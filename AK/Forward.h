@@ -20,6 +20,9 @@ class ByteBuffer;
 
 enum class TrailingCodePointTransformation : u8;
 
+class AsyncInputStream;
+class AsyncOutputStream;
+class AsyncStream;
 class BigEndianInputBitStream;
 class BigEndianOutputBitStream;
 class Bitmap;
@@ -154,6 +157,9 @@ class [[nodiscard]] ErrorOr;
 
 #if USING_AK_GLOBALLY
 using AK::Array;
+using AK::AsyncInputStream;
+using AK::AsyncOutputStream;
+using AK::AsyncStream;
 using AK::Atomic;
 using AK::Badge;
 using AK::BigEndianInputBitStream;
