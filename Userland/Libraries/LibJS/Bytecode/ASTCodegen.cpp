@@ -1627,19 +1627,19 @@ Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> CallExpression::gen
         auto arguments = TRY(arguments_to_array_for_call(generator, this->arguments())).value();
         generator.emit<Bytecode::Op::CallWithArgumentArray>(call_type, dst, callee, this_value, arguments, expression_string_index);
     } else {
-        Optional<Bytecode::Register> first_argument_reg {};
-        for (size_t i = 0; i < arguments().size(); ++i) {
-            auto reg = generator.allocate_register();
-            if (!first_argument_reg.has_value())
-                first_argument_reg = reg;
-        }
-        u32 register_offset = 0;
+        Vector<Bytecode::Operand> argument_operands;
         for (auto const& argument : arguments()) {
-            auto value = TRY(argument.value->generate_bytecode(generator)).value();
-            generator.emit<Bytecode::Op::Mov>(Bytecode::Operand(Bytecode::Register(first_argument_reg.value().index() + register_offset)), value);
-            register_offset += 1;
+            argument_operands.append(TRY(argument.value->generate_bytecode(generator)).value());
         }
-        generator.emit<Bytecode::Op::Call>(call_type, dst, callee, this_value, first_argument_reg.value_or(Bytecode::Register { 0 }), arguments().size(), expression_string_index, builtin);
+        generator.emit_with_extra_operand_slots<Bytecode::Op::Call>(
+            argument_operands.size(),
+            call_type,
+            dst,
+            callee,
+            this_value,
+            argument_operands,
+            expression_string_index,
+            builtin);
     }
 
     return dst;
