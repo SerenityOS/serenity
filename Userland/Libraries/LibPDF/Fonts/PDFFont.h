@@ -19,7 +19,7 @@ class Renderer;
 
 // PDF files don't need most of the data in OpenType fonts, and even contain invalid data for
 // these tables in some cases. Skip reading these tables.
-constexpr u32 pdf_skipped_opentype_tables = OpenType::FontOptions::SkipTables::Name;
+constexpr u32 pdf_skipped_opentype_tables = OpenType::FontOptions::SkipTables::Name | OpenType::FontOptions::SkipTables::Hmtx;
 
 class PDFFont : public RefCounted<PDFFont> {
 public:

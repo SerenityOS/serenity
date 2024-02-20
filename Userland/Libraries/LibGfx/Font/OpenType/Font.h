@@ -34,6 +34,9 @@ struct FontOptions {
     enum SkipTables {
         // If set, do not try to read the 'name' table. family() and variant() will return empty strings.
         Name = 1 << 0,
+
+        // If set, do not try to read the 'hmtx' table. This will make glyph_metrics() return 0 for everyting and is_fixed_width() return true.
+        Hmtx = 1 << 1,
     };
     u32 skip_tables { 0 };
 };
@@ -94,7 +97,7 @@ private:
         Optional<Name>&& name,
         Hhea&& hhea,
         Maxp&& maxp,
-        Hmtx&& hmtx,
+        Optional<Hmtx>&& hmtx,
         NonnullOwnPtr<CharCodeToGlyphIndex> cmap,
         Optional<Loca>&& loca,
         Optional<Glyf>&& glyf,
@@ -130,7 +133,7 @@ private:
     Optional<Name> m_name;
     Hhea m_hhea;
     Maxp m_maxp;
-    Hmtx m_hmtx;
+    Optional<Hmtx> m_hmtx;
     Optional<Loca> m_loca;
     Optional<Glyf> m_glyf;
     NonnullOwnPtr<CharCodeToGlyphIndex> m_cmap;
