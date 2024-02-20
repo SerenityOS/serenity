@@ -9,6 +9,7 @@
 #include <LibCompress/Deflate.h>
 #include <LibCompress/LZWDecoder.h>
 #include <LibCompress/PackBitsDecoder.h>
+#include <LibGfx/ImageFormats/CCITTDecoder.h>
 #include <LibGfx/ImageFormats/JPEGLoader.h>
 #include <LibGfx/ImageFormats/PNGLoader.h>
 #include <LibPDF/CommonNames.h>
@@ -275,7 +276,7 @@ PDFErrorOr<ByteBuffer> Filter::decode_run_length(ReadonlyBytes bytes)
     return TRY(Compress::PackBits::decode_all(bytes, OptionalNone {}, Compress::PackBits::CompatibilityMode::PDF));
 }
 
-PDFErrorOr<ByteBuffer> Filter::decode_ccitt(ReadonlyBytes, RefPtr<DictObject> decode_parms)
+PDFErrorOr<ByteBuffer> Filter::decode_ccitt(ReadonlyBytes bytes, RefPtr<DictObject> decode_parms)
 {
     // Table 3.9 Optional parameters for the CCITTFaxDecode filter
     int k = 0;
@@ -305,17 +306,15 @@ PDFErrorOr<ByteBuffer> Filter::decode_ccitt(ReadonlyBytes, RefPtr<DictObject> de
             damaged_rows_before_error = decode_parms->get_value(CommonNames::DamagedRowsBeforeError).get<int>();
     }
 
-    // FIXME: Do something with these.
-    (void)require_end_of_line;
-    (void)encoded_byte_align;
-    (void)columns;
-    (void)rows;
+    // FIXME: This parameter seems crucial when reading its description, but we still
+    //        achieve to decode images that have it. Figure out what to do with it.
     (void)end_of_block;
-    (void)black_is_1;
-    (void)damaged_rows_before_error;
+
+    if (require_end_of_line || encoded_byte_align || black_is_1 || damaged_rows_before_error > 0 || rows == 0)
+        return Error::rendering_unsupported_error("Unimplemented option for the CCITTFaxDecode Filter");
 
     if (k < 0)
-        return Error::rendering_unsupported_error("CCITTFaxDecode Filter Group 4 is unsupported");
+        return TRY(Gfx::CCITT::decode_ccitt_group4(bytes, columns, rows));
     if (k == 0)
         return Error::rendering_unsupported_error("CCITTFaxDecode Filter Group 3, 1-D is unsupported");
     return Error::rendering_unsupported_error("CCITTFaxDecode Filter Group 3, 2-D is unsupported");
