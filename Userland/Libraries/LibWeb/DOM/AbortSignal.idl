@@ -4,7 +4,7 @@
 // https://dom.spec.whatwg.org/#interface-AbortSignal
 [Exposed=(Window,Worker), CustomVisit]
 interface AbortSignal : EventTarget {
-    // FIXME: [NewObject] static AbortSignal abort(optional any reason);
+    [NewObject] static AbortSignal abort(optional any reason);
     // FIXME: [Exposed=(Window,Worker), NewObject] static AbortSignal timeout([EnforceRange] unsigned long long milliseconds);
     // FIXME: [NewObject] static AbortSignal _any(sequence<AbortSignal> signals);
 
