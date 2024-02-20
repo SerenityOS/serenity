@@ -282,6 +282,8 @@ private:
     // https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-window-status
     // When the Window object is created, the attribute must be set to the empty string. It does not do anything else.
     String m_status;
+
+    JS::GCPtr<Internals::Internals> m_internals;
 };
 
 void run_animation_frame_callbacks(DOM::Document&, double now);
