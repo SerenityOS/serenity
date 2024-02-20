@@ -11,6 +11,7 @@
  */
 
 #include "Namespaces.h"
+#include <AK/Array.h>
 #include <AK/LexicalPath.h>
 #include <AK/Queue.h>
 #include <AK/QuickSort.h>
@@ -370,6 +371,67 @@ static void generate_to_string(SourceGenerator& scoped_generator, ParameterType 
 }
 
 template<typename ParameterType>
+static void generate_to_integral(SourceGenerator& scoped_generator, ParameterType const& parameter, bool optional, Optional<ByteString> const& optional_default_value)
+{
+    struct TypeMap {
+        StringView idl_type;
+        StringView cpp_type;
+    };
+    static constexpr auto idl_type_map = to_array<TypeMap>({
+        { "boolean"sv, "bool"sv },
+        { "byte"sv, "WebIDL::Byte"sv },
+        { "octet"sv, "WebIDL::Octet"sv },
+        { "short"sv, "WebIDL::Short"sv },
+        { "unsigned short"sv, "WebIDL::UnsignedShort"sv },
+        { "long"sv, "WebIDL::Long"sv },
+        { "long long"sv, "WebIDL::LongLong"sv },
+        { "unsigned long"sv, "WebIDL::UnsignedLong"sv },
+        { "unsigned long long"sv, "WebIDL::UnsignedLongLong"sv },
+    });
+
+    auto it = find_if(idl_type_map.begin(), idl_type_map.end(), [&](auto const& entry) {
+        return entry.idl_type == parameter.type->name();
+    });
+
+    VERIFY(it != idl_type_map.end());
+    scoped_generator.set("cpp_type"sv, it->cpp_type);
+
+    if (!optional || optional_default_value.has_value()) {
+        scoped_generator.append(R"~~~(
+    @cpp_type@ @cpp_name@;
+)~~~");
+    } else {
+        scoped_generator.append(R"~~~(
+    Optional<@cpp_type@> @cpp_name@;
+)~~~");
+    }
+
+    if (optional) {
+        scoped_generator.append(R"~~~(
+    if (!@js_name@@js_suffix@.is_undefined())
+)~~~");
+    }
+
+    // FIXME: pass through [EnforceRange] and [Clamp] extended attributes
+    if (it->cpp_type == "bool"sv) {
+        scoped_generator.append(R"~~~(
+    @cpp_name@ = @js_name@@js_suffix@.to_boolean();
+)~~~");
+    } else {
+        scoped_generator.append(R"~~~(
+    @cpp_name@ = TRY(WebIDL::convert_to_int<@cpp_type@>(vm, @js_name@@js_suffix@));
+)~~~");
+    }
+
+    if (optional_default_value.has_value()) {
+        scoped_generator.append(R"~~~(
+    else
+        @cpp_name@ = static_cast<@cpp_type@>(@parameter.optional_default_value@);
+)~~~");
+    }
+}
+
+template<typename ParameterType>
 static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter, ByteString const& js_name, ByteString const& js_suffix, ByteString const& cpp_name, IDL::Interface const& interface, bool legacy_null_to_empty_string = false, bool optional = false, Optional<ByteString> optional_default_value = {}, bool variadic = false, size_t recursion_depth = 0, bool string_to_fly_string = false)
 {
     auto scoped_generator = generator.fork();
@@ -400,6 +462,8 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     // FIXME: Add support for optional, variadic, nullable and default values to all types
     if (parameter.type->is_string()) {
         generate_to_string(scoped_generator, parameter, variadic, optional, optional_default_value);
+    } else if (parameter.type->is_boolean() || parameter.type->is_integer()) {
+        generate_to_integral(scoped_generator, parameter, optional, optional_default_value);
     } else if (parameter.type->name().is_one_of("EventListener", "NodeFilter")) {
         // FIXME: Replace this with support for callback interfaces. https://webidl.spec.whatwg.org/#idl-callback-interface
 
@@ -504,180 +568,6 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
                 scoped_generator.append(R"~~~(
 )~~~");
             }
-        }
-    } else if (parameter.type->name() == "boolean") {
-        if (!optional || optional_default_value.has_value()) {
-            scoped_generator.append(R"~~~(
-    bool @cpp_name@;
-)~~~");
-        } else {
-            scoped_generator.append(R"~~~(
-    Optional<bool> @cpp_name@;
-)~~~");
-        }
-        if (optional) {
-            scoped_generator.append(R"~~~(
-    if (!@js_name@@js_suffix@.is_undefined())
-)~~~");
-        }
-        scoped_generator.append(R"~~~(
-    @cpp_name@ = @js_name@@js_suffix@.to_boolean();
-)~~~");
-        if (optional_default_value.has_value()) {
-            scoped_generator.append(R"~~~(
-    else
-        @cpp_name@ = @parameter.optional_default_value@;
-)~~~");
-        }
-    } else if (parameter.type->name() == "unsigned long") {
-        if (!optional || optional_default_value.has_value()) {
-            scoped_generator.append(R"~~~(
-    WebIDL::UnsignedLong @cpp_name@;
-)~~~");
-        } else {
-            scoped_generator.append(R"~~~(
-    Optional<WebIDL::UnsignedLong> @cpp_name@;
-)~~~");
-        }
-        if (optional) {
-            scoped_generator.append(R"~~~(
-    if (!@js_name@@js_suffix@.is_undefined())
-)~~~");
-        }
-        // FIXME: pass through [EnforceRange] and [Clamp] extended attributes
-        scoped_generator.append(R"~~~(
-    @cpp_name@ = TRY(WebIDL::convert_to_int<WebIDL::UnsignedLong>(vm, @js_name@@js_suffix@));
-)~~~");
-        if (optional_default_value.has_value()) {
-            scoped_generator.append(R"~~~(
-    else
-        @cpp_name@ = @parameter.optional_default_value@UL;
-)~~~");
-        }
-    } else if (parameter.type->name() == "short") {
-        if (!optional || optional_default_value.has_value()) {
-            scoped_generator.append(R"~~~(
-    WebIDL::Short @cpp_name@;
-)~~~");
-        } else {
-            scoped_generator.append(R"~~~(
-    Optional<WebIDL::Short> @cpp_name@;
-)~~~");
-        }
-        if (optional) {
-            scoped_generator.append(R"~~~(
-    if (!@js_name@@js_suffix@.is_undefined())
-)~~~");
-        }
-        // FIXME: pass through [EnforceRange] and [Clamp] extended attributes
-        scoped_generator.append(R"~~~(
-    @cpp_name@ = TRY(WebIDL::convert_to_int<WebIDL::Short>(vm, @js_name@@js_suffix@));
-)~~~");
-        if (optional_default_value.has_value()) {
-            scoped_generator.append(R"~~~(
-    else
-        @cpp_name@ = @parameter.optional_default_value@;
-)~~~");
-        }
-    } else if (parameter.type->name() == "unsigned short") {
-        if (!optional || optional_default_value.has_value()) {
-            scoped_generator.append(R"~~~(
-    WebIDL::UnsignedShort @cpp_name@;
-)~~~");
-        } else {
-            scoped_generator.append(R"~~~(
-    Optional<WebIDL::UnsignedShort> @cpp_name@;
-)~~~");
-        }
-        if (optional) {
-            scoped_generator.append(R"~~~(
-    if (!@js_name@@js_suffix@.is_undefined())
-)~~~");
-        }
-        // FIXME: pass through [EnforceRange] and [Clamp] extended attributes
-        scoped_generator.append(R"~~~(
-    @cpp_name@ = TRY(WebIDL::convert_to_int<WebIDL::UnsignedShort>(vm, @js_name@@js_suffix@));
-)~~~");
-        if (optional_default_value.has_value()) {
-            scoped_generator.append(R"~~~(
-    else
-        @cpp_name@ = @parameter.optional_default_value@;
-)~~~");
-        }
-    } else if (parameter.type->name() == "long") {
-        if (!optional || optional_default_value.has_value()) {
-            scoped_generator.append(R"~~~(
-    WebIDL::Long @cpp_name@;
-)~~~");
-        } else {
-            scoped_generator.append(R"~~~(
-    Optional<WebIDL::Long> @cpp_name@;
-)~~~");
-        }
-        if (optional) {
-            scoped_generator.append(R"~~~(
-    if (!@js_name@@js_suffix@.is_undefined())
-)~~~");
-        }
-        // FIXME: pass through [EnforceRange] and [Clamp] extended attributes
-        scoped_generator.append(R"~~~(
-    @cpp_name@ = TRY(WebIDL::convert_to_int<WebIDL::Long>(vm, @js_name@@js_suffix@));
-)~~~");
-        if (optional_default_value.has_value()) {
-            scoped_generator.append(R"~~~(
-    else
-        @cpp_name@ = @parameter.optional_default_value@L;
-)~~~");
-        }
-    } else if (parameter.type->name() == "long long") {
-        if (!optional || optional_default_value.has_value()) {
-            scoped_generator.append(R"~~~(
-    WebIDL::LongLong @cpp_name@;
-)~~~");
-        } else {
-            scoped_generator.append(R"~~~(
-    Optional<WebIDL::LongLong> @cpp_name@;
-)~~~");
-        }
-        if (optional) {
-            scoped_generator.append(R"~~~(
-    if (!@js_name@@js_suffix@.is_undefined())
-)~~~");
-        }
-        // FIXME: pass through [EnforceRange] and [Clamp] extended attributes
-        scoped_generator.append(R"~~~(
-    @cpp_name@ = TRY(WebIDL::convert_to_int<WebIDL::LongLong>(vm, @js_name@@js_suffix@));
-)~~~");
-        if (optional_default_value.has_value()) {
-            scoped_generator.append(R"~~~(
-    else
-        @cpp_name@ = @parameter.optional_default_value@L;
-)~~~");
-        }
-    } else if (parameter.type->name() == "unsigned long long") {
-        if (!optional || optional_default_value.has_value()) {
-            scoped_generator.append(R"~~~(
-    WebIDL::UnsignedLongLong @cpp_name@;
-)~~~");
-        } else {
-            scoped_generator.append(R"~~~(
-    Optional<WebIDL::UnsignedLongLong> @cpp_name@;
-)~~~");
-        }
-        if (optional) {
-            scoped_generator.append(R"~~~(
-    if (!@js_name@@js_suffix@.is_undefined())
-)~~~");
-        }
-        // FIXME: pass through [EnforceRange] and [Clamp] extended attributes
-        scoped_generator.append(R"~~~(
-    @cpp_name@ = TRY(WebIDL::convert_to_int<WebIDL::UnsignedLongLong>(vm, @js_name@@js_suffix@));
-)~~~");
-        if (optional_default_value.has_value()) {
-            scoped_generator.append(R"~~~(
-    else
-        @cpp_name@ = @parameter.optional_default_value@ULL;
-)~~~");
         }
     } else if (parameter.type->name() == "Promise") {
         // NOTE: It's not clear to me where the implicit wrapping of non-Promise values in a resolved
