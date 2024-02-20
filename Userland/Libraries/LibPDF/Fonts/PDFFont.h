@@ -8,6 +8,7 @@
 
 #include <AK/HashMap.h>
 #include <AK/Tuple.h>
+#include <LibGfx/Font/OpenType/Font.h>
 #include <LibGfx/Forward.h>
 #include <LibPDF/Document.h>
 #include <LibPDF/Encoding.h>
@@ -15,6 +16,10 @@
 namespace PDF {
 
 class Renderer;
+
+// PDF files don't need most of the data in OpenType fonts, and even contain invalid data for
+// these tables in some cases. Skip reading these tables.
+constexpr u32 pdf_skipped_opentype_tables = OpenType::FontOptions::SkipTables::Name;
 
 class PDFFont : public RefCounted<PDFFont> {
 public:

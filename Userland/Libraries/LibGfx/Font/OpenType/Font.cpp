@@ -256,9 +256,12 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
         return Error::from_string_literal("Font is missing Head");
     auto head = TRY(Head::from_slice(opt_head_slice.value()));
 
-    if (!opt_name_slice.has_value())
-        return Error::from_string_literal("Font is missing Name");
-    auto name = TRY(Name::from_slice(opt_name_slice.value()));
+    Optional<Name> name;
+    if (!(options.skip_tables & Options::SkipTables::Name)) {
+        if (!opt_name_slice.has_value())
+            return Error::from_string_literal("Font is missing Name");
+        name = TRY(Name::from_slice(opt_name_slice.value()));
+    }
 
     if (!opt_hhea_slice.has_value())
         return Error::from_string_literal("Font is missing Hhea");
@@ -544,12 +547,15 @@ u16 Font::units_per_em() const
 
 String Font::family() const
 {
+    if (!m_name.has_value())
+        return {};
+
     if (!m_family.has_value()) {
         m_family = [&] {
-            auto string = m_name.typographic_family_name();
+            auto string = m_name->typographic_family_name();
             if (!string.is_empty())
                 return string;
-            return m_name.family_name();
+            return m_name->family_name();
         }();
     }
     return *m_family;
@@ -557,10 +563,13 @@ String Font::family() const
 
 String Font::variant() const
 {
-    auto string = m_name.typographic_subfamily_name();
+    if (!m_name.has_value())
+        return {};
+
+    auto string = m_name->typographic_subfamily_name();
     if (!string.is_empty())
         return string;
-    return m_name.subfamily_name();
+    return m_name->subfamily_name();
 }
 
 u16 Font::weight() const

@@ -25,7 +25,7 @@ PDFErrorOr<void> TrueTypeFont::initialize(Document* document, NonnullRefPtr<Dict
         auto descriptor = MUST(dict->get_dict(document, CommonNames::FontDescriptor));
         if (descriptor->contains(CommonNames::FontFile2)) {
             auto font_file_stream = TRY(descriptor->get_stream(document, CommonNames::FontFile2));
-            auto ttf_font = TRY(OpenType::Font::try_load_from_externally_owned_memory(font_file_stream->bytes()));
+            auto ttf_font = TRY(OpenType::Font::try_load_from_externally_owned_memory(font_file_stream->bytes(), { .skip_tables = pdf_skipped_opentype_tables }));
             float point_size = (font_size * POINTS_PER_INCH) / DEFAULT_DPI;
             m_font = adopt_ref(*new Gfx::ScaledFont(*ttf_font, point_size, point_size));
         }

@@ -30,6 +30,12 @@ public:
 struct FontOptions {
     unsigned index { 0 };
     OwnPtr<CharCodeToGlyphIndex> external_cmap {};
+
+    enum SkipTables {
+        // If set, do not try to read the 'name' table. family() and variant() will return empty strings.
+        Name = 1 << 0,
+    };
+    u32 skip_tables { 0 };
 };
 
 class Font : public Gfx::VectorFont {
@@ -85,7 +91,7 @@ private:
 
     Font(
         Head&& head,
-        Name&& name,
+        Optional<Name>&& name,
         Hhea&& hhea,
         Maxp&& maxp,
         Hmtx&& hmtx,
@@ -121,7 +127,7 @@ private:
 
     // These are stateful wrappers around non-owning slices
     Head m_head;
-    Name m_name;
+    Optional<Name> m_name;
     Hhea m_hhea;
     Maxp m_maxp;
     Hmtx m_hmtx;
