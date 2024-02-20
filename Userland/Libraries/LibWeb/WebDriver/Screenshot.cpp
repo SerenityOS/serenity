@@ -61,6 +61,10 @@ Response capture_element_screenshot(Painter const& painter, Page& page, DOM::Ele
         auto canvas_element = DOM::create_element(element.document(), HTML::TagNames::canvas, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
         auto& canvas = verify_cast<HTML::HTMLCanvasElement>(*canvas_element);
 
+        // FIXME: Handle DevicePixelRatio in HiDPI mode.
+        MUST(canvas.set_width(rect.width()));
+        MUST(canvas.set_height(rect.height()));
+
         if (!canvas.create_bitmap(rect.width(), rect.height())) {
             encoded_string_or_error = Error::from_code(ErrorCode::UnableToCaptureScreen, "Unable to create a screenshot bitmap"sv);
             return;
