@@ -7,6 +7,6 @@ interface HTMLPreElement : HTMLElement {
     [HTMLConstructor] constructor();
 
     // Obsolete
-    // FIXME: [CEReactions, Reflect] attribute long width;
+    [CEReactions] attribute long width;
 
 };
