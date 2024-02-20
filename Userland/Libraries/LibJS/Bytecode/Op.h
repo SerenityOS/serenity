@@ -51,29 +51,31 @@ private:
     Operand m_src;
 };
 
-#define JS_ENUMERATE_COMMON_BINARY_OPS(O)     \
-    O(Add, add)                               \
-    O(Sub, sub)                               \
-    O(Mul, mul)                               \
-    O(Div, div)                               \
-    O(Exp, exp)                               \
-    O(Mod, mod)                               \
-    O(In, in)                                 \
-    O(InstanceOf, instance_of)                \
-    O(GreaterThan, greater_than)              \
-    O(GreaterThanEquals, greater_than_equals) \
-    O(LessThan, less_than)                    \
-    O(LessThanEquals, less_than_equals)       \
-    O(LooselyInequals, loosely_inequals)      \
-    O(LooselyEquals, loosely_equals)          \
-    O(StrictlyInequals, strict_inequals)      \
-    O(StrictlyEquals, strict_equals)          \
-    O(BitwiseAnd, bitwise_and)                \
-    O(BitwiseOr, bitwise_or)                  \
-    O(BitwiseXor, bitwise_xor)                \
-    O(LeftShift, left_shift)                  \
-    O(RightShift, right_shift)                \
+#define JS_ENUMERATE_COMMON_BINARY_OPS_WITH_FAST_PATH(O) \
+    O(Add, add)                                          \
+    O(BitwiseAnd, bitwise_and)                           \
+    O(BitwiseOr, bitwise_or)                             \
+    O(BitwiseXor, bitwise_xor)                           \
+    O(GreaterThan, greater_than)                         \
+    O(GreaterThanEquals, greater_than_equals)            \
+    O(LessThan, less_than)                               \
+    O(LessThanEquals, less_than_equals)                  \
+    O(Mul, mul)                                          \
+    O(RightShift, right_shift)                           \
+    O(Sub, sub)                                          \
     O(UnsignedRightShift, unsigned_right_shift)
+
+#define JS_ENUMERATE_COMMON_BINARY_OPS_WITHOUT_FAST_PATH(O) \
+    O(Div, div)                                             \
+    O(Exp, exp)                                             \
+    O(Mod, mod)                                             \
+    O(In, in)                                               \
+    O(InstanceOf, instance_of)                              \
+    O(LooselyInequals, loosely_inequals)                    \
+    O(LooselyEquals, loosely_equals)                        \
+    O(StrictlyInequals, strict_inequals)                    \
+    O(StrictlyEquals, strict_equals)                        \
+    O(LeftShift, left_shift)
 
 #define JS_DECLARE_COMMON_BINARY_OP(OpTitleCase, op_snake_case)             \
     class OpTitleCase final : public Instruction {                          \
@@ -99,7 +101,8 @@ private:
         Operand m_rhs;                                                      \
     };
 
-JS_ENUMERATE_COMMON_BINARY_OPS(JS_DECLARE_COMMON_BINARY_OP)
+JS_ENUMERATE_COMMON_BINARY_OPS_WITHOUT_FAST_PATH(JS_DECLARE_COMMON_BINARY_OP)
+JS_ENUMERATE_COMMON_BINARY_OPS_WITH_FAST_PATH(JS_DECLARE_COMMON_BINARY_OP)
 #undef JS_DECLARE_COMMON_BINARY_OP
 
 #define JS_ENUMERATE_COMMON_UNARY_OPS(O) \
