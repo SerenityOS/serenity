@@ -59,6 +59,7 @@
 #include <LibWeb/CSS/StyleValues/StyleValueList.h>
 #include <LibWeb/CSS/StyleValues/TimeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/TransformationStyleValue.h>
+#include <LibWeb/CSS/StyleValues/TransitionStyleValue.h>
 #include <LibWeb/CSS/StyleValues/UnresolvedStyleValue.h>
 #include <LibWeb/CSS/StyleValues/UnsetStyleValue.h>
 #include <LibWeb/DOM/Attr.h>
@@ -679,6 +680,24 @@ void StyleComputer::for_each_property_expanding_shorthands(PropertyID property_i
                 set_longhand_property(CSS::PropertyID::MinHeight, value);
             }
         }
+        return;
+    }
+
+    if (property_id == CSS::PropertyID::Transition) {
+        auto const& transitions = value.as_transition().transitions();
+        Array<Vector<ValueComparingNonnullRefPtr<StyleValue const>>, 4> transition_values;
+        for (auto const& transition : transitions) {
+            transition_values[0].append(*transition.property_name);
+            transition_values[1].append(TimeStyleValue::create(transition.duration));
+            transition_values[2].append(TimeStyleValue::create(transition.delay));
+            if (transition.easing)
+                transition_values[3].append(*transition.easing);
+        }
+
+        set_longhand_property(CSS::PropertyID::TransitionProperty, StyleValueList::create(move(transition_values[0]), StyleValueList::Separator::Comma));
+        set_longhand_property(CSS::PropertyID::TransitionDuration, StyleValueList::create(move(transition_values[1]), StyleValueList::Separator::Comma));
+        set_longhand_property(CSS::PropertyID::TransitionDelay, StyleValueList::create(move(transition_values[2]), StyleValueList::Separator::Comma));
+        set_longhand_property(CSS::PropertyID::TransitionTimingFunction, StyleValueList::create(move(transition_values[3]), StyleValueList::Separator::Comma));
         return;
     }
 
