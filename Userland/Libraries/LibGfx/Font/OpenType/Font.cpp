@@ -271,9 +271,12 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
         return Error::from_string_literal("Font is missing Maxp");
     auto maxp = TRY(Maxp::from_slice(opt_maxp_slice.value()));
 
-    if (!opt_hmtx_slice.has_value())
-        return Error::from_string_literal("Font is missing Hmtx");
-    auto hmtx = TRY(Hmtx::from_slice(opt_hmtx_slice.value(), maxp.num_glyphs(), hhea.number_of_h_metrics()));
+    Optional<Hmtx> hmtx;
+    if (!(options.skip_tables & Options::SkipTables::Hmtx)) {
+        if (!opt_hmtx_slice.has_value())
+            return Error::from_string_literal("Font is missing Hmtx");
+        hmtx = TRY(Hmtx::from_slice(opt_hmtx_slice.value(), maxp.num_glyphs(), hhea.number_of_h_metrics()));
+    }
 
     NonnullOwnPtr<CharCodeToGlyphIndex> cmap = options.external_cmap ? options.external_cmap.release_nonnull() : TRY(CmapCharCodeToGlyphIndex::from_slice(opt_cmap_slice.value()));
 
@@ -412,14 +415,14 @@ Gfx::ScaledGlyphMetrics Font::glyph_metrics(u32 glyph_id, float x_scale, float y
         return embedded_bitmap_metrics.release_value();
     }
 
-    if (!m_loca.has_value() || !m_glyf.has_value()) {
+    if (!m_loca.has_value() || !m_glyf.has_value() || !m_hmtx.has_value()) {
         return Gfx::ScaledGlyphMetrics {};
     }
 
     if (glyph_id >= glyph_count()) {
         glyph_id = 0;
     }
-    auto horizontal_metrics = m_hmtx.get_glyph_horizontal_metrics(glyph_id);
+    auto horizontal_metrics = m_hmtx->get_glyph_horizontal_metrics(glyph_id);
     auto glyph_offset = m_loca->get_glyph_offset(glyph_id);
     auto glyph = m_glyf->glyph(glyph_offset);
     return Gfx::ScaledGlyphMetrics {
