@@ -1248,7 +1248,10 @@ ThrowCompletionOr<void> Call::execute_impl(Bytecode::Interpreter& interpreter) c
 
     TRY(throw_if_needed_for_call(interpreter, callee, call_type(), expression_string()));
 
-    if (m_builtin.has_value() && m_argument_count == Bytecode::builtin_argument_count(m_builtin.value()) && interpreter.realm().get_builtin_value(m_builtin.value()) == callee) {
+    if (m_builtin.has_value()
+        && m_argument_count == Bytecode::builtin_argument_count(m_builtin.value())
+        && callee.is_object()
+        && interpreter.realm().get_builtin_value(m_builtin.value()) == &callee.as_object()) {
         interpreter.set(dst(), TRY(dispatch_builtin_call(interpreter, m_builtin.value(), { m_arguments, m_argument_count })));
         return {};
     }
