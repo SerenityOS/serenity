@@ -287,19 +287,6 @@ static WebIDL::ExceptionOr<Vector<BaseKeyframe>> process_a_keyframes_argument(JS
 {
     auto& vm = realm.vm();
 
-    auto parse_easing_string = [&](auto& value) -> RefPtr<CSS::StyleValue const> {
-        auto maybe_parser = CSS::Parser::Parser::create(CSS::Parser::ParsingContext(realm), value);
-        if (maybe_parser.is_error())
-            return {};
-
-        if (auto style_value = maybe_parser.release_value().parse_as_css_value(CSS::PropertyID::AnimationTimingFunction)) {
-            if (style_value->is_easing())
-                return style_value;
-        }
-
-        return {};
-    };
-
     // 1. If object is null, return an empty sequence of keyframes.
     if (!object)
         return Vector<BaseKeyframe> {};
@@ -525,7 +512,7 @@ static WebIDL::ExceptionOr<Vector<BaseKeyframe>> process_a_keyframes_argument(JS
         //
         //    If parsing the "easing" property fails, throw a TypeError and abort this procedure.
         auto easing_string = keyframe.easing.get<String>();
-        auto easing_value = parse_easing_string(easing_string);
+        auto easing_value = AnimationEffect::parse_easing_string(realm, easing_string);
 
         if (!easing_value)
             return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, MUST(String::formatted("Invalid animation easing value: \"{}\"", easing_string)) };
@@ -537,7 +524,7 @@ static WebIDL::ExceptionOr<Vector<BaseKeyframe>> process_a_keyframes_argument(JS
     //    interface, and if any of the values fail to parse, throw a TypeError and abort this procedure.
     for (auto& unused_easing : unused_easings) {
         auto easing_string = unused_easing.get<String>();
-        auto easing_value = parse_easing_string(easing_string);
+        auto easing_value = AnimationEffect::parse_easing_string(realm, easing_string);
         if (!easing_value)
             return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, MUST(String::formatted("Invalid animation easing value: \"{}\"", easing_string)) };
     }
@@ -729,6 +716,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<KeyframeEffect>> KeyframeEffect::construct_
 
     //     - timing function.
     effect->m_easing_function = source->m_easing_function;
+    effect->m_timing_function = source->m_timing_function;
 
     return effect;
 }
