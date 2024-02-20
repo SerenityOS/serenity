@@ -506,7 +506,7 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> ICCBasedColorSpace::create(Document* docum
         return Error { Error::Type::Internal, "Alternate color spaces in array format are not supported" };
     }
 
-    return Error { Error::Type::MalformedPDF, "Failed to load ICC color space with malformed profile and no alternate" };
+    return maybe_profile.release_error();
 }
 
 ICCBasedColorSpace::ICCBasedColorSpace(NonnullRefPtr<Gfx::ICC::Profile> profile)
