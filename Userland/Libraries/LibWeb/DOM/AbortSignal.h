@@ -37,10 +37,13 @@ public:
 
     // https://dom.spec.whatwg.org/#dom-abortsignal-reason
     JS::Value reason() const { return m_abort_reason; }
+    void set_reason(JS::Value reason) { m_abort_reason = reason; }
 
     JS::ThrowCompletionOr<void> throw_if_aborted() const;
 
     void follow(JS::NonnullGCPtr<AbortSignal> parent_signal);
+
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<AbortSignal>> abort(JS::VM&, JS::Value reason);
 
 private:
     explicit AbortSignal(JS::Realm&);

@@ -116,4 +116,20 @@ void AbortSignal::follow(JS::NonnullGCPtr<AbortSignal> parent_signal)
     });
 }
 
+// https://dom.spec.whatwg.org/#dom-abortsignal-abort
+WebIDL::ExceptionOr<JS::NonnullGCPtr<AbortSignal>> AbortSignal::abort(JS::VM& vm, JS::Value reason)
+{
+    // 1. Let signal be a new AbortSignal object.
+    auto signal = TRY(construct_impl(*vm.current_realm()));
+
+    // 2. Set signal’s abort reason to reason if it is given; otherwise to a new "AbortError" DOMException.
+    if (reason.is_undefined())
+        reason = WebIDL::AbortError::create(*vm.current_realm(), "Aborted without reason"_fly_string).ptr();
+
+    signal->set_reason(reason);
+
+    // 3. Return signal.
+    return signal;
+}
+
 }
