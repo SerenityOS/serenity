@@ -608,7 +608,7 @@ static ThrowCompletionOr<Value> strict_equals(VM&, Value src1, Value src2)
     return Value(is_strictly_equal(src1, src2));
 }
 
-#define JS_DEFINE_COMMON_BINARY_OP(OpTitleCase, op_snake_case)                                  \
+#define JS_DEFINE_EXECUTE_FOR_COMMON_BINARY_OP(OpTitleCase, op_snake_case)                      \
     ThrowCompletionOr<void> OpTitleCase::execute_impl(Bytecode::Interpreter& interpreter) const \
     {                                                                                           \
         auto& vm = interpreter.vm();                                                            \
@@ -616,16 +616,202 @@ static ThrowCompletionOr<Value> strict_equals(VM&, Value src1, Value src2)
         auto rhs = interpreter.get(m_rhs);                                                      \
         interpreter.set(m_dst, TRY(op_snake_case(vm, lhs, rhs)));                               \
         return {};                                                                              \
-    }                                                                                           \
-    ByteString OpTitleCase::to_byte_string_impl(Bytecode::Executable const& executable) const   \
-    {                                                                                           \
-        return ByteString::formatted(#OpTitleCase " {}, {}, {}",                                \
-            format_operand("dst"sv, m_dst, executable),                                         \
-            format_operand("lhs"sv, m_lhs, executable),                                         \
-            format_operand("rhs"sv, m_rhs, executable));                                        \
     }
 
-JS_ENUMERATE_COMMON_BINARY_OPS(JS_DEFINE_COMMON_BINARY_OP)
+#define JS_DEFINE_TO_BYTE_STRING_FOR_COMMON_BINARY_OP(OpTitleCase, op_snake_case)             \
+    ByteString OpTitleCase::to_byte_string_impl(Bytecode::Executable const& executable) const \
+    {                                                                                         \
+        return ByteString::formatted(#OpTitleCase " {}, {}, {}",                              \
+            format_operand("dst"sv, m_dst, executable),                                       \
+            format_operand("lhs"sv, m_lhs, executable),                                       \
+            format_operand("rhs"sv, m_rhs, executable));                                      \
+    }
+
+JS_ENUMERATE_COMMON_BINARY_OPS_WITHOUT_FAST_PATH(JS_DEFINE_EXECUTE_FOR_COMMON_BINARY_OP)
+JS_ENUMERATE_COMMON_BINARY_OPS_WITHOUT_FAST_PATH(JS_DEFINE_TO_BYTE_STRING_FOR_COMMON_BINARY_OP)
+JS_ENUMERATE_COMMON_BINARY_OPS_WITH_FAST_PATH(JS_DEFINE_TO_BYTE_STRING_FOR_COMMON_BINARY_OP)
+
+ThrowCompletionOr<void> Add::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& vm = interpreter.vm();
+    auto const lhs = interpreter.get(m_lhs);
+    auto const rhs = interpreter.get(m_rhs);
+
+    if (lhs.is_number() && rhs.is_number()) {
+        if (lhs.is_int32() && rhs.is_int32()) {
+            if (!Checked<i32>::addition_would_overflow(lhs.as_i32(), rhs.as_i32())) {
+                interpreter.set(m_dst, Value(lhs.as_i32() + rhs.as_i32()));
+                return {};
+            }
+        }
+        interpreter.set(m_dst, Value(lhs.as_double() + rhs.as_double()));
+        return {};
+    }
+
+    interpreter.set(m_dst, TRY(add(vm, lhs, rhs)));
+    return {};
+}
+
+ThrowCompletionOr<void> Mul::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& vm = interpreter.vm();
+    auto const lhs = interpreter.get(m_lhs);
+    auto const rhs = interpreter.get(m_rhs);
+
+    if (lhs.is_number() && rhs.is_number()) {
+        if (lhs.is_int32() && rhs.is_int32()) {
+            if (!Checked<i32>::multiplication_would_overflow(lhs.as_i32(), rhs.as_i32())) {
+                interpreter.set(m_dst, Value(lhs.as_i32() * rhs.as_i32()));
+                return {};
+            }
+        }
+        interpreter.set(m_dst, Value(lhs.as_double() * rhs.as_double()));
+        return {};
+    }
+
+    interpreter.set(m_dst, TRY(mul(vm, lhs, rhs)));
+    return {};
+}
+
+ThrowCompletionOr<void> Sub::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& vm = interpreter.vm();
+    auto const lhs = interpreter.get(m_lhs);
+    auto const rhs = interpreter.get(m_rhs);
+
+    if (lhs.is_number() && rhs.is_number()) {
+        if (lhs.is_int32() && rhs.is_int32()) {
+            if (!Checked<i32>::addition_would_overflow(lhs.as_i32(), -rhs.as_i32())) {
+                interpreter.set(m_dst, Value(lhs.as_i32() - rhs.as_i32()));
+                return {};
+            }
+        }
+        interpreter.set(m_dst, Value(lhs.as_double() - rhs.as_double()));
+        return {};
+    }
+
+    interpreter.set(m_dst, TRY(sub(vm, lhs, rhs)));
+    return {};
+}
+
+ThrowCompletionOr<void> BitwiseXor::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& vm = interpreter.vm();
+    auto const lhs = interpreter.get(m_lhs);
+    auto const rhs = interpreter.get(m_rhs);
+    if (lhs.is_int32() && rhs.is_int32()) {
+        interpreter.set(m_dst, Value(lhs.as_i32() ^ rhs.as_i32()));
+        return {};
+    }
+    interpreter.set(m_dst, TRY(bitwise_xor(vm, lhs, rhs)));
+    return {};
+}
+
+ThrowCompletionOr<void> BitwiseAnd::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& vm = interpreter.vm();
+    auto const lhs = interpreter.get(m_lhs);
+    auto const rhs = interpreter.get(m_rhs);
+    if (lhs.is_int32() && rhs.is_int32()) {
+        interpreter.set(m_dst, Value(lhs.as_i32() & rhs.as_i32()));
+        return {};
+    }
+    interpreter.set(m_dst, TRY(bitwise_and(vm, lhs, rhs)));
+    return {};
+}
+
+ThrowCompletionOr<void> BitwiseOr::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& vm = interpreter.vm();
+    auto const lhs = interpreter.get(m_lhs);
+    auto const rhs = interpreter.get(m_rhs);
+    if (lhs.is_int32() && rhs.is_int32()) {
+        interpreter.set(m_dst, Value(lhs.as_i32() | rhs.as_i32()));
+        return {};
+    }
+    interpreter.set(m_dst, TRY(bitwise_or(vm, lhs, rhs)));
+    return {};
+}
+
+ThrowCompletionOr<void> UnsignedRightShift::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& vm = interpreter.vm();
+    auto const lhs = interpreter.get(m_lhs);
+    auto const rhs = interpreter.get(m_rhs);
+    if (lhs.is_int32() && rhs.is_int32() && lhs.as_i32() >= 0 && rhs.as_i32() >= 0) {
+        auto const shift_count = static_cast<u32>(rhs.as_i32()) % 32;
+        interpreter.set(m_dst, Value(static_cast<u32>(lhs.as_i32()) >> shift_count));
+        return {};
+    }
+    interpreter.set(m_dst, TRY(unsigned_right_shift(vm, lhs, rhs)));
+    return {};
+}
+
+ThrowCompletionOr<void> RightShift::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& vm = interpreter.vm();
+    auto const lhs = interpreter.get(m_lhs);
+    auto const rhs = interpreter.get(m_rhs);
+    if (lhs.is_int32() && rhs.is_int32() && rhs.as_i32() >= 0) {
+        auto const shift_count = static_cast<u32>(rhs.as_i32()) % 32;
+        interpreter.set(m_dst, Value(lhs.as_i32() >> shift_count));
+        return {};
+    }
+    interpreter.set(m_dst, TRY(right_shift(vm, lhs, rhs)));
+    return {};
+}
+
+ThrowCompletionOr<void> LessThan::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& vm = interpreter.vm();
+    auto const lhs = interpreter.get(m_lhs);
+    auto const rhs = interpreter.get(m_rhs);
+    if (lhs.is_int32() && rhs.is_int32()) {
+        interpreter.set(m_dst, Value(lhs.as_i32() < rhs.as_i32()));
+        return {};
+    }
+    interpreter.set(m_dst, TRY(less_than(vm, lhs, rhs)));
+    return {};
+}
+
+ThrowCompletionOr<void> LessThanEquals::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& vm = interpreter.vm();
+    auto const lhs = interpreter.get(m_lhs);
+    auto const rhs = interpreter.get(m_rhs);
+    if (lhs.is_int32() && rhs.is_int32()) {
+        interpreter.set(m_dst, Value(lhs.as_i32() <= rhs.as_i32()));
+        return {};
+    }
+    interpreter.set(m_dst, TRY(less_than_equals(vm, lhs, rhs)));
+    return {};
+}
+
+ThrowCompletionOr<void> GreaterThan::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& vm = interpreter.vm();
+    auto const lhs = interpreter.get(m_lhs);
+    auto const rhs = interpreter.get(m_rhs);
+    if (lhs.is_int32() && rhs.is_int32()) {
+        interpreter.set(m_dst, Value(lhs.as_i32() > rhs.as_i32()));
+        return {};
+    }
+    interpreter.set(m_dst, TRY(greater_than(vm, lhs, rhs)));
+    return {};
+}
+
+ThrowCompletionOr<void> GreaterThanEquals::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& vm = interpreter.vm();
+    auto const lhs = interpreter.get(m_lhs);
+    auto const rhs = interpreter.get(m_rhs);
+    if (lhs.is_int32() && rhs.is_int32()) {
+        interpreter.set(m_dst, Value(lhs.as_i32() >= rhs.as_i32()));
+        return {};
+    }
+    interpreter.set(m_dst, TRY(greater_than_equals(vm, lhs, rhs)));
+    return {};
+}
 
 static ThrowCompletionOr<Value> not_(VM&, Value value)
 {
