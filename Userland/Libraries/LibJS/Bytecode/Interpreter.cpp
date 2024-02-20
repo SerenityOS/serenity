@@ -258,7 +258,7 @@ ThrowCompletionOr<Value> Interpreter::run(SourceTextModule& module)
     return js_undefined();
 }
 
-FLATTEN void Interpreter::run_bytecode()
+void Interpreter::run_bytecode()
 {
     auto* locals = vm().running_execution_context().locals.data();
     auto& accumulator = this->accumulator();
