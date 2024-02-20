@@ -42,7 +42,8 @@ bool g_dump_bytecode = false;
 static ByteString format_operand(StringView name, Operand operand, Bytecode::Executable const& executable)
 {
     StringBuilder builder;
-    builder.appendff("\033[32m{}\033[0m:", name);
+    if (!name.is_empty())
+        builder.appendff("\033[32m{}\033[0m:", name);
     switch (operand.type()) {
     case Operand::Type::Register:
         builder.appendff("\033[33mreg{}\033[0m", operand.index());
@@ -74,6 +75,20 @@ static ByteString format_operand(StringView name, Operand operand, Bytecode::Exe
     default:
         VERIFY_NOT_REACHED();
     }
+    return builder.to_byte_string();
+}
+
+static ByteString format_operand_list(StringView name, ReadonlySpan<Operand> operands, Bytecode::Executable const& executable)
+{
+    StringBuilder builder;
+    if (!name.is_empty())
+        builder.appendff(", \033[32{}\033[0m:[", name);
+    for (size_t i = 0; i < operands.size(); ++i) {
+        if (i != 0)
+            builder.append(", "sv);
+        builder.appendff("{}", format_operand(""sv, operands[i], executable));
+    }
+    builder.append("]"sv);
     return builder.to_byte_string();
 }
 
@@ -1202,27 +1217,25 @@ ThrowCompletionOr<void> Mov::execute_impl(Bytecode::Interpreter&) const
     __builtin_unreachable();
 }
 
-static ThrowCompletionOr<Value> dispatch_builtin_call(Bytecode::Interpreter& interpreter, Bytecode::Builtin builtin, Register first_argument)
+static ThrowCompletionOr<Value> dispatch_builtin_call(Bytecode::Interpreter& interpreter, Bytecode::Builtin builtin, ReadonlySpan<Operand> arguments)
 {
     switch (builtin) {
     case Builtin::MathAbs:
-        return TRY(MathObject::abs_impl(interpreter.vm(), interpreter.reg(first_argument)));
+        return TRY(MathObject::abs_impl(interpreter.vm(), interpreter.get(arguments[0])));
     case Builtin::MathLog:
-        return TRY(MathObject::log_impl(interpreter.vm(), interpreter.reg(first_argument)));
-    case Builtin::MathPow: {
-        auto exponent = interpreter.reg(Register { first_argument.index() + 1 });
-        return TRY(MathObject::pow_impl(interpreter.vm(), interpreter.reg(first_argument), exponent));
-    }
+        return TRY(MathObject::log_impl(interpreter.vm(), interpreter.get(arguments[0])));
+    case Builtin::MathPow:
+        return TRY(MathObject::pow_impl(interpreter.vm(), interpreter.get(arguments[0]), interpreter.get(arguments[1])));
     case Builtin::MathExp:
-        return TRY(MathObject::exp_impl(interpreter.vm(), interpreter.reg(first_argument)));
+        return TRY(MathObject::exp_impl(interpreter.vm(), interpreter.get(arguments[0])));
     case Builtin::MathCeil:
-        return TRY(MathObject::ceil_impl(interpreter.vm(), interpreter.reg(first_argument)));
+        return TRY(MathObject::ceil_impl(interpreter.vm(), interpreter.get(arguments[0])));
     case Builtin::MathFloor:
-        return TRY(MathObject::floor_impl(interpreter.vm(), interpreter.reg(first_argument)));
+        return TRY(MathObject::floor_impl(interpreter.vm(), interpreter.get(arguments[0])));
     case Builtin::MathRound:
-        return TRY(MathObject::round_impl(interpreter.vm(), interpreter.reg(first_argument)));
+        return TRY(MathObject::round_impl(interpreter.vm(), interpreter.get(arguments[0])));
     case Builtin::MathSqrt:
-        return TRY(MathObject::sqrt_impl(interpreter.vm(), interpreter.reg(first_argument)));
+        return TRY(MathObject::sqrt_impl(interpreter.vm(), interpreter.get(arguments[0])));
     case Bytecode::Builtin::__Count:
         VERIFY_NOT_REACHED();
     }
@@ -1236,11 +1249,15 @@ ThrowCompletionOr<void> Call::execute_impl(Bytecode::Interpreter& interpreter) c
     TRY(throw_if_needed_for_call(interpreter, callee, call_type(), expression_string()));
 
     if (m_builtin.has_value() && m_argument_count == Bytecode::builtin_argument_count(m_builtin.value()) && interpreter.realm().get_builtin_value(m_builtin.value()) == callee) {
-        interpreter.set(dst(), TRY(dispatch_builtin_call(interpreter, m_builtin.value(), m_first_argument)));
+        interpreter.set(dst(), TRY(dispatch_builtin_call(interpreter, m_builtin.value(), { m_arguments, m_argument_count })));
         return {};
     }
 
-    interpreter.set(dst(), TRY(perform_call(interpreter, interpreter.get(m_this_value), call_type(), callee, interpreter.registers().slice(m_first_argument.index(), m_argument_count))));
+    Vector<Value> argument_values;
+    argument_values.ensure_capacity(m_argument_count);
+    for (size_t i = 0; i < m_argument_count; ++i)
+        argument_values.unchecked_append(interpreter.get(m_arguments[i]));
+    interpreter.set(dst(), TRY(perform_call(interpreter, interpreter.get(m_this_value), call_type(), callee, argument_values)));
     return {};
 }
 
@@ -1893,30 +1910,25 @@ static StringView call_type_to_string(CallType type)
 ByteString Call::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
     auto type = call_type_to_string(m_type);
-    if (m_builtin.has_value()) {
-        return ByteString::formatted("Call{} {}, {}, {}, first_arg:{} (builtin {})",
-            type,
-            format_operand("dst"sv, m_dst, executable),
-            format_operand("callee"sv, m_callee, executable),
-            format_operand("this"sv, m_this_value, executable),
-            m_first_argument,
-            m_builtin.value());
-    }
-    if (m_expression_string.has_value()) {
-        return ByteString::formatted("Call{} {}, {}, {}, first_arg:{} ({})",
-            type,
-            format_operand("dst"sv, m_dst, executable),
-            format_operand("callee"sv, m_callee, executable),
-            format_operand("this"sv, m_this_value, executable),
-            m_first_argument,
-            executable.get_string(m_expression_string.value()));
-    }
-    return ByteString::formatted("Call{} {}, {}, {}, first_arg:{}",
+
+    StringBuilder builder;
+    builder.appendff("Call{} {}, {}, {}"sv,
         type,
         format_operand("dst"sv, m_dst, executable),
         format_operand("callee"sv, m_callee, executable),
-        format_operand("this"sv, m_this_value, executable),
-        m_first_argument);
+        format_operand("this"sv, m_this_value, executable));
+
+    builder.append(format_operand_list("args"sv, { m_arguments, m_argument_count }, executable));
+
+    if (m_builtin.has_value()) {
+        builder.appendff(", (builtin:{})", m_builtin.value());
+    }
+
+    if (m_expression_string.has_value()) {
+        builder.appendff(", `{}`", executable.get_string(m_expression_string.value()));
+    }
+
+    return builder.to_byte_string();
 }
 
 ByteString CallWithArgumentArray::to_byte_string_impl(Bytecode::Executable const& executable) const

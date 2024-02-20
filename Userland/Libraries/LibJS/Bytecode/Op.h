@@ -1152,17 +1152,23 @@ enum class CallType {
 
 class Call final : public Instruction {
 public:
-    Call(CallType type, Operand dst, Operand callee, Operand this_value, Register first_argument, u32 argument_count, Optional<StringTableIndex> expression_string = {}, Optional<Builtin> builtin = {})
-        : Instruction(Type::Call, sizeof(*this))
+    Call(CallType type, Operand dst, Operand callee, Operand this_value, ReadonlySpan<Operand> arguments, Optional<StringTableIndex> expression_string = {}, Optional<Builtin> builtin = {})
+        : Instruction(Type::Call, length_impl(arguments.size()))
         , m_dst(dst)
         , m_callee(callee)
         , m_this_value(this_value)
-        , m_first_argument(first_argument)
-        , m_argument_count(argument_count)
+        , m_argument_count(arguments.size())
         , m_type(type)
         , m_expression_string(expression_string)
         , m_builtin(builtin)
     {
+        for (size_t i = 0; i < arguments.size(); ++i)
+            m_arguments[i] = arguments[i];
+    }
+
+    size_t length_impl(size_t argument_count) const
+    {
+        return round_up_to_power_of_two(alignof(void*), sizeof(*this) + sizeof(Operand) * argument_count);
     }
 
     CallType call_type() const { return m_type; }
@@ -1171,7 +1177,6 @@ public:
     Operand this_value() const { return m_this_value; }
     Optional<StringTableIndex> const& expression_string() const { return m_expression_string; }
 
-    Register first_argument() const { return m_first_argument; }
     u32 argument_count() const { return m_argument_count; }
 
     Optional<Builtin> const& builtin() const { return m_builtin; }
@@ -1183,11 +1188,11 @@ private:
     Operand m_dst;
     Operand m_callee;
     Operand m_this_value;
-    Register m_first_argument;
     u32 m_argument_count { 0 };
     CallType m_type;
     Optional<StringTableIndex> m_expression_string;
     Optional<Builtin> m_builtin;
+    Operand m_arguments[];
 };
 
 class CallWithArgumentArray final : public Instruction {
