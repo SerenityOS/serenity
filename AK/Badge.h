@@ -15,15 +15,15 @@ class Badge {
 public:
     using Type = T;
 
+    Badge(Badge&&) = default;
+    Badge& operator=(Badge&&) = default;
+
 private:
     friend T;
     constexpr Badge() = default;
 
     Badge(Badge const&) = delete;
     Badge& operator=(Badge const&) = delete;
-
-    Badge(Badge&&) = delete;
-    Badge& operator=(Badge&&) = delete;
 };
 
 }
