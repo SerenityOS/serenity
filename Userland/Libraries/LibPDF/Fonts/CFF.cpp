@@ -279,8 +279,9 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
                 encoding->set(0, ".notdef");
                 continue;
             }
-            if (i >= encoding_codes.size() || i >= charset_names.size())
+            if (i - 1 >= encoding_codes.size() || i - 1 >= charset_names.size()) {
                 break;
+            }
             auto code = encoding_codes[i - 1];
             auto char_name = charset_names[i - 1];
             encoding->set(code, char_name);
