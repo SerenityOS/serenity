@@ -191,6 +191,7 @@ class TimePercentage;
 class TimeStyleValue;
 class Transformation;
 class TransformationStyleValue;
+class TransitionStyleValue;
 class URLStyleValue;
 class UnresolvedStyleValue;
 class UnsetStyleValue;

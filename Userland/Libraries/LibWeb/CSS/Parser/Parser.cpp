@@ -6,6 +6,7 @@
  * Copyright (c) 2022, MacDue <macdue@dueutil.tech>
  * Copyright (c) 2024, Shannon Booth <shannon@serenityos.org>
  * Copyright (c) 2024, Tommy van der Vorst <tommy@pixelspark.nl>
+ * Copyright (c) 2024, Matthew Olsson <mattco@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -73,6 +74,7 @@
 #include <LibWeb/CSS/StyleValues/StyleValueList.h>
 #include <LibWeb/CSS/StyleValues/TimeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/TransformationStyleValue.h>
+#include <LibWeb/CSS/StyleValues/TransitionStyleValue.h>
 #include <LibWeb/CSS/StyleValues/URLStyleValue.h>
 #include <LibWeb/CSS/StyleValues/UnresolvedStyleValue.h>
 #include <LibWeb/CSS/StyleValues/UnsetStyleValue.h>
@@ -5334,6 +5336,76 @@ RefPtr<StyleValue> Parser::parse_transform_origin_value(TokenStream<ComponentVal
     return nullptr;
 }
 
+RefPtr<StyleValue> Parser::parse_transition_value(TokenStream<ComponentValue>& tokens)
+{
+    if (contains_single_none_ident(tokens)) {
+        tokens.next_token(); // none
+        return IdentifierStyleValue::create(ValueID::None);
+    }
+
+    Vector<TransitionStyleValue::Transition> transitions;
+    auto transaction = tokens.begin_transaction();
+
+    while (tokens.has_next_token()) {
+        TransitionStyleValue::Transition transition;
+        auto time_value_count = 0;
+
+        while (tokens.has_next_token() && !tokens.peek_token().is(Token::Type::Comma)) {
+            if (auto time = parse_time(tokens); time.has_value()) {
+                switch (time_value_count) {
+                case 0:
+                    transition.duration = time.release_value().value();
+                    break;
+                case 1:
+                    transition.delay = time.release_value().value();
+                    break;
+                default:
+                    dbgln_if(CSS_PARSER_DEBUG, "Transition property has more than two time values");
+                    return {};
+                }
+                time_value_count++;
+                continue;
+            }
+
+            if (tokens.peek_token().is(Token::Type::Ident)) {
+                if (transition.property_name) {
+                    dbgln_if(CSS_PARSER_DEBUG, "Transition property has multiple property identifiers");
+                    return {};
+                }
+
+                auto ident = tokens.next_token().token().ident();
+                if (auto property = property_id_from_string(ident); property.has_value())
+                    transition.property_name = CustomIdentStyleValue::create(ident);
+            }
+
+            if (auto easing = parse_easing_value(tokens)) {
+                if (transition.easing) {
+                    dbgln_if(CSS_PARSER_DEBUG, "Transition property has multiple easing values");
+                    return {};
+                }
+
+                transition.easing = easing->as_easing();
+            }
+        }
+
+        if (!transition.property_name)
+            transition.property_name = CustomIdentStyleValue::create("all"_fly_string);
+
+        if (!transition.easing)
+            transition.easing = EasingStyleValue::create(EasingFunction::Ease, {});
+
+        transitions.append(move(transition));
+
+        if (!tokens.peek_token().is(Token::Type::Comma))
+            break;
+
+        tokens.next_token();
+    }
+
+    transaction.commit();
+    return TransitionStyleValue::create(move(transitions));
+}
+
 RefPtr<StyleValue> Parser::parse_as_css_value(PropertyID property_id)
 {
     auto component_values = parse_a_list_of_component_values(m_token_stream);
@@ -6262,7 +6334,11 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
     case PropertyID::TransformOrigin:
         if (auto parsed_value = parse_transform_origin_value(tokens); parsed_value && !tokens.has_next_token())
             return parsed_value.release_nonnull();
-        return ParseError ::SyntaxError;
+        return ParseError::SyntaxError;
+    case PropertyID::Transition:
+        if (auto parsed_value = parse_transition_value(tokens); parsed_value && !tokens.has_next_token())
+            return parsed_value.release_nonnull();
+        return ParseError::SyntaxError;
     default:
         break;
     }
