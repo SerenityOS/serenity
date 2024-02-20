@@ -19,7 +19,7 @@ class CSSAnimation : public Animations::Animation {
 public:
     static JS::NonnullGCPtr<CSSAnimation> create(JS::Realm&);
 
-    JS::GCPtr<DOM::Element> owning_element() const { return m_owning_element; }
+    JS::GCPtr<DOM::Element> owning_element() const override { return m_owning_element; }
     void set_owning_element(JS::GCPtr<DOM::Element> value) { m_owning_element = value; }
 
     FlyString const& animation_name() const { return id(); }

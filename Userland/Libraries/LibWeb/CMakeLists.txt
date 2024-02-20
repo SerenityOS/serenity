@@ -51,6 +51,7 @@ set(SOURCES
     CSS/CSSStyleRule.cpp
     CSS/CSSStyleSheet.cpp
     CSS/CSSSupportsRule.cpp
+    CSS/CSSTransition.cpp
     CSS/Display.cpp
     CSS/EdgeRect.cpp
     CSS/Flex.cpp
