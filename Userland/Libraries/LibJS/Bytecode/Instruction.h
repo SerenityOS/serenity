@@ -91,6 +91,8 @@
     O(NewString)                       \
     O(NewTypeError)                    \
     O(Not)                             \
+    O(PostfixDecrement)                \
+    O(PostfixIncrement)                \
     O(PutById)                         \
     O(PutByIdWithThis)                 \
     O(PutByValue)                      \
@@ -111,7 +113,6 @@
     O(ThrowIfNotObject)                \
     O(ThrowIfNullish)                  \
     O(ThrowIfTDZ)                      \
-    O(ToNumeric)                       \
     O(Typeof)                          \
     O(TypeofVariable)                  \
     O(UnaryMinus)                      \

@@ -1347,6 +1347,26 @@ private:
     Operand m_dst;
 };
 
+class PostfixIncrement final : public Instruction {
+public:
+    explicit PostfixIncrement(Operand dst, Operand src)
+        : Instruction(Type::PostfixIncrement, sizeof(*this))
+        , m_dst(dst)
+        , m_src(src)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
+
+    Operand dst() const { return m_dst; }
+    Operand src() const { return m_src; }
+
+private:
+    Operand m_dst;
+    Operand m_src;
+};
+
 class Decrement final : public Instruction {
 public:
     explicit Decrement(Operand dst)
@@ -1364,10 +1384,10 @@ private:
     Operand m_dst;
 };
 
-class ToNumeric final : public Instruction {
+class PostfixDecrement final : public Instruction {
 public:
-    explicit ToNumeric(Operand dst, Operand src)
-        : Instruction(Type::ToNumeric, sizeof(*this))
+    explicit PostfixDecrement(Operand dst, Operand src)
+        : Instruction(Type::PostfixDecrement, sizeof(*this))
         , m_dst(dst)
         , m_src(src)
     {
