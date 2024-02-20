@@ -28,11 +28,14 @@ public:
     void click(double x, double y);
     void wheel(double x, double y, double delta_x, double delta_y);
 
-    WebIDL::ExceptionOr<bool> dispatch_user_activated_event(DOM::EventTarget&, DOM::Event& event);
+    bool bypass_next_transient_activation_test() const { return m_bypass_next_transient_activation_test; }
+    void set_bypass_next_transient_activation_test(bool bypass_next_transient_activation_test) { m_bypass_next_transient_activation_test = bypass_next_transient_activation_test; }
 
 private:
     explicit Internals(JS::Realm&);
     virtual void initialize(JS::Realm&) override;
+
+    bool m_bypass_next_transient_activation_test { false };
 };
 
 }

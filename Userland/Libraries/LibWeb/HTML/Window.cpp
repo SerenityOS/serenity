@@ -134,6 +134,7 @@ void Window::visit_edges(JS::Cell::Visitor& visitor)
         visitor.visit(mime_type_object);
     visitor.visit(m_count_queuing_strategy_size_function);
     visitor.visit(m_byte_length_queuing_strategy_size_function);
+    visitor.visit(m_internals);
 }
 
 void Window::finalize()
@@ -605,6 +606,14 @@ bool Window::has_transient_activation() const
     // perceive the link between an interaction with the page and the page calling the activation-gated API.
     auto transient_activation_duration = 5;
 
+    // AD-HOC: Due to resource limitations on CI, we cannot rely on the time between the activation timestamp and the
+    //         transient activation timeout being predictable. So we allow tests to indicate when they want the next
+    //         check for a user gesture to succeed.
+    if (m_internals && m_internals->bypass_next_transient_activation_test()) {
+        m_internals->set_bypass_next_transient_activation_test(false);
+        return true;
+    }
+
     // When the current high resolution time given W
     auto unsafe_shared_time = HighResolutionTime::unsafe_shared_current_time();
     auto current_time = HighResolutionTime::relative_high_resolution_time(unsafe_shared_time, realm().global_object());
@@ -813,8 +822,11 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
 
     if (s_inspector_object_exposed)
         define_direct_property("inspector", heap().allocate<Internals::Inspector>(realm, realm), JS::default_attributes);
-    if (s_internals_object_exposed)
-        define_direct_property("internals", heap().allocate<Internals::Internals>(realm, realm), JS::default_attributes);
+
+    if (s_internals_object_exposed) {
+        m_internals = heap().allocate<Internals::Internals>(realm, realm);
+        define_direct_property("internals", m_internals, JS::default_attributes);
+    }
 
     return {};
 }
