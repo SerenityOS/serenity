@@ -283,14 +283,16 @@ CSSPixelSize FormattingContext::solve_replaced_size_constraint(CSSPixels input_w
     if (input_width > max_width && input_height < min_height)
         return { max_width, min_height };
 
-    if (input_width > max_width && input_height > max_height && max_width / input_width <= max_height / input_height)
-        return { max_width, max(min_height, max_width / aspect_ratio) };
-    if (input_width > max_width && input_height > max_height && max_width / input_width > max_height / input_height)
-        return { max(min_width, max_height * aspect_ratio), max_height };
-    if (input_width < min_width && input_height < min_height && min_width / input_width <= min_height / input_height)
-        return { min(max_width, min_height * aspect_ratio), min_height };
-    if (input_width < min_width && input_height < min_height && min_width / input_width > min_height / input_height)
-        return { min_width, min(max_height, min_width / aspect_ratio) };
+    if (input_width > 0) {
+        if (input_width > max_width && input_height > max_height && max_width / input_width <= max_height / input_height)
+            return { max_width, max(min_height, max_width / aspect_ratio) };
+        if (input_width > max_width && input_height > max_height && max_width / input_width > max_height / input_height)
+            return { max(min_width, max_height * aspect_ratio), max_height };
+        if (input_width < min_width && input_height < min_height && min_width / input_width <= min_height / input_height)
+            return { min(max_width, min_height * aspect_ratio), min_height };
+        if (input_width < min_width && input_height < min_height && min_width / input_width > min_height / input_height)
+            return { min_width, min(max_height, min_width / aspect_ratio) };
+    }
 
     if (input_width > max_width)
         return { max_width, max(max_width / aspect_ratio, min_height) };
