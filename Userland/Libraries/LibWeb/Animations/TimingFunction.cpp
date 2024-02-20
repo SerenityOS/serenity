@@ -7,6 +7,9 @@
 
 #include <AK/BinarySearch.h>
 #include <LibWeb/Animations/TimingFunction.h>
+#include <LibWeb/CSS/StyleValues/EasingStyleValue.h>
+#include <LibWeb/CSS/StyleValues/IntegerStyleValue.h>
+#include <LibWeb/CSS/StyleValues/NumberStyleValue.h>
 #include <math.h>
 
 namespace Web::Animations {
@@ -162,6 +165,80 @@ double StepsTimingFunction::operator()(double input_progress, bool before_flag) 
 
     // 7. The output progress value is current step / jumps.
     return current_step / jumps;
+}
+
+TimingFunction TimingFunction::from_easing_style_value(CSS::EasingStyleValue const& easing_value)
+{
+    switch (easing_value.easing_function()) {
+    case CSS::EasingFunction::Linear:
+        return Animations::linear_timing_function;
+    case CSS::EasingFunction::Ease:
+        return Animations::ease_timing_function;
+    case CSS::EasingFunction::EaseIn:
+        return Animations::ease_in_timing_function;
+    case CSS::EasingFunction::EaseOut:
+        return Animations::ease_out_timing_function;
+    case CSS::EasingFunction::EaseInOut:
+        return Animations::ease_in_out_timing_function;
+    case CSS::EasingFunction::CubicBezier: {
+        auto values = easing_value.values();
+        return {
+            Animations::CubicBezierTimingFunction {
+                values[0]->as_number().number(),
+                values[1]->as_number().number(),
+                values[2]->as_number().number(),
+                values[3]->as_number().number(),
+            },
+        };
+    }
+    case CSS::EasingFunction::Steps: {
+        auto values = easing_value.values();
+        auto jump_at_start = false;
+        auto jump_at_end = true;
+
+        if (values.size() > 1) {
+            auto identifier = values[1]->to_identifier();
+            switch (identifier) {
+            case CSS::ValueID::JumpStart:
+            case CSS::ValueID::Start:
+                jump_at_start = true;
+                jump_at_end = false;
+                break;
+            case CSS::ValueID::JumpEnd:
+            case CSS::ValueID::End:
+                jump_at_start = false;
+                jump_at_end = true;
+                break;
+            case CSS::ValueID::JumpNone:
+                jump_at_start = false;
+                jump_at_end = false;
+                break;
+            default:
+                break;
+            }
+        }
+
+        return Animations::TimingFunction { Animations::StepsTimingFunction {
+            .number_of_steps = static_cast<size_t>(max(values[0]->as_integer().integer(), !(jump_at_end && jump_at_start) ? 1 : 0)),
+            .jump_at_start = jump_at_start,
+            .jump_at_end = jump_at_end,
+        } };
+    }
+    case CSS::EasingFunction::StepEnd:
+        return Animations::TimingFunction { Animations::StepsTimingFunction {
+            .number_of_steps = 1,
+            .jump_at_start = false,
+            .jump_at_end = true,
+        } };
+    case CSS::EasingFunction::StepStart:
+        return Animations::TimingFunction { Animations::StepsTimingFunction {
+            .number_of_steps = 1,
+            .jump_at_start = true,
+            .jump_at_end = false,
+        } };
+    default:
+        return Animations::ease_timing_function;
+    }
 }
 
 double TimingFunction::operator()(double input_progress, bool before_flag) const

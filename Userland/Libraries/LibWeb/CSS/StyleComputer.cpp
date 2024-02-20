@@ -1060,89 +1060,10 @@ ErrorOr<void> StyleComputer::compute_cascaded_values(StyleProperties& style, DOM
             }
 
             Animations::TimingFunction timing_function = Animations::ease_timing_function;
-            if (auto timing_property = style.maybe_null_property(PropertyID::AnimationTimingFunction); timing_property && timing_property->is_easing()) {
-                auto& easing_value = timing_property->as_easing();
-                switch (easing_value.easing_function()) {
-                case EasingFunction::Linear:
-                    timing_function = Animations::linear_timing_function;
-                    break;
-                case EasingFunction::Ease:
-                    timing_function = Animations::ease_timing_function;
-                    break;
-                case EasingFunction::EaseIn:
-                    timing_function = Animations::ease_in_timing_function;
-                    break;
-                case EasingFunction::EaseOut:
-                    timing_function = Animations::ease_out_timing_function;
-                    break;
-                case EasingFunction::EaseInOut:
-                    timing_function = Animations::ease_in_out_timing_function;
-                    break;
-                case EasingFunction::CubicBezier: {
-                    auto values = easing_value.values();
-                    timing_function = {
-                        Animations::CubicBezierTimingFunction {
-                            values[0]->as_number().number(),
-                            values[1]->as_number().number(),
-                            values[2]->as_number().number(),
-                            values[3]->as_number().number(),
-                        },
-                    };
-                    break;
-                }
-                case EasingFunction::Steps: {
-                    auto values = easing_value.values();
-                    auto jump_at_start = false;
-                    auto jump_at_end = true;
-
-                    if (values.size() > 1) {
-                        auto identifier = values[1]->to_identifier();
-                        switch (identifier) {
-                        case ValueID::JumpStart:
-                        case ValueID::Start:
-                            jump_at_start = true;
-                            jump_at_end = false;
-                            break;
-                        case ValueID::JumpEnd:
-                        case ValueID::End:
-                            jump_at_start = false;
-                            jump_at_end = true;
-                            break;
-                        case ValueID::JumpNone:
-                            jump_at_start = false;
-                            jump_at_end = false;
-                            break;
-                        default:
-                            break;
-                        }
-                    }
-
-                    timing_function = Animations::TimingFunction { Animations::StepsTimingFunction {
-                        .number_of_steps = static_cast<size_t>(max(values[0]->as_integer().integer(), !(jump_at_end && jump_at_start) ? 1 : 0)),
-                        .jump_at_start = jump_at_start,
-                        .jump_at_end = jump_at_end,
-                    } };
-                    break;
-                }
-                case EasingFunction::StepEnd:
-                    timing_function = Animations::TimingFunction { Animations::StepsTimingFunction {
-                        .number_of_steps = 1,
-                        .jump_at_start = false,
-                        .jump_at_end = true,
-                    } };
-                    break;
-                case EasingFunction::StepStart:
-                    timing_function = Animations::TimingFunction { Animations::StepsTimingFunction {
-                        .number_of_steps = 1,
-                        .jump_at_start = true,
-                        .jump_at_end = false,
-                    } };
-                    break;
-                }
-            }
+            if (auto timing_property = style.maybe_null_property(PropertyID::AnimationTimingFunction); timing_property && timing_property->is_easing())
+                timing_function = Animations::TimingFunction::from_easing_style_value(timing_property->as_easing());
 
             auto& realm = element.realm();
-
             auto effect = Animations::KeyframeEffect::create(realm);
             auto iteration_duration = duration.has_value()
                 ? Variant<double, String> { duration.release_value().to_milliseconds() }
