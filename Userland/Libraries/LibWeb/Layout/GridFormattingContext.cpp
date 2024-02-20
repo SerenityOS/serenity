@@ -1197,16 +1197,19 @@ void GridFormattingContext::maximize_tracks(GridDimension const dimension)
             return should_treat_max_width_as_none(grid_container(), available_size);
         return !computed_values.max_height().is_auto();
     }();
-    auto maximum_size = calculate_grid_container_maximum_size(dimension);
-    if (!should_treat_grid_container_maximum_size_as_none && grid_container_inner_size > maximum_size) {
-        for (size_t i = 0; i < tracks.size(); i++)
-            tracks[i].base_size = saved_base_sizes[i];
-        auto available_space_with_max_width = *m_available_space;
-        if (dimension == GridDimension::Column)
-            available_space_with_max_width.width = AvailableSize::make_definite(maximum_size);
-        else
-            available_space_with_max_width.height = AvailableSize::make_definite(maximum_size);
-        maximize_tracks_using_available_size(available_space_with_max_width, dimension);
+
+    if (!should_treat_grid_container_maximum_size_as_none) {
+        auto maximum_size = calculate_grid_container_maximum_size(dimension);
+        if (grid_container_inner_size > maximum_size) {
+            for (size_t i = 0; i < tracks.size(); i++)
+                tracks[i].base_size = saved_base_sizes[i];
+            auto available_space_with_max_width = *m_available_space;
+            if (dimension == GridDimension::Column)
+                available_space_with_max_width.width = AvailableSize::make_definite(maximum_size);
+            else
+                available_space_with_max_width.height = AvailableSize::make_definite(maximum_size);
+            maximize_tracks_using_available_size(available_space_with_max_width, dimension);
+        }
     }
 }
 
