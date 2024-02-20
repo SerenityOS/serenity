@@ -130,6 +130,22 @@ private:
     u64 m_bits = 0;
 };
 
+// Time is in UTC.
+// Per spec, month is 1-12, day is 1-31, hours is 0-23, minutes 0-59, seconds 0-59 (i.e. no leap seconds).
+// But in practice, some profiles have invalid dates, like 0-0-0 0:0:0.
+// For valid profiles, the conversion to time_t will succeed.
+struct DateTime {
+    u16 year = 1970;
+    u16 month = 1; // One-based.
+    u16 day = 1;   // One-based.
+    u16 hours = 0;
+    u16 minutes = 0;
+    u16 seconds = 0;
+
+    ErrorOr<time_t> to_time_t() const;
+    static ErrorOr<DateTime> from_time_t(time_t);
+};
+
 struct ProfileHeader {
     u32 on_disk_size { 0 };
     Optional<PreferredCMMType> preferred_cmm_type;
@@ -137,7 +153,7 @@ struct ProfileHeader {
     DeviceClass device_class {};
     ColorSpace data_color_space {};
     ColorSpace connection_space {};
-    time_t creation_timestamp { 0 };
+    DateTime creation_timestamp;
     Optional<PrimaryPlatform> primary_platform {};
     Flags flags;
     Optional<DeviceManufacturer> device_manufacturer;
@@ -219,7 +235,7 @@ public:
     ColorSpace connection_space() const { return m_header.connection_space; }
 
     u32 on_disk_size() const { return m_header.on_disk_size; }
-    time_t creation_timestamp() const { return m_header.creation_timestamp; }
+    DateTime creation_timestamp() const { return m_header.creation_timestamp; }
     Optional<PrimaryPlatform> primary_platform() const { return m_header.primary_platform; }
     Flags flags() const { return m_header.flags; }
     Optional<DeviceManufacturer> device_manufacturer() const { return m_header.device_manufacturer; }

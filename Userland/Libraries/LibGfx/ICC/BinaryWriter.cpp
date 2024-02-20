@@ -673,16 +673,13 @@ static ErrorOr<void> encode_header(ByteBuffer& bytes, Profile const& profile)
     raw_header.data_color_space = profile.data_color_space();
     raw_header.profile_connection_space = profile.connection_space();
 
-    time_t profile_timestamp = profile.creation_timestamp();
-    struct tm tm;
-    if (!gmtime_r(&profile_timestamp, &tm))
-        return Error::from_errno(errno);
-    raw_header.profile_creation_time.year = tm.tm_year + 1900;
-    raw_header.profile_creation_time.month = tm.tm_mon + 1;
-    raw_header.profile_creation_time.day = tm.tm_mday;
-    raw_header.profile_creation_time.hours = tm.tm_hour;
-    raw_header.profile_creation_time.minutes = tm.tm_min;
-    raw_header.profile_creation_time.seconds = tm.tm_sec;
+    DateTime profile_timestamp = profile.creation_timestamp();
+    raw_header.profile_creation_time.year = profile_timestamp.year;
+    raw_header.profile_creation_time.month = profile_timestamp.month;
+    raw_header.profile_creation_time.day = profile_timestamp.day;
+    raw_header.profile_creation_time.hours = profile_timestamp.hours;
+    raw_header.profile_creation_time.minutes = profile_timestamp.minutes;
+    raw_header.profile_creation_time.seconds = profile_timestamp.seconds;
 
     raw_header.profile_file_signature = ProfileFileSignature;
     raw_header.primary_platform = profile.primary_platform().value_or(PrimaryPlatform { 0 });
