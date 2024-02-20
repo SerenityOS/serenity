@@ -52,14 +52,14 @@ public:
     HostDefined* host_defined() { return m_host_defined; }
     void set_host_defined(OwnPtr<HostDefined> host_defined) { m_host_defined = move(host_defined); }
 
-    void define_builtin(Bytecode::Builtin builtin, Value value)
+    void define_builtin(Bytecode::Builtin builtin, NonnullGCPtr<NativeFunction> value)
     {
         m_builtins[to_underlying(builtin)] = value;
     }
 
-    Value get_builtin_value(Bytecode::Builtin builtin)
+    NonnullGCPtr<NativeFunction> get_builtin_value(Bytecode::Builtin builtin)
     {
-        return m_builtins[to_underlying(builtin)];
+        return *m_builtins[to_underlying(builtin)];
     }
 
     static FlatPtr global_environment_offset() { return OFFSET_OF(Realm, m_global_environment); }
@@ -74,7 +74,7 @@ private:
     GCPtr<Object> m_global_object;                 // [[GlobalObject]]
     GCPtr<GlobalEnvironment> m_global_environment; // [[GlobalEnv]]
     OwnPtr<HostDefined> m_host_defined;            // [[HostDefined]]
-    AK::Array<Value, to_underlying(Bytecode::Builtin::__Count)> m_builtins;
+    AK::Array<GCPtr<NativeFunction>, to_underlying(Bytecode::Builtin::__Count)> m_builtins;
 };
 
 }
