@@ -251,8 +251,7 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
                 auto cid = 0;
                 TRY(cff->add_glyph(ByteString::formatted("{}", cid), move(glyphs[0])));
             } else {
-                // FIXME: Shouldn't this use resolve_sid(0, strings) (".notdef") as name?
-                TRY(cff->add_glyph(0, move(glyphs[0])));
+                TRY(cff->add_glyph(".notdef", move(glyphs[0])));
             }
             continue;
         }
