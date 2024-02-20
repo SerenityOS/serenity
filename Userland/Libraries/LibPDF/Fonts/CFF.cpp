@@ -280,6 +280,7 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
                 continue;
             }
             if (i - 1 >= encoding_codes.size() || i - 1 >= charset_names.size()) {
+                dbgln("CFF: No encoding for glyph {} onwards, encoding_codes size {} charset_names size {}", i, encoding_codes.size(), charset_names.size());
                 break;
             }
             auto code = encoding_codes[i - 1];
