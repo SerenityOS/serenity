@@ -127,8 +127,10 @@ void Type1FontProgram::consolidate_glyphs()
         auto glyph_path = maybe_base_glyph.value().path();
         auto maybe_accent_glyph = m_glyph_map.get(glyph.accented_character().accent_character);
         if (maybe_accent_glyph.has_value()) {
+            auto origin = glyph.accented_character().accent_origin;
             auto path = maybe_accent_glyph.value().path();
-            glyph_path.append_path(move(path));
+            Gfx::AffineTransform translation { 1, 0, 0, 1, origin.x(), origin.y() };
+            glyph_path.append_path(path.copy_transformed(translation));
         }
         glyph.path() = glyph_path;
     }
