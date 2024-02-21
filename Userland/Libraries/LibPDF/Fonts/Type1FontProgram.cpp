@@ -663,6 +663,7 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
                     }
                     path.close();
                 }
+                state.sp = 0;
                 break;
             }
 
