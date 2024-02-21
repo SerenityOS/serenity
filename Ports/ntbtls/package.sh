@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='ntbtls'
-version='0.3.1'
+version='0.3.2'
 useconfigure='true'
 use_fresh_config_sub='true'
 config_sub_paths=(
@@ -13,7 +13,7 @@ depends=(
     'zlib'
 )
 files=(
-    "https://gnupg.org/ftp/gcrypt/ntbtls/ntbtls-${version}.tar.bz2#8922181fef523b77b71625e562e4d69532278eabbd18bc74579dbe14135729ba"
+    "https://gnupg.org/ftp/gcrypt/ntbtls/ntbtls-${version}.tar.bz2#bdfcb99024acec9c6c4b998ad63bb3921df4cfee4a772ad6c0ca324dbbf2b07c"
 )
 
 pre_configure() {
