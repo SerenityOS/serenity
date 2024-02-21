@@ -904,6 +904,7 @@ static inline ErrorOr<Marker> read_marker_at_cursor(JPEGStream& stream)
     if (is_supported_marker(marker))
         return marker;
 
+    dbgln_if(JPEG_DEBUG, "Unsupported marker: {:#04x} around offset {:#x}", marker, stream.byte_offset());
     return Error::from_string_literal("Reached an unsupported marker");
 }
 
