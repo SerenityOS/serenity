@@ -1110,6 +1110,12 @@ CSSPixelPoint FormattingContext::calculate_static_position(Box const& box) const
 void FormattingContext::layout_absolutely_positioned_element(Box const& box, AvailableSpace const& available_space)
 {
     auto& containing_block_state = m_state.get_mutable(*box.containing_block());
+
+    // The size of the containing block of an abspos box is always definite from the perspective of the abspos box.
+    // Since abspos boxes are laid out last, we can mark the containing block as having definite sizes at this point.
+    containing_block_state.set_has_definite_width(true);
+    containing_block_state.set_has_definite_height(true);
+
     auto& box_state = m_state.get_mutable(box);
 
     // The border computed values are not changed by the compute_height & width calculations below.
@@ -1125,6 +1131,15 @@ void FormattingContext::layout_absolutely_positioned_element(Box const& box, Ava
     //       This is done so that inside layout can resolve percentage heights.
     //       In some situations, e.g with non-auto top & bottom values, the height can be determined early.
     compute_height_for_absolutely_positioned_element(box, available_space, BeforeOrAfterInsideLayout::Before);
+
+    // If the box width and/or height is fixed and/or or resolved from inset properties,
+    // mark the size as being definite (since layout was not required to resolve it, per CSS-SIZING-3).
+    if (box.computed_values().inset().left().is_length() && box.computed_values().inset().right().is_length()) {
+        box_state.set_has_definite_width(true);
+    }
+    if (box.computed_values().inset().top().is_length() && box.computed_values().inset().bottom().is_length()) {
+        box_state.set_has_definite_height(true);
+    }
 
     auto independent_formatting_context = layout_inside(box, LayoutMode::Normal, box_state.available_inner_space_or_constraints_from(available_space));
 
