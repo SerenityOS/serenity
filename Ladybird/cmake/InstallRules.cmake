@@ -4,7 +4,7 @@ include(GNUInstallDirs)
 
 set(package ladybird)
 
-set(ladybird_applications ladybird SQLServer WebContent WebDriver WebSocketServer RequestServer ImageDecoder WebWorker headless-browser)
+set(ladybird_applications ladybird ${ladybird_helper_processes})
 
 set(app_install_targets ${ladybird_applications})
 

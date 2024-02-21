@@ -182,6 +182,13 @@ target_include_directories(ladybird PRIVATE ${SERENITY_SOURCE_DIR}/Userland/)
 target_include_directories(ladybird PRIVATE ${SERENITY_SOURCE_DIR}/Userland/Applications/)
 target_include_directories(ladybird PRIVATE ${SERENITY_SOURCE_DIR}/Userland/Services/)
 
+function(set_ladybird_helper_output_directory target_name)
+    if (APPLE)
+        # Store helper processes in the same bundle directory as the main application
+        set_target_properties(${target_name} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "$<TARGET_FILE_DIR:ladybird>")
+    endif()
+endfunction()
+
 add_executable(headless-browser
     ${SERENITY_SOURCE_DIR}/Userland/Utilities/headless-browser.cpp
     ${SERENITY_SOURCE_DIR}/Userland/Services/WebContent/WebDriverConnection.cpp
@@ -213,7 +220,9 @@ add_subdirectory(WebContent)
 add_subdirectory(WebDriver)
 add_subdirectory(WebSocket)
 add_subdirectory(WebWorker)
-add_dependencies(ladybird ImageDecoder RequestServer SQLServer WebContent WebDriver WebSocketServer WebWorker headless-browser)
+
+set(ladybird_helper_processes ImageDecoder RequestServer SQLServer WebContent WebDriver WebSocketServer WebWorker headless-browser)
+add_dependencies(ladybird ${ladybird_helper_processes})
 
 function(create_ladybird_bundle target_name)
     set_target_properties(${target_name} PROPERTIES
@@ -228,18 +237,8 @@ function(create_ladybird_bundle target_name)
     )
 
     if (APPLE)
-        # FIXME: Create a proper app bundle for each helper process
-        set(app_dir "$<TARGET_FILE_DIR:${target_name}>")
         set(bundle_dir "$<TARGET_BUNDLE_DIR:${target_name}>")
         add_custom_command(TARGET ${target_name} POST_BUILD
-            COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:ImageDecoder>" "${app_dir}"
-            COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:RequestServer>" "${app_dir}"
-            COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:SQLServer>" "${app_dir}"
-            COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:WebContent>" "${app_dir}"
-            COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:WebDriver>" "${app_dir}"
-            COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:WebSocketServer>" "${app_dir}"
-            COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:WebWorker>" "${app_dir}"
-            COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:headless-browser>" "${app_dir}"
             COMMAND "mkdir" -p "${bundle_dir}/Contents/Resources"
             COMMAND "iconutil" --convert icns "${SERENITY_SOURCE_DIR}/Ladybird/Icons/macos/app_icon.iconset" --output "${bundle_dir}/Contents/Resources/app_icon.icns"
             COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${Lagom_BINARY_DIR}/cacert.pem" "${bundle_dir}/Contents"
@@ -248,6 +247,9 @@ function(create_ladybird_bundle target_name)
 endfunction()
 
 create_ladybird_bundle(ladybird)
+foreach(helper_process IN LISTS ladybird_helper_processes)
+    set_ladybird_helper_output_directory(${helper_process})
+endforeach()
 
 if(NOT CMAKE_SKIP_INSTALL_RULES)
     include(cmake/InstallRules.cmake)
@@ -269,9 +271,4 @@ if (BUILD_TESTING)
         ENVIRONMENT QT_QPA_PLATFORM=offscreen
         ENVIRONMENT "SERENITY_SOURCE_DIR=${SERENITY_SOURCE_DIR}"
     )
-    if (APPLE)
-        set_tests_properties(LibWeb WPT PROPERTIES
-            ENVIRONMENT "WEBDRIVER_BINARY=$<TARGET_FILE_DIR:ladybird>/$<TARGET_FILE_NAME:WebDriver>"
-        )
-    endif()
 endif()
