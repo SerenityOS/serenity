@@ -544,7 +544,7 @@ Optional<StyleProperty> ResolvedCSSStyleDeclaration::property(PropertyID propert
         // FIXME: This is a stopgap until we implement shorthand -> longhand conversion.
         auto value = style->maybe_null_property(property_id);
         if (!value) {
-            dbgln("FIXME: ResolvedCSSStyleDeclaration::property(property_id=0x{:x}) No value for property ID in newly computed style case.", to_underlying(property_id));
+            dbgln("FIXME: ResolvedCSSStyleDeclaration::property(property_id={:#x}) No value for property ID in newly computed style case.", to_underlying(property_id));
             return {};
         }
         return StyleProperty {

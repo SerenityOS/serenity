@@ -42,7 +42,7 @@ ErrorOr<void> FullBox::read_from_stream(BoxStream& stream)
 
 void FullBox::dump(String const& prepend) const
 {
-    outln("{}{} (version = {}, flags = 0x{:x})", prepend, box_type(), version, flags);
+    outln("{}{} (version = {}, flags = {:#x})", prepend, box_type(), version, flags);
 }
 
 static String add_indent(String const& string)

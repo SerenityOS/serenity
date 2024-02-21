@@ -17,19 +17,19 @@ bool validate_flattened_device_tree(FlattenedDeviceTreeHeader const& header, Rea
 {
     if (header.magic != 0xD00DFEEDU) {
         if (verbose == Verbose::Yes)
-            warnln("FDT Header has invalid magic value 0x{:08x}. Are you sure it's a flattened device tree?", header.magic);
+            warnln("FDT Header has invalid magic value {:#08x}. Are you sure it's a flattened device tree?", header.magic);
         return false;
     }
 
     if ((header.off_mem_rsvmap & ~0x7) != header.off_mem_rsvmap) {
         if (verbose == Verbose::Yes)
-            warnln("FDT Header's MemoryReservationBlock is not 8 byte aligned! Offset: 0x{:08x}", header.off_mem_rsvmap);
+            warnln("FDT Header's MemoryReservationBlock is not 8 byte aligned! Offset: {:#08x}", header.off_mem_rsvmap);
         return false;
     }
 
     if ((header.off_dt_struct & ~0x3) != header.off_dt_struct) {
         if (verbose == Verbose::Yes)
-            warnln("FDT Header's StructureBlock is not 4 byte aligned! Offset: 0x{:08x}", header.off_dt_struct);
+            warnln("FDT Header's StructureBlock is not 4 byte aligned! Offset: {:#08x}", header.off_dt_struct);
         return false;
     }
 
@@ -116,16 +116,16 @@ bool validate_flattened_device_tree(FlattenedDeviceTreeHeader const& header, Rea
 ErrorOr<void> dump(FlattenedDeviceTreeHeader const& header, ReadonlyBytes raw_device_tree)
 {
     outln("/dts-v1/;");
-    outln("// magic:               0x{:08x}", header.magic);
-    outln("// totalsize:           0x{:08x} ({})", header.totalsize, header.totalsize);
-    outln("// off_dt_struct:       0x{:08x}", header.off_dt_struct);
-    outln("// off_dt_strings:      0x{:08x}", header.off_dt_strings);
-    outln("// off_mem_rsvmap:      0x{:08x}", header.off_mem_rsvmap);
-    outln("// version:             0x{:08x}", header.version);
-    outln("// last_comp_version:   0x{:08x}", header.last_comp_version);
-    outln("// boot_cpuid_phys:     0x{:08x}", header.boot_cpuid_phys);
-    outln("// size_dt_strings:     0x{:08x}", header.size_dt_strings);
-    outln("// size_dt_struct:      0x{:08x}", header.size_dt_struct);
+    outln("// magic:               {:#08x}", header.magic);
+    outln("// totalsize:           {:#08x} ({})", header.totalsize, header.totalsize);
+    outln("// off_dt_struct:       {:#08x}", header.off_dt_struct);
+    outln("// off_dt_strings:      {:#08x}", header.off_dt_strings);
+    outln("// off_mem_rsvmap:      {:#08x}", header.off_mem_rsvmap);
+    outln("// version:             {:#08x}", header.version);
+    outln("// last_comp_version:   {:#08x}", header.last_comp_version);
+    outln("// boot_cpuid_phys:     {:#08x}", header.boot_cpuid_phys);
+    outln("// size_dt_strings:     {:#08x}", header.size_dt_strings);
+    outln("// size_dt_struct:      {:#08x}", header.size_dt_struct);
 
     if (!validate_flattened_device_tree(header, raw_device_tree, Verbose::Yes))
         return Error::from_errno(EINVAL);
@@ -134,7 +134,7 @@ ErrorOr<void> dump(FlattenedDeviceTreeHeader const& header, ReadonlyBytes raw_de
     auto const* mem_reserve_block = reinterpret_cast<FlattenedDeviceTreeReserveEntry const*>(&raw_device_tree[header.off_mem_rsvmap]);
     u64 next_block_offset = header.off_mem_rsvmap + sizeof(FlattenedDeviceTreeReserveEntry);
     while ((next_block_offset < header.off_dt_struct) && (*mem_reserve_block != FlattenedDeviceTreeReserveEntry {})) {
-        outln("/memreserve/ 0x{:08x} 0x{:08x};", mem_reserve_block->address, mem_reserve_block->size);
+        outln("/memreserve/ {:#08x} {:#08x};", mem_reserve_block->address, mem_reserve_block->size);
         ++mem_reserve_block;
         next_block_offset += sizeof(FlattenedDeviceTreeReserveEntry);
     }

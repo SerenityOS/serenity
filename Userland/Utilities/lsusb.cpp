@@ -96,11 +96,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 if (usb_db) {
                     StringView vendor_string = usb_db->get_vendor(vendor_id);
                     StringView device_string = usb_db->get_device(vendor_id, product_id);
-                    outln("  idVendor           0x{:04x} {}", device_descriptor.get_u32("vendor_id"sv).value_or(0), vendor_string);
-                    outln("  idProduct          0x{:04x} {}", device_descriptor.get_u32("product_id"sv).value_or(0), device_string);
+                    outln("  idVendor           {:#04x} {}", device_descriptor.get_u32("vendor_id"sv).value_or(0), vendor_string);
+                    outln("  idProduct          {:#04x} {}", device_descriptor.get_u32("product_id"sv).value_or(0), device_string);
                 } else {
-                    outln("  idVendor           0x{:04x}", device_descriptor.get_u32("vendor_id"sv).value_or(0));
-                    outln("  idProduct          0x{:04x}", device_descriptor.get_u32("product_id"sv).value_or(0));
+                    outln("  idVendor           {:#04x}", device_descriptor.get_u32("vendor_id"sv).value_or(0));
+                    outln("  idProduct          {:#04x}", device_descriptor.get_u32("product_id"sv).value_or(0));
                 }
                 outln("  bcdDevice          {}", device_descriptor.get_u32("device_release_bcd"sv).value_or(0));
                 outln("  iManufacturer      {}", device_descriptor.get_u32("manufacturer_id_descriptor_index"sv).value_or(0));
@@ -116,7 +116,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                     outln("    bDescriptorType  {}", configuration_descriptor.get_u32("descriptor_type"sv).value_or(0));
                     outln("    wTotalLength     {}", configuration_descriptor.get_u32("total_length"sv).value_or(0));
                     outln("    bNumInterfaces   {}", configuration_descriptor.get_u32("number_of_interfaces"sv).value_or(0));
-                    outln("    bmAttributes     0x{:02x}", configuration_descriptor.get_u32("attributes_bitmap"sv).value_or(0));
+                    outln("    bmAttributes     {:#02x}", configuration_descriptor.get_u32("attributes_bitmap"sv).value_or(0));
                     outln("    MaxPower         {}mA", configuration_descriptor.get_u32("max_power"sv).value_or(0) * 2u);
 
                     auto const& interface_descriptors = config_value.as_object().get_array("interfaces"sv).value();
@@ -153,9 +153,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                             outln("      Endpoint Descriptor:");
                             outln("        bLength            {}", endpoint_descriptor.get_u32("length"sv).value_or(0));
                             outln("        bDescriptorType    {}", endpoint_descriptor.get_u32("descriptor_type"sv).value_or(0));
-                            outln("        bEndpointAddress   0x{:02x} EP {} {}", endpoint_address, (endpoint_address & 0xFu), ((endpoint_address & 0x80u) ? "IN" : "OUT"));
-                            outln("        bmAttributes       0x{:02x}", endpoint_descriptor.get_u32("attribute_bitmap"sv).value_or(0));
-                            outln("        wMaxPacketSize     0x{:04x}", endpoint_descriptor.get_u32("max_packet_size"sv).value_or(0));
+                            outln("        bEndpointAddress   {:#02x} EP {} {}", endpoint_address, (endpoint_address & 0xFu), ((endpoint_address & 0x80u) ? "IN" : "OUT"));
+                            outln("        bmAttributes       {:#02x}", endpoint_descriptor.get_u32("attribute_bitmap"sv).value_or(0));
+                            outln("        wMaxPacketSize     {:#04x}", endpoint_descriptor.get_u32("max_packet_size"sv).value_or(0));
                             outln("        bInterval          {}", endpoint_descriptor.get_u32("polling_interval"sv).value_or(0));
                         });
                     });

@@ -686,7 +686,7 @@ void UHCIController::get_port_status(Badge<UHCIRootHub>, u8 port, HubStatus& hub
     // UHCI ports are always powered.
     hub_port_status.status |= PORT_STATUS_PORT_POWER;
 
-    dbgln_if(UHCI_DEBUG, "UHCI: get_port_status status=0x{:04x} change=0x{:04x}", hub_port_status.status, hub_port_status.change);
+    dbgln_if(UHCI_DEBUG, "UHCI: get_port_status status={:#04x} change={:#04x}", hub_port_status.status, hub_port_status.change);
 }
 
 void UHCIController::reset_port(u8 port)
@@ -808,7 +808,7 @@ ErrorOr<void> UHCIController::clear_port_feature(Badge<UHCIRootHub>, u8 port, Hu
         return EINVAL;
     }
 
-    dbgln_if(UHCI_DEBUG, "UHCI: clear_port_feature: writing 0x{:04x} to portsc{}.", port_data, port + 1);
+    dbgln_if(UHCI_DEBUG, "UHCI: clear_port_feature: writing {:#04x} to portsc{}.", port_data, port + 1);
 
     if (port == 0)
         write_portsc1(port_data);
