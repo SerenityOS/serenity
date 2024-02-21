@@ -327,9 +327,9 @@ RENDERER_HANDLER(path_stroke)
 {
     begin_path_paint();
     if (state().stroke_style.has<NonnullRefPtr<Gfx::PaintStyle>>()) {
-        m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_style.get<NonnullRefPtr<Gfx::PaintStyle>>(), state().ctm.x_scale() * state().line_width);
+        m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_style.get<NonnullRefPtr<Gfx::PaintStyle>>(), line_width());
     } else {
-        m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_style.get<Color>(), state().ctm.x_scale() * state().line_width);
+        m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_style.get<Color>(), line_width());
     }
     end_path_paint();
     return {};
@@ -376,9 +376,9 @@ RENDERER_HANDLER(path_fill_evenodd)
 RENDERER_HANDLER(path_fill_stroke_nonzero)
 {
     if (state().stroke_style.has<NonnullRefPtr<Gfx::PaintStyle>>()) {
-        m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_style.get<NonnullRefPtr<Gfx::PaintStyle>>(), state().ctm.x_scale() * state().line_width);
+        m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_style.get<NonnullRefPtr<Gfx::PaintStyle>>(), line_width());
     } else {
-        m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_style.get<Color>(), state().ctm.x_scale() * state().line_width);
+        m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_style.get<Color>(), line_width());
     }
     return handle_path_fill_nonzero(args);
 }
@@ -386,9 +386,9 @@ RENDERER_HANDLER(path_fill_stroke_nonzero)
 RENDERER_HANDLER(path_fill_stroke_evenodd)
 {
     if (state().stroke_style.has<NonnullRefPtr<Gfx::PaintStyle>>()) {
-        m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_style.get<NonnullRefPtr<Gfx::PaintStyle>>(), state().ctm.x_scale() * state().line_width);
+        m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_style.get<NonnullRefPtr<Gfx::PaintStyle>>(), line_width());
     } else {
-        m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_style.get<Color>(), state().ctm.x_scale() * state().line_width);
+        m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_style.get<Color>(), line_width());
     }
     return handle_path_fill_evenodd(args);
 }
@@ -951,6 +951,15 @@ Gfx::Rect<T> Renderer::map(Gfx::Rect<T> rect) const
 Gfx::Path Renderer::map(Gfx::Path const& path) const
 {
     return path.copy_transformed(state().ctm);
+}
+
+float Renderer::line_width() const
+{
+    // PDF 1.7 spec, 4.3.2 Details of Graphics State Parameters, Line Width:
+    // "A line width of 0 denotes the thinnest line that can be rendered at device resolution: 1 device pixel wide."
+    if (state().line_width == 0)
+        return 1;
+    return state().ctm.x_scale() * state().line_width;
 }
 
 PDFErrorOr<void> Renderer::set_graphics_state_from_dict(NonnullRefPtr<DictObject> dict)
