@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='libgcrypt'
-version='1.10.2'
+version='1.10.3'
 useconfigure='true'
 use_fresh_config_sub='true'
 config_sub_paths=(
@@ -10,7 +10,7 @@ depends=(
     'libgpg-error'
 )
 files=(
-    "https://gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-${version}.tar.bz2#3b9c02a004b68c256add99701de00b383accccf37177e0d6c58289664cce0c03"
+    "https://gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-${version}.tar.bz2#8b0870897ac5ac67ded568dcfadf45969cfa8a6beb0fd60af2a9eadc2a3272aa"
 )
 
 pre_configure() {
