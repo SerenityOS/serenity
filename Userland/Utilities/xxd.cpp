@@ -132,9 +132,9 @@ static void print_line_c_style(Bytes line)
 {
     out("  ");
     for (size_t i = 0; i < line.size() - 1; ++i) {
-        out("0x{:02x}, ", line[i]);
+        out("{:#02x}, ", line[i]);
     }
-    out("0x{:02x}", line[line.size() - 1]);
+    out("{:#02x}", line[line.size() - 1]);
 }
 
 static ErrorOr<String> path_to_variable_name(StringView path)

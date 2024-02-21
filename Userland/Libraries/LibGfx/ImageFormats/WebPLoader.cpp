@@ -294,7 +294,7 @@ static ErrorOr<VP8XHeader> decode_webp_chunk_VP8X(RIFF::Chunk const& vp8x_chunk)
     // 3 bytes height minus one
     u32 height = (vp8x_chunk[7] | (vp8x_chunk[8] << 8) | (vp8x_chunk[9] << 16)) + 1;
 
-    dbgln_if(WEBP_DEBUG, "flags 0x{:x} --{}{}{}{}{}{}, width {}, height {}",
+    dbgln_if(WEBP_DEBUG, "flags {:#x} --{}{}{}{}{}{}, width {}, height {}",
         flags,
         has_icc ? " icc" : "",
         has_alpha ? " alpha" : "",

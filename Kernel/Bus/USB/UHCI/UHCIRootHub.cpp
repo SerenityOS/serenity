@@ -114,11 +114,11 @@ ErrorOr<size_t> UHCIRootHub::handle_control_transfer(Transfer& transfer)
 
     if constexpr (UHCI_DEBUG) {
         dbgln("UHCIRootHub: Received control transfer.");
-        dbgln("UHCIRootHub: Request Type: 0x{:02x}", request.request_type);
-        dbgln("UHCIRootHub: Request: 0x{:02x}", request.request);
-        dbgln("UHCIRootHub: Value: 0x{:04x}", request.value);
-        dbgln("UHCIRootHub: Index: 0x{:04x}", request.index);
-        dbgln("UHCIRootHub: Length: 0x{:04x}", request.length);
+        dbgln("UHCIRootHub: Request Type: {:#02x}", request.request_type);
+        dbgln("UHCIRootHub: Request: {:#02x}", request.request);
+        dbgln("UHCIRootHub: Value: {:#04x}", request.value);
+        dbgln("UHCIRootHub: Index: {:#04x}", request.index);
+        dbgln("UHCIRootHub: Length: {:#04x}", request.length);
     }
 
     size_t length = 0;

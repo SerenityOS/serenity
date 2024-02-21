@@ -63,7 +63,7 @@ UNMAP_AFTER_INIT void USBManagement::enumerate_controllers()
             dmesgln("USBManagement: Direct attached device at {} is not currently supported.", device_identifier.address());
             return;
         }
-        dmesgln("USBManagement: Unknown/unsupported controller at {} with programming interface 0x{:02x}", device_identifier.address(), device_identifier.prog_if().value());
+        dmesgln("USBManagement: Unknown/unsupported controller at {} with programming interface {:#02x}", device_identifier.address(), device_identifier.prog_if().value());
     }));
 }
 

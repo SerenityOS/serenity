@@ -919,7 +919,7 @@ static constexpr Array<SpecialCasing, @special_casing_size@> s_special_case { {)
         generator.append(R"~~~(
     { @code_point@)~~~");
 
-        constexpr auto format = "0x{:x}"sv;
+        constexpr auto format = "{:#x}"sv;
         append_list_and_size(casing.lowercase_mapping, format);
         append_list_and_size(casing.uppercase_mapping, format);
         append_list_and_size(casing.titlecase_mapping, format);
@@ -944,7 +944,7 @@ static constexpr Array<CaseFolding, @case_folding_size@> s_case_folding { {)~~~"
         generator.append(R"~~~(
     { @code_point@, CaseFoldingStatus::@status@)~~~");
 
-        append_list_and_size(folding.mapping, "0x{:x}"sv);
+        append_list_and_size(folding.mapping, "{:#x}"sv);
         generator.append(" },");
     }
 

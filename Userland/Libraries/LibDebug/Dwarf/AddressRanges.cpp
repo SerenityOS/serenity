@@ -69,7 +69,7 @@ ErrorOr<void> AddressRangesV5::for_each_range(Function<void(Range)> callback)
         case RangeListEntryType::EndOfList:
             return {};
         default:
-            dbgln("unsupported range list entry type: 0x{:x}", entry_type);
+            dbgln("unsupported range list entry type: {:#x}", entry_type);
             return Error::from_string_literal("Unsupported range list entry type");
         }
     }

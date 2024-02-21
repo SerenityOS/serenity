@@ -28,7 +28,7 @@ static void dump_exception_syndrome_register(Aarch64::ESR_EL1 const& esr_el1)
     if (Aarch64::exception_class_is_data_abort(esr_el1.EC))
         dbgln("    Data Fault Status Code: {}", Aarch64::data_fault_status_code_to_string(esr_el1.ISS));
     if (Aarch64::exception_class_has_set_far(esr_el1.EC))
-        dbgln("    Faulting Virtual Address: 0x{:x}", Aarch64::FAR_EL1::read().virtual_address);
+        dbgln("    Faulting Virtual Address: {:#x}", Aarch64::FAR_EL1::read().virtual_address);
 }
 
 void dump_registers(RegisterState const& regs)
@@ -40,9 +40,9 @@ void dump_registers(RegisterState const& regs)
     Aarch64::SPSR_EL1 spsr_el1 = {};
     memcpy(&spsr_el1, (u8 const*)&regs.spsr_el1, sizeof(u64));
 
-    dbgln("Saved Program Status: (NZCV({:#b}) DAIF({:#b}) M({:#b})) / 0x{:x}", ((regs.spsr_el1 >> 28) & 0b1111), ((regs.spsr_el1 >> 6) & 0b1111), regs.spsr_el1 & 0b1111, regs.spsr_el1);
-    dbgln("Exception Link Register: 0x{:x}", regs.elr_el1);
-    dbgln("Stack Pointer (EL0): 0x{:x}", regs.sp_el0);
+    dbgln("Saved Program Status: (NZCV({:#b}) DAIF({:#b}) M({:#b})) / {:#x}", ((regs.spsr_el1 >> 28) & 0b1111), ((regs.spsr_el1 >> 6) & 0b1111), regs.spsr_el1 & 0b1111, regs.spsr_el1);
+    dbgln("Exception Link Register: {:#x}", regs.elr_el1);
+    dbgln("Stack Pointer (EL0): {:#x}", regs.sp_el0);
 
     dbgln(" x0={:p}  x1={:p}  x2={:p}  x3={:p}  x4={:p}", regs.x[0], regs.x[1], regs.x[2], regs.x[3], regs.x[4]);
     dbgln(" x5={:p}  x6={:p}  x7={:p}  x8={:p}  x9={:p}", regs.x[5], regs.x[6], regs.x[7], regs.x[8], regs.x[9]);

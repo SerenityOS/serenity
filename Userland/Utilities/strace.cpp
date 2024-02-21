@@ -290,7 +290,7 @@ struct Formatter<BitflagDerivative> : StandardFormatter {
             // No more BitflagOptions are available. Any remaining flags are unrecognized.
             if (had_any_output)
                 TRY(format_builder.put_literal(" | "sv));
-            format_builder.builder().appendff("0x{:x} (?)", static_cast<unsigned>(remaining));
+            format_builder.builder().appendff("{:#x} (?)", static_cast<unsigned>(remaining));
             had_any_output = true;
         }
 

@@ -129,7 +129,7 @@ void WebGLRenderingContextBase::active_texture(GLenum texture)
     if (m_context_lost)
         return;
 
-    dbgln_if(WEBGL_CONTEXT_DEBUG, "WebGLRenderingContextBase::active_texture(texture=0x{:08x})", texture);
+    dbgln_if(WEBGL_CONTEXT_DEBUG, "WebGLRenderingContextBase::active_texture(texture={:#08x})", texture);
     m_context->gl_active_texture(texture);
 }
 
@@ -138,7 +138,7 @@ void WebGLRenderingContextBase::clear(GLbitfield mask)
     if (m_context_lost)
         return;
 
-    dbgln_if(WEBGL_CONTEXT_DEBUG, "WebGLRenderingContextBase::clear(mask=0x{:08x})", mask);
+    dbgln_if(WEBGL_CONTEXT_DEBUG, "WebGLRenderingContextBase::clear(mask={:#08x})", mask);
     m_context->gl_clear(mask);
 
     // FIXME: This should only be done if this is targeting the front buffer.
@@ -168,7 +168,7 @@ void WebGLRenderingContextBase::clear_stencil(GLint s)
     if (m_context_lost)
         return;
 
-    dbgln_if(WEBGL_CONTEXT_DEBUG, "WebGLRenderingContextBase::clear_stencil(s=0x{:08x})", s);
+    dbgln_if(WEBGL_CONTEXT_DEBUG, "WebGLRenderingContextBase::clear_stencil(s={:#08x})", s);
     m_context->gl_clear_stencil(s);
 }
 
@@ -186,7 +186,7 @@ void WebGLRenderingContextBase::cull_face(GLenum mode)
     if (m_context_lost)
         return;
 
-    dbgln_if(WEBGL_CONTEXT_DEBUG, "WebGLRenderingContextBase::cull_face(mode=0x{:08x})", mode);
+    dbgln_if(WEBGL_CONTEXT_DEBUG, "WebGLRenderingContextBase::cull_face(mode={:#08x})", mode);
     m_context->gl_cull_face(mode);
 }
 
@@ -195,7 +195,7 @@ void WebGLRenderingContextBase::depth_func(GLenum func)
     if (m_context_lost)
         return;
 
-    dbgln_if(WEBGL_CONTEXT_DEBUG, "WebGLRenderingContextBase::depth_func(func=0x{:08x})", func);
+    dbgln_if(WEBGL_CONTEXT_DEBUG, "WebGLRenderingContextBase::depth_func(func={:#08x})", func);
     m_context->gl_depth_func(func);
 }
 
@@ -244,7 +244,7 @@ void WebGLRenderingContextBase::front_face(GLenum mode)
     if (m_context_lost)
         return;
 
-    dbgln_if(WEBGL_CONTEXT_DEBUG, "WebGLRenderingContextBase::front_face(mode=0x{:08x})", mode);
+    dbgln_if(WEBGL_CONTEXT_DEBUG, "WebGLRenderingContextBase::front_face(mode={:#08x})", mode);
     m_context->gl_front_face(mode);
 }
 
@@ -300,7 +300,7 @@ void WebGLRenderingContextBase::stencil_op(GLenum fail, GLenum zfail, GLenum zpa
     if (m_context_lost)
         return;
 
-    dbgln_if(WEBGL_CONTEXT_DEBUG, "WebGLRenderingContextBase::stencil_op(fail=0x{:08x}, zfail=0x{:08x}, zpass=0x{:08x})", fail, zfail, zpass);
+    dbgln_if(WEBGL_CONTEXT_DEBUG, "WebGLRenderingContextBase::stencil_op(fail={:#08x}, zfail={:#08x}, zpass={:#08x})", fail, zfail, zpass);
     m_context->gl_stencil_op_separate(GL_FRONT_AND_BACK, fail, zfail, zpass);
 }
 
@@ -309,7 +309,7 @@ void WebGLRenderingContextBase::stencil_op_separate(GLenum face, GLenum fail, GL
     if (m_context_lost)
         return;
 
-    dbgln_if(WEBGL_CONTEXT_DEBUG, "WebGLRenderingContextBase::stencil_op_separate(face=0x{:08x}, fail=0x{:08x}, zfail=0x{:08x}, zpass=0x{:08x})", face, fail, zfail, zpass);
+    dbgln_if(WEBGL_CONTEXT_DEBUG, "WebGLRenderingContextBase::stencil_op_separate(face={:#08x}, fail={:#08x}, zfail={:#08x}, zpass={:#08x})", face, fail, zfail, zpass);
     m_context->gl_stencil_op_separate(face, fail, zfail, zpass);
 }
 

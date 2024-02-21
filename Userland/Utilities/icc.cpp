@@ -328,13 +328,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     out_optional("      primary platform", profile->primary_platform().map([](auto platform) { return primary_platform_name(platform); }));
 
     auto flags = profile->flags();
-    outln("                 flags: 0x{:08x}", flags.bits());
+    outln("                 flags: {:#08x}", flags.bits());
     outln("                        - {}embedded in file", flags.is_embedded_in_file() ? "" : "not ");
     outln("                        - can{} be used independently of embedded color data", flags.can_be_used_independently_of_embedded_color_data() ? "" : "not");
     if (auto unknown_icc_bits = flags.icc_bits() & ~Gfx::ICC::Flags::KnownBitsMask)
-        outln("                        other unknown ICC bits: 0x{:04x}", unknown_icc_bits);
+        outln("                        other unknown ICC bits: {:#04x}", unknown_icc_bits);
     if (auto color_management_module_bits = flags.color_management_module_bits())
-        outln("                            CMM bits: 0x{:04x}", color_management_module_bits);
+        outln("                            CMM bits: {:#04x}", color_management_module_bits);
 
     out_optional("   device manufacturer", TRY(profile->device_manufacturer().map([](auto device_manufacturer) {
         return hyperlink(device_manufacturer_url(device_manufacturer), device_manufacturer);
@@ -344,7 +344,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     })));
 
     auto device_attributes = profile->device_attributes();
-    outln("     device attributes: 0x{:016x}", device_attributes.bits());
+    outln("     device attributes: {:#016x}", device_attributes.bits());
     outln("                        media is:");
     outln("                        - {}",
         device_attributes.media_reflectivity() == Gfx::ICC::DeviceAttributes::MediaReflectivity::Reflective ? "reflective" : "transparent");
@@ -356,7 +356,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         device_attributes.media_color() == Gfx::ICC::DeviceAttributes::MediaColor::Colored ? "colored" : "black and white");
     VERIFY((flags.icc_bits() & ~Gfx::ICC::DeviceAttributes::KnownBitsMask) == 0);
     if (auto vendor_bits = device_attributes.vendor_bits())
-        outln("                        vendor bits: 0x{:08x}", vendor_bits);
+        outln("                        vendor bits: {:#08x}", vendor_bits);
 
     outln("      rendering intent: {}", Gfx::ICC::rendering_intent_name(profile->rendering_intent()));
     outln("        pcs illuminant: {}", profile->pcs_illuminant());
@@ -523,7 +523,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
         } else if (tag_data->type() == Gfx::ICC::NamedColor2TagData::Type) {
             auto& named_colors = static_cast<Gfx::ICC::NamedColor2TagData&>(*tag_data);
-            outln("    vendor specific flag: 0x{:08x}", named_colors.vendor_specific_flag());
+            outln("    vendor specific flag: {:#08x}", named_colors.vendor_specific_flag());
             outln("    common name prefix: \"{}\"", named_colors.prefix());
             outln("    common name suffix: \"{}\"", named_colors.suffix());
             outln("    {} colors:", named_colors.size());
@@ -531,11 +531,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 const auto& pcs = named_colors.pcs_coordinates(i);
 
                 // FIXME: Display decoded values? (See ICC v4 6.3.4.2 and 10.8.)
-                out("        \"{}\", PCS coordinates: 0x{:04x} 0x{:04x} 0x{:04x}", TRY(named_colors.color_name(i)), pcs.xyz.x, pcs.xyz.y, pcs.xyz.z);
+                out("        \"{}\", PCS coordinates: {:#04x} {:#04x} {:#04x}", TRY(named_colors.color_name(i)), pcs.xyz.x, pcs.xyz.y, pcs.xyz.z);
                 if (auto number_of_device_coordinates = named_colors.number_of_device_coordinates(); number_of_device_coordinates > 0) {
                     out(", device coordinates:");
                     for (size_t j = 0; j < number_of_device_coordinates; ++j)
-                        out(" 0x{:04x}", named_colors.device_coordinates(i)[j]);
+                        out(" {:#04x}", named_colors.device_coordinates(i)[j]);
                 }
                 outln();
             }
@@ -568,7 +568,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (auto name = signature.name_for_tag(tag_signature); name.has_value()) {
                 outln("    signature: {}", name.value());
             } else {
-                outln("    signature: Unknown ('{:c}{:c}{:c}{:c}' / 0x{:08x})",
+                outln("    signature: Unknown ('{:c}{:c}{:c}{:c}' / {:#08x})",
                     signature.signature() >> 24, (signature.signature() >> 16) & 0xff, (signature.signature() >> 8) & 0xff, signature.signature() & 0xff,
                     signature.signature());
             }

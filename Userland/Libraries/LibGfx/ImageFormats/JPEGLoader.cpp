@@ -1171,7 +1171,7 @@ static ErrorOr<void> read_colour_encoding(JPEGStream& stream, [[maybe_unused]] J
         context.color_transform = ColorTransform::YCCK;
         break;
     default:
-        dbgln("0x{:x} is not a specified transform flag value, ignoring", color_transform);
+        dbgln("{:#x} is not a specified transform flag value, ignoring", color_transform);
     }
 
     return {};
