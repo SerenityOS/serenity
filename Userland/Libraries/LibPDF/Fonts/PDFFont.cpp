@@ -55,8 +55,14 @@ PDFErrorOr<NonnullRefPtr<PDFFont>> PDFFont::create(Document* document, NonnullRe
     return font.release_nonnull();
 }
 
-PDFErrorOr<void> PDFFont::initialize(Document*, NonnullRefPtr<DictObject> const&, float)
+PDFErrorOr<void> PDFFont::initialize(Document* document, NonnullRefPtr<DictObject> const& dict, float)
 {
+    if (dict->contains(CommonNames::FontDescriptor)) {
+        auto descriptor = TRY(dict->get_dict(document, CommonNames::FontDescriptor));
+        if (descriptor->contains(CommonNames::Flags))
+            m_flags = descriptor->get_value(CommonNames::Flags).to_int();
+    }
+
     return {};
 }
 
