@@ -16,7 +16,7 @@ Set some config paths to home directory
  create mode 100644 pkg/serenityos/retroarch.cfg
 
 diff --git a/Makefile b/Makefile
-index 63c7eda..2aed29f 100644
+index 63c7eda4aa9ac2acf7ec7dfe9c04fcd5d8919a74..2aed29f89cf3709186fcd7c13400e34f1c90c299 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -235,7 +235,7 @@ install: $(TARGET)
@@ -30,7 +30,7 @@ index 63c7eda..2aed29f 100644
  	cp docs/retroarch.6 $(DESTDIR)$(MAN_DIR)/man6
 diff --git a/pkg/serenityos/retroarch.cfg b/pkg/serenityos/retroarch.cfg
 new file mode 100644
-index 0000000..088e883
+index 0000000000000000000000000000000000000000..3fc7d7ac0fbb3330e5a359593ae3acfc88112540
 --- /dev/null
 +++ b/pkg/serenityos/retroarch.cfg
 @@ -0,0 +1,1021 @@

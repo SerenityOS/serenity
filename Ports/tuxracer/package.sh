@@ -8,8 +8,6 @@ files=(
 )
 depends=("glu" "SDL_mixer" "sdl12-compat" "tcl")
 configopts=(
-    "--with-gl-inc=${SERENITY_INSTALL_ROOT}/usr/include/LibGL"
-    "--with-gl-lib-name=gl"
     "--with-sdl-prefix=${SERENITY_INSTALL_ROOT}/usr/local"
     "--with-tcl-lib-name=tcl8.6"
     "--without-x"

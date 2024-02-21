@@ -39,8 +39,8 @@ configopts=(
     '-DUSE_DNS_C=ON'
     '-Bbuild'
     '-GNinja'
-    "-DCMAKE_C_FLAGS=-I${SERENITY_INSTALL_ROOT}/usr/include/LibGL -I${SERENITY_INSTALL_ROOT}/usr/local/include/SDL2 -I${SERENITY_INSTALL_ROOT}/usr/local/include -lcurl -lharfbuzz -lfreetype"
-    "-DCMAKE_CXX_FLAGS=-I${SERENITY_INSTALL_ROOT}/usr/include/LibGL -I${SERENITY_INSTALL_ROOT}/usr/local/include/SDL2 -I${SERENITY_INSTALL_ROOT}/usr/local/include -lcurl -lharfbuzz -lfreetype"
+    "-DCMAKE_C_FLAGS=-I${SERENITY_INSTALL_ROOT}/usr/local/include/SDL2 -I${SERENITY_INSTALL_ROOT}/usr/local/include -lcurl -lharfbuzz -lfreetype"
+    "-DCMAKE_CXX_FLAGS=-I${SERENITY_INSTALL_ROOT}/usr/local/include/SDL2 -I${SERENITY_INSTALL_ROOT}/usr/local/include -lcurl -lharfbuzz -lfreetype"
     '-DUSE_IPV6=OFF'
     '-DUSE_SYSTEM_ENET=OFF'
 )

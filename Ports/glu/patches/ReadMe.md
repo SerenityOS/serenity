@@ -1,11 +1,11 @@
 # Patches for glu on SerenityOS
 
-## `0001-Build-Manually-find-LibGL.patch`
+## `0001-Build-Remove-pkgconfig.patch`
 
-Build: Manually find LibGL
+Build: Remove pkgconfig
 
-We don't have a working pkgconfig to find it, so get rid of it and
-manually find the library using the C compiler.
+We can't use pkgconfig here since the OpenGL dependency we find is
+incompatible with it as an argument.
 
 ## `0002-Build-Do-not-hide-symbols-by-default.patch`
 

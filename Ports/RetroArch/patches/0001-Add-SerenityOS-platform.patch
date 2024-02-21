@@ -8,7 +8,7 @@ Subject: [PATCH] Add SerenityOS platform
  1 file changed, 3 insertions(+), 2 deletions(-)
 
 diff --git a/qb/qb.system.sh b/qb/qb.system.sh
-index c7ac141..f7f198d 100644
+index c7ac14110bafc0c1715a5b02fc933dc7c45dc449..f7f198dc9c290d5c46079cedd13c5cbb42bb678b 100644
 --- a/qb/qb.system.sh
 +++ b/qb/qb.system.sh
 @@ -1,5 +1,5 @@
