@@ -25,7 +25,7 @@ launcher_category='&Games'
 launcher_command=/usr/local/bin/retroarch
 icon_file=media/retroarch.ico
 
-export CFLAGS="-I${SERENITY_INSTALL_ROOT}/usr/include/LibGL -I${SERENITY_INSTALL_ROOT}/usr/local/include/SDL2"
+export CFLAGS="-I${SERENITY_INSTALL_ROOT}/usr/local/include/SDL2"
 
 post_install() {
 echo "==== Post installation instructions ===="

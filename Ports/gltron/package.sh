@@ -10,7 +10,6 @@ depends=("libpng" "glu" "SDL_sound" "sdl12-compat" "zlib")
 configopts=(
     "--disable-warn"
     "--with-sdl-prefix=${SERENITY_INSTALL_ROOT}/usr/local"
-    "CPPFLAGS=-I${SERENITY_INSTALL_ROOT}/usr/include/LibGL"
     "LIBS=-lm -lSDL_sound"
 )
 launcher_name='GLTron'

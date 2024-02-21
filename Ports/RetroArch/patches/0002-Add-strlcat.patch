@@ -8,7 +8,7 @@ Subject: [PATCH] Add strlcat()
  1 file changed, 4 insertions(+)
 
 diff --git a/Makefile.common b/Makefile.common
-index 580beba..dbfbd39 100644
+index 40c3ad2d5a077dc8f84932506d4253c7d98e326f..f2d6bcf526a1c7d3aba90bdd4ef6cd1ebc3ca91c 100644
 --- a/Makefile.common
 +++ b/Makefile.common
 @@ -186,6 +186,10 @@ ifneq ($(findstring Linux,$(OS)),)

@@ -9,9 +9,8 @@ configopts=(
     "--cross-file=${SERENITY_BUILD_DIR}/meson-cross-file.txt"
     "--prefix=${SERENITY_INSTALL_ROOT}/usr/local"
     '-Dbuildtype=release'
+    '-Dgl_provider=gl'
 )
-
-export CPPFLAGS="-I${SERENITY_INSTALL_ROOT}/usr/include/LibGL"
 
 configure() {
     run meson setup "${configopts[@]}" build

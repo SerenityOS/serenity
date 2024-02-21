@@ -11,7 +11,6 @@ workdir="quake2sdl-${commit_hash}"
 makeopts=()
 configopts=(
     "-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt"
-    "-DOPENGL_INCLUDE_DIR=${SERENITY_INSTALL_ROOT}/usr/include/LibGL"
 )
 depends=('SDL2')
 launcher_name='Quake II'

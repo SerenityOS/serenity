@@ -27,7 +27,6 @@ icon_file='icons/scummvm.ico'
 
 export CPPFLAGS='-fvisibility=hidden'
 export FREETYPE2_CFLAGS="-I${SERENITY_INSTALL_ROOT}/usr/local/include/freetype2"
-export OPENGL_CFLAGS="-I${SERENITY_INSTALL_ROOT}/usr/include/LibGL"
 export SDL_CFLAGS="-I${SERENITY_INSTALL_ROOT}/usr/local/include/SDL2"
 
 function post_install() {
