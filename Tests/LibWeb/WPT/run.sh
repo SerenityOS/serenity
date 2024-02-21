@@ -11,7 +11,7 @@ then
 fi
 
 
-: "${WEBDRIVER_BINARY:=$(env PATH="${SERENITY_SOURCE_DIR}/Build/lagom/bin:${SERENITY_SOURCE_DIR}/Meta/Lagom/Build/bin:${PATH}" \
+: "${WEBDRIVER_BINARY:=$(env PATH="${SERENITY_SOURCE_DIR}/Build/lagom/bin/Ladybird.app/Contents/MacOS:${SERENITY_SOURCE_DIR}/Build/lagom/bin:${SERENITY_SOURCE_DIR}/Meta/Lagom/Build/bin:${PATH}" \
                          which WebDriver)}"
 update_expectations_metadata=false
 
