@@ -176,6 +176,8 @@ private:
 
     Gfx::Path map(Gfx::Path const&) const;
 
+    float line_width() const;
+
     Gfx::AffineTransform calculate_image_space_transformation(int width, int height);
 
     PDFErrorOr<NonnullRefPtr<PDFFont>> get_font(FontCacheKey const&);
