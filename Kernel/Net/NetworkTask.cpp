@@ -447,7 +447,12 @@ void handle_tcp(IPv4Packet const& ipv4_packet, UnixDateTime const& packet_timest
     switch (socket->state()) {
     case TCPSocket::State::Closed:
         dbgln("handle_tcp: unexpected flags in Closed state ({:x}) for socket with tuple {}", tcp_packet.flags(), tuple.to_string());
-        // TODO: we may want to send an RST here, maybe as a configurable option
+        if (tcp_packet.has_rst()) {
+            return;
+        }
+        socket->set_sequence_number(tcp_packet.has_ack() ? tcp_packet.ack_number() : 0);
+        socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
+        (void)socket->send_tcp_packet(TCPFlags::RST | TCPFlags::ACK);
         return;
     case TCPSocket::State::TimeWait:
         dbgln("handle_tcp: unexpected flags in TimeWait state ({:x}) for socket with tuple {}", tcp_packet.flags(), tuple.to_string());
