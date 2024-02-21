@@ -648,8 +648,19 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
 
             case EndChar: {
                 maybe_read_width(Odd);
-                if (is_type2)
+                if (is_type2) {
+                    // Type 2 spec:
+                    // "In addition to the optional width (...) endchar may have four extra arguments that correspond exactly
+                    //  to the last four arguments of the Type 1 charstring command “seac”"
+                    if (state.sp == 4) {
+                        auto achar = pop();
+                        auto bchar = pop();
+                        auto ady = pop();
+                        auto adx = pop();
+                        state.glyph.set_accented_character(AccentedCharacter { (u8)bchar, (u8)achar, adx, ady });
+                    }
                     path.close();
+                }
                 break;
             }
 
