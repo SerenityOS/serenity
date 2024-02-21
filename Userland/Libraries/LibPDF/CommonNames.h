@@ -86,6 +86,7 @@
     X(FitH)                       \
     X(FitR)                       \
     X(FitV)                       \
+    X(Flags)                      \
     X(FlateDecode)                \
     X(Font)                       \
     X(FontDescriptor)             \
