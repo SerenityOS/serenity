@@ -1,0 +1,49 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jelle Raaijmakers <jelle@gmta.nl>
+Date: Wed, 21 Feb 2024 20:15:07 +0100
+Subject: [PATCH] Backport CMake fix from upstream
+
+Patch from:
+  https://github.com/curl/curl/commit/b2497a8d15284dfef4fa7f032572e07b0b4b4720
+
+This commit should be removed as soon as the fix has landed in a
+release.
+---
+ docs/libcurl/CMakeLists.txt      | 7 +++++--
+ docs/libcurl/opts/CMakeLists.txt | 7 +++++--
+ 2 files changed, 10 insertions(+), 4 deletions(-)
+
+diff --git a/docs/libcurl/CMakeLists.txt b/docs/libcurl/CMakeLists.txt
+index 6f0aa6490224d6f4c20e72fea1955ccc4e4f6e5a..0bc35fc97321a4e23504462b9a1504167899c157 100644
+--- a/docs/libcurl/CMakeLists.txt
++++ b/docs/libcurl/CMakeLists.txt
+@@ -62,8 +62,11 @@ add_custom_command(OUTPUT libcurl-symbols.md
+ add_manual_pages(man_MANS)
+ add_custom_target(man ALL DEPENDS ${man_MANS})
+ if(NOT CURL_DISABLE_INSTALL)
+-  install(FILES "$<LIST:TRANSFORM,${man_MANS},PREPEND,${CMAKE_CURRENT_BINARY_DIR}/>"
+-          DESTINATION ${CMAKE_INSTALL_MANDIR}/man3)
++  unset(_src)
++  foreach(_f ${man_MANS})
++    list(APPEND _src "${CMAKE_CURRENT_BINARY_DIR}/${_f}")
++  endforeach()
++  install(FILES ${_src} DESTINATION ${CMAKE_INSTALL_MANDIR}/man3)
+ endif()
+ 
+ add_subdirectory(opts)
+diff --git a/docs/libcurl/opts/CMakeLists.txt b/docs/libcurl/opts/CMakeLists.txt
+index 82844a2251ae8b0ef6ed29fe832481c35bf0e7d6..a20d0b9bf9ee9e0dc0e4820a0a20685f63aaf40a 100644
+--- a/docs/libcurl/opts/CMakeLists.txt
++++ b/docs/libcurl/opts/CMakeLists.txt
+@@ -29,6 +29,9 @@ add_manual_pages(man_MANS)
+ add_custom_target(opts-man DEPENDS ${man_MANS})
+ add_dependencies(man opts-man)
+ if(NOT CURL_DISABLE_INSTALL)
+-  install(FILES "$<LIST:TRANSFORM,${man_MANS},PREPEND,${CMAKE_CURRENT_BINARY_DIR}/>"
+-          DESTINATION ${CMAKE_INSTALL_MANDIR}/man3)
++  unset(_src)
++  foreach(_f ${man_MANS})
++    list(APPEND _src "${CMAKE_CURRENT_BINARY_DIR}/${_f}")
++  endforeach()
++  install(FILES ${_src} DESTINATION ${CMAKE_INSTALL_MANDIR}/man3)
+ endif()
