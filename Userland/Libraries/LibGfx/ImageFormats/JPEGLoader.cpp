@@ -834,7 +834,7 @@ static ErrorOr<void> decode_huffman_stream(JPEGLoadingContext& context, Vector<M
             if (result.is_error()) {
                 if constexpr (JPEG_DEBUG) {
                     dbgln("Failed to build Macroblock {}: {}", number_of_mcus_decoded_so_far, result.error());
-                    dbgln("Huffman stream byte offset {}", context.stream.byte_offset());
+                    dbgln("Huffman stream byte offset {:#x}", context.stream.byte_offset());
                 }
                 return result.release_error();
             }
