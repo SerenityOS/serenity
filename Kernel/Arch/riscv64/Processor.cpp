@@ -17,6 +17,88 @@ namespace Kernel {
 
 Processor* g_current_processor;
 
+static void store_fpu_state(FPUState* fpu_state)
+{
+    asm volatile(
+        "fsd f0, 0*8(%0) \n"
+        "fsd f1, 1*8(%0) \n"
+        "fsd f2, 2*8(%0) \n"
+        "fsd f3, 3*8(%0) \n"
+        "fsd f4, 4*8(%0) \n"
+        "fsd f5, 5*8(%0) \n"
+        "fsd f6, 6*8(%0) \n"
+        "fsd f7, 7*8(%0) \n"
+        "fsd f8, 8*8(%0) \n"
+        "fsd f9, 9*8(%0) \n"
+        "fsd f10, 10*8(%0) \n"
+        "fsd f11, 11*8(%0) \n"
+        "fsd f12, 12*8(%0) \n"
+        "fsd f13, 13*8(%0) \n"
+        "fsd f14, 14*8(%0) \n"
+        "fsd f15, 15*8(%0) \n"
+        "fsd f16, 16*8(%0) \n"
+        "fsd f17, 17*8(%0) \n"
+        "fsd f18, 18*8(%0) \n"
+        "fsd f19, 19*8(%0) \n"
+        "fsd f20, 20*8(%0) \n"
+        "fsd f21, 21*8(%0) \n"
+        "fsd f22, 22*8(%0) \n"
+        "fsd f23, 23*8(%0) \n"
+        "fsd f24, 24*8(%0) \n"
+        "fsd f25, 25*8(%0) \n"
+        "fsd f26, 26*8(%0) \n"
+        "fsd f27, 27*8(%0) \n"
+        "fsd f28, 28*8(%0) \n"
+        "fsd f29, 29*8(%0) \n"
+        "fsd f30, 30*8(%0) \n"
+        "fsd f31, 31*8(%0) \n"
+
+        "csrr t0, fcsr \n"
+        "sd t0, 32*8(%0) \n" ::"r"(fpu_state)
+        : "t0", "memory");
+}
+
+[[maybe_unused]] static void load_fpu_state(FPUState* fpu_state)
+{
+    asm volatile(
+        "fld f0, 0*8(%0) \n"
+        "fld f1, 1*8(%0) \n"
+        "fld f2, 2*8(%0) \n"
+        "fld f3, 3*8(%0) \n"
+        "fld f4, 4*8(%0) \n"
+        "fld f5, 5*8(%0) \n"
+        "fld f6, 6*8(%0) \n"
+        "fld f7, 7*8(%0) \n"
+        "fld f8, 8*8(%0) \n"
+        "fld f9, 9*8(%0) \n"
+        "fld f10, 10*8(%0) \n"
+        "fld f11, 11*8(%0) \n"
+        "fld f12, 12*8(%0) \n"
+        "fld f13, 13*8(%0) \n"
+        "fld f14, 14*8(%0) \n"
+        "fld f15, 15*8(%0) \n"
+        "fld f16, 16*8(%0) \n"
+        "fld f17, 17*8(%0) \n"
+        "fld f18, 18*8(%0) \n"
+        "fld f19, 19*8(%0) \n"
+        "fld f20, 20*8(%0) \n"
+        "fld f21, 21*8(%0) \n"
+        "fld f22, 22*8(%0) \n"
+        "fld f23, 23*8(%0) \n"
+        "fld f24, 24*8(%0) \n"
+        "fld f25, 25*8(%0) \n"
+        "fld f26, 26*8(%0) \n"
+        "fld f27, 27*8(%0) \n"
+        "fld f28, 28*8(%0) \n"
+        "fld f29, 29*8(%0) \n"
+        "fld f30, 30*8(%0) \n"
+        "fld f31, 31*8(%0) \n"
+
+        "ld t0, 32*8(%0) \n"
+        "csrw fcsr, t0 \n" ::"r"(fpu_state)
+        : "t0", "memory");
+}
+
 template<typename T>
 void ProcessorBase<T>::early_initialize(u32 cpu)
 {
@@ -35,6 +117,8 @@ void ProcessorBase<T>::initialize(u32)
     auto sstatus = RISCV64::CSR::SSTATUS::read();
     sstatus.FS = RISCV64::CSR::SSTATUS::FloatingPointStatus::Initial;
     RISCV64::CSR::SSTATUS::write(sstatus);
+
+    store_fpu_state(&s_clean_fpu_state);
 
     initialize_interrupts();
 }
