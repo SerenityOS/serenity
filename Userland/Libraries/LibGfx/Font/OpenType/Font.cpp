@@ -271,11 +271,16 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
         return Error::from_string_literal("Font is missing Maxp");
     auto maxp = TRY(Maxp::from_slice(opt_maxp_slice.value()));
 
+    bool can_omit_hmtx = (options.skip_tables & Options::SkipTables::Hmtx);
     Optional<Hmtx> hmtx;
-    if (!(options.skip_tables & Options::SkipTables::Hmtx)) {
-        if (!opt_hmtx_slice.has_value())
-            return Error::from_string_literal("Font is missing Hmtx");
-        hmtx = TRY(Hmtx::from_slice(opt_hmtx_slice.value(), maxp.num_glyphs(), hhea.number_of_h_metrics()));
+    if (opt_hmtx_slice.has_value()) {
+        auto hmtx_or_error = Hmtx::from_slice(opt_hmtx_slice.value(), maxp.num_glyphs(), hhea.number_of_h_metrics());
+        if (!hmtx_or_error.is_error())
+            hmtx = hmtx_or_error.release_value();
+        else if (!can_omit_hmtx)
+            return hmtx_or_error.release_error();
+    } else if (!can_omit_hmtx) {
+        return Error::from_string_literal("Font is missing Hmtx");
     }
 
     if (!options.external_cmap && !opt_cmap_slice.has_value())
@@ -292,9 +297,12 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
     }
 
     Optional<OS2> os2;
-    if (!(options.skip_tables & Options::SkipTables::OS2)) {
-        if (opt_os2_slice.has_value())
-            os2 = TRY(OS2::from_slice(opt_os2_slice.value()));
+    if (opt_os2_slice.has_value()) {
+        auto os2_or_error = OS2::from_slice(opt_os2_slice.value());
+        if (!os2_or_error.is_error())
+            os2 = os2_or_error.release_value();
+        else if (!(options.skip_tables & Options::SkipTables::OS2))
+            return os2_or_error.release_error();
     }
 
     Optional<Kern> kern {};
