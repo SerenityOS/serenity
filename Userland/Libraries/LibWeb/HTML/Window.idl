@@ -68,6 +68,11 @@ interface Window : EventTarget {
     [SameObject, Replaceable] readonly attribute Screen screen;
     [SameObject, Replaceable] readonly attribute VisualViewport? visualViewport;
 
+    undefined moveTo(long x, long y);
+    undefined moveBy(long x, long y);
+    undefined resizeTo(long x, long y);
+    undefined resizeBy(long x, long y);
+
     // viewport
     [Replaceable] readonly attribute long innerWidth;
     [Replaceable] readonly attribute long innerHeight;
