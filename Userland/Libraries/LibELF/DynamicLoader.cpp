@@ -790,8 +790,16 @@ void DynamicLoader::setup_plt_trampoline()
     VirtualAddress got_address = m_dynamic_object->plt_got_base_address();
 
     auto* got_ptr = (FlatPtr*)got_address.as_ptr();
+
+#if ARCH(AARCH64) || ARCH(X86_64)
     got_ptr[1] = (FlatPtr)m_dynamic_object.ptr();
     got_ptr[2] = (FlatPtr)&_plt_trampoline;
+#elif ARCH(RISCV64)
+    got_ptr[0] = (FlatPtr)&_plt_trampoline;
+    got_ptr[1] = (FlatPtr)m_dynamic_object.ptr();
+#else
+#    error Unknown architecture
+#endif
 }
 
 // Called from our ASM routine _plt_trampoline.
