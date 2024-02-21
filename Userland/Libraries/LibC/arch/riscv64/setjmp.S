@@ -56,8 +56,22 @@ sigsetjmp:
     sd s9, 9*8(a0)
     sd s10, 10*8(a0)
     sd s11, 11*8(a0)
-    sd sp, 12*8(a0)
-    sd ra, 13*8(a0)
+
+    fsd fs0, 12*8(a0)                    // Save floating-point registers
+    fsd fs1, 13*8(a0)                    // NOTE: We only support ABI_FLEN=64 in LibELF/Validation.cpp,
+    fsd fs2, 14*8(a0)                    //       so we only save the lower 64 bits of the fs* registers.
+    fsd fs3, 15*8(a0)
+    fsd fs4, 16*8(a0)
+    fsd fs5, 17*8(a0)
+    fsd fs6, 18*8(a0)
+    fsd fs7, 19*8(a0)
+    fsd fs8, 20*8(a0)
+    fsd fs9, 21*8(a0)
+    fsd fs10, 22*8(a0)
+    fsd fs11, 23*8(a0)
+
+    sd sp, 24*8(a0)
+    sd ra, 25*8(a0)
 
     li a0, 0
     ret
@@ -81,8 +95,22 @@ longjmp:
     ld s9, 9*8(a0)
     ld s10, 10*8(a0)
     ld s11, 11*8(a0)
-    ld sp, 12*8(a0)
-    ld ra, 13*8(a0)
+
+    fld fs0, 12*8(a0)                    // Restore floating-point registers
+    fld fs1, 13*8(a0)                    // NOTE: We only support ABI_FLEN=64 in LibELF/Validation.cpp,
+    fld fs2, 14*8(a0)                    //       so we only restore the lower 64 bits of the fs* registers.
+    fld fs3, 15*8(a0)
+    fld fs4, 16*8(a0)
+    fld fs5, 17*8(a0)
+    fld fs6, 18*8(a0)
+    fld fs7, 19*8(a0)
+    fld fs8, 20*8(a0)
+    fld fs9, 21*8(a0)
+    fld fs10, 22*8(a0)
+    fld fs11, 23*8(a0)
+
+    ld sp, 24*8(a0)
+    ld ra, 25*8(a0)
 
     mv a0, a1
     bnez a0, .Lnonzero
