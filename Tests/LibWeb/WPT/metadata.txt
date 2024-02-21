@@ -10,10 +10,6 @@
 [float-nowrap-3.html]
   expected: FAIL
 
---- css/CSS2/floats/float-root.html.ini ---
-[float-root.html]
-  expected: FAIL
-
 --- css/CSS2/floats/floats-placement-vertical-001c.xht.ini ---
 [floats-placement-vertical-001c.xht]
   expected: FAIL
@@ -39,10 +35,6 @@
   expected: FAIL
 
 
---- css/CSS2/floats/floats-line-wrap-shifted-001.html.ini ---
-[floats-line-wrap-shifted-001.html]
-  expected: FAIL
-
 --- css/CSS2/floats/floats-wrap-top-below-bfc-002l.xht.ini ---
 [floats-wrap-top-below-bfc-002l.xht]
   expected: FAIL
@@ -51,12 +43,12 @@
 [floats-wrap-top-below-bfc-003l.xht]
   expected: FAIL
 
---- css/CSS2/floats/floats-wrap-bfc-003-right-table.xht.ini ---
-[floats-wrap-bfc-003-right-table.xht]
+--- css/CSS2/floats/float-in-nested-multicol-001.html.ini ---
+[float-in-nested-multicol-001.html]
   expected: FAIL
 
---- css/CSS2/floats/float-with-absolutely-positioned-child-with-static-inset.html.ini ---
-[float-with-absolutely-positioned-child-with-static-inset.html]
+--- css/CSS2/floats/floats-wrap-bfc-003-right-table.xht.ini ---
+[floats-wrap-bfc-003-right-table.xht]
   expected: FAIL
 
 --- css/CSS2/floats/new-fc-relayout.html.ini ---
@@ -71,24 +63,12 @@
 [new-fc-beside-adjoining-float.html]
   expected: PASS
 
---- css/CSS2/floats/floats-placement-vertical-004-ref2.xht.ini ---
-[floats-placement-vertical-004-ref2.xht]
-  expected: FAIL
-
 --- css/CSS2/floats/new-fc-beside-adjoining-float-2.html.ini ---
 [new-fc-beside-adjoining-float-2.html]
   expected: PASS
 
 --- css/CSS2/floats/floats-placement-vertical-001b.xht.ini ---
 [floats-placement-vertical-001b.xht]
-  expected: FAIL
-
---- css/CSS2/floats/floats-placement-005.html.ini ---
-[floats-placement-005.html]
-  expected: FAIL
-
---- css/CSS2/floats/floats-placement-004.html.ini ---
-[floats-placement-004.html]
   expected: FAIL
 
 --- css/CSS2/floats/floats-wrap-bfc-with-margin-006.tentative.html.ini ---
@@ -117,10 +97,6 @@
   [Miss float below something else]
     expected: FAIL
 
---- css/CSS2/floats/negative-margin-float-positioning.html.ini ---
-[negative-margin-float-positioning.html]
-  expected: FAIL
-
 --- css/CSS2/floats/floats-wrap-top-below-bfc-003r.xht.ini ---
 [floats-wrap-top-below-bfc-003r.xht]
   expected: FAIL
@@ -137,20 +113,12 @@
 [float-nowrap-4.html]
   expected: FAIL
 
---- css/CSS2/floats/floats-placement-vertical-004-ref.xht.ini ---
-[floats-placement-vertical-004-ref.xht]
-  expected: FAIL
-
 --- css/CSS2/floats/floats-placement-vertical-001a.xht.ini ---
 [floats-placement-vertical-001a.xht]
   expected: FAIL
 
 --- css/CSS2/floats/overflow-scroll-float-paint-order.html.ini ---
 [overflow-scroll-float-paint-order.html]
-  expected: FAIL
-
---- css/CSS2/floats/floats-wrap-bfc-with-margin-008.tentative.html.ini ---
-[floats-wrap-bfc-with-margin-008.tentative.html]
   expected: FAIL
 
 --- css/CSS2/floats/floats-rule3-outside-left-001.xht.ini ---
@@ -177,10 +145,6 @@
 [floats-wrap-bfc-with-margin-001a.tentative.html]
   expected: FAIL
 
---- css/CSS2/floats/floats-wrap-bfc-with-margin-009.tentative.html.ini ---
-[floats-wrap-bfc-with-margin-009.tentative.html]
-  expected: FAIL
-
 --- css/CSS2/floats/floats-wrap-bfc-006.xht.ini ---
 [floats-wrap-bfc-006.xht]
   expected: FAIL
@@ -197,10 +161,6 @@
 [new-fc-separates-from-float-2.html]
   expected: FAIL
 
---- css/CSS2/floats/floats-in-table-caption-001.html.ini ---
-[floats-in-table-caption-001.html]
-  expected: FAIL
-
 --- css/CSS2/floats/new-fc-separates-from-float-3.html.ini ---
 [new-fc-separates-from-float-3.html]
   expected: FAIL
@@ -211,10 +171,6 @@
 
 --- css/CSS2/floats/floats-zero-height-wrap-002.xht.ini ---
 [floats-zero-height-wrap-002.xht]
-  expected: FAIL
-
---- css/CSS2/floats/negative-block-margin-pushing-float-out-of-block-formatting-context.html.ini ---
-[negative-block-margin-pushing-float-out-of-block-formatting-context.html]
   expected: FAIL
 
 --- css/CSS2/floats/floats-wrap-bfc-with-margin-001.html.ini ---
@@ -274,10 +230,6 @@
 [floats-wrap-bfc-003-right-overflow.xht]
   expected: FAIL
 
---- css/CSS2/floats/zero-available-space-float-positioning.html.ini ---
-[zero-available-space-float-positioning.html]
-  expected: FAIL
-
 --- css/CSS2/floats/floats-zero-height-wrap-001.xht.ini ---
 [floats-zero-height-wrap-001.xht]
   expected: FAIL
@@ -320,13 +272,5 @@
 --- css/CSS2/floats/floats-wrap-bfc-004.xht.ini ---
 [floats-wrap-bfc-004.xht]
   expected: FAIL
-
---- css/CSS2/floats/floats-wrap-bfc-with-margin-010.html.ini ---
-[floats-wrap-bfc-with-margin-010.html]
-  expected: FAIL
-
-
-
-
 
 
