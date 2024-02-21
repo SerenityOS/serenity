@@ -1229,6 +1229,64 @@ i32 Window::inner_height() const
     return 0;
 }
 
+// https://drafts.csswg.org/cssom-view/#dom-window-moveto
+void Window::move_to(long, long) const
+{
+    // 1. Optionally, return.
+    return;
+
+    // NOTE: For now, the other steps are unimplemented because we always return in step 1.
+    // FIXME: Implement these for popup windows?
+    // 2. Let target be this's relevant global object's browsing context.
+    // 3. If target is not an auxiliary browsing context that was created by a script (as opposed to by an action of the user), then return.
+    // 4. Optionally, clamp x and y in a user-agent-defined manner so that the window does not move outside the available space.
+    // 5. Move target’s window such that the window’s top left corner is at coordinates (x, y) relative to the top left corner of the output device, measured in CSS pixels of target. The positive axes are rightward and downward.
+}
+
+// https://drafts.csswg.org/cssom-view/#dom-window-moveby
+void Window::move_by(long, long) const
+{
+    // 1. Optionally, return.
+    return;
+
+    // NOTE: For now, the other steps are unimplemented because we always return in step 1.
+    // FIXME: Implement these for popup windows?
+    // 2. Let target be this's relevant global object's browsing context.
+    // 3. If target is not an auxiliary browsing context that was created by a script (as opposed to by an action of the user), then return.
+    // 4. Optionally, clamp x and y in a user-agent-defined manner so that the window does not move outside the available space.
+    // 5. Move target’s window x CSS pixels of target rightward and y CSS pixels of target downward.
+}
+
+// https://drafts.csswg.org/cssom-view/#dom-window-resizeto
+void Window::resize_to(long, long) const
+{
+    // 1. Optionally, return.
+    return;
+
+    // NOTE: For now, the other steps are unimplemented because we always return in step 1.
+    // FIXME: Implement these for popup windows?
+    // 2. Let target be this's relevant global object's browsing context.
+    // 3. If target is not an auxiliary browsing context that was created by a script (as opposed to by an action of the user), then return.
+    // 4. Optionally, clamp width and height in a user-agent-defined manner so that the window does not get too small or bigger than the available space.
+    // 5. Resize target’s window by moving its right and bottom edges such that the distance between the left and right edges of the viewport are width CSS pixels of target and the distance between the top and bottom edges of the viewport are height CSS pixels of target.
+    // 6. Optionally, move target’s window in a user-agent-defined manner so that it does not grow outside the available space.
+}
+
+// https://drafts.csswg.org/cssom-view/#dom-window-resizeby
+void Window::resize_by(long, long) const
+{
+    // 1. Optionally, return.
+    return;
+
+    // NOTE: For now, the other steps are unimplemented because we always return in step 1.
+    // FIXME: Implement these for popup windows?
+    // 2. Let target be this's relevant global object's browsing context.
+    // 3. If target is not an auxiliary browsing context that was created by a script (as opposed to by an action of the user), then return.
+    // 4. Optionally, clamp x and y in a user-agent-defined manner so that the window does not get too small or bigger than the available space.
+    // 5. Resize target’s window by moving its right edge x CSS pixels of target rightward and its bottom edge y CSS pixels of target downward.
+    // 6. Optionally, move target’s window in a user-agent-defined manner so that it does not grow outside the available space.
+}
+
 // https://w3c.github.io/csswg-drafts/cssom-view/#dom-window-scrollx
 double Window::scroll_x() const
 {

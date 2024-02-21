@@ -168,6 +168,11 @@ public:
     i32 inner_width() const;
     i32 inner_height() const;
 
+    void move_to(long, long) const;
+    void move_by(long, long) const;
+    void resize_to(long, long) const;
+    void resize_by(long, long) const;
+
     double scroll_x() const;
     double scroll_y() const;
     void scroll(ScrollToOptions const&);
