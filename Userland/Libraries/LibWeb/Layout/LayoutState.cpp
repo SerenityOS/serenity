@@ -495,6 +495,8 @@ void LayoutState::UsedValues::set_content_width(CSSPixels width)
         width = 0;
     }
     m_content_width = width;
+    // FIXME: We should not do this! Definiteness of widths should be determined early,
+    //        and not changed later (except for some special cases in flex layout..)
     m_has_definite_width = true;
 }
 
