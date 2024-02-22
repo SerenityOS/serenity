@@ -14,11 +14,10 @@
 
 ByteString s_serenity_resource_root;
 
-ErrorOr<String> application_directory()
+ErrorOr<ByteString> application_directory()
 {
     auto current_executable_path = TRY(Core::System::current_executable_path());
-    auto dirname = LexicalPath::dirname(current_executable_path);
-    return String::from_byte_string(dirname);
+    return LexicalPath::dirname(current_executable_path);
 }
 
 void platform_init()
@@ -33,7 +32,7 @@ void platform_init()
         auto home_lagom = ByteString::formatted("{}/.lagom", home);
         if (FileSystem::is_directory(home_lagom))
             return home_lagom;
-        auto app_dir = application_directory().release_value_but_fixme_should_propagate_errors().to_byte_string();
+        auto app_dir = MUST(application_directory());
 #ifdef AK_OS_MACOS
         return LexicalPath(app_dir).parent().append("Resources"sv).string();
 #else
@@ -44,13 +43,13 @@ void platform_init()
     Core::ResourceImplementation::install(make<Core::ResourceImplementationFile>(MUST(String::formatted("{}/res", s_serenity_resource_root))));
 }
 
-ErrorOr<Vector<String>> get_paths_for_helper_process(StringView process_name)
+ErrorOr<Vector<ByteString>> get_paths_for_helper_process(StringView process_name)
 {
     auto application_path = TRY(application_directory());
-    Vector<String> paths;
+    Vector<ByteString> paths;
 
-    TRY(paths.try_append(TRY(String::formatted("{}/{}", application_path, process_name))));
-    TRY(paths.try_append(TRY(String::formatted("./{}", process_name))));
+    TRY(paths.try_append(ByteString::formatted("{}/{}", application_path, process_name)));
+    TRY(paths.try_append(ByteString::formatted("./{}", process_name)));
     // NOTE: Add platform-specific paths here
     return paths;
 }
