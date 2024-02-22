@@ -54,8 +54,10 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::initialize(bool is_queue_polled)
     m_ready_timeout = Duration::from_milliseconds((CAP_TO(caps) + 1) * 500); // CAP.TO is in 500ms units
 
     calculate_doorbell_stride();
-    // IO queues + 1 admin queue
-    m_irq_type = TRY(reserve_irqs(nr_of_queues + 1, true));
+    if (queue_type == QueueType::IRQ) {
+        // IO queues + 1 admin queue
+        m_irq_type = TRY(reserve_irqs(nr_of_queues + 1, true));
+    }
 
     TRY(create_admin_queue(queue_type));
     VERIFY(m_admin_queue_ready == true);
@@ -351,7 +353,9 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_admin_queue(QueueType queu
     m_controller_regs->acq = reinterpret_cast<u64>(AK::convert_between_host_and_little_endian(cq_dma_pages.first()->paddr().as_ptr()));
     m_controller_regs->asq = reinterpret_cast<u64>(AK::convert_between_host_and_little_endian(sq_dma_pages.first()->paddr().as_ptr()));
 
-    auto irq = TRY(allocate_irq(0)); // Admin queue always uses the 0th index when using MSIx
+    Optional<u8> irq;
+    if (queue_type == QueueType::IRQ)
+        irq = TRY(allocate_irq(0)); // Admin queue always uses the 0th index when using MSIx
 
     maybe_error = start_controller();
     if (maybe_error.is_error()) {
@@ -398,7 +402,10 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_io_queue(u8 qid, QueueType
         auto flags = (queue_type == QueueType::IRQ) ? QUEUE_IRQ_ENABLED : QUEUE_IRQ_DISABLED;
         flags |= QUEUE_PHY_CONTIGUOUS;
         // When using MSIx interrupts, qid is used as an index into the interrupt table
-        sub.create_cq.irq_vector = (m_irq_type == PCI::InterruptType::PIN) ? 0 : qid;
+        if (m_irq_type.has_value() && m_irq_type.value() != PCI::InterruptType::PIN)
+            sub.create_cq.irq_vector = qid;
+        else
+            sub.create_cq.irq_vector = 0;
         sub.create_cq.cq_flags = AK::convert_between_host_and_little_endian(flags & 0xFFFF);
         submit_admin_command(sub, true);
     }

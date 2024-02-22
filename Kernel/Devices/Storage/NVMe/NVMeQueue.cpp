@@ -12,7 +12,7 @@
 #include <Kernel/Library/StdLib.h>
 
 namespace Kernel {
-ErrorOr<NonnullLockRefPtr<NVMeQueue>> NVMeQueue::try_create(NVMeController& device, u16 qid, u8 irq, u32 q_depth, OwnPtr<Memory::Region> cq_dma_region, OwnPtr<Memory::Region> sq_dma_region, Doorbell db_regs, QueueType queue_type)
+ErrorOr<NonnullLockRefPtr<NVMeQueue>> NVMeQueue::try_create(NVMeController& device, u16 qid, Optional<u8> irq, u32 q_depth, OwnPtr<Memory::Region> cq_dma_region, OwnPtr<Memory::Region> sq_dma_region, Doorbell db_regs, QueueType queue_type)
 {
     // Note: Allocate DMA region for RW operation. For now the requests don't exceed more than 4096 bytes (Storage device takes care of it)
     RefPtr<Memory::PhysicalPage> rw_dma_page;
@@ -26,7 +26,7 @@ ErrorOr<NonnullLockRefPtr<NVMeQueue>> NVMeQueue::try_create(NVMeController& devi
         return queue;
     }
 
-    auto queue = NVMeInterruptQueue::try_create(device, move(rw_dma_region), rw_dma_page.release_nonnull(), qid, irq, q_depth, move(cq_dma_region), move(sq_dma_region), move(db_regs));
+    auto queue = NVMeInterruptQueue::try_create(device, move(rw_dma_region), rw_dma_page.release_nonnull(), qid, irq.release_value(), q_depth, move(cq_dma_region), move(sq_dma_region), move(db_regs));
     return queue;
 }
 
