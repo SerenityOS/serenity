@@ -8,7 +8,9 @@ source_set("CSS") {
   ]
   sources = [
     "Angle.cpp",
+    "AnimationEvent.cpp",
     "CSS.cpp",
+    "CSSAnimation.cpp",
     "CSSConditionRule.cpp",
     "CSSFontFaceRule.cpp",
     "CSSGroupingRule.cpp",

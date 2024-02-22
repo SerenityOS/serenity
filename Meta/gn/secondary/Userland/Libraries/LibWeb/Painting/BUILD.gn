@@ -14,6 +14,9 @@ source_set("Painting") {
     "ButtonPaintable.cpp",
     "CanvasPaintable.cpp",
     "CheckBoxPaintable.cpp",
+    "Command.cpp",
+    "CommandExecutorCPU.cpp",
+    "CommandList.cpp",
     "FilterPainting.cpp",
     "GradientPainting.cpp",
     "ImagePaintable.cpp",
@@ -26,7 +29,6 @@ source_set("Painting") {
     "Paintable.cpp",
     "PaintableBox.cpp",
     "PaintableFragment.cpp",
-    "PaintingCommandExecutorCPU.cpp",
     "RadioButtonPaintable.cpp",
     "RecordingPainter.cpp",
     "SVGGraphicsPaintable.cpp",
@@ -42,7 +44,7 @@ source_set("Painting") {
   ]
 
   if (current_os == "linux" || current_os == "mac") {
-    sources += [ "PaintingCommandExecutorGPU.cpp" ]
+    sources += [ "CommandExecutorGPU.cpp" ]
     public_deps = [ "//Userland/Libraries/LibAccelGfx" ]
   }
 }
