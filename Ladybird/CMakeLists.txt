@@ -239,9 +239,8 @@ function(create_ladybird_bundle target_name)
     if (APPLE)
         set(bundle_dir "$<TARGET_BUNDLE_DIR:${target_name}>")
         add_custom_command(TARGET ${target_name} POST_BUILD
-            COMMAND "mkdir" -p "${bundle_dir}/Contents/Resources"
+            COMMAND "${CMAKE_COMMAND}" -E make_directory "${bundle_dir}/Contents/Resources"
             COMMAND "iconutil" --convert icns "${SERENITY_SOURCE_DIR}/Ladybird/Icons/macos/app_icon.iconset" --output "${bundle_dir}/Contents/Resources/app_icon.icns"
-            COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${Lagom_BINARY_DIR}/cacert.pem" "${bundle_dir}/Contents"
         )
     endif()
 endfunction()
@@ -251,6 +250,13 @@ foreach(helper_process IN LISTS ladybird_helper_processes)
     set_ladybird_helper_output_directory(${helper_process})
 endforeach()
 
+include(cmake/ResourceFiles.cmake)
+set(resource_base_dir "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_DATADIR}/Lagom")
+if (APPLE)
+    set(resource_base_dir "$<TARGET_BUNDLE_DIR:ladybird>/Contents/Resources")
+endif()
+copy_resources_to_build(${resource_base_dir} ladybird)
+
 if(NOT CMAKE_SKIP_INSTALL_RULES)
     include(cmake/InstallRules.cmake)
 endif()
@@ -259,7 +265,7 @@ include(CTest)
 if (BUILD_TESTING)
     add_test(
         NAME LibWeb
-        COMMAND ${CMAKE_CURRENT_BINARY_DIR}/../bin/headless-browser --resources "${SERENITY_SOURCE_DIR}/Base/res" --run-tests ${SERENITY_SOURCE_DIR}/Tests/LibWeb --dump-failed-ref-tests
+        COMMAND $<TARGET_FILE:headless-browser> --resources "${resource_base_dir}" --run-tests ${SERENITY_SOURCE_DIR}/Tests/LibWeb --dump-failed-ref-tests
     )
     add_test(
         NAME WPT
