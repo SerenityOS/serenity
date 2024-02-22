@@ -221,7 +221,7 @@ PDFErrorOr<NonnullRefPtr<NameObject>> Parser::parse_name()
             int hex_value = 0;
             for (int i = 0; i < 2; i++) {
                 auto ch = m_reader.consume();
-                VERIFY(isxdigit(ch));
+                VERIFY(is_ascii_hex_digit(ch));
                 hex_value *= 16;
                 if (ch <= '9') {
                     hex_value += ch - '0';
@@ -370,7 +370,7 @@ PDFErrorOr<ByteString> Parser::parse_hex_string()
                     return builder.to_byte_string();
                 }
 
-                if (!isxdigit(ch))
+                if (!is_ascii_hex_digit(ch))
                     return error("character in hex string isn't hex digit");
 
                 hex_value *= 16;
