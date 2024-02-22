@@ -137,6 +137,19 @@ executable("ladybird_executable") {
     frameworks = [ "Cocoa.framework" ]
   }
 
+  if (current_os != "mac") {
+    data_deps += [
+      ":ladybird_copy_config_resources",
+      ":ladybird_copy_fonts",
+      ":ladybird_copy_icons_16x16",
+      ":ladybird_copy_icons_32x32",
+      ":ladybird_copy_icons_browser",
+      ":ladybird_copy_themes",
+      ":ladybird_copy_web_resources",
+      ":ladybird_copy_web_templates",
+    ]
+  }
+
   output_name = "Ladybird"
 }
 
@@ -170,7 +183,132 @@ executable("headless-browser") {
   ]
 }
 
-if (current_os == "mac") {
+fonts = [
+  "//Base/res/fonts/CsillaBold10.font",
+  "//Base/res/fonts/CsillaBold12.font",
+  "//Base/res/fonts/CsillaRegular10.font",
+  "//Base/res/fonts/CsillaRegular12.font",
+  "//Base/res/fonts/KaticaBold10.font",
+  "//Base/res/fonts/KaticaBold12.font",
+  "//Base/res/fonts/KaticaBoldOblique10.font",
+  "//Base/res/fonts/KaticaItalic10.font",
+  "//Base/res/fonts/KaticaRegular10.font",
+  "//Base/res/fonts/KaticaRegular12.font",
+  "//Base/res/fonts/SerenitySans-Regular.ttf",
+]
+
+icons_16x16 = [
+  "//Base/res/icons/16x16/app-browser.png",
+  "//Base/res/icons/16x16/audio-volume-high.png",
+  "//Base/res/icons/16x16/audio-volume-muted.png",
+  "//Base/res/icons/16x16/close-tab.png",
+  "//Base/res/icons/16x16/edit-copy.png",
+  "//Base/res/icons/16x16/filetype-css.png",
+  "//Base/res/icons/16x16/filetype-folder-open.png",
+  "//Base/res/icons/16x16/filetype-html.png",
+  "//Base/res/icons/16x16/filetype-image.png",
+  "//Base/res/icons/16x16/filetype-sound.png",
+  "//Base/res/icons/16x16/filetype-video.png",
+  "//Base/res/icons/16x16/find.png",
+  "//Base/res/icons/16x16/go-forward.png",
+  "//Base/res/icons/16x16/history.png",
+  "//Base/res/icons/16x16/layers.png",
+  "//Base/res/icons/16x16/layout.png",
+  "//Base/res/icons/16x16/new-tab.png",
+  "//Base/res/icons/16x16/open-parent-directory.png",
+  "//Base/res/icons/16x16/pause.png",
+  "//Base/res/icons/16x16/play.png",
+  "//Base/res/icons/16x16/select-all.png",
+  "//Base/res/icons/16x16/settings.png",
+  "//Base/res/icons/16x16/spoof.png",
+  "//Base/res/icons/16x16/trash-can.png",
+  "//Base/res/icons/16x16/zoom-in.png",
+  "//Base/res/icons/16x16/zoom-out.png",
+  "//Base/res/icons/16x16/zoom-reset.png",
+]
+
+icons_32x32 = [
+  "//Base/res/icons/32x32/app-browser.png",
+  "//Base/res/icons/32x32/filetype-folder.png",
+  "//Base/res/icons/32x32/filetype-unknown.png",
+  "//Base/res/icons/32x32/msgbox-warning.png",
+]
+
+icons_browser = [
+  "//Base/res/icons/browser/clear-cache.png",
+  "//Base/res/icons/browser/cookie.png",
+  "//Base/res/icons/browser/dom-tree.png",
+  "//Base/res/icons/browser/local-storage.png",
+]
+
+themes = [
+  "//Base/res/themes/Default.ini",
+  "//Base/res/themes/Dark.ini",
+]
+
+web_resources = [
+  "//Base/res/ladybird/about.html",
+  "//Base/res/ladybird/inspector.css",
+  "//Base/res/ladybird/inspector.js",
+  "//Base/res/ladybird/newtab.html",
+]
+
+web_templates = [
+  "//Base/res/ladybird/templates/directory.html",
+  "//Base/res/ladybird/templates/error.html",
+  "//Base/res/ladybird/templates/version.html",
+]
+
+config_resources = [
+  "$root_build_dir/cacert.pem",
+  "//Base/home/anon/.config/BrowserAutoplayAllowlist.txt",
+  "//Base/home/anon/.config/BrowserContentFilters.txt",
+]
+
+if (current_os != "mac") {
+  copy("ladybird_copy_fonts") {
+    sources = fonts
+    outputs = [ "$root_out_dir/share/Lagom/fonts/{{source_file_part}}" ]
+  }
+
+  copy("ladybird_copy_icons_16x16") {
+    sources = icons_16x16
+    outputs = [ "$root_out_dir/share/Lagom/icons/16x16/{{source_file_part}}" ]
+  }
+
+  copy("ladybird_copy_icons_32x32") {
+    sources = icons_32x32
+    outputs = [ "$root_out_dir/share/Lagom/icons/32x32/{{source_file_part}}" ]
+  }
+
+  copy("ladybird_copy_icons_browser") {
+    sources = icons_browser
+    outputs = [ "$root_out_dir/share/Lagom/icons/browser/{{source_file_part}}" ]
+  }
+
+  copy("ladybird_copy_themes") {
+    sources = themes
+    outputs = [ "$root_out_dir/share/Lagom/themes/{{source_file_part}}" ]
+  }
+
+  copy("ladybird_copy_web_resources") {
+    sources = web_resources
+    outputs = [ "$root_out_dir/share/Lagom/ladybird/{{source_file_part}}" ]
+  }
+
+  copy("ladybird_copy_web_templates") {
+    sources = web_templates
+    outputs =
+        [ "$root_out_dir/share/Lagom/ladybird/templates/{{source_file_part}}" ]
+  }
+
+  copy("ladybird_copy_config_resources") {
+    public_deps = [ "//Userland/Libraries/LibTLS:ca_certificates_download" ]
+    sources = config_resources
+    outputs = [ "$root_out_dir/share/Lagom/ladybird/{{source_file_part}}" ]
+  }
+} else {
+  # macOS bundle steps
   bundle_data("ladybird_bundle_info_plist") {
     sources = [ "Info.plist" ]
     outputs = [ "{{bundle_contents_dir}}/Info.plist" ]
@@ -284,39 +422,46 @@ if (current_os == "mac") {
     outputs = [ "{{bundle_contents_dir}}/lib/{{source_file_part}}" ]
   }
 
-  bundle_data("ladybird_resources") {
-    # FIXME: We should not be listing directories here because a change to a file inside any of these directories
-    #        will not cause this action to be invoked.
-    sources = [
-      "//Base/res/color-palettes",
-      "//Base/res/cursor-themes",
-      "//Base/res/fonts",
-      "//Base/res/icons",
-      "//Base/res/themes",
-    ]
-    outputs = [ "{{bundle_resources_dir}}/res/" + "{{source_file_part}}" ]
+  bundle_data("ladybird_fonts") {
+    sources = fonts
+    outputs = [ "{{bundle_resources_dir}}/fonts/{{source_file_part}}" ]
+  }
+
+  bundle_data("ladybird_icons_16x16") {
+    sources = icons_16x16
+    outputs = [ "{{bundle_resources_dir}}/icons/16x16/{{source_file_part}}" ]
+  }
+
+  bundle_data("ladybird_icons_32x32") {
+    sources = icons_32x32
+    outputs = [ "{{bundle_resources_dir}}/icons/32x32/{{source_file_part}}" ]
+  }
+
+  bundle_data("ladybird_icons_browser") {
+    sources = icons_browser
+    outputs = [ "{{bundle_resources_dir}}/icons/browser/{{source_file_part}}" ]
+  }
+
+  bundle_data("ladybird_themes") {
+    sources = themes
+    outputs = [ "{{bundle_resources_dir}}/themes/{{source_file_part}}" ]
   }
 
   bundle_data("ladybird_web_resources") {
-    sources = [
-      "//Base/res/ladybird/about.html",
-      "//Base/res/ladybird/inspector.css",
-      "//Base/res/ladybird/inspector.js",
-      "//Base/res/ladybird/newtab.html",
-      "//Base/res/ladybird/templates/directory.html",
-      "//Base/res/ladybird/templates/error.html",
-    ]
-    outputs = [ "{{bundle_resources_dir}}/res/ladybird/{{source_file_part}}" ]
+    sources = web_resources
+    outputs = [ "{{bundle_resources_dir}}/ladybird/{{source_file_part}}" ]
+  }
+
+  bundle_data("ladybird_web_templates") {
+    sources = web_templates
+    outputs =
+        [ "{{bundle_resources_dir}}/ladybird/templates/{{source_file_part}}" ]
   }
 
   bundle_data("ladybird_config_resources") {
     public_deps = [ "//Userland/Libraries/LibTLS:ca_certificates_download" ]
-    sources = [
-      "$root_build_dir/cacert.pem",
-      "//Base/home/anon/.config/BrowserAutoplayAllowlist.txt",
-      "//Base/home/anon/.config/BrowserContentFilters.txt",
-    ]
-    outputs = [ "{{bundle_resources_dir}}/res/ladybird/{{source_file_part}}" ]
+    sources = config_resources
+    outputs = [ "{{bundle_resources_dir}}/ladybird/{{source_file_part}}" ]
   }
 
   action("ladybird_create_icon") {
@@ -364,9 +509,14 @@ if (current_os == "mac") {
       ":ladybird_bundle_info_plist",
       ":ladybird_bundle_libs",
       ":ladybird_config_resources",
+      ":ladybird_fonts",
       ":ladybird_icon",
-      ":ladybird_resources",
+      ":ladybird_icons_16x16",
+      ":ladybird_icons_32x32",
+      ":ladybird_icons_browser",
+      ":ladybird_themes",
       ":ladybird_web_resources",
+      ":ladybird_web_templates",
     ]
   }
 }
