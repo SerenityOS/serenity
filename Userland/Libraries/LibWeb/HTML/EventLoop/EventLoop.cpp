@@ -195,7 +195,8 @@ void EventLoop::process()
         document.evaluate_media_queries_and_report_changes();
     });
 
-    // FIXME:     10. For each fully active Document in docs, update animations and send events for that Document, passing in now as the timestamp. [WEBANIMATIONS]
+    // 10. For each fully active Document in docs, update animations and send events for that Document, passing in now as the timestamp. [WEBANIMATIONS]
+    // Note: This is handled by the document's animation timer
 
     // FIXME:     11. For each fully active Document in docs, run the fullscreen steps for that Document, passing in now as the timestamp. [FULLSCREEN]
 

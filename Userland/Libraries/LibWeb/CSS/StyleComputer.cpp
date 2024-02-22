@@ -2,6 +2,7 @@
  * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, the SerenityOS developers.
  * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2024, Matthew Olsson <mattco@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,6 +13,7 @@
 #include <AK/Find.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
+#include <AK/Math.h>
 #include <AK/QuickSort.h>
 #include <AK/TemporaryChange.h>
 #include <LibGfx/Font/Font.h>
@@ -22,6 +24,11 @@
 #include <LibGfx/Font/VectorFont.h>
 #include <LibGfx/Font/WOFF/Font.h>
 #include <LibGfx/Font/WOFF2/Font.h>
+#include <LibWeb/Animations/AnimationEffect.h>
+#include <LibWeb/Animations/DocumentTimeline.h>
+#include <LibWeb/Animations/TimingFunction.h>
+#include <LibWeb/CSS/AnimationEvent.h>
+#include <LibWeb/CSS/CSSAnimation.h>
 #include <LibWeb/CSS/CSSFontFaceRule.h>
 #include <LibWeb/CSS/CSSImportRule.h>
 #include <LibWeb/CSS/CSSStyleRule.h>
@@ -57,11 +64,14 @@
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/HTML/HTMLBRElement.h>
 #include <LibWeb/HTML/HTMLHtmlElement.h>
+#include <LibWeb/HTML/Scripting/TemporaryExecutionContext.h>
+#include <LibWeb/HighResolutionTime/TimeOrigin.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/Namespace.h>
 #include <LibWeb/Platform/FontPlugin.h>
 #include <LibWeb/ReferrerPolicy/AbstractOperations.h>
+#include <math.h>
 #include <stdio.h>
 
 namespace AK {
@@ -743,46 +753,6 @@ static ErrorOr<void> cascade_custom_properties(DOM::Element& element, Optional<C
     return {};
 }
 
-StyleComputer::AnimationStepTransition StyleComputer::Animation::step(CSS::Time const& time_step)
-{
-    auto delay_ms = remaining_delay.to_milliseconds();
-    auto time_step_ms = time_step.to_milliseconds();
-
-    if (delay_ms > time_step_ms) {
-        remaining_delay = CSS::Time { delay_ms - time_step_ms, CSS::Time::Type::Ms };
-        return AnimationStepTransition::NoTransition;
-    }
-
-    remaining_delay = CSS::Time { 0, CSS::Time::Type::Ms };
-    time_step_ms -= delay_ms;
-
-    // "auto": For time-driven animations, equivalent to 0s.
-    // https://www.w3.org/TR/2023/WD-css-animations-2-20230602/#valdef-animation-duration-auto
-    auto used_duration = duration.value_or(CSS::Time { 0, CSS::Time::Type::S });
-
-    auto added_progress = time_step_ms / used_duration.to_milliseconds();
-    auto new_progress = progress.as_fraction() + added_progress;
-    auto changed_iteration = false;
-    if (new_progress >= 1) {
-        if (iteration_count.has_value()) {
-            if (iteration_count.value() <= 1) {
-                progress = CSS::Percentage(100);
-                return AnimationStepTransition::ActiveToAfter;
-            }
-            --iteration_count.value();
-            changed_iteration = true;
-        }
-        ++current_iteration;
-        new_progress = 0;
-    }
-    progress = CSS::Percentage(new_progress * 100);
-
-    if (changed_iteration)
-        return AnimationStepTransition::ActiveToActiveChangingTheIteration;
-
-    return AnimationStepTransition::AfterToActive;
-}
-
 static ErrorOr<NonnullRefPtr<StyleValue>> interpolate_property(StyleValue const& from, StyleValue const& to, float delta)
 {
     if (from.type() != to.type()) {
@@ -878,31 +848,23 @@ static ErrorOr<NonnullRefPtr<StyleValue>> interpolate_property(StyleValue const&
     }
 }
 
-bool StyleComputer::Animation::is_animating_backwards() const
+ErrorOr<void> StyleComputer::collect_animation_into(JS::NonnullGCPtr<Animations::KeyframeEffect> effect, StyleProperties& style_properties) const
 {
-    return (direction == CSS::AnimationDirection::AlternateReverse && current_iteration % 2 == 1)
-        || (direction == CSS::AnimationDirection::Alternate && current_iteration % 2 == 0)
-        || direction == CSS::AnimationDirection::Reverse;
-}
-
-ErrorOr<void> StyleComputer::Animation::collect_into(StyleProperties& style_properties, RuleCache const& rule_cache) const
-{
-    if (remaining_delay.to_milliseconds() != 0) {
-        // If the fill mode is backwards or both, we'll pretend that the animation is started, but stuck at progress 0
-        if (fill_mode != CSS::AnimationFillMode::Backwards && fill_mode != CSS::AnimationFillMode::Both)
-            return {};
-    }
-
-    auto matching_keyframes = rule_cache.rules_by_animation_keyframes.get(name);
-    if (!matching_keyframes.has_value())
+    auto animation = effect->associated_animation();
+    if (!animation)
         return {};
 
-    auto& keyframes = matching_keyframes.value()->keyframes_by_key;
+    auto output_progress = effect->transformed_progress();
+    if (!output_progress.has_value())
+        return {};
 
-    auto output_progress = compute_output_progress(progress.as_fraction()) * 100.f;
-    auto is_backwards = is_animating_backwards();
+    if (!effect->key_frame_set())
+        return {};
 
-    auto key = static_cast<u64>(output_progress * AnimationKeyFrameKeyScaleFactor);
+    auto& keyframes = effect->key_frame_set()->keyframes_by_key;
+    auto is_backwards = effect->current_direction() == Animations::AnimationDirection::Backwards;
+
+    auto key = static_cast<u64>(output_progress.value() * 100.0 * Animations::KeyframeEffect::AnimationKeyFrameKeyScaleFactor);
     auto matching_keyframe_it = is_backwards ? keyframes.find_smallest_not_below_iterator(key) : keyframes.find_largest_not_above_iterator(key);
     if (matching_keyframe_it.is_end()) {
         if constexpr (LIBWEB_CSS_ANIMATION_DEBUG) {
@@ -934,52 +896,32 @@ ErrorOr<void> StyleComputer::Animation::collect_into(StyleProperties& style_prop
             : static_cast<float>(key - keyframe_start) / static_cast<float>(keyframe_end - keyframe_start);
     }();
 
-    auto valid_properties = 0;
-    for (auto const& property : keyframe_values.resolved_properties) {
-        if (property.has<Empty>())
-            continue;
-        valid_properties++;
+    if constexpr (LIBWEB_CSS_ANIMATION_DEBUG) {
+        auto valid_properties = keyframe_values.resolved_properties.size();
+        dbgln("Animation {} contains {} properties to interpolate, progress = {}%", animation->id(), valid_properties, progress_in_keyframe * 100);
     }
 
-    dbgln_if(LIBWEB_CSS_ANIMATION_DEBUG, "Animation {} contains {} properties to interpolate, progress = {}%", name, valid_properties, progress_in_keyframe * 100);
-
-    if (fill_mode == CSS::AnimationFillMode::Forwards || fill_mode == CSS::AnimationFillMode::Both) {
-        if (!active_state_if_fill_forward)
-            active_state_if_fill_forward = make<AnimationStateSnapshot>();
-    }
-
-    UnderlyingType<PropertyID> property_id_value = 0;
-    for (auto const& property : keyframe_values.resolved_properties) {
-        auto property_id = static_cast<PropertyID>(property_id_value++);
-        if (property.has<Empty>())
-            continue;
-
+    for (auto const& it : keyframe_values.resolved_properties) {
         auto resolve_property = [&](auto& property) {
             return property.visit(
-                [](Empty) -> RefPtr<StyleValue const> { VERIFY_NOT_REACHED(); },
-                [&](AnimationKeyFrameSet::ResolvedKeyFrame::UseInitial) {
-                    if (auto value = initial_state.state[to_underlying(property_id)])
-                        return value;
-
-                    auto value = style_properties.maybe_null_property(property_id);
-                    initial_state.state[to_underlying(property_id)] = value;
-                    return value;
+                [&](Animations::KeyframeEffect::KeyFrameSet::UseInitial) -> RefPtr<StyleValue const> {
+                    return style_properties.maybe_null_property(it.key);
                 },
                 [&](RefPtr<StyleValue const> value) { return value; });
         };
 
-        auto resolved_start_property = resolve_property(property);
+        auto resolved_start_property = resolve_property(it.value);
 
-        auto const& end_property = keyframe_end_values.resolved_properties[to_underlying(property_id)];
-        if (end_property.has<Empty>()) {
+        auto const& end_property = keyframe_end_values.resolved_properties.get(it.key);
+        if (!end_property.has_value()) {
             if (resolved_start_property) {
-                style_properties.set_property(property_id, resolved_start_property.release_nonnull());
-                dbgln_if(LIBWEB_CSS_ANIMATION_DEBUG, "No end property for property {}, using {}", string_from_property_id(property_id), resolved_start_property->to_string());
+                style_properties.set_property(it.key, *resolved_start_property);
+                dbgln_if(LIBWEB_CSS_ANIMATION_DEBUG, "No end property for property {}, using {}", string_from_property_id(it.key), resolved_start_property->to_string());
             }
             continue;
         }
 
-        auto resolved_end_property = resolve_property(end_property);
+        auto resolved_end_property = resolve_property(end_property.value());
 
         if (!resolved_start_property || !resolved_end_property)
             continue;
@@ -988,225 +930,11 @@ ErrorOr<void> StyleComputer::Animation::collect_into(StyleProperties& style_prop
         auto end = resolved_end_property.release_nonnull();
 
         auto next_value = TRY(interpolate_property(*start, *end, progress_in_keyframe));
-        dbgln_if(LIBWEB_CSS_ANIMATION_DEBUG, "Interpolated value for property {} at {}: {} -> {} = {}", string_from_property_id(property_id), progress_in_keyframe, start->to_string(), end->to_string(), next_value->to_string());
-        style_properties.set_property(property_id, next_value);
-        if (active_state_if_fill_forward)
-            active_state_if_fill_forward->state[to_underlying(property_id)] = next_value;
+        dbgln_if(LIBWEB_CSS_ANIMATION_DEBUG, "Interpolated value for property {} at {}: {} -> {} = {}", string_from_property_id(it.key), progress_in_keyframe, start->to_string(), end->to_string(), next_value->to_string());
+        style_properties.set_property(it.key, next_value);
     }
 
     return {};
-}
-
-bool StyleComputer::Animation::is_done() const
-{
-    return progress.as_fraction() >= 0.9999 && iteration_count.has_value() && iteration_count.value() == 0;
-}
-
-// NOTE: Magic values from <https://www.w3.org/TR/css-easing-1/#valdef-cubic-bezier-easing-function-ease>
-static auto ease_timing_function = StyleComputer::AnimationTiming::CubicBezier { 0.25, 0.1, 0.25, 1.0 };
-static auto ease_in_timing_function = StyleComputer::AnimationTiming::CubicBezier { 0.42, 0.0, 1.0, 1.0 };
-static auto ease_out_timing_function = StyleComputer::AnimationTiming::CubicBezier { 0.0, 0.0, 0.58, 1.0 };
-static auto ease_in_out_timing_function = StyleComputer::AnimationTiming::CubicBezier { 0.42, 0.0, 0.58, 1.0 };
-
-float StyleComputer::Animation::compute_output_progress(float input_progress) const
-{
-    auto output_progress = input_progress;
-    auto going_forwards = true;
-    switch (direction) {
-    case AnimationDirection::Alternate:
-        if (current_iteration % 2 == 0) {
-            output_progress = 1.0f - output_progress;
-            going_forwards = false;
-        }
-        break;
-    case AnimationDirection::AlternateReverse:
-        if (current_iteration % 2 == 1) {
-            output_progress = 1.0f - output_progress;
-            going_forwards = false;
-        }
-        break;
-    case AnimationDirection::Normal:
-        break;
-    case AnimationDirection::Reverse:
-        output_progress = 1.0f - output_progress;
-        going_forwards = false;
-        break;
-    }
-
-    if (remaining_delay.to_milliseconds() != 0)
-        return output_progress;
-
-    return timing_function.timing_function.visit(
-        [&](AnimationTiming::Linear) { return output_progress; },
-        [&](AnimationTiming::Steps const& steps) {
-            auto before_flag = (current_state == AnimationState::Before && going_forwards) || (current_state == AnimationState::After && !going_forwards);
-            auto progress_step = output_progress * static_cast<float>(steps.number_of_steps);
-            auto current_step = floorf(progress_step);
-            if (steps.jump_at_start)
-                current_step += 1;
-            if (before_flag && truncf(progress_step) == progress_step)
-                current_step -= 1;
-            if (output_progress >= 0 && current_step < 0)
-                current_step = 0;
-            size_t jumps;
-            if (steps.jump_at_start ^ steps.jump_at_end)
-                jumps = steps.number_of_steps;
-            else if (steps.jump_at_start && steps.jump_at_end)
-                jumps = steps.number_of_steps + 1;
-            else
-                jumps = steps.number_of_steps - 1;
-
-            if (output_progress <= 1 && current_step > static_cast<float>(jumps))
-                current_step = static_cast<float>(jumps);
-            return current_step / static_cast<float>(steps.number_of_steps);
-        },
-        [&](AnimationTiming::CubicBezier const& bezier) {
-            // Special cases first:
-            if (bezier == AnimationTiming::CubicBezier { 0.0, 0.0, 1.0, 1.0 })
-                return output_progress;
-            // FIXME: This is quite inefficient on memory and CPU, find a better way to do this.
-            auto sample = bezier.sample_around(static_cast<double>(output_progress));
-            return static_cast<float>(sample.y);
-        });
-}
-
-static double cubic_bezier_at(double x1, double x2, double t)
-{
-    auto a = 1.0 - 3.0 * x2 + 3.0 * x1;
-    auto b = 3.0 * x2 - 6.0 * x1;
-    auto c = 3.0 * x1;
-
-    auto t2 = t * t;
-    auto t3 = t2 * t;
-
-    return (a * t3) + (b * t2) + (c * t);
-}
-
-StyleComputer::AnimationTiming::CubicBezier::CachedSample StyleComputer::AnimationTiming::CubicBezier::sample_around(double x) const
-{
-    x = clamp(x, 0, 1);
-
-    auto solve = [&](auto t) {
-        auto x = cubic_bezier_at(x1, x2, t);
-        auto y = cubic_bezier_at(y1, y2, t);
-        return CachedSample { x, y, t };
-    };
-
-    if (m_cached_x_samples.is_empty())
-        m_cached_x_samples.append(solve(0.));
-
-    size_t nearby_index = 0;
-    if (auto found = binary_search(m_cached_x_samples, x, &nearby_index, [](auto x, auto& sample) {
-            if (x > sample.x)
-                return 1;
-            if (x < sample.x)
-                return -1;
-            return 0;
-        }))
-        return *found;
-
-    if (nearby_index == m_cached_x_samples.size() || nearby_index + 1 == m_cached_x_samples.size()) {
-        // Produce more samples until we have enough.
-        auto last_t = m_cached_x_samples.is_empty() ? 0 : m_cached_x_samples.last().t;
-        auto last_x = m_cached_x_samples.is_empty() ? 0 : m_cached_x_samples.last().x;
-        while (last_x <= x) {
-            last_t += 1. / 60.;
-            auto solution = solve(last_t);
-            m_cached_x_samples.append(solution);
-            last_x = solution.x;
-        }
-
-        if (auto found = binary_search(m_cached_x_samples, x, &nearby_index, [](auto x, auto& sample) {
-                if (x > sample.x)
-                    return 1;
-                if (x < sample.x)
-                    return -1;
-                return 0;
-            }))
-            return *found;
-    }
-
-    // We have two samples on either side of the x value we want, so we can linearly interpolate between them.
-    auto& sample1 = m_cached_x_samples[nearby_index];
-    auto& sample2 = m_cached_x_samples[nearby_index + 1];
-    auto factor = (x - sample1.x) / (sample2.x - sample1.x);
-    return CachedSample {
-        x,
-        clamp(sample1.y + factor * (sample2.y - sample1.y), 0, 1),
-        sample1.t + factor * (sample2.t - sample1.t),
-    };
-}
-
-void StyleComputer::ensure_animation_timer() const
-{
-    constexpr static auto timer_delay_ms = 1000 / 60;
-    if (!m_animation_driver_timer) {
-        m_animation_driver_timer = Platform::Timer::create_repeating(timer_delay_ms, [this] {
-            // If we run out of animations, stop the timer - it'll turn back on the next time we have an active animation.
-            if (m_active_animations.is_empty()) {
-                m_animation_driver_timer->stop();
-                return;
-            }
-
-            HashTable<AnimationKey> animations_to_remove;
-            HashTable<DOM::Element*> owning_elements_to_invalidate;
-
-            for (auto& it : m_active_animations) {
-                if (!it.value->owning_element) {
-                    // The element disappeared since we last ran, just discard the animation.
-                    animations_to_remove.set(it.key);
-                    continue;
-                }
-
-                auto transition = it.value->step(CSS::Time { timer_delay_ms, CSS::Time::Type::Ms });
-                owning_elements_to_invalidate.set(it.value->owning_element);
-
-                switch (transition) {
-                case AnimationStepTransition::NoTransition:
-                    break;
-                case AnimationStepTransition::IdleOrBeforeToActive:
-                    // FIXME: Dispatch `animationstart`.
-                    break;
-                case AnimationStepTransition::IdleOrBeforeToAfter:
-                    // FIXME: Dispatch `animationstart` then `animationend`.
-                    m_finished_animations.set(it.key, move(it.value->active_state_if_fill_forward));
-                    break;
-                case AnimationStepTransition::ActiveToBefore:
-                    // FIXME: Dispatch `animationend`.
-                    m_finished_animations.set(it.key, move(it.value->active_state_if_fill_forward));
-                    break;
-                case AnimationStepTransition::ActiveToActiveChangingTheIteration:
-                    // FIXME: Dispatch `animationiteration`.
-                    break;
-                case AnimationStepTransition::ActiveToAfter:
-                    // FIXME: Dispatch `animationend`.
-                    m_finished_animations.set(it.key, move(it.value->active_state_if_fill_forward));
-                    break;
-                case AnimationStepTransition::AfterToActive:
-                    // FIXME: Dispatch `animationstart`.
-                    break;
-                case AnimationStepTransition::AfterToBefore:
-                    // FIXME: Dispatch `animationstart` then `animationend`.
-                    m_finished_animations.set(it.key, move(it.value->active_state_if_fill_forward));
-                    break;
-                case AnimationStepTransition::Cancelled:
-                    // FIXME: Dispatch `animationcancel`.
-                    m_finished_animations.set(it.key, nullptr);
-                    break;
-                }
-                if (it.value->is_done())
-                    animations_to_remove.set(it.key);
-            }
-
-            for (auto key : animations_to_remove)
-                m_active_animations.remove(key);
-
-            for (auto* element : owning_elements_to_invalidate)
-                element->set_needs_style_update(true);
-        });
-    }
-
-    m_animation_driver_timer->start();
 }
 
 // https://www.w3.org/TR/css-cascade/#cascading
@@ -1230,7 +958,7 @@ ErrorOr<void> StyleComputer::compute_cascaded_values(StyleProperties& style, DOM
         did_match_any_pseudo_element_rules = true;
     }
 
-    // Then we resolve all the CSS custom pr`operties ("variables") for this element:
+    // Then we resolve all the CSS custom properties ("variables") for this element:
     TRY(cascade_custom_properties(element, pseudo_element, matching_rule_set.author_rules));
 
     // Then we apply the declarations from the matched rules in cascade order:
@@ -1261,176 +989,175 @@ ErrorOr<void> StyleComputer::compute_cascaded_values(StyleProperties& style, DOM
     cascade_declarations(style, element, pseudo_element, matching_rule_set.author_rules, CascadeOrigin::Author, Important::No);
 
     // Animation declarations [css-animations-2]
-    auto get_animation_name = [&]() -> Optional<String> {
+    auto animation_name = [&]() -> Optional<String> {
         auto animation_name = style.maybe_null_property(PropertyID::AnimationName);
         if (animation_name.is_null())
             return OptionalNone {};
         if (animation_name->is_string())
             return animation_name->as_string().string_value();
         return animation_name->to_string();
-    };
-    if (auto animation_name = get_animation_name(); animation_name.has_value()) {
-        if (auto source_declaration = style.property_source_declaration(PropertyID::AnimationName)) {
-            AnimationKey animation_key {
-                .source_declaration = source_declaration,
-                .element = &element,
-            };
+    }();
 
-            if (auto finished_state = m_finished_animations.get(animation_key); finished_state.has_value()) {
-                // We've already finished going through this animation, so drop it from the active animations.
-                m_active_animations.remove(animation_key);
-                // If the animation's fill mode was set to forwards/both, we need to collect and use the final frame's styles.
-                if (*finished_state) {
-                    auto& state = (*finished_state)->state;
-                    for (size_t property_id_value = 0; property_id_value < state.size(); ++property_id_value) {
-                        if (auto& property_value = state[property_id_value])
-                            style.set_property(static_cast<PropertyID>(property_id_value), *property_value);
-                    }
+    if (animation_name.has_value()) {
+        if (auto source_declaration = style.property_source_declaration(PropertyID::AnimationName); source_declaration && source_declaration != element.cached_animation_name_source()) {
+            // This animation name is new, so we need to create a new animation for it.
+            element.set_cached_animation_name_source(source_declaration);
+
+            Optional<CSS::Time> duration;
+            if (auto duration_value = style.maybe_null_property(PropertyID::AnimationDuration); duration_value) {
+                if (duration_value->is_time()) {
+                    duration = duration_value->as_time().time();
+                } else if (duration_value->is_identifier() && duration_value->as_identifier().id() == ValueID::Auto) {
+                    // We use empty optional to represent "auto".
+                    duration = {};
                 }
-            } else if (!animation_name->is_empty()) {
-                auto active_animation = m_active_animations.get(animation_key);
-                if (!active_animation.has_value()) {
-                    // New animation!
-                    Optional<CSS::Time> duration;
-                    if (auto duration_value = style.maybe_null_property(PropertyID::AnimationDuration); duration_value) {
-                        if (duration_value->is_time()) {
-                            duration = duration_value->as_time().time();
-                        } else if (duration_value->is_identifier() && duration_value->as_identifier().id() == ValueID::Auto) {
-                            // We use empty optional to represent "auto".
-                            duration = {};
-                        }
-                    }
-
-                    CSS::Time delay { 0, CSS::Time::Type::S };
-                    if (auto delay_value = style.maybe_null_property(PropertyID::AnimationDelay); delay_value && delay_value->is_time())
-                        delay = delay_value->as_time().time();
-
-                    Optional<size_t> iteration_count = 1;
-                    if (auto iteration_count_value = style.maybe_null_property(PropertyID::AnimationIterationCount); iteration_count_value) {
-                        if (iteration_count_value->is_identifier() && iteration_count_value->to_identifier() == ValueID::Infinite)
-                            iteration_count = {};
-                        else if (iteration_count_value->is_number())
-                            iteration_count = static_cast<size_t>(iteration_count_value->as_number().number());
-                    }
-
-                    CSS::AnimationFillMode fill_mode { CSS::AnimationFillMode::None };
-                    if (auto fill_mode_property = style.maybe_null_property(PropertyID::AnimationFillMode); fill_mode_property && fill_mode_property->is_identifier()) {
-                        if (auto fill_mode_value = value_id_to_animation_fill_mode(fill_mode_property->to_identifier()); fill_mode_value.has_value())
-                            fill_mode = *fill_mode_value;
-                    }
-
-                    CSS::AnimationDirection direction { CSS::AnimationDirection::Normal };
-                    if (auto direction_property = style.maybe_null_property(PropertyID::AnimationDirection); direction_property && direction_property->is_identifier()) {
-                        if (auto direction_value = value_id_to_animation_direction(direction_property->to_identifier()); direction_value.has_value())
-                            direction = *direction_value;
-                    }
-
-                    AnimationTiming timing_function { ease_timing_function };
-                    if (auto timing_property = style.maybe_null_property(PropertyID::AnimationTimingFunction); timing_property && timing_property->is_easing()) {
-                        auto& easing_value = timing_property->as_easing();
-                        switch (easing_value.easing_function()) {
-                        case EasingFunction::Linear:
-                            timing_function = AnimationTiming { AnimationTiming::Linear {} };
-                            break;
-                        case EasingFunction::Ease:
-                            timing_function = AnimationTiming { ease_timing_function };
-                            break;
-                        case EasingFunction::EaseIn:
-                            timing_function = AnimationTiming { ease_in_timing_function };
-                            break;
-                        case EasingFunction::EaseOut:
-                            timing_function = AnimationTiming { ease_out_timing_function };
-                            break;
-                        case EasingFunction::EaseInOut:
-                            timing_function = AnimationTiming { ease_in_out_timing_function };
-                            break;
-                        case EasingFunction::CubicBezier: {
-                            auto values = easing_value.values();
-                            timing_function = AnimationTiming {
-                                AnimationTiming::CubicBezier {
-                                    values[0]->as_number().number(),
-                                    values[1]->as_number().number(),
-                                    values[2]->as_number().number(),
-                                    values[3]->as_number().number(),
-                                },
-                            };
-                            break;
-                        }
-                        case EasingFunction::Steps: {
-                            auto values = easing_value.values();
-                            auto jump_at_start = false;
-                            auto jump_at_end = true;
-
-                            if (values.size() > 1) {
-                                auto identifier = values[1]->to_identifier();
-                                switch (identifier) {
-                                case ValueID::JumpStart:
-                                case ValueID::Start:
-                                    jump_at_start = true;
-                                    jump_at_end = false;
-                                    break;
-                                case ValueID::JumpEnd:
-                                case ValueID::End:
-                                    jump_at_start = false;
-                                    jump_at_end = true;
-                                    break;
-                                case ValueID::JumpNone:
-                                    jump_at_start = false;
-                                    jump_at_end = false;
-                                    break;
-                                default:
-                                    break;
-                                }
-                            }
-
-                            timing_function = AnimationTiming { AnimationTiming::Steps {
-                                .number_of_steps = static_cast<size_t>(max(values[0]->as_integer().integer(), !(jump_at_end && jump_at_start) ? 1 : 0)),
-                                .jump_at_start = jump_at_start,
-                                .jump_at_end = jump_at_end,
-                            } };
-                            break;
-                        }
-                        case EasingFunction::StepEnd:
-                            timing_function = AnimationTiming { AnimationTiming::Steps {
-                                .number_of_steps = 1,
-                                .jump_at_start = false,
-                                .jump_at_end = true,
-                            } };
-                            break;
-                        case EasingFunction::StepStart:
-                            timing_function = AnimationTiming { AnimationTiming::Steps {
-                                .number_of_steps = 1,
-                                .jump_at_start = true,
-                                .jump_at_end = false,
-                            } };
-                            break;
-                        }
-                    }
-
-                    auto animation = make<Animation>(Animation {
-                        .name = animation_name.release_value(),
-                        .duration = duration,
-                        .delay = delay,
-                        .iteration_count = iteration_count,
-                        .timing_function = timing_function,
-                        .direction = direction,
-                        .fill_mode = fill_mode,
-                        .owning_element = TRY(element.try_make_weak_ptr<DOM::Element>()),
-                        .progress = CSS::Percentage(0),
-                        .remaining_delay = delay,
-                    });
-                    active_animation = animation;
-                    m_active_animations.set(animation_key, move(animation));
-                }
-
-                TRY((*active_animation)->collect_into(style, rule_cache_for_cascade_origin(CascadeOrigin::Author)));
-            } else {
-                m_active_animations.remove(animation_key);
             }
-        }
 
-        if (!m_active_animations.is_empty())
-            ensure_animation_timer();
+            CSS::Time delay { 0, CSS::Time::Type::S };
+            if (auto delay_value = style.maybe_null_property(PropertyID::AnimationDelay); delay_value && delay_value->is_time())
+                delay = delay_value->as_time().time();
+
+            double iteration_count = 1.0;
+            if (auto iteration_count_value = style.maybe_null_property(PropertyID::AnimationIterationCount); iteration_count_value) {
+                if (iteration_count_value->is_identifier() && iteration_count_value->to_identifier() == ValueID::Infinite)
+                    iteration_count = HUGE_VAL;
+                else if (iteration_count_value->is_number())
+                    iteration_count = iteration_count_value->as_number().number();
+            }
+
+            CSS::AnimationFillMode fill_mode { CSS::AnimationFillMode::None };
+            if (auto fill_mode_property = style.maybe_null_property(PropertyID::AnimationFillMode); fill_mode_property && fill_mode_property->is_identifier()) {
+                if (auto fill_mode_value = value_id_to_animation_fill_mode(fill_mode_property->to_identifier()); fill_mode_value.has_value())
+                    fill_mode = *fill_mode_value;
+            }
+
+            CSS::AnimationDirection direction { CSS::AnimationDirection::Normal };
+            if (auto direction_property = style.maybe_null_property(PropertyID::AnimationDirection); direction_property && direction_property->is_identifier()) {
+                if (auto direction_value = value_id_to_animation_direction(direction_property->to_identifier()); direction_value.has_value())
+                    direction = *direction_value;
+            }
+
+            Animations::TimingFunction timing_function = Animations::ease_timing_function;
+            if (auto timing_property = style.maybe_null_property(PropertyID::AnimationTimingFunction); timing_property && timing_property->is_easing()) {
+                auto& easing_value = timing_property->as_easing();
+                switch (easing_value.easing_function()) {
+                case EasingFunction::Linear:
+                    timing_function = Animations::linear_timing_function;
+                    break;
+                case EasingFunction::Ease:
+                    timing_function = Animations::ease_timing_function;
+                    break;
+                case EasingFunction::EaseIn:
+                    timing_function = Animations::ease_in_timing_function;
+                    break;
+                case EasingFunction::EaseOut:
+                    timing_function = Animations::ease_out_timing_function;
+                    break;
+                case EasingFunction::EaseInOut:
+                    timing_function = Animations::ease_in_out_timing_function;
+                    break;
+                case EasingFunction::CubicBezier: {
+                    auto values = easing_value.values();
+                    timing_function = {
+                        Animations::CubicBezierTimingFunction {
+                            values[0]->as_number().number(),
+                            values[1]->as_number().number(),
+                            values[2]->as_number().number(),
+                            values[3]->as_number().number(),
+                        },
+                    };
+                    break;
+                }
+                case EasingFunction::Steps: {
+                    auto values = easing_value.values();
+                    auto jump_at_start = false;
+                    auto jump_at_end = true;
+
+                    if (values.size() > 1) {
+                        auto identifier = values[1]->to_identifier();
+                        switch (identifier) {
+                        case ValueID::JumpStart:
+                        case ValueID::Start:
+                            jump_at_start = true;
+                            jump_at_end = false;
+                            break;
+                        case ValueID::JumpEnd:
+                        case ValueID::End:
+                            jump_at_start = false;
+                            jump_at_end = true;
+                            break;
+                        case ValueID::JumpNone:
+                            jump_at_start = false;
+                            jump_at_end = false;
+                            break;
+                        default:
+                            break;
+                        }
+                    }
+
+                    timing_function = Animations::TimingFunction { Animations::StepsTimingFunction {
+                        .number_of_steps = static_cast<size_t>(max(values[0]->as_integer().integer(), !(jump_at_end && jump_at_start) ? 1 : 0)),
+                        .jump_at_start = jump_at_start,
+                        .jump_at_end = jump_at_end,
+                    } };
+                    break;
+                }
+                case EasingFunction::StepEnd:
+                    timing_function = Animations::TimingFunction { Animations::StepsTimingFunction {
+                        .number_of_steps = 1,
+                        .jump_at_start = false,
+                        .jump_at_end = true,
+                    } };
+                    break;
+                case EasingFunction::StepStart:
+                    timing_function = Animations::TimingFunction { Animations::StepsTimingFunction {
+                        .number_of_steps = 1,
+                        .jump_at_start = true,
+                        .jump_at_end = false,
+                    } };
+                    break;
+                }
+            }
+
+            auto& realm = element.realm();
+
+            auto effect = Animations::KeyframeEffect::create(realm);
+            auto iteration_duration = duration.has_value()
+                ? Variant<double, String> { duration.release_value().to_milliseconds() }
+                : "auto"_string;
+            effect->set_iteration_duration(iteration_duration);
+            effect->set_start_delay(delay.to_milliseconds());
+            effect->set_iteration_count(iteration_count);
+            effect->set_timing_function(move(timing_function));
+            effect->set_fill_mode(Animations::css_fill_mode_to_bindings_fill_mode(fill_mode));
+            effect->set_playback_direction(Animations::css_animation_direction_to_bindings_playback_direction(direction));
+
+            auto animation = CSSAnimation::create(realm);
+            animation->set_id(animation_name.release_value());
+            animation->set_timeline(m_document->timeline());
+            animation->set_owning_element(element);
+            animation->set_effect(effect);
+
+            auto const& rule_cache = rule_cache_for_cascade_origin(CascadeOrigin::Author);
+            if (auto keyframe_set = rule_cache.rules_by_animation_keyframes.get(animation->id()); keyframe_set.has_value())
+                effect->set_key_frame_set(keyframe_set.value());
+
+            element.associate_with_effect(effect);
+
+            HTML::TemporaryExecutionContext context(m_document->relevant_settings_object());
+            animation->play().release_value_but_fixme_should_propagate_errors();
+        }
+    }
+
+    auto animations = element.get_animations({ .subtree = false });
+    for (auto& animation : animations) {
+        if (!animation->is_relevant())
+            continue;
+
+        if (auto effect = animation->effect(); effect && effect->is_keyframe_effect()) {
+            auto& keyframe_effect = *static_cast<Animations::KeyframeEffect*>(effect.ptr());
+            TRY(collect_animation_into(keyframe_effect, style));
+        }
     }
 
     // Important author declarations
@@ -2235,88 +1962,36 @@ NonnullOwnPtr<StyleComputer::RuleCache> StyleComputer::make_rule_cache_for_casca
             ++rule_index;
         });
 
+        // Loosely based on https://drafts.csswg.org/css-animations-2/#keyframe-processing
         sheet.for_each_effective_keyframes_at_rule([&](CSSKeyframesRule const& rule) {
-            auto keyframe_set = make<AnimationKeyFrameSet>();
-            AnimationKeyFrameSet::ResolvedKeyFrame resolved_keyframe;
+            auto keyframe_set = adopt_ref(*new Animations::KeyframeEffect::KeyFrameSet);
+            HashTable<PropertyID> animated_properties;
 
             // Forwards pass, resolve all the user-specified keyframe properties.
             for (auto const& keyframe : rule.keyframes()) {
-                auto key = static_cast<u64>(keyframe->key().value() * AnimationKeyFrameKeyScaleFactor);
+                Animations::KeyframeEffect::KeyFrameSet::ResolvedKeyFrame resolved_keyframe;
+
+                auto key = static_cast<u64>(keyframe->key().value() * Animations::KeyframeEffect::AnimationKeyFrameKeyScaleFactor);
                 auto keyframe_rule = keyframe->style();
 
                 if (!is<PropertyOwningCSSStyleDeclaration>(*keyframe_rule))
                     continue;
 
-                auto current_keyframe = resolved_keyframe;
-                auto& keyframe_style = static_cast<PropertyOwningCSSStyleDeclaration const&>(*keyframe_rule);
-                for (auto& property : keyframe_style.properties())
-                    current_keyframe.resolved_properties[to_underlying(property.property_id)] = property.value;
+                auto const& keyframe_style = static_cast<PropertyOwningCSSStyleDeclaration const&>(*keyframe_rule);
+                for (auto const& property : keyframe_style.properties()) {
+                    animated_properties.set(property.property_id);
+                    resolved_keyframe.resolved_properties.set(property.property_id, property.value);
+                }
 
-                resolved_keyframe = move(current_keyframe);
                 keyframe_set->keyframes_by_key.insert(key, resolved_keyframe);
             }
 
-            // If there is no 'from' keyframe, make a synthetic one.
-            auto made_a_synthetic_from_keyframe = false;
-            if (!keyframe_set->keyframes_by_key.find(0)) {
-                keyframe_set->keyframes_by_key.insert(0, AnimationKeyFrameSet::ResolvedKeyFrame());
-                made_a_synthetic_from_keyframe = true;
-            }
-
-            // Backwards pass, resolve all the implied properties, go read <https://drafts.csswg.org/css-animations-2/#keyframe-processing> to see why.
-            auto first = true;
-            for (auto const& keyframe : rule.keyframes().in_reverse()) {
-                auto key = static_cast<u64>(keyframe->key().value() * AnimationKeyFrameKeyScaleFactor);
-                auto keyframe_rule = keyframe->style();
-
-                if (!is<PropertyOwningCSSStyleDeclaration>(*keyframe_rule))
-                    continue;
-
-                // The last keyframe is already fully resolved.
-                if (first) {
-                    first = false;
-                    continue;
-                }
-
-                auto next_keyframe = resolved_keyframe;
-                auto& current_keyframes = *keyframe_set->keyframes_by_key.find(key);
-
-                for (auto it = next_keyframe.resolved_properties.begin(); !it.is_end(); ++it) {
-                    auto& current_property = current_keyframes.resolved_properties[it.index()];
-                    if (!current_property.has<Empty>() || it->has<Empty>())
-                        continue;
-
-                    if (key == 0)
-                        current_property = AnimationKeyFrameSet::ResolvedKeyFrame::UseInitial();
-                    else
-                        current_property = *it;
-                }
-
-                resolved_keyframe = current_keyframes;
-            }
-
-            if (made_a_synthetic_from_keyframe && !first) {
-                auto next_keyframe = resolved_keyframe;
-                auto& current_keyframes = *keyframe_set->keyframes_by_key.find(0);
-
-                for (auto it = next_keyframe.resolved_properties.begin(); !it.is_end(); ++it) {
-                    auto& current_property = current_keyframes.resolved_properties[it.index()];
-                    if (!current_property.has<Empty>() || it->has<Empty>())
-                        continue;
-                    current_property = AnimationKeyFrameSet::ResolvedKeyFrame::UseInitial();
-                }
-
-                resolved_keyframe = current_keyframes;
-            }
+            Animations::KeyframeEffect::generate_initial_and_final_frames(keyframe_set, animated_properties);
 
             if constexpr (LIBWEB_CSS_DEBUG) {
                 dbgln("Resolved keyframe set '{}' into {} keyframes:", rule.name(), keyframe_set->keyframes_by_key.size());
-                for (auto it = keyframe_set->keyframes_by_key.begin(); it != keyframe_set->keyframes_by_key.end(); ++it) {
-                    size_t props = 0;
-                    for (auto& entry : it->resolved_properties)
-                        props += !entry.has<Empty>();
-                    dbgln("    - keyframe {}: {} properties", it.key(), props);
-                }
+                for (auto it = keyframe_set->keyframes_by_key.begin(); it != keyframe_set->keyframes_by_key.end(); ++it)
+                    dbgln("    - keyframe {}: {} properties", it.key(), it->resolved_properties.size());
             }
 
             rule_cache->rules_by_animation_keyframes.set(rule.name(), move(keyframe_set));
