@@ -87,7 +87,8 @@ public:
         auto const candidate = TRY(find_and_populate_until_any_of(candidates, buffer.size()));
 
         if (stream().is_eof()) {
-            if (buffer.size() < m_buffer.used_space()) {
+            if ((candidate.has_value() && candidate->offset + candidate->size > buffer.size())
+                || (!candidate.has_value() && buffer.size() < m_buffer.used_space())) {
                 // Normally, reading from an EOFed stream and receiving bytes
                 // would mean that the stream is no longer EOF. However, it's
                 // possible with a buffered stream that the user is able to read
