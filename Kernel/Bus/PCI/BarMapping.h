@@ -38,7 +38,7 @@ inline ErrorOr<PhysicalAddress> get_bar_address(DeviceIdentifier const& device, 
 }
 
 template<typename T>
-inline ErrorOr<Memory::TypedMapping<T>> map_bar(DeviceIdentifier const& device, HeaderType0BaseRegister bar, size_t size = sizeof(T), Memory::Region::Access access = IsConst<T> ? Memory::Region::Access::Read : Memory::Region::Access::ReadWrite)
+inline ErrorOr<Memory::TypedMapping<T>> map_bar(DeviceIdentifier const& device, HeaderType0BaseRegister bar, size_t size, Memory::Region::Access access = IsConst<T> ? Memory::Region::Access::Read : Memory::Region::Access::ReadWrite)
 {
     u64 pci_bar_value = get_BAR(device, bar);
     auto pci_bar_space_type = get_BAR_space_type(pci_bar_value);
@@ -63,9 +63,21 @@ inline ErrorOr<Memory::TypedMapping<T>> map_bar(DeviceIdentifier const& device, 
 }
 
 template<typename T>
-inline ErrorOr<NonnullOwnPtr<Memory::TypedMapping<T>>> adopt_new_nonnull_own_bar_mapping(DeviceIdentifier const& device, HeaderType0BaseRegister bar, size_t size = sizeof(T), Memory::Region::Access access = IsConst<T> ? Memory::Region::Access::Read : Memory::Region::Access::ReadWrite)
+inline ErrorOr<Memory::TypedMapping<T>> map_bar(DeviceIdentifier const& device, HeaderType0BaseRegister bar, Memory::Region::Access access = IsConst<T> ? Memory::Region::Access::Read : Memory::Region::Access::ReadWrite)
+{
+    return map_bar<T>(device, bar, PCI::get_BAR_space_size(device, bar), access);
+}
+
+template<typename T>
+inline ErrorOr<NonnullOwnPtr<Memory::TypedMapping<T>>> adopt_new_nonnull_own_bar_mapping(DeviceIdentifier const& device, HeaderType0BaseRegister bar, size_t size, Memory::Region::Access access = IsConst<T> ? Memory::Region::Access::Read : Memory::Region::Access::ReadWrite)
 {
     return adopt_nonnull_own_or_enomem(new (nothrow) Memory::TypedMapping<T>(TRY(map_bar<T>(device, bar, size, access))));
+}
+
+template<typename T>
+inline ErrorOr<NonnullOwnPtr<Memory::TypedMapping<T>>> adopt_new_nonnull_own_bar_mapping(DeviceIdentifier const& device, HeaderType0BaseRegister bar, Memory::Region::Access access = IsConst<T> ? Memory::Region::Access::Read : Memory::Region::Access::ReadWrite)
+{
+    return adopt_new_nonnull_own_bar_mapping<T>(device, bar, PCI::get_BAR_space_size(device, bar), access);
 }
 
 }
