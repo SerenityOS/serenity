@@ -303,6 +303,9 @@ template<class T>
 class Handle;
 
 template<class T, size_t inline_capacity = 0>
+class ConservativeVector;
+
+template<class T, size_t inline_capacity = 0>
 class MarkedVector;
 
 namespace Bytecode {
