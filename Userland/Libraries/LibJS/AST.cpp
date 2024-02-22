@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2024, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021-2022, David Tuin <davidot@serenityos.org>
  *
@@ -15,6 +15,7 @@
 #include <AK/TemporaryChange.h>
 #include <LibCrypto/BigInt/SignedBigInteger.h>
 #include <LibJS/AST.h>
+#include <LibJS/Heap/ConservativeVector.h>
 #include <LibJS/Heap/MarkedVector.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Accessor.h>
@@ -372,8 +373,8 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::create_class_const
 
     using StaticElement = Variant<ClassFieldDefinition, Handle<ECMAScriptFunctionObject>>;
 
-    Vector<PrivateElement> static_private_methods;
-    Vector<PrivateElement> instance_private_methods;
+    ConservativeVector<PrivateElement> static_private_methods(vm.heap());
+    ConservativeVector<PrivateElement> instance_private_methods(vm.heap());
     Vector<ClassFieldDefinition> instance_fields;
     Vector<StaticElement> static_elements;
 
