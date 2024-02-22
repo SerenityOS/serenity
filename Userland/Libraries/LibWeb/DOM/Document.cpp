@@ -1901,7 +1901,90 @@ void Document::dispatch_events_for_animation_if_necessary(JS::NonnullGCPtr<Anima
     if (!effect || !effect->is_keyframe_effect() || !animation->is_css_animation() || animation->pending())
         return;
 
-    // TODO: Dispatch events
+    auto& css_animation = verify_cast<CSS::CSSAnimation>(*animation);
+    css_animation.owning_element()->set_needs_style_update(true);
+
+    auto previous_phase = effect->previous_phase();
+    auto current_phase = effect->phase();
+    auto current_iteration = effect->current_iteration().value_or(0.0);
+
+    if (previous_phase != current_phase) {
+        auto owning_element = css_animation.owning_element();
+
+        auto dispatch_event = [&](FlyString name, double elapsed_time) {
+            append_pending_animation_event({
+                .event = CSS::AnimationEvent::create(
+                    owning_element->realm(),
+                    name,
+                    {
+                        { .bubbles = true },
+                        css_animation.id(),
+                        elapsed_time,
+                    }),
+                .target = animation,
+                .scheduled_event_time = HighResolutionTime::unsafe_shared_current_time(),
+            });
+        };
+
+        // For calculating the elapsedTime of each event, the following definitions are used:
+
+        // - interval start = max(min(-start delay, active duration), 0)
+        auto interval_start = max(min(-effect->start_delay(), effect->active_duration()), 0.0);
+
+        // - interval end = max(min(associated effect end - start delay, active duration), 0)
+        auto interval_end = max(min(effect->end_time() - effect->start_delay(), effect->active_duration()), 0.0);
+
+        switch (previous_phase) {
+        case Animations::AnimationEffect::Phase::Before:
+            [[fallthrough]];
+        case Animations::AnimationEffect::Phase::Idle:
+            if (current_phase == Animations::AnimationEffect::Phase::Active) {
+                dispatch_event("animationstart"_fly_string, interval_start);
+            } else if (current_phase == Animations::AnimationEffect::Phase::After) {
+                dispatch_event("animationstart"_fly_string, interval_start);
+                dispatch_event("animationend"_fly_string, interval_end);
+            }
+            break;
+        case Animations::AnimationEffect::Phase::Active:
+            if (current_phase == Animations::AnimationEffect::Phase::Before) {
+                dispatch_event("animationend"_fly_string, interval_start);
+            } else if (current_phase == Animations::AnimationEffect::Phase::Active) {
+                auto previous_current_iteration = effect->previous_current_iteration();
+                if (previous_current_iteration != current_iteration) {
+                    // The elapsed time for an animationiteration event is defined as follows:
+
+                    // 1. Let previous current iteration be the current iteration from the previous animation frame.
+
+                    // 2. If previous current iteration is greater than current iteration, let iteration boundary be current iteration + 1,
+                    //    otherwise let it be current iteration.
+                    auto iteration_boundary = previous_current_iteration > current_iteration ? current_iteration + 1 : current_iteration;
+
+                    // 3. The elapsed time is the result of evaluating (iteration boundary - iteration start) × iteration duration).
+                    auto iteration_duration_variant = effect->iteration_duration();
+                    auto iteration_duration = iteration_duration_variant.has<String>() ? 0.0 : iteration_duration_variant.get<double>();
+                    auto elapsed_time = (iteration_boundary - effect->iteration_start()) * iteration_duration;
+
+                    dispatch_event("animationiteration"_fly_string, elapsed_time);
+                }
+            } else if (current_phase == Animations::AnimationEffect::Phase::After) {
+                dispatch_event("animationend"_fly_string, interval_end);
+            }
+            break;
+        case Animations::AnimationEffect::Phase::After:
+            if (current_phase == Animations::AnimationEffect::Phase::Active) {
+                dispatch_event("animationstart"_fly_string, interval_end);
+            } else if (current_phase == Animations::AnimationEffect::Phase::Before) {
+                dispatch_event("animationstart"_fly_string, interval_end);
+                dispatch_event("animationend"_fly_string, interval_start);
+            }
+            break;
+        }
+
+        if (current_phase == Animations::AnimationEffect::Phase::Idle && previous_phase != Animations::AnimationEffect::Phase::Idle && previous_phase != Animations::AnimationEffect::Phase::After) {
+            // FIXME: Use the active time "at the moment it was cancelled"
+            dispatch_event("animationcancel"_fly_string, effect->active_time_using_fill(Bindings::FillMode::Both).value());
+        }
+    }
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#scroll-to-the-fragment-identifier
