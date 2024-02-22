@@ -352,6 +352,13 @@ void LayoutState::commit(Box& root)
             continue;
         auto const& box = static_cast<Layout::Box const&>(used_values.node());
         measure_scrollable_overflow(box);
+
+        // The scroll offset can become invalid if the scrollable overflow rectangle has changed after layout.
+        // For example, if the scroll container has been scrolled to the very end and is then resized to become larger
+        // (scrollable overflow rect become smaller), the scroll offset would be out of bounds.
+        auto& paintable_box = const_cast<Painting::PaintableBox&>(*box.paintable_box());
+        if (!paintable_box.scroll_offset().is_zero())
+            paintable_box.set_scroll_offset(paintable_box.scroll_offset());
     }
 }
 
