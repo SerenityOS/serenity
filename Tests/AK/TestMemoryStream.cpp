@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/BufferedStream.h>
 #include <AK/MemoryStream.h>
 #include <AK/String.h>
 #include <LibTest/TestCase.h>
@@ -269,4 +270,31 @@ TEST_CASE(fixed_memory_read_in_place)
     auto characters_again = TRY_OR_FAIL(mutable_stream.read_in_place<u8 const>(20));
     EXPECT_EQ(characters_again, some_words.bytes());
     EXPECT(mutable_stream.is_eof());
+}
+
+TEST_CASE(buffered_memory_stream_read_line)
+{
+    auto array = Array<u8, 32> {};
+
+    // First line: 8 bytes, second line: 24 bytes
+    array.fill('A');
+    array[7] = '\n';
+    array[31] = '\n';
+
+    auto memory_stream = make<FixedMemoryStream>(array.span(), FixedMemoryStream::Mode::ReadOnly);
+
+    // Buffer for buffered seekable is larger than the stream, so stream goes EOF immediately on read
+    auto buffered_stream = TRY_OR_FAIL(InputBufferedSeekable<FixedMemoryStream>::create(move(memory_stream), 64));
+
+    // Buffer is only 16 bytes, first read succeeds, second fails
+    auto buffer = TRY_OR_FAIL(ByteBuffer::create_zeroed(16));
+
+    auto read_bytes = TRY_OR_FAIL(buffered_stream->read_line(buffer));
+
+    EXPECT_EQ(read_bytes, "AAAAAAA"sv);
+
+    auto read_or_error = buffered_stream->read_line(buffer);
+
+    EXPECT(read_or_error.is_error());
+    EXPECT_EQ(read_or_error.error().code(), EMSGSIZE);
 }
