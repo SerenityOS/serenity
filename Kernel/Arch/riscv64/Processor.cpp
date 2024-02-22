@@ -113,6 +113,9 @@ void ProcessorBase<T>::initialize(u32)
 {
     m_deferred_call_pool.init();
 
+    // FIXME: Actually set the correct count when we support SMP on riscv64.
+    g_total_processors.store(1, AK::MemoryOrder::memory_order_release);
+
     // Enable the FPU
     auto sstatus = RISCV64::CSR::SSTATUS::read();
     sstatus.FS = RISCV64::CSR::SSTATUS::FloatingPointStatus::Initial;
