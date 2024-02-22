@@ -214,8 +214,17 @@ Optional<CSSPixelPoint> PaintableBox::enclosing_scroll_frame_offset() const
 
 Optional<CSSPixelRect> PaintableBox::clip_rect() const
 {
-    if (m_enclosing_clip_frame)
-        return m_enclosing_clip_frame->rect();
+    if (m_enclosing_clip_frame) {
+        auto rect = m_enclosing_clip_frame->rect();
+        // NOTE: Since the painting command executor applies a CSS transform and the clip rect is calculated
+        //       with this transform in account, we need to remove the transform from the clip rect.
+        //       Otherwise, the transform will be applied twice to the clip rect.
+        //       Similarly, for hit-testing, the transform must be removed from the clip rectangle since the position
+        //       includes the transform.
+        auto combined_transform = compute_combined_css_transform();
+        rect.translate_by(-combined_transform.translation().to_type<CSSPixels>());
+        return rect;
+    }
     return {};
 }
 
@@ -435,17 +444,12 @@ void PaintableBox::apply_clip_overflow_rect(PaintContext& context, PaintPhase ph
 
     if (clip_rect().has_value()) {
         auto overflow_clip_rect = clip_rect().value();
-        // NOTE: Since the painting command executor applies a CSS transform and the clip rect is calculated
-        //       with this transform in account, we need to remove the transform from the clip rect.
-        //       Otherwise, the transform will be applied twice to the clip rect.
-        auto combined_transform = compute_combined_css_transform();
-        overflow_clip_rect.translate_by(-combined_transform.translation().to_type<CSSPixels>());
-
         m_clipping_overflow = true;
         context.recording_painter().save();
         context.recording_painter().add_clip_rect(context.enclosing_device_rect(overflow_clip_rect).to_type<int>());
         auto const& border_radii_clips = this->border_radii_clips();
         m_corner_clipper_ids.resize(border_radii_clips.size());
+        auto combined_transform = compute_combined_css_transform();
         for (size_t corner_clip_index = 0; corner_clip_index < border_radii_clips.size(); ++corner_clip_index) {
             auto const& corner_clip = border_radii_clips[corner_clip_index];
             auto corners = corner_clip.radii.as_corners(context);
