@@ -52,7 +52,7 @@ struct NVMeIO {
 class NVMeController;
 class NVMeQueue : public AtomicRefCounted<NVMeQueue> {
 public:
-    static ErrorOr<NonnullLockRefPtr<NVMeQueue>> try_create(NVMeController& device, u16 qid, u8 irq, u32 q_depth, OwnPtr<Memory::Region> cq_dma_region, OwnPtr<Memory::Region> sq_dma_region, Doorbell db_regs, QueueType queue_type);
+    static ErrorOr<NonnullLockRefPtr<NVMeQueue>> try_create(NVMeController& device, u16 qid, Optional<u8> irq, u32 q_depth, OwnPtr<Memory::Region> cq_dma_region, OwnPtr<Memory::Region> sq_dma_region, Doorbell db_regs, QueueType queue_type);
     bool is_admin_queue() { return m_admin_queue; }
     u16 submit_sync_sqe(NVMeSubmission&);
     void read(AsyncBlockDeviceRequest& request, u16 nsid, u64 index, u32 count);

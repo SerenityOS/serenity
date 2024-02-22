@@ -80,7 +80,7 @@ private:
     AK::Duration m_ready_timeout;
     PhysicalAddress m_bar { 0 };
     u8 m_dbl_stride { 0 };
-    PCI::InterruptType m_irq_type;
+    Optional<PCI::InterruptType> m_irq_type;
     QueueType m_queue_type { QueueType::IRQ };
     static Atomic<u8> s_controller_id;
 };
