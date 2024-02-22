@@ -24,7 +24,7 @@ static ErrorOr<pid_t> launch_process(StringView application, ReadonlySpan<char c
 
     ErrorOr<pid_t> result = -1;
     for (auto const& path : paths) {
-        auto path_view = path.bytes_as_string_view();
+        auto path_view = path.view();
         result = Core::Process::spawn(path_view, arguments, {}, Core::Process::KeepAsChild::Yes);
         if (!result.is_error())
             break;

@@ -8,7 +8,7 @@
 
 ErrorOr<NonnullRefPtr<WebView::WebContentClient>> launch_web_content_process(
     WebView::ViewImplementation& view,
-    ReadonlySpan<String> candidate_web_content_paths,
+    ReadonlySpan<ByteString> candidate_web_content_paths,
     Ladybird::WebContentOptions const& web_content_options)
 {
     int socket_fds[2] {};
@@ -43,7 +43,7 @@ ErrorOr<NonnullRefPtr<WebView::WebContentClient>> launch_web_content_process(
                 "valgrind"sv,
                 "--tool=callgrind"sv,
                 "--instr-atstart=no"sv,
-                path.bytes_as_string_view(),
+                path.view(),
                 "--command-line"sv,
                 web_content_options.command_line,
                 "--executable-path"sv,
@@ -97,7 +97,7 @@ ErrorOr<NonnullRefPtr<WebView::WebContentClient>> launch_web_content_process(
 }
 
 template<typename Client>
-ErrorOr<NonnullRefPtr<Client>> launch_generic_server_process(ReadonlySpan<String> candidate_server_paths, StringView serenity_resource_root, Vector<ByteString> const& certificates, StringView server_name)
+ErrorOr<NonnullRefPtr<Client>> launch_generic_server_process(ReadonlySpan<ByteString> candidate_server_paths, StringView serenity_resource_root, Vector<ByteString> const& certificates, StringView server_name)
 {
     int socket_fds[2] {};
     TRY(Core::System::socketpair(AF_LOCAL, SOCK_STREAM, 0, socket_fds));
@@ -127,7 +127,7 @@ ErrorOr<NonnullRefPtr<Client>> launch_generic_server_process(ReadonlySpan<String
                 continue;
 
             auto arguments = Vector<StringView, 5> {
-                path.bytes_as_string_view(),
+                path.view(),
                 "--fd-passing-socket"sv,
                 fd_passing_socket_string,
             };
@@ -163,22 +163,22 @@ ErrorOr<NonnullRefPtr<Client>> launch_generic_server_process(ReadonlySpan<String
     return new_client;
 }
 
-ErrorOr<NonnullRefPtr<ImageDecoderClient::Client>> launch_image_decoder_process(ReadonlySpan<String> candidate_image_decoder_paths)
+ErrorOr<NonnullRefPtr<ImageDecoderClient::Client>> launch_image_decoder_process(ReadonlySpan<ByteString> candidate_image_decoder_paths)
 {
     return launch_generic_server_process<ImageDecoderClient::Client>(candidate_image_decoder_paths, ""sv, {}, "ImageDecoder"sv);
 }
 
-ErrorOr<NonnullRefPtr<Web::HTML::WebWorkerClient>> launch_web_worker_process(ReadonlySpan<String> candidate_web_worker_paths, Vector<ByteString> const& certificates)
+ErrorOr<NonnullRefPtr<Web::HTML::WebWorkerClient>> launch_web_worker_process(ReadonlySpan<ByteString> candidate_web_worker_paths, Vector<ByteString> const& certificates)
 {
     return launch_generic_server_process<Web::HTML::WebWorkerClient>(candidate_web_worker_paths, ""sv, certificates, "WebWorker"sv);
 }
 
-ErrorOr<NonnullRefPtr<Protocol::RequestClient>> launch_request_server_process(ReadonlySpan<String> candidate_request_server_paths, StringView serenity_resource_root, Vector<ByteString> const& certificates)
+ErrorOr<NonnullRefPtr<Protocol::RequestClient>> launch_request_server_process(ReadonlySpan<ByteString> candidate_request_server_paths, StringView serenity_resource_root, Vector<ByteString> const& certificates)
 {
     return launch_generic_server_process<Protocol::RequestClient>(candidate_request_server_paths, serenity_resource_root, certificates, "RequestServer"sv);
 }
 
-ErrorOr<NonnullRefPtr<Protocol::WebSocketClient>> launch_web_socket_process(ReadonlySpan<String> candidate_web_socket_paths, StringView serenity_resource_root, Vector<ByteString> const& certificates)
+ErrorOr<NonnullRefPtr<Protocol::WebSocketClient>> launch_web_socket_process(ReadonlySpan<ByteString> candidate_web_socket_paths, StringView serenity_resource_root, Vector<ByteString> const& certificates)
 {
     return launch_generic_server_process<Protocol::WebSocketClient>(candidate_web_socket_paths, serenity_resource_root, certificates, "WebSocket"sv);
 }

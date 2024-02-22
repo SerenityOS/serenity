@@ -30,7 +30,7 @@ class Database : public RefCounted<Database> {
 public:
     static ErrorOr<NonnullRefPtr<Database>> create();
 #if !defined(AK_OS_SERENITY)
-    static ErrorOr<NonnullRefPtr<Database>> create(Vector<String> candidate_sql_server_paths);
+    static ErrorOr<NonnullRefPtr<Database>> create(Vector<ByteString> candidate_sql_server_paths);
 #endif
 
     ErrorOr<SQL::StatementID> prepare_statement(StringView statement);

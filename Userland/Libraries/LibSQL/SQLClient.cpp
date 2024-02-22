@@ -52,7 +52,7 @@ static ErrorOr<int> create_database_socket(ByteString const& socket_path)
     return socket_fd;
 }
 
-static ErrorOr<void> launch_server(ByteString const& socket_path, ByteString const& pid_path, Vector<String> candidate_server_paths)
+static ErrorOr<void> launch_server(ByteString const& socket_path, ByteString const& pid_path, Vector<ByteString> candidate_server_paths)
 {
     auto server_fd_or_error = create_database_socket(socket_path);
     if (server_fd_or_error.is_error()) {
@@ -87,7 +87,7 @@ static ErrorOr<void> launch_server(ByteString const& socket_path, ByteString con
         ErrorOr<void> result;
         for (auto const& server_path : candidate_server_paths) {
             auto arguments = Array {
-                server_path.bytes_as_string_view(),
+                server_path.view(),
                 "--pid-file"sv,
                 pid_path,
             };
@@ -147,7 +147,7 @@ static ErrorOr<bool> should_launch_server(ByteString const& pid_path)
     return false;
 }
 
-ErrorOr<NonnullRefPtr<SQLClient>> SQLClient::launch_server_and_create_client(Vector<String> candidate_server_paths)
+ErrorOr<NonnullRefPtr<SQLClient>> SQLClient::launch_server_and_create_client(Vector<ByteString> candidate_server_paths)
 {
     auto runtime_directory = TRY(Core::StandardPaths::runtime_directory());
     auto socket_path = ByteString::formatted("{}/SQLServer.socket", runtime_directory);

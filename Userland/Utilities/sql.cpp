@@ -360,7 +360,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto sql_client = TRY(SQL::SQLClient::try_create());
 #else
     VERIFY(!sql_server_path.is_empty());
-    auto sql_client = TRY(SQL::SQLClient::launch_server_and_create_client({ TRY(String::from_utf8(sql_server_path)) }));
+    auto sql_client = TRY(SQL::SQLClient::launch_server_and_create_client({ sql_server_path }));
 #endif
 
     SQLRepl repl(loop, database_name, move(sql_client));
