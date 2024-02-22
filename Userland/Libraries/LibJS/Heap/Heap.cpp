@@ -369,6 +369,12 @@ __attribute__((no_sanitize("address"))) void Heap::gather_conservative_roots(Has
         }
     }
 
+    for (auto& vector : m_conservative_vectors) {
+        for (auto possible_value : vector.possible_values()) {
+            add_possible_value(possible_pointers, possible_value, HeapRoot { .type = HeapRoot::Type::ConservativeVector }, min_block_address, max_block_address);
+        }
+    }
+
     HashTable<HeapBlock*> all_live_heap_blocks;
     for_each_block([&](auto& block) {
         all_live_heap_blocks.set(&block);

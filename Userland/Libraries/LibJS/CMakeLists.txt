@@ -20,6 +20,7 @@ set(SOURCES
     Heap/BlockAllocator.cpp
     Heap/Cell.cpp
     Heap/CellAllocator.cpp
+    Heap/ConservativeVector.cpp
     Heap/Handle.cpp
     Heap/Heap.cpp
     Heap/HeapBlock.cpp

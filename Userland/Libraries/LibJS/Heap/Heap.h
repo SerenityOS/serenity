@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2024, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -17,6 +17,7 @@
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Cell.h>
 #include <LibJS/Heap/CellAllocator.h>
+#include <LibJS/Heap/ConservativeVector.h>
 #include <LibJS/Heap/Handle.h>
 #include <LibJS/Heap/HeapRoot.h>
 #include <LibJS/Heap/Internals.h>
@@ -73,6 +74,9 @@ public:
 
     void did_create_marked_vector(Badge<MarkedVectorBase>, MarkedVectorBase&);
     void did_destroy_marked_vector(Badge<MarkedVectorBase>, MarkedVectorBase&);
+
+    void did_create_conservative_vector(Badge<ConservativeVectorBase>, ConservativeVectorBase&);
+    void did_destroy_conservative_vector(Badge<ConservativeVectorBase>, ConservativeVectorBase&);
 
     void did_create_weak_container(Badge<WeakContainer>, WeakContainer&);
     void did_destroy_weak_container(Badge<WeakContainer>, WeakContainer&);
@@ -147,6 +151,7 @@ private:
 
     HandleImpl::List m_handles;
     MarkedVectorBase::List m_marked_vectors;
+    ConservativeVectorBase::List m_conservative_vectors;
     WeakContainer::List m_weak_containers;
 
     Vector<GCPtr<Cell>> m_uprooted_cells;
@@ -179,6 +184,18 @@ inline void Heap::did_destroy_marked_vector(Badge<MarkedVectorBase>, MarkedVecto
 {
     VERIFY(m_marked_vectors.contains(vector));
     m_marked_vectors.remove(vector);
+}
+
+inline void Heap::did_create_conservative_vector(Badge<ConservativeVectorBase>, ConservativeVectorBase& vector)
+{
+    VERIFY(!m_conservative_vectors.contains(vector));
+    m_conservative_vectors.append(vector);
+}
+
+inline void Heap::did_destroy_conservative_vector(Badge<ConservativeVectorBase>, ConservativeVectorBase& vector)
+{
+    VERIFY(m_conservative_vectors.contains(vector));
+    m_conservative_vectors.remove(vector);
 }
 
 inline void Heap::did_create_weak_container(Badge<WeakContainer>, WeakContainer& set)

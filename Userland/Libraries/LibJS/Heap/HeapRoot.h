@@ -15,6 +15,7 @@ struct HeapRoot {
         HeapFunctionCapturedPointer,
         Handle,
         MarkedVector,
+        ConservativeVector,
         RegisterPointer,
         SafeFunction,
         StackPointer,
