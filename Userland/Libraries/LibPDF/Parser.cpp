@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Hex.h>
 #include <AK/ScopeGuard.h>
 #include <LibPDF/CommonNames.h>
 #include <LibPDF/Document.h>
@@ -223,11 +224,7 @@ PDFErrorOr<NonnullRefPtr<NameObject>> Parser::parse_name()
                 auto ch = m_reader.consume();
                 VERIFY(is_ascii_hex_digit(ch));
                 hex_value *= 16;
-                if (ch <= '9') {
-                    hex_value += ch - '0';
-                } else {
-                    hex_value += ch - 'A' + 10;
-                }
+                hex_value += decode_hex_digit(ch);
             }
             builder.append(static_cast<char>(hex_value));
             continue;
@@ -374,13 +371,7 @@ PDFErrorOr<ByteString> Parser::parse_hex_string()
                     return error("character in hex string isn't hex digit");
 
                 hex_value *= 16;
-                if (ch <= '9') {
-                    hex_value += ch - '0';
-                } else if (ch >= 'A' && ch <= 'F') {
-                    hex_value += ch - 'A' + 10;
-                } else {
-                    hex_value += ch - 'a' + 10;
-                }
+                hex_value += decode_hex_digit(ch);
             }
 
             builder.append(static_cast<char>(hex_value));
