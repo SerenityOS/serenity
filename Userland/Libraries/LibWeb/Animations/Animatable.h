@@ -33,9 +33,13 @@ public:
     void associate_with_effect(JS::NonnullGCPtr<AnimationEffect> effect);
     void disassociate_with_effect(JS::NonnullGCPtr<AnimationEffect> effect);
 
+    JS::GCPtr<CSS::CSSStyleDeclaration const> cached_animation_name_source() const { return m_cached_animation_name_source; }
+    void set_cached_animation_name_source(JS::GCPtr<CSS::CSSStyleDeclaration const> value) { m_cached_animation_name_source = value; }
+
 private:
     Vector<JS::NonnullGCPtr<AnimationEffect>> m_associated_effects;
     bool m_is_sorted_by_composite_order { true };
+    JS::GCPtr<CSS::CSSStyleDeclaration const> m_cached_animation_name_source;
 };
 
 }

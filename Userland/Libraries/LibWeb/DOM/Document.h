@@ -561,6 +561,7 @@ public:
     void append_pending_animation_event(PendingAnimationEvent const&);
     void update_animations_and_send_events(Optional<double> const& timestamp);
     void remove_replaced_animations();
+    void ensure_animation_timer();
 
     bool ready_to_run_scripts() const { return m_ready_to_run_scripts; }
 
@@ -619,6 +620,8 @@ private:
     void queue_an_intersection_observer_entry(IntersectionObserver::IntersectionObserver&, HighResolutionTime::DOMHighResTimeStamp time, JS::NonnullGCPtr<Geometry::DOMRectReadOnly> root_bounds, JS::NonnullGCPtr<Geometry::DOMRectReadOnly> bounding_client_rect, JS::NonnullGCPtr<Geometry::DOMRectReadOnly> intersection_rect, bool is_intersecting, double intersection_ratio, JS::NonnullGCPtr<Element> target);
 
     Element* find_a_potential_indicated_element(FlyString const& fragment) const;
+
+    void dispatch_events_for_animation_if_necessary(JS::NonnullGCPtr<Animations::Animation>);
 
     JS::NonnullGCPtr<Page> m_page;
     OwnPtr<CSS::StyleComputer> m_style_computer;
@@ -815,6 +818,7 @@ private:
 
     // https://www.w3.org/TR/web-animations-1/#pending-animation-event-queue
     Vector<PendingAnimationEvent> m_pending_animation_event_queue;
+    RefPtr<Platform::Timer> m_animation_driver_timer;
 
     bool m_needs_to_call_page_did_load { false };
 

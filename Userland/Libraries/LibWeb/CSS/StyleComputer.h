@@ -10,7 +10,7 @@
 #include <AK/HashMap.h>
 #include <AK/Optional.h>
 #include <AK/OwnPtr.h>
-#include <AK/RedBlackTree.h>
+#include <LibWeb/Animations/KeyframeEffect.h>
 #include <LibWeb/CSS/CSSFontFaceRule.h>
 #include <LibWeb/CSS/CSSKeyframesRule.h>
 #include <LibWeb/CSS/CSSStyleDeclaration.h>
@@ -73,42 +73,6 @@ public:
 
     RefPtr<Gfx::FontCascadeList const> compute_font_for_style_values(DOM::Element const* element, Optional<CSS::Selector::PseudoElement::Type> pseudo_element, StyleValue const& font_family, StyleValue const& font_size, StyleValue const& font_style, StyleValue const& font_weight, StyleValue const& font_stretch, int math_depth = 0) const;
 
-    struct AnimationKey {
-        CSS::CSSStyleDeclaration const* source_declaration;
-        DOM::Element const* element;
-    };
-
-    struct AnimationTiming {
-        struct Linear { };
-        struct CubicBezier {
-            // Regular parameters
-            double x1;
-            double y1;
-            double x2;
-            double y2;
-
-            struct CachedSample {
-                double x;
-                double y;
-                double t;
-            };
-            mutable Vector<CachedSample, 64> m_cached_x_samples = {};
-
-            CachedSample sample_around(double x) const;
-            bool operator==(CubicBezier const& other) const
-            {
-                return x1 == other.x1 && y1 == other.y1 && x2 == other.x2 && y2 == other.y2;
-            }
-        };
-        struct Steps {
-            size_t number_of_steps;
-            bool jump_at_start;
-            bool jump_at_end;
-        };
-
-        Variant<Linear, CubicBezier, Steps> timing_function;
-    };
-
     void set_viewport_rect(Badge<DOM::Document>, CSSPixelRect const& viewport_rect) { m_viewport_rect = viewport_rect; }
 
 private:
@@ -156,28 +120,20 @@ private:
 
     JS::NonnullGCPtr<DOM::Document> m_document;
 
-    struct AnimationKeyFrameSet {
-        struct ResolvedKeyFrame {
-            struct UseInitial { };
-            Array<Variant<Empty, UseInitial, NonnullRefPtr<StyleValue const>>, to_underlying(last_property_id) + 1> resolved_properties {};
-        };
-        RedBlackTree<u64, ResolvedKeyFrame> keyframes_by_key;
-    };
-
     struct RuleCache {
         HashMap<FlyString, Vector<MatchingRule>> rules_by_id;
         HashMap<FlyString, Vector<MatchingRule>> rules_by_class;
         HashMap<FlyString, Vector<MatchingRule>> rules_by_tag_name;
         Vector<MatchingRule> other_rules;
 
-        HashMap<FlyString, NonnullOwnPtr<AnimationKeyFrameSet>> rules_by_animation_keyframes;
+        HashMap<FlyString, NonnullRefPtr<Animations::KeyframeEffect::KeyFrameSet>> rules_by_animation_keyframes;
     };
 
     NonnullOwnPtr<RuleCache> make_rule_cache_for_cascade_origin(CascadeOrigin);
 
     RuleCache const& rule_cache_for_cascade_origin(CascadeOrigin) const;
 
-    void ensure_animation_timer() const;
+    ErrorOr<void> collect_animation_into(JS::NonnullGCPtr<Animations::KeyframeEffect> animation, StyleProperties& style_properties) const;
 
     OwnPtr<RuleCache> m_author_rule_cache;
     OwnPtr<RuleCache> m_user_rule_cache;
@@ -190,71 +146,7 @@ private:
     Length::FontMetrics m_default_font_metrics;
     Length::FontMetrics m_root_element_font_metrics;
 
-    constexpr static u64 AnimationKeyFrameKeyScaleFactor = 1000; // 0..100000
-
-    enum class AnimationStepTransition {
-        NoTransition,
-        IdleOrBeforeToActive,
-        IdleOrBeforeToAfter,
-        ActiveToBefore,
-        ActiveToActiveChangingTheIteration,
-        ActiveToAfter,
-        AfterToActive,
-        AfterToBefore,
-        Cancelled,
-    };
-    enum class AnimationState {
-        Before,
-        After,
-        Idle,
-        Active,
-    };
-
-    struct AnimationStateSnapshot {
-        Array<RefPtr<StyleValue const>, to_underlying(last_property_id) + 1> state;
-    };
-
-    struct Animation {
-        String name;
-        Optional<CSS::Time> duration; // "auto" if not set.
-        CSS::Time delay;
-        Optional<size_t> iteration_count; // Infinite if not set.
-        AnimationTiming timing_function;
-        CSS::AnimationDirection direction;
-        CSS::AnimationFillMode fill_mode;
-        WeakPtr<DOM::Element> owning_element;
-
-        CSS::Percentage progress { 0 };
-        CSS::Time remaining_delay { 0, CSS::Time::Type::Ms };
-        AnimationState current_state { AnimationState::Before };
-        size_t current_iteration { 1 };
-
-        mutable AnimationStateSnapshot initial_state {};
-        mutable OwnPtr<AnimationStateSnapshot> active_state_if_fill_forward {};
-
-        AnimationStepTransition step(CSS::Time const& time_step);
-        ErrorOr<void> collect_into(StyleProperties&, RuleCache const&) const;
-        bool is_done() const;
-
-    private:
-        float compute_output_progress(float input_progress) const;
-        bool is_animating_backwards() const;
-    };
-
-    mutable HashMap<AnimationKey, NonnullOwnPtr<Animation>> m_active_animations;
-    mutable HashMap<AnimationKey, OwnPtr<AnimationStateSnapshot>> m_finished_animations; // If fill-mode is forward/both, this is non-null and contains the final state.
-    mutable RefPtr<Platform::Timer> m_animation_driver_timer;
-
     CSSPixelRect m_viewport_rect;
 };
 
 }
-
-template<>
-struct AK::Traits<Web::CSS::StyleComputer::AnimationKey> : public AK::DefaultTraits<Web::CSS::StyleComputer::AnimationKey> {
-    static unsigned hash(Web::CSS::StyleComputer::AnimationKey const& k) { return pair_int_hash(ptr_hash(k.source_declaration), ptr_hash(k.element)); }
-    static bool equals(Web::CSS::StyleComputer::AnimationKey const& a, Web::CSS::StyleComputer::AnimationKey const& b)
-    {
-        return a.element == b.element && a.source_declaration == b.source_declaration;
-    }
-};

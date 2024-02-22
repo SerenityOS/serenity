@@ -23,6 +23,8 @@
 #include <LibWeb/Animations/AnimationTimeline.h>
 #include <LibWeb/Animations/DocumentTimeline.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
+#include <LibWeb/CSS/AnimationEvent.h>
+#include <LibWeb/CSS/CSSAnimation.h>
 #include <LibWeb/CSS/MediaQueryList.h>
 #include <LibWeb/CSS/MediaQueryListEvent.h>
 #include <LibWeb/CSS/StyleComputer.h>
@@ -1887,6 +1889,19 @@ Element* Document::find_a_potential_indicated_element(FlyString const& fragment)
 
     // 3. Return null.
     return nullptr;
+}
+
+// https://www.w3.org/TR/css-animations-2/#event-dispatch
+void Document::dispatch_events_for_animation_if_necessary(JS::NonnullGCPtr<Animations::Animation> animation)
+{
+    // Each time a new animation frame is established and the animation does not have a pending play task or pending
+    // pause task, the events to dispatch are determined by comparing the animation’s phase before and after
+    // establishing the new animation frame as follows:
+    auto effect = animation->effect();
+    if (!effect || !effect->is_keyframe_effect() || !animation->is_css_animation() || animation->pending())
+        return;
+
+    // TODO: Dispatch events
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#scroll-to-the-fragment-identifier
@@ -3906,6 +3921,35 @@ void Document::remove_replaced_animations()
             }
         }
     }
+}
+
+void Document::ensure_animation_timer()
+{
+    constexpr static auto timer_delay_ms = 1000 / 60;
+    if (!m_animation_driver_timer) {
+        m_animation_driver_timer = Platform::Timer::create_repeating(timer_delay_ms, [this] {
+            bool has_animations = false;
+            for (auto& timeline : m_associated_animation_timelines) {
+                if (!timeline->associated_animations().is_empty()) {
+                    has_animations = true;
+                    break;
+                }
+            }
+            if (!has_animations) {
+                m_animation_driver_timer->stop();
+                return;
+            }
+
+            update_animations_and_send_events(MonotonicTime::now().milliseconds());
+
+            for (auto& timeline : m_associated_animation_timelines) {
+                for (auto& animation : timeline->associated_animations())
+                    dispatch_events_for_animation_if_necessary(animation);
+            }
+        });
+    }
+
+    m_animation_driver_timer->start();
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#dom-document-nameditem-filter
