@@ -894,52 +894,52 @@ private:
         m_position += 2;
         return value;
     }
-
-    static WebIDL::ExceptionOr<ByteBuffer> deserialize_bytes(JS::VM& vm, ReadonlySpan<u32> vector, size_t& position)
-    {
-        u32 size_bits[2];
-        size_bits[0] = vector[position++];
-        size_bits[1] = vector[position++];
-        u64 const size = *bit_cast<u64*>(&size_bits);
-
-        auto bytes = TRY_OR_THROW_OOM(vm, ByteBuffer::create_uninitialized(size));
-        u64 byte_position = 0;
-        while (position < vector.size() && byte_position < size) {
-            for (u8 i = 0; i < 4; ++i) {
-                bytes[byte_position++] = (vector[position] >> (i * 8) & 0xFF);
-                if (byte_position == size)
-                    break;
-            }
-            position++;
-        }
-        return bytes;
-    }
-
-    static WebIDL::ExceptionOr<String> deserialize_string(JS::VM& vm, ReadonlySpan<u32> vector, size_t& position)
-    {
-        auto bytes = TRY(deserialize_bytes(vm, vector, position));
-        return TRY_OR_THROW_OOM(vm, String::from_utf8(StringView { bytes }));
-    }
-
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::PrimitiveString>> deserialize_string_primitive(JS::VM& vm, ReadonlySpan<u32> vector, size_t& position)
-    {
-        auto bytes = TRY(deserialize_bytes(vm, vector, position));
-
-        return TRY(Bindings::throw_dom_exception_if_needed(vm, [&vm, &bytes]() {
-            return JS::PrimitiveString::create(vm, StringView { bytes });
-        }));
-    }
-
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::BigInt>> deserialize_big_int_primitive(JS::VM& vm, ReadonlySpan<u32> vector, size_t& position)
-    {
-        auto string = TRY(deserialize_string_primitive(vm, vector, position));
-        auto string_view = TRY(Bindings::throw_dom_exception_if_needed(vm, [&string]() {
-            return string->utf8_string_view();
-        }));
-        auto bigint = MUST(::Crypto::SignedBigInteger::from_base(10, string_view.substring_view(0, string_view.length() - 1)));
-        return JS::BigInt::create(vm, bigint);
-    }
 };
+
+WebIDL::ExceptionOr<ByteBuffer> deserialize_bytes(JS::VM& vm, ReadonlySpan<u32> vector, size_t& position)
+{
+    u32 size_bits[2];
+    size_bits[0] = vector[position++];
+    size_bits[1] = vector[position++];
+    u64 const size = *bit_cast<u64*>(&size_bits);
+
+    auto bytes = TRY_OR_THROW_OOM(vm, ByteBuffer::create_uninitialized(size));
+    u64 byte_position = 0;
+    while (position < vector.size() && byte_position < size) {
+        for (u8 i = 0; i < 4; ++i) {
+            bytes[byte_position++] = (vector[position] >> (i * 8) & 0xFF);
+            if (byte_position == size)
+                break;
+        }
+        position++;
+    }
+    return bytes;
+}
+
+WebIDL::ExceptionOr<String> deserialize_string(JS::VM& vm, ReadonlySpan<u32> vector, size_t& position)
+{
+    auto bytes = TRY(deserialize_bytes(vm, vector, position));
+    return TRY_OR_THROW_OOM(vm, String::from_utf8(StringView { bytes }));
+}
+
+WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::PrimitiveString>> deserialize_string_primitive(JS::VM& vm, ReadonlySpan<u32> vector, size_t& position)
+{
+    auto bytes = TRY(deserialize_bytes(vm, vector, position));
+
+    return TRY(Bindings::throw_dom_exception_if_needed(vm, [&vm, &bytes]() {
+        return JS::PrimitiveString::create(vm, StringView { bytes });
+    }));
+}
+
+WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::BigInt>> deserialize_big_int_primitive(JS::VM& vm, ReadonlySpan<u32> vector, size_t& position)
+{
+    auto string = TRY(deserialize_string_primitive(vm, vector, position));
+    auto string_view = TRY(Bindings::throw_dom_exception_if_needed(vm, [&string]() {
+        return string->utf8_string_view();
+    }));
+    auto bigint = MUST(::Crypto::SignedBigInteger::from_base(10, string_view.substring_view(0, string_view.length() - 1)));
+    return JS::BigInt::create(vm, bigint);
+}
 
 // https://html.spec.whatwg.org/multipage/structured-data.html#structuredserializewithtransfer
 WebIDL::ExceptionOr<SerializedTransferRecord> structured_serialize_with_transfer(JS::VM& vm, JS::Value value, Vector<JS::Handle<JS::Object>> const& transfer_list)
