@@ -31,7 +31,9 @@
 #include <LibJS/Runtime/VM.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/Bindings/Serializable.h>
 #include <LibWeb/Bindings/Transferable.h>
+#include <LibWeb/FileAPI/Blob.h>
 #include <LibWeb/HTML/MessagePort.h>
 #include <LibWeb/HTML/StructuredSerialize.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
@@ -104,6 +106,8 @@ enum ValueTag {
     Object,
 
     ObjectReference,
+
+    SerializableObject,
 
     // TODO: Define many more types
 
@@ -310,6 +314,14 @@ public:
         }
 
         // FIXME: 19. Otherwise, if value is a platform object that is a serializable object:
+        else if (value.is_object() && is<Bindings::Serializable>(value.as_object())) {
+            auto& serializable = dynamic_cast<Bindings::Serializable&>(value.as_object());
+
+            m_serialized.append(ValueTag::SerializableObject);
+
+            // 1. Perform the serialization steps for value's primary interface, given value, serialized, and forStorage.
+            TRY(serializable.serialization_steps(m_serialized, m_for_storage));
+        }
 
         // 20. Otherwise, if value is a platform object, then throw a "DataCloneError" DOMException.
         else if (value.is_object() && is<Bindings::PlatformObject>(value.as_object())) {
@@ -812,7 +824,20 @@ public:
         }
         // 22. Otherwise:
         default:
-            return WebIDL::DataCloneError::create(*m_vm.current_realm(), "Unsupported type"_fly_string);
+            VERIFY(tag == ValueTag::SerializableObject);
+
+            auto& realm = *m_vm.current_realm();
+            // 1. Let interfaceName be serialized.[[Type]].
+            auto interface_name = TRY(deserialize_string(m_vm, m_serialized, m_position));
+            // 2. If the interface identified by interfaceName is not exposed in targetRealm, then throw a "DataCloneError" DOMException.
+            if (!is_interface_exposed_on_target_realm(interface_name, realm))
+                return WebIDL::DataCloneError::create(realm, "Unsupported type"_fly_string);
+
+            // 3. Set value to a new instance of the interface identified by interfaceName, created in targetRealm.
+            value = TRY(create_serialized_type(interface_name, realm));
+
+            // 4. Set deep to true.
+            deep = true;
         }
 
         // 23. Set memory[serialized] to value.
@@ -874,8 +899,9 @@ public:
 
             // 4. Otherwise:
             else {
-                // FIXME: 1. Perform the appropriate deserialization steps for the interface identified by serialized.[[Type]], given serialized, value, and targetRealm.
-                VERIFY_NOT_REACHED();
+                // 1. Perform the appropriate deserialization steps for the interface identified by serialized.[[Type]], given serialized, value, and targetRealm.
+                auto& serializable = dynamic_cast<Bindings::Serializable&>(value.as_object());
+                TRY(serializable.deserialization_steps(m_serialized, m_position));
             }
         }
 
@@ -895,6 +921,22 @@ private:
         memcpy(&value, m_serialized.offset_pointer(m_position), sizeof(value));
         m_position += 2;
         return value;
+    }
+
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Bindings::PlatformObject>> create_serialized_type(StringView interface_name, JS::Realm& realm)
+    {
+        if (interface_name == "Blob"sv)
+            return FileAPI::Blob::create(realm);
+
+        VERIFY_NOT_REACHED();
+    }
+
+    // FIXME: Consolidate this function with the similar is_interface_exposed_on_target_realm() used when transferring objects.
+    //        Also, the name parameter would be better off being the interface name (as a string) so that we don't need a switch statement.
+    static bool is_interface_exposed_on_target_realm(StringView interface_name, JS::Realm& realm)
+    {
+        auto const& intrinsics = Bindings::host_defined_intrinsics(realm);
+        return intrinsics.is_exposed(interface_name);
     }
 };
 
