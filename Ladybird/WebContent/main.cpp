@@ -14,6 +14,7 @@
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalServer.h>
 #include <LibCore/Process.h>
+#include <LibCore/Resource.h>
 #include <LibCore/System.h>
 #include <LibCore/SystemServerTakeover.h>
 #include <LibIPC/ConnectionFromClient.h>
@@ -142,15 +143,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
 static ErrorOr<void> load_content_filters()
 {
-    auto file_or_error = Core::File::open(ByteString::formatted("{}/home/anon/.config/BrowserContentFilters.txt", s_serenity_resource_root), Core::File::OpenMode::Read);
-    if (file_or_error.is_error())
-        file_or_error = Core::File::open(ByteString::formatted("{}/res/ladybird/BrowserContentFilters.txt", s_serenity_resource_root), Core::File::OpenMode::Read);
-    if (file_or_error.is_error())
-        return file_or_error.release_error();
-
-    auto file = file_or_error.release_value();
-    auto ad_filter_list = TRY(Core::InputBufferedFile::create(move(file)));
     auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
+
+    auto resource = TRY(Core::Resource::load_from_uri("resource://ladybird/BrowserContentFilters.txt"sv));
+    auto ad_filter_list = TRY(InputBufferedSeekable<FixedMemoryStream>::create(make<FixedMemoryStream>(resource->data())));
 
     Vector<String> patterns;
 
@@ -171,15 +167,10 @@ static ErrorOr<void> load_content_filters()
 
 static ErrorOr<void> load_autoplay_allowlist()
 {
-    auto file_or_error = Core::File::open(TRY(String::formatted("{}/home/anon/.config/BrowserAutoplayAllowlist.txt", s_serenity_resource_root)), Core::File::OpenMode::Read);
-    if (file_or_error.is_error())
-        file_or_error = Core::File::open(TRY(String::formatted("{}/res/ladybird/BrowserAutoplayAllowlist.txt", s_serenity_resource_root)), Core::File::OpenMode::Read);
-    if (file_or_error.is_error())
-        return file_or_error.release_error();
-
-    auto file = file_or_error.release_value();
-    auto allowlist = TRY(Core::InputBufferedFile::create(move(file)));
     auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
+
+    auto resource = TRY(Core::Resource::load_from_uri("resource://ladybird/BrowserAutoplayAllowlist.txt"sv));
+    auto allowlist = TRY(InputBufferedSeekable<FixedMemoryStream>::create(make<FixedMemoryStream>(resource->data())));
 
     Vector<String> origins;
 

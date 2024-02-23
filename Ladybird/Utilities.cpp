@@ -23,10 +23,6 @@ ErrorOr<ByteString> application_directory()
 void platform_init()
 {
     s_serenity_resource_root = [] {
-        auto const* source_dir = getenv("SERENITY_SOURCE_DIR");
-        if (source_dir) {
-            return ByteString::formatted("{}/Base", source_dir);
-        }
         auto* home = getenv("XDG_CONFIG_HOME") ?: getenv("HOME");
         VERIFY(home);
         auto home_lagom = ByteString::formatted("{}/.lagom", home);
@@ -36,11 +32,11 @@ void platform_init()
 #ifdef AK_OS_MACOS
         return LexicalPath(app_dir).parent().append("Resources"sv).string();
 #else
-        return LexicalPath(app_dir).parent().append("share"sv).string();
+        return LexicalPath(app_dir).parent().append("share/Lagom"sv).string();
 #endif
     }();
 
-    Core::ResourceImplementation::install(make<Core::ResourceImplementationFile>(MUST(String::formatted("{}/res", s_serenity_resource_root))));
+    Core::ResourceImplementation::install(make<Core::ResourceImplementationFile>(MUST(String::from_byte_string(s_serenity_resource_root))));
 }
 
 ErrorOr<Vector<ByteString>> get_paths_for_helper_process(StringView process_name)
