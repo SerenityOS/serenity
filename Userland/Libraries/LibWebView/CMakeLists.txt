@@ -33,6 +33,7 @@ embed_as_string_view(
 )
 
 set(GENERATED_SOURCES
+    ${GENERATED_SOURCES}
     ../../Services/RequestServer/RequestClientEndpoint.h
     ../../Services/RequestServer/RequestServerEndpoint.h
     ../../Services/WebContent/WebContentClientEndpoint.h
