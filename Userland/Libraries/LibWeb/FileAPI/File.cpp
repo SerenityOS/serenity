@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023, Kenneth Myhra <kennethmyhra@serenityos.org>
+ * Copyright (c) 2022-2024, Kenneth Myhra <kennethmyhra@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -21,6 +21,11 @@ File::File(JS::Realm& realm, ByteBuffer byte_buffer, String file_name, String ty
 {
 }
 
+File::File(JS::Realm& realm)
+    : Blob(realm, {})
+{
+}
+
 void File::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
@@ -28,6 +33,11 @@ void File::initialize(JS::Realm& realm)
 }
 
 File::~File() = default;
+
+JS::NonnullGCPtr<File> File::create(JS::Realm& realm)
+{
+    return realm.heap().allocate<File>(realm, realm);
+}
 
 // https://w3c.github.io/FileAPI/#ref-for-dom-file-file
 WebIDL::ExceptionOr<JS::NonnullGCPtr<File>> File::create(JS::Realm& realm, Vector<BlobPart> const& file_bits, String const& file_name, Optional<FilePropertyBag> const& options)
@@ -75,6 +85,55 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<File>> File::create(JS::Realm& realm, Vecto
 WebIDL::ExceptionOr<JS::NonnullGCPtr<File>> File::construct_impl(JS::Realm& realm, Vector<BlobPart> const& file_bits, String const& file_name, Optional<FilePropertyBag> const& options)
 {
     return create(realm, file_bits, file_name, options);
+}
+
+WebIDL::ExceptionOr<void> File::serialization_steps(HTML::SerializationRecord& record, bool)
+{
+    auto& vm = this->vm();
+
+    TRY(HTML::serialize_string(vm, record, interface_name()));
+
+    // FIXME: 1. Set serialized.[[SnapshotState]] to value’s snapshot state.
+
+    // NON-STANDARD: FileAPI spec doesn't specify that type should be serialized, although
+    //               to be conformant with other browsers this needs to be serialized.
+    TRY(HTML::serialize_string(vm, record, m_type));
+
+    // 2. Set serialized.[[ByteSequence]] to value’s underlying byte sequence.
+    TRY(HTML::serialize_bytes(vm, record, m_byte_buffer.bytes()));
+
+    // 3. Set serialized.[[Name]] to the value of value’s name attribute.
+    TRY(HTML::serialize_string(vm, record, m_name));
+
+    // 4. Set serialized.[[LastModified]] to the value of value’s lastModified attribute.
+    record.append(bit_cast<u32*>(&m_last_modified), 2);
+
+    return {};
+}
+
+WebIDL::ExceptionOr<void> File::deserialization_steps(ReadonlySpan<u32> const& record, size_t& position)
+{
+    auto& vm = this->vm();
+
+    // FIXME: 1. Set value’s snapshot state to serialized.[[SnapshotState]].
+
+    // NON-STANDARD: FileAPI spec doesn't specify that type should be deserialized, although
+    //               to be conformant with other browsers this needs to be deserialized.
+    m_type = TRY(HTML::deserialize_string(vm, record, position));
+
+    // 2. Set value’s underlying byte sequence to serialized.[[ByteSequence]].
+    m_byte_buffer = TRY(HTML::deserialize_bytes(vm, record, position));
+
+    // 3. Initialize the value of value’s name attribute to serialized.[[Name]].
+    m_name = TRY(HTML::deserialize_string(vm, record, position));
+
+    // 4. Initialize the value of value’s lastModified attribute to serialized.[[LastModified]].
+    u32 bits[2] = {};
+    bits[0] = record[position++];
+    bits[1] = record[position++];
+    m_last_modified = *bit_cast<i64*>(&bits);
+
+    return {};
 }
 
 }

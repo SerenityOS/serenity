@@ -34,6 +34,7 @@
 #include <LibWeb/Bindings/Serializable.h>
 #include <LibWeb/Bindings/Transferable.h>
 #include <LibWeb/FileAPI/Blob.h>
+#include <LibWeb/FileAPI/File.h>
 #include <LibWeb/HTML/MessagePort.h>
 #include <LibWeb/HTML/StructuredSerialize.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
@@ -927,6 +928,8 @@ private:
     {
         if (interface_name == "Blob"sv)
             return FileAPI::Blob::create(realm);
+        if (interface_name == "File"sv)
+            return FileAPI::File::create(realm);
 
         VERIFY_NOT_REACHED();
     }
