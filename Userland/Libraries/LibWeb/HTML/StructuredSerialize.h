@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2022, Daniel Ehrenberg <dan@littledan.dev>
  * Copyright (c) 2022, Andrew Kaster <akaster@serenityos.org>
+ * Copyright (c) 2024, Kenneth Myhra <kennethmyhra@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,6 +13,8 @@
 #include <AK/Vector.h>
 #include <LibIPC/Forward.h>
 #include <LibJS/Forward.h>
+#include <LibJS/Runtime/DataView.h>
+#include <LibJS/Runtime/TypedArray.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
 // Structured serialize is an entirely different format from IPC because:
@@ -49,6 +52,14 @@ WebIDL::ExceptionOr<SerializationRecord> structured_serialize_for_storage(JS::VM
 WebIDL::ExceptionOr<SerializationRecord> structured_serialize_internal(JS::VM& vm, JS::Value, bool for_storage, SerializationMemory&);
 
 WebIDL::ExceptionOr<JS::Value> structured_deserialize(JS::VM& vm, SerializationRecord const& serialized, JS::Realm& target_realm, Optional<DeserializationMemory>);
+
+WebIDL::ExceptionOr<void> serialize_bytes(JS::VM& vm, Vector<u32>& vector, ReadonlyBytes bytes);
+WebIDL::ExceptionOr<void> serialize_string(JS::VM& vm, Vector<u32>& vector, DeprecatedFlyString const& string);
+WebIDL::ExceptionOr<void> serialize_string(JS::VM& vm, Vector<u32>& vector, String const& string);
+WebIDL::ExceptionOr<void> serialize_string(JS::VM& vm, Vector<u32>& vector, JS::PrimitiveString const& primitive_string);
+WebIDL::ExceptionOr<void> serialize_array_buffer(JS::VM& vm, Vector<u32>& vector, JS::ArrayBuffer const& array_buffer, bool for_storage);
+template<OneOf<JS::TypedArrayBase, JS::DataView> ViewType>
+WebIDL::ExceptionOr<void> serialize_viewed_array_buffer(JS::VM& vm, Vector<u32>& vector, ViewType const& view, bool for_storage, SerializationMemory& memory);
 
 WebIDL::ExceptionOr<ByteBuffer> deserialize_bytes(JS::VM& vm, ReadonlySpan<u32> vector, size_t& position);
 WebIDL::ExceptionOr<String> deserialize_string(JS::VM& vm, ReadonlySpan<u32> vector, size_t& position);
