@@ -862,10 +862,9 @@ ErrorOr<void> StyleComputer::collect_animation_into(JS::NonnullGCPtr<Animations:
         return {};
 
     auto& keyframes = effect->key_frame_set()->keyframes_by_key;
-    auto is_backwards = effect->current_direction() == Animations::AnimationDirection::Backwards;
 
     auto key = static_cast<u64>(output_progress.value() * 100.0 * Animations::KeyframeEffect::AnimationKeyFrameKeyScaleFactor);
-    auto matching_keyframe_it = is_backwards ? keyframes.find_smallest_not_below_iterator(key) : keyframes.find_largest_not_above_iterator(key);
+    auto matching_keyframe_it = keyframes.find_largest_not_above_iterator(key);
     if (matching_keyframe_it.is_end()) {
         if constexpr (LIBWEB_CSS_ANIMATION_DEBUG) {
             dbgln("    Did not find any start keyframe for the current state ({}) :(", key);
@@ -880,7 +879,7 @@ ErrorOr<void> StyleComputer::collect_animation_into(JS::NonnullGCPtr<Animations:
     auto keyframe_values = *matching_keyframe_it;
 
     auto initial_keyframe_it = matching_keyframe_it;
-    auto keyframe_end_it = is_backwards ? --matching_keyframe_it : ++matching_keyframe_it;
+    auto keyframe_end_it = ++matching_keyframe_it;
     if (keyframe_end_it.is_end())
         keyframe_end_it = initial_keyframe_it;
 
@@ -889,11 +888,8 @@ ErrorOr<void> StyleComputer::collect_animation_into(JS::NonnullGCPtr<Animations:
 
     auto progress_in_keyframe = [&] {
         if (keyframe_start == keyframe_end)
-            return is_backwards ? 1.f : 0.f;
-
-        return is_backwards
-            ? static_cast<float>(keyframe_start - key) / static_cast<float>(keyframe_start - keyframe_end)
-            : static_cast<float>(key - keyframe_start) / static_cast<float>(keyframe_end - keyframe_start);
+            return 0.f;
+        return static_cast<float>(key - keyframe_start) / static_cast<float>(keyframe_end - keyframe_start);
     }();
 
     if constexpr (LIBWEB_CSS_ANIMATION_DEBUG) {
