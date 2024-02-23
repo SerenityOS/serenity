@@ -222,7 +222,6 @@ void PageClient::paint(Web::DevicePixelRect const& content_rect, Gfx::Bitmap& ta
 void PageClient::set_viewport_rect(Web::DevicePixelRect const& rect)
 {
     page().top_level_traversable()->set_viewport_rect(page().device_to_css_rect(rect));
-    Web::HTML::main_thread_event_loop().schedule();
 }
 
 void PageClient::page_did_invalidate(Web::CSSPixelRect const&)

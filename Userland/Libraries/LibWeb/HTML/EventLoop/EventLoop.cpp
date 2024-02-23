@@ -256,9 +256,11 @@ void EventLoop::process()
 
     // 16. For each fully active Document in docs, update the rendering or user interface of that Document and its browsing context to reflect the current state.
     for_each_fully_active_document_in_docs([&](DOM::Document& document) {
-        auto* browsing_context = document.browsing_context();
-        auto& page = browsing_context->page();
-        page.client().schedule_repaint();
+        if (document.navigable() && document.navigable()->needs_repaint()) {
+            auto* browsing_context = document.browsing_context();
+            auto& page = browsing_context->page();
+            page.client().schedule_repaint();
+        }
     });
 
     // 13. If all of the following are true

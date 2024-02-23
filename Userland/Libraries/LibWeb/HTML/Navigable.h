@@ -173,6 +173,8 @@ public:
 
     [[nodiscard]] TargetSnapshotParams snapshot_target_snapshot_params();
 
+    [[nodiscard]] bool needs_repaint() const { return m_needs_repaint; }
+
     struct PaintConfig {
         bool paint_overlay { false };
         bool should_show_line_box_borders { false };
@@ -221,6 +223,8 @@ private:
 
     CSSPixelSize m_size;
     CSSPixelPoint m_viewport_scroll_offset;
+
+    bool m_needs_repaint { false };
 };
 
 HashTable<Navigable*>& all_navigables();
