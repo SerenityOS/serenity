@@ -66,11 +66,11 @@ protected:
 
     virtual void initialize(JS::Realm&) override;
 
-private:
-    explicit Blob(JS::Realm&);
-
     ByteBuffer m_byte_buffer {};
     String m_type {};
+
+private:
+    explicit Blob(JS::Realm&);
 };
 
 }
