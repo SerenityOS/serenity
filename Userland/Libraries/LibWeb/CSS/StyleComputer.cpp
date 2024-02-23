@@ -758,14 +758,8 @@ static ErrorOr<void> cascade_custom_properties(DOM::Element& element, Optional<C
     return {};
 }
 
-static ErrorOr<NonnullRefPtr<StyleValue>> interpolate_property(StyleValue const& from, StyleValue const& to, float delta)
+static ErrorOr<NonnullRefPtr<StyleValue const>> interpolate_value(StyleValue const& from, StyleValue const& to, float delta)
 {
-    if (from.type() != to.type()) {
-        if (delta > 0.999f)
-            return to;
-        return from;
-    }
-
     auto interpolate_raw = [delta = static_cast<double>(delta)](auto from, auto to) {
         return static_cast<RemoveCVReference<decltype(from)>>(static_cast<double>(from) + static_cast<double>(to - from) * delta);
     };
@@ -804,8 +798,8 @@ static ErrorOr<NonnullRefPtr<StyleValue>> interpolate_property(StyleValue const&
         auto& from_position = from.as_position();
         auto& to_position = to.as_position();
         return PositionStyleValue::create(
-            TRY(interpolate_property(from_position.edge_x(), to_position.edge_x(), delta))->as_edge(),
-            TRY(interpolate_property(from_position.edge_y(), to_position.edge_y(), delta))->as_edge());
+            TRY(interpolate_value(from_position.edge_x(), to_position.edge_x(), delta))->as_edge(),
+            TRY(interpolate_value(from_position.edge_y(), to_position.edge_y(), delta))->as_edge());
     }
     case StyleValue::Type::Rect: {
         auto from_rect = from.as_rect().rect();
@@ -831,7 +825,7 @@ static ErrorOr<NonnullRefPtr<StyleValue>> interpolate_property(StyleValue const&
         StyleValueVector interpolated_values;
         interpolated_values.ensure_capacity(from_input_values.size());
         for (size_t i = 0; i < from_input_values.size(); ++i)
-            interpolated_values.append(TRY(interpolate_property(*from_input_values[i], *to_input_values[i], delta)));
+            interpolated_values.append(TRY(interpolate_value(*from_input_values[i], *to_input_values[i], delta)));
 
         return TransformationStyleValue::create(from_transform.transform_function(), move(interpolated_values));
     }
@@ -844,12 +838,36 @@ static ErrorOr<NonnullRefPtr<StyleValue>> interpolate_property(StyleValue const&
         StyleValueVector interpolated_values;
         interpolated_values.ensure_capacity(from_list.size());
         for (size_t i = 0; i < from_list.size(); ++i)
-            interpolated_values.append(TRY(interpolate_property(from_list.values()[i], to_list.values()[i], delta)));
+            interpolated_values.append(TRY(interpolate_value(from_list.values()[i], to_list.values()[i], delta)));
 
         return StyleValueList::create(move(interpolated_values), from_list.separator());
     }
     default:
         return from;
+    }
+}
+
+static ErrorOr<ValueComparingNonnullRefPtr<StyleValue const>> interpolate_property(PropertyID property_id, StyleValue const& from, StyleValue const& to, float delta)
+{
+    if (from.type() != to.type()) {
+        if (delta > 0.999f)
+            return to;
+        return from;
+    }
+
+    auto animation_type = animation_type_from_longhand_property(property_id);
+    switch (animation_type) {
+    case AnimationType::ByComputedValue:
+        return interpolate_value(from, to, delta);
+    case AnimationType::None:
+        return to;
+    // FIXME: Handle all custom animatable properties
+    case AnimationType::Custom:
+    // FIXME: Handle repeatable-list animatable properties
+    case AnimationType::RepeatableList:
+    case AnimationType::Discrete:
+    default:
+        return delta >= 0.5f ? to : from;
     }
 }
 
@@ -933,7 +951,7 @@ ErrorOr<void> StyleComputer::collect_animation_into(JS::NonnullGCPtr<Animations:
         auto start = resolved_start_property.release_nonnull();
         auto end = resolved_end_property.release_nonnull();
 
-        auto next_value = TRY(interpolate_property(*start, *end, progress_in_keyframe));
+        auto next_value = TRY(interpolate_property(it.key, *start, *end, progress_in_keyframe));
         dbgln_if(LIBWEB_CSS_ANIMATION_DEBUG, "Interpolated value for property {} at {}: {} -> {} = {}", string_from_property_id(it.key), progress_in_keyframe, start->to_string(), end->to_string(), next_value->to_string());
         style_properties.set_property(it.key, next_value);
     }
