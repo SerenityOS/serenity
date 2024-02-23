@@ -948,11 +948,11 @@ Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> ForStatement::gener
     return body_result;
 }
 
-Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> ObjectExpression::generate_bytecode(Bytecode::Generator& generator, Optional<Bytecode::Operand> preferred_dst) const
+Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> ObjectExpression::generate_bytecode(Bytecode::Generator& generator, [[maybe_unused]] Optional<Bytecode::Operand> preferred_dst) const
 {
     Bytecode::Generator::SourceLocationScope scope(generator, *this);
 
-    auto object = choose_dst(generator, preferred_dst);
+    auto object = Bytecode::Operand(generator.allocate_register());
 
     generator.emit<Bytecode::Op::NewObject>(object);
     if (m_properties.is_empty())
