@@ -34,6 +34,11 @@ public:
     virtual Inode& root_inode() = 0;
     virtual bool supports_watchers() const { return false; }
 
+    // FIXME: We should aim to provide more concise mechanism to ensure
+    // that backing Inodes from the FileSystem are kept intact so we can
+    // attach them to a loop device.
+    virtual bool supports_backing_loop_devices() const { return false; }
+
     bool is_readonly() const { return m_readonly; }
 
     virtual unsigned total_block_count() const { return 0; }

@@ -24,6 +24,7 @@ public:
     virtual StringView class_name() const override { return "RAMFS"sv; }
 
     virtual bool supports_watchers() const override { return true; }
+    virtual bool supports_backing_loop_devices() const override { return true; }
 
     virtual Inode& root_inode() override;
 
