@@ -303,7 +303,9 @@ static ErrorOr<TestResult> run_dump_test(HeadlessWebContentView& view, StringVie
     } else if (mode == TestMode::Text) {
 
         view.on_load_finish = [&](auto const& loaded_url) {
-            VERIFY(url.equals(loaded_url, URL::ExcludeFragment::Yes));
+            // NOTE: We don't want subframe loads to trigger the test finish.
+            if (!url.equals(loaded_url, URL::ExcludeFragment::Yes))
+                return;
             did_finish_loading = true;
             if (did_finish_test)
                 loop.quit(0);
