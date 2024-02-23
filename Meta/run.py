@@ -707,6 +707,7 @@ def set_up_machine_devices(config: Configuration):
     if config.architecture == Arch.Aarch64:
         config.qemu_machine = "raspi3b"
         config.cpu_count = None
+        config.ram_size = "1G"  # The raspi3b machine only accepts 1G as a valid RAM size.
         config.vga_type = None
         config.display_device = None
         if config.machine_type != MachineType.CI:
