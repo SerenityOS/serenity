@@ -1980,12 +1980,14 @@ void Navigable::set_viewport_rect(CSSPixelRect const& rect)
             document->set_needs_layout();
         }
         did_change = true;
+        m_needs_repaint = true;
     }
 
     if (m_viewport_scroll_offset != rect.location()) {
         m_viewport_scroll_offset = rect.location();
         scroll_offset_did_change();
         did_change = true;
+        m_needs_repaint = true;
     }
 
     if (did_change && active_document()) {
@@ -2035,6 +2037,8 @@ void Navigable::set_needs_display(CSSPixelRect const& rect)
 {
     // FIXME: Ignore updates outside the visible viewport rect.
     //        This requires accounting for fixed-position elements in the input rect, which we don't do yet.
+
+    m_needs_repaint = true;
 
     if (is<TraversableNavigable>(*this)) {
         static_cast<TraversableNavigable*>(this)->page().client().page_did_invalidate(to_top_level_rect(rect));
@@ -2128,6 +2132,8 @@ void Navigable::paint(Painting::RecordingPainter& recording_painter, PaintConfig
         }
         recording_painter.commands_list().apply_scroll_offsets(scroll_offsets_by_frame_id);
     }
+
+    m_needs_repaint = false;
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#event-uni
