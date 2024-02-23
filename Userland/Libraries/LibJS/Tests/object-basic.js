@@ -122,6 +122,14 @@ describe("correct behavior", () => {
         Object.setPrototypeOf(derived, base);
         expect(derived.getNumber()).toBe(30);
     });
+
+    test("assigning object expression with destination referenced in object expression", () => {
+        function go(i) {
+            var i = { f: i };
+            return i;
+        }
+        expect(go("foo")).toEqual({ f: "foo" });
+    });
 });
 
 describe("side effects", () => {

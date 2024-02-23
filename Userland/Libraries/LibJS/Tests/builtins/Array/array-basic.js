@@ -55,3 +55,11 @@ test("basic functionality", () => {
     expect(a.toString()).toBe("1,20,2,,,3");
     expect(a.getterSetterValue).toBe(20);
 });
+
+test("assigning array expression with destination referenced in array expression", () => {
+    function go(i) {
+        var i = [i];
+        return i;
+    }
+    expect(go("foo")).toEqual(["foo"]);
+});
