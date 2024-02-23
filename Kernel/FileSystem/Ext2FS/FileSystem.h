@@ -47,6 +47,7 @@ public:
     virtual unsigned free_inode_count() const override;
 
     virtual bool supports_watchers() const override { return true; }
+    virtual bool supports_backing_loop_devices() const override { return true; }
 
     virtual u8 internal_file_type_to_directory_entry_type(DirectoryEntryView const& entry) const override;
 

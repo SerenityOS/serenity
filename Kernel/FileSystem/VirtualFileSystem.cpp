@@ -14,6 +14,7 @@
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/Loop/LoopDevice.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FileBackedFileSystem.h>
 #include <Kernel/FileSystem/FileSystem.h>
@@ -213,6 +214,12 @@ ErrorOr<void> VirtualFileSystem::mount(MountFile& mount_file, OpenFileDescriptio
             }));
             TRY(fs->initialize());
         }
+        if (source_description->file().is_loop_device()) {
+            auto& device = static_cast<LoopDevice&>(source_description->file());
+            auto path = TRY(device.custody().try_serialize_absolute_path());
+            dbgln("VirtualFileSystem: mounting from loop device {}, originated from {}", device.index(), path->view());
+        }
+
         TRY(add_file_system_to_mount_table(*fs, mount_point, flags));
         list.append(static_cast<FileBackedFileSystem&>(*fs));
         return {};

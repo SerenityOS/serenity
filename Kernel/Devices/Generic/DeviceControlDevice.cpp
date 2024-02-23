@@ -4,8 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/API/Ioctl.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/Generic/DeviceControlDevice.h>
+#include <Kernel/Devices/Loop/LoopDevice.h>
+#include <Kernel/Library/StdLib.h>
 
 namespace Kernel {
 
@@ -51,9 +54,33 @@ ErrorOr<size_t> DeviceControlDevice::read(OpenFileDescription&, u64 offset, User
     });
 }
 
-ErrorOr<void> DeviceControlDevice::ioctl(OpenFileDescription&, unsigned, Userspace<void*>)
+ErrorOr<void> DeviceControlDevice::ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg)
 {
-    return Error::from_errno(ENOTSUP);
+    switch (request) {
+    case DEVCTL_CREATE_LOOP_DEVICE: {
+        unsigned fd { 0 };
+        TRY(copy_from_user(&fd, static_ptr_cast<unsigned*>(arg)));
+        auto file_description = TRY(Process::current().open_file_description(fd));
+        auto device = TRY(LoopDevice::create_with_file_description(file_description));
+        unsigned index = device->index();
+        return copy_to_user(static_ptr_cast<unsigned*>(arg), &index);
+    }
+    case DEVCTL_DESTROY_LOOP_DEVICE: {
+        unsigned index { 0 };
+        TRY(copy_from_user(&index, static_ptr_cast<unsigned*>(arg)));
+        return LoopDevice::all_instances().with([index](auto& list) -> ErrorOr<void> {
+            for (auto& device : list) {
+                if (device.index() == index) {
+                    device.remove({});
+                    return {};
+                }
+            }
+            return Error::from_errno(ENODEV);
+        });
+    }
+    default:
+        return Error::from_errno(EINVAL);
+    };
 }
 
 }
