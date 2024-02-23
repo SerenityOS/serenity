@@ -1,0 +1,3 @@
+instanceOf Blob: true
+Blob.type: text/plain
+Blob.text(): Hello, Blob!
