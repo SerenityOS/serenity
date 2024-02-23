@@ -478,6 +478,11 @@ void Document::visit_edges(Cell::Visitor& visitor)
 
     for (auto& element : m_potentially_named_elements)
         visitor.visit(element);
+
+    for (auto& event : m_pending_animation_event_queue) {
+        visitor.visit(event.event);
+        visitor.visit(event.target);
+    }
 }
 
 // https://w3c.github.io/selection-api/#dom-document-getselection
