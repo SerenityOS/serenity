@@ -34,6 +34,7 @@ public:
     void set_dir(String const&);
 
     virtual bool is_editable() const final;
+    virtual bool is_focusable() const override;
     StringView content_editable() const;
     WebIDL::ExceptionOr<void> set_content_editable(StringView);
 
