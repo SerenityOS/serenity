@@ -93,6 +93,11 @@ bool HTMLElement::is_editable() const
     }
 }
 
+bool HTMLElement::is_focusable() const
+{
+    return m_content_editable_state == ContentEditableState::True;
+}
+
 StringView HTMLElement::content_editable() const
 {
     switch (m_content_editable_state) {
