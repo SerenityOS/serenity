@@ -11,6 +11,7 @@
 #include <LibWeb/HTML/TraversableNavigable.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/IntersectionObserver/IntersectionObserver.h>
+#include <LibWeb/Page/Page.h>
 
 namespace Web::IntersectionObserver {
 
@@ -156,11 +157,16 @@ Variant<JS::Handle<DOM::Element>, JS::Handle<DOM::Document>, Empty> Intersection
     return m_root.value();
 }
 
+// https://www.w3.org/TR/intersection-observer/#intersectionobserver-intersection-root
 Variant<JS::Handle<DOM::Element>, JS::Handle<DOM::Document>> IntersectionObserver::intersection_root() const
 {
-    if (!m_root.has_value())
-        return JS::make_handle(global_object().navigable()->traversable_navigable()->active_document());
-    return m_root.value();
+    // The intersection root for an IntersectionObserver is the value of its root attribute
+    // if the attribute is non-null;
+    if (m_root.has_value())
+        return m_root.value();
+
+    // otherwise, it is the top-level browsing context’s document node, referred to as the implicit root.
+    return JS::make_handle(global_object().page().top_level_browsing_context().active_document());
 }
 
 // https://www.w3.org/TR/intersection-observer/#intersectionobserver-root-intersection-rectangle
