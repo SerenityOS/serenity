@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2022, Daniel Ehrenberg <dan@littledan.dev>
  * Copyright (c) 2022, Andrew Kaster <akaster@serenityos.org>
- * Copyright (c) 2023, Kenneth Myhra <kennethmyhra@serenityos.org>
+ * Copyright (c) 2023-2024, Kenneth Myhra <kennethmyhra@serenityos.org>
  * Copyright (c) 2023, Idan Horowitz <idan.horowitz@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -170,10 +170,10 @@ public:
         } else if (value.is_bigint()) {
             m_serialized.append(ValueTag::BigIntPrimitive);
             auto& val = value.as_bigint();
-            TRY(serialize_string(m_serialized, TRY_OR_THROW_OOM(m_vm, val.to_string())));
+            TRY(serialize_string(m_vm, m_serialized, TRY_OR_THROW_OOM(m_vm, val.to_string())));
         } else if (value.is_string()) {
             m_serialized.append(ValueTag::StringPrimitive);
-            TRY(serialize_string(m_serialized, value.as_string()));
+            TRY(serialize_string(m_vm, m_serialized, value.as_string()));
         } else {
             return_primitive_type = false;
         }
@@ -206,14 +206,14 @@ public:
         else if (value.is_object() && is<JS::BigIntObject>(value.as_object())) {
             m_serialized.append(ValueTag::BigIntObject);
             auto& bigint_object = static_cast<JS::BigIntObject&>(value.as_object());
-            TRY(serialize_string(m_serialized, TRY_OR_THROW_OOM(m_vm, bigint_object.bigint().to_string())));
+            TRY(serialize_string(m_vm, m_serialized, TRY_OR_THROW_OOM(m_vm, bigint_object.bigint().to_string())));
         }
 
         // 10. Otherwise, if value has a [[StringData]] internal slot, then set serialized to { [[Type]]: "String", [[StringData]]: value.[[StringData]] }.
         else if (value.is_object() && is<JS::StringObject>(value.as_object())) {
             m_serialized.append(ValueTag::StringObject);
             auto& string_object = static_cast<JS::StringObject&>(value.as_object());
-            TRY(serialize_string(m_serialized, string_object.primitive_string()));
+            TRY(serialize_string(m_vm, m_serialized, string_object.primitive_string()));
         }
 
         // 11. Otherwise, if value has a [[DateValue]] internal slot, then set serialized to { [[Type]]: "Date", [[DateValue]]: value.[[DateValue]] }.
@@ -233,20 +233,20 @@ public:
             // Note: A Regex<ECMA262> object is perfectly happy to be reconstructed with just the source+flags
             //       In the future, we could optimize the work being done on the deserialize step by serializing
             //       more of the internal state (the [[RegExpMatcher]] internal slot)
-            TRY(serialize_string(m_serialized, TRY_OR_THROW_OOM(m_vm, String::from_byte_string(regexp_object.pattern()))));
-            TRY(serialize_string(m_serialized, TRY_OR_THROW_OOM(m_vm, String::from_byte_string(regexp_object.flags()))));
+            TRY(serialize_string(m_vm, m_serialized, TRY_OR_THROW_OOM(m_vm, String::from_byte_string(regexp_object.pattern()))));
+            TRY(serialize_string(m_vm, m_serialized, TRY_OR_THROW_OOM(m_vm, String::from_byte_string(regexp_object.flags()))));
         }
 
         // 13. Otherwise, if value has an [[ArrayBufferData]] internal slot, then:
         else if (value.is_object() && is<JS::ArrayBuffer>(value.as_object())) {
-            TRY(serialize_array_buffer(m_serialized, static_cast<JS::ArrayBuffer&>(value.as_object())));
+            TRY(serialize_array_buffer(m_vm, m_serialized, static_cast<JS::ArrayBuffer&>(value.as_object()), m_for_storage));
         }
 
         // 14. Otherwise, if value has a [[ViewedArrayBuffer]] internal slot, then:
         else if (value.is_object() && is<JS::TypedArrayBase>(value.as_object())) {
-            TRY(serialize_viewed_array_buffer(m_serialized, static_cast<JS::TypedArrayBase&>(value.as_object())));
+            TRY(serialize_viewed_array_buffer(m_vm, m_serialized, static_cast<JS::TypedArrayBase&>(value.as_object()), m_for_storage, m_memory));
         } else if (value.is_object() && is<JS::DataView>(value.as_object())) {
-            TRY(serialize_viewed_array_buffer(m_serialized, static_cast<JS::DataView&>(value.as_object())));
+            TRY(serialize_viewed_array_buffer(m_vm, m_serialized, static_cast<JS::DataView&>(value.as_object()), m_for_storage, m_memory));
         }
 
         // 15. Otherwise, if value has [[MapData]] internal slot, then:
@@ -291,7 +291,7 @@ public:
             m_serialized.append(type);
             m_serialized.append(message.has_value());
             if (message.has_value())
-                TRY(serialize_string(m_serialized, *message));
+                TRY(serialize_string(m_vm, m_serialized, *message));
         }
 
         // 18. Otherwise, if value is an Array exotic object, then:
@@ -407,7 +407,7 @@ public:
                         auto output_value = TRY(structured_serialize_internal(m_vm, input_value, m_for_storage, m_memory));
 
                         // 3. Append { [[Key]]: key, [[Value]]: outputValue } to serialized.[[Properties]].
-                        TRY(serialize_string(m_serialized, key.as_string()));
+                        TRY(serialize_string(m_vm, m_serialized, key.as_string()));
                         m_serialized.extend(output_value);
 
                         property_count++;
@@ -427,155 +427,157 @@ private:
     u32 m_next_id { 0 };
     SerializationRecord m_serialized;
     bool m_for_storage { false };
-
-    WebIDL::ExceptionOr<void> serialize_bytes(Vector<u32>& vector, ReadonlyBytes bytes)
-    {
-        // Append size of the buffer to the serialized structure.
-        u64 const size = bytes.size();
-        TRY_OR_THROW_OOM(m_vm, vector.try_append(bit_cast<u32*>(&size), 2));
-        // Append the bytes of the buffer to the serialized structure.
-        u64 byte_position = 0;
-        while (byte_position < size) {
-            u32 combined_value = 0;
-            for (u8 i = 0; i < 4; ++i) {
-                u8 const byte = bytes[byte_position];
-                combined_value |= byte << (i * 8);
-                byte_position++;
-                if (byte_position == size)
-                    break;
-            }
-            TRY_OR_THROW_OOM(m_vm, vector.try_append(combined_value));
-        }
-        return {};
-    }
-
-    WebIDL::ExceptionOr<void> serialize_string(Vector<u32>& vector, DeprecatedFlyString const& string)
-    {
-        return serialize_bytes(vector, string.view().bytes());
-    }
-
-    WebIDL::ExceptionOr<void> serialize_string(Vector<u32>& vector, String const& string)
-    {
-        return serialize_bytes(vector, { string.code_points().bytes(), string.code_points().byte_length() });
-    }
-
-    WebIDL::ExceptionOr<void> serialize_string(Vector<u32>& vector, JS::PrimitiveString const& primitive_string)
-    {
-        auto string = primitive_string.utf8_string();
-        TRY(serialize_string(vector, string));
-        return {};
-    }
-
-    WebIDL::ExceptionOr<void> serialize_array_buffer(Vector<u32>& vector, JS::ArrayBuffer const& array_buffer)
-    {
-        // 13. Otherwise, if value has an [[ArrayBufferData]] internal slot, then:
-
-        // FIXME: 1.  If IsSharedArrayBuffer(value) is true, then:
-        if (false) {
-            // 1. If the current settings object's cross-origin isolated capability is false, then throw a "DataCloneError" DOMException.
-            // NOTE: This check is only needed when serializing (and not when deserializing) as the cross-origin isolated capability cannot change
-            //       over time and a SharedArrayBuffer cannot leave an agent cluster.
-            if (current_settings_object().cross_origin_isolated_capability() == CanUseCrossOriginIsolatedAPIs::No)
-                return WebIDL::DataCloneError::create(*m_vm.current_realm(), "Cannot serialize SharedArrayBuffer when cross-origin isolated"_fly_string);
-
-            // 2. If forStorage is true, then throw a "DataCloneError" DOMException.
-            if (m_for_storage)
-                return WebIDL::DataCloneError::create(*m_vm.current_realm(), "Cannot serialize SharedArrayBuffer for storage"_fly_string);
-
-            // FIXME: 3. If value has an [[ArrayBufferMaxByteLength]] internal slot, then set serialized to { [[Type]]: "GrowableSharedArrayBuffer",
-            //           [[ArrayBufferData]]: value.[[ArrayBufferData]], [[ArrayBufferByteLengthData]]: value.[[ArrayBufferByteLengthData]],
-            //           [[ArrayBufferMaxByteLength]]: value.[[ArrayBufferMaxByteLength]], [[AgentCluster]]: the surrounding agent's agent cluster }.
-            // FIXME: 4. Otherwise, set serialized to { [[Type]]: "SharedArrayBuffer", [[ArrayBufferData]]: value.[[ArrayBufferData]],
-            //           [[ArrayBufferByteLength]]: value.[[ArrayBufferByteLength]], [[AgentCluster]]: the surrounding agent's agent cluster }.
-        }
-        // 2. Otherwise:
-        else {
-            // 1. If IsDetachedBuffer(value) is true, then throw a "DataCloneError" DOMException.
-            if (array_buffer.is_detached())
-                return WebIDL::DataCloneError::create(*m_vm.current_realm(), "Cannot serialize detached ArrayBuffer"_fly_string);
-
-            // 2. Let size be value.[[ArrayBufferByteLength]].
-            auto size = array_buffer.byte_length();
-
-            // 3. Let dataCopy be ? CreateByteDataBlock(size).
-            //    NOTE: This can throw a RangeError exception upon allocation failure.
-            auto data_copy = TRY(JS::create_byte_data_block(m_vm, size));
-
-            // 4. Perform CopyDataBlockBytes(dataCopy, 0, value.[[ArrayBufferData]], 0, size).
-            JS::copy_data_block_bytes(data_copy.buffer(), 0, array_buffer.buffer(), 0, size);
-
-            // FIXME: 5. If value has an [[ArrayBufferMaxByteLength]] internal slot, then set serialized to { [[Type]]: "ResizableArrayBuffer",
-            //    [[ArrayBufferData]]: dataCopy, [[ArrayBufferByteLength]]: size, [[ArrayBufferMaxByteLength]]: value.[[ArrayBufferMaxByteLength]] }.
-            if (false) {
-            }
-            // 6. Otherwise, set serialized to { [[Type]]: "ArrayBuffer", [[ArrayBufferData]]: dataCopy, [[ArrayBufferByteLength]]: size }.
-            else {
-                vector.append(ValueTag::ArrayBuffer);
-                TRY(serialize_bytes(vector, data_copy.buffer().bytes()));
-            }
-        }
-        return {};
-    }
-
-    template<OneOf<JS::TypedArrayBase, JS::DataView> ViewType>
-    WebIDL::ExceptionOr<void> serialize_viewed_array_buffer(Vector<u32>& vector, ViewType const& view)
-    {
-        // 14. Otherwise, if value has a [[ViewedArrayBuffer]] internal slot, then:
-
-        auto view_record = [&]() {
-            if constexpr (IsSame<ViewType, JS::DataView>) {
-                return JS::make_data_view_with_buffer_witness_record(view, JS::ArrayBuffer::Order::SeqCst);
-            } else {
-                return JS::make_typed_array_with_buffer_witness_record(view, JS::ArrayBuffer::Order::SeqCst);
-            }
-        }();
-
-        // 1. If IsArrayBufferViewOutOfBounds(value) is true, then throw a "DataCloneError" DOMException.
-        if constexpr (IsSame<ViewType, JS::DataView>) {
-            if (JS::is_view_out_of_bounds(view_record))
-                return WebIDL::DataCloneError::create(*m_vm.current_realm(), MUST(String::formatted(JS::ErrorType::BufferOutOfBounds.message(), "DataView"sv)));
-        } else {
-            if (JS::is_typed_array_out_of_bounds(view_record))
-                return WebIDL::DataCloneError::create(*m_vm.current_realm(), MUST(String::formatted(JS::ErrorType::BufferOutOfBounds.message(), "TypedArray"sv)));
-        }
-
-        // 2. Let buffer be the value of value's [[ViewedArrayBuffer]] internal slot.
-        auto* buffer = view.viewed_array_buffer();
-
-        // 3. Let bufferSerialized be ? StructuredSerializeInternal(buffer, forStorage, memory).
-        auto buffer_serialized = TRY(structured_serialize_internal(m_vm, JS::Value(buffer), m_for_storage, m_memory));
-
-        // 4. Assert: bufferSerialized.[[Type]] is "ArrayBuffer", "ResizableArrayBuffer", "SharedArrayBuffer", or "GrowableSharedArrayBuffer".
-        // NOTE: We currently only implement this for ArrayBuffer
-        VERIFY(buffer_serialized[0] == ValueTag::ArrayBuffer);
-
-        // 5. If value has a [[DataView]] internal slot, then set serialized to { [[Type]]: "ArrayBufferView", [[Constructor]]: "DataView",
-        //    [[ArrayBufferSerialized]]: bufferSerialized, [[ByteLength]]: value.[[ByteLength]], [[ByteOffset]]: value.[[ByteOffset]] }.
-        if constexpr (IsSame<ViewType, JS::DataView>) {
-            vector.append(ValueTag::ArrayBufferView);
-            vector.extend(move(buffer_serialized));           // [[ArrayBufferSerialized]]
-            TRY(serialize_string(vector, "DataView"_string)); // [[Constructor]]
-            vector.append(JS::get_view_byte_length(view_record));
-            vector.append(view.byte_offset());
-        }
-
-        // 6. Otherwise:
-        else {
-            // 1. Assert: value has a [[TypedArrayName]] internal slot.
-            //    NOTE: Handled by constexpr check and template constraints
-            // 2. Set serialized to { [[Type]]: "ArrayBufferView", [[Constructor]]: value.[[TypedArrayName]],
-            //    [[ArrayBufferSerialized]]: bufferSerialized, [[ByteLength]]: value.[[ByteLength]],
-            //    [[ByteOffset]]: value.[[ByteOffset]], [[ArrayLength]]: value.[[ArrayLength]] }.
-            vector.append(ValueTag::ArrayBufferView);
-            vector.extend(move(buffer_serialized));             // [[ArrayBufferSerialized]]
-            TRY(serialize_string(vector, view.element_name())); // [[Constructor]]
-            vector.append(JS::typed_array_byte_length(view_record));
-            vector.append(view.byte_offset());
-            vector.append(JS::typed_array_length(view_record));
-        }
-        return {};
-    }
 };
+
+WebIDL::ExceptionOr<void> serialize_bytes(JS::VM& vm, Vector<u32>& vector, ReadonlyBytes bytes)
+{
+    // Append size of the buffer to the serialized structure.
+    u64 const size = bytes.size();
+    TRY_OR_THROW_OOM(vm, vector.try_append(bit_cast<u32*>(&size), 2));
+    // Append the bytes of the buffer to the serialized structure.
+    u64 byte_position = 0;
+    while (byte_position < size) {
+        u32 combined_value = 0;
+        for (u8 i = 0; i < 4; ++i) {
+            u8 const byte = bytes[byte_position];
+            combined_value |= byte << (i * 8);
+            byte_position++;
+            if (byte_position == size)
+                break;
+        }
+        TRY_OR_THROW_OOM(vm, vector.try_append(combined_value));
+    }
+    return {};
+}
+
+WebIDL::ExceptionOr<void> serialize_string(JS::VM& vm, Vector<u32>& vector, DeprecatedFlyString const& string)
+{
+    return serialize_bytes(vm, vector, string.view().bytes());
+}
+
+WebIDL::ExceptionOr<void> serialize_string(JS::VM& vm, Vector<u32>& vector, String const& string)
+{
+    return serialize_bytes(vm, vector, { string.code_points().bytes(), string.code_points().byte_length() });
+}
+
+WebIDL::ExceptionOr<void> serialize_string(JS::VM& vm, Vector<u32>& vector, JS::PrimitiveString const& primitive_string)
+{
+    auto string = primitive_string.utf8_string();
+    TRY(serialize_string(vm, vector, string));
+    return {};
+}
+
+WebIDL::ExceptionOr<void> serialize_array_buffer(JS::VM& vm, Vector<u32>& vector, JS::ArrayBuffer const& array_buffer, bool for_storage)
+{
+    // 13. Otherwise, if value has an [[ArrayBufferData]] internal slot, then:
+
+    // FIXME: 1.  If IsSharedArrayBuffer(value) is true, then:
+    if (false) {
+        // 1. If the current settings object's cross-origin isolated capability is false, then throw a "DataCloneError" DOMException.
+        // NOTE: This check is only needed when serializing (and not when deserializing) as the cross-origin isolated capability cannot change
+        //       over time and a SharedArrayBuffer cannot leave an agent cluster.
+        if (current_settings_object().cross_origin_isolated_capability() == CanUseCrossOriginIsolatedAPIs::No)
+            return WebIDL::DataCloneError::create(*vm.current_realm(), "Cannot serialize SharedArrayBuffer when cross-origin isolated"_fly_string);
+
+        // 2. If forStorage is true, then throw a "DataCloneError" DOMException.
+        if (for_storage)
+            return WebIDL::DataCloneError::create(*vm.current_realm(), "Cannot serialize SharedArrayBuffer for storage"_fly_string);
+
+        // FIXME: 3. If value has an [[ArrayBufferMaxByteLength]] internal slot, then set serialized to { [[Type]]: "GrowableSharedArrayBuffer",
+        //           [[ArrayBufferData]]: value.[[ArrayBufferData]], [[ArrayBufferByteLengthData]]: value.[[ArrayBufferByteLengthData]],
+        //           [[ArrayBufferMaxByteLength]]: value.[[ArrayBufferMaxByteLength]], [[AgentCluster]]: the surrounding agent's agent cluster }.
+        // FIXME: 4. Otherwise, set serialized to { [[Type]]: "SharedArrayBuffer", [[ArrayBufferData]]: value.[[ArrayBufferData]],
+        //           [[ArrayBufferByteLength]]: value.[[ArrayBufferByteLength]], [[AgentCluster]]: the surrounding agent's agent cluster }.
+    }
+    // 2. Otherwise:
+    else {
+        // 1. If IsDetachedBuffer(value) is true, then throw a "DataCloneError" DOMException.
+        if (array_buffer.is_detached())
+            return WebIDL::DataCloneError::create(*vm.current_realm(), "Cannot serialize detached ArrayBuffer"_fly_string);
+
+        // 2. Let size be value.[[ArrayBufferByteLength]].
+        auto size = array_buffer.byte_length();
+
+        // 3. Let dataCopy be ? CreateByteDataBlock(size).
+        //    NOTE: This can throw a RangeError exception upon allocation failure.
+        auto data_copy = TRY(JS::create_byte_data_block(vm, size));
+
+        // 4. Perform CopyDataBlockBytes(dataCopy, 0, value.[[ArrayBufferData]], 0, size).
+        JS::copy_data_block_bytes(data_copy.buffer(), 0, array_buffer.buffer(), 0, size);
+
+        // FIXME: 5. If value has an [[ArrayBufferMaxByteLength]] internal slot, then set serialized to { [[Type]]: "ResizableArrayBuffer",
+        //    [[ArrayBufferData]]: dataCopy, [[ArrayBufferByteLength]]: size, [[ArrayBufferMaxByteLength]]: value.[[ArrayBufferMaxByteLength]] }.
+        if (false) {
+        }
+        // 6. Otherwise, set serialized to { [[Type]]: "ArrayBuffer", [[ArrayBufferData]]: dataCopy, [[ArrayBufferByteLength]]: size }.
+        else {
+            vector.append(ValueTag::ArrayBuffer);
+            TRY(serialize_bytes(vm, vector, data_copy.buffer().bytes()));
+        }
+    }
+    return {};
+}
+
+template<OneOf<JS::TypedArrayBase, JS::DataView> ViewType>
+WebIDL::ExceptionOr<void> serialize_viewed_array_buffer(JS::VM& vm, Vector<u32>& vector, ViewType const& view, bool for_storage, SerializationMemory& memory)
+{
+    // 14. Otherwise, if value has a [[ViewedArrayBuffer]] internal slot, then:
+
+    auto view_record = [&]() {
+        if constexpr (IsSame<ViewType, JS::DataView>) {
+            return JS::make_data_view_with_buffer_witness_record(view, JS::ArrayBuffer::Order::SeqCst);
+        } else {
+            return JS::make_typed_array_with_buffer_witness_record(view, JS::ArrayBuffer::Order::SeqCst);
+        }
+    }();
+
+    // 1. If IsArrayBufferViewOutOfBounds(value) is true, then throw a "DataCloneError" DOMException.
+    if constexpr (IsSame<ViewType, JS::DataView>) {
+        if (JS::is_view_out_of_bounds(view_record))
+            return WebIDL::DataCloneError::create(*vm.current_realm(), MUST(String::formatted(JS::ErrorType::BufferOutOfBounds.message(), "DataView"sv)));
+    } else {
+        if (JS::is_typed_array_out_of_bounds(view_record))
+            return WebIDL::DataCloneError::create(*vm.current_realm(), MUST(String::formatted(JS::ErrorType::BufferOutOfBounds.message(), "TypedArray"sv)));
+    }
+
+    // 2. Let buffer be the value of value's [[ViewedArrayBuffer]] internal slot.
+    auto* buffer = view.viewed_array_buffer();
+
+    // 3. Let bufferSerialized be ? StructuredSerializeInternal(buffer, forStorage, memory).
+    auto buffer_serialized = TRY(structured_serialize_internal(vm, JS::Value(buffer), for_storage, memory));
+
+    // 4. Assert: bufferSerialized.[[Type]] is "ArrayBuffer", "ResizableArrayBuffer", "SharedArrayBuffer", or "GrowableSharedArrayBuffer".
+    // NOTE: We currently only implement this for ArrayBuffer
+    VERIFY(buffer_serialized[0] == ValueTag::ArrayBuffer);
+
+    // 5. If value has a [[DataView]] internal slot, then set serialized to { [[Type]]: "ArrayBufferView", [[Constructor]]: "DataView",
+    //    [[ArrayBufferSerialized]]: bufferSerialized, [[ByteLength]]: value.[[ByteLength]], [[ByteOffset]]: value.[[ByteOffset]] }.
+    if constexpr (IsSame<ViewType, JS::DataView>) {
+        vector.append(ValueTag::ArrayBufferView);
+        vector.extend(move(buffer_serialized));               // [[ArrayBufferSerialized]]
+        TRY(serialize_string(vm, vector, "DataView"_string)); // [[Constructor]]
+        vector.append(JS::get_view_byte_length(view_record));
+        vector.append(view.byte_offset());
+    }
+
+    // 6. Otherwise:
+    else {
+        // 1. Assert: value has a [[TypedArrayName]] internal slot.
+        //    NOTE: Handled by constexpr check and template constraints
+        // 2. Set serialized to { [[Type]]: "ArrayBufferView", [[Constructor]]: value.[[TypedArrayName]],
+        //    [[ArrayBufferSerialized]]: bufferSerialized, [[ByteLength]]: value.[[ByteLength]],
+        //    [[ByteOffset]]: value.[[ByteOffset]], [[ArrayLength]]: value.[[ArrayLength]] }.
+        vector.append(ValueTag::ArrayBufferView);
+        vector.extend(move(buffer_serialized));                 // [[ArrayBufferSerialized]]
+        TRY(serialize_string(vm, vector, view.element_name())); // [[Constructor]]
+        vector.append(JS::typed_array_byte_length(view_record));
+        vector.append(view.byte_offset());
+        vector.append(JS::typed_array_length(view_record));
+    }
+    return {};
+}
+template WebIDL::ExceptionOr<void> serialize_viewed_array_buffer(JS::VM& vm, Vector<u32>& vector, JS::TypedArrayBase const& view, bool for_storage, SerializationMemory& memory);
+template WebIDL::ExceptionOr<void> serialize_viewed_array_buffer(JS::VM& vm, Vector<u32>& vector, JS::DataView const& view, bool for_storage, SerializationMemory& memory);
 
 class Deserializer {
 public:
