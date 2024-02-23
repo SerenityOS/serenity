@@ -7,7 +7,6 @@ The WSL Remote extension allows you to use VS Code in Windows while using the no
 The recommended extensions for VS Code include:
 
 - [clangd](https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-clangd)
-- [clang-format](https://marketplace.visualstudio.com/items?itemName=xaver.clang-format)
 - [GitLens](https://marketplace.visualstudio.com/items?itemName=eamodio.gitlens)
 
 ## Code comprehension
@@ -119,7 +118,7 @@ following ``c_cpp_properties.json`` to circumvent some errors. Even with the con
 
 ## Formatting
 
-The [clang-format extension](https://marketplace.visualstudio.com/items?itemName=xaver.clang-format) works out of the box. ``clang-format`` support is also included with the Microsoft C/C++ tools (see above). The settings below include a key that makes the Microsoft extension use the proper style.
+clangd provides code formatting out of the box using the ``clang-format`` engine. ``clang-format`` support is also included with the Microsoft C/C++ tools (see above). The settings below include a key that makes the Microsoft extension use the proper style.
 
 ## Settings
 
