@@ -19,14 +19,9 @@
 // FIXME: Share b/w RequestServer and WebSocket
 ErrorOr<ByteString> find_certificates(StringView serenity_resource_root)
 {
-    auto cert_path = ByteString::formatted("{}/res/ladybird/cacert.pem", serenity_resource_root);
-    if (!FileSystem::exists(cert_path)) {
-        auto app_dir = LexicalPath::dirname(TRY(Core::System::current_executable_path()));
-
-        cert_path = ByteString::formatted("{}/cacert.pem", LexicalPath(app_dir).parent());
-        if (!FileSystem::exists(cert_path))
-            return Error::from_string_view("Don't know how to load certs!"sv);
-    }
+    auto cert_path = ByteString::formatted("{}/ladybird/cacert.pem", serenity_resource_root);
+    if (!FileSystem::exists(cert_path))
+        return Error::from_string_view("Don't know how to load certs!"sv);
     return cert_path;
 }
 
