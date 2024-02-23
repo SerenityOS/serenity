@@ -3186,7 +3186,21 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.setter_callback@)
 }
 )~~~");
         } else if (attribute.extended_attributes.contains("Replaceable"sv)) {
-            attribute_generator.append(R"~~~(
+            if (interface.name.is_one_of("Window")) {
+                attribute_generator.append(R"~~~(
+JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.setter_callback@)
+{
+    auto this_value = vm.this_value();
+    if (!this_value.is_object() || !is<WindowProxy>(this_value.as_object()))
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "@namespaced_name@");
+    auto& window_proxy = static_cast<WindowProxy&>(this_value.as_object());
+    TRY(window_proxy.window()->internal_define_own_property("@attribute.name@", JS::PropertyDescriptor { .value = vm.argument(0), .writable = true }));
+    return JS::js_undefined();
+}
+)~~~");
+            } else {
+
+                attribute_generator.append(R"~~~(
 JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.setter_callback@)
 {
     auto this_value = vm.this_value();
@@ -3196,6 +3210,7 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.setter_callback@)
     return JS::js_undefined();
 }
 )~~~");
+            }
         } else if (auto put_forwards_identifier = attribute.extended_attributes.get("PutForwards"sv); put_forwards_identifier.has_value()) {
             attribute_generator.set("put_forwards_identifier"sv, *put_forwards_identifier);
 
