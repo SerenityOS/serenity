@@ -121,6 +121,8 @@ protected:
 
     mutable Mutex m_inode_lock { "Inode"sv };
 
+    ErrorOr<size_t> prepare_and_write_bytes_locked(off_t, size_t, UserOrKernelBuffer const& data, OpenFileDescription*);
+
     virtual ErrorOr<size_t> write_bytes_locked(off_t, size_t, UserOrKernelBuffer const& data, OpenFileDescription*) = 0;
     virtual ErrorOr<size_t> read_bytes_locked(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const = 0;
     virtual ErrorOr<void> truncate_locked(u64) { return {}; }
