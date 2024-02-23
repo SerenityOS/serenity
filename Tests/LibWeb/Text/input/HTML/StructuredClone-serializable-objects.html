@@ -7,6 +7,14 @@
         let text = await blob.text();
         println(`Blob.text(): ${text}`);
 
+        let file = structuredClone(new File(["Hello, File!"], "hello.txt", {type: "text/plain"}));
+        println(`instanceOf File: ${file instanceof File}`);
+        println(`File.name: ${file.name}`);
+        println(`File.type: ${file.type}`);
+        text = await file.text();
+        println(`File.text(): ${text}`);
+        println(`File.size: ${file.size}`);
+
         done();
     });
 </script>

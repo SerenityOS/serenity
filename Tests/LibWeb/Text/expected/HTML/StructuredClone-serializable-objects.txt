@@ -1,3 +1,8 @@
 instanceOf Blob: true
 Blob.type: text/plain
 Blob.text(): Hello, Blob!
+instanceOf File: true
+File.name: hello.txt
+File.type: text/plain
+File.text(): Hello, File!
+File.size: 12
