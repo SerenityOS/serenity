@@ -594,6 +594,7 @@ ErrorOr<size_t> Ext2FSInode::read_bytes_locked(off_t offset, size_t count, UserO
 
 ErrorOr<void> Ext2FSInode::resize(u64 new_size)
 {
+    VERIFY(m_inode_lock.is_locked());
     auto old_size = size();
     if (old_size == new_size)
         return {};
@@ -655,7 +656,7 @@ ErrorOr<void> Ext2FSInode::resize(u64 new_size)
         auto clear_from = old_size;
         u8 zero_buffer[PAGE_SIZE] {};
         while (bytes_to_clear) {
-            auto nwritten = TRY(write_bytes(clear_from, min(static_cast<u64>(sizeof(zero_buffer)), bytes_to_clear), UserOrKernelBuffer::for_kernel_buffer(zero_buffer), nullptr));
+            auto nwritten = TRY(prepare_and_write_bytes_locked(clear_from, min(static_cast<u64>(sizeof(zero_buffer)), bytes_to_clear), UserOrKernelBuffer::for_kernel_buffer(zero_buffer), nullptr));
             VERIFY(nwritten != 0);
             bytes_to_clear -= nwritten;
             clear_from += nwritten;
@@ -816,7 +817,7 @@ ErrorOr<void> Ext2FSInode::write_directory(Vector<Ext2FSDirectoryEntry>& entries
     TRY(resize(serialized_bytes_count));
 
     auto buffer = UserOrKernelBuffer::for_kernel_buffer(directory_data.data());
-    auto nwritten = TRY(write_bytes(0, serialized_bytes_count, buffer, nullptr));
+    auto nwritten = TRY(prepare_and_write_bytes_locked(0, serialized_bytes_count, buffer, nullptr));
     set_metadata_dirty(true);
     if (nwritten != directory_data.size())
         return EIO;
