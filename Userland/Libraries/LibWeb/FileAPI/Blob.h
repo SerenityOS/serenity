@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023, Kenneth Myhra <kennethmyhra@serenityos.org>
+ * Copyright (c) 2022-2024, Kenneth Myhra <kennethmyhra@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,6 +10,7 @@
 #include <AK/Vector.h>
 #include <LibWeb/Bindings/BlobPrototype.h>
 #include <LibWeb/Bindings/PlatformObject.h>
+#include <LibWeb/Bindings/Serializable.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
@@ -26,7 +27,9 @@ struct BlobPropertyBag {
 [[nodiscard]] ErrorOr<ByteBuffer> process_blob_parts(Vector<BlobPart> const& blob_parts, Optional<BlobPropertyBag> const& options = {});
 [[nodiscard]] bool is_basic_latin(StringView view);
 
-class Blob : public Bindings::PlatformObject {
+class Blob
+    : public Bindings::PlatformObject
+    , public Bindings::Serializable {
     WEB_PLATFORM_OBJECT(Blob, Bindings::PlatformObject);
     JS_DECLARE_ALLOCATOR(Blob);
 
@@ -51,6 +54,11 @@ public:
     ReadonlyBytes bytes() const { return m_byte_buffer.bytes(); }
 
     WebIDL::ExceptionOr<JS::NonnullGCPtr<Streams::ReadableStream>> get_stream();
+
+    virtual StringView interface_name() const override { return "Blob"sv; }
+
+    virtual WebIDL::ExceptionOr<void> serialization_steps(HTML::SerializationRecord& record, bool for_storage) override;
+    virtual WebIDL::ExceptionOr<void> deserialization_steps(ReadonlySpan<u32> const& record, size_t& position) override;
 
 protected:
     Blob(JS::Realm&, ByteBuffer, String type);
