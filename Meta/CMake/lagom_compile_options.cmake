@@ -30,3 +30,13 @@ add_linker_flag_if_supported(LINKER:--gdb-index)
 if (NOT ENABLE_FUZZERS)
     add_linker_flag_if_supported(LINKER:-Bsymbolic-non-weak-functions)
 endif()
+
+if (ENABLE_LAGOM_COVERAGE_COLLECTION)
+    if (CMAKE_CXX_COMPILER_ID MATCHES "Clang$" AND NOT ENABLE_FUZZERS)
+        add_compile_options(-fprofile-instr-generate -fcoverage-mapping)
+        add_link_options(-fprofile-instr-generate)
+    else()
+        message(FATAL_ERROR
+            "Collecting code coverage is unsupported in this configuration.")
+    endif()
+endif()
