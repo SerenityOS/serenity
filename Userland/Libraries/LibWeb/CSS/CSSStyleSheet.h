@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2019-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2024, Tim Ledbetter <timledbetter@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -28,6 +29,8 @@ public:
 
     virtual ~CSSStyleSheet() override = default;
 
+    JS::GCPtr<CSSRule const> owner_rule() const { return m_owner_css_rule; }
+    JS::GCPtr<CSSRule> owner_rule() { return m_owner_css_rule; }
     void set_owner_css_rule(CSSRule* rule) { m_owner_css_rule = rule; }
 
     virtual String type() const override { return "text/css"_string; }
