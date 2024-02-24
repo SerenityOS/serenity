@@ -604,7 +604,7 @@ bool Window::has_transient_activation() const
 {
     // The transient activation duration is expected be at most a few seconds, so that the user can possibly
     // perceive the link between an interaction with the page and the page calling the activation-gated API.
-    auto transient_activation_duration = 5;
+    static constexpr HighResolutionTime::DOMHighResTimeStamp transient_activation_duration_ms = 5000;
 
     // AD-HOC: Due to resource limitations on CI, we cannot rely on the time between the activation timestamp and the
     //         transient activation timeout being predictable. So we allow tests to indicate when they want the next
@@ -621,7 +621,7 @@ bool Window::has_transient_activation() const
     // is greater than or equal to the last activation timestamp in W
     if (current_time >= m_last_activation_timestamp) {
         // and less than the last activation timestamp in W plus the transient activation duration
-        if (current_time < m_last_activation_timestamp + transient_activation_duration) {
+        if (current_time < m_last_activation_timestamp + transient_activation_duration_ms) {
             // then W is said to have transient activation.
             return true;
         }
