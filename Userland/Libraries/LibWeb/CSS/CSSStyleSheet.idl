@@ -16,7 +16,7 @@ interface CSSStyleSheet : StyleSheet {
     // FIXME: undefined replaceSync(USVString text);
 
     // https://drafts.csswg.org/cssom/#legacy-css-style-sheet-members
-    // FIXME: [SameObject] readonly attribute CSSRuleList rules;
+    [SameObject, ImplementedAs=css_rules] readonly attribute CSSRuleList rules;
     // FIXME: long addRule(optional DOMString selector = "undefined", optional DOMString style = "undefined", optional unsigned long index);
     undefined removeRule(unsigned long index);
 };
