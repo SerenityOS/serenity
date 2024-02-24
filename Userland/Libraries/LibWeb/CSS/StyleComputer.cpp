@@ -351,18 +351,8 @@ static void sort_matching_rules(Vector<MatchingRule>& matching_rules)
     });
 }
 
-static void set_property_expanding_shorthands(StyleProperties& style, CSS::PropertyID property_id, StyleValue const& value, DOM::Document& document, CSS::CSSStyleDeclaration const* declaration, StyleProperties::PropertyValues const& properties_for_revert)
+void StyleComputer::for_each_property_expanding_shorthands(PropertyID property_id, StyleValue const& value, Function<void(PropertyID, StyleValue const&)> const& set_longhand_property)
 {
-    auto set_longhand_property = [&](CSS::PropertyID property_id, StyleValue const& value) {
-        if (value.is_revert()) {
-            auto& property_in_previous_cascade_origin = properties_for_revert[to_underlying(property_id)];
-            if (property_in_previous_cascade_origin.has_value())
-                style.set_property(property_id, property_in_previous_cascade_origin->style, property_in_previous_cascade_origin->declaration);
-        } else {
-            style.set_property(property_id, value, declaration);
-        }
-    };
-
     auto map_logical_property_to_real_property = [](PropertyID property_id) -> Optional<PropertyID> {
         // FIXME: Honor writing-mode, direction and text-orientation.
         switch (property_id) {
@@ -421,19 +411,21 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         }
     };
 
-    if (auto real_property_id = map_logical_property_to_real_property(property_id); real_property_id.has_value())
-        return set_property_expanding_shorthands(style, real_property_id.value(), value, document, declaration, properties_for_revert);
+    if (auto real_property_id = map_logical_property_to_real_property(property_id); real_property_id.has_value()) {
+        for_each_property_expanding_shorthands(real_property_id.value(), value, set_longhand_property);
+        return;
+    }
 
     if (auto real_property_ids = map_logical_property_to_real_properties(property_id); real_property_ids.has_value()) {
         if (value.is_value_list() && value.as_value_list().size() == 2) {
             auto const& start = value.as_value_list().values()[0];
             auto const& end = value.as_value_list().values()[1];
-            set_property_expanding_shorthands(style, real_property_ids->start, start, document, declaration, properties_for_revert);
-            set_property_expanding_shorthands(style, real_property_ids->end, end, document, declaration, properties_for_revert);
+            for_each_property_expanding_shorthands(real_property_ids->start, start, set_longhand_property);
+            for_each_property_expanding_shorthands(real_property_ids->end, end, set_longhand_property);
             return;
         }
-        set_property_expanding_shorthands(style, real_property_ids->start, value, document, declaration, properties_for_revert);
-        set_property_expanding_shorthands(style, real_property_ids->end, value, document, declaration, properties_for_revert);
+        for_each_property_expanding_shorthands(real_property_ids->start, value, set_longhand_property);
+        for_each_property_expanding_shorthands(real_property_ids->end, value, set_longhand_property);
         return;
     }
 
@@ -442,7 +434,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         auto& properties = shorthand_value.sub_properties();
         auto& values = shorthand_value.values();
         for (size_t i = 0; i < properties.size(); ++i)
-            set_property_expanding_shorthands(style, properties[i], values[i], document, declaration, properties_for_revert);
+            for_each_property_expanding_shorthands(properties[i], values[i], set_longhand_property);
         return;
     }
 
@@ -471,10 +463,10 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     };
 
     if (property_id == CSS::PropertyID::Border) {
-        set_property_expanding_shorthands(style, CSS::PropertyID::BorderTop, value, document, declaration, properties_for_revert);
-        set_property_expanding_shorthands(style, CSS::PropertyID::BorderRight, value, document, declaration, properties_for_revert);
-        set_property_expanding_shorthands(style, CSS::PropertyID::BorderBottom, value, document, declaration, properties_for_revert);
-        set_property_expanding_shorthands(style, CSS::PropertyID::BorderLeft, value, document, declaration, properties_for_revert);
+        for_each_property_expanding_shorthands(CSS::PropertyID::BorderTop, value, set_longhand_property);
+        for_each_property_expanding_shorthands(CSS::PropertyID::BorderRight, value, set_longhand_property);
+        for_each_property_expanding_shorthands(CSS::PropertyID::BorderBottom, value, set_longhand_property);
+        for_each_property_expanding_shorthands(CSS::PropertyID::BorderLeft, value, set_longhand_property);
         // FIXME: Also reset border-image, in line with the spec: https://www.w3.org/TR/css-backgrounds-3/#border-shorthands
         return;
     }
@@ -644,11 +636,24 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         // (eg `grid` -> `grid-template` -> `grid-template-areas` & `grid-template-rows` & `grid-template-columns`)
         VERIFY(value.is_css_wide_keyword());
         for (auto longhand : longhands_for_shorthand(property_id))
-            set_property_expanding_shorthands(style, longhand, value, document, declaration, properties_for_revert);
+            for_each_property_expanding_shorthands(longhand, value, set_longhand_property);
         return;
     }
 
     set_longhand_property(property_id, value);
+}
+
+void StyleComputer::set_property_expanding_shorthands(StyleProperties& style, CSS::PropertyID property_id, StyleValue const& value, CSS::CSSStyleDeclaration const* declaration, StyleProperties::PropertyValues const& properties_for_revert)
+{
+    for_each_property_expanding_shorthands(property_id, value, [&](PropertyID shorthand_id, StyleValue const& shorthand_value) {
+        if (shorthand_value.is_revert()) {
+            auto& property_in_previous_cascade_origin = properties_for_revert[to_underlying(shorthand_id)];
+            if (property_in_previous_cascade_origin.has_value())
+                style.set_property(shorthand_id, property_in_previous_cascade_origin->style, property_in_previous_cascade_origin->declaration);
+        } else {
+            style.set_property(shorthand_id, shorthand_value, declaration);
+        }
+    });
 }
 
 void StyleComputer::set_all_properties(DOM::Element& element, Optional<CSS::Selector::PseudoElement::Type> pseudo_element, StyleProperties& style, StyleValue const& value, DOM::Document& document, CSS::CSSStyleDeclaration const* declaration, StyleProperties::PropertyValues const& properties_for_revert) const
@@ -673,9 +678,9 @@ void StyleComputer::set_all_properties(DOM::Element& element, Optional<CSS::Sele
         if (property_value->is_unresolved())
             property_value = Parser::Parser::resolve_unresolved_style_value({}, Parser::ParsingContext { document }, element, pseudo_element, property_id, property_value->as_unresolved());
         if (!property_value->is_unresolved())
-            set_property_expanding_shorthands(style, property_id, property_value, document, declaration, properties_for_revert);
+            set_property_expanding_shorthands(style, property_id, property_value, declaration, properties_for_revert);
 
-        set_property_expanding_shorthands(style, property_id, value, document, declaration, properties_for_revert);
+        set_property_expanding_shorthands(style, property_id, value, declaration, properties_for_revert);
     }
 }
 
@@ -697,7 +702,7 @@ void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& e
             if (property.value->is_unresolved())
                 property_value = Parser::Parser::resolve_unresolved_style_value({}, Parser::ParsingContext { document() }, element, pseudo_element, property.property_id, property.value->as_unresolved());
             if (!property_value->is_unresolved())
-                set_property_expanding_shorthands(style, property.property_id, property_value, m_document, &match.rule->declaration(), properties_for_revert);
+                set_property_expanding_shorthands(style, property.property_id, property_value, &match.rule->declaration(), properties_for_revert);
         }
     }
 
@@ -716,7 +721,7 @@ void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& e
                 if (property.value->is_unresolved())
                     property_value = Parser::Parser::resolve_unresolved_style_value({}, Parser::ParsingContext { document() }, element, pseudo_element, property.property_id, property.value->as_unresolved());
                 if (!property_value->is_unresolved())
-                    set_property_expanding_shorthands(style, property.property_id, property_value, m_document, inline_style, properties_for_revert);
+                    set_property_expanding_shorthands(style, property.property_id, property_value, inline_style, properties_for_revert);
             }
         }
     }
