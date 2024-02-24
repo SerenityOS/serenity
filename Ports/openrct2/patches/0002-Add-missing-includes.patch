@@ -10,27 +10,27 @@ These are missing when compiling the release build.
  2 files changed, 3 insertions(+)
 
 diff --git a/src/openrct2/core/String.cpp b/src/openrct2/core/String.cpp
-index 76c4574ed6e060dc7032b0a8c346bdbc3a435a2d..fbe23e4af894e3dbf4bc57ba3370e3f9e2ed24e7 100644
+index 4cc60ce853d4ab8b707483c949032f48271f9660..32a88bde45fd53082cf5ba38c9f7bd02a6c16d5d 100644
 --- a/src/openrct2/core/String.cpp
 +++ b/src/openrct2/core/String.cpp
-@@ -14,6 +14,7 @@
- #include <sstream>
- #include <stdexcept>
- #include <vector>
+@@ -8,6 +8,7 @@
+  *****************************************************************************/
+ 
+ #include <algorithm>
 +#include <alloca.h>
- #ifndef _WIN32
- #    include <unicode/ucnv.h>
- #    include <unicode/unistr.h>
+ #include <cctype>
+ #include <cwctype>
+ #include <iomanip>
 diff --git a/src/openrct2/network/Socket.cpp b/src/openrct2/network/Socket.cpp
-index 89803e28568efd38dd82845f89af97e47366f5b6..e166ed45d158d0cf516ff83b7992e04780f28edb 100644
+index b8b2edbf32a292acefc67893e4c6f1f12f266691..a84c92fc471b55bdf9476821a234cd727a0b370b 100644
 --- a/src/openrct2/network/Socket.cpp
 +++ b/src/openrct2/network/Socket.cpp
-@@ -51,6 +51,8 @@
-     #include <netinet/tcp.h>
+@@ -52,6 +52,8 @@
+     #include <unistd.h>
      #include <sys/ioctl.h>
      #include <sys/socket.h>
 +    #include <sys/time.h>
 +    #include <sys/select.h>
+     #include <unistd.h>
      #include "../common.h"
      using SOCKET = int32_t;
-     #define SOCKET_ERROR -1

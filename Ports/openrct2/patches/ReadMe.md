@@ -24,25 +24,19 @@ Remove use of strptime()
 
 This is a hack to patch out strptime() from duktape, which is not being used by this project.
 
-## `0005-Don-t-try-linking-to-stdc-fs.patch`
-
-Don't try linking to stdc++fs
-
-This code tried to link to stdc++fs for std::filesystem features, which are already included in our toolchain.
-
-## `0006-Add-compile-options-to-CMakeLists.txt.patch`
+## `0005-Add-compile-options-to-CMakeLists.txt.patch`
 
 Add compile options to CMakeLists.txt
 
 This irons out some compiler warnings that turned into errors when compiling a release build.
 
-## `0007-Disable-locale-detection-for-writing-the-default-con.patch`
+## `0006-Disable-locale-detection-for-writing-the-default-con.patch`
 
 Disable locale detection for writing the default config.ini
 
 At the time of writing, locale support in Serenity is not great. We always returned the "C" locale, which this code interpreted wrong. Since this is just used for writing a default value to the game config (which can be changed later), we just default to English.
 
-## `0008-Disable-g2.dat-target.patch`
+## `0007-Disable-g2.dat-target.patch`
 
 Disable g2.dat target
 
