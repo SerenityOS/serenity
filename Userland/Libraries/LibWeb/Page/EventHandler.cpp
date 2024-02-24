@@ -787,8 +787,6 @@ bool EventHandler::handle_keydown(KeyCode key, u32 modifiers, u32 code_point)
         return false;
 
     if (m_browsing_context->cursor_position() && m_browsing_context->cursor_position()->node()->is_editable()) {
-        auto& node = verify_cast<DOM::Text>(*m_browsing_context->cursor_position()->node());
-
         if (key == KeyCode::Key_Backspace) {
             if (!m_browsing_context->decrement_cursor_position_offset()) {
                 // FIXME: Move to the previous node and delete the last character there.
@@ -819,23 +817,37 @@ bool EventHandler::handle_keydown(KeyCode key, u32 modifiers, u32 code_point)
             return true;
         }
         if (key == KeyCode::Key_Home) {
-            m_browsing_context->set_cursor_position(DOM::Position::create(realm, node, 0));
+            auto& cursor_position_node = *m_browsing_context->cursor_position()->node();
+            if (cursor_position_node.is_text())
+                m_browsing_context->set_cursor_position(DOM::Position::create(realm, cursor_position_node, 0));
             return true;
         }
         if (key == KeyCode::Key_End) {
-            m_browsing_context->set_cursor_position(DOM::Position::create(realm, node, (unsigned)node.data().bytes().size()));
+            auto& cursor_position_node = *m_browsing_context->cursor_position()->node();
+            if (cursor_position_node.is_text()) {
+                auto& text_node = static_cast<DOM::Text&>(cursor_position_node);
+                m_browsing_context->set_cursor_position(DOM::Position::create(realm, text_node, (unsigned)text_node.data().bytes().size()));
+            }
             return true;
         }
         if (key == KeyCode::Key_Return) {
-            if (is<HTML::HTMLInputElement>(node.editable_text_node_owner())) {
-                auto& input_element = static_cast<HTML::HTMLInputElement&>(*node.editable_text_node_owner());
-
-                if (auto* form = input_element.form()) {
+            HTML::HTMLInputElement* input_element = nullptr;
+            if (auto node = m_browsing_context->cursor_position()->node()) {
+                if (node->is_text()) {
+                    auto& text_node = static_cast<DOM::Text&>(*node);
+                    if (is<HTML::HTMLInputElement>(text_node.editable_text_node_owner()))
+                        input_element = static_cast<HTML::HTMLInputElement*>(text_node.editable_text_node_owner());
+                } else if (node->is_html_input_element()) {
+                    input_element = static_cast<HTML::HTMLInputElement*>(node.ptr());
+                }
+            }
+            if (input_element) {
+                if (auto* form = input_element->form()) {
                     form->implicitly_submit_form().release_value_but_fixme_should_propagate_errors();
                     return true;
                 }
 
-                input_element.commit_pending_changes();
+                input_element->commit_pending_changes();
                 return true;
             }
         }

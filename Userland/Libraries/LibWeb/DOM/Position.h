@@ -28,6 +28,7 @@ public:
 
     JS::GCPtr<Node> node() { return m_node; }
     JS::GCPtr<Node const> node() const { return m_node; }
+    void set_node(JS::NonnullGCPtr<Node> node) { m_node = node; }
 
     unsigned offset() const { return m_offset; }
     bool offset_is_at_end_of_node() const;
