@@ -18,6 +18,12 @@ namespace Web::CSS {
 
 class CSSImportRule;
 
+struct CSSStyleSheetInit {
+    Optional<String> base_url {};
+    Variant<JS::Handle<MediaList>, String> media { String {} };
+    bool disabled { false };
+};
+
 class CSSStyleSheet final
     : public StyleSheet
     , public Weakable<CSSStyleSheet> {
@@ -26,6 +32,7 @@ class CSSStyleSheet final
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<CSSStyleSheet> create(JS::Realm&, CSSRuleList&, MediaList&, Optional<AK::URL> location);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<CSSStyleSheet>> construct_impl(JS::Realm&, Optional<CSSStyleSheetInit> const& options = {});
 
     virtual ~CSSStyleSheet() override = default;
 
@@ -56,6 +63,14 @@ public:
     Optional<FlyString> default_namespace() const;
     Optional<FlyString> namespace_uri(StringView namespace_prefix) const;
 
+    Optional<AK::URL> base_url() const { return m_base_url; }
+    void set_base_url(Optional<AK::URL> base_url) { m_base_url = move(base_url); }
+
+    bool constructed() const { return m_constructed; }
+
+    JS::GCPtr<DOM::Document const> constructor_document() const { return m_constructor_document; }
+    void set_constructor_document(JS::GCPtr<DOM::Document const> constructor_document) { m_constructor_document = constructor_document; }
+
 private:
     CSSStyleSheet(JS::Realm&, CSSRuleList&, MediaList&, Optional<AK::URL> location);
 
@@ -64,12 +79,18 @@ private:
 
     void recalculate_namespaces();
 
+    void set_constructed(bool constructed) { m_constructed = constructed; }
+
     JS::GCPtr<CSSRuleList> m_rules;
     JS::GCPtr<CSSNamespaceRule> m_default_namespace_rule;
     HashMap<FlyString, JS::GCPtr<CSSNamespaceRule>> m_namespace_rules;
 
     JS::GCPtr<StyleSheetList> m_style_sheet_list;
     JS::GCPtr<CSSRule> m_owner_css_rule;
+
+    Optional<AK::URL> m_base_url;
+    JS::GCPtr<DOM::Document const> m_constructor_document;
+    bool m_constructed { false };
 };
 
 }
