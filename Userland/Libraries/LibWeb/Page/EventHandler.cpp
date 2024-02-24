@@ -757,7 +757,7 @@ bool EventHandler::handle_keydown(KeyCode key, u32 modifiers, u32 code_point)
 
     if (auto selection = document->get_selection()) {
         auto range = selection->range();
-        if (range && range->start_container()->is_editable()) {
+        if (range && !range->collapsed() && range->start_container()->is_editable()) {
             selection->remove_all_ranges();
 
             // FIXME: This doesn't work for some reason?
