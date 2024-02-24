@@ -286,10 +286,10 @@ WebIDL::ExceptionOr<WebIDL::Long> CSSStyleSheet::add_rule(Optional<String> selec
 }
 
 // https://www.w3.org/TR/cssom/#dom-cssstylesheet-removerule
-WebIDL::ExceptionOr<void> CSSStyleSheet::remove_rule(unsigned index)
+WebIDL::ExceptionOr<void> CSSStyleSheet::remove_rule(Optional<WebIDL::UnsignedLong> index)
 {
     // The removeRule(index) method must run the same steps as deleteRule().
-    return delete_rule(index);
+    return delete_rule(index.value_or(0));
 }
 
 void CSSStyleSheet::for_each_effective_style_rule(Function<void(CSSStyleRule const&)> const& callback) const
