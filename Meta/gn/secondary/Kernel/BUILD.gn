@@ -327,7 +327,7 @@ source_set("arch_sources") {
       "Arch/x86_64/Interrupts/APIC.cpp",
       "Arch/x86_64/Interrupts/IOAPIC.cpp",
       "Arch/x86_64/Interrupts/PIC.cpp",
-      "Arch/x86_64/PCI/Controller/HostBridge.cpp",
+      "Arch/x86_64/PCI/Controller/PIIX4HostBridge.cpp",
       "Arch/x86_64/PCI/Initializer.cpp",
       "Arch/x86_64/PCI/MSI.cpp",
       "Arch/x86_64/PCSpeaker.cpp",
