@@ -28,4 +28,5 @@ executable("WebWorker") {
     "//Userland/Services/WebWorker/PageHost.cpp",
     "main.cpp",
   ]
+  output_dir = "$root_out_dir/libexec"
 }

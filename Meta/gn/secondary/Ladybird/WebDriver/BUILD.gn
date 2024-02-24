@@ -27,4 +27,5 @@ executable("WebDriver") {
     "//Userland/Services/WebDriver/WebContentConnection.cpp",
     "main.cpp",
   ]
+  output_dir = "$root_out_dir/libexec"
 }

@@ -8,7 +8,7 @@ set(ladybird_applications ladybird ${ladybird_helper_processes})
 
 set(app_install_targets ${ladybird_applications})
 
-install(TARGETS ${app_install_targets}
+install(TARGETS ladybird
   EXPORT ladybirdTargets
   RUNTIME
     COMPONENT ladybird_Runtime
@@ -24,6 +24,13 @@ install(TARGETS ${app_install_targets}
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
   FILE_SET ladybird
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+
+install(TARGETS ${ladybird_helper_processes}
+  EXPORT ladybirdTargets
+  RUNTIME
+    COMPONENT ladybird_Runtime
+    DESTINATION ${CMAKE_INSTALL_LIBEXECDIR}
 )
 
 include("${SERENITY_SOURCE_DIR}/Meta/Lagom/get_linked_lagom_libraries.cmake")

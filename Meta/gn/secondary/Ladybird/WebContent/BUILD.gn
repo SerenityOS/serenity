@@ -81,4 +81,5 @@ executable("WebContent") {
     cflags_cc = [ "-DHAS_ACCELERATED_GRAPHICS" ]
     deps += [ "//Userland/Libraries/LibAccelGfx" ]
   }
+  output_dir = "$root_out_dir/libexec"
 }

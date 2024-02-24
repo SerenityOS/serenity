@@ -182,10 +182,18 @@ target_include_directories(ladybird PRIVATE ${SERENITY_SOURCE_DIR}/Userland/)
 target_include_directories(ladybird PRIVATE ${SERENITY_SOURCE_DIR}/Userland/Applications/)
 target_include_directories(ladybird PRIVATE ${SERENITY_SOURCE_DIR}/Userland/Services/)
 
-function(set_ladybird_helper_output_directory target_name)
+function(set_helper_process_properties)
+    set(targets ${ARGV})
     if (APPLE)
         # Store helper processes in the same bundle directory as the main application
-        set_target_properties(${target_name} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "$<TARGET_FILE_DIR:ladybird>")
+        set_target_properties(${targets} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "$<TARGET_FILE_DIR:ladybird>")
+    else()
+        set_target_properties(${targets} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBEXECDIR}")
+
+        if (NOT CMAKE_INSTALL_LIBEXECDIR STREQUAL "libexec")
+            set_source_files_properties(Utilities.cpp PROPERTIES COMPILE_DEFINITIONS LADYBIRD_LIBEXECDIR="${CMAKE_INSTALL_LIBEXECDIR}")
+            set_source_files_properties(Utilities.cpp TARGET_DIRECTORY ${targets} PROPERTIES COMPILE_DEFINITIONS LADYBIRD_LIBEXECDIR="${CMAKE_INSTALL_LIBEXECDIR}")
+        endif()
     endif()
 endfunction()
 
@@ -246,9 +254,7 @@ function(create_ladybird_bundle target_name)
 endfunction()
 
 create_ladybird_bundle(ladybird)
-foreach(helper_process IN LISTS ladybird_helper_processes)
-    set_ladybird_helper_output_directory(${helper_process})
-endforeach()
+set_helper_process_properties(${ladybird_helper_processes})
 
 include(cmake/ResourceFiles.cmake)
 set(resource_base_dir "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_DATADIR}/Lagom")
