@@ -8,7 +8,7 @@
 
 #include <AK/AtomicRefCounted.h>
 #include <AK/Types.h>
-#include <Kernel/Devices/GPU/GenericGraphicsAdapter.h>
+#include <Kernel/Devices/GPU/GPUDevice.h>
 
 namespace Kernel::Graphics {
 

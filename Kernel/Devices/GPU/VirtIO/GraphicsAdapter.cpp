@@ -28,7 +28,7 @@ ErrorOr<bool> VirtIOGraphicsAdapter::probe(PCI::DeviceIdentifier const& device_i
     return device_identifier.hardware_id().vendor_id == PCI::VendorID::VirtIO;
 }
 
-ErrorOr<NonnullLockRefPtr<GenericGraphicsAdapter>> VirtIOGraphicsAdapter::create(PCI::DeviceIdentifier const& device_identifier)
+ErrorOr<NonnullLockRefPtr<GPUDevice>> VirtIOGraphicsAdapter::create(PCI::DeviceIdentifier const& device_identifier)
 {
     // Setup memory transfer region
     auto scratch_space_region = TRY(MM.allocate_contiguous_kernel_region(

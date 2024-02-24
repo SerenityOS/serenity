@@ -10,7 +10,7 @@
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Devices/GPU/Bochs/Definitions.h>
 #include <Kernel/Devices/GPU/Console/GenericFramebufferConsole.h>
-#include <Kernel/Devices/GPU/GenericGraphicsAdapter.h>
+#include <Kernel/Devices/GPU/GPUDevice.h>
 #include <Kernel/Memory/PhysicalAddress.h>
 #include <Kernel/Memory/TypedMapping.h>
 
@@ -19,13 +19,13 @@ namespace Kernel {
 class GraphicsManagement;
 struct BochsDisplayMMIORegisters;
 
-class BochsGraphicsAdapter final : public GenericGraphicsAdapter
+class BochsGraphicsAdapter final : public GPUDevice
     , public PCI::Device {
     friend class GraphicsManagement;
 
 public:
     static ErrorOr<bool> probe(PCI::DeviceIdentifier const&);
-    static ErrorOr<NonnullLockRefPtr<GenericGraphicsAdapter>> create(PCI::DeviceIdentifier const&);
+    static ErrorOr<NonnullLockRefPtr<GPUDevice>> create(PCI::DeviceIdentifier const&);
     virtual ~BochsGraphicsAdapter() = default;
     virtual StringView device_name() const override { return "BochsGraphicsAdapter"sv; }
 

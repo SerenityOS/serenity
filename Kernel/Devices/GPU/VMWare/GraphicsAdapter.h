@@ -8,7 +8,7 @@
 
 #include <AK/Types.h>
 #include <Kernel/Bus/PCI/Device.h>
-#include <Kernel/Devices/GPU/GenericGraphicsAdapter.h>
+#include <Kernel/Devices/GPU/GPUDevice.h>
 #include <Kernel/Devices/GPU/VMWare/Definitions.h>
 #include <Kernel/Library/IOWindow.h>
 #include <Kernel/Locking/Spinlock.h>
@@ -21,13 +21,13 @@ class GraphicsManagement;
 
 class VMWareDisplayConnector;
 class VMWareGraphicsAdapter final
-    : public GenericGraphicsAdapter
+    : public GPUDevice
     , public PCI::Device {
     friend class GraphicsManagement;
 
 public:
     static ErrorOr<bool> probe(PCI::DeviceIdentifier const&);
-    static ErrorOr<NonnullLockRefPtr<GenericGraphicsAdapter>> create(PCI::DeviceIdentifier const&);
+    static ErrorOr<NonnullLockRefPtr<GPUDevice>> create(PCI::DeviceIdentifier const&);
     virtual ~VMWareGraphicsAdapter() = default;
 
     virtual StringView device_name() const override { return "VMWareGraphicsAdapter"sv; }

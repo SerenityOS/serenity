@@ -33,7 +33,7 @@ UNMAP_AFTER_INIT ErrorOr<bool> BochsGraphicsAdapter::probe(PCI::DeviceIdentifier
     return false;
 }
 
-UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<GenericGraphicsAdapter>> BochsGraphicsAdapter::create(PCI::DeviceIdentifier const& pci_device_identifier)
+UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<GPUDevice>> BochsGraphicsAdapter::create(PCI::DeviceIdentifier const& pci_device_identifier)
 {
     auto adapter = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) BochsGraphicsAdapter(pci_device_identifier)));
     MUST(adapter->initialize_adapter(pci_device_identifier));

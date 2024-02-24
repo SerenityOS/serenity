@@ -9,16 +9,16 @@
 #include <AK/Types.h>
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Devices/GPU/Console/GenericFramebufferConsole.h>
-#include <Kernel/Devices/GPU/GenericGraphicsAdapter.h>
+#include <Kernel/Devices/GPU/GPUDevice.h>
 
 namespace Kernel {
 
-class VoodooGraphicsAdapter final : public GenericGraphicsAdapter
+class VoodooGraphicsAdapter final : public GPUDevice
     , public PCI::Device {
 
 public:
     static ErrorOr<bool> probe(PCI::DeviceIdentifier const&);
-    static ErrorOr<NonnullLockRefPtr<GenericGraphicsAdapter>> create(PCI::DeviceIdentifier const&);
+    static ErrorOr<NonnullLockRefPtr<GPUDevice>> create(PCI::DeviceIdentifier const&);
     virtual ~VoodooGraphicsAdapter() = default;
     virtual StringView device_name() const override { return "VoodooGraphicsAdapter"sv; }
 

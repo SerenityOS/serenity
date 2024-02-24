@@ -34,7 +34,7 @@ UNMAP_AFTER_INIT ErrorOr<bool> VoodooGraphicsAdapter::probe(PCI::DeviceIdentifie
     return id.vendor_id == PCI::VendorID::Tdfx && is_supported_model(id.device_id);
 }
 
-UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<GenericGraphicsAdapter>> VoodooGraphicsAdapter::create(PCI::DeviceIdentifier const& pci_device_identifier)
+UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<GPUDevice>> VoodooGraphicsAdapter::create(PCI::DeviceIdentifier const& pci_device_identifier)
 {
     auto adapter = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) VoodooGraphicsAdapter(pci_device_identifier)));
     MUST(adapter->initialize_adapter(pci_device_identifier));
