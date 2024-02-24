@@ -32,7 +32,7 @@ ErrorOr<bool> IntelNativeGraphicsAdapter::probe(PCI::DeviceIdentifier const& pci
     return is_supported_model(pci_device_identifier.hardware_id().device_id);
 }
 
-ErrorOr<NonnullLockRefPtr<GenericGraphicsAdapter>> IntelNativeGraphicsAdapter::create(PCI::DeviceIdentifier const& pci_device_identifier)
+ErrorOr<NonnullLockRefPtr<GPUDevice>> IntelNativeGraphicsAdapter::create(PCI::DeviceIdentifier const& pci_device_identifier)
 {
     auto adapter = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) IntelNativeGraphicsAdapter(pci_device_identifier)));
     TRY(adapter->initialize_adapter());
@@ -67,7 +67,7 @@ ErrorOr<void> IntelNativeGraphicsAdapter::initialize_adapter()
 }
 
 IntelNativeGraphicsAdapter::IntelNativeGraphicsAdapter(PCI::DeviceIdentifier const& pci_device_identifier)
-    : GenericGraphicsAdapter()
+    : GPUDevice()
     , PCI::Device(const_cast<PCI::DeviceIdentifier&>(pci_device_identifier))
 {
 }

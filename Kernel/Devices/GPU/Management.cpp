@@ -123,7 +123,7 @@ static inline bool is_display_controller_pci_device(PCI::DeviceIdentifier const&
 
 struct PCIGraphicsDriverInitializer {
     ErrorOr<bool> (*probe)(PCI::DeviceIdentifier const&) = nullptr;
-    ErrorOr<NonnullLockRefPtr<GenericGraphicsAdapter>> (*create)(PCI::DeviceIdentifier const&) = nullptr;
+    ErrorOr<NonnullLockRefPtr<GPUDevice>> (*create)(PCI::DeviceIdentifier const&) = nullptr;
 };
 
 static constexpr PCIGraphicsDriverInitializer s_initializers[] = {
