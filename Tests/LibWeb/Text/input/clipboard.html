@@ -16,7 +16,10 @@
 
     asyncTest((done) => {
         writeText(() => {
-            internals.bypassNextTransientActivationTest = true;
+            const button = document.getElementById("button");
+            internals.dispatchUserActivatedEvent(button, new Event("mousedown"));
+            button.dispatchEvent(new Event("click"));
+
             writeText(done);
         });
     });

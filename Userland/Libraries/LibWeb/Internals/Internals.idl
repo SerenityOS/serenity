@@ -13,6 +13,6 @@
     undefined click(double x, double y);
     undefined wheel(double x, double y, double deltaX, double deltaY);
 
-    attribute boolean bypassNextTransientActivationTest;
+    boolean dispatchUserActivatedEvent(EventTarget target, Event event);
 
 };
