@@ -140,7 +140,9 @@ WebIDL::ExceptionOr<unsigned> CSSStyleSheet::insert_rule(StringView rule, unsign
     if (!parsed_rule)
         return WebIDL::SyntaxError::create(realm(), "Unable to parse CSS rule."_fly_string);
 
-    // FIXME: 5. If parsed rule is an @import rule, and the constructed flag is set, throw a SyntaxError DOMException.
+    // 5. If parsed rule is an @import rule, and the constructed flag is set, throw a SyntaxError DOMException.
+    if (constructed() && parsed_rule->type() == CSSRule::Type::Import)
+        return WebIDL::SyntaxError::create(realm(), "Can't insert @import rules into a constructed stylesheet."_fly_string);
 
     // 6. Return the result of invoking insert a CSS rule rule in the CSS rules at index.
     auto result = m_rules->insert_a_css_rule(parsed_rule, index);
