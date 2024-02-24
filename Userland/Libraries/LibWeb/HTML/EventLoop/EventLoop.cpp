@@ -248,9 +248,7 @@ void EventLoop::process()
     });
 
     // 14. For each fully active Document in docs, run the update intersection observations steps for that Document, passing in now as the timestamp. [INTERSECTIONOBSERVER]
-    for_each_fully_active_document_in_docs([&](DOM::Document& document) {
-        document.run_the_update_intersection_observations_steps(now);
-    });
+    // OPTIMIZATION: We do this automatically after layout or viewport changes, so we don't need to do it here.
 
     // FIXME:     15. Invoke the mark paint timing algorithm for each Document object in docs.
 
