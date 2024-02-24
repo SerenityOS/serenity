@@ -6,11 +6,117 @@
 
 #pragma once
 
-#include <AK/Types.h>
+#include <AK/Noncopyable.h>
+#include <AK/Vector.h>
 
 namespace AK {
 
-template<typename K, typename V, size_t Capacity>
+template<typename Node, typename Comparator, typename IndexSetter, size_t inline_capacity = 0>
+class IntrusiveBinaryHeap {
+    AK_MAKE_DEFAULT_COPYABLE(IntrusiveBinaryHeap);
+    AK_MAKE_DEFAULT_MOVABLE(IntrusiveBinaryHeap);
+
+public:
+    IntrusiveBinaryHeap() = default;
+
+    IntrusiveBinaryHeap(Vector<Node, inline_capacity>&& nodes)
+        : m_nodes(move(nodes))
+    {
+        for (ssize_t i = m_nodes.size() / 2; i--;)
+            heapify_down(i);
+    }
+
+    [[nodiscard]] size_t size() const { return m_nodes.size(); }
+    [[nodiscard]] bool is_empty() const { return m_nodes.is_empty(); }
+
+    void insert(Node const& node)
+    {
+        m_nodes.append(node);
+        IndexSetter {}(m_nodes.last(), m_nodes.size() - 1);
+        heapify_up(m_nodes.size() - 1);
+    }
+
+    void insert(Node&& node)
+    {
+        m_nodes.append(move(node));
+        IndexSetter {}(m_nodes.last(), m_nodes.size() - 1);
+        heapify_up(m_nodes.size() - 1);
+    }
+
+    Node pop(size_t i)
+    {
+        while (i != 0) {
+            swap_indices(i, (i - 1) / 2);
+            i = (i - 1) / 2;
+        }
+        swap_indices(0, m_nodes.size() - 1);
+        Node node = m_nodes.take_last();
+        heapify_down(0);
+        return node;
+    }
+
+    Node pop_min()
+    {
+        return pop(0);
+    }
+
+    Node const& peek_min() const
+    {
+        return m_nodes[0];
+    }
+
+    void clear()
+    {
+        m_nodes.clear();
+    }
+
+    ReadonlySpan<Node> nodes_in_arbitrary_order() const
+    {
+        return m_nodes;
+    }
+
+private:
+    void swap_indices(size_t i, size_t j)
+    {
+        swap(m_nodes[i], m_nodes[j]);
+        IndexSetter {}(m_nodes[i], i);
+        IndexSetter {}(m_nodes[j], j);
+    }
+
+    bool compare_indices(size_t i, size_t j)
+    {
+        return Comparator {}(m_nodes[i], m_nodes[j]);
+    }
+
+    void heapify_up(size_t i)
+    {
+        while (i != 0) {
+            auto parent = (i - 1) / 2;
+            if (compare_indices(parent, i))
+                break;
+            swap_indices(i, parent);
+            i = parent;
+        }
+    }
+
+    void heapify_down(size_t i)
+    {
+        while (i * 2 + 1 < size()) {
+            size_t min_child = i * 2 + 1;
+            size_t other_child = i * 2 + 2;
+            if (other_child < size() && compare_indices(other_child, min_child))
+                min_child = other_child;
+            if (compare_indices(i, min_child))
+                break;
+            swap_indices(i, min_child);
+            i = min_child;
+        }
+    }
+
+    Vector<Node, inline_capacity> m_nodes;
+};
+
+template<typename K, typename V, size_t inline_capacity>
 class BinaryHeap {
 public:
     BinaryHeap() = default;
@@ -19,95 +125,57 @@ public:
     // This constructor allows for O(n) construction of the heap (instead of O(nlogn) for repeated insertions)
     BinaryHeap(K keys[], V values[], size_t size)
     {
-        VERIFY(size <= Capacity);
-        m_size = size;
-        for (size_t i = 0; i < size; i++) {
-            m_elements[i].key = keys[i];
-            m_elements[i].value = values[i];
-        }
-
-        for (ssize_t i = size / 2; i >= 0; i--) {
-            heapify_down(i);
-        }
+        Vector<Node, inline_capacity> nodes;
+        nodes.ensure_capacity(size);
+        for (size_t i = 0; i < size; i++)
+            nodes.unchecked_append({ keys[i], values[i] });
+        m_heap = decltype(m_heap) { move(nodes) };
     }
 
-    [[nodiscard]] size_t size() const { return m_size; }
-    [[nodiscard]] bool is_empty() const { return m_size == 0; }
+    [[nodiscard]] size_t size() const { return m_heap.size(); }
+    [[nodiscard]] bool is_empty() const { return m_heap.is_empty(); }
 
     void insert(K key, V value)
     {
-        VERIFY(m_size < Capacity);
-        auto index = m_size++;
-        m_elements[index].key = key;
-        m_elements[index].value = value;
-        heapify_up(index);
+        m_heap.insert({ key, value });
     }
 
     V pop_min()
     {
-        VERIFY(!is_empty());
-        auto index = --m_size;
-        swap(m_elements[0], m_elements[index]);
-        heapify_down(0);
-        return m_elements[index].value;
+        return m_heap.pop_min().value;
     }
 
     [[nodiscard]] V const& peek_min() const
     {
-        VERIFY(!is_empty());
-        return m_elements[0].value;
+        return m_heap.peek_min().value;
     }
 
     [[nodiscard]] K const& peek_min_key() const
     {
-        VERIFY(!is_empty());
-        return m_elements[0].key;
+        return m_heap.peek_min().key;
     }
 
     void clear()
     {
-        m_size = 0;
+        m_heap.clear();
     }
 
 private:
-    void heapify_down(size_t index)
-    {
-        while (index * 2 + 1 < m_size) {
-            auto left_child = index * 2 + 1;
-            auto right_child = index * 2 + 2;
-
-            auto min_child = left_child;
-            if (right_child < m_size && m_elements[right_child].key < m_elements[min_child].key)
-                min_child = right_child;
-
-            if (m_elements[index].key <= m_elements[min_child].key)
-                break;
-            swap(m_elements[index], m_elements[min_child]);
-            index = min_child;
-        }
-    }
-
-    void heapify_up(size_t index)
-    {
-        while (index != 0) {
-            auto parent = (index - 1) / 2;
-
-            if (m_elements[index].key >= m_elements[parent].key)
-                break;
-            swap(m_elements[index], m_elements[parent]);
-            index = parent;
-        }
-    }
-
-    struct {
+    struct Node {
         K key;
         V value;
-    } m_elements[Capacity];
-    size_t m_size { 0 };
+    };
+
+    IntrusiveBinaryHeap<
+        Node,
+        decltype([](Node const& a, Node const& b) { return a.key < b.key; }),
+        decltype([](Node&, size_t) {})>
+        m_heap;
 };
 
 }
 
 #if USING_AK_GLOBALLY
 using AK::BinaryHeap;
+using AK::IntrusiveBinaryHeap;
 #endif
