@@ -41,6 +41,9 @@ struct FontFaceKey {
 
 class StyleComputer {
 public:
+    static void for_each_property_expanding_shorthands(PropertyID, StyleValue const&, Function<void(PropertyID, StyleValue const&)> const& set_longhand_property);
+    static void set_property_expanding_shorthands(StyleProperties&, PropertyID, StyleValue const&, CSS::CSSStyleDeclaration const*, StyleProperties::PropertyValues const& properties_for_revert);
+
     explicit StyleComputer(DOM::Document&);
     ~StyleComputer();
 
