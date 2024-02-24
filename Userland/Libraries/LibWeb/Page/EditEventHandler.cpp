@@ -114,6 +114,15 @@ void EditEventHandler::handle_insert(JS::NonnullGCPtr<DOM::Position> position, u
         node.set_data(MUST(builder.to_string()));
 
         node.invalidate_style();
+    } else {
+        auto& node = *position->node();
+        auto& realm = node.realm();
+        StringBuilder builder;
+        builder.append_code_point(code_point);
+        auto text = realm.heap().allocate<DOM::Text>(realm, node.document(), MUST(builder.to_string()));
+        MUST(node.append_child(*text));
+        position->set_node(text);
+        position->set_offset(1);
     }
 
     // FIXME: When nodes are removed from the DOM, the associated layout nodes become stale and still
