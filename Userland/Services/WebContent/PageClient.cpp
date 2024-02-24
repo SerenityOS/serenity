@@ -224,11 +224,6 @@ void PageClient::set_viewport_rect(Web::DevicePixelRect const& rect)
     page().top_level_traversable()->set_viewport_rect(page().device_to_css_rect(rect));
 }
 
-void PageClient::page_did_invalidate(Web::CSSPixelRect const&)
-{
-    Web::HTML::main_thread_event_loop().schedule();
-}
-
 void PageClient::page_did_request_cursor_change(Gfx::StandardCursor cursor)
 {
     client().async_did_request_cursor_change(m_id, (u32)cursor);
