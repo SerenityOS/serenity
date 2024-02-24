@@ -55,7 +55,7 @@ public:
     void did_request_certificates(Badge<RequestClient>);
 
     RefPtr<Core::Notifier>& write_notifier(Badge<RequestClient>) { return m_write_notifier; }
-    void set_request_fd(Badge<RequestClient>, int fd) { m_fd = fd; }
+    void set_request_fd(Badge<RequestClient>, int fd);
 
 private:
     explicit Request(RequestClient&, i32 request_id);
@@ -73,12 +73,9 @@ private:
     };
 
     struct InternalStreamData {
-        InternalStreamData(NonnullOwnPtr<Stream> stream)
-            : read_stream(move(stream))
-        {
-        }
+        InternalStreamData() { }
 
-        NonnullOwnPtr<Stream> read_stream;
+        OwnPtr<Stream> read_stream;
         RefPtr<Core::Notifier> read_notifier;
         bool success;
         u32 total_size { 0 };

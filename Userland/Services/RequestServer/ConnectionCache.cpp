@@ -71,13 +71,15 @@ void request_did_finish(URL const& url, Core::Socket const* socket)
                 connection->job_data.fail(Core::NetworkJob::Error::ConnectionFailed);
                 return;
             }
-            Core::deferred_invoke([&, url] {
-                dbgln_if(REQUESTSERVER_DEBUG, "Running next job in queue for connection {} @{}", &connection, connection->socket);
-                connection->timer.start();
-                connection->current_url = url;
-                connection->job_data = connection->request_queue.take_first();
-                connection->socket->set_notifications_enabled(true);
-                connection->job_data.start(*connection->socket);
+
+            connection->has_started = true;
+            Core::deferred_invoke([&connection = *connection, url] {
+                dbgln_if(REQUESTSERVER_DEBUG, "Running next job in queue for connection {}", &connection);
+                connection.timer.start();
+                connection.current_url = url;
+                connection.job_data = connection.request_queue.take_first();
+                connection.socket->set_notifications_enabled(true);
+                connection.job_data.start(*connection.socket);
             });
         }
     };

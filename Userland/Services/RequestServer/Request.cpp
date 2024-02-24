@@ -9,12 +9,9 @@
 
 namespace RequestServer {
 
-// FIXME: What about rollover?
-static i32 s_next_id = 1;
-
-Request::Request(ConnectionFromClient& client, NonnullOwnPtr<Core::File>&& output_stream)
+Request::Request(ConnectionFromClient& client, NonnullOwnPtr<Core::File>&& output_stream, i32 request_id)
     : m_client(client)
-    , m_id(s_next_id++)
+    , m_id(request_id)
     , m_output_stream(move(output_stream))
 {
 }

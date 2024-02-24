@@ -43,7 +43,7 @@ public:
     Core::File const& output_stream() const { return *m_output_stream; }
 
 protected:
-    explicit Request(ConnectionFromClient&, NonnullOwnPtr<Core::File>&&);
+    explicit Request(ConnectionFromClient&, NonnullOwnPtr<Core::File>&&, i32 request_id);
 
 private:
     ConnectionFromClient& m_client;

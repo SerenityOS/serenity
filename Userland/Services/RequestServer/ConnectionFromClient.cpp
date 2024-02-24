@@ -39,26 +39,30 @@ Messages::RequestServer::IsSupportedProtocolResponse ConnectionFromClient::is_su
     return supported;
 }
 
-Messages::RequestServer::StartRequestResponse ConnectionFromClient::start_request(ByteString const& method, URL const& url, HashMap<ByteString, ByteString> const& request_headers, ByteBuffer const& request_body, Core::ProxyData const& proxy_data)
+void ConnectionFromClient::start_request(i32 request_id, ByteString const& method, URL const& url, HashMap<ByteString, ByteString> const& request_headers, ByteBuffer const& request_body, Core::ProxyData const& proxy_data)
 {
     if (!url.is_valid()) {
         dbgln("StartRequest: Invalid URL requested: '{}'", url);
-        return { -1, Optional<IPC::File> {} };
+        (void)post_message(Messages::RequestClient::RequestFinished(request_id, false, 0));
+        return;
     }
+
     auto* protocol = Protocol::find_by_name(url.scheme().to_byte_string());
     if (!protocol) {
         dbgln("StartRequest: No protocol handler for URL: '{}'", url);
-        return { -1, Optional<IPC::File> {} };
+        (void)post_message(Messages::RequestClient::RequestFinished(request_id, false, 0));
+        return;
     }
-    auto request = protocol->start_request(*this, method, url, request_headers, request_body, proxy_data);
+    auto request = protocol->start_request(request_id, *this, method, url, request_headers, request_body, proxy_data);
     if (!request) {
         dbgln("StartRequest: Protocol handler failed to start request: '{}'", url);
-        return { -1, Optional<IPC::File> {} };
+        (void)post_message(Messages::RequestClient::RequestFinished(request_id, false, 0));
+        return;
     }
     auto id = request->id();
     auto fd = request->request_fd();
     m_requests.set(id, move(request));
-    return { id, IPC::File(fd, IPC::File::CloseAfterSending) };
+    (void)post_message(Messages::RequestClient::RequestStarted(request_id, IPC::File(fd, IPC::File::CloseAfterSending)));
 }
 
 Messages::RequestServer::StopRequestResponse ConnectionFromClient::stop_request(i32 request_id)
