@@ -701,7 +701,7 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
             auto resolve_border_width = [&]() -> CSSPixels {
                 auto value = computed_style.property(width_property);
                 if (value->is_calculated())
-                    return value->as_calculated().resolve_length(*this)->to_px(*this);
+                    return max(CSSPixels { 0 }, value->as_calculated().resolve_length(*this)->to_px(*this));
                 if (value->is_length())
                     return value->as_length().length().to_px(*this);
                 if (value->is_identifier()) {
