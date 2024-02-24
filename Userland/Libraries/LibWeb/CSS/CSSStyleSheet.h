@@ -53,6 +53,7 @@ public:
     WebIDL::ExceptionOr<void> delete_rule(unsigned index);
 
     JS::NonnullGCPtr<JS::Promise> replace(String text);
+    WebIDL::ExceptionOr<void> replace_sync(StringView text);
 
     void for_each_effective_style_rule(Function<void(CSSStyleRule const&)> const& callback) const;
     // Returns whether the match state of any media queries changed after evaluation.
