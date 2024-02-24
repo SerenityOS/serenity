@@ -51,7 +51,7 @@ public:
 
     WebIDL::ExceptionOr<unsigned> insert_rule(StringView rule, unsigned index);
     WebIDL::ExceptionOr<WebIDL::Long> add_rule(Optional<String> selector, Optional<String> style, Optional<WebIDL::UnsignedLong> index);
-    WebIDL::ExceptionOr<void> remove_rule(unsigned index);
+    WebIDL::ExceptionOr<void> remove_rule(Optional<WebIDL::UnsignedLong> index);
     WebIDL::ExceptionOr<void> delete_rule(unsigned index);
 
     JS::NonnullGCPtr<JS::Promise> replace(String text);

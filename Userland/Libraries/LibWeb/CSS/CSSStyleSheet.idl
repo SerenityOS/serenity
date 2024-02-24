@@ -19,7 +19,7 @@ interface CSSStyleSheet : StyleSheet {
     // https://drafts.csswg.org/cssom/#legacy-css-style-sheet-members
     [SameObject, ImplementedAs=css_rules] readonly attribute CSSRuleList rules;
     long addRule(optional DOMString selector = "undefined", optional DOMString style = "undefined", optional unsigned long index);
-    undefined removeRule(unsigned long index);
+    undefined removeRule(optional unsigned long index);
 };
 
 dictionary CSSStyleSheetInit {
