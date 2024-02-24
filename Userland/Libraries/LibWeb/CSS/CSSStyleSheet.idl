@@ -7,7 +7,7 @@
 interface CSSStyleSheet : StyleSheet {
     // FIXME: constructor(optional CSSStyleSheetInit options = {});
 
-    // FIXME: readonly attribute CSSRule? ownerRule;
+    readonly attribute CSSRule? ownerRule;
     [SameObject] readonly attribute CSSRuleList cssRules;
     unsigned long insertRule(CSSOMString rule, optional unsigned long index = 0);
     undefined deleteRule(unsigned long index);
