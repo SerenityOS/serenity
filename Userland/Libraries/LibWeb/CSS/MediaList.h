@@ -22,7 +22,7 @@ class MediaList final : public Bindings::PlatformObject {
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<MediaList> create(JS::Realm&, Vector<NonnullRefPtr<MediaQuery>>&&);
-    ~MediaList() = default;
+    virtual ~MediaList() override = default;
 
     String media_text() const;
     void set_media_text(StringView);

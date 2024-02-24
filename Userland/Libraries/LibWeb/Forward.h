@@ -105,6 +105,7 @@ class CSSRuleList;
 class CSSStyleDeclaration;
 class CSSStyleRule;
 class CSSStyleSheet;
+struct CSSStyleSheetInit;
 class CSSSupportsRule;
 class CalculatedStyleValue;
 class Clip;

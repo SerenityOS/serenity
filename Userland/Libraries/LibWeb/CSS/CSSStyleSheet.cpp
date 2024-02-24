@@ -12,6 +12,7 @@
 #include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/CSS/StyleSheetList.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::CSS {
@@ -21,6 +22,72 @@ JS_DEFINE_ALLOCATOR(CSSStyleSheet);
 JS::NonnullGCPtr<CSSStyleSheet> CSSStyleSheet::create(JS::Realm& realm, CSSRuleList& rules, MediaList& media, Optional<AK::URL> location)
 {
     return realm.heap().allocate<CSSStyleSheet>(realm, realm, rules, media, move(location));
+}
+
+// https://drafts.csswg.org/cssom/#dom-cssstylesheet-cssstylesheet
+WebIDL::ExceptionOr<JS::NonnullGCPtr<CSSStyleSheet>> CSSStyleSheet::construct_impl(JS::Realm& realm, Optional<CSSStyleSheetInit> const& options)
+{
+    // 1. Construct a new CSSStyleSheet object sheet.
+    auto sheet = create(realm, CSSRuleList::create_empty(realm), CSS::MediaList::create(realm, {}), {});
+
+    // 2. Set sheet’s location to the base URL of the associated Document for the current global object.
+    auto associated_document = sheet->global_object().document();
+    sheet->set_location(MUST(associated_document->base_url().to_string()));
+
+    // 3. Set sheet’s stylesheet base URL to the baseURL attribute value from options.
+    if (options.has_value() && options->base_url.has_value()) {
+        Optional<AK::URL> sheet_location_url;
+        if (sheet->location().has_value())
+            sheet_location_url = sheet->location().release_value();
+
+        // AD-HOC: This isn't explicitly mentioned in the specification, but multiple modern browsers do this.
+        AK::URL url = sheet->location().has_value() ? sheet_location_url->complete_url(options->base_url.value()) : options->base_url.value();
+        if (!url.is_valid())
+            return WebIDL::NotAllowedError::create(realm, "Constructed style sheets must have a valid base URL"_fly_string);
+
+        sheet->set_base_url(url);
+    }
+
+    // 4. Set sheet’s parent CSS style sheet to null.
+    sheet->set_parent_css_style_sheet(nullptr);
+
+    // 5. Set sheet’s owner node to null.
+    sheet->set_owner_node(nullptr);
+
+    // 6. Set sheet’s owner CSS rule to null.
+    sheet->set_owner_css_rule(nullptr);
+
+    // 7. Set sheet’s title to the the empty string.
+    sheet->set_title(String {});
+
+    // 8. Unset sheet’s alternate flag.
+    sheet->set_alternate(false);
+
+    // 9. Set sheet’s origin-clean flag.
+    sheet->set_origin_clean(true);
+
+    // 10. Set sheet’s constructed flag.
+    sheet->set_constructed(true);
+
+    // 11. Set sheet’s Constructor document to the associated Document for the current global object.
+    sheet->set_constructor_document(associated_document);
+
+    // 12. If the media attribute of options is a string, create a MediaList object from the string and assign it as sheet’s media.
+    //     Otherwise, serialize a media query list from the attribute and then create a MediaList object from the resulting string and set it as sheet’s media.
+    if (options.has_value()) {
+        if (options->media.has<String>()) {
+            sheet->set_media(options->media.get<String>());
+        } else {
+            sheet->m_media = *options->media.get<JS::Handle<MediaList>>();
+        }
+    }
+
+    // 13. If the disabled attribute of options is true, set sheet’s disabled flag.
+    if (options.has_value() && options->disabled)
+        sheet->set_disabled(true);
+
+    // 14. Return sheet
+    return sheet;
 }
 
 CSSStyleSheet::CSSStyleSheet(JS::Realm& realm, CSSRuleList& rules, MediaList& media, Optional<AK::URL> location)
@@ -53,6 +120,7 @@ void CSSStyleSheet::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_rules);
     visitor.visit(m_owner_css_rule);
     visitor.visit(m_default_namespace_rule);
+    visitor.visit(m_constructor_document);
     for (auto& [key, namespace_rule] : m_namespace_rules)
         visitor.visit(namespace_rule);
 }

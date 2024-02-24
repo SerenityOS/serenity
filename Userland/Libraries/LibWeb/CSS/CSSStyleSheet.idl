@@ -1,11 +1,12 @@
 #import <CSS/CSSRule.idl>
 #import <CSS/CSSRuleList.idl>
+#import <CSS/MediaList.idl>
 #import <CSS/StyleSheet.idl>
 
 // https://drafts.csswg.org/cssom/#cssstylesheet
 [Exposed=Window]
 interface CSSStyleSheet : StyleSheet {
-    // FIXME: constructor(optional CSSStyleSheetInit options = {});
+    constructor(optional CSSStyleSheetInit options = {});
 
     readonly attribute CSSRule? ownerRule;
     [SameObject] readonly attribute CSSRuleList cssRules;
