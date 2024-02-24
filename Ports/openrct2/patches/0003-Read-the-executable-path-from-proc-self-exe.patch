@@ -9,7 +9,7 @@ When looking for the executable path, we behave exactly like Linux.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/openrct2/platform/Platform.Linux.cpp b/src/openrct2/platform/Platform.Linux.cpp
-index fb1f1e58d92a9e8823f1c8ff82bcf1efc448a8fd..eea10444874fced76027421350c7a4402bbbbfe0 100644
+index 516c126cfea262448e94a9e883e5b0ea88e4036e..3f3f48b949fd9c6b24a09f8f88b51266c74462f2 100644
 --- a/src/openrct2/platform/Platform.Linux.cpp
 +++ b/src/openrct2/platform/Platform.Linux.cpp
 @@ -129,7 +129,7 @@ namespace Platform
