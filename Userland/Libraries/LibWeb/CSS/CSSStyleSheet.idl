@@ -13,7 +13,7 @@ interface CSSStyleSheet : StyleSheet {
     unsigned long insertRule(CSSOMString rule, optional unsigned long index = 0);
     undefined deleteRule(unsigned long index);
 
-    // FIXME: Promise<CSSStyleSheet> replace(USVString text);
+    Promise<CSSStyleSheet> replace(USVString text);
     // FIXME: undefined replaceSync(USVString text);
 
     // https://drafts.csswg.org/cssom/#legacy-css-style-sheet-members

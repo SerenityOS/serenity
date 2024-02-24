@@ -52,6 +52,8 @@ public:
     WebIDL::ExceptionOr<void> remove_rule(unsigned index);
     WebIDL::ExceptionOr<void> delete_rule(unsigned index);
 
+    JS::NonnullGCPtr<JS::Promise> replace(String text);
+
     void for_each_effective_style_rule(Function<void(CSSStyleRule const&)> const& callback) const;
     // Returns whether the match state of any media queries changed after evaluation.
     bool evaluate_media_queries(HTML::Window const&);
@@ -70,6 +72,8 @@ public:
     JS::GCPtr<DOM::Document const> constructor_document() const { return m_constructor_document; }
     void set_constructor_document(JS::GCPtr<DOM::Document const> constructor_document) { m_constructor_document = constructor_document; }
 
+    bool disallow_modification() const { return m_disallow_modification; }
+
 private:
     CSSStyleSheet(JS::Realm&, CSSRuleList&, MediaList&, Optional<AK::URL> location);
 
@@ -79,6 +83,7 @@ private:
     void recalculate_namespaces();
 
     void set_constructed(bool constructed) { m_constructed = constructed; }
+    void set_disallow_modification(bool disallow_modification) { m_disallow_modification = disallow_modification; }
 
     JS::GCPtr<CSSRuleList> m_rules;
     JS::GCPtr<CSSNamespaceRule> m_default_namespace_rule;
@@ -90,6 +95,7 @@ private:
     Optional<AK::URL> m_base_url;
     JS::GCPtr<DOM::Document const> m_constructor_document;
     bool m_constructed { false };
+    bool m_disallow_modification { false };
 };
 
 }
