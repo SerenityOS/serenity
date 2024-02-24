@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/OwnPtr.h>
+#include <AK/Span.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Interrupts/IRQHandler.h>
@@ -168,7 +169,7 @@ private:
         u16 address;
         u16 data;
     };
-    void phy_out_batch(const PhyRegister[], size_t length);
+    void phy_out_batch(ReadonlySpan<PhyRegister>);
 
     void extended_phy_out(u8 address, u16 data);
     u16 extended_phy_in(u8 address);
@@ -177,7 +178,7 @@ private:
         u16 clear;
         u16 set;
     };
-    void extended_phy_initialize(const EPhyUpdate[], size_t length);
+    void extended_phy_initialize(ReadonlySpan<EPhyUpdate>);
 
     void eri_out(u32 address, u32 mask, u32 data, u32 type);
     u32 eri_in(u32 address, u32 type);
@@ -187,7 +188,7 @@ private:
         u16 mask;
         u32 value;
     };
-    void exgmac_out_batch(const ExgMacRegister[], size_t length);
+    void exgmac_out_batch(ReadonlySpan<ExgMacRegister>);
 
     void csi_out(u32 address, u32 data);
     u32 csi_in(u32 address);
