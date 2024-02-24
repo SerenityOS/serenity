@@ -13,6 +13,7 @@
 #include <LibWeb/CSS/StyleSheetList.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/Window.h>
+#include <LibWeb/Platform/EventLoopPlugin.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::CSS {
@@ -130,7 +131,9 @@ WebIDL::ExceptionOr<unsigned> CSSStyleSheet::insert_rule(StringView rule, unsign
 {
     // FIXME: 1. If the origin-clean flag is unset, throw a SecurityError exception.
 
-    // FIXME: 2. If the disallow modification flag is set, throw a NotAllowedError DOMException.
+    // If the disallow modification flag is set, throw a NotAllowedError DOMException.
+    if (disallow_modification())
+        return WebIDL::NotAllowedError::create(realm(), "Can't call insert_rule() on non-modifiable stylesheets."_fly_string);
 
     // 3. Let parsed rule be the return value of invoking parse a rule with rule.
     auto context = m_style_sheet_list ? CSS::Parser::ParsingContext { m_style_sheet_list->document() } : CSS::Parser::ParsingContext { realm() };
@@ -165,7 +168,9 @@ WebIDL::ExceptionOr<void> CSSStyleSheet::delete_rule(unsigned index)
 {
     // FIXME: 1. If the origin-clean flag is unset, throw a SecurityError exception.
 
-    // FIXME: 2. If the disallow modification flag is set, throw a NotAllowedError DOMException.
+    // 2. If the disallow modification flag is set, throw a NotAllowedError DOMException.
+    if (disallow_modification())
+        return WebIDL::NotAllowedError::create(realm(), "Can't call delete_rule() on non-modifiable stylesheets."_fly_string);
 
     // 3. Remove a CSS rule in the CSS rules at index.
     auto result = m_rules->remove_a_css_rule(index);
@@ -176,6 +181,53 @@ WebIDL::ExceptionOr<void> CSSStyleSheet::delete_rule(unsigned index)
         }
     }
     return result;
+}
+
+// https://drafts.csswg.org/cssom/#dom-cssstylesheet-replace
+JS::NonnullGCPtr<JS::Promise> CSSStyleSheet::replace(String text)
+{
+    // 1. Let promise be a promise
+    auto promise = JS::Promise::create(realm());
+
+    // 2. If the constructed flag is not set, or the disallow modification flag is set, reject promise with a NotAllowedError DOMException and return promise.
+    if (!constructed()) {
+        promise->reject(WebIDL::NotAllowedError::create(realm(), "Can't call replace() on non-constructed stylesheets"_fly_string));
+        return promise;
+    }
+
+    if (disallow_modification()) {
+        promise->reject(WebIDL::NotAllowedError::create(realm(), "Can't call replace() on non-modifiable stylesheets"_fly_string));
+        return promise;
+    }
+
+    // 3. Set the disallow modification flag.
+    set_disallow_modification(true);
+
+    // 4. In parallel, do these steps:
+    Platform::EventLoopPlugin::the().deferred_invoke([this, text = move(text), promise] {
+        // 1. Let rules be the result of running parse a stylesheet’s contents from text.
+        auto context = m_style_sheet_list ? CSS::Parser::ParsingContext { m_style_sheet_list->document() } : CSS::Parser::ParsingContext { realm() };
+        auto* parsed_stylesheet = parse_css_stylesheet(context, text);
+        auto& rules = parsed_stylesheet->rules();
+
+        // 2. If rules contains one or more @import rules, remove those rules from rules.
+        JS::MarkedVector<JS::NonnullGCPtr<CSSRule>> rules_without_import(realm().heap());
+        for (auto rule : rules) {
+            if (rule->type() != CSSRule::Type::Import)
+                rules_without_import.append(rule);
+        }
+
+        // 3. Set sheet’s CSS rules to rules.
+        m_rules->set_rules({}, rules_without_import);
+
+        // 4. Unset sheet’s disallow modification flag.
+        set_disallow_modification(false);
+
+        // 5. Resolve promise with sheet.
+        promise->fulfill(this);
+    });
+
+    return promise;
 }
 
 // https://www.w3.org/TR/cssom/#dom-cssstylesheet-removerule
