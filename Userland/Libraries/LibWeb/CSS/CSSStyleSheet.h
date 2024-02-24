@@ -13,6 +13,7 @@
 #include <LibWeb/CSS/CSSRuleList.h>
 #include <LibWeb/CSS/CSSStyleRule.h>
 #include <LibWeb/CSS/StyleSheet.h>
+#include <LibWeb/WebIDL/Types.h>
 
 namespace Web::CSS {
 
@@ -49,6 +50,7 @@ public:
     CSSRuleList const* css_rules() const { return m_rules; }
 
     WebIDL::ExceptionOr<unsigned> insert_rule(StringView rule, unsigned index);
+    WebIDL::ExceptionOr<WebIDL::Long> add_rule(Optional<String> selector, Optional<String> style, Optional<WebIDL::UnsignedLong> index);
     WebIDL::ExceptionOr<void> remove_rule(unsigned index);
     WebIDL::ExceptionOr<void> delete_rule(unsigned index);
 
