@@ -13,14 +13,14 @@
 #include <Kernel/Memory/PhysicalAddress.h>
 
 namespace Kernel {
-class GenericGraphicsAdapter
-    : public AtomicRefCounted<GenericGraphicsAdapter>
-    , public LockWeakable<GenericGraphicsAdapter> {
+class GPUDevice
+    : public AtomicRefCounted<GPUDevice>
+    , public LockWeakable<GPUDevice> {
 public:
-    virtual ~GenericGraphicsAdapter() = default;
+    virtual ~GPUDevice() = default;
 
 protected:
-    GenericGraphicsAdapter() = default;
+    GPUDevice() = default;
 };
 
 }
