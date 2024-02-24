@@ -230,6 +230,33 @@ JS::NonnullGCPtr<JS::Promise> CSSStyleSheet::replace(String text)
     return promise;
 }
 
+// https://drafts.csswg.org/cssom/#dom-cssstylesheet-replacesync
+WebIDL::ExceptionOr<void> CSSStyleSheet::replace_sync(StringView text)
+{
+    // 1. If the constructed flag is not set, or the disallow modification flag is set, throw a NotAllowedError DOMException.
+    if (!constructed())
+        return WebIDL::NotAllowedError::create(realm(), "Can't call replaceSync() on non-constructed stylesheets"_fly_string);
+    if (disallow_modification())
+        return WebIDL::NotAllowedError::create(realm(), "Can't call replaceSync() on non-modifiable stylesheets"_fly_string);
+
+    // 2. Let rules be the result of running parse a stylesheet’s contents from text.
+    auto context = m_style_sheet_list ? CSS::Parser::ParsingContext { m_style_sheet_list->document() } : CSS::Parser::ParsingContext { realm() };
+    auto* parsed_stylesheet = parse_css_stylesheet(context, text);
+    auto& rules = parsed_stylesheet->rules();
+
+    // 3. If rules contains one or more @import rules, remove those rules from rules.
+    JS::MarkedVector<JS::NonnullGCPtr<CSSRule>> rules_without_import(realm().heap());
+    for (auto rule : rules) {
+        if (rule->type() != CSSRule::Type::Import)
+            rules_without_import.append(rule);
+    }
+
+    // 4.Set sheet’s CSS rules to rules.
+    m_rules->set_rules({}, rules_without_import);
+
+    return {};
+}
+
 // https://www.w3.org/TR/cssom/#dom-cssstylesheet-removerule
 WebIDL::ExceptionOr<void> CSSStyleSheet::remove_rule(unsigned index)
 {
