@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Array.h>
 #include <AK/MACAddress.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/IDs.h>
@@ -487,33 +488,33 @@ void RTL8168NetworkAdapter::configure_phy()
 
 void RTL8168NetworkAdapter::configure_phy_b_1()
 {
-    constexpr PhyRegister phy_registers[] = {
+    static constexpr auto phy_registers = to_array<PhyRegister>({
         { 0x10, 0xf41b },
-        { 0x1f, 0 }
-    };
+        { 0x1f, 0 },
+    });
 
     phy_out(0x1f, 0x1);
     phy_out(0x16, 1 << 0);
 
-    phy_out_batch(phy_registers, 2);
+    phy_out_batch(phy_registers);
 }
 
 void RTL8168NetworkAdapter::configure_phy_b_2()
 {
-    constexpr PhyRegister phy_registers[] = {
+    static constexpr auto phy_registers = to_array<PhyRegister>({
         { 0x1f, 0x1 },
         { 0x10, 0xf41b },
-        { 0x1f, 0 }
-    };
+        { 0x1f, 0 },
+    });
 
-    phy_out_batch(phy_registers, 3);
+    phy_out_batch(phy_registers);
 }
 
 void RTL8168NetworkAdapter::configure_phy_e_2()
 {
     // FIXME: linux's driver writes a firmware blob to the device at this point, is this needed?
 
-    constexpr PhyRegister phy_registers[] = {
+    static constexpr auto phy_registers = to_array<PhyRegister>({
         // Enable delay cap
         { 0x1f, 0x4 },
         { 0x1f, 0x7 },
@@ -538,9 +539,9 @@ void RTL8168NetworkAdapter::configure_phy_e_2()
         { 0x5, 0x8b76 },
         { 0x6, 0x8000 },
         { 0x1f, 0 },
-    };
+    });
 
-    phy_out_batch(phy_registers, 19);
+    phy_out_batch(phy_registers);
 
     // 4 corner performance improvement
     phy_out(0x1f, 0x5);
@@ -774,20 +775,21 @@ void RTL8168NetworkAdapter::configure_phy_h_2()
 void RTL8168NetworkAdapter::rar_exgmac_set()
 {
     auto mac = mac_address();
-    const u16 w[] = {
+
+    auto const w = to_array<u16>({
         (u16)(mac[0] | (mac[1] << 8)),
         (u16)(mac[2] | (mac[3] << 8)),
         (u16)(mac[4] | (mac[5] << 8)),
-    };
+    });
 
-    const ExgMacRegister exg_mac_registers[] = {
+    auto const exg_mac_registers = to_array<ExgMacRegister>({
         { 0xe0, ERI_MASK_1111, (u32)(w[0] | (w[1] << 16)) },
         { 0xe4, ERI_MASK_1111, (u32)w[2] },
         { 0xf0, ERI_MASK_1111, (u32)(w[0] << 16) },
         { 0xf4, ERI_MASK_1111, (u32)(w[1] | (w[2] << 16)) },
-    };
+    });
 
-    exgmac_out_batch(exg_mac_registers, 4);
+    exgmac_out_batch(exg_mac_registers);
 }
 
 void RTL8168NetworkAdapter::start_hardware()
@@ -933,14 +935,14 @@ void RTL8168NetworkAdapter::hardware_quirks_b_2()
 
 void RTL8168NetworkAdapter::hardware_quirks_e_2()
 {
-    constexpr EPhyUpdate ephy_info[] = {
+    static constexpr auto ephy_info = to_array<EPhyUpdate>({
         { 0x9, 0, 0x80 },
         { 0x19, 0, 0x224 },
-    };
+    });
 
     csi_enable(CSI_ACCESS_1);
 
-    extended_phy_initialize(ephy_info, 2);
+    extended_phy_initialize(ephy_info);
 
     // FIXME: MTU performance tweak
 
@@ -978,15 +980,15 @@ void RTL8168NetworkAdapter::hardware_quirks_h()
     out8(REG_CONFIG5, in8(REG_CONFIG5) & ~CFG5_ASPM_ENABLE);
 
     // initialize extended phy
-    constexpr EPhyUpdate ephy_info[] = {
+    static constexpr auto ephy_info = to_array<EPhyUpdate>({
         { 0x1e, 0x800, 0x1 },
         { 0x1d, 0, 0x800 },
         { 0x5, 0xffff, 0x2089 },
         { 0x6, 0xffff, 0x5881 },
         { 0x4, 0xffff, 0x154a },
-        { 0x1, 0xffff, 0x68b }
-    };
-    extended_phy_initialize(ephy_info, 6);
+        { 0x1, 0xffff, 0x68b },
+    });
+    extended_phy_initialize(ephy_info);
 
     // enable tx auto fifo
     out32(REG_TXCFG, in32(REG_TXCFG) | TXCFG_AUTO_FIFO);
@@ -1345,10 +1347,10 @@ void RTL8168NetworkAdapter::phy_update(u32 address, u32 set, u32 clear)
     phy_out(address, (value & ~clear) | set);
 }
 
-void RTL8168NetworkAdapter::phy_out_batch(const PhyRegister phy_registers[], size_t length)
+void RTL8168NetworkAdapter::phy_out_batch(ReadonlySpan<PhyRegister> phy_registers)
 {
-    for (size_t i = 0; i < length; i++) {
-        phy_out(phy_registers[i].address, phy_registers[i].data);
+    for (auto const& phy_register : phy_registers) {
+        phy_out(phy_register.address, phy_register.data);
     }
 }
 
@@ -1369,11 +1371,11 @@ u16 RTL8168NetworkAdapter::extended_phy_in(u8 address)
     return in32(REG_EPHYACCESS) & 0xFFFF;
 }
 
-void RTL8168NetworkAdapter::extended_phy_initialize(const EPhyUpdate ephy_info[], size_t length)
+void RTL8168NetworkAdapter::extended_phy_initialize(ReadonlySpan<EPhyUpdate> ephy_info)
 {
-    for (size_t i = 0; i < length; i++) {
-        auto updated_value = (extended_phy_in(ephy_info[i].offset) & ~ephy_info[i].clear) | ephy_info[i].set;
-        extended_phy_out(ephy_info[i].offset, updated_value);
+    for (auto const& info : ephy_info) {
+        auto updated_value = (extended_phy_in(info.offset) & ~info.clear) | info.set;
+        extended_phy_out(info.offset, updated_value);
     }
 }
 
@@ -1399,10 +1401,10 @@ void RTL8168NetworkAdapter::eri_update(u32 address, u32 mask, u32 set, u32 clear
     eri_out(address, mask, (value & ~clear) | set, type);
 }
 
-void RTL8168NetworkAdapter::exgmac_out_batch(const ExgMacRegister exgmac_registers[], size_t length)
+void RTL8168NetworkAdapter::exgmac_out_batch(ReadonlySpan<ExgMacRegister> exgmac_registers)
 {
-    for (size_t i = 0; i < length; i++) {
-        eri_out(exgmac_registers[i].address, exgmac_registers[i].mask, exgmac_registers[i].value, ERI_EXGMAC);
+    for (auto const& exgmac_register : exgmac_registers) {
+        eri_out(exgmac_register.address, exgmac_register.mask, exgmac_register.value, ERI_EXGMAC);
     }
 }
 
