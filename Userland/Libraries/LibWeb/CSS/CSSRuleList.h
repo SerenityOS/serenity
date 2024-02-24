@@ -62,6 +62,8 @@ public:
     bool evaluate_media_queries(HTML::Window const&);
     void for_each_effective_keyframes_at_rule(Function<void(CSSKeyframesRule const&)> const& callback) const;
 
+    void set_rules(Badge<CSSStyleSheet>, Vector<JS::NonnullGCPtr<CSSRule>> rules) { m_rules = move(rules); }
+
     Function<void()> on_change;
 
 private:
