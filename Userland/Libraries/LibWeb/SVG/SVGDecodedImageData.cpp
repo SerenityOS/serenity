@@ -147,11 +147,17 @@ RefPtr<Gfx::ImmutableBitmap> SVGDecodedImageData::bitmap(size_t, Gfx::IntSize si
     if (size.is_empty())
         return nullptr;
 
-    if (m_immutable_bitmap && m_immutable_bitmap->size() == size)
-        return m_immutable_bitmap;
+    if (auto it = m_cached_rendered_bitmaps.find(size); it != m_cached_rendered_bitmaps.end())
+        return it->value;
 
-    m_immutable_bitmap = Gfx::ImmutableBitmap::create(*render(size));
-    return m_immutable_bitmap;
+    // Prevent the cache from growing too big.
+    // FIXME: Evict least used entries.
+    if (m_cached_rendered_bitmaps.size() > 10)
+        m_cached_rendered_bitmaps.remove(m_cached_rendered_bitmaps.begin());
+
+    auto immutable_bitmap = Gfx::ImmutableBitmap::create(*render(size));
+    m_cached_rendered_bitmaps.set(size, immutable_bitmap);
+    return immutable_bitmap;
 }
 
 Optional<CSSPixels> SVGDecodedImageData::intrinsic_width() const

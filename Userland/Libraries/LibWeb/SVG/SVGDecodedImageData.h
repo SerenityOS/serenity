@@ -40,7 +40,8 @@ private:
     SVGDecodedImageData(JS::NonnullGCPtr<Page>, JS::NonnullGCPtr<SVGPageClient>, JS::NonnullGCPtr<DOM::Document>, JS::NonnullGCPtr<SVG::SVGSVGElement>);
 
     RefPtr<Gfx::Bitmap> render(Gfx::IntSize) const;
-    mutable RefPtr<Gfx::ImmutableBitmap> m_immutable_bitmap;
+
+    mutable HashMap<Gfx::IntSize, NonnullRefPtr<Gfx::ImmutableBitmap>> m_cached_rendered_bitmaps;
 
     JS::NonnullGCPtr<Page> m_page;
     JS::NonnullGCPtr<SVGPageClient> m_page_client;
