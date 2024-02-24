@@ -16,4 +16,5 @@ executable("ImageDecoder") {
     "//Userland/Services/ImageDecoder/ConnectionFromClient.cpp",
     "main.cpp",
   ]
+  output_dir = "$root_out_dir/libexec"
 }

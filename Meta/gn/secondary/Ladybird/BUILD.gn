@@ -181,6 +181,7 @@ executable("headless-browser") {
     "HelperProcess.cpp",
     "Utilities.cpp",
   ]
+  output_dir = "$root_out_dir/libexec"
 }
 
 fonts = [

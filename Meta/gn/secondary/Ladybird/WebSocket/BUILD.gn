@@ -18,4 +18,5 @@ executable("WebSocket") {
     "//Userland/Services/WebSocket/ConnectionFromClient.cpp",
     "main.cpp",
   ]
+  output_dir = "$root_out_dir/libexec"
 }
