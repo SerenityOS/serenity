@@ -248,22 +248,22 @@ decltype(auto) get_or_create_connection(auto& cache, URL const& url, auto job, C
 
     auto& connection = *sockets_for_url[index];
     if (!connection.has_started) {
-        if (auto result = recreate_socket_if_needed(connection, url); result.is_error()) {
-            dbgln("ConnectionCache: request failed to start, failed to make a socket: {}", result.error());
-            Core::deferred_invoke([job] {
-                job->fail(Core::NetworkJob::Error::ConnectionFailed);
-            });
-            return ReturnType { nullptr };
-        }
-        dbgln_if(REQUESTSERVER_DEBUG, "Immediately start request for url {} in {} - {}", url, &connection, connection.socket);
+        connection.has_started = true;
         Core::deferred_invoke([&connection, url, job] {
-            connection.has_started = true;
-            connection.removal_timer->stop();
-            connection.timer.start();
-            connection.current_url = url;
-            connection.job_data = decltype(connection.job_data)::create(job);
-            connection.socket->set_notifications_enabled(true);
-            connection.job_data.start(*connection.socket);
+            if (auto result = recreate_socket_if_needed(connection, url); result.is_error()) {
+                dbgln("ConnectionCache: request failed to start, failed to make a socket: {}", result.error());
+                Core::deferred_invoke([job] {
+                    job->fail(Core::NetworkJob::Error::ConnectionFailed);
+                });
+            } else {
+                dbgln_if(REQUESTSERVER_DEBUG, "Immediately start request for url {} in {} - {}", url, &connection, connection.socket);
+                connection.removal_timer->stop();
+                connection.timer.start();
+                connection.current_url = url;
+                connection.job_data = decltype(connection.job_data)::create(job);
+                connection.socket->set_notifications_enabled(true);
+                connection.job_data.start(*connection.socket);
+            }
         });
     } else {
         dbgln_if(REQUESTSERVER_DEBUG, "Enqueue request for URL {} in {} - {}", url, &connection, connection.socket);

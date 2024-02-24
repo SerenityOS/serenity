@@ -18,7 +18,7 @@ public:
     virtual ~Protocol();
 
     ByteString const& name() const { return m_name; }
-    virtual OwnPtr<Request> start_request(ConnectionFromClient&, ByteString const& method, const URL&, HashMap<ByteString, ByteString> const& headers, ReadonlyBytes body, Core::ProxyData proxy_data = {}) = 0;
+    virtual OwnPtr<Request> start_request(i32, ConnectionFromClient&, ByteString const& method, const URL&, HashMap<ByteString, ByteString> const& headers, ReadonlyBytes body, Core::ProxyData proxy_data = {}) = 0;
 
     static Protocol* find_by_name(ByteString const&);
 

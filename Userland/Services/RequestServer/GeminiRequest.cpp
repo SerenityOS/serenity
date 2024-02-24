@@ -12,8 +12,8 @@
 
 namespace RequestServer {
 
-GeminiRequest::GeminiRequest(ConnectionFromClient& client, NonnullRefPtr<Gemini::Job> job, NonnullOwnPtr<Core::File>&& output_stream)
-    : Request(client, move(output_stream))
+GeminiRequest::GeminiRequest(ConnectionFromClient& client, NonnullRefPtr<Gemini::Job> job, NonnullOwnPtr<Core::File>&& output_stream, i32 request_id)
+    : Request(client, move(output_stream), request_id)
     , m_job(move(job))
 {
     m_job->on_finish = [this](bool success) {
@@ -57,9 +57,9 @@ GeminiRequest::~GeminiRequest()
     m_job->cancel();
 }
 
-NonnullOwnPtr<GeminiRequest> GeminiRequest::create_with_job(Badge<GeminiProtocol>, ConnectionFromClient& client, NonnullRefPtr<Gemini::Job> job, NonnullOwnPtr<Core::File>&& output_stream)
+NonnullOwnPtr<GeminiRequest> GeminiRequest::create_with_job(Badge<GeminiProtocol>, ConnectionFromClient& client, NonnullRefPtr<Gemini::Job> job, NonnullOwnPtr<Core::File>&& output_stream, i32 request_id)
 {
-    return adopt_own(*new GeminiRequest(client, move(job), move(output_stream)));
+    return adopt_own(*new GeminiRequest(client, move(job), move(output_stream), request_id));
 }
 
 }

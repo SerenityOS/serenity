@@ -29,18 +29,25 @@ RefPtr<Request> RequestClient::start_request(ByteString const& method, URL const
     if (body_result.is_error())
         return nullptr;
 
-    auto maybe_response = IPCProxy::try_start_request(method, url, headers_or_error.release_value(), body_result.release_value(), proxy_data);
-    if (maybe_response.is_error())
-        return nullptr;
-    auto response = maybe_response.release_value();
-    auto request_id = response.request_id();
-    if (request_id < 0 || !response.response_fd().has_value())
-        return nullptr;
-    auto response_fd = response.response_fd().value().take_fd();
+    static i32 s_next_request_id = 0;
+    auto request_id = s_next_request_id++;
+
+    IPCProxy::async_start_request(request_id, method, url, headers_or_error.release_value(), body_result.release_value(), proxy_data);
     auto request = Request::create_from_id({}, *this, request_id);
-    request->set_request_fd({}, response_fd);
     m_requests.set(request_id, request);
     return request;
+}
+
+void RequestClient::request_started(i32 request_id, IPC::File const& response_file)
+{
+    auto request = m_requests.get(request_id);
+    if (!request.has_value()) {
+        warnln("Received response for non-existent request {}", request_id);
+        return;
+    }
+
+    auto response_fd = response_file.take_fd();
+    request.value()->set_request_fd({}, response_fd);
 }
 
 bool RequestClient::stop_request(Badge<Request>, Request& request)

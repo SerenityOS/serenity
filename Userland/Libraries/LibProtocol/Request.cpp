@@ -20,12 +20,26 @@ bool Request::stop()
     return m_client->stop_request({}, *this);
 }
 
+void Request::set_request_fd(Badge<Protocol::RequestClient>, int fd)
+{
+    VERIFY(m_fd == -1);
+    m_fd = fd;
+
+    auto notifier = Core::Notifier::construct(fd, Core::Notifier::Type::Read);
+    auto stream = MUST(Core::File::adopt_fd(fd, Core::File::OpenMode::Read));
+    notifier->on_activation = move(m_internal_stream_data->read_notifier->on_activation);
+    m_internal_stream_data->read_notifier = move(notifier);
+    m_internal_stream_data->read_stream = move(stream);
+}
+
 void Request::stream_into(Stream& stream)
 {
     VERIFY(!m_internal_stream_data);
 
-    m_internal_stream_data = make<InternalStreamData>(MUST(Core::File::adopt_fd(fd(), Core::File::OpenMode::Read)));
+    m_internal_stream_data = make<InternalStreamData>();
     m_internal_stream_data->read_notifier = Core::Notifier::construct(fd(), Core::Notifier::Type::Read);
+    if (fd() != -1)
+        m_internal_stream_data->read_stream = MUST(Core::File::adopt_fd(fd(), Core::File::OpenMode::Read));
 
     auto user_on_finish = move(on_finish);
     on_finish = [this](auto success, auto total_size) {

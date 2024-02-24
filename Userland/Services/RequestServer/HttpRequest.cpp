@@ -11,8 +11,8 @@
 
 namespace RequestServer {
 
-HttpRequest::HttpRequest(ConnectionFromClient& client, NonnullRefPtr<HTTP::Job> job, NonnullOwnPtr<Core::File>&& output_stream)
-    : Request(client, move(output_stream))
+HttpRequest::HttpRequest(ConnectionFromClient& client, NonnullRefPtr<HTTP::Job> job, NonnullOwnPtr<Core::File>&& output_stream, i32 request_id)
+    : Request(client, move(output_stream), request_id)
     , m_job(job)
 {
     Detail::init(this, job);
@@ -25,9 +25,9 @@ HttpRequest::~HttpRequest()
     m_job->cancel();
 }
 
-NonnullOwnPtr<HttpRequest> HttpRequest::create_with_job(Badge<HttpProtocol>&&, ConnectionFromClient& client, NonnullRefPtr<HTTP::Job> job, NonnullOwnPtr<Core::File>&& output_stream)
+NonnullOwnPtr<HttpRequest> HttpRequest::create_with_job(Badge<HttpProtocol>&&, ConnectionFromClient& client, NonnullRefPtr<HTTP::Job> job, NonnullOwnPtr<Core::File>&& output_stream, i32 request_id)
 {
-    return adopt_own(*new HttpRequest(client, move(job), move(output_stream)));
+    return adopt_own(*new HttpRequest(client, move(job), move(output_stream), request_id));
 }
 
 }

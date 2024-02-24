@@ -22,9 +22,9 @@ HttpProtocol::HttpProtocol()
 {
 }
 
-OwnPtr<Request> HttpProtocol::start_request(ConnectionFromClient& client, ByteString const& method, const URL& url, HashMap<ByteString, ByteString> const& headers, ReadonlyBytes body, Core::ProxyData proxy_data)
+OwnPtr<Request> HttpProtocol::start_request(i32 request_id, ConnectionFromClient& client, ByteString const& method, const URL& url, HashMap<ByteString, ByteString> const& headers, ReadonlyBytes body, Core::ProxyData proxy_data)
 {
-    return Detail::start_request(Badge<HttpProtocol> {}, client, method, url, headers, body, get_pipe_for_request(), proxy_data);
+    return Detail::start_request(Badge<HttpProtocol> {}, request_id, client, method, url, headers, body, get_pipe_for_request(), proxy_data);
 }
 
 }

@@ -15,7 +15,7 @@ public:
     GeminiProtocol();
     virtual ~GeminiProtocol() override = default;
 
-    virtual OwnPtr<Request> start_request(ConnectionFromClient&, ByteString const& method, const URL&, HashMap<ByteString, ByteString> const&, ReadonlyBytes body, Core::ProxyData proxy_data = {}) override;
+    virtual OwnPtr<Request> start_request(i32, ConnectionFromClient&, ByteString const& method, const URL&, HashMap<ByteString, ByteString> const&, ReadonlyBytes body, Core::ProxyData proxy_data = {}) override;
 };
 
 }

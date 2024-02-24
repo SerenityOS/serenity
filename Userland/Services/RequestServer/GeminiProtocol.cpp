@@ -17,7 +17,7 @@ GeminiProtocol::GeminiProtocol()
 {
 }
 
-OwnPtr<Request> GeminiProtocol::start_request(ConnectionFromClient& client, ByteString const&, const URL& url, HashMap<ByteString, ByteString> const&, ReadonlyBytes, Core::ProxyData proxy_data)
+OwnPtr<Request> GeminiProtocol::start_request(i32 request_id, ConnectionFromClient& client, ByteString const&, const URL& url, HashMap<ByteString, ByteString> const&, ReadonlyBytes, Core::ProxyData proxy_data)
 {
     Gemini::GeminiRequest request;
     request.set_url(url);
@@ -28,10 +28,12 @@ OwnPtr<Request> GeminiProtocol::start_request(ConnectionFromClient& client, Byte
 
     auto output_stream = MUST(Core::File::adopt_fd(pipe_result.value().write_fd, Core::File::OpenMode::Write));
     auto job = Gemini::Job::construct(request, *output_stream);
-    auto protocol_request = GeminiRequest::create_with_job({}, client, *job, move(output_stream));
+    auto protocol_request = GeminiRequest::create_with_job({}, client, *job, move(output_stream), request_id);
     protocol_request->set_request_fd(pipe_result.value().read_fd);
 
-    ConnectionCache::get_or_create_connection(ConnectionCache::g_tls_connection_cache, url, job, proxy_data);
+    Core::EventLoop::current().deferred_invoke([=] {
+        ConnectionCache::get_or_create_connection(ConnectionCache::g_tls_connection_cache, url, job, proxy_data);
+    });
 
     return protocol_request;
 }
