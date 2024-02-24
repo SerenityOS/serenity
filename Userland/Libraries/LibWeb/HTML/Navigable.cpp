@@ -2033,7 +2033,7 @@ void Navigable::set_needs_display()
     set_needs_display(viewport_rect());
 }
 
-void Navigable::set_needs_display(CSSPixelRect const& rect)
+void Navigable::set_needs_display(CSSPixelRect const&)
 {
     // FIXME: Ignore updates outside the visible viewport rect.
     //        This requires accounting for fixed-position elements in the input rect, which we don't do yet.
@@ -2041,7 +2041,8 @@ void Navigable::set_needs_display(CSSPixelRect const& rect)
     m_needs_repaint = true;
 
     if (is<TraversableNavigable>(*this)) {
-        static_cast<TraversableNavigable*>(this)->page().client().page_did_invalidate(to_top_level_rect(rect));
+        // Schedule the main thread event loop, which will, in turn, schedule a repaint.
+        Web::HTML::main_thread_event_loop().schedule();
         return;
     }
 
