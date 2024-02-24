@@ -547,4 +547,14 @@ TokenizedFeature::NoOpener HTMLElement::get_an_elements_noopener(StringView targ
     return TokenizedFeature::NoOpener::No;
 }
 
+void HTMLElement::did_receive_focus()
+{
+    if (m_content_editable_state != ContentEditableState::True)
+        return;
+    auto* browsing_context = document().browsing_context();
+    if (!browsing_context)
+        return;
+    browsing_context->set_cursor_position(DOM::Position::create(realm(), *this, 0));
+}
+
 }
