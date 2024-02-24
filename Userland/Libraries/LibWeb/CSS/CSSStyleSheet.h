@@ -44,7 +44,6 @@ public:
 
     CSSRuleList const& rules() const { return *m_rules; }
     CSSRuleList& rules() { return *m_rules; }
-    void set_rules(CSSRuleList& rules) { m_rules = &rules; }
 
     CSSRuleList* css_rules() { return m_rules; }
     CSSRuleList const* css_rules() const { return m_rules; }
