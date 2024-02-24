@@ -257,6 +257,34 @@ WebIDL::ExceptionOr<void> CSSStyleSheet::replace_sync(StringView text)
     return {};
 }
 
+// https://drafts.csswg.org/cssom/#dom-cssstylesheet-addrule
+WebIDL::ExceptionOr<WebIDL::Long> CSSStyleSheet::add_rule(Optional<String> selector, Optional<String> style, Optional<WebIDL::UnsignedLong> index)
+{
+    // 1. Let rule be an empty string.
+    StringBuilder rule;
+
+    // 2. Append selector to rule.
+    if (selector.has_value())
+        rule.append(selector.release_value());
+
+    // 3. Append " { " to rule.
+    rule.append('{');
+
+    // 4. If block is not empty, append block, followed by a space, to rule.
+    if (style.has_value() && !style->is_empty())
+        rule.appendff("{} ", style.release_value());
+
+    // 5. Append "}" to rule.
+    rule.append('}');
+
+    // 6. Let index be optionalIndex if provided, or the number of CSS rules in the stylesheet otherwise.
+    // 7. Call insertRule(), with rule and index as arguments.
+    TRY(insert_rule(rule.string_view(), index.value_or(rules().length())));
+
+    // 8. Return -1.
+    return -1;
+}
+
 // https://www.w3.org/TR/cssom/#dom-cssstylesheet-removerule
 WebIDL::ExceptionOr<void> CSSStyleSheet::remove_rule(unsigned index)
 {
