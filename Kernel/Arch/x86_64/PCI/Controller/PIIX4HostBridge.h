@@ -15,9 +15,9 @@
 
 namespace Kernel::PCI {
 
-class HostBridge : public HostController {
+class PIIX4HostBridge : public HostController {
 public:
-    static NonnullOwnPtr<HostBridge> must_create_with_io_access();
+    static NonnullOwnPtr<PIIX4HostBridge> must_create_with_io_access();
 
 private:
     virtual void write8_field_locked(BusNumber, DeviceNumber, FunctionNumber, u32 field, u8 value) override;
@@ -28,7 +28,7 @@ private:
     virtual u16 read16_field_locked(BusNumber, DeviceNumber, FunctionNumber, u32 field) override;
     virtual u32 read32_field_locked(BusNumber, DeviceNumber, FunctionNumber, u32 field) override;
 
-    explicit HostBridge(PCI::Domain const&);
+    explicit PIIX4HostBridge(PCI::Domain const&);
 };
 
 }
