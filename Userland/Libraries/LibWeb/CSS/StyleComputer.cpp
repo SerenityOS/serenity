@@ -959,6 +959,72 @@ ErrorOr<void> StyleComputer::collect_animation_into(JS::NonnullGCPtr<Animations:
     return {};
 }
 
+static void apply_animation_properties(DOM::Document& document, StyleProperties& style, Animations::Animation& animation)
+{
+    auto& effect = verify_cast<Animations::KeyframeEffect>(*animation.effect());
+
+    Optional<CSS::Time> duration;
+    if (auto duration_value = style.maybe_null_property(PropertyID::AnimationDuration); duration_value) {
+        if (duration_value->is_time()) {
+            duration = duration_value->as_time().time();
+        } else if (duration_value->is_identifier() && duration_value->as_identifier().id() == ValueID::Auto) {
+            // We use empty optional to represent "auto".
+            duration = {};
+        }
+    }
+
+    CSS::Time delay { 0, CSS::Time::Type::S };
+    if (auto delay_value = style.maybe_null_property(PropertyID::AnimationDelay); delay_value && delay_value->is_time())
+        delay = delay_value->as_time().time();
+
+    double iteration_count = 1.0;
+    if (auto iteration_count_value = style.maybe_null_property(PropertyID::AnimationIterationCount); iteration_count_value) {
+        if (iteration_count_value->is_identifier() && iteration_count_value->to_identifier() == ValueID::Infinite)
+            iteration_count = HUGE_VAL;
+        else if (iteration_count_value->is_number())
+            iteration_count = iteration_count_value->as_number().number();
+    }
+
+    CSS::AnimationFillMode fill_mode { CSS::AnimationFillMode::None };
+    if (auto fill_mode_property = style.maybe_null_property(PropertyID::AnimationFillMode); fill_mode_property && fill_mode_property->is_identifier()) {
+        if (auto fill_mode_value = value_id_to_animation_fill_mode(fill_mode_property->to_identifier()); fill_mode_value.has_value())
+            fill_mode = *fill_mode_value;
+    }
+
+    CSS::AnimationDirection direction { CSS::AnimationDirection::Normal };
+    if (auto direction_property = style.maybe_null_property(PropertyID::AnimationDirection); direction_property && direction_property->is_identifier()) {
+        if (auto direction_value = value_id_to_animation_direction(direction_property->to_identifier()); direction_value.has_value())
+            direction = *direction_value;
+    }
+
+    CSS::AnimationPlayState play_state { CSS::AnimationPlayState::Running };
+    if (auto play_state_property = style.maybe_null_property(PropertyID::AnimationPlayState); play_state_property && play_state_property->is_identifier()) {
+        if (auto play_state_value = value_id_to_animation_play_state(play_state_property->to_identifier()); play_state_value.has_value())
+            play_state = *play_state_value;
+    }
+
+    Animations::TimingFunction timing_function = Animations::ease_timing_function;
+    if (auto timing_property = style.maybe_null_property(PropertyID::AnimationTimingFunction); timing_property && timing_property->is_easing())
+        timing_function = Animations::TimingFunction::from_easing_style_value(timing_property->as_easing());
+
+    auto iteration_duration = duration.has_value()
+        ? Variant<double, String> { duration.release_value().to_milliseconds() }
+        : "auto"_string;
+    effect.set_iteration_duration(iteration_duration);
+    effect.set_start_delay(delay.to_milliseconds());
+    effect.set_iteration_count(iteration_count);
+    effect.set_timing_function(move(timing_function));
+    effect.set_fill_mode(Animations::css_fill_mode_to_bindings_fill_mode(fill_mode));
+    effect.set_playback_direction(Animations::css_animation_direction_to_bindings_playback_direction(direction));
+
+    HTML::TemporaryExecutionContext context(document.relevant_settings_object());
+    if (play_state == CSS::AnimationPlayState::Running && animation.play_state() != Bindings::AnimationPlayState::Running) {
+        animation.play().release_value_but_fixme_should_propagate_errors();
+    } else if (play_state == CSS::AnimationPlayState::Paused && animation.play_state() != Bindings::AnimationPlayState::Paused) {
+        animation.pause().release_value_but_fixme_should_propagate_errors();
+    }
+}
+
 // https://www.w3.org/TR/css-cascade/#cascading
 ErrorOr<void> StyleComputer::compute_cascaded_values(StyleProperties& style, DOM::Element& element, Optional<CSS::Selector::PseudoElement::Type> pseudo_element, bool& did_match_any_pseudo_element_rules, ComputeStyleMode mode) const
 {
@@ -1021,84 +1087,42 @@ ErrorOr<void> StyleComputer::compute_cascaded_values(StyleProperties& style, DOM
     }();
 
     if (animation_name.has_value()) {
-        if (auto source_declaration = style.property_source_declaration(PropertyID::AnimationName); source_declaration && source_declaration != element.cached_animation_name_source()) {
-            // This animation name is new, so we need to create a new animation for it.
-            element.set_cached_animation_name_source(source_declaration);
-
-            Optional<CSS::Time> duration;
-            if (auto duration_value = style.maybe_null_property(PropertyID::AnimationDuration); duration_value) {
-                if (duration_value->is_time()) {
-                    duration = duration_value->as_time().time();
-                } else if (duration_value->is_identifier() && duration_value->as_identifier().id() == ValueID::Auto) {
-                    // We use empty optional to represent "auto".
-                    duration = {};
-                }
-            }
-
-            CSS::Time delay { 0, CSS::Time::Type::S };
-            if (auto delay_value = style.maybe_null_property(PropertyID::AnimationDelay); delay_value && delay_value->is_time())
-                delay = delay_value->as_time().time();
-
-            double iteration_count = 1.0;
-            if (auto iteration_count_value = style.maybe_null_property(PropertyID::AnimationIterationCount); iteration_count_value) {
-                if (iteration_count_value->is_identifier() && iteration_count_value->to_identifier() == ValueID::Infinite)
-                    iteration_count = HUGE_VAL;
-                else if (iteration_count_value->is_number())
-                    iteration_count = iteration_count_value->as_number().number();
-            }
-
-            CSS::AnimationFillMode fill_mode { CSS::AnimationFillMode::None };
-            if (auto fill_mode_property = style.maybe_null_property(PropertyID::AnimationFillMode); fill_mode_property && fill_mode_property->is_identifier()) {
-                if (auto fill_mode_value = value_id_to_animation_fill_mode(fill_mode_property->to_identifier()); fill_mode_value.has_value())
-                    fill_mode = *fill_mode_value;
-            }
-
-            CSS::AnimationDirection direction { CSS::AnimationDirection::Normal };
-            if (auto direction_property = style.maybe_null_property(PropertyID::AnimationDirection); direction_property && direction_property->is_identifier()) {
-                if (auto direction_value = value_id_to_animation_direction(direction_property->to_identifier()); direction_value.has_value())
-                    direction = *direction_value;
-            }
-
-            CSS::AnimationPlayState play_state { CSS::AnimationPlayState::Running };
-            if (auto play_state_property = style.maybe_null_property(PropertyID::AnimationPlayState); play_state_property && play_state_property->is_identifier()) {
-                if (auto play_state_value = value_id_to_animation_play_state(play_state_property->to_identifier()); play_state_value.has_value())
-                    play_state = *play_state_value;
-            }
-
-            Animations::TimingFunction timing_function = Animations::ease_timing_function;
-            if (auto timing_property = style.maybe_null_property(PropertyID::AnimationTimingFunction); timing_property && timing_property->is_easing())
-                timing_function = Animations::TimingFunction::from_easing_style_value(timing_property->as_easing());
-
+        if (auto source_declaration = style.property_source_declaration(PropertyID::AnimationName); source_declaration) {
             auto& realm = element.realm();
-            auto effect = Animations::KeyframeEffect::create(realm);
-            auto iteration_duration = duration.has_value()
-                ? Variant<double, String> { duration.release_value().to_milliseconds() }
-                : "auto"_string;
-            effect->set_iteration_duration(iteration_duration);
-            effect->set_start_delay(delay.to_milliseconds());
-            effect->set_iteration_count(iteration_count);
-            effect->set_timing_function(move(timing_function));
-            effect->set_fill_mode(Animations::css_fill_mode_to_bindings_fill_mode(fill_mode));
-            effect->set_playback_direction(Animations::css_animation_direction_to_bindings_playback_direction(direction));
-            if (pseudo_element.has_value())
-                effect->set_pseudo_element(Selector::PseudoElement { pseudo_element.value() });
 
-            auto animation = CSSAnimation::create(realm);
-            animation->set_id(animation_name.release_value());
-            animation->set_timeline(m_document->timeline());
-            animation->set_owning_element(element);
-            animation->set_effect(effect);
+            if (source_declaration != element.cached_animation_name_source()) {
+                // This animation name is new, so we need to create a new animation for it.
+                if (auto existing_animation = element.cached_animation_name_animation())
+                    existing_animation->cancel();
+                element.set_cached_animation_name_source(source_declaration);
 
-            auto const& rule_cache = rule_cache_for_cascade_origin(CascadeOrigin::Author);
-            if (auto keyframe_set = rule_cache.rules_by_animation_keyframes.get(animation->id()); keyframe_set.has_value())
-                effect->set_key_frame_set(keyframe_set.value());
+                auto effect = Animations::KeyframeEffect::create(realm);
+                auto animation = CSSAnimation::create(realm);
+                animation->set_id(animation_name.release_value());
+                animation->set_timeline(m_document->timeline());
+                animation->set_owning_element(element);
+                animation->set_effect(effect);
+                apply_animation_properties(m_document, style, animation);
+                if (pseudo_element.has_value())
+                    effect->set_pseudo_element(Selector::PseudoElement { pseudo_element.value() });
 
-            element.associate_with_effect(effect);
+                auto const& rule_cache = rule_cache_for_cascade_origin(CascadeOrigin::Author);
+                if (auto keyframe_set = rule_cache.rules_by_animation_keyframes.get(animation->id()); keyframe_set.has_value())
+                    effect->set_key_frame_set(keyframe_set.value());
 
-            HTML::TemporaryExecutionContext context(m_document->relevant_settings_object());
-            animation->play().release_value_but_fixme_should_propagate_errors();
-            if (play_state == CSS::AnimationPlayState::Paused)
-                animation->pause().release_value_but_fixme_should_propagate_errors();
+                element.associate_with_effect(effect);
+                element.set_cached_animation_name_animation(animation);
+            } else {
+                // The animation hasn't changed, but some properties of the animation may have
+                apply_animation_properties(m_document, style, *element.cached_animation_name_animation());
+            }
+        }
+    } else {
+        // If the element had an existing animation, cancel it
+        if (auto existing_animation = element.cached_animation_name_animation()) {
+            existing_animation->cancel();
+            element.set_cached_animation_name_animation({});
+            element.set_cached_animation_name_source({});
         }
     }
 
