@@ -905,14 +905,14 @@ void Animation::notify_timeline_time_did_change()
     update_finished_state(DidSeek::No, SynchronouslyNotify::Yes);
 
     // Act on the pending play or pause task
-    if (m_pending_pause_task == TaskState::Scheduled) {
-        m_pending_pause_task = TaskState::None;
-        run_pending_pause_task();
-    }
-
     if (m_pending_play_task == TaskState::Scheduled) {
         m_pending_play_task = TaskState::None;
         run_pending_play_task();
+    }
+
+    if (m_pending_pause_task == TaskState::Scheduled) {
+        m_pending_pause_task = TaskState::None;
+        run_pending_pause_task();
     }
 }
 
