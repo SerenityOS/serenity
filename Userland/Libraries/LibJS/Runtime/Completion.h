@@ -272,33 +272,33 @@ template<typename ValueType>
 requires(!IsLvalueReference<ValueType>)
 class [[nodiscard]] ThrowCompletionOr {
 public:
-    ThrowCompletionOr()
+    ALWAYS_INLINE ThrowCompletionOr()
     requires(IsSame<ValueType, Empty>)
         : m_value_or_throw_completion(Empty {})
     {
     }
 
     // Not `explicit` on purpose so that `return vm.throw_completion<Error>(...);` is possible.
-    ThrowCompletionOr(Completion throw_completion)
+    ALWAYS_INLINE ThrowCompletionOr(Completion throw_completion)
         : m_value_or_throw_completion(move(throw_completion))
     {
         VERIFY(m_value_or_throw_completion.template get<Completion>().is_error());
     }
 
     // Not `explicit` on purpose so that `return value;` is possible.
-    ThrowCompletionOr(ValueType value)
+    ALWAYS_INLINE ThrowCompletionOr(ValueType value)
         : m_value_or_throw_completion(move(value))
     {
         if constexpr (IsSame<ValueType, Value>)
             VERIFY(!m_value_or_throw_completion.template get<ValueType>().is_empty());
     }
 
-    ThrowCompletionOr(ThrowCompletionOr const&) = default;
-    ThrowCompletionOr& operator=(ThrowCompletionOr const&) = default;
-    ThrowCompletionOr(ThrowCompletionOr&&) = default;
-    ThrowCompletionOr& operator=(ThrowCompletionOr&&) = default;
+    ALWAYS_INLINE ThrowCompletionOr(ThrowCompletionOr const&) = default;
+    ALWAYS_INLINE ThrowCompletionOr& operator=(ThrowCompletionOr const&) = default;
+    ALWAYS_INLINE ThrowCompletionOr(ThrowCompletionOr&&) = default;
+    ALWAYS_INLINE ThrowCompletionOr& operator=(ThrowCompletionOr&&) = default;
 
-    ThrowCompletionOr(OptionalNone value)
+    ALWAYS_INLINE ThrowCompletionOr(OptionalNone value)
         : m_value_or_throw_completion(ValueType { value })
     {
     }
@@ -307,7 +307,7 @@ public:
     // Most commonly: Value from Object* or similar, so we can omit the curly braces from "return { TRY(...) };".
     // Disabled for POD types to avoid weird conversion shenanigans.
     template<typename WrappedValueType>
-    ThrowCompletionOr(WrappedValueType&& value)
+    ALWAYS_INLINE ThrowCompletionOr(WrappedValueType&& value)
     requires(!IsPOD<ValueType>)
         : m_value_or_throw_completion(ValueType { value })
     {
