@@ -350,15 +350,13 @@ PDF::PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> PDFViewer::render_page(u32 page_inde
         return bitmap;
     }
 
-    if (page.rotate + m_rotations != 0) {
-        int rotation_count = ((page.rotate + m_rotations) / 90) % 4;
-        if (rotation_count == 3) {
-            bitmap = TRY(bitmap->rotated(Gfx::RotationDirection::CounterClockwise));
-        } else {
-            for (int i = 0; i < rotation_count; i++)
-                bitmap = TRY(bitmap->rotated(Gfx::RotationDirection::Clockwise));
-        }
-    }
+    int rotation_count = ((page.rotate + m_rotations) / 90) % 4;
+    if (rotation_count == 1)
+        bitmap = TRY(bitmap->rotated(Gfx::RotationDirection::Clockwise));
+    else if (rotation_count == 2)
+        bitmap = TRY(bitmap->rotated(Gfx::RotationDirection::Flip));
+    else if (rotation_count == 3)
+        bitmap = TRY(bitmap->rotated(Gfx::RotationDirection::CounterClockwise));
 
     return bitmap;
 }
