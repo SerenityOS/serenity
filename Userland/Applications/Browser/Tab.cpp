@@ -31,6 +31,7 @@
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/ColorPicker.h>
 #include <LibGUI/Dialog.h>
+#include <LibGUI/FilePicker.h>
 #include <LibGUI/InputBox.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MessageBox.h>
@@ -40,6 +41,7 @@
 #include <LibGUI/ToolbarContainer.h>
 #include <LibGUI/Window.h>
 #include <LibWeb/HTML/BrowsingContext.h>
+#include <LibWeb/HTML/SelectedFile.h>
 #include <LibWeb/HTML/SyntaxHighlighter/SyntaxHighlighter.h>
 #include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/Viewport.h>
@@ -552,6 +554,26 @@ Tab::Tab(BrowserWindow& window)
             view().color_picker_update({}, Web::HTML::ColorPickerUpdateState::Closed);
 
         m_dialog = nullptr;
+    };
+
+    view().on_request_file_picker = [this](auto allow_multiple_files) {
+        // FIXME: GUI::FilePicker does not allow selecting multiple files at once.
+        (void)allow_multiple_files;
+
+        Vector<Web::HTML::SelectedFile> selected_files;
+        auto& window = this->window();
+
+        auto create_selected_file = [&](auto file_path) {
+            if (auto file = Web::HTML::SelectedFile::from_file_path(file_path); file.is_error())
+                warnln("Unable to open file {}: {}", file_path, file.error());
+            else
+                selected_files.append(file.release_value());
+        };
+
+        if (auto path = GUI::FilePicker::get_open_filepath(&window, "Select file"); path.has_value())
+            create_selected_file(path.release_value());
+
+        view().file_picker_closed(std::move(selected_files));
     };
 
     m_select_dropdown = GUI::Menu::construct();
