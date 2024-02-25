@@ -141,8 +141,10 @@ PDFErrorOr<void> TrueTypePainter::draw_glyph(Gfx::Painter& painter, Gfx::FloatPo
 
 Optional<float> TrueTypePainter::get_glyph_width(u8 char_code) const
 {
-    // FIXME: Make this use the char_code lookup method used in draw_glyph().
-    return m_font->glyph_width(char_code);
+    // FIXME: Make this use the full char_code lookup method used in draw_glyph() once that's complete.
+    auto char_name = m_encoding->get_name(char_code);
+    u32 unicode = glyph_name_to_unicode(char_name).value_or(char_code);
+    return m_font->glyph_width(unicode);
 }
 
 void TrueTypePainter::set_font_size(float font_size)
