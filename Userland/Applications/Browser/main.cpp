@@ -107,7 +107,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app = TRY(GUI::Application::create(arguments));
     auto const man_file = "/usr/share/man/man1/Applications/Browser.md"sv;
 
-    Config::pledge_domain("Browser");
+    Config::pledge_domains({ "Browser", "FileManager" });
     Config::monitor_domain("Browser");
 
     // Connect to LaunchServer immediately and let it know that we won't ask for anything other than opening
@@ -126,8 +126,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/tmp/session/%sid/portal/sql", "rw"));
     TRY(Core::System::unveil("/home", "rwc"));
     TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil("/etc/group", "r"));
     TRY(Core::System::unveil("/etc/passwd", "r"));
     TRY(Core::System::unveil("/etc/timezone", "r"));
+    TRY(Core::System::unveil("/etc/FileIconProvider.ini", "r"));
     TRY(Core::System::unveil("/bin/BrowserSettings", "x"));
     TRY(Core::System::unveil("/bin/Browser", "x"));
     TRY(Core::System::unveil(nullptr, nullptr));
