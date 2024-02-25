@@ -12,6 +12,24 @@
 
 namespace PDF {
 
+class TrueTypePainter {
+public:
+    static NonnullOwnPtr<TrueTypePainter> create(Document*, NonnullRefPtr<DictObject> const&, SimpleFont const& containing_pdf_font, AK::NonnullRefPtr<Gfx::Font>, NonnullRefPtr<Encoding>);
+
+    PDFErrorOr<void> draw_glyph(Gfx::Painter&, Gfx::FloatPoint, float width, u8 char_code, Renderer const&);
+    Optional<float> get_glyph_width(u8 char_code) const;
+    void set_font_size(float font_size);
+
+private:
+    TrueTypePainter(AK::NonnullRefPtr<Gfx::Font>, NonnullRefPtr<Encoding>, bool encoding_is_mac_roman_or_win_ansi, bool is_nonsymbolic, Optional<u8> high_byte);
+
+    NonnullRefPtr<Gfx::Font> m_font;
+    NonnullRefPtr<Encoding> m_encoding;
+    bool m_encoding_is_mac_roman_or_win_ansi { false };
+    bool m_is_nonsymbolic { false };
+    Optional<u8> m_high_byte;
+};
+
 class TrueTypeFont : public SimpleFont {
 public:
     Optional<float> get_glyph_width(u8 char_code) const override;
@@ -25,9 +43,10 @@ protected:
 
 private:
     DeprecatedFlyString m_base_font_name;
-    RefPtr<Gfx::Font> m_font;
-    bool m_encoding_is_mac_roman_or_win_ansi { false };
-    Optional<u8> m_high_byte;
+
+    // Always non-null once initialize() has completed.
+    // FIXME: Move this class hierarchy to the usual fallible construction pattern and make this a NonnullOwnPtr.
+    OwnPtr<TrueTypePainter> m_font_painter;
 };
 
 }
