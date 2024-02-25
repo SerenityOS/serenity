@@ -15,65 +15,47 @@
 
 namespace PDF {
 
-PDFErrorOr<void> TrueTypeFont::initialize(Document* document, NonnullRefPtr<DictObject> const& dict, float font_size)
+TrueTypePainter::TrueTypePainter(AK::NonnullRefPtr<Gfx::Font> font, NonnullRefPtr<Encoding> encoding, bool encoding_is_mac_roman_or_win_ansi, bool is_nonsymbolic, Optional<u8> high_byte)
+    : m_font(move(font))
+    , m_encoding(move(encoding))
+    , m_encoding_is_mac_roman_or_win_ansi(encoding_is_mac_roman_or_win_ansi)
+    , m_is_nonsymbolic(is_nonsymbolic)
+    , m_high_byte(high_byte)
 {
-    TRY(SimpleFont::initialize(document, dict, font_size));
+}
 
+NonnullOwnPtr<TrueTypePainter> TrueTypePainter::create(Document* document, NonnullRefPtr<DictObject> const& dict, SimpleFont const& containing_pdf_font, AK::NonnullRefPtr<Gfx::Font> font, NonnullRefPtr<Encoding> encoding)
+{
+    bool encoding_is_mac_roman_or_win_ansi = false;
     if (dict->contains(CommonNames::Encoding)) {
         auto encoding_object = MUST(dict->get_object(document, CommonNames::Encoding));
         if (encoding_object->is<NameObject>()) {
             auto name = encoding_object->cast<NameObject>()->name();
             if (name == "MacRomanEncoding" || name == "WinAnsiEncoding")
-                m_encoding_is_mac_roman_or_win_ansi = true;
+                encoding_is_mac_roman_or_win_ansi = true;
         }
     }
-
-    m_base_font_name = TRY(dict->get_name(document, CommonNames::BaseFont))->name();
-
-    // If there's an embedded font program we use that; otherwise we try to find a replacement font
-    if (dict->contains(CommonNames::FontDescriptor)) {
-        auto descriptor = MUST(dict->get_dict(document, CommonNames::FontDescriptor));
-        if (descriptor->contains(CommonNames::FontFile2)) {
-            auto font_file_stream = TRY(descriptor->get_stream(document, CommonNames::FontFile2));
-            auto ttf_font = TRY(OpenType::Font::try_load_from_externally_owned_memory(font_file_stream->bytes(), { .skip_tables = pdf_skipped_opentype_tables }));
-            float point_size = (font_size * POINTS_PER_INCH) / DEFAULT_DPI;
-            m_font = adopt_ref(*new Gfx::ScaledFont(*ttf_font, point_size, point_size));
-        }
-    }
-    if (!m_font) {
-        m_font = TRY(replacement_for(base_font_name().to_lowercase(), font_size));
-    }
-    VERIFY(m_font);
 
     // See long spec comment in TrueTypeFont::draw_glyp().
-    if (!dict->contains(CommonNames::Encoding) || is_symbolic()) {
+    Optional<u8> high_byte;
+    if (!dict->contains(CommonNames::Encoding) || containing_pdf_font.is_symbolic()) {
         // FIXME: Looks like this is never hit in the test set (?).
         for (u8 prefix : { 0x00, 0xF0, 0xF1, 0xF2 }) {
             bool has_all = true;
             for (unsigned suffix = 0x00; suffix <= 0xFF; ++suffix) {
-                if (!m_font->contains_glyph((prefix << 8) | suffix)) {
+                if (!font->contains_glyph((prefix << 8) | suffix)) {
                     has_all = false;
                     break;
                 }
             }
             if (has_all) {
-                m_high_byte = prefix;
+                high_byte = prefix;
                 break;
             }
         }
     }
 
-    return {};
-}
-
-Optional<float> TrueTypeFont::get_glyph_width(u8 char_code) const
-{
-    return m_font->glyph_width(char_code);
-}
-
-void TrueTypeFont::set_font_size(float font_size)
-{
-    m_font = m_font->with_size((font_size * POINTS_PER_INCH) / DEFAULT_DPI);
+    return adopt_own(*new TrueTypePainter { move(font), move(encoding), encoding_is_mac_roman_or_win_ansi, containing_pdf_font.is_nonsymbolic(), high_byte });
 }
 
 static void do_draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u32 unicode, Gfx::Font const& font, ColorOrStyle const& style)
@@ -91,7 +73,7 @@ static void do_draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float wi
     }
 }
 
-PDFErrorOr<void> TrueTypeFont::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u8 char_code, Renderer const& renderer)
+PDFErrorOr<void> TrueTypePainter::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u8 char_code, Renderer const& renderer)
 {
     auto style = renderer.state().paint_style;
 
@@ -101,17 +83,14 @@ PDFErrorOr<void> TrueTypeFont::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint
     // "If the font has a named Encoding entry of either MacRomanEncoding or WinAnsiEncoding,
     //  or if the font descriptor’s Nonsymbolic flag (see Table 5.20) is set, the viewer creates
     //  a table that maps from character codes to glyph names:
-    if (m_encoding_is_mac_roman_or_win_ansi || is_nonsymbolic()) {
+    if (m_encoding_is_mac_roman_or_win_ansi || m_is_nonsymbolic) {
         //  • If the Encoding entry is one of the names MacRomanEncoding or WinAnsiEncoding,
         //    the table is initialized with the mappings described in Appendix D.
         //  • If the Encoding entry is a dictionary, the table is initialized with the entries
         //    from the dictionary’s BaseEncoding entry (see Table 5.11). Any entries in the
         //    Differences array are used to update the table. Finally, any undefined entries in
         //    the table are filled using StandardEncoding."
-        // Implementor's note: This is (mostly) done in SimpleFont::initialize() and encoding() returns the result.
-        auto effective_encoding = encoding();
-        if (!effective_encoding)
-            effective_encoding = Encoding::standard_encoding();
+        // Implementor's note: This is (mostly) done in SimpleFont::initialize() and m_encoding stores the result.
 
         // "If a (3, 1) “cmap” subtable (Microsoft Unicode) is present:
         //  • A character code is first mapped to a glyph name using the table described above.
@@ -126,7 +105,7 @@ PDFErrorOr<void> TrueTypeFont::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint
         // Implementor's note: We currently don't know which tables are present, so we for now we always
         // use the (3, 1) algorithm.
         // FIXME: Implement (1, 0) subtable support.
-        auto char_name = effective_encoding->get_name(char_code);
+        auto char_name = m_encoding->get_name(char_code);
         u32 unicode = glyph_name_to_unicode(char_name).value_or(char_code);
         if (m_font->contains_glyph(unicode)) {
             do_draw_glyph(painter, point, width, unicode, *m_font, style);
@@ -152,15 +131,68 @@ PDFErrorOr<void> TrueTypeFont::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint
     } else {
         // "If a character cannot be mapped in any of the ways described above, the results are implementation-dependent."
         // FIXME: Do something smarter?
-        auto effective_encoding = encoding();
-        if (!effective_encoding)
-            effective_encoding = Encoding::standard_encoding();
-        auto char_name = effective_encoding->get_name(char_code);
+        auto char_name = m_encoding->get_name(char_code);
         unicode = glyph_name_to_unicode(char_name).value_or(char_code);
     }
 
     do_draw_glyph(painter, point, width, unicode, *m_font, style);
     return {};
+}
+
+Optional<float> TrueTypePainter::get_glyph_width(u8 char_code) const
+{
+    // FIXME: Make this use the char_code lookup method used in draw_glyph().
+    return m_font->glyph_width(char_code);
+}
+
+void TrueTypePainter::set_font_size(float font_size)
+{
+    // Guaranteed non-null for ScaledFonts.
+    m_font = *m_font->with_size((font_size * POINTS_PER_INCH) / DEFAULT_DPI);
+}
+
+PDFErrorOr<void> TrueTypeFont::initialize(Document* document, NonnullRefPtr<DictObject> const& dict, float font_size)
+{
+    TRY(SimpleFont::initialize(document, dict, font_size));
+
+    m_base_font_name = TRY(dict->get_name(document, CommonNames::BaseFont))->name();
+
+    // If there's an embedded font program we use that; otherwise we try to find a replacement font
+    RefPtr<Gfx::Font> font;
+    if (dict->contains(CommonNames::FontDescriptor)) {
+        auto descriptor = MUST(dict->get_dict(document, CommonNames::FontDescriptor));
+        if (descriptor->contains(CommonNames::FontFile2)) {
+            auto font_file_stream = TRY(descriptor->get_stream(document, CommonNames::FontFile2));
+            auto ttf_font = TRY(OpenType::Font::try_load_from_externally_owned_memory(font_file_stream->bytes(), { .skip_tables = pdf_skipped_opentype_tables }));
+            float point_size = (font_size * POINTS_PER_INCH) / DEFAULT_DPI;
+            font = adopt_ref(*new Gfx::ScaledFont(*ttf_font, point_size, point_size));
+        }
+    }
+    if (!font)
+        font = TRY(replacement_for(base_font_name().to_lowercase(), font_size));
+
+    auto effective_encoding = encoding();
+    if (!effective_encoding)
+        effective_encoding = Encoding::standard_encoding();
+
+    m_font_painter = TrueTypePainter::create(document, dict, *this, *font, *effective_encoding);
+
+    return {};
+}
+
+Optional<float> TrueTypeFont::get_glyph_width(u8 char_code) const
+{
+    return m_font_painter->get_glyph_width(char_code);
+}
+
+void TrueTypeFont::set_font_size(float font_size)
+{
+    m_font_painter->set_font_size(font_size);
+}
+
+PDFErrorOr<void> TrueTypeFont::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u8 char_code, Renderer const& renderer)
+{
+    return m_font_painter->draw_glyph(painter, point, width, char_code, renderer);
 }
 
 }
