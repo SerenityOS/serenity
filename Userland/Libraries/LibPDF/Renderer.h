@@ -104,6 +104,8 @@ class Renderer {
 public:
     static PDFErrorsOr<void> render(Document&, Page const&, RefPtr<Gfx::Bitmap>, Color background_color, RenderingPreferences preferences);
 
+    static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> apply_page_rotation(NonnullRefPtr<Gfx::Bitmap>, Page const&, int extra_degrees = 0);
+
     struct FontCacheKey {
         NonnullRefPtr<DictObject> font_dictionary;
         float font_size;

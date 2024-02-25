@@ -50,6 +50,18 @@ PDFErrorsOr<void> Renderer::render(Document& document, Page const& page, RefPtr<
     return Renderer(document, page, bitmap, background_color, rendering_preferences).render();
 }
 
+ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Renderer::apply_page_rotation(NonnullRefPtr<Gfx::Bitmap> bitmap, Page const& page, int extra_degrees)
+{
+    int rotation_count = ((page.rotate + extra_degrees) / 90) % 4;
+    if (rotation_count == 1)
+        bitmap = TRY(bitmap->rotated(Gfx::RotationDirection::Clockwise));
+    else if (rotation_count == 2)
+        bitmap = TRY(bitmap->rotated(Gfx::RotationDirection::Flip));
+    else if (rotation_count == 3)
+        bitmap = TRY(bitmap->rotated(Gfx::RotationDirection::CounterClockwise));
+    return bitmap;
+}
+
 static void rect_path(Gfx::Path& path, float x, float y, float width, float height)
 {
     path.move_to({ x, y });
