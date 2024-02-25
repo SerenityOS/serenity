@@ -50,6 +50,10 @@
     "normal",
     "reverse"
   ],
+  "animation-play-state": [
+    "paused",
+    "running"
+  ],
   "appearance": [
     "auto",
     "button",

@@ -1059,6 +1059,12 @@ ErrorOr<void> StyleComputer::compute_cascaded_values(StyleProperties& style, DOM
                     direction = *direction_value;
             }
 
+            CSS::AnimationPlayState play_state { CSS::AnimationPlayState::Running };
+            if (auto play_state_property = style.maybe_null_property(PropertyID::AnimationPlayState); play_state_property && play_state_property->is_identifier()) {
+                if (auto play_state_value = value_id_to_animation_play_state(play_state_property->to_identifier()); play_state_value.has_value())
+                    play_state = *play_state_value;
+            }
+
             Animations::TimingFunction timing_function = Animations::ease_timing_function;
             if (auto timing_property = style.maybe_null_property(PropertyID::AnimationTimingFunction); timing_property && timing_property->is_easing())
                 timing_function = Animations::TimingFunction::from_easing_style_value(timing_property->as_easing());
@@ -1091,6 +1097,8 @@ ErrorOr<void> StyleComputer::compute_cascaded_values(StyleProperties& style, DOM
 
             HTML::TemporaryExecutionContext context(m_document->relevant_settings_object());
             animation->play().release_value_but_fixme_should_propagate_errors();
+            if (play_state == CSS::AnimationPlayState::Paused)
+                animation->pause().release_value_but_fixme_should_propagate_errors();
         }
     }
 
