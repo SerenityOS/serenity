@@ -445,6 +445,7 @@ class Path2D;
 class Plugin;
 class PluginArray;
 class PromiseRejectionEvent;
+class SelectedFile;
 class SharedImageRequest;
 class Storage;
 class SubmitEvent;
@@ -468,6 +469,7 @@ class WorkerGlobalScope;
 class WorkerLocation;
 class WorkerNavigator;
 
+enum class AllowMultipleFiles;
 enum class MediaSeekMode;
 enum class SandboxingFlagSet;
 

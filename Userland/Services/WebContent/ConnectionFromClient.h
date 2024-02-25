@@ -106,6 +106,7 @@ private:
     virtual void confirm_closed(u64 page_id, bool accepted) override;
     virtual void prompt_closed(u64 page_id, Optional<String> const& response) override;
     virtual void color_picker_update(u64 page_id, Optional<Color> const& picked_color, Web::HTML::ColorPickerUpdateState const& state) override;
+    virtual void file_picker_closed(u64 page_id, Vector<Web::HTML::SelectedFile> const& selected_files) override;
     virtual void select_dropdown_closed(u64 page_id, Optional<String> const& value) override;
 
     virtual void toggle_media_play_state(u64 page_id) override;

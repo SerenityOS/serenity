@@ -250,6 +250,11 @@ void ViewImplementation::color_picker_update(Optional<Color> picked_color, Web::
     client().async_color_picker_update(page_id(), picked_color, state);
 }
 
+void ViewImplementation::file_picker_closed(Vector<Web::HTML::SelectedFile> selected_files)
+{
+    client().async_file_picker_closed(page_id(), move(selected_files));
+}
+
 void ViewImplementation::select_dropdown_closed(Optional<String> value)
 {
     client().async_select_dropdown_closed(page_id(), value);

@@ -28,6 +28,7 @@
 #include <LibWeb/HTML/Numbers.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
+#include <LibWeb/HTML/SelectedFile.h>
 #include <LibWeb/HTML/SharedImageRequest.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/Infra/CharacterTypes.h>
@@ -37,6 +38,7 @@
 #include <LibWeb/Layout/CheckBox.h>
 #include <LibWeb/Layout/ImageBox.h>
 #include <LibWeb/Layout/RadioButton.h>
+#include <LibWeb/MimeSniff/Resource.h>
 #include <LibWeb/Namespace.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/UIEvents/EventNames.h>
@@ -213,12 +215,12 @@ static void show_the_picker_if_applicable(HTMLInputElement& element)
         //    with the bubbles attribute initialized to true.
         // 5. Otherwise, update the file selection for element.
 
-        bool const multiple = element.has_attribute(HTML::AttributeNames::multiple);
-        auto weak_element = element.make_weak_ptr<DOM::EventTarget>();
+        auto allow_multiple_files = element.has_attribute(HTML::AttributeNames::multiple) ? AllowMultipleFiles::Yes : AllowMultipleFiles::No;
+        auto weak_element = element.make_weak_ptr<HTMLInputElement>();
 
         // FIXME: Pass along accept attribute information https://html.spec.whatwg.org/multipage/input.html#attr-input-accept
         //    The accept attribute may be specified to provide user agents with a hint of what file types will be accepted.
-        element.document().browsing_context()->top_level_browsing_context()->page().client().page_did_request_file_picker(weak_element, multiple);
+        element.document().browsing_context()->top_level_browsing_context()->page().did_request_file_picker(weak_element, allow_multiple_files);
         return;
     }
 
@@ -378,6 +380,51 @@ void HTMLInputElement::did_pick_color(Optional<Color> picked_color)
             dispatch_event(*change_event);
         });
     }
+}
+
+void HTMLInputElement::did_select_files(Span<SelectedFile> selected_files)
+{
+    // https://html.spec.whatwg.org/multipage/input.html#show-the-picker,-if-applicable
+    // 4. If the user dismissed the prompt without changing their selection, then queue an element task on the user
+    //    interaction task source given element to fire an event named cancel at element, with the bubbles attribute
+    //    initialized to true.
+    if (selected_files.is_empty()) {
+        queue_an_element_task(HTML::Task::Source::UserInteraction, [this]() {
+            dispatch_event(DOM::Event::create(realm(), HTML::EventNames::cancel, { .bubbles = true }));
+        });
+
+        return;
+    }
+
+    Vector<JS::NonnullGCPtr<FileAPI::File>> files;
+    files.ensure_capacity(selected_files.size());
+
+    for (auto& selected_file : selected_files) {
+        auto contents = selected_file.take_contents();
+
+        auto mime_type = MUST(MimeSniff::Resource::sniff(contents));
+        auto blob = FileAPI::Blob::create(realm(), move(contents), mime_type.essence());
+
+        // FIXME: The FileAPI should use ByteString for file names.
+        auto file_name = MUST(String::from_byte_string(selected_file.name()));
+
+        auto file = MUST(FileAPI::File::create(realm(), { JS::make_handle(blob) }, file_name));
+        files.unchecked_append(file);
+    }
+
+    // https://html.spec.whatwg.org/multipage/input.html#update-the-file-selection
+    // 1. Queue an element task on the user interaction task source given element and the following steps:
+    queue_an_element_task(HTML::Task::Source::UserInteraction, [this, files = move(files)]() mutable {
+        // 1. Update element's selected files so that it represents the user's selection.
+        m_selected_files = FileAPI::FileList::create(realm(), move(files));
+        update_file_input_shadow_tree();
+
+        // 2. Fire an event named input at the input element, with the bubbles and composed attributes initialized to true.
+        dispatch_event(DOM::Event::create(realm(), HTML::EventNames::input, { .bubbles = true, .composed = true }));
+
+        // 3. Fire an event named change at the input element, with the bubbles attribute initialized to true.
+        dispatch_event(DOM::Event::create(realm(), HTML::EventNames::change, { .bubbles = true }));
+    });
 }
 
 String HTMLInputElement::value() const

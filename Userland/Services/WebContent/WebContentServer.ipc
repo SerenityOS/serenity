@@ -6,6 +6,7 @@
 #include <LibWeb/CSS/PreferredColorScheme.h>
 #include <LibWeb/CSS/Selector.h>
 #include <LibWeb/HTML/ColorPickerUpdateState.h>
+#include <LibWeb/HTML/SelectedFile.h>
 #include <LibWeb/WebDriver/ExecuteScript.h>
 #include <LibWebView/Attribute.h>
 
@@ -93,6 +94,7 @@ endpoint WebContentServer
     confirm_closed(u64 page_id, bool accepted) =|
     prompt_closed(u64 page_id, Optional<String> response) =|
     color_picker_update(u64 page_id, Optional<Color> picked_color, Web::HTML::ColorPickerUpdateState state) =|
+    file_picker_closed(u64 page_id, Vector<Web::HTML::SelectedFile> selected_files) =|
     select_dropdown_closed(u64 page_id, Optional<String> value) =|
 
     toggle_media_play_state(u64 page_id) =|

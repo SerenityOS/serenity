@@ -806,6 +806,19 @@ void WebContentClient::did_request_color_picker(u64 page_id, Color const& curren
         view.on_request_color_picker(current_color);
 }
 
+void WebContentClient::did_request_file_picker(u64 page_id, Web::HTML::AllowMultipleFiles allow_multiple_files)
+{
+    auto maybe_view = m_views.get(page_id);
+    if (!maybe_view.has_value()) {
+        dbgln("Received request file picker for unknown page ID {}", page_id);
+        return;
+    }
+    auto& view = *maybe_view.value();
+
+    if (view.on_request_file_picker)
+        view.on_request_file_picker(allow_multiple_files);
+}
+
 void WebContentClient::did_request_select_dropdown(u64 page_id, Gfx::IntPoint content_position, i32 minimum_width, Vector<Web::HTML::SelectItem> const& items)
 {
     auto maybe_view = m_views.get(page_id);

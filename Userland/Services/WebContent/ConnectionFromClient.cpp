@@ -28,6 +28,8 @@
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/HTML/BrowsingContext.h>
+#include <LibWeb/HTML/HTMLInputElement.h>
+#include <LibWeb/HTML/SelectedFile.h>
 #include <LibWeb/HTML/Storage.h>
 #include <LibWeb/HTML/TraversableNavigable.h>
 #include <LibWeb/HTML/Window.h>
@@ -1315,6 +1317,18 @@ void ConnectionFromClient::color_picker_update(u64 page_id, Optional<Color> cons
     auto& page = maybe_page.release_value();
 
     page.page().color_picker_update(picked_color, state);
+}
+
+void ConnectionFromClient::file_picker_closed(u64 page_id, Vector<Web::HTML::SelectedFile> const& selected_files)
+{
+    auto maybe_page = page(page_id);
+    if (!maybe_page.has_value()) {
+        dbgln("ConnectionFromClient::color_picker_update: No page with ID {}", page_id);
+        return;
+    }
+
+    auto& page = maybe_page.release_value();
+    page.page().file_picker_closed(const_cast<Vector<Web::HTML::SelectedFile>&>(selected_files));
 }
 
 void ConnectionFromClient::select_dropdown_closed(u64 page_id, Optional<String> const& value)
