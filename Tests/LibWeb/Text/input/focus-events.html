@@ -1,0 +1,54 @@
+<script src="include.js"></script>
+<style>
+    .input {
+        width: 100px;
+        height: 100px;
+        border: 1px solid black;
+    }
+</style>
+<input class="input" id="a" />
+<input class="input" id="b" />
+<script>
+    function elementToString(e) {
+        let element_string = `<${e.nodeName} `;
+        if (e.id) element_string += `id="${e.id}"`;
+        element_string += ">";
+        return element_string;
+    }
+
+    document.addEventListener("focusin", function (e) {
+        const target = elementToString(e.target);
+        println(`focusin target=${target}`);
+    });
+    document.addEventListener("focusout", function (e) {
+        const target = elementToString(e.target);
+        println(`focusout target=${target}`);
+    });
+
+    const a = document.getElementById("a");
+    const b = document.getElementById("b");
+
+    function onFocus(e) {
+        const target = elementToString(e.target);
+        println(`focus target=${target}`);
+    }
+
+    function onBlur(e) {
+        const target = elementToString(e.target);
+        println(`blur target=${target}`);
+    }
+
+    a.addEventListener("focus", onFocus);
+    a.addEventListener("blur", onBlur);
+    b.addEventListener("focus", onFocus);
+    b.addEventListener("blur", onBlur);
+
+    asyncTest(async done => {
+        a.focus();
+        await new Promise(resolve => setTimeout(resolve, 0));
+        b.focus();
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        done();
+    });
+</script>

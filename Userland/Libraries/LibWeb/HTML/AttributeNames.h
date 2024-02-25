@@ -141,6 +141,8 @@ namespace AttributeNames {
     __ENUMERATE_HTML_ATTRIBUTE(onended)                    \
     __ENUMERATE_HTML_ATTRIBUTE(onerror)                    \
     __ENUMERATE_HTML_ATTRIBUTE(onfocus)                    \
+    __ENUMERATE_HTML_ATTRIBUTE(onfocusin)                  \
+    __ENUMERATE_HTML_ATTRIBUTE(onfocusout)                 \
     __ENUMERATE_HTML_ATTRIBUTE(onformdata)                 \
     __ENUMERATE_HTML_ATTRIBUTE(onhashchange)               \
     __ENUMERATE_HTML_ATTRIBUTE(oninput)                    \

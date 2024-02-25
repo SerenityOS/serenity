@@ -51,6 +51,8 @@ namespace Web::HTML::EventNames {
     __ENUMERATE_HTML_EVENT(error)                    \
     __ENUMERATE_HTML_EVENT(finish)                   \
     __ENUMERATE_HTML_EVENT(focus)                    \
+    __ENUMERATE_HTML_EVENT(focusin)                  \
+    __ENUMERATE_HTML_EVENT(focusout)                 \
     __ENUMERATE_HTML_EVENT(formdata)                 \
     __ENUMERATE_HTML_EVENT(hashchange)               \
     __ENUMERATE_HTML_EVENT(input)                    \

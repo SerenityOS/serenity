@@ -79,6 +79,11 @@ static void run_focus_update_steps(Vector<JS::Handle<DOM::Node>> old_chain, Vect
             blur_event->set_related_target(related_blur_target);
             blur_event_target->dispatch_event(blur_event);
         }
+
+        auto focusout_event = UIEvents::FocusEvent::create(blur_event_target->realm(), HTML::EventNames::focusout);
+        focusout_event->set_bubbles(true);
+        focusout_event->set_related_target(related_blur_target);
+        blur_event_target->dispatch_event(focusout_event);
     }
 
     // FIXME: 3. Apply any relevant platform-specific conventions for focusing new focus target.
@@ -123,6 +128,11 @@ static void run_focus_update_steps(Vector<JS::Handle<DOM::Node>> old_chain, Vect
             auto focus_event = UIEvents::FocusEvent::create(focus_event_target->realm(), HTML::EventNames::focus);
             focus_event->set_related_target(related_focus_target);
             focus_event_target->dispatch_event(focus_event);
+
+            auto focusin_event = UIEvents::FocusEvent::create(focus_event_target->realm(), HTML::EventNames::focusin);
+            focusin_event->set_bubbles(true);
+            focusin_event->set_related_target(related_focus_target);
+            focus_event_target->dispatch_event(focusin_event);
         }
     }
 }

@@ -34,6 +34,8 @@
     E(onended, HTML::EventNames::ended)                                       \
     E(onerror, HTML::EventNames::error)                                       \
     E(onfocus, HTML::EventNames::focus)                                       \
+    E(onfocusin, HTML::EventNames::focusin)                                   \
+    E(onfocusout, HTML::EventNames::focusout)                                 \
     E(onformdata, HTML::EventNames::formdata)                                 \
     E(oninput, HTML::EventNames::input)                                       \
     E(oninvalid, HTML::EventNames::invalid)                                   \
