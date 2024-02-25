@@ -446,7 +446,7 @@ static bool decode_favicon(ReadonlyBytes favicon_data, URL const& favicon_url, J
 {
     auto decoded_image = Platform::ImageCodecPlugin::the().decode_image(favicon_data);
     if (!decoded_image.has_value() || decoded_image->frames.is_empty()) {
-        dbgln("Could not decode favicon {}", favicon_url);
+        dbgln_if(IMAGE_DECODER_DEBUG, "Could not decode favicon {}", favicon_url);
         return false;
     }
 
