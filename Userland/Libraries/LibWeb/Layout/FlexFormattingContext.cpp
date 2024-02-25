@@ -628,8 +628,13 @@ void FlexFormattingContext::determine_flex_base_size_and_hypothetical_main_size(
     }();
 
     // AD-HOC: This is not mentioned in the spec, but if the item has an aspect ratio,
-    //         we may need to adjust the main size in response to cross size min/max constraints.
+    //         we may need to adjust the main size in these ways:
+    //         - using stretch-fit main size if the flex basis is indefinite.
+    //         - in response to cross size min/max constraints.
     if (item.box->has_preferred_aspect_ratio()) {
+        if (!item.used_flex_basis_is_definite) {
+            item.flex_base_size = inner_main_size(m_flex_container_state);
+        }
         item.flex_base_size = adjust_main_size_through_aspect_ratio_for_cross_size_min_max_constraints(child_box, item.flex_base_size, computed_cross_min_size(child_box), computed_cross_max_size(child_box));
     }
 
@@ -1038,8 +1043,12 @@ void FlexFormattingContext::determine_hypothetical_cross_size_of_item(FlexItem& 
         return;
     }
 
-    if (item.box->has_preferred_aspect_ratio() && item.main_size.has_value()) {
-        item.hypothetical_cross_size = calculate_cross_size_from_main_size_and_aspect_ratio(item.main_size.value(), item.box->preferred_aspect_ratio().value());
+    if (item.box->has_preferred_aspect_ratio()) {
+        if (item.used_flex_basis_is_definite) {
+            item.hypothetical_cross_size = calculate_cross_size_from_main_size_and_aspect_ratio(item.main_size.value(), item.box->preferred_aspect_ratio().value());
+            return;
+        }
+        item.hypothetical_cross_size = inner_cross_size(m_flex_container_state);
         return;
     }
 
