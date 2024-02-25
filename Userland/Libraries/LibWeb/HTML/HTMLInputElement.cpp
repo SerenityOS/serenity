@@ -355,8 +355,7 @@ void HTMLInputElement::did_pick_color(Optional<Color> picked_color)
         m_value = value_sanitization_algorithm(picked_color.value().to_string_without_alpha());
         m_dirty_value = true;
 
-        if (m_color_well_element)
-            update_color_well_element();
+        update_color_well_element();
 
         // the user agent must queue an element task on the user interaction task source
         queue_an_element_task(HTML::Task::Source::UserInteraction, [this] {
@@ -442,11 +441,7 @@ WebIDL::ExceptionOr<void> HTMLInputElement::set_value(String const& value)
                     browsing_context->set_cursor_position(DOM::Position::create(realm, *m_text_node, m_text_node->data().bytes().size()));
             }
 
-            if (type_state() == TypeAttributeState::Color && m_color_well_element)
-                update_color_well_element();
-
-            if (type_state() == TypeAttributeState::Range && m_slider_thumb)
-                update_slider_thumb_element();
+            update_shadow_tree();
         }
 
         break;
@@ -615,6 +610,20 @@ void HTMLInputElement::create_shadow_tree_if_needed()
     }
 }
 
+void HTMLInputElement::update_shadow_tree()
+{
+    switch (type_state()) {
+    case TypeAttributeState::Color:
+        update_color_well_element();
+        break;
+    case TypeAttributeState::Range:
+        update_slider_thumb_element();
+        break;
+    default:
+        break;
+    }
+}
+
 void HTMLInputElement::create_text_input_shadow_tree()
 {
     auto shadow_root = heap().allocate<DOM::ShadowRoot>(realm(), document(), *this, Bindings::ShadowRootMode::Closed);
@@ -737,6 +746,9 @@ void HTMLInputElement::create_color_input_shadow_tree()
 
 void HTMLInputElement::update_color_well_element()
 {
+    if (!m_color_well_element)
+        return;
+
     MUST(m_color_well_element->style_for_bindings()->set_property(CSS::PropertyID::BackgroundColor, m_value));
 }
 
@@ -846,6 +858,9 @@ void HTMLInputElement::create_range_input_shadow_tree()
 
 void HTMLInputElement::update_slider_thumb_element()
 {
+    if (!m_slider_thumb)
+        return;
+
     double value = value_as_number();
     double minimum = *min();
     double maximum = *max();
@@ -891,13 +906,9 @@ void HTMLInputElement::form_associated_element_attribute_changed(FlyString const
             } else {
                 m_value = value_sanitization_algorithm(*value);
             }
+
             update_placeholder_visibility();
-
-            if (type_state() == TypeAttributeState::Color && m_color_well_element)
-                update_color_well_element();
-
-            if (type_state() == TypeAttributeState::Range && m_slider_thumb)
-                update_slider_thumb_element();
+            update_shadow_tree();
         }
     } else if (name == HTML::AttributeNames::placeholder) {
         if (m_placeholder_text_node)
@@ -1133,11 +1144,7 @@ void HTMLInputElement::reset_algorithm()
         update_placeholder_visibility();
     }
 
-    if (type_state() == TypeAttributeState::Color && m_color_well_element)
-        update_color_well_element();
-
-    if (type_state() == TypeAttributeState::Range && m_slider_thumb)
-        update_slider_thumb_element();
+    update_shadow_tree();
 }
 
 void HTMLInputElement::form_associated_element_was_inserted()
