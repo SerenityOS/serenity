@@ -94,6 +94,8 @@ public:
 
     void did_pick_color(Optional<Color> picked_color);
 
+    void did_select_files(Span<SelectedFile> selected_files);
+
     JS::GCPtr<FileAPI::FileList> files();
     void set_files(JS::GCPtr<FileAPI::FileList>);
 

@@ -18,6 +18,7 @@
 #include <LibWeb/HTML/HTMLSelectElement.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Scripting/TemporaryExecutionContext.h>
+#include <LibWeb/HTML/SelectedFile.h>
 #include <LibWeb/HTML/TraversableNavigable.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/Platform/EventLoopPlugin.h>
@@ -339,6 +340,30 @@ void Page::color_picker_update(Optional<Color> picked_color, HTML::ColorPickerUp
             input_element.did_pick_color(move(picked_color));
             if (state == HTML::ColorPickerUpdateState::Closed)
                 m_pending_non_blocking_dialog_target.clear();
+        }
+    }
+}
+
+void Page::did_request_file_picker(WeakPtr<HTML::HTMLInputElement> target, HTML::AllowMultipleFiles allow_multiple_files)
+{
+    if (m_pending_non_blocking_dialog == PendingNonBlockingDialog::None) {
+        m_pending_non_blocking_dialog = PendingNonBlockingDialog::FilePicker;
+        m_pending_non_blocking_dialog_target = move(target);
+
+        m_client->page_did_request_file_picker(allow_multiple_files);
+    }
+}
+
+void Page::file_picker_closed(Span<HTML::SelectedFile> selected_files)
+{
+    if (m_pending_non_blocking_dialog == PendingNonBlockingDialog::FilePicker) {
+        m_pending_non_blocking_dialog = PendingNonBlockingDialog::None;
+
+        if (m_pending_non_blocking_dialog_target) {
+            auto& input_element = verify_cast<HTML::HTMLInputElement>(*m_pending_non_blocking_dialog_target);
+            input_element.did_select_files(selected_files);
+
+            m_pending_non_blocking_dialog_target.clear();
         }
     }
 }

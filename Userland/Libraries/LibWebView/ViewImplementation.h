@@ -86,6 +86,7 @@ public:
     void confirm_closed(bool accepted);
     void prompt_closed(Optional<String> response);
     void color_picker_update(Optional<Color> picked_color, Web::HTML::ColorPickerUpdateState state);
+    void file_picker_closed(Vector<Web::HTML::SelectedFile> selected_files);
     void select_dropdown_closed(Optional<String> value);
 
     void toggle_media_play_state();
@@ -164,6 +165,7 @@ public:
     Function<Gfx::IntRect()> on_minimize_window;
     Function<Gfx::IntRect()> on_fullscreen_window;
     Function<void(Color current_color)> on_request_color_picker;
+    Function<void(Web::HTML::AllowMultipleFiles)> on_request_file_picker;
     Function<void(Gfx::IntPoint content_position, i32 minimum_width, Vector<Web::HTML::SelectItem> items)> on_request_select_dropdown;
     Function<void(bool)> on_finish_handling_input_event;
     Function<void()> on_text_test_finish;

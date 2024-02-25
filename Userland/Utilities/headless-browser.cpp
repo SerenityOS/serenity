@@ -8,6 +8,7 @@
  */
 
 #include <AK/Badge.h>
+#include <AK/ByteBuffer.h>
 #include <AK/ByteString.h>
 #include <AK/Function.h>
 #include <AK/JsonObject.h>
@@ -44,6 +45,7 @@
 #include <LibWeb/Cookie/Cookie.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/HTML/ActivateTab.h>
+#include <LibWeb/HTML/SelectedFile.h>
 #include <LibWeb/Worker/WebWorkerClient.h>
 #include <LibWebView/CookieJar.h>
 #include <LibWebView/Database.h>
@@ -433,6 +435,21 @@ static ErrorOr<TestResult> run_test(HeadlessWebContentView& view, StringView inp
         promise->resolve({});
     };
     view.on_text_test_finish = {};
+
+    view.on_request_file_picker = [&](auto allow_multiple_files) {
+        // Create some dummy files for tests.
+        Vector<Web::HTML::SelectedFile> selected_files;
+        selected_files.empend("file1"sv, MUST(ByteBuffer::copy("Contents for file1"sv.bytes())));
+
+        if (allow_multiple_files == Web::HTML::AllowMultipleFiles::Yes) {
+            selected_files.empend("file2"sv, MUST(ByteBuffer::copy("Contents for file2"sv.bytes())));
+            selected_files.empend("file3"sv, MUST(ByteBuffer::copy("Contents for file3"sv.bytes())));
+            selected_files.empend("file4"sv, MUST(ByteBuffer::copy("Contents for file4"sv.bytes())));
+        }
+
+        view.file_picker_closed(move(selected_files));
+    };
+
     view.load(URL("about:blank"sv));
     MUST(promise->await());
 
