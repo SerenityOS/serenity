@@ -84,7 +84,7 @@ inline StorageFormat determine_storage_format(BitmapFormat format)
 
 struct BackingStore;
 
-enum RotationDirection {
+enum class RotationDirection {
     CounterClockwise,
     Clockwise
 };
