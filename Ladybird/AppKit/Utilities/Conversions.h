@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/ByteString.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
 #include <LibGfx/Color.h>
@@ -18,6 +19,7 @@
 namespace Ladybird {
 
 String ns_string_to_string(NSString*);
+ByteString ns_string_to_byte_string(NSString*);
 NSString* string_to_ns_string(StringView);
 
 NSData* string_to_ns_data(StringView);

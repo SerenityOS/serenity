@@ -14,6 +14,12 @@ String ns_string_to_string(NSString* string)
     return MUST(String::from_utf8({ utf8, strlen(utf8) }));
 }
 
+ByteString ns_string_to_byte_string(NSString* string)
+{
+    auto const* utf8 = [string UTF8String];
+    return ByteString(utf8, strlen(utf8));
+}
+
 NSString* string_to_ns_string(StringView string)
 {
     return [[NSString alloc] initWithData:string_to_ns_data(string) encoding:NSUTF8StringEncoding];
