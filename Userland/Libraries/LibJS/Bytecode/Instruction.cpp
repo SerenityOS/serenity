@@ -10,6 +10,36 @@
 
 namespace JS::Bytecode {
 
+bool Instruction::is_terminator() const
+{
+#define __BYTECODE_OP(op) \
+    case Type::op:        \
+        return Op::op::IsTerminator;
+
+    switch (type()) {
+        ENUMERATE_BYTECODE_OPS(__BYTECODE_OP)
+    default:
+        VERIFY_NOT_REACHED();
+    }
+
+#undef __BYTECODE_OP
+}
+
+void Instruction::replace_references(BasicBlock const& from, BasicBlock const& to)
+{
+#define __BYTECODE_OP(op)       \
+    case Instruction::Type::op: \
+        return static_cast<Bytecode::Op::op&>(*this).replace_references_impl(from, to);
+
+    switch (type()) {
+        ENUMERATE_BYTECODE_OPS(__BYTECODE_OP)
+    default:
+        VERIFY_NOT_REACHED();
+    }
+
+#undef __BYTECODE_OP
+}
+
 void Instruction::destroy(Instruction& instruction)
 {
 #define __BYTECODE_OP(op)                        \

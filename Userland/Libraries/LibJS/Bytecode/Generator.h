@@ -76,7 +76,7 @@ public:
         void* slot = m_current_basic_block->data() + slot_offset;
         new (slot) OpType(forward<Args>(args)...);
         if constexpr (OpType::IsTerminator)
-            m_current_basic_block->terminate({});
+            m_current_basic_block->terminate({}, slot_offset);
         auto* op = static_cast<OpType*>(slot);
         op->set_source_record({ m_current_ast_node->start_offset(), m_current_ast_node->end_offset() });
     }
@@ -92,7 +92,7 @@ public:
         void* slot = m_current_basic_block->data() + slot_offset;
         new (slot) OpType(forward<Args>(args)...);
         if constexpr (OpType::IsTerminator)
-            m_current_basic_block->terminate({});
+            m_current_basic_block->terminate({}, slot_offset);
         auto* op = static_cast<OpType*>(slot);
         op->set_source_record({ m_current_ast_node->start_offset(), m_current_ast_node->end_offset() });
     }
