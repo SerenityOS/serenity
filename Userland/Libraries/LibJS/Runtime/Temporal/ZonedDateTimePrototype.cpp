@@ -538,10 +538,10 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::hours_in_day_getter)
     auto* tomorrow = TRY(create_temporal_date_time(vm, tomorrow_fields.year, tomorrow_fields.month, tomorrow_fields.day, 0, 0, 0, 0, 0, 0, *iso_calendar));
 
     // 13. Let todayInstant be ? BuiltinTimeZoneGetInstantFor(timeZone, today, "compatible").
-    auto* today_instant = TRY(builtin_time_zone_get_instant_for(vm, &time_zone, *today, "compatible"sv));
+    auto today_instant = TRY(builtin_time_zone_get_instant_for(vm, &time_zone, *today, "compatible"sv));
 
     // 14. Let tomorrowInstant be ? BuiltinTimeZoneGetInstantFor(timeZone, tomorrow, "compatible").
-    auto* tomorrow_instant = TRY(builtin_time_zone_get_instant_for(vm, &time_zone, *tomorrow, "compatible"sv));
+    auto tomorrow_instant = TRY(builtin_time_zone_get_instant_for(vm, &time_zone, *tomorrow, "compatible"sv));
 
     // 15. Let diffNs be tomorrowInstant.[[Nanoseconds]] - todayInstant.[[Nanoseconds]].
     auto diff_ns = tomorrow_instant->nanoseconds().big_integer().minus(today_instant->nanoseconds().big_integer());
@@ -1041,7 +1041,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::round)
     auto* dt_start = TRY(create_temporal_date_time(vm, temporal_date_time->iso_year(), temporal_date_time->iso_month(), temporal_date_time->iso_day(), 0, 0, 0, 0, 0, 0, *iso_calendar));
 
     // 15. Let instantStart be ? BuiltinTimeZoneGetInstantFor(timeZone, dtStart, "compatible").
-    auto* instant_start = TRY(builtin_time_zone_get_instant_for(vm, &time_zone, *dt_start, "compatible"sv));
+    auto instant_start = TRY(builtin_time_zone_get_instant_for(vm, &time_zone, *dt_start, "compatible"sv));
 
     // 16. Let startNs be instantStart.[[Nanoseconds]].
     auto& start_ns = instant_start->nanoseconds();
@@ -1175,7 +1175,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::start_of_day)
     auto* start_date_time = TRY(create_temporal_date_time(vm, temporal_date_time->iso_year(), temporal_date_time->iso_month(), temporal_date_time->iso_day(), 0, 0, 0, 0, 0, 0, calendar));
 
     // 8. Let startInstant be ? BuiltinTimeZoneGetInstantFor(timeZone, startDateTime, "compatible").
-    auto* start_instant = TRY(builtin_time_zone_get_instant_for(vm, &time_zone, *start_date_time, "compatible"sv));
+    auto start_instant = TRY(builtin_time_zone_get_instant_for(vm, &time_zone, *start_date_time, "compatible"sv));
 
     // 9. Return ! CreateTemporalZonedDateTime(startInstant.[[Nanoseconds]], timeZone, calendar).
     return MUST(create_temporal_zoned_date_time(vm, start_instant->nanoseconds(), time_zone, calendar));

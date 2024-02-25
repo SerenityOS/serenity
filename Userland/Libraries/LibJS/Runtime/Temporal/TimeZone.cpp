@@ -384,7 +384,7 @@ ThrowCompletionOr<PlainDateTime*> builtin_time_zone_get_plain_date_time_for(VM& 
 }
 
 // 11.6.11 BuiltinTimeZoneGetInstantFor ( timeZone, dateTime, disambiguation ), https://tc39.es/proposal-temporal/#sec-temporal-builtintimezonegetinstantfor
-ThrowCompletionOr<Instant*> builtin_time_zone_get_instant_for(VM& vm, Value time_zone, PlainDateTime& date_time, StringView disambiguation)
+ThrowCompletionOr<NonnullGCPtr<Instant>> builtin_time_zone_get_instant_for(VM& vm, Value time_zone, PlainDateTime& date_time, StringView disambiguation)
 {
     // 1. Assert: dateTime has an [[InitializedTemporalDateTime]] internal slot.
 
@@ -396,7 +396,7 @@ ThrowCompletionOr<Instant*> builtin_time_zone_get_instant_for(VM& vm, Value time
 }
 
 // 11.6.12 DisambiguatePossibleInstants ( possibleInstants, timeZone, dateTime, disambiguation ), https://tc39.es/proposal-temporal/#sec-temporal-disambiguatepossibleinstants
-ThrowCompletionOr<Instant*> disambiguate_possible_instants(VM& vm, MarkedVector<Instant*> const& possible_instants, Value time_zone, PlainDateTime& date_time, StringView disambiguation)
+ThrowCompletionOr<NonnullGCPtr<Instant>> disambiguate_possible_instants(VM& vm, MarkedVector<NonnullGCPtr<Instant>> const& possible_instants, Value time_zone, PlainDateTime& date_time, StringView disambiguation)
 {
     // 1. Assert: dateTime has an [[InitializedTemporalDateTime]] internal slot.
 
@@ -514,7 +514,7 @@ ThrowCompletionOr<Instant*> disambiguate_possible_instants(VM& vm, MarkedVector<
 }
 
 // 11.6.13 GetPossibleInstantsFor ( timeZone, dateTime ), https://tc39.es/proposal-temporal/#sec-temporal-getpossibleinstantsfor
-ThrowCompletionOr<MarkedVector<Instant*>> get_possible_instants_for(VM& vm, Value time_zone, PlainDateTime& date_time)
+ThrowCompletionOr<MarkedVector<NonnullGCPtr<Instant>>> get_possible_instants_for(VM& vm, Value time_zone, PlainDateTime& date_time)
 {
     // 1. Assert: dateTime has an [[InitializedTemporalDateTime]] internal slot.
 
@@ -525,7 +525,7 @@ ThrowCompletionOr<MarkedVector<Instant*>> get_possible_instants_for(VM& vm, Valu
     auto iterator = TRY(get_iterator(vm, possible_instants, IteratorHint::Sync));
 
     // 4. Let list be a new empty List.
-    auto list = MarkedVector<Instant*> { vm.heap() };
+    auto list = MarkedVector<NonnullGCPtr<Instant>> { vm.heap() };
 
     // 5. Let next be true.
     GCPtr<Object> next;
@@ -550,7 +550,7 @@ ThrowCompletionOr<MarkedVector<Instant*>> get_possible_instants_for(VM& vm, Valu
             }
 
             // iii. Append nextValue to the end of the List list.
-            list.append(static_cast<Instant*>(&next_value.as_object()));
+            list.append(verify_cast<Instant>(next_value.as_object()));
         }
     } while (next != nullptr);
 

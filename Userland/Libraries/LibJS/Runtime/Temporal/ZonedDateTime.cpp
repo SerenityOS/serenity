@@ -52,7 +52,7 @@ ThrowCompletionOr<BigInt const*> interpret_iso_date_time_offset(VM& vm, i32 year
     // 3. If offsetBehaviour is wall or offsetOption is "ignore", then
     if (offset_behavior == OffsetBehavior::Wall || offset_option == "ignore"sv) {
         // a. Let instant be ? BuiltinTimeZoneGetInstantFor(timeZone, dateTime, disambiguation).
-        auto* instant = TRY(builtin_time_zone_get_instant_for(vm, time_zone, *date_time, disambiguation));
+        auto instant = TRY(builtin_time_zone_get_instant_for(vm, time_zone, *date_time, disambiguation));
 
         // b. Return instant.[[Nanoseconds]].
         return &instant->nanoseconds();
@@ -84,7 +84,7 @@ ThrowCompletionOr<BigInt const*> interpret_iso_date_time_offset(VM& vm, i32 year
     auto possible_instants = TRY(get_possible_instants_for(vm, time_zone, *date_time));
 
     // 8. For each element candidate of possibleInstants, do
-    for (auto* candidate : possible_instants) {
+    for (auto candidate : possible_instants) {
         // a. Let candidateNanoseconds be ? GetOffsetNanosecondsFor(timeZone, candidate).
         auto candidate_nanoseconds = TRY(get_offset_nanoseconds_for(vm, time_zone, *candidate));
 
@@ -112,7 +112,7 @@ ThrowCompletionOr<BigInt const*> interpret_iso_date_time_offset(VM& vm, i32 year
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidZonedDateTimeOffset);
 
     // 10. Let instant be ? DisambiguatePossibleInstants(possibleInstants, timeZone, dateTime, disambiguation).
-    auto* instant = TRY(disambiguate_possible_instants(vm, possible_instants, time_zone, *date_time, disambiguation));
+    auto instant = TRY(disambiguate_possible_instants(vm, possible_instants, time_zone, *date_time, disambiguation));
 
     // 11. Return instant.[[Nanoseconds]].
     return &instant->nanoseconds();
@@ -392,7 +392,7 @@ ThrowCompletionOr<BigInt*> add_zoned_date_time(VM& vm, BigInt const& epoch_nanos
     auto* intermediate_date_time = TRY(create_temporal_date_time(vm, added_date->iso_year(), added_date->iso_month(), added_date->iso_day(), temporal_date_time->iso_hour(), temporal_date_time->iso_minute(), temporal_date_time->iso_second(), temporal_date_time->iso_millisecond(), temporal_date_time->iso_microsecond(), temporal_date_time->iso_nanosecond(), calendar));
 
     // 10. Let intermediateInstant be ? BuiltinTimeZoneGetInstantFor(timeZone, intermediateDateTime, "compatible").
-    auto* intermediate_instant = TRY(builtin_time_zone_get_instant_for(vm, time_zone, *intermediate_date_time, "compatible"sv));
+    auto intermediate_instant = TRY(builtin_time_zone_get_instant_for(vm, time_zone, *intermediate_date_time, "compatible"sv));
 
     // 11. Return ? AddInstant(intermediateInstant.[[Nanoseconds]], hours, minutes, seconds, milliseconds, microseconds, nanoseconds).
     return add_instant(vm, intermediate_instant->nanoseconds(), hours, minutes, seconds, milliseconds, microseconds, nanoseconds);

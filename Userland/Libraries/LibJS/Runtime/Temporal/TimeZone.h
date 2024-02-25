@@ -49,9 +49,9 @@ ThrowCompletionOr<Object*> to_temporal_time_zone(VM&, Value temporal_time_zone_l
 ThrowCompletionOr<double> get_offset_nanoseconds_for(VM&, Value time_zone, Instant&);
 ThrowCompletionOr<String> builtin_time_zone_get_offset_string_for(VM&, Value time_zone, Instant&);
 ThrowCompletionOr<PlainDateTime*> builtin_time_zone_get_plain_date_time_for(VM&, Value time_zone, Instant&, Object& calendar);
-ThrowCompletionOr<Instant*> builtin_time_zone_get_instant_for(VM&, Value time_zone, PlainDateTime&, StringView disambiguation);
-ThrowCompletionOr<Instant*> disambiguate_possible_instants(VM&, MarkedVector<Instant*> const& possible_instants, Value time_zone, PlainDateTime&, StringView disambiguation);
-ThrowCompletionOr<MarkedVector<Instant*>> get_possible_instants_for(VM&, Value time_zone, PlainDateTime&);
+ThrowCompletionOr<NonnullGCPtr<Instant>> builtin_time_zone_get_instant_for(VM&, Value time_zone, PlainDateTime&, StringView disambiguation);
+ThrowCompletionOr<NonnullGCPtr<Instant>> disambiguate_possible_instants(VM&, MarkedVector<NonnullGCPtr<Instant>> const& possible_instants, Value time_zone, PlainDateTime&, StringView disambiguation);
+ThrowCompletionOr<MarkedVector<NonnullGCPtr<Instant>>> get_possible_instants_for(VM&, Value time_zone, PlainDateTime&);
 ThrowCompletionOr<bool> time_zone_equals(VM&, Object& one, Object& two);
 
 }
