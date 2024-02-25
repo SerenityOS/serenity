@@ -674,7 +674,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::to_zoned_date_time)
     auto disambiguation = TRY(to_temporal_disambiguation(vm, options));
 
     // 6. Let instant be ? BuiltinTimeZoneGetInstantFor(timeZone, dateTime, disambiguation).
-    auto* instant = TRY(builtin_time_zone_get_instant_for(vm, time_zone, date_time, disambiguation));
+    auto instant = TRY(builtin_time_zone_get_instant_for(vm, time_zone, date_time, disambiguation));
 
     // 7. Return ! CreateTemporalZonedDateTime(instant.[[Nanoseconds]], timeZone, dateTime.[[Calendar]]).
     return MUST(create_temporal_zoned_date_time(vm, instant->nanoseconds(), *time_zone, date_time->calendar()));
