@@ -47,10 +47,8 @@ static PDF::PDFErrorOr<void> print_document_info(PDF::Document& document)
     return {};
 }
 
-static PDF::PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> render_page(PDF::Document& document, int page_index)
+static PDF::PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> render_page(PDF::Document& document, PDF::Page const& page)
 {
-    auto page = TRY(document.get_page(page_index));
-
     auto page_size = Gfx::IntSize { 800, round_to<int>(800 * page.media_box.height() / page.media_box.width()) };
 
     auto bitmap = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, page_size));
@@ -63,11 +61,11 @@ static PDF::PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> render_page(PDF::Document& do
     return bitmap;
 }
 
-static PDF::PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> render_page_to_memory(PDF::Document& document, int page_index, int repeats)
+static PDF::PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> render_page_to_memory(PDF::Document& document, PDF::Page const& page, int repeats)
 {
-    auto bitmap = TRY(render_page(document, page_index));
+    auto bitmap = TRY(render_page(document, page));
     for (int i = 0; i < repeats - 1; ++i)
-        (void)TRY(render_page(document, page_index));
+        (void)TRY(render_page(document, page));
     return bitmap;
 }
 
@@ -261,7 +259,8 @@ static PDF::PDFErrorOr<int> pdf_main(Main::Arguments arguments)
     }
 
     if (!render_path.is_empty() || render_bench) {
-        auto bitmap = TRY(render_page_to_memory(document, page_index, render_repeats));
+        auto page = TRY(document->get_page(page_index));
+        auto bitmap = TRY(render_page_to_memory(document, page, render_repeats));
         if (!render_path.is_empty())
             TRY(save_rendered_page(move(bitmap), render_path));
         return 0;
