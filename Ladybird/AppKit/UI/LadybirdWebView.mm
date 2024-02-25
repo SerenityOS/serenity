@@ -9,6 +9,7 @@
 #include <AK/URL.h>
 #include <LibGfx/ImageFormats/PNGWriter.h>
 #include <LibGfx/ShareableBitmap.h>
+#include <LibWeb/HTML/SelectedFile.h>
 #include <LibWebView/SearchEngine.h>
 #include <LibWebView/SourceHighlighter.h>
 #include <LibWebView/URL.h>
@@ -610,6 +611,42 @@ static void copy_data_to_clipboard(StringView data, NSPasteboardType pasteboard_
                                   object:panel];
 
         [panel makeKeyAndOrderFront:nil];
+    };
+
+    m_web_view_bridge->on_request_file_picker = [self](auto allow_multiple_files) {
+        auto* panel = [NSOpenPanel openPanel];
+        [panel setCanChooseFiles:YES];
+        [panel setCanChooseDirectories:NO];
+
+        if (allow_multiple_files == Web::HTML::AllowMultipleFiles::Yes) {
+            [panel setAllowsMultipleSelection:YES];
+            [panel setMessage:@"Select files"];
+        } else {
+            [panel setAllowsMultipleSelection:NO];
+            [panel setMessage:@"Select file"];
+        }
+
+        [panel beginSheetModalForWindow:[self window]
+                      completionHandler:^(NSInteger result) {
+                          Vector<Web::HTML::SelectedFile> selected_files;
+
+                          auto create_selected_file = [&](NSString* ns_file_path) {
+                              auto file_path = Ladybird::ns_string_to_byte_string(ns_file_path);
+
+                              if (auto file = Web::HTML::SelectedFile::from_file_path(file_path); file.is_error())
+                                  warnln("Unable to open file {}: {}", file_path, file.error());
+                              else
+                                  selected_files.append(file.release_value());
+                          };
+
+                          if (result == NSModalResponseOK) {
+                              for (NSURL* url : [panel URLs]) {
+                                  create_selected_file([url path]);
+                              }
+                          }
+
+                          m_web_view_bridge->file_picker_closed(move(selected_files));
+                      }];
     };
 
     self.select_dropdown = [[NSMenu alloc] initWithTitle:@"Select Dropdown"];
