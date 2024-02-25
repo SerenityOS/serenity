@@ -86,7 +86,8 @@ struct BackingStore;
 
 enum class RotationDirection {
     CounterClockwise,
-    Clockwise
+    Flip,
+    Clockwise,
 };
 
 class Bitmap : public RefCounted<Bitmap> {

@@ -277,6 +277,19 @@ ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Bitmap::clone() const
 
 ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Bitmap::rotated(Gfx::RotationDirection rotation_direction) const
 {
+    if (rotation_direction == Gfx::RotationDirection::Flip) {
+        auto new_bitmap = TRY(Gfx::Bitmap::create(format(), { width(), height() }, scale()));
+
+        auto w = this->physical_width();
+        auto h = this->physical_height();
+        for (int i = 0; i < w; i++) {
+            for (int j = 0; j < h; j++)
+                new_bitmap->set_pixel(w - i - 1, h - j - 1, this->get_pixel(i, j));
+        }
+
+        return new_bitmap;
+    }
+
     auto new_bitmap = TRY(Gfx::Bitmap::create(this->format(), { height(), width() }, scale()));
 
     auto w = this->physical_width();
