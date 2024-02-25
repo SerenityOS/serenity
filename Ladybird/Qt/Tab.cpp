@@ -14,6 +14,7 @@
 #include <AK/TemporaryChange.h>
 #include <LibGfx/ImageFormats/BMPWriter.h>
 #include <LibGfx/Painter.h>
+#include <LibWeb/HTML/SelectedFile.h>
 #include <LibWebView/SearchEngine.h>
 #include <LibWebView/SourceHighlighter.h>
 #include <LibWebView/URL.h>
@@ -229,6 +230,32 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
             view().color_picker_update({}, Web::HTML::ColorPickerUpdateState::Closed);
 
         m_dialog = nullptr;
+    };
+
+    view().on_request_file_picker = [this](auto allow_multiple_files) {
+        Vector<Web::HTML::SelectedFile> selected_files;
+
+        auto create_selected_file = [&](auto const& qfile_path) {
+            auto file_path = ak_byte_string_from_qstring(qfile_path);
+
+            if (auto file = Web::HTML::SelectedFile::from_file_path(file_path); file.is_error())
+                warnln("Unable to open file {}: {}", file_path, file.error());
+            else
+                selected_files.append(file.release_value());
+        };
+
+        if (allow_multiple_files == Web::HTML::AllowMultipleFiles::Yes) {
+            auto paths = QFileDialog::getOpenFileNames(this, "Select files", QDir::homePath(), "All Files (*.*)");
+            selected_files.ensure_capacity(static_cast<size_t>(paths.size()));
+
+            for (auto const& path : paths)
+                create_selected_file(path);
+        } else {
+            auto path = QFileDialog::getOpenFileName(this, "Select file", QDir::homePath(), "All Files (*.*)");
+            create_selected_file(path);
+        }
+
+        view().file_picker_closed(std::move(selected_files));
     };
 
     m_select_dropdown = new QMenu("Select Dropdown", this);
