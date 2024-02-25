@@ -63,6 +63,7 @@
     E(onseeked, HTML::EventNames::seeked)                                     \
     E(onseeking, HTML::EventNames::seeking)                                   \
     E(onselect, HTML::EventNames::select)                                     \
+    E(onselectionchange, HTML::EventNames::selectionchange)                   \
     E(onslotchange, HTML::EventNames::slotchange)                             \
     E(onstalled, HTML::EventNames::stalled)                                   \
     E(onsubmit, HTML::EventNames::submit)                                     \

@@ -12,6 +12,7 @@
 #include <LibWeb/DOM/DocumentFragment.h>
 #include <LibWeb/DOM/DocumentType.h>
 #include <LibWeb/DOM/ElementFactory.h>
+#include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/DOM/ProcessingInstruction.h>
 #include <LibWeb/DOM/Range.h>
@@ -100,6 +101,20 @@ void Range::update_associated_selection()
         layout_root->recompute_selection_states();
         layout_root->paintable()->set_needs_display();
     }
+
+    // https://w3c.github.io/selection-api/#selectionchange-event
+    // When the selection is dissociated with its range, associated with a new range or the associated range's boundary
+    // point is mutated either by the user or the content script, the user agent must queue a task on the user interaction
+    // task source to fire an event named selectionchange, which does not bubble and is not cancelable, at the document
+    // associated with the selection.
+    auto document = m_associated_selection->document();
+    queue_global_task(HTML::Task::Source::UserInteraction, relevant_global_object(*document), [document] {
+        EventInit event_init;
+        event_init.bubbles = false;
+        event_init.cancelable = false;
+        auto event = DOM::Event::create(document->realm(), HTML::EventNames::selectionchange, event_init);
+        document->dispatch_event(event);
+    });
 }
 
 // https://dom.spec.whatwg.org/#concept-range-root
