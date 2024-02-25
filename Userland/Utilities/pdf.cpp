@@ -50,6 +50,8 @@ static PDF::PDFErrorOr<void> print_document_info(PDF::Document& document)
 static PDF::PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> render_page(PDF::Document& document, PDF::Page const& page)
 {
     auto page_size = Gfx::IntSize { 800, round_to<int>(800 * page.media_box.height() / page.media_box.width()) };
+    if (int rotation_count = (page.rotate / 90) % 4; rotation_count % 2 == 1)
+        page_size = Gfx::IntSize { round_to<int>(800 * page.media_box.width() / page.media_box.height()), 800 };
 
     auto bitmap = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, page_size));
 
@@ -58,7 +60,7 @@ static PDF::PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> render_page(PDF::Document& do
         for (auto const& error : errors.error().errors())
             warnln("warning: {}", error.message());
     }
-    return bitmap;
+    return TRY(PDF::Renderer::apply_page_rotation(bitmap, page));
 }
 
 static PDF::PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> render_page_to_memory(PDF::Document& document, PDF::Page const& page, int repeats)
