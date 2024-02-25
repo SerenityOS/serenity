@@ -74,10 +74,12 @@ if (LADYBIRD_IS_TOP_LEVEL)
     include(use_linker)
     include(lagom_compile_options)
     include(lagom_install_options)
+    set(CMAKE_FOLDER "Ladybird")
 else()
     # FIXME: Use SERENITY_SOURCE_DIR in Lagom/CMakeLists.txt
     set(SERENITY_SOURCE_DIR "${SERENITY_PROJECT_ROOT}")
 endif()
+set(LADYBIRD_FOLDER "${CMAKE_FOLDER}")
 
 add_compile_options(-DAK_DONT_REPLACE_STD)
 add_compile_options(-Wno-expansion-to-defined)
@@ -210,6 +212,7 @@ if (ANDROID)
     include(cmake/AndroidExtras.cmake)
 endif()
 
+set(CMAKE_FOLDER "${LADYBIRD_FOLDER}/SpecialTargets")
 add_custom_target(run${LADYBIRD_CUSTOM_TARGET_SUFFIX}
     COMMAND "${CMAKE_COMMAND}" -E env "SERENITY_SOURCE_DIR=${SERENITY_SOURCE_DIR}" "$<TARGET_FILE:ladybird>" $ENV{LAGOM_ARGS}
     USES_TERMINAL
@@ -220,14 +223,15 @@ add_custom_target(debug${LADYBIRD_CUSTOM_TARGET_SUFFIX}
     COMMAND "${CMAKE_COMMAND}" -E env "SERENITY_SOURCE_DIR=${SERENITY_SOURCE_DIR}" gdb -ex "set follow-fork-mode child" "$<TARGET_FILE:ladybird>"
     USES_TERMINAL
 )
+set(CMAKE_FOLDER "${LADYBIRD_FOLDER}")
 
-add_subdirectory(ImageDecoder)
-add_subdirectory(RequestServer)
-add_subdirectory(SQLServer)
-add_subdirectory(WebContent)
-add_subdirectory(WebDriver)
-add_subdirectory(WebSocket)
-add_subdirectory(WebWorker)
+serenity_add_subdirectory(ImageDecoder)
+serenity_add_subdirectory(RequestServer)
+serenity_add_subdirectory(SQLServer)
+serenity_add_subdirectory(WebContent)
+serenity_add_subdirectory(WebDriver)
+serenity_add_subdirectory(WebSocket)
+serenity_add_subdirectory(WebWorker)
 
 set(ladybird_helper_processes ImageDecoder RequestServer SQLServer WebContent WebDriver WebSocketServer WebWorker headless-browser)
 add_dependencies(ladybird ${ladybird_helper_processes})

@@ -7,6 +7,9 @@ if (POLICY CMP0116)
     cmake_policy(SET CMP0116 NEW)
 endif()
 
+# Organize targets in project-based editors like Visual Studio and XCode into "Folders"
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
 serenity_option(ENABLE_COMPILETIME_FORMAT_CHECK ON CACHE BOOL "Enable compiletime format string checks")
 serenity_option(ENABLE_UNDEFINED_SANITIZER OFF CACHE BOOL "Enable undefined behavior sanitizer testing in gcc/clang")
 serenity_option(UNDEFINED_BEHAVIOR_IS_FATAL OFF CACHE BOOL "Make undefined behavior sanitizer errors non-recoverable")

@@ -179,6 +179,7 @@ function (generate_js_bindings target)
         )
 
         add_custom_target(generate_${basename} DEPENDS ${BINDINGS_SOURCES})
+        set_target_properties(generate_${basename} PROPERTIES FOLDER "${CMAKE_FOLDER}/Generated")
         add_dependencies(all_generated generate_${basename})
         add_dependencies(${target} generate_${basename})
 
@@ -215,6 +216,7 @@ function (generate_js_bindings target)
         )
         target_sources(${target} PRIVATE ${exposed_interface_sources})
         add_custom_target(generate_exposed_interfaces DEPENDS ${exposed_interface_sources})
+        set_target_properties(generate_exposed_interfaces PROPERTIES FOLDER "${CMAKE_FOLDER}/Generated")
         add_dependencies(all_generated generate_exposed_interfaces)
         add_dependencies(${target} generate_exposed_interfaces)
 

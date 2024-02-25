@@ -1,4 +1,4 @@
-add_subdirectory(GMLPlayground)
-add_subdirectory(Profiler)
-add_subdirectory(HackStudio)
-add_subdirectory(SQLStudio)
+serenity_add_subdirectory(GMLPlayground)
+serenity_add_subdirectory(Profiler)
+serenity_add_subdirectory(HackStudio)
+serenity_add_subdirectory(SQLStudio)

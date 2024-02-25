@@ -38,6 +38,11 @@ if(NOT COMMAND serenity_option)
     endmacro()
 endif()
 
+if (NOT CMAKE_FOLDER STREQUAL "")
+    set(CMAKE_FOLDER "Lagom")
+endif()
+set(LAGOM_FOLDER ${CMAKE_FOLDER})
+
 include(check_for_dependencies)
 include(use_linker)
 include(lagom_options NO_POLICY_SCOPE)
@@ -320,9 +325,10 @@ function(serenity_install_sources dir)
 endfunction()
 
 macro(add_serenity_subdirectory path)
-    add_subdirectory("${SERENITY_PROJECT_ROOT}/${path}" "${CMAKE_CURRENT_BINARY_DIR}/${path}")
+    serenity_add_subdirectory("${SERENITY_PROJECT_ROOT}/${path}" "${CMAKE_CURRENT_BINARY_DIR}/${path}")
 endmacro()
 
+set(CMAKE_FOLDER ${LAGOM_FOLDER}/SpecialTargets)
 add_custom_target(components ALL)
 option(BUILD_EVERYTHING "Build all optional components" ON)
 
@@ -346,11 +352,13 @@ endif()
 add_library(NoCoverage INTERFACE)
 # "install" these special targets to placate CMake
 install(TARGETS LibC LibCrypt LibSystem NoCoverage EXPORT LagomTargets)
+set(CMAKE_FOLDER ${LAGOM_FOLDER})
 
 # AK
 add_serenity_subdirectory(AK)
 lagom_lib(AK ak SOURCES ${AK_SOURCES})
 
+set(CMAKE_FOLDER ${LAGOM_FOLDER}/Libraries)
 # LibCore
 add_serenity_subdirectory(Userland/Libraries/LibCore)
 target_link_libraries(LibCore PRIVATE Threads::Threads)
@@ -414,7 +422,8 @@ install(FILES
 
 # Code Generators and other host tools
 if (BUILD_LAGOM_TOOLS)
-    add_subdirectory(Tools)
+    set(CMAKE_FOLDER ${LAGOM_FOLDER})
+    serenity_add_subdirectory(Tools)
 endif()
 
 if (BUILD_LAGOM)
@@ -441,6 +450,7 @@ if (BUILD_LAGOM)
     endforeach()
 
     # Lagom Libraries
+    set(CMAKE_FOLDER ${LAGOM_FOLDER}/Libraries)
     set(lagom_standard_libraries
         AccelGfx
         Archive
@@ -537,6 +547,7 @@ if (BUILD_LAGOM)
         install(TARGETS LibLocaleData EXPORT LagomTargets)
     endif()
 
+    set(CMAKE_FOLDER ${LAGOM_FOLDER})
     add_serenity_subdirectory(Userland/Shell)
 
     if (NOT ENABLE_FUZZERS AND NOT ENABLE_COMPILER_EXPLORER_BUILD AND NOT ANDROID)
@@ -544,6 +555,7 @@ if (BUILD_LAGOM)
         add_serenity_subdirectory(Userland/Services)
 
         # Lagom Utilities
+        set(CMAKE_FOLDER ${LAGOM_FOLDER}/Utilities)
         lagom_utility(abench SOURCES ../../Userland/Utilities/abench.cpp LIBS LibMain LibFileSystem LibAudio)
         lagom_utility(aconv SOURCES ../../Userland/Utilities/aconv.cpp LIBS LibMain LibFileSystem LibAudio)
 
@@ -566,6 +578,7 @@ if (BUILD_LAGOM)
         lagom_utility(gunzip SOURCES ../../Userland/Utilities/gunzip.cpp LIBS LibCompress LibMain)
         lagom_utility(gzip SOURCES ../../Userland/Utilities/gzip.cpp LIBS LibCompress LibMain)
 
+        set(CMAKE_FOLDER ${LAGOM_FOLDER})
         # Work around bug in JetBrains distributed CMake 3.27.2 where this causes infinite recursion in
         # export_components() when called from CLion Nova by checking if we already have Ladybird included
         # This technically breaks people including Lagom as a submodule and wanting Ladybird targets, but... who? why?
@@ -582,6 +595,7 @@ if (BUILD_LAGOM)
             add_serenity_subdirectory(Meta/Lagom/Contrib/VideoPlayerSDL)
         endif()
 
+        set(CMAKE_FOLDER ${LAGOM_FOLDER}/Utilities)
         lagom_utility(icc SOURCES ../../Userland/Utilities/icc.cpp LIBS LibGfx LibMain)
         lagom_utility(image SOURCES ../../Userland/Utilities/image.cpp LIBS LibGfx LibMain)
         lagom_utility(isobmff SOURCES ../../Userland/Utilities/isobmff.cpp LIBS LibGfx LibMain)
@@ -634,6 +648,7 @@ if (BUILD_LAGOM)
 
         enable_testing()
         # LibTest
+        set(CMAKE_FOLDER ${LAGOM_FOLDER}/Libraries)
         file(GLOB LIBTEST_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibTest/*.cpp")
         list(FILTER LIBTEST_SOURCES EXCLUDE REGEX ".*Main.cpp$")
         add_library(
@@ -649,6 +664,7 @@ if (BUILD_LAGOM)
         )
 
         # LibTest tests from Tests/
+        set(CMAKE_FOLDER ${LAGOM_FOLDER}/Tests)
         set(TEST_DIRECTORIES
             AK
             JSSpecCompiler
@@ -794,6 +810,7 @@ if (BUILD_LAGOM)
     endif()
 endif()
 
+set(CMAKE_FOLDER ${LAGOM_FOLDER})
 if (ENABLE_FUZZERS)
     add_subdirectory(Fuzzers)
 else()

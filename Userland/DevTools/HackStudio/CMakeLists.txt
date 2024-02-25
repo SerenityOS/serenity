@@ -5,8 +5,8 @@ serenity_component(
     DEPENDS CppLanguageServer ShellLanguageServer WebContent
 )
 
-add_subdirectory(LanguageServers)
-add_subdirectory(LanguageClients)
+serenity_add_subdirectory(LanguageServers)
+serenity_add_subdirectory(LanguageClients)
 
 stringify_gml(Dialogs/NewProjectDialog.gml Dialogs/NewProjectDialogGML.h new_project_dialog_gml)
 stringify_gml(Dialogs/Git/GitCommitDialog.gml Dialogs/Git/GitCommitDialogGML.h git_commit_dialog_gml)

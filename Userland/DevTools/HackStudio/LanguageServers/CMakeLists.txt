@@ -11,5 +11,5 @@ set(GENERATED_SOURCES
 serenity_lib(LibLanguageServer languageserver)
 target_link_libraries(LibLanguageServer PRIVATE LibCodeComprehension LibCore)
 
-add_subdirectory(Cpp)
-add_subdirectory(Shell)
+serenity_add_subdirectory(Cpp)
+serenity_add_subdirectory(Shell)

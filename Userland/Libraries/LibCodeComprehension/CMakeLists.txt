@@ -5,5 +5,5 @@ set(SOURCES
 
 serenity_lib(LibCodeComprehension codecomprehension)
 
-add_subdirectory(Cpp)
-add_subdirectory(Shell)
+serenity_add_subdirectory(Cpp)
+serenity_add_subdirectory(Shell)

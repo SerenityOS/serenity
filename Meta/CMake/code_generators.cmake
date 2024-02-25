@@ -20,6 +20,7 @@ function(embed_as_string_view name source_file output source_variable_name)
     )
 
     add_custom_target("generate_${name}" DEPENDS "${output}")
+    set_target_properties("generate_${name}" PROPERTIES FOLDER "${CMAKE_FOLDER}/Generated")
     add_dependencies(all_generated "generate_${name}")
 endfunction()
 
@@ -42,6 +43,7 @@ function(compile_gml source output)
     )
     get_filename_component(output_name ${output} NAME)
     add_custom_target(generate_${output_name} DEPENDS ${output})
+    set_target_properties(generate_${output_name} PROPERTIES FOLDER "${CMAKE_FOLDER}/Generated")
     add_dependencies(all_generated generate_${output_name})
 endfunction()
 
@@ -60,6 +62,7 @@ function(compile_ipc source output)
     )
     get_filename_component(output_name ${output} NAME)
     add_custom_target(generate_${output_name} DEPENDS ${output})
+    set_target_properties(generate_${output_name} PROPERTIES FOLDER "${CMAKE_FOLDER}/Generated")
     add_dependencies(all_generated generate_${output_name})
 
     # TODO: Use cmake_path() when we upgrade the minimum CMake version to 3.20
@@ -88,6 +91,7 @@ function(generate_state_machine source header)
             MAIN_DEPENDENCY ${source}
         )
         add_custom_target(${target_name} DEPENDS ${output})
+        set_target_properties(${target_name} PROPERTIES FOLDER "${CMAKE_FOLDER}/Generated")
         add_dependencies(all_generated ${target_name})
     endif()
 endfunction()

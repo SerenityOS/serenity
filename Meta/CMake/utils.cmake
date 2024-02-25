@@ -2,6 +2,14 @@
 include(${CMAKE_CURRENT_LIST_DIR}/serenity_components.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/code_generators.cmake)
 
+macro(serenity_add_subdirectory name)
+    get_filename_component(folder_name "${name}" NAME)
+    set(SAVE_CMAKE_FOLDER "${CMAKE_FOLDER}")
+    set(CMAKE_FOLDER "${CMAKE_FOLDER}/${folder_name}")
+    add_subdirectory(${name} ${ARGN})
+    set(CMAKE_FOLDER "${SAVE_CMAKE_FOLDER}")
+endmacro()
+
 function(serenity_set_implicit_links target_name)
     # Make sure that CMake is aware of the implicit LibC dependency, and ensure
     # that we are choosing the correct and updated LibC.
@@ -219,6 +227,7 @@ function(invoke_generator name generator version_file header implementation)
 
     add_custom_target("generate_${name}" DEPENDS "${header}" "${implementation}")
     add_dependencies(all_generated "generate_${name}")
+    set_target_properties("generate_${name}" PROPERTIES FOLDER ${CMAKE_FOLDER}/Generated)
     list(APPEND CURRENT_LIB_GENERATED "${name}")
     set(CURRENT_LIB_GENERATED ${CURRENT_LIB_GENERATED} PARENT_SCOPE)
 endfunction()

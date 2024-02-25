@@ -861,5 +861,5 @@ serenity_install_sources(Kernel)
 
 # Only x86 needs a Prekernel
 if ("${SERENITY_ARCH}" STREQUAL "x86_64")
-    add_subdirectory(Prekernel)
+    serenity_add_subdirectory(Prekernel)
 endif()

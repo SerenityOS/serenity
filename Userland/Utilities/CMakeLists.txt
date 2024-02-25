@@ -177,4 +177,4 @@ foreach(name IN LISTS FUZZER_TARGETS)
     target_link_libraries(test-fuzz PRIVATE "${FUZZER_DEPENDENCIES_${name}}")
 endforeach()
 
-add_subdirectory(pkg)
+serenity_add_subdirectory(pkg)

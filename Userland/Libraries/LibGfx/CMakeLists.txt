@@ -98,6 +98,7 @@ add_custom_command(
 )
 target_sources(LibGfx PRIVATE ${generated_sources})
 add_custom_target(generate_tiff_files_handler DEPENDS ${generated_sources})
+set_target_properties(generate_tiff_files_handler PROPERTIES FOLDER "${CMAKE_FOLDER}/Generated")
 add_dependencies(all_generated generate_tiff_files_handler)
 add_dependencies(LibGfx generate_tiff_files_handler)
 

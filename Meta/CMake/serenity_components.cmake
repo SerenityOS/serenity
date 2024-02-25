@@ -20,6 +20,7 @@ function(serenity_component name)
         SERENITY_COMPONENT_RECOMMENDED "${SERENITY_COMPONENT_RECOMMENDED}"
         SERENITY_COMPONENT_REQUIRED    "${SERENITY_COMPONENT_REQUIRED}"
         SERENITY_COMPONENT_DEPENDS     "${SERENITY_COMPONENT_DEPENDS}"
+        FOLDER                         "${CMAKE_FOLDER}/Components"
     )
     if(NOT "${SERENITY_COMPONENT_TARGETS}" STREQUAL "") # note: one component is /bin/false, which makes this tricky
         foreach(target IN LISTS SERENITY_COMPONENT_TARGETS)

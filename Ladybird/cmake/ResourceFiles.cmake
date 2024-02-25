@@ -122,7 +122,7 @@ function(copy_resource_set subdir)
 endfunction()
 
 function(copy_resources_to_build base_directory bundle_target)
-
+    set(CMAKE_FOLDER "${CMAKE_FOLDER}/CopyResources")
     add_custom_target("${bundle_target}_build_resource_files")
 
     copy_resource_set(fonts RESOURCES ${FONTS}
