@@ -24,9 +24,9 @@ static PDF::PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> render(PDF::Document& documen
 {
     auto page = TRY(document.get_page(page_index));
 
-    Gfx::IntSize page_size;
-    page_size.set_width(size.width);
-    page_size.set_height(size.height);
+    auto page_size = Gfx::IntSize { size.width, size.height };
+    if (int rotation_count = (page.rotate / 90) % 4; rotation_count % 2 == 1)
+        page_size = Gfx::IntSize { page_size.height(), page_size.width() };
 
     auto bitmap = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, page_size));
 
@@ -36,7 +36,7 @@ static PDF::PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> render(PDF::Document& documen
             NSLog(@"warning: %@", @(error.message().characters()));
     }
 
-    return bitmap;
+    return TRY(PDF::Renderer::apply_page_rotation(bitmap, page));
 }
 
 static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
