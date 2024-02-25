@@ -188,7 +188,7 @@ function(set_helper_process_properties)
         # Store helper processes in the same bundle directory as the main application
         set_target_properties(${targets} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "$<TARGET_FILE_DIR:ladybird>")
     else()
-        set_target_properties(${targets} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBEXECDIR}")
+        set_target_properties(${targets} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${IN_BUILD_PREFIX}${CMAKE_INSTALL_LIBEXECDIR}")
 
         if (NOT CMAKE_INSTALL_LIBEXECDIR STREQUAL "libexec")
             set_source_files_properties(Utilities.cpp PROPERTIES COMPILE_DEFINITIONS LADYBIRD_LIBEXECDIR="${CMAKE_INSTALL_LIBEXECDIR}")
@@ -257,7 +257,7 @@ create_ladybird_bundle(ladybird)
 set_helper_process_properties(${ladybird_helper_processes})
 
 include(cmake/ResourceFiles.cmake)
-set(resource_base_dir "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_DATADIR}/Lagom")
+set(resource_base_dir "${CMAKE_BINARY_DIR}/${IN_BUILD_PREFIX}${CMAKE_INSTALL_DATADIR}/Lagom")
 if (APPLE)
     set(resource_base_dir "$<TARGET_BUNDLE_DIR:ladybird>/Contents/Resources")
 endif()
