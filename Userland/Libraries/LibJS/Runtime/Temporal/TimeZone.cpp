@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2024, Shannon Booth <shannon@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -17,6 +18,7 @@
 #include <LibJS/Runtime/Temporal/PlainDateTime.h>
 #include <LibJS/Runtime/Temporal/TimeZone.h>
 #include <LibJS/Runtime/Temporal/TimeZoneConstructor.h>
+#include <LibJS/Runtime/Temporal/TimeZoneMethods.h>
 #include <LibJS/Runtime/Temporal/ZonedDateTime.h>
 #include <LibTimeZone/TimeZone.h>
 
@@ -389,7 +391,8 @@ ThrowCompletionOr<NonnullGCPtr<Instant>> builtin_time_zone_get_instant_for(VM& v
     // 1. Assert: dateTime has an [[InitializedTemporalDateTime]] internal slot.
 
     // 2. Let possibleInstants be ? GetPossibleInstantsFor(timeZone, dateTime).
-    auto possible_instants = TRY(get_possible_instants_for(vm, time_zone, date_time));
+    auto time_zone_record = TRY(create_time_zone_methods_record(vm, NonnullGCPtr<Object> { time_zone.as_object() }, { { TimeZoneMethod::GetPossibleInstantsFor } }));
+    auto possible_instants = TRY(get_possible_instants_for(vm, time_zone_record, date_time));
 
     // 3. Return ? DisambiguatePossibleInstants(possibleInstants, timeZone, dateTime, disambiguation).
     return disambiguate_possible_instants(vm, possible_instants, time_zone, date_time, disambiguation);
@@ -471,6 +474,8 @@ ThrowCompletionOr<NonnullGCPtr<Instant>> disambiguate_possible_instants(VM& vm, 
     // 16. Let nanoseconds be offsetAfter - offsetBefore.
     auto nanoseconds = offset_after - offset_before;
 
+    auto time_zone_record = TRY(create_time_zone_methods_record(vm, NonnullGCPtr<Object> { time_zone.as_object() }, { { TimeZoneMethod::GetPossibleInstantsFor } }));
+
     // 17. If disambiguation is "earlier", then
     if (disambiguation == "earlier"sv) {
         // a. Let earlier be ? AddDateTime(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]], dateTime.[[Calendar]], 0, 0, 0, 0, 0, 0, 0, 0, 0, -nanoseconds, undefined).
@@ -480,7 +485,7 @@ ThrowCompletionOr<NonnullGCPtr<Instant>> disambiguate_possible_instants(VM& vm, 
         auto* earlier_date_time = MUST(create_temporal_date_time(vm, earlier.year, earlier.month, earlier.day, earlier.hour, earlier.minute, earlier.second, earlier.millisecond, earlier.microsecond, earlier.nanosecond, date_time.calendar()));
 
         // c. Set possibleInstants to ? GetPossibleInstantsFor(timeZone, earlierDateTime).
-        auto possible_instants_ = TRY(get_possible_instants_for(vm, time_zone, *earlier_date_time));
+        auto possible_instants_ = TRY(get_possible_instants_for(vm, time_zone_record, *earlier_date_time));
 
         // d. If possibleInstants is empty, throw a RangeError exception.
         if (possible_instants_.is_empty())
@@ -500,7 +505,7 @@ ThrowCompletionOr<NonnullGCPtr<Instant>> disambiguate_possible_instants(VM& vm, 
     auto* later_date_time = MUST(create_temporal_date_time(vm, later.year, later.month, later.day, later.hour, later.minute, later.second, later.millisecond, later.microsecond, later.nanosecond, date_time.calendar()));
 
     // 21. Set possibleInstants to ? GetPossibleInstantsFor(timeZone, laterDateTime).
-    auto possible_instants_ = TRY(get_possible_instants_for(vm, time_zone, *later_date_time));
+    auto possible_instants_ = TRY(get_possible_instants_for(vm, time_zone_record, *later_date_time));
 
     // 22. Set n to possibleInstants's length.
     n = possible_instants_.size();
@@ -513,46 +518,82 @@ ThrowCompletionOr<NonnullGCPtr<Instant>> disambiguate_possible_instants(VM& vm, 
     return possible_instants_[n - 1];
 }
 
-// 11.6.13 GetPossibleInstantsFor ( timeZone, dateTime ), https://tc39.es/proposal-temporal/#sec-temporal-getpossibleinstantsfor
-ThrowCompletionOr<MarkedVector<NonnullGCPtr<Instant>>> get_possible_instants_for(VM& vm, Value time_zone, PlainDateTime& date_time)
+// 11.5.24 GetPossibleInstantsFor ( timeZoneRec, dateTime ), https://tc39.es/proposal-temporal/#sec-temporal-getpossibleinstantsfor
+ThrowCompletionOr<MarkedVector<NonnullGCPtr<Instant>>> get_possible_instants_for(VM& vm, TimeZoneMethods const& time_zone_record, PlainDateTime const& date_time)
 {
-    // 1. Assert: dateTime has an [[InitializedTemporalDateTime]] internal slot.
+    // 1. Let possibleInstants be ? TimeZoneMethodsRecordCall(timeZoneRec, GET-POSSIBLE-INSTANTS-FOR, « dateTime »).
+    auto possible_instants = TRY(time_zone_methods_record_call(vm, time_zone_record, TimeZoneMethod::GetPossibleInstantsFor, { { &date_time } }));
 
-    // 2. Let possibleInstants be ? Invoke(timeZone, "getPossibleInstantsFor", « dateTime »).
-    auto possible_instants = TRY(time_zone.invoke(vm, vm.names.getPossibleInstantsFor, &date_time));
+    // 2. If TimeZoneMethodsRecordIsBuiltin(timeZoneRec), return ! CreateListFromArrayLike(possibleInstants, « Object »).
+    if (time_zone_methods_record_is_builtin(time_zone_record)) {
+        auto list = MarkedVector<NonnullGCPtr<Instant>> { vm.heap() };
 
-    // 3. Let iteratorRecord be ? GetIterator(possibleInstants, sync).
+        (void)MUST(create_list_from_array_like(vm, possible_instants, [&list](auto value) -> ThrowCompletionOr<void> {
+            list.append(verify_cast<Instant>(value.as_object()));
+            return {};
+        }));
+
+        return list;
+    }
+
+    // 3. Let iteratorRecord be ? GetIterator(possibleInstants, SYNC).
     auto iterator = TRY(get_iterator(vm, possible_instants, IteratorHint::Sync));
 
     // 4. Let list be a new empty List.
     auto list = MarkedVector<NonnullGCPtr<Instant>> { vm.heap() };
 
-    // 5. Let next be true.
-    GCPtr<Object> next;
+    // 5. Repeat,
+    while (true) {
+        // a. Let value be ? IteratorStepValue(iteratorRecord).
+        auto value = TRY(iterator_step_value(vm, iterator));
 
-    // 6. Repeat, while next is not false,
-    do {
-        // a. Set next to ? IteratorStep(iteratorRecord).
-        next = TRY(iterator_step(vm, iterator));
+        // b. If value is DONE, then
+        if (!value.has_value()) {
+            // i. Let numResults be list's length.
+            auto num_results = list.size();
 
-        // b. If next is not false, then
-        if (next) {
-            // i. Let nextValue be ? IteratorValue(next).
-            auto next_value = TRY(iterator_value(vm, *next));
+            // ii. If numResults > 1, then
+            if (num_results > 1) {
+                // 1. Let epochNs be a new empty List.
+                // 2. For each value instant in list, do
+                //     a. Append instant.[[EpochNanoseconds]] to the end of the List epochNs.
+                //     FIXME: spec bug? shouldn't [[EpochNanoseconds]] just be called [[Nanoseconds]]?
+                // 3. Let min be the least element of the List epochNs.
+                // 4. Let max be the greatest element of the List epochNs.
 
-            // ii. If Type(nextValue) is not Object or nextValue does not have an [[InitializedTemporalInstant]] internal slot, then
-            if (!next_value.is_object() || !is<Instant>(next_value.as_object())) {
-                // 1. Let completion be ThrowCompletion(a newly created TypeError object).
-                auto completion = vm.throw_completion<TypeError>(ErrorType::NotAnObjectOfType, "Temporal.Instant");
+                auto const* min = &list.first()->nanoseconds().big_integer();
+                auto const* max = &list.first()->nanoseconds().big_integer();
 
-                // 2. Return ? IteratorClose(iteratorRecord, completion).
-                return iterator_close(vm, iterator, move(completion));
+                for (auto it = list.begin() + 1; it != list.end(); ++it) {
+                    auto const& value = it->ptr()->nanoseconds().big_integer();
+
+                    if (value < *min)
+                        min = &value;
+                    else if (value > *max)
+                        max = &value;
+                }
+
+                // 5. If abs(ℝ(max - min)) > nsPerDay, throw a RangeError exception.
+                if (max->minus(*min).unsigned_value() > ns_per_day_bigint.unsigned_value())
+                    return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidDuration);
             }
 
-            // iii. Append nextValue to the end of the List list.
-            list.append(verify_cast<Instant>(next_value.as_object()));
+            // iii. Return list.
+            return list;
         }
-    } while (next != nullptr);
+
+        // c. If value is not an Object or value does not have an [[InitializedTemporalInstant]] internal slot, then
+        if (!value->is_object() || !is<Instant>(value->as_object())) {
+            // i. Let completion be ThrowCompletion(a newly created TypeError object).
+            auto completion = vm.throw_completion<TypeError>(ErrorType::NotAnObjectOfType, "Temporal.Instant");
+
+            // ii. Return ? IteratorClose(iteratorRecord, completion).
+            return iterator_close(vm, iterator, move(completion));
+        }
+
+        // d. Append value to the end of the List list.
+        list.append(verify_cast<Instant>(value->as_object()));
+    }
 
     // 7. Return list.
     return { move(list) };

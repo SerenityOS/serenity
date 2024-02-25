@@ -81,7 +81,8 @@ ThrowCompletionOr<BigInt const*> interpret_iso_date_time_offset(VM& vm, i32 year
     VERIFY(offset_option.is_one_of("prefer"sv, "reject"sv));
 
     // 7. Let possibleInstants be ? GetPossibleInstantsFor(timeZone, dateTime).
-    auto possible_instants = TRY(get_possible_instants_for(vm, time_zone, *date_time));
+    auto time_zone_record = TRY(create_time_zone_methods_record(vm, NonnullGCPtr<Object> { time_zone.as_object() }, { { TimeZoneMethod::GetPossibleInstantsFor } }));
+    auto possible_instants = TRY(get_possible_instants_for(vm, time_zone_record, *date_time));
 
     // 8. For each element candidate of possibleInstants, do
     for (auto candidate : possible_instants) {
