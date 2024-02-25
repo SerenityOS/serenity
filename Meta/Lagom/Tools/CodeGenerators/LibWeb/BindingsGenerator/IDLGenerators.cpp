@@ -3187,16 +3187,27 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.setter_callback@)
 }
 )~~~");
         } else if (attribute.extended_attributes.contains("Replaceable"sv)) {
-            if (interface.name.is_one_of("Window")) {
+            if (interface.name == "Window"sv) {
                 attribute_generator.append(R"~~~(
 JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.setter_callback@)
 {
     auto this_value = vm.this_value();
-    if (!this_value.is_object() || !is<WindowProxy>(this_value.as_object()))
-        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "@namespaced_name@");
-    auto& window_proxy = static_cast<WindowProxy&>(this_value.as_object());
-    TRY(window_proxy.window()->internal_define_own_property("@attribute.name@", JS::PropertyDescriptor { .value = vm.argument(0), .writable = true }));
-    return JS::js_undefined();
+    JS::GCPtr<Window> window;
+    if (this_value.is_object()) {
+        if (is<WindowProxy>(this_value.as_object())) {
+            auto& window_proxy = static_cast<WindowProxy&>(this_value.as_object());
+            window = window_proxy.window();
+        } else if (is<Window>(this_value.as_object())) {
+            window = &static_cast<Window&>(this_value.as_object());
+        }
+    }
+
+    if (window) {
+        TRY(window->internal_define_own_property("@attribute.name@", JS::PropertyDescriptor { .value = vm.argument(0), .writable = true }));
+        return JS::js_undefined();
+    }
+
+    return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "@namespaced_name@");
 }
 )~~~");
             } else {
