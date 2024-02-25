@@ -8,6 +8,7 @@
 
 #include <LibGfx/Font/ScaledFont.h>
 #include <LibPDF/Fonts/SimpleFont.h>
+#include <LibPDF/Fonts/TrueTypeFont.h>
 #include <LibPDF/Fonts/Type1FontProgram.h>
 
 namespace PDF {
@@ -34,7 +35,7 @@ protected:
 private:
     DeprecatedFlyString m_base_font_name;
     RefPtr<Type1FontProgram> m_font_program;
-    RefPtr<Gfx::Font> m_font;
+    OwnPtr<TrueTypePainter> m_fallback_font_painter;
     HashMap<Type1GlyphCacheKey, RefPtr<Gfx::Bitmap>> m_glyph_cache;
 };
 

@@ -49,43 +49,39 @@ PDFErrorOr<void> Type1Font::initialize(Document* document, NonnullRefPtr<DictObj
         return Error::parse_error("Type1 fonts must not be CID-keyed"sv);
 
     if (!m_font_program) {
-        m_font = TRY(replacement_for(base_font_name().to_lowercase(), font_size));
+        // NOTE: We use this both for the 14 built-in fonts and for replacement fonts.
+        // We should probably separate these two cases.
+        auto font = TRY(replacement_for(base_font_name().to_lowercase(), font_size));
+
+        auto effective_encoding = encoding();
+        if (!effective_encoding)
+            effective_encoding = Encoding::standard_encoding();
+        m_fallback_font_painter = TrueTypePainter::create(document, dict, *this, *font, *effective_encoding);
     }
 
-    VERIFY(m_font_program || m_font);
+    VERIFY(m_font_program || m_fallback_font_painter);
     return {};
 }
 
 Optional<float> Type1Font::get_glyph_width(u8 char_code) const
 {
-    if (m_font)
-        return m_font->glyph_width(char_code);
+    if (m_fallback_font_painter)
+        return m_fallback_font_painter->get_glyph_width(char_code);
     return OptionalNone {};
 }
 
 void Type1Font::set_font_size(float font_size)
 {
-    if (m_font)
-        m_font = m_font->with_size((font_size * POINTS_PER_INCH) / DEFAULT_DPI);
+    if (m_fallback_font_painter)
+        m_fallback_font_painter->set_font_size(font_size);
 }
 
 PDFErrorOr<void> Type1Font::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u8 char_code, Renderer const& renderer)
 {
     auto style = renderer.state().paint_style;
 
-    if (!m_font_program) {
-        // Undo shift in Glyf::Glyph::append_simple_path() via OpenType::Font::rasterize_glyph().
-        auto position = point.translated(0, -m_font->pixel_metrics().ascent);
-        // FIXME: Bounding box and sample point look to be pretty wrong
-        if (style.has<Color>()) {
-            painter.draw_glyph(position, char_code, *m_font, style.get<Color>());
-        } else {
-            style.get<NonnullRefPtr<Gfx::PaintStyle>>()->paint(Gfx::IntRect(position.x(), position.y(), width, 0), [&](auto sample) {
-                painter.draw_glyph(position, char_code, *m_font, sample(Gfx::IntPoint(position.x(), position.y())));
-            });
-        }
-        return {};
-    }
+    if (!m_font_program)
+        return m_fallback_font_painter->draw_glyph(painter, point, width, char_code, renderer);
 
     auto effective_encoding = encoding();
     if (!effective_encoding)
