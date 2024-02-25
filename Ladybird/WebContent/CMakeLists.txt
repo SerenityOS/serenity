@@ -45,16 +45,16 @@ else()
     if (ANDROID)
         set(LIB_TYPE SHARED)
     endif()
-    add_library(webcontent ${LIB_TYPE} ${WEBCONTENT_SOURCES})
-    target_include_directories(webcontent PRIVATE ${SERENITY_SOURCE_DIR}/Userland/Services/)
-    target_include_directories(webcontent PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/..)
-    target_link_libraries(webcontent PRIVATE LibAudio LibCore LibFileSystem LibGfx LibIPC LibJS LibMain LibWeb LibWebSocket LibProtocol LibWebView LibImageDecoderClient)
-    target_sources(webcontent PUBLIC FILE_SET ladybird TYPE HEADERS
+    add_library(webcontent_svc ${LIB_TYPE} ${WEBCONTENT_SOURCES})
+    target_include_directories(webcontent_svc PRIVATE ${SERENITY_SOURCE_DIR}/Userland/Services/)
+    target_include_directories(webcontent_svc PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/..)
+    target_link_libraries(webcontent_svc PRIVATE LibAudio LibCore LibFileSystem LibGfx LibIPC LibJS LibMain LibWeb LibWebSocket LibProtocol LibWebView LibImageDecoderClient)
+    target_sources(webcontent_svc PUBLIC FILE_SET ladybird TYPE HEADERS
         BASE_DIRS ${SERENITY_SOURCE_DIR}
         FILES ../FontPlugin.h
               ../ImageCodecPlugin.h
     )
-    target_sources(webcontent PUBLIC FILE_SET server TYPE HEADERS
+    target_sources(webcontent_svc PUBLIC FILE_SET server TYPE HEADERS
         BASE_DIRS ${SERENITY_SOURCE_DIR}/Userland/Services
         FILES ${WEBCONTENT_SOURCE_DIR}/ConnectionFromClient.h
               ${WEBCONTENT_SOURCE_DIR}/ConsoleGlobalEnvironmentExtensions.h
@@ -65,35 +65,37 @@ else()
     )
 
     if (ANDROID)
-        target_sources(webcontent PRIVATE
+        target_sources(webcontent_svc PRIVATE
           ../Android/src/main/cpp/WebContentService.cpp
           ../Android/src/main/cpp/WebContentServiceJNI.cpp
           ../Android/src/main/cpp/LadybirdServiceBaseJNI.cpp
           ../Android/src/main/cpp/JNIHelpers.cpp
         )
-        target_link_libraries(webcontent PRIVATE android)
+        target_link_libraries(webcontent_svc PRIVATE android)
+        set_target_properties(webcontent_svc PROPERTIES OUTPUT_NAME "webcontent")
     endif()
 
     add_executable(WebContent main.cpp)
-    target_link_libraries(WebContent PRIVATE webcontent)
+    target_link_libraries(WebContent PRIVATE webcontent_svc)
 endif()
 
 target_include_directories(WebContent PRIVATE ${SERENITY_SOURCE_DIR}/Userland/Services/)
 target_include_directories(WebContent PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/..)
 target_link_libraries(WebContent PRIVATE LibAudio LibCore LibFileSystem LibGfx LibImageDecoderClient LibIPC LibJS LibMain LibWeb LibWebSocket LibProtocol LibWebView)
+set_helper_process_properties(WebContent)
 
 if (HAVE_PULSEAUDIO)
     target_compile_definitions(WebContent PRIVATE HAVE_PULSEAUDIO=1)
-    if (TARGET webcontent)
-        target_compile_definitions(webcontent PRIVATE HAVE_PULSEAUDIO=1)
+    if (TARGET webcontent_svc)
+        target_compile_definitions(webcontent_svc PRIVATE HAVE_PULSEAUDIO=1)
     endif()
 endif()
 
 if (HAS_ACCELERATED_GRAPHICS)
     target_compile_definitions(WebContent PRIVATE HAS_ACCELERATED_GRAPHICS)
     target_link_libraries(WebContent PRIVATE LibAccelGfx)
-    if (TARGET webcontent)
-        target_compile_definitions(webcontent PRIVATE HAS_ACCELERATED_GRAPHICS)
-        target_link_libraries(webcontent PRIVATE LibAccelGfx)
+    if (TARGET webcontent_svc)
+        target_compile_definitions(webcontent_svc PRIVATE HAS_ACCELERATED_GRAPHICS)
+        target_link_libraries(webcontent_svc PRIVATE LibAccelGfx)
     endif()
 endif()

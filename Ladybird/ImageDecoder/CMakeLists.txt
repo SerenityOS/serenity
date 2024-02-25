@@ -9,19 +9,21 @@ set(IMAGE_DECODER_SOURCES
 )
 
 if (ANDROID)
-    add_library(imagedecoder SHARED
+    add_library(imagedecoder_svc SHARED
             ${IMAGE_DECODER_SOURCES}
             ../Android/src/main/cpp/ImageDecoderService.cpp
             ../Android/src/main/cpp/LadybirdServiceBaseJNI.cpp
             ../Utilities.cpp
             )
+    set_target_properties(imagedecoder_svc PROPERTIES OUTPUT_NAME "imagedecoder")
 else()
-    add_library(imagedecoder STATIC ${IMAGE_DECODER_SOURCES})
+    add_library(imagedecoder_svc STATIC ${IMAGE_DECODER_SOURCES})
 endif()
 
 add_executable(ImageDecoder main.cpp)
-target_link_libraries(ImageDecoder PRIVATE imagedecoder LibMain)
+target_link_libraries(ImageDecoder PRIVATE imagedecoder_svc LibMain)
 
-target_include_directories(imagedecoder PRIVATE ${SERENITY_SOURCE_DIR}/Userland/Services/)
-target_include_directories(imagedecoder PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/..)
-target_link_libraries(imagedecoder PRIVATE LibCore LibGfx LibIPC LibImageDecoderClient LibMain)
+target_include_directories(imagedecoder_svc PRIVATE ${SERENITY_SOURCE_DIR}/Userland/Services/)
+target_include_directories(imagedecoder_svc PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/..)
+target_link_libraries(imagedecoder_svc PRIVATE LibCore LibGfx LibIPC LibImageDecoderClient LibMain)
+set_helper_process_properties(ImageDecoder)

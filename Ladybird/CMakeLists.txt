@@ -107,6 +107,10 @@ set(SOURCES
     HelperProcess.cpp
     Utilities.cpp
 )
+if (NOT APPLE AND NOT CMAKE_INSTALL_LIBEXECDIR STREQUAL "libexec")
+    set_source_files_properties(Utilities.cpp PROPERTIES COMPILE_DEFINITIONS LADYBIRD_LIBEXECDIR="${CMAKE_INSTALL_LIBEXECDIR}")
+endif()
+
 set(LADYBIRD_HEADERS
     HelperProcess.h
     Types.h
@@ -184,17 +188,30 @@ target_include_directories(ladybird PRIVATE ${SERENITY_SOURCE_DIR}/Userland/)
 target_include_directories(ladybird PRIVATE ${SERENITY_SOURCE_DIR}/Userland/Applications/)
 target_include_directories(ladybird PRIVATE ${SERENITY_SOURCE_DIR}/Userland/Services/)
 
-function(set_helper_process_properties)
-    set(targets ${ARGV})
+function(set_helper_process_properties target)
     if (APPLE)
         # Store helper processes in the same bundle directory as the main application
-        set_target_properties(${targets} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "$<TARGET_FILE_DIR:ladybird>")
+        # FIXME: For some reason, doing the simple thing for Xcode results in a duplicate rule to create Ladybird.app/Contents/MacOS
+        if (CMAKE_GENERATOR MATCHES "Xcode")
+            # FIXME: If we want to actually publish the app, we'll need to codesign properly... but for now, ad-hoc time
+            add_custom_command(TARGET ${target} POST_BUILD
+                COMMAND "${CMAKE_COMMAND}" -E make_directory "$<TARGET_FILE_DIR:ladybird>"
+                COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:${target}>" "$<TARGET_FILE_DIR:ladybird>"
+                COMMAND codesign --force --sign - "$<TARGET_FILE_DIR:ladybird>/$<TARGET_FILE_NAME:${target}>"
+            )
+        else()
+            set_target_properties(${target} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "$<TARGET_FILE_DIR:ladybird>")
+        endif()
     else()
-        set_target_properties(${targets} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBEXECDIR}")
+        get_property(is_multi_config GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+        if (is_multi_config)
+            set_target_properties(${target} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIG>/${CMAKE_INSTALL_LIBEXECDIR}")
+        else()
+            set_target_properties(${target} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBEXECDIR}")
+        endif()
 
         if (NOT CMAKE_INSTALL_LIBEXECDIR STREQUAL "libexec")
-            set_source_files_properties(Utilities.cpp PROPERTIES COMPILE_DEFINITIONS LADYBIRD_LIBEXECDIR="${CMAKE_INSTALL_LIBEXECDIR}")
-            set_source_files_properties(Utilities.cpp TARGET_DIRECTORY ${targets} PROPERTIES COMPILE_DEFINITIONS LADYBIRD_LIBEXECDIR="${CMAKE_INSTALL_LIBEXECDIR}")
+            set_source_files_properties(../Utilities.cpp PROPERTIES COMPILE_DEFINITIONS LADYBIRD_LIBEXECDIR="${CMAKE_INSTALL_LIBEXECDIR}")
         endif()
     endif()
 endfunction()
@@ -204,7 +221,7 @@ add_executable(headless-browser
     ${SERENITY_SOURCE_DIR}/Userland/Services/WebContent/WebDriverConnection.cpp
     HelperProcess.cpp
     Utilities.cpp)
-
+set_helper_process_properties(headless-browser)
 target_include_directories(headless-browser PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 target_link_libraries(headless-browser PRIVATE AK LibCore LibWeb LibWebView LibWebSocket LibCrypto LibFileSystem LibGemini LibHTTP LibImageDecoderClient LibJS LibGfx LibMain LibTLS LibIPC LibDiff LibProtocol)
 
@@ -258,7 +275,6 @@ function(create_ladybird_bundle target_name)
 endfunction()
 
 create_ladybird_bundle(ladybird)
-set_helper_process_properties(${ladybird_helper_processes})
 
 include(cmake/ResourceFiles.cmake)
 set(resource_base_dir "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_DATADIR}/Lagom")

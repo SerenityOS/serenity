@@ -14,11 +14,12 @@ set(WEBWORKER_SOURCES
 
 # FIXME: Add Android service
 
-add_library(webworker STATIC ${WEBWORKER_SOURCES})
+add_library(webworker_svc STATIC ${WEBWORKER_SOURCES})
 
-target_include_directories(webworker PRIVATE ${SERENITY_SOURCE_DIR}/Userland/Services/)
-target_include_directories(webworker PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/..)
-target_link_libraries(webworker PUBLIC LibCore LibFileSystem LibGfx LibIPC LibJS LibProtocol LibWeb LibWebView LibLocale LibImageDecoderClient LibMain)
+target_include_directories(webworker_svc PRIVATE ${SERENITY_SOURCE_DIR}/Userland/Services/)
+target_include_directories(webworker_svc PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/..)
+target_link_libraries(webworker_svc PUBLIC LibCore LibFileSystem LibGfx LibIPC LibJS LibProtocol LibWeb LibWebView LibLocale LibImageDecoderClient LibMain)
 
 add_executable(WebWorker main.cpp)
-target_link_libraries(WebWorker PRIVATE webworker)
+target_link_libraries(WebWorker PRIVATE webworker_svc)
+set_helper_process_properties(WebWorker)
