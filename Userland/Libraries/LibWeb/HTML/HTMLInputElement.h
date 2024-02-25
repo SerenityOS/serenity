@@ -226,6 +226,7 @@ private:
     void update_shadow_tree();
     void create_text_input_shadow_tree();
     void create_color_input_shadow_tree();
+    void create_file_input_shadow_tree();
     void create_range_input_shadow_tree();
     WebIDL::ExceptionOr<void> run_input_activation_behavior(DOM::Event const&);
     void set_checked_within_group();
@@ -254,6 +255,10 @@ private:
 
     void update_color_well_element();
     JS::GCPtr<DOM::Element> m_color_well_element;
+
+    void update_file_input_shadow_tree();
+    JS::GCPtr<DOM::Element> m_file_button;
+    JS::GCPtr<DOM::Element> m_file_label;
 
     void update_slider_thumb_element();
     JS::GCPtr<DOM::Element> m_slider_thumb;

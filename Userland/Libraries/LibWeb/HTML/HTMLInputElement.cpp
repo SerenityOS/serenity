@@ -69,6 +69,8 @@ void HTMLInputElement::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_placeholder_element);
     visitor.visit(m_placeholder_text_node);
     visitor.visit(m_color_well_element);
+    visitor.visit(m_file_button);
+    visitor.visit(m_file_label);
     visitor.visit(m_legacy_pre_activation_behavior_checked_element_in_group);
     visitor.visit(m_selected_files);
     visitor.visit(m_slider_thumb);
@@ -80,7 +82,7 @@ JS::GCPtr<Layout::Node> HTMLInputElement::create_layout_node(NonnullRefPtr<CSS::
     if (type_state() == TypeAttributeState::Hidden)
         return nullptr;
 
-    if (type_state() == TypeAttributeState::SubmitButton || type_state() == TypeAttributeState::Button || type_state() == TypeAttributeState::ResetButton || type_state() == TypeAttributeState::FileUpload)
+    if (type_state() == TypeAttributeState::SubmitButton || type_state() == TypeAttributeState::Button || type_state() == TypeAttributeState::ResetButton)
         return heap().allocate_without_realm<Layout::ButtonBox>(document(), *this, move(style));
 
     if (type_state() == TypeAttributeState::ImageButton)
@@ -600,6 +602,9 @@ void HTMLInputElement::create_shadow_tree_if_needed()
     case TypeAttributeState::Color:
         create_color_input_shadow_tree();
         break;
+    case TypeAttributeState::FileUpload:
+        create_file_input_shadow_tree();
+        break;
     case TypeAttributeState::Range:
         create_range_input_shadow_tree();
         break;
@@ -615,6 +620,9 @@ void HTMLInputElement::update_shadow_tree()
     switch (type_state()) {
     case TypeAttributeState::Color:
         update_color_well_element();
+        break;
+    case TypeAttributeState::FileUpload:
+        update_file_input_shadow_tree();
         break;
     case TypeAttributeState::Range:
         update_slider_thumb_element();
@@ -750,6 +758,53 @@ void HTMLInputElement::update_color_well_element()
         return;
 
     MUST(m_color_well_element->style_for_bindings()->set_property(CSS::PropertyID::BackgroundColor, m_value));
+}
+
+void HTMLInputElement::create_file_input_shadow_tree()
+{
+    auto& realm = this->realm();
+
+    auto shadow_root = heap().allocate<DOM::ShadowRoot>(realm, document(), *this, Bindings::ShadowRootMode::Closed);
+
+    m_file_button = DOM::create_element(document(), HTML::TagNames::button, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
+    m_file_label = DOM::create_element(document(), HTML::TagNames::label, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
+    MUST(m_file_label->set_attribute(HTML::AttributeNames::style, "padding-left: 4px;"_string));
+
+    auto on_button_click = [this](JS::VM&) {
+        show_the_picker_if_applicable(*this);
+        return JS::js_undefined();
+    };
+
+    auto on_button_click_function = JS::NativeFunction::create(realm, move(on_button_click), 0, "", &realm);
+    auto on_button_click_callback = realm.heap().allocate_without_realm<WebIDL::CallbackType>(on_button_click_function, Bindings::host_defined_environment_settings_object(realm));
+    m_file_button->add_event_listener_without_options(UIEvents::EventNames::click, DOM::IDLEventListener::create(realm, on_button_click_callback));
+
+    update_file_input_shadow_tree();
+
+    MUST(shadow_root->append_child(*m_file_button));
+    MUST(shadow_root->append_child(*m_file_label));
+
+    set_shadow_root(shadow_root);
+}
+
+void HTMLInputElement::update_file_input_shadow_tree()
+{
+    if (!m_file_button || !m_file_label)
+        return;
+
+    auto files_label = has_attribute(HTML::AttributeNames::multiple) ? "files"sv : "file"sv;
+    m_file_button->set_text_content(MUST(String::formatted("Select {}...", files_label)));
+
+    if (m_selected_files && m_selected_files->length() > 0) {
+        if (m_selected_files->length() == 1)
+            m_file_label->set_text_content(m_selected_files->item(0)->name());
+        else
+            m_file_label->set_text_content(MUST(String::formatted("{} files selected.", m_selected_files->length())));
+    } else {
+        m_file_label->set_text_content(MUST(String::formatted("No {} selected.", files_label)));
+    }
+
+    document().invalidate_layout();
 }
 
 void HTMLInputElement::create_range_input_shadow_tree()
