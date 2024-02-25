@@ -180,6 +180,7 @@ namespace AttributeNames {
     __ENUMERATE_HTML_ATTRIBUTE(onseeked)                   \
     __ENUMERATE_HTML_ATTRIBUTE(onseeking)                  \
     __ENUMERATE_HTML_ATTRIBUTE(onselect)                   \
+    __ENUMERATE_HTML_ATTRIBUTE(onselectionchange)          \
     __ENUMERATE_HTML_ATTRIBUTE(onslotchange)               \
     __ENUMERATE_HTML_ATTRIBUTE(onstalled)                  \
     __ENUMERATE_HTML_ATTRIBUTE(onstorage)                  \

@@ -88,6 +88,7 @@ namespace Web::HTML::EventNames {
     __ENUMERATE_HTML_EVENT(scroll)                   \
     __ENUMERATE_HTML_EVENT(scrollend)                \
     __ENUMERATE_HTML_EVENT(securitypolicyviolation)  \
+    __ENUMERATE_HTML_EVENT(selectionchange)          \
     __ENUMERATE_HTML_EVENT(seeked)                   \
     __ENUMERATE_HTML_EVENT(seeking)                  \
     __ENUMERATE_HTML_EVENT(select)                   \
