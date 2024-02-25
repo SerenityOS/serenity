@@ -76,8 +76,11 @@ void TrueTypeFont::set_font_size(float font_size)
     m_font = m_font->with_size((font_size * POINTS_PER_INCH) / DEFAULT_DPI);
 }
 
-static void do_draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint position, float width, u32 unicode, Gfx::Font const& font, ColorOrStyle const& style)
+static void do_draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u32 unicode, Gfx::Font const& font, ColorOrStyle const& style)
 {
+    // Undo shift in Glyf::Glyph::append_simple_path() via OpenType::Font::rasterize_glyph().
+    auto position = point.translated(0, -font.pixel_metrics().ascent);
+
     if (style.has<Color>()) {
         painter.draw_glyph(position, unicode, font, style.get<Color>());
     } else {
@@ -91,9 +94,6 @@ static void do_draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint position, float
 PDFErrorOr<void> TrueTypeFont::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u8 char_code, Renderer const& renderer)
 {
     auto style = renderer.state().paint_style;
-
-    // Undo shift in Glyf::Glyph::append_simple_path() via OpenType::Font::rasterize_glyph().
-    auto position = point.translated(0, -m_font->pixel_metrics().ascent);
 
     // 5.5.5 Character Encoding, Encodings for TrueType Fonts
     u32 unicode;
@@ -129,7 +129,7 @@ PDFErrorOr<void> TrueTypeFont::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint
         auto char_name = effective_encoding->get_name(char_code);
         u32 unicode = glyph_name_to_unicode(char_name).value_or(char_code);
         if (m_font->contains_glyph(unicode)) {
-            do_draw_glyph(painter, position, width, unicode, *m_font, style);
+            do_draw_glyph(painter, point, width, unicode, *m_font, style);
             return {};
         }
 
@@ -159,7 +159,7 @@ PDFErrorOr<void> TrueTypeFont::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint
         unicode = glyph_name_to_unicode(char_name).value_or(char_code);
     }
 
-    do_draw_glyph(painter, position, width, unicode, *m_font, style);
+    do_draw_glyph(painter, point, width, unicode, *m_font, style);
     return {};
 }
 
