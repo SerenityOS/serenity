@@ -12,6 +12,7 @@
 #include <LibWeb/Bindings/KeyframeEffectPrototype.h>
 #include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/CSS/PropertyID.h>
+#include <LibWeb/CSS/Selector.h>
 #include <LibWeb/CSS/StyleValue.h>
 
 namespace Web::Animations {
@@ -84,8 +85,12 @@ public:
     DOM::Element* target() const override { return m_target_element; }
     void set_target(DOM::Element* target);
 
-    Optional<String> pseudo_element() const { return m_target_pseudo_selector; }
-    void set_pseudo_element(Optional<String>);
+    // JS bindings
+    Optional<StringView> pseudo_element() const { return m_target_pseudo_selector->name(); }
+    WebIDL::ExceptionOr<void> set_pseudo_element(Optional<String>);
+
+    Optional<CSS::Selector::PseudoElement::Type> pseudo_element_type() const;
+    void set_pseudo_element(Optional<CSS::Selector::PseudoElement> pseudo_element) { m_target_pseudo_selector = pseudo_element; }
 
     Bindings::CompositeOperation composite() const { return m_composite; }
     void set_composite(Bindings::CompositeOperation value) { m_composite = value; }
@@ -109,7 +114,7 @@ private:
     JS::GCPtr<DOM::Element> m_target_element {};
 
     // https://www.w3.org/TR/web-animations-1/#dom-keyframeeffect-pseudoelement
-    Optional<String> m_target_pseudo_selector {};
+    Optional<CSS::Selector::PseudoElement> m_target_pseudo_selector {};
 
     // https://www.w3.org/TR/web-animations-1/#dom-keyframeeffect-composite
     Bindings::CompositeOperation m_composite { Bindings::CompositeOperation::Replace };

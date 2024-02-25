@@ -630,7 +630,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<KeyframeEffect>> KeyframeEffect::construct_
         // When assigning this property, the error-handling defined for the pseudoElement setter on the interface is
         // applied. If the setter requires an exception to be thrown, this procedure must throw the same exception and
         // abort all further steps.
-        effect->set_pseudo_element(options.get<KeyframeEffectOptions>().pseudo_element);
+        TRY(effect->set_pseudo_element(options.get<KeyframeEffectOptions>().pseudo_element));
     }
     //     Otherwise,
     else {
@@ -730,16 +730,14 @@ void KeyframeEffect::set_target(DOM::Element* target)
         m_target_element->associate_with_effect(*this);
 }
 
-void KeyframeEffect::set_pseudo_element(Optional<String> pseudo_element)
+WebIDL::ExceptionOr<void> KeyframeEffect::set_pseudo_element(Optional<String> pseudo_element)
 {
+    auto& realm = this->realm();
+
     // On setting, sets the target pseudo-selector of the animation effect to the provided value after applying the
     // following exceptions:
 
     // FIXME:
-    // - If the provided value is not null and is an invalid <pseudo-element-selector>, the user agent must throw a
-    //   DOMException with error name SyntaxError and leave the target pseudo-selector of this animation effect
-    //   unchanged.
-
     // - If one of the legacy Selectors Level 2 single-colon selectors (':before', ':after', ':first-letter', or
     //   ':first-line') is specified, the target pseudo-selector must be set to the equivalent two-colon selector
     //   (e.g. '::before').
@@ -747,12 +745,33 @@ void KeyframeEffect::set_pseudo_element(Optional<String> pseudo_element)
         auto value = pseudo_element.value();
 
         if (value == ":before" || value == ":after" || value == ":first-letter" || value == ":first-line") {
-            m_target_pseudo_selector = MUST(String::formatted(":{}", value));
-            return;
+            m_target_pseudo_selector = CSS::Selector::PseudoElement::from_string(MUST(value.substring_from_byte_offset(1)));
+            return {};
         }
     }
 
-    m_target_pseudo_selector = pseudo_element;
+    // - If the provided value is not null and is an invalid <pseudo-element-selector>, the user agent must throw a
+    //   DOMException with error name SyntaxError and leave the target pseudo-selector of this animation effect
+    //   unchanged.
+    if (pseudo_element.has_value()) {
+        auto pseudo_element_without_colons = MUST(pseudo_element->replace("::"sv, ""sv, ReplaceMode::FirstOnly));
+        if (auto value = CSS::Selector::PseudoElement::from_string(pseudo_element_without_colons); value.has_value()) {
+            m_target_pseudo_selector = value;
+        } else {
+            return WebIDL::SyntaxError::create(realm, MUST(String::formatted("Invalid pseudo-element selector: \"{}\"", pseudo_element.value())));
+        }
+    } else {
+        m_target_pseudo_selector = {};
+    }
+
+    return {};
+}
+
+Optional<CSS::Selector::PseudoElement::Type> KeyframeEffect::pseudo_element_type() const
+{
+    if (!m_target_pseudo_selector.has_value())
+        return {};
+    return m_target_pseudo_selector->type();
 }
 
 // https://www.w3.org/TR/web-animations-1/#dom-keyframeeffect-getkeyframes

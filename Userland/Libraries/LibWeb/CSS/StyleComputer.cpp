@@ -1074,6 +1074,8 @@ ErrorOr<void> StyleComputer::compute_cascaded_values(StyleProperties& style, DOM
             effect->set_timing_function(move(timing_function));
             effect->set_fill_mode(Animations::css_fill_mode_to_bindings_fill_mode(fill_mode));
             effect->set_playback_direction(Animations::css_animation_direction_to_bindings_playback_direction(direction));
+            if (pseudo_element.has_value())
+                effect->set_pseudo_element(Selector::PseudoElement { pseudo_element.value() });
 
             auto animation = CSSAnimation::create(realm);
             animation->set_id(animation_name.release_value());
@@ -1099,7 +1101,8 @@ ErrorOr<void> StyleComputer::compute_cascaded_values(StyleProperties& style, DOM
 
         if (auto effect = animation->effect(); effect && effect->is_keyframe_effect()) {
             auto& keyframe_effect = *static_cast<Animations::KeyframeEffect*>(effect.ptr());
-            TRY(collect_animation_into(keyframe_effect, style));
+            if (keyframe_effect.pseudo_element_type() == pseudo_element)
+                TRY(collect_animation_into(keyframe_effect, style));
         }
     }
 
