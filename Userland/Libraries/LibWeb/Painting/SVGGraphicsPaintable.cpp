@@ -80,7 +80,7 @@ RefPtr<Gfx::Bitmap> SVGGraphicsPaintable::calculate_mask(PaintContext& context, 
     auto mask = graphics_element.mask();
     VERIFY(mask);
     if (mask->mask_content_units() != SVG::MaskContentUnits::UserSpaceOnUse) {
-        dbgln("SVG: maskContentUnits=objectBoundingBox is not supported");
+        // FIXME: Implement support for maskContentUnits=objectBoundingBox
         return {};
     }
     auto mask_rect = context.enclosing_device_rect(masking_area);
