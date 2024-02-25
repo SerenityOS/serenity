@@ -675,7 +675,7 @@ def set_up_network_hardware(config: Configuration):
     if provided_ethernet_device_type is not None:
         config.ethernet_device_type = provided_ethernet_device_type
 
-    if config.architecture == Arch.Aarch64:
+    if config.architecture in [Arch.Aarch64, Arch.RISCV64]:
         config.network_backend = None
         config.network_default_device = None
     else:
