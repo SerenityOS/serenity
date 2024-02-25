@@ -53,7 +53,7 @@ HTMLElement includes HTMLOrSVGElement;
 interface mixin ElementContentEditable {
     [CEReactions] attribute DOMString contentEditable;
     // FIXME: [CEReactions] attribute DOMString enterKeyHint;
-    // FIXME: readonly attribute boolean isContentEditable;
+    readonly attribute boolean isContentEditable;
     // FIXME: [CEReactions] attribute DOMString inputMode;
 };
 

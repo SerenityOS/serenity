@@ -98,6 +98,14 @@ bool HTMLElement::is_focusable() const
     return m_content_editable_state == ContentEditableState::True;
 }
 
+// https://html.spec.whatwg.org/multipage/interaction.html#dom-iscontenteditable
+bool HTMLElement::is_content_editable() const
+{
+    // The isContentEditable IDL attribute, on getting, must return true if the element is either an editing host or
+    // editable, and false otherwise.
+    return is_editable();
+}
+
 StringView HTMLElement::content_editable() const
 {
     switch (m_content_editable_state) {
