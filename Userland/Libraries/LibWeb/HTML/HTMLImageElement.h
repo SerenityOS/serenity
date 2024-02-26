@@ -91,6 +91,7 @@ public:
     virtual Optional<CSSPixelFraction> intrinsic_aspect_ratio() const override;
     virtual RefPtr<Gfx::ImmutableBitmap> current_image_bitmap(Gfx::IntSize = {}) const override;
     virtual void set_visible_in_viewport(bool) override;
+    virtual JS::NonnullGCPtr<DOM::Element const> to_html_element() const override { return *this; }
 
     virtual void visit_edges(Cell::Visitor&) override;
 

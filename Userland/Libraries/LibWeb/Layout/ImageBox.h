@@ -32,6 +32,8 @@ public:
     void dom_node_did_update_alt_text(Badge<ImageProvider>);
 
 private:
+    virtual void visit_edges(Visitor&) override;
+
     ImageProvider const& m_image_provider;
 
     Optional<CSSPixels> m_cached_alt_text_width;

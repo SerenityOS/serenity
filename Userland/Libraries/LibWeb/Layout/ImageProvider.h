@@ -25,6 +25,8 @@ public:
     virtual RefPtr<Gfx::ImmutableBitmap> current_image_bitmap(Gfx::IntSize) const = 0;
     virtual void set_visible_in_viewport(bool) = 0;
 
+    virtual JS::NonnullGCPtr<DOM::Element const> to_html_element() const = 0;
+
 protected:
     static void did_update_alt_text(ImageBox&);
 };
