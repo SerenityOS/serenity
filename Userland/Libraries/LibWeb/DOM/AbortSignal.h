@@ -11,6 +11,7 @@
 #include <LibJS/Heap/HeapFunction.h>
 #include <LibWeb/DOM/EventTarget.h>
 #include <LibWeb/Forward.h>
+#include <LibWeb/WebIDL/Types.h>
 
 namespace Web::DOM {
 
@@ -44,6 +45,7 @@ public:
     void follow(JS::NonnullGCPtr<AbortSignal> parent_signal);
 
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<AbortSignal>> abort(JS::VM&, JS::Value reason);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<AbortSignal>> timeout(JS::VM&, Web::WebIDL::UnsignedLongLong milliseconds);
 
 private:
     explicit AbortSignal(JS::Realm&);

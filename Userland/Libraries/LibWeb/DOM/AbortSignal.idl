@@ -5,7 +5,7 @@
 [Exposed=(Window,Worker), CustomVisit]
 interface AbortSignal : EventTarget {
     [NewObject] static AbortSignal abort(optional any reason);
-    // FIXME: [Exposed=(Window,Worker), NewObject] static AbortSignal timeout([EnforceRange] unsigned long long milliseconds);
+    [Exposed=(Window,Worker), NewObject] static AbortSignal timeout([EnforceRange] unsigned long long milliseconds);
     // FIXME: [NewObject] static AbortSignal _any(sequence<AbortSignal> signals);
 
     readonly attribute boolean aborted;
