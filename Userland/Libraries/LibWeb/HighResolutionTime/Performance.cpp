@@ -23,6 +23,7 @@ JS_DEFINE_ALLOCATOR(Performance);
 Performance::Performance(HTML::Window& window)
     : DOM::EventTarget(window.realm())
     , m_window(window)
+    , m_timer(Core::TimerType::Precise)
 {
     m_timer.start();
 }
