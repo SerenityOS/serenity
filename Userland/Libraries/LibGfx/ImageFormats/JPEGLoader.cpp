@@ -454,7 +454,8 @@ struct JPEGLoadingContext {
 
     State state { State::NotDecoded };
 
-    Array<Optional<Array<u16, 64>>, 4> quantization_tables {};
+    Array<Array<u16, 64>, 4> quantization_tables {};
+    Array<bool, 4> registered_quantization_tables {};
 
     StartOfFrame frame;
     SamplingFactors sampling_factors {};
@@ -917,6 +918,15 @@ static ErrorOr<u16> read_effective_chunk_size(JPEGStream& stream)
     return stored_size - 2;
 }
 
+static ErrorOr<void> ensure_quantization_tables_are_present(JPEGLoadingContext& context)
+{
+    for (auto const& component : context.current_scan->components) {
+        if (!context.registered_quantization_tables[component.component.quantization_table_id])
+            return Error::from_string_literal("Unknown quantization table id");
+    }
+    return {};
+}
+
 static ErrorOr<void> read_start_of_scan(JPEGStream& stream, JPEGLoadingContext& context)
 {
     // B.2.3 - Scan header syntax
@@ -983,6 +993,8 @@ static ErrorOr<void> read_start_of_scan(JPEGStream& stream, JPEGLoadingContext& 
     }
 
     context.current_scan = move(current_scan);
+
+    TRY(ensure_quantization_tables_are_present(context));
 
     return {};
 }
@@ -1367,12 +1379,9 @@ static ErrorOr<void> read_quantization_table(JPEGStream& stream, JPEGLoadingCont
             return Error::from_string_literal("Unsupported quantization table id");
         }
 
-        auto& maybe_table = context.quantization_tables[table_id];
+        context.registered_quantization_tables[table_id] = true;
 
-        if (!maybe_table.has_value())
-            maybe_table = Array<u16, 64> {};
-
-        auto& table = maybe_table.value();
+        auto& table = context.quantization_tables[table_id];
 
         for (int i = 0; i < 64; i++) {
             if (element_unit_hint == 0)
@@ -1398,19 +1407,14 @@ static ErrorOr<void> skip_segment(JPEGStream& stream)
     return {};
 }
 
-static ErrorOr<void> dequantize(JPEGLoadingContext& context, Vector<Macroblock>& macroblocks)
+static void dequantize(JPEGLoadingContext& context, Vector<Macroblock>& macroblocks)
 {
     for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.sampling_factors.vertical) {
         for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.sampling_factors.horizontal) {
             for (u32 i = 0; i < context.components.size(); i++) {
                 auto const& component = context.components[i];
 
-                if (!context.quantization_tables[component.quantization_table_id].has_value()) {
-                    dbgln_if(JPEG_DEBUG, "Unknown quantization table id: {}!", component.quantization_table_id);
-                    return Error::from_string_literal("Unknown quantization table id");
-                }
-
-                auto const& table = context.quantization_tables[component.quantization_table_id].value();
+                auto const& table = context.quantization_tables[component.quantization_table_id];
 
                 for (u32 vfactor_i = 0; vfactor_i < component.sampling_factors.vertical; vfactor_i++) {
                     for (u32 hfactor_i = 0; hfactor_i < component.sampling_factors.horizontal; hfactor_i++) {
@@ -1424,8 +1428,6 @@ static ErrorOr<void> dequantize(JPEGLoadingContext& context, Vector<Macroblock>&
             }
         }
     }
-
-    return {};
 }
 
 static void inverse_dct_8x8(i16* block_component)
@@ -1967,7 +1969,7 @@ static ErrorOr<Vector<Macroblock>> construct_macroblocks(JPEGLoadingContext& con
 static ErrorOr<void> decode_jpeg(JPEGLoadingContext& context)
 {
     auto macroblocks = TRY(construct_macroblocks(context));
-    TRY(dequantize(context, macroblocks));
+    dequantize(context, macroblocks);
     inverse_dct(context, macroblocks);
     undo_subsampling(context, macroblocks);
     TRY(handle_color_transform(context, macroblocks));
