@@ -25,6 +25,7 @@ public:
 
 private:
     // ^JS::Cell
+    virtual void visit_edges(Visitor&) override;
     virtual void finalize() override;
 
     // ^Document::ViewportClient
@@ -34,6 +35,8 @@ private:
 
     bool m_renders_as_alt_text { false };
     String m_alt_text;
+
+    Layout::ImageProvider const& m_image_provider;
 };
 
 }
