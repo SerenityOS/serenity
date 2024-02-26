@@ -133,6 +133,7 @@ A general guide for contributing can be found in [`CONTRIBUTING.md`](CONTRIBUTIN
 * **Bastiaan van der Plaat** - [bplaat](https://github.com/bplaat)
 * **Dan Klishch** - [DanShaders](https://github.com/DanShaders)
 * **Julian Offenhäuser** - [janso3](https://github.com/janso3)
+* **Sönke Holz** - [spholz](https://github.com/spholz)
 
 And many more! [See here](https://github.com/SerenityOS/serenity/graphs/contributors) for a full contributor list. The people listed above have landed more than 100 commits in the project. :^)
 
