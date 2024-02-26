@@ -22,6 +22,12 @@ ImageBox::ImageBox(DOM::Document& document, DOM::Element& element, NonnullRefPtr
 
 ImageBox::~ImageBox() = default;
 
+void ImageBox::visit_edges(JS::Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_image_provider.to_html_element());
+}
+
 void ImageBox::prepare_for_replaced_layout()
 {
     set_natural_width(m_image_provider.intrinsic_width());
