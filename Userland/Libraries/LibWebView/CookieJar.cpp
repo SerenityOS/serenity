@@ -55,6 +55,10 @@ ErrorOr<CookieJar> CookieJar::create(Database& database)
             persistent=?
         WHERE ((name = ?) AND (domain = ?) AND (path = ?));)#"sv));
 
+    statements.update_cookie_last_access_time = TRY(database.prepare_statement(R"#(
+        UPDATE Cookies SET last_access_time=?
+        WHERE ((name = ?) AND (domain = ?) AND (path = ?));)#"sv));
+
     statements.insert_cookie = TRY(database.prepare_statement("INSERT INTO Cookies VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"sv));
     statements.expire_cookie = TRY(database.prepare_statement("DELETE FROM Cookies WHERE (expiry_time < ?);"sv));
     statements.select_cookie = TRY(database.prepare_statement("SELECT * FROM Cookies WHERE ((name = ?) AND (domain = ?) AND (path = ?));"sv));
@@ -447,9 +451,10 @@ Vector<Web::Cookie::Cookie> CookieJar::get_matching_cookies(const URL& url, Stri
 
     for (auto& cookie : cookie_list) {
         cookie.last_access_time = now;
-        update_cookie_in_database(cookie);
+        update_cookie_last_access_time_in_database(cookie);
     }
 
+    purge_expired_cookies();
     return cookie_list;
 }
 
@@ -557,6 +562,24 @@ void CookieJar::update_cookie_in_database(Web::Cookie::Cookie const& cookie)
                 cookie.http_only,
                 cookie.host_only,
                 cookie.persistent,
+                cookie.name,
+                cookie.domain,
+                cookie.path);
+        },
+        [&](TransientStorage& storage) {
+            CookieStorageKey key { cookie.name, cookie.domain, cookie.path };
+            storage.set(key, cookie);
+        });
+}
+
+void CookieJar::update_cookie_last_access_time_in_database(Web::Cookie::Cookie const& cookie)
+{
+    m_storage.visit(
+        [&](PersistedStorage& storage) {
+            storage.database.execute_statement(
+                storage.statements.update_cookie_last_access_time,
+                {}, {}, {},
+                cookie.last_access_time,
                 cookie.name,
                 cookie.domain,
                 cookie.path);

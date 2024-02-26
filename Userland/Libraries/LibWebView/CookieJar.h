@@ -33,6 +33,7 @@ class CookieJar {
         SQL::StatementID create_table { 0 };
         SQL::StatementID insert_cookie { 0 };
         SQL::StatementID update_cookie { 0 };
+        SQL::StatementID update_cookie_last_access_time { 0 };
         SQL::StatementID expire_cookie { 0 };
         SQL::StatementID select_cookie { 0 };
         SQL::StatementID select_all_cookies { 0 };
@@ -76,6 +77,7 @@ private:
 
     void insert_cookie_into_database(Web::Cookie::Cookie const& cookie);
     void update_cookie_in_database(Web::Cookie::Cookie const& cookie);
+    void update_cookie_last_access_time_in_database(Web::Cookie::Cookie const& cookie);
 
     using OnCookieFound = Function<void(Web::Cookie::Cookie&, Web::Cookie::Cookie)>;
     using OnCookieNotFound = Function<void(Web::Cookie::Cookie)>;
