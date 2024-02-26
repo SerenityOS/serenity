@@ -8,10 +8,11 @@
 
 #include <LibWeb/UIEvents/MouseEvent.h>
 #include <LibWeb/UIEvents/UIEvent.h>
+#include <LibWeb/WebIDL/Types.h>
 
 namespace Web::UIEvents {
 
-enum class WheelDeltaMode : unsigned long {
+enum class WheelDeltaMode : WebIDL::UnsignedLong {
     DOM_DELTA_PIXEL = 0,
     DOM_DELTA_LINE = 1,
     DOM_DELTA_PAGE = 2,
@@ -38,7 +39,7 @@ public:
     double delta_x() const { return m_delta_x; }
     double delta_y() const { return m_delta_y; }
     double delta_z() const { return m_delta_z; }
-    unsigned long delta_mode() const { return to_underlying(m_delta_mode); }
+    WebIDL::UnsignedLong delta_mode() const { return to_underlying(m_delta_mode); }
 
 private:
     WheelEvent(JS::Realm&, FlyString const& event_name, WheelEventInit const& event_init, double page_x, double page_y, double offset_x, double offset_y);

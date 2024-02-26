@@ -78,7 +78,7 @@ WebIDL::ExceptionOr<JS::Value> History::state() const
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#dom-history-go
-WebIDL::ExceptionOr<void> History::go(long delta = 0)
+WebIDL::ExceptionOr<void> History::go(WebIDL::Long delta = 0)
 {
     // 1. Let document be this's associated Document.
 

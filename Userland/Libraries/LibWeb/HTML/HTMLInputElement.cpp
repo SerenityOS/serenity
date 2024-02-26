@@ -1740,19 +1740,19 @@ WebIDL::ExceptionOr<void> HTMLInputElement::set_value_as_number(double value)
 }
 
 // https://html.spec.whatwg.org/multipage/input.html#dom-input-stepup
-WebIDL::ExceptionOr<void> HTMLInputElement::step_up(long n)
+WebIDL::ExceptionOr<void> HTMLInputElement::step_up(WebIDL::Long n)
 {
     return step_up_or_down(false, n);
 }
 
 // https://html.spec.whatwg.org/multipage/input.html#dom-input-stepdown
-WebIDL::ExceptionOr<void> HTMLInputElement::step_down(long n)
+WebIDL::ExceptionOr<void> HTMLInputElement::step_down(WebIDL::Long n)
 {
     return step_up_or_down(true, n);
 }
 
 // https://html.spec.whatwg.org/multipage/input.html#dom-input-stepup
-WebIDL::ExceptionOr<void> HTMLInputElement::step_up_or_down(bool is_down, long n)
+WebIDL::ExceptionOr<void> HTMLInputElement::step_up_or_down(bool is_down, WebIDL::Long n)
 {
     // 1. If the stepDown() and stepUp() methods do not apply, as defined for the input element's type attribute's current state, then throw an "InvalidStateError" DOMException.
     if (!step_up_or_down_applies())

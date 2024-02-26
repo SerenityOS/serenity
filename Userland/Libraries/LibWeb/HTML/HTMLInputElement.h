@@ -118,8 +118,8 @@ public:
     double value_as_number() const;
     WebIDL::ExceptionOr<void> set_value_as_number(double value);
 
-    WebIDL::ExceptionOr<void> step_up(long n = 1);
-    WebIDL::ExceptionOr<void> step_down(long n = 1);
+    WebIDL::ExceptionOr<void> step_up(WebIDL::Long n = 1);
+    WebIDL::ExceptionOr<void> step_down(WebIDL::Long n = 1);
 
     WebIDL::ExceptionOr<bool> check_validity();
     WebIDL::ExceptionOr<bool> report_validity();
@@ -221,7 +221,7 @@ private:
     double step_scale_factor() const;
     Optional<double> allowed_value_step() const;
     double step_base() const;
-    WebIDL::ExceptionOr<void> step_up_or_down(bool is_down, long n);
+    WebIDL::ExceptionOr<void> step_up_or_down(bool is_down, WebIDL::Long n);
 
     static TypeAttributeState parse_type_attribute(StringView);
     void create_shadow_tree_if_needed();

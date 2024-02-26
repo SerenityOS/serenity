@@ -11,6 +11,7 @@
 #include <LibJS/Heap/GCPtr.h>
 #include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/FileAPI/File.h>
+#include <LibWeb/WebIDL/Types.h>
 
 namespace Web::FileAPI {
 
@@ -23,7 +24,7 @@ public:
     virtual ~FileList() override;
 
     // https://w3c.github.io/FileAPI/#dfn-length
-    unsigned long length() const { return m_files.size(); }
+    WebIDL::UnsignedLong length() const { return m_files.size(); }
 
     // https://w3c.github.io/FileAPI/#dfn-item
     File* item(size_t index)
