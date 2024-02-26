@@ -39,7 +39,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     }
     auto loader = maybe_loader.release_value();
 
-    Core::ElapsedTimer sample_timer { true };
+    Core::ElapsedTimer sample_timer { Core::TimerType::Precise };
     i64 total_loader_time = 0;
     int remaining_samples = sample_count > 0 ? sample_count : NumericLimits<int>::max();
     unsigned total_loaded_samples = 0;

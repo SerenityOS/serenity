@@ -10,12 +10,17 @@
 
 namespace Core {
 
+enum class TimerType {
+    Precise,
+    Coarse
+};
+
 class ElapsedTimer {
 public:
     static ElapsedTimer start_new();
 
-    ElapsedTimer(bool precise = false)
-        : m_precise(precise)
+    ElapsedTimer(TimerType timer_type = TimerType::Coarse)
+        : m_timer_type(timer_type)
     {
     }
 
@@ -36,7 +41,7 @@ public:
 
 private:
     MonotonicTime m_origin_time { MonotonicTime::now() };
-    bool m_precise { false };
+    TimerType m_timer_type { TimerType::Coarse };
     bool m_valid { false };
 };
 

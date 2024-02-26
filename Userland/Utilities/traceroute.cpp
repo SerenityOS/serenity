@@ -78,7 +78,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     // 0: got ttl exhausted response
     // -1: error or no response
     auto try_reach_host = [&](int ttl) -> ErrorOr<int> {
-        Core::ElapsedTimer m_timer { true };
+        Core::ElapsedTimer m_timer { Core::TimerType::Precise };
         auto ttl_number = ByteString::number(ttl);
         for (auto i = 0; i < max_retries; i++) {
             icmp_request request {};
