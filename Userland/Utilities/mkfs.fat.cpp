@@ -570,28 +570,68 @@ static ErrorOr<void> format_fat32(Core::File& file, u64 file_size, u32 volume_id
     return {};
 }
 
+static ErrorOr<int> detect_fat_type_from_file_size(u64 file_size)
+{
+    u32 sector_count = file_size / 512;
+
+    auto check_table_for_support = [sector_count](auto const& table, bool fat12 = false) {
+        for (auto const& potential_entry : table) {
+            if (fat12 && sector_count == potential_entry.disk_size)
+                return true;
+            else if (!fat12 && sector_count <= potential_entry.disk_size)
+                return potential_entry.sectors_per_cluster != 0;
+        }
+        return false;
+    };
+
+    if (check_table_for_support(s_disk_table_fat12, true))
+        return 12;
+
+    if (file_size < 512 * MiB && check_table_for_support(s_disk_table_fat16))
+        return 16;
+
+    if (check_table_for_support(s_disk_table_fat32))
+        return 32;
+
+    return Error::from_string_literal("Unable to autodetect a compatible FAT variant");
+}
+
+static bool is_valid_fat_type(int fat_type)
+{
+    return fat_type == 12 || fat_type == 16 || fat_type == 32;
+}
+
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     StringView file_path;
-    int fat_type = 0;
+    Optional<int> fat_type_or_empty;
 
     struct timeval time;
     gettimeofday(&time, NULL);
     u32 volume_id = static_cast<u32>(time.tv_sec) | static_cast<u32>(time.tv_usec);
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(fat_type, "FAT type to use, valid types are 12, 16, and 32", "FAT-type", 'F', "FAT type");
+    args_parser.add_option(fat_type_or_empty, "FAT type to use, valid types are 12, 16, and 32", "FAT-type", 'F', "FAT type");
     args_parser.add_positional_argument(file_path, "File to format", "file", Core::ArgsParser::Required::Yes);
     args_parser.parse(arguments);
 
     auto file = TRY(Core::File::open(file_path, Core::File::OpenMode::ReadWrite | Core::File::OpenMode::DontCreate));
 
     u64 file_size = 0;
-
     if (FileSystem::is_device(file->fd()))
         file_size = TRY(FileSystem::block_device_size_from_ioctl(file->fd()));
     else
         file_size = TRY(FileSystem::size_from_fstat(file->fd()));
+
+    int fat_type = 0;
+    if (fat_type_or_empty.has_value()) {
+        fat_type = fat_type_or_empty.release_value();
+
+        if (!is_valid_fat_type(fat_type))
+            return Error::from_string_literal("Invalid FAT type specified, valid types are 12, 16, and 32");
+    } else {
+        fat_type = TRY(detect_fat_type_from_file_size(file_size));
+    }
 
     switch (fat_type) {
     case 12:
@@ -604,7 +644,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         TRY(format_fat32(*file, file_size, volume_id));
         break;
     default:
-        return Error::from_string_literal("Invalid or no FAT type specified, valid types are 12, 16, and 32");
+        VERIFY_NOT_REACHED();
     }
 
     sync();
