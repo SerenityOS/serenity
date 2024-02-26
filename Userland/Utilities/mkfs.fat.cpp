@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Array.h>
 #include <AK/Endian.h>
 #include <AK/Format.h>
 #include <AK/Types.h>
@@ -62,15 +63,15 @@ struct DiskSizeToSectorsPerClusterMapping {
 
 // NOTE: Unlike when using the tables after this one, the values here should only
 // be used if the given disk size is an exact match.
-static constexpr DiskSizeToSectorsPerClusterMapping s_disk_table_fat12[] = {
+static constexpr auto s_disk_table_fat12 = to_array<DiskSizeToSectorsPerClusterMapping>({
     { 720, 2 },  // 360K floppies
     { 1440, 2 }, // 720K floppies
     { 2400, 1 }, // 1200K floppies
     { 2880, 1 }, // 1440K floppies
     { 5760, 2 }, // 2880K floppies
-};
+});
 
-static constexpr DiskSizeToSectorsPerClusterMapping s_disk_table_fat16[] = {
+static constexpr auto s_disk_table_fat16 = to_array<DiskSizeToSectorsPerClusterMapping>({
     { 8400, 0 },       // disks up to 4.1 MiB, the 0 value for trips an error
     { 32680, 2 },      // disks up to 16 MiB, 1k cluster
     { 262144, 4 },     // disks up to 128 MiB, 2k cluster
@@ -79,16 +80,16 @@ static constexpr DiskSizeToSectorsPerClusterMapping s_disk_table_fat16[] = {
     { 2097152, 32 },   // disks up to 1 GiB, 16k cluster
     { 4194304, 64 },   // disks up to 2 GiB, 32k cluster
     { 0xFFFFFFFF, 0 }, // any disk greater than 2GiB, the 0 value trips an error
-};
+});
 
-static constexpr DiskSizeToSectorsPerClusterMapping s_disk_table_fat32[] = {
+static constexpr auto s_disk_table_fat32 = to_array<DiskSizeToSectorsPerClusterMapping>({
     { 66600, 0 },       // disks up to 32.5 MiB, the 0 value trips an error
     { 532480, 1 },      // disks up to 260 MiB, .5k cluster
     { 16777216, 8 },    // disks up to 8 GiB, 4k cluster
     { 33554432, 16 },   // disks up to 16 GiB, 8k cluster
     { 67108864, 32 },   // disks up to 32 GiB, 16k cluster
     { 0xFFFFFFFF, 64 }, // disks greater than 32GiB, 32k cluster
-};
+});
 
 static constexpr u8 s_boot_signature[2] = { 0x55, 0xAA };
 static constexpr u8 s_empty_12_bit_fat[4] = { 0xF0, 0xFF, 0xFF, 0x00 };
@@ -297,9 +298,9 @@ static ErrorOr<Kernel::DOS3BIOSParameterBlock> generate_dos_3_bios_parameter_blo
 
     switch (fat_type) {
     case FATType::FAT12:
-        for (size_t i = 0; i < sizeof(s_disk_table_fat12) / sizeof(s_disk_table_fat12[0]); ++i) {
-            if (boot_record.sector_count_16bit == s_disk_table_fat12[i].disk_size) {
-                boot_record.sectors_per_cluster = s_disk_table_fat12[i].sectors_per_cluster;
+        for (auto const& potential_entry : s_disk_table_fat12) {
+            if (boot_record.sector_count_16bit == potential_entry.disk_size) {
+                boot_record.sectors_per_cluster = potential_entry.sectors_per_cluster;
                 break;
             }
         }
@@ -309,9 +310,9 @@ static ErrorOr<Kernel::DOS3BIOSParameterBlock> generate_dos_3_bios_parameter_blo
 
         break;
     case FATType::FAT16:
-        for (size_t i = 0; i < sizeof(s_disk_table_fat16) / sizeof(s_disk_table_fat16[0]); ++i) {
-            if (get_fat16_sector_count() <= s_disk_table_fat16[i].disk_size) {
-                boot_record.sectors_per_cluster = s_disk_table_fat16[i].sectors_per_cluster;
+        for (auto const& potential_entry : s_disk_table_fat16) {
+            if (get_fat16_sector_count() <= potential_entry.disk_size) {
+                boot_record.sectors_per_cluster = potential_entry.sectors_per_cluster;
                 break;
             }
         }
@@ -325,9 +326,9 @@ static ErrorOr<Kernel::DOS3BIOSParameterBlock> generate_dos_3_bios_parameter_blo
         }
         break;
     case FATType::FAT32:
-        for (size_t i = 0; i < sizeof(s_disk_table_fat32) / sizeof(s_disk_table_fat32[0]); ++i) {
-            if (boot_record.sector_count_32bit <= s_disk_table_fat32[i].disk_size) {
-                boot_record.sectors_per_cluster = s_disk_table_fat32[i].sectors_per_cluster;
+        for (auto const& potential_entry : s_disk_table_fat32) {
+            if (boot_record.sector_count_32bit <= potential_entry.disk_size) {
+                boot_record.sectors_per_cluster = potential_entry.sectors_per_cluster;
                 break;
             }
         }
