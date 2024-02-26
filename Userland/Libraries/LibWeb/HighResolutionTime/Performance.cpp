@@ -52,7 +52,7 @@ JS::GCPtr<NavigationTiming::PerformanceTiming> Performance::timing()
 
 double Performance::time_origin() const
 {
-    return static_cast<double>(m_timer.origin_time().milliseconds());
+    return static_cast<double>(m_timer.origin_time().nanoseconds()) / 1e6;
 }
 
 // https://w3c.github.io/user-timing/#mark-method
