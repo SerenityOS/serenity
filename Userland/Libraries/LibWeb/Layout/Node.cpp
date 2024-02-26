@@ -830,6 +830,9 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     computed_values.set_math_depth(computed_style.math_depth());
     computed_values.set_quotes(computed_style.quotes());
 
+    if (auto object_fit = computed_style.object_fit(); object_fit.has_value())
+        computed_values.set_object_fit(object_fit.value());
+
     propagate_style_to_anonymous_wrappers();
 }
 
