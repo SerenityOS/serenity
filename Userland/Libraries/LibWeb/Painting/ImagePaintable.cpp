@@ -121,8 +121,8 @@ void ImagePaintable::paint(PaintContext& context, PaintPhase phase) const
             auto scaled_bitmap_width = bitmap_rect.width() * scale_x;
             auto scaled_bitmap_height = bitmap_rect.height() * scale_y;
 
-            auto residual_horizontal = image_int_rect.width() - scaled_bitmap_width;
-            auto residual_vertical = image_int_rect.height() - scaled_bitmap_height;
+            auto residual_horizontal = CSSPixels::nearest_value_for(image_int_rect.width() - scaled_bitmap_width);
+            auto residual_vertical = CSSPixels::nearest_value_for(image_int_rect.height() - scaled_bitmap_height);
 
             bitmap_intersect.set_x((bitmap_rect.width() - bitmap_intersect.width()) / 2);
             bitmap_intersect.set_y((bitmap_rect.height() - bitmap_intersect.height()) / 2);
@@ -135,17 +135,10 @@ void ImagePaintable::paint(PaintContext& context, PaintPhase phase) const
                 auto const& horizontal_edge = horizontal->as_edge();
                 auto const& offset = horizontal_edge.offset();
                 if (horizontal_edge.edge() == CSS::PositionEdge::Left) {
-                    if (offset.is_percentage())
-                        offset_x = (double)(residual_horizontal)*offset.percentage().as_fraction();
-                    else
-                        offset_x = offset.length().to_px(layout_node()).to_int();
-
+                    offset_x = offset.to_px(layout_node(), residual_horizontal).to_int();
                     bitmap_intersect.set_x(0);
                 } else if (horizontal_edge.edge() == CSS::PositionEdge::Right) {
-                    if (offset.is_percentage())
-                        offset_x = (double)residual_horizontal - (double)(residual_horizontal)*offset.percentage().as_fraction();
-                    else
-                        offset_x = residual_horizontal - offset.length().to_px(layout_node()).to_int();
+                    offset_x = residual_horizontal.to_int() - offset.to_px(layout_node(), residual_horizontal).to_int();
                 }
                 if (image_int_rect.width() < scaled_bitmap_width)
                     bitmap_intersect.set_x(-(offset_x / scale_x));
@@ -157,17 +150,10 @@ void ImagePaintable::paint(PaintContext& context, PaintPhase phase) const
                 auto const& vertical_edge = vertical->as_edge();
                 auto const& offset = vertical_edge.offset();
                 if (vertical_edge.edge() == CSS::PositionEdge::Top) {
-                    if (offset.is_percentage())
-                        offset_y = (double)(residual_vertical)*offset.percentage().as_fraction();
-                    else
-                        offset_y = offset.length().to_px(layout_node()).to_int();
-
+                    offset_y = offset.to_px(layout_node(), residual_vertical).to_int();
                     bitmap_intersect.set_y(0);
                 } else if (vertical_edge.edge() == CSS::PositionEdge::Bottom) {
-                    if (offset.is_percentage())
-                        offset_y = (double)residual_vertical - (double)(residual_vertical)*offset.percentage().as_fraction();
-                    else
-                        offset_y = residual_vertical - offset.length().to_px(layout_node()).to_int();
+                    offset_y = residual_vertical.to_int() - offset.to_px(layout_node(), residual_vertical).to_int();
                 }
                 if (image_int_rect.height() < scaled_bitmap_height)
                     bitmap_intersect.set_y(-(offset_y / scale_y));
