@@ -13,13 +13,14 @@
 #include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/WebIDL/Buffers.h>
+#include <LibWeb/WebIDL/Types.h>
 
 namespace Web::Encoding {
 
 // https://encoding.spec.whatwg.org/#dictdef-textencoderencodeintoresult
 struct TextEncoderEncodeIntoResult {
-    unsigned long long read;
-    unsigned long long written;
+    WebIDL::UnsignedLongLong read;
+    WebIDL::UnsignedLongLong written;
 };
 
 // https://encoding.spec.whatwg.org/#textencoder

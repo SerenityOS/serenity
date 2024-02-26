@@ -10,6 +10,7 @@
 #include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/HTML/HistoryHandlingBehavior.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
+#include <LibWeb/WebIDL/Types.h>
 
 namespace Web::HTML {
 
@@ -24,7 +25,7 @@ public:
 
     WebIDL::ExceptionOr<void> push_state(JS::Value data, String const& unused, Optional<String> const& url = {});
     WebIDL::ExceptionOr<void> replace_state(JS::Value data, String const& unused, Optional<String> const& url = {});
-    WebIDL::ExceptionOr<void> go(long delta);
+    WebIDL::ExceptionOr<void> go(WebIDL::Long delta);
     WebIDL::ExceptionOr<void> back();
     WebIDL::ExceptionOr<void> forward();
     WebIDL::ExceptionOr<u64> length() const;

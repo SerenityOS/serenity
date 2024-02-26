@@ -6,12 +6,14 @@
 
 #pragma once
 
+#include <LibWeb/WebIDL/Types.h>
+
 namespace Web::HTML {
 
 class NavigatorConcurrentHardwareMixin {
 public:
     // https://html.spec.whatwg.org/multipage/workers.html#dom-navigator-hardwareconcurrency
-    unsigned long long hardware_concurrency() { return 1; }
+    WebIDL::UnsignedLongLong hardware_concurrency() { return 1; }
 };
 
 }

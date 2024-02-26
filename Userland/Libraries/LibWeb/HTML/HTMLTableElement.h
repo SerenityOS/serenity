@@ -11,6 +11,7 @@
 #include <LibWeb/HTML/HTMLTableRowElement.h>
 #include <LibWeb/HTML/HTMLTableSectionElement.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
+#include <LibWeb/WebIDL/Types.h>
 
 namespace Web::HTML {
 
@@ -40,8 +41,8 @@ public:
     JS::NonnullGCPtr<HTMLTableSectionElement> create_t_body();
 
     JS::NonnullGCPtr<DOM::HTMLCollection> rows();
-    WebIDL::ExceptionOr<JS::NonnullGCPtr<HTMLTableRowElement>> insert_row(long index);
-    WebIDL::ExceptionOr<void> delete_row(long index);
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<HTMLTableRowElement>> insert_row(WebIDL::Long index);
+    WebIDL::ExceptionOr<void> delete_row(WebIDL::Long index);
 
     // https://www.w3.org/TR/html-aria/#el-table
     virtual Optional<ARIA::Role> default_role() const override { return ARIA::Role::table; }

@@ -55,9 +55,9 @@ TextEncoderEncodeIntoResult TextEncoder::encode_into(String const& source, JS::H
     auto& data = destination->viewed_array_buffer()->buffer();
 
     // 1. Let read be 0.
-    unsigned long long read = 0;
+    WebIDL::UnsignedLongLong read = 0;
     // 2. Let written be 0.
-    unsigned long long written = 0;
+    WebIDL::UnsignedLongLong written = 0;
 
     // NOTE: The AK::String is always UTF-8, so most of these steps are no-ops.
     // 3. Let encoder be an instance of the UTF-8 encoder.

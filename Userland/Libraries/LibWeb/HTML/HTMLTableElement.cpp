@@ -382,7 +382,7 @@ JS::NonnullGCPtr<DOM::HTMLCollection> HTMLTableElement::rows()
 }
 
 // https://html.spec.whatwg.org/multipage/tables.html#dom-table-insertrow
-WebIDL::ExceptionOr<JS::NonnullGCPtr<HTMLTableRowElement>> HTMLTableElement::insert_row(long index)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<HTMLTableRowElement>> HTMLTableElement::insert_row(WebIDL::Long index)
 {
     auto rows = this->rows();
     auto rows_length = rows->length();
@@ -408,7 +408,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<HTMLTableRowElement>> HTMLTableElement::ins
 }
 
 // https://html.spec.whatwg.org/multipage/tables.html#dom-table-deleterow
-WebIDL::ExceptionOr<void> HTMLTableElement::delete_row(long index)
+WebIDL::ExceptionOr<void> HTMLTableElement::delete_row(WebIDL::Long index)
 {
     auto rows = this->rows();
     auto rows_length = rows->length();
