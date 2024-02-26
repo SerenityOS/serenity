@@ -94,6 +94,8 @@ private:
 
     void create_shadow_tree_if_needed();
 
+    void handle_readonly_attribute(Optional<String> const& value);
+
     void update_placeholder_visibility();
     JS::GCPtr<DOM::Element> m_placeholder_element;
     JS::GCPtr<DOM::Text> m_placeholder_text_node;
@@ -101,7 +103,13 @@ private:
     JS::GCPtr<DOM::Element> m_inner_text_element;
     JS::GCPtr<DOM::Text> m_text_node;
 
-    bool m_dirty { false };
+    // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#concept-fe-dirty
+    bool m_dirty_value { false };
+
+    // https://html.spec.whatwg.org/multipage/form-elements.html#the-textarea-element:concept-fe-mutable
+    bool m_is_mutable { true };
+
+    // https://html.spec.whatwg.org/multipage/form-elements.html#concept-textarea-raw-value
     String m_raw_value;
 };
 
