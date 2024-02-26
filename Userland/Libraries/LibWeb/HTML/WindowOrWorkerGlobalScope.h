@@ -61,6 +61,8 @@ public:
 
     void queue_the_performance_observer_task();
 
+    void run_steps_after_a_timeout(i32 timeout, Function<void()> completion_step);
+
 protected:
     void initialize(JS::Realm&);
     void visit_edges(JS::Cell::Visitor&);
@@ -72,6 +74,7 @@ private:
         No,
     };
     i32 run_timer_initialization_steps(TimerHandler handler, i32 timeout, JS::MarkedVector<JS::Value> arguments, Repeat repeat, Optional<i32> previous_id = {});
+    void run_steps_after_a_timeout_impl(i32 timeout, Function<void()> completion_step, Optional<i32> timer_key = {});
 
     IDAllocator m_timer_id_allocator;
     HashMap<int, JS::NonnullGCPtr<Timer>> m_timers;
