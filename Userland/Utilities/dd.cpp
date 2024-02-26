@@ -45,7 +45,7 @@ struct {
     size_t total_bytes_copied = 0;
     size_t total_blocks_in = 0, partial_blocks_in = 0;
     size_t total_blocks_out = 0, partial_blocks_out = 0;
-    Core::ElapsedTimer timer { true };
+    Core::ElapsedTimer timer { Core::TimerType::Precise };
 } statistics;
 
 static void closing_statistics()
