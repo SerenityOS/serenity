@@ -1207,11 +1207,11 @@ String HTMLInputElement::value_sanitization_algorithm(String const& value) const
         auto maybe_value = parse_floating_point_number(value);
         if (!maybe_value.has_value() || !isfinite(maybe_value.value())) {
             // The default value is the minimum plus half the difference between the minimum and the maximum, unless the maximum is less than the minimum, in which case the default value is the minimum.
-            auto min = parse_floating_point_number(get_attribute(HTML::AttributeNames::min).value_or("0"_string)).value_or(0);
-            auto max = parse_floating_point_number(get_attribute(HTML::AttributeNames::max).value_or("1"_string)).value_or(1);
-            if (max > min)
-                return JS::number_to_string(min);
-            return JS::number_to_string(min + (max - min) / 2);
+            auto minimum = *min();
+            auto maximum = *max();
+            if (maximum > minimum)
+                return JS::number_to_string(minimum);
+            return JS::number_to_string(minimum + (maximum - minimum) / 2);
         }
     } else if (type_state() == HTMLInputElement::TypeAttributeState::Color) {
         // https://html.spec.whatwg.org/multipage/input.html#color-state-(type=color):value-sanitization-algorithm
