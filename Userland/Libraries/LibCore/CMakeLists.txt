@@ -8,6 +8,7 @@ set(SOURCES
     DirectoryEntry.cpp
     DirIterator.cpp
     ElapsedTimer.cpp
+    Environment.cpp
     Event.cpp
     EventLoop.cpp
     EventLoopImplementation.cpp
