@@ -28,8 +28,15 @@ ImagePaintable::ImagePaintable(Layout::ImageBox const& layout_box, String alt_te
     : PaintableBox(layout_box)
     , m_renders_as_alt_text(layout_box.renders_as_alt_text())
     , m_alt_text(move(alt_text))
+    , m_image_provider(layout_box.image_provider())
 {
     const_cast<DOM::Document&>(layout_box.document()).register_viewport_client(*this);
+}
+
+void ImagePaintable::visit_edges(JS::Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_image_provider.to_html_element());
 }
 
 void ImagePaintable::finalize()
@@ -59,7 +66,7 @@ void ImagePaintable::paint(PaintContext& context, PaintPhase phase) const
             auto enclosing_rect = context.enclosing_device_rect(absolute_rect()).to_type<int>();
             context.recording_painter().paint_frame(enclosing_rect, context.palette(), Gfx::FrameStyle::SunkenContainer);
             context.recording_painter().draw_text(enclosing_rect, m_alt_text, Platform::FontPlugin::the().default_font(), Gfx::TextAlignment::Center, computed_values().color(), Gfx::TextElision::Right);
-        } else if (auto bitmap = layout_box().image_provider().current_image_bitmap(image_rect.size().to_type<int>())) {
+        } else if (auto bitmap = m_image_provider.current_image_bitmap(image_rect.size().to_type<int>())) {
             ScopedCornerRadiusClip corner_clip { context, image_rect, normalized_border_radii_data(ShrinkRadiiForBorders::Yes) };
             auto image_int_rect = image_rect.to_type<int>();
             auto bitmap_rect = bitmap->rect();
@@ -180,7 +187,7 @@ void ImagePaintable::paint(PaintContext& context, PaintPhase phase) const
 
 void ImagePaintable::did_set_viewport_rect(CSSPixelRect const& viewport_rect)
 {
-    const_cast<Layout::ImageProvider&>(layout_box().image_provider()).set_visible_in_viewport(viewport_rect.intersects(absolute_rect()));
+    const_cast<Layout::ImageProvider&>(m_image_provider).set_visible_in_viewport(viewport_rect.intersects(absolute_rect()));
 }
 
 }
