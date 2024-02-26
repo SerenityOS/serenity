@@ -1026,10 +1026,24 @@ Optional<CSS::ObjectFit> StyleProperties::object_fit() const
     return value_id_to_object_fit(value->to_identifier());
 }
 
-CSS::PositionStyleValue const& StyleProperties::object_position() const
+CSS::ObjectPosition StyleProperties::object_position() const
 {
     auto value = property(CSS::PropertyID::ObjectPosition);
-    return value->as_position();
+    auto const& position = value->as_position();
+    CSS::ObjectPosition object_position;
+    auto const& edge_x = position.edge_x();
+    auto const& edge_y = position.edge_y();
+    if (edge_x->is_edge()) {
+        auto const& edge = edge_x->as_edge();
+        object_position.edge_x = edge.edge();
+        object_position.offset_x = edge.offset();
+    }
+    if (edge_y->is_edge()) {
+        auto const& edge = edge_y->as_edge();
+        object_position.edge_y = edge.edge();
+        object_position.offset_y = edge.offset();
+    }
+    return object_position;
 }
 
 Optional<CSS::TableLayout> StyleProperties::table_layout() const
