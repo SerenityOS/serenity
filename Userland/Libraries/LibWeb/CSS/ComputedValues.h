@@ -21,6 +21,7 @@
 #include <LibWeb/CSS/Ratio.h>
 #include <LibWeb/CSS/Size.h>
 #include <LibWeb/CSS/StyleValues/AbstractImageStyleValue.h>
+#include <LibWeb/CSS/StyleValues/PositionStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ShadowStyleValue.h>
 #include <LibWeb/CSS/Transformation.h>
 
@@ -74,6 +75,13 @@ struct ResolvedBackdropFilter {
     bool is_none() const { return filters.size() == 0; }
 
     Vector<FilterFunction> filters;
+};
+
+struct ObjectPosition {
+    PositionEdge edge_x { PositionEdge::Left };
+    CSS::LengthPercentage offset_x { Percentage(50) };
+    PositionEdge edge_y { PositionEdge::Top };
+    CSS::LengthPercentage offset_y { Percentage(50) };
 };
 
 class InitialValues {
@@ -154,6 +162,7 @@ public:
     static Vector<Vector<String>> grid_template_areas() { return {}; }
     static CSS::Time transition_delay() { return CSS::Time::make_seconds(0); }
     static CSS::ObjectFit object_fit() { return CSS::ObjectFit::Fill; }
+    static CSS::ObjectPosition object_position() { return {}; }
     static Color outline_color() { return Color::Black; }
     static CSS::Length outline_offset() { return CSS::Length::make_px(0); }
     static CSS::OutlineStyle outline_style() { return CSS::OutlineStyle::None; }
@@ -359,6 +368,7 @@ public:
     CSS::BorderCollapse border_collapse() const { return m_inherited.border_collapse; }
     Vector<Vector<String>> const& grid_template_areas() const { return m_noninherited.grid_template_areas; }
     CSS::ObjectFit object_fit() const { return m_noninherited.object_fit; }
+    CSS::ObjectPosition object_position() const { return m_noninherited.object_position; }
 
     CSS::LengthBox const& inset() const { return m_noninherited.inset; }
     const CSS::LengthBox& margin() const { return m_noninherited.margin; }
@@ -548,6 +558,7 @@ protected:
         CSS::Length outline_width { InitialValues::outline_width() };
         CSS::TableLayout table_layout { InitialValues::table_layout() };
         CSS::ObjectFit object_fit { InitialValues::object_fit() };
+        CSS::ObjectPosition object_position { InitialValues::object_position() };
 
         Optional<MaskReference> mask;
         CSS::MaskType mask_type { InitialValues::mask_type() };
@@ -660,6 +671,7 @@ public:
     void set_table_layout(CSS::TableLayout value) { m_noninherited.table_layout = value; }
     void set_quotes(CSS::QuotesData value) { m_inherited.quotes = value; }
     void set_object_fit(CSS::ObjectFit value) { m_noninherited.object_fit = value; }
+    void set_object_position(CSS::ObjectPosition value) { m_noninherited.object_position = value; }
 
     void set_fill(SVGPaint value) { m_inherited.fill = value; }
     void set_stroke(SVGPaint value) { m_inherited.stroke = value; }

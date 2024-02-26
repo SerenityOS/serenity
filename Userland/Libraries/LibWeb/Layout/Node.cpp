@@ -833,6 +833,8 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     if (auto object_fit = computed_style.object_fit(); object_fit.has_value())
         computed_values.set_object_fit(object_fit.value());
 
+    computed_values.set_object_position(computed_style.object_position());
+
     propagate_style_to_anonymous_wrappers();
 }
 

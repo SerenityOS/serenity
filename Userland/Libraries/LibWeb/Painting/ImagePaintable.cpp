@@ -71,7 +71,6 @@ void ImagePaintable::paint(PaintContext& context, PaintPhase phase) const
             auto image_int_rect = image_rect.to_type<int>();
             auto bitmap_rect = bitmap->rect();
             auto scaling_mode = to_gfx_scaling_mode(computed_values().image_rendering(), bitmap_rect, image_int_rect);
-            auto& dom_element = verify_cast<DOM::Element>(*dom_node());
             auto bitmap_aspect_ratio = (float)bitmap_rect.height() / bitmap_rect.width();
             auto image_aspect_ratio = (float)image_rect.height().value() / image_rect.width().value();
 
@@ -121,37 +120,27 @@ void ImagePaintable::paint(PaintContext& context, PaintPhase phase) const
             bitmap_intersect.set_x((bitmap_rect.width() - bitmap_intersect.width()) / 2);
             bitmap_intersect.set_y((bitmap_rect.height() - bitmap_intersect.height()) / 2);
 
-            CSS::PositionStyleValue const& object_position = dom_element.computed_css_values()->object_position();
+            auto const& object_position = computed_values().object_position();
 
             auto offset_x = 0;
-            auto const& horizontal = object_position.edge_x();
-            if (horizontal->is_edge()) {
-                auto const& horizontal_edge = horizontal->as_edge();
-                auto const& offset = horizontal_edge.offset();
-                if (horizontal_edge.edge() == CSS::PositionEdge::Left) {
-                    offset_x = offset.to_px(layout_node(), residual_horizontal).to_int();
-                    bitmap_intersect.set_x(0);
-                } else if (horizontal_edge.edge() == CSS::PositionEdge::Right) {
-                    offset_x = residual_horizontal.to_int() - offset.to_px(layout_node(), residual_horizontal).to_int();
-                }
-                if (image_int_rect.width() < scaled_bitmap_width)
-                    bitmap_intersect.set_x(-(offset_x / scale_x));
+            if (object_position.edge_x == CSS::PositionEdge::Left) {
+                offset_x = object_position.offset_x.to_px(layout_node(), residual_horizontal).to_int();
+                bitmap_intersect.set_x(0);
+            } else if (object_position.edge_x == CSS::PositionEdge::Right) {
+                offset_x = residual_horizontal.to_int() - object_position.offset_x.to_px(layout_node(), residual_horizontal).to_int();
             }
+            if (image_int_rect.width() < scaled_bitmap_width)
+                bitmap_intersect.set_x(-(offset_x / scale_x));
 
             auto offset_y = 0;
-            auto const& vertical = object_position.edge_y();
-            if (vertical->is_edge()) {
-                auto const& vertical_edge = vertical->as_edge();
-                auto const& offset = vertical_edge.offset();
-                if (vertical_edge.edge() == CSS::PositionEdge::Top) {
-                    offset_y = offset.to_px(layout_node(), residual_vertical).to_int();
-                    bitmap_intersect.set_y(0);
-                } else if (vertical_edge.edge() == CSS::PositionEdge::Bottom) {
-                    offset_y = residual_vertical.to_int() - offset.to_px(layout_node(), residual_vertical).to_int();
-                }
-                if (image_int_rect.height() < scaled_bitmap_height)
-                    bitmap_intersect.set_y(-(offset_y / scale_y));
+            if (object_position.edge_y == CSS::PositionEdge::Top) {
+                offset_y = object_position.offset_y.to_px(layout_node(), residual_vertical).to_int();
+                bitmap_intersect.set_y(0);
+            } else if (object_position.edge_y == CSS::PositionEdge::Bottom) {
+                offset_y = residual_vertical.to_int() - object_position.offset_y.to_px(layout_node(), residual_vertical).to_int();
             }
+            if (image_int_rect.height() < scaled_bitmap_height)
+                bitmap_intersect.set_y(-(offset_y / scale_y));
 
             Gfx::IntRect draw_rect = {
                 image_int_rect.x() + offset_x,
