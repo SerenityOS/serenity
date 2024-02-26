@@ -91,6 +91,7 @@ static void qt_timer_fired(Core::TimerShouldFireWhenNotVisible should_fire_when_
 intptr_t EventLoopManagerQt::register_timer(Core::EventReceiver& object, int milliseconds, bool should_reload, Core::TimerShouldFireWhenNotVisible should_fire_when_not_visible)
 {
     auto timer = new QTimer;
+    timer->setTimerType(Qt::PreciseTimer);
     timer->setInterval(milliseconds);
     timer->setSingleShot(!should_reload);
     auto weak_object = object.make_weak_ptr();
