@@ -350,6 +350,10 @@ install(TARGETS LibC LibCrypt LibSystem NoCoverage EXPORT LagomTargets)
 # AK
 add_serenity_subdirectory(AK)
 lagom_lib(AK ak SOURCES ${AK_SOURCES})
+if (${CMAKE_SYSTEM_NAME} MATCHES "BSD$" OR HAIKU)
+    # BSD Platforms and Haiku have backtrace(3) in a separate library
+    target_link_libraries(AK PRIVATE execinfo)
+endif()
 
 # LibCore
 add_serenity_subdirectory(Userland/Libraries/LibCore)
@@ -361,10 +365,6 @@ endif()
 if (${CMAKE_SYSTEM_NAME} MATCHES "SunOS")
     # Solaris has socket and networking related functions in two extra libraries
     target_link_libraries(LibCore PRIVATE nsl socket)
-endif()
-if (${CMAKE_SYSTEM_NAME} MATCHES "BSD$" OR HAIKU)
-    # BSD Platforms and Haiku have backtrace(3) in a separate library
-    target_link_libraries(LibCore PRIVATE execinfo)
 endif()
 if (HAIKU)
     # Haiku has networking related functions in the network library
