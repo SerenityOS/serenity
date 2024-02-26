@@ -20,11 +20,14 @@ namespace Web::Painting {
 
 JS::NonnullGCPtr<ImagePaintable> ImagePaintable::create(Layout::ImageBox const& layout_box)
 {
-    return layout_box.heap().allocate_without_realm<ImagePaintable>(layout_box);
+    auto alt = layout_box.dom_node().get_attribute_value(HTML::AttributeNames::alt);
+    return layout_box.heap().allocate_without_realm<ImagePaintable>(layout_box, move(alt));
 }
 
-ImagePaintable::ImagePaintable(Layout::ImageBox const& layout_box)
+ImagePaintable::ImagePaintable(Layout::ImageBox const& layout_box, String alt_text)
     : PaintableBox(layout_box)
+    , m_renders_as_alt_text(layout_box.renders_as_alt_text())
+    , m_alt_text(move(alt_text))
 {
     const_cast<DOM::Document&>(layout_box.document()).register_viewport_client(*this);
 }
@@ -52,12 +55,10 @@ void ImagePaintable::paint(PaintContext& context, PaintPhase phase) const
 
     if (phase == PaintPhase::Foreground) {
         auto image_rect = context.rounded_device_rect(absolute_rect());
-        if (layout_box().renders_as_alt_text()) {
-            auto const& image_element = verify_cast<HTML::HTMLElement>(*dom_node());
+        if (m_renders_as_alt_text) {
             auto enclosing_rect = context.enclosing_device_rect(absolute_rect()).to_type<int>();
             context.recording_painter().paint_frame(enclosing_rect, context.palette(), Gfx::FrameStyle::SunkenContainer);
-            auto alt = image_element.get_attribute_value(HTML::AttributeNames::alt);
-            context.recording_painter().draw_text(enclosing_rect, alt, Platform::FontPlugin::the().default_font(), Gfx::TextAlignment::Center, computed_values().color(), Gfx::TextElision::Right);
+            context.recording_painter().draw_text(enclosing_rect, m_alt_text, Platform::FontPlugin::the().default_font(), Gfx::TextAlignment::Center, computed_values().color(), Gfx::TextElision::Right);
         } else if (auto bitmap = layout_box().image_provider().current_image_bitmap(image_rect.size().to_type<int>())) {
             ScopedCornerRadiusClip corner_clip { context, image_rect, normalized_border_radii_data(ShrinkRadiiForBorders::Yes) };
             auto image_int_rect = image_rect.to_type<int>();

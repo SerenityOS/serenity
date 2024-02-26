@@ -30,7 +30,10 @@ private:
     // ^Document::ViewportClient
     virtual void did_set_viewport_rect(CSSPixelRect const&) final;
 
-    ImagePaintable(Layout::ImageBox const&);
+    ImagePaintable(Layout::ImageBox const&, String alt_text);
+
+    bool m_renders_as_alt_text { false };
+    String m_alt_text;
 };
 
 }
