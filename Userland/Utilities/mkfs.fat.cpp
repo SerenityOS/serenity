@@ -470,13 +470,17 @@ static Kernel::DOS7BIOSParameterBlock generate_dos_7_bios_parameter_block(Kernel
     return boot_record_fat32;
 }
 
-static Kernel::FAT32FSInfo generate_fat32_fs_info(Kernel::DOS7BIOSParameterBlock const& boot_record_fat32)
+static Kernel::FAT32FSInfo generate_fat32_fs_info(Kernel::DOS3BIOSParameterBlock const& boot_record, Kernel::DOS7BIOSParameterBlock const& boot_record_fat32)
 {
     Kernel::FAT32FSInfo fs_info {};
     fs_info.lead_signature = 0x41615252;
     __builtin_memset(&fs_info.unused1[0], 0, 480);
     fs_info.struct_signature = 0x61417272;
-    fs_info.last_known_free_cluster_count = 0xFFFFFFFF; // Signify that the amount of free clusters is unknown.
+    {
+        off_t const fat_sectors = boot_record_fat32.sectors_per_fat_32bit * boot_record.fat_count;
+        off_t const data_sector_count = boot_record.sector_count_32bit - boot_record.reserved_sector_count - fat_sectors;
+        fs_info.last_known_free_cluster_count = data_sector_count / boot_record.sectors_per_cluster - 1;
+    }
     fs_info.next_free_cluster_hint = boot_record_fat32.root_directory_cluster + 1;
     __builtin_memset(&fs_info.unused2[0], 0, 12);
     fs_info.trailing_signature = 0xAA550000;
@@ -525,7 +529,7 @@ static ErrorOr<void> format_fat32(Core::File& file, u64 file_size, u32 volume_id
 {
     auto boot_record = TRY(generate_dos_3_bios_parameter_block(file_size, FATType::FAT32));
     auto boot_record_fat32 = generate_dos_7_bios_parameter_block(boot_record, volume_id);
-    auto fs_info = generate_fat32_fs_info(boot_record_fat32);
+    auto fs_info = generate_fat32_fs_info(boot_record, boot_record_fat32);
     s_bootcode[s_message_offset_offset] = 0x77;
 
     TRY(wipe_file(file, file_size));
