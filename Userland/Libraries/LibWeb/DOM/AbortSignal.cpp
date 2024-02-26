@@ -9,6 +9,8 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/EventDispatcher.h>
 #include <LibWeb/HTML/EventHandler.h>
+#include <LibWeb/HTML/Window.h>
+#include <LibWeb/HTML/WindowOrWorkerGlobalScope.h>
 
 namespace Web::DOM {
 
@@ -129,6 +131,32 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<AbortSignal>> AbortSignal::abort(JS::VM& vm
     signal->set_reason(reason);
 
     // 3. Return signal.
+    return signal;
+}
+
+// https://dom.spec.whatwg.org/#dom-abortsignal-timeout
+WebIDL::ExceptionOr<JS::NonnullGCPtr<AbortSignal>> AbortSignal::timeout(JS::VM& vm, WebIDL::UnsignedLongLong milliseconds)
+{
+    auto& realm = *vm.current_realm();
+
+    // 1. Let signal be a new AbortSignal object.
+    auto signal = TRY(construct_impl(realm));
+
+    // 2. Let global be signal’s relevant global object.
+    auto& global = HTML::relevant_global_object(signal);
+    auto* window_or_worker = dynamic_cast<HTML::WindowOrWorkerGlobalScopeMixin*>(&global);
+    VERIFY(window_or_worker);
+
+    // 3. Run steps after a timeout given global, "AbortSignal-timeout", milliseconds, and the following step:
+    window_or_worker->run_steps_after_a_timeout(milliseconds, [&realm, &global, strong_signal = JS::make_handle(signal)]() {
+        // 1. Queue a global task on the timer task source given global to signal abort given signal and a new "TimeoutError" DOMException.
+        HTML::queue_global_task(HTML::Task::Source::TimerTask, global, [&realm, &strong_signal]() mutable {
+            auto reason = WebIDL::TimeoutError::create(realm, "Signal timed out"_fly_string);
+            strong_signal->signal_abort(reason);
+        });
+    });
+
+    // 4. Return signal.
     return signal;
 }
 
