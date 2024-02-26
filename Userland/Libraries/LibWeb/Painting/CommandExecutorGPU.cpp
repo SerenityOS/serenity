@@ -93,6 +93,13 @@ CommandResult CommandExecutorGPU::push_stacking_context(float opacity, bool is_f
     if (source_paintable_rect.is_empty())
         return CommandResult::SkipStackingContext;
 
+    // If, due to layout mistakes, we encounter an excessively large rectangle here, it must be skipped to prevent
+    // framebuffer allocation failure.
+    if (source_paintable_rect.width() > 10000 || source_paintable_rect.height() > 10000) {
+        dbgln("FIXME: Skipping stacking context with excessively large paintable rect: {}", source_paintable_rect);
+        return CommandResult::SkipStackingContext;
+    }
+
     m_stacking_contexts.last().stacking_context_depth++;
     painter().save();
     if (is_fixed_position) {
