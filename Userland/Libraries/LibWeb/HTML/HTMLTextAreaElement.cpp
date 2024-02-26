@@ -85,7 +85,7 @@ i32 HTMLTextAreaElement::default_tab_index_value() const
 void HTMLTextAreaElement::reset_algorithm()
 {
     // The reset algorithm for textarea elements is to set the dirty value flag back to false,
-    m_dirty = false;
+    m_dirty_value = false;
     // and set the raw value of element to its child text content.
     m_raw_value = child_text_content();
 
@@ -132,7 +132,7 @@ void HTMLTextAreaElement::set_value(String const& value)
     m_raw_value = value;
 
     // 3. Set this element's dirty value flag to true.
-    m_dirty = true;
+    m_dirty_value = true;
 
     // FIXME: 4. If the new API value is different from oldAPIValue, then move the text entry cursor position to the end of the text control, unselecting any selected text and resetting the selection direction to "none".
     update_placeholder_visibility();
@@ -203,7 +203,7 @@ void HTMLTextAreaElement::create_shadow_tree_if_needed()
     MUST(element->append_child(*m_inner_text_element));
 
     m_text_node = heap().allocate<DOM::Text>(realm(), document(), String {});
-    m_text_node->set_always_editable(true);
+    handle_readonly_attribute(attribute(HTML::AttributeNames::readonly));
     m_text_node->set_editable_text_node_owner(Badge<HTMLTextAreaElement> {}, *this);
     // NOTE: If `children_changed()` was called before now, `m_raw_value` will hold the text content.
     //       Otherwise, it will get filled in whenever that does get called.
@@ -211,6 +211,16 @@ void HTMLTextAreaElement::create_shadow_tree_if_needed()
     MUST(m_inner_text_element->append_child(*m_text_node));
 
     update_placeholder_visibility();
+}
+
+// https://html.spec.whatwg.org/multipage/input.html#attr-input-readonly
+void HTMLTextAreaElement::handle_readonly_attribute(Optional<String> const& maybe_value)
+{
+    // The readonly attribute is a boolean attribute that controls whether or not the user can edit the form control. When specified, the element is not mutable.
+    m_is_mutable = !maybe_value.has_value();
+
+    if (m_text_node)
+        m_text_node->set_always_editable(m_is_mutable);
 }
 
 void HTMLTextAreaElement::update_placeholder_visibility()
@@ -232,7 +242,7 @@ void HTMLTextAreaElement::children_changed()
 {
     // The children changed steps for textarea elements must, if the element's dirty value flag is false,
     // set the element's raw value to its child text content.
-    if (!m_dirty) {
+    if (!m_dirty_value) {
         m_raw_value = child_text_content();
         if (m_text_node)
             m_text_node->set_text_content(m_raw_value);
@@ -245,13 +255,15 @@ void HTMLTextAreaElement::form_associated_element_attribute_changed(FlyString co
     if (name == HTML::AttributeNames::placeholder) {
         if (m_placeholder_text_node)
             m_placeholder_text_node->set_data(value.value_or(String {}));
+    } else if (name == HTML::AttributeNames::readonly) {
+        handle_readonly_attribute(value);
     }
 }
 
 void HTMLTextAreaElement::did_edit_text_node(Badge<Web::HTML::BrowsingContext>)
 {
     // A textarea element's dirty value flag must be set to true whenever the user interacts with the control in a way that changes the raw value.
-    m_dirty = true;
+    m_dirty_value = true;
 
     update_placeholder_visibility();
 }
