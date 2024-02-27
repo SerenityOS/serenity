@@ -328,15 +328,15 @@ if (current_os != "mac") {
       "WebWorker",
     ]
     sources = [
-      "$root_out_dir/bin/ImageDecoder",
       "$root_out_dir/bin/Ladybird",
-      "$root_out_dir/bin/RequestServer",
-      "$root_out_dir/bin/SQLServer",
-      "$root_out_dir/bin/WebContent",
-      "$root_out_dir/bin/WebDriver",
-      "$root_out_dir/bin/WebSocket",
-      "$root_out_dir/bin/WebWorker",
-      "$root_out_dir/bin/headless-browser",
+      "$root_out_dir/libexec/ImageDecoder",
+      "$root_out_dir/libexec/RequestServer",
+      "$root_out_dir/libexec/SQLServer",
+      "$root_out_dir/libexec/WebContent",
+      "$root_out_dir/libexec/WebDriver",
+      "$root_out_dir/libexec/WebSocket",
+      "$root_out_dir/libexec/WebWorker",
+      "$root_out_dir/libexec/headless-browser",
     ]
     outputs = [ "{{bundle_executable_dir}}/{{source_file_part}}" ]
   }
