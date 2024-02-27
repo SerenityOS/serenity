@@ -238,6 +238,9 @@ static void get_ttglyph_offsets(ReadonlyBytes slice, u32 num_points, u32 flags_o
 
 ReadonlyBytes Glyf::Glyph::program() const
 {
+    if (m_num_contours == 0)
+        return {};
+
     auto instructions_start = m_num_contours * 2;
     u16 num_instructions = be_u16(m_slice.offset(instructions_start));
     return m_slice.slice(instructions_start + 2, num_instructions);
@@ -245,10 +248,11 @@ ReadonlyBytes Glyf::Glyph::program() const
 
 void Glyf::Glyph::append_path_impl(Gfx::Path& path, Gfx::AffineTransform const& transform) const
 {
+    if (m_num_contours == 0)
+        return;
+
     // Get offset for flags, x, and y.
-    u16 num_points = 0;
-    if (m_num_contours > 0)
-        num_points = be_u16(m_slice.offset((m_num_contours - 1) * 2)) + 1;
+    u16 num_points = be_u16(m_slice.offset((m_num_contours - 1) * 2)) + 1;
     u16 num_instructions = be_u16(m_slice.offset(m_num_contours * 2));
     u32 flags_offset = m_num_contours * 2 + 2 + num_instructions;
     u32 x_offset = 0;
