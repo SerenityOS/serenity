@@ -1956,9 +1956,11 @@ NonnullOwnPtr<StyleComputer::RuleCache> StyleComputer::make_rule_cache_for_casca
                     continue;
 
                 auto const& keyframe_style = static_cast<PropertyOwningCSSStyleDeclaration const&>(*keyframe_rule);
-                for (auto const& property : keyframe_style.properties()) {
-                    animated_properties.set(property.property_id);
-                    resolved_keyframe.resolved_properties.set(property.property_id, property.value);
+                for (auto const& it : keyframe_style.properties()) {
+                    for_each_property_expanding_shorthands(it.property_id, it.value, [&](PropertyID shorthand_id, StyleValue const& shorthand_value) {
+                        animated_properties.set(shorthand_id);
+                        resolved_keyframe.resolved_properties.set(shorthand_id, NonnullRefPtr<StyleValue const> { shorthand_value });
+                    });
                 }
 
                 keyframe_set->keyframes_by_key.insert(key, resolved_keyframe);
