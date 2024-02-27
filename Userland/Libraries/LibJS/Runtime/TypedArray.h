@@ -110,6 +110,18 @@ inline u32 typed_array_length(TypedArrayWithBufferWitness const& typed_array_rec
     return typed_array_length_with_known_valid_bounds(typed_array_record);
 }
 
+// Fast-path version of IsTypedArrayOutOfBounds when you already know the TA is not detached.
+bool is_typed_array_out_of_bounds_for_known_attached_array(TypedArrayWithBufferWitness const&);
+
+// 10.4.5.13 IsTypedArrayOutOfBounds ( taRecord ), https://tc39.es/ecma262/#sec-istypedarrayoutofbounds
+inline bool is_typed_array_out_of_bounds(TypedArrayWithBufferWitness const& typed_array_record)
+{
+    if (typed_array_record.cached_buffer_byte_length.is_detached())
+        return true;
+
+    return is_typed_array_out_of_bounds_for_known_attached_array(typed_array_record);
+}
+
 // 10.4.5.15 TypedArrayGetElement ( O, index ), https://tc39.es/ecma262/#sec-typedarraygetelement
 template<typename T>
 inline ThrowCompletionOr<Value> typed_array_get_element(TypedArrayBase const& typed_array, CanonicalIndex property_index)

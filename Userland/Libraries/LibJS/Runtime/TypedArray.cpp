@@ -668,7 +668,7 @@ u32 typed_array_length_with_known_valid_bounds(TypedArrayWithBufferWitness const
 }
 
 // 10.4.5.13 IsTypedArrayOutOfBounds ( taRecord ), https://tc39.es/ecma262/#sec-istypedarrayoutofbounds
-bool is_typed_array_out_of_bounds(TypedArrayWithBufferWitness const& typed_array_record)
+bool is_typed_array_out_of_bounds_for_known_attached_array(TypedArrayWithBufferWitness const& typed_array_record)
 {
     // 1. Let O be taRecord.[[Object]].
     auto object = typed_array_record.object;
@@ -677,11 +677,7 @@ bool is_typed_array_out_of_bounds(TypedArrayWithBufferWitness const& typed_array
     auto const& buffer_byte_length = typed_array_record.cached_buffer_byte_length;
 
     // 3. Assert: IsDetachedBuffer(O.[[ViewedArrayBuffer]]) is true if and only if bufferByteLength is detached.
-    VERIFY(object->viewed_array_buffer()->is_detached() == buffer_byte_length.is_detached());
-
     // 4. If bufferByteLength is detached, return true.
-    if (buffer_byte_length.is_detached())
-        return true;
 
     // 5. Let byteOffsetStart be O.[[ByteOffset]].
     auto byte_offset_start = object->byte_offset();
@@ -728,7 +724,7 @@ bool is_valid_integer_index(TypedArrayBase const& typed_array, CanonicalIndex pr
     // NOTE: Bounds checking is not a synchronizing operation when O's backing buffer is a growable SharedArrayBuffer.
 
     // 6. If IsTypedArrayOutOfBounds(taRecord) is true, return false.
-    if (is_typed_array_out_of_bounds(typed_array_record))
+    if (is_typed_array_out_of_bounds_for_known_attached_array(typed_array_record))
         return false;
 
     // 7. Let length be TypedArrayLength(taRecord).
