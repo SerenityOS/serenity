@@ -82,7 +82,7 @@ static ByteString format_operand_list(StringView name, ReadonlySpan<Operand> ope
 {
     StringBuilder builder;
     if (!name.is_empty())
-        builder.appendff(", \033[32{}\033[0m:[", name);
+        builder.appendff(", \033[32m{}\033[0m:[", name);
     for (size_t i = 0; i < operands.size(); ++i) {
         if (i != 0)
             builder.append(", "sv);
