@@ -138,6 +138,7 @@ position: static
 quotes: auto
 right: auto
 row-gap: auto
+scrollbar-width: auto
 stop-color: rgb(0, 0, 0)
 stop-opacity: 1
 stroke: none

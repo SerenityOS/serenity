@@ -177,6 +177,8 @@ public:
     static CSS::MathShift math_shift() { return CSS::MathShift::Normal; }
     static CSS::MathStyle math_style() { return CSS::MathStyle::Normal; }
     static int math_depth() { return 0; }
+
+    static CSS::ScrollbarWidth scrollbar_width() { return CSS::ScrollbarWidth::Auto; }
 };
 
 enum class BackgroundSize {
@@ -432,6 +434,8 @@ public:
     CSS::MathStyle math_style() const { return m_inherited.math_style; }
     int math_depth() const { return m_inherited.math_depth; }
 
+    CSS::ScrollbarWidth scrollbar_width() const { return m_noninherited.scrollbar_width; }
+
     NonnullOwnPtr<ComputedValues> clone_inherited_values() const
     {
         auto clone = make<ComputedValues>();
@@ -564,6 +568,8 @@ protected:
         CSS::MaskType mask_type { InitialValues::mask_type() };
         LengthPercentage x { InitialValues::x() };
         LengthPercentage y { InitialValues::x() };
+
+        CSS::ScrollbarWidth scrollbar_width { InitialValues::scrollbar_width() };
     } m_noninherited;
 };
 
@@ -694,6 +700,8 @@ public:
     void set_math_shift(CSS::MathShift value) { m_inherited.math_shift = value; }
     void set_math_style(CSS::MathStyle value) { m_inherited.math_style = value; }
     void set_math_depth(int value) { m_inherited.math_depth = value; }
+
+    void set_scrollbar_width(CSS::ScrollbarWidth value) { m_noninherited.scrollbar_width = value; }
 };
 
 }

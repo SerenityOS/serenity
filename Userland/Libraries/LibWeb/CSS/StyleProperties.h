@@ -158,6 +158,8 @@ public:
 
     QuotesData quotes() const;
 
+    Optional<CSS::ScrollbarWidth> scrollbar_width() const;
+
     static NonnullRefPtr<Gfx::Font const> font_fallback(bool monospace, bool bold);
 
 private:

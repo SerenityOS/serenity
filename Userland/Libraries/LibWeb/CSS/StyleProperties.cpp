@@ -1110,4 +1110,10 @@ QuotesData StyleProperties::quotes() const
     return InitialValues::quotes();
 }
 
+Optional<CSS::ScrollbarWidth> StyleProperties::scrollbar_width() const
+{
+    auto value = property(CSS::PropertyID::ScrollbarWidth);
+    return value_id_to_scrollbar_width(value->to_identifier());
+}
+
 }
