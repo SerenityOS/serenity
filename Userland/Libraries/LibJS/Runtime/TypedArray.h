@@ -94,9 +94,21 @@ struct TypedArrayWithBufferWitness {
 
 TypedArrayWithBufferWitness make_typed_array_with_buffer_witness_record(TypedArrayBase const&, ArrayBuffer::Order);
 u32 typed_array_byte_length(TypedArrayWithBufferWitness const&);
-u32 typed_array_length(TypedArrayWithBufferWitness const&);
 bool is_typed_array_out_of_bounds(TypedArrayWithBufferWitness const&);
 bool is_valid_integer_index(TypedArrayBase const&, CanonicalIndex);
+
+// Fast-path version of TypedArrayLength when you already know the TA is within its bounds,
+// i.e. you previously checked IsTypedArrayOutOfBounds.
+u32 typed_array_length_with_known_valid_bounds(TypedArrayWithBufferWitness const&);
+
+// 10.4.5.12 TypedArrayLength ( taRecord ), https://tc39.es/ecma262/#sec-typedarraylength
+inline u32 typed_array_length(TypedArrayWithBufferWitness const& typed_array_record)
+{
+    // 1. Assert: IsTypedArrayOutOfBounds(taRecord) is false.
+    VERIFY(!is_typed_array_out_of_bounds(typed_array_record));
+
+    return typed_array_length_with_known_valid_bounds(typed_array_record);
+}
 
 // 10.4.5.15 TypedArrayGetElement ( O, index ), https://tc39.es/ecma262/#sec-typedarraygetelement
 template<typename T>
