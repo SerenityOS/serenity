@@ -1205,24 +1205,24 @@ PDFErrorOr<Renderer::LoadedImage> Renderer::load_image(NonnullRefPtr<StreamObjec
     return LoadedImage { bitmap, is_image_mask };
 }
 
-Gfx::AffineTransform Renderer::calculate_image_space_transformation(int width, int height)
+Gfx::AffineTransform Renderer::calculate_image_space_transformation(Gfx::IntSize size)
 {
     // Image space maps to a 1x1 unit of user space and starts at the top-left
     auto image_space = state().ctm;
     image_space.multiply(Gfx::AffineTransform(
-        1.0f / width,
+        1.0f / size.width(),
         0.0f,
         0.0f,
-        -1.0f / height,
+        -1.0f / size.height(),
         0.0f,
         1.0f));
     return image_space;
 }
 
-void Renderer::show_empty_image(int width, int height)
+void Renderer::show_empty_image(Gfx::IntSize size)
 {
-    auto image_space_transformation = calculate_image_space_transformation(width, height);
-    auto image_border = image_space_transformation.map(Gfx::IntRect { 0, 0, width, height });
+    auto image_space_transformation = calculate_image_space_transformation(size);
+    auto image_border = image_space_transformation.map(Gfx::IntRect { {}, size });
     m_painter.stroke_path(rect_path(image_border), Color::Black, 1);
 }
 
@@ -1247,15 +1247,15 @@ static ErrorOr<void> apply_alpha_channel(NonnullRefPtr<Gfx::Bitmap> image_bitmap
 PDFErrorOr<void> Renderer::show_image(NonnullRefPtr<StreamObject> image)
 {
     auto image_dict = image->dict();
-    auto width = TRY(m_document->resolve_to<int>(image_dict->get_value(CommonNames::Width)));
-    auto height = TRY(m_document->resolve_to<int>(image_dict->get_value(CommonNames::Height)));
 
     OwnPtr<ClipRAII> clip_raii;
     if (m_rendering_preferences.clip_images)
         clip_raii = make<ClipRAII>(*this);
 
     if (!m_rendering_preferences.show_images) {
-        show_empty_image(width, height);
+        auto width = TRY(m_document->resolve_to<int>(image_dict->get_value(CommonNames::Width)));
+        auto height = TRY(m_document->resolve_to<int>(image_dict->get_value(CommonNames::Height)));
+        show_empty_image({ width, height });
         return {};
     }
     auto image_bitmap = TRY(load_image(image));
@@ -1285,8 +1285,8 @@ PDFErrorOr<void> Renderer::show_image(NonnullRefPtr<StreamObject> image)
         }
     }
 
-    auto image_space = calculate_image_space_transformation(width, height);
-    auto image_rect = Gfx::FloatRect { 0, 0, width, height };
+    auto image_space = calculate_image_space_transformation(image_bitmap.bitmap->size());
+    auto image_rect = Gfx::FloatRect { image_bitmap.bitmap->rect() };
     m_painter.draw_scaled_bitmap_with_transform(image_bitmap.bitmap->rect(), image_bitmap.bitmap, image_rect, image_space);
     return {};
 }

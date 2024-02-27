@@ -160,7 +160,7 @@ private:
     PDFErrorOr<LoadedImage> load_image(NonnullRefPtr<StreamObject>);
 
     PDFErrorOr<void> show_image(NonnullRefPtr<StreamObject>);
-    void show_empty_image(int width, int height);
+    void show_empty_image(Gfx::IntSize);
     PDFErrorOr<NonnullRefPtr<ColorSpace>> get_color_space_from_resources(Value const&, NonnullRefPtr<DictObject>);
     PDFErrorOr<NonnullRefPtr<ColorSpace>> get_color_space_from_document(NonnullRefPtr<Object>);
 
@@ -180,7 +180,7 @@ private:
 
     float line_width() const;
 
-    Gfx::AffineTransform calculate_image_space_transformation(int width, int height);
+    Gfx::AffineTransform calculate_image_space_transformation(Gfx::IntSize);
 
     PDFErrorOr<NonnullRefPtr<PDFFont>> get_font(FontCacheKey const&);
 
