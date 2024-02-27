@@ -2034,6 +2034,18 @@
     ],
     "percentages-resolve-to": "length"
   },
+  "scrollbar-width": {
+    "affects-layout": false,
+    "animation-type": "by-computed-value",
+    "inherited": false,
+    "initial": "auto",
+    "valid-types": [ "scrollbar-width" ],
+    "valid-identifiers": [
+      "auto",
+      "thin",
+      "none"
+    ]
+  },
   "stop-color": {
     "affects-layout": false,
     "animation-type": "by-computed-value",

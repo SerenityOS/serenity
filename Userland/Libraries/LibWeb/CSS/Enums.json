@@ -361,6 +361,11 @@
     "middle",
     "end"
   ],
+  "scrollbar-width": [
+    "auto",
+    "thin",
+    "none"
+  ],
   "text-align": [
     "center",
     "justify",
