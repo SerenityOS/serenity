@@ -22,6 +22,8 @@ source_set("sources") {
     "DirectoryEntry.h",
     "ElapsedTimer.cpp",
     "ElapsedTimer.h",
+    "Environment.cpp",
+    "Environment.h",
     "Event.cpp",
     "Event.h",
     "EventLoop.cpp",
