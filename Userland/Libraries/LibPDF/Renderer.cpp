@@ -1226,11 +1226,18 @@ void Renderer::show_empty_image(Gfx::IntSize size)
     m_painter.stroke_path(rect_path(image_border), Color::Black, 1);
 }
 
-static ErrorOr<void> apply_alpha_channel(NonnullRefPtr<Gfx::Bitmap> image_bitmap, NonnullRefPtr<const Gfx::Bitmap> mask_bitmap)
+static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> apply_alpha_channel(NonnullRefPtr<Gfx::Bitmap> image_bitmap, NonnullRefPtr<const Gfx::Bitmap> mask_bitmap)
 {
     // Make alpha mask same size as image.
-    if (mask_bitmap->size() != image_bitmap->size())
-        mask_bitmap = TRY(mask_bitmap->scaled_to_size(image_bitmap->size()));
+    if (mask_bitmap->size() != image_bitmap->size()) {
+        // Some files have 2x2 images for color and huge masks that contain rendered text outlines.
+        // So resize to the larger of the two.
+        auto new_size = Gfx::IntSize { max(image_bitmap->width(), mask_bitmap->width()), max(image_bitmap->height(), mask_bitmap->height()) };
+        if (image_bitmap->size() != new_size)
+            image_bitmap = TRY(image_bitmap->scaled_to_size(new_size));
+        if (mask_bitmap->size() != new_size)
+            mask_bitmap = TRY(mask_bitmap->scaled_to_size(new_size));
+    }
 
     image_bitmap->add_alpha_channel();
     for (int j = 0; j < image_bitmap->height(); ++j) {
@@ -1241,7 +1248,7 @@ static ErrorOr<void> apply_alpha_channel(NonnullRefPtr<Gfx::Bitmap> image_bitmap
             image_bitmap->set_pixel(i, j, image_color);
         }
     }
-    return {};
+    return image_bitmap;
 }
 
 PDFErrorOr<void> Renderer::show_image(NonnullRefPtr<StreamObject> image)
@@ -1274,12 +1281,12 @@ PDFErrorOr<void> Renderer::show_image(NonnullRefPtr<StreamObject> image)
         }
     } else if (image_dict->contains(CommonNames::SMask)) {
         auto smask_bitmap = TRY(load_image(TRY(image_dict->get_stream(m_document, CommonNames::SMask))));
-        TRY(apply_alpha_channel(image_bitmap.bitmap, smask_bitmap.bitmap));
+        image_bitmap.bitmap = TRY(apply_alpha_channel(image_bitmap.bitmap, smask_bitmap.bitmap));
     } else if (image_dict->contains(CommonNames::Mask)) {
         auto mask_object = TRY(image_dict->get_object(m_document, CommonNames::Mask));
         if (mask_object->is<StreamObject>()) {
             auto mask_bitmap = TRY(load_image(mask_object->cast<StreamObject>()));
-            TRY(apply_alpha_channel(image_bitmap.bitmap, mask_bitmap.bitmap));
+            image_bitmap.bitmap = TRY(apply_alpha_channel(image_bitmap.bitmap, mask_bitmap.bitmap));
         } else if (mask_object->is<ArrayObject>()) {
             return Error::rendering_unsupported_error("/Mask array objects not yet implemented");
         }
