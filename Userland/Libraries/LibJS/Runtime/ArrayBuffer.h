@@ -42,6 +42,14 @@ struct DataBlock {
     }
     ByteBuffer const& buffer() const { return const_cast<DataBlock*>(this)->buffer(); }
 
+    size_t size() const
+    {
+        return byte_buffer.visit(
+            [](Empty) -> size_t { return 0u; },
+            [](ByteBuffer const& buffer) { return buffer.size(); },
+            [](ByteBuffer const* buffer) { return buffer->size(); });
+    }
+
     Variant<Empty, ByteBuffer, ByteBuffer*> byte_buffer;
     Shared is_shared = { Shared::No };
 };
@@ -57,13 +65,7 @@ public:
 
     virtual ~ArrayBuffer() override = default;
 
-    size_t byte_length() const
-    {
-        if (is_detached())
-            return 0;
-
-        return m_data_block.buffer().size();
-    }
+    size_t byte_length() const { return m_data_block.size(); }
 
     // [[ArrayBufferData]]
     ByteBuffer& buffer() { return m_data_block.buffer(); }
