@@ -74,19 +74,38 @@ void TCPSocket::set_state(State new_state)
         // are packets on the way which we wouldn't want a new socket to get hit
         // with, so there's no point in keeping the receive buffer around.
         drop_receive_buffer();
-    }
 
-    if (new_state == State::Closed) {
-        closing_sockets().with_exclusive([&](auto& table) {
-            table.remove(tuple());
+        auto deadline = TimeManagement::the().current_time(CLOCK_MONOTONIC_COARSE) + maximum_segment_lifetime;
+        auto timer_was_added = TimerQueue::the().add_timer_without_id(*m_timer, CLOCK_MONOTONIC_COARSE, deadline, [&]() {
+            dbgln_if(TCP_SOCKET_DEBUG, "TCPSocket({}) TimeWait timer elpased", this);
+            if (m_state == State::TimeWait) {
+                m_state = State::Closed;
+                do_state_closed();
+            }
         });
 
-        if (m_originator)
-            release_to_originator();
+        if (!timer_was_added) [[unlikely]] {
+            dbgln_if(TCP_SOCKET_DEBUG, "TCPSocket({}) TimeWait timer deadline is in the past", this);
+            m_state = State::Closed;
+            new_state = State::Closed;
+        }
     }
+
+    if (new_state == State::Closed)
+        do_state_closed();
 
     if (previous_role != m_role || was_disconnected != protocol_is_disconnected())
         evaluate_block_conditions();
+}
+
+void TCPSocket::do_state_closed()
+{
+    if (m_originator)
+        release_to_originator();
+
+    closing_sockets().with_exclusive([&](auto& table) {
+        table.remove(tuple());
+    });
 }
 
 static Singleton<MutexProtected<HashMap<IPv4SocketTuple, RefPtr<TCPSocket>>>> s_socket_closing;
@@ -165,10 +184,11 @@ void TCPSocket::release_for_accept(NonnullRefPtr<TCPSocket> socket)
     [[maybe_unused]] auto rc = queue_connection_from(move(socket));
 }
 
-TCPSocket::TCPSocket(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer, NonnullOwnPtr<KBuffer> scratch_buffer)
+TCPSocket::TCPSocket(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer, NonnullOwnPtr<KBuffer> scratch_buffer, NonnullRefPtr<Timer> timer)
     : IPv4Socket(SOCK_STREAM, protocol, move(receive_buffer), move(scratch_buffer))
     , m_last_ack_sent_time(TimeManagement::the().monotonic_time())
     , m_last_retransmit_time(TimeManagement::the().monotonic_time())
+    , m_timer(timer)
 {
 }
 
@@ -183,7 +203,8 @@ ErrorOr<NonnullRefPtr<TCPSocket>> TCPSocket::try_create(int protocol, NonnullOwn
 {
     // Note: Scratch buffer is only used for SOCK_STREAM sockets.
     auto scratch_buffer = TRY(KBuffer::try_create_with_size("TCPSocket: Scratch buffer"sv, 65536));
-    return adopt_nonnull_ref_or_enomem(new (nothrow) TCPSocket(protocol, move(receive_buffer), move(scratch_buffer)));
+    auto timer = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Timer));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) TCPSocket(protocol, move(receive_buffer), move(scratch_buffer), timer));
 }
 
 ErrorOr<size_t> TCPSocket::protocol_size(ReadonlyBytes raw_ipv4_packet)

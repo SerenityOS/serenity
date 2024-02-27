@@ -15,6 +15,7 @@
 #include <Kernel/Library/LockWeakPtr.h>
 #include <Kernel/Locking/MutexProtected.h>
 #include <Kernel/Net/IPv4Socket.h>
+#include <Kernel/Time/TimerQueue.h>
 
 namespace Kernel {
 
@@ -179,7 +180,7 @@ protected:
     void set_direction(Direction direction) { m_direction = direction; }
 
 private:
-    explicit TCPSocket(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer, NonnullOwnPtr<KBuffer> scratch_buffer);
+    explicit TCPSocket(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer, NonnullOwnPtr<KBuffer> scratch_buffer, NonnullRefPtr<Timer> timer);
     virtual StringView class_name() const override { return "TCPSocket"sv; }
 
     virtual void shut_down_for_writing() override;
@@ -191,6 +192,8 @@ private:
     virtual bool protocol_is_disconnected() const override;
     virtual ErrorOr<void> protocol_bind() override;
     virtual ErrorOr<void> protocol_listen() override;
+
+    void do_state_closed();
 
     void enqueue_for_retransmit();
     void dequeue_for_retransmit();
@@ -236,6 +239,8 @@ private:
     u32 m_last_ack_number_sent { 0 };
     MonotonicTime m_last_ack_sent_time;
 
+    static constexpr Duration maximum_segment_lifetime = Duration::from_seconds(120);
+
     // FIXME: Make this configurable (sysctl)
     static constexpr u32 maximum_retransmits = 5;
     MonotonicTime m_last_retransmit_time;
@@ -252,6 +257,8 @@ private:
     IntrusiveListNode<TCPSocket> m_retransmit_list_node;
 
     Optional<IPv4SocketTuple> m_registered_socket_tuple;
+
+    NonnullRefPtr<Timer> m_timer;
 
 public:
     using RetransmitList = IntrusiveList<&TCPSocket::m_retransmit_list_node>;
