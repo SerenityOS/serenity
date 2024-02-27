@@ -68,6 +68,8 @@
 #    include <Kernel/Arch/aarch64/RPi/Framebuffer.h>
 #    include <Kernel/Arch/aarch64/RPi/Mailbox.h>
 #    include <Kernel/Arch/aarch64/RPi/MiniUART.h>
+#elif ARCH(RISCV64)
+#    include <Kernel/Arch/riscv64/Delay.h>
 #endif
 
 // Defined in the linker script
@@ -295,6 +297,8 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init([[maybe_unused]] BootInfo con
 
     if (kernel_command_line().contains("dump_fdt"sv))
         dump_fdt();
+
+    init_delay_loop();
 #endif
 
     // Initialize TimeManagement before using randomness!
