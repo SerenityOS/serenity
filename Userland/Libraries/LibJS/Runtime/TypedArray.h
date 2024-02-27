@@ -51,7 +51,7 @@ public:
 
     [[nodiscard]] Kind kind() const { return m_kind; }
 
-    virtual size_t element_size() const = 0;
+    u32 element_size() const { return m_element_size; }
     virtual DeprecatedFlyString const& element_name() const = 0;
 
     // 25.1.3.10 IsUnclampedIntegerElementType ( type ), https://tc39.es/ecma262/#sec-isunclampedintegerelementtype
@@ -66,14 +66,16 @@ public:
     virtual Value get_modify_set_value_in_buffer(size_t byte_index, Value value, ReadWriteModifyFunction operation, bool is_little_endian = true) = 0;
 
 protected:
-    TypedArrayBase(Object& prototype, IntrinsicConstructor intrinsic_constructor, Kind kind)
+    TypedArrayBase(Object& prototype, IntrinsicConstructor intrinsic_constructor, Kind kind, u32 element_size)
         : Object(ConstructWithPrototypeTag::Tag, prototype, MayInterfereWithIndexedPropertyAccess::Yes)
+        , m_element_size(element_size)
         , m_kind(kind)
         , m_intrinsic_constructor(intrinsic_constructor)
     {
         set_is_typed_array();
     }
 
+    u32 m_element_size { 0 };
     ByteLength m_array_length { 0 };
     ByteLength m_byte_length { 0 };
     u32 m_byte_offset { 0 };
@@ -481,8 +483,6 @@ public:
         return { reinterpret_cast<UnderlyingBufferDataType*>(m_viewed_array_buffer->buffer().data() + m_byte_offset), length };
     }
 
-    virtual size_t element_size() const override { return sizeof(UnderlyingBufferDataType); }
-
     bool is_unclamped_integer_element_type() const override
     {
         constexpr bool is_unclamped_integer = IsSame<T, i8> || IsSame<T, u8> || IsSame<T, i16> || IsSame<T, u16> || IsSame<T, i32> || IsSame<T, u32>;
@@ -501,7 +501,7 @@ public:
 
 protected:
     TypedArray(Object& prototype, IntrinsicConstructor intrinsic_constructor, u32 array_length, ArrayBuffer& array_buffer, Kind kind)
-        : TypedArrayBase(prototype, intrinsic_constructor, kind)
+        : TypedArrayBase(prototype, intrinsic_constructor, kind, sizeof(UnderlyingBufferDataType))
     {
         VERIFY(!Checked<u32>::multiplication_would_overflow(array_length, sizeof(UnderlyingBufferDataType)));
         m_viewed_array_buffer = &array_buffer;
