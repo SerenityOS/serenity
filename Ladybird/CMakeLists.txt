@@ -8,7 +8,7 @@ project(ladybird
 
 include(GNUInstallDirs)
 
-if (ANDROID)
+if (ANDROID OR IOS)
     set(BUILD_SHARED_LIBS OFF)
 endif()
 

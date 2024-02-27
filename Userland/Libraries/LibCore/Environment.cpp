@@ -10,7 +10,7 @@
 #include "Environment.h"
 #include <AK/ByteString.h>
 
-#if defined(AK_OS_MACOS)
+#if defined(AK_OS_MACOS) || defined(AK_OS_IOS)
 #    include <crt_externs.h>
 #else
 extern char** environ;
@@ -20,7 +20,7 @@ namespace Core::Environment {
 
 char** raw_environ()
 {
-#if defined(AK_OS_MACOS)
+#if defined(AK_OS_MACOS) || defined(AK_OS_IOS)
     return *_NSGetEnviron();
 #else
     return environ;
