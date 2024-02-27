@@ -7,6 +7,9 @@
 #include <AK/Types.h>
 #include <fenv.h>
 
+// This is the size of the floating point environment image in protected mode
+static_assert(sizeof(__x87_floating_point_environment) == 28);
+
 static u16 read_status_register()
 {
     u16 status_register;
@@ -114,8 +117,11 @@ int fegetround()
 
 int fesetround(int rounding_mode)
 {
-    if (rounding_mode < FE_TONEAREST || rounding_mode > FE_TOWARDZERO)
+    if (rounding_mode < FE_TONEAREST || rounding_mode > FE_TOMAXMAGNITUDE)
         return 1;
+
+    if (rounding_mode == FE_TOMAXMAGNITUDE)
+        rounding_mode = FE_TONEAREST;
 
     auto control_word = read_control_word();
 
