@@ -13,8 +13,6 @@
 #include <AK/Vector.h>
 #include <LibIPC/Forward.h>
 #include <LibJS/Forward.h>
-#include <LibJS/Runtime/DataView.h>
-#include <LibJS/Runtime/TypedArray.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
 // Structured serialize is an entirely different format from IPC because:

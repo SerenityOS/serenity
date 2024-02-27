@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include <LibJS/Runtime/TypedArray.h>
 #include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/Streams/ReadableByteStreamController.h>
