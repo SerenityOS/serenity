@@ -54,8 +54,28 @@ PDFErrorOr<void> Type1Font::initialize(Document* document, NonnullRefPtr<DictObj
         auto font = TRY(replacement_for(base_font_name().to_lowercase(), font_size));
 
         auto effective_encoding = encoding();
-        if (!effective_encoding)
-            effective_encoding = Encoding::standard_encoding();
+        if (!effective_encoding) {
+            // PDF 1.7 spec, APPENDIX D Character Sets and Encodings
+            // "Sections D.4, “Symbol Set and Encoding,” and D.5, “ZapfDingbats Set and Encoding,”
+            //  describe the character sets and built-in encodings for the Symbol and ZapfDingbats (ITC Zapf Dingbats)
+            //  font programs, which are among the standard 14 predefined fonts. These fonts have built-in encodings
+            //  that are unique to each font. (The characters for ZapfDingbats are ordered by code instead of by name,
+            //  since the names in that font are meaningless.)"
+            // FIXME: We use Liberation Sans for both Symbol and ZapfDingbats. It doesn't have all Symbol
+            //        characters, or at least not under the codepoints used in AdobeGlpyhList. It doesn't
+            //        have any ZapfDingbats characters, or at least not the names for it. Not sure what to do about
+            //        this -- we either need a different font, or need to tweak the encoding somehow.
+            //        (For Helvetica / Times / Courier, the Liberation family doesn't have the right metrics.)
+            if (base_font_name() == "Symbol"sv)
+                effective_encoding = Encoding::symbol_encoding();
+            else if (base_font_name() == "ZapfDingbats"sv)
+                effective_encoding = Encoding::zapf_encoding();
+            else
+                effective_encoding = Encoding::standard_encoding();
+        }
+
+        // FIXME: For the standard 14 fonts, set some m_flags bits (symbolic/nonsymbolic, italic, bold, fixed pitch, serif).
+
         m_fallback_font_painter = TrueTypePainter::create(document, dict, *this, *font, *effective_encoding);
     }
 
