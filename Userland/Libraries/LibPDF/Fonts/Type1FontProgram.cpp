@@ -107,7 +107,7 @@ Gfx::FloatPoint Type1FontProgram::glyph_translation(DeprecatedFlyString const& c
 
 Gfx::AffineTransform Type1FontProgram::glyph_transform_to_device_space(Glyph const& glyph, float width) const
 {
-    auto scale = width / (m_font_matrix.a() * glyph.width() + m_font_matrix.e());
+    auto scale = width == 0.0f ? 0.0f : (width / (m_font_matrix.a() * glyph.width() + m_font_matrix.e()));
     auto transform = m_font_matrix;
 
     // Convert character space to device space.
