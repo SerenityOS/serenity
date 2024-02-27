@@ -14,7 +14,7 @@
 
 #if defined(AK_OS_SERENITY)
 #    include <serenity.h>
-#elif defined(AK_OS_BSD_GENERIC)
+#elif !defined(AK_OS_IOS) && defined(AK_OS_BSD_GENERIC)
 #    include <sys/disk.h>
 #elif defined(AK_OS_LINUX)
 #    include <linux/fs.h>
@@ -230,7 +230,7 @@ ErrorOr<void> copy_file(StringView destination_path, StringView source_path, str
 
     if (has_flag(preserve_mode, PreserveMode::Timestamps)) {
         struct timespec times[2] = {
-#ifdef AK_OS_MACOS
+#if defined(AK_OS_MACOS) || defined(AK_OS_IOS)
             source_stat.st_atimespec,
             source_stat.st_mtimespec,
 #else
@@ -278,7 +278,7 @@ ErrorOr<void> copy_directory(StringView destination_path, StringView source_path
 
     if (has_flag(preserve_mode, PreserveMode::Timestamps)) {
         struct timespec times[2] = {
-#ifdef AK_OS_MACOS
+#if defined(AK_OS_MACOS) || defined(AK_OS_IOS)
             source_stat.st_atimespec,
             source_stat.st_mtimespec,
 #else

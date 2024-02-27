@@ -47,7 +47,7 @@ static int memfd_create(char const* name, unsigned int flags)
 }
 #endif
 
-#if defined(AK_OS_MACOS)
+#if defined(AK_OS_MACOS) || defined(AK_OS_IOS)
 #    include <mach-o/dyld.h>
 #    include <sys/mman.h>
 #else
@@ -140,7 +140,7 @@ static ErrorOr<Optional<struct group>> getgrent_impl(Span<char> buffer)
 namespace Core::System {
 
 #ifndef HOST_NAME_MAX
-#    ifdef AK_OS_MACOS
+#    if defined(AK_OS_MACOS) || defined(AK_OS_IOS)
 #        define HOST_NAME_MAX 255
 #    else
 #        define HOST_NAME_MAX 64
@@ -399,7 +399,7 @@ ErrorOr<Optional<struct spwd>> getspnam(StringView name)
 }
 #endif
 
-#if !defined(AK_OS_MACOS) && !defined(AK_OS_HAIKU)
+#if !defined(AK_OS_MACOS) && !defined(AK_OS_IOS) && !defined(AK_OS_HAIKU)
 ErrorOr<int> accept4(int sockfd, sockaddr* address, socklen_t* address_length, int flags)
 {
     auto fd = ::accept4(sockfd, address, address_length, flags);
@@ -898,17 +898,19 @@ ErrorOr<Optional<struct group>> getgrnam(StringView name)
         return Optional<struct group> {};
 }
 
+#if !defined(AK_OS_IOS)
 ErrorOr<void> clock_settime(clockid_t clock_id, struct timespec* ts)
 {
-#ifdef AK_OS_SERENITY
+#    ifdef AK_OS_SERENITY
     int rc = syscall(SC_clock_settime, clock_id, ts);
     HANDLE_SYSCALL_RETURN_VALUE("clocksettime", rc, {});
-#else
+#    else
     if (::clock_settime(clock_id, ts) < 0)
         return Error::from_syscall("clocksettime"sv, -errno);
     return {};
-#endif
+#    endif
 }
+#endif
 
 static ALWAYS_INLINE ErrorOr<pid_t> posix_spawn_wrapper(StringView path, posix_spawn_file_actions_t const* file_actions, posix_spawnattr_t const* attr, char* const arguments[], char* const envp[], StringView function_name, decltype(::posix_spawn) spawn_function)
 {
@@ -1379,7 +1381,7 @@ ErrorOr<void> exec(StringView filename, ReadonlySpan<StringView> arguments, Sear
         envp[environment->size()] = nullptr;
 
         if (search_in_path == SearchInPath::Yes && !filename.contains('/')) {
-#    if defined(AK_OS_MACOS) || defined(AK_OS_FREEBSD) || defined(AK_OS_SOLARIS)
+#    if defined(AK_OS_MACOS) || defined(AK_OS_IOS) || defined(AK_OS_FREEBSD) || defined(AK_OS_SOLARIS)
             // These BSDs don't support execvpe(), so we'll have to manually search the PATH.
             ScopedValueRollback errno_rollback(errno);
 
@@ -1782,7 +1784,7 @@ ErrorOr<ByteString> current_executable_path()
     size_t len = sizeof(path);
     if (sysctl(mib, 4, path, &len, nullptr, 0) < 0)
         return Error::from_syscall("sysctl"sv, -errno);
-#elif defined(AK_OS_MACOS)
+#elif defined(AK_OS_MACOS) || defined(AK_OS_IOS)
     u32 size = sizeof(path);
     auto ret = _NSGetExecutablePath(path, &size);
     if (ret != 0)

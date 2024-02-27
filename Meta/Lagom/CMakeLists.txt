@@ -539,7 +539,7 @@ if (BUILD_LAGOM)
 
     add_serenity_subdirectory(Userland/Shell)
 
-    if (NOT ENABLE_FUZZERS AND NOT ENABLE_COMPILER_EXPLORER_BUILD AND NOT ANDROID)
+    if (NOT ENABLE_FUZZERS AND NOT ENABLE_COMPILER_EXPLORER_BUILD AND NOT ANDROID AND NOT IOS)
         # Lagom Services
         add_serenity_subdirectory(Userland/Services)
 

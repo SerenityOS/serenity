@@ -38,6 +38,8 @@ namespace Web {
 #    define OS_STRING "Linux"
 #elif defined(AK_OS_MACOS)
 #    define OS_STRING "macOS"
+#elif defined(AK_OS_IOS)
+#    define OS_STRING "iOS"
 #elif defined(AK_OS_WINDOWS)
 #    define OS_STRING "Windows"
 #elif defined(AK_OS_FREEBSD)
