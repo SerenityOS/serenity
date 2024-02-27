@@ -588,26 +588,19 @@ JS_ENUMERATE_TYPED_ARRAYS
 #undef __JS_ENUMERATE
 
 // 10.4.5.9 MakeTypedArrayWithBufferWitnessRecord ( obj, order ), https://tc39.es/ecma262/#sec-maketypedarraywithbufferwitnessrecord
-TypedArrayWithBufferWitness make_typed_array_with_buffer_witness_record(TypedArrayBase const& typed_array, ArrayBuffer::Order order)
+TypedArrayWithBufferWitness make_typed_array_with_buffer_witness_record_for_known_attached_array(TypedArrayBase const& typed_array, ArrayBuffer::Order order)
 {
     // 1. Let buffer be obj.[[ViewedArrayBuffer]].
     auto* buffer = typed_array.viewed_array_buffer();
 
-    ByteLength byte_length { 0 };
-
     // 2. If IsDetachedBuffer(buffer) is true, then
-    if (buffer->is_detached()) {
-        // a. Let byteLength be detached.
-        byte_length = ByteLength::detached();
-    }
+    //     a. Let byteLength be detached.
     // 3. Else,
-    else {
-        // a. Let byteLength be ArrayBufferByteLength(buffer, order).
-        byte_length = array_buffer_byte_length(*buffer, order);
-    }
+    //     a. Let byteLength be ArrayBufferByteLength(buffer, order).
+    auto byte_length = array_buffer_byte_length(*buffer, order);
 
     // 4. Return the TypedArray With Buffer Witness Record { [[Object]]: obj, [[CachedBufferByteLength]]: byteLength }.
-    return { .object = typed_array, .cached_buffer_byte_length = move(byte_length) };
+    return { .object = typed_array, .cached_buffer_byte_length = byte_length };
 }
 
 // 10.4.5.11 TypedArrayByteLength ( taRecord ), https://tc39.es/ecma262/#sec-typedarraybytelength
@@ -719,7 +712,7 @@ bool is_valid_integer_index(TypedArrayBase const& typed_array, CanonicalIndex pr
         return false;
 
     // 4. Let taRecord be MakeTypedArrayWithBufferWitnessRecord(O, unordered).
-    auto typed_array_record = make_typed_array_with_buffer_witness_record(typed_array, ArrayBuffer::Unordered);
+    auto typed_array_record = make_typed_array_with_buffer_witness_record_for_known_attached_array(typed_array, ArrayBuffer::Unordered);
 
     // NOTE: Bounds checking is not a synchronizing operation when O's backing buffer is a growable SharedArrayBuffer.
 
