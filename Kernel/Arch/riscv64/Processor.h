@@ -196,7 +196,9 @@ ALWAYS_INLINE Thread* ProcessorBase<T>::current_thread()
 template<typename T>
 ALWAYS_INLINE void ProcessorBase<T>::pause()
 {
-    TODO_RISCV64();
+    // FIXME: Use the pause instruction directly (via .option arch, +zihintpause)
+    //        when we upgrade our toolchain to clang 17
+    asm volatile(".word 0x0100000f");
 }
 
 template<typename T>
