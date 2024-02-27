@@ -235,13 +235,16 @@ add_dependencies(ladybird ${ladybird_helper_processes})
 function(create_ladybird_bundle target_name)
     set_target_properties(${target_name} PROPERTIES
         OUTPUT_NAME "Ladybird"
-        MACOSX_BUNDLE_GUI_IDENTIFIER org.SerenityOS.Ladybird
-        MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
-        MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
-        MACOSX_BUNDLE_INFO_PLIST "${SERENITY_SOURCE_DIR}/Ladybird/Info.plist"
         MACOSX_BUNDLE TRUE
         WIN32_EXECUTABLE TRUE
-        XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER org.SerenityOS.Ladybird
+        XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER org.SerenityOS.${target_name}
+        MACOSX_BUNDLE_INFO_PLIST ${SERENITY_SOURCE_DIR}/Ladybird/Info.plist.in
+        MACOSX_BUNDLE_GUI_IDENTIFIER org.SerenityOS.${target_name}
+        MACOSX_BUNDLE_ICON_FILE app_icon.icns
+        MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
+        MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
+        MACOSX_BUNDLE_INFO_STRING ${PROJECT_DESCRIPTION}
+        MACOSX_BUNDLE_COPYRIGHT "Copyright (c) 2018-2024, the SerenityOS developers"
     )
 
     if (APPLE)

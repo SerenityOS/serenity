@@ -5,19 +5,23 @@
         <key>NSPrincipalClass</key>
         <string>NSApplication</string>
         <key>CFBundleIconFile</key>
-        <string>app_icon.icns</string>
+        <string>${MACOSX_BUNDLE_ICON_FILE}</string>
         <key>CFBundlePackageType</key>
         <string>APPL</string>
         <key>CFBundleGetInfoString</key>
-        <string>Ladybird</string>
+        <string>${MACOSX_BUNDLE_INFO_STRING}</string>
         <key>CFBundleSignature</key>
         <string></string>
         <key>CFBundleExecutable</key>
-        <string>Ladybird</string>
+        <string>${MACOSX_BUNDLE_EXECUTABLE_NAME}</string>
         <key>CFBundleIdentifier</key>
-        <string>org.SerenityOS.Ladybird</string>
-        <key>NSPrincipalClass</key>
-        <string>NSApplication</string>
+        <string>${MACOSX_BUNDLE_GUI_IDENTIFIER}</string>
+        <key>CFBundleVersion</key>
+        <string>${MACOSX_BUNDLE_BUNDLE_VERSION}</string>
+        <key>CFBundleShortVersionString</key>
+        <string>${MACOSX_BUNDLE_SHORT_VERSION_STRING}</string>
+        <key>NSHumanReadableCopyright</key>
+        <string>${MACOSX_BUNDLE_COPYRIGHT}</string>
         <key>NSHighResolutionCapable</key>
         <string>True</string>
         <key>CFBundleDocumentTypes</key>
