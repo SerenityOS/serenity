@@ -6,7 +6,7 @@
 
 iterable_idl_files = [
   "//Userland/Libraries/LibWeb/Fetch/Headers.idl",
-  "//Userland/Libraries/LibWeb/URL/URLSearchParams.idl",
+  "//Userland/Libraries/LibWeb/DOMURL/URLSearchParams.idl",
   "//Userland/Libraries/LibWeb/XHR/FormData.idl",
 ]
 
@@ -86,6 +86,7 @@ standard_idl_files = [
   "//Userland/Libraries/LibWeb/DOM/TreeWalker.idl",
   "//Userland/Libraries/LibWeb/DOM/XMLDocument.idl",
   "//Userland/Libraries/LibWeb/DOMParsing/XMLSerializer.idl",
+  "//Userland/Libraries/LibWeb/DOMURL/DOMURL.idl",
   "//Userland/Libraries/LibWeb/Encoding/TextDecoder.idl",
   "//Userland/Libraries/LibWeb/Encoding/TextEncoder.idl",
   "//Userland/Libraries/LibWeb/Fetch/Request.idl",
@@ -286,7 +287,6 @@ standard_idl_files = [
   "//Userland/Libraries/LibWeb/UIEvents/MouseEvent.idl",
   "//Userland/Libraries/LibWeb/UIEvents/UIEvent.idl",
   "//Userland/Libraries/LibWeb/UIEvents/WheelEvent.idl",
-  "//Userland/Libraries/LibWeb/URL/URL.idl",
   "//Userland/Libraries/LibWeb/UserTiming/PerformanceMark.idl",
   "//Userland/Libraries/LibWeb/UserTiming/PerformanceMeasure.idl",
   "//Userland/Libraries/LibWeb/WebAssembly/Instance.idl",
