@@ -156,14 +156,18 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_resource(Core::Resource const& 
     return font;
 }
 
-ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(ReadonlyBytes buffer, Options options)
+static ErrorOr<Tag> read_tag(ReadonlyBytes buffer)
 {
     FixedMemoryStream stream { buffer };
+    return stream.read_value<Tag>();
+}
 
-    auto tag = TRY(stream.read_value<Tag>());
+ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(ReadonlyBytes buffer, Options options)
+{
+    auto tag = TRY(read_tag(buffer));
     if (tag == Tag("ttcf")) {
         // It's a font collection
-        TRY(stream.seek(0, SeekMode::SetPosition));
+        FixedMemoryStream stream { buffer };
         auto ttc_header_v1 = TRY(stream.read_in_place<TTCHeaderV1>());
         // FIXME: Check for major_version == 2.
 
