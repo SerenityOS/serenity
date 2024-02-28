@@ -44,7 +44,7 @@ ErrorOr<void> MapsSettingsWidget::initialize()
     tile_provider_fields.empend("url_format", "URL format"_string, Gfx::TextAlignment::CenterLeft);
     tile_provider_fields.empend("attribution_text", "Attribution text"_string, Gfx::TextAlignment::CenterLeft);
     tile_provider_fields.empend("attribution_url", "Attribution URL"_string, Gfx::TextAlignment::CenterLeft);
-    auto tile_providers = GUI::JsonArrayModel::create(ByteString::formatted("{}/MapsTileProviders.json", Core::StandardPaths::config_directory()), move(tile_provider_fields));
+    auto tile_providers = GUI::JsonArrayModel::create("/usr/share/Maps/TileProviders.json", move(tile_provider_fields));
     tile_providers->invalidate();
 
     Vector<JsonValue> custom_tile_provider;

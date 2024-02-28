@@ -18,8 +18,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app = TRY(GUI::Application::create(arguments));
 
-    TRY(Core::System::unveil("/home", "r"));
     TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil("/usr/share/Maps", "r"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/config", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
