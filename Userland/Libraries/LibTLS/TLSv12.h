@@ -189,13 +189,21 @@ struct Options {
     OPTION_WITH_DEFAULTS(bool, use_compression, false)
     OPTION_WITH_DEFAULTS(bool, validate_certificates, true)
     OPTION_WITH_DEFAULTS(bool, allow_self_signed_certificates, false)
-    OPTION_WITH_DEFAULTS(Optional<Vector<Certificate>>, root_certificates, )
+    Optional<HashMap<String, Certificate>> root_certificates;
     OPTION_WITH_DEFAULTS(Function<void(AlertDescription)>, alert_handler, [](auto) {})
     OPTION_WITH_DEFAULTS(Function<void()>, finish_callback, [] {})
     OPTION_WITH_DEFAULTS(Function<Vector<Certificate>()>, certificate_provider, [] { return Vector<Certificate> {}; })
     OPTION_WITH_DEFAULTS(bool, enable_extended_master_secret, true)
 
 #undef OPTION_WITH_DEFAULTS
+
+    Options& set_root_certificates(Vector<Certificate>&& new_value) &
+    {
+        root_certificates = HashMap<String, Certificate> {};
+        for (auto& certificate : new_value)
+            root_certificates->set(MUST(certificate.subject.to_string()), move(certificate));
+        return *this;
+    }
 };
 
 class SegmentedBuffer {
@@ -299,7 +307,7 @@ struct Context {
     // message flags
     u8 handshake_messages[11] { 0 };
     ByteBuffer user_data;
-    HashMap<ByteString, Certificate> root_certificates;
+    HashMap<String, Certificate> const* root_certificates { nullptr };
 
     Vector<ByteString> alpn;
     StringView negotiated_alpn;
@@ -373,7 +381,7 @@ public:
         m_context.extensions.SNI = sni;
     }
 
-    void set_root_certificates(Vector<Certificate>);
+    void set_root_certificates(HashMap<String, Certificate> const&);
 
     static Vector<Certificate> parse_pem_certificate(ReadonlyBytes certificate_pem_buffer, ReadonlyBytes key_pem_buffer);
 

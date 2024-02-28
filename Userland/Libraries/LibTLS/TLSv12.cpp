@@ -199,22 +199,14 @@ void TLSv12::try_disambiguate_error() const
     dbgln("- {}", enum_to_value((AlertDescription)m_context.critical_error));
 }
 
-void TLSv12::set_root_certificates(Vector<Certificate> certificates)
+void TLSv12::set_root_certificates(HashMap<String, Certificate> const& certificates)
 {
-    if (!m_context.root_certificates.is_empty()) {
+    if (m_context.root_certificates != nullptr)
         dbgln("TLS warn: resetting root certificates!");
-        m_context.root_certificates.clear();
-    }
 
-    for (auto& cert : certificates) {
-        if (!cert.is_valid()) {
-            dbgln("Certificate for {} is invalid, things may or may not work!", cert.subject.to_string());
-        }
-        // FIXME: Figure out what we should do when our root certs are invalid.
+    m_context.root_certificates = &certificates;
 
-        m_context.root_certificates.set(MUST(cert.subject.to_string()).to_byte_string(), cert);
-    }
-    dbgln_if(TLS_DEBUG, "{}: Set {} root certificates", this, m_context.root_certificates.size());
+    dbgln_if(TLS_DEBUG, "{}: Set {} root certificates", this, m_context.root_certificates->size());
 }
 
 static bool wildcard_matches(StringView host, StringView subject)
@@ -294,7 +286,7 @@ bool Context::verify_chain(StringView host) const
             return false;
         }
 
-        auto maybe_root_certificate = root_certificates.get(issuer_string.to_byte_string());
+        auto maybe_root_certificate = root_certificates->get(issuer_string);
         if (maybe_root_certificate.has_value()) {
             auto& root_certificate = *maybe_root_certificate;
             auto verification_correct = verify_certificate_pair(cert, root_certificate);
@@ -515,9 +507,10 @@ TLSv12::TLSv12(StreamVariantType stream, Options options)
     m_context.is_server = false;
     m_context.tls_buffer = {};
 
-    set_root_certificates(m_context.options.root_certificates.has_value()
-            ? *m_context.options.root_certificates
-            : DefaultRootCACertificates::the().certificates());
+    if (m_context.options.root_certificates.has_value())
+        set_root_certificates(m_context.options.root_certificates.value());
+    else
+        set_root_certificates(DefaultRootCACertificates::the().certificates());
 
     setup_connection();
 }
@@ -565,7 +558,14 @@ DefaultRootCACertificates::DefaultRootCACertificates()
         return;
     }
 
-    m_ca_certificates = load_result.release_value();
+    for (auto& certificate : load_result.value()) {
+        if (!certificate.is_valid()) {
+            // FIXME: Figure out what we should do when our root certs are invalid.
+            dbgln("Certificate for {} is invalid, things may or may not work!", MUST(certificate.subject.to_string()));
+        }
+
+        m_ca_certificates.set(MUST(certificate.subject.to_string()), move(certificate));
+    }
 }
 
 DefaultRootCACertificates& DefaultRootCACertificates::the()
