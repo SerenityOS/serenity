@@ -42,11 +42,6 @@ String CSSMediaRule::condition_text() const
     return m_media->media_text();
 }
 
-void CSSMediaRule::set_condition_text(String const& text)
-{
-    m_media->set_media_text(text);
-}
-
 // https://www.w3.org/TR/cssom-1/#serialize-a-css-rule
 String CSSMediaRule::serialized() const
 {

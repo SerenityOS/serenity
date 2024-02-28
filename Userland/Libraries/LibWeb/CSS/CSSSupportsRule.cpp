@@ -35,12 +35,6 @@ String CSSSupportsRule::condition_text() const
     return m_supports->to_string();
 }
 
-void CSSSupportsRule::set_condition_text(String const& text)
-{
-    if (auto new_supports = parse_css_supports(Parser::ParsingContext { realm() }, text))
-        m_supports = new_supports.release_nonnull();
-}
-
 // https://www.w3.org/TR/cssom-1/#serialize-a-css-rule
 String CSSSupportsRule::serialized() const
 {
