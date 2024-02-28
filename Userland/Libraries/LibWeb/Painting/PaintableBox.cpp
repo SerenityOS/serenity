@@ -240,8 +240,8 @@ void PaintableBox::before_paint(PaintContext& context, [[maybe_unused]] PaintPha
     if (!is_visible())
         return;
 
-    apply_scroll_offset(context, phase);
     apply_clip_overflow_rect(context, phase);
+    apply_scroll_offset(context, phase);
 }
 
 void PaintableBox::after_paint(PaintContext& context, [[maybe_unused]] PaintPhase phase) const
@@ -249,8 +249,8 @@ void PaintableBox::after_paint(PaintContext& context, [[maybe_unused]] PaintPhas
     if (!is_visible())
         return;
 
-    clear_clip_overflow_rect(context, phase);
     reset_scroll_offset(context, phase);
+    clear_clip_overflow_rect(context, phase);
 }
 
 void PaintableBox::paint(PaintContext& context, PaintPhase phase) const
