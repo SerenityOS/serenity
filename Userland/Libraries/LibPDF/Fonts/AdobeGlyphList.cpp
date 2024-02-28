@@ -31,6 +31,8 @@ print(f'}};')
 where glyphlist.txt is from https://github.com/adobe-type-tools/agl-aglfn/blob/master/glyphlist.txt
 */
 
+#include <AK/CharacterTypes.h>
+#include <AK/Format.h>
 #include <AK/HashMap.h>
 #include <LibPDF/Fonts/AdobeGlyphList.h>
 
@@ -4239,9 +4241,98 @@ static HashMap<StringView, u32> const glyph_list = {
     { "zukatakana"sv, 0x30BA },
 };
 
+static bool are_all_uppercase_hex(StringView component)
+{
+    for (auto c : component)
+        if (!is_ascii_uppercase_hex_digit(c))
+            return false;
+    return true;
+}
+
+static u32 decode_hex(StringView hex_string)
+{
+    u32 code_point = 0;
+    for (auto c : hex_string) {
+        VERIFY(is_ascii_uppercase_hex_digit(c));
+        code_point = (code_point << 4) | parse_ascii_hex_digit(c);
+    }
+    return code_point;
+}
+
 Optional<u32> glyph_name_to_unicode(StringView name)
 {
-    return glyph_list.get(name);
+    // https://github.com/adobe-type-tools/agl-specification?tab=readme-ov-file#2-the-mapping
+    // "To map a glyph name to a character string, follow the three steps below:
+    //
+    //  1. Drop all the characters from the glyph name starting with the first occurrence of a period (U+002E FULL STOP), if any.
+    if (auto index = name.find('.'); index.has_value())
+        name = name.substring_view(0, index.value());
+
+    //  2. Split the remaining string into a sequence of components, using underscore (U+005F LOW LINE) as the delimiter.
+    if (auto index = name.find('_'); index.has_value()) {
+        dbgln("FIXME: splitting on _ not yet implemented, ignoring all but first component");
+        name = name.substring_view(0, index.value());
+    }
+
+    //  3. Map each component to a character string according to the procedure below, and concatenate those strings; the result is the character string to which the glyph name is mapped.
+    StringView component = name;
+
+    //  If the font is Zapf Dingbats (PostScript FontName: ZapfDingbats), and the component is in the ITC Zapf Dingbats Glyph List, then map it to the corresponding character in that list."
+    // FIXME: Implement.
+
+    // "Otherwise, if the component is in AGL, then map it to the corresponding character in that list.
+    auto agl_entry = glyph_list.get(component);
+    if (agl_entry.has_value())
+        return agl_entry.value();
+
+    //  Otherwise, if the component is of the form ‘uni’ (U+0075, U+006E, and U+0069)"
+    if (component.starts_with("uni"sv)) {
+        component = component.substring_view(3);
+
+        // Implementor's note: The spec allows 0 groups of four hex digits and maps them to nothing. Get this special case out of the way early.
+        if (component.is_empty())
+            return OptionalNone {};
+
+        // "followed by a sequence of uppercase hexadecimal digits (0–9 and A–F, meaning U+0030 through U+0039 and U+0041 through U+0046),
+        if (are_all_uppercase_hex(component)) {
+            bool all_are_ucs2 = true;
+            //  if the length of that sequence is a multiple of four,
+            if (component.length() % 4 == 0) {
+                for (size_t i = 0; i < component.length(); i += 4) {
+                    //  and if each group of four digits represents a value in the ranges 0000 through D7FF or E000 through FFFF,
+                    u32 code_point = decode_hex(component.substring_view(i, 4));
+                    bool is_ucs2 = code_point <= 0xFFFF && !is_unicode_surrogate(code_point);
+                    if (!is_ucs2) {
+                        all_are_ucs2 = false;
+                        break;
+                    }
+                }
+            }
+            if (all_are_ucs2) {
+                //  then interpret each as a Unicode scalar value and map the component to the string made of those scalar values.
+                //  Note that the range and digit-length restrictions mean that the ‘uni’ glyph name prefix can be used only with UVs in the Basic Multilingual Plane (BMP).
+                if (component.length() > 4)
+                    dbgln("FIXME: Returning multiple uni components not yet implemented, returning only the first one");
+                return decode_hex(component.substring_view(0, 4));
+            }
+        }
+    }
+    //  Otherwise, if the component is of the form ‘u’ (U+0075)
+    else if (component.starts_with('u')) {
+        component = component.substring_view(1);
+        //  followed by a sequence of four to six uppercase hexadecimal digits (0–9 and A–F, meaning U+0030 through U+0039 and U+0041 through U+0046),
+        if (4 <= component.length() && component.length() <= 6 && are_all_uppercase_hex(component)) {
+            //  and those digits represents a value in the ranges 0000 through D7FF or E000 through 10FFFF,
+            u32 code_point = decode_hex(component);
+            if (is_unicode(code_point) && !is_unicode_surrogate(code_point)) {
+                //  then interpret it as a Unicode scalar value and map the component to the string made of this scalar value.
+                return code_point;
+            }
+        }
+    }
+
+    //  Otherwise, map the component to an empty string."
+    return OptionalNone {};
 }
 
 }
