@@ -72,6 +72,19 @@ public:
     Optional<ReadonlyBytes> control_value_program() const;
     Optional<ReadonlyBytes> glyph_program(u32 glyph_id) const;
 
+    // https://learn.microsoft.com/en-us/typography/opentype/spec/otff
+    // "OpenType fonts that contain TrueType outlines should use the value of 0x00010000 for the sfntVersion.
+    //  OpenType fonts containing CFF data (version 1 or 2) should use 0x4F54544F ('OTTO', when re-interpreted as a Tag) for sfntVersion.
+    //  Note: The Apple specification for TrueType fonts allows for 'true' and 'typ1' for sfnt version.
+    //         These version tags should not be used for OpenType fonts."
+    // "Font Collection ID string: 'ttcf' (used for fonts with CFF or CFF2 outlines as well as TrueType outlines)"
+    // The old Apple TrueType spec said "Fonts with TrueType outlines produced for OS X or iOS only are encouraged to use 'true'",
+    // so 'true' is somewhat common, especially in PDFs.
+    static constexpr Tag HeaderTag_TrueTypeOutlines = Tag::from_u32(0x00010000);
+    static constexpr Tag HeaderTag_TrueTypeOutlinesApple = Tag { "true" };
+    static constexpr Tag HeaderTag_CFFOutlines = Tag { "OTTO" };
+    static constexpr Tag HeaderTag_FontCollection = Tag { "ttcf" };
+
 private:
     struct AscenderAndDescender {
         i16 ascender;
