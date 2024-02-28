@@ -30,10 +30,6 @@ struct ExecutionContext {
 
     void visit_edges(Cell::Visitor&);
 
-    static FlatPtr realm_offset() { return OFFSET_OF(ExecutionContext, realm); }
-    static FlatPtr lexical_environment_offset() { return OFFSET_OF(ExecutionContext, lexical_environment); }
-    static FlatPtr variable_environment_offset() { return OFFSET_OF(ExecutionContext, variable_environment); }
-
 private:
     ExecutionContext(Heap&);
 

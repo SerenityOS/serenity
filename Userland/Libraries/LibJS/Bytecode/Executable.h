@@ -22,16 +22,11 @@
 namespace JS::Bytecode {
 
 struct PropertyLookupCache {
-    static FlatPtr shape_offset() { return OFFSET_OF(PropertyLookupCache, shape); }
-    static FlatPtr property_offset_offset() { return OFFSET_OF(PropertyLookupCache, property_offset); }
-
     WeakPtr<Shape> shape;
     Optional<u32> property_offset;
 };
 
 struct GlobalVariableCache : public PropertyLookupCache {
-    static FlatPtr environment_serial_number_offset() { return OFFSET_OF(GlobalVariableCache, environment_serial_number); }
-
     u64 environment_serial_number { 0 };
 };
 

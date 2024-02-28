@@ -62,9 +62,6 @@ public:
         return *m_builtins[to_underlying(builtin)];
     }
 
-    static FlatPtr global_environment_offset() { return OFFSET_OF(Realm, m_global_environment); }
-    static FlatPtr builtins_offset() { return OFFSET_OF(Realm, m_builtins); }
-
 private:
     Realm() = default;
 
