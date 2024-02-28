@@ -96,7 +96,6 @@ struct TypedArrayWithBufferWitness {
 
 u32 typed_array_byte_length(TypedArrayWithBufferWitness const&);
 bool is_typed_array_out_of_bounds(TypedArrayWithBufferWitness const&);
-bool is_valid_integer_index(TypedArrayBase const&, CanonicalIndex);
 
 // Fast-path version of MakeTypedArrayWithBufferWitnessRecord when you already know the TA is not detached.
 TypedArrayWithBufferWitness make_typed_array_with_buffer_witness_record_for_known_attached_array(TypedArrayBase const&, ArrayBuffer::Order);
@@ -133,6 +132,35 @@ inline bool is_typed_array_out_of_bounds(TypedArrayWithBufferWitness const& type
         return true;
 
     return is_typed_array_out_of_bounds_for_known_attached_array(typed_array_record);
+}
+
+bool is_valid_integer_index_slow_case(TypedArrayBase const&, CanonicalIndex property_index);
+
+// 10.4.5.14 IsValidIntegerIndex ( O, index ), https://tc39.es/ecma262/#sec-isvalidintegerindex
+inline bool is_valid_integer_index(TypedArrayBase const& typed_array, CanonicalIndex property_index)
+{
+    // 1. If IsDetachedBuffer(O.[[ViewedArrayBuffer]]) is true, return false.
+    if (typed_array.viewed_array_buffer()->is_detached())
+        return false;
+
+    // 2. If IsIntegralNumber(index) is false, return false.
+    // 3. If index is -0𝔽, return false.
+    if (!property_index.is_index())
+        return false;
+
+    // OPTIMIZATION: For TypedArrays with non-resizable ArrayBuffers, we can avoid most of the work performed by
+    //               IsValidIntegerIndex. We just need to check whether the array itself is out-of-bounds and if
+    //               the provided index is within the array bounds.
+    if (auto const& array_length = typed_array.array_length(); !array_length.is_auto()) {
+        auto byte_length = array_buffer_byte_length(*typed_array.viewed_array_buffer(), ArrayBuffer::Unordered);
+        auto byte_offset_end = typed_array.byte_offset() + array_length.length() * typed_array.element_size();
+
+        return typed_array.byte_offset() <= byte_length
+            && byte_offset_end <= byte_length
+            && property_index.as_index() < array_length.length();
+    }
+
+    return is_valid_integer_index_slow_case(typed_array, property_index);
 }
 
 // 10.4.5.15 TypedArrayGetElement ( O, index ), https://tc39.es/ecma262/#sec-typedarraygetelement
