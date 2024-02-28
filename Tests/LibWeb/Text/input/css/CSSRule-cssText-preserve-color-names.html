@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<style>
+    #lowercase {
+        stop-color: cyan;
+    }
+    #uppercase {
+        background-color: MAGENTA;
+    }
+    #mixed-case {
+        border-color: YELLow;
+    }
+    #hex-value-not-preserved {
+        color: #AABBCC;
+    }
+</style>
+<script src="../include.js"></script>
+<script>
+    test(() => {
+        const rules = document.styleSheets[0].cssRules;
+        for (const rule of rules) {
+            println(rule.cssText);
+        }
+    });
+</script>

@@ -37,4 +37,14 @@ String ColorStyleValue::to_string() const
     return serialize_a_srgb_value(m_color);
 }
 
+ValueComparingNonnullRefPtr<ColorStyleValue> NamedColorStyleValue::create(Color color, FlyString const& color_name)
+{
+    return adopt_ref(*new (nothrow) NamedColorStyleValue(color, color_name));
+}
+
+String NamedColorStyleValue::to_string() const
+{
+    return MUST(m_color_name.to_string().to_lowercase());
+}
+
 }

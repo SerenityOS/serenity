@@ -2499,14 +2499,18 @@ Optional<Color> Parser::parse_color(ComponentValue const& component_value)
 RefPtr<StyleValue> Parser::parse_color_value(ComponentValue const& component_value)
 {
     auto color = parse_color(component_value);
+    if (component_value.is(Token::Type::Ident)) {
+        auto ident = component_value.token().ident();
+        if (color.has_value())
+            return NamedColorStyleValue::create(color.value(), ident);
+
+        auto ident_value_id = value_id_from_string(ident);
+        if (ident_value_id.has_value() && IdentifierStyleValue::is_color(ident_value_id.value()))
+            return IdentifierStyleValue::create(ident_value_id.value());
+    }
+
     if (color.has_value())
         return ColorStyleValue::create(color.value());
-
-    if (component_value.is(Token::Type::Ident)) {
-        auto ident = value_id_from_string(component_value.token().ident());
-        if (ident.has_value() && IdentifierStyleValue::is_color(ident.value()))
-            return IdentifierStyleValue::create(ident.value());
-    }
 
     return nullptr;
 }
