@@ -14,20 +14,21 @@ namespace PDF {
 
 class TrueTypePainter {
 public:
-    static NonnullOwnPtr<TrueTypePainter> create(Document*, NonnullRefPtr<DictObject> const&, SimpleFont const& containing_pdf_font, AK::NonnullRefPtr<Gfx::Font>, NonnullRefPtr<Encoding>);
+    static NonnullOwnPtr<TrueTypePainter> create(Document*, NonnullRefPtr<DictObject> const&, SimpleFont const& containing_pdf_font, AK::NonnullRefPtr<Gfx::Font>, NonnullRefPtr<Encoding>, bool is_zapf_dingbats);
 
     PDFErrorOr<void> draw_glyph(Gfx::Painter&, Gfx::FloatPoint, float width, u8 char_code, Renderer const&);
     Optional<float> get_glyph_width(u8 char_code) const;
     void set_font_size(float font_size);
 
 private:
-    TrueTypePainter(AK::NonnullRefPtr<Gfx::Font>, NonnullRefPtr<Encoding>, bool encoding_is_mac_roman_or_win_ansi, bool is_nonsymbolic, Optional<u8> high_byte);
+    TrueTypePainter(AK::NonnullRefPtr<Gfx::Font>, NonnullRefPtr<Encoding>, bool encoding_is_mac_roman_or_win_ansi, bool is_nonsymbolic, Optional<u8> high_byte, bool is_zapf_dingbats);
 
     NonnullRefPtr<Gfx::Font> m_font;
     NonnullRefPtr<Encoding> m_encoding;
     bool m_encoding_is_mac_roman_or_win_ansi { false };
     bool m_is_nonsymbolic { false };
     Optional<u8> m_high_byte;
+    bool m_is_zapf_dingbats { false };
 };
 
 class TrueTypeFont : public SimpleFont {

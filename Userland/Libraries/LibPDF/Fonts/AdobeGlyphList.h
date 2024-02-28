@@ -10,6 +10,6 @@
 
 namespace PDF {
 
-Optional<u32> glyph_name_to_unicode(StringView);
+Optional<u32> glyph_name_to_unicode(StringView, bool is_zapf_dingbats);
 
 }
