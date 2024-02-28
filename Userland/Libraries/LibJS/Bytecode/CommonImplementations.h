@@ -443,6 +443,15 @@ inline ThrowCompletionOr<void> put_by_value(VM& vm, Value base, Value property_k
                 }
             }
 
+            if (typed_array.kind() == TypedArrayBase::Kind::Uint32Array && value.is_integral_number()) {
+                auto integer = value.as_double();
+
+                if (AK::is_within_range<u32>(integer) && is_valid_integer_index(typed_array, canonical_index)) {
+                    fast_typed_array_set_element<u32>(typed_array, index, static_cast<u32>(integer));
+                    return {};
+                }
+            }
+
             switch (typed_array.kind()) {
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
     case TypedArrayBase::Kind::ClassName:                                           \
