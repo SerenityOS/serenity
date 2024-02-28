@@ -69,7 +69,7 @@ PDFErrorOr<void> PDFFont::initialize(Document* document, NonnullRefPtr<DictObjec
 PDFErrorOr<NonnullRefPtr<Gfx::Font>> PDFFont::replacement_for(StringView name, float font_size)
 {
     bool is_bold = name.contains("bold"sv, CaseSensitivity::CaseInsensitive);
-    bool is_italic = name.contains("italic"sv, CaseSensitivity::CaseInsensitive);
+    bool is_italic = name.contains("italic"sv, CaseSensitivity::CaseInsensitive) || name.contains("oblique"sv, CaseSensitivity::CaseInsensitive);
 
     FlyString font_family;
     if (name.contains("times"sv, CaseSensitivity::CaseInsensitive)) {
