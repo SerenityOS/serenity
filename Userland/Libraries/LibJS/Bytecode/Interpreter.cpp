@@ -426,6 +426,9 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable& executa
 
     TemporaryChange restore_executable { m_current_executable, &executable };
     TemporaryChange restore_saved_jump { m_scheduled_jump, static_cast<BasicBlock const*>(nullptr) };
+    TemporaryChange restore_realm { m_realm, vm().current_realm() };
+    TemporaryChange restore_global_object { m_global_object, &m_realm->global_object() };
+    TemporaryChange restore_global_declarative_environment { m_global_declarative_environment, &m_realm->global_environment().declarative_record() };
 
     VERIFY(!vm().execution_context_stack().is_empty());
 
@@ -528,11 +531,6 @@ ThrowCompletionOr<NonnullGCPtr<Bytecode::Executable>> compile(VM& vm, ASTNode co
         bytecode_executable->dump();
 
     return bytecode_executable;
-}
-
-Realm& Interpreter::realm()
-{
-    return *m_vm.current_realm();
 }
 
 void Interpreter::push_call_frame(Variant<NonnullOwnPtr<CallFrame>, CallFrame*> frame)

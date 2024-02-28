@@ -51,7 +51,9 @@ public:
     explicit Interpreter(VM&);
     ~Interpreter();
 
-    Realm& realm();
+    [[nodiscard]] Realm& realm() { return *m_realm; }
+    [[nodiscard]] Object& global_object() { return *m_global_object; }
+    [[nodiscard]] DeclarativeEnvironment& global_declarative_environment() { return *m_global_declarative_environment; }
     VM& vm() { return m_vm; }
     VM const& vm() const { return m_vm; }
 
@@ -125,6 +127,9 @@ private:
     BasicBlock const* m_scheduled_jump { nullptr };
     Executable* m_current_executable { nullptr };
     BasicBlock const* m_current_block { nullptr };
+    Realm* m_realm { nullptr };
+    Object* m_global_object { nullptr };
+    DeclarativeEnvironment* m_global_declarative_environment { nullptr };
     Optional<InstructionStreamIterator&> m_pc {};
 };
 
