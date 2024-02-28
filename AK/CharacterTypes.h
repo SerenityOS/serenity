@@ -60,9 +60,14 @@ constexpr bool is_ascii_octal_digit(u32 code_point)
     return code_point >= '0' && code_point <= '7';
 }
 
+constexpr bool is_ascii_uppercase_hex_digit(u32 code_point)
+{
+    return is_ascii_digit(code_point) || (code_point >= 'A' && code_point <= 'F');
+}
+
 constexpr bool is_ascii_hex_digit(u32 code_point)
 {
-    return is_ascii_digit(code_point) || (code_point >= 'A' && code_point <= 'F') || (code_point >= 'a' && code_point <= 'f');
+    return is_ascii_uppercase_hex_digit(code_point) || (code_point >= 'a' && code_point <= 'f');
 }
 
 constexpr bool is_ascii_blank(u32 code_point)
@@ -195,6 +200,7 @@ using AK::is_ascii_printable;
 using AK::is_ascii_punctuation;
 using AK::is_ascii_space;
 using AK::is_ascii_upper_alpha;
+using AK::is_ascii_uppercase_hex_digit;
 using AK::is_unicode;
 using AK::is_unicode_control;
 using AK::is_unicode_noncharacter;
