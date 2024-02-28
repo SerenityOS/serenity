@@ -12,23 +12,24 @@ Contains the Adobe Glyph List, transformed into C++ via this script:
 
 import sys
 
-print(f'static HashMap<StringView, u32> constexpr glyph_list = {{')
-for line in open('glyphlist.txt'):
-    line = line.strip()
-    if line.startswith('#'):
-        continue
+def write_table(source_filename, table_name):
+    print(f'static HashMap<StringView, u32> constexpr {table_name} = {{')
+    for line in open(source_filename):
+        line = line.strip()
+        if line.startswith('#'):
+            continue
+        name, codepoint = line.split(';')
+        if ' ' in codepoint:
+            print(f'skipping {name}, multiple codepoints', file=sys.stderr)
+            continue
+        print(f'    {{ "{name}"sv, 0x{codepoint} }},')
+    print(f'}};')
 
-    name, codepoint = line.split(';')
-
-    if ' ' in codepoint:
-        print(f'skipping {name}, multiple codepoints', file=sys.stderr)
-        continue
-
-    print(f'    {{ "{name}"sv, 0x{codepoint} }},')
-print(f'}};')
+write_table('glyphlist.txt', 'glyph_list')
+write_table('zapfdingbats.txt', 'zapf_dingbats_list')
 ```
 
-where glyphlist.txt is from https://github.com/adobe-type-tools/agl-aglfn/blob/master/glyphlist.txt
+where glyphlist.txt and zapfdingbats.txt are from https://github.com/adobe-type-tools/agl-aglfn/blob/master/glyphlist.txt
 */
 
 #include <AK/CharacterTypes.h>
@@ -4240,6 +4241,209 @@ static HashMap<StringView, u32> const glyph_list = {
     { "zuhiragana"sv, 0x305A },
     { "zukatakana"sv, 0x30BA },
 };
+static HashMap<StringView, u32> const zapf_dingbats_list = {
+    { "a100"sv, 0x275E },
+    { "a101"sv, 0x2761 },
+    { "a102"sv, 0x2762 },
+    { "a103"sv, 0x2763 },
+    { "a104"sv, 0x2764 },
+    { "a105"sv, 0x2710 },
+    { "a106"sv, 0x2765 },
+    { "a107"sv, 0x2766 },
+    { "a108"sv, 0x2767 },
+    { "a109"sv, 0x2660 },
+    { "a10"sv, 0x2721 },
+    { "a110"sv, 0x2665 },
+    { "a111"sv, 0x2666 },
+    { "a112"sv, 0x2663 },
+    { "a117"sv, 0x2709 },
+    { "a118"sv, 0x2708 },
+    { "a119"sv, 0x2707 },
+    { "a11"sv, 0x261B },
+    { "a120"sv, 0x2460 },
+    { "a121"sv, 0x2461 },
+    { "a122"sv, 0x2462 },
+    { "a123"sv, 0x2463 },
+    { "a124"sv, 0x2464 },
+    { "a125"sv, 0x2465 },
+    { "a126"sv, 0x2466 },
+    { "a127"sv, 0x2467 },
+    { "a128"sv, 0x2468 },
+    { "a129"sv, 0x2469 },
+    { "a12"sv, 0x261E },
+    { "a130"sv, 0x2776 },
+    { "a131"sv, 0x2777 },
+    { "a132"sv, 0x2778 },
+    { "a133"sv, 0x2779 },
+    { "a134"sv, 0x277A },
+    { "a135"sv, 0x277B },
+    { "a136"sv, 0x277C },
+    { "a137"sv, 0x277D },
+    { "a138"sv, 0x277E },
+    { "a139"sv, 0x277F },
+    { "a13"sv, 0x270C },
+    { "a140"sv, 0x2780 },
+    { "a141"sv, 0x2781 },
+    { "a142"sv, 0x2782 },
+    { "a143"sv, 0x2783 },
+    { "a144"sv, 0x2784 },
+    { "a145"sv, 0x2785 },
+    { "a146"sv, 0x2786 },
+    { "a147"sv, 0x2787 },
+    { "a148"sv, 0x2788 },
+    { "a149"sv, 0x2789 },
+    { "a14"sv, 0x270D },
+    { "a150"sv, 0x278A },
+    { "a151"sv, 0x278B },
+    { "a152"sv, 0x278C },
+    { "a153"sv, 0x278D },
+    { "a154"sv, 0x278E },
+    { "a155"sv, 0x278F },
+    { "a156"sv, 0x2790 },
+    { "a157"sv, 0x2791 },
+    { "a158"sv, 0x2792 },
+    { "a159"sv, 0x2793 },
+    { "a15"sv, 0x270E },
+    { "a160"sv, 0x2794 },
+    { "a161"sv, 0x2192 },
+    { "a162"sv, 0x27A3 },
+    { "a163"sv, 0x2194 },
+    { "a164"sv, 0x2195 },
+    { "a165"sv, 0x2799 },
+    { "a166"sv, 0x279B },
+    { "a167"sv, 0x279C },
+    { "a168"sv, 0x279D },
+    { "a169"sv, 0x279E },
+    { "a16"sv, 0x270F },
+    { "a170"sv, 0x279F },
+    { "a171"sv, 0x27A0 },
+    { "a172"sv, 0x27A1 },
+    { "a173"sv, 0x27A2 },
+    { "a174"sv, 0x27A4 },
+    { "a175"sv, 0x27A5 },
+    { "a176"sv, 0x27A6 },
+    { "a177"sv, 0x27A7 },
+    { "a178"sv, 0x27A8 },
+    { "a179"sv, 0x27A9 },
+    { "a17"sv, 0x2711 },
+    { "a180"sv, 0x27AB },
+    { "a181"sv, 0x27AD },
+    { "a182"sv, 0x27AF },
+    { "a183"sv, 0x27B2 },
+    { "a184"sv, 0x27B3 },
+    { "a185"sv, 0x27B5 },
+    { "a186"sv, 0x27B8 },
+    { "a187"sv, 0x27BA },
+    { "a188"sv, 0x27BB },
+    { "a189"sv, 0x27BC },
+    { "a18"sv, 0x2712 },
+    { "a190"sv, 0x27BD },
+    { "a191"sv, 0x27BE },
+    { "a192"sv, 0x279A },
+    { "a193"sv, 0x27AA },
+    { "a194"sv, 0x27B6 },
+    { "a195"sv, 0x27B9 },
+    { "a196"sv, 0x2798 },
+    { "a197"sv, 0x27B4 },
+    { "a198"sv, 0x27B7 },
+    { "a199"sv, 0x27AC },
+    { "a19"sv, 0x2713 },
+    { "a1"sv, 0x2701 },
+    { "a200"sv, 0x27AE },
+    { "a201"sv, 0x27B1 },
+    { "a202"sv, 0x2703 },
+    { "a203"sv, 0x2750 },
+    { "a204"sv, 0x2752 },
+    { "a205"sv, 0x276E },
+    { "a206"sv, 0x2770 },
+    { "a20"sv, 0x2714 },
+    { "a21"sv, 0x2715 },
+    { "a22"sv, 0x2716 },
+    { "a23"sv, 0x2717 },
+    { "a24"sv, 0x2718 },
+    { "a25"sv, 0x2719 },
+    { "a26"sv, 0x271A },
+    { "a27"sv, 0x271B },
+    { "a28"sv, 0x271C },
+    { "a29"sv, 0x2722 },
+    { "a2"sv, 0x2702 },
+    { "a30"sv, 0x2723 },
+    { "a31"sv, 0x2724 },
+    { "a32"sv, 0x2725 },
+    { "a33"sv, 0x2726 },
+    { "a34"sv, 0x2727 },
+    { "a35"sv, 0x2605 },
+    { "a36"sv, 0x2729 },
+    { "a37"sv, 0x272A },
+    { "a38"sv, 0x272B },
+    { "a39"sv, 0x272C },
+    { "a3"sv, 0x2704 },
+    { "a40"sv, 0x272D },
+    { "a41"sv, 0x272E },
+    { "a42"sv, 0x272F },
+    { "a43"sv, 0x2730 },
+    { "a44"sv, 0x2731 },
+    { "a45"sv, 0x2732 },
+    { "a46"sv, 0x2733 },
+    { "a47"sv, 0x2734 },
+    { "a48"sv, 0x2735 },
+    { "a49"sv, 0x2736 },
+    { "a4"sv, 0x260E },
+    { "a50"sv, 0x2737 },
+    { "a51"sv, 0x2738 },
+    { "a52"sv, 0x2739 },
+    { "a53"sv, 0x273A },
+    { "a54"sv, 0x273B },
+    { "a55"sv, 0x273C },
+    { "a56"sv, 0x273D },
+    { "a57"sv, 0x273E },
+    { "a58"sv, 0x273F },
+    { "a59"sv, 0x2740 },
+    { "a5"sv, 0x2706 },
+    { "a60"sv, 0x2741 },
+    { "a61"sv, 0x2742 },
+    { "a62"sv, 0x2743 },
+    { "a63"sv, 0x2744 },
+    { "a64"sv, 0x2745 },
+    { "a65"sv, 0x2746 },
+    { "a66"sv, 0x2747 },
+    { "a67"sv, 0x2748 },
+    { "a68"sv, 0x2749 },
+    { "a69"sv, 0x274A },
+    { "a6"sv, 0x271D },
+    { "a70"sv, 0x274B },
+    { "a71"sv, 0x25CF },
+    { "a72"sv, 0x274D },
+    { "a73"sv, 0x25A0 },
+    { "a74"sv, 0x274F },
+    { "a75"sv, 0x2751 },
+    { "a76"sv, 0x25B2 },
+    { "a77"sv, 0x25BC },
+    { "a78"sv, 0x25C6 },
+    { "a79"sv, 0x2756 },
+    { "a7"sv, 0x271E },
+    { "a81"sv, 0x25D7 },
+    { "a82"sv, 0x2758 },
+    { "a83"sv, 0x2759 },
+    { "a84"sv, 0x275A },
+    { "a85"sv, 0x276F },
+    { "a86"sv, 0x2771 },
+    { "a87"sv, 0x2772 },
+    { "a88"sv, 0x2773 },
+    { "a89"sv, 0x2768 },
+    { "a8"sv, 0x271F },
+    { "a90"sv, 0x2769 },
+    { "a91"sv, 0x276C },
+    { "a92"sv, 0x276D },
+    { "a93"sv, 0x276A },
+    { "a94"sv, 0x276B },
+    { "a95"sv, 0x2774 },
+    { "a96"sv, 0x2775 },
+    { "a97"sv, 0x275B },
+    { "a98"sv, 0x275C },
+    { "a99"sv, 0x275D },
+    { "a9"sv, 0x2720 },
+};
 
 static bool are_all_uppercase_hex(StringView component)
 {
@@ -4259,7 +4463,7 @@ static u32 decode_hex(StringView hex_string)
     return code_point;
 }
 
-Optional<u32> glyph_name_to_unicode(StringView name)
+Optional<u32> glyph_name_to_unicode(StringView name, bool is_zapf_dingbats)
 {
     // https://github.com/adobe-type-tools/agl-specification?tab=readme-ov-file#2-the-mapping
     // "To map a glyph name to a character string, follow the three steps below:
@@ -4277,10 +4481,14 @@ Optional<u32> glyph_name_to_unicode(StringView name)
     //  3. Map each component to a character string according to the procedure below, and concatenate those strings; the result is the character string to which the glyph name is mapped.
     StringView component = name;
 
-    //  If the font is Zapf Dingbats (PostScript FontName: ZapfDingbats), and the component is in the ITC Zapf Dingbats Glyph List, then map it to the corresponding character in that list."
-    // FIXME: Implement.
+    //  If the font is Zapf Dingbats (PostScript FontName: ZapfDingbats), and the component is in the ITC Zapf Dingbats Glyph List, then map it to the corresponding character in that list.
+    if (is_zapf_dingbats) {
+        auto zapf_dingbats_entry = zapf_dingbats_list.get(component);
+        if (zapf_dingbats_entry.has_value())
+            return zapf_dingbats_entry.value();
+    }
 
-    // "Otherwise, if the component is in AGL, then map it to the corresponding character in that list.
+    //  Otherwise, if the component is in AGL, then map it to the corresponding character in that list.
     auto agl_entry = glyph_list.get(component);
     if (agl_entry.has_value())
         return agl_entry.value();

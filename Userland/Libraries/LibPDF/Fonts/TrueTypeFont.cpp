@@ -15,16 +15,17 @@
 
 namespace PDF {
 
-TrueTypePainter::TrueTypePainter(AK::NonnullRefPtr<Gfx::Font> font, NonnullRefPtr<Encoding> encoding, bool encoding_is_mac_roman_or_win_ansi, bool is_nonsymbolic, Optional<u8> high_byte)
+TrueTypePainter::TrueTypePainter(AK::NonnullRefPtr<Gfx::Font> font, NonnullRefPtr<Encoding> encoding, bool encoding_is_mac_roman_or_win_ansi, bool is_nonsymbolic, Optional<u8> high_byte, bool is_zapf_dingbats)
     : m_font(move(font))
     , m_encoding(move(encoding))
     , m_encoding_is_mac_roman_or_win_ansi(encoding_is_mac_roman_or_win_ansi)
     , m_is_nonsymbolic(is_nonsymbolic)
     , m_high_byte(high_byte)
+    , m_is_zapf_dingbats(is_zapf_dingbats)
 {
 }
 
-NonnullOwnPtr<TrueTypePainter> TrueTypePainter::create(Document* document, NonnullRefPtr<DictObject> const& dict, SimpleFont const& containing_pdf_font, AK::NonnullRefPtr<Gfx::Font> font, NonnullRefPtr<Encoding> encoding)
+NonnullOwnPtr<TrueTypePainter> TrueTypePainter::create(Document* document, NonnullRefPtr<DictObject> const& dict, SimpleFont const& containing_pdf_font, AK::NonnullRefPtr<Gfx::Font> font, NonnullRefPtr<Encoding> encoding, bool is_zapf_dingbats)
 {
     bool encoding_is_mac_roman_or_win_ansi = false;
     if (dict->contains(CommonNames::Encoding)) {
@@ -55,7 +56,7 @@ NonnullOwnPtr<TrueTypePainter> TrueTypePainter::create(Document* document, Nonnu
         }
     }
 
-    return adopt_own(*new TrueTypePainter { move(font), move(encoding), encoding_is_mac_roman_or_win_ansi, containing_pdf_font.is_nonsymbolic(), high_byte });
+    return adopt_own(*new TrueTypePainter { move(font), move(encoding), encoding_is_mac_roman_or_win_ansi, containing_pdf_font.is_nonsymbolic(), high_byte, is_zapf_dingbats });
 }
 
 static void do_draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u32 unicode, Gfx::Font const& font, ColorOrStyle const& style)
@@ -106,7 +107,7 @@ PDFErrorOr<void> TrueTypePainter::draw_glyph(Gfx::Painter& painter, Gfx::FloatPo
         // use the (3, 1) algorithm.
         // FIXME: Implement (1, 0) subtable support.
         auto char_name = m_encoding->get_name(char_code);
-        u32 unicode = glyph_name_to_unicode(char_name).value_or(char_code);
+        u32 unicode = glyph_name_to_unicode(char_name, m_is_zapf_dingbats).value_or(char_code);
         if (m_font->contains_glyph(unicode)) {
             do_draw_glyph(painter, point, width, unicode, *m_font, style);
             return {};
@@ -132,7 +133,7 @@ PDFErrorOr<void> TrueTypePainter::draw_glyph(Gfx::Painter& painter, Gfx::FloatPo
         // "If a character cannot be mapped in any of the ways described above, the results are implementation-dependent."
         // FIXME: Do something smarter?
         auto char_name = m_encoding->get_name(char_code);
-        unicode = glyph_name_to_unicode(char_name).value_or(char_code);
+        unicode = glyph_name_to_unicode(char_name, m_is_zapf_dingbats).value_or(char_code);
     }
 
     do_draw_glyph(painter, point, width, unicode, *m_font, style);
@@ -143,7 +144,7 @@ Optional<float> TrueTypePainter::get_glyph_width(u8 char_code) const
 {
     // FIXME: Make this use the full char_code lookup method used in draw_glyph() once that's complete.
     auto char_name = m_encoding->get_name(char_code);
-    u32 unicode = glyph_name_to_unicode(char_name).value_or(char_code);
+    u32 unicode = glyph_name_to_unicode(char_name, m_is_zapf_dingbats).value_or(char_code);
     return m_font->glyph_width(unicode);
 }
 
@@ -177,7 +178,8 @@ PDFErrorOr<void> TrueTypeFont::initialize(Document* document, NonnullRefPtr<Dict
     if (!effective_encoding)
         effective_encoding = Encoding::standard_encoding();
 
-    m_font_painter = TrueTypePainter::create(document, dict, *this, *font, *effective_encoding);
+    bool const is_zapf_dingbats = false;
+    m_font_painter = TrueTypePainter::create(document, dict, *this, *font, *effective_encoding, is_zapf_dingbats);
 
     return {};
 }

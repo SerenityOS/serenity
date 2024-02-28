@@ -63,9 +63,8 @@ PDFErrorOr<void> Type1Font::initialize(Document* document, NonnullRefPtr<DictObj
             //  since the names in that font are meaningless.)"
             // FIXME: We use Liberation Sans for both Symbol and ZapfDingbats. It doesn't have all Symbol
             //        characters, or at least not under the codepoints used in AdobeGlpyhList. It doesn't
-            //        have any ZapfDingbats characters, or at least not the names for it. Not sure what to do about
-            //        this -- we either need a different font, or need to tweak the encoding somehow.
-            //        (For Helvetica / Times / Courier, the Liberation family doesn't have the right metrics.)
+            //        have most of the ZapfDingbats characters. Not sure what to do about this -- we might need a different font.
+            //        (For Helvetica / Times / Courier, the Liberation family also doesn't have the right metrics.)
             if (base_font_name() == "Symbol"sv)
                 effective_encoding = Encoding::symbol_encoding();
             else if (base_font_name() == "ZapfDingbats"sv)
@@ -76,7 +75,7 @@ PDFErrorOr<void> Type1Font::initialize(Document* document, NonnullRefPtr<DictObj
 
         // FIXME: For the standard 14 fonts, set some m_flags bits (symbolic/nonsymbolic, italic, bold, fixed pitch, serif).
 
-        m_fallback_font_painter = TrueTypePainter::create(document, dict, *this, *font, *effective_encoding);
+        m_fallback_font_painter = TrueTypePainter::create(document, dict, *this, *font, *effective_encoding, base_font_name() == "ZapfDingbats"sv);
     }
 
     VERIFY(m_font_program || m_fallback_font_painter);
