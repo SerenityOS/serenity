@@ -94,20 +94,9 @@ struct TypedArrayWithBufferWitness {
     ByteLength cached_buffer_byte_length;      // [[CachedBufferByteLength]]
 };
 
+TypedArrayWithBufferWitness make_typed_array_with_buffer_witness_record(TypedArrayBase const&, ArrayBuffer::Order);
 u32 typed_array_byte_length(TypedArrayWithBufferWitness const&);
 bool is_typed_array_out_of_bounds(TypedArrayWithBufferWitness const&);
-
-// Fast-path version of MakeTypedArrayWithBufferWitnessRecord when you already know the TA is not detached.
-TypedArrayWithBufferWitness make_typed_array_with_buffer_witness_record_for_known_attached_array(TypedArrayBase const&, ArrayBuffer::Order);
-
-// 10.4.5.9 MakeTypedArrayWithBufferWitnessRecord ( obj, order ), https://tc39.es/ecma262/#sec-maketypedarraywithbufferwitnessrecord
-inline TypedArrayWithBufferWitness make_typed_array_with_buffer_witness_record(TypedArrayBase const& typed_array, ArrayBuffer::Order order)
-{
-    if (typed_array.viewed_array_buffer()->is_detached())
-        return { .object = typed_array, .cached_buffer_byte_length = ByteLength::detached() };
-
-    return make_typed_array_with_buffer_witness_record_for_known_attached_array(typed_array, order);
-}
 
 // Fast-path version of TypedArrayLength when you already know the TA is within its bounds,
 // i.e. you previously checked IsTypedArrayOutOfBounds.
