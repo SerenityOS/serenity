@@ -1736,6 +1736,9 @@ CSSPixels FormattingContext::box_baseline(Box const& box) const
         case CSS::VerticalAlign::Top:
             // Top: Align the top of the aligned subtree with the top of the line box.
             return box_state.border_box_top();
+        case CSS::VerticalAlign::Middle:
+            // Align the vertical midpoint of the box with the baseline of the parent box plus half the x-height of the parent.
+            return box_state.content_height() / 2 + CSSPixels::nearest_value_for(box.containing_block()->first_available_font().pixel_metrics().x_height / 2);
         case CSS::VerticalAlign::Bottom:
             // Bottom: Align the bottom of the aligned subtree with the bottom of the line box.
             return box_state.content_height() + box_state.margin_box_top();
