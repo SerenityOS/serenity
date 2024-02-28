@@ -639,8 +639,11 @@ u32 typed_array_byte_length(TypedArrayWithBufferWitness const& typed_array_recor
 }
 
 // 10.4.5.12 TypedArrayLength ( taRecord ), https://tc39.es/ecma262/#sec-typedarraylength
-u32 typed_array_length_with_known_valid_bounds(TypedArrayWithBufferWitness const& typed_array_record)
+u32 typed_array_length(TypedArrayWithBufferWitness const& typed_array_record)
 {
+    // 1. Assert: IsTypedArrayOutOfBounds(taRecord) is false.
+    VERIFY(!is_typed_array_out_of_bounds(typed_array_record));
+
     // 2. Let O be taRecord.[[Object]].
     auto object = typed_array_record.object;
 
@@ -723,7 +726,7 @@ bool is_valid_integer_index_slow_case(TypedArrayBase const& typed_array, Canonic
         return false;
 
     // 7. Let length be TypedArrayLength(taRecord).
-    auto length = typed_array_length_with_known_valid_bounds(typed_array_record);
+    auto length = typed_array_length(typed_array_record);
 
     // 8. If ℝ(index) < 0 or ℝ(index) ≥ length, return false.
     if (property_index.as_index() >= length)
