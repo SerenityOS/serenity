@@ -700,21 +700,12 @@ bool is_typed_array_out_of_bounds_for_known_attached_array(TypedArrayWithBufferW
 }
 
 // 10.4.5.14 IsValidIntegerIndex ( O, index ), https://tc39.es/ecma262/#sec-isvalidintegerindex
-bool is_valid_integer_index(TypedArrayBase const& typed_array, CanonicalIndex property_index)
+bool is_valid_integer_index_slow_case(TypedArrayBase const& typed_array, CanonicalIndex property_index)
 {
-    // 1. If IsDetachedBuffer(O.[[ViewedArrayBuffer]]) is true, return false.
-    if (typed_array.viewed_array_buffer()->is_detached())
-        return false;
-
-    // 2. If IsIntegralNumber(index) is false, return false.
-    // 3. If index is -0𝔽, return false.
-    if (!property_index.is_index())
-        return false;
-
     // 4. Let taRecord be MakeTypedArrayWithBufferWitnessRecord(O, unordered).
     auto typed_array_record = make_typed_array_with_buffer_witness_record_for_known_attached_array(typed_array, ArrayBuffer::Unordered);
 
-    // NOTE: Bounds checking is not a synchronizing operation when O's backing buffer is a growable SharedArrayBuffer.
+    // 5. NOTE: Bounds checking is not a synchronizing operation when O's backing buffer is a growable SharedArrayBuffer.
 
     // 6. If IsTypedArrayOutOfBounds(taRecord) is true, return false.
     if (is_typed_array_out_of_bounds_for_known_attached_array(typed_array_record))
