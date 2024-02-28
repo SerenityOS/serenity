@@ -143,6 +143,7 @@ void ViewportPaintable::refresh_clip_state()
         // Start from CSS clip property if it exists.
         Optional<CSSPixelRect> clip_rect = paintable_box.get_clip_rect();
 
+        clip_frame.clear_border_radii_clips();
         if (overflow_x != CSS::Overflow::Visible && overflow_y != CSS::Overflow::Visible) {
             auto overflow_clip_rect = paintable_box.compute_absolute_padding_rect_with_css_transform_applied();
             for (auto const* block = &paintable_box.layout_box(); !block->is_viewport(); block = block->containing_block()) {
