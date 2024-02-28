@@ -38,9 +38,6 @@ public:
     ThrowCompletionOr<void> create_global_var_binding(DeprecatedFlyString const& name, bool can_be_deleted);
     ThrowCompletionOr<void> create_global_function_binding(DeprecatedFlyString const& name, Value, bool can_be_deleted);
 
-    static FlatPtr object_record_offset() { return OFFSET_OF(GlobalEnvironment, m_object_record); }
-    static FlatPtr declarative_record_offset() { return OFFSET_OF(GlobalEnvironment, m_declarative_record); }
-
 private:
     GlobalEnvironment(Object&, Object& this_value);
 

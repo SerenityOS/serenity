@@ -811,8 +811,6 @@ public:
             AK::swap(at(i), at(size() - i - 1));
     }
 
-    static FlatPtr outline_buffer_offset() { return OFFSET_OF(Vector, m_outline_buffer); }
-
 private:
     void reset_capacity()
     {

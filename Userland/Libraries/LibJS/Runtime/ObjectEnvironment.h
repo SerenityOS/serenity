@@ -42,8 +42,6 @@ public:
     // [[IsWithEnvironment]], Indicates whether this Environment Record is created for a with statement.
     bool is_with_environment() const { return m_with_environment; }
 
-    static FlatPtr binding_object_offset() { return OFFSET_OF(ObjectEnvironment, m_binding_object); }
-
 private:
     ObjectEnvironment(Object& binding_object, IsWithEnvironment, Environment* outer_environment);
 

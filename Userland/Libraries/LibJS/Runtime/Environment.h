@@ -57,9 +57,6 @@ public:
     bool is_permanently_screwed_by_eval() const { return m_permanently_screwed_by_eval; }
     void set_permanently_screwed_by_eval();
 
-    static FlatPtr is_permanently_screwed_by_eval_offset() { return OFFSET_OF(Environment, m_permanently_screwed_by_eval); }
-    static FlatPtr outer_environment_offset() { return OFFSET_OF(Environment, m_outer_environment); }
-
 protected:
     explicit Environment(Environment* parent);
 

@@ -318,9 +318,6 @@ public:
         }
     }
 
-    static FlatPtr value_offset() { return OFFSET_OF(Optional, m_storage); }
-    static FlatPtr has_value_offset() { return OFFSET_OF(Optional, m_has_value); }
-
 private:
     alignas(T) u8 m_storage[sizeof(T)];
     bool m_has_value { false };

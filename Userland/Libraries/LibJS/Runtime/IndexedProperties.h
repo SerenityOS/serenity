@@ -46,8 +46,6 @@ public:
 
     bool is_simple_storage() const { return m_is_simple_storage; }
 
-    static FlatPtr is_simple_storage_offset() { return OFFSET_OF(IndexedPropertyStorage, m_is_simple_storage); }
-
 protected:
     explicit IndexedPropertyStorage(IsSimpleStorage is_simple_storage)
         : m_is_simple_storage(is_simple_storage == IsSimpleStorage::Yes) {};
@@ -75,9 +73,6 @@ public:
     virtual bool set_array_like_size(size_t new_size) override;
 
     Vector<Value> const& elements() const { return m_packed_elements; }
-
-    static FlatPtr array_size_offset() { return OFFSET_OF(SimpleIndexedPropertyStorage, m_array_size); }
-    static FlatPtr elements_offset() { return OFFSET_OF(SimpleIndexedPropertyStorage, m_packed_elements); }
 
 private:
     friend GenericIndexedPropertyStorage;
@@ -176,8 +171,6 @@ public:
                 callback(element.value.value);
         }
     }
-
-    static FlatPtr storage_offset() { return OFFSET_OF(IndexedProperties, m_storage); }
 
 private:
     void switch_to_generic_storage();
