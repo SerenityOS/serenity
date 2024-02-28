@@ -165,7 +165,7 @@ static ErrorOr<Tag> read_tag(ReadonlyBytes buffer)
 ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(ReadonlyBytes buffer, Options options)
 {
     auto tag = TRY(read_tag(buffer));
-    if (tag == Tag("ttcf")) {
+    if (tag == HeaderTag_FontCollection) {
         // It's a font collection
         FixedMemoryStream stream { buffer };
         auto ttc_header_v1 = TRY(stream.read_in_place<TTCHeaderV1>());
@@ -178,10 +178,10 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(Readonl
         auto offset = TRY(stream.read_value<BigEndian<u32>>());
         return try_load_from_offset(buffer, offset, move(options));
     }
-    if (tag == Tag("OTTO"))
+    if (tag == HeaderTag_CFFOutlines)
         return Error::from_string_literal("CFF fonts not supported yet");
 
-    if (tag.to_u32() != 0x00010000 && tag != Tag("true"))
+    if (tag != HeaderTag_TrueTypeOutlines && tag != HeaderTag_TrueTypeOutlinesApple)
         return Error::from_string_literal("Not a valid font");
 
     return try_load_from_offset(buffer, 0, move(options));
