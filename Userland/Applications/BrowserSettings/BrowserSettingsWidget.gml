@@ -194,7 +194,7 @@
             @GUI::ImageWidget {
                 fixed_width: 32
                 fixed_height: 32
-                bitmap: "/res/icons/32x32/downloads.png"
+                bitmap: "/res/icons/32x32/downloads-directory-open.png"
             }
 
             @GUI::CheckBox {
