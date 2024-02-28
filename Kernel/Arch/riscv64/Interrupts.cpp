@@ -58,7 +58,8 @@ extern "C" void trap_handler(TrapFrame& trap_frame)
         // Exception
 
         Processor::current().enter_trap(trap_frame, false);
-        Processor::enable_interrupts();
+        if (trap_frame.regs->sstatus.SPIE == 1)
+            Processor::enable_interrupts();
 
         using enum RISCV64::CSR::SCAUSE;
         switch (scause) {
