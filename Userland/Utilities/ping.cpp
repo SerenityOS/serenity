@@ -112,7 +112,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     int fd = TRY(Core::System::socket(AF_INET, SOCK_RAW, IPPROTO_ICMP));
 
     TRY(Core::System::drop_privileges());
-    TRY(Core::System::pledge("stdio inet unix sigaction"));
+    TRY(Core::System::pledge("-id"));
 
     struct timeval timeout {
         1, 0
@@ -129,7 +129,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    TRY(Core::System::pledge("stdio inet sigaction"));
+    TRY(Core::System::pledge("-unix"));
 
     pid_t pid = getpid();
 

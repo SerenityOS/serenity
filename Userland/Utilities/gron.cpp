@@ -32,7 +32,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (isatty(STDOUT_FILENO))
         use_color = true;
 
-    TRY(Core::System::pledge("stdio rpath"));
+    TRY(Core::System::pledge("-tty"));
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Print each value in a JSON file with its fully expanded key.");
@@ -56,7 +56,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto file = TRY(Core::File::open_file_or_standard_stream(path, Core::File::OpenMode::Read));
 
-    TRY(Core::System::pledge("stdio"));
+    TRY(Core::System::pledge("-rpath"));
 
     auto file_contents = TRY(file->read_until_eof());
     auto json = TRY(JsonValue::from_string(file_contents));

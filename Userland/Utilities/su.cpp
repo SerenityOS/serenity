@@ -52,14 +52,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return Error::from_string_literal("Incorrect or disabled password.");
     }
 
-    TRY(Core::System::pledge("stdio rpath exec id"));
+    TRY(Core::System::pledge("-tty"));
 
     TRY(account.login());
 
     if (simulate_login)
         TRY(Core::System::chdir(account.home_directory()));
 
-    TRY(Core::System::pledge("stdio exec"));
+    TRY(Core::System::pledge("-rpath -id"));
 
     TRY(Core::Environment::set("HOME"sv, account.home_directory(), Core::Environment::Overwrite::Yes));
 

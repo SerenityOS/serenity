@@ -111,7 +111,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto f = TRY(Core::File::open_file_or_standard_stream(file, Core::File::OpenMode::Read));
     if (!follow)
-        TRY(Core::System::pledge("stdio"));
+        TRY(Core::System::pledge("-rpath"));
 
     auto file_is_seekable = !f->seek(0, SeekMode::SetPosition).is_error();
     if (!file_is_seekable) {
