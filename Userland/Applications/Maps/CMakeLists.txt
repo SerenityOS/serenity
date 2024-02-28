@@ -11,6 +11,7 @@ compile_gml(SearchPanel.gml SearchPanelGML.cpp)
 set(SOURCES
     main.cpp
     FavoritesEditDialogGML.cpp
+    FavoritesModel.cpp
     FavoritesPanelGML.cpp
     FavoritesPanel.cpp
     MapWidget.cpp

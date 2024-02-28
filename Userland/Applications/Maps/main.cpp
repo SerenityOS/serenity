@@ -123,7 +123,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto favorites_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-hearts.png"sv));
     map_widget.add_context_menu_action(GUI::Action::create(
         "Add to &Favorites", favorites_icon, [favorites_panel, &map_widget](auto&) {
-            MUST(favorites_panel->add_favorite({ "Unnamed place"_string, map_widget.context_menu_latlng(), map_widget.zoom() }));
+            favorites_panel->add_favorite({ "Unnamed place"_string, map_widget.context_menu_latlng(), map_widget.zoom() });
         },
         window));
 
