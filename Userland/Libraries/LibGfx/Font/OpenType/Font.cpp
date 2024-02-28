@@ -183,13 +183,31 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(Readonl
     return try_load_from_offset(buffer, 0, move(options));
 }
 
-// FIXME: "loca" and "glyf" are not available for CFF fonts.
-ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u32 offset, Options options)
+static ErrorOr<void> for_each_table_record(ReadonlyBytes buffer, u32 offset, Function<ErrorOr<void>(Tag, ReadonlyBytes)> callback)
 {
     FixedMemoryStream stream { buffer };
     TRY(stream.seek(offset, AK::SeekMode::SetPosition));
-    auto& table_directory = *TRY(stream.read_in_place<TableDirectory const>());
 
+    auto& table_directory = *TRY(stream.read_in_place<TableDirectory const>());
+    for (auto i = 0; i < table_directory.num_tables; i++) {
+        auto& table_record = *TRY(stream.read_in_place<TableRecord const>());
+
+        if (Checked<u32>::addition_would_overflow(static_cast<u32>(table_record.offset), static_cast<u32>(table_record.length)))
+            return Error::from_string_literal("Invalid table offset or length in font");
+
+        if (buffer.size() < table_record.offset + table_record.length)
+            return Error::from_string_literal("Font file too small");
+
+        auto buffer_here = buffer.slice(table_record.offset, table_record.length);
+        TRY(callback(table_record.table_tag, buffer_here));
+    }
+
+    return {};
+}
+
+// FIXME: "loca" and "glyf" are not available for CFF fonts.
+ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u32 offset, Options options)
+{
     Optional<ReadonlyBytes> opt_head_slice = {};
     Optional<ReadonlyBytes> opt_name_slice = {};
     Optional<ReadonlyBytes> opt_hhea_slice = {};
@@ -207,50 +225,41 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
     Optional<CBDT> cbdt;
     Optional<GPOS> gpos;
 
-    for (auto i = 0; i < table_directory.num_tables; i++) {
-        auto& table_record = *TRY(stream.read_in_place<TableRecord const>());
-
-        if (Checked<u32>::addition_would_overflow(static_cast<u32>(table_record.offset), static_cast<u32>(table_record.length)))
-            return Error::from_string_literal("Invalid table offset or length in font");
-
-        if (buffer.size() < table_record.offset + table_record.length)
-            return Error::from_string_literal("Font file too small");
-
-        auto buffer_here = buffer.slice(table_record.offset, table_record.length);
-
+    TRY(for_each_table_record(buffer, offset, [&](Tag table_tag, ReadonlyBytes tag_buffer) -> ErrorOr<void> {
         // Get the table offsets we need.
-        if (table_record.table_tag == Tag("head")) {
-            opt_head_slice = buffer_here;
-        } else if (table_record.table_tag == Tag("name")) {
-            opt_name_slice = buffer_here;
-        } else if (table_record.table_tag == Tag("hhea")) {
-            opt_hhea_slice = buffer_here;
-        } else if (table_record.table_tag == Tag("maxp")) {
-            opt_maxp_slice = buffer_here;
-        } else if (table_record.table_tag == Tag("hmtx")) {
-            opt_hmtx_slice = buffer_here;
-        } else if (table_record.table_tag == Tag("cmap")) {
-            opt_cmap_slice = buffer_here;
-        } else if (table_record.table_tag == Tag("loca")) {
-            opt_loca_slice = buffer_here;
-        } else if (table_record.table_tag == Tag("glyf")) {
-            opt_glyf_slice = buffer_here;
-        } else if (table_record.table_tag == Tag("OS/2")) {
-            opt_os2_slice = buffer_here;
-        } else if (table_record.table_tag == Tag("kern")) {
-            opt_kern_slice = buffer_here;
-        } else if (table_record.table_tag == Tag("fpgm")) {
-            opt_fpgm_slice = buffer_here;
-        } else if (table_record.table_tag == Tag("prep")) {
-            opt_prep_slice = buffer_here;
-        } else if (table_record.table_tag == Tag("CBLC")) {
-            cblc = TRY(CBLC::from_slice(buffer_here));
-        } else if (table_record.table_tag == Tag("CBDT")) {
-            cbdt = TRY(CBDT::from_slice(buffer_here));
-        } else if (table_record.table_tag == Tag("GPOS")) {
-            gpos = TRY(GPOS::from_slice(buffer_here));
+        if (table_tag == Tag("head")) {
+            opt_head_slice = tag_buffer;
+        } else if (table_tag == Tag("name")) {
+            opt_name_slice = tag_buffer;
+        } else if (table_tag == Tag("hhea")) {
+            opt_hhea_slice = tag_buffer;
+        } else if (table_tag == Tag("maxp")) {
+            opt_maxp_slice = tag_buffer;
+        } else if (table_tag == Tag("hmtx")) {
+            opt_hmtx_slice = tag_buffer;
+        } else if (table_tag == Tag("cmap")) {
+            opt_cmap_slice = tag_buffer;
+        } else if (table_tag == Tag("loca")) {
+            opt_loca_slice = tag_buffer;
+        } else if (table_tag == Tag("glyf")) {
+            opt_glyf_slice = tag_buffer;
+        } else if (table_tag == Tag("OS/2")) {
+            opt_os2_slice = tag_buffer;
+        } else if (table_tag == Tag("kern")) {
+            opt_kern_slice = tag_buffer;
+        } else if (table_tag == Tag("fpgm")) {
+            opt_fpgm_slice = tag_buffer;
+        } else if (table_tag == Tag("prep")) {
+            opt_prep_slice = tag_buffer;
+        } else if (table_tag == Tag("CBLC")) {
+            cblc = TRY(CBLC::from_slice(tag_buffer));
+        } else if (table_tag == Tag("CBDT")) {
+            cbdt = TRY(CBDT::from_slice(tag_buffer));
+        } else if (table_tag == Tag("GPOS")) {
+            gpos = TRY(GPOS::from_slice(tag_buffer));
         }
-    }
+        return {};
+    }));
 
     if (!opt_head_slice.has_value())
         return Error::from_string_literal("Font is missing Head");
