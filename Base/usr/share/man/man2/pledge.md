@@ -14,9 +14,9 @@ int pledge(const char* promises, const char* execpromises);
 
 `pledge()` makes a promise to the kernel that from this moment on, the calling process will only use a subset of system functionality.
 
-Functionality is divided into a curated set of promises (described below), which can be combined to cover the program's needs. Both arguments are space-separated lists of promises.
+Functionality is divided into a curated set of promises (described below), which can be combined to cover the program's needs. Both arguments are space-separated lists of promises, with each promise potentially prefixed with a '-'.
 
-Note that `pledge()` can be called repeatedly to remove previously-pledged promises, but it can never regain capabilities once lost.
+`pledge()` can be called repeatedly to forfeit previously-pledged promises, but it can never regain capabilities once lost. Previously-pledged promises can be forfeited by either specifying a subset of the previously pledged promises, or by prepending a '-' character to one or more promises in which case only these "negative" promises will be forfeited. It is an error to mix negative and non-negative promises in the same `pledge()` call. A negative promise has no effect if the same promise has already been forfeited.
 
 `promises` are applied to the current process, and will also be inherited by children created by [`fork`(2)](help://man/2/fork).
 
@@ -64,8 +64,31 @@ Promises marked with an asterisk (\*) are SerenityOS specific extensions not sup
 
 * `EFAULT`: `promises` and/or `execpromises` are not null and not in readable memory.
 * `EINVAL`: One or more invalid promises were specified.
+* `EINVAL`: Negative promise(s) `pledge()`d before any non-negative `pledge()` call.
+* `EINVAL`: Negative promises were mixed with non-negative promises in the same `pledge()` call.
 * `EPERM`: An attempt to increase capabilities was rejected.
 * `E2BIG`: `promises` string or `execpromises `string are longer than all known promises strings together.
+
+## Examples
+
+Example using negative pledges:
+
+```**c++
+// Initial pledge
+pledge("stdio rpath wpath id", NULL);
+
+// Stuff that needs "id" here...
+
+// Forfeit id
+pledge("-id", NULL);
+
+// Stuff that needs rpath/wpath here...
+
+// Forfeit rpath and wpath
+pledge("-rpath -wpath", NULL);
+
+// Only stdio remains pledged at this point.
+```
 
 ## History
 

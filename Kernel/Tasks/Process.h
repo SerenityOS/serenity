@@ -74,7 +74,8 @@ UnixDateTime kgettimeofday();
     __ENUMERATE_PLEDGE_PROMISE(mount)     \
     __ENUMERATE_PLEDGE_PROMISE(no_error)
 
-#define __ENUMERATE_PLEDGE_PROMISE(x) sizeof(#x) + 1 +
+// +2 = +1 for space, +1 for minus
+#define __ENUMERATE_PLEDGE_PROMISE(x) sizeof(#x) + 2 +
 // NOTE: We truncate the last space from the string as it's not needed (with 0 - 1).
 constexpr static unsigned all_promises_strings_length_with_spaces = ENUMERATE_PLEDGE_PROMISES 0 - 1;
 #undef __ENUMERATE_PLEDGE_PROMISE
