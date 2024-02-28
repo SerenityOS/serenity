@@ -27,6 +27,8 @@ public:
         double latitude;
         double longitude;
 
+        bool operator==(LatLng const& other) const = default;
+
         double distance_to(LatLng const& other) const;
     };
 
