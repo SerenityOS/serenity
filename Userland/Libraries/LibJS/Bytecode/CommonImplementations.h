@@ -183,10 +183,8 @@ inline ThrowCompletionOr<Value> get_by_value(VM& vm, Value base_value, Value pro
 inline ThrowCompletionOr<Value> get_global(Bytecode::Interpreter& interpreter, DeprecatedFlyString const& identifier, GlobalVariableCache& cache)
 {
     auto& vm = interpreter.vm();
-    auto& realm = *vm.current_realm();
-
-    auto& binding_object = realm.global_environment().object_record().binding_object();
-    auto& declarative_record = realm.global_environment().declarative_record();
+    auto& binding_object = interpreter.global_object();
+    auto& declarative_record = interpreter.global_declarative_environment();
 
     // OPTIMIZATION: If the shape of the object hasn't changed, we can use the cached property offset.
     auto& shape = binding_object.shape();
