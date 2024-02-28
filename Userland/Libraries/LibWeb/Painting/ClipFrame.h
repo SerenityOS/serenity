@@ -28,6 +28,7 @@ struct ClipFrame : public RefCounted<ClipFrame> {
         }
         m_border_radii_clips.append(border_radii_clip);
     }
+    void clear_border_radii_clips() { m_border_radii_clips.clear(); }
 
     CSSPixelRect rect() const { return m_rect; }
     void set_rect(CSSPixelRect rect) { m_rect = rect; }
