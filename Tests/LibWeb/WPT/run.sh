@@ -14,6 +14,7 @@ fi
 : "${WEBDRIVER_BINARY:=$(env PATH="${SERENITY_SOURCE_DIR}/Build/lagom/bin/Ladybird.app/Contents/MacOS:${SERENITY_SOURCE_DIR}/Build/lagom/libexec:${SERENITY_SOURCE_DIR}/Meta/Lagom/Build/libexec:${PATH}" \
                          which WebDriver)}"
 update_expectations_metadata=false
+remove_wpt_repository=false
 
 for arg in "$@"; do
   case $arg in
@@ -23,6 +24,10 @@ for arg in "$@"; do
         ;;
     --update-expectations-metadata)
         update_expectations_metadata=true
+        shift
+        ;;
+    --remove-wpt-repository)
+        remove_wpt_repository=true
         shift
         ;;
     *)
@@ -81,6 +86,10 @@ python3 ./wpt/wpt run ladybird \
 if [[ $update_expectations_metadata == true ]]; then
     python3 ./wpt/wpt update-expectations --product ladybird --metadata ./metadata --manifest ./MANIFEST.json "${wpt_run_log_filename}"
     python3 ./concat-extract-metadata.py --concat ./metadata > metadata.txt
+fi
+
+if [[ $remove_wpt_repository == true ]]; then
+    rm -rf wpt
 fi
 
 popd
