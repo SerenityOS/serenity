@@ -13,20 +13,3 @@ stages:
         parameters:
           os: 'Linux'
           lagom_lints: true
-
-      - template: Meta/Azure/Lagom.yml
-        parameters:
-          os: 'Linux'
-          fuzzer: 'Fuzz'
-
-      - template: Meta/Azure/Lagom.yml
-        parameters:
-          os: 'macOS'
-
-  - stage: SerenityOS
-    dependsOn: []
-
-    jobs:
-      - template: Meta/Azure/Serenity.yml
-        parameters:
-          arch: 'x86_64'

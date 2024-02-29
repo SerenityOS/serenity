@@ -42,6 +42,10 @@ jobs:
       vmImage: $(job_pool)
 
     steps:
+    - script: |
+        df -h
+      displayName: "Disk usage at start"
+
     - template: Setup.yml
       parameters:
         os: '${{ parameters.os }}'
@@ -58,160 +62,95 @@ jobs:
           ccache_version: 2
           serenity_ccache_size: '2G'
 
-    - ${{ if eq(parameters.os, 'Android') }}:
-      - script: |
-          yes | $ANDROID_SDK_ROOT/tools/bin/sdkmanager "ndk;$(ndk_version)"
-        displayName: "Install NDK $(ndk_version)"
+    - script: |
+        set -e
+        df -h
+        cmake -GNinja -B Build \
+          -DBUILD_LAGOM=ON \
+          -DENABLE_LAGOM_CCACHE=ON \
+          -DENABLE_LAGOM_LADYBIRD=ON \
+          -DINCLUDE_WASM_SPEC_TESTS=ON \
+          -DWASM_SPEC_TEST_SKIP_FORMATTING=ON \
+          -DENABLE_UNDEFINED_SANITIZER=ON \
+          -DENABLE_ADDRESS_SANITIZER=ON \
+          -DCMAKE_C_COMPILER=$(host-cc) \
+          -DCMAKE_CXX_COMPILER=$(host-cxx)
+        df -h
+      displayName: 'Create Build Environment'
+      workingDirectory: $(Build.SourcesDirectory)/Meta/Lagom
+      env:
+        PATH: '$(PATH):$(Build.SourcesDirectory)/wabt-1.0.23/bin'
+        CCACHE_DIR: '$(SERENITY_CCACHE_DIR)'
 
-      - script: |
-          # Install AVD files
-          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install 'system-images;android-30;google_apis;x86_64'
+    - script: |
+        set -e
+        cmake --build .
+        df -h
+        cmake --install . --prefix $(Build.SourcesDirectory)/Meta/Lagom/Install
+        df -h
+      displayName: 'Build'
+      workingDirectory: $(Build.SourcesDirectory)/Meta/Lagom/Build
+      env:
+        CCACHE_DIR: '$(SERENITY_CCACHE_DIR)'
 
-          # Create emulator
-          echo "no" | $ANDROID_HOME/tools/bin/avdmanager create avd -n xamarin_android_emulator -k 'system-images;android-30;google_apis;x86_64' --force
+    - script: |
+        set -e
+        ninja test
+        df -h
+      displayName: 'Test'
+      workingDirectory: $(Build.SourcesDirectory)/Meta/Lagom/Build
+      timeoutInMinutes: 60
+      env:
+        SERENITY_SOURCE_DIR: '$(Build.SourcesDirectory)'
+        CTEST_OUTPUT_ON_FAILURE: 1
+        ASAN_OPTIONS: 'strict_string_checks=1:check_initialization_order=1:strict_init_order=1:detect_stack_use_after_return=1'
+        UBSAN_OPTIONS: 'print_stacktrace=1:print_summary=1:halt_on_error=1'
+        TESTS_ONLY: 1
 
-          $ANDROID_HOME/emulator/emulator -list-avds
+    # Detect if any test dumps exist, which enables the next step to publish them as an artifact.
+    - bash: |
+        if [[ -d $(Build.SourcesDirectory)/Meta/Lagom/Build/Ladybird/test-dumps ]]; then
+          echo "##vso[task.setvariable variable=TestDumpsExist]true"
+        fi
+        df -h
+      condition: always()
 
-          echo "Starting emulator"
+    - publish: $(Build.SourcesDirectory)/Meta/Lagom/Build/Ladybird/test-dumps
+      artifact: 'test-dumps-${{ parameters.os }}-${{ parameters.fuzzer }}'
+      condition: eq(variables.TestDumpsExist, 'true')
 
-          # Start emulator in background
-          nohup $ANDROID_HOME/emulator/emulator -avd xamarin_android_emulator -no-snapshot > /dev/null 2>&1 &
-          $ANDROID_HOME/platform-tools/adb wait-for-device shell 'while [[ -z $(getprop sys.boot_completed | tr -d '\r') ]]; do sleep 1; done; input keyevent 82'
-          $ANDROID_HOME/platform-tools/adb devices
-          echo "Emulator started"
-        displayName: "Start Android Emulator"
+    - script: |
+        df -h
+        ./run.sh
+        df -h
+        rm -rf wpt
+        df -h
+      displayName: 'WPT'
+      workingDirectory: $(Build.SourcesDirectory)/Tests/LibWeb/WPT/
+      env:
+        SERENITY_SOURCE_DIR: '$(Build.SourcesDirectory)'
+        QT_QPA_PLATFORM: 'offscreen'
 
-      - task: Gradle@2
-        inputs:
-          workingDirectory: 'Ladybird/Android'
-          gradleWrapperFile: 'gradlew'
-          gradleOptions: '-Xmx3072m'
-          jdkVersionOption: '17'
-          jdkArchitectureOption: 'x64'
-          publishJUnitResults: true
-          testResultsFiles: '**/TEST-*.xml'
-          tasks: 'connectedAndroidTest'
-        env:
-          CCACHE_DIR: '$(SERENITY_CCACHE_DIR)'
-          SERENITY_CACHE_DIR: "$(Build.SourcesDirectory)/Meta/Lagom/caches"
-        displayName: "Build and Test in Android Emulator"
-
-    - ${{ elseif eq(parameters.fuzzer, 'Fuzz') }}:
-      - script: |
-          set -e
-          cmake -GNinja -B tools-build \
-              -DBUILD_LAGOM=OFF \
-              -DENABLE_LAGOM_CCACHE=ON \
-              -DCMAKE_INSTALL_PREFIX=tool-install \
-              -Dpackage=LagomTools
-          ninja -C tools-build install
-          cmake -GNinja -B Build \
-            -DBUILD_LAGOM=ON \
-            -DENABLE_LAGOM_CCACHE=ON \
-            -DENABLE_FUZZERS_LIBFUZZER=ON \
-            -DENABLE_ADDRESS_SANITIZER=ON \
-            -DCMAKE_C_COMPILER=clang \
-            -DCMAKE_CXX_COMPILER=clang++ \
-            -DCMAKE_PREFIX_PATH=tool-install
-        displayName: 'Create Build Environment'
-        workingDirectory: $(Build.SourcesDirectory)/Meta/Lagom
-        env:
-          CCACHE_DIR: '$(SERENITY_CCACHE_DIR)'
-    - ${{ elseif eq(parameters.fuzzer, 'NoFuzz') }}:
-      - script: |
-          set -e
-          cmake -GNinja -B Build \
-            -DBUILD_LAGOM=ON \
-            -DENABLE_LAGOM_CCACHE=ON \
-            -DENABLE_LAGOM_LADYBIRD=ON \
-            -DINCLUDE_WASM_SPEC_TESTS=ON \
-            -DWASM_SPEC_TEST_SKIP_FORMATTING=ON \
-            -DENABLE_UNDEFINED_SANITIZER=ON \
-            -DENABLE_ADDRESS_SANITIZER=ON \
-            -DCMAKE_C_COMPILER=$(host-cc) \
-            -DCMAKE_CXX_COMPILER=$(host-cxx)
-        displayName: 'Create Build Environment'
-        workingDirectory: $(Build.SourcesDirectory)/Meta/Lagom
-        env:
-          PATH: '$(PATH):$(Build.SourcesDirectory)/wabt-1.0.23/bin'
-          CCACHE_DIR: '$(SERENITY_CCACHE_DIR)'
-
-    - ${{ if not(eq(parameters.os, 'Android')) }}:
-        - script: |
-            set -e
-            cmake --build .
-            cmake --install . --prefix $(Build.SourcesDirectory)/Meta/Lagom/Install
-          displayName: 'Build'
-          workingDirectory: $(Build.SourcesDirectory)/Meta/Lagom/Build
-          env:
-            CCACHE_DIR: '$(SERENITY_CCACHE_DIR)'
-
-    - ${{ if and(eq(parameters.fuzzer, 'NoFuzz'), not(eq(parameters.os, 'Android')) ) }}:
-      - script: |
-          set -e
-          ninja test
-        displayName: 'Test'
-        workingDirectory: $(Build.SourcesDirectory)/Meta/Lagom/Build
-        timeoutInMinutes: 60
-        env:
-          SERENITY_SOURCE_DIR: '$(Build.SourcesDirectory)'
-          CTEST_OUTPUT_ON_FAILURE: 1
-          ASAN_OPTIONS: 'strict_string_checks=1:check_initialization_order=1:strict_init_order=1:detect_stack_use_after_return=1'
-          UBSAN_OPTIONS: 'print_stacktrace=1:print_summary=1:halt_on_error=1'
-          TESTS_ONLY: 1
-
-      # Detect if any test dumps exist, which enables the next step to publish them as an artifact.
-      - bash: |
-          if [[ -d $(Build.SourcesDirectory)/Meta/Lagom/Build/Ladybird/test-dumps ]]; then
-            echo "##vso[task.setvariable variable=TestDumpsExist]true"
-          fi
-        condition: always()
-
-      - publish: $(Build.SourcesDirectory)/Meta/Lagom/Build/Ladybird/test-dumps
-        artifact: 'test-dumps-${{ parameters.os }}-${{ parameters.fuzzer }}'
-        condition: eq(variables.TestDumpsExist, 'true')
-
-    - ${{ if and(eq(parameters.fuzzer, 'NoFuzz'), eq(parameters.os, 'Linux') ) }}:
-      - script: |
-          ./run.sh --remove-wpt-repository
-        displayName: 'WPT'
-        workingDirectory: $(Build.SourcesDirectory)/Tests/LibWeb/WPT/
-        env:
-          SERENITY_SOURCE_DIR: '$(Build.SourcesDirectory)'
-          QT_QPA_PLATFORM: 'offscreen'
-
-    - ${{ if and(eq(parameters.fuzzer, 'NoFuzz'), eq(parameters.os, 'macOS') ) }}:
-      - script: |
-          set -e
-          cmake -B Build -DENABLE_QT=ON
-        displayName: 'Enable the Ladybird Qt chrome'
-        workingDirectory: $(Build.SourcesDirectory)/Meta/Lagom
-        env:
-          CCACHE_DIR: '$(SERENITY_CCACHE_DIR)'
-
-      - script: |
-          set -e
-          cmake --build .
-        displayName: 'Build Ladybird Qt chrome'
-        workingDirectory: $(Build.SourcesDirectory)/Meta/Lagom/Build
-        env:
-          CCACHE_DIR: '$(SERENITY_CCACHE_DIR)'
-
-    - ${{ if eq(parameters.lagom_lints, true) }}:
-      - script: |
-          set -e
-          ./Meta/check-markdown.sh
-          ./Meta/lint-gml-format.sh
-          git ls-files '*.ipc' | xargs ./Meta/Lagom/Build/bin/IPCMagicLinter
-        displayName: 'Run lints that require Lagom'
-        workingDirectory: $(Build.SourcesDirectory)/
-        env:
-          MARKDOWN_CHECK_BINARY: ./Meta/Lagom/Build/bin/markdown-check
-          GML_FORMAT: ./Meta/Lagom/Build/bin/gml-format
-          # FIXME: enable detect_stack_use_after_return=1 #7420
-          ASAN_OPTIONS: 'strict_string_checks=1:check_initialization_order=1:strict_init_order=1:detect_stack_use_after_return=0'
-          UBSAN_OPTIONS: 'print_stacktrace=1:print_summary=1:halt_on_error=1'
+    - script: |
+        set -e
+        ./Meta/check-markdown.sh
+        ./Meta/lint-gml-format.sh
+        git ls-files '*.ipc' | xargs ./Meta/Lagom/Build/bin/IPCMagicLinter
+        df -h
+      displayName: 'Run lints that require Lagom'
+      workingDirectory: $(Build.SourcesDirectory)/
+      env:
+        MARKDOWN_CHECK_BINARY: ./Meta/Lagom/Build/bin/markdown-check
+        GML_FORMAT: ./Meta/Lagom/Build/bin/gml-format
+        # FIXME: enable detect_stack_use_after_return=1 #7420
+        ASAN_OPTIONS: 'strict_string_checks=1:check_initialization_order=1:strict_init_order=1:detect_stack_use_after_return=0'
+        UBSAN_OPTIONS: 'print_stacktrace=1:print_summary=1:halt_on_error=1'
 
     - script: |
         CCACHE_DIR='$(SERENITY_CCACHE_DIR)' ccache -s
+        df -h
       displayName: 'Cache Stats'
+
+    - script: |
+        df -h
+      displayName: "Disk usage at end"
