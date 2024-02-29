@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/HashMap.h>
-#include <AK/Tuple.h>
 #include <LibGfx/Font/OpenType/Font.h>
 #include <LibGfx/Forward.h>
 #include <LibPDF/Document.h>

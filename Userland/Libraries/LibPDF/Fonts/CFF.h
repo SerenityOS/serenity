@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Tuple.h>
 #include <AK/Types.h>
 #include <LibPDF/Error.h>
 #include <LibPDF/Fonts/Type1FontProgram.h>

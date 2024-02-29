@@ -12,7 +12,6 @@
 #include <AK/LexicalPath.h>
 #include <AK/Optional.h>
 #include <AK/String.h>
-#include <AK/Tuple.h>
 #include <AK/Variant.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
