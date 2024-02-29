@@ -811,24 +811,8 @@ static ErrorOr<NonnullRefPtr<StyleValue const>> interpolate_value(StyleValue con
             Length(interpolate_raw(from_rect.left_edge.raw_value(), to_rect.left_edge.raw_value()), from_rect.left_edge.type()),
         });
     }
-    case StyleValue::Type::Transformation: {
-        auto& from_transform = from.as_transformation();
-        auto& to_transform = to.as_transformation();
-        if (from_transform.transform_function() != to_transform.transform_function())
-            return from;
-
-        auto from_input_values = from_transform.values();
-        auto to_input_values = to_transform.values();
-        if (from_input_values.size() != to_input_values.size())
-            return from;
-
-        StyleValueVector interpolated_values;
-        interpolated_values.ensure_capacity(from_input_values.size());
-        for (size_t i = 0; i < from_input_values.size(); ++i)
-            interpolated_values.append(TRY(interpolate_value(*from_input_values[i], *to_input_values[i], delta)));
-
-        return TransformationStyleValue::create(from_transform.transform_function(), move(interpolated_values));
-    }
+    case StyleValue::Type::Transformation:
+        VERIFY_NOT_REACHED();
     case StyleValue::Type::ValueList: {
         auto& from_list = from.as_value_list();
         auto& to_list = to.as_value_list();
@@ -861,8 +845,31 @@ static ErrorOr<ValueComparingNonnullRefPtr<StyleValue const>> interpolate_proper
         return interpolate_value(from, to, delta);
     case AnimationType::None:
         return to;
-    // FIXME: Handle all custom animatable properties
-    case AnimationType::Custom:
+    case AnimationType::Custom: {
+        if (property_id == PropertyID::Transform) {
+            // Try to optimize same-function interpolation
+            if (from.is_transformation() && to.is_transformation()) {
+                auto& from_transform = from.as_transformation();
+                auto& to_transform = to.as_transformation();
+                if (from_transform.transform_function() == to_transform.transform_function()) {
+                    auto from_input_values = from_transform.values();
+                    auto to_input_values = to_transform.values();
+                    if (from_input_values.size() == to_input_values.size()) {
+                        StyleValueVector interpolated_values;
+                        interpolated_values.ensure_capacity(from_input_values.size());
+                        for (size_t i = 0; i < from_input_values.size(); ++i)
+                            interpolated_values.append(TRY(interpolate_value(element, *from_input_values[i], *to_input_values[i], delta)));
+
+                        return TransformationStyleValue::create(from_transform.transform_function(), move(interpolated_values));
+                    }
+                }
+            }
+            return from;
+        }
+
+        // FIXME: Handle all custom animatable properties
+        [[fallthrough]];
+    }
     // FIXME: Handle repeatable-list animatable properties
     case AnimationType::RepeatableList:
     case AnimationType::Discrete:

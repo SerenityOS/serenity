@@ -2219,7 +2219,7 @@
     ]
   },
   "transform": {
-    "animation-type": "by-computed-value",
+    "animation-type": "custom",
     "inherited": false,
     "initial": "none",
     "affects-layout": false,
