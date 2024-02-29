@@ -18,7 +18,7 @@
 
         const supportsRule = document.styleSheets[0].cssRules[1];
         println(`@supports rule conditionText initial value: ${supportsRule.conditionText}`);
-        mediaRule.conditionText = "(unsupported-property: unsupported-value)";
+        supportsRule.conditionText = "(unsupported-property: unsupported-value)";
         println(`@supports rule conditionText value after assignment: ${supportsRule.conditionText}`);
     });
 </script>
