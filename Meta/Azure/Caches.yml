@@ -56,6 +56,8 @@ steps:
     - script: |
         CCACHE_DIR=${{ parameters.serenity_ccache_path }} ccache -M ${{ parameters.serenity_ccache_size }}
         CCACHE_DIR=${{ parameters.serenity_ccache_path }} ccache -s
+        CCACHE_DIR=${{ parameters.serenity_ccache_path }} ccache --evict-older-than=30d
+        CCACHE_DIR=${{ parameters.serenity_ccache_path }} ccache -s
       displayName: 'Configure Serenity ccache'
 
   - ${{ if eq(parameters.with_remote_data_caches, true) }}:
