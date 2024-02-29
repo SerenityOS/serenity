@@ -8,6 +8,7 @@
 
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/DecodedImageData.h>
+#include <WebContent/PageClient.h>
 
 namespace Web::SVG {
 
@@ -16,6 +17,7 @@ class SVGDecodedImageData final : public HTML::DecodedImageData {
     JS_DECLARE_ALLOCATOR(SVGDecodedImageData);
 
 public:
+    class SVGPageClient;
     static ErrorOr<JS::NonnullGCPtr<SVGDecodedImageData>> create(JS::Realm&, JS::NonnullGCPtr<Page>, URL::URL const&, ByteBuffer encoded_svg);
     virtual ~SVGDecodedImageData() override;
 
@@ -36,7 +38,6 @@ public:
     virtual void visit_edges(Cell::Visitor& visitor) override;
 
 private:
-    class SVGPageClient;
     SVGDecodedImageData(JS::NonnullGCPtr<Page>, JS::NonnullGCPtr<SVGPageClient>, JS::NonnullGCPtr<DOM::Document>, JS::NonnullGCPtr<SVG::SVGSVGElement>);
 
     RefPtr<Gfx::Bitmap> render(Gfx::IntSize) const;
@@ -48,6 +49,39 @@ private:
 
     JS::NonnullGCPtr<DOM::Document> m_document;
     JS::NonnullGCPtr<SVG::SVGSVGElement> m_root_element;
+};
+
+class SVGDecodedImageData::SVGPageClient final : public PageClient {
+    JS_CELL(SVGDecodedImageData::SVGPageClient, PageClient);
+
+public:
+    static JS::NonnullGCPtr<SVGPageClient> create(JS::VM& vm, Page& page)
+    {
+        return vm.heap().allocate_without_realm<SVGPageClient>(page);
+    }
+
+    virtual ~SVGPageClient() override = default;
+
+    Page& m_host_page;
+    Page* m_svg_page { nullptr };
+
+    virtual Page& page() override { return *m_svg_page; }
+    virtual Page const& page() const override { return *m_svg_page; }
+    virtual bool is_connection_open() const override { return false; }
+    virtual Gfx::Palette palette() const override { return m_host_page.client().palette(); }
+    virtual DevicePixelRect screen_rect() const override { return {}; }
+    virtual double device_pixels_per_css_pixel() const override { return 1.0; }
+    virtual CSS::PreferredColorScheme preferred_color_scheme() const override { return m_host_page.client().preferred_color_scheme(); }
+    virtual void request_file(FileRequest) override { }
+    virtual void paint(DevicePixelRect const&, Gfx::Bitmap&, Web::PaintOptions = {}) override { }
+    virtual void schedule_repaint() override { }
+    virtual bool is_ready_to_paint() const override { return true; }
+
+private:
+    explicit SVGPageClient(Page& host_page)
+        : m_host_page(host_page)
+    {
+    }
 };
 
 }

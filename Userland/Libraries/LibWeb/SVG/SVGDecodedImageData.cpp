@@ -25,39 +25,6 @@ namespace Web::SVG {
 
 JS_DEFINE_ALLOCATOR(SVGDecodedImageData);
 
-class SVGDecodedImageData::SVGPageClient final : public PageClient {
-    JS_CELL(SVGDecodedImageData::SVGPageClient, PageClient);
-
-public:
-    static JS::NonnullGCPtr<SVGPageClient> create(JS::VM& vm, Page& page)
-    {
-        return vm.heap().allocate_without_realm<SVGPageClient>(page);
-    }
-
-    virtual ~SVGPageClient() override = default;
-
-    Page& m_host_page;
-    Page* m_svg_page { nullptr };
-
-    virtual Page& page() override { return *m_svg_page; }
-    virtual Page const& page() const override { return *m_svg_page; }
-    virtual bool is_connection_open() const override { return false; }
-    virtual Gfx::Palette palette() const override { return m_host_page.client().palette(); }
-    virtual DevicePixelRect screen_rect() const override { return {}; }
-    virtual double device_pixels_per_css_pixel() const override { return 1.0; }
-    virtual CSS::PreferredColorScheme preferred_color_scheme() const override { return m_host_page.client().preferred_color_scheme(); }
-    virtual void request_file(FileRequest) override { }
-    virtual void paint(DevicePixelRect const&, Gfx::Bitmap&, Web::PaintOptions = {}) override { }
-    virtual void schedule_repaint() override { }
-    virtual bool is_ready_to_paint() const override { return true; }
-
-private:
-    explicit SVGPageClient(Page& host_page)
-        : m_host_page(host_page)
-    {
-    }
-};
-
 ErrorOr<JS::NonnullGCPtr<SVGDecodedImageData>> SVGDecodedImageData::create(JS::Realm& realm, JS::NonnullGCPtr<Page> host_page, URL::URL const& url, ByteBuffer data)
 {
     auto page_client = SVGPageClient::create(Bindings::main_thread_vm(), host_page);

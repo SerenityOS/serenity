@@ -634,6 +634,9 @@ public:
 
     size_t transition_generation() const { return m_transition_generation; }
 
+    // Does document represent an embedded svg img
+    [[nodiscard]] bool is_decoded_svg() const;
+
 protected:
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
