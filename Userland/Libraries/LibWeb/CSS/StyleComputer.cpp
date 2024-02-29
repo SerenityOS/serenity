@@ -760,6 +760,9 @@ static ErrorOr<void> cascade_custom_properties(DOM::Element& element, Optional<C
 
 static ErrorOr<NonnullRefPtr<StyleValue const>> interpolate_value(StyleValue const& from, StyleValue const& to, float delta)
 {
+    if (from.type() != to.type())
+        return delta >= 0.5f ? to : from;
+
     auto interpolate_raw = [delta = static_cast<double>(delta)](auto from, auto to) {
         return static_cast<RemoveCVReference<decltype(from)>>(static_cast<double>(from) + static_cast<double>(to - from) * delta);
     };
@@ -833,12 +836,6 @@ static ErrorOr<NonnullRefPtr<StyleValue const>> interpolate_value(StyleValue con
 
 static ErrorOr<ValueComparingNonnullRefPtr<StyleValue const>> interpolate_property(PropertyID property_id, StyleValue const& from, StyleValue const& to, float delta)
 {
-    if (from.type() != to.type()) {
-        if (delta > 0.999f)
-            return to;
-        return from;
-    }
-
     auto animation_type = animation_type_from_longhand_property(property_id);
     switch (animation_type) {
     case AnimationType::ByComputedValue:
