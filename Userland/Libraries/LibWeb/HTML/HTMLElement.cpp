@@ -205,7 +205,8 @@ JS::GCPtr<DOM::Element> HTMLElement::offset_parent() const
             return const_cast<Element*>(ancestor);
     }
 
-    VERIFY_NOT_REACHED();
+    // 3. Return null.
+    return nullptr;
 }
 
 // https://www.w3.org/TR/cssom-view-1/#dom-htmlelement-offsettop
