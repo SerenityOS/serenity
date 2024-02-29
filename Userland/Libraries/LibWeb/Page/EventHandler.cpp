@@ -174,10 +174,9 @@ bool EventHandler::handle_mousewheel(CSSPixelPoint position, CSSPixelPoint scree
     if (paintable) {
         auto* containing_block = paintable->containing_block();
         while (containing_block) {
-            if (containing_block->is_user_scrollable()) {
-                const_cast<Painting::PaintableBox*>(containing_block->paintable_box())->handle_mousewheel({}, position, buttons, modifiers, wheel_delta_x, wheel_delta_y);
-                break;
-            }
+            auto handled_scroll_event = const_cast<Painting::PaintableBox*>(containing_block->paintable_box())->handle_mousewheel({}, position, buttons, modifiers, wheel_delta_x, wheel_delta_y);
+            if (handled_scroll_event)
+                return true;
             containing_block = containing_block->containing_block();
         }
 
