@@ -608,6 +608,9 @@ public:
     void unregister_shadow_root(Badge<DOM::ShadowRoot>, DOM::ShadowRoot&);
     void for_each_shadow_root(Function<void(DOM::ShadowRoot&)>&& callback);
 
+    // Does document represent an embedded svg img
+    [[nodiscard]] bool is_decoded_svg() const;
+
 protected:
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
