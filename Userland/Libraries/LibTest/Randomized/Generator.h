@@ -13,7 +13,6 @@
 #include <AK/Random.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
-#include <AK/Tuple.h>
 
 #include <math.h>
 

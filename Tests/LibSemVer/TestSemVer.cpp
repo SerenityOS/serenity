@@ -5,7 +5,6 @@
  */
 
 #include <AK/StringView.h>
-#include <AK/Tuple.h>
 #include <AK/Vector.h>
 #include <LibSemVer/SemVer.h>
 #include <LibTest/TestCase.h>
@@ -198,7 +197,7 @@ TEST_CASE(is_greater_than) // NOLINT(readability-function-cognitive-complexity)
     EXPECT(IS_GREATER_THAN_SCENARIO("1.0.0-beta"sv, "1.0.0-alpha"sv));
     EXPECT(IS_GREATER_THAN_SCENARIO("1.0.0-0.beta"sv, "1.0.0-0.alpha"sv));
 
-    // 3. Either one is numeric, but not both, then numeric given low precendence
+    // 3. Either one is numeric, but not both, then numeric given low precedence
     EXPECT(IS_GREATER_THAN_SCENARIO("1.0.0-0.alpha"sv, "1.0.0-0.0"sv));
     EXPECT(!IS_GREATER_THAN_SCENARIO("1.0.0-0.0"sv, "1.0.0-0.alpha"sv));
 

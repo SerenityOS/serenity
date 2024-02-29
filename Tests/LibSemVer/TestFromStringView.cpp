@@ -5,7 +5,6 @@
  */
 
 #include <AK/StringView.h>
-#include <AK/Tuple.h>
 #include <AK/Vector.h>
 #include <LibSemVer/SemVer.h>
 #include <LibTest/TestCase.h>

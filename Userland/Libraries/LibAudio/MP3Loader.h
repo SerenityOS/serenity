@@ -10,7 +10,6 @@
 #include "MP3Types.h"
 #include <AK/BitStream.h>
 #include <AK/MemoryStream.h>
-#include <AK/Tuple.h>
 #include <LibDSP/MDCT.h>
 
 namespace Audio {
