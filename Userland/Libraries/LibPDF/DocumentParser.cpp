@@ -8,7 +8,6 @@
 #include <AK/BitStream.h>
 #include <AK/Endian.h>
 #include <AK/MemoryStream.h>
-#include <AK/Tuple.h>
 #include <LibPDF/CommonNames.h>
 #include <LibPDF/Document.h>
 #include <LibPDF/DocumentParser.h>
@@ -425,7 +424,12 @@ PDFErrorOr<NonnullRefPtr<XRefTable>> DocumentParser::parse_xref_stream()
 
     auto number_of_object_entries = dict->get_value("Size").get<int>();
 
-    Vector<Tuple<int, int>> subsections;
+    struct Subsection {
+        int start;
+        int count;
+    };
+
+    Vector<Subsection> subsections;
     if (dict->contains(CommonNames::Index)) {
         auto index_array = TRY(dict->get_array(m_document, CommonNames::Index));
         if (index_array->size() % 2 != 0)
@@ -449,9 +453,7 @@ PDFErrorOr<NonnullRefPtr<XRefTable>> DocumentParser::parse_xref_stream()
 
     size_t byte_index = 0;
 
-    for (auto const& subsection : subsections) {
-        auto start = subsection.get<0>();
-        auto count = subsection.get<1>();
+    for (auto [start, count] : subsections) {
         Vector<XRefEntry> entries;
 
         for (int i = 0; i < count; i++) {
