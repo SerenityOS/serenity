@@ -173,9 +173,7 @@ jobs:
 
     - ${{ if and(eq(parameters.fuzzer, 'NoFuzz'), eq(parameters.os, 'Linux') ) }}:
       - script: |
-          du -sh /tmp* | sort -h
-          ./run.sh
-          du -sh /tmp* | sort -h
+          ./run.sh --remove-wpt-repository
         displayName: 'WPT'
         workingDirectory: $(Build.SourcesDirectory)/Tests/LibWeb/WPT/
         env:
