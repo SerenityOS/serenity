@@ -35,6 +35,12 @@
             background-color: blue;
             border-radius: 10px;
         }
+
+        #box4 {
+            height: 50px;
+            top: 600px;
+            left: 50px;
+        }
     </style>
 </head>
 <body>
@@ -51,6 +57,7 @@
 <div id="box3">
     <div id="box3-inner"></div>
 </div>
+<div class="box" id="box4"></div>
 <script>
     for (let i = 0; i < 5; i++) {
         const ball = document.getElementById(`ball${i}`);
@@ -78,10 +85,19 @@
     });
 
     // Discrete property animation
-    box3.animate({ overflow: ['visible'] }, {
+    box3.animate({ overflow: ["visible"] }, {
         duration: 2000,
         iterations: Infinity,
         direction: "alternate",
-    })
+    });
+
+    box4.animate([
+        { transform: "none" },
+        { transform: "translateX(400px) rotate3d(1, 1, 0, 50deg)" },
+    ], {
+        duration: 2000,
+        iterations: Infinity,
+        direction: "alternate"
+    });
 </script>
 </body>
