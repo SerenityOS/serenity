@@ -197,6 +197,17 @@ public:
         return result;
     }
 
+    template<ConvertibleTo<T> U>
+    constexpr bool operator==(VectorN<N, U> const& other) const
+    {
+        UNROLL_LOOP
+        for (auto i = 0u; i < N; ++i) {
+            if (m_data[i] != static_cast<T>(other.m_data[i]))
+                return false;
+        }
+        return true;
+    }
+
     [[nodiscard]] constexpr T dot(VectorN const& other) const
     {
         T result {};
