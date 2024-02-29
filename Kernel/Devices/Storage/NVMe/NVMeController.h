@@ -8,7 +8,6 @@
 
 #include <AK/OwnPtr.h>
 #include <AK/Time.h>
-#include <AK/Tuple.h>
 #include <AK/Types.h>
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Devices/Storage/NVMe/NVMeDefinitions.h>
@@ -55,11 +54,16 @@ public:
     void set_admin_queue_ready_flag() { m_admin_queue_ready = true; }
 
 private:
+    struct NSFeatures {
+        u64 namespace_size;
+        u8 lba_size;
+    };
+
     NVMeController(PCI::DeviceIdentifier const&, u32 hardware_relative_controller_id);
 
     ErrorOr<void> identify_and_init_namespaces();
     ErrorOr<void> identify_and_init_controller();
-    Tuple<u64, u8> get_ns_features(IdentifyNamespace& identify_data_struct);
+    NSFeatures get_ns_features(IdentifyNamespace& identify_data_struct);
     ErrorOr<void> create_admin_queue(QueueType queue_type);
     ErrorOr<void> create_io_queue(u8 qid, QueueType queue_type);
     void calculate_doorbell_stride()

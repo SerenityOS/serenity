@@ -206,9 +206,8 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::identify_and_init_namespaces()
             if (void* fault_at; !safe_memcpy(&id_ns, prp_dma_region->vaddr().as_ptr(), NVMe_IDENTIFY_SIZE, fault_at)) {
                 return EFAULT;
             }
-            auto val = get_ns_features(id_ns);
-            auto block_counts = val.get<0>();
-            auto block_size = 1 << val.get<1>();
+            auto [block_counts, lba_size] = get_ns_features(id_ns);
+            auto block_size = 1 << lba_size;
 
             dbgln_if(NVME_DEBUG, "NVMe: Block count is {} and Block size is {}", block_counts, block_size);
 
@@ -279,14 +278,14 @@ ErrorOr<void> NVMeController::identify_and_init_controller()
     return {};
 }
 
-UNMAP_AFTER_INIT Tuple<u64, u8> NVMeController::get_ns_features(IdentifyNamespace& identify_data_struct)
+UNMAP_AFTER_INIT NVMeController::NSFeatures NVMeController::get_ns_features(IdentifyNamespace& identify_data_struct)
 {
     auto flbas = identify_data_struct.flbas & FLBA_SIZE_MASK;
     auto namespace_size = identify_data_struct.nsze;
     auto lba_format = identify_data_struct.lbaf[flbas];
 
     auto lba_size = (lba_format & LBA_SIZE_MASK) >> 16;
-    return Tuple<u64, u8>(namespace_size, lba_size);
+    return { namespace_size, static_cast<u8>(lba_size) };
 }
 
 LockRefPtr<StorageDevice> NVMeController::device(u32 index) const
