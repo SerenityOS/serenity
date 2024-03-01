@@ -72,7 +72,6 @@ public:
     [[nodiscard]] bool contains(StringView key) const;
 
     [[nodiscard]] bool is_boot_profiling_enabled() const;
-    [[nodiscard]] bool is_ide_enabled() const;
     [[nodiscard]] bool is_ioapic_enabled() const;
     [[nodiscard]] bool is_smp_enabled_without_ioapic_enabled() const;
     [[nodiscard]] bool is_smp_enabled() const;
