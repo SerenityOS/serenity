@@ -40,6 +40,16 @@ private:
     CIDSystemInfo m_system_info;
     HashMap<u16, u16> m_widths;
     u16 m_missing_width;
+
+    int m_default_position_vector_y;
+    int m_default_displacement_vector_y;
+    struct VerticalMetric {
+        int vertical_displacement_vector_y;
+        int position_vector_x;
+        int position_vector_y;
+    };
+    HashMap<u16, VerticalMetric> m_vertical_metrics;
+
     OwnPtr<CIDFontType> m_cid_font_type;
 };
 
