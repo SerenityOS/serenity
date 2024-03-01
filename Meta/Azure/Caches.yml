@@ -55,6 +55,7 @@ steps:
 
     - script: |
         CCACHE_DIR=${{ parameters.serenity_ccache_path }} ccache -M ${{ parameters.serenity_ccache_size }}
+        CCACHE_DIR=${{ parameters.serenity_ccache_path }} ccache -c
         CCACHE_DIR=${{ parameters.serenity_ccache_path }} ccache -s
       displayName: 'Configure Serenity ccache'
 
