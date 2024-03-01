@@ -701,6 +701,16 @@ static void format_dbgputstr(FormattedSyscallBuilder& builder, char* characters,
     builder.add_argument(StringArgument { { characters, size }, "\0\n"sv });
 }
 
+static void format_kill(FormattedSyscallBuilder& builder, pid_t pid_or_pgid, int signal)
+{
+    builder.add_argument(pid_or_pgid);
+    auto* signal_name = getsignalname(signal);
+    if (signal_name)
+        builder.add_argument(signal_name);
+    else
+        builder.add_argument(signal);
+}
+
 static ErrorOr<void> format_syscall(FormattedSyscallBuilder& builder, Syscall::Function syscall_function, syscall_arg_t arg1, syscall_arg_t arg2, syscall_arg_t arg3, syscall_arg_t res)
 {
     enum ResultType {
@@ -787,6 +797,9 @@ static ErrorOr<void> format_syscall(FormattedSyscallBuilder& builder, Syscall::F
     case SC_write:
         format_write(builder, (int)arg1, (void*)arg2, (size_t)arg3);
         result_type = Ssize;
+        break;
+    case SC_kill:
+        format_kill(builder, (pid_t)arg1, (int)arg2);
         break;
     case SC_getuid:
     case SC_geteuid:
