@@ -100,6 +100,23 @@ struct DrawEmoji {
 
 using DrawGlyphOrEmoji = Variant<DrawGlyph, DrawEmoji>;
 
+class GlyphRun : public RefCounted<GlyphRun> {
+public:
+    GlyphRun() = default;
+    GlyphRun(Vector<Gfx::DrawGlyphOrEmoji>&& glyphs)
+        : m_glyphs(move(glyphs))
+    {
+    }
+
+    [[nodiscard]] Vector<Gfx::DrawGlyphOrEmoji> const& glyphs() const { return m_glyphs; }
+    [[nodiscard]] bool is_empty() const { return m_glyphs.is_empty(); }
+
+    void append(Gfx::DrawGlyphOrEmoji glyph) { m_glyphs.append(glyph); }
+
+private:
+    Vector<Gfx::DrawGlyphOrEmoji> m_glyphs;
+};
+
 Variant<DrawGlyph, DrawEmoji> prepare_draw_glyph_or_emoji(FloatPoint point, Utf8CodePointIterator& it, Font const& font);
 
 template<typename Callback>

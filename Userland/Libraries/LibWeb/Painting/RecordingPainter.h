@@ -100,7 +100,7 @@ public:
     void draw_signed_distance_field(Gfx::IntRect const& dst_rect, Color color, Gfx::GrayscaleBitmap const& sdf, float smoothing);
 
     // Streamlined text drawing routine that does no wrapping/elision/alignment.
-    void draw_text_run(Gfx::IntPoint baseline_start, Span<Gfx::DrawGlyphOrEmoji const> glyph_run, Color color, Gfx::IntRect const& rect, double scale);
+    void draw_text_run(Gfx::IntPoint baseline_start, Gfx::GlyphRun const& glyph_run, Color color, Gfx::IntRect const& rect, double scale);
 
     void add_clip_rect(Gfx::IntRect const& rect);
 

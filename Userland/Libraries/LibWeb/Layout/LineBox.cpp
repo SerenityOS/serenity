@@ -26,7 +26,7 @@ void LineBox::add_fragment(Node const& layout_node, int start, int length, CSSPi
         m_fragments.last().set_width(m_fragments.last().width() + content_width);
         for (auto glyph : glyph_run) {
             glyph.visit([&](auto& glyph) { glyph.position.translate_by(fragment_width.to_float(), 0); });
-            m_fragments.last().m_glyph_run.append(glyph);
+            m_fragments.last().m_glyph_run->append(glyph);
         }
     } else {
         Vector<Gfx::DrawGlyphOrEmoji> glyph_run_copy { glyph_run };

@@ -206,11 +206,11 @@ void RecordingPainter::draw_signed_distance_field(Gfx::IntRect const& dst_rect, 
     });
 }
 
-void RecordingPainter::draw_text_run(Gfx::IntPoint baseline_start, Span<Gfx::DrawGlyphOrEmoji const> glyph_run, Color color, Gfx::IntRect const& rect, double scale)
+void RecordingPainter::draw_text_run(Gfx::IntPoint baseline_start, Gfx::GlyphRun const& glyph_run, Color color, Gfx::IntRect const& rect, double scale)
 {
     auto transformed_baseline_start = state().translation.map(baseline_start).to_type<float>();
     append(DrawGlyphRun {
-        .glyph_run = Vector<Gfx::DrawGlyphOrEmoji> { glyph_run },
+        .glyph_run = glyph_run,
         .color = color,
         .rect = state().translation.map(rect),
         .translation = transformed_baseline_start,

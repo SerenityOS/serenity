@@ -49,7 +49,7 @@ void CommandList::execute(CommandExecutor& executor)
             auto& command = command_with_scroll_id.command;
             if (command.has<DrawGlyphRun>()) {
                 auto scale = command.get<DrawGlyphRun>().scale;
-                for (auto const& glyph_or_emoji : command.get<DrawGlyphRun>().glyph_run) {
+                for (auto const& glyph_or_emoji : command.get<DrawGlyphRun>().glyph_run->glyphs()) {
                     if (glyph_or_emoji.has<Gfx::DrawGlyph>()) {
                         auto const& glyph = glyph_or_emoji.get<Gfx::DrawGlyph>();
                         auto const& font = *glyph.font->with_size(glyph.font->point_size() * static_cast<float>(scale));
@@ -89,7 +89,7 @@ void CommandList::execute(CommandExecutor& executor)
 
         auto result = command.visit(
             [&](DrawGlyphRun const& command) {
-                return executor.draw_glyph_run(command.glyph_run, command.color, command.translation, command.scale);
+                return executor.draw_glyph_run(command.glyph_run->glyphs(), command.color, command.translation, command.scale);
             },
             [&](DrawText const& command) {
                 return executor.draw_text(command.rect, command.raw_text, command.alignment, command.color,
