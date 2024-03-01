@@ -583,8 +583,8 @@ void WindowManager::for_each_window_manager(Callback callback)
     auto& connections = WMConnectionFromClient::s_connections;
 
     // FIXME: this isn't really ordered... does it need to be?
-    for (auto it = connections.begin(); it != connections.end(); ++it) {
-        if (callback(*it->value) == IterationDecision::Break)
+    for (auto [_, connection] : connections) {
+        if (callback(connection) == IterationDecision::Break)
             return;
     }
 }

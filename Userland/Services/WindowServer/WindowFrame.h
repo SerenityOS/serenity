@@ -7,6 +7,8 @@
 #pragma once
 
 #include <AK/Forward.h>
+#include <AK/HashMap.h>
+#include <AK/NonnullOwnPtr.h>
 #include <AK/RefPtr.h>
 #include <LibCore/Forward.h>
 #include <LibGfx/Forward.h>
@@ -101,10 +103,9 @@ public:
 
     void set_dirty(bool re_render_shadow = false)
     {
-        for (auto& it : m_rendered_cache) {
-            auto& cached = *it.value;
-            cached.m_dirty = true;
-            cached.m_shadow_dirty |= re_render_shadow;
+        for (auto& [_, cached] : m_rendered_cache) {
+            cached->m_dirty = true;
+            cached->m_shadow_dirty |= re_render_shadow;
         }
     }
 

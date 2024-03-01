@@ -8,7 +8,6 @@
 #include "Screen.h"
 #include "Compositor.h"
 #include "Event.h"
-#include "EventLoop.h"
 #include "ScreenBackend.h"
 #include "VirtualScreenBackend.h"
 #include "WindowManager.h"
@@ -85,22 +84,21 @@ bool Screen::apply_layout(ScreenLayout&& screen_layout, ByteString& error_msg)
     }
     HashMap<Screen*, size_t> screens_with_resolution_change;
     HashMap<Screen*, size_t> screens_with_scale_change;
-    for (auto& it : current_to_new_indices_map) {
-        auto& screen = s_layout.screens[it.key];
-        auto& new_screen = screen_layout.screens[it.value];
+    for (auto [current_index, new_index] : current_to_new_indices_map) {
+        auto& screen = s_layout.screens[current_index];
+        auto& new_screen = screen_layout.screens[new_index];
         if (screen.resolution != new_screen.resolution)
-            screens_with_resolution_change.set(s_screens[it.key], it.value);
+            screens_with_resolution_change.set(s_screens[current_index], new_index);
         if (screen.scale_factor != new_screen.scale_factor)
-            screens_with_scale_change.set(s_screens[it.key], it.value);
+            screens_with_scale_change.set(s_screens[current_index], new_index);
     }
 
     auto screens_backup = move(s_screens);
     auto layout_backup = move(s_layout);
 
-    for (auto& it : screens_with_resolution_change) {
-        auto& existing_screen = *it.key;
-        dbgln("Closing device {} in preparation for resolution change", layout_backup.screens[existing_screen.index()].device.value_or("<virtual screen>"));
-        existing_screen.close_device();
+    for (auto& [existing_screen, _] : screens_with_resolution_change) {
+        dbgln("Closing device {} in preparation for resolution change", layout_backup.screens[existing_screen->index()].device.value_or("<virtual screen>"));
+        existing_screen->close_device();
     }
 
     AK::ArmedScopeGuard rollback([&] {
