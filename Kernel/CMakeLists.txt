@@ -50,7 +50,6 @@ set(KERNEL_SOURCES
     Bus/VirtIO/Transport/InterruptHandler.cpp
     Bus/VirtIO/Device.cpp
     Bus/VirtIO/Queue.cpp
-    Bus/VirtIO/RNG.cpp
     Devices/AsyncDeviceRequest.cpp
     Devices/Audio/AC97/AC97.cpp
     Devices/Audio/Channel.cpp
@@ -282,6 +281,7 @@ set(KERNEL_SOURCES
     Net/Socket.cpp
     Net/TCPSocket.cpp
     Net/UDPSocket.cpp
+    Security/Random/VirtIO/RNG.cpp
     Security/AddressSanitizer.cpp
     Security/Credentials.cpp
     Security/Random.cpp
