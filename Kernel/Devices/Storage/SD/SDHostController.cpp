@@ -73,10 +73,6 @@ SDHostController::SDHostController()
 {
 }
 
-ErrorOr<void> SDHostController::reset() { return ENOTIMPL; }
-
-ErrorOr<void> SDHostController::shutdown() { return ENOTIMPL; }
-
 void SDHostController::complete_current_request(AsyncDeviceRequest::RequestResult)
 {
     VERIFY_NOT_REACHED();

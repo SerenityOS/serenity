@@ -15,16 +15,6 @@
 
 namespace Kernel {
 
-ErrorOr<void> IDEController::reset()
-{
-    return Error::from_errno(ENOTIMPL);
-}
-
-ErrorOr<void> IDEController::shutdown()
-{
-    return Error::from_errno(ENOTIMPL);
-}
-
 size_t IDEController::devices_count() const
 {
     size_t count = 0;

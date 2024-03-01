@@ -25,8 +25,6 @@ public:
     virtual ~SDHostController() = default;
 
     virtual LockRefPtr<StorageDevice> device(u32 index) const override { return index == 0 ? m_card : nullptr; }
-    virtual ErrorOr<void> reset() override;
-    virtual ErrorOr<void> shutdown() override;
     virtual size_t devices_count() const override { return m_card ? 1 : 0; }
     virtual void complete_current_request(AsyncDeviceRequest::RequestResult) override;
 

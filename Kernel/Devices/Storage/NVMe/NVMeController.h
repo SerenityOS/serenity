@@ -31,8 +31,7 @@ public:
     virtual StringView device_name() const override { return "NVMeController"sv; }
 
 protected:
-    ErrorOr<void> reset() override;
-    ErrorOr<void> shutdown() override;
+    ErrorOr<void> reset();
     void complete_current_request(AsyncDeviceRequest::RequestResult result) override;
 
 public:

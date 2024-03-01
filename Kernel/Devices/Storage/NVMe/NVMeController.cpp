@@ -305,11 +305,6 @@ ErrorOr<void> NVMeController::reset()
     return {};
 }
 
-ErrorOr<void> NVMeController::shutdown()
-{
-    return Error::from_errno(ENOTIMPL);
-}
-
 void NVMeController::complete_current_request([[maybe_unused]] AsyncDeviceRequest::RequestResult result)
 {
     VERIFY_NOT_REACHED();
