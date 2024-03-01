@@ -48,8 +48,6 @@ set(KERNEL_SOURCES
     Bus/VirtIO/Transport/PCIe/TransportLink.cpp
     Bus/VirtIO/Transport/Entity.cpp
     Bus/VirtIO/Transport/InterruptHandler.cpp
-    Bus/VirtIO/Console.cpp
-    Bus/VirtIO/ConsolePort.cpp
     Bus/VirtIO/Device.cpp
     Bus/VirtIO/Queue.cpp
     Bus/VirtIO/RNG.cpp
@@ -113,6 +111,8 @@ set(KERNEL_SOURCES
     Devices/GPU/VirtIO/GPU3DDevice.cpp
     Devices/GPU/VirtIO/GraphicsAdapter.cpp
     Devices/Loop/LoopDevice.cpp
+    Devices/Serial/VirtIO/Console.cpp
+    Devices/Serial/VirtIO/ConsolePort.cpp
     Devices/Storage/AHCI/ATADevice.cpp
     Devices/Storage/AHCI/ATADiskDevice.cpp
     Devices/Storage/AHCI/Controller.cpp

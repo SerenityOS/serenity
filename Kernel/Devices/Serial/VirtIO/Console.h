@@ -7,8 +7,8 @@
 
 #pragma once
 
-#include <Kernel/Bus/VirtIO/ConsolePort.h>
 #include <Kernel/Bus/VirtIO/Device.h>
+#include <Kernel/Devices/Serial/VirtIO/ConsolePort.h>
 #include <Kernel/Memory/RingBuffer.h>
 
 namespace Kernel::VirtIO {
