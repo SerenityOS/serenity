@@ -838,6 +838,10 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     if (auto scrollbar_width = computed_style.scrollbar_width(); scrollbar_width.has_value())
         computed_values.set_scrollbar_width(scrollbar_width.value());
 
+    auto direction_value = computed_style.property(CSS::PropertyID::Direction);
+    if (auto direction = value_id_to_direction(direction_value->to_identifier()); direction.has_value())
+        computed_values.set_direction(direction.value());
+
     propagate_style_to_anonymous_wrappers();
 }
 

@@ -164,24 +164,34 @@ void LineBuilder::update_last_line()
 
     auto text_align = m_context.containing_block().computed_values().text_align();
 
+    auto direction = m_context.containing_block().computed_values().direction();
+
     auto current_line_height = max(m_max_height_on_current_line, m_context.containing_block().computed_values().line_height());
     CSSPixels x_offset_top = m_context.leftmost_x_offset_at(m_current_y);
     CSSPixels x_offset_bottom = m_context.leftmost_x_offset_at(m_current_y + current_line_height - 1);
     CSSPixels x_offset = max(x_offset_top, x_offset_bottom);
 
     CSSPixels excess_horizontal_space = m_available_width_for_current_line.to_px_or_zero() - line_box.width();
-
     // If (after justification, if any) the inline contents of a line box are too long to fit within it,
     // then the contents are start-aligned: any content that doesn't fit overflows the line box’s end edge.
     if (excess_horizontal_space > 0) {
+        if (direction == CSS::Direction::Rtl)
+            x_offset += excess_horizontal_space;
+
         switch (text_align) {
         case CSS::TextAlign::Center:
         case CSS::TextAlign::LibwebCenter:
-            x_offset += excess_horizontal_space / 2;
+            if (direction == CSS::Direction::Ltr) {
+                x_offset += excess_horizontal_space / 2;
+            } else {
+                x_offset -= excess_horizontal_space / 2;
+            }
             break;
         case CSS::TextAlign::Right:
         case CSS::TextAlign::LibwebRight:
-            x_offset += excess_horizontal_space;
+            if (direction == CSS::Direction::Ltr)
+                x_offset += excess_horizontal_space;
+
             break;
         case CSS::TextAlign::Left:
         case CSS::TextAlign::LibwebLeft:

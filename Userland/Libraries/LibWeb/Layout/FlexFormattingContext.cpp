@@ -2217,4 +2217,13 @@ CSSPixels FlexFormattingContext::cross_gap() const
     return gap.to_px(flex_container(), inner_cross_size(m_flex_container_state));
 }
 
+bool FlexFormattingContext::is_direction_reverse() const
+{
+    auto direction = flex_container().computed_values().direction();
+    return (
+               m_flex_direction == CSS::FlexDirection::ColumnReverse && direction == CSS::Direction::Ltr)
+        || (m_flex_direction == CSS::FlexDirection::RowReverse && direction == CSS::Direction::Ltr)
+        || (m_flex_direction != CSS::FlexDirection::ColumnReverse && m_flex_direction != CSS::FlexDirection::RowReverse && direction == CSS::Direction::Rtl);
+}
+
 }

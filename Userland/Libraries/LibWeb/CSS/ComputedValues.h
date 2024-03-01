@@ -179,6 +179,8 @@ public:
     static int math_depth() { return 0; }
 
     static CSS::ScrollbarWidth scrollbar_width() { return CSS::ScrollbarWidth::Auto; }
+
+    static CSS::Direction direction() { return CSS::Direction::Ltr; }
 };
 
 enum class BackgroundSize {
@@ -436,6 +438,8 @@ public:
 
     CSS::ScrollbarWidth scrollbar_width() const { return m_noninherited.scrollbar_width; }
 
+    CSS::Direction direction() const { return m_inherited.direction; }
+
     NonnullOwnPtr<ComputedValues> clone_inherited_values() const
     {
         auto clone = make<ComputedValues>();
@@ -482,6 +486,7 @@ protected:
         CSS::MathShift math_shift { InitialValues::math_shift() };
         CSS::MathStyle math_style { InitialValues::math_style() };
         int math_depth { InitialValues::math_depth() };
+        CSS::Direction direction { InitialValues::direction() };
     } m_inherited;
 
     struct {
@@ -702,6 +707,8 @@ public:
     void set_math_depth(int value) { m_inherited.math_depth = value; }
 
     void set_scrollbar_width(CSS::ScrollbarWidth value) { m_noninherited.scrollbar_width = value; }
+
+    void set_direction(CSS::Direction value) { m_inherited.direction = value; }
 };
 
 }
