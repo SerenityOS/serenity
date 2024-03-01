@@ -38,7 +38,7 @@
 namespace Web::Painting {
 
 struct DrawGlyphRun {
-    Vector<Gfx::DrawGlyphOrEmoji> glyph_run;
+    NonnullRefPtr<Gfx::GlyphRun> glyph_run;
     Color color;
     Gfx::IntRect rect;
     Gfx::FloatPoint translation;
