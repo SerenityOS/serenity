@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/BitStream.h>
 #include <AK/Utf8View.h>
 #include <LibPDF/CommonNames.h>
 #include <LibPDF/Fonts/PDFFont.h>
@@ -1216,6 +1217,49 @@ PDFErrorOr<Renderer::LoadedImage> Renderer::load_image(NonnullRefPtr<StreamObjec
     return LoadedImage { bitmap, is_image_mask };
 }
 
+PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> Renderer::make_mask_bitmap_from_array(NonnullRefPtr<ArrayObject> array, NonnullRefPtr<StreamObject> image)
+{
+    // PDF 1.7 spec, 4.8.5. Masked Images, Color Key Masking
+    // "For color key masking, the value of the Mask entry is an array of 2 × n integers, [min_1 max_1 ... min_n max_n],
+    //  where n is the number of color components in the image’s color space. Each integer must be in the range 0 to 2**(BitsPerComponent − 1),
+    //  representing color values _before_ decoding with the Decode array.
+    //  An image sample is masked [...] if min_i ≤ c_i ≤ max_i for all 1 ≤ i ≤ n."
+    // For indexed images, this means the array masks the index, not the color.
+    auto image_dict = image->dict();
+    auto width = TRY(m_document->resolve_to<int>(image_dict->get_value(CommonNames::Width)));
+    auto height = TRY(m_document->resolve_to<int>(image_dict->get_value(CommonNames::Height)));
+    auto bits_per_component = TRY(m_document->resolve_to<int>(image_dict->get_value(CommonNames::BitsPerComponent)));
+    VERIFY(bits_per_component == 1 || bits_per_component == 2 || bits_per_component == 4 || bits_per_component == 8 || bits_per_component == 16);
+
+    if (array->size() % 2 != 0)
+        return Error(Error::Type::MalformedPDF, "Mask array must have an even number of elements");
+    auto n_components = array->size() / 2;
+    Vector<int, 4> min, max;
+    for (size_t i = 0; i < n_components; ++i) {
+        min.append(array->at(i * 2).to_int());
+        max.append(array->at(i * 2 + 1).to_int());
+    }
+
+    auto mask_bitmap = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { width, height }));
+    auto bit_stream = make<BigEndianInputBitStream>(make<FixedMemoryStream>(image->bytes()));
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            bool is_masked = true;
+            for (size_t i = 0; i < n_components; ++i) {
+                u16 sample = TRY(bit_stream->read_bits(bits_per_component));
+                if (sample < min[i] || sample > max[i]) {
+                    is_masked = false;
+                    TRY(bit_stream->read_bits((n_components - 1 - i) * bits_per_component));
+                    break;
+                }
+            }
+            mask_bitmap->set_pixel(x, y, Color::from_argb(is_masked ? 0x00'00'00'00 : 0xff'ff'ff'ff));
+        }
+        bit_stream->align_to_byte_boundary();
+    }
+    return mask_bitmap;
+}
+
 Gfx::AffineTransform Renderer::calculate_image_space_transformation(Gfx::IntSize size)
 {
     // Image space maps to a 1x1 unit of user space and starts at the top-left
@@ -1299,7 +1343,8 @@ PDFErrorOr<void> Renderer::show_image(NonnullRefPtr<StreamObject> image)
             auto mask_bitmap = TRY(load_image(mask_object->cast<StreamObject>()));
             image_bitmap.bitmap = TRY(apply_alpha_channel(image_bitmap.bitmap, mask_bitmap.bitmap));
         } else if (mask_object->is<ArrayObject>()) {
-            return Error::rendering_unsupported_error("/Mask array objects not yet implemented");
+            auto mask_bitmap = TRY(make_mask_bitmap_from_array(mask_object->cast<ArrayObject>(), image));
+            image_bitmap.bitmap = TRY(apply_alpha_channel(image_bitmap.bitmap, mask_bitmap));
         }
     }
 
