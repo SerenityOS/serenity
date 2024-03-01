@@ -158,7 +158,7 @@ private:
         bool is_image_mask = false;
     };
     PDFErrorOr<LoadedImage> load_image(NonnullRefPtr<StreamObject>);
-
+    PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> make_mask_bitmap_from_array(NonnullRefPtr<ArrayObject>, NonnullRefPtr<StreamObject>);
     PDFErrorOr<void> show_image(NonnullRefPtr<StreamObject>);
     void show_empty_image(Gfx::IntSize);
     PDFErrorOr<NonnullRefPtr<ColorSpace>> get_color_space_from_resources(Value const&, NonnullRefPtr<DictObject>);
