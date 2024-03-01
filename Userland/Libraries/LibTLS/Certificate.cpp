@@ -798,15 +798,15 @@ ErrorOr<Certificate> Certificate::parse_certificate(ReadonlyBytes buffer, bool)
 
 ErrorOr<String> RelativeDistinguishedName::to_string() const
 {
-#define ADD_IF_RECOGNIZED(identifier, shorthand_code)             \
-    if (it->key == identifier) {                                  \
-        cert_name.appendff("\\{}={}", shorthand_code, it->value); \
-        continue;                                                 \
+#define ADD_IF_RECOGNIZED(identifier, shorthand_code)         \
+    if (member_identifier == identifier) {                    \
+        cert_name.appendff("\\{}={}", shorthand_code, value); \
+        continue;                                             \
     }
 
     StringBuilder cert_name;
 
-    for (auto it = m_members.begin(); it != m_members.end(); ++it) {
+    for (auto const& [member_identifier, value] : m_members) {
         ADD_IF_RECOGNIZED(enum_value(AttributeType::SerialNumber), "SERIALNUMBER");
         ADD_IF_RECOGNIZED(enum_value(AttributeType::Email), "MAIL");
         ADD_IF_RECOGNIZED(enum_value(AttributeType::Title), "T");
@@ -825,7 +825,7 @@ ErrorOr<String> RelativeDistinguishedName::to_string() const
         ADD_IF_RECOGNIZED(enum_value(AttributeType::Dc), "DC");
         ADD_IF_RECOGNIZED(enum_value(AttributeType::Uid), "UID");
 
-        cert_name.appendff("\\{}={}", it->key, it->value);
+        cert_name.appendff("\\{}={}", member_identifier, value);
     }
 #undef ADD_IF_RECOGNIZED
 
