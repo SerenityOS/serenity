@@ -293,10 +293,10 @@ PDFErrorOr<void> Type0Font::initialize(Document* document, NonnullRefPtr<DictObj
                 auto first_code = pending_code.release_value();
                 auto last_code = value.to_int();
                 auto width = widths_array->at(i + 1).to_int();
+                i++;
+
                 for (u16 code = first_code; code <= last_code; code++)
                     widths.set(code, width);
-
-                i++;
             } else {
                 auto array = TRY(document->resolve_to<ArrayObject>(value));
                 auto code = pending_code.release_value();
