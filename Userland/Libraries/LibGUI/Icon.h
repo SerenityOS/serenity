@@ -23,13 +23,7 @@ public:
     Gfx::Bitmap const* bitmap_for_size(int) const;
     void set_bitmap_for_size(int, RefPtr<Gfx::Bitmap const>&&);
 
-    Vector<int> sizes() const
-    {
-        Vector<int> sizes;
-        for (auto& it : m_bitmaps)
-            sizes.append(it.key);
-        return sizes;
-    }
+    Vector<int> sizes() const { return m_bitmaps.keys(); }
 
 private:
     IconImpl() = default;
