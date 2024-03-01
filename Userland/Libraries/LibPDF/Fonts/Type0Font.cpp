@@ -306,9 +306,56 @@ PDFErrorOr<void> Type0Font::initialize(Document* document, NonnullRefPtr<DictObj
         }
     }
 
+    // "The default position vector and vertical displacement vector are specified by the DW2 entry in the CIDFont dictionary."
+    int default_position_vector_y = 880;
+    int default_displacement_vector_y = -1000;
+    if (descendant_font->contains(CommonNames::DW2)) {
+        auto widths_array = MUST(descendant_font->get_array(document, CommonNames::DW2));
+        VERIFY(widths_array->size() == 2);
+        default_position_vector_y = widths_array->at(0).to_int();
+        default_displacement_vector_y = widths_array->at(1).to_int();
+    }
+
+    // "The W2 array allows the definition of vertical metrics for individual CIDs."
+    HashMap<u16, VerticalMetric> vertical_metrics;
+    if (descendant_font->contains(CommonNames::W2)) {
+        auto widths_array = MUST(descendant_font->get_array(document, CommonNames::W2));
+        Optional<u16> pending_code;
+
+        for (size_t i = 0; i < widths_array->size(); i++) {
+            auto& value = widths_array->at(i);
+            if (!pending_code.has_value()) {
+                pending_code = value.to_int();
+            } else if (value.has_number()) {
+                auto first_code = pending_code.release_value();
+                auto last_code = value.to_int();
+                auto vertical_displacement_vector_y = widths_array->at(i + 1).to_int();
+                auto position_vector_x = widths_array->at(i + 2).to_int();
+                auto position_vector_y = widths_array->at(i + 3).to_int();
+                i += 3;
+
+                for (u16 code = first_code; code <= last_code; code++)
+                    vertical_metrics.set(code, VerticalMetric { vertical_displacement_vector_y, position_vector_x, position_vector_y });
+            } else {
+                auto array = TRY(document->resolve_to<ArrayObject>(value));
+                VERIFY(array->size() % 3 == 0);
+                auto code = pending_code.release_value();
+                for (size_t j = 0; j < array->size(); j += 3) {
+                    auto vertical_displacement_vector_y = array->at(j).to_int();
+                    auto position_vector_x = array->at(j + 1).to_int();
+                    auto position_vector_y = array->at(j + 2).to_int();
+                    vertical_metrics.set(code++, VerticalMetric { vertical_displacement_vector_y, position_vector_x, position_vector_y });
+                }
+            }
+        }
+    }
+
     m_system_info = move(system_info);
     m_widths = move(widths);
     m_missing_width = default_width;
+    m_default_position_vector_y = default_position_vector_y;
+    m_default_displacement_vector_y = default_displacement_vector_y;
+    m_vertical_metrics = move(vertical_metrics);
     return {};
 }
 

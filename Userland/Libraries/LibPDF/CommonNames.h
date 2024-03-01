@@ -52,6 +52,7 @@
     X(D)                          \
     X(DCTDecode)                  \
     X(DW)                         \
+    X(DW2)                        \
     X(DamagedRowsBeforeError)     \
     X(Decode)                     \
     X(DecodeParms)                \
@@ -188,6 +189,7 @@
     X(UserUnit)                   \
     X(V)                          \
     X(W)                          \
+    X(W2)                         \
     X(WhitePoint)                 \
     X(Width)                      \
     X(Widths)                     \
