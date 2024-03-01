@@ -41,6 +41,7 @@ struct DrawGlyphRun {
     Vector<Gfx::DrawGlyphOrEmoji> glyph_run;
     Color color;
     Gfx::IntRect rect;
+    Gfx::FloatPoint translation;
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return rect; }
 

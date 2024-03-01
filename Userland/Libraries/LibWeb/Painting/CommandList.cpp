@@ -87,7 +87,7 @@ void CommandList::execute(CommandExecutor& executor)
 
         auto result = command.visit(
             [&](DrawGlyphRun const& command) {
-                return executor.draw_glyph_run(command.glyph_run, command.color);
+                return executor.draw_glyph_run(command.glyph_run, command.color, command.translation);
             },
             [&](DrawText const& command) {
                 return executor.draw_text(command.rect, command.raw_text, command.alignment, command.color,
