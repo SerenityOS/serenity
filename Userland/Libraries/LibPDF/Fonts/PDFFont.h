@@ -45,7 +45,7 @@ public:
 
 protected:
     virtual PDFErrorOr<void> initialize(Document* document, NonnullRefPtr<DictObject> const& dict, float font_size);
-    static PDFErrorOr<NonnullRefPtr<Gfx::Font>> replacement_for(StringView name, float font_size);
+    static PDFErrorOr<NonnullRefPtr<Gfx::ScaledFont>> replacement_for(StringView name, float font_size);
 
     unsigned m_flags { 0 };
 };

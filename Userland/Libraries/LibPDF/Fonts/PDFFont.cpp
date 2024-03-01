@@ -6,6 +6,7 @@
 
 #include <AK/String.h>
 #include <AK/StringView.h>
+#include <AK/TypeCasts.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibPDF/CommonNames.h>
 #include <LibPDF/Fonts/PDFFont.h>
@@ -66,7 +67,7 @@ PDFErrorOr<void> PDFFont::initialize(Document* document, NonnullRefPtr<DictObjec
     return {};
 }
 
-PDFErrorOr<NonnullRefPtr<Gfx::Font>> PDFFont::replacement_for(StringView name, float font_size)
+PDFErrorOr<NonnullRefPtr<Gfx::ScaledFont>> PDFFont::replacement_for(StringView name, float font_size)
 {
     bool is_bold = name.contains("bold"sv, CaseSensitivity::CaseInsensitive);
     bool is_italic = name.contains("italic"sv, CaseSensitivity::CaseInsensitive) || name.contains("oblique"sv, CaseSensitivity::CaseInsensitive);
@@ -96,7 +97,9 @@ PDFErrorOr<NonnullRefPtr<Gfx::Font>> PDFFont::replacement_for(StringView name, f
     auto font = Gfx::FontDatabase::the().get(font_family, font_variant, point_size);
     if (!font)
         return Error::internal_error("Failed to load {} {} at {}pt", font_family, font_variant, point_size);
-    return font.release_nonnull();
+
+    VERIFY(is<Gfx::ScaledFont>(*font));
+    return static_ptr_cast<Gfx::ScaledFont>(font.release_nonnull());
 }
 
 }
