@@ -598,7 +598,10 @@ RENDERER_HANDLER(text_show_string_array)
     for (auto& element : elements) {
         if (element.has_number()) {
             float shift = element.to_float() / 1000.0f;
-            m_text_matrix.translate(-shift * text_state().font_size * text_state().horizontal_scaling, 0.0f);
+            if (text_state().font->writing_mode() == WritingMode::Horizontal)
+                m_text_matrix.translate(-shift * text_state().font_size * text_state().horizontal_scaling, 0.0f);
+            else
+                m_text_matrix.translate(0.0f, -shift * text_state().font_size);
             m_text_rendering_matrix_is_dirty = true;
         } else {
             auto str = element.get<NonnullRefPtr<Object>>()->cast<StringObject>()->string();
