@@ -33,9 +33,6 @@ public:
     u32 hardware_relative_controller_id() const { return m_hardware_relative_controller_id; }
 
 protected:
-    virtual ErrorOr<void> reset() = 0;
-    virtual ErrorOr<void> shutdown() = 0;
-
     virtual void complete_current_request(AsyncDeviceRequest::RequestResult) = 0;
 
     explicit StorageController(u32 hardware_relative_controller_id);
