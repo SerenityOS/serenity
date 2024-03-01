@@ -64,16 +64,16 @@ public:
     template<typename Callback>
     void for_each_window(Callback callback)
     {
-        for (auto& it : m_windows) {
-            if (callback(*it.value) == IterationDecision::Break)
+        for (auto& [_, window] : m_windows) {
+            if (callback(*window) == IterationDecision::Break)
                 break;
         }
     }
     template<typename Callback>
     void for_each_menu(Callback callback)
     {
-        for (auto& it : m_menus) {
-            if (callback(*it.value) == IterationDecision::Break)
+        for (auto& [_, menu] : m_menus) {
+            if (callback(*menu) == IterationDecision::Break)
                 break;
         }
     }
