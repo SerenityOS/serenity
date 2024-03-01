@@ -15,7 +15,7 @@
 
 namespace PDF {
 
-TrueTypePainter::TrueTypePainter(AK::NonnullRefPtr<Gfx::Font> font, NonnullRefPtr<Encoding> encoding, bool encoding_is_mac_roman_or_win_ansi, bool is_nonsymbolic, Optional<u8> high_byte, bool is_zapf_dingbats)
+TrueTypePainter::TrueTypePainter(AK::NonnullRefPtr<Gfx::ScaledFont> font, NonnullRefPtr<Encoding> encoding, bool encoding_is_mac_roman_or_win_ansi, bool is_nonsymbolic, Optional<u8> high_byte, bool is_zapf_dingbats)
     : m_font(move(font))
     , m_encoding(move(encoding))
     , m_encoding_is_mac_roman_or_win_ansi(encoding_is_mac_roman_or_win_ansi)
@@ -25,7 +25,7 @@ TrueTypePainter::TrueTypePainter(AK::NonnullRefPtr<Gfx::Font> font, NonnullRefPt
 {
 }
 
-NonnullOwnPtr<TrueTypePainter> TrueTypePainter::create(Document* document, NonnullRefPtr<DictObject> const& dict, SimpleFont const& containing_pdf_font, AK::NonnullRefPtr<Gfx::Font> font, NonnullRefPtr<Encoding> encoding, bool is_zapf_dingbats)
+NonnullOwnPtr<TrueTypePainter> TrueTypePainter::create(Document* document, NonnullRefPtr<DictObject> const& dict, SimpleFont const& containing_pdf_font, AK::NonnullRefPtr<Gfx::ScaledFont> font, NonnullRefPtr<Encoding> encoding, bool is_zapf_dingbats)
 {
     bool encoding_is_mac_roman_or_win_ansi = false;
     if (dict->contains(CommonNames::Encoding)) {
@@ -150,8 +150,7 @@ Optional<float> TrueTypePainter::get_glyph_width(u8 char_code) const
 
 void TrueTypePainter::set_font_size(float font_size)
 {
-    // Guaranteed non-null for ScaledFonts.
-    m_font = *m_font->with_size((font_size * POINTS_PER_INCH) / DEFAULT_DPI);
+    m_font = m_font->scaled_with_size((font_size * POINTS_PER_INCH) / DEFAULT_DPI);
 }
 
 PDFErrorOr<void> TrueTypeFont::initialize(Document* document, NonnullRefPtr<DictObject> const& dict, float font_size)
@@ -161,7 +160,7 @@ PDFErrorOr<void> TrueTypeFont::initialize(Document* document, NonnullRefPtr<Dict
     m_base_font_name = TRY(dict->get_name(document, CommonNames::BaseFont))->name();
 
     // If there's an embedded font program we use that; otherwise we try to find a replacement font
-    RefPtr<Gfx::Font> font;
+    RefPtr<Gfx::ScaledFont> font;
     if (dict->contains(CommonNames::FontDescriptor)) {
         auto descriptor = MUST(dict->get_dict(document, CommonNames::FontDescriptor));
         if (descriptor->contains(CommonNames::FontFile2)) {
