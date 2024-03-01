@@ -31,9 +31,16 @@ CommandExecutorGPU::~CommandExecutorGPU()
     painter().flush(m_target_bitmap);
 }
 
-CommandResult CommandExecutorGPU::draw_glyph_run(Vector<Gfx::DrawGlyphOrEmoji> const& glyph_run, Color const& color)
+CommandResult CommandExecutorGPU::draw_glyph_run(Vector<Gfx::DrawGlyphOrEmoji> const& glyph_run, Color const& color, Gfx::FloatPoint translation)
 {
-    painter().draw_glyph_run(glyph_run, color);
+    Vector<Gfx::DrawGlyphOrEmoji> transformed_glyph_run;
+    transformed_glyph_run.ensure_capacity(glyph_run.size());
+    for (auto& glyph : glyph_run) {
+        auto transformed_glyph = glyph;
+        transformed_glyph.visit([&](auto& glyph) { glyph.position.translate_by(translation); });
+        transformed_glyph_run.append(transformed_glyph);
+    }
+    painter().draw_glyph_run(transformed_glyph_run, color);
     return CommandResult::Continue;
 }
 

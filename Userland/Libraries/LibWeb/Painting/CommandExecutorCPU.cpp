@@ -24,15 +24,17 @@ CommandExecutorCPU::CommandExecutorCPU(Gfx::Bitmap& bitmap)
         .scaling_mode = {} });
 }
 
-CommandResult CommandExecutorCPU::draw_glyph_run(Vector<Gfx::DrawGlyphOrEmoji> const& glyph_run, Color const& color)
+CommandResult CommandExecutorCPU::draw_glyph_run(Vector<Gfx::DrawGlyphOrEmoji> const& glyph_run, Color const& color, Gfx::FloatPoint translation)
 {
     auto& painter = this->painter();
     for (auto& glyph_or_emoji : glyph_run) {
+        auto transformed_glyph = glyph_or_emoji;
+        transformed_glyph.visit([&](auto& glyph) { glyph.position.translate_by(translation); });
         if (glyph_or_emoji.has<Gfx::DrawGlyph>()) {
-            auto& glyph = glyph_or_emoji.get<Gfx::DrawGlyph>();
+            auto& glyph = transformed_glyph.get<Gfx::DrawGlyph>();
             painter.draw_glyph(glyph.position, glyph.code_point, *glyph.font, color);
         } else {
-            auto& emoji = glyph_or_emoji.get<Gfx::DrawEmoji>();
+            auto& emoji = transformed_glyph.get<Gfx::DrawEmoji>();
             painter.draw_emoji(emoji.position.to_type<int>(), *emoji.emoji, *emoji.font);
         }
     }
