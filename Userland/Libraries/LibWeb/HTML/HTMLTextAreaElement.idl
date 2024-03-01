@@ -11,8 +11,8 @@ interface HTMLTextAreaElement : HTMLElement {
     [CEReactions, Reflect=dirname] attribute DOMString dirName;
     [CEReactions, Reflect] attribute boolean disabled;
     readonly attribute HTMLFormElement? form;
-    // FIXME: [CEReactions] attribute long maxLength;
-    // FIXME: [CEReactions] attribute long minLength;
+    [CEReactions] attribute long maxLength;
+    [CEReactions] attribute long minLength;
     [CEReactions, Reflect] attribute DOMString name;
     [CEReactions, Reflect] attribute DOMString placeholder;
     [CEReactions, Reflect=readonly] attribute boolean readOnly;

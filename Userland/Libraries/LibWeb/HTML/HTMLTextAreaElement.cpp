@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
  * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2024, Bastiaan van der Plaat <bastiaan.v.d.plaat@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -147,6 +148,40 @@ u32 HTMLTextAreaElement::text_length() const
     return Utf16View { utf16_data }.length_in_code_units();
 }
 
+// https://html.spec.whatwg.org/multipage/form-elements.html#dom-textarea-maxlength
+WebIDL::Long HTMLTextAreaElement::max_length() const
+{
+    // The maxLength IDL attribute must reflect the maxlength content attribute, limited to only non-negative numbers.
+    if (auto maxlength_string = get_attribute(HTML::AttributeNames::maxlength); maxlength_string.has_value()) {
+        if (auto maxlength = parse_non_negative_integer(*maxlength_string); maxlength.has_value())
+            return *maxlength;
+    }
+    return -1;
+}
+
+WebIDL::ExceptionOr<void> HTMLTextAreaElement::set_max_length(WebIDL::Long value)
+{
+    // The maxLength IDL attribute must reflect the maxlength content attribute, limited to only non-negative numbers.
+    return set_attribute(HTML::AttributeNames::maxlength, TRY(convert_non_negative_integer_to_string(realm(), value)));
+}
+
+// https://html.spec.whatwg.org/multipage/form-elements.html#dom-textarea-minlength
+WebIDL::Long HTMLTextAreaElement::min_length() const
+{
+    // The minLength IDL attribute must reflect the minlength content attribute, limited to only non-negative numbers.
+    if (auto minlength_string = get_attribute(HTML::AttributeNames::minlength); minlength_string.has_value()) {
+        if (auto minlength = parse_non_negative_integer(*minlength_string); minlength.has_value())
+            return *minlength;
+    }
+    return -1;
+}
+
+WebIDL::ExceptionOr<void> HTMLTextAreaElement::set_min_length(WebIDL::Long value)
+{
+    // The minLength IDL attribute must reflect the minlength content attribute, limited to only non-negative numbers.
+    return set_attribute(HTML::AttributeNames::minlength, TRY(convert_non_negative_integer_to_string(realm(), value)));
+}
+
 // https://html.spec.whatwg.org/multipage/form-elements.html#dom-textarea-cols
 unsigned HTMLTextAreaElement::cols() const
 {
@@ -208,6 +243,7 @@ void HTMLTextAreaElement::create_shadow_tree_if_needed()
     // NOTE: If `children_changed()` was called before now, `m_raw_value` will hold the text content.
     //       Otherwise, it will get filled in whenever that does get called.
     m_text_node->set_text_content(m_raw_value);
+    handle_maxlength_attribute();
     MUST(m_inner_text_element->append_child(*m_text_node));
 
     update_placeholder_visibility();
@@ -221,6 +257,19 @@ void HTMLTextAreaElement::handle_readonly_attribute(Optional<String> const& mayb
 
     if (m_text_node)
         m_text_node->set_always_editable(m_is_mutable);
+}
+
+// https://html.spec.whatwg.org/multipage/form-elements.html#dom-textarea-maxlength
+void HTMLTextAreaElement::handle_maxlength_attribute()
+{
+    if (m_text_node) {
+        auto max_length = this->max_length();
+        if (max_length >= 0) {
+            m_text_node->set_max_length(max_length);
+        } else {
+            m_text_node->set_max_length({});
+        }
+    }
 }
 
 void HTMLTextAreaElement::update_placeholder_visibility()
@@ -257,6 +306,8 @@ void HTMLTextAreaElement::form_associated_element_attribute_changed(FlyString co
             m_placeholder_text_node->set_data(value.value_or(String {}));
     } else if (name == HTML::AttributeNames::readonly) {
         handle_readonly_attribute(value);
+    } else if (name == HTML::AttributeNames::maxlength) {
+        handle_maxlength_attribute();
     }
 }
 
