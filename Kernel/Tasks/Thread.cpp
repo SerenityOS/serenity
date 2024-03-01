@@ -964,14 +964,14 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
     }
 
     if (signal == SIGCONT) {
-        dbgln("signal: SIGCONT resuming {}", *this);
+        dbgln_if(SIGNAL_DEBUG, "signal: SIGCONT resuming {}", *this);
     } else {
         if (tracer) {
             // when a thread is traced, it should be stopped whenever it receives a signal
             // the tracer is notified of this by using waitpid()
             // only "pending signals" from the tracer are sent to the tracee
             if (!tracer->has_pending_signal(signal)) {
-                dbgln("signal: {} stopping {} for tracer", signal, *this);
+                dbgln_if(SIGNAL_DEBUG, "signal: {} stopping {} for tracer", signal, *this);
                 set_state(Thread::State::Stopped, signal);
                 return DispatchSignalResult::Yield;
             }
