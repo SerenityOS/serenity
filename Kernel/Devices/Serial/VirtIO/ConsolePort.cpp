@@ -5,8 +5,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Bus/VirtIO/Console.h>
-#include <Kernel/Bus/VirtIO/ConsolePort.h>
+#include <Kernel/Devices/Serial/VirtIO/Console.h>
+#include <Kernel/Devices/Serial/VirtIO/ConsolePort.h>
 
 namespace Kernel::VirtIO {
 
