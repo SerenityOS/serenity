@@ -77,8 +77,7 @@ void ViewportPaintable::assign_scroll_frames()
 
     for_each_in_subtree([&](auto const& paintable) {
         for (auto block = paintable.containing_block(); block; block = block->containing_block()) {
-            auto const& block_paintable_box = *block->paintable_box();
-            if (auto scroll_frame = scroll_state.get(&block_paintable_box); scroll_frame.has_value()) {
+            if (auto scroll_frame = scroll_state.get(block); scroll_frame.has_value()) {
                 if (paintable.is_paintable_box()) {
                     auto const& paintable_box = static_cast<PaintableBox const&>(paintable);
                     const_cast<PaintableBox&>(paintable_box).set_enclosing_scroll_frame(scroll_frame.value());
@@ -108,8 +107,7 @@ void ViewportPaintable::assign_clip_frames()
 
     for_each_in_subtree([&](auto const& paintable) {
         for (auto block = paintable.containing_block(); block; block = block->containing_block()) {
-            auto const& block_paintable_box = *block->paintable_box();
-            if (auto clip_frame = clip_state.get(&block_paintable_box); clip_frame.has_value()) {
+            if (auto clip_frame = clip_state.get(block); clip_frame.has_value()) {
                 if (paintable.is_paintable_box()) {
                     auto const& paintable_box = static_cast<PaintableBox const&>(paintable);
                     const_cast<PaintableBox&>(paintable_box).set_enclosing_clip_frame(clip_frame.value());
@@ -251,7 +249,7 @@ void ViewportPaintable::resolve_paint_only_properties()
             auto const& bottom_right_border_radius = inline_paintable.computed_values().border_bottom_right_radius();
             auto const& bottom_left_border_radius = inline_paintable.computed_values().border_bottom_left_radius();
 
-            auto containing_block_position_in_absolute_coordinates = inline_paintable.containing_block()->paintable_box()->absolute_position();
+            auto containing_block_position_in_absolute_coordinates = inline_paintable.containing_block()->absolute_position();
             for (size_t i = 0; i < fragments.size(); ++i) {
                 auto is_first_fragment = i == 0;
                 auto is_last_fragment = i == fragments.size() - 1;

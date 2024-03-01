@@ -181,10 +181,15 @@ public:
 
     virtual void set_needs_display() const;
 
-    Layout::Box const* containing_block() const
+    PaintableBox* containing_block() const
     {
-        if (!m_containing_block.has_value())
-            m_containing_block = m_layout_node->containing_block();
+        if (!m_containing_block.has_value()) {
+            auto containing_layout_box = m_layout_node->containing_block();
+            if (containing_layout_box)
+                m_containing_block = const_cast<PaintableBox*>(containing_layout_box->paintable_box());
+            else
+                m_containing_block = nullptr;
+        }
         return *m_containing_block;
     }
 
@@ -209,7 +214,7 @@ private:
     JS::GCPtr<DOM::Node> m_dom_node;
     JS::NonnullGCPtr<Layout::Node const> m_layout_node;
     JS::NonnullGCPtr<HTML::BrowsingContext> m_browsing_context;
-    Optional<JS::GCPtr<Layout::Box const>> mutable m_containing_block;
+    Optional<JS::GCPtr<PaintableBox>> mutable m_containing_block;
 
     OwnPtr<StackingContext> m_stacking_context;
 };

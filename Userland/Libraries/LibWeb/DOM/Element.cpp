@@ -923,13 +923,8 @@ JS::NonnullGCPtr<Geometry::DOMRectList> Element::get_client_rects() const
     }
 
     Gfx::AffineTransform transform;
-    for (auto const* containing_block = this->layout_node(); containing_block; containing_block = containing_block->containing_block()) {
-        Gfx::AffineTransform containing_block_transform;
-        if (containing_block->paintable() && containing_block->paintable()->is_paintable_box()) {
-            auto const& containing_block_paintable_box = static_cast<Painting::PaintableBox const&>(*containing_block->paintable());
-            containing_block_transform = Gfx::extract_2d_affine_transform(containing_block_paintable_box.transform());
-        }
-        transform = transform.multiply(containing_block_transform);
+    for (auto const* containing_block = this->paintable_box(); containing_block; containing_block = containing_block->containing_block()) {
+        transform = transform.multiply(Gfx::extract_2d_affine_transform(containing_block->transform()));
     }
 
     auto const* paintable = this->paintable();

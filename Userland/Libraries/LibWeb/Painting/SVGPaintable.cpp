@@ -25,7 +25,7 @@ CSSPixelRect SVGPaintable::compute_absolute_rect() const
 {
     if (auto* svg_svg_box = layout_box().first_ancestor_of_type<Layout::SVGSVGBox>()) {
         CSSPixelRect rect { offset(), content_size() };
-        for (Layout::Box const* ancestor = svg_svg_box; ancestor && ancestor->paintable(); ancestor = ancestor->paintable()->containing_block())
+        for (Layout::Box const* ancestor = svg_svg_box; ancestor; ancestor = ancestor->containing_block())
             rect.translate_by(ancestor->paintable_box()->offset());
         return rect;
     }

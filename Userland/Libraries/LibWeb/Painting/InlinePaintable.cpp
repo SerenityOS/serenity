@@ -73,7 +73,7 @@ void InlinePaintable::paint(PaintContext& context, PaintPhase phase) const
     auto& painter = context.recording_painter();
 
     if (phase == PaintPhase::Background) {
-        auto containing_block_position_in_absolute_coordinates = containing_block()->paintable_box()->absolute_position();
+        auto containing_block_position_in_absolute_coordinates = containing_block()->absolute_position();
 
         for_each_fragment([&](auto const& fragment, bool is_first_fragment, bool is_last_fragment) {
             CSSPixelRect absolute_fragment_rect { containing_block_position_in_absolute_coordinates.translated(fragment.offset()), fragment.size() };
@@ -118,7 +118,7 @@ void InlinePaintable::paint(PaintContext& context, PaintPhase phase) const
             .left = computed_values().border_left(),
         };
 
-        auto containing_block_position_in_absolute_coordinates = containing_block()->paintable_box()->absolute_position();
+        auto containing_block_position_in_absolute_coordinates = containing_block()->absolute_position();
 
         for_each_fragment([&](auto const& fragment, bool is_first_fragment, bool is_last_fragment) {
             CSSPixelRect absolute_fragment_rect { containing_block_position_in_absolute_coordinates.translated(fragment.offset()), fragment.size() };
@@ -247,7 +247,7 @@ CSSPixelRect InlinePaintable::bounding_rect() const
 
     if (bounding_rect.is_empty()) {
         // FIXME: This is adhoc, and we should return rect of empty fragment instead.
-        auto containing_block_position_in_absolute_coordinates = containing_block()->paintable_box()->absolute_position();
+        auto containing_block_position_in_absolute_coordinates = containing_block()->absolute_position();
         return { containing_block_position_in_absolute_coordinates, { 0, 0 } };
     }
     return bounding_rect;

@@ -117,8 +117,8 @@ CSSPixelPoint PaintableBox::offset() const
 CSSPixelRect PaintableBox::compute_absolute_rect() const
 {
     CSSPixelRect rect { offset(), content_size() };
-    for (auto const* block = containing_block(); block && block->paintable(); block = block->paintable()->containing_block())
-        rect.translate_by(block->paintable_box()->offset());
+    for (auto const* block = containing_block(); block; block = block->containing_block())
+        rect.translate_by(block->offset());
     return rect;
 }
 
@@ -126,10 +126,10 @@ CSSPixelRect PaintableBox::compute_absolute_padding_rect_with_css_transform_appl
 {
     CSSPixelRect rect { offset(), content_size() };
     for (auto const* block = containing_block(); block; block = block->containing_block()) {
-        auto offset = block->paintable_box()->offset();
-        auto affine_transform = Gfx::extract_2d_affine_transform(block->paintable_box()->transform());
+        auto offset = block->offset();
+        auto affine_transform = Gfx::extract_2d_affine_transform(block->transform());
         offset.translate_by(affine_transform.translation().to_type<CSSPixels>());
-        offset.translate_by(-block->paintable_box()->scroll_offset());
+        offset.translate_by(-block->scroll_offset());
         rect.translate_by(offset);
     }
     auto affine_transform = Gfx::extract_2d_affine_transform(transform());
@@ -146,8 +146,8 @@ CSSPixelRect PaintableBox::compute_absolute_padding_rect_with_css_transform_appl
 Gfx::AffineTransform PaintableBox::compute_combined_css_transform() const
 {
     Gfx::AffineTransform combined_transform;
-    for (auto const* ancestor = &this->layout_box(); ancestor; ancestor = ancestor->containing_block()) {
-        auto affine_transform = Gfx::extract_2d_affine_transform(ancestor->paintable_box()->transform());
+    for (auto const* ancestor = this; ancestor; ancestor = ancestor->containing_block()) {
+        auto affine_transform = Gfx::extract_2d_affine_transform(ancestor->transform());
         combined_transform = combined_transform.multiply(affine_transform);
     }
     return combined_transform;

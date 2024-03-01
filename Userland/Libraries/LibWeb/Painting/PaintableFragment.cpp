@@ -25,8 +25,8 @@ CSSPixelRect const PaintableFragment::absolute_rect() const
 {
     CSSPixelRect rect { {}, size() };
     auto const* containing_block = paintable().containing_block();
-    if (containing_block && containing_block->paintable_box())
-        rect.set_location(containing_block->paintable_box()->absolute_position());
+    if (containing_block)
+        rect.set_location(containing_block->absolute_position());
     rect.translate_by(offset());
     return rect;
 }
