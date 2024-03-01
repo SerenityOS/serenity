@@ -899,7 +899,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 #if ARCH(X86_64)
         syscall_arg_t syscall_index = regs.rax;
         syscall_arg_t arg1 = regs.rdx;
-        syscall_arg_t arg2 = regs.rcx;
+        syscall_arg_t arg2 = regs.rdi;
         syscall_arg_t arg3 = regs.rbx;
 #elif ARCH(AARCH64)
         syscall_arg_t syscall_index = 0; // FIXME
