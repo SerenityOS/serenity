@@ -31,8 +31,6 @@ public:
     virtual StringView device_name() const override { return "AHCI"sv; }
 
     virtual LockRefPtr<StorageDevice> device(u32 index) const override;
-    virtual ErrorOr<void> reset() override;
-    virtual ErrorOr<void> shutdown() override;
     virtual size_t devices_count() const override;
     virtual void complete_current_request(AsyncDeviceRequest::RequestResult) override;
 
@@ -41,6 +39,8 @@ public:
     void handle_interrupt_for_port(Badge<AHCIInterruptHandler>, u32 port_index) const;
 
 private:
+    ErrorOr<void> reset();
+
     void disable_global_interrupts() const;
     void enable_global_interrupts() const;
 

@@ -72,11 +72,6 @@ ErrorOr<void> AHCIController::reset()
     return {};
 }
 
-ErrorOr<void> AHCIController::shutdown()
-{
-    return Error::from_errno(ENOTIMPL);
-}
-
 size_t AHCIController::devices_count() const
 {
     SpinlockLocker locker(m_hba_control_lock);
