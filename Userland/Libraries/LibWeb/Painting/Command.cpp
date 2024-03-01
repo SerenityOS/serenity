@@ -11,12 +11,8 @@ namespace Web::Painting {
 
 void DrawGlyphRun::translate_by(Gfx::IntPoint const& offset)
 {
-    for (auto& glyph : glyph_run) {
-        glyph.visit([&](auto& glyph) {
-            glyph.translate_by(offset.to_type<float>());
-        });
-    }
     rect.translate_by(offset);
+    translation.translate_by(offset.to_type<float>());
 }
 
 Gfx::IntRect PaintOuterBoxShadow::bounding_rect() const

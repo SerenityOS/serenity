@@ -24,12 +24,15 @@ CommandExecutorCPU::CommandExecutorCPU(Gfx::Bitmap& bitmap)
         .scaling_mode = {} });
 }
 
-CommandResult CommandExecutorCPU::draw_glyph_run(Vector<Gfx::DrawGlyphOrEmoji> const& glyph_run, Color const& color, Gfx::FloatPoint translation)
+CommandResult CommandExecutorCPU::draw_glyph_run(Vector<Gfx::DrawGlyphOrEmoji> const& glyph_run, Color const& color, Gfx::FloatPoint translation, double scale)
 {
     auto& painter = this->painter();
     for (auto& glyph_or_emoji : glyph_run) {
         auto transformed_glyph = glyph_or_emoji;
-        transformed_glyph.visit([&](auto& glyph) { glyph.position.translate_by(translation); });
+        transformed_glyph.visit([&](auto& glyph) {
+            glyph.position = glyph.position.scaled(scale).translated(translation);
+            glyph.font = *glyph.font->with_size(glyph.font->point_size() * static_cast<float>(scale));
+        });
         if (glyph_or_emoji.has<Gfx::DrawGlyph>()) {
             auto& glyph = transformed_glyph.get<Gfx::DrawGlyph>();
             painter.draw_glyph(glyph.position, glyph.code_point, *glyph.font, color);
