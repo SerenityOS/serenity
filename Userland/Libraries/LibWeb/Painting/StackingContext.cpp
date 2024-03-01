@@ -328,34 +328,6 @@ void StackingContext::paint(PaintContext& context) const
     context.recording_painter().restore();
 }
 
-template<typename Callback>
-static TraversalDecision for_each_in_inclusive_subtree_within_same_stacking_context_in_reverse(Paintable const& paintable, Callback callback)
-{
-    if (paintable.stacking_context()) {
-        // Note: Include the stacking context (so we can hit test it), but don't recurse into it.
-        if (auto decision = callback(paintable); decision != TraversalDecision::Continue)
-            return decision;
-        return TraversalDecision::SkipChildrenAndContinue;
-    }
-    for (auto* child = paintable.last_child(); child; child = child->previous_sibling()) {
-        if (for_each_in_inclusive_subtree_within_same_stacking_context_in_reverse(*child, callback) == TraversalDecision::Break)
-            return TraversalDecision::Break;
-    }
-    if (auto decision = callback(paintable); decision != TraversalDecision::Continue)
-        return decision;
-    return TraversalDecision::Continue;
-}
-
-template<typename Callback>
-static TraversalDecision for_each_in_subtree_within_same_stacking_context_in_reverse(Paintable const& paintable, Callback callback)
-{
-    for (auto* child = paintable.last_child(); child; child = child->previous_sibling()) {
-        if (for_each_in_inclusive_subtree_within_same_stacking_context_in_reverse(*child, callback) == TraversalDecision::Break)
-            return TraversalDecision::Break;
-    }
-    return TraversalDecision::Continue;
-}
-
 TraversalDecision StackingContext::hit_test(CSSPixelPoint position, HitTestType type, Function<TraversalDecision(HitTestResult)> const& callback) const
 {
     if (!paintable().is_visible())
@@ -389,39 +361,16 @@ TraversalDecision StackingContext::hit_test(CSSPixelPoint position, HitTestType 
             return TraversalDecision::Break;
     }
 
-    bool should_exit = false;
-
     // 6. the child stacking contexts with stack level 0 and the positioned descendants with stack level 0.
-    for_each_in_subtree_within_same_stacking_context_in_reverse(paintable(), [&](Paintable const& paintable) {
-        VERIFY(!should_exit);
-        if (!paintable.is_paintable_box())
-            return TraversalDecision::Continue;
-
-        auto const& paintable_box = verify_cast<PaintableBox>(paintable);
-
-        auto const& z_index = paintable_box.computed_values().z_index();
-        auto positioned_element_without_stacking_context = paintable_box.is_positioned() && !paintable_box.stacking_context();
-        if (z_index.value_or(0) == 0 && (positioned_element_without_stacking_context || paintable_box.layout_node().is_grid_item())) {
-            if (paintable_box.hit_test(transformed_position, type, callback) == TraversalDecision::Break) {
-                should_exit = true;
+    for (auto const& paintable : m_positioned_descendants_with_stack_level_0_and_stacking_contexts.in_reverse()) {
+        if (paintable.stacking_context()) {
+            if (paintable.stacking_context()->hit_test(transformed_position, type, callback) == TraversalDecision::Break)
                 return TraversalDecision::Break;
-            }
+        } else {
+            if (paintable.hit_test(transformed_position, type, callback) == TraversalDecision::Break)
+                return TraversalDecision::Break;
         }
-
-        if (paintable_box.stacking_context()) {
-            if (z_index.value_or(0) == 0) {
-                if (paintable_box.stacking_context()->hit_test(transformed_position, type, callback) == TraversalDecision::Break) {
-                    should_exit = true;
-                    return TraversalDecision::Break;
-                }
-            }
-        }
-
-        return TraversalDecision::Continue;
-    });
-
-    if (should_exit)
-        return TraversalDecision::Break;
+    }
 
     // 5. the in-flow, inline-level, non-positioned descendants, including inline tables and inline blocks.
     if (paintable().layout_node().children_are_inline() && is<Layout::BlockContainer>(paintable().layout_node())) {
@@ -434,23 +383,10 @@ TraversalDecision StackingContext::hit_test(CSSPixelPoint position, HitTestType 
     }
 
     // 4. the non-positioned floats.
-    for_each_in_subtree_within_same_stacking_context_in_reverse(paintable(), [&](Paintable const& paintable) {
-        VERIFY(!should_exit);
-        if (!paintable.is_paintable_box())
-            return TraversalDecision::Continue;
-
-        auto const& paintable_box = verify_cast<PaintableBox>(paintable);
-        if (paintable_box.is_floating()) {
-            if (paintable_box.hit_test(transformed_position, type, callback) == TraversalDecision::Break) {
-                should_exit = true;
-                return TraversalDecision::Break;
-            }
-        }
-        return TraversalDecision::Continue;
-    });
-
-    if (should_exit)
-        return TraversalDecision::Break;
+    for (auto const& paintable : m_non_positioned_floating_descendants.in_reverse()) {
+        if (paintable.hit_test(transformed_position, type, callback) == TraversalDecision::Break)
+            return TraversalDecision::Break;
+    }
 
     // 3. the in-flow, non-inline-level, non-positioned descendants.
     if (!paintable().layout_node().children_are_inline()) {
