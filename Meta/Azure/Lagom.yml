@@ -140,7 +140,7 @@ jobs:
         - script: |
             set -e
             cmake --build .
-            cmake --install . --prefix $(Build.SourcesDirectory)/Meta/Lagom/Install
+            cmake --install . --strip --prefix $(Build.SourcesDirectory)/Meta/Lagom/Install
           displayName: 'Build'
           workingDirectory: $(Build.SourcesDirectory)/Meta/Lagom/Build
           env:
