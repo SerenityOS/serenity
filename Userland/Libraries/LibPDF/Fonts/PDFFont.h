@@ -20,6 +20,11 @@ class Renderer;
 // these tables in some cases. Skip reading these tables.
 constexpr u32 pdf_skipped_opentype_tables = OpenType::FontOptions::SkipTables::Name | OpenType::FontOptions::SkipTables::Hmtx | OpenType::FontOptions::SkipTables::OS2;
 
+enum class WritingMode {
+    Horizontal,
+    Vertical,
+};
+
 class PDFFont : public RefCounted<PDFFont> {
 public:
     static PDFErrorOr<NonnullRefPtr<PDFFont>> create(Document*, NonnullRefPtr<DictObject> const&, float font_size);
@@ -28,6 +33,8 @@ public:
 
     virtual void set_font_size(float font_size) = 0;
     virtual PDFErrorOr<Gfx::FloatPoint> draw_string(Gfx::Painter&, Gfx::FloatPoint, ByteString const&, Renderer const&) = 0;
+
+    virtual WritingMode writing_mode() const { return WritingMode::Horizontal; }
 
     // TABLE 5.20 Font flags
     bool is_fixed_pitch() const { return m_flags & (1 << (1 - 1)); }

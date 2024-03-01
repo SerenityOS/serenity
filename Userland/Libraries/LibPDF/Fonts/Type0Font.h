@@ -27,11 +27,6 @@ public:
     virtual u32 next() = 0;
 };
 
-enum class WritingMode {
-    Horizontal,
-    Vertical,
-};
-
 class Type0CMap {
 public:
     virtual ~Type0CMap() = default;
@@ -58,6 +53,7 @@ public:
 
     void set_font_size(float font_size) override;
     PDFErrorOr<Gfx::FloatPoint> draw_string(Gfx::Painter&, Gfx::FloatPoint, ByteString const&, Renderer const&) override;
+    WritingMode writing_mode() const override { return m_cmap->writing_mode(); }
 
     DeprecatedFlyString base_font_name() const { return m_base_font_name; }
 
