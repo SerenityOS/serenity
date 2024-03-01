@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
  * Copyright (c) 2022, Luke Wilde <lukew@serenityos.org>
+ * Copyright (c) 2024, Bastiaan van der Plaat <bastiaan.v.d.plaat@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,6 +12,7 @@
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/FormAssociatedElement.h>
 #include <LibWeb/HTML/HTMLElement.h>
+#include <LibWeb/WebIDL/Types.h>
 
 namespace Web::HTML {
 
@@ -77,6 +79,12 @@ public:
 
     u32 text_length() const;
 
+    WebIDL::Long max_length() const;
+    WebIDL::ExceptionOr<void> set_max_length(WebIDL::Long);
+
+    WebIDL::Long min_length() const;
+    WebIDL::ExceptionOr<void> set_min_length(WebIDL::Long);
+
     unsigned cols() const;
     WebIDL::ExceptionOr<void> set_cols(unsigned);
 
@@ -95,6 +103,7 @@ private:
     void create_shadow_tree_if_needed();
 
     void handle_readonly_attribute(Optional<String> const& value);
+    void handle_maxlength_attribute();
 
     void update_placeholder_visibility();
     JS::GCPtr<DOM::Element> m_placeholder_element;

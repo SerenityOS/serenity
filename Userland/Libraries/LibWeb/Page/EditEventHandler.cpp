@@ -111,8 +111,14 @@ void EditEventHandler::handle_insert(JS::NonnullGCPtr<DOM::Position> position, u
         builder.append(node.data().bytes_as_string_view().substring_view(0, position->offset()));
         builder.append_code_point(code_point);
         builder.append(node.data().bytes_as_string_view().substring_view(position->offset()));
-        node.set_data(MUST(builder.to_string()));
 
+        // Cut string by max length
+        // FIXME: Cut by UTF-16 code units instead of raw bytes
+        if (auto max_length = node.max_length(); max_length.has_value() && builder.string_view().length() > *max_length) {
+            node.set_data(MUST(String::from_utf8(builder.string_view().substring_view(0, *max_length))));
+        } else {
+            node.set_data(MUST(builder.to_string()));
+        }
         node.invalidate_style();
     } else {
         auto& node = *position->node();

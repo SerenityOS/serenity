@@ -578,6 +578,19 @@ static bool is_allowed_to_be_readonly(HTML::HTMLInputElement::TypeAttributeState
     }
 }
 
+// https://html.spec.whatwg.org/multipage/input.html#attr-input-maxlength
+void HTMLInputElement::handle_maxlength_attribute()
+{
+    if (m_text_node) {
+        auto max_length = this->max_length();
+        if (max_length >= 0) {
+            m_text_node->set_max_length(max_length);
+        } else {
+            m_text_node->set_max_length({});
+        }
+    }
+}
+
 // https://html.spec.whatwg.org/multipage/input.html#attr-input-readonly
 void HTMLInputElement::handle_readonly_attribute(Optional<String> const& maybe_value)
 {
@@ -728,6 +741,7 @@ void HTMLInputElement::create_text_input_shadow_tree()
     m_text_node->set_editable_text_node_owner(Badge<HTMLInputElement> {}, *this);
     if (type_state() == TypeAttributeState::Password)
         m_text_node->set_is_password_input({}, true);
+    handle_maxlength_attribute();
     MUST(m_inner_text_element->append_child(*m_text_node));
 
     update_placeholder_visibility();
@@ -1024,6 +1038,8 @@ void HTMLInputElement::form_associated_element_attribute_changed(FlyString const
     } else if (name == HTML::AttributeNames::alt) {
         if (layout_node() && type_state() == TypeAttributeState::ImageButton)
             did_update_alt_text(verify_cast<Layout::ImageBox>(*layout_node()));
+    } else if (name == HTML::AttributeNames::maxlength) {
+        handle_maxlength_attribute();
     }
 }
 
@@ -1443,6 +1459,40 @@ void HTMLInputElement::apply_presentational_hints(CSS::StyleProperties& style) c
                 style.set_property(CSS::PropertyID::Height, parsed_value.release_nonnull());
         }
     });
+}
+
+//  https://html.spec.whatwg.org/multipage/input.html#dom-input-maxlength
+WebIDL::Long HTMLInputElement::max_length() const
+{
+    // The maxLength IDL attribute must reflect the maxlength content attribute, limited to only non-negative numbers.
+    if (auto maxlength_string = get_attribute(HTML::AttributeNames::maxlength); maxlength_string.has_value()) {
+        if (auto maxlength = parse_non_negative_integer(*maxlength_string); maxlength.has_value())
+            return *maxlength;
+    }
+    return -1;
+}
+
+WebIDL::ExceptionOr<void> HTMLInputElement::set_max_length(WebIDL::Long value)
+{
+    // The maxLength IDL attribute must reflect the maxlength content attribute, limited to only non-negative numbers.
+    return set_attribute(HTML::AttributeNames::maxlength, TRY(convert_non_negative_integer_to_string(realm(), value)));
+}
+
+// https://html.spec.whatwg.org/multipage/input.html#dom-input-minlength
+WebIDL::Long HTMLInputElement::min_length() const
+{
+    // The minLength IDL attribute must reflect the minlength content attribute, limited to only non-negative numbers.
+    if (auto minlength_string = get_attribute(HTML::AttributeNames::minlength); minlength_string.has_value()) {
+        if (auto minlength = parse_non_negative_integer(*minlength_string); minlength.has_value())
+            return *minlength;
+    }
+    return -1;
+}
+
+WebIDL::ExceptionOr<void> HTMLInputElement::set_min_length(WebIDL::Long value)
+{
+    // The minLength IDL attribute must reflect the minlength content attribute, limited to only non-negative numbers.
+    return set_attribute(HTML::AttributeNames::minlength, TRY(convert_non_negative_integer_to_string(realm(), value)));
 }
 
 // https://html.spec.whatwg.org/multipage/input.html#the-size-attribute

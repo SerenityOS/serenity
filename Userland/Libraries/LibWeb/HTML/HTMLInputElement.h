@@ -16,6 +16,7 @@
 #include <LibWeb/HTML/HTMLElement.h>
 #include <LibWeb/Layout/ImageProvider.h>
 #include <LibWeb/WebIDL/DOMException.h>
+#include <LibWeb/WebIDL/Types.h>
 
 namespace Web::HTML {
 
@@ -103,6 +104,12 @@ public:
     // NOTE: User interaction
     // https://html.spec.whatwg.org/multipage/input.html#update-the-file-selection
     void update_the_file_selection(JS::NonnullGCPtr<FileAPI::FileList>);
+
+    WebIDL::Long max_length() const;
+    WebIDL::ExceptionOr<void> set_max_length(WebIDL::Long);
+
+    WebIDL::Long min_length() const;
+    WebIDL::ExceptionOr<void> set_min_length(WebIDL::Long);
 
     unsigned size() const;
     WebIDL::ExceptionOr<void> set_size(unsigned value);
@@ -235,6 +242,7 @@ private:
     WebIDL::ExceptionOr<void> run_input_activation_behavior(DOM::Event const&);
     void set_checked_within_group();
 
+    void handle_maxlength_attribute();
     void handle_readonly_attribute(Optional<String> const& value);
     WebIDL::ExceptionOr<void> handle_src_attribute(StringView value);
 

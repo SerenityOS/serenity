@@ -103,9 +103,11 @@ namespace AttributeNames {
     __ENUMERATE_HTML_ATTRIBUTE(marginheight)               \
     __ENUMERATE_HTML_ATTRIBUTE(marginwidth)                \
     __ENUMERATE_HTML_ATTRIBUTE(max)                        \
+    __ENUMERATE_HTML_ATTRIBUTE(maxlength)                  \
     __ENUMERATE_HTML_ATTRIBUTE(media)                      \
     __ENUMERATE_HTML_ATTRIBUTE(method)                     \
     __ENUMERATE_HTML_ATTRIBUTE(min)                        \
+    __ENUMERATE_HTML_ATTRIBUTE(minlength)                  \
     __ENUMERATE_HTML_ATTRIBUTE(multiple)                   \
     __ENUMERATE_HTML_ATTRIBUTE(muted)                      \
     __ENUMERATE_HTML_ATTRIBUTE(name)                       \
