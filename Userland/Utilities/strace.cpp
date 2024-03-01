@@ -711,7 +711,7 @@ static void format_kill(FormattedSyscallBuilder& builder, pid_t pid_or_pgid, int
         builder.add_argument(signal);
 }
 
-static ErrorOr<void> format_syscall(FormattedSyscallBuilder& builder, Syscall::Function syscall_function, syscall_arg_t arg1, syscall_arg_t arg2, syscall_arg_t arg3, syscall_arg_t res)
+static ErrorOr<void> format_syscall(FormattedSyscallBuilder& builder, Syscall::Function syscall_function, syscall_arg_t arg1, syscall_arg_t arg2, syscall_arg_t arg3, syscall_arg_t arg4, syscall_arg_t res)
 {
     enum ResultType {
         Int,
@@ -810,7 +810,7 @@ static ErrorOr<void> format_syscall(FormattedSyscallBuilder& builder, Syscall::F
     case SC_gettid:
         break;
     default:
-        builder.add_arguments((void*)arg1, (void*)arg2, (void*)arg3);
+        builder.add_arguments((void*)arg1, (void*)arg2, (void*)arg3, (void*)arg4);
         result_type = VoidP;
     }
 
@@ -914,17 +914,20 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         syscall_arg_t arg1 = regs.rdx;
         syscall_arg_t arg2 = regs.rdi;
         syscall_arg_t arg3 = regs.rbx;
+        syscall_arg_t arg4 = regs.rsi;
 #elif ARCH(AARCH64)
         syscall_arg_t syscall_index = 0; // FIXME
         syscall_arg_t arg1 = 0;          // FIXME
         syscall_arg_t arg2 = 0;          // FIXME
         syscall_arg_t arg3 = 0;          // FIXME
+        syscall_arg_t arg4 = 0;          // FIXME
         TODO_AARCH64();
 #elif ARCH(RISCV64)
         syscall_arg_t syscall_index = 0; // FIXME
         syscall_arg_t arg1 = 0;          // FIXME
         syscall_arg_t arg2 = 0;          // FIXME
         syscall_arg_t arg3 = 0;          // FIXME
+        syscall_arg_t arg4 = 0;          // FIXME
         TODO_RISCV64();
 #else
 #    error Unknown architecture
@@ -958,7 +961,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             continue;
 
         FormattedSyscallBuilder builder(syscall_name);
-        TRY(format_syscall(builder, syscall_function, arg1, arg2, arg3, res));
+        TRY(format_syscall(builder, syscall_function, arg1, arg2, arg3, arg4, res));
 
         TRY(trace_file->write_until_depleted(builder.string_view().bytes()));
     }
