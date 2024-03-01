@@ -121,12 +121,12 @@ public:
     virtual void set_font_size(float) override;
 
 private:
-    CIDFontType2(RefPtr<Gfx::Font> font)
+    CIDFontType2(RefPtr<Gfx::ScaledFont> font)
         : m_font(move(font))
     {
     }
 
-    RefPtr<Gfx::Font> m_font;
+    RefPtr<Gfx::ScaledFont> m_font;
 };
 
 static PDFErrorOr<NonnullOwnPtr<OpenType::CharCodeToGlyphIndex>> create_cid_to_gid_map(Document* document, NonnullRefPtr<DictObject> const& dict)
@@ -179,7 +179,7 @@ PDFErrorOr<NonnullOwnPtr<CIDFontType2>> CIDFontType2::create(Document* document,
 
     auto cid_to_gid_map = TRY(create_cid_to_gid_map(document, descendant));
 
-    RefPtr<Gfx::Font> font;
+    RefPtr<Gfx::ScaledFont> font;
     if (descriptor->contains(CommonNames::FontFile2)) {
         auto font_file_stream = TRY(descriptor->get_stream(document, CommonNames::FontFile2));
         float point_size = (font_size * POINTS_PER_INCH) / DEFAULT_DPI;
@@ -231,7 +231,7 @@ PDFErrorOr<void> CIDFontType2::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint
 
 void CIDFontType2::set_font_size(float font_size)
 {
-    m_font = m_font->with_size((font_size * POINTS_PER_INCH) / DEFAULT_DPI);
+    m_font = m_font->scaled_with_size((font_size * POINTS_PER_INCH) / DEFAULT_DPI);
 }
 
 Type0Font::Type0Font() = default;
