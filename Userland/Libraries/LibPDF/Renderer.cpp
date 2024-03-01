@@ -596,12 +596,8 @@ RENDERER_HANDLER(text_show_string_array)
     auto elements = MUST(m_document->resolve_to<ArrayObject>(args[0]))->elements();
 
     for (auto& element : elements) {
-        if (element.has<int>()) {
-            float shift = (float)element.get<int>() / 1000.0f;
-            m_text_matrix.translate(-shift * text_state().font_size * text_state().horizontal_scaling, 0.0f);
-            m_text_rendering_matrix_is_dirty = true;
-        } else if (element.has<float>()) {
-            float shift = element.get<float>() / 1000.0f;
+        if (element.has_number()) {
+            float shift = element.to_float() / 1000.0f;
             m_text_matrix.translate(-shift * text_state().font_size * text_state().horizontal_scaling, 0.0f);
             m_text_rendering_matrix_is_dirty = true;
         } else {
