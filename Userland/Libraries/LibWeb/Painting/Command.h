@@ -42,6 +42,7 @@ struct DrawGlyphRun {
     Color color;
     Gfx::IntRect rect;
     Gfx::FloatPoint translation;
+    double scale { 1 };
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return rect; }
 
