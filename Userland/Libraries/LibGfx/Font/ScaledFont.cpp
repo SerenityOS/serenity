@@ -153,11 +153,16 @@ u8 ScaledFont::glyph_fixed_width() const
     return glyph_metrics(glyph_id_for_code_point(' ')).advance_width;
 }
 
-RefPtr<Font> ScaledFont::with_size(float point_size) const
+NonnullRefPtr<ScaledFont> ScaledFont::scaled_with_size(float point_size) const
 {
     if (point_size == m_point_height && point_size == m_point_width)
-        return const_cast<ScaledFont*>(this);
+        return *const_cast<ScaledFont*>(this);
     return m_font->scaled_font(point_size);
+}
+
+RefPtr<Font> ScaledFont::with_size(float point_size) const
+{
+    return scaled_with_size(point_size);
 }
 
 Gfx::FontPixelMetrics ScaledFont::pixel_metrics() const
