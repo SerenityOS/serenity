@@ -273,12 +273,14 @@ PDFErrorOr<void> Type0Font::initialize(Document* document, NonnullRefPtr<DictObj
         return Error { Error::Type::MalformedPDF, "invalid /Subtype for Type 0 font" };
     }
 
+    // PDF 1.7 spec, 5.6.3 CIDFonts, Glyph Metrics in CIDFonts, and TABLE 5.14 Entries in a CIDFont dictionary
+    // "The DW entry defines the default width, which is used for all glyphs whose widths are not specified individually."
     u16 default_width = 1000;
     if (descendant_font->contains(CommonNames::DW))
         default_width = descendant_font->get_value(CommonNames::DW).to_int();
 
+    // "The W array allows the definition of widths for individual CIDs."
     HashMap<u16, u16> widths;
-
     if (descendant_font->contains(CommonNames::W)) {
         auto widths_array = MUST(descendant_font->get_array(document, CommonNames::W));
         Optional<u16> pending_code;
