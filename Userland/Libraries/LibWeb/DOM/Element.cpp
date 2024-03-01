@@ -2030,7 +2030,8 @@ JS::ThrowCompletionOr<void> Element::upgrade_element(JS::NonnullGCPtr<HTML::Cust
         m_custom_element_definition = nullptr;
 
         // 2. Empty element's custom element reaction queue.
-        m_custom_element_reaction_queue = nullptr;
+        if (m_custom_element_reaction_queue)
+            m_custom_element_reaction_queue->clear();
 
         // 3. Rethrow the exception (thus terminating this algorithm).
         return maybe_exception.release_error();
