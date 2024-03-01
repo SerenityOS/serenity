@@ -239,6 +239,11 @@ Type0Font::~Type0Font() = default;
 
 class IdentityType0CMap : public Type0CMap {
 public:
+    IdentityType0CMap(WritingMode writing_mode)
+        : Type0CMap(writing_mode)
+    {
+    }
+
     virtual PDFErrorOr<NonnullOwnPtr<CIDIterator>> iterate(ReadonlyBytes bytes) const override
     {
         // 9.7.5.2 Predefined CMaps:
@@ -278,10 +283,12 @@ static PDFErrorOr<NonnullOwnPtr<Type0CMap>> make_cmap(NonnullRefPtr<Object> cons
         return Error::rendering_unsupported_error("Type0 font: support for general type 0 cmaps not yet implemented");
 
     auto cmap_name = cmap_value->cast<NameObject>()->name();
-    if (cmap_name != CommonNames::IdentityH)
+    if (cmap_name != CommonNames::IdentityH && cmap_name != CommonNames::IdentityV)
         return Error::rendering_unsupported_error("Type0 font: unimplemented named type 0 cmap {}", cmap_name);
 
-    return make<IdentityType0CMap>();
+    WritingMode writing_mode = cmap_name.ends_with("-H"sv) ? WritingMode::Horizontal : WritingMode::Vertical;
+
+    return make<IdentityType0CMap>(writing_mode);
 }
 
 PDFErrorOr<void> Type0Font::initialize(Document* document, NonnullRefPtr<DictObject> const& dict, float font_size)
@@ -438,9 +445,13 @@ PDFErrorOr<Gfx::FloatPoint> Type0Font::draw_string(Gfx::Painter& painter, Gfx::F
     auto character_spacing = renderer.text_state().character_spacing;
     auto word_spacing = renderer.text_state().word_spacing;
 
+    WritingMode writing_mode = m_cmap->writing_mode();
+
     auto cids = TRY(m_cmap->iterate(string.bytes()));
     while (cids->has_next()) {
         auto cid = cids->next();
+
+        // FIGURE 5.5 Metrics for horizontal and vertical writing modes
 
         // Use the width specified in the font's dictionary if available,
         // and use the default width for the given font otherwise.
@@ -450,16 +461,35 @@ PDFErrorOr<Gfx::FloatPoint> Type0Font::draw_string(Gfx::Painter& painter, Gfx::F
         else
             glyph_width = font_size * m_missing_width / 1000.0f;
 
-        Gfx::FloatPoint glyph_render_position = text_rendering_matrix.map(glyph_position);
-        TRY(m_cid_font_type->draw_glyph(painter, glyph_render_position, glyph_width, cid, renderer));
+        VerticalMetric vertical_metric;
+        float vertical_displacement_vector_y;
+        float position_vector_x = 0.0f;
+        float position_vector_y = 0.0f;
+        if (writing_mode == WritingMode::Vertical) {
+            if (auto metric = m_vertical_metrics.get(cid); metric.has_value()) {
+                vertical_metric = metric.value();
+                vertical_displacement_vector_y = renderer.text_state().font_size * vertical_metric.vertical_displacement_vector_y / 1000.0f;
+                position_vector_x = vertical_metric.position_vector_x / 1000.0f;
+                position_vector_y = vertical_metric.position_vector_y / 1000.0f;
+            } else {
+                vertical_displacement_vector_y = renderer.text_state().font_size * m_default_displacement_vector_y / 1000.0f;
+                position_vector_x = glyph_width / 2.0f / font_size;
+                position_vector_y = m_default_position_vector_y / 1000.0f;
+            }
+        }
 
-        // FIXME: Honor encoding's WMode for vertical text.
+        Gfx::FloatPoint glyph_render_position = text_rendering_matrix.map(glyph_position - Gfx::FloatPoint { position_vector_x, position_vector_y });
+        TRY(m_cid_font_type->draw_glyph(painter, glyph_render_position, glyph_width, cid, renderer));
 
         // glyph_width is scaled by `text_rendering_matrix.x_scale() * renderer.text_state().font_size / horizontal_scaling`,
         // but it should only be scaled by `renderer.text_state().font_size`.
         // FIXME: Having to divide here isn't pretty. Refactor things so that this isn't needed.
-        auto tx = glyph_width / text_rendering_matrix.x_scale() * horizontal_scaling;
-        tx += character_spacing;
+        float displacement;
+        if (writing_mode == WritingMode::Horizontal)
+            displacement = glyph_width / text_rendering_matrix.x_scale() * horizontal_scaling;
+        else
+            displacement = vertical_displacement_vector_y;
+        displacement += character_spacing;
 
         // ISO 32000 (PDF 2.0), 9.3.3 Wordspacing
         // "Word spacing shall be applied to every occurrence of the single-byte character code 32
@@ -468,9 +498,12 @@ PDFErrorOr<Gfx::FloatPoint> Type0Font::draw_string(Gfx::Painter& painter, Gfx::F
         // FIXME: Identity-H always uses 2 bytes, but this will be true once we support more encodings.
         bool was_single_byte_code = false;
         if (cid == ' ' && was_single_byte_code)
-            tx += word_spacing;
+            displacement += word_spacing;
 
-        glyph_position += { tx, 0.0f };
+        if (writing_mode == WritingMode::Horizontal)
+            glyph_position += { displacement, 0.0f };
+        else
+            glyph_position += { 0.0f, displacement };
     }
     return glyph_position;
 }

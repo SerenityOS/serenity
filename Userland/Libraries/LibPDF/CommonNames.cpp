@@ -13,5 +13,6 @@ ENUMERATE_COMMON_NAMES(ENUMERATE)
 #undef ENUMERATE
 
 DeprecatedFlyString CommonNames::IdentityH = "Identity-H";
+DeprecatedFlyString CommonNames::IdentityV = "Identity-V";
 
 }

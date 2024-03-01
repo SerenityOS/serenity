@@ -206,7 +206,9 @@ public:
     ENUMERATE_COMMON_NAMES(ENUMERATE)
 #undef ENUMERATE
 
+    // Special cases where the string value isn't identical to the name.
     static DeprecatedFlyString IdentityH;
+    static DeprecatedFlyString IdentityV;
 };
 
 }

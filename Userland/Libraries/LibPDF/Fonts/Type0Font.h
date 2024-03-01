@@ -27,10 +27,28 @@ public:
     virtual u32 next() = 0;
 };
 
+enum class WritingMode {
+    Horizontal,
+    Vertical,
+};
+
 class Type0CMap {
 public:
     virtual ~Type0CMap() = default;
+
+    // "(Writing mode is specified as part of the CMap because, in some cases, different shapes are used when writing horizontally and vertically.
+    //  In such cases, the horizontal and vertical variants of a CMap specify different CIDs for a given character code.)"
+    WritingMode writing_mode() const { return m_writing_mode; }
+
     virtual PDFErrorOr<NonnullOwnPtr<CIDIterator>> iterate(ReadonlyBytes) const = 0;
+
+protected:
+    Type0CMap(WritingMode writing_mode)
+        : m_writing_mode(writing_mode)
+    {
+    }
+
+    WritingMode m_writing_mode;
 };
 
 class Type0Font : public PDFFont {
