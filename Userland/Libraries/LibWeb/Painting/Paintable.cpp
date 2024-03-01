@@ -128,8 +128,6 @@ void Paintable::set_needs_display() const
     auto* containing_block = this->containing_block();
     if (!containing_block)
         return;
-    if (!containing_block->paintable_box())
-        return;
     auto navigable = this->navigable();
     if (!navigable)
         return;
@@ -140,9 +138,9 @@ void Paintable::set_needs_display() const
             navigable->set_needs_display(fragment.absolute_rect());
     }
 
-    if (!is<Painting::PaintableWithLines>(*containing_block->paintable_box()))
+    if (!is<Painting::PaintableWithLines>(*containing_block))
         return;
-    static_cast<Painting::PaintableWithLines const&>(*containing_block->paintable_box()).for_each_fragment([&](auto& fragment) {
+    static_cast<Painting::PaintableWithLines const&>(*containing_block).for_each_fragment([&](auto& fragment) {
         navigable->set_needs_display(fragment.absolute_rect());
         return IterationDecision::Continue;
     });
@@ -162,8 +160,8 @@ CSSPixelPoint Paintable::box_type_agnostic_position() const
     }
 
     CSSPixelPoint position;
-    if (auto const* block = containing_block(); block && block->paintable() && is<Painting::PaintableWithLines>(*block->paintable())) {
-        static_cast<Painting::PaintableWithLines const&>(*block->paintable_box()).for_each_fragment([&](auto& fragment) {
+    if (auto const* block = containing_block(); block && is<Painting::PaintableWithLines>(*block)) {
+        static_cast<Painting::PaintableWithLines const&>(*block).for_each_fragment([&](auto& fragment) {
             position = fragment.absolute_rect().location();
             return IterationDecision::Break;
         });
