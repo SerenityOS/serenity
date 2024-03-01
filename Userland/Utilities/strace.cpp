@@ -11,6 +11,7 @@
 #include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 #include <Kernel/API/SyscallString.h>
+#include <Kernel/API/prctl_numbers.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCore/System.h>
@@ -208,6 +209,18 @@ HANDLE(CLOCK_REALTIME)
 HANDLE(CLOCK_MONOTONIC)
 HANDLE(CLOCK_REALTIME_COARSE)
 HANDLE(CLOCK_MONOTONIC_COARSE)
+END_VALUES_TO_NAMES()
+
+VALUES_TO_NAMES(prctl_option_name)
+HANDLE(PR_SET_DUMPABLE)
+HANDLE(PR_GET_DUMPABLE)
+HANDLE(PR_SET_NO_NEW_SYSCALL_REGION_ANNOTATIONS)
+HANDLE(PR_GET_NO_NEW_SYSCALL_REGION_ANNOTATIONS)
+HANDLE(PR_SET_COREDUMP_METADATA_VALUE)
+HANDLE(PR_SET_PROCESS_NAME)
+HANDLE(PR_GET_PROCESS_NAME)
+HANDLE(PR_SET_THREAD_NAME)
+HANDLE(PR_GET_THREAD_NAME)
 END_VALUES_TO_NAMES()
 
 static int g_pid = -1;
@@ -711,6 +724,23 @@ static void format_kill(FormattedSyscallBuilder& builder, pid_t pid_or_pgid, int
         builder.add_argument(signal);
 }
 
+static void format_prctl(FormattedSyscallBuilder& builder, int option, size_t arg1, size_t arg2, size_t arg3)
+{
+    builder.add_argument(prctl_option_name(option));
+    switch (option) {
+    case PR_SET_DUMPABLE:
+    case PR_SET_NO_NEW_SYSCALL_REGION_ANNOTATIONS:
+        builder.add_argument((bool)arg1);
+        break;
+    case PR_GET_DUMPABLE:
+    case PR_GET_NO_NEW_SYSCALL_REGION_ANNOTATIONS:
+        break;
+    default:
+        builder.add_arguments(arg1, arg2, arg3);
+        break;
+    }
+}
+
 static ErrorOr<void> format_syscall(FormattedSyscallBuilder& builder, Syscall::Function syscall_function, syscall_arg_t arg1, syscall_arg_t arg2, syscall_arg_t arg3, syscall_arg_t arg4, syscall_arg_t res)
 {
     enum ResultType {
@@ -800,6 +830,9 @@ static ErrorOr<void> format_syscall(FormattedSyscallBuilder& builder, Syscall::F
         break;
     case SC_kill:
         format_kill(builder, (pid_t)arg1, (int)arg2);
+        break;
+    case SC_prctl:
+        format_prctl(builder, (int)arg1, (size_t)arg2, (size_t)arg3, (size_t)arg4);
         break;
     case SC_getuid:
     case SC_geteuid:
