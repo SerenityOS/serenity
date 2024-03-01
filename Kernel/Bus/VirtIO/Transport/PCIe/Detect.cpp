@@ -10,10 +10,10 @@
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/Bus/VirtIO/Device.h>
-#include <Kernel/Bus/VirtIO/RNG.h>
 #include <Kernel/Bus/VirtIO/Transport/PCIe/Detect.h>
 #include <Kernel/Devices/Serial/VirtIO/Console.h>
 #include <Kernel/Sections.h>
+#include <Kernel/Security/Random/VirtIO/RNG.h>
 
 namespace Kernel::VirtIO {
 
