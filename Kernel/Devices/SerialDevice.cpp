@@ -16,7 +16,11 @@ SerialDevice::SerialDevice(NonnullOwnPtr<IOWindow> registers_io_window, unsigned
     : CharacterDevice(4, minor)
     , m_registers_io_window(move(registers_io_window))
 {
-    initialize();
+    set_interrupts(false);
+    set_baud(Baud38400);
+    set_line_control(None, One, EightBits);
+    set_fifo_control(EnableFIFO | ClearReceiveFIFO | ClearTransmitFIFO | TriggerLevel4);
+    set_modem_control(RequestToSend | DataTerminalReady);
 }
 
 SerialDevice::~SerialDevice() = default;
@@ -74,15 +78,6 @@ void SerialDevice::put_char(char ch)
     m_registers_io_window->write8(0, ch);
 
     m_last_put_char_was_carriage_return = (ch == '\r');
-}
-
-void SerialDevice::initialize()
-{
-    set_interrupts(false);
-    set_baud(Baud38400);
-    set_line_control(None, One, EightBits);
-    set_fifo_control(EnableFIFO | ClearReceiveFIFO | ClearTransmitFIFO | TriggerLevel4);
-    set_modem_control(RequestToSend | DataTerminalReady);
 }
 
 void SerialDevice::set_interrupts(bool interrupt_enable)
