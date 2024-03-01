@@ -237,21 +237,60 @@ void CIDFontType2::set_font_size(float font_size)
 Type0Font::Type0Font() = default;
 Type0Font::~Type0Font() = default;
 
+class IdentityType0CMap : public Type0CMap {
+public:
+    virtual PDFErrorOr<NonnullOwnPtr<CIDIterator>> iterate(ReadonlyBytes bytes) const override
+    {
+        // 9.7.5.2 Predefined CMaps:
+        // "When the current font is a Type 0 font whose Encoding entry is Identity-H or Identity-V,
+        //  the string to be shown shall contain pairs of bytes representing CIDs, high-order byte first."
+        if (bytes.size() % 2 != 0)
+            return Error::malformed_error("Identity-H but length not multiple of 2");
+
+        class IdentityCIDIterator : public CIDIterator {
+        public:
+            IdentityCIDIterator(ReadonlyBytes bytes)
+                : m_bytes(bytes)
+            {
+            }
+
+            virtual bool has_next() const override { return m_index < m_bytes.size(); }
+            virtual u32 next() override
+            {
+                u32 result = (m_bytes[m_index] << 8) | m_bytes[m_index + 1];
+                m_index += 2;
+                return result;
+            }
+
+        private:
+            ReadonlyBytes m_bytes;
+            size_t m_index { 0 };
+        };
+
+        return make<IdentityCIDIterator>(bytes);
+    }
+};
+
+static PDFErrorOr<NonnullOwnPtr<Type0CMap>> make_cmap(NonnullRefPtr<Object> const& cmap_value)
+{
+    // FIXME: Support arbitrary CMaps
+    if (!cmap_value->is<NameObject>())
+        return Error::rendering_unsupported_error("Type0 font: support for general type 0 cmaps not yet implemented");
+
+    auto cmap_name = cmap_value->cast<NameObject>()->name();
+    if (cmap_name != CommonNames::IdentityH)
+        return Error::rendering_unsupported_error("Type0 font: unimplemented named type 0 cmap {}", cmap_name);
+
+    return make<IdentityType0CMap>();
+}
+
 PDFErrorOr<void> Type0Font::initialize(Document* document, NonnullRefPtr<DictObject> const& dict, float font_size)
 {
     TRY(PDFFont::initialize(document, dict, font_size));
 
     m_base_font_name = TRY(dict->get_name(document, CommonNames::BaseFont))->name();
 
-    // FIXME: Support arbitrary CMaps
-    auto cmap_value = TRY(dict->get_object(document, CommonNames::Encoding));
-    if (!cmap_value->is<NameObject>())
-        return Error::rendering_unsupported_error("Type0 font: support for general type 0 cmaps not yet implemented");
-
-    auto cmap_name = cmap_value->cast<NameObject>()->name();
-    if (cmap_name != CommonNames::IdentityH) {
-        return Error::rendering_unsupported_error("Type0 font: unimplemented named type 0 cmap {}", cmap_name);
-    }
+    m_cmap = TRY(make_cmap(TRY(dict->get_object(document, CommonNames::Encoding))));
 
     auto descendant_font_value = TRY(dict->get_array(document, CommonNames::DescendantFonts));
     auto descendant_font = TRY(descendant_font_value->get_dict_at(document, 0));
@@ -387,16 +426,6 @@ PDFErrorOr<Gfx::FloatPoint> Type0Font::draw_string(Gfx::Painter& painter, Gfx::F
     //  if no match is found, a second byte shall be extracted, and the 2-byte code shall be matched against 2-byte
     //  codespace ranges [...]"
 
-    // 9.7.5.2 Predefined CMaps:
-    // "When the current font is a Type 0 font whose Encoding entry is Identity-H or Identity-V,
-    //  the string to be shown shall contain pairs of bytes representing CIDs, high-order byte first."
-    // Type0Font::initialize() currently rejects everything except Identity-H.
-    // FIXME: Support more.
-    if (string.length() % 2 != 0)
-        return Error::malformed_error("Identity-H but length not multiple of 2");
-
-    auto cids = ReadonlySpan<BigEndian<u16>>(reinterpret_cast<BigEndian<u16> const*>(string.characters()), string.length() / 2);
-
     auto horizontal_scaling = renderer.text_state().horizontal_scaling;
 
     auto const& text_rendering_matrix = renderer.calculate_text_rendering_matrix();
@@ -409,7 +438,10 @@ PDFErrorOr<Gfx::FloatPoint> Type0Font::draw_string(Gfx::Painter& painter, Gfx::F
     auto character_spacing = renderer.text_state().character_spacing;
     auto word_spacing = renderer.text_state().word_spacing;
 
-    for (auto cid : cids) {
+    auto cids = TRY(m_cmap->iterate(string.bytes()));
+    while (cids->has_next()) {
+        auto cid = cids->next();
+
         // Use the width specified in the font's dictionary if available,
         // and use the default width for the given font otherwise.
         float glyph_width;
