@@ -20,6 +20,19 @@ struct CIDSystemInfo {
     u8 supplement;
 };
 
+class CIDIterator {
+public:
+    virtual ~CIDIterator() = default;
+    virtual bool has_next() const = 0;
+    virtual u32 next() = 0;
+};
+
+class Type0CMap {
+public:
+    virtual ~Type0CMap() = default;
+    virtual PDFErrorOr<NonnullOwnPtr<CIDIterator>> iterate(ReadonlyBytes) const = 0;
+};
+
 class Type0Font : public PDFFont {
 public:
     Type0Font();
@@ -51,6 +64,7 @@ private:
     HashMap<u16, VerticalMetric> m_vertical_metrics;
 
     OwnPtr<CIDFontType> m_cid_font_type;
+    OwnPtr<Type0CMap> m_cmap;
 };
 
 }
