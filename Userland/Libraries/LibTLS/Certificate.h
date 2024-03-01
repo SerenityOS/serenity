@@ -195,7 +195,7 @@ public:
 
     ErrorOr<AK::HashSetResult> set(String key, String value)
     {
-        return m_members.try_set(key, value);
+        return m_members.try_set(move(key), move(value));
     }
 
     Optional<String> get(StringView key) const
@@ -223,14 +223,9 @@ public:
         return String();
     }
 
-    String organizational_unit()
+    String organizational_unit() const
     {
-        auto entry = get(AttributeType::Ou);
-        if (entry.has_value()) {
-            return entry.value();
-        }
-
-        return String();
+        return get(AttributeType::Ou).value_or({});
     }
 
 private:

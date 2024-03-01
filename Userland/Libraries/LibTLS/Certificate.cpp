@@ -285,7 +285,7 @@ static ErrorOr<RelativeDistinguishedName> parse_name(Crypto::ASN1::Decoder& deco
 
             auto attribute_type_string = TRY(String::join("."sv, attribute_type_oid));
             auto attribute_value_string = TRY(String::from_utf8(attribute_value));
-            TRY(rdn.set(attribute_type_string, attribute_value_string));
+            TRY(rdn.set(move(attribute_type_string), move(attribute_value_string)));
 
             EXIT_SCOPE();
         }
