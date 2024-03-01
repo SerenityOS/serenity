@@ -33,3 +33,18 @@ test("Issue #8198 arrow function escapes function scope", () => {
     f();
     expect(b).toBe(3);
 });
+
+test("Referencing the declared var in the initializer of a duplicate var declaration", () => {
+    function c(e) {
+        e.foo;
+    }
+    function h() {}
+    function go() {
+        var p = true;
+        var p = h() || c(p);
+        return 0;
+    }
+
+    // It's all good as long as go() doesn't throw.
+    expect(go()).toBe(0);
+});

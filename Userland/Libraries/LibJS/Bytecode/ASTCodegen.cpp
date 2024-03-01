@@ -1452,10 +1452,15 @@ Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> VariableDeclaration
     Bytecode::Generator::SourceLocationScope scope(generator, *this);
 
     for (auto& declarator : m_declarations) {
+        // NOTE: `var` declarations can have duplicates, but duplicate `let` or `const` bindings are a syntax error.
+        //       Because of this, we can sink `let` and `const` directly into the preferred_dst if available.
+        //       This is not safe for `var` since the preferred_dst may be used in the initializer.
         Optional<Bytecode::Operand> init_dst;
-        if (auto const* identifier = declarator->target().get_pointer<NonnullRefPtr<Identifier const>>()) {
-            if ((*identifier)->is_local()) {
-                init_dst = Bytecode::Operand(Bytecode::Operand::Type::Local, (*identifier)->local_variable_index());
+        if (declaration_kind() != DeclarationKind::Var) {
+            if (auto const* identifier = declarator->target().get_pointer<NonnullRefPtr<Identifier const>>()) {
+                if ((*identifier)->is_local()) {
+                    init_dst = Bytecode::Operand(Bytecode::Operand::Type::Local, (*identifier)->local_variable_index());
+                }
             }
         }
 
