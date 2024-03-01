@@ -48,8 +48,6 @@ set(KERNEL_SOURCES
     Bus/VirtIO/Transport/PCIe/TransportLink.cpp
     Bus/VirtIO/Transport/Entity.cpp
     Bus/VirtIO/Transport/InterruptHandler.cpp
-    Bus/VirtIO/Console.cpp
-    Bus/VirtIO/ConsolePort.cpp
     Bus/VirtIO/Device.cpp
     Bus/VirtIO/Queue.cpp
     Bus/VirtIO/RNG.cpp
@@ -68,6 +66,8 @@ set(KERNEL_SOURCES
     Devices/DeviceManagement.cpp
     Devices/KCOVDevice.cpp
     Devices/KCOVInstance.cpp
+    Devices/Serial/VirtIO/Console.cpp
+    Devices/Serial/VirtIO/ConsolePort.cpp
     Devices/PCISerialDevice.cpp
     Devices/SerialDevice.cpp
     Devices/HID/AllMiceDevice.cpp

@@ -5,9 +5,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Bus/VirtIO/Console.h>
 #include <Kernel/Bus/VirtIO/Transport/PCIe/TransportLink.h>
 #include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/Serial/VirtIO/Console.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Tasks/WorkQueue.h>
 
