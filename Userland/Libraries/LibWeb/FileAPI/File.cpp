@@ -106,7 +106,7 @@ WebIDL::ExceptionOr<void> File::serialization_steps(HTML::SerializationRecord& r
     TRY(HTML::serialize_string(vm, record, m_name));
 
     // 4. Set serialized.[[LastModified]] to the value of value’s lastModified attribute.
-    record.append(bit_cast<u32*>(&m_last_modified), 2);
+    HTML::serialize_i64(record, m_last_modified);
 
     return {};
 }
@@ -128,10 +128,7 @@ WebIDL::ExceptionOr<void> File::deserialization_steps(ReadonlySpan<u32> const& r
     m_name = TRY(HTML::deserialize_string(vm, record, position));
 
     // 4. Initialize the value of value’s lastModified attribute to serialized.[[LastModified]].
-    u32 bits[2] = {};
-    bits[0] = record[position++];
-    bits[1] = record[position++];
-    m_last_modified = *bit_cast<i64*>(&bits);
+    m_last_modified = HTML::deserialize_i64(record, position);
 
     return {};
 }

@@ -61,6 +61,8 @@ WebIDL::ExceptionOr<void> serialize_big_int_object(JS::VM& vm, SerializationReco
 WebIDL::ExceptionOr<void> serialize_string_object(JS::VM& vm, SerializationRecord& serialized, JS::Value& value);
 void serialize_date_object(SerializationRecord& serialized, JS::Value& value);
 WebIDL::ExceptionOr<void> serialize_reg_exp_object(JS::VM& vm, SerializationRecord& serialized, JS::Value& value);
+void serialize_u64(SerializationRecord& serialized, u64 value);
+void serialize_i64(SerializationRecord& serialized, i64 value);
 
 WebIDL::ExceptionOr<void> serialize_bytes(JS::VM& vm, Vector<u32>& vector, ReadonlyBytes bytes);
 WebIDL::ExceptionOr<void> serialize_string(JS::VM& vm, Vector<u32>& vector, DeprecatedFlyString const& string);
@@ -78,6 +80,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::BigIntObject>> deserialize_big_int_obje
 WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::StringObject>> deserialize_string_object(JS::Realm& realm, ReadonlySpan<u32> const& serialized, size_t& position);
 JS::NonnullGCPtr<JS::Date> deserialize_date_object(JS::Realm& realm, ReadonlySpan<u32> const& serialized, size_t& position);
 WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::RegExpObject>> deserialize_reg_exp_object(JS::Realm& realm, ReadonlySpan<u32> const& serialized, size_t& position);
+u64 deserialize_u64(ReadonlySpan<u32> const& serialized, size_t& position);
+i64 deserialize_i64(ReadonlySpan<u32> const& serialized, size_t& position);
 
 WebIDL::ExceptionOr<ByteBuffer> deserialize_bytes(JS::VM& vm, ReadonlySpan<u32> vector, size_t& position);
 WebIDL::ExceptionOr<String> deserialize_string(JS::VM& vm, ReadonlySpan<u32> vector, size_t& position);
