@@ -12,6 +12,7 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Process.h>
+#include <LibGfx/Palette.h>
 #include <LibGfx/Point.h>
 
 KeymapStatusWidget::KeymapStatusWidget() = default;
@@ -75,5 +76,5 @@ void KeymapStatusWidget::paint_event(GUI::PaintEvent& event)
     GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
     painter.clear_rect(event.rect(), Gfx::Color::Transparent);
-    painter.draw_text(rect(), m_current_keymap.substring_view(0, 2), Gfx::TextAlignment::Center);
+    painter.draw_text(rect(), m_current_keymap.substring_view(0, 2), Gfx::TextAlignment::Center, palette().window_text());
 }

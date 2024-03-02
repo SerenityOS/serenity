@@ -621,6 +621,7 @@ void Job::finish_up()
         return;
     }
 
+    stop_timer();
     m_has_scheduled_finish = true;
     auto response = HttpResponse::create(m_code, move(m_headers), m_received_size);
     deferred_invoke([this, response = move(response)] {
