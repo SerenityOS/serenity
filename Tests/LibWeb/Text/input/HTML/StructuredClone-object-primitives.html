@@ -14,6 +14,7 @@
         println(structuredClone(new URIError("hello")));
         println(structuredClone(JSON.stringify({"a": "b", 1: 2})));
         println(structuredClone([1, 4, "aaaa"]));
+        println(structuredClone([]));
         println(structuredClone(new Set(["a", "b", "c"])).has("b"));
         println(structuredClone(new Map([["a", 0], ["b", 1], ["c", 2]])).get("b"));
 
