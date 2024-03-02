@@ -8,7 +8,6 @@
 #include <AK/Singleton.h>
 #include <AK/StringView.h>
 #include <Kernel/Arch/Delay.h>
-#include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Devices/Storage/ATA/ATADiskDevice.h>
 #include <Kernel/Devices/Storage/ATA/Definitions.h>
 #include <Kernel/Devices/Storage/ATA/GenericIDE/Channel.h>

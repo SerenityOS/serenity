@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Devices/Storage/StorageDevice.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Devices/Storage/DeviceAttribute.h>
