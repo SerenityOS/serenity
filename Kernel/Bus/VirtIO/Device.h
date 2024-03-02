@@ -18,8 +18,6 @@
 
 namespace Kernel::VirtIO {
 
-void detect();
-
 class Device {
 public:
     virtual ~Device() = default;
