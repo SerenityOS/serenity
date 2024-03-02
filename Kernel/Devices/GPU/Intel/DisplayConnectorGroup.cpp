@@ -5,7 +5,6 @@
  */
 
 #include <Kernel/Arch/Delay.h>
-#include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/GPU/Console/ContiguousFramebufferConsole.h>
