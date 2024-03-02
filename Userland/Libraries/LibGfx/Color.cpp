@@ -375,3 +375,18 @@ ErrorOr<void> AK::Formatter<Gfx::Color>::format(FormatBuilder& builder, Gfx::Col
 {
     return Formatter<StringView>::format(builder, value.to_byte_string());
 }
+
+ErrorOr<void> AK::Formatter<Gfx::YUV>::format(FormatBuilder& builder, Gfx::YUV value)
+{
+    return Formatter<FormatString>::format(builder, "{} {} {}"sv, value.y, value.u, value.v);
+}
+
+ErrorOr<void> AK::Formatter<Gfx::HSV>::format(FormatBuilder& builder, Gfx::HSV value)
+{
+    return Formatter<FormatString>::format(builder, "{} {} {}"sv, value.hue, value.saturation, value.value);
+}
+
+ErrorOr<void> AK::Formatter<Gfx::Oklab>::format(FormatBuilder& builder, Gfx::Oklab value)
+{
+    return Formatter<FormatString>::format(builder, "{} {} {}"sv, value.L, value.a, value.b);
+}
