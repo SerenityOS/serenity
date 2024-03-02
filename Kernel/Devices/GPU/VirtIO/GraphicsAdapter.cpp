@@ -6,7 +6,6 @@
 
 #include <AK/BinaryBufferWriter.h>
 #include <Kernel/Arch/Delay.h>
-#include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/Bus/VirtIO/Transport/PCIe/TransportLink.h>
 #include <Kernel/Devices/DeviceManagement.h>
@@ -22,6 +21,21 @@ namespace Kernel {
 #define DEVICE_EVENTS_READ 0x0
 #define DEVICE_EVENTS_CLEAR 0x4
 #define DEVICE_NUM_SCANOUTS 0x8
+
+ErrorOr<NonnullRefPtr<VirtIOGraphicsAdapter>> VirtIOGraphicsAdapter::create(NonnullOwnPtr<VirtIO::TransportEntity> transport_link)
+{
+    // Setup memory transfer region
+    auto scratch_space_region = TRY(MM.allocate_contiguous_kernel_region(
+        32 * PAGE_SIZE,
+        "VirtGPU Scratch Space"sv,
+        Memory::Region::Access::ReadWrite));
+
+    auto active_context_ids = TRY(Bitmap::create(VREND_MAX_CTX, false));
+    auto adapter = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) VirtIOGraphicsAdapter(move(transport_link), move(active_context_ids), move(scratch_space_region))));
+    TRY(adapter->initialize_virtio_resources());
+    TRY(adapter->initialize_adapter());
+    return adapter;
+}
 
 ErrorOr<void> VirtIOGraphicsAdapter::initialize_adapter()
 {

@@ -32,6 +32,7 @@ set(KERNEL_SOURCES
     Bus/PCI/Drivers/Audio/IntelHDA.cpp
     Bus/PCI/Drivers/GPU/BochsDisplay.cpp
     Bus/PCI/Drivers/GPU/Intel.cpp
+    Bus/PCI/Drivers/GPU/VirtIO.cpp
     Bus/PCI/Drivers/GPU/VMWare.cpp
     Bus/PCI/Drivers/GPU/3dfx.cpp
     Bus/PCI/Drivers/Net/E1000.cpp
@@ -119,6 +120,10 @@ set(KERNEL_SOURCES
     Devices/GPU/Intel/DisplayConnectorGroup.cpp
     Devices/GPU/Intel/NativeDisplayConnector.cpp
     Devices/GPU/Intel/NativeGraphicsAdapter.cpp
+    Devices/GPU/VirtIO/Console.cpp
+    Devices/GPU/VirtIO/DisplayConnector.cpp
+    Devices/GPU/VirtIO/GPU3DDevice.cpp
+    Devices/GPU/VirtIO/GraphicsAdapter.cpp
     Devices/GPU/VMWare/Console.cpp
     Devices/GPU/VMWare/DisplayConnector.cpp
     Devices/GPU/VMWare/GraphicsAdapter.cpp

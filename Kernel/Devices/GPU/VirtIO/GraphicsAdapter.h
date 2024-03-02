@@ -12,6 +12,7 @@
 #include <Kernel/Bus/VirtIO/Queue.h>
 #include <Kernel/Devices/GPU/GPUDevice.h>
 #include <Kernel/Devices/GPU/VirtIO/Protocol.h>
+#include <Kernel/Library/Driver.h>
 
 namespace Kernel {
 
@@ -36,7 +37,10 @@ class VirtIOGraphicsAdapter final
     friend class VirtIODisplayConnector;
     friend class VirtIOGPU3DDevice;
 
+    KERNEL_MAKE_DRIVER_LISTABLE(VirtIOGraphicsAdapter)
 public:
+    static ErrorOr<NonnullRefPtr<VirtIOGraphicsAdapter>> create(NonnullOwnPtr<VirtIO::TransportEntity> transport_link);
+
     virtual ErrorOr<void> initialize_virtio_resources() override;
 
     ErrorOr<void> mode_set_resolution(Badge<VirtIODisplayConnector>, VirtIODisplayConnector&, size_t width, size_t height);
