@@ -10,6 +10,7 @@
 #include <AK/OwnPtr.h>
 #include <AK/Types.h>
 #include <Kernel/Bus/USB/USBDescriptors.h>
+#include <Kernel/Library/UserOrKernelBuffer.h>
 #include <Kernel/Locking/Mutex.h>
 #include <Kernel/Memory/Region.h>
 
