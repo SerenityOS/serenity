@@ -61,7 +61,10 @@ bool Parser::consume_line_number(size_t& number)
 ErrorOr<String> Parser::parse_file_line(Optional<size_t> const& strip_count)
 {
     // FIXME: handle parsing timestamps as well.
-    auto path = consume_line();
+    auto line = consume_line();
+
+    GenericLexer line_parser(line);
+    auto path = line_parser.consume_until('\t');
 
     // No strip count given. Default to basename of file.
     if (!strip_count.has_value())

@@ -261,3 +261,18 @@ TEST_CASE(patch_remove_file_trailing_garbage)
 
     EXPECT_FILE_EQ(ByteString::formatted("{}/a", s_test_dir), "2\n"sv);
 }
+
+TEST_CASE(patch_with_timestamp_separated_by_tab)
+{
+    PatchSetup setup;
+
+    auto patch = R"(
+--- /dev/null	2024-03-02 20:19:31.462146900 +1300
++++ 1	2024-03-02 20:56:57.922136203 +1300
+@@ -0,0 +1 @@
++a
+)"sv;
+
+    run_patch(ExpectSuccess::Yes, {}, patch, "patching file 1\n"sv);
+    EXPECT_FILE_EQ(ByteString::formatted("{}/1", s_test_dir), "a\n"sv);
+}
