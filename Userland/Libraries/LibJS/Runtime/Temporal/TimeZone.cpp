@@ -329,14 +329,15 @@ ThrowCompletionOr<Object*> to_temporal_time_zone(VM& vm, Value temporal_time_zon
     return MUST_OR_THROW_OOM(create_temporal_time_zone(vm, *parse_result.offset_string));
 }
 
-// 11.6.8 GetOffsetNanosecondsFor ( timeZone, instant ), https://tc39.es/proposal-temporal/#sec-temporal-getoffsetnanosecondsfor
-ThrowCompletionOr<double> get_offset_nanoseconds_for(VM& vm, Value time_zone, Instant& instant)
+// 11.5.19 GetOffsetNanosecondsFor ( timeZoneRec, instant ), https://tc39.es/proposal-temporal/#sec-temporal-getoffsetnanosecondsfor
+ThrowCompletionOr<double> get_offset_nanoseconds_for(VM& vm, TimeZoneMethods const& time_zone_record, Instant const& instant)
 {
-    // 1. Let getOffsetNanosecondsFor be ? GetMethod(timeZone, "getOffsetNanosecondsFor").
-    auto get_offset_nanoseconds_for = TRY(time_zone.get_method(vm, vm.names.getOffsetNanosecondsFor));
+    // 1. Let offsetNanoseconds be ? TimeZoneMethodsRecordCall(timeZoneRec, GET-OFFSET-NANOSECONDS-FOR, « instant »).
+    auto offset_nanoseconds_value = TRY(time_zone_methods_record_call(vm, time_zone_record, TimeZoneMethod::GetOffsetNanosecondsFor, { { &instant } }));
 
-    // 2. Let offsetNanoseconds be ? Call(getOffsetNanosecondsFor, timeZone, « instant »).
-    auto offset_nanoseconds_value = TRY(call(vm, get_offset_nanoseconds_for, time_zone, &instant));
+    // 2. If TimeZoneMethodsRecordIsBuiltin(timeZoneRec), return ℝ(offsetNanoseconds).
+    if (time_zone_methods_record_is_builtin(time_zone_record))
+        return offset_nanoseconds_value.as_double();
 
     // 3. If Type(offsetNanoseconds) is not Number, throw a TypeError exception.
     if (!offset_nanoseconds_value.is_number())
@@ -360,8 +361,10 @@ ThrowCompletionOr<double> get_offset_nanoseconds_for(VM& vm, Value time_zone, In
 // 11.6.9 BuiltinTimeZoneGetOffsetStringFor ( timeZone, instant ), https://tc39.es/proposal-temporal/#sec-temporal-builtintimezonegetoffsetstringfor
 ThrowCompletionOr<String> builtin_time_zone_get_offset_string_for(VM& vm, Value time_zone, Instant& instant)
 {
+    auto time_zone_record = TRY(create_time_zone_methods_record(vm, NonnullGCPtr<Object> { time_zone.as_object() }, { { TimeZoneMethod::GetOffsetNanosecondsFor } }));
+
     // 1. Let offsetNanoseconds be ? GetOffsetNanosecondsFor(timeZone, instant).
-    auto offset_nanoseconds = TRY(get_offset_nanoseconds_for(vm, time_zone, instant));
+    auto offset_nanoseconds = TRY(get_offset_nanoseconds_for(vm, time_zone_record, instant));
 
     // 2. Return ! FormatTimeZoneOffsetString(offsetNanoseconds).
     return MUST_OR_THROW_OOM(format_time_zone_offset_string(vm, offset_nanoseconds));
@@ -370,10 +373,12 @@ ThrowCompletionOr<String> builtin_time_zone_get_offset_string_for(VM& vm, Value 
 // 11.6.10 BuiltinTimeZoneGetPlainDateTimeFor ( timeZone, instant, calendar ), https://tc39.es/proposal-temporal/#sec-temporal-builtintimezonegetplaindatetimefor
 ThrowCompletionOr<PlainDateTime*> builtin_time_zone_get_plain_date_time_for(VM& vm, Value time_zone, Instant& instant, Object& calendar)
 {
+    auto time_zone_record = TRY(create_time_zone_methods_record(vm, NonnullGCPtr<Object> { time_zone.as_object() }, { { TimeZoneMethod::GetOffsetNanosecondsFor } }));
+
     // 1. Assert: instant has an [[InitializedTemporalInstant]] internal slot.
 
     // 2. Let offsetNanoseconds be ? GetOffsetNanosecondsFor(timeZone, instant).
-    auto offset_nanoseconds = TRY(get_offset_nanoseconds_for(vm, time_zone, instant));
+    auto offset_nanoseconds = TRY(get_offset_nanoseconds_for(vm, time_zone_record, instant));
 
     // 3. Let result be ! GetISOPartsFromEpoch(ℝ(instant.[[Nanoseconds]])).
     auto result = get_iso_parts_from_epoch(vm, instant.nanoseconds().big_integer());
@@ -465,16 +470,16 @@ ThrowCompletionOr<NonnullGCPtr<Instant>> disambiguate_possible_instants(VM& vm, 
     // 13. Let dayAfter be ! CreateTemporalInstant(dayAfterNs).
     auto* day_after = MUST(create_temporal_instant(vm, day_after_ns));
 
+    auto time_zone_record = TRY(create_time_zone_methods_record(vm, NonnullGCPtr<Object> { time_zone.as_object() }, { { TimeZoneMethod::GetOffsetNanosecondsFor, TimeZoneMethod::GetPossibleInstantsFor } }));
+
     // 14. Let offsetBefore be ? GetOffsetNanosecondsFor(timeZone, dayBefore).
-    auto offset_before = TRY(get_offset_nanoseconds_for(vm, time_zone, *day_before));
+    auto offset_before = TRY(get_offset_nanoseconds_for(vm, time_zone_record, *day_before));
 
     // 15. Let offsetAfter be ? GetOffsetNanosecondsFor(timeZone, dayAfter).
-    auto offset_after = TRY(get_offset_nanoseconds_for(vm, time_zone, *day_after));
+    auto offset_after = TRY(get_offset_nanoseconds_for(vm, time_zone_record, *day_after));
 
     // 16. Let nanoseconds be offsetAfter - offsetBefore.
     auto nanoseconds = offset_after - offset_before;
-
-    auto time_zone_record = TRY(create_time_zone_methods_record(vm, NonnullGCPtr<Object> { time_zone.as_object() }, { { TimeZoneMethod::GetPossibleInstantsFor } }));
 
     // 17. If disambiguation is "earlier", then
     if (disambiguation == "earlier"sv) {

@@ -175,7 +175,7 @@ describe("errors", () => {
         const zonedDateTime = new Temporal.ZonedDateTime(0n, {});
         expect(() => {
             Temporal.PlainDateTime.from(zonedDateTime);
-        }).toThrowWithMessage(TypeError, "null is not a function");
+        }).toThrowWithMessage(TypeError, "getOffsetNanosecondsFor is undefined");
     });
 
     test("string must not contain a UTC designator", () => {

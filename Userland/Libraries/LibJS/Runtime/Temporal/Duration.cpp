@@ -438,12 +438,13 @@ ThrowCompletionOr<double> calculate_offset_shift(VM& vm, Value relative_to_value
         return 0.0;
 
     auto& relative_to = static_cast<ZonedDateTime&>(relative_to_value.as_object());
+    auto time_zone_record = TRY(create_time_zone_methods_record(vm, NonnullGCPtr<Object> { relative_to.time_zone() }, { { TimeZoneMethod::GetOffsetNanosecondsFor } }));
 
     // 2. Let instant be ! CreateTemporalInstant(relativeTo.[[Nanoseconds]]).
     auto* instant = MUST(create_temporal_instant(vm, relative_to.nanoseconds()));
 
     // 3. Let offsetBefore be ? GetOffsetNanosecondsFor(relativeTo.[[TimeZone]], instant).
-    auto offset_before = TRY(get_offset_nanoseconds_for(vm, &relative_to.time_zone(), *instant));
+    auto offset_before = TRY(get_offset_nanoseconds_for(vm, time_zone_record, *instant));
 
     // 4. Let after be ? AddZonedDateTime(relativeTo.[[Nanoseconds]], relativeTo.[[TimeZone]], relativeTo.[[Calendar]], y, mon, w, d, 0, 0, 0, 0, 0, 0).
     auto* after = TRY(add_zoned_date_time(vm, relative_to.nanoseconds(), &relative_to.time_zone(), relative_to.calendar(), years, months, weeks, days, 0, 0, 0, 0, 0, 0));
@@ -452,7 +453,7 @@ ThrowCompletionOr<double> calculate_offset_shift(VM& vm, Value relative_to_value
     auto* instant_after = MUST(create_temporal_instant(vm, *after));
 
     // 6. Let offsetAfter be ? GetOffsetNanosecondsFor(relativeTo.[[TimeZone]], instantAfter).
-    auto offset_after = TRY(get_offset_nanoseconds_for(vm, &relative_to.time_zone(), *instant_after));
+    auto offset_after = TRY(get_offset_nanoseconds_for(vm, time_zone_record, *instant_after));
 
     // 7. Return offsetAfter - offsetBefore.
     return offset_after - offset_before;
