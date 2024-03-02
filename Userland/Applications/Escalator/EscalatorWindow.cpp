@@ -69,6 +69,7 @@ EscalatorWindow::EscalatorWindow(StringView executable, Vector<StringView> argum
     };
 
     m_password_input = *main_widget->find_descendant_of_type_named<GUI::PasswordBox>("password");
+    m_password_input->set_focus(true);
 }
 
 ErrorOr<void> EscalatorWindow::check_password()
