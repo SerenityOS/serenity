@@ -2106,14 +2106,19 @@ CSSPixelPoint FlexFormattingContext::calculate_static_position(Box const& box) c
     CSSPixels cross_offset = 0;
     CSSPixels half_line_size = inner_cross_size(m_flex_container_state) / 2;
 
+    auto cross_to_px = [&](CSS::LengthPercentage const& length_percentage) -> CSSPixels {
+        return length_percentage.to_px(box, m_flex_container_state.content_width());
+    };
+
     auto const& box_state = m_state.get(box);
-    CSSPixels cross_margin_before = is_row_layout() ? box_state.margin_top : box_state.margin_left;
-    CSSPixels cross_margin_after = is_row_layout() ? box_state.margin_bottom : box_state.margin_right;
-    CSSPixels cross_border_before = is_row_layout() ? box_state.border_top : box_state.border_left;
-    CSSPixels cross_border_after = is_row_layout() ? box_state.border_bottom : box_state.border_right;
-    CSSPixels cross_padding_after = is_row_layout() ? box_state.padding_bottom : box_state.padding_right;
-    CSSPixels main_border_before = is_row_layout() ? box_state.border_left : box_state.border_top;
-    CSSPixels main_border_after = is_row_layout() ? box_state.border_right : box_state.border_bottom;
+    CSSPixels cross_margin_before = is_row_layout() ? cross_to_px(box.computed_values().margin().top()) : cross_to_px(box.computed_values().margin().left());
+    CSSPixels cross_margin_after = is_row_layout() ? cross_to_px(box.computed_values().margin().bottom()) : cross_to_px(box.computed_values().margin().right());
+    CSSPixels cross_border_before = is_row_layout() ? box.computed_values().border_top().width : box.computed_values().border_left().width;
+    CSSPixels cross_border_after = is_row_layout() ? box.computed_values().border_bottom().width : box.computed_values().border_right().width;
+    CSSPixels cross_padding_before = is_row_layout() ? cross_to_px(box.computed_values().padding().top()) : cross_to_px(box.computed_values().padding().left());
+    CSSPixels cross_padding_after = is_row_layout() ? cross_to_px(box.computed_values().padding().bottom()) : cross_to_px(box.computed_values().padding().right());
+    CSSPixels main_border_before = is_row_layout() ? box.computed_values().border_left().width : box.computed_values().border_top().width;
+    CSSPixels main_border_after = is_row_layout() ? box.computed_values().border_right().width : box.computed_values().border_bottom().width;
 
     switch (alignment_for_item(box)) {
     case CSS::AlignItems::Baseline:
@@ -2124,15 +2129,15 @@ CSSPixelPoint FlexFormattingContext::calculate_static_position(Box const& box) c
     case CSS::AlignItems::SelfStart:
     case CSS::AlignItems::Stretch:
     case CSS::AlignItems::Normal:
-        cross_offset = -half_line_size + cross_margin_before;
+        cross_offset = -half_line_size;
         break;
     case CSS::AlignItems::End:
     case CSS::AlignItems::SelfEnd:
     case CSS::AlignItems::FlexEnd:
-        cross_offset = half_line_size - inner_cross_size(box_state) - cross_margin_after - cross_border_after - cross_padding_after;
+        cross_offset = half_line_size - inner_cross_size(box_state) - (cross_margin_before + cross_margin_after) - (cross_border_before + cross_border_after) - (cross_padding_before + cross_padding_after);
         break;
     case CSS::AlignItems::Center:
-        cross_offset = -((inner_cross_size(box_state) + cross_border_before + cross_border_after) / 2);
+        cross_offset = -((inner_cross_size(box_state) + cross_margin_after + cross_margin_before + cross_border_before + cross_border_after + cross_padding_before + cross_padding_after) / 2);
         break;
     default:
         break;

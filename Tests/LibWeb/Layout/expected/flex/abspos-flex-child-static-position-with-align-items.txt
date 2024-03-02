@@ -32,15 +32,15 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
       BlockContainer <(anonymous)> (not painted) [BFC] children: inline
         TextNode <#text>
       Box <div.outer.end> at (38,208) content-size 150x150 flex-container(row) flex-item [FFC] children: not-inline
-        BlockContainer <div> at (48,308) content-size 150x50 positioned [BFC] children: inline
-          frag 0 from TextNode start: 0, length: 3, rect: [48,308 26.1875x17] baseline: 13.296875
+        BlockContainer <div> at (48,298) content-size 150x50 positioned [BFC] children: inline
+          frag 0 from TextNode start: 0, length: 3, rect: [48,298 26.1875x17] baseline: 13.296875
               "end"
           TextNode <#text>
       BlockContainer <(anonymous)> (not painted) [BFC] children: inline
         TextNode <#text>
       Box <div.outer.flex-end> at (208,208) content-size 150x150 flex-container(row) flex-item [FFC] children: not-inline
-        BlockContainer <div> at (218,308) content-size 150x50 positioned [BFC] children: inline
-          frag 0 from TextNode start: 0, length: 8, rect: [218,308 61.765625x17] baseline: 13.296875
+        BlockContainer <div> at (218,298) content-size 150x50 positioned [BFC] children: inline
+          frag 0 from TextNode start: 0, length: 8, rect: [218,298 61.765625x17] baseline: 13.296875
               "flex-end"
           TextNode <#text>
       BlockContainer <(anonymous)> (not painted) [BFC] children: inline
@@ -60,8 +60,8 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
       BlockContainer <(anonymous)> (not painted) [BFC] children: inline
         TextNode <#text>
       Box <div.outer.self-end> at (38,378) content-size 150x150 flex-container(row) flex-item [FFC] children: not-inline
-        BlockContainer <div> at (48,478) content-size 150x50 positioned [BFC] children: inline
-          frag 0 from TextNode start: 0, length: 8, rect: [48,478 61.40625x17] baseline: 13.296875
+        BlockContainer <div> at (48,468) content-size 150x50 positioned [BFC] children: inline
+          frag 0 from TextNode start: 0, length: 8, rect: [48,468 61.40625x17] baseline: 13.296875
               "self-end"
           TextNode <#text>
       BlockContainer <(anonymous)> (not painted) [BFC] children: inline
@@ -82,11 +82,11 @@ ViewportPaintable (Viewport<#document>) [0,0 800x600]
       PaintableBox (Box<DIV>.outer.flex-start) [538,28 170x170] overflow: [548,38 170x150]
         PaintableWithLines (BlockContainer<DIV>) [548,38 170x70]
           TextPaintable (TextNode<#text>)
-      PaintableBox (Box<DIV>.outer.end) [28,198 170x170] overflow: [38,208 170x160]
-        PaintableWithLines (BlockContainer<DIV>) [38,298 170x70]
+      PaintableBox (Box<DIV>.outer.end) [28,198 170x170] overflow: [38,208 170x150]
+        PaintableWithLines (BlockContainer<DIV>) [38,288 170x70]
           TextPaintable (TextNode<#text>)
-      PaintableBox (Box<DIV>.outer.flex-end) [198,198 170x170] overflow: [208,208 170x160]
-        PaintableWithLines (BlockContainer<DIV>) [208,298 170x70]
+      PaintableBox (Box<DIV>.outer.flex-end) [198,198 170x170] overflow: [208,208 170x150]
+        PaintableWithLines (BlockContainer<DIV>) [208,288 170x70]
           TextPaintable (TextNode<#text>)
       PaintableBox (Box<DIV>.outer.center) [368,198 170x170] overflow: [378,208 170x150]
         PaintableWithLines (BlockContainer<DIV>) [378,248 170x70]
@@ -94,6 +94,6 @@ ViewportPaintable (Viewport<#document>) [0,0 800x600]
       PaintableBox (Box<DIV>.outer.self-start) [538,198 170x170] overflow: [548,208 170x150]
         PaintableWithLines (BlockContainer<DIV>) [548,208 170x70]
           TextPaintable (TextNode<#text>)
-      PaintableBox (Box<DIV>.outer.self-end) [28,368 170x170] overflow: [38,378 170x160]
-        PaintableWithLines (BlockContainer<DIV>) [38,468 170x70]
+      PaintableBox (Box<DIV>.outer.self-end) [28,368 170x170] overflow: [38,378 170x150]
+        PaintableWithLines (BlockContainer<DIV>) [38,458 170x70]
           TextPaintable (TextNode<#text>)
