@@ -11,6 +11,7 @@ Error
 URIError: hello
 {"1":2,"a":"b"}
 1,4,aaaa
+
 true
 1
 true
