@@ -61,6 +61,8 @@ set(KERNEL_SOURCES
     Bus/USB/USBManagement.cpp
     Bus/USB/USBPipe.cpp
     Bus/USB/USBTransfer.cpp
+    Bus/VirtIO/Transport/PCIe/InterruptHandler.cpp
+    Bus/VirtIO/Transport/PCIe/TransportLink.cpp
     Bus/VirtIO/Transport/Entity.cpp
     Bus/VirtIO/Transport/InterruptHandler.cpp
     Bus/VirtIO/Device.cpp
