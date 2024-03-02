@@ -206,32 +206,23 @@ void StackingContext::paint_internal(PaintContext& context) const
 
     // Draw positioned descendants with z-index `0` or `auto` in tree order. (step 8)
     // FIXME: There's more to this step that we have yet to understand and implement.
-    paintable().for_each_in_subtree([&context](Paintable const& paintable) {
-        auto const& z_index = paintable.computed_values().z_index();
-
-        if (!paintable.is_positioned() || (z_index.has_value() && z_index.value() != 0)) {
-            return paintable.stacking_context()
-                ? TraversalDecision::SkipChildrenAndContinue
-                : TraversalDecision::Continue;
-        }
+    for (auto const& paintable : m_positioned_descendants_with_stack_level_0_and_stacking_contexts) {
+        if (!paintable.is_positioned())
+            continue;
 
         // At this point, `paintable_box` is a positioned descendant with z-index: auto.
         // FIXME: This is basically duplicating logic found elsewhere in this same function. Find a way to make this more elegant.
-        auto exit_decision = TraversalDecision::Continue;
         auto* parent_paintable = paintable.parent();
         if (parent_paintable)
             parent_paintable->before_children_paint(context, PaintPhase::Foreground);
         if (auto* child = paintable.stacking_context()) {
             paint_child(context, *child);
-            exit_decision = TraversalDecision::SkipChildrenAndContinue;
         } else {
             paint_node_as_stacking_context(paintable, context);
         }
         if (parent_paintable)
             parent_paintable->after_children_paint(context, PaintPhase::Foreground);
-
-        return exit_decision;
-    });
+    };
 
     // Stacking contexts formed by positioned descendants with z-indices greater than or equal to 1 in z-index order
     // (smallest first) then tree order. (Step 9)
