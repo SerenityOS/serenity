@@ -8,7 +8,6 @@
 #include <AK/Find.h>
 #include <AK/Platform.h>
 #include <Kernel/Arch/Delay.h>
-#include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/USB/UHCI/UHCIController.h>
 #include <Kernel/Bus/USB/USBRequest.h>
 #include <Kernel/Debug.h>
@@ -64,11 +63,20 @@ static constexpr u16 UHCI_PORTSC_NON_WRITE_CLEAR_BIT_MASK = 0x1FF5; // This is u
 static constexpr u8 UHCI_NUMBER_OF_ISOCHRONOUS_TDS = 128;
 static constexpr u16 UHCI_NUMBER_OF_FRAMES = 1024;
 
+ErrorOr<NonnullRefPtr<UHCIController>> UHCIController::try_to_initialize(PCI::Device& pci_device)
+{
+    // NOTE: This assumes that address is pointing to a valid UHCI controller.
+    dmesgln("UHCI Controller found {} @ {}", pci_device.device_id().hardware_id(), pci_device.device_id().address());
+    auto registers_io_window = TRY(IOWindow::create_for_pci_device_bar(pci_device, PCI::HeaderType0BaseRegister::BAR4));
+    auto controller = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) UHCIController(pci_device, move(registers_io_window))));
+    TRY(controller->initialize());
+    return controller;
+}
+
 ErrorOr<void> UHCIController::initialize()
 {
-    dmesgln_pci(*this, "Controller found {} @ {}", PCI::get_hardware_id(device_identifier()), device_identifier().address());
-    dmesgln_pci(*this, "I/O base {}", m_registers_io_window);
-    dmesgln_pci(*this, "Interrupt line: {}", interrupt_number());
+    dmesgln("UHCI I/O base {}", m_registers_io_window);
+    dmesgln("UHCI Interrupt line: {}", interrupt_number());
 
     TRY(spawn_async_poll_process());
     TRY(spawn_port_process());
@@ -77,14 +85,13 @@ ErrorOr<void> UHCIController::initialize()
     return start();
 }
 
-UNMAP_AFTER_INIT UHCIController::UHCIController(PCI::DeviceIdentifier const& pci_device_identifier, NonnullOwnPtr<IOWindow> registers_io_window)
-    : PCI::Device(const_cast<PCI::DeviceIdentifier&>(pci_device_identifier))
-    , IRQHandler(pci_device_identifier.interrupt_line().value())
+UHCIController::UHCIController(PCI::Device& pci_device, NonnullOwnPtr<IOWindow> registers_io_window)
+    : IRQHandler(pci_device.device_id().interrupt_line().value())
     , m_registers_io_window(move(registers_io_window))
 {
 }
 
-UNMAP_AFTER_INIT UHCIController::~UHCIController() = default;
+UHCIController::~UHCIController() = default;
 
 ErrorOr<void> UHCIController::reset()
 {
@@ -120,7 +127,7 @@ ErrorOr<void> UHCIController::reset()
     return {};
 }
 
-UNMAP_AFTER_INIT ErrorOr<void> UHCIController::create_structures()
+ErrorOr<void> UHCIController::create_structures()
 {
     m_queue_head_pool = TRY(UHCIDescriptorPool<QueueHead>::try_create("Queue Head Pool"sv));
 
@@ -166,7 +173,7 @@ UNMAP_AFTER_INIT ErrorOr<void> UHCIController::create_structures()
     return {};
 }
 
-UNMAP_AFTER_INIT void UHCIController::setup_schedule()
+void UHCIController::setup_schedule()
 {
     //
     // https://github.com/alkber/minix3-usbsubsystem/blob/master/usb/uhci-hcd.c

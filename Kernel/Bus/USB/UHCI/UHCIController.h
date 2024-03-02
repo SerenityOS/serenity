@@ -16,6 +16,7 @@
 #include <Kernel/Bus/USB/UHCI/UHCIRootHub.h>
 #include <Kernel/Bus/USB/USBController.h>
 #include <Kernel/Interrupts/IRQHandler.h>
+#include <Kernel/Library/Driver.h>
 #include <Kernel/Library/IOWindow.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
@@ -26,18 +27,18 @@ namespace Kernel::USB {
 
 class UHCIController final
     : public USBController
-    , public PCI::Device
     , public IRQHandler {
+    KERNEL_MAKE_DRIVER_LISTABLE(UHCIController)
 
     static constexpr u8 MAXIMUM_NUMBER_OF_TDS = 128; // Upper pool limit. This consumes the second page we have allocated
     static constexpr u8 MAXIMUM_NUMBER_OF_QHS = 64;
 
 public:
     static constexpr u8 NUMBER_OF_ROOT_PORTS = 2;
+    static ErrorOr<NonnullRefPtr<UHCIController>> try_to_initialize(PCI::Device& pci_device);
     virtual ~UHCIController() override;
 
     virtual StringView purpose() const override { return "UHCI"sv; }
-    virtual StringView device_name() const override { return purpose(); }
 
     virtual ErrorOr<void> initialize() override;
     virtual ErrorOr<void> reset() override;
@@ -59,7 +60,7 @@ public:
     ErrorOr<void> clear_port_feature(Badge<UHCIRootHub>, u8, HubFeatureSelector);
 
 private:
-    UHCIController(PCI::DeviceIdentifier const& pci_device_identifier, NonnullOwnPtr<IOWindow> registers_io_window);
+    UHCIController(PCI::Device&, NonnullOwnPtr<IOWindow> registers_io_window);
 
     u16 read_usbcmd() { return m_registers_io_window->read16(0); }
     u16 read_usbsts() { return m_registers_io_window->read16(0x2); }
