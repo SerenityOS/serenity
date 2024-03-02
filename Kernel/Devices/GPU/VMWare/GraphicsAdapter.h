@@ -10,6 +10,7 @@
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Devices/GPU/GPUDevice.h>
 #include <Kernel/Devices/GPU/VMWare/Definitions.h>
+#include <Kernel/Library/Driver.h>
 #include <Kernel/Library/IOWindow.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/PhysicalAddress.h>
@@ -24,10 +25,10 @@ class VMWareGraphicsAdapter final
     : public GPUDevice {
     friend class GraphicsManagement;
 
+    KERNEL_MAKE_DRIVER_LISTABLE(VMWareGraphicsAdapter)
 public:
+    static ErrorOr<NonnullRefPtr<VMWareGraphicsAdapter>> create(PCI::Device&);
     virtual ~VMWareGraphicsAdapter() = default;
-
-    virtual StringView device_name() const override { return "VMWareGraphicsAdapter"sv; }
 
     ErrorOr<void> modeset_primary_screen_resolution(Badge<VMWareDisplayConnector>, size_t width, size_t height);
     size_t primary_screen_width(Badge<VMWareDisplayConnector>) const;
@@ -46,13 +47,13 @@ private:
     void print_svga_capabilities() const;
     void modeset_primary_screen_resolution(size_t width, size_t height);
 
-    VMWareGraphicsAdapter(PCI::DeviceIdentifier const&, NonnullOwnPtr<IOWindow> registers_io_window);
+    VMWareGraphicsAdapter(PCI::Device&, NonnullOwnPtr<IOWindow> registers_io_window);
 
+    NonnullRefPtr<PCI::Device> const m_pci_device;
     Memory::TypedMapping<VMWareDisplayFIFORegisters volatile> m_fifo_registers;
     LockRefPtr<VMWareDisplayConnector> m_display_connector;
     mutable NonnullOwnPtr<IOWindow> m_registers_io_window;
     mutable Spinlock<LockRank::None> m_io_access_lock {};
     mutable RecursiveSpinlock<LockRank::None> m_operation_lock {};
 };
-
 }

@@ -7,8 +7,6 @@
 #include <AK/Atomic.h>
 #include <AK/Checked.h>
 #include <AK/Try.h>
-#include <Kernel/Bus/PCI/API.h>
-#include <Kernel/Bus/PCI/BarMapping.h>
 #include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/Devices/GPU/Console/ContiguousFramebufferConsole.h>
 #include <Kernel/Devices/GPU/Management.h>
@@ -21,26 +19,19 @@
 
 namespace Kernel {
 
-ErrorOr<bool> VMWareGraphicsAdapter::probe(PCI::DeviceIdentifier const& pci_device_identifier)
+ErrorOr<NonnullRefPtr<VMWareGraphicsAdapter>> VMWareGraphicsAdapter::create(PCI::Device& pci_device)
 {
-    PCI::HardwareID id = pci_device_identifier.hardware_id();
-    // Note: We only support VMWare SVGA II adapter
-    return id.vendor_id == PCI::VendorID::VMWare && id.device_id == 0x0405;
-}
-
-ErrorOr<NonnullLockRefPtr<GPUDevice>> VMWareGraphicsAdapter::create(PCI::DeviceIdentifier const& pci_device_identifier)
-{
-    auto registers_io_window = TRY(IOWindow::create_for_pci_device_bar(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR0));
-    auto adapter = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) VMWareGraphicsAdapter(pci_device_identifier, move(registers_io_window))));
+    auto registers_io_window = TRY(IOWindow::create_for_pci_device_bar(pci_device, PCI::HeaderType0BaseRegister::BAR0));
+    auto adapter = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) VMWareGraphicsAdapter(pci_device, move(registers_io_window))));
     TRY(adapter->initialize_adapter());
     return adapter;
 }
 
-UNMAP_AFTER_INIT VMWareGraphicsAdapter::VMWareGraphicsAdapter(PCI::DeviceIdentifier const& pci_device_identifier, NonnullOwnPtr<IOWindow> registers_io_window)
-    : PCI::Device(const_cast<PCI::DeviceIdentifier&>(pci_device_identifier))
+VMWareGraphicsAdapter::VMWareGraphicsAdapter(PCI::Device& pci_device, NonnullOwnPtr<IOWindow> registers_io_window)
+    : m_pci_device(pci_device)
     , m_registers_io_window(move(registers_io_window))
 {
-    dbgln("VMWare SVGA @ {}, {}", pci_device_identifier.address(), m_registers_io_window);
+    dbgln("VMWare SVGA @ {}, {}", m_pci_device->device_id().address(), m_registers_io_window);
 }
 
 u32 VMWareGraphicsAdapter::read_io_register(VMWareDisplayRegistersOffset register_offset) const
@@ -56,29 +47,29 @@ void VMWareGraphicsAdapter::write_io_register(VMWareDisplayRegistersOffset regis
     m_registers_io_window->write32_unaligned(1, value);
 }
 
-UNMAP_AFTER_INIT ErrorOr<void> VMWareGraphicsAdapter::negotiate_device_version()
+ErrorOr<void> VMWareGraphicsAdapter::negotiate_device_version()
 {
     write_io_register(VMWareDisplayRegistersOffset::ID, vmware_svga_version_2_id);
     auto accepted_version = read_io_register(VMWareDisplayRegistersOffset::ID);
-    dbgln("VMWare SVGA @ {}: Accepted version {}", device_identifier().address(), accepted_version);
+    dbgln("VMWare SVGA @ {}: Accepted version {}", m_pci_device->device_id().address(), accepted_version);
     if (read_io_register(VMWareDisplayRegistersOffset::ID) == vmware_svga_version_2_id)
         return {};
     return Error::from_errno(ENOTSUP);
 }
 
-UNMAP_AFTER_INIT ErrorOr<void> VMWareGraphicsAdapter::initialize_fifo_registers()
+ErrorOr<void> VMWareGraphicsAdapter::initialize_fifo_registers()
 {
     auto framebuffer_size = read_io_register(VMWareDisplayRegistersOffset::FB_SIZE);
     auto fifo_size = read_io_register(VMWareDisplayRegistersOffset::MEM_SIZE);
-    auto fifo_physical_address = TRY(PCI::get_bar_address(device_identifier(), PCI::HeaderType0BaseRegister::BAR2));
+    auto fifo_physical_address = PhysicalAddress(m_pci_device->resources()[2].physical_memory_address());
 
-    dbgln("VMWare SVGA @ {}: framebuffer size {} bytes, FIFO size {} bytes @ {}", device_identifier().address(), framebuffer_size, fifo_size, fifo_physical_address);
+    dbgln("VMWare SVGA @ {}: framebuffer size {} bytes, FIFO size {} bytes @ {}", m_pci_device->device_id().address(), framebuffer_size, fifo_size, fifo_physical_address);
     if (framebuffer_size < 0x100000 || fifo_size < 0x10000) {
-        dbgln("VMWare SVGA @ {}: invalid framebuffer or fifo size", device_identifier().address());
+        dbgln("VMWare SVGA @ {}: invalid framebuffer or fifo size", m_pci_device->device_id().address());
         return Error::from_errno(ENOTSUP);
     }
 
-    m_fifo_registers = TRY(PCI::map_bar<VMWareDisplayFIFORegisters volatile>(device_identifier(), PCI::HeaderType0BaseRegister::BAR2, fifo_size));
+    m_fifo_registers = TRY(m_pci_device->map_resource<VMWareDisplayFIFORegisters volatile>(PCI::HeaderType0BaseRegister::BAR2, fifo_size));
     m_fifo_registers->start = 16;
     m_fifo_registers->size = 16 + (10 * 1024);
     m_fifo_registers->next_command = 16;
@@ -86,7 +77,7 @@ UNMAP_AFTER_INIT ErrorOr<void> VMWareGraphicsAdapter::initialize_fifo_registers(
     return {};
 }
 
-UNMAP_AFTER_INIT void VMWareGraphicsAdapter::print_svga_capabilities() const
+void VMWareGraphicsAdapter::print_svga_capabilities() const
 {
     auto svga_capabilities = read_io_register(VMWareDisplayRegistersOffset::CAPABILITIES);
     dbgln("VMWare SVGA capabilities (raw {:x}):", svga_capabilities);
@@ -176,7 +167,7 @@ void VMWareGraphicsAdapter::modeset_primary_screen_resolution(size_t width, size
     write_io_register(VMWareDisplayRegistersOffset::CONFIG_DONE, 1);
 }
 
-UNMAP_AFTER_INIT ErrorOr<void> VMWareGraphicsAdapter::initialize_adapter()
+ErrorOr<void> VMWareGraphicsAdapter::initialize_adapter()
 {
     TRY(negotiate_device_version());
     print_svga_capabilities();
@@ -184,9 +175,8 @@ UNMAP_AFTER_INIT ErrorOr<void> VMWareGraphicsAdapter::initialize_adapter()
     // Note: enable the device by modesetting the primary screen resolution
     modeset_primary_screen_resolution(640, 480);
 
-    auto bar1_space_size = PCI::get_BAR_space_size(device_identifier(), PCI::HeaderType0BaseRegister::BAR1);
-
-    m_display_connector = VMWareDisplayConnector::must_create(*this, TRY(PCI::get_bar_address(device_identifier(), PCI::HeaderType0BaseRegister::BAR1)), bar1_space_size);
+    auto& resource1 = m_pci_device->resources()[1];
+    m_display_connector = VMWareDisplayConnector::must_create(*this, PhysicalAddress(resource1.physical_memory_address()), resource1.length);
     TRY(m_display_connector->set_safe_mode_setting());
     return {};
 }
