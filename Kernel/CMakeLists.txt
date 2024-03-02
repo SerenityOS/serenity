@@ -43,6 +43,7 @@ set(KERNEL_SOURCES
     Bus/PCI/Drivers/Storage/NVMe/NVMe.cpp
     Bus/PCI/Drivers/Storage/NVMe/VolumeManagementDevice.cpp
     Bus/PCI/Drivers/Storage/SD/SDHCI.cpp
+    Bus/PCI/Drivers/USB/EHCI.cpp
     Bus/PCI/Drivers/USB/UHCI.cpp
     Bus/PCI/Access.cpp
     Bus/PCI/Bus.cpp
@@ -50,6 +51,7 @@ set(KERNEL_SOURCES
     Bus/PCI/Device.cpp
     Bus/USB/Drivers/HID/MouseDriver.cpp
     Bus/USB/Drivers/MassStorage/MassStorageDriver.cpp
+    Bus/USB/EHCI/EHCIController.cpp
     Bus/USB/UHCI/UHCIController.cpp
     Bus/USB/UHCI/UHCIRootHub.cpp
     Bus/USB/USBConfiguration.cpp

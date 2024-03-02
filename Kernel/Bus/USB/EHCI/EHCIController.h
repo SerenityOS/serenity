@@ -10,17 +10,16 @@
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Bus/USB/EHCI/Registers.h>
 #include <Kernel/Bus/USB/USBController.h>
+#include <Kernel/Library/Driver.h>
 #include <Kernel/Memory/TypedMapping.h>
 
 namespace Kernel::USB::EHCI {
 
-class EHCIController : public USBController
-    , public PCI::Device {
+class EHCIController : public USBController {
+    KERNEL_MAKE_DRIVER_LISTABLE(EHCIController)
 public:
+    static ErrorOr<NonnullRefPtr<EHCIController>> try_to_initialize(PCI::Device& pci_device);
     virtual ~EHCIController() override = default;
-
-    // ^PCI::Device
-    virtual StringView device_name() const override { return "EHCI"sv; }
 
     // ^USBController
     virtual ErrorOr<void> initialize() override;
@@ -35,11 +34,11 @@ public:
     virtual ErrorOr<void> submit_async_interrupt_transfer(NonnullLockRefPtr<Transfer>, u16) override { return ENOTSUP; }
 
 private:
-    EHCIController(PCI::DeviceIdentifier const& pci_device_identifier, NonnullOwnPtr<Memory::Region> register_region, VirtualAddress register_base_address);
+    EHCIController(PCI::Device&, NonnullOwnPtr<Memory::Region> register_region, VirtualAddress register_base_address);
 
+    NonnullRefPtr<PCI::Device> const m_pci_device;
     NonnullOwnPtr<Memory::Region> m_register_region;
     CapabilityRegisters const* m_cap_regs;
     OperationalRegisters volatile* m_op_regs;
 };
-
 }
