@@ -419,10 +419,6 @@ void init_stage2(void*)
     }
     SysFSFirmwareDirectory::initialize();
 
-    if (!PCI::Access::is_disabled()) {
-        VirtIO::detect_pci_instances();
-    }
-
     NetworkingManagement::the().initialize();
 
 #ifdef ENABLE_KERNEL_COVERAGE_COLLECTION
