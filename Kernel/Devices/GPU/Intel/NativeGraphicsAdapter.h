@@ -17,13 +17,8 @@
 namespace Kernel {
 
 class IntelNativeGraphicsAdapter final
-    : public GPUDevice
-    , public PCI::Device {
-
+    : public GPUDevice {
 public:
-    static ErrorOr<bool> probe(PCI::DeviceIdentifier const&);
-    static ErrorOr<NonnullLockRefPtr<GPUDevice>> create(PCI::DeviceIdentifier const&);
-
     virtual ~IntelNativeGraphicsAdapter() = default;
 
     virtual StringView device_name() const override { return "IntelNativeGraphicsAdapter"sv; }

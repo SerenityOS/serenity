@@ -13,13 +13,9 @@
 #include <Kernel/Boot/Multiboot.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/IDs.h>
-#include <Kernel/Devices/GPU/3dfx/GraphicsAdapter.h>
 #include <Kernel/Devices/GPU/Bochs/GraphicsAdapter.h>
 #include <Kernel/Devices/GPU/Console/BootFramebufferConsole.h>
-#include <Kernel/Devices/GPU/Intel/NativeGraphicsAdapter.h>
 #include <Kernel/Devices/GPU/Management.h>
-#include <Kernel/Devices/GPU/VMWare/GraphicsAdapter.h>
-#include <Kernel/Devices/GPU/VirtIO/GraphicsAdapter.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Sections.h>
 
@@ -127,11 +123,7 @@ struct PCIGraphicsDriverInitializer {
 };
 
 static constexpr PCIGraphicsDriverInitializer s_initializers[] = {
-    { IntelNativeGraphicsAdapter::probe, IntelNativeGraphicsAdapter::create },
     { BochsGraphicsAdapter::probe, BochsGraphicsAdapter::create },
-    { VirtIOGraphicsAdapter::probe, VirtIOGraphicsAdapter::create },
-    { VMWareGraphicsAdapter::probe, VMWareGraphicsAdapter::create },
-    { VoodooGraphicsAdapter::probe, VoodooGraphicsAdapter::create },
 };
 
 UNMAP_AFTER_INIT ErrorOr<void> GraphicsManagement::determine_and_initialize_graphics_device(PCI::DeviceIdentifier const& device_identifier)

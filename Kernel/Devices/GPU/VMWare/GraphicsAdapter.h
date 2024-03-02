@@ -21,13 +21,10 @@ class GraphicsManagement;
 
 class VMWareDisplayConnector;
 class VMWareGraphicsAdapter final
-    : public GPUDevice
-    , public PCI::Device {
+    : public GPUDevice {
     friend class GraphicsManagement;
 
 public:
-    static ErrorOr<bool> probe(PCI::DeviceIdentifier const&);
-    static ErrorOr<NonnullLockRefPtr<GPUDevice>> create(PCI::DeviceIdentifier const&);
     virtual ~VMWareGraphicsAdapter() = default;
 
     virtual StringView device_name() const override { return "VMWareGraphicsAdapter"sv; }

@@ -28,19 +28,6 @@ static bool is_supported_model(u16 device_id)
     return false;
 }
 
-UNMAP_AFTER_INIT ErrorOr<bool> VoodooGraphicsAdapter::probe(PCI::DeviceIdentifier const& pci_device_identifier)
-{
-    PCI::HardwareID id = pci_device_identifier.hardware_id();
-    return id.vendor_id == PCI::VendorID::Tdfx && is_supported_model(id.device_id);
-}
-
-UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<GPUDevice>> VoodooGraphicsAdapter::create(PCI::DeviceIdentifier const& pci_device_identifier)
-{
-    auto adapter = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) VoodooGraphicsAdapter(pci_device_identifier)));
-    MUST(adapter->initialize_adapter(pci_device_identifier));
-    return adapter;
-}
-
 UNMAP_AFTER_INIT VoodooGraphicsAdapter::VoodooGraphicsAdapter(PCI::DeviceIdentifier const& device_identifier)
     : PCI::Device(const_cast<PCI::DeviceIdentifier&>(device_identifier))
 {

@@ -37,9 +37,6 @@ class VirtIOGraphicsAdapter final
     friend class VirtIOGPU3DDevice;
 
 public:
-    static ErrorOr<bool> probe(PCI::DeviceIdentifier const&);
-    static ErrorOr<NonnullLockRefPtr<GPUDevice>> create(PCI::DeviceIdentifier const&);
-
     virtual ErrorOr<void> initialize_virtio_resources() override;
 
     ErrorOr<void> mode_set_resolution(Badge<VirtIODisplayConnector>, VirtIODisplayConnector&, size_t width, size_t height);

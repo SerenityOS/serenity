@@ -83,8 +83,6 @@ set(KERNEL_SOURCES
     Devices/Generic/RandomDevice.cpp
     Devices/Generic/SelfTTYDevice.cpp
     Devices/Generic/ZeroDevice.cpp
-    Devices/GPU/3dfx/GraphicsAdapter.cpp
-    Devices/GPU/3dfx/VoodooDisplayConnector.cpp
     Devices/GPU/Bochs/GraphicsAdapter.cpp
     Devices/GPU/Bochs/QEMUDisplayConnector.cpp
     Devices/GPU/Console/BootFramebufferConsole.cpp
@@ -94,22 +92,6 @@ set(KERNEL_SOURCES
     Devices/GPU/DisplayConnector.cpp
     Devices/GPU/Generic/DisplayConnector.cpp
     Devices/GPU/Management.cpp
-    Devices/GPU/Intel/Auxiliary/GMBusConnector.cpp
-    Devices/GPU/Intel/Plane/DisplayPlane.cpp
-    Devices/GPU/Intel/Plane/G33DisplayPlane.cpp
-    Devices/GPU/Intel/Transcoder/AnalogDisplayTranscoder.cpp
-    Devices/GPU/Intel/Transcoder/DisplayTranscoder.cpp
-    Devices/GPU/Intel/Transcoder/PLL.cpp
-    Devices/GPU/Intel/DisplayConnectorGroup.cpp
-    Devices/GPU/Intel/NativeDisplayConnector.cpp
-    Devices/GPU/Intel/NativeGraphicsAdapter.cpp
-    Devices/GPU/VMWare/Console.cpp
-    Devices/GPU/VMWare/GraphicsAdapter.cpp
-    Devices/GPU/VMWare/DisplayConnector.cpp
-    Devices/GPU/VirtIO/DisplayConnector.cpp
-    Devices/GPU/VirtIO/Console.cpp
-    Devices/GPU/VirtIO/GPU3DDevice.cpp
-    Devices/GPU/VirtIO/GraphicsAdapter.cpp
     Devices/Loop/LoopDevice.cpp
     Devices/Storage/ATA/AHCI/Controller.cpp
     Devices/Storage/ATA/AHCI/Port.cpp
