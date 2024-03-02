@@ -11,6 +11,7 @@
 #include <LibWeb/DOM/DocumentLoadEventDelayer.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/FileAPI/FileList.h>
+#include <LibWeb/HTML/ColorPickerUpdateState.h>
 #include <LibWeb/HTML/FormAssociatedElement.h>
 #include <LibWeb/HTML/HTMLElement.h>
 #include <LibWeb/Layout/ImageProvider.h>
@@ -92,7 +93,7 @@ public:
 
     bool is_mutable() const { return m_is_mutable; }
 
-    void did_pick_color(Optional<Color> picked_color);
+    void did_pick_color(Optional<Color> picked_color, ColorPickerUpdateState state);
 
     void did_select_files(Span<SelectedFile> selected_files);
 

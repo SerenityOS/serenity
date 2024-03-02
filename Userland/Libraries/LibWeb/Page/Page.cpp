@@ -337,7 +337,7 @@ void Page::color_picker_update(Optional<Color> picked_color, HTML::ColorPickerUp
 
         if (m_pending_non_blocking_dialog_target) {
             auto& input_element = verify_cast<HTML::HTMLInputElement>(*m_pending_non_blocking_dialog_target);
-            input_element.did_pick_color(move(picked_color));
+            input_element.did_pick_color(move(picked_color), state);
             if (state == HTML::ColorPickerUpdateState::Closed)
                 m_pending_non_blocking_dialog_target.clear();
         }
