@@ -28,6 +28,7 @@ set(KERNEL_SOURCES
     Bus/PCI/Controller/HostController.cpp
     Bus/PCI/Controller/MemoryBackedHostBridge.cpp
     Bus/PCI/Controller/VolumeManagementDevice.cpp
+    Bus/PCI/Drivers/Audio/AC97.cpp
     Bus/PCI/Drivers/Audio/IntelHDA.cpp
     Bus/PCI/Drivers/GPU/BochsDisplay.cpp
     Bus/PCI/Drivers/Net/E1000.cpp
@@ -51,6 +52,7 @@ set(KERNEL_SOURCES
     Bus/VirtIO/Queue.cpp
     Devices/AsyncDeviceRequest.cpp
     Devices/Audio/Channel.cpp
+    Devices/Audio/AC97/AC97.cpp
     Devices/Audio/IntelHDA/Codec.cpp
     Devices/Audio/IntelHDA/Controller.cpp
     Devices/Audio/IntelHDA/Format.cpp
