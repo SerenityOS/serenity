@@ -56,12 +56,12 @@ class Paintable
 public:
     virtual ~Paintable();
 
-    [[nodiscard]] bool is_visible() const;
-    [[nodiscard]] bool is_positioned() const;
-    [[nodiscard]] bool is_fixed_position() const { return layout_node().is_fixed_position(); }
-    [[nodiscard]] bool is_absolutely_positioned() const { return layout_node().is_absolutely_positioned(); }
-    [[nodiscard]] bool is_floating() const { return layout_node().is_floating(); }
-    [[nodiscard]] bool is_inline() const { return layout_node().is_inline(); }
+    [[nodiscard]] bool is_visible() const { return m_visible; }
+    [[nodiscard]] bool is_positioned() const { return m_positioned; }
+    [[nodiscard]] bool is_fixed_position() const { return m_fixed_position; }
+    [[nodiscard]] bool is_absolutely_positioned() const { return m_absolutely_positioned; }
+    [[nodiscard]] bool is_floating() const { return m_floating; }
+    [[nodiscard]] bool is_inline() const { return m_inline; }
     [[nodiscard]] CSS::Display display() const { return layout_node().display(); }
 
     template<typename U, typename Callback>
@@ -217,6 +217,13 @@ private:
     Optional<JS::GCPtr<PaintableBox>> mutable m_containing_block;
 
     OwnPtr<StackingContext> m_stacking_context;
+
+    bool m_visible : 1 { false };
+    bool m_positioned : 1 { false };
+    bool m_fixed_position : 1 { false };
+    bool m_absolutely_positioned : 1 { false };
+    bool m_floating : 1 { false };
+    bool m_inline : 1 { false };
 };
 
 inline DOM::Node* HitTestResult::dom_node()
