@@ -25,8 +25,15 @@ public:
     {
     }
 
-    bool is_identity() const;
-    bool is_identity_or_translation() const;
+    [[nodiscard]] bool is_identity() const
+    {
+        return m_values[0] == 1 && m_values[1] == 0 && m_values[2] == 0 && m_values[3] == 1 && m_values[4] == 0 && m_values[5] == 0;
+    }
+
+    [[nodiscard]] bool is_identity_or_translation() const
+    {
+        return m_values[0] == 1 && m_values[1] == 0 && m_values[2] == 0 && m_values[3] == 1;
+    }
 
     void map(float unmapped_x, float unmapped_y, float& mapped_x, float& mapped_y) const;
 
