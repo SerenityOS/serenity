@@ -1412,7 +1412,7 @@ ErrorOr<void> StyleComputer::compute_cascaded_values(StyleProperties& style, DOM
                 if (auto keyframe_set = rule_cache.rules_by_animation_keyframes.get(animation->id()); keyframe_set.has_value())
                     effect->set_key_frame_set(keyframe_set.value());
 
-                element.associate_with_effect(effect);
+                effect->set_target(&element);
                 element.set_cached_animation_name_animation(animation);
             } else {
                 // The animation hasn't changed, but some properties of the animation may have
