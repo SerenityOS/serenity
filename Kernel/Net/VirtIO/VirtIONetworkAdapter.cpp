@@ -91,21 +91,22 @@ static constexpr size_t MAX_RX_FRAME_SIZE = 1514; // Non-jumbo Ethernet frame li
 static constexpr size_t RX_BUFFER_SIZE = sizeof(VirtIONetHdr) * MAX_RX_FRAME_SIZE;
 static constexpr u16 MAX_INFLIGHT_PACKETS = 128;
 
-UNMAP_AFTER_INIT VirtIONetworkAdapter::VirtIONetworkAdapter(StringView interface_name, NonnullOwnPtr<VirtIO::TransportEntity> pci_transport_link)
-    : VirtIO::Device(move(pci_transport_link))
+ErrorOr<NonnullRefPtr<VirtIONetworkAdapter>> VirtIONetworkAdapter::create(StringView interface_name, NonnullOwnPtr<VirtIO::TransportEntity> transport_link)
+{
+    auto adapter = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) VirtIONetworkAdapter(interface_name, move(transport_link))));
+    adapter->m_rx_buffers = TRY(Memory::RingBuffer::try_create("VirtIONetworkAdapter Rx buffer"sv, RX_BUFFER_SIZE * MAX_INFLIGHT_PACKETS));
+    adapter->m_tx_buffers = TRY(Memory::RingBuffer::try_create("VirtIONetworkAdapter Tx buffer"sv, RX_BUFFER_SIZE * MAX_INFLIGHT_PACKETS));
+    TRY(adapter->initialize_virtio_resources());
+    return adapter;
+}
+
+VirtIONetworkAdapter::VirtIONetworkAdapter(StringView interface_name, NonnullOwnPtr<VirtIO::TransportEntity> transport_link)
+    : VirtIO::Device(move(transport_link))
     , NetworkAdapter(interface_name)
 {
 }
 
-UNMAP_AFTER_INIT ErrorOr<void> VirtIONetworkAdapter::initialize()
-{
-    m_rx_buffers = TRY(Memory::RingBuffer::try_create("VirtIONetworkAdapter Rx buffer"sv, RX_BUFFER_SIZE * MAX_INFLIGHT_PACKETS));
-    m_tx_buffers = TRY(Memory::RingBuffer::try_create("VirtIONetworkAdapter Tx buffer"sv, RX_BUFFER_SIZE * MAX_INFLIGHT_PACKETS));
-
-    return initialize_virtio_resources();
-}
-
-UNMAP_AFTER_INIT ErrorOr<void> VirtIONetworkAdapter::initialize_virtio_resources()
+ErrorOr<void> VirtIONetworkAdapter::initialize_virtio_resources()
 {
     dbgln_if(VIRTIO_DEBUG, "VirtIONetworkAdapter: initialize_virtio_resources");
     TRY(Device::initialize_virtio_resources());

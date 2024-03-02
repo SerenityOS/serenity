@@ -7,6 +7,7 @@
 #pragma once
 
 #include <Kernel/Bus/VirtIO/Device.h>
+#include <Kernel/Library/Driver.h>
 #include <Kernel/Memory/RingBuffer.h>
 #include <Kernel/Net/NetworkAdapter.h>
 
@@ -15,8 +16,9 @@ namespace Kernel {
 class VirtIONetworkAdapter
     : public VirtIO::Device
     , public NetworkAdapter {
-
+    KERNEL_MAKE_DRIVER_LISTABLE(VirtIONetworkAdapter)
 public:
+    static ErrorOr<NonnullRefPtr<VirtIONetworkAdapter>> create(StringView interface_name, NonnullOwnPtr<VirtIO::TransportEntity>);
     virtual ~VirtIONetworkAdapter() override = default;
 
     // VirtIO::Device

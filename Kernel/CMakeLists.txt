@@ -37,6 +37,7 @@ set(KERNEL_SOURCES
     Bus/PCI/Drivers/Net/E1000.cpp
     Bus/PCI/Drivers/Net/E1000e.cpp
     Bus/PCI/Drivers/Net/RTL8168.cpp
+    Bus/PCI/Drivers/Net/VirtIO.cpp
     Bus/PCI/Drivers/RNG/VirtIO.cpp
     Bus/PCI/Drivers/Serial/8250.cpp
     Bus/PCI/Drivers/Storage/ATA/AHCI.cpp
@@ -278,6 +279,7 @@ set(KERNEL_SOURCES
     Net/Intel/E1000NetworkAdapter.cpp
     Net/Intel/E1000ENetworkAdapter.cpp
     Net/Realtek/RTL8168NetworkAdapter.cpp
+    Net/VirtIO/VirtIONetworkAdapter.cpp
     Net/IPv4Socket.cpp
     Net/LocalSocket.cpp
     Net/LoopbackAdapter.cpp
