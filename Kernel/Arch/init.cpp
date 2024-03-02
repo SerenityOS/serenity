@@ -442,11 +442,11 @@ void init_stage2(void*)
         (*init_function)();
 
     StorageManagement::the().initialize(kernel_command_line().is_force_pio(), kernel_command_line().is_nvme_polling_enabled());
-    for (int i = 0; i < 5; ++i) {
+    for (int i = 0; i < 10000; ++i) {
         if (StorageManagement::the().determine_boot_device(kernel_command_line().root_device()))
             break;
-        dbgln_if(STORAGE_DEVICE_DEBUG, "Boot device {} not found, sleeping 2 seconds", kernel_command_line().root_device());
-        (void)Thread::current()->sleep(Duration::from_seconds(2));
+        dbgln_if(STORAGE_DEVICE_DEBUG, "Boot device {} not found, sleeping 100 milliseconds", kernel_command_line().root_device());
+        (void)Thread::current()->sleep(Duration::from_milliseconds(100));
     }
     if (VirtualFileSystem::the().mount_root(StorageManagement::the().root_filesystem()).is_error()) {
         PANIC("VirtualFileSystem::mount_root failed");
