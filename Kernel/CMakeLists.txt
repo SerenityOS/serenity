@@ -40,8 +40,6 @@ set(KERNEL_SOURCES
     Bus/USB/USBManagement.cpp
     Bus/USB/USBPipe.cpp
     Bus/USB/USBTransfer.cpp
-    Bus/VirtIO/Transport/PCIe/InterruptHandler.cpp
-    Bus/VirtIO/Transport/PCIe/TransportLink.cpp
     Bus/VirtIO/Transport/Entity.cpp
     Bus/VirtIO/Transport/InterruptHandler.cpp
     Bus/VirtIO/Device.cpp
@@ -60,8 +58,6 @@ set(KERNEL_SOURCES
     Devices/DeviceManagement.cpp
     Devices/KCOVDevice.cpp
     Devices/KCOVInstance.cpp
-    Devices/Serial/VirtIO/Console.cpp
-    Devices/Serial/VirtIO/ConsolePort.cpp
     Devices/SerialDevice.cpp
     Devices/HID/AllMiceDevice.cpp
     Devices/HID/KeyboardDevice.cpp
@@ -245,7 +241,6 @@ set(KERNEL_SOURCES
     Net/Socket.cpp
     Net/TCPSocket.cpp
     Net/UDPSocket.cpp
-    Security/Random/VirtIO/RNG.cpp
     Security/AddressSanitizer.cpp
     Security/Credentials.cpp
     Security/Random.cpp
