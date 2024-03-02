@@ -20,8 +20,7 @@ namespace Kernel {
 class AsyncBlockDeviceRequest;
 class AHCIInterruptHandler;
 class AHCIPort;
-class AHCIController final : public ATAController
-    , public PCI::Device {
+class AHCIController final : public ATAController {
     friend class AHCIInterruptHandler;
 
 public:

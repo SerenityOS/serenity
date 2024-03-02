@@ -16,13 +16,8 @@ namespace Kernel {
 
 class AsyncBlockDeviceRequest;
 
-class PCIIDELegacyModeController final : public IDEController
-    , public PCI::Device {
+class PCIIDELegacyModeController final : public IDEController {
 public:
-    static ErrorOr<NonnullRefPtr<PCIIDELegacyModeController>> initialize(PCI::DeviceIdentifier const&, bool force_pio);
-
-    virtual StringView device_name() const override { return "PCIIDELegacyModeController"sv; }
-
     bool is_bus_master_capable() const;
     bool is_pci_native_mode_enabled() const;
 

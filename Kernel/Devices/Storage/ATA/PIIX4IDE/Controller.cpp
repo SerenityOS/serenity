@@ -15,21 +15,6 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<PCIIDELegacyModeController>> PCIIDELegacyModeController::initialize(PCI::DeviceIdentifier const& device_identifier, bool force_pio)
-{
-    auto controller = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) PCIIDELegacyModeController(device_identifier)));
-    PCI::enable_io_space(device_identifier);
-    PCI::enable_memory_space(device_identifier);
-    PCI::enable_bus_mastering(device_identifier);
-    ArmedScopeGuard disable_interrupts_on_failure([&] {
-        controller->disable_pin_based_interrupts();
-    });
-    controller->enable_pin_based_interrupts();
-    TRY(controller->initialize_and_enumerate_channels(force_pio));
-    disable_interrupts_on_failure.disarm();
-    return controller;
-}
-
 UNMAP_AFTER_INIT PCIIDELegacyModeController::PCIIDELegacyModeController(PCI::DeviceIdentifier const& device_identifier)
     : PCI::Device(const_cast<PCI::DeviceIdentifier&>(device_identifier))
     , m_prog_if(device_identifier.prog_if())

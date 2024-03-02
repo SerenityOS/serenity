@@ -9,18 +9,6 @@
 
 namespace Kernel {
 
-ErrorOr<NonnullRefPtr<PCISDHostController>> PCISDHostController::try_initialize(PCI::DeviceIdentifier const& device_identifier)
-{
-    auto sdhc = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) PCISDHostController(device_identifier)));
-    TRY(sdhc->initialize());
-
-    PCI::enable_bus_mastering(sdhc->device_identifier());
-    PCI::enable_memory_space(sdhc->device_identifier());
-    sdhc->try_enable_dma();
-
-    return sdhc;
-}
-
 PCISDHostController::PCISDHostController(PCI::DeviceIdentifier const& device_identifier)
     : PCI::Device(device_identifier)
     , SDHostController()

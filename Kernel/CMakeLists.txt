@@ -90,12 +90,8 @@ set(KERNEL_SOURCES
     Devices/GPU/Generic/DisplayConnector.cpp
     Devices/GPU/Management.cpp
     Devices/Loop/LoopDevice.cpp
-    Devices/Storage/ATA/AHCI/Controller.cpp
-    Devices/Storage/ATA/AHCI/Port.cpp
-    Devices/Storage/ATA/AHCI/InterruptHandler.cpp
     Devices/Storage/ATA/GenericIDE/Controller.cpp
     Devices/Storage/ATA/GenericIDE/Channel.cpp
-    Devices/Storage/ATA/PIIX4IDE/Controller.cpp
     Devices/Storage/ATA/ATAController.cpp
     Devices/Storage/ATA/ATADevice.cpp
     Devices/Storage/ATA/ATADiskDevice.cpp
@@ -105,7 +101,6 @@ set(KERNEL_SOURCES
     Devices/Storage/NVMe/NVMeInterruptQueue.cpp
     Devices/Storage/NVMe/NVMePollQueue.cpp
     Devices/Storage/NVMe/NVMeQueue.cpp
-    Devices/Storage/SD/PCISDHostController.cpp
     Devices/Storage/SD/SDHostController.cpp
     Devices/Storage/SD/SDMemoryCard.cpp
     Devices/Storage/USB/BulkSCSIInterface.cpp

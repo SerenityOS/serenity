@@ -13,13 +13,8 @@
 
 namespace Kernel {
 
-class PCISDHostController : public PCI::Device
-    , public SDHostController {
+class PCISDHostController : public SDHostController {
 public:
-    static ErrorOr<NonnullRefPtr<PCISDHostController>> try_initialize(PCI::DeviceIdentifier const& device_identifier);
-
-    // ^PCI::Device
-    virtual StringView device_name() const override { return "SD Host Controller"sv; }
 
 protected:
     // ^SDHostController
