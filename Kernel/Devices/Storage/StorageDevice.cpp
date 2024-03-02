@@ -36,8 +36,16 @@ StorageDevice::StorageDevice(Badge<RamdiskDevice>, LUNAddress logical_unit_numbe
 {
 }
 
+void StorageDevice::prepare_for_unplug()
+{
+    partitions().with([](auto& partitions_list) {
+        partitions_list.clear();
+    });
+}
+
 ErrorOr<void> StorageDevice::after_inserting()
 {
+    TRY(StorageManagement::enumerate_device_partitions(*this));
     auto sysfs_storage_device_directory = StorageDeviceSysFSDirectory::create(SysFSStorageDirectory::the(), *this);
     m_sysfs_device_directory = sysfs_storage_device_directory;
     SysFSStorageDirectory::the().plug({}, *sysfs_storage_device_directory);
@@ -46,11 +54,13 @@ ErrorOr<void> StorageDevice::after_inserting()
     m_symlink_sysfs_component = sys_fs_component;
     after_inserting_add_symlink_to_device_identifier_directory();
     after_inserting_add_to_device_management();
+    StorageManagement::the().attach_device(*this);
     return {};
 }
 
 void StorageDevice::will_be_destroyed()
 {
+    StorageManagement::the().detach_device(*this);
     // NOTE: We check if m_symlink_sysfs_component is not null, because if we failed
     // in StorageDevice::after_inserting(), then that method will not set m_symlink_sysfs_component.
     if (m_symlink_sysfs_component) {

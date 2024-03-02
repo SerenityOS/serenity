@@ -66,11 +66,10 @@ public:
     virtual bool can_read(OpenFileDescription const&, u64) const override { return true; }
     virtual ErrorOr<size_t> write(OpenFileDescription&, u64, UserOrKernelBuffer const&, size_t) override;
     virtual bool can_write(OpenFileDescription const&, u64) const override { return true; }
-    virtual void prepare_for_unplug() { m_partitions.clear(); }
+    virtual void prepare_for_unplug();
 
-    Vector<NonnullLockRefPtr<StorageDevicePartition>> const& partitions() const { return m_partitions; }
-
-    void add_partition(NonnullLockRefPtr<StorageDevicePartition> disk_partition) { MUST(m_partitions.try_append(disk_partition)); }
+    SpinlockProtected<IntrusiveList<&StorageDevicePartition::m_parent_list_node>, LockRank::None>& partitions() { return m_partitions; }
+    SpinlockProtected<IntrusiveList<&StorageDevicePartition::m_parent_list_node>, LockRank::None> const& partitions() const { return m_partitions; }
 
     LUNAddress const& logical_unit_number_address() const { return m_logical_unit_number_address; }
 
@@ -97,8 +96,8 @@ private:
     virtual ErrorOr<void> after_inserting() override;
     virtual void will_be_destroyed() override;
 
-    mutable IntrusiveListNode<StorageDevice, LockRefPtr<StorageDevice>> m_list_node;
-    Vector<NonnullLockRefPtr<StorageDevicePartition>> m_partitions;
+    mutable IntrusiveListNode<StorageDevice, NonnullRefPtr<StorageDevice>> m_list_node;
+    SpinlockProtected<IntrusiveList<&StorageDevicePartition::m_parent_list_node>, LockRank::None> m_partitions;
 
     LUNAddress const m_logical_unit_number_address;
 

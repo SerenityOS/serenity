@@ -168,7 +168,6 @@ ErrorOr<void> MassStorageDriver::initialise_bulk_only_device(USB::Device& device
         move(out_pipe)));
 
     m_interfaces.append(bulk_scsi_interface);
-    StorageManagement::the().add_device(bulk_scsi_interface);
 
     return {};
 }
@@ -177,7 +176,6 @@ void MassStorageDriver::detach(USB::Device& device)
 {
     auto&& interface = AK::find_if(m_interfaces.begin(), m_interfaces.end(), [&device](auto& interface) { return &interface.device() == &device; });
 
-    StorageManagement::the().remove_device(*interface);
     m_interfaces.remove(*interface);
 }
 

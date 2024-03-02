@@ -71,17 +71,6 @@ ErrorOr<void> AHCIController::reset()
     return {};
 }
 
-size_t AHCIController::devices_count() const
-{
-    SpinlockLocker locker(m_hba_control_lock);
-    size_t count = 0;
-    for (auto port : m_ports) {
-        if (port && port->connected_device())
-            count++;
-    }
-    return count;
-}
-
 void AHCIController::start_request(ATADevice const& device, AsyncBlockDeviceRequest& request)
 {
     auto port = m_ports[device.ata_address().port];
@@ -192,36 +181,6 @@ void AHCIController::disable_global_interrupts() const
 void AHCIController::enable_global_interrupts() const
 {
     hba().control_regs.ghc = hba().control_regs.ghc | (1 << 1);
-}
-
-LockRefPtr<StorageDevice> AHCIController::device_by_port(u32 port_index) const
-{
-    SpinlockLocker locker(m_hba_control_lock);
-    auto port = m_ports[port_index];
-    if (!port)
-        return {};
-    SpinlockLocker port_hard_locker(port->m_hard_lock);
-    return port->connected_device();
-}
-
-LockRefPtr<StorageDevice> AHCIController::device(u32 index) const
-{
-    Vector<NonnullLockRefPtr<StorageDevice>> connected_devices;
-    u32 pi = hba().control_regs.pi;
-    u32 bit = bit_scan_forward(pi);
-    while (bit) {
-        dbgln_if(AHCI_DEBUG, "Checking implemented port {}, pi {:b}", bit - 1, pi);
-        pi &= ~(1u << (bit - 1));
-        auto checked_device = device_by_port(bit - 1);
-        bit = bit_scan_forward(pi);
-        if (checked_device.is_null())
-            continue;
-        connected_devices.append(checked_device.release_nonnull());
-    }
-    dbgln_if(AHCI_DEBUG, "Connected device count: {}, Index: {}", connected_devices.size(), index);
-    if (index >= connected_devices.size())
-        return nullptr;
-    return connected_devices[index];
 }
 
 }

@@ -26,8 +26,6 @@ class NVMeController : public PCI::Device
 public:
     static ErrorOr<NonnullRefPtr<NVMeController>> try_initialize(PCI::DeviceIdentifier const&, bool is_queue_polled);
     ErrorOr<void> initialize(bool is_queue_polled);
-    LockRefPtr<StorageDevice> device(u32 index) const override;
-    size_t devices_count() const override;
     virtual StringView device_name() const override { return "NVMeController"sv; }
 
 protected:

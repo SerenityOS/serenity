@@ -288,16 +288,6 @@ UNMAP_AFTER_INIT NVMeController::NSFeatures NVMeController::get_ns_features(Iden
     return { namespace_size, static_cast<u8>(lba_size) };
 }
 
-LockRefPtr<StorageDevice> NVMeController::device(u32 index) const
-{
-    return m_namespaces.at(index);
-}
-
-size_t NVMeController::devices_count() const
-{
-    return m_device_count;
-}
-
 ErrorOr<void> NVMeController::reset()
 {
     TRY(reset_controller());

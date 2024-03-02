@@ -20,8 +20,6 @@ class IDEController : public ATAController {
 public:
     virtual ~IDEController() override;
 
-    virtual LockRefPtr<StorageDevice> device(u32 index) const override final;
-    virtual size_t devices_count() const override final;
     virtual void start_request(ATADevice const&, AsyncBlockDeviceRequest&) override final;
     virtual void complete_current_request(AsyncDeviceRequest::RequestResult) override final;
 

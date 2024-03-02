@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/IntrusiveList.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Library/LockWeakPtr.h>
@@ -16,9 +17,10 @@ namespace Kernel {
 class StorageDevice;
 class StorageDevicePartition final : public BlockDevice {
     friend class DeviceManagement;
+    friend class StorageDevice;
 
 public:
-    static NonnullLockRefPtr<StorageDevicePartition> create(StorageDevice&, MinorNumber, Partition::DiskPartitionMetadata);
+    static ErrorOr<NonnullRefPtr<StorageDevicePartition>> create(StorageDevice&, MinorNumber, Partition::DiskPartitionMetadata);
     virtual ~StorageDevicePartition();
 
     virtual void start_request(AsyncBlockDeviceRequest&) override;
@@ -41,6 +43,7 @@ private:
 
     LockWeakPtr<StorageDevice> m_device;
     Partition::DiskPartitionMetadata m_metadata;
+    IntrusiveListNode<StorageDevicePartition, NonnullRefPtr<StorageDevicePartition>> m_parent_list_node;
 };
 
 }

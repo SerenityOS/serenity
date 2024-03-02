@@ -14,12 +14,14 @@
 namespace Kernel {
 
 WorkQueue* g_io_work;
+WorkQueue* g_storage_detect_work;
 WorkQueue* g_ata_work;
 WorkQueue* g_pci_bus_work;
 
 UNMAP_AFTER_INIT void WorkQueue::initialize()
 {
     g_io_work = new WorkQueue("IO WorkQueue Task"sv);
+    g_storage_detect_work = new WorkQueue("Storage Detect WorkQueue Task"sv);
     g_ata_work = new WorkQueue("ATA WorkQueue Task"sv);
     g_pci_bus_work = new WorkQueue("PCI-bus WorkQueue Task"sv);
 }

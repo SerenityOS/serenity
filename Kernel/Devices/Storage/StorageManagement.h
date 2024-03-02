@@ -41,16 +41,17 @@ public:
     static u32 generate_relative_ata_controller_id(Badge<ATAController>);
     static u32 generate_relative_sd_controller_id(Badge<SDHostController>);
 
-    void add_device(StorageDevice&);
-    void remove_device(StorageDevice&);
+    static ErrorOr<void> enumerate_device_partitions(StorageDevice&);
+    static ErrorOr<NonnullOwnPtr<Partition::PartitionTable>> try_to_initialize_partition_table(StorageDevice&);
+
+    void attach_device(StorageDevice&);
+    void detach_device(StorageDevice&);
 
 private:
     void enumerate_pci_controllers(bool force_pio, bool nvme_poll);
-    void enumerate_storage_devices();
-    ErrorOr<void> enumerate_device_partitions(StorageDevice&);
-    void enumerate_disk_partitions();
-
     void determine_boot_device_with_partition_uuid();
+
+    static void enumerate_device_holder_partitions(void* holder);
 
     void resolve_partition_from_boot_device_parameter(StorageDevice const& chosen_storage_device, StringView boot_device_prefix);
     void determine_boot_device_with_logical_unit_number();
@@ -64,14 +65,12 @@ private:
 
     void dump_storage_devices_and_partitions() const;
 
-    ErrorOr<NonnullOwnPtr<Partition::PartitionTable>> try_to_initialize_partition_table(StorageDevice&) const;
-
     LockRefPtr<BlockDevice> boot_block_device() const;
 
     StringView m_boot_argument;
     LockWeakPtr<BlockDevice> m_boot_block_device;
     Vector<NonnullRefPtr<StorageController>> m_controllers;
-    IntrusiveList<&StorageDevice::m_list_node> m_storage_devices;
+    SpinlockProtected<IntrusiveList<&StorageDevice::m_list_node>, LockRank::None> m_storage_devices;
 };
 
 }

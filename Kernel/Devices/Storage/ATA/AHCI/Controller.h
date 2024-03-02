@@ -29,8 +29,6 @@ public:
 
     virtual StringView device_name() const override { return "AHCI"sv; }
 
-    virtual LockRefPtr<StorageDevice> device(u32 index) const override;
-    virtual size_t devices_count() const override;
     virtual void start_request(ATADevice const&, AsyncBlockDeviceRequest&) override;
     virtual void complete_current_request(AsyncDeviceRequest::RequestResult) override;
 
