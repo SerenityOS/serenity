@@ -11,6 +11,7 @@
 #include <Kernel/Devices/GPU/Definitions.h>
 #include <Kernel/Devices/GPU/Intel/DisplayConnectorGroup.h>
 #include <Kernel/Devices/GPU/Intel/NativeDisplayConnector.h>
+#include <Kernel/Library/Driver.h>
 #include <Kernel/Memory/PhysicalAddress.h>
 #include <LibEDID/EDID.h>
 
@@ -18,16 +19,19 @@ namespace Kernel {
 
 class IntelNativeGraphicsAdapter final
     : public GPUDevice {
-public:
-    virtual ~IntelNativeGraphicsAdapter() = default;
 
-    virtual StringView device_name() const override { return "IntelNativeGraphicsAdapter"sv; }
+    KERNEL_MAKE_DRIVER_LISTABLE(IntelNativeGraphicsAdapter)
+public:
+    static ErrorOr<NonnullRefPtr<IntelNativeGraphicsAdapter>> create(PCI::Device&);
+
+    virtual ~IntelNativeGraphicsAdapter() = default;
 
 private:
     ErrorOr<void> initialize_adapter();
 
-    explicit IntelNativeGraphicsAdapter(PCI::DeviceIdentifier const&);
+    explicit IntelNativeGraphicsAdapter(PCI::Device&);
 
     LockRefPtr<IntelDisplayConnectorGroup> m_connector_group;
+    NonnullRefPtr<PCI::Device> const m_pci_device;
 };
 }
