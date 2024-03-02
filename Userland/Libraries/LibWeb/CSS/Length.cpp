@@ -148,17 +148,13 @@ CSSPixels Length::to_px(ResolutionContext const& context) const
     return to_px(context.viewport_rect, context.font_metrics, context.root_font_metrics);
 }
 
-CSSPixels Length::to_px(Layout::Node const& layout_node) const
+CSSPixels Length::to_px_slow_case(Layout::Node const& layout_node) const
 {
     if (is_auto()) {
         // FIXME: We really, really shouldn't end up here, but we do, and so frequently that
         //        adding a dbgln() here outputs a couple hundred lines loading `welcome.html`.
         return 0;
     }
-
-    if (is_absolute())
-        return absolute_length_to_px();
-
     if (!layout_node.document().browsing_context())
         return 0;
 
