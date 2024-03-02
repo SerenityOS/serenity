@@ -37,7 +37,7 @@ class AsyncBlockDeviceRequest;
 
 class IDEController;
 #if ARCH(X86_64)
-class PCIIDELegacyModeController;
+class PIIX4IDEController;
 class ISAIDEController;
 #endif
 class IDEChannel
@@ -96,7 +96,7 @@ public:
     virtual StringView purpose() const override { return "PATA Channel"sv; }
 
 #if ARCH(X86_64)
-    ErrorOr<void> allocate_resources_for_pci_ide_controller(Badge<PCIIDELegacyModeController>, bool force_pio);
+    ErrorOr<void> allocate_resources_for_pci_ide_controller(Badge<PIIX4IDEController>, bool force_pio);
     ErrorOr<void> allocate_resources_for_isa_ide_controller(Badge<ISAIDEController>);
 #endif
 

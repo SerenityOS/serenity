@@ -23,13 +23,13 @@ namespace Kernel {
 #define PATA_PRIMARY_IRQ 14
 #define PATA_SECONDARY_IRQ 15
 
-UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<IDEChannel>> IDEChannel::create(IDEController const& controller, IOWindowGroup io_window_group, ChannelType type)
+ErrorOr<NonnullRefPtr<IDEChannel>> IDEChannel::create(IDEController const& controller, IOWindowGroup io_window_group, ChannelType type)
 {
     auto ata_identify_data_buffer = KBuffer::try_create_with_size("ATA Identify Page"sv, 4096, Memory::Region::Access::ReadWrite, AllocationStrategy::AllocateNow).release_value();
     return adopt_nonnull_ref_or_enomem(new (nothrow) IDEChannel(controller, move(io_window_group), type, move(ata_identify_data_buffer)));
 }
 
-UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<IDEChannel>> IDEChannel::create(IDEController const& controller, u8 irq, IOWindowGroup io_window_group, ChannelType type)
+ErrorOr<NonnullRefPtr<IDEChannel>> IDEChannel::create(IDEController const& controller, u8 irq, IOWindowGroup io_window_group, ChannelType type)
 {
     auto ata_identify_data_buffer = KBuffer::try_create_with_size("ATA Identify Page"sv, 4096, Memory::Region::Access::ReadWrite, AllocationStrategy::AllocateNow).release_value();
     return adopt_nonnull_ref_or_enomem(new (nothrow) IDEChannel(controller, irq, move(io_window_group), type, move(ata_identify_data_buffer)));
@@ -82,7 +82,7 @@ ErrorOr<void> IDEChannel::port_phy_reset()
 }
 
 #if ARCH(X86_64)
-ErrorOr<void> IDEChannel::allocate_resources_for_pci_ide_controller(Badge<PCIIDELegacyModeController>, bool force_pio)
+ErrorOr<void> IDEChannel::allocate_resources_for_pci_ide_controller(Badge<PIIX4IDEController>, bool force_pio)
 {
     return allocate_resources(force_pio);
 }
@@ -92,7 +92,7 @@ ErrorOr<void> IDEChannel::allocate_resources_for_isa_ide_controller(Badge<ISAIDE
 }
 #endif
 
-UNMAP_AFTER_INIT ErrorOr<void> IDEChannel::allocate_resources(bool force_pio)
+ErrorOr<void> IDEChannel::allocate_resources(bool force_pio)
 {
     dbgln_if(PATA_DEBUG, "IDEChannel: {} IO base: {}", channel_type_string(), m_io_window_group.io_window());
     dbgln_if(PATA_DEBUG, "IDEChannel: {} control base: {}", channel_type_string(), m_io_window_group.control_window());
@@ -119,7 +119,7 @@ UNMAP_AFTER_INIT ErrorOr<void> IDEChannel::allocate_resources(bool force_pio)
     return {};
 }
 
-UNMAP_AFTER_INIT IDEChannel::IDEChannel(IDEController const& controller, u8 irq, IOWindowGroup io_group, ChannelType type, NonnullOwnPtr<KBuffer> ata_identify_data_buffer)
+IDEChannel::IDEChannel(IDEController const& controller, u8 irq, IOWindowGroup io_group, ChannelType type, NonnullOwnPtr<KBuffer> ata_identify_data_buffer)
     : ATAPort(controller, (type == ChannelType::Primary ? 0 : 1), move(ata_identify_data_buffer))
     , IRQHandler(irq)
     , m_channel_type(type)
@@ -127,7 +127,7 @@ UNMAP_AFTER_INIT IDEChannel::IDEChannel(IDEController const& controller, u8 irq,
 {
 }
 
-UNMAP_AFTER_INIT IDEChannel::IDEChannel(IDEController const& controller, IOWindowGroup io_group, ChannelType type, NonnullOwnPtr<KBuffer> ata_identify_data_buffer)
+IDEChannel::IDEChannel(IDEController const& controller, IOWindowGroup io_group, ChannelType type, NonnullOwnPtr<KBuffer> ata_identify_data_buffer)
     : ATAPort(controller, (type == ChannelType::Primary ? 0 : 1), move(ata_identify_data_buffer))
     , IRQHandler(type == ChannelType::Primary ? PATA_PRIMARY_IRQ : PATA_SECONDARY_IRQ)
     , m_channel_type(type)
@@ -135,7 +135,7 @@ UNMAP_AFTER_INIT IDEChannel::IDEChannel(IDEController const& controller, IOWindo
 {
 }
 
-UNMAP_AFTER_INIT IDEChannel::~IDEChannel() = default;
+IDEChannel::~IDEChannel() = default;
 
 bool IDEChannel::handle_irq(RegisterState const&)
 {

@@ -40,7 +40,7 @@ void IDEController::complete_current_request(AsyncDeviceRequest::RequestResult)
     VERIFY_NOT_REACHED();
 }
 
-UNMAP_AFTER_INIT IDEController::IDEController() = default;
-UNMAP_AFTER_INIT IDEController::~IDEController() = default;
+IDEController::IDEController() = default;
+IDEController::~IDEController() = default;
 
 }
