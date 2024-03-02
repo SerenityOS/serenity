@@ -1069,6 +1069,8 @@ static ErrorOr<NonnullRefPtr<StyleValue const>> interpolate_value(DOM::Element& 
     case StyleValue::Type::Angle:
         return AngleStyleValue::create(Angle::make_degrees(interpolate_raw(from.as_angle().angle().to_degrees(), to.as_angle().angle().to_degrees(), delta)));
     case StyleValue::Type::Color: {
+        // https://drafts.csswg.org/css-color/#interpolation-space
+        // If the host syntax does not define what color space interpolation should take place in, it defaults to Oklab.
         auto from_color = from.as_color().color();
         auto to_color = to.as_color().color();
         auto from_oklab = from_color.to_oklab();
