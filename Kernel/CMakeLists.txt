@@ -32,6 +32,7 @@ set(KERNEL_SOURCES
     Bus/PCI/Drivers/Audio/IntelHDA.cpp
     Bus/PCI/Drivers/GPU/BochsDisplay.cpp
     Bus/PCI/Drivers/Net/E1000.cpp
+    Bus/PCI/Drivers/Net/E1000e.cpp
     Bus/PCI/Drivers/Storage/NVMe/NVMe.cpp
     Bus/PCI/Access.cpp
     Bus/PCI/Bus.cpp
@@ -238,6 +239,7 @@ set(KERNEL_SOURCES
     Library/KString.cpp
     Library/UserOrKernelBuffer.cpp
     Net/Intel/E1000NetworkAdapter.cpp
+    Net/Intel/E1000ENetworkAdapter.cpp
     Net/IPv4Socket.cpp
     Net/LocalSocket.cpp
     Net/LoopbackAdapter.cpp

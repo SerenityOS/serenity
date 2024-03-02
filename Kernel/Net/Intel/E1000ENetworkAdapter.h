@@ -10,6 +10,7 @@
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Interrupts/IRQHandler.h>
+#include <Kernel/Library/Driver.h>
 #include <Kernel/Library/IOWindow.h>
 #include <Kernel/Net/Intel/E1000NetworkAdapter.h>
 #include <Kernel/Net/NetworkAdapter.h>
@@ -19,15 +20,17 @@ namespace Kernel {
 
 class E1000ENetworkAdapter final
     : public E1000NetworkAdapter {
+    KERNEL_MAKE_DRIVER_LISTABLE(E1000ENetworkAdapter)
 public:
+    static ErrorOr<NonnullRefPtr<E1000ENetworkAdapter>> create(PCI::Device&);
+
     virtual ~E1000ENetworkAdapter() override;
 
     virtual StringView purpose() const override { return class_name(); }
 
 private:
     ErrorOr<void> initialize();
-
-    E1000ENetworkAdapter(StringView interface_name, PCI::DeviceIdentifier const&, u8 irq,
+    E1000ENetworkAdapter(StringView interface_name, PCI::Device&, u8 irq,
         NonnullOwnPtr<IOWindow> registers_io_window, NonnullOwnPtr<Memory::Region> rx_buffer_region,
         NonnullOwnPtr<Memory::Region> tx_buffer_region, NonnullOwnPtr<Memory::Region> rx_descriptors_region,
         NonnullOwnPtr<Memory::Region> tx_descriptors_region);
