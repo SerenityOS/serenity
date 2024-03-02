@@ -26,7 +26,9 @@ UNMAP_AFTER_INIT ErrorOr<bool> Controller::probe(PCI::DeviceIdentifier const& de
 UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<AudioController>> Controller::create(PCI::DeviceIdentifier const& pci_device_identifier)
 {
     auto controller_io_window = TRY(IOWindow::create_for_pci_device_bar(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR0));
-    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Controller(pci_device_identifier, move(controller_io_window))));
+    auto device = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Controller(pci_device_identifier, move(controller_io_window))));
+    TRY(device->initialize());
+    return device;
 }
 
 UNMAP_AFTER_INIT Controller::Controller(PCI::DeviceIdentifier const& pci_device_identifier, NonnullOwnPtr<IOWindow> controller_io_window)
@@ -35,7 +37,7 @@ UNMAP_AFTER_INIT Controller::Controller(PCI::DeviceIdentifier const& pci_device_
 {
 }
 
-UNMAP_AFTER_INIT ErrorOr<void> Controller::initialize(Badge<AudioManagement>)
+UNMAP_AFTER_INIT ErrorOr<void> Controller::initialize()
 {
     // Enable DMA and interrupts
     PCI::enable_bus_mastering(device_identifier());

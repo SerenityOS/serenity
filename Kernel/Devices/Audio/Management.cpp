@@ -7,7 +7,6 @@
 #include <AK/Singleton.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/Access.h>
-#include <Kernel/Devices/Audio/AC97/AC97.h>
 #include <Kernel/Devices/Audio/IntelHDA/Controller.h>
 #include <Kernel/Devices/Audio/Management.h>
 
@@ -42,7 +41,6 @@ struct PCIAudioDriverInitializer {
 };
 
 static constexpr PCIAudioDriverInitializer s_initializers[] = {
-    { AC97::probe, AC97::create },
     { Audio::IntelHDA::Controller::probe, Audio::IntelHDA::Controller::create },
 };
 
@@ -55,11 +53,8 @@ UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<AudioController>> AudioManagement::determ
             continue;
         }
         auto initializer_probe_found_driver_match = initializer_probe_found_driver_match_or_error.release_value();
-        if (initializer_probe_found_driver_match) {
-            auto device = TRY(initializer.create(device_identifier));
-            TRY(device->initialize({}));
-            return device;
-        }
+        if (initializer_probe_found_driver_match)
+            return TRY(initializer.create(device_identifier));
     }
     dmesgln("AudioManagement: Failed to initialize device {}, unsupported audio device", device_identifier.address());
     return Error::from_errno(ENODEV);

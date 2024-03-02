@@ -74,6 +74,7 @@ private:
 
     Controller(PCI::DeviceIdentifier const&, NonnullOwnPtr<IOWindow>);
 
+    ErrorOr<void> initialize();
     ErrorOr<void> initialize_codec(u8 codec_address);
     ErrorOr<void> configure_output_route();
     ErrorOr<void> reset();
@@ -81,7 +82,6 @@ private:
     // ^AudioController
     virtual RefPtr<AudioChannel> audio_channel(u32 index) const override;
     virtual ErrorOr<size_t> write(size_t channel_index, UserOrKernelBuffer const& data, size_t length) override;
-    virtual ErrorOr<void> initialize(Badge<AudioManagement>) override;
     virtual ErrorOr<void> set_pcm_output_sample_rate(size_t channel_index, u32 samples_per_second_rate) override;
     virtual ErrorOr<u32> get_pcm_output_sample_rate(size_t channel_index) override;
 

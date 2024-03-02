@@ -27,8 +27,6 @@ public:
     virtual RefPtr<AudioChannel> audio_channel(u32 index) const = 0;
     virtual ErrorOr<size_t> write(size_t channel_index, UserOrKernelBuffer const& data, size_t length) = 0;
 
-    virtual ErrorOr<void> initialize(Badge<AudioManagement>) = 0;
-
     virtual ErrorOr<void> set_pcm_output_sample_rate(size_t channel_index, u32 samples_per_second_rate) = 0;
     // Note: The return value is rate of samples per second
     virtual ErrorOr<u32> get_pcm_output_sample_rate(size_t channel_index) = 0;

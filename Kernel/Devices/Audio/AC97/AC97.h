@@ -23,13 +23,9 @@ namespace Kernel {
 
 class AC97 final
     : public AudioController
-    , public PCI::Device
     , public IRQHandler {
 
 public:
-    static ErrorOr<bool> probe(PCI::DeviceIdentifier const&);
-    static ErrorOr<NonnullRefPtr<AudioController>> create(PCI::DeviceIdentifier const&);
-
     virtual ~AC97() override;
 
     // ^PCI::Device
@@ -160,6 +156,8 @@ private:
 
     AC97(PCI::DeviceIdentifier const&, NonnullOwnPtr<AC97Channel> pcm_out_channel, NonnullOwnPtr<IOWindow> mixer_io_window, NonnullOwnPtr<IOWindow> bus_io_window);
 
+    ErrorOr<void> initialize();
+
     // ^IRQHandler
     virtual bool handle_irq(RegisterState const&) override;
 
@@ -170,7 +168,6 @@ private:
     ErrorOr<void> write_single_buffer(UserOrKernelBuffer const&, size_t, size_t);
 
     // ^AudioController
-    virtual ErrorOr<void> initialize(Badge<AudioManagement>) override;
     virtual RefPtr<AudioChannel> audio_channel(u32 index) const override;
     virtual ErrorOr<size_t> write(size_t channel_index, UserOrKernelBuffer const& data, size_t length) override;
     virtual ErrorOr<void> set_pcm_output_sample_rate(size_t channel_index, u32 samples_per_second_rate) override;

@@ -21,38 +21,6 @@ static constexpr u16 pcm_fixed_sample_rate = 48000;
 static constexpr u16 pcm_sample_rate_minimum = 8000;
 static constexpr u16 pcm_sample_rate_maximum = 48000;
 
-UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<AudioController>> AC97::create(PCI::DeviceIdentifier const& pci_device_identifier)
-{
-    auto mixer_io_window = TRY(IOWindow::create_for_pci_device_bar(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR0));
-    auto bus_io_window = TRY(IOWindow::create_for_pci_device_bar(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR1));
-
-    auto pcm_out_channel_io_window = TRY(bus_io_window->create_from_io_window_with_offset(NativeAudioBusChannel::PCMOutChannel));
-    auto pcm_out_channel = TRY(AC97Channel::create_with_parent_pci_device(pci_device_identifier.address(), "PCMOut"sv, move(pcm_out_channel_io_window)));
-
-    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) AC97(pci_device_identifier, move(pcm_out_channel), move(mixer_io_window), move(bus_io_window))));
-}
-
-UNMAP_AFTER_INIT ErrorOr<bool> AC97::probe(PCI::DeviceIdentifier const& device_identifier)
-{
-    VERIFY(device_identifier.class_code() == PCI::ClassID::Multimedia);
-
-    // TODO: Check pci ids.
-
-    if (PCI::get_BAR_space_size(device_identifier, PCI::HeaderType0BaseRegister::BAR0) <= NativeAudioMixerRegister::MaxUsedMixerOffset)
-        return Error::from_errno(EIO);
-
-    // BAR registers are 32-bit. So if BAR0 is 64-bit then
-    // it occupies BAR0 and BAR1 and hence BAR1 isn't present on its own.
-    u64 pci_bar0_value = PCI::get_BAR(device_identifier, PCI::HeaderType0BaseRegister::BAR0);
-    if (PCI::get_BAR_space_type(pci_bar0_value) == PCI::BARSpaceType::Memory64BitSpace)
-        return Error::from_errno(EIO);
-
-    if (PCI::get_BAR_space_size(device_identifier, PCI::HeaderType0BaseRegister::BAR1) <= NativeAudioBusRegister::MaxUsedBusOffset)
-        return Error::from_errno(EIO);
-
-    return device_identifier.subclass_code() == PCI::Multimedia::SubclassID::Audio;
-}
-
 UNMAP_AFTER_INIT AC97::AC97(PCI::DeviceIdentifier const& pci_device_identifier, NonnullOwnPtr<AC97Channel> pcm_out_channel, NonnullOwnPtr<IOWindow> mixer_io_window, NonnullOwnPtr<IOWindow> bus_io_window)
     : PCI::Device(const_cast<PCI::DeviceIdentifier&>(pci_device_identifier))
     , IRQHandler(pci_device_identifier.interrupt_line().value())
@@ -96,7 +64,7 @@ bool AC97::handle_irq(RegisterState const&)
     return true;
 }
 
-UNMAP_AFTER_INIT ErrorOr<void> AC97::initialize(Badge<AudioManagement>)
+UNMAP_AFTER_INIT ErrorOr<void> AC97::initialize()
 {
     dbgln_if(AC97_DEBUG, "AC97 @ {}: mixer base: {:#04x}", device_identifier().address(), m_mixer_io_window);
     dbgln_if(AC97_DEBUG, "AC97 @ {}: bus base: {:#04x}", device_identifier().address(), m_bus_io_window);

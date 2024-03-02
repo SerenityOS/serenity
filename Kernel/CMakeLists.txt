@@ -50,7 +50,6 @@ set(KERNEL_SOURCES
     Bus/VirtIO/Device.cpp
     Bus/VirtIO/Queue.cpp
     Devices/AsyncDeviceRequest.cpp
-    Devices/Audio/AC97/AC97.cpp
     Devices/Audio/Channel.cpp
     Devices/Audio/IntelHDA/Codec.cpp
     Devices/Audio/IntelHDA/Controller.cpp
