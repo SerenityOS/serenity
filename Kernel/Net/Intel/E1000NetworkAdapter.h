@@ -22,7 +22,6 @@ class E1000NetworkAdapter : public NetworkAdapter
 public:
     static ErrorOr<bool> probe(PCI::DeviceIdentifier const&);
     static ErrorOr<NonnullRefPtr<NetworkAdapter>> create(PCI::DeviceIdentifier const&);
-    virtual ErrorOr<void> initialize(Badge<NetworkingManagement>) override;
 
     virtual ~E1000NetworkAdapter() override;
 
@@ -34,6 +33,9 @@ public:
     virtual StringView purpose() const override { return class_name(); }
     virtual StringView device_name() const override { return "E1000"sv; }
     virtual Type adapter_type() const override { return Type::Ethernet; }
+
+private:
+    ErrorOr<void> initialize();
 
 protected:
     static constexpr size_t rx_buffer_size = 8192;

@@ -10,12 +10,9 @@
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Library/KString.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
-#include <Kernel/Net/Intel/E1000ENetworkAdapter.h>
 #include <Kernel/Net/Intel/E1000NetworkAdapter.h>
 #include <Kernel/Net/LoopbackAdapter.h>
 #include <Kernel/Net/NetworkingManagement.h>
-#include <Kernel/Net/Realtek/RTL8168NetworkAdapter.h>
-#include <Kernel/Net/VirtIO/VirtIONetworkAdapter.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {
@@ -98,10 +95,7 @@ struct PCINetworkDriverInitializer {
 };
 
 static constexpr PCINetworkDriverInitializer s_initializers[] = {
-    { RTL8168NetworkAdapter::probe, RTL8168NetworkAdapter::create },
     { E1000NetworkAdapter::probe, E1000NetworkAdapter::create },
-    { E1000ENetworkAdapter::probe, E1000ENetworkAdapter::create },
-    { VirtIONetworkAdapter::probe, VirtIONetworkAdapter::create },
 };
 
 UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<NetworkAdapter>> NetworkingManagement::determine_network_device(PCI::DeviceIdentifier const& device_identifier) const
@@ -113,11 +107,8 @@ UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<NetworkAdapter>> NetworkingManagement::de
             continue;
         }
         auto initializer_probe_found_driver_match = initializer_probe_found_driver_match_or_error.release_value();
-        if (initializer_probe_found_driver_match) {
-            auto adapter = TRY(initializer.create(device_identifier));
-            TRY(adapter->initialize({}));
-            return adapter;
-        }
+        if (initializer_probe_found_driver_match)
+            return TRY(initializer.create(device_identifier));
     }
     dmesgln("Networking: Failed to initialize device {}, unsupported network adapter", device_identifier.address());
     return Error::from_errno(ENODEV);

@@ -20,15 +20,13 @@ namespace Kernel {
 class E1000ENetworkAdapter final
     : public E1000NetworkAdapter {
 public:
-    static ErrorOr<bool> probe(PCI::DeviceIdentifier const&);
-    static ErrorOr<NonnullRefPtr<NetworkAdapter>> create(PCI::DeviceIdentifier const&);
-    virtual ErrorOr<void> initialize(Badge<NetworkingManagement>) override;
-
     virtual ~E1000ENetworkAdapter() override;
 
     virtual StringView purpose() const override { return class_name(); }
 
 private:
+    ErrorOr<void> initialize();
+
     E1000ENetworkAdapter(StringView interface_name, PCI::DeviceIdentifier const&, u8 irq,
         NonnullOwnPtr<IOWindow> registers_io_window, NonnullOwnPtr<Memory::Region> rx_buffer_region,
         NonnullOwnPtr<Memory::Region> tx_buffer_region, NonnullOwnPtr<Memory::Region> rx_descriptors_region,

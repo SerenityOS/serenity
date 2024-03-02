@@ -194,23 +194,6 @@ namespace Kernel {
 #define TX_BUFFER_SIZE 0x1FF8
 #define RX_BUFFER_SIZE 0x1FF8 // FIXME: this should be increased (0x3FFF)
 
-UNMAP_AFTER_INIT ErrorOr<bool> RTL8168NetworkAdapter::probe(PCI::DeviceIdentifier const& pci_device_identifier)
-{
-    if (pci_device_identifier.hardware_id().vendor_id != PCI::VendorID::Realtek)
-        return false;
-    if (pci_device_identifier.hardware_id().device_id != 0x8168)
-        return false;
-    return true;
-}
-
-UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<NetworkAdapter>> RTL8168NetworkAdapter::create(PCI::DeviceIdentifier const& pci_device_identifier)
-{
-    u8 irq = pci_device_identifier.interrupt_line().value();
-    auto interface_name = TRY(NetworkingManagement::generate_interface_name_from_pci_address(pci_device_identifier));
-    auto registers_io_window = TRY(IOWindow::create_for_pci_device_bar(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR0));
-    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) RTL8168NetworkAdapter(interface_name.representable_view(), pci_device_identifier, irq, move(registers_io_window))));
-}
-
 bool RTL8168NetworkAdapter::determine_supported_version() const
 {
     switch (m_version) {
@@ -268,7 +251,7 @@ UNMAP_AFTER_INIT RTL8168NetworkAdapter::RTL8168NetworkAdapter(StringView interfa
     dmesgln_pci(*this, "I/O port base: {}", m_registers_io_window);
 }
 
-UNMAP_AFTER_INIT ErrorOr<void> RTL8168NetworkAdapter::initialize(Badge<NetworkingManagement>)
+UNMAP_AFTER_INIT ErrorOr<void> RTL8168NetworkAdapter::initialize()
 {
     identify_chip_version();
     dmesgln_pci(*this, "Version detected - {} ({}{})", possible_device_name(), (u8)m_version, m_version_uncertain ? "?" : "");

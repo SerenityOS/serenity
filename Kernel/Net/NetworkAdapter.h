@@ -58,7 +58,6 @@ public:
 
     virtual StringView class_name() const = 0;
     virtual Type adapter_type() const = 0;
-    virtual ErrorOr<void> initialize(Badge<NetworkingManagement>) = 0;
 
     StringView name() const { return m_name.representable_view(); }
     MACAddress mac_address() { return m_mac_address; }

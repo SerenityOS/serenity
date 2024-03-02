@@ -91,29 +91,13 @@ static constexpr size_t MAX_RX_FRAME_SIZE = 1514; // Non-jumbo Ethernet frame li
 static constexpr size_t RX_BUFFER_SIZE = sizeof(VirtIONetHdr) * MAX_RX_FRAME_SIZE;
 static constexpr u16 MAX_INFLIGHT_PACKETS = 128;
 
-UNMAP_AFTER_INIT ErrorOr<bool> VirtIONetworkAdapter::probe(PCI::DeviceIdentifier const& pci_device_identifier)
-{
-    if (pci_device_identifier.hardware_id().vendor_id != PCI::VendorID::VirtIO)
-        return false;
-    if (pci_device_identifier.hardware_id().device_id != PCI::DeviceID::VirtIONetAdapter)
-        return false;
-    return true;
-}
-
-UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<NetworkAdapter>> VirtIONetworkAdapter::create(PCI::DeviceIdentifier const& pci_device_identifier)
-{
-    auto interface_name = TRY(NetworkingManagement::generate_interface_name_from_pci_address(pci_device_identifier));
-    auto pci_transport_link = TRY(VirtIO::PCIeTransportLink::create(pci_device_identifier));
-    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) VirtIONetworkAdapter(interface_name.representable_view(), move(pci_transport_link))));
-}
-
 UNMAP_AFTER_INIT VirtIONetworkAdapter::VirtIONetworkAdapter(StringView interface_name, NonnullOwnPtr<VirtIO::TransportEntity> pci_transport_link)
     : VirtIO::Device(move(pci_transport_link))
     , NetworkAdapter(interface_name)
 {
 }
 
-UNMAP_AFTER_INIT ErrorOr<void> VirtIONetworkAdapter::initialize(Badge<NetworkingManagement>)
+UNMAP_AFTER_INIT ErrorOr<void> VirtIONetworkAdapter::initialize()
 {
     m_rx_buffers = TRY(Memory::RingBuffer::try_create("VirtIONetworkAdapter Rx buffer"sv, RX_BUFFER_SIZE * MAX_INFLIGHT_PACKETS));
     m_tx_buffers = TRY(Memory::RingBuffer::try_create("VirtIONetworkAdapter Tx buffer"sv, RX_BUFFER_SIZE * MAX_INFLIGHT_PACKETS));

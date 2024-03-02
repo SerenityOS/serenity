@@ -19,12 +19,10 @@ namespace Kernel {
 
 // RTL8618 / RTL8111 Driver based on https://people.freebsd.org/~wpaul/RealTek/RTL8111B_8168B_Registers_DataSheet_1.0.pdf
 class RTL8168NetworkAdapter final : public NetworkAdapter
-    , public PCI::Device
     , public IRQHandler {
 public:
     static ErrorOr<bool> probe(PCI::DeviceIdentifier const&);
     static ErrorOr<NonnullRefPtr<NetworkAdapter>> create(PCI::DeviceIdentifier const&);
-    virtual ErrorOr<void> initialize(Badge<NetworkingManagement>) override;
 
     virtual ~RTL8168NetworkAdapter() override;
 
@@ -38,6 +36,8 @@ public:
     virtual Type adapter_type() const override { return Type::Ethernet; }
 
 private:
+    ErrorOr<void> initialize();
+
     // FIXME: should this be increased? (maximum allowed here is 1024) - memory usage vs packet loss chance tradeoff
     static constexpr size_t number_of_rx_descriptors = 64;
     static constexpr size_t number_of_tx_descriptors = 16;
