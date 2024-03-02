@@ -54,12 +54,20 @@ EscalatorWindow::EscalatorWindow(StringView executable, Vector<StringView> argum
     m_icon_image_widget->set_bitmap(app_icon.bitmap_for_size(32));
 
     m_ok_button = *main_widget->find_descendant_of_type_named<GUI::DialogButton>("ok_button");
-    m_ok_button->on_click = [this](auto) {
-        auto result = check_password();
-        if (result.is_error()) {
-            GUI::MessageBox::show_error(this, ByteString::formatted("Failed to execute command: {}", result.error()));
+    size_t password_attempts = 0;
+    m_ok_button->on_click = [this, password_attempts](auto) mutable {
+        if (check_password()) {
+            auto result = execute_command();
+            if (result.is_error()) {
+                GUI::MessageBox::show_error(this, ByteString::formatted("Failed to execute command: {}", result.error()));
+            }
+            close();
+        } else {
+            if (++password_attempts >= 3) {
+                GUI::MessageBox::show_error(this, ByteString::formatted("Too many failed attempts"));
+                close();
+            }
         }
-        close();
     };
     m_ok_button->set_default(true);
 
@@ -71,12 +79,12 @@ EscalatorWindow::EscalatorWindow(StringView executable, Vector<StringView> argum
     m_password_input = *main_widget->find_descendant_of_type_named<GUI::PasswordBox>("password");
 }
 
-ErrorOr<void> EscalatorWindow::check_password()
+bool EscalatorWindow::check_password()
 {
     ByteString password = m_password_input->text();
     if (password.is_empty()) {
         GUI::MessageBox::show_error(this, "Please enter a password."sv);
-        return {};
+        return false;
     }
 
     // FIXME: PasswordBox really should store its input directly as a SecretString.
@@ -84,12 +92,10 @@ ErrorOr<void> EscalatorWindow::check_password()
     if (!m_current_user.authenticate(password_secret)) {
         GUI::MessageBox::show_error(this, "Incorrect or disabled password."sv);
         m_password_input->select_all();
-        return {};
+        return false;
     }
 
-    // Caller will close Escalator if error is returned.
-    TRY(execute_command());
-    return {};
+    return true;
 }
 
 ErrorOr<void> EscalatorWindow::execute_command()

@@ -36,7 +36,7 @@ public:
 private:
     EscalatorWindow(StringView executable, Vector<StringView> arguments, Options const& options);
 
-    ErrorOr<void> check_password();
+    bool check_password();
 
     Vector<StringView> m_arguments;
     StringView m_executable;
