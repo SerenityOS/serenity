@@ -11,6 +11,7 @@
 #include <Kernel/Devices/Storage/ATA/AHCI/Definitions.h>
 #include <Kernel/Devices/Storage/ATA/ATAController.h>
 #include <Kernel/Devices/Storage/StorageDevice.h>
+#include <Kernel/Library/Driver.h>
 #include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/Sections.h>
@@ -23,16 +24,17 @@ class AHCIPort;
 class AHCIController final : public ATAController {
     friend class AHCIInterruptHandler;
 
+    KERNEL_MAKE_DRIVER_LISTABLE(AHCIController)
 public:
-    static ErrorOr<NonnullRefPtr<AHCIController>> initialize(PCI::DeviceIdentifier const& pci_device_identifier);
+    static ErrorOr<NonnullRefPtr<AHCIController>> initialize(PCI::Device&);
     virtual ~AHCIController() override;
-
-    virtual StringView device_name() const override { return "AHCI"sv; }
 
     virtual void start_request(ATADevice const&, AsyncBlockDeviceRequest&) override;
     virtual void complete_current_request(AsyncDeviceRequest::RequestResult) override;
 
     void handle_interrupt_for_port(Badge<AHCIInterruptHandler>, u32 port_index) const;
+
+    PCI::Device& pci_device() { return *m_pci_device; }
 
 private:
     ErrorOr<void> reset();
@@ -40,19 +42,20 @@ private:
     void disable_global_interrupts() const;
     void enable_global_interrupts() const;
 
-    explicit AHCIController(PCI::DeviceIdentifier const&);
-    ErrorOr<void> initialize_hba(PCI::DeviceIdentifier const&);
+    explicit AHCIController(PCI::Device&);
+    ErrorOr<void> initialize_hba();
 
     AHCI::HBADefinedCapabilities capabilities() const;
-    LockRefPtr<StorageDevice> device_by_port(u32 index) const;
 
     volatile AHCI::PortRegisters& port(size_t port_number) const;
-    ErrorOr<Memory::TypedMapping<AHCI::HBA volatile>> map_default_hba_region(PCI::DeviceIdentifier const&);
+    ErrorOr<Memory::TypedMapping<AHCI::HBA volatile>> map_default_hba_region();
     volatile AHCI::HBA& hba() const;
 
     Array<LockRefPtr<AHCIPort>, 32> m_ports;
     Memory::TypedMapping<AHCI::HBA volatile> m_hba_mapping;
     AHCI::HBADefinedCapabilities m_hba_capabilities;
+
+    NonnullRefPtr<PCI::Device> const m_pci_device;
 
     // FIXME: There could be multiple IRQ (MSI) handlers for AHCI. Find a way to use all of them.
     OwnPtr<AHCIInterruptHandler> m_irq_handler;
