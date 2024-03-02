@@ -348,7 +348,7 @@ void HTMLInputElement::did_edit_text_node(Badge<BrowsingContext>)
     });
 }
 
-void HTMLInputElement::did_pick_color(Optional<Color> picked_color)
+void HTMLInputElement::did_pick_color(Optional<Color> picked_color, ColorPickerUpdateState state)
 {
     // https://html.spec.whatwg.org/multipage/input.html#common-input-element-events
     // For input elements without a defined input activation behavior, but to which these events apply
@@ -371,14 +371,16 @@ void HTMLInputElement::did_pick_color(Optional<Color> picked_color)
         });
 
         // and any time the user commits the change, the user agent must queue an element task on the user interaction task source
-        queue_an_element_task(HTML::Task::Source::UserInteraction, [this] {
-            // given the input element
-            // FIXME: to set its user interacted to true
-            // and fire an event named change at the input element, with the bubbles attribute initialized to true.
-            auto change_event = DOM::Event::create(realm(), HTML::EventNames::change);
-            change_event->set_bubbles(true);
-            dispatch_event(*change_event);
-        });
+        if (state == ColorPickerUpdateState::Closed) {
+            queue_an_element_task(HTML::Task::Source::UserInteraction, [this] {
+                // given the input element
+                // FIXME: to set its user interacted to true
+                // and fire an event named change at the input element, with the bubbles attribute initialized to true.
+                auto change_event = DOM::Event::create(realm(), HTML::EventNames::change);
+                change_event->set_bubbles(true);
+                dispatch_event(*change_event);
+            });
+        }
     }
 }
 
