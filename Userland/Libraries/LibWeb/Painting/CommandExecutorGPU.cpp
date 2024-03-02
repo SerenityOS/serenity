@@ -103,13 +103,6 @@ CommandResult CommandExecutorGPU::push_stacking_context(float opacity, bool is_f
     if (source_paintable_rect.is_empty())
         return CommandResult::SkipStackingContext;
 
-    // If, due to layout mistakes, we encounter an excessively large rectangle here, it must be skipped to prevent
-    // framebuffer allocation failure.
-    if (source_paintable_rect.width() > 10000 || source_paintable_rect.height() > 10000) {
-        dbgln("FIXME: Skipping stacking context with excessively large paintable rect: {}", source_paintable_rect);
-        return CommandResult::SkipStackingContext;
-    }
-
     m_stacking_contexts.last().stacking_context_depth++;
     painter().save();
     if (is_fixed_position) {
@@ -128,6 +121,13 @@ CommandResult CommandExecutorGPU::push_stacking_context(float opacity, bool is_f
     final_transform.multiply(stacking_context_transform);
     final_transform.multiply(inverse_origin_translation);
     if (opacity < 1 || !stacking_context_transform.is_identity_or_translation()) {
+        // If, due to layout mistakes, we encounter an excessively large rectangle here, it must be skipped to prevent
+        // framebuffer allocation failure.
+        if (source_paintable_rect.width() > 10000 || source_paintable_rect.height() > 10000) {
+            dbgln("FIXME: Skipping stacking context with excessively large paintable rect: {}", source_paintable_rect);
+            return CommandResult::SkipStackingContext;
+        }
+
         auto canvas = AccelGfx::Canvas::create(source_paintable_rect.size());
         auto painter = AccelGfx::Painter::create(m_context, canvas);
         painter->translate(-source_paintable_rect.location().to_type<float>());
