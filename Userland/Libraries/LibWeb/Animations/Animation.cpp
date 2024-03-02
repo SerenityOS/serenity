@@ -396,8 +396,14 @@ void Animation::set_onremove(JS::GCPtr<WebIDL::CallbackType> event_handler)
 }
 
 // https://www.w3.org/TR/web-animations-1/#dom-animation-cancel
-void Animation::cancel()
+void Animation::cancel(ShouldInvalidate should_invalidate)
 {
+    // Note: When called from JS, we always want to invalidate the animation target's style. However, this method is
+    //       also called from the StyleComputer when the animation-name CSS property changes. That happens in the
+    //       middle of a cascade, and importantly, _before_ computing the animation effect stack, so there is no
+    //       need for another invalidation. And in fact, if we did invalidate, it would lead to a crash, as the element
+    //       would not have it's "m_needs_style_update" flag cleared.
+
     auto& realm = this->realm();
 
     // 1. If animation’s play state is not idle, perform the following steps:
@@ -452,7 +458,8 @@ void Animation::cancel()
     // 3. Make animation’s start time unresolved.
     m_start_time = {};
 
-    invalidate_effect();
+    if (should_invalidate == ShouldInvalidate::Yes)
+        invalidate_effect();
 }
 
 // https://www.w3.org/TR/web-animations-1/#dom-animation-finish

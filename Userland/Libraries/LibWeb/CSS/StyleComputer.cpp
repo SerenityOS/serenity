@@ -1395,7 +1395,7 @@ ErrorOr<void> StyleComputer::compute_cascaded_values(StyleProperties& style, DOM
             if (source_declaration != element.cached_animation_name_source()) {
                 // This animation name is new, so we need to create a new animation for it.
                 if (auto existing_animation = element.cached_animation_name_animation())
-                    existing_animation->cancel();
+                    existing_animation->cancel(Animations::Animation::ShouldInvalidate::No);
                 element.set_cached_animation_name_source(source_declaration);
 
                 auto effect = Animations::KeyframeEffect::create(realm);
@@ -1422,7 +1422,7 @@ ErrorOr<void> StyleComputer::compute_cascaded_values(StyleProperties& style, DOM
     } else {
         // If the element had an existing animation, cancel it
         if (auto existing_animation = element.cached_animation_name_animation()) {
-            existing_animation->cancel();
+            existing_animation->cancel(Animations::Animation::ShouldInvalidate::No);
             element.set_cached_animation_name_animation({});
             element.set_cached_animation_name_source({});
         }
