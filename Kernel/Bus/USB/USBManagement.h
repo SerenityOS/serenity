@@ -28,8 +28,6 @@ public:
     Vector<NonnullLockRefPtr<Driver>>& available_drivers() { return m_available_drivers; }
 
 private:
-    void enumerate_controllers();
-
     USBController::List m_controllers;
     Vector<NonnullLockRefPtr<Driver>> m_available_drivers;
 };

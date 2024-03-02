@@ -31,9 +31,6 @@ set(KERNEL_SOURCES
     Bus/PCI/API.cpp
     Bus/PCI/Device.cpp
     Bus/PCI/DeviceIdentifier.cpp
-    Bus/USB/EHCI/EHCIController.cpp
-    Bus/USB/UHCI/UHCIController.cpp
-    Bus/USB/UHCI/UHCIRootHub.cpp
     Bus/USB/Drivers/HID/MouseDriver.cpp
     Bus/USB/Drivers/MassStorage/MassStorageDriver.cpp
     Bus/USB/USBConfiguration.cpp

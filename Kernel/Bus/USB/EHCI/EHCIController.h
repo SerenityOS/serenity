@@ -17,7 +17,6 @@ namespace Kernel::USB::EHCI {
 class EHCIController : public USBController
     , public PCI::Device {
 public:
-    static ErrorOr<NonnullLockRefPtr<EHCIController>> try_to_initialize(PCI::DeviceIdentifier const& pci_device_identifier);
     virtual ~EHCIController() override = default;
 
     // ^PCI::Device

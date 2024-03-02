@@ -10,28 +10,6 @@
 
 namespace Kernel::USB::EHCI {
 
-ErrorOr<NonnullLockRefPtr<EHCIController>> EHCIController::try_to_initialize(const PCI::DeviceIdentifier& pci_device_identifier)
-{
-
-    // FIXME: This assumes the BIOS left us a physical region for the controller
-    auto pci_bar_address = TRY(PCI::get_bar_address(pci_device_identifier, SpaceBaseAddressRegister));
-    auto pci_bar_space_size = PCI::get_BAR_space_size(pci_device_identifier, SpaceBaseAddressRegister);
-
-    auto register_region_size = TRY(Memory::page_round_up(pci_bar_address.offset_in_page() + pci_bar_space_size));
-    auto register_region = TRY(MM.allocate_kernel_region(pci_bar_address.page_base(), register_region_size, {}, Memory::Region::Access::ReadWrite));
-
-    VirtualAddress register_base_address = register_region->vaddr().offset(pci_bar_address.offset_in_page());
-
-    PCI::enable_bus_mastering(pci_device_identifier);
-    PCI::enable_memory_space(pci_device_identifier);
-
-    auto controller = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) EHCIController(pci_device_identifier, move(register_region), register_base_address)));
-
-    TRY(controller->initialize());
-
-    return controller;
-}
-
 EHCIController::EHCIController(PCI::DeviceIdentifier const& pci_device_identifier, NonnullOwnPtr<Memory::Region> register_region, VirtualAddress register_base_address)
     : PCI::Device(pci_device_identifier)
     , m_register_region(move(register_region))

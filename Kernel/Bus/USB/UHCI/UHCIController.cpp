@@ -64,15 +64,6 @@ static constexpr u16 UHCI_PORTSC_NON_WRITE_CLEAR_BIT_MASK = 0x1FF5; // This is u
 static constexpr u8 UHCI_NUMBER_OF_ISOCHRONOUS_TDS = 128;
 static constexpr u16 UHCI_NUMBER_OF_FRAMES = 1024;
 
-ErrorOr<NonnullLockRefPtr<UHCIController>> UHCIController::try_to_initialize(PCI::DeviceIdentifier const& pci_device_identifier)
-{
-    // NOTE: This assumes that address is pointing to a valid UHCI controller.
-    auto registers_io_window = TRY(IOWindow::create_for_pci_device_bar(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR4));
-    auto controller = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) UHCIController(pci_device_identifier, move(registers_io_window))));
-    TRY(controller->initialize());
-    return controller;
-}
-
 ErrorOr<void> UHCIController::initialize()
 {
     dmesgln_pci(*this, "Controller found {} @ {}", PCI::get_hardware_id(device_identifier()), device_identifier().address());
