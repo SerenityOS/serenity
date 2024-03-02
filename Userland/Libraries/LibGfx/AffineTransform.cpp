@@ -89,6 +89,11 @@ AffineTransform& AffineTransform::skew_radians(float x_radians, float y_radians)
 
 AffineTransform& AffineTransform::translate(float tx, float ty)
 {
+    if (is_identity_or_translation()) {
+        m_values[4] += tx;
+        m_values[5] += ty;
+        return *this;
+    }
     m_values[4] += tx * m_values[0] + ty * m_values[2];
     m_values[5] += tx * m_values[1] + ty * m_values[3];
     return *this;
@@ -208,6 +213,12 @@ static T largest_of(T p1, T p2, T p3, T p4)
 template<>
 FloatRect AffineTransform::map(FloatRect const& rect) const
 {
+    if (is_identity()) {
+        return rect;
+    }
+    if (is_identity_or_translation()) {
+        return rect.translated(e(), f());
+    }
     FloatPoint p1 = map(rect.top_left());
     FloatPoint p2 = map(rect.top_right());
     FloatPoint p3 = map(rect.bottom_right());
