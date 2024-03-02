@@ -70,9 +70,8 @@ static Optional<Location> locate_hunk(Vector<StringView> const& content, Hunk co
     // match the hunk by ignoring an increasing amount of context lines. The number of context lines that are ignored is
     // called the 'fuzz'.
     for (size_t fuzz = 0; fuzz <= max_fuzz; ++fuzz) {
-
-        auto suffix_fuzz = max(fuzz + patch_suffix_context - context, 0);
-        auto prefix_fuzz = max(fuzz + patch_prefix_context - context, 0);
+        auto suffix_fuzz = (patch_suffix_context >= context) ? (fuzz + patch_suffix_context - context) : 0;
+        auto prefix_fuzz = (patch_prefix_context >= context) ? (fuzz + patch_prefix_context - context) : 0;
 
         // If the fuzz is greater than the total number of lines for a hunk, then it may be possible for the hunk to match anything.
         if (suffix_fuzz + prefix_fuzz >= hunk.lines.size())
