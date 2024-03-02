@@ -11,6 +11,7 @@
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Interrupts/IRQHandler.h>
+#include <Kernel/Library/Driver.h>
 #include <Kernel/Library/IOWindow.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/Security/Random.h>
@@ -20,9 +21,9 @@ namespace Kernel {
 // RTL8618 / RTL8111 Driver based on https://people.freebsd.org/~wpaul/RealTek/RTL8111B_8168B_Registers_DataSheet_1.0.pdf
 class RTL8168NetworkAdapter final : public NetworkAdapter
     , public IRQHandler {
+    KERNEL_MAKE_DRIVER_LISTABLE(RTL8168NetworkAdapter)
 public:
-    static ErrorOr<bool> probe(PCI::DeviceIdentifier const&);
-    static ErrorOr<NonnullRefPtr<NetworkAdapter>> create(PCI::DeviceIdentifier const&);
+    static ErrorOr<NonnullRefPtr<RTL8168NetworkAdapter>> create(PCI::Device&);
 
     virtual ~RTL8168NetworkAdapter() override;
 
@@ -32,7 +33,6 @@ public:
     virtual i32 link_speed() override;
 
     virtual StringView purpose() const override { return class_name(); }
-    virtual StringView device_name() const override { return class_name(); }
     virtual Type adapter_type() const override { return Type::Ethernet; }
 
 private:
@@ -42,7 +42,7 @@ private:
     static constexpr size_t number_of_rx_descriptors = 64;
     static constexpr size_t number_of_tx_descriptors = 16;
 
-    RTL8168NetworkAdapter(StringView, PCI::DeviceIdentifier const&, u8 irq, NonnullOwnPtr<IOWindow> registers_io_window);
+    RTL8168NetworkAdapter(StringView, PCI::Device&, u8 irq, NonnullOwnPtr<IOWindow> registers_io_window);
 
     virtual bool handle_irq(RegisterState const&) override;
     virtual StringView class_name() const override { return "RTL8168NetworkAdapter"sv; }
@@ -206,6 +206,8 @@ private:
 
     void ocp_phy_out(u32 address, u32 data);
     u16 ocp_phy_in(u32 address);
+
+    NonnullRefPtr<PCI::Device> const m_pci_device;
 
     ChipVersion m_version { ChipVersion::Unknown };
     bool m_version_uncertain { true };

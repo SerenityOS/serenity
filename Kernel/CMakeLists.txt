@@ -33,6 +33,7 @@ set(KERNEL_SOURCES
     Bus/PCI/Drivers/GPU/BochsDisplay.cpp
     Bus/PCI/Drivers/Net/E1000.cpp
     Bus/PCI/Drivers/Net/E1000e.cpp
+    Bus/PCI/Drivers/Net/RTL8168.cpp
     Bus/PCI/Drivers/Storage/NVMe/NVMe.cpp
     Bus/PCI/Access.cpp
     Bus/PCI/Bus.cpp
@@ -240,6 +241,7 @@ set(KERNEL_SOURCES
     Library/UserOrKernelBuffer.cpp
     Net/Intel/E1000NetworkAdapter.cpp
     Net/Intel/E1000ENetworkAdapter.cpp
+    Net/Realtek/RTL8168NetworkAdapter.cpp
     Net/IPv4Socket.cpp
     Net/LocalSocket.cpp
     Net/LoopbackAdapter.cpp
