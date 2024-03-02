@@ -276,3 +276,40 @@ TEST_CASE(patch_with_timestamp_separated_by_tab)
     run_patch(ExpectSuccess::Yes, {}, patch, "patching file 1\n"sv);
     EXPECT_FILE_EQ(ByteString::formatted("{}/1", s_test_dir), "a\n"sv);
 }
+
+TEST_CASE(patch_defines_add_remove)
+{
+    PatchSetup setup;
+
+    StringView patch = R"(
+--- file.cpp
++++ file.cpp
+@@ -1,4 +1,4 @@
+ int main()
+ {
+-    return 0;
++    return 1;
+ }
+)"sv;
+
+    auto file = R"(int main()
+{
+    return 0;
+}
+)"sv;
+
+    auto input = MUST(Core::File::open(ByteString::formatted("{}/file.cpp", s_test_dir), Core::File::OpenMode::Write));
+    MUST(input->write_until_depleted(file.bytes()));
+
+    run_patch(ExpectSuccess::Yes, { "--ifdef", "TEST_PATCH" }, patch);
+
+    EXPECT_FILE_EQ(ByteString::formatted("{}/file.cpp", s_test_dir), R"(int main()
+{
+#ifndef TEST_PATCH
+    return 0;
+#else
+    return 1;
+#endif
+}
+)");
+}

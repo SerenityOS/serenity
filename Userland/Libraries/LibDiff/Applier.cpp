@@ -130,7 +130,59 @@ static ErrorOr<size_t> write_hunk(Stream& out, Hunk const& hunk, Location const&
     return line_number;
 }
 
-ErrorOr<void> apply_patch(Stream& out, Vector<StringView> const& lines, Patch const& patch)
+static ErrorOr<size_t> write_define_hunk(Stream& out, Hunk const& hunk, Location const& location, Vector<StringView> const& lines, StringView define)
+{
+    enum class State {
+        Outside,
+        InsideIFNDEF,
+        InsideIFDEF,
+        InsideELSE,
+    };
+
+    auto state = State::Outside;
+
+    auto line_number = location.line_number;
+
+    for (auto const& patch_line : hunk.lines) {
+        if (patch_line.operation == Diff::Line::Operation::Context) {
+            auto const& line = lines.at(line_number);
+            ++line_number;
+            if (state != State::Outside) {
+                TRY(out.write_formatted("#endif\n"));
+                state = State::Outside;
+            }
+            TRY(out.write_formatted("{}\n", line));
+        } else if (patch_line.operation == Diff::Line::Operation::Addition) {
+            if (state == State::Outside) {
+                state = State::InsideIFDEF;
+                TRY(out.write_formatted("#ifdef {}\n", define));
+            } else if (state == State::InsideIFNDEF) {
+                state = State::InsideELSE;
+                TRY(out.write_formatted("#else\n"));
+            }
+            TRY(out.write_formatted("{}\n", patch_line.content));
+        } else if (patch_line.operation == Diff::Line::Operation::Removal) {
+            auto const& line = lines.at(line_number);
+            ++line_number;
+
+            if (state == State::Outside) {
+                state = State::InsideIFNDEF;
+                TRY(out.write_formatted("#ifndef {}\n", define));
+            } else if (state == State::InsideIFDEF) {
+                state = State::InsideELSE;
+                TRY(out.write_formatted("#else\n"));
+            }
+            TRY(out.write_formatted("{}\n", line));
+        }
+    }
+
+    if (state != State::Outside)
+        TRY(out.write_formatted("#endif\n"));
+
+    return line_number;
+}
+
+ErrorOr<void> apply_patch(Stream& out, Vector<StringView> const& lines, Patch const& patch, Optional<StringView> const& define)
 {
     size_t line_number = 0; // NOTE: relative to 'old' file.
     ssize_t offset_error = 0;
@@ -150,7 +202,10 @@ ErrorOr<void> apply_patch(Stream& out, Vector<StringView> const& lines, Patch co
             TRY(out.write_formatted("{}\n", lines.at(line_number)));
 
         // Then output the hunk to what we hope is the correct location in the file.
-        line_number = TRY(write_hunk(out, hunk, location, lines));
+        if (define.has_value())
+            line_number = TRY(write_define_hunk(out, hunk, location, lines, define.value()));
+        else
+            line_number = TRY(write_hunk(out, hunk, location, lines));
     }
 
     // We've finished applying all hunks, write out anything from the old file we haven't already.
