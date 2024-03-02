@@ -31,6 +31,7 @@ set(KERNEL_SOURCES
     Bus/PCI/Drivers/Audio/AC97.cpp
     Bus/PCI/Drivers/Audio/IntelHDA.cpp
     Bus/PCI/Drivers/GPU/BochsDisplay.cpp
+    Bus/PCI/Drivers/GPU/3dfx.cpp
     Bus/PCI/Drivers/Net/E1000.cpp
     Bus/PCI/Drivers/Net/E1000e.cpp
     Bus/PCI/Drivers/Net/RTL8168.cpp
@@ -84,6 +85,8 @@ set(KERNEL_SOURCES
     Devices/Generic/RandomDevice.cpp
     Devices/Generic/SelfTTYDevice.cpp
     Devices/Generic/ZeroDevice.cpp
+    Devices/GPU/3dfx/GraphicsAdapter.cpp
+    Devices/GPU/3dfx/VoodooDisplayConnector.cpp
     Devices/GPU/Bochs/GraphicsAdapter.cpp
     Devices/GPU/Bochs/QEMUDisplayConnector.cpp
     Devices/GPU/Console/BootFramebufferConsole.cpp

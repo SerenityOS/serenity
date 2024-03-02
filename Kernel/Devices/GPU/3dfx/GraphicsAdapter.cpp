@@ -4,8 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Bus/PCI/API.h>
-#include <Kernel/Bus/PCI/BarMapping.h>
 #include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/Devices/GPU/3dfx/Definitions.h>
 #include <Kernel/Devices/GPU/3dfx/GraphicsAdapter.h>
@@ -13,41 +11,35 @@
 
 namespace Kernel {
 
-static constexpr u16 supported_models[] {
-    // 0x0003, // Banshee (untested)
-    0x0005, // Voodoo 3
-    // 0x0009 // Voodoo 4 / Voodoo 5 (untested)
-};
-
-static bool is_supported_model(u16 device_id)
+ErrorOr<NonnullRefPtr<VoodooGraphicsAdapter>> VoodooGraphicsAdapter::create(PCI::Device& pci_device)
 {
-    for (auto& id : supported_models) {
-        if (id == device_id)
-            return true;
-    }
-    return false;
+    auto adapter = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) VoodooGraphicsAdapter(pci_device)));
+    MUST(adapter->initialize_adapter());
+    return adapter;
 }
 
-UNMAP_AFTER_INIT VoodooGraphicsAdapter::VoodooGraphicsAdapter(PCI::DeviceIdentifier const& device_identifier)
-    : PCI::Device(const_cast<PCI::DeviceIdentifier&>(device_identifier))
+VoodooGraphicsAdapter::VoodooGraphicsAdapter(PCI::Device& pci_device)
+    : m_pci_device(pci_device)
 {
 }
 
-UNMAP_AFTER_INIT ErrorOr<void> VoodooGraphicsAdapter::initialize_adapter(PCI::DeviceIdentifier const& pci_device_identifier)
+ErrorOr<void> VoodooGraphicsAdapter::initialize_adapter()
 {
-    PCI::enable_io_space(device_identifier());
-    PCI::enable_memory_space(device_identifier());
+    m_pci_device->enable_io_space();
+    m_pci_device->enable_memory_space();
 
-    auto mmio_mapping = TRY(PCI::map_bar<VoodooGraphics::RegisterMap volatile>(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR0));
-    dbgln_if(TDFX_DEBUG, "3dfx mmio addr {} size {}", mmio_mapping.paddr, mmio_mapping.length);
+    auto const& resource0 = m_pci_device->resources()[0];
+    auto mmio_addr = PhysicalAddress(resource0.physical_memory_address());
+    dbgln_if(TDFX_DEBUG, "3dfx mmio addr {} size {}", mmio_addr, resource0.length);
+    auto mmio_mapping = TRY(Memory::map_typed<VoodooGraphics::RegisterMap volatile>(mmio_addr, resource0.length, Memory::Region::Access::Read | Memory::Region::Access::Write));
 
-    auto vmem_addr = TRY(PCI::get_bar_address(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR1));
-    auto vmem_size = PCI::get_BAR_space_size(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR1);
-    dbgln_if(TDFX_DEBUG, "3dfx vmem addr {} size {}", vmem_addr, vmem_size);
+    auto const& resource1 = m_pci_device->resources()[1];
+    auto vmem_addr = PhysicalAddress(resource1.physical_memory_address());
+    dbgln_if(TDFX_DEBUG, "3dfx vmem addr {} size {}", vmem_addr, resource1.length);
 
-    auto io_window = TRY(IOWindow::create_for_pci_device_bar(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR2));
+    auto io_window = TRY(IOWindow::create_for_pci_device_bar(*m_pci_device, PCI::HeaderType0BaseRegister::BAR2));
 
-    m_display_connector = VoodooGraphics::VoodooDisplayConnector::must_create(vmem_addr, vmem_size, move(mmio_mapping), move(io_window));
+    m_display_connector = VoodooGraphics::VoodooDisplayConnector::must_create(vmem_addr, resource1.length, move(mmio_mapping), move(io_window));
     TRY(m_display_connector->set_safe_mode_setting());
 
     return {};
