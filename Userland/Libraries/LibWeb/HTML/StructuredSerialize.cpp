@@ -701,16 +701,12 @@ public:
             break;
         }
         case ValueTag::BooleanPrimitive: {
-            value = JS::Value(static_cast<bool>(m_serialized[m_position++]));
+            value = JS::Value { deserialize_boolean_primitive(m_serialized, m_position) };
             is_primitive = true;
             break;
         }
         case ValueTag::NumberPrimitive: {
-            u32 bits[2] = {};
-            bits[0] = m_serialized[m_position++];
-            bits[1] = m_serialized[m_position++];
-            auto double_value = *bit_cast<double*>(&bits);
-            value = JS::Value(double_value);
+            value = JS::Value { deserialize_number_primitive(m_serialized, m_position) };
             is_primitive = true;
             break;
         }
@@ -728,51 +724,33 @@ public:
         }
         // 6. Otherwise, if serialized.[[Type]] is "Boolean", then set value to a new Boolean object in targetRealm whose [[BooleanData]] internal slot value is serialized.[[BooleanData]].
         case BooleanObject: {
-            auto* realm = m_vm.current_realm();
-            auto bool_value = static_cast<bool>(m_serialized[m_position++]);
-            value = JS::BooleanObject::create(*realm, bool_value);
+            value = deserialize_boolean_object(*m_vm.current_realm(), m_serialized, m_position);
             break;
         }
         // 7. Otherwise, if serialized.[[Type]] is "Number", then set value to a new Number object in targetRealm whose [[NumberData]] internal slot value is serialized.[[NumberData]].
         case ValueTag::NumberObject: {
-            auto* realm = m_vm.current_realm();
-            u32 bits[2];
-            bits[0] = m_serialized[m_position++];
-            bits[1] = m_serialized[m_position++];
-            auto double_value = *bit_cast<double*>(&bits);
-            value = JS::NumberObject::create(*realm, double_value);
+            value = deserialize_number_object(*m_vm.current_realm(), m_serialized, m_position);
             break;
         }
         // 8. Otherwise, if serialized.[[Type]] is "BigInt", then set value to a new BigInt object in targetRealm whose [[BigIntData]] internal slot value is serialized.[[BigIntData]].
         case ValueTag::BigIntObject: {
-            auto* realm = m_vm.current_realm();
-            auto big_int = TRY(deserialize_big_int_primitive(m_vm, m_serialized, m_position));
-            value = JS::BigIntObject::create(*realm, big_int);
+            value = TRY(deserialize_big_int_object(*m_vm.current_realm(), m_serialized, m_position));
             break;
         }
         // 9. Otherwise, if serialized.[[Type]] is "String", then set value to a new String object in targetRealm whose [[StringData]] internal slot value is serialized.[[StringData]].
         case ValueTag::StringObject: {
-            auto* realm = m_vm.current_realm();
-            auto string = TRY(deserialize_string_primitive(m_vm, m_serialized, m_position));
-            value = JS::StringObject::create(*realm, string, realm->intrinsics().string_prototype());
+            value = TRY(deserialize_string_object(*m_vm.current_realm(), m_serialized, m_position));
             break;
         }
         // 10. Otherwise, if serialized.[[Type]] is "Date", then set value to a new Date object in targetRealm whose [[DateValue]] internal slot value is serialized.[[DateValue]].
         case ValueTag::DateObject: {
-            auto* realm = m_vm.current_realm();
-            u32 bits[2];
-            bits[0] = m_serialized[m_position++];
-            bits[1] = m_serialized[m_position++];
-            auto double_value = *bit_cast<double*>(&bits);
-            value = JS::Date::create(*realm, double_value);
+            value = deserialize_date_object(*m_vm.current_realm(), m_serialized, m_position);
             break;
         }
         // 11. Otherwise, if serialized.[[Type]] is "RegExp", then set value to a new RegExp object in targetRealm whose [[RegExpMatcher]] internal slot value is serialized.[[RegExpMatcher]],
         //     whose [[OriginalSource]] internal slot value is serialized.[[OriginalSource]], and whose [[OriginalFlags]] internal slot value is serialized.[[OriginalFlags]].
         case ValueTag::RegExpObject: {
-            auto pattern = TRY(deserialize_string_primitive(m_vm, m_serialized, m_position));
-            auto flags = TRY(deserialize_string_primitive(m_vm, m_serialized, m_position));
-            value = TRY(JS::regexp_create(m_vm, move(pattern), move(flags)));
+            value = TRY(deserialize_reg_exp_object(*m_vm.current_realm(), m_serialized, m_position));
             break;
         }
         // FIXME: 12. Otherwise, if serialized.[[Type]] is "SharedArrayBuffer", then:
@@ -1008,8 +986,67 @@ private:
     }
 };
 
+bool deserialize_boolean_primitive(ReadonlySpan<u32> const& serialized, size_t& position)
+{
+    VERIFY(position < serialized.size());
+    return static_cast<bool>(serialized[position++]);
+}
+
+double deserialize_number_primitive(ReadonlySpan<u32> const& serialized, size_t& position)
+{
+    VERIFY(position + 2 <= serialized.size());
+    u32 const bits[2] {
+        serialized[position++],
+        serialized[position++],
+    };
+    return *bit_cast<double*>(&bits);
+}
+
+JS::NonnullGCPtr<JS::BooleanObject> deserialize_boolean_object(JS::Realm& realm, ReadonlySpan<u32> const& serialized, size_t& position)
+{
+    auto boolean_primitive = deserialize_boolean_primitive(serialized, position);
+    return JS::BooleanObject::create(realm, boolean_primitive);
+}
+
+JS::NonnullGCPtr<JS::NumberObject> deserialize_number_object(JS::Realm& realm, ReadonlySpan<u32> const& serialized, size_t& position)
+{
+    auto number_primitive = deserialize_number_primitive(serialized, position);
+    return JS::NumberObject::create(realm, number_primitive);
+}
+
+WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::BigIntObject>> deserialize_big_int_object(JS::Realm& realm, ReadonlySpan<u32> const& serialized, size_t& position)
+{
+    auto big_int_primitive = TRY(deserialize_big_int_primitive(realm.vm(), serialized, position));
+    return JS::BigIntObject::create(realm, big_int_primitive);
+}
+
+WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::StringObject>> deserialize_string_object(JS::Realm& realm, ReadonlySpan<u32> const& serialized, size_t& position)
+{
+    auto string_primitive = TRY(deserialize_string_primitive(realm.vm(), serialized, position));
+    return JS::StringObject::create(realm, string_primitive, realm.intrinsics().string_prototype());
+}
+
+JS::NonnullGCPtr<JS::Date> deserialize_date_object(JS::Realm& realm, ReadonlySpan<u32> const& serialized, size_t& position)
+{
+    VERIFY(position + 2 <= serialized.size());
+    u32 const bits[2] {
+        serialized[position++],
+        serialized[position++],
+    };
+    auto double_value = *bit_cast<double*>(&bits);
+    return JS::Date::create(realm, double_value);
+}
+
+WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::RegExpObject>> deserialize_reg_exp_object(JS::Realm& realm, ReadonlySpan<u32> const& serialized, size_t& position)
+{
+    auto pattern = TRY(deserialize_string_primitive(realm.vm(), serialized, position));
+    auto flags = TRY(deserialize_string_primitive(realm.vm(), serialized, position));
+    return TRY(JS::regexp_create(realm.vm(), move(pattern), move(flags)));
+}
+
 WebIDL::ExceptionOr<ByteBuffer> deserialize_bytes(JS::VM& vm, ReadonlySpan<u32> vector, size_t& position)
 {
+    VERIFY(position + 2 <= vector.size());
     u32 size_bits[2];
     size_bits[0] = vector[position++];
     size_bits[1] = vector[position++];
