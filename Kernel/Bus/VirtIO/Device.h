@@ -26,9 +26,9 @@ public:
 
     bool handle_irq(Badge<TransportInterruptHandler>);
 
-protected:
     virtual StringView class_name() const { return "VirtIO::Device"sv; }
 
+protected:
     explicit Device(NonnullOwnPtr<TransportEntity>);
 
     void mask_status_bits(u8 status_mask);
