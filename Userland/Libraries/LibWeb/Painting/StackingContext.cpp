@@ -121,7 +121,7 @@ void StackingContext::paint_descendants(PaintContext& context, Paintable const& 
             return;
         }
 
-        bool child_is_inline_or_replaced = child.is_inline() || is<Layout::ReplacedBox>(child);
+        bool child_is_inline_or_replaced = child.is_inline() || is<Layout::ReplacedBox>(child.layout_node());
         switch (phase) {
         case StackingContextPaintPhase::BackgroundAndBorders:
             if (!child_is_inline_or_replaced && !child.is_floating()) {
