@@ -939,8 +939,20 @@ RENDERER_HANDLER(marked_content_end)
     return {};
 }
 
-RENDERER_TODO(compatibility_begin)
-RENDERER_TODO(compatibility_end)
+RENDERER_HANDLER(compatibility_begin)
+{
+    // We're supposed to ignore unknown operands in compatibility_begin / compatibility_end sections.
+    // But we want to know about all operands, so we just ignore this.
+    // In practice, it seems like compatibility_begin / compatibility_end were introduced when
+    // `sh` was added, and they're used exlusively around `sh`.
+    return {};
+}
+
+RENDERER_HANDLER(compatibility_end)
+{
+    // See comment in compatibility_begin.
+    return {};
+}
 
 template<typename T>
 Gfx::Point<T> Renderer::map(T x, T y) const
