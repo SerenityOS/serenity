@@ -10,14 +10,14 @@
 
 namespace Kernel::Graphics {
 
-UNMAP_AFTER_INIT NonnullLockRefPtr<VGATextModeConsole> VGATextModeConsole::initialize()
+NonnullLockRefPtr<VGATextModeConsole> VGATextModeConsole::initialize()
 {
     auto vga_window_size = MUST(Memory::page_round_up(0xc0000 - 0xa0000));
     auto vga_window_region = MUST(MM.allocate_kernel_region(PhysicalAddress(0xa0000), vga_window_size, "VGA Display"sv, Memory::Region::Access::ReadWrite));
     return adopt_lock_ref(*new (nothrow) VGATextModeConsole(move(vga_window_region)));
 }
 
-UNMAP_AFTER_INIT VGATextModeConsole::VGATextModeConsole(NonnullOwnPtr<Memory::Region> vga_window_region)
+VGATextModeConsole::VGATextModeConsole(NonnullOwnPtr<Memory::Region> vga_window_region)
     : Console(80, 25)
     , m_vga_window_region(move(vga_window_region))
     , m_current_vga_window(m_vga_window_region->vaddr().offset(0x18000).as_ptr())
