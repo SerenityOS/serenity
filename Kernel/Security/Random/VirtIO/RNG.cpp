@@ -4,19 +4,19 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Security/Random/VirtIO/RNG.h>
-#include <Kernel/Bus/VirtIO/Transport/PCIe/TransportLink.h>
 #include <Kernel/Sections.h>
+#include <Kernel/Security/Random/VirtIO/RNG.h>
 
 namespace Kernel::VirtIO {
 
-UNMAP_AFTER_INIT NonnullLockRefPtr<RNG> RNG::must_create_for_pci_instance(PCI::DeviceIdentifier const& device_identifier)
+ErrorOr<NonnullRefPtr<RNG>> RNG::create(NonnullOwnPtr<VirtIO::TransportEntity> transport_link)
 {
-    auto pci_transport_link = MUST(PCIeTransportLink::create(device_identifier));
-    return adopt_lock_ref_if_nonnull(new RNG(move(pci_transport_link))).release_nonnull();
+    auto rng = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) RNG(move(transport_link))));
+    TRY(rng->initialize_virtio_resources());
+    return rng;
 }
 
-UNMAP_AFTER_INIT ErrorOr<void> RNG::initialize_virtio_resources()
+ErrorOr<void> RNG::initialize_virtio_resources()
 {
     TRY(Device::initialize_virtio_resources());
     TRY(negotiate_features([&](auto) {
@@ -30,7 +30,7 @@ UNMAP_AFTER_INIT ErrorOr<void> RNG::initialize_virtio_resources()
     return {};
 }
 
-UNMAP_AFTER_INIT RNG::RNG(NonnullOwnPtr<TransportEntity> transport_entity)
+RNG::RNG(NonnullOwnPtr<TransportEntity> transport_entity)
     : VirtIO::Device(move(transport_entity))
 {
 }

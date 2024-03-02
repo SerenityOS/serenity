@@ -8,7 +8,9 @@
 
 #include <AK/AtomicRefCounted.h>
 #include <Kernel/Bus/VirtIO/Device.h>
+#include <Kernel/Bus/VirtIO/Transport/Entity.h>
 #include <Kernel/Devices/CharacterDevice.h>
+#include <Kernel/Library/Driver.h>
 #include <Kernel/Security/Random.h>
 
 namespace Kernel::VirtIO {
@@ -18,8 +20,10 @@ namespace Kernel::VirtIO {
 class RNG final
     : public AtomicRefCounted<RNG>
     , public VirtIO::Device {
+    KERNEL_MAKE_DRIVER_LISTABLE(VirtIO::RNG)
+
 public:
-    static NonnullLockRefPtr<RNG> must_create_for_pci_instance(PCI::DeviceIdentifier const&);
+    static ErrorOr<NonnullRefPtr<RNG>> create(NonnullOwnPtr<VirtIO::TransportEntity>);
     virtual ~RNG() override = default;
 
     virtual ErrorOr<void> initialize_virtio_resources() override;
