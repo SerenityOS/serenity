@@ -8,17 +8,21 @@
 #pragma once
 
 #include <Kernel/Bus/VirtIO/Device.h>
+#include <Kernel/Bus/VirtIO/Transport/Entity.h>
 #include <Kernel/Devices/Serial/VirtIO/ConsolePort.h>
+#include <Kernel/Library/Driver.h>
 #include <Kernel/Memory/RingBuffer.h>
 
 namespace Kernel::VirtIO {
 class Console
     : public VirtIO::Device
     , public AtomicRefCounted<Console> {
+    KERNEL_MAKE_DRIVER_LISTABLE(VirtIO::Console)
+
     friend VirtIO::ConsolePort;
 
 public:
-    static NonnullLockRefPtr<Console> must_create_for_pci_instance(PCI::DeviceIdentifier const&);
+    static ErrorOr<NonnullRefPtr<Console>> create(NonnullOwnPtr<VirtIO::TransportEntity>);
     virtual ~Console() override = default;
 
     unsigned device_id() const

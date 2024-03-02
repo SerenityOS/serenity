@@ -40,6 +40,7 @@ set(KERNEL_SOURCES
     Bus/PCI/Drivers/Net/VirtIO.cpp
     Bus/PCI/Drivers/RNG/VirtIO.cpp
     Bus/PCI/Drivers/Serial/8250.cpp
+    Bus/PCI/Drivers/Serial/VirtIOConsole.cpp
     Bus/PCI/Drivers/Storage/ATA/AHCI.cpp
     Bus/PCI/Drivers/Storage/ATA/PIIX4IDE.cpp
     Bus/PCI/Drivers/Storage/NVMe/NVMe.cpp
@@ -126,6 +127,8 @@ set(KERNEL_SOURCES
     Devices/GPU/Management.cpp
     Devices/Loop/LoopDevice.cpp
     Devices/Serial/PCI/Serial8250Device.cpp
+    Devices/Serial/VirtIO/Console.cpp
+    Devices/Serial/VirtIO/ConsolePort.cpp
     Devices/Storage/ATA/AHCI/Controller.cpp
     Devices/Storage/ATA/AHCI/InterruptHandler.cpp
     Devices/Storage/ATA/AHCI/Port.cpp

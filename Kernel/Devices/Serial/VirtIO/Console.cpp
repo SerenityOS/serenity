@@ -5,7 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Bus/VirtIO/Transport/PCIe/TransportLink.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/Serial/VirtIO/Console.h>
 #include <Kernel/Sections.h>
@@ -15,13 +14,14 @@ namespace Kernel::VirtIO {
 
 unsigned Console::next_device_id = 0;
 
-UNMAP_AFTER_INIT NonnullLockRefPtr<Console> Console::must_create_for_pci_instance(PCI::DeviceIdentifier const& pci_device_identifier)
+ErrorOr<NonnullRefPtr<Console>> Console::create(NonnullOwnPtr<VirtIO::TransportEntity> transport_link)
 {
-    auto pci_transport_link = MUST(PCIeTransportLink::create(pci_device_identifier));
-    return adopt_lock_ref_if_nonnull(new (nothrow) Console(move(pci_transport_link))).release_nonnull();
+    auto console = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Console(move(transport_link))));
+    TRY(console->initialize_virtio_resources());
+    return console;
 }
 
-UNMAP_AFTER_INIT ErrorOr<void> Console::initialize_virtio_resources()
+ErrorOr<void> Console::initialize_virtio_resources()
 {
     TRY(Device::initialize_virtio_resources());
     auto const* cfg = TRY(transport_entity().get_config(VirtIO::ConfigurationType::Device));
@@ -60,7 +60,7 @@ UNMAP_AFTER_INIT ErrorOr<void> Console::initialize_virtio_resources()
     return {};
 }
 
-UNMAP_AFTER_INIT Console::Console(NonnullOwnPtr<TransportEntity> transport_entity)
+Console::Console(NonnullOwnPtr<TransportEntity> transport_entity)
     : VirtIO::Device(move(transport_entity))
     , m_device_id(next_device_id++)
 {
