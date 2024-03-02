@@ -106,8 +106,6 @@ public:
 private:
     SerialDevice(NonnullOwnPtr<IOWindow> registers_io_window, unsigned minor);
 
-    friend class PCISerialDevice;
-
     // ^CharacterDevice
     virtual StringView class_name() const override { return "SerialDevice"sv; }
 

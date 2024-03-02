@@ -31,7 +31,6 @@
 #include <Kernel/Devices/Generic/ZeroDevice.h>
 #include <Kernel/Devices/HID/Management.h>
 #include <Kernel/Devices/KCOVDevice.h>
-#include <Kernel/Devices/PCISerialDevice.h>
 #include <Kernel/Devices/SerialDevice.h>
 #include <Kernel/Devices/Storage/StorageManagement.h>
 #include <Kernel/Devices/TTY/ConsoleManagement.h>
@@ -383,9 +382,6 @@ void init_stage2(void*)
 
     // Initialize the PCI Bus as early as possible, for early boot (PCI based) serial logging
     PCI::initialize();
-    if (!PCI::Access::is_disabled()) {
-        PCISerialDevice::detect();
-    }
 
     VirtualFileSystem::initialize();
 

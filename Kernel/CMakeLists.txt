@@ -62,7 +62,6 @@ set(KERNEL_SOURCES
     Devices/KCOVInstance.cpp
     Devices/Serial/VirtIO/Console.cpp
     Devices/Serial/VirtIO/ConsolePort.cpp
-    Devices/PCISerialDevice.cpp
     Devices/SerialDevice.cpp
     Devices/HID/AllMiceDevice.cpp
     Devices/HID/KeyboardDevice.cpp
