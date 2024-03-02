@@ -233,21 +233,22 @@ void ViewportPaintable::resolve_paint_only_properties()
     // - Transform origins
     // - Outlines
     for_each_in_inclusive_subtree([&](Paintable& paintable) {
-        auto& node = paintable.layout_node();
+        auto& layout_node = paintable.layout_node();
 
         auto const is_inline_paintable = paintable.is_inline_paintable();
         auto const is_paintable_box = paintable.is_paintable_box();
         auto const is_paintable_with_lines = paintable.is_paintable_with_lines();
+        auto const& computed_values = layout_node.computed_values();
 
         // Border radii
         if (is_inline_paintable) {
             auto& inline_paintable = static_cast<Painting::InlinePaintable&>(paintable);
             auto& fragments = inline_paintable.fragments();
 
-            auto const& top_left_border_radius = inline_paintable.computed_values().border_top_left_radius();
-            auto const& top_right_border_radius = inline_paintable.computed_values().border_top_right_radius();
-            auto const& bottom_right_border_radius = inline_paintable.computed_values().border_bottom_right_radius();
-            auto const& bottom_left_border_radius = inline_paintable.computed_values().border_bottom_left_radius();
+            auto const& top_left_border_radius = computed_values.border_top_left_radius();
+            auto const& top_right_border_radius = computed_values.border_top_right_radius();
+            auto const& bottom_right_border_radius = computed_values.border_bottom_right_radius();
+            auto const& bottom_left_border_radius = computed_values.border_bottom_left_radius();
 
             auto containing_block_position_in_absolute_coordinates = inline_paintable.containing_block()->absolute_position();
             for (size_t i = 0; i < fragments.size(); ++i) {
@@ -267,7 +268,7 @@ void ViewportPaintable::resolve_paint_only_properties()
                     auto extra_end_width = inline_paintable.box_model().padding.right;
                     absolute_fragment_rect.set_width(absolute_fragment_rect.width() + extra_end_width);
                 }
-                auto border_radii_data = normalize_border_radii_data(inline_paintable.layout_node(),
+                auto border_radii_data = normalize_border_radii_data(layout_node,
                     absolute_fragment_rect, top_left_border_radius,
                     top_right_border_radius,
                     bottom_right_border_radius,
@@ -281,29 +282,29 @@ void ViewportPaintable::resolve_paint_only_properties()
             auto& paintable_box = static_cast<Painting::PaintableBox&>(paintable);
 
             CSSPixelRect const border_rect { 0, 0, paintable_box.border_box_width(), paintable_box.border_box_height() };
-            auto const& border_top_left_radius = node.computed_values().border_top_left_radius();
-            auto const& border_top_right_radius = node.computed_values().border_top_right_radius();
-            auto const& border_bottom_right_radius = node.computed_values().border_bottom_right_radius();
-            auto const& border_bottom_left_radius = node.computed_values().border_bottom_left_radius();
+            auto const& border_top_left_radius = computed_values.border_top_left_radius();
+            auto const& border_top_right_radius = computed_values.border_top_right_radius();
+            auto const& border_bottom_right_radius = computed_values.border_bottom_right_radius();
+            auto const& border_bottom_left_radius = computed_values.border_bottom_left_radius();
 
-            auto radii_data = normalize_border_radii_data(node, border_rect, border_top_left_radius,
+            auto radii_data = normalize_border_radii_data(layout_node, border_rect, border_top_left_radius,
                 border_top_right_radius, border_bottom_right_radius,
                 border_bottom_left_radius);
             paintable_box.set_border_radii_data(radii_data);
         }
 
         // Box shadows
-        auto const& box_shadow_data = node.computed_values().box_shadow();
+        auto const& box_shadow_data = computed_values.box_shadow();
         if (!box_shadow_data.is_empty()) {
             Vector<Painting::ShadowData> resolved_box_shadow_data;
             resolved_box_shadow_data.ensure_capacity(box_shadow_data.size());
             for (auto const& layer : box_shadow_data) {
                 resolved_box_shadow_data.empend(
                     layer.color,
-                    layer.offset_x.to_px(node),
-                    layer.offset_y.to_px(node),
-                    layer.blur_radius.to_px(node),
-                    layer.spread_distance.to_px(node),
+                    layer.offset_x.to_px(layout_node),
+                    layer.offset_y.to_px(layout_node),
+                    layer.blur_radius.to_px(layout_node),
+                    layer.spread_distance.to_px(layout_node),
                     layer.placement == CSS::ShadowPlacement::Outer ? Painting::ShadowPlacement::Outer
                                                                    : Painting::ShadowPlacement::Inner);
             }
@@ -328,10 +329,10 @@ void ViewportPaintable::resolve_paint_only_properties()
                     for (auto const& layer : text_shadow) {
                         resolved_shadow_data.empend(
                             layer.color,
-                            layer.offset_x.to_px(paintable_with_lines.layout_node()),
-                            layer.offset_y.to_px(paintable_with_lines.layout_node()),
-                            layer.blur_radius.to_px(paintable_with_lines.layout_node()),
-                            layer.spread_distance.to_px(paintable_with_lines.layout_node()),
+                            layer.offset_x.to_px(layout_node),
+                            layer.offset_y.to_px(layout_node),
+                            layer.blur_radius.to_px(layout_node),
+                            layer.spread_distance.to_px(layout_node),
                             Painting::ShadowPlacement::Outer);
                     }
                     const_cast<Painting::PaintableFragment&>(fragment).set_shadows(move(resolved_shadow_data));
@@ -415,17 +416,16 @@ void ViewportPaintable::resolve_paint_only_properties()
                 }
                 VERIFY_NOT_REACHED();
             }();
-            auto x = reference_box.left() + transform_origin.x.to_px(node, reference_box.width());
-            auto y = reference_box.top() + transform_origin.y.to_px(node, reference_box.height());
+            auto x = reference_box.left() + transform_origin.x.to_px(layout_node, reference_box.width());
+            auto y = reference_box.top() + transform_origin.y.to_px(layout_node, reference_box.height());
             paintable_box.set_transform_origin({ x, y });
             paintable_box.set_transform_origin({ x, y });
         }
 
         // Outlines
-        auto const& computed_values = node.computed_values();
-        auto outline_width = computed_values.outline_width().to_px(node);
-        auto outline_data = borders_data_for_outline(node, computed_values.outline_color(), computed_values.outline_style(), outline_width);
-        auto outline_offset = computed_values.outline_offset().to_px(node);
+        auto outline_width = computed_values.outline_width().to_px(layout_node);
+        auto outline_data = borders_data_for_outline(layout_node, computed_values.outline_color(), computed_values.outline_style(), outline_width);
+        auto outline_offset = computed_values.outline_offset().to_px(layout_node);
         if (is_paintable_box) {
             auto& paintable_box = static_cast<Painting::PaintableBox&>(paintable);
             paintable_box.set_outline_data(outline_data);
