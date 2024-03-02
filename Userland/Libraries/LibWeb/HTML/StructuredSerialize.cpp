@@ -167,18 +167,16 @@ public:
             m_serialized.append(ValueTag::NullPrimitive);
         } else if (value.is_boolean()) {
             m_serialized.append(ValueTag::BooleanPrimitive);
-            m_serialized.append(static_cast<u32>(value.as_bool()));
+            serialize_boolean_primitive(m_serialized, value);
         } else if (value.is_number()) {
             m_serialized.append(ValueTag::NumberPrimitive);
-            double number = value.as_double();
-            m_serialized.append(bit_cast<u32*>(&number), 2);
+            serialize_number_primitive(m_serialized, value);
         } else if (value.is_bigint()) {
             m_serialized.append(ValueTag::BigIntPrimitive);
-            auto& val = value.as_bigint();
-            TRY(serialize_string(m_vm, m_serialized, TRY_OR_THROW_OOM(m_vm, val.to_string())));
+            TRY(serialize_big_int_primitive(m_vm, m_serialized, value));
         } else if (value.is_string()) {
             m_serialized.append(ValueTag::StringPrimitive);
-            TRY(serialize_string(m_vm, m_serialized, value.as_string()));
+            TRY(serialize_string_primitive(m_vm, m_serialized, value));
         } else {
             return_primitive_type = false;
         }
@@ -195,38 +193,31 @@ public:
         // 7. If value has a [[BooleanData]] internal slot, then set serialized to { [[Type]]: "Boolean", [[BooleanData]]: value.[[BooleanData]] }.
         if (value.is_object() && is<JS::BooleanObject>(value.as_object())) {
             m_serialized.append(ValueTag::BooleanObject);
-            auto& boolean_object = static_cast<JS::BooleanObject&>(value.as_object());
-            m_serialized.append(bit_cast<u32>(static_cast<u32>(boolean_object.boolean())));
+            serialize_boolean_object(m_serialized, value);
         }
 
         // 8. Otherwise, if value has a [[NumberData]] internal slot, then set serialized to { [[Type]]: "Number", [[NumberData]]: value.[[NumberData]] }.
         else if (value.is_object() && is<JS::NumberObject>(value.as_object())) {
             m_serialized.append(ValueTag::NumberObject);
-            auto& number_object = static_cast<JS::NumberObject&>(value.as_object());
-            double const number = number_object.number();
-            m_serialized.append(bit_cast<u32*>(&number), 2);
+            serialize_number_object(m_serialized, value);
         }
 
         // 9. Otherwise, if value has a [[BigIntData]] internal slot, then set serialized to { [[Type]]: "BigInt", [[BigIntData]]: value.[[BigIntData]] }.
         else if (value.is_object() && is<JS::BigIntObject>(value.as_object())) {
             m_serialized.append(ValueTag::BigIntObject);
-            auto& bigint_object = static_cast<JS::BigIntObject&>(value.as_object());
-            TRY(serialize_string(m_vm, m_serialized, TRY_OR_THROW_OOM(m_vm, bigint_object.bigint().to_string())));
+            TRY(serialize_big_int_object(m_vm, m_serialized, value));
         }
 
         // 10. Otherwise, if value has a [[StringData]] internal slot, then set serialized to { [[Type]]: "String", [[StringData]]: value.[[StringData]] }.
         else if (value.is_object() && is<JS::StringObject>(value.as_object())) {
             m_serialized.append(ValueTag::StringObject);
-            auto& string_object = static_cast<JS::StringObject&>(value.as_object());
-            TRY(serialize_string(m_vm, m_serialized, string_object.primitive_string()));
+            TRY(serialize_string_object(m_vm, m_serialized, value));
         }
 
         // 11. Otherwise, if value has a [[DateValue]] internal slot, then set serialized to { [[Type]]: "Date", [[DateValue]]: value.[[DateValue]] }.
         else if (value.is_object() && is<JS::Date>(value.as_object())) {
             m_serialized.append(ValueTag::DateObject);
-            auto& date_object = static_cast<JS::Date&>(value.as_object());
-            double const date_value = date_object.date_value();
-            m_serialized.append(bit_cast<u32*>(&date_value), 2);
+            serialize_date_object(m_serialized, value);
         }
 
         // 12. Otherwise, if value has a [[RegExpMatcher]] internal slot, then set serialized to
@@ -234,12 +225,7 @@ public:
         //       [[OriginalFlags]]: value.[[OriginalFlags]] }.
         else if (value.is_object() && is<JS::RegExpObject>(value.as_object())) {
             m_serialized.append(ValueTag::RegExpObject);
-            auto& regexp_object = static_cast<JS::RegExpObject&>(value.as_object());
-            // Note: A Regex<ECMA262> object is perfectly happy to be reconstructed with just the source+flags
-            //       In the future, we could optimize the work being done on the deserialize step by serializing
-            //       more of the internal state (the [[RegExpMatcher]] internal slot)
-            TRY(serialize_string(m_vm, m_serialized, TRY_OR_THROW_OOM(m_vm, String::from_byte_string(regexp_object.pattern()))));
-            TRY(serialize_string(m_vm, m_serialized, TRY_OR_THROW_OOM(m_vm, String::from_byte_string(regexp_object.flags()))));
+            TRY(serialize_reg_exp_object(m_vm, m_serialized, value));
         }
 
         // 13. Otherwise, if value has an [[ArrayBufferData]] internal slot, then:
@@ -441,6 +427,85 @@ private:
     SerializationRecord m_serialized;
     bool m_for_storage { false };
 };
+
+void serialize_boolean_primitive(SerializationRecord& serialized, JS::Value& value)
+{
+    VERIFY(value.is_boolean());
+    serialized.append(static_cast<u32>(value.as_bool()));
+}
+
+void serialize_number_primitive(SerializationRecord& serialized, JS::Value& value)
+{
+    VERIFY(value.is_number());
+    double number = value.as_double();
+    serialized.append(bit_cast<u32*>(&number), 2);
+}
+
+WebIDL::ExceptionOr<void> serialize_big_int_primitive(JS::VM& vm, SerializationRecord& serialized, JS::Value& value)
+{
+    VERIFY(value.is_bigint());
+    auto& val = value.as_bigint();
+    TRY(serialize_string(vm, serialized, TRY_OR_THROW_OOM(vm, val.to_string())));
+    return {};
+}
+
+WebIDL::ExceptionOr<void> serialize_string_primitive(JS::VM& vm, SerializationRecord& serialized, JS::Value& value)
+{
+    VERIFY(value.is_string());
+    TRY(serialize_string(vm, serialized, value.as_string()));
+    return {};
+}
+
+void serialize_boolean_object(SerializationRecord& serialized, JS::Value& value)
+{
+    VERIFY(value.is_object() && is<JS::BooleanObject>(value.as_object()));
+    auto& boolean_object = static_cast<JS::BooleanObject&>(value.as_object());
+    serialized.append(bit_cast<u32>(static_cast<u32>(boolean_object.boolean())));
+}
+
+void serialize_number_object(SerializationRecord& serialized, JS::Value& value)
+{
+    VERIFY(value.is_object() && is<JS::NumberObject>(value.as_object()));
+    auto& number_object = static_cast<JS::NumberObject&>(value.as_object());
+    double const number = number_object.number();
+    serialized.append(bit_cast<u32*>(&number), 2);
+}
+
+WebIDL::ExceptionOr<void> serialize_big_int_object(JS::VM& vm, SerializationRecord& serialized, JS::Value& value)
+{
+    VERIFY(value.is_object() && is<JS::BigIntObject>(value.as_object()));
+    auto& bigint_object = static_cast<JS::BigIntObject&>(value.as_object());
+    TRY(serialize_string(vm, serialized, TRY_OR_THROW_OOM(vm, bigint_object.bigint().to_string())));
+    return {};
+}
+
+WebIDL::ExceptionOr<void> serialize_string_object(JS::VM& vm, SerializationRecord& serialized, JS::Value& value)
+{
+    VERIFY(value.is_object() && is<JS::StringObject>(value.as_object()));
+    auto& string_object = static_cast<JS::StringObject&>(value.as_object());
+    TRY(serialize_string(vm, serialized, string_object.primitive_string()));
+    return {};
+}
+
+void serialize_date_object(SerializationRecord& serialized, JS::Value& value)
+{
+    VERIFY(value.is_object() && is<JS::Date>(value.as_object()));
+    auto& date_object = static_cast<JS::Date&>(value.as_object());
+    double const date_value = date_object.date_value();
+    serialized.append(bit_cast<u32*>(&date_value), 2);
+}
+
+WebIDL::ExceptionOr<void> serialize_reg_exp_object(JS::VM& vm, SerializationRecord& serialized, JS::Value& value)
+{
+    VERIFY(value.is_object() && is<JS::RegExpObject>(value.as_object()));
+    auto& regexp_object = static_cast<JS::RegExpObject&>(value.as_object());
+    // Note: A Regex<ECMA262> object is perfectly happy to be reconstructed with just the source+flags
+    //       In the future, we could optimize the work being done on the deserialize step by serializing
+    //       more of the internal state (the [[RegExpMatcher]] internal slot)
+    TRY(serialize_string(vm, serialized, TRY_OR_THROW_OOM(vm, String::from_byte_string(regexp_object.pattern()))));
+    TRY(serialize_string(vm, serialized, TRY_OR_THROW_OOM(vm, String::from_byte_string(regexp_object.flags()))));
+    return {};
+}
 
 WebIDL::ExceptionOr<void> serialize_bytes(JS::VM& vm, Vector<u32>& vector, ReadonlyBytes bytes)
 {

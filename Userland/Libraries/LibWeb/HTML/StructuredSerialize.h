@@ -51,6 +51,17 @@ WebIDL::ExceptionOr<SerializationRecord> structured_serialize_internal(JS::VM& v
 
 WebIDL::ExceptionOr<JS::Value> structured_deserialize(JS::VM& vm, SerializationRecord const& serialized, JS::Realm& target_realm, Optional<DeserializationMemory>);
 
+void serialize_boolean_primitive(SerializationRecord& serialized, JS::Value& value);
+void serialize_number_primitive(SerializationRecord& serialized, JS::Value& value);
+WebIDL::ExceptionOr<void> serialize_big_int_primitive(JS::VM& vm, SerializationRecord& serialized, JS::Value& value);
+WebIDL::ExceptionOr<void> serialize_string_primitive(JS::VM& vm, SerializationRecord& serialized, JS::Value& value);
+void serialize_boolean_object(SerializationRecord& serialized, JS::Value& value);
+void serialize_number_object(SerializationRecord& serialized, JS::Value& value);
+WebIDL::ExceptionOr<void> serialize_big_int_object(JS::VM& vm, SerializationRecord& serialized, JS::Value& value);
+WebIDL::ExceptionOr<void> serialize_string_object(JS::VM& vm, SerializationRecord& serialized, JS::Value& value);
+void serialize_date_object(SerializationRecord& serialized, JS::Value& value);
+WebIDL::ExceptionOr<void> serialize_reg_exp_object(JS::VM& vm, SerializationRecord& serialized, JS::Value& value);
+
 WebIDL::ExceptionOr<void> serialize_bytes(JS::VM& vm, Vector<u32>& vector, ReadonlyBytes bytes);
 WebIDL::ExceptionOr<void> serialize_string(JS::VM& vm, Vector<u32>& vector, DeprecatedFlyString const& string);
 WebIDL::ExceptionOr<void> serialize_string(JS::VM& vm, Vector<u32>& vector, String const& string);
