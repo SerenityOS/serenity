@@ -304,7 +304,7 @@ SubtleCrypto::SupportedAlgorithmsMap SubtleCrypto::supported_algorithms()
 
     // https://w3c.github.io/webcrypto/#algorithm-conventions
     // https://w3c.github.io/webcrypto/#sha
-    define_an_algorithm("digest"_string, "SHA1"_string, ""_string);
+    define_an_algorithm("digest"_string, "SHA-1"_string, ""_string);
     define_an_algorithm("digest"_string, "SHA-256"_string, ""_string);
     define_an_algorithm("digest"_string, "SHA-384"_string, ""_string);
     define_an_algorithm("digest"_string, "SHA-512"_string, ""_string);
