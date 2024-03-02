@@ -507,11 +507,21 @@ WebIDL::ExceptionOr<void> serialize_reg_exp_object(JS::VM& vm, SerializationReco
     return {};
 }
 
+void serialize_u64(SerializationRecord& serialized, u64 value)
+{
+    serialized.append(bit_cast<u32*>(&value), 2);
+}
+
+void serialize_i64(SerializationRecord& serialized, i64 value)
+{
+    serialized.append(bit_cast<u32*>(&value), 2);
+}
+
 WebIDL::ExceptionOr<void> serialize_bytes(JS::VM& vm, Vector<u32>& vector, ReadonlyBytes bytes)
 {
     // Append size of the buffer to the serialized structure.
     u64 const size = bytes.size();
-    TRY_OR_THROW_OOM(vm, vector.try_append(bit_cast<u32*>(&size), 2));
+    serialize_u64(vector, size);
     // Append the bytes of the buffer to the serialized structure.
     u64 byte_position = 0;
     while (byte_position < size) {
@@ -1044,13 +1054,29 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::RegExpObject>> deserialize_reg_exp_obje
     return TRY(JS::regexp_create(realm.vm(), move(pattern), move(flags)));
 }
 
+u64 deserialize_u64(ReadonlySpan<u32> const& serialized, size_t& position)
+{
+    VERIFY(position + 2 <= serialized.size());
+    u32 const bits[2] {
+        serialized[position++],
+        serialized[position++],
+    };
+    return *bit_cast<u64*>(&bits);
+}
+
+i64 deserialize_i64(ReadonlySpan<u32> const& serialized, size_t& position)
+{
+    VERIFY(position + 2 <= serialized.size());
+    u32 const bits[2] {
+        serialized[position++],
+        serialized[position++],
+    };
+    return *bit_cast<i64*>(&bits);
+}
+
 WebIDL::ExceptionOr<ByteBuffer> deserialize_bytes(JS::VM& vm, ReadonlySpan<u32> vector, size_t& position)
 {
-    VERIFY(position + 2 <= vector.size());
-    u32 size_bits[2];
-    size_bits[0] = vector[position++];
-    size_bits[1] = vector[position++];
-    u64 const size = *bit_cast<u64*>(&size_bits);
+    u64 const size = deserialize_u64(vector, position);
 
     auto bytes = TRY_OR_THROW_OOM(vm, ByteBuffer::create_uninitialized(size));
     u64 byte_position = 0;
