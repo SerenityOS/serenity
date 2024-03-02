@@ -12,6 +12,11 @@
 
 namespace Kernel {
 
+ErrorOr<NonnullRefPtr<SerialDevice>> SerialDevice::create_with_io_window(NonnullOwnPtr<IOWindow> registers_io_window, unsigned minor)
+{
+    return *TRY(DeviceManagement::try_create_device<SerialDevice>(move(registers_io_window), minor));
+}
+
 SerialDevice::SerialDevice(NonnullOwnPtr<IOWindow> registers_io_window, unsigned minor)
     : CharacterDevice(4, minor)
     , m_registers_io_window(move(registers_io_window))

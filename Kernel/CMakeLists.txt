@@ -37,6 +37,7 @@ set(KERNEL_SOURCES
     Bus/PCI/Drivers/Net/E1000.cpp
     Bus/PCI/Drivers/Net/E1000e.cpp
     Bus/PCI/Drivers/Net/RTL8168.cpp
+    Bus/PCI/Drivers/Serial/8250.cpp
     Bus/PCI/Drivers/Storage/NVMe/NVMe.cpp
     Bus/PCI/Drivers/Storage/NVMe/VolumeManagementDevice.cpp
     Bus/PCI/Access.cpp
@@ -112,6 +113,7 @@ set(KERNEL_SOURCES
     Devices/GPU/Generic/DisplayConnector.cpp
     Devices/GPU/Management.cpp
     Devices/Loop/LoopDevice.cpp
+    Devices/Serial/PCI/Serial8250Device.cpp
     Devices/Storage/ATA/GenericIDE/Controller.cpp
     Devices/Storage/ATA/GenericIDE/Channel.cpp
     Devices/Storage/ATA/ATAController.cpp

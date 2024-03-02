@@ -16,6 +16,7 @@ class SerialDevice final : public CharacterDevice {
 
 public:
     static NonnullLockRefPtr<SerialDevice> must_create(size_t com_number);
+    static ErrorOr<NonnullRefPtr<SerialDevice>> create_with_io_window(NonnullOwnPtr<IOWindow> registers_io_window, unsigned minor);
 
     virtual ~SerialDevice() override;
 
@@ -103,6 +104,8 @@ public:
         DataReady = 0x01 << 0
     };
 
+    void set_baud(Baud);
+
 private:
     SerialDevice(NonnullOwnPtr<IOWindow> registers_io_window, unsigned minor);
 
@@ -111,7 +114,6 @@ private:
 
     void initialize();
     void set_interrupts(bool interrupt_enable);
-    void set_baud(Baud);
     void set_fifo_control(u8 fifo_control);
     void set_line_control(ParitySelect, StopBits, WordLength);
     void set_break_enable(bool break_enable);
