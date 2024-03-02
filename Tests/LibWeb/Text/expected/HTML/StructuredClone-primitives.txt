@@ -5,4 +5,5 @@ false
 123
 123.456
 9007199254740991
+
 This is a string
