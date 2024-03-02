@@ -2,6 +2,7 @@
 port='SRB2'
 useconfigure=true
 version='2.2.13'
+short_version=${version//./}
 depends=(
     'curl'
     'glu'
@@ -18,7 +19,7 @@ configopts=(
 )
 files=(
     "https://github.com/STJr/SRB2/archive/refs/tags/SRB2_release_${version}.tar.gz#0fc460dc93c056c21bfcc389ac0515588673ee692968d9a6711b19e63d283b3f"
-    "https://git.do.srb2.org/STJr/srb2assets-public/-/archive/SRB2_release_${version}/srb2assets-public-SRB2_release_${version}.tar.gz#edcc98a7ad0c0878013b39ca3941cdf8094f6cbab5129911abe3022170e96b8a"
+    "https://github.com/STJr/SRB2/releases/download/SRB2_release_${version}/SRB2-v${short_version}-Full.zip#83b91a351135b63705e49daffa44e7ac3cf3e33b397f56ff347ebb71eda27d4a"
 )
 workdir="SRB2-SRB2_release_${version}"
 launcher_name='Sonic Robo Blast 2'
@@ -39,5 +40,6 @@ build() {
 install() {
     run /usr/bin/install -d "${SERENITY_INSTALL_ROOT}${install_dir}/"
     run /usr/bin/install ./build/bin/srb2 ./srb2.png "${SERENITY_INSTALL_ROOT}${install_dir}"
-    run cp -r "../srb2assets-public-SRB2_release_${version}/." "${SERENITY_INSTALL_ROOT}${install_dir}/"
+    run cp -r ${PWD}/*.{dat,dta,pk3,txt} "${SERENITY_INSTALL_ROOT}${install_dir}/"
+    run cp -r "../models" "${SERENITY_INSTALL_ROOT}${install_dir}/"
 }
