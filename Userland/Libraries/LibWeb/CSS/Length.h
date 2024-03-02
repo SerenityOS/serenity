@@ -166,7 +166,12 @@ public:
 
     [[nodiscard]] CSSPixels to_px(ResolutionContext const&) const;
 
-    CSSPixels to_px(Layout::Node const&) const;
+    [[nodiscard]] ALWAYS_INLINE CSSPixels to_px(Layout::Node const& node) const
+    {
+        if (is_absolute())
+            return absolute_length_to_px();
+        return to_px_slow_case(node);
+    }
 
     ALWAYS_INLINE CSSPixels to_px(CSSPixelRect const& viewport_rect, FontMetrics const& font_metrics, FontMetrics const& root_font_metrics) const
     {
@@ -219,6 +224,8 @@ public:
 
 private:
     char const* unit_name() const;
+
+    [[nodiscard]] CSSPixels to_px_slow_case(Layout::Node const&) const;
 
     Type m_type;
     double m_value { 0 };
