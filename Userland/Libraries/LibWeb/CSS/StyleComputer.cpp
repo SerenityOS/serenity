@@ -1141,26 +1141,8 @@ static ErrorOr<ValueComparingNonnullRefPtr<StyleValue const>> interpolate_proper
     case AnimationType::None:
         return to;
     case AnimationType::Custom: {
-        if (property_id == PropertyID::Transform) {
-            // Try to optimize same-function interpolation
-            if (from.is_transformation() && to.is_transformation()) {
-                auto& from_transform = from.as_transformation();
-                auto& to_transform = to.as_transformation();
-                if (from_transform.transform_function() == to_transform.transform_function()) {
-                    auto from_input_values = from_transform.values();
-                    auto to_input_values = to_transform.values();
-                    if (from_input_values.size() == to_input_values.size()) {
-                        StyleValueVector interpolated_values;
-                        interpolated_values.ensure_capacity(from_input_values.size());
-                        for (size_t i = 0; i < from_input_values.size(); ++i)
-                            interpolated_values.append(TRY(interpolate_value(element, *from_input_values[i], *to_input_values[i], delta)));
-
-                        return TransformationStyleValue::create(from_transform.transform_function(), move(interpolated_values));
-                    }
-                }
-            }
+        if (property_id == PropertyID::Transform)
             return interpolate_transform(element, from, to, delta);
-        }
 
         // FIXME: Handle all custom animatable properties
         [[fallthrough]];
