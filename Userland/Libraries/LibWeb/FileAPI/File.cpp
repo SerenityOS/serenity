@@ -91,8 +91,6 @@ WebIDL::ExceptionOr<void> File::serialization_steps(HTML::SerializationRecord& r
 {
     auto& vm = this->vm();
 
-    TRY(HTML::serialize_string(vm, record, interface_name()));
-
     // FIXME: 1. Set serialized.[[SnapshotState]] to value’s snapshot state.
 
     // NON-STANDARD: FileAPI spec doesn't specify that type should be serialized, although
