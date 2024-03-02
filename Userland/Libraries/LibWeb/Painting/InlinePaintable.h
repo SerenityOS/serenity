@@ -66,4 +66,7 @@ private:
     Vector<PaintableFragment> m_fragments;
 };
 
+template<>
+inline bool Paintable::fast_is<InlinePaintable>() const { return is_inline_paintable(); }
+
 }
