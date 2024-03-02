@@ -23,6 +23,6 @@ describe("errors", () => {
         const zonedDateTime = new Temporal.ZonedDateTime(0n, {});
         expect(() => {
             zonedDateTime.offsetNanoseconds;
-        }).toThrowWithMessage(TypeError, "null is not a function");
+        }).toThrowWithMessage(TypeError, "getOffsetNanosecondsFor is undefined");
     });
 });

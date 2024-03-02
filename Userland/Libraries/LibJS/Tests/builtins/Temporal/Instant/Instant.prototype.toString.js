@@ -67,6 +67,6 @@ describe("errors", () => {
         const instant = new Temporal.Instant(0n);
         expect(() => {
             instant.toString({ timeZone: {} });
-        }).toThrowWithMessage(TypeError, "null is not a function");
+        }).toThrowWithMessage(TypeError, "getOffsetNanosecondsFor is undefined");
     });
 });

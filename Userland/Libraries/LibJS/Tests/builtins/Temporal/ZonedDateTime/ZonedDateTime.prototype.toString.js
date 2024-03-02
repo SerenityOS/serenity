@@ -156,7 +156,7 @@ describe("errors", () => {
         const zonedDateTime = new Temporal.ZonedDateTime(0n, {});
         expect(() => {
             zonedDateTime.toString();
-        }).toThrowWithMessage(TypeError, "null is not a function");
+        }).toThrowWithMessage(TypeError, "getOffsetNanosecondsFor is undefined");
     });
 
     test("calendarName option must be one of 'auto', 'always', 'never', 'critical'", () => {

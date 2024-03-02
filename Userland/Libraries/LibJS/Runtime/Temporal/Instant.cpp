@@ -300,8 +300,10 @@ ThrowCompletionOr<String> temporal_instant_to_string(VM& vm, Instant& instant, V
     }
     // 9. Else,
     else {
+        auto time_zone_record = TRY(create_time_zone_methods_record(vm, NonnullGCPtr<Object> { time_zone.as_object() }, { { TimeZoneMethod::GetOffsetNanosecondsFor } }));
+
         // a. Let offsetNs be ? GetOffsetNanosecondsFor(timeZone, instant).
-        auto offset_ns = TRY(get_offset_nanoseconds_for(vm, time_zone, instant));
+        auto offset_ns = TRY(get_offset_nanoseconds_for(vm, time_zone_record, instant));
 
         // b. Let timeZoneString be ! FormatISOTimeZoneOffsetString(offsetNs).
         time_zone_string = MUST_OR_THROW_OOM(format_iso_time_zone_offset_string(vm, offset_ns));

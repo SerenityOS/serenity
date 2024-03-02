@@ -674,13 +674,14 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::offset_nanoseconds_getter)
     auto zoned_date_time = TRY(typed_this_object(vm));
 
     // 3. Let timeZone be zonedDateTime.[[TimeZone]].
-    auto& time_zone = zoned_date_time->time_zone();
+    // 3. Let timeZoneRec be ? CreateTimeZoneMethodsRecord(zonedDateTime.[[TimeZone]], « GET-OFFSET-NANOSECONDS-FOR »).
+    auto time_zone_record = TRY(create_time_zone_methods_record(vm, NonnullGCPtr<Object> { zoned_date_time->time_zone() }, { { TimeZoneMethod::GetOffsetNanosecondsFor } }));
 
     // 4. Let instant be ! CreateTemporalInstant(zonedDateTime.[[Nanoseconds]]).
     auto* instant = MUST(create_temporal_instant(vm, zoned_date_time->nanoseconds()));
 
-    // 5. Return 𝔽(? GetOffsetNanosecondsFor(timeZone, instant)).
-    return Value(TRY(get_offset_nanoseconds_for(vm, &time_zone, *instant)));
+    // 5. Return 𝔽(? GetOffsetNanosecondsFor(timeZoneRec, instant)).
+    return Value(TRY(get_offset_nanoseconds_for(vm, time_zone_record, *instant)));
 }
 
 // 6.3.30 get Temporal.ZonedDateTime.prototype.offset, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.offset
@@ -1025,6 +1026,8 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::round)
     // 9. Let timeZone be zonedDateTime.[[TimeZone]].
     auto& time_zone = zoned_date_time->time_zone();
 
+    auto time_zone_record = TRY(create_time_zone_methods_record(vm, NonnullGCPtr<Object> { time_zone }, { { TimeZoneMethod::GetOffsetNanosecondsFor } }));
+
     // 10. Let instant be ! CreateTemporalInstant(zonedDateTime.[[Nanoseconds]]).
     auto* instant = MUST(create_temporal_instant(vm, zoned_date_time->nanoseconds()));
 
@@ -1062,7 +1065,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::round)
     auto round_result = round_iso_date_time(temporal_date_time->iso_year(), temporal_date_time->iso_month(), temporal_date_time->iso_day(), temporal_date_time->iso_hour(), temporal_date_time->iso_minute(), temporal_date_time->iso_second(), temporal_date_time->iso_millisecond(), temporal_date_time->iso_microsecond(), temporal_date_time->iso_nanosecond(), rounding_increment, *smallest_unit, rounding_mode, day_length_ns);
 
     // 21. Let offsetNanoseconds be ? GetOffsetNanosecondsFor(timeZone, instant).
-    auto offset_nanoseconds = TRY(get_offset_nanoseconds_for(vm, &time_zone, *instant));
+    auto offset_nanoseconds = TRY(get_offset_nanoseconds_for(vm, time_zone_record, *instant));
 
     // 22. Let epochNanoseconds be ? InterpretISODateTimeOffset(roundResult.[[Year]], roundResult.[[Month]], roundResult.[[Day]], roundResult.[[Hour]], roundResult.[[Minute]], roundResult.[[Second]], roundResult.[[Millisecond]], roundResult.[[Microsecond]], roundResult.[[Nanosecond]], option, offsetNanoseconds, timeZone, "compatible", "prefer", match exactly).
     auto* epoch_nanoseconds = TRY(interpret_iso_date_time_offset(vm, round_result.year, round_result.month, round_result.day, round_result.hour, round_result.minute, round_result.second, round_result.millisecond, round_result.microsecond, round_result.nanosecond, OffsetBehavior::Option, offset_nanoseconds, &time_zone, "compatible"sv, "prefer"sv, MatchBehavior::MatchExactly));

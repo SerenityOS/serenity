@@ -35,7 +35,7 @@ describe("errors", () => {
         const instant = new Temporal.Instant(1n);
         expect(() => {
             timeZone.getPlainDateTimeFor(instant);
-        }).toThrowWithMessage(TypeError, "null is not a function");
+        }).toThrowWithMessage(TypeError, "getOffsetNanosecondsFor is undefined");
     });
 
     test("this value must be a Temporal.TimeZone object", () => {

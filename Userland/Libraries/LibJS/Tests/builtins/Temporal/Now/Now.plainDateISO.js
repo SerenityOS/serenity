@@ -52,6 +52,6 @@ describe("errors", () => {
     test("custom time zone doesn't have a getOffsetNanosecondsFor function", () => {
         expect(() => {
             Temporal.Now.plainDateISO({});
-        }).toThrowWithMessage(TypeError, "null is not a function");
+        }).toThrowWithMessage(TypeError, "getOffsetNanosecondsFor is undefined");
     });
 });
