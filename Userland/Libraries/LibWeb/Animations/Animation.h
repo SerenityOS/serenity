@@ -77,7 +77,11 @@ public:
         Yes,
         No,
     };
-    void cancel();
+    enum class ShouldInvalidate {
+        Yes,
+        No,
+    };
+    void cancel(ShouldInvalidate = ShouldInvalidate::Yes);
     WebIDL::ExceptionOr<void> finish();
     WebIDL::ExceptionOr<void> play();
     WebIDL::ExceptionOr<void> play_an_animation(AutoRewind);
