@@ -113,7 +113,7 @@ ThrowCompletionOr<BigInt const*> interpret_iso_date_time_offset(VM& vm, i32 year
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidZonedDateTimeOffset);
 
     // 10. Let instant be ? DisambiguatePossibleInstants(possibleInstants, timeZone, dateTime, disambiguation).
-    auto instant = TRY(disambiguate_possible_instants(vm, possible_instants, time_zone, *date_time, disambiguation));
+    auto instant = TRY(disambiguate_possible_instants(vm, possible_instants, time_zone_record, *date_time, disambiguation));
 
     // 11. Return instant.[[Nanoseconds]].
     return &instant->nanoseconds();
