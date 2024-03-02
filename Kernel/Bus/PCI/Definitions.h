@@ -18,6 +18,10 @@
 
 namespace Kernel::PCI {
 
+AK_TYPEDEF_DISTINCT_ORDERED_ID(u8, BusNumber);
+AK_TYPEDEF_DISTINCT_ORDERED_ID(u8, DeviceNumber);
+AK_TYPEDEF_DISTINCT_ORDERED_ID(u8, FunctionNumber);
+
 enum class HeaderType {
     Device = 0,
     Bridge = 1,
@@ -30,13 +34,6 @@ enum class HeaderType0BaseRegister {
     BAR3,
     BAR4,
     BAR5,
-};
-
-enum class BARSpaceType {
-    IOSpace,
-    Memory16BitSpace,
-    Memory32BitSpace,
-    Memory64BitSpace,
 };
 
 enum class RegisterOffset {
@@ -65,6 +62,7 @@ enum class RegisterOffset {
     CAPABILITIES_POINTER = 0x34,  // u8
     INTERRUPT_LINE = 0x3C,        // byte
     INTERRUPT_PIN = 0x3D,         // byte
+    __END = 0x3E,
 };
 
 enum class Limits {
@@ -79,7 +77,6 @@ static constexpr u16 value_port = 0xcfc;
 static constexpr size_t mmio_device_space_size = 4096;
 static constexpr u16 none_value = 0xffff;
 static constexpr size_t memory_range_per_bus = mmio_device_space_size * to_underlying(Limits::MaxFunctionsPerDevice) * to_underlying(Limits::MaxDevicesPerBus);
-static constexpr u64 bar_address_mask = ~0xfull;
 static constexpr u8 msi_control_offset = 2;
 static constexpr u16 msi_control_enable = 0x0001;
 static constexpr u8 msi_address_low_offset = 4;
@@ -93,7 +90,7 @@ static constexpr u16 msix_table_offset_mask = 0xfff8;
 static constexpr u16 msix_control_enable = 0x8000;
 
 // Taken from https://pcisig.com/sites/default/files/files/PCI_Code-ID_r_1_11__v24_Jan_2019.pdf
-enum class ClassID {
+enum class ClassID : u8 {
     Legacy = 0x00,
     MassStorage = 0x01,
     Network = 0x02,
@@ -166,6 +163,7 @@ enum class SubclassID {
     VGA = 0x00,
     XGA = 0x01,
     ThreeD = 0x02,
+    Other = 0x80,
 };
 
 }
@@ -232,10 +230,12 @@ enum ID {
 }
 
 struct HardwareID {
-    u16 vendor_id { 0 };
-    u16 device_id { 0 };
+    u16 const vendor_id { 0 };
+    u16 const device_id { 0 };
 
     bool is_null() const { return !vendor_id && !device_id; }
+    bool is_vendor_id_wildcard() const { return vendor_id == 0xffff; }
+    bool is_device_id_wildcard() const { return device_id == 0xffff; }
 
     bool operator==(HardwareID const& other) const
     {
@@ -318,31 +318,7 @@ private:
     u8 m_function { 0 };
 };
 
-class Capability {
-public:
-    Capability(Address address, u8 id, u8 ptr)
-        : m_address(address)
-        , m_id(id)
-        , m_ptr(ptr)
-    {
-    }
-
-    CapabilityID id() const { return m_id; }
-
-    u8 read8(size_t offset) const;
-    u16 read16(size_t offset) const;
-    u32 read32(size_t offset) const;
-    void write8(size_t offset, u8 value) const;
-    void write16(size_t offset, u16 value) const;
-    void write32(size_t offset, u32 value) const;
-
-private:
-    const Address m_address;
-    const CapabilityID m_id;
-    const u8 m_ptr;
-};
-
-AK_TYPEDEF_DISTINCT_ORDERED_ID(u8, ClassCode);
+AK_TYPEDEF_DISTINCT_NUMERIC_GENERAL(u8, ClassCode, Comparison, CastToBool, CastToUnderlying)
 AK_MAKE_DISTINCT_NUMERIC_COMPARABLE_TO_ENUM(ClassCode, ClassID)
 
 AK_TYPEDEF_DISTINCT_ORDERED_ID(u8, SubclassCode);
@@ -368,7 +344,7 @@ AK_TYPEDEF_DISTINCT_ORDERED_ID(u8, InterruptPin);
 class Access;
 class EnumerableDeviceIdentifier {
 public:
-    EnumerableDeviceIdentifier(Address address, HardwareID hardware_id, RevisionID revision_id, ClassCode class_code, SubclassCode subclass_code, ProgrammingInterface prog_if, SubsystemID subsystem_id, SubsystemVendorID subsystem_vendor_id, InterruptLine interrupt_line, InterruptPin interrupt_pin, Vector<Capability> const& capabilities)
+    EnumerableDeviceIdentifier(Address address, HardwareID hardware_id, RevisionID revision_id, ClassCode class_code, SubclassCode subclass_code, ProgrammingInterface prog_if, SubsystemID subsystem_id, SubsystemVendorID subsystem_vendor_id, InterruptLine interrupt_line, InterruptPin interrupt_pin)
         : m_address(address)
         , m_hardware_id(hardware_id)
         , m_revision_id(revision_id)
@@ -379,15 +355,9 @@ public:
         , m_subsystem_vendor_id(subsystem_vendor_id)
         , m_interrupt_line(interrupt_line)
         , m_interrupt_pin(interrupt_pin)
-        , m_capabilities(capabilities)
     {
-        if constexpr (PCI_DEBUG) {
-            for (auto const& capability : capabilities)
-                dbgln("{} has capability {}", address, capability.id());
-        }
     }
 
-    Vector<Capability> const& capabilities() const { return m_capabilities; }
     HardwareID const& hardware_id() const { return m_hardware_id; }
     Address const& address() const { return m_address; }
 
@@ -423,8 +393,6 @@ protected:
 
     InterruptLine m_interrupt_line;
     InterruptPin m_interrupt_pin;
-
-    Vector<Capability> m_capabilities;
 };
 
 class MSIxInfo {
@@ -455,48 +423,6 @@ public:
 
     bool message_address_64_bit_format { false };
     u8 count {};
-};
-
-class DeviceIdentifier
-    : public RefCounted<DeviceIdentifier>
-    , public EnumerableDeviceIdentifier {
-    AK_MAKE_NONCOPYABLE(DeviceIdentifier);
-
-public:
-    static ErrorOr<NonnullRefPtr<DeviceIdentifier>> from_enumerable_identifier(EnumerableDeviceIdentifier const& other_identifier);
-
-    void initialize();
-    bool is_msix_capable() const { return m_msix_info.table_size > 0; }
-    u8 get_msix_table_bar() const { return m_msix_info.table_bar; }
-    u32 get_msix_table_offset() const { return m_msix_info.table_offset; }
-
-    bool is_msi_capable() const { return m_msi_info.count > 0; }
-    bool is_msi_64bit_address_format() { return m_msi_info.message_address_64_bit_format; }
-
-    Spinlock<LockRank::None>& operation_lock() { return m_operation_lock; }
-    Spinlock<LockRank::None>& operation_lock() const { return m_operation_lock; }
-
-    virtual ~DeviceIdentifier() = default;
-
-private:
-    DeviceIdentifier(EnumerableDeviceIdentifier const& other_identifier)
-        : EnumerableDeviceIdentifier(other_identifier.address(),
-            other_identifier.hardware_id(),
-            other_identifier.revision_id(),
-            other_identifier.class_code(),
-            other_identifier.subclass_code(),
-            other_identifier.prog_if(),
-            other_identifier.subsystem_id(),
-            other_identifier.subsystem_vendor_id(),
-            other_identifier.interrupt_line(),
-            other_identifier.interrupt_pin(),
-            other_identifier.capabilities())
-    {
-    }
-
-    mutable Spinlock<LockRank::None> m_operation_lock;
-    MSIxInfo m_msix_info {};
-    MSIInfo m_msi_info {};
 };
 
 class Domain;

@@ -28,7 +28,7 @@ class GraphicsManagement {
 public:
     static GraphicsManagement& the();
     static bool is_initialized();
-    bool initialize();
+    void initialize();
 
     unsigned allocate_minor_device_number() { return m_current_minor_number++; }
     GraphicsManagement();
@@ -48,8 +48,6 @@ public:
 
 private:
     void enable_vga_text_mode_console_cursor();
-
-    ErrorOr<void> determine_and_initialize_graphics_device(PCI::DeviceIdentifier const&);
 
     void initialize_preset_resolution_generic_display_connector();
 

@@ -5,50 +5,182 @@
  */
 
 #include <AK/AnyOf.h>
+#include <AK/Error.h>
+#include <AK/NonnullRefPtr.h>
+#include <AK/RefPtr.h>
 #include <Kernel/Arch/Interrupts.h>
 #include <Kernel/Arch/PCIMSI.h>
-#include <Kernel/Bus/PCI/API.h>
+#include <Kernel/Bus/PCI/Bus.h>
+#include <Kernel/Bus/PCI/Controller/HostController.h>
+#include <Kernel/Bus/PCI/Definitions.h>
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Memory/TypedMapping.h>
 
 namespace Kernel::PCI {
 
-Device::Device(DeviceIdentifier const& pci_identifier)
-    : m_pci_identifier(pci_identifier)
+void Device::set_parent_bus(Bus& parent_bus)
 {
-    m_pci_identifier->initialize();
-    m_interrupt_range.m_start_irq = m_pci_identifier->interrupt_line().value();
+    VERIFY(!m_parent_bus);
+    m_parent_bus = &parent_bus;
+}
+
+void Device::set_host_controller(PCI::HostController& host_controller)
+{
+    VERIFY(!m_host_controller);
+    m_host_controller = &host_controller;
+}
+
+ErrorOr<NonnullRefPtr<Device>> Device::from_enumerable_identifier(EnumerableDeviceIdentifier const& identifier)
+{
+    return adopt_nonnull_ref_or_enomem(new (nothrow) Device(identifier));
+}
+
+Device::Device(EnumerableDeviceIdentifier const& identifier)
+    : m_device_id(identifier)
+{
+    m_interrupt_range.m_start_irq = identifier.interrupt_line().value();
     m_interrupt_range.m_irq_count = 1;
 }
 
-bool Device::is_msi_capable() const
+void Device::set_capabilities(Vector<Capability> capabilities)
 {
-    return m_pci_identifier->is_msi_capable();
-}
-bool Device::is_msix_capable() const
-{
-    return m_pci_identifier->is_msix_capable();
+    VERIFY(m_capabilities.is_empty());
+    m_capabilities = move(capabilities);
 }
 
-void Device::enable_pin_based_interrupts() const
+u8 Device::config_space_read8_locked(PCI::RegisterOffset field)
 {
-    PCI::enable_interrupt_line(m_pci_identifier);
+    VERIFY(m_operation_lock.is_locked());
+    VERIFY(m_host_controller);
+    auto const& device_address = device_id().address();
+    auto bus_number = device_address.bus();
+    auto device_number = device_address.device();
+    auto function_number = device_address.function();
+    return m_host_controller->read8_field(bus_number, device_number, function_number, static_cast<u32>(field));
 }
-void Device::disable_pin_based_interrupts() const
+
+u16 Device::config_space_read16_locked(PCI::RegisterOffset field)
 {
-    PCI::disable_interrupt_line(m_pci_identifier);
+    VERIFY(m_operation_lock.is_locked());
+    VERIFY(m_host_controller);
+    auto const& device_address = device_id().address();
+    auto bus_number = device_address.bus();
+    auto device_number = device_address.device();
+    auto function_number = device_address.function();
+    return m_host_controller->read16_field(bus_number, device_number, function_number, static_cast<u32>(field));
+}
+
+u32 Device::config_space_read32_locked(PCI::RegisterOffset field)
+{
+    VERIFY(m_operation_lock.is_locked());
+    auto const& device_address = device_id().address();
+    auto bus_number = device_address.bus();
+    auto device_number = device_address.device();
+    auto function_number = device_address.function();
+    return m_host_controller->read32_field(bus_number, device_number, function_number, static_cast<u32>(field));
+}
+
+void Device::config_space_write8_locked(PCI::RegisterOffset field, u8 value)
+{
+    VERIFY(m_operation_lock.is_locked());
+    VERIFY(m_host_controller);
+    auto const& device_address = device_id().address();
+    auto bus_number = device_address.bus();
+    auto device_number = device_address.device();
+    auto function_number = device_address.function();
+    m_host_controller->write8_field(bus_number, device_number, function_number, static_cast<u32>(field), value);
+}
+
+void Device::config_space_write16_locked(PCI::RegisterOffset field, u16 value)
+{
+    VERIFY(m_operation_lock.is_locked());
+    VERIFY(m_host_controller);
+    auto const& device_address = device_id().address();
+    auto bus_number = device_address.bus();
+    auto device_number = device_address.device();
+    auto function_number = device_address.function();
+    m_host_controller->write16_field(bus_number, device_number, function_number, static_cast<u32>(field), value);
+}
+
+void Device::config_space_write32_locked(PCI::RegisterOffset field, u32 value)
+{
+    VERIFY(m_operation_lock.is_locked());
+    VERIFY(m_host_controller);
+    auto const& device_address = device_id().address();
+    auto bus_number = device_address.bus();
+    auto device_number = device_address.device();
+    auto function_number = device_address.function();
+    m_host_controller->write32_field(bus_number, device_number, function_number, static_cast<u32>(field), value);
+}
+
+void Device::enable_pin_based_interrupts()
+{
+    SpinlockLocker locker(m_operation_lock);
+    config_space_write16_locked(PCI::RegisterOffset::COMMAND,
+        config_space_read16_locked(PCI::RegisterOffset::COMMAND) & ~(1 << 10));
+}
+
+void Device::disable_pin_based_interrupts()
+{
+    SpinlockLocker locker(m_operation_lock);
+    config_space_write16_locked(PCI::RegisterOffset::COMMAND,
+        config_space_read16_locked(PCI::RegisterOffset::COMMAND) | 1 << 10);
+}
+
+void Device::enable_io_space()
+{
+    SpinlockLocker locker(m_operation_lock);
+    config_space_write16_locked(PCI::RegisterOffset::COMMAND,
+        config_space_read16_locked(PCI::RegisterOffset::COMMAND) | (1 << 0));
+}
+void Device::disable_io_space()
+{
+    SpinlockLocker locker(m_operation_lock);
+    config_space_write16_locked(PCI::RegisterOffset::COMMAND,
+        config_space_read16_locked(PCI::RegisterOffset::COMMAND) & ~(1 << 0));
+}
+
+void Device::enable_memory_space()
+{
+    SpinlockLocker locker(m_operation_lock);
+    config_space_write16_locked(PCI::RegisterOffset::COMMAND,
+        config_space_read16_locked(PCI::RegisterOffset::COMMAND) | (1 << 1));
+}
+void Device::disable_memory_space()
+{
+    SpinlockLocker locker(m_operation_lock);
+    config_space_write16_locked(PCI::RegisterOffset::COMMAND,
+        config_space_read16_locked(PCI::RegisterOffset::COMMAND) & ~(1 << 1));
+}
+
+void Device::enable_bus_mastering()
+{
+    SpinlockLocker locker(m_operation_lock);
+    auto value = config_space_read16_locked(PCI::RegisterOffset::COMMAND);
+    value |= (1 << 2);
+    value |= (1 << 0);
+    config_space_write16_locked(PCI::RegisterOffset::COMMAND, value);
+}
+
+void Device::disable_bus_mastering()
+{
+    SpinlockLocker locker(m_operation_lock);
+    auto value = config_space_read16_locked(PCI::RegisterOffset::COMMAND);
+    value &= ~(1 << 2);
+    value |= (1 << 0);
+    config_space_write16_locked(PCI::RegisterOffset::COMMAND, value);
 }
 
 void Device::enable_message_signalled_interrupts()
 {
-    for (auto& capability : m_pci_identifier->capabilities()) {
+    for (auto& capability : m_capabilities) {
         if (capability.id().value() == PCI::Capabilities::ID::MSI)
             capability.write16(msi_control_offset, capability.read16(msi_control_offset) | msi_control_enable);
     }
 }
 void Device::disable_message_signalled_interrupts()
 {
-    for (auto& capability : m_pci_identifier->capabilities()) {
+    for (auto& capability : m_capabilities) {
         if (capability.id().value() == PCI::Capabilities::ID::MSI)
             capability.write16(msi_control_offset, capability.read16(msi_control_offset) & ~(msi_control_enable));
     }
@@ -56,7 +188,7 @@ void Device::disable_message_signalled_interrupts()
 
 void Device::enable_extended_message_signalled_interrupts()
 {
-    for (auto& capability : m_pci_identifier->capabilities()) {
+    for (auto& capability : m_capabilities) {
         if (capability.id().value() == PCI::Capabilities::ID::MSIX)
             capability.write16(msi_control_offset, capability.read16(msi_control_offset) | msix_control_enable);
     }
@@ -64,7 +196,7 @@ void Device::enable_extended_message_signalled_interrupts()
 
 void Device::disable_extended_message_signalled_interrupts()
 {
-    for (auto& capability : m_pci_identifier->capabilities()) {
+    for (auto& capability : m_capabilities) {
         if (capability.id().value() == PCI::Capabilities::ID::MSIX)
             capability.write16(msi_control_offset, capability.read16(msi_control_offset) & ~(msix_control_enable));
     }
@@ -73,6 +205,42 @@ void Device::disable_extended_message_signalled_interrupts()
 PCI::InterruptType Device::get_interrupt_type()
 {
     return m_interrupt_range.m_type;
+}
+
+u8 Device::config_space_read8(PCI::RegisterOffset field)
+{
+    SpinlockLocker locker(m_operation_lock);
+    return config_space_read8_locked(field);
+}
+
+u16 Device::config_space_read16(PCI::RegisterOffset field)
+{
+    SpinlockLocker locker(m_operation_lock);
+    return config_space_read16_locked(field);
+}
+
+u32 Device::config_space_read32(PCI::RegisterOffset field)
+{
+    SpinlockLocker locker(m_operation_lock);
+    return config_space_read32_locked(field);
+}
+
+void Device::config_space_write8(PCI::RegisterOffset field, u8 value)
+{
+    SpinlockLocker locker(m_operation_lock);
+    config_space_write8_locked(field, value);
+}
+
+void Device::config_space_write16(PCI::RegisterOffset field, u16 value)
+{
+    SpinlockLocker locker(m_operation_lock);
+    config_space_write16_locked(field, value);
+}
+
+void Device::config_space_write32(PCI::RegisterOffset field, u32 value)
+{
+    SpinlockLocker locker(m_operation_lock);
+    config_space_write32_locked(field, value);
 }
 
 // Reserve `numbers_of_irqs` for this device. Returns the interrupt type
@@ -110,10 +278,10 @@ PhysicalAddress Device::msix_table_entry_address(u8 irq)
 
     VERIFY(index < m_interrupt_range.m_irq_count);
     VERIFY(index >= 0);
-    auto table_bar_ptr = PCI::get_BAR(device_identifier(), static_cast<PCI::HeaderType0BaseRegister>(m_pci_identifier->get_msix_table_bar())) & PCI::bar_address_mask;
-    auto table_offset = m_pci_identifier->get_msix_table_offset();
+    auto table_bar_ptr = m_resources[static_cast<size_t>(get_msix_table_bar())].physical_memory_address();
+    auto table_offset = get_msix_table_offset();
 
-    return PhysicalAddress(table_bar_ptr + table_offset + (index * 16));
+    return table_bar_ptr.offset(table_offset + (index * 16));
 }
 
 // This function is used to allocate an irq at an index and returns
@@ -146,11 +314,11 @@ ErrorOr<u8> Device::allocate_irq(u8 index)
 
         auto data = msi_data_register(m_interrupt_range.m_start_irq + index, false, false);
         auto addr = msi_address_register(0, false, false);
-        for (auto& capability : m_pci_identifier->capabilities()) {
+        for (auto& capability : m_capabilities) {
             if (capability.id().value() == PCI::Capabilities::ID::MSI) {
                 capability.write32(msi_address_low_offset, addr & 0xffffffff);
 
-                if (!m_pci_identifier->is_msi_64bit_address_format()) {
+                if (!is_msi_64bit_address_format()) {
                     capability.write16(msi_address_high_or_data_offset, data);
                     break;
                 }

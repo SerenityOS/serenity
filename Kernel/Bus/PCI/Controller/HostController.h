@@ -6,20 +6,26 @@
 
 #pragma once
 
+#include <AK/AtomicRefCounted.h>
 #include <AK/Bitmap.h>
 #include <AK/Vector.h>
+#include <Kernel/Bus/PCI/Bus.h>
 #include <Kernel/Bus/PCI/Definitions.h>
+#include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Locking/Spinlock.h>
 
 namespace Kernel::PCI {
 
-AK_TYPEDEF_DISTINCT_ORDERED_ID(u8, BusNumber);
-AK_TYPEDEF_DISTINCT_ORDERED_ID(u8, DeviceNumber);
-AK_TYPEDEF_DISTINCT_ORDERED_ID(u8, FunctionNumber);
+class HostController
+    : public AtomicRefCounted<HostController> {
+    friend class Access;
 
-class HostController {
 public:
     virtual ~HostController() = default;
+
+    ErrorOr<void> enumerate_all_devices(Badge<Access>);
+
+    u32 domain_number() const { return m_domain.domain_number(); }
 
     void write8_field(BusNumber, DeviceNumber, FunctionNumber, u32 field, u8 value);
     void write16_field(BusNumber, DeviceNumber, FunctionNumber, u32 field, u16 value);
@@ -29,20 +35,24 @@ public:
     u16 read16_field(BusNumber, DeviceNumber, FunctionNumber, u32 field);
     u32 read32_field(BusNumber, DeviceNumber, FunctionNumber, u32 field);
 
-    u32 domain_number() const { return m_domain.domain_number(); }
-
-    void enumerate_attached_devices(Function<IterationDecision(EnumerableDeviceIdentifier)> callback);
-
 private:
-    void enumerate_bus(Function<IterationDecision(EnumerableDeviceIdentifier)> const& callback, BusNumber, bool recursive);
-    void enumerate_functions(Function<IterationDecision(EnumerableDeviceIdentifier)> const& callback, BusNumber, DeviceNumber, FunctionNumber, bool recursive);
-    void enumerate_device(Function<IterationDecision(EnumerableDeviceIdentifier)> const& callback, BusNumber bus, DeviceNumber device, bool recursive);
+    using DevicesList = SpinlockProtected<IntrusiveList<&Device::m_host_controller_list_node>, LockRank::None>;
 
-    u8 read8_field(BusNumber, DeviceNumber, FunctionNumber, RegisterOffset field);
-    u16 read16_field(BusNumber, DeviceNumber, FunctionNumber, RegisterOffset field);
+    ErrorOr<void> enumerate_bus(Bus&, bool recursive);
+    ErrorOr<void> enumerate_function(Bus&, DeviceNumber, FunctionNumber, bool recursive);
+    ErrorOr<void> enumerate_device(Bus&, DeviceNumber, bool recursive);
 
-    Optional<u8> get_capabilities_pointer_for_function(BusNumber, DeviceNumber, FunctionNumber);
-    Vector<Capability> get_capabilities_for_function(BusNumber, DeviceNumber, FunctionNumber);
+    void fill_device_resources(PCI::Device& device);
+    PCI::Resource determine_device_resource_address_and_length(PCI::Device& device, u8 field);
+
+    u8 read8_field_locked(BusNumber, DeviceNumber, FunctionNumber, RegisterOffset field);
+    u16 read16_field_locked(BusNumber, DeviceNumber, FunctionNumber, RegisterOffset field);
+
+    Optional<u8> get_capabilities_pointer_for_function(Bus&, DeviceNumber, FunctionNumber);
+
+    void enumerate_msi_capabilities_for_function(Bus&, PCI::Device&, Vector<PCI::Capability> const&);
+
+    size_t calculate_bar_resource_space_size(Bus& bus, DeviceNumber device, FunctionNumber function, size_t resource_index);
 
 protected:
     virtual void write8_field_locked(BusNumber, DeviceNumber, FunctionNumber, u32 field, u8 value) = 0;
@@ -53,14 +63,17 @@ protected:
     virtual u16 read16_field_locked(BusNumber, DeviceNumber, FunctionNumber, u32 field) = 0;
     virtual u32 read32_field_locked(BusNumber, DeviceNumber, FunctionNumber, u32 field) = 0;
 
-    explicit HostController(PCI::Domain const& domain);
+    explicit HostController(PCI::Domain const& domain, NonnullRefPtr<Bus> root_bus);
 
-    const PCI::Domain m_domain;
+    ErrorOr<void> enumerate_capabilities_for_function(Bus&, PCI::Device&);
+
+    PCI::Domain const m_domain;
+    NonnullRefPtr<Bus> const m_root_bus;
 
     Spinlock<LockRank::None> m_access_lock;
 
 private:
+    DevicesList m_attached_devices;
     Bitmap m_enumerated_buses;
 };
-
 }

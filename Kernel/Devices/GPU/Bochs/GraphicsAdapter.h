@@ -11,6 +11,7 @@
 #include <Kernel/Devices/GPU/Bochs/Definitions.h>
 #include <Kernel/Devices/GPU/Console/GenericFramebufferConsole.h>
 #include <Kernel/Devices/GPU/GPUDevice.h>
+#include <Kernel/Library/Driver.h>
 #include <Kernel/Memory/PhysicalAddress.h>
 #include <Kernel/Memory/TypedMapping.h>
 
@@ -19,21 +20,20 @@ namespace Kernel {
 class GraphicsManagement;
 struct BochsDisplayMMIORegisters;
 
-class BochsGraphicsAdapter final : public GPUDevice
-    , public PCI::Device {
+class BochsGraphicsAdapter final : public GPUDevice {
     friend class GraphicsManagement;
 
+    KERNEL_MAKE_DRIVER_LISTABLE(BochsGraphicsAdapter)
 public:
-    static ErrorOr<bool> probe(PCI::DeviceIdentifier const&);
-    static ErrorOr<NonnullLockRefPtr<GPUDevice>> create(PCI::DeviceIdentifier const&);
+    static ErrorOr<NonnullRefPtr<BochsGraphicsAdapter>> create(PCI::Device const&);
     virtual ~BochsGraphicsAdapter() = default;
-    virtual StringView device_name() const override { return "BochsGraphicsAdapter"sv; }
 
 private:
-    ErrorOr<void> initialize_adapter(PCI::DeviceIdentifier const&);
+    ErrorOr<void> initialize_adapter();
 
-    explicit BochsGraphicsAdapter(PCI::DeviceIdentifier const&);
+    explicit BochsGraphicsAdapter(PCI::Device const&);
 
     LockRefPtr<DisplayConnector> m_display_connector;
+    NonnullRefPtr<PCI::Device> const m_pci_device;
 };
 }

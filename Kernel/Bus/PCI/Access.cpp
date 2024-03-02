@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2020-2023, Liav A. <liavalb@hotmail.co.il>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,6 +7,7 @@
 #include <AK/ByteReader.h>
 #include <AK/Error.h>
 #include <AK/HashTable.h>
+#include <AK/Singleton.h>
 #if ARCH(X86_64)
 #    include <Kernel/Arch/x86_64/PCI/Controller/PIIX4HostBridge.h>
 #endif
@@ -19,12 +20,17 @@
 #include <Kernel/Memory/Region.h>
 #include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/Sections.h>
+#include <Kernel/Tasks/WorkQueue.h>
 
 namespace Kernel::PCI {
 
-#define PCI_MMIO_CONFIG_SPACE_SIZE 4096
-
 static Access* s_access;
+
+void Access::initialize()
+{
+    VERIFY(!is_initialized());
+    new Access;
+}
 
 Access& Access::the()
 {
@@ -49,106 +55,17 @@ bool Access::is_disabled()
     return g_pci_access_is_disabled_from_commandline || g_pci_access_io_probe_failed;
 }
 
-UNMAP_AFTER_INIT bool Access::find_and_register_pci_host_bridges_from_acpi_mcfg_table(PhysicalAddress mcfg_table)
+ErrorOr<void> Access::add_host_controller_and_scan_for_devices(NonnullRefPtr<HostController> controller)
 {
-    u32 length = 0;
-    u8 revision = 0;
-    {
-        auto mapped_mcfg_table_or_error = Memory::map_typed<ACPI::Structures::SDTHeader>(mcfg_table);
-        if (mapped_mcfg_table_or_error.is_error()) {
-            dbgln("Failed to map MCFG table");
-            return false;
-        }
-        auto mapped_mcfg_table = mapped_mcfg_table_or_error.release_value();
-        length = mapped_mcfg_table->length;
-        revision = mapped_mcfg_table->revision;
-    }
+    TRY(m_host_controllers.with([controller](auto& controllers) -> ErrorOr<void> {
+        auto domain_number = controller->domain_number();
 
-    if (length == sizeof(ACPI::Structures::SDTHeader))
-        return false;
-
-    dbgln("PCI: MCFG, length: {}, revision: {}", length, revision);
-
-    if (Checked<size_t>::addition_would_overflow(length, PAGE_SIZE)) {
-        dbgln("Overflow when adding extra page to allocation of length {}", length);
-        return false;
-    }
-    length += PAGE_SIZE;
-    auto region_size_or_error = Memory::page_round_up(length);
-    if (region_size_or_error.is_error()) {
-        dbgln("Failed to round up length of {} to pages", length);
-        return false;
-    }
-    auto mcfg_region_or_error = MM.allocate_kernel_region(mcfg_table.page_base(), region_size_or_error.value(), "PCI Parsing MCFG"sv, Memory::Region::Access::ReadWrite);
-    if (mcfg_region_or_error.is_error())
-        return false;
-    auto& mcfg = *(ACPI::Structures::MCFG*)mcfg_region_or_error.value()->vaddr().offset(mcfg_table.offset_in_page()).as_ptr();
-    dbgln_if(PCI_DEBUG, "PCI: Checking MCFG @ {}, {}", VirtualAddress(&mcfg), mcfg_table);
-    for (u32 index = 0; index < ((mcfg.header.length - sizeof(ACPI::Structures::MCFG)) / sizeof(ACPI::Structures::PCI_MMIO_Descriptor)); index++) {
-        u8 start_bus = mcfg.descriptors[index].start_pci_bus;
-        u8 end_bus = mcfg.descriptors[index].end_pci_bus;
-        u64 start_addr = mcfg.descriptors[index].base_addr;
-
-        Domain pci_domain { index, start_bus, end_bus };
-        dmesgln("PCI: New PCI domain @ {}, PCI buses ({}-{})", PhysicalAddress { start_addr }, start_bus, end_bus);
-        auto host_bridge = MemoryBackedHostBridge::must_create(pci_domain, PhysicalAddress { start_addr });
-        add_host_controller(move(host_bridge));
-    }
-
-    return true;
-}
-
-UNMAP_AFTER_INIT bool Access::initialize_for_multiple_pci_domains(PhysicalAddress mcfg_table)
-{
-    VERIFY(!Access::is_initialized());
-    auto* access = new Access();
-    if (!access->find_and_register_pci_host_bridges_from_acpi_mcfg_table(mcfg_table))
-        return false;
-    access->rescan_hardware();
-    dbgln_if(PCI_DEBUG, "PCI: access for multiple PCI domain initialised.");
-    return true;
-}
-
-#if ARCH(X86_64)
-UNMAP_AFTER_INIT bool Access::initialize_for_one_pci_domain()
-{
-    VERIFY(!Access::is_initialized());
-    auto* access = new Access();
-    auto host_bridge = PIIX4HostBridge::must_create_with_io_access();
-    access->add_host_controller(move(host_bridge));
-    access->rescan_hardware();
-    dbgln_if(PCI_DEBUG, "PCI: access for one PCI domain initialised.");
-    return true;
-}
-#endif
-
-ErrorOr<void> Access::add_host_controller_and_scan_for_devices(NonnullOwnPtr<HostController> controller)
-{
-    SpinlockLocker locker(m_access_lock);
-    SpinlockLocker scan_locker(m_scan_lock);
-    auto domain_number = controller->domain_number();
-
-    VERIFY(!m_host_controllers.contains(domain_number));
-    // Note: We need to register the new controller as soon as possible, and
-    // definitely before enumerating devices behind that.
-    m_host_controllers.set(domain_number, move(controller));
-    ErrorOr<void> error_or_void {};
-    m_host_controllers.get(domain_number).value()->enumerate_attached_devices([&](EnumerableDeviceIdentifier const& device_identifier) -> IterationDecision {
-        auto device_identifier_or_error = DeviceIdentifier::from_enumerable_identifier(device_identifier);
-        if (device_identifier_or_error.is_error()) {
-            error_or_void = device_identifier_or_error.release_error();
-            return IterationDecision::Break;
-        }
-        m_device_identifiers.append(device_identifier_or_error.release_value());
-        return IterationDecision::Continue;
-    });
+        VERIFY(!controllers.contains(domain_number));
+        TRY(controllers.try_set(domain_number, move(controller)));
+        TRY(controller->enumerate_all_devices({}));
+        return {};
+    }));
     return {};
-}
-
-UNMAP_AFTER_INIT void Access::add_host_controller(NonnullOwnPtr<HostController> controller)
-{
-    auto domain_number = controller->domain_number();
-    m_host_controllers.set(domain_number, move(controller));
 }
 
 UNMAP_AFTER_INIT Access::Access()
@@ -156,118 +73,141 @@ UNMAP_AFTER_INIT Access::Access()
     s_access = this;
 }
 
-UNMAP_AFTER_INIT void Access::rescan_hardware()
+struct ClassedDriverDeviceLists {
+    IntrusiveList<&Driver::m_classed_list_node> driver_list;
+    IntrusiveList<&Device::m_classed_list_node> device_list;
+};
+
+struct ClassedLists {
+    SpinlockProtected<ClassedDriverDeviceLists, LockRank::None> lists[256];
+};
+
+static Singleton<ClassedLists> s_classed_lists;
+
+static void attach_device_to_driver(RawPtr<PCI::Driver>& device_driver_ptr, PCI::Driver& driver)
 {
-    SpinlockLocker locker(m_access_lock);
-    SpinlockLocker scan_locker(m_scan_lock);
-    VERIFY(m_device_identifiers.is_empty());
-    ErrorOr<void> error_or_void {};
-    for (auto& [_, host_controller] : m_host_controllers) {
-        host_controller->enumerate_attached_devices([this, &error_or_void](EnumerableDeviceIdentifier device_identifier) -> IterationDecision {
-            auto device_identifier_or_error = DeviceIdentifier::from_enumerable_identifier(device_identifier);
-            if (device_identifier_or_error.is_error()) {
-                error_or_void = device_identifier_or_error.release_error();
-                return IterationDecision::Break;
-            }
-            m_device_identifiers.append(device_identifier_or_error.release_value());
-            return IterationDecision::Continue;
-        });
-    }
-    if (error_or_void.is_error()) {
-        dmesgln("Failed during PCI Access::rescan_hardware due to {}", error_or_void.error());
-        VERIFY_NOT_REACHED();
-    }
+    device_driver_ptr = &driver;
 }
 
-ErrorOr<void> Access::fast_enumerate(Function<void(DeviceIdentifier const&)>& callback) const
+static bool is_matching_device_based_on_hardware_id(PCI::Device const& device, HardwareIDMatch const& hardware_id_match)
 {
-    // Note: We hold the m_access_lock for a brief moment just to ensure we get
-    // a complete Vector in case someone wants to mutate it.
-    Vector<NonnullRefPtr<DeviceIdentifier>> device_identifiers;
-    {
-        SpinlockLocker locker(m_access_lock);
-        VERIFY(!m_device_identifiers.is_empty());
-        TRY(device_identifiers.try_extend(m_device_identifiers));
-    }
-    for (auto const& device_identifier : device_identifiers) {
-        callback(device_identifier);
-    }
-    return {};
+    if (device.device_id().hardware_id() == hardware_id_match.hardware_id)
+        return true;
+    if (device.device_id().subclass_code() != hardware_id_match.subclass_code)
+        return false;
+    if (hardware_id_match.hardware_id.is_vendor_id_wildcard())
+        return true;
+    if (device.device_id().hardware_id().vendor_id == hardware_id_match.hardware_id.vendor_id && hardware_id_match.hardware_id.is_device_id_wildcard())
+        return true;
+    return false;
 }
 
-DeviceIdentifier const& Access::get_device_identifier(Address address) const
+static bool is_matching_driver_based_on_hardware_id_match(PCI::Device const& device, PCI::HardwareIDMatch const* already_chosen_match, HardwareIDMatch const& hardware_id_match)
 {
-    for (auto& device_identifier : m_device_identifiers) {
-        auto device_address = device_identifier->address();
-        if (device_address.domain() == address.domain()
-            && device_address.bus() == address.bus()
-            && device_address.device() == address.device()
-            && device_address.function() == address.function()) {
-            return device_identifier;
+    if (!is_matching_device_based_on_hardware_id(device, hardware_id_match))
+        return false;
+    if (!already_chosen_match)
+        return true;
+    // FIXME: Don't choose the "winning driver" based on this order,
+    // but account for all HardwareIDMatch members at once.
+    if (hardware_id_match.revision_id.has_value()) {
+        if (!already_chosen_match->revision_id.has_value() && hardware_id_match.revision_id.value() == device.device_id().revision_id())
+            return true;
+    }
+    if (hardware_id_match.subsystem_id_match.has_value()) {
+        if (!already_chosen_match->subsystem_id_match.has_value()) {
+            auto& subsystem_id_match = hardware_id_match.subsystem_id_match.value();
+            if (subsystem_id_match.subsystem_id == device.device_id().subsystem_id()
+                && subsystem_id_match.subsystem_vendor_id == device.device_id().subsystem_vendor_id())
+                return true;
         }
     }
-    VERIFY_NOT_REACHED();
+    if (hardware_id_match.programming_interface.has_value()) {
+        if (!already_chosen_match->programming_interface.has_value()) {
+            auto& programming_interface = hardware_id_match.programming_interface.value();
+            if (programming_interface == device.device_id().prog_if())
+                return true;
+        }
+    }
+    return false;
 }
 
-void Access::write8_field(DeviceIdentifier const& identifier, u32 field, u8 value)
+void Access::register_device(NonnullRefPtr<Device> device)
 {
-    VERIFY(identifier.operation_lock().is_locked());
-    SpinlockLocker locker(m_access_lock);
-    VERIFY(m_host_controllers.contains(identifier.address().domain()));
-    auto& controller = *m_host_controllers.get(identifier.address().domain()).value();
-    controller.write8_field(identifier.address().bus(), identifier.address().device(), identifier.address().function(), field, value);
-}
-void Access::write16_field(DeviceIdentifier const& identifier, u32 field, u16 value)
-{
-    VERIFY(identifier.operation_lock().is_locked());
-    SpinlockLocker locker(m_access_lock);
-    VERIFY(m_host_controllers.contains(identifier.address().domain()));
-    auto& controller = *m_host_controllers.get(identifier.address().domain()).value();
-    controller.write16_field(identifier.address().bus(), identifier.address().device(), identifier.address().function(), field, value);
-}
-void Access::write32_field(DeviceIdentifier const& identifier, u32 field, u32 value)
-{
-    VERIFY(identifier.operation_lock().is_locked());
-    SpinlockLocker locker(m_access_lock);
-    VERIFY(m_host_controllers.contains(identifier.address().domain()));
-    auto& controller = *m_host_controllers.get(identifier.address().domain()).value();
-    controller.write32_field(identifier.address().bus(), identifier.address().device(), identifier.address().function(), field, value);
+    auto result = g_pci_bus_work->try_queue([device]() {
+        s_classed_lists->lists[static_cast<u8>(device->device_id().class_code())].with([device](auto& classed_lists) {
+            classed_lists.device_list.append(*device);
+            RawPtr<PCI::Driver> chosen_driver = nullptr;
+            RawPtr<PCI::HardwareIDMatch const> chosen_match = nullptr;
+            for (auto& driver : classed_lists.driver_list) {
+                for (auto& match : driver.matches()) {
+                    if (!is_matching_driver_based_on_hardware_id_match(device, chosen_match, match))
+                        continue;
+                    chosen_driver = &driver;
+                    chosen_match = &match;
+                }
+            }
+            if (!chosen_driver)
+                return;
+            device->driver({}).with([&](auto& attached_device_driver) {
+                // NOTE: If the device is attached to a driver, don't
+                // re-attach it to another driver.
+                if (attached_device_driver)
+                    return;
+                auto result = chosen_driver->probe(device);
+                if (!result.is_error())
+                    attach_device_to_driver(attached_device_driver, *chosen_driver);
+                else
+                    dbgln("PCI: Failed to attach device {} on driver {} due to {}", device->device_id().address(), chosen_driver->name(), result.release_error());
+                return;
+            });
+        });
+    });
+    if (result.is_error())
+        dbgln("PCI: Failed to queue registering device {} due to {}", device->device_id().address(), result.release_error());
 }
 
-u8 Access::read8_field(DeviceIdentifier const& identifier, RegisterOffset field)
+void Access::register_driver(NonnullRefPtr<Driver> driver)
 {
-    VERIFY(identifier.operation_lock().is_locked());
-    return read8_field(identifier, to_underlying(field));
-}
-u16 Access::read16_field(DeviceIdentifier const& identifier, RegisterOffset field)
-{
-    VERIFY(identifier.operation_lock().is_locked());
-    return read16_field(identifier, to_underlying(field));
+    m_all_drivers.with([driver](auto& drivers_list) {
+        drivers_list.append(*driver);
+    });
+    dbgln_if(PCI_DEBUG, "PCI: Registering driver {}", driver->name());
+    auto result = g_pci_bus_work->try_queue([driver]() {
+        s_classed_lists->lists[to_underlying(driver->class_id())].with([driver](auto& classed_lists) {
+            classed_lists.driver_list.append(*driver);
+            for (auto& device : classed_lists.device_list) {
+                device.driver({}).with([&](auto& attached_device_driver) {
+                    // NOTE: If the device is attached to a driver, don't
+                    // re-attach it to another driver.
+                    if (attached_device_driver)
+                        return;
+                    for (auto& match : driver->matches()) {
+                        if (!is_matching_device_based_on_hardware_id(device, match))
+                            continue;
+                        auto result = driver->probe(device);
+                        if (!result.is_error())
+                            attach_device_to_driver(attached_device_driver, *driver);
+                        else
+                            dbgln("PCI: Failed to attach device {} on driver {} due to {}", device.device_id().address(), driver->name(), result.release_error());
+                        return;
+                    }
+                });
+            }
+        });
+    });
+    if (result.is_error())
+        dbgln("PCI: Failed to queue registering driver {} due to {}", driver->name(), result.release_error());
 }
 
-u8 Access::read8_field(DeviceIdentifier const& identifier, u32 field)
+RefPtr<Driver> Access::get_driver_by_name(StringView)
 {
-    VERIFY(identifier.operation_lock().is_locked());
-    SpinlockLocker locker(m_access_lock);
-    VERIFY(m_host_controllers.contains(identifier.address().domain()));
-    auto& controller = *m_host_controllers.get(identifier.address().domain()).value();
-    return controller.read8_field(identifier.address().bus(), identifier.address().device(), identifier.address().function(), field);
+    TODO();
 }
-u16 Access::read16_field(DeviceIdentifier const& identifier, u32 field)
+
+void Access::unregister_driver(NonnullRefPtr<Driver>)
 {
-    VERIFY(identifier.operation_lock().is_locked());
-    SpinlockLocker locker(m_access_lock);
-    VERIFY(m_host_controllers.contains(identifier.address().domain()));
-    auto& controller = *m_host_controllers.get(identifier.address().domain()).value();
-    return controller.read16_field(identifier.address().bus(), identifier.address().device(), identifier.address().function(), field);
-}
-u32 Access::read32_field(DeviceIdentifier const& identifier, u32 field)
-{
-    VERIFY(identifier.operation_lock().is_locked());
-    SpinlockLocker locker(m_access_lock);
-    VERIFY(m_host_controllers.contains(identifier.address().domain()));
-    auto& controller = *m_host_controllers.get(identifier.address().domain()).value();
-    return controller.read32_field(identifier.address().bus(), identifier.address().device(), identifier.address().function(), field);
+    TODO();
 }
 
 }

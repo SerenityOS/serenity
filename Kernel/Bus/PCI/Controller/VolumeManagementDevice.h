@@ -9,16 +9,20 @@
 #include <AK/Bitmap.h>
 #include <AK/Vector.h>
 #include <Kernel/Bus/PCI/Controller/MemoryBackedHostBridge.h>
+#include <Kernel/Library/Driver.h>
 #include <Kernel/Locking/Spinlock.h>
 
 namespace Kernel::PCI {
 
-class VolumeManagementDevice final : public MemoryBackedHostBridge {
+class VolumeManagementDevice final
+    : public MemoryBackedHostBridge {
+    KERNEL_MAKE_DRIVER_LISTABLE(VolumeManagementDevice)
+
 public:
-    static NonnullOwnPtr<VolumeManagementDevice> must_create(PCI::DeviceIdentifier const& device_identifier);
+    static ErrorOr<NonnullRefPtr<VolumeManagementDevice>> create(PCI::Device& device, NonnullRefPtr<Bus> parent_bus);
 
 private:
-    VolumeManagementDevice(PCI::Domain const&, PhysicalAddress);
+    VolumeManagementDevice(PCI::Domain const&, NonnullRefPtr<Bus> root_bus, PhysicalAddress);
 
     virtual void write8_field_locked(BusNumber, DeviceNumber, FunctionNumber, u32 field, u8 value) override;
     virtual void write16_field_locked(BusNumber, DeviceNumber, FunctionNumber, u32 field, u16 value) override;

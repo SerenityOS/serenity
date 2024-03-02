@@ -34,6 +34,7 @@
 #include <Kernel/Devices/SerialDevice.h>
 #include <Kernel/Devices/Storage/StorageManagement.h>
 #include <Kernel/Devices/TTY/ConsoleManagement.h>
+#include <Kernel/Devices/TTY/PCI/Serial8250Device.h>
 #include <Kernel/Devices/TTY/PTYMultiplexer.h>
 #include <Kernel/Devices/TTY/VirtualConsole.h>
 #include <Kernel/FileSystem/SysFS/Registry.h>
@@ -380,8 +381,11 @@ void init_stage2(void*)
     }
 #endif
 
-    // Initialize the PCI Bus as early as possible, for early boot (PCI based) serial logging
+    // Initialize all PCI & USB Drivers
     PCI::initialize();
+    USB::USBManagement::initialize();
+    for (auto* init_function = driver_init_table_start; init_function != driver_init_table_end; init_function++)
+        (*init_function)();
 
     VirtualFileSystem::initialize();
 
@@ -410,9 +414,6 @@ void init_stage2(void*)
 
     auto boot_profiling = kernel_command_line().is_boot_profiling_enabled();
 
-    if (!PCI::Access::is_disabled()) {
-        USB::USBManagement::initialize();
-    }
     SysFSFirmwareDirectory::initialize();
 
     NetworkingManagement::the().initialize();
@@ -428,10 +429,6 @@ void init_stage2(void*)
     PTYMultiplexer::initialize();
 
     AudioManagement::the().initialize();
-
-    // Initialize all USB Drivers
-    for (auto* init_function = driver_init_table_start; init_function != driver_init_table_end; init_function++)
-        (*init_function)();
 
     StorageManagement::the().initialize(kernel_command_line().is_force_pio(), kernel_command_line().is_nvme_polling_enabled());
     for (int i = 0; i < 10000; ++i) {

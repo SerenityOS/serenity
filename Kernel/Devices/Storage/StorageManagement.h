@@ -48,7 +48,6 @@ public:
     void detach_device(StorageDevice&);
 
 private:
-    void enumerate_pci_controllers(bool force_pio, bool nvme_poll);
     void determine_boot_device_with_partition_uuid();
 
     static void enumerate_device_holder_partitions(void* holder);

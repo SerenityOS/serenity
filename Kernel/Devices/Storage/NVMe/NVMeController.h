@@ -14,6 +14,7 @@
 #include <Kernel/Devices/Storage/NVMe/NVMeNameSpace.h>
 #include <Kernel/Devices/Storage/NVMe/NVMeQueue.h>
 #include <Kernel/Devices/Storage/StorageController.h>
+#include <Kernel/Library/Driver.h>
 #include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Library/NonnullLockRefPtr.h>
 #include <Kernel/Locking/Spinlock.h>
@@ -21,12 +22,12 @@
 
 namespace Kernel {
 
-class NVMeController : public PCI::Device
-    , public StorageController {
+class NVMeController
+    : public StorageController {
+    KERNEL_MAKE_DRIVER_LISTABLE(NVMeController)
 public:
-    static ErrorOr<NonnullRefPtr<NVMeController>> try_initialize(PCI::DeviceIdentifier const&, bool is_queue_polled);
+    static ErrorOr<NonnullRefPtr<NVMeController>> try_initialize(PCI::Device&, bool is_queue_polled);
     ErrorOr<void> initialize(bool is_queue_polled);
-    virtual StringView device_name() const override { return "NVMeController"sv; }
 
 protected:
     ErrorOr<void> reset();
@@ -56,7 +57,7 @@ private:
         u8 lba_size;
     };
 
-    NVMeController(PCI::DeviceIdentifier const&, u32 hardware_relative_controller_id);
+    NVMeController(PCI::Device&, u32 hardware_relative_controller_id);
 
     ErrorOr<void> identify_and_init_namespaces();
     ErrorOr<void> identify_and_init_controller();
@@ -70,6 +71,8 @@ private:
     bool wait_for_ready(bool);
 
 private:
+    NonnullRefPtr<PCI::Device> const m_pci_device;
+
     LockRefPtr<NVMeQueue> m_admin_queue;
     Vector<NonnullLockRefPtr<NVMeQueue>> m_queues;
     Vector<NonnullLockRefPtr<NVMeNameSpace>> m_namespaces;

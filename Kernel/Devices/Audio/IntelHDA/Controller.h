@@ -17,6 +17,7 @@
 #include <Kernel/Devices/Audio/IntelHDA/InterruptHandler.h>
 #include <Kernel/Devices/Audio/IntelHDA/OutputPath.h>
 #include <Kernel/Devices/Audio/IntelHDA/RingBuffer.h>
+#include <Kernel/Library/Driver.h>
 #include <Kernel/Library/IOWindow.h>
 
 namespace Kernel::Audio::IntelHDA {
@@ -26,20 +27,18 @@ namespace Kernel::Audio::IntelHDA {
 class Codec;
 
 class Controller final
-    : public AudioController
-    , public PCI::Device {
-public:
-    static ErrorOr<bool> probe(PCI::DeviceIdentifier const&);
-    static ErrorOr<NonnullRefPtr<AudioController>> create(PCI::DeviceIdentifier const&);
-    virtual ~Controller() = default;
+    : public AudioController {
+    KERNEL_MAKE_DRIVER_LISTABLE(Audio::IntelHDA::Controller)
 
-    // ^PCI::Device
-    virtual StringView device_name() const override { return "IntelHDA"sv; }
+public:
+    static ErrorOr<NonnullRefPtr<Controller>> create(PCI::Device&);
+    virtual ~Controller() = default;
 
     ErrorOr<bool> handle_interrupt(Badge<InterruptHandler>);
     ErrorOr<u32> send_command(u8 codec_address, u8 node_id, CodecControlVerb verb, u16 payload);
 
 private:
+
     static constexpr size_t fixed_audio_channel_index = 0;
 
     // 3.3: High Definition Audio Controller Register Set
@@ -72,7 +71,7 @@ private:
         GlobalInterruptStatus = 1u << 31,
     };
 
-    Controller(PCI::DeviceIdentifier const&, NonnullOwnPtr<IOWindow>);
+    Controller(PCI::Device&, NonnullOwnPtr<IOWindow>);
 
     ErrorOr<void> initialize();
     ErrorOr<void> initialize_codec(u8 codec_address);
@@ -85,6 +84,7 @@ private:
     virtual ErrorOr<void> set_pcm_output_sample_rate(size_t channel_index, u32 samples_per_second_rate) override;
     virtual ErrorOr<u32> get_pcm_output_sample_rate(size_t channel_index) override;
 
+    NonnullRefPtr<PCI::Device> const m_pci_device;
     NonnullOwnPtr<IOWindow> m_controller_io_window;
     u8 m_number_of_output_streams;
     u8 m_number_of_input_streams;
@@ -96,5 +96,4 @@ private:
     OwnPtr<OutputPath> m_output_path;
     RefPtr<AudioChannel> m_audio_channel;
 };
-
 }

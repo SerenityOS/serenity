@@ -6,7 +6,6 @@
 
 #include <Kernel/Arch/CPU.h>
 #include <Kernel/Boot/CommandLine.h>
-#include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Controller/MemoryBackedHostBridge.h>
 #include <Kernel/Bus/PCI/Initializer.h>

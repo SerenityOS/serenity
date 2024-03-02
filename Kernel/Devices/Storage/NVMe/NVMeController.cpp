@@ -11,8 +11,7 @@
 #include <Kernel/Arch/Interrupts.h>
 #include <Kernel/Arch/SafeMem.h>
 #include <Kernel/Boot/CommandLine.h>
-#include <Kernel/Bus/PCI/API.h>
-#include <Kernel/Bus/PCI/BarMapping.h>
+#include <Kernel/Bus/PCI/Definitions.h>
 #include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/Storage/NVMe/NVMeController.h>
 #include <Kernel/Devices/Storage/StorageManagement.h>
@@ -21,28 +20,28 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<NVMeController>> NVMeController::try_initialize(Kernel::PCI::DeviceIdentifier const& device_identifier, bool is_queue_polled)
+ErrorOr<NonnullRefPtr<NVMeController>> NVMeController::try_initialize(PCI::Device& pci_device, bool is_queue_polled)
 {
-    auto controller = TRY(adopt_nonnull_ref_or_enomem(new NVMeController(device_identifier, StorageManagement::generate_relative_nvme_controller_id({}))));
+    auto controller = TRY(adopt_nonnull_ref_or_enomem(new NVMeController(pci_device, StorageManagement::generate_relative_nvme_controller_id({}))));
     TRY(controller->initialize(is_queue_polled));
     return controller;
 }
 
-UNMAP_AFTER_INIT NVMeController::NVMeController(const PCI::DeviceIdentifier& device_identifier, u32 hardware_relative_controller_id)
-    : PCI::Device(const_cast<PCI::DeviceIdentifier&>(device_identifier))
-    , StorageController(hardware_relative_controller_id)
+NVMeController::NVMeController(PCI::Device& device, u32 hardware_relative_controller_id)
+    : StorageController(hardware_relative_controller_id)
+    , m_pci_device(device)
 {
 }
 
-UNMAP_AFTER_INIT ErrorOr<void> NVMeController::initialize(bool is_queue_polled)
+ErrorOr<void> NVMeController::initialize(bool is_queue_polled)
 {
     // Nr of queues = one queue per core
     auto nr_of_queues = Processor::count();
     auto queue_type = is_queue_polled ? QueueType::Polled : QueueType::IRQ;
 
-    PCI::enable_memory_space(device_identifier());
-    PCI::enable_bus_mastering(device_identifier());
-    m_bar = TRY(PCI::get_bar_address(device_identifier(), PCI::HeaderType0BaseRegister::BAR0));
+    m_pci_device->enable_memory_space();
+    m_pci_device->enable_bus_mastering();
+    m_bar = PhysicalAddress(m_pci_device->resources()[0].physical_memory_address());
     static_assert(sizeof(ControllerRegister) == REG_SQ0TDBL_START);
     static_assert(sizeof(NVMeSubmission) == (1 << SQ_WIDTH));
 
@@ -56,7 +55,7 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::initialize(bool is_queue_polled)
     calculate_doorbell_stride();
     if (queue_type == QueueType::IRQ) {
         // IO queues + 1 admin queue
-        m_irq_type = TRY(reserve_irqs(nr_of_queues + 1, true));
+        m_irq_type = TRY(m_pci_device->reserve_irqs(nr_of_queues + 1, true));
     }
 
     TRY(create_admin_queue(queue_type));
@@ -145,7 +144,7 @@ ErrorOr<void> NVMeController::start_controller()
     return {};
 }
 
-UNMAP_AFTER_INIT u32 NVMeController::get_admin_q_dept()
+u32 NVMeController::get_admin_q_dept()
 {
     u32 aqa = m_controller_regs->aqa;
     // Queue depth is 0 based
@@ -154,7 +153,7 @@ UNMAP_AFTER_INIT u32 NVMeController::get_admin_q_dept()
     return q_depth;
 }
 
-UNMAP_AFTER_INIT ErrorOr<void> NVMeController::identify_and_init_namespaces()
+ErrorOr<void> NVMeController::identify_and_init_namespaces()
 {
 
     RefPtr<Memory::PhysicalPage> prp_dma_buffer;
@@ -176,7 +175,7 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::identify_and_init_namespaces()
         sub.identify.cns = NVMe_CNS_ID_ACTIVE_NS & 0xff;
         status = submit_admin_command(sub, true);
         if (status) {
-            dmesgln_pci(*this, "Failed to identify active namespace command");
+            dmesgln_pci(*m_pci_device, "Failed to identify active namespace command");
             return EFAULT;
         }
         if (void* fault_at; !safe_memcpy(active_namespace_list, prp_dma_region->vaddr().as_ptr(), NVMe_IDENTIFY_SIZE, fault_at)) {
@@ -199,7 +198,7 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::identify_and_init_namespaces()
             sub.identify.nsid = nsid;
             status = submit_admin_command(sub, true);
             if (status) {
-                dmesgln_pci(*this, "Failed identify namespace with nsid {}", nsid);
+                dmesgln_pci(*m_pci_device, "Failed identify namespace with nsid {}", nsid);
                 return EFAULT;
             }
             static_assert(sizeof(IdentifyNamespace) == NVMe_IDENTIFY_SIZE);
@@ -239,7 +238,7 @@ ErrorOr<void> NVMeController::identify_and_init_controller()
         sub.identify.cns = NVMe_CNS_ID_CTRL & 0xff;
         status = submit_admin_command(sub, true);
         if (status) {
-            dmesgln_pci(*this, "Failed to identify active namespace command");
+            dmesgln_pci(*m_pci_device, "Failed to identify active namespace command");
             return EFAULT;
         }
         if (void* fault_at; !safe_memcpy(&ctrl, prp_dma_region->vaddr().as_ptr(), NVMe_IDENTIFY_SIZE, fault_at)) {
@@ -278,7 +277,7 @@ ErrorOr<void> NVMeController::identify_and_init_controller()
     return {};
 }
 
-UNMAP_AFTER_INIT NVMeController::NSFeatures NVMeController::get_ns_features(IdentifyNamespace& identify_data_struct)
+NVMeController::NSFeatures NVMeController::get_ns_features(IdentifyNamespace& identify_data_struct)
 {
     auto flbas = identify_data_struct.flbas & FLBA_SIZE_MASK;
     auto namespace_size = identify_data_struct.nsze;
@@ -300,7 +299,7 @@ void NVMeController::complete_current_request([[maybe_unused]] AsyncDeviceReques
     VERIFY_NOT_REACHED();
 }
 
-UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_admin_queue(QueueType queue_type)
+ErrorOr<void> NVMeController::create_admin_queue(QueueType queue_type)
 {
     auto qdepth = get_admin_q_dept();
     OwnPtr<Memory::Region> cq_dma_region;
@@ -311,7 +310,7 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_admin_queue(QueueType queu
     auto sq_size = round_up_to_power_of_two(SQ_SIZE(qdepth), 4096);
     auto maybe_error = reset_controller();
     if (maybe_error.is_error()) {
-        dmesgln_pci(*this, "Failed to reset the NVMe controller");
+        dmesgln_pci(*m_pci_device, "Failed to reset the NVMe controller");
         return maybe_error;
     }
     {
@@ -339,21 +338,21 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_admin_queue(QueueType queu
 
     Optional<u8> irq;
     if (queue_type == QueueType::IRQ)
-        irq = TRY(allocate_irq(0)); // Admin queue always uses the 0th index when using MSIx
+        irq = TRY(m_pci_device->allocate_irq(0)); // Admin queue always uses the 0th index when using MSIx
 
     maybe_error = start_controller();
     if (maybe_error.is_error()) {
-        dmesgln_pci(*this, "Failed to restart the NVMe controller");
+        dmesgln_pci(*m_pci_device, "Failed to restart the NVMe controller");
         return maybe_error;
     }
     set_admin_queue_ready_flag();
-    m_admin_queue = TRY(NVMeQueue::try_create(*this, 0, irq, qdepth, move(cq_dma_region), move(sq_dma_region), move(doorbell), queue_type));
+    m_admin_queue = TRY(NVMeQueue::try_create(*m_pci_device, 0, irq, qdepth, move(cq_dma_region), move(sq_dma_region), move(doorbell), queue_type));
 
     dbgln_if(NVME_DEBUG, "NVMe: Admin queue created");
     return {};
 }
 
-UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_io_queue(u8 qid, QueueType queue_type)
+ErrorOr<void> NVMeController::create_io_queue(u8 qid, QueueType queue_type)
 {
     OwnPtr<Memory::Region> cq_dma_region;
     Vector<NonnullRefPtr<Memory::PhysicalPage>> cq_dma_pages;
@@ -422,9 +421,9 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_io_queue(u8 qid, QueueType
         .dbbuf_eventidx = move(eventidx_doorbell_regs),
     };
 
-    auto irq = TRY(allocate_irq(qid));
+    auto irq = TRY(m_pci_device->allocate_irq(qid));
 
-    m_queues.append(TRY(NVMeQueue::try_create(*this, qid, irq, IO_QUEUE_SIZE, move(cq_dma_region), move(sq_dma_region), move(doorbell), queue_type)));
+    m_queues.append(TRY(NVMeQueue::try_create(*m_pci_device, qid, irq, IO_QUEUE_SIZE, move(cq_dma_region), move(sq_dma_region), move(doorbell), queue_type)));
     dbgln_if(NVME_DEBUG, "NVMe: Created IO Queue with QID{}", m_queues.size());
     return {};
 }

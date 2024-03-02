@@ -7,17 +7,63 @@
 #include <AK/ByteReader.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Controller/MemoryBackedHostBridge.h>
+#include <Kernel/Library/StdLib.h>
 #include <Kernel/Memory/MemoryManager.h>
 
 namespace Kernel::PCI {
 
-NonnullOwnPtr<MemoryBackedHostBridge> MemoryBackedHostBridge::must_create(Domain const& domain, PhysicalAddress start_address)
+ErrorOr<NonnullRefPtr<MemoryBackedHostBridge>> MemoryBackedHostBridge::create(Domain const& domain, RefPtr<Bus> parent_bus, PhysicalAddress start_address)
 {
-    return adopt_own_if_nonnull(new (nothrow) MemoryBackedHostBridge(domain, start_address)).release_nonnull();
+    auto region = TRY(MM.allocate_kernel_region(start_address, mmio_device_space_size, "PCI ECAM"sv, Memory::Region::Access::ReadWrite));
+    Array<u8, to_underlying(PCI::RegisterOffset::__END)> host_bridge_device_registers;
+    memcpy(host_bridge_device_registers.data(), region->vaddr().as_ptr(), host_bridge_device_registers.size());
+
+    auto get_u16_field = [host_bridge_device_registers](PCI::RegisterOffset offset) -> u16 {
+        return host_bridge_device_registers[to_underlying(offset)]
+            | (static_cast<u16>(host_bridge_device_registers[to_underlying(offset) + 1]) << 8);
+    };
+    auto get_u8_field = [host_bridge_device_registers](PCI::RegisterOffset offset) -> u16 {
+        return host_bridge_device_registers[to_underlying(offset)];
+    };
+
+    Address address(domain.domain_number(), domain.start_bus(), 0, 0);
+    HardwareID id = { get_u16_field(PCI::RegisterOffset::VENDOR_ID), get_u16_field(PCI::RegisterOffset::DEVICE_ID) };
+    ClassCode class_code = get_u8_field(PCI::RegisterOffset::CLASS);
+    SubclassCode subclass_code = get_u8_field(PCI::RegisterOffset::SUBCLASS);
+    ProgrammingInterface prog_if = get_u8_field(PCI::RegisterOffset::PROG_IF);
+    RevisionID revision_id = get_u8_field(PCI::RegisterOffset::REVISION_ID);
+    SubsystemID subsystem_id = get_u16_field(PCI::RegisterOffset::SUBSYSTEM_ID);
+    SubsystemVendorID subsystem_vendor_id = get_u16_field(PCI::RegisterOffset::SUBSYSTEM_VENDOR_ID);
+    InterruptLine interrupt_line = get_u8_field(PCI::RegisterOffset::INTERRUPT_LINE);
+    InterruptPin interrupt_pin = get_u8_field(PCI::RegisterOffset::INTERRUPT_PIN);
+    auto identifier = EnumerableDeviceIdentifier { address, id, revision_id, class_code, subclass_code, prog_if, subsystem_id, subsystem_vendor_id, interrupt_line, interrupt_pin };
+    auto host_bridge_device = TRY(Device::from_enumerable_identifier(identifier));
+
+    dbgln("PCI: Memory Backed Host Bridge: {:04X}:{:02X}:{:02X}:{:02X}: vendor, dev_id {:04x}:{:04x}, starting at {:p}",
+        (u32)domain.domain_number(),
+        (u8)domain.start_bus(),
+        (u8)0,
+        (u8)0,
+        (u16)id.vendor_id,
+        (u16)id.device_id,
+        start_address);
+
+    if (parent_bus)
+        host_bridge_device->set_parent_bus(*parent_bus);
+    auto bus = TRY(Bus::create(domain.start_bus(), host_bridge_device, parent_bus));
+    auto bridge = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) MemoryBackedHostBridge(domain, bus, start_address)));
+    host_bridge_device->set_host_controller(*bridge);
+
+    {
+        SpinlockLocker locker(bridge->m_access_lock);
+        TRY(bridge->enumerate_capabilities_for_function(bus, host_bridge_device));
+    }
+
+    return bridge;
 }
 
-MemoryBackedHostBridge::MemoryBackedHostBridge(PCI::Domain const& domain, PhysicalAddress start_address)
-    : HostController(domain)
+MemoryBackedHostBridge::MemoryBackedHostBridge(PCI::Domain const& domain, NonnullRefPtr<Bus> root_bus, PhysicalAddress start_address)
+    : HostController(domain, root_bus)
     , m_start_address(start_address)
 {
 }

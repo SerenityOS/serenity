@@ -8,7 +8,6 @@
 #include <AK/Optional.h>
 #include <AK/Vector.h>
 #include <Kernel/Arch/Delay.h>
-#include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Devices/Audio/IntelHDA/Codec.h>
 #include <Kernel/Devices/Audio/IntelHDA/InterruptHandler.h>
 #include <Kernel/Devices/Audio/IntelHDA/Stream.h>
@@ -17,36 +16,30 @@
 
 namespace Kernel::Audio::IntelHDA {
 
-UNMAP_AFTER_INIT ErrorOr<bool> Controller::probe(PCI::DeviceIdentifier const& device_identifier)
+ErrorOr<NonnullRefPtr<Controller>> Controller::create(PCI::Device& pci_device)
 {
-    VERIFY(device_identifier.class_code() == PCI::ClassID::Multimedia);
-    return device_identifier.subclass_code() == PCI::Multimedia::SubclassID::HDACompatible;
-}
-
-UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<AudioController>> Controller::create(PCI::DeviceIdentifier const& pci_device_identifier)
-{
-    auto controller_io_window = TRY(IOWindow::create_for_pci_device_bar(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR0));
-    auto device = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Controller(pci_device_identifier, move(controller_io_window))));
+    auto controller_io_window = TRY(IOWindow::create_for_pci_device_bar(pci_device, PCI::HeaderType0BaseRegister::BAR0));
+    auto device = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Controller(pci_device, move(controller_io_window))));
     TRY(device->initialize());
     return device;
 }
 
-UNMAP_AFTER_INIT Controller::Controller(PCI::DeviceIdentifier const& pci_device_identifier, NonnullOwnPtr<IOWindow> controller_io_window)
-    : PCI::Device(const_cast<PCI::DeviceIdentifier&>(pci_device_identifier))
+Controller::Controller(PCI::Device& pci_device, NonnullOwnPtr<IOWindow> controller_io_window)
+    : m_pci_device(pci_device)
     , m_controller_io_window(move(controller_io_window))
 {
 }
 
-UNMAP_AFTER_INIT ErrorOr<void> Controller::initialize()
+ErrorOr<void> Controller::initialize()
 {
     // Enable DMA and interrupts
-    PCI::enable_bus_mastering(device_identifier());
-    m_interrupt_handler = TRY(InterruptHandler::create(*this));
+    m_pci_device->enable_bus_mastering();
+    m_interrupt_handler = TRY(InterruptHandler::create(*this, *m_pci_device, m_pci_device->device_id().interrupt_line().value()));
 
     // 3.3.3, 3.3.4: Controller version
     auto version_minor = m_controller_io_window->read8(ControllerRegister::VersionMinor);
     auto version_major = m_controller_io_window->read8(ControllerRegister::VersionMajor);
-    dmesgln_pci(*this, "Intel High Definition Audio specification v{}.{}", version_major, version_minor);
+    dmesgln_pci(*m_pci_device, "Intel High Definition Audio specification v{}.{}", version_major, version_minor);
     if (version_major != 1 || version_minor != 0)
         return ENOTSUP;
 
@@ -85,14 +78,14 @@ UNMAP_AFTER_INIT ErrorOr<void> Controller::initialize()
     u16 state_change_status = m_controller_io_window->read16(ControllerRegister::StateChangeStatus);
     for (u8 codec_address = 0; codec_address < 14; ++codec_address) {
         if ((state_change_status & (1 << codec_address)) > 0) {
-            dmesgln_pci(*this, "Found codec on address #{}", codec_address);
+            dmesgln_pci(*m_pci_device, "Found codec on address #{}", codec_address);
             TRY(initialize_codec(codec_address));
         }
     }
 
     auto result = configure_output_route();
     if (result.is_error()) {
-        dmesgln_pci(*this, "Failed to set up an output audio channel: {}", result.error());
+        dmesgln_pci(*m_pci_device, "Failed to set up an output audio channel: {}", result.error());
         return result.release_error();
     }
 
@@ -100,7 +93,7 @@ UNMAP_AFTER_INIT ErrorOr<void> Controller::initialize()
     return {};
 }
 
-UNMAP_AFTER_INIT ErrorOr<void> Controller::initialize_codec(u8 codec_address)
+ErrorOr<void> Controller::initialize_codec(u8 codec_address)
 {
     auto codec = TRY(Codec::create(*this, codec_address));
 
@@ -139,7 +132,7 @@ ErrorOr<u32> Controller::send_command(u8 codec_address, u8 node_id, CodecControl
     return response;
 }
 
-UNMAP_AFTER_INIT ErrorOr<void> Controller::configure_output_route()
+ErrorOr<void> Controller::configure_output_route()
 {
     Vector<NonnullRefPtr<WidgetNode>> queued_nodes;
     Vector<WidgetNode*> visited_nodes;
@@ -219,7 +212,7 @@ UNMAP_AFTER_INIT ErrorOr<void> Controller::configure_output_route()
                 for (u8 connection_node_id : current_node->connection_list()) {
                     auto connection_node = codec->node_by_node_id(connection_node_id);
                     if (!connection_node.has_value() || connection_node.value()->node_type() != Node::NodeType::Widget) {
-                        dmesgln_pci(*this, "Warning: connection node {} does not exist or is the wrong type", connection_node_id);
+                        dmesgln_pci(*m_pci_device, "Warning: connection node {} does not exist or is the wrong type", connection_node_id);
                         continue;
                     }
 
@@ -247,12 +240,12 @@ UNMAP_AFTER_INIT ErrorOr<void> Controller::configure_output_route()
     }
 
     if (!m_output_path) {
-        dmesgln_pci(*this, "Failed to find an audio output path");
+        dmesgln_pci(*m_pci_device, "Failed to find an audio output path");
         return ENODEV;
     }
 
     // We are ready to go!
-    dmesgln_pci(*this, "Successfully configured an audio output path");
+    dmesgln_pci(*m_pci_device, "Successfully configured an audio output path");
     dbgln_if(INTEL_HDA_DEBUG, "{}", TRY(m_output_path->to_string()));
 
     return {};
@@ -340,7 +333,7 @@ ErrorOr<void> Controller::set_pcm_output_sample_rate(size_t channel_index, u32 s
         .pcm_bits = OutputPath::fixed_pcm_bits,
         .number_of_channels = OutputPath::fixed_channel_count,
     }));
-    dmesgln_pci(*this, "Set output channel #{} PCM rate: {} Hz", channel_index, samples_per_second_rate);
+    dmesgln_pci(*m_pci_device, "Set output channel #{} PCM rate: {} Hz", channel_index, samples_per_second_rate);
     return {};
 }
 

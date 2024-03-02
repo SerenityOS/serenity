@@ -5,20 +5,20 @@
  */
 
 #include <AK/ByteReader.h>
-#include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/Access.h>
-#include <Kernel/Bus/PCI/BarMapping.h>
 #include <Kernel/Bus/PCI/Controller/VolumeManagementDevice.h>
 
 namespace Kernel::PCI {
 
 static Atomic<u32> s_vmd_pci_domain_number = 0x10000;
 
-NonnullOwnPtr<VolumeManagementDevice> VolumeManagementDevice::must_create(PCI::DeviceIdentifier const& device_identifier)
+ErrorOr<NonnullRefPtr<VolumeManagementDevice>> VolumeManagementDevice::create(PCI::Device& device, NonnullRefPtr<Bus> parent_bus)
 {
-    SpinlockLocker locker(device_identifier.operation_lock());
+    SpinlockLocker locker(device.operation_lock());
+
     u8 start_bus = 0;
-    switch ((PCI::read16_locked(device_identifier, static_cast<PCI::RegisterOffset>(0x44)) >> 8) & 0x3) {
+    auto start_bus_identifier = (device.config_space_read16(static_cast<PCI::RegisterOffset>(0x44)) >> 8) & 0x3;
+    switch (start_bus_identifier) {
     case 0:
         break;
     case 1:
@@ -28,17 +28,17 @@ NonnullOwnPtr<VolumeManagementDevice> VolumeManagementDevice::must_create(PCI::D
         start_bus = 224;
         break;
     default:
-        dbgln("VMD @ {}: Unknown bus offset option was set to {}", device_identifier.address(),
-            ((PCI::read16_locked(device_identifier, static_cast<PCI::RegisterOffset>(0x44)) >> 8) & 0x3));
+        dbgln("VMD @ {}: Unknown bus offset option was set to {}", device.device_id().address(), start_bus_identifier);
         VERIFY_NOT_REACHED();
     }
 
     // FIXME: The end bus might not be 255, so we actually need to check it with the
     // resource size of BAR0.
-    dbgln("VMD Host bridge @ {}: Start bus at {}, end bus {}", device_identifier.address(), start_bus, 0xff);
+    dbgln("VMD Host bridge @ {}: Start bus at {}, end bus {}", device.device_id().address(), start_bus, 0xff);
     PCI::Domain domain { s_vmd_pci_domain_number++, start_bus, 0xff };
-    auto start_address = PCI::get_bar_address(device_identifier, PCI::HeaderType0BaseRegister::BAR0).release_value_but_fixme_should_propagate_errors();
-    return adopt_own_if_nonnull(new (nothrow) VolumeManagementDevice(domain, start_address)).release_nonnull();
+    auto start_address = PhysicalAddress(device.resources()[0].physical_memory_address()).page_base();
+    auto root_bus = TRY(Bus::create(domain.start_bus(), device, parent_bus));
+    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) VolumeManagementDevice(domain, root_bus, start_address)));
 }
 
 void VolumeManagementDevice::write8_field_locked(BusNumber bus, DeviceNumber device, FunctionNumber function, u32 field, u8 value)
@@ -79,8 +79,8 @@ u32 VolumeManagementDevice::read32_field_locked(BusNumber bus, DeviceNumber devi
     return MemoryBackedHostBridge::read32_field_locked(bus, device, function, field);
 }
 
-VolumeManagementDevice::VolumeManagementDevice(PCI::Domain const& domain, PhysicalAddress start_address)
-    : MemoryBackedHostBridge(domain, start_address)
+VolumeManagementDevice::VolumeManagementDevice(PCI::Domain const& domain, NonnullRefPtr<Bus> root_bus, PhysicalAddress start_address)
+    : MemoryBackedHostBridge(domain, root_bus, start_address)
 {
 }
 

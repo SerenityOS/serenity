@@ -15,7 +15,7 @@
 #    include <Kernel/Arch/x86_64/Firmware/PCBIOS/Mapper.h>
 #    include <Kernel/Arch/x86_64/IO.h>
 #endif
-#include <Kernel/Bus/PCI/API.h>
+#include <Kernel/Bus/PCI/Definitions.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
 #include <Kernel/Library/StdLib.h>
@@ -278,17 +278,10 @@ void Parser::access_generic_address(Structures::GenericAddressStructure const& s
     }
     case GenericAddressStructure::AddressSpace::PCIConfigurationSpace: {
         // According to https://uefi.org/specs/ACPI/6.4/05_ACPI_Software_Programming_Model/ACPI_Software_Programming_Model.html#address-space-format,
-        // PCI addresses must be confined to devices on Segment group 0, bus 0.
-        auto pci_address = PCI::Address(0, 0, ((structure.address >> 24) & 0xFF), ((structure.address >> 16) & 0xFF));
-        dbgln("ACPI: Sending value {:x} to {}", value, pci_address);
-        u32 offset_in_pci_address = structure.address & 0xFFFF;
-        if (structure.access_size == (u8)GenericAddressStructure::AccessSize::QWord) {
-            dbgln("Trying to send QWord to PCI configuration space");
-            VERIFY_NOT_REACHED();
-        }
-        VERIFY(structure.access_size != (u8)GenericAddressStructure::AccessSize::Undefined);
-        auto& pci_device_identifier = PCI::get_device_identifier(pci_address);
-        PCI::raw_access(pci_device_identifier, offset_in_pci_address, (1 << (structure.access_size - 1)), value);
+        // FIXME: Find a proper way to use the PCI configuration space without
+        // going behind an HostController responsibility for accessing the
+        // device.
+        TODO();
         return;
     }
     default:

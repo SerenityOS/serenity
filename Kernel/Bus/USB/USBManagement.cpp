@@ -7,7 +7,6 @@
 
 #include <AK/Singleton.h>
 #include <Kernel/Boot/CommandLine.h>
-#include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/Definitions.h>
 #include <Kernel/Bus/USB/USBManagement.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Bus/USB/BusDirectory.h>

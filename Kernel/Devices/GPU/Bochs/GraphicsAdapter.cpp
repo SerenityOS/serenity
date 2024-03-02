@@ -10,8 +10,6 @@
 #if ARCH(X86_64)
 #    include <Kernel/Arch/x86_64/Hypervisor/BochsDisplayConnector.h>
 #endif
-#include <Kernel/Bus/PCI/API.h>
-#include <Kernel/Bus/PCI/BarMapping.h>
 #include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/Devices/GPU/Bochs/Definitions.h>
 #include <Kernel/Devices/GPU/Bochs/GraphicsAdapter.h>
@@ -23,29 +21,19 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT ErrorOr<bool> BochsGraphicsAdapter::probe(PCI::DeviceIdentifier const& pci_device_identifier)
+ErrorOr<NonnullRefPtr<BochsGraphicsAdapter>> BochsGraphicsAdapter::create(PCI::Device const& pci_device)
 {
-    PCI::HardwareID id = pci_device_identifier.hardware_id();
-    if (id.vendor_id == PCI::VendorID::QEMUOld && id.device_id == 0x1111)
-        return true;
-    if (id.vendor_id == PCI::VendorID::VirtualBox && id.device_id == 0xbeef)
-        return true;
-    return false;
-}
-
-UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<GPUDevice>> BochsGraphicsAdapter::create(PCI::DeviceIdentifier const& pci_device_identifier)
-{
-    auto adapter = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) BochsGraphicsAdapter(pci_device_identifier)));
-    MUST(adapter->initialize_adapter(pci_device_identifier));
+    auto adapter = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) BochsGraphicsAdapter(pci_device)));
+    MUST(adapter->initialize_adapter());
     return adapter;
 }
 
-UNMAP_AFTER_INIT BochsGraphicsAdapter::BochsGraphicsAdapter(PCI::DeviceIdentifier const& device_identifier)
-    : PCI::Device(const_cast<PCI::DeviceIdentifier&>(device_identifier))
+BochsGraphicsAdapter::BochsGraphicsAdapter(PCI::Device const& pci_device)
+    : m_pci_device(pci_device)
 {
 }
 
-UNMAP_AFTER_INIT ErrorOr<void> BochsGraphicsAdapter::initialize_adapter(PCI::DeviceIdentifier const& pci_device_identifier)
+ErrorOr<void> BochsGraphicsAdapter::initialize_adapter()
 {
     // Note: If we use VirtualBox graphics adapter (which is based on Bochs one), we need to use IO ports
     // Note: Bochs (the real bochs graphics adapter in the Bochs emulator) uses revision ID of 0x0
@@ -53,20 +41,20 @@ UNMAP_AFTER_INIT ErrorOr<void> BochsGraphicsAdapter::initialize_adapter(PCI::Dev
 
     // Note: In non x86-builds, we should never encounter VirtualBox hardware nor Pure Bochs VBE graphics,
     // so just assume we can use the QEMU BochsVBE-compatible graphics adapter only.
-    auto bar0_space_size = PCI::get_BAR_space_size(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR0);
+    auto bar0_space_size = m_pci_device->resources()[0].length;
 #if ARCH(X86_64)
-    bool virtual_box_hardware = (pci_device_identifier.hardware_id().vendor_id == 0x80ee && pci_device_identifier.hardware_id().device_id == 0xbeef);
-    if (pci_device_identifier.revision_id().value() == 0x0 || virtual_box_hardware) {
-        m_display_connector = BochsDisplayConnector::must_create(PhysicalAddress(TRY(PCI::get_bar_address(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR0))), bar0_space_size, virtual_box_hardware);
+    bool virtual_box_hardware = (m_pci_device->device_id().hardware_id().vendor_id == 0x80ee && m_pci_device->device_id().hardware_id().device_id == 0xbeef);
+    if (m_pci_device->device_id().revision_id().value() == 0x0 || virtual_box_hardware) {
+        m_display_connector = BochsDisplayConnector::must_create(PhysicalAddress(m_pci_device->resources()[0].physical_memory_address()), bar0_space_size, virtual_box_hardware);
     } else {
-        auto registers_mapping = TRY(PCI::map_bar<BochsDisplayMMIORegisters volatile>(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR2));
+        auto registers_mapping = TRY(Memory::map_typed_writable<BochsDisplayMMIORegisters volatile>(PhysicalAddress(m_pci_device->resources()[2].physical_memory_address())));
         VERIFY(registers_mapping.region);
-        m_display_connector = QEMUDisplayConnector::must_create(PhysicalAddress(TRY(PCI::get_bar_address(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR0))), bar0_space_size, move(registers_mapping));
+        m_display_connector = QEMUDisplayConnector::must_create(PhysicalAddress(m_pci_device->resources()[0].physical_memory_address()), bar0_space_size, move(registers_mapping));
     }
 #else
-    auto registers_mapping = TRY(PCI::map_bar<BochsDisplayMMIORegisters volatile>(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR2));
+    auto registers_mapping = TRY(Memory::map_typed_writable<BochsDisplayMMIORegisters volatile>(PhysicalAddress(m_pci_device->resources()[2].physical_memory_address())));
     VERIFY(registers_mapping.region);
-    m_display_connector = QEMUDisplayConnector::must_create(PhysicalAddress(TRY(PCI::get_bar_address(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR0))), bar0_space_size, move(registers_mapping));
+    m_display_connector = QEMUDisplayConnector::must_create(PhysicalAddress(m_pci_device->resources()[0].physical_memory_address()), bar0_space_size, move(registers_mapping));
 #endif
 
     // Note: According to Gerd Hoffmann - "The linux driver simply does

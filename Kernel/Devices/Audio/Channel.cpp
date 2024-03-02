@@ -13,7 +13,7 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<AudioChannel>> AudioChannel::create(AudioController const& controller, size_t channel_index)
+ErrorOr<NonnullRefPtr<AudioChannel>> AudioChannel::create(AudioController const& controller, size_t channel_index)
 {
     auto channel = TRY(DeviceManagement::try_create_device<AudioChannel>(controller, channel_index));
 

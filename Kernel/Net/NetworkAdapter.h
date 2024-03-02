@@ -46,6 +46,8 @@ class NetworkingManagement;
 class NetworkAdapter
     : public AtomicRefCounted<NetworkAdapter>
     , public LockWeakable<NetworkAdapter> {
+    friend class NetworkingManagement;
+
 public:
     enum class Type {
         Loopback,
@@ -125,6 +127,7 @@ private:
     u32 m_packets_out { 0 };
     u32 m_bytes_out { 0 };
     u32 m_mtu { 1500 };
+    IntrusiveListNode<NetworkAdapter> m_list_node;
 };
 
 }

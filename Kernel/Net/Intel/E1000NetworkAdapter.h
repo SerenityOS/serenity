@@ -10,18 +10,19 @@
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Interrupts/IRQHandler.h>
+#include <Kernel/Library/Driver.h>
 #include <Kernel/Library/IOWindow.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/Security/Random.h>
 
 namespace Kernel {
 
-class E1000NetworkAdapter : public NetworkAdapter
-    , public PCI::Device
+class E1000NetworkAdapter
+    : public NetworkAdapter
     , public IRQHandler {
+    KERNEL_MAKE_DRIVER_LISTABLE(E1000NetworkAdapter)
 public:
-    static ErrorOr<bool> probe(PCI::DeviceIdentifier const&);
-    static ErrorOr<NonnullRefPtr<NetworkAdapter>> create(PCI::DeviceIdentifier const&);
+    static ErrorOr<NonnullRefPtr<E1000NetworkAdapter>> create(PCI::Device&);
 
     virtual ~E1000NetworkAdapter() override;
 
@@ -31,7 +32,6 @@ public:
     virtual bool link_full_duplex() override;
 
     virtual StringView purpose() const override { return class_name(); }
-    virtual StringView device_name() const override { return "E1000"sv; }
     virtual Type adapter_type() const override { return Type::Ethernet; }
 
 private:
@@ -44,7 +44,7 @@ protected:
     void setup_interrupts();
     void setup_link();
 
-    E1000NetworkAdapter(StringView, PCI::DeviceIdentifier const&, u8 irq,
+    E1000NetworkAdapter(StringView, PCI::Device&, u8 irq,
         NonnullOwnPtr<IOWindow> registers_io_window, NonnullOwnPtr<Memory::Region> rx_buffer_region,
         NonnullOwnPtr<Memory::Region> tx_buffer_region, NonnullOwnPtr<Memory::Region> rx_descriptors_region,
         NonnullOwnPtr<Memory::Region> tx_descriptors_region);
@@ -89,6 +89,8 @@ protected:
 
     static constexpr size_t number_of_rx_descriptors = 256;
     static constexpr size_t number_of_tx_descriptors = 256;
+
+    NonnullRefPtr<PCI::Device> const m_pci_device;
 
     NonnullOwnPtr<IOWindow> m_registers_io_window;
 
