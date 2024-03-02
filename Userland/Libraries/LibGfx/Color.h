@@ -626,6 +626,21 @@ struct Formatter<Gfx::Color> : public Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder&, Gfx::Color);
 };
 
+template<>
+struct Formatter<Gfx::YUV> : public Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder&, Gfx::YUV);
+};
+
+template<>
+struct Formatter<Gfx::HSV> : public Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder&, Gfx::HSV);
+};
+
+template<>
+struct Formatter<Gfx::Oklab> : public Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder&, Gfx::Oklab);
+};
+
 }
 
 namespace IPC {
