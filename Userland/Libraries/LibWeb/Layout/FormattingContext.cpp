@@ -656,7 +656,7 @@ CSSPixels FormattingContext::compute_height_for_replaced_element(Box const& box,
 void FormattingContext::compute_width_for_absolutely_positioned_non_replaced_element(Box const& box, AvailableSpace const& available_space)
 {
     auto width_of_containing_block = available_space.width.to_px_or_zero();
-    auto& computed_values = box.computed_values();
+    auto const& computed_values = box.computed_values();
     auto zero_value = CSS::Length::make_px(0);
 
     auto margin_left = CSS::Length::make_auto();
@@ -699,10 +699,20 @@ void FormattingContext::compute_width_for_absolutely_positioned_non_replaced_ele
             // Then, if the 'direction' property of the element establishing the static-position containing block
             // is 'ltr' set 'left' to the static position and apply rule number three below;
             // otherwise, set 'right' to the static position and apply rule number one below.
-            // FIXME: This is very hackish.
+
+            // NOTE: As with compute_height_for_absolutely_positioned_non_replaced_element, we actually apply these
+            //       steps in the opposite order since the static position may depend on the width of the box.
+
+            auto result = calculate_shrink_to_fit_widths(box);
+            auto available_width = solve_for_width();
+            CSSPixels content_width = min(max(result.preferred_minimum_width, available_width.to_px(box)), result.preferred_width);
+            width = CSS::Length::make_px(content_width);
+            m_state.get_mutable(box).set_content_width(content_width);
+
             auto static_position = calculate_static_position(box);
+
             left = static_position.x();
-            goto Rule3;
+            right = solve_for_right();
         }
 
         // If none of the three is auto:
@@ -765,7 +775,6 @@ void FormattingContext::compute_width_for_absolutely_positioned_non_replaced_ele
         // 3. 'width' and 'right' are 'auto' and 'left' is not 'auto',
         //    then the width is shrink-to-fit. Then solve for 'right'
         else if (width.is_auto() && computed_right.is_auto() && !computed_left.is_auto()) {
-        Rule3:
             auto result = calculate_shrink_to_fit_widths(box);
             auto available_width = solve_for_width();
             width = CSS::Length::make_px(min(max(result.preferred_minimum_width, available_width.to_px(box)), result.preferred_width));
