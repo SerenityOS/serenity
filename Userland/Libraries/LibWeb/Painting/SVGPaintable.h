@@ -18,9 +18,14 @@ public:
     Layout::SVGBox const& layout_box() const;
 
 protected:
+    virtual bool is_svg_paintable() const override { return true; }
+
     SVGPaintable(Layout::SVGBox const&);
 
     virtual CSSPixelRect compute_absolute_rect() const override;
 };
+
+template<>
+inline bool Paintable::fast_is<SVGPaintable>() const { return is_svg_paintable(); }
 
 }
