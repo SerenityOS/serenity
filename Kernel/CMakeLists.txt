@@ -21,6 +21,7 @@ set(KERNEL_SOURCES
     Arch/init.cpp
     Arch/DeferredCallPool.cpp
     Arch/PageFault.cpp
+    Arch/PlatformDriver.cpp
     Arch/Processor.cpp
     Arch/TrapFrame.cpp
     Boot/CommandLine.cpp
@@ -382,6 +383,7 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
         Arch/x86_64/ISABus/HID/VMWareMouseDevice.cpp
         Arch/x86_64/ISABus/I8042Controller.cpp
         Arch/x86_64/ISABus/IDEController.cpp
+        Arch/x86_64/ISABus/ISAIIDEDriver.cpp
         Arch/x86_64/ISABus/SerialDevice.cpp
         Arch/x86_64/PCI/Controller/PIIX4HostBridge.cpp
         Arch/x86_64/PCI/Initializer.cpp
@@ -433,6 +435,7 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
         Arch/aarch64/RPi/InterruptController.cpp
         Arch/aarch64/RPi/Mailbox.cpp
         Arch/aarch64/RPi/MiniUART.cpp
+        Arch/aarch64/RPi/SDHCDriver.cpp
         Arch/aarch64/RPi/SDHostController.cpp
         Arch/aarch64/RPi/Timer.cpp
         Arch/aarch64/RPi/UART.cpp

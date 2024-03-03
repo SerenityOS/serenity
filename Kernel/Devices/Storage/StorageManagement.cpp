@@ -9,12 +9,6 @@
 #include <AK/Singleton.h>
 #include <AK/StringView.h>
 #include <AK/UUID.h>
-#if ARCH(X86_64)
-#    include <Kernel/Arch/x86_64/ISABus/IDEController.h>
-#endif
-#if ARCH(AARCH64)
-#    include <Kernel/Arch/aarch64/RPi/SDHostController.h>
-#endif
 #include <Kernel/Boot/CommandLine.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Controller/VolumeManagementDevice.h>
@@ -453,24 +447,6 @@ NonnullRefPtr<FileSystem> StorageManagement::root_filesystem() const
 
 UNMAP_AFTER_INIT void StorageManagement::initialize(bool, bool)
 {
-    VERIFY(s_storage_device_minor_number == 0);
-    if (PCI::Access::is_disabled()) {
-#if ARCH(X86_64)
-        // Note: If PCI is disabled, we assume that at least we have an ISA IDE controller
-        // to probe and use
-        auto isa_ide_controller = MUST(ISAIDEController::initialize());
-        m_controllers.append(isa_ide_controller);
-#endif
-    }
-
-#if ARCH(AARCH64)
-    auto& rpi_sdhc = RPi::SDHostController::the();
-    if (auto maybe_error = rpi_sdhc.initialize(); maybe_error.is_error()) {
-        dmesgln("Unable to initialize RaspberryPi's SD Host Controller: {}", maybe_error.error());
-    } else {
-        m_controllers.append(rpi_sdhc);
-    }
-#endif
 }
 
 StorageManagement& StorageManagement::the()

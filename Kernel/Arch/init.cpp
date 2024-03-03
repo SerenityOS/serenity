@@ -384,6 +384,8 @@ void init_stage2(void*)
     // Initialize all PCI & USB Drivers
     PCI::initialize();
     USB::USBManagement::initialize();
+    // NOTE: This loop will initiailize all PCI, USB and platform-specific
+    // drivers that are compiled right now in the kernel image.
     for (auto* init_function = driver_init_table_start; init_function != driver_init_table_end; init_function++)
         (*init_function)();
 
