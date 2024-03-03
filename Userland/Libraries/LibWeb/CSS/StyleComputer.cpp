@@ -1061,6 +1061,21 @@ static ErrorOr<NonnullRefPtr<StyleValue const>> interpolate_transform(DOM::Eleme
     return StyleValueList::create({ TransformationStyleValue::create(TransformFunction::Matrix3d, move(values)) }, StyleValueList::Separator::Comma);
 }
 
+static Color interpolate_color(Color from, Color to, float delta)
+{
+    // https://drafts.csswg.org/css-color/#interpolation-space
+    // If the host syntax does not define what color space interpolation should take place in, it defaults to Oklab.
+    auto from_oklab = from.to_oklab();
+    auto to_oklab = to.to_oklab();
+
+    auto color = Color::from_oklab(
+        interpolate_raw(from_oklab.L, to_oklab.L, delta),
+        interpolate_raw(from_oklab.a, to_oklab.a, delta),
+        interpolate_raw(from_oklab.b, to_oklab.b, delta));
+    color.set_alpha(interpolate_raw(from.alpha(), to.alpha(), delta));
+    return color;
+}
+
 static ErrorOr<NonnullRefPtr<StyleValue const>> interpolate_value(DOM::Element& element, StyleValue const& from, StyleValue const& to, float delta)
 {
     if (from.type() != to.type())
@@ -1069,22 +1084,8 @@ static ErrorOr<NonnullRefPtr<StyleValue const>> interpolate_value(DOM::Element& 
     switch (from.type()) {
     case StyleValue::Type::Angle:
         return AngleStyleValue::create(Angle::make_degrees(interpolate_raw(from.as_angle().angle().to_degrees(), to.as_angle().angle().to_degrees(), delta)));
-    case StyleValue::Type::Color: {
-        // https://drafts.csswg.org/css-color/#interpolation-space
-        // If the host syntax does not define what color space interpolation should take place in, it defaults to Oklab.
-        auto from_color = from.as_color().color();
-        auto to_color = to.as_color().color();
-        auto from_oklab = from_color.to_oklab();
-        auto to_oklab = to_color.to_oklab();
-
-        auto color = Color::from_oklab(
-            interpolate_raw(from_oklab.L, to_oklab.L, delta),
-            interpolate_raw(from_oklab.a, to_oklab.a, delta),
-            interpolate_raw(from_oklab.b, to_oklab.b, delta));
-        color.set_alpha(interpolate_raw(from_color.alpha(), to_color.alpha(), delta));
-
-        return ColorStyleValue::create(color);
-    }
+    case StyleValue::Type::Color:
+        return ColorStyleValue::create(interpolate_color(from.as_color().color(), to.as_color().color(), delta));
     case StyleValue::Type::Integer:
         return IntegerStyleValue::create(interpolate_raw(from.as_integer().integer(), to.as_integer().integer(), delta));
     case StyleValue::Type::Length: {
