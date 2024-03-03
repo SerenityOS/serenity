@@ -87,9 +87,11 @@ void StorageManagement::remove_device(StorageDevice& device)
     m_storage_devices.remove(device);
 }
 
-UNMAP_AFTER_INIT void StorageManagement::enumerate_pci_controllers(bool nvme_poll)
+UNMAP_AFTER_INIT void StorageManagement::enumerate_pci_controllers()
 {
     VERIFY(m_controllers.is_empty());
+
+    auto nvme_poll = kernel_command_line().is_nvme_polling_enabled();
 
     if (!kernel_command_line().disable_physical_storage()) {
         // NOTE: Search for VMD devices before actually searching for storage controllers
@@ -464,12 +466,12 @@ NonnullRefPtr<FileSystem> StorageManagement::root_filesystem() const
     return file_system;
 }
 
-UNMAP_AFTER_INIT void StorageManagement::initialize(bool poll)
+UNMAP_AFTER_INIT void StorageManagement::initialize()
 {
     VERIFY(s_storage_device_minor_number == 0);
     if (PCI::Access::is_disabled())
         return;
-    enumerate_pci_controllers(poll);
+    enumerate_pci_controllers();
 
     enumerate_storage_devices();
     enumerate_disk_partitions();
