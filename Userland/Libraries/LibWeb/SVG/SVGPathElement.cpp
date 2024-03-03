@@ -99,10 +99,8 @@ void SVGPathElement::attribute_changed(FlyString const& name, Optional<String> c
 {
     SVGGeometryElement::attribute_changed(name, value);
 
-    if (name == "d") {
+    if (name == "d")
         m_instructions = AttributeParser::parse_path_data(value.value_or(String {}));
-        m_path.clear();
-    }
 }
 
 Gfx::Path path_from_path_instructions(ReadonlySpan<PathInstruction> instructions)
@@ -273,12 +271,9 @@ Gfx::Path path_from_path_instructions(ReadonlySpan<PathInstruction> instructions
     return path;
 }
 
-Gfx::Path& SVGPathElement::get_path()
+Gfx::Path SVGPathElement::get_path(CSSPixelSize)
 {
-    if (!m_path.has_value()) {
-        m_path = path_from_path_instructions(m_instructions);
-    }
-    return m_path.value();
+    return path_from_path_instructions(m_instructions);
 }
 
 }

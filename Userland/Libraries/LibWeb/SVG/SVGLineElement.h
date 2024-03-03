@@ -20,7 +20,7 @@ public:
 
     virtual void attribute_changed(FlyString const& name, Optional<String> const& value) override;
 
-    virtual Gfx::Path& get_path() override;
+    virtual Gfx::Path get_path(CSSPixelSize viewport_size) override;
 
     JS::NonnullGCPtr<SVGAnimatedLength> x1() const;
     JS::NonnullGCPtr<SVGAnimatedLength> y1() const;
@@ -31,8 +31,6 @@ private:
     SVGLineElement(DOM::Document&, DOM::QualifiedName);
 
     virtual void initialize(JS::Realm&) override;
-
-    Optional<Gfx::Path> m_path;
 
     Optional<float> m_x1;
     Optional<float> m_y1;

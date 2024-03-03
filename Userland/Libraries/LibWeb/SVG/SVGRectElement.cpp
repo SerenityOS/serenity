@@ -32,30 +32,21 @@ void SVGRectElement::attribute_changed(FlyString const& name, Optional<String> c
 
     if (name == SVG::AttributeNames::x) {
         m_x = AttributeParser::parse_coordinate(value.value_or(String {}));
-        m_path.clear();
     } else if (name == SVG::AttributeNames::y) {
         m_y = AttributeParser::parse_coordinate(value.value_or(String {}));
-        m_path.clear();
     } else if (name == SVG::AttributeNames::width) {
         m_width = AttributeParser::parse_positive_length(value.value_or(String {}));
-        m_path.clear();
     } else if (name == SVG::AttributeNames::height) {
         m_height = AttributeParser::parse_positive_length(value.value_or(String {}));
-        m_path.clear();
     } else if (name == SVG::AttributeNames::rx) {
         m_radius_x = AttributeParser::parse_length(value.value_or(String {}));
-        m_path.clear();
     } else if (name == SVG::AttributeNames::ry) {
         m_radius_y = AttributeParser::parse_length(value.value_or(String {}));
-        m_path.clear();
     }
 }
 
-Gfx::Path& SVGRectElement::get_path()
+Gfx::Path SVGRectElement::get_path(CSSPixelSize)
 {
-    if (m_path.has_value())
-        return m_path.value();
-
     float width = m_width.value_or(0);
     float height = m_height.value_or(0);
     float x = m_x.value_or(0);
@@ -63,10 +54,8 @@ Gfx::Path& SVGRectElement::get_path()
 
     Gfx::Path path;
     // If width or height is zero, rendering is disabled.
-    if (width == 0 && height == 0) {
-        m_path = move(path);
-        return m_path.value();
-    }
+    if (width == 0 || height == 0)
+        return path;
 
     auto corner_radii = calculate_used_corner_radius_values();
     float rx = corner_radii.width();
@@ -116,8 +105,7 @@ Gfx::Path& SVGRectElement::get_path()
     if (rx > 0 && ry > 0)
         path.elliptical_arc_to({ x + rx, y }, corner_radii, x_axis_rotation, large_arc_flag, sweep_flag);
 
-    m_path = move(path);
-    return m_path.value();
+    return path;
 }
 
 Gfx::FloatSize SVGRectElement::calculate_used_corner_radius_values() const

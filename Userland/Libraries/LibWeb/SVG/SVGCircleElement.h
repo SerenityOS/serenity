@@ -20,7 +20,7 @@ public:
 
     virtual void attribute_changed(FlyString const& name, Optional<String> const& value) override;
 
-    virtual Gfx::Path& get_path() override;
+    virtual Gfx::Path get_path(CSSPixelSize viewport_size) override;
 
     JS::NonnullGCPtr<SVGAnimatedLength> cx() const;
     JS::NonnullGCPtr<SVGAnimatedLength> cy() const;
@@ -30,8 +30,6 @@ private:
     SVGCircleElement(DOM::Document&, DOM::QualifiedName);
 
     virtual void initialize(JS::Realm&) override;
-
-    Optional<Gfx::Path> m_path;
 
     Optional<float> m_center_x;
     Optional<float> m_center_y;

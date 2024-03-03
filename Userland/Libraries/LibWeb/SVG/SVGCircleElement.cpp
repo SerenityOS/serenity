@@ -40,11 +40,8 @@ void SVGCircleElement::attribute_changed(FlyString const& name, Optional<String>
     }
 }
 
-Gfx::Path& SVGCircleElement::get_path()
+Gfx::Path SVGCircleElement::get_path(CSSPixelSize viewport_size)
 {
-    if (m_path.has_value())
-        return m_path.value();
-
     float cx = m_center_x.value_or(0);
     float cy = m_center_y.value_or(0);
     float r = m_radius.value_or(0);
@@ -52,10 +49,8 @@ Gfx::Path& SVGCircleElement::get_path()
     Gfx::Path path;
 
     // A zero radius disables rendering.
-    if (r == 0) {
-        m_path = move(path);
-        return m_path.value();
-    }
+    if (r == 0)
+        return {};
 
     bool large_arc = false;
     bool sweep = true;
@@ -75,8 +70,7 @@ Gfx::Path& SVGCircleElement::get_path()
     // 5. arc with a segment-completing close path operation.
     path.arc_to({ cx + r, cy }, r, large_arc, sweep);
 
-    m_path = move(path);
-    return m_path.value();
+    return path;
 }
 
 // https://www.w3.org/TR/SVG11/shapes.html#CircleElementCXAttribute
