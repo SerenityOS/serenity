@@ -219,11 +219,23 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init([[maybe_unused]] BootInfo con
     // FIXME: Read the /chosen/bootargs property.
     kernel_cmdline = RPi::Mailbox::the().query_kernel_command_line(s_command_line_buffer);
 #elif ARCH(RISCV64)
+    // FIXME: Technically we cant panic here, as serial debugging is not enabled yet,
+    //        as that depends on the command line.
+    //        This also means that all errors during `verify_fdt` will crash as well....
+    //        We need to find a solution for this
+    //        Maybe we can use the early boot console for this?
+    //        Or temporarily enable serial debugging?
+    if (!verify_fdt())
+        PANIC("DeviceTree validation failed");
+
     auto maybe_command_line = get_command_line_from_fdt();
-    if (maybe_command_line.is_error())
-        kernel_cmdline = "serial_debug"sv;
-    else
+    if (maybe_command_line.is_error()) {
+        dmesgln("Failed to get command line from FDT: {}", maybe_command_line.error());
+        kernel_cmdline = "serial_debug dump_fdt"sv;
+    } else {
         kernel_cmdline = maybe_command_line.value();
+    }
+
 #endif
 
     setup_serial_debug();
