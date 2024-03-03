@@ -48,6 +48,7 @@ PDFViewer::PDFViewer()
     m_page_view_mode = static_cast<PageViewMode>(Config::read_i32("PDFViewer"sv, "Display"sv, "PageMode"sv, 0));
     m_rendering_preferences.show_clipping_paths = Config::read_bool("PDFViewer"sv, "Rendering"sv, "ShowClippingPaths"sv, false);
     m_rendering_preferences.show_images = Config::read_bool("PDFViewer"sv, "Rendering"sv, "ShowImages"sv, true);
+    m_rendering_preferences.show_diagnostics = Config::read_bool("PDFViewer"sv, "Rendering"sv, "ShowDiagnostics"sv, false);
     m_rendering_preferences.clip_images = Config::read_bool("PDFViewer"sv, "Rendering"sv, "ClipImages"sv, true);
     m_rendering_preferences.clip_paths = Config::read_bool("PDFViewer"sv, "Rendering"sv, "ClipPaths"sv, true);
     m_rendering_preferences.clip_text = Config::read_bool("PDFViewer"sv, "Rendering"sv, "ClipText"sv, true);
@@ -167,6 +168,13 @@ void PDFViewer::set_current_page(u32 current_page)
 {
     m_current_page_index = current_page;
     vertical_scrollbar().set_value(m_page_dimension_cache.render_info[current_page].total_height_before_this_page);
+    update();
+}
+
+void PDFViewer::set_show_rendering_diagnostics(bool show_diagnostics)
+{
+    m_rendering_preferences.show_diagnostics = show_diagnostics;
+    Config::write_bool("PDFViewer"sv, "Rendering"sv, "ShowDiagnostics"sv, show_diagnostics);
     update();
 }
 
