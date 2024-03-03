@@ -420,6 +420,12 @@ void init_stage2(void*)
     if (!PCI::Access::is_disabled()) {
         USB::USBManagement::initialize();
     }
+
+    // NOTE: This loop will initiailize all USB & platform-specific
+    // drivers that are compiled right now in the kernel image.
+    for (auto* init_function = driver_init_table_start; init_function != driver_init_table_end; init_function++)
+        (*init_function)();
+
     SysFSFirmwareDirectory::initialize();
 
     if (!PCI::Access::is_disabled()) {
@@ -440,10 +446,6 @@ void init_stage2(void*)
     PTYMultiplexer::initialize();
 
     AudioManagement::the().initialize();
-
-    // Initialize all USB Drivers
-    for (auto* init_function = driver_init_table_start; init_function != driver_init_table_end; init_function++)
-        (*init_function)();
 
     StorageManagement::the().initialize(kernel_command_line().is_nvme_polling_enabled());
     for (int i = 0; i < 10000; ++i) {
