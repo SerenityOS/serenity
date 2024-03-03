@@ -81,12 +81,12 @@ public:
         op->set_source_record({ m_current_ast_node->start_offset(), m_current_ast_node->end_offset() });
     }
 
-    template<typename OpType, typename... Args>
-    void emit_with_extra_operand_slots(size_t extra_operand_slots, Args&&... args)
+    template<typename OpType, typename ExtraSlotType, typename... Args>
+    void emit_with_extra_slots(size_t extra_slot_count, Args&&... args)
     {
         VERIFY(!is_current_block_terminated());
 
-        size_t size_to_allocate = round_up_to_power_of_two(sizeof(OpType) + extra_operand_slots * sizeof(Operand), alignof(void*));
+        size_t size_to_allocate = round_up_to_power_of_two(sizeof(OpType) + extra_slot_count * sizeof(ExtraSlotType), alignof(void*));
         size_t slot_offset = m_current_basic_block->size();
         grow(size_to_allocate);
         void* slot = m_current_basic_block->data() + slot_offset;
@@ -95,6 +95,18 @@ public:
             m_current_basic_block->terminate({});
         auto* op = static_cast<OpType*>(slot);
         op->set_source_record({ m_current_ast_node->start_offset(), m_current_ast_node->end_offset() });
+    }
+
+    template<typename OpType, typename... Args>
+    void emit_with_extra_operand_slots(size_t extra_operand_slots, Args&&... args)
+    {
+        emit_with_extra_slots<OpType, Operand>(extra_operand_slots, forward<Args>(args)...);
+    }
+
+    template<typename OpType, typename... Args>
+    void emit_with_extra_value_slots(size_t extra_operand_slots, Args&&... args)
+    {
+        emit_with_extra_slots<OpType, Value>(extra_operand_slots, forward<Args>(args)...);
     }
 
     struct ReferenceOperands {
