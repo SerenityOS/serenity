@@ -24,7 +24,7 @@ bool Ratio::is_degenerate() const
 
 String Ratio::to_string() const
 {
-    return MUST(String::formatted("{} / {}", m_first_value, m_second_value));
+    return MUST(String::formatted("{:.5} / {:.5}", m_first_value, m_second_value));
 }
 
 }
