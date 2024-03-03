@@ -54,7 +54,7 @@ static constexpr u8 CAP_DBL_SHIFT = 32;
 static constexpr u8 CAP_DBL_MASK = 0xf;
 static constexpr u8 CAP_TO_SHIFT = 24;
 static constexpr u64 CAP_TO_MASK = 0xff << CAP_TO_SHIFT;
-static constexpr u16 MQES(u64 cap)
+static constexpr u32 MQES(u64 cap)
 {
     return (cap & 0xffff) + 1;
 }
