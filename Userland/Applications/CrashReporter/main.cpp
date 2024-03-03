@@ -81,8 +81,8 @@ static TitleAndText build_backtrace(Coredump::Reader const& coredump, ELF::Core:
     auto fault_address = metadata.get("fault_address");
     auto fault_type = metadata.get("fault_type");
     auto fault_access = metadata.get("fault_access");
-    if (fault_address.has_value() && fault_type.has_value() && fault_access.has_value()) {
-        builder.appendff("{} fault on {} at address {}", fault_type.value(), fault_access.value(), fault_address.value());
+    if (fault_address.has_value() && fault_access.has_value()) {
+        builder.appendff("{} fault on {} at address {}", fault_type.value_or("Page"), fault_access.value(), fault_address.value());
         constexpr FlatPtr malloc_scrub_pattern = explode_byte(MALLOC_SCRUB_BYTE);
         constexpr FlatPtr free_scrub_pattern = explode_byte(FREE_SCRUB_BYTE);
         auto raw_fault_address = AK::StringUtils::convert_to_uint_from_hex(fault_address.value().substring_view(2));
