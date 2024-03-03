@@ -50,6 +50,7 @@ public:
     enum class Type {
         PageNotPresent = PageFaultFlags::NotPresent,
         ProtectionViolation = PageFaultFlags::ProtectionViolation,
+        Unknown,
     };
 
     enum class Access {
@@ -90,7 +91,7 @@ public:
     bool is_instruction_fetch() const { return m_is_instruction_fetch; }
 
 private:
-    Type m_type;
+    Type m_type = Type::Unknown;
     Access m_access;
     ExecutionMode m_execution_mode;
     bool m_is_reserved_bit_violation { false };

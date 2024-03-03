@@ -358,6 +358,7 @@ void Region::clear_to_zero()
 
 PageFaultResponse Region::handle_fault(PageFault const& fault)
 {
+#if !ARCH(RISCV64)
     auto page_index_in_region = page_index_from_address(fault.vaddr());
     if (fault.type() == PageFault::Type::PageNotPresent) {
         if (fault.is_read() && !is_readable()) {
@@ -404,6 +405,57 @@ PageFaultResponse Region::handle_fault(PageFault const& fault)
     }
     dbgln("PV(error) fault in Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
     return PageFaultResponse::ShouldCrash;
+#else
+    // FIXME: Consider to merge the RISC-V page fault handling code with the x86_64/aarch64 implementation.
+    //        RISC-V doesn't tell you *why* a memory access failed, only the original access type (r/w/x).
+    //        We probably should take the page fault reason into account, if the processor provides it.
+
+    auto page_index_in_region = page_index_from_address(fault.vaddr());
+
+    if (fault.is_read() && !is_readable()) {
+        dbgln("Read page fault in non-readable Region({})[{}]", this, page_index_in_region);
+        return PageFaultResponse::ShouldCrash;
+    }
+
+    if (fault.is_write() && !is_writable()) {
+        dbgln("Write page fault in non-writable Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
+        return PageFaultResponse::ShouldCrash;
+    }
+
+    if (fault.is_instruction_fetch() && !is_executable()) {
+        dbgln("Instruction fetch page fault in non-executable Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
+        return PageFaultResponse::ShouldCrash;
+    }
+
+    if (fault.is_write() && is_writable() && should_cow(page_index_in_region)) {
+        dbgln_if(PAGE_FAULT_DEBUG, "CoW page fault in Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
+        auto phys_page = physical_page(page_index_in_region);
+        if (phys_page->is_shared_zero_page() || phys_page->is_lazy_committed_page()) {
+            dbgln_if(PAGE_FAULT_DEBUG, "Zero page fault in Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
+            return handle_zero_fault(page_index_in_region, *phys_page);
+        }
+        return handle_cow_fault(page_index_in_region);
+    }
+
+    if (vmobject().is_inode()) {
+        dbgln_if(PAGE_FAULT_DEBUG, "Inode page fault in Region({})[{}]", this, page_index_in_region);
+        return handle_inode_fault(page_index_in_region);
+    }
+
+    SpinlockLocker vmobject_locker(vmobject().m_lock);
+    auto& page_slot = physical_page_slot(page_index_in_region);
+    if (page_slot->is_lazy_committed_page()) {
+        auto page_index_in_vmobject = translate_to_vmobject_page(page_index_in_region);
+        VERIFY(m_vmobject->is_anonymous());
+        page_slot = static_cast<AnonymousVMObject&>(*m_vmobject).allocate_committed_page({});
+        if (!remap_vmobject_page(page_index_in_vmobject, *page_slot))
+            return PageFaultResponse::OutOfMemory;
+        return PageFaultResponse::Continue;
+    }
+
+    dbgln("Unexpected page fault in Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
+    return PageFaultResponse::ShouldCrash;
+#endif
 }
 
 PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region, PhysicalPage& page_in_slot_at_time_of_fault)

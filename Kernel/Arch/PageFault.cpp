@@ -120,7 +120,8 @@ void PageFault::handle(RegisterState& regs)
                 auto fault_address_string = KString::formatted("{:p}", fault_address);
                 auto fault_address_view = fault_address_string.is_error() ? ""sv : fault_address_string.value()->view();
                 (void)current_process.try_set_coredump_property("fault_address"sv, fault_address_view);
-                (void)current_process.try_set_coredump_property("fault_type"sv, type() == PageFault::Type::PageNotPresent ? "NotPresent"sv : "ProtectionViolation"sv);
+                if (type() != PageFault::Type::Unknown)
+                    (void)current_process.try_set_coredump_property("fault_type"sv, type() == PageFault::Type::PageNotPresent ? "NotPresent"sv : "ProtectionViolation"sv);
                 StringView fault_access;
                 if (is_instruction_fetch())
                     fault_access = "Execute"sv;

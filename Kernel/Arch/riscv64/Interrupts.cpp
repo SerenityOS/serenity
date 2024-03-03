@@ -96,9 +96,8 @@ extern "C" void trap_handler(TrapFrame& trap_frame)
             else if (scause == StoreOrAMOPageFault)
                 fault.set_access(PageFault::Access::Write);
 
-            // FIXME: RISC-V doesn't tell you *why* a memory access failed, only the original access type (r/w/x).
-            //        So either detect the correct type by walking the page table or rewrite MM to not depend on the processor-provided reason.
-            fault.set_type(PageFault::Type::ProtectionViolation);
+            // RISC-V doesn't tell you the reason why a page fault occurred, so we don't use PageFault::set_type() here.
+            // The RISC-V implementation of Region::handle_fault() works without a correct PageFault::type().
 
             fault.handle(*trap_frame.regs);
             break;
