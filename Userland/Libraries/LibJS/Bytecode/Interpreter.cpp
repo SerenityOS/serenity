@@ -96,6 +96,16 @@ static ByteString format_operand_list(StringView name, ReadonlySpan<Operand> ope
     return builder.to_byte_string();
 }
 
+static ByteString format_value_list(StringView name, ReadonlySpan<Value> values)
+{
+    StringBuilder builder;
+    if (!name.is_empty())
+        builder.appendff(", \033[32m{}\033[0m:[", name);
+    builder.join(", "sv, values);
+    builder.append("]"sv);
+    return builder.to_byte_string();
+}
+
 NonnullOwnPtr<CallFrame> CallFrame::create(size_t register_count)
 {
     size_t allocation_size = sizeof(CallFrame) + sizeof(Value) * register_count;
@@ -870,8 +880,8 @@ ThrowCompletionOr<void> NewArray::execute_impl(Bytecode::Interpreter& interprete
 ThrowCompletionOr<void> NewPrimitiveArray::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto array = MUST(Array::create(interpreter.realm(), 0));
-    for (size_t i = 0; i < m_values.size(); i++)
-        array->indexed_properties().put(i, m_values[i], default_attributes);
+    for (size_t i = 0; i < m_element_count; i++)
+        array->indexed_properties().put(i, m_elements[i], default_attributes);
     interpreter.set(dst(), array);
     return {};
 }
@@ -1622,7 +1632,7 @@ ByteString NewPrimitiveArray::to_byte_string_impl(Bytecode::Executable const& ex
 {
     return ByteString::formatted("NewPrimitiveArray {}, {}"sv,
         format_operand("dst"sv, dst(), executable),
-        m_values.span());
+        format_value_list("elements"sv, elements()));
 }
 
 ByteString ArrayAppend::to_byte_string_impl(Bytecode::Executable const& executable) const

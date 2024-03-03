@@ -1024,14 +1024,15 @@ Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> ArrayExpression::ge
     if (all_of(m_elements, [](auto element) { return !element || is<PrimitiveLiteral>(*element); })) {
         // If all elements are constant primitives, we can just emit a single instruction to initialize the array,
         // instead of emitting instructions to manually evaluate them one-by-one
-        auto values = MUST(FixedArray<Value>::create(m_elements.size()));
+        Vector<Value> values;
+        values.resize(m_elements.size());
         for (auto i = 0u; i < m_elements.size(); ++i) {
             if (!m_elements[i])
                 continue;
             values[i] = static_cast<PrimitiveLiteral const&>(*m_elements[i]).value();
         }
         auto dst = choose_dst(generator, preferred_dst);
-        generator.emit<Bytecode::Op::NewPrimitiveArray>(dst, move(values));
+        generator.emit_with_extra_value_slots<Bytecode::Op::NewPrimitiveArray>(values.size(), dst, values);
         return dst;
     }
 

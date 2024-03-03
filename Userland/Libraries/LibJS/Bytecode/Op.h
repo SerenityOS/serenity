@@ -290,22 +290,30 @@ private:
 
 class NewPrimitiveArray final : public Instruction {
 public:
-    NewPrimitiveArray(Operand dst, FixedArray<Value> values)
-        : Instruction(Type::NewPrimitiveArray, sizeof(*this))
+    NewPrimitiveArray(Operand dst, ReadonlySpan<Value> elements)
+        : Instruction(Type::NewPrimitiveArray, length_impl(elements.size()))
         , m_dst(dst)
-        , m_values(move(values))
+        , m_element_count(elements.size())
     {
+        for (size_t i = 0; i < m_element_count; ++i)
+            m_elements[i] = elements[i];
+    }
+
+    size_t length_impl(size_t element_count) const
+    {
+        return round_up_to_power_of_two(alignof(void*), sizeof(*this) + sizeof(Value) * element_count);
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     Operand dst() const { return m_dst; }
-    ReadonlySpan<Value> values() const { return m_values.span(); }
+    ReadonlySpan<Value> elements() const { return { m_elements, m_element_count }; }
 
 private:
     Operand m_dst;
-    FixedArray<Value> m_values;
+    size_t m_element_count { 0 };
+    Value m_elements[];
 };
 
 class ArrayAppend final : public Instruction {
