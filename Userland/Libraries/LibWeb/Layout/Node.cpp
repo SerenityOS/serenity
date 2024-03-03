@@ -392,6 +392,8 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
                     return CSS::BackgroundBox::ContentBox;
                 case CSS::ValueID::PaddingBox:
                     return CSS::BackgroundBox::PaddingBox;
+                case CSS::ValueID::Text:
+                    return CSS::BackgroundBox::Text;
                 default:
                     VERIFY_NOT_REACHED();
                 }
