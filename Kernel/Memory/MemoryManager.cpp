@@ -385,7 +385,17 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map_fdt(MemoryManager::GlobalD
     auto const& fdt_header = *reinterpret_cast<DeviceTree::FlattenedDeviceTreeHeader const*>(fdt_addr);
     auto fdt_buffer = ReadonlyBytes(fdt_addr, fdt_header.totalsize);
 
-    // FIXME: Parse the MemoryReservationBlock
+    auto const* mem_reserve_block = reinterpret_cast<DeviceTree::FlattenedDeviceTreeReserveEntry const*>(&fdt_buffer[fdt_header.off_mem_rsvmap]);
+
+    u64 next_block_offset = fdt_header.off_mem_rsvmap + sizeof(DeviceTree::FlattenedDeviceTreeReserveEntry);
+    while ((next_block_offset < fdt_header.off_dt_struct) && (*mem_reserve_block != DeviceTree::FlattenedDeviceTreeReserveEntry {})) {
+        dbgln("MM: Reserved Range /memreserve/: address: {} size {:#x}", PhysicalAddress { mem_reserve_block->address }, mem_reserve_block->size);
+        global_data.physical_memory_ranges.append(PhysicalMemoryRange { PhysicalMemoryRangeType::Reserved, PhysicalAddress { mem_reserve_block->address }, mem_reserve_block->size });
+        // FIXME: Not all of these are "used", only those in "memory" are actually "used"
+        global_data.used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::BootModule, PhysicalAddress { mem_reserve_block->address }, PhysicalAddress { mem_reserve_block->address + mem_reserve_block->size } });
+        ++mem_reserve_block;
+        next_block_offset += sizeof(DeviceTree::FlattenedDeviceTreeReserveEntry);
+    }
 
     // Schema:
     // https://github.com/devicetree-org/dt-schema/blob/main/dtschema/schemas/root-node.yaml
@@ -396,7 +406,7 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map_fdt(MemoryManager::GlobalD
     // https://github.com/devicetree-org/dt-schema/blob/main/dtschema/schemas/reserved-memory/reserved-memory.yaml
     // Memory:
     // https://github.com/devicetree-org/dt-schema/blob/main/dtschema/schemas/memory.yaml
-    // -> #address-cells: /#address-cells , #size-cells: /size-cells #
+    // -> #address-cells: /#address-cells , #size-cells: /#size-cells
 
     // FIXME: When booting from UEFI, the /memory node may not be relied upon
     enum class State {
