@@ -25,6 +25,8 @@ public:
     float value() const { return m_value; }
     WebIDL::ExceptionOr<void> set_value(float value);
 
+    [[nodiscard]] static JS::NonnullGCPtr<SVGLength> from_length_percentage(JS::Realm&, CSS::LengthPercentage const&);
+
 private:
     SVGLength(JS::Realm&, u8 unit_type, float value);
 
