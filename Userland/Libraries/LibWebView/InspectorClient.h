@@ -70,6 +70,7 @@ private:
     Optional<i32> m_body_node_id;
     Optional<i32> m_pending_selection;
 
+    bool m_inspector_loaded { false };
     bool m_dom_tree_loaded { false };
 
     struct ContextMenuData {

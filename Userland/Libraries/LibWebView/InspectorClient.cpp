@@ -118,6 +118,7 @@ InspectorClient::InspectorClient(ViewImplementation& content_web_view, ViewImple
     m_inspector_web_view.use_native_user_style_sheet();
 
     m_inspector_web_view.on_inspector_loaded = [this]() {
+        m_inspector_loaded = true;
         inspect();
 
         m_content_web_view.js_console_request_messages(0);
@@ -191,6 +192,8 @@ InspectorClient::~InspectorClient()
 
 void InspectorClient::inspect()
 {
+    if (!m_inspector_loaded)
+        return;
     if (m_dom_tree_loaded)
         return;
 
