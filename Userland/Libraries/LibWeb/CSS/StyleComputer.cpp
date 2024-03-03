@@ -52,6 +52,7 @@
 #include <LibWeb/CSS/StyleValues/NumberStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PercentageStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PositionStyleValue.h>
+#include <LibWeb/CSS/StyleValues/RatioStyleValue.h>
 #include <LibWeb/CSS/StyleValues/RectStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ShorthandStyleValue.h>
 #include <LibWeb/CSS/StyleValues/StringStyleValue.h>
@@ -1103,6 +1104,20 @@ static ErrorOr<NonnullRefPtr<StyleValue const>> interpolate_value(DOM::Element& 
         return PositionStyleValue::create(
             TRY(interpolate_value(element, from_position.edge_x(), to_position.edge_x(), delta))->as_edge(),
             TRY(interpolate_value(element, from_position.edge_y(), to_position.edge_y(), delta))->as_edge());
+    }
+    case StyleValue::Type::Ratio: {
+        auto from_ratio = from.as_ratio().ratio();
+        auto to_ratio = to.as_ratio().ratio();
+
+        // The interpolation of a <ratio> is defined by converting each <ratio> to a number by dividing the first value
+        // by the second (so a ratio of 3 / 2 would become 1.5), taking the logarithm of that result (so the 1.5 would
+        // become approximately 0.176), then interpolating those values. The result during the interpolation is
+        // converted back to a <ratio> by inverting the logarithm, then interpreting the result as a <ratio> with the
+        // result as the first value and 1 as the second value.
+        auto from_number = log(from_ratio.value());
+        auto to_number = log(to_ratio.value());
+        auto interp_number = interpolate_raw(from_number, to_number, delta);
+        return RatioStyleValue::create(Ratio(pow(M_E, interp_number)));
     }
     case StyleValue::Type::Rect: {
         auto from_rect = from.as_rect().rect();
