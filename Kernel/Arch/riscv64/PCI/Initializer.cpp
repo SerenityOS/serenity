@@ -11,6 +11,7 @@
 #include <Kernel/Bus/PCI/Controller/MemoryBackedHostBridge.h>
 #include <Kernel/Bus/PCI/Initializer.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Bus/PCI/BusDirectory.h>
+#include <Kernel/Firmware/Devicetree/Devicetree.h>
 #include <Userland/Libraries/LibDeviceTree/DeviceTree.h>
 
 namespace Kernel::PCI {

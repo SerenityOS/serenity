@@ -15,6 +15,7 @@
 #include <Kernel/Boot/BootInfo.h>
 #include <Kernel/Boot/Multiboot.h>
 #include <Kernel/FileSystem/Inode.h>
+#include <Kernel/Firmware/Devicetree/Devicetree.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/Interrupts/InterruptDisabler.h>
 #include <Kernel/KSyms.h>

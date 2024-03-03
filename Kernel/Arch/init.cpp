@@ -42,6 +42,7 @@
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Firmware/ACPI/Initialize.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
+#include <Kernel/Firmware/Devicetree/Devicetree.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Library/Panic.h>
