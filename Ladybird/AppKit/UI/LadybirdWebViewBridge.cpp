@@ -110,9 +110,10 @@ void WebViewBridge::mouse_move_event(Gfx::IntPoint position, Gfx::IntPoint scree
     client().async_mouse_move(m_client_state.page_index, to_content_position(position).to_type<Web::DevicePixels>(), to_content_position(screen_position).to_type<Web::DevicePixels>(), 0, to_underlying(button), modifiers);
 }
 
-void WebViewBridge::mouse_wheel_event(Gfx::IntPoint position, Gfx::IntPoint screen_position, GUI::MouseButton button, KeyModifier modifiers, int wheel_delta_x, int wheel_delta_y)
+void WebViewBridge::mouse_wheel_event(Gfx::IntPoint position, Gfx::IntPoint screen_position, GUI::MouseButton button, KeyModifier modifiers, Gfx::FloatPoint wheel_delta)
 {
-    client().async_mouse_wheel(m_client_state.page_index, to_content_position(position).to_type<Web::DevicePixels>(), to_content_position(screen_position).to_type<Web::DevicePixels>(), to_underlying(button), to_underlying(button), modifiers, wheel_delta_x, wheel_delta_y);
+    auto delta = wheel_delta.to_type<Web::DevicePixels>();
+    client().async_mouse_wheel(m_client_state.page_index, to_content_position(position).to_type<Web::DevicePixels>(), to_content_position(screen_position).to_type<Web::DevicePixels>(), to_underlying(button), to_underlying(button), modifiers, delta.x(), delta.y());
 }
 
 void WebViewBridge::mouse_double_click_event(Gfx::IntPoint position, Gfx::IntPoint screen_position, GUI::MouseButton button, KeyModifier modifiers)

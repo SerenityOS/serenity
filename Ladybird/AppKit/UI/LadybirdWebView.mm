@@ -1251,7 +1251,7 @@ static void copy_data_to_clipboard(StringView data, NSPasteboardType pasteboard_
         delta_x *= [self scrollView].horizontalLineScroll;
         delta_y *= [self scrollView].verticalLineScroll;
     }
-    m_web_view_bridge->mouse_wheel_event(position, screen_position, button, modifiers, delta_x, delta_y);
+    m_web_view_bridge->mouse_wheel_event(position, screen_position, button, modifiers, { delta_x, delta_y });
 }
 
 - (void)mouseDown:(NSEvent*)event
