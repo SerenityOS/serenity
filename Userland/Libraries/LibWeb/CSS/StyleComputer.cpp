@@ -760,6 +760,8 @@ static ErrorOr<void> cascade_custom_properties(DOM::Element& element, Optional<C
     return {};
 }
 
+static ErrorOr<NonnullRefPtr<StyleValue const>> interpolate_value(DOM::Element& element, StyleValue const& from, StyleValue const& to, float delta);
+
 template<typename T>
 static T interpolate_raw(T from, T to, float delta)
 {
@@ -1076,6 +1078,67 @@ static Color interpolate_color(Color from, Color to, float delta)
     return color;
 }
 
+static ErrorOr<NonnullRefPtr<StyleValue const>> interpolate_box_shadow(DOM::Element& element, StyleValue const& from, StyleValue const& to, float delta)
+{
+    // https://drafts.csswg.org/css-backgrounds/#box-shadow
+    // Animation type: by computed value, treating none as a zero-item list and appending blank shadows
+    //                 (transparent 0 0 0 0) with a corresponding inset keyword as needed to match the longer list if
+    //                 the shorter list is otherwise compatible with the longer one
+
+    static constexpr auto process_list = [](StyleValue const& value) {
+        StyleValueVector shadows;
+        if (value.is_value_list()) {
+            for (auto const& element : value.as_value_list().values()) {
+                if (element->is_shadow())
+                    shadows.append(element);
+            }
+        } else if (value.is_shadow()) {
+            shadows.append(value);
+        } else if (!value.is_identifier() || value.as_identifier().id() != ValueID::None) {
+            VERIFY_NOT_REACHED();
+        }
+        return shadows;
+    };
+
+    static constexpr auto extend_list_if_necessary = [](StyleValueVector& values, StyleValueVector const& other) {
+        values.ensure_capacity(other.size());
+        for (size_t i = values.size(); i < other.size(); i++) {
+            values.unchecked_append(ShadowStyleValue::create(
+                Color::Transparent,
+                LengthStyleValue::create(Length::make_px(0)),
+                LengthStyleValue::create(Length::make_px(0)),
+                LengthStyleValue::create(Length::make_px(0)),
+                LengthStyleValue::create(Length::make_px(0)),
+                other[i]->as_shadow().placement()));
+        }
+    };
+
+    StyleValueVector from_shadows = process_list(from);
+    StyleValueVector to_shadows = process_list(to);
+
+    extend_list_if_necessary(from_shadows, to_shadows);
+    extend_list_if_necessary(to_shadows, from_shadows);
+
+    VERIFY(from_shadows.size() == to_shadows.size());
+    StyleValueVector result_shadows;
+    result_shadows.ensure_capacity(from_shadows.size());
+
+    for (size_t i = 0; i < from_shadows.size(); i++) {
+        auto const& from_shadow = from_shadows[i]->as_shadow();
+        auto const& to_shadow = to_shadows[i]->as_shadow();
+        auto result_shadow = ShadowStyleValue::create(
+            interpolate_color(from_shadow.color(), to_shadow.color(), delta),
+            TRY(interpolate_value(element, from_shadow.offset_x(), to_shadow.offset_x(), delta)),
+            TRY(interpolate_value(element, from_shadow.offset_y(), to_shadow.offset_y(), delta)),
+            TRY(interpolate_value(element, from_shadow.blur_radius(), to_shadow.blur_radius(), delta)),
+            TRY(interpolate_value(element, from_shadow.spread_distance(), to_shadow.spread_distance(), delta)),
+            delta >= 0.5f ? to_shadow.placement() : from_shadow.placement());
+        result_shadows.unchecked_append(result_shadow);
+    }
+
+    return StyleValueList::create(move(result_shadows), StyleValueList::Separator::Comma);
+}
+
 static ErrorOr<NonnullRefPtr<StyleValue const>> interpolate_value(DOM::Element& element, StyleValue const& from, StyleValue const& to, float delta)
 {
     if (from.type() != to.type())
@@ -1161,6 +1224,8 @@ static ErrorOr<ValueComparingNonnullRefPtr<StyleValue const>> interpolate_proper
     case AnimationType::Custom: {
         if (property_id == PropertyID::Transform)
             return interpolate_transform(element, from, to, delta);
+        if (property_id == PropertyID::BoxShadow)
+            return interpolate_box_shadow(element, from, to, delta);
 
         // FIXME: Handle all custom animatable properties
         [[fallthrough]];
