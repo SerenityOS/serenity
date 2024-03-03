@@ -210,10 +210,9 @@ bool RadialGradientStyleValue::equals(StyleValue const& other) const
 void RadialGradientStyleValue::paint(PaintContext& context, DevicePixelRect const& dest_rect, CSS::ImageRendering, Vector<Gfx::Path> const& clip_paths) const
 {
     VERIFY(m_resolved.has_value());
-    Painting::paint_radial_gradient(context, dest_rect, m_resolved->data,
-        context.rounded_device_point(m_resolved->center),
-        context.rounded_device_size(m_resolved->gradient_size),
-        clip_paths);
+    auto center = context.rounded_device_point(m_resolved->center).to_type<int>();
+    auto size = context.rounded_device_size(m_resolved->gradient_size).to_type<int>();
+    context.recording_painter().fill_rect_with_radial_gradient(dest_rect.to_type<int>(), m_resolved->data, center, size, clip_paths);
 }
 
 }
