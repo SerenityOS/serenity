@@ -753,10 +753,21 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     computed_values.set_grid_template_areas(computed_style.grid_template_areas());
     computed_values.set_grid_auto_flow(computed_style.grid_auto_flow());
 
+    if (auto cx_value = computed_style.length_percentage(CSS::PropertyID::Cx); cx_value.has_value())
+        computed_values.set_cx(*cx_value);
+    if (auto cy_value = computed_style.length_percentage(CSS::PropertyID::Cy); cy_value.has_value())
+        computed_values.set_cy(*cy_value);
+    if (auto r_value = computed_style.length_percentage(CSS::PropertyID::R); r_value.has_value())
+        computed_values.set_r(*r_value);
+    if (auto rx_value = computed_style.length_percentage(CSS::PropertyID::Rx); rx_value.has_value())
+        computed_values.set_rx(*rx_value);
+    if (auto ry_value = computed_style.length_percentage(CSS::PropertyID::Ry); ry_value.has_value())
+        computed_values.set_ry(*ry_value);
     if (auto x_value = computed_style.length_percentage(CSS::PropertyID::X); x_value.has_value())
         computed_values.set_x(*x_value);
     if (auto y_value = computed_style.length_percentage(CSS::PropertyID::Y); y_value.has_value())
         computed_values.set_y(*y_value);
+
     auto fill = computed_style.property(CSS::PropertyID::Fill);
     if (fill->has_color())
         computed_values.set_fill(fill->to_color(*this));
