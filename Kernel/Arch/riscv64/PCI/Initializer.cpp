@@ -31,124 +31,114 @@ void initialize()
     // https://github.com/devicetree-org/dt-schema/blob/main/dtschema/schemas/pci/pci-bus-common.yaml
     // https://github.com/devicetree-org/dt-schema/blob/main/dtschema/schemas/pci/pci-host-bridge.yaml
 
-    // The pci controllers are usually in /soc/pcie?@XXXXXXXX
-    // FIXME: They can also appear in the root node, or any simple-bus other than soc
     auto const& device_tree = DeviceTree::get();
-
-    auto maybe_soc = device_tree.get_child("soc"sv);
-    if (!maybe_soc.has_value()) {
-        dmesgln("PCI: No `soc` node found in the device tree, PCI initialization will be skipped");
-        return;
-    }
-
-    auto const& soc = maybe_soc.value();
+    // These values must be present in the root node
+    // And all connected simple-bus nodes have the same values for these, unless
+    // they also have a "ranges" property, which is not supported by us, for now
+    auto address_cells = device_tree.get_property("#address-cells"sv).value().as<u32>();
+    [[maybe_unused]] auto size_cells = device_tree.get_property("#size-cells"sv).value().as<u32>();
 
     enum class ControllerCompatible {
         Unknown,
         ECAM,
     };
 
-    // These properties must be present
-    auto soc_address_cells = soc.get_property("#address-cells"sv).value().as<u32>();
-    [[maybe_unused]] auto soc_size_cells = soc.get_property("#size-cells"sv).value().as<u32>();
-
     Optional<u32> domain_counter;
-    for (auto const& entry : soc.children()) {
-        if (!entry.key.starts_with("pci"sv))
-            continue;
-        auto const& node = entry.value;
-
-        if (auto device_type = node.get_property("device_type"sv); !device_type.has_value() || device_type.value().as_string() != "pci"sv) {
-            // Technically, the device_type property is deprecated, but if it is present,
-            // no harm's done in checking it anyway
-            dmesgln("PCI: PCI named devicetree entry {} not a PCI type device, got device type '{}' instead", entry.key, device_type.has_value() ? device_type.value().as_string() : "<None>"sv);
-            continue;
-        }
-
-        auto maybe_compatible = node.get_property("compatible"sv);
-        if (!maybe_compatible.has_value()) {
-            dmesgln("PCI: Devicetree node for {} does not have a 'compatible' string, rejecting", entry.key);
-            continue;
-        }
-        auto compatible = maybe_compatible.value();
-        auto controller_compatibility = ControllerCompatible::Unknown;
-        // Compatible strings are a list of strings;
-        // They should be sorted from most specific to least specific,
-        // so it's best to take the first one we recognize
-        compatible.for_each_string([&controller_compatibility](StringView compatible_string) -> IterationDecision {
-            if (compatible_string == "pci-host-ecam-generic"sv) {
-                controller_compatibility = ControllerCompatible::ECAM;
-                return IterationDecision::Break;
+    MUST(device_tree.for_each_connected_pci_controller(
+        [&domain_counter, address_cells](StringView node_name, DeviceTree::DeviceTreeNodeView const& node) -> ErrorOr<IterationDecision> {
+            if (auto device_type = node.get_property("device_type"sv); !device_type.has_value() || device_type->as_string() != "pci"sv) {
+                // Technically, the device_type property is deprecated, but if it is present,
+                // no harm's done in checking it anyway
+                dmesgln("PCI: PCI named devicetree entry {} not a PCI type device, got device type '{}' instead", node_name, device_type.has_value() ? device_type.value().as_string() : "<None>"sv);
+                return IterationDecision::Continue;
             }
-            // FIXME: Implement CAM (pci-host-cam-generic), but maybe it's to old to be relevant
+
+            auto maybe_compatible = node.get_property("compatible"sv);
+            if (!maybe_compatible.has_value()) {
+                dmesgln("PCI: Devicetree node for {} does not have a 'compatible' string, rejecting", node_name);
+                return IterationDecision::Continue;
+            }
+            auto compatible = maybe_compatible.value();
+            auto controller_compatibility = ControllerCompatible::Unknown;
+            // Compatible strings are a list of strings;
+            // They should be sorted from most specific to least specific,
+            // so it's best to take the first one we recognize
+            compatible.for_each_string([&controller_compatibility](StringView compatible_string) -> IterationDecision {
+                if (compatible_string == "pci-host-ecam-generic"sv) {
+                    controller_compatibility = ControllerCompatible::ECAM;
+                    return IterationDecision::Break;
+                }
+                // FIXME: Implement CAM (pci-host-cam-generic), but maybe it's to old to be relevant
+
+                return IterationDecision::Continue;
+            });
+            if (controller_compatibility == ControllerCompatible::Unknown) {
+                dmesgln("PCI: Devicetree node for {} does not have a known 'compatible' string, rejecting", node_name);
+                dmesgln("PCI: Compatible strings provided: {}", compatible.as_strings());
+                return IterationDecision::Continue;
+            }
+
+            auto maybe_reg = node.get_property("reg"sv);
+            if (!maybe_reg.has_value()) {
+                dmesgln("PCI: Devicetree node for {} does not have a physical address assigned to it, rejecting", node_name);
+                return IterationDecision::Continue;
+            }
+            auto reg = maybe_reg.value();
+
+            Array<u8, 2> bus_range { 0, 255 };
+            auto maybe_bus_range = node.get_property("bus-range"sv);
+            if (maybe_bus_range.has_value()) {
+                auto provided_bus_range = maybe_bus_range.value().as<Array<BigEndian<u32>, 2>>();
+                // FIXME: Range check these
+                bus_range[0] = provided_bus_range[0];
+                bus_range[1] = provided_bus_range[1];
+            }
+
+            u32 domain;
+            auto maybe_domain = node.get_property("linux,pci-domain"sv);
+            if (!maybe_domain.has_value()) {
+                // FIXME: Make a check similar to the domain counter check below
+                if (!domain_counter.has_value())
+                    domain_counter = 0;
+                domain = domain_counter.value();
+                domain_counter = domain_counter.value() + 1;
+            } else {
+                if (domain_counter.has_value()) {
+                    dmesgln("PCI: Devicetree node for {} has a PCI-domain assigned, but a previous controller did not have one assigned", node_name);
+                    dmesgln("PCI: This could lead to domain collisions if handled improperly");
+                    dmesgln("PCI: We will for now reject this device for now, further investigation is advised");
+                    return IterationDecision::Continue;
+                }
+                domain = maybe_domain.value().as<u32>();
+            }
+
+            switch (controller_compatibility) {
+            case ControllerCompatible::ECAM: {
+                // FIXME: Make this use a nice helper function
+                // FIXME: Use the provided size field
+                auto stream = reg.as_stream();
+                FlatPtr paddr;
+                if (address_cells == 1)
+                    paddr = MUST(stream.read_value<BigEndian<u32>>());
+                else
+                    paddr = MUST(stream.read_value<BigEndian<u64>>());
+
+                Access::the().add_host_controller(
+                    MemoryBackedHostBridge::must_create(
+                        Domain {
+                            domain,
+                            bus_range[0],
+                            bus_range[1],
+                        },
+                        PhysicalAddress { paddr }));
+                break;
+            }
+            case ControllerCompatible::Unknown:
+                VERIFY_NOT_REACHED(); // This should have been rejected earlier
+            }
 
             return IterationDecision::Continue;
-        });
-        if (controller_compatibility == ControllerCompatible::Unknown) {
-            dmesgln("PCI: Devicetree node for {} does not have a known 'compatible' string, rejecting", entry.key);
-            dmesgln("PCI: Compatible strings provided: {}", compatible.as_strings());
-            continue;
-        }
-
-        auto maybe_reg = node.get_property("reg"sv);
-        if (!maybe_reg.has_value()) {
-            dmesgln("PCI: Devicetree node for {} does not have a physical address assigned to it, rejecting", entry.key);
-            continue;
-        }
-        auto reg = maybe_reg.value();
-
-        Array<u8, 2> bus_range { 0, 255 };
-        auto maybe_bus_range = node.get_property("bus-range"sv);
-        if (maybe_bus_range.has_value()) {
-            auto provided_bus_range = maybe_bus_range.value().as<Array<BigEndian<u32>, 2>>();
-            // FIXME: Range check these
-            bus_range[0] = provided_bus_range[0];
-            bus_range[1] = provided_bus_range[1];
-        }
-
-        u32 domain;
-        auto maybe_domain = node.get_property("linux,pci-domain"sv);
-        if (!maybe_domain.has_value()) {
-            // FIXME: Make a check similar to the domain counter check below
-            if (!domain_counter.has_value())
-                domain_counter = 0;
-            domain = domain_counter.value();
-            domain_counter = domain_counter.value() + 1;
-        } else {
-            if (domain_counter.has_value()) {
-                dmesgln("PCI: Devicetree node for {} has a PCI-domain assigned, but a previous controller did not have one assigned", entry.key);
-                dmesgln("PCI: This could lead to domain collisions if handled improperly");
-                dmesgln("PCI: We will for now reject this device for now, further investigation is advised");
-                continue;
-            }
-            domain = maybe_domain.value().as<u32>();
-        }
-
-        switch (controller_compatibility) {
-        case ControllerCompatible::ECAM: {
-            // FIXME: Make this use a nice helper function
-            // FIXME: Use the provided size field
-            auto stream = reg.as_stream();
-            FlatPtr paddr;
-            if (soc_address_cells == 1)
-                paddr = MUST(stream.read_value<BigEndian<u32>>());
-            else
-                paddr = MUST(stream.read_value<BigEndian<u64>>());
-
-            Access::the().add_host_controller(
-                MemoryBackedHostBridge::must_create(
-                    Domain {
-                        domain,
-                        bus_range[0],
-                        bus_range[1],
-                    },
-                    PhysicalAddress { paddr }));
-            break;
-        }
-        case ControllerCompatible::Unknown:
-            VERIFY_NOT_REACHED(); // This should have been rejected earlier
-        }
-    }
+        }));
 
     Access::the().rescan_hardware();
 
