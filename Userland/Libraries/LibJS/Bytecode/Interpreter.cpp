@@ -119,6 +119,26 @@ NonnullOwnPtr<CallFrame> CallFrame::create(size_t register_count)
     return call_frame;
 }
 
+static ThrowCompletionOr<Value> loosely_inequals(VM& vm, Value src1, Value src2)
+{
+    return Value(!TRY(is_loosely_equal(vm, src1, src2)));
+}
+
+static ThrowCompletionOr<Value> loosely_equals(VM& vm, Value src1, Value src2)
+{
+    return Value(TRY(is_loosely_equal(vm, src1, src2)));
+}
+
+static ThrowCompletionOr<Value> strict_inequals(VM&, Value src1, Value src2)
+{
+    return Value(!is_strictly_equal(src1, src2));
+}
+
+static ThrowCompletionOr<Value> strict_equals(VM&, Value src1, Value src2)
+{
+    return Value(is_strictly_equal(src1, src2));
+}
+
 Interpreter::Interpreter(VM& vm)
     : m_vm(vm)
 {
@@ -324,6 +344,33 @@ void Interpreter::run_bytecode()
                 else
                     m_current_block = &static_cast<Op::JumpIf const&>(instruction).false_target()->block();
                 goto start;
+
+#define JS_HANDLE_FUSABLE_BINARY_JUMP(PreOp, int32_operator, slow_case) \
+    case Instruction::Type::Jump##PreOp: {                              \
+        auto& jump = static_cast<Op::Jump##PreOp const&>(instruction);  \
+        auto lhs = get(jump.lhs());                                     \
+        auto rhs = get(jump.rhs());                                     \
+        bool condition = false;                                         \
+        if (lhs.is_int32() && rhs.is_int32()) {                         \
+            condition = lhs.as_i32() int32_operator rhs.as_i32();       \
+        } else {                                                        \
+            auto condition_or_error = slow_case(vm(), lhs, rhs);        \
+            if (condition_or_error.is_error()) {                        \
+                result = condition_or_error.release_error();            \
+                break;                                                  \
+            }                                                           \
+            condition = condition_or_error.value().to_boolean();        \
+        }                                                               \
+                                                                        \
+        if (condition)                                                  \
+            m_current_block = &jump.true_target()->block();             \
+        else                                                            \
+            m_current_block = &jump.false_target()->block();            \
+        goto start;                                                     \
+    }
+
+                JS_ENUMERATE_FUSABLE_BINARY_OPS(JS_HANDLE_FUSABLE_BINARY_JUMP)
+
             case Instruction::Type::JumpNullish:
                 if (get(static_cast<Op::JumpNullish const&>(instruction).condition()).is_nullish())
                     m_current_block = &static_cast<Op::Jump const&>(instruction).true_target()->block();
@@ -545,6 +592,7 @@ static PassManager& optimization_pipeline()
         pm->add<Passes::UnifySameBlocks>();
         pm->add<Passes::GenerateCFG>();
         pm->add<Passes::MergeBlocks>();
+        pm->add<Passes::Peephole>();
         pm->add<Passes::GenerateCFG>();
         pm->add<Passes::PlaceBlocks>();
         return pm;
@@ -587,7 +635,6 @@ Variant<NonnullOwnPtr<CallFrame>, CallFrame*> Interpreter::pop_call_frame()
     m_current_call_frame = m_call_frames.is_empty() ? Span<Value> {} : this->call_frame().registers();
     return frame;
 }
-
 }
 
 namespace JS::Bytecode {
@@ -640,26 +687,6 @@ ThrowCompletionOr<void> End::execute_impl(Bytecode::Interpreter&) const
 {
     // Handled in the interpreter loop.
     __builtin_unreachable();
-}
-
-static ThrowCompletionOr<Value> loosely_inequals(VM& vm, Value src1, Value src2)
-{
-    return Value(!TRY(is_loosely_equal(vm, src1, src2)));
-}
-
-static ThrowCompletionOr<Value> loosely_equals(VM& vm, Value src1, Value src2)
-{
-    return Value(TRY(is_loosely_equal(vm, src1, src2)));
-}
-
-static ThrowCompletionOr<Value> strict_inequals(VM&, Value src1, Value src2)
-{
-    return Value(!is_strictly_equal(src1, src2));
-}
-
-static ThrowCompletionOr<Value> strict_equals(VM&, Value src1, Value src2)
-{
-    return Value(is_strictly_equal(src1, src2));
 }
 
 #define JS_DEFINE_EXECUTE_FOR_COMMON_BINARY_OP(OpTitleCase, op_snake_case)                      \
@@ -1224,6 +1251,20 @@ ThrowCompletionOr<void> JumpIf::execute_impl(Bytecode::Interpreter&) const
     // Handled in the interpreter loop.
     __builtin_unreachable();
 }
+
+#define JS_DEFINE_FUSABLE_BINARY_OP(PreOp, ...)                                                                  \
+    ThrowCompletionOr<void> Jump##PreOp::execute_impl(Bytecode::Interpreter&) const { __builtin_unreachable(); } \
+                                                                                                                 \
+    ByteString Jump##PreOp::to_byte_string_impl(Bytecode::Executable const& executable) const                    \
+    {                                                                                                            \
+        return ByteString::formatted("Jump" #PreOp " {}, {}, \033[32mtrue\033[0m:{} \033[32mfalse\033[0m:{}",    \
+            format_operand("lhs"sv, m_lhs, executable),                                                          \
+            format_operand("rhs"sv, m_rhs, executable),                                                          \
+            *m_true_target,                                                                                      \
+            *m_false_target);                                                                                    \
+    }
+
+JS_ENUMERATE_FUSABLE_BINARY_OPS(JS_DEFINE_FUSABLE_BINARY_OP)
 
 ThrowCompletionOr<void> JumpUndefined::execute_impl(Bytecode::Interpreter&) const
 {

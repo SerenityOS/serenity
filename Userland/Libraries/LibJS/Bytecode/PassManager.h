@@ -107,6 +107,15 @@ private:
     virtual void perform(PassPipelineExecutable&) override;
 };
 
+class Peephole : public Pass {
+public:
+    Peephole() = default;
+    ~Peephole() override = default;
+
+private:
+    virtual void perform(PassPipelineExecutable&) override;
+};
+
 class DumpCFG : public Pass {
 public:
     DumpCFG(FILE* file)

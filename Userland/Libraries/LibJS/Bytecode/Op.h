@@ -1123,6 +1123,40 @@ private:
     Operand m_condition;
 };
 
+// NOTE: The raw operator is used for comparing two Int32 values.
+#define JS_ENUMERATE_FUSABLE_BINARY_OPS(X)        \
+    X(GreaterThan, >, greater_than)               \
+    X(GreaterThanEquals, >=, greater_than_equals) \
+    X(LessThan, <, less_than)                     \
+    X(LessThanEquals, <=, less_than_equals)       \
+    X(LooselyEquals, ==, loosely_equals)          \
+    X(LooselyInequals, !=, loosely_inequals)      \
+    X(StrictlyEquals, ==, strict_equals)          \
+    X(StrictlyInequals, !=, strict_inequals)
+
+#define JS_DECLARE_FUSED_JUMP(PreOp, ...)                                                     \
+    class Jump##PreOp final : public Jump {                                                   \
+    public:                                                                                   \
+        explicit Jump##PreOp(Operand lhs, Operand rhs, Label true_target, Label false_target) \
+            : Jump(Type::Jump##PreOp, move(true_target), move(false_target), sizeof(*this))   \
+            , m_lhs(lhs)                                                                      \
+            , m_rhs(rhs)                                                                      \
+        {                                                                                     \
+        }                                                                                     \
+        ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;                   \
+        ByteString to_byte_string_impl(Bytecode::Executable const&) const;                    \
+                                                                                              \
+        Operand lhs() const { return m_lhs; }                                                 \
+        Operand rhs() const { return m_rhs; }                                                 \
+                                                                                              \
+    private:                                                                                  \
+        Operand m_lhs;                                                                        \
+        Operand m_rhs;                                                                        \
+    };
+
+JS_ENUMERATE_FUSABLE_BINARY_OPS(JS_DECLARE_FUSED_JUMP)
+#undef JS_DECLARE_FUSED_JUMP
+
 class JumpNullish final : public Jump {
 public:
     explicit JumpNullish(Operand condition, Label true_target, Label false_target)
