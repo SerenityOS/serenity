@@ -2000,7 +2000,7 @@ ByteString PostfixIncrement::to_byte_string_impl(Bytecode::Executable const& exe
 {
     return ByteString::formatted("PostfixIncrement {}, {}",
         format_operand("dst"sv, m_dst, executable),
-        format_operand("src"sv, m_dst, executable));
+        format_operand("src"sv, m_src, executable));
 }
 
 ByteString Decrement::to_byte_string_impl(Bytecode::Executable const& executable) const
@@ -2012,7 +2012,7 @@ ByteString PostfixDecrement::to_byte_string_impl(Bytecode::Executable const& exe
 {
     return ByteString::formatted("PostfixDecrement {}, {}",
         format_operand("dst"sv, m_dst, executable),
-        format_operand("src"sv, m_dst, executable));
+        format_operand("src"sv, m_src, executable));
 }
 
 ByteString Throw::to_byte_string_impl(Bytecode::Executable const& executable) const
