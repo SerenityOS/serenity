@@ -2110,6 +2110,10 @@ CSSPixelPoint FlexFormattingContext::calculate_static_position(Box const& box) c
         return length_percentage.to_px(box, m_flex_container_state.content_width());
     };
 
+    auto main_to_px = [&](CSS::LengthPercentage const& length_percentage) -> CSSPixels {
+        return length_percentage.to_px(box, m_flex_container_state.content_width());
+    };
+
     auto const& box_state = m_state.get(box);
     CSSPixels cross_margin_before = is_row_layout() ? cross_to_px(box.computed_values().margin().top()) : cross_to_px(box.computed_values().margin().left());
     CSSPixels cross_margin_after = is_row_layout() ? cross_to_px(box.computed_values().margin().bottom()) : cross_to_px(box.computed_values().margin().right());
@@ -2117,8 +2121,12 @@ CSSPixelPoint FlexFormattingContext::calculate_static_position(Box const& box) c
     CSSPixels cross_border_after = is_row_layout() ? box.computed_values().border_bottom().width : box.computed_values().border_right().width;
     CSSPixels cross_padding_before = is_row_layout() ? cross_to_px(box.computed_values().padding().top()) : cross_to_px(box.computed_values().padding().left());
     CSSPixels cross_padding_after = is_row_layout() ? cross_to_px(box.computed_values().padding().bottom()) : cross_to_px(box.computed_values().padding().right());
+    CSSPixels main_margin_before = is_row_layout() ? main_to_px(box.computed_values().margin().left()) : main_to_px(box.computed_values().margin().top());
+    CSSPixels main_margin_after = is_row_layout() ? main_to_px(box.computed_values().margin().right()) : main_to_px(box.computed_values().margin().bottom());
     CSSPixels main_border_before = is_row_layout() ? box.computed_values().border_left().width : box.computed_values().border_top().width;
     CSSPixels main_border_after = is_row_layout() ? box.computed_values().border_right().width : box.computed_values().border_bottom().width;
+    CSSPixels main_padding_before = is_row_layout() ? main_to_px(box.computed_values().padding().left()) : main_to_px(box.computed_values().padding().top());
+    CSSPixels main_padding_after = is_row_layout() ? main_to_px(box.computed_values().padding().right()) : main_to_px(box.computed_values().padding().bottom());
 
     switch (alignment_for_item(box)) {
     case CSS::AlignItems::Baseline:
@@ -2172,12 +2180,12 @@ CSSPixelPoint FlexFormattingContext::calculate_static_position(Box const& box) c
     case CSS::JustifyContent::SpaceAround:
     case CSS::JustifyContent::SpaceEvenly:
         pack_from_end = false;
-        main_offset = (inner_main_size(m_flex_container_state) - inner_main_size(box_state) - main_border_before - main_border_after) / 2;
+        main_offset = (inner_main_size(m_flex_container_state) - inner_main_size(box_state) - main_margin_before - main_margin_after - main_border_before - main_border_after - main_padding_before - main_padding_after) / 2;
         break;
     }
 
     if (pack_from_end)
-        main_offset += inner_main_size(m_flex_container_state) - inner_main_size(box_state) - main_border_before - main_border_after;
+        main_offset += inner_main_size(m_flex_container_state) - inner_main_size(box_state) - main_margin_before - main_margin_after - main_border_before - main_border_after - main_padding_before - main_padding_after;
 
     auto static_position_offset = is_row_layout() ? CSSPixelPoint { main_offset, cross_offset } : CSSPixelPoint { cross_offset, main_offset };
 
