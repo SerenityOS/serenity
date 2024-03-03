@@ -291,6 +291,7 @@ write_cmake_config("ak_debug_gen") {
     "IMAP_PARSER_DEBUG=",
     "ITEM_RECTS_DEBUG=",
     "JOB_DEBUG=",
+    "JBIG2_DEBUG=",
     "JPEG_DEBUG=",
     "JS_BYTECODE_DEBUG=",
     "JS_MODULE_DEBUG=",

@@ -234,6 +234,10 @@
 #    cmakedefine01 ITEM_RECTS_DEBUG
 #endif
 
+#ifndef JBIG2_DEBUG
+#    cmakedefine01 JBIG2_DEBUG
+#endif
+
 #ifndef JOB_DEBUG
 #    cmakedefine01 JOB_DEBUG
 #endif
