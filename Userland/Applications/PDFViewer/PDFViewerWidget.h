@@ -14,6 +14,7 @@
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/NumericInput.h>
+#include <LibGUI/Splitter.h>
 #include <LibGUI/Widget.h>
 
 class PDFViewer;
@@ -39,6 +40,7 @@ private:
     RefPtr<PDFViewer> m_viewer;
     RefPtr<SidebarWidget> m_sidebar;
     NonnullRefPtr<PagedErrorsModel> m_paged_errors_model;
+    RefPtr<GUI::VerticalSplitter> m_vertical_splitter;
     RefPtr<GUI::TreeView> m_errors_tree_view;
     RefPtr<GUI::NumericInput> m_page_text_box;
     RefPtr<GUI::Label> m_total_page_label;

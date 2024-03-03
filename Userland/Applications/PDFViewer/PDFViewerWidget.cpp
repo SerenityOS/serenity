@@ -182,10 +182,10 @@ PDFViewerWidget::PDFViewerWidget()
         m_viewer->set_current_page(page);
     };
 
-    auto& v_splitter = h_splitter.add<GUI::VerticalSplitter>();
-    v_splitter.layout()->set_spacing(4);
+    m_vertical_splitter = h_splitter.add<GUI::VerticalSplitter>();
+    m_vertical_splitter->layout()->set_spacing(4);
 
-    m_viewer = v_splitter.add<PDFViewer>();
+    m_viewer = m_vertical_splitter->add<PDFViewer>();
     m_viewer->on_page_change = [&](auto new_page) {
         m_page_text_box->set_value(new_page + 1, GUI::AllowCallback::No);
         m_go_to_prev_page_action->set_enabled(new_page > 0);
@@ -195,13 +195,17 @@ PDFViewerWidget::PDFViewerWidget()
         verify_cast<PagedErrorsModel>(m_paged_errors_model.ptr())->add_errors(page, errors);
     };
 
-    m_errors_tree_view = v_splitter.add<GUI::TreeView>();
+    m_errors_tree_view = GUI::TreeView::construct();
     m_errors_tree_view->set_preferred_height(10);
     m_errors_tree_view->column_header().set_visible(true);
     m_errors_tree_view->set_should_fill_selected_rows(true);
     m_errors_tree_view->set_selection_behavior(GUI::AbstractView::SelectionBehavior::SelectRows);
     m_errors_tree_view->set_model(MUST(GUI::SortingProxyModel::create(m_paged_errors_model)));
     m_errors_tree_view->set_key_column(0);
+
+    if (m_viewer->show_rendering_diagnostics()) {
+        m_vertical_splitter->add_child(*m_errors_tree_view);
+    }
 
     initialize_toolbar(toolbar);
 }
@@ -247,6 +251,16 @@ ErrorOr<void> PDFViewerWidget::initialize_menubar(GUI::Window& window)
     }));
 
     auto debug_menu = window.add_menu("&Debug"_string);
+    auto toggle_show_diagnostics = GUI::Action::create_checkable("Show Rendering &Diagnostics", [&](auto& action) {
+        if (action.is_checked()) {
+            m_vertical_splitter->add_child(*m_errors_tree_view);
+        } else {
+            m_vertical_splitter->remove_child(*m_errors_tree_view);
+        }
+        m_viewer->set_show_rendering_diagnostics(action.is_checked());
+    });
+    toggle_show_diagnostics->set_checked(m_viewer->show_rendering_diagnostics());
+    debug_menu->add_action(toggle_show_diagnostics);
     auto toggle_show_clipping_paths = GUI::Action::create_checkable("Show &Clipping Paths", [&](auto& action) {
         m_viewer->set_show_clipping_paths(action.is_checked());
     });
