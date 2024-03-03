@@ -15,16 +15,18 @@
 
 namespace JS::Bytecode {
 
-Generator::Generator()
-    : m_string_table(make<StringTable>())
+Generator::Generator(VM& vm)
+    : m_vm(vm)
+    , m_string_table(make<StringTable>())
     , m_identifier_table(make<IdentifierTable>())
     , m_regex_table(make<RegexTable>())
+    , m_constants(vm.heap())
 {
 }
 
 CodeGenerationErrorOr<NonnullGCPtr<Executable>> Generator::generate(VM& vm, ASTNode const& node, ReadonlySpan<FunctionParameter> parameters, FunctionKind enclosing_function_kind)
 {
-    Generator generator;
+    Generator generator(vm);
 
     for (auto const& parameter : parameters) {
         if (auto const* identifier = parameter.binding.get_pointer<NonnullRefPtr<Identifier const>>();

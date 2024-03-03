@@ -50,4 +50,11 @@ void Executable::dump() const
     warnln("");
 }
 
+void Executable::visit_edges(Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    for (auto constant : constants)
+        visitor.visit(constant);
+}
+
 }

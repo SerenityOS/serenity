@@ -88,7 +88,6 @@
     O(NewObject)                       \
     O(NewPrimitiveArray)               \
     O(NewRegExp)                       \
-    O(NewString)                       \
     O(NewTypeError)                    \
     O(Not)                             \
     O(PostfixDecrement)                \

@@ -302,9 +302,7 @@ Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> BigIntLiteral::gene
 Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> StringLiteral::generate_bytecode(Bytecode::Generator& generator, [[maybe_unused]] Optional<Bytecode::Operand> preferred_dst) const
 {
     Bytecode::Generator::SourceLocationScope scope(generator, *this);
-    auto dst = choose_dst(generator, preferred_dst);
-    generator.emit<Bytecode::Op::NewString>(dst, generator.intern_string(m_value));
-    return dst;
+    return generator.add_constant(PrimitiveString::create(generator.vm(), m_value), Bytecode::Generator::DeduplicateConstant::No);
 }
 
 Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> RegExpLiteral::generate_bytecode(Bytecode::Generator& generator, Optional<Bytecode::Operand> preferred_dst) const
@@ -1165,20 +1163,13 @@ static Bytecode::CodeGenerationErrorOr<void> generate_object_binding_pattern_byt
             VERIFY_NOT_REACHED();
         }
 
-        Bytecode::StringTableIndex name_index;
-
         auto value = Bytecode::Operand(generator.allocate_register());
 
         if (name.has<NonnullRefPtr<Identifier const>>()) {
-            auto identifier = name.get<NonnullRefPtr<Identifier const>>()->string();
-            name_index = generator.intern_string(identifier);
-
+            auto const& identifier = name.get<NonnullRefPtr<Identifier const>>()->string();
             if (has_rest) {
-                auto excluded_name = Bytecode::Operand(generator.allocate_register());
-                excluded_property_names.append(excluded_name);
-                generator.emit<Bytecode::Op::NewString>(excluded_name, name_index);
+                excluded_property_names.append(generator.add_constant(PrimitiveString::create(generator.vm(), identifier), Bytecode::Generator::DeduplicateConstant::No));
             }
-
             generator.emit_get_by_id(value, object, generator.intern_identifier(identifier));
         } else {
             auto expression = name.get<NonnullRefPtr<Expression const>>();
