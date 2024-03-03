@@ -470,6 +470,12 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map_fdt(MemoryManager::GlobalD
                     break;
                 case State::InReservedMemoryChild:
                     // FIXME: Handle non static allocations,
+                    if (!state.start.has_value()) {
+                        VERIFY(state.size.has_value());
+                        dbgln("MM: Non static reserved memory range {} of size {:#x}, skipping for now", node_name, state.size.value());
+                        state.state = State::InReservedMemory;
+                        break;
+                    }
                     VERIFY(state.start.has_value() && state.size.has_value());
                     dbgln("MM: Reserved Range {}: address: {} size {:#x}", node_name, PhysicalAddress { state.start.value() }, state.size.value());
                     global_data.physical_memory_ranges.append(PhysicalMemoryRange { PhysicalMemoryRangeType::Reserved, PhysicalAddress { state.start.value() }, state.size.value() });
