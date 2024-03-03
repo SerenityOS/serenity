@@ -1123,6 +1123,23 @@ private:
     Operand m_condition;
 };
 
+class JumpIfNot final : public Jump {
+public:
+    explicit JumpIfNot(Operand condition, Label true_target, Label false_target)
+        : Jump(Type::JumpIfNot, move(true_target), move(false_target), sizeof(*this))
+        , m_condition(condition)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
+
+    Operand condition() const { return m_condition; }
+
+private:
+    Operand m_condition;
+};
+
 // NOTE: The raw operator is used for comparing two Int32 values.
 #define JS_ENUMERATE_FUSABLE_BINARY_OPS(X)        \
     X(GreaterThan, >, greater_than)               \

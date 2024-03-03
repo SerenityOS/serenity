@@ -71,6 +71,7 @@ static void generate_cfg_for_block(BasicBlock const& current_block, PassPipeline
 #undef JS_ENUMERATE_FUSABLE_BINARY_OP
 
         case JumpIf:
+        case JumpIfNot:
         case JumpNullish:
         case JumpUndefined: {
             // FIXME: It would be nice if we could avoid this copy, if we know that the unwind context stays the same in both paths

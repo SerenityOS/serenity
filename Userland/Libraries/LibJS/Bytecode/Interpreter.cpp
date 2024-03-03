@@ -344,6 +344,12 @@ void Interpreter::run_bytecode()
                 else
                     m_current_block = &static_cast<Op::JumpIf const&>(instruction).false_target()->block();
                 goto start;
+            case Instruction::Type::JumpIfNot:
+                if (!get(static_cast<Op::JumpIfNot const&>(instruction).condition()).to_boolean())
+                    m_current_block = &static_cast<Op::JumpIfNot const&>(instruction).true_target()->block();
+                else
+                    m_current_block = &static_cast<Op::JumpIfNot const&>(instruction).false_target()->block();
+                goto start;
 
 #define JS_HANDLE_FUSABLE_BINARY_JUMP(PreOp, int32_operator, slow_case) \
     case Instruction::Type::Jump##PreOp: {                              \
@@ -1252,6 +1258,12 @@ ThrowCompletionOr<void> JumpIf::execute_impl(Bytecode::Interpreter&) const
     __builtin_unreachable();
 }
 
+ThrowCompletionOr<void> JumpIfNot::execute_impl(Bytecode::Interpreter&) const
+{
+    // Handled in the interpreter loop.
+    __builtin_unreachable();
+}
+
 #define JS_DEFINE_FUSABLE_BINARY_OP(PreOp, ...)                                                                  \
     ThrowCompletionOr<void> Jump##PreOp::execute_impl(Bytecode::Interpreter&) const { __builtin_unreachable(); } \
                                                                                                                  \
@@ -1930,6 +1942,14 @@ ByteString JumpIf::to_byte_string_impl(Bytecode::Executable const& executable) c
     return ByteString::formatted("JumpIf {}, \033[32mtrue\033[0m:{} \033[32mfalse\033[0m:{}",
         format_operand("condition"sv, m_condition, executable),
         true_string, false_string);
+}
+
+ByteString JumpIfNot::to_byte_string_impl(Bytecode::Executable const& executable) const
+{
+    return ByteString::formatted("JumpIfNot {}, \033[32mtrue\033[0m:{} \033[32mfalse\033[0m:{}",
+        format_operand("condition"sv, m_condition, executable),
+        *m_true_target,
+        *m_false_target);
 }
 
 ByteString JumpNullish::to_byte_string_impl(Bytecode::Executable const& executable) const
