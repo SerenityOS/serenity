@@ -718,10 +718,6 @@ void BrowserWindow::event(Core::Event& event)
     case GUI::Event::Resize:
         broadcast_window_size(static_cast<GUI::ResizeEvent&>(event).size());
         break;
-    case GUI::Event::KeyDown:
-        // FIXME: add support for hotkeys *within* ladybird
-        event.ignore();
-        break;
     default:
         break;
     }
