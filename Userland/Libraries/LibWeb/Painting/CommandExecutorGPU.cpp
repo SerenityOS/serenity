@@ -53,8 +53,9 @@ CommandResult CommandExecutorGPU::draw_text(Gfx::IntRect const&, String const&, 
     return CommandResult::Continue;
 }
 
-CommandResult CommandExecutorGPU::fill_rect(Gfx::IntRect const& rect, Color const& color)
+CommandResult CommandExecutorGPU::fill_rect(Gfx::IntRect const& rect, Color const& color, Vector<Gfx::Path> const&)
 {
+    // FIXME: Support clip paths
     painter().fill_rect(rect, color);
     return CommandResult::Continue;
 }
@@ -80,8 +81,9 @@ CommandResult CommandExecutorGPU::draw_scaled_bitmap(Gfx::IntRect const& dst_rec
     return CommandResult::Continue;
 }
 
-CommandResult CommandExecutorGPU::draw_scaled_immutable_bitmap(Gfx::IntRect const& dst_rect, Gfx::ImmutableBitmap const& immutable_bitmap, Gfx::IntRect const& src_rect, Gfx::Painter::ScalingMode scaling_mode)
+CommandResult CommandExecutorGPU::draw_scaled_immutable_bitmap(Gfx::IntRect const& dst_rect, Gfx::ImmutableBitmap const& immutable_bitmap, Gfx::IntRect const& src_rect, Gfx::Painter::ScalingMode scaling_mode, Vector<Gfx::Path> const&)
 {
+    // TODO: Support clip paths
     painter().draw_scaled_immutable_bitmap(dst_rect, immutable_bitmap, src_rect, to_accelgfx_scaling_mode(scaling_mode));
     return CommandResult::Continue;
 }
@@ -160,8 +162,9 @@ CommandResult CommandExecutorGPU::pop_stacking_context()
     return CommandResult::Continue;
 }
 
-CommandResult CommandExecutorGPU::paint_linear_gradient(Gfx::IntRect const& rect, Web::Painting::LinearGradientData const& data)
+CommandResult CommandExecutorGPU::paint_linear_gradient(Gfx::IntRect const& rect, Web::Painting::LinearGradientData const& data, Vector<Gfx::Path> const&)
 {
+    // FIXME: Support clip paths
     painter().fill_rect_with_linear_gradient(rect, data.color_stops.list, data.gradient_angle, data.color_stops.repeat_length);
     return CommandResult::Continue;
 }
@@ -201,8 +204,9 @@ CommandResult CommandExecutorGPU::paint_text_shadow(int blur_radius, Gfx::IntRec
     return CommandResult::Continue;
 }
 
-CommandResult CommandExecutorGPU::fill_rect_with_rounded_corners(Gfx::IntRect const& rect, Color const& color, Gfx::AntiAliasingPainter::CornerRadius const& top_left_radius, Gfx::AntiAliasingPainter::CornerRadius const& top_right_radius, Gfx::AntiAliasingPainter::CornerRadius const& bottom_left_radius, Gfx::AntiAliasingPainter::CornerRadius const& bottom_right_radius)
+CommandResult CommandExecutorGPU::fill_rect_with_rounded_corners(Gfx::IntRect const& rect, Color const& color, Gfx::AntiAliasingPainter::CornerRadius const& top_left_radius, Gfx::AntiAliasingPainter::CornerRadius const& top_right_radius, Gfx::AntiAliasingPainter::CornerRadius const& bottom_left_radius, Gfx::AntiAliasingPainter::CornerRadius const& bottom_right_radius, Vector<Gfx::Path> const&)
 {
+    // FIXME: Support clip paths
     painter().fill_rect_with_rounded_corners(
         rect, color,
         { static_cast<float>(top_left_radius.horizontal_radius), static_cast<float>(top_left_radius.vertical_radius) },
@@ -286,13 +290,13 @@ CommandResult CommandExecutorGPU::draw_rect(Gfx::IntRect const&, Color const&, b
     return CommandResult::Continue;
 }
 
-CommandResult CommandExecutorGPU::paint_radial_gradient(Gfx::IntRect const&, Web::Painting::RadialGradientData const&, Gfx::IntPoint const&, Gfx::IntSize const&)
+CommandResult CommandExecutorGPU::paint_radial_gradient(Gfx::IntRect const&, Web::Painting::RadialGradientData const&, Gfx::IntPoint const&, Gfx::IntSize const&, Vector<Gfx::Path> const&)
 {
     // FIXME
     return CommandResult::Continue;
 }
 
-CommandResult CommandExecutorGPU::paint_conic_gradient(Gfx::IntRect const&, Web::Painting::ConicGradientData const&, Gfx::IntPoint const&)
+CommandResult CommandExecutorGPU::paint_conic_gradient(Gfx::IntRect const&, Web::Painting::ConicGradientData const&, Gfx::IntPoint const&, Vector<Gfx::Path> const&)
 {
     // FIXME
     return CommandResult::Continue;

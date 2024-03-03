@@ -20,8 +20,8 @@ LinearGradientData resolve_linear_gradient_data(Layout::NodeWithStyleAndBoxModel
 ConicGradientData resolve_conic_gradient_data(Layout::NodeWithStyleAndBoxModelMetrics const&, CSS::ConicGradientStyleValue const&);
 RadialGradientData resolve_radial_gradient_data(Layout::NodeWithStyleAndBoxModelMetrics const&, CSSPixelSize, CSS::RadialGradientStyleValue const&);
 
-void paint_linear_gradient(PaintContext&, DevicePixelRect const&, LinearGradientData const&);
-void paint_conic_gradient(PaintContext&, DevicePixelRect const&, ConicGradientData const&, DevicePixelPoint position);
-void paint_radial_gradient(PaintContext&, DevicePixelRect const&, RadialGradientData const&, DevicePixelPoint position, DevicePixelSize size);
+void paint_linear_gradient(PaintContext&, DevicePixelRect const&, LinearGradientData const&, Vector<Gfx::Path> const& clip_paths = {});
+void paint_conic_gradient(PaintContext&, DevicePixelRect const&, ConicGradientData const&, DevicePixelPoint position, Vector<Gfx::Path> const& clip_paths = {});
+void paint_radial_gradient(PaintContext&, DevicePixelRect const&, RadialGradientData const&, DevicePixelPoint position, DevicePixelSize size, Vector<Gfx::Path> const& clip_paths = {});
 
 }

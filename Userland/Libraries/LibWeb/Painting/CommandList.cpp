@@ -96,7 +96,7 @@ void CommandList::execute(CommandExecutor& executor)
                     command.elision, command.wrapping, command.font);
             },
             [&](FillRect const& command) {
-                return executor.fill_rect(command.rect, command.color);
+                return executor.fill_rect(command.rect, command.color, command.clip_paths);
             },
             [&](DrawScaledBitmap const& command) {
                 return executor.draw_scaled_bitmap(command.dst_rect, command.bitmap, command.src_rect,
@@ -104,7 +104,7 @@ void CommandList::execute(CommandExecutor& executor)
             },
             [&](DrawScaledImmutableBitmap const& command) {
                 return executor.draw_scaled_immutable_bitmap(command.dst_rect, command.bitmap, command.src_rect,
-                    command.scaling_mode);
+                    command.scaling_mode, command.clip_paths);
             },
             [&](SetClipRect const& command) {
                 return executor.set_clip_rect(command.rect);
@@ -122,15 +122,15 @@ void CommandList::execute(CommandExecutor& executor)
                 return executor.pop_stacking_context();
             },
             [&](PaintLinearGradient const& command) {
-                return executor.paint_linear_gradient(command.gradient_rect, command.linear_gradient_data);
+                return executor.paint_linear_gradient(command.gradient_rect, command.linear_gradient_data, command.clip_paths);
             },
             [&](PaintRadialGradient const& command) {
                 return executor.paint_radial_gradient(command.rect, command.radial_gradient_data,
-                    command.center, command.size);
+                    command.center, command.size, command.clip_paths);
             },
             [&](PaintConicGradient const& command) {
                 return executor.paint_conic_gradient(command.rect, command.conic_gradient_data,
-                    command.position);
+                    command.position, command.clip_paths);
             },
             [&](PaintOuterBoxShadow const& command) {
                 return executor.paint_outer_box_shadow(command.outer_box_shadow_params);
@@ -148,7 +148,8 @@ void CommandList::execute(CommandExecutor& executor)
                     command.top_left_radius,
                     command.top_right_radius,
                     command.bottom_left_radius,
-                    command.bottom_right_radius);
+                    command.bottom_right_radius,
+                    command.clip_paths);
             },
             [&](FillPathUsingColor const& command) {
                 return executor.fill_path_using_color(command.path, command.color, command.winding_rule,

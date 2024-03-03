@@ -42,10 +42,10 @@ void ConicGradientStyleValue::resolve_for_size(Layout::NodeWithStyleAndBoxModelM
     m_resolved->position = m_properties.position->resolved(node, CSSPixelRect { { 0, 0 }, size });
 }
 
-void ConicGradientStyleValue::paint(PaintContext& context, DevicePixelRect const& dest_rect, CSS::ImageRendering) const
+void ConicGradientStyleValue::paint(PaintContext& context, DevicePixelRect const& dest_rect, CSS::ImageRendering, Vector<Gfx::Path> const& clip_paths) const
 {
     VERIFY(m_resolved.has_value());
-    Painting::paint_conic_gradient(context, dest_rect, m_resolved->data, context.rounded_device_point(m_resolved->position));
+    Painting::paint_conic_gradient(context, dest_rect, m_resolved->data, context.rounded_device_point(m_resolved->position), clip_paths);
 }
 
 bool ConicGradientStyleValue::equals(StyleValue const& other) const

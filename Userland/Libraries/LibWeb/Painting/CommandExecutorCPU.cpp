@@ -55,10 +55,38 @@ CommandResult CommandExecutorCPU::draw_text(Gfx::IntRect const& rect, String con
     return CommandResult::Continue;
 }
 
-CommandResult CommandExecutorCPU::fill_rect(Gfx::IntRect const& rect, Color const& color)
+template<typename Callback>
+void apply_clip_paths_to_painter(Gfx::IntRect const& rect, Callback callback, Vector<Gfx::Path> const& clip_paths, Gfx::Painter& target_painter)
 {
-    auto& painter = this->painter();
-    painter.fill_rect(rect, color);
+    // Setup a painter for a background canvas that we will paint to first.
+    auto background_canvas = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, rect.size()).release_value_but_fixme_should_propagate_errors();
+    Gfx::Painter painter(*background_canvas);
+
+    // Offset the painter to paint in the correct location.
+    painter.translate(-rect.location());
+
+    // Paint the background canvas.
+    callback(painter);
+
+    // Apply the clip path to the target painter.
+    Gfx::AntiAliasingPainter aa_painter(target_painter);
+    for (auto const& clip_path : clip_paths) {
+        auto fill_offset = clip_path.bounding_box().location().to_type<int>() - rect.location();
+        auto paint_style = Gfx::BitmapPaintStyle::create(*background_canvas, fill_offset).release_value_but_fixme_should_propagate_errors();
+        aa_painter.fill_path(clip_path, paint_style);
+    }
+}
+
+CommandResult CommandExecutorCPU::fill_rect(Gfx::IntRect const& rect, Color const& color, Vector<Gfx::Path> const& clip_paths)
+{
+    auto paint_op = [&](Gfx::Painter& painter) {
+        painter.fill_rect(rect, color);
+    };
+    if (clip_paths.is_empty()) {
+        paint_op(painter());
+    } else {
+        apply_clip_paths_to_painter(rect, paint_op, clip_paths, painter());
+    }
     return CommandResult::Continue;
 }
 
@@ -69,10 +97,16 @@ CommandResult CommandExecutorCPU::draw_scaled_bitmap(Gfx::IntRect const& dst_rec
     return CommandResult::Continue;
 }
 
-CommandResult CommandExecutorCPU::draw_scaled_immutable_bitmap(Gfx::IntRect const& dst_rect, Gfx::ImmutableBitmap const& immutable_bitmap, Gfx::IntRect const& src_rect, Gfx::Painter::ScalingMode scaling_mode)
+CommandResult CommandExecutorCPU::draw_scaled_immutable_bitmap(Gfx::IntRect const& dst_rect, Gfx::ImmutableBitmap const& immutable_bitmap, Gfx::IntRect const& src_rect, Gfx::Painter::ScalingMode scaling_mode, Vector<Gfx::Path> const& clip_paths)
 {
-    auto& painter = this->painter();
-    painter.draw_scaled_bitmap(dst_rect, immutable_bitmap.bitmap(), src_rect, 1, scaling_mode);
+    auto paint_op = [&](Gfx::Painter& painter) {
+        painter.draw_scaled_bitmap(dst_rect, immutable_bitmap.bitmap(), src_rect, 1, scaling_mode);
+    };
+    if (clip_paths.is_empty()) {
+        paint_op(painter());
+    } else {
+        apply_clip_paths_to_painter(dst_rect, paint_op, clip_paths, painter());
+    }
     return CommandResult::Continue;
 }
 
@@ -200,12 +234,18 @@ CommandResult CommandExecutorCPU::pop_stacking_context()
     return CommandResult::Continue;
 }
 
-CommandResult CommandExecutorCPU::paint_linear_gradient(Gfx::IntRect const& gradient_rect, Web::Painting::LinearGradientData const& linear_gradient_data)
+CommandResult CommandExecutorCPU::paint_linear_gradient(Gfx::IntRect const& gradient_rect, Web::Painting::LinearGradientData const& linear_gradient_data, Vector<Gfx::Path> const& clip_paths)
 {
-    auto const& data = linear_gradient_data;
-    painter().fill_rect_with_linear_gradient(
-        gradient_rect, data.color_stops.list,
-        data.gradient_angle, data.color_stops.repeat_length);
+    auto paint_op = [&](Gfx::Painter& painter) {
+        painter.fill_rect_with_linear_gradient(
+            gradient_rect, linear_gradient_data.color_stops.list,
+            linear_gradient_data.gradient_angle, linear_gradient_data.color_stops.repeat_length);
+    };
+    if (clip_paths.is_empty()) {
+        paint_op(painter());
+    } else {
+        apply_clip_paths_to_painter(gradient_rect, paint_op, clip_paths, painter());
+    }
     return CommandResult::Continue;
 }
 
@@ -255,16 +295,23 @@ CommandResult CommandExecutorCPU::paint_text_shadow(int blur_radius, Gfx::IntRec
     return CommandResult::Continue;
 }
 
-CommandResult CommandExecutorCPU::fill_rect_with_rounded_corners(Gfx::IntRect const& rect, Color const& color, Gfx::AntiAliasingPainter::CornerRadius const& top_left_radius, Gfx::AntiAliasingPainter::CornerRadius const& top_right_radius, Gfx::AntiAliasingPainter::CornerRadius const& bottom_left_radius, Gfx::AntiAliasingPainter::CornerRadius const& bottom_right_radius)
+CommandResult CommandExecutorCPU::fill_rect_with_rounded_corners(Gfx::IntRect const& rect, Color const& color, Gfx::AntiAliasingPainter::CornerRadius const& top_left_radius, Gfx::AntiAliasingPainter::CornerRadius const& top_right_radius, Gfx::AntiAliasingPainter::CornerRadius const& bottom_left_radius, Gfx::AntiAliasingPainter::CornerRadius const& bottom_right_radius, Vector<Gfx::Path> const& clip_paths)
 {
-    Gfx::AntiAliasingPainter aa_painter(painter());
-    aa_painter.fill_rect_with_rounded_corners(
-        rect,
-        color,
-        top_left_radius,
-        top_right_radius,
-        bottom_right_radius,
-        bottom_left_radius);
+    auto paint_op = [&](Gfx::Painter& painter) {
+        Gfx::AntiAliasingPainter aa_painter(painter);
+        aa_painter.fill_rect_with_rounded_corners(
+            rect,
+            color,
+            top_left_radius,
+            top_right_radius,
+            bottom_right_radius,
+            bottom_left_radius);
+    };
+    if (clip_paths.is_empty()) {
+        paint_op(painter());
+    } else {
+        apply_clip_paths_to_painter(rect, paint_op, clip_paths, painter());
+    }
     return CommandResult::Continue;
 }
 
@@ -380,15 +427,29 @@ CommandResult CommandExecutorCPU::draw_rect(Gfx::IntRect const& rect, Color cons
     return CommandResult::Continue;
 }
 
-CommandResult CommandExecutorCPU::paint_radial_gradient(Gfx::IntRect const& rect, Web::Painting::RadialGradientData const& radial_gradient_data, Gfx::IntPoint const& center, Gfx::IntSize const& size)
+CommandResult CommandExecutorCPU::paint_radial_gradient(Gfx::IntRect const& rect, Web::Painting::RadialGradientData const& radial_gradient_data, Gfx::IntPoint const& center, Gfx::IntSize const& size, Vector<Gfx::Path> const& clip_paths)
 {
-    painter().fill_rect_with_radial_gradient(rect, radial_gradient_data.color_stops.list, center, size, radial_gradient_data.color_stops.repeat_length);
+    auto paint_op = [&](Gfx::Painter& painter) {
+        painter.fill_rect_with_radial_gradient(rect, radial_gradient_data.color_stops.list, center, size, radial_gradient_data.color_stops.repeat_length);
+    };
+    if (clip_paths.is_empty()) {
+        paint_op(painter());
+    } else {
+        apply_clip_paths_to_painter(rect, paint_op, clip_paths, painter());
+    }
     return CommandResult::Continue;
 }
 
-CommandResult CommandExecutorCPU::paint_conic_gradient(Gfx::IntRect const& rect, Web::Painting::ConicGradientData const& conic_gradient_data, Gfx::IntPoint const& position)
+CommandResult CommandExecutorCPU::paint_conic_gradient(Gfx::IntRect const& rect, Web::Painting::ConicGradientData const& conic_gradient_data, Gfx::IntPoint const& position, Vector<Gfx::Path> const& clip_paths)
 {
-    painter().fill_rect_with_conic_gradient(rect, conic_gradient_data.color_stops.list, position, conic_gradient_data.start_angle, conic_gradient_data.color_stops.repeat_length);
+    auto paint_op = [&](Gfx::Painter& painter) {
+        painter.fill_rect_with_conic_gradient(rect, conic_gradient_data.color_stops.list, position, conic_gradient_data.start_angle, conic_gradient_data.color_stops.repeat_length);
+    };
+    if (clip_paths.is_empty()) {
+        paint_op(painter());
+    } else {
+        apply_clip_paths_to_painter(rect, paint_op, clip_paths, painter());
+    }
     return CommandResult::Continue;
 }
 
