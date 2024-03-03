@@ -28,23 +28,16 @@ void SVGPolygonElement::attribute_changed(FlyString const& name, Optional<String
 {
     SVGGeometryElement::attribute_changed(name, value);
 
-    if (name == SVG::AttributeNames::points) {
+    if (name == SVG::AttributeNames::points)
         m_points = AttributeParser::parse_points(value.value_or(String {}));
-        m_path.clear();
-    }
 }
 
-Gfx::Path& SVGPolygonElement::get_path()
+Gfx::Path SVGPolygonElement::get_path(CSSPixelSize)
 {
-    if (m_path.has_value())
-        return m_path.value();
-
     Gfx::Path path;
 
-    if (m_points.is_empty()) {
-        m_path = move(path);
-        return m_path.value();
-    }
+    if (m_points.is_empty())
+        return path;
 
     // 1. perform an absolute moveto operation to the first coordinate pair in the list of points
     path.move_to(m_points.first());
@@ -56,8 +49,7 @@ Gfx::Path& SVGPolygonElement::get_path()
     // 3. perform a closepath command
     path.close();
 
-    m_path = move(path);
-    return m_path.value();
+    return path;
 }
 
 }

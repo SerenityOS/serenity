@@ -262,31 +262,30 @@ void SVGFormattingContext::run(Box const& box, LayoutMode layout_mode, Available
         return IterationDecision::Continue;
     });
 
+    auto viewport_width = [&] {
+        if (viewbox.has_value())
+            return CSSPixels::nearest_value_for(viewbox->width);
+        if (svg_box_state.has_definite_width())
+            return svg_box_state.content_width();
+        dbgln_if(LIBWEB_CSS_DEBUG, "FIXME: Failed to resolve width of SVG viewport!");
+        return CSSPixels {};
+    }();
+
+    auto viewport_height = [&] {
+        if (viewbox.has_value())
+            return CSSPixels::nearest_value_for(viewbox->height);
+        if (svg_box_state.has_definite_height())
+            return svg_box_state.content_height();
+        dbgln_if(LIBWEB_CSS_DEBUG, "FIXME: Failed to resolve height of SVG viewport!");
+        return CSSPixels {};
+    }();
+
     for_each_in_subtree(box, [&](Node const& descendant) {
         if (is<SVG::SVGViewport>(descendant.dom_node())) {
             // Layout for a nested SVG viewport.
             // https://svgwg.org/svg2-draft/coords.html#EstablishingANewSVGViewport.
             SVGFormattingContext nested_context(m_state, static_cast<Box const&>(descendant), this, viewbox_transform);
             auto& nested_viewport_state = m_state.get_mutable(static_cast<Box const&>(descendant));
-
-            auto viewport_width = [&] {
-                if (viewbox.has_value())
-                    return CSSPixels::nearest_value_for(viewbox->width);
-                if (svg_box_state.has_definite_width())
-                    return svg_box_state.content_width();
-                dbgln_if(LIBWEB_CSS_DEBUG, "FIXME: Failed to resolve width of SVG viewport!");
-                return CSSPixels {};
-            }();
-
-            auto viewport_height = [&] {
-                if (viewbox.has_value())
-                    return CSSPixels::nearest_value_for(viewbox->height);
-                if (svg_box_state.has_definite_height())
-                    return svg_box_state.content_height();
-                dbgln_if(LIBWEB_CSS_DEBUG, "FIXME: Failed to resolve height of SVG viewport!");
-                return CSSPixels {};
-            }();
-
             auto resolve_dimension = [](auto& node, auto size, auto reference_value) {
                 // The value auto for width and height on the ‘svg’ element is treated as 100%.
                 // https://svgwg.org/svg2-draft/geometry.html#Sizing
@@ -318,7 +317,7 @@ void SVGFormattingContext::run(Box const& box, LayoutMode layout_mode, Available
 
             Gfx::Path path;
             if (is<SVGGeometryBox>(descendant)) {
-                path = static_cast<SVG::SVGGeometryElement&>(dom_node).get_path();
+                path = static_cast<SVG::SVGGeometryElement&>(dom_node).get_path({ viewport_width, viewport_height });
             } else if (is<SVGTextBox>(descendant)) {
                 auto& text_element = static_cast<SVG::SVGTextPositioningElement&>(dom_node);
 
@@ -363,7 +362,7 @@ void SVGFormattingContext::run(Box const& box, LayoutMode layout_mode, Available
                 auto text_contents = text_path_element.text_contents();
                 Utf8View text_utf8 { text_contents };
 
-                auto shape_path = const_cast<SVG::SVGGeometryElement&>(*path_or_shape).get_path();
+                auto shape_path = const_cast<SVG::SVGGeometryElement&>(*path_or_shape).get_path({ viewport_width, viewport_height });
                 path = shape_path.place_text_along(text_utf8, font);
             }
 
