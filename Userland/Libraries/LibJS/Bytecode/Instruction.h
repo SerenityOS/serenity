@@ -82,7 +82,6 @@
     O(Mov)                             \
     O(Mul)                             \
     O(NewArray)                        \
-    O(NewBigInt)                       \
     O(NewClass)                        \
     O(NewFunction)                     \
     O(NewObject)                       \

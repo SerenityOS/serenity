@@ -63,6 +63,8 @@ static ByteString format_operand(StringView name, Operand operand, Bytecode::Exe
             builder.appendff("Int32({})", value.as_i32());
         else if (value.is_double())
             builder.appendff("Double({})", value.as_double());
+        else if (value.is_bigint())
+            builder.appendff("BigInt({})", value.as_bigint().to_byte_string());
         else if (value.is_string())
             builder.appendff("String(\"{}\")", value.as_string().utf8_string_view());
         else if (value.is_undefined())
@@ -854,13 +856,6 @@ static ThrowCompletionOr<Value> typeof_(VM& vm, Value value)
 
 JS_ENUMERATE_COMMON_UNARY_OPS(JS_DEFINE_COMMON_UNARY_OP)
 
-ThrowCompletionOr<void> NewBigInt::execute_impl(Bytecode::Interpreter& interpreter) const
-{
-    auto& vm = interpreter.vm();
-    interpreter.set(dst(), BigInt::create(vm, m_bigint));
-    return {};
-}
-
 ThrowCompletionOr<void> NewArray::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto array = MUST(Array::create(interpreter.realm(), 0));
@@ -1611,13 +1606,6 @@ ByteString Mov::to_byte_string_impl(Bytecode::Executable const& executable) cons
     return ByteString::formatted("Mov {}, {}",
         format_operand("dst"sv, m_dst, executable),
         format_operand("src"sv, m_src, executable));
-}
-
-ByteString NewBigInt::to_byte_string_impl(Bytecode::Executable const& executable) const
-{
-    return ByteString::formatted("NewBigInt {}, {}",
-        format_operand("dst"sv, dst(), executable),
-        m_bigint.to_base_deprecated(10));
 }
 
 ByteString NewArray::to_byte_string_impl(Bytecode::Executable const& executable) const
