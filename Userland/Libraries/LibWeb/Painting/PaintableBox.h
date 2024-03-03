@@ -227,6 +227,8 @@ protected:
     virtual CSSPixelRect compute_absolute_paint_rect() const;
 
 private:
+    Vector<Gfx::Path> compute_text_clip_paths(PaintContext&) const;
+
     [[nodiscard]] virtual bool is_paintable_box() const final { return true; }
 
     enum class ScrollDirection {

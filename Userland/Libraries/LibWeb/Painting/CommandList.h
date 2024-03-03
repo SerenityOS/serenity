@@ -49,16 +49,16 @@ public:
 
     virtual CommandResult draw_glyph_run(Vector<Gfx::DrawGlyphOrEmoji> const& glyph_run, Color const&, Gfx::FloatPoint translation, double scale) = 0;
     virtual CommandResult draw_text(Gfx::IntRect const&, String const&, Gfx::TextAlignment alignment, Color const&, Gfx::TextElision, Gfx::TextWrapping, Optional<NonnullRefPtr<Gfx::Font>> const&) = 0;
-    virtual CommandResult fill_rect(Gfx::IntRect const&, Color const&) = 0;
+    virtual CommandResult fill_rect(Gfx::IntRect const&, Color const&, Vector<Gfx::Path> const& clip_paths) = 0;
     virtual CommandResult draw_scaled_bitmap(Gfx::IntRect const& dst_rect, Gfx::Bitmap const& bitmap, Gfx::IntRect const& src_rect, Gfx::Painter::ScalingMode scaling_mode) = 0;
-    virtual CommandResult draw_scaled_immutable_bitmap(Gfx::IntRect const& dst_rect, Gfx::ImmutableBitmap const&, Gfx::IntRect const& src_rect, Gfx::Painter::ScalingMode scaling_mode) = 0;
+    virtual CommandResult draw_scaled_immutable_bitmap(Gfx::IntRect const& dst_rect, Gfx::ImmutableBitmap const&, Gfx::IntRect const& src_rect, Gfx::Painter::ScalingMode scaling_mode, Vector<Gfx::Path> const& clip_paths = {}) = 0;
     virtual CommandResult set_clip_rect(Gfx::IntRect const& rect) = 0;
     virtual CommandResult clear_clip_rect() = 0;
     virtual CommandResult push_stacking_context(float opacity, bool is_fixed_position, Gfx::IntRect const& source_paintable_rect, Gfx::IntPoint post_transform_translation, CSS::ImageRendering image_rendering, StackingContextTransform transform, Optional<StackingContextMask> mask) = 0;
     virtual CommandResult pop_stacking_context() = 0;
-    virtual CommandResult paint_linear_gradient(Gfx::IntRect const&, LinearGradientData const&) = 0;
-    virtual CommandResult paint_radial_gradient(Gfx::IntRect const& rect, RadialGradientData const&, Gfx::IntPoint const& center, Gfx::IntSize const& size) = 0;
-    virtual CommandResult paint_conic_gradient(Gfx::IntRect const& rect, ConicGradientData const&, Gfx::IntPoint const& position) = 0;
+    virtual CommandResult paint_linear_gradient(Gfx::IntRect const&, LinearGradientData const&, Vector<Gfx::Path> const& clip_paths = {}) = 0;
+    virtual CommandResult paint_radial_gradient(Gfx::IntRect const& rect, RadialGradientData const&, Gfx::IntPoint const& center, Gfx::IntSize const& size, Vector<Gfx::Path> const& clip_paths = {}) = 0;
+    virtual CommandResult paint_conic_gradient(Gfx::IntRect const& rect, ConicGradientData const&, Gfx::IntPoint const& position, Vector<Gfx::Path> const& clip_paths = {}) = 0;
     virtual CommandResult paint_outer_box_shadow(PaintOuterBoxShadowParams const&) = 0;
     virtual CommandResult paint_inner_box_shadow(PaintOuterBoxShadowParams const&) = 0;
     virtual CommandResult paint_text_shadow(int blur_radius, Gfx::IntRect const& shadow_bounding_rect, Gfx::IntRect const& text_rect, Span<Gfx::DrawGlyphOrEmoji const>, Color const&, int fragment_baseline, Gfx::IntPoint const& draw_location) = 0;
@@ -66,7 +66,8 @@ public:
         Gfx::AntiAliasingPainter::CornerRadius const& top_left_radius,
         Gfx::AntiAliasingPainter::CornerRadius const& top_right_radius,
         Gfx::AntiAliasingPainter::CornerRadius const& bottom_left_radius,
-        Gfx::AntiAliasingPainter::CornerRadius const& bottom_right_radius)
+        Gfx::AntiAliasingPainter::CornerRadius const& bottom_right_radius,
+        Vector<Gfx::Path> const& clip_paths = {})
         = 0;
     virtual CommandResult fill_path_using_color(Gfx::Path const&, Color const& color, Gfx::Painter::WindingRule, Gfx::FloatPoint const& aa_translation) = 0;
     virtual CommandResult fill_path_using_paint_style(Gfx::Path const&, Gfx::PaintStyle const& paint_style, Gfx::Painter::WindingRule winding_rule, float opacity, Gfx::FloatPoint const& aa_translation) = 0;

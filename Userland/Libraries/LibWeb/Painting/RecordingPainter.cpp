@@ -34,11 +34,12 @@ void RecordingPainter::blit_corner_clipping(u32 id, Gfx::IntRect border_rect)
     append(BlitCornerClipping { id, border_rect = state().translation.map(border_rect) });
 }
 
-void RecordingPainter::fill_rect(Gfx::IntRect const& rect, Color color)
+void RecordingPainter::fill_rect(Gfx::IntRect const& rect, Color color, Vector<Gfx::Path> const& clip_paths)
 {
     append(FillRect {
         .rect = state().translation.map(rect),
         .color = color,
+        .clip_paths = clip_paths,
     });
 }
 
@@ -118,29 +119,31 @@ void RecordingPainter::fill_ellipse(Gfx::IntRect const& a_rect, Color color, Gfx
     });
 }
 
-void RecordingPainter::fill_rect_with_linear_gradient(Gfx::IntRect const& gradient_rect, LinearGradientData const& data)
+void RecordingPainter::fill_rect_with_linear_gradient(Gfx::IntRect const& gradient_rect, LinearGradientData const& data, Vector<Gfx::Path> const& clip_paths)
 {
     append(PaintLinearGradient {
         .gradient_rect = state().translation.map(gradient_rect),
         .linear_gradient_data = data,
-    });
+        .clip_paths = clip_paths });
 }
 
-void RecordingPainter::fill_rect_with_conic_gradient(Gfx::IntRect const& rect, ConicGradientData const& data, Gfx::IntPoint const& position)
+void RecordingPainter::fill_rect_with_conic_gradient(Gfx::IntRect const& rect, ConicGradientData const& data, Gfx::IntPoint const& position, Vector<Gfx::Path> const& clip_paths)
 {
     append(PaintConicGradient {
         .rect = state().translation.map(rect),
         .conic_gradient_data = data,
-        .position = position });
+        .position = position,
+        .clip_paths = clip_paths });
 }
 
-void RecordingPainter::fill_rect_with_radial_gradient(Gfx::IntRect const& rect, RadialGradientData const& data, Gfx::IntPoint center, Gfx::IntSize size)
+void RecordingPainter::fill_rect_with_radial_gradient(Gfx::IntRect const& rect, RadialGradientData const& data, Gfx::IntPoint center, Gfx::IntSize size, Vector<Gfx::Path> const& clip_paths)
 {
     append(PaintRadialGradient {
         .rect = state().translation.map(rect),
         .radial_gradient_data = data,
         .center = center,
-        .size = size });
+        .size = size,
+        .clip_paths = clip_paths });
 }
 
 void RecordingPainter::draw_rect(Gfx::IntRect const& rect, Color color, bool rough)
@@ -161,13 +164,14 @@ void RecordingPainter::draw_scaled_bitmap(Gfx::IntRect const& dst_rect, Gfx::Bit
     });
 }
 
-void RecordingPainter::draw_scaled_immutable_bitmap(Gfx::IntRect const& dst_rect, Gfx::ImmutableBitmap const& bitmap, Gfx::IntRect const& src_rect, Gfx::Painter::ScalingMode scaling_mode)
+void RecordingPainter::draw_scaled_immutable_bitmap(Gfx::IntRect const& dst_rect, Gfx::ImmutableBitmap const& bitmap, Gfx::IntRect const& src_rect, Gfx::Painter::ScalingMode scaling_mode, Vector<Gfx::Path> const& clip_paths)
 {
     append(DrawScaledImmutableBitmap {
         .dst_rect = state().translation.map(dst_rect),
         .bitmap = bitmap,
         .src_rect = src_rect,
         .scaling_mode = scaling_mode,
+        .clip_paths = clip_paths,
     });
 }
 
@@ -327,10 +331,10 @@ void RecordingPainter::paint_text_shadow(int blur_radius, Gfx::IntRect bounding_
         .draw_location = state().translation.map(draw_location) });
 }
 
-void RecordingPainter::fill_rect_with_rounded_corners(Gfx::IntRect const& rect, Color color, Gfx::AntiAliasingPainter::CornerRadius top_left_radius, Gfx::AntiAliasingPainter::CornerRadius top_right_radius, Gfx::AntiAliasingPainter::CornerRadius bottom_right_radius, Gfx::AntiAliasingPainter::CornerRadius bottom_left_radius)
+void RecordingPainter::fill_rect_with_rounded_corners(Gfx::IntRect const& rect, Color color, Gfx::AntiAliasingPainter::CornerRadius top_left_radius, Gfx::AntiAliasingPainter::CornerRadius top_right_radius, Gfx::AntiAliasingPainter::CornerRadius bottom_right_radius, Gfx::AntiAliasingPainter::CornerRadius bottom_left_radius, Vector<Gfx::Path> const& clip_paths)
 {
     if (!top_left_radius && !top_right_radius && !bottom_right_radius && !bottom_left_radius) {
-        fill_rect(rect, color);
+        fill_rect(rect, color, clip_paths);
         return;
     }
 
@@ -341,21 +345,23 @@ void RecordingPainter::fill_rect_with_rounded_corners(Gfx::IntRect const& rect, 
         .top_right_radius = top_right_radius,
         .bottom_left_radius = bottom_left_radius,
         .bottom_right_radius = bottom_right_radius,
+        .clip_paths = clip_paths,
     });
 }
 
-void RecordingPainter::fill_rect_with_rounded_corners(Gfx::IntRect const& a_rect, Color color, int radius)
+void RecordingPainter::fill_rect_with_rounded_corners(Gfx::IntRect const& a_rect, Color color, int radius, Vector<Gfx::Path> const& clip_paths)
 {
-    fill_rect_with_rounded_corners(a_rect, color, radius, radius, radius, radius);
+    fill_rect_with_rounded_corners(a_rect, color, radius, radius, radius, radius, clip_paths);
 }
 
-void RecordingPainter::fill_rect_with_rounded_corners(Gfx::IntRect const& a_rect, Color color, int top_left_radius, int top_right_radius, int bottom_right_radius, int bottom_left_radius)
+void RecordingPainter::fill_rect_with_rounded_corners(Gfx::IntRect const& a_rect, Color color, int top_left_radius, int top_right_radius, int bottom_right_radius, int bottom_left_radius, Vector<Gfx::Path> const& clip_paths)
 {
     fill_rect_with_rounded_corners(a_rect, color,
         { top_left_radius, top_left_radius },
         { top_right_radius, top_right_radius },
         { bottom_right_radius, bottom_right_radius },
-        { bottom_left_radius, bottom_left_radius });
+        { bottom_left_radius, bottom_left_radius },
+        clip_paths);
 }
 
 void RecordingPainter::draw_triangle_wave(Gfx::IntPoint a_p1, Gfx::IntPoint a_p2, Color color, int amplitude, int thickness = 1)

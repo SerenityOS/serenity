@@ -12,6 +12,6 @@
 
 namespace Web::Painting {
 
-void paint_background(PaintContext&, Layout::NodeWithStyleAndBoxModelMetrics const&, CSSPixelRect const&, Color background_color, CSS::ImageRendering, Vector<CSS::BackgroundLayerData> const*, BorderRadiiData const&);
+void paint_background(PaintContext&, Layout::NodeWithStyleAndBoxModelMetrics const&, CSSPixelRect const&, Color background_color, CSS::ImageRendering, Vector<CSS::BackgroundLayerData> const*, BorderRadiiData const&, Vector<Gfx::Path> const& clip_paths = {});
 
 }

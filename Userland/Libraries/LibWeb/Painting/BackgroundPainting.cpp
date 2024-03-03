@@ -61,7 +61,7 @@ static CSSPixelSize run_default_sizing_algorithm(
 }
 
 // https://www.w3.org/TR/css-backgrounds-3/#backgrounds
-void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMetrics const& layout_node, CSSPixelRect const& border_rect, Color background_color, CSS::ImageRendering image_rendering, Vector<CSS::BackgroundLayerData> const* background_layers, BorderRadiiData const& border_radii)
+void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMetrics const& layout_node, CSSPixelRect const& border_rect, Color background_color, CSS::ImageRendering image_rendering, Vector<CSS::BackgroundLayerData> const* background_layers, BorderRadiiData const& border_radii, Vector<Gfx::Path> const& clip_paths)
 {
     auto& painter = context.recording_painter();
 
@@ -118,13 +118,14 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
         }
     }
 
-    context.recording_painter().fill_rect_with_rounded_corners(
+    painter.fill_rect_with_rounded_corners(
         context.rounded_device_rect(color_box.rect).to_type<int>(),
         background_color,
         color_box.radii.top_left.as_corner(context),
         color_box.radii.top_right.as_corner(context),
         color_box.radii.bottom_right.as_corner(context),
-        color_box.radii.bottom_left.as_corner(context));
+        color_box.radii.bottom_left.as_corner(context),
+        clip_paths);
 
     if (!has_paintable_layers)
         return;
@@ -388,10 +389,10 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
                     fill_rect = fill_rect->united(image_device_rect);
                 }
             });
-            painter.fill_rect(fill_rect->to_type<int>(), color.value());
+            painter.fill_rect(fill_rect->to_type<int>(), color.value(), clip_paths);
         } else {
             for_each_image_device_rect([&](auto const& image_device_rect) {
-                image.paint(context, image_device_rect, image_rendering);
+                image.paint(context, image_device_rect, image_rendering, clip_paths);
             });
         }
     }
