@@ -445,7 +445,7 @@ NonnullRefPtr<FileSystem> StorageManagement::root_filesystem() const
     return file_system;
 }
 
-UNMAP_AFTER_INIT void StorageManagement::initialize(bool, bool)
+UNMAP_AFTER_INIT void StorageManagement::initialize()
 {
 }
 

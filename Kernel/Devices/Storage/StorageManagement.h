@@ -24,7 +24,7 @@ class StorageManagement {
 
 public:
     StorageManagement();
-    void initialize(bool force_pio, bool nvme_poll);
+    void initialize();
     static StorageManagement& the();
 
     bool determine_boot_device(StringView boot_argument);

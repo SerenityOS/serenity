@@ -75,7 +75,6 @@ public:
     [[nodiscard]] bool is_ioapic_enabled() const;
     [[nodiscard]] bool is_smp_enabled_without_ioapic_enabled() const;
     [[nodiscard]] bool is_smp_enabled() const;
-    [[nodiscard]] bool is_physical_networking_disabled() const;
     [[nodiscard]] bool is_vmmouse_enabled() const;
     [[nodiscard]] PCIAccessLevel pci_access_level() const;
     [[nodiscard]] bool is_pci_disabled() const;
@@ -84,22 +83,16 @@ public:
     [[nodiscard]] bool i8042_enable_first_port_translation() const;
     [[nodiscard]] GraphicsSubsystemMode graphics_subsystem_mode() const;
     [[nodiscard]] I8042PresenceMode i8042_presence_mode() const;
-    [[nodiscard]] bool is_force_pio() const;
     [[nodiscard]] AcpiFeatureLevel acpi_feature_level() const;
     [[nodiscard]] StringView system_mode() const;
     [[nodiscard]] PanicMode panic_mode(Validate should_validate = Validate::No) const;
     [[nodiscard]] HPETMode hpet_mode() const;
-    [[nodiscard]] bool disable_physical_storage() const;
     [[nodiscard]] bool disable_ps2_mouse() const;
-    [[nodiscard]] bool disable_uhci_controller() const;
-    [[nodiscard]] bool disable_usb() const;
-    [[nodiscard]] bool disable_virtio() const;
     [[nodiscard]] bool is_early_boot_console_disabled() const;
     [[nodiscard]] AHCIResetMode ahci_reset_mode() const;
     [[nodiscard]] StringView userspace_init() const;
     [[nodiscard]] Vector<NonnullOwnPtr<KString>> userspace_init_args() const;
     [[nodiscard]] StringView root_device() const;
-    [[nodiscard]] bool is_nvme_polling_enabled() const;
     [[nodiscard]] size_t switch_to_tty() const;
 
 private:

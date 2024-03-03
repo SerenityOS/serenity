@@ -190,19 +190,9 @@ bool CommandLine::is_pc_speaker_enabled() const
     PANIC("Unknown pcspeaker setting: {}", value);
 }
 
-UNMAP_AFTER_INIT bool CommandLine::is_force_pio() const
-{
-    return contains("force_pio"sv);
-}
-
 UNMAP_AFTER_INIT StringView CommandLine::root_device() const
 {
     return lookup("root"sv).value_or("lun0:0:0"sv);
-}
-
-bool CommandLine::is_nvme_polling_enabled() const
-{
-    return contains("nvme_poll"sv);
 }
 
 UNMAP_AFTER_INIT AcpiFeatureLevel CommandLine::acpi_feature_level() const
@@ -227,34 +217,9 @@ UNMAP_AFTER_INIT HPETMode CommandLine::hpet_mode() const
     PANIC("Unknown HPETMode: {}", hpet_mode);
 }
 
-UNMAP_AFTER_INIT bool CommandLine::is_physical_networking_disabled() const
-{
-    return contains("disable_physical_networking"sv);
-}
-
 UNMAP_AFTER_INIT bool CommandLine::disable_ps2_mouse() const
 {
     return contains("disable_ps2_mouse"sv);
-}
-
-UNMAP_AFTER_INIT bool CommandLine::disable_physical_storage() const
-{
-    return contains("disable_physical_storage"sv);
-}
-
-UNMAP_AFTER_INIT bool CommandLine::disable_uhci_controller() const
-{
-    return contains("disable_uhci_controller"sv);
-}
-
-UNMAP_AFTER_INIT bool CommandLine::disable_usb() const
-{
-    return contains("disable_usb"sv);
-}
-
-UNMAP_AFTER_INIT bool CommandLine::disable_virtio() const
-{
-    return contains("disable_virtio"sv);
 }
 
 UNMAP_AFTER_INIT AHCIResetMode CommandLine::ahci_reset_mode() const

@@ -432,7 +432,7 @@ void init_stage2(void*)
 
     AudioManagement::the().initialize();
 
-    StorageManagement::the().initialize(kernel_command_line().is_force_pio(), kernel_command_line().is_nvme_polling_enabled());
+    StorageManagement::the().initialize();
     for (int i = 0; i < 10000; ++i) {
         if (StorageManagement::the().determine_boot_device(kernel_command_line().root_device()))
             break;
