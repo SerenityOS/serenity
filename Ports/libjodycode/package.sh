@@ -2,8 +2,8 @@
 port='libjodycode'
 version='3.1'
 files=(
-    "https://github.com/jbruchon/libjodycode/archive/refs/tags/v${version}.tar.gz#c72974eb1d38873e06ea84b3d78990f87192f0113da5bd13fcac6bbc6a6e2184"
+    "https://codeberg.org/jbruchon/libjodycode/archive/v${version}.tar.gz#837b660c305215f0cbd68b002e831f29fe1a1d823cace74d75203111eb433bbd"
 )
 auth_type='sha256'
-workdir="libjodycode-${version}"
+workdir='libjodycode'
 makeopts=("UNAME_S=serenity UNAME_M=${SERENITY_ARCH} CROSS_DETECT=cross")

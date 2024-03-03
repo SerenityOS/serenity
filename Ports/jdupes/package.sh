@@ -2,8 +2,9 @@
 port='jdupes'
 version='1.27.3'
 files=(
-    "https://github.com/jbruchon/jdupes/archive/refs/tags/v${version}.tar.gz#6e8352f61b3920a2b5626c7122c3b80b4fdcc5cdd3f1c0c3424530425a77d846"
+    "https://codeberg.org/jbruchon/jdupes/archive/v${version}.tar.gz#1c75ed30dc95b3b5024019ab2ba3f78a14835c11d5b71249aa94374fde650c16"
 )
+workdir='jdupes'
 depends=(
     'libjodycode'
 )
