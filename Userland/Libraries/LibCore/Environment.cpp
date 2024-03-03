@@ -93,7 +93,7 @@ Optional<StringView> get(StringView name, [[maybe_unused]] SecureOnly secure)
     builder.append('\0');
     // Note the explicit null terminators above.
 
-#if defined(AK_OS_MACOS)
+#if defined(AK_OS_MACOS) || defined(AK_OS_ANDROID)
     char* result = ::getenv(builder.string_view().characters_without_null_termination());
 #else
     char* result;
