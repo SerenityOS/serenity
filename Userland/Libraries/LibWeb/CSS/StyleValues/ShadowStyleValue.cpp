@@ -7,14 +7,16 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "ShadowStyleValue.h"
+#include <LibWeb/CSS/Serialize.h>
+#include <LibWeb/CSS/StyleValues/ShadowStyleValue.h>
 
 namespace Web::CSS {
 
 String ShadowStyleValue::to_string() const
 {
     StringBuilder builder;
-    builder.appendff("{} {} {} {} {}", m_properties.color.to_string(), m_properties.offset_x->to_string(), m_properties.offset_y->to_string(), m_properties.blur_radius->to_string(), m_properties.spread_distance->to_string());
+    serialize_a_srgb_value(builder, m_properties.color);
+    builder.appendff(" {} {} {} {}", m_properties.offset_x->to_string(), m_properties.offset_y->to_string(), m_properties.blur_radius->to_string(), m_properties.spread_distance->to_string());
     if (m_properties.placement == ShadowPlacement::Inner)
         builder.append(" inset"sv);
     return MUST(builder.to_string());
