@@ -63,6 +63,8 @@ static ByteString format_operand(StringView name, Operand operand, Bytecode::Exe
             builder.appendff("Int32({})", value.as_i32());
         else if (value.is_double())
             builder.appendff("Double({})", value.as_double());
+        else if (value.is_string())
+            builder.appendff("String(\"{}\")", value.as_string().utf8_string_view());
         else if (value.is_undefined())
             builder.append("Undefined"sv);
         else if (value.is_null())
@@ -899,12 +901,6 @@ ThrowCompletionOr<void> IteratorToArray::execute_impl(Bytecode::Interpreter& int
     return {};
 }
 
-ThrowCompletionOr<void> NewString::execute_impl(Bytecode::Interpreter& interpreter) const
-{
-    interpreter.set(dst(), PrimitiveString::create(interpreter.vm(), interpreter.current_executable().get_string(m_string)));
-    return {};
-}
-
 ThrowCompletionOr<void> NewObject::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
@@ -1654,13 +1650,6 @@ ByteString IteratorToArray::to_byte_string_impl(Bytecode::Executable const& exec
     return ByteString::formatted("IteratorToArray {}, {}",
         format_operand("dst"sv, dst(), executable),
         format_operand("iterator"sv, iterator(), executable));
-}
-
-ByteString NewString::to_byte_string_impl(Bytecode::Executable const& executable) const
-{
-    return ByteString::formatted("NewString {}, \"{}\"",
-        format_operand("dst"sv, dst(), executable),
-        executable.string_table->get(m_string));
 }
 
 ByteString NewObject::to_byte_string_impl(Bytecode::Executable const& executable) const

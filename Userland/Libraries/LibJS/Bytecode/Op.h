@@ -136,26 +136,6 @@ JS_ENUMERATE_COMMON_BINARY_OPS_WITH_FAST_PATH(JS_DECLARE_COMMON_BINARY_OP)
 JS_ENUMERATE_COMMON_UNARY_OPS(JS_DECLARE_COMMON_UNARY_OP)
 #undef JS_DECLARE_COMMON_UNARY_OP
 
-class NewString final : public Instruction {
-public:
-    NewString(Operand dst, StringTableIndex string)
-        : Instruction(Type::NewString, sizeof(*this))
-        , m_dst(dst)
-        , m_string(string)
-    {
-    }
-
-    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-
-    Operand dst() const { return m_dst; }
-    StringTableIndex index() const { return m_string; }
-
-private:
-    Operand m_dst;
-    StringTableIndex m_string;
-};
-
 class NewObject final : public Instruction {
 public:
     explicit NewObject(Operand dst)

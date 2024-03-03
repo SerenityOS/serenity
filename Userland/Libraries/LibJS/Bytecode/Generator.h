@@ -25,6 +25,8 @@ namespace JS::Bytecode {
 
 class Generator {
 public:
+    VM& vm() { return m_vm; }
+
     enum class SurroundingScopeKind {
         Global,
         Function,
@@ -261,6 +263,8 @@ public:
     }
 
 private:
+    VM& m_vm;
+
     enum class JumpType {
         Continue,
         Break,
@@ -268,7 +272,7 @@ private:
     void generate_scoped_jump(JumpType);
     void generate_labelled_jump(JumpType, DeprecatedFlyString const& label);
 
-    Generator();
+    explicit Generator(VM&);
     ~Generator() = default;
 
     void grow(size_t);
@@ -286,7 +290,7 @@ private:
     NonnullOwnPtr<StringTable> m_string_table;
     NonnullOwnPtr<IdentifierTable> m_identifier_table;
     NonnullOwnPtr<RegexTable> m_regex_table;
-    Vector<Value> m_constants;
+    MarkedVector<Value> m_constants;
 
     u32 m_next_register { Register::reserved_register_count };
     u32 m_next_block { 1 };
