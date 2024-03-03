@@ -279,7 +279,7 @@ Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> NullLiteral::genera
     return generator.add_constant(js_null());
 }
 
-Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> BigIntLiteral::generate_bytecode(Bytecode::Generator& generator, Optional<Bytecode::Operand> preferred_dst) const
+Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> BigIntLiteral::generate_bytecode(Bytecode::Generator& generator, [[maybe_unused]] Optional<Bytecode::Operand> preferred_dst) const
 {
     Bytecode::Generator::SourceLocationScope scope(generator, *this);
     // 1. Return the NumericValue of NumericLiteral as defined in 12.8.3.
@@ -293,10 +293,7 @@ Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> BigIntLiteral::gene
             return MUST(Crypto::SignedBigInteger::from_base(2, m_value.substring(2, m_value.length() - 3)));
         return MUST(Crypto::SignedBigInteger::from_base(10, m_value.substring(0, m_value.length() - 1)));
     }();
-
-    auto dst = choose_dst(generator, preferred_dst);
-    generator.emit<Bytecode::Op::NewBigInt>(dst, integer);
-    return dst;
+    return generator.add_constant(BigInt::create(generator.vm(), move(integer)), Bytecode::Generator::DeduplicateConstant::No);
 }
 
 Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> StringLiteral::generate_bytecode(Bytecode::Generator& generator, [[maybe_unused]] Optional<Bytecode::Operand> preferred_dst) const

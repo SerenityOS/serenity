@@ -239,26 +239,6 @@ private:
     Operand m_excluded_names[];
 };
 
-class NewBigInt final : public Instruction {
-public:
-    NewBigInt(Operand dst, Crypto::SignedBigInteger bigint)
-        : Instruction(Type::NewBigInt, sizeof(*this))
-        , m_dst(dst)
-        , m_bigint(move(bigint))
-    {
-    }
-
-    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-
-    Operand dst() const { return m_dst; }
-    Crypto::SignedBigInteger const& bigint() const { return m_bigint; }
-
-private:
-    Operand m_dst;
-    Crypto::SignedBigInteger m_bigint;
-};
-
 // NOTE: This instruction is variable-width depending on the number of elements!
 class NewArray final : public Instruction {
 public:
