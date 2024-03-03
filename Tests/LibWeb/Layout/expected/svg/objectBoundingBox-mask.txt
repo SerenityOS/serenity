@@ -8,7 +8,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
           TextNode <#text>
           SVGGeometryBox <rect> at (8,8) content-size 1x1 children: not-inline
           TextNode <#text>
-          SVGGeometryBox <circle> at (8.09375,8.09375) content-size 0.796875x0.796875 children: not-inline
+          SVGGeometryBox <circle> at (8.09375,8.09375) content-size 0.8125x0.8125 children: not-inline
           TextNode <#text>
         TextNode <#text>
         SVGGeometryBox <rect> at (8,8) content-size 200x200 children: not-inline
