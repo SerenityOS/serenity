@@ -144,7 +144,7 @@ void serialize_a_srgb_value(StringBuilder& builder, Color color)
     if (color.alpha() == 255)
         builder.appendff("rgb({}, {}, {})"sv, color.red(), color.green(), color.blue());
     else
-        builder.appendff("rgba({}, {}, {}, {})"sv, color.red(), color.green(), color.blue(), (float)(color.alpha()) / 255.0f);
+        builder.appendff("rgba({}, {}, {}, {:.4})"sv, color.red(), color.green(), color.blue(), (float)(color.alpha()) / 255.0f);
 }
 
 String escape_a_character(u32 character)
