@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<style>
+    #box {
+        width: 100px;
+        height: 100px;
+        background-color: magenta;
+        display: none;
+    }
+</style>
+<script src="include.js"></script>
+<body>
+    <div id="box"></div>
+</body>
+<script>
+    test(() => {
+        const animation = box.animate([
+            { transform: 'translateX(0px)' },
+            { transform: 'translateX(100%)' }
+        ], {
+            duration: 2000,
+            iterations: 1
+        });
+
+        animation.currentTime = 0;
+        const style = getComputedStyle(box);
+        println(`box.style.transform: ${style.transform}`);
+    });
+</script>

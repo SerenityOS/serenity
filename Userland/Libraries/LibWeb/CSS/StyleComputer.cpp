@@ -1240,6 +1240,9 @@ static ErrorOr<ValueComparingNonnullRefPtr<StyleValue const>> interpolate_proper
 
 ErrorOr<void> StyleComputer::collect_animation_into(JS::NonnullGCPtr<Animations::KeyframeEffect> effect, StyleProperties& style_properties) const
 {
+    if (!effect->target()->layout_node())
+        return {};
+
     auto animation = effect->associated_animation();
     if (!animation)
         return {};
