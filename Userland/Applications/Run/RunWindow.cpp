@@ -96,12 +96,6 @@ void RunWindow::do_run()
     hide();
 
     if (run_via_launch(run_input) || run_as_command(run_input)) {
-        // Remove any existing history entry, prepend the successful run string to history and save.
-        m_path_history.remove_all_matching([&](ByteString v) { return v == run_input; });
-        m_path_history.prepend(run_input);
-        // FIXME: Handle failure to save history somehow.
-        (void)save_history();
-
         close();
         return;
     }
@@ -120,7 +114,11 @@ bool RunWindow::run_as_command(ByteString const& run_input)
 
     pid_t child_pid = maybe_child_pid.release_value();
 
-    // Command spawned in child shell. Hide and wait for exit code.
+    // The child shell was able to start. Let's save it to the history immediately so users can see it as the first entry the next time they run this program.
+    prepend_history(run_input);
+    // FIXME: Handle failure to save history somehow.
+    (void)save_history();
+
     int status;
     if (waitpid(child_pid, &status, 0) < 0)
         return false;
@@ -130,6 +128,8 @@ bool RunWindow::run_as_command(ByteString const& run_input)
 
     // 127 is typically the shell indicating command not found. 126 for all other errors.
     if (child_error == 126 || child_error == 127) {
+        // There's an opportunity to remove the history entry here since it failed during its runtime, but other implementations (e.g. Windows 11) don't bother removing the entry.
+        // This makes sense, especially for cases where a user is debugging a failing program.
         return false;
     }
 
@@ -157,6 +157,10 @@ bool RunWindow::run_via_launch(ByteString const& run_input)
         return false;
     }
 
+    prepend_history(run_input);
+    // FIXME: Handle failure to save history somehow.
+    (void)save_history();
+
     dbgln("Ran via URL launch.");
 
     return true;
@@ -180,6 +184,12 @@ ErrorOr<void> RunWindow::load_history()
             m_path_history.append(line);
     }
     return {};
+}
+
+void RunWindow::prepend_history(ByteString const& input)
+{
+    m_path_history.remove_all_matching([&](ByteString const& entry) { return input == entry; });
+    m_path_history.prepend(input);
 }
 
 ErrorOr<void> RunWindow::save_history()
