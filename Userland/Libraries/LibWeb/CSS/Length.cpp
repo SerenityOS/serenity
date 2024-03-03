@@ -184,7 +184,7 @@ String Length::to_string() const
 {
     if (is_auto())
         return "auto"_string;
-    return MUST(String::formatted("{}{}", m_value, unit_name()));
+    return MUST(String::formatted("{:.5}{}", m_value, unit_name()));
 }
 
 char const* Length::unit_name() const
