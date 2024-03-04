@@ -26,7 +26,7 @@ private:
     static PDFErrorOr<ByteBuffer> decode_flate(ReadonlyBytes bytes, RefPtr<DictObject> decode_parms);
     static PDFErrorOr<ByteBuffer> decode_run_length(ReadonlyBytes bytes);
     static PDFErrorOr<ByteBuffer> decode_ccitt(ReadonlyBytes bytes, RefPtr<DictObject> decode_parms);
-    static PDFErrorOr<ByteBuffer> decode_jbig2(ReadonlyBytes bytes);
+    static PDFErrorOr<ByteBuffer> decode_jbig2(ReadonlyBytes bytes, RefPtr<DictObject> decode_parms);
     static PDFErrorOr<ByteBuffer> decode_dct(ReadonlyBytes bytes);
     static PDFErrorOr<ByteBuffer> decode_jpx(ReadonlyBytes bytes);
     static PDFErrorOr<ByteBuffer> decode_crypt(ReadonlyBytes bytes);

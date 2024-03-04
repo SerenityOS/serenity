@@ -10,6 +10,7 @@
 #include <LibCompress/LZWDecoder.h>
 #include <LibCompress/PackBitsDecoder.h>
 #include <LibGfx/ImageFormats/CCITTDecoder.h>
+#include <LibGfx/ImageFormats/JBIG2Loader.h>
 #include <LibGfx/ImageFormats/JPEGLoader.h>
 #include <LibGfx/ImageFormats/PNGLoader.h>
 #include <LibPDF/CommonNames.h>
@@ -33,7 +34,7 @@ PDFErrorOr<ByteBuffer> Filter::decode(ReadonlyBytes bytes, DeprecatedFlyString c
     if (encoding_type == CommonNames::CCITTFaxDecode)
         return decode_ccitt(bytes, decode_parms);
     if (encoding_type == CommonNames::JBIG2Decode)
-        return decode_jbig2(bytes);
+        return decode_jbig2(bytes, decode_parms);
     if (encoding_type == CommonNames::DCTDecode)
         return decode_dct(bytes);
     if (encoding_type == CommonNames::JPXDecode)
@@ -333,9 +334,15 @@ PDFErrorOr<ByteBuffer> Filter::decode_ccitt(ReadonlyBytes bytes, RefPtr<DictObje
     return decoded;
 }
 
-PDFErrorOr<ByteBuffer> Filter::decode_jbig2(ReadonlyBytes)
+PDFErrorOr<ByteBuffer> Filter::decode_jbig2(ReadonlyBytes bytes, RefPtr<DictObject> decode_parms)
 {
-    return Error::rendering_unsupported_error("JBIG2 Filter is unsupported");
+    // 3.3.6 JBIG2Decode Filter
+    if (decode_parms) {
+        if (decode_parms->contains(CommonNames::JBIG2Globals))
+            return Error::rendering_unsupported_error("JBIG2Globals is not yet supported");
+    }
+
+    return TRY(Gfx::JBIG2ImageDecoderPlugin::decode_embedded(bytes));
 }
 
 PDFErrorOr<ByteBuffer> Filter::decode_dct(ReadonlyBytes bytes)
