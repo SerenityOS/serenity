@@ -460,7 +460,7 @@ PDFErrorOr<void> Parser::unfilter_stream(NonnullRefPtr<StreamObject> stream_obje
         if (!decode_parms_vector.is_empty())
             decode_parms = decode_parms_vector.at(i);
 
-        stream_object->buffer() = TRY(Filter::decode(stream_object->bytes(), filters.at(i), decode_parms));
+        stream_object->buffer() = TRY(Filter::decode(m_document, stream_object->bytes(), filters.at(i), decode_parms));
     }
 
     return {};

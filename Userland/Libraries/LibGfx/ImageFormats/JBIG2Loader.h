@@ -25,10 +25,10 @@ public:
 
     virtual ErrorOr<ImageFrameDescriptor> frame(size_t index, Optional<IntSize> ideal_size = {}) override;
 
-    static ErrorOr<ByteBuffer> decode_embedded(ReadonlyBytes);
+    static ErrorOr<ByteBuffer> decode_embedded(Vector<ReadonlyBytes>);
 
 private:
-    JBIG2ImageDecoderPlugin(ReadonlyBytes);
+    JBIG2ImageDecoderPlugin();
 
     OwnPtr<JBIG2LoadingContext> m_context;
 };
