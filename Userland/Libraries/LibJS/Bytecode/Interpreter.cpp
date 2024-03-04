@@ -119,23 +119,39 @@ NonnullOwnPtr<CallFrame> CallFrame::create(size_t register_count)
     return call_frame;
 }
 
-static ThrowCompletionOr<Value> loosely_inequals(VM& vm, Value src1, Value src2)
+ALWAYS_INLINE static ThrowCompletionOr<Value> loosely_inequals(VM& vm, Value src1, Value src2)
 {
+    if (src1.tag() == src2.tag()) {
+        if (src1.is_int32() || src1.is_object() || src1.is_boolean() || src1.is_nullish())
+            return Value(src1.encoded() != src2.encoded());
+    }
     return Value(!TRY(is_loosely_equal(vm, src1, src2)));
 }
 
-static ThrowCompletionOr<Value> loosely_equals(VM& vm, Value src1, Value src2)
+ALWAYS_INLINE static ThrowCompletionOr<Value> loosely_equals(VM& vm, Value src1, Value src2)
 {
+    if (src1.tag() == src2.tag()) {
+        if (src1.is_int32() || src1.is_object() || src1.is_boolean() || src1.is_nullish())
+            return Value(src1.encoded() == src2.encoded());
+    }
     return Value(TRY(is_loosely_equal(vm, src1, src2)));
 }
 
-static ThrowCompletionOr<Value> strict_inequals(VM&, Value src1, Value src2)
+ALWAYS_INLINE static ThrowCompletionOr<Value> strict_inequals(VM&, Value src1, Value src2)
 {
+    if (src1.tag() == src2.tag()) {
+        if (src1.is_int32() || src1.is_object() || src1.is_boolean() || src1.is_nullish())
+            return Value(src1.encoded() != src2.encoded());
+    }
     return Value(!is_strictly_equal(src1, src2));
 }
 
-static ThrowCompletionOr<Value> strict_equals(VM&, Value src1, Value src2)
+ALWAYS_INLINE static ThrowCompletionOr<Value> strict_equals(VM&, Value src1, Value src2)
 {
+    if (src1.tag() == src2.tag()) {
+        if (src1.is_int32() || src1.is_object() || src1.is_boolean() || src1.is_nullish())
+            return Value(src1.encoded() == src2.encoded());
+    }
     return Value(is_strictly_equal(src1, src2));
 }
 
