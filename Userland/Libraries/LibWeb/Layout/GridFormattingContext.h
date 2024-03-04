@@ -53,6 +53,11 @@ struct GridItem {
     [[nodiscard]] int gap_adjusted_column(Box const& grid_box) const;
 };
 
+enum class FoundUnoccupiedPlace {
+    No,
+    Yes
+};
+
 class OccupationGrid {
 public:
     OccupationGrid(size_t columns_count, size_t rows_count)
@@ -82,6 +87,8 @@ public:
     int max_row_index() const { return m_max_row_index; }
 
     bool is_occupied(int column_index, int row_index) const;
+
+    FoundUnoccupiedPlace find_unoccupied_place(GridDimension dimension, int& column_index, int& row_index, int column_span, int row_span) const;
 
 private:
     HashTable<GridPosition> m_occupation_grid;
