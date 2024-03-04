@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/EnumBits.h>
 #include <AK/Types.h>
 
 #define ENUMERATE_KEY_CODES                                    \
@@ -166,6 +167,8 @@ enum KeyModifier {
 
     Is_Press = 0x80,
 };
+
+AK_ENUM_BITWISE_OPERATORS(KeyModifier);
 
 struct KeyEvent {
     KeyCode key { Key_Invalid };
