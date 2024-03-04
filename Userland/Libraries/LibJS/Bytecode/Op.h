@@ -59,6 +59,7 @@ private:
     O(BitwiseXor, bitwise_xor)                           \
     O(GreaterThan, greater_than)                         \
     O(GreaterThanEquals, greater_than_equals)            \
+    O(LeftShift, left_shift)                             \
     O(LessThan, less_than)                               \
     O(LessThanEquals, less_than_equals)                  \
     O(Mul, mul)                                          \
@@ -75,8 +76,7 @@ private:
     O(LooselyInequals, loosely_inequals)                    \
     O(LooselyEquals, loosely_equals)                        \
     O(StrictlyInequals, strict_inequals)                    \
-    O(StrictlyEquals, strict_equals)                        \
-    O(LeftShift, left_shift)
+    O(StrictlyEquals, strict_equals)
 
 #define JS_DECLARE_COMMON_BINARY_OP(OpTitleCase, op_snake_case)                \
     class OpTitleCase final : public Instruction {                             \
