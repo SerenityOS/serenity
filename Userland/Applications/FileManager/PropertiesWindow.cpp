@@ -403,7 +403,7 @@ ErrorOr<void> PropertiesWindow::create_font_tab(GUI::TabWidget& tab_widget, Nonn
 
 ErrorOr<void> PropertiesWindow::create_image_tab(GUI::TabWidget& tab_widget, NonnullOwnPtr<Core::MappedFile> mapped_file, StringView mime_type)
 {
-    auto image_decoder = Gfx::ImageDecoder::try_create_for_raw_bytes(mapped_file->bytes(), mime_type);
+    auto image_decoder = TRY(Gfx::ImageDecoder::try_create_for_raw_bytes(mapped_file->bytes(), mime_type));
     if (!image_decoder)
         return {};
 

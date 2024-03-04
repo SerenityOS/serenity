@@ -33,7 +33,7 @@ static ErrorOr<Optional<String>> image_details(StringView description, StringVie
 {
     auto mapped_file = TRY(Core::MappedFile::map(path));
     auto mime_type = Core::guess_mime_type_based_on_filename(path);
-    auto image_decoder = Gfx::ImageDecoder::try_create_for_raw_bytes(mapped_file->bytes(), mime_type);
+    auto image_decoder = TRY(Gfx::ImageDecoder::try_create_for_raw_bytes(mapped_file->bytes(), mime_type));
     if (!image_decoder)
         return OptionalNone {};
 

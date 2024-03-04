@@ -256,7 +256,7 @@ ErrorOr<void> SpiceAgent::did_receive_clipboard_message(ClipboardMessage& messag
         auto mime_type = TRY(clipboard_data_type_to_mime_type(message.data_type()));
 
         // FIXME: It should be trivial to make `try_create_for_raw_bytes` take a `StringView` instead of a direct `ByteString`.
-        auto decoder = Gfx::ImageDecoder::try_create_for_raw_bytes(message.contents(), mime_type.to_byte_string());
+        auto decoder = TRY(Gfx::ImageDecoder::try_create_for_raw_bytes(message.contents(), mime_type.to_byte_string()));
         if (!decoder || (decoder->frame_count() == 0)) {
             return Error::from_string_literal("Failed to find a suitable decoder for a pasted image!");
         }

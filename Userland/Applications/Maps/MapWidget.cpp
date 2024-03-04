@@ -341,11 +341,12 @@ void MapWidget::process_tile_queue()
         m_first_image_loaded = true;
 
         // Decode loaded PNG image data
-        auto decoder = Gfx::ImageDecoder::try_create_for_raw_bytes(payload, "image/png");
-        if (!decoder || (decoder->frame_count() == 0)) {
+        auto decoder_or_err = Gfx::ImageDecoder::try_create_for_raw_bytes(payload, "image/png");
+        if (decoder_or_err.is_error() || !decoder_or_err.value() || (decoder_or_err.value()->frame_count() == 0)) {
             dbgln("Maps: Can't decode image: {}", url);
             return;
         }
+        auto decoder = decoder_or_err.release_value();
         m_tiles.set(tile_key, decoder->frame(0).release_value_but_fixme_should_propagate_errors().image);
 
         // FIXME: only update the part of the screen that this tile covers

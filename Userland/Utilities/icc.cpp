@@ -276,7 +276,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
         auto file = TRY(Core::MappedFile::map(path));
 
-        auto decoder = Gfx::ImageDecoder::try_create_for_raw_bytes(file->bytes());
+        auto decoder = TRY(Gfx::ImageDecoder::try_create_for_raw_bytes(file->bytes()));
         if (decoder) {
             if (auto embedded_icc_bytes = TRY(decoder->icc_data()); embedded_icc_bytes.has_value()) {
                 icc_bytes = *embedded_icc_bytes;
