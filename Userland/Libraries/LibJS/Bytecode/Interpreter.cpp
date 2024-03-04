@@ -841,7 +841,7 @@ ThrowCompletionOr<void> UnsignedRightShift::execute_impl(Bytecode::Interpreter& 
     auto& vm = interpreter.vm();
     auto const lhs = interpreter.get(m_lhs);
     auto const rhs = interpreter.get(m_rhs);
-    if (lhs.is_int32() && rhs.is_int32() && lhs.as_i32() >= 0 && rhs.as_i32() >= 0) {
+    if (lhs.is_int32() && rhs.is_int32()) {
         auto const shift_count = static_cast<u32>(rhs.as_i32()) % 32;
         interpreter.set(m_dst, Value(static_cast<u32>(lhs.as_i32()) >> shift_count));
         return {};
@@ -855,7 +855,7 @@ ThrowCompletionOr<void> RightShift::execute_impl(Bytecode::Interpreter& interpre
     auto& vm = interpreter.vm();
     auto const lhs = interpreter.get(m_lhs);
     auto const rhs = interpreter.get(m_rhs);
-    if (lhs.is_int32() && rhs.is_int32() && rhs.as_i32() >= 0) {
+    if (lhs.is_int32() && rhs.is_int32()) {
         auto const shift_count = static_cast<u32>(rhs.as_i32()) % 32;
         interpreter.set(m_dst, Value(lhs.as_i32() >> shift_count));
         return {};
@@ -869,7 +869,7 @@ ThrowCompletionOr<void> LeftShift::execute_impl(Bytecode::Interpreter& interpret
     auto& vm = interpreter.vm();
     auto const lhs = interpreter.get(m_lhs);
     auto const rhs = interpreter.get(m_rhs);
-    if (lhs.is_int32() && rhs.is_int32() && rhs.as_i32() >= 0) {
+    if (lhs.is_int32() && rhs.is_int32()) {
         auto const shift_count = static_cast<u32>(rhs.as_i32()) % 32;
         interpreter.set(m_dst, Value(lhs.as_i32() << shift_count));
         return {};
