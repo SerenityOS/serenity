@@ -73,7 +73,6 @@ struct JBIG2LoadingContext {
         Error,
     };
     State state { State::NotDecoded };
-    ReadonlyBytes data;
 
     Organization organization { Organization::Sequential };
     IntSize size;
@@ -83,12 +82,12 @@ struct JBIG2LoadingContext {
     Vector<SegmentData> segments;
 };
 
-static ErrorOr<void> decode_jbig2_header(JBIG2LoadingContext& context)
+static ErrorOr<void> decode_jbig2_header(JBIG2LoadingContext& context, ReadonlyBytes data)
 {
-    if (!JBIG2ImageDecoderPlugin::sniff(context.data))
+    if (!JBIG2ImageDecoderPlugin::sniff(data))
         return Error::from_string_literal("JBIG2LoadingContext: Invalid JBIG2 header");
 
-    FixedMemoryStream stream(context.data.slice(sizeof(id_string)));
+    FixedMemoryStream stream(data.slice(sizeof(id_string)));
 
     // D.4.2 File header flags
     u8 header_flags = TRY(stream.read_value<u8>());
@@ -219,11 +218,8 @@ static ErrorOr<size_t> scan_for_immediate_generic_region_size(ReadonlyBytes data
     return size;
 }
 
-static ErrorOr<void> decode_segment_headers(JBIG2LoadingContext& context)
+static ErrorOr<void> decode_segment_headers(JBIG2LoadingContext& context, ReadonlyBytes data)
 {
-    ReadonlyBytes data = context.data;
-    if (context.organization != Organization::Embedded)
-        data = data.slice(sizeof(id_string) + sizeof(u8) + (context.number_of_pages.has_value() ? sizeof(u32) : 0));
     FixedMemoryStream stream(data);
 
     Vector<ReadonlyBytes> segment_datas;
@@ -270,10 +266,9 @@ static ErrorOr<void> decode_segment_headers(JBIG2LoadingContext& context)
     return {};
 }
 
-JBIG2ImageDecoderPlugin::JBIG2ImageDecoderPlugin(ReadonlyBytes data)
+JBIG2ImageDecoderPlugin::JBIG2ImageDecoderPlugin()
 {
     m_context = make<JBIG2LoadingContext>();
-    m_context->data = data;
 }
 
 IntSize JBIG2ImageDecoderPlugin::size()
@@ -288,9 +283,12 @@ bool JBIG2ImageDecoderPlugin::sniff(ReadonlyBytes data)
 
 ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> JBIG2ImageDecoderPlugin::create(ReadonlyBytes data)
 {
-    auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) JBIG2ImageDecoderPlugin(data)));
-    TRY(decode_jbig2_header(*plugin->m_context));
-    TRY(decode_segment_headers(*plugin->m_context));
+    auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) JBIG2ImageDecoderPlugin()));
+    TRY(decode_jbig2_header(*plugin->m_context, data));
+
+    data = data.slice(sizeof(id_string) + sizeof(u8) + (plugin->m_context->number_of_pages.has_value() ? sizeof(u32) : 0));
+    TRY(decode_segment_headers(*plugin->m_context, data));
+
     return plugin;
 }
 
@@ -306,12 +304,14 @@ ErrorOr<ImageFrameDescriptor> JBIG2ImageDecoderPlugin::frame(size_t index, Optio
     return Error::from_string_literal("JBIG2ImageDecoderPlugin: Draw the rest of the owl");
 }
 
-ErrorOr<ByteBuffer> JBIG2ImageDecoderPlugin::decode_embedded(ReadonlyBytes data)
+ErrorOr<ByteBuffer> JBIG2ImageDecoderPlugin::decode_embedded(Vector<ReadonlyBytes> data)
 {
-    dbgln_if(JBIG2_DEBUG, "JBIG2ImageDecoderPlugin: Decoding embedded JBIG2 of size {}", data.size());
-    auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) JBIG2ImageDecoderPlugin(data)));
+    auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) JBIG2ImageDecoderPlugin()));
     plugin->m_context->organization = Organization::Embedded;
-    TRY(decode_segment_headers(*plugin->m_context));
+
+    for (auto const& segment_data : data)
+        TRY(decode_segment_headers(*plugin->m_context, segment_data));
+
     return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode embedded JBIG2 yet");
 }
 

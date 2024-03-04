@@ -19,7 +19,7 @@
 
 namespace PDF {
 
-PDFErrorOr<ByteBuffer> Filter::decode(ReadonlyBytes bytes, DeprecatedFlyString const& encoding_type, RefPtr<DictObject> decode_parms)
+PDFErrorOr<ByteBuffer> Filter::decode(Document* document, ReadonlyBytes bytes, DeprecatedFlyString const& encoding_type, RefPtr<DictObject> decode_parms)
 {
     if (encoding_type == CommonNames::ASCIIHexDecode)
         return decode_ascii_hex(bytes);
@@ -34,7 +34,7 @@ PDFErrorOr<ByteBuffer> Filter::decode(ReadonlyBytes bytes, DeprecatedFlyString c
     if (encoding_type == CommonNames::CCITTFaxDecode)
         return decode_ccitt(bytes, decode_parms);
     if (encoding_type == CommonNames::JBIG2Decode)
-        return decode_jbig2(bytes, decode_parms);
+        return decode_jbig2(document, bytes, decode_parms);
     if (encoding_type == CommonNames::DCTDecode)
         return decode_dct(bytes);
     if (encoding_type == CommonNames::JPXDecode)
@@ -334,15 +334,19 @@ PDFErrorOr<ByteBuffer> Filter::decode_ccitt(ReadonlyBytes bytes, RefPtr<DictObje
     return decoded;
 }
 
-PDFErrorOr<ByteBuffer> Filter::decode_jbig2(ReadonlyBytes bytes, RefPtr<DictObject> decode_parms)
+PDFErrorOr<ByteBuffer> Filter::decode_jbig2(Document* document, ReadonlyBytes bytes, RefPtr<DictObject> decode_parms)
 {
     // 3.3.6 JBIG2Decode Filter
+    Vector<ReadonlyBytes> segments;
     if (decode_parms) {
-        if (decode_parms->contains(CommonNames::JBIG2Globals))
-            return Error::rendering_unsupported_error("JBIG2Globals is not yet supported");
+        if (decode_parms->contains(CommonNames::JBIG2Globals)) {
+            auto globals = TRY(decode_parms->get_stream(document, CommonNames::JBIG2Globals));
+            segments.append(globals->bytes());
+        }
     }
 
-    return TRY(Gfx::JBIG2ImageDecoderPlugin::decode_embedded(bytes));
+    segments.append(bytes);
+    return TRY(Gfx::JBIG2ImageDecoderPlugin::decode_embedded(segments));
 }
 
 PDFErrorOr<ByteBuffer> Filter::decode_dct(ReadonlyBytes bytes)
