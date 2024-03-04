@@ -172,7 +172,6 @@ static ErrorOr<SegmentHeader> decode_segment_header(SeekableStream& stream)
     dbgln_if(JBIG2_DEBUG, "Segment data length: {}", data_length);
 
     // FIXME: Add some validity checks:
-    // - data_length can only be 0xffff'ffff for type ImmediateGenericRegion
     // - check type is valid
     // - check referred_to_segment_numbers are smaller than segment_number
     // - 7.3.1 Rules for segment references
@@ -181,8 +180,43 @@ static ErrorOr<SegmentHeader> decode_segment_header(SeekableStream& stream)
     Optional<u32> opt_data_length;
     if (data_length != 0xffff'ffff)
         opt_data_length = data_length;
+    else if (type != ImmediateGenericRegion)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Unknown data length only allowed for ImmediateGenericRegion");
 
     return SegmentHeader { segment_number, type, move(referred_to_segment_numbers), segment_page_association, opt_data_length };
+}
+
+static ErrorOr<size_t> scan_for_immediate_generic_region_size(ReadonlyBytes data)
+{
+    // 7.2.7 Segment data length
+    // "If the segment's type is "Immediate generic region", then the length field may contain the value 0xFFFFFFFF.
+    //  This value is intended to mean that the length of the segment's data part is unknown at the time that the segment header is written (...).
+    //  In this case, the true length of the segment's data part shall be determined through examination of the data:
+    //  if the segment uses template-based arithmetic coding, then the segment's data part ends with the two-byte sequence 0xFF 0xAC followed by a four-byte row count.
+    //  If the segment uses MMR coding, then the segment's data part ends with the two-byte sequence 0x00 0x00 followed by a four-byte row count.
+    //  The form of encoding used by the segment may be determined by examining the eighteenth byte of its segment data part,
+    //  and the end sequences can occur anywhere after that eighteenth byte."
+    // 7.4.6.4 Decoding a generic region segment
+    // "NOTE – The sequence 0x00 0x00 cannot occur within MMR-encoded data; the sequence 0xFF 0xAC can occur only at the end of arithmetically-coded data.
+    //  Thus, those sequences cannot occur by chance in the data that is decoded to generate the contents of the generic region."
+    dbgln_if(JBIG2_DEBUG, "(Unknown data length, computing it)");
+
+    if (data.size() < 18)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Data too short to contain segment data header");
+
+    // Per 7.4.6.1 Generic region segment data header, this starts with the 17 bytes described in
+    // 7.4.1 Region segment information field, followed the byte described in 7.4.6.2 Generic region segment flags.
+    // That byte's lowest bit stores if the segment uses MMR.
+    u8 flags = data[17];
+    bool uses_mmr = (flags & 1) != 0;
+    auto end_sequence = uses_mmr ? to_array<u8>({ 0x00, 0x00 }) : to_array<u8>({ 0xFF, 0xAC });
+    u8 const* end = static_cast<u8 const*>(memmem(data.data() + 19, data.size() - 19 - sizeof(u32), end_sequence.data(), end_sequence.size()));
+    if (!end)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Could not find end sequence in segment data");
+
+    size_t size = end - data.data() + end_sequence.size() + sizeof(u32);
+    dbgln_if(JBIG2_DEBUG, "(Computed size is {})", size);
+    return size;
 }
 
 static ErrorOr<void> decode_segment_headers(JBIG2LoadingContext& context)
@@ -194,16 +228,19 @@ static ErrorOr<void> decode_segment_headers(JBIG2LoadingContext& context)
 
     Vector<ReadonlyBytes> segment_datas;
     auto store_and_skip_segment_data = [&](SegmentHeader const& segment_header) -> ErrorOr<void> {
-        if (!segment_header.data_length.has_value())
-            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Can't handle segment without data length yet");
-
         size_t start_offset = TRY(stream.tell());
-        if (start_offset + segment_header.data_length.value() > data.size())
+        u32 data_length = TRY(segment_header.data_length.try_value_or_lazy_evaluated([&]() {
+            return scan_for_immediate_generic_region_size(data.slice(start_offset));
+        }));
+
+        if (start_offset + data_length > data.size()) {
+            dbgln_if(JBIG2_DEBUG, "JBIG2ImageDecoderPlugin: start_offset={}, data_length={}, data.size()={}", start_offset, data_length, data.size());
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Segment data length exceeds file size");
-        ReadonlyBytes segment_data = data.slice(start_offset, segment_header.data_length.value());
+        }
+        ReadonlyBytes segment_data = data.slice(start_offset, data_length);
         segment_datas.append(segment_data);
 
-        TRY(stream.seek(segment_header.data_length.value(), SeekMode::FromCurrentPosition));
+        TRY(stream.seek(data_length, SeekMode::FromCurrentPosition));
         return {};
     };
 
@@ -271,6 +308,7 @@ ErrorOr<ImageFrameDescriptor> JBIG2ImageDecoderPlugin::frame(size_t index, Optio
 
 ErrorOr<ByteBuffer> JBIG2ImageDecoderPlugin::decode_embedded(ReadonlyBytes data)
 {
+    dbgln_if(JBIG2_DEBUG, "JBIG2ImageDecoderPlugin: Decoding embedded JBIG2 of size {}", data.size());
     auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) JBIG2ImageDecoderPlugin(data)));
     plugin->m_context->organization = Organization::Embedded;
     TRY(decode_segment_headers(*plugin->m_context));
