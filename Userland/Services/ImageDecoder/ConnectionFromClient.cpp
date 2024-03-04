@@ -43,11 +43,12 @@ static void decode_image_to_details(Core::AnonymousBuffer const& encoded_buffer,
     VERIFY(bitmaps.size() == 0);
     VERIFY(durations.size() == 0);
 
-    auto decoder = Gfx::ImageDecoder::try_create_for_raw_bytes(ReadonlyBytes { encoded_buffer.data<u8>(), encoded_buffer.size() }, known_mime_type);
-    if (!decoder) {
+    auto decoder_or_err = Gfx::ImageDecoder::try_create_for_raw_bytes(ReadonlyBytes { encoded_buffer.data<u8>(), encoded_buffer.size() }, known_mime_type);
+    if (decoder_or_err.is_error() || !decoder_or_err.value()) {
         dbgln_if(IMAGE_DECODER_DEBUG, "Could not find suitable image decoder plugin for data");
         return;
     }
+    auto decoder = decoder_or_err.release_value();
 
     if (!decoder->frame_count()) {
         dbgln_if(IMAGE_DECODER_DEBUG, "Could not decode image from encoded data");

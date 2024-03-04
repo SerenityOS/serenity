@@ -147,7 +147,7 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::load_from_file(NonnullOwnPtr<Core::File> 
 
 ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::load_from_bytes(ReadonlyBytes bytes, Optional<IntSize> ideal_size, Optional<ByteString> mine_type)
 {
-    if (auto decoder = ImageDecoder::try_create_for_raw_bytes(bytes, mine_type)) {
+    if (auto decoder = TRY(ImageDecoder::try_create_for_raw_bytes(bytes, mine_type))) {
         auto frame = TRY(decoder->frame(0, ideal_size));
         if (auto& bitmap = frame.image)
             return bitmap.release_nonnull();

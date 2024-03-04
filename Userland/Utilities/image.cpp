@@ -227,9 +227,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Options options = TRY(parse_options(arguments));
 
     auto file = TRY(Core::MappedFile::map(options.in_path));
-    auto decoder = Gfx::ImageDecoder::try_create_for_raw_bytes(file->bytes());
+    auto decoder = TRY(Gfx::ImageDecoder::try_create_for_raw_bytes(file->bytes()));
     if (!decoder)
-        return Error::from_string_view("Failed to decode input file"sv);
+        return Error::from_string_view("Could not find decoder for input file"sv);
 
     LoadedImage image = TRY(load_image(*decoder, options.frame_index));
 

@@ -26,7 +26,7 @@
 
 namespace Gfx {
 
-static OwnPtr<ImageDecoderPlugin> probe_and_sniff_for_appropriate_plugin(ReadonlyBytes bytes)
+static ErrorOr<OwnPtr<ImageDecoderPlugin>> probe_and_sniff_for_appropriate_plugin(ReadonlyBytes bytes)
 {
     struct ImagePluginInitializer {
         bool (*sniff)(ReadonlyBytes) = nullptr;
@@ -56,11 +56,9 @@ static OwnPtr<ImageDecoderPlugin> probe_and_sniff_for_appropriate_plugin(Readonl
         auto sniff_result = plugin.sniff(bytes);
         if (!sniff_result)
             continue;
-        auto plugin_decoder = plugin.create(bytes);
-        if (!plugin_decoder.is_error())
-            return plugin_decoder.release_value();
+        return TRY(plugin.create(bytes));
     }
-    return {};
+    return OwnPtr<ImageDecoderPlugin> {};
 }
 
 static OwnPtr<ImageDecoderPlugin> probe_and_sniff_for_appropriate_plugin_with_known_mime_type(StringView mime_type, ReadonlyBytes bytes)
@@ -88,9 +86,9 @@ static OwnPtr<ImageDecoderPlugin> probe_and_sniff_for_appropriate_plugin_with_kn
     return {};
 }
 
-RefPtr<ImageDecoder> ImageDecoder::try_create_for_raw_bytes(ReadonlyBytes bytes, Optional<ByteString> mime_type)
+ErrorOr<RefPtr<ImageDecoder>> ImageDecoder::try_create_for_raw_bytes(ReadonlyBytes bytes, Optional<ByteString> mime_type)
 {
-    if (OwnPtr<ImageDecoderPlugin> plugin = probe_and_sniff_for_appropriate_plugin(bytes); plugin)
+    if (auto plugin = TRY(probe_and_sniff_for_appropriate_plugin(bytes)); plugin)
         return adopt_ref_if_nonnull(new (nothrow) ImageDecoder(plugin.release_nonnull()));
 
     if (mime_type.has_value()) {
@@ -98,7 +96,7 @@ RefPtr<ImageDecoder> ImageDecoder::try_create_for_raw_bytes(ReadonlyBytes bytes,
             return adopt_ref_if_nonnull(new (nothrow) ImageDecoder(plugin.release_nonnull()));
     }
 
-    return {};
+    return RefPtr<ImageDecoder> {};
 }
 
 ImageDecoder::ImageDecoder(NonnullOwnPtr<ImageDecoderPlugin> plugin)
