@@ -131,6 +131,8 @@ public:
         Number,
     };
 
+    [[nodiscard]] u16 tag() const { return m_value.tag; }
+
     bool is_empty() const { return m_value.tag == EMPTY_TAG; }
     bool is_undefined() const { return m_value.tag == UNDEFINED_TAG; }
     bool is_null() const { return m_value.tag == NULL_TAG; }
