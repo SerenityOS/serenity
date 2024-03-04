@@ -23,7 +23,10 @@ public:
     DevPtsFS const& fs() const { return static_cast<DevPtsFS const&>(Inode::fs()); }
 
 private:
-    DevPtsFSInode(DevPtsFS&, InodeIndex, SlavePTY*);
+    DevPtsFSInode(DevPtsFS&, InodeIndex, SlavePTY&);
+
+    // NOTE: This constructor is used for the root inode only.
+    DevPtsFSInode(DevPtsFS&);
 
     // ^Inode
     virtual ErrorOr<size_t> read_bytes_locked(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const override;
