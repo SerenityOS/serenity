@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <AK/EnumBits.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
@@ -263,7 +264,7 @@ public:
     ByteString const& keymap() const { return m_keymap; }
 
 private:
-    const ByteString m_keymap;
+    ByteString const m_keymap;
 };
 
 class WMAddToQuickLaunchEvent : public WMEvent {
@@ -383,6 +384,8 @@ enum MouseButton : u8 {
     Backward = 8,
     Forward = 16,
 };
+
+AK_ENUM_BITWISE_OPERATORS(MouseButton);
 
 class KeyEvent final : public Event {
 public:
