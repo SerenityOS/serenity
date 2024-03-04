@@ -134,7 +134,9 @@ public:
     {
         if (m_parent)
             m_parent->remove_child(*this);
-        m_parent = nullptr;
+
+        // The call to `remove_child` may have deleted the object.
+        // Do not dereference `this` from this point forward.
     }
 
     template<class T, class... Args>
