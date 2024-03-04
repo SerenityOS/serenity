@@ -839,10 +839,9 @@ void WebContentClient::did_finish_handling_input_event(u64 page_id, bool event_w
         dbgln("Received finish handling input event for unknown page ID {}", page_id);
         return;
     }
-    auto& view = *maybe_view.value();
 
-    if (view.on_finish_handling_input_event)
-        view.on_finish_handling_input_event(event_was_accepted);
+    auto& view = *maybe_view.value();
+    view.did_finish_handling_input_event({}, event_was_accepted);
 }
 
 void WebContentClient::did_change_theme_color(u64 page_id, Gfx::Color color)

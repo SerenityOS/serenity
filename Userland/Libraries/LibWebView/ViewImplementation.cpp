@@ -112,6 +112,60 @@ void ViewImplementation::reset_zoom()
     update_zoom();
 }
 
+void ViewImplementation::enqueue_input_event(Web::InputEvent event)
+{
+    // Send the next event over to the WebContent to be handled by JS. We'll later get a message to say whether JS
+    // prevented the default event behavior, at which point we either discard or handle that event, and then try to
+    // process the next one.
+    m_pending_input_events.enqueue(move(event));
+
+    // FIXME: Replace these IPCs with a singular "async_input_event".
+    m_pending_input_events.tail().visit(
+        [this](Web::KeyEvent const& event) {
+            switch (event.type) {
+            case Web::KeyEvent::Type::KeyDown:
+                client().async_key_down(m_client_state.page_index, event.key, event.modifiers, event.code_point);
+                break;
+            case Web::KeyEvent::Type::KeyUp:
+                client().async_key_up(m_client_state.page_index, event.key, event.modifiers, event.code_point);
+                break;
+            }
+        },
+        [this](Web::MouseEvent const& event) {
+            switch (event.type) {
+            case Web::MouseEvent::Type::MouseDown:
+                client().async_mouse_down(m_client_state.page_index, event.position, event.screen_position, event.button, event.buttons, event.modifiers);
+                break;
+            case Web::MouseEvent::Type::MouseUp:
+                client().async_mouse_up(m_client_state.page_index, event.position, event.screen_position, event.button, event.buttons, event.modifiers);
+                break;
+            case Web::MouseEvent::Type::MouseMove:
+                client().async_mouse_move(m_client_state.page_index, event.position, event.screen_position, event.button, event.buttons, event.modifiers);
+                break;
+            case Web::MouseEvent::Type::MouseWheel:
+                client().async_mouse_wheel(m_client_state.page_index, event.position, event.screen_position, event.button, event.buttons, event.modifiers, event.wheel_delta_x, event.wheel_delta_y);
+                break;
+            case Web::MouseEvent::Type::DoubleClick:
+                client().async_doubleclick(m_client_state.page_index, event.position, event.screen_position, event.button, event.buttons, event.modifiers);
+                break;
+            }
+        });
+}
+
+void ViewImplementation::did_finish_handling_input_event(Badge<WebContentClient>, bool event_was_accepted)
+{
+    auto event = m_pending_input_events.dequeue();
+
+    if (!event_was_accepted && event.has<Web::KeyEvent>()) {
+        auto const& key_event = event.get<Web::KeyEvent>();
+
+        // Here we handle events that were not consumed or cancelled by the WebContent. Propagate the event back
+        // to the concrete view implementation.
+        if (on_finish_handling_key_event)
+            on_finish_handling_key_event(key_event);
+    }
+}
+
 void ViewImplementation::set_preferred_color_scheme(Web::CSS::PreferredColorScheme color_scheme)
 {
     client().async_set_preferred_color_scheme(page_id(), color_scheme);

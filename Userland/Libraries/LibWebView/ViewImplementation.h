@@ -10,6 +10,7 @@
 #include <AK/Forward.h>
 #include <AK/Function.h>
 #include <AK/LexicalPath.h>
+#include <AK/Queue.h>
 #include <AK/String.h>
 #include <LibCore/Promise.h>
 #include <LibGfx/Forward.h>
@@ -18,6 +19,7 @@
 #include <LibWeb/HTML/ActivateTab.h>
 #include <LibWeb/HTML/ColorPickerUpdateState.h>
 #include <LibWeb/HTML/SelectItem.h>
+#include <LibWeb/Page/InputEvent.h>
 #include <LibWebView/Forward.h>
 #include <LibWebView/WebContentClient.h>
 
@@ -51,6 +53,9 @@ public:
     void reset_zoom();
     float zoom_level() const { return m_zoom_level; }
     float device_pixel_ratio() const { return m_device_pixel_ratio; }
+
+    void enqueue_input_event(Web::InputEvent);
+    void did_finish_handling_input_event(Badge<WebContentClient>, bool event_was_accepted);
 
     void set_preferred_color_scheme(Web::CSS::PreferredColorScheme);
 
@@ -167,7 +172,7 @@ public:
     Function<void(Color current_color)> on_request_color_picker;
     Function<void(Web::HTML::AllowMultipleFiles)> on_request_file_picker;
     Function<void(Gfx::IntPoint content_position, i32 minimum_width, Vector<Web::HTML::SelectItem> items)> on_request_select_dropdown;
-    Function<void(bool)> on_finish_handling_input_event;
+    Function<void(Web::KeyEvent const&)> on_finish_handling_key_event;
     Function<void()> on_text_test_finish;
     Function<void(Gfx::Color)> on_theme_color_change;
     Function<void(String const&, String const&, String const&)> on_insert_clipboard_entry;
@@ -233,6 +238,8 @@ protected:
 
     float m_zoom_level { 1.0 };
     float m_device_pixel_ratio { 1.0 };
+
+    Queue<Web::InputEvent> m_pending_input_events;
 
     RefPtr<Core::Timer> m_backing_store_shrink_timer;
 

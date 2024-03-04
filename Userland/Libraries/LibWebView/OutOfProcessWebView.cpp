@@ -69,8 +69,8 @@ OutOfProcessWebView::OutOfProcessWebView()
         GUI::Application::the()->hide_tooltip();
     };
 
-    on_finish_handling_input_event = [this](auto event_was_accepted) {
-        did_finish_handling_input_event(event_was_accepted);
+    on_finish_handling_key_event = [this](auto const& event) {
+        finish_handling_key_event(event);
     };
 
     on_request_worker_agent = []() {
@@ -169,22 +169,22 @@ void OutOfProcessWebView::update_zoom()
 
 void OutOfProcessWebView::keydown_event(GUI::KeyEvent& event)
 {
-    enqueue_input_event(event);
+    enqueue_native_event(Web::KeyEvent::Type::KeyDown, event);
 }
 
 void OutOfProcessWebView::keyup_event(GUI::KeyEvent& event)
 {
-    enqueue_input_event(event);
+    enqueue_native_event(Web::KeyEvent::Type::KeyUp, event);
 }
 
 void OutOfProcessWebView::mousedown_event(GUI::MouseEvent& event)
 {
-    enqueue_input_event(event);
+    enqueue_native_event(Web::MouseEvent::Type::MouseDown, event);
 }
 
 void OutOfProcessWebView::mouseup_event(GUI::MouseEvent& event)
 {
-    enqueue_input_event(event);
+    enqueue_native_event(Web::MouseEvent::Type::MouseUp, event);
 
     if (event.button() == GUI::MouseButton::Backward) {
         if (on_navigate_back)
@@ -197,17 +197,17 @@ void OutOfProcessWebView::mouseup_event(GUI::MouseEvent& event)
 
 void OutOfProcessWebView::mousemove_event(GUI::MouseEvent& event)
 {
-    enqueue_input_event(event);
+    enqueue_native_event(Web::MouseEvent::Type::MouseMove, event);
 }
 
 void OutOfProcessWebView::mousewheel_event(GUI::MouseEvent& event)
 {
-    enqueue_input_event(event);
+    enqueue_native_event(Web::MouseEvent::Type::MouseWheel, event);
 }
 
 void OutOfProcessWebView::doubleclick_event(GUI::MouseEvent& event)
 {
-    enqueue_input_event(event);
+    enqueue_native_event(Web::MouseEvent::Type::DoubleClick, event);
 }
 
 void OutOfProcessWebView::theme_change_event(GUI::ThemeChangeEvent& event)
@@ -305,138 +305,61 @@ void OutOfProcessWebView::hide_event(GUI::HideEvent&)
     set_system_visibility_state(false);
 }
 
-void OutOfProcessWebView::enqueue_input_event(InputEvent const& event)
+void OutOfProcessWebView::enqueue_native_event(Web::MouseEvent::Type type, GUI::MouseEvent const& event)
 {
-    m_pending_input_events.enqueue(event);
-    process_next_input_event();
+    auto position = to_content_position(event.position()).to_type<Web::DevicePixels>();
+    auto screen_position = (event.position() + (window()->position() + relative_position())).to_type<Web::DevicePixels>();
+
+    // FIXME: This wheel delta step size multiplier is used to remain the old scroll behaviour, in future use system step size.
+    static constexpr int SCROLL_STEP_SIZE = 24;
+    auto wheel_delta_x = event.wheel_delta_x() * SCROLL_STEP_SIZE;
+    auto wheel_delta_y = event.wheel_delta_y() * SCROLL_STEP_SIZE;
+
+    enqueue_input_event(Web::MouseEvent { type, position, screen_position, event.button(), static_cast<GUI::MouseButton>(event.buttons()), static_cast<KeyModifier>(event.modifiers()), wheel_delta_x, wheel_delta_y, nullptr });
 }
 
-void OutOfProcessWebView::process_next_input_event()
-{
-    if (m_pending_input_events.is_empty())
-        return;
-
-    if (m_is_awaiting_response_for_input_event)
-        return;
-    m_is_awaiting_response_for_input_event = true;
-
-    // Send the next event over to the web content to be handled by JS.
-    // We'll later get a message to say whether JS prevented the default event behavior,
-    // at which point we either discard or handle that event, then try and process the next one.
-    auto event = m_pending_input_events.head();
-    event.visit(
-        [this](GUI::KeyEvent const& event) {
-            switch (event.type()) {
-            case GUI::Event::Type::KeyDown:
-                client().async_key_down(m_client_state.page_index, event.key(), event.modifiers(), event.code_point());
-                break;
-            case GUI::Event::Type::KeyUp:
-                client().async_key_up(m_client_state.page_index, event.key(), event.modifiers(), event.code_point());
-                break;
-            default:
-                dbgln("Unrecognized key event type in OOPWV input event queue: {}", event.type());
-                VERIFY_NOT_REACHED();
-            }
-        },
-        [this](GUI::MouseEvent const& event) {
-            auto position = to_content_position(event.position()).to_type<Web::DevicePixels>();
-            auto screen_position = (event.position() + (window()->position() + relative_position())).to_type<Web::DevicePixels>();
-            switch (event.type()) {
-            case GUI::Event::Type::MouseDown:
-                client().async_mouse_down(m_client_state.page_index, position, screen_position, event.button(), event.buttons(), event.modifiers());
-                break;
-            case GUI::Event::Type::MouseUp:
-                client().async_mouse_up(m_client_state.page_index, position, screen_position, event.button(), event.buttons(), event.modifiers());
-                break;
-            case GUI::Event::Type::MouseMove:
-                client().async_mouse_move(m_client_state.page_index, position, screen_position, event.button(), event.buttons(), event.modifiers());
-                break;
-            case GUI::Event::Type::MouseWheel: {
-                // FIXME: This wheel delta step size multiplier is used to remain the old scroll behaviour, in future use system step size.
-                constexpr int scroll_step_size = 24;
-                client().async_mouse_wheel(m_client_state.page_index, position, screen_position, event.button(), event.buttons(), event.modifiers(), event.wheel_delta_x() * scroll_step_size, event.wheel_delta_y() * scroll_step_size);
-                break;
-            }
-            case GUI::Event::Type::MouseDoubleClick:
-                client().async_doubleclick(m_client_state.page_index, position, screen_position, event.button(), event.buttons(), event.modifiers());
-                break;
-            default:
-                dbgln("Unrecognized mouse event type in OOPWV input event queue: {}", event.type());
-                VERIFY_NOT_REACHED();
-            }
-        });
-}
-
-void OutOfProcessWebView::did_finish_handling_input_event(bool event_was_accepted)
-{
-    VERIFY(m_is_awaiting_response_for_input_event);
-
-    auto event = m_pending_input_events.dequeue();
-    m_is_awaiting_response_for_input_event = false;
-
-    if (!event_was_accepted) {
-        // Here we handle events that were not consumed or cancelled by web content.
-        // That is, we manually implement the steps that would have happened if the original
-        // OutOfProcessWebView::foo_event() had called event.ignore().
-        //
-        // The first step is to give our superclass a chance to handle the event.
-        //
-        // Then, if it does not, we dispatch the event to our parent widget, but limited so
-        // that it will never bubble up to the Window. (Otherwise, it would then dispatch the
-        // event to us since we are the focused widget, and it would go round indefinitely.)
-        //
-        // Finally, any unhandled KeyDown events are propagated to trigger any Actions.
-        event.visit(
-            [this](GUI::KeyEvent& event) {
-                switch (event.type()) {
-                case GUI::Event::Type::KeyDown:
-                    Super::keydown_event(event);
-                    break;
-                case GUI::Event::Type::KeyUp:
-                    Super::keyup_event(event);
-                    break;
-                default:
-                    dbgln("Unhandled key event type in OOPWV input event queue: {}", event.type());
-                    VERIFY_NOT_REACHED();
-                }
-
-                if (!event.is_accepted()) {
-                    parent_widget()->dispatch_event(event, window());
-
-                    // NOTE: If other events can ever trigger shortcuts, propagate those here.
-                    if (!event.is_accepted() && event.type() == GUI::Event::Type::KeyDown)
-                        window()->propagate_shortcuts(event, this);
-                }
-            },
-            [this](GUI::MouseEvent& event) {
-                switch (event.type()) {
-                case GUI::Event::Type::MouseDown:
-                    Super::mousedown_event(event);
-                    break;
-                case GUI::Event::Type::MouseUp:
-                    Super::mouseup_event(event);
-                    break;
-                case GUI::Event::Type::MouseMove:
-                    Super::mousemove_event(event);
-                    break;
-                case GUI::Event::Type::MouseWheel:
-                    Super::mousewheel_event(event);
-                    break;
-                case GUI::Event::Type::MouseDoubleClick:
-                    Super::doubleclick_event(event);
-                    break;
-                default:
-                    dbgln("Unhandled mouse event type in OOPWV input event queue: {}", event.type());
-                    VERIFY_NOT_REACHED();
-                }
-
-                if (!event.is_accepted())
-                    parent_widget()->dispatch_event(event, window());
-                // FIXME: Propagate event for mouse-button shortcuts once that is implemented.
-            });
+struct KeyData : Web::ChromeInputData {
+    explicit KeyData(GUI::KeyEvent const& event)
+        : event(make<GUI::KeyEvent>(event))
+    {
     }
 
-    process_next_input_event();
+    NonnullOwnPtr<GUI::KeyEvent> event;
+};
+
+void OutOfProcessWebView::enqueue_native_event(Web::KeyEvent::Type type, GUI::KeyEvent const& event)
+{
+    enqueue_input_event(Web::KeyEvent { type, event.key(), static_cast<KeyModifier>(event.modifiers()), event.code_point(), make<KeyData>(event) });
+}
+
+void OutOfProcessWebView::finish_handling_key_event(Web::KeyEvent const& key_event)
+{
+    // First, we give our superclass a chance to handle the event.
+    //
+    // If it does not, we dispatch the event to our parent widget, but limited such that it will never bubble up to the
+    // Window. (Otherwise, it would then dispatch the event to us since we are the focused widget, and it would go around
+    // indefinitely.)
+    //
+    // Finally, any unhandled KeyDown events are propagated to trigger any shortcut Actions.
+    auto& chrome_data = verify_cast<KeyData>(*key_event.chrome_data);
+    auto& event = *chrome_data.event;
+
+    switch (key_event.type) {
+    case Web::KeyEvent::Type::KeyDown:
+        Super::keydown_event(event);
+        break;
+    case Web::KeyEvent::Type::KeyUp:
+        Super::keyup_event(event);
+        break;
+    }
+
+    if (!event.is_accepted()) {
+        parent_widget()->dispatch_event(event, window());
+
+        // NOTE: If other events can ever trigger shortcuts, propagate those here.
+        if (!event.is_accepted() && event.type() == GUI::Event::Type::KeyDown)
+            window()->propagate_shortcuts(static_cast<GUI::KeyEvent&>(event), this);
+    }
 }
 
 void OutOfProcessWebView::set_content_scales_to_viewport(bool b)
