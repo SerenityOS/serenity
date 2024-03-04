@@ -112,6 +112,7 @@
     X(Info)                       \
     X(Intent)                     \
     X(JBIG2Decode)                \
+    X(JBIG2Globals)               \
     X(JPXDecode)                  \
     X(K)                          \
     X(Keywords)                   \

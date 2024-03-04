@@ -180,7 +180,10 @@ static ErrorOr<SegmentHeader> decode_segment_header(SeekableStream& stream)
 
 static ErrorOr<void> decode_segment_headers(JBIG2LoadingContext& context)
 {
-    FixedMemoryStream stream(context.data.slice(sizeof(id_string) + sizeof(u8) + (context.number_of_pages.has_value() ? sizeof(u32) : 0)));
+    ReadonlyBytes data = context.data;
+    if (context.organization != Organization::Embedded)
+        data = data.slice(sizeof(id_string) + sizeof(u8) + (context.number_of_pages.has_value() ? sizeof(u32) : 0));
+    FixedMemoryStream stream(data);
     while (!stream.is_eof()) {
         auto segment_header = TRY(decode_segment_header(stream));
         if (context.organization != Organization::RandomAccess) {
@@ -230,6 +233,14 @@ ErrorOr<ImageFrameDescriptor> JBIG2ImageDecoderPlugin::frame(size_t index, Optio
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Decoding failed");
 
     return Error::from_string_literal("JBIG2ImageDecoderPlugin: Draw the rest of the owl");
+}
+
+ErrorOr<ByteBuffer> JBIG2ImageDecoderPlugin::decode_embedded(ReadonlyBytes data)
+{
+    auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) JBIG2ImageDecoderPlugin(data)));
+    plugin->m_context->organization = Organization::Embedded;
+    TRY(decode_segment_headers(*plugin->m_context));
+    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode embedded JBIG2 yet");
 }
 
 }
