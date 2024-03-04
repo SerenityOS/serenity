@@ -62,6 +62,11 @@ struct SegmentHeader {
     Optional<u32> data_length;
 };
 
+struct SegmentData {
+    SegmentHeader header;
+    ReadonlyBytes data;
+};
+
 struct JBIG2LoadingContext {
     enum class State {
         NotDecoded = 0,
@@ -74,6 +79,8 @@ struct JBIG2LoadingContext {
     IntSize size;
 
     Optional<u32> number_of_pages;
+
+    Vector<SegmentData> segments;
 };
 
 static ErrorOr<void> decode_jbig2_header(JBIG2LoadingContext& context)
@@ -184,18 +191,45 @@ static ErrorOr<void> decode_segment_headers(JBIG2LoadingContext& context)
     if (context.organization != Organization::Embedded)
         data = data.slice(sizeof(id_string) + sizeof(u8) + (context.number_of_pages.has_value() ? sizeof(u32) : 0));
     FixedMemoryStream stream(data);
+
+    Vector<ReadonlyBytes> segment_datas;
+    auto store_and_skip_segment_data = [&](SegmentHeader const& segment_header) -> ErrorOr<void> {
+        if (!segment_header.data_length.has_value())
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Can't handle segment without data length yet");
+
+        size_t start_offset = TRY(stream.tell());
+        if (start_offset + segment_header.data_length.value() > data.size())
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Segment data length exceeds file size");
+        ReadonlyBytes segment_data = data.slice(start_offset, segment_header.data_length.value());
+        segment_datas.append(segment_data);
+
+        TRY(stream.seek(segment_header.data_length.value(), SeekMode::FromCurrentPosition));
+        return {};
+    };
+
+    Vector<SegmentHeader> segment_headers;
     while (!stream.is_eof()) {
         auto segment_header = TRY(decode_segment_header(stream));
-        if (context.organization != Organization::RandomAccess) {
-            if (!segment_header.data_length.has_value())
-                return Error::from_string_literal("JBIG2ImageDecoderPlugin: Can't handle non-random-access organization segment without data length yet");
-            TRY(stream.seek(segment_header.data_length.value(), SeekMode::FromCurrentPosition));
-        }
+        segment_headers.append(segment_header);
+
+        if (context.organization != Organization::RandomAccess)
+            TRY(store_and_skip_segment_data(segment_header));
 
         // Required per spec for files with RandomAccess organization.
         if (segment_header.type == SegmentType::EndOfFile)
             break;
     }
+
+    if (context.organization == Organization::RandomAccess) {
+        for (auto const& segment_header : segment_headers)
+            TRY(store_and_skip_segment_data(segment_header));
+    }
+
+    if (segment_headers.size() != segment_datas.size())
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Segment headers and segment datas have different sizes");
+    for (size_t i = 0; i < segment_headers.size(); ++i)
+        context.segments.append({ segment_headers[i], segment_datas[i] });
+
     return {};
 }
 
