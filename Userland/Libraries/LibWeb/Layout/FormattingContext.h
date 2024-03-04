@@ -50,6 +50,9 @@ public:
 
     static bool creates_block_formatting_context(Box const&);
 
+    CSSPixels compute_table_box_width_inside_table_wrapper(Box const&, AvailableSpace const&);
+    CSSPixels compute_table_box_height_inside_table_wrapper(Box const&, AvailableSpace const&);
+
     CSSPixels compute_width_for_replaced_element(Box const&, AvailableSpace const&) const;
     CSSPixels compute_height_for_replaced_element(Box const&, AvailableSpace const&) const;
 

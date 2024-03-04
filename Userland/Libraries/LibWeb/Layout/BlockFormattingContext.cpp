@@ -410,48 +410,6 @@ void BlockFormattingContext::compute_width_for_block_level_replaced_element_in_n
     box_state.padding_right = padding_right;
 }
 
-CSSPixels BlockFormattingContext::compute_table_box_width_inside_table_wrapper(Box const& box, AvailableSpace const& available_space)
-{
-    // 17.5.2
-    // Table wrapper width should be equal to width of table box it contains
-
-    auto const& computed_values = box.computed_values();
-
-    auto width_of_containing_block = available_space.width.to_px_or_zero();
-
-    auto zero_value = CSS::Length::make_px(0);
-
-    auto margin_left = computed_values.margin().left().resolved(box, width_of_containing_block);
-    auto margin_right = computed_values.margin().right().resolved(box, width_of_containing_block);
-
-    // If 'margin-left', or 'margin-right' are computed as 'auto', their used value is '0'.
-    if (margin_left.is_auto())
-        margin_left = zero_value;
-    if (margin_right.is_auto())
-        margin_right = zero_value;
-
-    // table-wrapper can't have borders or paddings but it might have margin taken from table-root.
-    auto available_width = width_of_containing_block - margin_left.to_px(box) - margin_right.to_px(box);
-
-    LayoutState throwaway_state(&m_state);
-    auto context = create_independent_formatting_context_if_needed(throwaway_state, box);
-    VERIFY(context);
-    context->run(box, LayoutMode::IntrinsicSizing, m_state.get(box).available_inner_space_or_constraints_from(available_space));
-
-    Optional<Box const&> table_box;
-    box.for_each_in_subtree_of_type<Box>([&](Box const& child_box) {
-        if (child_box.display().is_table_inside()) {
-            table_box = child_box;
-            return IterationDecision::Break;
-        }
-        return IterationDecision::Continue;
-    });
-    VERIFY(table_box.has_value());
-
-    auto table_used_width = throwaway_state.get(*table_box).border_box_width();
-    return available_space.width.is_definite() ? min(table_used_width, available_width) : table_used_width;
-}
-
 void BlockFormattingContext::compute_height(Box const& box, AvailableSpace const& available_space)
 {
     auto const& computed_values = box.computed_values();

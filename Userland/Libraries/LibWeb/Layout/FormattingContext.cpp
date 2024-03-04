@@ -381,6 +381,93 @@ CSSPixels FormattingContext::compute_auto_height_for_block_formatting_context_ro
     return max(CSSPixels(0.0f), bottom.value_or(0) - top.value_or(0));
 }
 
+// 17.5.2 Table width algorithms: the 'table-layout' property
+// https://www.w3.org/TR/CSS22/tables.html#width-layout
+CSSPixels FormattingContext::compute_table_box_width_inside_table_wrapper(Box const& box, AvailableSpace const& available_space)
+{
+    // Table wrapper width should be equal to width of table box it contains
+
+    auto const& computed_values = box.computed_values();
+
+    auto width_of_containing_block = available_space.width.to_px_or_zero();
+
+    auto zero_value = CSS::Length::make_px(0);
+
+    auto margin_left = computed_values.margin().left().resolved(box, width_of_containing_block);
+    auto margin_right = computed_values.margin().right().resolved(box, width_of_containing_block);
+
+    // If 'margin-left', or 'margin-right' are computed as 'auto', their used value is '0'.
+    if (margin_left.is_auto())
+        margin_left = zero_value;
+    if (margin_right.is_auto())
+        margin_right = zero_value;
+
+    // table-wrapper can't have borders or paddings but it might have margin taken from table-root.
+    auto available_width = width_of_containing_block - margin_left.to_px(box) - margin_right.to_px(box);
+
+    LayoutState throwaway_state(&m_state);
+    auto context = create_independent_formatting_context_if_needed(throwaway_state, box);
+    VERIFY(context);
+    context->run(box, LayoutMode::IntrinsicSizing, m_state.get(box).available_inner_space_or_constraints_from(available_space));
+
+    Optional<Box const&> table_box;
+    box.for_each_in_subtree_of_type<Box>([&](Box const& child_box) {
+        if (child_box.display().is_table_inside()) {
+            table_box = child_box;
+            return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    });
+    VERIFY(table_box.has_value());
+
+    auto table_used_width = throwaway_state.get(*table_box).border_box_width();
+    return available_space.width.is_definite() ? min(table_used_width, available_width) : table_used_width;
+}
+
+// 17.5.3 Table height algorithms
+// https://www.w3.org/TR/CSS22/tables.html#height-layout
+CSSPixels FormattingContext::compute_table_box_height_inside_table_wrapper(Box const& box, AvailableSpace const& available_space)
+{
+    // Table wrapper height should be equal to height of table box it contains
+
+    auto const& computed_values = box.computed_values();
+
+    auto width_of_containing_block = available_space.width.to_px_or_zero();
+    auto height_of_containing_block = available_space.height.to_px_or_zero();
+
+    auto zero_value = CSS::Length::make_px(0);
+
+    auto margin_top = computed_values.margin().top().resolved(box, width_of_containing_block);
+    auto margin_bottom = computed_values.margin().bottom().resolved(box, width_of_containing_block);
+
+    // If 'margin-top', or 'margin-top' are computed as 'auto', their used value is '0'.
+    if (margin_top.is_auto())
+        margin_top = zero_value;
+    if (margin_bottom.is_auto())
+        margin_bottom = zero_value;
+
+    // table-wrapper can't have borders or paddings but it might have margin taken from table-root.
+    auto available_height = height_of_containing_block - margin_top.to_px(box) - margin_bottom.to_px(box);
+
+    LayoutState throwaway_state(&m_state);
+    auto context = create_independent_formatting_context_if_needed(throwaway_state, box);
+    VERIFY(context);
+    context->run(box, LayoutMode::IntrinsicSizing, m_state.get(box).available_inner_space_or_constraints_from(available_space));
+
+    Optional<Box const&> table_box;
+    box.for_each_in_subtree_of_type<Box>([&](Box const& child_box) {
+        if (child_box.display().is_table_inside()) {
+            table_box = child_box;
+            return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    });
+    VERIFY(table_box.has_value());
+
+    auto table_used_height = throwaway_state.get(*table_box).border_box_height();
+    return available_space.height.is_definite() ? min(table_used_height, available_height) : table_used_height;
+}
+
 // 10.3.2 Inline, replaced elements, https://www.w3.org/TR/CSS22/visudet.html#inline-replaced-width
 CSSPixels FormattingContext::tentative_width_for_replaced_element(Box const& box, CSS::Size const& computed_width, AvailableSpace const& available_space) const
 {
@@ -705,6 +792,8 @@ void FormattingContext::compute_width_for_absolutely_positioned_non_replaced_ele
 
     // 1. The tentative used width is calculated (without 'min-width' and 'max-width')
     auto used_width = try_compute_width([&] {
+        if (is<TableWrapper>(box))
+            return CSS::Length::make_px(compute_table_box_width_inside_table_wrapper(box, available_space));
         if (computed_values.width().is_auto())
             return CSS::Length::make_auto();
         return CSS::Length::make_px(calculate_inner_width(box, available_space.width, computed_values.width()));
@@ -833,17 +922,19 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
     //       In the before pass, if it turns out we need the automatic height of the box, we abort these steps.
     //       This allows the box to retain an indefinite height from the perspective of inside layout.
 
-    auto apply_min_max_height_constraints = [this, &box, &available_space](CSSPixels unconstrained_height) -> CSSPixels {
+    auto apply_min_max_height_constraints = [this, &box, &available_space](CSS::Length unconstrained_height) -> CSS::Length {
         auto const& computed_min_height = box.computed_values().min_height();
         auto const& computed_max_height = box.computed_values().max_height();
         auto constrained_height = unconstrained_height;
         if (!computed_max_height.is_none()) {
             auto inner_max_height = calculate_inner_height(box, available_space.height, computed_max_height);
-            constrained_height = min(constrained_height, inner_max_height);
+            if (inner_max_height < constrained_height.to_px(box))
+                constrained_height = CSS::Length::make_px(inner_max_height);
         }
         if (!computed_min_height.is_auto()) {
             auto inner_min_height = calculate_inner_height(box, available_space.height, computed_min_height);
-            constrained_height = max(constrained_height, inner_min_height);
+            if (inner_min_height > constrained_height.to_px(box))
+                constrained_height = CSS::Length::make_px(inner_min_height);
         }
         return constrained_height;
     };
@@ -852,7 +943,6 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
     auto margin_bottom = box.computed_values().margin().bottom();
     auto top = box.computed_values().inset().top();
     auto bottom = box.computed_values().inset().bottom();
-    auto height = box.computed_values().height();
 
     auto width_of_containing_block = containing_block_width_for(box);
     auto height_of_containing_block = available_space.height.to_px_or_zero();
@@ -861,171 +951,177 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
         No,
         Yes,
     };
-    auto solve_for = [&](CSS::Length length, ClampToZero clamp_to_zero = ClampToZero::No) {
-        auto unclamped_value = height_of_containing_block
-            - top.to_px(box, height_of_containing_block)
-            - margin_top.to_px(box, width_of_containing_block)
-            - box.computed_values().border_top().width
-            - box.computed_values().padding().top().to_px(box, width_of_containing_block)
-            - height.to_px(box, height_of_containing_block)
-            - box.computed_values().padding().bottom().to_px(box, width_of_containing_block)
-            - box.computed_values().border_bottom().width
-            - margin_bottom.to_px(box, width_of_containing_block)
-            - bottom.to_px(box, height_of_containing_block)
-            + length.to_px(box);
-        if (clamp_to_zero == ClampToZero::Yes)
-            return CSS::Length::make_px(max(CSSPixels(0), unclamped_value));
-        return CSS::Length::make_px(unclamped_value);
-    };
 
-    auto solve_for_top = [&] {
-        top = solve_for(top.resolved(box, height_of_containing_block));
-    };
+    auto try_compute_height = [&](CSS::Length height) -> CSS::Length {
+        auto solve_for = [&](CSS::Length length, ClampToZero clamp_to_zero = ClampToZero::No) {
+            auto unclamped_value = height_of_containing_block
+                - top.to_px(box, height_of_containing_block)
+                - margin_top.to_px(box, width_of_containing_block)
+                - box.computed_values().border_top().width
+                - box.computed_values().padding().top().to_px(box, width_of_containing_block)
+                - height.to_px(box)
+                - box.computed_values().padding().bottom().to_px(box, width_of_containing_block)
+                - box.computed_values().border_bottom().width
+                - margin_bottom.to_px(box, width_of_containing_block)
+                - bottom.to_px(box, height_of_containing_block)
+                + length.to_px(box);
+            if (clamp_to_zero == ClampToZero::Yes)
+                return CSS::Length::make_px(max(CSSPixels(0), unclamped_value));
+            return CSS::Length::make_px(unclamped_value);
+        };
 
-    auto solve_for_bottom = [&] {
-        bottom = solve_for(bottom.resolved(box, height_of_containing_block));
-    };
+        auto solve_for_top = [&] {
+            top = solve_for(top.resolved(box, height_of_containing_block));
+        };
 
-    auto solve_for_height = [&] {
-        height = CSS::Size::make_length(solve_for(height.resolved(box, height_of_containing_block), ClampToZero::Yes));
-    };
+        auto solve_for_bottom = [&] {
+            bottom = solve_for(bottom.resolved(box, height_of_containing_block));
+        };
 
-    auto solve_for_margin_top = [&] {
-        margin_top = solve_for(margin_top.resolved(box, width_of_containing_block));
-    };
+        auto solve_for_height = [&] {
+            height = solve_for(height, ClampToZero::Yes);
+        };
 
-    auto solve_for_margin_bottom = [&] {
-        margin_bottom = solve_for(margin_bottom.resolved(box, width_of_containing_block));
-    };
+        auto solve_for_margin_top = [&] {
+            margin_top = solve_for(margin_top.resolved(box, width_of_containing_block));
+        };
 
-    auto solve_for_margin_top_and_margin_bottom = [&] {
-        auto remainder = solve_for(CSS::Length::make_px(margin_top.to_px(box, width_of_containing_block) + margin_bottom.to_px(box, width_of_containing_block))).to_px(box);
-        margin_top = CSS::Length::make_px(remainder / 2);
-        margin_bottom = CSS::Length::make_px(remainder / 2);
-    };
+        auto solve_for_margin_bottom = [&] {
+            margin_bottom = solve_for(margin_bottom.resolved(box, width_of_containing_block));
+        };
 
-    // If all three of top, height, and bottom are auto:
-    if (top.is_auto() && should_treat_height_as_auto(box, available_space) && bottom.is_auto()) {
-        // First set any auto values for margin-top and margin-bottom to 0,
-        if (margin_top.is_auto())
-            margin_top = CSS::Length::make_px(0);
-        if (margin_bottom.is_auto())
-            margin_bottom = CSS::Length::make_px(0);
+        auto solve_for_margin_top_and_margin_bottom = [&] {
+            auto remainder = solve_for(CSS::Length::make_px(margin_top.to_px(box, width_of_containing_block) + margin_bottom.to_px(box, width_of_containing_block))).to_px(box);
+            margin_top = CSS::Length::make_px(remainder / 2);
+            margin_bottom = CSS::Length::make_px(remainder / 2);
+        };
 
-        // then set top to the static position,
-        // and finally apply rule number three below.
-
-        // NOTE: We actually perform these two steps in the opposite order,
-        //       because the static position may depend on the height of the box (due to alignment properties).
-
-        auto maybe_height = compute_auto_height_for_absolutely_positioned_element(box, available_space, before_or_after_inside_layout);
-        if (!maybe_height.has_value())
-            return;
-        height = CSS::Size::make_px(maybe_height.value());
-
-        auto constrained_height = apply_min_max_height_constraints(maybe_height.value());
-        m_state.get_mutable(box).set_content_height(constrained_height);
-
-        auto static_position = calculate_static_position(box);
-        top = CSS::Length::make_px(static_position.y());
-
-        solve_for_bottom();
-    }
-
-    // If none of the three are auto:
-    else if (!top.is_auto() && !should_treat_height_as_auto(box, available_space) && !bottom.is_auto()) {
-        // If both margin-top and margin-bottom are auto,
-        if (margin_top.is_auto() && margin_bottom.is_auto()) {
-            // solve the equation under the extra constraint that the two margins get equal values.
-            solve_for_margin_top_and_margin_bottom();
-        }
-
-        // If one of margin-top or margin-bottom is auto,
-        else if (margin_top.is_auto() || margin_bottom.is_auto()) {
-            // solve the equation for that value.
+        // If all three of top, height, and bottom are auto:
+        if (top.is_auto() && height.is_auto() && bottom.is_auto()) {
+            // First set any auto values for margin-top and margin-bottom to 0,
             if (margin_top.is_auto())
-                solve_for_margin_top();
-            else
-                solve_for_margin_bottom();
-        }
+                margin_top = CSS::Length::make_px(0);
+            if (margin_bottom.is_auto())
+                margin_bottom = CSS::Length::make_px(0);
 
-        // If the values are over-constrained,
-        else {
-            // ignore the value for bottom and solve for that value.
-            solve_for_bottom();
-        }
-    }
-
-    // Otherwise,
-    else {
-        // set auto values for margin-top and margin-bottom to 0,
-        if (margin_top.is_auto())
-            margin_top = CSS::Length::make_px(0);
-        if (margin_bottom.is_auto())
-            margin_bottom = CSS::Length::make_px(0);
-
-        // and pick one of the following six rules that apply.
-
-        // 1. If top and height are auto and bottom is not auto,
-        if (top.is_auto() && should_treat_height_as_auto(box, available_space) && !bottom.is_auto()) {
-            // then the height is based on the Auto heights for block formatting context roots,
-            auto maybe_height = compute_auto_height_for_absolutely_positioned_element(box, available_space, before_or_after_inside_layout);
-            if (!maybe_height.has_value())
-                return;
-            height = CSS::Size::make_px(maybe_height.value());
-
-            // and solve for top.
-            solve_for_top();
-        }
-
-        // 2. If top and bottom are auto and height is not auto,
-        else if (top.is_auto() && bottom.is_auto() && !should_treat_height_as_auto(box, available_space)) {
             // then set top to the static position,
-            top = CSS::Length::make_px(calculate_static_position(box).y());
+            // and finally apply rule number three below.
 
-            // then solve for bottom.
-            solve_for_bottom();
-        }
+            // NOTE: We actually perform these two steps in the opposite order,
+            //       because the static position may depend on the height of the box (due to alignment properties).
 
-        // 3. If height and bottom are auto and top is not auto,
-        else if (should_treat_height_as_auto(box, available_space) && bottom.is_auto() && !top.is_auto()) {
-            // then the height is based on the Auto heights for block formatting context roots,
             auto maybe_height = compute_auto_height_for_absolutely_positioned_element(box, available_space, before_or_after_inside_layout);
             if (!maybe_height.has_value())
-                return;
-            height = CSS::Size::make_px(maybe_height.value());
+                return height;
+            height = CSS::Length::make_px(maybe_height.value());
 
-            // and solve for bottom.
+            auto constrained_height = apply_min_max_height_constraints(height);
+            m_state.get_mutable(box).set_content_height(constrained_height.to_px(box));
+
+            auto static_position = calculate_static_position(box);
+            top = CSS::Length::make_px(static_position.y());
+
             solve_for_bottom();
         }
 
-        // 4. If top is auto, height and bottom are not auto,
-        else if (top.is_auto() && !should_treat_height_as_auto(box, available_space) && !bottom.is_auto()) {
-            // then solve for top.
-            solve_for_top();
+        // If none of the three are auto:
+        else if (!top.is_auto() && !height.is_auto() && !bottom.is_auto()) {
+            // If both margin-top and margin-bottom are auto,
+            if (margin_top.is_auto() && margin_bottom.is_auto()) {
+                // solve the equation under the extra constraint that the two margins get equal values.
+                solve_for_margin_top_and_margin_bottom();
+            }
+
+            // If one of margin-top or margin-bottom is auto,
+            else if (margin_top.is_auto() || margin_bottom.is_auto()) {
+                // solve the equation for that value.
+                if (margin_top.is_auto())
+                    solve_for_margin_top();
+                else
+                    solve_for_margin_bottom();
+            }
+
+            // If the values are over-constrained,
+            else {
+                // ignore the value for bottom and solve for that value.
+                solve_for_bottom();
+            }
         }
 
-        // 5. If height is auto, top and bottom are not auto,
-        else if (should_treat_height_as_auto(box, available_space) && !top.is_auto() && !bottom.is_auto()) {
-            // then solve for height.
-            solve_for_height();
+        // Otherwise,
+        else {
+            // set auto values for margin-top and margin-bottom to 0,
+            if (margin_top.is_auto())
+                margin_top = CSS::Length::make_px(0);
+            if (margin_bottom.is_auto())
+                margin_bottom = CSS::Length::make_px(0);
+
+            // and pick one of the following six rules that apply.
+
+            // 1. If top and height are auto and bottom is not auto,
+            if (top.is_auto() && height.is_auto() && !bottom.is_auto()) {
+                // then the height is based on the Auto heights for block formatting context roots,
+                auto maybe_height = compute_auto_height_for_absolutely_positioned_element(box, available_space, before_or_after_inside_layout);
+                if (!maybe_height.has_value())
+                    return height;
+                height = CSS::Length::make_px(maybe_height.value());
+
+                // and solve for top.
+                solve_for_top();
+            }
+
+            // 2. If top and bottom are auto and height is not auto,
+            else if (top.is_auto() && bottom.is_auto() && !height.is_auto()) {
+                // then set top to the static position,
+                top = CSS::Length::make_px(calculate_static_position(box).y());
+
+                // then solve for bottom.
+                solve_for_bottom();
+            }
+
+            // 3. If height and bottom are auto and top is not auto,
+            else if (height.is_auto() && bottom.is_auto() && !top.is_auto()) {
+                // then the height is based on the Auto heights for block formatting context roots,
+                auto maybe_height = compute_auto_height_for_absolutely_positioned_element(box, available_space, before_or_after_inside_layout);
+                if (!maybe_height.has_value())
+                    return height;
+                height = CSS::Length::make_px(maybe_height.value());
+
+                // and solve for bottom.
+                solve_for_bottom();
+            }
+
+            // 4. If top is auto, height and bottom are not auto,
+            else if (top.is_auto() && !height.is_auto() && !bottom.is_auto()) {
+                // then solve for top.
+                solve_for_top();
+            }
+
+            // 5. If height is auto, top and bottom are not auto,
+            else if (height.is_auto() && !top.is_auto() && !bottom.is_auto()) {
+                // then solve for height.
+                solve_for_height();
+            }
+
+            // 6. If bottom is auto, top and height are not auto,
+            else if (bottom.is_auto() && !top.is_auto() && !height.is_auto()) {
+                // then solve for bottom.
+                solve_for_bottom();
+            }
         }
 
-        // 6. If bottom is auto, top and height are not auto,
-        else if (bottom.is_auto() && !top.is_auto() && !should_treat_height_as_auto(box, available_space)) {
-            // then solve for bottom.
-            solve_for_bottom();
-        }
-    }
+        return height;
+    };
 
     // Compute the height based on box type and CSS properties:
     // https://www.w3.org/TR/css-sizing-3/#box-sizing
-    CSSPixels used_height = 0;
-    if (should_treat_height_as_auto(box, available_space)) {
-        used_height = height.to_px(box, height_of_containing_block);
-    } else {
-        used_height = calculate_inner_height(box, available_space.height, height);
-    }
+    auto used_height = try_compute_height([&] {
+        if (is<TableWrapper>(box))
+            return CSS::Length::make_px(compute_table_box_height_inside_table_wrapper(box, available_space));
+        if (should_treat_height_as_auto(box, available_space))
+            return CSS::Length::make_auto();
+        return CSS::Length::make_px(calculate_inner_height(box, available_space.height, box.computed_values().height()));
+    }());
 
     used_height = apply_min_max_height_constraints(used_height);
 
@@ -1033,7 +1129,7 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
     //       the final used values for vertical margin/border/padding.
 
     auto& box_state = m_state.get_mutable(box);
-    box_state.set_content_height(used_height);
+    box_state.set_content_height(used_height.to_px(box));
 
     // do not set calculated insets or margins on the first pass, there will be a second pass
     if (before_or_after_inside_layout == BeforeOrAfterInsideLayout::Before)
