@@ -20,6 +20,15 @@ public:
     static ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> create(ReadonlyBytes);
 
     virtual ~JBIG2ImageDecoderPlugin() override = default;
+
+    virtual IntSize size() override;
+
+    virtual ErrorOr<ImageFrameDescriptor> frame(size_t index, Optional<IntSize> ideal_size = {}) override;
+
+private:
+    JBIG2ImageDecoderPlugin(ReadonlyBytes);
+
+    OwnPtr<JBIG2LoadingContext> m_context;
 };
 
 }
