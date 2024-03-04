@@ -123,11 +123,13 @@ inline ThrowCompletionOr<Value> get_by_value(VM& vm, Value base_value, Value pro
 
         // For "non-typed arrays":
         if (!object.may_interfere_with_indexed_property_access()
-            && object_storage
-            && object_storage->has_index(index)) {
-            auto value = object_storage->get(index)->value;
-            if (!value.is_accessor())
-                return value;
+            && object_storage) {
+            auto maybe_value = object_storage->get(index);
+            if (maybe_value.has_value()) {
+                auto value = maybe_value->value;
+                if (!value.is_accessor())
+                    return value;
+            }
         }
 
         // For typed arrays:
@@ -398,12 +400,14 @@ inline ThrowCompletionOr<void> put_by_value(VM& vm, Value base, Value property_k
         // For "non-typed arrays":
         if (storage
             && storage->is_simple_storage()
-            && !object.may_interfere_with_indexed_property_access()
-            && storage->has_index(index)) {
-            auto existing_value = storage->get(index)->value;
-            if (!existing_value.is_accessor()) {
-                storage->put(index, value);
-                return {};
+            && !object.may_interfere_with_indexed_property_access()) {
+            auto maybe_value = storage->get(index);
+            if (maybe_value.has_value()) {
+                auto existing_value = maybe_value->value;
+                if (!existing_value.is_accessor()) {
+                    storage->put(index, value);
+                    return {};
+                }
             }
         }
 
