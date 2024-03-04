@@ -69,8 +69,6 @@ private:
 
     void compute_width_for_block_level_replaced_element_in_normal_flow(Box const&, AvailableSpace const&);
 
-    CSSPixels compute_table_box_width_inside_table_wrapper(Box const&, AvailableSpace const&);
-
     void layout_viewport(LayoutMode, AvailableSpace const&);
 
     void layout_block_level_children(BlockContainer const&, LayoutMode, AvailableSpace const&);
