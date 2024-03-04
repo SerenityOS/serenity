@@ -106,11 +106,8 @@ static ErrorOr<void> decode_jbig2_header(JBIG2LoadingContext& context)
     return {};
 }
 
-static ErrorOr<SegmentHeader> decode_segment_header(JBIG2LoadingContext& context)
+static ErrorOr<SegmentHeader> decode_segment_header(SeekableStream& stream)
 {
-    ReadonlyBytes data = context.data.slice(sizeof(id_string) + sizeof(u8) + (context.number_of_pages.has_value() ? sizeof(u32) : 0));
-    FixedMemoryStream stream(data);
-
     // 7.2.2 Segment number
     u32 segment_number = TRY(stream.read_value<BigEndian<u32>>());
     dbgln_if(JBIG2_DEBUG, "Segment number: {}", segment_number);
@@ -181,6 +178,24 @@ static ErrorOr<SegmentHeader> decode_segment_header(JBIG2LoadingContext& context
     return SegmentHeader { segment_number, type, move(referred_to_segment_numbers), segment_page_association, opt_data_length };
 }
 
+static ErrorOr<void> decode_segment_headers(JBIG2LoadingContext& context)
+{
+    FixedMemoryStream stream(context.data.slice(sizeof(id_string) + sizeof(u8) + (context.number_of_pages.has_value() ? sizeof(u32) : 0)));
+    while (!stream.is_eof()) {
+        auto segment_header = TRY(decode_segment_header(stream));
+        if (context.organization != Organization::RandomAccess) {
+            if (!segment_header.data_length.has_value())
+                return Error::from_string_literal("JBIG2ImageDecoderPlugin: Can't handle non-random-access organization segment without data length yet");
+            TRY(stream.seek(segment_header.data_length.value(), SeekMode::FromCurrentPosition));
+        }
+
+        // Required per spec for files with RandomAccess organization.
+        if (segment_header.type == SegmentType::EndOfFile)
+            break;
+    }
+    return {};
+}
+
 JBIG2ImageDecoderPlugin::JBIG2ImageDecoderPlugin(ReadonlyBytes data)
 {
     m_context = make<JBIG2LoadingContext>();
@@ -201,7 +216,7 @@ ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> JBIG2ImageDecoderPlugin::create(Reado
 {
     auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) JBIG2ImageDecoderPlugin(data)));
     TRY(decode_jbig2_header(*plugin->m_context));
-    TRY(decode_segment_header(*plugin->m_context));
+    TRY(decode_segment_headers(*plugin->m_context));
     return plugin;
 }
 
