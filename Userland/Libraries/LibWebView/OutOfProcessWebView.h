@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include <AK/Queue.h>
 #include <AK/URL.h>
 #include <LibGUI/AbstractScrollableWidget.h>
 #include <LibGUI/Widget.h>
@@ -85,13 +84,9 @@ private:
     virtual Gfx::IntPoint to_content_position(Gfx::IntPoint widget_position) const override;
     virtual Gfx::IntPoint to_widget_position(Gfx::IntPoint content_position) const override;
 
-    using InputEvent = Variant<GUI::KeyEvent, GUI::MouseEvent>;
-    void enqueue_input_event(InputEvent const&);
-    void process_next_input_event();
-    void did_finish_handling_input_event(bool event_was_accepted);
-
-    bool m_is_awaiting_response_for_input_event { false };
-    Queue<InputEvent> m_pending_input_events;
+    void enqueue_native_event(Web::MouseEvent::Type, GUI::MouseEvent const& event);
+    void enqueue_native_event(Web::KeyEvent::Type, GUI::KeyEvent const& event);
+    void finish_handling_key_event(Web::KeyEvent const&);
 
     bool m_content_scales_to_viewport { false };
 };

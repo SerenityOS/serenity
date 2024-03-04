@@ -40,6 +40,7 @@ link_qt("ladybird_qt_components") {
 
 config("ladybird_config") {
   include_dirs = [
+    "//Userland",
     "//Userland/Applications",
     "//Userland/Services",
   ]
