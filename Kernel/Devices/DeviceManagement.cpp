@@ -42,13 +42,13 @@ DeviceManagement& DeviceManagement::the()
     return *s_the;
 }
 
-Device* DeviceManagement::get_device(MajorNumber major, MinorNumber minor)
+RefPtr<Device> DeviceManagement::get_device(MajorNumber major, MinorNumber minor)
 {
-    return m_devices.with([&](auto& map) -> Device* {
+    return m_devices.with([&](auto& map) -> RefPtr<Device> {
         auto it = map.find(encoded_device(major.value(), minor.value()));
         if (it == map.end())
             return nullptr;
-        return it->value;
+        return *it->value;
     });
 }
 

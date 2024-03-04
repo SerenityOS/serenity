@@ -16,11 +16,16 @@ static InodeIndex pty_index_to_inode_index(unsigned pty_index)
     return pty_index + 2;
 }
 
-DevPtsFSInode::DevPtsFSInode(DevPtsFS& fs, InodeIndex index, SlavePTY* pty)
-    : Inode(fs, index)
+// NOTE: This constructor is used for the root inode only.
+DevPtsFSInode::DevPtsFSInode(DevPtsFS& fs)
+    : Inode(fs, 1)
 {
-    if (pty)
-        m_pty = *pty;
+}
+
+DevPtsFSInode::DevPtsFSInode(DevPtsFS& fs, InodeIndex index, SlavePTY& pty)
+    : Inode(fs, index)
+    , m_pty(pty)
+{
 }
 
 DevPtsFSInode::~DevPtsFSInode() = default;
