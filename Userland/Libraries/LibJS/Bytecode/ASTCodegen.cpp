@@ -435,7 +435,9 @@ Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> AssignmentExpressio
                     }
 
                     if (expression.is_computed()) {
-                        computed_property = TRY(expression.property().generate_bytecode(generator)).value();
+                        auto property = TRY(expression.property().generate_bytecode(generator)).value();
+                        computed_property = Bytecode::Operand(generator.allocate_register());
+                        generator.emit<Bytecode::Op::Mov>(*computed_property, property);
 
                         // To be continued later with PutByValue.
                     } else if (expression.property().is_identifier()) {

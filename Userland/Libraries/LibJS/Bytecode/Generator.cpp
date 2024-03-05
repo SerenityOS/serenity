@@ -256,11 +256,13 @@ CodeGenerationErrorOr<Generator::ReferenceOperands> Generator::emit_load_from_re
     auto base = TRY(expression.object().generate_bytecode(*this)).value();
     if (expression.is_computed()) {
         auto property = TRY(expression.property().generate_bytecode(*this)).value();
+        auto saved_property = Operand(allocate_register());
+        emit<Bytecode::Op::Mov>(saved_property, property);
         auto dst = preferred_dst.has_value() ? preferred_dst.value() : Operand(allocate_register());
         emit<Bytecode::Op::GetByValue>(dst, base, property);
         return ReferenceOperands {
             .base = base,
-            .referenced_name = property,
+            .referenced_name = saved_property,
             .this_value = base,
             .loaded_value = dst,
         };
