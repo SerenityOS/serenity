@@ -27,4 +27,9 @@ OwnPtr<Request> HttpsProtocol::start_request(i32 request_id, ConnectionFromClien
     return Detail::start_request(Badge<HttpsProtocol> {}, request_id, client, method, url, headers, body, get_pipe_for_request(), proxy_data);
 }
 
+void HttpsProtocol::install()
+{
+    Protocol::install(adopt_own(*new HttpsProtocol()));
+}
+
 }

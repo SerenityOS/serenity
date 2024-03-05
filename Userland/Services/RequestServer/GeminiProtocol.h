@@ -12,8 +12,12 @@ namespace RequestServer {
 
 class GeminiProtocol final : public Protocol {
 public:
-    GeminiProtocol();
     virtual ~GeminiProtocol() override = default;
+
+    static void install();
+
+private:
+    GeminiProtocol();
 
     virtual OwnPtr<Request> start_request(i32, ConnectionFromClient&, ByteString const& method, const URL&, HashMap<ByteString, ByteString> const&, ReadonlyBytes body, Core::ProxyData proxy_data = {}) override;
 };
