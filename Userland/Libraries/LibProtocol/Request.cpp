@@ -69,7 +69,6 @@ void Request::stream_into(Stream& stream)
                 break;
             // FIXME: What do we do if this fails?
             stream.write_until_depleted(read_bytes).release_value_but_fixme_should_propagate_errors();
-            break;
         } while (true);
 
         if (m_internal_stream_data->read_stream->is_eof())
