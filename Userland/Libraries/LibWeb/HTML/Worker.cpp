@@ -57,7 +57,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Worker>> Worker::create(String const& scrip
     // Technically not a fixme if our policy is not to throw errors :^)
 
     // 2. Let outside settings be the current settings object.
-    auto& outside_settings = document.relevant_settings_object();
+    auto& outside_settings = current_settings_object();
 
     // 3. Parse the scriptURL argument relative to outside settings.
     auto url = document.parse_url(script_url.to_byte_string());
@@ -110,7 +110,7 @@ void Worker::run_a_worker(URL& url, EnvironmentSettingsObject& outside_settings,
     // and is shared. Run the rest of these steps in that agent.
 
     // Note: This spawns a new process to act as the 'agent' for the worker.
-    m_agent = heap().allocate<WorkerAgent>(outside_settings.realm(), url, options, port);
+    m_agent = heap().allocate<WorkerAgent>(outside_settings.realm(), url, options, port, outside_settings);
 }
 
 // https://html.spec.whatwg.org/multipage/workers.html#dom-worker-terminate

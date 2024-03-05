@@ -9,6 +9,7 @@
 #include <LibWeb/Fetch/Fetching/Fetching.h>
 #include <LibWeb/Fetch/Infrastructure/FetchAlgorithms.h>
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
+#include <LibWeb/HTML/Scripting/EnvironmentSettingsSnapshot.h>
 #include <LibWeb/HTML/Scripting/Fetching.h>
 #include <LibWeb/HTML/Scripting/WorkerEnvironmentSettingsObject.h>
 #include <LibWeb/HTML/WorkerDebugConsoleClient.h>
@@ -28,7 +29,7 @@ DedicatedWorkerHost::~DedicatedWorkerHost() = default;
 
 // https://html.spec.whatwg.org/multipage/workers.html#run-a-worker
 // FIXME: Extract out into a helper for both shared and dedicated workers
-void DedicatedWorkerHost::run(JS::NonnullGCPtr<Web::Page> page, Web::HTML::TransferDataHolder message_port_data)
+void DedicatedWorkerHost::run(JS::NonnullGCPtr<Web::Page> page, Web::HTML::TransferDataHolder message_port_data, Web::HTML::SerializedEnvironmentSettingsObject const& outside_settings_snapshot)
 {
     bool const is_shared = false;
 
@@ -63,6 +64,9 @@ void DedicatedWorkerHost::run(JS::NonnullGCPtr<Web::Page> page, Web::HTML::Trans
 
     // 11. Append owner to worker global scope's owner set.
     // FIXME: support for 'owner' set on WorkerGlobalScope
+
+    // IMPLEMENTATION DEFINED: We need an object to represent the fetch response's client
+    auto outside_settings = inner_settings->heap().allocate<Web::HTML::EnvironmentSettingsSnapshot>(inner_settings->realm(), inner_settings->realm_execution_context().copy(), outside_settings_snapshot);
 
     // 12. If is shared is true, then:
     if (is_shared) {
@@ -210,8 +214,7 @@ void DedicatedWorkerHost::run(JS::NonnullGCPtr<Web::Page> page, Web::HTML::Trans
         dbgln("Unsupported script type {} for LibWeb/Worker", m_type);
         TODO();
     }
-    // FIXME: We don't have outside settings anymore, they live in the owner. https://github.com/whatwg/html/issues/9920
-    if (auto err = Web::HTML::fetch_classic_worker_script(m_url, inner_settings, destination, inner_settings, perform_fetch, on_complete); err.is_error()) {
+    if (auto err = Web::HTML::fetch_classic_worker_script(m_url, outside_settings, destination, inner_settings, perform_fetch, on_complete); err.is_error()) {
         dbgln("Failed to run worker script");
         // FIXME: Abort the worker properly
         TODO();

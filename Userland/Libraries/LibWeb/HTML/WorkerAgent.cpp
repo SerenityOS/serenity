@@ -13,10 +13,11 @@ namespace Web::HTML {
 
 JS_DEFINE_ALLOCATOR(WorkerAgent);
 
-WorkerAgent::WorkerAgent(URL url, WorkerOptions const& options, JS::GCPtr<MessagePort> outside_port)
+WorkerAgent::WorkerAgent(URL url, WorkerOptions const& options, JS::GCPtr<MessagePort> outside_port, JS::NonnullGCPtr<EnvironmentSettingsObject> outside_settings)
     : m_worker_options(options)
     , m_url(move(url))
     , m_outside_port(outside_port)
+    , m_outside_settings(outside_settings)
 {
 }
 
@@ -41,7 +42,7 @@ void WorkerAgent::initialize(JS::Realm& realm)
     m_worker_ipc = make_ref_counted<WebWorkerClient>(move(worker_socket));
     m_worker_ipc->set_fd_passing_socket(move(fd_passing_socket));
 
-    m_worker_ipc->async_start_dedicated_worker(m_url, m_worker_options.type, m_worker_options.credentials, m_worker_options.name, move(data_holder));
+    m_worker_ipc->async_start_dedicated_worker(m_url, m_worker_options.type, m_worker_options.credentials, m_worker_options.name, move(data_holder), m_outside_settings->serialize());
 }
 
 void WorkerAgent::visit_edges(Cell::Visitor& visitor)
@@ -49,6 +50,7 @@ void WorkerAgent::visit_edges(Cell::Visitor& visitor)
     Base::visit_edges(visitor);
     visitor.visit(m_message_port);
     visitor.visit(m_outside_port);
+    visitor.visit(m_outside_settings);
 }
 
 }
