@@ -465,6 +465,7 @@ ErrorOr<void> initialize_main_thread_vm()
         JS::NonnullGCPtr fetch_client { *settings_object };
 
         // 12. If loadState is not undefined, then:
+        HTML::PerformTheFetchHook perform_fetch;
         if (load_state) {
             auto& fetch_context = static_cast<HTML::FetchContext&>(*load_state);
 
@@ -473,6 +474,9 @@ ErrorOr<void> initialize_main_thread_vm()
 
             // 2. Set fetchClient loadState.[[FetchClient]].
             fetch_client = fetch_context.fetch_client;
+
+            // For step 13
+            perform_fetch = fetch_context.perform_fetch;
         }
 
         auto on_single_fetch_complete = HTML::create_on_fetch_script_complete(realm.heap(), [referrer, &realm, load_state, module_request, payload](JS::GCPtr<HTML::Script> const& module_script) -> void {
@@ -530,8 +534,8 @@ ErrorOr<void> initialize_main_thread_vm()
 
         // 13. Fetch a single imported module script given url, fetchClient, destination, fetchOptions, settingsObject, fetchReferrer,
         //     moduleRequest, and onSingleFetchComplete as defined below.
-        //     If loadState is not undefined and loadState.[[PerformFetch]] is not null, pass loadState.[[PerformFetch]] along as well.#
-        HTML::fetch_single_imported_module_script(realm, url.release_value(), *fetch_client, destination, fetch_options, *settings_object, fetch_referrer, module_request, on_single_fetch_complete);
+        //     If loadState is not undefined and loadState.[[PerformFetch]] is not null, pass loadState.[[PerformFetch]] along as well.
+        HTML::fetch_single_imported_module_script(realm, url.release_value(), *fetch_client, destination, fetch_options, *settings_object, fetch_referrer, module_request, perform_fetch, on_single_fetch_complete);
     };
 
     return {};

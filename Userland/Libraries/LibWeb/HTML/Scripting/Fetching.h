@@ -16,16 +16,16 @@
 
 namespace Web::HTML {
 
-enum class IsTopLevel {
-    No,
+enum class TopLevelModule {
     Yes,
+    No
 };
 
 using OnFetchScriptComplete = JS::NonnullGCPtr<JS::HeapFunction<void(JS::GCPtr<Script>)>>;
-using PerformTheFetchHook = JS::GCPtr<JS::HeapFunction<WebIDL::ExceptionOr<void>(JS::NonnullGCPtr<Fetch::Infrastructure::Request>, IsTopLevel, Fetch::Infrastructure::FetchAlgorithms::ProcessResponseConsumeBodyFunction)>>;
+using PerformTheFetchHook = JS::GCPtr<JS::HeapFunction<WebIDL::ExceptionOr<void>(JS::NonnullGCPtr<Fetch::Infrastructure::Request>, TopLevelModule, Fetch::Infrastructure::FetchAlgorithms::ProcessResponseConsumeBodyFunction)>>;
 
 OnFetchScriptComplete create_on_fetch_script_complete(JS::Heap& heap, Function<void(JS::GCPtr<Script>)> function);
-PerformTheFetchHook create_perform_the_fetch_hook(JS::Heap& heap, Function<WebIDL::ExceptionOr<void>(JS::NonnullGCPtr<Fetch::Infrastructure::Request>, IsTopLevel, Fetch::Infrastructure::FetchAlgorithms::ProcessResponseConsumeBodyFunction)> function);
+PerformTheFetchHook create_perform_the_fetch_hook(JS::Heap& heap, Function<WebIDL::ExceptionOr<void>(JS::NonnullGCPtr<Fetch::Infrastructure::Request>, TopLevelModule, Fetch::Infrastructure::FetchAlgorithms::ProcessResponseConsumeBodyFunction)> function);
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#script-fetch-options
 struct ScriptFetchOptions {
@@ -60,11 +60,11 @@ class FetchContext : public JS::GraphLoadingState::HostDefined {
 public:
     JS::Value parse_error;                                    // [[ParseError]]
     Fetch::Infrastructure::Request::Destination destination;  // [[Destination]]
-    JS::GCPtr<JS::Promise> perform_fetch;                     // [[PerformFetch]]
+    PerformTheFetchHook perform_fetch;                        // [[PerformFetch]]
     JS::NonnullGCPtr<EnvironmentSettingsObject> fetch_client; // [[FetchClient]]
 
 private:
-    FetchContext(JS::Value parse_error, Fetch::Infrastructure::Request::Destination destination, JS::GCPtr<JS::Promise> perform_fetch, EnvironmentSettingsObject& fetch_client)
+    FetchContext(JS::Value parse_error, Fetch::Infrastructure::Request::Destination destination, PerformTheFetchHook perform_fetch, EnvironmentSettingsObject& fetch_client)
         : parse_error(parse_error)
         , destination(destination)
         , perform_fetch(perform_fetch)
@@ -88,19 +88,16 @@ Optional<URL> resolve_url_like_module_specifier(ByteString const& specifier, URL
 
 WebIDL::ExceptionOr<void> fetch_classic_script(JS::NonnullGCPtr<HTMLScriptElement>, URL const&, EnvironmentSettingsObject& settings_object, ScriptFetchOptions options, CORSSettingAttribute cors_setting, String character_encoding, OnFetchScriptComplete on_complete);
 WebIDL::ExceptionOr<void> fetch_classic_worker_script(URL const&, EnvironmentSettingsObject& fetch_client, Fetch::Infrastructure::Request::Destination, EnvironmentSettingsObject& settings_object, PerformTheFetchHook, OnFetchScriptComplete);
-void fetch_internal_module_script_graph(JS::Realm&, JS::ModuleRequest const& module_request, EnvironmentSettingsObject& fetch_client_settings_object, Fetch::Infrastructure::Request::Destination, ScriptFetchOptions const&, Script& referring_script, HashTable<ModuleLocationTuple> const& visited_set, OnFetchScriptComplete on_complete);
+WebIDL::ExceptionOr<void> fetch_module_worker_script_graph(URL const&, EnvironmentSettingsObject& fetch_client, Fetch::Infrastructure::Request::Destination, EnvironmentSettingsObject& settings_object, PerformTheFetchHook, OnFetchScriptComplete);
+WebIDL::ExceptionOr<void> fetch_worklet_module_worker_script_graph(URL const&, EnvironmentSettingsObject& fetch_client, Fetch::Infrastructure::Request::Destination, EnvironmentSettingsObject& settings_object, PerformTheFetchHook, OnFetchScriptComplete);
+void fetch_internal_module_script_graph(JS::Realm&, JS::ModuleRequest const& module_request, EnvironmentSettingsObject& fetch_client_settings_object, Fetch::Infrastructure::Request::Destination, ScriptFetchOptions const&, Script& referring_script, HashTable<ModuleLocationTuple> const& visited_set, PerformTheFetchHook, OnFetchScriptComplete on_complete);
 void fetch_external_module_script_graph(JS::Realm&, URL const&, EnvironmentSettingsObject& settings_object, ScriptFetchOptions const&, OnFetchScriptComplete on_complete);
 void fetch_inline_module_script_graph(JS::Realm&, ByteString const& filename, ByteString const& source_text, URL const& base_url, EnvironmentSettingsObject& settings_object, OnFetchScriptComplete on_complete);
-void fetch_single_imported_module_script(JS::Realm&, URL const&, EnvironmentSettingsObject& fetch_client, Fetch::Infrastructure::Request::Destination, ScriptFetchOptions const&, EnvironmentSettingsObject& settings_object, Fetch::Infrastructure::Request::Referrer, JS::ModuleRequest const&, OnFetchScriptComplete on_complete);
+void fetch_single_imported_module_script(JS::Realm&, URL const&, EnvironmentSettingsObject& fetch_client, Fetch::Infrastructure::Request::Destination, ScriptFetchOptions const&, EnvironmentSettingsObject& settings_object, Fetch::Infrastructure::Request::Referrer, JS::ModuleRequest const&, PerformTheFetchHook, OnFetchScriptComplete on_complete);
 
-void fetch_descendants_of_a_module_script(JS::Realm&, JavaScriptModuleScript& module_script, EnvironmentSettingsObject& fetch_client_settings_object, Fetch::Infrastructure::Request::Destination, HashTable<ModuleLocationTuple> visited_set, OnFetchScriptComplete callback);
-void fetch_descendants_of_and_link_a_module_script(JS::Realm&, JavaScriptModuleScript&, EnvironmentSettingsObject&, Fetch::Infrastructure::Request::Destination, OnFetchScriptComplete on_complete);
+void fetch_descendants_of_a_module_script(JS::Realm&, JavaScriptModuleScript& module_script, EnvironmentSettingsObject& fetch_client_settings_object, Fetch::Infrastructure::Request::Destination, HashTable<ModuleLocationTuple> visited_set, PerformTheFetchHook, OnFetchScriptComplete callback);
+void fetch_descendants_of_and_link_a_module_script(JS::Realm&, JavaScriptModuleScript&, EnvironmentSettingsObject&, Fetch::Infrastructure::Request::Destination, PerformTheFetchHook, OnFetchScriptComplete on_complete);
 
-enum class TopLevelModule {
-    Yes,
-    No
-};
-
-void fetch_single_module_script(JS::Realm&, URL const&, EnvironmentSettingsObject& fetch_client, Fetch::Infrastructure::Request::Destination, ScriptFetchOptions const&, EnvironmentSettingsObject& settings_object, Web::Fetch::Infrastructure::Request::ReferrerType const&, Optional<JS::ModuleRequest> const&, TopLevelModule, OnFetchScriptComplete callback);
+void fetch_single_module_script(JS::Realm&, URL const&, EnvironmentSettingsObject& fetch_client, Fetch::Infrastructure::Request::Destination, ScriptFetchOptions const&, EnvironmentSettingsObject& settings_object, Web::Fetch::Infrastructure::Request::ReferrerType const&, Optional<JS::ModuleRequest> const&, TopLevelModule, PerformTheFetchHook, OnFetchScriptComplete callback);
 
 }

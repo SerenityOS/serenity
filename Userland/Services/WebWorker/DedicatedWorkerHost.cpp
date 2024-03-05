@@ -82,14 +82,14 @@ void DedicatedWorkerHost::run(JS::NonnullGCPtr<Web::Page> page, Web::HTML::Trans
                                  : Web::Fetch::Infrastructure::Request::Destination::Worker;
 
     // In both cases, let performFetch be the following perform the fetch hook given request, isTopLevel and processCustomFetchResponse:
-    auto perform_fetch_function = [inner_settings, worker_global_scope](JS::NonnullGCPtr<Web::Fetch::Infrastructure::Request> request, Web::HTML::IsTopLevel is_top_level, Web::Fetch::Infrastructure::FetchAlgorithms::ProcessResponseConsumeBodyFunction process_custom_fetch_response) -> Web::WebIDL::ExceptionOr<void> {
+    auto perform_fetch_function = [inner_settings, worker_global_scope](JS::NonnullGCPtr<Web::Fetch::Infrastructure::Request> request, Web::HTML::TopLevelModule is_top_level, Web::Fetch::Infrastructure::FetchAlgorithms::ProcessResponseConsumeBodyFunction process_custom_fetch_response) -> Web::WebIDL::ExceptionOr<void> {
         auto& realm = inner_settings->realm();
         auto& vm = realm.vm();
 
         Web::Fetch::Infrastructure::FetchAlgorithms::Input fetch_algorithms_input {};
 
         // 1. If isTopLevel is false, fetch request with processResponseConsumeBody set to processCustomFetchResponse, and abort these steps.
-        if (is_top_level == Web::HTML::IsTopLevel::No) {
+        if (is_top_level == Web::HTML::TopLevelModule::No) {
             fetch_algorithms_input.process_response_consume_body = move(process_custom_fetch_response);
             TRY(Web::Fetch::Fetching::fetch(realm, request, Web::Fetch::Infrastructure::FetchAlgorithms::create(vm, move(fetch_algorithms_input))));
             return {};
@@ -210,14 +210,20 @@ void DedicatedWorkerHost::run(JS::NonnullGCPtr<Web::Page> page, Web::HTML::Trans
     //               and with onComplete and performFetch as defined below.
     // module:   Fetch a module worker script graph given url, outside settings, destination, the value of the credentials member of options, inside settings,
     //               and with onComplete and performFetch as defined below.
-    if (m_type != "classic"sv) {
-        dbgln("Unsupported script type {} for LibWeb/Worker", m_type);
-        TODO();
-    }
-    if (auto err = Web::HTML::fetch_classic_worker_script(m_url, outside_settings, destination, inner_settings, perform_fetch, on_complete); err.is_error()) {
-        dbgln("Failed to run worker script");
-        // FIXME: Abort the worker properly
-        TODO();
+    if (m_type == "classic"sv) {
+        if (auto err = Web::HTML::fetch_classic_worker_script(m_url, outside_settings, destination, inner_settings, perform_fetch, on_complete); err.is_error()) {
+            dbgln("Failed to run worker script");
+            // FIXME: Abort the worker properly
+            TODO();
+        }
+    } else {
+        VERIFY(m_type == "module"sv);
+        // FIXME: Pass credentials
+        if (auto err = Web::HTML::fetch_module_worker_script_graph(m_url, outside_settings, destination, inner_settings, perform_fetch, on_complete); err.is_error()) {
+            dbgln("Failed to run worker script");
+            // FIXME: Abort the worker properly
+            TODO();
+        }
     }
 }
 
