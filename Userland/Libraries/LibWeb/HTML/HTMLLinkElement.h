@@ -70,7 +70,7 @@ private:
         CORSSettingAttribute crossorigin { CORSSettingAttribute::NoCORS };
         // referrer policy (default the empty string)
         //      A referrer policy
-        Optional<ReferrerPolicy::ReferrerPolicy> referrer_policy {};
+        ReferrerPolicy::ReferrerPolicy referrer_policy { ReferrerPolicy::ReferrerPolicy::EmptyString };
         // FIXME: source set (default null)
         //          Null or a source set
         // base URL

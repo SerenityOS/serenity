@@ -236,7 +236,7 @@ WebIDL::ExceptionOr<Optional<JS::NonnullGCPtr<PendingResponse>>> main_fetch(JS::
 
     // 8. If request’s referrer policy is the empty string, then set request’s referrer policy to request’s policy
     //    container’s referrer policy.
-    if (!request->referrer_policy().has_value()) {
+    if (request->referrer_policy() == ReferrerPolicy::ReferrerPolicy::EmptyString) {
         VERIFY(request->policy_container().has<HTML::PolicyContainer>());
         request->set_referrer_policy(request->policy_container().get<HTML::PolicyContainer>().referrer_policy);
     }

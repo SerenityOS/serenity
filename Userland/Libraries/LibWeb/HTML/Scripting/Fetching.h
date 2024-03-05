@@ -42,7 +42,7 @@ struct ScriptFetchOptions {
     Fetch::Infrastructure::Request::CredentialsMode credentials_mode { Fetch::Infrastructure::Request::CredentialsMode::SameOrigin };
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#concept-script-fetch-options-referrer-policy
-    Optional<ReferrerPolicy::ReferrerPolicy> referrer_policy;
+    ReferrerPolicy::ReferrerPolicy referrer_policy { ReferrerPolicy::ReferrerPolicy::EmptyString };
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#concept-script-fetch-options-render-blocking
     bool render_blocking { false };

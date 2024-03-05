@@ -559,7 +559,7 @@ after_step_7:
             request->set_initiator(Fetch::Infrastructure::Request::Initiator::ImageSet);
 
         // 21. Set request's referrer policy to the current state of the element's referrerpolicy attribute.
-        request->set_referrer_policy(ReferrerPolicy::from_string(get_attribute_value(HTML::AttributeNames::referrerpolicy)));
+        request->set_referrer_policy(ReferrerPolicy::from_string(get_attribute_value(HTML::AttributeNames::referrerpolicy)).value_or(ReferrerPolicy::ReferrerPolicy::EmptyString));
 
         // FIXME: 22. Set request's priority to the current state of the element's fetchpriority attribute.
 
@@ -774,7 +774,7 @@ void HTMLImageElement::react_to_changes_in_the_environment()
         request->set_initiator(Fetch::Infrastructure::Request::Initiator::ImageSet);
 
         // 3. Set request's referrer policy to the current state of the element's referrerpolicy attribute.
-        request->set_referrer_policy(ReferrerPolicy::from_string(get_attribute_value(HTML::AttributeNames::referrerpolicy)));
+        request->set_referrer_policy(ReferrerPolicy::from_string(get_attribute_value(HTML::AttributeNames::referrerpolicy)).value_or(ReferrerPolicy::ReferrerPolicy::EmptyString));
 
         // FIXME: 4. Set request's priority to the current state of the element's fetchpriority attribute.
 

@@ -82,8 +82,8 @@ Optional<URL> determine_requests_referrer(Fetch::Infrastructure::Request const& 
 
     // 8. Execute the statements corresponding to the value of policy:
     // Note: If request’s referrer policy is the empty string, Fetch will not call into this algorithm.
-    VERIFY(policy.has_value());
-    switch (*policy) {
+    VERIFY(policy != ReferrerPolicy::EmptyString);
+    switch (policy) {
     // "no-referrer"
     case ReferrerPolicy::NoReferrer:
         // Return no referrer

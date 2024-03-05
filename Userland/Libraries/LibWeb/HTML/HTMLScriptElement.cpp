@@ -54,10 +54,7 @@ void HTMLScriptElement::attribute_changed(FlyString const& name, Optional<String
     if (name == HTML::AttributeNames::crossorigin) {
         m_crossorigin = cors_setting_attribute_from_keyword(value);
     } else if (name == HTML::AttributeNames::referrerpolicy) {
-        if (!value.has_value())
-            m_referrer_policy.clear();
-        else
-            m_referrer_policy = ReferrerPolicy::from_string(*value);
+        m_referrer_policy = ReferrerPolicy::from_string(value.value_or(""_string)).value_or(ReferrerPolicy::ReferrerPolicy::EmptyString);
     }
 }
 
