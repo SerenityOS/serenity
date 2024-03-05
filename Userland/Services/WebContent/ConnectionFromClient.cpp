@@ -227,185 +227,84 @@ void ConnectionFromClient::process_next_input_event()
         return;
 
     auto event = m_input_event_queue.dequeue();
-    event.visit(
-        [&](QueuedMouseEvent const& event) {
-            auto maybe_page = page(event.page_id);
-            if (!maybe_page.has_value()) {
-                dbgln("ConnectionFromClient::process_next_input_event: No page with ID {}", event.page_id);
-                return;
-            }
-            auto& page = maybe_page.release_value();
 
+    auto maybe_page = page(event.page_id);
+    if (!maybe_page.has_value()) {
+        dbgln("ConnectionFromClient::process_next_input_event: No page with ID {}", event.page_id);
+        return;
+    }
+    auto& page = maybe_page->page();
+
+    auto handled = event.event.visit(
+        [&](Web::KeyEvent const& event) {
             switch (event.type) {
-            case QueuedMouseEvent::Type::MouseDown:
-                report_finished_handling_input_event(event.page_id, page.page().handle_mousedown(event.position, event.screen_position, event.button, event.buttons, event.modifiers));
-                break;
-            case QueuedMouseEvent::Type::MouseUp:
-                report_finished_handling_input_event(event.page_id, page.page().handle_mouseup(event.position, event.screen_position, event.button, event.buttons, event.modifiers));
-                break;
-            case QueuedMouseEvent::Type::MouseMove:
-                // NOTE: We have to notify the client about coalesced MouseMoves,
-                //       so we do that by saying none of them were handled by the web page.
-                for (size_t i = 0; i < event.coalesced_event_count; ++i) {
-                    report_finished_handling_input_event(event.page_id, false);
-                }
-                report_finished_handling_input_event(event.page_id, page.page().handle_mousemove(event.position, event.screen_position, event.buttons, event.modifiers));
-                break;
-            case QueuedMouseEvent::Type::DoubleClick:
-                report_finished_handling_input_event(event.page_id, page.page().handle_doubleclick(event.position, event.screen_position, event.button, event.buttons, event.modifiers));
-                break;
-            case QueuedMouseEvent::Type::MouseWheel:
-                for (size_t i = 0; i < event.coalesced_event_count; ++i) {
-                    report_finished_handling_input_event(event.page_id, false);
-                }
-                report_finished_handling_input_event(event.page_id, page.page().handle_mousewheel(event.position, event.screen_position, event.button, event.buttons, event.modifiers, event.wheel_delta_x, event.wheel_delta_y));
-                break;
+            case Web::KeyEvent::Type::KeyDown:
+                return page.handle_keydown(event.key, event.modifiers, event.code_point);
+            case Web::KeyEvent::Type::KeyUp:
+                return page.handle_keyup(event.key, event.modifiers, event.code_point);
             }
+            VERIFY_NOT_REACHED();
         },
-        [&](QueuedKeyboardEvent const& event) {
-            auto maybe_page = page(event.page_id);
-            if (!maybe_page.has_value()) {
-                dbgln("ConnectionFromClient::process_next_input_event: No page with ID {}", event.page_id);
-                return;
-            }
-            auto& page = maybe_page.release_value();
-
+        [&](Web::MouseEvent const& event) {
             switch (event.type) {
-            case QueuedKeyboardEvent::Type::KeyDown:
-                report_finished_handling_input_event(event.page_id, page.page().handle_keydown((KeyCode)event.key, event.modifiers, event.code_point));
-                break;
-            case QueuedKeyboardEvent::Type::KeyUp:
-                report_finished_handling_input_event(event.page_id, page.page().handle_keyup((KeyCode)event.key, event.modifiers, event.code_point));
-                break;
+            case Web::MouseEvent::Type::MouseDown:
+                return page.handle_mousedown(event.position, event.screen_position, event.button, event.buttons, event.modifiers);
+            case Web::MouseEvent::Type::MouseUp:
+                return page.handle_mouseup(event.position, event.screen_position, event.button, event.buttons, event.modifiers);
+            case Web::MouseEvent::Type::MouseMove:
+                return page.handle_mousemove(event.position, event.screen_position, event.buttons, event.modifiers);
+            case Web::MouseEvent::Type::MouseWheel:
+                return page.handle_mousewheel(event.position, event.screen_position, event.button, event.buttons, event.modifiers, event.wheel_delta_x, event.wheel_delta_y);
+            case Web::MouseEvent::Type::DoubleClick:
+                return page.handle_doubleclick(event.position, event.screen_position, event.button, event.buttons, event.modifiers);
             }
+            VERIFY_NOT_REACHED();
         });
+
+    // We have to notify the client about coalesced events, so we do that by saying none of them were handled by the web page.
+    for (size_t i = 0; i < event.coalesced_event_count; ++i)
+        report_finished_handling_input_event(event.page_id, false);
+    report_finished_handling_input_event(event.page_id, handled);
 
     if (!m_input_event_queue.is_empty())
         m_input_event_queue_timer->start();
 }
 
-void ConnectionFromClient::mouse_down(u64 page_id, Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, u32 button, u32 buttons, u32 modifiers)
+void ConnectionFromClient::key_event(u64 page_id, Web::KeyEvent const& event)
 {
-    enqueue_input_event(
-        QueuedMouseEvent {
-            .type = QueuedMouseEvent::Type::MouseDown,
-            .position = position,
-            .screen_position = screen_position,
-            .button = button,
-            .buttons = buttons,
-            .modifiers = modifiers,
-            .page_id = page_id,
-        });
+    enqueue_input_event({ page_id, move(const_cast<Web::KeyEvent&>(event)), 0 });
 }
 
-void ConnectionFromClient::mouse_move(u64 page_id, Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, [[maybe_unused]] u32 button, u32 buttons, u32 modifiers)
+void ConnectionFromClient::mouse_event(u64 page_id, Web::MouseEvent const& event)
 {
-    auto event = QueuedMouseEvent {
-        .type = QueuedMouseEvent::Type::MouseMove,
-        .position = position,
-        .screen_position = screen_position,
-        .button = button,
-        .buttons = buttons,
-        .modifiers = modifiers,
-        .page_id = page_id,
+    // OPTIMIZATION: Coalesce consecutive unprocessed mouse move and wheel events.
+    auto should_coalesce = [&]() {
+        if (m_input_event_queue.is_empty())
+            return false;
+
+        if (event.type != Web::MouseEvent::Type::MouseMove && event.type != Web::MouseEvent::Type::MouseWheel)
+            return false;
+
+        if (m_input_event_queue.tail().page_id != page_id)
+            return false;
+
+        if (auto* mouse_event = m_input_event_queue.tail().event.get_pointer<Web::MouseEvent>())
+            return mouse_event->type == event.type;
+
+        return false;
     };
 
-    // OPTIMIZATION: Coalesce with previous unprocessed event iff the previous event is also a MouseMove event.
-    if (!m_input_event_queue.is_empty()
-        && m_input_event_queue.tail().has<QueuedMouseEvent>()
-        && m_input_event_queue.tail().get<QueuedMouseEvent>().type == QueuedMouseEvent::Type::MouseMove
-        && m_input_event_queue.tail().get<QueuedMouseEvent>().page_id == page_id) {
-        event.coalesced_event_count = m_input_event_queue.tail().get<QueuedMouseEvent>().coalesced_event_count + 1;
-        m_input_event_queue.tail() = event;
+    if (should_coalesce()) {
+        m_input_event_queue.tail().event = move(const_cast<Web::MouseEvent&>(event));
+        ++m_input_event_queue.tail().coalesced_event_count;
+
         return;
     }
 
-    enqueue_input_event(move(event));
+    enqueue_input_event({ page_id, move(const_cast<Web::MouseEvent&>(event)), 0 });
 }
 
-void ConnectionFromClient::mouse_up(u64 page_id, Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, u32 button, u32 buttons, u32 modifiers)
-{
-    enqueue_input_event(
-        QueuedMouseEvent {
-            .type = QueuedMouseEvent::Type::MouseUp,
-            .position = position,
-            .screen_position = screen_position,
-            .button = button,
-            .buttons = buttons,
-            .modifiers = modifiers,
-            .page_id = page_id,
-        });
-}
-
-void ConnectionFromClient::mouse_wheel(u64 page_id, Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, u32 button, u32 buttons, u32 modifiers, Web::DevicePixels wheel_delta_x, Web::DevicePixels wheel_delta_y)
-{
-    auto event = QueuedMouseEvent {
-        .type = QueuedMouseEvent::Type::MouseWheel,
-        .position = position,
-        .screen_position = screen_position,
-        .button = button,
-        .buttons = buttons,
-        .modifiers = modifiers,
-        .wheel_delta_x = wheel_delta_x,
-        .wheel_delta_y = wheel_delta_y,
-        .page_id = page_id,
-    };
-
-    // OPTIMIZATION: Coalesce with previous unprocessed event if the previous event is also a MouseWheel event.
-    if (!m_input_event_queue.is_empty()
-        && m_input_event_queue.tail().has<QueuedMouseEvent>()
-        && m_input_event_queue.tail().get<QueuedMouseEvent>().type == QueuedMouseEvent::Type::MouseWheel
-        && m_input_event_queue.tail().get<QueuedMouseEvent>().page_id == page_id) {
-        auto const& last_event = m_input_event_queue.tail().get<QueuedMouseEvent>();
-        event.coalesced_event_count = last_event.coalesced_event_count + 1;
-        event.wheel_delta_x += last_event.wheel_delta_x;
-        event.wheel_delta_y += last_event.wheel_delta_y;
-        m_input_event_queue.tail() = event;
-        return;
-    }
-
-    enqueue_input_event(move(event));
-}
-
-void ConnectionFromClient::doubleclick(u64 page_id, Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, u32 button, u32 buttons, u32 modifiers)
-{
-    enqueue_input_event(
-        QueuedMouseEvent {
-            .type = QueuedMouseEvent::Type::DoubleClick,
-            .position = position,
-            .screen_position = screen_position,
-            .button = button,
-            .buttons = buttons,
-            .modifiers = modifiers,
-            .page_id = page_id,
-        });
-}
-
-void ConnectionFromClient::key_down(u64 page_id, i32 key, u32 modifiers, u32 code_point)
-{
-    enqueue_input_event(
-        QueuedKeyboardEvent {
-            .type = QueuedKeyboardEvent::Type::KeyDown,
-            .key = key,
-            .modifiers = modifiers,
-            .code_point = code_point,
-            .page_id = page_id,
-        });
-}
-
-void ConnectionFromClient::key_up(u64 page_id, i32 key, u32 modifiers, u32 code_point)
-{
-    enqueue_input_event(
-        QueuedKeyboardEvent {
-            .type = QueuedKeyboardEvent::Type::KeyUp,
-            .key = key,
-            .modifiers = modifiers,
-            .code_point = code_point,
-            .page_id = page_id,
-        });
-}
-
-void ConnectionFromClient::enqueue_input_event(Variant<QueuedMouseEvent, QueuedKeyboardEvent> event)
+void ConnectionFromClient::enqueue_input_event(QueuedInputEvent event)
 {
     m_input_event_queue.enqueue(move(event));
     m_input_event_queue_timer->start();

@@ -16,6 +16,7 @@
 #include <LibWeb/CSS/PreferredColorScheme.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/Loader/FileRequest.h>
+#include <LibWeb/Page/InputEvent.h>
 #include <LibWeb/Platform/Timer.h>
 #include <LibWebView/Forward.h>
 #include <WebContent/Forward.h>
@@ -56,13 +57,8 @@ private:
     virtual void load_url(u64 page_id, URL const&) override;
     virtual void load_html(u64 page_id, ByteString const&) override;
     virtual void set_viewport_rect(u64 page_id, Web::DevicePixelRect const&) override;
-    virtual void mouse_down(u64 page_id, Web::DevicePixelPoint, Web::DevicePixelPoint, u32, u32, u32) override;
-    virtual void mouse_move(u64 page_id, Web::DevicePixelPoint, Web::DevicePixelPoint, u32, u32, u32) override;
-    virtual void mouse_up(u64 page_id, Web::DevicePixelPoint, Web::DevicePixelPoint, u32, u32, u32) override;
-    virtual void mouse_wheel(u64 page_id, Web::DevicePixelPoint, Web::DevicePixelPoint, u32, u32, u32, Web::DevicePixels, Web::DevicePixels) override;
-    virtual void doubleclick(u64 page_id, Web::DevicePixelPoint, Web::DevicePixelPoint, u32, u32, u32) override;
-    virtual void key_down(u64 page_id, i32, u32, u32) override;
-    virtual void key_up(u64 page_id, i32, u32, u32) override;
+    virtual void key_event(u64 page_id, Web::KeyEvent const&) override;
+    virtual void mouse_event(u64 page_id, Web::MouseEvent const&) override;
     virtual void add_backing_store(u64 page_id, i32 front_bitmap_id, Gfx::ShareableBitmap const& front_bitmap, i32 back_bitmap_id, Gfx::ShareableBitmap const& back_bitmap) override;
     virtual void ready_to_paint(u64 page_id) override;
     virtual void debug_request(u64 page_id, ByteString const&, ByteString const&) override;
@@ -136,42 +132,16 @@ private:
     HashMap<int, Web::FileRequest> m_requested_files {};
     int last_id { 0 };
 
-    struct QueuedMouseEvent {
-        enum class Type {
-            MouseMove,
-            MouseDown,
-            MouseUp,
-            MouseWheel,
-            DoubleClick,
-        };
-        Type type {};
-        Web::DevicePixelPoint position {};
-        Web::DevicePixelPoint screen_position {};
-        u32 button {};
-        u32 buttons {};
-        u32 modifiers {};
-        Web::DevicePixels wheel_delta_x {};
-        Web::DevicePixels wheel_delta_y {};
+    struct QueuedInputEvent {
+        u64 page_id { 0 };
+        Web::InputEvent event;
         size_t coalesced_event_count { 0 };
-        u64 page_id { 0 };
     };
 
-    struct QueuedKeyboardEvent {
-        enum class Type {
-            KeyDown,
-            KeyUp,
-        };
-        Type type {};
-        i32 key {};
-        u32 modifiers {};
-        u32 code_point {};
-        u64 page_id { 0 };
-    };
-
-    void enqueue_input_event(Variant<QueuedMouseEvent, QueuedKeyboardEvent>);
+    void enqueue_input_event(QueuedInputEvent);
     void process_next_input_event();
 
-    Queue<Variant<QueuedMouseEvent, QueuedKeyboardEvent>> m_input_event_queue;
+    Queue<QueuedInputEvent> m_input_event_queue;
 
     RefPtr<Web::Platform::Timer> m_input_event_queue_timer;
 };

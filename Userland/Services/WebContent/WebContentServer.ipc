@@ -7,6 +7,7 @@
 #include <LibWeb/CSS/Selector.h>
 #include <LibWeb/HTML/ColorPickerUpdateState.h>
 #include <LibWeb/HTML/SelectedFile.h>
+#include <LibWeb/Page/InputEvent.h>
 #include <LibWeb/WebDriver/ExecuteScript.h>
 #include <LibWebView/Attribute.h>
 
@@ -29,14 +30,8 @@ endpoint WebContentServer
 
     set_viewport_rect(u64 page_id, Web::DevicePixelRect rect) =|
 
-    mouse_down(u64 page_id, Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, u32 button, u32 buttons, u32 modifiers) =|
-    mouse_move(u64 page_id, Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, u32 button, u32 buttons, u32 modifiers) =|
-    mouse_up(u64 page_id, Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, u32 button, u32 buttons, u32 modifiers) =|
-    mouse_wheel(u64 page_id, Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, u32 button, u32 buttons, u32 modifiers, Web::DevicePixels wheel_delta_x, Web::DevicePixels wheel_delta_y) =|
-    doubleclick(u64 page_id, Web::DevicePixelPoint position, Web::DevicePixelPoint screen_position, u32 button, u32 buttons, u32 modifiers) =|
-
-    key_down(u64 page_id, i32 key, u32 modifiers, u32 code_point) =|
-    key_up(u64 page_id, i32 key, u32 modifiers, u32 code_point) =|
+    key_event(u64 page_id, Web::KeyEvent event) =|
+    mouse_event(u64 page_id, Web::MouseEvent event) =|
 
     debug_request(u64 page_id, ByteString request, ByteString argument) =|
     get_source(u64 page_id) =|
