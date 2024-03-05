@@ -10,6 +10,7 @@
 #include <AK/URL.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Forward.h>
+#include <LibWeb/HTML/Scripting/SerializedEnvironmentSettingsObject.h>
 #include <LibWeb/HTML/StructuredSerialize.h>
 
 namespace WebWorker {
@@ -19,7 +20,7 @@ public:
     explicit DedicatedWorkerHost(URL url, String type);
     ~DedicatedWorkerHost();
 
-    void run(JS::NonnullGCPtr<Web::Page>, Web::HTML::TransferDataHolder message_port_data);
+    void run(JS::NonnullGCPtr<Web::Page>, Web::HTML::TransferDataHolder message_port_data, Web::HTML::SerializedEnvironmentSettingsObject const&);
 
 private:
     RefPtr<Web::HTML::WorkerDebugConsoleClient> m_console;

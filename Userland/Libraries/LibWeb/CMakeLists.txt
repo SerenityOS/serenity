@@ -383,6 +383,7 @@ set(SOURCES
     HTML/PromiseRejectionEvent.cpp
     HTML/Scripting/ClassicScript.cpp
     HTML/Scripting/Environments.cpp
+    HTML/Scripting/EnvironmentSettingsSnapshot.cpp
     HTML/Scripting/ExceptionReporter.cpp
     HTML/Scripting/Fetching.cpp
     HTML/Scripting/ModuleMap.cpp

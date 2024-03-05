@@ -1,10 +1,11 @@
 #include <AK/URL.h>
 #include <LibIPC/File.h>
 #include <LibWeb/HTML/StructuredSerialize.h>
+#include <LibWeb/HTML/Scripting/SerializedEnvironmentSettingsObject.h>
 
 endpoint WebWorkerServer {
 
-    start_dedicated_worker(URL url, String type, String credentials, String name, Web::HTML::TransferDataHolder message_port) =|
+    start_dedicated_worker(URL url, String type, String credentials, String name, Web::HTML::TransferDataHolder message_port, Web::HTML::SerializedEnvironmentSettingsObject outside_settings) =|
 
     handle_file_return(i32 error, Optional<IPC::File> file, i32 request_id) =|
 }

@@ -3,6 +3,7 @@ source_set("Scripting") {
   deps = [ "//Userland/Libraries/LibWeb:all_generated" ]
   sources = [
     "ClassicScript.cpp",
+    "EnvironmentSettingsSnapshot.cpp",
     "Environments.cpp",
     "ExceptionReporter.cpp",
     "Fetching.cpp",
