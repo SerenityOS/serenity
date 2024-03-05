@@ -65,7 +65,7 @@ static Array constexpr s_plaintext_suffixes = {
 
 static Array const s_registered_mime_type = {
     MimeType { .name = "application/gzip"sv, .common_extensions = { ".gz"sv, ".gzip"sv }, .description = "GZIP compressed data"sv, .magic_bytes = Vector<u8> { 0x1F, 0x8B } },
-    MimeType { .name = "application/javascript"sv, .common_extensions = { ".js"sv }, .description = "JavaScript source"sv },
+    MimeType { .name = "application/javascript"sv, .common_extensions = { ".js"sv, ".mjs"sv }, .description = "JavaScript source"sv },
     MimeType { .name = "application/json"sv, .common_extensions = { ".json"sv }, .description = "JSON data"sv },
     MimeType { .name = "application/pdf"sv, .common_extensions = { ".pdf"sv }, .description = "PDF document"sv, .magic_bytes = Vector<u8> { 0x25, 'P', 'D', 'F', 0x2D } },
     MimeType { .name = "application/rtf"sv, .common_extensions = { ".rtf"sv }, .description = "Rich text file"sv, .magic_bytes = Vector<u8> { 0x7B, 0x5C, 0x72, 0x74, 0x66, 0x31 } },
