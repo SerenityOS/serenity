@@ -119,6 +119,10 @@ WebContentView::WebContentView(QWidget* window, WebContentOptions const& web_con
         QToolTip::hideText();
     };
 
+    on_finish_handling_key_event = [this](auto const& event) {
+        finish_handling_key_event(event);
+    };
+
     on_request_worker_agent = [this]() {
         auto worker_client = MUST(launch_web_worker_process(MUST(get_paths_for_helper_process("WebWorker"sv)), m_web_content_options.certificates));
         return worker_client->dup_sockets();
@@ -131,52 +135,52 @@ WebContentView::~WebContentView()
         m_client_state.client->unregister_view(m_client_state.page_index);
 }
 
-unsigned get_button_from_qt_event(QSinglePointEvent const& event)
+static GUI::MouseButton get_button_from_qt_event(QSinglePointEvent const& event)
 {
     if (event.button() == Qt::MouseButton::LeftButton)
-        return 1;
+        return GUI::MouseButton::Primary;
     if (event.button() == Qt::MouseButton::RightButton)
-        return 2;
+        return GUI::MouseButton::Secondary;
     if (event.button() == Qt::MouseButton::MiddleButton)
-        return 4;
+        return GUI::MouseButton::Middle;
     if (event.button() == Qt::MouseButton::BackButton)
-        return 8;
+        return GUI::MouseButton::Backward;
     if (event.buttons() == Qt::MouseButton::ForwardButton)
-        return 16;
-    return 0;
+        return GUI::MouseButton::Forward;
+    return GUI::MouseButton::None;
 }
 
-unsigned get_buttons_from_qt_event(QSinglePointEvent const& event)
+static GUI::MouseButton get_buttons_from_qt_event(QSinglePointEvent const& event)
 {
-    unsigned buttons = 0;
-    if (event.buttons() & Qt::MouseButton::LeftButton)
-        buttons |= 1;
-    if (event.buttons() & Qt::MouseButton::RightButton)
-        buttons |= 2;
-    if (event.buttons() & Qt::MouseButton::MiddleButton)
-        buttons |= 4;
-    if (event.buttons() & Qt::MouseButton::BackButton)
-        buttons |= 8;
-    if (event.buttons() & Qt::MouseButton::ForwardButton)
-        buttons |= 16;
+    auto buttons = GUI::MouseButton::None;
+    if (event.buttons().testFlag(Qt::MouseButton::LeftButton))
+        buttons |= GUI::MouseButton::Primary;
+    if (event.buttons().testFlag(Qt::MouseButton::RightButton))
+        buttons |= GUI::MouseButton::Secondary;
+    if (event.buttons().testFlag(Qt::MouseButton::MiddleButton))
+        buttons |= GUI::MouseButton::Middle;
+    if (event.buttons().testFlag(Qt::MouseButton::BackButton))
+        buttons |= GUI::MouseButton::Backward;
+    if (event.buttons().testFlag(Qt::MouseButton::ForwardButton))
+        buttons |= GUI::MouseButton::Forward;
     return buttons;
 }
 
-unsigned get_modifiers_from_qt_mouse_event(QSinglePointEvent const& event)
+static KeyModifier get_modifiers_from_qt_mouse_event(QSinglePointEvent const& event)
 {
-    unsigned modifiers = 0;
-    if (event.modifiers() & Qt::Modifier::ALT)
-        modifiers |= 1;
-    if (event.modifiers() & Qt::Modifier::CTRL)
-        modifiers |= 2;
-    if (event.modifiers() & Qt::Modifier::SHIFT)
-        modifiers |= 4;
+    auto modifiers = KeyModifier::Mod_None;
+    if (event.modifiers().testFlag(Qt::AltModifier))
+        modifiers |= KeyModifier::Mod_Alt;
+    if (event.modifiers().testFlag(Qt::ControlModifier))
+        modifiers |= KeyModifier::Mod_Ctrl;
+    if (event.modifiers().testFlag(Qt::ShiftModifier))
+        modifiers |= KeyModifier::Mod_Shift;
     return modifiers;
 }
 
-unsigned get_modifiers_from_qt_keyboard_event(QKeyEvent const& event)
+static KeyModifier get_modifiers_from_qt_keyboard_event(QKeyEvent const& event)
 {
-    auto modifiers = 0;
+    auto modifiers = KeyModifier::Mod_None;
     if (event.modifiers().testFlag(Qt::AltModifier))
         modifiers |= KeyModifier::Mod_Alt;
     if (event.modifiers().testFlag(Qt::ControlModifier))
@@ -192,7 +196,7 @@ unsigned get_modifiers_from_qt_keyboard_event(QKeyEvent const& event)
     return modifiers;
 }
 
-KeyCode get_keycode_from_qt_keyboard_event(QKeyEvent const& event)
+static KeyCode get_keycode_from_qt_keyboard_event(QKeyEvent const& event)
 {
     struct Mapping {
         constexpr Mapping(Qt::Key q, KeyCode s)
@@ -325,97 +329,47 @@ KeyCode get_keycode_from_qt_keyboard_event(QKeyEvent const& event)
     return Key_Invalid;
 }
 
+void WebContentView::keyPressEvent(QKeyEvent* event)
+{
+    enqueue_native_event(Web::KeyEvent::Type::KeyDown, *event);
+}
+
+void WebContentView::keyReleaseEvent(QKeyEvent* event)
+{
+    enqueue_native_event(Web::KeyEvent::Type::KeyUp, *event);
+}
+
 void WebContentView::mouseMoveEvent(QMouseEvent* event)
 {
-    Gfx::IntPoint position(event->position().x() * m_device_pixel_ratio, event->position().y() * m_device_pixel_ratio);
-    Gfx::IntPoint screen_position(event->globalPosition().x() * m_device_pixel_ratio, event->globalPosition().y() * m_device_pixel_ratio);
-    auto buttons = get_buttons_from_qt_event(*event);
-    auto modifiers = get_modifiers_from_qt_mouse_event(*event);
-    client().async_mouse_move(m_client_state.page_index, Web::DevicePixelPoint { to_content_position(position) }, Web::DevicePixelPoint { screen_position }, 0, buttons, modifiers);
+    enqueue_native_event(Web::MouseEvent::Type::MouseMove, *event);
 }
 
 void WebContentView::mousePressEvent(QMouseEvent* event)
 {
-    Gfx::IntPoint position(event->position().x() * m_device_pixel_ratio, event->position().y() * m_device_pixel_ratio);
-    Gfx::IntPoint screen_position(event->globalPosition().x() * m_device_pixel_ratio, event->globalPosition().y() * m_device_pixel_ratio);
-    auto button = get_button_from_qt_event(*event);
-    if (button == 0) {
-        // We could not convert Qt buttons to something that Lagom can
-        // recognize - don't even bother propagating this to the web engine
-        // as it will not handle it anyway, and it will (currently) assert
-        return;
-    }
-    auto modifiers = get_modifiers_from_qt_mouse_event(*event);
-    auto buttons = get_buttons_from_qt_event(*event);
-    client().async_mouse_down(m_client_state.page_index, Web::DevicePixelPoint { to_content_position(position) }, Web::DevicePixelPoint { screen_position }, button, buttons, modifiers);
+    enqueue_native_event(Web::MouseEvent::Type::MouseDown, *event);
 }
 
 void WebContentView::mouseReleaseEvent(QMouseEvent* event)
 {
-    Gfx::IntPoint position(event->position().x() * m_device_pixel_ratio, event->position().y() * m_device_pixel_ratio);
-    Gfx::IntPoint screen_position(event->globalPosition().x() * m_device_pixel_ratio, event->globalPosition().y() * m_device_pixel_ratio);
-    auto button = get_button_from_qt_event(*event);
+    enqueue_native_event(Web::MouseEvent::Type::MouseUp, *event);
 
-    if (event->button() & Qt::MouseButton::BackButton) {
+    if (event->button() == Qt::MouseButton::BackButton) {
         if (on_navigate_back)
             on_navigate_back();
-    } else if (event->button() & Qt::MouseButton::ForwardButton) {
+    } else if (event->button() == Qt::MouseButton::ForwardButton) {
         if (on_navigate_forward)
             on_navigate_forward();
     }
-
-    if (button == 0) {
-        // We could not convert Qt buttons to something that Lagom can
-        // recognize - don't even bother propagating this to the web engine
-        // as it will not handle it anyway, and it will (currently) assert
-        return;
-    }
-    auto modifiers = get_modifiers_from_qt_mouse_event(*event);
-    auto buttons = get_buttons_from_qt_event(*event);
-    client().async_mouse_up(m_client_state.page_index, Web::DevicePixelPoint { to_content_position(position) }, Web::DevicePixelPoint { screen_position }, button, buttons, modifiers);
 }
 
 void WebContentView::wheelEvent(QWheelEvent* event)
 {
-    if (!event->modifiers().testFlag(Qt::ControlModifier)) {
-        Gfx::IntPoint position(event->position().x() * m_device_pixel_ratio, event->position().y() * m_device_pixel_ratio);
-        Gfx::IntPoint screen_position(event->globalPosition().x() * m_device_pixel_ratio, event->globalPosition().y() * m_device_pixel_ratio);
-        auto button = get_button_from_qt_event(*event);
-        auto buttons = get_buttons_from_qt_event(*event);
-        auto modifiers = get_modifiers_from_qt_mouse_event(*event);
-
-        auto num_pixels = -event->pixelDelta();
-        if (!num_pixels.isNull()) {
-            client().async_mouse_wheel(m_client_state.page_index, Web::DevicePixelPoint { to_content_position(position) }, Web::DevicePixelPoint(screen_position), button, buttons, modifiers, num_pixels.x(), num_pixels.y());
-        } else {
-            auto num_degrees = -event->angleDelta();
-            float delta_x = -num_degrees.x() / 120;
-            float delta_y = num_degrees.y() / 120;
-            auto step_x = delta_x * QApplication::wheelScrollLines() * m_device_pixel_ratio;
-            auto step_y = delta_y * QApplication::wheelScrollLines() * m_device_pixel_ratio;
-            int scroll_step_size = verticalScrollBar()->singleStep();
-            client().async_mouse_wheel(m_client_state.page_index, Web::DevicePixelPoint { to_content_position(position) }, Web::DevicePixelPoint(screen_position), button, buttons, modifiers, step_x * scroll_step_size, step_y * scroll_step_size);
-        }
-        event->accept();
-        return;
-    }
-    event->ignore();
+    enqueue_native_event(Web::MouseEvent::Type::MouseWheel, *event);
 }
 
 void WebContentView::mouseDoubleClickEvent(QMouseEvent* event)
 {
-    Gfx::IntPoint position(event->position().x() * m_device_pixel_ratio, event->position().y() * m_device_pixel_ratio);
-    Gfx::IntPoint screen_position(event->globalPosition().x() * m_device_pixel_ratio, event->globalPosition().y() * m_device_pixel_ratio);
-    auto button = get_button_from_qt_event(*event);
-    if (button == 0) {
-        // We could not convert Qt buttons to something that Lagom can
-        // recognize - don't even bother propagating this to the web engine
-        // as it will not handle it anyway, and it will (currently) assert
-        return;
-    }
-    auto modifiers = get_modifiers_from_qt_mouse_event(*event);
-    auto buttons = get_buttons_from_qt_event(*event);
-    client().async_doubleclick(m_client_state.page_index, Web::DevicePixelPoint { to_content_position(position) }, Web::DevicePixelPoint { screen_position }, button, buttons, modifiers);
+    enqueue_native_event(Web::MouseEvent::Type::DoubleClick, *event);
 }
 
 void WebContentView::dragEnterEvent(QDragEnterEvent* event)
@@ -429,49 +383,6 @@ void WebContentView::dropEvent(QDropEvent* event)
     VERIFY(event->mimeData()->hasUrls());
     emit urls_dropped(event->mimeData()->urls());
     event->acceptProposedAction();
-}
-
-void WebContentView::keyPressEvent(QKeyEvent* event)
-{
-    switch (event->key()) {
-    case Qt::Key_Left:
-    case Qt::Key_Right:
-    case Qt::Key_Up:
-    case Qt::Key_Down:
-    case Qt::Key_PageUp:
-    case Qt::Key_PageDown:
-        QAbstractScrollArea::keyPressEvent(event);
-        break;
-    default:
-        break;
-    }
-
-    if (event->key() == Qt::Key_Backtab) {
-        // NOTE: Qt transforms Shift+Tab into a "Backtab", so we undo that transformation here.
-        client().async_key_down(m_client_state.page_index, KeyCode::Key_Tab, Mod_Shift, '\t');
-        return;
-    }
-
-    auto modifiers = get_modifiers_from_qt_keyboard_event(*event);
-    if (event->key() == Qt::Key_Enter || event->key() == Qt::Key_Return) {
-        // This ensures consistent behavior between systems that treat Enter as '\n' and '\r\n'
-        client().async_key_down(m_client_state.page_index, KeyCode::Key_Return, modifiers, '\n');
-        return;
-    }
-
-    auto text = event->text();
-    auto point = text.isEmpty() ? 0u : event->text()[0].unicode();
-    auto keycode = get_keycode_from_qt_keyboard_event(*event);
-    client().async_key_down(m_client_state.page_index, keycode, modifiers, point);
-}
-
-void WebContentView::keyReleaseEvent(QKeyEvent* event)
-{
-    auto text = event->text();
-    auto point = text.isEmpty() ? 0u : event->text()[0].unicode();
-    auto keycode = get_keycode_from_qt_keyboard_event(*event);
-    auto modifiers = get_modifiers_from_qt_keyboard_event(*event);
-    client().async_key_up(m_client_state.page_index, keycode, modifiers, point);
 }
 
 void WebContentView::focusInEvent(QFocusEvent*)
@@ -757,12 +668,110 @@ bool WebContentView::event(QEvent* event)
         return QAbstractScrollArea::event(event);
     }
 
+    if (event->type() == QEvent::ShortcutOverride) {
+        event->accept();
+        return true;
+    }
+
     return QAbstractScrollArea::event(event);
 }
 
 ErrorOr<String> WebContentView::dump_layout_tree()
 {
     return String::from_byte_string(client().dump_layout_tree(m_client_state.page_index));
+}
+
+void WebContentView::enqueue_native_event(Web::MouseEvent::Type type, QSinglePointEvent const& event)
+{
+    auto position = to_content_position({ event.position().x() * m_device_pixel_ratio, event.position().y() * m_device_pixel_ratio });
+    auto screen_position = Gfx::IntPoint { event.globalPosition().x() * m_device_pixel_ratio, event.globalPosition().y() * m_device_pixel_ratio };
+
+    auto button = get_button_from_qt_event(event);
+    auto buttons = get_buttons_from_qt_event(event);
+    auto modifiers = get_modifiers_from_qt_mouse_event(event);
+
+    if (button == 0 && (type == Web::MouseEvent::Type::MouseDown || type == Web::MouseEvent::Type::MouseUp)) {
+        // We could not convert Qt buttons to something that LibWeb can recognize - don't even bother propagating this
+        // to the web engine as it will not handle it anyway, and it will (currently) assert.
+        return;
+    }
+
+    int wheel_delta_x = 0;
+    int wheel_delta_y = 0;
+
+    if (type == Web::MouseEvent::Type::MouseWheel && !event.modifiers().testFlag(Qt::ControlModifier)) {
+        auto const& wheel_event = static_cast<QWheelEvent const&>(event);
+
+        if (auto pixel_delta = -wheel_event.pixelDelta(); !pixel_delta.isNull()) {
+            wheel_delta_x = pixel_delta.x();
+            wheel_delta_y = pixel_delta.y();
+        } else {
+            auto angle_delta = -wheel_event.angleDelta();
+            float delta_x = -static_cast<float>(angle_delta.x()) / 120.0f;
+            float delta_y = static_cast<float>(angle_delta.y()) / 120.0f;
+
+            auto step_x = delta_x * static_cast<float>(QApplication::wheelScrollLines()) * m_device_pixel_ratio;
+            auto step_y = delta_y * static_cast<float>(QApplication::wheelScrollLines()) * m_device_pixel_ratio;
+            auto scroll_step_size = static_cast<float>(verticalScrollBar()->singleStep());
+
+            wheel_delta_x = static_cast<int>(step_x * scroll_step_size);
+            wheel_delta_y = static_cast<int>(step_y * scroll_step_size);
+        }
+    }
+
+    enqueue_input_event(Web::MouseEvent { type, position.to_type<Web::DevicePixels>(), screen_position.to_type<Web::DevicePixels>(), button, buttons, modifiers, wheel_delta_x, wheel_delta_y, nullptr });
+}
+
+struct KeyData : Web::ChromeInputData {
+    explicit KeyData(QKeyEvent const& event)
+        : event(adopt_own(*event.clone()))
+    {
+    }
+
+    NonnullOwnPtr<QKeyEvent> event;
+};
+
+void WebContentView::enqueue_native_event(Web::KeyEvent::Type type, QKeyEvent const& event)
+{
+    auto keycode = get_keycode_from_qt_keyboard_event(event);
+    auto modifiers = get_modifiers_from_qt_keyboard_event(event);
+
+    auto text = event.text();
+    auto code_point = text.isEmpty() ? 0u : event.text()[0].unicode();
+
+    auto to_web_event = [&]() -> Web::KeyEvent {
+        if (event.key() == Qt::Key_Backtab) {
+            // Qt transforms Shift+Tab into a "Backtab", so we undo that transformation here.
+            return { type, KeyCode::Key_Tab, Mod_Shift, '\t', make<KeyData>(event) };
+        }
+
+        if (event.key() == Qt::Key_Enter || event.key() == Qt::Key_Return) {
+            // This ensures consistent behavior between systems that treat Enter as '\n' and '\r\n'
+            return { type, KeyCode::Key_Return, Mod_Shift, '\n', make<KeyData>(event) };
+        }
+
+        return { type, keycode, modifiers, code_point, make<KeyData>(event) };
+    };
+
+    enqueue_input_event(to_web_event());
+}
+
+void WebContentView::finish_handling_key_event(Web::KeyEvent const& key_event)
+{
+    auto& chrome_data = verify_cast<KeyData>(*key_event.chrome_data);
+    auto& event = *chrome_data.event;
+
+    switch (key_event.type) {
+    case Web::KeyEvent::Type::KeyDown:
+        QAbstractScrollArea::keyPressEvent(&event);
+        break;
+    case Web::KeyEvent::Type::KeyUp:
+        QAbstractScrollArea::keyReleaseEvent(&event);
+        break;
+    }
+
+    if (!event.isAccepted())
+        QApplication::sendEvent(parent(), &event);
 }
 
 }

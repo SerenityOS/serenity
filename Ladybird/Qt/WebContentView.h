@@ -24,8 +24,10 @@
 #include <QAbstractScrollArea>
 #include <QUrl>
 
-class QTextEdit;
+class QKeyEvent;
 class QLineEdit;
+class QSinglePointEvent;
+class QTextEdit;
 
 namespace WebView {
 class WebContentClient;
@@ -92,6 +94,10 @@ private:
 
     void update_viewport_rect();
     void update_cursor(Gfx::StandardCursor cursor);
+
+    void enqueue_native_event(Web::MouseEvent::Type, QSinglePointEvent const& event);
+    void enqueue_native_event(Web::KeyEvent::Type, QKeyEvent const& event);
+    void finish_handling_key_event(Web::KeyEvent const&);
 
     bool m_should_show_line_box_borders { false };
 
