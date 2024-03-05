@@ -13,11 +13,8 @@
 #include <LibGfx/Size.h>
 #include <LibGfx/StandardCursor.h>
 #include <LibWeb/CSS/PreferredColorScheme.h>
+#include <LibWeb/Page/InputEvent.h>
 #include <LibWebView/ViewImplementation.h>
-
-// FIXME: These should not be included outside of Serenity.
-#include <Kernel/API/KeyCode.h>
-#include <LibGUI/Event.h>
 
 namespace Ladybird {
 
@@ -41,14 +38,8 @@ public:
     void update_palette();
     void set_preferred_color_scheme(Web::CSS::PreferredColorScheme);
 
-    void mouse_down_event(Gfx::IntPoint, Gfx::IntPoint, GUI::MouseButton, KeyModifier);
-    void mouse_up_event(Gfx::IntPoint, Gfx::IntPoint, GUI::MouseButton, KeyModifier);
-    void mouse_move_event(Gfx::IntPoint, Gfx::IntPoint, GUI::MouseButton, KeyModifier);
-    void mouse_wheel_event(Gfx::IntPoint, Gfx::IntPoint, GUI::MouseButton, KeyModifier, int, int);
-    void mouse_double_click_event(Gfx::IntPoint, Gfx::IntPoint, GUI::MouseButton, KeyModifier);
-
-    void key_down_event(KeyCode, KeyModifier, u32);
-    void key_up_event(KeyCode, KeyModifier, u32);
+    void enqueue_input_event(Web::MouseEvent);
+    void enqueue_input_event(Web::KeyEvent);
 
     struct Paintable {
         Gfx::Bitmap& bitmap;

@@ -95,39 +95,16 @@ void WebViewBridge::set_preferred_color_scheme(Web::CSS::PreferredColorScheme co
     client().async_set_preferred_color_scheme(m_client_state.page_index, color_scheme);
 }
 
-void WebViewBridge::mouse_down_event(Gfx::IntPoint position, Gfx::IntPoint screen_position, GUI::MouseButton button, KeyModifier modifiers)
+void WebViewBridge::enqueue_input_event(Web::MouseEvent event)
 {
-    client().async_mouse_down(m_client_state.page_index, to_content_position(position).to_type<Web::DevicePixels>(), to_content_position(screen_position).to_type<Web::DevicePixels>(), to_underlying(button), to_underlying(button), modifiers);
+    event.position = to_content_position(event.position.to_type<int>()).to_type<Web::DevicePixels>();
+    event.screen_position = to_content_position(event.screen_position.to_type<int>()).to_type<Web::DevicePixels>();
+    ViewImplementation::enqueue_input_event(move(event));
 }
 
-void WebViewBridge::mouse_up_event(Gfx::IntPoint position, Gfx::IntPoint screen_position, GUI::MouseButton button, KeyModifier modifiers)
+void WebViewBridge::enqueue_input_event(Web::KeyEvent event)
 {
-    client().async_mouse_up(m_client_state.page_index, to_content_position(position).to_type<Web::DevicePixels>(), to_content_position(screen_position).to_type<Web::DevicePixels>(), to_underlying(button), to_underlying(button), modifiers);
-}
-
-void WebViewBridge::mouse_move_event(Gfx::IntPoint position, Gfx::IntPoint screen_position, GUI::MouseButton button, KeyModifier modifiers)
-{
-    client().async_mouse_move(m_client_state.page_index, to_content_position(position).to_type<Web::DevicePixels>(), to_content_position(screen_position).to_type<Web::DevicePixels>(), 0, to_underlying(button), modifiers);
-}
-
-void WebViewBridge::mouse_wheel_event(Gfx::IntPoint position, Gfx::IntPoint screen_position, GUI::MouseButton button, KeyModifier modifiers, int wheel_delta_x, int wheel_delta_y)
-{
-    client().async_mouse_wheel(m_client_state.page_index, to_content_position(position).to_type<Web::DevicePixels>(), to_content_position(screen_position).to_type<Web::DevicePixels>(), to_underlying(button), to_underlying(button), modifiers, wheel_delta_x, wheel_delta_y);
-}
-
-void WebViewBridge::mouse_double_click_event(Gfx::IntPoint position, Gfx::IntPoint screen_position, GUI::MouseButton button, KeyModifier modifiers)
-{
-    client().async_doubleclick(m_client_state.page_index, to_content_position(position).to_type<Web::DevicePixels>(), to_content_position(screen_position).to_type<Web::DevicePixels>(), button, to_underlying(button), modifiers);
-}
-
-void WebViewBridge::key_down_event(KeyCode key_code, KeyModifier modifiers, u32 code_point)
-{
-    client().async_key_down(m_client_state.page_index, key_code, modifiers, code_point);
-}
-
-void WebViewBridge::key_up_event(KeyCode key_code, KeyModifier modifiers, u32 code_point)
-{
-    client().async_key_up(m_client_state.page_index, key_code, modifiers, code_point);
+    ViewImplementation::enqueue_input_event(move(event));
 }
 
 Optional<WebViewBridge::Paintable> WebViewBridge::paintable()
