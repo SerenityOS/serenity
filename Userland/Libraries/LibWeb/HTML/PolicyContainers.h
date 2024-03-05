@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibIPC/Forward.h>
 #include <LibWeb/ReferrerPolicy/ReferrerPolicy.h>
 
 namespace Web::HTML {
@@ -24,4 +25,12 @@ struct PolicyContainer {
     ReferrerPolicy::ReferrerPolicy referrer_policy { ReferrerPolicy::DEFAULT_REFERRER_POLICY };
 };
 
+}
+
+namespace IPC {
+template<>
+ErrorOr<void> encode(IPC::Encoder&, Web::HTML::PolicyContainer const&);
+
+template<>
+ErrorOr<Web::HTML::PolicyContainer> decode(IPC::Decoder&);
 }

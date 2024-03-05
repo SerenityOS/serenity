@@ -9,6 +9,7 @@ source_set("Scripting") {
     "ModuleMap.cpp",
     "ModuleScript.cpp",
     "Script.cpp",
+    "SerializedEnvironmentSettingsObject.cpp",
     "TemporaryExecutionContext.cpp",
     "WindowEnvironmentSettingsObject.cpp",
     "WorkerEnvironmentSettingsObject.cpp",

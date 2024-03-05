@@ -10,6 +10,7 @@
 #include <AK/ByteString.h>
 #include <AK/URL.h>
 #include <AK/URLParser.h>
+#include <LibIPC/Forward.h>
 
 namespace Web::HTML {
 
@@ -132,3 +133,11 @@ struct Traits<Web::HTML::Origin> : public DefaultTraits<Web::HTML::Origin> {
     }
 };
 } // namespace AK
+
+namespace IPC {
+template<>
+ErrorOr<void> encode(Encoder&, Web::HTML::Origin const&);
+
+template<>
+ErrorOr<Web::HTML::Origin> decode(Decoder&);
+}
