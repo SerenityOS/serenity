@@ -12,6 +12,7 @@
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/Scripting/ModuleMap.h>
+#include <LibWeb/HTML/Scripting/SerializedEnvironmentSettingsObject.h>
 
 namespace Web::HTML {
 
@@ -38,11 +39,6 @@ struct Environment {
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#concept-environment-execution-ready-flag
     bool execution_ready { false };
-};
-
-enum class CanUseCrossOriginIsolatedAPIs {
-    No,
-    Yes,
 };
 
 enum class RunScriptDecision {
@@ -114,6 +110,8 @@ struct EnvironmentSettingsObject
     bool module_type_allowed(StringView module_type) const;
 
     void disallow_further_import_maps();
+
+    SerializedEnvironmentSettingsObject serialize();
 
 protected:
     explicit EnvironmentSettingsObject(NonnullOwnPtr<JS::ExecutionContext>);

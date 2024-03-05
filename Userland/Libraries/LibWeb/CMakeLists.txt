@@ -366,7 +366,9 @@ set(SOURCES
     HTML/NavigatorBeacon.cpp
     HTML/NavigatorID.cpp
     HTML/Numbers.cpp
+    HTML/Origin.cpp
     HTML/PageTransitionEvent.cpp
+    HTML/PolicyContainers.cpp
     HTML/Parser/Entities.cpp
     HTML/Parser/HTMLEncodingDetection.cpp
     HTML/Parser/HTMLParser.cpp
@@ -389,6 +391,7 @@ set(SOURCES
     HTML/Scripting/TemporaryExecutionContext.cpp
     HTML/Scripting/WindowEnvironmentSettingsObject.cpp
     HTML/Scripting/WorkerEnvironmentSettingsObject.cpp
+    HTML/Scripting/SerializedEnvironmentSettingsObject.cpp
     HTML/SelectedFile.cpp
     HTML/SelectItem.cpp
     HTML/SessionHistoryEntry.cpp
