@@ -51,17 +51,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::EventLoop event_loop;
 
-    [[maybe_unused]] auto gemini = make<RequestServer::GeminiProtocol>();
-    [[maybe_unused]] auto http = make<RequestServer::HttpProtocol>();
-    [[maybe_unused]] auto https = make<RequestServer::HttpsProtocol>();
+    RequestServer::GeminiProtocol::install();
+    RequestServer::HttpProtocol::install();
+    RequestServer::HttpsProtocol::install();
 
     auto client = TRY(IPC::take_over_accepted_client_from_system_server<RequestServer::ConnectionFromClient>());
     client->set_fd_passing_socket(TRY(Core::LocalSocket::adopt_fd(fd_passing_socket)));
 
-    auto result = event_loop.exec();
-
-    // FIXME: We exit instead of returning, so that protocol destructors don't get called.
-    //        The Protocol base class should probably do proper de-registration instead of
-    //        just VERIFY_NOT_REACHED().
-    exit(result);
+    return event_loop.exec();
 }

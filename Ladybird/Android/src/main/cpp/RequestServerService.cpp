@@ -37,10 +37,9 @@ ErrorOr<int> service_main(int ipc_socket, int fd_passing_socket)
 
     Core::EventLoop event_loop;
 
-    // FIXME: Don't leak these :V
-    [[maybe_unused]] auto* gemini = new RequestServer::GeminiProtocol;
-    [[maybe_unused]] auto* http = new RequestServer::HttpProtocol;
-    [[maybe_unused]] auto* https = new RequestServer::HttpsProtocol;
+    RequestServer::GeminiProtocol::install();
+    RequestServer::HttpProtocol::install();
+    RequestServer::HttpsProtocol::install();
 
     auto socket = TRY(Core::LocalSocket::adopt_fd(ipc_socket));
     auto client = TRY(RequestServer::ConnectionFromClient::try_create(move(socket)));

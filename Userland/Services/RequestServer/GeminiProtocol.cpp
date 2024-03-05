@@ -38,4 +38,9 @@ OwnPtr<Request> GeminiProtocol::start_request(i32 request_id, ConnectionFromClie
     return protocol_request;
 }
 
+void GeminiProtocol::install()
+{
+    Protocol::install(adopt_own(*new GeminiProtocol()));
+}
+
 }

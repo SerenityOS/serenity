@@ -5,6 +5,7 @@
  */
 
 #include <AK/HashMap.h>
+#include <AK/NonnullOwnPtr.h>
 #include <RequestServer/Protocol.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -13,26 +14,20 @@
 
 namespace RequestServer {
 
-static HashMap<ByteString, Protocol*>& all_protocols()
+static HashMap<ByteString, NonnullOwnPtr<Protocol>>& all_protocols()
 {
-    static HashMap<ByteString, Protocol*> map;
+    static HashMap<ByteString, NonnullOwnPtr<Protocol>> map;
     return map;
 }
 
 Protocol* Protocol::find_by_name(ByteString const& name)
 {
-    return all_protocols().get(name).value_or(nullptr);
+    return all_protocols().get(name).map([](auto& p) -> Protocol* { return p; }).value_or(nullptr);
 }
 
 Protocol::Protocol(ByteString const& name)
+    : m_name(name)
 {
-    all_protocols().set(name, this);
-}
-
-Protocol::~Protocol()
-{
-    // FIXME: Do proper de-registration.
-    VERIFY_NOT_REACHED();
 }
 
 ErrorOr<Protocol::Pipe> Protocol::get_pipe_for_request()
@@ -45,6 +40,12 @@ ErrorOr<Protocol::Pipe> Protocol::get_pipe_for_request()
     }
     fcntl(fd_pair[1], F_SETFL, fcntl(fd_pair[1], F_GETFL) | O_NONBLOCK);
     return Pipe { fd_pair[0], fd_pair[1] };
+}
+
+void Protocol::install(NonnullOwnPtr<Protocol> protocol)
+{
+    auto name = protocol->name();
+    all_protocols().set(move(name), move(protocol));
 }
 
 }

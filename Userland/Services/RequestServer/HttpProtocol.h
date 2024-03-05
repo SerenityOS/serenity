@@ -24,8 +24,12 @@ public:
     using JobType = HTTP::Job;
     using RequestType = HttpRequest;
 
-    HttpProtocol();
     ~HttpProtocol() override = default;
+
+    static void install();
+
+private:
+    HttpProtocol();
 
     virtual OwnPtr<Request> start_request(i32, ConnectionFromClient&, ByteString const& method, const URL&, HashMap<ByteString, ByteString> const& headers, ReadonlyBytes body, Core::ProxyData proxy_data = {}) override;
 };
