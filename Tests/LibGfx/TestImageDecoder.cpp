@@ -71,6 +71,16 @@ TEST_CASE(test_bmp_top_down)
     TRY_OR_FAIL(expect_single_frame(*plugin_decoder));
 }
 
+TEST_CASE(test_bmp_1bpp)
+{
+    auto file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("bmp/bitmap.bmp"sv)));
+    EXPECT(Gfx::BMPImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = TRY_OR_FAIL(Gfx::BMPImageDecoderPlugin::create(file->bytes()));
+
+    auto frame = TRY_OR_FAIL(expect_single_frame_of_size(*plugin_decoder, { 399, 400 }));
+    EXPECT_EQ(frame.image->begin()[0], 0xff'ff'ff'ff);
+}
+
 TEST_CASE(test_ico_malformed_frame)
 {
     Array test_inputs = {
