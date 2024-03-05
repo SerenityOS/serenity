@@ -14,7 +14,6 @@ extern "C" {
 
 struct __attribute__((packed)) __mcontext {
     uint64_t x[31];
-    uint64_t sp;
     uint64_t pc;
 };
 
