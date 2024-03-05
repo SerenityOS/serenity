@@ -67,6 +67,11 @@ struct HideCursor {
 @property (nonatomic, strong) NSTextField* status_label;
 @property (nonatomic, strong) NSAlert* dialog;
 
+// NSEvent does not provide a way to mark whether it has been handled, nor can we attach user data to the event. So
+// when we dispatch the event for a second time after WebContent has had a chance to handle it, we must track that
+// event ourselves to prevent indefinitely repeating the event.
+@property (nonatomic, strong) NSEvent* event_being_redispatched;
+
 @end
 
 @implementation LadybirdWebView
@@ -282,6 +287,14 @@ static void copy_data_to_clipboard(StringView data, NSPasteboardType pasteboard_
 
     m_web_view_bridge->on_favicon_change = [self](auto const& bitmap) {
         [self.observer onFaviconChange:bitmap];
+    };
+
+    m_web_view_bridge->on_finish_handling_key_event = [self](auto const& key_event) {
+        NSEvent* event = Ladybird::key_event_to_ns_event(key_event);
+
+        self.event_being_redispatched = event;
+        [NSApp sendEvent:event];
+        self.event_being_redispatched = nil;
     };
 
     m_web_view_bridge->on_scroll = [self](auto position) {
@@ -1238,82 +1251,90 @@ static void copy_data_to_clipboard(StringView data, NSPasteboardType pasteboard_
 
 - (void)mouseMoved:(NSEvent*)event
 {
-    auto [position, screen_position, button, modifiers] = Ladybird::ns_event_to_mouse_event(event, self, GUI::MouseButton::None);
-    m_web_view_bridge->mouse_move_event(position, screen_position, button, modifiers);
+    auto mouse_event = Ladybird::ns_event_to_mouse_event(Web::MouseEvent::Type::MouseMove, event, self, [self scrollView], GUI::MouseButton::None);
+    m_web_view_bridge->enqueue_input_event(move(mouse_event));
 }
 
 - (void)scrollWheel:(NSEvent*)event
 {
-    auto [position, screen_position, button, modifiers] = Ladybird::ns_event_to_mouse_event(event, self, GUI::MouseButton::Middle);
-    CGFloat delta_x = -[event scrollingDeltaX];
-    CGFloat delta_y = -[event scrollingDeltaY];
-    if (![event hasPreciseScrollingDeltas]) {
-        delta_x *= [self scrollView].horizontalLineScroll;
-        delta_y *= [self scrollView].verticalLineScroll;
-    }
-    m_web_view_bridge->mouse_wheel_event(position, screen_position, button, modifiers, delta_x, delta_y);
+    auto mouse_event = Ladybird::ns_event_to_mouse_event(Web::MouseEvent::Type::MouseWheel, event, self, [self scrollView], GUI::MouseButton::Middle);
+    m_web_view_bridge->enqueue_input_event(move(mouse_event));
 }
 
 - (void)mouseDown:(NSEvent*)event
 {
     [[self window] makeFirstResponder:self];
 
-    auto [position, screen_position, button, modifiers] = Ladybird::ns_event_to_mouse_event(event, self, GUI::MouseButton::Primary);
-
-    if (event.clickCount % 2 == 0) {
-        m_web_view_bridge->mouse_double_click_event(position, screen_position, button, modifiers);
-    } else {
-        m_web_view_bridge->mouse_down_event(position, screen_position, button, modifiers);
-    }
+    auto mouse_event = Ladybird::ns_event_to_mouse_event(Web::MouseEvent::Type::MouseDown, event, self, [self scrollView], GUI::MouseButton::Primary);
+    m_web_view_bridge->enqueue_input_event(move(mouse_event));
 }
 
 - (void)mouseUp:(NSEvent*)event
 {
-    auto [position, screen_position, button, modifiers] = Ladybird::ns_event_to_mouse_event(event, self, GUI::MouseButton::Primary);
-    m_web_view_bridge->mouse_up_event(position, screen_position, button, modifiers);
+    auto mouse_event = Ladybird::ns_event_to_mouse_event(Web::MouseEvent::Type::MouseUp, event, self, [self scrollView], GUI::MouseButton::Primary);
+    m_web_view_bridge->enqueue_input_event(move(mouse_event));
 }
 
 - (void)mouseDragged:(NSEvent*)event
 {
-    auto [position, screen_position, button, modifiers] = Ladybird::ns_event_to_mouse_event(event, self, GUI::MouseButton::Primary);
-    m_web_view_bridge->mouse_move_event(position, screen_position, button, modifiers);
+    auto mouse_event = Ladybird::ns_event_to_mouse_event(Web::MouseEvent::Type::MouseMove, event, self, [self scrollView], GUI::MouseButton::Primary);
+    m_web_view_bridge->enqueue_input_event(move(mouse_event));
 }
 
 - (void)rightMouseDown:(NSEvent*)event
 {
     [[self window] makeFirstResponder:self];
 
-    auto [position, screen_position, button, modifiers] = Ladybird::ns_event_to_mouse_event(event, self, GUI::MouseButton::Secondary);
-
-    if (event.clickCount % 2 == 0) {
-        m_web_view_bridge->mouse_double_click_event(position, screen_position, button, modifiers);
-    } else {
-        m_web_view_bridge->mouse_down_event(position, screen_position, button, modifiers);
-    }
+    auto mouse_event = Ladybird::ns_event_to_mouse_event(Web::MouseEvent::Type::MouseDown, event, self, [self scrollView], GUI::MouseButton::Primary);
+    m_web_view_bridge->enqueue_input_event(move(mouse_event));
 }
 
 - (void)rightMouseUp:(NSEvent*)event
 {
-    auto [position, screen_position, button, modifiers] = Ladybird::ns_event_to_mouse_event(event, self, GUI::MouseButton::Secondary);
-    m_web_view_bridge->mouse_up_event(position, screen_position, button, modifiers);
+    auto mouse_event = Ladybird::ns_event_to_mouse_event(Web::MouseEvent::Type::MouseUp, event, self, [self scrollView], GUI::MouseButton::Secondary);
+    m_web_view_bridge->enqueue_input_event(move(mouse_event));
 }
 
 - (void)rightMouseDragged:(NSEvent*)event
 {
-    auto [position, screen_position, button, modifiers] = Ladybird::ns_event_to_mouse_event(event, self, GUI::MouseButton::Secondary);
-    m_web_view_bridge->mouse_move_event(position, screen_position, button, modifiers);
+    auto mouse_event = Ladybird::ns_event_to_mouse_event(Web::MouseEvent::Type::MouseMove, event, self, [self scrollView], GUI::MouseButton::Secondary);
+    m_web_view_bridge->enqueue_input_event(move(mouse_event));
+}
+
+- (BOOL)performKeyEquivalent:(NSEvent*)event
+{
+    if ([event window] != [self window]) {
+        return NO;
+    }
+    if ([[self window] firstResponder] != self) {
+        return NO;
+    }
+    if (self.event_being_redispatched == event) {
+        return NO;
+    }
+
+    [self keyDown:event];
+    return YES;
 }
 
 - (void)keyDown:(NSEvent*)event
 {
-    auto [key_code, modifiers, code_point] = Ladybird::ns_event_to_key_event(event);
-    m_web_view_bridge->key_down_event(key_code, modifiers, code_point);
+    if (self.event_being_redispatched == event) {
+        return;
+    }
+
+    auto key_event = Ladybird::ns_event_to_key_event(Web::KeyEvent::Type::KeyDown, event);
+    m_web_view_bridge->enqueue_input_event(move(key_event));
 }
 
 - (void)keyUp:(NSEvent*)event
 {
-    auto [key_code, modifiers, code_point] = Ladybird::ns_event_to_key_event(event);
-    m_web_view_bridge->key_up_event(key_code, modifiers, code_point);
+    if (self.event_being_redispatched == event) {
+        return;
+    }
+
+    auto key_event = Ladybird::ns_event_to_key_event(Web::KeyEvent::Type::KeyUp, event);
+    m_web_view_bridge->enqueue_input_event(move(key_event));
 }
 
 @end

@@ -36,13 +36,37 @@ static KeyModifier ns_modifiers_to_key_modifiers(NSEventModifierFlags modifier_f
     return static_cast<KeyModifier>(modifiers);
 }
 
-MouseEvent ns_event_to_mouse_event(NSEvent* event, NSView* view, GUI::MouseButton button)
+Web::MouseEvent ns_event_to_mouse_event(Web::MouseEvent::Type type, NSEvent* event, NSView* view, NSScrollView* scroll_view, GUI::MouseButton button)
 {
     auto position = [view convertPoint:event.locationInWindow fromView:nil];
+    auto device_position = ns_point_to_gfx_point(position).to_type<Web::DevicePixels>();
+
     auto screen_position = [NSEvent mouseLocation];
+    auto device_screen_position = ns_point_to_gfx_point(screen_position).to_type<Web::DevicePixels>();
+
     auto modifiers = ns_modifiers_to_key_modifiers(event.modifierFlags, button);
 
-    return { ns_point_to_gfx_point(position), ns_point_to_gfx_point(screen_position), button, modifiers };
+    int wheel_delta_x = 0;
+    int wheel_delta_y = 0;
+
+    if (type == Web::MouseEvent::Type::MouseDown) {
+        if (event.clickCount % 2 == 0) {
+            type = Web::MouseEvent::Type::DoubleClick;
+        }
+    } else if (type == Web::MouseEvent::Type::MouseWheel) {
+        CGFloat delta_x = -[event scrollingDeltaX];
+        CGFloat delta_y = -[event scrollingDeltaY];
+
+        if (![event hasPreciseScrollingDeltas]) {
+            delta_x *= scroll_view.horizontalLineScroll;
+            delta_y *= scroll_view.verticalLineScroll;
+        }
+
+        wheel_delta_x = static_cast<int>(delta_x);
+        wheel_delta_y = static_cast<int>(delta_y);
+    }
+
+    return { type, device_position, device_screen_position, button, button, modifiers, wheel_delta_x, wheel_delta_y, nullptr };
 }
 
 NSEvent* create_context_menu_mouse_event(NSView* view, Gfx::IntPoint position)
@@ -179,7 +203,33 @@ static KeyCode ns_key_code_to_key_code(unsigned short key_code, KeyModifier& mod
     return KeyCode::Key_Invalid;
 }
 
-KeyEvent ns_event_to_key_event(NSEvent* event)
+class KeyData : public Web::ChromeInputData {
+public:
+    explicit KeyData(NSEvent* event)
+        : m_event(CFBridgingRetain(event))
+    {
+    }
+
+    virtual ~KeyData() override
+    {
+        if (m_event != nullptr) {
+            CFBridgingRelease(m_event);
+        }
+    }
+
+    NSEvent* take_event()
+    {
+        VERIFY(m_event != nullptr);
+
+        CFTypeRef event = exchange(m_event, nullptr);
+        return CFBridgingRelease(event);
+    }
+
+private:
+    CFTypeRef m_event { nullptr };
+};
+
+Web::KeyEvent ns_event_to_key_event(Web::KeyEvent::Type type, NSEvent* event)
 {
     auto modifiers = ns_modifiers_to_key_modifiers(event.modifierFlags);
     auto key_code = ns_key_code_to_key_code(event.keyCode, modifiers);
@@ -190,7 +240,13 @@ KeyEvent ns_event_to_key_event(NSEvent* event)
     // FIXME: WebContent should really support multi-code point key events.
     auto code_point = utf8_view.is_empty() ? 0u : *utf8_view.begin();
 
-    return { key_code, modifiers, code_point };
+    return { type, key_code, modifiers, code_point, make<KeyData>(event) };
+}
+
+NSEvent* key_event_to_ns_event(Web::KeyEvent const& event)
+{
+    auto& chrome_data = verify_cast<KeyData>(*event.chrome_data);
+    return chrome_data.take_event();
 }
 
 }
