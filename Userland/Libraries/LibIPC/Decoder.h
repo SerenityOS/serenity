@@ -108,6 +108,18 @@ ErrorOr<File> decode(Decoder&);
 template<>
 ErrorOr<Empty> decode(Decoder&);
 
+template<Concepts::Array T>
+ErrorOr<T> decode(Decoder& decoder)
+{
+    T array {};
+    auto size = TRY(decoder.decode_size());
+    if (size != array.size())
+        return Error::from_string_literal("Array size mismatch");
+    for (size_t i = 0; i < array.size(); ++i)
+        array[i] = TRY(decoder.decode<typename T::ValueType>());
+    return array;
+}
+
 template<Concepts::Vector T>
 ErrorOr<T> decode(Decoder& decoder)
 {

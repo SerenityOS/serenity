@@ -108,6 +108,17 @@ ErrorOr<void> encode(Encoder&, File const&);
 template<>
 ErrorOr<void> encode(Encoder&, Empty const&);
 
+template<typename T, size_t N>
+ErrorOr<void> encode(Encoder& encoder, Array<T, N> const& array)
+{
+    TRY(encoder.encode_size(array.size()));
+
+    for (auto const& value : array)
+        TRY(encoder.encode(value));
+
+    return {};
+}
+
 template<Concepts::Vector T>
 ErrorOr<void> encode(Encoder& encoder, T const& vector)
 {
