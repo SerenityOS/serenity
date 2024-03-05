@@ -7,6 +7,7 @@ source_set("Page") {
   sources = [
     "EditEventHandler.cpp",
     "EventHandler.cpp",
+    "InputEvent.cpp",
     "Page.cpp",
   ]
 }

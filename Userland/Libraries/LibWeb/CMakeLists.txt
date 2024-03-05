@@ -492,6 +492,7 @@ set(SOURCES
     NavigationTiming/PerformanceTiming.cpp
     Page/EditEventHandler.cpp
     Page/EventHandler.cpp
+    Page/InputEvent.cpp
     Page/Page.cpp
     Painting/AudioPaintable.cpp
     Painting/BackgroundPainting.cpp

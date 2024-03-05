@@ -9,6 +9,7 @@
 #include <AK/OwnPtr.h>
 #include <AK/Variant.h>
 #include <LibGfx/Point.h>
+#include <LibIPC/Forward.h>
 #include <LibWeb/PixelUnits.h>
 
 // FIXME: These should not be included outside of Serenity. This FIXME appears in several locations across the Ladybird
@@ -29,6 +30,8 @@ public:
         KeyUp,
     };
 
+    KeyEvent clone_without_chrome_data() const;
+
     Type type;
     KeyCode key { KeyCode::Key_Invalid };
     KeyModifier modifiers { KeyModifier::Mod_None };
@@ -47,6 +50,8 @@ public:
         DoubleClick,
     };
 
+    MouseEvent clone_without_chrome_data() const;
+
     Type type;
     Web::DevicePixelPoint position;
     Web::DevicePixelPoint screen_position;
@@ -60,5 +65,21 @@ public:
 };
 
 using InputEvent = Variant<KeyEvent, MouseEvent>;
+
+}
+
+namespace IPC {
+
+template<>
+ErrorOr<void> encode(Encoder&, Web::KeyEvent const&);
+
+template<>
+ErrorOr<Web::KeyEvent> decode(Decoder&);
+
+template<>
+ErrorOr<void> encode(Encoder&, Web::MouseEvent const&);
+
+template<>
+ErrorOr<Web::MouseEvent> decode(Decoder&);
 
 }

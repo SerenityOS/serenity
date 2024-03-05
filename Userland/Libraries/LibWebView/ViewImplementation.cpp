@@ -119,36 +119,12 @@ void ViewImplementation::enqueue_input_event(Web::InputEvent event)
     // process the next one.
     m_pending_input_events.enqueue(move(event));
 
-    // FIXME: Replace these IPCs with a singular "async_input_event".
     m_pending_input_events.tail().visit(
         [this](Web::KeyEvent const& event) {
-            switch (event.type) {
-            case Web::KeyEvent::Type::KeyDown:
-                client().async_key_down(m_client_state.page_index, event.key, event.modifiers, event.code_point);
-                break;
-            case Web::KeyEvent::Type::KeyUp:
-                client().async_key_up(m_client_state.page_index, event.key, event.modifiers, event.code_point);
-                break;
-            }
+            client().async_key_event(m_client_state.page_index, event.clone_without_chrome_data());
         },
         [this](Web::MouseEvent const& event) {
-            switch (event.type) {
-            case Web::MouseEvent::Type::MouseDown:
-                client().async_mouse_down(m_client_state.page_index, event.position, event.screen_position, event.button, event.buttons, event.modifiers);
-                break;
-            case Web::MouseEvent::Type::MouseUp:
-                client().async_mouse_up(m_client_state.page_index, event.position, event.screen_position, event.button, event.buttons, event.modifiers);
-                break;
-            case Web::MouseEvent::Type::MouseMove:
-                client().async_mouse_move(m_client_state.page_index, event.position, event.screen_position, event.button, event.buttons, event.modifiers);
-                break;
-            case Web::MouseEvent::Type::MouseWheel:
-                client().async_mouse_wheel(m_client_state.page_index, event.position, event.screen_position, event.button, event.buttons, event.modifiers, event.wheel_delta_x, event.wheel_delta_y);
-                break;
-            case Web::MouseEvent::Type::DoubleClick:
-                client().async_doubleclick(m_client_state.page_index, event.position, event.screen_position, event.button, event.buttons, event.modifiers);
-                break;
-            }
+            client().async_mouse_event(m_client_state.page_index, event.clone_without_chrome_data());
         });
 }
 
