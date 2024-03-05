@@ -71,4 +71,8 @@ Lclear_bss_done:
   li t5, 0
   li t6, 0
 
+  // The trap handler expects sscratch to be zero if we are in supervisor mode.
+  // sscratch contains the kernel stack pointer if we are in user mode.
+  csrw sscratch, zero
+
   tail pre_init

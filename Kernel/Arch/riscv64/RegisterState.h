@@ -18,7 +18,7 @@ VALIDATE_IS_RISCV64()
 
 namespace Kernel {
 
-struct RegisterState {
+struct alignas(16) RegisterState {
     u64 x[31];
 
     RISCV64::CSR::SSTATUS sstatus;
@@ -26,10 +26,10 @@ struct RegisterState {
     RISCV64::CSR::SCAUSE scause;
     u64 stval;
 
-    u64 user_sp;
-
-    FlatPtr userspace_sp() const { return user_sp; }
-    void set_userspace_sp(FlatPtr value) { user_sp = value; }
+    // x86_64 uses its additional RegisterState member "userspace_rsp" here, which is also invalid if no privilege mode change happened.
+    // On RISC-V, we only have one sp member, and regardless of the previous privilege mode, we always use this member here.
+    FlatPtr userspace_sp() const { return x[1]; }
+    void set_userspace_sp(FlatPtr value) { x[1] = value; }
 
     FlatPtr ip() const { return sepc; }
     void set_ip(FlatPtr value) { sepc = value; }
@@ -68,7 +68,6 @@ inline void copy_kernel_registers_into_ptrace_registers(PtraceRegisters& ptrace_
     for (auto i = 0; i < 31; i++)
         ptrace_regs.x[i] = kernel_regs.x[i];
 
-    ptrace_regs.sp = kernel_regs.userspace_sp();
     ptrace_regs.pc = kernel_regs.ip();
 }
 
@@ -77,7 +76,6 @@ inline void copy_ptrace_registers_into_kernel_registers(RegisterState& kernel_re
     for (auto i = 0; i < 31; i++)
         kernel_regs.x[i] = ptrace_regs.x[i];
 
-    kernel_regs.set_userspace_sp(ptrace_regs.sp);
     kernel_regs.set_ip(ptrace_regs.pc);
 }
 
