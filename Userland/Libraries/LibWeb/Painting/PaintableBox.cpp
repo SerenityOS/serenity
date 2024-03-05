@@ -861,9 +861,6 @@ TraversalDecision PaintableBox::hit_test(CSSPixelPoint position, HitTestType typ
         return stacking_context()->hit_test(position, type, callback);
     }
 
-    if (!absolute_border_box_rect().contains(position_adjusted_by_scroll_offset.x(), position_adjusted_by_scroll_offset.y()))
-        return TraversalDecision::Continue;
-
     for (auto const* child = last_child(); child; child = child->previous_sibling()) {
         auto z_index = child->computed_values().z_index();
         if (child->layout_node().is_positioned() && z_index.value_or(0) == 0)
@@ -871,6 +868,9 @@ TraversalDecision PaintableBox::hit_test(CSSPixelPoint position, HitTestType typ
         if (child->hit_test(position, type, callback) == TraversalDecision::Break)
             return TraversalDecision::Break;
     }
+
+    if (!absolute_border_box_rect().contains(position_adjusted_by_scroll_offset.x(), position_adjusted_by_scroll_offset.y()))
+        return TraversalDecision::Continue;
 
     if (!visible_for_hit_testing())
         return TraversalDecision::Continue;
