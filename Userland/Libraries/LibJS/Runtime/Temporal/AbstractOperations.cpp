@@ -1580,20 +1580,20 @@ ThrowCompletionOr<DurationRecord> parse_temporal_duration_string(VM& vm, StringV
     auto seconds_part = parse_result->duration_whole_seconds;
     auto f_seconds_part = parse_result->duration_seconds_fraction;
 
-    // 4. Let yearsMV be ! ToIntegerOrInfinity(CodePointsToString(years)).
-    auto years = years_part.value_or("0"sv).to_number<double>().release_value();
+    // 4. Let yearsMV be ? ToIntegerWithTruncation(CodePointsToString(_years_)).
+    auto years = TRY(to_integer_with_truncation(vm, Value(years_part.value_or("0"sv).to_number<double>().release_value()), ErrorType::TemporalInvalidDateTimeString, vm.names.years.as_string(), vm.names.Infinity.as_string()));
 
-    // 5. Let monthsMV be ! ToIntegerOrInfinity(CodePointsToString(months)).
-    auto months = months_part.value_or("0"sv).to_number<double>().release_value();
+    // 5. Let monthsMV be ? ToIntegerWithTruncation(CodePointsToString(_months_)).
+    auto months = TRY(to_integer_with_truncation(vm, Value(months_part.value_or("0"sv).to_number<double>().release_value()), ErrorType::TemporalInvalidDateTimeString, vm.names.month.as_string(), vm.names.Infinity.as_string()));
 
-    // 6. Let weeksMV be ! ToIntegerOrInfinity(CodePointsToString(weeks)).
-    auto weeks = weeks_part.value_or("0"sv).to_number<double>().release_value();
+    // 6. Let weeksMV be ? ToIntegerWithTruncation(CodePointsToString(_weeks_)).
+    auto weeks = TRY(to_integer_with_truncation(vm, Value(weeks_part.value_or("0"sv).to_number<double>().release_value()), ErrorType::TemporalInvalidDateTimeString, vm.names.weeks.as_string(), vm.names.Infinity.as_string()));
 
-    // 7. Let daysMV be ! ToIntegerOrInfinity(CodePointsToString(days)).
-    auto days = days_part.value_or("0"sv).to_number<double>().release_value();
+    // 7. Let daysMV be ? ToIntegerWithTruncation(CodePointsToString(_days_)).
+    auto days = TRY(to_integer_with_truncation(vm, Value(days_part.value_or("0"sv).to_number<double>().release_value()), ErrorType::TemporalInvalidDateTimeString, vm.names.days.as_string(), vm.names.Infinity.as_string()));
 
-    // 8. Let hoursMV be ! ToIntegerOrInfinity(CodePointsToString(hours)).
-    auto hours = hours_part.value_or("0"sv).to_number<double>().release_value();
+    // 8. Let hoursMV be ? ToIntegerWithTruncation(CodePointsToString(_hours_)).
+    auto hours = TRY(to_integer_with_truncation(vm, Value(hours_part.value_or("0"sv).to_number<double>().release_value()), ErrorType::TemporalInvalidDateTimeString, vm.names.hours.as_string(), vm.names.Infinity.as_string()));
 
     double minutes;
 
@@ -1609,13 +1609,13 @@ ThrowCompletionOr<DurationRecord> parse_temporal_duration_string(VM& vm, StringV
         // c. Let fHoursScale be the length of fHoursDigits.
         auto f_hours_scale = (double)f_hours_digits.length();
 
-        // d. Let minutesMV be ! ToIntegerOrInfinity(fHoursDigits) / 10^fHoursScale × 60.
-        minutes = f_hours_digits.to_number<double>().release_value() / pow(10., f_hours_scale) * 60;
+        // d. Let minutesMV be ? ToIntegerWithTruncation(fHoursDigits) / 10^fHoursScale × 60.
+        minutes = TRY(to_integer_with_truncation(vm, Value(f_hours_digits.to_number<double>().release_value()), ErrorType::TemporalInvalidDateTimeString, vm.names.minutes.as_string(), vm.names.Infinity.as_string())) / pow(10., f_hours_scale) * 60;
     }
     // 10. Else,
     else {
-        // a. Let minutesMV be ! ToIntegerOrInfinity(CodePointsToString(minutes)).
-        minutes = minutes_part.value_or("0"sv).to_number<double>().release_value();
+        // a. Let minutesMV be ? ToIntegerWithTruncation(CodePointsToString(minutes)).
+        minutes = TRY(to_integer_with_truncation(vm, Value(minutes_part.value_or("0"sv).to_number<double>().release_value()), ErrorType::TemporalInvalidDateTimeString, vm.names.minutes.as_string(), vm.names.Infinity.as_string()));
     }
 
     double seconds;
@@ -1632,13 +1632,13 @@ ThrowCompletionOr<DurationRecord> parse_temporal_duration_string(VM& vm, StringV
         // c. Let fMinutesScale be the length of fMinutesDigits.
         auto f_minutes_scale = (double)f_minutes_digits.length();
 
-        // d. Let secondsMV be ! ToIntegerOrInfinity(fMinutesDigits) / 10^fMinutesScale × 60.
-        seconds = f_minutes_digits.to_number<double>().release_value() / pow(10, f_minutes_scale) * 60;
+        // d. Let secondsMV be ? ToIntegerWithTruncation(fMinutesDigits) / 10^fMinutesScale × 60.
+        seconds = TRY(to_integer_with_truncation(vm, Value(f_minutes_digits.to_number<double>().release_value()), ErrorType::TemporalInvalidDateTimeString, vm.names.seconds.as_string(), vm.names.Infinity.as_string())) / pow(10, f_minutes_scale) * 60;
     }
     // 12. Else if seconds is not empty, then
     else if (seconds_part.has_value()) {
-        // a. Let secondsMV be ! ToIntegerOrInfinity(CodePointsToString(seconds)).
-        seconds = seconds_part.value_or("0"sv).to_number<double>().release_value();
+        // a. Let secondsMV be ? ToIntegerWithTruncation(CodePointsToString(seconds)).
+        seconds = TRY(to_integer_with_truncation(vm, Value(seconds_part.value_or("0"sv).to_number<double>().release_value()), ErrorType::TemporalInvalidDateTimeString, vm.names.seconds.as_string(), vm.names.Infinity.as_string()));
     }
     // 13. Else,
     else {
@@ -1656,8 +1656,8 @@ ThrowCompletionOr<DurationRecord> parse_temporal_duration_string(VM& vm, StringV
         // b. Let fSecondsScale be the length of fSecondsDigits.
         auto f_seconds_scale = (double)f_seconds_digits.length();
 
-        // c. Let millisecondsMV be ! ToIntegerOrInfinity(fSecondsDigits) / 10^fSecondsScale × 1000.
-        milliseconds = f_seconds_digits.to_number<double>().release_value() / pow(10, f_seconds_scale) * 1000;
+        // c. Let millisecondsMV be ? ToIntegerWithTruncation(fMinutesDigits) / 10^fMinutesScale × 60.
+        milliseconds = TRY(to_integer_with_truncation(vm, Value(f_seconds_digits.to_number<double>().release_value()), ErrorType::TemporalInvalidDateTimeString, vm.names.milliseconds.as_string(), vm.names.Infinity.as_string())) / pow(10, f_seconds_scale) * 60;
     }
     // 15. Else,
     else {
@@ -1689,7 +1689,7 @@ ThrowCompletionOr<DurationRecord> parse_temporal_duration_string(VM& vm, StringV
         factor = 1;
     }
 
-    // 20. Return ? CreateDurationRecord(yearsMV × factor, monthsMV × factor, weeksMV × factor, daysMV × factor, hoursMV × factor, floor(minutesMV) × factor, floor(secondsMV) × factor, floor(millisecondsMV) × factor, floor(microsecondsMV) × factor, floor(nanosecondsMV) × factor).
+    // 20. Return ! CreateDurationRecord(yearsMV × factor, monthsMV × factor, weeksMV × factor, daysMV × factor, hoursMV × factor, floor(minutesMV) × factor, floor(secondsMV) × factor, floor(millisecondsMV) × factor, floor(microsecondsMV) × factor, floor(nanosecondsMV) × factor).
     return create_duration_record(vm, years * factor, months * factor, weeks * factor, days * factor, hours * factor, floor(minutes) * factor, floor(seconds) * factor, floor(milliseconds) * factor, floor(microseconds) * factor, floor(nanoseconds) * factor);
 }
 
