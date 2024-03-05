@@ -13,13 +13,13 @@
 
 namespace Web::Fetch {
 
-[[nodiscard]] Optional<ReferrerPolicy::ReferrerPolicy> from_bindings_enum(Bindings::ReferrerPolicy);
+[[nodiscard]] ReferrerPolicy::ReferrerPolicy from_bindings_enum(Bindings::ReferrerPolicy);
 [[nodiscard]] Infrastructure::Request::Mode from_bindings_enum(Bindings::RequestMode);
 [[nodiscard]] Infrastructure::Request::CredentialsMode from_bindings_enum(Bindings::RequestCredentials);
 [[nodiscard]] Infrastructure::Request::CacheMode from_bindings_enum(Bindings::RequestCache);
 [[nodiscard]] Infrastructure::Request::RedirectMode from_bindings_enum(Bindings::RequestRedirect);
 
-[[nodiscard]] Bindings::ReferrerPolicy to_bindings_enum(Optional<ReferrerPolicy::ReferrerPolicy> const&);
+[[nodiscard]] Bindings::ReferrerPolicy to_bindings_enum(ReferrerPolicy::ReferrerPolicy);
 [[nodiscard]] Bindings::RequestDestination to_bindings_enum(Optional<Infrastructure::Request::Destination> const&);
 [[nodiscard]] Bindings::RequestMode to_bindings_enum(Infrastructure::Request::Mode);
 [[nodiscard]] Bindings::RequestCredentials to_bindings_enum(Infrastructure::Request::CredentialsMode);

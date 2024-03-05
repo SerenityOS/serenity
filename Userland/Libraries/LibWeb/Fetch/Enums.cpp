@@ -23,11 +23,11 @@ namespace Web::Fetch {
 // - Fetch has use-cases beyond its JS interface, so having to refer to the 'Bindings' namespace
 //   constantly is irritating.
 
-Optional<ReferrerPolicy::ReferrerPolicy> from_bindings_enum(Bindings::ReferrerPolicy referrer_policy)
+ReferrerPolicy::ReferrerPolicy from_bindings_enum(Bindings::ReferrerPolicy referrer_policy)
 {
     switch (referrer_policy) {
     case Bindings::ReferrerPolicy::Empty:
-        return {};
+        return ReferrerPolicy::ReferrerPolicy::EmptyString;
     case Bindings::ReferrerPolicy::NoReferrer:
         return ReferrerPolicy::ReferrerPolicy::NoReferrer;
     case Bindings::ReferrerPolicy::NoReferrerWhenDowngrade:
@@ -113,11 +113,11 @@ Infrastructure::Request::RedirectMode from_bindings_enum(Bindings::RequestRedire
     }
 }
 
-Bindings::ReferrerPolicy to_bindings_enum(Optional<ReferrerPolicy::ReferrerPolicy> const& referrer_policy)
+Bindings::ReferrerPolicy to_bindings_enum(ReferrerPolicy::ReferrerPolicy referrer_policy)
 {
-    if (!referrer_policy.has_value())
+    switch (referrer_policy) {
+    case ReferrerPolicy::ReferrerPolicy::EmptyString:
         return Bindings::ReferrerPolicy::Empty;
-    switch (*referrer_policy) {
     case ReferrerPolicy::ReferrerPolicy::NoReferrer:
         return Bindings::ReferrerPolicy::NoReferrer;
     case ReferrerPolicy::ReferrerPolicy::NoReferrerWhenDowngrade:

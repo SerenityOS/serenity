@@ -35,6 +35,8 @@ StringView to_string(ReferrerPolicy referrer_policy)
 
 Optional<ReferrerPolicy> from_string(StringView string)
 {
+    if (string.is_empty())
+        return ReferrerPolicy::EmptyString;
     if (string.equals_ignoring_ascii_case("no-referrer"sv))
         return ReferrerPolicy::NoReferrer;
     if (string.equals_ignoring_ascii_case("no-referrer-when-downgrade"sv))

@@ -107,7 +107,7 @@ private:
     CORSSettingAttribute m_crossorigin { CORSSettingAttribute::NoCORS };
 
     // https://html.spec.whatwg.org/multipage/scripting.html#attr-script-referrerpolicy
-    Optional<ReferrerPolicy::ReferrerPolicy> m_referrer_policy;
+    ReferrerPolicy::ReferrerPolicy m_referrer_policy { ReferrerPolicy::ReferrerPolicy::EmptyString };
 
     bool m_failed_to_load { false };
 

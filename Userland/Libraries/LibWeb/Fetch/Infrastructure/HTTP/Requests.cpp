@@ -309,8 +309,8 @@ ErrorOr<void> Request::add_origin_header()
     // 3. Otherwise, if request’s method is neither `GET` nor `HEAD`, then:
     else if (!StringView { m_method }.is_one_of("GET"sv, "HEAD"sv)) {
         // 1. If request’s mode is not "cors", then switch on request’s referrer policy:
-        if (m_mode != Mode::CORS && m_referrer_policy.has_value()) {
-            switch (*m_referrer_policy) {
+        if (m_mode != Mode::CORS) {
+            switch (m_referrer_policy) {
             // -> "no-referrer"
             case ReferrerPolicy::ReferrerPolicy::NoReferrer:
                 // Set serializedOrigin to `null`.
