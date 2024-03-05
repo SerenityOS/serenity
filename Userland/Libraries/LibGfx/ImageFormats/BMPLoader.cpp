@@ -979,11 +979,11 @@ static ErrorOr<void> decode_bmp_color_table(BMPLoadingContext& context)
         if (bytes_per_color == 4) {
             if (!streamer.has_u32())
                 return Error::from_string_literal("Cannot read 32 bits");
-            context.color_table.append(streamer.read_u32());
+            context.color_table.append(streamer.read_u32() | 0xff'00'00'00);
         } else {
             if (!streamer.has_u24())
                 return Error::from_string_literal("Cannot read 24 bits");
-            context.color_table.append(streamer.read_u24());
+            context.color_table.append(streamer.read_u24() | 0xff'00'00'00);
         }
     }
 
