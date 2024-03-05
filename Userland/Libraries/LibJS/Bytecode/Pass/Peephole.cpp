@@ -40,32 +40,29 @@ void Peephole::perform(PassPipelineExecutable& executable)
 
                     if (instruction.type() == Instruction::Type::Not) {
                         auto const& not_ = static_cast<Op::Not const&>(instruction);
-                        VERIFY(jump.condition() == not_.dst());
-                        new_block->append<Op::JumpIfNot>(
-                            not_.source_record().source_start_offset,
-                            not_.source_record().source_end_offset,
-                            not_.src(),
-                            *jump.true_target(),
-                            *jump.false_target());
-                        ++it;
-                        VERIFY(it.at_end());
-                        continue;
+                        if (jump.condition() != not_.dst()) {
+                            auto slot_offset = new_block->size();
+                            new_block->grow(not_.length());
+                            memcpy(new_block->data() + slot_offset, &not_, not_.length());
+                            continue;
+                        }
                     }
 
 #define DO_FUSE_JUMP(PreOp, ...)                                          \
     if (instruction.type() == Instruction::Type::PreOp) {                 \
         auto const& compare = static_cast<Op::PreOp const&>(instruction); \
-        VERIFY(jump.condition() == compare.dst());                        \
-        new_block->append<Op::Jump##PreOp>(                               \
-            compare.source_record().source_start_offset,                  \
-            compare.source_record().source_end_offset,                    \
-            compare.lhs(),                                                \
-            compare.rhs(),                                                \
-            *jump.true_target(),                                          \
-            *jump.false_target());                                        \
-        ++it;                                                             \
-        VERIFY(it.at_end());                                              \
-        continue;                                                         \
+        if (jump.condition() == compare.dst()) {                          \
+            new_block->append<Op::Jump##PreOp>(                           \
+                compare.source_record().source_start_offset,              \
+                compare.source_record().source_end_offset,                \
+                compare.lhs(),                                            \
+                compare.rhs(),                                            \
+                *jump.true_target(),                                      \
+                *jump.false_target());                                    \
+            ++it;                                                         \
+            VERIFY(it.at_end());                                          \
+            continue;                                                     \
+        }                                                                 \
     }
                     JS_ENUMERATE_FUSABLE_BINARY_OPS(DO_FUSE_JUMP)
                 }
