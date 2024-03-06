@@ -1400,7 +1400,7 @@ static void apply_animation_properties(DOM::Document& document, StyleProperties&
     effect.set_playback_direction(Animations::css_animation_direction_to_bindings_playback_direction(direction));
 
     HTML::TemporaryExecutionContext context(document.relevant_settings_object());
-    if (play_state == CSS::AnimationPlayState::Running && animation.play_state() != Bindings::AnimationPlayState::Running) {
+    if (play_state == CSS::AnimationPlayState::Running && !animation.is_relevant()) {
         animation.play().release_value_but_fixme_should_propagate_errors();
     } else if (play_state == CSS::AnimationPlayState::Paused && animation.play_state() != Bindings::AnimationPlayState::Paused) {
         animation.pause().release_value_but_fixme_should_propagate_errors();
