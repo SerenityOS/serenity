@@ -818,13 +818,13 @@ static RefPtr<StyleValue const> interpolate_transform(DOM::Element& element, Sty
     };
 
     static constexpr auto style_value_to_matrix = [](DOM::Element& element, StyleValue const& value) -> FloatMatrix4x4 {
-        if (value.to_identifier() == ValueID::None)
-            return FloatMatrix4x4::identity();
-
         if (value.is_transformation())
             return transformation_style_value_to_matrix(element, value.as_transformation()).value_or(FloatMatrix4x4::identity());
 
-        VERIFY(value.is_value_list());
+        // This encompasses both the allowed value "none" and any invalid values
+        if (!value.is_value_list())
+            return FloatMatrix4x4::identity();
+
         auto matrix = FloatMatrix4x4::identity();
         for (auto const& value_element : value.as_value_list().values()) {
             if (value_element->is_transformation()) {
