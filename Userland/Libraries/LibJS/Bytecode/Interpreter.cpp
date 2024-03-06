@@ -15,7 +15,6 @@
 #include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Bytecode/Label.h>
 #include <LibJS/Bytecode/Op.h>
-#include <LibJS/Bytecode/PassManager.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/BigInt.h>
@@ -569,25 +568,6 @@ void Interpreter::enter_object_environment(Object& object)
     vm().running_execution_context().lexical_environment = new_object_environment(object, true, old_environment);
 }
 
-static PassManager& optimization_pipeline()
-{
-    static auto s_optimization_pipeline = [] {
-        auto pm = make<PassManager>();
-        pm->add<Passes::GenerateCFG>();
-        pm->add<Passes::UnifySameBlocks>();
-        pm->add<Passes::GenerateCFG>();
-        pm->add<Passes::MergeBlocks>();
-        pm->add<Passes::GenerateCFG>();
-        pm->add<Passes::UnifySameBlocks>();
-        pm->add<Passes::GenerateCFG>();
-        pm->add<Passes::MergeBlocks>();
-        pm->add<Passes::GenerateCFG>();
-        pm->add<Passes::PlaceBlocks>();
-        return pm;
-    }();
-    return *s_optimization_pipeline;
-}
-
 ThrowCompletionOr<NonnullGCPtr<Bytecode::Executable>> compile(VM& vm, ASTNode const& node, ReadonlySpan<FunctionParameter> parameters, FunctionKind kind, DeprecatedFlyString const& name)
 {
     auto executable_result = Bytecode::Generator::generate(vm, node, parameters, kind);
@@ -596,13 +576,6 @@ ThrowCompletionOr<NonnullGCPtr<Bytecode::Executable>> compile(VM& vm, ASTNode co
 
     auto bytecode_executable = executable_result.release_value();
     bytecode_executable->name = name;
-
-    auto& passes = optimization_pipeline();
-    passes.perform(*bytecode_executable);
-    if constexpr (JS_BYTECODE_DEBUG) {
-        dbgln("Optimisation passes took {}us", passes.elapsed());
-        dbgln("Compiled Bytecode::Block for function '{}':", name);
-    }
 
     if (Bytecode::g_dump_bytecode)
         bytecode_executable->dump();

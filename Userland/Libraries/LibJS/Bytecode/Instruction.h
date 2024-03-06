@@ -131,13 +131,10 @@ public:
 #undef __BYTECODE_OP
     };
 
-    [[nodiscard]] bool is_terminator() const;
-
     Type type() const { return m_type; }
     size_t length() const { return m_length; }
     ByteString to_byte_string(Bytecode::Executable const&) const;
     ThrowCompletionOr<void> execute(Bytecode::Interpreter&) const;
-    void replace_references(BasicBlock const& from, BasicBlock const& to);
     static void destroy(Instruction&);
 
     // FIXME: Find a better way to organize this information

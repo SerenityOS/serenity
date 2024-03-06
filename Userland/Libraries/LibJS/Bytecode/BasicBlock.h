@@ -8,7 +8,6 @@
 
 #include <AK/Badge.h>
 #include <AK/String.h>
-#include <LibJS/Bytecode/Operand.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Handle.h>
 
@@ -36,7 +35,7 @@ public:
 
     void grow(size_t additional_size);
 
-    void terminate(Badge<Generator>, size_t slot_offset) { terminate(slot_offset); }
+    void terminate(Badge<Generator>) { m_terminated = true; }
     bool is_terminated() const { return m_terminated; }
 
     String const& name() const { return m_name; }
@@ -47,56 +46,14 @@ public:
     BasicBlock const* handler() const { return m_handler; }
     BasicBlock const* finalizer() const { return m_finalizer; }
 
-    Instruction const* terminator() const
-    {
-        VERIFY(m_terminated);
-        return reinterpret_cast<Instruction const*>(data() + m_terminator_offset);
-    }
-
-    template<typename OpType, typename... Args>
-    void append(u32 start_offset, u32 end_offset, Args&&... args)
-    {
-        VERIFY(!m_terminated);
-        size_t const slot_offset = size();
-        grow(sizeof(OpType));
-        void* slot = data() + slot_offset;
-        new (slot) OpType(forward<Args>(args)...);
-        if constexpr (OpType::IsTerminator)
-            terminate(slot_offset);
-        auto* op = static_cast<OpType*>(slot);
-        op->set_source_record({ start_offset, end_offset });
-    }
-
-    template<typename OpType, typename... Args>
-    void append_with_extra_operand_slots(u32 start_offset, u32 end_offset, size_t extra_operand_slots, Args&&... args)
-    {
-        VERIFY(!m_terminated);
-        size_t size_to_allocate = round_up_to_power_of_two(sizeof(OpType) + extra_operand_slots * sizeof(Operand), alignof(void*));
-        size_t slot_offset = size();
-        grow(size_to_allocate);
-        void* slot = data() + slot_offset;
-        new (slot) OpType(forward<Args>(args)...);
-        if constexpr (OpType::IsTerminator)
-            terminate(slot_offset);
-        auto* op = static_cast<OpType*>(slot);
-        op->set_source_record({ start_offset, end_offset });
-    }
-
 private:
     explicit BasicBlock(String name);
-
-    void terminate(size_t slot_offset)
-    {
-        m_terminated = true;
-        m_terminator_offset = slot_offset;
-    }
 
     Vector<u8> m_buffer;
     BasicBlock const* m_handler { nullptr };
     BasicBlock const* m_finalizer { nullptr };
     String m_name;
     bool m_terminated { false };
-    size_t m_terminator_offset { 0 };
 };
 
 }

@@ -18,7 +18,6 @@
 namespace JS::Bytecode {
 
 class InstructionStreamIterator;
-class PassManager;
 
 struct CallFrame {
     static NonnullOwnPtr<CallFrame> create(size_t register_count);

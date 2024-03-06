@@ -42,7 +42,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand dst() const { return m_dst; }
     Operand src() const { return m_src; }
@@ -78,29 +77,28 @@ private:
     O(StrictlyInequals, strict_inequals)                    \
     O(StrictlyEquals, strict_equals)
 
-#define JS_DECLARE_COMMON_BINARY_OP(OpTitleCase, op_snake_case)                \
-    class OpTitleCase final : public Instruction {                             \
-    public:                                                                    \
-        explicit OpTitleCase(Operand dst, Operand lhs, Operand rhs)            \
-            : Instruction(Type::OpTitleCase, sizeof(*this))                    \
-            , m_dst(dst)                                                       \
-            , m_lhs(lhs)                                                       \
-            , m_rhs(rhs)                                                       \
-        {                                                                      \
-        }                                                                      \
-                                                                               \
-        ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;    \
-        ByteString to_byte_string_impl(Bytecode::Executable const&) const;     \
-        void replace_references_impl(BasicBlock const&, BasicBlock const&) { } \
-                                                                               \
-        Operand dst() const { return m_dst; }                                  \
-        Operand lhs() const { return m_lhs; }                                  \
-        Operand rhs() const { return m_rhs; }                                  \
-                                                                               \
-    private:                                                                   \
-        Operand m_dst;                                                         \
-        Operand m_lhs;                                                         \
-        Operand m_rhs;                                                         \
+#define JS_DECLARE_COMMON_BINARY_OP(OpTitleCase, op_snake_case)             \
+    class OpTitleCase final : public Instruction {                          \
+    public:                                                                 \
+        explicit OpTitleCase(Operand dst, Operand lhs, Operand rhs)         \
+            : Instruction(Type::OpTitleCase, sizeof(*this))                 \
+            , m_dst(dst)                                                    \
+            , m_lhs(lhs)                                                    \
+            , m_rhs(rhs)                                                    \
+        {                                                                   \
+        }                                                                   \
+                                                                            \
+        ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const; \
+        ByteString to_byte_string_impl(Bytecode::Executable const&) const;  \
+                                                                            \
+        Operand dst() const { return m_dst; }                               \
+        Operand lhs() const { return m_lhs; }                               \
+        Operand rhs() const { return m_rhs; }                               \
+                                                                            \
+    private:                                                                \
+        Operand m_dst;                                                      \
+        Operand m_lhs;                                                      \
+        Operand m_rhs;                                                      \
     };
 
 JS_ENUMERATE_COMMON_BINARY_OPS_WITHOUT_FAST_PATH(JS_DECLARE_COMMON_BINARY_OP)
@@ -114,26 +112,25 @@ JS_ENUMERATE_COMMON_BINARY_OPS_WITH_FAST_PATH(JS_DECLARE_COMMON_BINARY_OP)
     O(UnaryMinus, unary_minus)           \
     O(Typeof, typeof_)
 
-#define JS_DECLARE_COMMON_UNARY_OP(OpTitleCase, op_snake_case)                 \
-    class OpTitleCase final : public Instruction {                             \
-    public:                                                                    \
-        OpTitleCase(Operand dst, Operand src)                                  \
-            : Instruction(Type::OpTitleCase, sizeof(*this))                    \
-            , m_dst(dst)                                                       \
-            , m_src(src)                                                       \
-        {                                                                      \
-        }                                                                      \
-                                                                               \
-        ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;    \
-        ByteString to_byte_string_impl(Bytecode::Executable const&) const;     \
-        void replace_references_impl(BasicBlock const&, BasicBlock const&) { } \
-                                                                               \
-        Operand dst() const { return m_dst; }                                  \
-        Operand src() const { return m_src; }                                  \
-                                                                               \
-    private:                                                                   \
-        Operand m_dst;                                                         \
-        Operand m_src;                                                         \
+#define JS_DECLARE_COMMON_UNARY_OP(OpTitleCase, op_snake_case)              \
+    class OpTitleCase final : public Instruction {                          \
+    public:                                                                 \
+        OpTitleCase(Operand dst, Operand src)                               \
+            : Instruction(Type::OpTitleCase, sizeof(*this))                 \
+            , m_dst(dst)                                                    \
+            , m_src(src)                                                    \
+        {                                                                   \
+        }                                                                   \
+                                                                            \
+        ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const; \
+        ByteString to_byte_string_impl(Bytecode::Executable const&) const;  \
+                                                                            \
+        Operand dst() const { return m_dst; }                               \
+        Operand src() const { return m_src; }                               \
+                                                                            \
+    private:                                                                \
+        Operand m_dst;                                                      \
+        Operand m_src;                                                      \
     };
 
 JS_ENUMERATE_COMMON_UNARY_OPS(JS_DECLARE_COMMON_UNARY_OP)
@@ -149,7 +146,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand dst() const { return m_dst; }
 
@@ -170,7 +166,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand dst() const { return m_dst; }
     StringTableIndex source_index() const { return m_source_index; }
@@ -187,26 +182,25 @@ private:
 #define JS_ENUMERATE_NEW_BUILTIN_ERROR_OPS(O) \
     O(TypeError)
 
-#define JS_DECLARE_NEW_BUILTIN_ERROR_OP(ErrorName)                             \
-    class New##ErrorName final : public Instruction {                          \
-    public:                                                                    \
-        New##ErrorName(Operand dst, StringTableIndex error_string)             \
-            : Instruction(Type::New##ErrorName, sizeof(*this))                 \
-            , m_dst(dst)                                                       \
-            , m_error_string(error_string)                                     \
-        {                                                                      \
-        }                                                                      \
-                                                                               \
-        ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;    \
-        ByteString to_byte_string_impl(Bytecode::Executable const&) const;     \
-        void replace_references_impl(BasicBlock const&, BasicBlock const&) { } \
-                                                                               \
-        Operand dst() const { return m_dst; }                                  \
-        StringTableIndex error_string() const { return m_error_string; }       \
-                                                                               \
-    private:                                                                   \
-        Operand m_dst;                                                         \
-        StringTableIndex m_error_string;                                       \
+#define JS_DECLARE_NEW_BUILTIN_ERROR_OP(ErrorName)                          \
+    class New##ErrorName final : public Instruction {                       \
+    public:                                                                 \
+        New##ErrorName(Operand dst, StringTableIndex error_string)          \
+            : Instruction(Type::New##ErrorName, sizeof(*this))              \
+            , m_dst(dst)                                                    \
+            , m_error_string(error_string)                                  \
+        {                                                                   \
+        }                                                                   \
+                                                                            \
+        ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const; \
+        ByteString to_byte_string_impl(Bytecode::Executable const&) const;  \
+                                                                            \
+        Operand dst() const { return m_dst; }                               \
+        StringTableIndex error_string() const { return m_error_string; }    \
+                                                                            \
+    private:                                                                \
+        Operand m_dst;                                                      \
+        StringTableIndex m_error_string;                                    \
     };
 
 JS_ENUMERATE_NEW_BUILTIN_ERROR_OPS(JS_DECLARE_NEW_BUILTIN_ERROR_OP)
@@ -227,7 +221,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     size_t length_impl(size_t excluded_names_count) const
     {
@@ -267,7 +260,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand dst() const { return m_dst; }
 
@@ -314,7 +306,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand dst() const { return m_dst; }
     ReadonlySpan<Value> elements() const { return { m_elements, m_element_count }; }
@@ -337,7 +328,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand dst() const { return m_dst; }
     Operand src() const { return m_src; }
@@ -361,7 +351,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand dst() const { return m_dst; }
     Operand specifier() const { return m_specifier; }
@@ -384,7 +373,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand dst() const { return m_dst; }
     Operand iterator() const { return m_iterator; }
@@ -405,7 +393,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand dst() const { return m_dst; }
     Operand src() const { return m_src; }
@@ -429,7 +416,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 };
 
 class EnterObjectEnvironment final : public Instruction {
@@ -442,7 +428,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand object() const { return m_object; }
 
@@ -460,7 +445,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand dst() const { return m_dst; }
 
@@ -482,7 +466,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     IdentifierTableIndex identifier() const { return m_identifier; }
     EnvironmentMode mode() const { return m_mode; }
@@ -516,7 +499,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     IdentifierTableIndex identifier() const { return m_identifier; }
     Operand src() const { return m_src; }
@@ -543,7 +525,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     size_t index() const { return m_index; }
     Operand dst() const { return Operand(Operand::Type::Local, m_index); }
@@ -567,7 +548,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     IdentifierTableIndex identifier() const { return m_identifier; }
     u32 cache_index() const { return m_cache_index; }
@@ -593,7 +573,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand dst() const { return m_dst; }
     IdentifierTableIndex identifier() const { return m_identifier; }
@@ -617,7 +596,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand dst() const { return m_dst; }
     IdentifierTableIndex identifier() const { return m_identifier; }
@@ -640,7 +618,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand dst() const { return m_dst; }
     IdentifierTableIndex identifier() const { return m_identifier; }
@@ -663,7 +640,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand dst() const { return m_dst; }
     Operand base() const { return m_base; }
@@ -691,7 +667,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand dst() const { return m_dst; }
     Operand base() const { return m_base; }
@@ -719,7 +694,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand dst() const { return m_dst; }
     Operand base() const { return m_base; }
@@ -743,7 +717,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand dst() const { return m_dst; }
     Operand base() const { return m_base; }
@@ -778,7 +751,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand base() const { return m_base; }
     IdentifierTableIndex property() const { return m_property; }
@@ -809,7 +781,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand base() const { return m_base; }
     Operand this_value() const { return m_this_value; }
@@ -840,7 +811,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand base() const { return m_base; }
     IdentifierTableIndex property() const { return m_property; }
@@ -865,7 +835,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand dst() const { return m_dst; }
     Operand base() const { return m_base; }
@@ -890,7 +859,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand dst() const { return m_dst; }
     Operand base() const { return m_base; }
@@ -916,7 +884,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand dst() const { return m_dst; }
     Operand base() const { return m_base; }
@@ -941,7 +908,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand dst() const { return m_dst; }
     Operand base() const { return m_base; }
@@ -968,7 +934,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand base() const { return m_base; }
     Operand property() const { return m_property; }
@@ -996,7 +961,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand base() const { return m_base; }
     Operand property() const { return m_property; }
@@ -1024,7 +988,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand dst() const { return m_dst; }
     Operand base() const { return m_base; }
@@ -1054,7 +1017,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
 private:
     Operand m_dst;
@@ -1090,13 +1052,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const& from, BasicBlock const& to)
-    {
-        if (m_true_target.has_value() && &m_true_target->block() == &from)
-            m_true_target = Label { to };
-        if (m_false_target.has_value() && &m_false_target->block() == &from)
-            m_false_target = Label { to };
-    }
 
     auto& true_target() const { return m_true_target; }
     auto& false_target() const { return m_false_target; }
@@ -1196,7 +1151,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
 private:
     Operand m_dst;
@@ -1231,7 +1185,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
 private:
     Operand m_dst;
@@ -1254,7 +1207,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand dst() const { return m_dst; }
     Operand arguments() const { return m_arguments; }
@@ -1279,7 +1231,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand dst() const { return m_dst; }
     Optional<Operand> const& super_class() const { return m_super_class; }
@@ -1306,7 +1257,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand dst() const { return m_dst; }
     FunctionExpression const& function_node() const { return m_function_node; }
@@ -1330,7 +1280,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     ScopeNode const& scope_node() const { return m_scope_node; }
 
@@ -1350,7 +1299,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Optional<Operand> const& value() const { return m_value; }
 
@@ -1368,7 +1316,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand dst() const { return m_dst; }
 
@@ -1387,7 +1334,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand dst() const { return m_dst; }
     Operand src() const { return m_src; }
@@ -1407,7 +1353,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand dst() const { return m_dst; }
 
@@ -1426,7 +1371,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand dst() const { return m_dst; }
     Operand src() const { return m_src; }
@@ -1448,7 +1392,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand src() const { return m_src; }
 
@@ -1466,7 +1409,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand src() const { return m_src; }
 
@@ -1484,7 +1426,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand src() const { return m_src; }
 
@@ -1502,7 +1443,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand src() const { return m_src; }
 
@@ -1514,34 +1454,19 @@ class EnterUnwindContext final : public Instruction {
 public:
     constexpr static bool IsTerminator = true;
 
-    EnterUnwindContext(Label entry_point, Optional<Label> handler, Optional<Label> finalizer)
+    EnterUnwindContext(Label entry_point)
         : Instruction(Type::EnterUnwindContext, sizeof(*this))
         , m_entry_point(move(entry_point))
-        , m_handler(move(handler))
-        , m_finalizer(move(finalizer))
     {
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const& from, BasicBlock const& to)
-    {
-        if (&m_entry_point.block() == &from)
-            m_entry_point = Label { to };
-        if (m_handler.has_value() && &m_handler->block() == &from)
-            m_handler = Label { to };
-        if (m_finalizer.has_value() && &m_finalizer->block() == &from)
-            m_finalizer = Label { to };
-    }
 
     auto& entry_point() const { return m_entry_point; }
-    auto& handler() const { return m_handler; }
-    auto& finalizer() const { return m_finalizer; }
 
 private:
     Label m_entry_point;
-    Optional<Label> m_handler;
-    Optional<Label> m_finalizer;
 };
 
 class ScheduleJump final : public Instruction {
@@ -1567,11 +1492,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const& from, BasicBlock const& to)
-    {
-        if (&m_target.block() == &from)
-            m_target = Label { to };
-    }
 
 private:
     Label m_target;
@@ -1586,7 +1506,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 };
 
 class LeaveUnwindContext final : public Instruction {
@@ -1598,7 +1517,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 };
 
 class ContinuePendingUnwind final : public Instruction {
@@ -1613,11 +1531,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const& from, BasicBlock const& to)
-    {
-        if (&m_resume_target.block() == &from)
-            m_resume_target = Label { to };
-    }
 
     auto& resume_target() const { return m_resume_target; }
 
@@ -1644,11 +1557,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const& from, BasicBlock const& to)
-    {
-        if (m_continuation_label.has_value() && &m_continuation_label->block() == &from)
-            m_continuation_label = Label { to };
-    }
 
     auto& continuation() const { return m_continuation_label; }
     Operand value() const { return m_value; }
@@ -1671,11 +1579,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const& from, BasicBlock const& to)
-    {
-        if (&m_continuation_label.block() == &from)
-            m_continuation_label = Label { to };
-    }
 
     auto& continuation() const { return m_continuation_label; }
     Operand argument() const { return m_argument; }
@@ -1697,7 +1600,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand dst() const { return m_dst; }
     Operand iterable() const { return m_iterable; }
@@ -1720,7 +1622,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand object() const { return m_object; }
     Operand iterator_record() const { return m_iterator_record; }
@@ -1741,7 +1642,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand next_method() const { return m_next_method; }
     Operand iterator_record() const { return m_iterator_record; }
@@ -1763,7 +1663,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand dst() const { return m_dst; }
     Operand object() const { return m_object; }
@@ -1786,7 +1685,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand dst() const { return m_dst; }
     Operand object() const { return m_object; }
@@ -1808,7 +1706,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand iterator_record() const { return m_iterator_record; }
     Completion::Type completion_type() const { return m_completion_type; }
@@ -1832,7 +1729,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand iterator_record() const { return m_iterator_record; }
     Completion::Type completion_type() const { return m_completion_type; }
@@ -1855,7 +1751,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand dst() const { return m_dst; }
     Operand iterator_record() const { return m_iterator_record; }
@@ -1875,7 +1770,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand dst() const { return m_dst; }
 
@@ -1893,7 +1787,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand dst() const { return m_dst; }
 
@@ -1911,7 +1804,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand dst() const { return m_dst; }
 
@@ -1929,7 +1821,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand dst() const { return m_dst; }
 
@@ -1948,7 +1839,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand dst() const { return m_dst; }
     IdentifierTableIndex identifier() const { return m_identifier; }
@@ -1970,7 +1860,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     Operand value() const { return m_value; }
 
@@ -1989,7 +1878,6 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
 private:
     StringView m_text;
