@@ -760,7 +760,7 @@ static ErrorOr<void> cascade_custom_properties(DOM::Element& element, Optional<C
     return {};
 }
 
-static ErrorOr<NonnullRefPtr<StyleValue const>> interpolate_value(DOM::Element& element, StyleValue const& from, StyleValue const& to, float delta);
+static NonnullRefPtr<StyleValue const> interpolate_value(DOM::Element& element, StyleValue const& from, StyleValue const& to, float delta);
 
 template<typename T>
 static T interpolate_raw(T from, T to, float delta)
@@ -772,11 +772,12 @@ static T interpolate_raw(T from, T to, float delta)
     }
 }
 
-static ErrorOr<NonnullRefPtr<StyleValue const>> interpolate_transform(DOM::Element& element, StyleValue const& from, StyleValue const& to, float delta)
+// A null return value means the interpolated matrix was not invertible or otherwise invalid
+static RefPtr<StyleValue const> interpolate_transform(DOM::Element& element, StyleValue const& from, StyleValue const& to, float delta)
 {
     // Note that the spec uses column-major notation, so all the matrix indexing is reversed.
 
-    static constexpr auto make_transformation = [](TransformationStyleValue const& transformation) -> ErrorOr<Transformation> {
+    static constexpr auto make_transformation = [](TransformationStyleValue const& transformation) -> Optional<Transformation> {
         Vector<TransformValue> values;
 
         for (auto const& value : transformation.values()) {
@@ -797,35 +798,41 @@ static ErrorOr<NonnullRefPtr<StyleValue const>> interpolate_transform(DOM::Eleme
                 values.append(NumberPercentage { Number(Number::Type::Number, value->as_number().number()) });
                 break;
             default:
-                return Error::from_string_literal("Transform contains unsupported style value");
+                return {};
             }
         }
 
         return Transformation { transformation.transform_function(), move(values) };
     };
 
-    static constexpr auto transformation_style_value_to_matrix = [](DOM::Element& element, TransformationStyleValue const& value) -> ErrorOr<FloatMatrix4x4> {
-        auto transformation = TRY(make_transformation(value.as_transformation()));
+    static constexpr auto transformation_style_value_to_matrix = [](DOM::Element& element, TransformationStyleValue const& value) -> Optional<FloatMatrix4x4> {
+        auto transformation = make_transformation(value.as_transformation());
+        if (!transformation.has_value())
+            return {};
         Optional<Painting::PaintableBox const&> paintable_box;
         if (auto layout_node = element.layout_node()) {
             if (auto paintable = layout_node->paintable(); paintable && is<Painting::PaintableBox>(paintable))
                 paintable_box = *static_cast<Painting::PaintableBox*>(paintable);
         }
-        return transformation.to_matrix(paintable_box);
+        if (auto matrix = transformation->to_matrix(paintable_box); !matrix.is_error())
+            return matrix.value();
+        return {};
     };
 
-    static constexpr auto style_value_to_matrix = [](DOM::Element& element, StyleValue const& value) -> ErrorOr<FloatMatrix4x4> {
+    static constexpr auto style_value_to_matrix = [](DOM::Element& element, StyleValue const& value) -> FloatMatrix4x4 {
         if (value.to_identifier() == ValueID::None)
             return FloatMatrix4x4::identity();
 
         if (value.is_transformation())
-            return transformation_style_value_to_matrix(element, value.as_transformation());
+            return transformation_style_value_to_matrix(element, value.as_transformation()).value_or(FloatMatrix4x4::identity());
 
         VERIFY(value.is_value_list());
         auto matrix = FloatMatrix4x4::identity();
         for (auto const& value_element : value.as_value_list().values()) {
-            if (value_element->is_transformation())
-                matrix = matrix * TRY(transformation_style_value_to_matrix(element, value_element->as_transformation()));
+            if (value_element->is_transformation()) {
+                if (auto value_matrix = transformation_style_value_to_matrix(element, value_element->as_transformation()); value_matrix.has_value())
+                    matrix = matrix * value_matrix.value();
+            }
         }
 
         return matrix;
@@ -839,7 +846,7 @@ static ErrorOr<NonnullRefPtr<StyleValue const>> interpolate_transform(DOM::Eleme
         FloatVector4 perspective;
     };
     // https://drafts.csswg.org/css-transforms-2/#decomposing-a-3d-matrix
-    static constexpr auto decompose = [](FloatMatrix4x4 matrix) -> ErrorOr<DecomposedValues> {
+    static constexpr auto decompose = [](FloatMatrix4x4 matrix) -> Optional<DecomposedValues> {
         // https://drafts.csswg.org/css-transforms-1/#supporting-functions
         static constexpr auto combine = [](auto a, auto b, float ascl, float bscl) {
             return FloatVector3 {
@@ -851,7 +858,7 @@ static ErrorOr<NonnullRefPtr<StyleValue const>> interpolate_transform(DOM::Eleme
 
         // Normalize the matrix.
         if (matrix(3, 3) == 0.f)
-            return Error::from_string_literal("Cannot interpolate non-invertible matrix");
+            return {};
 
         for (int i = 0; i < 4; i++)
             for (int j = 0; j < 4; j++)
@@ -865,7 +872,7 @@ static ErrorOr<NonnullRefPtr<StyleValue const>> interpolate_transform(DOM::Eleme
         perspective_matrix(3, 3) = 1.f;
 
         if (!perspective_matrix.is_invertible())
-            return Error::from_string_literal("Cannot interpolate non-invertible matrix");
+            return {};
 
         DecomposedValues values;
 
@@ -1049,11 +1056,13 @@ static ErrorOr<NonnullRefPtr<StyleValue const>> interpolate_transform(DOM::Eleme
         };
     };
 
-    auto from_matrix = TRY(style_value_to_matrix(element, from));
-    auto to_matrix = TRY(style_value_to_matrix(element, to));
-    auto from_decomposed = TRY(decompose(from_matrix));
-    auto to_decomposed = TRY(decompose(to_matrix));
-    auto interpolated_decomposed = interpolate(from_decomposed, to_decomposed, delta);
+    auto from_matrix = style_value_to_matrix(element, from);
+    auto to_matrix = style_value_to_matrix(element, to);
+    auto from_decomposed = decompose(from_matrix);
+    auto to_decomposed = decompose(to_matrix);
+    if (!from_decomposed.has_value() || !to_decomposed.has_value())
+        return {};
+    auto interpolated_decomposed = interpolate(from_decomposed.value(), to_decomposed.value(), delta);
     auto interpolated = recompose(interpolated_decomposed);
 
     StyleValueVector values;
@@ -1078,7 +1087,7 @@ static Color interpolate_color(Color from, Color to, float delta)
     return color;
 }
 
-static ErrorOr<NonnullRefPtr<StyleValue const>> interpolate_box_shadow(DOM::Element& element, StyleValue const& from, StyleValue const& to, float delta)
+static NonnullRefPtr<StyleValue const> interpolate_box_shadow(DOM::Element& element, StyleValue const& from, StyleValue const& to, float delta)
 {
     // https://drafts.csswg.org/css-backgrounds/#box-shadow
     // Animation type: by computed value, treating none as a zero-item list and appending blank shadows
@@ -1128,10 +1137,10 @@ static ErrorOr<NonnullRefPtr<StyleValue const>> interpolate_box_shadow(DOM::Elem
         auto const& to_shadow = to_shadows[i]->as_shadow();
         auto result_shadow = ShadowStyleValue::create(
             interpolate_color(from_shadow.color(), to_shadow.color(), delta),
-            TRY(interpolate_value(element, from_shadow.offset_x(), to_shadow.offset_x(), delta)),
-            TRY(interpolate_value(element, from_shadow.offset_y(), to_shadow.offset_y(), delta)),
-            TRY(interpolate_value(element, from_shadow.blur_radius(), to_shadow.blur_radius(), delta)),
-            TRY(interpolate_value(element, from_shadow.spread_distance(), to_shadow.spread_distance(), delta)),
+            interpolate_value(element, from_shadow.offset_x(), to_shadow.offset_x(), delta),
+            interpolate_value(element, from_shadow.offset_y(), to_shadow.offset_y(), delta),
+            interpolate_value(element, from_shadow.blur_radius(), to_shadow.blur_radius(), delta),
+            interpolate_value(element, from_shadow.spread_distance(), to_shadow.spread_distance(), delta),
             delta >= 0.5f ? to_shadow.placement() : from_shadow.placement());
         result_shadows.unchecked_append(result_shadow);
     }
@@ -1139,7 +1148,7 @@ static ErrorOr<NonnullRefPtr<StyleValue const>> interpolate_box_shadow(DOM::Elem
     return StyleValueList::create(move(result_shadows), StyleValueList::Separator::Comma);
 }
 
-static ErrorOr<NonnullRefPtr<StyleValue const>> interpolate_value(DOM::Element& element, StyleValue const& from, StyleValue const& to, float delta)
+static NonnullRefPtr<StyleValue const> interpolate_value(DOM::Element& element, StyleValue const& from, StyleValue const& to, float delta)
 {
     if (from.type() != to.type())
         return delta >= 0.5f ? to : from;
@@ -1166,8 +1175,8 @@ static ErrorOr<NonnullRefPtr<StyleValue const>> interpolate_value(DOM::Element& 
         auto& from_position = from.as_position();
         auto& to_position = to.as_position();
         return PositionStyleValue::create(
-            TRY(interpolate_value(element, from_position.edge_x(), to_position.edge_x(), delta))->as_edge(),
-            TRY(interpolate_value(element, from_position.edge_y(), to_position.edge_y(), delta))->as_edge());
+            interpolate_value(element, from_position.edge_x(), to_position.edge_x(), delta)->as_edge(),
+            interpolate_value(element, from_position.edge_y(), to_position.edge_y(), delta)->as_edge());
     }
     case StyleValue::Type::Ratio: {
         auto from_ratio = from.as_ratio().ratio();
@@ -1204,7 +1213,7 @@ static ErrorOr<NonnullRefPtr<StyleValue const>> interpolate_value(DOM::Element& 
         StyleValueVector interpolated_values;
         interpolated_values.ensure_capacity(from_list.size());
         for (size_t i = 0; i < from_list.size(); ++i)
-            interpolated_values.append(TRY(interpolate_value(element, from_list.values()[i], to_list.values()[i], delta)));
+            interpolated_values.append(interpolate_value(element, from_list.values()[i], to_list.values()[i], delta));
 
         return StyleValueList::create(move(interpolated_values), from_list.separator());
     }
@@ -1213,7 +1222,7 @@ static ErrorOr<NonnullRefPtr<StyleValue const>> interpolate_value(DOM::Element& 
     }
 }
 
-static ErrorOr<ValueComparingNonnullRefPtr<StyleValue const>> interpolate_property(DOM::Element& element, PropertyID property_id, StyleValue const& from, StyleValue const& to, float delta)
+static ValueComparingNonnullRefPtr<StyleValue const> interpolate_property(DOM::Element& element, PropertyID property_id, StyleValue const& from, StyleValue const& to, float delta)
 {
     auto animation_type = animation_type_from_longhand_property(property_id);
     switch (animation_type) {
@@ -1222,8 +1231,18 @@ static ErrorOr<ValueComparingNonnullRefPtr<StyleValue const>> interpolate_proper
     case AnimationType::None:
         return to;
     case AnimationType::Custom: {
-        if (property_id == PropertyID::Transform)
-            return interpolate_transform(element, from, to, delta);
+        if (property_id == PropertyID::Transform) {
+            if (auto interpolated_transform = interpolate_transform(element, from, to, delta))
+                return *interpolated_transform;
+
+            // FIXME: https://drafts.csswg.org/css-transforms-1/#interpolation-of-transforms
+            //        In some cases, an animation might cause a transformation matrix to be singular or non-invertible.
+            //        For example, an animation in which scale moves from 1 to -1. At the time when the matrix is in
+            //        such a state, the transformed element is not rendered.
+
+            // For now, just fall back to discrete interpolation
+            return delta >= 0.5f ? to : from;
+        }
         if (property_id == PropertyID::BoxShadow)
             return interpolate_box_shadow(element, from, to, delta);
 
@@ -1318,7 +1337,7 @@ ErrorOr<void> StyleComputer::collect_animation_into(JS::NonnullGCPtr<Animations:
         auto start = resolved_start_property.release_nonnull();
         auto end = resolved_end_property.release_nonnull();
 
-        auto next_value = TRY(interpolate_property(*effect->target(), it.key, *start, *end, progress_in_keyframe));
+        auto next_value = interpolate_property(*effect->target(), it.key, *start, *end, progress_in_keyframe);
         dbgln_if(LIBWEB_CSS_ANIMATION_DEBUG, "Interpolated value for property {} at {}: {} -> {} = {}", string_from_property_id(it.key), progress_in_keyframe, start->to_string(), end->to_string(), next_value->to_string());
         style_properties.set_property(it.key, next_value);
     }
