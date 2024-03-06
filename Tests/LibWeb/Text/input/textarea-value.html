@@ -35,5 +35,19 @@
             textarea.innerHTML = 'PASS';
             return textarea.textLength;
         });
+
+        // 5. Textarea input via keyboard events.
+        testPart(() => {
+            const textarea = document.createElement('textarea');
+
+            // The element currently has to be part of a document to be able to receive keyboard events.
+            document.body.appendChild(textarea);
+
+            internals.sendText(textarea, 'PASS');
+            const value = textarea.value;
+
+            document.body.removeChild(textarea);
+            return value;
+        });
     });
 </script>

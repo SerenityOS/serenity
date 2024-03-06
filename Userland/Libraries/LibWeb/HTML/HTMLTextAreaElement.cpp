@@ -24,6 +24,7 @@ JS_DEFINE_ALLOCATOR(HTMLTextAreaElement);
 
 HTMLTextAreaElement::HTMLTextAreaElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
+    , m_input_event_timer(Web::Platform::Timer::create_single_shot(0, [this]() { queue_firing_input_event(); }))
 {
 }
 
@@ -333,10 +334,28 @@ void HTMLTextAreaElement::form_associated_element_attribute_changed(FlyString co
 
 void HTMLTextAreaElement::did_edit_text_node(Badge<Web::HTML::BrowsingContext>)
 {
+    VERIFY(m_text_node);
+    m_raw_value = m_text_node->data();
+
+    // Any time the user causes the element's raw value to change, the user agent must queue an element task on the user
+    // interaction task source given the textarea element to fire an event named input at the textarea element, with the
+    // bubbles and composed attributes initialized to true. User agents may wait for a suitable break in the user's
+    // interaction before queuing the task; for example, a user agent could wait for the user to have not hit a key for
+    // 100ms, so as to only fire the event when the user pauses, instead of continuously for each keystroke.
+    m_input_event_timer->restart(100);
+
     // A textarea element's dirty value flag must be set to true whenever the user interacts with the control in a way that changes the raw value.
     m_dirty_value = true;
 
     update_placeholder_visibility();
+}
+
+void HTMLTextAreaElement::queue_firing_input_event()
+{
+    queue_an_element_task(HTML::Task::Source::UserInteraction, [this]() {
+        auto change_event = DOM::Event::create(realm(), HTML::EventNames::input, { .bubbles = true, .composed = true });
+        dispatch_event(change_event);
+    });
 }
 
 }
