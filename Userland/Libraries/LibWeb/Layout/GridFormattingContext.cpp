@@ -223,14 +223,12 @@ void GridFormattingContext::place_item_with_row_and_column_position(Box const& c
     auto column_start = column_placement_position.start;
     auto column_span = column_placement_position.span;
 
-    m_grid_items.append(GridItem {
+    record_grid_placement(GridItem {
         .box = child_box,
         .row = row_start,
         .row_span = row_span,
         .column = column_start,
         .column_span = column_span });
-
-    m_occupation_grid.set_occupied(column_start, column_start + column_span, row_start, row_start + row_span);
 }
 
 void GridFormattingContext::place_item_with_row_position(Box const& child_box)
@@ -254,9 +252,8 @@ void GridFormattingContext::place_item_with_row_position(Box const& child_box)
     if (!found_available_column) {
         column_start = m_occupation_grid.column_count();
     }
-    m_occupation_grid.set_occupied(column_start, column_start + column_span, row_start, row_start + row_span);
 
-    m_grid_items.append(GridItem {
+    record_grid_placement(GridItem {
         .box = child_box,
         .row = row_start,
         .row_span = row_span,
@@ -289,9 +286,8 @@ void GridFormattingContext::place_item_with_column_position(Box const& child_box
     }
     // 4.1.1.3. Set the item's row-start line to the cursor's row position, and set the item's row-end
     // line according to its span from that position.
-    m_occupation_grid.set_occupied(column_start, column_start + column_span, auto_placement_cursor_y, auto_placement_cursor_y + row_span);
 
-    m_grid_items.append(GridItem {
+    record_grid_placement(GridItem {
         .box = child_box,
         .row = auto_placement_cursor_y,
         .row_span = row_span,
@@ -384,13 +380,18 @@ void GridFormattingContext::place_item_with_no_declared_position(Box const& chil
         auto_placement_cursor_y += row_span - 1;
     }
 
-    m_occupation_grid.set_occupied(column_start, column_start + column_span, row_start, row_start + row_span);
-    m_grid_items.append(GridItem {
+    record_grid_placement(GridItem {
         .box = child_box,
         .row = row_start,
         .row_span = row_span,
         .column = column_start,
         .column_span = column_span });
+}
+
+void GridFormattingContext::record_grid_placement(GridItem grid_item)
+{
+    m_occupation_grid.set_occupied(grid_item.column, grid_item.column + grid_item.column_span, grid_item.row, grid_item.row + grid_item.row_span);
+    m_grid_items.append(grid_item);
 }
 
 void GridFormattingContext::initialize_grid_tracks_from_definition(GridDimension dimension)

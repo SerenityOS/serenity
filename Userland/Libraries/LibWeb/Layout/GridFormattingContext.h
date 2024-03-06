@@ -266,6 +266,7 @@ private:
     void place_item_with_row_position(Box const& child_box);
     void place_item_with_column_position(Box const& child_box, int& auto_placement_cursor_x, int& auto_placement_cursor_y);
     void place_item_with_no_declared_position(Box const& child_box, int& auto_placement_cursor_x, int& auto_placement_cursor_y);
+    void record_grid_placement(GridItem);
 
     void initialize_grid_tracks_from_definition(GridDimension);
     void initialize_grid_tracks_for_columns_and_rows();
