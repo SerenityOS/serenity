@@ -148,6 +148,26 @@ u32 HTMLTextAreaElement::text_length() const
     return Utf16View { utf16_data }.length_in_code_units();
 }
 
+// https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#dom-cva-checkvalidity
+bool HTMLTextAreaElement::check_validity()
+{
+    dbgln("(STUBBED) HTMLTextAreaElement::check_validity(). Called on: {}", debug_description());
+    return true;
+}
+
+// https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#dom-cva-reportvalidity
+bool HTMLTextAreaElement::report_validity()
+{
+    dbgln("(STUBBED) HTMLTextAreaElement::report_validity(). Called on: {}", debug_description());
+    return true;
+}
+
+// https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#dom-cva-setcustomvalidity
+void HTMLTextAreaElement::set_custom_validity(String const& error)
+{
+    dbgln("(STUBBED) HTMLTextAreaElement::set_custom_validity(\"{}\"). Called on: {}", error, debug_description());
+}
+
 // https://html.spec.whatwg.org/multipage/form-elements.html#dom-textarea-maxlength
 WebIDL::Long HTMLTextAreaElement::max_length() const
 {

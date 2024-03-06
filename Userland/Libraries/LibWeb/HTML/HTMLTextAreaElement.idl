@@ -28,9 +28,9 @@ interface HTMLTextAreaElement : HTMLElement {
     // FIXME: readonly attribute boolean willValidate;
     // FIXME: readonly attribute ValidityState validity;
     // FIXME: readonly attribute DOMString validationMessage;
-    // FIXME: boolean checkValidity();
-    // FIXME: boolean reportValidity();
-    // FIXME: undefined setCustomValidity(DOMString error);
+    boolean checkValidity();
+    boolean reportValidity();
+    undefined setCustomValidity(DOMString error);
 
     // FIXME: readonly attribute NodeList labels;
 
