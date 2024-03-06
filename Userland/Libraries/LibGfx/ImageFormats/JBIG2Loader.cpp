@@ -266,6 +266,38 @@ static ErrorOr<void> decode_segment_headers(JBIG2LoadingContext& context, Readon
     return {};
 }
 
+// 7.4.8 Page information segment syntax
+struct [[gnu::packed]] PageInformationSegment {
+    BigEndian<u32> bitmap_width;
+    BigEndian<u32> bitmap_height;
+    BigEndian<u32> page_x_resolution; // In pixels/meter.
+    BigEndian<u32> page_y_resolution; // In pixels/meter.
+    u8 flags;
+    BigEndian<u16> striping_information;
+};
+static_assert(AssertSize<PageInformationSegment, 19>());
+
+static ErrorOr<PageInformationSegment> decode_page_information_segment(ReadonlyBytes data)
+{
+    // 7.4.8 Page information segment syntax
+    if (data.size() != sizeof(PageInformationSegment))
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid page information segment size");
+    return *(PageInformationSegment const*)data.data();
+}
+
+static ErrorOr<void> scan_for_page_size(JBIG2LoadingContext& context)
+{
+    // We only decode the first page at the moment.
+    for (auto const& segment : context.segments) {
+        if (segment.header.type != SegmentType::PageInformation)
+            continue;
+        auto page_information = TRY(decode_page_information_segment(segment.data));
+        context.size = { page_information.bitmap_width, page_information.bitmap_height };
+        return {};
+    }
+    return Error::from_string_literal("JBIG2ImageDecoderPlugin: No page information segment found");
+}
+
 JBIG2ImageDecoderPlugin::JBIG2ImageDecoderPlugin()
 {
     m_context = make<JBIG2LoadingContext>();
@@ -289,6 +321,8 @@ ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> JBIG2ImageDecoderPlugin::create(Reado
     data = data.slice(sizeof(id_string) + sizeof(u8) + (plugin->m_context->number_of_pages.has_value() ? sizeof(u32) : 0));
     TRY(decode_segment_headers(*plugin->m_context, data));
 
+    TRY(scan_for_page_size(*plugin->m_context));
+
     return plugin;
 }
 
@@ -311,6 +345,8 @@ ErrorOr<ByteBuffer> JBIG2ImageDecoderPlugin::decode_embedded(Vector<ReadonlyByte
 
     for (auto const& segment_data : data)
         TRY(decode_segment_headers(*plugin->m_context, segment_data));
+
+    TRY(scan_for_page_size(*plugin->m_context));
 
     return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode embedded JBIG2 yet");
 }
