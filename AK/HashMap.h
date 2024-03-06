@@ -135,6 +135,8 @@ public:
 
     ErrorOr<void> try_ensure_capacity(size_t capacity) { return m_table.try_ensure_capacity(capacity); }
 
+    void ensure_capacity(size_t capacity) { return m_table.ensure_capacity(capacity); }
+
     Optional<typename ValueTraits::ConstPeekType> get(K const& key) const
     requires(!IsPointer<typename ValueTraits::PeekType>)
     {
