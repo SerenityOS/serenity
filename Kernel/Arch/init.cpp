@@ -162,10 +162,6 @@ READONLY_AFTER_INIT size_t multiboot_module_length;
 
 Atomic<Graphics::Console*> g_boot_console;
 
-#if ARCH(AARCH64)
-READONLY_AFTER_INIT static u8 s_command_line_buffer[512];
-#endif
-
 extern "C" [[noreturn]] UNMAP_AFTER_INIT NO_SANITIZE_COVERAGE void init([[maybe_unused]] BootInfo const& boot_info)
 {
 #if ARCH(X86_64)
@@ -194,32 +190,11 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT NO_SANITIZE_COVERAGE void init([[maybe_
     multiboot_framebuffer_height = boot_info.multiboot_framebuffer_height;
     multiboot_framebuffer_bpp = boot_info.multiboot_framebuffer_bpp;
     multiboot_framebuffer_type = boot_info.multiboot_framebuffer_type;
-#elif ARCH(AARCH64)
-    // FIXME: For the aarch64 platforms, we should get the information by parsing a device tree instead of using multiboot.
-    auto [ram_base, ram_size] = RPi::Mailbox::the().query_lower_arm_memory_range();
-    auto [vcmem_base, vcmem_size] = RPi::Mailbox::the().query_videocore_memory_range();
-    multiboot_memory_map_t mmap[] = {
-        {
-            sizeof(struct multiboot_mmap_entry) - sizeof(u32),
-            (u64)ram_base,
-            (u64)ram_size,
-            MULTIBOOT_MEMORY_AVAILABLE,
-        },
-        {
-            sizeof(struct multiboot_mmap_entry) - sizeof(u32),
-            (u64)vcmem_base,
-            (u64)vcmem_size,
-            MULTIBOOT_MEMORY_RESERVED,
-        },
-        // FIXME: VideoCore only reports the first 1GB of RAM, the rest only shows up in the device tree.
-    };
-    multiboot_memory_map = mmap;
-    multiboot_memory_map_count = 2;
+#elif ARCH(AARCH64) || ARCH(RISCV64)
+    if (!DeviceTree::verify_fdt())
+        // We are too early in the boot process to print anything, so just hang if the FDT is invalid.
+        Processor::halt();
 
-    multiboot_module_length = 0;
-    // FIXME: Read the /chosen/bootargs property.
-    kernel_cmdline = RPi::Mailbox::the().query_kernel_command_line(s_command_line_buffer);
-#elif ARCH(RISCV64)
     auto maybe_command_line = DeviceTree::get_command_line_from_fdt();
     if (maybe_command_line.is_error())
         kernel_cmdline = "serial_debug"sv;
@@ -286,12 +261,14 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT NO_SANITIZE_COVERAGE void init([[maybe_
     for (ctor_func_t* ctor = start_ctors; ctor < end_ctors; ctor++)
         (*ctor)();
 
-#if ARCH(RISCV64)
+#if ARCH(AARCH64) || ARCH(RISCV64)
     MUST(DeviceTree::unflatten_fdt());
 
     if (kernel_command_line().contains("dump_fdt"sv))
         DeviceTree::dump_fdt();
+#endif
 
+#if ARCH(RISCV64)
     init_delay_loop();
 #endif
 
