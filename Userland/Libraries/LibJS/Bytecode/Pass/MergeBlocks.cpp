@@ -36,8 +36,7 @@ void MergeBlocks::perform(PassPipelineExecutable& executable)
         if (entry.key->terminator()->type() != Instruction::Type::Jump)
             continue;
 
-        // NOTE: We can't replace the first block in a function, as it's the entry block.
-        if (entry.key != executable.executable.basic_blocks.first()) {
+        {
             InstructionStreamIterator it { entry.key->instruction_stream() };
             auto& first_instruction = *it;
             if (first_instruction.type() == Instruction::Type::Jump) {
