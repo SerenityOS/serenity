@@ -54,6 +54,10 @@ PDFErrorOr<void> Type1Font::initialize(Document* document, NonnullRefPtr<DictObj
         auto font = TRY(replacement_for(base_font_name().to_lowercase(), font_size));
 
         auto effective_encoding = encoding();
+        bool is_standard_14_font = base_font_name() == "Helvetica" || base_font_name() == "Helvetica-Bold" || base_font_name() == "Helvetica-Oblique" || base_font_name() == "Helvetica-BoldOblique"
+            || base_font_name() == "Times-Roman" || base_font_name() == "Times-Bold" || base_font_name() == "Times-Italic" || base_font_name() == "Times-BoldItalic"
+            || base_font_name() == "Courier" || base_font_name() == "Courier-Bold" || base_font_name() == "Courier-Oblique" || base_font_name() == "Courier-BoldOblique"
+            || base_font_name() == "Symbol" || base_font_name() == "ZapfDingbats";
         if (!effective_encoding) {
             // PDF 1.7 spec, APPENDIX D Character Sets and Encodings
             // "Sections D.4, “Symbol Set and Encoding,” and D.5, “ZapfDingbats Set and Encoding,”
@@ -73,7 +77,12 @@ PDFErrorOr<void> Type1Font::initialize(Document* document, NonnullRefPtr<DictObj
                 effective_encoding = Encoding::standard_encoding();
         }
 
-        // FIXME: For the standard 14 fonts, set some m_flags bits (symbolic/nonsymbolic, italic, bold, fixed pitch, serif).
+        if (is_standard_14_font) {
+            // We use the Liberation fonts as a replacement for the standard 14 fonts, and they're all non-symbolic.
+            m_flags = (m_flags | NonSymbolic) & ~Symbolic;
+
+            // FIXME: Set more m_flags bits (symbolic/nonsymbolic, italic, bold, fixed pitch, serif).
+        }
 
         m_fallback_font_painter = TrueTypePainter::create(document, dict, *this, *font, *effective_encoding, base_font_name() == "ZapfDingbats"sv);
     }

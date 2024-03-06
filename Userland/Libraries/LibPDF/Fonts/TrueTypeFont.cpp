@@ -37,23 +37,26 @@ NonnullOwnPtr<TrueTypePainter> TrueTypePainter::create(Document* document, Nonnu
         }
     }
 
-    // See long spec comment in TrueTypeFont::draw_glyp().
+    // See long spec comment in TrueTypeFont::draw_glyph().
     Optional<u8> high_byte;
     if (!dict->contains(CommonNames::Encoding) || containing_pdf_font.is_symbolic()) {
-        // FIXME: Looks like this is never hit in the test set (?).
-        for (u8 prefix : { 0x00, 0xF0, 0xF1, 0xF2 }) {
-            bool has_all = true;
+        Array<u8, 4> prefixes { 0x00, 0xF0, 0xF1, 0xF2 };
+        Array<size_t, prefixes.size()> counts { 0, 0, 0, 0 };
+        for (size_t i = 0; i < prefixes.size(); ++i) {
             for (unsigned suffix = 0x00; suffix <= 0xFF; ++suffix) {
-                if (!font->contains_glyph((prefix << 8) | suffix)) {
-                    has_all = false;
-                    break;
-                }
-            }
-            if (has_all) {
-                high_byte = prefix;
-                break;
+                if (font->contains_glyph((prefixes[i] << 8) | suffix))
+                    counts[i] += 1;
             }
         }
+        size_t max = 0, max_index = -1;
+        for (size_t i = 0; i < counts.size(); ++i) {
+            if (counts[i] > max) {
+                max = counts[i];
+                max_index = i;
+            }
+        }
+        if (max > 0)
+            high_byte = max_index;
     }
 
     return adopt_own(*new TrueTypePainter { move(font), move(encoding), encoding_is_mac_roman_or_win_ansi, containing_pdf_font.is_nonsymbolic(), high_byte, is_zapf_dingbats });
