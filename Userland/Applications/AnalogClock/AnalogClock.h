@@ -18,6 +18,9 @@ public:
 
     Function<void(GUI::ContextMenuEvent&)> on_context_menu_request;
 
+    void set_time_zone(StringView time_zone) { m_time_zone = time_zone; }
+    void set_show_time_zone(bool value) { m_show_time_zone = value; }
+
 private:
     AnalogClock()
         : m_small_graduation_square(Gfx::IntRect({}, { 3, 3 }))
@@ -37,6 +40,9 @@ private:
     double m_hand_wing_span { 5 };
 
     bool m_show_window_frame { true };
+
+    StringView m_time_zone;
+    bool m_show_time_zone { false };
 
 protected:
     void context_menu_event(GUI::ContextMenuEvent& event) override;

@@ -10,6 +10,7 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/Path.h>
+#include <LibTimeZone/TimeZone.h>
 
 void AnalogClock::draw_graduations(GUI::Painter& painter, Gfx::IntRect rect, int x, int y)
 {
@@ -112,9 +113,21 @@ void AnalogClock::paint_event(GUI::PaintEvent& event)
     GUI::Painter painter(*this);
     painter.clear_rect(event.rect(), m_show_window_frame ? palette().window() : Gfx::Color::Transparent);
 
+    if (m_show_time_zone) {
+        painter.draw_text(
+            Gfx::IntRect { { event.rect().width() / 2, (int)(event.rect().height() - m_clock_face_radius) / 2 }, {} },
+            m_time_zone,
+            Gfx::FontDatabase::default_font().bold_variant(),
+            Gfx::TextAlignment::Center);
+    }
+
     draw_face(painter);
 
-    auto time = Core::DateTime::now();
+    auto now_seconds = Core::DateTime::now().timestamp();
+    auto maybe_time_zone_offset = TimeZone::get_time_zone_offset(m_time_zone, UnixDateTime::from_seconds_since_epoch(now_seconds));
+    VERIFY(maybe_time_zone_offset.has_value());
+
+    auto time = Core::DateTime::from_timestamp(now_seconds + maybe_time_zone_offset.value().seconds);
     auto minute = time.minute() * (2 * M_PI) / 60;
     auto hour = (minute + (2 * M_PI) * time.hour()) / 12;
     auto seconds = time.second() * (2 * M_PI) / 60;
