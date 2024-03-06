@@ -316,7 +316,7 @@ PDFErrorOr<ByteBuffer> Filter::decode_ccitt(ReadonlyBytes bytes, RefPtr<DictObje
     //        achieve to decode images that have it. Figure out what to do with it.
     (void)end_of_block;
 
-    if (require_end_of_line || encoded_byte_align || damaged_rows_before_error > 0 || rows == 0)
+    if (require_end_of_line || encoded_byte_align || damaged_rows_before_error > 0)
         return Error::rendering_unsupported_error("Unimplemented option for the CCITTFaxDecode Filter");
 
     ByteBuffer decoded {};
