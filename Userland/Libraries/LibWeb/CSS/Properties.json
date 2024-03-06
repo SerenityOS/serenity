@@ -1307,6 +1307,13 @@
       "image-rendering"
     ]
   },
+  "inline-size": {
+      "logical-alias-for": [
+        "width"
+      ],
+      "initial": "auto",
+      "max-values": 1
+  },
   "inset": {
     "inherited": false,
     "initial": "auto",

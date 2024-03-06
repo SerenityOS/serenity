@@ -374,6 +374,8 @@ void StyleComputer::for_each_property_expanding_shorthands(PropertyID property_i
             return PropertyID::PaddingLeft;
         case PropertyID::PaddingInlineEnd:
             return PropertyID::PaddingRight;
+        case PropertyID::InlineSize:
+            return PropertyID::Width;
         case PropertyID::InsetBlockStart:
             return PropertyID::Top;
         case PropertyID::InsetBlockEnd:
