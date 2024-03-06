@@ -8,6 +8,8 @@
 
 #include <AK/HashMap.h>
 #include <LibIPC/ConnectionToServer.h>
+#include <LibProtocol/WebSocket.h>
+#include <LibWebSocket/WebSocket.h>
 #include <RequestServer/RequestClientEndpoint.h>
 #include <RequestServer/RequestServerEndpoint.h>
 
@@ -26,6 +28,8 @@ public:
     template<typename RequestHashMapTraits = Traits<ByteString>>
     RefPtr<Request> start_request(ByteString const& method, URL const&, HashMap<ByteString, ByteString, RequestHashMapTraits> const& request_headers = {}, ReadonlyBytes request_body = {}, Core::ProxyData const& = {});
 
+    RefPtr<WebSocket> websocket_connect(const URL&, ByteString const& origin = {}, Vector<ByteString> const& protocols = {}, Vector<ByteString> const& extensions = {}, HashMap<ByteString, ByteString> const& request_headers = {});
+
     void ensure_connection(URL const&, ::RequestServer::CacheLevel);
 
     bool stop_request(Badge<Request>, Request&);
@@ -38,7 +42,14 @@ private:
     virtual void certificate_requested(i32) override;
     virtual void headers_became_available(i32, HashMap<ByteString, ByteString, CaseInsensitiveStringTraits> const&, Optional<u32> const&) override;
 
+    virtual void websocket_connected(i32) override;
+    virtual void websocket_received(i32, bool, ByteBuffer const&) override;
+    virtual void websocket_errored(i32, i32) override;
+    virtual void websocket_closed(i32, u16, ByteString const&, bool) override;
+    virtual void websocket_certificate_requested(i32) override;
+
     HashMap<i32, RefPtr<Request>> m_requests;
+    HashMap<i32, NonnullRefPtr<WebSocket>> m_websockets;
 };
 
 }

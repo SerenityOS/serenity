@@ -12,8 +12,8 @@
 #include <LibCore/System.h>
 #include <LibLine/Editor.h>
 #include <LibMain/Main.h>
+#include <LibProtocol/RequestClient.h>
 #include <LibProtocol/WebSocket.h>
-#include <LibProtocol/WebSocketClient.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -38,7 +38,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::EventLoop loop;
 
-    auto maybe_websocket_client = Protocol::WebSocketClient::try_create();
+    auto maybe_websocket_client = Protocol::RequestClient::try_create();
     if (maybe_websocket_client.is_error()) {
         warnln("Failed to connect to the websocket server: {}\n", maybe_websocket_client.error());
         return maybe_websocket_client.release_error();
@@ -47,7 +47,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     RefPtr<Line::Editor> editor = Line::Editor::construct();
     bool should_quit = false;
-    auto socket = websocket_client->connect(url, origin);
+    auto socket = websocket_client->websocket_connect(url, origin);
     if (!socket) {
         warnln("Failed to start socket for '{}'\n", url);
         return 1;

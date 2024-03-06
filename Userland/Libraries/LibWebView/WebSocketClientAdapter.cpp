@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibProtocol/RequestClient.h>
 #include <LibProtocol/WebSocket.h>
-#include <LibProtocol/WebSocketClient.h>
 #include <LibWebView/WebSocketClientAdapter.h>
 
 namespace WebView {
@@ -105,32 +105,6 @@ void WebSocketClientSocketAdapter::send(StringView text_message)
 void WebSocketClientSocketAdapter::close(u16 code, ByteString reason)
 {
     m_websocket->close(code, reason);
-}
-
-ErrorOr<NonnullRefPtr<WebSocketClientManagerAdapter>> WebSocketClientManagerAdapter::try_create(NonnullRefPtr<Protocol::WebSocketClient> websocket_client)
-{
-    return adopt_nonnull_ref_or_enomem(new (nothrow) WebSocketClientManagerAdapter(move(websocket_client)));
-}
-
-ErrorOr<NonnullRefPtr<WebSocketClientManagerAdapter>> WebSocketClientManagerAdapter::try_create()
-{
-    auto websocket_client = TRY(Protocol::WebSocketClient::try_create());
-    return adopt_nonnull_ref_or_enomem(new (nothrow) WebSocketClientManagerAdapter(move(websocket_client)));
-}
-
-WebSocketClientManagerAdapter::WebSocketClientManagerAdapter(NonnullRefPtr<Protocol::WebSocketClient> websocket_client)
-    : m_websocket_client(move(websocket_client))
-{
-}
-
-WebSocketClientManagerAdapter::~WebSocketClientManagerAdapter() = default;
-
-RefPtr<Web::WebSockets::WebSocketClientSocket> WebSocketClientManagerAdapter::connect(const URL& url, ByteString const& origin, Vector<ByteString> const& protocols)
-{
-    auto underlying_websocket = m_websocket_client->connect(url, origin, protocols);
-    if (!underlying_websocket)
-        return {};
-    return WebSocketClientSocketAdapter::create(underlying_websocket.release_nonnull());
 }
 
 }

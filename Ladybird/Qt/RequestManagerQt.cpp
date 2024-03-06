@@ -5,6 +5,8 @@
  */
 
 #include "RequestManagerQt.h"
+#include "WebSocketImplQt.h"
+#include "WebSocketQt.h"
 #include <AK/JsonObject.h>
 #include <QNetworkCookie>
 
@@ -74,6 +76,18 @@ ErrorOr<NonnullRefPtr<RequestManagerQt::Request>> RequestManagerQt::Request::cre
     }
 
     return adopt_ref(*new Request(*reply));
+}
+
+RefPtr<Web::WebSockets::WebSocketClientSocket> RequestManagerQt::websocket_connect(AK::URL const& url, AK::ByteString const& origin, Vector<AK::ByteString> const& protocols)
+{
+    WebSocket::ConnectionInfo connection_info(url);
+    connection_info.set_origin(origin);
+    connection_info.set_protocols(protocols);
+
+    auto impl = adopt_ref(*new WebSocketImplQt);
+    auto web_socket = WebSocket::WebSocket::create(move(connection_info), move(impl));
+    web_socket->start();
+    return WebSocketQt::create(web_socket);
 }
 
 RequestManagerQt::Request::Request(QNetworkReply& reply)

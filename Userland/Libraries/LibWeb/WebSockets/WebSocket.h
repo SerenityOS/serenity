@@ -114,19 +114,7 @@ public:
     Function<CertificateAndKey()> on_certificate_requested;
 
 protected:
-    explicit WebSocketClientSocket();
-};
-
-class WebSocketClientManager : public Core::EventReceiver {
-    C_OBJECT_ABSTRACT(WebSocketClientManager)
-public:
-    static void initialize(RefPtr<WebSocketClientManager>);
-    static WebSocketClientManager& the();
-
-    virtual RefPtr<WebSocketClientSocket> connect(URL const&, ByteString const& origin, Vector<ByteString> const& protocols) = 0;
-
-protected:
-    explicit WebSocketClientManager();
+    explicit WebSocketClientSocket() = default;
 };
 
 }

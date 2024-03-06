@@ -40,7 +40,6 @@ ErrorOr<int> serenity_main(Main::Arguments)
     TRY(Core::System::unveil("/tmp/session/%sid/portal/audio", "rw"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/request", "rw"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/image", "rw"));
-    TRY(Core::System::unveil("/tmp/session/%sid/portal/websocket", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     Web::Platform::EventLoopPlugin::install(*new Web::Platform::EventLoopPluginSerenity);
@@ -51,7 +50,6 @@ ErrorOr<int> serenity_main(Main::Arguments)
         return Web::Platform::AudioCodecPluginAgnostic::create(move(loader));
     });
 
-    Web::WebSockets::WebSocketClientManager::initialize(TRY(WebView::WebSocketClientManagerAdapter::try_create()));
     Web::ResourceLoader::initialize(TRY(WebView::RequestServerAdapter::try_create()));
     TRY(Web::Bindings::initialize_main_thread_vm());
 

@@ -28,18 +28,12 @@
 #include <LibWeb/Platform/AudioCodecPluginAgnostic.h>
 #include <LibWeb/Platform/EventLoopPluginSerenity.h>
 #include <LibWebView/RequestServerAdapter.h>
-#include <LibWebView/WebSocketClientAdapter.h>
 #include <WebContent/ConnectionFromClient.h>
 #include <WebContent/PageHost.h>
 
 static ErrorOr<NonnullRefPtr<Protocol::RequestClient>> bind_request_server_service()
 {
     return bind_service<Protocol::RequestClient>(&bind_request_server_java);
-}
-
-static ErrorOr<NonnullRefPtr<Protocol::WebSocketClient>> bind_web_socket_service()
-{
-    return bind_service<Protocol::WebSocketClient>(&bind_web_socket_java);
 }
 
 template ErrorOr<NonnullRefPtr<ImageDecoderClient::Client>, Error>
@@ -63,9 +57,6 @@ ErrorOr<int> service_main(int ipc_socket, int fd_passing_socket)
 
     auto request_server_client = TRY(bind_request_server_service());
     Web::ResourceLoader::initialize(TRY(WebView::RequestServerAdapter::try_create(move(request_server_client))));
-
-    auto web_socket_client = TRY(bind_web_socket_service());
-    Web::WebSockets::WebSocketClientManager::initialize(TRY(WebView::WebSocketClientManagerAdapter::try_create(move(web_socket_client))));
 
     bool is_layout_test_mode = false;
 

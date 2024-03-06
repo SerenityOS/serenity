@@ -30,13 +30,11 @@ ErrorOr<int> serenity_main(Main::Arguments)
     TRY(Core::System::unveil("/etc/timezone", "r"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/request", "rw"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/image", "rw"));
-    TRY(Core::System::unveil("/tmp/session/%sid/portal/websocket", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     Web::Platform::EventLoopPlugin::install(*new Web::Platform::EventLoopPluginSerenity);
     Web::Platform::FontPlugin::install(*new Web::Platform::FontPluginSerenity);
 
-    Web::WebSockets::WebSocketClientManager::initialize(TRY(WebView::WebSocketClientManagerAdapter::try_create()));
     Web::ResourceLoader::initialize(TRY(WebView::RequestServerAdapter::try_create()));
     TRY(Web::Bindings::initialize_main_thread_vm());
 

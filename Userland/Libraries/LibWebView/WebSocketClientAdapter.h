@@ -13,7 +13,7 @@
 
 namespace Protocol {
 class WebSocket;
-class WebSocketClient;
+class RequestClient;
 };
 
 namespace WebView {
@@ -36,21 +36,6 @@ private:
     WebSocketClientSocketAdapter(NonnullRefPtr<Protocol::WebSocket>);
 
     NonnullRefPtr<Protocol::WebSocket> m_websocket;
-};
-
-class WebSocketClientManagerAdapter : public Web::WebSockets::WebSocketClientManager {
-public:
-    static ErrorOr<NonnullRefPtr<WebSocketClientManagerAdapter>> try_create(NonnullRefPtr<Protocol::WebSocketClient>);
-    static ErrorOr<NonnullRefPtr<WebSocketClientManagerAdapter>> try_create();
-
-    virtual ~WebSocketClientManagerAdapter() override;
-
-    virtual RefPtr<Web::WebSockets::WebSocketClientSocket> connect(const URL&, ByteString const& origin, Vector<ByteString> const& protocols) override;
-
-private:
-    WebSocketClientManagerAdapter(NonnullRefPtr<Protocol::WebSocketClient>);
-
-    NonnullRefPtr<Protocol::WebSocketClient> m_websocket_client;
 };
 
 }

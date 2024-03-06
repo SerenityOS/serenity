@@ -67,9 +67,5 @@ static ErrorOr<void> initialize_lagom_networking(Vector<ByteString> const& certi
     auto request_server_client = TRY(launch_request_server_process(candidate_request_server_paths, s_serenity_resource_root, certificates));
     Web::ResourceLoader::initialize(TRY(WebView::RequestServerAdapter::try_create(move(request_server_client))));
 
-    auto candidate_web_socket_paths = TRY(get_paths_for_helper_process("WebSocket"sv));
-    auto web_socket_client = TRY(launch_web_socket_process(candidate_web_socket_paths, s_serenity_resource_root, certificates));
-    Web::WebSockets::WebSocketClientManager::initialize(TRY(WebView::WebSocketClientManagerAdapter::try_create(move(web_socket_client))));
-
     return {};
 }

@@ -19,6 +19,7 @@
 #include <LibWeb/HTML/MessageEvent.h>
 #include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/Window.h>
+#include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/WebIDL/AbstractOperations.h>
 #include <LibWeb/WebIDL/Buffers.h>
 #include <LibWeb/WebIDL/DOMException.h>
@@ -29,27 +30,7 @@ namespace Web::WebSockets {
 
 JS_DEFINE_ALLOCATOR(WebSocket);
 
-static RefPtr<WebSocketClientManager> s_websocket_client_manager;
-
-void WebSocketClientManager::initialize(RefPtr<WebSocketClientManager> websocket_client_manager)
-{
-    s_websocket_client_manager = websocket_client_manager;
-}
-
-WebSocketClientManager& WebSocketClientManager::the()
-{
-    if (!s_websocket_client_manager) [[unlikely]] {
-        dbgln("Web::WebSockets::WebSocketClientManager was not initialized!");
-        VERIFY_NOT_REACHED();
-    }
-    return *s_websocket_client_manager;
-}
-
-WebSocketClientSocket::WebSocketClientSocket() = default;
-
 WebSocketClientSocket::~WebSocketClientSocket() = default;
-
-WebSocketClientManager::WebSocketClientManager() = default;
 
 // https://websockets.spec.whatwg.org/#dom-websocket-websocket
 WebIDL::ExceptionOr<JS::NonnullGCPtr<WebSocket>> WebSocket::construct_impl(JS::Realm& realm, String const& url, Optional<Variant<String, Vector<String>>> const& protocols)
@@ -148,7 +129,7 @@ ErrorOr<void> WebSocket::establish_web_socket_connection(URL& url_record, Vector
     for (auto const& protocol : protocols)
         TRY(protcol_byte_strings.try_append(protocol.to_byte_string()));
 
-    m_websocket = WebSocketClientManager::the().connect(url_record, origin_string, protcol_byte_strings);
+    m_websocket = ResourceLoader::the().connector().websocket_connect(url_record, origin_string, protcol_byte_strings);
     m_websocket->on_open = [weak_this = make_weak_ptr<WebSocket>()] {
         if (!weak_this)
             return;

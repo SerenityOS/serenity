@@ -57,11 +57,6 @@
             android:exported="false"
             android:process=":RequestServer" />
         <service
-            android:name=".WebSocketService"
-            android:enabled="true"
-            android:exported="false"
-            android:process=":WebSocket" />
-        <service
             android:name=".ImageDecoderService"
             android:enabled="true"
             android:exported="false"

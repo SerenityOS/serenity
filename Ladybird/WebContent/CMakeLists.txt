@@ -21,7 +21,6 @@ if (ENABLE_QT)
         ../Qt/EventLoopImplementationQtEventTarget.cpp
         ../Qt/RequestManagerQt.cpp
         ../Qt/StringUtils.cpp
-        ../Qt/WebSocketClientManagerQt.cpp
         ../Qt/WebSocketQt.cpp
         ../Qt/WebSocketImplQt.cpp
         main.cpp
