@@ -63,13 +63,6 @@ static void generate_cfg_for_block(BasicBlock const& current_block, PassPipeline
             enter_label(true_target, current_block);
             return;
         }
-
-#define JS_ENUMERATE_FUSABLE_BINARY_OP(PreOp, ...) \
-    case Jump##PreOp:
-
-            JS_ENUMERATE_FUSABLE_BINARY_OPS(JS_ENUMERATE_FUSABLE_BINARY_OP)
-#undef JS_ENUMERATE_FUSABLE_BINARY_OP
-
         case JumpIf:
         case JumpNullish:
         case JumpUndefined: {

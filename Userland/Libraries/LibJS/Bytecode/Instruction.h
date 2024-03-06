@@ -69,14 +69,6 @@
     O(IteratorToArray)                 \
     O(Jump)                            \
     O(JumpIf)                          \
-    O(JumpGreaterThan)                 \
-    O(JumpGreaterThanEquals)           \
-    O(JumpLessThan)                    \
-    O(JumpLessThanEquals)              \
-    O(JumpLooselyEquals)               \
-    O(JumpLooselyInequals)             \
-    O(JumpStrictlyEquals)              \
-    O(JumpStrictlyInequals)            \
     O(JumpNullish)                     \
     O(JumpUndefined)                   \
     O(LeaveLexicalEnvironment)         \

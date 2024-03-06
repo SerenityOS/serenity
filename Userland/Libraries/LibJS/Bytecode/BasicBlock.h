@@ -82,14 +82,14 @@ public:
         op->set_source_record({ start_offset, end_offset });
     }
 
+private:
+    explicit BasicBlock(String name);
+
     void terminate(size_t slot_offset)
     {
         m_terminated = true;
         m_terminator_offset = slot_offset;
     }
-
-private:
-    explicit BasicBlock(String name);
 
     Vector<u8> m_buffer;
     BasicBlock const* m_handler { nullptr };

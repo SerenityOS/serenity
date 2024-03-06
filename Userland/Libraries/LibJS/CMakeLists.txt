@@ -12,7 +12,6 @@ set(SOURCES
     Bytecode/Pass/DumpCFG.cpp
     Bytecode/Pass/GenerateCFG.cpp
     Bytecode/Pass/MergeBlocks.cpp
-    Bytecode/Pass/Peephole.cpp
     Bytecode/Pass/PlaceBlocks.cpp
     Bytecode/Pass/UnifySameBlocks.cpp
     Bytecode/RegexTable.cpp
