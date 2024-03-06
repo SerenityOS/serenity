@@ -12,6 +12,7 @@
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/FormAssociatedElement.h>
 #include <LibWeb/HTML/HTMLElement.h>
+#include <LibWeb/Platform/Timer.h>
 #include <LibWeb/WebIDL/Types.h>
 
 namespace Web::HTML {
@@ -109,12 +110,16 @@ private:
     void handle_readonly_attribute(Optional<String> const& value);
     void handle_maxlength_attribute();
 
+    void queue_firing_input_event();
+
     void update_placeholder_visibility();
     JS::GCPtr<DOM::Element> m_placeholder_element;
     JS::GCPtr<DOM::Text> m_placeholder_text_node;
 
     JS::GCPtr<DOM::Element> m_inner_text_element;
     JS::GCPtr<DOM::Text> m_text_node;
+
+    RefPtr<Web::Platform::Timer> m_input_event_timer;
 
     // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#concept-fe-dirty
     bool m_dirty_value { false };
