@@ -481,7 +481,7 @@ void ConnectionFromClient::debug_request(u64 page_id, ByteString const& request,
                 for (auto& child : element->children_as_vector())
                     elements_to_visit.enqueue(child.ptr());
                 if (element->is_element()) {
-                    auto styles = doc->style_computer().compute_style(*static_cast<Web::DOM::Element*>(element)).release_value_but_fixme_should_propagate_errors();
+                    auto styles = doc->style_computer().compute_style(*static_cast<Web::DOM::Element*>(element));
                     dbgln("+ Element {}", element->debug_description());
                     auto& properties = styles->properties();
                     for (size_t i = 0; i < properties.size(); ++i)
@@ -704,7 +704,7 @@ void ConnectionFromClient::inspect_dom_node(u64 page_id, i32 node_id, Optional<W
             // FIXME: Pseudo-elements only exist as Layout::Nodes, which don't have style information
             //        in a format we can use. So, we run the StyleComputer again to get the specified
             //        values, and have to ignore the computed values and custom properties.
-            auto pseudo_element_style = MUST(page.page().focused_context().active_document()->style_computer().compute_style(element, pseudo_element));
+            auto pseudo_element_style = page.page().focused_context().active_document()->style_computer().compute_style(element, pseudo_element);
             ByteString computed_values = serialize_json(pseudo_element_style);
             ByteString resolved_values = "{}";
             ByteString custom_properties_json = serialize_custom_properties_json(element, pseudo_element);

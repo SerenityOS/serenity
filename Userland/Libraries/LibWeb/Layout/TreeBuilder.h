@@ -27,7 +27,7 @@ private:
 
     i32 calculate_list_item_index(DOM::Node&);
 
-    ErrorOr<void> create_layout_tree(DOM::Node&, Context&);
+    void create_layout_tree(DOM::Node&, Context&);
 
     void push_parent(Layout::NodeWithStyle& node) { m_ancestor_stack.append(node); }
     void pop_parent() { m_ancestor_stack.take_last(); }
@@ -49,7 +49,7 @@ private:
         Prepend,
     };
     void insert_node_into_inline_or_block_ancestor(Layout::Node&, CSS::Display, AppendOrPrepend);
-    ErrorOr<void> create_pseudo_element_if_needed(DOM::Element&, CSS::Selector::PseudoElement::Type, AppendOrPrepend);
+    void create_pseudo_element_if_needed(DOM::Element&, CSS::Selector::PseudoElement::Type, AppendOrPrepend);
 
     JS::GCPtr<Layout::Node> m_layout_root;
     Vector<JS::NonnullGCPtr<Layout::NodeWithStyle>> m_ancestor_stack;
