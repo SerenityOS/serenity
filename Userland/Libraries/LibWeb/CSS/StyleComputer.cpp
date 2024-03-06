@@ -1220,7 +1220,7 @@ static NonnullRefPtr<StyleValue const> interpolate_value(DOM::Element& element, 
     }
 }
 
-static ValueComparingNonnullRefPtr<StyleValue const> interpolate_property(DOM::Element& element, PropertyID property_id, StyleValue const& from, StyleValue const& to, float delta)
+static ValueComparingRefPtr<StyleValue const> interpolate_property(DOM::Element& element, PropertyID property_id, StyleValue const& from, StyleValue const& to, float delta)
 {
     auto animation_type = animation_type_from_longhand_property(property_id);
     switch (animation_type) {
@@ -1233,13 +1233,11 @@ static ValueComparingNonnullRefPtr<StyleValue const> interpolate_property(DOM::E
             if (auto interpolated_transform = interpolate_transform(element, from, to, delta))
                 return *interpolated_transform;
 
-            // FIXME: https://drafts.csswg.org/css-transforms-1/#interpolation-of-transforms
-            //        In some cases, an animation might cause a transformation matrix to be singular or non-invertible.
-            //        For example, an animation in which scale moves from 1 to -1. At the time when the matrix is in
-            //        such a state, the transformed element is not rendered.
-
-            // For now, just fall back to discrete interpolation
-            return delta >= 0.5f ? to : from;
+            // https://drafts.csswg.org/css-transforms-1/#interpolation-of-transforms
+            // In some cases, an animation might cause a transformation matrix to be singular or non-invertible.
+            // For example, an animation in which scale moves from 1 to -1. At the time when the matrix is in
+            // such a state, the transformed element is not rendered.
+            return {};
         }
         if (property_id == PropertyID::BoxShadow)
             return interpolate_box_shadow(element, from, to, delta);
@@ -1335,9 +1333,14 @@ void StyleComputer::collect_animation_into(JS::NonnullGCPtr<Animations::Keyframe
         auto start = resolved_start_property.release_nonnull();
         auto end = resolved_end_property.release_nonnull();
 
-        auto next_value = interpolate_property(*effect->target(), it.key, *start, *end, progress_in_keyframe);
-        dbgln_if(LIBWEB_CSS_ANIMATION_DEBUG, "Interpolated value for property {} at {}: {} -> {} = {}", string_from_property_id(it.key), progress_in_keyframe, start->to_string(), end->to_string(), next_value->to_string());
-        style_properties.set_property(it.key, next_value);
+        if (auto next_value = interpolate_property(*effect->target(), it.key, *start, *end, progress_in_keyframe)) {
+            dbgln_if(LIBWEB_CSS_ANIMATION_DEBUG, "Interpolated value for property {} at {}: {} -> {} = {}", string_from_property_id(it.key), progress_in_keyframe, start->to_string(), end->to_string(), next_value->to_string());
+            style_properties.set_property(it.key, *next_value);
+        } else {
+            // If interpolate_property() fails, the element should not be rendered
+            dbgln_if(LIBWEB_CSS_ANIMATION_DEBUG, "Interpolated value for property {} at {}: {} -> {} is invalid", string_from_property_id(it.key), progress_in_keyframe, start->to_string(), end->to_string());
+            style_properties.set_property(PropertyID::Visibility, IdentifierStyleValue::create(ValueID::Hidden));
+        }
     }
 }
 
