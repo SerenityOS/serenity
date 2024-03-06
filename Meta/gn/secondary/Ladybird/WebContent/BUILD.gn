@@ -68,7 +68,6 @@ executable("WebContent") {
       "//Ladybird/Qt/EventLoopImplementationQtEventTarget.cpp",
       "//Ladybird/Qt/RequestManagerQt.cpp",
       "//Ladybird/Qt/StringUtils.cpp",
-      "//Ladybird/Qt/WebSocketClientManagerQt.cpp",
       "//Ladybird/Qt/WebSocketImplQt.cpp",
       "//Ladybird/Qt/WebSocketQt.cpp",
     ]
