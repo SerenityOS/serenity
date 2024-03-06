@@ -25,6 +25,7 @@ set(SOURCES
     Bindings/PlatformObject.cpp
     Clipboard/Clipboard.cpp
     Crypto/Crypto.cpp
+    Crypto/CryptoAlgorithms.cpp
     Crypto/CryptoBindings.cpp
     Crypto/CryptoKey.cpp
     Crypto/SubtleCrypto.cpp

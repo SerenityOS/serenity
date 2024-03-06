@@ -41,17 +41,17 @@ void SubtleCrypto::initialize(JS::Realm& realm)
 }
 
 // https://w3c.github.io/webcrypto/#dfn-normalize-an-algorithm
-JS::ThrowCompletionOr<Bindings::Algorithm> SubtleCrypto::normalize_an_algorithm(AlgorithmIdentifier const& algorithm, String operation)
+WebIDL::ExceptionOr<SubtleCrypto::NormalizedAlgorithmAndParameter> SubtleCrypto::normalize_an_algorithm(AlgorithmIdentifier const& algorithm, String operation)
 {
     auto& realm = this->realm();
+    auto& vm = this->vm();
 
     // If alg is an instance of a DOMString:
     if (algorithm.has<String>()) {
         // Return the result of running the normalize an algorithm algorithm,
         // with the alg set to a new Algorithm dictionary whose name attribute is alg, and with the op set to op.
         auto dictionary = JS::make_handle(JS::Object::create(realm, realm.intrinsics().object_prototype()));
-        TRY(dictionary->create_data_property("name", JS::PrimitiveString::create(realm.vm(), algorithm.get<String>())));
-        TRY(dictionary->create_data_property("op", JS::PrimitiveString::create(realm.vm(), operation)));
+        TRY(dictionary->create_data_property("name", JS::PrimitiveString::create(vm, algorithm.get<String>())));
 
         return normalize_an_algorithm(dictionary, operation);
     }
@@ -65,49 +65,38 @@ JS::ThrowCompletionOr<Bindings::Algorithm> SubtleCrypto::normalize_an_algorithm(
 
     // 2. Let initialAlg be the result of converting the ECMAScript object represented by alg to
     // the IDL dictionary type Algorithm, as defined by [WebIDL].
-    // FIXME: How do we turn this into an "Algorithm" in a nice way?
-    // NOTE: For now, we just use the object as-is.
-    auto initial_algorithm = algorithm.get<JS::Handle<JS::Object>>();
-
     // 3. If an error occurred, return the error and terminate this algorithm.
-    auto has_name = TRY(initial_algorithm->has_property("name"));
-    if (!has_name) {
-        return realm.vm().throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "Algorithm");
-    }
+    // Note: We're not going to bother creating an Algorithm object, all we want is the name attribute so that we can
+    //       fetch the actual algorithm factory from the registeredAlgorithms map.
+    auto initial_algorithm = TRY(algorithm.get<JS::Handle<JS::Object>>()->get("name"));
 
     // 4. Let algName be the value of the name attribute of initialAlg.
-    auto algorithm_name = TRY(TRY(initial_algorithm->get("name")).to_string(realm.vm()));
+    auto algorithm_name = TRY(initial_algorithm.to_string(vm));
 
-    String desired_type;
+    RegisteredAlgorithm desired_type;
 
     // 5. If registeredAlgorithms contains a key that is a case-insensitive string match for algName:
-    if (registered_algorithms.contains(algorithm_name)) {
+    if (auto it = registered_algorithms.find(algorithm_name); it != registered_algorithms.end()) {
         // 1. Set algName to the value of the matching key.
-        auto it = registered_algorithms.find(algorithm_name);
-        algorithm_name = (*it).key;
-
         // 2. Let desiredType be the IDL dictionary type stored at algName in registeredAlgorithms.
-        desired_type = (*it).value;
+        desired_type = it->value;
     } else {
         // Otherwise:
         // Return a new NotSupportedError and terminate this algorithm.
-        // FIXME: This should be a DOMException
-        return realm.vm().throw_completion<JS::TypeError>(JS::ErrorType::NotImplemented, algorithm_name);
+        return WebIDL::NotSupportedError::create(realm, MUST(String::formatted("Algorithm '{}' is not supported", algorithm_name)));
     }
 
     // 8. Let normalizedAlgorithm be the result of converting the ECMAScript object represented by alg
     // to the IDL dictionary type desiredType, as defined by [WebIDL].
-    // FIXME: Should IDL generate a struct for each of these?
-    Bindings::Algorithm normalized_algorithm;
-
     // 9. Set the name attribute of normalizedAlgorithm to algName.
-    normalized_algorithm.name = algorithm_name;
-
     // 10. If an error occurred, return the error and terminate this algorithm.
-
-    // FIXME: 11. Let dictionaries be a list consisting of the IDL dictionary type desiredType
+    // 11. Let dictionaries be a list consisting of the IDL dictionary type desiredType
     // and all of desiredType's inherited dictionaries, in order from least to most derived.
-    // FIXME: 12. For each dictionary dictionary in dictionaries:
+    // 12. For each dictionary dictionary in dictionaries:
+    //    Note: All of these steps are handled by the create_methods and parameter_from_value methods.
+    auto methods = desired_type.create_methods(realm);
+    auto parameter = TRY(desired_type.parameter_from_value(vm, algorithm.get<JS::Handle<JS::Object>>()));
+    auto normalized_algorithm = NormalizedAlgorithmAndParameter { move(methods), move(parameter) };
 
     // 13. Return normalizedAlgorithm.
     return normalized_algorithm;
@@ -145,36 +134,15 @@ JS::NonnullGCPtr<JS::Promise> SubtleCrypto::digest(AlgorithmIdentifier const& al
         // FIXME: Need spec reference to https://webidl.spec.whatwg.org/#reject
 
         // 8. Let result be the result of performing the digest operation specified by normalizedAlgorithm using algorithm, with data as message.
-        auto algorithm_name = algorithm_object.name;
+        auto result = algorithm_object.methods->digest(*algorithm_object.parameter, data_buffer);
 
-        ::Crypto::Hash::HashKind hash_kind;
-        if (algorithm_name.equals_ignoring_ascii_case("SHA-1"sv)) {
-            hash_kind = ::Crypto::Hash::HashKind::SHA1;
-        } else if (algorithm_name.equals_ignoring_ascii_case("SHA-256"sv)) {
-            hash_kind = ::Crypto::Hash::HashKind::SHA256;
-        } else if (algorithm_name.equals_ignoring_ascii_case("SHA-384"sv)) {
-            hash_kind = ::Crypto::Hash::HashKind::SHA384;
-        } else if (algorithm_name.equals_ignoring_ascii_case("SHA-512"sv)) {
-            hash_kind = ::Crypto::Hash::HashKind::SHA512;
-        } else {
-            WebIDL::reject_promise(realm, promise, WebIDL::NotSupportedError::create(realm, MUST(String::formatted("Invalid hash function '{}'", algorithm_name))));
+        if (result.is_exception()) {
+            WebIDL::reject_promise(realm, promise, Bindings::dom_exception_to_throw_completion(realm.vm(), result.release_error()).release_value().value());
             return;
         }
-
-        ::Crypto::Hash::Manager hash { hash_kind };
-        hash.update(data_buffer);
-
-        auto digest = hash.digest();
-        auto result_buffer = ByteBuffer::copy(digest.immutable_data(), hash.digest_size());
-        if (result_buffer.is_error()) {
-            WebIDL::reject_promise(realm, promise, WebIDL::OperationError::create(realm, "Failed to create result buffer"_fly_string));
-            return;
-        }
-
-        auto result = JS::ArrayBuffer::create(realm, result_buffer.release_value());
 
         // 9. Resolve promise with result.
-        WebIDL::resolve_promise(realm, promise, result);
+        WebIDL::resolve_promise(realm, promise, result.release_value());
     });
 
     return verify_cast<JS::Promise>(*promise->promise());
@@ -222,19 +190,14 @@ JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Promise>> SubtleCrypto::import_key(Bi
     auto promise = WebIDL::create_promise(realm);
 
     // 8. Return promise and perform the remaining steps in parallel.
-    Platform::EventLoopPlugin::the().deferred_invoke([&realm, this, real_key_data = move(real_key_data), normalized_algorithm = normalized_algorithm.release_value(), promise, format, extractable, key_usages = move(key_usages), algorithm = move(algorithm)]() -> void {
+    Platform::EventLoopPlugin::the().deferred_invoke([&realm, real_key_data = move(real_key_data), normalized_algorithm = normalized_algorithm.release_value(), promise, format, extractable, key_usages = move(key_usages), algorithm = move(algorithm)]() -> void {
         HTML::TemporaryExecutionContext context(Bindings::host_defined_environment_settings_object(realm), HTML::TemporaryExecutionContext::CallbacksEnabled::Yes);
 
         // 9. If the following steps or referenced procedures say to throw an error, reject promise with the returned error and then terminate the algorithm.
 
         // 10. Let result be the CryptoKey object that results from performing the import key operation
         // specified by normalizedAlgorithm using keyData, algorithm, format, extractable and usages.
-        if (normalized_algorithm.name != "PBKDF2"sv) {
-            WebIDL::reject_promise(realm, promise, WebIDL::NotSupportedError::create(realm, MUST(String::formatted("Invalid algorithm '{}'", normalized_algorithm.name))));
-            return;
-        }
-
-        auto maybe_result = pbkdf2_import_key(real_key_data, algorithm, format, extractable, key_usages);
+        auto maybe_result = normalized_algorithm.methods->import_key(*normalized_algorithm.parameter, format, real_key_data.downcast<CryptoKey::InternalKeyData>(), extractable, key_usages);
         if (maybe_result.is_error()) {
             WebIDL::reject_promise(realm, promise, Bindings::dom_exception_to_throw_completion(realm.vm(), maybe_result.release_error()).release_value().value());
             return;
@@ -298,13 +261,13 @@ SubtleCrypto::SupportedAlgorithmsMap SubtleCrypto::supported_algorithms()
 
     // https://w3c.github.io/webcrypto/#algorithm-conventions
     // https://w3c.github.io/webcrypto/#sha
-    define_an_algorithm("digest"_string, "SHA-1"_string, ""_string);
-    define_an_algorithm("digest"_string, "SHA-256"_string, ""_string);
-    define_an_algorithm("digest"_string, "SHA-384"_string, ""_string);
-    define_an_algorithm("digest"_string, "SHA-512"_string, ""_string);
+    define_an_algorithm<SHA>("digest"_string, "SHA-1"_string);
+    define_an_algorithm<SHA>("digest"_string, "SHA-256"_string);
+    define_an_algorithm<SHA>("digest"_string, "SHA-384"_string);
+    define_an_algorithm<SHA>("digest"_string, "SHA-512"_string);
 
     // https://w3c.github.io/webcrypto/#pbkdf2
-    define_an_algorithm("importKey"_string, "PBKDF2"_string, ""_string);
+    define_an_algorithm<PBKDF2>("importKey"_string, "PBKDF2"_string);
     // FIXME: define_an_algorithm("deriveBits"_string, "PBKDF2"_string, "Pbkdf2Params"_string);
     // FIXME: define_an_algorithm("get key length"_string, "PBKDF2"_string, ""_string);
 
@@ -312,7 +275,8 @@ SubtleCrypto::SupportedAlgorithmsMap SubtleCrypto::supported_algorithms()
 }
 
 // https://w3c.github.io/webcrypto/#concept-define-an-algorithm
-void SubtleCrypto::define_an_algorithm(String op, String algorithm, String type)
+template<typename Methods, typename Param>
+void SubtleCrypto::define_an_algorithm(AK::String op, AK::String algorithm)
 {
     auto& internal_object = supported_algorithms_internal();
 
@@ -322,51 +286,8 @@ void SubtleCrypto::define_an_algorithm(String op, String algorithm, String type)
     auto registered_algorithms = maybe_registered_algorithms.value();
 
     // 2. Set the alg key of registeredAlgorithms to the IDL dictionary type type.
-    registered_algorithms.set(algorithm, type);
+    registered_algorithms.set(algorithm, RegisteredAlgorithm { &Methods::create, &Param::from_value });
     internal_object.set(op, registered_algorithms);
-}
-
-// https://w3c.github.io/webcrypto/#pbkdf2-operations
-WebIDL::ExceptionOr<JS::NonnullGCPtr<CryptoKey>> SubtleCrypto::pbkdf2_import_key([[maybe_unused]] Variant<ByteBuffer, Bindings::JsonWebKey, Empty> key_data, [[maybe_unused]] AlgorithmIdentifier algorithm_parameter, Bindings::KeyFormat format, bool extractable, Vector<Bindings::KeyUsage> key_usages)
-{
-    auto& realm = this->realm();
-
-    // 1. If format is not "raw", throw a NotSupportedError
-    if (format != Bindings::KeyFormat::Raw) {
-        return WebIDL::NotSupportedError::create(realm, "Only raw format is supported"_fly_string);
-    }
-
-    // 2. If usages contains a value that is not "deriveKey" or "deriveBits", then throw a SyntaxError.
-    for (auto& usage : key_usages) {
-        if (usage != Bindings::KeyUsage::Derivekey && usage != Bindings::KeyUsage::Derivebits) {
-            return WebIDL::SyntaxError::create(realm, MUST(String::formatted("Invalid key usage '{}'", idl_enum_to_string(usage))));
-        }
-    }
-
-    // 3. If extractable is not false, then throw a SyntaxError.
-    if (extractable)
-        return WebIDL::SyntaxError::create(realm, "extractable must be false"_fly_string);
-
-    // 4. Let key be a new CryptoKey representing keyData.
-    auto key = CryptoKey::create(realm);
-
-    // 5. Set the [[type]] internal slot of key to "secret".
-    key->set_type(Bindings::KeyType::Secret);
-
-    // 6. Set the [[extractable]] internal slot of key to false.
-    key->set_extractable(false);
-
-    // 7. Let algorithm be a new KeyAlgorithm object.
-    auto algorithm = Bindings::KeyAlgorithm::create(realm);
-
-    // 8. Set the name attribute of algorithm to "PBKDF2".
-    algorithm->set_name("PBKDF2"_string);
-
-    // 9. Set the [[algorithm]] internal slot of key to algorithm.
-    key->set_algorithm(algorithm);
-
-    // 10. Return key.
-    return key;
 }
 
 }

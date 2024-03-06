@@ -11,6 +11,7 @@
 #include <LibWeb/Bindings/CryptoKeyPrototype.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Bindings/PlatformObject.h>
+#include <LibWeb/Crypto/CryptoBindings.h>
 
 namespace Web::Crypto {
 
@@ -19,7 +20,9 @@ class CryptoKey final : public Bindings::PlatformObject {
     JS_DECLARE_ALLOCATOR(CryptoKey);
 
 public:
-    [[nodiscard]] static JS::NonnullGCPtr<CryptoKey> create(JS::Realm&);
+    using InternalKeyData = Variant<ByteBuffer, Bindings::JsonWebKey>;
+
+    [[nodiscard]] static JS::NonnullGCPtr<CryptoKey> create(JS::Realm&, InternalKeyData);
 
     virtual ~CryptoKey() override;
 
@@ -34,7 +37,7 @@ public:
     void set_usages(JS::NonnullGCPtr<Object> usages) { m_usages = move(usages); }
 
 private:
-    explicit CryptoKey(JS::Realm&);
+    CryptoKey(JS::Realm&, InternalKeyData);
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Visitor&) override;
 
@@ -42,6 +45,8 @@ private:
     bool m_extractable { false };
     JS::NonnullGCPtr<Object> m_algorithm;
     JS::NonnullGCPtr<Object> m_usages;
+
+    InternalKeyData m_key_data;
 };
 
 }
