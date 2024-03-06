@@ -13,6 +13,7 @@
 #include <LibGfx/ImageFormats/ICOLoader.h>
 #include <LibGfx/ImageFormats/ILBMLoader.h>
 #include <LibGfx/ImageFormats/ImageDecoder.h>
+#include <LibGfx/ImageFormats/JBIG2Loader.h>
 #include <LibGfx/ImageFormats/JPEGLoader.h>
 #include <LibGfx/ImageFormats/JPEGXLLoader.h>
 #include <LibGfx/ImageFormats/PAMLoader.h>
@@ -314,6 +315,14 @@ TEST_CASE(test_ilbm_malformed_frame)
         auto frame_or_error = plugin_decoder->frame(0);
         EXPECT(frame_or_error.is_error());
     }
+}
+
+TEST_CASE(test_jbig2_size)
+{
+    auto file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("jbig2/bitmap.jbig2"sv)));
+    EXPECT(Gfx::JBIG2ImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = TRY_OR_FAIL(Gfx::JBIG2ImageDecoderPlugin::create(file->bytes()));
+    EXPECT_EQ(plugin_decoder->size(), Gfx::IntSize(399, 400));
 }
 
 TEST_CASE(test_jpeg_sof0_one_scan)
