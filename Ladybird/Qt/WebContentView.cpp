@@ -364,6 +364,11 @@ void WebContentView::mouseReleaseEvent(QMouseEvent* event)
 
 void WebContentView::wheelEvent(QWheelEvent* event)
 {
+    if (event->modifiers().testFlag(Qt::ControlModifier)) {
+        event->ignore();
+        return;
+    }
+
     enqueue_native_event(Web::MouseEvent::Type::MouseWheel, *event);
 }
 
@@ -699,7 +704,7 @@ void WebContentView::enqueue_native_event(Web::MouseEvent::Type type, QSinglePoi
     int wheel_delta_x = 0;
     int wheel_delta_y = 0;
 
-    if (type == Web::MouseEvent::Type::MouseWheel && !event.modifiers().testFlag(Qt::ControlModifier)) {
+    if (type == Web::MouseEvent::Type::MouseWheel) {
         auto const& wheel_event = static_cast<QWheelEvent const&>(event);
 
         if (auto pixel_delta = -wheel_event.pixelDelta(); !pixel_delta.isNull()) {
