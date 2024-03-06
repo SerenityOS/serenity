@@ -923,14 +923,17 @@ JS::NonnullGCPtr<Geometry::DOMRectList> Element::get_client_rects() const
 
     Gfx::AffineTransform transform;
     for (auto const* containing_block = this->paintable_box(); containing_block; containing_block = containing_block->containing_block()) {
-        transform = transform.multiply(Gfx::extract_2d_affine_transform(containing_block->transform()));
+        transform = Gfx::extract_2d_affine_transform(containing_block->transform()).multiply(transform);
     }
 
     auto const* paintable = this->paintable();
     if (auto const* paintable_box = this->paintable_box()) {
         auto absolute_rect = paintable_box->absolute_border_box_rect();
-        absolute_rect.translate_by(-viewport_offset.x(), -viewport_offset.y());
-        rects.append(Geometry::DOMRect::create(realm(), transform.map(absolute_rect.to_type<float>())));
+        auto transformed_rect = transform.map(absolute_rect.translated(-paintable_box->transform_origin()).to_type<float>())
+                                    .to_type<CSSPixels>()
+                                    .translated(paintable_box->transform_origin())
+                                    .translated(-viewport_offset);
+        rects.append(Geometry::DOMRect::create(realm(), transformed_rect.to_type<float>()));
     } else if (paintable && is<Painting::InlinePaintable>(*paintable)) {
         auto const& inline_paintable = static_cast<Painting::InlinePaintable const&>(*paintable);
         auto absolute_rect = inline_paintable.bounding_rect();
