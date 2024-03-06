@@ -69,7 +69,6 @@
     O(IteratorToArray)                 \
     O(Jump)                            \
     O(JumpIf)                          \
-    O(JumpIfNot)                       \
     O(JumpGreaterThan)                 \
     O(JumpGreaterThanEquals)           \
     O(JumpLessThan)                    \

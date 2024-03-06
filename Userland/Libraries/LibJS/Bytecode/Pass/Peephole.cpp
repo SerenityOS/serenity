@@ -38,20 +38,6 @@ void Peephole::perform(PassPipelineExecutable& executable)
                 if (next_instruction.type() == Instruction::Type::JumpIf) {
                     auto const& jump = static_cast<Op::JumpIf const&>(next_instruction);
 
-                    if (instruction.type() == Instruction::Type::Not) {
-                        auto const& not_ = static_cast<Op::Not const&>(instruction);
-                        VERIFY(jump.condition() == not_.dst());
-                        new_block->append<Op::JumpIfNot>(
-                            not_.source_record().source_start_offset,
-                            not_.source_record().source_end_offset,
-                            not_.src(),
-                            *jump.true_target(),
-                            *jump.false_target());
-                        ++it;
-                        VERIFY(it.at_end());
-                        continue;
-                    }
-
 #define DO_FUSE_JUMP(PreOp, ...)                                          \
     if (instruction.type() == Instruction::Type::PreOp) {                 \
         auto const& compare = static_cast<Op::PreOp const&>(instruction); \
