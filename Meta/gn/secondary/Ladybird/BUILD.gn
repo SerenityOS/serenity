@@ -56,7 +56,6 @@ executable("ladybird_executable") {
     "SQLServer",
     "WebContent",
     "WebDriver",
-    "WebSocket",
     "WebWorker",
   ]
   deps = [
@@ -325,7 +324,6 @@ if (current_os != "mac") {
       "SQLServer",
       "WebContent",
       "WebDriver",
-      "WebSocket",
       "WebWorker",
     ]
     sources = [
