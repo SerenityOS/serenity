@@ -85,6 +85,7 @@ grid-template-columns:
 grid-template-rows: 
 height: 1445px
 image-rendering: auto
+inline-size: auto
 inset-block-end: auto
 inset-block-start: auto
 inset-inline-end: auto
