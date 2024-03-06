@@ -255,6 +255,13 @@ private:
 
     void build_grid_areas();
 
+    struct PlacementPosition {
+        int start { 0 };
+        int end { 0 };
+        size_t span { 1 };
+    };
+    PlacementPosition resolve_grid_position(Box const& child_box, GridDimension const dimension);
+
     void place_grid_items();
     void place_item_with_row_and_column_position(Box const& child_box);
     void place_item_with_row_position(Box const& child_box);
