@@ -373,6 +373,8 @@ void CookieJar::store_cookie(Web::Cookie::ParsedCookie const& parsed_cookie, con
 
         // 11. If the cookie store contains a cookie with the same name, domain, and path as the newly created cookie:
         [this, source, sync_promise](auto& cookie, auto old_cookie) {
+            ScopeGuard guard { [&]() { sync_promise->resolve({}); } };
+
             // If the newly created cookie was received from a "non-HTTP" API and the old-cookie's http-only-flag is set, abort these
             // steps and ignore the newly created cookie entirely.
             if (source != Web::Cookie::Source::Http && old_cookie.http_only)
@@ -384,7 +386,6 @@ void CookieJar::store_cookie(Web::Cookie::ParsedCookie const& parsed_cookie, con
             // Remove the old-cookie from the cookie store.
             // NOTE: Rather than deleting then re-inserting this cookie, we update it in-place.
             update_cookie_in_database(cookie);
-            sync_promise->resolve({});
         },
 
         // 12. Insert the newly created cookie into the cookie store.
