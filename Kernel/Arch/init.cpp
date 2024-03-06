@@ -193,31 +193,41 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init([[maybe_unused]] BootInfo con
     multiboot_framebuffer_bpp = boot_info.multiboot_framebuffer_bpp;
     multiboot_framebuffer_type = boot_info.multiboot_framebuffer_type;
 #elif ARCH(AARCH64)
-    // FIXME: For the aarch64 platforms, we should get the information by parsing a device tree instead of using multiboot.
-    auto [ram_base, ram_size] = RPi::Mailbox::the().query_lower_arm_memory_range();
-    auto [vcmem_base, vcmem_size] = RPi::Mailbox::the().query_videocore_memory_range();
-    multiboot_memory_map_t mmap[] = {
-        {
-            sizeof(struct multiboot_mmap_entry) - sizeof(u32),
-            (u64)ram_base,
-            (u64)ram_size,
-            MULTIBOOT_MEMORY_AVAILABLE,
-        },
-        {
-            sizeof(struct multiboot_mmap_entry) - sizeof(u32),
-            (u64)vcmem_base,
-            (u64)vcmem_size,
-            MULTIBOOT_MEMORY_RESERVED,
-        },
-        // FIXME: VideoCore only reports the first 1GB of RAM, the rest only shows up in the device tree.
-    };
-    multiboot_memory_map = mmap;
-    multiboot_memory_map_count = 2;
+    // FIXME: Remove the later part of this if-statement once qemu generates its own FTD for aarch64
+    if (verify_fdt()) {
+        auto maybe_command_line = get_command_line_from_fdt();
+        if (maybe_command_line.is_error()) {
+            dmesgln("Failed to get command line from FDT: {}", maybe_command_line.error());
+            kernel_cmdline = "serial_debug dump_fdt"sv;
+        } else {
+            kernel_cmdline = maybe_command_line.value();
+        }
+    } else {
+        auto [ram_base, ram_size] = RPi::Mailbox::the().query_lower_arm_memory_range();
+        auto [vcmem_base, vcmem_size] = RPi::Mailbox::the().query_videocore_memory_range();
+        multiboot_memory_map_t mmap[] = {
+            {
+                sizeof(struct multiboot_mmap_entry) - sizeof(u32),
+                (u64)ram_base,
+                (u64)ram_size,
+                MULTIBOOT_MEMORY_AVAILABLE,
+            },
+            {
+                sizeof(struct multiboot_mmap_entry) - sizeof(u32),
+                (u64)vcmem_base,
+                (u64)vcmem_size,
+                MULTIBOOT_MEMORY_RESERVED,
+            },
+            // FIXME: VideoCore only reports the first 1GB of RAM, the rest only shows up in the device tree.
+        };
+        multiboot_memory_map = mmap;
+        multiboot_memory_map_count = 2;
 
-    multiboot_modules = nullptr;
-    multiboot_modules_count = 0;
-    // FIXME: Read the /chosen/bootargs property.
-    kernel_cmdline = RPi::Mailbox::the().query_kernel_command_line(s_command_line_buffer);
+        multiboot_modules = nullptr;
+        multiboot_modules_count = 0;
+        // FIXME: Read the /chosen/bootargs property.
+        kernel_cmdline = RPi::Mailbox::the().query_kernel_command_line(s_command_line_buffer);
+    }
 #elif ARCH(RISCV64)
     // FIXME: Technically we cant panic here, as serial debugging is not enabled yet,
     //        as that depends on the command line.

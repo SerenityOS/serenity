@@ -282,13 +282,13 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
 #endif
         global_data.used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::Kernel, PhysicalAddress(virtual_to_low_physical((FlatPtr)start_of_kernel_image)), PhysicalAddress(page_round_up(virtual_to_low_physical((FlatPtr)end_of_kernel_image)).release_value_but_fixme_should_propagate_errors()) });
 
-#if ARCH(RISCV64)
-        // FIXME: AARCH64 might be able to make use of this code path
-        //        Some x86 platforms also provide flattened device trees
-        parse_memory_map_fdt(global_data, s_fdt_storage);
-#else
-        parse_memory_map_multiboot(global_data);
-#endif
+        // FIXME: Not having a (valid) FDT does not mean we have a multiboot memory map
+        //        AARCH64, which can boot without us having received a FDT,
+        //        creates an artificial memory map, so this works in that case
+        if (verify_fdt())
+            parse_memory_map_fdt(global_data, s_fdt_storage);
+        else
+            parse_memory_map_multiboot(global_data);
 
         // Now we need to setup the physical regions we will use later
         struct ContiguousPhysicalVirtualRange {
