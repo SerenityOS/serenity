@@ -278,24 +278,29 @@ void ConnectionFromClient::key_event(u64 page_id, Web::KeyEvent const& event)
 void ConnectionFromClient::mouse_event(u64 page_id, Web::MouseEvent const& event)
 {
     // OPTIMIZATION: Coalesce consecutive unprocessed mouse move and wheel events.
-    auto should_coalesce = [&]() {
+    auto event_to_coalesce = [&]() -> Web::MouseEvent const* {
         if (m_input_event_queue.is_empty())
-            return false;
+            return nullptr;
+        if (m_input_event_queue.tail().page_id != page_id)
+            return nullptr;
 
         if (event.type != Web::MouseEvent::Type::MouseMove && event.type != Web::MouseEvent::Type::MouseWheel)
-            return false;
+            return nullptr;
 
-        if (m_input_event_queue.tail().page_id != page_id)
-            return false;
+        if (auto const* mouse_event = m_input_event_queue.tail().event.get_pointer<Web::MouseEvent>()) {
+            if (mouse_event->type == event.type)
+                return mouse_event;
+        }
 
-        if (auto* mouse_event = m_input_event_queue.tail().event.get_pointer<Web::MouseEvent>())
-            return mouse_event->type == event.type;
-
-        return false;
+        return nullptr;
     };
 
-    if (should_coalesce()) {
-        m_input_event_queue.tail().event = move(const_cast<Web::MouseEvent&>(event));
+    if (auto const* last_mouse_event = event_to_coalesce()) {
+        auto& mutable_event = const_cast<Web::MouseEvent&>(event);
+        mutable_event.wheel_delta_x += last_mouse_event->wheel_delta_x;
+        mutable_event.wheel_delta_y += last_mouse_event->wheel_delta_y;
+
+        m_input_event_queue.tail().event = move(mutable_event);
         ++m_input_event_queue.tail().coalesced_event_count;
 
         return;
