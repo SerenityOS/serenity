@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "WebSocketClientAdapter.h"
 #include <LibProtocol/Request.h>
 #include <LibProtocol/RequestClient.h>
 #include <LibWebView/RequestServerAdapter.h>
@@ -92,6 +93,14 @@ RefPtr<Web::ResourceLoaderConnectorRequest> RequestServerAdapter::start_request(
     if (!protocol_request)
         return {};
     return RequestServerRequestAdapter::try_create(protocol_request.release_nonnull()).release_value_but_fixme_should_propagate_errors();
+}
+
+RefPtr<Web::WebSockets::WebSocketClientSocket> RequestServerAdapter::websocket_connect(AK::URL const& url, AK::ByteString const& origin, Vector<AK::ByteString> const& protocols)
+{
+    auto underlying_websocket = m_protocol_client->websocket_connect(url, origin, protocols);
+    if (!underlying_websocket)
+        return {};
+    return WebSocketClientSocketAdapter::create(underlying_websocket.release_nonnull());
 }
 
 void RequestServerAdapter::prefetch_dns(URL const& url)

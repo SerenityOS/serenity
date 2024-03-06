@@ -226,10 +226,9 @@ add_subdirectory(RequestServer)
 add_subdirectory(SQLServer)
 add_subdirectory(WebContent)
 add_subdirectory(WebDriver)
-add_subdirectory(WebSocket)
 add_subdirectory(WebWorker)
 
-set(ladybird_helper_processes ImageDecoder RequestServer SQLServer WebContent WebDriver WebSocketServer WebWorker headless-browser)
+set(ladybird_helper_processes ImageDecoder RequestServer SQLServer WebContent WebDriver WebWorker headless-browser)
 add_dependencies(ladybird ${ladybird_helper_processes})
 
 function(create_ladybird_bundle target_name)

@@ -66,6 +66,10 @@ namespace Web {
 constexpr auto default_user_agent = "Mozilla/5.0 (" OS_STRING "; " CPU_STRING ") " BROWSER_NAME "/" BROWSER_VERSION ""sv;
 constexpr auto default_platform = OS_STRING " " CPU_STRING ""sv;
 
+namespace WebSockets {
+class WebSocketClientSocket;
+}
+
 class ResourceLoaderConnectorRequest : public RefCounted<ResourceLoaderConnectorRequest> {
 public:
     virtual ~ResourceLoaderConnectorRequest();
@@ -97,6 +101,7 @@ public:
     virtual void preconnect(URL const&) = 0;
 
     virtual RefPtr<ResourceLoaderConnectorRequest> start_request(ByteString const& method, URL const&, HashMap<ByteString, ByteString> const& request_headers = {}, ReadonlyBytes request_body = {}, Core::ProxyData const& = {}) = 0;
+    virtual RefPtr<Web::WebSockets::WebSocketClientSocket> websocket_connect(const URL&, ByteString const& origin, Vector<ByteString> const& protocols) = 0;
 
 protected:
     explicit ResourceLoaderConnector();

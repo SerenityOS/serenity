@@ -2,7 +2,7 @@ serenity_component(
     Browser
     RECOMMENDED
     TARGETS Browser
-    DEPENDS BrowserSettings ImageDecoder RequestServer WebContent WebSocket
+    DEPENDS BrowserSettings ImageDecoder RequestServer WebContent
 )
 
 stringify_gml(BrowserWindow.gml BrowserWindowGML.h browser_window_gml)

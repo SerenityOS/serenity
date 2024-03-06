@@ -40,8 +40,6 @@ set(GENERATED_SOURCES
     ../../Services/WebContent/WebContentServerEndpoint.h
     ../../Services/WebContent/WebDriverClientEndpoint.h
     ../../Services/WebContent/WebDriverServerEndpoint.h
-    ../../Services/WebSocket/WebSocketClientEndpoint.h
-    ../../Services/WebSocket/WebSocketServerEndpoint.h
     NativeStyleSheetSource.cpp
 )
 

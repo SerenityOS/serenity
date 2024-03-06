@@ -486,8 +486,6 @@ if (BUILD_LAGOM)
     # These are needed for both LibWeb and LibProtocol.
     compile_ipc(${SERENITY_PROJECT_ROOT}/Userland/Services/RequestServer/RequestClient.ipc Userland/Services/RequestServer/RequestClientEndpoint.h)
     compile_ipc(${SERENITY_PROJECT_ROOT}/Userland/Services/RequestServer/RequestServer.ipc Userland/Services/RequestServer/RequestServerEndpoint.h)
-    compile_ipc(${SERENITY_PROJECT_ROOT}/Userland/Services/WebSocket/WebSocketClient.ipc Userland/Services/WebSocket/WebSocketClientEndpoint.h)
-    compile_ipc(${SERENITY_PROJECT_ROOT}/Userland/Services/WebSocket/WebSocketServer.ipc Userland/Services/WebSocket/WebSocketServerEndpoint.h)
 
     if (ENABLE_LAGOM_LIBWEB)
         list(APPEND lagom_standard_libraries Web WebView)

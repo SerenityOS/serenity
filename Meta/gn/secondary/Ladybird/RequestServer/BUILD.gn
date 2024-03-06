@@ -15,6 +15,7 @@ executable("RequestServer") {
     "//Userland/Libraries/LibMain",
     "//Userland/Libraries/LibProtocol",
     "//Userland/Libraries/LibTLS",
+    "//Userland/Libraries/LibWebSocket",
   ]
   sources = [
     "//Userland/Services/RequestServer/ConnectionCache.cpp",

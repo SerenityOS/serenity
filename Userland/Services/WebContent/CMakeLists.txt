@@ -3,7 +3,7 @@ include(accelerated_graphics)
 serenity_component(
     WebContent
     TARGETS WebContent
-    DEPENDS ImageDecoder RequestServer WebSocket
+    DEPENDS ImageDecoder RequestServer
 )
 
 compile_ipc(WebContentServer.ipc WebContentServerEndpoint.h)

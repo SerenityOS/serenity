@@ -178,8 +178,3 @@ ErrorOr<NonnullRefPtr<Protocol::RequestClient>> launch_request_server_process(Re
 {
     return launch_generic_server_process<Protocol::RequestClient>(candidate_request_server_paths, serenity_resource_root, certificates, "RequestServer"sv);
 }
-
-ErrorOr<NonnullRefPtr<Protocol::WebSocketClient>> launch_web_socket_process(ReadonlySpan<ByteString> candidate_web_socket_paths, StringView serenity_resource_root, Vector<ByteString> const& certificates)
-{
-    return launch_generic_server_process<Protocol::WebSocketClient>(candidate_web_socket_paths, serenity_resource_root, certificates, "WebSocket"sv);
-}

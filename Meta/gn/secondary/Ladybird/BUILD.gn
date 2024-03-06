@@ -334,7 +334,6 @@ if (current_os != "mac") {
       "$root_out_dir/libexec/SQLServer",
       "$root_out_dir/libexec/WebContent",
       "$root_out_dir/libexec/WebDriver",
-      "$root_out_dir/libexec/WebSocket",
       "$root_out_dir/libexec/WebWorker",
       "$root_out_dir/libexec/headless-browser",
     ]

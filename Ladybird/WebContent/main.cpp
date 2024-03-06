@@ -38,7 +38,6 @@
 #if defined(HAVE_QT)
 #    include <Ladybird/Qt/EventLoopImplementationQt.h>
 #    include <Ladybird/Qt/RequestManagerQt.h>
-#    include <Ladybird/Qt/WebSocketClientManagerQt.h>
 #    include <QCoreApplication>
 
 #    if defined(HAVE_QT_MULTIMEDIA)
@@ -109,14 +108,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
 #if defined(HAVE_QT)
-    if (!use_lagom_networking) {
+    if (!use_lagom_networking)
         Web::ResourceLoader::initialize(Ladybird::RequestManagerQt::create());
-        Web::WebSockets::WebSocketClientManager::initialize(Ladybird::WebSocketClientManagerQt::create());
-    } else
+    else
 #endif
-    {
         TRY(initialize_lagom_networking(certificates));
-    }
 
     Web::HTML::Window::set_internals_object_exposed(is_layout_test_mode);
 
@@ -194,10 +190,6 @@ static ErrorOr<void> initialize_lagom_networking(Vector<ByteString> const& certi
     auto candidate_request_server_paths = TRY(get_paths_for_helper_process("RequestServer"sv));
     auto request_server_client = TRY(launch_request_server_process(candidate_request_server_paths, s_serenity_resource_root, certificates));
     Web::ResourceLoader::initialize(TRY(WebView::RequestServerAdapter::try_create(move(request_server_client))));
-
-    auto candidate_web_socket_paths = TRY(get_paths_for_helper_process("WebSocket"sv));
-    auto web_socket_client = TRY(launch_web_socket_process(candidate_web_socket_paths, s_serenity_resource_root, certificates));
-    Web::WebSockets::WebSocketClientManager::initialize(TRY(WebView::WebSocketClientManagerAdapter::try_create(move(web_socket_client))));
 
     return {};
 }

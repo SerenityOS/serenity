@@ -10,6 +10,8 @@
 #include <AK/Weakable.h>
 #include <LibCore/Proxy.h>
 #include <LibCore/Socket.h>
+#include <LibWebSocket/ConnectionInfo.h>
+#include <LibWebSocket/Message.h>
 #include <RequestServer/ConnectionFromClient.h>
 #include <RequestServer/Protocol.h>
 #include <RequestServer/Request.h>
@@ -185,6 +187,82 @@ void ConnectionFromClient::ensure_connection(URL const& url, ::RequestServer::Ca
         do_preconnect(ConnectionCache::g_tls_connection_cache);
     else
         dbgln("EnsureConnection: Invalid URL scheme: '{}'", url.scheme());
+}
+
+static i32 s_next_websocket_id = 1;
+Messages::RequestServer::WebsocketConnectResponse ConnectionFromClient::websocket_connect(URL const& url, ByteString const& origin, Vector<ByteString> const& protocols, Vector<ByteString> const& extensions, HashMap<ByteString, ByteString> const& additional_request_headers)
+{
+    if (!url.is_valid()) {
+        dbgln("WebSocket::Connect: Invalid URL requested: '{}'", url);
+        return -1;
+    }
+
+    WebSocket::ConnectionInfo connection_info(url);
+    connection_info.set_origin(origin);
+    connection_info.set_protocols(protocols);
+    connection_info.set_extensions(extensions);
+
+    Vector<WebSocket::ConnectionInfo::Header> headers;
+    for (auto const& header : additional_request_headers) {
+        headers.append({ header.key, header.value });
+    }
+    connection_info.set_headers(headers);
+
+    auto id = ++s_next_websocket_id;
+    auto connection = WebSocket::WebSocket::create(move(connection_info));
+    connection->on_open = [this, id]() {
+        async_websocket_connected(id);
+    };
+    connection->on_message = [this, id](auto message) {
+        async_websocket_received(id, message.is_text(), message.data());
+    };
+    connection->on_error = [this, id](auto message) {
+        async_websocket_errored(id, (i32)message);
+    };
+    connection->on_close = [this, id](u16 code, ByteString reason, bool was_clean) {
+        async_websocket_closed(id, code, move(reason), was_clean);
+    };
+
+    connection->start();
+    m_websockets.set(id, move(connection));
+    return id;
+}
+
+Messages::RequestServer::WebsocketReadyStateResponse ConnectionFromClient::websocket_ready_state(i32 connection_id)
+{
+    if (auto connection = m_websockets.get(connection_id).value_or({}))
+        return (u32)connection->ready_state();
+    return (u32)WebSocket::ReadyState::Closed;
+}
+
+Messages::RequestServer::WebsocketSubprotocolInUseResponse ConnectionFromClient::websocket_subprotocol_in_use(i32 connection_id)
+{
+    if (auto connection = m_websockets.get(connection_id).value_or({}))
+        return connection->subprotocol_in_use();
+    return ByteString::empty();
+}
+
+void ConnectionFromClient::websocket_send(i32 connection_id, bool is_text, ByteBuffer const& data)
+{
+    if (auto connection = m_websockets.get(connection_id).value_or({}); connection && connection->ready_state() == WebSocket::ReadyState::Open)
+        connection->send(WebSocket::Message { data, is_text });
+}
+
+void ConnectionFromClient::websocket_close(i32 connection_id, u16 code, ByteString const& reason)
+{
+    if (auto connection = m_websockets.get(connection_id).value_or({}); connection && connection->ready_state() == WebSocket::ReadyState::Open)
+        connection->close(code, reason);
+}
+
+Messages::RequestServer::WebsocketSetCertificateResponse ConnectionFromClient::websocket_set_certificate(i32 connection_id, ByteString const&, ByteString const&)
+{
+    auto success = false;
+    if (auto connection = m_websockets.get(connection_id).value_or({}); connection) {
+        // NO OP here
+        // connection->set_certificate(certificate, key);
+        success = true;
+    }
+    return success;
 }
 
 }
