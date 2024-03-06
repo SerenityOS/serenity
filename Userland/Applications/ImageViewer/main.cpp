@@ -57,7 +57,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     // TRY(Core::System::unveil("/res", "r"));
     // TRY(Core::System::unveil(nullptr, nullptr));
 
-    auto app_icon = GUI::Icon::default_icon("filetype-image"sv);
+    auto app_icon = GUI::Icon::default_icon("app-image-viewer"sv);
 
     StringView path;
     Core::ArgsParser args_parser;
