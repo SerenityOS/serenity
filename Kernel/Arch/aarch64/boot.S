@@ -7,6 +7,9 @@
 // In a specially-named text section so that the linker script can put it first in .text.
 .section ".text.first"
 
+// We expect that x0 contains a pointer to a flattened devicetree,
+// which is also what the AArch64 Linux boot protocol requires.
+
 .global start
 .type start, @function
 start:
