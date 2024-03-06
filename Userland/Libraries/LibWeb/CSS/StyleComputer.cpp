@@ -729,7 +729,7 @@ void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& e
     }
 }
 
-static ErrorOr<void> cascade_custom_properties(DOM::Element& element, Optional<CSS::Selector::PseudoElement::Type> pseudo_element, Vector<MatchingRule> const& matching_rules)
+static void cascade_custom_properties(DOM::Element& element, Optional<CSS::Selector::PseudoElement::Type> pseudo_element, Vector<MatchingRule> const& matching_rules)
 {
     size_t needed_capacity = 0;
     for (auto const& matching_rule : matching_rules)
@@ -741,7 +741,7 @@ static ErrorOr<void> cascade_custom_properties(DOM::Element& element, Optional<C
     }
 
     HashMap<FlyString, StyleProperty> custom_properties;
-    TRY(custom_properties.try_ensure_capacity(needed_capacity));
+    custom_properties.ensure_capacity(needed_capacity);
 
     for (auto const& matching_rule : matching_rules) {
         for (auto const& it : verify_cast<PropertyOwningCSSStyleDeclaration>(matching_rule.rule->declaration()).custom_properties())
@@ -756,8 +756,6 @@ static ErrorOr<void> cascade_custom_properties(DOM::Element& element, Optional<C
     }
 
     element.set_custom_properties(pseudo_element, move(custom_properties));
-
-    return {};
 }
 
 static NonnullRefPtr<StyleValue const> interpolate_value(DOM::Element& element, StyleValue const& from, StyleValue const& to, float delta);
@@ -1257,18 +1255,18 @@ static ValueComparingNonnullRefPtr<StyleValue const> interpolate_property(DOM::E
     }
 }
 
-ErrorOr<void> StyleComputer::collect_animation_into(JS::NonnullGCPtr<Animations::KeyframeEffect> effect, StyleProperties& style_properties) const
+void StyleComputer::collect_animation_into(JS::NonnullGCPtr<Animations::KeyframeEffect> effect, StyleProperties& style_properties) const
 {
     auto animation = effect->associated_animation();
     if (!animation)
-        return {};
+        return;
 
     auto output_progress = effect->transformed_progress();
     if (!output_progress.has_value())
-        return {};
+        return;
 
     if (!effect->key_frame_set())
-        return {};
+        return;
 
     auto& keyframes = effect->key_frame_set()->keyframes_by_key;
 
@@ -1281,7 +1279,7 @@ ErrorOr<void> StyleComputer::collect_animation_into(JS::NonnullGCPtr<Animations:
             for (auto it = keyframes.begin(); it != keyframes.end(); ++it)
                 dbgln("        - {}", it.key());
         }
-        return {};
+        return;
     }
 
     auto keyframe_start = matching_keyframe_it.key();
@@ -1341,8 +1339,6 @@ ErrorOr<void> StyleComputer::collect_animation_into(JS::NonnullGCPtr<Animations:
         dbgln_if(LIBWEB_CSS_ANIMATION_DEBUG, "Interpolated value for property {} at {}: {} -> {} = {}", string_from_property_id(it.key), progress_in_keyframe, start->to_string(), end->to_string(), next_value->to_string());
         style_properties.set_property(it.key, next_value);
     }
-
-    return {};
 }
 
 static void apply_animation_properties(DOM::Document& document, StyleProperties& style, Animations::Animation& animation)
@@ -1412,7 +1408,7 @@ static void apply_animation_properties(DOM::Document& document, StyleProperties&
 }
 
 // https://www.w3.org/TR/css-cascade/#cascading
-ErrorOr<void> StyleComputer::compute_cascaded_values(StyleProperties& style, DOM::Element& element, Optional<CSS::Selector::PseudoElement::Type> pseudo_element, bool& did_match_any_pseudo_element_rules, ComputeStyleMode mode) const
+void StyleComputer::compute_cascaded_values(StyleProperties& style, DOM::Element& element, Optional<CSS::Selector::PseudoElement::Type> pseudo_element, bool& did_match_any_pseudo_element_rules, ComputeStyleMode mode) const
 {
     // First, we collect all the CSS rules whose selectors match `element`:
     MatchingRuleSet matching_rule_set;
@@ -1427,13 +1423,13 @@ ErrorOr<void> StyleComputer::compute_cascaded_values(StyleProperties& style, DOM
         VERIFY(pseudo_element.has_value());
         if (matching_rule_set.author_rules.is_empty() && matching_rule_set.user_rules.is_empty() && matching_rule_set.user_agent_rules.is_empty()) {
             did_match_any_pseudo_element_rules = false;
-            return {};
+            return;
         }
         did_match_any_pseudo_element_rules = true;
     }
 
     // Then we resolve all the CSS custom properties ("variables") for this element:
-    TRY(cascade_custom_properties(element, pseudo_element, matching_rule_set.author_rules));
+    cascade_custom_properties(element, pseudo_element, matching_rule_set.author_rules);
 
     // Then we apply the declarations from the matched rules in cascade order:
 
@@ -1520,7 +1516,7 @@ ErrorOr<void> StyleComputer::compute_cascaded_values(StyleProperties& style, DOM
         if (auto effect = animation->effect(); effect && effect->is_keyframe_effect()) {
             auto& keyframe_effect = *static_cast<Animations::KeyframeEffect*>(effect.ptr());
             if (keyframe_effect.pseudo_element_type() == pseudo_element)
-                TRY(collect_animation_into(keyframe_effect, style));
+                collect_animation_into(keyframe_effect, style);
         }
     }
 
@@ -1534,8 +1530,6 @@ ErrorOr<void> StyleComputer::compute_cascaded_values(StyleProperties& style, DOM
     cascade_declarations(style, element, pseudo_element, matching_rule_set.user_agent_rules, CascadeOrigin::UserAgent, Important::Yes);
 
     // FIXME: Transition declarations [css-transitions-1]
-
-    return {};
 }
 
 DOM::Element const* element_to_inherit_style_from(DOM::Element const* element, Optional<CSS::Selector::PseudoElement::Type> pseudo_element)
@@ -2199,25 +2193,24 @@ NonnullRefPtr<StyleProperties> StyleComputer::create_document_style() const
     return style;
 }
 
-ErrorOr<NonnullRefPtr<StyleProperties>> StyleComputer::compute_style(DOM::Element& element, Optional<CSS::Selector::PseudoElement::Type> pseudo_element) const
+NonnullRefPtr<StyleProperties> StyleComputer::compute_style(DOM::Element& element, Optional<CSS::Selector::PseudoElement::Type> pseudo_element) const
 {
-    auto style = TRY(compute_style_impl(element, move(pseudo_element), ComputeStyleMode::Normal));
-    return style.release_nonnull();
+    return compute_style_impl(element, move(pseudo_element), ComputeStyleMode::Normal).release_nonnull();
 }
 
-ErrorOr<RefPtr<StyleProperties>> StyleComputer::compute_pseudo_element_style_if_needed(DOM::Element& element, Optional<CSS::Selector::PseudoElement::Type> pseudo_element) const
+RefPtr<StyleProperties> StyleComputer::compute_pseudo_element_style_if_needed(DOM::Element& element, Optional<CSS::Selector::PseudoElement::Type> pseudo_element) const
 {
     return compute_style_impl(element, move(pseudo_element), ComputeStyleMode::CreatePseudoElementStyleIfNeeded);
 }
 
-ErrorOr<RefPtr<StyleProperties>> StyleComputer::compute_style_impl(DOM::Element& element, Optional<CSS::Selector::PseudoElement::Type> pseudo_element, ComputeStyleMode mode) const
+RefPtr<StyleProperties> StyleComputer::compute_style_impl(DOM::Element& element, Optional<CSS::Selector::PseudoElement::Type> pseudo_element, ComputeStyleMode mode) const
 {
     build_rule_cache_if_needed();
 
     // Special path for elements that use pseudo element as style selector
     if (element.use_pseudo_element().has_value()) {
         auto& parent_element = verify_cast<HTML::HTMLElement>(*element.root().parent_or_shadow_host());
-        auto style = TRY(compute_style(parent_element, *element.use_pseudo_element()));
+        auto style = compute_style(parent_element, *element.use_pseudo_element());
 
         // Merge back inline styles
         if (element.has_attribute(HTML::AttributeNames::style)) {
@@ -2231,7 +2224,7 @@ ErrorOr<RefPtr<StyleProperties>> StyleComputer::compute_style_impl(DOM::Element&
     auto style = StyleProperties::create();
     // 1. Perform the cascade. This produces the "specified style"
     bool did_match_any_pseudo_element_rules = false;
-    TRY(compute_cascaded_values(style, element, pseudo_element, did_match_any_pseudo_element_rules, mode));
+    compute_cascaded_values(style, element, pseudo_element, did_match_any_pseudo_element_rules, mode);
 
     if (mode == ComputeStyleMode::CreatePseudoElementStyleIfNeeded && !did_match_any_pseudo_element_rules)
         return nullptr;

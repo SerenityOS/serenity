@@ -572,8 +572,7 @@ Element::RequiredInvalidationAfterStyleChange Element::recompute_style()
     set_needs_style_update(false);
     VERIFY(parent());
 
-    // FIXME propagate errors
-    auto new_computed_css_values = MUST(document().style_computer().compute_style(*this));
+    auto new_computed_css_values = document().style_computer().compute_style(*this);
 
     // Tables must not inherit -libweb-* values for text-align.
     // FIXME: Find the spec for this.
