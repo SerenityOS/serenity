@@ -283,9 +283,7 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
 #endif
         global_data.used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::Kernel, PhysicalAddress(virtual_to_low_physical((FlatPtr)start_of_kernel_image)), PhysicalAddress(page_round_up(virtual_to_low_physical((FlatPtr)end_of_kernel_image)).release_value_but_fixme_should_propagate_errors()) });
 
-#if ARCH(RISCV64)
-        // FIXME: AARCH64 might be able to make use of this code path
-        //        Some x86 platforms also provide flattened device trees
+#if ARCH(AARCH64) || ARCH(RISCV64)
         parse_memory_map_fdt(global_data, DeviceTree::s_fdt_storage);
 #else
         parse_memory_map_multiboot(global_data);
@@ -649,6 +647,12 @@ UNMAP_AFTER_INIT void MemoryManager::initialize_physical_pages()
     m_global_data.with([&](auto& global_data) {
         // We assume that the physical page range is contiguous and doesn't contain huge gaps!
         PhysicalAddress highest_physical_address;
+#if ARCH(AARCH64)
+        // FIXME: The BCM2711/BCM2835 Raspberry Pi VideoCore region ends at 0x4000'0000.
+        //        Either make MMIO usable before MM is fully initialized and use the RPi mailbox to get this address
+        //        or make the physical page array dynamically resizable and possibly non-contiguos.
+        highest_physical_address = PhysicalAddress { 0x4000'0000 };
+#endif
         for (auto& range : global_data.used_memory_ranges) {
             if (range.end.get() > highest_physical_address.get())
                 highest_physical_address = range.end;
