@@ -8,6 +8,7 @@
 
 #include <AK/Forward.h>
 #include <AK/Types.h>
+#include <Kernel/Memory/PhysicalAddress.h>
 
 namespace Kernel {
 
@@ -17,7 +18,7 @@ void dbgln_without_mmu(StringView);
 
 namespace Memory {
 
-void init_page_tables();
+void init_page_tables(PhysicalPtr fdt_ptr);
 void unmap_identity_map();
 
 }

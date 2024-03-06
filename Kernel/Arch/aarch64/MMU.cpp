@@ -14,8 +14,10 @@
 #include <Kernel/Arch/aarch64/RPi/UART.h>
 #include <Kernel/Arch/aarch64/Registers.h>
 #include <Kernel/Boot/BootInfo.h>
+#include <Kernel/Firmware/Devicetree/Devicetree.h>
 #include <Kernel/Library/Panic.h>
 #include <Kernel/Sections.h>
+#include <LibDeviceTree/FlattenedDeviceTree.h>
 
 // Documentation here for Aarch64 Address Translations
 // https://documentation-service.arm.com/static/5efa1d23dbdee951c1ccdec5?token=
@@ -267,8 +269,20 @@ static void setup_kernel_page_directory(u64* root_table)
     *adjust_by_mapping_base(&boot_pdpt) = PhysicalAddress((PhysicalPtr)get_page_directory_table(root_table, VirtualAddress { *adjust_by_mapping_base(&kernel_mapping_base) }));
 }
 
-void init_page_tables()
+void init_page_tables(PhysicalPtr fdt_ptr)
 {
+    // Copy the FDT to a known location, if we were passed one
+    DeviceTree::FlattenedDeviceTreeHeader* fdt_header = bit_cast<DeviceTree::FlattenedDeviceTreeHeader*>(fdt_ptr);
+    if (fdt_header->magic == 0xD00DFEED) {
+        u8* fdt_storage = bit_cast<u8*>(fdt_ptr);
+        if (fdt_header->totalsize > fdt_storage_size)
+            panic_without_mmu("Passed FDT is bigger than the internal storage"sv);
+        for (size_t o = 0; o < fdt_header->totalsize; o += 1) {
+            // FIXME: Maybe increase the IO size here
+            adjust_by_mapping_base(s_fdt_storage)[o] = fdt_storage[o];
+        }
+    }
+
     *adjust_by_mapping_base(&physical_to_virtual_offset) = KERNEL_MAPPING_BASE;
     *adjust_by_mapping_base(&kernel_mapping_base) = KERNEL_MAPPING_BASE;
     *adjust_by_mapping_base(&kernel_load_base) = KERNEL_MAPPING_BASE;
