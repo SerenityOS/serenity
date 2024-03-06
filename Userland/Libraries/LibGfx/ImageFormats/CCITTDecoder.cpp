@@ -436,7 +436,7 @@ ErrorOr<ReferenceLine> decode_single_ccitt_2d_line(BigEndianInputBitStream& inpu
                 reference_line.take_first();
                 continue;
             }
-            if (change.color != current_color)
+            if (change.color != current_color || change.column == image_width)
                 next_change = change;
             else
                 offset++;
