@@ -450,7 +450,7 @@ ErrorOr<ReferenceLine> decode_single_ccitt_2d_line(BigEndianInputBitStream& inpu
             TRY(decoded_bits.write_bits(current_color == ccitt_white ? 0u : 1u, 1));
 
         column = change.column + offset;
-        current_color = change.color;
+        current_color = invert(current_color);
         remainder_from_pass_mode = 0;
 
         TRY(current_line.try_empend(current_color, column));
