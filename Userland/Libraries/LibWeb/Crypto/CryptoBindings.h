@@ -6,6 +6,10 @@
 
 #pragma once
 
+#include <AK/Optional.h>
+#include <AK/String.h>
+#include <AK/Vector.h>
+#include <LibJS/Runtime/Object.h>
 #include <LibWeb/WebIDL/Buffers.h>
 
 // FIXME: Generate these from IDL
@@ -40,11 +44,6 @@ struct JsonWebKey {
     Optional<String> k;
 };
 
-// https://w3c.github.io/webcrypto/#dfn-Algorithm
-struct Algorithm {
-    String name;
-};
-
 // https://w3c.github.io/webcrypto/#key-algorithm-dictionary
 class KeyAlgorithm : public JS::Object {
     JS_OBJECT(KeyAlgorithm, Object);
@@ -64,13 +63,6 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(name_getter);
 
     String m_name;
-};
-
-// https://w3c.github.io/webcrypto/#pbkdf2-params
-struct Pbkdf2Params {
-    JS::Handle<WebIDL::BufferSource> salt;
-    u32 iterations;
-    Variant<JS::Handle<JS::Object>, String> hash;
 };
 
 };
