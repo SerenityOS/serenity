@@ -39,10 +39,15 @@ public:
     // TABLE 5.20 Font flags
     bool is_fixed_pitch() const { return m_flags & (1 << (1 - 1)); }
     bool is_serif() const { return m_flags & (1 << (2 - 1)); }
-    bool is_symbolic() const { return m_flags & (1 << (3 - 1)); }
+
+    static constexpr unsigned Symbolic = 1 << (3 - 1);
+    bool is_symbolic() const { return m_flags & Symbolic; }
+
     bool is_script() const { return m_flags & (1 << (4 - 1)); }
+
     // Note: No bit position 5.
-    bool is_nonsymbolic() const { return m_flags & (1 << (6 - 1)); }
+    static constexpr unsigned NonSymbolic = 1 << (6 - 1);
+    bool is_nonsymbolic() const { return m_flags & NonSymbolic; }
     bool is_italic() const { return m_flags & (1 << (7 - 1)); }
     // Note: Big jump in bit positions.
     bool is_all_cap() const { return m_flags & (1 << (17 - 1)); }
