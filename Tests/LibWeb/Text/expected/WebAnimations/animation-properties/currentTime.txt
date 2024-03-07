@@ -1,0 +1,5 @@
+   Animation with no timeline has null currentTime: true
+Animation that hasn't been played has null currentTime: true
+Played animation has a currentTime of 0: true
+New animation has not started animating: true
+Animation with currentTime set to end is finished: true
