@@ -19,6 +19,8 @@
 
 namespace Kernel {
 
+extern "C" void syscall_handler(TrapFrame const*);
+
 // FIXME: Share this array with x86_64/aarch64 somehow and consider if this really needs to use raw pointers and not OwnPtrs
 static Array<GenericInterruptHandler*, 64> s_interrupt_handlers;
 
@@ -103,7 +105,8 @@ extern "C" void trap_handler(TrapFrame& trap_frame)
         }
 
         case EnvironmentCallFromUMode:
-            TODO_RISCV64();
+            trap_frame.regs->sepc += 4;
+            syscall_handler(&trap_frame);
             break;
 
         case Breakpoint:
