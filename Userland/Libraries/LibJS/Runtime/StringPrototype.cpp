@@ -1425,6 +1425,17 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_well_formed)
     return PrimitiveString::create(vm, MUST(result.to_string()));
 }
 
+// 22.1.3.17.3 ToZeroPaddedDecimalString ( n, minLength ), https://tc39.es/ecma262/#sec-tozeropaddeddecimalstring
+ThrowCompletionOr<String> to_zero_padded_decimal_string(VM& vm, size_t n, size_t min_length)
+{
+    // 1. Let S be the String representation of n, formatted as a decimal number.
+    auto string = TRY_OR_THROW_OOM(vm, String::formatted("{}", n));
+
+    // 2. Return StringPad(S, minLength, "0", start).
+    auto padded_utf16_string = pad_string(Utf16String::create(string.bytes_as_string_view()), min_length, Utf16String::create("0"sv), PadPlacement::Start);
+    return padded_utf16_string.to_utf8();
+}
+
 // 22.1.3.32.1 TrimString ( string, where ), https://tc39.es/ecma262/#sec-trimstring
 ThrowCompletionOr<String> trim_string(VM& vm, Value input_value, TrimMode where)
 {
