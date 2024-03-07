@@ -95,6 +95,7 @@ interface Document : Node {
     [CEReactions, ImplementedAs=adopt_node_binding] Node adoptNode(Node node);
 
     [ImplementedAs=style_sheets_for_bindings] readonly attribute StyleSheetList styleSheets;
+    attribute any adoptedStyleSheets;
 
     readonly attribute DOMString compatMode;
     readonly attribute DocumentType? doctype;

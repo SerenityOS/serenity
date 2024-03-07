@@ -34,6 +34,7 @@
 #include <LibWeb/HTML/SharedImageRequest.h>
 #include <LibWeb/HTML/VisibilityState.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
+#include <LibWeb/WebIDL/ObservableArray.h>
 
 namespace Web::DOM {
 
@@ -130,6 +131,8 @@ public:
 
     CSS::StyleSheetList& style_sheets();
     CSS::StyleSheetList const& style_sheets() const;
+
+    void for_each_css_style_sheet(Function<void(CSS::CSSStyleSheet&)>&& callback) const;
 
     CSS::StyleSheetList* style_sheets_for_bindings() { return &style_sheets(); }
 
@@ -598,6 +601,9 @@ public:
     [[nodiscard]] bool has_active_resize_observations();
     [[nodiscard]] bool has_skipped_resize_observations();
 
+    JS::NonnullGCPtr<WebIDL::ObservableArray> adopted_style_sheets() const;
+    WebIDL::ExceptionOr<void> set_adopted_style_sheets(JS::Value);
+
 protected:
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
@@ -832,6 +838,8 @@ private:
     bool m_design_mode_enabled { false };
 
     bool m_needs_to_resolve_paint_only_properties { true };
+
+    mutable JS::GCPtr<WebIDL::ObservableArray> m_adopted_style_sheets;
 };
 
 template<>
