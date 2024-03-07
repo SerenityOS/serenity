@@ -91,6 +91,7 @@ void Element::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     SlottableMixin::visit_edges(visitor);
+    Animatable::visit_edges(visitor);
 
     visitor.visit(m_attributes);
     visitor.visit(m_inline_style);
