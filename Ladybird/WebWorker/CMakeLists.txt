@@ -17,8 +17,10 @@ set(WEBWORKER_SOURCES
 add_library(webworker STATIC ${WEBWORKER_SOURCES})
 
 target_include_directories(webworker PRIVATE ${SERENITY_SOURCE_DIR}/Userland/Services/)
+target_include_directories(webworker PRIVATE ${SERENITY_SOURCE_DIR}/Userland/)
 target_include_directories(webworker PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/..)
 target_link_libraries(webworker PUBLIC LibCore LibFileSystem LibGfx LibIPC LibJS LibProtocol LibWeb LibWebView LibLocale LibImageDecoderClient LibMain)
 
 add_executable(WebWorker main.cpp)
+target_include_directories(WebWorker PRIVATE ${SERENITY_SOURCE_DIR}/Userland/)
 target_link_libraries(WebWorker PRIVATE webworker)

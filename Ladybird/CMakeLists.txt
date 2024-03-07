@@ -204,6 +204,7 @@ add_executable(headless-browser
     Utilities.cpp)
 
 target_include_directories(headless-browser PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+target_include_directories(headless-browser PRIVATE ${SERENITY_SOURCE_DIR}/Userland/)
 target_link_libraries(headless-browser PRIVATE AK LibCore LibWeb LibWebView LibWebSocket LibCrypto LibFileSystem LibGemini LibHTTP LibImageDecoderClient LibJS LibGfx LibMain LibTLS LibIPC LibDiff LibProtocol)
 
 if (ANDROID)
