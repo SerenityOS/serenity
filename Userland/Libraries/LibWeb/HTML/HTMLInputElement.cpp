@@ -12,6 +12,7 @@
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibWeb/CSS/StyleValues/DisplayStyleValue.h>
 #include <LibWeb/CSS/StyleValues/IdentifierStyleValue.h>
+#include <LibWeb/CSS/StyleValues/LengthStyleValue.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/Event.h>
@@ -100,6 +101,11 @@ JS::GCPtr<Layout::Node> HTMLInputElement::create_layout_node(NonnullRefPtr<CSS::
     //         This is required for the internal shadow tree to work correctly in layout.
     if (style->display().is_inline_outside() && style->display().is_flow_inside())
         style->set_property(CSS::PropertyID::Display, CSS::DisplayStyleValue::create(CSS::Display::from_short(CSS::Display::Short::InlineBlock)));
+
+    if (type_state() != TypeAttributeState::FileUpload) {
+        if (style->property(CSS::PropertyID::Width)->has_auto())
+            style->set_property(CSS::PropertyID::Width, CSS::LengthStyleValue::create(CSS::Length(size(), CSS::Length::Type::Ch)));
+    }
 
     return Element::create_layout_node_for_display_type(document(), style->display(), style, this);
 }
