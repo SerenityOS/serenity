@@ -52,4 +52,28 @@ private:
     InternalKeyData m_key_data;
 };
 
+// https://w3c.github.io/webcrypto/#ref-for-dfn-CryptoKeyPair-2
+class CryptoKeyPair : public JS::Object {
+    JS_OBJECT(CryptoKeyPair, Object);
+    JS_DECLARE_ALLOCATOR(CryptoKeyPair);
+
+public:
+    static JS::NonnullGCPtr<CryptoKeyPair> create(JS::Realm&, JS::NonnullGCPtr<CryptoKey> public_key, JS::NonnullGCPtr<CryptoKey> private_key);
+    virtual ~CryptoKeyPair() override = default;
+
+    JS::NonnullGCPtr<CryptoKey> public_key() const { return m_public_key; }
+    JS::NonnullGCPtr<CryptoKey> private_key() const { return m_private_key; }
+
+private:
+    CryptoKeyPair(JS::Realm&, JS::NonnullGCPtr<CryptoKey> public_key, JS::NonnullGCPtr<CryptoKey> private_key);
+    virtual void initialize(JS::Realm&) override;
+    virtual void visit_edges(Visitor&) override;
+
+    JS_DECLARE_NATIVE_FUNCTION(public_key_getter);
+    JS_DECLARE_NATIVE_FUNCTION(private_key_getter);
+
+    JS::NonnullGCPtr<CryptoKey> m_public_key;
+    JS::NonnullGCPtr<CryptoKey> m_private_key;
+};
+
 }
