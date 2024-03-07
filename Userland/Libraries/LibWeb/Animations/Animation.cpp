@@ -652,6 +652,7 @@ WebIDL::ExceptionOr<void> Animation::play_an_animation(AutoRewind auto_rewind)
     //     If a user agent determines that animation is immediately ready, it may schedule the above task as a microtask
     //     such that it runs at the next microtask checkpoint, but it must not perform the task synchronously.
     m_pending_play_task = TaskState::Scheduled;
+    m_saved_play_time = MonotonicTime::now().milliseconds();
 
     // 13. Run the procedure to update an animation’s finished state for animation with the did seek flag set to false,
     //     and the synchronously notify flag set to false.
@@ -735,6 +736,7 @@ WebIDL::ExceptionOr<void> Animation::pause()
     //
     // Note: This is run_pending_pause_task()
     m_pending_pause_task = TaskState::Scheduled;
+    m_saved_pause_time = MonotonicTime::now().milliseconds();
 
     // 11. Run the procedure to update an animation’s finished state for animation with the did seek flag set to false,
     //     and the synchronously notify flag set to false.
@@ -1203,14 +1205,7 @@ void Animation::run_pending_play_task()
 
     // 2. Let ready time be the time value of the timeline associated with animation at the moment when animation became
     //    ready.
-    // FIXME: Ideally we would save the time before the update_finished_state call in play_an_animation() and use that
-    //        as the ready time, as step 2 indicates, however at that point the timeline will not have had it's current
-    //        time updated by the Document, so the time we would save would be incorrect if there are no other
-    //        animations running.
-    auto ready_time = m_timeline->current_time();
-
-    // Note: The timeline being active is a precondition for this method to be called
-    VERIFY(ready_time.has_value());
+    auto ready_time = m_saved_play_time.release_value();
 
     // 3. Perform the steps corresponding to the first matching condition below, if any:
 
@@ -1221,7 +1216,7 @@ void Animation::run_pending_play_task()
 
         // 2. Let new start time be the result of evaluating ready time - hold time / playback rate for animation. If
         //    the playback rate is zero, let new start time be simply ready time.
-        auto new_start_time = m_playback_rate != 0.0 ? ready_time.value() - (m_hold_time.value() / m_playback_rate) : ready_time;
+        auto new_start_time = m_playback_rate != 0.0 ? ready_time - (m_hold_time.value() / m_playback_rate) : ready_time;
 
         // 3. Set the start time of animation to new start time.
         m_start_time = new_start_time;
@@ -1234,7 +1229,7 @@ void Animation::run_pending_play_task()
     else if (m_start_time.has_value() && m_pending_playback_rate.has_value()) {
         // 1. Let current time to match be the result of evaluating (ready time - start time) × playback rate for
         //    animation.
-        auto current_time_to_match = (ready_time.value() - m_start_time.value()) * m_playback_rate;
+        auto current_time_to_match = (ready_time - m_start_time.value()) * m_playback_rate;
 
         // 2. Apply any pending playback rate on animation.
         apply_any_pending_playback_rate();
@@ -1245,7 +1240,7 @@ void Animation::run_pending_play_task()
 
         // 4. Let new start time be the result of evaluating ready time - current time to match / playback rate for
         //    animation. If the playback rate is zero, let new start time be simply ready time.
-        auto new_start_time = m_playback_rate != 0.0 ? ready_time.value() - (current_time_to_match / m_playback_rate) : ready_time;
+        auto new_start_time = m_playback_rate != 0.0 ? ready_time - (current_time_to_match / m_playback_rate) : ready_time;
 
         // 5. Set the start time of animation to new start time.
         m_start_time = new_start_time;
@@ -1265,21 +1260,15 @@ void Animation::run_pending_pause_task()
 {
     // 1. Let ready time be the time value of the timeline associated with animation at the moment when the user agent
     //    completed processing necessary to suspend playback of animation’s associated effect.
-    // FIXME: Ideally we would save the time before the update_finished_state call in pause_an_animation() and use that
-    //        as the ready time, as step 1 indicates, however at that point the timeline will not have had it's current
-    //        time updated by the Document, so the time we would save would be incorrect if there are no other
-    //        animations running.
-    auto ready_time = m_timeline->current_time();
-
-    // Note: The timeline being active is a precondition for this method to be called
-    VERIFY(ready_time.has_value());
+    VERIFY(m_saved_pause_time.has_value());
+    auto ready_time = m_saved_pause_time.release_value();
 
     // 2. If animation’s start time is resolved and its hold time is not resolved, let animation’s hold time be the
     //    result of evaluating (ready time - start time) × playback rate.
     // Note: The hold time might be already set if the animation is finished, or if the animation has a pending play
     //       task. In either case we want to preserve the hold time as we enter the paused state.
     if (m_start_time.has_value() && !m_hold_time.has_value())
-        m_hold_time = (ready_time.value() - m_start_time.value()) * m_playback_rate;
+        m_hold_time = (ready_time - m_start_time.value()) * m_playback_rate;
 
     // 3. Apply any pending playback rate on animation.
     apply_any_pending_playback_rate();
