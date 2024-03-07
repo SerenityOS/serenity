@@ -31,19 +31,17 @@ HTMLTextAreaElement::HTMLTextAreaElement(DOM::Document& document, DOM::Qualified
 
 HTMLTextAreaElement::~HTMLTextAreaElement() = default;
 
-JS::GCPtr<Layout::Node> HTMLTextAreaElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
+void HTMLTextAreaElement::adjust_computed_style(CSS::StyleProperties& style)
 {
     // AD-HOC: We rewrite `display: inline` to `display: inline-block`.
     //         This is required for the internal shadow tree to work correctly in layout.
-    if (style->display().is_inline_outside() && style->display().is_flow_inside())
-        style->set_property(CSS::PropertyID::Display, CSS::DisplayStyleValue::create(CSS::Display::from_short(CSS::Display::Short::InlineBlock)));
+    if (style.display().is_inline_outside() && style.display().is_flow_inside())
+        style.set_property(CSS::PropertyID::Display, CSS::DisplayStyleValue::create(CSS::Display::from_short(CSS::Display::Short::InlineBlock)));
 
-    if (style->property(CSS::PropertyID::Width)->has_auto())
-        style->set_property(CSS::PropertyID::Width, CSS::LengthStyleValue::create(CSS::Length(cols(), CSS::Length::Type::Ch)));
-    if (style->property(CSS::PropertyID::Height)->has_auto())
-        style->set_property(CSS::PropertyID::Height, CSS::LengthStyleValue::create(CSS::Length(rows(), CSS::Length::Type::Lh)));
-
-    return Element::create_layout_node_for_display_type(document(), style->display(), style, this);
+    if (style.property(CSS::PropertyID::Width)->has_auto())
+        style.set_property(CSS::PropertyID::Width, CSS::LengthStyleValue::create(CSS::Length(cols(), CSS::Length::Type::Ch)));
+    if (style.property(CSS::PropertyID::Height)->has_auto())
+        style.set_property(CSS::PropertyID::Height, CSS::LengthStyleValue::create(CSS::Length(rows(), CSS::Length::Type::Lh)));
 }
 
 void HTMLTextAreaElement::initialize(JS::Realm& realm)

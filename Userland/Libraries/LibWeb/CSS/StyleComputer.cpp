@@ -2250,6 +2250,9 @@ RefPtr<StyleProperties> StyleComputer::compute_style_impl(DOM::Element& element,
     // 7. Resolve effective overflow values
     resolve_effective_overflow_values(style);
 
+    // 8. Let the element adjust computed style
+    element.adjust_computed_style(style);
+
     return style;
 }
 

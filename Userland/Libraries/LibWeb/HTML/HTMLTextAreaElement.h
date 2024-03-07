@@ -28,7 +28,7 @@ class HTMLTextAreaElement final
 public:
     virtual ~HTMLTextAreaElement() override;
 
-    virtual JS::GCPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
+    virtual void adjust_computed_style(CSS::StyleProperties&) override;
 
     String const& type() const
     {
