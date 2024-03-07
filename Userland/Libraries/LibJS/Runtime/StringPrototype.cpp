@@ -680,8 +680,43 @@ enum class PadPlacement {
     End,
 };
 
-// 22.1.3.17.1 StringPad ( O, maxLength, fillString, placement ), https://tc39.es/ecma262/#sec-stringpad
-static ThrowCompletionOr<Value> pad_string(VM& vm, Utf16String string, Value max_length, Value fill_string, PadPlacement placement)
+// 22.1.3.17.2 StringPad ( S, maxLength, fillString, placement ), https://tc39.es/ecma262/#sec-stringpad
+static Utf16String pad_string(Utf16String string, size_t max_length, Utf16String const& fill_string, PadPlacement placement)
+{
+    // 1. Let stringLength be the length of S.
+    auto string_length = string.length_in_code_units();
+
+    // 2. If maxLength ≤ stringLength, return S.
+    if (max_length <= string_length)
+        return string;
+
+    // 3. If fillString is the empty String, return S.
+    if (fill_string.is_empty())
+        return string;
+
+    // 4. Let fillLen be maxLength - stringLength.
+    auto fill_length = max_length - string_length;
+
+    // 5. Let truncatedStringFiller be the String value consisting of repeated concatenations of fillString truncated to length fillLen.
+    StringBuilder truncated_string_filler_builder;
+    auto fill_code_units = fill_string.length_in_code_units();
+    for (size_t i = 0; i < fill_length / fill_code_units; ++i)
+        truncated_string_filler_builder.append(fill_string.view());
+
+    truncated_string_filler_builder.append(fill_string.substring_view(0, fill_length % fill_code_units));
+    auto truncated_string_filler = MUST(truncated_string_filler_builder.to_string());
+
+    // 6. If placement is start, return the string-concatenation of truncatedStringFiller and S.
+    // 7. Else, return the string-concatenation of S and truncatedStringFiller.
+    auto formatted = placement == PadPlacement::Start
+        ? MUST(String::formatted("{}{}", truncated_string_filler, string.view()))
+        : MUST(String::formatted("{}{}", string.view(), truncated_string_filler));
+
+    return Utf16String::create(formatted);
+}
+
+// 22.1.3.17.1 StringPaddingBuiltinsImpl ( O, maxLength, fillString, placement ), https://tc39.es/ecma262/#sec-tozeropaddeddecimalstring
+static ThrowCompletionOr<Value> string_padding_builtins_impl(VM& vm, Utf16String string, Value max_length, Value fill_string, PadPlacement placement)
 {
     // 1. Let S be ? ToString(O).
 
@@ -695,35 +730,17 @@ static ThrowCompletionOr<Value> pad_string(VM& vm, Utf16String string, Value max
     if (int_max_length <= string_length)
         return PrimitiveString::create(vm, move(string));
 
-    // 5. If fillString is undefined, let filler be the String value consisting solely of the code unit 0x0020 (SPACE).
+    // 5. If fillString is undefined, set fillString to the String value consisting solely of the code unit 0x0020 (SPACE).
+    // FIXME: Set fillString to the String value.
     auto filler = Utf16String::create(Utf16Data { 0x20 });
     if (!fill_string.is_undefined()) {
         // 6. Else, let filler be ? ToString(fillString).
         filler = TRY(fill_string.to_utf16_string(vm));
-
-        // 7. If filler is the empty String, return S.
-        if (filler.is_empty())
-            return PrimitiveString::create(vm, move(string));
     }
 
-    // 8. Let fillLen be intMaxLength - stringLength.
-    auto fill_length = int_max_length - string_length;
-
-    StringBuilder truncated_string_filler_builder;
-    auto fill_code_units = filler.length_in_code_units();
-    for (size_t i = 0; i < fill_length / fill_code_units; ++i)
-        truncated_string_filler_builder.append(filler.view());
-
-    // 9. Let truncatedStringFiller be the String value consisting of repeated concatenations of filler truncated to length fillLen.
-    truncated_string_filler_builder.append(filler.substring_view(0, fill_length % fill_code_units));
-    auto truncated_string_filler = MUST(truncated_string_filler_builder.to_string());
-
-    // 10. If placement is start, return the string-concatenation of truncatedStringFiller and S.
-    // 11. Else, return the string-concatenation of S and truncatedStringFiller.
-    auto formatted = placement == PadPlacement::Start
-        ? MUST(String::formatted("{}{}", truncated_string_filler, string.view()))
-        : MUST(String::formatted("{}{}", string.view(), truncated_string_filler));
-    return PrimitiveString::create(vm, move(formatted));
+    // 7. Return StringPad(S, intMaxLength, fillString, placement).
+    auto padded_string = pad_string(string, int_max_length, filler, placement);
+    return PrimitiveString::create(vm, move(padded_string));
 }
 
 // 22.1.3.16 String.prototype.padEnd ( maxLength [ , fillString ] ), https://tc39.es/ecma262/#sec-string.prototype.padend
@@ -735,8 +752,8 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::pad_end)
     // 1. Let O be ? RequireObjectCoercible(this value).
     auto string = TRY(utf16_string_from(vm));
 
-    // 2. Return ? StringPad(O, maxLength, fillString, end).
-    return pad_string(vm, move(string), max_length, fill_string, PadPlacement::End);
+    // 2. Return ? StringPaddingBuiltinsImpl(O, maxLength, fillString, end).
+    return string_padding_builtins_impl(vm, move(string), max_length, fill_string, PadPlacement::End);
 }
 
 // 22.1.3.17 String.prototype.padStart ( maxLength [ , fillString ] ), https://tc39.es/ecma262/#sec-string.prototype.padstart
@@ -748,8 +765,8 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::pad_start)
     // 1. Let O be ? RequireObjectCoercible(this value).
     auto string = TRY(utf16_string_from(vm));
 
-    // 2. Return ? StringPad(O, maxLength, fillString, start).
-    return pad_string(vm, move(string), max_length, fill_string, PadPlacement::Start);
+    // 2. Return ? StringPaddingBuiltinsImpl(O, maxLength, fillString, start).
+    return string_padding_builtins_impl(vm, move(string), max_length, fill_string, PadPlacement::Start);
 }
 
 // 22.1.3.18 String.prototype.repeat ( count ), https://tc39.es/ecma262/#sec-string.prototype.repeat
