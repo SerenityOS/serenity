@@ -9,9 +9,9 @@
 #include <AK/ByteBuffer.h>
 #include <AK/Forward.h>
 #include <AK/Optional.h>
+#include <AK/Time.h>
 #include <AK/Types.h>
 #include <LibCore/ConfigFile.h>
-#include <LibCore/DateTime.h>
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
 #include <LibCrypto/PK/RSA.h>
 #include <LibTLS/Extensions.h>
@@ -233,8 +233,8 @@ private:
 };
 
 struct Validity {
-    Core::DateTime not_before;
-    Core::DateTime not_after;
+    UnixDateTime not_before;
+    UnixDateTime not_after;
 };
 
 class SubjectPublicKey {

@@ -6,6 +6,7 @@
 
 #include "CertificateStoreWidget.h"
 #include <AK/String.h>
+#include <LibCore/DateTime.h>
 #include <LibCrypto/ASN1/PEM.h>
 #include <LibFileSystem/FileSystem.h>
 #include <LibFileSystemAccessClient/Client.h>
@@ -74,7 +75,7 @@ GUI::Variant CertificateStoreModel::data(GUI::ModelIndex const& index, GUI::Mode
         return issued_by;
     }
     case Column::Expire:
-        return cert.validity.not_after.to_byte_string("%Y-%m-%d"sv);
+        return Core::DateTime::from_timestamp(cert.validity.not_after.seconds_since_epoch()).to_byte_string("%Y-%m-%d"sv);
     default:
         VERIFY_NOT_REACHED();
     }

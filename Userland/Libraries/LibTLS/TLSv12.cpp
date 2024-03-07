@@ -104,15 +104,15 @@ void TLSv12::consume(ReadonlyBytes record)
 
 bool Certificate::is_valid() const
 {
-    auto now = Core::DateTime::now();
+    auto now = UnixDateTime::now();
 
     if (now < validity.not_before) {
-        dbgln("certificate expired (not yet valid, signed for {})", validity.not_before.to_byte_string());
+        dbgln("certificate expired (not yet valid, signed for {})", Core::DateTime::from_timestamp(validity.not_before.seconds_since_epoch()));
         return false;
     }
 
     if (validity.not_after < now) {
-        dbgln("certificate expired (expiry date {})", validity.not_after.to_byte_string());
+        dbgln("certificate expired (expiry date {})", Core::DateTime::from_timestamp(validity.not_after.seconds_since_epoch()));
         return false;
     }
 

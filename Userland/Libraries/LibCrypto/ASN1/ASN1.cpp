@@ -119,7 +119,7 @@ ByteString type_name(Type type)
     return "InvalidType";
 }
 
-Optional<Core::DateTime> parse_utc_time(StringView time)
+Optional<UnixDateTime> parse_utc_time(StringView time)
 {
     // YYMMDDhhmm[ss]Z or YYMMDDhhmm[ss](+|-)hhmm
     GenericLexer lexer(time);
@@ -164,10 +164,10 @@ Optional<Core::DateTime> parse_utc_time(StringView time)
     if (offset_hours.has_value() || offset_minutes.has_value())
         dbgln("FIXME: Implement UTCTime with offset!");
 
-    return Core::DateTime::create(full_year, month.value(), day.value(), hour.value(), minute.value(), full_seconds);
+    return UnixDateTime::from_unix_time_parts(full_year, month.value(), day.value(), hour.value(), minute.value(), full_seconds, 0);
 }
 
-Optional<Core::DateTime> parse_generalized_time(StringView time)
+Optional<UnixDateTime> parse_generalized_time(StringView time)
 {
     // YYYYMMDDhh[mm[ss[.fff]]] or YYYYMMDDhh[mm[ss[.fff]]]Z or YYYYMMDDhh[mm[ss[.fff]]](+|-)hhmm
     GenericLexer lexer(time);
@@ -177,6 +177,7 @@ Optional<Core::DateTime> parse_generalized_time(StringView time)
     auto hour = lexer.consume(2).to_number<unsigned>();
     Optional<unsigned> minute, seconds, milliseconds, offset_hours, offset_minutes;
     [[maybe_unused]] bool negative_offset = false;
+
     if (!lexer.is_eof()) {
         if (lexer.consume_specific('Z'))
             goto done_parsing;
@@ -233,7 +234,6 @@ done_parsing:;
     if (offset_hours.has_value() || offset_minutes.has_value())
         dbgln("FIXME: Implement GeneralizedTime with offset!");
 
-    // Unceremoniously drop the milliseconds on the floor.
-    return Core::DateTime::create(year.value(), month.value(), day.value(), hour.value(), minute.value_or(0), seconds.value_or(0));
+    return UnixDateTime::from_unix_time_parts(year.value(), month.value(), day.value(), hour.value(), minute.value_or(0), seconds.value_or(0), milliseconds.value_or(0));
 }
 }
