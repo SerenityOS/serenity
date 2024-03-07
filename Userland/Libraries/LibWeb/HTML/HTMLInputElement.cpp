@@ -97,17 +97,23 @@ JS::GCPtr<Layout::Node> HTMLInputElement::create_layout_node(NonnullRefPtr<CSS::
     if (type_state() == TypeAttributeState::RadioButton)
         return heap().allocate_without_realm<Layout::RadioButton>(document(), *this, move(style));
 
+    return Element::create_layout_node_for_display_type(document(), style->display(), style, this);
+}
+
+void HTMLInputElement::adjust_computed_style(CSS::StyleProperties& style)
+{
+    if (type_state() == TypeAttributeState::Hidden || type_state() == TypeAttributeState::SubmitButton || type_state() == TypeAttributeState::Button || type_state() == TypeAttributeState::ResetButton || type_state() == TypeAttributeState::ImageButton || type_state() == TypeAttributeState::Checkbox || type_state() == TypeAttributeState::RadioButton)
+        return;
+
     // AD-HOC: We rewrite `display: inline` to `display: inline-block`.
     //         This is required for the internal shadow tree to work correctly in layout.
-    if (style->display().is_inline_outside() && style->display().is_flow_inside())
-        style->set_property(CSS::PropertyID::Display, CSS::DisplayStyleValue::create(CSS::Display::from_short(CSS::Display::Short::InlineBlock)));
+    if (style.display().is_inline_outside() && style.display().is_flow_inside())
+        style.set_property(CSS::PropertyID::Display, CSS::DisplayStyleValue::create(CSS::Display::from_short(CSS::Display::Short::InlineBlock)));
 
     if (type_state() != TypeAttributeState::FileUpload) {
-        if (style->property(CSS::PropertyID::Width)->has_auto())
-            style->set_property(CSS::PropertyID::Width, CSS::LengthStyleValue::create(CSS::Length(size(), CSS::Length::Type::Ch)));
+        if (style.property(CSS::PropertyID::Width)->has_auto())
+            style.set_property(CSS::PropertyID::Width, CSS::LengthStyleValue::create(CSS::Length(size(), CSS::Length::Type::Ch)));
     }
-
-    return Element::create_layout_node_for_display_type(document(), style->display(), style, this);
 }
 
 void HTMLInputElement::set_checked(bool checked, ChangeSource change_source)

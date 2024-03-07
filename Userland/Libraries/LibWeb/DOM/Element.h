@@ -212,6 +212,7 @@ public:
     JS::NonnullGCPtr<Geometry::DOMRectList> get_client_rects() const;
 
     virtual JS::GCPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>);
+    virtual void adjust_computed_style(CSS::StyleProperties&) { }
 
     virtual void did_receive_focus() { }
     virtual void did_lose_focus() { }

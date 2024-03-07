@@ -48,14 +48,12 @@ void HTMLSelectElement::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_chevron_icon_element);
 }
 
-JS::GCPtr<Layout::Node> HTMLSelectElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
+void HTMLSelectElement::adjust_computed_style(CSS::StyleProperties& style)
 {
     // AD-HOC: We rewrite `display: inline` to `display: inline-block`.
     //         This is required for the internal shadow tree to work correctly in layout.
-    if (style->display().is_inline_outside() && style->display().is_flow_inside())
-        style->set_property(CSS::PropertyID::Display, CSS::DisplayStyleValue::create(CSS::Display::from_short(CSS::Display::Short::InlineBlock)));
-
-    return Element::create_layout_node_for_display_type(document(), style->display(), style, this);
+    if (style.display().is_inline_outside() && style.display().is_flow_inside())
+        style.set_property(CSS::PropertyID::Display, CSS::DisplayStyleValue::create(CSS::Display::from_short(CSS::Display::Short::InlineBlock)));
 }
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#dom-select-options
