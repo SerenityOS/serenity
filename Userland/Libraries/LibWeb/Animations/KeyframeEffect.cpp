@@ -723,11 +723,13 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<KeyframeEffect>> KeyframeEffect::construct_
 
 void KeyframeEffect::set_target(DOM::Element* target)
 {
-    if (m_target_element)
-        m_target_element->disassociate_with_effect(*this);
+    if (auto animation = this->associated_animation()) {
+        if (m_target_element)
+            m_target_element->disassociate_with_animation(*animation);
+        if (target)
+            target->associate_with_animation(*animation);
+    }
     m_target_element = target;
-    if (m_target_element)
-        m_target_element->associate_with_effect(*this);
 }
 
 WebIDL::ExceptionOr<void> KeyframeEffect::set_pseudo_element(Optional<String> pseudo_element)
@@ -851,12 +853,6 @@ WebIDL::ExceptionOr<void> KeyframeEffect::set_keyframes(Optional<JS::Handle<JS::
 KeyframeEffect::KeyframeEffect(JS::Realm& realm)
     : AnimationEffect(realm)
 {
-}
-
-KeyframeEffect::~KeyframeEffect()
-{
-    if (m_target_element)
-        m_target_element->disassociate_with_effect(*this);
 }
 
 void KeyframeEffect::initialize(JS::Realm& realm)

@@ -352,7 +352,7 @@ void Animation::set_replace_state(Bindings::AnimationReplaceState value)
     if (value == Bindings::AnimationReplaceState::Removed) {
         // Remove the associated effect from its target, if applicable
         if (m_effect && m_effect->target())
-            m_effect->target()->disassociate_with_effect(*m_effect);
+            m_effect->target()->disassociate_with_animation(*this);
 
         // Remove this animation from its timeline
         m_timeline->disassociate_with_animation(*this);
