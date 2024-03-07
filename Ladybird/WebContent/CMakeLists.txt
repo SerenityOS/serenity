@@ -46,6 +46,7 @@ else()
     endif()
     add_library(webcontent ${LIB_TYPE} ${WEBCONTENT_SOURCES})
     target_include_directories(webcontent PRIVATE ${SERENITY_SOURCE_DIR}/Userland/Services/)
+    target_include_directories(webcontent PRIVATE ${SERENITY_SOURCE_DIR}/Userland/)
     target_include_directories(webcontent PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/..)
     target_link_libraries(webcontent PRIVATE LibAudio LibCore LibFileSystem LibGfx LibIPC LibJS LibMain LibWeb LibWebSocket LibProtocol LibWebView LibImageDecoderClient)
     target_sources(webcontent PUBLIC FILE_SET ladybird TYPE HEADERS
@@ -78,6 +79,7 @@ else()
 endif()
 
 target_include_directories(WebContent PRIVATE ${SERENITY_SOURCE_DIR}/Userland/Services/)
+target_include_directories(WebContent PRIVATE ${SERENITY_SOURCE_DIR}/Userland/)
 target_include_directories(WebContent PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/..)
 target_link_libraries(WebContent PRIVATE LibAudio LibCore LibFileSystem LibGfx LibImageDecoderClient LibIPC LibJS LibMain LibWeb LibWebSocket LibProtocol LibWebView)
 
