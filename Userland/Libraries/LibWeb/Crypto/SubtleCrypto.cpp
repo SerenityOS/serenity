@@ -135,7 +135,6 @@ JS::NonnullGCPtr<JS::Promise> SubtleCrypto::digest(AlgorithmIdentifier const& al
     // 6. Return promise and perform the remaining steps in parallel.
     Platform::EventLoopPlugin::the().deferred_invoke([&realm, algorithm_object = normalized_algorithm.release_value(), promise, data_buffer = move(data_buffer)]() -> void {
         HTML::TemporaryExecutionContext context(Bindings::host_defined_environment_settings_object(realm), HTML::TemporaryExecutionContext::CallbacksEnabled::Yes);
-
         // 7. If the following steps or referenced procedures say to throw an error, reject promise with the returned error and then terminate the algorithm.
         // FIXME: Need spec reference to https://webidl.spec.whatwg.org/#reject
 
@@ -149,6 +148,66 @@ JS::NonnullGCPtr<JS::Promise> SubtleCrypto::digest(AlgorithmIdentifier const& al
 
         // 9. Resolve promise with result.
         WebIDL::resolve_promise(realm, promise, result.release_value());
+    });
+
+    return verify_cast<JS::Promise>(*promise->promise());
+}
+
+// https://w3c.github.io/webcrypto/#dfn-SubtleCrypto-method-generateKey
+JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Promise>> SubtleCrypto::generate_key(AlgorithmIdentifier algorithm, bool extractable, Vector<Bindings::KeyUsage> key_usages)
+{
+    auto& realm = this->realm();
+
+    // 1. Let algorithm, extractable and usages be the algorithm, extractable and keyUsages
+    //    parameters passed to the generateKey() method, respectively.
+
+    // 2. Let normalizedAlgorithm be the result of normalizing an algorithm,
+    //    with alg set to algorithm and op set to "generateKey".
+    auto normalized_algorithm = normalize_an_algorithm(algorithm, "generateKey"_string);
+
+    // 3. If an error occurred, return a Promise rejected with normalizedAlgorithm.
+    if (normalized_algorithm.is_error())
+        return WebIDL::create_rejected_promise_from_exception(realm, normalized_algorithm.release_error());
+
+    // 4. Let promise be a new Promise.
+    auto promise = WebIDL::create_promise(realm);
+
+    // 5. Return promise and perform the remaining steps in parallel.
+    Platform::EventLoopPlugin::the().deferred_invoke([&realm, normalized_algorithm = normalized_algorithm.release_value(), promise, extractable, key_usages = move(key_usages)]() -> void {
+        HTML::TemporaryExecutionContext context(Bindings::host_defined_environment_settings_object(realm), HTML::TemporaryExecutionContext::CallbacksEnabled::Yes);
+        // 6. If the following steps or referenced procedures say to throw an error, reject promise with
+        //    the returned error and then terminate the algorithm.
+
+        // 7. Let result be the result of performing the generate key operation specified by normalizedAlgorithm
+        //    using algorithm, extractable and usages.
+        auto result_or_error = normalized_algorithm.methods->generate_key(*normalized_algorithm.parameter, extractable, key_usages);
+
+        if (result_or_error.is_error()) {
+            WebIDL::reject_promise(realm, promise, Bindings::dom_exception_to_throw_completion(realm.vm(), result_or_error.release_error()).release_value().value());
+            return;
+        }
+        auto result = result_or_error.release_value();
+
+        // 8. If result is a CryptoKey object:
+        //      If the [[type]] internal slot of result is "secret" or "private" and usages is empty, then throw a SyntaxError.
+        //    If result is a CryptoKeyPair object:
+        //      If the [[usages]] internal slot of the privateKey attribute of result is the empty sequence, then throw a SyntaxError.
+        // 9. Resolve promise with result.
+        result.visit(
+            [&](JS::NonnullGCPtr<CryptoKey>& key) {
+                if ((key->type() == Bindings::KeyType::Secret || key->type() == Bindings::KeyType::Private) && key_usages.is_empty()) {
+                    WebIDL::reject_promise(realm, promise, WebIDL::SyntaxError::create(realm, "usages must not be empty"_fly_string));
+                    return;
+                }
+                WebIDL::resolve_promise(realm, promise, key);
+            },
+            [&](JS::NonnullGCPtr<CryptoKeyPair>& key_pair) {
+                if (key_pair->private_key()->internal_usages().is_empty()) {
+                    WebIDL::reject_promise(realm, promise, WebIDL::SyntaxError::create(realm, "usages must not be empty"_fly_string));
+                    return;
+                }
+                WebIDL::resolve_promise(realm, promise, key_pair);
+            });
     });
 
     return verify_cast<JS::Promise>(*promise->promise());
