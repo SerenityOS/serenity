@@ -33,6 +33,7 @@
     T(ICOLoader)             \
     T(ILBMLoader)            \
     T(IMAPParser)            \
+    T(JBIG2Loader)           \
     T(JPEGLoader)            \
     T(Js)                    \
     T(JsonParser)            \
