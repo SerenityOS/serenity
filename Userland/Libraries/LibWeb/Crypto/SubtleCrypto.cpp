@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/QuickSort.h>
 #include <LibCrypto/Hash/HashManager.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibJS/Runtime/Promise.h>
@@ -19,6 +20,11 @@
 #include <LibWeb/WebIDL/Promise.h>
 
 namespace Web::Crypto {
+
+static void normalize_key_usages(Vector<Bindings::KeyUsage>& key_usages)
+{
+    quick_sort(key_usages);
+}
 
 JS_DEFINE_ALLOCATOR(SubtleCrypto);
 
@@ -190,7 +196,7 @@ JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Promise>> SubtleCrypto::import_key(Bi
     auto promise = WebIDL::create_promise(realm);
 
     // 8. Return promise and perform the remaining steps in parallel.
-    Platform::EventLoopPlugin::the().deferred_invoke([&realm, real_key_data = move(real_key_data), normalized_algorithm = normalized_algorithm.release_value(), promise, format, extractable, key_usages = move(key_usages), algorithm = move(algorithm)]() -> void {
+    Platform::EventLoopPlugin::the().deferred_invoke([&realm, real_key_data = move(real_key_data), normalized_algorithm = normalized_algorithm.release_value(), promise, format, extractable, key_usages = move(key_usages), algorithm = move(algorithm)]() mutable -> void {
         HTML::TemporaryExecutionContext context(Bindings::host_defined_environment_settings_object(realm), HTML::TemporaryExecutionContext::CallbacksEnabled::Yes);
 
         // 9. If the following steps or referenced procedures say to throw an error, reject promise with the returned error and then terminate the algorithm.
@@ -214,7 +220,8 @@ JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Promise>> SubtleCrypto::import_key(Bi
         result->set_extractable(extractable);
 
         // 13. Set the [[usages]] internal slot of result to the normalized value of usages.
-        // FIXME: result->set_usages(key_usages);
+        normalize_key_usages(key_usages);
+        result->set_usages(key_usages);
 
         // 14. Resolve promise with result.
         WebIDL::resolve_promise(realm, promise, result);

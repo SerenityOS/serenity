@@ -28,13 +28,15 @@ public:
 
     bool extractable() const { return m_extractable; }
     Bindings::KeyType type() const { return m_type; }
-    Object const* algorithm() const { return m_algorithm.ptr(); }
-    Object const* usages() const { return m_usages.ptr(); }
+    JS::Object const* algorithm() const { return m_algorithm; }
+    JS::Object const* usages() const { return m_usages; }
+
+    Vector<Bindings::KeyUsage> internal_usages() const { return m_key_usages; }
 
     void set_extractable(bool extractable) { m_extractable = extractable; }
     void set_type(Bindings::KeyType type) { m_type = type; }
     void set_algorithm(JS::NonnullGCPtr<Object> algorithm) { m_algorithm = move(algorithm); }
-    void set_usages(JS::NonnullGCPtr<Object> usages) { m_usages = move(usages); }
+    void set_usages(Vector<Bindings::KeyUsage>);
 
 private:
     CryptoKey(JS::Realm&, InternalKeyData);
@@ -46,6 +48,7 @@ private:
     JS::NonnullGCPtr<Object> m_algorithm;
     JS::NonnullGCPtr<Object> m_usages;
 
+    Vector<Bindings::KeyUsage> m_key_usages;
     InternalKeyData m_key_data;
 };
 
