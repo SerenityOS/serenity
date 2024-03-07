@@ -521,14 +521,24 @@ private:
         VERIFY_NOT_REACHED();
     }
 
+    ErrorOr<void> set_next_ifd(u32 ifd_offset)
+    {
+        if (ifd_offset != 0) {
+            if (ifd_offset < TRY(m_stream->tell()))
+                return Error::from_string_literal("TIFFImageDecoderPlugin: Can not accept an IFD pointing to previous data");
+
+            m_next_ifd = Optional<u32> { ifd_offset };
+        } else {
+            m_next_ifd = OptionalNone {};
+        }
+        return {};
+    }
+
     ErrorOr<void> read_next_idf_offset()
     {
         auto const next_block_position = TRY(read_value<u32>());
+        TRY(set_next_ifd(next_block_position));
 
-        if (next_block_position != 0)
-            m_next_ifd = Optional<u32> { next_block_position };
-        else
-            m_next_ifd = OptionalNone {};
         return {};
     }
 
@@ -675,7 +685,10 @@ private:
         }()));
 
         auto subifd_handler = [&](u32 ifd_offset) -> ErrorOr<void> {
-            m_next_ifd = ifd_offset;
+            if (auto result = set_next_ifd(ifd_offset); result.is_error()) {
+                dbgln("{}", result.error());
+                return {};
+            }
             TRY(read_next_image_file_directory());
             return {};
         };
