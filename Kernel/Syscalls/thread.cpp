@@ -77,7 +77,13 @@ ErrorOr<FlatPtr> Process::sys$create_thread(void* (*entry)(void*), Userspace<Sys
     regs.x[2] = (FlatPtr)params.stack_location;
     regs.x[3] = (FlatPtr)params.stack_size;
 #elif ARCH(RISCV64)
-    TODO_RISCV64();
+    regs.satp = address_space().with([](auto& space) { return space->page_directory().satp(); });
+
+    // Set up the argument registers expected by pthread_create_helper.
+    regs.x[9] = (FlatPtr)params.entry;
+    regs.x[10] = (FlatPtr)params.entry_argument;
+    regs.x[11] = (FlatPtr)params.stack_location;
+    regs.x[12] = (FlatPtr)params.stack_size;
 #else
 #    error Unknown architecture
 #endif
