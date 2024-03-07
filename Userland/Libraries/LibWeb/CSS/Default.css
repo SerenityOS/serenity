@@ -29,7 +29,6 @@ label {
 input:not([type=submit], input[type=button], input[type=image], input[type=reset], input[type=color], input[type=checkbox], input[type=file], input[type=radio], input[type=range]), textarea {
     border: 1px solid ButtonBorder;
     min-height: 16px;
-    width: attr(size ch, 20ch);
     cursor: text;
     overflow: hidden;
 }
