@@ -52,7 +52,7 @@ interface SubtleCrypto {
 
     Promise<any> digest(AlgorithmIdentifier algorithm, BufferSource data);
 
-    // FIXME: Promise<any> generateKey(AlgorithmIdentifier algorithm,  boolean extractable, sequence<KeyUsage> keyUsages);
+    Promise<any> generateKey(AlgorithmIdentifier algorithm,  boolean extractable, sequence<KeyUsage> keyUsages);
     // FIXME: Promise<any> deriveKey(AlgorithmIdentifier algorithm, CryptoKey baseKey, AlgorithmIdentifier derivedKeyType, boolean extractable, sequence<KeyUsage> keyUsages );
     // FIXME: Promise<ArrayBuffer> deriveBits(AlgorithmIdentifier algorithm, CryptoKey baseKey, unsigned long length);
 
