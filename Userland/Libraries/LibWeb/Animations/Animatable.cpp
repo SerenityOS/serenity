@@ -63,9 +63,9 @@ Vector<JS::NonnullGCPtr<Animation>> Animatable::get_animations(Web::Animations::
     // The returned list is sorted using the composite order described for the associated animations of effects in
     // §5.4.2 The effect stack.
     if (!m_is_sorted_by_composite_order) {
-        quick_sort(m_associated_effects, [](JS::NonnullGCPtr<AnimationEffect>& a, JS::NonnullGCPtr<AnimationEffect>& b) {
-            auto& a_effect = verify_cast<KeyframeEffect>(*a);
-            auto& b_effect = verify_cast<KeyframeEffect>(*b);
+        quick_sort(m_associated_animations, [](JS::NonnullGCPtr<Animation>& a, JS::NonnullGCPtr<Animation>& b) {
+            auto& a_effect = verify_cast<KeyframeEffect>(*a->effect());
+            auto& b_effect = verify_cast<KeyframeEffect>(*b->effect());
             return KeyframeEffect::composite_order(a_effect, b_effect) < 0;
         });
         m_is_sorted_by_composite_order = true;
@@ -75,29 +75,29 @@ Vector<JS::NonnullGCPtr<Animation>> Animatable::get_animations(Web::Animations::
     (void)options;
 
     Vector<JS::NonnullGCPtr<Animation>> relevant_animations;
-    for (auto& effect : m_associated_effects) {
-        if (auto animation = effect->associated_animation(); animation && animation->is_relevant())
+    for (auto const& animation : m_associated_animations) {
+        if (animation->is_relevant())
             relevant_animations.append(*animation);
     }
 
     return relevant_animations;
 }
 
-void Animatable::associate_with_effect(JS::NonnullGCPtr<AnimationEffect> effect)
+void Animatable::associate_with_animation(JS::NonnullGCPtr<Animation> animation)
 {
-    m_associated_effects.append(effect);
+    m_associated_animations.append(animation);
     m_is_sorted_by_composite_order = false;
 }
 
-void Animatable::disassociate_with_effect(JS::NonnullGCPtr<AnimationEffect> effect)
+void Animatable::disassociate_with_animation(JS::NonnullGCPtr<Animation> animation)
 {
-    m_associated_effects.remove_first_matching([&](auto element) { return effect == element; });
+    m_associated_animations.remove_first_matching([&](auto element) { return animation == element; });
 }
 
 void Animatable::visit_edges(JS::Cell::Visitor& visitor)
 {
-    for (auto const& effect : m_associated_effects)
-        visitor.visit(effect);
+    for (auto const& animation : m_associated_animations)
+        visitor.visit(animation);
     visitor.visit(m_cached_animation_name_source);
     visitor.visit(m_cached_animation_name_animation);
 }

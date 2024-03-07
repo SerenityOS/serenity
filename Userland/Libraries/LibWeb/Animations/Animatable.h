@@ -30,8 +30,8 @@ public:
     WebIDL::ExceptionOr<JS::NonnullGCPtr<Animation>> animate(Optional<JS::Handle<JS::Object>> keyframes, Variant<Empty, double, KeyframeAnimationOptions> options = {});
     Vector<JS::NonnullGCPtr<Animation>> get_animations(GetAnimationsOptions options = {});
 
-    void associate_with_effect(JS::NonnullGCPtr<AnimationEffect> effect);
-    void disassociate_with_effect(JS::NonnullGCPtr<AnimationEffect> effect);
+    void associate_with_animation(JS::NonnullGCPtr<Animation>);
+    void disassociate_with_animation(JS::NonnullGCPtr<Animation>);
 
     JS::GCPtr<CSS::CSSStyleDeclaration const> cached_animation_name_source() const { return m_cached_animation_name_source; }
     void set_cached_animation_name_source(JS::GCPtr<CSS::CSSStyleDeclaration const> value) { m_cached_animation_name_source = value; }
@@ -43,7 +43,7 @@ protected:
     void visit_edges(JS::Cell::Visitor&);
 
 private:
-    Vector<JS::NonnullGCPtr<AnimationEffect>> m_associated_effects;
+    Vector<JS::NonnullGCPtr<Animation>> m_associated_animations;
     bool m_is_sorted_by_composite_order { true };
     JS::GCPtr<CSS::CSSStyleDeclaration const> m_cached_animation_name_source;
     JS::GCPtr<Animations::Animation> m_cached_animation_name_animation;

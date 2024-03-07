@@ -105,7 +105,7 @@ public:
 
 private:
     KeyframeEffect(JS::Realm&);
-    virtual ~KeyframeEffect() override;
+    virtual ~KeyframeEffect() override = default;
 
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
