@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <AK/Time.h>
 #include <AK/Types.h>
-#include <LibCore/DateTime.h>
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
 
 namespace Crypto::ASN1 {
@@ -75,7 +75,7 @@ ByteString kind_name(Kind);
 ByteString class_name(Class);
 ByteString type_name(Type);
 
-Optional<Core::DateTime> parse_utc_time(StringView);
-Optional<Core::DateTime> parse_generalized_time(StringView);
+Optional<UnixDateTime> parse_utc_time(StringView);
+Optional<UnixDateTime> parse_generalized_time(StringView);
 
 }

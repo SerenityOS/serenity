@@ -5,11 +5,12 @@
  */
 
 #include <AK/StringView.h>
+#include <AK/Time.h>
 #include <LibCrypto/ASN1/ASN1.h>
 #include <LibTest/TestCase.h>
 
 #define EXPECT_DATETIME(sv, y, mo, d, h, mi, s) \
-    EXPECT_EQ(Crypto::ASN1::parse_utc_time(sv).value(), Core::DateTime::create(y, mo, d, h, mi, s))
+    EXPECT_EQ(Crypto::ASN1::parse_utc_time(sv).value(), UnixDateTime::from_unix_time_parts(y, mo, d, h, mi, s, 0))
 
 TEST_CASE(test_utc_boring)
 {
@@ -65,79 +66,76 @@ TEST_CASE(test_utc_missing_z)
 }
 
 #undef EXPECT_DATETIME
-#define EXPECT_DATETIME(sv, y, mo, d, h, mi, s) \
-    EXPECT_EQ(Crypto::ASN1::parse_generalized_time(sv).value(), Core::DateTime::create(y, mo, d, h, mi, s))
+#define EXPECT_DATETIME(sv, y, mo, d, h, mi, s, ms) \
+    EXPECT_EQ(Crypto::ASN1::parse_generalized_time(sv).value(), UnixDateTime::from_unix_time_parts(y, mo, d, h, mi, s, ms))
 
 TEST_CASE(test_generalized_boring)
 {
     // YYYYMMDDhh[mm[ss[.fff]]]
-    EXPECT_DATETIME("20010101010101Z"sv, 2001, 1, 1, 1, 1, 1);
-    EXPECT_DATETIME("20010203040506Z"sv, 2001, 2, 3, 4, 5, 6);
-    EXPECT_DATETIME("20020406081012Z"sv, 2002, 4, 6, 8, 10, 12);
-    EXPECT_DATETIME("200204060810Z"sv, 2002, 4, 6, 8, 10, 0);
-    EXPECT_DATETIME("2002040608Z"sv, 2002, 4, 6, 8, 0, 0);
-    // TODO: We probably should not discard the milliseconds.
-    EXPECT_DATETIME("20020406081012.567Z"sv, 2002, 4, 6, 8, 10, 12);
-    EXPECT_DATETIME("20220911220000Z"sv, 2022, 9, 11, 22, 0, 0);
+    EXPECT_DATETIME("20010101010101Z"sv, 2001, 1, 1, 1, 1, 1, 0);
+    EXPECT_DATETIME("20010203040506Z"sv, 2001, 2, 3, 4, 5, 6, 0);
+    EXPECT_DATETIME("20020406081012Z"sv, 2002, 4, 6, 8, 10, 12, 0);
+    EXPECT_DATETIME("200204060810Z"sv, 2002, 4, 6, 8, 10, 0, 0);
+    EXPECT_DATETIME("2002040608Z"sv, 2002, 4, 6, 8, 0, 0, 0);
+    EXPECT_DATETIME("20020406081012.567Z"sv, 2002, 4, 6, 8, 10, 12, 567);
+    EXPECT_DATETIME("20220911220000Z"sv, 2022, 9, 11, 22, 0, 0, 0);
 }
 
 TEST_CASE(test_generalized_offset)
 {
     // YYYYMMDDhh[mm[ss[.fff]]](+|-)hhmm
     // We don't yet support storing the offset anywhere and instead just assume that the offset is just +0000.
-    EXPECT_DATETIME("20010101010101+0000"sv, 2001, 1, 1, 1, 1, 1);
-    EXPECT_DATETIME("20010203040506+0000"sv, 2001, 2, 3, 4, 5, 6);
-    EXPECT_DATETIME("20020406081012+0000"sv, 2002, 4, 6, 8, 10, 12);
-    EXPECT_DATETIME("200204060810+0000"sv, 2002, 4, 6, 8, 10, 0);
-    EXPECT_DATETIME("2002040608+0000"sv, 2002, 4, 6, 8, 0, 0);
-    // TODO: We probably should not discard the milliseconds.
-    EXPECT_DATETIME("20020406081012.567+0000"sv, 2002, 4, 6, 8, 10, 12);
-    EXPECT_DATETIME("20220911220000+0000"sv, 2022, 9, 11, 22, 0, 0);
+    EXPECT_DATETIME("20010101010101+0000"sv, 2001, 1, 1, 1, 1, 1, 0);
+    EXPECT_DATETIME("20010203040506+0000"sv, 2001, 2, 3, 4, 5, 6, 0);
+    EXPECT_DATETIME("20020406081012+0000"sv, 2002, 4, 6, 8, 10, 12, 0);
+    EXPECT_DATETIME("200204060810+0000"sv, 2002, 4, 6, 8, 10, 0, 0);
+    EXPECT_DATETIME("2002040608+0000"sv, 2002, 4, 6, 8, 0, 0, 0);
+    EXPECT_DATETIME("20020406081012.567+0000"sv, 2002, 4, 6, 8, 10, 12, 567);
+    EXPECT_DATETIME("20220911220000+0000"sv, 2022, 9, 11, 22, 0, 0, 0);
     // Designed to fail once we support offsets:
-    EXPECT_DATETIME("20220911220000+0600"sv, 2022, 9, 11, 22, 0, 0);
+    EXPECT_DATETIME("20220911220000+0600"sv, 2022, 9, 11, 22, 0, 0, 0);
 }
 
 TEST_CASE(test_generalized_missing_z)
 {
     // YYYYMMDDhh[mm[ss[.fff]]]
-    EXPECT_DATETIME("20010101010101"sv, 2001, 1, 1, 1, 1, 1);
-    EXPECT_DATETIME("20010203040506"sv, 2001, 2, 3, 4, 5, 6);
-    EXPECT_DATETIME("20020406081012"sv, 2002, 4, 6, 8, 10, 12);
-    EXPECT_DATETIME("200204060810"sv, 2002, 4, 6, 8, 10, 0);
-    EXPECT_DATETIME("2002040608"sv, 2002, 4, 6, 8, 0, 0);
-    // TODO: We probably should not discard the milliseconds.
-    EXPECT_DATETIME("20020406081012.567"sv, 2002, 4, 6, 8, 10, 12);
-    EXPECT_DATETIME("20220911220000"sv, 2022, 9, 11, 22, 0, 0);
+    EXPECT_DATETIME("20010101010101"sv, 2001, 1, 1, 1, 1, 1, 0);
+    EXPECT_DATETIME("20010203040506"sv, 2001, 2, 3, 4, 5, 6, 0);
+    EXPECT_DATETIME("20020406081012"sv, 2002, 4, 6, 8, 10, 12, 0);
+    EXPECT_DATETIME("200204060810"sv, 2002, 4, 6, 8, 10, 0, 0);
+    EXPECT_DATETIME("2002040608"sv, 2002, 4, 6, 8, 0, 0, 0);
+    EXPECT_DATETIME("20020406081012.567"sv, 2002, 4, 6, 8, 10, 12, 567);
+    EXPECT_DATETIME("20220911220000"sv, 2022, 9, 11, 22, 0, 0, 0);
 }
 
 TEST_CASE(test_generalized_unusual_year)
 {
     // Towards the positive
-    EXPECT_DATETIME("20010203040506Z"sv, 2001, 2, 3, 4, 5, 6);
-    EXPECT_DATETIME("20110203040506Z"sv, 2011, 2, 3, 4, 5, 6);
-    EXPECT_DATETIME("21010203040506Z"sv, 2101, 2, 3, 4, 5, 6);
-    EXPECT_DATETIME("30010203040506Z"sv, 3001, 2, 3, 4, 5, 6);
-    EXPECT_DATETIME("40010203040506Z"sv, 4001, 2, 3, 4, 5, 6);
-    EXPECT_DATETIME("90010203040506Z"sv, 9001, 2, 3, 4, 5, 6);
-    EXPECT_DATETIME("99990203040506Z"sv, 9999, 2, 3, 4, 5, 6);
+    EXPECT_DATETIME("20010203040506Z"sv, 2001, 2, 3, 4, 5, 6, 0);
+    EXPECT_DATETIME("20110203040506Z"sv, 2011, 2, 3, 4, 5, 6, 0);
+    EXPECT_DATETIME("21010203040506Z"sv, 2101, 2, 3, 4, 5, 6, 0);
+    EXPECT_DATETIME("30010203040506Z"sv, 3001, 2, 3, 4, 5, 6, 0);
+    EXPECT_DATETIME("40010203040506Z"sv, 4001, 2, 3, 4, 5, 6, 0);
+    EXPECT_DATETIME("90010203040506Z"sv, 9001, 2, 3, 4, 5, 6, 0);
+    EXPECT_DATETIME("99990203040506Z"sv, 9999, 2, 3, 4, 5, 6, 0);
 
     // Towards zero
-    EXPECT_DATETIME("20010203040506Z"sv, 2001, 2, 3, 4, 5, 6);
-    EXPECT_DATETIME("19990203040506Z"sv, 1999, 2, 3, 4, 5, 6);
-    EXPECT_DATETIME("19500203040506Z"sv, 1950, 2, 3, 4, 5, 6);
-    EXPECT_DATETIME("19010203040506Z"sv, 1901, 2, 3, 4, 5, 6);
-    EXPECT_DATETIME("18010203040506Z"sv, 1801, 2, 3, 4, 5, 6);
-    EXPECT_DATETIME("15010203040506Z"sv, 1501, 2, 3, 4, 5, 6);
-    EXPECT_DATETIME("10010203040506Z"sv, 1001, 2, 3, 4, 5, 6);
-    EXPECT_DATETIME("01010203040506Z"sv, 101, 2, 3, 4, 5, 6);
-    EXPECT_DATETIME("00110203040506Z"sv, 11, 2, 3, 4, 5, 6);
-    EXPECT_DATETIME("00010203040506Z"sv, 1, 2, 3, 4, 5, 6);
-    EXPECT_DATETIME("00000203040506Z"sv, 0, 2, 3, 4, 5, 6);
+    EXPECT_DATETIME("20010203040506Z"sv, 2001, 2, 3, 4, 5, 6, 0);
+    EXPECT_DATETIME("19990203040506Z"sv, 1999, 2, 3, 4, 5, 6, 0);
+    EXPECT_DATETIME("19500203040506Z"sv, 1950, 2, 3, 4, 5, 6, 0);
+    EXPECT_DATETIME("19010203040506Z"sv, 1901, 2, 3, 4, 5, 6, 0);
+    EXPECT_DATETIME("18010203040506Z"sv, 1801, 2, 3, 4, 5, 6, 0);
+    EXPECT_DATETIME("15010203040506Z"sv, 1501, 2, 3, 4, 5, 6, 0);
+    EXPECT_DATETIME("10010203040506Z"sv, 1001, 2, 3, 4, 5, 6, 0);
+    EXPECT_DATETIME("01010203040506Z"sv, 101, 2, 3, 4, 5, 6, 0);
+    EXPECT_DATETIME("00110203040506Z"sv, 11, 2, 3, 4, 5, 6, 0);
+    EXPECT_DATETIME("00010203040506Z"sv, 1, 2, 3, 4, 5, 6, 0);
+    EXPECT_DATETIME("00000203040506Z"sv, 0, 2, 3, 4, 5, 6, 0);
 
     // Problematic dates
-    EXPECT_DATETIME("20200229040506Z"sv, 2020, 2, 29, 4, 5, 6);
-    EXPECT_DATETIME("20000229040506Z"sv, 2000, 2, 29, 4, 5, 6);
-    EXPECT_DATETIME("24000229040506Z"sv, 2400, 2, 29, 4, 5, 6);
+    EXPECT_DATETIME("20200229040506Z"sv, 2020, 2, 29, 4, 5, 6, 0);
+    EXPECT_DATETIME("20000229040506Z"sv, 2000, 2, 29, 4, 5, 6, 0);
+    EXPECT_DATETIME("24000229040506Z"sv, 2400, 2, 29, 4, 5, 6, 0);
 }
 
 TEST_CASE(test_generalized_nonexistent_dates)

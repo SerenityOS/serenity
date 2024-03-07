@@ -296,7 +296,7 @@ static ErrorOr<RelativeDistinguishedName> parse_name(Crypto::ASN1::Decoder& deco
     return rdn;
 }
 
-static ErrorOr<Core::DateTime> parse_time(Crypto::ASN1::Decoder& decoder, Vector<StringView> current_scope)
+static ErrorOr<UnixDateTime> parse_time(Crypto::ASN1::Decoder& decoder, Vector<StringView> current_scope)
 {
     // Time ::= Choice {
     //     utc_time     UTCTime,
