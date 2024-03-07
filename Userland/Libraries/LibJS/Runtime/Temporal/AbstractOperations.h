@@ -166,6 +166,7 @@ ThrowCompletionOr<void> reject_object_with_calendar_or_time_zone(VM&, Object&);
 ThrowCompletionOr<String> format_seconds_string_part(VM&, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Variant<StringView, u8> const& precision);
 double sign(double);
 double sign(Crypto::SignedBigInteger const&);
+ThrowCompletionOr<String> format_fractional_seconds(VM&, u64 sub_second_nanoseconds, Variant<StringView, u8> precision);
 UnsignedRoundingMode get_unsigned_rounding_mode(StringView rounding_mode, bool is_negative);
 double apply_unsigned_rounding_mode(double x, double r1, double r2, Optional<UnsignedRoundingMode> const&);
 Crypto::SignedBigInteger apply_unsigned_rounding_mode(Crypto::SignedDivisionResult const&, Crypto::SignedBigInteger const& r1, Crypto::SignedBigInteger const& r2, Optional<UnsignedRoundingMode> const&, Crypto::UnsignedBigInteger const& increment);
