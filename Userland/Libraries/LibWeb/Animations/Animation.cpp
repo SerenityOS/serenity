@@ -74,6 +74,14 @@ void Animation::set_effect(JS::GCPtr<AnimationEffect> new_effect)
     }
 
     // 6. Let the associated effect of animation be new effect.
+    auto old_target = m_effect ? m_effect->target() : nullptr;
+    auto new_target = new_effect ? new_effect->target() : nullptr;
+    if (old_target != new_target) {
+        if (old_target)
+            old_target->disassociate_with_animation(*this);
+        if (new_target)
+            new_target->associate_with_animation(*this);
+    }
     if (new_effect)
         new_effect->set_associated_animation(this);
     if (m_effect)
