@@ -6,6 +6,7 @@
  */
 
 #include <AK/Memory.h>
+#include <LibJS/Runtime/Array.h>
 #include <LibWeb/Crypto/CryptoKey.h>
 
 namespace Web::Crypto {
@@ -43,6 +44,15 @@ void CryptoKey::visit_edges(Visitor& visitor)
     Base::visit_edges(visitor);
     visitor.visit(m_algorithm);
     visitor.visit(m_usages);
+}
+
+void CryptoKey::set_usages(Vector<Bindings::KeyUsage> usages)
+{
+    m_key_usages = move(usages);
+    auto& realm = this->realm();
+    m_usages = JS::Array::create_from<Bindings::KeyUsage>(realm, m_key_usages.span(), [&](auto& key_usage) -> JS::Value {
+        return JS::PrimitiveString::create(realm.vm(), Bindings::idl_enum_to_string(key_usage));
+    });
 }
 
 }
