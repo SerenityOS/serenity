@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Checked.h>
 #include <LibGfx/CMYKBitmap.h>
 
 namespace Gfx {
@@ -11,7 +12,12 @@ namespace Gfx {
 ErrorOr<NonnullRefPtr<CMYKBitmap>> CMYKBitmap::create_with_size(IntSize const& size)
 {
     VERIFY(size.width() >= 0 && size.height() >= 0);
-    auto data = TRY(ByteBuffer::create_uninitialized(size.width() * size.height() * sizeof(CMYK)));
+    Checked<int> final_size { size.width() };
+    final_size.mul(size.height());
+    final_size.mul(sizeof(CMYK));
+    if (final_size.has_overflow())
+        return Error::from_string_literal("Image dimensions cause an integer overflow");
+    auto data = TRY(ByteBuffer::create_uninitialized(final_size.value()));
     return adopt_ref(*new CMYKBitmap(size, move(data)));
 }
 
