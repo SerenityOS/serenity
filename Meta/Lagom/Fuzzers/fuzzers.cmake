@@ -19,6 +19,7 @@ set(FUZZER_TARGETS
     ICOLoader
     ILBMLoader
     IMAPParser
+    JBIG2Loader
     JPEGLoader
     Js
     JsonParser
@@ -92,6 +93,7 @@ set(FUZZER_DEPENDENCIES_ICCProfile LibGfx)
 set(FUZZER_DEPENDENCIES_ICOLoader LibGfx)
 set(FUZZER_DEPENDENCIES_ILBMLoader LibGfx)
 set(FUZZER_DEPENDENCIES_IMAPParser LibIMAP)
+set(FUZZER_DEPENDENCIES_JBIG2Loader LibGfx)
 set(FUZZER_DEPENDENCIES_JPEGLoader LibGfx)
 set(FUZZER_DEPENDENCIES_Js LibJS)
 set(FUZZER_DEPENDENCIES_LzmaDecompression LibArchive LibCompress)
