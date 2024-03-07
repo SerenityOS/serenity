@@ -94,4 +94,12 @@ void Animatable::disassociate_with_effect(JS::NonnullGCPtr<AnimationEffect> effe
     m_associated_effects.remove_first_matching([&](auto element) { return effect == element; });
 }
 
+void Animatable::visit_edges(JS::Cell::Visitor& visitor)
+{
+    for (auto const& effect : m_associated_effects)
+        visitor.visit(effect);
+    visitor.visit(m_cached_animation_name_source);
+    visitor.visit(m_cached_animation_name_animation);
+}
+
 }

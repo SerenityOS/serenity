@@ -39,6 +39,9 @@ public:
     JS::GCPtr<Animations::Animation> cached_animation_name_animation() const { return m_cached_animation_name_animation; }
     void set_cached_animation_name_animation(JS::GCPtr<Animations::Animation> value) { m_cached_animation_name_animation = value; }
 
+protected:
+    void visit_edges(JS::Cell::Visitor&);
+
 private:
     Vector<JS::NonnullGCPtr<AnimationEffect>> m_associated_effects;
     bool m_is_sorted_by_composite_order { true };
