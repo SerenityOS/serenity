@@ -647,6 +647,7 @@ set(SOURCES
     WebIDL/Buffers.cpp
     WebIDL/CallbackType.cpp
     WebIDL/DOMException.cpp
+    WebIDL/ObservableArray.cpp
     WebIDL/OverloadResolution.cpp
     WebIDL/Promise.cpp
     WebSockets/WebSocket.cpp
