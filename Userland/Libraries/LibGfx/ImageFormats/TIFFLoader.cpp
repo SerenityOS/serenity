@@ -106,6 +106,12 @@ public:
         if (any_of(*m_metadata.bits_per_sample(), [](auto bit_depth) { return bit_depth == 0 || bit_depth > 32; }))
             return Error::from_string_literal("TIFFImageDecoderPlugin: Invalid value in BitsPerSample");
 
+        if (m_metadata.bits_per_sample()->size() != m_metadata.samples_per_pixel())
+            return Error::from_string_literal("TIFFImageDecoderPlugin: Invalid number of values in BitsPerSample");
+
+        if (*m_metadata.samples_per_pixel() < samples_for_photometric_interpretation())
+            return Error::from_string_literal("TIFFImageDecoderPlugin: Not enough values in BitsPerSample for given PhotometricInterpretation");
+
         return {};
     }
 
