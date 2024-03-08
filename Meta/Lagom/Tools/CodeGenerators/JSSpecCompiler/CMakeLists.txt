@@ -15,9 +15,9 @@ set(SOURCES
     Parser/AlgorithmStepList.cpp
     Parser/CppASTConverter.cpp
     Parser/Lexer.cpp
-    Parser/SpecFunction.cpp
     Parser/Specification.cpp
     Parser/SpecificationClause.cpp
+    Parser/SpecificationFunction.cpp
     Parser/SpecificationParsingContext.cpp
     Parser/SpecParsingStep.cpp
     Parser/TextParser.cpp
