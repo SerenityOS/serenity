@@ -1388,8 +1388,12 @@ WebIDL::ExceptionOr<void> Navigable::navigate(NavigateParams params)
         document_state->set_navigable_target_name(target_name());
 
         // 5. If url matches about:blank or is about:srcdoc, then set documentState's origin to documentState's initiator origin.
-        //   FIXME: should this say "matches about:srcdoc"
-        if (url_matches_about_blank(url) || url == "about:srcdoc"sv) {
+        if (url_matches_about_blank(url) || url_matches_about_srcdoc(url)) {
+            // document_resource cannot have an Empty if the url is about:srcdoc since we rely on document_resource
+            // having a String to call create_navigation_params_from_a_srcdoc_resource
+            if (url_matches_about_srcdoc(url) && document_resource.has<Empty>()) {
+                document_state->set_resource({ String {} });
+            }
             // 1. Set documentState's origin to initiatorOriginSnapshot.
             document_state->set_origin(document_state->initiator_origin());
 
