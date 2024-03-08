@@ -99,6 +99,9 @@ public:
     // The "trimmed length" is the number of words after trimming leading zeroed words
     [[nodiscard]] size_t trimmed_length() const;
 
+    [[nodiscard]] size_t byte_length() const { return length() * sizeof(Word); }
+    [[nodiscard]] size_t trimmed_byte_length() const { return trimmed_length() * sizeof(Word); }
+
     void clamp_to_trimmed_length();
     void resize_with_leading_zeros(size_t num_words);
 
