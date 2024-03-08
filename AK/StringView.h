@@ -235,7 +235,11 @@ public:
     // 0.29, the spec defines a line ending as "a newline (U+000A), a carriage
     // return (U+000D) not followed by a newline, or a carriage return and a
     // following newline.".
-    [[nodiscard]] Vector<StringView> lines(bool consider_cr = true) const;
+    enum class ConsiderCarriageReturn {
+        No,
+        Yes,
+    };
+    [[nodiscard]] Vector<StringView> lines(ConsiderCarriageReturn = ConsiderCarriageReturn::Yes) const;
 
     // Create a new substring view of this string view, starting either at the beginning of
     // the given substring view, or after its end, and continuing until the end of this string

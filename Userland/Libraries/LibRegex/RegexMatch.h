@@ -303,7 +303,7 @@ public:
     {
         return m_view.visit(
             [](StringView view) {
-                auto views = view.lines(false);
+                auto views = view.lines(StringView::ConsiderCarriageReturn::No);
                 Vector<RegexStringView> new_views;
                 for (auto& view : views)
                     new_views.empend(view);
