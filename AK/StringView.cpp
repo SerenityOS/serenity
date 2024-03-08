@@ -68,6 +68,48 @@ Vector<StringView> StringView::split_view(StringView separator, SplitBehavior sp
     return parts;
 }
 
+template<typename Callback>
+static void for_each_line(StringView string, Callback&& callback)
+{
+    char const* characters = string.characters_without_null_termination();
+
+    size_t substart = 0;
+    bool last_ch_was_cr = false;
+
+    for (size_t i = 0; i < string.length(); ++i) {
+        char ch = characters[i];
+        bool split_view = false;
+
+        switch (ch) {
+        case '\n':
+            if (last_ch_was_cr)
+                substart = i + 1;
+            else
+                split_view = true;
+
+            last_ch_was_cr = false;
+            break;
+
+        case '\r':
+            split_view = true;
+            last_ch_was_cr = true;
+            break;
+
+        default:
+            last_ch_was_cr = false;
+            break;
+        }
+
+        if (split_view) {
+            callback(string.substring_view(substart, i - substart));
+            substart = i + 1;
+        }
+    }
+
+    if (size_t taillen = string.length() - substart; taillen != 0)
+        callback(string.substring_view(substart, taillen));
+}
+
 Vector<StringView> StringView::lines(ConsiderCarriageReturn consider_carriage_return) const
 {
     if (is_empty())
@@ -76,36 +118,24 @@ Vector<StringView> StringView::lines(ConsiderCarriageReturn consider_carriage_re
     if (consider_carriage_return == ConsiderCarriageReturn::No)
         return split_view('\n', SplitBehavior::KeepEmpty);
 
-    Vector<StringView> v;
-    size_t substart = 0;
-    bool last_ch_was_cr = false;
-    bool split_view = false;
-    for (size_t i = 0; i < length(); ++i) {
-        char ch = characters_without_null_termination()[i];
-        if (ch == '\n') {
-            split_view = true;
-            if (last_ch_was_cr) {
-                substart = i + 1;
-                split_view = false;
-            }
-        }
-        if (ch == '\r') {
-            split_view = true;
-            last_ch_was_cr = true;
-        } else {
-            last_ch_was_cr = false;
-        }
-        if (split_view) {
-            size_t sublen = i - substart;
-            v.append(substring_view(substart, sublen));
-            substart = i + 1;
-        }
-        split_view = false;
-    }
-    size_t taillen = length() - substart;
-    if (taillen != 0)
-        v.append(substring_view(substart, taillen));
-    return v;
+    Vector<StringView> lines;
+    for_each_line(*this, [&](auto line) { lines.append(line); });
+
+    return lines;
+}
+
+size_t StringView::count_lines(ConsiderCarriageReturn consider_carriage_return) const
+{
+    if (is_empty())
+        return 1;
+
+    if (consider_carriage_return == ConsiderCarriageReturn::No)
+        return count('\n') + 1;
+
+    size_t lines = 0;
+    for_each_line(*this, [&](auto) { ++lines; });
+
+    return lines;
 }
 
 bool StringView::starts_with(char ch) const
