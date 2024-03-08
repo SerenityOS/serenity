@@ -1204,9 +1204,10 @@ CSSPixelPoint FormattingContext::calculate_static_position(Box const& box) const
             // Easy case: no previous sibling, we're at the top of the containing block.
         }
     } else {
-        x = m_state.get(box).margin_left;
+        auto const& box_state = m_state.get(box);
+        x = box_state.margin_left;
         // We're among block siblings, Y can be calculated easily.
-        y = m_state.get(box).margin_top;
+        y = box_state.margin_top + box_state.vertical_offset_of_parent_block_container;
     }
     auto offset_to_static_parent = content_box_rect_in_static_position_ancestor_coordinate_space(box, *box.containing_block());
     return offset_to_static_parent.location().translated(x, y);
