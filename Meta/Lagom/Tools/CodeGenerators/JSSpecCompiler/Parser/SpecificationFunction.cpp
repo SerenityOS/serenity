@@ -10,7 +10,7 @@
 
 namespace JSSpecCompiler {
 
-bool SpecFunction::post_initialize(XML::Node const* element)
+bool SpecificationFunction::post_initialize(XML::Node const* element)
 {
     VERIFY(element->as_element().name == tag_emu_clause);
 
@@ -84,7 +84,7 @@ bool SpecFunction::post_initialize(XML::Node const* element)
     }
 }
 
-void SpecFunction::do_collect(TranslationUnitRef translation_unit)
+void SpecificationFunction::do_collect(TranslationUnitRef translation_unit)
 {
     translation_unit->adopt_function(make_ref_counted<FunctionDefinition>(m_name, m_algorithm.tree(), move(m_arguments)));
 }

@@ -65,7 +65,7 @@ class SpecificationParsingContext;
 class AlgorithmStep;
 class AlgorithmStepList;
 class Algorithm;
-class SpecFunction;
+class SpecificationFunction;
 class SpecificationClause;
 class Specification;
 

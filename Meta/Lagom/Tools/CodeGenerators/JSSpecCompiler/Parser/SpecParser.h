@@ -132,9 +132,9 @@ private:
     Vector<NonnullOwnPtr<SpecificationClause>> m_subclauses;
 };
 
-class SpecFunction : public SpecificationClause {
+class SpecificationFunction : public SpecificationClause {
 public:
-    SpecFunction(SpecificationClause&& clause)
+    SpecificationFunction(SpecificationClause&& clause)
         : SpecificationClause(move(clause))
     {
     }
