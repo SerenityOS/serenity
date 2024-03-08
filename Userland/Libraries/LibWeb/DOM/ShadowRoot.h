@@ -8,6 +8,7 @@
 
 #include <LibWeb/Bindings/ShadowRootPrototype.h>
 #include <LibWeb/DOM/DocumentFragment.h>
+#include <LibWeb/WebIDL/ObservableArray.h>
 
 namespace Web::DOM {
 
@@ -33,6 +34,17 @@ public:
     WebIDL::ExceptionOr<String> inner_html() const;
     WebIDL::ExceptionOr<void> set_inner_html(StringView);
 
+    CSS::StyleSheetList& style_sheets();
+    CSS::StyleSheetList const& style_sheets() const;
+
+    CSS::StyleSheetList* style_sheets_for_bindings() { return &style_sheets(); }
+
+    JS::NonnullGCPtr<WebIDL::ObservableArray> adopted_style_sheets() const;
+    WebIDL::ExceptionOr<void> set_adopted_style_sheets(JS::Value);
+
+protected:
+    virtual void visit_edges(Cell::Visitor&) override;
+
 private:
     ShadowRoot(Document&, Element& host, Bindings::ShadowRootMode);
     virtual void initialize(JS::Realm&) override;
@@ -46,6 +58,9 @@ private:
     Bindings::SlotAssignmentMode m_slot_assignment { Bindings::SlotAssignmentMode::Named };
     bool m_delegates_focus { false };
     bool m_available_to_element_internals { false };
+
+    JS::GCPtr<CSS::StyleSheetList> m_style_sheets;
+    mutable JS::GCPtr<WebIDL::ObservableArray> m_adopted_style_sheets;
 };
 
 template<>

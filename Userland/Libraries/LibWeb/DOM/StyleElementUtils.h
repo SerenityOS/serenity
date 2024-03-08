@@ -8,6 +8,7 @@
 
 #include <LibWeb/CSS/CSSStyleSheet.h>
 #include <LibWeb/DOM/Element.h>
+#include <LibWeb/WebIDL/ObservableArray.h>
 
 namespace Web::DOM {
 

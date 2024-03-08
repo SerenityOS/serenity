@@ -1,4 +1,5 @@
 #import <DOM/DocumentFragment.idl>
+#import <DOM/DocumentOrShadowRoot.idl>
 #import <DOM/InnerHTML.idl>
 
 // https://dom.spec.whatwg.org/#shadowroot
@@ -12,6 +13,7 @@ interface ShadowRoot : DocumentFragment {
 };
 
 ShadowRoot includes InnerHTML;
+ShadowRoot includes DocumentOrShadowRoot;
 
 enum ShadowRootMode { "open", "closed" };
 enum SlotAssignmentMode { "manual", "named" };
