@@ -337,6 +337,10 @@ SubtleCrypto::SupportedAlgorithmsMap SubtleCrypto::supported_algorithms()
     // FIXME: define_an_algorithm("deriveBits"_string, "PBKDF2"_string, "Pbkdf2Params"_string);
     // FIXME: define_an_algorithm("get key length"_string, "PBKDF2"_string, ""_string);
 
+    // https://w3c.github.io/webcrypto/#rsa-oaep
+    define_an_algorithm<RSAOAEP, RsaHashedKeyGenParams>("generateKey"_string, "RSA-OAEP"_string);
+    // FIXME: encrypt, decrypt, importKey, exportKey
+
     return internal_object;
 }
 

@@ -44,25 +44,4 @@ struct JsonWebKey {
     Optional<String> k;
 };
 
-// https://w3c.github.io/webcrypto/#key-algorithm-dictionary
-class KeyAlgorithm : public JS::Object {
-    JS_OBJECT(KeyAlgorithm, Object);
-    JS_DECLARE_ALLOCATOR(KeyAlgorithm);
-
-public:
-    static JS::NonnullGCPtr<KeyAlgorithm> create(JS::Realm&);
-    virtual ~KeyAlgorithm() override = default;
-
-    String const& name() const { return m_name; }
-    void set_name(String name) { m_name = move(name); }
-
-private:
-    KeyAlgorithm(JS::Realm&);
-    virtual void initialize(JS::Realm&) override;
-
-    JS_DECLARE_NATIVE_FUNCTION(name_getter);
-
-    String m_name;
-};
-
-};
+}
