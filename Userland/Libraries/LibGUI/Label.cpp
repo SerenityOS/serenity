@@ -96,7 +96,7 @@ int Label::text_calculated_preferred_width() const
 
 int Label::text_calculated_preferred_height() const
 {
-    return static_cast<int>(ceilf(font().preferred_line_height()) * (m_text.count("\n"sv) + 1));
+    return static_cast<int>(ceilf(font().preferred_line_height()) * m_text.bytes_as_string_view().count_lines());
 }
 
 Optional<UISize> Label::calculated_preferred_size() const

@@ -29,9 +29,9 @@ public:
     {
         m_label->set_text(move(tooltip));
         int tooltip_width = m_label->effective_min_size().width().as_int() + 10;
-        int line_count = m_label->text().count("\n"sv);
+        int line_count = m_label->text().bytes_as_string_view().count_lines();
         int font_size = m_label->font().pixel_size_rounded_up();
-        int tooltip_height = font_size * (1 + line_count) + ((font_size + 1) / 2) * line_count + 8;
+        int tooltip_height = font_size * line_count + ((font_size + 1) / 2) * (line_count - 1) + 8;
 
         Gfx::IntRect desktop_rect = Desktop::the().rect();
         if (tooltip_width > desktop_rect.width())
