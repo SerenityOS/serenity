@@ -91,11 +91,13 @@ ErrorOr<void> TGAImageDecoderPlugin::decode_tga_header()
     return {};
 }
 
-ErrorOr<bool> TGAImageDecoderPlugin::validate_before_create(ReadonlyBytes data)
+bool TGAImageDecoderPlugin::validate_before_create(ReadonlyBytes data)
 {
     FixedMemoryStream stream { data };
-    auto header = TRY(stream.read_value<Gfx::TGAHeader>());
-    return !ensure_header_validity(header, data.size()).is_error();
+    auto header_or_err = stream.read_value<Gfx::TGAHeader>();
+    if (header_or_err.is_error())
+        return false;
+    return !ensure_header_validity(header_or_err.release_value(), data.size()).is_error();
 }
 
 ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> TGAImageDecoderPlugin::create(ReadonlyBytes data)
