@@ -64,7 +64,7 @@ static ErrorOr<OwnPtr<ImageDecoderPlugin>> probe_and_sniff_for_appropriate_plugi
 static OwnPtr<ImageDecoderPlugin> probe_and_sniff_for_appropriate_plugin_with_known_mime_type(StringView mime_type, ReadonlyBytes bytes)
 {
     struct ImagePluginWithMIMETypeInitializer {
-        ErrorOr<bool> (*validate_before_create)(ReadonlyBytes) = nullptr;
+        bool (*validate_before_create)(ReadonlyBytes) = nullptr;
         ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> (*create)(ReadonlyBytes) = nullptr;
         StringView mime_type;
     };
@@ -76,7 +76,7 @@ static OwnPtr<ImageDecoderPlugin> probe_and_sniff_for_appropriate_plugin_with_kn
     for (auto& plugin : s_initializers_with_mime_type) {
         if (plugin.mime_type != mime_type)
             continue;
-        auto validation_result = plugin.validate_before_create(bytes).release_value_but_fixme_should_propagate_errors();
+        auto validation_result = plugin.validate_before_create(bytes);
         if (!validation_result)
             continue;
         auto plugin_decoder = plugin.create(bytes);
