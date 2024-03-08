@@ -430,6 +430,7 @@ void Animation::cancel(ShouldInvalidate should_invalidate)
 
         // 4. Let current finished promise be a new promise in the relevant Realm of animation.
         m_current_finished_promise = WebIDL::create_promise(realm);
+        m_is_finished = false;
 
         // 5. Create an AnimationPlaybackEvent, cancelEvent.
         // 6. Set cancelEvent’s type attribute to cancel.
