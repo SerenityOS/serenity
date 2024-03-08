@@ -167,6 +167,13 @@ ThrowCompletionOr<String> format_seconds_string_part(VM&, u8 second, u16 millise
 double sign(double);
 double sign(Crypto::SignedBigInteger const&);
 ThrowCompletionOr<String> format_fractional_seconds(VM&, u64 sub_second_nanoseconds, Variant<StringView, u8> precision);
+
+enum class Style {
+    Separated,
+    Unseparated
+};
+ThrowCompletionOr<String> format_time_string(VM& vm, u8 hour, u8 minute, u8 second, u64 sub_second_nanoseconds, Variant<StringView, u8> precision, Optional<Style> style = {});
+
 UnsignedRoundingMode get_unsigned_rounding_mode(StringView rounding_mode, bool is_negative);
 double apply_unsigned_rounding_mode(double x, double r1, double r2, Optional<UnsignedRoundingMode> const&);
 Crypto::SignedBigInteger apply_unsigned_rounding_mode(Crypto::SignedDivisionResult const&, Crypto::SignedBigInteger const& r1, Crypto::SignedBigInteger const& r2, Optional<UnsignedRoundingMode> const&, Crypto::UnsignedBigInteger const& increment);

@@ -959,6 +959,35 @@ ThrowCompletionOr<String> format_fractional_seconds(VM& vm, u64 sub_second_nanos
     return TRY_OR_THROW_OOM(vm, String::formatted(".{}", fraction_string));
 }
 
+// 13.26 FormatTimeString ( hour, minute, second, subSecondNanoseconds, precision [ , style ] ), https://tc39.es/proposal-temporal/#sec-temporal-formattimestring
+ThrowCompletionOr<String> format_time_string(VM& vm, u8 hour, u8 minute, u8 second, u64 sub_second_nanoseconds, Variant<StringView, u8> precision, Optional<Style> style)
+{
+    String separator = ":"_string;
+
+    // 1. If style is present and style is unseparated, let separator be the empty String; otherwise, let separator be ":".
+    if (style.has_value() && *style == Style::Unseparated)
+        separator = ""_string;
+
+    // 2. Let hh be ToZeroPaddedDecimalString(hour, 2).
+    auto hh = TRY(to_zero_padded_decimal_string(vm, hour, 2));
+
+    // 3. Let mm be ToZeroPaddedDecimalString(minute, 2).
+    auto mm = TRY(to_zero_padded_decimal_string(vm, minute, 2));
+
+    // 4. If precision is "minute", return the string-concatenation of hh, separator, and mm.
+    if (precision.has<StringView>() && precision.get<StringView>() == "minute"sv)
+        return TRY_OR_THROW_OOM(vm, String::formatted("{}{}{}", hh, separator, mm));
+
+    // 5. Let ss be ToZeroPaddedDecimalString(second, 2).
+    auto ss = TRY(to_zero_padded_decimal_string(vm, second, 2));
+
+    // 6. Let subSecondsPart be FormatFractionalSeconds(subSecondNanoseconds, precision).
+    auto subseconds_part = TRY(format_fractional_seconds(vm, sub_second_nanoseconds, precision));
+
+    // 7. Return the string-concatenation of hh, separator, mm, separator, ss, and subSecondsPart.
+    return TRY_OR_THROW_OOM(vm, String::formatted("{}{}{}{}{}{}", hh, separator, mm, separator, ss, subseconds_part));
+}
+
 // 13.23 GetUnsignedRoundingMode ( roundingMode, isNegative ), https://tc39.es/proposal-temporal/#sec-temporal-getunsignedroundingmode
 UnsignedRoundingMode get_unsigned_rounding_mode(StringView rounding_mode, bool is_negative)
 {
