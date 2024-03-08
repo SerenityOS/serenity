@@ -5,7 +5,7 @@
  */
 
 #include "Parser/Lexer.h"
-#include "Parser/SpecParser.h"
+#include "Parser/SpecificationParsing.h"
 
 namespace JSSpecCompiler {
 

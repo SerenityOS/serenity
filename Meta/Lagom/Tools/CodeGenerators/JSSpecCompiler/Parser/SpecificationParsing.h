@@ -163,10 +163,10 @@ private:
     Vector<NonnullOwnPtr<SpecificationClause>> m_clauses;
 };
 
-class SpecParsingStep : public CompilationStep {
+class SpecificationParsingStep : public CompilationStep {
 public:
-    SpecParsingStep();
-    ~SpecParsingStep();
+    SpecificationParsingStep();
+    ~SpecificationParsingStep();
 
     void run(TranslationUnitRef translation_unit) override;
 
