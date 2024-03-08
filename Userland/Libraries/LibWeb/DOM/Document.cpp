@@ -4628,13 +4628,9 @@ void Document::for_each_css_style_sheet(Function<void(CSS::CSSStyleSheet&)>&& ca
         callback(*style_sheet);
 
     if (m_adopted_style_sheets) {
-        for (auto& entry : m_adopted_style_sheets->indexed_properties()) {
-            auto value_and_attributes = m_adopted_style_sheets->indexed_properties().storage()->get(entry.index());
-            if (value_and_attributes.has_value()) {
-                auto& style_sheet = verify_cast<CSS::CSSStyleSheet>(value_and_attributes->value.as_object());
-                callback(style_sheet);
-            }
-        }
+        m_adopted_style_sheets->for_each<CSS::CSSStyleSheet>([&](auto& style_sheet) {
+            callback(style_sheet);
+        });
     }
 }
 
