@@ -16,7 +16,7 @@
 #include "Compiler/Passes/SSABuildingPass.h"
 #include "Function.h"
 #include "Parser/CppASTConverter.h"
-#include "Parser/SpecParser.h"
+#include "Parser/SpecificationParsing.h"
 
 using namespace JSSpecCompiler;
 
@@ -122,7 +122,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (language == language_cpp)
         pipeline.add_step(adopt_own_if_nonnull(new CppParsingStep()));
     else
-        pipeline.add_step(adopt_own_if_nonnull(new SpecParsingStep()));
+        pipeline.add_step(adopt_own_if_nonnull(new SpecificationParsingStep()));
     pipeline.add_compilation_pass<IfBranchMergingPass>();
     pipeline.add_compilation_pass<ReferenceResolvingPass>();
     pipeline.add_compilation_pass<CFGBuildingPass>();

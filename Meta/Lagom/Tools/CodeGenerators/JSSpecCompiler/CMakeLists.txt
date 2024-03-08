@@ -19,7 +19,7 @@ set(SOURCES
     Parser/SpecificationClause.cpp
     Parser/SpecificationFunction.cpp
     Parser/SpecificationParsingContext.cpp
-    Parser/SpecParsingStep.cpp
+    Parser/SpecificationParsingStep.cpp
     Parser/TextParser.cpp
     Parser/XMLUtils.cpp
     DiagnosticEngine.cpp

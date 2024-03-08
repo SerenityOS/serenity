@@ -10,20 +10,20 @@
 
 #include "Function.h"
 #include "Parser/Lexer.h"
-#include "Parser/SpecParser.h"
+#include "Parser/SpecificationParsing.h"
 #include "Parser/TextParser.h"
 #include "Parser/XMLUtils.h"
 
 namespace JSSpecCompiler {
 
-SpecParsingStep::SpecParsingStep()
+SpecificationParsingStep::SpecificationParsingStep()
     : CompilationStep("parser"sv)
 {
 }
 
-SpecParsingStep::~SpecParsingStep() = default;
+SpecificationParsingStep::~SpecificationParsingStep() = default;
 
-void SpecParsingStep::run(TranslationUnitRef translation_unit)
+void SpecificationParsingStep::run(TranslationUnitRef translation_unit)
 {
     SpecificationParsingContext ctx(translation_unit);
     auto filename = translation_unit->filename();
