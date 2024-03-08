@@ -75,6 +75,7 @@ struct JBIG2LoadingContext {
     enum class State {
         NotDecoded = 0,
         Error,
+        Decoded,
     };
     State state { State::NotDecoded };
 
@@ -302,6 +303,195 @@ static ErrorOr<void> scan_for_page_size(JBIG2LoadingContext& context)
     return Error::from_string_literal("JBIG2ImageDecoderPlugin: No page information segment found for page 1");
 }
 
+static ErrorOr<void> decode_symbol_dictionary(JBIG2LoadingContext&, SegmentData const&)
+{
+    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode symbol dictionary yet");
+}
+
+static ErrorOr<void> decode_intermediate_text_region(JBIG2LoadingContext&, SegmentData const&)
+{
+    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode intermediate text region yet");
+}
+
+static ErrorOr<void> decode_immediate_text_region(JBIG2LoadingContext&, SegmentData const&)
+{
+    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode immediate text region yet");
+}
+
+static ErrorOr<void> decode_immediate_lossless_text_region(JBIG2LoadingContext&, SegmentData const&)
+{
+    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode immediate lossless text region yet");
+}
+
+static ErrorOr<void> decode_pattern_dictionary(JBIG2LoadingContext&, SegmentData const&)
+{
+    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode pattern dictionary yet");
+}
+
+static ErrorOr<void> decode_intermediate_halftone_region(JBIG2LoadingContext&, SegmentData const&)
+{
+    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode intermediate halftone region yet");
+}
+
+static ErrorOr<void> decode_immediate_halftone_region(JBIG2LoadingContext&, SegmentData const&)
+{
+    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode immediate halftone region yet");
+}
+
+static ErrorOr<void> decode_immediate_lossless_halftone_region(JBIG2LoadingContext&, SegmentData const&)
+{
+    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode immediate lossless halftone region yet");
+}
+
+static ErrorOr<void> decode_intermediate_generic_region(JBIG2LoadingContext&, SegmentData const&)
+{
+    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode intermediate generic region yet");
+}
+
+static ErrorOr<void> decode_immediate_generic_region(JBIG2LoadingContext&, SegmentData const&)
+{
+    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode immediate generic region yet");
+}
+
+static ErrorOr<void> decode_immediate_lossless_generic_region(JBIG2LoadingContext&, SegmentData const&)
+{
+    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode immediate lossless generic region yet");
+}
+
+static ErrorOr<void> decode_intermediate_generic_refinement_region(JBIG2LoadingContext&, SegmentData const&)
+{
+    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode intermediate generic refinement region yet");
+}
+
+static ErrorOr<void> decode_immediate_generic_refinement_region(JBIG2LoadingContext&, SegmentData const&)
+{
+    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode immediate generic refinement region yet");
+}
+
+static ErrorOr<void> decode_immediate_lossless_generic_refinement_region(JBIG2LoadingContext&, SegmentData const&)
+{
+    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode immediate lossless generic refinement region yet");
+}
+
+static ErrorOr<void> decode_page_information(JBIG2LoadingContext&, SegmentData const&)
+{
+    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode page information yet");
+}
+
+static ErrorOr<void> decode_end_of_page(JBIG2LoadingContext&, SegmentData const&)
+{
+    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode end of page yet");
+}
+
+static ErrorOr<void> decode_end_of_stripe(JBIG2LoadingContext&, SegmentData const&)
+{
+    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode end of stripe yet");
+}
+
+static ErrorOr<void> decode_end_of_file(JBIG2LoadingContext&, SegmentData const&)
+{
+    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode end of file yet");
+}
+
+static ErrorOr<void> decode_profiles(JBIG2LoadingContext&, SegmentData const&)
+{
+    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode profiles yet");
+}
+
+static ErrorOr<void> decode_tables(JBIG2LoadingContext&, SegmentData const&)
+{
+    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode tables yet");
+}
+
+static ErrorOr<void> decode_color_palette(JBIG2LoadingContext&, SegmentData const&)
+{
+    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode color palette yet");
+}
+
+static ErrorOr<void> decode_extension(JBIG2LoadingContext&, SegmentData const&)
+{
+    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode extension yet");
+}
+
+static ErrorOr<void> decode_data(JBIG2LoadingContext& context)
+{
+    for (auto const& segment : context.segments) {
+        if (segment.header.page_association != 0 && segment.header.page_association != 1)
+            continue;
+
+        switch (segment.header.type) {
+        case SegmentType::SymbolDictionary:
+            TRY(decode_symbol_dictionary(context, segment));
+            break;
+        case SegmentType::IntermediateTextRegion:
+            TRY(decode_intermediate_text_region(context, segment));
+            break;
+        case SegmentType::ImmediateTextRegion:
+            TRY(decode_immediate_text_region(context, segment));
+            break;
+        case SegmentType::ImmediateLosslessTextRegion:
+            TRY(decode_immediate_lossless_text_region(context, segment));
+            break;
+        case SegmentType::PatternDictionary:
+            TRY(decode_pattern_dictionary(context, segment));
+            break;
+        case SegmentType::IntermediateHalftoneRegion:
+            TRY(decode_intermediate_halftone_region(context, segment));
+            break;
+        case SegmentType::ImmediateHalftoneRegion:
+            TRY(decode_immediate_halftone_region(context, segment));
+            break;
+        case SegmentType::ImmediateLosslessHalftoneRegion:
+            TRY(decode_immediate_lossless_halftone_region(context, segment));
+            break;
+        case SegmentType::IntermediateGenericRegion:
+            TRY(decode_intermediate_generic_region(context, segment));
+            break;
+        case SegmentType::ImmediateGenericRegion:
+            TRY(decode_immediate_generic_region(context, segment));
+            break;
+        case SegmentType::ImmediateLosslessGenericRegion:
+            TRY(decode_immediate_lossless_generic_region(context, segment));
+            break;
+        case SegmentType::IntermediateGenericRefinementRegion:
+            TRY(decode_intermediate_generic_refinement_region(context, segment));
+            break;
+        case SegmentType::ImmediateGenericRefinementRegion:
+            TRY(decode_immediate_generic_refinement_region(context, segment));
+            break;
+        case SegmentType::ImmediateLosslessGenericRefinementRegion:
+            TRY(decode_immediate_lossless_generic_refinement_region(context, segment));
+            break;
+        case SegmentType::PageInformation:
+            TRY(decode_page_information(context, segment));
+            break;
+        case SegmentType::EndOfPage:
+            TRY(decode_end_of_page(context, segment));
+            break;
+        case SegmentType::EndOfStripe:
+            TRY(decode_end_of_stripe(context, segment));
+            break;
+        case SegmentType::EndOfFile:
+            TRY(decode_end_of_file(context, segment));
+            break;
+        case SegmentType::Profiles:
+            TRY(decode_profiles(context, segment));
+            break;
+        case SegmentType::Tables:
+            TRY(decode_tables(context, segment));
+            break;
+        case SegmentType::ColorPalette:
+            TRY(decode_color_palette(context, segment));
+            break;
+        case SegmentType::Extension:
+            TRY(decode_extension(context, segment));
+            break;
+        }
+    }
+
+    return {};
+}
+
 JBIG2ImageDecoderPlugin::JBIG2ImageDecoderPlugin()
 {
     m_context = make<JBIG2LoadingContext>();
@@ -339,6 +529,15 @@ ErrorOr<ImageFrameDescriptor> JBIG2ImageDecoderPlugin::frame(size_t index, Optio
     if (m_context->state == JBIG2LoadingContext::State::Error)
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Decoding failed");
 
+    if (m_context->state < JBIG2LoadingContext::State::Decoded) {
+        auto result = decode_data(*m_context);
+        if (result.is_error()) {
+            m_context->state = JBIG2LoadingContext::State::Error;
+            return result.release_error();
+        }
+        m_context->state = JBIG2LoadingContext::State::Decoded;
+    }
+
     return Error::from_string_literal("JBIG2ImageDecoderPlugin: Draw the rest of the owl");
 }
 
@@ -351,6 +550,7 @@ ErrorOr<ByteBuffer> JBIG2ImageDecoderPlugin::decode_embedded(Vector<ReadonlyByte
         TRY(decode_segment_headers(*plugin->m_context, segment_data));
 
     TRY(scan_for_page_size(*plugin->m_context));
+    TRY(decode_data(*plugin->m_context));
 
     return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode embedded JBIG2 yet");
 }
