@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/OwnPtr.h>
+#include <AK/TemporaryChange.h>
 
 #include "AST/AST.h"
 #include "CompilationPipeline.h"
@@ -30,11 +31,21 @@ public:
     DiagnosticEngine& diag();
 
     template<typename Func>
-    auto with_new_logical_scope(Func&& func);
+    auto with_new_logical_scope(Func&& func)
+    {
+        TemporaryChange<RefPtr<LogicalLocation>> change(m_current_logical_scope, make_ref_counted<LogicalLocation>());
+        return func();
+    }
+
     LogicalLocation& current_logical_scope();
 
     template<typename Func>
-    auto with_new_step_list_nesting_level(Func&& func);
+    auto with_new_step_list_nesting_level(Func&& func)
+    {
+        TemporaryChange change(m_step_list_nesting_level, m_step_list_nesting_level + 1);
+        return func();
+    }
+
     int step_list_nesting_level() const;
 
     Location file_scope() const;

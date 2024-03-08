@@ -10,9 +10,16 @@ set(SOURCES
     Compiler/Passes/IfBranchMergingPass.cpp
     Compiler/Passes/ReferenceResolvingPass.cpp
     Compiler/Passes/SSABuildingPass.cpp
+    Parser/Algorithm.cpp
+    Parser/AlgorithmStep.cpp
+    Parser/AlgorithmStepList.cpp
     Parser/CppASTConverter.cpp
     Parser/Lexer.cpp
-    Parser/SpecParser.cpp
+    Parser/SpecFunction.cpp
+    Parser/Specification.cpp
+    Parser/SpecificationClause.cpp
+    Parser/SpecificationParsingContext.cpp
+    Parser/SpecParsingStep.cpp
     Parser/TextParser.cpp
     Parser/XMLUtils.cpp
     DiagnosticEngine.cpp
