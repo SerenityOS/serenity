@@ -28,6 +28,18 @@ public:
     JS::ThrowCompletionOr<void> append(JS::Value value);
     void clear();
 
+    template<typename T, typename Callback>
+    void for_each(Callback callback)
+    {
+        for (auto& entry : indexed_properties()) {
+            auto value_and_attributes = indexed_properties().storage()->get(entry.index());
+            if (value_and_attributes.has_value()) {
+                auto& style_sheet = verify_cast<T>(value_and_attributes->value.as_object());
+                callback(style_sheet);
+            }
+        }
+    }
+
     explicit ObservableArray(Object& prototype);
 
     virtual void visit_edges(JS::Cell::Visitor&) override;
