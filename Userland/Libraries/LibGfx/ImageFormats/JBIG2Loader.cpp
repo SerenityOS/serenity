@@ -303,6 +303,38 @@ static ErrorOr<void> scan_for_page_size(JBIG2LoadingContext& context)
     return Error::from_string_literal("JBIG2ImageDecoderPlugin: No page information segment found for page 1");
 }
 
+static ErrorOr<void> warn_about_multiple_pages(JBIG2LoadingContext& context)
+{
+    HashTable<u32> seen_pages;
+    Vector<u32> pages;
+
+    for (auto const& segment : context.segments) {
+        if (segment.header.page_association == 0)
+            continue;
+        if (seen_pages.contains(segment.header.page_association))
+            continue;
+        seen_pages.set(segment.header.page_association);
+        pages.append(segment.header.page_association);
+    }
+
+    // scan_for_page_size() already checked that there's a page 1.
+    VERIFY(seen_pages.contains(1));
+    if (pages.size() == 1)
+        return {};
+
+    StringBuilder builder;
+    builder.appendff("JBIG2 file contains {} pages ({}", pages.size(), pages[0]);
+    size_t i;
+    for (i = 1; i < min(pages.size(), 10); ++i)
+        builder.appendff(" {}", pages[i]);
+    if (i != pages.size())
+        builder.append(" ..."sv);
+    builder.append("). We will only render page 1."sv);
+    dbgln("JBIG2ImageDecoderPlugin: {}", TRY(builder.to_string()));
+
+    return {};
+}
+
 static ErrorOr<void> decode_symbol_dictionary(JBIG2LoadingContext&, SegmentData const&)
 {
     return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode symbol dictionary yet");
@@ -415,6 +447,8 @@ static ErrorOr<void> decode_extension(JBIG2LoadingContext&, SegmentData const&)
 
 static ErrorOr<void> decode_data(JBIG2LoadingContext& context)
 {
+    TRY(warn_about_multiple_pages(context));
+
     for (auto const& segment : context.segments) {
         if (segment.header.page_association != 0 && segment.header.page_association != 1)
             continue;
