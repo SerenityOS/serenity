@@ -73,8 +73,11 @@ Vector<ByteString, 32> TextLayout::wrap_lines(TextElision elision, TextWrapping 
 
             continue;
         }
-        case '\n':
-        case '\r': {
+        case '\r':
+            if (it.peek(1) == static_cast<u32>('\n'))
+                ++it;
+            [[fallthrough]];
+        case '\n': {
             if (current_block_type.has_value()) {
                 blocks.append({
                     current_block_type.value(),
