@@ -447,14 +447,11 @@ ThrowCompletionOr<String> temporal_time_to_string(VM& vm, u8 hour, u8 minute, u8
 {
     // 1. Assert: hour, minute, second, millisecond, microsecond and nanosecond are integers.
 
-    // 2. Let hour be ToZeroPaddedDecimalString(hour, 2).
-    // 3. Let minute be ToZeroPaddedDecimalString(minute, 2).
+    // 2. Let subSecondNanoseconds be millisecond × 10**6 + microsecond × 10**3 + nanosecond.
+    u64 sub_second_nanoseconds = millisecond * 1'000'000 + microsecond * 1'000 + nanosecond;
 
-    // 4. Let seconds be ! FormatSecondsStringPart(second, millisecond, microsecond, nanosecond, precision).
-    auto seconds = MUST_OR_THROW_OOM(format_seconds_string_part(vm, second, millisecond, microsecond, nanosecond, precision));
-
-    // 5. Return the string-concatenation of hour, the code unit 0x003A (COLON), minute, and seconds.
-    return TRY_OR_THROW_OOM(vm, String::formatted("{:02}:{:02}{}", hour, minute, seconds));
+    // 3. Return FormatTimeString(hour, minute, second, subSecondNanoseconds, precision).
+    return format_time_string(vm, hour, minute, second, sub_second_nanoseconds, precision);
 }
 
 // 4.5.10 CompareTemporalTime ( h1, min1, s1, ms1, mus1, ns1, h2, min2, s2, ms2, mus2, ns2 ), https://tc39.es/proposal-temporal/#sec-temporal-comparetemporaltime
