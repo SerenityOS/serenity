@@ -19,7 +19,14 @@ ShadowRoot::ShadowRoot(Document& document, Element& host, Bindings::ShadowRootMo
     : DocumentFragment(document)
     , m_mode(mode)
 {
+    document.register_shadow_root({}, *this);
     set_host(&host);
+}
+
+void ShadowRoot::finalize()
+{
+    Base::finalize();
+    document().unregister_shadow_root({}, *this);
 }
 
 void ShadowRoot::initialize(JS::Realm& realm)

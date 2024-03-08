@@ -604,6 +604,10 @@ public:
     JS::NonnullGCPtr<WebIDL::ObservableArray> adopted_style_sheets() const;
     WebIDL::ExceptionOr<void> set_adopted_style_sheets(JS::Value);
 
+    void register_shadow_root(Badge<DOM::ShadowRoot>, DOM::ShadowRoot&);
+    void unregister_shadow_root(Badge<DOM::ShadowRoot>, DOM::ShadowRoot&);
+    void for_each_shadow_root(Function<void(DOM::ShadowRoot&)>&& callback);
+
 protected:
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
@@ -840,6 +844,8 @@ private:
     bool m_needs_to_resolve_paint_only_properties { true };
 
     mutable JS::GCPtr<WebIDL::ObservableArray> m_adopted_style_sheets;
+
+    Vector<JS::NonnullGCPtr<DOM::ShadowRoot>> m_shadow_roots;
 };
 
 template<>
