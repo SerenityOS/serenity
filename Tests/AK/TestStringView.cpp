@@ -105,6 +105,24 @@ TEST_CASE(lines)
     EXPECT_EQ(test_string_vector.at(2).is_empty(), true);
 }
 
+TEST_CASE(count_lines)
+{
+    EXPECT_EQ(""sv.count_lines(), 1u);
+    EXPECT_EQ("foo"sv.count_lines(), 1u);
+
+    EXPECT_EQ("foo\nbar"sv.count_lines(), 2u);
+    EXPECT_EQ("foo\rbar"sv.count_lines(), 2u);
+    EXPECT_EQ("foo\rbar"sv.count_lines(StringView::ConsiderCarriageReturn::No), 1u);
+    EXPECT_EQ("foo\r\nbar"sv.count_lines(), 2u);
+    EXPECT_EQ("foo\r\nbar"sv.count_lines(StringView::ConsiderCarriageReturn::No), 2u);
+
+    EXPECT_EQ("foo\nbar\nbax"sv.count_lines(), 3u);
+    EXPECT_EQ("foo\rbar\rbaz"sv.count_lines(), 3u);
+    EXPECT_EQ("foo\rbar\rbaz"sv.count_lines(StringView::ConsiderCarriageReturn::No), 1u);
+    EXPECT_EQ("foo\r\nbar\r\nbaz"sv.count_lines(), 3u);
+    EXPECT_EQ("foo\r\nbar\r\nbaz"sv.count_lines(StringView::ConsiderCarriageReturn::No), 3u);
+}
+
 TEST_CASE(find)
 {
     auto test_string_view = "aabbcc_xy_ccbbaa"sv;
