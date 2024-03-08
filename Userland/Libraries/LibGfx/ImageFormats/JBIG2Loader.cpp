@@ -297,6 +297,11 @@ static ErrorOr<void> scan_for_page_size(JBIG2LoadingContext& context)
         if (segment.header.type != SegmentType::PageInformation || segment.header.page_association != 1)
             continue;
         auto page_information = TRY(decode_page_information_segment(segment.data));
+
+        // FIXME: We're supposed to compute this from the striping information if it's not set.
+        if (page_information.bitmap_height == 0xffff'ffff)
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot handle unknown page height yet");
+
         context.size = { page_information.bitmap_width, page_information.bitmap_height };
         return {};
     }
