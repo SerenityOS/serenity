@@ -5,6 +5,7 @@
  */
 
 #include <LibWeb/CSS/Parser/Parser.h>
+#include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/StyleElementUtils.h>
 #include <LibWeb/Infra/Strings.h>
