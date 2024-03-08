@@ -58,7 +58,11 @@ struct SegmentHeader {
     u32 segment_number;
     SegmentType type;
     Vector<u32> referred_to_segment_numbers;
+
+    // 7.2.6 Segment page association
+    // "The first page must be numbered "1". This field may contain a value of zero; this value indicates that this segment is not associated with any page."
     u32 page_association;
+
     Optional<u32> data_length;
 };
 
@@ -289,13 +293,13 @@ static ErrorOr<void> scan_for_page_size(JBIG2LoadingContext& context)
 {
     // We only decode the first page at the moment.
     for (auto const& segment : context.segments) {
-        if (segment.header.type != SegmentType::PageInformation)
+        if (segment.header.type != SegmentType::PageInformation || segment.header.page_association != 1)
             continue;
         auto page_information = TRY(decode_page_information_segment(segment.data));
         context.size = { page_information.bitmap_width, page_information.bitmap_height };
         return {};
     }
-    return Error::from_string_literal("JBIG2ImageDecoderPlugin: No page information segment found");
+    return Error::from_string_literal("JBIG2ImageDecoderPlugin: No page information segment found for page 1");
 }
 
 JBIG2ImageDecoderPlugin::JBIG2ImageDecoderPlugin()
