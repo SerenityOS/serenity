@@ -585,6 +585,7 @@ void BlockFormattingContext::layout_block_level_box(Box const& box, BlockContain
     auto& box_state = m_state.get_mutable(box);
 
     if (box.is_absolutely_positioned()) {
+        box_state.vertical_offset_of_parent_block_container = m_y_offset_of_current_block_container.value();
         m_absolutely_positioned_boxes.append(box);
         return;
     }
