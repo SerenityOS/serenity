@@ -98,10 +98,10 @@ public:
     using KeyPairType = RSAKeyPair<PublicKeyType, PrivateKeyType>;
 
     static KeyPairType parse_rsa_key(ReadonlyBytes der);
-    static KeyPairType generate_key_pair(size_t bits = 256)
+    static KeyPairType generate_key_pair(size_t bits = 256, IntegerType e = 65537)
     {
-        IntegerType e { 65537 }; // :P
-        IntegerType p, q;
+        IntegerType p;
+        IntegerType q;
         IntegerType lambda;
 
         do {
