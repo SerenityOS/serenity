@@ -1101,10 +1101,8 @@ void Animation::update_finished_state(DidSeek did_seek, SynchronouslyNotify sync
                 return;
 
             // 2. Resolve animation’s current finished promise object with animation.
-            {
-                HTML::TemporaryExecutionContext execution_context { Bindings::host_defined_environment_settings_object(realm) };
-                WebIDL::resolve_promise(realm, current_finished_promise(), this);
-            }
+            HTML::TemporaryExecutionContext execution_context { Bindings::host_defined_environment_settings_object(realm) };
+            WebIDL::resolve_promise(realm, current_finished_promise(), this);
             m_is_finished = true;
 
             // 3. Create an AnimationPlaybackEvent, finishEvent.
@@ -1166,10 +1164,8 @@ void Animation::update_finished_state(DidSeek did_seek, SynchronouslyNotify sync
     // 6. If current finished state is false and animation’s current finished promise is already resolved, set
     //    animation’s current finished promise to a new promise in the relevant Realm of animation.
     if (!current_finished_state && m_is_finished) {
-        {
-            HTML::TemporaryExecutionContext execution_context { Bindings::host_defined_environment_settings_object(realm) };
-            m_current_finished_promise = WebIDL::create_promise(realm);
-        }
+        HTML::TemporaryExecutionContext execution_context { Bindings::host_defined_environment_settings_object(realm) };
+        m_current_finished_promise = WebIDL::create_promise(realm);
         m_is_finished = false;
     }
 
