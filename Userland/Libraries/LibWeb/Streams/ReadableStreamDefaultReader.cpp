@@ -158,9 +158,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> ReadableStreamDefaultReader::
 
     // 1. If this.[[stream]] is undefined, return a promise rejected with a TypeError exception.
     if (!m_stream) {
-        auto exception = JS::TypeError::create(realm, "Cannot read from an empty stream"sv);
-        auto promise_capability = WebIDL::create_rejected_promise(realm, exception);
-        return JS::NonnullGCPtr { verify_cast<JS::Promise>(*promise_capability->promise()) };
+        WebIDL::SimpleException exception { WebIDL::SimpleExceptionType::TypeError, "Cannot read from an empty stream"sv };
+        return WebIDL::create_rejected_promise_from_exception(realm, move(exception));
     }
 
     // 2. Let promise be a new promise.

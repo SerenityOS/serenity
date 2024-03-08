@@ -13,7 +13,6 @@
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/HostDefined.h>
 #include <LibWeb/HTML/Scripting/ExceptionReporter.h>
-#include <LibWeb/WebIDL/ExceptionOr.h>
 #include <LibWeb/WebIDL/Promise.h>
 
 namespace Web::WebIDL {
@@ -293,6 +292,13 @@ void wait_for_all(JS::Realm& realm, Vector<JS::NonnullGCPtr<Promise>> const& pro
         // 5. Set index to index + 1.
         ++index;
     }
+}
+
+JS::NonnullGCPtr<JS::Promise> create_rejected_promise_from_exception(JS::Realm& realm, Exception exception)
+{
+    auto throw_completion = Bindings::dom_exception_to_throw_completion(realm.vm(), move(exception));
+    auto promise_capability = WebIDL::create_rejected_promise(realm, *throw_completion.value());
+    return JS::NonnullGCPtr { verify_cast<JS::Promise>(*promise_capability->promise().ptr()) };
 }
 
 }

@@ -26,9 +26,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> ReadableStreamGenericReaderMi
 {
     // 1. If this.[[stream]] is undefined, return a promise rejected with a TypeError exception.
     if (!m_stream) {
-        auto exception = JS::TypeError::create(m_realm, "No stream present to cancel"sv);
-        auto promise_capability = WebIDL::create_rejected_promise(m_realm, exception);
-        return JS::NonnullGCPtr { verify_cast<JS::Promise>(*promise_capability->promise().ptr()) };
+        WebIDL::SimpleException exception { WebIDL::SimpleExceptionType::TypeError, "No stream present to cancel"sv };
+        return WebIDL::create_rejected_promise_from_exception(m_realm, move(exception));
     }
 
     // 2. Return ! ReadableStreamReaderGenericCancel(this, reason).

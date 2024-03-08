@@ -155,9 +155,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> consume_body(JS::Realm& realm
 {
     // 1. If object is unusable, then return a promise rejected with a TypeError.
     if (object.is_unusable()) {
-        auto exception = JS::TypeError::create(realm, "Body is unusable"sv);
-        auto promise_capability = WebIDL::create_rejected_promise(realm, exception);
-        return JS::NonnullGCPtr { verify_cast<JS::Promise>(*promise_capability->promise().ptr()) };
+        WebIDL::SimpleException exception { WebIDL::SimpleExceptionType::TypeError, "Body is unusable"sv };
+        return WebIDL::create_rejected_promise_from_exception(realm, move(exception));
     }
 
     // 2. Let promise be a new promise.

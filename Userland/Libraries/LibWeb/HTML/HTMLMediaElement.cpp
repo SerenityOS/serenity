@@ -340,10 +340,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> HTMLMediaElement::play()
     // 2. If the media element's error attribute is not null and its code is MEDIA_ERR_SRC_NOT_SUPPORTED, then return a promise
     //    rejected with a "NotSupportedError" DOMException.
     if (m_error && m_error->code() == MediaError::Code::SrcNotSupported) {
-        auto error = WebIDL::NotSupportedError::create(realm, m_error->message());
-        auto promise = WebIDL::create_rejected_promise(realm, error);
-
-        return JS::NonnullGCPtr { verify_cast<JS::Promise>(*promise->promise()) };
+        auto exception = WebIDL::NotSupportedError::create(realm, m_error->message());
+        return WebIDL::create_rejected_promise_from_exception(realm, move(exception));
     }
 
     // 3. Let promise be a new promise and append promise to the list of pending play promises.
