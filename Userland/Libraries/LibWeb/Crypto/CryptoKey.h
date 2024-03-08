@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibCrypto/PK/RSA.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/GCPtr.h>
 #include <LibWeb/Bindings/CryptoKeyPrototype.h>
@@ -20,7 +21,7 @@ class CryptoKey final : public Bindings::PlatformObject {
     JS_DECLARE_ALLOCATOR(CryptoKey);
 
 public:
-    using InternalKeyData = Variant<ByteBuffer, Bindings::JsonWebKey>;
+    using InternalKeyData = Variant<ByteBuffer, Bindings::JsonWebKey, ::Crypto::PK::RSAPublicKey<>, ::Crypto::PK::RSAPrivateKey<>>;
 
     [[nodiscard]] static JS::NonnullGCPtr<CryptoKey> create(JS::Realm&, InternalKeyData);
 

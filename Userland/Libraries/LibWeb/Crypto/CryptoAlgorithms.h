@@ -8,6 +8,7 @@
 
 #include <AK/EnumBits.h>
 #include <AK/String.h>
+#include <LibCrypto/BigInt/UnsignedBigInteger.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/GCPtr.h>
 #include <LibWeb/Bindings/SubtleCryptoPrototype.h>
@@ -18,12 +19,11 @@
 
 namespace Web::Crypto {
 
-using KeyDataType = Variant<JS::Handle<WebIDL::BufferSource>, Bindings::JsonWebKey>;
 using AlgorithmIdentifier = Variant<JS::Handle<JS::Object>, String>;
 using HashAlgorithmIdentifier = AlgorithmIdentifier;
+using KeyDataType = Variant<JS::Handle<WebIDL::BufferSource>, Bindings::JsonWebKey>;
 
 // https://w3c.github.io/webcrypto/#algorithm-overview
-
 struct AlgorithmParams {
     String name;
 
@@ -34,6 +34,22 @@ struct AlgorithmParams {
 struct PBKDF2Params : public AlgorithmParams {
     JS::Handle<WebIDL::BufferSource> salt;
     u32 iterations;
+    HashAlgorithmIdentifier hash;
+
+    static JS::ThrowCompletionOr<NonnullOwnPtr<AlgorithmParams>> from_value(JS::VM&, JS::Value);
+};
+
+// https://w3c.github.io/webcrypto/#dfn-RsaKeyGenParams
+struct RsaKeyGenParams : public AlgorithmParams {
+    u32 modulus_length;
+    // NOTE that the raw data is going to be in Big Endian u8[] format
+    ::Crypto::UnsignedBigInteger public_exponent;
+
+    static JS::ThrowCompletionOr<NonnullOwnPtr<AlgorithmParams>> from_value(JS::VM&, JS::Value);
+};
+
+// https://w3c.github.io/webcrypto/#dfn-RsaHashedKeyGenParams
+struct RsaHashedKeyGenParams : public RsaKeyGenParams {
     HashAlgorithmIdentifier hash;
 
     static JS::ThrowCompletionOr<NonnullOwnPtr<AlgorithmParams>> from_value(JS::VM&, JS::Value);
@@ -67,6 +83,19 @@ protected:
     }
 
     JS::Realm& m_realm;
+};
+
+class RSAOAEP : public AlgorithmMethods {
+public:
+    virtual WebIDL::ExceptionOr<Variant<JS::NonnullGCPtr<CryptoKey>, JS::NonnullGCPtr<CryptoKeyPair>>> generate_key(AlgorithmParams const&, bool, Vector<Bindings::KeyUsage> const&) override;
+
+    static NonnullOwnPtr<AlgorithmMethods> create(JS::Realm& realm) { return adopt_own(*new RSAOAEP(realm)); }
+
+private:
+    explicit RSAOAEP(JS::Realm& realm)
+        : AlgorithmMethods(realm)
+    {
+    }
 };
 
 class PBKDF2 : public AlgorithmMethods {
