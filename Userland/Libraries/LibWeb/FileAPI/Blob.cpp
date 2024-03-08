@@ -367,11 +367,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> Blob::text()
 
     // 2. Let reader be the result of getting a reader from stream. If that threw an exception, return a new promise rejected with that exception.
     auto reader_or_exception = acquire_readable_stream_default_reader(*stream);
-    if (reader_or_exception.is_exception()) {
-        auto throw_completion = Bindings::dom_exception_to_throw_completion(vm, reader_or_exception.exception());
-        auto promise_capability = WebIDL::create_rejected_promise(realm, *throw_completion.value());
-        return JS::NonnullGCPtr { verify_cast<JS::Promise>(*promise_capability->promise().ptr()) };
-    }
+    if (reader_or_exception.is_exception())
+        return WebIDL::create_rejected_promise_from_exception(realm, reader_or_exception.release_error());
     auto reader = reader_or_exception.release_value();
 
     // 3. Let promise be the result of reading all bytes from stream with reader
@@ -393,18 +390,14 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> Blob::text()
 WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> Blob::array_buffer()
 {
     auto& realm = this->realm();
-    auto& vm = realm.vm();
 
     // 1. Let stream be the result of calling get stream on this.
     auto stream = TRY(this->get_stream());
 
     // 2. Let reader be the result of getting a reader from stream. If that threw an exception, return a new promise rejected with that exception.
     auto reader_or_exception = acquire_readable_stream_default_reader(*stream);
-    if (reader_or_exception.is_exception()) {
-        auto throw_completion = Bindings::dom_exception_to_throw_completion(vm, reader_or_exception.exception());
-        auto promise_capability = WebIDL::create_rejected_promise(realm, *throw_completion.value());
-        return JS::NonnullGCPtr { verify_cast<JS::Promise>(*promise_capability->promise().ptr()) };
-    }
+    if (reader_or_exception.is_exception())
+        return WebIDL::create_rejected_promise_from_exception(realm, reader_or_exception.release_error());
     auto reader = reader_or_exception.release_value();
 
     // 3. Let promise be the result of reading all bytes from stream with reader.

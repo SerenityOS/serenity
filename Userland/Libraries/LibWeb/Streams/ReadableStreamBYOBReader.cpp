@@ -110,30 +110,26 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> ReadableStreamBYOBReader::rea
 
     // 1. If view.[[ByteLength]] is 0, return a promise rejected with a TypeError exception.
     if (view->byte_length() == 0) {
-        auto exception = JS::TypeError::create(realm, "Cannot read in an empty buffer"sv);
-        auto promise_capability = WebIDL::create_rejected_promise(realm, exception);
-        return JS::NonnullGCPtr { verify_cast<JS::Promise>(*promise_capability->promise()) };
+        WebIDL::SimpleException exception { WebIDL::SimpleExceptionType::TypeError, "Cannot read in an empty buffer"sv };
+        return WebIDL::create_rejected_promise_from_exception(realm, move(exception));
     }
 
     // 2. If view.[[ViewedArrayBuffer]].[[ArrayBufferByteLength]] is 0, return a promise rejected with a TypeError exception.
     if (view->viewed_array_buffer()->byte_length() == 0) {
-        auto exception = JS::TypeError::create(realm, "Cannot read in an empty buffer"sv);
-        auto promise_capability = WebIDL::create_rejected_promise(realm, exception);
-        return JS::NonnullGCPtr { verify_cast<JS::Promise>(*promise_capability->promise()) };
+        WebIDL::SimpleException exception { WebIDL::SimpleExceptionType::TypeError, "Cannot read in an empty buffer"sv };
+        return WebIDL::create_rejected_promise_from_exception(realm, move(exception));
     }
 
     // 3. If ! IsDetachedBuffer(view.[[ViewedArrayBuffer]]) is true, return a promise rejected with a TypeError exception.
     if (view->viewed_array_buffer()->is_detached()) {
-        auto exception = JS::TypeError::create(realm, "Cannot read in a detached buffer"sv);
-        auto promise_capability = WebIDL::create_rejected_promise(realm, exception);
-        return JS::NonnullGCPtr { verify_cast<JS::Promise>(*promise_capability->promise()) };
+        WebIDL::SimpleException exception { WebIDL::SimpleExceptionType::TypeError, "Cannot read in a detached buffer"sv };
+        return WebIDL::create_rejected_promise_from_exception(realm, move(exception));
     }
 
     // 4. If this.[[stream]] is undefined, return a promise rejected with a TypeError exception.
     if (!m_stream) {
-        auto exception = JS::TypeError::create(realm, "Cannot read from an empty stream"sv);
-        auto promise_capability = WebIDL::create_rejected_promise(realm, exception);
-        return JS::NonnullGCPtr { verify_cast<JS::Promise>(*promise_capability->promise()) };
+        WebIDL::SimpleException exception { WebIDL::SimpleExceptionType::TypeError, "Cannot read from an empty stream"sv };
+        return WebIDL::create_rejected_promise_from_exception(realm, move(exception));
     }
 
     // 5. Let promise be a new promise.

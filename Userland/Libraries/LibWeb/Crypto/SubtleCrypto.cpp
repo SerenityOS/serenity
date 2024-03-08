@@ -122,10 +122,8 @@ JS::NonnullGCPtr<JS::Promise> SubtleCrypto::digest(AlgorithmIdentifier const& al
 
     // 2. Let data be the result of getting a copy of the bytes held by the data parameter passed to the digest() method.
     auto data_buffer_or_error = WebIDL::get_buffer_source_copy(*data->raw_object());
-    if (data_buffer_or_error.is_error()) {
-        auto promise = WebIDL::create_rejected_promise(realm, WebIDL::OperationError::create(realm, "Failed to copy bytes from ArrayBuffer"_fly_string));
-        return verify_cast<JS::Promise>(*promise->promise());
-    }
+    if (data_buffer_or_error.is_error())
+        return WebIDL::create_rejected_promise_from_exception(realm, WebIDL::OperationError::create(realm, "Failed to copy bytes from ArrayBuffer"_fly_string));
     auto data_buffer = data_buffer_or_error.release_value();
 
     // 3. Let normalizedAlgorithm be the result of normalizing an algorithm, with alg set to algorithm and op set to "digest".
@@ -133,10 +131,8 @@ JS::NonnullGCPtr<JS::Promise> SubtleCrypto::digest(AlgorithmIdentifier const& al
 
     // 4. If an error occurred, return a Promise rejected with normalizedAlgorithm.
     // FIXME: Spec bug: link to https://webidl.spec.whatwg.org/#a-promise-rejected-with
-    if (normalized_algorithm.is_error()) {
-        auto promise = WebIDL::create_rejected_promise(realm, normalized_algorithm.release_error().release_value().value());
-        return verify_cast<JS::Promise>(*promise->promise());
-    }
+    if (normalized_algorithm.is_error())
+        return WebIDL::create_rejected_promise_from_exception(realm, normalized_algorithm.release_error());
 
     // 5. Let promise be a new Promise.
     auto promise = WebIDL::create_promise(realm);
@@ -219,10 +215,8 @@ JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Promise>> SubtleCrypto::import_key(Bi
     auto normalized_algorithm = normalize_an_algorithm(algorithm, "importKey"_string);
 
     // 6. If an error occurred, return a Promise rejected with normalizedAlgorithm.
-    if (normalized_algorithm.is_error()) {
-        auto promise = WebIDL::create_rejected_promise(realm, normalized_algorithm.release_error().release_value().value());
-        return verify_cast<JS::Promise>(*promise->promise());
-    }
+    if (normalized_algorithm.is_error())
+        return WebIDL::create_rejected_promise_from_exception(realm, normalized_algorithm.release_error());
 
     // 7. Let promise be a new Promise.
     auto promise = WebIDL::create_promise(realm);

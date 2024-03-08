@@ -32,6 +32,8 @@ struct SimpleException {
     Variant<String, StringView> message;
 };
 
+using Exception = Variant<SimpleException, JS::NonnullGCPtr<DOMException>, JS::Completion>;
+
 template<typename ValueType>
 class [[nodiscard]] ExceptionOr {
 public:
@@ -78,7 +80,7 @@ public:
         VERIFY(completion.is_error());
     }
 
-    ExceptionOr(Variant<SimpleException, JS::NonnullGCPtr<DOMException>, JS::Completion> exception)
+    ExceptionOr(Exception exception)
         : m_result_or_exception(move(exception))
     {
         if (auto* completion = m_result_or_exception.template get_pointer<JS::Completion>())
@@ -100,7 +102,7 @@ public:
         return move(m_result_or_exception.template get<ValueType>());
     }
 
-    Variant<SimpleException, JS::NonnullGCPtr<DOMException>, JS::Completion> exception() const
+    Exception exception() const
     {
         return m_result_or_exception.template downcast<SimpleException, JS::NonnullGCPtr<DOMException>, JS::Completion>();
     }
@@ -118,7 +120,7 @@ public:
 
     // These are for compatibility with the TRY() macro in AK.
     [[nodiscard]] bool is_error() const { return is_exception(); }
-    Variant<SimpleException, JS::NonnullGCPtr<DOMException>, JS::Completion> release_error() { return exception(); }
+    Exception release_error() { return exception(); }
 
 private:
     // https://webidl.spec.whatwg.org/#idl-exceptions
