@@ -68,12 +68,12 @@ Vector<StringView> StringView::split_view(StringView separator, SplitBehavior sp
     return parts;
 }
 
-Vector<StringView> StringView::lines(bool consider_cr) const
+Vector<StringView> StringView::lines(ConsiderCarriageReturn consider_carriage_return) const
 {
     if (is_empty())
         return {};
 
-    if (!consider_cr)
+    if (consider_carriage_return == ConsiderCarriageReturn::No)
         return split_view('\n', SplitBehavior::KeepEmpty);
 
     Vector<StringView> v;

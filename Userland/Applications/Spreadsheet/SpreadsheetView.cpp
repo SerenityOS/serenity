@@ -425,7 +425,7 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
             StringView urls { data.data(), data.size() };
             Vector<Position> source_positions, target_positions;
 
-            for (auto& line : urls.lines(false)) {
+            for (auto& line : urls.lines(StringView::ConsiderCarriageReturn::No)) {
                 auto position = m_sheet->position_from_url(line);
                 if (position.has_value())
                     source_positions.append(position.release_value());
