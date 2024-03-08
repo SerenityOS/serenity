@@ -486,6 +486,9 @@ void Document::visit_edges(Cell::Visitor& visitor)
     }
 
     visitor.visit(m_adopted_style_sheets);
+
+    for (auto& shadow_root : m_shadow_roots)
+        visitor.visit(shadow_root);
 }
 
 // https://w3c.github.io/selection-api/#dom-document-getselection
@@ -4599,6 +4602,24 @@ void Document::for_each_css_style_sheet(Function<void(CSS::CSSStyleSheet&)>&& ca
             callback(style_sheet);
         });
     }
+}
+
+void Document::register_shadow_root(Badge<DOM::ShadowRoot>, DOM::ShadowRoot& shadow_root)
+{
+    m_shadow_roots.append(shadow_root);
+}
+
+void Document::unregister_shadow_root(Badge<DOM::ShadowRoot>, DOM::ShadowRoot& shadow_root)
+{
+    m_shadow_roots.remove_all_matching([&](auto& item) {
+        return item.ptr() == &shadow_root;
+    });
+}
+
+void Document::for_each_shadow_root(Function<void(DOM::ShadowRoot&)>&& callback)
+{
+    for (auto& shadow_root : m_shadow_roots)
+        callback(shadow_root);
 }
 
 }

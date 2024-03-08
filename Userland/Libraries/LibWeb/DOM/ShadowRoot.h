@@ -42,6 +42,8 @@ public:
     JS::NonnullGCPtr<WebIDL::ObservableArray> adopted_style_sheets() const;
     WebIDL::ExceptionOr<void> set_adopted_style_sheets(JS::Value);
 
+    virtual void finalize() override;
+
 protected:
     virtual void visit_edges(Cell::Visitor&) override;
 
