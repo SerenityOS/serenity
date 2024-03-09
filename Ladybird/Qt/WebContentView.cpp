@@ -109,9 +109,12 @@ WebContentView::WebContentView(QWidget* window, WebContentOptions const& web_con
     };
 
     on_enter_tooltip_area = [this](auto position, auto const& tooltip) {
+        auto tooltip_without_carriage_return = tooltip.contains("\r"sv)
+            ? tooltip.replace("\r\n"sv, "\n"sv, ReplaceMode::All).replace("\r"sv, "\n"sv, ReplaceMode::All)
+            : tooltip;
         QToolTip::showText(
             mapToGlobal(QPoint(position.x(), position.y())),
-            qstring_from_ak_string(tooltip),
+            qstring_from_ak_string(tooltip_without_carriage_return),
             this);
     };
 
