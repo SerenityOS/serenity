@@ -6,6 +6,7 @@ source_set("DOM") {
     "AbortSignal.cpp",
     "AbstractRange.cpp",
     "AccessibilityTreeNode.cpp",
+    "AdoptedStyleSheets.cpp",
     "Attr.cpp",
     "CDATASection.cpp",
     "CharacterData.cpp",
