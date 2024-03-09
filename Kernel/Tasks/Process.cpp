@@ -458,13 +458,31 @@ void signal_trampoline_dummy()
         "asm_signal_trampoline_end: \n" ::[sigreturn_syscall_number] "i"(Syscall::SC_sigreturn),
         [offset_to_first_register_slot] "i"(offset_to_first_register_slot));
 #elif ARCH(RISCV64)
-    constexpr static auto offset_to_a0_slot = align_up_to(sizeof(__ucontext) + sizeof(siginfo) + sizeof(FPUState) + 3 * sizeof(FlatPtr), 16);
+    constexpr static auto offset_to_a0_slot = sizeof(__ucontext) + sizeof(siginfo) + sizeof(FPUState) + 4 * sizeof(FlatPtr);
     asm(
         ".global asm_signal_trampoline\n"
         "asm_signal_trampoline:\n"
         // stack state: 0, ucontext, signal_info (alignment = 16), fpu_state (alignment = 16), ucontext*, siginfo*, signal, handler
 
-        // FIXME: Implement this
+        // Load the handler address into t0.
+        "ld t0, 0(sp)\n"
+        // Store a0 (return value from a syscall) into the register slot, such that we can return the correct value in sys$sigreturn.
+        "sd a0, %[offset_to_first_register_slot](sp)\n"
+        // Load the signal number into the first argument.
+        "ld a0, 8(sp)\n"
+        // Load a pointer to the signal_info structure into the second argument.
+        "ld a1, 16(sp)\n"
+        // Load a pointer to the ucontext into the third argument.
+        "ld a2, 24(sp)\n"
+        // Pop the values off the stack.
+        "addi sp, sp, 32\n"
+        // Call the signal handler.
+        "jalr t0\n"
+
+        // Call sys$sigreturn.
+        "li a7, %[sigreturn_syscall_number]\n"
+        "ecall\n"
+        // We should never return, so trap if we do return.
         "unimp\n"
 
         "\n"
