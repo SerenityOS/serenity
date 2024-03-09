@@ -98,7 +98,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
       TextNode <#text>
       SVGSVGBox <svg> at (249,201) content-size 160x60 [SVG] children: inline
         TextNode <#text>
-        SVGGeometryBox <circle> at (299,201) content-size 60x60 children: not-inline
+        SVGGeometryBox <circle> at (249,201) content-size 160x60 children: not-inline
         TextNode <#text>
       TextNode <#text>
 
@@ -141,4 +141,4 @@ ViewportPaintable (Viewport<#document>) [0,0 800x600]
         SVGPathPaintable (SVGGeometryBox<circle>) [114,136 125x125]
       TextPaintable (TextNode<#text>)
       SVGSVGPaintable (SVGSVGBox<svg>) [248,200 162x62]
-        SVGPathPaintable (SVGGeometryBox<circle>) [299,201 60x60]
+        SVGPathPaintable (SVGGeometryBox<circle>) [249,201 160x60]
