@@ -116,6 +116,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView passes_to_dump_cfg;
     args_parser.add_option(passes_to_dump_cfg, "Dump CFG after specified passes.", "dump-cfg", 0, "{all|last|<pass-name>|-<pass-name>[,...]}");
 
+    bool silence_diagnostics = false;
+    args_parser.add_option(silence_diagnostics, "Silence all diagnostics.", "silence-diagnostics", 0);
+
     args_parser.parse(arguments);
 
     CompilationPipeline pipeline;
@@ -163,7 +166,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     }
 
-    translation_unit.diag().print_diagnostics();
+    if (!silence_diagnostics)
+        translation_unit.diag().print_diagnostics();
 
     return 0;
 }
