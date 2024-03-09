@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <LibWeb/Bindings/Serializable.h>
 #include <LibWeb/Geometry/DOMMatrixReadOnly.h>
 #include <LibWeb/WebIDL/Buffers.h>
 
@@ -22,6 +23,7 @@ public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrix>> create_from_dom_matrix_2d_init(JS::Realm&, DOMMatrix2DInit& init);
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrix>> create_from_dom_matrix_init(JS::Realm&, DOMMatrixInit& init);
     static JS::NonnullGCPtr<DOMMatrix> create_from_dom_matrix_read_only(JS::Realm&, DOMMatrixReadOnly const& read_only_matrix);
+    static JS::NonnullGCPtr<DOMMatrix> create(JS::Realm&);
 
     virtual ~DOMMatrix() override;
 
@@ -67,10 +69,13 @@ public:
 
     WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrix>> set_matrix_value(String const& transform_list);
 
+    virtual StringView interface_name() const override { return "DOMMatrix"sv; }
+
 private:
     DOMMatrix(JS::Realm&, double m11, double m12, double m21, double m22, double m41, double m42);
     DOMMatrix(JS::Realm&, double m11, double m12, double m13, double m14, double m21, double m22, double m23, double m24, double m31, double m32, double m33, double m34, double m41, double m42, double m43, double m44);
     DOMMatrix(JS::Realm&, DOMMatrixReadOnly const& read_only_matrix);
+    explicit DOMMatrix(JS::Realm&);
 
     virtual void initialize(JS::Realm&) override;
 };

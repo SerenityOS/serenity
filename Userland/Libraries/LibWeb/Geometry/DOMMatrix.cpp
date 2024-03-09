@@ -118,6 +118,11 @@ JS::NonnullGCPtr<DOMMatrix> DOMMatrix::create_from_dom_matrix_read_only(JS::Real
     return realm.heap().allocate<DOMMatrix>(realm, realm, read_only_matrix);
 }
 
+JS::NonnullGCPtr<DOMMatrix> DOMMatrix::create(JS::Realm& realm)
+{
+    return realm.heap().allocate<DOMMatrix>(realm, realm);
+}
+
 DOMMatrix::DOMMatrix(JS::Realm& realm, double m11, double m12, double m21, double m22, double m41, double m42)
     : DOMMatrixReadOnly(realm, m11, m12, m21, m22, m41, m42)
 {
@@ -130,6 +135,11 @@ DOMMatrix::DOMMatrix(JS::Realm& realm, double m11, double m12, double m13, doubl
 
 DOMMatrix::DOMMatrix(JS::Realm& realm, DOMMatrixReadOnly const& read_only_matrix)
     : DOMMatrixReadOnly(realm, read_only_matrix)
+{
+}
+
+DOMMatrix::DOMMatrix(JS::Realm& realm)
+    : DOMMatrixReadOnly(realm)
 {
 }
 
