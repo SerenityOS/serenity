@@ -18,6 +18,7 @@ class DOMPoint final : public DOMPointReadOnly {
 
 public:
     static JS::NonnullGCPtr<DOMPoint> construct_impl(JS::Realm&, double x = 0, double y = 0, double z = 0, double w = 1);
+    static JS::NonnullGCPtr<DOMPoint> create(JS::Realm&);
 
     static JS::NonnullGCPtr<DOMPoint> from_point(JS::VM&, DOMPointInit const&);
 
@@ -33,8 +34,11 @@ public:
     void set_z(double z) { m_z = z; }
     void set_w(double w) { m_w = w; }
 
+    virtual StringView interface_name() const override { return "DOMPoint"sv; }
+
 private:
     DOMPoint(JS::Realm&, double x, double y, double z, double w);
+    DOMPoint(JS::Realm&);
 
     virtual void initialize(JS::Realm&) override;
 };

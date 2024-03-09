@@ -14,3 +14,5 @@ DOMMatrix: {"a":10,"b":20,"c":30,"d":40,"e":50,"f":60,"m11":10,"m12":20,"m13":0,
 DOMMatrix: {"a":10,"b":20,"c":50,"d":60,"e":130,"f":140,"m11":10,"m12":20,"m13":30,"m14":40,"m21":50,"m22":60,"m23":70,"m24":80,"m31":90,"m32":100,"m33":110,"m34":120,"m41":130,"m42":140,"m43":150,"m44":160,"is2D":false,"isIdentity":false}
 instanceOf DOMPointReadOnly: true
 DOMPointReadOnly: {"x":10,"y":20,"z":30,"w":40}
+instanceOf DOMPoint: true
+DOMPoint: {"x":10,"y":20,"z":30,"w":40}
