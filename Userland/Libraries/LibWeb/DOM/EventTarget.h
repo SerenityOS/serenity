@@ -73,7 +73,7 @@ private:
 
         // https://html.spec.whatwg.org/multipage/webappapis.html#event-handler-map
         // Spec Note: The order of the entries of event handler map could be arbitrary. It is not observable through any algorithms that operate on the map.
-        HashMap<FlyString, JS::GCPtr<HTML::EventHandler>> event_handler_map;
+        HashMap<FlyString, JS::NonnullGCPtr<HTML::EventHandler>> event_handler_map;
     };
 
     Data& ensure_data();
