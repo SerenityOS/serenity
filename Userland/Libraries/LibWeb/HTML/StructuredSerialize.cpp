@@ -35,6 +35,7 @@
 #include <LibWeb/Bindings/Transferable.h>
 #include <LibWeb/FileAPI/Blob.h>
 #include <LibWeb/FileAPI/File.h>
+#include <LibWeb/Geometry/DOMMatrix.h>
 #include <LibWeb/Geometry/DOMMatrixReadOnly.h>
 #include <LibWeb/HTML/MessagePort.h>
 #include <LibWeb/HTML/StructuredSerialize.h>
@@ -966,6 +967,8 @@ private:
             return FileAPI::File::create(realm);
         if (interface_name == "DOMMatrixReadOnly"sv)
             return Geometry::DOMMatrixReadOnly::create(realm);
+        if (interface_name == "DOMMatrix"sv)
+            return Geometry::DOMMatrix::create(realm);
 
         VERIFY_NOT_REACHED();
     }
