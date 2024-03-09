@@ -5,7 +5,9 @@
  */
 
 #include <AK/Debug.h>
+#include <AK/Utf16View.h>
 #include <LibGfx/ImageFormats/JBIG2Loader.h>
+#include <LibTextCodec/Decoder.h>
 
 // Spec: ITU-T_T_88__08_2018.pdf in the zip file here:
 // https://www.itu.int/rec/T-REC-T.88-201808-I
@@ -445,9 +447,68 @@ static ErrorOr<void> decode_color_palette(JBIG2LoadingContext&, SegmentData cons
     return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode color palette yet");
 }
 
-static ErrorOr<void> decode_extension(JBIG2LoadingContext&, SegmentData const&)
+static ErrorOr<void> decode_extension(JBIG2LoadingContext&, SegmentData const& segment)
 {
-    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode extension yet");
+    // 7.4.14 Extension segment syntax
+    FixedMemoryStream stream { segment.data };
+
+    enum ExtensionType {
+        SingleByteCodedComment = 0x20000000,
+        MultiByteCodedComment = 0x20000002,
+    };
+    u32 type = TRY(stream.read_value<BigEndian<u32>>());
+
+    auto read_string = [&]<class T>() -> ErrorOr<Vector<T>> {
+        Vector<T> result;
+        do {
+            result.append(TRY(stream.read_value<BigEndian<T>>()));
+        } while (result.last());
+        result.take_last();
+        return result;
+    };
+
+    switch (type) {
+    case SingleByteCodedComment: {
+        // 7.4.15.1 Single-byte coded comment
+        // Pairs of zero-terminated ISO/IEC 8859-1 (latin1) pairs, terminated by another \0.
+        while (true) {
+            auto first_bytes = TRY(read_string.template operator()<u8>());
+            if (first_bytes.is_empty())
+                break;
+
+            auto second_bytes = TRY(read_string.template operator()<u8>());
+
+            auto first = TRY(TextCodec::decoder_for("ISO-8859-1"sv)->to_utf8(StringView { first_bytes }));
+            auto second = TRY(TextCodec::decoder_for("ISO-8859-1"sv)->to_utf8(StringView { second_bytes }));
+            dbgln("JBIG2ImageDecoderPlugin: key '{}', value '{}'", first, second);
+        }
+        if (!stream.is_eof())
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Trailing data after SingleByteCodedComment");
+        return {};
+    }
+    case MultiByteCodedComment: {
+        // 7.4.15.2 Multi-byte coded comment
+        // Pairs of (two-byte-)zero-terminated UCS-2 pairs, terminated by another \0\0.
+        while (true) {
+            auto first_ucs2 = TRY(read_string.template operator()<u16>());
+            if (first_ucs2.is_empty())
+                break;
+
+            auto second_ucs2 = TRY(read_string.template operator()<u16>());
+
+            auto first = TRY(Utf16View(first_ucs2).to_utf8());
+            auto second = TRY(Utf16View(second_ucs2).to_utf8());
+            dbgln("JBIG2ImageDecoderPlugin: key '{}', value '{}'", first, second);
+        }
+        if (!stream.is_eof())
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Trailing data after MultiByteCodedComment");
+        return {};
+    }
+    }
+
+    // FIXME: If bit 31 in `type` is not set, the extension isn't necessary, and we could ignore it.
+    dbgln("JBIG2ImageDecoderPlugin: Unknown extension type {:#x}", type);
+    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Unknown extension type");
 }
 
 static ErrorOr<void> decode_data(JBIG2LoadingContext& context)
