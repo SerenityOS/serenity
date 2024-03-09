@@ -346,7 +346,14 @@ PDFErrorOr<ByteBuffer> Filter::decode_jbig2(Document* document, ReadonlyBytes by
     }
 
     segments.append(bytes);
-    return TRY(Gfx::JBIG2ImageDecoderPlugin::decode_embedded(segments));
+    auto decoded = TRY(Gfx::JBIG2ImageDecoderPlugin::decode_embedded(segments));
+
+    // JBIG2 treats `1` as "ink present" (black) and `0` as "no ink" (white).
+    // PDF treats `1` as "light present" (white) and `1` as "no light" (black).
+    // So we have to invert.
+    invert_bits(decoded);
+
+    return decoded;
 }
 
 PDFErrorOr<ByteBuffer> Filter::decode_dct(ReadonlyBytes bytes)
