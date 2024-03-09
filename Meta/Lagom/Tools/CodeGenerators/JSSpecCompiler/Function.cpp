@@ -7,11 +7,13 @@
 #include "Function.h"
 #include "AST/AST.h"
 #include "Compiler/ControlFlowGraph.h"
+#include "Runtime/Realm.h"
 
 namespace JSSpecCompiler {
 
 TranslationUnit::TranslationUnit(StringView filename)
     : m_filename(filename)
+    , m_realm(make<Runtime::Realm>(m_diagnostic_engine))
 {
 }
 

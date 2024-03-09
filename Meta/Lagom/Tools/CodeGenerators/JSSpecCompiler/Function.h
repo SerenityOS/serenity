@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/HashMap.h>
+#include <AK/NonnullOwnPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/StringView.h>
@@ -31,6 +32,8 @@ public:
 
     EnumeratorRef get_node_for_enumerator_value(StringView value);
 
+    Runtime::Realm* realm() const { return m_realm; }
+
 private:
     StringView m_filename;
     DiagnosticEngine m_diagnostic_engine;
@@ -38,6 +41,8 @@ private:
     Vector<NonnullRefPtr<FunctionDeclaration>> m_declarations_owner;
     HashMap<FlyString, FunctionDeclarationRef> m_abstract_operation_index;
     HashMap<StringView, EnumeratorRef> m_enumerator_nodes;
+
+    NonnullOwnPtr<Runtime::Realm> m_realm;
 };
 
 struct FunctionArgument {
