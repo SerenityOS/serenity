@@ -37,6 +37,7 @@
 #include <LibWeb/FileAPI/File.h>
 #include <LibWeb/Geometry/DOMMatrix.h>
 #include <LibWeb/Geometry/DOMMatrixReadOnly.h>
+#include <LibWeb/Geometry/DOMPoint.h>
 #include <LibWeb/Geometry/DOMPointReadOnly.h>
 #include <LibWeb/HTML/MessagePort.h>
 #include <LibWeb/HTML/StructuredSerialize.h>
@@ -972,6 +973,8 @@ private:
             return Geometry::DOMMatrix::create(realm);
         if (interface_name == "DOMPointReadOnly"sv)
             return Geometry::DOMPointReadOnly::create(realm);
+        if (interface_name == "DOMPoint"sv)
+            return Geometry::DOMPoint::create(realm);
 
         VERIFY_NOT_REACHED();
     }
