@@ -80,10 +80,13 @@ public:
     void set_bit(size_t x, size_t y, bool b);
     void fill(bool b);
 
-private:
-    BitBuffer(Vector<u8>, size_t width, size_t height, size_t pitch);
+    ErrorOr<NonnullRefPtr<Gfx::Bitmap>> to_gfx_bitmap() const;
+    ErrorOr<ByteBuffer> to_byte_buffer() const;
 
-    Vector<u8> m_bits;
+private:
+    BitBuffer(ByteBuffer, size_t width, size_t height, size_t pitch);
+
+    ByteBuffer m_bits;
     size_t m_width;
     size_t m_height;
     size_t m_pitch;
@@ -92,8 +95,7 @@ private:
 ErrorOr<NonnullOwnPtr<BitBuffer>> BitBuffer::create(size_t width, size_t height)
 {
     size_t pitch = ceil_div(width, 8ull);
-    Vector<u8> bits;
-    TRY(bits.try_resize(pitch * height));
+    auto bits = TRY(ByteBuffer::create_uninitialized(pitch * height));
     return adopt_nonnull_own_or_enomem(new (nothrow) BitBuffer(move(bits), width, height, pitch));
 }
 
@@ -126,11 +128,28 @@ void BitBuffer::set_bit(size_t x, size_t y, bool b)
 void BitBuffer::fill(bool b)
 {
     u8 fill_byte = b ? 0xff : 0;
-    for (auto& byte : m_bits)
+    for (auto& byte : m_bits.bytes())
         byte = fill_byte;
 }
 
-BitBuffer::BitBuffer(Vector<u8> bits, size_t width, size_t height, size_t pitch)
+ErrorOr<NonnullRefPtr<Gfx::Bitmap>> BitBuffer::to_gfx_bitmap() const
+{
+    auto bitmap = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { m_width, m_height }));
+    for (size_t y = 0; y < m_height; ++y) {
+        for (size_t x = 0; x < m_width; ++x) {
+            auto color = get_bit(x, y) ? Color::Black : Color::White;
+            bitmap->set_pixel(x, y, color);
+        }
+    }
+    return bitmap;
+}
+
+ErrorOr<ByteBuffer> BitBuffer::to_byte_buffer() const
+{
+    return ByteBuffer::copy(m_bits);
+}
+
+BitBuffer::BitBuffer(ByteBuffer bits, size_t width, size_t height, size_t pitch)
     : m_bits(move(bits))
     , m_width(width)
     , m_height(height)
@@ -748,7 +767,8 @@ ErrorOr<ImageFrameDescriptor> JBIG2ImageDecoderPlugin::frame(size_t index, Optio
         m_context->state = JBIG2LoadingContext::State::Decoded;
     }
 
-    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Draw the rest of the owl");
+    auto bitmap = TRY(m_context->page.bits->to_gfx_bitmap());
+    return ImageFrameDescriptor { move(bitmap), 0 };
 }
 
 ErrorOr<ByteBuffer> JBIG2ImageDecoderPlugin::decode_embedded(Vector<ReadonlyBytes> data)
@@ -762,7 +782,7 @@ ErrorOr<ByteBuffer> JBIG2ImageDecoderPlugin::decode_embedded(Vector<ReadonlyByte
     TRY(scan_for_page_size(*plugin->m_context));
     TRY(decode_data(*plugin->m_context));
 
-    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode embedded JBIG2 yet");
+    return plugin->m_context->page.bits->to_byte_buffer();
 }
 
 }
