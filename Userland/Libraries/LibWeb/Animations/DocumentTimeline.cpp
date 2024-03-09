@@ -9,6 +9,7 @@
 #include <LibWeb/Animations/DocumentTimeline.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/Window.h>
+#include <LibWeb/HighResolutionTime/Performance.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::Animations {
@@ -17,7 +18,9 @@ JS_DEFINE_ALLOCATOR(DocumentTimeline);
 
 JS::NonnullGCPtr<DocumentTimeline> DocumentTimeline::create(JS::Realm& realm, DOM::Document& document, HighResolutionTime::DOMHighResTimeStamp origin_time)
 {
-    return realm.heap().allocate<DocumentTimeline>(realm, realm, document, origin_time);
+    auto timeline = realm.heap().allocate<DocumentTimeline>(realm, realm, document, origin_time);
+    timeline->set_current_time(document.window().performance()->now());
+    return timeline;
 }
 
 // https://www.w3.org/TR/web-animations-1/#dom-documenttimeline-documenttimeline

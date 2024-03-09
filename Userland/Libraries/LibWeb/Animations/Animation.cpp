@@ -14,6 +14,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/Scripting/TemporaryExecutionContext.h>
 #include <LibWeb/HTML/Window.h>
+#include <LibWeb/HighResolutionTime/Performance.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 #include <LibWeb/WebIDL/Promise.h>
 
@@ -661,7 +662,7 @@ WebIDL::ExceptionOr<void> Animation::play_an_animation(AutoRewind auto_rewind)
     //     If a user agent determines that animation is immediately ready, it may schedule the above task as a microtask
     //     such that it runs at the next microtask checkpoint, but it must not perform the task synchronously.
     m_pending_play_task = TaskState::Scheduled;
-    m_saved_play_time = MonotonicTime::now().milliseconds();
+    m_saved_play_time = global_object().performance()->now();
 
     // 13. Run the procedure to update an animation’s finished state for animation with the did seek flag set to false,
     //     and the synchronously notify flag set to false.
@@ -745,7 +746,7 @@ WebIDL::ExceptionOr<void> Animation::pause()
     //
     // Note: This is run_pending_pause_task()
     m_pending_pause_task = TaskState::Scheduled;
-    m_saved_pause_time = MonotonicTime::now().milliseconds();
+    m_saved_pause_time = global_object().performance()->now();
 
     // 11. Run the procedure to update an animation’s finished state for animation with the did seek flag set to false,
     //     and the synchronously notify flag set to false.
