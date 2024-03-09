@@ -280,7 +280,7 @@ public:
             // FIXME: 6. User agents should attach a serialized representation of any interesting accompanying data which are not yet specified, notably the stack property, to serialized.
             m_serialized.append(ValueTag::ErrorObject);
             m_serialized.append(type);
-            m_serialized.append(message.has_value());
+            serialize_primitive_type(m_serialized, message.has_value());
             if (message.has_value())
                 TRY(serialize_string(m_vm, m_serialized, *message));
         }
@@ -294,7 +294,7 @@ public:
 
             // 3. Set serialized to { [[Type]]: "Array", [[Length]]: valueLen, [[Properties]]: a new empty List }.
             m_serialized.append(ValueTag::ArrayObject);
-            m_serialized.append(bit_cast<u32*>(&length), 2);
+            serialize_primitive_type(m_serialized, length);
 
             // 4. Set deep to true.
             deep = true;
@@ -377,8 +377,7 @@ public:
                     // 1. If entry is not the special value empty, append entry to copiedList.
                     copied_list.append(entry.key);
                 }
-                u64 size = set.set_size();
-                m_serialized.append(bit_cast<u32*>(&size), 2);
+                serialize_primitive_type(m_serialized, set.set_size());
                 // 3. For each entry of copiedList:
                 for (auto copied_value : copied_list) {
                     // 1. Let serializedEntry be ? StructuredSerializeInternal(entry, forStorage, memory).
@@ -395,7 +394,7 @@ public:
             else {
                 u64 property_count = 0;
                 auto count_offset = m_serialized.size();
-                m_serialized.append(bit_cast<u32*>(&property_count), 2);
+                serialize_primitive_type(m_serialized, property_count);
                 for (auto key : MUST(value.as_object().enumerable_own_property_names(JS::Object::PropertyKind::Key))) {
                     auto property_key = MUST(JS::PropertyKey::from_value(m_vm, key));
 
@@ -433,14 +432,13 @@ private:
 void serialize_boolean_primitive(SerializationRecord& serialized, JS::Value& value)
 {
     VERIFY(value.is_boolean());
-    serialized.append(static_cast<u32>(value.as_bool()));
+    serialize_primitive_type(serialized, value.as_bool());
 }
 
 void serialize_number_primitive(SerializationRecord& serialized, JS::Value& value)
 {
     VERIFY(value.is_number());
-    double number = value.as_double();
-    serialized.append(bit_cast<u32*>(&number), 2);
+    serialize_primitive_type(serialized, value.as_double());
 }
 
 WebIDL::ExceptionOr<void> serialize_big_int_primitive(JS::VM& vm, SerializationRecord& serialized, JS::Value& value)
@@ -462,15 +460,14 @@ void serialize_boolean_object(SerializationRecord& serialized, JS::Value& value)
 {
     VERIFY(value.is_object() && is<JS::BooleanObject>(value.as_object()));
     auto& boolean_object = static_cast<JS::BooleanObject&>(value.as_object());
-    serialized.append(bit_cast<u32>(static_cast<u32>(boolean_object.boolean())));
+    serialize_primitive_type(serialized, boolean_object.boolean());
 }
 
 void serialize_number_object(SerializationRecord& serialized, JS::Value& value)
 {
     VERIFY(value.is_object() && is<JS::NumberObject>(value.as_object()));
     auto& number_object = static_cast<JS::NumberObject&>(value.as_object());
-    double const number = number_object.number();
-    serialized.append(bit_cast<u32*>(&number), 2);
+    serialize_primitive_type(serialized, number_object.number());
 }
 
 WebIDL::ExceptionOr<void> serialize_big_int_object(JS::VM& vm, SerializationRecord& serialized, JS::Value& value)
@@ -493,8 +490,7 @@ void serialize_date_object(SerializationRecord& serialized, JS::Value& value)
 {
     VERIFY(value.is_object() && is<JS::Date>(value.as_object()));
     auto& date_object = static_cast<JS::Date&>(value.as_object());
-    double const date_value = date_object.date_value();
-    serialized.append(bit_cast<u32*>(&date_value), 2);
+    serialize_primitive_type(serialized, date_object.date_value());
 }
 
 WebIDL::ExceptionOr<void> serialize_reg_exp_object(JS::VM& vm, SerializationRecord& serialized, JS::Value& value)
@@ -509,21 +505,11 @@ WebIDL::ExceptionOr<void> serialize_reg_exp_object(JS::VM& vm, SerializationReco
     return {};
 }
 
-void serialize_u64(SerializationRecord& serialized, u64 value)
-{
-    serialized.append(bit_cast<u32*>(&value), 2);
-}
-
-void serialize_i64(SerializationRecord& serialized, i64 value)
-{
-    serialized.append(bit_cast<u32*>(&value), 2);
-}
-
 WebIDL::ExceptionOr<void> serialize_bytes(JS::VM& vm, Vector<u32>& vector, ReadonlyBytes bytes)
 {
     // Append size of the buffer to the serialized structure.
     u64 const size = bytes.size();
-    serialize_u64(vector, size);
+    serialize_primitive_type(vector, size);
     // Append the bytes of the buffer to the serialized structure.
     u64 byte_position = 0;
     while (byte_position < size) {
@@ -646,8 +632,8 @@ WebIDL::ExceptionOr<void> serialize_viewed_array_buffer(JS::VM& vm, Vector<u32>&
         vector.append(ValueTag::ArrayBufferView);
         vector.extend(move(buffer_serialized));               // [[ArrayBufferSerialized]]
         TRY(serialize_string(vm, vector, "DataView"_string)); // [[Constructor]]
-        vector.append(JS::get_view_byte_length(view_record));
-        vector.append(view.byte_offset());
+        serialize_primitive_type(vector, JS::get_view_byte_length(view_record));
+        serialize_primitive_type(vector, view.byte_offset());
     }
 
     // 6. Otherwise:
@@ -660,9 +646,9 @@ WebIDL::ExceptionOr<void> serialize_viewed_array_buffer(JS::VM& vm, Vector<u32>&
         vector.append(ValueTag::ArrayBufferView);
         vector.extend(move(buffer_serialized));                 // [[ArrayBufferSerialized]]
         TRY(serialize_string(vm, vector, view.element_name())); // [[Constructor]]
-        vector.append(JS::typed_array_byte_length(view_record));
-        vector.append(view.byte_offset());
-        vector.append(JS::typed_array_length(view_record));
+        serialize_primitive_type(vector, JS::typed_array_byte_length(view_record));
+        serialize_primitive_type(vector, view.byte_offset());
+        serialize_primitive_type(vector, JS::typed_array_length(view_record));
     }
     return {};
 }
@@ -784,13 +770,13 @@ public:
             auto array_buffer_value = TRY(deserialize());
             auto& array_buffer = verify_cast<JS::ArrayBuffer>(array_buffer_value.as_object());
             auto constructor_name = TRY(deserialize_string(m_vm, m_serialized, m_position));
-            u32 byte_length = m_serialized[m_position++];
-            u32 byte_offset = m_serialized[m_position++];
+            u32 byte_length = deserialize_primitive_type<u32>(m_serialized, m_position);
+            u32 byte_offset = deserialize_primitive_type<u32>(m_serialized, m_position);
 
             if (constructor_name == "DataView"sv) {
                 value = JS::DataView::create(*realm, &array_buffer, byte_length, byte_offset);
             } else {
-                u32 array_length = m_serialized[m_position++];
+                u32 array_length = deserialize_primitive_type<u32>(m_serialized, m_position);
                 JS::GCPtr<JS::TypedArrayBase> typed_array_ptr;
 #define CREATE_TYPED_ARRAY(ClassName)       \
     if (constructor_name == #ClassName##sv) \
@@ -830,7 +816,7 @@ public:
             auto& realm = *m_vm.current_realm();
             // 1. Let outputProto be targetRealm.[[Intrinsics]].[[%Array.prototype%]].
             // 2. Set value to ! ArrayCreate(serialized.[[Length]], outputProto).
-            auto length = read_u64();
+            auto length = deserialize_primitive_type<u64>(m_serialized, m_position);
             value = MUST(JS::Array::create(realm, length));
             // 3. Set deep to true.
             deep = true;
@@ -849,7 +835,7 @@ public:
         case ValueTag::ErrorObject: {
             auto& realm = *m_vm.current_realm();
             auto type = static_cast<ErrorType>(m_serialized[m_position++]);
-            auto has_message = static_cast<bool>(m_serialized[m_position++]);
+            auto has_message = deserialize_primitive_type<bool>(m_serialized, m_position);
             if (has_message) {
                 auto message = TRY(deserialize_string(m_vm, m_serialized, m_position));
                 switch (type) {
@@ -906,7 +892,7 @@ public:
             // 1. If serialized.[[Type]] is "Map", then:
             if (tag == ValueTag::MapObject) {
                 auto& map = static_cast<JS::Map&>(value.as_object());
-                auto length = read_u64();
+                auto length = deserialize_primitive_type<u64>(m_serialized, m_position);
                 // 1. For each Record { [[Key]], [[Value]] } entry of serialized.[[MapData]]:
                 for (u64 i = 0u; i < length; ++i) {
                     // 1. Let deserializedKey be ? StructuredDeserialize(entry.[[Key]], targetRealm, memory).
@@ -923,7 +909,7 @@ public:
             // 2. Otherwise, if serialized.[[Type]] is "Set", then:
             else if (tag == ValueTag::SetObject) {
                 auto& set = static_cast<JS::Set&>(value.as_object());
-                auto length = read_u64();
+                auto length = deserialize_primitive_type<u64>(m_serialized, m_position);
                 // 1. For each entry of serialized.[[SetData]]:
                 for (u64 i = 0u; i < length; ++i) {
                     // 1. Let deserializedEntry be ? StructuredDeserialize(entry, targetRealm, memory).
@@ -937,7 +923,7 @@ public:
             // 3. Otherwise, if serialized.[[Type]] is "Array" or "Object", then:
             else if (tag == ValueTag::ArrayObject || tag == ValueTag::Object) {
                 auto& object = value.as_object();
-                auto length = read_u64();
+                auto length = deserialize_primitive_type<u64>(m_serialized, m_position);
                 // 1. For each Record { [[Key]], [[Value]] } entry of serialized.[[Properties]]:
                 for (u64 i = 0u; i < length; ++i) {
                     auto key = TRY(deserialize_string(m_vm, m_serialized, m_position));
@@ -971,14 +957,6 @@ private:
     size_t m_position { 0 };
     JS::MarkedVector<JS::Value> m_memory; // Index -> JS value
 
-    u64 read_u64()
-    {
-        u64 value;
-        memcpy(&value, m_serialized.offset_pointer(m_position), sizeof(value));
-        m_position += 2;
-        return value;
-    }
-
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<Bindings::PlatformObject>> create_serialized_type(StringView interface_name, JS::Realm& realm)
     {
         if (interface_name == "Blob"sv)
@@ -1000,18 +978,12 @@ private:
 
 bool deserialize_boolean_primitive(ReadonlySpan<u32> const& serialized, size_t& position)
 {
-    VERIFY(position < serialized.size());
-    return static_cast<bool>(serialized[position++]);
+    return deserialize_primitive_type<bool>(serialized, position);
 }
 
 double deserialize_number_primitive(ReadonlySpan<u32> const& serialized, size_t& position)
 {
-    VERIFY(position + 2 <= serialized.size());
-    u32 const bits[2] {
-        serialized[position++],
-        serialized[position++],
-    };
-    return *bit_cast<double*>(&bits);
+    return deserialize_primitive_type<double>(serialized, position);
 }
 
 JS::NonnullGCPtr<JS::BooleanObject> deserialize_boolean_object(JS::Realm& realm, ReadonlySpan<u32> const& serialized, size_t& position)
@@ -1040,12 +1012,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::StringObject>> deserialize_string_objec
 
 JS::NonnullGCPtr<JS::Date> deserialize_date_object(JS::Realm& realm, ReadonlySpan<u32> const& serialized, size_t& position)
 {
-    VERIFY(position + 2 <= serialized.size());
-    u32 const bits[2] {
-        serialized[position++],
-        serialized[position++],
-    };
-    auto double_value = *bit_cast<double*>(&bits);
+    auto double_value = deserialize_primitive_type<double>(serialized, position);
     return JS::Date::create(realm, double_value);
 }
 
@@ -1056,29 +1023,9 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::RegExpObject>> deserialize_reg_exp_obje
     return TRY(JS::regexp_create(realm.vm(), move(pattern), move(flags)));
 }
 
-u64 deserialize_u64(ReadonlySpan<u32> const& serialized, size_t& position)
-{
-    VERIFY(position + 2 <= serialized.size());
-    u32 const bits[2] {
-        serialized[position++],
-        serialized[position++],
-    };
-    return *bit_cast<u64*>(&bits);
-}
-
-i64 deserialize_i64(ReadonlySpan<u32> const& serialized, size_t& position)
-{
-    VERIFY(position + 2 <= serialized.size());
-    u32 const bits[2] {
-        serialized[position++],
-        serialized[position++],
-    };
-    return *bit_cast<i64*>(&bits);
-}
-
 WebIDL::ExceptionOr<ByteBuffer> deserialize_bytes(JS::VM& vm, ReadonlySpan<u32> vector, size_t& position)
 {
-    u64 const size = deserialize_u64(vector, position);
+    u64 const size = deserialize_primitive_type<u64>(vector, position);
 
     auto bytes = TRY_OR_THROW_OOM(vm, ByteBuffer::create_uninitialized(size));
     u64 byte_position = 0;

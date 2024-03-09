@@ -61,8 +61,18 @@ WebIDL::ExceptionOr<void> serialize_big_int_object(JS::VM& vm, SerializationReco
 WebIDL::ExceptionOr<void> serialize_string_object(JS::VM& vm, SerializationRecord& serialized, JS::Value& value);
 void serialize_date_object(SerializationRecord& serialized, JS::Value& value);
 WebIDL::ExceptionOr<void> serialize_reg_exp_object(JS::VM& vm, SerializationRecord& serialized, JS::Value& value);
-void serialize_u64(SerializationRecord& serialized, u64 value);
-void serialize_i64(SerializationRecord& serialized, i64 value);
+
+template<typename T>
+requires(IsIntegral<T> || IsFloatingPoint<T>)
+void serialize_primitive_type(SerializationRecord& serialized, T value)
+{
+    if constexpr (sizeof(T) < sizeof(u32)) {
+        // NOTE: If the value is smaller than a u32, we can just store it directly.
+        serialized.append(static_cast<u32>(value));
+        return;
+    }
+    serialized.append(bit_cast<u32*>(&value), sizeof(T) / 4);
+}
 
 WebIDL::ExceptionOr<void> serialize_bytes(JS::VM& vm, Vector<u32>& vector, ReadonlyBytes bytes);
 WebIDL::ExceptionOr<void> serialize_string(JS::VM& vm, Vector<u32>& vector, DeprecatedFlyString const& string);
@@ -80,8 +90,19 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::BigIntObject>> deserialize_big_int_obje
 WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::StringObject>> deserialize_string_object(JS::Realm& realm, ReadonlySpan<u32> const& serialized, size_t& position);
 JS::NonnullGCPtr<JS::Date> deserialize_date_object(JS::Realm& realm, ReadonlySpan<u32> const& serialized, size_t& position);
 WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::RegExpObject>> deserialize_reg_exp_object(JS::Realm& realm, ReadonlySpan<u32> const& serialized, size_t& position);
-u64 deserialize_u64(ReadonlySpan<u32> const& serialized, size_t& position);
-i64 deserialize_i64(ReadonlySpan<u32> const& serialized, size_t& position);
+
+template<typename T>
+requires(IsIntegral<T> || IsFloatingPoint<T>)
+T deserialize_primitive_type(ReadonlySpan<u32> const& serialized, size_t& position)
+{
+    T value;
+    // NOTE: Make sure we always round up, otherwise Ts that are less than 32 bit will end up with a size of 0.
+    auto size = 1 + ((sizeof(value) - 1) / 4);
+    VERIFY(position + size <= serialized.size());
+    memcpy(&value, serialized.offset_pointer(position), sizeof(value));
+    position += size;
+    return value;
+}
 
 WebIDL::ExceptionOr<ByteBuffer> deserialize_bytes(JS::VM& vm, ReadonlySpan<u32> vector, size_t& position);
 WebIDL::ExceptionOr<String> deserialize_string(JS::VM& vm, ReadonlySpan<u32> vector, size_t& position);
