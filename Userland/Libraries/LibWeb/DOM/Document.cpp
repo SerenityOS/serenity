@@ -92,6 +92,7 @@
 #include <LibWeb/HTML/TraversableNavigable.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/HTML/WindowProxy.h>
+#include <LibWeb/HighResolutionTime/Performance.h>
 #include <LibWeb/HighResolutionTime/TimeOrigin.h>
 #include <LibWeb/Infra/CharacterTypes.h>
 #include <LibWeb/Infra/Strings.h>
@@ -3847,10 +3848,8 @@ JS::NonnullGCPtr<Animations::DocumentTimeline> Document::timeline()
 {
     // The DocumentTimeline object representing the default document timeline. The default document timeline has an
     // origin time of zero.
-    if (!m_default_timeline) {
+    if (!m_default_timeline)
         m_default_timeline = Animations::DocumentTimeline::create(realm(), *this, 0.0);
-        m_default_timeline->set_current_time(MonotonicTime::now().milliseconds());
-    }
     return *m_default_timeline;
 }
 
@@ -4037,7 +4036,7 @@ void Document::ensure_animation_timer()
                 return;
             }
 
-            update_animations_and_send_events(MonotonicTime::now().milliseconds());
+            update_animations_and_send_events(window().performance()->now());
 
             for (auto& timeline : m_associated_animation_timelines) {
                 for (auto& animation : timeline->associated_animations())
