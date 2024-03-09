@@ -34,14 +34,6 @@ void HTMLTableCellElement::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLTableCellElementPrototype>(realm, "HTMLTableCellElement"_fly_string));
 }
 
-static const HTML::HTMLTableElement& table_containing_cell(const HTML::HTMLTableCellElement& node)
-{
-    auto parent_node = node.parent();
-    while (!is<HTML::HTMLTableElement>(parent_node))
-        parent_node = parent_node->parent();
-    return static_cast<const HTML::HTMLTableElement&>(*parent_node);
-}
-
 void HTMLTableCellElement::apply_presentational_hints(CSS::StyleProperties& style) const
 {
     for_each_attribute([&](auto& name, auto& value) {
@@ -84,23 +76,26 @@ void HTMLTableCellElement::apply_presentational_hints(CSS::StyleProperties& styl
             return;
         }
     });
-    auto const& table_element = table_containing_cell(*this);
 
-    if (auto padding = table_element.padding()) {
+    auto const table_element = first_ancestor_of_type<HTMLTableElement>();
+    if (!table_element)
+        return;
+
+    if (auto padding = table_element->padding()) {
         style.set_property(CSS::PropertyID::PaddingTop, CSS::LengthStyleValue::create(CSS::Length::make_px(padding)));
         style.set_property(CSS::PropertyID::PaddingBottom, CSS::LengthStyleValue::create(CSS::Length::make_px(padding)));
         style.set_property(CSS::PropertyID::PaddingLeft, CSS::LengthStyleValue::create(CSS::Length::make_px(padding)));
         style.set_property(CSS::PropertyID::PaddingRight, CSS::LengthStyleValue::create(CSS::Length::make_px(padding)));
     }
 
-    auto border = table_element.border();
+    auto border = table_element->border();
 
     if (!border)
         return;
     auto apply_border_style = [&](CSS::PropertyID style_property, CSS::PropertyID width_property, CSS::PropertyID color_property) {
         style.set_property(style_property, CSS::IdentifierStyleValue::create(CSS::ValueID::Inset));
         style.set_property(width_property, CSS::LengthStyleValue::create(CSS::Length::make_px(1)));
-        style.set_property(color_property, table_element.computed_css_values()->property(color_property));
+        style.set_property(color_property, table_element->computed_css_values()->property(color_property));
     };
     apply_border_style(CSS::PropertyID::BorderLeftStyle, CSS::PropertyID::BorderLeftWidth, CSS::PropertyID::BorderLeftColor);
     apply_border_style(CSS::PropertyID::BorderTopStyle, CSS::PropertyID::BorderTopWidth, CSS::PropertyID::BorderTopColor);
