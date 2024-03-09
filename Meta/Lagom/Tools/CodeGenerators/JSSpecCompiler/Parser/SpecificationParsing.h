@@ -150,6 +150,14 @@ private:
     Algorithm m_algorithm;
 };
 
+class ObjectProperties : public SpecificationClause {
+public:
+    ObjectProperties(SpecificationClause&& clause)
+        : SpecificationClause(move(clause))
+    {
+    }
+};
+
 class Specification {
 public:
     static NonnullOwnPtr<Specification> create(SpecificationParsingContext& ctx, XML::Node const* element);

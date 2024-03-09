@@ -731,6 +731,47 @@ TextParseErrorOr<AccessorDeclaration> TextParser::parse_accessor_declaration()
     return accessor;
 }
 
+// <properties_list_declaration> :== | Properties of the <qualified_name> Prototype Object $
+//                                   | Properties of the <qualified_name> Constructor $
+//                                   | Properties of <qualified_name> Instances $
+//                                   | The <qualified_name> Constructor $
+TextParseErrorOr<ClauseHeader::PropertiesList> TextParser::parse_properties_list_declaration()
+{
+    auto rollback = rollback_point();
+
+    ClauseHeader::PropertiesList properties_list;
+
+    if (!consume_word("The"sv).is_error()) {
+        properties_list.name = TRY(parse_qualified_name());
+        properties_list.object_type = ClauseHeader::ObjectType::Constructor;
+        TRY(consume_word("Constructor"sv));
+    } else {
+        TRY(consume_words({ "Properties"sv, "of"sv }));
+
+        bool has_the = !consume_word("the"sv).is_error();
+
+        properties_list.name = TRY(parse_qualified_name());
+
+        if (!has_the) {
+            TRY(consume_word("Instances"sv));
+            properties_list.object_type = ClauseHeader::ObjectType::Instance;
+        } else {
+            if (consume_word("Prototype"sv).is_error()) {
+                TRY(consume_word("Constructor"sv));
+                properties_list.object_type = ClauseHeader::ObjectType::Constructor;
+            } else {
+                TRY(consume_word("Object"sv));
+                properties_list.object_type = ClauseHeader::ObjectType::Prototype;
+            }
+        }
+    }
+
+    TRY(expect_eof());
+
+    rollback.disarm();
+    return properties_list;
+}
+
 TextParseErrorOr<MethodDeclaration> TextParser::parse_method_declaration()
 {
     auto rollback = rollback_point();
@@ -763,6 +804,9 @@ TextParseErrorOr<ClauseHeader> TextParser::parse_clause_header(ClauseHasAoidAttr
             return result;
         } else if (auto method = parse_method_declaration(); !method.is_error()) {
             result.header = method.release_value();
+            return result;
+        } else if (auto properties_list = parse_properties_list_declaration(); !properties_list.is_error()) {
+            result.header = properties_list.release_value();
             return result;
         }
     }

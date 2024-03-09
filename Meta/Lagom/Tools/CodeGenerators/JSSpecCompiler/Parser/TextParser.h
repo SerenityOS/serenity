@@ -13,8 +13,19 @@
 namespace JSSpecCompiler {
 
 struct ClauseHeader {
+    enum class ObjectType {
+        Constructor,
+        Prototype,
+        Instance,
+    };
+
+    struct PropertiesList {
+        QualifiedName name;
+        ObjectType object_type;
+    };
+
     StringView section_number;
-    Variant<AK::Empty, AbstractOperationDeclaration, AccessorDeclaration, MethodDeclaration> header;
+    Variant<AK::Empty, AbstractOperationDeclaration, AccessorDeclaration, MethodDeclaration, PropertiesList> header;
 };
 
 struct TextParseError { };
@@ -93,6 +104,7 @@ private:
     TextParseErrorOr<AbstractOperationDeclaration> parse_abstract_operation_declaration();
     TextParseErrorOr<MethodDeclaration> parse_method_declaration();
     TextParseErrorOr<AccessorDeclaration> parse_accessor_declaration();
+    TextParseErrorOr<ClauseHeader::PropertiesList> parse_properties_list_declaration();
 
     SpecificationParsingContext& m_ctx;
     Vector<Token> const& m_tokens;
