@@ -69,6 +69,13 @@ class SpecificationFunction;
 class SpecificationClause;
 class Specification;
 
+namespace Runtime {
+class Cell;
+class Object;
+class ObjectType;
+class Realm;
+}
+
 // DiagnosticEngine.h
 struct LogicalLocation;
 struct Location;

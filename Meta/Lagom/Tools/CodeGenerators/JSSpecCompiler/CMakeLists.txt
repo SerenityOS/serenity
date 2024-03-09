@@ -22,6 +22,9 @@ set(SOURCES
     Parser/SpecificationParsingStep.cpp
     Parser/TextParser.cpp
     Parser/XMLUtils.cpp
+    Runtime/Object.cpp
+    Runtime/ObjectType.cpp
+    Runtime/Realm.cpp
     DiagnosticEngine.cpp
     Function.cpp
     main.cpp
