@@ -325,6 +325,28 @@ TEST_CASE(test_jbig2_size)
     EXPECT_EQ(plugin_decoder->size(), Gfx::IntSize(399, 400));
 }
 
+TEST_CASE(test_jbig2_black_47x23)
+{
+    auto file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("jbig2/black_47x23.jbig2"sv)));
+    EXPECT(Gfx::JBIG2ImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = TRY_OR_FAIL(Gfx::JBIG2ImageDecoderPlugin::create(file->bytes()));
+
+    auto frame = TRY_OR_FAIL(expect_single_frame_of_size(*plugin_decoder, { 47, 23 }));
+    for (auto pixel : *frame.image)
+        EXPECT_EQ(pixel, Gfx::Color(Gfx::Color::Black).value());
+}
+
+TEST_CASE(test_jbig2_white_47x23)
+{
+    auto file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("jbig2/white_47x23.jbig2"sv)));
+    EXPECT(Gfx::JBIG2ImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = TRY_OR_FAIL(Gfx::JBIG2ImageDecoderPlugin::create(file->bytes()));
+
+    auto frame = TRY_OR_FAIL(expect_single_frame_of_size(*plugin_decoder, { 47, 23 }));
+    for (auto pixel : *frame.image)
+        EXPECT_EQ(pixel, Gfx::Color(Gfx::Color::White).value());
+}
+
 TEST_CASE(test_jpeg_sof0_one_scan)
 {
     auto file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("jpg/rgb24.jpg"sv)));
