@@ -20,6 +20,7 @@
 #include <Kernel/Tasks/PerformanceManager.h>
 #include <Kernel/Tasks/Process.h>
 #include <Kernel/Tasks/Scheduler.h>
+#include <Kernel/Tasks/ScopedProcessList.h>
 #include <Kernel/Time/TimeManagement.h>
 #include <LibELF/AuxiliaryVector.h>
 #include <LibELF/Image.h>
@@ -475,12 +476,8 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
     VERIFY(!Processor::in_critical());
     auto main_program_metadata = main_program_description->metadata();
     // NOTE: Don't allow running SUID binaries at all if we are in a jail.
-    TRY(Process::current().jail().with([&](auto const& my_jail) -> ErrorOr<void> {
-        if (my_jail && (main_program_metadata.is_setuid() || main_program_metadata.is_setgid())) {
-            return Error::from_errno(EPERM);
-        }
-        return {};
-    }));
+    if (Process::current().is_jailed() && (main_program_metadata.is_setuid() || main_program_metadata.is_setgid()))
+        return Error::from_errno(EPERM);
 
     // Although we *could* handle a pseudo_path here, trying to execute something that doesn't have
     // a custody (e.g. BlockDevice or RandomDevice) is pretty suspicious anyway.
@@ -534,8 +531,7 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
 
     auto old_credentials = this->credentials();
     auto new_credentials = old_credentials;
-    auto old_process_attached_jail = m_attached_jail.with([&](auto& jail) -> RefPtr<Jail> { return jail; });
-    auto old_scoped_list = m_jail_process_list.with([&](auto& list) -> RefPtr<ProcessList> { return list; });
+    auto old_scoped_list = m_scoped_process_list.with([&](auto& list) -> RefPtr<ScopedProcessList> { return list; });
 
     bool executable_is_setid = false;
 
@@ -590,11 +586,7 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
 
     m_executable.with([&](auto& executable) { executable = main_program_description->custody(); });
     m_arguments = move(arguments);
-    m_attached_jail.with([&](auto& jail) {
-        jail = old_process_attached_jail;
-    });
-
-    m_jail_process_list.with([&](auto& list) {
+    m_scoped_process_list.with([&](auto& list) {
         list = old_scoped_list;
     });
 
@@ -822,7 +814,7 @@ ErrorOr<RefPtr<OpenFileDescription>> Process::find_elf_interpreter_for_executabl
 
     if (!interpreter_path.is_empty()) {
         dbgln_if(EXEC_DEBUG, "exec({}): Using program interpreter {}", path, interpreter_path);
-        auto interpreter_description = TRY(VirtualFileSystem::the().open(credentials(), interpreter_path, O_EXEC, 0, current_directory()));
+        auto interpreter_description = TRY(VirtualFileSystem::the().open(vfs_root_context(), credentials(), interpreter_path, O_EXEC, 0, current_directory()));
         auto interp_metadata = interpreter_description->metadata();
 
         VERIFY(interpreter_description->inode());
@@ -892,7 +884,7 @@ ErrorOr<void> Process::exec(NonnullOwnPtr<KString> path, Vector<NonnullOwnPtr<KS
     //        * ET_EXEC binary that just gets loaded
     //        * ET_DYN binary that requires a program interpreter
     //
-    auto description = TRY(VirtualFileSystem::the().open(credentials(), path->view(), O_EXEC, 0, current_directory()));
+    auto description = TRY(VirtualFileSystem::the().open(vfs_root_context(), credentials(), path->view(), O_EXEC, 0, current_directory()));
     auto metadata = description->metadata();
 
     if (!metadata.is_regular_file())

@@ -26,7 +26,7 @@ ErrorOr<size_t> SysFSSystemStringVariable::write_bytes(off_t, size_t count, User
     TRY(buffer.read(value, count));
     auto new_value_without_possible_newlines = TRY(KString::try_create(new_value->view().trim("\n"sv)));
     // NOTE: If we are in a jail, don't let the current process to change the variable.
-    if (Process::current().is_currently_in_jail())
+    if (Process::current().is_jailed())
         return Error::from_errno(EPERM);
     set_value(move(new_value_without_possible_newlines));
     return count;

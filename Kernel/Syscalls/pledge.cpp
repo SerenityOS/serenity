@@ -6,11 +6,53 @@
 
 #include <AK/FixedStringBuffer.h>
 #include <AK/StringView.h>
+#include <Kernel/Library/Fuse.h>
 #include <Kernel/Tasks/Process.h>
 
 namespace Kernel {
 
-ErrorOr<FlatPtr> Process::sys$pledge(Userspace<Syscall::SC_pledge_params const*> user_params)
+static ErrorOr<u32> parse_pledge_string_to_mask(StringView pledge_spec)
+{
+    u32 mask = 0;
+    Fuse found_invalid_pledge;
+    pledge_spec.for_each_split_view(' ', SplitBehavior::Nothing, [&mask, &found_invalid_pledge](auto const& part) {
+#define __ENUMERATE_PLEDGE_PROMISE(x)   \
+    if (part == #x##sv) {               \
+        mask |= (1u << (u32)Pledge::x); \
+        return;                         \
+    }
+        ENUMERATE_PLEDGE_PROMISES
+#undef __ENUMERATE_PLEDGE_PROMISE
+        found_invalid_pledge.set();
+    });
+    if (found_invalid_pledge.was_set())
+        return Error::from_errno(EINVAL);
+    return mask;
+}
+
+ErrorOr<FlatPtr> Process::sys$pledge_remove_capabilities(Userspace<Syscall::SC_pledge_remove_capabilities_params const*> user_params)
+{
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
+    auto params = TRY(copy_typed_from_user(user_params));
+    auto removed_capabilities = TRY(get_syscall_string_fixed_buffer<all_promises_strings_length_with_spaces>(params.removed_capabilities));
+
+    u32 pledge_mask = TRY(parse_pledge_string_to_mask(removed_capabilities.representable_view()));
+    if (pledge_mask == 0)
+        return Error::from_errno(EINVAL);
+
+    TRY(with_mutable_protected_data([&](auto& protected_data) -> ErrorOr<void> {
+        // NOTE: If we don't have promises being set, then subtracting capabilities
+        // is meaningless, so return EPERM for now.
+        if (!protected_data.has_promises)
+            return Error::from_errno(EPERM);
+        auto current_promises = protected_data.promises;
+        protected_data.promises = (current_promises & ~pledge_mask);
+        return {};
+    }));
+    return 0;
+}
+
+ErrorOr<FlatPtr> Process::sys$pledge_set_capabilities(Userspace<Syscall::SC_pledge_set_capabilities_params const*> user_params)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     auto params = TRY(copy_typed_from_user(user_params));
@@ -30,32 +72,13 @@ ErrorOr<FlatPtr> Process::sys$pledge(Userspace<Syscall::SC_pledge_params const*>
         execpromises = TRY(get_syscall_string_fixed_buffer<all_promises_strings_length_with_spaces>(params.execpromises));
     }
 
-    auto parse_pledge = [&](auto pledge_spec, u32& mask) {
-        auto found_invalid_pledge = true;
-        pledge_spec.for_each_split_view(' ', SplitBehavior::Nothing, [&mask, &found_invalid_pledge](auto const& part) {
-#define __ENUMERATE_PLEDGE_PROMISE(x)   \
-    if (part == #x##sv) {               \
-        mask |= (1u << (u32)Pledge::x); \
-        return;                         \
-    }
-            ENUMERATE_PLEDGE_PROMISES
-#undef __ENUMERATE_PLEDGE_PROMISE
-            found_invalid_pledge = false;
-        });
-        return found_invalid_pledge;
-    };
-
     u32 new_promises = 0;
-    if (promises_provided) {
-        if (!parse_pledge(promises.representable_view(), new_promises))
-            return EINVAL;
-    }
+    if (promises_provided)
+        new_promises = TRY(parse_pledge_string_to_mask(promises.representable_view()));
 
     u32 new_execpromises = 0;
-    if (execpromises_provided) {
-        if (!parse_pledge(execpromises.representable_view(), new_execpromises))
-            return EINVAL;
-    }
+    if (execpromises_provided)
+        new_execpromises = TRY(parse_pledge_string_to_mask(execpromises.representable_view()));
 
     return with_mutable_protected_data([&](auto& protected_data) -> ErrorOr<FlatPtr> {
         if (promises_provided) {

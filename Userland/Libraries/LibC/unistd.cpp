@@ -949,7 +949,7 @@ int fsopen(char const* fs_type, int flags)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int fsmount(int mount_fd, int source_fd, char const* target)
+int fsmount(int vfs_context_id, int mount_fd, int source_fd, char const* target)
 {
     if (!target) {
         errno = EFAULT;
@@ -957,6 +957,7 @@ int fsmount(int mount_fd, int source_fd, char const* target)
     }
 
     Syscall::SC_fsmount_params params {
+        vfs_context_id,
         mount_fd,
         { target, strlen(target) },
         source_fd,
@@ -965,7 +966,7 @@ int fsmount(int mount_fd, int source_fd, char const* target)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int bindmount(int source_fd, char const* target, int flags)
+int bindmount(int vfs_context_id, int source_fd, char const* target, int flags)
 {
     if (!target) {
         errno = EFAULT;
@@ -973,6 +974,7 @@ int bindmount(int source_fd, char const* target, int flags)
     }
 
     Syscall::SC_bindmount_params params {
+        vfs_context_id,
         { target, strlen(target) },
         source_fd,
         flags,
@@ -981,21 +983,25 @@ int bindmount(int source_fd, char const* target, int flags)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int mount(int source_fd, char const* target, char const* fs_type, int flags)
+int mount(int vfs_context_id, int source_fd, char const* target, char const* fs_type, int flags)
 {
     if (flags & MS_BIND)
-        return bindmount(source_fd, target, flags);
+        return bindmount(vfs_context_id, source_fd, target, flags);
 
     int mount_fd = fsopen(fs_type, flags);
     if (mount_fd < 0)
         return -1;
 
-    return fsmount(mount_fd, source_fd, target);
+    return fsmount(vfs_context_id, mount_fd, source_fd, target);
 }
 
-int umount(char const* mountpoint)
+int umount(int vfs_context_id, char const* mountpoint)
 {
-    int rc = syscall(SC_umount, mountpoint, strlen(mountpoint));
+    Syscall::SC_umount_params params {
+        vfs_context_id,
+        { mountpoint, strlen(mountpoint) },
+    };
+    int rc = syscall(SC_umount, &params);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
@@ -1018,11 +1024,11 @@ int set_process_name(char const* name, size_t name_length)
 
 int pledge(char const* promises, char const* execpromises)
 {
-    Syscall::SC_pledge_params params {
+    Syscall::SC_pledge_set_capabilities_params params {
         { promises, promises ? strlen(promises) : 0 },
         { execpromises, execpromises ? strlen(execpromises) : 0 }
     };
-    int rc = syscall(SC_pledge, &params);
+    int rc = syscall(SC_pledge_set_capabilities, &params);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 

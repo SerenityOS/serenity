@@ -178,3 +178,4 @@ foreach(name IN LISTS FUZZER_TARGETS)
 endforeach()
 
 add_subdirectory(pkg)
+add_subdirectory(runc)

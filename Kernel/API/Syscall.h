@@ -63,6 +63,7 @@ enum class NeedsBigProcessLock {
     S(clock_settime, NeedsBigProcessLock::No)              \
     S(close, NeedsBigProcessLock::No)                      \
     S(connect, NeedsBigProcessLock::No)                    \
+    S(copy_mount, NeedsBigProcessLock::No)                 \
     S(create_inode_watcher, NeedsBigProcessLock::No)       \
     S(create_thread, NeedsBigProcessLock::No)              \
     S(dbgputstr, NeedsBigProcessLock::No)                  \
@@ -116,8 +117,6 @@ enum class NeedsBigProcessLock {
     S(inode_watcher_remove_watch, NeedsBigProcessLock::No) \
     S(ioctl, NeedsBigProcessLock::No)                      \
     S(join_thread, NeedsBigProcessLock::No)                \
-    S(jail_create, NeedsBigProcessLock::No)                \
-    S(jail_attach, NeedsBigProcessLock::No)                \
     S(kill, NeedsBigProcessLock::No)                       \
     S(kill_thread, NeedsBigProcessLock::No)                \
     S(killpg, NeedsBigProcessLock::No)                     \
@@ -137,7 +136,8 @@ enum class NeedsBigProcessLock {
     S(perf_event, NeedsBigProcessLock::Yes)                \
     S(perf_register_string, NeedsBigProcessLock::Yes)      \
     S(pipe, NeedsBigProcessLock::No)                       \
-    S(pledge, NeedsBigProcessLock::No)                     \
+    S(pledge_set_capabilities, NeedsBigProcessLock::No)    \
+    S(pledge_remove_capabilities, NeedsBigProcessLock::No) \
     S(poll, NeedsBigProcessLock::No)                       \
     S(posix_fallocate, NeedsBigProcessLock::No)            \
     S(prctl, NeedsBigProcessLock::No)                      \
@@ -195,6 +195,8 @@ enum class NeedsBigProcessLock {
     S(umount, NeedsBigProcessLock::No)                     \
     S(uname, NeedsBigProcessLock::No)                      \
     S(unlink, NeedsBigProcessLock::No)                     \
+    S(unshare_attach, NeedsBigProcessLock::No)             \
+    S(unshare_create, NeedsBigProcessLock::No)             \
     S(unveil, NeedsBigProcessLock::No)                     \
     S(utime, NeedsBigProcessLock::No)                      \
     S(utimensat, NeedsBigProcessLock::No)                  \
@@ -341,14 +343,14 @@ struct SC_setkeymap_params {
     StringArgument map_name;
 };
 
-struct SC_jail_create_params {
-    u64 index;
-    StringArgument name;
+struct SC_unshare_create_params {
+    int type;
     int flags;
 };
 
-struct SC_jail_attach_params {
-    u64 index;
+struct SC_unshare_attach_params {
+    int type;
+    int id;
 };
 
 struct SC_getkeymap_params {
@@ -437,25 +439,45 @@ struct SC_fsopen_params {
 };
 
 struct SC_fsmount_params {
+    int vfs_root_context_id;
     int mount_fd;
     StringArgument target;
     int source_fd;
 };
 
 struct SC_bindmount_params {
+    int vfs_root_context_id;
     StringArgument target;
     int source_fd;
     int flags;
 };
 
 struct SC_remount_params {
+    int vfs_root_context_id;
     StringArgument target;
     int flags;
 };
 
-struct SC_pledge_params {
+struct SC_umount_params {
+    int vfs_root_context_id;
+    StringArgument target;
+};
+
+struct SC_copy_mount_params {
+    int original_vfs_root_context_id;
+    int target_vfs_root_context_id;
+    StringArgument original_path;
+    StringArgument target_path;
+    int flags;
+};
+
+struct SC_pledge_set_capabilities_params {
     StringArgument promises;
     StringArgument execpromises;
+};
+
+struct SC_pledge_remove_capabilities_params {
+    StringArgument removed_capabilities;
 };
 
 struct SC_unveil_params {

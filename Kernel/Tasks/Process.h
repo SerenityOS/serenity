@@ -21,6 +21,8 @@
 #include <Kernel/FileSystem/InodeMetadata.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/FileSystem/UnveilNode.h>
+#include <Kernel/FileSystem/VFSRootContext.h>
+#include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Library/Assertions.h>
 #include <Kernel/Library/LockWeakPtr.h>
@@ -30,9 +32,9 @@
 #include <Kernel/Locking/MutexProtected.h>
 #include <Kernel/Memory/AddressSpace.h>
 #include <Kernel/Security/Credentials.h>
-#include <Kernel/Security/Jail.h>
 #include <Kernel/Tasks/AtomicEdgeAction.h>
 #include <Kernel/Tasks/FutexQueue.h>
+#include <Kernel/Tasks/HostnameContext.h>
 #include <Kernel/Tasks/PerformanceEventBuffer.h>
 #include <Kernel/Tasks/ProcessGroup.h>
 #include <Kernel/Tasks/Thread.h>
@@ -41,7 +43,6 @@
 
 namespace Kernel {
 
-MutexProtected<FixedStringBuffer<UTSNAME_ENTRY_LEN - 1>>& hostname();
 UnixDateTime kgettimeofday();
 
 #define ENUMERATE_PLEDGE_PROMISES         \
@@ -70,8 +71,8 @@ UnixDateTime kgettimeofday();
     __ENUMERATE_PLEDGE_PROMISE(prot_exec) \
     __ENUMERATE_PLEDGE_PROMISE(map_fixed) \
     __ENUMERATE_PLEDGE_PROMISE(getkeymap) \
-    __ENUMERATE_PLEDGE_PROMISE(jail)      \
     __ENUMERATE_PLEDGE_PROMISE(mount)     \
+    __ENUMERATE_PLEDGE_PROMISE(unshare)   \
     __ENUMERATE_PLEDGE_PROMISE(no_error)
 
 #define __ENUMERATE_PLEDGE_PROMISE(x) sizeof(#x) + 1 +
@@ -115,8 +116,6 @@ static_assert(sizeof(GlobalFutexKey) == (sizeof(FlatPtr) * 2));
 
 struct LoadResult;
 
-class ProcessList;
-
 class Process final
     : public ListedRefCounted<Process, LockType::Spinlock>
     , public LockWeakable<Process> {
@@ -140,6 +139,7 @@ class Process final
         Atomic<u32> thread_count { 0 };
         u8 termination_status { 0 };
         u8 termination_signal { 0 };
+        Fuse jailed;
     };
 
 public:
@@ -150,6 +150,7 @@ public:
 
     friend class Thread;
     friend class Coredump;
+    friend class ScopedProcessList;
 
     auto with_protected_data(auto&& callback) const
     {
@@ -210,7 +211,7 @@ public:
     }
 
     static ErrorOr<ProcessAndFirstThread> create_kernel_process(StringView name, void (*entry)(void*), void* entry_data = nullptr, u32 affinity = THREAD_AFFINITY_DEFAULT, RegisterProcess do_register = RegisterProcess::Yes);
-    static ErrorOr<ProcessAndFirstThread> create_user_process(StringView path, UserID, GroupID, Vector<NonnullOwnPtr<KString>> arguments, Vector<NonnullOwnPtr<KString>> environment, RefPtr<TTY>);
+    static ErrorOr<ProcessAndFirstThread> create_user_process(StringView path, UserID, GroupID, Vector<NonnullOwnPtr<KString>> arguments, Vector<NonnullOwnPtr<KString>> environment, NonnullRefPtr<VFSRootContext>, NonnullRefPtr<HostnameContext>, RefPtr<TTY>);
     static void register_new(Process&);
 
     ~Process();
@@ -234,8 +235,8 @@ public:
     bool is_kernel_process() const { return m_is_kernel_process; }
     bool is_user_process() const { return !m_is_kernel_process; }
 
-    static RefPtr<Process> from_pid_in_same_jail(ProcessID);
-    static RefPtr<Process> from_pid_ignoring_jails(ProcessID);
+    static RefPtr<Process> from_pid_in_same_process_list(ProcessID);
+    static RefPtr<Process> from_pid_ignoring_process_lists(ProcessID);
     static SessionID get_sid_from_pgid(ProcessGroupID pgid);
 
     using Name = FixedStringBuffer<32>;
@@ -258,11 +259,32 @@ public:
         return with_protected_data([](auto& protected_data) { return protected_data.ppid; });
     }
 
-    SpinlockProtected<RefPtr<Jail>, LockRank::Process> const& jail() { return m_attached_jail; }
-
-    bool is_currently_in_jail() const
+    NonnullRefPtr<VFSRootContext> vfs_root_context() const
     {
-        return m_attached_jail.with([&](auto& jail) -> bool { return !jail.is_null(); });
+        return m_attached_vfs_root_context.with([](auto& context) -> NonnullRefPtr<VFSRootContext> {
+            return *context;
+        });
+    }
+
+    NonnullRefPtr<HostnameContext> hostname_context() const
+    {
+        return m_attached_hostname_context.with([](auto& context) -> NonnullRefPtr<HostnameContext> {
+            return *context;
+        });
+    }
+
+    NonnullRefPtr<Custody> vfs_root_context_custody() const
+    {
+        return m_attached_vfs_root_context.with([](auto& context) -> NonnullRefPtr<Custody> {
+            return context->custody().with([](auto& custody) -> NonnullRefPtr<Custody> {
+                return *custody;
+            });
+        });
+    }
+
+    bool is_jailed() const
+    {
+        return with_protected_data([](auto& protected_data) { return protected_data.jailed.was_set(); });
     }
 
     NonnullRefPtr<Credentials> credentials() const;
@@ -279,11 +301,11 @@ public:
 
     // Breakable iteration functions
     template<IteratorFunction<Process&> Callback>
-    static void for_each_ignoring_jails(Callback);
+    static void for_each_ignoring_process_lists(Callback);
 
-    static ErrorOr<void> for_each_in_same_jail(Function<ErrorOr<void>(Process&)>);
-    ErrorOr<void> for_each_in_pgrp_in_same_jail(ProcessGroupID, Function<ErrorOr<void>(Process&)>);
-    ErrorOr<void> for_each_child_in_same_jail(Function<ErrorOr<void>(Process&)>);
+    static ErrorOr<void> for_each_in_same_process_list(Function<ErrorOr<void>(Process&)>);
+    ErrorOr<void> for_each_in_pgrp_in_same_process_list(ProcessGroupID, Function<ErrorOr<void>(Process&)>);
+    ErrorOr<void> for_each_child_in_same_process_list(Function<ErrorOr<void>(Process&)>);
 
     template<IteratorFunction<Thread&> Callback>
     IterationDecision for_each_thread(Callback);
@@ -293,7 +315,7 @@ public:
 
     // Non-breakable iteration functions
     template<VoidFunction<Process&> Callback>
-    static void for_each_ignoring_jails(Callback);
+    static void for_each_ignoring_process_lists(Callback);
 
     template<VoidFunction<Thread&> Callback>
     IterationDecision for_each_thread(Callback);
@@ -409,7 +431,7 @@ public:
     ErrorOr<FlatPtr> sys$rmdir(Userspace<char const*> pathname, size_t path_length);
     ErrorOr<FlatPtr> sys$fsmount(Userspace<Syscall::SC_fsmount_params const*>);
     ErrorOr<FlatPtr> sys$fsopen(Userspace<Syscall::SC_fsopen_params const*>);
-    ErrorOr<FlatPtr> sys$umount(Userspace<char const*> mountpoint, size_t mountpoint_length);
+    ErrorOr<FlatPtr> sys$umount(Userspace<Syscall::SC_umount_params const*>);
     ErrorOr<FlatPtr> sys$chmod(Userspace<Syscall::SC_chmod_params const*>);
     ErrorOr<FlatPtr> sys$fchmod(int fd, mode_t);
     ErrorOr<FlatPtr> sys$chown(Userspace<Syscall::SC_chown_params const*>);
@@ -437,6 +459,7 @@ public:
     ErrorOr<FlatPtr> sys$kill_thread(pid_t tid, int signal);
     ErrorOr<FlatPtr> sys$rename(Userspace<Syscall::SC_rename_params const*>);
     ErrorOr<FlatPtr> sys$mknod(Userspace<Syscall::SC_mknod_params const*>);
+    ErrorOr<FlatPtr> sys$copy_mount(Userspace<Syscall::SC_copy_mount_params const*> user_params);
     ErrorOr<FlatPtr> sys$realpath(Userspace<Syscall::SC_realpath_params const*>);
     ErrorOr<FlatPtr> sys$getrandom(Userspace<void*>, size_t, unsigned int);
     ErrorOr<FlatPtr> sys$getkeymap(Userspace<Syscall::SC_getkeymap_params const*>);
@@ -446,7 +469,8 @@ public:
     ErrorOr<FlatPtr> sys$profiling_disable(pid_t);
     ErrorOr<FlatPtr> sys$profiling_free_buffer(pid_t);
     ErrorOr<FlatPtr> sys$futex(Userspace<Syscall::SC_futex_params const*>);
-    ErrorOr<FlatPtr> sys$pledge(Userspace<Syscall::SC_pledge_params const*>);
+    ErrorOr<FlatPtr> sys$pledge_set_capabilities(Userspace<Syscall::SC_pledge_set_capabilities_params const*>);
+    ErrorOr<FlatPtr> sys$pledge_remove_capabilities(Userspace<Syscall::SC_pledge_remove_capabilities_params const*>);
     ErrorOr<FlatPtr> sys$unveil(Userspace<Syscall::SC_unveil_params const*>);
     ErrorOr<FlatPtr> sys$perf_event(int type, FlatPtr arg1, FlatPtr arg2);
     ErrorOr<FlatPtr> sys$perf_register_string(Userspace<char const*>, size_t);
@@ -462,11 +486,11 @@ public:
     ErrorOr<FlatPtr> sys$statvfs(Userspace<Syscall::SC_statvfs_params const*> user_params);
     ErrorOr<FlatPtr> sys$fstatvfs(int fd, statvfs* buf);
     ErrorOr<FlatPtr> sys$map_time_page();
-    ErrorOr<FlatPtr> sys$jail_create(Userspace<Syscall::SC_jail_create_params*> user_params);
-    ErrorOr<FlatPtr> sys$jail_attach(Userspace<Syscall::SC_jail_attach_params const*> user_params);
     ErrorOr<FlatPtr> sys$get_root_session_id(pid_t force_sid);
     ErrorOr<FlatPtr> sys$remount(Userspace<Syscall::SC_remount_params const*> user_params);
     ErrorOr<FlatPtr> sys$bindmount(Userspace<Syscall::SC_bindmount_params const*> user_params);
+    ErrorOr<FlatPtr> sys$unshare_create(Userspace<Syscall::SC_unshare_create_params const*> user_params);
+    ErrorOr<FlatPtr> sys$unshare_attach(Userspace<Syscall::SC_unshare_attach_params const*> user_params);
 
     enum SockOrPeerName {
         SockName,
@@ -651,9 +675,9 @@ private:
     bool add_thread(Thread&);
     bool remove_thread(Thread&);
 
-    Process(StringView name, NonnullRefPtr<Credentials>, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> current_directory, RefPtr<Custody> executable, RefPtr<TTY> tty, UnveilNode unveil_tree, UnveilNode exec_unveil_tree, UnixDateTime creation_time);
-    static ErrorOr<ProcessAndFirstThread> create_with_forked_name(UserID, GroupID, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> current_directory = nullptr, RefPtr<Custody> executable = nullptr, RefPtr<TTY> = nullptr, Process* fork_parent = nullptr);
-    static ErrorOr<ProcessAndFirstThread> create(StringView name, UserID, GroupID, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> current_directory = nullptr, RefPtr<Custody> executable = nullptr, RefPtr<TTY> = nullptr, Process* fork_parent = nullptr);
+    Process(StringView name, NonnullRefPtr<Credentials>, ProcessID ppid, bool is_kernel_process, NonnullRefPtr<VFSRootContext>, NonnullRefPtr<HostnameContext>, RefPtr<Custody> current_directory, RefPtr<Custody> executable, RefPtr<TTY> tty, UnveilNode unveil_tree, UnveilNode exec_unveil_tree, UnixDateTime creation_time);
+    static ErrorOr<ProcessAndFirstThread> create_with_forked_name(UserID, GroupID, ProcessID ppid, bool is_kernel_process, NonnullRefPtr<VFSRootContext> vfs_root_context, NonnullRefPtr<HostnameContext>, RefPtr<Custody> current_directory = nullptr, RefPtr<Custody> executable = nullptr, RefPtr<TTY> = nullptr, Process* fork_parent = nullptr);
+    static ErrorOr<ProcessAndFirstThread> create(StringView name, UserID, GroupID, ProcessID ppid, bool is_kernel_process, NonnullRefPtr<VFSRootContext> vfs_root_context, NonnullRefPtr<HostnameContext>, RefPtr<Custody> current_directory = nullptr, RefPtr<Custody> executable = nullptr, RefPtr<TTY> = nullptr, Process* fork_parent = nullptr);
     ErrorOr<NonnullRefPtr<Thread>> attach_resources(NonnullOwnPtr<Memory::AddressSpace>&&, Process* fork_parent);
     static ProcessID allocate_pid();
 
@@ -897,7 +921,18 @@ public:
     }
 
 private:
+    ErrorOr<NonnullRefPtr<ScopedProcessList>> scoped_process_list_for_id(int id);
+
     ErrorOr<NonnullRefPtr<Custody>> custody_for_dirfd(int dirfd);
+
+    ErrorOr<NonnullRefPtr<VFSRootContext>> vfs_root_context_for_id(int id);
+    ErrorOr<NonnullRefPtr<VFSRootContext>> acquire_vfs_root_context_for_id_and_validate_path(bool& different_vfs_root_context, int id, StringView path);
+
+    struct MountTargetContext {
+        NonnullRefPtr<Custody> custody;
+        NonnullRefPtr<VFSRootContext> vfs_root_context;
+    };
+    ErrorOr<MountTargetContext> context_for_mount_operation(int vfs_root_context_id, StringView path);
 
     SpinlockProtected<Thread::ListInProcess, LockRank::None>& thread_list() { return m_thread_list; }
     SpinlockProtected<Thread::ListInProcess, LockRank::None> const& thread_list() const { return m_thread_list; }
@@ -924,16 +959,18 @@ private:
     Vector<NonnullOwnPtr<KString>> m_arguments;
     Vector<NonnullOwnPtr<KString>> m_environment;
 
-    IntrusiveListNode<Process> m_jail_process_list_node;
+    IntrusiveListNode<Process> m_scoped_process_list_node;
     IntrusiveListNode<Process> m_all_processes_list_node;
 
 public:
     using AllProcessesList = IntrusiveListRelaxedConst<&Process::m_all_processes_list_node>;
-    using JailProcessList = IntrusiveListRelaxedConst<&Process::m_jail_process_list_node>;
 
 private:
-    SpinlockProtected<RefPtr<ProcessList>, LockRank::None> m_jail_process_list;
-    SpinlockProtected<RefPtr<Jail>, LockRank::Process> m_attached_jail {};
+    SpinlockProtected<RefPtr<ScopedProcessList>, LockRank::None> m_scoped_process_list;
+
+    SpinlockProtected<RefPtr<VFSRootContext>, LockRank::Process> m_attached_vfs_root_context;
+
+    SpinlockProtected<RefPtr<HostnameContext>, LockRank::Process> m_attached_hostname_context;
 
     struct MasterThreadLocalStorage {
         LockWeakPtr<Memory::Region> region;
@@ -982,17 +1019,6 @@ public:
     static SpinlockProtected<Process::AllProcessesList, LockRank::None>& all_instances();
 };
 
-class ProcessList : public RefCounted<ProcessList> {
-public:
-    static ErrorOr<NonnullRefPtr<ProcessList>> create();
-    SpinlockProtected<Process::JailProcessList, LockRank::None>& attached_processes() { return m_attached_processes; }
-    SpinlockProtected<Process::JailProcessList, LockRank::None> const& attached_processes() const { return m_attached_processes; }
-
-private:
-    ProcessList() = default;
-    SpinlockProtected<Process::JailProcessList, LockRank::None> m_attached_processes;
-};
-
 // Note: Process object should be 2 pages of 4096 bytes each.
 // It's not expected that the Process object will expand further because the first
 // page is used for all unprotected values (which should be plenty of space for them).
@@ -1015,7 +1041,7 @@ inline IterationDecision Process::for_each_thread(Callback callback)
 }
 
 template<IteratorFunction<Process&> Callback>
-inline void Process::for_each_ignoring_jails(Callback callback)
+inline void Process::for_each_ignoring_process_lists(Callback callback)
 {
     Process::all_instances().with([&](auto const& list) {
         for (auto it = list.begin(); it != list.end();) {

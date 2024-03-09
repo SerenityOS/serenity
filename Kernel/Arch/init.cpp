@@ -52,6 +52,7 @@
 #include <Kernel/Sections.h>
 #include <Kernel/Security/Random.h>
 #include <Kernel/Tasks/FinalizerTask.h>
+#include <Kernel/Tasks/HostnameContext.h>
 #include <Kernel/Tasks/Process.h>
 #include <Kernel/Tasks/Scheduler.h>
 #include <Kernel/Tasks/SyncTask.h>
@@ -308,6 +309,10 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init([[maybe_unused]] BootInfo con
 
     __stack_chk_guard = get_fast_random<uintptr_t>();
 
+    // NOTE: Initialize the empty VFS root context just before we need to create
+    // kernel processes.
+    VFSRootContext::initialize_empty_ramfs_root_context_for_kernel_processes();
+
     Process::initialize();
 
     Scheduler::initialize();
@@ -448,9 +453,13 @@ void init_stage2(void*)
         dbgln_if(STORAGE_DEVICE_DEBUG, "Boot device {} not found, sleeping 2 seconds", kernel_command_line().root_device());
         (void)Thread::current()->sleep(Duration::from_seconds(2));
     }
-    if (VirtualFileSystem::the().mount_root(StorageManagement::the().root_filesystem()).is_error()) {
-        PANIC("VirtualFileSystem::mount_root failed");
+
+    auto first_process_vfs_context_or_error = StorageManagement::the().create_first_vfs_root_context();
+    if (first_process_vfs_context_or_error.is_error()) {
+        PANIC("StorageManagement::create_first_vfs_root_context failed");
     }
+
+    auto first_process_vfs_context = first_process_vfs_context_or_error.release_value();
 
     // Switch out of early boot mode.
     g_in_early_boot = false;
@@ -461,6 +470,11 @@ void init_stage2(void*)
     // NOTE: Everything in the .ksyms section becomes read-only after this point.
     MM.protect_ksyms_after_init();
 
+    auto hostname_context_or_error = HostnameContext::create_initial();
+    if (hostname_context_or_error.is_error())
+        PANIC("init_stage2: Error creating initial hostname context: {}", hostname_context_or_error.error());
+    auto hostname_context = hostname_context_or_error.release_value();
+
     // NOTE: Everything marked UNMAP_AFTER_INIT becomes inaccessible after this point.
     MM.unmap_text_after_init();
 
@@ -469,7 +483,8 @@ void init_stage2(void*)
 
     dmesgln("Running first user process: {}", userspace_init);
     dmesgln("Init (first) process args: {}", init_args);
-    auto init_or_error = Process::create_user_process(userspace_init, UserID(0), GroupID(0), move(init_args), {}, tty0);
+
+    auto init_or_error = Process::create_user_process(userspace_init, UserID(0), GroupID(0), move(init_args), {}, move(first_process_vfs_context), move(hostname_context), tty0);
     if (init_or_error.is_error())
         PANIC("init_stage2: Error spawning init process: {}", init_or_error.error());
 
