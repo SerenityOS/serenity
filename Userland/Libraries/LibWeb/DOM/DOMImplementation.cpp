@@ -12,6 +12,7 @@
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/DOM/XMLDocument.h>
+#include <LibWeb/HTML/HTMLDocument.h>
 #include <LibWeb/HTML/Origin.h>
 #include <LibWeb/Namespace.h>
 
@@ -91,10 +92,11 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> DOMImplementation::create_docume
 JS::NonnullGCPtr<Document> DOMImplementation::create_html_document(Optional<String> const& title) const
 {
     // 1. Let doc be a new document that is an HTML document.
-    auto html_document = Document::create(realm());
+    auto html_document = HTML::HTMLDocument::create(realm());
 
     // 2. Set doc’s content type to "text/html".
     html_document->set_content_type("text/html"_string);
+    html_document->set_document_type(DOM::Document::Type::HTML);
 
     html_document->set_ready_for_post_load_tasks(true);
 
