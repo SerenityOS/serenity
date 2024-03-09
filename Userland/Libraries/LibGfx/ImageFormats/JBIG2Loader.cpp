@@ -73,6 +73,85 @@ struct SegmentData {
     ReadonlyBytes data;
 };
 
+class BitBuffer {
+public:
+    static ErrorOr<NonnullOwnPtr<BitBuffer>> create(size_t width, size_t height);
+    bool get_bit(size_t x, size_t y) const;
+    void set_bit(size_t x, size_t y, bool b);
+    void fill(bool b);
+
+private:
+    BitBuffer(Vector<u8>, size_t width, size_t height, size_t pitch);
+
+    Vector<u8> m_bits;
+    size_t m_width;
+    size_t m_height;
+    size_t m_pitch;
+};
+
+ErrorOr<NonnullOwnPtr<BitBuffer>> BitBuffer::create(size_t width, size_t height)
+{
+    size_t pitch = ceil_div(width, 8ull);
+    Vector<u8> bits;
+    TRY(bits.try_resize(pitch * height));
+    return adopt_nonnull_own_or_enomem(new (nothrow) BitBuffer(move(bits), width, height, pitch));
+}
+
+bool BitBuffer::get_bit(size_t x, size_t y) const
+{
+    VERIFY(x < m_width);
+    VERIFY(y < m_height);
+    size_t byte_offset = x / 8;
+    size_t bit_offset = x % 8;
+    u8 byte = m_bits[y * m_pitch + byte_offset];
+    byte = (byte >> (8 - 1 - bit_offset)) & 1;
+    return byte != 0;
+}
+
+void BitBuffer::set_bit(size_t x, size_t y, bool b)
+{
+    VERIFY(x < m_width);
+    VERIFY(y < m_height);
+    size_t byte_offset = x / 8;
+    size_t bit_offset = x % 8;
+    u8 byte = m_bits[y * m_pitch + byte_offset];
+    u8 mask = 1u << (8 - 1 - bit_offset);
+    if (b)
+        byte |= mask;
+    else
+        byte &= ~mask;
+    m_bits[y * m_pitch + byte_offset] = byte;
+}
+
+void BitBuffer::fill(bool b)
+{
+    u8 fill_byte = b ? 0xff : 0;
+    for (auto& byte : m_bits)
+        byte = fill_byte;
+}
+
+BitBuffer::BitBuffer(Vector<u8> bits, size_t width, size_t height, size_t pitch)
+    : m_bits(move(bits))
+    , m_width(width)
+    , m_height(height)
+    , m_pitch(pitch)
+{
+}
+
+// 7.4.8.5 Page segment flags
+enum class CombinationOperator {
+    Or = 0,
+    And = 1,
+    Xor = 2,
+    XNor = 3,
+};
+
+struct Page {
+    IntSize size;
+    CombinationOperator default_combination_operator;
+    OwnPtr<BitBuffer> bits;
+};
+
 struct JBIG2LoadingContext {
     enum class State {
         NotDecoded = 0,
@@ -82,7 +161,7 @@ struct JBIG2LoadingContext {
     State state { State::NotDecoded };
 
     Organization organization { Organization::Sequential };
-    IntSize size;
+    Page page;
 
     Optional<u32> number_of_pages;
 
@@ -295,6 +374,7 @@ static ErrorOr<PageInformationSegment> decode_page_information_segment(ReadonlyB
 static ErrorOr<void> scan_for_page_size(JBIG2LoadingContext& context)
 {
     // We only decode the first page at the moment.
+    bool found_size = false;
     for (auto const& segment : context.segments) {
         if (segment.header.type != SegmentType::PageInformation || segment.header.page_association != 1)
             continue;
@@ -304,10 +384,12 @@ static ErrorOr<void> scan_for_page_size(JBIG2LoadingContext& context)
         if (page_information.bitmap_height == 0xffff'ffff)
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot handle unknown page height yet");
 
-        context.size = { page_information.bitmap_width, page_information.bitmap_height };
-        return {};
+        context.page.size = { page_information.bitmap_width, page_information.bitmap_height };
+        found_size = true;
     }
-    return Error::from_string_literal("JBIG2ImageDecoderPlugin: No page information segment found for page 1");
+    if (!found_size)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: No page information segment found for page 1");
+    return {};
 }
 
 static ErrorOr<void> warn_about_multiple_pages(JBIG2LoadingContext& context)
@@ -412,9 +494,37 @@ static ErrorOr<void> decode_immediate_lossless_generic_refinement_region(JBIG2Lo
     return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode immediate lossless generic refinement region yet");
 }
 
-static ErrorOr<void> decode_page_information(JBIG2LoadingContext&, SegmentData const&)
+static ErrorOr<void> decode_page_information(JBIG2LoadingContext& context, SegmentData const& segment)
 {
-    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode page information yet");
+    // 7.4.8 Page information segment syntax and 8.1 Decoder model steps 1) - 3).
+
+    // "1) Decode the page information segment.""
+    auto page_information = TRY(decode_page_information_segment(segment.data));
+
+    bool page_is_striped = (page_information.striping_information & 0x80) != 0;
+    if (page_information.bitmap_height == 0xffff'ffff && !page_is_striped)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Non-striped bitmaps of indeterminate height not allowed");
+
+    u8 default_color = (page_information.flags >> 2) & 1;
+    u8 default_combination_operator = (page_information.flags >> 3) & 3;
+    context.page.default_combination_operator = static_cast<CombinationOperator>(default_combination_operator);
+
+    // FIXME: Do something with the other fields in page_information.
+
+    // "2) Create the page buffer, of the size given in the page information segment.
+    //
+    //     If the page height is unknown, then this is not possible. However, in this case the page must be striped,
+    //     and the maximum stripe height specified, and the initial page buffer can be created with height initially
+    //     equal to this maximum stripe height."
+    size_t height = page_information.bitmap_height;
+    if (height == 0xffff'ffff)
+        height = page_information.striping_information & 0x7F;
+    context.page.bits = TRY(BitBuffer::create(page_information.bitmap_width, height));
+
+    // "3) Fill the page buffer with the page's default pixel value."
+    context.page.bits->fill(default_color != 0);
+
+    return {};
 }
 
 static ErrorOr<void> decode_end_of_page(JBIG2LoadingContext&, SegmentData const&)
@@ -599,7 +709,7 @@ JBIG2ImageDecoderPlugin::JBIG2ImageDecoderPlugin()
 
 IntSize JBIG2ImageDecoderPlugin::size()
 {
-    return m_context->size;
+    return m_context->page.size;
 }
 
 bool JBIG2ImageDecoderPlugin::sniff(ReadonlyBytes data)
