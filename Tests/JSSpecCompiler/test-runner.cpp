@@ -92,6 +92,8 @@ Vector<ByteString> build_command_line_arguments(LexicalPath const& test_source, 
     if (test_source.has_extension(".cpp"sv))
         result.append("-xc++"sv);
 
+    result.append("--silence-diagnostics"sv);
+
     result.append(test_source.string());
 
     return result;
