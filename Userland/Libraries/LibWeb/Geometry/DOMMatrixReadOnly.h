@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2023, Luke Wilde <lukew@serenityos.org>
  * Copyright (c) 2023, Bastiaan van der Plaat <bastiaan.v.d.plaat@gmail.com>
+ * Copyright (c) 2024, Kenneth Myhra <kennethmyhra@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,6 +10,7 @@
 
 #include <LibGfx/Matrix4x4.h>
 #include <LibWeb/Bindings/PlatformObject.h>
+#include <LibWeb/Bindings/Serializable.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/WebIDL/Buffers.h>
 
@@ -46,13 +48,16 @@ struct DOMMatrixInit : public DOMMatrix2DInit {
 };
 
 // https://drafts.fxtf.org/geometry/#dommatrixreadonly
-class DOMMatrixReadOnly : public Bindings::PlatformObject {
+class DOMMatrixReadOnly
+    : public Bindings::PlatformObject
+    , public Bindings::Serializable {
     WEB_PLATFORM_OBJECT(DOMMatrixReadOnly, Bindings::PlatformObject);
 
 public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrixReadOnly>> construct_impl(JS::Realm&, Optional<Variant<String, Vector<double>>> const& init);
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrixReadOnly>> create_from_dom_matrix_2d_init(JS::Realm&, DOMMatrix2DInit& init);
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrixReadOnly>> create_from_dom_matrix_init(JS::Realm&, DOMMatrixInit& init);
+    static JS::NonnullGCPtr<DOMMatrixReadOnly> create(JS::Realm&);
 
     virtual ~DOMMatrixReadOnly() override;
 
@@ -109,10 +114,15 @@ public:
 
     WebIDL::ExceptionOr<String> to_string() const;
 
+    virtual StringView interface_name() const override { return "DOMMatrixReadOnly"sv; }
+    virtual WebIDL::ExceptionOr<void> serialization_steps(HTML::SerializationRecord&, bool for_storage) override;
+    virtual WebIDL::ExceptionOr<void> deserialization_steps(ReadonlySpan<u32> const& record, size_t& position) override;
+
 protected:
     DOMMatrixReadOnly(JS::Realm&, double m11, double m12, double m21, double m22, double m41, double m42);
     DOMMatrixReadOnly(JS::Realm&, double m11, double m12, double m13, double m14, double m21, double m22, double m23, double m24, double m31, double m32, double m33, double m34, double m41, double m42, double m43, double m44);
     DOMMatrixReadOnly(JS::Realm&, DOMMatrixReadOnly const& other);
+    explicit DOMMatrixReadOnly(JS::Realm&);
 
     // NOTE: The matrix used in the spec is column-major (https://drafts.fxtf.org/geometry/#4x4-abstract-matrix) but Gfx::Matrix4x4 is row-major so we need to transpose the values.
     Gfx::DoubleMatrix4x4 m_matrix { Gfx::DoubleMatrix4x4::identity() };

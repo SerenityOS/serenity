@@ -15,6 +15,12 @@
         println(`File.text(): ${text}`);
         println(`File.size: ${file.size}`);
 
+        let domMatrixReadOnly = structuredClone(new DOMMatrixReadOnly([1.7976931348623157e+308, 2.2250738585072014e-308, 2.2204460492503131e-016, 40, 50, 60]));
+        println(`instanceOf DOMMatrixReadOnly: ${domMatrixReadOnly instanceof DOMMatrixReadOnly}`);
+        println(`DOMMatrixReadOnly: ${JSON.stringify(domMatrixReadOnly)}`);
+        domMatrixReadOnly = structuredClone(new DOMMatrixReadOnly([10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160]));
+        println(`DOMMatrixReadOnly: ${JSON.stringify(domMatrixReadOnly)}`);
+
         done();
     });
 </script>
