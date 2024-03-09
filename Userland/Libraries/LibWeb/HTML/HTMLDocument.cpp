@@ -27,4 +27,10 @@ JS::NonnullGCPtr<HTMLDocument> HTMLDocument::create(JS::Realm& realm, URL const&
     return realm.heap().allocate<HTMLDocument>(realm, realm, url);
 }
 
+void HTMLDocument::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLDocumentPrototype>(realm, "HTMLDocument"_fly_string));
+}
+
 }

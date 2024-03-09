@@ -15,7 +15,7 @@ namespace Web::HTML {
 //       https://github.com/whatwg/html/issues/4792
 //       https://github.com/whatwg/dom/issues/221
 class HTMLDocument final : public DOM::Document {
-    JS_CELL(HTMLDocument, DOM::Document);
+    WEB_PLATFORM_OBJECT(HTMLDocument, DOM::Document);
     JS_DECLARE_ALLOCATOR(HTMLDocument);
 
 public:
@@ -25,6 +25,8 @@ public:
     WebIDL::ExceptionOr<JS::NonnullGCPtr<HTMLDocument>> construct_impl(JS::Realm&);
 
 private:
+    virtual void initialize(JS::Realm&) override;
+
     HTMLDocument(JS::Realm&, URL const&);
 };
 
