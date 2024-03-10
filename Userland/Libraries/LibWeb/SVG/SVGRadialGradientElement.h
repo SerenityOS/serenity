@@ -36,9 +36,9 @@ protected:
     virtual void initialize(JS::Realm&) override;
 
 private:
-    JS::GCPtr<SVGRadialGradientElement const> linked_radial_gradient() const
+    JS::GCPtr<SVGRadialGradientElement const> linked_radial_gradient(HashTable<SVGGradientElement const*>& seen_gradients) const
     {
-        if (auto gradient = linked_gradient(); gradient && is<SVGRadialGradientElement>(*gradient))
+        if (auto gradient = linked_gradient(seen_gradients); gradient && is<SVGRadialGradientElement>(*gradient))
             return &verify_cast<SVGRadialGradientElement>(*gradient);
         return {};
     }
@@ -49,6 +49,13 @@ private:
     NumberPercentage end_circle_x() const;
     NumberPercentage end_circle_y() const;
     NumberPercentage end_circle_radius() const;
+
+    NumberPercentage start_circle_x_impl(HashTable<SVGGradientElement const*>& seen_gradients) const;
+    NumberPercentage start_circle_y_impl(HashTable<SVGGradientElement const*>& seen_gradients) const;
+    NumberPercentage start_circle_radius_impl(HashTable<SVGGradientElement const*>& seen_gradients) const;
+    NumberPercentage end_circle_x_impl(HashTable<SVGGradientElement const*>& seen_gradients) const;
+    NumberPercentage end_circle_y_impl(HashTable<SVGGradientElement const*>& seen_gradients) const;
+    NumberPercentage end_circle_radius_impl(HashTable<SVGGradientElement const*>& seen_gradients) const;
 
     Optional<NumberPercentage> m_cx;
     Optional<NumberPercentage> m_cy;

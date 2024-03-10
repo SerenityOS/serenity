@@ -55,12 +55,22 @@ protected:
 
     virtual void initialize(JS::Realm&) override;
 
-    JS::GCPtr<SVGGradientElement const> linked_gradient() const;
+    JS::GCPtr<SVGGradientElement const> linked_gradient(HashTable<SVGGradientElement const*>& seen_gradients) const;
 
     Gfx::AffineTransform gradient_paint_transform(SVGPaintContext const&) const;
 
     template<VoidFunction<SVGStopElement> Callback>
     void for_each_color_stop(Callback const& callback) const
+    {
+        HashTable<SVGGradientElement const*> seen_gradients;
+        return for_each_color_stop_impl(callback, seen_gradients);
+    }
+
+    void add_color_stops(Gfx::SVGGradientPaintStyle&) const;
+
+private:
+    template<VoidFunction<SVGStopElement> Callback>
+    void for_each_color_stop_impl(Callback const& callback, HashTable<SVGGradientElement const*>& seen_gradients) const
     {
         bool color_stops_found = false;
         for_each_child_of_type<SVG::SVGStopElement>([&](auto& stop) {
@@ -68,14 +78,15 @@ protected:
             callback(stop);
         });
         if (!color_stops_found) {
-            if (auto gradient = linked_gradient())
-                gradient->for_each_color_stop(callback);
+            if (auto gradient = linked_gradient(seen_gradients))
+                gradient->for_each_color_stop_impl(callback, seen_gradients);
         }
     }
 
-    void add_color_stops(Gfx::SVGGradientPaintStyle&) const;
+    GradientUnits gradient_units_impl(HashTable<SVGGradientElement const*>& seen_gradients) const;
+    SpreadMethod spread_method_impl(HashTable<SVGGradientElement const*>& seen_gradients) const;
+    Optional<Gfx::AffineTransform> gradient_transform_impl(HashTable<SVGGradientElement const*>& seen_gradients) const;
 
-private:
     Optional<GradientUnits> m_gradient_units = {};
     Optional<SpreadMethod> m_spread_method = {};
     Optional<Gfx::AffineTransform> m_gradient_transform = {};

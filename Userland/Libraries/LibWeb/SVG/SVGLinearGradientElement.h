@@ -34,9 +34,9 @@ protected:
     virtual void initialize(JS::Realm&) override;
 
 private:
-    JS::GCPtr<SVGLinearGradientElement const> linked_linear_gradient() const
+    JS::GCPtr<SVGLinearGradientElement const> linked_linear_gradient(HashTable<SVGGradientElement const*>& seen_gradients) const
     {
-        if (auto gradient = linked_gradient(); gradient && is<SVGLinearGradientElement>(*gradient))
+        if (auto gradient = linked_gradient(seen_gradients); gradient && is<SVGLinearGradientElement>(*gradient))
             return &verify_cast<SVGLinearGradientElement>(*gradient);
         return {};
     }
@@ -45,6 +45,11 @@ private:
     NumberPercentage start_y() const;
     NumberPercentage end_x() const;
     NumberPercentage end_y() const;
+
+    NumberPercentage start_x_impl(HashTable<SVGGradientElement const*>& seen_gradients) const;
+    NumberPercentage start_y_impl(HashTable<SVGGradientElement const*>& seen_gradients) const;
+    NumberPercentage end_x_impl(HashTable<SVGGradientElement const*>& seen_gradients) const;
+    NumberPercentage end_y_impl(HashTable<SVGGradientElement const*>& seen_gradients) const;
 
     Optional<NumberPercentage> m_x1;
     Optional<NumberPercentage> m_y1;
