@@ -41,7 +41,7 @@ public:
 #undef __ENUMERATE
 
 protected:
-    virtual DOM::EventTarget& window_event_handlers_to_event_target() = 0;
+    virtual JS::GCPtr<DOM::EventTarget> window_event_handlers_to_event_target() = 0;
 };
 
 }

@@ -38,10 +38,10 @@ private:
     virtual void initialize(JS::Realm&) override;
 
     // ^HTML::GlobalEventHandlers
-    virtual EventTarget& global_event_handlers_to_event_target(FlyString const& event_name) override;
+    virtual JS::GCPtr<DOM::EventTarget> global_event_handlers_to_event_target(FlyString const& event_name) override;
 
     // ^HTML::WindowEventHandlers
-    virtual EventTarget& window_event_handlers_to_event_target() override;
+    virtual JS::GCPtr<DOM::EventTarget> window_event_handlers_to_event_target() override;
 
     RefPtr<CSS::ImageStyleValue> m_background_style_value;
 };

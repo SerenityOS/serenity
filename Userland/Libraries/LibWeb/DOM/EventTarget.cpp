@@ -327,7 +327,7 @@ static EventTarget* determine_target_of_event_handler(EventTarget& event_target,
         return nullptr;
 
     // 4. Return eventTarget's node document's relevant global object.
-    return &event_target_element.document().window();
+    return &verify_cast<EventTarget>(HTML::relevant_global_object(event_target_element.document()));
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#event-handler-attributes:event-handler-idl-attributes-2
@@ -807,8 +807,8 @@ bool EventTarget::dispatch_event(Event& event)
             static_cast<HTML::Window*>(this)->set_last_activation_timestamp(current_time);
         } else if (is<DOM::Element>(this)) {
             auto const* element = static_cast<DOM::Element const*>(this);
-            auto& window = element->document().window();
-            window.set_last_activation_timestamp(current_time);
+            if (auto window = element->document().window())
+                window->set_last_activation_timestamp(current_time);
         }
     }
 

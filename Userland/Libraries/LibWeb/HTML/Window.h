@@ -218,10 +218,10 @@ private:
     virtual void finalize() override;
 
     // ^HTML::GlobalEventHandlers
-    virtual DOM::EventTarget& global_event_handlers_to_event_target(FlyString const&) override { return *this; }
+    virtual JS::GCPtr<DOM::EventTarget> global_event_handlers_to_event_target(FlyString const&) override { return *this; }
 
     // ^HTML::WindowEventHandlers
-    virtual DOM::EventTarget& window_event_handlers_to_event_target() override { return *this; }
+    virtual JS::GCPtr<DOM::EventTarget> window_event_handlers_to_event_target() override { return *this; }
 
     void invoke_idle_callbacks();
 

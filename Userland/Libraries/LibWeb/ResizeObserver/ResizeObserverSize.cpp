@@ -44,7 +44,7 @@ JS::NonnullGCPtr<ResizeObserverSize> ResizeObserverSize::calculate_box_size(JS::
             computed_size->set_block_size(paintable_box.content_height().to_double());
             break;
         case Bindings::ResizeObserverBoxOptions::DevicePixelContentBox: {
-            auto device_pixel_ratio = target.document().window().device_pixel_ratio();
+            auto device_pixel_ratio = target.document().window()->device_pixel_ratio();
             // 1. Set computedSize’s inlineSize attribute to target’s content area inline length, in integral device pixels.
             computed_size->set_inline_size(paintable_box.border_box_width().to_double() * device_pixel_ratio);
             // 2. Set computedSize’s blockSize attribute to target’s content area block length, in integral device pixels.

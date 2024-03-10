@@ -317,7 +317,7 @@ public:
     HTML::DocumentReadyState readiness() const { return m_readiness; }
     void update_readiness(HTML::DocumentReadyState);
 
-    HTML::Window& window() const { return const_cast<HTML::Window&>(*m_window); }
+    [[nodiscard]] JS::GCPtr<HTML::Window> window() const { return m_window; }
 
     void set_window(HTML::Window&);
 
@@ -616,7 +616,7 @@ protected:
 
 private:
     // ^HTML::GlobalEventHandlers
-    virtual EventTarget& global_event_handlers_to_event_target(FlyString const&) final { return *this; }
+    virtual JS::GCPtr<EventTarget> global_event_handlers_to_event_target(FlyString const&) final { return *this; }
 
     void tear_down_layout_tree();
 

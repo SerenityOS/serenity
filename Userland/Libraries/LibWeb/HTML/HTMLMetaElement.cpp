@@ -64,7 +64,7 @@ void HTMLMetaElement::inserted()
         auto media = attribute(AttributeNames::media);
         if (media.has_value()) {
             auto query = parse_media_query(context, media.value());
-            if (!query->evaluate(document().window()))
+            if (document().window() && !query->evaluate(*document().window()))
                 return;
         }
 

@@ -12,14 +12,17 @@
 namespace Web::HTML {
 
 #undef __ENUMERATE
-#define __ENUMERATE(attribute_name, event_name)                                                           \
-    void GlobalEventHandlers::set_##attribute_name(WebIDL::CallbackType* value)                           \
-    {                                                                                                     \
-        global_event_handlers_to_event_target(event_name).set_event_handler_attribute(event_name, value); \
-    }                                                                                                     \
-    WebIDL::CallbackType* GlobalEventHandlers::attribute_name()                                           \
-    {                                                                                                     \
-        return global_event_handlers_to_event_target(event_name).event_handler_attribute(event_name);     \
+#define __ENUMERATE(attribute_name, event_name)                                    \
+    void GlobalEventHandlers::set_##attribute_name(WebIDL::CallbackType* value)    \
+    {                                                                              \
+        if (auto event_target = global_event_handlers_to_event_target(event_name)) \
+            event_target->set_event_handler_attribute(event_name, value);          \
+    }                                                                              \
+    WebIDL::CallbackType* GlobalEventHandlers::attribute_name()                    \
+    {                                                                              \
+        if (auto event_target = global_event_handlers_to_event_target(event_name)) \
+            return event_target->event_handler_attribute(event_name);              \
+        return nullptr;                                                            \
     }
 ENUMERATE_GLOBAL_EVENT_HANDLERS(__ENUMERATE)
 #undef __ENUMERATE

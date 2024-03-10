@@ -94,7 +94,7 @@ void HTMLBodyElement::attribute_changed(FlyString const& name, Optional<String> 
 #undef __ENUMERATE
 }
 
-DOM::EventTarget& HTMLBodyElement::global_event_handlers_to_event_target(FlyString const& event_name)
+JS::GCPtr<DOM::EventTarget> HTMLBodyElement::global_event_handlers_to_event_target(FlyString const& event_name)
 {
     // NOTE: This is a little weird, but IIUC document.body.onload actually refers to window.onload
     // NOTE: document.body can return either a HTMLBodyElement or HTMLFrameSetElement, so both these elements must support this mapping.
@@ -104,7 +104,7 @@ DOM::EventTarget& HTMLBodyElement::global_event_handlers_to_event_target(FlyStri
     return *this;
 }
 
-DOM::EventTarget& HTMLBodyElement::window_event_handlers_to_event_target()
+JS::GCPtr<DOM::EventTarget> HTMLBodyElement::window_event_handlers_to_event_target()
 {
     // All WindowEventHandlers on HTMLFrameSetElement (e.g. document.body.onrejectionhandled) are mapped to window.on{event}.
     // NOTE: document.body can return either a HTMLBodyElement or HTMLFrameSetElement, so both these elements must support this mapping.

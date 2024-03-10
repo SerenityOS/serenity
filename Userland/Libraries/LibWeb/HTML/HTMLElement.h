@@ -82,7 +82,7 @@ private:
     virtual bool is_html_element() const final { return true; }
 
     // ^HTML::GlobalEventHandlers
-    virtual DOM::EventTarget& global_event_handlers_to_event_target(FlyString const&) override { return *this; }
+    virtual JS::GCPtr<DOM::EventTarget> global_event_handlers_to_event_target(FlyString const&) override { return *this; }
     virtual void did_receive_focus() override;
 
     JS::GCPtr<DOMStringMap> m_dataset;
