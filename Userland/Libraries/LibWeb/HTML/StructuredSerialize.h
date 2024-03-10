@@ -41,6 +41,11 @@ struct DeserializedTransferRecord {
     Vector<JS::Handle<JS::Object>> transferred_values;
 };
 
+struct DeserializedRecord {
+    Optional<JS::Value> value;
+    size_t position;
+};
+
 enum class TransferType : u8 {
     MessagePort,
 };
@@ -50,6 +55,7 @@ WebIDL::ExceptionOr<SerializationRecord> structured_serialize_for_storage(JS::VM
 WebIDL::ExceptionOr<SerializationRecord> structured_serialize_internal(JS::VM& vm, JS::Value, bool for_storage, SerializationMemory&);
 
 WebIDL::ExceptionOr<JS::Value> structured_deserialize(JS::VM& vm, SerializationRecord const& serialized, JS::Realm& target_realm, Optional<DeserializationMemory>);
+WebIDL::ExceptionOr<DeserializedRecord> structured_deserialize_internal(JS::VM& vm, ReadonlySpan<u32> const& serialized, JS::Realm& target_realm, DeserializationMemory& memory, Optional<size_t> position = {});
 
 void serialize_boolean_primitive(SerializationRecord& serialized, JS::Value& value);
 void serialize_number_primitive(SerializationRecord& serialized, JS::Value& value);

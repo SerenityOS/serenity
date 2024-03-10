@@ -663,13 +663,16 @@ template WebIDL::ExceptionOr<void> serialize_viewed_array_buffer(JS::VM& vm, Vec
 
 class Deserializer {
 public:
-    Deserializer(JS::VM& vm, JS::Realm& target_realm, ReadonlySpan<u32> serialized, DeserializationMemory& memory)
+    Deserializer(JS::VM& vm, JS::Realm& target_realm, ReadonlySpan<u32> serialized, DeserializationMemory& memory, Optional<size_t> position = {})
         : m_vm(vm)
         , m_serialized(serialized)
         , m_memory(memory)
+        , m_position(position.value_or(0))
     {
         VERIFY(vm.current_realm() == &target_realm);
     }
+
+    size_t position() const { return m_position; }
 
     // https://html.spec.whatwg.org/multipage/structured-data.html#structureddeserialize
     WebIDL::ExceptionOr<JS::Value> deserialize()
@@ -960,8 +963,8 @@ public:
 private:
     JS::VM& m_vm;
     ReadonlySpan<u32> m_serialized;
-    size_t m_position { 0 };
     JS::MarkedVector<JS::Value> m_memory; // Index -> JS value
+    size_t m_position { 0 };
 
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<Bindings::PlatformObject>> create_serialized_type(StringView interface_name, JS::Realm& realm)
     {
@@ -1288,12 +1291,22 @@ WebIDL::ExceptionOr<JS::Value> structured_deserialize(JS::VM& vm, SerializationR
     auto& target_settings = Bindings::host_defined_environment_settings_object(target_realm);
     target_settings.prepare_to_run_script();
 
-    Deserializer deserializer(vm, target_realm, serialized.span(), *memory);
-
-    auto result = deserializer.deserialize();
+    auto result = TRY(structured_deserialize_internal(vm, serialized.span(), target_realm, *memory));
 
     target_settings.clean_up_after_running_script();
-    return result;
+    VERIFY(result.value.has_value());
+    return *result.value;
+}
+
+WebIDL::ExceptionOr<DeserializedRecord> structured_deserialize_internal(JS::VM& vm, ReadonlySpan<u32> const& serialized, JS::Realm& target_realm, DeserializationMemory& memory, Optional<size_t> position)
+{
+    Deserializer deserializer(vm, target_realm, serialized, memory, move(position));
+    auto value = TRY(deserializer.deserialize());
+    auto deserialized_record = DeserializedRecord {
+        .value = value,
+        .position = deserializer.position(),
+    };
+    return deserialized_record;
 }
 
 }
