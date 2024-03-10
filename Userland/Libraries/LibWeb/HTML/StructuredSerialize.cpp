@@ -307,7 +307,7 @@ public:
             deep = true;
         }
 
-        // FIXME: 19. Otherwise, if value is a platform object that is a serializable object:
+        // 19. Otherwise, if value is a platform object that is a serializable object:
         else if (value.is_object() && is<Bindings::Serializable>(value.as_object())) {
             auto& serializable = dynamic_cast<Bindings::Serializable&>(value.as_object());
 
