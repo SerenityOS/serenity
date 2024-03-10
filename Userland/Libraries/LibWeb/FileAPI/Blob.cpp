@@ -149,7 +149,7 @@ void Blob::initialize(JS::Realm& realm)
     WEB_SET_PROTOTYPE_FOR_INTERFACE(Blob);
 }
 
-WebIDL::ExceptionOr<void> Blob::serialization_steps(HTML::SerializationRecord& record, bool)
+WebIDL::ExceptionOr<void> Blob::serialization_steps(HTML::SerializationRecord& record, bool, HTML::SerializationMemory&)
 {
     auto& vm = this->vm();
 
