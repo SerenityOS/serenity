@@ -16,3 +16,5 @@ instanceOf DOMPointReadOnly: true
 DOMPointReadOnly: {"x":10,"y":20,"z":30,"w":40}
 instanceOf DOMPoint: true
 DOMPoint: {"x":10,"y":20,"z":30,"w":40}
+instanceOf DOMRectReadOnly: true
+DOMRectReadOnly: {"x":10,"y":20,"width":30,"height":40,"top":20,"right":40,"bottom":60,"left":10}

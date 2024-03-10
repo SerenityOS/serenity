@@ -1,11 +1,13 @@
 /*
  * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2024, Kenneth Myhra <kennethmyhra@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Geometry/DOMRectReadOnly.h>
+#include <LibWeb/HTML/StructuredSerialize.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::Geometry {
@@ -24,9 +26,19 @@ JS::NonnullGCPtr<DOMRectReadOnly> DOMRectReadOnly::from_rect(JS::VM& vm, Geometr
     return realm.heap().allocate<DOMRectReadOnly>(realm, realm, other.x, other.y, other.width, other.height);
 }
 
+JS::NonnullGCPtr<DOMRectReadOnly> DOMRectReadOnly::create(JS::Realm& realm)
+{
+    return realm.heap().allocate<DOMRectReadOnly>(realm, realm);
+}
+
 DOMRectReadOnly::DOMRectReadOnly(JS::Realm& realm, double x, double y, double width, double height)
     : PlatformObject(realm)
     , m_rect(x, y, width, height)
+{
+}
+
+DOMRectReadOnly::DOMRectReadOnly(JS::Realm& realm)
+    : PlatformObject(realm)
 {
 }
 
@@ -36,6 +48,37 @@ void DOMRectReadOnly::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::DOMRectReadOnlyPrototype>(realm, "DOMRectReadOnly"_fly_string));
+}
+
+// https://drafts.fxtf.org/geometry/#structured-serialization
+WebIDL::ExceptionOr<void> DOMRectReadOnly::serialization_steps(HTML::SerializationRecord& serialized, bool)
+{
+    // 1. Set serialized.[[X]] to value’s x coordinate.
+    HTML::serialize_primitive_type(serialized, this->x());
+    // 2. Set serialized.[[Y]] to value’s y coordinate.
+    HTML::serialize_primitive_type(serialized, this->y());
+    // 3. Set serialized.[[Width]] to value’s width.
+    HTML::serialize_primitive_type(serialized, this->width());
+    // 4. Set serialized.[[Height]] to value’s height.
+    HTML::serialize_primitive_type(serialized, this->height());
+    return {};
+}
+
+// https://drafts.fxtf.org/geometry/#structured-serialization
+WebIDL::ExceptionOr<void> DOMRectReadOnly::deserialization_steps(ReadonlySpan<u32> const& serialized, size_t& position)
+{
+    // 1. Set value’s x coordinate to serialized.[[X]].
+    auto x = HTML::deserialize_primitive_type<double>(serialized, position);
+    // 2. Set value’s y coordinate to serialized.[[Y]].
+    auto y = HTML::deserialize_primitive_type<double>(serialized, position);
+    // 3. Set value’s width to serialized.[[Width]].
+    auto width = HTML::deserialize_primitive_type<double>(serialized, position);
+    // 4. Set value’s height to serialized.[[Height]].
+    auto height = HTML::deserialize_primitive_type<double>(serialized, position);
+
+    m_rect = { x, y, width, height };
+
+    return {};
 }
 
 }
