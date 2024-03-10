@@ -953,13 +953,13 @@ int Element::client_top() const
     const_cast<Document&>(document()).update_layout();
 
     // 1. If the element has no associated CSS layout box or if the CSS layout box is inline, return zero.
-    if (!layout_node() || !layout_node()->is_box())
+    if (!paintable_box())
         return 0;
 
     // 2. Return the computed value of the border-top-width property
     //    plus the height of any scrollbar rendered between the top padding edge and the top border edge,
     //    ignoring any transforms that apply to the element and its ancestors.
-    return static_cast<Layout::Box const&>(*layout_node()).computed_values().border_top().width.to_int();
+    return paintable_box()->computed_values().border_top().width.to_int();
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-element-clientleft
@@ -969,13 +969,13 @@ int Element::client_left() const
     const_cast<Document&>(document()).update_layout();
 
     // 1. If the element has no associated CSS layout box or if the CSS layout box is inline, return zero.
-    if (!layout_node() || !layout_node()->is_box())
+    if (!paintable_box())
         return 0;
 
     // 2. Return the computed value of the border-left-width property
     //    plus the width of any scrollbar rendered between the left padding edge and the left border edge,
     //    ignoring any transforms that apply to the element and its ancestors.
-    return static_cast<Layout::Box const&>(*layout_node()).computed_values().border_left().width.to_int();
+    return paintable_box()->computed_values().border_left().width.to_int();
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-element-clientwidth
@@ -1178,19 +1178,11 @@ double Element::scroll_top() const
         return window->scroll_y();
 
     // 8. If the element does not have any associated box, return zero and terminate these steps.
-    if (!layout_node() || !is<Layout::Box>(layout_node()))
+    if (!paintable_box())
         return 0.0;
-
-    // FIXME: Ideally we would stop creating a layout node for column group so that a layout node would always have
-    //        a paintable, but in the meantime, special case this node.
-    if (layout_node()->display().is_table_column_group()) {
-        VERIFY(!paintable_box());
-        return 0.0;
-    }
 
     // 9. Return the y-coordinate of the scrolling area at the alignment point with the top of the padding edge of the element.
     // FIXME: Is this correct?
-    VERIFY(paintable_box());
     return paintable_box()->scroll_offset().y().to_double();
 }
 
@@ -1226,19 +1218,11 @@ double Element::scroll_left() const
         return window->scroll_x();
 
     // 8. If the element does not have any associated box, return zero and terminate these steps.
-    if (!layout_node() || !is<Layout::Box>(layout_node()))
+    if (!paintable_box())
         return 0.0;
-
-    // FIXME: Ideally we would stop creating a layout node for column group so that a layout node would always have
-    //        a paintable, but in the meantime, special case this node.
-    if (layout_node()->display().is_table_column_group()) {
-        VERIFY(!paintable_box());
-        return 0.0;
-    }
 
     // 9. Return the x-coordinate of the scrolling area at the alignment point with the left of the padding edge of the element.
     // FIXME: Is this correct?
-    VERIFY(paintable_box());
     return paintable_box()->scroll_offset().x().to_double();
 }
 
@@ -1285,11 +1269,10 @@ void Element::set_scroll_left(double x)
     }
 
     // 10. If the element does not have any associated box, the element has no associated scrolling box, or the element has no overflow, terminate these steps.
-    if (!layout_node() || !is<Layout::Box>(layout_node()))
+    if (!paintable_box())
         return;
 
-    auto* box = static_cast<Layout::Box*>(layout_node());
-    if (!box->is_scroll_container())
+    if (!paintable_box()->layout_box().is_scroll_container())
         return;
 
     // FIXME: or the element has no overflow.
@@ -1343,11 +1326,10 @@ void Element::set_scroll_top(double y)
     }
 
     // 10. If the element does not have any associated box, the element has no associated scrolling box, or the element has no overflow, terminate these steps.
-    if (!layout_node() || !is<Layout::Box>(layout_node()))
+    if (!paintable_box())
         return;
 
-    auto* box = static_cast<Layout::Box*>(layout_node());
-    if (!box->is_scroll_container())
+    if (!paintable_box()->layout_box().is_scroll_container())
         return;
 
     // FIXME: or the element has no overflow.
