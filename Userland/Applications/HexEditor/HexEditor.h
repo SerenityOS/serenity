@@ -55,7 +55,12 @@ public:
     bool copy_selected_hex_to_clipboard();
     bool copy_selected_hex_to_clipboard_as_c_code();
 
-    size_t bytes_per_row() const { return m_bytes_per_row; }
+    size_t bytes_per_group() const { return m_bytes_per_group; }
+    void set_bytes_per_group(size_t);
+    size_t groups_per_row() const { return m_groups_per_row; }
+    void set_groups_per_row(size_t);
+    size_t bytes_per_row() const { return m_groups_per_row * m_bytes_per_group; }
+    // FIXME: Deprecated! Set bytes_per_group or groups_per_row instead
     void set_bytes_per_row(size_t);
 
     void set_position(size_t position);
@@ -88,7 +93,8 @@ protected:
 private:
     size_t m_line_spacing { 4 };
     size_t m_content_length { 0 };
-    size_t m_bytes_per_row { 16 };
+    size_t m_bytes_per_group { 4 };
+    size_t m_groups_per_row { 4 };
     bool m_in_drag_select { false };
     Selection m_selection;
     size_t m_position { 0 };
@@ -107,14 +113,14 @@ private:
 
     void scroll_position_into_view(size_t position);
 
-    size_t total_rows() const { return ceil_div(m_content_length, m_bytes_per_row); }
+    size_t total_rows() const { return ceil_div(m_content_length, bytes_per_row()); }
     size_t line_height() const { return font().pixel_size_rounded_up() + m_line_spacing; }
     size_t character_width() const { return font().glyph_fixed_width(); }
     size_t cell_width() const { return character_width() * 3; }
 
     int offset_area_width() const { return m_padding + font().width_rounded_up("0X12345678"sv) + m_padding; }
-    int hex_area_width() const { return m_padding + m_bytes_per_row * cell_width() + m_padding; }
-    int text_area_width() const { return m_padding + m_bytes_per_row * character_width() + m_padding; }
+    int hex_area_width() const { return m_padding + bytes_per_row() * cell_width() + m_padding; }
+    int text_area_width() const { return m_padding + bytes_per_row() * character_width() + m_padding; }
 
     struct OffsetData {
         size_t offset;
