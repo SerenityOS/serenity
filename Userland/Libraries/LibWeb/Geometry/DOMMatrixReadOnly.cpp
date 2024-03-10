@@ -759,7 +759,7 @@ WebIDL::ExceptionOr<void> DOMMatrixReadOnly::serialization_steps(HTML::Serializa
 }
 
 // https://drafts.fxtf.org/geometry/#structured-serialization
-WebIDL::ExceptionOr<void> DOMMatrixReadOnly::deserialization_steps(ReadonlySpan<u32> const& record, size_t& position)
+WebIDL::ExceptionOr<void> DOMMatrixReadOnly::deserialization_steps(ReadonlySpan<u32> const& record, size_t& position, HTML::DeserializationMemory&)
 {
     bool is_2d = HTML::deserialize_primitive_type<bool>(record, position);
     // 1. If serialized.[[Is2D]] is true:

@@ -65,7 +65,7 @@ WebIDL::ExceptionOr<void> DOMRectReadOnly::serialization_steps(HTML::Serializati
 }
 
 // https://drafts.fxtf.org/geometry/#structured-serialization
-WebIDL::ExceptionOr<void> DOMRectReadOnly::deserialization_steps(ReadonlySpan<u32> const& serialized, size_t& position)
+WebIDL::ExceptionOr<void> DOMRectReadOnly::deserialization_steps(ReadonlySpan<u32> const& serialized, size_t& position, HTML::DeserializationMemory&)
 {
     // 1. Set value’s x coordinate to serialized.[[X]].
     auto x = HTML::deserialize_primitive_type<double>(serialized, position);
