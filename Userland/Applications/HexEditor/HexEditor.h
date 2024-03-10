@@ -116,10 +116,23 @@ private:
     size_t total_rows() const { return ceil_div(m_content_length, bytes_per_row()); }
     size_t line_height() const { return font().pixel_size_rounded_up() + m_line_spacing; }
     size_t character_width() const { return font().glyph_fixed_width(); }
-    size_t cell_width() const { return character_width() * 3; }
+    size_t cell_gap() const { return character_width() / 2; }
+    size_t cell_width() const { return character_width() * 2 + cell_gap(); }
+    size_t group_gap() const { return character_width() * 1.5; }
+    size_t group_width() const
+    {
+        return (character_width() * 2 * bytes_per_group())
+            + (cell_gap() * (bytes_per_group() - 1))
+            + group_gap();
+    }
 
     int offset_area_width() const { return m_padding + font().width_rounded_up("0X12345678"sv) + m_padding; }
-    int hex_area_width() const { return m_padding + bytes_per_row() * cell_width() + m_padding; }
+    int hex_area_width() const
+    {
+        return m_padding
+            + groups_per_row() * group_width() - group_gap()
+            + m_padding;
+    }
     int text_area_width() const { return m_padding + bytes_per_row() * character_width() + m_padding; }
 
     struct OffsetData {
