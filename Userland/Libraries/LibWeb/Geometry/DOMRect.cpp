@@ -22,6 +22,11 @@ JS::NonnullGCPtr<DOMRect> DOMRect::create(JS::Realm& realm, Gfx::FloatRect const
     return realm.heap().allocate<DOMRect>(realm, realm, rect.x(), rect.y(), rect.width(), rect.height());
 }
 
+JS::NonnullGCPtr<DOMRect> DOMRect::create(JS::Realm& realm)
+{
+    return realm.heap().allocate<DOMRect>(realm, realm);
+}
+
 // https://drafts.fxtf.org/geometry/#create-a-domrect-from-the-dictionary
 JS::NonnullGCPtr<DOMRect> DOMRect::from_rect(JS::VM& vm, Geometry::DOMRectInit const& other)
 {
@@ -31,6 +36,11 @@ JS::NonnullGCPtr<DOMRect> DOMRect::from_rect(JS::VM& vm, Geometry::DOMRectInit c
 
 DOMRect::DOMRect(JS::Realm& realm, double x, double y, double width, double height)
     : DOMRectReadOnly(realm, x, y, width, height)
+{
+}
+
+DOMRect::DOMRect(JS::Realm& realm)
+    : DOMRectReadOnly(realm)
 {
 }
 
