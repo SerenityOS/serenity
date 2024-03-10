@@ -79,7 +79,7 @@ JS_DEFINE_ALLOCATOR(Window);
 void run_animation_frame_callbacks(DOM::Document& document, double now)
 {
     // FIXME: Bring this closer to the spec.
-    document.window().animation_frame_callback_driver().run(now);
+    document.window()->animation_frame_callback_driver().run(now);
 }
 
 class IdleCallback : public RefCounted<IdleCallback> {

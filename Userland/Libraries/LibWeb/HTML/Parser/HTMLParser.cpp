@@ -328,7 +328,7 @@ void HTMLParser::the_end(JS::NonnullGCPtr<DOM::Document> document, JS::GCPtr<HTM
             return;
 
         // 3. Let window be the Document's relevant global object.
-        JS::NonnullGCPtr<Window> window = document->window();
+        auto& window = verify_cast<Window>(relevant_global_object(*document));
 
         // 4. Set the Document's load timing info's load event start time to the current high resolution time given window.
         document->load_timing_info().load_event_start_time = HighResolutionTime::unsafe_shared_current_time();
@@ -336,7 +336,7 @@ void HTMLParser::the_end(JS::NonnullGCPtr<DOM::Document> document, JS::GCPtr<HTM
         // 5. Fire an event named load at window, with legacy target override flag set.
         // FIXME: The legacy target override flag is currently set by a virtual override of dispatch_event()
         //        We should reorganize this so that the flag appears explicitly here instead.
-        window->dispatch_event(DOM::Event::create(document->realm(), HTML::EventNames::load));
+        window.dispatch_event(DOM::Event::create(document->realm(), HTML::EventNames::load));
 
         // FIXME: 6. Invoke WebDriver BiDi load complete with the Document's browsing context, and a new WebDriver BiDi navigation status whose id is the Document object's navigation id, status is "complete", and url is the Document object's URL.
 
@@ -352,7 +352,7 @@ void HTMLParser::the_end(JS::NonnullGCPtr<DOM::Document> document, JS::GCPtr<HTM
         document->set_page_showing(true);
 
         // 11. Fire a page transition event named pageshow at window with false.
-        window->fire_a_page_transition_event(HTML::EventNames::pageshow, false);
+        window.fire_a_page_transition_event(HTML::EventNames::pageshow, false);
 
         // 12. Completely finish loading the Document.
         document->completely_finish_loading();

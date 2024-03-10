@@ -55,7 +55,7 @@ static void run_focus_update_steps(Vector<JS::Handle<DOM::Node>> old_chain, Vect
             blur_event_target = entry.ptr();
         } else if (is<DOM::Document>(*entry)) {
             // If entry is a Document object, let blur event target be that Document object's relevant global object.
-            blur_event_target = &static_cast<DOM::Document&>(*entry).window();
+            blur_event_target = static_cast<DOM::Document&>(*entry).window();
         }
 
         // 3. If entry is the last entry in old chain, and entry is an Element,
@@ -105,7 +105,7 @@ static void run_focus_update_steps(Vector<JS::Handle<DOM::Node>> old_chain, Vect
             focus_event_target = entry.ptr();
         } else if (is<DOM::Document>(*entry)) {
             // If entry is a Document object, let focus event target be that Document object's relevant global object.
-            focus_event_target = &static_cast<DOM::Document&>(*entry).window();
+            focus_event_target = static_cast<DOM::Document&>(*entry).window();
         }
 
         // 3. If entry is the last entry in new chain, and entry is an Element,

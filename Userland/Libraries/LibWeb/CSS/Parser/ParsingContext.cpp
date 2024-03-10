@@ -56,7 +56,9 @@ URL ParsingContext::complete_url(StringView relative_url) const
 
 HTML::Window const* ParsingContext::window() const
 {
-    return m_document && m_document->default_view() ? &m_document->window() : nullptr;
+    if (!m_document)
+        return nullptr;
+    return m_document->window();
 }
 
 }

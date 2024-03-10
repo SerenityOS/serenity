@@ -19,7 +19,7 @@ JS_DEFINE_ALLOCATOR(DocumentTimeline);
 JS::NonnullGCPtr<DocumentTimeline> DocumentTimeline::create(JS::Realm& realm, DOM::Document& document, HighResolutionTime::DOMHighResTimeStamp origin_time)
 {
     auto timeline = realm.heap().allocate<DocumentTimeline>(realm, realm, document, origin_time);
-    timeline->set_current_time(document.window().performance()->now());
+    timeline->set_current_time(document.window()->performance()->now());
     return timeline;
 }
 

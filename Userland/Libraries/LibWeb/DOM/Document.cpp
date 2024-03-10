@@ -638,7 +638,7 @@ WebIDL::ExceptionOr<JS::GCPtr<HTML::WindowProxy>> Document::open(StringView url,
         return WebIDL::InvalidAccessError::create(realm(), "Cannot perform open on a document that isn't fully active."_fly_string);
 
     // 2. Return the result of running the window open steps with url, name, and features.
-    return window().open_impl(url, name, features);
+    return window()->open_impl(url, name, features);
 }
 
 // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#closing-the-input-stream
@@ -2273,7 +2273,7 @@ JS::GCPtr<HTML::Location> Document::location()
     if (!is_fully_active())
         return nullptr;
 
-    return window().location();
+    return window()->location();
 }
 
 // https://html.spec.whatwg.org/multipage/interaction.html#dom-document-hidden
@@ -2330,7 +2330,7 @@ void Document::run_the_resize_steps()
         return;
     m_last_viewport_size = viewport_size;
 
-    window().dispatch_event(DOM::Event::create(realm(), UIEvents::EventNames::resize));
+    window()->dispatch_event(DOM::Event::create(realm(), UIEvents::EventNames::resize));
 
     schedule_layout_update();
 }
@@ -2401,9 +2401,13 @@ void Document::evaluate_media_queries_and_report_changes()
 
 void Document::evaluate_media_rules()
 {
+    auto window = this->window();
+    if (!window)
+        return;
+
     bool any_media_queries_changed_match_state = false;
     for (auto& style_sheet : style_sheets().sheets()) {
-        if (style_sheet->evaluate_media_queries(window()))
+        if (style_sheet->evaluate_media_queries(*window))
             any_media_queries_changed_match_state = true;
     }
 
@@ -3302,6 +3306,10 @@ void Document::unregister_resize_observer(Badge<ResizeObserver::ResizeObserver>,
 // https://www.w3.org/TR/intersection-observer/#queue-an-intersection-observer-task
 void Document::queue_intersection_observer_task()
 {
+    auto window = this->window();
+    if (!window)
+        return;
+
     // 1. If document’s IntersectionObserverTaskQueued flag is set to true, return.
     if (m_intersection_observer_task_queued)
         return;
@@ -3310,7 +3318,7 @@ void Document::queue_intersection_observer_task()
     m_intersection_observer_task_queued = true;
 
     // 3. Queue a task on the IntersectionObserver task source associated with the document's event loop to notify intersection observers.
-    HTML::queue_global_task(HTML::Task::Source::IntersectionObserver, window(), [this]() {
+    HTML::queue_global_task(HTML::Task::Source::IntersectionObserver, *window, [this]() {
         auto& realm = this->realm();
 
         // https://www.w3.org/TR/intersection-observer/#notify-intersection-observers
@@ -4036,7 +4044,7 @@ void Document::ensure_animation_timer()
                 return;
             }
 
-            update_animations_and_send_events(window().performance()->now());
+            update_animations_and_send_events(window()->performance()->now());
 
             for (auto& timeline : m_associated_animation_timelines) {
                 for (auto& animation : timeline->associated_animations())

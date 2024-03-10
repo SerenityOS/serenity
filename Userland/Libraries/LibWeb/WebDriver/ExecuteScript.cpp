@@ -227,15 +227,15 @@ static JS::ThrowCompletionOr<JS::Value> execute_a_function_body(Web::Page& page,
 
     // 1. Let window be the associated window of the current browsing context’s active document.
     // FIXME: This will need adjusting when WebDriver supports frames.
-    auto& window = page.top_level_browsing_context().active_document()->window();
+    auto window = page.top_level_browsing_context().active_document()->window();
 
     // 2. Let environment settings be the environment settings object for window.
-    auto& environment_settings = Web::HTML::relevant_settings_object(window);
+    auto& environment_settings = Web::HTML::relevant_settings_object(*window);
 
     // 3. Let global scope be environment settings realm’s global environment.
     auto& global_scope = environment_settings.realm().global_environment();
 
-    auto& realm = window.realm();
+    auto& realm = window->realm();
 
     bool contains_direct_call_to_eval = false;
     auto source_text = ByteString::formatted("function() {{ {} }}", body);
@@ -271,7 +271,7 @@ static JS::ThrowCompletionOr<JS::Value> execute_a_function_body(Web::Page& page,
     // 9. Let completion be Function.[[Call]](window, parameters) with function as the this value.
     // NOTE: This is not entirely clear, but I don't think they mean actually passing `function` as
     // the this value argument, but using it as the object [[Call]] is executed on.
-    auto completion = function->internal_call(&window, move(parameters));
+    auto completion = function->internal_call(window, move(parameters));
 
     // 10. Clean up after running a callback with environment settings.
     environment_settings.clean_up_after_running_callback();

@@ -436,7 +436,7 @@ void ConnectionFromClient::debug_request(u64 page_id, ByteString const& request,
 
     if (request == "dump-local-storage") {
         if (auto* document = page.page().top_level_browsing_context().active_document())
-            document->window().local_storage().release_value_but_fixme_should_propagate_errors()->dump();
+            document->window()->local_storage().release_value_but_fixme_should_propagate_errors()->dump();
         return;
     }
 
@@ -1086,7 +1086,7 @@ Messages::WebContentServer::GetLocalStorageEntriesResponse ConnectionFromClient:
     auto& page = maybe_page.release_value();
 
     auto* document = page.page().top_level_browsing_context().active_document();
-    auto local_storage = document->window().local_storage().release_value_but_fixme_should_propagate_errors();
+    auto local_storage = document->window()->local_storage().release_value_but_fixme_should_propagate_errors();
     return local_storage->map();
 }
 
@@ -1100,7 +1100,7 @@ Messages::WebContentServer::GetSessionStorageEntriesResponse ConnectionFromClien
     auto& page = maybe_page.release_value();
 
     auto* document = page.page().top_level_browsing_context().active_document();
-    auto session_storage = document->window().session_storage().release_value_but_fixme_should_propagate_errors();
+    auto session_storage = document->window()->session_storage().release_value_but_fixme_should_propagate_errors();
     return session_storage->map();
 }
 
