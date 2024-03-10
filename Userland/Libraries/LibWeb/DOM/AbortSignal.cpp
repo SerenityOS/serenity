@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
+ * Copyright (c) 2024, Tim Ledbetter <timledbetter@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -67,6 +68,10 @@ void AbortSignal::signal_abort(JS::Value reason)
     auto abort_event = Event::create(realm(), HTML::EventNames::abort);
     abort_event->set_is_trusted(true);
     dispatch_event(abort_event);
+
+    // 6. For each dependentSignal of signal’s dependent signals, signal abort on dependentSignal with signal’s abort reason.
+    for (auto const& dependent_signal : m_dependent_signals)
+        dependent_signal->signal_abort(reason);
 }
 
 void AbortSignal::set_onabort(WebIDL::CallbackType* event_handler)
@@ -95,6 +100,12 @@ void AbortSignal::visit_edges(JS::Cell::Visitor& visitor)
     visitor.visit(m_abort_reason);
     for (auto& algorithm : m_abort_algorithms)
         visitor.visit(algorithm);
+
+    for (auto& source_signal : m_source_signals)
+        visitor.visit(source_signal);
+
+    for (auto& dependent_signal : m_dependent_signals)
+        visitor.visit(dependent_signal);
 }
 
 // https://dom.spec.whatwg.org/#abortsignal-follow
@@ -160,6 +171,76 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<AbortSignal>> AbortSignal::timeout(JS::VM& 
 
     // 4. Return signal.
     return signal;
+}
+
+// https://dom.spec.whatwg.org/#dom-abortsignal-any
+WebIDL::ExceptionOr<JS::NonnullGCPtr<AbortSignal>> AbortSignal::any(JS::VM& vm, JS::Value signals)
+{
+    Vector<JS::Handle<AbortSignal>> signals_list;
+    auto iterator_record = TRY(get_iterator(vm, signals, JS::IteratorHint::Sync));
+    while (true) {
+        auto next = TRY(iterator_step_value(vm, iterator_record));
+        if (!next.has_value())
+            break;
+
+        auto value = next.release_value();
+        if (!value.is_object() || !is<AbortSignal>(value.as_object()))
+            return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "AbortSignal");
+
+        auto& signal = static_cast<AbortSignal&>(value.as_object());
+        signals_list.append(JS::make_handle(signal));
+    }
+
+    // The static any(signals) method steps are to return the result of creating a dependent abort signal from signals using AbortSignal and the current realm.
+    return create_dependent_abort_signal(*vm.current_realm(), signals_list);
+}
+
+// https://dom.spec.whatwg.org/#create-a-dependent-abort-signal
+WebIDL::ExceptionOr<JS::NonnullGCPtr<AbortSignal>> AbortSignal::create_dependent_abort_signal(JS::Realm& realm, Vector<JS::Handle<AbortSignal>> const& signals)
+{
+    // 1. Let resultSignal be a new object implementing signalInterface using realm.
+    auto result_signal = TRY(construct_impl(realm));
+
+    // 2. For each signal of signals: if signal is aborted, then set resultSignal’s abort reason to signal’s abort reason and return resultSignal.
+    for (auto const& signal : signals) {
+        if (signal->aborted()) {
+            result_signal->set_reason(signal->reason());
+            return result_signal;
+        }
+    }
+
+    // 3. Set resultSignal’s dependent to true.
+    result_signal->set_dependent(true);
+
+    // 4. For each signal of signals:
+    for (auto const& signal : signals) {
+        // 1. If signal’s dependent is false, then:
+        if (!signal->dependent()) {
+            // 1. Append signal to resultSignal’s source signals.
+            result_signal->append_source_signal({ signal });
+
+            // 2. Append resultSignal to signal’s dependent signals.
+            signal->append_dependent_signal(result_signal);
+        }
+        // 2. Otherwise, for each sourceSignal of signal’s source signals:
+        else {
+            for (auto const& source_signal : signal->source_signals()) {
+                // 1. Assert: sourceSignal is not aborted and not dependent.
+                VERIFY(source_signal);
+                VERIFY(!source_signal->aborted());
+                VERIFY(!source_signal->dependent());
+
+                // 2. Append sourceSignal to resultSignal’s source signals.
+                result_signal->append_source_signal(source_signal);
+
+                // 3. Append resultSignal to sourceSignal’s dependent signals.
+                source_signal->append_dependent_signal(result_signal);
+            }
+        }
+    }
+
+    // 5. Return resultSignal
+    return result_signal;
 }
 
 }
