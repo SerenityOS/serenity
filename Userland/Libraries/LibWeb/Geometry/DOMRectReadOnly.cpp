@@ -51,7 +51,7 @@ void DOMRectReadOnly::initialize(JS::Realm& realm)
 }
 
 // https://drafts.fxtf.org/geometry/#structured-serialization
-WebIDL::ExceptionOr<void> DOMRectReadOnly::serialization_steps(HTML::SerializationRecord& serialized, bool)
+WebIDL::ExceptionOr<void> DOMRectReadOnly::serialization_steps(HTML::SerializationRecord& serialized, bool, HTML::SerializationMemory&)
 {
     // 1. Set serialized.[[X]] to value’s x coordinate.
     HTML::serialize_primitive_type(serialized, this->x());

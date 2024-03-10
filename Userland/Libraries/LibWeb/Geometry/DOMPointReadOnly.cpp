@@ -65,7 +65,7 @@ void DOMPointReadOnly::initialize(JS::Realm& realm)
     WEB_SET_PROTOTYPE_FOR_INTERFACE(DOMPointReadOnly);
 }
 
-WebIDL::ExceptionOr<void> DOMPointReadOnly::serialization_steps(HTML::SerializationRecord& serialized, bool)
+WebIDL::ExceptionOr<void> DOMPointReadOnly::serialization_steps(HTML::SerializationRecord& serialized, bool, HTML::SerializationMemory&)
 {
     // 1. Set serialized.[[X]] to value’s x coordinate.
     HTML::serialize_primitive_type(serialized, m_x);

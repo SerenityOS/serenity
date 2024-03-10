@@ -87,7 +87,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<File>> File::construct_impl(JS::Realm& real
     return create(realm, file_bits, file_name, options);
 }
 
-WebIDL::ExceptionOr<void> File::serialization_steps(HTML::SerializationRecord& record, bool)
+WebIDL::ExceptionOr<void> File::serialization_steps(HTML::SerializationRecord& record, bool, HTML::SerializationMemory&)
 {
     auto& vm = this->vm();
 

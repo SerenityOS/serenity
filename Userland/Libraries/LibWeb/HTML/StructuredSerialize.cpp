@@ -315,7 +315,7 @@ public:
             TRY(serialize_string(m_vm, m_serialized, serializable.interface_name()));
 
             // 1. Perform the serialization steps for value's primary interface, given value, serialized, and forStorage.
-            TRY(serializable.serialization_steps(m_serialized, m_for_storage));
+            TRY(serializable.serialization_steps(m_serialized, m_for_storage, m_memory));
         }
 
         // 20. Otherwise, if value is a platform object, then throw a "DataCloneError" DOMException.
