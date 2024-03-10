@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2024, Kenneth Myhra <kennethmyhra@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,6 +9,7 @@
 
 #include <LibGfx/Rect.h>
 #include <LibWeb/Bindings/PlatformObject.h>
+#include <LibWeb/Bindings/Serializable.h>
 #include <LibWeb/Forward.h>
 
 namespace Web::Geometry {
@@ -21,13 +23,16 @@ struct DOMRectInit {
 };
 
 // https://drafts.fxtf.org/geometry/#domrectreadonly
-class DOMRectReadOnly : public Bindings::PlatformObject {
+class DOMRectReadOnly
+    : public Bindings::PlatformObject
+    , public Bindings::Serializable {
     WEB_PLATFORM_OBJECT(DOMRectReadOnly, Bindings::PlatformObject);
     JS_DECLARE_ALLOCATOR(DOMRectReadOnly);
 
 public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMRectReadOnly>> construct_impl(JS::Realm&, double x = 0, double y = 0, double width = 0, double height = 0);
     [[nodiscard]] static JS::NonnullGCPtr<DOMRectReadOnly> from_rect(JS::VM&, DOMRectInit const&);
+    static JS::NonnullGCPtr<DOMRectReadOnly> create(JS::Realm&);
 
     virtual ~DOMRectReadOnly() override;
 
@@ -64,8 +69,13 @@ public:
         return min(x(), x() + width());
     }
 
+    virtual StringView interface_name() const override { return "DOMRectReadOnly"sv; }
+    virtual WebIDL::ExceptionOr<void> serialization_steps(HTML::SerializationRecord&, bool for_storage) override;
+    virtual WebIDL::ExceptionOr<void> deserialization_steps(ReadonlySpan<u32> const&, size_t& position) override;
+
 protected:
     DOMRectReadOnly(JS::Realm&, double x, double y, double width, double height);
+    explicit DOMRectReadOnly(JS::Realm&);
 
     virtual void initialize(JS::Realm&) override;
 

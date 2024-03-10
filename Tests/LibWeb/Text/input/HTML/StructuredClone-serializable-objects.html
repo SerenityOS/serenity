@@ -35,6 +35,10 @@
         println(`instanceOf DOMPoint: ${domPoint instanceof DOMPoint}`);
         println(`DOMPoint: ${JSON.stringify(domPoint)}`);
 
+        let domRectReadOnly = structuredClone(new DOMRectReadOnly(10, 20, 30, 40));
+        println(`instanceOf DOMRectReadOnly: ${domRectReadOnly instanceof DOMRectReadOnly}`);
+        println(`DOMRectReadOnly: ${JSON.stringify(domRectReadOnly)}`);
+
         done();
     });
 </script>
