@@ -312,9 +312,10 @@ Optional<HexEditor::OffsetData> HexEditor::offset_at(Gfx::IntPoint position) con
         auto hex_text_end_x = hex_end_x - m_padding;
         absolute_x = clamp(absolute_x, hex_text_start_x, hex_text_end_x);
 
-        auto byte_x = (absolute_x - hex_text_start_x) / cell_width();
+        auto group_x = (absolute_x - hex_text_start_x) / group_width();
+        auto byte_within_group = (absolute_x - hex_text_start_x - group_x * group_width()) / cell_width();
         auto byte_y = (absolute_y - hex_start_y) / line_height();
-        auto offset = (byte_y * bytes_per_row()) + byte_x;
+        auto offset = (byte_y * bytes_per_row()) + (group_x * bytes_per_group()) + byte_within_group;
 
         if (offset >= m_document->size())
             return {};
@@ -666,11 +667,14 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
             if (byte_position >= m_document->size())
                 return;
 
+            auto group = column / bytes_per_group();
+            auto column_within_group = column % bytes_per_group();
+
             auto const cell = m_document->get(byte_position);
             auto const annotation = m_document->annotations().closest_annotation_at(byte_position);
 
             Gfx::IntRect hex_display_rect_high_nibble {
-                static_cast<int>(hex_area_text_start_x + column * cell_width()),
+                static_cast<int>(hex_area_text_start_x + (group * group_width()) + (column_within_group * cell_width())),
                 row_text_y,
                 static_cast<int>(character_width()),
                 static_cast<int>(line_height() - m_line_spacing),
@@ -686,7 +690,7 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
             Gfx::IntRect background_rect {
                 static_cast<int>(hex_display_rect_high_nibble.x() - character_width() / 2),
                 row_background_y,
-                static_cast<int>(cell_width()),
+                static_cast<int>(character_width() * 3),
                 static_cast<int>(line_height()),
             };
 
