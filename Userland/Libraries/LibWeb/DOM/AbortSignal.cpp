@@ -64,7 +64,9 @@ void AbortSignal::signal_abort(JS::Value reason)
     m_abort_algorithms.clear();
 
     // 5. Fire an event named abort at signal.
-    dispatch_event(Event::create(realm(), HTML::EventNames::abort));
+    auto abort_event = Event::create(realm(), HTML::EventNames::abort);
+    abort_event->set_is_trusted(true);
+    dispatch_event(abort_event);
 }
 
 void AbortSignal::set_onabort(WebIDL::CallbackType* event_handler)
