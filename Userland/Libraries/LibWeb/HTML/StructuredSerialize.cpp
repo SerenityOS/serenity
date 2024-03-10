@@ -949,7 +949,7 @@ public:
             else {
                 // 1. Perform the appropriate deserialization steps for the interface identified by serialized.[[Type]], given serialized, value, and targetRealm.
                 auto& serializable = dynamic_cast<Bindings::Serializable&>(value.as_object());
-                TRY(serializable.deserialization_steps(m_serialized, m_position));
+                TRY(serializable.deserialization_steps(m_serialized, m_position, m_memory));
             }
         }
 

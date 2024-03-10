@@ -165,7 +165,7 @@ WebIDL::ExceptionOr<void> Blob::serialization_steps(HTML::SerializationRecord& r
     return {};
 }
 
-WebIDL::ExceptionOr<void> Blob::deserialization_steps(ReadonlySpan<u32> const& record, size_t& position)
+WebIDL::ExceptionOr<void> Blob::deserialization_steps(ReadonlySpan<u32> const& record, size_t& position, HTML::DeserializationMemory&)
 {
     auto& vm = this->vm();
 

@@ -79,7 +79,7 @@ WebIDL::ExceptionOr<void> DOMPointReadOnly::serialization_steps(HTML::Serializat
     return {};
 }
 
-WebIDL::ExceptionOr<void> DOMPointReadOnly::deserialization_steps(ReadonlySpan<u32> const& serialized, size_t& position)
+WebIDL::ExceptionOr<void> DOMPointReadOnly::deserialization_steps(ReadonlySpan<u32> const& serialized, size_t& position, HTML::DeserializationMemory&)
 {
     // 1. Set value’s x coordinate to serialized.[[X]].
     m_x = HTML::deserialize_primitive_type<double>(serialized, position);
