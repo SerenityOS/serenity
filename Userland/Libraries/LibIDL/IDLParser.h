@@ -57,6 +57,10 @@ private:
     Vector<Parameter> parse_parameters();
     NonnullRefPtr<Type const> parse_type();
     void parse_constant(Interface&);
+    ByteString parse_identifier_until(AK::Function<bool(char)> predicate);
+    ByteString parse_identifier_ending_with(auto... possible_terminating_characters);
+    ByteString parse_identifier_ending_with_space();
+    ByteString parse_identifier_ending_with_space_or(auto... possible_terminating_characters);
 
     ByteString import_base_path;
     ByteString filename;
