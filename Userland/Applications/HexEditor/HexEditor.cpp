@@ -242,9 +242,24 @@ void HexEditor::update_content_size()
 
 void HexEditor::set_bytes_per_row(size_t bytes_per_row)
 {
-    if (bytes_per_row == m_bytes_per_row)
+    if (bytes_per_row == this->bytes_per_row())
         return;
-    m_bytes_per_row = bytes_per_row;
+    set_groups_per_row(ceil_div(bytes_per_row, m_bytes_per_group));
+}
+
+void HexEditor::set_bytes_per_group(size_t bytes_per_group)
+{
+    if (bytes_per_group == m_bytes_per_group)
+        return;
+    m_bytes_per_group = bytes_per_group;
+    update_content_size();
+}
+
+void HexEditor::set_groups_per_row(size_t groups_per_row)
+{
+    if (groups_per_row == m_groups_per_row)
+        return;
+    m_groups_per_row = groups_per_row;
     update_content_size();
 }
 
@@ -299,7 +314,7 @@ Optional<HexEditor::OffsetData> HexEditor::offset_at(Gfx::IntPoint position) con
 
         auto byte_x = (absolute_x - hex_text_start_x) / cell_width();
         auto byte_y = (absolute_y - hex_start_y) / line_height();
-        auto offset = (byte_y * m_bytes_per_row) + byte_x;
+        auto offset = (byte_y * bytes_per_row()) + byte_x;
 
         if (offset >= m_document->size())
             return {};
@@ -315,7 +330,7 @@ Optional<HexEditor::OffsetData> HexEditor::offset_at(Gfx::IntPoint position) con
 
         auto byte_x = (absolute_x - text_text_start_x) / character_width();
         auto byte_y = (absolute_y - text_start_y) / line_height();
-        auto offset = (byte_y * m_bytes_per_row) + byte_x;
+        auto offset = (byte_y * bytes_per_row()) + byte_x;
 
         if (offset >= m_document->size())
             return {};
