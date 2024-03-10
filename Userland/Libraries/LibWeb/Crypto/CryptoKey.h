@@ -12,11 +12,14 @@
 #include <LibWeb/Bindings/CryptoKeyPrototype.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Bindings/PlatformObject.h>
+#include <LibWeb/Bindings/Serializable.h>
 #include <LibWeb/Crypto/CryptoBindings.h>
 
 namespace Web::Crypto {
 
-class CryptoKey final : public Bindings::PlatformObject {
+class CryptoKey final
+    : public Bindings::PlatformObject
+    , public Bindings::Serializable {
     WEB_PLATFORM_OBJECT(CryptoKey, Bindings::PlatformObject);
     JS_DECLARE_ALLOCATOR(CryptoKey);
 
@@ -24,6 +27,7 @@ public:
     using InternalKeyData = Variant<ByteBuffer, Bindings::JsonWebKey, ::Crypto::PK::RSAPublicKey<>, ::Crypto::PK::RSAPrivateKey<>>;
 
     [[nodiscard]] static JS::NonnullGCPtr<CryptoKey> create(JS::Realm&, InternalKeyData);
+    [[nodiscard]] static JS::NonnullGCPtr<CryptoKey> create(JS::Realm&);
 
     virtual ~CryptoKey() override;
 
@@ -41,8 +45,14 @@ public:
 
     InternalKeyData const& handle() const { return m_key_data; }
 
+    virtual StringView interface_name() const override { return "CryptoKey"sv; }
+    virtual WebIDL::ExceptionOr<void> serialization_steps(HTML::SerializationRecord& record, bool for_storage, HTML::SerializationMemory&) override;
+    virtual WebIDL::ExceptionOr<void> deserialization_steps(ReadonlySpan<u32> const& record, size_t& position, HTML::DeserializationMemory&) override;
+
 private:
     CryptoKey(JS::Realm&, InternalKeyData);
+    explicit CryptoKey(JS::Realm&);
+
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Visitor&) override;
 

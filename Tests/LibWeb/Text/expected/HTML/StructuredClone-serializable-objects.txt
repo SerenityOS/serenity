@@ -20,3 +20,8 @@ instanceOf DOMRectReadOnly: true
 DOMRectReadOnly: {"x":10,"y":20,"width":30,"height":40,"top":20,"right":40,"bottom":60,"left":10}
 instanceOf DOMRect: true
 DOMRect: {"x":10,"y":20,"width":30,"height":40,"top":20,"right":40,"bottom":60,"left":10}
+instanceOf CryptoKey: true
+CryptoKey.type: "secret"
+CryptoKey.extractable: false
+CryptoKey.algorithm: {"name":"PBKDF2"}
+CryptoKey.usages: ["deriveKey","deriveBits"]

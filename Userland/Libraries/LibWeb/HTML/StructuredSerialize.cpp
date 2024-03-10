@@ -33,6 +33,7 @@
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Bindings/Serializable.h>
 #include <LibWeb/Bindings/Transferable.h>
+#include <LibWeb/Crypto/CryptoKey.h>
 #include <LibWeb/FileAPI/Blob.h>
 #include <LibWeb/FileAPI/File.h>
 #include <LibWeb/Geometry/DOMMatrix.h>
@@ -984,6 +985,8 @@ private:
             return Geometry::DOMRectReadOnly::create(realm);
         if (interface_name == "DOMRect"sv)
             return Geometry::DOMRect::create(realm);
+        if (interface_name == "CryptoKey"sv)
+            return Crypto::CryptoKey::create(realm);
 
         VERIFY_NOT_REACHED();
     }

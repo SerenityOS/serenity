@@ -43,6 +43,20 @@
         println(`instanceOf DOMRect: ${domRect instanceof DOMRect}`);
         println(`DOMRect: ${JSON.stringify(domRect)}`);
 
+        let cryptoKey = await window.crypto.subtle.importKey(
+            "raw",
+            new TextEncoder().encode("password"),
+            { name: "PBKDF2" },
+            false,
+            ["deriveBits", "deriveKey"]
+        );
+        let clonedCryptoKey = structuredClone(cryptoKey);
+        println(`instanceOf CryptoKey: ${clonedCryptoKey instanceof CryptoKey}`);
+        println(`CryptoKey.type: ${JSON.stringify(clonedCryptoKey.type)}`);
+        println(`CryptoKey.extractable: ${JSON.stringify(clonedCryptoKey.extractable)}`);
+        println(`CryptoKey.algorithm: ${JSON.stringify(clonedCryptoKey.algorithm)}`);
+        println(`CryptoKey.usages: ${JSON.stringify(clonedCryptoKey.usages)}`);
+
         done();
     });
 </script>
