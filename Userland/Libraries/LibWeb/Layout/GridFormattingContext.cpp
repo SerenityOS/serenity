@@ -1833,53 +1833,13 @@ void GridFormattingContext::layout_absolutely_positioned_element(Box const& box,
     auto& box_state = m_state.get_mutable(box);
     auto const& computed_values = box.computed_values();
 
-    auto const& grid_row_start = computed_values.grid_row_start();
-    auto const& grid_row_end = computed_values.grid_row_end();
-    auto const& grid_column_start = computed_values.grid_column_start();
-    auto const& grid_column_end = computed_values.grid_column_end();
+    auto row_placement_position = resolve_grid_position(box, GridDimension::Row);
+    auto column_placement_position = resolve_grid_position(box, GridDimension::Column);
 
-    int row_start = 0, row_end = 0, column_start = 0, column_end = 0;
-
-    if (grid_column_end.has_identifier()) {
-        if (auto maybe_grid_area = m_grid_areas.get(grid_column_end.identifier()); maybe_grid_area.has_value())
-            column_end = maybe_grid_area->column_end;
-        else if (auto line_name_index = get_line_index_by_line_name(GridDimension::Column, grid_column_end.identifier()); line_name_index.has_value())
-            column_end = line_name_index.value();
-        else
-            column_end = 1;
-        column_start = column_end - 1;
-    }
-
-    if (grid_column_start.has_identifier()) {
-        if (auto maybe_grid_area = m_grid_areas.get(grid_column_start.identifier()); maybe_grid_area.has_value())
-            column_start = maybe_grid_area->column_start;
-        else if (auto line_name_index = get_line_index_by_line_name(GridDimension::Column, grid_column_start.identifier()); line_name_index.has_value())
-            column_start = line_name_index.value();
-        else
-            column_start = 0;
-    }
-
-    if (grid_row_end.has_identifier()) {
-        if (auto maybe_grid_area = m_grid_areas.get(grid_row_end.identifier()); maybe_grid_area.has_value())
-            row_end = maybe_grid_area->row_end;
-        else if (auto line_name_index = get_line_index_by_line_name(GridDimension::Row, grid_row_end.identifier()); line_name_index.has_value())
-            row_end = line_name_index.value();
-        else
-            row_end = 1;
-        row_start = row_end - 1;
-    }
-
-    if (grid_row_start.has_identifier()) {
-        if (auto maybe_grid_area = m_grid_areas.get(grid_row_start.identifier()); maybe_grid_area.has_value())
-            row_start = maybe_grid_area->row_start;
-        else if (auto line_name_index = get_line_index_by_line_name(GridDimension::Row, grid_row_start.identifier()); line_name_index.has_value())
-            row_start = line_name_index.value();
-        else
-            row_start = 0;
-    }
-
-    size_t row_span = row_end - row_start;
-    size_t column_span = column_end - column_start;
+    auto row_start = row_placement_position.start;
+    auto row_span = row_placement_position.span;
+    auto column_start = column_placement_position.start;
+    auto column_span = column_placement_position.span;
 
     GridItem item { box, row_start, row_span, column_start, column_span };
 
