@@ -18,6 +18,7 @@ class DOMRect final : public DOMRectReadOnly {
 public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMRect>> construct_impl(JS::Realm&, double x = 0, double y = 0, double width = 0, double height = 0);
     [[nodiscard]] static JS::NonnullGCPtr<DOMRect> create(JS::Realm&, Gfx::FloatRect const&);
+    [[nodiscard]] static JS::NonnullGCPtr<DOMRect> create(JS::Realm&);
     [[nodiscard]] static JS::NonnullGCPtr<DOMRect> from_rect(JS::VM&, DOMRectInit const&);
 
     virtual ~DOMRect() override;
@@ -32,8 +33,11 @@ public:
     void set_width(double width) { m_rect.set_width(width); }
     void set_height(double height) { m_rect.set_height(height); }
 
+    virtual StringView interface_name() const override { return "DOMRect"sv; }
+
 private:
     DOMRect(JS::Realm&, double x, double y, double width, double height);
+    explicit DOMRect(JS::Realm&);
 
     virtual void initialize(JS::Realm&) override;
 };
