@@ -438,6 +438,15 @@ TEST_CASE(unicode)
     EXPECT(!url.fragment().has_value());
 }
 
+TEST_CASE(query_with_non_ascii)
+{
+    URL url { "http://example.com/?utf8=✓"sv };
+    EXPECT(url.is_valid());
+    EXPECT_EQ(url.serialize_path(), "/"sv);
+    EXPECT_EQ(url.query(), "utf8=%E2%9C%93");
+    EXPECT(!url.fragment().has_value());
+}
+
 TEST_CASE(complete_file_url_with_base)
 {
     URL url { "file:///home/index.html" };

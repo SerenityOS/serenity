@@ -714,7 +714,7 @@ ErrorOr<String> URLParser::percent_encode_after_encoding(StringView input, URL::
     StringBuilder output;
 
     // 3. For each byte of encodeOutput converted to a byte sequence:
-    for (auto byte : input) {
+    for (u8 byte : input) {
         // 1. If spaceAsPlus is true and byte is 0x20 (SP), then append U+002B (+) to output and continue.
         if (space_as_plus && byte == ' ') {
             output.append('+');
