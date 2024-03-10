@@ -417,7 +417,7 @@ JS::GCPtr<Layout::Node> Element::create_layout_node_for_display_type(DOM::Docume
         // MathML elements with a computed display value equal to block math or inline math control box generation
         // and layout according to their tag name, as described in the relevant sections.
         // FIXME: Figure out what kind of node we should make for them. For now, we'll stick with a generic Box.
-        return document.heap().allocate_without_realm<Layout::Box>(document, element, move(style));
+        return document.heap().allocate_without_realm<Layout::BlockContainer>(document, element, move(style));
     }
 
     if (display.is_inline_outside()) {
