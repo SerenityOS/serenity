@@ -9,6 +9,7 @@
 
 #include "IDLParser.h"
 #include <AK/Assertions.h>
+#include <AK/Function.h>
 #include <AK/LexicalPath.h>
 #include <AK/QuickSort.h>
 #include <LibCore/File.h>
@@ -104,6 +105,27 @@ void Parser::assert_string(StringView expected)
         report_parsing_error(ByteString::formatted("expected '{}'", expected), filename, input, lexer.tell());
 }
 
+ByteString Parser::parse_identifier_until(AK::Function<bool(char)> predicate)
+{
+    auto identifier = lexer.consume_until(move(predicate));
+    return identifier.trim("_"sv, TrimMode::Left);
+}
+
+ByteString Parser::parse_identifier_ending_with_space_or(auto... possible_terminating_characters)
+{
+    return parse_identifier_until([&](auto ch) { return (is_ascii_space(ch) || ... || (ch == possible_terminating_characters)); });
+}
+
+ByteString Parser::parse_identifier_ending_with(auto... possible_terminating_characters)
+{
+    return parse_identifier_until([&](auto ch) { return (... || (ch == possible_terminating_characters)); });
+}
+
+ByteString Parser::parse_identifier_ending_with_space()
+{
+    return parse_identifier_ending_with_space_or();
+}
+
 HashMap<ByteString, ByteString> Parser::parse_extended_attributes()
 {
     HashMap<ByteString, ByteString> extended_attributes;
@@ -111,7 +133,7 @@ HashMap<ByteString, ByteString> Parser::parse_extended_attributes()
         consume_whitespace();
         if (lexer.consume_specific(']'))
             break;
-        auto name = lexer.consume_until([](auto ch) { return ch == ']' || ch == '=' || ch == ','; });
+        auto name = parse_identifier_ending_with(']', '=', ',');
         if (lexer.consume_specific('=')) {
             bool did_open_paren = false;
             auto value = lexer.consume_until(
@@ -277,20 +299,19 @@ void Parser::parse_attribute(HashMap<ByteString, ByteString>& extended_attribute
 
     auto type = parse_type();
     consume_whitespace();
-    auto name = lexer.consume_until([](auto ch) { return is_ascii_space(ch) || ch == ';'; });
+    auto name = parse_identifier_ending_with_space_or(';');
     consume_whitespace();
 
     assert_specific(';');
 
-    auto name_as_string = name.to_byte_string();
-    auto getter_callback_name = ByteString::formatted("{}_getter", name_as_string.to_snakecase());
-    auto setter_callback_name = ByteString::formatted("{}_setter", name_as_string.to_snakecase());
+    auto getter_callback_name = ByteString::formatted("{}_getter", name.to_snakecase());
+    auto setter_callback_name = ByteString::formatted("{}_setter", name.to_snakecase());
 
     Attribute attribute {
         inherit,
         readonly,
         move(type),
-        move(name_as_string),
+        move(name),
         move(extended_attributes),
         move(getter_callback_name),
         move(setter_callback_name),
@@ -305,7 +326,7 @@ void Parser::parse_constant(Interface& interface)
 
     auto type = parse_type();
     consume_whitespace();
-    auto name = lexer.consume_until([](auto ch) { return is_ascii_space(ch) || ch == '='; });
+    auto name = parse_identifier_ending_with_space_or('=');
     consume_whitespace();
     lexer.consume_specific('=');
     consume_whitespace();
@@ -343,7 +364,7 @@ Vector<Parameter> Parser::parse_parameters()
         auto type = parse_type();
         bool variadic = lexer.consume_specific("..."sv);
         consume_whitespace();
-        auto name = lexer.consume_until([](auto ch) { return is_ascii_space(ch) || ch == ',' || ch == ')' || ch == '='; });
+        auto name = parse_identifier_ending_with_space_or(',', ')', '=');
         Parameter parameter = { move(type), move(name), optional, {}, move(extended_attributes), variadic };
         consume_whitespace();
         if (variadic) {
@@ -381,7 +402,7 @@ Function Parser::parse_function(HashMap<ByteString, ByteString>& extended_attrib
 
     auto return_type = parse_type();
     consume_whitespace();
-    auto name = lexer.consume_until([](auto ch) { return is_ascii_space(ch) || ch == '('; });
+    auto name = parse_identifier_ending_with_space_or('(');
     consume_whitespace();
     assert_specific('(');
     auto parameters = parse_parameters();
@@ -560,11 +581,11 @@ void Parser::parse_deleter(HashMap<ByteString, ByteString>& extended_attributes,
 void Parser::parse_interface(Interface& interface)
 {
     consume_whitespace();
-    interface.name = lexer.consume_until([](auto ch) { return is_ascii_space(ch); });
+    interface.name = parse_identifier_ending_with_space();
     consume_whitespace();
     if (lexer.consume_specific(':')) {
         consume_whitespace();
-        interface.parent_name = lexer.consume_until([](auto ch) { return is_ascii_space(ch); });
+        interface.parent_name = parse_identifier_ending_with_space();
         consume_whitespace();
     }
     assert_specific('{');
@@ -650,7 +671,7 @@ void Parser::parse_namespace(Interface& interface)
 {
     consume_whitespace();
 
-    interface.name = lexer.consume_until([](auto ch) { return is_ascii_space(ch); });
+    interface.name = parse_identifier_ending_with_space();
     interface.is_namespace = true;
 
     consume_whitespace();
@@ -681,7 +702,7 @@ void Parser::parse_enumeration(HashMap<ByteString, ByteString> extended_attribut
     Enumeration enumeration {};
     enumeration.extended_attributes = move(extended_attributes);
 
-    auto name = lexer.consume_until([](auto ch) { return is_ascii_space(ch); });
+    auto name = parse_identifier_ending_with_space();
     consume_whitespace();
 
     assert_specific('{');
@@ -736,10 +757,10 @@ void Parser::parse_typedef(Interface& interface)
     auto type = parse_type();
     consume_whitespace();
 
-    auto name = lexer.consume_until(';');
+    auto name = parse_identifier_ending_with(';');
     assert_specific(';');
 
-    interface.typedefs.set(name, Typedef { move(extended_attributes), move(type) });
+    interface.typedefs.set(move(name), Typedef { move(extended_attributes), move(type) });
     consume_whitespace();
 }
 
@@ -750,12 +771,12 @@ void Parser::parse_dictionary(Interface& interface)
 
     Dictionary dictionary {};
 
-    auto name = lexer.consume_until([](auto ch) { return is_ascii_space(ch); });
+    auto name = parse_identifier_ending_with_space();
     consume_whitespace();
 
     if (lexer.consume_specific(':')) {
         consume_whitespace();
-        dictionary.parent_name = lexer.consume_until([](auto ch) { return is_ascii_space(ch); });
+        dictionary.parent_name = parse_identifier_ending_with_space();
         consume_whitespace();
     }
     assert_specific('{');
@@ -783,7 +804,7 @@ void Parser::parse_dictionary(Interface& interface)
         auto type = parse_type();
         consume_whitespace();
 
-        auto name = lexer.consume_until([](auto ch) { return is_ascii_space(ch) || ch == ';'; });
+        auto name = parse_identifier_ending_with_space_or(';');
         consume_whitespace();
 
         Optional<StringView> default_value;
@@ -800,7 +821,7 @@ void Parser::parse_dictionary(Interface& interface)
         DictionaryMember member {
             required,
             move(type),
-            name,
+            move(name),
             move(extended_attributes),
             Optional<ByteString>(move(default_value)),
         };
@@ -842,7 +863,7 @@ void Parser::parse_callback_function(HashMap<ByteString, ByteString>& extended_a
     assert_string("callback"sv);
     consume_whitespace();
 
-    auto name = lexer.consume_until([](auto ch) { return is_ascii_space(ch); });
+    auto name = parse_identifier_ending_with_space();
     consume_whitespace();
 
     assert_specific('=');
@@ -856,7 +877,7 @@ void Parser::parse_callback_function(HashMap<ByteString, ByteString>& extended_a
     consume_whitespace();
     assert_specific(';');
 
-    interface.callback_functions.set(name, CallbackFunction { move(return_type), move(parameters), extended_attributes.contains("LegacyTreatNonObjectAsNull") });
+    interface.callback_functions.set(move(name), CallbackFunction { move(return_type), move(parameters), extended_attributes.contains("LegacyTreatNonObjectAsNull") });
     consume_whitespace();
 }
 
@@ -880,11 +901,11 @@ void Parser::parse_non_interface_entities(bool allow_interface, Interface& inter
             parse_callback_function(extended_attributes, interface);
         } else if ((allow_interface && !lexer.next_is("interface") && !lexer.next_is("namespace")) || !allow_interface) {
             auto current_offset = lexer.tell();
-            auto name = lexer.consume_until([](auto ch) { return is_ascii_space(ch); });
+            auto name = parse_identifier_ending_with_space();
             consume_whitespace();
             if (lexer.consume_specific("includes"sv)) {
                 consume_whitespace();
-                auto mixin_name = lexer.consume_until([](auto ch) { return is_ascii_space(ch) || ch == ';'; });
+                auto mixin_name = parse_identifier_ending_with_space_or(';');
                 interface.included_mixins.ensure(name).set(mixin_name);
                 consume_whitespace();
                 assert_specific(';');
