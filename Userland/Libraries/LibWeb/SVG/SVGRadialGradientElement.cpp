@@ -53,12 +53,18 @@ void SVGRadialGradientElement::attribute_changed(FlyString const& name, Optional
 // https://svgwg.org/svg2-draft/pservers.html#RadialGradientElementFXAttribute
 NumberPercentage SVGRadialGradientElement::start_circle_x() const
 {
+    HashTable<SVGGradientElement const*> seen_gradients;
+    return start_circle_x_impl(seen_gradients);
+}
+
+NumberPercentage SVGRadialGradientElement::start_circle_x_impl(HashTable<SVGGradientElement const*>& seen_gradients) const
+{
     if (m_fx.has_value())
         return *m_fx;
     // If the element references an element that specifies a value for 'fx', then the value of 'fx' is
     // inherited from the referenced element.
-    if (auto gradient = linked_radial_gradient())
-        return gradient->start_circle_x();
+    if (auto gradient = linked_radial_gradient(seen_gradients))
+        return gradient->start_circle_x_impl(seen_gradients);
     // If attribute ‘fx’ is not specified, ‘fx’ will coincide with the presentational value of ‘cx’ for
     // the element whether the value for 'cx' was inherited or not.
     return end_circle_x();
@@ -67,12 +73,18 @@ NumberPercentage SVGRadialGradientElement::start_circle_x() const
 // https://svgwg.org/svg2-draft/pservers.html#RadialGradientElementFYAttribute
 NumberPercentage SVGRadialGradientElement::start_circle_y() const
 {
+    HashTable<SVGGradientElement const*> seen_gradients;
+    return start_circle_y_impl(seen_gradients);
+}
+
+NumberPercentage SVGRadialGradientElement::start_circle_y_impl(HashTable<SVGGradientElement const*>& seen_gradients) const
+{
     if (m_fy.has_value())
         return *m_fy;
     // If the element references an element that specifies a value for 'fy', then the value of 'fy' is
     // inherited from the referenced element.
-    if (auto gradient = linked_radial_gradient())
-        return gradient->start_circle_y();
+    if (auto gradient = linked_radial_gradient(seen_gradients))
+        return gradient->start_circle_y_impl(seen_gradients);
     // If attribute ‘fy’ is not specified, ‘fy’ will coincide with the presentational value of ‘cy’ for
     // the element whether the value for 'cy' was inherited or not.
     return end_circle_y();
@@ -81,13 +93,19 @@ NumberPercentage SVGRadialGradientElement::start_circle_y() const
 // https://svgwg.org/svg2-draft/pservers.html#RadialGradientElementFRAttribute
 NumberPercentage SVGRadialGradientElement::start_circle_radius() const
 {
+    HashTable<SVGGradientElement const*> seen_gradients;
+    return start_circle_radius_impl(seen_gradients);
+}
+
+NumberPercentage SVGRadialGradientElement::start_circle_radius_impl(HashTable<SVGGradientElement const*>& seen_gradients) const
+{
     // Note: A negative value is an error.
     if (m_fr.has_value() && m_fr->value() >= 0)
         return *m_fr;
     // if the element references an element that specifies a value for 'fr', then the value of
     // 'fr' is inherited from the referenced element.
-    if (auto gradient = linked_radial_gradient())
-        return gradient->start_circle_radius();
+    if (auto gradient = linked_radial_gradient(seen_gradients))
+        return gradient->start_circle_radius_impl(seen_gradients);
     // If the attribute is not specified, the effect is as if a value of '0%' were specified.
     return NumberPercentage::create_percentage(0);
 }
@@ -95,31 +113,49 @@ NumberPercentage SVGRadialGradientElement::start_circle_radius() const
 // https://svgwg.org/svg2-draft/pservers.html#RadialGradientElementCXAttribute
 NumberPercentage SVGRadialGradientElement::end_circle_x() const
 {
+    HashTable<SVGGradientElement const*> seen_gradients;
+    return end_circle_x_impl(seen_gradients);
+}
+
+NumberPercentage SVGRadialGradientElement::end_circle_x_impl(HashTable<SVGGradientElement const*>& seen_gradients) const
+{
     if (m_cx.has_value())
         return *m_cx;
-    if (auto gradient = linked_radial_gradient())
-        return gradient->end_circle_x();
+    if (auto gradient = linked_radial_gradient(seen_gradients))
+        return gradient->end_circle_x_impl(seen_gradients);
     return NumberPercentage::create_percentage(50);
 }
 
 // https://svgwg.org/svg2-draft/pservers.html#RadialGradientElementCYAttribute
 NumberPercentage SVGRadialGradientElement::end_circle_y() const
 {
+    HashTable<SVGGradientElement const*> seen_gradients;
+    return end_circle_y_impl(seen_gradients);
+}
+
+NumberPercentage SVGRadialGradientElement::end_circle_y_impl(HashTable<SVGGradientElement const*>& seen_gradients) const
+{
     if (m_cy.has_value())
         return *m_cy;
-    if (auto gradient = linked_radial_gradient())
-        return gradient->end_circle_y();
+    if (auto gradient = linked_radial_gradient(seen_gradients))
+        return gradient->end_circle_y_impl(seen_gradients);
     return NumberPercentage::create_percentage(50);
 }
 
 // https://svgwg.org/svg2-draft/pservers.html#RadialGradientElementRAttribute
 NumberPercentage SVGRadialGradientElement::end_circle_radius() const
 {
+    HashTable<SVGGradientElement const*> seen_gradients;
+    return end_circle_radius_impl(seen_gradients);
+}
+
+NumberPercentage SVGRadialGradientElement::end_circle_radius_impl(HashTable<SVGGradientElement const*>& seen_gradients) const
+{
     // Note: A negative value is an error.
     if (m_r.has_value() && m_r->value() >= 0)
         return *m_r;
-    if (auto gradient = linked_radial_gradient())
-        return gradient->end_circle_radius();
+    if (auto gradient = linked_radial_gradient(seen_gradients))
+        return gradient->end_circle_radius_impl(seen_gradients);
     return NumberPercentage::create_percentage(50);
 }
 

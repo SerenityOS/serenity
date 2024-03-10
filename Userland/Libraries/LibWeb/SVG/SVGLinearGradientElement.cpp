@@ -49,10 +49,16 @@ void SVGLinearGradientElement::attribute_changed(FlyString const& name, Optional
 // https://www.w3.org/TR/SVG11/pservers.html#LinearGradientElementX1Attribute
 NumberPercentage SVGLinearGradientElement::start_x() const
 {
+    HashTable<SVGGradientElement const*> seen_gradients;
+    return start_x_impl(seen_gradients);
+}
+
+NumberPercentage SVGLinearGradientElement::start_x_impl(HashTable<SVGGradientElement const*>& seen_gradients) const
+{
     if (m_x1.has_value())
         return *m_x1;
-    if (auto gradient = linked_linear_gradient())
-        return gradient->start_x();
+    if (auto gradient = linked_linear_gradient(seen_gradients))
+        return gradient->start_x_impl(seen_gradients);
     // If the attribute is not specified, the effect is as if a value of '0%' were specified.
     return NumberPercentage::create_percentage(0);
 }
@@ -60,10 +66,16 @@ NumberPercentage SVGLinearGradientElement::start_x() const
 // https://www.w3.org/TR/SVG11/pservers.html#LinearGradientElementY1Attribute
 NumberPercentage SVGLinearGradientElement::start_y() const
 {
+    HashTable<SVGGradientElement const*> seen_gradients;
+    return start_y_impl(seen_gradients);
+}
+
+NumberPercentage SVGLinearGradientElement::start_y_impl(HashTable<SVGGradientElement const*>& seen_gradients) const
+{
     if (m_y1.has_value())
         return *m_y1;
-    if (auto gradient = linked_linear_gradient())
-        return gradient->start_x();
+    if (auto gradient = linked_linear_gradient(seen_gradients))
+        return gradient->start_y_impl(seen_gradients);
     // If the attribute is not specified, the effect is as if a value of '0%' were specified.
     return NumberPercentage::create_percentage(0);
 }
@@ -71,10 +83,16 @@ NumberPercentage SVGLinearGradientElement::start_y() const
 // https://www.w3.org/TR/SVG11/pservers.html#LinearGradientElementX2Attribute
 NumberPercentage SVGLinearGradientElement::end_x() const
 {
+    HashTable<SVGGradientElement const*> seen_gradients;
+    return end_x_impl(seen_gradients);
+}
+
+NumberPercentage SVGLinearGradientElement::end_x_impl(HashTable<SVGGradientElement const*>& seen_gradients) const
+{
     if (m_x2.has_value())
         return *m_x2;
-    if (auto gradient = linked_linear_gradient())
-        return gradient->start_x();
+    if (auto gradient = linked_linear_gradient(seen_gradients))
+        return gradient->end_x_impl(seen_gradients);
     // If the attribute is not specified, the effect is as if a value of '100%' were specified.
     return NumberPercentage::create_percentage(100);
 }
@@ -82,10 +100,16 @@ NumberPercentage SVGLinearGradientElement::end_x() const
 // https://www.w3.org/TR/SVG11/pservers.html#LinearGradientElementY2Attribute
 NumberPercentage SVGLinearGradientElement::end_y() const
 {
+    HashTable<SVGGradientElement const*> seen_gradients;
+    return end_y_impl(seen_gradients);
+}
+
+NumberPercentage SVGLinearGradientElement::end_y_impl(HashTable<SVGGradientElement const*>& seen_gradients) const
+{
     if (m_y2.has_value())
         return *m_y2;
-    if (auto gradient = linked_linear_gradient())
-        return gradient->start_x();
+    if (auto gradient = linked_linear_gradient(seen_gradients))
+        return gradient->end_y_impl(seen_gradients);
     // If the attribute is not specified, the effect is as if a value of '0%' were specified.
     return NumberPercentage::create_percentage(0);
 }
