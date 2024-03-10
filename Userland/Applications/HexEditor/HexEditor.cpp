@@ -707,14 +707,14 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
             // 4. Annotations
             // 5. Null bytes
             // 6. Regular formatting
-            auto determine_background_color = [&](EditMode edit_mode) -> Gfx::Color {
+            auto determine_background_color = [&](EditMode edit_mode) -> Optional<Gfx::Color> {
                 if (selected)
                     return cell.modified ? palette().selection().inverted() : palette().selection();
                 if (byte_position == m_position && m_edit_mode != edit_mode)
                     return palette().inactive_selection();
                 if (annotation.has_value())
                     return annotation->background_color;
-                return palette().color(background_role());
+                return {};
             };
             auto determine_text_color = [&](EditMode edit_mode) -> Gfx::Color {
                 if (cell.modified)
@@ -729,13 +729,14 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
                     return palette().color(ColorRole::PlaceholderText);
                 return palette().color(foreground_role());
             };
-            Gfx::Color background_color_hex = determine_background_color(EditMode::Hex);
-            Gfx::Color background_color_text = determine_background_color(EditMode::Text);
-            Gfx::Color text_color_hex = determine_text_color(EditMode::Hex);
-            Gfx::Color text_color_text = determine_text_color(EditMode::Text);
+            auto background_color_hex = determine_background_color(EditMode::Hex);
+            auto background_color_text = determine_background_color(EditMode::Text);
+            auto text_color_hex = determine_text_color(EditMode::Hex);
+            auto text_color_text = determine_text_color(EditMode::Text);
             auto& font = cell.modified ? this->font().bold_variant() : this->font();
 
-            painter.fill_rect(background_rect, background_color_hex);
+            if (background_color_hex.has_value())
+                painter.fill_rect(background_rect, *background_color_hex);
 
             Gfx::IntRect text_display_rect {
                 static_cast<int>(text_area_text_start_x + column * character_width()),
@@ -774,7 +775,8 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
                 static_cast<int>(line_height()),
             };
 
-            painter.fill_rect(text_background_rect, background_color_text);
+            if (background_color_text.has_value())
+                painter.fill_rect(text_background_rect, *background_color_text);
 
             if (m_edit_mode == EditMode::Text)
                 draw_cursor_rect();
