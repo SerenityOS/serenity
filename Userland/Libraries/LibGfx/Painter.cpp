@@ -1351,7 +1351,7 @@ void Painter::draw_scaled_bitmap(IntRect const& a_dst_rect, Gfx::Bitmap const& s
     }
 }
 
-FLATTEN void Painter::draw_glyph(FloatPoint point, u32 code_point, Color color)
+ALWAYS_INLINE void Painter::draw_glyph(FloatPoint point, u32 code_point, Color color)
 {
     draw_glyph(point, code_point, font(), color);
 }
