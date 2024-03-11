@@ -51,7 +51,7 @@ private:
     CustomElementDefinition(String const& name, String const& local_name, WebIDL::CallbackType& constructor, Vector<String>&& observed_attributes, LifecycleCallbacksStorage&& lifecycle_callbacks, bool form_associated, bool disable_internals, bool disable_shadow)
         : m_name(name)
         , m_local_name(local_name)
-        , m_constructor(JS::make_handle(constructor))
+        , m_constructor(constructor)
         , m_observed_attributes(move(observed_attributes))
         , m_lifecycle_callbacks(move(lifecycle_callbacks))
         , m_form_associated(form_associated)
@@ -74,7 +74,7 @@ private:
 
     // https://html.spec.whatwg.org/multipage/custom-elements.html#concept-custom-element-definition-constructor
     // A Web IDL CustomElementConstructor callback function type value wrapping the custom element constructor
-    JS::Handle<WebIDL::CallbackType> m_constructor;
+    JS::NonnullGCPtr<WebIDL::CallbackType> m_constructor;
 
     // https://html.spec.whatwg.org/multipage/custom-elements.html#concept-custom-element-definition-observed-attributes
     // A list of observed attributes
