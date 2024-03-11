@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Enumerate.h>
 #include <AK/Queue.h>
 
 #include "AST/AST.h"
@@ -430,9 +431,9 @@ void SSABuildingPass::rename_variables(Vertex u, Vertex from)
 void SSABuildingPass::rename_variables()
 {
     HashMap<StringView, size_t> argument_index_by_name;
-    for (size_t i = 0; i < m_function->m_arguments.size(); ++i)
-        argument_index_by_name.set(m_function->m_arguments[i].name, i);
-    m_function->m_ssa_arguments.resize(m_function->m_arguments.size());
+    for (auto [i, argument] : enumerate(m_function->arguments()))
+        argument_index_by_name.set(argument.name, i);
+    m_function->m_ssa_arguments.resize(m_function->arguments().size());
 
     for (auto const& [name, var_decl] : m_function->m_local_variables) {
         make_new_ssa_variable_for(var_decl);

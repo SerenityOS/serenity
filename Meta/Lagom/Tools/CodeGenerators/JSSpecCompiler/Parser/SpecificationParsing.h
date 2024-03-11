@@ -145,9 +145,8 @@ protected:
 
 private:
     StringView m_id;
-    String m_name;
-
-    Vector<FunctionArgument> m_arguments;
+    Optional<Declaration> m_declaration;
+    Location m_location;
     Algorithm m_algorithm;
 };
 

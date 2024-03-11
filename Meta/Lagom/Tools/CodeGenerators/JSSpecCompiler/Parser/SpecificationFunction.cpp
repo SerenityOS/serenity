@@ -15,35 +15,29 @@ bool SpecificationFunction::post_initialize(XML::Node const* element)
     VERIFY(element->as_element().name == tag_emu_clause);
 
     auto& ctx = context();
+    m_location = ctx.location_from_xml_offset(element->offset);
 
     auto maybe_id = get_attribute_by_name(element, attribute_id);
     if (!maybe_id.has_value()) {
-        ctx.diag().error(ctx.location_from_xml_offset(element->offset),
+        ctx.diag().error(m_location,
             "no id attribute");
     } else {
         m_id = maybe_id.value();
     }
 
     m_header.header.visit(
-        [&](ClauseHeader::AbstractOperation const& abstract_operation) {
-            auto maybe_abstract_operation_id = get_attribute_by_name(element, attribute_aoid);
-            if (maybe_abstract_operation_id.has_value())
-                m_name = MUST(String::from_utf8(maybe_abstract_operation_id.value()));
+        [&](AbstractOperationDeclaration const& abstract_operation) {
+            m_declaration = abstract_operation;
 
-            auto const& [function_name, arguments] = abstract_operation;
-            m_arguments = arguments;
+            auto abstract_operation_id = get_attribute_by_name(element, attribute_aoid).value();
 
-            if (m_name != function_name) {
-                ctx.diag().warn(ctx.location_from_xml_offset(element->offset),
+            if (abstract_operation.name != abstract_operation_id) {
+                ctx.diag().warn(m_location,
                     "function name in header and <emu-clause>[aoid] do not match");
             }
         },
-        [&](ClauseHeader::Accessor const& accessor) {
-            m_name = MUST(String::formatted("%get {}%", MUST(String::join("."sv, accessor.qualified_name))));
-        },
-        [&](ClauseHeader::Method const& method) {
-            m_name = MUST(String::formatted("%{}%", MUST(String::join("."sv, method.qualified_name))));
-            m_arguments = method.arguments;
+        [&](OneOf<AccessorDeclaration, MethodDeclaration> auto const& declaration) {
+            m_declaration = declaration;
         },
         [&](auto const&) {
             VERIFY_NOT_REACHED();
@@ -70,7 +64,7 @@ bool SpecificationFunction::post_initialize(XML::Node const* element)
     }
 
     if (algorithm_nodes.size() != 1) {
-        ctx.diag().error(ctx.location_from_xml_offset(element->offset),
+        ctx.diag().error(m_location,
             "<emu-clause> specifing function should have exactly one <emu-alg> child"sv);
         return false;
     }
@@ -86,7 +80,7 @@ bool SpecificationFunction::post_initialize(XML::Node const* element)
 
 void SpecificationFunction::do_collect(TranslationUnitRef translation_unit)
 {
-    translation_unit->adopt_function(make_ref_counted<FunctionDefinition>(m_name, m_algorithm.tree(), move(m_arguments)));
+    translation_unit->adopt_function(make_ref_counted<FunctionDefinition>(m_declaration.release_value(), m_location, m_algorithm.tree()));
 }
 
 }

@@ -19,23 +19,21 @@ TranslationUnit::~TranslationUnit() = default;
 
 void TranslationUnit::adopt_declaration(NonnullRefPtr<FunctionDeclaration>&& declaration)
 {
-    declaration->m_translation_unit = this;
-    m_function_index.set(declaration->m_name, declaration.ptr());
+    if (auto decl_name = declaration->declaration(); decl_name.has<AbstractOperationDeclaration>())
+        m_abstract_operation_index.set(decl_name.get<AbstractOperationDeclaration>().name, declaration.ptr());
     m_declarations_owner.append(move(declaration));
 }
 
-FunctionDefinitionRef TranslationUnit::adopt_function(NonnullRefPtr<FunctionDefinition>&& definition)
+void TranslationUnit::adopt_function(NonnullRefPtr<FunctionDefinition>&& definition)
 {
-    FunctionDefinitionRef result = definition.ptr();
-    m_functions_to_compile.append(result);
+    m_functions_to_compile.append(definition);
     adopt_declaration(definition);
-    return result;
 }
 
-FunctionDeclarationRef TranslationUnit::find_declaration_by_name(StringView name) const
+FunctionDeclarationRef TranslationUnit::find_abstract_operation_by_name(StringView name) const
 {
-    auto it = m_function_index.find(name);
-    if (it == m_function_index.end())
+    auto it = m_abstract_operation_index.find(name);
+    if (it == m_abstract_operation_index.end())
         return nullptr;
     return it->value;
 }
@@ -50,14 +48,39 @@ EnumeratorRef TranslationUnit::get_node_for_enumerator_value(StringView value)
     return enumerator;
 }
 
-FunctionDeclaration::FunctionDeclaration(StringView name, Vector<FunctionArgument>&& arguments)
-    : m_name(name)
-    , m_arguments(arguments)
+FunctionDeclaration::FunctionDeclaration(Declaration&& declaration, Location location)
+    : m_declaration(move(declaration))
+    , m_location(location)
 {
 }
 
-FunctionDefinition::FunctionDefinition(StringView name, Tree ast, Vector<FunctionArgument>&& arguments)
-    : FunctionDeclaration(name, move(arguments))
+String FunctionDeclaration::name() const
+{
+    return m_declaration.visit(
+        [&](AbstractOperationDeclaration const& abstract_operation) {
+            return abstract_operation.name.to_string();
+        },
+        [&](MethodDeclaration const& method) {
+            return MUST(String::formatted("%{}%", method.name.to_string()));
+        },
+        [&](AccessorDeclaration const& accessor) {
+            return MUST(String::formatted("%get {}%", accessor.name.to_string()));
+        });
+}
+
+ReadonlySpan<FunctionArgument> FunctionDeclaration::arguments() const
+{
+    return m_declaration.visit(
+        [&](AccessorDeclaration const&) {
+            return ReadonlySpan<FunctionArgument> {};
+        },
+        [&](auto const& declaration) {
+            return declaration.arguments.span();
+        });
+}
+
+FunctionDefinition::FunctionDefinition(Declaration&& declaration, Location location, Tree ast)
+    : FunctionDeclaration(move(declaration), location)
     , m_ast(move(ast))
     , m_named_return_value(make_ref_counted<NamedVariableDeclaration>("$return"sv))
 {
