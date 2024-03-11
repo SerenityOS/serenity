@@ -3127,6 +3127,9 @@ void Document::did_stop_being_active_document_in_navigable()
         if (document_observer->document_became_inactive())
             document_observer->document_became_inactive()->function()();
     }
+
+    if (m_animation_driver_timer)
+        m_animation_driver_timer->stop();
 }
 
 void Document::increment_throw_on_dynamic_markup_insertion_counter(Badge<HTML::HTMLParser>)
