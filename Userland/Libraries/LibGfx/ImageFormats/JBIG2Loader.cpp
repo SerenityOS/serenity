@@ -561,9 +561,12 @@ static ErrorOr<void> decode_end_of_stripe(JBIG2LoadingContext&, SegmentData cons
     return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode end of stripe yet");
 }
 
-static ErrorOr<void> decode_end_of_file(JBIG2LoadingContext&, SegmentData const&)
+static ErrorOr<void> decode_end_of_file(JBIG2LoadingContext&, SegmentData const& segment)
 {
-    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode end of file yet");
+    // 7.4.11 End of file segment syntax
+    if (segment.data.size() != 0)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: End of file segment has non-zero size");
+    return {};
 }
 
 static ErrorOr<void> decode_profiles(JBIG2LoadingContext&, SegmentData const&)
@@ -649,7 +652,9 @@ static ErrorOr<void> decode_data(JBIG2LoadingContext& context)
 {
     TRY(warn_about_multiple_pages(context));
 
-    for (auto const& segment : context.segments) {
+    for (size_t i = 0; i < context.segments.size(); ++i) {
+        auto const& segment = context.segments[i];
+
         if (segment.header.page_association != 0 && segment.header.page_association != 1)
             continue;
 
@@ -707,6 +712,9 @@ static ErrorOr<void> decode_data(JBIG2LoadingContext& context)
             break;
         case SegmentType::EndOfFile:
             TRY(decode_end_of_file(context, segment));
+            // "If a file contains an end of file segment, it must be the last segment."
+            if (i != context.segments.size() - 1)
+                return Error::from_string_literal("JBIG2ImageDecoderPlugin: End of file segment not last segment");
             break;
         case SegmentType::Profiles:
             TRY(decode_profiles(context, segment));
