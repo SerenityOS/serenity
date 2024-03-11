@@ -11,6 +11,7 @@ namespace Web::HTML {
 void CustomElementDefinition::visit_edges(Visitor& visitor)
 {
     Base::visit_edges(visitor);
+    visitor.visit(m_constructor);
     for (auto& callback : m_lifecycle_callbacks)
         visitor.visit(callback.value);
 }
