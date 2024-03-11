@@ -14,6 +14,7 @@
 #include <LibWeb/Layout/BlockFormattingContext.h>
 #include <LibWeb/Layout/SVGFormattingContext.h>
 #include <LibWeb/Layout/SVGGeometryBox.h>
+#include <LibWeb/Layout/SVGMaskBox.h>
 #include <LibWeb/Layout/SVGSVGBox.h>
 #include <LibWeb/Layout/SVGTextBox.h>
 #include <LibWeb/Layout/SVGTextPathBox.h>
@@ -289,6 +290,8 @@ void SVGFormattingContext::run(Box const& box, LayoutMode layout_mode, Available
     }();
 
     for_each_in_subtree(box, [&](Node const& descendant) {
+        if (is<SVGMaskBox>(descendant))
+            return TraversalDecision::SkipChildrenAndContinue;
         if (is<SVG::SVGViewport>(descendant.dom_node())) {
             // Layout for a nested SVG viewport.
             // https://svgwg.org/svg2-draft/coords.html#EstablishingANewSVGViewport.
@@ -391,14 +394,19 @@ void SVGFormattingContext::run(Box const& box, LayoutMode layout_mode, Available
     // https://svgwg.org/svg2-draft/struct.html#Groups
     // 5.2. Grouping: the ‘g’ element
     // The ‘g’ element is a container element for grouping together related graphics elements.
-    box.for_each_in_subtree_of_type<Box>([&](Box const& descendant) {
+    box.for_each_in_subtree_of_type<SVGBox>([&](SVGBox const& descendant) {
         if (is_container_element(descendant)) {
             Gfx::BoundingBox<CSSPixels> bounding_box;
-            descendant.for_each_in_subtree_of_type<Box>([&](Box const& child_of_svg_container) {
-                auto& box_state = m_state.get(child_of_svg_container);
+            for_each_in_subtree(descendant, [&](Node const& child_of_svg_container) {
+                if (!is<SVGBox>(child_of_svg_container))
+                    return TraversalDecision::Continue;
+                // Masks do not change the bounding box of their parents.
+                if (is<SVGMaskBox>(child_of_svg_container))
+                    return TraversalDecision::SkipChildrenAndContinue;
+                auto& box_state = m_state.get(static_cast<SVGBox const&>(child_of_svg_container));
                 bounding_box.add_point(box_state.offset);
                 bounding_box.add_point(box_state.offset.translated(box_state.content_width(), box_state.content_height()));
-                return IterationDecision::Continue;
+                return TraversalDecision::Continue;
             });
 
             auto& box_state = m_state.get_mutable(descendant);
@@ -409,6 +417,28 @@ void SVGFormattingContext::run(Box const& box, LayoutMode layout_mode, Available
             box_state.set_has_definite_width(true);
             box_state.set_has_definite_height(true);
         }
+        return IterationDecision::Continue;
+    });
+
+    // Lay out masks last (as their parent needs to be sized first).
+    box.for_each_in_subtree_of_type<SVGMaskBox>([&](SVGMaskBox const& mask_box) {
+        auto& mask_state = m_state.get_mutable(static_cast<Box const&>(mask_box));
+        auto parent_viewbox_transform = viewbox_transform;
+        if (mask_box.dom_node().mask_content_units() == SVG::MaskContentUnits::ObjectBoundingBox) {
+            auto* masked_node = mask_box.parent();
+            auto& masked_node_state = m_state.get(*masked_node);
+            mask_state.set_content_width(masked_node_state.content_width());
+            mask_state.set_content_height(masked_node_state.content_height());
+            parent_viewbox_transform = Gfx::AffineTransform {}.translate(masked_node_state.offset.to_type<float>());
+        } else {
+            mask_state.set_content_width(viewport_width);
+            mask_state.set_content_height(viewport_height);
+        }
+        // Pretend masks are a viewport so we can scale the contents depending on the `maskContentUnits`.
+        SVGFormattingContext nested_context(m_state, static_cast<Box const&>(mask_box), this, parent_viewbox_transform);
+        mask_state.set_has_definite_width(true);
+        mask_state.set_has_definite_height(true);
+        nested_context.run(static_cast<Box const&>(mask_box), layout_mode, available_space);
         return IterationDecision::Continue;
     });
 }

@@ -49,8 +49,6 @@ public:
 
     Layout::SVGGraphicsBox const& layout_box() const;
 
-    virtual bool forms_unconnected_subtree() const override;
-
     virtual Optional<CSSPixelRect> get_masking_area() const override;
     virtual Optional<Gfx::Bitmap::MaskKind> get_mask_type() const override;
     virtual RefPtr<Gfx::Bitmap> calculate_mask(PaintContext&, CSSPixelRect const& masking_area) const override;
