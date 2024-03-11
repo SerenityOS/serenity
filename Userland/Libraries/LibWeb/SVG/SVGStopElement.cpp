@@ -62,7 +62,8 @@ float SVGStopElement::stop_opacity() const
 
 JS::NonnullGCPtr<SVGAnimatedNumber> SVGStopElement::offset() const
 {
-    TODO();
+    // FIXME: Implement this properly.
+    return SVGAnimatedNumber::create(realm(), 0, 0);
 }
 
 void SVGStopElement::initialize(JS::Realm& realm)

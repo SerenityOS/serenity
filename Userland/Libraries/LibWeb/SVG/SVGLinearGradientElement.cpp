@@ -163,22 +163,26 @@ Optional<Gfx::PaintStyle const&> SVGLinearGradientElement::to_gfx_paint_style(SV
 
 JS::NonnullGCPtr<SVGAnimatedLength> SVGLinearGradientElement::x1() const
 {
-    TODO();
+    // FIXME: Implement this properly.
+    return SVGAnimatedLength::create(realm(), SVGLength::create(realm(), 0, 0), SVGLength::create(realm(), 0, 0));
 }
 
 JS::NonnullGCPtr<SVGAnimatedLength> SVGLinearGradientElement::y1() const
 {
-    TODO();
+    // FIXME: Implement this properly.
+    return SVGAnimatedLength::create(realm(), SVGLength::create(realm(), 0, 0), SVGLength::create(realm(), 0, 0));
 }
 
 JS::NonnullGCPtr<SVGAnimatedLength> SVGLinearGradientElement::x2() const
 {
-    TODO();
+    // FIXME: Implement this properly.
+    return SVGAnimatedLength::create(realm(), SVGLength::create(realm(), 0, 0), SVGLength::create(realm(), 0, 0));
 }
 
 JS::NonnullGCPtr<SVGAnimatedLength> SVGLinearGradientElement::y2() const
 {
-    TODO();
+    // FIXME: Implement this properly.
+    return SVGAnimatedLength::create(realm(), SVGLength::create(realm(), 0, 0), SVGLength::create(realm(), 0, 0));
 }
 
 }
