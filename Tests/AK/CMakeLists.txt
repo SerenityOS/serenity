@@ -25,6 +25,7 @@ set(AK_TEST_SOURCES
     TestDoublyLinkedList.cpp
     TestEndian.cpp
     TestEnumBits.cpp
+    TestEnumerate.cpp
     TestFind.cpp
     TestFixedArray.cpp
     TestFixedPoint.cpp
