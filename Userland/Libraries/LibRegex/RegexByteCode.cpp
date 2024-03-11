@@ -332,7 +332,7 @@ ALWAYS_INLINE ExecutionResult OpCode_CheckEnd::execute(MatchInput const& input, 
 ALWAYS_INLINE ExecutionResult OpCode_ClearCaptureGroup::execute(MatchInput const& input, MatchState& state) const
 {
     if (input.match_index < state.capture_group_matches.size()) {
-        auto& group = state.capture_group_matches[input.match_index];
+        auto& group = state.capture_group_matches.mutable_at(input.match_index);
         auto group_id = id();
         if (group_id >= group.size())
             group.resize(group_id + 1);
@@ -352,19 +352,19 @@ ALWAYS_INLINE ExecutionResult OpCode_SaveLeftCaptureGroup::execute(MatchInput co
     }
 
     if (id() >= state.capture_group_matches.at(input.match_index).size()) {
-        state.capture_group_matches.at(input.match_index).ensure_capacity(id());
+        state.capture_group_matches.mutable_at(input.match_index).ensure_capacity(id());
         auto capacity = state.capture_group_matches.at(input.match_index).capacity();
         for (size_t i = state.capture_group_matches.at(input.match_index).size(); i <= capacity; ++i)
-            state.capture_group_matches.at(input.match_index).empend();
+            state.capture_group_matches.mutable_at(input.match_index).empend();
     }
 
-    state.capture_group_matches.at(input.match_index).at(id()).left_column = state.string_position;
+    state.capture_group_matches.mutable_at(input.match_index).at(id()).left_column = state.string_position;
     return ExecutionResult::Continue;
 }
 
 ALWAYS_INLINE ExecutionResult OpCode_SaveRightCaptureGroup::execute(MatchInput const& input, MatchState& state) const
 {
-    auto& match = state.capture_group_matches.at(input.match_index).at(id());
+    auto& match = state.capture_group_matches.mutable_at(input.match_index).at(id());
     auto start_position = match.left_column;
     if (state.string_position < start_position) {
         dbgln("Right capture group {} is before left capture group {}!", state.string_position, start_position);
@@ -391,7 +391,7 @@ ALWAYS_INLINE ExecutionResult OpCode_SaveRightCaptureGroup::execute(MatchInput c
 
 ALWAYS_INLINE ExecutionResult OpCode_SaveRightNamedCaptureGroup::execute(MatchInput const& input, MatchState& state) const
 {
-    auto& match = state.capture_group_matches.at(input.match_index).at(id());
+    auto& match = state.capture_group_matches.mutable_at(input.match_index).at(id());
     auto start_position = match.left_column;
     if (state.string_position < start_position)
         return ExecutionResult::Failed_ExecuteLowPrioForks;
@@ -1051,7 +1051,7 @@ ALWAYS_INLINE ExecutionResult OpCode_Repeat::execute(MatchInput const&, MatchSta
 
     if (id() >= state.repetition_marks.size())
         state.repetition_marks.resize(id() + 1);
-    auto& repetition_mark = state.repetition_marks.at(id());
+    auto& repetition_mark = state.repetition_marks.mutable_at(id());
 
     if (repetition_mark == count() - 1) {
         repetition_mark = 0;
@@ -1068,7 +1068,7 @@ ALWAYS_INLINE ExecutionResult OpCode_ResetRepeat::execute(MatchInput const&, Mat
     if (id() >= state.repetition_marks.size())
         state.repetition_marks.resize(id() + 1);
 
-    state.repetition_marks.at(id()) = 0;
+    state.repetition_marks.mutable_at(id()) = 0;
     return ExecutionResult::Continue;
 }
 

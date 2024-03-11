@@ -110,7 +110,7 @@ public:
             m_detail->m_members.clear();
     }
 
-    T& at(size_t index)
+    T& mutable_at(size_t index)
     {
         // We're handing out a mutable reference, so make sure we own the data exclusively.
         copy();
@@ -120,13 +120,6 @@ public:
     T const& at(size_t index) const
     {
         return m_detail->m_members.at(index);
-    }
-
-    T& operator[](size_t index)
-    {
-        // We're handing out a mutable reference, so make sure we own the data exclusively.
-        copy();
-        return m_detail->m_members[index];
     }
 
     T const& operator[](size_t index) const
