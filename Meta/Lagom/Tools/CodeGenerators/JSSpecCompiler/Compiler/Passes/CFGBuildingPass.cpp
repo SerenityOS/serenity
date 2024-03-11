@@ -4,8 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "Compiler/Passes/CFGBuildingPass.h"
+#include <AK/Enumerate.h>
+
 #include "AST/AST.h"
+#include "Compiler/Passes/CFGBuildingPass.h"
 #include "Function.h"
 
 namespace JSSpecCompiler {
@@ -37,9 +39,7 @@ RecursionDecision CFGBuildingPass::on_entry(Tree tree)
     if (auto if_else_if_chain = as<IfElseIfChain>(tree); if_else_if_chain) {
         auto* end_block = create_empty_block();
 
-        for (size_t i = 0; i < if_else_if_chain->branches_count(); ++i) {
-            auto current_condition = if_else_if_chain->m_conditions[i];
-
+        for (auto [i, current_condition] : enumerate(if_else_if_chain->m_conditions)) {
             run_in_subtree(current_condition);
             will_be_used_as_expression(current_condition);
             auto* condition_block = exchange_current_with_empty();
