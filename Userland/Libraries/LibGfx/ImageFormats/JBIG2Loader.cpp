@@ -6,6 +6,7 @@
 
 #include <AK/Debug.h>
 #include <AK/Utf16View.h>
+#include <LibGfx/ImageFormats/CCITTDecoder.h>
 #include <LibGfx/ImageFormats/JBIG2Loader.h>
 #include <LibTextCodec/Decoder.h>
 
@@ -371,6 +372,54 @@ static ErrorOr<void> decode_segment_headers(JBIG2LoadingContext& context, Readon
     return {};
 }
 
+// 7.4.1 Region segment information field
+struct [[gnu::packed]] RegionSegmentInformationField {
+    BigEndian<u32> width;
+    BigEndian<u32> height;
+    BigEndian<u32> x_location;
+    BigEndian<u32> y_location;
+    u8 flags;
+
+    // FIXME: Or have just ::CombinationOperator represent both page and segment operators?
+    enum class CombinationOperator {
+        Or = 0,
+        And = 1,
+        Xor = 2,
+        XNor = 3,
+        Replace = 4,
+    };
+
+    CombinationOperator external_combination_operator() const
+    {
+        VERIFY((flags & 0x7) <= 4);
+        return static_cast<CombinationOperator>(flags & 0x7);
+    }
+
+    bool is_color_bitmap() const
+    {
+        return (flags & 0x8) != 0;
+    }
+};
+static_assert(AssertSize<RegionSegmentInformationField, 17>());
+
+static ErrorOr<RegionSegmentInformationField> decode_region_segment_information_field(ReadonlyBytes data)
+{
+    // 7.4.8 Page information segment syntax
+    if (data.size() < sizeof(RegionSegmentInformationField))
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid region segment information field size");
+    auto result = *(RegionSegmentInformationField const*)data.data();
+    if ((result.flags & 0b1111'0000) != 0)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid region segment information field flags");
+    if ((result.flags & 0x7) > 4)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid region segment information field operator");
+
+    // NOTE 3 – If the colour extension flag (COLEXTFLAG) is equal to 1, the external combination operator must be REPLACE.
+    if (result.is_color_bitmap() && result.external_combination_operator() != RegionSegmentInformationField::CombinationOperator::Replace)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid colored region segment information field operator");
+
+    return result;
+}
+
 // 7.4.8 Page information segment syntax
 struct [[gnu::packed]] PageInformationSegment {
     BigEndian<u32> bitmap_width;
@@ -443,6 +492,46 @@ static ErrorOr<void> warn_about_multiple_pages(JBIG2LoadingContext& context)
     return {};
 }
 
+// 6.2.2 Input parameters
+struct GenericRegionDecodingInputParameters {
+    bool is_modified_modified_read; // "MMR" in spec.
+    u32 region_width;               // "GBW" in spec.
+    u32 region_height;              // "GBH" in spec.
+    u8 gb_template;
+    bool is_typical_prediction_used;                 // "TPGDON" in spec.
+    bool is_extended_reference_template_used;        // "EXTTEMPLATE" in spec.
+    Optional<NonnullOwnPtr<BitBuffer>> skip_pattern; // "USESKIP", "SKIP" in spec.
+
+    struct AdaptiveTemplatePixel {
+        i8 x, y;
+    };
+    AdaptiveTemplatePixel adaptive_template_pixels[12]; // "GBATX" / "GBATY" in spec.
+    // FIXME: GBCOLS, GBCOMBOP, COLEXTFLAG
+};
+
+// 6.2 Generic region decoding procedure
+static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(GenericRegionDecodingInputParameters const& inputs, ReadonlyBytes data)
+{
+    if (inputs.is_modified_modified_read) {
+        // 6.2.6 Decoding using MMR coding
+        auto buffer = TRY(CCITT::decode_ccitt_group4(data, inputs.region_width, inputs.region_height));
+        auto result = TRY(BitBuffer::create(inputs.region_width, inputs.region_height));
+        size_t bytes_per_row = ceil_div(inputs.region_width, 8);
+        if (buffer.size() != bytes_per_row * inputs.region_height)
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Decoded MMR data has wrong size");
+
+        // FIXME: Could probably just copy the ByteBuffer directly into the BitBuffer's internal ByteBuffer instead.
+        for (size_t y = 0; y < inputs.region_height; ++y) {
+            for (size_t x = 0; x < inputs.region_width; ++x) {
+                bool bit = buffer[y * bytes_per_row + x / 8] & (1 << (7 - x % 8));
+                result->set_bit(x, y, bit);
+            }
+        }
+        return result;
+    }
+    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Non-MMR generic region decoding not implemented yet");
+}
+
 static ErrorOr<void> decode_symbol_dictionary(JBIG2LoadingContext&, SegmentData const&)
 {
     return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode symbol dictionary yet");
@@ -488,9 +577,91 @@ static ErrorOr<void> decode_intermediate_generic_region(JBIG2LoadingContext&, Se
     return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode intermediate generic region yet");
 }
 
-static ErrorOr<void> decode_immediate_generic_region(JBIG2LoadingContext&, SegmentData const&)
+static ErrorOr<void> decode_immediate_generic_region(JBIG2LoadingContext& context, SegmentData const& segment)
 {
-    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode immediate generic region yet");
+    // 7.4.6 Generic region segment syntax
+    auto data = segment.data;
+    auto information_field = TRY(decode_region_segment_information_field(data));
+    data = data.slice(sizeof(information_field));
+
+    // 7.4.6.2 Generic region segment flags
+    if (data.is_empty())
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: No segment data");
+    u8 flags = data[0];
+    bool uses_mmr = (flags & 1) != 0;
+    u8 arithmetic_coding_template = (flags >> 1) & 3;               // "GBTEMPLATE"
+    bool typical_prediction_generic_decoding_on = (flags >> 3) & 1; // "TPGDON"
+    bool uses_extended_reference_template = (flags >> 4) & 1;       // "EXTTEMPLATE"
+    if (flags & 0b1110'0000)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid flags");
+    data = data.slice(sizeof(flags));
+
+    // 7.4.6.3 Generic region segment AT flags
+    GenericRegionDecodingInputParameters::AdaptiveTemplatePixel adaptive_template_pixels[12];
+    if (!uses_mmr) {
+        if (arithmetic_coding_template == 0 && !uses_extended_reference_template) {
+            if (data.size() < 8)
+                return Error::from_string_literal("JBIG2ImageDecoderPlugin: No adaptive template data");
+            for (int i = 0; i < 4; ++i) {
+                adaptive_template_pixels[i].x = static_cast<i8>(data[2 * i]);
+                adaptive_template_pixels[i].y = static_cast<i8>(data[2 * i + 1]);
+            }
+            data = data.slice(8);
+        } else if (arithmetic_coding_template == 0 && uses_extended_reference_template) {
+            if (data.size() < 24)
+                return Error::from_string_literal("JBIG2ImageDecoderPlugin: No adaptive template data");
+            for (int i = 0; i < 12; ++i) {
+                adaptive_template_pixels[i].x = static_cast<i8>(data[2 * i]);
+                adaptive_template_pixels[i].y = static_cast<i8>(data[2 * i + 1]);
+            }
+            // FIXME: Is this supposed to be 24 or 32? THe spec says "32-byte field as shown below" and then shows 24 bytes.
+            data = data.slice(24);
+        } else {
+            if (data.size() < 2)
+                return Error::from_string_literal("JBIG2ImageDecoderPlugin: No adaptive template data");
+            for (int i = 0; i < 1; ++i) {
+                adaptive_template_pixels[i].x = static_cast<i8>(data[2 * i]);
+                adaptive_template_pixels[i].y = static_cast<i8>(data[2 * i + 1]);
+            }
+            for (int i = 1; i < 4; ++i) {
+                adaptive_template_pixels[i].x = 0;
+                adaptive_template_pixels[i].y = 0;
+            }
+            data = data.slice(2);
+        }
+    }
+
+    // 7.4.6.4 Decoding a generic region segment
+    // "1) Interpret its header, as described in 7.4.6.1"
+    // Done above.
+    // "2) As described in E.3.7, reset all the arithmetic coding statistics to zero."
+    // FIXME: Implement this once we support arithmetic coding.
+    // "3) Invoke the generic region decoding procedure described in 6.2, with the parameters to the generic region decoding procedure set as shown in Table 37."
+    GenericRegionDecodingInputParameters inputs;
+    inputs.is_modified_modified_read = uses_mmr;
+    inputs.region_width = information_field.width;
+    inputs.region_height = information_field.height;
+    inputs.gb_template = arithmetic_coding_template;
+    inputs.is_typical_prediction_used = typical_prediction_generic_decoding_on;
+    inputs.is_extended_reference_template_used = uses_extended_reference_template;
+    inputs.skip_pattern = OptionalNone {};
+    static_assert(sizeof(inputs.adaptive_template_pixels) == sizeof(adaptive_template_pixels));
+    memcpy(inputs.adaptive_template_pixels, adaptive_template_pixels, sizeof(adaptive_template_pixels));
+    auto result = TRY(generic_region_decoding_procedure(inputs, data));
+
+    // 8.2 Page image composition step 5)
+    if (information_field.x_location + information_field.width > (u32)context.page.size.width()
+        || information_field.y_location + information_field.height > (u32)context.page.size.height()) {
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Region bounds outsize of page bounds");
+    }
+    for (size_t y = 0; y < information_field.height; ++y) {
+        for (size_t x = 0; x < information_field.width; ++x) {
+            // FIXME: Honor segment's combination operator instead of just copying.
+            context.page.bits->set_bit(information_field.x_location + x, information_field.y_location + y, result->get_bit(x, y));
+        }
+    }
+
+    return {};
 }
 
 static ErrorOr<void> decode_immediate_lossless_generic_region(JBIG2LoadingContext&, SegmentData const&)
