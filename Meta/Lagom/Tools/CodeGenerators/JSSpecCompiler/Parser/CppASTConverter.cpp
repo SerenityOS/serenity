@@ -28,7 +28,13 @@ NonnullRefPtr<FunctionDefinition> CppASTConverter::convert()
     for (auto const& parameter : m_function->parameters())
         arguments.append({ .name = parameter->full_name() });
 
-    return make_ref_counted<FunctionDefinition>(name, tree, move(arguments));
+    return make_ref_counted<FunctionDefinition>(
+        AbstractOperationDeclaration {
+            .name = MUST(FlyString::from_utf8(name)),
+            .arguments = move(arguments),
+        },
+        Location {},
+        tree);
 }
 
 template<>

@@ -644,14 +644,14 @@ TextParseErrorOr<Tree> TextParser::parse_step_with_substeps(Tree substeps)
 }
 
 // <qualified_name> :== <word> (. <word>)*
-TextParseErrorOr<Vector<StringView>> TextParser::parse_qualified_name()
+TextParseErrorOr<QualifiedName> TextParser::parse_qualified_name()
 {
     Vector<StringView> qualified_name;
     qualified_name.append(TRY(consume_token_with_type(TokenType::Word)).data);
     while (true) {
         auto token_or_error = consume_token_with_type(TokenType::MemberAccess);
         if (token_or_error.is_error())
-            return qualified_name;
+            return QualifiedName { qualified_name };
         qualified_name.append(TRY(consume_token_with_type(TokenType::Word)).data);
     }
 }
@@ -702,12 +702,14 @@ TextParseErrorOr<Vector<FunctionArgument>> TextParser::parse_function_arguments_
 }
 
 // <ao_declaration> :== <word> <function_arguments> $
-TextParseErrorOr<ClauseHeader::AbstractOperation> TextParser::parse_abstract_operation_declaration()
+TextParseErrorOr<AbstractOperationDeclaration> TextParser::parse_abstract_operation_declaration()
 {
     auto rollback = rollback_point();
 
-    ClauseHeader::AbstractOperation function_definition;
-    function_definition.name = TRY(consume_token_with_type(TokenType::Word)).data;
+    auto name = TRY(consume_token_with_type(TokenType::Word)).data;
+
+    AbstractOperationDeclaration function_definition;
+    function_definition.name = MUST(FlyString::from_utf8(name));
     function_definition.arguments = TRY(parse_function_arguments_in_declaration());
     TRY(expect_eof());
 
@@ -716,25 +718,25 @@ TextParseErrorOr<ClauseHeader::AbstractOperation> TextParser::parse_abstract_ope
 }
 
 // <accessor_declaration> :== get <qualified_name> $
-TextParseErrorOr<ClauseHeader::Accessor> TextParser::parse_accessor_declaration()
+TextParseErrorOr<AccessorDeclaration> TextParser::parse_accessor_declaration()
 {
     auto rollback = rollback_point();
 
     TRY(consume_word("get"sv));
-    ClauseHeader::Accessor accessor;
-    accessor.qualified_name = TRY(parse_qualified_name());
+    AccessorDeclaration accessor;
+    accessor.name = TRY(parse_qualified_name());
     TRY(expect_eof());
 
     rollback.disarm();
     return accessor;
 }
 
-TextParseErrorOr<ClauseHeader::Method> TextParser::parse_method_declaration()
+TextParseErrorOr<MethodDeclaration> TextParser::parse_method_declaration()
 {
     auto rollback = rollback_point();
 
-    ClauseHeader::Method method;
-    method.qualified_name = TRY(parse_qualified_name());
+    MethodDeclaration method;
+    method.name = TRY(parse_qualified_name());
     method.arguments = TRY(parse_function_arguments_in_declaration());
     TRY(expect_eof());
 

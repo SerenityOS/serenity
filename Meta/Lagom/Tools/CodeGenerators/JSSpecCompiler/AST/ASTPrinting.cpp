@@ -185,7 +185,7 @@ void Enumerator::dump_tree(StringBuilder& builder)
 
 void FunctionPointer::dump_tree(StringBuilder& builder)
 {
-    dump_node(builder, "Func \"{}\"", m_declaration->m_name);
+    dump_node(builder, "Func \"{}\"", m_declaration->name());
 }
 
 void List::dump_tree(StringBuilder& builder)
