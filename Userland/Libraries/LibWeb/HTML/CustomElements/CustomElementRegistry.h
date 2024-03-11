@@ -47,7 +47,7 @@ private:
 
     // https://html.spec.whatwg.org/multipage/custom-elements.html#when-defined-promise-map
     // Every CustomElementRegistry also has a when-defined promise map, mapping valid custom element names to promises. It is used to implement the whenDefined() method.
-    OrderedHashMap<String, JS::Handle<JS::Promise>> m_when_defined_promise_map;
+    OrderedHashMap<String, JS::NonnullGCPtr<JS::Promise>> m_when_defined_promise_map;
 };
 
 }
