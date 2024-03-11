@@ -81,6 +81,8 @@ public:
 
     using ViewImplementation::client;
 
+    QPoint map_point_to_global_position(Gfx::IntPoint) const;
+
 signals:
     void urls_dropped(QList<QUrl> const&);
 

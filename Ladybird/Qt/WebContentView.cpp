@@ -644,6 +644,11 @@ Web::DevicePixelRect WebContentView::viewport_rect() const
     return m_viewport_rect.to_type<Web::DevicePixels>();
 }
 
+QPoint WebContentView::map_point_to_global_position(Gfx::IntPoint position) const
+{
+    return mapToGlobal(QPoint { position.x(), position.y() } / device_pixel_ratio());
+}
+
 Gfx::IntPoint WebContentView::to_content_position(Gfx::IntPoint widget_position) const
 {
     return widget_position.translated(max(0, horizontalScrollBar()->value()), max(0, verticalScrollBar()->value()));

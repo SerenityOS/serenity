@@ -271,7 +271,7 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
             select_dropdown_add_item(m_select_dropdown, item);
         }
 
-        m_select_dropdown->exec(view().mapToGlobal(QPoint(content_position.x(), content_position.y()) / view().device_pixel_ratio()));
+        m_select_dropdown->exec(view().map_point_to_global_position(content_position));
     };
 
     QObject::connect(focus_location_editor_action, &QAction::triggered, this, &Tab::focus_location_editor);
@@ -406,7 +406,7 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
             search_selected_text_action->setVisible(false);
         }
 
-        m_page_context_menu->exec(view().mapToGlobal(QPoint(content_position.x(), content_position.y()) / view().device_pixel_ratio()));
+        m_page_context_menu->exec(view().map_point_to_global_position(content_position));
     };
 
     auto* open_link_action = new QAction("&Open", this);
@@ -450,7 +450,7 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
             break;
         }
 
-        m_link_context_menu->exec(view().mapToGlobal(QPoint(content_position.x(), content_position.y()) / view().device_pixel_ratio()));
+        m_link_context_menu->exec(view().map_point_to_global_position(content_position));
     };
 
     auto* open_image_action = new QAction("&Open Image", this);
@@ -503,7 +503,7 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
         m_image_context_menu_url = image_url;
         m_image_context_menu_bitmap = shareable_bitmap;
 
-        m_image_context_menu->exec(view().mapToGlobal(QPoint(content_position.x(), content_position.y()) / view().device_pixel_ratio()));
+        m_image_context_menu->exec(view().map_point_to_global_position(content_position));
     };
 
     m_media_context_menu_play_icon = load_icon_from_uri("resource://icons/16x16/play.png"sv);
@@ -619,7 +619,7 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
         m_media_context_menu_controls_action->setChecked(menu.has_user_agent_controls);
         m_media_context_menu_loop_action->setChecked(menu.is_looping);
 
-        auto screen_position = view().mapToGlobal(QPoint(content_position.x(), content_position.y()) / view().device_pixel_ratio());
+        auto screen_position = view().map_point_to_global_position(content_position);
         if (menu.is_video)
             m_video_context_menu->exec(screen_position);
         else
