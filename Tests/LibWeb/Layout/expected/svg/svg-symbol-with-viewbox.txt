@@ -9,7 +9,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
         TextNode <#text>
         SVGSVGBox <svg> at (8,8) content-size 300x150 [SVG] children: inline
           TextNode <#text>
-          SVGGraphicsBox <use> at (92.375,26.75) content-size 131.25x112.15625 children: not-inline
+          SVGGraphicsBox <use> at (8,8) content-size 300x150 children: not-inline
             SVGGraphicsBox <symbol#braces> at (92.375,26.75) content-size 131.25x112.15625 [BFC] children: inline
               TextNode <#text>
               SVGGeometryBox <path> at (92.375,26.75) content-size 131.25x112.15625 children: inline
@@ -24,6 +24,6 @@ ViewportPaintable (Viewport<#document>) [0,0 800x600]
       PaintableWithLines (BlockContainer(anonymous)) [8,8 784x0]
       PaintableWithLines (BlockContainer<DIV>) [8,8 784x150]
         SVGSVGPaintable (SVGSVGBox<svg>) [8,8 300x150]
-          SVGGraphicsPaintable (SVGGraphicsBox<use>) [92.375,26.75 131.25x112.15625]
+          SVGGraphicsPaintable (SVGGraphicsBox<use>) [8,8 300x150]
             SVGGraphicsPaintable (SVGGraphicsBox<symbol>#braces) [92.375,26.75 131.25x112.15625]
               SVGPathPaintable (SVGGeometryBox<path>) [92.375,26.75 131.25x112.15625]
