@@ -35,10 +35,10 @@ public:
 
 protected:
     AnimationTimeline(JS::Realm&);
-    virtual ~AnimationTimeline() override;
 
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
+    virtual void finalize() override;
 
     // https://www.w3.org/TR/web-animations-1/#dom-animationtimeline-currenttime
     Optional<double> m_current_time {};
