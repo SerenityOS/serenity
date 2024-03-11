@@ -551,7 +551,7 @@ void Linker::link(HashMap<Linker::Name, ExternValue> const& exports)
         m_unresolved_imports.remove(entry);
 }
 
-AK::Result<Vector<ExternValue>, LinkError> Linker::finish()
+AK::ErrorOr<Vector<ExternValue>, LinkError> Linker::finish()
 {
     populate();
     if (!m_unresolved_imports.is_empty()) {

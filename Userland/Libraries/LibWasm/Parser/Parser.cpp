@@ -28,7 +28,7 @@ static auto parse_vector(Stream& stream)
 {
     ScopeLogger<WASM_BINPARSER_DEBUG> logger;
     if constexpr (requires { T::parse(stream); }) {
-        using ResultT = typename decltype(T::parse(stream))::ValueType;
+        using ResultT = typename decltype(T::parse(stream))::ResultType;
         auto count_or_error = stream.read_value<LEB128<size_t>>();
         if (count_or_error.is_error())
             return ParseResult<Vector<ResultT>> { with_eof_check(stream, ParseError::ExpectedSize) };

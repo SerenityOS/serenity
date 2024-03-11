@@ -307,7 +307,7 @@ void BytecodeInterpreter::binary_numeric_operation(Configuration& configuration,
     auto lhs = lhs_ptr->to<PopTypeLHS>();
     PushType result;
     auto call_result = Operator { forward<Args>(args)... }(lhs.value(), rhs.value());
-    if constexpr (IsSpecializationOf<decltype(call_result), AK::Result>) {
+    if constexpr (IsSpecializationOf<decltype(call_result), AK::ErrorOr>) {
         if (call_result.is_error()) {
             trap_if_not(false, call_result.error());
             return;
@@ -328,7 +328,7 @@ void BytecodeInterpreter::unary_operation(Configuration& configuration, Args&&..
     auto value = entry_ptr->to<PopType>();
     auto call_result = Operator { forward<Args>(args)... }(*value);
     PushType result;
-    if constexpr (IsSpecializationOf<decltype(call_result), AK::Result>) {
+    if constexpr (IsSpecializationOf<decltype(call_result), AK::ErrorOr>) {
         if (call_result.is_error()) {
             trap_if_not(false, call_result.error());
             return;
