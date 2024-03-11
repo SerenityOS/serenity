@@ -546,9 +546,14 @@ static ErrorOr<void> decode_page_information(JBIG2LoadingContext& context, Segme
     return {};
 }
 
-static ErrorOr<void> decode_end_of_page(JBIG2LoadingContext&, SegmentData const&)
+static ErrorOr<void> decode_end_of_page(JBIG2LoadingContext&, SegmentData const& segment)
 {
-    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode end of page yet");
+    // 7.4.9 End of page segment syntax
+    if (segment.data.size() != 0)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: End of page segment has non-zero size");
+    // FIXME: If the page had unknown height, check that previous segment was end-of-stripe.
+    // FIXME: Maybe mark page as completed and error if we see more segments for it?
+    return {};
 }
 
 static ErrorOr<void> decode_end_of_stripe(JBIG2LoadingContext&, SegmentData const&)
