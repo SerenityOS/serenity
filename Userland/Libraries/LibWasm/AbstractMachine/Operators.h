@@ -58,8 +58,8 @@ struct Divide {
             Checked value(lhs);
             value /= rhs;
             if (value.has_overflow())
-                return AK::Result<Lhs, StringView>("Integer division overflow"sv);
-            return AK::Result<Lhs, StringView>(value.value());
+                return AK::ErrorOr<Lhs, StringView>("Integer division overflow"sv);
+            return AK::ErrorOr<Lhs, StringView>(value.value());
         }
     }
 
@@ -71,12 +71,12 @@ struct Modulo {
     auto operator()(Lhs lhs, Rhs rhs) const
     {
         if (rhs == 0)
-            return AK::Result<Lhs, StringView>("Integer division overflow"sv);
+            return AK::ErrorOr<Lhs, StringView>("Integer division overflow"sv);
         if constexpr (IsSigned<Lhs>) {
             if (rhs == -1)
-                return AK::Result<Lhs, StringView>(0); // Spec weirdness right here, signed division overflow is ignored.
+                return AK::ErrorOr<Lhs, StringView>(0); // Spec weirdness right here, signed division overflow is ignored.
         }
-        return AK::Result<Lhs, StringView>(lhs % rhs);
+        return AK::ErrorOr<Lhs, StringView>(lhs % rhs);
     }
 
     static StringView name() { return "%"sv; }
@@ -479,7 +479,7 @@ struct Floor {
 
 struct Truncate {
     template<typename Lhs>
-    AK::Result<Lhs, StringView> operator()(Lhs lhs) const
+    AK::ErrorOr<Lhs, StringView> operator()(Lhs lhs) const
     {
         if constexpr (IsSame<Lhs, float>)
             return truncf(lhs);
@@ -536,7 +536,7 @@ struct Wrap {
 template<typename ResultT>
 struct CheckedTruncate {
     template<typename Lhs>
-    AK::Result<ResultT, StringView> operator()(Lhs lhs) const
+    AK::ErrorOr<ResultT, StringView> operator()(Lhs lhs) const
     {
         if (isnan(lhs) || isinf(lhs)) // "undefined", let's just trap.
             return "Truncation undefined behavior"sv;

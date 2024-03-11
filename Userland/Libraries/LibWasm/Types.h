@@ -61,7 +61,7 @@ enum class ParseError {
 ByteString parse_error_to_byte_string(ParseError);
 
 template<typename T>
-using ParseResult = Result<T, ParseError>;
+using ParseResult = ErrorOr<T, ParseError>;
 
 AK_TYPEDEF_DISTINCT_ORDERED_ID(size_t, TypeIndex);
 AK_TYPEDEF_DISTINCT_ORDERED_ID(size_t, FunctionIndex);

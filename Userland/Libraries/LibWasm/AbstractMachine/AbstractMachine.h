@@ -604,7 +604,7 @@ private:
     Vector<EntryType, 1024> m_data;
 };
 
-using InstantiationResult = AK::Result<NonnullOwnPtr<ModuleInstance>, InstantiationError>;
+using InstantiationResult = AK::ErrorOr<NonnullOwnPtr<ModuleInstance>, InstantiationError>;
 
 class AbstractMachine {
 public:
@@ -655,7 +655,7 @@ public:
         return m_unresolved_imports;
     }
 
-    AK::Result<Vector<ExternValue>, LinkError> finish();
+    AK::ErrorOr<Vector<ExternValue>, LinkError> finish();
 
 private:
     void populate();
