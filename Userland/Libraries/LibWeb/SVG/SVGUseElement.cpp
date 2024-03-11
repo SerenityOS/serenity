@@ -163,12 +163,14 @@ JS::NonnullGCPtr<SVGAnimatedLength> SVGUseElement::y() const
 
 JS::NonnullGCPtr<SVGAnimatedLength> SVGUseElement::width() const
 {
-    TODO();
+    // FIXME: Implement this properly.
+    return SVGAnimatedLength::create(realm(), SVGLength::create(realm(), 0, 0), SVGLength::create(realm(), 0, 0));
 }
 
 JS::NonnullGCPtr<SVGAnimatedLength> SVGUseElement::height() const
 {
-    TODO();
+    // FIXME: Implement this properly.
+    return SVGAnimatedLength::create(realm(), SVGLength::create(realm(), 0, 0), SVGLength::create(realm(), 0, 0));
 }
 
 // https://svgwg.org/svg2-draft/struct.html#TermInstanceRoot

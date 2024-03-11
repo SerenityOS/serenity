@@ -216,32 +216,38 @@ Optional<Gfx::PaintStyle const&> SVGRadialGradientElement::to_gfx_paint_style(SV
 
 JS::NonnullGCPtr<SVGAnimatedLength> SVGRadialGradientElement::cx() const
 {
-    TODO();
+    // FIXME: Implement this properly.
+    return SVGAnimatedLength::create(realm(), SVGLength::create(realm(), 0, 0), SVGLength::create(realm(), 0, 0));
 }
 
 JS::NonnullGCPtr<SVGAnimatedLength> SVGRadialGradientElement::cy() const
 {
-    TODO();
+    // FIXME: Implement this properly.
+    return SVGAnimatedLength::create(realm(), SVGLength::create(realm(), 0, 0), SVGLength::create(realm(), 0, 0));
 }
 
 JS::NonnullGCPtr<SVGAnimatedLength> SVGRadialGradientElement::fx() const
 {
-    TODO();
+    // FIXME: Implement this properly.
+    return SVGAnimatedLength::create(realm(), SVGLength::create(realm(), 0, 0), SVGLength::create(realm(), 0, 0));
 }
 
 JS::NonnullGCPtr<SVGAnimatedLength> SVGRadialGradientElement::fy() const
 {
-    TODO();
+    // FIXME: Implement this properly.
+    return SVGAnimatedLength::create(realm(), SVGLength::create(realm(), 0, 0), SVGLength::create(realm(), 0, 0));
 }
 
 JS::NonnullGCPtr<SVGAnimatedLength> SVGRadialGradientElement::fr() const
 {
-    TODO();
+    // FIXME: Implement this properly.
+    return SVGAnimatedLength::create(realm(), SVGLength::create(realm(), 0, 0), SVGLength::create(realm(), 0, 0));
 }
 
 JS::NonnullGCPtr<SVGAnimatedLength> SVGRadialGradientElement::r() const
 {
-    TODO();
+    // FIXME: Implement this properly.
+    return SVGAnimatedLength::create(realm(), SVGLength::create(realm(), 0, 0), SVGLength::create(realm(), 0, 0));
 }
 
 }
