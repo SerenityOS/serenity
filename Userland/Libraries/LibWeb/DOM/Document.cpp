@@ -4023,7 +4023,7 @@ void Document::ensure_animation_timer()
 {
     constexpr static auto timer_delay_ms = 1000 / 60;
     if (!m_animation_driver_timer) {
-        m_animation_driver_timer = Platform::Timer::create_repeating(timer_delay_ms, [this] {
+        m_animation_driver_timer = MUST(Core::Timer::create_repeating(timer_delay_ms, [this] {
             bool has_animations = false;
             for (auto& timeline : m_associated_animation_timelines) {
                 if (!timeline->associated_animations().is_empty()) {
@@ -4042,7 +4042,7 @@ void Document::ensure_animation_timer()
                 for (auto& animation : timeline->associated_animations())
                     dispatch_events_for_animation_if_necessary(animation);
             }
-        });
+        }));
     }
 
     m_animation_driver_timer->start();
