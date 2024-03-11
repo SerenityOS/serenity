@@ -38,7 +38,8 @@ ErrorOr<void, ValidationError> Validator::validate(Module& module)
     m_context = {};
 
     module.for_each_section_of_type<TypeSection>([this](TypeSection const& section) {
-        m_context.types = section.types();
+        for (auto& type : section.types())
+            m_context.types.append(type);
     });
 
     module.for_each_section_of_type<ImportSection>([&](ImportSection const& section) {
@@ -90,23 +91,23 @@ ErrorOr<void, ValidationError> Validator::validate(Module& module)
     module.for_each_section_of_type<TableSection>([this](TableSection const& section) {
         m_context.tables.ensure_capacity(m_context.tables.size() + section.tables().size());
         for (auto& table : section.tables())
-            m_context.tables.unchecked_append(table.type());
+            m_context.tables.append(table.type());
     });
     module.for_each_section_of_type<MemorySection>([this](MemorySection const& section) {
         m_context.memories.ensure_capacity(m_context.memories.size() + section.memories().size());
         for (auto& memory : section.memories())
-            m_context.memories.unchecked_append(memory.type());
+            m_context.memories.append(memory.type());
     });
 
     module.for_each_section_of_type<GlobalSection>([this](GlobalSection const& section) {
         m_context.globals.ensure_capacity(m_context.globals.size() + section.entries().size());
         for (auto& global : section.entries())
-            m_context.globals.unchecked_append(global.type());
+            m_context.globals.append(global.type());
     });
     module.for_each_section_of_type<ElementSection>([this](ElementSection const& section) {
         m_context.elements.ensure_capacity(section.segments().size());
         for (auto& segment : section.segments())
-            m_context.elements.unchecked_append(segment.type);
+            m_context.elements.append(segment.type);
     });
     module.for_each_section_of_type<DataSection>([this](DataSection const& section) {
         m_context.datas.resize(section.data().size());

@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/COWVector.h>
 #include <AK/Debug.h>
 #include <AK/HashTable.h>
 #include <AK/SourceLocation.h>
@@ -17,15 +18,15 @@
 namespace Wasm {
 
 struct Context {
-    Vector<FunctionType> types;
-    Vector<FunctionType> functions;
-    Vector<TableType> tables;
-    Vector<MemoryType> memories;
-    Vector<GlobalType> globals;
-    Vector<ValueType> elements;
-    Vector<bool> datas;
-    Vector<ValueType> locals;
-    Vector<ResultType> labels;
+    COWVector<FunctionType> types;
+    COWVector<FunctionType> functions;
+    COWVector<TableType> tables;
+    COWVector<MemoryType> memories;
+    COWVector<GlobalType> globals;
+    COWVector<ValueType> elements;
+    COWVector<bool> datas;
+    COWVector<ValueType> locals;
+    COWVector<ResultType> labels;
     Optional<ResultType> return_;
     AK::HashTable<FunctionIndex> references;
     size_t imported_function_count { 0 };
@@ -345,7 +346,7 @@ private:
     Vector<ChildScopeKind> m_entered_scopes;
     Vector<BlockDetails> m_block_details;
     Vector<FunctionType> m_entered_blocks;
-    Vector<GlobalType> m_globals_without_internal_globals;
+    COWVector<GlobalType> m_globals_without_internal_globals;
 };
 
 }
