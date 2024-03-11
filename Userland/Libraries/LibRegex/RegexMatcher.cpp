@@ -157,9 +157,9 @@ RegexResult Matcher<Parser>::match(Vector<RegexStringView> const& views, Optiona
         for (size_t j = 0; j < c_match_preallocation_count; ++j) {
             state.matches.empend();
             state.capture_group_matches.empend();
-            state.capture_group_matches.at(j).ensure_capacity(capture_groups_count);
+            state.capture_group_matches.mutable_at(j).ensure_capacity(capture_groups_count);
             for (size_t k = 0; k < capture_groups_count; ++k)
-                state.capture_group_matches.at(j).unchecked_append({});
+                state.capture_group_matches.mutable_at(j).unchecked_append({});
         }
     }
 
@@ -169,9 +169,9 @@ RegexResult Matcher<Parser>::match(Vector<RegexStringView> const& views, Optiona
 
         VERIFY(start_position + state.string_position - start_position <= input.view.length());
         if (input.regex_options.has_flag_set(AllFlags::StringCopyMatches)) {
-            state.matches.at(input.match_index) = { input.view.substring_view(start_position, state.string_position - start_position).to_byte_string(), input.line, start_position, input.global_offset + start_position };
+            state.matches.mutable_at(input.match_index) = { input.view.substring_view(start_position, state.string_position - start_position).to_byte_string(), input.line, start_position, input.global_offset + start_position };
         } else { // let the view point to the original string ...
-            state.matches.at(input.match_index) = { input.view.substring_view(start_position, state.string_position - start_position), input.line, start_position, input.global_offset + start_position };
+            state.matches.mutable_at(input.match_index) = { input.view.substring_view(start_position, state.string_position - start_position), input.line, start_position, input.global_offset + start_position };
         }
     };
 

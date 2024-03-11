@@ -38,8 +38,7 @@ ErrorOr<void, ValidationError> Validator::validate(Module& module)
     m_context = {};
 
     module.for_each_section_of_type<TypeSection>([this](TypeSection const& section) {
-        for (auto& type : section.types())
-            m_context.types.append(type);
+        m_context.types.extend(section.types());
     });
 
     module.for_each_section_of_type<ImportSection>([&](ImportSection const& section) {
