@@ -41,6 +41,8 @@ void CustomElementRegistry::visit_edges(Visitor& visitor)
     Base::visit_edges(visitor);
     for (auto& definition : m_custom_element_definitions)
         visitor.visit(definition);
+    for (auto& [name, promise] : m_when_defined_promise_map)
+        visitor.visit(promise);
 }
 
 // https://webidl.spec.whatwg.org/#es-callback-function
@@ -310,7 +312,7 @@ JS::ThrowCompletionOr<void> CustomElementRegistry::define(String const& name, We
     auto promise_when_defined_iterator = m_when_defined_promise_map.find(name);
     if (promise_when_defined_iterator != m_when_defined_promise_map.end()) {
         // 1. Let promise be the value of that entry.
-        auto* promise = promise_when_defined_iterator->value.cell();
+        auto promise = promise_when_defined_iterator->value;
 
         // 2. Resolve promise with constructor.
         promise->fulfill(constructor->callback);
@@ -369,10 +371,10 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> CustomElementRegistry::when_d
 
     auto existing_promise_iterator = m_when_defined_promise_map.find(name);
     if (existing_promise_iterator != m_when_defined_promise_map.end()) {
-        promise = existing_promise_iterator->value.cell();
+        promise = existing_promise_iterator->value;
     } else {
         promise = JS::Promise::create(realm);
-        m_when_defined_promise_map.set(name, JS::make_handle(promise));
+        m_when_defined_promise_map.set(name, *promise);
     }
 
     // 5. Return promise.
