@@ -201,14 +201,14 @@ JS::ThrowCompletionOr<void> CustomElementRegistry::define(String const& name, We
             // 2. If callbackValue is not undefined, then set the value of the entry in lifecycleCallbacks with key callbackName to the result of converting callbackValue to the Web IDL Function callback type. Rethrow any exceptions from the conversion.
             if (!callback_value.is_undefined()) {
                 auto callback = TRY(convert_value_to_callback_function(vm, callback_value));
-                lifecycle_callbacks.set(callback_name, JS::make_handle(callback));
+                lifecycle_callbacks.set(callback_name, callback);
             }
         }
 
         // 5. If the value of the entry in lifecycleCallbacks with key "attributeChangedCallback" is not null, then:
         auto attribute_changed_callback_iterator = lifecycle_callbacks.find(CustomElementReactionNames::attributeChangedCallback);
         VERIFY(attribute_changed_callback_iterator != lifecycle_callbacks.end());
-        if (!attribute_changed_callback_iterator->value.is_null()) {
+        if (attribute_changed_callback_iterator->value) {
             // 1. Let observedAttributesIterable be ? Get(constructor, "observedAttributes").
             auto observed_attributes_iterable = TRY(constructor->callback->get(JS::PropertyKey { "observedAttributes" }));
 
@@ -253,7 +253,7 @@ JS::ThrowCompletionOr<void> CustomElementRegistry::define(String const& name, We
 
                 // 2. If callbackValue is not undefined, then set the value of the entry in lifecycleCallbacks with key callbackName to the result of converting callbackValue to the Web IDL Function callback type. Rethrow any exceptions from the conversion.
                 if (!callback_value.is_undefined())
-                    lifecycle_callbacks.set(callback_name, JS::make_handle(TRY(convert_value_to_callback_function(vm, callback_value))));
+                    lifecycle_callbacks.set(callback_name, TRY(convert_value_to_callback_function(vm, callback_value)));
             }
         }
 

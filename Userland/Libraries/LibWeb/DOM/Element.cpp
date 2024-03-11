@@ -1910,7 +1910,7 @@ void Element::enqueue_a_custom_element_callback_reaction(FlyString const& callba
     if (callback_iterator == definition->lifecycle_callbacks().end())
         return;
 
-    if (callback_iterator->value.is_null())
+    if (!callback_iterator->value)
         return;
 
     // 4. If callbackName is "attributeChangedCallback", then:

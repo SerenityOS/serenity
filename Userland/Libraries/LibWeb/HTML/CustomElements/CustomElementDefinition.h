@@ -20,7 +20,7 @@ class CustomElementDefinition : public JS::Cell {
     JS_CELL(CustomElementDefinition, JS::Cell);
     JS_DECLARE_ALLOCATOR(CustomElementDefinition);
 
-    using LifecycleCallbacksStorage = OrderedHashMap<FlyString, JS::Handle<WebIDL::CallbackType>>;
+    using LifecycleCallbacksStorage = OrderedHashMap<FlyString, JS::GCPtr<WebIDL::CallbackType>>;
     using ConstructionStackStorage = Vector<Variant<JS::Handle<DOM::Element>, AlreadyConstructedCustomElementMarker>>;
 
     static JS::NonnullGCPtr<CustomElementDefinition> create(JS::Realm& realm, String const& name, String const& local_name, WebIDL::CallbackType& constructor, Vector<String>&& observed_attributes, LifecycleCallbacksStorage&& lifecycle_callbacks, bool form_associated, bool disable_internals, bool disable_shadow)
@@ -59,6 +59,8 @@ private:
         , m_disable_shadow(disable_shadow)
     {
     }
+
+    virtual void visit_edges(Visitor& visitor) override;
 
     // https://html.spec.whatwg.org/multipage/custom-elements.html#concept-custom-element-definition-name
     // A name
