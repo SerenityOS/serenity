@@ -48,7 +48,7 @@ AnimationTimeline::AnimationTimeline(JS::Realm& realm)
 {
 }
 
-AnimationTimeline::~AnimationTimeline()
+void AnimationTimeline::finalize()
 {
     if (m_associated_document)
         m_associated_document->disassociate_with_timeline(*this);
