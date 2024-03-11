@@ -36,6 +36,13 @@ void CustomElementRegistry::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::CustomElementRegistryPrototype>(realm, "CustomElementRegistry"_fly_string));
 }
 
+void CustomElementRegistry::visit_edges(Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    for (auto& definition : m_custom_element_definitions)
+        visitor.visit(definition);
+}
+
 // https://webidl.spec.whatwg.org/#es-callback-function
 static JS::ThrowCompletionOr<JS::NonnullGCPtr<WebIDL::CallbackType>> convert_value_to_callback_function(JS::VM& vm, JS::Value value)
 {
@@ -119,7 +126,7 @@ JS::ThrowCompletionOr<void> CustomElementRegistry::define(String const& name, We
         return JS::throw_completion(WebIDL::SyntaxError::create(realm, MUST(String::formatted("'{}' is not a valid custom element name"sv, name))));
 
     // 3. If this CustomElementRegistry contains an entry with name name, then throw a "NotSupportedError" DOMException.
-    auto existing_definition_with_name_iterator = m_custom_element_definitions.find_if([&name](JS::Handle<CustomElementDefinition> const& definition) {
+    auto existing_definition_with_name_iterator = m_custom_element_definitions.find_if([&name](auto const& definition) {
         return definition->name() == name;
     });
 
@@ -127,7 +134,7 @@ JS::ThrowCompletionOr<void> CustomElementRegistry::define(String const& name, We
         return JS::throw_completion(WebIDL::NotSupportedError::create(realm, MUST(String::formatted("A custom element with name '{}' is already defined"sv, name))));
 
     // 4. If this CustomElementRegistry contains an entry with constructor constructor, then throw a "NotSupportedError" DOMException.
-    auto existing_definition_with_constructor_iterator = m_custom_element_definitions.find_if([&constructor](JS::Handle<CustomElementDefinition> const& definition) {
+    auto existing_definition_with_constructor_iterator = m_custom_element_definitions.find_if([&constructor](auto const& definition) {
         return definition->constructor().callback == constructor->callback;
     });
 
@@ -274,7 +281,7 @@ JS::ThrowCompletionOr<void> CustomElementRegistry::define(String const& name, We
     auto definition = CustomElementDefinition::create(realm, name, local_name, *constructor, move(observed_attributes), move(lifecycle_callbacks), form_associated, disable_internals, disable_shadow);
 
     // 16. Add definition to this CustomElementRegistry.
-    m_custom_element_definitions.append(JS::make_handle(*definition));
+    m_custom_element_definitions.append(definition);
 
     // 17. Let document be this CustomElementRegistry's relevant global object's associated Document.
     auto& document = verify_cast<HTML::Window>(relevant_global_object(*this)).associated_document();
@@ -319,12 +326,12 @@ JS::ThrowCompletionOr<void> CustomElementRegistry::define(String const& name, We
 Variant<JS::Handle<WebIDL::CallbackType>, JS::Value> CustomElementRegistry::get(String const& name) const
 {
     // 1. If this CustomElementRegistry contains an entry with name name, then return that entry's constructor.
-    auto existing_definition_iterator = m_custom_element_definitions.find_if([&name](JS::Handle<CustomElementDefinition> const& definition) {
+    auto existing_definition_iterator = m_custom_element_definitions.find_if([&name](auto const& definition) {
         return definition->name() == name;
     });
 
     if (!existing_definition_iterator.is_end())
-        return JS::make_handle(existing_definition_iterator->cell()->constructor());
+        return JS::make_handle((*existing_definition_iterator)->constructor());
 
     // 2. Otherwise, return undefined.
     return JS::js_undefined();
@@ -349,7 +356,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> CustomElementRegistry::when_d
 
     if (existing_definition_iterator != m_custom_element_definitions.end()) {
         auto promise = JS::Promise::create(realm);
-        promise->fulfill(existing_definition_iterator->cell()->constructor().callback);
+        promise->fulfill((*existing_definition_iterator)->constructor().callback);
         return promise;
     }
 

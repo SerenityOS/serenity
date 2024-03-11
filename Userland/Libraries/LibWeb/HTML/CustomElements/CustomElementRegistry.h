@@ -36,9 +36,10 @@ private:
     CustomElementRegistry(JS::Realm&);
 
     virtual void initialize(JS::Realm&) override;
+    virtual void visit_edges(Visitor&) override;
 
     // Every CustomElementRegistry has a set of custom element definitions, initially empty. In general, algorithms in this specification look up elements in the registry by any of name, local name, or constructor.
-    Vector<JS::Handle<CustomElementDefinition>> m_custom_element_definitions;
+    Vector<JS::NonnullGCPtr<CustomElementDefinition>> m_custom_element_definitions;
 
     // https://html.spec.whatwg.org/multipage/custom-elements.html#element-definition-is-running
     // Every CustomElementRegistry also has an element definition is running flag which is used to prevent reentrant invocations of element definition. It is initially unset.
