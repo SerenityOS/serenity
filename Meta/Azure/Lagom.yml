@@ -58,6 +58,15 @@ jobs:
           ccache_version: 2
         serenity_ccache_size: '2G'
 
+    # On Ubuntu, with Linux kernel 6.5, ARCH_MMAP_RND_BITS was changed from ARCH_MMAP_RND_BITS_MIN (28 on x64) to
+    # ARCH_MMAP_RND_BITS_MAX (32 on x64). This breaks assumptions made by libasan's allocators, and we see a flaky
+    # crash from within libasan itself. Here, we restore the previous value until we have a version of GCC which fixes
+    # the issue in libasan (reportedly 13.2.1): https://stackoverflow.com/questions/77894856/possible-bug-in-gcc-sanitizers
+    - ${{ if eq(parameters.os, 'Linux') }}:
+      - script: |
+          sudo sysctl vm.mmap_rnd_bits=28
+        displayName: 'Work around libasan ASLR bug'
+
     - ${{ if eq(parameters.os, 'Android') }}:
       - script: |
           yes | $ANDROID_SDK_ROOT/tools/bin/sdkmanager "ndk;$(ndk_version)"
