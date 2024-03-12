@@ -946,6 +946,41 @@ JS::GCPtr<WindowProxy const> Window::top() const
     return navigable->top_level_traversable()->active_window_proxy();
 }
 
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-opener
+JS::GCPtr<WindowProxy const> Window::opener() const
+{
+    // 1. Let current be this's browsing context.
+    auto const* current = browsing_context();
+
+    // 2. If current is null, then return null.
+    if (!current)
+        return {};
+
+    // 3. If current's opener browsing context is null, then return null.
+    auto opener_browsing_context = current->opener_browsing_context();
+    if (!opener_browsing_context)
+        return {};
+
+    // 4. Return current's opener browsing context's WindowProxy object.
+    return opener_browsing_context->window_proxy();
+}
+
+WebIDL::ExceptionOr<void> Window::set_opener(JS::Value value)
+{
+    // 1. If the given value is null and this's browsing context is non-null, then set this's browsing context's opener browsing context to null.
+    auto* browsing_context = this->browsing_context();
+    if (value.is_null() && browsing_context)
+        browsing_context->set_opener_browsing_context(nullptr);
+
+    // 2. If the given value is non-null, then perform ? DefinePropertyOrThrow(this, "opener", { [[Value]]: the given value, [[Writable]]: true, [[Enumerable]]: true, [[Configurable]]: true }).
+    if (!value.is_null()) {
+        static JS::PropertyKey opener_property_key { "opener", JS::PropertyKey::StringMayBeNumber::No };
+        TRY(define_property_or_throw(opener_property_key, { .value = value, .writable = true, .enumerable = true, .configurable = true }));
+    }
+
+    return {};
+}
+
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-parent
 JS::GCPtr<WindowProxy const> Window::parent() const
 {
