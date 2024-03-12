@@ -1563,16 +1563,35 @@ ErrorOr<void> socketpair(int domain, int type, int protocol, int sv[2])
     return {};
 }
 
-ErrorOr<Array<int, 2>> pipe2([[maybe_unused]] int flags)
+ErrorOr<Array<int, 2>> pipe2(int flags)
 {
     Array<int, 2> fds;
+
 #if defined(__unix__)
     if (::pipe2(fds.data(), flags) < 0)
         return Error::from_syscall("pipe2"sv, -errno);
 #else
     if (::pipe(fds.data()) < 0)
         return Error::from_syscall("pipe2"sv, -errno);
+
+    // Ensure we don't leak the fds if any of the system calls below fail.
+    AK::ArmedScopeGuard close_fds { [&]() {
+        MUST(close(fds[0]));
+        MUST(close(fds[1]));
+    } };
+
+    if ((flags & O_CLOEXEC) != 0) {
+        TRY(fcntl(fds[0], F_SETFD, FD_CLOEXEC));
+        TRY(fcntl(fds[1], F_SETFD, FD_CLOEXEC));
+    }
+    if ((flags & O_NONBLOCK) != 0) {
+        TRY(fcntl(fds[0], F_SETFL, TRY(fcntl(fds[0], F_GETFL)) | O_NONBLOCK));
+        TRY(fcntl(fds[1], F_SETFL, TRY(fcntl(fds[1], F_GETFL)) | O_NONBLOCK));
+    }
+
+    close_fds.disarm();
 #endif
+
     return fds;
 }
 
