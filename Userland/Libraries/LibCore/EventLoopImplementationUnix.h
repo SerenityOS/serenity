@@ -59,7 +59,7 @@ private:
     int m_exit_code { 0 };
 
     // The wake pipe of this event loop needs to be accessible from other threads.
-    int (*m_wake_pipe_fds)[2];
+    Array<int, 2>& m_wake_pipe_fds;
 };
 
 }
