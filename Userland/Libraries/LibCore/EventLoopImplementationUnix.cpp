@@ -239,15 +239,7 @@ struct ThreadData {
         if (wake_pipe_fds[1] != -1)
             close(wake_pipe_fds[1]);
 
-#if defined(SOCK_NONBLOCK)
-        int rc = pipe2(wake_pipe_fds, O_CLOEXEC);
-#else
-        int rc = pipe(wake_pipe_fds);
-        fcntl(wake_pipe_fds[0], F_SETFD, FD_CLOEXEC);
-        fcntl(wake_pipe_fds[1], F_SETFD, FD_CLOEXEC);
-
-#endif
-        VERIFY(rc == 0);
+        wake_pipe_fds = MUST(Core::System::pipe2(O_CLOEXEC));
 
         // The wake pipe informs us of POSIX signals as well as manual calls to wake()
         VERIFY(poll_fds.size() == 0);
@@ -264,14 +256,14 @@ struct ThreadData {
 
     // The wake pipe is used to notify another event loop that someone has called wake(), or a signal has been received.
     // wake() writes 0i32 into the pipe, signals write the signal number (guaranteed non-zero).
-    int wake_pipe_fds[2] { -1, -1 };
+    Array<int, 2> wake_pipe_fds { -1, -1 };
 
     pid_t pid { 0 };
 };
 }
 
 EventLoopImplementationUnix::EventLoopImplementationUnix()
-    : m_wake_pipe_fds(&ThreadData::the().wake_pipe_fds)
+    : m_wake_pipe_fds(ThreadData::the().wake_pipe_fds)
 {
 }
 
@@ -320,7 +312,7 @@ void EventLoopImplementationUnix::post_event(EventReceiver& receiver, NonnullOwn
 void EventLoopImplementationUnix::wake()
 {
     int wake_event = 0;
-    MUST(Core::System::write((*m_wake_pipe_fds)[1], { &wake_event, sizeof(wake_event) }));
+    MUST(Core::System::write(m_wake_pipe_fds[1], { &wake_event, sizeof(wake_event) }));
 }
 
 void EventLoopManagerUnix::wait_for_events(EventLoopImplementation::PumpMode mode)
