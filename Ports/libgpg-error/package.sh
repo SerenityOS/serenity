@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='libgpg-error'
-version='1.47'
+version='1.48'
 files=(
-    "https://gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-${version}.tar.bz2#9e3c670966b96ecc746c28c2c419541e3bcb787d1a73930f5e5f5e1bcbbb9bdb"
+    "https://gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-${version}.tar.bz2#89ce1ae893e122924b858de84dc4f67aae29ffa610ebf668d5aa539045663d6f"
 )
 useconfigure='true'
 use_fresh_config_sub='true'
