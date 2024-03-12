@@ -35,6 +35,7 @@ interface Window : EventTarget {
     [Replaceable] readonly attribute WindowProxy frames;
     [Replaceable] readonly attribute unsigned long length;
     [LegacyUnforgeable] readonly attribute WindowProxy? top;
+    attribute any opener;
     [Replaceable] readonly attribute WindowProxy? parent;
     readonly attribute Element? frameElement;
     WindowProxy? open(optional USVString url = "", optional DOMString target = "_blank", optional [LegacyNullToEmptyString] DOMString features = "");

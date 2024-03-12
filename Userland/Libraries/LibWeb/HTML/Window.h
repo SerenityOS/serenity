@@ -144,6 +144,8 @@ public:
     JS::NonnullGCPtr<WindowProxy> frames() const;
     u32 length();
     JS::GCPtr<WindowProxy const> top() const;
+    JS::GCPtr<WindowProxy const> opener() const;
+    WebIDL::ExceptionOr<void> set_opener(JS::Value);
     JS::GCPtr<WindowProxy const> parent() const;
     JS::GCPtr<DOM::Element const> frame_element() const;
     WebIDL::ExceptionOr<JS::GCPtr<WindowProxy>> open(Optional<String> const& url, Optional<String> const& target, Optional<String> const& features);
