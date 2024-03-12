@@ -22,12 +22,15 @@ struct DOMQuadInit {
 };
 
 // https://drafts.fxtf.org/geometry/#domquad
-class DOMQuad : public Bindings::PlatformObject {
+class DOMQuad
+    : public Bindings::PlatformObject
+    , public Bindings::Serializable {
     WEB_PLATFORM_OBJECT(DOMQuad, Bindings::PlatformObject);
     JS_DECLARE_ALLOCATOR(DOMQuad);
 
 public:
     static JS::NonnullGCPtr<DOMQuad> construct_impl(JS::Realm&, DOMPointInit const& p1, DOMPointInit const& p2, DOMPointInit const& p3, DOMPointInit const& p4);
+    static JS::NonnullGCPtr<DOMQuad> create(JS::Realm& realm);
 
     virtual ~DOMQuad() override;
 
@@ -41,8 +44,13 @@ public:
 
     JS::NonnullGCPtr<DOMRect> get_bounds() const;
 
+    virtual StringView interface_name() const override { return "DOMQuad"sv; }
+    virtual WebIDL::ExceptionOr<void> serialization_steps(HTML::SerializationRecord&, bool for_storage, HTML::SerializationMemory&) override;
+    virtual WebIDL::ExceptionOr<void> deserialization_steps(ReadonlySpan<u32> const&, size_t& position, HTML::DeserializationMemory&) override;
+
 private:
     DOMQuad(JS::Realm&, DOMPointInit const& p1, DOMPointInit const& p2, DOMPointInit const& p3, DOMPointInit const& p4);
+    explicit DOMQuad(JS::Realm&);
 
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;

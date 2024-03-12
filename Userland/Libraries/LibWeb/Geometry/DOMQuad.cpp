@@ -16,12 +16,26 @@ JS::NonnullGCPtr<DOMQuad> DOMQuad::construct_impl(JS::Realm& realm, DOMPointInit
     return realm.heap().allocate<DOMQuad>(realm, realm, p1, p2, p3, p4);
 }
 
+JS::NonnullGCPtr<DOMQuad> DOMQuad::create(JS::Realm& realm)
+{
+    return realm.heap().allocate<DOMQuad>(realm, realm);
+}
+
 DOMQuad::DOMQuad(JS::Realm& realm, DOMPointInit const& p1, DOMPointInit const& p2, DOMPointInit const& p3, DOMPointInit const& p4)
     : PlatformObject(realm)
     , m_p1(DOMPoint::from_point(realm.vm(), p1))
     , m_p2(DOMPoint::from_point(realm.vm(), p2))
     , m_p3(DOMPoint::from_point(realm.vm(), p3))
     , m_p4(DOMPoint::from_point(realm.vm(), p4))
+{
+}
+
+DOMQuad::DOMQuad(JS::Realm& realm)
+    : PlatformObject(realm)
+    , m_p1(DOMPoint::create(realm))
+    , m_p2(DOMPoint::create(realm))
+    , m_p3(DOMPoint::create(realm))
+    , m_p4(DOMPoint::create(realm))
 {
 }
 
@@ -82,6 +96,53 @@ JS::NonnullGCPtr<DOMRect> DOMQuad::get_bounds() const
 
     // 7. Return bounds.
     return bounds;
+}
+
+// https://drafts.fxtf.org/geometry/#structured-serialization
+WebIDL::ExceptionOr<void> DOMQuad::serialization_steps(HTML::SerializationRecord& serialzied, bool for_storage, HTML::SerializationMemory& memory)
+{
+    auto& vm = this->vm();
+    // 1. Set serialized.[[P1]] to the sub-serialization of value’s point 1.
+    serialzied.extend(TRY(HTML::structured_serialize_internal(vm, m_p1, for_storage, memory)));
+    // 2. Set serialized.[[P2]] to the sub-serialization of value’s point 2.
+    serialzied.extend(TRY(HTML::structured_serialize_internal(vm, m_p2, for_storage, memory)));
+    // 3. Set serialized.[[P3]] to the sub-serialization of value’s point 3.
+    serialzied.extend(TRY(HTML::structured_serialize_internal(vm, m_p3, for_storage, memory)));
+    // 4. Set serialized.[[P4]] to the sub-serialization of value’s point 4.
+    serialzied.extend(TRY(HTML::structured_serialize_internal(vm, m_p4, for_storage, memory)));
+
+    return {};
+}
+
+// https://drafts.fxtf.org/geometry/#structured-serialization
+WebIDL::ExceptionOr<void> DOMQuad::deserialization_steps(ReadonlySpan<u32> const& serialized, size_t& position, HTML::DeserializationMemory& memory)
+{
+    auto& realm = this->realm();
+    // 1. Set value’s point 1 to the sub-deserialization of serialized.[[P1]].
+    auto deserialized_record = TRY(HTML::structured_deserialize_internal(vm(), serialized, realm, memory, position));
+    if (deserialized_record.value.has_value() && is<DOMPoint>(deserialized_record.value.value().as_object()))
+        m_p1 = dynamic_cast<DOMPoint&>(deserialized_record.value.release_value().as_object());
+    position = deserialized_record.position;
+
+    // 2. Set value’s point 2 to the sub-deserialization of serialized.[[P2]].
+    deserialized_record = TRY(HTML::structured_deserialize_internal(vm(), serialized, realm, memory, position));
+    if (deserialized_record.value.has_value() && is<DOMPoint>(deserialized_record.value.value().as_object()))
+        m_p2 = dynamic_cast<DOMPoint&>(deserialized_record.value.release_value().as_object());
+    position = deserialized_record.position;
+
+    // 3. Set value’s point 3 to the sub-deserialization of serialized.[[P3]].
+    deserialized_record = TRY(HTML::structured_deserialize_internal(vm(), serialized, realm, memory, position));
+    if (deserialized_record.value.has_value() && is<DOMPoint>(deserialized_record.value.value().as_object()))
+        m_p3 = dynamic_cast<DOMPoint&>(deserialized_record.value.release_value().as_object());
+    position = deserialized_record.position;
+
+    // 4. Set value’s point 4 to the sub-deserialization of serialized.[[P4]].
+    deserialized_record = TRY(HTML::structured_deserialize_internal(vm(), serialized, realm, memory, position));
+    if (deserialized_record.value.has_value() && is<DOMPoint>(deserialized_record.value.value().as_object()))
+        m_p4 = dynamic_cast<DOMPoint&>(deserialized_record.value.release_value().as_object());
+    position = deserialized_record.position;
+
+    return {};
 }
 
 void DOMQuad::initialize(JS::Realm& realm)
