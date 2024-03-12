@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='libksba'
-version='1.6.4'
+version='1.6.6'
 useconfigure='true'
 use_fresh_config_sub='true'
 config_sub_paths=(
@@ -10,7 +10,7 @@ depends=(
     'libgpg-error'
 )
 files=(
-    "https://gnupg.org/ftp/gcrypt/libksba/libksba-${version}.tar.bz2#bbb43f032b9164d86c781ffe42213a83bf4f2fee91455edfa4654521b8b03b6b"
+    "https://gnupg.org/ftp/gcrypt/libksba/libksba-${version}.tar.bz2#5dec033d211559338838c0c4957c73dfdc3ee86f73977d6279640c9cd08ce6a4"
 )
 
 pre_configure() {
