@@ -1204,6 +1204,17 @@ TEST_CASE(test_tvg_malformed)
     }
 }
 
+TEST_CASE(test_tvg_rgb565)
+{
+    auto file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("tvg/green-rgb565.tvg"sv)));
+    EXPECT(Gfx::TinyVGImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = TRY_OR_FAIL(Gfx::TinyVGImageDecoderPlugin::create(file->bytes()));
+    auto frame = TRY_OR_FAIL(expect_single_frame_of_size(*plugin_decoder, { 100, 100 }));
+
+    // Should be a solid dark green:
+    EXPECT_EQ(frame.image->get_pixel(50, 50), Gfx::Color(0, 130, 0));
+}
+
 TEST_CASE(test_jxl_modular_simple_tree_upsample2_10bits)
 {
     auto file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("jxl/modular_simple_tree_upsample2_10bits_rct.jxl"sv)));

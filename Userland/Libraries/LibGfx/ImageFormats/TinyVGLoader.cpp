@@ -147,7 +147,7 @@ static ErrorOr<Vector<Color>> decode_color_table(Stream& stream, ColorEncoding e
             auto red = (color >> (6 + 5)) & 0x1f;
             auto green = (color >> 5) & 0x3f;
             auto blue = (color >> 0) & 0x1f;
-            return Color((red * 255 + 15) / 31, (green * 255 + 31), (blue * 255 + 15) / 31);
+            return Color((red * 255 + 15) / 31, (green * 255 + 31) / 63, (blue * 255 + 15) / 31);
         }
         case ColorEncoding::RGBAF32: {
             auto red = TRY(stream.read_value<LittleEndian<f32>>());
