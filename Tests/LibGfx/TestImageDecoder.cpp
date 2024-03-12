@@ -347,6 +347,39 @@ TEST_CASE(test_jbig2_white_47x23)
         EXPECT_EQ(pixel, Gfx::Color(Gfx::Color::White).value());
 }
 
+TEST_CASE(test_jbig2_arithmetic_decoder)
+{
+    // https://www.itu.int/rec/T-REC-T.88-201808-I
+    // H.2 Test sequence for arithmetic coder
+    // clang-format off
+    constexpr auto input = to_array<u8>({
+        0x84, 0xC7, 0x3B, 0xFC, 0xE1, 0xA1, 0x43, 0x04,
+        0x02, 0x20, 0x00, 0x00, 0x41, 0x0D, 0xBB, 0x86,
+        0xF4, 0x31, 0x7F, 0xFF, 0x88, 0xFF, 0x37, 0x47,
+        0x1A, 0xDB, 0x6A, 0xDF, 0xFF, 0xAC
+        });
+    constexpr auto output = to_array<u8>({
+        0x00, 0x02, 0x00, 0x51, 0x00, 0x00, 0x00, 0xC0,
+        0x03, 0x52, 0x87, 0x2A, 0xAA, 0xAA, 0xAA, 0xAA,
+        0x82, 0xC0, 0x20, 0x00, 0xFC, 0xD7, 0x9E, 0xF6,
+        0xBF, 0x7F, 0xED, 0x90, 0x4F, 0x46, 0xA3, 0xBF
+    });
+    // clang-format on
+
+    // "For this entire test, a single value of CX is used. I(CX) is initially 0 and MPS(CX) is initially 0."
+    Gfx::JBIG2::ArithmeticDecoder::Context context { 0, 0 };
+    auto decoder = MUST(Gfx::JBIG2::ArithmeticDecoder::initialize(input, context));
+
+    for (auto expected : output) {
+        u8 actual = 0;
+        for (size_t i = 0; i < 8; ++i) {
+            actual <<= 1;
+            actual |= static_cast<u8>(decoder.get_next_bit());
+        }
+        EXPECT_EQ(actual, expected);
+    }
+}
+
 TEST_CASE(test_jpeg_sof0_one_scan)
 {
     auto file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("jpg/rgb24.jpg"sv)));
