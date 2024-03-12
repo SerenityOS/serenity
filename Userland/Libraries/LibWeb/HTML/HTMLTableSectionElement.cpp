@@ -66,7 +66,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<HTMLTableRowElement>> HTMLTableSectionEleme
         TRY(append_child(table_row));
     // 4. Otherwise, insert table row as a child of this element, immediately before the index-th tr element in the rows collection.
     else
-        table_row.insert_before(*this, rows_collection->item(index));
+        insert_before(table_row, rows_collection->item(index));
 
     // 5. Return table row.
     return JS::NonnullGCPtr(table_row);
