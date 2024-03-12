@@ -39,6 +39,7 @@ source_set("Layout") {
     "SVGFormattingContext.cpp",
     "SVGGeometryBox.cpp",
     "SVGGraphicsBox.cpp",
+    "SVGMaskBox.cpp",
     "SVGSVGBox.cpp",
     "SVGTextBox.cpp",
     "SVGTextPathBox.cpp",

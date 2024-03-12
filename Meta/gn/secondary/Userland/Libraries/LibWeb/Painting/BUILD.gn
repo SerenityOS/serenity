@@ -32,6 +32,7 @@ source_set("Painting") {
     "RadioButtonPaintable.cpp",
     "RecordingPainter.cpp",
     "SVGGraphicsPaintable.cpp",
+    "SVGMaskPaintable.cpp",
     "SVGPaintable.cpp",
     "SVGPathPaintable.cpp",
     "SVGSVGPaintable.cpp",
