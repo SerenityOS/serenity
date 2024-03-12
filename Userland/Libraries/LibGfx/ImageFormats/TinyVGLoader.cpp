@@ -364,7 +364,7 @@ ErrorOr<NonnullRefPtr<TinyVGDecodedImageData>> TinyVGDecodedImageData::decode(St
     if (header.version != 1)
         return Error::from_string_literal("Invalid TinyVG: Unsupported version");
 
-    auto const& color_table = TRY(decode_color_table(stream, header.color_encoding, header.color_count));
+    auto color_table = TRY(decode_color_table(stream, header.color_encoding, header.color_count));
     TinyVGReader reader { stream, header, color_table.span() };
 
     auto rectangle_to_path = [](FloatRect const& rect) -> Path {
