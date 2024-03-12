@@ -6,11 +6,8 @@
 
 #include <AK/HashMap.h>
 #include <AK/NonnullOwnPtr.h>
+#include <LibCore/System.h>
 #include <RequestServer/Protocol.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <string.h>
-#include <unistd.h>
 
 namespace RequestServer {
 
@@ -32,13 +29,7 @@ Protocol::Protocol(ByteString const& name)
 
 ErrorOr<Protocol::Pipe> Protocol::get_pipe_for_request()
 {
-    int fd_pair[2] { 0 };
-    if (pipe(fd_pair) != 0) {
-        auto saved_errno = errno;
-        dbgln("Protocol: pipe() failed: {}", strerror(saved_errno));
-        return Error::from_errno(saved_errno);
-    }
-    fcntl(fd_pair[1], F_SETFL, fcntl(fd_pair[1], F_GETFL) | O_NONBLOCK);
+    auto fd_pair = TRY(Core::System::pipe2(O_NONBLOCK));
     return Pipe { fd_pair[0], fd_pair[1] };
 }
 
