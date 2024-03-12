@@ -364,6 +364,9 @@ void MessagePort::post_message_task_steps(SerializedTransferRecord& serialize_wi
 // https://html.spec.whatwg.org/multipage/web-messaging.html#dom-messageport-start
 void MessagePort::start()
 {
+    if (!is_entangled())
+        return;
+
     VERIFY(m_socket);
     VERIFY(m_fd_passing_socket);
 
