@@ -28,23 +28,23 @@ public:
 
     void add_finalization_record(Cell& target, Value held_value, Cell* unregister_token);
     bool remove_by_token(Cell& unregister_token);
-    ThrowCompletionOr<void> cleanup(Optional<JobCallback> = {});
+    ThrowCompletionOr<void> cleanup(GCPtr<JobCallback> = {});
 
     virtual void remove_dead_cells(Badge<Heap>) override;
 
     Realm& realm() { return *m_realm; }
     Realm const& realm() const { return *m_realm; }
 
-    JobCallback& cleanup_callback() { return m_cleanup_callback; }
-    JobCallback const& cleanup_callback() const { return m_cleanup_callback; }
+    JobCallback& cleanup_callback() { return *m_cleanup_callback; }
+    JobCallback const& cleanup_callback() const { return *m_cleanup_callback; }
 
 private:
-    FinalizationRegistry(Realm&, JobCallback, Object& prototype);
+    FinalizationRegistry(Realm&, NonnullGCPtr<JobCallback>, Object& prototype);
 
     virtual void visit_edges(Visitor& visitor) override;
 
     NonnullGCPtr<Realm> m_realm;
-    JobCallback m_cleanup_callback;
+    NonnullGCPtr<JobCallback> m_cleanup_callback;
 
     struct FinalizationRecord {
         GCPtr<Cell> target;

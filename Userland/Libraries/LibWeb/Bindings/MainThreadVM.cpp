@@ -191,7 +191,7 @@ ErrorOr<void> initialize_main_thread_vm()
 
     // 8.1.5.4.1 HostCallJobCallback(callback, V, argumentsList), https://html.spec.whatwg.org/multipage/webappapis.html#hostcalljobcallback
     s_main_thread_vm->host_call_job_callback = [](JS::JobCallback& callback, JS::Value this_value, ReadonlySpan<JS::Value> arguments_list) {
-        auto& callback_host_defined = verify_cast<WebEngineCustomJobCallbackData>(*callback.custom_data);
+        auto& callback_host_defined = verify_cast<WebEngineCustomJobCallbackData>(*callback.custom_data());
 
         // 1. Let incumbent settings be callback.[[HostDefined]].[[IncumbentSettings]]. (NOTE: Not necessary)
         // 2. Let script execution context be callback.[[HostDefined]].[[ActiveScriptContext]]. (NOTE: Not necessary)
@@ -204,7 +204,7 @@ ErrorOr<void> initialize_main_thread_vm()
             s_main_thread_vm->push_execution_context(*callback_host_defined.active_script_context);
 
         // 5. Let result be Call(callback.[[Callback]], V, argumentsList).
-        auto result = JS::call(*s_main_thread_vm, *callback.callback.cell(), this_value, arguments_list);
+        auto result = JS::call(*s_main_thread_vm, callback.callback(), this_value, arguments_list);
 
         // 6. If script execution context is not null, then pop script execution context from the JavaScript execution context stack.
         if (callback_host_defined.active_script_context) {
@@ -227,7 +227,7 @@ ErrorOr<void> initialize_main_thread_vm()
         // 2. Queue a global task on the JavaScript engine task source given global to perform the following steps:
         HTML::queue_global_task(HTML::Task::Source::JavaScriptEngine, global, [&finalization_registry] {
             // 1. Let entry be finalizationRegistry.[[CleanupCallback]].[[Callback]].[[Realm]]'s environment settings object.
-            auto& entry = host_defined_environment_settings_object(*finalization_registry.cleanup_callback().callback.cell()->realm());
+            auto& entry = host_defined_environment_settings_object(*finalization_registry.cleanup_callback().callback().realm());
 
             // 2. Check if we can run script with entry. If this returns "do not run", then return.
             if (entry.can_run_script() == HTML::RunScriptDecision::DoNotRun)
@@ -319,7 +319,7 @@ ErrorOr<void> initialize_main_thread_vm()
     };
 
     // 8.1.5.4.4 HostMakeJobCallback(callable), https://html.spec.whatwg.org/multipage/webappapis.html#hostmakejobcallback
-    s_main_thread_vm->host_make_job_callback = [](JS::FunctionObject& callable) -> JS::JobCallback {
+    s_main_thread_vm->host_make_job_callback = [](JS::FunctionObject& callable) -> JS::NonnullGCPtr<JS::JobCallback> {
         // 1. Let incumbent settings be the incumbent settings object.
         auto& incumbent_settings = HTML::incumbent_settings_object();
 
@@ -351,7 +351,7 @@ ErrorOr<void> initialize_main_thread_vm()
 
         // 5. Return the JobCallback Record { [[Callback]]: callable, [[HostDefined]]: { [[IncumbentSettings]]: incumbent settings, [[ActiveScriptContext]]: script execution context } }.
         auto host_defined = adopt_own(*new WebEngineCustomJobCallbackData(incumbent_settings, move(script_execution_context)));
-        return { JS::make_handle(&callable), move(host_defined) };
+        return JS::JobCallback::create(*s_main_thread_vm, callable, move(host_defined));
     };
 
     // 8.1.5.5.1 HostGetImportMetaProperties(moduleRecord), https://html.spec.whatwg.org/multipage/webappapis.html#hostgetimportmetaproperties
