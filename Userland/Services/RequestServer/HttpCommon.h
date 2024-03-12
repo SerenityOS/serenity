@@ -102,12 +102,10 @@ OwnPtr<Request> start_request(TBadgedProtocol&& protocol, i32 request_id, Connec
     auto protocol_request = TRequest::create_with_job(forward<TBadgedProtocol>(protocol), client, (TJob&)*job, move(output_stream), request_id);
     protocol_request->set_request_fd(pipe_result.value().read_fd);
 
-    Core::EventLoop::current().deferred_invoke([=] {
-        if constexpr (IsSame<typename TBadgedProtocol::Type, HttpsProtocol>)
-            ConnectionCache::get_or_create_connection(ConnectionCache::g_tls_connection_cache, url, job, proxy_data);
-        else
-            ConnectionCache::get_or_create_connection(ConnectionCache::g_tcp_connection_cache, url, job, proxy_data);
-    });
+    if constexpr (IsSame<typename TBadgedProtocol::Type, HttpsProtocol>)
+        ConnectionCache::get_or_create_connection(ConnectionCache::g_tls_connection_cache, url, job, proxy_data);
+    else
+        ConnectionCache::get_or_create_connection(ConnectionCache::g_tcp_connection_cache, url, job, proxy_data);
 
     return protocol_request;
 }
