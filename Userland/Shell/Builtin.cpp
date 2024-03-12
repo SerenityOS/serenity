@@ -203,7 +203,7 @@ ErrorOr<int> Shell::builtin_unalias(Main::Arguments arguments)
 
     Core::ArgsParser parser;
     parser.set_general_help("Remove alias from the list of aliases");
-    parser.add_option(remove_all, "Remove all aliases", nullptr, 'a');
+    parser.add_option(remove_all, "Remove all aliases", {}, 'a');
     parser.add_positional_argument(aliases, "List of aliases to remove", "alias", Core::ArgsParser::Required::Yes);
 
     if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
@@ -1587,7 +1587,7 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
     auto commit = [&] {
         return current.visit(
             [&](Core::ArgsParser::Option& option) {
-                if (!option.long_name && !option.short_name) {
+                if (option.long_name.is_null() && !option.short_name) {
                     warnln("Defined option must have at least one of --long-name or --short-name");
                     return false;
                 }
@@ -1609,7 +1609,7 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
                 return true;
             },
             [&](Core::ArgsParser::Arg& arg) {
-                if (!arg.name) {
+                if (arg.name.is_null()) {
                     warnln("Defined positional argument must have a name");
                     return false;
                 }
@@ -1651,7 +1651,7 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
         .value_name = "string",
         .accept_value = [&](StringView value) {
             VERIFY(strlen(value.characters_without_null_termination()) == value.length());
-            user_parser.set_general_help(value.characters_without_null_termination());
+            user_parser.set_general_help(value);
             return true;
         },
     });
@@ -1744,7 +1744,7 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
                 },
                 [&](auto& option) {
                     help_string_storage = value;
-                    option.help_string = help_string_storage.characters();
+                    option.help_string = help_string_storage;
                     return true;
                 });
         },
@@ -1760,13 +1760,13 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
                 warnln("Must be defining an option to use --long-name");
                 return false;
             }
-            if (option->long_name) {
+            if (!option->long_name.is_null()) {
                 warnln("Repeated application of --long-name is not allowed, current option has long name set to \"{}\"", option->long_name);
                 return false;
             }
 
             long_name_storage = value;
-            option->long_name = long_name_storage.characters();
+            option->long_name = long_name_storage;
             return true;
         },
     });
@@ -1805,7 +1805,7 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
                     return false;
                 },
                 [&](Core::ArgsParser::Option& option) {
-                    if (option.value_name) {
+                    if (!option.value_name.is_null()) {
                         warnln("Repeated application of --value-name is not allowed, current option has value name set to \"{}\"", option.value_name);
                         return false;
                     }
@@ -1815,17 +1815,17 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
                     }
 
                     value_name_storage = value;
-                    option.value_name = value_name_storage.characters();
+                    option.value_name = value_name_storage;
                     return true;
                 },
                 [&](Core::ArgsParser::Arg& arg) {
-                    if (arg.name) {
+                    if (!arg.name.is_null()) {
                         warnln("Repeated application of --value-name is not allowed, current argument has value name set to \"{}\"", arg.name);
                         return false;
                     }
 
                     name_storage = value;
-                    arg.name = name_storage.characters();
+                    arg.name = name_storage;
                     return true;
                 });
         },

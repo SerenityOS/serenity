@@ -91,7 +91,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     });
     args_parser.add_option(payload_size, "Amount of bytes to send as payload in the ECHO_REQUEST packets.", "size", 's', "size");
     args_parser.add_option(quiet, "Quiet mode. Only display summary when finished.", "quiet", 'q');
-    args_parser.add_option(ttl, "Set the TTL (time-to-live) value on the ICMP packets.", nullptr, 't', "ttl");
+    args_parser.add_option(ttl, "Set the TTL (time-to-live) value on the ICMP packets.", {}, 't', "ttl");
     args_parser.parse(arguments);
 
     if (count.has_value() && (count.value() < 1 || count.value() > UINT32_MAX)) {

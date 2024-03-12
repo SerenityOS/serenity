@@ -31,10 +31,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio rpath"));
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(flag_print_uid, "Print UID", nullptr, 'u');
-    args_parser.add_option(flag_print_gid, "Print GID", nullptr, 'g');
-    args_parser.add_option(flag_print_gid_all, "Print all GIDs", nullptr, 'G');
-    args_parser.add_option(flag_print_name, "Print name", nullptr, 'n');
+    args_parser.add_option(flag_print_uid, "Print UID", {}, 'u');
+    args_parser.add_option(flag_print_gid, "Print GID", {}, 'g');
+    args_parser.add_option(flag_print_gid_all, "Print all GIDs", {}, 'G');
+    args_parser.add_option(flag_print_name, "Print name", {}, 'n');
     args_parser.add_positional_argument(user_str, "User name/UID to query", "USER", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 

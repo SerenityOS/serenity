@@ -24,7 +24,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView opt_algorithm;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(opt_algorithm, "Checksum algorithm (default 'cksum', use 'list' to list available algorithms)", "algorithm", '\0', nullptr);
+    args_parser.add_option(opt_algorithm, "Checksum algorithm (default 'cksum', use 'list' to list available algorithms)", "algorithm", '\0', {});
     args_parser.add_positional_argument(paths, "File", "file", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 

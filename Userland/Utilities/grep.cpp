@@ -165,7 +165,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
             return true;
         },
     });
-    args_parser.add_option(case_insensitive, "Make matches case-insensitive", nullptr, 'i');
+    args_parser.add_option(case_insensitive, "Make matches case-insensitive", {}, 'i');
     args_parser.add_option(line_numbers, "Output line-numbers", "line-numbers", 'n');
     args_parser.add_option(invert_match, "Select non-matching lines", "invert-match", 'v');
     args_parser.add_option(quiet_mode, "Do not write anything to standard output", "quiet", 'q');
@@ -187,7 +187,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
         },
     });
     args_parser.add_option(binary_mode, BinaryFileMode::Text, "Treat binary files as text (same as --binary-mode text)", "text", 'a');
-    args_parser.add_option(binary_mode, BinaryFileMode::Skip, "Ignore binary files (same as --binary-mode skip)", nullptr, 'I');
+    args_parser.add_option(binary_mode, BinaryFileMode::Skip, "Ignore binary files (same as --binary-mode skip)", {}, 'I');
     args_parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "When to use colored output for the matching text ([auto], never, always)",

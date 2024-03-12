@@ -208,9 +208,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(source, "Source path", "source", Core::ArgsParser::Required::No);
     args_parser.add_positional_argument(mountpoint, "Mount point", "mountpoint", Core::ArgsParser::Required::No);
-    args_parser.add_option(fs_type, "File system type", nullptr, 't', "fstype");
-    args_parser.add_option(options, "Mount options", nullptr, 'o', "options");
-    args_parser.add_option(should_mount_all, "Mount all file systems listed in /etc/fstab and /etc/fstab.d/*", nullptr, 'a');
+    args_parser.add_option(fs_type, "File system type", {}, 't', "fstype");
+    args_parser.add_option(options, "Mount options", {}, 'o', "options");
+    args_parser.add_option(should_mount_all, "Mount all file systems listed in /etc/fstab and /etc/fstab.d/*", {}, 'a');
     args_parser.parse(arguments);
 
     if (should_mount_all) {

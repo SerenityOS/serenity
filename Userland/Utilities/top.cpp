@@ -142,7 +142,7 @@ static void parse_args(Main::Arguments arguments, TopOption& top_option)
         "Sort by field [pid, tid, pri, user, state, virt, phys, cpu, name]",
         "sort-by",
         's',
-        nullptr,
+        {},
         [&top_option](StringView sort_by_option) {
             if (sort_by_option == "pid"sv)
                 top_option.sort_by = TopOption::SortBy::Pid;
@@ -171,7 +171,7 @@ static void parse_args(Main::Arguments arguments, TopOption& top_option)
     Core::ArgsParser args_parser;
 
     args_parser.set_general_help("Display information about processes");
-    args_parser.add_option(top_option.delay_time, "Delay time interval in seconds", "delay-time", 'd', nullptr);
+    args_parser.add_option(top_option.delay_time, "Delay time interval in seconds", "delay-time", 'd', {});
     args_parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "A comma-separated list of pids to filter by",

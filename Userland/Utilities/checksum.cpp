@@ -43,7 +43,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::ArgsParser args_parser;
     args_parser.add_option(verify_from_paths, "Verify checksums from file(s)", "check", 'c');
-    args_parser.add_positional_argument(paths, paths_help_string.characters(), "path", Core::ArgsParser::Required::No);
+    args_parser.add_positional_argument(paths, paths_help_string, "path", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
     if (paths.is_empty())

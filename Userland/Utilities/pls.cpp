@@ -19,7 +19,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     uid_t as_user_uid = 0;
     bool preserve_env = false;
     args_parser.set_stop_on_first_non_option(true);
-    args_parser.add_option(as_user_uid, "User to execute as", nullptr, 'u', "UID");
+    args_parser.add_option(as_user_uid, "User to execute as", {}, 'u', "UID");
     args_parser.add_option(preserve_env, "Preserve user environment when running command", "preserve-env", 'E');
     args_parser.add_positional_argument(command, "Command to run at elevated privilege level", "command");
     args_parser.parse(arguments);

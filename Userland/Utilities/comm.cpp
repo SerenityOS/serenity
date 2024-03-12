@@ -34,10 +34,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Compare two sorted files line by line");
-    args_parser.add_option(suppress_col1, "Suppress column 1 (lines unique to file1)", nullptr, '1');
-    args_parser.add_option(suppress_col2, "Suppress column 2 (lines unique to file2)", nullptr, '2');
-    args_parser.add_option(suppress_col3, "Suppress column 3 (lines common to both files)", nullptr, '3');
-    args_parser.add_option(case_insensitive, "Use case-insensitive comparison of lines", nullptr, 'i');
+    args_parser.add_option(suppress_col1, "Suppress column 1 (lines unique to file1)", {}, '1');
+    args_parser.add_option(suppress_col2, "Suppress column 2 (lines unique to file2)", {}, '2');
+    args_parser.add_option(suppress_col3, "Suppress column 3 (lines common to both files)", {}, '3');
+    args_parser.add_option(case_insensitive, "Use case-insensitive comparison of lines", {}, 'i');
     args_parser.add_option(color, "Always print colored output", "color", 'c');
     args_parser.add_option(no_color, "Do not print colored output", "no-color", 0);
     args_parser.add_option(print_total, "Print a summary", "total", 't');

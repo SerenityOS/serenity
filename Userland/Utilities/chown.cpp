@@ -30,7 +30,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.set_general_help("Change the ownership of a file or directory.");
     args_parser.add_option(no_dereference, "Don't follow symlinks", "no-dereference", 'h');
     args_parser.add_option(recursive, "Change file ownership recursively", "recursive", 'R');
-    args_parser.add_option(follow_symlinks, "Follow symlinks while recursing into directories", nullptr, 'L');
+    args_parser.add_option(follow_symlinks, "Follow symlinks while recursing into directories", {}, 'L');
     args_parser.add_positional_argument(spec, "User and group IDs", "USER[:GROUP]");
     args_parser.add_positional_argument(paths, "Paths to files", "PATH");
     args_parser.parse(arguments);

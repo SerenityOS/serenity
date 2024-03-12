@@ -89,8 +89,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView command = ""sv;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(port, "Port to listen on", nullptr, 'p', "port");
-    args_parser.add_option(command, "Program to run on connection", nullptr, 'c', "command");
+    args_parser.add_option(port, "Port to listen on", {}, 'p', "port");
+    args_parser.add_option(command, "Program to run on connection", {}, 'c', "command");
     args_parser.parse(arguments);
 
     if ((u16)port != port) {
