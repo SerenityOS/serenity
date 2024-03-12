@@ -40,6 +40,7 @@
 #include <LibWeb/Geometry/DOMMatrixReadOnly.h>
 #include <LibWeb/Geometry/DOMPoint.h>
 #include <LibWeb/Geometry/DOMPointReadOnly.h>
+#include <LibWeb/Geometry/DOMQuad.h>
 #include <LibWeb/Geometry/DOMRect.h>
 #include <LibWeb/Geometry/DOMRectReadOnly.h>
 #include <LibWeb/HTML/MessagePort.h>
@@ -987,6 +988,8 @@ private:
             return Geometry::DOMRect::create(realm);
         if (interface_name == "CryptoKey"sv)
             return Crypto::CryptoKey::create(realm);
+        if (interface_name == "DOMQuad"sv)
+            return Geometry::DOMQuad::create(realm);
 
         VERIFY_NOT_REACHED();
     }

@@ -43,6 +43,10 @@
         println(`instanceOf DOMRect: ${domRect instanceof DOMRect}`);
         println(`DOMRect: ${JSON.stringify(domRect)}`);
 
+        let domQuad = structuredClone(new DOMQuad(new DOMPoint(10, 20, 30, 40), new DOMPoint(50, 60, 70, 80), new DOMPoint(90, 100, 110, 120), new DOMPoint(130, 140, 150, 160)));
+        println(`instanceOf DOMQuad: ${domQuad instanceof DOMQuad}`);
+        println(`DOMQuad: ${JSON.stringify(domQuad)}`);
+
         let cryptoKey = await window.crypto.subtle.importKey(
             "raw",
             new TextEncoder().encode("password"),
