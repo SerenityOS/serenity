@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='libassuan'
-version='2.5.6'
+version='2.5.7'
 useconfigure='true'
 use_fresh_config_sub='true'
 config_sub_paths=(
@@ -10,7 +10,7 @@ depends=(
     'libgpg-error'
 )
 files=(
-    "https://gnupg.org/ftp/gcrypt/libassuan/libassuan-${version}.tar.bz2#e9fd27218d5394904e4e39788f9b1742711c3e6b41689a31aa3380bd5aa4f426"
+    "https://gnupg.org/ftp/gcrypt/libassuan/libassuan-${version}.tar.bz2#0103081ffc27838a2e50479153ca105e873d3d65d8a9593282e9c94c7e6afb76"
 )
 
 pre_configure() {
