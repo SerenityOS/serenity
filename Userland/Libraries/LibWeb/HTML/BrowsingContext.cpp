@@ -176,7 +176,7 @@ WebIDL::ExceptionOr<BrowsingContext::BrowsingContextAndDocument> BrowsingContext
         });
 
     // 10. Let topLevelCreationURL be about:blank if embedder is null; otherwise embedder's relevant settings object's top-level creation URL.
-    auto top_level_creation_url = !embedder ? URL("about:blank") : relevant_settings_object(*embedder).top_level_creation_url;
+    auto top_level_creation_url = !embedder ? URL("about:blank"sv) : relevant_settings_object(*embedder).top_level_creation_url;
 
     // 11. Let topLevelOrigin be origin if embedder is null; otherwise embedder's relevant settings object's top-level origin.
     auto top_level_origin = !embedder ? origin : relevant_settings_object(*embedder).origin();
@@ -184,7 +184,7 @@ WebIDL::ExceptionOr<BrowsingContext::BrowsingContextAndDocument> BrowsingContext
     // 12. Set up a window environment settings object with about:blank, realm execution context, null, topLevelCreationURL, and topLevelOrigin.
     WindowEnvironmentSettingsObject::setup(
         page,
-        URL("about:blank"),
+        URL("about:blank"sv),
         move(realm_execution_context),
         {},
         top_level_creation_url,

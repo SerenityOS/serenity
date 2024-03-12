@@ -594,7 +594,7 @@ static WebIDL::ExceptionOr<NavigationParams> create_navigation_params_from_a_src
     //    header list: (`Content-Type`, `text/html`)
     //    body: the UTF-8 encoding of documentResource, as a body
     auto response = Fetch::Infrastructure::Response::create(vm);
-    response->url_list().append(URL("about:srcdoc"));
+    response->url_list().append(URL("about:srcdoc"sv));
     auto header = TRY_OR_THROW_OOM(vm, Fetch::Infrastructure::Header::from_string_pair("Content-Type"sv, "text/html"sv));
     TRY_OR_THROW_OOM(vm, response->header_list()->append(move(header)));
     response->set_body(TRY(Fetch::Infrastructure::byte_sequence_as_body(realm, document_resource.get<String>().bytes())));
@@ -1126,7 +1126,7 @@ WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(
             auto error_html = load_error_page(entry->url).release_value_but_fixme_should_propagate_errors();
             entry->document_state->set_document(create_document_for_inline_content(this, navigation_id, [error_html](auto& document) {
                 auto parser = HTML::HTMLParser::create(document, error_html, "utf-8");
-                document.set_url(URL("about:error"));
+                document.set_url(URL("about:error"sv));
                 parser->run();
             }));
 

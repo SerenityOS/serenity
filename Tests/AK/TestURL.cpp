@@ -449,7 +449,7 @@ TEST_CASE(query_with_non_ascii)
 
 TEST_CASE(complete_file_url_with_base)
 {
-    URL url { "file:///home/index.html" };
+    URL url { "file:///home/index.html"sv };
     EXPECT(url.is_valid());
     EXPECT_EQ(url.serialize_path(), "/home/index.html");
     EXPECT_EQ(url.path_segment_count(), 2u);

@@ -22,6 +22,13 @@ namespace AK {
 class StringView {
 public:
     ALWAYS_INLINE constexpr StringView() = default;
+    template<size_t N>
+    ALWAYS_INLINE consteval StringView(char const (&string)[N])
+        : m_characters(string)
+        , m_length(N - 1)
+    {
+        VERIFY(m_characters[m_length] == '\0');
+    }
     ALWAYS_INLINE constexpr StringView(char const* characters, size_t length)
         : m_characters(characters)
         , m_length(length)

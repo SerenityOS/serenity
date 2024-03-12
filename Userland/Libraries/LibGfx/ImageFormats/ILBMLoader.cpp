@@ -106,7 +106,7 @@ static ErrorOr<void> decode_iff_ilbm_header(ILBMLoadingContext& context)
     if (header.magic() != "FORM"sv || (header.subformat != "ILBM"sv && header.subformat != "PBM "sv))
         return Error::from_string_literal("Invalid IFF-ILBM header");
 
-    context.format = header.subformat == "ILBM" ? Format::ILBM : Format::PBM;
+    context.format = header.subformat == "ILBM"sv ? Format::ILBM : Format::PBM;
 
     return {};
 }

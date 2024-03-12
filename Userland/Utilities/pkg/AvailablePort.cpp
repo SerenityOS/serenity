@@ -102,7 +102,7 @@ ErrorOr<int> AvailablePort::update_available_ports_list_file()
     auto output_stream = TRY(Core::File::open("/usr/Ports/AvailablePorts.md"sv, Core::File::OpenMode::ReadWrite, 0644));
     Core::EventLoop loop;
 
-    URL url("https://raw.githubusercontent.com/SerenityOS/serenity/master/Ports/AvailablePorts.md");
+    URL url("https://raw.githubusercontent.com/SerenityOS/serenity/master/Ports/AvailablePorts.md"sv);
     ByteString method = "GET";
     outln("pkg: Syncing packages database...");
     request = protocol_client->start_request(method, url, request_headers, ReadonlyBytes {}, proxy_data);

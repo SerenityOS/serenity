@@ -712,7 +712,7 @@ ErrorOr<ImageFrameDescriptor> WebPImageDecoderPlugin::frame(size_t index, Option
             auto bitmap = TRY(decode_webp_image_data(m_context->image_data.value()));
 
             // Check that size in VP8X chunk matches dimensions in VP8 or VP8L chunk if both are present.
-            if (m_context->first_chunk->id() == "VP8X") {
+            if (m_context->first_chunk->id() == "VP8X"sv) {
                 if (static_cast<u32>(bitmap->width()) != m_context->vp8x_header.width || static_cast<u32>(bitmap->height()) != m_context->vp8x_header.height)
                     return Error::from_string_literal("WebPImageDecoderPlugin: VP8X and VP8/VP8L chunks store different dimensions");
             }
