@@ -59,7 +59,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     game.set_focus(true);
 
     auto high_score = Config::read_u32("Snake"sv, "Snake"sv, "HighScore"sv, 0);
-    auto snake_skin_name = Config::read_string("Snake"sv, "Snake"sv, "SnakeSkin"sv, "Classic"sv);
+    auto snake_skin_name = Config::read_string("Snake"sv, "Snake"sv, "SnakeSkin"sv, "Snake"sv);
 
     auto& statusbar = *widget->find_descendant_of_type_named<GUI::Statusbar>("statusbar"sv);
     statusbar.set_text(0, "Score: 0"_string);
