@@ -7,6 +7,7 @@ files=(
     "https://github.com/libsdl-org/sdl12-compat/archive/refs/tags/release-${version}.tar.gz#3e308e817c7f0c6383225485e9a67bf1119ad684b8cc519038671cc1b5d29861"
 )
 depends=(
+    'glu'
     'SDL2'
 )
 
