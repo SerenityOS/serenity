@@ -1230,4 +1230,24 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> Range::create_contextual
     return fragment_node;
 }
 
+void Range::increase_start_offset(Badge<Node>, WebIDL::UnsignedLong count)
+{
+    m_start_offset += count;
+}
+
+void Range::increase_end_offset(Badge<Node>, WebIDL::UnsignedLong count)
+{
+    m_end_offset += count;
+}
+
+void Range::decrease_start_offset(Badge<Node>, WebIDL::UnsignedLong count)
+{
+    m_start_offset -= count;
+}
+
+void Range::decrease_end_offset(Badge<Node>, WebIDL::UnsignedLong count)
+{
+    m_end_offset -= count;
+}
+
 }

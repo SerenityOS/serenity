@@ -47,6 +47,11 @@ public:
     void collapse(bool to_start);
     WebIDL::ExceptionOr<void> select_node_contents(Node&);
 
+    void increase_start_offset(Badge<Node>, WebIDL::UnsignedLong);
+    void increase_end_offset(Badge<Node>, WebIDL::UnsignedLong);
+    void decrease_start_offset(Badge<Node>, WebIDL::UnsignedLong);
+    void decrease_end_offset(Badge<Node>, WebIDL::UnsignedLong);
+
     // https://dom.spec.whatwg.org/#dom-range-start_to_start
     enum HowToCompareBoundaryPoints : WebIDL::UnsignedShort {
         START_TO_START = 0,

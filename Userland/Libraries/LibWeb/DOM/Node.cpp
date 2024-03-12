@@ -427,13 +427,13 @@ void Node::insert_before(JS::NonnullGCPtr<Node> node, JS::GCPtr<Node> child, boo
         // 1. For each live range whose start node is parent and start offset is greater than child’s index, increase its start offset by count.
         for (auto& range : Range::live_ranges()) {
             if (range->start_container() == this && range->start_offset() > child->index())
-                MUST(range->set_start(*range->start_container(), range->start_offset() + count));
+                range->increase_start_offset({}, count);
         }
 
         // 2. For each live range whose end node is parent and end offset is greater than child’s index, increase its end offset by count.
         for (auto& range : Range::live_ranges()) {
             if (range->end_container() == this && range->end_offset() > child->index())
-                MUST(range->set_end(*range->end_container(), range->end_offset() + count));
+                range->increase_end_offset({}, count);
         }
     }
 
@@ -601,13 +601,13 @@ void Node::remove(bool suppress_observers)
     // 6. For each live range whose start node is parent and start offset is greater than index, decrease its start offset by 1.
     for (auto& range : Range::live_ranges()) {
         if (range->start_container() == parent && range->start_offset() > index)
-            MUST(range->set_start(*range->start_container(), range->start_offset() - 1));
+            range->decrease_start_offset({}, 1);
     }
 
     // 7. For each live range whose end node is parent and end offset is greater than index, decrease its end offset by 1.
     for (auto& range : Range::live_ranges()) {
         if (range->end_container() == parent && range->end_offset() > index)
-            MUST(range->set_end(*range->end_container(), range->end_offset() - 1));
+            range->decrease_end_offset({}, 1);
     }
 
     // 8. For each NodeIterator object iterator whose root’s node document is node’s node document, run the NodeIterator pre-removing steps given node and iterator.
