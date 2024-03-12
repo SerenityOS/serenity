@@ -11,11 +11,11 @@ namespace JS {
 
 JS_DEFINE_ALLOCATOR(FinalizationRegistry);
 
-FinalizationRegistry::FinalizationRegistry(Realm& realm, JobCallback cleanup_callback, Object& prototype)
+FinalizationRegistry::FinalizationRegistry(Realm& realm, NonnullGCPtr<JobCallback> cleanup_callback, Object& prototype)
     : Object(ConstructWithPrototypeTag::Tag, prototype)
     , WeakContainer(heap())
     , m_realm(realm)
-    , m_cleanup_callback(move(cleanup_callback))
+    , m_cleanup_callback(cleanup_callback)
 {
 }
 
@@ -62,7 +62,7 @@ void FinalizationRegistry::remove_dead_cells(Badge<Heap>)
 }
 
 // 9.13 CleanupFinalizationRegistry ( finalizationRegistry ), https://tc39.es/ecma262/#sec-cleanup-finalization-registry
-ThrowCompletionOr<void> FinalizationRegistry::cleanup(Optional<JobCallback> callback)
+ThrowCompletionOr<void> FinalizationRegistry::cleanup(JS::GCPtr<JobCallback> callback)
 {
     auto& vm = this->vm();
 
@@ -70,7 +70,7 @@ ThrowCompletionOr<void> FinalizationRegistry::cleanup(Optional<JobCallback> call
     // Note: Ensured by type.
 
     // 2. Let callback be finalizationRegistry.[[CleanupCallback]].
-    auto& cleanup_callback = callback.has_value() ? callback.value() : m_cleanup_callback;
+    auto cleanup_callback = callback ? callback : m_cleanup_callback;
 
     // 3. While finalizationRegistry.[[Cells]] contains a Record cell such that cell.[[WeakRefTarget]] is empty, an implementation may perform the following steps:
     for (auto it = m_records.begin(); it != m_records.end(); ++it) {
@@ -84,7 +84,7 @@ ThrowCompletionOr<void> FinalizationRegistry::cleanup(Optional<JobCallback> call
         it.remove(m_records);
 
         // c. Perform ? HostCallJobCallback(callback, undefined, « cell.[[HeldValue]] »).
-        TRY(vm.host_call_job_callback(cleanup_callback, js_undefined(), move(arguments)));
+        TRY(vm.host_call_job_callback(*cleanup_callback, js_undefined(), move(arguments)));
     }
 
     // 4. Return unused.
@@ -95,6 +95,7 @@ void FinalizationRegistry::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_realm);
+    visitor.visit(m_cleanup_callback);
     for (auto& record : m_records) {
         visitor.visit(record.held_value);
         visitor.visit(record.unregister_token);

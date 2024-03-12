@@ -300,7 +300,7 @@ Value Promise::perform_then(Value on_fulfilled, Value on_rejected, GCPtr<Promise
 
     // 3. If IsCallable(onFulfilled) is false, then
     //     a. Let onFulfilledJobCallback be empty.
-    Optional<JobCallback> on_fulfilled_job_callback;
+    GCPtr<JobCallback> on_fulfilled_job_callback;
 
     // 4. Else,
     if (on_fulfilled.is_function()) {
@@ -311,7 +311,7 @@ Value Promise::perform_then(Value on_fulfilled, Value on_rejected, GCPtr<Promise
 
     // 5. If IsCallable(onRejected) is false, then
     //     a. Let onRejectedJobCallback be empty.
-    Optional<JobCallback> on_rejected_job_callback;
+    GCPtr<JobCallback> on_rejected_job_callback;
 
     // 6. Else,
     if (on_rejected.is_function()) {

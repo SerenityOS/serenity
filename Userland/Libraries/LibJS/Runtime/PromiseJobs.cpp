@@ -26,12 +26,12 @@ static ThrowCompletionOr<Value> run_reaction_job(VM& vm, PromiseReaction& reacti
     auto type = reaction.type();
 
     // c. Let handler be reaction.[[Handler]].
-    auto& handler = reaction.handler();
+    auto handler = reaction.handler();
 
     Completion handler_result;
 
     // d. If handler is empty, then
-    if (!handler.has_value()) {
+    if (!handler) {
         dbgln_if(PROMISE_DEBUG, "run_reaction_job: Handler is empty");
 
         // i. If type is Fulfill, let handlerResult be NormalCompletion(argument).
@@ -51,8 +51,8 @@ static ThrowCompletionOr<Value> run_reaction_job(VM& vm, PromiseReaction& reacti
     }
     // e. Else, let handlerResult be Completion(HostCallJobCallback(handler, undefined, « argument »)).
     else {
-        dbgln_if(PROMISE_DEBUG, "run_reaction_job: Calling handler callback {} @ {} with argument {}", handler.value().callback.cell()->class_name(), handler.value().callback.cell(), argument);
-        handler_result = vm.host_call_job_callback(handler.value(), js_undefined(), ReadonlySpan<Value> { &argument, 1 });
+        dbgln_if(PROMISE_DEBUG, "run_reaction_job: Calling handler callback {} @ {} with argument {}", handler->callback().class_name(), &handler->callback(), argument);
+        handler_result = vm.host_call_job_callback(*handler, js_undefined(), ReadonlySpan<Value> { &argument, 1 });
     }
 
     // f. If promiseCapability is undefined, then
@@ -98,10 +98,10 @@ PromiseJob create_promise_reaction_job(VM& vm, PromiseReaction& reaction, Value 
     Realm* handler_realm { nullptr };
 
     // 3. If reaction.[[Handler]] is not empty, then
-    auto& handler = reaction.handler();
-    if (handler.has_value()) {
+    auto handler = reaction.handler();
+    if (handler) {
         // a. Let getHandlerRealmResult be Completion(GetFunctionRealm(reaction.[[Handler]].[[Callback]])).
-        auto get_handler_realm_result = get_function_realm(vm, *handler->callback.cell());
+        auto get_handler_realm_result = get_function_realm(vm, handler->callback());
 
         // b. If getHandlerRealmResult is a normal completion, set handlerRealm to getHandlerRealmResult.[[Value]].
         if (!get_handler_realm_result.is_throw_completion()) {
@@ -144,10 +144,10 @@ static ThrowCompletionOr<Value> run_resolve_thenable_job(VM& vm, Promise& promis
 }
 
 // 27.2.2.2 NewPromiseResolveThenableJob ( promiseToResolve, thenable, then ), https://tc39.es/ecma262/#sec-newpromiseresolvethenablejob
-PromiseJob create_promise_resolve_thenable_job(VM& vm, Promise& promise_to_resolve, Value thenable, JobCallback then)
+PromiseJob create_promise_resolve_thenable_job(VM& vm, Promise& promise_to_resolve, Value thenable, JS::NonnullGCPtr<JobCallback> then)
 {
     // 2. Let getThenRealmResult be Completion(GetFunctionRealm(then.[[Callback]])).
-    auto get_then_realm_result = get_function_realm(vm, *then.callback.cell());
+    auto get_then_realm_result = get_function_realm(vm, then->callback());
 
     Realm* then_realm;
 
@@ -164,7 +164,7 @@ PromiseJob create_promise_resolve_thenable_job(VM& vm, Promise& promise_to_resol
 
     // 1. Let job be a new Job Abstract Closure with no parameters that captures promiseToResolve, thenable, and then and performs the following steps when called:
     //    See run_resolve_thenable_job() for "the following steps".
-    auto job = [&vm, promise_to_resolve = make_handle(promise_to_resolve), thenable = make_handle(thenable), then = move(then)]() mutable {
+    auto job = [&vm, promise_to_resolve = make_handle(promise_to_resolve), thenable = make_handle(thenable), then]() mutable {
         return run_resolve_thenable_job(vm, *promise_to_resolve.cell(), thenable.value(), then);
     };
 

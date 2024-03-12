@@ -21,6 +21,6 @@ struct PromiseJob {
 
 // NOTE: These return a PromiseJob to prevent awkward casting at call sites.
 PromiseJob create_promise_reaction_job(VM&, PromiseReaction&, Value argument);
-PromiseJob create_promise_resolve_thenable_job(VM&, Promise&, Value thenable, JobCallback then);
+PromiseJob create_promise_resolve_thenable_job(VM&, Promise&, Value thenable, JS::NonnullGCPtr<JobCallback> then);
 
 }

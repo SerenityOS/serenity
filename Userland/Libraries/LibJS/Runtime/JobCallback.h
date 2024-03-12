@@ -9,20 +9,40 @@
 #include <AK/OwnPtr.h>
 #include <LibJS/Heap/Handle.h>
 #include <LibJS/Runtime/Completion.h>
+#include <LibJS/Runtime/FunctionObject.h>
+#include <LibJS/Runtime/VM.h>
 
 namespace JS {
 
 // 9.5.1 JobCallback Records, https://tc39.es/ecma262/#sec-jobcallback-records
-struct JobCallback {
+class JobCallback : public JS::Cell {
+    JS_CELL(JobCallback, JS::Cell);
+    JS_DECLARE_ALLOCATOR(JobCallback);
+
+public:
     struct CustomData {
         virtual ~CustomData() = default;
     };
 
-    Handle<FunctionObject> callback;
-    OwnPtr<CustomData> custom_data { nullptr };
+    [[nodiscard]] static JS::NonnullGCPtr<JobCallback> create(JS::VM& vm, FunctionObject& callback, OwnPtr<CustomData> custom_data);
+
+    JobCallback(FunctionObject& callback, OwnPtr<CustomData> custom_data)
+        : m_callback(callback)
+        , m_custom_data(move(custom_data))
+    {
+    }
+
+    void visit_edges(Visitor& visitor) override;
+
+    FunctionObject& callback() { return m_callback; }
+    CustomData* custom_data() { return m_custom_data; }
+
+private:
+    JS::NonnullGCPtr<FunctionObject> m_callback;
+    OwnPtr<CustomData> m_custom_data { nullptr };
 };
 
-JobCallback make_job_callback(FunctionObject& callback);
-ThrowCompletionOr<Value> call_job_callback(VM&, JobCallback&, Value this_value, ReadonlySpan<Value> arguments_list);
+JS::NonnullGCPtr<JobCallback> make_job_callback(FunctionObject& callback);
+ThrowCompletionOr<Value> call_job_callback(VM&, JS::NonnullGCPtr<JobCallback>, Value this_value, ReadonlySpan<Value> arguments_list);
 
 }

@@ -24,24 +24,24 @@ public:
         Reject,
     };
 
-    static NonnullGCPtr<PromiseReaction> create(VM& vm, Type type, GCPtr<PromiseCapability> capability, Optional<JobCallback> handler);
+    static NonnullGCPtr<PromiseReaction> create(VM& vm, Type type, GCPtr<PromiseCapability> capability, JS::GCPtr<JobCallback> handler);
 
     virtual ~PromiseReaction() = default;
 
     Type type() const { return m_type; }
     GCPtr<PromiseCapability> capability() const { return m_capability; }
 
-    Optional<JobCallback>& handler() { return m_handler; }
-    Optional<JobCallback> const& handler() const { return m_handler; }
+    JS::GCPtr<JobCallback> handler() { return m_handler; }
+    JS::GCPtr<JobCallback const> handler() const { return m_handler; }
 
 private:
-    PromiseReaction(Type type, GCPtr<PromiseCapability> capability, Optional<JobCallback> handler);
+    PromiseReaction(Type type, GCPtr<PromiseCapability> capability, JS::GCPtr<JobCallback> handler);
 
     virtual void visit_edges(Visitor&) override;
 
     Type m_type;
     GCPtr<PromiseCapability> m_capability;
-    Optional<JobCallback> m_handler;
+    JS::GCPtr<JobCallback> m_handler;
 };
 
 }

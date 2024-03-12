@@ -255,7 +255,7 @@ public:
     Function<ThrowCompletionOr<Value>(JobCallback&, Value, ReadonlySpan<Value>)> host_call_job_callback;
     Function<void(FinalizationRegistry&)> host_enqueue_finalization_registry_cleanup_job;
     Function<void(Function<ThrowCompletionOr<Value>()>, Realm*)> host_enqueue_promise_job;
-    Function<JobCallback(FunctionObject&)> host_make_job_callback;
+    Function<JS::NonnullGCPtr<JobCallback>(FunctionObject&)> host_make_job_callback;
     Function<ThrowCompletionOr<void>(Realm&)> host_ensure_can_compile_strings;
     Function<ThrowCompletionOr<void>(Object&)> host_ensure_can_add_private_element;
     Function<ThrowCompletionOr<HandledByHost>(ArrayBuffer&, size_t)> host_resize_array_buffer;

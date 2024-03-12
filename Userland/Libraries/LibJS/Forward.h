@@ -222,7 +222,7 @@ class WeakContainer;
 class WrappedFunction;
 enum class DeclarationKind;
 struct AlreadyResolved;
-struct JobCallback;
+class JobCallback;
 struct ModuleRequest;
 struct ModuleWithSpecifier;
 
