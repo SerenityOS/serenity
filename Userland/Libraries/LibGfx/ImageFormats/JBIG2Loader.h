@@ -14,6 +14,66 @@ namespace Gfx {
 
 struct JBIG2LoadingContext;
 
+namespace JBIG2 {
+
+// E.3 Arithmetic decoding procedure, but with the changes described in
+// Annex G Arithmetic decoding procedure (software conventions).
+// Exposed for testing.
+class ArithmeticDecoder {
+public:
+    struct Context {
+        u16 I;     // Index I stored for context CX (E.2.4)
+        u8 is_mps; // "More probable symbol" (E.1.1). 0 or 1.
+    };
+
+    static ErrorOr<ArithmeticDecoder> initialize(ReadonlyBytes data, Context context);
+
+    bool get_next_bit();
+
+private:
+    ArithmeticDecoder(ReadonlyBytes data)
+        : m_data(data)
+    {
+    }
+
+    ReadonlyBytes m_data;
+
+    // The code below uses names from the spec, so that the algorithms look exactly like the flowcharts in the spec.
+
+    // Abbreviations:
+    // "CX": "Context" (E.1)
+    // "D": "Decision" (as in "encoder input" / "decoder output") (E.1)
+    // "I(CX)": "Index I stored for context CX" (E.2.4)
+    // "MPS": "More probable symbol" (E.1.1)
+    // "LPS": "Less probable symbol" (E.1.1)
+
+    void INITDEC();
+    u8 DECODE(); // Returns a single decoded bit.
+    u8 MPS_EXCHANGE();
+    u8 LPS_EXCHANGE();
+    void RENORMD();
+    void BYTEIN();
+
+    u8 B(size_t offset = 0) const; // Byte pointed to by BP.
+    size_t BP;                     // Pointer into compressed data.
+
+    // E.3.1 Decoder code register conventions
+    u32 C; // Consists of u16 C_high, C_low.
+    u16 A; // Current value of the fraction. Fixed precision; 0x8000 is equivalent to 0.75.
+
+    u8 CT; // Count of the number of bits in C.
+
+    Context CX;
+    static u16& I(Context& cx) { return cx.I; }
+    static u8& MPS(Context& cx) { return cx.is_mps; }
+    static u16 Qe(u16);
+    static u8 NMPS(u16);
+    static u8 NLPS(u16);
+    static u8 SWITCH(u16);
+};
+
+}
+
 class JBIG2ImageDecoderPlugin : public ImageDecoderPlugin {
 public:
     static bool sniff(ReadonlyBytes);
