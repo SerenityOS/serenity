@@ -29,11 +29,26 @@ public:
         return m_data;
     }
 
-    bool get(size_t index)
+    bool get(size_t index) const
     {
         if (index >= 8 * m_data.size() - m_unused_bits)
             return false;
         return 0 != (m_data[index / 8] & (1u << (7 - (index % 8))));
+    }
+
+    size_t unused_bits() const { return m_unused_bits; }
+    size_t byte_length() const { return m_data.size(); }
+
+    ReadonlyBytes underlying_bytes() const { return m_data; }
+
+    // FIXME: Improve me! I am naive!
+    bool operator==(BitStringView const& other) const
+    {
+        for (size_t bit_index = 0; bit_index < 8 * m_data.size() - m_unused_bits; ++bit_index) {
+            if (get(bit_index) != other.get(bit_index))
+                return false;
+        }
+        return true;
     }
 
 private:
@@ -186,34 +201,38 @@ private:
     {
         auto data = TRY(read_bytes(length));
 
-        if (klass != Class::Universal)
+        if constexpr (IsSame<ValueType, ReadonlyBytes>) {
+            return data;
+        } else {
+            if (klass != Class::Universal)
+                return with_type_check<ValueType>(data);
+
+            if (kind == Kind::Boolean)
+                return with_type_check<ValueType>(decode_boolean(data));
+
+            if (kind == Kind::Integer)
+                return with_type_check<ValueType>(decode_arbitrary_sized_integer(data));
+
+            if (kind == Kind::OctetString)
+                return with_type_check<ValueType>(decode_octet_string(data));
+
+            if (kind == Kind::Null)
+                return with_type_check<ValueType>(decode_null(data));
+
+            if (kind == Kind::ObjectIdentifier)
+                return with_type_check<ValueType>(decode_object_identifier(data));
+
+            if (kind == Kind::PrintableString || kind == Kind::IA5String || kind == Kind::UTCTime)
+                return with_type_check<ValueType>(decode_printable_string(data));
+
+            if (kind == Kind::Utf8String)
+                return with_type_check<ValueType>(StringView { data.data(), data.size() });
+
+            if (kind == Kind::BitString)
+                return with_type_check<ValueType>(decode_bit_string(data));
+
             return with_type_check<ValueType>(data);
-
-        if (kind == Kind::Boolean)
-            return with_type_check<ValueType>(decode_boolean(data));
-
-        if (kind == Kind::Integer)
-            return with_type_check<ValueType>(decode_arbitrary_sized_integer(data));
-
-        if (kind == Kind::OctetString)
-            return with_type_check<ValueType>(decode_octet_string(data));
-
-        if (kind == Kind::Null)
-            return with_type_check<ValueType>(decode_null(data));
-
-        if (kind == Kind::ObjectIdentifier)
-            return with_type_check<ValueType>(decode_object_identifier(data));
-
-        if (kind == Kind::PrintableString || kind == Kind::IA5String || kind == Kind::UTCTime)
-            return with_type_check<ValueType>(decode_printable_string(data));
-
-        if (kind == Kind::Utf8String)
-            return with_type_check<ValueType>(StringView { data.data(), data.size() });
-
-        if (kind == Kind::BitString)
-            return with_type_check<ValueType>(decode_bit_string(data));
-
-        return with_type_check<ValueType>(data);
+        }
     }
 
     ErrorOr<Tag> read_tag();
@@ -234,5 +253,84 @@ private:
 };
 
 ErrorOr<void> pretty_print(Decoder&, Stream&, int indent = 0);
+
+class Encoder {
+public:
+    Encoder()
+    {
+        m_buffer_stack.empend();
+    }
+
+    ReadonlyBytes active_bytes() const { return m_buffer_stack.last().bytes(); }
+    ByteBuffer finish()
+    {
+        VERIFY(m_buffer_stack.size() == 1);
+        return m_buffer_stack.take_last();
+    }
+
+    template<typename ValueType>
+    ErrorOr<void> write(ValueType const& value, Optional<Class> class_override = {}, Optional<Kind> kind_override = {})
+    {
+        if constexpr (IsSame<ValueType, bool>) {
+            return write_boolean(value, class_override, kind_override);
+        } else if constexpr (IsSame<ValueType, UnsignedBigInteger> || (IsIntegral<ValueType> && IsUnsigned<ValueType>)) {
+            return write_arbitrary_sized_integer(value, class_override, kind_override);
+        } else if constexpr (IsOneOf<ValueType, StringView, String, ByteString>) {
+            return write_printable_string(value, class_override, kind_override);
+        } else if constexpr (IsOneOf<ValueType, ReadonlyBytes, ByteBuffer>) {
+            return write_octet_string(value, class_override, kind_override);
+        } else if constexpr (IsSame<ValueType, nullptr_t>) {
+            return write_null(class_override, kind_override);
+        } else if constexpr (IsOneOf<ValueType, Vector<int>, Span<int const>, Span<int>>) {
+            return write_object_identifier(value, class_override, kind_override);
+        } else if constexpr (IsSame<ValueType, BitStringView>) {
+            return write_bit_string(value, class_override, kind_override);
+        } else {
+            dbgln("Unsupported type: {}", __PRETTY_FUNCTION__);
+            return Error::from_string_literal("ASN1::Encoder: Trying to encode a value of an unsupported type");
+        }
+    }
+
+    template<typename Fn>
+    ErrorOr<void> write_constructed(Class class_, Kind kind, Fn&& fn)
+    {
+        return write_constructed(bit_cast<u8>(class_), bit_cast<u8>(kind), forward<Fn>(fn));
+    }
+
+    template<typename Fn>
+    ErrorOr<void> write_constructed(u8 class_, u8 kind, Fn&& fn)
+    {
+        m_buffer_stack.empend();
+        using ResultType = decltype(fn());
+        if constexpr (IsSpecializationOf<ResultType, ErrorOr>) {
+            TRY(fn());
+        } else {
+            fn();
+        }
+        auto buffer = m_buffer_stack.take_last();
+
+        TRY(write_tag(bit_cast<Class>(class_), Type::Constructed, bit_cast<Kind>(kind)));
+        TRY(write_length(buffer.size()));
+        TRY(write_bytes(buffer.bytes()));
+
+        return {};
+    }
+
+private:
+    ErrorOr<void> write_tag(Class, Type, Kind);
+    ErrorOr<void> write_length(size_t);
+    ErrorOr<void> write_bytes(ReadonlyBytes);
+    ErrorOr<void> write_byte(u8);
+
+    ErrorOr<void> write_boolean(bool, Optional<Class>, Optional<Kind>);
+    ErrorOr<void> write_arbitrary_sized_integer(UnsignedBigInteger const&, Optional<Class>, Optional<Kind>);
+    ErrorOr<void> write_printable_string(StringView, Optional<Class>, Optional<Kind>);
+    ErrorOr<void> write_octet_string(ReadonlyBytes, Optional<Class>, Optional<Kind>);
+    ErrorOr<void> write_null(Optional<Class>, Optional<Kind>);
+    ErrorOr<void> write_object_identifier(Span<int const>, Optional<Class>, Optional<Kind>);
+    ErrorOr<void> write_bit_string(BitStringView, Optional<Class>, Optional<Kind>);
+
+    Vector<ByteBuffer> m_buffer_stack;
+};
 
 }
