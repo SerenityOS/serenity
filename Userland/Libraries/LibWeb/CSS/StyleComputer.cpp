@@ -310,7 +310,7 @@ Vector<MatchingRule> StyleComputer::collect_matching_rules(DOM::Element const& e
 
     auto const& rule_cache = rule_cache_for_cascade_origin(cascade_origin);
 
-    Vector<MatchingRule> rules_to_run;
+    Vector<MatchingRule, 512> rules_to_run;
     auto add_rules_to_run = [&](Vector<MatchingRule> const& rules) {
         rules_to_run.grow_capacity(rules_to_run.size() + rules.size());
         if (pseudo_element.has_value()) {
