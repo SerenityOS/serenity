@@ -11,6 +11,7 @@
 
 namespace Crypto::NumberTheory {
 
+UnsignedBigInteger Mod(UnsignedBigInteger const& a, UnsignedBigInteger const& b);
 UnsignedBigInteger ModularInverse(UnsignedBigInteger const& a_, UnsignedBigInteger const& b);
 UnsignedBigInteger ModularPower(UnsignedBigInteger const& b, UnsignedBigInteger const& e, UnsignedBigInteger const& m);
 

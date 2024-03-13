@@ -10,6 +10,14 @@
 
 namespace Crypto::NumberTheory {
 
+UnsignedBigInteger Mod(UnsignedBigInteger const& a, UnsignedBigInteger const& b)
+{
+    UnsignedBigInteger result;
+    result.set_to(a);
+    result.set_to(result.divided_by(b).remainder);
+    return result;
+}
+
 UnsignedBigInteger ModularInverse(UnsignedBigInteger const& a_, UnsignedBigInteger const& b)
 {
     if (b == 1)
