@@ -563,12 +563,14 @@ void queue_mutation_observer_microtask(DOM::Document const& document)
     // 3. Queue a microtask to notify mutation observers.
     // NOTE: This uses the implied document concept. In the case of mutation observers, it is always done in a node context, so document should be that node's document.
     // FIXME: Is it safe to pass custom_data through?
-    HTML::queue_a_microtask(&document, [&custom_data]() {
+    HTML::queue_a_microtask(&document, [&custom_data, &heap = document.heap()]() {
         // 1. Set the surrounding agent’s mutation observer microtask queued to false.
         custom_data.mutation_observer_microtask_queued = false;
 
         // 2. Let notifySet be a clone of the surrounding agent’s mutation observers.
-        auto notify_set = custom_data.mutation_observers;
+        JS::MarkedVector<DOM::MutationObserver*> notify_set(heap);
+        for (auto& observer : custom_data.mutation_observers)
+            notify_set.append(observer);
 
         // FIXME: 3. Let signalSet be a clone of the surrounding agent’s signal slots.
 
@@ -588,7 +590,7 @@ void queue_mutation_observer_microtask(DOM::Document const& document)
 
                 if (node->registered_observer_list()) {
                     node->registered_observer_list()->remove_all_matching([&mutation_observer](DOM::RegisteredObserver& registered_observer) {
-                        return is<DOM::TransientRegisteredObserver>(registered_observer) && static_cast<DOM::TransientRegisteredObserver&>(registered_observer).observer().ptr() == mutation_observer.ptr();
+                        return is<DOM::TransientRegisteredObserver>(registered_observer) && static_cast<DOM::TransientRegisteredObserver&>(registered_observer).observer().ptr() == mutation_observer;
                     });
                 }
             }
@@ -605,7 +607,7 @@ void queue_mutation_observer_microtask(DOM::Document const& document)
                     MUST(wrapped_records->create_data_property(property_index, record.ptr()));
                 }
 
-                auto result = WebIDL::invoke_callback(callback, mutation_observer.ptr(), wrapped_records, mutation_observer.ptr());
+                auto result = WebIDL::invoke_callback(callback, mutation_observer, wrapped_records, mutation_observer);
                 if (result.is_abrupt())
                     HTML::report_exception(result, realm);
             }
