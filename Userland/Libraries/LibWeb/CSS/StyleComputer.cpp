@@ -336,6 +336,10 @@ Vector<MatchingRule> StyleComputer::collect_matching_rules(DOM::Element const& e
     }
     if (auto it = rule_cache.rules_by_tag_name.find(element.local_name()); it != rule_cache.rules_by_tag_name.end())
         add_rules_to_run(it->value);
+    if (pseudo_element.has_value())
+        add_rules_to_run(rule_cache.pseudo_element_rules);
+    if (element.is_document_element())
+        add_rules_to_run(rule_cache.root_rules);
     add_rules_to_run(rule_cache.other_rules);
 
     Vector<MatchingRule> matching_rules;
@@ -2290,6 +2294,7 @@ NonnullOwnPtr<StyleComputer::RuleCache> StyleComputer::make_rule_cache_for_casca
     size_t num_id_rules = 0;
     size_t num_tag_name_rules = 0;
     size_t num_pseudo_element_rules = 0;
+    size_t num_root_rules = 0;
 
     Vector<MatchingRule> matching_rules;
     size_t style_sheet_index = 0;
@@ -2310,10 +2315,18 @@ NonnullOwnPtr<StyleComputer::RuleCache> StyleComputer::make_rule_cache_for_casca
                 };
 
                 for (auto const& simple_selector : selector.compound_selectors().last().simple_selectors) {
-                    if (simple_selector.type == CSS::Selector::SimpleSelector::Type::PseudoElement) {
-                        matching_rule.contains_pseudo_element = true;
-                        ++num_pseudo_element_rules;
-                        break;
+                    if (!matching_rule.contains_pseudo_element) {
+                        if (simple_selector.type == CSS::Selector::SimpleSelector::Type::PseudoElement) {
+                            matching_rule.contains_pseudo_element = true;
+                            ++num_pseudo_element_rules;
+                        }
+                    }
+                    if (!matching_rule.contains_root_pseudo_class) {
+                        if (simple_selector.type == CSS::Selector::SimpleSelector::Type::PseudoClass
+                            && simple_selector.pseudo_class().type == CSS::PseudoClass::Root) {
+                            matching_rule.contains_root_pseudo_class = true;
+                            ++num_root_rules;
+                        }
                     }
                 }
 
@@ -2338,8 +2351,14 @@ NonnullOwnPtr<StyleComputer::RuleCache> StyleComputer::make_rule_cache_for_casca
                         break;
                     }
                 }
-                if (!added_to_bucket)
-                    rule_cache->other_rules.append(move(matching_rule));
+                if (!added_to_bucket) {
+                    if (matching_rule.contains_pseudo_element)
+                        rule_cache->pseudo_element_rules.append(move(matching_rule));
+                    else if (matching_rule.contains_root_pseudo_class)
+                        rule_cache->root_rules.append(move(matching_rule));
+                    else
+                        rule_cache->other_rules.append(move(matching_rule));
+                }
 
                 ++selector_index;
             }
@@ -2391,6 +2410,7 @@ NonnullOwnPtr<StyleComputer::RuleCache> StyleComputer::make_rule_cache_for_casca
         dbgln("        Class: {}", num_class_rules);
         dbgln("      TagName: {}", num_tag_name_rules);
         dbgln("PseudoElement: {}", num_pseudo_element_rules);
+        dbgln("         Root: {}", num_root_rules);
         dbgln("        Other: {}", rule_cache->other_rules.size());
         dbgln("        Total: {}", num_class_rules + num_id_rules + num_tag_name_rules + rule_cache->other_rules.size());
     }

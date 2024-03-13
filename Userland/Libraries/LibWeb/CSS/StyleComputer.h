@@ -37,8 +37,10 @@ struct MatchingRule {
     size_t style_sheet_index { 0 };
     size_t rule_index { 0 };
     size_t selector_index { 0 };
+
     u32 specificity { 0 };
     bool contains_pseudo_element { false };
+    bool contains_root_pseudo_class { false };
 };
 
 struct FontFaceKey {
@@ -129,6 +131,8 @@ private:
         HashMap<FlyString, Vector<MatchingRule>> rules_by_id;
         HashMap<FlyString, Vector<MatchingRule>> rules_by_class;
         HashMap<FlyString, Vector<MatchingRule>> rules_by_tag_name;
+        Vector<MatchingRule> pseudo_element_rules;
+        Vector<MatchingRule> root_rules;
         Vector<MatchingRule> other_rules;
 
         HashMap<FlyString, NonnullRefPtr<Animations::KeyframeEffect::KeyFrameSet>> rules_by_animation_keyframes;
