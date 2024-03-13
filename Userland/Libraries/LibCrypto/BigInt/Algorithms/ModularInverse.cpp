@@ -27,7 +27,7 @@ void UnsignedBigIntegerAlgorithms::modular_inverse_without_allocation(
     UnsignedBigInteger one { 1 };
 
     temp_u.set_to(a);
-    if (a.words()[0] % 2 == 0) {
+    if (!a.is_odd()) {
         // u += b
         add_into_accumulator_without_allocation(temp_u, b);
     }
@@ -47,8 +47,8 @@ void UnsignedBigIntegerAlgorithms::modular_inverse_without_allocation(
             // d += x
             add_into_accumulator_without_allocation(temp_d, temp_x);
 
-            while (temp_u.words()[0] % 2 == 0) {
-                if (temp_d.words()[0] % 2 == 1) {
+            while (!temp_u.is_odd()) {
+                if (temp_d.is_odd()) {
                     // d += b
                     add_into_accumulator_without_allocation(temp_d, b);
                 }
@@ -70,8 +70,8 @@ void UnsignedBigIntegerAlgorithms::modular_inverse_without_allocation(
         // x += d
         add_into_accumulator_without_allocation(temp_x, temp_d);
 
-        while (temp_v.words()[0] % 2 == 0) {
-            if (temp_x.words()[0] % 2 == 1) {
+        while (!temp_v.is_odd()) {
+            if (temp_x.is_odd()) {
                 // x += b
                 add_into_accumulator_without_allocation(temp_x, b);
             }
