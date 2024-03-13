@@ -41,7 +41,7 @@ public:
     [[nodiscard]] ReadonlyBytes bytes() const;
     [[nodiscard]] StringView bytes_as_string_view() const;
 
-    [[nodiscard]] bool operator==(FlyString const& other) const;
+    [[nodiscard]] ALWAYS_INLINE bool operator==(FlyString const& other) const { return m_data.raw({}) == other.m_data.raw({}); }
     [[nodiscard]] bool operator==(String const&) const;
     [[nodiscard]] bool operator==(StringView) const;
     [[nodiscard]] bool operator==(char const*) const;
