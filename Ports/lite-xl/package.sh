@@ -1,7 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='lite-xl'
-version='2.1.0'
-commit_hash='97ba91af8b855a10a14bdc5cad774c877156f4a9'
+version='2.1.3'
 useconfigure='true'
 configopts=(
     "--buildtype=release"
@@ -14,9 +13,9 @@ depends=(
     'SDL2'
 )
 files=(
-    "https://github.com/lite-xl/lite-xl/archive/${commit_hash}.tar.gz#25a0dd0a6ef856fd312eecd54983d401224eb8d7a5d5aa4a37c9131ac77bd9ca"
+    "https://github.com/lite-xl/lite-xl/archive/refs/tags/v${version}.tar.gz#a13c423588a5549e42fda7dfe9064bd3776b6202c170c7bb493d96a692360383"
 )
-workdir="lite-xl-${commit_hash}"
+workdir="lite-xl-${version}"
 launcher_name='Lite-XL'
 icon_file='resources/icons/icon.ico'
 launcher_category='D&evelopment'
