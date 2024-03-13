@@ -1,0 +1,33 @@
+/*
+ * Copyright (c) 2024, Tim Flynn <trflynn89@serenityos.org>
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ */
+
+#include <LibJS/Runtime/Realm.h>
+#include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/HTML/DataTransfer.h>
+
+namespace Web::HTML {
+
+JS_DEFINE_ALLOCATOR(DataTransfer);
+
+JS::NonnullGCPtr<DataTransfer> DataTransfer::construct_impl(JS::Realm& realm)
+{
+    return realm.heap().allocate<DataTransfer>(realm, realm);
+}
+
+DataTransfer::DataTransfer(JS::Realm& realm)
+    : PlatformObject(realm)
+{
+}
+
+DataTransfer::~DataTransfer() = default;
+
+void DataTransfer::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::DataTransferPrototype>(realm, "DataTransfer"_fly_string));
+}
+
+}
