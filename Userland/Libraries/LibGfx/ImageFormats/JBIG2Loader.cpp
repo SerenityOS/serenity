@@ -306,8 +306,8 @@ static ErrorOr<size_t> scan_for_immediate_generic_region_size(ReadonlyBytes data
     //  Thus, those sequences cannot occur by chance in the data that is decoded to generate the contents of the generic region."
     dbgln_if(JBIG2_DEBUG, "(Unknown data length, computing it)");
 
-    if (data.size() < 18)
-        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Data too short to contain segment data header");
+    if (data.size() < 19 + sizeof(u32))
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Data too short to contain segment data header and end sequence");
 
     // Per 7.4.6.1 Generic region segment data header, this starts with the 17 bytes described in
     // 7.4.1 Region segment information field, followed the byte described in 7.4.6.2 Generic region segment flags.
