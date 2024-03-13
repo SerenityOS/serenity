@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Badge.h>
 #include <AK/Endian.h>
 #include <AK/Forward.h>
 
@@ -69,6 +70,8 @@ public:
     [[nodiscard]] bool operator==(StringBase const&) const;
 
     void did_create_fly_string(Badge<FlyString>) const;
+
+    [[nodiscard]] ALWAYS_INLINE FlatPtr raw(Badge<FlyString>) const { return bit_cast<FlatPtr>(m_data); }
 
 protected:
     template<typename Func>
