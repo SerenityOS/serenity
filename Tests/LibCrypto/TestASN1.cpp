@@ -7,6 +7,7 @@
 #include <AK/StringView.h>
 #include <AK/Time.h>
 #include <LibCrypto/ASN1/ASN1.h>
+#include <LibCrypto/ASN1/DER.h>
 #include <LibTest/TestCase.h>
 
 #define EXPECT_DATETIME(sv, y, mo, d, h, mi, s) \
@@ -162,4 +163,78 @@ TEST_CASE(test_generalized_nonexistent_dates)
     (void)Crypto::ASN1::parse_generalized_time("19180207040506Z"sv); // Gregorian switch; Estonia, Russia
     (void)Crypto::ASN1::parse_generalized_time("19230222040506Z"sv); // Gregorian switch; Greece
     (void)Crypto::ASN1::parse_generalized_time("19261224040506Z"sv); // Gregorian switch; Turkey
+}
+
+TEST_CASE(test_encoder_primitives)
+{
+    auto roundtrip_value = [](auto value) {
+        Crypto::ASN1::Encoder encoder;
+        MUST(encoder.write(value));
+        auto encoded = encoder.finish();
+        Crypto::ASN1::Decoder decoder(encoded);
+        auto decoded = MUST(decoder.read<decltype(value)>());
+        EXPECT_EQ(decoded, value);
+    };
+
+    roundtrip_value(false);
+    roundtrip_value(true);
+
+    roundtrip_value(Crypto::UnsignedBigInteger { 0 });
+    roundtrip_value(Crypto::UnsignedBigInteger { 1 });
+    roundtrip_value(Crypto::UnsignedBigInteger { 2 }.shift_left(128));
+    roundtrip_value(Crypto::UnsignedBigInteger { 2 }.shift_left(256));
+
+    roundtrip_value(Vector { 1, 2, 840, 113549, 1, 1, 1 });
+    roundtrip_value(Vector { 1, 2, 840, 113549, 1, 1, 11 });
+
+    roundtrip_value(ByteString { "Hello, World!\n" });
+
+    roundtrip_value(nullptr);
+
+    roundtrip_value(Crypto::ASN1::BitStringView { { { 0x00, 0x01, 0x02, 0x03 } }, 3 });
+}
+
+TEST_CASE(test_encoder_constructed)
+{
+    Crypto::ASN1::Encoder encoder;
+    /*
+     * RSAPrivateKey ::= SEQUENCE {
+     *   version           Version,  -- Version ::= INTEGER { two-prime(0), multi(1) }
+     *   modulus           INTEGER,  -- n
+     *   publicExponent    INTEGER,  -- e
+     *   privateExponent   INTEGER,  -- d
+     *   prime1            INTEGER,  -- p
+     *   prime2            INTEGER,  -- q
+     *   exponent1         INTEGER,  -- d mod (p-1)
+     *   exponent2         INTEGER,  -- d mod (q-1)
+     *   coefficient       INTEGER,  -- (inverse of q) mod p
+     *   otherPrimeInfos   OtherPrimeInfos OPTIONAL
+     * }
+     */
+    (void)encoder.write_constructed(Crypto::ASN1::Class::Universal, Crypto::ASN1::Kind::Sequence, [&] {
+        MUST(encoder.write(0u));       // version
+        MUST(encoder.write(0x1234u));  // modulus
+        MUST(encoder.write(0x10001u)); // publicExponent
+        MUST(encoder.write(0x5678u));  // privateExponent
+        MUST(encoder.write(0x9abcu));  // prime1
+        MUST(encoder.write(0xdef0u));  // prime2
+        MUST(encoder.write(0x1234u));  // exponent1
+        MUST(encoder.write(0x5678u));  // exponent2
+        MUST(encoder.write(0x9abcu));  // coefficient
+    });
+    auto encoded = encoder.finish();
+    Crypto::ASN1::Decoder decoder(encoded);
+    MUST(decoder.enter());                                                 // Sequence
+    EXPECT_EQ(MUST(decoder.read<Crypto::UnsignedBigInteger>()), 0u);       // version
+    EXPECT_EQ(MUST(decoder.read<Crypto::UnsignedBigInteger>()), 0x1234u);  // modulus
+    EXPECT_EQ(MUST(decoder.read<Crypto::UnsignedBigInteger>()), 0x10001u); // publicExponent
+    EXPECT_EQ(MUST(decoder.read<Crypto::UnsignedBigInteger>()), 0x5678u);  // privateExponent
+    EXPECT_EQ(MUST(decoder.read<Crypto::UnsignedBigInteger>()), 0x9abcu);  // prime1
+    EXPECT_EQ(MUST(decoder.read<Crypto::UnsignedBigInteger>()), 0xdef0u);  // prime2
+    EXPECT_EQ(MUST(decoder.read<Crypto::UnsignedBigInteger>()), 0x1234u);  // exponent1
+    EXPECT_EQ(MUST(decoder.read<Crypto::UnsignedBigInteger>()), 0x5678u);  // exponent2
+    EXPECT_EQ(MUST(decoder.read<Crypto::UnsignedBigInteger>()), 0x9abcu);  // coefficient
+    EXPECT(decoder.eof());                                                 // no otherPrimeInfos
+    MUST(decoder.leave());                                                 // Sequence
+    EXPECT(decoder.eof());                                                 // no other data
 }

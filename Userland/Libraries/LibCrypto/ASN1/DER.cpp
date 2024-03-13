@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/IntegralMath.h>
 #include <AK/Stream.h>
 #include <AK/Try.h>
 #include <AK/Utf8View.h>
@@ -234,6 +235,206 @@ ErrorOr<void> Decoder::leave()
     return {};
 }
 
+ErrorOr<void> Encoder::write_tag(Class class_, Type type, Kind kind)
+{
+    auto class_byte = to_underlying(class_);
+    auto type_byte = to_underlying(type);
+    auto kind_byte = to_underlying(kind);
+
+    auto byte = class_byte | type_byte | kind_byte;
+    if (kind_byte > 0x1f) {
+        auto high = kind_byte >> 7;
+        byte = class_byte | type_byte | 0x1f;
+        TRY(write_byte(byte));
+        byte = (kind_byte & 0x7f) | high;
+    }
+
+    return write_byte(byte);
+}
+
+ErrorOr<void> Encoder::write_byte(u8 byte)
+{
+    return write_bytes({ &byte, 1 });
+}
+
+ErrorOr<void> Encoder::write_length(size_t value)
+{
+    if (value < 0x80)
+        return write_byte(value);
+
+    size_t size = ceil_div(AK::ceil_log2(value), 3ul);
+    TRY(write_byte(0x80 | size));
+
+    for (size_t i = 0; i < size; i++) {
+        auto shift = (size - i - 1) * 8;
+        auto byte = (value >> shift) & 0xff;
+        TRY(write_byte(byte));
+    }
+
+    return {};
+}
+
+ErrorOr<void> Encoder::write_bytes(ReadonlyBytes bytes)
+{
+    auto output = TRY(m_buffer_stack.last().get_bytes_for_writing(bytes.size()));
+    bytes.copy_to(output);
+    return {};
+}
+
+ErrorOr<void> Encoder::write_boolean(bool value, Optional<Class> class_override, Optional<Kind> kind_override)
+{
+    auto class_ = class_override.value_or(Class::Universal);
+    auto type = Type::Primitive;
+    auto kind = kind_override.value_or(Kind::Boolean);
+
+    TRY(write_tag(class_, type, kind));
+    TRY(write_length(1));
+    return write_byte(value ? 0xff : 0x00);
+}
+
+ErrorOr<void> Encoder::write_arbitrary_sized_integer(UnsignedBigInteger const& value, Optional<Class> class_override, Optional<Kind> kind_override)
+{
+    auto class_ = class_override.value_or(Class::Universal);
+    auto type = Type::Primitive;
+    auto kind = kind_override.value_or(Kind::Integer);
+    TRY(write_tag(class_, type, kind));
+
+    auto max_byte_size = max(1ull, value.length() * UnsignedBigInteger::BITS_IN_WORD / 8); // At minimum, we need one byte to encode 0.
+    ByteBuffer buffer;
+    auto output = TRY(buffer.get_bytes_for_writing(max_byte_size));
+    auto size = value.export_data(output);
+    // DER does not allow empty integers, encode a zero if the exported size is zero.
+    if (size == 0) {
+        output[0] = 0;
+        size = 1;
+    }
+
+    // Chop off the leading zeros
+    if constexpr (AK::HostIsLittleEndian) {
+        while (size > 1 && output[0] == 0) {
+            size--;
+            output = output.slice(1);
+        }
+    } else {
+        while (size > 1 && output[size - 1] == 0)
+            size--;
+    }
+
+    // If the MSB is set, we need to add a leading zero to indicate a positive number.
+    if ((output[0] & 0x80) != 0) {
+        TRY(write_length(size + 1));
+        TRY(write_byte(0));
+    } else {
+        TRY(write_length(size));
+    }
+    return write_bytes(output.slice(0, size));
+}
+
+ErrorOr<void> Encoder::write_printable_string(StringView string, Optional<Class> class_override, Optional<Kind> kind_override)
+{
+    Utf8View view { string };
+    if (!view.validate())
+        return Error::from_string_literal("ASN1::Encoder: Invalid UTF-8 in printable string");
+
+    auto class_ = class_override.value_or(Class::Universal);
+    auto type = Type::Primitive;
+    auto kind = kind_override.value_or(Kind::PrintableString);
+
+    TRY(write_tag(class_, type, kind));
+    TRY(write_length(string.length()));
+    return write_bytes(string.bytes());
+}
+
+ErrorOr<void> Encoder::write_octet_string(ReadonlyBytes bytes, Optional<Class> class_override, Optional<Kind> kind_override)
+{
+    auto class_ = class_override.value_or(Class::Universal);
+    auto type = Type::Primitive;
+    auto kind = kind_override.value_or(Kind::OctetString);
+
+    TRY(write_tag(class_, type, kind));
+    TRY(write_length(bytes.size()));
+    return write_bytes(bytes);
+}
+
+ErrorOr<void> Encoder::write_null(Optional<Class> class_override, Optional<Kind> kind_override)
+{
+    auto class_ = class_override.value_or(Class::Universal);
+    auto type = Type::Primitive;
+    auto kind = kind_override.value_or(Kind::Null);
+
+    TRY(write_tag(class_, type, kind));
+    TRY(write_length(0));
+    return {};
+}
+
+ErrorOr<void> Encoder::write_object_identifier(Span<int const> segments, Optional<Class> class_override, Optional<Kind> kind_override)
+{
+    auto class_ = class_override.value_or(Class::Universal);
+    auto type = Type::Primitive;
+    auto kind = kind_override.value_or(Kind::ObjectIdentifier);
+
+    if (segments.size() < 2)
+        return Error::from_string_literal("ASN1::Encoder: Object identifier must have at least two segments");
+
+    TRY(write_tag(class_, type, kind));
+    size_t length = 1;
+    for (size_t i = 2; i < segments.size(); i++) {
+        auto segment = segments[i];
+        if (segment < 0)
+            return Error::from_string_literal("ASN1::Encoder: Object identifier segments must be non-negative");
+
+        if (segment < 0x80)
+            length += 1;
+        else if (segment < 0x4000)
+            length += 2;
+        else if (segment < 0x200000)
+            length += 3;
+        else
+            length += 4;
+    }
+
+    TRY(write_length(length));
+
+    auto first_byte = (segments[0] * 40) + segments[1];
+    TRY(write_byte(first_byte));
+
+    for (size_t i = 2; i < segments.size(); i++) {
+        auto segment = segments[i];
+        if (segment < 0x80) {
+            TRY(write_byte(segment));
+        } else if (segment < 0x4000) {
+            TRY(write_byte((segment >> 7) | 0x80));
+            TRY(write_byte(segment & 0x7f));
+        } else if (segment < 0x200000) {
+            TRY(write_byte((segment >> 14) | 0x80));
+            TRY(write_byte(((segment >> 7) & 0x7f) | 0x80));
+            TRY(write_byte(segment & 0x7f));
+        } else {
+            TRY(write_byte((segment >> 21) | 0x80));
+            TRY(write_byte(((segment >> 14) & 0x7f) | 0x80));
+            TRY(write_byte(((segment >> 7) & 0x7f) | 0x80));
+            TRY(write_byte(segment & 0x7f));
+        }
+    }
+
+    return {};
+}
+
+ErrorOr<void> Encoder::write_bit_string(BitStringView view, Optional<Class> class_override, Optional<Kind> kind_override)
+{
+    auto class_ = class_override.value_or(Class::Universal);
+    auto type = Type::Primitive;
+    auto kind = kind_override.value_or(Kind::BitString);
+
+    auto unused_bits = view.unused_bits();
+    auto total_size_in_bits = view.byte_length() * 8 - unused_bits;
+
+    TRY(write_tag(class_, type, kind));
+    TRY(write_length(ceil_div(total_size_in_bits, 8ul) + 1));
+    TRY(write_byte(unused_bits));
+    return write_bytes(view.underlying_bytes());
+}
+
 ErrorOr<void> pretty_print(Decoder& decoder, Stream& stream, int indent)
 {
     while (!decoder.eof()) {
@@ -244,7 +445,7 @@ ErrorOr<void> pretty_print(Decoder& decoder, Stream& stream, int indent)
             builder.append(' ');
         builder.appendff("<{}> ", class_name(tag.class_));
         if (tag.type == Type::Constructed) {
-            builder.appendff("[{}] {} ({})", type_name(tag.type), static_cast<u8>(tag.kind), kind_name(tag.kind));
+            builder.appendff("[{}] {} ({})", type_name(tag.type), to_underlying(tag.kind), kind_name(tag.kind));
             TRY(decoder.enter());
 
             builder.append('\n');
@@ -257,7 +458,7 @@ ErrorOr<void> pretty_print(Decoder& decoder, Stream& stream, int indent)
             continue;
         } else {
             if (tag.class_ != Class::Universal)
-                builder.appendff("[{}] {} {}", type_name(tag.type), static_cast<u8>(tag.kind), kind_name(tag.kind));
+                builder.appendff("[{}] {} {}", type_name(tag.type), to_underlying(tag.kind), kind_name(tag.kind));
             else
                 builder.appendff("[{}] {}", type_name(tag.type), kind_name(tag.kind));
             switch (tag.kind) {
@@ -323,7 +524,7 @@ ErrorOr<void> pretty_print(Decoder& decoder, Stream& stream, int indent)
             case Kind::Set:
                 return Error::from_string_literal("ASN1::Decoder: Unexpected Primitive");
             default: {
-                dbgln("PrettyPrint error: Unhandled kind {}", static_cast<u8>(tag.kind));
+                dbgln("PrettyPrint error: Unhandled kind {}", to_underlying(tag.kind));
             }
             }
         }
