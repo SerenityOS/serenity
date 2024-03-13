@@ -30,15 +30,26 @@ WebIDL::ExceptionOr<XHR::FormDataEntry> create_entry(JS::Realm& realm, String co
             return TRY_OR_THROW_OOM(vm, Infra::convert_to_scalar_value_string(string));
         },
         // 3. Otherwise:
-        [&](JS::NonnullGCPtr<FileAPI::Blob> const& blob) -> WebIDL::ExceptionOr<Variant<JS::Handle<FileAPI::File>, String>> {
-            // 1. If value is not a File object, then set value to a new File object, representing the same bytes, whose name attribute value is "blob".
-            // 2. If filename is given, then set value to a new File object, representing the same bytes, whose name attribute is filename.
-            String name_attribute;
-            if (filename.has_value())
-                name_attribute = filename.value();
-            else
-                name_attribute = "blob"_string;
-            return JS::make_handle(TRY(FileAPI::File::create(realm, { JS::make_handle(*blob) }, move(name_attribute), {})));
+        [&](JS::NonnullGCPtr<FileAPI::Blob> blob) -> WebIDL::ExceptionOr<Variant<JS::Handle<FileAPI::File>, String>> {
+            // 1. If value is not a File object, then set value to a new File object, representing the same bytes, whose
+            //    name attribute value is "blob".
+            if (!is<FileAPI::File>(*blob)) {
+                FileAPI::FilePropertyBag options {};
+                options.type = blob->type();
+
+                blob = TRY(FileAPI::File::create(realm, { JS::make_handle(*blob) }, "blob"_string, move(options)));
+            }
+
+            // 2. If filename is given, then set value to a new File object, representing the same bytes, whose name
+            //    attribute is filename.
+            if (filename.has_value()) {
+                FileAPI::FilePropertyBag options {};
+                options.type = blob->type();
+
+                blob = TRY(FileAPI::File::create(realm, { JS::make_handle(*blob) }, *filename, move(options)));
+            }
+
+            return JS::make_handle(verify_cast<FileAPI::File>(*blob));
         }));
 
     // 4. Return an entry whose name is name and whose value is value.
