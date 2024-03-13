@@ -267,18 +267,18 @@ ErrorOr<SerializedFormData> serialize_to_multipart_form_data(Vector<XHR::FormDat
                 // For filenames replace any 0x0A (LF) bytes with the byte sequence `%0A`, 0x0D (CR) with `%0D` and 0x22 (") with `%22`
                 auto escaped_filename = TRY(escape_line_feed_carriage_return_double_quote(file->name()));
                 // Add a `Content-Disposition` header with a `name` set to entry's name and `filename` set to entry's filename.
-                TRY(builder.try_append(TRY(String::formatted("Content-Disposition: form-data; name=\"{}\"; filename=\"{}\"\r\n"sv, escaped_name, escaped_filename))));
+                TRY(builder.try_append(TRY(String::formatted("Content-Disposition: form-data; name=\"{}\"; filename=\"{}\"\r\n", escaped_name, escaped_filename))));
                 // The parts of the generated multipart/form-data resource that correspond to file fields must have a `Content-Type` header specified.
-                TRY(builder.try_append(TRY(String::formatted("Content-Type: {}\r\n\r\n"sv, file->type()))));
+                TRY(builder.try_append(TRY(String::formatted("Content-Type: {}\r\n\r\n", file->type()))));
                 // FIXME: Serialize the contents of the file.
-                TRY(builder.try_append(TRY(String::formatted("\r\n"sv))));
+                TRY(builder.try_append("\r\n"sv));
                 return {};
             },
             [&](String const& string) -> ErrorOr<void> {
                 // Replace every occurrence of U+000D (CR) not followed by U+000A (LF), and every occurrence of U+000A (LF) not preceded by U+000D (CR) by a string consisting of a U+000D (CR) and U+000A (LF).
                 auto normalized_value = TRY(normalize_line_breaks(string));
                 // Add a `Content-Disposition` header with a `name` set to entry's name.
-                TRY(builder.try_append(TRY(String::formatted("Content-Disposition: form-data; name=\"{}\"\r\n\r\n"sv, escaped_name))));
+                TRY(builder.try_append(TRY(String::formatted("Content-Disposition: form-data; name=\"{}\"\r\n\r\n", escaped_name))));
                 TRY(builder.try_append(TRY(String::formatted("{}\r\n", normalized_value))));
                 return {};
             }));
