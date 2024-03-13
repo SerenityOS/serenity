@@ -378,6 +378,10 @@ void BrowsingContext::set_cursor_position(JS::NonnullGCPtr<DOM::Position> positi
 
     m_cursor_position = position;
 
+    // NOTE: the cursor does not get painted in HTML Input element if no text is present
+    if (m_cursor_position && m_cursor_position->node()->text_content()->is_empty())
+        m_cursor_position->node()->set_text_content(MUST(String::formatted(" ")));
+
     if (m_cursor_position && m_cursor_position->node()->paintable())
         m_cursor_position->node()->paintable()->set_needs_display();
 
