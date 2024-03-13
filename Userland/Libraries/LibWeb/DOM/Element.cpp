@@ -777,7 +777,8 @@ bool Element::is_target() const
 // https://dom.spec.whatwg.org/#document-element
 bool Element::is_document_element() const
 {
-    return document().document_element() == this;
+    // The document element of a document is the element whose parent is that document, if it exists; otherwise null.
+    return parent() == &document();
 }
 
 JS::NonnullGCPtr<HTMLCollection> Element::get_elements_by_class_name(StringView class_names)
