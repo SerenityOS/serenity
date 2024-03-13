@@ -422,7 +422,11 @@ void HTMLInputElement::did_select_files(Span<SelectedFile> selected_files)
         // FIXME: The FileAPI should use ByteString for file names.
         auto file_name = MUST(String::from_byte_string(selected_file.name()));
 
-        auto file = MUST(FileAPI::File::create(realm(), { JS::make_handle(blob) }, file_name));
+        // FIXME: Fill in other fields (e.g. last_modified).
+        FileAPI::FilePropertyBag options {};
+        options.type = mime_type.essence();
+
+        auto file = MUST(FileAPI::File::create(realm(), { JS::make_handle(blob) }, file_name, move(options)));
         files.unchecked_append(file);
     }
 
