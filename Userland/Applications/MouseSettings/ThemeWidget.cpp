@@ -97,6 +97,22 @@ void ThemeModel::invalidate()
     Model::invalidate();
 }
 
+Vector<GUI::ModelIndex> ThemeModel::matches(StringView needle, unsigned flags, const GUI::ModelIndex& parent)
+{
+    Vector<GUI::ModelIndex> found = {};
+
+    for (size_t i = 0; i < m_themes.size(); ++i) {
+        auto theme = m_themes[i];
+        if (!string_matches(theme, needle, flags))
+            continue;
+        found.append(index(i, 0, parent));
+        if (flags & GUI::Model::MatchesFlag::FirstMatchOnly)
+            break;
+    }
+
+    return found;
+}
+
 ErrorOr<NonnullRefPtr<ThemeWidget>> ThemeWidget::try_create()
 {
     auto widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) ThemeWidget()));
@@ -145,6 +161,4 @@ void ThemeWidget::apply_settings()
 void ThemeWidget::reset_default_values()
 {
     m_theme_name_box->set_text("Default");
-    // FIXME: ComboBox::set_text() doesn't fire the on_change callback, so we have to set the theme here manually.
-    m_mouse_cursor_model->change_theme("Default");
 }
