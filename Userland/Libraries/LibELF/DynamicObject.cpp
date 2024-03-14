@@ -242,6 +242,11 @@ void DynamicObject::parse()
         }
     }
 
+    if (highest_chain_idx < num_omitted_symbols) {
+        m_symbol_count = 0;
+        return;
+    }
+
     size_t amount_symbols = highest_chain_idx;
     u32 const* last_chain = &chains[highest_chain_idx - num_omitted_symbols];
     while ((*(last_chain++) & 1) == 0) {
