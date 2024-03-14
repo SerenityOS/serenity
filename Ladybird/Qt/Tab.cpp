@@ -32,6 +32,8 @@
 #include <QMenu>
 #include <QMessageBox>
 #include <QMimeData>
+#include <QMimeDatabase>
+#include <QMimeType>
 #include <QPainter>
 #include <QPoint>
 #include <QPushButton>
@@ -232,7 +234,7 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
         m_dialog = nullptr;
     };
 
-    view().on_request_file_picker = [this](auto const&, auto allow_multiple_files) {
+    view().on_request_file_picker = [this](auto const& accepted_file_types, auto allow_multiple_files) {
         Vector<Web::HTML::SelectedFile> selected_files;
 
         auto create_selected_file = [&](auto const& qfile_path) {
@@ -244,14 +246,60 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
                 selected_files.append(file.release_value());
         };
 
+        QStringList accepted_file_filters;
+        QMimeDatabase mime_database;
+
+        for (auto const& filter : accepted_file_types.filters) {
+            filter.visit(
+                [&](Web::HTML::FileFilter::FileType type) {
+                    QString title;
+                    QString filter;
+
+                    switch (type) {
+                    case Web::HTML::FileFilter::FileType::Audio:
+                        title = "Audio files";
+                        filter = "audio/";
+                        break;
+                    case Web::HTML::FileFilter::FileType::Image:
+                        title = "Image files";
+                        filter = "image/";
+                        break;
+                    case Web::HTML::FileFilter::FileType::Video:
+                        title = "Video files";
+                        filter = "video/";
+                        break;
+                    }
+
+                    QStringList extensions;
+
+                    for (auto const& mime_type : mime_database.allMimeTypes()) {
+                        if (mime_type.name().startsWith(filter))
+                            extensions.append(mime_type.globPatterns());
+                    }
+
+                    accepted_file_filters.append(QString("%1 (%2)").arg(title, extensions.join(" ")));
+                },
+                [&](Web::HTML::FileFilter::MimeType const& filter) {
+                    if (auto mime_type = mime_database.mimeTypeForName(qstring_from_ak_string(filter.value)); mime_type.isValid())
+                        accepted_file_filters.append(mime_type.filterString());
+                },
+                [&](Web::HTML::FileFilter::Extension const& filter) {
+                    auto extension = MUST(String::formatted("*.{}", filter.value));
+                    accepted_file_filters.append(qstring_from_ak_string(extension));
+                });
+        }
+
+        accepted_file_filters.size() > 1 ? accepted_file_filters.prepend("All files (*)") : accepted_file_filters.append("All files (*)");
+        auto filters = accepted_file_filters.join(";;");
+
         if (allow_multiple_files == Web::HTML::AllowMultipleFiles::Yes) {
-            auto paths = QFileDialog::getOpenFileNames(this, "Select files", QDir::homePath(), "All Files (*.*)");
+            auto paths = QFileDialog::getOpenFileNames(this, "Select files", QDir::homePath(), filters);
             selected_files.ensure_capacity(static_cast<size_t>(paths.size()));
 
             for (auto const& path : paths)
                 create_selected_file(path);
         } else {
-            auto path = QFileDialog::getOpenFileName(this, "Select file", QDir::homePath(), "All Files (*.*)");
+            auto path = QFileDialog::getOpenFileName(this, "Select file", QDir::homePath(), filters);
             create_selected_file(path);
         }
 
