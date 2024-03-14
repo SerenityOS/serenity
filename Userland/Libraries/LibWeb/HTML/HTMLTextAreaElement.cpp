@@ -133,7 +133,10 @@ String HTMLTextAreaElement::value() const
 // https://html.spec.whatwg.org/multipage/form-elements.html#dom-textarea-value
 void HTMLTextAreaElement::set_value(String const& value)
 {
-    // FIXME: 1. Let oldAPIValue be this element's API value.
+    auto& realm = this->realm();
+
+    // 1. Let oldAPIValue be this element's API value.
+    auto old_api_value = api_value();
 
     // 2. Set this element's raw value to the new value.
     set_raw_value(value);
@@ -141,8 +144,17 @@ void HTMLTextAreaElement::set_value(String const& value)
     // 3. Set this element's dirty value flag to true.
     m_dirty_value = true;
 
-    // FIXME: 4. If the new API value is different from oldAPIValue, then move the text entry cursor position to the end of the text control, unselecting any selected text and resetting the selection direction to "none".
-    update_placeholder_visibility();
+    // 4. If the new API value is different from oldAPIValue, then move the text entry cursor position to the end of
+    //    the text control, unselecting any selected text and resetting the selection direction to "none".
+    if (api_value() != old_api_value) {
+        if (m_text_node) {
+            m_text_node->set_data(m_raw_value);
+            update_placeholder_visibility();
+
+            if (auto* browsing_context = document().browsing_context())
+                browsing_context->set_cursor_position(DOM::Position::create(realm, *m_text_node, m_text_node->data().bytes().size()));
+        }
+    }
 }
 
 void HTMLTextAreaElement::set_raw_value(String value)
