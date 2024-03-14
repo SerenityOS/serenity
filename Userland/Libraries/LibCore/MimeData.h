@@ -61,6 +61,6 @@ struct MimeType {
     u64 offset { 0 };
 };
 
-Optional<StringView> get_description_from_mime_type(StringView);
+Optional<MimeType const&> get_mime_type_data(StringView);
 
 }
