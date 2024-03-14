@@ -23,6 +23,7 @@
 #include <Applications/Browser/URLBox.h>
 #include <Applications/BrowserSettings/Defaults.h>
 #include <LibConfig/Client.h>
+#include <LibCore/MimeData.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
@@ -32,6 +33,7 @@
 #include <LibGUI/ColorPicker.h>
 #include <LibGUI/Dialog.h>
 #include <LibGUI/FilePicker.h>
+#include <LibGUI/FileTypeFilter.h>
 #include <LibGUI/InputBox.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MessageBox.h>
@@ -556,7 +558,7 @@ Tab::Tab(BrowserWindow& window)
         m_dialog = nullptr;
     };
 
-    view().on_request_file_picker = [this](auto const&, auto allow_multiple_files) {
+    view().on_request_file_picker = [this](auto const& accepted_file_types, auto allow_multiple_files) {
         // FIXME: GUI::FilePicker does not allow selecting multiple files at once.
         (void)allow_multiple_files;
 
@@ -570,7 +572,42 @@ Tab::Tab(BrowserWindow& window)
                 selected_files.append(file.release_value());
         };
 
-        if (auto path = GUI::FilePicker::get_open_filepath(&window, "Select file"); path.has_value())
+        Vector<GUI::FileTypeFilter> accepted_file_filters;
+
+        for (auto const& filter : accepted_file_types.filters) {
+            filter.visit(
+                [&](Web::HTML::FileFilter::FileType type) {
+                    switch (type) {
+                    case Web::HTML::FileFilter::FileType::Audio:
+                        accepted_file_filters.append(GUI::FileTypeFilter::audio_files());
+                        break;
+                    case Web::HTML::FileFilter::FileType::Image:
+                        accepted_file_filters.append(GUI::FileTypeFilter::image_files());
+                        break;
+                    case Web::HTML::FileFilter::FileType::Video:
+                        accepted_file_filters.append(GUI::FileTypeFilter::video_files());
+                        break;
+                    }
+                },
+                [&](Web::HTML::FileFilter::MimeType const& filter) {
+                    if (auto mime_type = Core::get_mime_type_data(filter.value); mime_type.has_value()) {
+                        Vector<ByteString> extensions;
+                        extensions.ensure_capacity(mime_type->common_extensions.size());
+
+                        for (auto extension : mime_type->common_extensions)
+                            extensions.append(extension);
+
+                        accepted_file_filters.append({ mime_type->description, move(extensions) });
+                    }
+                },
+                [&](Web::HTML::FileFilter::Extension const& filter) {
+                    accepted_file_filters.empend(ByteString {}, Vector<ByteString> { filter.value.to_byte_string() });
+                });
+        }
+
+        accepted_file_filters.size() > 1 ? accepted_file_filters.prepend(GUI::FileTypeFilter::all_files()) : accepted_file_filters.append(GUI::FileTypeFilter::all_files());
+
+        if (auto path = GUI::FilePicker::get_open_filepath(&window, "Select file", Core::StandardPaths::home_directory(), false, GUI::Dialog::ScreenPosition::CenterWithinParent, move(accepted_file_filters)); path.has_value())
             create_selected_file(path.release_value());
 
         view().file_picker_closed(std::move(selected_files));
