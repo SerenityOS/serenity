@@ -556,7 +556,7 @@ Tab::Tab(BrowserWindow& window)
         m_dialog = nullptr;
     };
 
-    view().on_request_file_picker = [this](auto allow_multiple_files) {
+    view().on_request_file_picker = [this](auto const&, auto allow_multiple_files) {
         // FIXME: GUI::FilePicker does not allow selecting multiple files at once.
         (void)allow_multiple_files;
 

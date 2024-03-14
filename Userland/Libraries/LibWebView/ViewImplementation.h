@@ -18,6 +18,7 @@
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/ActivateTab.h>
 #include <LibWeb/HTML/ColorPickerUpdateState.h>
+#include <LibWeb/HTML/FileFilter.h>
 #include <LibWeb/HTML/SelectItem.h>
 #include <LibWeb/Page/InputEvent.h>
 #include <LibWebView/Forward.h>
@@ -170,7 +171,7 @@ public:
     Function<Gfx::IntRect()> on_minimize_window;
     Function<Gfx::IntRect()> on_fullscreen_window;
     Function<void(Color current_color)> on_request_color_picker;
-    Function<void(Web::HTML::AllowMultipleFiles)> on_request_file_picker;
+    Function<void(Web::HTML::FileFilter const& accepted_file_types, Web::HTML::AllowMultipleFiles)> on_request_file_picker;
     Function<void(Gfx::IntPoint content_position, i32 minimum_width, Vector<Web::HTML::SelectItem> items)> on_request_select_dropdown;
     Function<void(Web::KeyEvent const&)> on_finish_handling_key_event;
     Function<void()> on_text_test_finish;

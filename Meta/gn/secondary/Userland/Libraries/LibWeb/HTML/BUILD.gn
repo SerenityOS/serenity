@@ -31,6 +31,7 @@ source_set("HTML") {
     "ErrorEvent.cpp",
     "EventHandler.cpp",
     "EventNames.cpp",
+    "FileFilter.cpp",
     "Focus.cpp",
     "FormAssociatedElement.cpp",
     "FormControlInfrastructure.cpp",

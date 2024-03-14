@@ -806,7 +806,7 @@ void WebContentClient::did_request_color_picker(u64 page_id, Color const& curren
         view.on_request_color_picker(current_color);
 }
 
-void WebContentClient::did_request_file_picker(u64 page_id, Web::HTML::AllowMultipleFiles allow_multiple_files)
+void WebContentClient::did_request_file_picker(u64 page_id, Web::HTML::FileFilter const& accepted_file_types, Web::HTML::AllowMultipleFiles allow_multiple_files)
 {
     auto maybe_view = m_views.get(page_id);
     if (!maybe_view.has_value()) {
@@ -816,7 +816,7 @@ void WebContentClient::did_request_file_picker(u64 page_id, Web::HTML::AllowMult
     auto& view = *maybe_view.value();
 
     if (view.on_request_file_picker)
-        view.on_request_file_picker(allow_multiple_files);
+        view.on_request_file_picker(accepted_file_types, allow_multiple_files);
 }
 
 void WebContentClient::did_request_select_dropdown(u64 page_id, Gfx::IntPoint content_position, i32 minimum_width, Vector<Web::HTML::SelectItem> const& items)

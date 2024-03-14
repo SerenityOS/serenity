@@ -626,7 +626,7 @@ static void copy_data_to_clipboard(StringView data, NSPasteboardType pasteboard_
         [panel makeKeyAndOrderFront:nil];
     };
 
-    m_web_view_bridge->on_request_file_picker = [self](auto allow_multiple_files) {
+    m_web_view_bridge->on_request_file_picker = [self](auto const&, auto allow_multiple_files) {
         auto* panel = [NSOpenPanel openPanel];
         [panel setCanChooseFiles:YES];
         [panel setCanChooseDirectories:NO];
