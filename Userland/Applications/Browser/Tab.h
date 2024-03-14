@@ -109,8 +109,6 @@ private:
     void update_status(Optional<String> text_override = {}, i32 count_waiting = 0);
     void close_sub_widgets();
 
-    void select_dropdown_add_item(GUI::Menu& menu, Web::HTML::SelectItem const& item);
-
     WebView::History m_history;
 
     RefPtr<WebView::OutOfProcessWebView> m_web_content_view;

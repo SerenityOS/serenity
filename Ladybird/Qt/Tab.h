@@ -61,8 +61,6 @@ signals:
     void favicon_changed(int id, QIcon);
 
 private:
-    void select_dropdown_add_item(QMenu* menu, Web::HTML::SelectItem const& item);
-
     virtual void resizeEvent(QResizeEvent*) override;
     virtual bool event(QEvent*) override;
 
