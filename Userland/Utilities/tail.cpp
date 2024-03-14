@@ -41,6 +41,10 @@ static ErrorOr<off_t> find_seek_pos(Core::File& file, int wanted_lines, bool sta
 
     if (start_from_end) {
         off_t pos = TRY(file.seek(0, SeekMode::FromEndPosition));
+
+        if (wanted_lines == 0)
+            return pos;
+
         off_t end = pos;
         for (; pos >= 1; pos--) {
             TRY(file.seek(pos - 1, SeekMode::SetPosition));
@@ -55,6 +59,10 @@ static ErrorOr<off_t> find_seek_pos(Core::File& file, int wanted_lines, bool sta
         return pos;
     }
 
+    // If we want the first or zeroeth line, we don't need to seek at all.
+    if (wanted_lines == 0 || wanted_lines == 1)
+        return 0;
+
     off_t file_size = TRY(file.size());
     off_t pos = 0;
 
@@ -62,7 +70,7 @@ static ErrorOr<off_t> find_seek_pos(Core::File& file, int wanted_lines, bool sta
         auto ch = TRY(file.read_value<u8>());
         if (ch == '\n') {
             lines++;
-            if (lines == wanted_lines)
+            if (lines + 1 == wanted_lines)
                 break;
         }
     }
