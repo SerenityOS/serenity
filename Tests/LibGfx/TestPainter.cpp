@@ -38,7 +38,6 @@ TEST_CASE(draw_scaled_bitmap_with_transform)
     painter.draw_scaled_bitmap_with_transform(dest_rect, source_bitmap, source_rect, transform);
     for (int y = 0; y < bitmap->height(); ++y) {
         for (int x = 0; x < bitmap->width(); ++x) {
-            dbgln("{} {}: {}", x, y, bitmap->get_pixel(x, y));
             if (x >= 10 && x < 10 + 10 && y >= 20 && y < 20 + 5)
                 EXPECT_EQ(bitmap->get_pixel(x, y), Color::Black);
             else
