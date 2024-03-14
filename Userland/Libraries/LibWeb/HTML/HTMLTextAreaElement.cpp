@@ -129,7 +129,7 @@ String HTMLTextAreaElement::value() const
     return m_raw_value;
 }
 
-// https://html.spec.whatwg.org/multipage/form-elements.html#dom-output-value
+// https://html.spec.whatwg.org/multipage/form-elements.html#dom-textarea-value
 void HTMLTextAreaElement::set_value(String const& value)
 {
     // FIXME: 1. Let oldAPIValue be this element's API value.
