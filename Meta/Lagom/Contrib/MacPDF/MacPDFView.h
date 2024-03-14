@@ -30,5 +30,6 @@
 - (IBAction)toggleClipImages:(id)sender;
 - (IBAction)toggleClipPaths:(id)sender;
 - (IBAction)toggleClipText:(id)sender;
+- (IBAction)toggleShowImages:(id)sender;
 
 @end
