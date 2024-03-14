@@ -599,6 +599,8 @@ static ErrorOr<void> decode_immediate_generic_region(JBIG2LoadingContext& contex
     // 7.4.6.3 Generic region segment AT flags
     GenericRegionDecodingInputParameters::AdaptiveTemplatePixel adaptive_template_pixels[12];
     if (!uses_mmr) {
+        dbgln_if(JBIG2_DEBUG, "Non-MMR generic region, GBTEMPLATE={} TPGDON={} EXTTEMPLATE={}", arithmetic_coding_template, typical_prediction_generic_decoding_on, uses_extended_reference_template);
+
         if (arithmetic_coding_template == 0 && !uses_extended_reference_template) {
             if (data.size() < 8)
                 return Error::from_string_literal("JBIG2ImageDecoderPlugin: No adaptive template data");
