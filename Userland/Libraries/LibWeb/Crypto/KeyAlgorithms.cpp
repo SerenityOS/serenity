@@ -90,15 +90,16 @@ WebIDL::ExceptionOr<void> RsaKeyAlgorithm::set_public_exponent(::Crypto::Unsigne
 
     auto bytes = TRY_OR_THROW_OOM(vm, ByteBuffer::create_uninitialized(exponent.trimmed_byte_length()));
 
-    bool const strip_leading_zeroes = true;
-    auto data_size = exponent.export_data(bytes.span(), strip_leading_zeroes);
+    bool const remove_leading_zeroes = true;
+    auto data_size = exponent.export_data(bytes.span(), remove_leading_zeroes);
+    auto data_slice = bytes.bytes().slice(bytes.size() - data_size, data_size);
 
     // The BigInteger typedef from the WebCrypto spec requires the bytes in the Uint8Array be ordered in Big Endian
 
     Vector<u8, 32> byte_swapped_data;
     byte_swapped_data.ensure_capacity(data_size);
     for (size_t i = 0; i < data_size; ++i)
-        byte_swapped_data.append(bytes[data_size - i - 1]);
+        byte_swapped_data.append(data_slice[data_size - i - 1]);
 
     m_public_exponent = TRY(JS::Uint8Array::create(realm, byte_swapped_data.size()));
     m_public_exponent->viewed_array_buffer()->buffer().overwrite(0, byte_swapped_data.data(), byte_swapped_data.size());
