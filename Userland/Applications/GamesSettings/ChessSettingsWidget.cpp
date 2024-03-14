@@ -69,6 +69,23 @@ public:
         return s_board_themes.at(index.row()).name;
     }
 
+    virtual Vector<GUI::ModelIndex> matches(StringView needle, unsigned flags = MatchesFlag::AllMatching, GUI::ModelIndex const& parent = GUI::ModelIndex()) override
+    {
+        Vector<GUI::ModelIndex> found = {};
+
+        for (size_t i = 0; i < s_board_themes.size(); ++i) {
+            auto theme = s_board_themes[i];
+            if (!string_matches(theme.name, needle, flags))
+                continue;
+
+            found.append(index(i, 0, parent));
+            if (flags & FirstMatchOnly)
+                break;
+        }
+
+        return found;
+    }
+
 private:
     BoardThemeModel()
     {
@@ -294,14 +311,8 @@ void ChessSettingsWidget::apply_settings()
 
 void ChessSettingsWidget::reset_default_values()
 {
-    // FIXME: `set_text()` on a combobox doesn't trigger the `on_change` callback, but it probably should!
-    //        Until then, we have to manually tell the preview to update.
-    m_piece_set_combobox->set_text("Classic");
-    m_preview->set_piece_set_name("Classic"_string);
-    auto& board_theme = get_board_theme("Beige"sv);
-    m_board_theme_combobox->set_text(board_theme.name);
-    m_preview->set_dark_square_color(board_theme.dark_square_color);
-    m_preview->set_light_square_color(board_theme.light_square_color);
+    m_piece_set_combobox->set_text("Classic"sv);
+    m_board_theme_combobox->set_text("Beige"sv);
     m_show_coordinates_checkbox->set_checked(true);
     m_highlight_checks_checkbox->set_checked(true);
 }
