@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Base64.h>
 #include <AK/QuickSort.h>
 #include <LibCrypto/Hash/HashManager.h>
 #include <LibCrypto/PK/RSA.h>
@@ -55,6 +56,34 @@ static ::Crypto::UnsignedBigInteger big_integer_from_api_big_integer(JS::GCPtr<J
         result = ::Crypto::UnsignedBigInteger::import_data(reversed_buffer.data(), reversed_buffer.size());
     }
     return result;
+}
+
+// https://www.rfc-editor.org/rfc/rfc7518#section-2
+ErrorOr<String> base64_url_uint_encode(::Crypto::UnsignedBigInteger integer)
+{
+    static_assert(AK::HostIsLittleEndian, "This code assumes little-endian");
+
+    // The representation of a positive or zero integer value as the
+    // base64url encoding of the value's unsigned big-endian
+    // representation as an octet sequence.  The octet sequence MUST
+    // utilize the minimum number of octets needed to represent the
+    // value.  Zero is represented as BASE64URL(single zero-valued
+    // octet), which is "AA".
+
+    auto bytes = TRY(ByteBuffer::create_uninitialized(integer.trimmed_byte_length()));
+
+    bool const remove_leading_zeroes = true;
+    auto data_size = integer.export_data(bytes.span(), remove_leading_zeroes);
+
+    auto data_slice = bytes.bytes().slice(bytes.size() - data_size, data_size);
+
+    // We need to encode the integer's big endian representation as a base64 string
+    Vector<u8, 32> byte_swapped_data;
+    byte_swapped_data.ensure_capacity(data_size);
+    for (size_t i = 0; i < data_size; ++i)
+        byte_swapped_data.append(data_slice[data_size - i - 1]);
+
+    return encode_base64(byte_swapped_data);
 }
 
 AlgorithmParams::~AlgorithmParams() = default;
@@ -225,6 +254,129 @@ WebIDL::ExceptionOr<Variant<JS::NonnullGCPtr<CryptoKey>, JS::NonnullGCPtr<Crypto
     // 21. Set the privateKey attribute of result to be privateKey.
     // 22. Return the result of converting result to an ECMAScript Object, as defined by [WebIDL].
     return Variant<JS::NonnullGCPtr<CryptoKey>, JS::NonnullGCPtr<CryptoKeyPair>> { CryptoKeyPair::create(m_realm, public_key, private_key) };
+}
+
+// https://w3c.github.io/webcrypto/#rsa-oaep-operations
+WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Object>> RSAOAEP::export_key(Bindings::KeyFormat format, JS::NonnullGCPtr<CryptoKey> key)
+{
+    auto& realm = m_realm;
+    auto& vm = realm.vm();
+
+    // 1. Let key be the key to be exported.
+
+    // 2. If the underlying cryptographic key material represented by the [[handle]] internal slot of key cannot be accessed, then throw an OperationError.
+    // Note: In our impl this is always accessible
+    auto const& handle = key->handle();
+
+    JS::GCPtr<JS::Object> result = nullptr;
+
+    // 3. If format is "spki"
+    if (format == Bindings::KeyFormat::Spki) {
+        // 1. If the [[type]] internal slot of key is not "public", then throw an InvalidAccessError.
+        if (key->type() != Bindings::KeyType::Public)
+            return WebIDL::InvalidAccessError::create(realm, "Key is not public"_fly_string);
+
+        // FIXME: 2. Let data be an instance of the subjectPublicKeyInfo ASN.1 structure defined in [RFC5280] with the following properties:
+        // - Set the algorithm field to an AlgorithmIdentifier ASN.1 type with the following properties:
+        //   - Set the algorithm field to the OID rsaEncryption defined in [RFC3447].
+        //   - Set the params field to the ASN.1 type NULL.
+        // - Set the subjectPublicKey field to the result of DER-encoding an RSAPublicKey ASN.1 type, as defined in [RFC3447], Appendix A.1.1,
+        //   that represents the RSA public key represented by the [[handle]] internal slot of key
+
+        // FIXME: 3. Let result be the result of creating an ArrayBuffer containing data.
+        result = JS::ArrayBuffer::create(realm, TRY_OR_THROW_OOM(vm, ByteBuffer::copy(("FIXME"sv).bytes())));
+    }
+
+    // FIXME: If format is "pkcs8"
+
+    // If format is "jwk"
+    else if (format == Bindings::KeyFormat::Jwk) {
+        // 1. Let jwk be a new JsonWebKey dictionary.
+        Bindings::JsonWebKey jwk = {};
+
+        // 2. Set the kty attribute of jwk to the string "RSA".
+        jwk.kty = "RSA"_string;
+
+        // 4. Let hash be the name attribute of the hash attribute of the [[algorithm]] internal slot of key.
+        auto hash = TRY(verify_cast<RsaHashedKeyAlgorithm>(*key->algorithm()).hash().visit([](String const& name) -> JS::ThrowCompletionOr<String> { return name; }, [&](JS::Handle<JS::Object> const& obj) -> JS::ThrowCompletionOr<String> {
+                auto name_property = TRY(obj->get("name"));
+                return name_property.to_string(realm.vm()); }));
+
+        // 4. If hash is "SHA-1":
+        //      - Set the alg attribute of jwk to the string "RSA-OAEP".
+        if (hash == "SHA-1"sv) {
+            jwk.alg = "RSA-OAEP"_string;
+        }
+        //    If hash is "SHA-256":
+        //      - Set the alg attribute of jwk to the string "RSA-OAEP-256".
+        else if (hash == "SHA-256"sv) {
+            jwk.alg = "RSA-OAEP-256"_string;
+        }
+        //    If hash is "SHA-384":
+        //      - Set the alg attribute of jwk to the string "RSA-OAEP-384".
+        else if (hash == "SHA-384"sv) {
+            jwk.alg = "RSA-OAEP-384"_string;
+        }
+        //    If hash is "SHA-512":
+        //      - Set the alg attribute of jwk to the string "RSA-OAEP-512".
+        else if (hash == "SHA-512"sv) {
+            jwk.alg = "RSA-OAEP-512"_string;
+        } else {
+            // FIXME: Support 'other applicable specifications'
+            // - Perform any key export steps defined by other applicable specifications,
+            //   passing format and the hash attribute of the [[algorithm]] internal slot of key and obtaining alg.
+            // - Set the alg attribute of jwk to alg.
+            return WebIDL::NotSupportedError::create(realm, TRY_OR_THROW_OOM(vm, String::formatted("Unsupported hash algorithm '{}'", hash)));
+        }
+
+        // 10. Set the attributes n and e of jwk according to the corresponding definitions in JSON Web Algorithms [JWA], Section 6.3.1.
+        auto maybe_error = handle.visit(
+            [&](::Crypto::PK::RSAPublicKey<> const& public_key) -> ErrorOr<void> {
+                jwk.n = TRY(base64_url_uint_encode(public_key.modulus()));
+                jwk.e = TRY(base64_url_uint_encode(public_key.public_exponent()));
+                return {};
+            },
+            [&](::Crypto::PK::RSAPrivateKey<> const& private_key) -> ErrorOr<void> {
+                jwk.n = TRY(base64_url_uint_encode(private_key.modulus()));
+                jwk.e = TRY(base64_url_uint_encode(private_key.public_exponent()));
+
+                // 11. If the [[type]] internal slot of key is "private":
+                //    1. Set the attributes named d, p, q, dp, dq, and qi of jwk according to the corresponding definitions in JSON Web Algorithms [JWA], Section 6.3.2.
+                jwk.d = TRY(base64_url_uint_encode(private_key.private_exponent()));
+                // FIXME: Add p, q, dq, qi
+
+                // 12. If the underlying RSA private key represented by the [[handle]] internal slot of key is represented by more than two primes,
+                //     set the attribute named oth of jwk according to the corresponding definition in JSON Web Algorithms [JWA], Section 6.3.2.7
+                // FIXME: We don't support more than 2 primes on RSA keys
+                return {};
+            },
+            [](auto) -> ErrorOr<void> {
+                VERIFY_NOT_REACHED();
+            });
+        // FIXME: clang-format butchers the visit if we do the TRY inline
+        TRY_OR_THROW_OOM(vm, maybe_error);
+
+        // 13. Set the key_ops attribute of jwk to the usages attribute of key.
+        jwk.key_ops = Vector<String> {};
+        jwk.key_ops->ensure_capacity(key->internal_usages().size());
+        for (auto const& usage : key->internal_usages()) {
+            jwk.key_ops->append(Bindings::idl_enum_to_string(usage));
+        }
+
+        // 14. Set the ext attribute of jwk to the [[extractable]] internal slot of key.
+        jwk.ext = key->extractable();
+
+        // 15. Let result be the result of converting jwk to an ECMAScript Object, as defined by [WebIDL].
+        result = TRY(jwk.to_object(realm));
+    }
+
+    // Otherwise throw a NotSupportedError.
+    else {
+        return WebIDL::NotSupportedError::create(realm, TRY_OR_THROW_OOM(vm, String::formatted("Exporting to format {} is not supported", Bindings::idl_enum_to_string(format))));
+    }
+
+    // 8. Return result
+    return JS::NonnullGCPtr { *result };
 }
 
 WebIDL::ExceptionOr<JS::NonnullGCPtr<CryptoKey>> PBKDF2::import_key(AlgorithmParams const&, Bindings::KeyFormat format, CryptoKey::InternalKeyData key_data, bool extractable, Vector<Bindings::KeyUsage> const& key_usages)

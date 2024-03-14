@@ -106,6 +106,11 @@ public:
         return WebIDL::NotSupportedError::create(m_realm, "generateKey is not supported"_fly_string);
     }
 
+    virtual WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Object>> export_key(Bindings::KeyFormat, JS::NonnullGCPtr<CryptoKey>)
+    {
+        return WebIDL::NotSupportedError::create(m_realm, "exportKey is not supported"_fly_string);
+    }
+
     static NonnullOwnPtr<AlgorithmMethods> create(JS::Realm& realm) { return adopt_own(*new AlgorithmMethods(realm)); }
 
 protected:
@@ -120,6 +125,7 @@ protected:
 class RSAOAEP : public AlgorithmMethods {
 public:
     virtual WebIDL::ExceptionOr<Variant<JS::NonnullGCPtr<CryptoKey>, JS::NonnullGCPtr<CryptoKeyPair>>> generate_key(AlgorithmParams const&, bool, Vector<Bindings::KeyUsage> const&) override;
+    virtual WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Object>> export_key(Bindings::KeyFormat, JS::NonnullGCPtr<CryptoKey>) override;
 
     static NonnullOwnPtr<AlgorithmMethods> create(JS::Realm& realm) { return adopt_own(*new RSAOAEP(realm)); }
 
@@ -155,5 +161,7 @@ private:
     {
     }
 };
+
+ErrorOr<String> base64_url_uint_encode(::Crypto::UnsignedBigInteger);
 
 }
