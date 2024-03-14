@@ -138,3 +138,24 @@ TEST_CASE(starts_with)
     ReadonlyBytes hey_bytes_u8 { hey_array, 3 };
     EXPECT(bytes.starts_with(hey_bytes_u8));
 }
+
+TEST_CASE(contains_slow)
+{
+    Vector<String> list { "abc"_string, "def"_string, "ghi"_string };
+    auto span = list.span();
+
+    EXPECT(span.contains_slow("abc"_string));
+    EXPECT(span.contains_slow("abc"sv));
+
+    EXPECT(span.contains_slow("def"_string));
+    EXPECT(span.contains_slow("def"sv));
+
+    EXPECT(span.contains_slow("ghi"_string));
+    EXPECT(span.contains_slow("ghi"sv));
+
+    EXPECT(!span.contains_slow("whf"_string));
+    EXPECT(!span.contains_slow("whf"sv));
+
+    EXPECT(!span.contains_slow(String {}));
+    EXPECT(!span.contains_slow(StringView {}));
+}

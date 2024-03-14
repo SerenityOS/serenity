@@ -210,10 +210,11 @@ public:
         return size();
     }
 
-    [[nodiscard]] constexpr bool contains_slow(T const& value) const
+    template<typename V>
+    [[nodiscard]] constexpr bool contains_slow(V const& value) const
     {
         for (size_t i = 0; i < size(); ++i) {
-            if (at(i) == value)
+            if (Traits<RemoveReference<T>>::equals(at(i), value))
                 return true;
         }
         return false;
