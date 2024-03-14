@@ -25,6 +25,12 @@ using KeyDataType = Variant<JS::Handle<WebIDL::BufferSource>, Bindings::JsonWebK
 
 // https://w3c.github.io/webcrypto/#algorithm-overview
 struct AlgorithmParams {
+    virtual ~AlgorithmParams();
+    explicit AlgorithmParams(String name)
+        : name(move(name))
+    {
+    }
+
     String name;
 
     static JS::ThrowCompletionOr<NonnullOwnPtr<AlgorithmParams>> from_value(JS::VM&, JS::Value);
@@ -32,6 +38,15 @@ struct AlgorithmParams {
 
 // https://w3c.github.io/webcrypto/#pbkdf2-params
 struct PBKDF2Params : public AlgorithmParams {
+    virtual ~PBKDF2Params() override;
+    PBKDF2Params(String name, JS::Handle<WebIDL::BufferSource> salt, u32 iterations, HashAlgorithmIdentifier hash)
+        : AlgorithmParams(move(name))
+        , salt(move(salt))
+        , iterations(iterations)
+        , hash(move(hash))
+    {
+    }
+
     JS::Handle<WebIDL::BufferSource> salt;
     u32 iterations;
     HashAlgorithmIdentifier hash;
@@ -41,6 +56,15 @@ struct PBKDF2Params : public AlgorithmParams {
 
 // https://w3c.github.io/webcrypto/#dfn-RsaKeyGenParams
 struct RsaKeyGenParams : public AlgorithmParams {
+    virtual ~RsaKeyGenParams() override;
+
+    RsaKeyGenParams(String name, u32 modulus_length, ::Crypto::UnsignedBigInteger public_exponent)
+        : AlgorithmParams(move(name))
+        , modulus_length(modulus_length)
+        , public_exponent(move(public_exponent))
+    {
+    }
+
     u32 modulus_length;
     // NOTE that the raw data is going to be in Big Endian u8[] format
     ::Crypto::UnsignedBigInteger public_exponent;
@@ -50,6 +74,14 @@ struct RsaKeyGenParams : public AlgorithmParams {
 
 // https://w3c.github.io/webcrypto/#dfn-RsaHashedKeyGenParams
 struct RsaHashedKeyGenParams : public RsaKeyGenParams {
+    virtual ~RsaHashedKeyGenParams() override;
+
+    RsaHashedKeyGenParams(String name, u32 modulus_length, ::Crypto::UnsignedBigInteger public_exponent, HashAlgorithmIdentifier hash)
+        : RsaKeyGenParams(move(name), modulus_length, move(public_exponent))
+        , hash(move(hash))
+    {
+    }
+
     HashAlgorithmIdentifier hash;
 
     static JS::ThrowCompletionOr<NonnullOwnPtr<AlgorithmParams>> from_value(JS::VM&, JS::Value);

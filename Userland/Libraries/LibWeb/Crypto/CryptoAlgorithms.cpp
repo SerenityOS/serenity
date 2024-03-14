@@ -57,6 +57,8 @@ static ::Crypto::UnsignedBigInteger big_integer_from_api_big_integer(JS::GCPtr<J
     return result;
 }
 
+AlgorithmParams::~AlgorithmParams() = default;
+
 JS::ThrowCompletionOr<NonnullOwnPtr<AlgorithmParams>> AlgorithmParams::from_value(JS::VM& vm, JS::Value value)
 {
     auto& object = value.as_object();
@@ -64,8 +66,10 @@ JS::ThrowCompletionOr<NonnullOwnPtr<AlgorithmParams>> AlgorithmParams::from_valu
     auto name = TRY(object.get("name"));
     auto name_string = TRY(name.to_string(vm));
 
-    return adopt_own(*new AlgorithmParams { .name = name_string });
+    return adopt_own(*new AlgorithmParams { name_string });
 }
+
+PBKDF2Params::~PBKDF2Params() = default;
 
 JS::ThrowCompletionOr<NonnullOwnPtr<AlgorithmParams>> PBKDF2Params::from_value(JS::VM& vm, JS::Value value)
 {
@@ -96,8 +100,10 @@ JS::ThrowCompletionOr<NonnullOwnPtr<AlgorithmParams>> PBKDF2Params::from_value(J
         hash = HashAlgorithmIdentifier { hash_object };
     }
 
-    return adopt_own<AlgorithmParams>(*new PBKDF2Params { { name }, salt, iterations, hash.downcast<HashAlgorithmIdentifier>() });
+    return adopt_own<AlgorithmParams>(*new PBKDF2Params { name, salt, iterations, hash.downcast<HashAlgorithmIdentifier>() });
 }
+
+RsaKeyGenParams::~RsaKeyGenParams() = default;
 
 JS::ThrowCompletionOr<NonnullOwnPtr<AlgorithmParams>> RsaKeyGenParams::from_value(JS::VM& vm, JS::Value value)
 {
@@ -117,8 +123,10 @@ JS::ThrowCompletionOr<NonnullOwnPtr<AlgorithmParams>> RsaKeyGenParams::from_valu
 
     public_exponent = static_cast<JS::Uint8Array&>(public_exponent_value.as_object());
 
-    return adopt_own<AlgorithmParams>(*new RsaKeyGenParams { { name }, modulus_length, big_integer_from_api_big_integer(public_exponent) });
+    return adopt_own<AlgorithmParams>(*new RsaKeyGenParams { name, modulus_length, big_integer_from_api_big_integer(public_exponent) });
 }
+
+RsaHashedKeyGenParams::~RsaHashedKeyGenParams() = default;
 
 JS::ThrowCompletionOr<NonnullOwnPtr<AlgorithmParams>> RsaHashedKeyGenParams::from_value(JS::VM& vm, JS::Value value)
 {
@@ -148,7 +156,7 @@ JS::ThrowCompletionOr<NonnullOwnPtr<AlgorithmParams>> RsaHashedKeyGenParams::fro
         hash = HashAlgorithmIdentifier { hash_object };
     }
 
-    return adopt_own<AlgorithmParams>(*new RsaHashedKeyGenParams { { { name }, modulus_length, big_integer_from_api_big_integer(public_exponent) }, hash.get<HashAlgorithmIdentifier>() });
+    return adopt_own<AlgorithmParams>(*new RsaHashedKeyGenParams { name, modulus_length, big_integer_from_api_big_integer(public_exponent), hash.get<HashAlgorithmIdentifier>() });
 }
 
 // https://w3c.github.io/webcrypto/#rsa-oaep-operations
