@@ -49,5 +49,12 @@
             document.body.removeChild(textarea);
             return value;
         });
+
+        // 6. Textarea set value with carriage return
+        testPart(() => {
+            const textarea = document.createElement('textarea');
+            textarea.value = '\ntext\rwith\r\ncarriage\n\rreturn\r\r';
+            return textarea.value.replaceAll('\n', '[0x0a]');
+        });
     });
 </script>
