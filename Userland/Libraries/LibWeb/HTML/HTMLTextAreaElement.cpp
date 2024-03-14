@@ -96,7 +96,10 @@ void HTMLTextAreaElement::reset_algorithm()
     // and set the raw value of element to its child text content.
     set_raw_value(child_text_content());
 
-    update_placeholder_visibility();
+    if (m_text_node) {
+        m_text_node->set_text_content(m_raw_value);
+        update_placeholder_visibility();
+    }
 }
 
 void HTMLTextAreaElement::form_associated_element_was_inserted()
