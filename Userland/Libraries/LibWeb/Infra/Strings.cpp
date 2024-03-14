@@ -8,6 +8,7 @@
  */
 
 #include <AK/CharacterTypes.h>
+#include <AK/GenericLexer.h>
 #include <AK/String.h>
 #include <AK/Utf16View.h>
 #include <AK/Utf8View.h>
@@ -22,6 +23,29 @@ bool is_ascii_case_insensitive_match(StringView a, StringView b)
     // A string A is an ASCII case-insensitive match for a string B,
     // if the ASCII lowercase of A is the ASCII lowercase of B.
     return AK::StringUtils::equals_ignoring_ascii_case(a, b);
+}
+
+// https://infra.spec.whatwg.org/#normalize-newlines
+String normalize_newlines(String const& string)
+{
+    // To normalize newlines in a string, replace every U+000D CR U+000A LF code point pair with a single U+000A LF
+    // code point, and then replace every remaining U+000D CR code point with a U+000A LF code point.
+    if (!string.contains('\r'))
+        return string;
+
+    StringBuilder builder;
+    GenericLexer lexer { string };
+
+    while (!lexer.is_eof()) {
+        builder.append(lexer.consume_until('\r'));
+
+        if (lexer.peek() == '\r') {
+            lexer.ignore(1 + static_cast<size_t>(lexer.peek(1) == '\n'));
+            builder.append('\n');
+        }
+    }
+
+    return MUST(builder.to_string());
 }
 
 // https://infra.spec.whatwg.org/#strip-and-collapse-ascii-whitespace
