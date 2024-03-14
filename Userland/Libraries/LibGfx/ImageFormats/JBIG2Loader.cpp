@@ -597,40 +597,25 @@ static ErrorOr<void> decode_immediate_generic_region(JBIG2LoadingContext& contex
     data = data.slice(sizeof(flags));
 
     // 7.4.6.3 Generic region segment AT flags
-    GenericRegionDecodingInputParameters::AdaptiveTemplatePixel adaptive_template_pixels[12];
+    GenericRegionDecodingInputParameters::AdaptiveTemplatePixel adaptive_template_pixels[12] = {};
     if (!uses_mmr) {
         dbgln_if(JBIG2_DEBUG, "Non-MMR generic region, GBTEMPLATE={} TPGDON={} EXTTEMPLATE={}", arithmetic_coding_template, typical_prediction_generic_decoding_on, uses_extended_reference_template);
 
-        if (arithmetic_coding_template == 0 && !uses_extended_reference_template) {
-            if (data.size() < 8)
-                return Error::from_string_literal("JBIG2ImageDecoderPlugin: No adaptive template data");
-            for (int i = 0; i < 4; ++i) {
-                adaptive_template_pixels[i].x = static_cast<i8>(data[2 * i]);
-                adaptive_template_pixels[i].y = static_cast<i8>(data[2 * i + 1]);
-            }
-            data = data.slice(8);
-        } else if (arithmetic_coding_template == 0 && uses_extended_reference_template) {
-            if (data.size() < 24)
-                return Error::from_string_literal("JBIG2ImageDecoderPlugin: No adaptive template data");
-            for (int i = 0; i < 12; ++i) {
-                adaptive_template_pixels[i].x = static_cast<i8>(data[2 * i]);
-                adaptive_template_pixels[i].y = static_cast<i8>(data[2 * i + 1]);
-            }
-            // FIXME: Is this supposed to be 24 or 32? THe spec says "32-byte field as shown below" and then shows 24 bytes.
-            data = data.slice(24);
-        } else {
-            if (data.size() < 2)
-                return Error::from_string_literal("JBIG2ImageDecoderPlugin: No adaptive template data");
-            for (int i = 0; i < 1; ++i) {
-                adaptive_template_pixels[i].x = static_cast<i8>(data[2 * i]);
-                adaptive_template_pixels[i].y = static_cast<i8>(data[2 * i + 1]);
-            }
-            for (int i = 1; i < 4; ++i) {
-                adaptive_template_pixels[i].x = 0;
-                adaptive_template_pixels[i].y = 0;
-            }
-            data = data.slice(2);
+        if (arithmetic_coding_template == 0 && uses_extended_reference_template) {
+            // This was added in T.88 Amendment 2 (https://www.itu.int/rec/T-REC-T.88-200306-S!Amd2/en) mid-2003.
+            // I haven't seen it being used in the wild, and the spec says "32-byte field as shown below" and then shows 24 bytes,
+            // so it's not clear how much data to read.
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: GBTEMPLATE=0 EXTTEMPLATE=1 not yet implemented");
         }
+
+        size_t number_of_adaptive_template_pixels = arithmetic_coding_template == 0 ? 4 : 1;
+        if (data.size() < 2 * number_of_adaptive_template_pixels)
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: No adaptive template data");
+        for (size_t i = 0; i < number_of_adaptive_template_pixels; ++i) {
+            adaptive_template_pixels[i].x = static_cast<i8>(data[2 * i]);
+            adaptive_template_pixels[i].y = static_cast<i8>(data[2 * i + 1]);
+        }
+        data = data.slice(2 * number_of_adaptive_template_pixels);
     }
 
     // 7.4.6.4 Decoding a generic region segment
