@@ -15,7 +15,8 @@ $ tail [-f] [-n number] [file]
 ## Options
 
 * `-f`, `--follow`: Output data as it is written to the file
-* `-n number`, `--lines number`: Print the specified number of lines
+* `-n [+]NUM`, `--lines [+]NUM`: output the last NUM lines, instead of the last 10; or use -n +NUM to output starting with line NUM
+* `-c [+]NUM`, `--bytes [+]NUM`: output the last NUM bytes; or use -n +NUM to output starting with byte NUM
 
 ## Arguments
 
@@ -30,12 +31,22 @@ $ tail README.md
 
 Print the last 42 lines of todo.txt:
 ```sh
-$ tail -n42 todo.txt
+$ tail -n 42 todo.txt
 ```
 
 Print the last lines as they are written to logs.log:
 ```sh
 $ tail -f logs.log
+```
+
+Print everything but the first line of foobar.csv
+```sh
+$ tail -n +2 foobar.csv
+```
+
+Print the last 1337 bytes of leet.txt
+```sh
+$ tail -c 1337 leet.txt
 ```
 
 ## See also
