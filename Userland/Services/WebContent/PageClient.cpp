@@ -549,9 +549,9 @@ void PageClient::page_did_request_color_picker(Color current_color)
     client().async_did_request_color_picker(m_id, current_color);
 }
 
-void PageClient::page_did_request_file_picker(Web::HTML::AllowMultipleFiles allow_multiple_files)
+void PageClient::page_did_request_file_picker(Web::HTML::FileFilter accepted_file_types, Web::HTML::AllowMultipleFiles allow_multiple_files)
 {
-    client().async_did_request_file_picker(m_id, allow_multiple_files);
+    client().async_did_request_file_picker(m_id, move(accepted_file_types), allow_multiple_files);
 }
 
 void PageClient::page_did_request_select_dropdown(Web::CSSPixelPoint content_position, Web::CSSPixels minimum_width, Vector<Web::HTML::SelectItem> items)

@@ -39,6 +39,7 @@
 #include <LibWeb/Layout/CheckBox.h>
 #include <LibWeb/Layout/ImageBox.h>
 #include <LibWeb/Layout/RadioButton.h>
+#include <LibWeb/MimeSniff/MimeType.h>
 #include <LibWeb/MimeSniff/Resource.h>
 #include <LibWeb/Namespace.h>
 #include <LibWeb/Page/Page.h>
@@ -181,6 +182,43 @@ void HTMLInputElement::set_files(JS::GCPtr<FileAPI::FileList> files)
     m_selected_files = files;
 }
 
+// https://html.spec.whatwg.org/multipage/input.html#attr-input-accept
+FileFilter HTMLInputElement::parse_accept_attribute() const
+{
+    FileFilter filter;
+
+    // If specified, the attribute must consist of a set of comma-separated tokens, each of which must be an ASCII
+    // case-insensitive match for one of the following:
+    get_attribute_value(HTML::AttributeNames::accept).bytes_as_string_view().for_each_split_view(',', SplitBehavior::Nothing, [&](StringView value) {
+        // The string "audio/*"
+        //     Indicates that sound files are accepted.
+        if (value.equals_ignoring_ascii_case("audio/*"sv))
+            filter.add_filter(FileFilter::FileType::Audio);
+
+        // The string "video/*"
+        //     Indicates that video files are accepted.
+        if (value.equals_ignoring_ascii_case("video/*"sv))
+            filter.add_filter(FileFilter::FileType::Video);
+
+        // The string "image/*"
+        //     Indicates that image files are accepted.
+        if (value.equals_ignoring_ascii_case("image/*"sv))
+            filter.add_filter(FileFilter::FileType::Image);
+
+        // A valid MIME type string with no parameters
+        //     Indicates that files of the specified type are accepted.
+        else if (auto mime_type = MUST(MimeSniff::MimeType::parse(value)); mime_type.has_value() && mime_type->parameters().is_empty())
+            filter.add_filter(FileFilter::MimeType { mime_type->essence() });
+
+        // A string whose first character is a U+002E FULL STOP character (.)
+        //     Indicates that files with the specified file extension are accepted.
+        else if (value.starts_with('.'))
+            filter.add_filter(FileFilter::Extension { MUST(String::from_utf8(value.substring_view(1))) });
+    });
+
+    return filter;
+}
+
 // https://html.spec.whatwg.org/multipage/input.html#update-the-file-selection
 void HTMLInputElement::update_the_file_selection(JS::NonnullGCPtr<FileAPI::FileList> files)
 {
@@ -227,12 +265,11 @@ static void show_the_picker_if_applicable(HTMLInputElement& element)
         //    with the bubbles attribute initialized to true.
         // 5. Otherwise, update the file selection for element.
 
+        auto accepted_file_types = element.parse_accept_attribute();
         auto allow_multiple_files = element.has_attribute(HTML::AttributeNames::multiple) ? AllowMultipleFiles::Yes : AllowMultipleFiles::No;
         auto weak_element = element.make_weak_ptr<HTMLInputElement>();
 
-        // FIXME: Pass along accept attribute information https://html.spec.whatwg.org/multipage/input.html#attr-input-accept
-        //    The accept attribute may be specified to provide user agents with a hint of what file types will be accepted.
-        element.document().browsing_context()->top_level_browsing_context()->page().did_request_file_picker(weak_element, allow_multiple_files);
+        element.document().browsing_context()->top_level_browsing_context()->page().did_request_file_picker(weak_element, move(accepted_file_types), allow_multiple_files);
         return;
     }
 

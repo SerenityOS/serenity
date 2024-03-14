@@ -12,6 +12,7 @@
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/FileAPI/FileList.h>
 #include <LibWeb/HTML/ColorPickerUpdateState.h>
+#include <LibWeb/HTML/FileFilter.h>
 #include <LibWeb/HTML/FormAssociatedElement.h>
 #include <LibWeb/HTML/HTMLElement.h>
 #include <LibWeb/Layout/ImageProvider.h>
@@ -101,6 +102,8 @@ public:
 
     JS::GCPtr<FileAPI::FileList> files();
     void set_files(JS::GCPtr<FileAPI::FileList>);
+
+    FileFilter parse_accept_attribute() const;
 
     // NOTE: User interaction
     // https://html.spec.whatwg.org/multipage/input.html#update-the-file-selection

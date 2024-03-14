@@ -31,6 +31,7 @@
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/ActivateTab.h>
 #include <LibWeb/HTML/ColorPickerUpdateState.h>
+#include <LibWeb/HTML/FileFilter.h>
 #include <LibWeb/HTML/SelectItem.h>
 #include <LibWeb/HTML/TokenizedFeatures.h>
 #include <LibWeb/HTML/WebViewHints.h>
@@ -134,7 +135,7 @@ public:
     void did_request_color_picker(WeakPtr<HTML::HTMLInputElement> target, Color current_color);
     void color_picker_update(Optional<Color> picked_color, HTML::ColorPickerUpdateState state);
 
-    void did_request_file_picker(WeakPtr<HTML::HTMLInputElement> target, HTML::AllowMultipleFiles);
+    void did_request_file_picker(WeakPtr<HTML::HTMLInputElement> target, HTML::FileFilter accepted_file_types, HTML::AllowMultipleFiles);
     void file_picker_closed(Span<HTML::SelectedFile> selected_files);
 
     void did_request_select_dropdown(WeakPtr<HTML::HTMLSelectElement> target, Web::CSSPixelPoint content_position, Web::CSSPixels minimum_width, Vector<Web::HTML::SelectItem> items);
@@ -285,7 +286,7 @@ public:
 
     // https://html.spec.whatwg.org/multipage/input.html#show-the-picker,-if-applicable
     virtual void page_did_request_color_picker([[maybe_unused]] Color current_color) {};
-    virtual void page_did_request_file_picker(Web::HTML::AllowMultipleFiles) {};
+    virtual void page_did_request_file_picker([[maybe_unused]] HTML::FileFilter accepted_file_types, Web::HTML::AllowMultipleFiles) {};
     virtual void page_did_request_select_dropdown([[maybe_unused]] Web::CSSPixelPoint content_position, [[maybe_unused]] Web::CSSPixels minimum_width, [[maybe_unused]] Vector<Web::HTML::SelectItem> items) {};
 
     virtual void page_did_finish_text_test() {};

@@ -232,7 +232,7 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
         m_dialog = nullptr;
     };
 
-    view().on_request_file_picker = [this](auto allow_multiple_files) {
+    view().on_request_file_picker = [this](auto const&, auto allow_multiple_files) {
         Vector<Web::HTML::SelectedFile> selected_files;
 
         auto create_selected_file = [&](auto const& qfile_path) {

@@ -436,15 +436,42 @@ static ErrorOr<TestResult> run_test(HeadlessWebContentView& view, StringView inp
     };
     view.on_text_test_finish = {};
 
-    view.on_request_file_picker = [&](auto allow_multiple_files) {
+    view.on_request_file_picker = [&](auto const& accepted_file_types, auto allow_multiple_files) {
         // Create some dummy files for tests.
         Vector<Web::HTML::SelectedFile> selected_files;
-        selected_files.empend("file1"sv, MUST(ByteBuffer::copy("Contents for file1"sv.bytes())));
 
-        if (allow_multiple_files == Web::HTML::AllowMultipleFiles::Yes) {
-            selected_files.empend("file2"sv, MUST(ByteBuffer::copy("Contents for file2"sv.bytes())));
-            selected_files.empend("file3"sv, MUST(ByteBuffer::copy("Contents for file3"sv.bytes())));
-            selected_files.empend("file4"sv, MUST(ByteBuffer::copy("Contents for file4"sv.bytes())));
+        bool add_txt_files = accepted_file_types.filters.is_empty();
+        bool add_cpp_files = false;
+
+        for (auto const& filter : accepted_file_types.filters) {
+            filter.visit(
+                [](Web::HTML::FileFilter::FileType) {},
+                [&](Web::HTML::FileFilter::MimeType const& mime_type) {
+                    if (mime_type.value == "text/plain"sv)
+                        add_txt_files = true;
+                },
+                [&](Web::HTML::FileFilter::Extension const& extension) {
+                    if (extension.value == "cpp"sv)
+                        add_cpp_files = true;
+                });
+        }
+
+        if (add_txt_files) {
+            selected_files.empend("file1"sv, MUST(ByteBuffer::copy("Contents for file1"sv.bytes())));
+
+            if (allow_multiple_files == Web::HTML::AllowMultipleFiles::Yes) {
+                selected_files.empend("file2"sv, MUST(ByteBuffer::copy("Contents for file2"sv.bytes())));
+                selected_files.empend("file3"sv, MUST(ByteBuffer::copy("Contents for file3"sv.bytes())));
+                selected_files.empend("file4"sv, MUST(ByteBuffer::copy("Contents for file4"sv.bytes())));
+            }
+        }
+
+        if (add_cpp_files) {
+            selected_files.empend("file1.cpp"sv, MUST(ByteBuffer::copy("int main() {{ return 1; }}"sv.bytes())));
+
+            if (allow_multiple_files == Web::HTML::AllowMultipleFiles::Yes) {
+                selected_files.empend("file2.cpp"sv, MUST(ByteBuffer::copy("int main() {{ return 2; }}"sv.bytes())));
+            }
         }
 
         view.file_picker_closed(move(selected_files));
