@@ -5,11 +5,11 @@
     }
 
     asyncTest(async done => {
-
-        // FIXME: Generate a key with module lengths longer than 512, when they don't take an eternity to generate.
+        // FIXME: Generate a key with module lengths longer than 256, when they don't take an eternity to generate.
+        //        This is #23561
         let algorithm = {
             name: "RSA-OAEP",
-            modulusLength: 512,
+            modulusLength: 256,
             publicExponent: new Uint8Array([1, 0, 1]),
             hash: "SHA-256",
         };
@@ -17,11 +17,12 @@
         println("generateKey with RSA-OAEP algorithm");
         var key = undefined;
         try {
-            key = await window.crypto.subtle.generateKey(
-                algorithm,
-                true,
-                ["encrypt", "decrypt", "wrapKey", "unwrapKey"]
-            );
+            key = await window.crypto.subtle.generateKey(algorithm, true, [
+                "encrypt",
+                "decrypt",
+                "wrapKey",
+                "unwrapKey",
+            ]);
         } catch (e) {
             println(`FAIL: ${e}`);
         }
@@ -41,22 +42,23 @@
 
         println("invalid usages throw");
         try {
-            const key2 = await window.crypto.subtle.generateKey(
-                algorithm,
-                true,
-                ["encrypt", "decrypt", "wrapKey", "unwrapKey", "sign"]
-            );
+            const key2 = await window.crypto.subtle.generateKey(algorithm, true, [
+                "encrypt",
+                "decrypt",
+                "wrapKey",
+                "unwrapKey",
+                "sign",
+            ]);
         } catch (e) {
             println(`Error: ${e}`);
         }
 
         println("no usages for private key throws");
         try {
-            const key3 = await window.crypto.subtle.generateKey(
-                algorithm,
-                true,
-                ["encrypt", "wrapKey"]
-            );
+            const key3 = await window.crypto.subtle.generateKey(algorithm, true, [
+                "encrypt",
+                "wrapKey",
+            ]);
         } catch (e) {
             println(`Error: ${e}`);
         }
