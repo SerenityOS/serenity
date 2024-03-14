@@ -102,6 +102,9 @@ private:
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
+    void set_raw_value(String);
+    String api_value() const;
+
     // ^DOM::Element
     virtual i32 default_tab_index_value() const override;
 
@@ -129,6 +132,9 @@ private:
 
     // https://html.spec.whatwg.org/multipage/form-elements.html#concept-textarea-raw-value
     String m_raw_value;
+
+    // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#concept-fe-api-value
+    mutable Optional<String> m_api_value;
 };
 
 }

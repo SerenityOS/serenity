@@ -17,6 +17,7 @@
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/HTMLTextAreaElement.h>
 #include <LibWeb/HTML/Numbers.h>
+#include <LibWeb/Infra/Strings.h>
 #include <LibWeb/Namespace.h>
 
 namespace Web::HTML {
@@ -93,7 +94,7 @@ void HTMLTextAreaElement::reset_algorithm()
     // The reset algorithm for textarea elements is to set the dirty value flag back to false,
     m_dirty_value = false;
     // and set the raw value of element to its child text content.
-    m_raw_value = child_text_content();
+    set_raw_value(child_text_content());
 
     update_placeholder_visibility();
 }
@@ -126,7 +127,7 @@ void HTMLTextAreaElement::set_default_value(String const& default_value)
 String HTMLTextAreaElement::value() const
 {
     // The value IDL attribute must, on getting, return the element's API value.
-    return m_raw_value;
+    return api_value();
 }
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#dom-textarea-value
@@ -135,7 +136,7 @@ void HTMLTextAreaElement::set_value(String const& value)
     // FIXME: 1. Let oldAPIValue be this element's API value.
 
     // 2. Set this element's raw value to the new value.
-    m_raw_value = value;
+    set_raw_value(value);
 
     // 3. Set this element's dirty value flag to true.
     m_dirty_value = true;
@@ -144,12 +145,27 @@ void HTMLTextAreaElement::set_value(String const& value)
     update_placeholder_visibility();
 }
 
+void HTMLTextAreaElement::set_raw_value(String value)
+{
+    m_raw_value = move(value);
+    m_api_value.clear();
+}
+
+// https://html.spec.whatwg.org/multipage/form-elements.html#the-textarea-element:concept-fe-api-value-3
+String HTMLTextAreaElement::api_value() const
+{
+    // The algorithm for obtaining the element's API value is to return the element's raw value, with newlines normalized.
+    if (!m_api_value.has_value())
+        m_api_value = Infra::normalize_newlines(m_raw_value);
+    return *m_api_value;
+}
+
 // https://html.spec.whatwg.org/multipage/form-elements.html#dom-textarea-textlength
 u32 HTMLTextAreaElement::text_length() const
 {
     // The textLength IDL attribute must return the length of the element's API value.
     // FIXME: This is inefficient!
-    auto utf16_data = MUST(AK::utf8_to_utf16(m_raw_value));
+    auto utf16_data = MUST(AK::utf8_to_utf16(api_value()));
     return Utf16View { utf16_data }.length_in_code_units();
 }
 
@@ -317,7 +333,7 @@ void HTMLTextAreaElement::children_changed()
     // The children changed steps for textarea elements must, if the element's dirty value flag is false,
     // set the element's raw value to its child text content.
     if (!m_dirty_value) {
-        m_raw_value = child_text_content();
+        set_raw_value(child_text_content());
         if (m_text_node)
             m_text_node->set_text_content(m_raw_value);
         update_placeholder_visibility();
@@ -339,7 +355,7 @@ void HTMLTextAreaElement::form_associated_element_attribute_changed(FlyString co
 void HTMLTextAreaElement::did_edit_text_node(Badge<Web::HTML::BrowsingContext>)
 {
     VERIFY(m_text_node);
-    m_raw_value = m_text_node->data();
+    set_raw_value(m_text_node->data());
 
     // Any time the user causes the element's raw value to change, the user agent must queue an element task on the user
     // interaction task source given the textarea element to fire an event named input at the textarea element, with the
