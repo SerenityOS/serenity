@@ -23,9 +23,19 @@ struct FileTypeFilter {
         return FileTypeFilter { "All Files", {} };
     }
 
+    static FileTypeFilter audio_files()
+    {
+        return FileTypeFilter { "Audio Files", Vector<ByteString> { "flac", "m3u", "m3u8", "m4a", "m4b", "m4r", "mid", "midi", "mka", "mp3", "mpga", "oga", "ogg", "opus", "spx", "vlc", "wav", "wax", "wma", "wmx", "wvx" } };
+    }
+
     static FileTypeFilter image_files()
     {
         return FileTypeFilter { "Image Files", Vector<ByteString> { "png", "gif", "bmp", "dip", "pam", "pbm", "pgm", "ppm", "ico", "iff", "jb2", "jbig2", "jpeg", "jpg", "jxl", "dds", "qoi", "tif", "tiff", "webp", "tvg" } };
+    }
+
+    static FileTypeFilter video_files()
+    {
+        return FileTypeFilter { "Video Files", Vector<ByteString> { "avf", "avi", "flv", "m4u", "m4v", "mk3d", "mkv", "mov", "movie", "mp4", "mpeg", "mpg", "ogg", "ogv", "vob", "webm", "wmv" } };
     }
 };
 
