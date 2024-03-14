@@ -367,6 +367,11 @@ def set_up_qemu_binary(config: Configuration):
             # reg.exe not found; errors in reg.exe itself do not throw an error.
             config.qemu_kind = QEMUKind.Other
 
+    if config.qemu_kind == QEMUKind.MacOS:
+        # Assume, for now, that HVF is available.
+        # In set_up_virtualization_support, we'll actually check if it's supported.
+        config.virtualization_support = True
+
     if config.qemu_binary is None:
         # Set up full path for the binary if possible (otherwise trust system PATH)
         local_qemu_bin = Path(str(config.serenity_src), "Toolchain/Local/qemu/bin/", qemu_binary_basename)
