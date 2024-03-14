@@ -35,8 +35,8 @@ interface HTMLTextAreaElement : HTMLElement {
     // FIXME: readonly attribute NodeList labels;
 
     // FIXME: undefined select();
-    // FIXME: attribute unsigned long selectionStart;
-    // FIXME: attribute unsigned long selectionEnd;
+    attribute unsigned long selectionStart;
+    attribute unsigned long selectionEnd;
     // FIXME: attribute DOMString selectionDirection;
     // FIXME: undefined setRangeText(DOMString replacement);
     // FIXME: undefined setRangeText(DOMString replacement, unsigned long start, unsigned long end, optional SelectionMode selectionMode = "preserve");
