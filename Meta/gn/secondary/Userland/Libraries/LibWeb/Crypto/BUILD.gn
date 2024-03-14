@@ -6,6 +6,7 @@ source_set("Crypto") {
     "Crypto.h",
     "CryptoAlgorithms.cpp",
     "CryptoAlgorithms.h",
+    "CryptoBindings.cpp",
     "CryptoBindings.h",
     "CryptoKey.cpp",
     "CryptoKey.h",

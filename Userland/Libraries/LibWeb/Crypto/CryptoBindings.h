@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2023, stelar7 <dudedbz@gmail.com>
+ * Copyright (c) 2024, Andrew Kaster <akaster@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,8 +10,7 @@
 #include <AK/Optional.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
-#include <LibJS/Runtime/Object.h>
-#include <LibWeb/WebIDL/Buffers.h>
+#include <LibCrypto/BigInt/UnsignedBigInteger.h>
 
 // FIXME: Generate these from IDL
 namespace Web::Bindings {
@@ -42,6 +42,8 @@ struct JsonWebKey {
     Optional<String> qi;
     Optional<Vector<RsaOtherPrimesInfo>> oth;
     Optional<String> k;
+
+    JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> to_object(JS::Realm&);
 };
 
 }

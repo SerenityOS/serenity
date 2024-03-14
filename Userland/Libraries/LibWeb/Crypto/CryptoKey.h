@@ -39,6 +39,8 @@ public:
     void set_algorithm(JS::NonnullGCPtr<Object> algorithm) { m_algorithm = move(algorithm); }
     void set_usages(Vector<Bindings::KeyUsage>);
 
+    InternalKeyData const& handle() const { return m_key_data; }
+
 private:
     CryptoKey(JS::Realm&, InternalKeyData);
     virtual void initialize(JS::Realm&) override;
@@ -50,7 +52,7 @@ private:
     JS::NonnullGCPtr<Object> m_usages;
 
     Vector<Bindings::KeyUsage> m_key_usages;
-    InternalKeyData m_key_data;
+    InternalKeyData m_key_data; // [[handle]]
 };
 
 // https://w3c.github.io/webcrypto/#ref-for-dfn-CryptoKeyPair-2

@@ -14,7 +14,6 @@
 #include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/Bindings/SubtleCryptoPrototype.h>
 #include <LibWeb/Crypto/CryptoAlgorithms.h>
-#include <LibWeb/Crypto/CryptoBindings.h>
 #include <LibWeb/Crypto/CryptoKey.h>
 
 namespace Web::Crypto {
@@ -39,6 +38,7 @@ public:
     JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Promise>> generate_key(AlgorithmIdentifier algorithm, bool extractable, Vector<Bindings::KeyUsage> key_usages);
 
     JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Promise>> import_key(Bindings::KeyFormat format, KeyDataType key_data, AlgorithmIdentifier algorithm, bool extractable, Vector<Bindings::KeyUsage> key_usages);
+    JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Promise>> export_key(Bindings::KeyFormat format, JS::NonnullGCPtr<CryptoKey> key);
 
 private:
     explicit SubtleCrypto(JS::Realm&);

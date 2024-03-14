@@ -38,6 +38,7 @@ static bool is_platform_object(Type const& type)
         "CanvasGradient"sv,
         "CanvasPattern"sv,
         "CanvasRenderingContext2D"sv,
+        "CryptoKey"sv,
         "Document"sv,
         "DocumentType"sv,
         "EventTarget"sv,

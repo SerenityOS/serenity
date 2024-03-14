@@ -11,6 +11,7 @@
 #include <LibJS/Runtime/Promise.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/Crypto/KeyAlgorithms.h>
 #include <LibWeb/Crypto/SubtleCrypto.h>
 #include <LibWeb/HTML/Scripting/TemporaryExecutionContext.h>
 #include <LibWeb/Platform/EventLoopPlugin.h>
@@ -289,6 +290,52 @@ JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Promise>> SubtleCrypto::import_key(Bi
     return verify_cast<JS::Promise>(*promise->promise());
 }
 
+// https://w3c.github.io/webcrypto/#dfn-SubtleCrypto-method-exportKey
+JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Promise>> SubtleCrypto::export_key(Bindings::KeyFormat format, JS::NonnullGCPtr<CryptoKey> key)
+{
+    auto& realm = this->realm();
+    // 1. Let format and key be the format and key parameters passed to the exportKey() method, respectively.
+
+    // 2. Let promise be a new Promise.
+    auto promise = WebIDL::create_promise(realm);
+
+    // 3. Return promise and perform the remaining steps in parallel.
+    Platform::EventLoopPlugin::the().deferred_invoke([&realm, key, this, promise, format]() -> void {
+        HTML::TemporaryExecutionContext context(Bindings::host_defined_environment_settings_object(realm), HTML::TemporaryExecutionContext::CallbacksEnabled::Yes);
+        // 4.  If the following steps or referenced procedures say to throw an error, reject promise with the returned error and then terminate the algorithm.
+
+        // 5. If the name member of the [[algorithm]] internal slot of key does not identify a registered algorithm that supports the export key operation,
+        //    then throw a NotSupportedError.
+        // Note: Handled by the base AlgorithmMethods implementation
+        auto& algorithm = verify_cast<KeyAlgorithm>(*key->algorithm());
+        // FIXME: Stash the AlgorithmMethods on the KeyAlgorithm
+        auto normalized_algorithm_or_error = normalize_an_algorithm(algorithm.name(), "exportKey"_string);
+        if (normalized_algorithm_or_error.is_error()) {
+            WebIDL::reject_promise(realm, promise, Bindings::dom_exception_to_throw_completion(realm.vm(), normalized_algorithm_or_error.release_error()).release_value().value());
+            return;
+        }
+        auto normalized_algorithm = normalized_algorithm_or_error.release_value();
+
+        // 6. If the [[extractable]] internal slot of key is false, then throw an InvalidAccessError.
+        if (!key->extractable()) {
+            WebIDL::reject_promise(realm, promise, WebIDL::InvalidAccessError::create(realm, "Key is not extractable"_fly_string));
+            return;
+        }
+
+        // 7. Let result be the result of performing the export key operation specified by the [[algorithm]] internal slot of key using key and format.
+        auto result_or_error = normalized_algorithm.methods->export_key(format, key);
+        if (result_or_error.is_error()) {
+            WebIDL::reject_promise(realm, promise, Bindings::dom_exception_to_throw_completion(realm.vm(), result_or_error.release_error()).release_value().value());
+            return;
+        }
+
+        // 8. Resolve promise with result.
+        WebIDL::resolve_promise(realm, promise, result_or_error.release_value());
+    });
+
+    return verify_cast<JS::Promise>(*promise->promise());
+}
+
 SubtleCrypto::SupportedAlgorithmsMap& SubtleCrypto::supported_algorithms_internal()
 {
     static SubtleCrypto::SupportedAlgorithmsMap s_supported_algorithms;
@@ -339,7 +386,8 @@ SubtleCrypto::SupportedAlgorithmsMap SubtleCrypto::supported_algorithms()
 
     // https://w3c.github.io/webcrypto/#rsa-oaep
     define_an_algorithm<RSAOAEP, RsaHashedKeyGenParams>("generateKey"_string, "RSA-OAEP"_string);
-    // FIXME: encrypt, decrypt, importKey, exportKey
+    define_an_algorithm<RSAOAEP>("exportKey"_string, "RSA-OAEP"_string);
+    // FIXME: encrypt, decrypt, importKey
 
     return internal_object;
 }
