@@ -184,7 +184,7 @@ static ErrorOr<void> print_mounts()
         if (mount_flags & MS_NOREGULAR)
             out(",noregular");
         if (mount_flags & MS_SRCHIDDEN)
-            out(",srcobfuscate");
+            out(",srchidden");
         if (mount_flags & MS_NOEXEC)
             out(",noexec");
         if (mount_flags & MS_NOSUID)
