@@ -336,6 +336,23 @@ TEST_CASE(test_jbig2_white_47x23)
         EXPECT_EQ(pixel, Gfx::Color(Gfx::Color::White).value());
 }
 
+TEST_CASE(test_jbig2_generic_region_arithmetic_code)
+{
+    auto file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("jbig2/bitmap.jbig2"sv)));
+    EXPECT(Gfx::JBIG2ImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = TRY_OR_FAIL(Gfx::JBIG2ImageDecoderPlugin::create(file->bytes()));
+
+    auto bmp_file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("bmp/bitmap.bmp"sv)));
+    auto bmp_plugin_decoder = TRY_OR_FAIL(Gfx::JBIG2ImageDecoderPlugin::create(file->bytes()));
+
+    auto frame = TRY_OR_FAIL(expect_single_frame_of_size(*plugin_decoder, { 399, 400 }));
+    auto bmp_frame = TRY_OR_FAIL(expect_single_frame_of_size(*bmp_plugin_decoder, { 399, 400 }));
+
+    for (int y = 0; y < frame.image->height(); ++y)
+        for (int x = 0; x < frame.image->width(); ++x)
+            EXPECT_EQ(frame.image->get_pixel(x, y), bmp_frame.image->get_pixel(x, y));
+}
+
 TEST_CASE(test_jbig2_arithmetic_decoder)
 {
     // https://www.itu.int/rec/T-REC-T.88-201808-I
