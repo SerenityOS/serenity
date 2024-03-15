@@ -732,7 +732,68 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(Gener
         }
         return result;
     }
-    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Non-MMR generic region decoding not implemented yet");
+
+    // 6.2.5 Decoding using a template and arithmetic coding
+    if (inputs.gb_template != 0)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode GBTEMPLATE != 0 yet");
+
+    if (inputs.adaptive_template_pixels[0].x != 3 || inputs.adaptive_template_pixels[0].y != -1
+        || inputs.adaptive_template_pixels[1].x != -3 || inputs.adaptive_template_pixels[1].y != -1
+        || inputs.adaptive_template_pixels[2].x != 2 || inputs.adaptive_template_pixels[2].y != -2
+        || inputs.adaptive_template_pixels[3].x != -2 || inputs.adaptive_template_pixels[3].y != -2)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot handle custom adaptive pixels yet");
+
+    if (inputs.is_typical_prediction_used)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode TPGDON yet");
+
+    if (inputs.is_extended_reference_template_used)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode EXTTEMPLATE yet");
+
+    if (inputs.skip_pattern.has_value())
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode USESKIP yet");
+
+    auto result = TRY(BitBuffer::create(inputs.region_width, inputs.region_height));
+
+    auto decoder = MUST(JBIG2::ArithmeticDecoder::initialize(data));
+    auto get_pixel = [&inputs](NonnullOwnPtr<BitBuffer> const& buffer, int x, int y) -> bool {
+        if (x < 0 || x >= (int)inputs.region_width || y < 0)
+            return false;
+        return buffer->get_bit(x, y);
+    };
+
+    // Figure 3(a) – Template when GBTEMPLATE = 0 and EXTTEMPLATE = 0,
+    auto compute_context = [&get_pixel](NonnullOwnPtr<BitBuffer> const& buffer, int x, int y) -> u16 {
+        u16 result = 0;
+        for (int i = 0; i < 5; ++i)
+            result = (result << 1) | (u16)get_pixel(buffer, x - 2 + i, y - 2);
+        for (int i = 0; i < 7; ++i)
+            result = (result << 1) | (u16)get_pixel(buffer, x - 3 + i, y - 1);
+        for (int i = 0; i < 4; ++i)
+            result = (result << 1) | (u16)get_pixel(buffer, x - 4 + i, y);
+        return result;
+    };
+
+    // "The values of the pixels in this neighbourhood define a context. Each context has its own adaptive probability estimate
+    //  used by the arithmetic coder (see Annex E)."
+    // "* Decode the current pixel by invoking the arithmetic entropy decoding procedure, with CX set to the value formed by
+    //    concatenating the label "GB" and the 10-16 pixel values gathered in CONTEXT."
+    // Implementor's note: What this is supposed to mean is that we have a bunch of independent contexts, and we pick the
+    // context for the current pixel based on pixel values in the neighborhood. The "GB" part just means this context is
+    // independent from other contexts in the spec. At the moment, these are the only contexts we have, so we just
+    // create them on demand here.
+    // I can't find where the spec says this, but the contexts all start out zero-initialized.
+    Vector<JBIG2::ArithmeticDecoder::Context> contexts;
+    contexts.resize(1 << 16);
+
+    for (size_t y = 0; y < inputs.region_height; ++y) {
+        for (size_t x = 0; x < inputs.region_width; ++x) {
+            u16 context = compute_context(result, x, y);
+            bool bit = decoder.get_next_bit(contexts[context]);
+            result->set_bit(x, y, bit);
+        }
+    }
+
+    return result;
 }
 
 static ErrorOr<void> decode_symbol_dictionary(JBIG2LoadingContext&, SegmentData const&)
