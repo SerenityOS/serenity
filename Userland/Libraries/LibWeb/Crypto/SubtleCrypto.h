@@ -28,6 +28,7 @@ public:
     virtual ~SubtleCrypto() override;
 
     JS::NonnullGCPtr<JS::Promise> encrypt(AlgorithmIdentifier const& algorithm, JS::NonnullGCPtr<CryptoKey> key, JS::Handle<WebIDL::BufferSource> const& data_parameter);
+    JS::NonnullGCPtr<JS::Promise> decrypt(AlgorithmIdentifier const& algorithm, JS::NonnullGCPtr<CryptoKey> key, JS::Handle<WebIDL::BufferSource> const& data_parameter);
 
     JS::NonnullGCPtr<JS::Promise> digest(AlgorithmIdentifier const& algorithm, JS::Handle<WebIDL::BufferSource> const& data);
 
