@@ -601,11 +601,12 @@ void HTMLInputElement::update_placeholder_visibility()
 {
     if (!m_placeholder_element)
         return;
-    auto placeholder_text = this->placeholder_value();
-    if (placeholder_text.has_value()) {
+    if (this->placeholder_value().has_value()) {
         MUST(m_placeholder_element->style_for_bindings()->set_property(CSS::PropertyID::Display, "block"sv));
+        MUST(m_inner_text_element->style_for_bindings()->set_property(CSS::PropertyID::Display, "none"sv));
     } else {
         MUST(m_placeholder_element->style_for_bindings()->set_property(CSS::PropertyID::Display, "none"sv));
+        MUST(m_inner_text_element->style_for_bindings()->set_property(CSS::PropertyID::Display, "block"sv));
     }
 }
 
@@ -767,7 +768,7 @@ void HTMLInputElement::create_text_input_shadow_tree()
     m_placeholder_element = MUST(DOM::create_element(document(), HTML::TagNames::div, Namespace::HTML));
     m_placeholder_element->set_use_pseudo_element(CSS::Selector::PseudoElement::Type::Placeholder);
     MUST(m_placeholder_element->set_attribute(HTML::AttributeNames::style, R"~~~(
-        flex: 1;
+        width: 100%;
         height: 1lh;
     )~~~"_string));
     MUST(element->append_child(*m_placeholder_element));
@@ -779,7 +780,7 @@ void HTMLInputElement::create_text_input_shadow_tree()
 
     m_inner_text_element = MUST(DOM::create_element(document(), HTML::TagNames::div, Namespace::HTML));
     MUST(m_inner_text_element->set_attribute(HTML::AttributeNames::style, R"~~~(
-        flex: 1;
+        width: 100%;
         height: 1lh;
     )~~~"_string));
     MUST(element->append_child(*m_inner_text_element));
