@@ -174,6 +174,19 @@ Attr const* NamedNodeMap::get_attribute(FlyString const& qualified_name, size_t*
     return nullptr;
 }
 
+Attr const* NamedNodeMap::get_attribute_with_lowercase_qualified_name(FlyString const& lowercase_qualified_name) const
+{
+    bool compare_as_lowercase = associated_element().namespace_uri() == Namespace::HTML;
+    VERIFY(compare_as_lowercase);
+
+    for (auto const& attribute : m_attributes) {
+        if (attribute->lowercase_name() == lowercase_qualified_name)
+            return attribute;
+    }
+
+    return nullptr;
+}
+
 // https://dom.spec.whatwg.org/#concept-element-attributes-get-by-namespace
 Attr* NamedNodeMap::get_attribute_ns(Optional<FlyString> const& namespace_, FlyString const& local_name, size_t* item_index)
 {
