@@ -951,6 +951,16 @@ RefPtr<ColumnConstraint> Parser::parse_column_constraint()
         auto collation_name = consume(TokenType::Identifier).value();
         return create_ast_node<CollateColumnConstraint>(move(name), move(collation_name));
     }
+    if (consume_if(TokenType::Generated)) {
+        consume(TokenType::Always);
+    }
+    if (consume_if(TokenType::As)) {
+        consume(TokenType::ParenOpen);
+        auto expression = parse_expression();
+        consume(TokenType::ParenClose);
+        auto computation_strategy = parse_computation_strategy();
+        return create_ast_node<GeneratedColumnConstraint>(move(name), move(expression), move(computation_strategy));
+    }
     return {};
 }
 
@@ -1174,6 +1184,13 @@ Order Parser::parse_order()
     auto order = consume_if(TokenType::Desc) ? Order::Descending : Order::Ascending;
     consume_if(TokenType::Asc); // ASC is the default, so ignore it if specified.
     return order;
+}
+
+GeneratedColumnConstraint::ComputationStrategy Parser::parse_computation_strategy()
+{
+    auto strategy = consume_if(TokenType::Stored) ? GeneratedColumnConstraint::ComputationStrategy::Stored : GeneratedColumnConstraint::ComputationStrategy::Virtual;
+    consume_if(TokenType::Virtual); // Virtual is the default, so ignore it if specified.
+    return strategy;
 }
 
 Token Parser::consume()

@@ -180,6 +180,28 @@ private:
     ByteString m_collation_name;
 };
 
+class GeneratedColumnConstraint : public ColumnConstraint {
+public:
+    enum class ComputationStrategy {
+        Virtual,
+        Stored,
+    };
+
+    GeneratedColumnConstraint(Optional<ByteString> name, NonnullRefPtr<Expression> expression, ComputationStrategy computation_strategy)
+        : ColumnConstraint(move(name))
+        , m_expression(move(expression))
+        , m_computation_strategy(move(computation_strategy))
+    {
+    }
+
+    NonnullRefPtr<Expression> const& expression() const { return m_expression; }
+    ComputationStrategy const& computation_strategy() const { return m_computation_strategy; }
+
+private:
+    NonnullRefPtr<Expression> m_expression;
+    ComputationStrategy m_computation_strategy;
+};
+
 class ColumnDefinition : public ASTNode {
 public:
     ColumnDefinition(ByteString name, NonnullRefPtr<TypeName> type_name, RefPtr<ColumnConstraint> column_constraint)
