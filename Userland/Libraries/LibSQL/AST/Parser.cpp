@@ -1083,8 +1083,7 @@ NonnullRefPtr<OrderingTerm> Parser::parse_ordering_term()
         collation_name = consume(TokenType::Identifier).value();
     }
 
-    Order order = consume_if(TokenType::Desc) ? Order::Descending : Order::Ascending;
-    consume_if(TokenType::Asc); // ASC is the default, so ignore it if specified.
+    Order order = parse_order();
 
     Nulls nulls = order == Order::Ascending ? Nulls::First : Nulls::Last;
     if (consume_if(TokenType::Nulls)) {
@@ -1130,6 +1129,13 @@ ConflictResolution Parser::parse_conflict_resolution()
     }
 
     return ConflictResolution::Abort;
+}
+
+Order Parser::parse_order()
+{
+    auto order = consume_if(TokenType::Desc) ? Order::Descending : Order::Ascending;
+    consume_if(TokenType::Asc); // ASC is the default, so ignore it if specified.
+    return order;
 }
 
 Token Parser::consume()

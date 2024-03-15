@@ -100,6 +100,7 @@ private:
     NonnullRefPtr<OrderingTerm> parse_ordering_term();
     void parse_schema_and_table_name(ByteString& schema_name, ByteString& table_name);
     ConflictResolution parse_conflict_resolution();
+    Order parse_order();
 
     template<typename ParseCallback>
     void parse_comma_separated_list(bool surrounded_by_parentheses, ParseCallback&& parse_callback)
