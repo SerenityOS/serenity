@@ -648,7 +648,7 @@ String HTMLInputElement::placeholder() const
 }
 
 // https://html.spec.whatwg.org/multipage/input.html#attr-input-placeholder
-Optional<ByteString> HTMLInputElement::placeholder_value() const
+Optional<String> HTMLInputElement::placeholder_value() const
 {
     if (!m_text_node || !m_text_node->data().is_empty())
         return {};
@@ -656,7 +656,7 @@ Optional<ByteString> HTMLInputElement::placeholder_value() const
         return {};
     if (!has_attribute(HTML::AttributeNames::placeholder))
         return {};
-    return placeholder().to_byte_string();
+    return placeholder();
 }
 
 void HTMLInputElement::create_shadow_tree_if_needed()

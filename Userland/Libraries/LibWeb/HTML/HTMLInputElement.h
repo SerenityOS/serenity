@@ -78,7 +78,7 @@ public:
     void commit_pending_changes();
 
     String placeholder() const;
-    Optional<ByteString> placeholder_value() const;
+    Optional<String> placeholder_value() const;
 
     bool checked() const { return m_checked; }
     enum class ChangeSource {
