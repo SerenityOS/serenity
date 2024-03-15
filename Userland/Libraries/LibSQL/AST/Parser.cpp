@@ -920,7 +920,11 @@ RefPtr<ColumnConstraint> Parser::parse_column_constraint()
         auto is_auto_increment = consume_if(TokenType::Autoincrement);
         return create_ast_node<PrimaryKeyColumnConstraint>(move(name), move(order), move(conflict_resolution), is_auto_increment);
     }
-
+    if (consume_if(TokenType::Not)) {
+        consume(TokenType::Null);
+        auto conflict_resolution = parse_conflict_resolution();
+        return create_ast_node<NotNullColumnConstraint>(move(name), move(conflict_resolution));
+    }
     return {};
 }
 
