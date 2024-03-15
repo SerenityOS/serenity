@@ -79,34 +79,6 @@ void GraphicsManagement::set_vga_text_mode_cursor([[maybe_unused]] size_t consol
 #endif
 }
 
-void GraphicsManagement::deactivate_graphical_mode()
-{
-    return m_display_connector_nodes.with([&](auto& display_connectors) {
-        for (auto& connector : display_connectors)
-            connector.set_display_mode({}, DisplayConnector::DisplayMode::Console);
-    });
-}
-void GraphicsManagement::activate_graphical_mode()
-{
-    return m_display_connector_nodes.with([&](auto& display_connectors) {
-        for (auto& connector : display_connectors)
-            connector.set_display_mode({}, DisplayConnector::DisplayMode::Graphical);
-    });
-}
-
-void GraphicsManagement::attach_new_display_connector(Badge<DisplayConnector>, DisplayConnector& connector)
-{
-    return m_display_connector_nodes.with([&](auto& display_connectors) {
-        display_connectors.append(connector);
-    });
-}
-void GraphicsManagement::detach_display_connector(Badge<DisplayConnector>, DisplayConnector& connector)
-{
-    return m_display_connector_nodes.with([&](auto& display_connectors) {
-        display_connectors.remove(connector);
-    });
-}
-
 static inline bool is_vga_compatible_pci_device(PCI::DeviceIdentifier const& device_identifier)
 {
     // Note: Check for Display Controller, VGA Compatible Controller or

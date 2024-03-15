@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Singleton.h>
 #include <Kernel/API/Ioctl.h>
 #include <Kernel/API/MajorNumberAllocation.h>
 #include <Kernel/Devices/GPU/DisplayConnector.h>
@@ -14,6 +15,44 @@
 #include <Kernel/Memory/MemoryManager.h>
 
 namespace Kernel {
+
+static Singleton<SpinlockProtected<DisplayConnector::List, LockRank::None>> s_all_instances;
+
+SpinlockProtected<DisplayConnector::List, LockRank::None>& DisplayConnector::all_instances()
+{
+    return s_all_instances;
+}
+
+void DisplayConnector::deactivate_system_graphical_mode()
+{
+    s_all_instances->with([&](auto& display_connectors) {
+        for (auto& connector : display_connectors)
+            connector.set_display_mode(DisplayConnector::DisplayMode::Console);
+    });
+}
+void DisplayConnector::activate_system_graphical_mode()
+{
+    s_all_instances->with([&](auto& display_connectors) {
+        for (auto& connector : display_connectors)
+            connector.set_display_mode(DisplayConnector::DisplayMode::Graphical);
+    });
+}
+
+bool DisplayConnector::unref() const
+{
+    bool did_hit_zero = DisplayConnector::all_instances().with([&](auto&) {
+        if (deref_base())
+            return false;
+        m_list_node.remove();
+        const_cast<DisplayConnector&>(*this).revoke_weak_ptrs();
+        return true;
+    });
+    if (did_hit_zero) {
+        const_cast<DisplayConnector&>(*this).will_be_destroyed();
+        delete this;
+    }
+    return did_hit_zero;
+}
 
 DisplayConnector::DisplayConnector(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, bool enable_write_combine_optimization)
     : CharacterDevice(MajorAllocation::CharacterDeviceFamily::GPU, GraphicsManagement::the().allocate_minor_device_number())
@@ -54,8 +93,6 @@ ErrorOr<size_t> DisplayConnector::write(OpenFileDescription&, u64, UserOrKernelB
 
 void DisplayConnector::will_be_destroyed()
 {
-    GraphicsManagement::the().detach_display_connector({}, *this);
-
     // NOTE: We check if m_symlink_sysfs_component is not null, because if we failed
     // at some point in DisplayConnector::after_inserting(), then that method will tear down
     // the object internal members safely, so we don't want to do it again here.
@@ -133,7 +170,7 @@ ErrorOr<void> DisplayConnector::after_inserting()
     clean_from_sysfs_display_connector_device_directory.disarm();
     clean_symlink_to_device_identifier_directory.disarm();
 
-    GraphicsManagement::the().attach_new_display_connector({}, *this);
+    DisplayConnector::all_instances().with([&](auto& list) { list.append(*this); });
     if (m_enable_write_combine_optimization) {
         [[maybe_unused]] auto result = m_framebuffer_region->set_write_combine(true);
     }
@@ -147,7 +184,7 @@ bool DisplayConnector::console_mode() const
     return m_console_mode;
 }
 
-void DisplayConnector::set_display_mode(Badge<GraphicsManagement>, DisplayMode mode)
+void DisplayConnector::set_display_mode(DisplayMode mode)
 {
     SpinlockLocker locker(m_control_lock);
 

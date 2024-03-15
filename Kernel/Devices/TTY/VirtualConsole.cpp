@@ -108,12 +108,12 @@ void VirtualConsole::switch_to(unsigned index)
 
             if (active_console->is_graphical() && !was_graphical) {
                 active_console->set_active(true);
-                GraphicsManagement::the().activate_graphical_mode();
+                DisplayConnector::activate_system_graphical_mode();
                 return;
             }
 
             VERIFY(!active_console->is_graphical() && was_graphical);
-            GraphicsManagement::the().deactivate_graphical_mode();
+            DisplayConnector::deactivate_system_graphical_mode();
             active_console->set_active(true);
         });
     });

@@ -79,6 +79,10 @@ public:
     };
 
 public:
+    static void deactivate_system_graphical_mode();
+    static void activate_system_graphical_mode();
+
+    virtual bool unref() const override;
     virtual ~DisplayConnector() = default;
 
     virtual bool mutable_mode_setting_capable() const = 0;
@@ -97,8 +101,6 @@ public:
     ModeSetting current_mode_setting() const;
     virtual ErrorOr<void> set_y_offset(size_t y) = 0;
     virtual ErrorOr<void> unblank() = 0;
-
-    void set_display_mode(Badge<GraphicsManagement>, DisplayMode);
 
     Memory::Region const& framebuffer_region() const { return *m_framebuffer_region; }
 
@@ -131,6 +133,8 @@ protected:
     u8* framebuffer_data() { return m_framebuffer_data; }
 
 private:
+    void set_display_mode(DisplayMode);
+
     // ^File
     virtual bool is_seekable() const override { return true; }
     virtual bool can_read(OpenFileDescription const&, u64) const final override { return true; }
@@ -169,6 +173,10 @@ private:
     LockWeakPtr<Process> m_responsible_process;
     Spinlock<LockRank::None> m_responsible_process_lock {};
 
-    IntrusiveListNode<DisplayConnector, LockRefPtr<DisplayConnector>> m_list_node;
+    mutable IntrusiveListNode<DisplayConnector> m_list_node;
+
+public:
+    using List = IntrusiveList<&DisplayConnector::m_list_node>;
+    static SpinlockProtected<DisplayConnector::List, LockRank::None>& all_instances();
 };
 }

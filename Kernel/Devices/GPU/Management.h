@@ -33,18 +33,12 @@ public:
     unsigned allocate_minor_device_number() { return m_current_minor_number++; }
     GraphicsManagement();
 
-    void attach_new_display_connector(Badge<DisplayConnector>, DisplayConnector&);
-    void detach_display_connector(Badge<DisplayConnector>, DisplayConnector&);
-
     void set_vga_text_mode_cursor(size_t console_width, size_t x, size_t y);
     void disable_vga_text_mode_console_cursor();
     void disable_vga_emulation_access_permanently();
 
     LockRefPtr<Graphics::Console> console() const { return m_console; }
     void set_console(Graphics::Console&);
-
-    void deactivate_graphical_mode();
-    void activate_graphical_mode();
 
 private:
     void enable_vga_text_mode_console_cursor();
@@ -63,7 +57,6 @@ private:
 
     unsigned m_current_minor_number { 0 };
 
-    SpinlockProtected<IntrusiveList<&DisplayConnector::m_list_node>, LockRank::None> m_display_connector_nodes {};
 #if ARCH(X86_64)
     OwnPtr<VGAIOArbiter> m_vga_arbiter;
 #endif
