@@ -397,7 +397,8 @@ SupportedAlgorithmsMap supported_algorithms()
     // https://w3c.github.io/webcrypto/#rsa-oaep
     define_an_algorithm<RSAOAEP, RsaHashedKeyGenParams>("generateKey"_string, "RSA-OAEP"_string);
     define_an_algorithm<RSAOAEP>("exportKey"_string, "RSA-OAEP"_string);
-    // FIXME: encrypt, decrypt, importKey
+    define_an_algorithm<RSAOAEP, RsaHashedImportParams>("importKey"_string, "RSA-OAEP"_string);
+    // FIXME: encrypt, decrypt
 
     return internal_object;
 }
