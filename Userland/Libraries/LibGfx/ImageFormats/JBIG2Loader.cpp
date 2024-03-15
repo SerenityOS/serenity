@@ -743,9 +743,6 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(Gener
         || inputs.adaptive_template_pixels[3].x != -2 || inputs.adaptive_template_pixels[3].y != -2)
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot handle custom adaptive pixels yet");
 
-    if (inputs.is_typical_prediction_used)
-        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode TPGDON yet");
-
     if (inputs.is_extended_reference_template_used)
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode EXTTEMPLATE yet");
 
@@ -785,7 +782,23 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(Gener
     Vector<JBIG2::ArithmeticDecoder::Context> contexts;
     contexts.resize(1 << 16);
 
+    // Figure 8 – Reused context for coding the SLTP value when GBTEMPLATE is 0
+    constexpr u16 sltp_context_for_template_0 = 0b10011'0110010'0101;
+
+    // 6.2.5.7 Decoding the bitmap
+    bool ltp = false; // "LTP" in spec. "Line (uses) Typical Prediction" maybe?
     for (size_t y = 0; y < inputs.region_height; ++y) {
+        if (inputs.is_typical_prediction_used) {
+            // "SLTP" in spec. "Swap LTP" or "Switch LTP" maybe?
+            bool sltp = decoder.get_next_bit(contexts[sltp_context_for_template_0]);
+            ltp = ltp ^ sltp;
+            if (ltp) {
+                for (size_t x = 0; x < inputs.region_width; ++x)
+                    result->set_bit(x, y, get_pixel(result, (int)x, (int)y - 1));
+                continue;
+            }
+        }
+
         for (size_t x = 0; x < inputs.region_width; ++x) {
             u16 context = compute_context(result, x, y);
             bool bit = decoder.get_next_bit(contexts[context]);
