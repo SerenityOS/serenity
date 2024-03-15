@@ -70,6 +70,15 @@ void CryptoKey::set_usages(Vector<Bindings::KeyUsage> usages)
     });
 }
 
+String CryptoKey::algorithm_name() const
+{
+    if (m_algorithm_name.is_empty()) {
+        auto name = MUST(m_algorithm->get("name"));
+        m_algorithm_name = MUST(name.to_string(vm()));
+    }
+    return m_algorithm_name;
+}
+
 JS::NonnullGCPtr<CryptoKeyPair> CryptoKeyPair::create(JS::Realm& realm, JS::NonnullGCPtr<CryptoKey> public_key, JS::NonnullGCPtr<CryptoKey> private_key)
 {
     return realm.heap().allocate<CryptoKeyPair>(realm, realm, public_key, private_key);

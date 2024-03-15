@@ -106,6 +106,11 @@ class AlgorithmMethods {
 public:
     virtual ~AlgorithmMethods();
 
+    virtual WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::ArrayBuffer>> encrypt(AlgorithmParams const&, JS::NonnullGCPtr<CryptoKey>, ByteBuffer const&)
+    {
+        return WebIDL::NotSupportedError::create(m_realm, "encrypt is not supported"_fly_string);
+    }
+
     virtual WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::ArrayBuffer>> digest(AlgorithmParams const&, ByteBuffer const&)
     {
         return WebIDL::NotSupportedError::create(m_realm, "digest is not supported"_fly_string);
