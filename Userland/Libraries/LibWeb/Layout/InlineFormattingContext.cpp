@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2024, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -18,9 +18,13 @@
 
 namespace Web::Layout {
 
-InlineFormattingContext::InlineFormattingContext(LayoutState& state, BlockContainer const& containing_block, BlockFormattingContext& parent)
+InlineFormattingContext::InlineFormattingContext(
+    LayoutState& state,
+    BlockContainer const& containing_block,
+    LayoutState::UsedValues& containing_block_used_values,
+    BlockFormattingContext& parent)
     : FormattingContext(Type::Inline, state, containing_block, &parent)
-    , m_containing_block_state(state.get(containing_block))
+    , m_containing_block_used_values(containing_block_used_values)
 {
 }
 
@@ -39,7 +43,7 @@ BlockFormattingContext const& InlineFormattingContext::parent() const
 CSSPixels InlineFormattingContext::leftmost_x_offset_at(CSSPixels y) const
 {
     // NOTE: Floats are relative to the BFC root box, not necessarily the containing block of this IFC.
-    auto box_in_root_rect = content_box_rect_in_ancestor_coordinate_space(m_containing_block_state, parent().root());
+    auto box_in_root_rect = content_box_rect_in_ancestor_coordinate_space(m_containing_block_used_values, parent().root());
     CSSPixels y_in_root = box_in_root_rect.y() + y;
     auto space_and_containing_margin = parent().space_used_and_containing_margin_for_floats(y_in_root);
     auto left_side_floats_limit_to_right = space_and_containing_margin.left_total_containing_margin + space_and_containing_margin.left_used_space;
@@ -55,7 +59,7 @@ CSSPixels InlineFormattingContext::leftmost_x_offset_at(CSSPixels y) const
 
 AvailableSize InlineFormattingContext::available_space_for_line(CSSPixels y) const
 {
-    auto intrusions = parent().intrusion_by_floats_into_box(m_containing_block_state, y);
+    auto intrusions = parent().intrusion_by_floats_into_box(m_containing_block_used_values, y);
     if (m_available_space->width.is_definite()) {
         return AvailableSize::make_definite(m_available_space->width.to_px_or_zero() - (intrusions.left + intrusions.right));
     } else {
@@ -81,7 +85,7 @@ void InlineFormattingContext::run(Box const&, LayoutMode layout_mode, AvailableS
 
     CSSPixels content_height = 0;
 
-    for (auto& line_box : m_containing_block_state.line_boxes) {
+    for (auto& line_box : m_containing_block_used_values.line_boxes) {
         content_height += line_box.height();
     }
 
@@ -174,7 +178,7 @@ void InlineFormattingContext::dimension_box_on_line(Box const& box, LayoutMode l
 
     // NOTE: Flex containers with `auto` height are treated as `max-content`, so we can compute their height early.
     if (box_state.has_definite_height() || box.display().is_flex_inside())
-        parent().compute_height(box, AvailableSpace(AvailableSize::make_definite(width), AvailableSize::make_definite(m_containing_block_state.content_height())));
+        parent().compute_height(box, AvailableSpace(AvailableSize::make_definite(width), AvailableSize::make_definite(m_containing_block_used_values.content_height())));
 
     auto independent_formatting_context = layout_inside(box, layout_mode, box_state.available_inner_space_or_constraints_from(*m_available_space));
 
@@ -183,7 +187,7 @@ void InlineFormattingContext::dimension_box_on_line(Box const& box, LayoutMode l
         // FIXME: (10.6.6) If 'height' is 'auto', the height depends on the element's descendants per 10.6.7.
         parent().compute_height(box, AvailableSpace(AvailableSize::make_indefinite(), AvailableSize::make_indefinite()));
     } else {
-        auto inner_height = calculate_inner_height(box, AvailableSize::make_definite(m_containing_block_state.content_height()), height_value);
+        auto inner_height = calculate_inner_height(box, AvailableSize::make_definite(m_containing_block_used_values.content_height()), height_value);
         box_state.set_content_height(inner_height);
     }
 
@@ -242,12 +246,11 @@ void InlineFormattingContext::apply_justification_to_fragments(CSS::TextJustify 
 
 void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
 {
-    auto& containing_block_state = m_state.get_mutable(containing_block());
-    auto& line_boxes = containing_block_state.line_boxes;
+    auto& line_boxes = m_containing_block_used_values.line_boxes;
     line_boxes.clear_with_capacity();
 
-    InlineLevelIterator iterator(*this, m_state, containing_block(), layout_mode);
-    LineBuilder line_builder(*this, m_state);
+    InlineLevelIterator iterator(*this, m_state, containing_block(), m_containing_block_used_values, layout_mode);
+    LineBuilder line_builder(*this, m_state, m_containing_block_used_values);
 
     // NOTE: When we ignore collapsible whitespace chunks at the start of a line,
     //       we have to remember how much start margin that chunk had in the inline
@@ -371,7 +374,7 @@ void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
 
 bool InlineFormattingContext::any_floats_intrude_at_y(CSSPixels y) const
 {
-    auto box_in_root_rect = content_box_rect_in_ancestor_coordinate_space(m_containing_block_state, parent().root());
+    auto box_in_root_rect = content_box_rect_in_ancestor_coordinate_space(m_containing_block_used_values, parent().root());
     CSSPixels y_in_root = box_in_root_rect.y() + y;
     auto space_and_containing_margin = parent().space_used_and_containing_margin_for_floats(y_in_root);
     return space_and_containing_margin.left_used_space > 0 || space_and_containing_margin.right_used_space > 0;
@@ -379,8 +382,8 @@ bool InlineFormattingContext::any_floats_intrude_at_y(CSSPixels y) const
 
 bool InlineFormattingContext::can_fit_new_line_at_y(CSSPixels y) const
 {
-    auto top_intrusions = parent().intrusion_by_floats_into_box(m_containing_block_state, y);
-    auto bottom_intrusions = parent().intrusion_by_floats_into_box(m_containing_block_state, y + containing_block().computed_values().line_height() - 1);
+    auto top_intrusions = parent().intrusion_by_floats_into_box(m_containing_block_used_values, y);
+    auto bottom_intrusions = parent().intrusion_by_floats_into_box(m_containing_block_used_values, y + containing_block().computed_values().line_height() - 1);
 
     auto left_edge = [](auto& space) -> CSSPixels {
         return space.left;
