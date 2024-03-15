@@ -124,6 +124,20 @@ private:
     ConflictResolution m_conflict_resolution;
 };
 
+class UniqueColumnConstraint : public ColumnConstraint {
+public:
+    UniqueColumnConstraint(Optional<ByteString> name, ConflictResolution conflict_resolution)
+        : ColumnConstraint(move(name))
+        , m_conflict_resolution(move(conflict_resolution))
+    {
+    }
+
+    ConflictResolution const& conflict_resolution() const { return m_conflict_resolution; }
+
+private:
+    ConflictResolution m_conflict_resolution;
+};
+
 class ColumnDefinition : public ASTNode {
 public:
     ColumnDefinition(ByteString name, NonnullRefPtr<TypeName> type_name, RefPtr<ColumnConstraint> column_constraint)

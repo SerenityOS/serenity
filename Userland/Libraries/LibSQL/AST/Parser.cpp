@@ -925,6 +925,10 @@ RefPtr<ColumnConstraint> Parser::parse_column_constraint()
         auto conflict_resolution = parse_conflict_resolution();
         return create_ast_node<NotNullColumnConstraint>(move(name), move(conflict_resolution));
     }
+    if (consume_if(TokenType::Unique)) {
+        auto conflict_resolution = parse_conflict_resolution();
+        return create_ast_node<UniqueColumnConstraint>(move(name), move(conflict_resolution));
+    }
     return {};
 }
 
