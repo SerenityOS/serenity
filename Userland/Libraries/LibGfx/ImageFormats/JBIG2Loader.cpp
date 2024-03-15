@@ -846,6 +846,11 @@ static ErrorOr<void> decode_immediate_generic_region(JBIG2LoadingContext& contex
         || information_field.y_location + information_field.height > (u32)context.page.size.height()) {
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Region bounds outsize of page bounds");
     }
+    if (information_field.external_combination_operator() != RegionSegmentInformationField::CombinationOperator::Or
+        && information_field.external_combination_operator() != RegionSegmentInformationField::CombinationOperator::Xor
+        && information_field.external_combination_operator() != RegionSegmentInformationField::CombinationOperator::Replace)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot handle external combination operator other than OR, XOR, and REPLACE yet");
+
     for (size_t y = 0; y < information_field.height; ++y) {
         for (size_t x = 0; x < information_field.width; ++x) {
             // FIXME: Honor segment's combination operator instead of just copying.
@@ -904,6 +909,8 @@ static ErrorOr<void> decode_page_information(JBIG2LoadingContext& context, Segme
     context.page.bits = TRY(BitBuffer::create(page_information.bitmap_width, height));
 
     // "3) Fill the page buffer with the page's default pixel value."
+    if (default_color == 1)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Can only handle white default color for now");
     context.page.bits->fill(default_color != 0);
 
     return {};
