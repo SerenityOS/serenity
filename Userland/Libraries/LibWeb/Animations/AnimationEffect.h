@@ -67,8 +67,6 @@ class AnimationEffect : public Bindings::PlatformObject {
 public:
     static RefPtr<CSS::StyleValue const> parse_easing_string(JS::Realm& realm, StringView value);
 
-    static JS::NonnullGCPtr<AnimationEffect> create(JS::Realm&);
-
     EffectTiming get_timing() const;
     ComputedEffectTiming get_computed_timing() const;
     WebIDL::ExceptionOr<void> update_timing(OptionalEffectTiming timing = {});
