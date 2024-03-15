@@ -714,6 +714,8 @@ struct GenericRegionDecodingInputParameters {
 static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(GenericRegionDecodingInputParameters const& inputs, ReadonlyBytes data)
 {
     if (inputs.is_modified_modified_read) {
+        dbgln_if(JBIG2_DEBUG, "JBIG2ImageDecoderPlugin: MMR image data");
+
         // 6.2.6 Decoding using MMR coding
         auto buffer = TRY(CCITT::decode_ccitt_group4(data, inputs.region_width, inputs.region_height));
         auto result = TRY(BitBuffer::create(inputs.region_width, inputs.region_height));
@@ -784,6 +786,8 @@ static ErrorOr<void> decode_immediate_generic_region(JBIG2LoadingContext& contex
     auto data = segment.data;
     auto information_field = TRY(decode_region_segment_information_field(data));
     data = data.slice(sizeof(information_field));
+
+    dbgln_if(JBIG2_DEBUG, "Generic region: width={}, height={}, x={}, y={}, flags={:#x}", information_field.width, information_field.height, information_field.x_location, information_field.y_location, information_field.flags);
 
     // 7.4.6.2 Generic region segment flags
     if (data.is_empty())
