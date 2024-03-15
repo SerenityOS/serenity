@@ -933,6 +933,20 @@ RefPtr<ColumnConstraint> Parser::parse_column_constraint()
         auto expression = parse_expression();
         return create_ast_node<CheckColumnConstraint>(move(name), move(expression));
     }
+    if (consume_if(TokenType::Default)) {
+        if (consume_if(TokenType::ParenOpen)) {
+            auto expression = parse_expression();
+            consume(TokenType::ParenClose);
+            return create_ast_node<DefaultColumnConstraint>(move(name), move(expression));
+        }
+        auto maybe_expression = parse_literal_value_expression();
+        if (maybe_expression.is_null()) {
+            expected("a literal value"sv);
+            return {};
+        }
+        auto expression = maybe_expression.release_nonnull();
+        return create_ast_node<DefaultColumnConstraint>(move(name), move(expression));
+    }
     if (consume_if(TokenType::Collate)) {
         auto collation_name = consume(TokenType::Identifier).value();
         return create_ast_node<CollateColumnConstraint>(move(name), move(collation_name));

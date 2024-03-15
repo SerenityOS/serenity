@@ -152,6 +152,20 @@ private:
     NonnullRefPtr<Expression> m_expression;
 };
 
+class DefaultColumnConstraint : public ColumnConstraint {
+public:
+    DefaultColumnConstraint(Optional<ByteString> name, NonnullRefPtr<Expression> expression)
+        : ColumnConstraint(move(name))
+        , m_expression(move(expression))
+    {
+    }
+
+    NonnullRefPtr<Expression> const& expression() const { return m_expression; }
+
+private:
+    NonnullRefPtr<Expression> m_expression;
+};
+
 class CollateColumnConstraint : public ColumnConstraint {
 public:
     CollateColumnConstraint(Optional<ByteString> name, ByteString collation_name)
