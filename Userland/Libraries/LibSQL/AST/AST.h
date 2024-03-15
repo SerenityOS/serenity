@@ -90,6 +90,26 @@ private:
     Optional<ByteString> m_name;
 };
 
+class PrimaryKeyColumnConstraint : public ColumnConstraint {
+public:
+    PrimaryKeyColumnConstraint(Optional<ByteString> name, Order order, ConflictResolution conflict_resolution, bool autoincrement)
+        : ColumnConstraint(move(name))
+        , m_order(move(order))
+        , m_conflict_resolution(move(conflict_resolution))
+        , m_autoincrement(autoincrement)
+    {
+    }
+
+    Order const& order() const { return m_order; }
+    ConflictResolution const& conflict_resolution() const { return m_conflict_resolution; }
+    bool is_autoincrement() const { return m_autoincrement; }
+
+private:
+    Order m_order;
+    ConflictResolution m_conflict_resolution;
+    bool m_autoincrement;
+};
+
 class ColumnDefinition : public ASTNode {
 public:
     ColumnDefinition(ByteString name, NonnullRefPtr<TypeName> type_name, RefPtr<ColumnConstraint> column_constraint)

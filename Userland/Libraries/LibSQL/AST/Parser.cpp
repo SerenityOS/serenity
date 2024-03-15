@@ -913,7 +913,15 @@ RefPtr<ColumnConstraint> Parser::parse_column_constraint()
         name = consume(TokenType::Identifier).value();
     }
 
-    return create_ast_node<ColumnDefinition>(move(name), move(type_name));
+    if (consume_if(TokenType::Primary)) {
+        consume(TokenType::Key);
+        auto order = parse_order();
+        auto conflict_resolution = parse_conflict_resolution();
+        auto is_auto_increment = consume_if(TokenType::Autoincrement);
+        return create_ast_node<PrimaryKeyColumnConstraint>(move(name), move(order), move(conflict_resolution), is_auto_increment);
+    }
+
+    return {};
 }
 
 NonnullRefPtr<TypeName> Parser::parse_type_name()
