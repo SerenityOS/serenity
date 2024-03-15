@@ -201,8 +201,7 @@ ErrorOr<Optional<JsonObject>> NetworkSettingsWidget::create_settings_object()
 
 void NetworkSettingsWidget::switch_adapter(ByteString const& adapter)
 {
-    m_adapters_combobox->set_text(adapter, GUI::AllowCallback::No);
-    on_switch_adapter(adapter);
+    m_adapters_combobox->set_text(adapter);
 }
 
 }
