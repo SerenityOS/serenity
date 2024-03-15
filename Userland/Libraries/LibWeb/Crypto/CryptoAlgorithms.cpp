@@ -16,6 +16,7 @@
 #include <LibWeb/Crypto/CryptoAlgorithms.h>
 #include <LibWeb/Crypto/KeyAlgorithms.h>
 #include <LibWeb/Crypto/SubtleCrypto.h>
+#include <LibWeb/WebIDL/AbstractOperations.h>
 
 namespace Web::Crypto {
 
@@ -216,19 +217,17 @@ PBKDF2Params::~PBKDF2Params() = default;
 
 JS::ThrowCompletionOr<NonnullOwnPtr<AlgorithmParams>> PBKDF2Params::from_value(JS::VM& vm, JS::Value value)
 {
-    auto& realm = *vm.current_realm();
     auto& object = value.as_object();
 
     auto name_value = TRY(object.get("name"));
     auto name = TRY(name_value.to_string(vm));
 
     auto salt_value = TRY(object.get("salt"));
-    JS::Handle<WebIDL::BufferSource> salt;
 
     if (!salt_value.is_object() || !(is<JS::TypedArrayBase>(salt_value.as_object()) || is<JS::ArrayBuffer>(salt_value.as_object()) || is<JS::DataView>(salt_value.as_object())))
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "BufferSource");
 
-    salt = JS::make_handle(vm.heap().allocate<WebIDL::BufferSource>(realm, salt_value.as_object()));
+    auto salt = TRY_OR_THROW_OOM(vm, WebIDL::get_buffer_source_copy(salt_value.as_object()));
 
     auto iterations_value = TRY(object.get("iterations"));
     auto iterations = TRY(iterations_value.to_u32(vm));
