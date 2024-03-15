@@ -374,6 +374,34 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::ArrayBuffer>> RSAOAEP::encrypt(Algorith
 }
 
 // https://w3c.github.io/webcrypto/#rsa-oaep-operations
+WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::ArrayBuffer>> RSAOAEP::decrypt(AlgorithmParams const& params, JS::NonnullGCPtr<CryptoKey> key, AK::ByteBuffer const& ciphertext)
+{
+    auto& realm = m_realm;
+    auto& vm = realm.vm();
+    auto const& normalized_algorithm = static_cast<RsaOaepParams const&>(params);
+
+    // 1. If the [[type]] internal slot of key is not "private", then throw an InvalidAccessError.
+    if (key->type() != Bindings::KeyType::Private)
+        return WebIDL::InvalidAccessError::create(realm, "Key is not a private key"_fly_string);
+
+    // 2. Let label be the contents of the label member of normalizedAlgorithm or the empty octet string if the label member of normalizedAlgorithm is not present.
+    [[maybe_unused]] auto const& label = normalized_algorithm.label;
+
+    // 3. Perform the decryption operation defined in Section 7.1 of [RFC3447] with the key represented by key as the recipient's RSA private key,
+    //    the contents of ciphertext as the ciphertext to be decrypted, C, and label as the label, L, and with the hash function specified by the hash attribute
+    //    of the [[algorithm]] internal slot of key as the Hash option and MGF1 (defined in Section B.2.1 of [RFC3447]) as the MGF option.
+
+    // 4. If performing the operation results in an error, then throw an OperationError.
+
+    // 5. Let plaintext the value M that results from performing the operation.
+    // FIXME: Actually decrypt the data
+    auto plaintext = TRY_OR_THROW_OOM(vm, ByteBuffer::copy(ciphertext));
+
+    // 6. Return the result of creating an ArrayBuffer containing plaintext.
+    return JS::ArrayBuffer::create(realm, move(plaintext));
+}
+
+// https://w3c.github.io/webcrypto/#rsa-oaep-operations
 WebIDL::ExceptionOr<Variant<JS::NonnullGCPtr<CryptoKey>, JS::NonnullGCPtr<CryptoKeyPair>>> RSAOAEP::generate_key(AlgorithmParams const& params, bool extractable, Vector<Bindings::KeyUsage> const& key_usages)
 {
     // 1. If usages contains an entry which is not "encrypt", "decrypt", "wrapKey" or "unwrapKey", then throw a SyntaxError.
