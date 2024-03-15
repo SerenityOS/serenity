@@ -307,9 +307,9 @@ private:
     Optional<Supports::Feature> parse_supports_feature(TokenStream<ComponentValue>&);
 
     NonnullRefPtr<StyleValue> resolve_unresolved_style_value(DOM::Element&, Optional<Selector::PseudoElement::Type>, PropertyID, UnresolvedStyleValue const&);
-    bool expand_variables(DOM::Element&, Optional<Selector::PseudoElement::Type>, StringView property_name, HashMap<FlyString, NonnullRefPtr<PropertyDependencyNode>>& dependencies, TokenStream<ComponentValue>& source, Vector<ComponentValue>& dest);
-    bool expand_unresolved_values(DOM::Element&, StringView property_name, TokenStream<ComponentValue>& source, Vector<ComponentValue>& dest);
-    bool substitute_attr_function(DOM::Element& element, StringView property_name, Function const& attr_function, Vector<ComponentValue>& dest);
+    bool expand_variables(DOM::Element&, Optional<Selector::PseudoElement::Type>, FlyString const& property_name, HashMap<FlyString, NonnullRefPtr<PropertyDependencyNode>>& dependencies, TokenStream<ComponentValue>& source, Vector<ComponentValue>& dest);
+    bool expand_unresolved_values(DOM::Element&, FlyString const& property_name, TokenStream<ComponentValue>& source, Vector<ComponentValue>& dest);
+    bool substitute_attr_function(DOM::Element& element, FlyString const& property_name, Function const& attr_function, Vector<ComponentValue>& dest);
 
     static bool has_ignored_vendor_prefix(StringView);
 
