@@ -9,8 +9,10 @@
 #include <LibWeb/CSS/SelectorEngine.h>
 #include <LibWeb/CSS/StyleProperties.h>
 #include <LibWeb/CSS/ValueID.h>
+#include <LibWeb/DOM/Attr.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
+#include <LibWeb/DOM/NamedNodeMap.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/AttributeNames.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
@@ -28,6 +30,7 @@
 #include <LibWeb/HTML/HTMLSelectElement.h>
 #include <LibWeb/HTML/HTMLTextAreaElement.h>
 #include <LibWeb/Infra/Strings.h>
+#include <LibWeb/Namespace.h>
 
 namespace Web::SelectorEngine {
 
@@ -131,10 +134,16 @@ static inline bool matches_attribute(CSS::Selector::SimpleSelector::Attribute co
 
     auto const& attribute_name = attribute.qualified_name.name.name;
 
+    auto const* attr = element.namespace_uri() == Namespace::HTML ? element.attributes()->get_attribute_with_lowercase_qualified_name(attribute_name)
+                                                                  : element.attributes()->get_attribute(attribute_name);
+
     if (attribute.match_type == CSS::Selector::SimpleSelector::Attribute::MatchType::HasAttribute) {
         // Early way out in case of an attribute existence selector.
-        return element.has_attribute(attribute_name);
+        return attr != nullptr;
     }
+
+    if (!attr)
+        return false;
 
     auto const case_insensitive_match = (attribute.case_type == CSS::Selector::SimpleSelector::Attribute::CaseType::CaseInsensitiveMatch);
     auto const case_sensitivity = case_insensitive_match
@@ -144,14 +153,14 @@ static inline bool matches_attribute(CSS::Selector::SimpleSelector::Attribute co
     switch (attribute.match_type) {
     case CSS::Selector::SimpleSelector::Attribute::MatchType::ExactValueMatch:
         return case_insensitive_match
-            ? Infra::is_ascii_case_insensitive_match(element.attribute(attribute_name).value_or({}), attribute.value)
-            : element.attribute(attribute_name) == attribute.value;
+            ? Infra::is_ascii_case_insensitive_match(attr->value(), attribute.value)
+            : attr->value() == attribute.value;
     case CSS::Selector::SimpleSelector::Attribute::MatchType::ContainsWord: {
         if (attribute.value.is_empty()) {
             // This selector is always false is match value is empty.
             return false;
         }
-        auto attribute_value = element.attribute(attribute_name).value_or({});
+        auto const& attribute_value = attr->value();
         auto const view = attribute_value.bytes_as_string_view().split_view(' ');
         auto const size = view.size();
         for (size_t i = 0; i < size; ++i) {
@@ -166,9 +175,9 @@ static inline bool matches_attribute(CSS::Selector::SimpleSelector::Attribute co
     }
     case CSS::Selector::SimpleSelector::Attribute::MatchType::ContainsString:
         return !attribute.value.is_empty()
-            && element.attribute(attribute_name).value_or({}).contains(attribute.value, case_sensitivity);
+            && attr->value().contains(attribute.value, case_sensitivity);
     case CSS::Selector::SimpleSelector::Attribute::MatchType::StartsWithSegment: {
-        auto const element_attr_value = element.attribute(attribute_name).value_or({});
+        auto const& element_attr_value = attr->value();
         if (element_attr_value.is_empty()) {
             // If the attribute value on element is empty, the selector is true
             // if the match value is also empty and false otherwise.
@@ -184,10 +193,10 @@ static inline bool matches_attribute(CSS::Selector::SimpleSelector::Attribute co
     }
     case CSS::Selector::SimpleSelector::Attribute::MatchType::StartsWithString:
         return !attribute.value.is_empty()
-            && element.attribute(attribute_name).value_or({}).bytes_as_string_view().starts_with(attribute.value, case_sensitivity);
+            && attr->value().bytes_as_string_view().starts_with(attribute.value, case_sensitivity);
     case CSS::Selector::SimpleSelector::Attribute::MatchType::EndsWithString:
         return !attribute.value.is_empty()
-            && element.attribute(attribute_name).value_or({}).bytes_as_string_view().ends_with(attribute.value, case_sensitivity);
+            && attr->value().bytes_as_string_view().ends_with(attribute.value, case_sensitivity);
     default:
         break;
     }
