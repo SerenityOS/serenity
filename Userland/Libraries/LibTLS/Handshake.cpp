@@ -11,7 +11,6 @@
 
 #include <LibCore/Timer.h>
 #include <LibCrypto/ASN1/DER.h>
-#include <LibCrypto/PK/Code/EMSA_PSS.h>
 #include <LibTLS/TLSv12.h>
 
 namespace TLS {

@@ -17,7 +17,6 @@
 #include <LibCrypto/Curves/X25519.h>
 #include <LibCrypto/Curves/X448.h>
 #include <LibCrypto/PK/Code/EMSA_PKCS1_V1_5.h>
-#include <LibCrypto/PK/Code/EMSA_PSS.h>
 #include <LibTLS/TLSv12.h>
 
 namespace TLS {

@@ -17,7 +17,6 @@
 #include <LibCrypto/Curves/Ed25519.h>
 #include <LibCrypto/Curves/SECPxxxr1.h>
 #include <LibCrypto/PK/Code/EMSA_PKCS1_V1_5.h>
-#include <LibCrypto/PK/Code/EMSA_PSS.h>
 #include <LibFileSystem/FileSystem.h>
 #include <LibTLS/Certificate.h>
 #include <LibTLS/TLSv12.h>

@@ -161,10 +161,3 @@ TEST_CASE(test_RSA_encrypt_decrypt)
 
     EXPECT(memcmp(enc.data(), "WellHelloFriendsWellHelloFriendsWellHelloFriendsWellHelloFriends", 64) == 0);
 }
-
-TEST_CASE(test_RSA_EMSA_PSS_construction)
-{
-    // This is a template validity test
-    Crypto::PK::RSA rsa;
-    Crypto::PK::RSA_EMSA_PSS<Crypto::Hash::SHA256> rsa_esma_pss(rsa);
-}
