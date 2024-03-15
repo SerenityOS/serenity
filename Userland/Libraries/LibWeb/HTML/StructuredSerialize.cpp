@@ -168,20 +168,20 @@ public:
         bool return_primitive_type = true;
         // 4. If Type(value) is Undefined, Null, Boolean, Number, BigInt, or String, then return { [[Type]]: "primitive", [[Value]]: value }.
         if (value.is_undefined()) {
-            m_serialized.append(ValueTag::UndefinedPrimitive);
+            serialize_enum(m_serialized, ValueTag::UndefinedPrimitive);
         } else if (value.is_null()) {
-            m_serialized.append(ValueTag::NullPrimitive);
+            serialize_enum(m_serialized, ValueTag::NullPrimitive);
         } else if (value.is_boolean()) {
-            m_serialized.append(ValueTag::BooleanPrimitive);
+            serialize_enum(m_serialized, ValueTag::BooleanPrimitive);
             serialize_boolean_primitive(m_serialized, value);
         } else if (value.is_number()) {
-            m_serialized.append(ValueTag::NumberPrimitive);
+            serialize_enum(m_serialized, ValueTag::NumberPrimitive);
             serialize_number_primitive(m_serialized, value);
         } else if (value.is_bigint()) {
-            m_serialized.append(ValueTag::BigIntPrimitive);
+            serialize_enum(m_serialized, ValueTag::BigIntPrimitive);
             TRY(serialize_big_int_primitive(m_vm, m_serialized, value));
         } else if (value.is_string()) {
-            m_serialized.append(ValueTag::StringPrimitive);
+            serialize_enum(m_serialized, ValueTag::StringPrimitive);
             TRY(serialize_string_primitive(m_vm, m_serialized, value));
         } else {
             return_primitive_type = false;
@@ -198,31 +198,31 @@ public:
 
         // 7. If value has a [[BooleanData]] internal slot, then set serialized to { [[Type]]: "Boolean", [[BooleanData]]: value.[[BooleanData]] }.
         if (value.is_object() && is<JS::BooleanObject>(value.as_object())) {
-            m_serialized.append(ValueTag::BooleanObject);
+            serialize_enum(m_serialized, ValueTag::BooleanObject);
             serialize_boolean_object(m_serialized, value);
         }
 
         // 8. Otherwise, if value has a [[NumberData]] internal slot, then set serialized to { [[Type]]: "Number", [[NumberData]]: value.[[NumberData]] }.
         else if (value.is_object() && is<JS::NumberObject>(value.as_object())) {
-            m_serialized.append(ValueTag::NumberObject);
+            serialize_enum(m_serialized, ValueTag::NumberObject);
             serialize_number_object(m_serialized, value);
         }
 
         // 9. Otherwise, if value has a [[BigIntData]] internal slot, then set serialized to { [[Type]]: "BigInt", [[BigIntData]]: value.[[BigIntData]] }.
         else if (value.is_object() && is<JS::BigIntObject>(value.as_object())) {
-            m_serialized.append(ValueTag::BigIntObject);
+            serialize_enum(m_serialized, ValueTag::BigIntObject);
             TRY(serialize_big_int_object(m_vm, m_serialized, value));
         }
 
         // 10. Otherwise, if value has a [[StringData]] internal slot, then set serialized to { [[Type]]: "String", [[StringData]]: value.[[StringData]] }.
         else if (value.is_object() && is<JS::StringObject>(value.as_object())) {
-            m_serialized.append(ValueTag::StringObject);
+            serialize_enum(m_serialized, ValueTag::StringObject);
             TRY(serialize_string_object(m_vm, m_serialized, value));
         }
 
         // 11. Otherwise, if value has a [[DateValue]] internal slot, then set serialized to { [[Type]]: "Date", [[DateValue]]: value.[[DateValue]] }.
         else if (value.is_object() && is<JS::Date>(value.as_object())) {
-            m_serialized.append(ValueTag::DateObject);
+            serialize_enum(m_serialized, ValueTag::DateObject);
             serialize_date_object(m_serialized, value);
         }
 
@@ -230,7 +230,7 @@ public:
         //     { [[Type]]: "RegExp", [[RegExpMatcher]]: value.[[RegExpMatcher]], [[OriginalSource]]: value.[[OriginalSource]],
         //       [[OriginalFlags]]: value.[[OriginalFlags]] }.
         else if (value.is_object() && is<JS::RegExpObject>(value.as_object())) {
-            m_serialized.append(ValueTag::RegExpObject);
+            serialize_enum(m_serialized, ValueTag::RegExpObject);
             TRY(serialize_reg_exp_object(m_vm, m_serialized, value));
         }
 
@@ -249,7 +249,7 @@ public:
         // 15. Otherwise, if value has [[MapData]] internal slot, then:
         else if (value.is_object() && is<JS::Map>(value.as_object())) {
             // 1. Set serialized to { [[Type]]: "Map", [[MapData]]: a new empty List }.
-            m_serialized.append(ValueTag::MapObject);
+            serialize_enum(m_serialized, ValueTag::MapObject);
             // 2. Set deep to true.
             deep = true;
         }
@@ -257,7 +257,7 @@ public:
         // 16. Otherwise, if value has [[SetData]] internal slot, then:
         else if (value.is_object() && is<JS::Set>(value.as_object())) {
             // 1. Set serialized to { [[Type]]: "Set", [[SetData]]: a new empty List }.
-            m_serialized.append(ValueTag::SetObject);
+            serialize_enum(m_serialized, ValueTag::SetObject);
             // 2. Set deep to true.
             deep = true;
         }
@@ -284,8 +284,8 @@ public:
 
             // 5. Set serialized to { [[Type]]: "Error", [[Name]]: name, [[Message]]: message }.
             // FIXME: 6. User agents should attach a serialized representation of any interesting accompanying data which are not yet specified, notably the stack property, to serialized.
-            m_serialized.append(ValueTag::ErrorObject);
-            m_serialized.append(type);
+            serialize_enum(m_serialized, ValueTag::ErrorObject);
+            serialize_enum(m_serialized, type);
             serialize_primitive_type(m_serialized, message.has_value());
             if (message.has_value())
                 TRY(serialize_string(m_vm, m_serialized, *message));
@@ -299,7 +299,7 @@ public:
             u64 length = MUST(JS::length_of_array_like(m_vm, value.as_object()));
 
             // 3. Set serialized to { [[Type]]: "Array", [[Length]]: valueLen, [[Properties]]: a new empty List }.
-            m_serialized.append(ValueTag::ArrayObject);
+            serialize_enum(m_serialized, ValueTag::ArrayObject);
             serialize_primitive_type(m_serialized, length);
 
             // 4. Set deep to true.
@@ -310,7 +310,7 @@ public:
         else if (value.is_object() && is<Bindings::Serializable>(value.as_object())) {
             auto& serializable = dynamic_cast<Bindings::Serializable&>(value.as_object());
 
-            m_serialized.append(ValueTag::SerializableObject);
+            serialize_enum(m_serialized, ValueTag::SerializableObject);
 
             TRY(serialize_string(m_vm, m_serialized, serializable.interface_name()));
 
@@ -335,7 +335,7 @@ public:
         // 24. Otherwise:
         else {
             // 1. Set serialized to { [[Type]]: "Object", [[Properties]]: a new empty List }.
-            m_serialized.append(ValueTag::Object);
+            serialize_enum(m_serialized, ValueTag::Object);
 
             // 2. Set deep to true.
             deep = true;
@@ -593,7 +593,7 @@ WebIDL::ExceptionOr<void> serialize_array_buffer(JS::VM& vm, Vector<u32>& vector
         }
         // 6. Otherwise, set serialized to { [[Type]]: "ArrayBuffer", [[ArrayBufferData]]: dataCopy, [[ArrayBufferByteLength]]: size }.
         else {
-            vector.append(ValueTag::ArrayBuffer);
+            serialize_enum(vector, ValueTag::ArrayBuffer);
             TRY(serialize_bytes(vm, vector, data_copy.buffer().bytes()));
         }
     }
@@ -635,7 +635,7 @@ WebIDL::ExceptionOr<void> serialize_viewed_array_buffer(JS::VM& vm, Vector<u32>&
     // 5. If value has a [[DataView]] internal slot, then set serialized to { [[Type]]: "ArrayBufferView", [[Constructor]]: "DataView",
     //    [[ArrayBufferSerialized]]: bufferSerialized, [[ByteLength]]: value.[[ByteLength]], [[ByteOffset]]: value.[[ByteOffset]] }.
     if constexpr (IsSame<ViewType, JS::DataView>) {
-        vector.append(ValueTag::ArrayBufferView);
+        serialize_enum(vector, ValueTag::ArrayBufferView);
         vector.extend(move(buffer_serialized));               // [[ArrayBufferSerialized]]
         TRY(serialize_string(vm, vector, "DataView"_string)); // [[Constructor]]
         serialize_primitive_type(vector, JS::get_view_byte_length(view_record));
@@ -649,7 +649,7 @@ WebIDL::ExceptionOr<void> serialize_viewed_array_buffer(JS::VM& vm, Vector<u32>&
         // 2. Set serialized to { [[Type]]: "ArrayBufferView", [[Constructor]]: value.[[TypedArrayName]],
         //    [[ArrayBufferSerialized]]: bufferSerialized, [[ByteLength]]: value.[[ByteLength]],
         //    [[ByteOffset]]: value.[[ByteOffset]], [[ArrayLength]]: value.[[ArrayLength]] }.
-        vector.append(ValueTag::ArrayBufferView);
+        serialize_enum(vector, ValueTag::ArrayBufferView);
         vector.extend(move(buffer_serialized));                 // [[ArrayBufferSerialized]]
         TRY(serialize_string(vm, vector, view.element_name())); // [[Constructor]]
         serialize_primitive_type(vector, JS::typed_array_byte_length(view_record));
@@ -674,7 +674,7 @@ public:
     // https://html.spec.whatwg.org/multipage/structured-data.html#structureddeserialize
     WebIDL::ExceptionOr<JS::Value> deserialize()
     {
-        auto tag = m_serialized[m_position++];
+        auto tag = deserialize_primitive_type<ValueTag>(m_serialized, m_position);
 
         // 2. If memory[serialized] exists, then return memory[serialized].
         if (tag == ValueTag::ObjectReference) {
@@ -840,7 +840,7 @@ public:
         // 21. Otherwise, if serialized.[[Type]] is "Error", then:
         case ValueTag::ErrorObject: {
             auto& realm = *m_vm.current_realm();
-            auto type = static_cast<ErrorType>(m_serialized[m_position++]);
+            auto type = deserialize_primitive_type<ErrorType>(m_serialized, m_position);
             auto has_message = deserialize_primitive_type<bool>(m_serialized, m_position);
             if (has_message) {
                 auto message = TRY(deserialize_string(m_vm, m_serialized, m_position));

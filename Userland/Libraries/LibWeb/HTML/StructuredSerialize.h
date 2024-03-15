@@ -74,6 +74,13 @@ void serialize_primitive_type(SerializationRecord& serialized, T value)
     serialized.append(bit_cast<u32*>(&value), sizeof(T) / 4);
 }
 
+template<typename T>
+requires(IsEnum<T>)
+void serialize_enum(SerializationRecord& serialized, T value)
+{
+    serialize_primitive_type<UnderlyingType<T>>(serialized, to_underlying(value));
+}
+
 WebIDL::ExceptionOr<void> serialize_bytes(JS::VM& vm, Vector<u32>& vector, ReadonlyBytes bytes);
 WebIDL::ExceptionOr<void> serialize_string(JS::VM& vm, Vector<u32>& vector, DeprecatedFlyString const& string);
 WebIDL::ExceptionOr<void> serialize_string(JS::VM& vm, Vector<u32>& vector, String const& string);
@@ -92,7 +99,7 @@ JS::NonnullGCPtr<JS::Date> deserialize_date_object(JS::Realm& realm, ReadonlySpa
 WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::RegExpObject>> deserialize_reg_exp_object(JS::Realm& realm, ReadonlySpan<u32> const& serialized, size_t& position);
 
 template<typename T>
-requires(IsIntegral<T> || IsFloatingPoint<T>)
+requires(IsIntegral<T> || IsFloatingPoint<T> || IsEnum<T>)
 T deserialize_primitive_type(ReadonlySpan<u32> const& serialized, size_t& position)
 {
     T value;
