@@ -89,6 +89,7 @@ struct GraphicsState {
 struct RenderingPreferences {
     bool show_clipping_paths { false };
     bool show_images { true };
+    bool show_hidden_text { false };
     bool show_diagnostics { false };
 
     bool clip_images { true };
@@ -120,6 +121,8 @@ public:
     Gfx::AffineTransform const& calculate_text_rendering_matrix() const;
 
     PDFErrorOr<void> render_type3_glyph(Gfx::FloatPoint, StreamObject const&, Gfx::AffineTransform const&, Optional<NonnullRefPtr<DictObject>>);
+
+    bool show_hidden_text() const { return m_rendering_preferences.show_hidden_text; }
 
 private:
     Renderer(RefPtr<Document>, Page const&, RefPtr<Gfx::Bitmap>, Color background_color, RenderingPreferences);

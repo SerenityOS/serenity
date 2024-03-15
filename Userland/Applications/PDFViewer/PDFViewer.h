@@ -68,6 +68,8 @@ public:
     void set_show_clipping_paths(bool);
     bool show_images() const { return m_rendering_preferences.show_images; }
     void set_show_images(bool);
+    bool show_hidden_text() const { return m_rendering_preferences.show_hidden_text; }
+    void set_show_hidden_text(bool);
     bool clip_images() const { return m_rendering_preferences.clip_images; }
     void set_clip_images(bool);
     bool clip_paths() const { return m_rendering_preferences.clip_paths; }

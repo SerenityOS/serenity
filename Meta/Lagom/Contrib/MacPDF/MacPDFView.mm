@@ -185,6 +185,10 @@ static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
         [item setState:_preferences.show_images ? NSControlStateValueOn : NSControlStateValueOff];
         return _doc ? YES : NO;
     }
+    if ([item action] == @selector(toggleShowHiddenText:)) {
+        [item setState:_preferences.show_hidden_text ? NSControlStateValueOn : NSControlStateValueOff];
+        return _doc ? YES : NO;
+    }
     return NO;
 }
 
@@ -224,6 +228,14 @@ static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
 {
     if (_doc) {
         _preferences.show_images = !_preferences.show_images;
+        [self invalidateCachedBitmap];
+    }
+}
+
+- (IBAction)toggleShowHiddenText:(id)sender
+{
+    if (_doc) {
+        _preferences.show_hidden_text = !_preferences.show_hidden_text;
         [self invalidateCachedBitmap];
     }
 }
