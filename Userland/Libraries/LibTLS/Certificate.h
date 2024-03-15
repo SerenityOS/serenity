@@ -12,6 +12,7 @@
 #include <AK/Time.h>
 #include <AK/Types.h>
 #include <LibCore/ConfigFile.h>
+#include <LibCrypto/ASN1/DER.h>
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
 #include <LibCrypto/PK/RSA.h>
 #include <LibTLS/Extensions.h>
@@ -244,6 +245,7 @@ public:
     AlgorithmIdentifier algorithm;
     ByteBuffer raw_key;
 };
+ErrorOr<SubjectPublicKey> parse_subject_public_key_info(Crypto::ASN1::Decoder& decoder, Vector<StringView> current_scope = {});
 
 class Certificate {
 public:
