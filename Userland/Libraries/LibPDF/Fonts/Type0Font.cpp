@@ -478,8 +478,10 @@ PDFErrorOr<Gfx::FloatPoint> Type0Font::draw_string(Gfx::Painter& painter, Gfx::F
             }
         }
 
-        Gfx::FloatPoint glyph_render_position = text_rendering_matrix.map(glyph_position - Gfx::FloatPoint { position_vector_x, position_vector_y });
-        TRY(m_cid_font_type->draw_glyph(painter, glyph_render_position, glyph_width, cid, renderer));
+        if (renderer.text_state().rendering_mode != TextRenderingMode::Invisible || renderer.show_hidden_text()) {
+            Gfx::FloatPoint glyph_render_position = text_rendering_matrix.map(glyph_position - Gfx::FloatPoint { position_vector_x, position_vector_y });
+            TRY(m_cid_font_type->draw_glyph(painter, glyph_render_position, glyph_width, cid, renderer));
+        }
 
         // glyph_width is scaled by `text_rendering_matrix.x_scale() * renderer.text_state().font_size / horizontal_scaling`,
         // but it should only be scaled by `renderer.text_state().font_size`.

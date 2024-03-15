@@ -694,6 +694,12 @@
                                     <action selector="toggleShowImages:" target="-1" id="mNE-9J-Nle"/>
                                 </connections>
                             </menuItem>
+                            <menuItem title="Show Hidden Text" id="PhM-XC-ExK">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="toggleShowHiddenText:" target="-1" id="7iT-L2-Jd1"/>
+                                </connections>
+                            </menuItem>
                         </items>
                     </menu>
                 </menuItem>

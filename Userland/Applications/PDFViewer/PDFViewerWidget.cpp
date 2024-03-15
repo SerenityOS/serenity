@@ -271,6 +271,11 @@ ErrorOr<void> PDFViewerWidget::initialize_menubar(GUI::Window& window)
     });
     toggle_show_images->set_checked(m_viewer->show_images());
     debug_menu->add_action(toggle_show_images);
+    auto toggle_show_hidden_text = GUI::Action::create_checkable("Show &Hidden Text", [&](auto& action) {
+        m_viewer->set_show_hidden_text(action.is_checked());
+    });
+    toggle_show_hidden_text->set_checked(m_viewer->show_hidden_text());
+    debug_menu->add_action(toggle_show_hidden_text);
     auto toggle_clip_images = GUI::Action::create_checkable("Clip I&mages", [&](auto& action) {
         m_viewer->set_clip_images(action.is_checked());
     });

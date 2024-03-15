@@ -164,6 +164,11 @@
     [_pdfView toggleShowImages:sender];
 }
 
+- (IBAction)toggleShowHiddenText:(id)sender
+{
+    [_pdfView toggleShowHiddenText:sender];
+}
+
 - (IBAction)showGoToPageDialog:(id)sender
 {
     auto alert = [[NSAlert alloc] init];

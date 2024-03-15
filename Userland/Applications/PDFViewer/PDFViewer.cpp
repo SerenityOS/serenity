@@ -48,6 +48,7 @@ PDFViewer::PDFViewer()
     m_page_view_mode = static_cast<PageViewMode>(Config::read_i32("PDFViewer"sv, "Display"sv, "PageMode"sv, 0));
     m_rendering_preferences.show_clipping_paths = Config::read_bool("PDFViewer"sv, "Rendering"sv, "ShowClippingPaths"sv, false);
     m_rendering_preferences.show_images = Config::read_bool("PDFViewer"sv, "Rendering"sv, "ShowImages"sv, true);
+    m_rendering_preferences.show_hidden_text = Config::read_bool("PDFViewer"sv, "Rendering"sv, "ShowHiddenText"sv, false);
     m_rendering_preferences.show_diagnostics = Config::read_bool("PDFViewer"sv, "Rendering"sv, "ShowDiagnostics"sv, false);
     m_rendering_preferences.clip_images = Config::read_bool("PDFViewer"sv, "Rendering"sv, "ClipImages"sv, true);
     m_rendering_preferences.clip_paths = Config::read_bool("PDFViewer"sv, "Rendering"sv, "ClipPaths"sv, true);
@@ -189,6 +190,13 @@ void PDFViewer::set_show_images(bool show_images)
 {
     m_rendering_preferences.show_images = show_images;
     Config::write_bool("PDFViewer"sv, "Rendering"sv, "ShowImages"sv, show_images);
+    update();
+}
+
+void PDFViewer::set_show_hidden_text(bool show_hidden_text)
+{
+    m_rendering_preferences.show_hidden_text = show_hidden_text;
+    Config::write_bool("PDFViewer"sv, "Rendering"sv, "ShowHiddenText"sv, show_hidden_text);
     update();
 }
 
