@@ -56,7 +56,7 @@ String PropertyOwningCSSStyleDeclaration::item(size_t index) const
 {
     if (index >= m_properties.size())
         return {};
-    return MUST(String::from_utf8(CSS::string_from_property_id(m_properties[index].property_id)));
+    return CSS::string_from_property_id(m_properties[index].property_id).to_string();
 }
 
 JS::NonnullGCPtr<ElementInlineCSSStyleDeclaration> ElementInlineCSSStyleDeclaration::create(DOM::Element& element, Vector<StyleProperty> properties, HashMap<FlyString, StyleProperty> custom_properties)

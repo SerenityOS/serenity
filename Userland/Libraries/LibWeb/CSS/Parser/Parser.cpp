@@ -7019,7 +7019,7 @@ static RefPtr<StyleValue const> get_custom_property(DOM::Element const& element,
     return nullptr;
 }
 
-bool Parser::expand_variables(DOM::Element& element, Optional<Selector::PseudoElement::Type> pseudo_element, StringView property_name, HashMap<FlyString, NonnullRefPtr<PropertyDependencyNode>>& dependencies, TokenStream<ComponentValue>& source, Vector<ComponentValue>& dest)
+bool Parser::expand_variables(DOM::Element& element, Optional<Selector::PseudoElement::Type> pseudo_element, FlyString const& property_name, HashMap<FlyString, NonnullRefPtr<PropertyDependencyNode>>& dependencies, TokenStream<ComponentValue>& source, Vector<ComponentValue>& dest)
 {
     // Arbitrary large value chosen to avoid the billion-laughs attack.
     // https://www.w3.org/TR/css-variables-1/#long-variables
@@ -7081,7 +7081,7 @@ bool Parser::expand_variables(DOM::Element& element, Optional<Selector::PseudoEl
         // but rebuilding it every time.
         if (custom_property_name == property_name)
             return false;
-        auto parent = get_dependency_node(MUST(FlyString::from_utf8(property_name)));
+        auto parent = get_dependency_node(property_name);
         auto child = get_dependency_node(custom_property_name);
         parent->add_child(child);
         if (parent->has_cycles())
@@ -7109,7 +7109,7 @@ bool Parser::expand_variables(DOM::Element& element, Optional<Selector::PseudoEl
     return true;
 }
 
-bool Parser::expand_unresolved_values(DOM::Element& element, StringView property_name, TokenStream<ComponentValue>& source, Vector<ComponentValue>& dest)
+bool Parser::expand_unresolved_values(DOM::Element& element, FlyString const& property_name, TokenStream<ComponentValue>& source, Vector<ComponentValue>& dest)
 {
     while (source.has_next_token()) {
         auto const& value = source.next_token();
@@ -7180,7 +7180,7 @@ bool Parser::expand_unresolved_values(DOM::Element& element, StringView property
 }
 
 // https://drafts.csswg.org/css-values-5/#attr-substitution
-bool Parser::substitute_attr_function(DOM::Element& element, StringView property_name, Function const& attr_function, Vector<ComponentValue>& dest)
+bool Parser::substitute_attr_function(DOM::Element& element, FlyString const& property_name, Function const& attr_function, Vector<ComponentValue>& dest)
 {
     // First, parse the arguments to attr():
     // attr() = attr( <q-name> <attr-type>? , <declaration-value>?)
