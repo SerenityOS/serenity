@@ -929,6 +929,10 @@ RefPtr<ColumnConstraint> Parser::parse_column_constraint()
         auto conflict_resolution = parse_conflict_resolution();
         return create_ast_node<UniqueColumnConstraint>(move(name), move(conflict_resolution));
     }
+    if (consume_if(TokenType::Check)) {
+        auto expression = parse_expression();
+        return create_ast_node<CheckColumnConstraint>(move(name), move(expression));
+    }
     return {};
 }
 

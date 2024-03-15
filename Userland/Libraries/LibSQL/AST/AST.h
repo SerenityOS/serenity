@@ -138,6 +138,20 @@ private:
     ConflictResolution m_conflict_resolution;
 };
 
+class CheckColumnConstraint : public ColumnConstraint {
+public:
+    CheckColumnConstraint(Optional<ByteString> name, NonnullRefPtr<Expression> expression)
+        : ColumnConstraint(move(name))
+        , m_expression(move(expression))
+    {
+    }
+
+    NonnullRefPtr<Expression> const& expression() const { return m_expression; }
+
+private:
+    NonnullRefPtr<Expression> m_expression;
+};
+
 class ColumnDefinition : public ASTNode {
 public:
     ColumnDefinition(ByteString name, NonnullRefPtr<TypeName> type_name, RefPtr<ColumnConstraint> column_constraint)
