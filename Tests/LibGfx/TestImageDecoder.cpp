@@ -368,13 +368,13 @@ TEST_CASE(test_jbig2_arithmetic_decoder)
 
     // "For this entire test, a single value of CX is used. I(CX) is initially 0 and MPS(CX) is initially 0."
     Gfx::JBIG2::ArithmeticDecoder::Context context { 0, 0 };
-    auto decoder = MUST(Gfx::JBIG2::ArithmeticDecoder::initialize(input, context));
+    auto decoder = MUST(Gfx::JBIG2::ArithmeticDecoder::initialize(input));
 
     for (auto expected : output) {
         u8 actual = 0;
         for (size_t i = 0; i < 8; ++i) {
             actual <<= 1;
-            actual |= static_cast<u8>(decoder.get_next_bit());
+            actual |= static_cast<u8>(decoder.get_next_bit(context));
         }
         EXPECT_EQ(actual, expected);
     }

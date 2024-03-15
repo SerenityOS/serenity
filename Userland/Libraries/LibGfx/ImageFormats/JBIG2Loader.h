@@ -26,9 +26,9 @@ public:
         u8 is_mps; // "More probable symbol" (E.1.1). 0 or 1.
     };
 
-    static ErrorOr<ArithmeticDecoder> initialize(ReadonlyBytes data, Context context);
+    static ErrorOr<ArithmeticDecoder> initialize(ReadonlyBytes data);
 
-    bool get_next_bit();
+    bool get_next_bit(Context& context);
 
 private:
     ArithmeticDecoder(ReadonlyBytes data)
@@ -63,9 +63,9 @@ private:
 
     u8 CT; // Count of the number of bits in C.
 
-    Context CX;
-    static u16& I(Context& cx) { return cx.I; }
-    static u8& MPS(Context& cx) { return cx.is_mps; }
+    Context* CX;
+    static u16& I(Context* cx) { return cx->I; }
+    static u8& MPS(Context* cx) { return cx->is_mps; }
     static u16 Qe(u16);
     static u8 NMPS(u16);
     static u8 NLPS(u16);
