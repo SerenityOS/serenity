@@ -901,7 +901,17 @@ NonnullRefPtr<ColumnDefinition> Parser::parse_column_definition()
         // https://www.sqlite.org/datatype3.html: If no type is specified then the column has affinity BLOB.
         : create_ast_node<TypeName>("BLOB", Vector<NonnullRefPtr<SignedNumber>> {});
 
-    // FIXME: Parse "column-constraint".
+    auto column_constraint = parse_column_constraint();
+    return create_ast_node<ColumnDefinition>(move(name), move(type_name), move(column_constraint));
+}
+
+RefPtr<ColumnConstraint> Parser::parse_column_constraint()
+{
+    // https://sqlite.org/syntax/column-constraint.html
+    Optional<ByteString> name = {};
+    if (consume_if(TokenType::Constraint)) {
+        name = consume(TokenType::Identifier).value();
+    }
 
     return create_ast_node<ColumnDefinition>(move(name), move(type_name));
 }

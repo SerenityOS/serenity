@@ -69,20 +69,36 @@ private:
     Vector<NonnullRefPtr<SignedNumber>> m_signed_numbers;
 };
 
+class ColumnConstraint : public ASTNode {
+public:
+    ColumnConstraint(Optional<ByteString> name)
+        : m_name(move(name))
+    {
+    }
+
+    Optional<ByteString> const& name() const { return m_name; }
+
+private:
+    Optional<ByteString> m_name;
+};
+
 class ColumnDefinition : public ASTNode {
 public:
-    ColumnDefinition(ByteString name, NonnullRefPtr<TypeName> type_name)
+    ColumnDefinition(ByteString name, NonnullRefPtr<TypeName> type_name, RefPtr<ColumnConstraint> column_constraint)
         : m_name(move(name))
         , m_type_name(move(type_name))
+        , m_column_constraint(move(column_constraint))
     {
     }
 
     ByteString const& name() const { return m_name; }
     NonnullRefPtr<TypeName> const& type_name() const { return m_type_name; }
+    RefPtr<ColumnConstraint> const& column_constraint() const { return m_column_constraint; }
 
 private:
     ByteString m_name;
     NonnullRefPtr<TypeName> m_type_name;
+    RefPtr<ColumnConstraint> m_column_constraint;
 };
 
 class CommonTableExpression : public ASTNode {

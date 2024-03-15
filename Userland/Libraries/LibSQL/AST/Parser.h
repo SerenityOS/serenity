@@ -89,6 +89,7 @@ private:
     RefPtr<Expression> parse_in_expression(NonnullRefPtr<Expression> expression, bool invert_expression);
 
     NonnullRefPtr<ColumnDefinition> parse_column_definition();
+    RefPtr<ColumnConstraint> parse_column_constraint();
     NonnullRefPtr<TypeName> parse_type_name();
     NonnullRefPtr<SignedNumber> parse_signed_number();
     NonnullRefPtr<CommonTableExpression> parse_common_table_expression();
