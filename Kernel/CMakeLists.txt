@@ -89,7 +89,6 @@ set(KERNEL_SOURCES
     Devices/GPU/Console/BootFramebufferConsole.cpp
     Devices/GPU/Console/GenericFramebufferConsole.cpp
     Devices/GPU/Console/ContiguousFramebufferConsole.cpp
-    Devices/GPU/Console/VGATextModeConsole.cpp
     Devices/GPU/DisplayConnector.cpp
     Devices/GPU/Generic/DisplayConnector.cpp
     Devices/GPU/Management.cpp
@@ -424,6 +423,7 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
         Arch/x86_64/PCI/MSI.cpp
 
         Arch/x86_64/VGA/IOArbiter.cpp
+        Arch/x86_64/VGA/TextModeConsole.cpp
 
         Arch/x86_64/PowerState.cpp
         Arch/x86_64/RTC.cpp

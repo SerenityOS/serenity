@@ -514,7 +514,6 @@ executable("Kernel_bin") {
     "Devices/GPU/Console/BootFramebufferConsole.cpp",
     "Devices/GPU/Console/ContiguousFramebufferConsole.cpp",
     "Devices/GPU/Console/GenericFramebufferConsole.cpp",
-    "Devices/GPU/Console/VGATextModeConsole.cpp",
     "Devices/GPU/DisplayConnector.cpp",
     "Devices/GPU/Generic/DisplayConnector.cpp",
     "Devices/GPU/Intel/Auxiliary/GMBusConnector.cpp",
