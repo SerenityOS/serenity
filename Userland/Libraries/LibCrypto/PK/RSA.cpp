@@ -295,39 +295,6 @@ void RSA::import_public_key(ReadonlyBytes bytes, bool pem)
     m_public_key = key.public_key;
 }
 
-template<typename HashFunction>
-void RSA_EMSA_PSS<HashFunction>::sign(ReadonlyBytes in, Bytes& out)
-{
-    // -- encode via EMSA_PSS
-    auto mod_bits = m_rsa.private_key().modulus().trimmed_length() * sizeof(u32) * 8;
-
-    Vector<u8, 2048> EM;
-    EM.resize(mod_bits);
-    auto EM_buf = Bytes { EM };
-    m_emsa_pss.encode(in, EM_buf, mod_bits - 1);
-
-    // -- sign via RSA
-    m_rsa.sign(EM_buf, out);
-}
-
-template<typename HashFunction>
-VerificationConsistency RSA_EMSA_PSS<HashFunction>::verify(ReadonlyBytes in)
-{
-    auto mod_bytes = m_rsa.public_key().modulus().trimmed_length() * sizeof(u32);
-    if (in.size() != mod_bytes)
-        return VerificationConsistency::Inconsistent;
-
-    Vector<u8, 256> EM;
-    EM.resize(mod_bytes);
-    auto EM_buf = Bytes { EM };
-
-    // -- verify via RSA
-    m_rsa.verify(in, EM_buf);
-
-    // -- verify via EMSA_PSS
-    return m_emsa_pss.verify(in, EM, mod_bytes * 8 - 1);
-}
-
 void RSA_PKCS1_EME::encrypt(ReadonlyBytes in, Bytes& out)
 {
     auto mod_len = (m_public_key.modulus().trimmed_length() * sizeof(u32) * 8 + 7) / 8;

@@ -11,7 +11,6 @@
 #include <LibCrypto/ASN1/DER.h>
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
 #include <LibCrypto/NumberTheory/ModularFunctions.h>
-#include <LibCrypto/PK/Code/EMSA_PSS.h>
 #include <LibCrypto/PK/PK.h>
 
 namespace Crypto::PK {
@@ -142,9 +141,6 @@ struct RSAKeyPair {
 
 using IntegerType = UnsignedBigInteger;
 class RSA : public PKSystem<RSAPrivateKey<IntegerType>, RSAPublicKey<IntegerType>> {
-    template<typename T>
-    friend class RSA_EMSA_PSS;
-
 public:
     using KeyPairType = RSAKeyPair<PublicKeyType, PrivateKeyType>;
 
@@ -227,22 +223,6 @@ public:
 
     PrivateKeyType const& private_key() const { return m_private_key; }
     PublicKeyType const& public_key() const { return m_public_key; }
-};
-
-template<typename HashFunction>
-class RSA_EMSA_PSS {
-public:
-    RSA_EMSA_PSS(RSA& rsa)
-        : m_rsa(rsa)
-    {
-    }
-
-    void sign(ReadonlyBytes in, Bytes& out);
-    VerificationConsistency verify(ReadonlyBytes in);
-
-private:
-    EMSA_PSS<HashFunction, HashFunction::DigestSize> m_emsa_pss;
-    RSA m_rsa;
 };
 
 class RSA_PKCS1_EME : public RSA {

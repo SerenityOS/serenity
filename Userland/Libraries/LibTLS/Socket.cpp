@@ -8,7 +8,6 @@
 #include <LibCore/DateTime.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/Timer.h>
-#include <LibCrypto/PK/Code/EMSA_PSS.h>
 #include <LibTLS/TLSv12.h>
 
 // Each record can hold at most 18432 bytes, leaving some headroom and rounding down to
