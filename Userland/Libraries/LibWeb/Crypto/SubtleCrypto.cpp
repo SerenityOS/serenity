@@ -26,6 +26,17 @@ static void normalize_key_usages(Vector<Bindings::KeyUsage>& key_usages)
 {
     quick_sort(key_usages);
 }
+struct RegisteredAlgorithm {
+    NonnullOwnPtr<AlgorithmMethods> (*create_methods)(JS::Realm&) = nullptr;
+    JS::ThrowCompletionOr<NonnullOwnPtr<AlgorithmParams>> (*parameter_from_value)(JS::VM&, JS::Value) = nullptr;
+};
+using SupportedAlgorithmsMap = HashMap<String, HashMap<String, RegisteredAlgorithm, AK::ASCIICaseInsensitiveStringTraits>>;
+
+static SupportedAlgorithmsMap& supported_algorithms_internal();
+static SupportedAlgorithmsMap supported_algorithms();
+
+template<typename Methods, typename Param = AlgorithmParams>
+static void define_an_algorithm(String op, String algorithm);
 
 JS_DEFINE_ALLOCATOR(SubtleCrypto);
 
@@ -48,10 +59,9 @@ void SubtleCrypto::initialize(JS::Realm& realm)
 }
 
 // https://w3c.github.io/webcrypto/#dfn-normalize-an-algorithm
-WebIDL::ExceptionOr<SubtleCrypto::NormalizedAlgorithmAndParameter> SubtleCrypto::normalize_an_algorithm(AlgorithmIdentifier const& algorithm, String operation)
+WebIDL::ExceptionOr<NormalizedAlgorithmAndParameter> normalize_an_algorithm(JS::Realm& realm, AlgorithmIdentifier const& algorithm, String operation)
 {
-    auto& realm = this->realm();
-    auto& vm = this->vm();
+    auto& vm = realm.vm();
 
     // If alg is an instance of a DOMString:
     if (algorithm.has<String>()) {
@@ -60,7 +70,7 @@ WebIDL::ExceptionOr<SubtleCrypto::NormalizedAlgorithmAndParameter> SubtleCrypto:
         auto dictionary = JS::make_handle(JS::Object::create(realm, realm.intrinsics().object_prototype()));
         TRY(dictionary->create_data_property("name", JS::PrimitiveString::create(vm, algorithm.get<String>())));
 
-        return normalize_an_algorithm(dictionary, operation);
+        return normalize_an_algorithm(realm, dictionary, operation);
     }
 
     // If alg is an object:
@@ -123,7 +133,7 @@ JS::NonnullGCPtr<JS::Promise> SubtleCrypto::digest(AlgorithmIdentifier const& al
     auto data_buffer = data_buffer_or_error.release_value();
 
     // 3. Let normalizedAlgorithm be the result of normalizing an algorithm, with alg set to algorithm and op set to "digest".
-    auto normalized_algorithm = normalize_an_algorithm(algorithm, "digest"_string);
+    auto normalized_algorithm = normalize_an_algorithm(realm, algorithm, "digest"_string);
 
     // 4. If an error occurred, return a Promise rejected with normalizedAlgorithm.
     // FIXME: Spec bug: link to https://webidl.spec.whatwg.org/#a-promise-rejected-with
@@ -164,7 +174,7 @@ JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Promise>> SubtleCrypto::generate_key(
 
     // 2. Let normalizedAlgorithm be the result of normalizing an algorithm,
     //    with alg set to algorithm and op set to "generateKey".
-    auto normalized_algorithm = normalize_an_algorithm(algorithm, "generateKey"_string);
+    auto normalized_algorithm = normalize_an_algorithm(realm, algorithm, "generateKey"_string);
 
     // 3. If an error occurred, return a Promise rejected with normalizedAlgorithm.
     if (normalized_algorithm.is_error())
@@ -246,7 +256,7 @@ JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Promise>> SubtleCrypto::import_key(Bi
 
     // NOTE: The spec jumps to 5 here for some reason?
     // 5. Let normalizedAlgorithm be the result of normalizing an algorithm, with alg set to algorithm and op set to "importKey".
-    auto normalized_algorithm = normalize_an_algorithm(algorithm, "importKey"_string);
+    auto normalized_algorithm = normalize_an_algorithm(realm, algorithm, "importKey"_string);
 
     // 6. If an error occurred, return a Promise rejected with normalizedAlgorithm.
     if (normalized_algorithm.is_error())
@@ -300,7 +310,7 @@ JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Promise>> SubtleCrypto::export_key(Bi
     auto promise = WebIDL::create_promise(realm);
 
     // 3. Return promise and perform the remaining steps in parallel.
-    Platform::EventLoopPlugin::the().deferred_invoke([&realm, key, this, promise, format]() -> void {
+    Platform::EventLoopPlugin::the().deferred_invoke([&realm, key, promise, format]() -> void {
         HTML::TemporaryExecutionContext context(Bindings::host_defined_environment_settings_object(realm), HTML::TemporaryExecutionContext::CallbacksEnabled::Yes);
         // 4.  If the following steps or referenced procedures say to throw an error, reject promise with the returned error and then terminate the algorithm.
 
@@ -309,7 +319,7 @@ JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Promise>> SubtleCrypto::export_key(Bi
         // Note: Handled by the base AlgorithmMethods implementation
         auto& algorithm = verify_cast<KeyAlgorithm>(*key->algorithm());
         // FIXME: Stash the AlgorithmMethods on the KeyAlgorithm
-        auto normalized_algorithm_or_error = normalize_an_algorithm(algorithm.name(), "exportKey"_string);
+        auto normalized_algorithm_or_error = normalize_an_algorithm(realm, algorithm.name(), "exportKey"_string);
         if (normalized_algorithm_or_error.is_error()) {
             WebIDL::reject_promise(realm, promise, Bindings::dom_exception_to_throw_completion(realm.vm(), normalized_algorithm_or_error.release_error()).release_value().value());
             return;
@@ -336,14 +346,14 @@ JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Promise>> SubtleCrypto::export_key(Bi
     return verify_cast<JS::Promise>(*promise->promise());
 }
 
-SubtleCrypto::SupportedAlgorithmsMap& SubtleCrypto::supported_algorithms_internal()
+SupportedAlgorithmsMap& supported_algorithms_internal()
 {
-    static SubtleCrypto::SupportedAlgorithmsMap s_supported_algorithms;
+    static SupportedAlgorithmsMap s_supported_algorithms;
     return s_supported_algorithms;
 }
 
 // https://w3c.github.io/webcrypto/#algorithm-normalization-internalS
-SubtleCrypto::SupportedAlgorithmsMap SubtleCrypto::supported_algorithms()
+SupportedAlgorithmsMap supported_algorithms()
 {
     auto& internal_object = supported_algorithms_internal();
 
@@ -394,7 +404,7 @@ SubtleCrypto::SupportedAlgorithmsMap SubtleCrypto::supported_algorithms()
 
 // https://w3c.github.io/webcrypto/#concept-define-an-algorithm
 template<typename Methods, typename Param>
-void SubtleCrypto::define_an_algorithm(AK::String op, AK::String algorithm)
+void define_an_algorithm(AK::String op, AK::String algorithm)
 {
     auto& internal_object = supported_algorithms_internal();
 

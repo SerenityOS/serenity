@@ -22,12 +22,6 @@ class SubtleCrypto final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(SubtleCrypto, Bindings::PlatformObject);
     JS_DECLARE_ALLOCATOR(SubtleCrypto);
 
-    struct RegisteredAlgorithm {
-        NonnullOwnPtr<AlgorithmMethods> (*create_methods)(JS::Realm&) = nullptr;
-        JS::ThrowCompletionOr<NonnullOwnPtr<AlgorithmParams>> (*parameter_from_value)(JS::VM&, JS::Value) = nullptr;
-    };
-    using SupportedAlgorithmsMap = HashMap<String, HashMap<String, RegisteredAlgorithm, AK::ASCIICaseInsensitiveStringTraits>>;
-
 public:
     [[nodiscard]] static JS::NonnullGCPtr<SubtleCrypto> create(JS::Realm&);
 
@@ -43,18 +37,12 @@ public:
 private:
     explicit SubtleCrypto(JS::Realm&);
     virtual void initialize(JS::Realm&) override;
-
-    struct NormalizedAlgorithmAndParameter {
-        NonnullOwnPtr<AlgorithmMethods> methods;
-        NonnullOwnPtr<AlgorithmParams> parameter;
-    };
-    WebIDL::ExceptionOr<NormalizedAlgorithmAndParameter> normalize_an_algorithm(AlgorithmIdentifier const& algorithm, String operation);
-
-    static SubtleCrypto::SupportedAlgorithmsMap& supported_algorithms_internal();
-    static SubtleCrypto::SupportedAlgorithmsMap supported_algorithms();
-
-    template<typename Methods, typename Param = AlgorithmParams>
-    static void define_an_algorithm(String op, String algorithm);
 };
+
+struct NormalizedAlgorithmAndParameter {
+    NonnullOwnPtr<AlgorithmMethods> methods;
+    NonnullOwnPtr<AlgorithmParams> parameter;
+};
+WebIDL::ExceptionOr<NormalizedAlgorithmAndParameter> normalize_an_algorithm(JS::Realm&, AlgorithmIdentifier const& algorithm, String operation);
 
 }
