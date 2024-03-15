@@ -247,6 +247,18 @@ public:
 };
 ErrorOr<SubjectPublicKey> parse_subject_public_key_info(Crypto::ASN1::Decoder& decoder, Vector<StringView> current_scope = {});
 
+// https://www.rfc-editor.org/rfc/rfc5208#section-5
+class PrivateKey {
+public:
+    Crypto::PK::RSAPrivateKey<Crypto::UnsignedBigInteger> rsa;
+
+    AlgorithmIdentifier algorithm;
+    ByteBuffer raw_key;
+
+    // FIXME: attributes [0]  IMPLICIT Attributes OPTIONAL
+};
+ErrorOr<PrivateKey> parse_private_key_info(Crypto::ASN1::Decoder& decoder, Vector<StringView> current_scope = {});
+
 class Certificate {
 public:
     u16 version { 0 };
