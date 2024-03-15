@@ -119,6 +119,63 @@ WebIDL::ExceptionOr<NormalizedAlgorithmAndParameter> normalize_an_algorithm(JS::
     return normalized_algorithm;
 }
 
+// https://w3c.github.io/webcrypto/#dfn-SubtleCrypto-method-encrypt
+JS::NonnullGCPtr<JS::Promise> SubtleCrypto::encrypt(AlgorithmIdentifier const& algorithm, JS::NonnullGCPtr<CryptoKey> key, JS::Handle<WebIDL::BufferSource> const& data_parameter)
+{
+    auto& realm = this->realm();
+    auto& vm = this->vm();
+    // 1. Let algorithm and key be the algorithm and key parameters passed to the encrypt() method, respectively.
+
+    // 2. Let data be the result of getting a copy of the bytes held by the data parameter passed to the encrypt() method.
+    auto data_or_error = WebIDL::get_buffer_source_copy(*data_parameter->raw_object());
+    if (data_or_error.is_error()) {
+        VERIFY(data_or_error.error().code() == ENOMEM);
+        return WebIDL::create_rejected_promise_from_exception(realm, vm.throw_completion<JS::InternalError>(vm.error_message(JS::VM::ErrorMessage::OutOfMemory)));
+    }
+    auto data = data_or_error.release_value();
+
+    // 3. Let normalizedAlgorithm be the result of normalizing an algorithm, with alg set to algorithm and op set to "encrypt".
+    auto normalized_algorithm = normalize_an_algorithm(realm, algorithm, "encrypt"_string);
+
+    // 4. If an error occurred, return a Promise rejected with normalizedAlgorithm.
+    if (normalized_algorithm.is_error())
+        return WebIDL::create_rejected_promise_from_exception(realm, normalized_algorithm.release_error());
+
+    // 5. Let promise be a new Promise.
+    auto promise = WebIDL::create_promise(realm);
+
+    // 6. Return promise and perform the remaining steps in parallel.
+
+    Platform::EventLoopPlugin::the().deferred_invoke([&realm, normalized_algorithm = normalized_algorithm.release_value(), promise, key, data = move(data)]() -> void {
+        HTML::TemporaryExecutionContext context(Bindings::host_defined_environment_settings_object(realm), HTML::TemporaryExecutionContext::CallbacksEnabled::Yes);
+        // 7. If the following steps or referenced procedures say to throw an error, reject promise with the returned error and then terminate the algorithm.
+
+        // 8. If the name member of normalizedAlgorithm is not equal to the name attribute of the [[algorithm]] internal slot of key then throw an InvalidAccessError.
+        if (normalized_algorithm.parameter->name != key->algorithm_name()) {
+            WebIDL::reject_promise(realm, promise, WebIDL::InvalidAccessError::create(realm, "Algorithm mismatch"_fly_string));
+            return;
+        }
+
+        // 9. If the [[usages]] internal slot of key does not contain an entry that is "encrypt", then throw an InvalidAccessError.
+        if (!key->internal_usages().contains_slow(Bindings::KeyUsage::Encrypt)) {
+            WebIDL::reject_promise(realm, promise, WebIDL::InvalidAccessError::create(realm, "Key does not support encryption"_fly_string));
+            return;
+        }
+
+        // 10. Let ciphertext be the result of performing the encrypt operation specified by normalizedAlgorithm using algorithm and key and with data as plaintext.
+        auto cipher_text = normalized_algorithm.methods->encrypt(*normalized_algorithm.parameter, key, data);
+        if (cipher_text.is_error()) {
+            WebIDL::reject_promise(realm, promise, Bindings::dom_exception_to_throw_completion(realm.vm(), cipher_text.release_error()).release_value().value());
+            return;
+        }
+
+        // 9. Resolve promise with ciphertext.
+        WebIDL::resolve_promise(realm, promise, cipher_text.release_value());
+    });
+
+    return verify_cast<JS::Promise>(*promise->promise());
+}
+
 // https://w3c.github.io/webcrypto/#dfn-SubtleCrypto-method-digest
 JS::NonnullGCPtr<JS::Promise> SubtleCrypto::digest(AlgorithmIdentifier const& algorithm, JS::Handle<WebIDL::BufferSource> const& data)
 {

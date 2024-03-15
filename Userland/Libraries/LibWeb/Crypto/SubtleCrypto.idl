@@ -45,7 +45,7 @@ dictionary JsonWebKey
 // https://w3c.github.io/webcrypto/#subtlecrypto-interface
 [SecureContext,Exposed=(Window,Worker)]
 interface SubtleCrypto {
-    // FIXME: Promise<any> encrypt(AlgorithmIdentifier algorithm, CryptoKey key, BufferSource data);
+    Promise<any> encrypt(AlgorithmIdentifier algorithm, CryptoKey key, BufferSource data);
     // FIXME: Promise<any> decrypt(AlgorithmIdentifier algorithm, CryptoKey key, BufferSource data);
     // FIXME: Promise<any> sign(AlgorithmIdentifier algorithm, CryptoKey key, BufferSource data);
     // FIXME: Promise<any> verify(AlgorithmIdentifier algorithm, CryptoKey key, BufferSource signature, BufferSource data);
