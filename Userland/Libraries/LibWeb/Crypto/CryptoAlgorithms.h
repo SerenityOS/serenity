@@ -39,7 +39,7 @@ struct AlgorithmParams {
 // https://w3c.github.io/webcrypto/#pbkdf2-params
 struct PBKDF2Params : public AlgorithmParams {
     virtual ~PBKDF2Params() override;
-    PBKDF2Params(String name, JS::Handle<WebIDL::BufferSource> salt, u32 iterations, HashAlgorithmIdentifier hash)
+    PBKDF2Params(String name, ByteBuffer salt, u32 iterations, HashAlgorithmIdentifier hash)
         : AlgorithmParams(move(name))
         , salt(move(salt))
         , iterations(iterations)
@@ -47,7 +47,7 @@ struct PBKDF2Params : public AlgorithmParams {
     {
     }
 
-    JS::Handle<WebIDL::BufferSource> salt;
+    ByteBuffer salt;
     u32 iterations;
     HashAlgorithmIdentifier hash;
 
