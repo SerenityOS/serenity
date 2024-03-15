@@ -472,7 +472,7 @@ void BlockFormattingContext::layout_inline_children(BlockContainer const& block_
 
     auto& block_container_state = m_state.get_mutable(block_container);
 
-    InlineFormattingContext context(m_state, block_container, *this);
+    InlineFormattingContext context(m_state, block_container, block_container_state, *this);
     context.run(
         block_container,
         layout_mode,

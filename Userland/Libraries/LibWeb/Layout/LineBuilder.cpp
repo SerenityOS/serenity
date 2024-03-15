@@ -10,12 +10,12 @@
 
 namespace Web::Layout {
 
-LineBuilder::LineBuilder(InlineFormattingContext& context, LayoutState& layout_state)
+LineBuilder::LineBuilder(InlineFormattingContext& context, LayoutState& layout_state, LayoutState::UsedValues& containing_block_used_values)
     : m_context(context)
     , m_layout_state(layout_state)
-    , m_containing_block_state(layout_state.get_mutable(context.containing_block()))
+    , m_containing_block_used_values(containing_block_used_values)
 {
-    m_text_indent = m_context.containing_block().computed_values().text_indent().to_px(m_context.containing_block(), m_containing_block_state.content_width());
+    m_text_indent = m_context.containing_block().computed_values().text_indent().to_px(m_context.containing_block(), m_containing_block_used_values.content_width());
     begin_new_line(false);
 }
 
@@ -35,7 +35,7 @@ void LineBuilder::break_line(ForcedBreak forced_break, Optional<CSSPixels> next_
     size_t break_count = 0;
     bool floats_intrude_at_current_y = false;
     do {
-        m_containing_block_state.line_boxes.append(LineBox());
+        m_containing_block_used_values.line_boxes.append(LineBox());
         begin_new_line(true, break_count == 0);
         break_count++;
         floats_intrude_at_current_y = m_context.any_floats_intrude_at_y(m_current_y);
@@ -71,14 +71,14 @@ void LineBuilder::begin_new_line(bool increment_y, bool is_first_break_in_sequen
     m_last_line_needs_update = true;
 
     // FIXME: Support text-indent with "each-line".
-    if (m_containing_block_state.line_boxes.size() <= 1) {
+    if (m_containing_block_used_values.line_boxes.size() <= 1) {
         ensure_last_line_box().m_width += m_text_indent;
     }
 }
 
 LineBox& LineBuilder::ensure_last_line_box()
 {
-    auto& line_boxes = m_containing_block_state.line_boxes;
+    auto& line_boxes = m_containing_block_used_values.line_boxes;
     if (line_boxes.is_empty())
         line_boxes.append(LineBox {});
     return line_boxes.last();
@@ -92,7 +92,7 @@ void LineBuilder::append_box(Box const& box, CSSPixels leading_size, CSSPixels t
     m_max_height_on_current_line = max(m_max_height_on_current_line, box_state.margin_box_height());
 
     box_state.containing_line_box_fragment = LineBoxFragmentCoordinate {
-        .line_box_index = m_containing_block_state.line_boxes.size() - 1,
+        .line_box_index = m_containing_block_used_values.line_boxes.size() - 1,
         .fragment_index = line_box.fragments().size() - 1,
     };
 }
@@ -139,7 +139,7 @@ bool LineBuilder::should_break(CSSPixels next_item_width)
     if (m_available_width_for_current_line.is_max_content())
         return false;
 
-    auto const& line_boxes = m_containing_block_state.line_boxes;
+    auto const& line_boxes = m_containing_block_used_values.line_boxes;
     if (line_boxes.is_empty() || line_boxes.last().is_empty()) {
         // If we don't have a single line box yet *and* there are no floats intruding
         // at this Y coordinate, we don't need to break before inserting anything.
@@ -155,7 +155,7 @@ bool LineBuilder::should_break(CSSPixels next_item_width)
 void LineBuilder::update_last_line()
 {
     m_last_line_needs_update = false;
-    auto& line_boxes = m_containing_block_state.line_boxes;
+    auto& line_boxes = m_containing_block_used_values.line_boxes;
 
     if (line_boxes.is_empty())
         return;
@@ -330,7 +330,7 @@ void LineBuilder::update_last_line()
 void LineBuilder::remove_last_line_if_empty()
 {
     // If there's an empty line box at the bottom, just remove it instead of giving it height.
-    auto& line_boxes = m_containing_block_state.line_boxes;
+    auto& line_boxes = m_containing_block_used_values.line_boxes;
     if (!line_boxes.is_empty() && line_boxes.last().is_empty()) {
         line_boxes.take_last();
         m_last_line_needs_update = false;
@@ -343,8 +343,8 @@ void LineBuilder::recalculate_available_space()
     auto available_at_top_of_line_box = m_context.available_space_for_line(m_current_y);
     auto available_at_bottom_of_line_box = m_context.available_space_for_line(m_current_y + current_line_height - 1);
     m_available_width_for_current_line = min(available_at_bottom_of_line_box, available_at_top_of_line_box);
-    if (!m_containing_block_state.line_boxes.is_empty())
-        m_containing_block_state.line_boxes.last().m_original_available_width = m_available_width_for_current_line;
+    if (!m_containing_block_used_values.line_boxes.is_empty())
+        m_containing_block_used_values.line_boxes.last().m_original_available_width = m_available_width_for_current_line;
 }
 
 }

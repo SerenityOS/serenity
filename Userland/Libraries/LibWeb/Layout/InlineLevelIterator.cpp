@@ -13,12 +13,12 @@
 
 namespace Web::Layout {
 
-InlineLevelIterator::InlineLevelIterator(Layout::InlineFormattingContext& inline_formatting_context, Layout::LayoutState& layout_state, Layout::BlockContainer const& container, LayoutMode layout_mode)
+InlineLevelIterator::InlineLevelIterator(Layout::InlineFormattingContext& inline_formatting_context, Layout::LayoutState& layout_state, Layout::BlockContainer const& containing_block, LayoutState::UsedValues const& containing_block_used_values, LayoutMode layout_mode)
     : m_inline_formatting_context(inline_formatting_context)
     , m_layout_state(layout_state)
-    , m_container(container)
-    , m_container_state(layout_state.get(container))
-    , m_next_node(container.first_child())
+    , m_containing_block(containing_block)
+    , m_containing_block_used_values(containing_block_used_values)
+    , m_next_node(containing_block.first_child())
     , m_layout_mode(layout_mode)
 {
     skip_to_next();
@@ -34,9 +34,9 @@ void InlineLevelIterator::enter_node_with_box_model_metrics(Layout::NodeWithStyl
     auto& used_values = m_layout_state.get_mutable(node);
     auto const& computed_values = node.computed_values();
 
-    used_values.margin_left = computed_values.margin().left().to_px(node, m_container_state.content_width());
+    used_values.margin_left = computed_values.margin().left().to_px(node, m_containing_block_used_values.content_width());
     used_values.border_left = computed_values.border_left().width;
-    used_values.padding_left = computed_values.padding().left().to_px(node, m_container_state.content_width());
+    used_values.padding_left = computed_values.padding().left().to_px(node, m_containing_block_used_values.content_width());
 
     m_extra_leading_metrics->margin += used_values.margin_left;
     m_extra_leading_metrics->border += used_values.border_left;
@@ -57,9 +57,9 @@ void InlineLevelIterator::exit_node_with_box_model_metrics()
     auto& used_values = m_layout_state.get_mutable(node);
     auto const& computed_values = node->computed_values();
 
-    used_values.margin_right = computed_values.margin().right().to_px(node, m_container_state.content_width());
+    used_values.margin_right = computed_values.margin().right().to_px(node, m_containing_block_used_values.content_width());
     used_values.border_right = computed_values.border_right().width;
-    used_values.padding_right = computed_values.padding().right().to_px(node, m_container_state.content_width());
+    used_values.padding_right = computed_values.padding().right().to_px(node, m_containing_block_used_values.content_width());
 
     m_extra_trailing_metrics->margin += used_values.margin_right;
     m_extra_trailing_metrics->border += used_values.border_right;
@@ -107,7 +107,7 @@ void InlineLevelIterator::compute_next()
     if (m_next_node == nullptr)
         return;
     do {
-        m_next_node = next_inline_node_in_pre_order(*m_next_node, m_container);
+        m_next_node = next_inline_node_in_pre_order(*m_next_node, m_containing_block);
     } while (m_next_node && (!m_next_node->is_inline() && !m_next_node->is_out_of_flow(m_inline_formatting_context)));
 }
 
