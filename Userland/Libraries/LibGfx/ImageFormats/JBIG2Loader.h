@@ -22,7 +22,7 @@ namespace JBIG2 {
 class ArithmeticDecoder {
 public:
     struct Context {
-        u16 I;     // Index I stored for context CX (E.2.4)
+        u8 I;      // Index I stored for context CX (E.2.4)
         u8 is_mps; // "More probable symbol" (E.1.1). 0 or 1.
     };
 
@@ -64,7 +64,7 @@ private:
     u8 CT; // Count of the number of bits in C.
 
     Context* CX;
-    static u16& I(Context* cx) { return cx->I; }
+    static u8& I(Context* cx) { return cx->I; }
     static u8& MPS(Context* cx) { return cx->is_mps; }
     static u16 Qe(u16);
     static u8 NMPS(u16);
