@@ -349,7 +349,7 @@ static ErrorOr<Validity> parse_validity(Crypto::ASN1::Decoder& decoder, Vector<S
     return validity;
 }
 
-static ErrorOr<SubjectPublicKey> parse_subject_public_key_info(Crypto::ASN1::Decoder& decoder, Vector<StringView> current_scope)
+ErrorOr<SubjectPublicKey> parse_subject_public_key_info(Crypto::ASN1::Decoder& decoder, Vector<StringView> current_scope)
 {
     // SubjectPublicKeyInfo ::= Sequence {
     //     algorithm           AlgorithmIdentifier,
@@ -387,9 +387,6 @@ static ErrorOr<SubjectPublicKey> parse_subject_public_key_info(Crypto::ASN1::Dec
 
     String algo_oid = TRY(String::join("."sv, public_key.algorithm.identifier));
     ERROR_WITH_SCOPE(TRY(String::formatted("Unhandled algorithm {}", algo_oid)));
-
-    EXIT_SCOPE();
-    return public_key;
 }
 
 static ErrorOr<Crypto::ASN1::BitStringView> parse_unique_identifier(Crypto::ASN1::Decoder& decoder, Vector<StringView> current_scope)
