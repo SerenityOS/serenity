@@ -933,6 +933,10 @@ RefPtr<ColumnConstraint> Parser::parse_column_constraint()
         auto expression = parse_expression();
         return create_ast_node<CheckColumnConstraint>(move(name), move(expression));
     }
+    if (consume_if(TokenType::Collate)) {
+        auto collation_name = consume(TokenType::Identifier).value();
+        return create_ast_node<CollateColumnConstraint>(move(name), move(collation_name));
+    }
     return {};
 }
 

@@ -152,6 +152,20 @@ private:
     NonnullRefPtr<Expression> m_expression;
 };
 
+class CollateColumnConstraint : public ColumnConstraint {
+public:
+    CollateColumnConstraint(Optional<ByteString> name, ByteString collation_name)
+        : ColumnConstraint(move(name))
+        , m_collation_name(move(collation_name))
+    {
+    }
+
+    ByteString const& collation_name() const { return m_collation_name; }
+
+private:
+    ByteString m_collation_name;
+};
+
 class ColumnDefinition : public ASTNode {
 public:
     ColumnDefinition(ByteString name, NonnullRefPtr<TypeName> type_name, RefPtr<ColumnConstraint> column_constraint)
