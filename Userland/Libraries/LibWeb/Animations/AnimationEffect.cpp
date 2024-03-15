@@ -49,11 +49,6 @@ Bindings::PlaybackDirection css_animation_direction_to_bindings_playback_directi
     }
 }
 
-JS::NonnullGCPtr<AnimationEffect> AnimationEffect::create(JS::Realm& realm)
-{
-    return realm.heap().allocate<AnimationEffect>(realm, realm);
-}
-
 OptionalEffectTiming EffectTiming::to_optional_effect_timing() const
 {
     return {
