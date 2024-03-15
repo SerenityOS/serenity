@@ -180,6 +180,8 @@ private:
     ByteString m_collation_name;
 };
 
+class ReferencesColumnConstraint : public ColumnConstraint { };
+
 class GeneratedColumnConstraint : public ColumnConstraint {
 public:
     enum class ComputationStrategy {

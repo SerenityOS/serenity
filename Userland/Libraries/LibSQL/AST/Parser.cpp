@@ -951,6 +951,9 @@ RefPtr<ColumnConstraint> Parser::parse_column_constraint()
         auto collation_name = consume(TokenType::Identifier).value();
         return create_ast_node<CollateColumnConstraint>(move(name), move(collation_name));
     }
+    if (match(TokenType::References)) {
+        // FIXME: foreign-key-clause
+    }
     if (consume_if(TokenType::Generated)) {
         consume(TokenType::Always);
     }
