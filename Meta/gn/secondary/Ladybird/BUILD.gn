@@ -134,7 +134,10 @@ executable("ladybird_executable") {
       "//Userland",
     ]
 
-    frameworks = [ "Cocoa.framework" ]
+    frameworks = [
+      "Cocoa.framework",
+      "UniformTypeIdentifiers.framework",
+    ]
   }
 
   if (current_os != "mac") {

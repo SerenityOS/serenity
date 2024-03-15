@@ -149,7 +149,7 @@ elseif (APPLE)
         AppKit/Utilities/Conversions.mm
     )
     target_include_directories(ladybird PRIVATE AppKit)
-    target_link_libraries(ladybird PRIVATE "-framework Cocoa" LibUnicode)
+    target_link_libraries(ladybird PRIVATE "-framework Cocoa -framework UniformTypeIdentifiers" LibUnicode)
     target_compile_options(ladybird PRIVATE
         -fobjc-arc
         -Wno-deprecated-anon-enum-enum-conversion # Required for CGImageCreate

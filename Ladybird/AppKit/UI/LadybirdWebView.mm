@@ -18,6 +18,7 @@
 #import <Application/ApplicationDelegate.h>
 #import <UI/Event.h>
 #import <UI/LadybirdWebView.h>
+#import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 #import <Utilities/Conversions.h>
 
 #if !__has_feature(objc_arc)
@@ -626,7 +627,7 @@ static void copy_data_to_clipboard(StringView data, NSPasteboardType pasteboard_
         [panel makeKeyAndOrderFront:nil];
     };
 
-    m_web_view_bridge->on_request_file_picker = [self](auto const&, auto allow_multiple_files) {
+    m_web_view_bridge->on_request_file_picker = [self](auto const& accepted_file_types, auto allow_multiple_files) {
         auto* panel = [NSOpenPanel openPanel];
         [panel setCanChooseFiles:YES];
         [panel setCanChooseDirectories:NO];
@@ -638,6 +639,43 @@ static void copy_data_to_clipboard(StringView data, NSPasteboardType pasteboard_
             [panel setAllowsMultipleSelection:NO];
             [panel setMessage:@"Select file"];
         }
+
+        NSMutableArray<UTType*>* accepted_file_filters = [NSMutableArray array];
+
+        for (auto const& filter : accepted_file_types.filters) {
+            filter.visit(
+                [&](Web::HTML::FileFilter::FileType type) {
+                    switch (type) {
+                    case Web::HTML::FileFilter::FileType::Audio:
+                        [accepted_file_filters addObject:UTTypeAudio];
+                        break;
+                    case Web::HTML::FileFilter::FileType::Image:
+                        [accepted_file_filters addObject:UTTypeImage];
+                        break;
+                    case Web::HTML::FileFilter::FileType::Video:
+                        [accepted_file_filters addObject:UTTypeVideo];
+                        break;
+                    }
+                },
+                [&](Web::HTML::FileFilter::MimeType const& filter) {
+                    auto* ns_mime_type = Ladybird::string_to_ns_string(filter.value);
+
+                    if (auto* ut_type = [UTType typeWithMIMEType:ns_mime_type]) {
+                        [accepted_file_filters addObject:ut_type];
+                    }
+                },
+                [&](Web::HTML::FileFilter::Extension const& filter) {
+                    auto* ns_extension = Ladybird::string_to_ns_string(filter.value);
+
+                    if (auto* ut_type = [UTType typeWithFilenameExtension:ns_extension]) {
+                        [accepted_file_filters addObject:ut_type];
+                    }
+                });
+        }
+
+        // FIXME: Create an accessory view to allow selecting the active file filter.
+        [panel setAllowedContentTypes:accepted_file_filters];
+        [panel setAllowsOtherFileTypes:YES];
 
         [panel beginSheetModalForWindow:[self window]
                       completionHandler:^(NSInteger result) {
