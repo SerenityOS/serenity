@@ -69,6 +69,14 @@ private:
     Vector<NonnullRefPtr<SignedNumber>> m_signed_numbers;
 };
 
+enum class ConflictResolution {
+    Abort,
+    Fail,
+    Ignore,
+    Replace,
+    Rollback,
+};
+
 class ColumnConstraint : public ASTNode {
 public:
     ColumnConstraint(Optional<ByteString> name)
@@ -940,14 +948,6 @@ private:
     ByteString m_schema_name;
     ByteString m_table_name;
     bool m_is_error_if_table_does_not_exist;
-};
-
-enum class ConflictResolution {
-    Abort,
-    Fail,
-    Ignore,
-    Replace,
-    Rollback,
 };
 
 class Insert : public Statement {
