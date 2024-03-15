@@ -1113,7 +1113,7 @@ void Parser::parse_schema_and_table_name(ByteString& schema_name, ByteString& ta
 ConflictResolution Parser::parse_conflict_resolution()
 {
     // https://sqlite.org/lang_conflict.html
-    if (consume_if(TokenType::Or)) {
+    if (consume_if(TokenType::On)) {
         if (consume_if(TokenType::Abort))
             return ConflictResolution::Abort;
         if (consume_if(TokenType::Fail))
