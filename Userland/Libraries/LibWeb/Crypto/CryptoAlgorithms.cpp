@@ -323,6 +323,56 @@ JS::ThrowCompletionOr<NonnullOwnPtr<AlgorithmParams>> RsaHashedImportParams::fro
     return adopt_own<AlgorithmParams>(*new RsaHashedImportParams { name, hash.get<HashAlgorithmIdentifier>() });
 }
 
+RsaOaepParams::~RsaOaepParams() = default;
+
+JS::ThrowCompletionOr<NonnullOwnPtr<AlgorithmParams>> RsaOaepParams::from_value(JS::VM& vm, JS::Value value)
+{
+    auto& object = value.as_object();
+
+    auto name_value = TRY(object.get("name"));
+    auto name = TRY(name_value.to_string(vm));
+
+    auto label_value = TRY(object.get("label"));
+
+    ByteBuffer label;
+    if (!label_value.is_nullish()) {
+        if (!label_value.is_object() || !(is<JS::TypedArrayBase>(label_value.as_object()) || is<JS::ArrayBuffer>(label_value.as_object()) || is<JS::DataView>(label_value.as_object())))
+            return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "BufferSource");
+
+        label = TRY_OR_THROW_OOM(vm, WebIDL::get_buffer_source_copy(label_value.as_object()));
+    }
+
+    return adopt_own<AlgorithmParams>(*new RsaOaepParams { name, move(label) });
+}
+
+// https://w3c.github.io/webcrypto/#rsa-oaep-operations
+WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::ArrayBuffer>> RSAOAEP::encrypt(AlgorithmParams const& params, JS::NonnullGCPtr<CryptoKey> key, ByteBuffer const& plaintext)
+{
+    auto& realm = m_realm;
+    auto& vm = realm.vm();
+    auto const& normalized_algorithm = static_cast<RsaOaepParams const&>(params);
+
+    // 1. If the [[type]] internal slot of key is not "public", then throw an InvalidAccessError.
+    if (key->type() != Bindings::KeyType::Public)
+        return WebIDL::InvalidAccessError::create(realm, "Key is not a public key"_fly_string);
+
+    // 2. Let label be the contents of the label member of normalizedAlgorithm or the empty octet string if the label member of normalizedAlgorithm is not present.
+    [[maybe_unused]] auto const& label = normalized_algorithm.label;
+
+    // 3. Perform the encryption operation defined in Section 7.1 of [RFC3447] with the key represented by key as the recipient's RSA public key,
+    //    the contents of plaintext as the message to be encrypted, M and label as the label, L, and with the hash function specified by the hash attribute
+    //    of the [[algorithm]] internal slot of key as the Hash option and MGF1 (defined in Section B.2.1 of [RFC3447]) as the MGF option.
+
+    // 4. If performing the operation results in an error, then throw an OperationError.
+
+    // 5. Let ciphertext be the value C that results from performing the operation.
+    // FIXME: Actually encrypt the data
+    auto ciphertext = TRY_OR_THROW_OOM(vm, ByteBuffer::copy(plaintext));
+
+    // 6. Return the result of creating an ArrayBuffer containing ciphertext.
+    return JS::ArrayBuffer::create(realm, move(ciphertext));
+}
+
 // https://w3c.github.io/webcrypto/#rsa-oaep-operations
 WebIDL::ExceptionOr<Variant<JS::NonnullGCPtr<CryptoKey>, JS::NonnullGCPtr<CryptoKeyPair>>> RSAOAEP::generate_key(AlgorithmParams const& params, bool extractable, Vector<Bindings::KeyUsage> const& key_usages)
 {

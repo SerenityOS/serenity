@@ -515,7 +515,8 @@ SupportedAlgorithmsMap supported_algorithms()
     define_an_algorithm<RSAOAEP, RsaHashedKeyGenParams>("generateKey"_string, "RSA-OAEP"_string);
     define_an_algorithm<RSAOAEP>("exportKey"_string, "RSA-OAEP"_string);
     define_an_algorithm<RSAOAEP, RsaHashedImportParams>("importKey"_string, "RSA-OAEP"_string);
-    // FIXME: encrypt, decrypt
+    define_an_algorithm<RSAOAEP, RsaOaepParams>("encrypt"_string, "RSA-OAEP"_string);
+    // FIXME: decrypt
 
     return internal_object;
 }
