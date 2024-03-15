@@ -123,13 +123,16 @@ WebIDL::ExceptionOr<NormalizedAlgorithmAndParameter> normalize_an_algorithm(JS::
 JS::NonnullGCPtr<JS::Promise> SubtleCrypto::digest(AlgorithmIdentifier const& algorithm, JS::Handle<WebIDL::BufferSource> const& data)
 {
     auto& realm = this->realm();
+    auto& vm = this->vm();
 
     // 1. Let algorithm be the algorithm parameter passed to the digest() method.
 
     // 2. Let data be the result of getting a copy of the bytes held by the data parameter passed to the digest() method.
     auto data_buffer_or_error = WebIDL::get_buffer_source_copy(*data->raw_object());
-    if (data_buffer_or_error.is_error())
-        return WebIDL::create_rejected_promise_from_exception(realm, WebIDL::OperationError::create(realm, "Failed to copy bytes from ArrayBuffer"_fly_string));
+    if (data_buffer_or_error.is_error()) {
+        VERIFY(data_buffer_or_error.error().code() == ENOMEM);
+        return WebIDL::create_rejected_promise_from_exception(realm, vm.throw_completion<JS::InternalError>(vm.error_message(JS::VM::ErrorMessage::OutOfMemory)));
+    }
     auto data_buffer = data_buffer_or_error.release_value();
 
     // 3. Let normalizedAlgorithm be the result of normalizing an algorithm, with alg set to algorithm and op set to "digest".
