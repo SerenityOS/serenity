@@ -77,16 +77,16 @@ constexpr auto qe_table = to_array<QeEntry>({
     { 0x5601, 46, 46, 0 },
 });
 
-ErrorOr<ArithmeticDecoder> ArithmeticDecoder::initialize(ReadonlyBytes data, Context context)
+ErrorOr<ArithmeticDecoder> ArithmeticDecoder::initialize(ReadonlyBytes data)
 {
     ArithmeticDecoder decoder { data };
-    decoder.CX = context;
     decoder.INITDEC();
     return decoder;
 }
 
-bool ArithmeticDecoder::get_next_bit()
+bool ArithmeticDecoder::get_next_bit(Context& context)
 {
+    CX = &context;
     // Useful for comparing to Table H.1 – Encoder and decoder trace data.
     // dbg("I={} MPS={} A={:#x} C={:#x} CT={} B={:#x}", I(CX), MPS(CX), A, C, CT, B());
     u8 D = DECODE();
