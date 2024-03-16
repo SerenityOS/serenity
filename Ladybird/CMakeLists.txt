@@ -199,7 +199,6 @@ endfunction()
 
 add_executable(headless-browser
     ${SERENITY_SOURCE_DIR}/Userland/Utilities/headless-browser.cpp
-    ${SERENITY_SOURCE_DIR}/Userland/Services/WebContent/WebDriverConnection.cpp
     HelperProcess.cpp
     Utilities.cpp)
 
@@ -229,8 +228,11 @@ add_subdirectory(WebContent)
 add_subdirectory(WebDriver)
 add_subdirectory(WebWorker)
 
-set(ladybird_helper_processes ImageDecoder RequestServer SQLServer WebContent WebDriver WebWorker headless-browser)
+set(ladybird_helper_processes ImageDecoder RequestServer SQLServer WebContent WebWorker)
+
 add_dependencies(ladybird ${ladybird_helper_processes})
+add_dependencies(headless-browser ${ladybird_helper_processes})
+add_dependencies(WebDriver ladybird headless-browser)
 
 function(create_ladybird_bundle target_name)
     set_target_properties(${target_name} PROPERTIES
@@ -255,6 +257,9 @@ endfunction()
 
 create_ladybird_bundle(ladybird)
 set_helper_process_properties(${ladybird_helper_processes})
+if (APPLE)
+    set_helper_process_properties(headless-browser WebDriver)
+endif()
 
 include(cmake/ResourceFiles.cmake)
 set(resource_base_dir "${CMAKE_BINARY_DIR}/${IN_BUILD_PREFIX}${CMAKE_INSTALL_DATADIR}/Lagom")

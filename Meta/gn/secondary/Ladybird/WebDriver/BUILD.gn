@@ -6,7 +6,10 @@ executable("WebDriver") {
     "//Userland/Services",
     "//Ladybird",
   ]
-  data_deps = [ "//Ladybird:headless-browser" ]
+  data_deps = [
+    "//Ladybird:headless-browser",
+    "//Ladybird:ladybird_executable",
+  ]
   deps = [
     "//AK",
     "//Userland/Libraries/LibCore",
@@ -27,5 +30,4 @@ executable("WebDriver") {
     "//Userland/Services/WebDriver/WebContentConnection.cpp",
     "main.cpp",
   ]
-  output_dir = "$root_out_dir/libexec"
 }

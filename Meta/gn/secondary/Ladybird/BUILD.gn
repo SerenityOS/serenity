@@ -47,17 +47,17 @@ config("ladybird_config") {
   defines = [ "AK_DONT_REPLACE_STD" ]
 }
 
+ladybird_helper_processes = [
+  "ImageDecoder",
+  "RequestServer",
+  "SQLServer",
+  "WebContent",
+  "WebWorker",
+]
+
 executable("ladybird_executable") {
   configs += [ ":ladybird_config" ]
-  data_deps = [
-    ":headless-browser",
-    "ImageDecoder",
-    "RequestServer",
-    "SQLServer",
-    "WebContent",
-    "WebDriver",
-    "WebWorker",
-  ]
+  data_deps = ladybird_helper_processes
   deps = [
     "//AK",
     "//Userland/Libraries/LibCore",
@@ -178,13 +178,12 @@ executable("headless-browser") {
     "//Userland/Libraries/LibWebSocket",
     "//Userland/Libraries/LibWebView",
   ]
+  data_deps = ladybird_helper_processes
   sources = [
-    "//Userland/Services/WebContent/WebDriverConnection.cpp",
     "//Userland/Utilities/headless-browser.cpp",
     "HelperProcess.cpp",
     "Utilities.cpp",
   ]
-  output_dir = "$root_out_dir/libexec"
 }
 
 fonts = [
@@ -331,13 +330,13 @@ if (current_os != "mac") {
     ]
     sources = [
       "$root_out_dir/bin/Ladybird",
+      "$root_out_dir/bin/WebDriver",
+      "$root_out_dir/bin/headless-browser",
       "$root_out_dir/libexec/ImageDecoder",
       "$root_out_dir/libexec/RequestServer",
       "$root_out_dir/libexec/SQLServer",
       "$root_out_dir/libexec/WebContent",
-      "$root_out_dir/libexec/WebDriver",
       "$root_out_dir/libexec/WebWorker",
-      "$root_out_dir/libexec/headless-browser",
     ]
     outputs = [ "{{bundle_executable_dir}}/{{source_file_part}}" ]
   }
