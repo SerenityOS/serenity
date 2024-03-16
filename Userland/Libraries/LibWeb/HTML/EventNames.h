@@ -17,6 +17,7 @@ namespace Web::HTML::EventNames {
 #define ENUMERATE_HTML_EVENTS                        \
     __ENUMERATE_HTML_EVENT(abort)                    \
     __ENUMERATE_HTML_EVENT(addtrack)                 \
+    __ENUMERATE_HTML_EVENT(animationcancel)          \
     __ENUMERATE_HTML_EVENT(animationend)             \
     __ENUMERATE_HTML_EVENT(animationiteration)       \
     __ENUMERATE_HTML_EVENT(animationstart)           \

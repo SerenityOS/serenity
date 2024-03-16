@@ -1941,7 +1941,7 @@ void Document::dispatch_events_for_animation_if_necessary(JS::NonnullGCPtr<Anima
     if (previous_phase != current_phase) {
         auto owning_element = css_animation.owning_element();
 
-        auto dispatch_event = [&](FlyString name, double elapsed_time) {
+        auto dispatch_event = [&](FlyString const& name, double elapsed_time) {
             append_pending_animation_event({
                 .event = CSS::AnimationEvent::create(
                     owning_element->realm(),
@@ -1969,15 +1969,15 @@ void Document::dispatch_events_for_animation_if_necessary(JS::NonnullGCPtr<Anima
             [[fallthrough]];
         case Animations::AnimationEffect::Phase::Idle:
             if (current_phase == Animations::AnimationEffect::Phase::Active) {
-                dispatch_event("animationstart"_fly_string, interval_start);
+                dispatch_event(HTML::EventNames::animationstart, interval_start);
             } else if (current_phase == Animations::AnimationEffect::Phase::After) {
-                dispatch_event("animationstart"_fly_string, interval_start);
-                dispatch_event("animationend"_fly_string, interval_end);
+                dispatch_event(HTML::EventNames::animationstart, interval_start);
+                dispatch_event(HTML::EventNames::animationend, interval_end);
             }
             break;
         case Animations::AnimationEffect::Phase::Active:
             if (current_phase == Animations::AnimationEffect::Phase::Before) {
-                dispatch_event("animationend"_fly_string, interval_start);
+                dispatch_event(HTML::EventNames::animationend, interval_start);
             } else if (current_phase == Animations::AnimationEffect::Phase::Active) {
                 auto previous_current_iteration = effect->previous_current_iteration();
                 if (previous_current_iteration != current_iteration) {
@@ -1994,25 +1994,25 @@ void Document::dispatch_events_for_animation_if_necessary(JS::NonnullGCPtr<Anima
                     auto iteration_duration = iteration_duration_variant.has<String>() ? 0.0 : iteration_duration_variant.get<double>();
                     auto elapsed_time = (iteration_boundary - effect->iteration_start()) * iteration_duration;
 
-                    dispatch_event("animationiteration"_fly_string, elapsed_time);
+                    dispatch_event(HTML::EventNames::animationiteration, elapsed_time);
                 }
             } else if (current_phase == Animations::AnimationEffect::Phase::After) {
-                dispatch_event("animationend"_fly_string, interval_end);
+                dispatch_event(HTML::EventNames::animationend, interval_end);
             }
             break;
         case Animations::AnimationEffect::Phase::After:
             if (current_phase == Animations::AnimationEffect::Phase::Active) {
-                dispatch_event("animationstart"_fly_string, interval_end);
+                dispatch_event(HTML::EventNames::animationstart, interval_end);
             } else if (current_phase == Animations::AnimationEffect::Phase::Before) {
-                dispatch_event("animationstart"_fly_string, interval_end);
-                dispatch_event("animationend"_fly_string, interval_start);
+                dispatch_event(HTML::EventNames::animationstart, interval_end);
+                dispatch_event(HTML::EventNames::animationend, interval_start);
             }
             break;
         }
 
         if (current_phase == Animations::AnimationEffect::Phase::Idle && previous_phase != Animations::AnimationEffect::Phase::Idle && previous_phase != Animations::AnimationEffect::Phase::After) {
             // FIXME: Use the active time "at the moment it was cancelled"
-            dispatch_event("animationcancel"_fly_string, effect->active_time_using_fill(Bindings::FillMode::Both).value());
+            dispatch_event(HTML::EventNames::animationcancel, effect->active_time_using_fill(Bindings::FillMode::Both).value());
         }
     }
 }
