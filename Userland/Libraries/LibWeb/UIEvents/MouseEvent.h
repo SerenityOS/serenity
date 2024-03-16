@@ -71,6 +71,8 @@ protected:
     virtual void initialize(JS::Realm&) override;
 
 private:
+    virtual bool is_mouse_event() const override { return true; }
+
     void set_event_characteristics();
 
     double m_screen_x { 0 };
@@ -100,5 +102,12 @@ private:
     i16 m_button { 0 };
     u16 m_buttons { 0 };
 };
+
+}
+
+namespace Web::DOM {
+
+template<>
+inline bool Event::fast_is<UIEvents::MouseEvent>() const { return is_mouse_event(); }
 
 }
