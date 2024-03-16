@@ -26,7 +26,11 @@ JS_DEFINE_ALLOCATOR(HTMLTextAreaElement);
 
 HTMLTextAreaElement::HTMLTextAreaElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
-    , m_input_event_timer(Web::Platform::Timer::create_single_shot(0, [this]() { queue_firing_input_event(); }))
+    , m_input_event_timer(MUST(Core::Timer::create_single_shot(0, [weak_this = make_weak_ptr()]() {
+        if (!weak_this)
+            return;
+        static_cast<HTMLTextAreaElement*>(weak_this.ptr())->queue_firing_input_event();
+    })))
 {
 }
 
