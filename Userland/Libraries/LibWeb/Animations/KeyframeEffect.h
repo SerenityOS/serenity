@@ -103,6 +103,8 @@ public:
 
     virtual bool is_keyframe_effect() const override { return true; }
 
+    virtual void update_style_properties() override;
+
 private:
     KeyframeEffect(JS::Realm&);
     virtual ~KeyframeEffect() override = default;

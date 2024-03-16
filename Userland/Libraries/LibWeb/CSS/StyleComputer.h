@@ -55,7 +55,8 @@ struct FontFaceKey {
 class StyleComputer {
 public:
     static void for_each_property_expanding_shorthands(PropertyID, StyleValue const&, Function<void(PropertyID, StyleValue const&)> const& set_longhand_property);
-    static void set_property_expanding_shorthands(StyleProperties&, PropertyID, StyleValue const&, CSS::CSSStyleDeclaration const*, StyleProperties::PropertyValues const& properties_for_revert);
+    static void set_property_expanding_shorthands(StyleProperties&, PropertyID, StyleValue const&, CSS::CSSStyleDeclaration const*, StyleProperties::PropertyValues const& properties_for_revert, StyleProperties::Important = StyleProperties::Important::No);
+    static NonnullRefPtr<StyleValue const> get_inherit_value(JS::Realm& initial_value_context_realm, CSS::PropertyID, DOM::Element const*, Optional<CSS::Selector::PseudoElement::Type> = {});
 
     explicit StyleComputer(DOM::Document&);
     ~StyleComputer();
@@ -82,6 +83,12 @@ public:
 
     void set_viewport_rect(Badge<DOM::Document>, CSSPixelRect const& viewport_rect) { m_viewport_rect = viewport_rect; }
 
+    enum class AnimationRefresh {
+        No,
+        Yes,
+    };
+    void collect_animation_into(JS::NonnullGCPtr<Animations::KeyframeEffect> animation, StyleProperties& style_properties, AnimationRefresh = AnimationRefresh::No) const;
+
 private:
     enum class ComputeStyleMode {
         Normal,
@@ -105,7 +112,7 @@ private:
 
     void compute_defaulted_property_value(StyleProperties&, DOM::Element const*, CSS::PropertyID, Optional<CSS::Selector::PseudoElement::Type>) const;
 
-    void set_all_properties(DOM::Element&, Optional<CSS::Selector::PseudoElement::Type>, StyleProperties&, StyleValue const&, DOM::Document&, CSS::CSSStyleDeclaration const*, StyleProperties::PropertyValues const& properties_for_revert) const;
+    void set_all_properties(DOM::Element&, Optional<CSS::Selector::PseudoElement::Type>, StyleProperties&, StyleValue const&, DOM::Document&, CSS::CSSStyleDeclaration const*, StyleProperties::PropertyValues const& properties_for_revert, StyleProperties::Important = StyleProperties::Important::No) const;
 
     template<typename Callback>
     void for_each_stylesheet(CascadeOrigin, Callback) const;
@@ -141,8 +148,6 @@ private:
     NonnullOwnPtr<RuleCache> make_rule_cache_for_cascade_origin(CascadeOrigin);
 
     RuleCache const& rule_cache_for_cascade_origin(CascadeOrigin) const;
-
-    void collect_animation_into(JS::NonnullGCPtr<Animations::KeyframeEffect> animation, StyleProperties& style_properties) const;
 
     OwnPtr<RuleCache> m_author_rule_cache;
     OwnPtr<RuleCache> m_user_rule_cache;

@@ -1163,6 +1163,19 @@ void Document::update_style()
 {
     if (!browsing_context())
         return;
+
+    for (auto& timeline : m_associated_animation_timelines) {
+        for (auto& animation : timeline->associated_animations()) {
+            if (auto effect = animation->effect(); effect && effect->target())
+                effect->target()->reset_animated_css_properties();
+        }
+
+        for (auto& animation : timeline->associated_animations()) {
+            if (auto effect = animation->effect())
+                effect->update_style_properties();
+        }
+    }
+
     if (!needs_full_style_update() && !needs_style_update() && !child_needs_style_update())
         return;
 
@@ -1917,7 +1930,8 @@ void Document::dispatch_events_for_animation_if_necessary(JS::NonnullGCPtr<Anima
         return;
 
     auto& css_animation = verify_cast<CSS::CSSAnimation>(*animation);
-    css_animation.owning_element()->set_needs_style_update(true);
+    if (auto target = effect->target(); target && target->paintable())
+        target->paintable()->set_needs_display();
 
     auto previous_phase = effect->previous_phase();
     auto current_phase = effect->phase();

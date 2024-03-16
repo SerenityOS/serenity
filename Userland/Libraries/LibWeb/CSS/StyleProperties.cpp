@@ -34,13 +34,49 @@
 
 namespace Web::CSS {
 
-void StyleProperties::set_property(CSS::PropertyID id, NonnullRefPtr<StyleValue const> value, CSS::CSSStyleDeclaration const* source_declaration)
+NonnullRefPtr<StyleProperties> StyleProperties::clone() const
 {
-    m_property_values[to_underlying(id)] = StyleAndSourceDeclaration { move(value), source_declaration };
+    auto clone = adopt_ref(*new StyleProperties);
+    clone->m_property_values = m_property_values;
+    clone->m_animated_property_values = m_animated_property_values;
+    clone->m_font_list = m_font_list;
+    clone->m_line_height = m_line_height;
+    clone->m_math_depth = m_math_depth;
+    return clone;
+}
+
+bool StyleProperties::is_property_important(CSS::PropertyID property_id) const
+{
+    return m_property_values[to_underlying(property_id)].has_value() && m_property_values[to_underlying(property_id)]->important == Important::Yes;
+}
+
+bool StyleProperties::is_property_inherited(CSS::PropertyID property_id) const
+{
+    return m_property_values[to_underlying(property_id)].has_value() && m_property_values[to_underlying(property_id)]->inherited == Inherited::Yes;
+}
+
+void StyleProperties::set_property(CSS::PropertyID id, NonnullRefPtr<StyleValue const> value, CSS::CSSStyleDeclaration const* source_declaration, Inherited inherited, Important important)
+{
+    m_property_values[to_underlying(id)] = StyleAndSourceDeclaration { move(value), source_declaration, important, inherited };
+}
+
+void StyleProperties::set_animated_property(CSS::PropertyID id, NonnullRefPtr<StyleValue const> value)
+{
+    m_animated_property_values[to_underlying(id)] = move(value);
+}
+
+void StyleProperties::reset_animated_properties()
+{
+    for (auto& animated_property : m_animated_property_values)
+        animated_property.clear();
 }
 
 NonnullRefPtr<StyleValue const> StyleProperties::property(CSS::PropertyID property_id) const
 {
+    auto animated_value = m_animated_property_values[to_underlying(property_id)];
+    if (animated_value.has_value())
+        return *animated_value;
+
     auto value = m_property_values[to_underlying(property_id)];
     // By the time we call this method, all properties have values assigned.
     VERIFY(value.has_value());
@@ -49,6 +85,10 @@ NonnullRefPtr<StyleValue const> StyleProperties::property(CSS::PropertyID proper
 
 RefPtr<StyleValue const> StyleProperties::maybe_null_property(CSS::PropertyID property_id) const
 {
+    auto animated_value = m_animated_property_values[to_underlying(property_id)];
+    if (animated_value.has_value())
+        return *animated_value;
+
     auto value = m_property_values[to_underlying(property_id)];
     if (value.has_value())
         return value->style;
