@@ -106,6 +106,7 @@
 #include <LibWeb/PermissionsPolicy/AutoplayAllowlist.h>
 #include <LibWeb/ResizeObserver/ResizeObserver.h>
 #include <LibWeb/ResizeObserver/ResizeObserverEntry.h>
+#include <LibWeb/SVG/SVGDecodedImageData.h>
 #include <LibWeb/SVG/SVGElement.h>
 #include <LibWeb/SVG/SVGTitleElement.h>
 #include <LibWeb/SVG/TagNames.h>
@@ -2121,7 +2122,9 @@ void Document::update_readiness(HTML::DocumentReadyState readiness_value)
 
     if (readiness_value == HTML::DocumentReadyState::Complete) {
         if (navigable() && navigable()->is_traversable()) {
-            HTML::HTMLLinkElement::load_fallback_favicon_if_needed(*this).release_value_but_fixme_should_propagate_errors();
+            if (!is_decoded_svg()) {
+                HTML::HTMLLinkElement::load_fallback_favicon_if_needed(*this).release_value_but_fixme_should_propagate_errors();
+            }
             navigable()->traversable_navigable()->page().client().page_did_finish_loading(url());
         } else {
             m_needs_to_call_page_did_load = true;
@@ -4644,6 +4647,11 @@ void Document::for_each_shadow_root(Function<void(DOM::ShadowRoot&)>&& callback)
 {
     for (auto& shadow_root : m_shadow_roots)
         callback(shadow_root);
+}
+
+bool Document::is_decoded_svg() const
+{
+    return is<Web::SVG::SVGDecodedImageData::SVGPageClient>(page().client());
 }
 
 }
