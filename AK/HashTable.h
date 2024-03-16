@@ -378,6 +378,8 @@ public:
 
     [[nodiscard]] Iterator find(T const& value)
     {
+        if (is_empty())
+            return end();
         return find(TraitsForT::hash(value), [&](auto& entry) { return TraitsForT::equals(entry, value); });
     }
 
@@ -389,6 +391,8 @@ public:
 
     [[nodiscard]] ConstIterator find(T const& value) const
     {
+        if (is_empty())
+            return end();
         return find(TraitsForT::hash(value), [&](auto& entry) { return TraitsForT::equals(entry, value); });
     }
     // FIXME: Support for predicates, while guaranteeing that the predicate call
@@ -396,24 +400,32 @@ public:
     template<Concepts::HashCompatible<T> K>
     requires(IsSame<TraitsForT, Traits<T>>) [[nodiscard]] Iterator find(K const& value)
     {
+        if (is_empty())
+            return end();
         return find(Traits<K>::hash(value), [&](auto& entry) { return Traits<T>::equals(entry, value); });
     }
 
     template<Concepts::HashCompatible<T> K, typename TUnaryPredicate>
     requires(IsSame<TraitsForT, Traits<T>>) [[nodiscard]] Iterator find(K const& value, TUnaryPredicate predicate)
     {
+        if (is_empty())
+            return end();
         return find(Traits<K>::hash(value), move(predicate));
     }
 
     template<Concepts::HashCompatible<T> K>
     requires(IsSame<TraitsForT, Traits<T>>) [[nodiscard]] ConstIterator find(K const& value) const
     {
+        if (is_empty())
+            return end();
         return find(Traits<K>::hash(value), [&](auto& entry) { return Traits<T>::equals(entry, value); });
     }
 
     template<Concepts::HashCompatible<T> K, typename TUnaryPredicate>
     requires(IsSame<TraitsForT, Traits<T>>) [[nodiscard]] ConstIterator find(K const& value, TUnaryPredicate predicate) const
     {
+        if (is_empty())
+            return end();
         return find(Traits<K>::hash(value), move(predicate));
     }
 
