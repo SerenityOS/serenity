@@ -58,7 +58,7 @@ Usage: $NAME COMMAND [TARGET] [TOOLCHAIN] [ARGS...]
         Resolves the address 0x12345678 in the Kernel binary
     $NAME addr2line x86_64 WindowServer 0x12345678
         Resolves the address 0x12345678 in the WindowServer binary
-    $NAME gdb x86_64 smp=on -ex 'hb *init'
+    $NAME gdb x86_64 GNU smp=on -ex 'hb *init'
         Runs the image for the TARGET x86_64 in qemu and attaches a gdb session
         setting a breakpoint at the init() function in the Kernel.
 EOF
