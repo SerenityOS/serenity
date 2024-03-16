@@ -194,6 +194,19 @@ static RefPtr<StyleValue const> style_value_for_shadow(Vector<ShadowData> const&
     return StyleValueList::create(move(style_values), StyleValueList::Separator::Comma);
 }
 
+static RefPtr<StyleValue const> style_value_for_svg_paint(Optional<SVGPaint> maybe_svg_paint)
+{
+    if (!maybe_svg_paint.has_value())
+        return IdentifierStyleValue::create(ValueID::None);
+
+    auto svg_paint = maybe_svg_paint.release_value();
+    if (svg_paint.is_color())
+        return ColorStyleValue::create(svg_paint.as_color());
+    if (svg_paint.is_url())
+        return URLStyleValue::create(svg_paint.as_url());
+    VERIFY_NOT_REACHED();
+}
+
 RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(Layout::NodeWithStyle const& layout_node, PropertyID property_id) const
 {
     // A limited number of properties have special rules for producing their "resolved value".
@@ -234,9 +247,15 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
         return ColorStyleValue::create(layout_node.computed_values().color());
     case PropertyID::OutlineColor:
         return ColorStyleValue::create(layout_node.computed_values().outline_color());
+    case PropertyID::StopColor:
+        return ColorStyleValue::create(layout_node.computed_values().stop_color());
     case PropertyID::TextDecorationColor:
         return ColorStyleValue::create(layout_node.computed_values().text_decoration_color());
         // NOTE: text-shadow isn't listed, but is computed the same as box-shadow.
+    case PropertyID::Fill:
+        return style_value_for_svg_paint(layout_node.computed_values().fill());
+    case PropertyID::Stroke:
+        return style_value_for_svg_paint(layout_node.computed_values().stroke());
     case PropertyID::TextShadow:
         return style_value_for_shadow(layout_node.computed_values().text_shadow());
 
