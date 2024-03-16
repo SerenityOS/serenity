@@ -37,7 +37,7 @@ DOMImplementation::~DOMImplementation() = default;
 void DOMImplementation::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::DOMImplementationPrototype>(realm, "DOMImplementation"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(DOMImplementation);
 }
 
 void DOMImplementation::visit_edges(Cell::Visitor& visitor)

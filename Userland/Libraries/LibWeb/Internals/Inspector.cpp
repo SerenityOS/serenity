@@ -29,7 +29,7 @@ Inspector::~Inspector() = default;
 void Inspector::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    Object::set_prototype(&Bindings::ensure_web_prototype<Bindings::InspectorPrototype>(realm, "Inspector"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(Inspector);
 }
 
 void Inspector::inspector_loaded()

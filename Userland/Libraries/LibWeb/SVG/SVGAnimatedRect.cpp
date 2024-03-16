@@ -23,7 +23,7 @@ SVGAnimatedRect::~SVGAnimatedRect() = default;
 void SVGAnimatedRect::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGAnimatedRectPrototype>(realm, "SVGAnimatedRect"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(SVGAnimatedRect);
     m_base_val = Geometry::DOMRect::create(realm, { 0, 0, 0, 0 });
     m_anim_val = Geometry::DOMRect::create(realm, { 0, 0, 0, 0 });
 }

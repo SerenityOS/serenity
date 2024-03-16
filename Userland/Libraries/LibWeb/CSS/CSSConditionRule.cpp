@@ -31,7 +31,7 @@ void CSSConditionRule::for_each_effective_keyframes_at_rule(Function<void(CSSKey
 void CSSConditionRule::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSConditionRulePrototype>(realm, "CSSConditionRule"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(CSSConditionRule);
 }
 
 }

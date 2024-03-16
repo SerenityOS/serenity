@@ -40,7 +40,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<StaticRange>> StaticRange::construct_impl(J
 void StaticRange::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::StaticRangePrototype>(realm, "StaticRange"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(StaticRange);
 }
 
 }

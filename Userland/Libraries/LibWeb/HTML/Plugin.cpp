@@ -30,7 +30,7 @@ Plugin::~Plugin() = default;
 void Plugin::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::PluginPrototype>(realm, "Plugin"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(Plugin);
 }
 
 // https://html.spec.whatwg.org/multipage/system-state.html#dom-plugin-name

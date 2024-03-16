@@ -28,7 +28,7 @@ SVGUseElement::SVGUseElement(DOM::Document& document, DOM::QualifiedName qualifi
 void SVGUseElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGUseElementPrototype>(realm, "SVGUseElement"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(SVGUseElement);
 
     // The shadow tree is open (inspectable by script), but read-only.
     auto shadow_root = heap().allocate<DOM::ShadowRoot>(realm, document(), *this, Bindings::ShadowRootMode::Open);

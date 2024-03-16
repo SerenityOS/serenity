@@ -66,7 +66,7 @@ ReadableByteStreamController::ReadableByteStreamController(JS::Realm& realm)
 void ReadableByteStreamController::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::ReadableByteStreamControllerPrototype>(realm, "ReadableByteStreamController"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(ReadableByteStreamController);
 }
 
 // https://streams.spec.whatwg.org/#rbs-controller-enqueue

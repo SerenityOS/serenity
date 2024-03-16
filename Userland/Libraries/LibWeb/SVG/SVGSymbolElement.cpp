@@ -27,7 +27,7 @@ SVGSymbolElement::SVGSymbolElement(DOM::Document& document, DOM::QualifiedName q
 void SVGSymbolElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGSymbolElementPrototype>(realm, "SVGSymbolElement"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(SVGSymbolElement);
 }
 
 // https://svgwg.org/svg2-draft/struct.html#SymbolNotes

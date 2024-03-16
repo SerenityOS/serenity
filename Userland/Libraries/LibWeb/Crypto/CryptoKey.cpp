@@ -38,7 +38,7 @@ CryptoKey::~CryptoKey()
 void CryptoKey::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::CryptoKeyPrototype>(realm, "CryptoKey"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(CryptoKey);
 }
 
 void CryptoKey::visit_edges(Visitor& visitor)

@@ -28,7 +28,7 @@ HTMLIFrameElement::~HTMLIFrameElement() = default;
 void HTMLIFrameElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLIFrameElementPrototype>(realm, "HTMLIFrameElement"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(HTMLIFrameElement);
 }
 
 JS::GCPtr<Layout::Node> HTMLIFrameElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)

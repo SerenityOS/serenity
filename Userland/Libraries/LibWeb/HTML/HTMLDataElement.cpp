@@ -21,7 +21,7 @@ HTMLDataElement::~HTMLDataElement() = default;
 void HTMLDataElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLDataElementPrototype>(realm, "HTMLDataElement"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(HTMLDataElement);
 }
 
 }

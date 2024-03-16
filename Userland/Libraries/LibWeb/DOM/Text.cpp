@@ -28,7 +28,7 @@ Text::Text(Document& document, NodeType type, String const& data)
 void Text::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::TextPrototype>(realm, "Text"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(Text);
 }
 
 void Text::visit_edges(Cell::Visitor& visitor)

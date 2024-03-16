@@ -27,7 +27,7 @@ HTMLProgressElement::~HTMLProgressElement() = default;
 void HTMLProgressElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLProgressElementPrototype>(realm, "HTMLProgressElement"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(HTMLProgressElement);
 }
 
 void HTMLProgressElement::visit_edges(Cell::Visitor& visitor)

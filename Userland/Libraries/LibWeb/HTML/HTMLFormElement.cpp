@@ -52,7 +52,7 @@ HTMLFormElement::~HTMLFormElement() = default;
 void HTMLFormElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLFormElementPrototype>(realm, "HTMLFormElement"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(HTMLFormElement);
 }
 
 void HTMLFormElement::visit_edges(Cell::Visitor& visitor)

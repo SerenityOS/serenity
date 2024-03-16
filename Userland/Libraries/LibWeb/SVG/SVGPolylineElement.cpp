@@ -21,7 +21,7 @@ SVGPolylineElement::SVGPolylineElement(DOM::Document& document, DOM::QualifiedNa
 void SVGPolylineElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGPolylineElementPrototype>(realm, "SVGPolylineElement"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(SVGPolylineElement);
 }
 
 void SVGPolylineElement::attribute_changed(FlyString const& name, Optional<String> const& value)

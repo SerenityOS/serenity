@@ -31,7 +31,7 @@ Response::~Response() = default;
 void Response::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::ResponsePrototype>(realm, "Response"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(Response);
 }
 
 void Response::visit_edges(Cell::Visitor& visitor)

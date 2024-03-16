@@ -24,7 +24,7 @@ VideoTrackList::VideoTrackList(JS::Realm& realm)
 void VideoTrackList::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::VideoTrackListPrototype>(realm, "VideoTrackList"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(VideoTrackList);
 }
 
 // https://html.spec.whatwg.org/multipage/media.html#dom-tracklist-item

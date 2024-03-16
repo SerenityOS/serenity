@@ -118,7 +118,7 @@ WebIDL::ExceptionOr<ReadableStreamPair> ReadableStream::tee()
 void ReadableStream::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::ReadableStreamPrototype>(realm, "ReadableStream"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(ReadableStream);
 }
 
 void ReadableStream::visit_edges(Cell::Visitor& visitor)

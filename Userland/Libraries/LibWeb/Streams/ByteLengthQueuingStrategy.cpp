@@ -41,7 +41,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::CallbackType>> ByteLengthQueuingStr
 void ByteLengthQueuingStrategy::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::ByteLengthQueuingStrategyPrototype>(realm, "ByteLengthQueuingStrategy"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(ByteLengthQueuingStrategy);
 }
 
 }

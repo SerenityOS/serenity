@@ -29,7 +29,7 @@ HTMLFormControlsCollection::~HTMLFormControlsCollection() = default;
 void HTMLFormControlsCollection::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLFormControlsCollectionPrototype>(realm, "HTMLFormControlsCollection"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(HTMLFormControlsCollection);
 }
 
 // https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#dom-htmlformcontrolscollection-nameditem

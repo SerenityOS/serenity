@@ -23,7 +23,7 @@ SVGClipPathElement::~SVGClipPathElement()
 void SVGClipPathElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGClipPathElementPrototype>(realm, "SVGClipPathElement"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(SVGClipPathElement);
 }
 
 JS::GCPtr<Layout::Node> SVGClipPathElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties>)

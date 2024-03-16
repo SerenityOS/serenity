@@ -78,7 +78,7 @@ Range::~Range()
 void Range::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::RangePrototype>(realm, "Range"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(Range);
 }
 
 void Range::visit_edges(Cell::Visitor& visitor)

@@ -21,7 +21,7 @@ SVGPolygonElement::SVGPolygonElement(DOM::Document& document, DOM::QualifiedName
 void SVGPolygonElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGPolygonElementPrototype>(realm, "SVGPolygonElement"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(SVGPolygonElement);
 }
 
 void SVGPolygonElement::attribute_changed(FlyString const& name, Optional<String> const& value)

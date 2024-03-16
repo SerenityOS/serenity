@@ -77,7 +77,7 @@ DocumentTimeline::DocumentTimeline(JS::Realm& realm, DOM::Document& document, Hi
 void DocumentTimeline::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::DocumentTimelinePrototype>(realm, "DocumentTimeline"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(DocumentTimeline);
 }
 
 }

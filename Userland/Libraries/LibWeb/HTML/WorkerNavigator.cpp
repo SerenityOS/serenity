@@ -28,7 +28,7 @@ WorkerNavigator::~WorkerNavigator() = default;
 void WorkerNavigator::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::WorkerNavigatorPrototype>(realm, "WorkerNavigator"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(WorkerNavigator);
 }
 
 }

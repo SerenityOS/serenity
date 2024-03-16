@@ -20,7 +20,7 @@ SVGRadialGradientElement::SVGRadialGradientElement(DOM::Document& document, DOM:
 void SVGRadialGradientElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGRadialGradientElementPrototype>(realm, "SVGRadialGradientElement"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(SVGRadialGradientElement);
 }
 
 void SVGRadialGradientElement::attribute_changed(FlyString const& name, Optional<String> const& value)

@@ -57,7 +57,7 @@ void AnimationTimeline::finalize()
 void AnimationTimeline::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::AnimationTimelinePrototype>(realm, "AnimationTimeline"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(AnimationTimeline);
 }
 
 void AnimationTimeline::visit_edges(Cell::Visitor& visitor)

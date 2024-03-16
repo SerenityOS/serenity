@@ -26,7 +26,7 @@ HTMLMeterElement::~HTMLMeterElement() = default;
 void HTMLMeterElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLMeterElementPrototype>(realm, "HTMLMeterElement"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(HTMLMeterElement);
 }
 
 void HTMLMeterElement::visit_edges(Cell::Visitor& visitor)

@@ -30,7 +30,7 @@ URLSearchParams::~URLSearchParams() = default;
 void URLSearchParams::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::URLSearchParamsPrototype>(realm, "URLSearchParams"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(URLSearchParams);
 }
 
 void URLSearchParams::visit_edges(Cell::Visitor& visitor)

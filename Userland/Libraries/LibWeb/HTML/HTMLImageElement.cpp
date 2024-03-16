@@ -55,7 +55,7 @@ void HTMLImageElement::finalize()
 void HTMLImageElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLImageElementPrototype>(realm, "HTMLImageElement"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(HTMLImageElement);
 
     m_current_request = ImageRequest::create(realm, document().page());
 }

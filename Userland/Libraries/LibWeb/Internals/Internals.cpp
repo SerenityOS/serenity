@@ -32,7 +32,7 @@ Internals::~Internals() = default;
 void Internals::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    Object::set_prototype(&Bindings::ensure_web_prototype<Bindings::InternalsPrototype>(realm, "Internals"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(Internals);
 }
 
 void Internals::signal_text_test_is_done()

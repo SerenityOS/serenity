@@ -73,7 +73,7 @@ CSSAnimation::CSSAnimation(JS::Realm& realm)
 void CSSAnimation::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSAnimationPrototype>(realm, "CSSAnimation"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(CSSAnimation);
 }
 
 void CSSAnimation::visit_edges(Cell::Visitor& visitor)

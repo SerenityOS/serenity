@@ -45,7 +45,7 @@ void Instance::initialize(JS::Realm& realm)
     auto& vm = this->vm();
 
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::InstancePrototype>(realm, "WebAssembly.Instance"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE_WITH_CUSTOM_NAME(Instance, WebAssembly.Instance);
 
     auto& instance = *Detail::s_instantiated_modules[m_index];
     auto& cache = Detail::s_module_caches.at(m_index);

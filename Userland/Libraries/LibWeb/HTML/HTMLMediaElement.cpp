@@ -51,7 +51,7 @@ HTMLMediaElement::~HTMLMediaElement() = default;
 void HTMLMediaElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLMediaElementPrototype>(realm, "HTMLMediaElement"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(HTMLMediaElement);
 
     m_audio_tracks = realm.heap().allocate<AudioTrackList>(realm, realm);
     m_video_tracks = realm.heap().allocate<VideoTrackList>(realm, realm);

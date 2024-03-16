@@ -604,7 +604,7 @@ AnimationEffect::AnimationEffect(JS::Realm& realm)
 void AnimationEffect::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::AnimationEffectPrototype>(realm, "AnimationEffect"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(AnimationEffect);
 }
 
 }

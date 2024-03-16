@@ -24,7 +24,7 @@ AudioTrackList::AudioTrackList(JS::Realm& realm)
 void AudioTrackList::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::AudioTrackListPrototype>(realm, "AudioTrackList"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(AudioTrackList);
 }
 
 // https://html.spec.whatwg.org/multipage/media.html#dom-tracklist-item

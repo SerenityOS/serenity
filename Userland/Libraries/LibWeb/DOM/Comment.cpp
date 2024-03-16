@@ -28,7 +28,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Comment>> Comment::construct_impl(JS::Realm
 void Comment::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::CommentPrototype>(realm, "Comment"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(Comment);
 }
 
 }

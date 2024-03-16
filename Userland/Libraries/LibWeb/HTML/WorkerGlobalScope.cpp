@@ -37,7 +37,7 @@ void WorkerGlobalScope::initialize_web_interfaces(Badge<WorkerEnvironmentSetting
     // FIXME: Handle shared worker
     add_dedicated_worker_exposed_interfaces(*this);
 
-    Object::set_prototype(&Bindings::ensure_web_prototype<Bindings::WorkerGlobalScopePrototype>(realm, "WorkerGlobalScope"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(WorkerGlobalScope);
 
     WindowOrWorkerGlobalScopeMixin::initialize(realm);
 

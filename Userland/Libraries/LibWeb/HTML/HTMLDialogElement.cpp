@@ -23,7 +23,7 @@ HTMLDialogElement::~HTMLDialogElement() = default;
 void HTMLDialogElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLDialogElementPrototype>(realm, "HTMLDialogElement"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(HTMLDialogElement);
 }
 
 // https://html.spec.whatwg.org/multipage/interactive-elements.html#dom-dialog-show

@@ -138,7 +138,7 @@ DOMMatrix::~DOMMatrix() = default;
 void DOMMatrix::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::DOMMatrixPrototype>(realm, "DOMMatrix"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(DOMMatrix);
 }
 
 // https://drafts.fxtf.org/geometry/#dom-dommatrix-frommatrix

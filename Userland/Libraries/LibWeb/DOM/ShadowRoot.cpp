@@ -32,7 +32,7 @@ void ShadowRoot::finalize()
 void ShadowRoot::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::ShadowRootPrototype>(realm, "ShadowRoot"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(ShadowRoot);
 }
 
 // https://dom.spec.whatwg.org/#ref-for-get-the-parent%E2%91%A6
