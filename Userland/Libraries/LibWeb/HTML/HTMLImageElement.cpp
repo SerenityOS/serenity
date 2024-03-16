@@ -838,7 +838,13 @@ void HTMLImageElement::handle_failed_fetch()
 void HTMLImageElement::restart_the_animation()
 {
     m_current_frame_index = 0;
-    m_animation_timer->start();
+
+    auto image_data = m_current_request->image_data();
+    if (image_data && image_data->frame_count() > 1) {
+        m_animation_timer->start();
+    } else {
+        m_animation_timer->stop();
+    }
 }
 
 // https://html.spec.whatwg.org/multipage/images.html#update-the-source-set
