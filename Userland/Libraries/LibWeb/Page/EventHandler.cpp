@@ -856,9 +856,6 @@ bool EventHandler::handle_keydown(KeyCode key, u32 modifiers, u32 code_point)
             m_browsing_context->increment_cursor_position_offset();
             return true;
         }
-
-        // NOTE: Because modifier keys should be ignored, we need to return true.
-        return true;
     }
 
     // FIXME: Work out and implement the difference between this and keydown.
