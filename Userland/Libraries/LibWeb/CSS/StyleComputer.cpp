@@ -90,7 +90,6 @@ struct Traits<Web::CSS::FontFaceKey> : public DefaultTraits<Web::CSS::FontFaceKe
 namespace Web::CSS {
 
 static DOM::Element const* element_to_inherit_style_from(DOM::Element const*, Optional<CSS::Selector::PseudoElement::Type>);
-static NonnullRefPtr<StyleValue const> get_inherit_value(JS::Realm& initial_value_context_realm, CSS::PropertyID, DOM::Element const*, Optional<CSS::Selector::PseudoElement::Type>);
 
 StyleComputer::StyleComputer(DOM::Document& document)
     : m_document(document)
@@ -668,26 +667,27 @@ void StyleComputer::for_each_property_expanding_shorthands(PropertyID property_i
     set_longhand_property(property_id, value);
 }
 
-void StyleComputer::set_property_expanding_shorthands(StyleProperties& style, CSS::PropertyID property_id, StyleValue const& value, CSS::CSSStyleDeclaration const* declaration, StyleProperties::PropertyValues const& properties_for_revert)
+void StyleComputer::set_property_expanding_shorthands(StyleProperties& style, CSS::PropertyID property_id, StyleValue const& value, CSS::CSSStyleDeclaration const* declaration, StyleProperties::PropertyValues const& properties_for_revert, StyleProperties::Important important)
 {
     for_each_property_expanding_shorthands(property_id, value, [&](PropertyID shorthand_id, StyleValue const& shorthand_value) {
         if (shorthand_value.is_revert()) {
             auto& property_in_previous_cascade_origin = properties_for_revert[to_underlying(shorthand_id)];
             if (property_in_previous_cascade_origin.has_value())
-                style.set_property(shorthand_id, property_in_previous_cascade_origin->style, property_in_previous_cascade_origin->declaration);
+                style.set_property(shorthand_id, property_in_previous_cascade_origin->style, property_in_previous_cascade_origin->declaration, StyleProperties::Inherited::No, important);
         } else {
-            style.set_property(shorthand_id, shorthand_value, declaration);
+            style.set_property(shorthand_id, shorthand_value, declaration, StyleProperties::Inherited::No, important);
         }
     });
 }
 
-void StyleComputer::set_all_properties(DOM::Element& element, Optional<CSS::Selector::PseudoElement::Type> pseudo_element, StyleProperties& style, StyleValue const& value, DOM::Document& document, CSS::CSSStyleDeclaration const* declaration, StyleProperties::PropertyValues const& properties_for_revert) const
+void StyleComputer::set_all_properties(DOM::Element& element, Optional<CSS::Selector::PseudoElement::Type> pseudo_element, StyleProperties& style, StyleValue const& value, DOM::Document& document, CSS::CSSStyleDeclaration const* declaration, StyleProperties::PropertyValues const& properties_for_revert, StyleProperties::Important important) const
 {
     for (auto i = to_underlying(CSS::first_longhand_property_id); i <= to_underlying(CSS::last_longhand_property_id); ++i) {
         auto property_id = (CSS::PropertyID)i;
 
         if (value.is_revert()) {
             style.m_property_values[to_underlying(property_id)] = properties_for_revert[to_underlying(property_id)];
+            style.m_property_values[to_underlying(property_id)]->important = important;
             continue;
         }
 
@@ -696,6 +696,7 @@ void StyleComputer::set_all_properties(DOM::Element& element, Optional<CSS::Sele
                 style.m_property_values[to_underlying(property_id)] = { { get_inherit_value(document.realm(), property_id, &element, pseudo_element), nullptr } };
             else
                 style.m_property_values[to_underlying(property_id)] = { { property_initial_value(document.realm(), property_id), nullptr } };
+            style.m_property_values[to_underlying(property_id)]->important = important;
             continue;
         }
 
@@ -705,7 +706,9 @@ void StyleComputer::set_all_properties(DOM::Element& element, Optional<CSS::Sele
         if (!property_value->is_unresolved())
             set_property_expanding_shorthands(style, property_id, property_value, declaration, properties_for_revert);
 
-        set_property_expanding_shorthands(style, property_id, value, declaration, properties_for_revert);
+        style.m_property_values[to_underlying(property_id)]->important = important;
+
+        set_property_expanding_shorthands(style, property_id, value, declaration, properties_for_revert, important);
     }
 }
 
@@ -719,7 +722,7 @@ void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& e
                 continue;
 
             if (property.property_id == CSS::PropertyID::All) {
-                set_all_properties(element, pseudo_element, style, property.value, m_document, &match.rule->declaration(), properties_for_revert);
+                set_all_properties(element, pseudo_element, style, property.value, m_document, &match.rule->declaration(), properties_for_revert, important == Important::Yes ? StyleProperties::Important::Yes : StyleProperties::Important::No);
                 continue;
             }
 
@@ -727,7 +730,7 @@ void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& e
             if (property.value->is_unresolved())
                 property_value = Parser::Parser::resolve_unresolved_style_value({}, Parser::ParsingContext { document() }, element, pseudo_element, property.property_id, property.value->as_unresolved());
             if (!property_value->is_unresolved())
-                set_property_expanding_shorthands(style, property.property_id, property_value, &match.rule->declaration(), properties_for_revert);
+                set_property_expanding_shorthands(style, property.property_id, property_value, &match.rule->declaration(), properties_for_revert, important == Important::Yes ? StyleProperties::Important::Yes : StyleProperties::Important::No);
         }
     }
 
@@ -738,7 +741,7 @@ void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& e
                     continue;
 
                 if (property.property_id == CSS::PropertyID::All) {
-                    set_all_properties(element, pseudo_element, style, property.value, m_document, inline_style, properties_for_revert);
+                    set_all_properties(element, pseudo_element, style, property.value, m_document, inline_style, properties_for_revert, important == Important::Yes ? StyleProperties::Important::Yes : StyleProperties::Important::No);
                     continue;
                 }
 
@@ -746,7 +749,7 @@ void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& e
                 if (property.value->is_unresolved())
                     property_value = Parser::Parser::resolve_unresolved_style_value({}, Parser::ParsingContext { document() }, element, pseudo_element, property.property_id, property.value->as_unresolved());
                 if (!property_value->is_unresolved())
-                    set_property_expanding_shorthands(style, property.property_id, property_value, inline_style, properties_for_revert);
+                    set_property_expanding_shorthands(style, property.property_id, property_value, inline_style, properties_for_revert, important == Important::Yes ? StyleProperties::Important::Yes : StyleProperties::Important::No);
             }
         }
     }
@@ -1276,7 +1279,7 @@ static ValueComparingRefPtr<StyleValue const> interpolate_property(DOM::Element&
     }
 }
 
-void StyleComputer::collect_animation_into(JS::NonnullGCPtr<Animations::KeyframeEffect> effect, StyleProperties& style_properties) const
+void StyleComputer::collect_animation_into(JS::NonnullGCPtr<Animations::KeyframeEffect> effect, StyleProperties& style_properties, AnimationRefresh refresh) const
 {
     auto animation = effect->associated_animation();
     if (!animation)
@@ -1329,6 +1332,8 @@ void StyleComputer::collect_animation_into(JS::NonnullGCPtr<Animations::Keyframe
         auto resolve_property = [&](auto& property) {
             return property.visit(
                 [&](Animations::KeyframeEffect::KeyFrameSet::UseInitial) -> RefPtr<StyleValue const> {
+                    if (refresh == AnimationRefresh::Yes)
+                        return {};
                     return style_properties.maybe_null_property(it.key);
                 },
                 [&](RefPtr<StyleValue const> value) { return value; });
@@ -1339,7 +1344,7 @@ void StyleComputer::collect_animation_into(JS::NonnullGCPtr<Animations::Keyframe
         auto const& end_property = keyframe_end_values.resolved_properties.get(it.key);
         if (!end_property.has_value()) {
             if (resolved_start_property) {
-                style_properties.set_property(it.key, *resolved_start_property);
+                style_properties.set_animated_property(it.key, *resolved_start_property);
                 dbgln_if(LIBWEB_CSS_ANIMATION_DEBUG, "No end property for property {}, using {}", string_from_property_id(it.key), resolved_start_property->to_string());
             }
             continue;
@@ -1356,13 +1361,17 @@ void StyleComputer::collect_animation_into(JS::NonnullGCPtr<Animations::Keyframe
         auto start = resolved_start_property.release_nonnull();
         auto end = resolved_end_property.release_nonnull();
 
+        if (style_properties.is_property_important(it.key)) {
+            continue;
+        }
+
         if (auto next_value = interpolate_property(*effect->target(), it.key, *start, *end, progress_in_keyframe)) {
             dbgln_if(LIBWEB_CSS_ANIMATION_DEBUG, "Interpolated value for property {} at {}: {} -> {} = {}", string_from_property_id(it.key), progress_in_keyframe, start->to_string(), end->to_string(), next_value->to_string());
-            style_properties.set_property(it.key, *next_value);
+            style_properties.set_animated_property(it.key, *next_value);
         } else {
             // If interpolate_property() fails, the element should not be rendered
             dbgln_if(LIBWEB_CSS_ANIMATION_DEBUG, "Interpolated value for property {} at {}: {} -> {} is invalid", string_from_property_id(it.key), progress_in_keyframe, start->to_string(), end->to_string());
-            style_properties.set_property(PropertyID::Visibility, IdentifierStyleValue::create(ValueID::Hidden));
+            style_properties.set_animated_property(PropertyID::Visibility, IdentifierStyleValue::create(ValueID::Hidden));
         }
     }
 }
@@ -1570,7 +1579,7 @@ DOM::Element const* element_to_inherit_style_from(DOM::Element const* element, O
     return parent_element;
 }
 
-NonnullRefPtr<StyleValue const> get_inherit_value(JS::Realm& initial_value_context_realm, CSS::PropertyID property_id, DOM::Element const* element, Optional<CSS::Selector::PseudoElement::Type> pseudo_element)
+NonnullRefPtr<StyleValue const> StyleComputer::get_inherit_value(JS::Realm& initial_value_context_realm, CSS::PropertyID property_id, DOM::Element const* element, Optional<CSS::Selector::PseudoElement::Type> pseudo_element)
 {
     auto* parent_element = element_to_inherit_style_from(element, pseudo_element);
 
@@ -1586,7 +1595,7 @@ void StyleComputer::compute_defaulted_property_value(StyleProperties& style, DOM
     auto& value_slot = style.m_property_values[to_underlying(property_id)];
     if (!value_slot.has_value()) {
         if (is_inherited_property(property_id))
-            style.m_property_values[to_underlying(property_id)] = { { get_inherit_value(document().realm(), property_id, element, pseudo_element), nullptr } };
+            style.m_property_values[to_underlying(property_id)] = { { get_inherit_value(document().realm(), property_id, element, pseudo_element), nullptr, StyleProperties::Important::No, StyleProperties::Inherited::Yes } };
         else
             style.m_property_values[to_underlying(property_id)] = { { property_initial_value(document().realm(), property_id), nullptr } };
         return;
@@ -1599,6 +1608,7 @@ void StyleComputer::compute_defaulted_property_value(StyleProperties& style, DOM
 
     if (value_slot->style->is_inherit()) {
         value_slot->style = get_inherit_value(document().realm(), property_id, element, pseudo_element);
+        value_slot->inherited = StyleProperties::Inherited::Yes;
         return;
     }
 
@@ -1608,6 +1618,7 @@ void StyleComputer::compute_defaulted_property_value(StyleProperties& style, DOM
         if (is_inherited_property(property_id)) {
             // then if it is an inherited property, this is treated as inherit,
             value_slot->style = get_inherit_value(document().realm(), property_id, element, pseudo_element);
+            value_slot->inherited = StyleProperties::Inherited::Yes;
         } else {
             // and if it is not, this is treated as initial.
             value_slot->style = property_initial_value(document().realm(), property_id);

@@ -15,6 +15,7 @@
 #include <LibWeb/HTML/Scripting/TemporaryExecutionContext.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/HighResolutionTime/Performance.h>
+#include <LibWeb/Painting/Paintable.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 #include <LibWeb/WebIDL/Promise.h>
 
@@ -1315,8 +1316,8 @@ JS::NonnullGCPtr<WebIDL::Promise> Animation::current_finished_promise() const
 void Animation::invalidate_effect()
 {
     if (m_effect) {
-        if (auto target = m_effect->target())
-            target->invalidate_style();
+        if (auto target = m_effect->target(); target && target->paintable())
+            target->paintable()->set_needs_display();
     }
 }
 

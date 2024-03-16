@@ -146,6 +146,8 @@ public:
     virtual DOM::Element* target() const { return {}; }
     virtual bool is_keyframe_effect() const { return false; }
 
+    virtual void update_style_properties() = 0;
+
 protected:
     AnimationEffect(JS::Realm&);
     virtual ~AnimationEffect() = default;

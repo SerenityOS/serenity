@@ -23,6 +23,8 @@ public:
 
     static NonnullRefPtr<StyleProperties> create() { return adopt_ref(*new StyleProperties); }
 
+    NonnullRefPtr<StyleProperties> clone() const;
+
     template<typename Callback>
     inline void for_each_property(Callback callback) const
     {
@@ -32,16 +34,34 @@ public:
         }
     }
 
+    enum class Important {
+        No,
+        Yes
+    };
+
+    enum class Inherited {
+        No,
+        Yes
+    };
+
     struct StyleAndSourceDeclaration {
         NonnullRefPtr<StyleValue const> style;
         CSS::CSSStyleDeclaration const* declaration = nullptr;
+        Important important { Important::No };
+        Inherited inherited { Inherited::No };
     };
     using PropertyValues = Array<Optional<StyleAndSourceDeclaration>, to_underlying(CSS::last_property_id) + 1>;
 
     auto& properties() { return m_property_values; }
     auto const& properties() const { return m_property_values; }
 
-    void set_property(CSS::PropertyID, NonnullRefPtr<StyleValue const> value, CSS::CSSStyleDeclaration const* source_declaration = nullptr);
+    void reset_animated_properties();
+
+    bool is_property_important(CSS::PropertyID property_id) const;
+    bool is_property_inherited(CSS::PropertyID property_id) const;
+
+    void set_property(CSS::PropertyID, NonnullRefPtr<StyleValue const> value, CSS::CSSStyleDeclaration const* source_declaration = nullptr, Inherited = Inherited::No, Important = Important::No);
+    void set_animated_property(CSS::PropertyID, NonnullRefPtr<StyleValue const> value);
     NonnullRefPtr<StyleValue const> property(CSS::PropertyID) const;
     RefPtr<StyleValue const> maybe_null_property(CSS::PropertyID) const;
     CSS::CSSStyleDeclaration const* property_source_declaration(CSS::PropertyID) const;
@@ -166,6 +186,8 @@ private:
     friend class StyleComputer;
 
     PropertyValues m_property_values;
+    Array<Optional<NonnullRefPtr<StyleValue const>>, to_underlying(CSS::last_property_id) + 1> m_animated_property_values;
+
     Optional<CSS::Overflow> overflow(CSS::PropertyID) const;
     Vector<CSS::ShadowData> shadow(CSS::PropertyID, Layout::Node const&) const;
 

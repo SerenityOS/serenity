@@ -10,6 +10,8 @@
 #include <LibWeb/Animations/KeyframeEffect.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/StyleComputer.h>
+#include <LibWeb/Layout/Node.h>
+#include <LibWeb/Painting/Paintable.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::Animations {
@@ -867,6 +869,58 @@ void KeyframeEffect::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_target_element);
     for (auto const& keyframe : m_keyframe_objects)
         visitor.visit(keyframe);
+}
+
+void KeyframeEffect::update_style_properties()
+{
+    if (!target())
+        return;
+
+    if (pseudo_element_type().has_value()) {
+        // StyleProperties are not saved for pseudo-elements so there is nothing to patch
+        target()->invalidate_style();
+        return;
+    }
+
+    auto* style = target()->computed_css_values();
+    if (!style)
+        return;
+
+    auto style_before_animation_update = style->clone();
+
+    auto& document = target()->document();
+    document.style_computer().collect_animation_into(*this, *style, CSS::StyleComputer::AnimationRefresh::Yes);
+
+    // Traversal of the subtree is necessary to update the animated properties inherited from the target element.
+    target()->for_each_in_subtree_of_type<DOM::Element>([&](auto& element) {
+        auto* element_style = element.computed_css_values();
+        if (!element_style || !element.layout_node())
+            return IterationDecision::Continue;
+
+        for (auto i = to_underlying(CSS::first_property_id); i <= to_underlying(CSS::last_property_id); ++i) {
+            if (element_style->is_property_inherited(static_cast<CSS::PropertyID>(i))) {
+                auto new_value = CSS::StyleComputer::get_inherit_value(document.realm(), static_cast<CSS::PropertyID>(i), &element);
+                element_style->set_property(static_cast<CSS::PropertyID>(i), *new_value, nullptr, CSS::StyleProperties::Inherited::Yes);
+            }
+        }
+
+        element.layout_node()->apply_style(*element_style);
+        return IterationDecision::Continue;
+    });
+
+    auto invalidation = DOM::Element::compute_required_invalidation(style_before_animation_update, *style);
+
+    if (target()->layout_node())
+        target()->layout_node()->apply_style(*style);
+
+    if (invalidation.relayout)
+        document.set_needs_layout();
+    if (invalidation.rebuild_layout_tree)
+        document.invalidate_layout();
+    if (invalidation.repaint)
+        document.set_needs_to_resolve_paint_only_properties();
+    if (invalidation.rebuild_stacking_context_tree)
+        document.invalidate_stacking_context_tree();
 }
 
 }

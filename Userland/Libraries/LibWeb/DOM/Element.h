@@ -166,6 +166,8 @@ public:
         static RequiredInvalidationAfterStyleChange full() { return { true, true, true, true }; }
     };
 
+    static Element::RequiredInvalidationAfterStyleChange compute_required_invalidation(CSS::StyleProperties const& old_style, CSS::StyleProperties const& new_style);
+
     RequiredInvalidationAfterStyleChange recompute_style();
 
     Optional<CSS::Selector::PseudoElement::Type> use_pseudo_element() const { return m_use_pseudo_element; }
@@ -178,6 +180,8 @@ public:
     CSS::StyleProperties const* computed_css_values() const { return m_computed_css_values.ptr(); }
     void set_computed_css_values(RefPtr<CSS::StyleProperties>);
     NonnullRefPtr<CSS::StyleProperties> resolved_css_values();
+
+    void reset_animated_css_properties();
 
     CSS::CSSStyleDeclaration const* inline_style() const;
 
