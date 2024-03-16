@@ -295,9 +295,9 @@ StyleComputer::RuleCache const& StyleComputer::rule_cache_for_cascade_origin(Cas
 [[nodiscard]] static bool filter_namespace_rule(DOM::Element const& element, MatchingRule const& rule)
 {
     // FIXME: Filter out non-default namespace using prefixes
-    auto namespace_uri = rule.sheet->default_namespace();
-    if (namespace_uri.has_value() && namespace_uri.value() != element.namespace_uri()) {
-        return false;
+    if (auto namespace_rule = rule.sheet->default_namespace_rule()) {
+        if (namespace_rule->namespace_uri() != element.namespace_uri())
+            return false;
     }
     return true;
 }

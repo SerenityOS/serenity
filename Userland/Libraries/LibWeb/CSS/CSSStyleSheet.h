@@ -65,6 +65,8 @@ public:
     void set_style_sheet_list(Badge<StyleSheetList>, StyleSheetList*);
 
     Optional<FlyString> default_namespace() const;
+    JS::GCPtr<CSSNamespaceRule> default_namespace_rule() const { return m_default_namespace_rule; }
+
     Optional<FlyString> namespace_uri(StringView namespace_prefix) const;
 
     Optional<URL> base_url() const { return m_base_url; }
