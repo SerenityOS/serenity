@@ -339,6 +339,13 @@ Vector<MatchingRule> StyleComputer::collect_matching_rules(DOM::Element const& e
         add_rules_to_run(rule_cache.pseudo_element_rules);
     if (element.is_document_element())
         add_rules_to_run(rule_cache.root_rules);
+
+    element.for_each_attribute([&](auto& name, auto&) {
+        if (auto it = rule_cache.rules_by_attribute_name.find(name); it != rule_cache.rules_by_attribute_name.end()) {
+            add_rules_to_run(it->value);
+        }
+    });
+
     add_rules_to_run(rule_cache.other_rules);
 
     Vector<MatchingRule> matching_rules;
@@ -2306,6 +2313,7 @@ NonnullOwnPtr<StyleComputer::RuleCache> StyleComputer::make_rule_cache_for_casca
     size_t num_tag_name_rules = 0;
     size_t num_pseudo_element_rules = 0;
     size_t num_root_rules = 0;
+    size_t num_attribute_rules = 0;
 
     Vector<MatchingRule> matching_rules;
     size_t style_sheet_index = 0;
@@ -2363,12 +2371,23 @@ NonnullOwnPtr<StyleComputer::RuleCache> StyleComputer::make_rule_cache_for_casca
                     }
                 }
                 if (!added_to_bucket) {
-                    if (matching_rule.contains_pseudo_element)
+                    if (matching_rule.contains_pseudo_element) {
                         rule_cache->pseudo_element_rules.append(move(matching_rule));
-                    else if (matching_rule.contains_root_pseudo_class)
+                    } else if (matching_rule.contains_root_pseudo_class) {
                         rule_cache->root_rules.append(move(matching_rule));
-                    else
-                        rule_cache->other_rules.append(move(matching_rule));
+                    } else {
+                        for (auto const& simple_selector : selector.compound_selectors().last().simple_selectors) {
+                            if (simple_selector.type == CSS::Selector::SimpleSelector::Type::Attribute) {
+                                rule_cache->rules_by_attribute_name.ensure(simple_selector.attribute().qualified_name.name.lowercase_name).append(move(matching_rule));
+                                ++num_attribute_rules;
+                                added_to_bucket = true;
+                                break;
+                            }
+                        }
+                        if (!added_to_bucket) {
+                            rule_cache->other_rules.append(move(matching_rule));
+                        }
+                    }
                 }
 
                 ++selector_index;
@@ -2415,6 +2434,7 @@ NonnullOwnPtr<StyleComputer::RuleCache> StyleComputer::make_rule_cache_for_casca
         ++style_sheet_index;
     });
 
+    size_t total_rules = num_class_rules + num_id_rules + num_tag_name_rules + num_pseudo_element_rules + num_root_rules + num_attribute_rules + rule_cache->other_rules.size();
     if constexpr (LIBWEB_CSS_DEBUG) {
         dbgln("Built rule cache!");
         dbgln("           ID: {}", num_id_rules);
@@ -2422,8 +2442,9 @@ NonnullOwnPtr<StyleComputer::RuleCache> StyleComputer::make_rule_cache_for_casca
         dbgln("      TagName: {}", num_tag_name_rules);
         dbgln("PseudoElement: {}", num_pseudo_element_rules);
         dbgln("         Root: {}", num_root_rules);
+        dbgln("    Attribute: {}", num_attribute_rules);
         dbgln("        Other: {}", rule_cache->other_rules.size());
-        dbgln("        Total: {}", num_class_rules + num_id_rules + num_tag_name_rules + rule_cache->other_rules.size());
+        dbgln("        Total: {}", total_rules);
     }
     return rule_cache;
 }

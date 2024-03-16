@@ -138,6 +138,7 @@ private:
         HashMap<FlyString, Vector<MatchingRule>> rules_by_id;
         HashMap<FlyString, Vector<MatchingRule>> rules_by_class;
         HashMap<FlyString, Vector<MatchingRule>> rules_by_tag_name;
+        HashMap<FlyString, Vector<MatchingRule>, AK::ASCIICaseInsensitiveFlyStringTraits> rules_by_attribute_name;
         Vector<MatchingRule> pseudo_element_rules;
         Vector<MatchingRule> root_rules;
         Vector<MatchingRule> other_rules;
