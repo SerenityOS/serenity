@@ -101,6 +101,8 @@ public:
     [[nodiscard]] IteratorType end() { return m_table.end(); }
     [[nodiscard]] IteratorType find(K const& key)
     {
+        if (m_table.is_empty())
+            return m_table.end();
         return m_table.find(KeyTraits::hash(key), [&](auto& entry) { return KeyTraits::equals(entry.key, key); });
     }
     template<typename TUnaryPredicate>
@@ -113,6 +115,8 @@ public:
     [[nodiscard]] ConstIteratorType end() const { return m_table.end(); }
     [[nodiscard]] ConstIteratorType find(K const& key) const
     {
+        if (m_table.is_empty())
+            return m_table.end();
         return m_table.find(KeyTraits::hash(key), [&](auto& entry) { return KeyTraits::equals(entry.key, key); });
     }
     template<typename TUnaryPredicate>
@@ -124,12 +128,16 @@ public:
     template<Concepts::HashCompatible<K> Key>
     requires(IsSame<KeyTraits, Traits<K>>) [[nodiscard]] IteratorType find(Key const& key)
     {
+        if (m_table.is_empty())
+            return m_table.end();
         return m_table.find(Traits<Key>::hash(key), [&](auto& entry) { return Traits<K>::equals(entry.key, key); });
     }
 
     template<Concepts::HashCompatible<K> Key>
     requires(IsSame<KeyTraits, Traits<K>>) [[nodiscard]] ConstIteratorType find(Key const& key) const
     {
+        if (m_table.is_empty())
+            return m_table.end();
         return m_table.find(Traits<Key>::hash(key), [&](auto& entry) { return Traits<K>::equals(entry.key, key); });
     }
 
