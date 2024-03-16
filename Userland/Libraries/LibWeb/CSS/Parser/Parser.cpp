@@ -6943,7 +6943,7 @@ NonnullRefPtr<StyleValue> Parser::resolve_unresolved_style_value(Badge<StyleComp
 
 class PropertyDependencyNode : public RefCounted<PropertyDependencyNode> {
 public:
-    static NonnullRefPtr<PropertyDependencyNode> create(String name)
+    static NonnullRefPtr<PropertyDependencyNode> create(FlyString name)
     {
         return adopt_ref(*new PropertyDependencyNode(move(name)));
     }
@@ -6974,12 +6974,12 @@ public:
     }
 
 private:
-    explicit PropertyDependencyNode(String name)
+    explicit PropertyDependencyNode(FlyString name)
         : m_name(move(name))
     {
     }
 
-    String m_name;
+    FlyString m_name;
     Vector<NonnullRefPtr<PropertyDependencyNode>> m_children;
     bool m_marked { false };
 };
@@ -7008,12 +7008,12 @@ NonnullRefPtr<StyleValue> Parser::resolve_unresolved_style_value(DOM::Element& e
 static RefPtr<StyleValue const> get_custom_property(DOM::Element const& element, Optional<CSS::Selector::PseudoElement::Type> pseudo_element, FlyString const& custom_property_name)
 {
     if (pseudo_element.has_value()) {
-        if (auto it = element.custom_properties(pseudo_element).find(custom_property_name.to_string()); it != element.custom_properties(pseudo_element).end())
+        if (auto it = element.custom_properties(pseudo_element).find(custom_property_name); it != element.custom_properties(pseudo_element).end())
             return it->value.value;
     }
 
     for (auto const* current_element = &element; current_element; current_element = current_element->parent_element()) {
-        if (auto it = current_element->custom_properties({}).find(custom_property_name.to_string()); it != current_element->custom_properties({}).end())
+        if (auto it = current_element->custom_properties({}).find(custom_property_name); it != current_element->custom_properties({}).end())
             return it->value.value;
     }
     return nullptr;
@@ -7029,10 +7029,10 @@ bool Parser::expand_variables(DOM::Element& element, Optional<Selector::PseudoEl
         return false;
     }
 
-    auto get_dependency_node = [&](FlyString name) -> NonnullRefPtr<PropertyDependencyNode> {
+    auto get_dependency_node = [&](FlyString const& name) -> NonnullRefPtr<PropertyDependencyNode> {
         if (auto existing = dependencies.get(name); existing.has_value())
             return *existing.value();
-        auto new_node = PropertyDependencyNode::create(name.to_string());
+        auto new_node = PropertyDependencyNode::create(name);
         dependencies.set(name, new_node);
         return new_node;
     };
