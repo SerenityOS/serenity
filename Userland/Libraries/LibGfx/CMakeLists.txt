@@ -70,6 +70,7 @@ set(SOURCES
     Painter.cpp
     Palette.cpp
     Path.cpp
+    PathClipper.cpp
     Point.cpp
     Rect.cpp
     ShareableBitmap.cpp

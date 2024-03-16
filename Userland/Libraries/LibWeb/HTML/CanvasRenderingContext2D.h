@@ -15,6 +15,7 @@
 #include <LibGfx/Forward.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/Path.h>
+#include <LibGfx/PathClipper.h>
 #include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/HTML/Canvas/CanvasCompositing.h>
 #include <LibWeb/HTML/Canvas/CanvasDrawImage.h>
@@ -23,7 +24,6 @@
 #include <LibWeb/HTML/Canvas/CanvasImageData.h>
 #include <LibWeb/HTML/Canvas/CanvasImageSmoothing.h>
 #include <LibWeb/HTML/Canvas/CanvasPath.h>
-#include <LibWeb/HTML/Canvas/CanvasPathClipper.h>
 #include <LibWeb/HTML/Canvas/CanvasPathDrawingStyles.h>
 #include <LibWeb/HTML/Canvas/CanvasRect.h>
 #include <LibWeb/HTML/Canvas/CanvasState.h>
@@ -129,7 +129,7 @@ private:
         auto painter = this->antialiased_painter();
         if (!painter.has_value())
             return;
-        ScopedCanvasPathClip clipper(painter->underlying_painter(), drawing_state().clip);
+        Gfx::ScopedPathClip clipper(painter->underlying_painter(), drawing_state().clip);
         auto draw_rect = draw_function(*painter);
         if (drawing_state().clip.has_value())
             draw_rect.intersect(drawing_state().clip->path.bounding_box());
