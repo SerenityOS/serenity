@@ -1,9 +1,7 @@
-{ pkgs ? import <nixpkgs> { } }:
-with pkgs;
+{ pkgs ? import <nixpkgs> { } }: with pkgs;
 
-stdenv.mkDerivation {
-  name = "cpp-env";
-  nativeBuildInputs = [
+mkShell.override { stdenv = gcc13Stdenv; } {
+  packages = [
     ccache
     cmake
     curl
@@ -21,11 +19,6 @@ stdenv.mkDerivation {
     rsync
     texinfo
     unzip
-  ];
-
-  buildInputs = [
-    e2fsprogs
-    fuse2fs
     # To build the GRUB disk image
     grub2
     libxcrypt
@@ -34,6 +27,4 @@ stdenv.mkDerivation {
     qemu
     python3
   ];
-
-  hardeningDisable = [ "format" "fortify" ];
 }
