@@ -27,35 +27,19 @@ apt-get install curl cmake libmpc-devel gmp-devel e2fsprogs libmpfr-devel ninja-
 
 ## NixOS
 
-You can use the `nix-shell` script [`Toolchain/serenity.nix`](../Toolchain/serenity.nix) to set up the environment (using your host nixpkgs):
+You can use the flake in the root directory to enter a devShell that has all the required packages and tools to build SerenityOS:
 
 ```console
-nix-shell Toolchain/serenity.nix
-
-# With a custom entrypoint, for example your favorite shell
-nix-shell --command bash Toolchain/serenity.nix
+nix develop
 ```
 
-or you can use the nix flake [`Toolchain/flake.nix`](../Toolchain/flake.nix) instead:
+Or you can use the legacy `nix-shell` tool to enter the devShell:
 
 ```console
-nix develop ./Toolchain#
-
-# With a custom entrypoint, for example your favorite shell
-nix develop ./Toolchain# --command bash
+nix-shell Toolchain
 ```
 
-You can also save this environment to a profile:
-
-```
-nix develop Toolchain --profile Toolchain/nix-profiles/dev 
-```
-
-and resume later with:
-
-```
-nix develop Toolchain/nix-profiles/dev
-```
+This will use the `Toolchain/default.nix` file and your host `nixpkgs`.
 
 ## Alpine Linux
 
