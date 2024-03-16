@@ -922,8 +922,9 @@ JS::NonnullGCPtr<Geometry::DOMRectList> Element::get_client_rects() const
     // FIXME: - Replace each anonymous block box with its child box(es) and repeat this until no anonymous block boxes
     //          are left in the final list.
     const_cast<Document&>(document()).update_layout();
-    VERIFY(document().navigable());
-    auto viewport_offset = document().navigable()->viewport_scroll_offset();
+    auto navigable = document().navigable();
+    VERIFY(navigable);
+    auto viewport_offset = navigable->viewport_scroll_offset();
 
     if (document().paintable()) {
         // NOTE: Make sure CSS transforms are resolved before it is used to calculate the rect position.
