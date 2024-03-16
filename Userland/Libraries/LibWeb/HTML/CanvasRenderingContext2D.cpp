@@ -592,7 +592,7 @@ void CanvasRenderingContext2D::clip_internal(Gfx::Path& path, Gfx::Painter::Wind
     if (drawing_state().clip.has_value()) {
         dbgln("FIXME: CRC2D: Calculate the new clip path by intersecting the given path with the current one.");
     }
-    drawing_state().clip = CanvasClip { path, winding_rule };
+    drawing_state().clip = Gfx::ClipPath { path, winding_rule };
 }
 
 void CanvasRenderingContext2D::clip(StringView fill_rule)
