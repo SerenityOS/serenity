@@ -158,7 +158,8 @@ void EventLoop::process()
 
     // 2. Rendering opportunities: Remove from docs all Document objects whose node navigables do not have a rendering opportunity.
     docs.remove_all_matching([&](auto& document) {
-        return document->navigable() && !document->navigable()->has_a_rendering_opportunity();
+        auto navigable = document->navigable();
+        return navigable && !navigable->has_a_rendering_opportunity();
     });
 
     // 3. If docs is not empty, then set hasARenderingOpportunity to true
@@ -254,7 +255,8 @@ void EventLoop::process()
 
     // 16. For each fully active Document in docs, update the rendering or user interface of that Document and its browsing context to reflect the current state.
     for_each_fully_active_document_in_docs([&](DOM::Document& document) {
-        if (document.navigable() && document.navigable()->needs_repaint()) {
+        auto navigable = document.navigable();
+        if (navigable && navigable->needs_repaint()) {
             auto* browsing_context = document.browsing_context();
             auto& page = browsing_context->page();
             page.client().schedule_repaint();

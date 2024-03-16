@@ -29,8 +29,9 @@ void HTMLTitleElement::initialize(JS::Realm& realm)
 void HTMLTitleElement::children_changed()
 {
     HTMLElement::children_changed();
-    if (navigable() && navigable()->is_traversable()) {
-        navigable()->traversable_navigable()->page().client().page_did_change_title(document().title().to_byte_string());
+    auto navigable = this->navigable();
+    if (navigable && navigable->is_traversable()) {
+        navigable->traversable_navigable()->page().client().page_did_change_title(document().title().to_byte_string());
     }
 }
 

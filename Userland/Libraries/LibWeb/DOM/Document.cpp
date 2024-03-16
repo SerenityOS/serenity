@@ -1042,8 +1042,9 @@ void Document::update_layout()
 
     // NOTE: If our parent document needs a relayout, we must do that *first*.
     //       This is necessary as the parent layout may cause our viewport to change.
-    if (navigable() && navigable()->container())
-        navigable()->container()->document().update_layout();
+    auto navigable = this->navigable();
+    if (navigable && navigable->container())
+        navigable->container()->document().update_layout();
 
     update_style();
 
@@ -1054,7 +1055,7 @@ void Document::update_layout()
     if (m_created_for_appropriate_template_contents)
         return;
 
-    if (!navigable())
+    if (!navigable)
         return;
 
     auto viewport_rect = this->viewport_rect();
@@ -1097,10 +1098,10 @@ void Document::update_layout()
     // Broadcast the current viewport rect to any new paintables, so they know whether they're visible or not.
     inform_all_viewport_clients_about_the_current_viewport_rect();
 
-    navigable()->set_needs_display();
+    navigable->set_needs_display();
     set_needs_to_resolve_paint_only_properties();
 
-    if (navigable()->is_traversable()) {
+    if (navigable->is_traversable()) {
         // NOTE: The assignment of scroll frames only needs to occur for traversables because they take care of all
         //       nested navigable documents.
         paintable()->assign_scroll_frames();
@@ -2120,9 +2121,10 @@ void Document::update_readiness(HTML::DocumentReadyState readiness_value)
     dispatch_event(Event::create(realm(), HTML::EventNames::readystatechange));
 
     if (readiness_value == HTML::DocumentReadyState::Complete) {
-        if (navigable() && navigable()->is_traversable()) {
+        auto navigable = this->navigable();
+        if (navigable && navigable->is_traversable()) {
             HTML::HTMLLinkElement::load_fallback_favicon_if_needed(*this).release_value_but_fixme_should_propagate_errors();
-            navigable()->traversable_navigable()->page().client().page_did_finish_loading(url());
+            navigable->traversable_navigable()->page().client().page_did_finish_loading(url());
         } else {
             m_needs_to_call_page_did_load = true;
         }
@@ -2275,7 +2277,8 @@ bool Document::is_fully_active() const
 
 bool Document::is_active() const
 {
-    return navigable() && navigable()->active_document() == this;
+    auto navigable = this->navigable();
+    return navigable && navigable->active_document() == this;
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#dom-document-location
