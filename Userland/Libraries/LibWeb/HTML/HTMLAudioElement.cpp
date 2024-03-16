@@ -24,7 +24,7 @@ HTMLAudioElement::~HTMLAudioElement() = default;
 void HTMLAudioElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLAudioElementPrototype>(realm, "HTMLAudioElement"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(HTMLAudioElement);
 }
 
 JS::GCPtr<Layout::Node> HTMLAudioElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)

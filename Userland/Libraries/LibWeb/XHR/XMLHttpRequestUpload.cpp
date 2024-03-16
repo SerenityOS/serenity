@@ -22,7 +22,7 @@ XMLHttpRequestUpload::~XMLHttpRequestUpload() = default;
 void XMLHttpRequestUpload::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::XMLHttpRequestUploadPrototype>(realm, "XMLHttpRequestUpload"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(XMLHttpRequestUpload);
 }
 
 }

@@ -30,7 +30,7 @@ AnimationEvent::AnimationEvent(JS::Realm& realm, FlyString const& type, Animatio
 void AnimationEvent::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::AnimationEventPrototype>(realm, "AnimationEvent"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(AnimationEvent);
 }
 
 }

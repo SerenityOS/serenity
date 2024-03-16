@@ -53,7 +53,7 @@ MouseEvent::~MouseEvent() = default;
 void MouseEvent::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::MouseEventPrototype>(realm, "MouseEvent"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(MouseEvent);
 }
 
 bool MouseEvent::get_modifier_state(String const& key_arg) const

@@ -29,7 +29,7 @@ RadioNodeList::~RadioNodeList() = default;
 void RadioNodeList::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::RadioNodeListPrototype>(realm, "RadioNodeList"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(RadioNodeList);
 }
 
 static HTML::HTMLInputElement const* radio_button(Node const& node)

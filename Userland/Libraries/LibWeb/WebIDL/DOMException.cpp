@@ -33,7 +33,7 @@ DOMException::~DOMException() = default;
 void DOMException::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::DOMExceptionPrototype>(realm, "DOMException"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(DOMException);
 }
 
 }

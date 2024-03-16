@@ -44,7 +44,7 @@ Attr::Attr(Document& document, QualifiedName qualified_name, String value, Eleme
 void Attr::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::AttrPrototype>(realm, "Attr"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(Attr);
 }
 
 void Attr::visit_edges(Cell::Visitor& visitor)

@@ -59,7 +59,7 @@ void EventTarget::initialize(JS::Realm& realm)
     // FIXME: We can't do this for HTML::Window or HTML::WorkerGlobalScope, as this will run when creating the initial global object.
     //        During this time, the ESO is not setup, so it will cause a nullptr dereference in host_defined_intrinsics.
     if (!is<HTML::WindowOrWorkerGlobalScopeMixin>(this))
-        set_prototype(&Bindings::ensure_web_prototype<Bindings::EventTargetPrototype>(realm, "EventTarget"_fly_string));
+        WEB_SET_PROTOTYPE_FOR_INTERFACE(EventTarget);
 }
 
 void EventTarget::visit_edges(Cell::Visitor& visitor)

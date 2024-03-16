@@ -21,7 +21,7 @@ HTMLOutputElement::~HTMLOutputElement() = default;
 void HTMLOutputElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLOutputElementPrototype>(realm, "HTMLOutputElement"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(HTMLOutputElement);
 }
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#dom-output-defaultvalue

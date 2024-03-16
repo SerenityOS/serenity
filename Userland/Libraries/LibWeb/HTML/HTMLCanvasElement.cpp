@@ -40,7 +40,7 @@ HTMLCanvasElement::~HTMLCanvasElement() = default;
 void HTMLCanvasElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLCanvasElementPrototype>(realm, "HTMLCanvasElement"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(HTMLCanvasElement);
 }
 
 void HTMLCanvasElement::visit_edges(Cell::Visitor& visitor)

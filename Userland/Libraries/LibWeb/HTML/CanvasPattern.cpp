@@ -138,7 +138,7 @@ WebIDL::ExceptionOr<JS::GCPtr<CanvasPattern>> CanvasPattern::create(JS::Realm& r
 void CanvasPattern::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::CanvasPatternPrototype>(realm, "CanvasPattern"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(CanvasPattern);
 }
 
 }

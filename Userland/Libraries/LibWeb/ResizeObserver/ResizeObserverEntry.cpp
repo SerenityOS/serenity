@@ -61,7 +61,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<ResizeObserverEntry>> ResizeObserverEntry::
 void ResizeObserverEntry::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::ResizeObserverEntryPrototype>(realm, "ResizeObserverEntry"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(ResizeObserverEntry);
 }
 
 void ResizeObserverEntry::visit_edges(JS::Cell::Visitor& visitor)

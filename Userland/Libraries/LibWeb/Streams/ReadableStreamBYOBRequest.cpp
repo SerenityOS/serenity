@@ -30,7 +30,7 @@ ReadableStreamBYOBRequest::ReadableStreamBYOBRequest(JS::Realm& realm)
 void ReadableStreamBYOBRequest::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::ReadableStreamBYOBRequestPrototype>(realm, "ReadableStreamBYOBRequest"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(ReadableStreamBYOBRequest);
 }
 
 void ReadableStreamBYOBRequest::visit_edges(Cell::Visitor& visitor)

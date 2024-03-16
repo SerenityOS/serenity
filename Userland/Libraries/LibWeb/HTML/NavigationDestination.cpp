@@ -30,7 +30,7 @@ NavigationDestination::~NavigationDestination() = default;
 void NavigationDestination::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::NavigationDestinationPrototype>(realm, "NavigationDestination"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(NavigationDestination);
 }
 
 void NavigationDestination::visit_edges(JS::Cell::Visitor& visitor)

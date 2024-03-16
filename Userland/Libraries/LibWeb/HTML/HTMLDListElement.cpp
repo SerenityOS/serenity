@@ -21,7 +21,7 @@ HTMLDListElement::~HTMLDListElement() = default;
 void HTMLDListElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLDListElementPrototype>(realm, "HTMLDListElement"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(HTMLDListElement);
 }
 
 }

@@ -29,7 +29,7 @@ Worker::Worker(String const& script_url, WorkerOptions const& options, DOM::Docu
 void Worker::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::WorkerPrototype>(realm, "Worker"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(Worker);
 }
 
 void Worker::visit_edges(Cell::Visitor& visitor)

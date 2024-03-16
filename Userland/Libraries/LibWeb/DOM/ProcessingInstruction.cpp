@@ -22,7 +22,7 @@ ProcessingInstruction::ProcessingInstruction(Document& document, String const& d
 void ProcessingInstruction::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::ProcessingInstructionPrototype>(realm, "ProcessingInstruction"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(ProcessingInstruction);
 }
 
 }

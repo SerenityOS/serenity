@@ -21,7 +21,7 @@ SVGLineElement::SVGLineElement(DOM::Document& document, DOM::QualifiedName quali
 void SVGLineElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGLineElementPrototype>(realm, "SVGLineElement"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(SVGLineElement);
 }
 
 void SVGLineElement::attribute_changed(FlyString const& name, Optional<String> const& value)

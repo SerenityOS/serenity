@@ -81,7 +81,7 @@ XMLHttpRequest::~XMLHttpRequest() = default;
 void XMLHttpRequest::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::XMLHttpRequestPrototype>(realm, "XMLHttpRequest"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(XMLHttpRequest);
 }
 
 void XMLHttpRequest::visit_edges(Cell::Visitor& visitor)

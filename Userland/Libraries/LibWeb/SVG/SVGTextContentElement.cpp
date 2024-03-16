@@ -26,7 +26,7 @@ SVGTextContentElement::SVGTextContentElement(DOM::Document& document, DOM::Quali
 void SVGTextContentElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGTextContentElementPrototype>(realm, "SVGTextContentElement"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(SVGTextContentElement);
 }
 
 Optional<TextAnchor> SVGTextContentElement::text_anchor() const

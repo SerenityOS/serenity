@@ -34,7 +34,7 @@ DOMPoint::~DOMPoint() = default;
 void DOMPoint::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::DOMPointPrototype>(realm, "DOMPoint"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(DOMPoint);
 }
 
 }

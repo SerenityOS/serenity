@@ -40,7 +40,7 @@ void HTMLDivElement::apply_presentational_hints(CSS::StyleProperties& style) con
 void HTMLDivElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLDivElementPrototype>(realm, "HTMLDivElement"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(HTMLDivElement);
 }
 
 }

@@ -29,7 +29,7 @@ MimeTypeArray::~MimeTypeArray() = default;
 void MimeTypeArray::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::MimeTypeArrayPrototype>(realm, "MimeTypeArray"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(MimeTypeArray);
 }
 
 // https://html.spec.whatwg.org/multipage/system-state.html#pdf-viewing-support:support-named-properties-2

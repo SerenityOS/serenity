@@ -115,7 +115,7 @@ WebSocket::~WebSocket() = default;
 void WebSocket::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::WebSocketPrototype>(realm, "WebSocket"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(WebSocket);
 }
 
 ErrorOr<void> WebSocket::establish_web_socket_connection(URL& url_record, Vector<String>& protocols, HTML::EnvironmentSettingsObject& client)

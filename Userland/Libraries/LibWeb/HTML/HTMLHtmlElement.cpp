@@ -22,7 +22,7 @@ HTMLHtmlElement::~HTMLHtmlElement() = default;
 void HTMLHtmlElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLHtmlElementPrototype>(realm, "HTMLHtmlElement"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(HTMLHtmlElement);
 }
 
 bool HTMLHtmlElement::should_use_body_background_properties() const

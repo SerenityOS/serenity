@@ -52,7 +52,7 @@ ReadableStreamDefaultReader::ReadableStreamDefaultReader(JS::Realm& realm)
 void ReadableStreamDefaultReader::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::ReadableStreamDefaultReaderPrototype>(realm, "ReadableStreamDefaultReader"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(ReadableStreamDefaultReader);
 }
 
 void ReadableStreamDefaultReader::visit_edges(Cell::Visitor& visitor)

@@ -374,7 +374,7 @@ Document::~Document()
 void Document::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::DocumentPrototype>(realm, "Document"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(Document);
 
     m_selection = heap().allocate<Selection::Selection>(realm, realm, *this);
 

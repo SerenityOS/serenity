@@ -23,7 +23,7 @@ SVGElement::SVGElement(DOM::Document& document, DOM::QualifiedName qualified_nam
 void SVGElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGElementPrototype>(realm, "SVGElement"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(SVGElement);
 
     m_dataset = HTML::DOMStringMap::create(*this);
 }

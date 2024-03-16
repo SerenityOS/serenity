@@ -33,7 +33,7 @@ CustomElementRegistry::~CustomElementRegistry() = default;
 void CustomElementRegistry::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::CustomElementRegistryPrototype>(realm, "CustomElementRegistry"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(CustomElementRegistry);
 }
 
 void CustomElementRegistry::visit_edges(Visitor& visitor)

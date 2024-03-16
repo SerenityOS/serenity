@@ -40,7 +40,7 @@ XMLSerializer::~XMLSerializer() = default;
 void XMLSerializer::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::XMLSerializerPrototype>(realm, "XMLSerializer"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(XMLSerializer);
 }
 
 // https://w3c.github.io/DOM-Parsing/#dom-xmlserializer-serializetostring

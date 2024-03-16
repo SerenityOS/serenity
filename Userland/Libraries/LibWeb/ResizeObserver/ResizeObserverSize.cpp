@@ -17,7 +17,7 @@ JS_DEFINE_ALLOCATOR(ResizeObserverSize);
 void ResizeObserverSize::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::ResizeObserverSizePrototype>(realm, "ResizeObserverSize"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(ResizeObserverSize);
 }
 
 // https://drafts.csswg.org/resize-observer-1/#calculate-box-size

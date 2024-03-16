@@ -31,7 +31,7 @@ VisualViewport::VisualViewport(DOM::Document& document)
 void VisualViewport::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::VisualViewportPrototype>(realm, "VisualViewport"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(VisualViewport);
 }
 
 void VisualViewport::visit_edges(Cell::Visitor& visitor)

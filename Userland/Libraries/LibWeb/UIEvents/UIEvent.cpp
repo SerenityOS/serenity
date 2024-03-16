@@ -38,7 +38,7 @@ UIEvent::~UIEvent() = default;
 void UIEvent::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::UIEventPrototype>(realm, "UIEvent"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(UIEvent);
 }
 
 void UIEvent::visit_edges(Cell::Visitor& visitor)

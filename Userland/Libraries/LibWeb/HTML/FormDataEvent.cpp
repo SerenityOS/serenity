@@ -28,7 +28,7 @@ FormDataEvent::~FormDataEvent() = default;
 void FormDataEvent::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::FormDataEventPrototype>(realm, "FormDataEvent"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(FormDataEvent);
 }
 
 void FormDataEvent::visit_edges(Cell::Visitor& visitor)

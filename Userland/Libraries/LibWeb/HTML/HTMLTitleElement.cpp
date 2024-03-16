@@ -23,7 +23,7 @@ HTMLTitleElement::~HTMLTitleElement() = default;
 void HTMLTitleElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLTitleElementPrototype>(realm, "HTMLTitleElement"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(HTMLTitleElement);
 }
 
 void HTMLTitleElement::children_changed()

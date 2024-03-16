@@ -30,7 +30,7 @@ AbortController::~AbortController() = default;
 void AbortController::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::AbortControllerPrototype>(realm, "AbortController"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(AbortController);
 }
 
 void AbortController::visit_edges(Cell::Visitor& visitor)

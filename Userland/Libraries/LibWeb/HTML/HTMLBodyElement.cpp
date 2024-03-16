@@ -35,7 +35,7 @@ void HTMLBodyElement::visit_edges(Visitor& visitor)
 void HTMLBodyElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLBodyElementPrototype>(realm, "HTMLBodyElement"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(HTMLBodyElement);
 }
 
 void HTMLBodyElement::apply_presentational_hints(CSS::StyleProperties& style) const

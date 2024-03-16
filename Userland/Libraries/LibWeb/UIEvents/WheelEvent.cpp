@@ -29,7 +29,7 @@ WheelEvent::~WheelEvent() = default;
 void WheelEvent::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::WheelEventPrototype>(realm, "WheelEvent"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(WheelEvent);
 }
 
 JS::NonnullGCPtr<WheelEvent> WheelEvent::create(JS::Realm& realm, FlyString const& event_name, WheelEventInit const& event_init, double page_x, double page_y, double offset_x, double offset_y)

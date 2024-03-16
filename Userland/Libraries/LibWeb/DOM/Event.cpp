@@ -46,7 +46,7 @@ Event::Event(JS::Realm& realm, FlyString const& type, EventInit const& event_ini
 void Event::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::EventPrototype>(realm, "Event"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(Event);
 }
 
 void Event::visit_edges(Visitor& visitor)

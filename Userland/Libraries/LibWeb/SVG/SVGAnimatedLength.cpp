@@ -30,7 +30,7 @@ SVGAnimatedLength::~SVGAnimatedLength() = default;
 void SVGAnimatedLength::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGAnimatedLengthPrototype>(realm, "SVGAnimatedLength"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(SVGAnimatedLength);
 }
 
 void SVGAnimatedLength::visit_edges(Cell::Visitor& visitor)

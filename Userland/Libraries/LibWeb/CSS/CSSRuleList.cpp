@@ -42,7 +42,7 @@ JS::NonnullGCPtr<CSSRuleList> CSSRuleList::create_empty(JS::Realm& realm)
 void CSSRuleList::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSRuleListPrototype>(realm, "CSSRuleList"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(CSSRuleList);
 }
 
 void CSSRuleList::visit_edges(Cell::Visitor& visitor)

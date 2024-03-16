@@ -29,7 +29,7 @@ SVGSVGElement::SVGSVGElement(DOM::Document& document, DOM::QualifiedName qualifi
 void SVGSVGElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGSVGElementPrototype>(realm, "SVGSVGElement"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(SVGSVGElement);
     m_view_box_for_bindings = heap().allocate<SVGAnimatedRect>(realm, realm);
 }
 

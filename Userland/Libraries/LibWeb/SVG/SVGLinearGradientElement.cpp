@@ -23,7 +23,7 @@ SVGLinearGradientElement::SVGLinearGradientElement(DOM::Document& document, DOM:
 void SVGLinearGradientElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGLinearGradientElementPrototype>(realm, "SVGLinearGradientElement"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(SVGLinearGradientElement);
 }
 
 void SVGLinearGradientElement::attribute_changed(FlyString const& name, Optional<String> const& value)

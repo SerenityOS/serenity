@@ -21,7 +21,7 @@ HTMLOListElement::~HTMLOListElement() = default;
 void HTMLOListElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLOListElementPrototype>(realm, "HTMLOListElement"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(HTMLOListElement);
 }
 
 }

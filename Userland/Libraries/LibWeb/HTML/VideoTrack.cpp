@@ -75,7 +75,7 @@ VideoTrack::~VideoTrack()
 void VideoTrack::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::VideoTrackPrototype>(realm, "VideoTrack"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(VideoTrack);
 
     auto id = s_video_track_id_allocator.allocate();
     m_id = MUST(String::number(id));

@@ -20,7 +20,7 @@ BaseAudioContext::~BaseAudioContext() = default;
 void BaseAudioContext::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::BaseAudioContextPrototype>(realm, "BaseAudioContext"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(BaseAudioContext);
 }
 
 void BaseAudioContext::set_onstatechange(WebIDL::CallbackType* event_handler)

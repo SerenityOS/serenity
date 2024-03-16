@@ -33,7 +33,7 @@ SVGAnimatedString::~SVGAnimatedString() = default;
 void SVGAnimatedString::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGAnimatedStringPrototype>(realm, "SVGAnimatedString"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(SVGAnimatedString);
 }
 
 void SVGAnimatedString::visit_edges(Cell::Visitor& visitor)

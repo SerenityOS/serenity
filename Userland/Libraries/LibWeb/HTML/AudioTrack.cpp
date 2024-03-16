@@ -50,7 +50,7 @@ AudioTrack::~AudioTrack()
 void AudioTrack::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::AudioTrackPrototype>(realm, "AudioTrack"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(AudioTrack);
 
     auto id = s_audio_track_id_allocator.allocate();
     m_id = MUST(String::number(id));

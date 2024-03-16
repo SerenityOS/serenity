@@ -33,7 +33,7 @@ MediaQueryList::MediaQueryList(DOM::Document& document, Vector<NonnullRefPtr<Med
 void MediaQueryList::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::MediaQueryListPrototype>(realm, "MediaQueryList"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(MediaQueryList);
 }
 
 void MediaQueryList::visit_edges(Cell::Visitor& visitor)

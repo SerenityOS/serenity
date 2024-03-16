@@ -45,7 +45,7 @@ MessagePort::~MessagePort()
 void MessagePort::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::MessagePortPrototype>(realm, "MessagePort"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(MessagePort);
 }
 
 void MessagePort::visit_edges(Cell::Visitor& visitor)

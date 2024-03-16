@@ -15,6 +15,14 @@
 #include <LibJS/Runtime/VM.h>
 #include <LibWeb/Bindings/HostDefined.h>
 
+#define WEB_SET_PROTOTYPE_FOR_INTERFACE_WITH_CUSTOM_NAME(interface_class, interface_name)                  \
+    do {                                                                                                   \
+        static auto name = #interface_name##_fly_string;                                                   \
+        set_prototype(&Bindings::ensure_web_prototype<Bindings::interface_class##Prototype>(realm, name)); \
+    } while (0)
+
+#define WEB_SET_PROTOTYPE_FOR_INTERFACE(interface_name) WEB_SET_PROTOTYPE_FOR_INTERFACE_WITH_CUSTOM_NAME(interface_name, interface_name)
+
 namespace Web::Bindings {
 
 class Intrinsics final : public JS::Cell {

@@ -21,7 +21,7 @@ SVGEllipseElement::SVGEllipseElement(DOM::Document& document, DOM::QualifiedName
 void SVGEllipseElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGEllipseElementPrototype>(realm, "SVGEllipseElement"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(SVGEllipseElement);
 }
 
 void SVGEllipseElement::attribute_changed(FlyString const& name, Optional<String> const& value)

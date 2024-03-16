@@ -33,7 +33,7 @@ Navigator::~Navigator() = default;
 void Navigator::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::NavigatorPrototype>(realm, "Navigator"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(Navigator);
 }
 
 // https://html.spec.whatwg.org/multipage/system-state.html#dom-navigator-pdfviewerenabled

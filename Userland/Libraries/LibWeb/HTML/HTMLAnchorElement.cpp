@@ -23,7 +23,7 @@ HTMLAnchorElement::~HTMLAnchorElement() = default;
 void HTMLAnchorElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLAnchorElementPrototype>(realm, "HTMLAnchorElement"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(HTMLAnchorElement);
 }
 
 void HTMLAnchorElement::attribute_changed(FlyString const& name, Optional<String> const& value)

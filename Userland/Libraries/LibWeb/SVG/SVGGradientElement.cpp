@@ -135,7 +135,7 @@ JS::GCPtr<SVGGradientElement const> SVGGradientElement::linked_gradient(HashTabl
 void SVGGradientElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGGradientElementPrototype>(realm, "SVGGradientElement"_fly_string));
+    WEB_SET_PROTOTYPE_FOR_INTERFACE(SVGGradientElement);
 }
 
 }
