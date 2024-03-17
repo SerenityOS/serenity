@@ -1367,11 +1367,13 @@ static FloatingPointBuilder binary_to_decimal(u64 mantissa, i64 exponent)
 }
 
 class MinimalBigInt {
+    using Ops = StorageOperations<>;
+
 public:
     MinimalBigInt() = default;
     MinimalBigInt(u64 value)
     {
-        StorageOperations::copy(Detail::get_storage_of(value), get_storage(words_in_u64));
+        Ops::copy(Detail::get_storage_of(value), get_storage(words_in_u64));
     }
 
     static MinimalBigInt from_decimal_floating_point(BasicParseResult const& parse_result, size_t& digits_parsed, size_t max_total_digits)
@@ -1492,8 +1494,8 @@ public:
         u64 top_u64 = 0;
 
         for (size_t i = 0; i < m_used_length; ++i) {
-            size_t word_start = i * word_size;
-            size_t word_end = word_start + word_size;
+            size_t word_start = i * native_word_size;
+            size_t word_end = word_start + native_word_size;
 
             if (top_u64_start < word_end) {
                 if (top_u64_start >= word_start) {
@@ -1516,7 +1518,7 @@ public:
         if (m_used_length == 0)
             return 0;
         // This is guaranteed to be at most max_words_needed * word_size so not above i32 max
-        return static_cast<i32>(word_size * m_used_length) - count_leading_zeroes(m_words[m_used_length - 1]);
+        return static_cast<i32>(native_word_size * m_used_length) - count_leading_zeroes(m_words[m_used_length - 1]);
     }
 
     void multiply_with_power_of_10(u32 exponent)
@@ -1646,7 +1648,7 @@ public:
                     multiply_with_small(power_of_5[i][0]);
                 } else {
                     auto copy = *this;
-                    StorageOperations::baseline_mul(copy.get_storage(), power_of_5[i],
+                    Ops::baseline_mul(copy.get_storage(), power_of_5[i],
                         get_storage(m_used_length + power_of_5[i].size()), g_null_allocator);
                     trim_last_word_if_zero();
                 }
@@ -1657,12 +1659,12 @@ public:
     void multiply_with_power_of_2(u32 exponent)
     {
         if (exponent) {
-            size_t max_new_length = m_used_length + (exponent + word_size - 1) / word_size;
+            size_t max_new_length = m_used_length + (exponent + native_word_size - 1) / native_word_size;
             if (m_used_length != max_words_needed)
                 m_words[m_used_length] = 0;
             auto storage = get_storage(max_new_length);
 
-            StorageOperations::shift_left(storage, exponent, storage);
+            Ops::shift_left(storage, exponent, storage);
             trim_last_word_if_zero();
         }
     }
@@ -1675,7 +1677,7 @@ public:
 
     CompareResult compare_to(MinimalBigInt const& other) const
     {
-        return static_cast<CompareResult>(StorageOperations::compare(get_storage(), other.get_storage(), false));
+        return static_cast<CompareResult>(Ops::compare(get_storage(), other.get_storage(), false));
     }
 
 private:
@@ -1706,11 +1708,11 @@ private:
 
     void multiply_with_small(u64 value)
     {
-        if (value <= max_word) {
+        if (value <= max_native_word) {
             auto native_value = static_cast<NativeWord>(value);
             NativeWord carry = 0;
             for (size_t i = 0; i < m_used_length; ++i) {
-                auto result = UFixedBigInt<word_size>(m_words[i]).wide_multiply(native_value) + carry;
+                auto result = UFixedBigInt<native_word_size>(m_words[i]).wide_multiply(native_value) + carry;
                 carry = result.high();
                 m_words[i] = result.low();
             }
@@ -1719,21 +1721,21 @@ private:
         } else {
             // word_size == 32 && value > NumericLimits<u32>::max()
             auto copy = *this;
-            StorageOperations::baseline_mul(copy.get_storage(), Detail::get_storage_of(value), get_storage(m_used_length + 2), g_null_allocator);
+            Ops::baseline_mul(copy.get_storage(), Detail::get_storage_of(value), get_storage(m_used_length + 2), g_null_allocator);
             trim_last_word_if_zero();
         }
     }
 
     void add_small(u64 value)
     {
-        if (m_used_length == 0 && value <= max_word) {
+        if (m_used_length == 0 && value <= max_native_word) {
             m_words[m_used_length++] = static_cast<NativeWord>(value);
             return;
         }
 
         auto initial_storage = get_storage();
         auto expanded_storage = get_storage(max(m_used_length, words_in_u64));
-        if (StorageOperations::add<false>(initial_storage, Detail::get_storage_of(value), expanded_storage))
+        if (Ops::add<false>(initial_storage, Detail::get_storage_of(value), expanded_storage))
             m_words[m_used_length++] = 1;
     }
 
@@ -1746,7 +1748,7 @@ private:
     }
 
     // The max valid words we might need are log2(10^(769 + 342)), max digits + max exponent
-    static constexpr size_t words_in_u64 = word_size == 64 ? 1 : 2;
+    static constexpr size_t words_in_u64 = native_word_size == 64 ? 1 : 2;
     static constexpr size_t max_words_needed = 58 * words_in_u64;
 
     size_t m_used_length = 0;

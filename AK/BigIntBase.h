@@ -14,33 +14,51 @@
 namespace AK {
 
 namespace Detail {
+
+template<typename T>
+struct DoubleWordHelper;
+
+template<>
+struct DoubleWordHelper<u32> {
+    using Type = u64;
+    using SignedType = i64;
+};
+template<typename T>
+using DoubleWord = typename DoubleWordHelper<T>::Type;
+template<typename T>
+using SignedDoubleWord = typename DoubleWordHelper<T>::SignedType;
+
 // Ideally, we want to store data in the native processor's words. However, for some algorithms,
 // particularly multiplication, we require double of the amount of the native word size.
 #if defined(__SIZEOF_INT128__) && defined(AK_ARCH_64_BIT)
+template<>
+struct DoubleWordHelper<u64> {
+    using Type = unsigned __int128;
+    using SignedType = __int128;
+};
 using NativeWord = u64;
-using DoubleWord = unsigned __int128;
-using SignedDoubleWord = __int128;
 #else
 using NativeWord = u32;
-using DoubleWord = u64;
-using SignedDoubleWord = i64;
 #endif
 
-template<bool sign>
-using ConditionallySignedDoubleWord = Conditional<sign, SignedDoubleWord, DoubleWord>;
+using NativeDoubleWord = DoubleWord<NativeWord>;
+using SignedNativeDoubleWord = SignedDoubleWord<NativeWord>;
+
+template<typename WordType, bool sign>
+using ConditionallySignedDoubleWord = Conditional<sign, SignedDoubleWord<WordType>, DoubleWord<WordType>>;
 
 template<typename T>
-concept BuiltInUFixedInt = OneOf<T, bool, u8, u16, u32, u64, unsigned long, unsigned long long, DoubleWord>;
+concept BuiltInUFixedInt = OneOf<T, bool, u8, u16, u32, u64, unsigned long, unsigned long long, NativeDoubleWord>;
 
 template<typename T>
 constexpr inline size_t bit_width = sizeof(T) * 8;
 
-constexpr size_t word_size = bit_width<NativeWord>;
-constexpr NativeWord max_word = ~static_cast<NativeWord>(0);
-static_assert(word_size == 32 || word_size == 64);
+constexpr size_t native_word_size = bit_width<NativeWord>;
+constexpr NativeWord max_native_word = NumericLimits<NativeWord>::max();
+static_assert(native_word_size == 32 || native_word_size == 64);
 
 // Max big integer length is 256 MiB (2.1e9 bits) for 32-bit, 4 GiB (3.4e10 bits) for 64-bit.
-constexpr size_t max_big_int_length = 1 << (word_size == 32 ? 26 : 29);
+constexpr size_t max_big_int_length = 1 << (native_word_size == 32 ? 26 : 29);
 
 // ===== Static storage for big integers =====
 template<typename T, typename WordType = NativeWord>
@@ -59,8 +77,8 @@ concept IntegerStorage = requires(T storage, size_t index) {
     } -> ConvertibleTo<WordType*>;
 };
 
-template<typename T>
-concept IntegerReadonlyStorage = IntegerStorage<T, NativeWord const>;
+template<typename T, typename WordType = NativeWord>
+concept IntegerReadonlyStorage = IntegerStorage<T, WordType const>;
 
 struct NullAllocator {
     NativeWord* allocate(size_t) { VERIFY_NOT_REACHED(); }
@@ -79,7 +97,7 @@ struct StorageSpan : AK::Span<Word> {
 
     constexpr bool is_negative() const
     {
-        return is_signed && this->last() >> (word_size - 1);
+        return is_signed && this->last() >> (bit_width<Word> - 1);
     }
 };
 
@@ -91,8 +109,8 @@ using UnsignedStorageReadonlySpan = StorageSpan<NativeWord const, false>;
 // `bit_size`-sized and `ceil(bit_size / word_size) * word_size`-sized `StaticStorage`s will act the
 // same.
 template<bool is_signed_, size_t bit_size>
-requires(bit_size <= max_big_int_length * word_size) struct StaticStorage {
-    constexpr static size_t static_size = (bit_size + word_size - 1) / word_size;
+requires(bit_size <= max_big_int_length * native_word_size) struct StaticStorage {
+    constexpr static size_t static_size = (bit_size + native_word_size - 1) / native_word_size;
     constexpr static bool is_signed = is_signed_;
 
     // We store integers in little-endian regardless of the host endianness. We use two's complement
@@ -102,7 +120,7 @@ requires(bit_size <= max_big_int_length * word_size) struct StaticStorage {
 
     constexpr bool is_negative() const
     {
-        return is_signed_ && m_data[static_size - 1] >> (word_size - 1);
+        return is_signed_ && m_data[static_size - 1] >> (native_word_size - 1);
     }
 
     constexpr static size_t size()
@@ -152,41 +170,51 @@ constexpr StaticStorage<false, bit_width<T>> get_storage_of(T value)
 {
     if constexpr (sizeof(T) > sizeof(NativeWord)) {
         static_assert(sizeof(T) == 2 * sizeof(NativeWord));
-        return { static_cast<NativeWord>(value), static_cast<NativeWord>(value >> word_size) };
+        return { static_cast<NativeWord>(value), static_cast<NativeWord>(value >> native_word_size) };
     }
     return { static_cast<NativeWord>(value) };
 }
 
 // ===== Utilities =====
-ALWAYS_INLINE constexpr NativeWord extend_sign(bool sign)
+template<typename Word>
+ALWAYS_INLINE constexpr Word extend_sign(bool sign)
 {
-    return sign ? max_word : 0;
+    return sign ? NumericLimits<Word>::max() : 0;
 }
 
 // FIXME: If available, we might try to use AVX2 and AVX512.
-ALWAYS_INLINE constexpr NativeWord add_words(NativeWord word1, NativeWord word2, bool& carry)
+template<typename WordType>
+ALWAYS_INLINE constexpr WordType add_words(WordType word1, WordType word2, bool& carry)
 {
     if (!is_constant_evaluated()) {
 #if __has_builtin(__builtin_addc)
-        NativeWord ncarry, output;
-        if constexpr (SameAs<NativeWord, unsigned int>)
+        WordType ncarry, output;
+        if constexpr (SameAs<WordType, unsigned int>)
             output = __builtin_addc(word1, word2, carry, reinterpret_cast<unsigned int*>(&ncarry));
-        else if constexpr (SameAs<NativeWord, unsigned long>)
+        else if constexpr (SameAs<WordType, unsigned long>)
             output = __builtin_addcl(word1, word2, carry, reinterpret_cast<unsigned long*>(&ncarry));
-        else if constexpr (SameAs<NativeWord, unsigned long long>)
+        else if constexpr (SameAs<WordType, unsigned long long>)
             output = __builtin_addcll(word1, word2, carry, reinterpret_cast<unsigned long long*>(&ncarry));
         else
             VERIFY_NOT_REACHED();
         carry = ncarry;
         return output;
 #elif ARCH(X86_64)
-        unsigned long long output;
-        carry = __builtin_ia32_addcarryx_u64(carry, word1, word2, &output);
-        return static_cast<NativeWord>(output);
+        if constexpr (SameAs<WordType, unsigned int>) {
+            unsigned int output;
+            carry = __builtin_ia32_addcarryx_u32(carry, word1, word2, &output);
+            return output;
+        } else if constexpr (OneOf<WordType, unsigned long, unsigned long long>) {
+            unsigned long long output;
+            carry = __builtin_ia32_addcarryx_u64(carry, word1, word2, &output);
+            return output;
+        } else {
+            VERIFY_NOT_REACHED();
+        }
 #endif
     }
     // Note: This is usually too confusing for both GCC and Clang.
-    NativeWord output;
+    WordType output;
     bool ncarry = __builtin_add_overflow(word1, word2, &output);
     if (carry) {
         ++output;
@@ -197,28 +225,38 @@ ALWAYS_INLINE constexpr NativeWord add_words(NativeWord word1, NativeWord word2,
     return output;
 }
 
-ALWAYS_INLINE constexpr NativeWord sub_words(NativeWord word1, NativeWord word2, bool& carry)
+template<typename WordType>
+ALWAYS_INLINE constexpr WordType sub_words(WordType word1, WordType word2, bool& carry)
 {
     if (!is_constant_evaluated()) {
 #if __has_builtin(__builtin_subc) && !defined(AK_BUILTIN_SUBC_BROKEN)
-        NativeWord ncarry, output;
-        if constexpr (SameAs<NativeWord, unsigned int>)
+        WordType ncarry, output;
+        if constexpr (SameAs<WordType, unsigned int>)
             output = __builtin_subc(word1, word2, carry, reinterpret_cast<unsigned int*>(&ncarry));
-        else if constexpr (SameAs<NativeWord, unsigned long>)
+        else if constexpr (SameAs<WordType, unsigned long>)
             output = __builtin_subcl(word1, word2, carry, reinterpret_cast<unsigned long*>(&ncarry));
-        else if constexpr (SameAs<NativeWord, unsigned long long>)
+        else if constexpr (SameAs<WordType, unsigned long long>)
             output = __builtin_subcll(word1, word2, carry, reinterpret_cast<unsigned long long*>(&ncarry));
         else
             VERIFY_NOT_REACHED();
         carry = ncarry;
         return output;
 #elif ARCH(X86_64) && defined(AK_COMPILER_GCC)
-        unsigned long long output;
-        carry = __builtin_ia32_sbb_u64(carry, word1, word2, &output);
-        return static_cast<NativeWord>(output);
+        if constexpr (SameAs<WordType, unsigned int>) {
+            unsigned int output;
+            carry = __builtin_ia32_sbb_u32(carry, word1, word2, &output);
+            return output;
+        } else if constexpr (OneOf<WordType, unsigned long, unsigned long long>) {
+            unsigned long long output;
+            carry = __builtin_ia32_sbb_u64(carry, word1, word2, &output);
+            return output;
+        } else {
+            VERIFY_NOT_REACHED();
+        }
 #endif
     }
-    NativeWord output;
+    // Note: This is usually too confusing for both GCC and Clang.
+    WordType output;
     bool ncarry = __builtin_sub_overflow(word1, word2, &output);
     if (carry) {
         if (output == 0)
@@ -229,30 +267,41 @@ ALWAYS_INLINE constexpr NativeWord sub_words(NativeWord word1, NativeWord word2,
     return output;
 }
 
-// Calculate ((dividend1 << word_size) + dividend0) / divisor. Quotient should be guaranteed to fit
-// into NativeWord.
-ALWAYS_INLINE constexpr NativeWord div_mod_words(NativeWord dividend0, NativeWord dividend1, NativeWord divisor, NativeWord& remainder)
+template<typename WordType>
+constexpr DoubleWord<WordType> dword(WordType low, WordType high)
 {
-    auto dividend = (static_cast<DoubleWord>(dividend1) << word_size) + dividend0;
-    remainder = static_cast<NativeWord>(dividend % divisor);
-    return static_cast<NativeWord>(dividend / divisor);
+    return (static_cast<DoubleWord<WordType>>(high) << bit_width<WordType>) | low;
+}
+
+// Calculate ((dividend_high << word_size) + dividend_low) / divisor. Quotient should be guaranteed to fit
+// into WordType.
+template<typename WordType>
+ALWAYS_INLINE constexpr WordType div_mod_words(WordType dividend_low, WordType dividend_high, WordType divisor, WordType& remainder)
+{
+    auto dividend = dword(dividend_low, dividend_high);
+    remainder = static_cast<WordType>(dividend % divisor);
+    return static_cast<WordType>(dividend / divisor);
 }
 
 // ===== Operations on integer storages =====
 // Naming scheme for variables belonging to one of the operands or the result is as follows:
 // trailing digit in a name is 1 if a variable belongs to `operand1` (or the only `operand`), 2 --
 // for `operand2` and no trailing digit -- for `result`.
+template<typename WordType = NativeWord>
 struct StorageOperations {
-    static constexpr void copy(IntegerReadonlyStorage auto const& operand, IntegerStorage auto&& result, size_t offset = 0)
+    static constexpr size_t word_size = bit_width<WordType>;
+    using DoubleWordType = DoubleWord<WordType>;
+
+    static constexpr void copy(IntegerReadonlyStorage<WordType> auto const& operand, IntegerStorage<WordType> auto&& result, size_t offset = 0)
     {
-        auto fill = extend_sign(operand.is_negative());
+        auto fill = extend_sign<WordType>(operand.is_negative());
         size_t size1 = operand.size(), size = result.size();
 
         for (size_t i = 0; i < size; ++i)
             result[i] = i + offset < size1 ? operand[i + offset] : fill;
     }
 
-    static constexpr void set(NativeWord value, auto&& result)
+    static constexpr void set(WordType value, auto&& result)
     {
         result[0] = value;
         for (size_t i = 1; i < result.size(); ++i)
@@ -260,7 +309,7 @@ struct StorageOperations {
     }
 
     // `is_for_inequality' is a hint to compiler that we do not need to differentiate between < and >.
-    static constexpr int compare(IntegerReadonlyStorage auto const& operand1, IntegerReadonlyStorage auto const& operand2, bool is_for_inequality)
+    static constexpr int compare(IntegerReadonlyStorage<WordType> auto const& operand1, IntegerReadonlyStorage<WordType> auto const& operand2, bool is_for_inequality)
     {
         bool sign1 = operand1.is_negative(), sign2 = operand2.is_negative();
         size_t size1 = operand1.size(), size2 = operand2.size();
@@ -271,7 +320,7 @@ struct StorageOperations {
             return 1;
         }
 
-        NativeWord compare_value = extend_sign(sign1);
+        WordType compare_value = extend_sign<WordType>(sign1);
         bool differ_in_high_bits = false;
 
         if (size1 > size2) {
@@ -317,7 +366,7 @@ struct StorageOperations {
     //  - !operand1.is_signed && !operand2.is_signed && !result.is_signed (the function will also work
     //    for signed storages but will extend them with zeroes regardless of the actual sign).
     template<Bitwise operation>
-    static constexpr void compute_bitwise(IntegerReadonlyStorage auto const& operand1, IntegerReadonlyStorage auto const& operand2, IntegerStorage auto&& result)
+    static constexpr void compute_bitwise(IntegerReadonlyStorage<WordType> auto const& operand1, IntegerReadonlyStorage<WordType> auto const& operand2, IntegerStorage<WordType> auto&& result)
     {
         size_t size1 = operand1.size(), size2 = operand2.size(), size = result.size();
 
@@ -345,7 +394,7 @@ struct StorageOperations {
     //       to then easily generate most of the operators via defines). That is why we have unused
     //       first operand here.
     template<Bitwise operation>
-    static constexpr void compute_inplace_bitwise(IntegerReadonlyStorage auto const&, IntegerReadonlyStorage auto const& operand2, IntegerStorage auto&& result)
+    static constexpr void compute_inplace_bitwise(IntegerReadonlyStorage<WordType> auto const&, IntegerReadonlyStorage<WordType> auto const& operand2, IntegerStorage<WordType> auto&& result)
     {
         size_t min_size = min(result.size(), operand2.size());
 
@@ -364,7 +413,7 @@ struct StorageOperations {
     // Requirements for the next two functions:
     //  - shift < result.size() * word_size;
     //  - result.size() == operand.size().
-    static constexpr void shift_left(IntegerReadonlyStorage auto const& operand, size_t shift, IntegerStorage auto&& result)
+    static constexpr void shift_left(IntegerReadonlyStorage<WordType> auto const& operand, size_t shift, IntegerStorage<WordType> auto&& result)
     {
         size_t size = operand.size();
         size_t offset = shift / word_size, remainder = shift % word_size;
@@ -383,7 +432,7 @@ struct StorageOperations {
         }
     }
 
-    static constexpr void shift_right(IntegerReadonlyStorage auto const& operand, size_t shift, IntegerStorage auto&& result)
+    static constexpr void shift_right(IntegerReadonlyStorage<WordType> auto const& operand, size_t shift, IntegerStorage<WordType> auto&& result)
     {
         size_t size = operand.size();
         size_t offset = shift / word_size, remainder = shift % word_size;
@@ -412,10 +461,10 @@ struct StorageOperations {
     //     a + b * (-1) ** subtract = c + r * 2 ** (result.size() * word_size).
     // In particular, r equals 0 iff no overflow has happened.
     template<bool subtract>
-    static constexpr int add(IntegerReadonlyStorage auto const& operand1, IntegerReadonlyStorage auto const& operand2, IntegerStorage auto&& result, bool carry = false)
+    static constexpr int add(IntegerReadonlyStorage<WordType> auto const& operand1, IntegerReadonlyStorage<WordType> auto const& operand2, IntegerStorage<WordType> auto&& result, bool carry = false)
     {
         bool sign1 = operand1.is_negative(), sign2 = operand2.is_negative();
-        auto fill1 = extend_sign(sign1), fill2 = extend_sign(sign2);
+        auto fill1 = extend_sign<WordType>(sign1), fill2 = extend_sign<WordType>(sign2);
         size_t size1 = operand1.size(), size2 = operand2.size(), size = result.size();
 
         for (size_t i = 0; i < size; ++i) {
@@ -436,7 +485,7 @@ struct StorageOperations {
 
     // See `storage_add` for the meaning of the return value.
     template<bool subtract>
-    static constexpr int increment(IntegerStorage auto&& operand)
+    static constexpr int increment(IntegerStorage<WordType> auto&& operand)
     {
         bool carry = true;
         bool sign = operand.is_negative();
@@ -444,9 +493,9 @@ struct StorageOperations {
 
         for (size_t i = 0; i < size; ++i) {
             if constexpr (!subtract)
-                operand[i] = add_words(operand[i], 0, carry);
+                operand[i] = add_words<WordType>(operand[i], 0, carry);
             else
-                operand[i] = sub_words(operand[i], 0, carry);
+                operand[i] = sub_words<WordType>(operand[i], 0, carry);
         }
 
         if constexpr (!subtract)
@@ -459,33 +508,33 @@ struct StorageOperations {
     //  - result.size() == operand.size().
     //
     // Return value: operand != 0.
-    static constexpr bool negate(IntegerReadonlyStorage auto const& operand, IntegerStorage auto&& result)
+    static constexpr bool negate(IntegerReadonlyStorage<WordType> auto const& operand, IntegerStorage<WordType> auto&& result)
     {
         bool carry = false;
         size_t size = operand.size();
         for (size_t i = 0; i < size; ++i)
-            result[i] = sub_words(0, operand[i], carry);
+            result[i] = sub_words<WordType>(0, operand[i], carry);
         return carry;
     }
 
     // No allocations will occur if both operands are unsigned.
-    template<IntegerReadonlyStorage Operand1, IntegerReadonlyStorage Operand2>
-    static constexpr void baseline_mul(Operand1 const& operand1, Operand2 const& operand2, IntegerStorage auto&& __restrict__ result, auto&& buffer)
+    template<IntegerReadonlyStorage<WordType> Operand1, IntegerReadonlyStorage<WordType> Operand2>
+    static constexpr void baseline_mul(Operand1 const& operand1, Operand2 const& operand2, IntegerStorage<WordType> auto&& __restrict__ result, auto&& buffer)
     {
         bool sign1 = operand1.is_negative(), sign2 = operand2.is_negative();
         size_t size1 = operand1.size(), size2 = operand2.size(), size = result.size();
 
         if (size1 == 1 && size2 == 1) {
             // We do not want to compete with the cleverness of the compiler of multiplying NativeWords.
-            ConditionallySignedDoubleWord<Operand1::is_signed> word1 = operand1[0];
-            ConditionallySignedDoubleWord<Operand2::is_signed> word2 = operand2[0];
-            auto value = static_cast<DoubleWord>(word1 * word2);
+            ConditionallySignedDoubleWord<WordType, Operand1::is_signed> word1 = operand1[0];
+            ConditionallySignedDoubleWord<WordType, Operand2::is_signed> word2 = operand2[0];
+            auto value = static_cast<DoubleWordType>(word1 * word2);
 
             result[0] = value;
             if (size > 1) {
                 result[1] = value >> word_size;
 
-                auto fill = extend_sign(sign1 ^ sign2);
+                auto fill = extend_sign<WordType>(sign1 ^ sign2);
                 for (size_t i = 2; i < result.size(); ++i)
                     result[i] = fill;
             }
@@ -503,31 +552,31 @@ struct StorageOperations {
         if (size2 < size) {
             if (sign1) {
                 auto inverted = buffer.allocate(size1);
-                negate(operand1, UnsignedStorageSpan { inverted, size1 });
+                negate(operand1, StorageSpan<WordType, false> { inverted, size1 });
                 data1 = inverted;
             }
             if (sign2) {
                 auto inverted = buffer.allocate(size2);
-                negate(operand2, UnsignedStorageSpan { inverted, size2 });
+                negate(operand2, StorageSpan<WordType, false> { inverted, size2 });
                 data2 = inverted;
             }
         }
         size1 = min(size1, size), size2 = min(size2, size);
 
         // Do schoolbook O(size1 * size2).
-        DoubleWord carry = 0;
+        DoubleWordType carry = 0;
         for (size_t i = 0; i < size; ++i) {
-            result[i] = static_cast<NativeWord>(carry);
+            result[i] = static_cast<WordType>(carry);
             carry >>= word_size;
 
             size_t start_index = i >= size2 ? i - size2 + 1 : 0;
             size_t end_index = min(i + 1, size1);
 
             for (size_t j = start_index; j < end_index; ++j) {
-                auto x = static_cast<DoubleWord>(data1[j]) * data2[i - j];
+                auto x = static_cast<DoubleWordType>(data1[j]) * data2[i - j];
 
                 bool ncarry = false;
-                result[i] = add_words(result[i], static_cast<NativeWord>(x), ncarry);
+                result[i] = add_words(result[i], static_cast<WordType>(x), ncarry);
                 carry += (x >> word_size) + ncarry;
             }
         }
@@ -536,9 +585,10 @@ struct StorageOperations {
             negate(result, result);
     }
 };
+
 }
 
-using Detail::StorageOperations, Detail::NativeWord, Detail::word_size, Detail::max_word,
+using Detail::StorageOperations, Detail::NativeWord, Detail::native_word_size, Detail::max_native_word,
     Detail::UnsignedStorageSpan, Detail::UnsignedStorageReadonlySpan;
 
 inline Detail::NullAllocator g_null_allocator;
