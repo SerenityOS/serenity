@@ -6,6 +6,7 @@
  */
 
 #include "UnsignedBigIntegerAlgorithms.h"
+#include <AK/BigIntBase.h>
 #include <AK/BuiltinWrappers.h>
 #include <AK/NumericLimits.h>
 
@@ -205,6 +206,15 @@ FLATTEN void UnsignedBigIntegerAlgorithms::shift_left_without_allocation(
         shift_left_by_n_words(temp_plus, temp_result.length(), temp_result);
         add_into_accumulator_without_allocation(output, temp_result);
     }
+}
+
+FLATTEN void UnsignedBigIntegerAlgorithms::shift_right_without_allocation(
+    UnsignedBigInteger const& number,
+    size_t num_bits,
+    UnsignedBigInteger& output)
+{
+    output.m_words.resize_and_keep_capacity(number.length() - (num_bits / UnsignedBigInteger::BITS_IN_WORD));
+    Ops::shift_right(number.words_span(), num_bits, output.words_span());
 }
 
 void UnsignedBigIntegerAlgorithms::shift_left_by_n_words(

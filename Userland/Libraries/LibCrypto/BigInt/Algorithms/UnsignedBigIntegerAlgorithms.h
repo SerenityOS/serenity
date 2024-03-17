@@ -11,6 +11,8 @@
 namespace Crypto {
 
 class UnsignedBigIntegerAlgorithms {
+    using Ops = AK::StorageOperations<UnsignedBigInteger::Word>;
+
 public:
     static void add_without_allocation(UnsignedBigInteger const& left, UnsignedBigInteger const& right, UnsignedBigInteger& output);
     static void add_into_accumulator_without_allocation(UnsignedBigInteger& accumulator, UnsignedBigInteger const& value);
@@ -20,6 +22,7 @@ public:
     static void bitwise_xor_without_allocation(UnsignedBigInteger const& left, UnsignedBigInteger const& right, UnsignedBigInteger& output);
     static void bitwise_not_fill_to_one_based_index_without_allocation(UnsignedBigInteger const& left, size_t, UnsignedBigInteger& output);
     static void shift_left_without_allocation(UnsignedBigInteger const& number, size_t bits_to_shift_by, UnsignedBigInteger& temp_result, UnsignedBigInteger& temp_plus, UnsignedBigInteger& output);
+    static void shift_right_without_allocation(UnsignedBigInteger const& number, size_t num_bits, UnsignedBigInteger& output);
     static void multiply_without_allocation(UnsignedBigInteger const& left, UnsignedBigInteger const& right, UnsignedBigInteger& temp_shift_result, UnsignedBigInteger& temp_shift_plus, UnsignedBigInteger& temp_shift, UnsignedBigInteger& output);
     static void divide_without_allocation(UnsignedBigInteger const& numerator, UnsignedBigInteger const& denominator, UnsignedBigInteger& temp_shift_result, UnsignedBigInteger& temp_shift_plus, UnsignedBigInteger& temp_shift, UnsignedBigInteger& temp_minus, UnsignedBigInteger& quotient, UnsignedBigInteger& remainder);
     static void divide_u16_without_allocation(UnsignedBigInteger const& numerator, UnsignedBigInteger::Word denominator, UnsignedBigInteger& quotient, UnsignedBigInteger& remainder);
