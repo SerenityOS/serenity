@@ -30,7 +30,7 @@ static IntegerType Power(IntegerType const& b, IntegerType const& e)
             exp.set_to(exp.multiplied_by(base));
 
         // ep = ep / 2;
-        ep.set_to(ep.divided_by(IntegerType { 2 }).quotient);
+        ep.set_to(ep.shift_right(1));
 
         // base = base * base
         base.set_to(base.multiplied_by(base));
