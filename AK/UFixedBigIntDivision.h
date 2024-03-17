@@ -74,64 +74,7 @@ constexpr void div_mod_internal(
     Ops::copy(operand1, dividend);
     auto divisor = operand2;
 
-    // D1. Normalize
-    // FIXME: Investigate GCC producing bogus -Warray-bounds when dividing u128 by u32. This code
-    //        should not be reachable at all in this case because fast paths above cover all cases
-    //        when `operand2.size() == 1`.
-    AK_IGNORE_DIAGNOSTIC("-Warray-bounds", size_t shift = count_leading_zeroes(divisor[divisor_len - 1]);)
-    Ops::shift_left(dividend, shift, dividend);
-    Ops::shift_left(divisor, shift, divisor);
-
-    auto divisor_approx = divisor[divisor_len - 1];
-
-    for (size_t i = dividend_len + 1; i-- > divisor_len;) {
-        // D3. Calculate qhat
-        NativeWord qhat;
-        VERIFY(dividend[i] <= divisor_approx);
-        if (dividend[i] == divisor_approx) {
-            qhat = max_native_word;
-        } else {
-            NativeWord rhat;
-            qhat = div_mod_words(dividend[i - 1], dividend[i], divisor_approx, rhat);
-
-            auto is_qhat_too_large = [&] {
-                return UFixedBigInt<native_word_size> { qhat }.wide_multiply(divisor[divisor_len - 2]) > UFixedBigInt<native_word_size * 2> { dividend[i - 2], rhat };
-            };
-            if (is_qhat_too_large()) {
-                --qhat;
-                bool carry = false;
-                rhat = add_words(rhat, divisor_approx, carry);
-                if (!carry && is_qhat_too_large())
-                    --qhat;
-            }
-        }
-
-        // D4. Multiply & subtract
-        NativeWord mul_carry = 0;
-        bool sub_carry = false;
-        for (size_t j = 0; j < divisor_len; ++j) {
-            auto mul_result = UFixedBigInt<native_word_size> { qhat }.wide_multiply(divisor[j]) + mul_carry;
-            auto& output = dividend[i + j - divisor_len];
-            output = sub_words(output, mul_result.low(), sub_carry);
-            mul_carry = mul_result.high();
-        }
-        dividend[i] = sub_words(dividend[i], mul_carry, sub_carry);
-
-        if (sub_carry) {
-            // D6. Add back
-            auto dividend_part = UnsignedStorageSpan { dividend.data() + i - divisor_len, divisor_len + 1 };
-            VERIFY(Ops::add<false>(dividend_part, divisor, dividend_part));
-        }
-
-        quotient[i - divisor_len] = qhat - sub_carry;
-    }
-
-    for (size_t i = dividend_len - divisor_len + 1; i < quotient.size(); ++i)
-        quotient[i] = 0;
-
-    // D8. Unnormalize
-    if constexpr (restore_remainder)
-        Ops::shift_right(UnsignedStorageSpan { dividend.data(), remainder.size() }, shift, remainder);
+    Ops::div_mod_internal<restore_remainder>(dividend, divisor, quotient, remainder, dividend_len, divisor_len);
 }
 
 }

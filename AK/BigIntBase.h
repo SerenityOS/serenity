@@ -147,6 +147,8 @@ requires(bit_size <= max_big_int_length * native_word_size) struct StaticStorage
     {
         return m_data;
     }
+
+    constexpr operator StorageSpan<NativeWord, is_signed>() { return { m_data, static_size }; }
 };
 
 struct IntegerWrapper {
@@ -265,6 +267,12 @@ ALWAYS_INLINE constexpr WordType sub_words(WordType word1, WordType word2, bool&
     }
     carry = ncarry;
     return output;
+}
+
+template<typename WordType>
+ALWAYS_INLINE constexpr DoubleWord<WordType> wide_multiply(WordType word1, WordType word2)
+{
+    return static_cast<DoubleWord<WordType>>(word1) * word2;
 }
 
 template<typename WordType>
@@ -583,6 +591,74 @@ struct StorageOperations {
 
         if (size2 < size && (sign1 ^ sign2))
             negate(result, result);
+    }
+
+    template<bool restore_remainder = false>
+    static constexpr void div_mod_internal(
+        StorageSpan<WordType, false> dividend, StorageSpan<WordType, false> divisor,
+        StorageSpan<WordType, false> quotient, StorageSpan<WordType, false> remainder,
+        size_t dividend_len, size_t divisor_len)
+    {
+        // Knuth's algorithm D
+        // D1. Normalize
+        // FIXME: Investigate GCC producing bogus -Warray-bounds when dividing u128 by u32. This code
+        //        should not be reachable at all in this case because fast paths above cover all cases
+        //        when `operand2.size() == 1`.
+        AK_IGNORE_DIAGNOSTIC("-Warray-bounds", size_t shift = count_leading_zeroes(divisor[divisor_len - 1]);)
+        shift_left(dividend, shift, dividend);
+        shift_left(divisor, shift, divisor);
+
+        auto divisor_approx = divisor[divisor_len - 1];
+
+        for (size_t i = dividend_len + 1; i-- > divisor_len;) {
+            // D3. Calculate qhat
+            WordType qhat;
+            VERIFY(dividend[i] <= divisor_approx);
+            if (dividend[i] == divisor_approx) {
+                qhat = NumericLimits<WordType>::max();
+            } else {
+                WordType rhat;
+                qhat = div_mod_words(dividend[i - 1], dividend[i], divisor_approx, rhat);
+
+                auto is_qhat_too_large = [&] {
+                    return wide_multiply(qhat, divisor[divisor_len - 2]) > dword(dividend[i - 2], rhat);
+                };
+                if (is_qhat_too_large()) {
+                    --qhat;
+                    bool carry = false;
+                    rhat = add_words(rhat, divisor_approx, carry);
+                    if (!carry && is_qhat_too_large())
+                        --qhat;
+                }
+            }
+
+            // D4. Multiply & subtract
+            WordType mul_carry = 0;
+            bool sub_carry = false;
+            for (size_t j = 0; j < divisor_len; ++j) {
+                auto mul_result = wide_multiply(qhat, divisor[j]) + mul_carry;
+                auto& output = dividend[i + j - divisor_len];
+                output = sub_words(output, static_cast<WordType>(mul_result), sub_carry);
+                mul_carry = mul_result >> word_size;
+            }
+            dividend[i] = sub_words(dividend[i], mul_carry, sub_carry);
+
+            if (sub_carry) {
+                // D6. Add back
+                auto dividend_part = StorageSpan<WordType, false> { dividend.slice(i - divisor_len, divisor_len + 1) };
+                auto overflow = add<false>(dividend_part, divisor, dividend_part);
+                VERIFY(overflow == 1);
+            }
+
+            quotient[i - divisor_len] = qhat - sub_carry;
+        }
+
+        for (size_t i = dividend_len - divisor_len + 1; i < quotient.size(); ++i)
+            quotient[i] = 0;
+
+        // D8. Unnormalize
+        if constexpr (restore_remainder)
+            shift_right(StorageSpan<WordType, false> { dividend.trim(remainder.size()) }, shift, remainder);
     }
 };
 
