@@ -1,11 +1,12 @@
 /*
- * Copyright (c) 2022-2023, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022-2024, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2024, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Debug.h>
+#include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/Layout/AvailableSpace.h>
 #include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/InlineNode.h>
@@ -206,6 +207,10 @@ void LayoutState::commit(Box& root)
     //       from the layout tree. This is done to ensure that we don't end up with any old-tree pointers
     //       when text paintables shift around in the tree.
     root.for_each_in_inclusive_subtree([&](Layout::Node& node) {
+        node.set_paintable(nullptr);
+        return IterationDecision::Continue;
+    });
+    root.document().for_each_shadow_including_inclusive_descendant([&](DOM::Node& node) {
         node.set_paintable(nullptr);
         return IterationDecision::Continue;
     });
