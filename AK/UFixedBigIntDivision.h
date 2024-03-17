@@ -95,7 +95,7 @@ constexpr void div_mod_internal(
             qhat = div_mod_words(dividend[i - 1], dividend[i], divisor_approx, rhat);
 
             auto is_qhat_too_large = [&] {
-                return UFixedBigInt<native_word_size> { qhat }.wide_multiply(divisor[divisor_len - 2]) > u128 { dividend[i - 2], rhat };
+                return UFixedBigInt<native_word_size> { qhat }.wide_multiply(divisor[divisor_len - 2]) > UFixedBigInt<native_word_size * 2> { dividend[i - 2], rhat };
             };
             if (is_qhat_too_large()) {
                 --qhat;
