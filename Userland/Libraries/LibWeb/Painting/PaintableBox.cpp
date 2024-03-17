@@ -276,6 +276,8 @@ Optional<CSSPixelRect> PaintableBox::scroll_thumb_rect(ScrollDirection direction
     auto scroll_overflow_size = direction == ScrollDirection::Horizontal ? scrollable_overflow_rect.width() : scrollable_overflow_rect.height();
     auto scrollport_size = direction == ScrollDirection::Horizontal ? padding_rect.width() : padding_rect.height();
     auto scroll_offset = direction == ScrollDirection::Horizontal ? this->scroll_offset().x() : this->scroll_offset().y();
+    if (scroll_overflow_size == 0)
+        return {};
 
     auto thumb_size = scrollport_size * (scrollport_size / scroll_overflow_size);
     CSSPixels thumb_position = 0;
