@@ -144,7 +144,7 @@ void EdgeFlagPathRasterizer<SamplesPerPixel>::fill_internal(Painter& painter, Pa
     if (m_clip.is_empty())
         return;
 
-    auto& lines = path.split_lines();
+    auto lines = path.split_lines();
     if (lines.is_empty())
         return;
 

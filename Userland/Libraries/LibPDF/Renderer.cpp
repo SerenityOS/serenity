@@ -247,7 +247,7 @@ RENDERER_HANDLER(path_move)
 
 RENDERER_HANDLER(path_line)
 {
-    VERIFY(!m_current_path.segments().is_empty());
+    VERIFY(!m_current_path.is_empty());
     m_current_path.line_to(map(args[0].to_float(), args[1].to_float()));
     return {};
 }
@@ -265,8 +265,8 @@ RENDERER_HANDLER(path_cubic_bezier_curve)
 RENDERER_HANDLER(path_cubic_bezier_curve_no_first_control)
 {
     VERIFY(args.size() == 4);
-    VERIFY(!m_current_path.segments().is_empty());
-    auto current_point = (*m_current_path.segments().rbegin())->point();
+    VERIFY(!m_current_path.is_empty());
+    auto current_point = m_current_path.last_point();
     m_current_path.cubic_bezier_curve_to(
         current_point,
         map(args[0].to_float(), args[1].to_float()),
@@ -277,7 +277,7 @@ RENDERER_HANDLER(path_cubic_bezier_curve_no_first_control)
 RENDERER_HANDLER(path_cubic_bezier_curve_no_second_control)
 {
     VERIFY(args.size() == 4);
-    VERIFY(!m_current_path.segments().is_empty());
+    VERIFY(!m_current_path.is_empty());
     auto first_control_point = map(args[0].to_float(), args[1].to_float());
     auto second_control_point = map(args[2].to_float(), args[3].to_float());
     m_current_path.cubic_bezier_curve_to(

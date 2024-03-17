@@ -129,7 +129,8 @@ WebIDL::ExceptionOr<void> CanvasPath::arc_to(double x1, double y1, double x2, do
 
     // 2. Ensure there is a subpath for (x1, y1).
     auto transform = active_transform();
-    m_path.ensure_subpath(transform.map(Gfx::FloatPoint { x1, y1 }));
+    if (m_path.is_empty())
+        m_path.move_to(transform.map(Gfx::FloatPoint { x1, y1 }));
 
     // 3. If radius is negative, then throw an "IndexSizeError" DOMException.
     if (radius < 0)

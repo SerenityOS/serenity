@@ -279,10 +279,10 @@ public:
                     path.line_to(TRY(read_point()));
                     break;
                 case PathCommand::HorizontalLine:
-                    path.line_to({ TRY(read_unit()), path.segments().last()->point().y() });
+                    path.line_to({ TRY(read_unit()), path.last_point().y() });
                     break;
                 case PathCommand::VerticalLine:
-                    path.line_to({ path.segments().last()->point().x(), TRY(read_unit()) });
+                    path.line_to({ path.last_point().x(), TRY(read_unit()) });
                     break;
                 case PathCommand::CubicBezier: {
                     auto control_0 = TRY(read_point());
