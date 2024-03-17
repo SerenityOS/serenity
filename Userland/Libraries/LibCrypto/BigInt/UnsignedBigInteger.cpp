@@ -492,6 +492,15 @@ FLATTEN UnsignedBigInteger UnsignedBigInteger::shift_left(size_t num_bits) const
     return output;
 }
 
+FLATTEN UnsignedBigInteger UnsignedBigInteger::shift_right(size_t num_bits) const
+{
+    UnsignedBigInteger output;
+
+    UnsignedBigIntegerAlgorithms::shift_right_without_allocation(*this, num_bits, output);
+
+    return output;
+}
+
 FLATTEN UnsignedBigInteger UnsignedBigInteger::multiplied_by(UnsignedBigInteger const& other) const
 {
     UnsignedBigInteger result;

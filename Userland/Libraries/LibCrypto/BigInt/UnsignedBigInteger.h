@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <AK/BigIntBase.h>
 #include <AK/ByteBuffer.h>
 #include <AK/ByteString.h>
 #include <AK/Concepts.h>
@@ -24,6 +25,8 @@ constexpr size_t STARTING_WORD_SIZE = 32;
 class UnsignedBigInteger {
 public:
     using Word = u32;
+    using StorageSpan = AK::Detail::StorageSpan<Word, false>;
+    using ConstStorageSpan = AK::Detail::StorageSpan<Word const, false>;
     static constexpr size_t BITS_IN_WORD = 32;
 
     // This constructor accepts any unsigned with size up to Word.
@@ -114,6 +117,7 @@ public:
     [[nodiscard]] UnsignedBigInteger bitwise_xor(UnsignedBigInteger const& other) const;
     [[nodiscard]] UnsignedBigInteger bitwise_not_fill_to_one_based_index(size_t) const;
     [[nodiscard]] UnsignedBigInteger shift_left(size_t num_bits) const;
+    [[nodiscard]] UnsignedBigInteger shift_right(size_t num_bits) const;
     [[nodiscard]] UnsignedBigInteger multiplied_by(UnsignedBigInteger const& other) const;
     [[nodiscard]] UnsignedDivisionResult divided_by(UnsignedBigInteger const& divisor) const;
 
@@ -140,6 +144,8 @@ private:
     // Little endian
     // m_word[0] + m_word[1] * Word::MAX + m_word[2] * Word::MAX * Word::MAX + ...
     Vector<Word, STARTING_WORD_SIZE> m_words;
+    StorageSpan words_span() { return { m_words.data(), m_words.size() }; }
+    ConstStorageSpan words_span() const { return { m_words.data(), m_words.size() }; }
 
     mutable u32 m_cached_hash { 0 };
 

@@ -117,6 +117,7 @@ public:
     [[nodiscard]] SignedBigInteger bitwise_xor(SignedBigInteger const& other) const;
     [[nodiscard]] SignedBigInteger bitwise_not() const;
     [[nodiscard]] SignedBigInteger shift_left(size_t num_bits) const;
+    [[nodiscard]] SignedBigInteger shift_right(size_t num_bits) const;
     [[nodiscard]] SignedBigInteger multiplied_by(SignedBigInteger const& other) const;
     [[nodiscard]] SignedDivisionResult divided_by(SignedBigInteger const& divisor) const;
 
