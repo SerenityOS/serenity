@@ -926,10 +926,8 @@ JS::NonnullGCPtr<Geometry::DOMRectList> Element::get_client_rects() const
     VERIFY(navigable);
     auto viewport_offset = navigable->viewport_scroll_offset();
 
-    if (document().paintable()) {
-        // NOTE: Make sure CSS transforms are resolved before it is used to calculate the rect position.
-        const_cast<Painting::ViewportPaintable*>(document().paintable())->resolve_paint_only_properties();
-    }
+    // NOTE: Make sure CSS transforms are resolved before it is used to calculate the rect position.
+    const_cast<Document&>(document()).update_paint_and_hit_testing_properties_if_needed();
 
     Gfx::AffineTransform transform;
     for (auto const* containing_block = this->paintable_box(); containing_block; containing_block = containing_block->containing_block()) {
