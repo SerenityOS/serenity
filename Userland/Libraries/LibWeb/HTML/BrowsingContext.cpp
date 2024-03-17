@@ -279,9 +279,15 @@ BrowsingContext::BrowsingContext(JS::NonnullGCPtr<Page> page)
     m_cursor_blink_timer = Core::Timer::create_repeating(500, [this] {
         if (!is_focused_context())
             return;
-        if (m_cursor_position && m_cursor_position->node()->paintable()) {
+        if (!m_cursor_position)
+            return;
+        auto node = m_cursor_position->node();
+        if (!node)
+            return;
+        node->document().update_layout();
+        if (node->paintable()) {
             m_cursor_blink_state = !m_cursor_blink_state;
-            m_cursor_position->node()->paintable()->set_needs_display();
+            node->paintable()->set_needs_display();
         }
     }).release_value_but_fixme_should_propagate_errors();
 }
