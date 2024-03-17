@@ -58,7 +58,7 @@ constexpr auto& get_storage_of(UFixedBigInt<bit_size> const& value) { return val
 template<typename Operand1, typename Operand2, typename Result>
 constexpr void mul_internal(Operand1 const& operand1, Operand2 const& operand2, Result& result)
 {
-    StorageOperations::baseline_mul(operand1, operand2, result, g_null_allocator);
+    StorageOperations<>::baseline_mul(operand1, operand2, result, g_null_allocator);
 }
 
 template<size_t dividend_size, size_t divisor_size, bool restore_remainder>
@@ -72,27 +72,28 @@ template<size_t bit_size, typename Storage>
 class UFixedBigInt {
     constexpr static size_t static_size = Storage::static_size;
     constexpr static size_t part_size = static_size / 2;
-    using UFixedBigIntPart = Conditional<part_size * word_size <= 64, u64, UFixedBigInt<part_size * word_size>>;
+    using UFixedBigIntPart = Conditional<part_size * native_word_size <= 64, u64, UFixedBigInt<part_size * native_word_size>>;
+    using Ops = StorageOperations<>;
 
 public:
     constexpr UFixedBigInt() = default;
 
-    explicit constexpr UFixedBigInt(IntegerWrapper value) { StorageOperations::copy(value.m_data, m_data); }
+    explicit constexpr UFixedBigInt(IntegerWrapper value) { Ops::copy(value.m_data, m_data); }
     consteval UFixedBigInt(int value)
     {
-        StorageOperations::copy(IntegerWrapper(value).m_data, m_data);
+        Ops::copy(IntegerWrapper(value).m_data, m_data);
     }
 
     template<UFixedInt T>
     requires(sizeof(T) > sizeof(Storage)) explicit constexpr UFixedBigInt(T const& value)
     {
-        StorageOperations::copy(get_storage_of(value), m_data);
+        Ops::copy(get_storage_of(value), m_data);
     }
 
     template<UFixedInt T>
     requires(sizeof(T) <= sizeof(Storage)) constexpr UFixedBigInt(T const& value)
     {
-        StorageOperations::copy(get_storage_of(value), m_data);
+        Ops::copy(get_storage_of(value), m_data);
     }
 
     constexpr UFixedBigInt(UFixedBigIntPart const& low, UFixedBigIntPart const& high)
@@ -112,21 +113,21 @@ public:
         size_t offset = 0;
 
         for (size_t i = 0; i < n; ++i) {
-            if (offset % word_size == 0) {
+            if (offset % native_word_size == 0) {
                 // Aligned initialization (i. e. u256 from two u128)
                 decltype(auto) storage = get_storage_of(value[i]);
                 for (size_t i = 0; i < storage.size(); ++i)
-                    m_data[i + offset / word_size] = storage[i];
-            } else if (offset % word_size == 32 && IsSame<T, u32>) {
+                    m_data[i + offset / native_word_size] = storage[i];
+            } else if (offset % native_word_size == 32 && IsSame<T, u32>) {
                 // u32 vector initialization on 64-bit platforms
-                m_data[offset / word_size] |= static_cast<DoubleWord>(value[i]) << 32;
+                m_data[offset / native_word_size] |= static_cast<NativeDoubleWord>(value[i]) << 32;
             } else {
                 VERIFY_NOT_REACHED();
             }
             offset += assumed_bit_size<T>;
         }
 
-        for (size_t i = (offset + word_size - 1) / word_size; i < m_data.size(); ++i)
+        for (size_t i = (offset + native_word_size - 1) / native_word_size; i < m_data.size(); ++i)
             m_data[i] = 0;
     }
 
@@ -135,7 +136,7 @@ public:
     constexpr explicit operator T() const
     {
         T result;
-        StorageOperations::copy(m_data, result.m_data);
+        Ops::copy(m_data, result.m_data);
         return result;
     }
 
@@ -146,9 +147,9 @@ public:
     }
 
     template<BuiltInUFixedInt T>
-    requires(sizeof(T) == sizeof(DoubleWord)) constexpr explicit operator T() const
+    requires(sizeof(T) == sizeof(NativeDoubleWord)) constexpr explicit operator T() const
     {
-        return (static_cast<DoubleWord>(m_data[1]) << word_size) + m_data[0];
+        return (static_cast<NativeDoubleWord>(m_data[1]) << native_word_size) + m_data[0];
     }
 
     constexpr UFixedBigIntPart low() const
@@ -156,11 +157,11 @@ public:
     {
         if constexpr (part_size == 1) {
             return m_data[0];
-        } else if constexpr (IsSame<UFixedBigIntPart, DoubleWord>) {
-            return m_data[0] + (static_cast<DoubleWord>(m_data[1]) << word_size);
+        } else if constexpr (IsSame<UFixedBigIntPart, NativeDoubleWord>) {
+            return m_data[0] + (static_cast<NativeDoubleWord>(m_data[1]) << native_word_size);
         } else {
-            UFixedBigInt<part_size * word_size> result;
-            StorageOperations::copy(m_data, result.m_data);
+            UFixedBigInt<part_size * native_word_size> result;
+            Ops::copy(m_data, result.m_data);
             return result;
         }
     }
@@ -170,11 +171,11 @@ public:
     {
         if constexpr (part_size == 1) {
             return m_data[part_size];
-        } else if constexpr (IsSame<UFixedBigIntPart, DoubleWord>) {
-            return m_data[part_size] + (static_cast<DoubleWord>(m_data[part_size + 1]) << word_size);
+        } else if constexpr (IsSame<UFixedBigIntPart, NativeDoubleWord>) {
+            return m_data[part_size] + (static_cast<NativeDoubleWord>(m_data[part_size + 1]) << native_word_size);
         } else {
-            UFixedBigInt<part_size * word_size> result;
-            StorageOperations::copy(m_data, result.m_data, part_size);
+            UFixedBigInt<part_size * native_word_size> result;
+            Ops::copy(m_data, result.m_data, part_size);
             return result;
         }
     }
@@ -216,7 +217,7 @@ public:
                 result += count_trailing_zeroes(m_data[i]);
                 break;
             } else {
-                result += word_size;
+                result += native_word_size;
             }
         }
         return result;
@@ -230,10 +231,10 @@ public:
                 result += count_leading_zeroes(m_data[i]);
                 break;
             } else {
-                result += word_size;
+                result += native_word_size;
             }
         }
-        return result + bit_size - word_size * static_size;
+        return result + bit_size - native_word_size * static_size;
     }
 
     // Comparisons
@@ -255,22 +256,22 @@ public:
 
     constexpr bool operator==(UFixedInt auto const& other) const
     {
-        return StorageOperations::compare(m_data, get_storage_of(other), true) == 0;
+        return Ops::compare(m_data, get_storage_of(other), true) == 0;
     }
 
     constexpr bool operator==(IntegerWrapper other) const
     {
-        return StorageOperations::compare(m_data, get_storage_of(other), true) == 0;
+        return Ops::compare(m_data, get_storage_of(other), true) == 0;
     }
 
     constexpr int operator<=>(UFixedInt auto const& other) const
     {
-        return StorageOperations::compare(m_data, get_storage_of(other), false);
+        return Ops::compare(m_data, get_storage_of(other), false);
     }
 
     constexpr int operator<=>(IntegerWrapper other) const
     {
-        return StorageOperations::compare(m_data, get_storage_of(other), false);
+        return Ops::compare(m_data, get_storage_of(other), false);
     }
 
 #define DEFINE_STANDARD_BINARY_OPERATOR(op, function)                        \
@@ -302,43 +303,43 @@ public:
     }
 
     // Binary operators
-    DEFINE_STANDARD_BINARY_OPERATOR(^, StorageOperations::compute_bitwise<StorageOperations::Bitwise::XOR>)
-    DEFINE_STANDARD_BINARY_OPERATOR(&, StorageOperations::compute_bitwise<StorageOperations::Bitwise::AND>)
-    DEFINE_STANDARD_BINARY_OPERATOR(|, StorageOperations::compute_bitwise<StorageOperations::Bitwise::OR>)
-    DEFINE_STANDARD_COMPOUND_ASSIGNMENT(^=, StorageOperations::compute_inplace_bitwise<StorageOperations::Bitwise::XOR>)
-    DEFINE_STANDARD_COMPOUND_ASSIGNMENT(&=, StorageOperations::compute_inplace_bitwise<StorageOperations::Bitwise::AND>)
-    DEFINE_STANDARD_COMPOUND_ASSIGNMENT(|=, StorageOperations::compute_inplace_bitwise<StorageOperations::Bitwise::OR>)
+    DEFINE_STANDARD_BINARY_OPERATOR(^, Ops::compute_bitwise<Ops::Bitwise::XOR>)
+    DEFINE_STANDARD_BINARY_OPERATOR(&, Ops::compute_bitwise<Ops::Bitwise::AND>)
+    DEFINE_STANDARD_BINARY_OPERATOR(|, Ops::compute_bitwise<Ops::Bitwise::OR>)
+    DEFINE_STANDARD_COMPOUND_ASSIGNMENT(^=, Ops::compute_inplace_bitwise<Ops::Bitwise::XOR>)
+    DEFINE_STANDARD_COMPOUND_ASSIGNMENT(&=, Ops::compute_inplace_bitwise<Ops::Bitwise::AND>)
+    DEFINE_STANDARD_COMPOUND_ASSIGNMENT(|=, Ops::compute_inplace_bitwise<Ops::Bitwise::OR>)
 
     constexpr auto operator~() const
     {
         UFixedBigInt<bit_size> result;
-        StorageOperations::compute_bitwise<StorageOperations::Bitwise::INVERT>(m_data, m_data, result.m_data);
+        Ops::compute_bitwise<Ops::Bitwise::INVERT>(m_data, m_data, result.m_data);
         return result;
     }
 
     constexpr auto operator<<(size_t shift) const
     {
         UFixedBigInt<bit_size> result;
-        StorageOperations::shift_left(m_data, shift, result.m_data);
+        Ops::shift_left(m_data, shift, result.m_data);
         return result;
     }
 
     constexpr auto& operator<<=(size_t shift)
     {
-        StorageOperations::shift_left(m_data, shift, m_data);
+        Ops::shift_left(m_data, shift, m_data);
         return *this;
     }
 
     constexpr auto operator>>(size_t shift) const
     {
         UFixedBigInt<bit_size> result;
-        StorageOperations::shift_right(m_data, shift, result.m_data);
+        Ops::shift_right(m_data, shift, result.m_data);
         return result;
     }
 
     constexpr auto& operator>>=(size_t shift)
     {
-        StorageOperations::shift_right(m_data, shift, m_data);
+        Ops::shift_right(m_data, shift, m_data);
         return *this;
     }
 
@@ -347,7 +348,7 @@ public:
     constexpr auto addc(T const& other, bool& carry) const
     {
         UFixedBigInt<max(bit_size, assumed_bit_size<T>)> result;
-        carry = StorageOperations::add<false>(m_data, get_storage_of(other), result.m_data, carry);
+        carry = Ops::add<false>(m_data, get_storage_of(other), result.m_data, carry);
         return result;
     }
 
@@ -355,38 +356,38 @@ public:
     constexpr auto subc(T const& other, bool& borrow) const
     {
         UFixedBigInt<max(bit_size, assumed_bit_size<T>)> result;
-        borrow = StorageOperations::add<true>(m_data, get_storage_of(other), result.m_data, borrow);
+        borrow = Ops::add<true>(m_data, get_storage_of(other), result.m_data, borrow);
         return result;
     }
 
-    DEFINE_STANDARD_BINARY_OPERATOR(+, StorageOperations::add<false>)
-    DEFINE_STANDARD_BINARY_OPERATOR(-, StorageOperations::add<true>)
-    DEFINE_STANDARD_COMPOUND_ASSIGNMENT(+=, StorageOperations::add<false>)
-    DEFINE_STANDARD_COMPOUND_ASSIGNMENT(-=, StorageOperations::add<true>)
+    DEFINE_STANDARD_BINARY_OPERATOR(+, Ops::add<false>)
+    DEFINE_STANDARD_BINARY_OPERATOR(-, Ops::add<true>)
+    DEFINE_STANDARD_COMPOUND_ASSIGNMENT(+=, Ops::add<false>)
+    DEFINE_STANDARD_COMPOUND_ASSIGNMENT(-=, Ops::add<true>)
 
     constexpr auto& operator++()
     {
-        StorageOperations::increment<false>(m_data);
+        Ops::increment<false>(m_data);
         return *this;
     }
 
     constexpr auto& operator--()
     {
-        StorageOperations::increment<true>(m_data);
+        Ops::increment<true>(m_data);
         return *this;
     }
 
     constexpr auto operator++(int)
     {
         UFixedBigInt<bit_size> result = *this;
-        StorageOperations::increment<false>(m_data);
+        Ops::increment<false>(m_data);
         return result;
     }
 
     constexpr auto operator--(int)
     {
         UFixedBigInt<bit_size> result = *this;
-        StorageOperations::increment<true>(m_data);
+        Ops::increment<true>(m_data);
         return result;
     }
 
