@@ -33,11 +33,6 @@ void EditEventHandler::handle_delete_character_after(JS::NonnullGCPtr<DOM::Posit
     builder.append(text.bytes_as_string_view().substring_view(*next_grapheme_offset));
     node.set_data(MUST(builder.to_string()));
 
-    // FIXME: When nodes are removed from the DOM, the associated layout nodes become stale and still
-    //        remain in the layout tree. This has to be fixed, this just causes everything to be recomputed
-    //        which really hurts performance.
-    m_browsing_context->active_document()->force_layout();
-
     m_browsing_context->did_edit({});
 }
 
@@ -94,11 +89,6 @@ void EditEventHandler::handle_delete(DOM::Range& range)
         end->remove();
     }
 
-    // FIXME: When nodes are removed from the DOM, the associated layout nodes become stale and still
-    //        remain in the layout tree. This has to be fixed, this just causes everything to be recomputed
-    //        which really hurts performance.
-    m_browsing_context->active_document()->force_layout();
-
     m_browsing_context->did_edit({});
 }
 
@@ -130,11 +120,6 @@ void EditEventHandler::handle_insert(JS::NonnullGCPtr<DOM::Position> position, u
         position->set_node(text);
         position->set_offset(1);
     }
-
-    // FIXME: When nodes are removed from the DOM, the associated layout nodes become stale and still
-    //        remain in the layout tree. This has to be fixed, this just causes everything to be recomputed
-    //        which really hurts performance.
-    m_browsing_context->active_document()->force_layout();
 
     m_browsing_context->did_edit({});
 }
