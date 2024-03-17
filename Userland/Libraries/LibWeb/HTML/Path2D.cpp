@@ -42,9 +42,9 @@ Path2D::Path2D(JS::Realm& realm, Optional<Variant<JS::Handle<Path2D>, String>> c
     auto path_instructions = SVG::AttributeParser::parse_path_data(path->get<String>());
     auto svg_path = SVG::path_from_path_instructions(path_instructions);
 
-    if (!svg_path.segments().is_empty()) {
+    if (!svg_path.is_empty()) {
         // 5. Let (x, y) be the last point in svgPath.
-        auto xy = svg_path.segments().last()->point();
+        auto xy = svg_path.last_point();
 
         // 6. Add all the subpaths, if any, from svgPath to output.
         this->path() = move(svg_path);
@@ -70,7 +70,7 @@ WebIDL::ExceptionOr<void> Path2D::add_path(JS::NonnullGCPtr<Path2D> path, Geomet
     // The addPath(path, transform) method, when invoked on a Path2D object a, must run these steps:
 
     // 1. If the Path2D object path has no subpaths, then return.
-    if (path->path().segments().is_empty())
+    if (path->path().is_empty())
         return {};
 
     // 2. Let matrix be the result of creating a DOMMatrix from the 2D dictionary transform.
@@ -85,11 +85,11 @@ WebIDL::ExceptionOr<void> Path2D::add_path(JS::NonnullGCPtr<Path2D> path, Geomet
     auto copy = path->path().copy_transformed(Gfx::AffineTransform { static_cast<float>(matrix->m11()), static_cast<float>(matrix->m12()), static_cast<float>(matrix->m21()), static_cast<float>(matrix->m22()), static_cast<float>(matrix->m41()), static_cast<float>(matrix->m42()) });
 
     // 6. Let (x, y) be the last point in the last subpath of c.
-    auto xy = copy.segments().last()->point();
+    auto xy = copy.last_point();
 
     // 7. Add all the subpaths in c to a.
     // FIXME: Is this correct?
-    this->path().add_path(copy);
+    this->path().append_path(copy);
 
     // 8. Create a new subpath in a with (x, y) as the only point in the subpath.
     this->move_to(xy.x(), xy.y());
