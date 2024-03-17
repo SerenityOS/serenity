@@ -141,11 +141,15 @@ public:
 
 private:
     friend class UnsignedBigIntegerAlgorithms;
+
     // Little endian
     // m_word[0] + m_word[1] * Word::MAX + m_word[2] * Word::MAX * Word::MAX + ...
     Vector<Word, STARTING_WORD_SIZE> m_words;
     StorageSpan words_span() { return { m_words.data(), m_words.size() }; }
-    ConstStorageSpan words_span() const { return { m_words.data(), m_words.size() }; }
+    ConstStorageSpan words_span() const
+    {
+        return { m_words.data(), m_words.size() };
+    }
 
     mutable u32 m_cached_hash { 0 };
 
