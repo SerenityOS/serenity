@@ -6,43 +6,87 @@
  */
 
 #include "UnsignedBigIntegerAlgorithms.h"
+#include <AK/BigIntBase.h>
+#include <AK/BuiltinWrappers.h>
 
 namespace Crypto {
+
+using AK::Detail::div_mod_words;
+using AK::Detail::dword;
 
 /**
  * Complexity: O(N^2) where N is the number of words in the larger number
  * Division method:
- * We loop over the bits of the divisor, attempting to subtract divisor<<i from the dividend.
- * If the result is non-negative, it means that divisor*2^i "fits" in the dividend,
- * so we set the ith bit in the quotient and reduce divisor<<i from the dividend.
- * When we're done, what's left from the dividend is the remainder.
+ * Knuth's Algorithm D, see UFixedBigIntDivision.h for more details
  */
 FLATTEN void UnsignedBigIntegerAlgorithms::divide_without_allocation(
     UnsignedBigInteger const& numerator,
     UnsignedBigInteger const& denominator,
-    UnsignedBigInteger& temp_shift_result,
-    UnsignedBigInteger& temp_shift_plus,
-    UnsignedBigInteger& temp_shift,
-    UnsignedBigInteger& temp_minus,
+    [[maybe_unused]] UnsignedBigInteger& temp_shift_result,
+    [[maybe_unused]] UnsignedBigInteger& temp_shift_plus,
+    [[maybe_unused]] UnsignedBigInteger& temp_shift,
+    [[maybe_unused]] UnsignedBigInteger& temp_minus,
     UnsignedBigInteger& quotient,
     UnsignedBigInteger& remainder)
 {
-    quotient.set_to_0();
-    remainder.set_to(numerator);
+    size_t dividend_len = numerator.trimmed_length();
+    size_t divisor_len = denominator.trimmed_length();
 
-    // iterate all bits
-    for (int word_index = numerator.trimmed_length() - 1; word_index >= 0; --word_index) {
-        for (int bit_index = UnsignedBigInteger::BITS_IN_WORD - 1; bit_index >= 0; --bit_index) {
-            size_t shift_amount = word_index * UnsignedBigInteger::BITS_IN_WORD + bit_index;
-            shift_left_without_allocation(denominator, shift_amount, temp_shift_result, temp_shift_plus, temp_shift);
+    VERIFY(divisor_len != 0);
 
-            subtract_without_allocation(remainder, temp_shift, temp_minus);
-            if (!temp_minus.is_invalid()) {
-                remainder.set_to(temp_minus);
-                quotient.set_bit_inplace(shift_amount);
-            }
-        }
+    // Fast paths
+    // Division by 1
+    if (divisor_len == 1 && denominator.m_words[0] == 1) {
+        quotient.set_to(numerator);
+        remainder.set_to_0();
+        return;
     }
+
+    if (dividend_len < divisor_len) {
+        quotient.set_to_0();
+        remainder.set_to(numerator);
+        return;
+    }
+
+    if (divisor_len == 1 && dividend_len == 1) {
+        quotient.set_to(numerator.m_words[0] / denominator.m_words[0]);
+        remainder.set_to(numerator.m_words[0] % denominator.m_words[0]);
+        return;
+    }
+    // Division by Word
+    if (divisor_len == 1) {
+        quotient.resize_with_leading_zeros(dividend_len);
+        remainder.resize_with_leading_zeros(1);
+
+        // FIXME: Use a "DoubleWord" to allow increasing the Word size of
+        //        BigInt in the future
+        static_assert(UnsignedBigInteger::BITS_IN_WORD == 32);
+        auto u = dword(numerator.m_words[dividend_len - 2], numerator.m_words[dividend_len - 1]);
+        auto divisor = denominator.m_words[0];
+
+        auto top = u / divisor;
+        quotient.m_words[dividend_len - 1] = top >> UnsignedBigInteger::BITS_IN_WORD;
+        quotient.m_words[dividend_len - 2] = static_cast<UnsignedBigInteger::Word>(top);
+
+        auto carry = static_cast<UnsignedBigInteger::Word>(u % divisor);
+        for (size_t i = dividend_len - 2; i-- != 0;)
+            quotient.m_words[i] = div_mod_words(numerator.m_words[i], carry, divisor, carry);
+        remainder.m_words[0] = carry;
+        return;
+    }
+
+    // Knuth's algorithm D
+    auto dividend = numerator;
+    dividend.resize_with_leading_zeros(dividend_len + 1);
+    auto divisor = denominator;
+
+    quotient.resize_with_leading_zeros(dividend_len - divisor_len + 1);
+    remainder.resize_with_leading_zeros(divisor_len);
+
+    Ops::div_mod_internal<true>(
+        dividend.words_span(), divisor.words_span(),
+        quotient.words_span(), remainder.words_span(),
+        dividend_len, divisor_len);
 }
 
 /**
