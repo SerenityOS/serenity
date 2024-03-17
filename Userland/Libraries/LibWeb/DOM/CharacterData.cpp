@@ -123,7 +123,6 @@ WebIDL::ExceptionOr<void> CharacterData::replace_data(size_t offset, size_t coun
     if (auto* layout_node = this->layout_node(); layout_node && layout_node->is_text_node())
         static_cast<Layout::TextNode&>(*layout_node).invalidate_text_for_rendering();
 
-    set_needs_style_update(true);
     document().set_needs_layout();
     return {};
 }
