@@ -930,8 +930,10 @@ JS::NonnullGCPtr<Geometry::DOMRectList> Element::get_client_rects() const
     const_cast<Document&>(document()).update_paint_and_hit_testing_properties_if_needed();
 
     Gfx::AffineTransform transform;
+    CSSPixelPoint scroll_offset;
     for (auto const* containing_block = this->paintable_box(); containing_block; containing_block = containing_block->containing_block()) {
         transform = Gfx::extract_2d_affine_transform(containing_block->transform()).multiply(transform);
+        scroll_offset.translate_by(containing_block->scroll_offset());
     }
 
     auto const* paintable = this->paintable();
@@ -940,12 +942,14 @@ JS::NonnullGCPtr<Geometry::DOMRectList> Element::get_client_rects() const
         auto transformed_rect = transform.map(absolute_rect.translated(-paintable_box->transform_origin()).to_type<float>())
                                     .to_type<CSSPixels>()
                                     .translated(paintable_box->transform_origin())
+                                    .translated(-scroll_offset)
                                     .translated(-viewport_offset);
         rects.append(Geometry::DOMRect::create(realm(), transformed_rect.to_type<float>()));
     } else if (paintable && is<Painting::InlinePaintable>(*paintable)) {
         auto const& inline_paintable = static_cast<Painting::InlinePaintable const&>(*paintable);
         auto absolute_rect = inline_paintable.bounding_rect();
-        absolute_rect.translate_by(-viewport_offset.x(), -viewport_offset.y());
+        absolute_rect.translate_by(-scroll_offset);
+        absolute_rect.translate_by(-viewport_offset);
         rects.append(Geometry::DOMRect::create(realm(), transform.map(absolute_rect.to_type<float>())));
     } else if (paintable) {
         dbgln("FIXME: Failed to get client rects for element ({})", debug_description());
