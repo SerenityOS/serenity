@@ -1,0 +1,4 @@
+[App]
+Name=&Screenshot
+Executable=/bin/Screenshot
+Category=&Utilities
