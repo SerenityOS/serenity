@@ -180,7 +180,8 @@ bool EventHandler::handle_mousewheel(CSSPixelPoint position, CSSPixelPoint scree
             containing_block = containing_block->containing_block();
         }
 
-        paintable->handle_mousewheel({}, position, buttons, modifiers, wheel_delta_x, wheel_delta_y);
+        if (paintable->handle_mousewheel({}, position, buttons, modifiers, wheel_delta_x, wheel_delta_y))
+            return true;
 
         auto node = dom_node_for_event_dispatch(*paintable);
 
