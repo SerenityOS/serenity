@@ -47,6 +47,8 @@ public:
 
     int text_index_at(CSSPixels) const;
 
+    StringView string_view() const;
+
 private:
     JS::NonnullGCPtr<Layout::Node const> m_layout_node;
     CSSPixelPoint m_offset;

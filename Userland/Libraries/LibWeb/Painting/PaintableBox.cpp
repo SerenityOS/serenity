@@ -612,9 +612,9 @@ void PaintableBox::clear_clip_overflow_rect(PaintContext& context, PaintPhase ph
     }
 }
 
-void paint_cursor_if_needed(PaintContext& context, Layout::TextNode const& text_node, PaintableFragment const& fragment)
+void paint_cursor_if_needed(PaintContext& context, TextPaintable const& paintable, PaintableFragment const& fragment)
 {
-    auto const& browsing_context = text_node.browsing_context();
+    auto const& browsing_context = paintable.browsing_context();
 
     if (!browsing_context.is_focused_context())
         return;
@@ -622,7 +622,7 @@ void paint_cursor_if_needed(PaintContext& context, Layout::TextNode const& text_
     if (!browsing_context.cursor_blink_state())
         return;
 
-    if (browsing_context.cursor_position()->node() != &text_node.dom_node())
+    if (browsing_context.cursor_position()->node() != paintable.dom_node())
         return;
 
     // NOTE: This checks if the cursor is before the start or after the end of the fragment. If it is at the end, after all text, it should still be painted.
@@ -634,9 +634,9 @@ void paint_cursor_if_needed(PaintContext& context, Layout::TextNode const& text_
 
     auto fragment_rect = fragment.absolute_rect();
 
-    auto text = text_node.text_for_rendering().bytes_as_string_view().substring_view(fragment.start(), fragment.length());
+    auto text = fragment.string_view();
     CSSPixelRect cursor_rect {
-        fragment_rect.x() + CSSPixels::nearest_value_for(text_node.first_available_font().width(text.substring_view(0, text_node.browsing_context().cursor_position()->offset() - fragment.start()))),
+        fragment_rect.x() + CSSPixels::nearest_value_for(paintable.layout_node().first_available_font().width(text.substring_view(0, paintable.browsing_context().cursor_position()->offset() - fragment.start()))),
         fragment_rect.top(),
         1,
         fragment_rect.height()
@@ -644,10 +644,10 @@ void paint_cursor_if_needed(PaintContext& context, Layout::TextNode const& text_
 
     auto cursor_device_rect = context.rounded_device_rect(cursor_rect).to_type<int>();
 
-    context.recording_painter().draw_rect(cursor_device_rect, text_node.computed_values().color());
+    context.recording_painter().draw_rect(cursor_device_rect, paintable.computed_values().color());
 }
 
-void paint_text_decoration(PaintContext& context, Layout::Node const& text_node, PaintableFragment const& fragment)
+void paint_text_decoration(PaintContext& context, TextPaintable const& paintable, PaintableFragment const& fragment)
 {
     auto& painter = context.recording_painter();
     auto& font = fragment.layout_node().first_available_font();
@@ -655,11 +655,11 @@ void paint_text_decoration(PaintContext& context, Layout::Node const& text_node,
     CSSPixels glyph_height = CSSPixels::nearest_value_for(font.pixel_size());
     auto baseline = fragment.baseline();
 
-    auto line_color = text_node.computed_values().text_decoration_color();
+    auto line_color = paintable.computed_values().text_decoration_color();
     auto const& text_paintable = static_cast<TextPaintable const&>(fragment.paintable());
     auto device_line_thickness = context.rounded_device_pixels(text_paintable.text_decoration_thickness());
 
-    auto text_decoration_lines = text_node.computed_values().text_decoration_line();
+    auto text_decoration_lines = paintable.computed_values().text_decoration_line();
     for (auto line : text_decoration_lines) {
         DevicePixelPoint line_start_point {};
         DevicePixelPoint line_end_point {};
@@ -686,7 +686,7 @@ void paint_text_decoration(PaintContext& context, Layout::Node const& text_node,
             return;
         }
 
-        switch (text_node.computed_values().text_decoration_style()) {
+        switch (paintable.computed_values().text_decoration_style()) {
         case CSS::TextDecorationStyle::Solid:
             painter.draw_line(line_start_point.to_type<int>(), line_end_point.to_type<int>(), line_color, device_line_thickness.value(), Gfx::Painter::LineStyle::Solid);
             break;
@@ -722,7 +722,7 @@ void paint_text_decoration(PaintContext& context, Layout::Node const& text_node,
     }
 }
 
-void paint_text_fragment(PaintContext& context, Layout::TextNode const& text_node, PaintableFragment const& fragment, PaintPhase phase)
+void paint_text_fragment(PaintContext& context, TextPaintable const& paintable, PaintableFragment const& fragment, PaintPhase phase)
 {
     auto& painter = context.recording_painter();
 
@@ -730,16 +730,16 @@ void paint_text_fragment(PaintContext& context, Layout::TextNode const& text_nod
         auto fragment_absolute_rect = fragment.absolute_rect();
         auto fragment_absolute_device_rect = context.enclosing_device_rect(fragment_absolute_rect);
 
-        if (text_node.document().inspected_layout_node() == &text_node)
+        if (paintable.document().inspected_layout_node() == &paintable.layout_node())
             context.recording_painter().draw_rect(fragment_absolute_device_rect.to_type<int>(), Color::Magenta);
 
-        auto text = text_node.text_for_rendering();
+        auto text = paintable.text_for_rendering();
 
         DevicePixelPoint baseline_start { fragment_absolute_device_rect.x(), fragment_absolute_device_rect.y() + context.rounded_device_pixels(fragment.baseline()) };
         auto scale = context.device_pixels_per_css_pixel();
-        painter.draw_text_run(baseline_start.to_type<int>(), fragment.glyph_run(), text_node.computed_values().color(), fragment_absolute_device_rect.to_type<int>(), scale);
+        painter.draw_text_run(baseline_start.to_type<int>(), fragment.glyph_run(), paintable.computed_values().color(), fragment_absolute_device_rect.to_type<int>(), scale);
 
-        auto selection_rect = context.enclosing_device_rect(fragment.selection_rect(text_node.first_available_font())).to_type<int>();
+        auto selection_rect = context.enclosing_device_rect(fragment.selection_rect(paintable.layout_node().first_available_font())).to_type<int>();
         if (!selection_rect.is_empty()) {
             painter.fill_rect(selection_rect, CSS::SystemColor::highlight());
             RecordingPainterStateSaver saver(painter);
@@ -747,8 +747,8 @@ void paint_text_fragment(PaintContext& context, Layout::TextNode const& text_nod
             painter.draw_text_run(baseline_start.to_type<int>(), fragment.glyph_run(), CSS::SystemColor::highlight_text(), fragment_absolute_device_rect.to_type<int>(), scale);
         }
 
-        paint_text_decoration(context, text_node, fragment);
-        paint_cursor_if_needed(context, text_node, fragment);
+        paint_text_decoration(context, paintable, fragment);
+        paint_cursor_if_needed(context, paintable, fragment);
     }
 }
 
@@ -811,8 +811,8 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
                 context.rounded_device_point(fragment_absolute_rect.top_left().translated(0, fragment.baseline())).to_type<int>(),
                 context.rounded_device_point(fragment_absolute_rect.top_right().translated(-1, fragment.baseline())).to_type<int>(), Color::Red);
         }
-        if (is<Layout::TextNode>(fragment.layout_node()))
-            paint_text_fragment(context, static_cast<Layout::TextNode const&>(fragment.layout_node()), fragment, phase);
+        if (is<TextPaintable>(fragment.paintable()))
+            paint_text_fragment(context, static_cast<TextPaintable const&>(fragment.paintable()), fragment, phase);
     }
 
     if (should_clip_overflow) {
