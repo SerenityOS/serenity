@@ -43,9 +43,24 @@ struct Group3Options {
         Yes = 1,
     };
 
+    // Addition from the PDF specification
+    enum class RequireEndOfLine : u8 {
+        No = 0,
+        Yes = 1,
+    };
+
+    enum class EncodedByteAligned : u8 {
+        No = 0,
+        Yes = 1,
+    };
+
     Mode dimensions = Mode::OneDimension;
     Compression compression = Compression::Compressed;
     UseFillBits use_fill_bits = UseFillBits::No;
+
+    // Default values are set to be compatible with the CCITT specification
+    RequireEndOfLine require_end_of_line = RequireEndOfLine::Yes;
+    EncodedByteAligned encoded_byte_aligned = EncodedByteAligned::No;
 };
 
 ErrorOr<ByteBuffer> decode_ccitt_group3(ReadonlyBytes bytes, u32 image_width, u32 image_height, Group3Options const& options);

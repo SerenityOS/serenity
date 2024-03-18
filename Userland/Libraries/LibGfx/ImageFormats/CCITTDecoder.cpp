@@ -596,12 +596,18 @@ ErrorOr<ByteBuffer> decode_ccitt_group3(ReadonlyBytes bytes, u32 image_width, u3
         // NOTE: For whatever reason, the last EOL doesn't seem to be included
 
         for (u32 i = 0; i < image_height; ++i) {
-            TRY(read_eol(*bit_stream, options.use_fill_bits));
+            if (options.require_end_of_line == Group3Options::RequireEndOfLine::Yes)
+                TRY(read_eol(*bit_stream, options.use_fill_bits));
             TRY(decode_single_ccitt3_1d_line(*bit_stream, *decoded_bits, image_width));
+            if (options.encoded_byte_aligned == Group3Options::EncodedByteAligned::Yes)
+                bit_stream->align_to_byte_boundary();
         }
 
         return decoded_bytes;
     }
+
+    if (options.require_end_of_line == Group3Options::RequireEndOfLine::No || options.encoded_byte_aligned == Group3Options::EncodedByteAligned::Yes)
+        return Error::from_string_literal("CCITTDecoder: Unsupported option for CCITT3 2D decoding");
 
     TRY(decode_single_ccitt3_2d_block(*bit_stream, *decoded_bits, image_width, image_height, options.use_fill_bits));
     return decoded_bytes;
