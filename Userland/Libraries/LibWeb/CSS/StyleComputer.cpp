@@ -380,7 +380,7 @@ static void sort_matching_rules(Vector<MatchingRule>& matching_rules)
     });
 }
 
-void StyleComputer::for_each_property_expanding_shorthands(PropertyID property_id, StyleValue const& value, Function<void(PropertyID, StyleValue const&)> const& set_longhand_property)
+void StyleComputer::for_each_property_expanding_shorthands(PropertyID property_id, StyleValue const& value, AllowUnresolved allow_unresolved, Function<void(PropertyID, StyleValue const&)> const& set_longhand_property)
 {
     auto map_logical_property_to_real_property = [](PropertyID property_id) -> Optional<PropertyID> {
         // FIXME: Honor writing-mode, direction and text-orientation.
@@ -443,7 +443,7 @@ void StyleComputer::for_each_property_expanding_shorthands(PropertyID property_i
     };
 
     if (auto real_property_id = map_logical_property_to_real_property(property_id); real_property_id.has_value()) {
-        for_each_property_expanding_shorthands(real_property_id.value(), value, set_longhand_property);
+        for_each_property_expanding_shorthands(real_property_id.value(), value, allow_unresolved, set_longhand_property);
         return;
     }
 
@@ -451,12 +451,12 @@ void StyleComputer::for_each_property_expanding_shorthands(PropertyID property_i
         if (value.is_value_list() && value.as_value_list().size() == 2) {
             auto const& start = value.as_value_list().values()[0];
             auto const& end = value.as_value_list().values()[1];
-            for_each_property_expanding_shorthands(real_property_ids->start, start, set_longhand_property);
-            for_each_property_expanding_shorthands(real_property_ids->end, end, set_longhand_property);
+            for_each_property_expanding_shorthands(real_property_ids->start, start, allow_unresolved, set_longhand_property);
+            for_each_property_expanding_shorthands(real_property_ids->end, end, allow_unresolved, set_longhand_property);
             return;
         }
-        for_each_property_expanding_shorthands(real_property_ids->start, value, set_longhand_property);
-        for_each_property_expanding_shorthands(real_property_ids->end, value, set_longhand_property);
+        for_each_property_expanding_shorthands(real_property_ids->start, value, allow_unresolved, set_longhand_property);
+        for_each_property_expanding_shorthands(real_property_ids->end, value, allow_unresolved, set_longhand_property);
         return;
     }
 
@@ -465,7 +465,7 @@ void StyleComputer::for_each_property_expanding_shorthands(PropertyID property_i
         auto& properties = shorthand_value.sub_properties();
         auto& values = shorthand_value.values();
         for (size_t i = 0; i < properties.size(); ++i)
-            for_each_property_expanding_shorthands(properties[i], values[i], set_longhand_property);
+            for_each_property_expanding_shorthands(properties[i], values[i], allow_unresolved, set_longhand_property);
         return;
     }
 
@@ -494,10 +494,10 @@ void StyleComputer::for_each_property_expanding_shorthands(PropertyID property_i
     };
 
     if (property_id == CSS::PropertyID::Border) {
-        for_each_property_expanding_shorthands(CSS::PropertyID::BorderTop, value, set_longhand_property);
-        for_each_property_expanding_shorthands(CSS::PropertyID::BorderRight, value, set_longhand_property);
-        for_each_property_expanding_shorthands(CSS::PropertyID::BorderBottom, value, set_longhand_property);
-        for_each_property_expanding_shorthands(CSS::PropertyID::BorderLeft, value, set_longhand_property);
+        for_each_property_expanding_shorthands(CSS::PropertyID::BorderTop, value, allow_unresolved, set_longhand_property);
+        for_each_property_expanding_shorthands(CSS::PropertyID::BorderRight, value, allow_unresolved, set_longhand_property);
+        for_each_property_expanding_shorthands(CSS::PropertyID::BorderBottom, value, allow_unresolved, set_longhand_property);
+        for_each_property_expanding_shorthands(CSS::PropertyID::BorderLeft, value, allow_unresolved, set_longhand_property);
         // FIXME: Also reset border-image, in line with the spec: https://www.w3.org/TR/css-backgrounds-3/#border-shorthands
         return;
     }
@@ -665,9 +665,10 @@ void StyleComputer::for_each_property_expanding_shorthands(PropertyID property_i
         // That means if we got here, that `value` must be a CSS-wide keyword, which we should apply to our longhand properties.
         // We don't directly call `set_longhand_property()` because the longhands might have longhands of their own.
         // (eg `grid` -> `grid-template` -> `grid-template-areas` & `grid-template-rows` & `grid-template-columns`)
-        VERIFY(value.is_css_wide_keyword());
+        // Forget this requirement if we're ignoring unresolved values and the value is unresolved.
+        VERIFY(value.is_css_wide_keyword() || (allow_unresolved == AllowUnresolved::Yes && value.is_unresolved()));
         for (auto longhand : longhands_for_shorthand(property_id))
-            for_each_property_expanding_shorthands(longhand, value, set_longhand_property);
+            for_each_property_expanding_shorthands(longhand, value, allow_unresolved, set_longhand_property);
         return;
     }
 
@@ -676,7 +677,7 @@ void StyleComputer::for_each_property_expanding_shorthands(PropertyID property_i
 
 void StyleComputer::set_property_expanding_shorthands(StyleProperties& style, CSS::PropertyID property_id, StyleValue const& value, CSS::CSSStyleDeclaration const* declaration, StyleProperties::PropertyValues const& properties_for_revert, StyleProperties::Important important)
 {
-    for_each_property_expanding_shorthands(property_id, value, [&](PropertyID shorthand_id, StyleValue const& shorthand_value) {
+    for_each_property_expanding_shorthands(property_id, value, AllowUnresolved::No, [&](PropertyID shorthand_id, StyleValue const& shorthand_value) {
         if (shorthand_value.is_revert()) {
             auto& property_in_previous_cascade_origin = properties_for_revert[to_underlying(shorthand_id)];
             if (property_in_previous_cascade_origin.style)
@@ -2412,7 +2413,8 @@ NonnullOwnPtr<StyleComputer::RuleCache> StyleComputer::make_rule_cache_for_casca
 
                 auto const& keyframe_style = static_cast<PropertyOwningCSSStyleDeclaration const&>(*keyframe_rule);
                 for (auto const& it : keyframe_style.properties()) {
-                    for_each_property_expanding_shorthands(it.property_id, it.value, [&](PropertyID shorthand_id, StyleValue const& shorthand_value) {
+                    // Unresolved properties will be resolved in collect_animation_into()
+                    for_each_property_expanding_shorthands(it.property_id, it.value, AllowUnresolved::Yes, [&](PropertyID shorthand_id, StyleValue const& shorthand_value) {
                         animated_properties.set(shorthand_id);
                         resolved_keyframe.properties.set(shorthand_id, NonnullRefPtr<StyleValue const> { shorthand_value });
                     });

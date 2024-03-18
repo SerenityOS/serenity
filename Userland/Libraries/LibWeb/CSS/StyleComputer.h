@@ -54,7 +54,11 @@ struct FontFaceKey {
 
 class StyleComputer {
 public:
-    static void for_each_property_expanding_shorthands(PropertyID, StyleValue const&, Function<void(PropertyID, StyleValue const&)> const& set_longhand_property);
+    enum class AllowUnresolved {
+        Yes,
+        No,
+    };
+    static void for_each_property_expanding_shorthands(PropertyID, StyleValue const&, AllowUnresolved, Function<void(PropertyID, StyleValue const&)> const& set_longhand_property);
     static void set_property_expanding_shorthands(StyleProperties&, PropertyID, StyleValue const&, CSS::CSSStyleDeclaration const*, StyleProperties::PropertyValues const& properties_for_revert, StyleProperties::Important = StyleProperties::Important::No);
     static NonnullRefPtr<StyleValue const> get_inherit_value(JS::Realm& initial_value_context_realm, CSS::PropertyID, DOM::Element const*, Optional<CSS::Selector::PseudoElement::Type> = {});
 
