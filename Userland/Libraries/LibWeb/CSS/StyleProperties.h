@@ -29,8 +29,8 @@ public:
     inline void for_each_property(Callback callback) const
     {
         for (size_t i = 0; i < m_property_values.size(); ++i) {
-            if (m_property_values[i].has_value())
-                callback((CSS::PropertyID)i, *m_property_values[i]->style);
+            if (m_property_values[i].style)
+                callback((CSS::PropertyID)i, *m_property_values[i].style);
         }
     }
 
@@ -45,12 +45,12 @@ public:
     };
 
     struct StyleAndSourceDeclaration {
-        NonnullRefPtr<StyleValue const> style;
+        RefPtr<StyleValue const> style;
         CSS::CSSStyleDeclaration const* declaration = nullptr;
         Important important { Important::No };
         Inherited inherited { Inherited::No };
     };
-    using PropertyValues = Array<Optional<StyleAndSourceDeclaration>, to_underlying(CSS::last_property_id) + 1>;
+    using PropertyValues = Array<StyleAndSourceDeclaration, to_underlying(CSS::last_property_id) + 1>;
 
     auto& properties() { return m_property_values; }
     auto const& properties() const { return m_property_values; }

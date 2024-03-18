@@ -389,7 +389,7 @@ void ConnectionFromClient::debug_request(u64 page_id, ByteString const& request,
                     dbgln("+ Element {}", element->debug_description());
                     auto& properties = styles->properties();
                     for (size_t i = 0; i < properties.size(); ++i)
-                        dbgln("|  {} = {}", Web::CSS::string_from_property_id(static_cast<Web::CSS::PropertyID>(i)), properties[i].has_value() ? properties[i]->style->to_string() : ""_string);
+                        dbgln("|  {} = {}", Web::CSS::string_from_property_id(static_cast<Web::CSS::PropertyID>(i)), properties[i].style ? properties[i].style->to_string() : ""_string);
                     dbgln("---");
                 }
             }
