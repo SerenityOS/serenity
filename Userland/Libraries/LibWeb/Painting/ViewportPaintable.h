@@ -30,6 +30,9 @@ public:
 
     void resolve_paint_only_properties();
 
+    JS::GCPtr<Selection::Selection> selection() const;
+    void recompute_selection_states();
+
 private:
     void build_stacking_context_tree();
 

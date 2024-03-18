@@ -158,17 +158,6 @@ public:
     bool children_are_inline() const { return m_children_are_inline; }
     void set_children_are_inline(bool value) { m_children_are_inline = value; }
 
-    enum class SelectionState {
-        None,        // No selection
-        Start,       // Selection starts in this Node
-        End,         // Selection ends in this Node
-        StartAndEnd, // Selection starts and ends in this Node
-        Full,        // Selection starts before and ends after this Node
-    };
-
-    SelectionState selection_state() const { return m_selection_state; }
-    void set_selection_state(SelectionState state) { m_selection_state = state; }
-
     u32 initial_quote_nesting_level() const { return m_initial_quote_nesting_level; }
     void set_initial_quote_nesting_level(u32 value) { m_initial_quote_nesting_level = value; }
 
@@ -190,7 +179,6 @@ private:
     bool m_anonymous { false };
     bool m_has_style { false };
     bool m_children_are_inline { false };
-    SelectionState m_selection_state { SelectionState::None };
 
     bool m_is_flex_item { false };
     bool m_is_grid_item { false };
