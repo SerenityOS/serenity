@@ -16,7 +16,6 @@ void UnsignedBigIntegerAlgorithms::destructive_modular_power_without_allocation(
     UnsignedBigInteger& temp_1,
     UnsignedBigInteger& temp_2,
     UnsignedBigInteger& temp_3,
-    UnsignedBigInteger& temp_4,
     UnsignedBigInteger& temp_multiply,
     UnsignedBigInteger& temp_quotient,
     UnsignedBigInteger& temp_remainder,
@@ -27,17 +26,16 @@ void UnsignedBigIntegerAlgorithms::destructive_modular_power_without_allocation(
         if (ep.words()[0] % 2 == 1) {
             // exp = (exp * base) % m;
             multiply_without_allocation(exp, base, temp_1, temp_2, temp_3, temp_multiply);
-            divide_without_allocation(temp_multiply, m, temp_1, temp_2, temp_3, temp_4, temp_quotient, temp_remainder);
+            divide_without_allocation(temp_multiply, m, temp_quotient, temp_remainder);
             exp.set_to(temp_remainder);
         }
 
         // ep = ep / 2;
-        divide_u16_without_allocation(ep, 2, temp_quotient, temp_remainder);
-        ep.set_to(temp_quotient);
+        ep.set_to(ep.shift_right(1));
 
         // base = (base * base) % m;
         multiply_without_allocation(base, base, temp_1, temp_2, temp_3, temp_multiply);
-        divide_without_allocation(temp_multiply, m, temp_1, temp_2, temp_3, temp_4, temp_quotient, temp_remainder);
+        divide_without_allocation(temp_multiply, m, temp_quotient, temp_remainder);
         base.set_to(temp_remainder);
 
         // Note that not clamping here would cause future calculations (multiply, specifically) to allocate even more unused space
@@ -208,13 +206,13 @@ void UnsignedBigIntegerAlgorithms::montgomery_modular_power_with_minimal_allocat
 
     // rr = ( 2 ^ (2 * modulo.length() * BITS_IN_WORD) ) % modulo
     shift_left_by_n_words(one, 2 * num_words, x);
-    divide_without_allocation(x, modulo, temp_z, one, z, zz, temp_extra, rr);
+    divide_without_allocation(x, modulo, temp_extra, rr);
     rr.resize_with_leading_zeros(num_words);
 
     // x = base [% modulo, if x doesn't already fit in modulo's words]
     x.set_to(base);
     if (x.trimmed_length() > num_words)
-        divide_without_allocation(base, modulo, temp_z, one, z, zz, temp_extra, x);
+        divide_without_allocation(base, modulo, temp_extra, x);
     x.resize_with_leading_zeros(num_words);
 
     one.set_to(1);
@@ -274,11 +272,10 @@ void UnsignedBigIntegerAlgorithms::montgomery_modular_power_with_minimal_allocat
         dbgln("Encountered the modulo branch during a montgomery modular power. Params : {} - {} - {}", base, exponent, modulo);
         // We just clobber all the other temporaries that we don't need for the division.
         // This is wasteful, but we're on the edgiest of cases already.
-        divide_without_allocation(zz, modulo, temp_z, rr, z, x, temp_extra, result);
+        divide_without_allocation(zz, modulo, temp_extra, result);
     }
 
     result.clamp_to_trimmed_length();
-    return;
 }
 
 }

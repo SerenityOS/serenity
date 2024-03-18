@@ -24,9 +24,6 @@ UnsignedBigInteger ModularInverse(UnsignedBigInteger const& a_, UnsignedBigInteg
         return { 1 };
 
     UnsignedBigInteger temp_1;
-    UnsignedBigInteger temp_2;
-    UnsignedBigInteger temp_3;
-    UnsignedBigInteger temp_4;
     UnsignedBigInteger temp_minus;
     UnsignedBigInteger temp_quotient;
     UnsignedBigInteger temp_d;
@@ -35,7 +32,7 @@ UnsignedBigInteger ModularInverse(UnsignedBigInteger const& a_, UnsignedBigInteg
     UnsignedBigInteger temp_x;
     UnsignedBigInteger result;
 
-    UnsignedBigIntegerAlgorithms::modular_inverse_without_allocation(a_, b, temp_1, temp_2, temp_3, temp_4, temp_minus, temp_quotient, temp_d, temp_u, temp_v, temp_x, result);
+    UnsignedBigIntegerAlgorithms::modular_inverse_without_allocation(a_, b, temp_1, temp_minus, temp_quotient, temp_d, temp_u, temp_v, temp_x, result);
     return result;
 }
 
@@ -65,12 +62,11 @@ UnsignedBigInteger ModularPower(UnsignedBigInteger const& b, UnsignedBigInteger 
     UnsignedBigInteger temp_1;
     UnsignedBigInteger temp_2;
     UnsignedBigInteger temp_3;
-    UnsignedBigInteger temp_4;
     UnsignedBigInteger temp_multiply;
     UnsignedBigInteger temp_quotient;
     UnsignedBigInteger temp_remainder;
 
-    UnsignedBigIntegerAlgorithms::destructive_modular_power_without_allocation(ep, base, m, temp_1, temp_2, temp_3, temp_4, temp_multiply, temp_quotient, temp_remainder, result);
+    UnsignedBigIntegerAlgorithms::destructive_modular_power_without_allocation(ep, base, m, temp_1, temp_2, temp_3, temp_multiply, temp_quotient, temp_remainder, result);
 
     return result;
 }
@@ -79,15 +75,11 @@ UnsignedBigInteger GCD(UnsignedBigInteger const& a, UnsignedBigInteger const& b)
 {
     UnsignedBigInteger temp_a { a };
     UnsignedBigInteger temp_b { b };
-    UnsignedBigInteger temp_1;
-    UnsignedBigInteger temp_2;
-    UnsignedBigInteger temp_3;
-    UnsignedBigInteger temp_4;
     UnsignedBigInteger temp_quotient;
     UnsignedBigInteger temp_remainder;
     UnsignedBigInteger output;
 
-    UnsignedBigIntegerAlgorithms::destructive_GCD_without_allocation(temp_a, temp_b, temp_1, temp_2, temp_3, temp_4, temp_quotient, temp_remainder, output);
+    UnsignedBigIntegerAlgorithms::destructive_GCD_without_allocation(temp_a, temp_b, temp_quotient, temp_remainder, output);
 
     return output;
 }
@@ -99,20 +91,19 @@ UnsignedBigInteger LCM(UnsignedBigInteger const& a, UnsignedBigInteger const& b)
     UnsignedBigInteger temp_1;
     UnsignedBigInteger temp_2;
     UnsignedBigInteger temp_3;
-    UnsignedBigInteger temp_4;
     UnsignedBigInteger temp_quotient;
     UnsignedBigInteger temp_remainder;
     UnsignedBigInteger gcd_output;
     UnsignedBigInteger output { 0 };
 
-    UnsignedBigIntegerAlgorithms::destructive_GCD_without_allocation(temp_a, temp_b, temp_1, temp_2, temp_3, temp_4, temp_quotient, temp_remainder, gcd_output);
+    UnsignedBigIntegerAlgorithms::destructive_GCD_without_allocation(temp_a, temp_b, temp_quotient, temp_remainder, gcd_output);
     if (gcd_output == 0) {
         dbgln_if(NT_DEBUG, "GCD is zero");
         return output;
     }
 
     // output = (a / gcd_output) * b
-    UnsignedBigIntegerAlgorithms::divide_without_allocation(a, gcd_output, temp_1, temp_2, temp_3, temp_4, temp_quotient, temp_remainder);
+    UnsignedBigIntegerAlgorithms::divide_without_allocation(a, gcd_output, temp_quotient, temp_remainder);
     UnsignedBigIntegerAlgorithms::multiply_without_allocation(temp_quotient, b, temp_1, temp_2, temp_3, output);
 
     dbgln_if(NT_DEBUG, "quot: {} rem: {} out: {}", temp_quotient, temp_remainder, output);

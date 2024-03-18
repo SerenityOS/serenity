@@ -530,7 +530,7 @@ FLATTEN UnsignedDivisionResult UnsignedBigInteger::divided_by(UnsignedBigInteger
     UnsignedBigInteger temp_shift;
     UnsignedBigInteger temp_minus;
 
-    UnsignedBigIntegerAlgorithms::divide_without_allocation(*this, divisor, temp_shift_result, temp_shift_plus, temp_shift, temp_minus, quotient, remainder);
+    UnsignedBigIntegerAlgorithms::divide_without_allocation(*this, divisor, quotient, remainder);
 
     return UnsignedDivisionResult { quotient, remainder };
 }
