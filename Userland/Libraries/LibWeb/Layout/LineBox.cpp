@@ -32,7 +32,7 @@ void LineBox::add_fragment(Node const& layout_node, int start, int length, CSSPi
         Vector<Gfx::DrawGlyphOrEmoji> glyph_run_copy { glyph_run };
         CSSPixels x_offset = leading_margin + leading_size + m_width;
         CSSPixels y_offset = 0;
-        m_fragments.append(LineBoxFragment { layout_node, start, length, CSSPixelPoint(x_offset, y_offset), CSSPixelSize(content_width, content_height), border_box_top, border_box_bottom, move(glyph_run_copy) });
+        m_fragments.append(LineBoxFragment { layout_node, start, length, CSSPixelPoint(x_offset, y_offset), CSSPixelSize(content_width, content_height), border_box_top, move(glyph_run_copy) });
     }
     m_width += leading_margin + leading_size + content_width + trailing_size + trailing_margin;
     m_height = max(m_height, content_height + border_box_top + border_box_bottom);

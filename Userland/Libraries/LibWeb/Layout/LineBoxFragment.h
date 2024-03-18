@@ -19,14 +19,13 @@ class LineBoxFragment {
     friend class LineBox;
 
 public:
-    LineBoxFragment(Node const& layout_node, int start, int length, CSSPixelPoint offset, CSSPixelSize size, CSSPixels border_box_top, CSSPixels border_box_bottom, Vector<Gfx::DrawGlyphOrEmoji> glyphs)
+    LineBoxFragment(Node const& layout_node, int start, int length, CSSPixelPoint offset, CSSPixelSize size, CSSPixels border_box_top, Vector<Gfx::DrawGlyphOrEmoji> glyphs)
         : m_layout_node(layout_node)
         , m_start(start)
         , m_length(length)
         , m_offset(offset)
         , m_size(size)
         , m_border_box_top(border_box_top)
-        , m_border_box_bottom(border_box_bottom)
         , m_glyph_run(adopt_ref(*new Gfx::GlyphRun(move(glyphs))))
     {
     }
@@ -69,7 +68,6 @@ private:
     CSSPixelPoint m_offset;
     CSSPixelSize m_size;
     CSSPixels m_border_box_top { 0 };
-    CSSPixels m_border_box_bottom { 0 };
     CSSPixels m_baseline { 0 };
     NonnullRefPtr<Gfx::GlyphRun> m_glyph_run;
 };
