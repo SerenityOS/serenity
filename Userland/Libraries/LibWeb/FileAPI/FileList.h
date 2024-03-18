@@ -15,12 +15,16 @@
 
 namespace Web::FileAPI {
 
-class FileList : public Bindings::PlatformObject {
+class FileList
+    : public Bindings::PlatformObject
+    , public Bindings::Serializable {
     WEB_PLATFORM_OBJECT(FileList, Bindings::PlatformObject);
     JS_DECLARE_ALLOCATOR(FileList);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<FileList> create(JS::Realm&, Vector<JS::NonnullGCPtr<File>>&&);
+    [[nodiscard]] static JS::NonnullGCPtr<FileList> create(JS::Realm&);
+
     virtual ~FileList() override;
 
     // https://w3c.github.io/FileAPI/#dfn-length
@@ -41,8 +45,13 @@ public:
     virtual bool is_supported_property_index(u32 index) const override;
     virtual WebIDL::ExceptionOr<JS::Value> item_value(size_t index) const override;
 
+    virtual StringView interface_name() const override { return "FileList"sv; }
+    virtual WebIDL::ExceptionOr<void> serialization_steps(HTML::SerializationRecord& serialized, bool for_storage, HTML::SerializationMemory&) override;
+    virtual WebIDL::ExceptionOr<void> deserialization_steps(ReadonlySpan<u32> const& serialized, size_t& position, HTML::DeserializationMemory&) override;
+
 private:
     FileList(JS::Realm&, Vector<JS::NonnullGCPtr<File>>&&);
+    explicit FileList(JS::Realm&);
 
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
