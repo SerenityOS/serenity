@@ -742,7 +742,7 @@ void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& e
     }
 
     if (cascade_origin == CascadeOrigin::Author && !pseudo_element.has_value()) {
-        if (auto const* inline_style = verify_cast<ElementInlineCSSStyleDeclaration>(element.inline_style())) {
+        if (auto const inline_style = element.inline_style()) {
             for (auto const& property : inline_style->properties()) {
                 if (important != property.important)
                     continue;
@@ -769,7 +769,7 @@ static void cascade_custom_properties(DOM::Element& element, Optional<CSS::Selec
         needed_capacity += verify_cast<PropertyOwningCSSStyleDeclaration>(matching_rule.rule->declaration()).custom_properties().size();
 
     if (!pseudo_element.has_value()) {
-        if (auto const* inline_style = verify_cast<PropertyOwningCSSStyleDeclaration>(element.inline_style()))
+        if (auto const inline_style = element.inline_style())
             needed_capacity += inline_style->custom_properties().size();
     }
 
@@ -782,7 +782,7 @@ static void cascade_custom_properties(DOM::Element& element, Optional<CSS::Selec
     }
 
     if (!pseudo_element.has_value()) {
-        if (auto const* inline_style = verify_cast<PropertyOwningCSSStyleDeclaration>(element.inline_style())) {
+        if (auto const inline_style = element.inline_style()) {
             for (auto const& it : inline_style->custom_properties())
                 custom_properties.set(it.key, it.value);
         }
