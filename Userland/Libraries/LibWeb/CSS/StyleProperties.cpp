@@ -62,19 +62,17 @@ void StyleProperties::set_property(CSS::PropertyID id, NonnullRefPtr<StyleValue 
 
 void StyleProperties::set_animated_property(CSS::PropertyID id, NonnullRefPtr<StyleValue const> value)
 {
-    m_animated_property_values[to_underlying(id)] = move(value);
+    m_animated_property_values.set(id, move(value));
 }
 
 void StyleProperties::reset_animated_properties()
 {
-    for (auto& animated_property : m_animated_property_values)
-        animated_property.clear();
+    m_animated_property_values.clear();
 }
 
 NonnullRefPtr<StyleValue const> StyleProperties::property(CSS::PropertyID property_id) const
 {
-    auto animated_value = m_animated_property_values[to_underlying(property_id)];
-    if (animated_value.has_value())
+    if (auto animated_value = m_animated_property_values.get(property_id).value_or(nullptr))
         return *animated_value;
 
     auto value = m_property_values[to_underlying(property_id)];
@@ -85,8 +83,7 @@ NonnullRefPtr<StyleValue const> StyleProperties::property(CSS::PropertyID proper
 
 RefPtr<StyleValue const> StyleProperties::maybe_null_property(CSS::PropertyID property_id) const
 {
-    auto animated_value = m_animated_property_values[to_underlying(property_id)];
-    if (animated_value.has_value())
+    if (auto animated_value = m_animated_property_values.get(property_id).value_or(nullptr))
         return *animated_value;
 
     auto value = m_property_values[to_underlying(property_id)];
