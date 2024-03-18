@@ -21,7 +21,7 @@
 namespace Web::CSS {
 
 // https://www.w3.org/TR/css-cascade/#origin
-enum class CascadeOrigin {
+enum class CascadeOrigin : u8 {
     Author,
     User,
     UserAgent,
@@ -30,7 +30,6 @@ enum class CascadeOrigin {
 };
 
 struct MatchingRule {
-    CascadeOrigin cascade_origin;
     JS::GCPtr<DOM::ShadowRoot const> shadow_root;
     JS::GCPtr<CSSStyleRule const> rule;
     JS::GCPtr<CSSStyleSheet const> sheet;
@@ -39,6 +38,7 @@ struct MatchingRule {
     size_t selector_index { 0 };
 
     u32 specificity { 0 };
+    CascadeOrigin cascade_origin;
     bool contains_pseudo_element { false };
     bool contains_root_pseudo_class { false };
 };

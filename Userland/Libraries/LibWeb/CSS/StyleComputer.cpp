@@ -2323,14 +2323,14 @@ NonnullOwnPtr<StyleComputer::RuleCache> StyleComputer::make_rule_cache_for_casca
             size_t selector_index = 0;
             for (CSS::Selector const& selector : rule.selectors()) {
                 MatchingRule matching_rule {
-                    cascade_origin,
                     shadow_root,
                     &rule,
                     sheet,
                     style_sheet_index,
                     rule_index,
                     selector_index,
-                    selector.specificity()
+                    selector.specificity(),
+                    cascade_origin,
                 };
 
                 for (auto const& simple_selector : selector.compound_selectors().last().simple_selectors) {
