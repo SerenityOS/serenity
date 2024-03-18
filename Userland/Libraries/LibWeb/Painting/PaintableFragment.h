@@ -57,7 +57,6 @@ private:
     Painting::BorderRadiiData m_border_radii_data;
     NonnullRefPtr<Gfx::GlyphRun> m_glyph_run;
     Vector<ShadowData> m_shadows;
-    bool m_contained_by_inline_node { false };
 };
 
 }
