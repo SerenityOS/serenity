@@ -92,7 +92,7 @@ public:
         No,
         Yes,
     };
-    void collect_animation_into(JS::NonnullGCPtr<Animations::KeyframeEffect> animation, StyleProperties& style_properties, AnimationRefresh = AnimationRefresh::No) const;
+    void collect_animation_into(DOM::Element&, Optional<CSS::Selector::PseudoElement::Type>, JS::NonnullGCPtr<Animations::KeyframeEffect> animation, StyleProperties& style_properties, AnimationRefresh = AnimationRefresh::No) const;
 
 private:
     enum class ComputeStyleMode {
