@@ -36,6 +36,7 @@
 #include <LibWeb/Crypto/CryptoKey.h>
 #include <LibWeb/FileAPI/Blob.h>
 #include <LibWeb/FileAPI/File.h>
+#include <LibWeb/FileAPI/FileList.h>
 #include <LibWeb/Geometry/DOMMatrix.h>
 #include <LibWeb/Geometry/DOMMatrixReadOnly.h>
 #include <LibWeb/Geometry/DOMPoint.h>
@@ -974,6 +975,8 @@ private:
             return FileAPI::Blob::create(realm);
         if (interface_name == "File"sv)
             return FileAPI::File::create(realm);
+        if (interface_name == "FileList"sv)
+            return FileAPI::FileList::create(realm);
         if (interface_name == "DOMMatrixReadOnly"sv)
             return Geometry::DOMMatrixReadOnly::create(realm);
         if (interface_name == "DOMMatrix"sv)
