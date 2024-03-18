@@ -21,6 +21,7 @@
 #include <LibWeb/Page/EventHandler.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/Painting/PaintableBox.h>
+#include <LibWeb/Painting/TextPaintable.h>
 #include <LibWeb/UIEvents/EventNames.h>
 #include <LibWeb/UIEvents/KeyboardEvent.h>
 #include <LibWeb/UIEvents/MouseEvent.h>
@@ -611,16 +612,15 @@ bool EventHandler::handle_doubleclick(CSSPixelPoint position, CSSPixelPoint scre
 
     if (button == GUI::MouseButton::Primary) {
         if (auto result = paint_root()->hit_test(position, Painting::HitTestType::TextCursor); result.has_value()) {
-            auto hit_paintable = result->paintable;
-            if (!hit_paintable->dom_node())
+            if (!result->paintable->dom_node())
                 return true;
 
-            auto const& hit_layout_node = hit_paintable->layout_node();
-            if (!hit_layout_node.is_text_node())
+            if (!is<Painting::TextPaintable>(*result->paintable))
                 return true;
+            auto& hit_paintable = static_cast<Painting::TextPaintable const&>(*result->paintable);
 
-            auto& hit_dom_node = verify_cast<DOM::Text>(*hit_paintable->dom_node());
-            auto const& text_for_rendering = verify_cast<Layout::TextNode>(hit_layout_node).text_for_rendering();
+            auto& hit_dom_node = const_cast<DOM::Text&>(verify_cast<DOM::Text>(*hit_paintable.dom_node()));
+            auto const& text_for_rendering = hit_paintable.text_for_rendering();
 
             int first_word_break_before = [&] {
                 // Start from one before the index position to prevent selecting only spaces between words, caused by the addition below.

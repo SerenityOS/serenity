@@ -9,6 +9,7 @@
 #include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Painting/BackgroundPainting.h>
 #include <LibWeb/Painting/InlinePaintable.h>
+#include <LibWeb/Painting/TextPaintable.h>
 
 namespace Web::Painting {
 
@@ -174,8 +175,8 @@ void InlinePaintable::paint(PaintContext& context, PaintPhase phase) const
 
     if (phase == PaintPhase::Foreground) {
         for_each_fragment([&](auto const& fragment, bool, bool) {
-            if (is<Layout::TextNode>(fragment.layout_node()))
-                paint_text_fragment(context, static_cast<Layout::TextNode const&>(fragment.layout_node()), fragment, phase);
+            if (is<TextPaintable>(fragment.paintable()))
+                paint_text_fragment(context, static_cast<TextPaintable const&>(fragment.paintable()), fragment, phase);
         });
     }
 

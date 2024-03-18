@@ -314,8 +314,8 @@ private:
     Vector<PaintableFragment> m_fragments;
 };
 
-void paint_text_decoration(PaintContext& context, Layout::Node const& text_node, PaintableFragment const& fragment);
-void paint_cursor_if_needed(PaintContext& context, Layout::TextNode const& text_node, PaintableFragment const& fragment);
-void paint_text_fragment(PaintContext& context, Layout::TextNode const& text_node, PaintableFragment const& fragment, PaintPhase phase);
+void paint_text_decoration(PaintContext&, TextPaintable const&, PaintableFragment const&);
+void paint_cursor_if_needed(PaintContext&, TextPaintable const&, PaintableFragment const&);
+void paint_text_fragment(PaintContext&, TextPaintable const&, PaintableFragment const&, PaintPhase);
 
 }

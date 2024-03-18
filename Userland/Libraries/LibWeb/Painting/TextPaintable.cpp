@@ -12,13 +12,14 @@
 
 namespace Web::Painting {
 
-JS::NonnullGCPtr<TextPaintable> TextPaintable::create(Layout::TextNode const& layout_node)
+JS::NonnullGCPtr<TextPaintable> TextPaintable::create(Layout::TextNode const& layout_node, String const& text_for_rendering)
 {
-    return layout_node.heap().allocate_without_realm<TextPaintable>(layout_node);
+    return layout_node.heap().allocate_without_realm<TextPaintable>(layout_node, text_for_rendering);
 }
 
-TextPaintable::TextPaintable(Layout::TextNode const& layout_node)
+TextPaintable::TextPaintable(Layout::TextNode const& layout_node, String const& text_for_rendering)
     : Paintable(layout_node)
+    , m_text_for_rendering(text_for_rendering)
 {
 }
 

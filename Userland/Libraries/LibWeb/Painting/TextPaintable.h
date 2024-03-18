@@ -14,7 +14,7 @@ class TextPaintable final : public Paintable {
     JS_CELL(TextPaintable, Paintable);
 
 public:
-    static JS::NonnullGCPtr<TextPaintable> create(Layout::TextNode const&);
+    static JS::NonnullGCPtr<TextPaintable> create(Layout::TextNode const&, String const& text_for_rendering);
 
     Layout::TextNode const& layout_node() const { return static_cast<Layout::TextNode const&>(Paintable::layout_node()); }
 
@@ -27,11 +27,14 @@ public:
     void set_text_decoration_thickness(CSSPixels thickness) { m_text_decoration_thickness = thickness; }
     CSSPixels text_decoration_thickness() const { return m_text_decoration_thickness; }
 
+    String const& text_for_rendering() const { return m_text_for_rendering; }
+
 private:
     virtual bool is_text_paintable() const override { return true; }
 
-    explicit TextPaintable(Layout::TextNode const&);
+    TextPaintable(Layout::TextNode const&, String const& text_for_rendering);
 
+    String m_text_for_rendering;
     CSSPixels m_text_decoration_thickness { 0 };
 };
 
