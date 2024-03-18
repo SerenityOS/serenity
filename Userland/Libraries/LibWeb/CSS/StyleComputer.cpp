@@ -1331,11 +1331,11 @@ void StyleComputer::collect_animation_into(JS::NonnullGCPtr<Animations::Keyframe
     }();
 
     if constexpr (LIBWEB_CSS_ANIMATION_DEBUG) {
-        auto valid_properties = keyframe_values.resolved_properties.size();
+        auto valid_properties = keyframe_values.properties.size();
         dbgln("Animation {} contains {} properties to interpolate, progress = {}%", animation->id(), valid_properties, progress_in_keyframe * 100);
     }
 
-    for (auto const& it : keyframe_values.resolved_properties) {
+    for (auto const& it : keyframe_values.properties) {
         auto resolve_property = [&](auto& property) {
             return property.visit(
                 [&](Animations::KeyframeEffect::KeyFrameSet::UseInitial) -> RefPtr<StyleValue const> {
@@ -1348,7 +1348,7 @@ void StyleComputer::collect_animation_into(JS::NonnullGCPtr<Animations::Keyframe
 
         auto resolved_start_property = resolve_property(it.value);
 
-        auto const& end_property = keyframe_end_values.resolved_properties.get(it.key);
+        auto const& end_property = keyframe_end_values.properties.get(it.key);
         if (!end_property.has_value()) {
             if (resolved_start_property) {
                 style_properties.set_animated_property(it.key, *resolved_start_property);
@@ -2414,7 +2414,7 @@ NonnullOwnPtr<StyleComputer::RuleCache> StyleComputer::make_rule_cache_for_casca
                 for (auto const& it : keyframe_style.properties()) {
                     for_each_property_expanding_shorthands(it.property_id, it.value, [&](PropertyID shorthand_id, StyleValue const& shorthand_value) {
                         animated_properties.set(shorthand_id);
-                        resolved_keyframe.resolved_properties.set(shorthand_id, NonnullRefPtr<StyleValue const> { shorthand_value });
+                        resolved_keyframe.properties.set(shorthand_id, NonnullRefPtr<StyleValue const> { shorthand_value });
                     });
                 }
 
@@ -2426,7 +2426,7 @@ NonnullOwnPtr<StyleComputer::RuleCache> StyleComputer::make_rule_cache_for_casca
             if constexpr (LIBWEB_CSS_DEBUG) {
                 dbgln("Resolved keyframe set '{}' into {} keyframes:", rule.name(), keyframe_set->keyframes_by_key.size());
                 for (auto it = keyframe_set->keyframes_by_key.begin(); it != keyframe_set->keyframes_by_key.end(); ++it)
-                    dbgln("    - keyframe {}: {} properties", it.key(), it->resolved_properties.size());
+                    dbgln("    - keyframe {}: {} properties", it.key(), it->properties.size());
             }
 
             rule_cache->rules_by_animation_keyframes.set(rule.name(), move(keyframe_set));
