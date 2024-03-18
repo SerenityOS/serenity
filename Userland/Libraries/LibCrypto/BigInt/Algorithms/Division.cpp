@@ -22,10 +22,6 @@ using AK::Detail::dword;
 FLATTEN void UnsignedBigIntegerAlgorithms::divide_without_allocation(
     UnsignedBigInteger const& numerator,
     UnsignedBigInteger const& denominator,
-    [[maybe_unused]] UnsignedBigInteger& temp_shift_result,
-    [[maybe_unused]] UnsignedBigInteger& temp_shift_plus,
-    [[maybe_unused]] UnsignedBigInteger& temp_shift,
-    [[maybe_unused]] UnsignedBigInteger& temp_minus,
     UnsignedBigInteger& quotient,
     UnsignedBigInteger& remainder)
 {

@@ -13,9 +13,6 @@ void UnsignedBigIntegerAlgorithms::modular_inverse_without_allocation(
     UnsignedBigInteger const& a,
     UnsignedBigInteger const& b,
     UnsignedBigInteger& temp_1,
-    UnsignedBigInteger& temp_2,
-    UnsignedBigInteger& temp_3,
-    UnsignedBigInteger& temp_4,
     UnsignedBigInteger& temp_minus,
     UnsignedBigInteger& temp_quotient,
     UnsignedBigInteger& temp_d,
@@ -87,7 +84,7 @@ void UnsignedBigIntegerAlgorithms::modular_inverse_without_allocation(
     }
 
     // return x % b
-    divide_without_allocation(temp_x, b, temp_1, temp_2, temp_3, temp_4, temp_quotient, result);
+    divide_without_allocation(temp_x, b, temp_quotient, result);
 }
 
 }
