@@ -49,6 +49,7 @@ public:
     virtual void request_file(FileRequest) override { }
     virtual void paint(DevicePixelRect const&, Gfx::Bitmap&, Web::PaintOptions = {}) override { }
     virtual void schedule_repaint() override { }
+    virtual bool is_ready_to_paint() const override { return true; }
 
 private:
     explicit SVGPageClient(Page& host_page)

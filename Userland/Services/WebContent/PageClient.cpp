@@ -96,6 +96,11 @@ void PageClient::schedule_repaint()
         m_repaint_timer->start();
 }
 
+bool PageClient::is_ready_to_paint() const
+{
+    return m_paint_state == PaintState::Ready;
+}
+
 void PageClient::ready_to_paint()
 {
     auto old_paint_state = exchange(m_paint_state, PaintState::Ready);

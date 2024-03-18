@@ -307,6 +307,7 @@ public:
     virtual void inspector_did_execute_console_script([[maybe_unused]] String const& script) { }
 
     virtual void schedule_repaint() = 0;
+    virtual bool is_ready_to_paint() const = 0;
 
 protected:
     virtual ~PageClient() = default;

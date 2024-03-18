@@ -30,6 +30,7 @@ public:
     static void set_use_gpu_painter();
 
     virtual void schedule_repaint() override;
+    virtual bool is_ready_to_paint() const override;
 
     virtual Web::Page& page() override { return *m_page; }
     virtual Web::Page const& page() const override { return *m_page; }

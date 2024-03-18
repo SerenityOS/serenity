@@ -2073,8 +2073,11 @@ bool Navigable::has_a_rendering_opportunity() const
     // or whether the document's visibility state is "visible".
     // Rendering opportunities typically occur at regular intervals.
 
-    // FIXME: We should at the very least say `false` here if we're an inactive browser tab.
-    return true;
+    // FIXME: Return `false` here if we're an inactive browser tab.
+    auto browsing_context = const_cast<Navigable*>(this)->active_browsing_context();
+    if (!browsing_context)
+        return false;
+    return browsing_context->page().client().is_ready_to_paint();
 }
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#inform-the-navigation-api-about-aborting-navigation
