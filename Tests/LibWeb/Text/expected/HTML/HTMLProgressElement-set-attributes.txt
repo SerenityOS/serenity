@@ -6,3 +6,6 @@ value attribute after setting value attribute to 50: 1
 value attribute after setting max attribute to 100: 50
 max attribute after setting max attribute to 100: 100
 value attribute after setting max attribute to 101: 100
+value attribute after setting value attribute to -1: 0
+value attribute after setting max attribute to 0: 0
+max attribute after setting max attribute to 0: 1
