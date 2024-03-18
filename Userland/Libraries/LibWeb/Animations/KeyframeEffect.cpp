@@ -873,26 +873,27 @@ void KeyframeEffect::visit_edges(Cell::Visitor& visitor)
 
 void KeyframeEffect::update_style_properties()
 {
-    if (!target())
+    auto target = this->target();
+    if (!target)
         return;
 
     if (pseudo_element_type().has_value()) {
         // StyleProperties are not saved for pseudo-elements so there is nothing to patch
-        target()->invalidate_style();
+        target->invalidate_style();
         return;
     }
 
-    auto* style = target()->computed_css_values();
+    auto* style = target->computed_css_values();
     if (!style)
         return;
 
     auto style_before_animation_update = style->clone();
 
-    auto& document = target()->document();
-    document.style_computer().collect_animation_into(*this, *style, CSS::StyleComputer::AnimationRefresh::Yes);
+    auto& document = target->document();
+    document.style_computer().collect_animation_into(*target, pseudo_element_type(), *this, *style, CSS::StyleComputer::AnimationRefresh::Yes);
 
     // Traversal of the subtree is necessary to update the animated properties inherited from the target element.
-    target()->for_each_in_subtree_of_type<DOM::Element>([&](auto& element) {
+    target->for_each_in_subtree_of_type<DOM::Element>([&](auto& element) {
         auto* element_style = element.computed_css_values();
         if (!element_style || !element.layout_node())
             return IterationDecision::Continue;
@@ -910,8 +911,8 @@ void KeyframeEffect::update_style_properties()
 
     auto invalidation = DOM::Element::compute_required_invalidation(style_before_animation_update, *style);
 
-    if (target()->layout_node())
-        target()->layout_node()->apply_style(*style);
+    if (target->layout_node())
+        target->layout_node()->apply_style(*style);
 
     if (invalidation.relayout)
         document.set_needs_layout();

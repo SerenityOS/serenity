@@ -1287,7 +1287,7 @@ static ValueComparingRefPtr<StyleValue const> interpolate_property(DOM::Element&
     }
 }
 
-void StyleComputer::collect_animation_into(JS::NonnullGCPtr<Animations::KeyframeEffect> effect, StyleProperties& style_properties, AnimationRefresh refresh) const
+void StyleComputer::collect_animation_into(DOM::Element& element, Optional<CSS::Selector::PseudoElement::Type> pseudo_element, JS::NonnullGCPtr<Animations::KeyframeEffect> effect, StyleProperties& style_properties, AnimationRefresh refresh) const
 {
     auto animation = effect->associated_animation();
     if (!animation)
@@ -1344,7 +1344,11 @@ void StyleComputer::collect_animation_into(JS::NonnullGCPtr<Animations::Keyframe
                         return {};
                     return style_properties.maybe_null_property(it.key);
                 },
-                [&](RefPtr<StyleValue const> value) { return value; });
+                [&](RefPtr<StyleValue const> value) -> RefPtr<StyleValue const> {
+                    if (value->is_unresolved())
+                        return Parser::Parser::resolve_unresolved_style_value(Parser::ParsingContext { element.document() }, element, pseudo_element, it.key, value->as_unresolved());
+                    return value;
+                });
         };
 
         auto resolved_start_property = resolve_property(it.value);
@@ -1559,7 +1563,7 @@ void StyleComputer::compute_cascaded_values(StyleProperties& style, DOM::Element
         if (auto effect = animation->effect(); effect && effect->is_keyframe_effect()) {
             auto& keyframe_effect = *static_cast<Animations::KeyframeEffect*>(effect.ptr());
             if (keyframe_effect.pseudo_element_type() == pseudo_element)
-                collect_animation_into(keyframe_effect, style);
+                collect_animation_into(element, pseudo_element, keyframe_effect, style);
         }
     }
 
