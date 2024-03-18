@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021, Max Wipfli <mail@maxwipfli.ch>
- * Copyright (c) 2023, Shannon Booth <shannon@serenityos.org>
+ * Copyright (c) 2023-2024, Shannon Booth <shannon@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -13,10 +13,10 @@
 #include <AK/SourceLocation.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringUtils.h>
-#include <AK/URLParser.h>
 #include <AK/Utf8View.h>
+#include <LibURL/Parser.h>
 
-namespace AK {
+namespace URL {
 
 // NOTE: This is similar to the LibC macro EOF = -1.
 constexpr u32 end_of_file = 0xFFFFFFFF;
@@ -36,11 +36,11 @@ static bool is_url_code_point(u32 code_point)
 
 static void report_validation_error(SourceLocation const& location = SourceLocation::current())
 {
-    dbgln_if(URL_PARSER_DEBUG, "URLParser::basic_parse: Validation error! {}", location);
+    dbgln_if(URL_PARSER_DEBUG, "URL::Parser::basic_parse: Validation error! {}", location);
 }
 
 // https://url.spec.whatwg.org/#concept-opaque-host-parser
-static Optional<URL::Host> parse_opaque_host(StringView input)
+static Optional<Host> parse_opaque_host(StringView input)
 {
     // 1. If input contains a forbidden host code point, host-invalid-code-point validation error, return failure.
     auto forbidden_host_characters_excluding_percent = "\0\t\n\r #/:<>?@[\\]^|"sv;
@@ -57,7 +57,7 @@ static Optional<URL::Host> parse_opaque_host(StringView input)
     //       currently report validation errors, they are only useful for debugging efforts in the URL parsing code.
 
     // 4. Return the result of running UTF-8 percent-encode on input using the C0 control percent-encode set.
-    return String::from_byte_string(URL::percent_encode(input, URL::PercentEncodeSet::C0Control)).release_value_but_fixme_should_propagate_errors();
+    return String::from_byte_string(percent_encode(input, PercentEncodeSet::C0Control)).release_value_but_fixme_should_propagate_errors();
 }
 
 struct ParsedIPv4Number {
@@ -122,11 +122,11 @@ static Optional<ParsedIPv4Number> parse_ipv4_number(StringView input)
     // 8. Let output be the mathematical integer value that is represented by input in radix-R notation, using ASCII hex digits for digits with values 0 through 15.
     Optional<u32> maybe_output;
     if (radix == 8)
-        maybe_output = StringUtils::convert_to_uint_from_octal(input);
+        maybe_output = AK::StringUtils::convert_to_uint_from_octal(input);
     else if (radix == 10)
         maybe_output = input.to_number<u32>();
     else if (radix == 16)
-        maybe_output = StringUtils::convert_to_uint_from_hex(input);
+        maybe_output = AK::StringUtils::convert_to_uint_from_hex(input);
     else
         VERIFY_NOT_REACHED();
 
@@ -139,7 +139,7 @@ static Optional<ParsedIPv4Number> parse_ipv4_number(StringView input)
 }
 
 // https://url.spec.whatwg.org/#concept-ipv4-parser
-static Optional<URL::IPv4Address> parse_ipv4_address(StringView input)
+static Optional<IPv4Address> parse_ipv4_address(StringView input)
 {
     // 1. Let parts be the result of strictly splitting input on U+002E (.).
     auto parts = input.split_view("."sv, SplitBehavior::KeepEmpty);
@@ -193,7 +193,7 @@ static Optional<URL::IPv4Address> parse_ipv4_address(StringView input)
     }
 
     // 8. If the last item in numbers is greater than or equal to 256^(5 − numbers’s size), then return failure.
-    if (numbers.last() >= pow<size_t>(256, 5 - numbers.size()))
+    if (numbers.last() >= AK::pow<size_t>(256, 5 - numbers.size()))
         return {};
 
     // 9. Let ipv4 be the last item in numbers.
@@ -208,7 +208,7 @@ static Optional<URL::IPv4Address> parse_ipv4_address(StringView input)
     // 12. For each n of numbers:
     for (u32 n : numbers) {
         // 1. Increment ipv4 by n × 256^(3 − counter).
-        ipv4 += n * pow<size_t>(256, 3 - counter);
+        ipv4 += n * AK::pow<size_t>(256, 3 - counter);
 
         // 2. Increment counter by 1.
         ++counter;
@@ -219,7 +219,7 @@ static Optional<URL::IPv4Address> parse_ipv4_address(StringView input)
 }
 
 // https://url.spec.whatwg.org/#concept-ipv4-serializer
-static ErrorOr<String> serialize_ipv4_address(URL::IPv4Address address)
+static ErrorOr<String> serialize_ipv4_address(IPv4Address address)
 {
     // 1. Let output be the empty string.
     // NOTE: Array to avoid prepend.
@@ -245,7 +245,7 @@ static ErrorOr<String> serialize_ipv4_address(URL::IPv4Address address)
 }
 
 // https://url.spec.whatwg.org/#concept-ipv6-serializer
-static void serialize_ipv6_address(URL::IPv6Address const& address, StringBuilder& output)
+static void serialize_ipv6_address(IPv6Address const& address, StringBuilder& output)
 {
     // 1. Let output be the empty string.
 
@@ -315,7 +315,7 @@ static void serialize_ipv6_address(URL::IPv6Address const& address, StringBuilde
 }
 
 // https://url.spec.whatwg.org/#concept-ipv6-parser
-static Optional<URL::IPv6Address> parse_ipv6_address(StringView input)
+static Optional<IPv6Address> parse_ipv6_address(StringView input)
 {
     // 1. Let address be a new IPv6 address whose IPv6 pieces are all 0.
     Array<u16, 8> address {};
@@ -576,7 +576,7 @@ static bool ends_in_a_number_checker(StringView input)
 
 // https://url.spec.whatwg.org/#concept-host-parser
 // NOTE: This is a very bare-bones implementation.
-static Optional<URL::Host> parse_host(StringView input, bool is_opaque = false)
+static Optional<Host> parse_host(StringView input, bool is_opaque = false)
 {
     // 1. If input starts with U+005B ([), then:
     if (input.starts_with('[')) {
@@ -601,7 +601,7 @@ static Optional<URL::Host> parse_host(StringView input, bool is_opaque = false)
     VERIFY(!input.is_empty());
 
     // FIXME: 4. Let domain be the result of running UTF-8 decode without BOM on the percent-decoding of input.
-    auto domain = URL::percent_decode(input);
+    auto domain = percent_decode(input);
 
     // NOTE: This is handled in Unicode::create_unicode_url, to work around the fact that we can't call into LibUnicode here
     // FIXME: 5. Let asciiDomain be the result of running domain to ASCII with domain and false.
@@ -635,17 +635,17 @@ static Optional<URL::Host> parse_host(StringView input, bool is_opaque = false)
 }
 
 // https://url.spec.whatwg.org/#concept-host-serializer
-ErrorOr<String> URLParser::serialize_host(URL::Host const& host)
+ErrorOr<String> Parser::serialize_host(Host const& host)
 {
     // 1. If host is an IPv4 address, return the result of running the IPv4 serializer on host.
-    if (host.has<URL::IPv4Address>())
-        return serialize_ipv4_address(host.get<URL::IPv4Address>());
+    if (host.has<IPv4Address>())
+        return serialize_ipv4_address(host.get<IPv4Address>());
 
     // 2. Otherwise, if host is an IPv6 address, return U+005B ([), followed by the result of running the IPv6 serializer on host, followed by U+005D (]).
-    if (host.has<URL::IPv6Address>()) {
+    if (host.has<IPv6Address>()) {
         StringBuilder output;
         TRY(output.try_append('['));
-        serialize_ipv6_address(host.get<URL::IPv6Address>(), output);
+        serialize_ipv6_address(host.get<IPv6Address>(), output);
         TRY(output.try_append(']'));
         return output.to_string();
     }
@@ -689,7 +689,7 @@ constexpr bool is_double_dot_path_segment(StringView input)
 }
 
 // https://url.spec.whatwg.org/#shorten-a-urls-path
-void URLParser::shorten_urls_path(URL& url)
+void Parser::shorten_urls_path(URL& url)
 {
     // 1. Assert: url does not have an opaque path.
     VERIFY(!url.cannot_be_a_base_url());
@@ -707,7 +707,7 @@ void URLParser::shorten_urls_path(URL& url)
 }
 
 // https://url.spec.whatwg.org/#string-percent-encode-after-encoding
-ErrorOr<String> URLParser::percent_encode_after_encoding(StringView input, URL::PercentEncodeSet percent_encode_set, bool space_as_plus)
+ErrorOr<String> Parser::percent_encode_after_encoding(StringView input, PercentEncodeSet percent_encode_set, bool space_as_plus)
 {
     // NOTE: This is written somewhat ad-hoc since we don't yet implement the Encoding spec.
 
@@ -727,7 +727,7 @@ ErrorOr<String> URLParser::percent_encode_after_encoding(StringView input, URL::
         // 3. Assert: percentEncodeSet includes all non-ASCII code points.
 
         // 4. If isomorphic is not in percentEncodeSet, then append isomorph to output.
-        if (!URL::code_point_is_in_percent_encode_set(isomorph, percent_encode_set)) {
+        if (!code_point_is_in_percent_encode_set(isomorph, percent_encode_set)) {
             output.append_code_point(isomorph);
         }
 
@@ -748,9 +748,9 @@ ErrorOr<String> URLParser::percent_encode_after_encoding(StringView input, URL::
 //       future for validation of URLs, which would then lead to infinite recursion.
 //       The same goes for base_url, because e.g. the port() getter does not always return m_port, and we are interested in the underlying member
 //       variables' values here, not what the URL class presents to its users.
-URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, Optional<URL> url, Optional<State> state_override)
+URL Parser::basic_parse(StringView raw_input, Optional<URL> const& base_url, Optional<URL> url, Optional<State> state_override)
 {
-    dbgln_if(URL_PARSER_DEBUG, "URLParser::parse: Parsing '{}'", raw_input);
+    dbgln_if(URL_PARSER_DEBUG, "URL::Parser::parse: Parsing '{}'", raw_input);
     if (raw_input.is_empty())
         return base_url.has_value() ? *base_url : URL {};
 
@@ -841,11 +841,11 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
 
         if constexpr (URL_PARSER_DEBUG) {
             if (code_point == end_of_file)
-                dbgln("URLParser::basic_parse: {} state with EOF.", state_name(state));
+                dbgln("URL::Parser::basic_parse: {} state with EOF.", state_name(state));
             else if (is_ascii_printable(code_point))
-                dbgln("URLParser::basic_parse: {} state with code point U+{:04X} ({:c}).", state_name(state), code_point, code_point);
+                dbgln("URL::Parser::basic_parse: {} state with code point U+{:04X} ({:c}).", state_name(state), code_point, code_point);
             else
-                dbgln("URLParser::basic_parse: {} state with code point U+{:04X}.", state_name(state), code_point);
+                dbgln("URL::Parser::basic_parse: {} state with code point U+{:04X}.", state_name(state), code_point);
         }
 
         switch (state) {
@@ -877,11 +877,11 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
                 // 1. If state override is given, then:
                 if (state_override.has_value()) {
                     // 1. If url’s scheme is a special scheme and buffer is not a special scheme, then return.
-                    if (URL::is_special_scheme(url->scheme()) && !URL::is_special_scheme(buffer.string_view()))
+                    if (is_special_scheme(url->scheme()) && !is_special_scheme(buffer.string_view()))
                         return *url;
 
                     // 2. If url’s scheme is not a special scheme and buffer is a special scheme, then return.
-                    if (!URL::is_special_scheme(url->scheme()) && URL::is_special_scheme(buffer.string_view()))
+                    if (!is_special_scheme(url->scheme()) && is_special_scheme(buffer.string_view()))
                         return *url;
 
                     // 3. If url includes credentials or has a non-null port, and buffer is "file", then return.
@@ -899,7 +899,7 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
                 // 3. If state override is given, then:
                 if (state_override.has_value()) {
                     // 1. If url’s port is url’s scheme’s default port, then set url’s port to null.
-                    if (url->port() == URL::default_port_for_scheme(url->scheme()))
+                    if (url->port() == default_port_for_scheme(url->scheme()))
                         url->m_port = {};
 
                     // 2. Return.
@@ -1147,14 +1147,14 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
                         if (password_builder.is_empty())
                             password_builder.append(url->m_password);
 
-                        URL::append_percent_encoded_if_necessary(password_builder, c, URL::PercentEncodeSet::Userinfo);
+                        append_percent_encoded_if_necessary(password_builder, c, PercentEncodeSet::Userinfo);
                     }
                     // 4. Otherwise, append encodedCodePoints to url’s username.
                     else {
                         if (username_builder.is_empty())
                             username_builder.append(url->m_username);
 
-                        URL::append_percent_encoded_if_necessary(username_builder, c, URL::PercentEncodeSet::Userinfo);
+                        append_percent_encoded_if_necessary(username_builder, c, PercentEncodeSet::Userinfo);
                     }
                 }
 
@@ -1305,7 +1305,7 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
                     }
 
                     // 3. Set url’s port to null, if port is url’s scheme’s default port; otherwise to port.
-                    if (port.value() == URL::default_port_for_scheme(url->scheme()))
+                    if (port.value() == default_port_for_scheme(url->scheme()))
                         url->m_port = {};
                     else
                         url->m_port = port.value();
@@ -1585,7 +1585,7 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
                     report_validation_error();
 
                 // 3. UTF-8 percent-encode c using the path percent-encode set and append the result to buffer.
-                URL::append_percent_encoded_if_necessary(buffer, code_point, URL::PercentEncodeSet::Path);
+                append_percent_encoded_if_necessary(buffer, code_point, PercentEncodeSet::Path);
             }
             break;
         // -> opaque path state, https://url.spec.whatwg.org/#cannot-be-a-base-url-path-state
@@ -1620,7 +1620,7 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
 
                 // 3. If c is not the EOF code point, UTF-8 percent-encode c using the C0 control percent-encode set and append the result to url’s path.
                 if (code_point != end_of_file) {
-                    URL::append_percent_encoded_if_necessary(buffer, code_point, URL::PercentEncodeSet::C0Control);
+                    append_percent_encoded_if_necessary(buffer, code_point, PercentEncodeSet::C0Control);
                 } else {
                     url->m_paths[0] = buffer.to_string_without_validation();
                     buffer.clear();
@@ -1642,7 +1642,7 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
                 // then:
 
                 // 1. Let queryPercentEncodeSet be the special-query percent-encode set if url is special; otherwise the query percent-encode set.
-                auto query_percent_encode_set = url->is_special() ? URL::PercentEncodeSet::SpecialQuery : URL::PercentEncodeSet::Query;
+                auto query_percent_encode_set = url->is_special() ? PercentEncodeSet::SpecialQuery : PercentEncodeSet::Query;
 
                 // 2. Percent-encode after encoding, with encoding, buffer, and queryPercentEncodeSet, and append the result to url’s query.
                 url->m_query = percent_encode_after_encoding(buffer.string_view(), query_percent_encode_set).release_value_but_fixme_should_propagate_errors();
@@ -1687,7 +1687,7 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
                 // NOTE: The percent-encode is done on EOF on the entire buffer.
                 buffer.append_code_point(code_point);
             } else {
-                url->m_fragment = percent_encode_after_encoding(buffer.string_view(), URL::PercentEncodeSet::Fragment).release_value_but_fixme_should_propagate_errors();
+                url->m_fragment = percent_encode_after_encoding(buffer.string_view(), PercentEncodeSet::Fragment).release_value_but_fixme_should_propagate_errors();
                 buffer.clear();
             }
             break;
@@ -1701,7 +1701,7 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
     }
 
     url->m_valid = true;
-    dbgln_if(URL_PARSER_DEBUG, "URLParser::parse: Parsed URL to be '{}'.", url->serialize());
+    dbgln_if(URL_PARSER_DEBUG, "URL::Parser::parse: Parsed URL to be '{}'.", url->serialize());
 
     // 10. Return url.
     return url.release_value();

@@ -19,8 +19,8 @@
 
 @interface ApplicationDelegate ()
 {
-    Vector<URL> m_initial_urls;
-    URL m_new_tab_page_url;
+    Vector<URL::URL> m_initial_urls;
+    URL::URL m_new_tab_page_url;
 
     // This will always be populated, but we cannot have a non-default constructible instance variable.
     Optional<WebView::CookieJar> m_cookie_jar;
@@ -50,8 +50,8 @@
 
 @implementation ApplicationDelegate
 
-- (instancetype)init:(Vector<URL>)initial_urls
-              newTabPageURL:(URL)new_tab_page_url
+- (instancetype)init:(Vector<URL::URL>)initial_urls
+              newTabPageURL:(URL::URL)new_tab_page_url
               withCookieJar:(WebView::CookieJar)cookie_jar
           webContentOptions:(Ladybird::WebContentOptions const&)web_content_options
     webdriverContentIPCPath:(StringView)webdriver_content_ipc_path
@@ -95,7 +95,7 @@
 
 #pragma mark - Public methods
 
-- (TabController*)createNewTab:(Optional<URL> const&)url
+- (TabController*)createNewTab:(Optional<URL::URL> const&)url
                        fromTab:(Tab*)tab
                    activateTab:(Web::HTML::ActivateTab)activate_tab
 {
@@ -106,7 +106,7 @@
 }
 
 - (nonnull TabController*)createNewTab:(StringView)html
-                                   url:(URL const&)url
+                                   url:(URL::URL const&)url
                                fromTab:(nullable Tab*)tab
                            activateTab:(Web::HTML::ActivateTab)activate_tab
 {
@@ -155,7 +155,7 @@
         return;
     }
 
-    [self createNewTab:URL("about:version"sv)
+    [self createNewTab:URL::URL("about:version"sv)
                fromTab:(Tab*)current_tab
            activateTab:Web::HTML::ActivateTab::Yes];
 }

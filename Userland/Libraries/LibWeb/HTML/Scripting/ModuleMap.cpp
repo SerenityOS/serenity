@@ -21,17 +21,17 @@ void ModuleMap::visit_edges(Visitor& visitor)
             visitor.visit(callback);
 }
 
-bool ModuleMap::is_fetching(URL const& url, ByteString const& type) const
+bool ModuleMap::is_fetching(URL::URL const& url, ByteString const& type) const
 {
     return is(url, type, EntryType::Fetching);
 }
 
-bool ModuleMap::is_failed(URL const& url, ByteString const& type) const
+bool ModuleMap::is_failed(URL::URL const& url, ByteString const& type) const
 {
     return is(url, type, EntryType::Failed);
 }
 
-bool ModuleMap::is(URL const& url, ByteString const& type, EntryType entry_type) const
+bool ModuleMap::is(URL::URL const& url, ByteString const& type, EntryType entry_type) const
 {
     auto value = m_values.get({ url, type });
     if (!value.has_value())
@@ -40,12 +40,12 @@ bool ModuleMap::is(URL const& url, ByteString const& type, EntryType entry_type)
     return value->type == entry_type;
 }
 
-Optional<ModuleMap::Entry> ModuleMap::get(URL const& url, ByteString const& type) const
+Optional<ModuleMap::Entry> ModuleMap::get(URL::URL const& url, ByteString const& type) const
 {
     return m_values.get({ url, type });
 }
 
-AK::HashSetResult ModuleMap::set(URL const& url, ByteString const& type, Entry entry)
+AK::HashSetResult ModuleMap::set(URL::URL const& url, ByteString const& type, Entry entry)
 {
     // NOTE: Re-entering this function while firing wait_for_change callbacks is not allowed.
     VERIFY(!m_firing_callbacks);
@@ -63,7 +63,7 @@ AK::HashSetResult ModuleMap::set(URL const& url, ByteString const& type, Entry e
     return value;
 }
 
-void ModuleMap::wait_for_change(JS::Heap& heap, URL const& url, ByteString const& type, Function<void(Entry)> callback)
+void ModuleMap::wait_for_change(JS::Heap& heap, URL::URL const& url, ByteString const& type, Function<void(Entry)> callback)
 {
     m_callbacks.ensure({ url, type }).append(JS::create_heap_function(heap, move(callback)));
 }

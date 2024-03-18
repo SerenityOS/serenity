@@ -16,7 +16,6 @@
 #include <AK/HashTable.h>
 #include <AK/LexicalPath.h>
 #include <AK/RecursionDecision.h>
-#include <AK/URL.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
@@ -27,6 +26,7 @@
 #include <LibManual/SectionNode.h>
 #include <LibMarkdown/Document.h>
 #include <LibMarkdown/Visitor.h>
+#include <LibURL/URL.h>
 #include <stdlib.h>
 
 static bool is_missing_file_acceptable(String const& filename)

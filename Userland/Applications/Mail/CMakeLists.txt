@@ -20,4 +20,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_app(Mail ICON app-mail)
-target_link_libraries(Mail PRIVATE LibConfig LibCore LibDesktop LibGfx LibGUI LibIMAP LibWebView LibWeb LibMain)
+target_link_libraries(Mail PRIVATE LibConfig LibCore LibDesktop LibGfx LibGUI LibIMAP LibWebView LibWeb LibMain LibURL)

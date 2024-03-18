@@ -8,7 +8,6 @@
  */
 
 #include "MainWidget.h"
-#include <AK/URL.h>
 #include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
 #include <LibDesktop/Launcher.h>
@@ -17,6 +16,7 @@
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Window.h>
 #include <LibMain/Main.h>
+#include <LibURL/URL.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {

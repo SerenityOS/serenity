@@ -28,7 +28,7 @@ public:
     static NonnullRefPtr<WebSocket> create(ConnectionInfo, RefPtr<WebSocketImpl> = nullptr);
     virtual ~WebSocket() override = default;
 
-    URL const& url() const { return m_connection.url(); }
+    URL::URL const& url() const { return m_connection.url(); }
 
     ReadyState ready_state();
 

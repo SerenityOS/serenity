@@ -355,6 +355,8 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "BSD$" OR HAIKU)
     target_link_libraries(AK PRIVATE execinfo)
 endif()
 
+add_serenity_subdirectory(Userland/Libraries/LibURL)
+
 # LibCore
 add_serenity_subdirectory(Userland/Libraries/LibCore)
 target_link_libraries(LibCore PRIVATE Threads::Threads)
@@ -370,6 +372,7 @@ if (HAIKU)
     # Haiku has networking related functions in the network library
     target_link_libraries(LibCore PRIVATE network)
 endif()
+target_link_libraries(LibCore PRIVATE LibURL)
 
 # LibMain
 add_serenity_subdirectory(Userland/Libraries/LibMain)
@@ -580,7 +583,7 @@ if (BUILD_LAGOM)
             add_serenity_subdirectory(Meta/Lagom/Contrib/VideoPlayerSDL)
         endif()
 
-        lagom_utility(icc SOURCES ../../Userland/Utilities/icc.cpp LIBS LibGfx LibMain)
+        lagom_utility(icc SOURCES ../../Userland/Utilities/icc.cpp LIBS LibGfx LibMain LibURL)
         lagom_utility(image SOURCES ../../Userland/Utilities/image.cpp LIBS LibGfx LibMain)
         lagom_utility(isobmff SOURCES ../../Userland/Utilities/isobmff.cpp LIBS LibGfx LibMain)
         lagom_utility(ttfdisasm SOURCES ../../Userland/Utilities/ttfdisasm.cpp LIBS LibGfx LibMain)
@@ -596,7 +599,7 @@ if (BUILD_LAGOM)
         endif()
 
         lagom_utility(lzcat SOURCES ../../Userland/Utilities/lzcat.cpp LIBS LibCompress LibMain)
-        lagom_utility(markdown-check SOURCES ../../Userland/Utilities/markdown-check.cpp LIBS LibFileSystem LibMarkdown LibMain LibManual)
+        lagom_utility(markdown-check SOURCES ../../Userland/Utilities/markdown-check.cpp LIBS LibFileSystem LibMarkdown LibMain LibManual LibURL)
         lagom_utility(mkfs.fat SOURCES  ../../Userland/Utilities/mkfs.fat.cpp LIBS LibFileSystem LibMain)
 
         if (NOT EMSCRIPTEN)
@@ -626,7 +629,7 @@ if (BUILD_LAGOM)
         endif()
 
         lagom_utility(wasm SOURCES ../../Userland/Utilities/wasm.cpp LIBS LibFileSystem LibWasm LibLine LibMain LibJS)
-        lagom_utility(xml SOURCES ../../Userland/Utilities/xml.cpp LIBS LibFileSystem LibMain LibXML)
+        lagom_utility(xml SOURCES ../../Userland/Utilities/xml.cpp LIBS LibFileSystem LibMain LibXML LibURL)
         lagom_utility(xzcat SOURCES ../../Userland/Utilities/xzcat.cpp LIBS LibCompress LibMain)
         lagom_utility(fdtdump SOURCES ../../Userland/Utilities/fdtdump.cpp LIBS LibDeviceTree LibMain)
 

@@ -197,7 +197,7 @@ void BrowserSettingsWidget::set_search_engine_url(StringView url)
 void BrowserSettingsWidget::apply_settings()
 {
     auto homepage_url = m_homepage_url_textbox->text();
-    if (!URL(homepage_url).is_valid()) {
+    if (!URL::URL(homepage_url).is_valid()) {
         GUI::MessageBox::show_error(this->window(), "The homepage URL you have entered is not valid"sv);
         m_homepage_url_textbox->select_all();
         m_homepage_url_textbox->set_focus(true);
@@ -206,7 +206,7 @@ void BrowserSettingsWidget::apply_settings()
     Config::write_string("Browser"sv, "Preferences"sv, "Home"sv, homepage_url);
 
     auto new_tab_url = m_new_tab_url_textbox->text();
-    if (!URL(new_tab_url).is_valid()) {
+    if (!URL::URL(new_tab_url).is_valid()) {
         GUI::MessageBox::show_error(this->window(), "The new tab URL you have entered is not valid"sv);
         m_new_tab_url_textbox->select_all();
         m_new_tab_url_textbox->set_focus(true);

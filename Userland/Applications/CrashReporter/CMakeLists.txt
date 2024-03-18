@@ -13,4 +13,4 @@ set(SOURCES
 )
 
 serenity_app(CrashReporter ICON app-crash-reporter)
-target_link_libraries(CrashReporter PRIVATE LibCore LibCoredump LibDebug LibDesktop LibFileSystem LibFileSystemAccessClient LibGfx LibGUI LibMain LibThreading)
+target_link_libraries(CrashReporter PRIVATE LibCore LibCoredump LibDebug LibDesktop LibFileSystem LibFileSystemAccessClient LibGfx LibGUI LibMain LibThreading LibURL)

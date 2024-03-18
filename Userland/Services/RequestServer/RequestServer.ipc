@@ -1,4 +1,4 @@
-#include <AK/URL.h>
+#include <LibURL/URL.h>
 #include <RequestServer/ConnectionCache.h>
 
 endpoint RequestServer
@@ -6,14 +6,14 @@ endpoint RequestServer
     // Test if a specific protocol is supported, e.g "http"
     is_supported_protocol(ByteString protocol) => (bool supported)
 
-    start_request(i32 request_id, ByteString method, URL url, HashMap<ByteString,ByteString> request_headers, ByteBuffer request_body, Core::ProxyData proxy_data) =|
+    start_request(i32 request_id, ByteString method, URL::URL url, HashMap<ByteString,ByteString> request_headers, ByteBuffer request_body, Core::ProxyData proxy_data) =|
     stop_request(i32 request_id) => (bool success)
     set_certificate(i32 request_id, ByteString certificate, ByteString key) => (bool success)
 
-    ensure_connection(URL url, ::RequestServer::CacheLevel cache_level) =|
+    ensure_connection(URL::URL url, ::RequestServer::CacheLevel cache_level) =|
 
     // Websocket Connection API
-    websocket_connect(URL url, ByteString origin, Vector<ByteString> protocols, Vector<ByteString> extensions, HashMap<ByteString,ByteString> additional_request_headers) => (i32 connection_id)
+    websocket_connect(URL::URL url, ByteString origin, Vector<ByteString> protocols, Vector<ByteString> extensions, HashMap<ByteString,ByteString> additional_request_headers) => (i32 connection_id)
     websocket_ready_state(i32 connection_id) => (u32 ready_state)
     websocket_subprotocol_in_use(i32 connection_id) => (ByteString subprotocol_in_use)
     websocket_send(i32 connection_id, bool is_text, ByteBuffer data) =|

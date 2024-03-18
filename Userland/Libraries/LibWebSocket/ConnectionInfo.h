@@ -6,19 +6,19 @@
 
 #pragma once
 
-#include <AK/URL.h>
 #include <AK/Vector.h>
 #include <LibCore/EventReceiver.h>
 #include <LibTLS/TLSv12.h>
+#include <LibURL/URL.h>
 #include <LibWebSocket/Message.h>
 
 namespace WebSocket {
 
 class ConnectionInfo final {
 public:
-    ConnectionInfo(URL);
+    ConnectionInfo(URL::URL);
 
-    URL const& url() const { return m_url; }
+    URL::URL const& url() const { return m_url; }
 
     ByteString const& origin() const { return m_origin; }
     void set_origin(ByteString origin) { m_origin = move(origin); }
@@ -43,7 +43,7 @@ public:
     ByteString resource_name() const;
 
 private:
-    URL m_url;
+    URL::URL m_url;
     ByteString m_origin;
     Vector<ByteString> m_protocols {};
     Vector<ByteString> m_extensions {};

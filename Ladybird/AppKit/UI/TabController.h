@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/Forward.h>
-#include <AK/URL.h>
+#include <LibURL/URL.h>
 
 #import <System/Cocoa.h>
 
@@ -23,10 +23,10 @@ struct TabSettings {
 
 - (instancetype)init;
 
-- (void)loadURL:(URL const&)url;
-- (void)loadHTML:(StringView)html url:(URL const&)url;
+- (void)loadURL:(URL::URL const&)url;
+- (void)loadHTML:(StringView)html url:(URL::URL const&)url;
 
-- (void)onLoadStart:(URL const&)url isRedirect:(BOOL)isRedirect;
+- (void)onLoadStart:(URL::URL const&)url isRedirect:(BOOL)isRedirect;
 - (void)onTitleChange:(ByteString const&)title;
 
 - (void)navigateBack:(id)sender;

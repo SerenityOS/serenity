@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/URL.h>
+#include <LibURL/URL.h>
 #include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/HTML/StructuredSerialize.h>
 
@@ -31,14 +31,14 @@ public:
     JS::GCPtr<NavigationHistoryEntry> navigation_history_entry() const { return m_entry; }
 
     // Setters are not available to JS, but expected in many spec algorithms
-    void set_url(URL const& url) { m_url = url; }
+    void set_url(URL::URL const& url) { m_url = url; }
     void set_entry(JS::GCPtr<NavigationHistoryEntry> entry) { m_entry = entry; }
     void set_state(SerializationRecord state) { m_state = move(state); }
     void set_is_same_document(bool b) { m_is_same_document = b; }
 
     virtual ~NavigationDestination() override;
 
-    URL const& raw_url() const { return m_url; }
+    URL::URL const& raw_url() const { return m_url; }
 
 private:
     NavigationDestination(JS::Realm&);
@@ -47,7 +47,7 @@ private:
     virtual void visit_edges(JS::Cell::Visitor&) override;
 
     // https://html.spec.whatwg.org/multipage/nav-history-apis.html#concept-navigationdestination-url
-    URL m_url;
+    URL::URL m_url;
 
     // https://html.spec.whatwg.org/multipage/nav-history-apis.html#concept-navigationdestination-url
     JS::GCPtr<NavigationHistoryEntry> m_entry;

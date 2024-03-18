@@ -403,7 +403,7 @@ Messages::WebDriverClient::NavigateToResponse WebDriverConnection::navigate_to(J
     // 2. Let url be the result of getting the property url from the parameters argument.
     if (!payload.is_object() || !payload.as_object().has_string("url"sv))
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Payload doesn't have a string `url`"sv);
-    URL url(payload.as_object().get_byte_string("url"sv).value());
+    URL::URL url(payload.as_object().get_byte_string("url"sv).value());
 
     // FIXME: 3. If url is not an absolute URL or is not an absolute URL with fragment or not a local scheme, return error with error code invalid argument.
 

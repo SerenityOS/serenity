@@ -87,7 +87,7 @@ RequestServerAdapter::RequestServerAdapter(NonnullRefPtr<Protocol::RequestClient
 
 RequestServerAdapter::~RequestServerAdapter() = default;
 
-RefPtr<Web::ResourceLoaderConnectorRequest> RequestServerAdapter::start_request(ByteString const& method, URL const& url, HashMap<ByteString, ByteString> const& headers, ReadonlyBytes body, Core::ProxyData const& proxy)
+RefPtr<Web::ResourceLoaderConnectorRequest> RequestServerAdapter::start_request(ByteString const& method, URL::URL const& url, HashMap<ByteString, ByteString> const& headers, ReadonlyBytes body, Core::ProxyData const& proxy)
 {
     auto protocol_request = m_protocol_client->start_request(method, url, headers, body, proxy);
     if (!protocol_request)
@@ -95,7 +95,7 @@ RefPtr<Web::ResourceLoaderConnectorRequest> RequestServerAdapter::start_request(
     return RequestServerRequestAdapter::try_create(protocol_request.release_nonnull()).release_value_but_fixme_should_propagate_errors();
 }
 
-RefPtr<Web::WebSockets::WebSocketClientSocket> RequestServerAdapter::websocket_connect(AK::URL const& url, AK::ByteString const& origin, Vector<AK::ByteString> const& protocols)
+RefPtr<Web::WebSockets::WebSocketClientSocket> RequestServerAdapter::websocket_connect(URL::URL const& url, AK::ByteString const& origin, Vector<AK::ByteString> const& protocols)
 {
     auto underlying_websocket = m_protocol_client->websocket_connect(url, origin, protocols);
     if (!underlying_websocket)
@@ -103,12 +103,12 @@ RefPtr<Web::WebSockets::WebSocketClientSocket> RequestServerAdapter::websocket_c
     return WebSocketClientSocketAdapter::create(underlying_websocket.release_nonnull());
 }
 
-void RequestServerAdapter::prefetch_dns(URL const& url)
+void RequestServerAdapter::prefetch_dns(URL::URL const& url)
 {
     m_protocol_client->ensure_connection(url, RequestServer::CacheLevel::ResolveOnly);
 }
 
-void RequestServerAdapter::preconnect(URL const& url)
+void RequestServerAdapter::preconnect(URL::URL const& url)
 {
     m_protocol_client->ensure_connection(url, RequestServer::CacheLevel::CreateConnection);
 }

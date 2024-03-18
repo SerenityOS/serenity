@@ -13,7 +13,6 @@
 #include <AK/NumberFormat.h>
 #include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
-#include <AK/URL.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
@@ -23,6 +22,7 @@
 #include <LibFileSystem/FileSystem.h>
 #include <LibHTTP/HttpRequest.h>
 #include <LibHTTP/HttpResponse.h>
+#include <LibURL/URL.h>
 #include <WebServer/Client.h>
 #include <WebServer/Configuration.h>
 #include <stdio.h>

@@ -10,7 +10,6 @@
 #include "Game.h"
 #include "MainWidget.h"
 #include <AK/NumberFormat.h>
-#include <AK/URL.h>
 #include <LibConfig/Client.h>
 #include <LibCore/System.h>
 #include <LibCore/Timer.h>
@@ -25,6 +24,7 @@
 #include <LibGUI/Statusbar.h>
 #include <LibGUI/Window.h>
 #include <LibMain/Main.h>
+#include <LibURL/URL.h>
 #include <stdio.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)

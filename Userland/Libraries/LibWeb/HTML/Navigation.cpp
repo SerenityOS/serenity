@@ -1282,7 +1282,7 @@ bool Navigation::fire_a_traverse_navigate_event(JS::NonnullGCPtr<SessionHistoryE
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#fire-a-push/replace/reload-navigate-event
 bool Navigation::fire_a_push_replace_reload_navigate_event(
     Bindings::NavigationType navigation_type,
-    URL destination_url,
+    URL::URL destination_url,
     bool is_same_document,
     UserNavigationInvolvement user_involvement,
     Optional<Vector<XHR::FormDataEntry>&> form_data_entry_list,
@@ -1322,7 +1322,7 @@ bool Navigation::fire_a_push_replace_reload_navigate_event(
 }
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#fire-a-download-request-navigate-event
-bool Navigation::fire_a_download_request_navigate_event(URL destination_url, UserNavigationInvolvement user_involvement, String filename)
+bool Navigation::fire_a_download_request_navigate_event(URL::URL destination_url, UserNavigationInvolvement user_involvement, String filename)
 {
     auto& realm = relevant_realm(*this);
     auto& vm = this->vm();

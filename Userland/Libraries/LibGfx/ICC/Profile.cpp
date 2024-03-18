@@ -305,15 +305,15 @@ ErrorOr<void> parse_reserved(ICCHeader const& header)
 }
 }
 
-URL device_manufacturer_url(DeviceManufacturer device_manufacturer)
+URL::URL device_manufacturer_url(DeviceManufacturer device_manufacturer)
 {
-    return URL(ByteString::formatted("https://www.color.org/signatureRegistry/?entityEntry={:c}{:c}{:c}{:c}-{:08X}",
+    return URL::URL(ByteString::formatted("https://www.color.org/signatureRegistry/?entityEntry={:c}{:c}{:c}{:c}-{:08X}",
         device_manufacturer.c0(), device_manufacturer.c1(), device_manufacturer.c2(), device_manufacturer.c3(), device_manufacturer.value));
 }
 
-URL device_model_url(DeviceModel device_model)
+URL::URL device_model_url(DeviceModel device_model)
 {
-    return URL(ByteString::formatted("https://www.color.org/signatureRegistry/deviceRegistry/?entityEntry={:c}{:c}{:c}{:c}-{:08X}",
+    return URL::URL(ByteString::formatted("https://www.color.org/signatureRegistry/deviceRegistry/?entityEntry={:c}{:c}{:c}{:c}-{:08X}",
         device_model.c0(), device_model.c1(), device_model.c2(), device_model.c3(), device_model.value));
 }
 

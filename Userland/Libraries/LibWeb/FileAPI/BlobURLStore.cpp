@@ -5,7 +5,7 @@
  */
 
 #include <AK/StringBuilder.h>
-#include <AK/URL.h>
+#include <LibURL/URL.h>
 #include <LibWeb/Crypto/Crypto.h>
 #include <LibWeb/FileAPI/Blob.h>
 #include <LibWeb/FileAPI/BlobURLStore.h>
@@ -82,7 +82,7 @@ ErrorOr<void> remove_entry_from_blob_url_store(StringView url)
     auto& store = blob_url_store();
 
     // 2. Let url string be the result of serializing url.
-    auto url_string = TRY(URL { url }.to_string());
+    auto url_string = TRY(URL::URL { url }.to_string());
 
     // 3. Remove store[url string].
     store.remove(url_string);

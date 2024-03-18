@@ -8,9 +8,9 @@
 
 #include <AK/HashMap.h>
 #include <AK/HashTable.h>
-#include <AK/URL.h>
 #include <LibCore/ConfigFile.h>
 #include <LibDesktop/AppFile.h>
+#include <LibURL/URL.h>
 
 namespace LaunchServer {
 
@@ -40,9 +40,9 @@ public:
 
     void load_handlers(ByteString const& af_dir = Desktop::AppFile::APP_FILES_DIRECTORY);
     void load_config(Core::ConfigFile const&);
-    bool open_url(const URL&, ByteString const& handler_name);
-    Vector<ByteString> handlers_for_url(const URL&);
-    Vector<ByteString> handlers_with_details_for_url(const URL&);
+    bool open_url(const URL::URL&, ByteString const& handler_name);
+    Vector<ByteString> handlers_for_url(const URL::URL&);
+    Vector<ByteString> handlers_with_details_for_url(const URL::URL&);
 
 private:
     HashMap<ByteString, Handler> m_handlers;
@@ -55,8 +55,8 @@ private:
     Handler get_handler_for_executable(Handler::Type, ByteString const&) const;
     size_t for_each_handler(ByteString const& key, HashMap<ByteString, ByteString> const& user_preferences, Function<bool(Handler const&)> f);
     void for_each_handler_for_path(ByteString const&, Function<bool(Handler const&)> f);
-    bool open_file_url(const URL&);
+    bool open_file_url(const URL::URL&);
     bool open_with_user_preferences(HashMap<ByteString, ByteString> const& user_preferences, ByteString const& key, Vector<ByteString> const& arguments, ByteString const& default_program = {});
-    bool open_with_handler_name(const URL&, ByteString const& handler_name);
+    bool open_with_handler_name(const URL::URL&, ByteString const& handler_name);
 };
 }

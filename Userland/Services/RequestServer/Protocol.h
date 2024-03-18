@@ -7,8 +7,8 @@
 #pragma once
 
 #include <AK/RefPtr.h>
-#include <AK/URL.h>
 #include <LibCore/Proxy.h>
+#include <LibURL/URL.h>
 #include <RequestServer/Forward.h>
 
 namespace RequestServer {
@@ -18,7 +18,7 @@ public:
     virtual ~Protocol() = default;
 
     ByteString const& name() const { return m_name; }
-    virtual OwnPtr<Request> start_request(i32, ConnectionFromClient&, ByteString const& method, const URL&, HashMap<ByteString, ByteString> const& headers, ReadonlyBytes body, Core::ProxyData proxy_data = {}) = 0;
+    virtual OwnPtr<Request> start_request(i32, ConnectionFromClient&, ByteString const& method, const URL::URL&, HashMap<ByteString, ByteString> const& headers, ReadonlyBytes body, Core::ProxyData proxy_data = {}) = 0;
 
     static Protocol* find_by_name(ByteString const&);
 

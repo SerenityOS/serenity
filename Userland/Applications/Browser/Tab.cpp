@@ -18,7 +18,6 @@
 #include "InspectorWidget.h"
 #include "StorageWidget.h"
 #include <AK/StringBuilder.h>
-#include <AK/URL.h>
 #include <Applications/Browser/TabGML.h>
 #include <Applications/Browser/URLBox.h>
 #include <Applications/BrowserSettings/Defaults.h>
@@ -42,6 +41,7 @@
 #include <LibGUI/Toolbar.h>
 #include <LibGUI/ToolbarContainer.h>
 #include <LibGUI/Window.h>
+#include <LibURL/URL.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/SelectedFile.h>
 #include <LibWeb/HTML/SyntaxHighlighter/SyntaxHighlighter.h>
@@ -59,7 +59,7 @@ Tab::~Tab()
     close_sub_widgets();
 }
 
-void Tab::start_download(const URL& url)
+void Tab::start_download(const URL::URL& url)
 {
     auto window = GUI::Window::construct(&this->window());
     window->resize(300, 170);
@@ -69,7 +69,7 @@ void Tab::start_download(const URL& url)
     window->show();
 }
 
-void Tab::view_source(const URL& url, ByteString const& source)
+void Tab::view_source(const URL::URL& url, ByteString const& source)
 {
     auto window = GUI::Window::construct(&this->window());
     auto editor = window->set_main_widget<GUI::TextEditor>();
@@ -654,7 +654,7 @@ Tab::Tab(BrowserWindow& window)
 
     view().on_new_web_view = [this](auto activate_tab, auto, auto) {
         // FIXME: Create a child tab that re-uses the ConnectionFromClient of the parent tab
-        auto& tab = this->window().create_new_tab(URL("about:blank"), activate_tab);
+        auto& tab = this->window().create_new_tab(URL::URL("about:blank"), activate_tab);
         return tab.view().handle();
     };
 
@@ -799,14 +799,14 @@ void Tab::update_reset_zoom_button()
     }
 }
 
-void Tab::load(URL const& url, LoadType load_type)
+void Tab::load(URL::URL const& url, LoadType load_type)
 {
     m_is_history_navigation = (load_type == LoadType::HistoryNavigation);
     m_web_content_view->load(url);
     m_location_box->set_focus(false);
 }
 
-URL Tab::url() const
+URL::URL Tab::url() const
 {
     return m_web_content_view->url();
 }

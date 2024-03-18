@@ -42,7 +42,7 @@ static QIcon const& app_icon()
     return icon;
 }
 
-BrowserWindow::BrowserWindow(Vector<URL> const& initial_urls, WebView::CookieJar& cookie_jar, WebContentOptions const& web_content_options, StringView webdriver_content_ipc_path)
+BrowserWindow::BrowserWindow(Vector<URL::URL> const& initial_urls, WebView::CookieJar& cookie_jar, WebContentOptions const& web_content_options, StringView webdriver_content_ipc_path)
     : m_cookie_jar(cookie_jar)
     , m_web_content_options(web_content_options)
     , m_webdriver_content_ipc_path(webdriver_content_ipc_path)
@@ -471,7 +471,7 @@ void BrowserWindow::debug_request(ByteString const& request, ByteString const& a
     m_current_tab->debug_request(request, argument);
 }
 
-Tab& BrowserWindow::new_tab_from_url(URL const& url, Web::HTML::ActivateTab activate_tab)
+Tab& BrowserWindow::new_tab_from_url(URL::URL const& url, Web::HTML::ActivateTab activate_tab)
 {
     auto& tab = create_new_tab(activate_tab);
     tab.navigate(url);

@@ -48,7 +48,7 @@ public:
         int scale_max_width { 100 };
         bool attribution_enabled { true };
         Optional<String> attribution_text {};
-        Optional<URL> attribution_url {};
+        Optional<URL::URL> attribution_url {};
     };
 
     LatLng center() const { return m_center; }
@@ -90,7 +90,7 @@ public:
         };
         String text;
         Position position;
-        Optional<URL> url {};
+        Optional<URL::URL> url {};
         Optional<String> name {};
         Gfx::IntRect rect { 0, 0, 0, 0 };
     };
@@ -188,7 +188,7 @@ private:
     bool m_scale_enabled {};
     int m_scale_max_width {};
     bool m_attribution_enabled {};
-    URL m_attribution_url;
+    URL::URL m_attribution_url;
     bool m_dragging { false };
     int m_last_mouse_x { 0 };
     int m_last_mouse_y { 0 };

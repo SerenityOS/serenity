@@ -42,7 +42,7 @@ set(GENERATED_SOURCES
 )
 
 serenity_app(Spreadsheet ICON app-spreadsheet)
-target_link_libraries(Spreadsheet PRIVATE LibConfig LibCore LibFileSystem LibFileSystemAccessClient LibGfx LibGUI LibJS LibMain LibMarkdown LibSyntax LibWebView LibWeb)
+target_link_libraries(Spreadsheet PRIVATE LibConfig LibCore LibFileSystem LibFileSystemAccessClient LibGfx LibGUI LibJS LibMain LibMarkdown LibSyntax LibWebView LibWeb LibURL)
 
 serenity_test(Writers/Test/TestXSVWriter.cpp Spreadsheet)
 

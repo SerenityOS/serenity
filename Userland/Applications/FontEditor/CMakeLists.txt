@@ -25,4 +25,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_app(FontEditor ICON app-font-editor)
-target_link_libraries(FontEditor PRIVATE LibConfig LibCore LibFileSystemAccessClient LibGUI LibDesktop LibGfx LibMain LibUnicode)
+target_link_libraries(FontEditor PRIVATE LibConfig LibCore LibFileSystemAccessClient LibGUI LibDesktop LibGfx LibMain LibUnicode LibURL)

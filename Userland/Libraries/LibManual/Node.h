@@ -10,6 +10,7 @@
 #include <AK/RefCounted.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
+#include <LibURL/Forward.h>
 
 namespace Manual {
 
@@ -37,7 +38,7 @@ public:
 
     // Finds a page via the help://man/<number>/<subsections...>/page URLs.
     // This will automatically start discovering pages by inspecting the filesystem.
-    static ErrorOr<NonnullRefPtr<Node const>> try_find_from_help_url(URL const&);
+    static ErrorOr<NonnullRefPtr<Node const>> try_find_from_help_url(URL::URL const&);
 
     bool operator==(Node const& other) const
     {

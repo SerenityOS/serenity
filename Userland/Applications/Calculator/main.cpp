@@ -5,7 +5,6 @@
  */
 
 #include "CalculatorWidget.h"
-#include <AK/URL.h>
 #include <LibCore/System.h>
 #include <LibCrypto/NumberTheory/ModularFunctions.h>
 #include <LibDesktop/Launcher.h>
@@ -20,6 +19,7 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 #include <LibMain/Main.h>
+#include <LibURL/URL.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {

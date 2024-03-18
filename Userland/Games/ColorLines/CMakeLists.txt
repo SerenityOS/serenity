@@ -10,4 +10,4 @@ set(SOURCES
 )
 
 serenity_app(ColorLines ICON app-colorlines)
-target_link_libraries(ColorLines PRIVATE LibGUI LibCore LibGfx LibConfig LibMain LibDesktop)
+target_link_libraries(ColorLines PRIVATE LibGUI LibCore LibGfx LibConfig LibMain LibDesktop LibURL)

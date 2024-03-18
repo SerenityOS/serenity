@@ -7,4 +7,4 @@ set(SOURCES
 )
 
 serenity_lib(LibManual manual)
-target_link_libraries(LibManual PRIVATE LibCore LibFileSystem)
+target_link_libraries(LibManual PRIVATE LibCore LibFileSystem LibURL)

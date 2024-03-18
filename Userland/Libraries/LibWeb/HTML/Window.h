@@ -10,8 +10,8 @@
 #include <AK/Badge.h>
 #include <AK/RefPtr.h>
 #include <AK/TypeCasts.h>
-#include <AK/URL.h>
 #include <LibJS/Heap/Heap.h>
+#include <LibURL/URL.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Bindings/WindowGlobalMixin.h>
 #include <LibWeb/DOM/EventTarget.h>

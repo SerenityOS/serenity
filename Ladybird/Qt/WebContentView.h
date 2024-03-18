@@ -11,11 +11,11 @@
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
-#include <AK/URL.h>
 #include <Ladybird/Types.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Rect.h>
 #include <LibGfx/StandardCursor.h>
+#include <LibURL/URL.h>
 #include <LibWeb/CSS/PreferredColorScheme.h>
 #include <LibWeb/CSS/Selector.h>
 #include <LibWeb/Forward.h>
@@ -47,7 +47,7 @@ public:
     WebContentView(QWidget* window, WebContentOptions const&, StringView webdriver_content_ipc_path, RefPtr<WebView::WebContentClient> parent_client = nullptr, size_t page_index = 0);
     virtual ~WebContentView() override;
 
-    Function<String(const URL&, Web::HTML::ActivateTab)> on_tab_open_request;
+    Function<String(const URL::URL&, Web::HTML::ActivateTab)> on_tab_open_request;
 
     virtual void paintEvent(QPaintEvent*) override;
     virtual void resizeEvent(QResizeEvent*) override;

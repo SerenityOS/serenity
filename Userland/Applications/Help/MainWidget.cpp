@@ -11,7 +11,6 @@
 #include <AK/LexicalPath.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
-#include <AK/URL.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
@@ -35,6 +34,7 @@
 #include <LibManual/Path.h>
 #include <LibManual/SectionNode.h>
 #include <LibMarkdown/Document.h>
+#include <LibURL/URL.h>
 
 namespace Help {
 
@@ -154,7 +154,7 @@ ErrorOr<void> MainWidget::initialize(GUI::Window& window)
         m_copy_action->set_enabled(!m_web_view->selected_text().is_empty());
         m_context_menu->popup(screen_position);
     };
-    m_web_view->on_link_hover = [this](URL const& url) {
+    m_web_view->on_link_hover = [this](URL::URL const& url) {
         if (url.is_valid())
             m_statusbar->set_text(String::from_byte_string(url.to_byte_string()).release_value_but_fixme_should_propagate_errors());
         else
@@ -245,7 +245,7 @@ ErrorOr<void> MainWidget::initialize(GUI::Window& window)
     return {};
 }
 
-void MainWidget::open_url(URL const& url)
+void MainWidget::open_url(URL::URL const& url)
 {
     m_go_back_action->set_enabled(m_history.can_go_back());
     m_go_forward_action->set_enabled(m_history.can_go_forward());
@@ -273,7 +273,7 @@ void MainWidget::open_url(URL const& url)
     }
 }
 
-void MainWidget::open_external(URL const& url)
+void MainWidget::open_external(URL::URL const& url)
 {
     if (!Desktop::Launcher::open(url))
         GUI::MessageBox::show(window(), ByteString::formatted("The link to '{}' could not be opened.", url), "Failed to open link"sv, GUI::MessageBox::Type::Error);

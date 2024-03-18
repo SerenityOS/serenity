@@ -62,7 +62,7 @@ else()
 endif()
 
 serenity_lib(LibCore core)
-target_link_libraries(LibCore PRIVATE LibCrypt LibSystem)
+target_link_libraries(LibCore PRIVATE LibCrypt LibSystem LibURL)
 
 if (APPLE)
     target_link_libraries(LibCore PUBLIC "-framework CoreFoundation")

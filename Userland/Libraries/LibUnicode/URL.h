@@ -7,10 +7,10 @@
 #pragma once
 
 #include <AK/String.h>
-#include <AK/URL.h>
+#include <LibURL/URL.h>
 
 namespace Unicode {
 
-ErrorOr<URL> create_unicode_url(String const&);
+ErrorOr<URL::URL> create_unicode_url(String const&);
 
 }

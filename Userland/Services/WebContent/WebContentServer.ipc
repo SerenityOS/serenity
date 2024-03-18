@@ -1,4 +1,4 @@
-#include <AK/URL.h>
+#include <LibURL/URL.h>
 #include <LibIPC/File.h>
 #include <LibCore/AnonymousBuffer.h>
 #include <LibGfx/Rect.h>
@@ -22,7 +22,7 @@ endpoint WebContentServer
     update_system_fonts(u64 page_id, ByteString default_font_query, ByteString fixed_width_font_query, ByteString window_title_font_query) =|
     update_screen_rects(u64 page_id, Vector<Web::DevicePixelRect> rects, u32 main_screen_index) =|
 
-    load_url(u64 page_id, URL url) =|
+    load_url(u64 page_id, URL::URL url) =|
     load_html(u64 page_id, ByteString html) =|
 
     add_backing_store(u64 page_id, i32 front_bitmap_id, Gfx::ShareableBitmap front_bitmap, i32 back_bitmap_id, Gfx::ShareableBitmap back_bitmap) =|

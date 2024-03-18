@@ -892,7 +892,7 @@ enum class FetchMode {
 };
 
 // https://html.spec.whatwg.org/multipage/media.html#concept-media-load-resource
-WebIDL::ExceptionOr<void> HTMLMediaElement::fetch_resource(URL const& url_record, Function<void(String)> failure_callback)
+WebIDL::ExceptionOr<void> HTMLMediaElement::fetch_resource(URL::URL const& url_record, Function<void(String)> failure_callback)
 {
     auto& realm = this->realm();
     auto& vm = realm.vm();

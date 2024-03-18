@@ -1,4 +1,4 @@
-#include <AK/URL.h>
+#include <LibURL/URL.h>
 #include <LibGUI/FileTypeFilter.h>
 
 endpoint FileSystemAccessServer

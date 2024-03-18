@@ -582,7 +582,7 @@ after_step_7:
     return {};
 }
 
-void HTMLImageElement::add_callbacks_to_image_request(JS::NonnullGCPtr<ImageRequest> image_request, bool maybe_omit_events, URL const& url_string, URL const& previous_url)
+void HTMLImageElement::add_callbacks_to_image_request(JS::NonnullGCPtr<ImageRequest> image_request, bool maybe_omit_events, URL::URL const& url_string, URL::URL const& previous_url)
 {
     image_request->add_callbacks(
         [this, image_request, maybe_omit_events, url_string, previous_url]() {

@@ -10,7 +10,6 @@
 #include <AK/NumberFormat.h>
 #include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
-#include <AK/URL.h>
 #include <AK/Utf8View.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
@@ -19,6 +18,7 @@
 #include <LibCore/System.h>
 #include <LibFileSystem/FileSystem.h>
 #include <LibMain/Main.h>
+#include <LibURL/URL.h>
 #include <ctype.h>
 #include <dirent.h>
 #include <errno.h>

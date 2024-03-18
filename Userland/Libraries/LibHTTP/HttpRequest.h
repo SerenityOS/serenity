@@ -10,9 +10,9 @@
 #include <AK/ByteBuffer.h>
 #include <AK/ByteString.h>
 #include <AK/Optional.h>
-#include <AK/URL.h>
 #include <AK/Vector.h>
 #include <LibCore/Forward.h>
+#include <LibURL/URL.h>
 
 namespace HTTP {
 
@@ -71,8 +71,8 @@ public:
     ByteString const& resource() const { return m_resource; }
     Vector<Header> const& headers() const { return m_headers; }
 
-    URL const& url() const { return m_url; }
-    void set_url(URL const& url) { m_url = url; }
+    URL::URL const& url() const { return m_url; }
+    void set_url(URL::URL const& url) { m_url = url; }
 
     Method method() const { return m_method; }
     void set_method(Method method) { m_method = method; }
@@ -86,11 +86,11 @@ public:
     void set_headers(HashMap<ByteString, ByteString> const&);
 
     static ErrorOr<HttpRequest, HttpRequest::ParseError> from_raw_request(ReadonlyBytes);
-    static Optional<Header> get_http_basic_authentication_header(URL const&);
+    static Optional<Header> get_http_basic_authentication_header(URL::URL const&);
     static Optional<BasicAuthenticationCredentials> parse_http_basic_authentication_header(ByteString const&);
 
 private:
-    URL m_url;
+    URL::URL m_url;
     ByteString m_resource;
     Method m_method { GET };
     Vector<Header> m_headers;

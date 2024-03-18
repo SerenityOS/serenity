@@ -14,6 +14,7 @@
 #include <AK/Traits.h>
 #include <LibCore/DateTime.h>
 #include <LibSQL/Type.h>
+#include <LibURL/Forward.h>
 #include <LibWeb/Cookie/Cookie.h>
 #include <LibWeb/Forward.h>
 #include <LibWebView/Forward.h>
@@ -50,30 +51,30 @@ public:
     static ErrorOr<CookieJar> create(Database&);
     static CookieJar create();
 
-    String get_cookie(const URL& url, Web::Cookie::Source source);
-    void set_cookie(const URL& url, Web::Cookie::ParsedCookie const& parsed_cookie, Web::Cookie::Source source);
+    String get_cookie(const URL::URL& url, Web::Cookie::Source source);
+    void set_cookie(const URL::URL& url, Web::Cookie::ParsedCookie const& parsed_cookie, Web::Cookie::Source source);
     void update_cookie(Web::Cookie::Cookie);
     void dump_cookies();
     Vector<Web::Cookie::Cookie> get_all_cookies();
-    Vector<Web::Cookie::Cookie> get_all_cookies(URL const& url);
-    Optional<Web::Cookie::Cookie> get_named_cookie(URL const& url, StringView name);
+    Vector<Web::Cookie::Cookie> get_all_cookies(URL::URL const& url);
+    Optional<Web::Cookie::Cookie> get_named_cookie(URL::URL const& url, StringView name);
 
 private:
     explicit CookieJar(PersistedStorage);
     explicit CookieJar(TransientStorage);
 
-    static Optional<String> canonicalize_domain(const URL& url);
+    static Optional<String> canonicalize_domain(const URL::URL& url);
     static bool domain_matches(StringView string, StringView domain_string);
     static bool path_matches(StringView request_path, StringView cookie_path);
-    static String default_path(const URL& url);
+    static String default_path(const URL::URL& url);
 
     enum class MatchingCookiesSpecMode {
         RFC6265,
         WebDriver,
     };
 
-    void store_cookie(Web::Cookie::ParsedCookie const& parsed_cookie, const URL& url, String canonicalized_domain, Web::Cookie::Source source);
-    Vector<Web::Cookie::Cookie> get_matching_cookies(const URL& url, StringView canonicalized_domain, Web::Cookie::Source source, MatchingCookiesSpecMode mode = MatchingCookiesSpecMode::RFC6265);
+    void store_cookie(Web::Cookie::ParsedCookie const& parsed_cookie, const URL::URL& url, String canonicalized_domain, Web::Cookie::Source source);
+    Vector<Web::Cookie::Cookie> get_matching_cookies(const URL::URL& url, StringView canonicalized_domain, Web::Cookie::Source source, MatchingCookiesSpecMode mode = MatchingCookiesSpecMode::RFC6265);
 
     void insert_cookie_into_database(Web::Cookie::Cookie const& cookie);
     void update_cookie_in_database(Web::Cookie::Cookie const& cookie);

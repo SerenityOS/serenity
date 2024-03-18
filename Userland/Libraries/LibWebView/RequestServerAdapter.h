@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/Function.h>
-#include <AK/URL.h>
+#include <LibURL/URL.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/WebSockets/WebSocket.h>
 
@@ -43,11 +43,11 @@ public:
     static ErrorOr<NonnullRefPtr<RequestServerAdapter>> try_create();
     virtual ~RequestServerAdapter() override;
 
-    virtual void prefetch_dns(URL const& url) override;
-    virtual void preconnect(URL const& url) override;
+    virtual void prefetch_dns(URL::URL const& url) override;
+    virtual void preconnect(URL::URL const& url) override;
 
-    virtual RefPtr<Web::ResourceLoaderConnectorRequest> start_request(ByteString const& method, URL const&, HashMap<ByteString, ByteString> const& request_headers = {}, ReadonlyBytes request_body = {}, Core::ProxyData const& = {}) override;
-    virtual RefPtr<Web::WebSockets::WebSocketClientSocket> websocket_connect(const URL&, ByteString const& origin, Vector<ByteString> const& protocols) override;
+    virtual RefPtr<Web::ResourceLoaderConnectorRequest> start_request(ByteString const& method, URL::URL const&, HashMap<ByteString, ByteString> const& request_headers = {}, ReadonlyBytes request_body = {}, Core::ProxyData const& = {}) override;
+    virtual RefPtr<Web::WebSockets::WebSocketClientSocket> websocket_connect(const URL::URL&, ByteString const& origin, Vector<ByteString> const& protocols) override;
 
 private:
     RefPtr<Protocol::RequestClient> m_protocol_client;

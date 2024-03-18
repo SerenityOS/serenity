@@ -19,7 +19,7 @@ ContentFilter::ContentFilter() = default;
 
 ContentFilter::~ContentFilter() = default;
 
-bool ContentFilter::is_filtered(const URL& url) const
+bool ContentFilter::is_filtered(const URL::URL& url) const
 {
     if (url.scheme() == "data")
         return false;

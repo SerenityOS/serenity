@@ -10,8 +10,8 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/RefCounted.h>
-#include <AK/URL.h>
 #include <AK/Weakable.h>
+#include <LibURL/URL.h>
 #include <LibWeb/DOM/EventTarget.h>
 #include <LibWeb/DOMURL/URLSearchParams.h>
 #include <LibWeb/Fetch/BodyInit.h>
@@ -129,7 +129,7 @@ private:
     // https://xhr.spec.whatwg.org/#request-url
     // request URL
     //     A URL.
-    URL m_request_url;
+    URL::URL m_request_url;
 
     // https://xhr.spec.whatwg.org/#author-request-headers
     // author request headers

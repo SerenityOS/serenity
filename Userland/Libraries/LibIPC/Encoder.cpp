@@ -14,13 +14,13 @@
 #include <AK/NumericLimits.h>
 #include <AK/String.h>
 #include <AK/Time.h>
-#include <AK/URL.h>
 #include <LibCore/AnonymousBuffer.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/Proxy.h>
 #include <LibCore/System.h>
 #include <LibIPC/Encoder.h>
 #include <LibIPC/File.h>
+#include <LibURL/URL.h>
 
 namespace IPC {
 
@@ -97,7 +97,7 @@ ErrorOr<void> encode(Encoder& encoder, UnixDateTime const& value)
 }
 
 template<>
-ErrorOr<void> encode(Encoder& encoder, URL const& value)
+ErrorOr<void> encode(Encoder& encoder, URL::URL const& value)
 {
     return encoder.encode(value.to_byte_string());
 }

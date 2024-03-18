@@ -10,7 +10,7 @@
 namespace Web::Fetch::Infrastructure {
 
 // https://fetch.spec.whatwg.org/#is-local
-bool is_local_url(URL const& url)
+bool is_local_url(URL::URL const& url)
 {
     // A URL is local if its scheme is a local scheme.
     return any_of(LOCAL_SCHEMES, [&](auto scheme) { return url.scheme() == scheme; });

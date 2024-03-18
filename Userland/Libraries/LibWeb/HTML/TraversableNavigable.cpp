@@ -115,7 +115,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<TraversableNavigable>> TraversableNavigable
 }
 
 // https://html.spec.whatwg.org/multipage/document-sequences.html#create-a-fresh-top-level-traversable
-WebIDL::ExceptionOr<JS::NonnullGCPtr<TraversableNavigable>> TraversableNavigable::create_a_fresh_top_level_traversable(JS::NonnullGCPtr<Page> page, URL const& initial_navigation_url, Variant<Empty, String, POSTResource> initial_navigation_post_resource)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<TraversableNavigable>> TraversableNavigable::create_a_fresh_top_level_traversable(JS::NonnullGCPtr<Page> page, URL::URL const& initial_navigation_url, Variant<Empty, String, POSTResource> initial_navigation_post_resource)
 {
     // 1. Let traversable be the result of creating a new top-level traversable given null and the empty string.
     auto traversable = TRY(create_a_new_top_level_traversable(page, nullptr, {}));

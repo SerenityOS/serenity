@@ -17,5 +17,5 @@ set(GENERATED_SOURCES
 )
 
 serenity_bin(WebWorker)
-target_link_libraries(WebWorker PRIVATE LibCore LibFileSystem LibGfx LibIPC LibJS LibWeb LibWebView LibLocale LibMain)
+target_link_libraries(WebWorker PRIVATE LibCore LibFileSystem LibGfx LibIPC LibJS LibWeb LibWebView LibLocale LibMain LibURL)
 link_with_locale_data(WebWorker)

@@ -9,7 +9,7 @@
 #include <AK/ByteString.h>
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
-#include <AK/URL.h>
+#include <LibURL/URL.h>
 #include <RequestServer/ConnectionFromClient.h>
 #include <RequestServer/HttpCommon.h>
 #include <RequestServer/HttpsProtocol.h>
@@ -22,7 +22,7 @@ HttpsProtocol::HttpsProtocol()
 {
 }
 
-OwnPtr<Request> HttpsProtocol::start_request(i32 request_id, ConnectionFromClient& client, ByteString const& method, const URL& url, HashMap<ByteString, ByteString> const& headers, ReadonlyBytes body, Core::ProxyData proxy_data)
+OwnPtr<Request> HttpsProtocol::start_request(i32 request_id, ConnectionFromClient& client, ByteString const& method, const URL::URL& url, HashMap<ByteString, ByteString> const& headers, ReadonlyBytes body, Core::ProxyData proxy_data)
 {
     return Detail::start_request(Badge<HttpsProtocol> {}, request_id, client, method, url, headers, body, get_pipe_for_request(), proxy_data);
 }

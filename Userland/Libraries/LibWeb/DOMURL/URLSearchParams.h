@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/URL.h>
 #include <AK/Vector.h>
+#include <LibURL/URL.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::DOMURL {

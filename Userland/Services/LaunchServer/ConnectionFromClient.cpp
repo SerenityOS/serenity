@@ -7,8 +7,8 @@
 #include "ConnectionFromClient.h"
 #include "Launcher.h"
 #include <AK/HashMap.h>
-#include <AK/URL.h>
 #include <LaunchServer/LaunchClientEndpoint.h>
+#include <LibURL/URL.h>
 
 namespace LaunchServer {
 
@@ -24,7 +24,7 @@ void ConnectionFromClient::die()
     s_connections.remove(client_id());
 }
 
-Messages::LaunchServer::OpenUrlResponse ConnectionFromClient::open_url(URL const& url, ByteString const& handler_name)
+Messages::LaunchServer::OpenUrlResponse ConnectionFromClient::open_url(URL::URL const& url, ByteString const& handler_name)
 {
     if (!m_allowlist.is_empty()) {
         bool allowed = false;
@@ -47,17 +47,17 @@ Messages::LaunchServer::OpenUrlResponse ConnectionFromClient::open_url(URL const
     return Launcher::the().open_url(url, handler_name);
 }
 
-Messages::LaunchServer::GetHandlersForUrlResponse ConnectionFromClient::get_handlers_for_url(URL const& url)
+Messages::LaunchServer::GetHandlersForUrlResponse ConnectionFromClient::get_handlers_for_url(URL::URL const& url)
 {
     return Launcher::the().handlers_for_url(url);
 }
 
-Messages::LaunchServer::GetHandlersWithDetailsForUrlResponse ConnectionFromClient::get_handlers_with_details_for_url(URL const& url)
+Messages::LaunchServer::GetHandlersWithDetailsForUrlResponse ConnectionFromClient::get_handlers_with_details_for_url(URL::URL const& url)
 {
     return Launcher::the().handlers_with_details_for_url(url);
 }
 
-void ConnectionFromClient::add_allowed_url(URL const& url)
+void ConnectionFromClient::add_allowed_url(URL::URL const& url)
 {
     if (m_allowlist_is_sealed) {
         did_misbehave("Got request to add more allowed handlers after list was sealed");
@@ -69,7 +69,7 @@ void ConnectionFromClient::add_allowed_url(URL const& url)
         return;
     }
 
-    m_allowlist.empend(ByteString(), false, Vector<URL> { url });
+    m_allowlist.empend(ByteString(), false, Vector<URL::URL> { url });
 }
 
 void ConnectionFromClient::add_allowed_handler_with_any_url(ByteString const& handler_name)
@@ -84,10 +84,10 @@ void ConnectionFromClient::add_allowed_handler_with_any_url(ByteString const& ha
         return;
     }
 
-    m_allowlist.empend(handler_name, true, Vector<URL>());
+    m_allowlist.empend(handler_name, true, Vector<URL::URL>());
 }
 
-void ConnectionFromClient::add_allowed_handler_with_only_specific_urls(ByteString const& handler_name, Vector<URL> const& urls)
+void ConnectionFromClient::add_allowed_handler_with_only_specific_urls(ByteString const& handler_name, Vector<URL::URL> const& urls)
 {
     if (m_allowlist_is_sealed) {
         did_misbehave("Got request to add more allowed handlers after list was sealed");

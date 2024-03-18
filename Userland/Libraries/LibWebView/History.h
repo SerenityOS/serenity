@@ -6,22 +6,22 @@
 
 #pragma once
 
-#include <AK/URL.h>
 #include <AK/Vector.h>
+#include <LibURL/URL.h>
 
 namespace WebView {
 
 class History {
 public:
     struct URLTitlePair {
-        URL url;
+        URL::URL url;
         ByteString title;
     };
     void dump() const;
     Vector<URLTitlePair> get_all_history_entries();
 
-    void push(const URL& url, ByteString const& title);
-    void replace_current(const URL& url, ByteString const& title);
+    void push(const URL::URL& url, ByteString const& title);
+    void replace_current(const URL::URL& url, ByteString const& title);
     void update_title(ByteString const& title);
     URLTitlePair current() const;
 

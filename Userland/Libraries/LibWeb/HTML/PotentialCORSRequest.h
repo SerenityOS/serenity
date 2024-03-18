@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/URL.h>
 #include <LibJS/Heap/GCPtr.h>
+#include <LibURL/URL.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Requests.h>
 #include <LibWeb/HTML/CORSSettingAttribute.h>
 
@@ -18,6 +18,6 @@ enum class SameOriginFallbackFlag {
     Yes,
 };
 
-[[nodiscard]] JS::NonnullGCPtr<Fetch::Infrastructure::Request> create_potential_CORS_request(JS::VM&, const URL&, Optional<Fetch::Infrastructure::Request::Destination>, CORSSettingAttribute, SameOriginFallbackFlag = SameOriginFallbackFlag::No);
+[[nodiscard]] JS::NonnullGCPtr<Fetch::Infrastructure::Request> create_potential_CORS_request(JS::VM&, const URL::URL&, Optional<Fetch::Infrastructure::Request::Destination>, CORSSettingAttribute, SameOriginFallbackFlag = SameOriginFallbackFlag::No);
 
 }

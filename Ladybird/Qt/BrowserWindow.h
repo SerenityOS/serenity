@@ -28,7 +28,7 @@ class BrowserWindow : public QMainWindow {
     Q_OBJECT
 
 public:
-    BrowserWindow(Vector<URL> const& initial_urls, WebView::CookieJar&, WebContentOptions const&, StringView webdriver_content_ipc_path);
+    BrowserWindow(Vector<URL::URL> const& initial_urls, WebView::CookieJar&, WebContentOptions const&, StringView webdriver_content_ipc_path);
 
     WebContentView& view() const { return m_current_tab->view(); }
 
@@ -73,7 +73,7 @@ public slots:
     void device_pixel_ratio_changed(qreal dpi);
     void tab_title_changed(int index, QString const&);
     void tab_favicon_changed(int index, QIcon const& icon);
-    Tab& new_tab_from_url(URL const&, Web::HTML::ActivateTab);
+    Tab& new_tab_from_url(URL::URL const&, Web::HTML::ActivateTab);
     Tab& new_tab_from_content(StringView html, Web::HTML::ActivateTab);
     Tab& new_child_tab(Web::HTML::ActivateTab, Tab& parent, Web::HTML::WebViewHints, Optional<u64> page_index);
     void activate_tab(int index);

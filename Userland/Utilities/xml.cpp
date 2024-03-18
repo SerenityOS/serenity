@@ -6,12 +6,12 @@
 
 #include <AK/LexicalPath.h>
 #include <AK/Queue.h>
-#include <AK/URL.h>
-#include <AK/URLParser.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibFileSystem/FileSystem.h>
 #include <LibMain/Main.h>
+#include <LibURL/Parser.h>
+#include <LibURL/URL.h>
 #include <LibXML/DOM/Document.h>
 #include <LibXML/DOM/Node.h>
 #include <LibXML/Parser/Parser.h>
@@ -364,7 +364,7 @@ static auto parse(StringView contents)
             .preserve_comments = true,
             .resolve_external_resource = [&](XML::SystemID const& system_id, Optional<XML::PublicID> const&) -> ErrorOr<ByteString> {
                 auto base = URL::create_with_file_scheme(s_path);
-                auto url = URLParser::basic_parse(system_id.system_literal, base);
+                auto url = URL::Parser::basic_parse(system_id.system_literal, base);
                 if (!url.is_valid())
                     return Error::from_string_literal("Invalid URL");
 

@@ -15,13 +15,13 @@
 #include <AK/JsonParser.h>
 #include <AK/ScopeGuard.h>
 #include <AK/TemporaryChange.h>
-#include <AK/URL.h>
 #include <LibCore/File.h>
 #include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Heap/DeferGC.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/FunctionObject.h>
+#include <LibURL/URL.h>
 #include <ctype.h>
 #include <unistd.h>
 
@@ -243,7 +243,7 @@ Optional<ByteString> Sheet::column_arithmetic(StringView column_name, int offset
     return m_columns.last();
 }
 
-Cell* Sheet::from_url(const URL& url)
+Cell* Sheet::from_url(const URL::URL& url)
 {
     auto maybe_position = position_from_url(url);
     if (!maybe_position.has_value())
@@ -252,7 +252,7 @@ Cell* Sheet::from_url(const URL& url)
     return at(maybe_position.value());
 }
 
-Optional<Position> Sheet::position_from_url(const URL& url) const
+Optional<Position> Sheet::position_from_url(const URL::URL& url) const
 {
     if (!url.is_valid()) {
         dbgln("Invalid url: {}", url.to_byte_string());
@@ -747,9 +747,9 @@ ByteString Position::to_cell_identifier(Sheet const& sheet) const
     return ByteString::formatted("{}{}", sheet.column(column), row);
 }
 
-URL Position::to_url(Sheet const& sheet) const
+URL::URL Position::to_url(Sheet const& sheet) const
 {
-    URL url;
+    URL::URL url;
     url.set_scheme("spreadsheet"_string);
     url.set_host("cell"_string);
     url.set_paths({ ByteString::number(getpid()) });

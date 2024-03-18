@@ -8,7 +8,7 @@
 #pragma once
 
 #include <AK/Array.h>
-#include <AK/URL.h>
+#include <LibURL/URL.h>
 
 namespace Web::Fetch::Infrastructure {
 
@@ -33,7 +33,7 @@ inline constexpr Array FETCH_SCHEMES = {
     "resource"sv
 };
 
-[[nodiscard]] bool is_local_url(URL const&);
+[[nodiscard]] bool is_local_url(URL::URL const&);
 [[nodiscard]] bool is_fetch_scheme(StringView);
 [[nodiscard]] bool is_http_or_https_scheme(StringView);
 

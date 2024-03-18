@@ -55,7 +55,7 @@ void SearchPanel::search(StringView query)
     HashMap<ByteString, ByteString> headers;
     headers.set("User-Agent", "SerenityOS Maps");
     headers.set("Accept", "application/json");
-    URL url(MUST(String::formatted("https://nominatim.openstreetmap.org/search?q={}&format=json", URL::percent_encode(query, URL::PercentEncodeSet::Query))));
+    URL::URL url(MUST(String::formatted("https://nominatim.openstreetmap.org/search?q={}&format=json", URL::percent_encode(query, URL::PercentEncodeSet::Query))));
     auto request = m_request_client->start_request("GET", url, headers, {});
     VERIFY(!request.is_null());
     m_request = request;

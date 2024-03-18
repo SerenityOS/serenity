@@ -9,8 +9,8 @@
 #include <AK/ByteBuffer.h>
 #include <AK/HashMap.h>
 #include <AK/Time.h>
-#include <AK/URL.h>
 #include <LibCore/ElapsedTimer.h>
+#include <LibURL/URL.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/Page/Page.h>
 
@@ -22,7 +22,7 @@ public:
     {
     }
 
-    static LoadRequest create_for_url_on_page(const URL& url, Page* page);
+    static LoadRequest create_for_url_on_page(const URL::URL& url, Page* page);
 
     // The main resource is the file being displayed in a frame (unlike subresources like images, scripts, etc.)
     // If a main resource fails with an HTTP error, we may still display its content if non-empty, e.g a custom 404 page.
@@ -31,8 +31,8 @@ public:
 
     bool is_valid() const { return m_url.is_valid(); }
 
-    const URL& url() const { return m_url; }
-    void set_url(const URL& url) { m_url = url; }
+    const URL::URL& url() const { return m_url; }
+    void set_url(const URL::URL& url) { m_url = url; }
 
     ByteString const& method() const { return m_method; }
     void set_method(ByteString const& method) { m_method = method; }
@@ -74,7 +74,7 @@ public:
     HashMap<ByteString, ByteString, CaseInsensitiveStringTraits> const& headers() const { return m_headers; }
 
 private:
-    URL m_url;
+    URL::URL m_url;
     ByteString m_method { "GET" };
     HashMap<ByteString, ByteString, CaseInsensitiveStringTraits> m_headers;
     ByteBuffer m_body;

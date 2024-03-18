@@ -35,8 +35,6 @@ set(AK_SOURCES
     StringUtils.cpp
     StringView.cpp
     Time.cpp
-    URL.cpp
-    URLParser.cpp
     UUID.cpp
     Utf16View.cpp
     Utf32View.cpp

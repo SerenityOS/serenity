@@ -19,4 +19,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_bin(LaunchServer)
-target_link_libraries(LaunchServer PRIVATE LibCore LibIPC LibDesktop LibFileSystem LibMain)
+target_link_libraries(LaunchServer PRIVATE LibCore LibIPC LibDesktop LibFileSystem LibMain LibURL)

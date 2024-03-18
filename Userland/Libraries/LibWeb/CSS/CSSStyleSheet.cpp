@@ -20,7 +20,7 @@ namespace Web::CSS {
 
 JS_DEFINE_ALLOCATOR(CSSStyleSheet);
 
-JS::NonnullGCPtr<CSSStyleSheet> CSSStyleSheet::create(JS::Realm& realm, CSSRuleList& rules, MediaList& media, Optional<URL> location)
+JS::NonnullGCPtr<CSSStyleSheet> CSSStyleSheet::create(JS::Realm& realm, CSSRuleList& rules, MediaList& media, Optional<URL::URL> location)
 {
     return realm.heap().allocate<CSSStyleSheet>(realm, realm, rules, media, move(location));
 }
@@ -37,12 +37,12 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<CSSStyleSheet>> CSSStyleSheet::construct_im
 
     // 3. Set sheet’s stylesheet base URL to the baseURL attribute value from options.
     if (options.has_value() && options->base_url.has_value()) {
-        Optional<URL> sheet_location_url;
+        Optional<URL::URL> sheet_location_url;
         if (sheet->location().has_value())
             sheet_location_url = sheet->location().release_value();
 
         // AD-HOC: This isn't explicitly mentioned in the specification, but multiple modern browsers do this.
-        URL url = sheet->location().has_value() ? sheet_location_url->complete_url(options->base_url.value()) : options->base_url.value();
+        URL::URL url = sheet->location().has_value() ? sheet_location_url->complete_url(options->base_url.value()) : options->base_url.value();
         if (!url.is_valid())
             return WebIDL::NotAllowedError::create(realm, "Constructed style sheets must have a valid base URL"_fly_string);
 
@@ -91,7 +91,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<CSSStyleSheet>> CSSStyleSheet::construct_im
     return sheet;
 }
 
-CSSStyleSheet::CSSStyleSheet(JS::Realm& realm, CSSRuleList& rules, MediaList& media, Optional<URL> location)
+CSSStyleSheet::CSSStyleSheet(JS::Realm& realm, CSSRuleList& rules, MediaList& media, Optional<URL::URL> location)
     : StyleSheet(realm, media)
     , m_rules(&rules)
 {

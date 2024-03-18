@@ -8,8 +8,8 @@
 
 #include <AK/Optional.h>
 #include <AK/RefCounted.h>
-#include <AK/URL.h>
 #include <LibCore/Socket.h>
+#include <LibURL/URL.h>
 #include <LibWeb/DOM/EventTarget.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/WindowOrWorkerGlobalScope.h>
@@ -77,8 +77,8 @@ public:
 
     // Non-IDL public methods
 
-    URL const& url() const { return m_url.value(); }
-    void set_url(URL const& url) { m_url = url; }
+    URL::URL const& url() const { return m_url.value(); }
+    void set_url(URL::URL const& url) { m_url = url; }
 
     // Spec note: While the WorkerLocation object is created after the WorkerGlobalScope object,
     //            this is not problematic as it cannot be observed from script.
@@ -114,7 +114,7 @@ private:
 
     // https://html.spec.whatwg.org/multipage/workers.html#concept-workerglobalscope-url
     // A WorkerGlobalScope object has an associated url (null or a URL). It is initially null.
-    Optional<URL> m_url;
+    Optional<URL::URL> m_url;
 
     // https://html.spec.whatwg.org/multipage/workers.html#concept-workerglobalscope-name
     // A WorkerGlobalScope object has an associated name (a string). It is set during creation.

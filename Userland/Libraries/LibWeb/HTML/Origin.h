@@ -8,9 +8,10 @@
 #pragma once
 
 #include <AK/ByteString.h>
-#include <AK/URL.h>
-#include <AK/URLParser.h>
-#include <LibIPC/Forward.h>
+#include <LibIPC/Decoder.h>
+#include <LibIPC/Encoder.h>
+#include <LibURL/Parser.h>
+#include <LibURL/URL.h>
 
 namespace Web::HTML {
 
@@ -87,7 +88,7 @@ public:
         result.append("://"sv);
 
         // 4. Append origin's host, serialized, to result.
-        result.append(URLParser::serialize_host(host()).release_value_but_fixme_should_propagate_errors().to_byte_string());
+        result.append(URL::Parser::serialize_host(host()).release_value_but_fixme_should_propagate_errors().to_byte_string());
 
         // 5. If origin's port is non-null, append a U+003A COLON character (:), and origin's port, serialized, to result.
         if (port() != 0) {
@@ -129,7 +130,7 @@ struct Traits<Web::HTML::Origin> : public DefaultTraits<Web::HTML::Origin> {
         auto hash_without_host = pair_int_hash(origin.scheme().hash(), origin.port());
         if (origin.host().has<Empty>())
             return hash_without_host;
-        return pair_int_hash(hash_without_host, URLParser::serialize_host(origin.host()).release_value_but_fixme_should_propagate_errors().hash());
+        return pair_int_hash(hash_without_host, URL::Parser::serialize_host(origin.host()).release_value_but_fixme_should_propagate_errors().hash());
     }
 };
 } // namespace AK

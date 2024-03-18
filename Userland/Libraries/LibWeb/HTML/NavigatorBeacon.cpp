@@ -29,7 +29,7 @@ WebIDL::ExceptionOr<bool> NavigatorBeaconMixin::send_beacon(String const& url, O
     auto origin = relevant_settings_object.origin();
 
     // 3. Set parsedUrl to the result of the URL parser steps with url and base. If the algorithm returns an error, or if parsedUrl's scheme is not "http" or "https", throw a "TypeError" exception and terminate these steps.
-    auto parsed_url = URLParser::basic_parse(url, base_url);
+    auto parsed_url = URL::Parser::basic_parse(url, base_url);
     if (!parsed_url.is_valid())
         return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, MUST(String::formatted("Beacon URL {} is invalid.", url)) };
     if (parsed_url.scheme() != "http" && parsed_url.scheme() != "https")

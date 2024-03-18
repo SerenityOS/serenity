@@ -10,7 +10,6 @@
 #include <AK/LexicalPath.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
-#include <AK/URL.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
@@ -19,6 +18,7 @@
 #include <LibFileSystem/FileSystem.h>
 #include <LibMain/Main.h>
 #include <LibRegex/Regex.h>
+#include <LibURL/URL.h>
 #include <stdio.h>
 #include <unistd.h>
 

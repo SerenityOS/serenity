@@ -8,7 +8,7 @@
 
 namespace WebSocket {
 
-ConnectionInfo::ConnectionInfo(URL url)
+ConnectionInfo::ConnectionInfo(URL::URL url)
     : m_url(move(url))
 {
 }

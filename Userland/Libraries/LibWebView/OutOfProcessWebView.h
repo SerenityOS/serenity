@@ -7,9 +7,10 @@
 
 #pragma once
 
-#include <AK/URL.h>
+#include <AK/Queue.h>
 #include <LibGUI/AbstractScrollableWidget.h>
 #include <LibGUI/Widget.h>
+#include <LibURL/URL.h>
 #include <LibWeb/CSS/Selector.h>
 #include <LibWeb/HTML/ActivateTab.h>
 #include <LibWeb/Page/Page.h>

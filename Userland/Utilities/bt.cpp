@@ -6,13 +6,13 @@
  */
 
 #include <AK/LexicalPath.h>
-#include <AK/URL.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <LibSymbolication/Symbolication.h>
+#include <LibURL/URL.h>
 #include <unistd.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)

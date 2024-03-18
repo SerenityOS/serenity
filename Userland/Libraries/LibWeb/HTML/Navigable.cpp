@@ -501,7 +501,7 @@ Vector<JS::NonnullGCPtr<SessionHistoryEntry>>& Navigable::get_session_history_en
 }
 
 // https://html.spec.whatwg.org/multipage/browsers.html#determining-navigation-params-policy-container
-static PolicyContainer determine_navigation_params_policy_container(URL const& response_url,
+static PolicyContainer determine_navigation_params_policy_container(URL::URL const& response_url,
     Optional<PolicyContainer> history_policy_container,
     Optional<PolicyContainer> initiator_policy_container,
     Optional<PolicyContainer> parent_policy_container,
@@ -594,7 +594,7 @@ static WebIDL::ExceptionOr<NavigationParams> create_navigation_params_from_a_src
     //    header list: (`Content-Type`, `text/html`)
     //    body: the UTF-8 encoding of documentResource, as a body
     auto response = Fetch::Infrastructure::Response::create(vm);
-    response->url_list().append(URL("about:srcdoc"));
+    response->url_list().append(URL::URL("about:srcdoc"));
     auto header = TRY_OR_THROW_OOM(vm, Fetch::Infrastructure::Header::from_string_pair("Content-Type"sv, "text/html"sv));
     TRY_OR_THROW_OOM(vm, response->header_list()->append(move(header)));
     response->set_body(TRY(Fetch::Infrastructure::byte_sequence_as_body(realm, document_resource.get<String>().bytes())));
@@ -791,10 +791,10 @@ static WebIDL::ExceptionOr<Variant<Empty, NavigationParams, NonFetchSchemeNaviga
     CrossOriginOpenerPolicy response_coop = {};
 
     // 16. Let locationURL be null.
-    ErrorOr<Optional<URL>> location_url { OptionalNone {} };
+    ErrorOr<Optional<URL::URL>> location_url { OptionalNone {} };
 
     // 17. Let currentURL be request's current URL.
-    URL current_url = request->current_url();
+    URL::URL current_url = request->current_url();
 
     // 18. Let commitEarlyHints be null.
     Function<void(DOM::Document&)> commit_early_hints = nullptr;
@@ -1126,7 +1126,7 @@ WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(
             auto error_html = load_error_page(entry->url).release_value_but_fixme_should_propagate_errors();
             entry->document_state->set_document(create_document_for_inline_content(this, navigation_id, [error_html](auto& document) {
                 auto parser = HTML::HTMLParser::create(document, error_html, "utf-8");
-                document.set_url(URL("about:error"));
+                document.set_url(URL::URL("about:error"));
                 parser->run();
             }));
 
@@ -1437,7 +1437,7 @@ WebIDL::ExceptionOr<void> Navigable::navigate(NavigateParams params)
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigate-fragid
-WebIDL::ExceptionOr<void> Navigable::navigate_to_a_fragment(URL const& url, HistoryHandlingBehavior history_handling, UserNavigationInvolvement user_involvement, Optional<SerializationRecord> navigation_api_state, String navigation_id)
+WebIDL::ExceptionOr<void> Navigable::navigate_to_a_fragment(URL::URL const& url, HistoryHandlingBehavior history_handling, UserNavigationInvolvement user_involvement, Optional<SerializationRecord> navigation_api_state, String navigation_id)
 {
     (void)navigation_id;
 
@@ -1524,7 +1524,7 @@ WebIDL::ExceptionOr<void> Navigable::navigate_to_a_fragment(URL const& url, Hist
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#evaluate-a-javascript:-url
-WebIDL::ExceptionOr<JS::GCPtr<DOM::Document>> Navigable::evaluate_javascript_url(URL const& url, Origin const& new_document_origin, String navigation_id)
+WebIDL::ExceptionOr<JS::GCPtr<DOM::Document>> Navigable::evaluate_javascript_url(URL::URL const& url, Origin const& new_document_origin, String navigation_id)
 {
     auto& vm = this->vm();
     auto& realm = active_window()->realm();
@@ -1626,7 +1626,7 @@ WebIDL::ExceptionOr<JS::GCPtr<DOM::Document>> Navigable::evaluate_javascript_url
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigate-to-a-javascript:-url
-WebIDL::ExceptionOr<void> Navigable::navigate_to_a_javascript_url(URL const& url, HistoryHandlingBehavior history_handling, Origin const& initiator_origin, CSPNavigationType csp_navigation_type, String navigation_id)
+WebIDL::ExceptionOr<void> Navigable::navigate_to_a_javascript_url(URL::URL const& url, HistoryHandlingBehavior history_handling, Origin const& initiator_origin, CSPNavigationType csp_navigation_type, String navigation_id)
 {
     // 1. Assert: historyHandling is "replace".
     VERIFY(history_handling == HistoryHandlingBehavior::Replace);
@@ -1715,7 +1715,7 @@ void Navigable::reload()
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#the-navigation-must-be-a-replace
-bool navigation_must_be_a_replace(URL const& url, DOM::Document const& document)
+bool navigation_must_be_a_replace(URL::URL const& url, DOM::Document const& document)
 {
     return url.scheme() == "javascript"sv || document.is_initial_about_blank();
 }
@@ -1863,7 +1863,7 @@ void finalize_a_cross_document_navigation(JS::NonnullGCPtr<Navigable> navigable,
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#url-and-history-update-steps
-void perform_url_and_history_update_steps(DOM::Document& document, URL new_url, Optional<SerializationRecord> serialized_data, HistoryHandlingBehavior history_handling)
+void perform_url_and_history_update_steps(DOM::Document& document, URL::URL new_url, Optional<SerializationRecord> serialized_data, HistoryHandlingBehavior history_handling)
 {
     // 1. Let navigable be document's node navigable.
     auto navigable = document.navigable();

@@ -7,7 +7,6 @@
 #include "SpreadsheetView.h"
 #include "CellTypeDialog.h"
 #include <AK/ScopeGuard.h>
-#include <AK/URL.h>
 #include <LibCore/MimeData.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/HeaderView.h>
@@ -17,6 +16,7 @@
 #include <LibGUI/Scrollbar.h>
 #include <LibGUI/TableView.h>
 #include <LibGfx/Palette.h>
+#include <LibURL/URL.h>
 
 namespace Spreadsheet {
 

@@ -81,7 +81,7 @@ endif()
 target_include_directories(WebContent PRIVATE ${SERENITY_SOURCE_DIR}/Userland/Services/)
 target_include_directories(WebContent PRIVATE ${SERENITY_SOURCE_DIR}/Userland/)
 target_include_directories(WebContent PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/..)
-target_link_libraries(WebContent PRIVATE LibAudio LibCore LibFileSystem LibGfx LibImageDecoderClient LibIPC LibJS LibMain LibWeb LibWebSocket LibProtocol LibWebView)
+target_link_libraries(WebContent PRIVATE LibAudio LibCore LibFileSystem LibGfx LibImageDecoderClient LibIPC LibJS LibMain LibWeb LibWebSocket LibProtocol LibWebView LibURL)
 
 if (HAVE_PULSEAUDIO)
     target_compile_definitions(WebContent PRIVATE HAVE_PULSEAUDIO=1)

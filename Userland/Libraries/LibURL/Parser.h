@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021, Max Wipfli <mail@maxwipfli.ch>
- * Copyright (c) 2023, Shannon Booth <shannon@serenityos.org>
+ * Copyright (c) 2023-2024, Shannon Booth <shannon@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,9 +9,9 @@
 
 #include <AK/Optional.h>
 #include <AK/StringView.h>
-#include <AK/URL.h>
+#include <LibURL/URL.h>
 
-namespace AK {
+namespace URL {
 
 #define ENUMERATE_STATES                 \
     STATE(SchemeStart)                   \
@@ -36,7 +36,7 @@ namespace AK {
     STATE(Query)                         \
     STATE(Fragment)
 
-class URLParser {
+class Parser {
 public:
     enum class State {
 #define STATE(state) state,
@@ -60,10 +60,10 @@ public:
     static URL basic_parse(StringView input, Optional<URL> const& base_url = {}, Optional<URL> url = {}, Optional<State> state_override = {});
 
     // https://url.spec.whatwg.org/#string-percent-encode-after-encoding
-    static ErrorOr<String> percent_encode_after_encoding(StringView input, URL::PercentEncodeSet percent_encode_set, bool space_as_plus = false);
+    static ErrorOr<String> percent_encode_after_encoding(StringView input, PercentEncodeSet percent_encode_set, bool space_as_plus = false);
 
     // https://url.spec.whatwg.org/#concept-host-serializer
-    static ErrorOr<String> serialize_host(URL::Host const&);
+    static ErrorOr<String> serialize_host(Host const&);
 
     // https://url.spec.whatwg.org/#shorten-a-urls-path
     static void shorten_urls_path(URL&);
@@ -72,7 +72,3 @@ public:
 #undef ENUMERATE_STATES
 
 }
-
-#if USING_AK_GLOBALLY
-using AK::URLParser;
-#endif

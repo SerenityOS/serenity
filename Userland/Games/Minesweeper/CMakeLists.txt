@@ -16,4 +16,4 @@ set(SOURCES
 )
 
 serenity_app(Minesweeper ICON app-minesweeper)
-target_link_libraries(Minesweeper PRIVATE LibCore LibGfx LibGUI LibConfig LibMain LibDesktop)
+target_link_libraries(Minesweeper PRIVATE LibCore LibGfx LibGUI LibConfig LibMain LibDesktop LibURL)

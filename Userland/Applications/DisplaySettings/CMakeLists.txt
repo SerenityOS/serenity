@@ -33,4 +33,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_app(DisplaySettings ICON app-display-settings)
-target_link_libraries(DisplaySettings PRIVATE LibCore LibDesktop LibGfx LibGUI LibConfig LibIPC LibMain LibEDID LibThreading LibFileSystemAccessClient)
+target_link_libraries(DisplaySettings PRIVATE LibCore LibDesktop LibGfx LibGUI LibConfig LibIPC LibMain LibEDID LibThreading LibFileSystemAccessClient LibURL)

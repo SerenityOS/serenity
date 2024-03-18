@@ -121,7 +121,7 @@ WebIDL::ExceptionOr<void> History::forward()
 }
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#can-have-its-url-rewritten
-bool can_have_its_url_rewritten(DOM::Document const& document, ::URL const& target_url)
+bool can_have_its_url_rewritten(DOM::Document const& document, URL::URL const& target_url)
 {
     // 1. Let documentURL be document's URL.
     auto document_url = document.url();

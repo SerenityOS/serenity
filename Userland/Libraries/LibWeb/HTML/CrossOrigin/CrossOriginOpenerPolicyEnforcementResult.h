@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/URL.h>
+#include <LibURL/URL.h>
 #include <LibWeb/HTML/CrossOrigin/CrossOriginOpenerPolicy.h>
 #include <LibWeb/HTML/Origin.h>
 
@@ -21,7 +21,7 @@ struct CrossOriginOpenerPolicyEnforcementResult {
     bool would_need_a_browsing_context_group_switch_due_to_report_only { false };
 
     // A URL url.
-    URL url;
+    URL::URL url;
 
     // An origin origin.
     Origin origin;

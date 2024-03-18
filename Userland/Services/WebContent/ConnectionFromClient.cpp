@@ -148,7 +148,7 @@ void ConnectionFromClient::update_screen_rects(u64 page_id, Vector<Web::DevicePi
     page.set_screen_rects(rects, main_screen);
 }
 
-void ConnectionFromClient::load_url(u64 page_id, const URL& url)
+void ConnectionFromClient::load_url(u64 page_id, const URL::URL& url)
 {
     dbgln_if(SPAM_DEBUG, "handle: WebContentServer::LoadURL: url={}", url);
     auto maybe_page = page(page_id);

@@ -14,13 +14,13 @@ RequestClient::RequestClient(NonnullOwnPtr<Core::LocalSocket> socket)
 {
 }
 
-void RequestClient::ensure_connection(URL const& url, ::RequestServer::CacheLevel cache_level)
+void RequestClient::ensure_connection(URL::URL const& url, ::RequestServer::CacheLevel cache_level)
 {
     async_ensure_connection(url, cache_level);
 }
 
 template<typename RequestHashMapTraits>
-RefPtr<Request> RequestClient::start_request(ByteString const& method, URL const& url, HashMap<ByteString, ByteString, RequestHashMapTraits> const& request_headers, ReadonlyBytes request_body, Core::ProxyData const& proxy_data)
+RefPtr<Request> RequestClient::start_request(ByteString const& method, URL::URL const& url, HashMap<ByteString, ByteString, RequestHashMapTraits> const& request_headers, ReadonlyBytes request_body, Core::ProxyData const& proxy_data)
 {
     auto headers_or_error = request_headers.template clone<Traits<ByteString>>();
     if (headers_or_error.is_error())
@@ -103,7 +103,7 @@ void RequestClient::certificate_requested(i32 request_id)
     }
 }
 
-RefPtr<WebSocket> RequestClient::websocket_connect(const URL& url, ByteString const& origin, Vector<ByteString> const& protocols, Vector<ByteString> const& extensions, HashMap<ByteString, ByteString> const& request_headers)
+RefPtr<WebSocket> RequestClient::websocket_connect(const URL::URL& url, ByteString const& origin, Vector<ByteString> const& protocols, Vector<ByteString> const& extensions, HashMap<ByteString, ByteString> const& request_headers)
 {
     auto headers_or_error = request_headers.clone();
     if (headers_or_error.is_error())
@@ -153,5 +153,5 @@ void RequestClient::websocket_certificate_requested(i32 connection_id)
 
 }
 
-template RefPtr<Protocol::Request> Protocol::RequestClient::start_request(ByteString const& method, URL const&, HashMap<ByteString, ByteString> const& request_headers, ReadonlyBytes request_body, Core::ProxyData const&);
-template RefPtr<Protocol::Request> Protocol::RequestClient::start_request(ByteString const& method, URL const&, HashMap<ByteString, ByteString, CaseInsensitiveStringTraits> const& request_headers, ReadonlyBytes request_body, Core::ProxyData const&);
+template RefPtr<Protocol::Request> Protocol::RequestClient::start_request(ByteString const& method, URL::URL const&, HashMap<ByteString, ByteString> const& request_headers, ReadonlyBytes request_body, Core::ProxyData const&);
+template RefPtr<Protocol::Request> Protocol::RequestClient::start_request(ByteString const& method, URL::URL const&, HashMap<ByteString, ByteString, CaseInsensitiveStringTraits> const& request_headers, ReadonlyBytes request_body, Core::ProxyData const&);
