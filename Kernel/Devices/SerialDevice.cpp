@@ -12,14 +12,23 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT SerialDevice::SerialDevice(NonnullOwnPtr<IOWindow> registers_io_window, unsigned minor)
+ErrorOr<NonnullRefPtr<SerialDevice>> SerialDevice::create_with_io_window(NonnullOwnPtr<IOWindow> registers_io_window, unsigned minor)
+{
+    return *TRY(DeviceManagement::try_create_device<SerialDevice>(move(registers_io_window), minor));
+}
+
+SerialDevice::SerialDevice(NonnullOwnPtr<IOWindow> registers_io_window, unsigned minor)
     : CharacterDevice(4, minor)
     , m_registers_io_window(move(registers_io_window))
 {
-    initialize();
+    set_interrupts(false);
+    set_baud(Baud38400);
+    set_line_control(None, One, EightBits);
+    set_fifo_control(EnableFIFO | ClearReceiveFIFO | ClearTransmitFIFO | TriggerLevel4);
+    set_modem_control(RequestToSend | DataTerminalReady);
 }
 
-UNMAP_AFTER_INIT SerialDevice::~SerialDevice() = default;
+SerialDevice::~SerialDevice() = default;
 
 bool SerialDevice::can_read(OpenFileDescription const&, u64) const
 {
@@ -76,16 +85,7 @@ void SerialDevice::put_char(char ch)
     m_last_put_char_was_carriage_return = (ch == '\r');
 }
 
-UNMAP_AFTER_INIT void SerialDevice::initialize()
-{
-    set_interrupts(false);
-    set_baud(Baud38400);
-    set_line_control(None, One, EightBits);
-    set_fifo_control(EnableFIFO | ClearReceiveFIFO | ClearTransmitFIFO | TriggerLevel4);
-    set_modem_control(RequestToSend | DataTerminalReady);
-}
-
-UNMAP_AFTER_INIT void SerialDevice::set_interrupts(bool interrupt_enable)
+void SerialDevice::set_interrupts(bool interrupt_enable)
 {
     m_interrupt_enable = interrupt_enable;
 

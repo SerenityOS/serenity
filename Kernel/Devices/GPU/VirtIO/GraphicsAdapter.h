@@ -10,8 +10,9 @@
 #include <AK/DistinctNumeric.h>
 #include <Kernel/Bus/VirtIO/Device.h>
 #include <Kernel/Bus/VirtIO/Queue.h>
-#include <Kernel/Devices/GPU/GenericGraphicsAdapter.h>
+#include <Kernel/Devices/GPU/GPUDevice.h>
 #include <Kernel/Devices/GPU/VirtIO/Protocol.h>
+#include <Kernel/Library/Driver.h>
 
 namespace Kernel {
 
@@ -31,14 +32,14 @@ namespace Kernel {
 class VirtIODisplayConnector;
 class VirtIOGPU3DDevice;
 class VirtIOGraphicsAdapter final
-    : public GenericGraphicsAdapter
+    : public GPUDevice
     , public VirtIO::Device {
     friend class VirtIODisplayConnector;
     friend class VirtIOGPU3DDevice;
 
+    KERNEL_MAKE_DRIVER_LISTABLE(VirtIOGraphicsAdapter)
 public:
-    static ErrorOr<bool> probe(PCI::DeviceIdentifier const&);
-    static ErrorOr<NonnullLockRefPtr<GenericGraphicsAdapter>> create(PCI::DeviceIdentifier const&);
+    static ErrorOr<NonnullRefPtr<VirtIOGraphicsAdapter>> create(NonnullOwnPtr<VirtIO::TransportEntity> transport_link);
 
     virtual ErrorOr<void> initialize_virtio_resources() override;
 

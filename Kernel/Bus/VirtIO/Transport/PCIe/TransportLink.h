@@ -14,16 +14,13 @@
 namespace Kernel::VirtIO {
 
 class PCIeTransportLink final
-    : public TransportEntity
-    , public PCI::Device {
+    : public TransportEntity {
 public:
-    static ErrorOr<NonnullOwnPtr<TransportEntity>> create(PCI::DeviceIdentifier const& pci_identifier);
-
-    virtual StringView device_name() const override { return "VirtIOTransportLink"sv; }
+    static ErrorOr<NonnullOwnPtr<TransportEntity>> create(PCI::Device const&);
     virtual StringView determine_device_class_name() const override;
 
 private:
-    explicit PCIeTransportLink(PCI::DeviceIdentifier const& pci_identifier);
+    explicit PCIeTransportLink(PCI::Device const&);
 
     // ^TransportEntity
     virtual ErrorOr<void> locate_configurations_and_resources(Badge<VirtIO::Device>, VirtIO::Device&) override;
@@ -35,6 +32,6 @@ private:
     // FIXME: There could be multiple IRQ (MSI-X) handlers for a VirtIO device.
     // Find a way to use all of them.
     OwnPtr<PCI::IRQHandler> m_irq_handler;
+    NonnullRefPtr<PCI::Device> const m_pci_device;
 };
-
 };

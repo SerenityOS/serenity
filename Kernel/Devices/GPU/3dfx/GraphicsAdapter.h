@@ -9,24 +9,25 @@
 #include <AK/Types.h>
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Devices/GPU/Console/GenericFramebufferConsole.h>
-#include <Kernel/Devices/GPU/GenericGraphicsAdapter.h>
+#include <Kernel/Devices/GPU/GPUDevice.h>
+#include <Kernel/Library/Driver.h>
 
 namespace Kernel {
 
-class VoodooGraphicsAdapter final : public GenericGraphicsAdapter
-    , public PCI::Device {
+class VoodooGraphicsAdapter final : public GPUDevice {
+    KERNEL_MAKE_DRIVER_LISTABLE(VoodooGraphicsAdapter)
 
 public:
-    static ErrorOr<bool> probe(PCI::DeviceIdentifier const&);
-    static ErrorOr<NonnullLockRefPtr<GenericGraphicsAdapter>> create(PCI::DeviceIdentifier const&);
+    static ErrorOr<NonnullRefPtr<VoodooGraphicsAdapter>> create(PCI::Device&);
     virtual ~VoodooGraphicsAdapter() = default;
-    virtual StringView device_name() const override { return "VoodooGraphicsAdapter"sv; }
 
 private:
-    ErrorOr<void> initialize_adapter(PCI::DeviceIdentifier const&);
+    ErrorOr<void> initialize_adapter();
 
-    explicit VoodooGraphicsAdapter(PCI::DeviceIdentifier const&);
+    explicit VoodooGraphicsAdapter(PCI::Device&);
 
     LockRefPtr<DisplayConnector> m_display_connector;
+
+    NonnullRefPtr<PCI::Device> const m_pci_device;
 };
 }

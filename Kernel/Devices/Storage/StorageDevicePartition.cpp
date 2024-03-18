@@ -12,12 +12,9 @@
 
 namespace Kernel {
 
-NonnullLockRefPtr<StorageDevicePartition> StorageDevicePartition::create(StorageDevice& device, MinorNumber minor_number, Partition::DiskPartitionMetadata metadata)
+ErrorOr<NonnullRefPtr<StorageDevicePartition>> StorageDevicePartition::create(StorageDevice& device, MinorNumber minor_number, Partition::DiskPartitionMetadata metadata)
 {
-    auto partition_or_error = DeviceManagement::try_create_device<StorageDevicePartition>(device, minor_number, metadata);
-    // FIXME: Find a way to propagate errors
-    VERIFY(!partition_or_error.is_error());
-    return partition_or_error.release_value();
+    return *TRY(DeviceManagement::try_create_device<StorageDevicePartition>(device, minor_number, metadata));
 }
 
 StorageDevicePartition::StorageDevicePartition(StorageDevice& device, MinorNumber minor_number, Partition::DiskPartitionMetadata metadata)

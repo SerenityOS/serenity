@@ -11,6 +11,7 @@
 #include <AK/RefPtr.h>
 #include <AK/Types.h>
 #include <Kernel/Bus/PCI/Definitions.h>
+#include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Locking/SpinlockProtected.h>
 #include <Kernel/Memory/Region.h>
 #include <Kernel/Net/NetworkAdapter.h>
@@ -26,7 +27,7 @@ public:
     static bool is_initialized();
     bool initialize();
 
-    static ErrorOr<FixedStringBuffer<IFNAMSIZ>> generate_interface_name_from_pci_address(PCI::DeviceIdentifier const&);
+    static ErrorOr<FixedStringBuffer<IFNAMSIZ>> generate_interface_name_from_pci_address(PCI::Device&);
 
     NetworkingManagement();
 
@@ -38,10 +39,11 @@ public:
 
     NonnullRefPtr<NetworkAdapter> loopback_adapter() const;
 
-private:
-    ErrorOr<NonnullRefPtr<NetworkAdapter>> determine_network_device(PCI::DeviceIdentifier const&) const;
+    void attach_adapter(NetworkAdapter&);
+    void detach_adapter(NetworkAdapter&);
 
-    SpinlockProtected<Vector<NonnullRefPtr<NetworkAdapter>>, LockRank::None> m_adapters {};
+private:
+    SpinlockProtected<IntrusiveList<&NetworkAdapter::m_list_node>, LockRank::None> m_adapters {};
     RefPtr<NetworkAdapter> m_loopback_adapter;
 };
 

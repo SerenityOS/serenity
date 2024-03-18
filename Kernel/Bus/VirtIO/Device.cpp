@@ -9,7 +9,7 @@
 
 namespace Kernel::VirtIO {
 
-UNMAP_AFTER_INIT ErrorOr<void> Device::initialize_virtio_resources()
+ErrorOr<void> Device::initialize_virtio_resources()
 {
     TRY(m_transport_entity->locate_configurations_and_resources({}, *this));
     // NOTE: We enable interrupts at least after the m_register_bases[0] ptr is
@@ -26,7 +26,7 @@ UNMAP_AFTER_INIT ErrorOr<void> Device::initialize_virtio_resources()
     return {};
 }
 
-UNMAP_AFTER_INIT VirtIO::Device::Device(NonnullOwnPtr<TransportEntity> transport_entity)
+VirtIO::Device::Device(NonnullOwnPtr<TransportEntity> transport_entity)
     : m_class_name(transport_entity->determine_device_class_name())
     , m_transport_entity(move(transport_entity))
 {

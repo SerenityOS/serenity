@@ -16,7 +16,9 @@
 namespace Kernel {
 
 extern WorkQueue* g_io_work;
+extern WorkQueue* g_storage_detect_work;
 extern WorkQueue* g_ata_work;
+extern WorkQueue* g_pci_bus_work;
 
 class WorkQueue {
     AK_MAKE_NONCOPYABLE(WorkQueue);

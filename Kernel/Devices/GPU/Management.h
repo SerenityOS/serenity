@@ -15,8 +15,8 @@
 #include <Kernel/Bus/PCI/Definitions.h>
 #include <Kernel/Devices/GPU/Console/Console.h>
 #include <Kernel/Devices/GPU/DisplayConnector.h>
+#include <Kernel/Devices/GPU/GPUDevice.h>
 #include <Kernel/Devices/GPU/Generic/DisplayConnector.h>
-#include <Kernel/Devices/GPU/GenericGraphicsAdapter.h>
 #include <Kernel/Devices/GPU/VirtIO/GraphicsAdapter.h>
 #include <Kernel/Library/NonnullLockRefPtr.h>
 #include <Kernel/Memory/Region.h>
@@ -28,7 +28,7 @@ class GraphicsManagement {
 public:
     static GraphicsManagement& the();
     static bool is_initialized();
-    bool initialize();
+    void initialize();
 
     unsigned allocate_minor_device_number() { return m_current_minor_number++; }
     GraphicsManagement();
@@ -49,11 +49,9 @@ public:
 private:
     void enable_vga_text_mode_console_cursor();
 
-    ErrorOr<void> determine_and_initialize_graphics_device(PCI::DeviceIdentifier const&);
-
     void initialize_preset_resolution_generic_display_connector();
 
-    Vector<NonnullLockRefPtr<GenericGraphicsAdapter>> m_graphics_devices;
+    Vector<NonnullLockRefPtr<GPUDevice>> m_graphics_devices;
     LockRefPtr<Graphics::Console> m_console;
 
     // Note: This is only used when booting with kernel commandline that includes "graphics_subsystem_mode=limited"

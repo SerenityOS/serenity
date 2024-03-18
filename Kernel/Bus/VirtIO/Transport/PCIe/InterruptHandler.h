@@ -17,13 +17,13 @@ class PCIeTransportInterruptHandler final
     : public TransportInterruptHandler
     , public PCI::IRQHandler {
 public:
-    static ErrorOr<NonnullOwnPtr<PCIeTransportInterruptHandler>> create(PCIeTransportLink&, VirtIO::Device&, u8 irq);
+    static ErrorOr<NonnullOwnPtr<PCIeTransportInterruptHandler>> create(PCI::Device&, VirtIO::Device&, u8 irq);
     virtual ~PCIeTransportInterruptHandler() override = default;
 
     virtual StringView purpose() const override { return "VirtIO PCI IRQ Handler"sv; }
 
 private:
-    PCIeTransportInterruptHandler(PCIeTransportLink&, VirtIO::Device&, u8 irq);
+    PCIeTransportInterruptHandler(PCI::Device&, VirtIO::Device&, u8 irq);
 
     //^ IRQHandler
     virtual bool handle_irq(RegisterState const&) override;

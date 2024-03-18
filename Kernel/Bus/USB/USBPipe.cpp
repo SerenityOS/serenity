@@ -7,7 +7,7 @@
 
 #include <AK/StdLibExtras.h>
 #include <Kernel/Bus/USB/PacketTypes.h>
-#include <Kernel/Bus/USB/UHCI/UHCIController.h>
+#include <Kernel/Bus/USB/USBController.h>
 #include <Kernel/Bus/USB/USBPipe.h>
 #include <Kernel/Bus/USB/USBTransfer.h>
 

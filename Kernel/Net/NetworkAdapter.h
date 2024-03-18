@@ -46,6 +46,8 @@ class NetworkingManagement;
 class NetworkAdapter
     : public AtomicRefCounted<NetworkAdapter>
     , public LockWeakable<NetworkAdapter> {
+    friend class NetworkingManagement;
+
 public:
     enum class Type {
         Loopback,
@@ -58,7 +60,6 @@ public:
 
     virtual StringView class_name() const = 0;
     virtual Type adapter_type() const = 0;
-    virtual ErrorOr<void> initialize(Badge<NetworkingManagement>) = 0;
 
     StringView name() const { return m_name.representable_view(); }
     MACAddress mac_address() { return m_mac_address; }
@@ -126,6 +127,7 @@ private:
     u32 m_packets_out { 0 };
     u32 m_bytes_out { 0 };
     u32 m_mtu { 1500 };
+    IntrusiveListNode<NetworkAdapter> m_list_node;
 };
 
 }

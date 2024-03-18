@@ -21,21 +21,43 @@ set(KERNEL_SOURCES
     Arch/init.cpp
     Arch/DeferredCallPool.cpp
     Arch/PageFault.cpp
+    Arch/PlatformDriver.cpp
     Arch/Processor.cpp
     Arch/TrapFrame.cpp
     Boot/CommandLine.cpp
     Bus/PCI/Controller/HostController.cpp
     Bus/PCI/Controller/MemoryBackedHostBridge.cpp
     Bus/PCI/Controller/VolumeManagementDevice.cpp
+    Bus/PCI/Drivers/Audio/AC97.cpp
+    Bus/PCI/Drivers/Audio/IntelHDA.cpp
+    Bus/PCI/Drivers/GPU/BochsDisplay.cpp
+    Bus/PCI/Drivers/GPU/Intel.cpp
+    Bus/PCI/Drivers/GPU/VirtIO.cpp
+    Bus/PCI/Drivers/GPU/VMWare.cpp
+    Bus/PCI/Drivers/GPU/3dfx.cpp
+    Bus/PCI/Drivers/Net/E1000.cpp
+    Bus/PCI/Drivers/Net/E1000e.cpp
+    Bus/PCI/Drivers/Net/RTL8168.cpp
+    Bus/PCI/Drivers/Net/VirtIO.cpp
+    Bus/PCI/Drivers/RNG/VirtIO.cpp
+    Bus/PCI/Drivers/Serial/8250.cpp
+    Bus/PCI/Drivers/Serial/VirtIOConsole.cpp
+    Bus/PCI/Drivers/Storage/ATA/AHCI.cpp
+    Bus/PCI/Drivers/Storage/ATA/PIIX4IDE.cpp
+    Bus/PCI/Drivers/Storage/NVMe/NVMe.cpp
+    Bus/PCI/Drivers/Storage/NVMe/VolumeManagementDevice.cpp
+    Bus/PCI/Drivers/Storage/SD/SDHCI.cpp
+    Bus/PCI/Drivers/USB/EHCI.cpp
+    Bus/PCI/Drivers/USB/UHCI.cpp
     Bus/PCI/Access.cpp
-    Bus/PCI/API.cpp
+    Bus/PCI/Bus.cpp
+    Bus/PCI/Capability.cpp
     Bus/PCI/Device.cpp
-    Bus/PCI/DeviceIdentifier.cpp
+    Bus/USB/Drivers/HID/MouseDriver.cpp
+    Bus/USB/Drivers/MassStorage/MassStorageDriver.cpp
     Bus/USB/EHCI/EHCIController.cpp
     Bus/USB/UHCI/UHCIController.cpp
     Bus/USB/UHCI/UHCIRootHub.cpp
-    Bus/USB/Drivers/HID/MouseDriver.cpp
-    Bus/USB/Drivers/MassStorage/MassStorageDriver.cpp
     Bus/USB/USBConfiguration.cpp
     Bus/USB/USBController.cpp
     Bus/USB/USBDevice.cpp
@@ -43,19 +65,15 @@ set(KERNEL_SOURCES
     Bus/USB/USBManagement.cpp
     Bus/USB/USBPipe.cpp
     Bus/USB/USBTransfer.cpp
-    Bus/VirtIO/Transport/PCIe/Detect.cpp
     Bus/VirtIO/Transport/PCIe/InterruptHandler.cpp
     Bus/VirtIO/Transport/PCIe/TransportLink.cpp
     Bus/VirtIO/Transport/Entity.cpp
     Bus/VirtIO/Transport/InterruptHandler.cpp
-    Bus/VirtIO/Console.cpp
-    Bus/VirtIO/ConsolePort.cpp
     Bus/VirtIO/Device.cpp
     Bus/VirtIO/Queue.cpp
-    Bus/VirtIO/RNG.cpp
     Devices/AsyncDeviceRequest.cpp
-    Devices/Audio/AC97/AC97.cpp
     Devices/Audio/Channel.cpp
+    Devices/Audio/AC97/AC97.cpp
     Devices/Audio/IntelHDA/Codec.cpp
     Devices/Audio/IntelHDA/Controller.cpp
     Devices/Audio/IntelHDA/Format.cpp
@@ -68,7 +86,6 @@ set(KERNEL_SOURCES
     Devices/DeviceManagement.cpp
     Devices/KCOVDevice.cpp
     Devices/KCOVInstance.cpp
-    Devices/PCISerialDevice.cpp
     Devices/SerialDevice.cpp
     Devices/HID/AllMiceDevice.cpp
     Devices/HID/KeyboardDevice.cpp
@@ -94,9 +111,6 @@ set(KERNEL_SOURCES
     Devices/GPU/Console/GenericFramebufferConsole.cpp
     Devices/GPU/Console/ContiguousFramebufferConsole.cpp
     Devices/GPU/Console/VGATextModeConsole.cpp
-    Devices/GPU/DisplayConnector.cpp
-    Devices/GPU/Generic/DisplayConnector.cpp
-    Devices/GPU/Management.cpp
     Devices/GPU/Intel/Auxiliary/GMBusConnector.cpp
     Devices/GPU/Intel/Plane/DisplayPlane.cpp
     Devices/GPU/Intel/Plane/G33DisplayPlane.cpp
@@ -106,19 +120,26 @@ set(KERNEL_SOURCES
     Devices/GPU/Intel/DisplayConnectorGroup.cpp
     Devices/GPU/Intel/NativeDisplayConnector.cpp
     Devices/GPU/Intel/NativeGraphicsAdapter.cpp
-    Devices/GPU/VMWare/Console.cpp
-    Devices/GPU/VMWare/GraphicsAdapter.cpp
-    Devices/GPU/VMWare/DisplayConnector.cpp
-    Devices/GPU/VirtIO/DisplayConnector.cpp
     Devices/GPU/VirtIO/Console.cpp
+    Devices/GPU/VirtIO/DisplayConnector.cpp
     Devices/GPU/VirtIO/GPU3DDevice.cpp
     Devices/GPU/VirtIO/GraphicsAdapter.cpp
+    Devices/GPU/VMWare/Console.cpp
+    Devices/GPU/VMWare/DisplayConnector.cpp
+    Devices/GPU/VMWare/GraphicsAdapter.cpp
+    Devices/GPU/DisplayConnector.cpp
+    Devices/GPU/Generic/DisplayConnector.cpp
+    Devices/GPU/Management.cpp
     Devices/Loop/LoopDevice.cpp
+    Devices/Serial/PCI/Serial8250Device.cpp
+    Devices/Serial/VirtIO/Console.cpp
+    Devices/Serial/VirtIO/ConsolePort.cpp
     Devices/Storage/ATA/AHCI/Controller.cpp
-    Devices/Storage/ATA/AHCI/Port.cpp
     Devices/Storage/ATA/AHCI/InterruptHandler.cpp
+    Devices/Storage/ATA/AHCI/Port.cpp
     Devices/Storage/ATA/GenericIDE/Controller.cpp
     Devices/Storage/ATA/GenericIDE/Channel.cpp
+    Devices/Storage/ATA/PIIX4IDE/Controller.cpp
     Devices/Storage/ATA/ATAController.cpp
     Devices/Storage/ATA/ATADevice.cpp
     Devices/Storage/ATA/ATADiskDevice.cpp
@@ -177,10 +198,6 @@ set(KERNEL_SOURCES
     FileSystem/SysFS/LinkInode.cpp
     FileSystem/SysFS/Registry.cpp
     FileSystem/SysFS/RootDirectory.cpp
-    FileSystem/SysFS/Subsystems/Bus/PCI/BusDirectory.cpp
-    FileSystem/SysFS/Subsystems/Bus/PCI/DeviceAttribute.cpp
-    FileSystem/SysFS/Subsystems/Bus/PCI/DeviceDirectory.cpp
-    FileSystem/SysFS/Subsystems/Bus/PCI/DeviceExpansionROM.cpp
     FileSystem/SysFS/Subsystems/Bus/USB/BusDirectory.cpp
     FileSystem/SysFS/Subsystems/Bus/USB/DeviceInformation.cpp
     FileSystem/SysFS/Subsystems/Bus/Directory.cpp
@@ -267,8 +284,8 @@ set(KERNEL_SOURCES
     Library/KLexicalPath.cpp
     Library/KString.cpp
     Library/UserOrKernelBuffer.cpp
-    Net/Intel/E1000ENetworkAdapter.cpp
     Net/Intel/E1000NetworkAdapter.cpp
+    Net/Intel/E1000ENetworkAdapter.cpp
     Net/Realtek/RTL8168NetworkAdapter.cpp
     Net/VirtIO/VirtIONetworkAdapter.cpp
     Net/IPv4Socket.cpp
@@ -281,6 +298,7 @@ set(KERNEL_SOURCES
     Net/Socket.cpp
     Net/TCPSocket.cpp
     Net/UDPSocket.cpp
+    Security/Random/VirtIO/RNG.cpp
     Security/AddressSanitizer.cpp
     Security/Credentials.cpp
     Security/Random.cpp
@@ -418,9 +436,9 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
         Arch/x86_64/ISABus/HID/VMWareMouseDevice.cpp
         Arch/x86_64/ISABus/I8042Controller.cpp
         Arch/x86_64/ISABus/IDEController.cpp
+        Arch/x86_64/ISABus/ISAIIDEDriver.cpp
         Arch/x86_64/ISABus/SerialDevice.cpp
-        Arch/x86_64/PCI/Controller/HostBridge.cpp
-        Arch/x86_64/PCI/IDELegacyModeController.cpp
+        Arch/x86_64/PCI/Controller/PIIX4HostBridge.cpp
         Arch/x86_64/PCI/Initializer.cpp
         Arch/x86_64/PCI/MSI.cpp
 
@@ -470,6 +488,7 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
         Arch/aarch64/RPi/InterruptController.cpp
         Arch/aarch64/RPi/Mailbox.cpp
         Arch/aarch64/RPi/MiniUART.cpp
+        Arch/aarch64/RPi/SDHCDriver.cpp
         Arch/aarch64/RPi/SDHostController.cpp
         Arch/aarch64/RPi/Timer.cpp
         Arch/aarch64/RPi/UART.cpp

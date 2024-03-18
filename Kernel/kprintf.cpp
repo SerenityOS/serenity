@@ -15,7 +15,6 @@
 #include <Kernel/Devices/GPU/Console/BootFramebufferConsole.h>
 #include <Kernel/Devices/GPU/Management.h>
 #include <Kernel/Devices/Generic/ConsoleDevice.h>
-#include <Kernel/Devices/PCISerialDevice.h>
 #include <Kernel/Devices/TTY/ConsoleManagement.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/kstdio.h>
@@ -41,9 +40,6 @@ bool is_serial_debug_enabled()
 
 static void serial_putch(char ch)
 {
-    if (PCISerialDevice::is_available())
-        return PCISerialDevice::the().put_char(ch);
-
     debug_output(ch);
 }
 

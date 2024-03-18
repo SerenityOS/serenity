@@ -13,6 +13,7 @@
 #    include <Kernel/Arch/x86_64/IO.h>
 #endif
 #include <Kernel/Bus/PCI/Definitions.h>
+#include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Memory/PhysicalAddress.h>
 #include <Kernel/Memory/TypedMapping.h>
 
@@ -32,8 +33,8 @@ public:
 #if ARCH(X86_64)
     static ErrorOr<NonnullOwnPtr<IOWindow>> create_for_io_space(IOAddress, u64 space_length);
 #endif
-    static ErrorOr<NonnullOwnPtr<IOWindow>> create_for_pci_device_bar(PCI::DeviceIdentifier const&, PCI::HeaderType0BaseRegister, u64 space_length);
-    static ErrorOr<NonnullOwnPtr<IOWindow>> create_for_pci_device_bar(PCI::DeviceIdentifier const&, PCI::HeaderType0BaseRegister);
+    static ErrorOr<NonnullOwnPtr<IOWindow>> create_for_pci_device_bar(PCI::Device&, PCI::HeaderType0BaseRegister, u64 space_length);
+    static ErrorOr<NonnullOwnPtr<IOWindow>> create_for_pci_device_bar(PCI::Device&, PCI::HeaderType0BaseRegister);
 
     ErrorOr<NonnullOwnPtr<IOWindow>> create_from_io_window_with_offset(u64 offset, u64 space_length);
     ErrorOr<NonnullOwnPtr<IOWindow>> create_from_io_window_with_offset(u64 offset);

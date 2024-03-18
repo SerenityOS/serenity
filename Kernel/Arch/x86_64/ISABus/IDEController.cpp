@@ -7,7 +7,6 @@
 #include <AK/OwnPtr.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/x86_64/ISABus/IDEController.h>
-#include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Devices/Storage/ATA/ATADiskDevice.h>
 #include <Kernel/Devices/Storage/ATA/GenericIDE/Channel.h>
 #include <Kernel/Library/LockRefPtr.h>

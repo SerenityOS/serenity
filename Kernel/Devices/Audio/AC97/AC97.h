@@ -8,11 +8,11 @@
 
 #include <AK/Error.h>
 #include <AK/RefPtr.h>
-#include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Devices/Audio/Controller.h>
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/Interrupts/IRQHandler.h>
+#include <Kernel/Library/Driver.h>
 #include <Kernel/Library/IOWindow.h>
 #include <Kernel/Locking/SpinlockProtected.h>
 
@@ -23,17 +23,13 @@ namespace Kernel {
 
 class AC97 final
     : public AudioController
-    , public PCI::Device
     , public IRQHandler {
+    KERNEL_MAKE_DRIVER_LISTABLE(AC97)
 
 public:
-    static ErrorOr<bool> probe(PCI::DeviceIdentifier const&);
-    static ErrorOr<NonnullRefPtr<AudioController>> create(PCI::DeviceIdentifier const&);
+    static ErrorOr<NonnullRefPtr<AC97>> create(PCI::Device&);
 
     virtual ~AC97() override;
-
-    // ^PCI::Device
-    virtual StringView device_name() const override { return "AC97"sv; }
 
     // ^IRQHandler
     virtual StringView purpose() const override { return "AC97"sv; }
@@ -158,7 +154,9 @@ private:
         StringView m_name;
     };
 
-    AC97(PCI::DeviceIdentifier const&, NonnullOwnPtr<AC97Channel> pcm_out_channel, NonnullOwnPtr<IOWindow> mixer_io_window, NonnullOwnPtr<IOWindow> bus_io_window);
+    AC97(PCI::Device&, NonnullOwnPtr<AC97Channel> pcm_out_channel, NonnullOwnPtr<IOWindow> mixer_io_window, NonnullOwnPtr<IOWindow> bus_io_window);
+
+    ErrorOr<void> initialize();
 
     // ^IRQHandler
     virtual bool handle_irq(RegisterState const&) override;
@@ -170,12 +168,12 @@ private:
     ErrorOr<void> write_single_buffer(UserOrKernelBuffer const&, size_t, size_t);
 
     // ^AudioController
-    virtual ErrorOr<void> initialize(Badge<AudioManagement>) override;
     virtual RefPtr<AudioChannel> audio_channel(u32 index) const override;
     virtual ErrorOr<size_t> write(size_t channel_index, UserOrKernelBuffer const& data, size_t length) override;
     virtual ErrorOr<void> set_pcm_output_sample_rate(size_t channel_index, u32 samples_per_second_rate) override;
     virtual ErrorOr<u32> get_pcm_output_sample_rate(size_t channel_index) override;
 
+    NonnullRefPtr<PCI::Device> const m_pci_device;
     OwnPtr<Memory::Region> m_buffer_descriptor_list;
     u8 m_buffer_descriptor_list_index { 0 };
     AC97Revision m_codec_revision { AC97Revision::Revision21OrEarlier };

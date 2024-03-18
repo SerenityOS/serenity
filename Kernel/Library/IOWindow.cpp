@@ -4,9 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Bus/PCI/API.h>
-#include <Kernel/Bus/PCI/BarMapping.h>
 #include <Kernel/Bus/PCI/Definitions.h>
+#include <Kernel/Bus/PCI/Resource.h>
 #include <Kernel/Library/IOWindow.h>
 
 namespace Kernel {
@@ -65,17 +64,27 @@ ErrorOr<NonnullOwnPtr<IOWindow>> IOWindow::create_from_io_window_with_offset(u64
     return create_from_io_window_with_offset(offset, m_memory_mapped_range->length - offset);
 }
 
-ErrorOr<NonnullOwnPtr<IOWindow>> IOWindow::create_for_pci_device_bar(PCI::DeviceIdentifier const& pci_device_identifier, PCI::HeaderType0BaseRegister pci_bar, u64 space_length)
+ErrorOr<NonnullOwnPtr<IOWindow>> IOWindow::create_for_pci_device_bar(PCI::Device& pci_device, PCI::HeaderType0BaseRegister pci_bar, u64 space_length)
 {
-    u64 pci_bar_value = PCI::get_BAR(pci_device_identifier, pci_bar);
-    auto pci_bar_space_type = PCI::get_BAR_space_type(pci_bar_value);
+    u64 pci_bar_value = pci_device.resources()[to_underlying(pci_bar)].address;
+    auto pci_bar_space_type = pci_device.resources()[to_underlying(pci_bar)].type;
+    if (pci_bar_space_type == PCI::Resource::SpaceType::Memory64BitSpace) {
+        // FIXME: In theory, BAR5 cannot be assigned to 64 bit as it is the last one...
+        // however, there might be 64 bit BAR5 for real bare metal hardware, so remove this
+        // if it makes a problem.
+        if (pci_bar == PCI::HeaderType0BaseRegister::BAR5) {
+            return Error::from_errno(EINVAL);
+        }
+        u64 next_pci_bar_value = pci_device.resources()[to_underlying(pci_bar) + 1].address;
+        pci_bar_value |= next_pci_bar_value << 32;
+    }
 
-    if (pci_bar_space_type == PCI::BARSpaceType::IOSpace) {
+    auto pci_bar_space_size = pci_device.resources()[to_underlying(pci_bar)].length;
+    if (pci_bar_space_size < space_length)
+        return Error::from_errno(EIO);
+
+    if (pci_bar_space_type == PCI::Resource::SpaceType::IOSpace) {
 #if ARCH(X86_64)
-        auto pci_bar_space_size = PCI::get_BAR_space_size(pci_device_identifier, pci_bar);
-        if (pci_bar_space_size < space_length)
-            return Error::from_errno(EIO);
-
         // X86 IO instructions use DX -a 16 bit register- as the "address"
         // So we need to check against u16's
         if (pci_bar_value > AK::NumericLimits<u16>::max())
@@ -90,14 +99,20 @@ ErrorOr<NonnullOwnPtr<IOWindow>> IOWindow::create_for_pci_device_bar(PCI::Device
 #endif
     }
 
-    auto memory_mapped_range = TRY(PCI::adopt_new_nonnull_own_bar_mapping<u8 volatile>(pci_device_identifier, pci_bar, space_length));
+    if (pci_bar_space_type == PCI::Resource::SpaceType::Memory32BitSpace && Checked<u32>::addition_would_overflow(pci_bar_value, space_length))
+        return Error::from_errno(EOVERFLOW);
+    if (pci_bar_space_type == PCI::Resource::SpaceType::Memory16BitSpace && Checked<u16>::addition_would_overflow(pci_bar_value, space_length))
+        return Error::from_errno(EOVERFLOW);
+    if (pci_bar_space_type == PCI::Resource::SpaceType::Memory64BitSpace && Checked<u64>::addition_would_overflow(pci_bar_value, space_length))
+        return Error::from_errno(EOVERFLOW);
+    auto memory_mapped_range = TRY(Memory::adopt_new_nonnull_own_typed_mapping<u8 volatile>(PhysicalAddress(pci_bar_value & PCI::bar_address_mask), space_length, Memory::Region::Access::ReadWrite));
     return TRY(adopt_nonnull_own_or_enomem(new (nothrow) IOWindow(move(memory_mapped_range))));
 }
 
-ErrorOr<NonnullOwnPtr<IOWindow>> IOWindow::create_for_pci_device_bar(PCI::DeviceIdentifier const& pci_device_identifier, PCI::HeaderType0BaseRegister pci_bar)
+ErrorOr<NonnullOwnPtr<IOWindow>> IOWindow::create_for_pci_device_bar(PCI::Device& pci_device, PCI::HeaderType0BaseRegister pci_bar)
 {
-    u64 pci_bar_space_size = PCI::get_BAR_space_size(pci_device_identifier, pci_bar);
-    return create_for_pci_device_bar(pci_device_identifier, pci_bar, pci_bar_space_size);
+    u64 pci_bar_space_size = pci_device.resources()[to_underlying(pci_bar)].length;
+    return create_for_pci_device_bar(pci_device, pci_bar, pci_bar_space_size);
 }
 
 IOWindow::IOWindow(NonnullOwnPtr<Memory::TypedMapping<u8 volatile>> memory_mapped_range)

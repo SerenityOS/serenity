@@ -21,7 +21,7 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<AHCIPort>> AHCIPort::create(AHCIController const& controller, AHCI::HBADefinedCapabilities hba_capabilities, volatile AHCI::PortRegisters& registers, u32 port_index)
+ErrorOr<NonnullLockRefPtr<AHCIPort>> AHCIPort::create(AHCIController const& controller, AHCI::HBADefinedCapabilities hba_capabilities, volatile AHCI::PortRegisters& registers, u32 port_index)
 {
     auto identify_buffer_page = MUST(MM.allocate_physical_page());
     auto port = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) AHCIPort(controller, move(identify_buffer_page), hba_capabilities, registers, port_index)));
@@ -55,7 +55,7 @@ ErrorOr<void> AHCIPort::allocate_resources_and_initialize_ports()
     return {};
 }
 
-UNMAP_AFTER_INIT AHCIPort::AHCIPort(AHCIController const& controller, NonnullRefPtr<Memory::PhysicalPage> identify_buffer_page, AHCI::HBADefinedCapabilities hba_capabilities, volatile AHCI::PortRegisters& registers, u32 port_index)
+AHCIPort::AHCIPort(AHCIController const& controller, NonnullRefPtr<Memory::PhysicalPage> identify_buffer_page, AHCI::HBADefinedCapabilities hba_capabilities, volatile AHCI::PortRegisters& registers, u32 port_index)
     : m_port_index(port_index)
     , m_hba_capabilities(hba_capabilities)
     , m_identify_buffer_page(move(identify_buffer_page))
@@ -82,7 +82,6 @@ void AHCIPort::handle_interrupt()
         clear_sata_error_register();
         if ((m_port_registers.ssts & 0xf) != 3 && m_connected_device) {
             m_connected_device->prepare_for_unplug();
-            StorageManagement::the().remove_device(*m_connected_device);
             auto work_item_creation_result = g_io_work->try_queue([this]() {
                 m_connected_device.clear();
             });
@@ -187,8 +186,8 @@ void AHCIPort::recover_from_fatal_error()
         return;
     }
 
-    dmesgln("{}: AHCI Port {} fatal error, shutting down!", controller->device_identifier().address(), representative_port_index());
-    dmesgln("{}: AHCI Port {} fatal error, SError {}", controller->device_identifier().address(), representative_port_index(), (u32)m_port_registers.serr);
+    dmesgln("{}: AHCI Port {} fatal error, shutting down!", controller->pci_device().device_id().address(), representative_port_index());
+    dmesgln("{}: AHCI Port {} fatal error, SError {}", controller->pci_device().device_id().address(), representative_port_index(), (u32)m_port_registers.serr);
     stop_command_list_processing();
     stop_fis_receiving();
     m_interrupt_enable.clear();
@@ -219,7 +218,7 @@ bool AHCIPort::reset()
     return initialize();
 }
 
-UNMAP_AFTER_INIT bool AHCIPort::initialize_without_reset()
+bool AHCIPort::initialize_without_reset()
 {
     MutexLocker locker(m_lock);
     SpinlockLocker lock(m_hard_lock);

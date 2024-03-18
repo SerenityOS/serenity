@@ -8,9 +8,9 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT ErrorOr<NonnullOwnPtr<AHCIInterruptHandler>> AHCIInterruptHandler::create(AHCIController& controller, u8 irq, AHCI::MaskedBitField taken_ports)
+ErrorOr<NonnullOwnPtr<AHCIInterruptHandler>> AHCIInterruptHandler::create(AHCIController& controller, PCI::Device& pci_device, u8 irq, AHCI::MaskedBitField taken_ports)
 {
-    auto port_handler = TRY(adopt_nonnull_own_or_enomem(new (nothrow) AHCIInterruptHandler(controller, irq, taken_ports)));
+    auto port_handler = TRY(adopt_nonnull_own_or_enomem(new (nothrow) AHCIInterruptHandler(controller, pci_device, irq, taken_ports)));
     port_handler->allocate_resources_and_initialize_ports();
     return port_handler;
 }
@@ -22,8 +22,8 @@ void AHCIInterruptHandler::allocate_resources_and_initialize_ports()
     enable_irq();
 }
 
-UNMAP_AFTER_INIT AHCIInterruptHandler::AHCIInterruptHandler(AHCIController& controller, u8 irq, AHCI::MaskedBitField taken_ports)
-    : PCI::IRQHandler(controller, irq)
+AHCIInterruptHandler::AHCIInterruptHandler(AHCIController& controller, PCI::Device& pci_device, u8 irq, AHCI::MaskedBitField taken_ports)
+    : PCI::IRQHandler(pci_device, irq)
     , m_parent_controller(controller)
     , m_taken_ports(taken_ports)
     , m_pending_ports_interrupts(create_pending_ports_interrupts_bitfield())

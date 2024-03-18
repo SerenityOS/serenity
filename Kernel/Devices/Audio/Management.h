@@ -26,9 +26,6 @@ public:
     bool initialize();
 
 private:
-    ErrorOr<NonnullRefPtr<AudioController>> determine_audio_device(PCI::DeviceIdentifier const& device_identifier) const;
-
-    void enumerate_hardware_controllers();
     SpinlockProtected<IntrusiveList<&AudioController::m_node>, LockRank::None> m_controllers_list;
 };
 
