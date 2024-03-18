@@ -48,7 +48,7 @@ double HTMLProgressElement::value() const
 
 WebIDL::ExceptionOr<void> HTMLProgressElement::set_value(double value)
 {
-    if (value < 0 || value > max())
+    if (value < 0)
         return {};
 
     TRY(set_attribute(HTML::AttributeNames::value, MUST(String::number(value))));
