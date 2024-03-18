@@ -118,7 +118,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
             return true;
         } });
-    args_parser.add_option(string_offset_format, StringOffsetFormat::Octal, "Equivalent to specifying -t o.", nullptr, 'o');
+    args_parser.add_option(string_offset_format, StringOffsetFormat::Octal, "Equivalent to specifying -t o.", {}, 'o');
     args_parser.set_general_help("Write the sequences of printable characters in files or pipes to stdout.");
     args_parser.add_positional_argument(paths, "File path", "path", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);

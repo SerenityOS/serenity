@@ -900,7 +900,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     Script script;
     Vector<StringView> pos_args;
     arg_parser.set_general_help("The Stream EDitor");
-    arg_parser.add_option(suppress_default_output, "suppress default output", nullptr, 'n');
+    arg_parser.add_option(suppress_default_output, "suppress default output", {}, 'n');
     arg_parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "A file containing script commands",

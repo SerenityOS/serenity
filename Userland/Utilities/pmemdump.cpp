@@ -92,7 +92,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Core::ArgsParser args;
     args.add_positional_argument(arg_offset, "Physical Address (Offset)", "offset", Core::ArgsParser::Required::Yes);
     args.add_positional_argument(arg_length, "Length of that region", "length", Core::ArgsParser::Required::Yes);
-    args.add_option(use_read_instead_of_mmap, "Read /dev/mem instead of try to map it", nullptr, 'r');
+    args.add_option(use_read_instead_of_mmap, "Read /dev/mem instead of try to map it", {}, 'r');
 
     args.parse(arguments);
 

@@ -30,8 +30,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     parser.add_positional_argument(filename1, "First file to compare", "file1", Core::ArgsParser::Required::Yes);
     parser.add_positional_argument(filename2, "Second file to compare", "file2", Core::ArgsParser::Required::Yes);
-    parser.add_option(unified, "Write diff in unified format", nullptr, 'u');
-    parser.add_option(context, "Write diff in context format", nullptr, 'c');
+    parser.add_option(unified, "Write diff in unified format", {}, 'u');
+    parser.add_option(context, "Write diff in context format", {}, 'c');
     parser.add_option(unified_format_context, "Write diff in unified format with the given number of context lines", "unified", 'U', "lines");
     parser.add_option(context_format_context, "Write diff in context format with the given number of context lines", "context", 'C', "lines");
     parser.parse(arguments);

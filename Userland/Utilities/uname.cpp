@@ -25,12 +25,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool flag_all = false;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(flag_system, "Print the system name (default)", nullptr, 's');
-    args_parser.add_option(flag_node, "Print the node name", nullptr, 'n');
-    args_parser.add_option(flag_release, "Print the system release", nullptr, 'r');
-    args_parser.add_option(flag_version, "Print the version of the release", nullptr, 'v');
-    args_parser.add_option(flag_machine, "Print the machine hardware name", nullptr, 'm');
-    args_parser.add_option(flag_all, "Print all information (same as -snrm)", nullptr, 'a');
+    args_parser.add_option(flag_system, "Print the system name (default)", {}, 's');
+    args_parser.add_option(flag_node, "Print the node name", {}, 'n');
+    args_parser.add_option(flag_release, "Print the system release", {}, 'r');
+    args_parser.add_option(flag_version, "Print the version of the release", {}, 'v');
+    args_parser.add_option(flag_machine, "Print the machine hardware name", {}, 'm');
+    args_parser.add_option(flag_all, "Print all information (same as -snrm)", {}, 'a');
     args_parser.parse(arguments);
 
     if (flag_all)

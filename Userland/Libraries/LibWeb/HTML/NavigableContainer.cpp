@@ -191,7 +191,7 @@ HTML::WindowProxy* NavigableContainer::content_window()
 Optional<URL> NavigableContainer::shared_attribute_processing_steps_for_iframe_and_frame(bool initial_insertion)
 {
     // 1. Let url be the URL record about:blank.
-    auto url = URL("about:blank");
+    auto url = URL("about:blank"sv);
 
     // 2. If element has a src attribute specified, and its value is not the empty string,
     //    then parse the value of that attribute relative to element's node document.

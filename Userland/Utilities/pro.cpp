@@ -163,7 +163,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.set_general_help(
         "Request a file from an arbitrary URL. This command uses RequestServer, "
         "and thus supports at least http, https, and gemini.");
-    args_parser.add_option(save_at_provided_name, "Write to a file named as the remote file", nullptr, 'O');
+    args_parser.add_option(save_at_provided_name, "Write to a file named as the remote file", {}, 'O');
     args_parser.add_option(data, "(HTTP only) Send the provided data via an HTTP POST request", "data", 'd', "data");
     args_parser.add_option(method_override, "(HTTP only) HTTP method to use for the request (eg, GET, POST, etc)", "method", 'm', "method");
     args_parser.add_option(should_follow_url, "(HTTP only) Follow the Location header if a 3xx status is encountered", "follow", 'l');

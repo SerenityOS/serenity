@@ -21,8 +21,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Vector<ByteString> paths;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(flag_most_posix, "Check for most POSIX systems", nullptr, 'p');
-    args_parser.add_option(flag_empty_name_and_leading_dash, "Check for empty names and leading dash", nullptr, 'P');
+    args_parser.add_option(flag_most_posix, "Check for most POSIX systems", {}, 'p');
+    args_parser.add_option(flag_empty_name_and_leading_dash, "Check for empty names and leading dash", {}, 'P');
     args_parser.add_option(flag_portability, "Check portability (equivalent to -p and -P)", "portability", '\0');
     args_parser.add_positional_argument(paths, "Path to check", "path", Core::ArgsParser::Required::Yes);
     args_parser.parse(arguments);

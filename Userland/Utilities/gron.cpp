@@ -44,7 +44,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         "Monochrome (don't colorize output)",
         "monochrome",
         'm',
-        nullptr,
+        {},
         [](StringView s) {
             VERIFY(s.is_empty());
             use_color = false;

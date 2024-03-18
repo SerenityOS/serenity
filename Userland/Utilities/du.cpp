@@ -104,9 +104,9 @@ ErrorOr<void> parse_args(Main::Arguments arguments, Vector<ByteString>& files, D
     Core::ArgsParser::Option block_size_1k_option {
         Core::ArgsParser::OptionArgumentMode::None,
         "Equivalent to `--block-size 1024`",
-        nullptr,
+        {},
         'k',
-        nullptr,
+        {},
         [&du_option](StringView) {
             du_option.block_size = 1024;
             return true;

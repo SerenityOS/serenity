@@ -176,17 +176,17 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     args_parser.add_option(capitalize_c_include_file_style, "Capitalize C include file style (-i).", "capitalize", 'C');
     args_parser.add_option(line_length_option, "Amount of bytes shown per line (max 256)", "cols", 'c', "cols");
     args_parser.add_option(offset_in_decimal, "Show file offset in decimal", "decimal", 'd');
-    args_parser.add_option(little_endian_hexdump, "Little-endian hex dump", nullptr, 'e');
+    args_parser.add_option(little_endian_hexdump, "Little-endian hex dump", {}, 'e');
     args_parser.add_option(group_size_option, "Separate the output of every amount bytes", "groupsize", 'g', "amount");
     args_parser.add_option(c_include_file_style, "Output in C include file style", "include", 'i');
     args_parser.add_option(max_bytes, "Truncate to fixed number of bytes", "len", 'l', "bytes");
     args_parser.add_option(c_include_file_style_variable_name, "Set variable name used in C include ouput (-i)", "name", 'n', "include_style");
-    args_parser.add_option(position_offset, "Add offset to displayed file position", nullptr, 'o', "offset");
+    args_parser.add_option(position_offset, "Add offset to displayed file position", {}, 'o', "offset");
     args_parser.add_option(plain_hexdump_style, "Output in plain hex dump style", "plain", 'p');
     args_parser.add_option(revert, "Patch hex dump into binary", "revert", 'r');
-    args_parser.add_option(colorize_output_option, "Colorize output", nullptr, 'R', "when");
+    args_parser.add_option(colorize_output_option, "Colorize output", {}, 'R', "when");
     args_parser.add_option(seek_to, "Seek to a byte offset", "seek", 's', "[-]offset");
-    args_parser.add_option(uppercase_hex, "Use upper case hex letters", nullptr, 'u');
+    args_parser.add_option(uppercase_hex, "Use upper case hex letters", {}, 'u');
 
     args_parser.parse(args);
 

@@ -187,7 +187,7 @@ static ErrorOr<String> parse_tty_pseudo_name(StringView tty_name)
 }
 
 template<typename Value, typename ParseValue>
-Core::ArgsParser::Option make_list_option(Vector<Value>& value_list, char const* help_string, char const* long_name, char short_name, char const* value_name, ParseValue parse_value)
+Core::ArgsParser::Option make_list_option(Vector<Value>& value_list, StringView help_string, StringView long_name, char short_name, StringView value_name, ParseValue parse_value)
 {
     return Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
@@ -234,11 +234,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Vector<uid_t> uid_list;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(every_terminal_process_flag, "Show every process associated with terminals", nullptr, 'a');
-    args_parser.add_option(every_process_flag, "Show every process", nullptr, 'A');
-    args_parser.add_option(every_process_flag, "Show every process (Equivalent to -A)", nullptr, 'e');
-    args_parser.add_option(full_format_flag, "Full format", nullptr, 'f');
-    args_parser.add_option(make_list_option(columns, "Specify a user-defined format.", nullptr, 'o', "column-format", [&](StringView column_format_specifier) -> Optional<Column> {
+    args_parser.add_option(every_terminal_process_flag, "Show every process associated with terminals", {}, 'a');
+    args_parser.add_option(every_process_flag, "Show every process", {}, 'A');
+    args_parser.add_option(every_process_flag, "Show every process (Equivalent to -A)", {}, 'e');
+    args_parser.add_option(full_format_flag, "Full format", {}, 'f');
+    args_parser.add_option(make_list_option(columns, "Specify a user-defined format.", {}, 'o', "column-format", [&](StringView column_format_specifier) -> Optional<Column> {
         auto column_or_error = parse_column_format_specifier(column_format_specifier);
         if (column_or_error.is_error()) {
             warnln("Could not parse '{}' as a column format specifier", column_format_specifier);
@@ -246,7 +246,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
         return column_or_error.release_value();
     }));
-    args_parser.add_option(make_list_option(pid_list, "Show processes with a matching PID. (Comma- or space-separated list)", nullptr, 'p', "pid-list", [&](StringView pid_string) {
+    args_parser.add_option(make_list_option(pid_list, "Show processes with a matching PID. (Comma- or space-separated list)", {}, 'p', "pid-list", [&](StringView pid_string) {
         provided_filtering_option = true;
         auto pid = pid_string.to_number<int>();
         if (!pid.has_value())
@@ -260,7 +260,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             warnln("Could not parse '{}' as a PID.", pid_string);
         return pid;
     }));
-    args_parser.add_option(make_list_option(pid_list, "Show processes with a matching PID. (Comma- or space-separated list.) Processes will be listed in the order given.", nullptr, 'q', "pid-list", [&](StringView pid_string) {
+    args_parser.add_option(make_list_option(pid_list, "Show processes with a matching PID. (Comma- or space-separated list.) Processes will be listed in the order given.", {}, 'q', "pid-list", [&](StringView pid_string) {
         provided_quick_pid_list = true;
         auto pid = pid_string.to_number<int>();
         if (!pid.has_value())
@@ -276,7 +276,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
         return tty_pseudo_name_or_error.release_value().to_byte_string();
     }));
-    args_parser.add_option(make_list_option(uid_list, "Show processes with a matching user ID or login name. (Comma- or space-separated list.)", nullptr, 'u', "user-list", [&](StringView user_string) -> Optional<uid_t> {
+    args_parser.add_option(make_list_option(uid_list, "Show processes with a matching user ID or login name. (Comma- or space-separated list.)", {}, 'u', "user-list", [&](StringView user_string) -> Optional<uid_t> {
         provided_filtering_option = true;
         if (auto uid = user_string.to_number<uid_t>(); uid.has_value()) {
             return uid.value();

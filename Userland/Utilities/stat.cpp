@@ -94,7 +94,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Vector<StringView> files;
 
     auto args_parser = Core::ArgsParser();
-    args_parser.add_option(should_follow_links, "Follow links to files", nullptr, 'L');
+    args_parser.add_option(should_follow_links, "Follow links to files", {}, 'L');
     args_parser.add_positional_argument(files, "File(s) to stat", "file", Core::ArgsParser::Required::Yes);
     args_parser.parse(arguments);
 

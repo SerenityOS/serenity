@@ -22,7 +22,7 @@ void UsersMapWidget::get_users()
     HashMap<ByteString, ByteString> headers;
     headers.set("User-Agent", "SerenityOS Maps");
     headers.set("Accept", "application/json");
-    URL url("https://usermap.serenityos.org/people.json");
+    URL url("https://usermap.serenityos.org/people.json"sv);
     auto request = request_client()->start_request("GET", url, headers, {});
     VERIFY(!request.is_null());
     m_request = request;
@@ -76,7 +76,7 @@ void UsersMapWidget::add_users_to_map()
 
     add_panel({ MUST(String::formatted("{} users are already registered", m_users.value().size())),
         Panel::Position::TopRight,
-        { { "https://github.com/SerenityOS/user-map" } },
+        { { "https://github.com/SerenityOS/user-map"sv } },
         "users"_string });
 }
 

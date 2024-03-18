@@ -59,7 +59,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     });
     args_parser.add_option(interactive, "Prompt before overwriting files", "interactive", 'i');
     args_parser.add_option(recursion_allowed, "Copy directories recursively", "recursive", 'R');
-    args_parser.add_option(recursion_allowed, "Same as -R", nullptr, 'r');
+    args_parser.add_option(recursion_allowed, "Same as -R", {}, 'r');
     args_parser.add_option(verbose, "Verbose", "verbose", 'v');
     args_parser.add_positional_argument(sources, "Source file paths", "source");
     args_parser.add_positional_argument(destination, "Destination file path", "destination");

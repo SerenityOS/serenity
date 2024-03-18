@@ -247,8 +247,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool keep_open = false;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(command_to_execute, "Execute this command inside the terminal", nullptr, 'e', "command");
-    args_parser.add_option(keep_open, "Keep the terminal open after the command has finished executing", nullptr, 'k');
+    args_parser.add_option(command_to_execute, "Execute this command inside the terminal", {}, 'e', "command");
+    args_parser.add_option(keep_open, "Keep the terminal open after the command has finished executing", {}, 'k');
 
     args_parser.parse(arguments);
 

@@ -79,8 +79,8 @@ ErrorOr<int> serenity_main(Main::Arguments args)
             return true;
         },
     });
-    args_parser.add_option(options.single_shot, "Only return one pid", nullptr, 's');
-    args_parser.add_option(options.pid_separator, "Use `separator` to separate multiple pids", nullptr, 'S', "separator");
+    args_parser.add_option(options.single_shot, "Only return one pid", {}, 's');
+    args_parser.add_option(options.pid_separator, "Use `separator` to separate multiple pids", {}, 'S', "separator");
     args_parser.add_positional_argument(options.process_name, "Process name to search for", "process-name");
 
     args_parser.parse(args);

@@ -285,7 +285,7 @@ static ErrorOr<TestResult> run_dump_test(HeadlessWebContentView& view, StringVie
     if (mode == TestMode::Layout) {
         view.on_load_finish = [&](auto const& loaded_url) {
             // This callback will be called for 'about:blank' first, then for the URL we actually want to dump
-            VERIFY(url.equals(loaded_url, URL::ExcludeFragment::Yes) || loaded_url.equals(URL("about:blank")));
+            VERIFY(url.equals(loaded_url, URL::ExcludeFragment::Yes) || loaded_url.equals(URL("about:blank"sv)));
 
             if (url.equals(loaded_url, URL::ExcludeFragment::Yes)) {
                 // NOTE: We take a screenshot here to force the lazy layout of SVG-as-image documents to happen.

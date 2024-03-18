@@ -63,28 +63,28 @@ int main(int argc, char** argv)
     args_parser.set_general_help(
         "Exercise error-handling paths of the execution environment "
         "(i.e., Kernel or UE) by crashing in many different ways.");
-    args_parser.add_option(do_all_crash_types, "Test that all (except -U) of the following crash types crash as expected (default behavior)", nullptr, 'A');
-    args_parser.add_option(do_segmentation_violation, "Perform a segmentation violation by dereferencing an invalid pointer", nullptr, 's');
-    args_parser.add_option(do_division_by_zero, "Perform a division by zero", nullptr, 'd');
-    args_parser.add_option(do_illegal_instruction, "Execute an illegal CPU instruction", nullptr, 'i');
-    args_parser.add_option(do_abort, "Call `abort()`", nullptr, 'a');
-    args_parser.add_option(do_read_from_uninitialized_malloc_memory, "Read a pointer from uninitialized malloc memory, then read from it", nullptr, 'm');
-    args_parser.add_option(do_read_from_freed_memory, "Read a pointer from memory freed using `free()`, then read from it", nullptr, 'f');
-    args_parser.add_option(do_write_to_uninitialized_malloc_memory, "Read a pointer from uninitialized malloc memory, then write to it", nullptr, 'M');
-    args_parser.add_option(do_write_to_freed_memory, "Read a pointer from memory freed using `free()`, then write to it", nullptr, 'F');
-    args_parser.add_option(do_write_to_read_only_memory, "Write to read-only memory", nullptr, 'r');
-    args_parser.add_option(do_invalid_stack_pointer_on_syscall, "Make a syscall while using an invalid stack pointer", nullptr, 'T');
-    args_parser.add_option(do_invalid_stack_pointer_on_page_fault, "Trigger a page fault while using an invalid stack pointer", nullptr, 't');
-    args_parser.add_option(do_syscall_from_writeable_memory, "Make a syscall from writeable memory", nullptr, 'S');
-    args_parser.add_option(do_legitimate_syscall, "Make a syscall from legitimate memory (but outside syscall-code mapped region)", nullptr, 'y');
-    args_parser.add_option(do_execute_non_executable_memory, "Attempt to execute non-executable memory (not mapped with PROT_EXEC)", nullptr, 'X');
-    args_parser.add_option(do_trigger_user_mode_instruction_prevention, "Attempt to trigger an x86 User Mode Instruction Prevention fault. WARNING: This test runs only when invoked manually, see #10042.", nullptr, 'U');
+    args_parser.add_option(do_all_crash_types, "Test that all (except -U) of the following crash types crash as expected (default behavior)", {}, 'A');
+    args_parser.add_option(do_segmentation_violation, "Perform a segmentation violation by dereferencing an invalid pointer", {}, 's');
+    args_parser.add_option(do_division_by_zero, "Perform a division by zero", {}, 'd');
+    args_parser.add_option(do_illegal_instruction, "Execute an illegal CPU instruction", {}, 'i');
+    args_parser.add_option(do_abort, "Call `abort()`", {}, 'a');
+    args_parser.add_option(do_read_from_uninitialized_malloc_memory, "Read a pointer from uninitialized malloc memory, then read from it", {}, 'm');
+    args_parser.add_option(do_read_from_freed_memory, "Read a pointer from memory freed using `free()`, then read from it", {}, 'f');
+    args_parser.add_option(do_write_to_uninitialized_malloc_memory, "Read a pointer from uninitialized malloc memory, then write to it", {}, 'M');
+    args_parser.add_option(do_write_to_freed_memory, "Read a pointer from memory freed using `free()`, then write to it", {}, 'F');
+    args_parser.add_option(do_write_to_read_only_memory, "Write to read-only memory", {}, 'r');
+    args_parser.add_option(do_invalid_stack_pointer_on_syscall, "Make a syscall while using an invalid stack pointer", {}, 'T');
+    args_parser.add_option(do_invalid_stack_pointer_on_page_fault, "Trigger a page fault while using an invalid stack pointer", {}, 't');
+    args_parser.add_option(do_syscall_from_writeable_memory, "Make a syscall from writeable memory", {}, 'S');
+    args_parser.add_option(do_legitimate_syscall, "Make a syscall from legitimate memory (but outside syscall-code mapped region)", {}, 'y');
+    args_parser.add_option(do_execute_non_executable_memory, "Attempt to execute non-executable memory (not mapped with PROT_EXEC)", {}, 'X');
+    args_parser.add_option(do_trigger_user_mode_instruction_prevention, "Attempt to trigger an x86 User Mode Instruction Prevention fault. WARNING: This test runs only when invoked manually, see #10042.", {}, 'U');
 #if ARCH(X86_64)
-    args_parser.add_option(do_use_io_instruction, "Use an x86 I/O instruction in userspace", nullptr, 'I');
+    args_parser.add_option(do_use_io_instruction, "Use an x86 I/O instruction in userspace", {}, 'I');
 #endif
-    args_parser.add_option(do_pledge_violation, "Violate pledge()'d promises", nullptr, 'p');
-    args_parser.add_option(do_failing_assertion, "Perform a failing assertion", nullptr, 'n');
-    args_parser.add_option(do_deref_null_refptr, "Dereference a null RefPtr", nullptr, 'R');
+    args_parser.add_option(do_pledge_violation, "Violate pledge()'d promises", {}, 'p');
+    args_parser.add_option(do_failing_assertion, "Perform a failing assertion", {}, 'n');
+    args_parser.add_option(do_deref_null_refptr, "Dereference a null RefPtr", {}, 'R');
 
     if (argc == 1) {
         do_all_crash_types = true;

@@ -36,7 +36,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 
     Core::ArgsParser args_parser;
     args_parser.add_option(display_number_of_matches, "Suppress normal output and print the number of matching processes", "count", 'c');
-    args_parser.add_option(pid_delimiter, "Set the string used to delimit multiple pids", "delimiter", 'd', nullptr);
+    args_parser.add_option(pid_delimiter, "Set the string used to delimit multiple pids", "delimiter", 'd', {});
     args_parser.add_option(case_insensitive, "Make matches case-insensitive", "ignore-case", 'i');
     args_parser.add_option(newest_only, "Select the most recently created process only", "newest", 'n');
     args_parser.add_option(oldest_only, "Select the least recently created process only", "oldest", 'o');
