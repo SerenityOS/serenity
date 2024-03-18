@@ -317,16 +317,22 @@ PDFErrorOr<ByteBuffer> Filter::decode_ccitt(ReadonlyBytes bytes, RefPtr<DictObje
     //        achieve to decode images that have it. Figure out what to do with it.
     (void)end_of_block;
 
-    if (require_end_of_line || encoded_byte_align || damaged_rows_before_error > 0)
+    if (require_end_of_line || (encoded_byte_align && k != 0) || damaged_rows_before_error > 0)
         return Error::rendering_unsupported_error("Unimplemented option for the CCITTFaxDecode Filter");
 
     ByteBuffer decoded {};
-    if (k < 0)
+    if (k < 0) {
         decoded = TRY(Gfx::CCITT::decode_ccitt_group4(bytes, columns, rows));
-    else if (k == 0)
-        return Error::rendering_unsupported_error("CCITTFaxDecode Filter Group 3, 1-D is unsupported");
-    else
+    } else if (k == 0) {
+        Gfx::CCITT::Group3Options options {
+            .require_end_of_line = require_end_of_line ? Gfx::CCITT::Group3Options::RequireEndOfLine::Yes : Gfx::CCITT::Group3Options::RequireEndOfLine::No,
+            .encoded_byte_aligned = encoded_byte_align ? Gfx::CCITT::Group3Options::EncodedByteAligned::Yes : Gfx::CCITT::Group3Options::EncodedByteAligned::No,
+        };
+
+        decoded = TRY(Gfx::CCITT::decode_ccitt_group3(bytes, columns, rows, options));
+    } else {
         return Error::rendering_unsupported_error("CCITTFaxDecode Filter Group 3, 2-D is unsupported");
+    }
 
     if (!black_is_1)
         invert_bits(decoded);
