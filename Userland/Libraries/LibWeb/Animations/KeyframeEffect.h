@@ -64,7 +64,9 @@ public:
     struct KeyFrameSet : public RefCounted<KeyFrameSet> {
         struct UseInitial { };
         struct ResolvedKeyFrame {
-            HashMap<CSS::PropertyID, Variant<UseInitial, NonnullRefPtr<CSS::StyleValue const>>> resolved_properties {};
+            // These StyleValue properties can be unresolved, as they may be generated from a @keyframes rule, well
+            // before they are applied to an element
+            HashMap<CSS::PropertyID, Variant<UseInitial, NonnullRefPtr<CSS::StyleValue const>>> properties {};
         };
         RedBlackTree<u64, ResolvedKeyFrame> keyframes_by_key;
     };

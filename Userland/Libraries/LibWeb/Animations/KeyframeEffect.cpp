@@ -551,8 +551,8 @@ void KeyframeEffect::generate_initial_and_final_frames(RefPtr<KeyFrameSet> keyfr
     //    0% or one that would be positioned earlier in the used keyframe order, add the computed value of that
     //    property on element to initial keyframe’s keyframe values.
     for (auto property : animated_properties) {
-        if (!initial_keyframe->resolved_properties.contains(property))
-            initial_keyframe->resolved_properties.set(property, KeyFrameSet::UseInitial {});
+        if (!initial_keyframe->properties.contains(property))
+            initial_keyframe->properties.set(property, KeyFrameSet::UseInitial {});
     }
 
     // 3. If initial keyframe’s keyframe values is not empty, prepend initial keyframe to keyframes.
@@ -568,8 +568,8 @@ void KeyframeEffect::generate_initial_and_final_frames(RefPtr<KeyFrameSet> keyfr
     }
 
     for (auto property : animated_properties) {
-        if (!final_keyframe->resolved_properties.contains(property))
-            final_keyframe->resolved_properties.set(property, KeyFrameSet::UseInitial {});
+        if (!final_keyframe->properties.contains(property))
+            final_keyframe->properties.set(property, KeyFrameSet::UseInitial {});
     }
 }
 
@@ -839,7 +839,7 @@ WebIDL::ExceptionOr<void> KeyframeEffect::set_keyframes(Optional<JS::Handle<JS::
         for (auto const& [property_id, property_value] : keyframe.parsed_properties()) {
             CSS::StyleComputer::for_each_property_expanding_shorthands(property_id, property_value, [&](CSS::PropertyID shorthand_id, CSS::StyleValue const& shorthand_value) {
                 m_target_properties.set(shorthand_id);
-                resolved_keyframe.resolved_properties.set(shorthand_id, NonnullRefPtr<CSS::StyleValue const> { shorthand_value });
+                resolved_keyframe.properties.set(shorthand_id, NonnullRefPtr<CSS::StyleValue const> { shorthand_value });
             });
         }
 
