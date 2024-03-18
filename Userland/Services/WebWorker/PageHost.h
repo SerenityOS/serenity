@@ -31,6 +31,7 @@ public:
     virtual void paint(Web::DevicePixelRect const&, Gfx::Bitmap&, Web::PaintOptions = {}) override;
     virtual void request_file(Web::FileRequest) override;
     virtual void schedule_repaint() override {};
+    virtual bool is_ready_to_paint() const override { return true; }
 
 private:
     explicit PageHost(ConnectionFromClient&);
