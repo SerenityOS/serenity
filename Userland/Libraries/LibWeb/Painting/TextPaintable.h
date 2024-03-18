@@ -28,6 +28,8 @@ public:
     CSSPixels text_decoration_thickness() const { return m_text_decoration_thickness; }
 
 private:
+    virtual bool is_text_paintable() const override { return true; }
+
     explicit TextPaintable(Layout::TextNode const&);
 
     CSSPixels m_text_decoration_thickness { 0 };

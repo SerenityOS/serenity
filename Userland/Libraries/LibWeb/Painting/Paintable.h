@@ -200,6 +200,7 @@ public:
     [[nodiscard]] virtual bool is_paintable_with_lines() const { return false; }
     [[nodiscard]] virtual bool is_inline_paintable() const { return false; }
     [[nodiscard]] virtual bool is_svg_paintable() const { return false; }
+    [[nodiscard]] virtual bool is_text_paintable() const { return false; }
 
     DOM::Document const& document() const { return layout_node().document(); }
     DOM::Document& document() { return layout_node().document(); }
@@ -255,5 +256,8 @@ inline bool Paintable::fast_is<PaintableBox>() const { return is_paintable_box()
 
 template<>
 inline bool Paintable::fast_is<PaintableWithLines>() const { return is_paintable_with_lines(); }
+
+template<>
+inline bool Paintable::fast_is<TextPaintable>() const { return is_text_paintable(); }
 
 }
