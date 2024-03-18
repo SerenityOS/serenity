@@ -105,6 +105,7 @@ function(copy_resource_set subdir)
 
         add_custom_command(
             OUTPUT ${outputs}
+            DEPENDS ${inputs}
             COMMAND "${CMAKE_COMMAND}" -E make_directory "${COPY_DESTINATION}/${subdir}"
             COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${inputs}" "${COPY_DESTINATION}/${subdir}"
             COMMAND_EXPAND_LISTS
