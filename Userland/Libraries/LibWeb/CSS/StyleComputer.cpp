@@ -715,7 +715,7 @@ void StyleComputer::set_all_properties(DOM::Element& element, Optional<CSS::Sele
 
         NonnullRefPtr<StyleValue> property_value = value;
         if (property_value->is_unresolved())
-            property_value = Parser::Parser::resolve_unresolved_style_value({}, Parser::ParsingContext { document }, element, pseudo_element, property_id, property_value->as_unresolved());
+            property_value = Parser::Parser::resolve_unresolved_style_value(Parser::ParsingContext { document }, element, pseudo_element, property_id, property_value->as_unresolved());
         if (!property_value->is_unresolved())
             set_property_expanding_shorthands(style, property_id, property_value, declaration, properties_for_revert);
 
@@ -741,7 +741,7 @@ void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& e
 
             auto property_value = property.value;
             if (property.value->is_unresolved())
-                property_value = Parser::Parser::resolve_unresolved_style_value({}, Parser::ParsingContext { document() }, element, pseudo_element, property.property_id, property.value->as_unresolved());
+                property_value = Parser::Parser::resolve_unresolved_style_value(Parser::ParsingContext { document() }, element, pseudo_element, property.property_id, property.value->as_unresolved());
             if (!property_value->is_unresolved())
                 set_property_expanding_shorthands(style, property.property_id, property_value, &match.rule->declaration(), properties_for_revert, important == Important::Yes ? StyleProperties::Important::Yes : StyleProperties::Important::No);
         }
@@ -760,7 +760,7 @@ void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& e
 
                 auto property_value = property.value;
                 if (property.value->is_unresolved())
-                    property_value = Parser::Parser::resolve_unresolved_style_value({}, Parser::ParsingContext { document() }, element, pseudo_element, property.property_id, property.value->as_unresolved());
+                    property_value = Parser::Parser::resolve_unresolved_style_value(Parser::ParsingContext { document() }, element, pseudo_element, property.property_id, property.value->as_unresolved());
                 if (!property_value->is_unresolved())
                     set_property_expanding_shorthands(style, property.property_id, property_value, inline_style, properties_for_revert, important == Important::Yes ? StyleProperties::Important::Yes : StyleProperties::Important::No);
             }
@@ -1498,7 +1498,7 @@ void StyleComputer::compute_cascaded_values(StyleProperties& style, DOM::Element
                 auto property_id = (CSS::PropertyID)i;
                 auto& property = style.m_property_values[i];
                 if (property.style && property.style->is_unresolved())
-                    property.style = Parser::Parser::resolve_unresolved_style_value({}, Parser::ParsingContext { document() }, element, pseudo_element, property_id, property.style->as_unresolved());
+                    property.style = Parser::Parser::resolve_unresolved_style_value(Parser::ParsingContext { document() }, element, pseudo_element, property_id, property.style->as_unresolved());
             }
         }
     }

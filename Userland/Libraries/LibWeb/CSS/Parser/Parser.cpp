@@ -6929,7 +6929,7 @@ bool Parser::has_ignored_vendor_prefix(StringView string)
     return true;
 }
 
-NonnullRefPtr<StyleValue> Parser::resolve_unresolved_style_value(Badge<StyleComputer>, ParsingContext const& context, DOM::Element& element, Optional<Selector::PseudoElement::Type> pseudo_element, PropertyID property_id, UnresolvedStyleValue const& unresolved)
+NonnullRefPtr<StyleValue> Parser::resolve_unresolved_style_value(ParsingContext const& context, DOM::Element& element, Optional<Selector::PseudoElement::Type> pseudo_element, PropertyID property_id, UnresolvedStyleValue const& unresolved)
 {
     // Unresolved always contains a var() or attr(), unless it is a custom property's value, in which case we shouldn't be trying
     // to produce a different StyleValue from it.
