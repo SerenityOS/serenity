@@ -59,8 +59,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto database = TRY(WebView::Database::create(move(sql_server_paths)));
     auto cookie_jar = TRY(WebView::CookieJar::create(*database));
 
-    URL new_tab_page_url = Browser::default_new_tab_url;
-    Vector<URL> initial_urls;
+    URL::URL new_tab_page_url = Browser::default_new_tab_url;
+    Vector<URL::URL> initial_urls;
 
     for (auto const& raw_url : raw_urls) {
         if (auto url = WebView::sanitize_url(raw_url); url.has_value())

@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/URL.h>
 #include <AK/Variant.h>
+#include <LibURL/URL.h>
 #include <LibWeb/CSS/CalculatedOr.h>
 
 namespace Web::HTML {

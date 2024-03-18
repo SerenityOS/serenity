@@ -20,7 +20,6 @@
 #include <AK/StringBuilder.h>
 #include <AK/TemporaryChange.h>
 #include <AK/Tuple.h>
-#include <AK/URL.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/Environment.h>
@@ -31,6 +30,7 @@
 #include <LibCore/Timer.h>
 #include <LibFileSystem/FileSystem.h>
 #include <LibLine/Editor.h>
+#include <LibURL/URL.h>
 #include <Shell/PosixParser.h>
 #include <errno.h>
 #include <fcntl.h>

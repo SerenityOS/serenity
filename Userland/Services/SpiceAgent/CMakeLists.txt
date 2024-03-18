@@ -11,5 +11,5 @@ set(SOURCES
 )
 
 serenity_bin(SpiceAgent)
-target_link_libraries(SpiceAgent PRIVATE LibCore LibDesktop LibFileSystem LibGfx LibGUI LibMain)
+target_link_libraries(SpiceAgent PRIVATE LibCore LibDesktop LibFileSystem LibGfx LibGUI LibMain LibURL)
 add_dependencies(SpiceAgent Clipboard)

@@ -314,8 +314,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> Document::create_and_initialize(
         auto const& referrer = navigation_params.request->referrer();
 
         // 3. If referrer is a URL record, then set document's referrer to the serialization of referrer.
-        if (referrer.has<URL>()) {
-            document->m_referrer = MUST(String::from_byte_string(referrer.get<URL>().serialize()));
+        if (referrer.has<URL::URL>()) {
+            document->m_referrer = MUST(String::from_byte_string(referrer.get<URL::URL>().serialize()));
         }
     }
 
@@ -339,12 +339,12 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> Document::construct_impl(JS::Rea
     return Document::create(realm);
 }
 
-JS::NonnullGCPtr<Document> Document::create(JS::Realm& realm, URL const& url)
+JS::NonnullGCPtr<Document> Document::create(JS::Realm& realm, URL::URL const& url)
 {
     return realm.heap().allocate<Document>(realm, realm, url);
 }
 
-Document::Document(JS::Realm& realm, const URL& url)
+Document::Document(JS::Realm& realm, const URL::URL& url)
     : ParentNode(realm, *this, NodeType::DOCUMENT_NODE)
     , m_page(Bindings::host_defined_page(realm))
     , m_style_computer(make<CSS::StyleComputer>(*this))
@@ -945,7 +945,7 @@ JS::GCPtr<HTML::HTMLBaseElement const> Document::first_base_element_with_href_in
 }
 
 // https://html.spec.whatwg.org/multipage/urls-and-fetching.html#fallback-base-url
-URL Document::fallback_base_url() const
+URL::URL Document::fallback_base_url() const
 {
     // 1. If document is an iframe srcdoc document, then:
     if (HTML::url_matches_about_srcdoc(m_url)) {
@@ -965,7 +965,7 @@ URL Document::fallback_base_url() const
 }
 
 // https://html.spec.whatwg.org/multipage/urls-and-fetching.html#document-base-url
-URL Document::base_url() const
+URL::URL Document::base_url() const
 {
     // 1. If there is no base element that has an href attribute in the Document, then return the Document's fallback base URL.
     auto base_element = first_base_element_with_href_in_tree_order();
@@ -977,7 +977,7 @@ URL Document::base_url() const
 }
 
 // https://html.spec.whatwg.org/multipage/urls-and-fetching.html#parse-a-url
-URL Document::parse_url(StringView url) const
+URL::URL Document::parse_url(StringView url) const
 {
     // FIXME: Pass in document's character encoding.
     return base_url().complete_url(url);
@@ -2747,7 +2747,7 @@ String Document::domain() const
         return String {};
 
     // 3. Return effectiveDomain, serialized.
-    return MUST(URLParser::serialize_host(effective_domain.release_value()));
+    return MUST(URL::Parser::serialize_host(effective_domain.release_value()));
 }
 
 void Document::set_domain(String const& domain)
@@ -3803,7 +3803,7 @@ void Document::update_for_history_step_application(JS::NonnullGCPtr<HTML::Sessio
     //      The doNotReactivate argument distinguishes between these two cases.
     if (documents_entry_changed) {
         // 1. Let oldURL be document's latest entry's URL.
-        auto old_url = m_latest_entry ? m_latest_entry->url : URL {};
+        auto old_url = m_latest_entry ? m_latest_entry->url : URL::URL {};
 
         // 2. Set document's latest entry to entry.
         m_latest_entry = entry;
@@ -3866,7 +3866,7 @@ void Document::update_for_history_step_application(JS::NonnullGCPtr<HTML::Sessio
     }
 }
 
-HashMap<URL, JS::GCPtr<HTML::SharedImageRequest>>& Document::shared_image_requests()
+HashMap<URL::URL, JS::GCPtr<HTML::SharedImageRequest>>& Document::shared_image_requests()
 {
     return m_shared_image_requests;
 }

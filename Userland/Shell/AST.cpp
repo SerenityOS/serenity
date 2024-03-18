@@ -12,9 +12,9 @@
 #include <AK/ScopedValueRollback.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
-#include <AK/URL.h>
 #include <LibCore/EventLoop.h>
 #include <LibFileSystem/FileSystem.h>
+#include <LibURL/URL.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>

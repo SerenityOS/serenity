@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include <AK/URL.h>
+#include <LibURL/URL.h>
 #include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/DOMURL/URLSearchParams.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
@@ -20,7 +20,7 @@ class DOMURL : public Bindings::PlatformObject {
     JS_DECLARE_ALLOCATOR(DOMURL);
 
 public:
-    [[nodiscard]] static JS::NonnullGCPtr<DOMURL> create(JS::Realm&, URL, JS::NonnullGCPtr<URLSearchParams> query);
+    [[nodiscard]] static JS::NonnullGCPtr<DOMURL> create(JS::Realm&, URL::URL, JS::NonnullGCPtr<URLSearchParams> query);
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMURL>> construct_impl(JS::Realm&, String const& url, Optional<String> const& base = {});
 
     virtual ~DOMURL() override;
@@ -79,22 +79,22 @@ public:
     void set_query(Badge<URLSearchParams>, Optional<String> query) { m_url.set_query(move(query)); }
 
 private:
-    DOMURL(JS::Realm&, URL, JS::NonnullGCPtr<URLSearchParams> query);
+    DOMURL(JS::Realm&, URL::URL, JS::NonnullGCPtr<URLSearchParams> query);
 
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
-    URL m_url;
+    URL::URL m_url;
     JS::NonnullGCPtr<URLSearchParams> m_query;
 };
 
-HTML::Origin url_origin(URL const&);
+HTML::Origin url_origin(URL::URL const&);
 bool host_is_domain(URL::Host const&);
 
 // https://url.spec.whatwg.org/#potentially-strip-trailing-spaces-from-an-opaque-path
 void strip_trailing_spaces_from_an_opaque_path(DOMURL& url);
 
 // https://url.spec.whatwg.org/#concept-url-parser
-URL parse(StringView input, Optional<URL> const& base_url = {});
+URL::URL parse(StringView input, Optional<URL::URL> const& base_url = {});
 
 }

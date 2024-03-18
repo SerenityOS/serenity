@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/URL.h>
+#include <LibURL/URL.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/EventLoop/Task.h>
 #include <LibWeb/HTML/Navigable.h>
@@ -69,7 +69,7 @@ private:
     void update_href();
     bool cannot_navigate() const;
 
-    Optional<URL> m_url;
+    Optional<URL::URL> m_url;
 };
 
 }

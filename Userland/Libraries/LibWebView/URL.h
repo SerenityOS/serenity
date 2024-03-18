@@ -8,7 +8,7 @@
 
 #include <AK/Optional.h>
 #include <AK/StringView.h>
-#include <AK/URL.h>
+#include <LibURL/URL.h>
 
 namespace WebView {
 
@@ -19,7 +19,7 @@ enum class AppendTLD {
     No,
     Yes,
 };
-Optional<URL> sanitize_url(StringView, Optional<StringView> search_engine = {}, AppendTLD = AppendTLD::No);
+Optional<URL::URL> sanitize_url(StringView, Optional<StringView> search_engine = {}, AppendTLD = AppendTLD::No);
 
 struct URLParts {
     StringView scheme_and_subdomain;
@@ -34,7 +34,7 @@ enum class URLType {
     Telephone,
     Other,
 };
-URLType url_type(URL const&);
-String url_text_to_copy(URL const&);
+URLType url_type(URL::URL const&);
+String url_text_to_copy(URL::URL const&);
 
 }

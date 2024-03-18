@@ -75,7 +75,7 @@ private:
         //          Null or a source set
         // base URL
         //      A URL
-        URL base_url;
+        URL::URL base_url;
         // origin
         //      An origin
         HTML::Origin origin;

@@ -15,6 +15,7 @@
 #include <LibIPC/Concepts.h>
 #include <LibIPC/Forward.h>
 #include <LibIPC/Message.h>
+#include <LibURL/Forward.h>
 
 namespace IPC {
 
@@ -100,7 +101,7 @@ template<>
 ErrorOr<void> encode(Encoder&, UnixDateTime const&);
 
 template<>
-ErrorOr<void> encode(Encoder&, URL const&);
+ErrorOr<void> encode(Encoder&, URL::URL const&);
 
 template<>
 ErrorOr<void> encode(Encoder&, File const&);

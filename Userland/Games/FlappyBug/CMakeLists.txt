@@ -10,4 +10,4 @@ set(SOURCES
 )
 
 serenity_app(FlappyBug ICON app-flappybug)
-target_link_libraries(FlappyBug PRIVATE LibCore LibGfx LibGUI LibConfig LibMain LibDesktop)
+target_link_libraries(FlappyBug PRIVATE LibCore LibGfx LibGUI LibConfig LibMain LibDesktop LibURL)

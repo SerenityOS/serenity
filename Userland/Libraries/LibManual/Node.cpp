@@ -11,9 +11,9 @@
 #include <AK/LexicalPath.h>
 #include <AK/Optional.h>
 #include <AK/StringView.h>
-#include <AK/URL.h>
 #include <LibFileSystem/FileSystem.h>
 #include <LibManual/Path.h>
+#include <LibURL/URL.h>
 
 namespace Manual {
 
@@ -80,7 +80,7 @@ ErrorOr<NonnullRefPtr<PageNode const>> Node::try_create_from_query(Vector<String
     return Error::from_string_literal("Page doesn't exist in section");
 }
 
-ErrorOr<NonnullRefPtr<Node const>> Node::try_find_from_help_url(URL const& url)
+ErrorOr<NonnullRefPtr<Node const>> Node::try_find_from_help_url(URL::URL const& url)
 {
     if (url.host() != "man"_string)
         return Error::from_string_view("Bad help operation"sv);

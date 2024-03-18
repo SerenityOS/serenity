@@ -6,10 +6,10 @@
 
 #include "FileTransferOperation.h"
 #include "SpiceAgent.h"
-#include <AK/URL.h>
 #include <LibCore/StandardPaths.h>
 #include <LibDesktop/Launcher.h>
 #include <LibFileSystem/FileSystem.h>
+#include <LibURL/URL.h>
 
 namespace SpiceAgent {
 

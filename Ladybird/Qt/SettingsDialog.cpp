@@ -8,7 +8,7 @@
 #include "SettingsDialog.h"
 #include "Settings.h"
 #include "StringUtils.h"
-#include <AK/URL.h>
+#include <LibURL/URL.h>
 #include <LibWebView/SearchEngine.h>
 #include <QLabel>
 #include <QMenu>
@@ -39,11 +39,11 @@ SettingsDialog::SettingsDialog(QMainWindow* window)
     m_new_tab_page->setText(Settings::the()->new_tab_page());
     QObject::connect(m_new_tab_page, &QLineEdit::textChanged, this, [this] {
         auto url_string = ak_string_from_qstring(m_new_tab_page->text());
-        m_new_tab_page->setStyleSheet(URL(url_string).is_valid() ? "" : "border: 1px solid red;");
+        m_new_tab_page->setStyleSheet(URL::URL(url_string).is_valid() ? "" : "border: 1px solid red;");
     });
     QObject::connect(m_new_tab_page, &QLineEdit::editingFinished, this, [this] {
         auto url_string = ak_string_from_qstring(m_new_tab_page->text());
-        if (URL(url_string).is_valid())
+        if (URL::URL(url_string).is_valid())
             Settings::the()->set_new_tab_page(m_new_tab_page->text());
     });
     QObject::connect(m_new_tab_page, &QLineEdit::returnPressed, this, [this] {

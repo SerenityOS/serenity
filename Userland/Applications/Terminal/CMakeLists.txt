@@ -9,4 +9,4 @@ set(SOURCES
 )
 
 serenity_app(Terminal ICON app-terminal)
-target_link_libraries(Terminal PRIVATE LibConfig LibCore LibFileSystem LibDesktop LibGfx LibGUI LibVT LibMain)
+target_link_libraries(Terminal PRIVATE LibConfig LibCore LibFileSystem LibDesktop LibGfx LibGUI LibVT LibMain LibURL)

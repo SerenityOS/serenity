@@ -5,8 +5,8 @@
  */
 
 #include <AK/StringBuilder.h>
-#include <AK/URL.h>
 #include <LibGemini/GeminiRequest.h>
+#include <LibURL/URL.h>
 
 namespace Gemini {
 
@@ -20,7 +20,7 @@ ErrorOr<ByteBuffer> GeminiRequest::to_raw_request() const
 
 Optional<GeminiRequest> GeminiRequest::from_raw_request(ByteBuffer const& raw_request)
 {
-    URL url = StringView(raw_request);
+    URL::URL url = StringView(raw_request);
     if (!url.is_valid())
         return {};
     GeminiRequest request;

@@ -10,8 +10,8 @@
 #include <AK/ByteString.h>
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
-#include <AK/URL.h>
 #include <LibHTTP/Job.h>
+#include <LibURL/URL.h>
 #include <RequestServer/ConnectionFromClient.h>
 #include <RequestServer/HttpRequest.h>
 #include <RequestServer/Protocol.h>
@@ -31,7 +31,7 @@ public:
 private:
     HttpProtocol();
 
-    virtual OwnPtr<Request> start_request(i32, ConnectionFromClient&, ByteString const& method, const URL&, HashMap<ByteString, ByteString> const& headers, ReadonlyBytes body, Core::ProxyData proxy_data = {}) override;
+    virtual OwnPtr<Request> start_request(i32, ConnectionFromClient&, ByteString const& method, const URL::URL&, HashMap<ByteString, ByteString> const& headers, ReadonlyBytes body, Core::ProxyData proxy_data = {}) override;
 };
 
 }

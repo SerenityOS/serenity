@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/URLParser.h>
+#include <LibURL/Parser.h>
 #include <LibWeb/HTML/WorkerGlobalScope.h>
 #include <LibWeb/HTML/WorkerLocation.h>
 
@@ -71,7 +71,7 @@ WebIDL::ExceptionOr<String> WorkerLocation::hostname() const
         return String {};
 
     // 3. Return host, serialized.
-    return TRY_OR_THROW_OOM(vm, URLParser::serialize_host(host));
+    return TRY_OR_THROW_OOM(vm, URL::Parser::serialize_host(host));
 }
 
 // https://html.spec.whatwg.org/multipage/workers.html#dom-workerlocation-port

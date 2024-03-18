@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/RefCounted.h>
-#include <AK/URL.h>
+#include <LibURL/URL.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/Scripting/SerializedEnvironmentSettingsObject.h>
@@ -17,7 +17,7 @@ namespace WebWorker {
 
 class DedicatedWorkerHost : public RefCounted<DedicatedWorkerHost> {
 public:
-    explicit DedicatedWorkerHost(URL url, String type);
+    explicit DedicatedWorkerHost(URL::URL url, String type);
     ~DedicatedWorkerHost();
 
     void run(JS::NonnullGCPtr<Web::Page>, Web::HTML::TransferDataHolder message_port_data, Web::HTML::SerializedEnvironmentSettingsObject const&);
@@ -25,7 +25,7 @@ public:
 private:
     RefPtr<Web::HTML::WorkerDebugConsoleClient> m_console;
 
-    URL m_url;
+    URL::URL m_url;
     String m_type;
 };
 

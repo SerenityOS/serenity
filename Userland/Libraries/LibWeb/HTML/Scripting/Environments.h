@@ -7,8 +7,8 @@
 
 #pragma once
 
-#include <AK/URL.h>
 #include <LibJS/Forward.h>
+#include <LibURL/URL.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/Scripting/ModuleMap.h>
@@ -24,10 +24,10 @@ struct Environment {
     String id;
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#concept-environment-creation-url
-    URL creation_url;
+    URL::URL creation_url;
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#concept-environment-top-level-creation-url
-    URL top_level_creation_url;
+    URL::URL top_level_creation_url;
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#concept-environment-top-level-origin
     Origin top_level_origin;
@@ -68,7 +68,7 @@ struct EnvironmentSettingsObject
     virtual String api_url_character_encoding() = 0;
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#api-base-url
-    virtual URL api_base_url() = 0;
+    virtual URL::URL api_base_url() = 0;
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#concept-settings-object-origin
     virtual Origin origin() = 0;
@@ -79,7 +79,7 @@ struct EnvironmentSettingsObject
     // https://html.spec.whatwg.org/multipage/webappapis.html#concept-settings-object-cross-origin-isolated-capability
     virtual CanUseCrossOriginIsolatedAPIs cross_origin_isolated_capability() = 0;
 
-    URL parse_url(StringView);
+    URL::URL parse_url(StringView);
 
     JS::Realm& realm();
     JS::Object& global_object();

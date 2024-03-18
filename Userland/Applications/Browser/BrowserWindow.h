@@ -29,8 +29,8 @@ public:
 
     GUI::TabWidget& tab_widget();
     Tab& active_tab();
-    Tab& create_new_tab(URL const&, Web::HTML::ActivateTab activate);
-    void create_new_window(URL const&);
+    Tab& create_new_tab(URL::URL const&, Web::HTML::ActivateTab activate);
+    void create_new_window(URL::URL const&);
 
     GUI::Action& go_back_action() { return *m_go_back_action; }
     GUI::Action& go_forward_action() { return *m_go_forward_action; }
@@ -51,7 +51,7 @@ public:
     void broadcast_window_size(Gfx::IntSize);
 
 private:
-    BrowserWindow(WebView::CookieJar&, Vector<URL> const&, StringView const);
+    BrowserWindow(WebView::CookieJar&, Vector<URL::URL> const&, StringView const);
 
     void build_menus(StringView const);
     ErrorOr<void> load_search_engines(GUI::Menu& settings_menu);

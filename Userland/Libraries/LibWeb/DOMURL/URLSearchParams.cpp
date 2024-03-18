@@ -7,9 +7,9 @@
 
 #include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
-#include <AK/URLParser.h>
 #include <AK/Utf8View.h>
 #include <LibTextCodec/Decoder.h>
+#include <LibURL/Parser.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/DOMURL/DOMURL.h>
@@ -54,12 +54,12 @@ ErrorOr<String> url_encode(Vector<QueryParam> const& tuples, StringView encoding
         // 1. Assert: tuple’s name and tuple’s value are scalar value strings.
 
         // 2. Let name be the result of running percent-encode after encoding with encoding, tuple’s name, the application/x-www-form-urlencoded percent-encode set, and true.
-        // FIXME: URLParser does not currently implement encoding.
-        auto name = TRY(URLParser::percent_encode_after_encoding(tuple.name, URL::PercentEncodeSet::ApplicationXWWWFormUrlencoded, true));
+        // FIXME: URL::Parser does not currently implement encoding.
+        auto name = TRY(URL::Parser::percent_encode_after_encoding(tuple.name, URL::PercentEncodeSet::ApplicationXWWWFormUrlencoded, true));
 
         // 3. Let value be the result of running percent-encode after encoding with encoding, tuple’s value, the application/x-www-form-urlencoded percent-encode set, and true.
-        // FIXME: URLParser does not currently implement encoding.
-        auto value = TRY(URLParser::percent_encode_after_encoding(tuple.value, URL::PercentEncodeSet::ApplicationXWWWFormUrlencoded, true));
+        // FIXME: URL::Parser does not currently implement encoding.
+        auto value = TRY(URL::Parser::percent_encode_after_encoding(tuple.value, URL::PercentEncodeSet::ApplicationXWWWFormUrlencoded, true));
 
         // 4. If output is not the empty string, then append U+0026 (&) to output.
         if (!output.is_empty())

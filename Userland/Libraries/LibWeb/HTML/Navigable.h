@@ -125,7 +125,7 @@ public:
         Function<void()> completion_steps = [] {});
 
     struct NavigateParams {
-        URL const& url;
+        URL::URL const& url;
         JS::NonnullGCPtr<DOM::Document> source_document;
         Variant<Empty, String, POSTResource> document_resource = Empty {};
         JS::GCPtr<Fetch::Infrastructure::Response> response = nullptr;
@@ -139,10 +139,10 @@ public:
 
     WebIDL::ExceptionOr<void> navigate(NavigateParams);
 
-    WebIDL::ExceptionOr<void> navigate_to_a_fragment(URL const&, HistoryHandlingBehavior, UserNavigationInvolvement, Optional<SerializationRecord> navigation_api_state, String navigation_id);
+    WebIDL::ExceptionOr<void> navigate_to_a_fragment(URL::URL const&, HistoryHandlingBehavior, UserNavigationInvolvement, Optional<SerializationRecord> navigation_api_state, String navigation_id);
 
-    WebIDL::ExceptionOr<JS::GCPtr<DOM::Document>> evaluate_javascript_url(URL const&, Origin const& new_document_origin, String navigation_id);
-    WebIDL::ExceptionOr<void> navigate_to_a_javascript_url(URL const&, HistoryHandlingBehavior, Origin const& initiator_origin, CSPNavigationType csp_navigation_type, String navigation_id);
+    WebIDL::ExceptionOr<JS::GCPtr<DOM::Document>> evaluate_javascript_url(URL::URL const&, Origin const& new_document_origin, String navigation_id);
+    WebIDL::ExceptionOr<void> navigate_to_a_javascript_url(URL::URL const&, HistoryHandlingBehavior, Origin const& initiator_origin, CSPNavigationType csp_navigation_type, String navigation_id);
 
     bool allowed_by_sandboxing_to_navigate(Navigable const& target, SourceSnapshotParams const&);
 
@@ -229,9 +229,9 @@ private:
 
 HashTable<Navigable*>& all_navigables();
 
-bool navigation_must_be_a_replace(URL const& url, DOM::Document const& document);
+bool navigation_must_be_a_replace(URL::URL const& url, DOM::Document const& document);
 void finalize_a_cross_document_navigation(JS::NonnullGCPtr<Navigable>, HistoryHandlingBehavior, JS::NonnullGCPtr<SessionHistoryEntry>);
-void perform_url_and_history_update_steps(DOM::Document& document, URL new_url, Optional<SerializationRecord> = {}, HistoryHandlingBehavior history_handling = HistoryHandlingBehavior::Reload);
+void perform_url_and_history_update_steps(DOM::Document& document, URL::URL new_url, Optional<SerializationRecord> = {}, HistoryHandlingBehavior history_handling = HistoryHandlingBehavior::Reload);
 UserNavigationInvolvement user_navigation_involvement(DOM::Event const&);
 
 }

@@ -8,11 +8,11 @@
 #pragma once
 
 #include <AK/Optional.h>
-#include <AK/URL.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Widget.h>
 #include <LibGfx/ShareableBitmap.h>
 #include <LibHTTP/Job.h>
+#include <LibURL/URL.h>
 #include <LibWeb/Forward.h>
 #include <LibWebView/History.h>
 #include <LibWebView/ViewImplementation.h>
@@ -38,14 +38,14 @@ class Tab final : public GUI::Widget {
 public:
     virtual ~Tab() override;
 
-    URL url() const;
+    URL::URL url() const;
 
     enum class LoadType {
         Normal,
         HistoryNavigation,
     };
 
-    void load(URL const&, LoadType = LoadType::Normal);
+    void load(URL::URL const&, LoadType = LoadType::Normal);
 
     void reload();
     void go_back(int steps = 1);
@@ -64,11 +64,11 @@ public:
     void window_size_changed(Gfx::IntSize);
 
     Function<void(ByteString const&)> on_title_change;
-    Function<void(const URL&)> on_tab_open_request;
+    Function<void(const URL::URL&)> on_tab_open_request;
     Function<void(Tab&)> on_activate_tab_request;
     Function<void(Tab&)> on_tab_close_request;
     Function<void(Tab&)> on_tab_close_other_request;
-    Function<void(const URL&)> on_window_open_request;
+    Function<void(const URL::URL&)> on_window_open_request;
     Function<void(Gfx::Bitmap const&)> on_favicon_change;
     Function<Vector<Web::Cookie::Cookie>()> on_get_cookies_entries;
     Function<OrderedHashMap<String, String>()> on_get_local_storage_entries;
@@ -104,8 +104,8 @@ private:
     void update_actions();
     ErrorOr<void> bookmark_current_url();
     void update_bookmark_button(StringView url);
-    void start_download(const URL& url);
-    void view_source(const URL& url, ByteString const& source);
+    void start_download(const URL::URL& url);
+    void view_source(const URL::URL& url, ByteString const& source);
     void update_status(Optional<String> text_override = {}, i32 count_waiting = 0);
     void close_sub_widgets();
 
@@ -129,11 +129,11 @@ private:
     RefPtr<GUI::Menu> m_link_context_menu;
     RefPtr<GUI::Action> m_link_context_menu_default_action;
     RefPtr<GUI::Action> m_link_copy_action;
-    URL m_link_context_menu_url;
+    URL::URL m_link_context_menu_url;
 
     RefPtr<GUI::Menu> m_image_context_menu;
     Gfx::ShareableBitmap m_image_context_menu_bitmap;
-    URL m_image_context_menu_url;
+    URL::URL m_image_context_menu_url;
 
     RefPtr<GUI::Menu> m_audio_context_menu;
     RefPtr<GUI::Menu> m_video_context_menu;
@@ -141,7 +141,7 @@ private:
     RefPtr<GUI::Action> m_media_context_menu_mute_unmute_action;
     RefPtr<GUI::Action> m_media_context_menu_controls_action;
     RefPtr<GUI::Action> m_media_context_menu_loop_action;
-    URL m_media_context_menu_url;
+    URL::URL m_media_context_menu_url;
 
     RefPtr<GUI::Menu> m_tab_context_menu;
 
@@ -157,7 +157,7 @@ private:
     ByteString m_title;
     RefPtr<Gfx::Bitmap const> m_icon;
 
-    Optional<URL> m_navigating_url;
+    Optional<URL::URL> m_navigating_url;
 
     bool m_loaded { false };
     bool m_is_history_navigation { false };

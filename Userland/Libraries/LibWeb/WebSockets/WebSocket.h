@@ -8,8 +8,8 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
-#include <AK/URL.h>
 #include <LibCore/EventReceiver.h>
+#include <LibURL/URL.h>
 #include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/DOM/EventTarget.h>
 #include <LibWeb/Forward.h>
@@ -44,7 +44,7 @@ public:
     virtual ~WebSocket() override;
 
     WebIDL::ExceptionOr<String> url() const { return TRY_OR_THROW_OOM(vm(), m_url.to_string()); }
-    void set_url(URL url) { m_url = move(url); }
+    void set_url(URL::URL url) { m_url = move(url); }
 
 #undef __ENUMERATE
 #define __ENUMERATE(attribute_name, event_name)       \
@@ -73,9 +73,9 @@ private:
 
     virtual void initialize(JS::Realm&) override;
 
-    ErrorOr<void> establish_web_socket_connection(URL& url_record, Vector<String>& protocols, HTML::EnvironmentSettingsObject& client);
+    ErrorOr<void> establish_web_socket_connection(URL::URL& url_record, Vector<String>& protocols, HTML::EnvironmentSettingsObject& client);
 
-    URL m_url;
+    URL::URL m_url;
     String m_binary_type { "blob"_string };
     RefPtr<WebSocketClientSocket> m_websocket;
 };

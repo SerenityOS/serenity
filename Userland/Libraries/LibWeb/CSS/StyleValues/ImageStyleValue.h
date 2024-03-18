@@ -9,9 +9,9 @@
 
 #pragma once
 
-#include <AK/URL.h>
 #include <LibJS/Heap/Cell.h>
 #include <LibJS/Heap/Handle.h>
+#include <LibURL/URL.h>
 #include <LibWeb/CSS/Enums.h>
 #include <LibWeb/CSS/StyleValues/AbstractImageStyleValue.h>
 #include <LibWeb/HTML/SharedImageRequest.h>
@@ -22,7 +22,7 @@ class ImageStyleValue final
     : public AbstractImageStyleValue
     , public Weakable<ImageStyleValue> {
 public:
-    static ValueComparingNonnullRefPtr<ImageStyleValue> create(URL const& url)
+    static ValueComparingNonnullRefPtr<ImageStyleValue> create(URL::URL const& url)
     {
         return adopt_ref(*new (nothrow) ImageStyleValue(url));
     }
@@ -54,14 +54,14 @@ public:
     JS::GCPtr<HTML::DecodedImageData> image_data() const;
 
 private:
-    ImageStyleValue(URL const&);
+    ImageStyleValue(URL::URL const&);
 
     JS::GCPtr<HTML::SharedImageRequest> m_image_request;
 
     void animate();
     Gfx::ImmutableBitmap const* bitmap(size_t frame_index, Gfx::IntSize = {}) const;
 
-    URL m_url;
+    URL::URL m_url;
     WeakPtr<DOM::Document> m_document;
 
     size_t m_current_frame_index { 0 };

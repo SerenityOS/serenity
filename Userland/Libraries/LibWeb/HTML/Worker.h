@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/RefCounted.h>
-#include <AK/URLParser.h>
+#include <LibURL/Parser.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/MessageEvent.h>
@@ -69,7 +69,7 @@ private:
 
     JS::GCPtr<WorkerAgent> m_agent;
 
-    void run_a_worker(URL& url, EnvironmentSettingsObject& outside_settings, JS::GCPtr<MessagePort> outside_port, WorkerOptions const& options);
+    void run_a_worker(URL::URL& url, EnvironmentSettingsObject& outside_settings, JS::GCPtr<MessagePort> outside_port, WorkerOptions const& options);
 };
 
 }

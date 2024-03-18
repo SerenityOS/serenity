@@ -6,7 +6,6 @@
 
 #include "MainWidget.h"
 #include "WordGame.h"
-#include <AK/URL.h>
 #include <LibConfig/Client.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
@@ -20,6 +19,7 @@
 #include <LibGUI/Statusbar.h>
 #include <LibGUI/Window.h>
 #include <LibMain/Main.h>
+#include <LibURL/URL.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {

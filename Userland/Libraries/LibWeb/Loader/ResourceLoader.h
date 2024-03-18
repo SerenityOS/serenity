@@ -10,9 +10,9 @@
 #include <AK/ByteString.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
-#include <AK/URL.h>
 #include <LibCore/EventReceiver.h>
 #include <LibCore/Proxy.h>
+#include <LibURL/URL.h>
 #include <LibWeb/Loader/Resource.h>
 #include <LibWeb/Page/Page.h>
 
@@ -97,11 +97,11 @@ class ResourceLoaderConnector : public RefCounted<ResourceLoaderConnector> {
 public:
     virtual ~ResourceLoaderConnector();
 
-    virtual void prefetch_dns(URL const&) = 0;
-    virtual void preconnect(URL const&) = 0;
+    virtual void prefetch_dns(URL::URL const&) = 0;
+    virtual void preconnect(URL::URL const&) = 0;
 
-    virtual RefPtr<ResourceLoaderConnectorRequest> start_request(ByteString const& method, URL const&, HashMap<ByteString, ByteString> const& request_headers = {}, ReadonlyBytes request_body = {}, Core::ProxyData const& = {}) = 0;
-    virtual RefPtr<Web::WebSockets::WebSocketClientSocket> websocket_connect(const URL&, ByteString const& origin, Vector<ByteString> const& protocols) = 0;
+    virtual RefPtr<ResourceLoaderConnectorRequest> start_request(ByteString const& method, URL::URL const&, HashMap<ByteString, ByteString> const& request_headers = {}, ReadonlyBytes request_body = {}, Core::ProxyData const& = {}) = 0;
+    virtual RefPtr<Web::WebSockets::WebSocketClientSocket> websocket_connect(const URL::URL&, ByteString const& origin, Vector<ByteString> const& protocols) = 0;
 
 protected:
     explicit ResourceLoaderConnector();
@@ -123,8 +123,8 @@ public:
 
     ResourceLoaderConnector& connector() { return *m_connector; }
 
-    void prefetch_dns(URL const&);
-    void preconnect(URL const&);
+    void prefetch_dns(URL::URL const&);
+    void preconnect(URL::URL const&);
 
     Function<void()> on_load_counter_change;
 

@@ -10,4 +10,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_lib(LibDesktop desktop)
-target_link_libraries(LibDesktop PRIVATE LibCore LibIPC LibGfx LibGUI LibFileSystem)
+target_link_libraries(LibDesktop PRIVATE LibCore LibIPC LibGfx LibGUI LibFileSystem LibURL)

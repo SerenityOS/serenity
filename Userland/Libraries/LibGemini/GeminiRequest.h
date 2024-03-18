@@ -7,8 +7,8 @@
 #pragma once
 
 #include <AK/Optional.h>
-#include <AK/URL.h>
 #include <LibCore/Forward.h>
+#include <LibURL/URL.h>
 
 namespace Gemini {
 
@@ -17,15 +17,15 @@ public:
     GeminiRequest() = default;
     ~GeminiRequest() = default;
 
-    const URL& url() const { return m_url; }
-    void set_url(const URL& url) { m_url = url; }
+    const URL::URL& url() const { return m_url; }
+    void set_url(const URL::URL& url) { m_url = url; }
 
     ErrorOr<ByteBuffer> to_raw_request() const;
 
     static Optional<GeminiRequest> from_raw_request(ByteBuffer const&);
 
 private:
-    URL m_url;
+    URL::URL m_url;
 };
 
 }

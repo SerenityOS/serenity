@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/URL.h>
 #include <AK/Vector.h>
 #include <LibConfig/Listener.h>
 #include <LibDesktop/Launcher.h>
@@ -16,6 +15,7 @@
 #include <LibGUI/IconView.h>
 #include <LibGUI/StackWidget.h>
 #include <LibGUI/TableView.h>
+#include <LibURL/URL.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 
@@ -59,12 +59,12 @@ public:
     int path_history_size() const { return m_path_history.size(); }
     int path_history_position() const { return m_path_history_position; }
     static RefPtr<LauncherHandler> get_default_launch_handler(Vector<NonnullRefPtr<LauncherHandler>> const& handlers);
-    static Vector<NonnullRefPtr<LauncherHandler>> get_launch_handlers(URL const& url);
+    static Vector<NonnullRefPtr<LauncherHandler>> get_launch_handlers(URL::URL const& url);
     static Vector<NonnullRefPtr<LauncherHandler>> get_launch_handlers(ByteString const& path);
 
     void refresh();
 
-    void launch(URL const&, LauncherHandler const&) const;
+    void launch(URL::URL const&, LauncherHandler const&) const;
 
     Function<void(StringView path, bool can_read_in_path, bool can_write_in_path)> on_path_change;
     Function<void(GUI::AbstractView&)> on_selection_change;

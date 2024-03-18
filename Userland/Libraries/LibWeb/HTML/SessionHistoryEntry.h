@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <AK/URL.h>
 #include <AK/WeakPtr.h>
 #include <LibJS/Heap/Cell.h>
 #include <LibJS/Heap/GCPtr.h>
+#include <LibURL/URL.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/PolicyContainers.h>
 #include <LibWeb/HTML/StructuredSerialize.h>
@@ -46,7 +46,7 @@ struct SessionHistoryEntry final : public JS::Cell {
 
     // https://html.spec.whatwg.org/multipage/browsing-the-web.html#she-url
     // URL, a URL
-    URL url;
+    URL::URL url;
 
     // https://html.spec.whatwg.org/multipage/browsing-the-web.html#she-document-state
     JS::GCPtr<HTML::DocumentState> document_state;

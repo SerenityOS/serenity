@@ -10,15 +10,15 @@
 #include <AK/Debug.h>
 #include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
-#include <AK/URL.h>
-#include <AK/URLParser.h>
 #include <AK/Utf8View.h>
+#include <LibURL/Parser.h>
+#include <LibURL/URL.h>
 
-namespace AK {
+namespace URL {
 
-// FIXME: It could make sense to force users of URL to use URLParser::basic_parse() explicitly instead of using a constructor.
+// FIXME: It could make sense to force users of URL to use URL::Parser::basic_parse() explicitly instead of using a constructor.
 URL::URL(StringView string)
-    : URL(URLParser::basic_parse(string))
+    : URL(Parser::basic_parse(string))
 {
     if constexpr (URL_PARSER_DEBUG) {
         if (m_valid)
@@ -33,7 +33,7 @@ URL URL::complete_url(StringView relative_url) const
     if (!is_valid())
         return {};
 
-    return URLParser::basic_parse(relative_url, *this);
+    return Parser::basic_parse(relative_url, *this);
 }
 
 ErrorOr<String> URL::username() const
@@ -95,7 +95,7 @@ void URL::set_host(Host host)
 // https://url.spec.whatwg.org/#concept-host-serializer
 ErrorOr<String> URL::serialized_host() const
 {
-    return URLParser::serialize_host(m_host);
+    return Parser::serialize_host(m_host);
 }
 
 void URL::set_port(Optional<u16> port)
@@ -157,7 +157,7 @@ bool URL::compute_validity() const
 }
 
 // https://url.spec.whatwg.org/#default-port
-Optional<u16> URL::default_port_for_scheme(StringView scheme)
+Optional<u16> default_port_for_scheme(StringView scheme)
 {
     // Spec defined mappings with port:
     if (scheme == "ftp")
@@ -182,7 +182,7 @@ Optional<u16> URL::default_port_for_scheme(StringView scheme)
     return {};
 }
 
-URL URL::create_with_file_scheme(ByteString const& path, ByteString const& fragment, ByteString const& hostname)
+URL create_with_file_scheme(ByteString const& path, ByteString const& fragment, ByteString const& hostname)
 {
     LexicalPath lexical_path(path);
     if (!lexical_path.is_absolute())
@@ -199,7 +199,7 @@ URL URL::create_with_file_scheme(ByteString const& path, ByteString const& fragm
     return url;
 }
 
-URL URL::create_with_help_scheme(ByteString const& path, ByteString const& fragment, ByteString const& hostname)
+URL create_with_help_scheme(ByteString const& path, ByteString const& fragment, ByteString const& hostname)
 {
     LexicalPath lexical_path(path);
 
@@ -215,17 +215,17 @@ URL URL::create_with_help_scheme(ByteString const& path, ByteString const& fragm
     return url;
 }
 
-URL URL::create_with_url_or_path(ByteString const& url_or_path)
+URL create_with_url_or_path(ByteString const& url_or_path)
 {
     URL url = url_or_path;
     if (url.is_valid())
         return url;
 
     ByteString path = LexicalPath::canonicalized_path(url_or_path);
-    return URL::create_with_file_scheme(path);
+    return create_with_file_scheme(path);
 }
 
-URL URL::create_with_data(StringView mime_type, StringView payload, bool is_base64)
+URL create_with_data(StringView mime_type, StringView payload, bool is_base64)
 {
     URL url;
     url.set_cannot_be_a_base_url(true);
@@ -242,7 +242,7 @@ URL URL::create_with_data(StringView mime_type, StringView payload, bool is_base
 }
 
 // https://url.spec.whatwg.org/#special-scheme
-bool URL::is_special_scheme(StringView scheme)
+bool is_special_scheme(StringView scheme)
 {
     return scheme.is_one_of("ftp", "file", "http", "https", "ws", "wss");
 }
@@ -420,13 +420,13 @@ bool URL::equals(URL const& other, ExcludeFragment exclude_fragments) const
 }
 
 // https://fetch.spec.whatwg.org/#data-url-processor
-ErrorOr<URL::DataURL> URL::process_data_url() const
+ErrorOr<DataURL> URL::process_data_url() const
 {
     // 1. Assert: dataURL’s scheme is "data".
     VERIFY(scheme() == "data");
 
     // 2. Let input be the result of running the URL serializer on dataURL with exclude fragment set to true.
-    auto input = serialize(URL::ExcludeFragment::Yes);
+    auto input = serialize(ExcludeFragment::Yes);
 
     // 3. Remove the leading "data:" from input.
     input = input.substring("data:"sv.length());
@@ -451,7 +451,7 @@ ErrorOr<URL::DataURL> URL::process_data_url() const
     auto encoded_body = input.substring_view(position.value());
 
     // 10. Let body be the percent-decoding of encodedBody.
-    auto body = URL::percent_decode(encoded_body).to_byte_buffer();
+    auto body = percent_decode(encoded_body).to_byte_buffer();
 
     // 11. If mimeType ends with U+003B (;), followed by zero or more U+0020 SPACE, followed by an ASCII case-insensitive match for "base64", then:
     if (mime_type.ends_with("base64"sv, CaseSensitivity::CaseInsensitive)) {
@@ -490,10 +490,10 @@ ErrorOr<URL::DataURL> URL::process_data_url() const
         mime_type_record = "text/plain;charset=US-ASCII"sv;
 
     // 15. Return a new data: URL struct whose MIME type is mimeTypeRecord and body is body.
-    return URL::DataURL { TRY(String::from_utf8(mime_type_record)), body };
+    return DataURL { TRY(String::from_utf8(mime_type_record)), body };
 }
 
-void URL::append_percent_encoded(StringBuilder& builder, u32 code_point)
+void append_percent_encoded(StringBuilder& builder, u32 code_point)
 {
     if (code_point <= 0x7f)
         builder.appendff("%{:02X}", code_point);
@@ -508,28 +508,28 @@ void URL::append_percent_encoded(StringBuilder& builder, u32 code_point)
 }
 
 // https://url.spec.whatwg.org/#c0-control-percent-encode-set
-bool URL::code_point_is_in_percent_encode_set(u32 code_point, URL::PercentEncodeSet set)
+bool code_point_is_in_percent_encode_set(u32 code_point, PercentEncodeSet set)
 {
     // NOTE: Once we've checked for presence in the C0Control set, we know that the code point is
     //       a valid ASCII character in the range 0x20..0x7E, so we can safely cast it to char.
     switch (set) {
-    case URL::PercentEncodeSet::C0Control:
+    case PercentEncodeSet::C0Control:
         return code_point < 0x20 || code_point > 0x7E;
-    case URL::PercentEncodeSet::Fragment:
-        return code_point_is_in_percent_encode_set(code_point, URL::PercentEncodeSet::C0Control) || " \"<>`"sv.contains(static_cast<char>(code_point));
-    case URL::PercentEncodeSet::Query:
-        return code_point_is_in_percent_encode_set(code_point, URL::PercentEncodeSet::C0Control) || " \"#<>"sv.contains(static_cast<char>(code_point));
-    case URL::PercentEncodeSet::SpecialQuery:
-        return code_point_is_in_percent_encode_set(code_point, URL::PercentEncodeSet::Query) || code_point == '\'';
-    case URL::PercentEncodeSet::Path:
-        return code_point_is_in_percent_encode_set(code_point, URL::PercentEncodeSet::Query) || "?`{}"sv.contains(static_cast<char>(code_point));
-    case URL::PercentEncodeSet::Userinfo:
-        return code_point_is_in_percent_encode_set(code_point, URL::PercentEncodeSet::Path) || "/:;=@[\\]^|"sv.contains(static_cast<char>(code_point));
-    case URL::PercentEncodeSet::Component:
-        return code_point_is_in_percent_encode_set(code_point, URL::PercentEncodeSet::Userinfo) || "$%&+,"sv.contains(static_cast<char>(code_point));
-    case URL::PercentEncodeSet::ApplicationXWWWFormUrlencoded:
-        return code_point_is_in_percent_encode_set(code_point, URL::PercentEncodeSet::Component) || "!'()~"sv.contains(static_cast<char>(code_point));
-    case URL::PercentEncodeSet::EncodeURI:
+    case PercentEncodeSet::Fragment:
+        return code_point_is_in_percent_encode_set(code_point, PercentEncodeSet::C0Control) || " \"<>`"sv.contains(static_cast<char>(code_point));
+    case PercentEncodeSet::Query:
+        return code_point_is_in_percent_encode_set(code_point, PercentEncodeSet::C0Control) || " \"#<>"sv.contains(static_cast<char>(code_point));
+    case PercentEncodeSet::SpecialQuery:
+        return code_point_is_in_percent_encode_set(code_point, PercentEncodeSet::Query) || code_point == '\'';
+    case PercentEncodeSet::Path:
+        return code_point_is_in_percent_encode_set(code_point, PercentEncodeSet::Query) || "?`{}"sv.contains(static_cast<char>(code_point));
+    case PercentEncodeSet::Userinfo:
+        return code_point_is_in_percent_encode_set(code_point, PercentEncodeSet::Path) || "/:;=@[\\]^|"sv.contains(static_cast<char>(code_point));
+    case PercentEncodeSet::Component:
+        return code_point_is_in_percent_encode_set(code_point, PercentEncodeSet::Userinfo) || "$%&+,"sv.contains(static_cast<char>(code_point));
+    case PercentEncodeSet::ApplicationXWWWFormUrlencoded:
+        return code_point_is_in_percent_encode_set(code_point, PercentEncodeSet::Component) || "!'()~"sv.contains(static_cast<char>(code_point));
+    case PercentEncodeSet::EncodeURI:
         // NOTE: This is the same percent encode set that JS encodeURI() uses.
         // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURI
         return code_point > 0x7E || (!is_ascii_alphanumeric(code_point) && !";,/?:@&=+$-_.!~*'()#"sv.contains(static_cast<char>(code_point)));
@@ -538,7 +538,7 @@ bool URL::code_point_is_in_percent_encode_set(u32 code_point, URL::PercentEncode
     }
 }
 
-void URL::append_percent_encoded_if_necessary(StringBuilder& builder, u32 code_point, URL::PercentEncodeSet set)
+void append_percent_encoded_if_necessary(StringBuilder& builder, u32 code_point, PercentEncodeSet set)
 {
     if (code_point_is_in_percent_encode_set(code_point, set))
         append_percent_encoded(builder, code_point);
@@ -546,7 +546,7 @@ void URL::append_percent_encoded_if_necessary(StringBuilder& builder, u32 code_p
         builder.append_code_point(code_point);
 }
 
-ByteString URL::percent_encode(StringView input, URL::PercentEncodeSet set, SpaceAsPlus space_as_plus)
+ByteString percent_encode(StringView input, PercentEncodeSet set, SpaceAsPlus space_as_plus)
 {
     StringBuilder builder;
     for (auto code_point : Utf8View(input)) {
@@ -558,7 +558,7 @@ ByteString URL::percent_encode(StringView input, URL::PercentEncodeSet set, Spac
     return builder.to_byte_string();
 }
 
-ByteString URL::percent_decode(StringView input)
+ByteString percent_decode(StringView input)
 {
     if (!input.contains('%'))
         return input;

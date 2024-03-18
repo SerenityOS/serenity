@@ -5,13 +5,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/URL.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibDesktop/Launcher.h>
 #include <LibFileSystem/FileSystem.h>
 #include <LibMain/Main.h>
+#include <LibURL/URL.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -26,7 +26,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     for (auto& url_or_path : urls_or_paths) {
         auto path_or_error = FileSystem::real_path(url_or_path);
-        URL url;
+        URL::URL url;
         if (path_or_error.is_error()) {
             url = url_or_path;
             if (!url.is_valid()) {

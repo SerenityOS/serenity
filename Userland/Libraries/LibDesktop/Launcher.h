@@ -10,6 +10,7 @@
 #include <AK/Forward.h>
 #include <AK/HashMap.h>
 #include <AK/RefCounted.h>
+#include <LibURL/Forward.h>
 
 namespace Desktop {
 
@@ -31,14 +32,14 @@ public:
     };
 
     static void ensure_connection();
-    static ErrorOr<void> add_allowed_url(URL const&);
+    static ErrorOr<void> add_allowed_url(URL::URL const&);
     static ErrorOr<void> add_allowed_handler_with_any_url(ByteString const& handler);
-    static ErrorOr<void> add_allowed_handler_with_only_specific_urls(ByteString const& handler, Vector<URL> const&);
+    static ErrorOr<void> add_allowed_handler_with_only_specific_urls(ByteString const& handler, Vector<URL::URL> const&);
     static ErrorOr<void> seal_allowlist();
-    static bool open(const URL&, ByteString const& handler_name = {});
-    static bool open(const URL&, Details const& details);
-    static Vector<ByteString> get_handlers_for_url(const URL&);
-    static Vector<NonnullRefPtr<Details>> get_handlers_with_details_for_url(const URL&);
+    static bool open(const URL::URL&, ByteString const& handler_name = {});
+    static bool open(const URL::URL&, Details const& details);
+    static Vector<ByteString> get_handlers_for_url(const URL::URL&);
+    static Vector<NonnullRefPtr<Details>> get_handlers_with_details_for_url(const URL::URL&);
 };
 
 }

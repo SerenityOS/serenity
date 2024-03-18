@@ -16,11 +16,11 @@
 #include <AK/RefPtr.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
-#include <AK/URL.h>
 #include <AK/Variant.h>
 #include <AK/Vector.h>
 #include <AK/WeakPtr.h>
 #include <LibGfx/Color.h>
+#include <LibURL/URL.h>
 #include <LibWeb/CSS/Enums.h>
 #include <LibWeb/CSS/Length.h>
 #include <LibWeb/CSS/ValueID.h>

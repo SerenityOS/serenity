@@ -24,4 +24,4 @@ set(SOURCES
         )
 
 serenity_app(Profiler ICON app-profiler)
-target_link_libraries(Profiler PRIVATE LibCore LibDebug LibFileSystem LibGfx LibGUI LibDesktop LibX86 LibSymbolication LibMain)
+target_link_libraries(Profiler PRIVATE LibCore LibDebug LibFileSystem LibGfx LibGUI LibDesktop LibX86 LibSymbolication LibMain LibURL)

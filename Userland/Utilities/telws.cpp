@@ -6,7 +6,6 @@
 
 #include <AK/Base64.h>
 #include <AK/Format.h>
-#include <AK/URL.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/System.h>
@@ -14,6 +13,7 @@
 #include <LibMain/Main.h>
 #include <LibProtocol/RequestClient.h>
 #include <LibProtocol/WebSocket.h>
+#include <LibURL/URL.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -29,7 +29,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     args_parser.parse(arguments);
 
-    URL url(url_string);
+    URL::URL url(url_string);
 
     if (!url.is_valid()) {
         warnln("The given URL is not valid");

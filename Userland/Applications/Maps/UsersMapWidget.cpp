@@ -22,7 +22,7 @@ void UsersMapWidget::get_users()
     HashMap<ByteString, ByteString> headers;
     headers.set("User-Agent", "SerenityOS Maps");
     headers.set("Accept", "application/json");
-    URL url("https://usermap.serenityos.org/people.json");
+    URL::URL url("https://usermap.serenityos.org/people.json");
     auto request = request_client()->start_request("GET", url, headers, {});
     VERIFY(!request.is_null());
     m_request = request;

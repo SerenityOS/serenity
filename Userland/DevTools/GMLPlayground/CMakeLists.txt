@@ -16,4 +16,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_app(GMLPlayground ICON app-gml-playground)
-target_link_libraries(GMLPlayground PRIVATE LibConfig LibCore LibDesktop LibFileSystemAccessClient LibGfx LibGUI LibMain LibSyntax)
+target_link_libraries(GMLPlayground PRIVATE LibConfig LibCore LibDesktop LibFileSystemAccessClient LibGfx LibGUI LibMain LibSyntax LibURL)

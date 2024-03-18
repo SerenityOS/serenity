@@ -121,7 +121,7 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
         m_hover_label->hide();
     };
 
-    view().on_load_start = [this](const URL& url, bool is_redirect) {
+    view().on_load_start = [this](const URL::URL& url, bool is_redirect) {
         // If we are loading due to a redirect, we replace the current history entry
         // with the loaded URL
         if (is_redirect) {
@@ -384,7 +384,7 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
     search_selected_text_action->setIcon(load_icon_from_uri("resource://icons/16x16/find.png"sv));
     QObject::connect(search_selected_text_action, &QAction::triggered, this, [this]() {
         auto url = MUST(String::formatted(Settings::the()->search_engine().query_url, URL::percent_encode(*m_page_context_menu_search_text)));
-        m_window->new_tab_from_url(URL(url), Web::HTML::ActivateTab::Yes);
+        m_window->new_tab_from_url(URL::URL(url), Web::HTML::ActivateTab::Yes);
     });
 
     auto take_screenshot = [this](auto type) {
@@ -733,7 +733,7 @@ void Tab::focus_location_editor()
     m_location_edit->selectAll();
 }
 
-void Tab::navigate(URL const& url)
+void Tab::navigate(URL::URL const& url)
 {
     view().load(url);
 }
@@ -772,17 +772,17 @@ void Tab::reload()
     view().load(m_history.current().url.to_byte_string());
 }
 
-void Tab::open_link(URL const& url)
+void Tab::open_link(URL::URL const& url)
 {
     view().on_link_click(url, "", 0);
 }
 
-void Tab::open_link_in_new_tab(URL const& url)
+void Tab::open_link_in_new_tab(URL::URL const& url)
 {
     view().on_link_click(url, "_blank", 0);
 }
 
-void Tab::copy_link_url(URL const& url)
+void Tab::copy_link_url(URL::URL const& url)
 {
     auto* clipboard = QGuiApplication::clipboard();
     clipboard->setText(qstring_from_ak_string(WebView::url_text_to_copy(url)));

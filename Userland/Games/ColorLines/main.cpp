@@ -6,7 +6,6 @@
  */
 
 #include "ColorLines.h"
-#include <AK/URL.h>
 #include <LibConfig/Client.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
@@ -17,6 +16,7 @@
 #include <LibGUI/Menubar.h>
 #include <LibGUI/Window.h>
 #include <LibMain/Main.h>
+#include <LibURL/URL.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {

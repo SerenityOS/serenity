@@ -124,7 +124,7 @@ Parser::Parser(Parser&& other)
 // 5.3.3. Parse a stylesheet
 // https://www.w3.org/TR/css-syntax-3/#parse-stylesheet
 template<typename T>
-Parser::ParsedStyleSheet Parser::parse_a_stylesheet(TokenStream<T>& tokens, Optional<URL> location)
+Parser::ParsedStyleSheet Parser::parse_a_stylesheet(TokenStream<T>& tokens, Optional<URL::URL> location)
 {
     // To parse a stylesheet from an input given an optional url location:
 
@@ -144,7 +144,7 @@ Parser::ParsedStyleSheet Parser::parse_a_stylesheet(TokenStream<T>& tokens, Opti
 }
 
 // https://www.w3.org/TR/css-syntax-3/#parse-a-css-stylesheet
-CSSStyleSheet* Parser::parse_as_css_stylesheet(Optional<URL> location)
+CSSStyleSheet* Parser::parse_as_css_stylesheet(Optional<URL::URL> location)
 {
     // To parse a CSS stylesheet, first parse a stylesheet.
     auto style_sheet = parse_a_stylesheet(m_token_stream, {});
@@ -1160,11 +1160,11 @@ ElementInlineCSSStyleDeclaration* Parser::parse_as_style_attribute(DOM::Element&
     return ElementInlineCSSStyleDeclaration::create(element, move(properties), move(custom_properties));
 }
 
-Optional<URL> Parser::parse_url_function(ComponentValue const& component_value)
+Optional<URL::URL> Parser::parse_url_function(ComponentValue const& component_value)
 {
     // FIXME: Handle list of media queries. https://www.w3.org/TR/css-cascade-3/#conditional-import
 
-    auto convert_string_to_url = [&](StringView url_string) -> Optional<URL> {
+    auto convert_string_to_url = [&](StringView url_string) -> Optional<URL::URL> {
         auto url = m_context.complete_url(url_string);
         if (url.is_valid())
             return url;
@@ -1215,7 +1215,7 @@ CSSRule* Parser::convert_to_rule(NonnullRefPtr<Rule> rule)
             return parse_font_face_rule(tokens);
         }
         if (rule->at_rule_name().equals_ignoring_ascii_case("import"sv) && !rule->prelude().is_empty()) {
-            Optional<URL> url;
+            Optional<URL::URL> url;
             for (auto const& token : rule->prelude()) {
                 if (token.is(Token::Type::Whitespace))
                     continue;

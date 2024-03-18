@@ -5,13 +5,13 @@
  */
 
 #include <AK/StringBuilder.h>
-#include <AK/URL.h>
+#include <LibURL/URL.h>
 #include <LibWeb/HTML/Parser/HTMLTokenizer.h>
 #include <LibWebView/SourceHighlighter.h>
 
 namespace WebView {
 
-String highlight_source(URL const& url, StringView source)
+String highlight_source(URL::URL const& url, StringView source)
 {
     Web::HTML::HTMLTokenizer tokenizer { source, "utf-8"sv };
     StringBuilder builder;

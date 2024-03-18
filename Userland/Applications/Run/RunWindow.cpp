@@ -8,7 +8,6 @@
 #include "RunWindow.h"
 #include "MainWidget.h"
 #include <AK/LexicalPath.h>
-#include <AK/URL.h>
 #include <LibCore/Process.h>
 #include <LibCore/StandardPaths.h>
 #include <LibDesktop/Launcher.h>
@@ -20,6 +19,7 @@
 #include <LibGUI/ImageWidget.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Widget.h>
+#include <LibURL/URL.h>
 #include <spawn.h>
 #include <stdio.h>
 #include <string.h>

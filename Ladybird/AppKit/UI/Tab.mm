@@ -6,11 +6,11 @@
 
 #include <AK/ByteString.h>
 #include <AK/String.h>
-#include <AK/URL.h>
 #include <Ladybird/Utilities.h>
 #include <LibCore/Resource.h>
 #include <LibGfx/ImageFormats/PNGWriter.h>
 #include <LibGfx/ShareableBitmap.h>
+#include <LibURL/URL.h>
 
 #import <Application/ApplicationDelegate.h>
 #import <UI/Inspector.h>
@@ -34,7 +34,7 @@ static constexpr CGFloat const WINDOW_HEIGHT = 800;
 
 @property (nonatomic, strong) InspectorController* inspector_controller;
 
-@property (nonatomic, assign) URL last_url;
+@property (nonatomic, assign) URL::URL last_url;
 
 @end
 
@@ -188,7 +188,7 @@ static constexpr CGFloat const WINDOW_HEIGHT = 800;
 
 #pragma mark - LadybirdWebViewObserver
 
-- (String const&)onCreateNewTab:(URL const&)url
+- (String const&)onCreateNewTab:(URL::URL const&)url
                     activateTab:(Web::HTML::ActivateTab)activate_tab
 {
     auto* delegate = (ApplicationDelegate*)[NSApp delegate];
@@ -202,7 +202,7 @@ static constexpr CGFloat const WINDOW_HEIGHT = 800;
 }
 
 - (String const&)onCreateNewTab:(StringView)html
-                            url:(URL const&)url
+                            url:(URL::URL const&)url
                     activateTab:(Web::HTML::ActivateTab)activate_tab
 {
     auto* delegate = (ApplicationDelegate*)[NSApp delegate];
@@ -216,12 +216,12 @@ static constexpr CGFloat const WINDOW_HEIGHT = 800;
     return [[tab web_view] handle];
 }
 
-- (void)loadURL:(URL const&)url
+- (void)loadURL:(URL::URL const&)url
 {
     [[self tabController] loadURL:url];
 }
 
-- (void)onLoadStart:(URL const&)url isRedirect:(BOOL)is_redirect
+- (void)onLoadStart:(URL::URL const&)url isRedirect:(BOOL)is_redirect
 {
     if (url != self.last_url) {
         self.last_url = url;
@@ -239,7 +239,7 @@ static constexpr CGFloat const WINDOW_HEIGHT = 800;
     }
 }
 
-- (void)onLoadFinish:(URL const&)url
+- (void)onLoadFinish:(URL::URL const&)url
 {
     if (self.inspector_controller != nil) {
         auto* inspector = (Inspector*)[self.inspector_controller window];

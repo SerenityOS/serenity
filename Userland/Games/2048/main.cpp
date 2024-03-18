@@ -7,7 +7,6 @@
 #include "BoardView.h"
 #include "Game.h"
 #include "GameSizeDialog.h"
-#include <AK/URL.h>
 #include <Games/2048/GameWindowGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/System.h>
@@ -23,6 +22,7 @@
 #include <LibGUI/Statusbar.h>
 #include <LibGUI/Window.h>
 #include <LibMain/Main.h>
+#include <LibURL/URL.h>
 #include <stdio.h>
 #include <time.h>
 

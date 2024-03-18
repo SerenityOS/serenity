@@ -8,7 +8,6 @@
 #include "MainWidget.h"
 #include "SettingsDialog.h"
 #include <AK/String.h>
-#include <AK/URL.h>
 #include <LibConfig/Client.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
@@ -21,6 +20,7 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Painter.h>
 #include <LibMain/Main.h>
+#include <LibURL/URL.h>
 
 // FIXME: Improve this AI.
 // Currently, this AI always chooses a move that gets the most cells flooded immediately.

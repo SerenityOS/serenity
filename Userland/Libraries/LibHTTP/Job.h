@@ -26,7 +26,7 @@ public:
     virtual void shutdown(ShutdownMode) override;
 
     Core::Socket const* socket() const { return m_socket; }
-    URL url() const { return m_request.url(); }
+    URL::URL url() const { return m_request.url(); }
 
     HttpResponse* response() { return static_cast<HttpResponse*>(Core::NetworkJob::response()); }
     HttpResponse const* response() const { return static_cast<HttpResponse const*>(Core::NetworkJob::response()); }

@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Forward.h>
+#include <LibURL/Forward.h>
 #include <LibWeb/Forward.h>
 
 namespace Web::SecureContexts {
@@ -17,6 +18,6 @@ enum class Trustworthiness {
 };
 
 [[nodiscard]] Trustworthiness is_origin_potentially_trustworthy(HTML::Origin const&);
-[[nodiscard]] Trustworthiness is_url_potentially_trustworthy(URL const&);
+[[nodiscard]] Trustworthiness is_url_potentially_trustworthy(URL::URL const&);
 
 }

@@ -10,7 +10,7 @@
 #include <AK/NonnullOwnPtr.h>
 #include <AK/Optional.h>
 #include <AK/RefCounted.h>
-#include <AK/URL.h>
+#include <LibURL/URL.h>
 #include <RequestServer/Forward.h>
 
 namespace RequestServer {
@@ -20,7 +20,7 @@ public:
     virtual ~Request() = default;
 
     i32 id() const { return m_id; }
-    virtual URL url() const = 0;
+    virtual URL::URL url() const = 0;
 
     Optional<u32> status_code() const { return m_status_code; }
     Optional<u64> total_size() const { return m_total_size; }

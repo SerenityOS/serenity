@@ -6,9 +6,9 @@
 
 #include <AK/Optional.h>
 #include <AK/TemporaryChange.h>
-#include <AK/URL.h>
 #include <LibGfx/ImageFormats/PNGWriter.h>
 #include <LibGfx/ShareableBitmap.h>
+#include <LibURL/URL.h>
 #include <LibWeb/HTML/SelectedFile.h>
 #include <LibWebView/SearchEngine.h>
 #include <LibWebView/SourceHighlighter.h>
@@ -51,7 +51,7 @@ struct HideCursor {
 {
     OwnPtr<Ladybird::WebViewBridge> m_web_view_bridge;
 
-    URL m_context_menu_url;
+    URL::URL m_context_menu_url;
     Gfx::ShareableBitmap m_context_menu_bitmap;
     Optional<String> m_context_menu_search_text;
 
@@ -118,7 +118,7 @@ struct HideCursor {
 
 #pragma mark - Public methods
 
-- (void)loadURL:(URL const&)url
+- (void)loadURL:(URL::URL const&)url
 {
     m_web_view_bridge->load(url);
 }

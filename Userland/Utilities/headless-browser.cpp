@@ -17,7 +17,6 @@
 #include <AK/NonnullOwnPtr.h>
 #include <AK/Platform.h>
 #include <AK/String.h>
-#include <AK/URL.h>
 #include <AK/Vector.h>
 #include <Ladybird/Types.h>
 #include <LibCore/ArgsParser.h>
@@ -42,6 +41,7 @@
 #include <LibGfx/StandardCursor.h>
 #include <LibGfx/SystemTheme.h>
 #include <LibIPC/File.h>
+#include <LibURL/URL.h>
 #include <LibWeb/Cookie/Cookie.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/HTML/ActivateTab.h>
@@ -285,7 +285,7 @@ static ErrorOr<TestResult> run_dump_test(HeadlessWebContentView& view, StringVie
     if (mode == TestMode::Layout) {
         view.on_load_finish = [&](auto const& loaded_url) {
             // This callback will be called for 'about:blank' first, then for the URL we actually want to dump
-            VERIFY(url.equals(loaded_url, URL::ExcludeFragment::Yes) || loaded_url.equals(URL("about:blank")));
+            VERIFY(url.equals(loaded_url, URL::ExcludeFragment::Yes) || loaded_url.equals(URL::URL("about:blank")));
 
             if (url.equals(loaded_url, URL::ExcludeFragment::Yes)) {
                 // NOTE: We take a screenshot here to force the lazy layout of SVG-as-image documents to happen.
@@ -477,7 +477,7 @@ static ErrorOr<TestResult> run_test(HeadlessWebContentView& view, StringView inp
         view.file_picker_closed(move(selected_files));
     };
 
-    view.load(URL("about:blank"sv));
+    view.load(URL::URL("about:blank"sv));
     MUST(promise->await());
 
     s_current_test_path = input_path;

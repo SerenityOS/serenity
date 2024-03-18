@@ -33,12 +33,12 @@ private:
     explicit ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket>);
 
     virtual Messages::RequestServer::IsSupportedProtocolResponse is_supported_protocol(ByteString const&) override;
-    virtual void start_request(i32 request_id, ByteString const&, URL const&, HashMap<ByteString, ByteString> const&, ByteBuffer const&, Core::ProxyData const&) override;
+    virtual void start_request(i32 request_id, ByteString const&, URL::URL const&, HashMap<ByteString, ByteString> const&, ByteBuffer const&, Core::ProxyData const&) override;
     virtual Messages::RequestServer::StopRequestResponse stop_request(i32) override;
     virtual Messages::RequestServer::SetCertificateResponse set_certificate(i32, ByteString const&, ByteString const&) override;
-    virtual void ensure_connection(URL const& url, ::RequestServer::CacheLevel const& cache_level) override;
+    virtual void ensure_connection(URL::URL const& url, ::RequestServer::CacheLevel const& cache_level) override;
 
-    virtual Messages::RequestServer::WebsocketConnectResponse websocket_connect(URL const&, ByteString const&, Vector<ByteString> const&, Vector<ByteString> const&, HashMap<ByteString, ByteString> const&) override;
+    virtual Messages::RequestServer::WebsocketConnectResponse websocket_connect(URL::URL const&, ByteString const&, Vector<ByteString> const&, Vector<ByteString> const&, HashMap<ByteString, ByteString> const&) override;
     virtual Messages::RequestServer::WebsocketReadyStateResponse websocket_ready_state(i32) override;
     virtual Messages::RequestServer::WebsocketSubprotocolInUseResponse websocket_subprotocol_in_use(i32) override;
     virtual void websocket_send(i32, bool, ByteBuffer const&) override;

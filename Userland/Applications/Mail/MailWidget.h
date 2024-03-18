@@ -49,11 +49,11 @@ private:
 
     RefPtr<GUI::Menu> m_link_context_menu;
     RefPtr<GUI::Action> m_link_context_menu_default_action;
-    URL m_link_context_menu_url;
+    URL::URL m_link_context_menu_url;
 
     RefPtr<GUI::Menu> m_image_context_menu;
     Gfx::ShareableBitmap m_image_context_menu_bitmap;
-    URL m_image_context_menu_url;
+    URL::URL m_image_context_menu_url;
 
     OwnPtr<AccountHolder> m_account_holder;
 };

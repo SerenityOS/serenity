@@ -32,7 +32,7 @@ class CSSStyleSheet final
     JS_DECLARE_ALLOCATOR(CSSStyleSheet);
 
 public:
-    [[nodiscard]] static JS::NonnullGCPtr<CSSStyleSheet> create(JS::Realm&, CSSRuleList&, MediaList&, Optional<URL> location);
+    [[nodiscard]] static JS::NonnullGCPtr<CSSStyleSheet> create(JS::Realm&, CSSRuleList&, MediaList&, Optional<URL::URL> location);
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<CSSStyleSheet>> construct_impl(JS::Realm&, Optional<CSSStyleSheetInit> const& options = {});
 
     virtual ~CSSStyleSheet() override = default;
@@ -69,8 +69,8 @@ public:
 
     Optional<FlyString> namespace_uri(StringView namespace_prefix) const;
 
-    Optional<URL> base_url() const { return m_base_url; }
-    void set_base_url(Optional<URL> base_url) { m_base_url = move(base_url); }
+    Optional<URL::URL> base_url() const { return m_base_url; }
+    void set_base_url(Optional<URL::URL> base_url) { m_base_url = move(base_url); }
 
     bool constructed() const { return m_constructed; }
 
@@ -80,7 +80,7 @@ public:
     bool disallow_modification() const { return m_disallow_modification; }
 
 private:
-    CSSStyleSheet(JS::Realm&, CSSRuleList&, MediaList&, Optional<URL> location);
+    CSSStyleSheet(JS::Realm&, CSSRuleList&, MediaList&, Optional<URL::URL> location);
 
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
@@ -97,7 +97,7 @@ private:
     JS::GCPtr<StyleSheetList> m_style_sheet_list;
     JS::GCPtr<CSSRule> m_owner_css_rule;
 
-    Optional<URL> m_base_url;
+    Optional<URL::URL> m_base_url;
     JS::GCPtr<DOM::Document const> m_constructor_document;
     bool m_constructed { false };
     bool m_disallow_modification { false };

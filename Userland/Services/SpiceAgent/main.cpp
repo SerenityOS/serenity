@@ -6,7 +6,6 @@
  */
 
 #include "SpiceAgent.h"
-#include <AK/URL.h>
 #include <LibCore/StandardPaths.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
@@ -15,6 +14,7 @@
 #include <LibGUI/Clipboard.h>
 #include <LibIPC/ConnectionToServer.h>
 #include <LibMain/Main.h>
+#include <LibURL/URL.h>
 #include <fcntl.h>
 
 static constexpr auto SPICE_DEVICE = "/dev/hvc0p1"sv;

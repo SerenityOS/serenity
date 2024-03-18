@@ -385,7 +385,7 @@ WebIDL::ExceptionOr<JS::GCPtr<WindowProxy>> Window::open_impl(StringView url, St
         // NOTE: While this is not implemented yet, all of observable actions taken by this operation are optional (implementation-defined).
 
         // 3. Let urlRecord be the URL record about:blank.
-        auto url_record = URL("about:blank"sv);
+        auto url_record = URL::URL("about:blank"sv);
 
         // 4. If url is not the empty string, then set urlRecord to the result of encoding-parsing a URL given url, relative to the entry settings object.
         if (!url.is_empty()) {

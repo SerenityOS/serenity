@@ -9,7 +9,6 @@
 
 #include <AK/Debug.h>
 #include <AK/HashMap.h>
-#include <AK/URL.h>
 #include <AK/Vector.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/EventLoop.h>
@@ -17,6 +16,7 @@
 #include <LibCore/SOCKSProxyClient.h>
 #include <LibCore/Timer.h>
 #include <LibTLS/TLSv12.h>
+#include <LibURL/URL.h>
 
 namespace RequestServer {
 
@@ -34,7 +34,7 @@ struct Proxy {
     OwnPtr<Core::SOCKSProxyClient> proxy_client_storage {};
 
     template<typename SocketType, typename StorageType, typename... Args>
-    ErrorOr<NonnullOwnPtr<StorageType>> tunnel(URL const& url, Args&&... args)
+    ErrorOr<NonnullOwnPtr<StorageType>> tunnel(URL::URL const& url, Args&&... args)
     {
         if (data.type == Core::ProxyData::Direct) {
             return TRY(SocketType::connect(TRY(url.serialized_host()).to_byte_string(), url.port_or_default(), forward<Args>(args)...));
@@ -94,7 +94,7 @@ struct Connection {
     QueueType request_queue;
     NonnullRefPtr<Core::Timer> removal_timer;
     bool has_started { false };
-    URL current_url {};
+    URL::URL current_url {};
     Core::ElapsedTimer timer {};
     JobData job_data {};
     Proxy proxy {};
@@ -129,14 +129,14 @@ extern HashMap<ConnectionKey, NonnullOwnPtr<Vector<NonnullOwnPtr<Connection<Core
 extern HashMap<ConnectionKey, NonnullOwnPtr<Vector<NonnullOwnPtr<Connection<TLS::TLSv12>>>>> g_tls_connection_cache;
 extern HashMap<ByteString, InferredServerProperties> g_inferred_server_properties;
 
-void request_did_finish(URL const&, Core::Socket const*);
+void request_did_finish(URL::URL const&, Core::Socket const*);
 void dump_jobs();
 
 constexpr static size_t MaxConcurrentConnectionsPerURL = 4;
 constexpr static size_t ConnectionKeepAliveTimeMilliseconds = 10'000;
 
 template<typename T>
-ErrorOr<void> recreate_socket_if_needed(T& connection, URL const& url)
+ErrorOr<void> recreate_socket_if_needed(T& connection, URL::URL const& url)
 {
     using SocketType = typename T::SocketType;
     using SocketStorageType = typename T::StorageType;
@@ -176,7 +176,7 @@ ErrorOr<void> recreate_socket_if_needed(T& connection, URL const& url)
     return {};
 }
 
-decltype(auto) get_or_create_connection(auto& cache, URL const& url, auto job, Core::ProxyData proxy_data = {})
+decltype(auto) get_or_create_connection(auto& cache, URL::URL const& url, auto job, Core::ProxyData proxy_data = {})
 {
     using CacheEntryType = RemoveCVReference<decltype(*cache.begin()->value)>;
 

@@ -8,9 +8,9 @@
 
 #include <AK/Error.h>
 #include <AK/OwnPtr.h>
-#include <AK/URL.h>
 #include <LibGfx/Size.h>
 #include <LibJS/Heap/Handle.h>
+#include <LibURL/URL.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/SharedImageRequest.h>
 
@@ -40,8 +40,8 @@ public:
     State state() const;
     void set_state(State);
 
-    URL const& current_url() const;
-    void set_current_url(JS::Realm&, URL);
+    URL::URL const& current_url() const;
+    void set_current_url(JS::Realm&, URL::URL);
 
     [[nodiscard]] JS::GCPtr<DecodedImageData> image_data() const;
     void set_image_data(JS::GCPtr<DecodedImageData>);
@@ -73,7 +73,7 @@ private:
 
     // https://html.spec.whatwg.org/multipage/images.html#img-req-url
     // An image request's current URL is initially the empty string.
-    URL m_current_url;
+    URL::URL m_current_url;
 
     // https://html.spec.whatwg.org/multipage/images.html#img-req-data
     JS::GCPtr<DecodedImageData> m_image_data;

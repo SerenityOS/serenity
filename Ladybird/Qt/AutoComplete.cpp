@@ -9,7 +9,7 @@
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonParser.h>
-#include <AK/URL.h>
+#include <LibURL/URL.h>
 
 namespace Ladybird {
 

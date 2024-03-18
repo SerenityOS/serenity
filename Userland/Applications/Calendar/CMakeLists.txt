@@ -22,4 +22,4 @@ set(SOURCES
 )
 
 serenity_app(Calendar ICON app-calendar)
-target_link_libraries(Calendar PRIVATE LibConfig LibCore LibFileSystem LibFileSystemAccessClient LibGfx LibGUI LibMain LibDesktop)
+target_link_libraries(Calendar PRIVATE LibConfig LibCore LibFileSystem LibFileSystemAccessClient LibGfx LibGUI LibMain LibDesktop LibURL)

@@ -7,4 +7,4 @@ set(SOURCES
 )
 
 serenity_lib(LibGemini gemini)
-target_link_libraries(LibGemini PRIVATE LibCore LibTLS)
+target_link_libraries(LibGemini PRIVATE LibCore LibTLS LibURL)

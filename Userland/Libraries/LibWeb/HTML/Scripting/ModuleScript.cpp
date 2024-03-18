@@ -17,20 +17,20 @@ JS_DEFINE_ALLOCATOR(JavaScriptModuleScript);
 
 ModuleScript::~ModuleScript() = default;
 
-ModuleScript::ModuleScript(URL base_url, ByteString filename, EnvironmentSettingsObject& environment_settings_object)
+ModuleScript::ModuleScript(URL::URL base_url, ByteString filename, EnvironmentSettingsObject& environment_settings_object)
     : Script(move(base_url), move(filename), environment_settings_object)
 {
 }
 
 JavaScriptModuleScript::~JavaScriptModuleScript() = default;
 
-JavaScriptModuleScript::JavaScriptModuleScript(URL base_url, ByteString filename, EnvironmentSettingsObject& environment_settings_object)
+JavaScriptModuleScript::JavaScriptModuleScript(URL::URL base_url, ByteString filename, EnvironmentSettingsObject& environment_settings_object)
     : ModuleScript(move(base_url), move(filename), environment_settings_object)
 {
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#creating-a-javascript-module-script
-WebIDL::ExceptionOr<JS::GCPtr<JavaScriptModuleScript>> JavaScriptModuleScript::create(ByteString const& filename, StringView source, EnvironmentSettingsObject& settings_object, URL base_url)
+WebIDL::ExceptionOr<JS::GCPtr<JavaScriptModuleScript>> JavaScriptModuleScript::create(ByteString const& filename, StringView source, EnvironmentSettingsObject& settings_object, URL::URL base_url)
 {
     // 1. If scripting is disabled for settings, then set source to the empty string.
     if (settings_object.is_scripting_disabled())

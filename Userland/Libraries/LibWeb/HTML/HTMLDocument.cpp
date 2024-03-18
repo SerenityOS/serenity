@@ -10,7 +10,7 @@ namespace Web::HTML {
 
 JS_DEFINE_ALLOCATOR(HTMLDocument);
 
-HTMLDocument::HTMLDocument(JS::Realm& realm, URL const& url)
+HTMLDocument::HTMLDocument(JS::Realm& realm, URL::URL const& url)
     : Document(realm, url)
 {
 }
@@ -22,7 +22,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<HTMLDocument>> HTMLDocument::construct_impl
     return HTMLDocument::create(realm);
 }
 
-JS::NonnullGCPtr<HTMLDocument> HTMLDocument::create(JS::Realm& realm, URL const& url)
+JS::NonnullGCPtr<HTMLDocument> HTMLDocument::create(JS::Realm& realm, URL::URL const& url)
 {
     return realm.heap().allocate<HTMLDocument>(realm, realm, url);
 }

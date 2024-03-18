@@ -61,7 +61,7 @@ public:
     {
     }
 
-    Function<void(URL)> on_open_file;
+    Function<void(URL::URL)> on_open_file;
 
     bool event(QEvent* event) override
     {
@@ -133,7 +133,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto cookie_jar = database ? TRY(WebView::CookieJar::create(*database)) : WebView::CookieJar::create();
 
-    Vector<URL> initial_urls;
+    Vector<URL::URL> initial_urls;
 
     for (auto const& raw_url : raw_urls) {
         if (auto url = WebView::sanitize_url(raw_url); url.has_value())

@@ -8,7 +8,6 @@
 #include "BoardWidget.h"
 #include "MainWidget.h"
 #include <AK/Try.h>
-#include <AK/URL.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Application.h>
@@ -23,6 +22,7 @@
 #include <LibGUI/ToolbarContainer.h>
 #include <LibGUI/Window.h>
 #include <LibMain/Main.h>
+#include <LibURL/URL.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {

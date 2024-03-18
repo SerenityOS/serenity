@@ -164,7 +164,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     }
 
-    Vector<URL> initial_urls;
+    Vector<URL::URL> initial_urls;
 
     for (auto specified_url : specified_urls) {
         if (auto url = WebView::sanitize_url(specified_url); url.has_value())

@@ -8,6 +8,7 @@
 
 #include <AK/Forward.h>
 #include <LibGfx/Forward.h>
+#include <LibURL/Forward.h>
 #include <LibWeb/CSS/PreferredColorScheme.h>
 #include <LibWeb/HTML/ActivateTab.h>
 #include <LibWebView/Forward.h>
@@ -16,16 +17,16 @@
 
 @protocol LadybirdWebViewObserver <NSObject>
 
-- (String const&)onCreateNewTab:(URL const&)url
+- (String const&)onCreateNewTab:(URL::URL const&)url
                     activateTab:(Web::HTML::ActivateTab)activate_tab;
 
 - (String const&)onCreateNewTab:(StringView)html
-                            url:(URL const&)url
+                            url:(URL::URL const&)url
                     activateTab:(Web::HTML::ActivateTab)activate_tab;
 
-- (void)loadURL:(URL const&)url;
-- (void)onLoadStart:(URL const&)url isRedirect:(BOOL)is_redirect;
-- (void)onLoadFinish:(URL const&)url;
+- (void)loadURL:(URL::URL const&)url;
+- (void)onLoadStart:(URL::URL const&)url isRedirect:(BOOL)is_redirect;
+- (void)onLoadFinish:(URL::URL const&)url;
 
 - (void)onTitleChange:(ByteString const&)title;
 - (void)onFaviconChange:(Gfx::Bitmap const&)bitmap;
@@ -40,7 +41,7 @@
 
 - (instancetype)init:(id<LadybirdWebViewObserver>)observer;
 
-- (void)loadURL:(URL const&)url;
+- (void)loadURL:(URL::URL const&)url;
 - (void)loadHTML:(StringView)html;
 
 - (WebView::ViewImplementation&)view;

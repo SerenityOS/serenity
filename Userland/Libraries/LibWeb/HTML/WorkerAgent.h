@@ -22,14 +22,14 @@ class WorkerAgent : public JS::Cell {
     JS_CELL(Agent, JS::Cell);
     JS_DECLARE_ALLOCATOR(WorkerAgent);
 
-    WorkerAgent(URL url, WorkerOptions const& options, JS::GCPtr<MessagePort> outside_port, JS::NonnullGCPtr<EnvironmentSettingsObject> outside_settings);
+    WorkerAgent(URL::URL url, WorkerOptions const& options, JS::GCPtr<MessagePort> outside_port, JS::NonnullGCPtr<EnvironmentSettingsObject> outside_settings);
 
 private:
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     WorkerOptions m_worker_options;
-    URL m_url;
+    URL::URL m_url;
 
     JS::GCPtr<MessagePort> m_message_port;
     JS::GCPtr<MessagePort> m_outside_port;

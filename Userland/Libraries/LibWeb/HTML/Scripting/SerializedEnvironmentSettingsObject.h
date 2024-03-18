@@ -7,8 +7,8 @@
 #pragma once
 
 #include <AK/String.h>
-#include <AK/URL.h>
 #include <LibIPC/Forward.h>
+#include <LibURL/URL.h>
 #include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/PolicyContainers.h>
 
@@ -21,12 +21,12 @@ enum class CanUseCrossOriginIsolatedAPIs {
 
 struct SerializedEnvironmentSettingsObject {
     String id;
-    URL creation_url;
-    URL top_level_creation_url;
+    URL::URL creation_url;
+    URL::URL top_level_creation_url;
     Origin top_level_origin;
 
     String api_url_character_encoding;
-    URL api_base_url;
+    URL::URL api_base_url;
     Origin origin;
     PolicyContainer policy_container;
     CanUseCrossOriginIsolatedAPIs cross_origin_isolated_capability;

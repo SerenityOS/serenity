@@ -15,7 +15,7 @@ HashMap<ConnectionKey, NonnullOwnPtr<Vector<NonnullOwnPtr<Connection<Core::TCPSo
 HashMap<ConnectionKey, NonnullOwnPtr<Vector<NonnullOwnPtr<Connection<TLS::TLSv12>>>>> g_tls_connection_cache {};
 HashMap<ByteString, InferredServerProperties> g_inferred_server_properties;
 
-void request_did_finish(URL const& url, Core::Socket const* socket)
+void request_did_finish(URL::URL const& url, Core::Socket const* socket)
 {
     if (!socket) {
         dbgln("Request with a null socket finished for URL {}", url);

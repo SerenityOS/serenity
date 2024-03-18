@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Max Wipfli <mail@maxwipfli.ch>
- * Copyright (c) 2023, Shannon Booth <shannon@serenityos.org>
+ * Copyright (c) 2023-2024, Shannon Booth <shannon@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -18,31 +18,70 @@
 #    undef basename
 #endif
 
-namespace AK {
+namespace URL {
+
+enum class PercentEncodeSet {
+    C0Control,
+    Fragment,
+    Query,
+    SpecialQuery,
+    Path,
+    Userinfo,
+    Component,
+    ApplicationXWWWFormUrlencoded,
+    EncodeURI
+};
+
+enum class ExcludeFragment {
+    No,
+    Yes
+};
+
+// https://url.spec.whatwg.org/#concept-ipv4
+// An IPv4 address is a 32-bit unsigned integer that identifies a network address. [RFC791]
+// FIXME: It would be nice if this were an AK::IPv4Address
+using IPv4Address = u32;
+
+// https://url.spec.whatwg.org/#concept-ipv6
+// An IPv6 address is a 128-bit unsigned integer that identifies a network address. For the purposes of this standard
+// it is represented as a list of eight 16-bit unsigned integers, also known as IPv6 pieces. [RFC4291]
+// FIXME: It would be nice if this were an AK::IPv6Address
+using IPv6Address = Array<u16, 8>;
+
+// https://url.spec.whatwg.org/#concept-host
+// A host is a domain, an IP address, an opaque host, or an empty host. Typically a host serves as a network address,
+// but it is sometimes used as opaque identifier in URLs where a network address is not necessary.
+using Host = Variant<IPv4Address, IPv6Address, String, Empty>;
+
+enum class ApplyPercentDecoding {
+    Yes,
+    No
+};
+
+struct DataURL {
+    String mime_type;
+    ByteBuffer body;
+};
+
+void append_percent_encoded_if_necessary(StringBuilder&, u32 code_point, PercentEncodeSet set = PercentEncodeSet::Userinfo);
+void append_percent_encoded(StringBuilder&, u32 code_point);
+bool code_point_is_in_percent_encode_set(u32 code_point, PercentEncodeSet);
+Optional<u16> default_port_for_scheme(StringView);
+bool is_special_scheme(StringView);
+
+enum class SpaceAsPlus {
+    No,
+    Yes,
+};
+ByteString percent_encode(StringView input, PercentEncodeSet set = PercentEncodeSet::Userinfo, SpaceAsPlus = SpaceAsPlus::No);
+ByteString percent_decode(StringView input);
 
 // https://url.spec.whatwg.org/#url-representation
 // A URL is a struct that represents a universal identifier. To disambiguate from a valid URL string it can also be referred to as a URL record.
 class URL {
-    friend class URLParser;
+    friend class Parser;
 
 public:
-    enum class PercentEncodeSet {
-        C0Control,
-        Fragment,
-        Query,
-        SpecialQuery,
-        Path,
-        Userinfo,
-        Component,
-        ApplicationXWWWFormUrlencoded,
-        EncodeURI
-    };
-
-    enum class ExcludeFragment {
-        No,
-        Yes
-    };
-
     URL() = default;
     URL(StringView);
     URL(ByteString const& string)
@@ -53,22 +92,6 @@ public:
         : URL(string.bytes_as_string_view())
     {
     }
-
-    // https://url.spec.whatwg.org/#concept-ipv4
-    // An IPv4 address is a 32-bit unsigned integer that identifies a network address. [RFC791]
-    // FIXME: It would be nice if this were an AK::IPv4Address
-    using IPv4Address = u32;
-
-    // https://url.spec.whatwg.org/#concept-ipv6
-    // An IPv6 address is a 128-bit unsigned integer that identifies a network address. For the purposes of this standard
-    // it is represented as a list of eight 16-bit unsigned integers, also known as IPv6 pieces. [RFC4291]
-    // FIXME: It would be nice if this were an AK::IPv6Address
-    using IPv6Address = Array<u16, 8>;
-
-    // https://url.spec.whatwg.org/#concept-host
-    // A host is a domain, an IP address, an opaque host, or an empty host. Typically a host serves as a network address,
-    // but it is sometimes used as opaque identifier in URLs where a network address is not necessary.
-    using Host = Variant<IPv4Address, IPv6Address, String, Empty>;
 
     bool is_valid() const { return m_valid; }
 
@@ -107,10 +130,6 @@ public:
         m_paths.append(String {});
     }
 
-    enum class ApplyPercentDecoding {
-        Yes,
-        No
-    };
     ByteString serialize_path(ApplyPercentDecoding = ApplyPercentDecoding::Yes) const;
     ByteString serialize(ExcludeFragment = ExcludeFragment::No) const;
     ByteString serialize_for_display() const;
@@ -124,39 +143,15 @@ public:
 
     URL complete_url(StringView) const;
 
-    struct DataURL {
-        String mime_type;
-        ByteBuffer body;
-    };
     ErrorOr<DataURL> process_data_url() const;
 
-    static URL create_with_url_or_path(ByteString const&);
-    static URL create_with_file_scheme(ByteString const& path, ByteString const& fragment = {}, ByteString const& hostname = {});
-    static URL create_with_help_scheme(ByteString const& path, ByteString const& fragment = {}, ByteString const& hostname = {});
-    static URL create_with_data(StringView mime_type, StringView payload, bool is_base64 = false);
-
-    static Optional<u16> default_port_for_scheme(StringView);
-    static bool is_special_scheme(StringView);
-
-    enum class SpaceAsPlus {
-        No,
-        Yes,
-    };
-    static ByteString percent_encode(StringView input, PercentEncodeSet set = PercentEncodeSet::Userinfo, SpaceAsPlus = SpaceAsPlus::No);
-    static ByteString percent_decode(StringView input);
-
     bool operator==(URL const& other) const { return equals(other, ExcludeFragment::No); }
-
-    static bool code_point_is_in_percent_encode_set(u32 code_point, URL::PercentEncodeSet);
 
     String const& raw_username() const { return m_username; }
     String const& raw_password() const { return m_password; }
 
 private:
     bool compute_validity() const;
-
-    static void append_percent_encoded_if_necessary(StringBuilder&, u32 code_point, PercentEncodeSet set = PercentEncodeSet::Userinfo);
-    static void append_percent_encoded(StringBuilder&, u32 code_point);
 
     bool m_valid { false };
 
@@ -188,17 +183,22 @@ private:
     bool m_cannot_be_a_base_url { false };
 };
 
+URL create_with_url_or_path(ByteString const&);
+URL create_with_file_scheme(ByteString const& path, ByteString const& fragment = {}, ByteString const& hostname = {});
+URL create_with_help_scheme(ByteString const& path, ByteString const& fragment = {}, ByteString const& hostname = {});
+URL create_with_data(StringView mime_type, StringView payload, bool is_base64 = false);
+
+}
+
 template<>
-struct Formatter<URL> : Formatter<StringView> {
-    ErrorOr<void> format(FormatBuilder& builder, URL const& value)
+struct AK::Formatter<URL::URL> : AK::Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, URL::URL const& value)
     {
         return Formatter<StringView>::format(builder, value.serialize());
     }
 };
 
 template<>
-struct Traits<URL> : public DefaultTraits<URL> {
-    static unsigned hash(URL const& url) { return url.to_byte_string().hash(); }
+struct AK::Traits<URL::URL> : public AK::DefaultTraits<URL::URL> {
+    static unsigned hash(URL::URL const& url) { return url.to_byte_string().hash(); }
 };
-
-}

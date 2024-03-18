@@ -13,4 +13,4 @@ set(SOURCES
 )
 
 serenity_app(MapsSettings ICON app-maps)
-target_link_libraries(MapsSettings PRIVATE LibConfig LibCore LibGfx LibGUI LibMain)
+target_link_libraries(MapsSettings PRIVATE LibConfig LibCore LibGfx LibGUI LibMain LibURL)

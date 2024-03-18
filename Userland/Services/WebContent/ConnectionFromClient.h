@@ -54,7 +54,7 @@ private:
     virtual void update_system_theme(u64 page_id, Core::AnonymousBuffer const&) override;
     virtual void update_system_fonts(u64 page_id, ByteString const&, ByteString const&, ByteString const&) override;
     virtual void update_screen_rects(u64 page_id, Vector<Web::DevicePixelRect> const&, u32) override;
-    virtual void load_url(u64 page_id, URL const&) override;
+    virtual void load_url(u64 page_id, URL::URL const&) override;
     virtual void load_html(u64 page_id, ByteString const&) override;
     virtual void set_viewport_rect(u64 page_id, Web::DevicePixelRect const&) override;
     virtual void key_event(u64 page_id, Web::KeyEvent const&) override;

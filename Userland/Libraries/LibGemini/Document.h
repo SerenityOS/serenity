@@ -9,7 +9,7 @@
 #include <AK/ByteString.h>
 #include <AK/Forward.h>
 #include <AK/NonnullOwnPtr.h>
-#include <AK/URL.h>
+#include <LibURL/URL.h>
 
 namespace Gemini {
 
@@ -32,12 +32,12 @@ class Document : public RefCounted<Document> {
 public:
     ByteString render_to_html() const;
 
-    static NonnullRefPtr<Document> parse(StringView source, const URL&);
+    static NonnullRefPtr<Document> parse(StringView source, const URL::URL&);
 
-    const URL& url() const { return m_url; }
+    const URL::URL& url() const { return m_url; }
 
 private:
-    explicit Document(const URL& url)
+    explicit Document(const URL::URL& url)
         : m_url(url)
     {
     }
@@ -45,7 +45,7 @@ private:
     void read_lines(StringView);
 
     Vector<NonnullOwnPtr<Line>> m_lines;
-    URL m_url;
+    URL::URL m_url;
     bool m_inside_preformatted_block { false };
     bool m_inside_unordered_list { false };
 };
@@ -67,7 +67,7 @@ public:
     virtual ByteString render_to_html() const override;
 
 private:
-    URL m_url;
+    URL::URL m_url;
     ByteString m_name;
 };
 

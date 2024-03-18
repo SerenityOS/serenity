@@ -7,9 +7,9 @@
 
 #pragma once
 
-#include <AK/URL.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/Completion.h>
+#include <LibURL/URL.h>
 #include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/CrossOrigin/CrossOriginPropertyDescriptorMap.h>
@@ -75,8 +75,8 @@ private:
     virtual void visit_edges(Cell::Visitor&) override;
 
     JS::GCPtr<DOM::Document> relevant_document() const;
-    URL url() const;
-    WebIDL::ExceptionOr<void> navigate(URL, HistoryHandlingBehavior = HistoryHandlingBehavior::Default);
+    URL::URL url() const;
+    WebIDL::ExceptionOr<void> navigate(URL::URL, HistoryHandlingBehavior = HistoryHandlingBehavior::Default);
 
     // [[CrossOriginPropertyDescriptorMap]], https://html.spec.whatwg.org/multipage/browsers.html#crossoriginpropertydescriptormap
     HTML::CrossOriginPropertyDescriptorMap m_cross_origin_property_descriptor_map;

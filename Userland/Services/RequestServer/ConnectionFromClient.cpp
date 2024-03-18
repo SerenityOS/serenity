@@ -41,7 +41,7 @@ Messages::RequestServer::IsSupportedProtocolResponse ConnectionFromClient::is_su
     return supported;
 }
 
-void ConnectionFromClient::start_request(i32 request_id, ByteString const& method, URL const& url, HashMap<ByteString, ByteString> const& request_headers, ByteBuffer const& request_body, Core::ProxyData const& proxy_data)
+void ConnectionFromClient::start_request(i32 request_id, ByteString const& method, URL::URL const& url, HashMap<ByteString, ByteString> const& request_headers, ByteBuffer const& request_body, Core::ProxyData const& proxy_data)
 {
     if (!url.is_valid()) {
         dbgln("StartRequest: Invalid URL requested: '{}'", url);
@@ -117,7 +117,7 @@ Messages::RequestServer::SetCertificateResponse ConnectionFromClient::set_certif
 class Job : public RefCounted<Job>
     , public Weakable<Job> {
 public:
-    static NonnullRefPtr<Job> ensure(URL const& url)
+    static NonnullRefPtr<Job> ensure(URL::URL const& url)
     {
         RefPtr<Job> job;
         if (auto it = s_jobs.find(url); it != s_jobs.end())
@@ -147,16 +147,16 @@ public:
     }
 
 private:
-    explicit Job(URL url)
+    explicit Job(URL::URL url)
         : m_url(move(url))
     {
     }
 
-    URL m_url;
-    inline static HashMap<URL, WeakPtr<Job>> s_jobs {};
+    URL::URL m_url;
+    inline static HashMap<URL::URL, WeakPtr<Job>> s_jobs {};
 };
 
-void ConnectionFromClient::ensure_connection(URL const& url, ::RequestServer::CacheLevel const& cache_level)
+void ConnectionFromClient::ensure_connection(URL::URL const& url, ::RequestServer::CacheLevel const& cache_level)
 {
     if (!url.is_valid()) {
         dbgln("EnsureConnection: Invalid URL requested: '{}'", url);
@@ -190,7 +190,7 @@ void ConnectionFromClient::ensure_connection(URL const& url, ::RequestServer::Ca
 }
 
 static i32 s_next_websocket_id = 1;
-Messages::RequestServer::WebsocketConnectResponse ConnectionFromClient::websocket_connect(URL const& url, ByteString const& origin, Vector<ByteString> const& protocols, Vector<ByteString> const& extensions, HashMap<ByteString, ByteString> const& additional_request_headers)
+Messages::RequestServer::WebsocketConnectResponse ConnectionFromClient::websocket_connect(URL::URL const& url, ByteString const& origin, Vector<ByteString> const& protocols, Vector<ByteString> const& extensions, HashMap<ByteString, ByteString> const& additional_request_headers)
 {
     if (!url.is_valid()) {
         dbgln("WebSocket::Connect: Invalid URL requested: '{}'", url);

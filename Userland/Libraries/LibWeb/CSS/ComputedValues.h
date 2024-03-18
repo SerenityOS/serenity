@@ -201,33 +201,33 @@ public:
         : m_value(color)
     {
     }
-    SVGPaint(URL const& url)
+    SVGPaint(URL::URL const& url)
         : m_value(url)
     {
     }
 
     bool is_color() const { return m_value.has<Color>(); }
-    bool is_url() const { return m_value.has<URL>(); }
+    bool is_url() const { return m_value.has<URL::URL>(); }
     Color as_color() const { return m_value.get<Color>(); }
-    URL const& as_url() const { return m_value.get<URL>(); }
+    URL::URL const& as_url() const { return m_value.get<URL::URL>(); }
 
 private:
-    Variant<URL, Color> m_value;
+    Variant<URL::URL, Color> m_value;
 };
 
 // https://drafts.fxtf.org/css-masking-1/#typedef-mask-reference
 class MaskReference {
 public:
     // TODO: Support other mask types.
-    MaskReference(URL const& url)
+    MaskReference(URL::URL const& url)
         : m_url(url)
     {
     }
 
-    URL const& url() const { return m_url; }
+    URL::URL const& url() const { return m_url; }
 
 private:
-    URL m_url;
+    URL::URL m_url;
 };
 
 struct BackgroundLayerData {

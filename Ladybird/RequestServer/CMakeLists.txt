@@ -33,7 +33,7 @@ target_link_libraries(RequestServer PRIVATE requestserver)
 
 target_include_directories(requestserver PRIVATE ${SERENITY_SOURCE_DIR}/Userland/Services/)
 target_include_directories(requestserver PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/..)
-target_link_libraries(requestserver PUBLIC LibCore LibMain LibCrypto LibFileSystem LibGemini LibHTTP LibIPC LibMain LibTLS LibWebView LibWebSocket)
+target_link_libraries(requestserver PUBLIC LibCore LibMain LibCrypto LibFileSystem LibGemini LibHTTP LibIPC LibMain LibTLS LibWebView LibWebSocket LibURL)
 if (${CMAKE_SYSTEM_NAME} MATCHES "SunOS")
     # Solaris has socket and networking related functions in two extra libraries
     target_link_libraries(requestserver PUBLIC nsl socket)

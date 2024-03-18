@@ -161,7 +161,7 @@ void EnvironmentSettingsObject::prepare_to_run_callback()
 }
 
 // https://html.spec.whatwg.org/multipage/urls-and-fetching.html#parse-a-url
-URL EnvironmentSettingsObject::parse_url(StringView url)
+URL::URL EnvironmentSettingsObject::parse_url(StringView url)
 {
     // 1. Let encoding be document's character encoding, if document was given, and environment settings object's API URL character encoding otherwise.
     // FIXME: Pass in environment settings object's API URL character encoding.

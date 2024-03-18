@@ -12,7 +12,6 @@
 #include <AK/MaybeOwned.h>
 #include <AK/NumberFormat.h>
 #include <AK/String.h>
-#include <AK/URL.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/System.h>
@@ -21,6 +20,7 @@
 #include <LibMain/Main.h>
 #include <LibProtocol/Request.h>
 #include <LibProtocol/RequestClient.h>
+#include <LibURL/URL.h>
 #include <ctype.h>
 #include <stdio.h>
 
@@ -215,7 +215,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         // FIXME: Content-Type?
     }
 
-    URL url(url_str);
+    URL::URL url(url_str);
     if (!url.is_valid()) {
         warnln("'{}' is not a valid URL", url_str);
         return 1;

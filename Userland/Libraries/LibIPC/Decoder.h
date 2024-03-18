@@ -22,6 +22,7 @@
 #include <LibIPC/File.h>
 #include <LibIPC/Forward.h>
 #include <LibIPC/Message.h>
+#include <LibURL/URL.h>
 
 namespace IPC {
 
@@ -100,7 +101,7 @@ template<>
 ErrorOr<UnixDateTime> decode(Decoder&);
 
 template<>
-ErrorOr<URL> decode(Decoder&);
+ErrorOr<URL::URL> decode(Decoder&);
 
 template<>
 ErrorOr<File> decode(Decoder&);

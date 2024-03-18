@@ -113,13 +113,13 @@ public:
     bool fire_a_traverse_navigate_event(JS::NonnullGCPtr<SessionHistoryEntry> destination_she, UserNavigationInvolvement = UserNavigationInvolvement::None);
     bool fire_a_push_replace_reload_navigate_event(
         Bindings::NavigationType,
-        URL destination_url,
+        URL::URL destination_url,
         bool is_same_document,
         UserNavigationInvolvement = UserNavigationInvolvement::None,
         Optional<Vector<XHR::FormDataEntry>&> form_data_entry_list = {},
         Optional<SerializationRecord> navigation_api_state = {},
         Optional<SerializationRecord> classic_history_api_state = {});
-    bool fire_a_download_request_navigate_event(URL destination_url, UserNavigationInvolvement user_involvement, String filename);
+    bool fire_a_download_request_navigate_event(URL::URL destination_url, UserNavigationInvolvement user_involvement, String filename);
 
     void initialize_the_navigation_api_entries_for_a_new_document(Vector<JS::NonnullGCPtr<SessionHistoryEntry>> const& new_shes, JS::NonnullGCPtr<SessionHistoryEntry> initial_she);
     void update_the_navigation_api_entries_for_a_same_document_navigation(JS::NonnullGCPtr<SessionHistoryEntry> destination_she, Bindings::NavigationType);

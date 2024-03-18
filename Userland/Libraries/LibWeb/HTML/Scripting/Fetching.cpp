@@ -77,11 +77,11 @@ ByteString module_type_from_module_request(JS::ModuleRequest const& module_reque
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#resolve-a-module-specifier
-WebIDL::ExceptionOr<URL> resolve_module_specifier(Optional<Script&> referring_script, ByteString const& specifier)
+WebIDL::ExceptionOr<URL::URL> resolve_module_specifier(Optional<Script&> referring_script, ByteString const& specifier)
 {
     // 1. Let settingsObject and baseURL be null.
     Optional<EnvironmentSettingsObject&> settings_object;
-    Optional<URL const&> base_url;
+    Optional<URL::URL const&> base_url;
 
     // 2. If referringScript is not null, then:
     if (referring_script.has_value()) {
@@ -153,7 +153,7 @@ WebIDL::ExceptionOr<URL> resolve_module_specifier(Optional<Script&> referring_sc
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#resolving-an-imports-match
-WebIDL::ExceptionOr<Optional<URL>> resolve_imports_match(ByteString const& normalized_specifier, Optional<URL> as_url, ModuleSpecifierMap const& specifier_map)
+WebIDL::ExceptionOr<Optional<URL::URL>> resolve_imports_match(ByteString const& normalized_specifier, Optional<URL::URL> as_url, ModuleSpecifierMap const& specifier_map)
 {
     // 1. For each specifierKey → resolutionResult of specifierMap:
     for (auto const& [specifier_key, resolution_result] : specifier_map) {
@@ -216,11 +216,11 @@ WebIDL::ExceptionOr<Optional<URL>> resolve_imports_match(ByteString const& norma
     }
 
     // 2. Return null.
-    return Optional<URL> {};
+    return Optional<URL::URL> {};
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#resolving-a-url-like-module-specifier
-Optional<URL> resolve_url_like_module_specifier(ByteString const& specifier, URL const& base_url)
+Optional<URL::URL> resolve_url_like_module_specifier(ByteString const& specifier, URL::URL const& base_url)
 {
     // 1. If specifier starts with "/", "./", or "../", then:
     if (specifier.starts_with("/"sv) || specifier.starts_with("./"sv) || specifier.starts_with("../"sv)) {
@@ -277,7 +277,7 @@ static void set_up_module_script_request(Fetch::Infrastructure::Request& request
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#fetch-a-classic-script
-WebIDL::ExceptionOr<void> fetch_classic_script(JS::NonnullGCPtr<HTMLScriptElement> element, URL const& url, EnvironmentSettingsObject& settings_object, ScriptFetchOptions options, CORSSettingAttribute cors_setting, String character_encoding, OnFetchScriptComplete on_complete)
+WebIDL::ExceptionOr<void> fetch_classic_script(JS::NonnullGCPtr<HTMLScriptElement> element, URL::URL const& url, EnvironmentSettingsObject& settings_object, ScriptFetchOptions options, CORSSettingAttribute cors_setting, String character_encoding, OnFetchScriptComplete on_complete)
 {
     auto& realm = element->realm();
     auto& vm = realm.vm();
@@ -342,7 +342,7 @@ WebIDL::ExceptionOr<void> fetch_classic_script(JS::NonnullGCPtr<HTMLScriptElemen
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#fetch-a-classic-worker-script
-WebIDL::ExceptionOr<void> fetch_classic_worker_script(URL const& url, EnvironmentSettingsObject& fetch_client, Fetch::Infrastructure::Request::Destination destination, EnvironmentSettingsObject& settings_object, PerformTheFetchHook perform_fetch, OnFetchScriptComplete on_complete)
+WebIDL::ExceptionOr<void> fetch_classic_worker_script(URL::URL const& url, EnvironmentSettingsObject& fetch_client, Fetch::Infrastructure::Request::Destination destination, EnvironmentSettingsObject& settings_object, PerformTheFetchHook perform_fetch, OnFetchScriptComplete on_complete)
 {
     auto& realm = settings_object.realm();
     auto& vm = realm.vm();
@@ -422,13 +422,13 @@ WebIDL::ExceptionOr<void> fetch_classic_worker_script(URL const& url, Environmen
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#fetch-a-module-worker-script-tree
-WebIDL::ExceptionOr<void> fetch_module_worker_script_graph(URL const& url, EnvironmentSettingsObject& fetch_client, Fetch::Infrastructure::Request::Destination destination, EnvironmentSettingsObject& settings_object, PerformTheFetchHook perform_fetch, OnFetchScriptComplete on_complete)
+WebIDL::ExceptionOr<void> fetch_module_worker_script_graph(URL::URL const& url, EnvironmentSettingsObject& fetch_client, Fetch::Infrastructure::Request::Destination destination, EnvironmentSettingsObject& settings_object, PerformTheFetchHook perform_fetch, OnFetchScriptComplete on_complete)
 {
     return fetch_worklet_module_worker_script_graph(url, fetch_client, destination, settings_object, move(perform_fetch), move(on_complete));
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#fetch-a-worklet/module-worker-script-graph
-WebIDL::ExceptionOr<void> fetch_worklet_module_worker_script_graph(URL const& url, EnvironmentSettingsObject& fetch_client, Fetch::Infrastructure::Request::Destination destination, EnvironmentSettingsObject& settings_object, PerformTheFetchHook perform_fetch, OnFetchScriptComplete on_complete)
+WebIDL::ExceptionOr<void> fetch_worklet_module_worker_script_graph(URL::URL const& url, EnvironmentSettingsObject& fetch_client, Fetch::Infrastructure::Request::Destination destination, EnvironmentSettingsObject& settings_object, PerformTheFetchHook perform_fetch, OnFetchScriptComplete on_complete)
 {
     auto& realm = settings_object.realm();
     auto& vm = realm.vm();
@@ -593,7 +593,7 @@ void fetch_descendants_of_a_module_script(JS::Realm& realm, JavaScriptModuleScri
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#fetch-a-single-module-script
 void fetch_single_module_script(JS::Realm& realm,
-    URL const& url,
+    URL::URL const& url,
     EnvironmentSettingsObject& fetch_client,
     Fetch::Infrastructure::Request::Destination destination,
     ScriptFetchOptions const& options,
@@ -713,7 +713,7 @@ void fetch_single_module_script(JS::Realm& realm,
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#fetch-a-module-script-tree
-void fetch_external_module_script_graph(JS::Realm& realm, URL const& url, EnvironmentSettingsObject& settings_object, ScriptFetchOptions const& options, OnFetchScriptComplete on_complete)
+void fetch_external_module_script_graph(JS::Realm& realm, URL::URL const& url, EnvironmentSettingsObject& settings_object, ScriptFetchOptions const& options, OnFetchScriptComplete on_complete)
 {
     // 1. Disallow further import maps given settingsObject.
     settings_object.disallow_further_import_maps();
@@ -735,7 +735,7 @@ void fetch_external_module_script_graph(JS::Realm& realm, URL const& url, Enviro
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#fetch-an-inline-module-script-graph
-void fetch_inline_module_script_graph(JS::Realm& realm, ByteString const& filename, ByteString const& source_text, URL const& base_url, EnvironmentSettingsObject& settings_object, OnFetchScriptComplete on_complete)
+void fetch_inline_module_script_graph(JS::Realm& realm, ByteString const& filename, ByteString const& source_text, URL::URL const& base_url, EnvironmentSettingsObject& settings_object, OnFetchScriptComplete on_complete)
 {
     // 1. Disallow further import maps given settingsObject.
     settings_object.disallow_further_import_maps();
@@ -755,7 +755,7 @@ void fetch_inline_module_script_graph(JS::Realm& realm, ByteString const& filena
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#fetch-a-single-imported-module-script
 void fetch_single_imported_module_script(JS::Realm& realm,
-    URL const& url,
+    URL::URL const& url,
     EnvironmentSettingsObject& fetch_client,
     Fetch::Infrastructure::Request::Destination destination,
     ScriptFetchOptions const& options,

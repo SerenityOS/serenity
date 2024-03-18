@@ -8,7 +8,6 @@
 
 #include <AK/Format.h>
 #include <AK/Optional.h>
-#include <AK/URL.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/Process.h>
@@ -22,6 +21,7 @@
 #include <LibGfx/ImageFormats/PNGWriter.h>
 #include <LibGfx/Palette.h>
 #include <LibMain/Main.h>
+#include <LibURL/URL.h>
 #include <unistd.h>
 
 class SelectableLayover final : public GUI::Widget {

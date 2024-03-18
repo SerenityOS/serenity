@@ -1,4 +1,4 @@
-#include <AK/URL.h>
+#include <LibURL/URL.h>
 #include <LibCore/AnonymousBuffer.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/ShareableBitmap.h>
@@ -16,8 +16,8 @@
 
 endpoint WebContentClient
 {
-    did_start_loading(u64 page_id, URL url, bool is_redirect) =|
-    did_finish_loading(u64 page_id, URL url) =|
+    did_start_loading(u64 page_id, URL::URL url, bool is_redirect) =|
+    did_finish_loading(u64 page_id, URL::URL url) =|
     did_request_navigate_back(u64 page_id) =|
     did_request_navigate_forward(u64 page_id) =|
     did_request_refresh(u64 page_id) =|
@@ -29,13 +29,13 @@ endpoint WebContentClient
     did_request_scroll_to(u64 page_id, Gfx::IntPoint scroll_position) =|
     did_enter_tooltip_area(u64 page_id, Gfx::IntPoint content_position, ByteString title) =|
     did_leave_tooltip_area(u64 page_id) =|
-    did_hover_link(u64 page_id, URL url) =|
+    did_hover_link(u64 page_id, URL::URL url) =|
     did_unhover_link(u64 page_id) =|
-    did_click_link(u64 page_id, URL url, ByteString target, unsigned modifiers) =|
-    did_middle_click_link(u64 page_id, URL url, ByteString target, unsigned modifiers) =|
+    did_click_link(u64 page_id, URL::URL url, ByteString target, unsigned modifiers) =|
+    did_middle_click_link(u64 page_id, URL::URL url, ByteString target, unsigned modifiers) =|
     did_request_context_menu(u64 page_id, Gfx::IntPoint content_position) =|
-    did_request_link_context_menu(u64 page_id, Gfx::IntPoint content_position, URL url, ByteString target, unsigned modifiers) =|
-    did_request_image_context_menu(u64 page_id, Gfx::IntPoint content_position, URL url, ByteString target, unsigned modifiers, Gfx::ShareableBitmap bitmap) =|
+    did_request_link_context_menu(u64 page_id, Gfx::IntPoint content_position, URL::URL url, ByteString target, unsigned modifiers) =|
+    did_request_image_context_menu(u64 page_id, Gfx::IntPoint content_position, URL::URL url, ByteString target, unsigned modifiers, Gfx::ShareableBitmap bitmap) =|
     did_request_media_context_menu(u64 page_id, Gfx::IntPoint content_position, ByteString target, unsigned modifiers, Web::Page::MediaContextMenu menu) =|
     did_request_alert(u64 page_id, String message) =|
     did_request_confirm(u64 page_id, String message) =|
@@ -43,7 +43,7 @@ endpoint WebContentClient
     did_request_set_prompt_text(u64 page_id, String message) =|
     did_request_accept_dialog(u64 page_id) =|
     did_request_dismiss_dialog(u64 page_id) =|
-    did_get_source(u64 page_id, URL url, ByteString source) =|
+    did_get_source(u64 page_id, URL::URL url, ByteString source) =|
 
     did_inspect_dom_tree(u64 page_id, ByteString dom_tree) =|
     did_inspect_dom_node(u64 page_id, bool has_style, ByteString computed_style,  ByteString resolved_style,  ByteString custom_properties, ByteString node_box_sizing, ByteString aria_properties_state) =|
@@ -55,10 +55,10 @@ endpoint WebContentClient
     did_take_screenshot(u64 page_id, Gfx::ShareableBitmap screenshot) =|
 
     did_change_favicon(u64 page_id, Gfx::ShareableBitmap favicon) =|
-    did_request_all_cookies(u64 page_id, URL url) => (Vector<Web::Cookie::Cookie> cookies)
-    did_request_named_cookie(u64 page_id, URL url, String name) => (Optional<Web::Cookie::Cookie> cookie)
-    did_request_cookie(u64 page_id, URL url, Web::Cookie::Source source) => (String cookie)
-    did_set_cookie(u64 page_id, URL url, Web::Cookie::ParsedCookie cookie, Web::Cookie::Source source) => ()
+    did_request_all_cookies(u64 page_id, URL::URL url) => (Vector<Web::Cookie::Cookie> cookies)
+    did_request_named_cookie(u64 page_id, URL::URL url, String name) => (Optional<Web::Cookie::Cookie> cookie)
+    did_request_cookie(u64 page_id, URL::URL url, Web::Cookie::Source source) => (String cookie)
+    did_set_cookie(u64 page_id, URL::URL url, Web::Cookie::ParsedCookie cookie, Web::Cookie::Source source) => ()
     did_update_cookie(u64 page_id, Web::Cookie::Cookie cookie) =|
     did_update_resource_count(u64 page_id, i32 count_waiting) =|
     did_request_new_web_view(u64 page_id, Web::HTML::ActivateTab activate_tab, Web::HTML::WebViewHints hints, Optional<u64> page_index) => (String handle)

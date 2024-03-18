@@ -20,7 +20,7 @@
 #include <LibVideo/Color/CodingIndependentCodePoints.h>
 
 template<class T>
-static ErrorOr<String> hyperlink(URL const& target, T const& label)
+static ErrorOr<String> hyperlink(URL::URL const& target, T const& label)
 {
     return String::formatted("\033]8;;{}\033\\{}\033]8;;\033\\", target, label);
 }

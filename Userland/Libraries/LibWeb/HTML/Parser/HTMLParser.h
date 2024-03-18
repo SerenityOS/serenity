@@ -54,7 +54,7 @@ public:
     static JS::NonnullGCPtr<HTMLParser> create(DOM::Document&, StringView input, ByteString const& encoding);
 
     void run(HTMLTokenizer::StopAtInsertionPoint = HTMLTokenizer::StopAtInsertionPoint::No);
-    void run(const URL&, HTMLTokenizer::StopAtInsertionPoint = HTMLTokenizer::StopAtInsertionPoint::No);
+    void run(const URL::URL&, HTMLTokenizer::StopAtInsertionPoint = HTMLTokenizer::StopAtInsertionPoint::No);
 
     static void the_end(JS::NonnullGCPtr<DOM::Document>, JS::GCPtr<HTMLParser> = nullptr);
 

@@ -56,7 +56,7 @@ void Page::set_focused_browsing_context(Badge<EventHandler>, HTML::BrowsingConte
     m_focused_context = browsing_context.make_weak_ptr();
 }
 
-void Page::load(const URL& url)
+void Page::load(const URL::URL& url)
 {
     (void)top_level_traversable()->navigate({ .url = url, .source_document = *top_level_traversable()->active_document(), .user_involvement = HTML::UserNavigationInvolvement::BrowserUI });
 }
@@ -499,7 +499,7 @@ template<>
 ErrorOr<Web::Page::MediaContextMenu> IPC::decode(Decoder& decoder)
 {
     return Web::Page::MediaContextMenu {
-        .media_url = TRY(decoder.decode<URL>()),
+        .media_url = TRY(decoder.decode<URL::URL>()),
         .is_video = TRY(decoder.decode<bool>()),
         .is_playing = TRY(decoder.decode<bool>()),
         .is_muted = TRY(decoder.decode<bool>()),

@@ -6,7 +6,6 @@
  */
 
 #include "MapWidget.h"
-#include <AK/URL.h>
 #include <Applications/MapsSettings/Defaults.h>
 #include <LibConfig/Client.h>
 #include <LibDesktop/Launcher.h>
@@ -15,6 +14,7 @@
 #include <LibGUI/Clipboard.h>
 #include <LibGfx/ImageFormats/ImageDecoder.h>
 #include <LibProtocol/Request.h>
+#include <LibURL/URL.h>
 
 namespace Maps {
 
@@ -74,7 +74,7 @@ MapWidget::MapWidget(Options const& options)
     m_request_client = Protocol::RequestClient::try_create().release_value_but_fixme_should_propagate_errors();
     if (options.attribution_enabled) {
         auto attribution_text = options.attribution_text.value_or(MUST(String::from_byte_string(Config::read_string("Maps"sv, "MapWidget"sv, "TileProviderAttributionText"sv, Maps::default_tile_provider_attribution_text))));
-        URL attribution_url = options.attribution_url.value_or(URL(Config::read_string("Maps"sv, "MapWidget"sv, "TileProviderAttributionUrl"sv, Maps::default_tile_provider_attribution_url)));
+        URL::URL attribution_url = options.attribution_url.value_or(URL::URL(Config::read_string("Maps"sv, "MapWidget"sv, "TileProviderAttributionUrl"sv, Maps::default_tile_provider_attribution_url)));
         add_panel({ attribution_text, Panel::Position::BottomRight, attribution_url, "attribution"_string });
     }
     m_marker_image = Gfx::Bitmap::load_from_file("/res/graphics/maps/marker-blue.png"sv).release_value_but_fixme_should_propagate_errors();
@@ -117,7 +117,7 @@ void MapWidget::config_string_did_change(StringView domain, StringView group, St
         // Update attribution panel url when it exists
         for (auto& panel : m_panels) {
             if (panel.name == "attribution") {
-                panel.url = URL(value);
+                panel.url = URL::URL(value);
                 return;
             }
         }
@@ -248,19 +248,19 @@ void MapWidget::context_menu_event(GUI::ContextMenuEvent& event)
     auto link_icon = MUST(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-symlink.png"sv));
     m_context_menu->add_action(GUI::Action::create(
         "Open in &OpenStreetMap", link_icon, [this](auto&) {
-            Desktop::Launcher::open(URL(MUST(String::formatted("https://www.openstreetmap.org/#map={}/{}/{}", m_zoom, m_context_menu_latlng.latitude, m_context_menu_latlng.longitude))));
+            Desktop::Launcher::open(URL::URL(MUST(String::formatted("https://www.openstreetmap.org/#map={}/{}/{}", m_zoom, m_context_menu_latlng.latitude, m_context_menu_latlng.longitude))));
         }));
     m_context_menu->add_action(GUI::Action::create(
         "Open in &Google Maps", link_icon, [this](auto&) {
-            Desktop::Launcher::open(URL(MUST(String::formatted("https://www.google.com/maps/@{},{},{}z", m_context_menu_latlng.latitude, m_context_menu_latlng.longitude, m_zoom))));
+            Desktop::Launcher::open(URL::URL(MUST(String::formatted("https://www.google.com/maps/@{},{},{}z", m_context_menu_latlng.latitude, m_context_menu_latlng.longitude, m_zoom))));
         }));
     m_context_menu->add_action(GUI::Action::create(
         "Open in &Bing Maps", link_icon, [this](auto&) {
-            Desktop::Launcher::open(URL(MUST(String::formatted("https://www.bing.com/maps/?cp={}~{}&lvl={}", m_context_menu_latlng.latitude, m_context_menu_latlng.longitude, m_zoom))));
+            Desktop::Launcher::open(URL::URL(MUST(String::formatted("https://www.bing.com/maps/?cp={}~{}&lvl={}", m_context_menu_latlng.latitude, m_context_menu_latlng.longitude, m_zoom))));
         }));
     m_context_menu->add_action(GUI::Action::create(
         "Open in &DuckDuckGo Maps", link_icon, [this](auto&) {
-            Desktop::Launcher::open(URL(MUST(String::formatted("https://duckduckgo.com/?q={},+{}&ia=web&iaxm=maps", m_context_menu_latlng.latitude, m_context_menu_latlng.longitude))));
+            Desktop::Launcher::open(URL::URL(MUST(String::formatted("https://duckduckgo.com/?q={},+{}&ia=web&iaxm=maps", m_context_menu_latlng.latitude, m_context_menu_latlng.longitude))));
         }));
     m_context_menu->add_separator();
     m_context_menu->add_action(GUI::Action::create(
@@ -318,7 +318,7 @@ void MapWidget::process_tile_queue()
     HashMap<ByteString, ByteString> headers;
     headers.set("User-Agent", "SerenityOS Maps");
     headers.set("Accept", "image/png");
-    URL url(MUST(String::formatted(m_tile_provider.value_or(m_default_tile_provider), tile_key.zoom, tile_key.x, tile_key.y)));
+    URL::URL url(MUST(String::formatted(m_tile_provider.value_or(m_default_tile_provider), tile_key.zoom, tile_key.x, tile_key.y)));
     auto request = m_request_client->start_request("GET", url, headers, {});
     VERIFY(!request.is_null());
 

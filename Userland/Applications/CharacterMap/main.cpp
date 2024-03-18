@@ -6,7 +6,6 @@
 
 #include "CharacterMapWidget.h"
 #include "SearchCharacters.h"
-#include <AK/URL.h>
 #include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
@@ -16,6 +15,7 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibMain/Main.h>
+#include <LibURL/URL.h>
 
 static void search_and_print_results(ByteString const& query)
 {

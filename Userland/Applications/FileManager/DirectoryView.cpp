@@ -67,7 +67,7 @@ RefPtr<LauncherHandler> DirectoryView::get_default_launch_handler(Vector<Nonnull
     return {};
 }
 
-Vector<NonnullRefPtr<LauncherHandler>> DirectoryView::get_launch_handlers(URL const& url)
+Vector<NonnullRefPtr<LauncherHandler>> DirectoryView::get_launch_handlers(URL::URL const& url)
 {
     Vector<NonnullRefPtr<LauncherHandler>> handlers;
     for (auto& h : Desktop::Launcher::get_handlers_with_details_for_url(url)) {
@@ -491,7 +491,7 @@ void DirectoryView::set_should_show_dotfiles(bool show_dotfiles)
     m_model->set_should_show_dotfiles(show_dotfiles);
 }
 
-void DirectoryView::launch(URL const&, LauncherHandler const& launcher_handler) const
+void DirectoryView::launch(URL::URL const&, LauncherHandler const& launcher_handler) const
 {
     pid_t child;
 

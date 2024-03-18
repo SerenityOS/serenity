@@ -7,8 +7,8 @@
 #pragma once
 
 #include <AK/String.h>
-#include <AK/URL.h>
 #include <AK/Vector.h>
+#include <LibURL/URL.h>
 
 namespace Web {
 
@@ -16,7 +16,7 @@ class ContentFilter {
 public:
     static ContentFilter& the();
 
-    bool is_filtered(const URL&) const;
+    bool is_filtered(const URL::URL&) const;
     ErrorOr<void> set_patterns(ReadonlySpan<String>);
 
 private:

@@ -7,13 +7,13 @@
 
 #include <AK/JsonValue.h>
 #include <AK/NumericLimits.h>
-#include <AK/URL.h>
 #include <LibCore/AnonymousBuffer.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/Proxy.h>
 #include <LibCore/Socket.h>
 #include <LibIPC/Decoder.h>
 #include <LibIPC/File.h>
+#include <LibURL/URL.h>
 #include <fcntl.h>
 
 namespace IPC {
@@ -81,10 +81,10 @@ ErrorOr<UnixDateTime> decode(Decoder& decoder)
 }
 
 template<>
-ErrorOr<URL> decode(Decoder& decoder)
+ErrorOr<URL::URL> decode(Decoder& decoder)
 {
     auto url = TRY(decoder.decode<ByteString>());
-    return URL { url };
+    return URL::URL { url };
 }
 
 template<>

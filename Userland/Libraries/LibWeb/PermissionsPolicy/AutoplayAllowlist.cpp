@@ -5,7 +5,7 @@
  */
 
 #include <AK/String.h>
-#include <AK/URL.h>
+#include <LibURL/URL.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOMURL/DOMURL.h>
 #include <LibWeb/HTML/Origin.h>
@@ -73,7 +73,7 @@ ErrorOr<void> AutoplayAllowlist::enable_for_origins(ReadonlySpan<String> origins
     TRY(allowlist.try_ensure_capacity(origins.size()));
 
     for (auto const& origin : origins) {
-        URL url { origin };
+        URL::URL url { origin };
 
         if (!url.is_valid())
             url = TRY(String::formatted("https://{}", origin));

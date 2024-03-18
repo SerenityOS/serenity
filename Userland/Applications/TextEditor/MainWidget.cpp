@@ -8,7 +8,6 @@
 #include "MainWidget.h"
 #include <AK/Optional.h>
 #include <AK/StringBuilder.h>
-#include <AK/URL.h>
 #include <Applications/TextEditor/TextEditorWindowGML.h>
 #include <LibCMake/CMakeCache/SyntaxHighlighter.h>
 #include <LibCMake/SyntaxHighlighter.h>
@@ -41,6 +40,7 @@
 #include <LibMarkdown/Document.h>
 #include <LibMarkdown/SyntaxHighlighter.h>
 #include <LibSQL/AST/SyntaxHighlighter.h>
+#include <LibURL/URL.h>
 #include <LibWeb/CSS/SyntaxHighlighter/SyntaxHighlighter.h>
 #include <LibWeb/HTML/SyntaxHighlighter/SyntaxHighlighter.h>
 #include <LibWebView/OutOfProcessWebView.h>

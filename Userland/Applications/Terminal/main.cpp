@@ -7,7 +7,6 @@
 #include <AK/FixedArray.h>
 #include <AK/QuickSort.h>
 #include <AK/TypedTransfer.h>
-#include <AK/URL.h>
 #include <LibConfig/Client.h>
 #include <LibConfig/Listener.h>
 #include <LibCore/Account.h>
@@ -36,6 +35,7 @@
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Palette.h>
 #include <LibMain/Main.h>
+#include <LibURL/URL.h>
 #include <LibVT/TerminalWidget.h>
 #include <pty.h>
 

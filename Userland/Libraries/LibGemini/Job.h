@@ -27,7 +27,7 @@ public:
     GeminiResponse* response() { return static_cast<GeminiResponse*>(Core::NetworkJob::response()); }
     GeminiResponse const* response() const { return static_cast<GeminiResponse const*>(Core::NetworkJob::response()); }
 
-    const URL& url() const { return m_request.url(); }
+    const URL::URL& url() const { return m_request.url(); }
     Core::Socket const* socket() const { return m_socket; }
 
     ErrorOr<size_t> response_length() const;

@@ -8,15 +8,15 @@
 #pragma once
 
 #include <AK/FlyString.h>
-#include <AK/URL.h>
 #include <LibGfx/Font/UnicodeRange.h>
+#include <LibURL/URL.h>
 
 namespace Web::CSS {
 
 class FontFace {
 public:
     struct Source {
-        Variant<String, URL> local_or_url;
+        Variant<String, URL::URL> local_or_url;
         // FIXME: Do we need to keep this around, or is it only needed to discard unwanted formats during parsing?
         Optional<FlyString> format;
     };

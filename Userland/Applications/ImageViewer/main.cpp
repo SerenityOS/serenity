@@ -8,7 +8,6 @@
 
 #include "MainWidget.h"
 #include "ViewWidget.h"
-#include <AK/URL.h>
 #include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
@@ -32,6 +31,7 @@
 #include <LibGfx/Palette.h>
 #include <LibGfx/Rect.h>
 #include <LibMain/Main.h>
+#include <LibURL/URL.h>
 #include <serenity.h>
 #include <string.h>
 

@@ -883,7 +883,7 @@ void TerminalWidget::mousemove_event(GUI::MouseEvent& event)
 
             auto handlers = Desktop::Launcher::get_handlers_for_url(attribute.href);
             if (!handlers.is_empty()) {
-                auto url = URL(attribute.href);
+                auto url = URL::URL(attribute.href);
                 auto path = url.serialize_path();
 
                 auto app_file = Desktop::AppFile::get_for_app(LexicalPath::basename(handlers[0]));
@@ -1179,7 +1179,7 @@ void TerminalWidget::context_menu_event(GUI::ContextMenuEvent& event)
         }));
         m_context_menu_for_hyperlink->add_action(GUI::Action::create("Copy &Name", [&](auto&) {
             // file://courage/home/anon/something -> /home/anon/something
-            auto path = URL(m_context_menu_href).serialize_path();
+            auto path = URL::URL(m_context_menu_href).serialize_path();
             // /home/anon/something -> something
             auto name = LexicalPath::basename(path);
             GUI::Clipboard::the().set_plain_text(name);

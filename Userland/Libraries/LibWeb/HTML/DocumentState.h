@@ -7,8 +7,8 @@
 
 #pragma once
 
-#include <AK/URL.h>
 #include <LibJS/Heap/Cell.h>
+#include <LibURL/URL.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Requests.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/Origin.h>
@@ -53,8 +53,8 @@ public:
     [[nodiscard]] Optional<HTML::Origin> origin() const { return m_origin; }
     void set_origin(Optional<HTML::Origin> origin) { m_origin = move(origin); }
 
-    [[nodiscard]] Optional<URL> const& about_base_url() const { return m_about_base_url; }
-    void set_about_base_url(Optional<URL> url) { m_about_base_url = move(url); }
+    [[nodiscard]] Optional<URL::URL> const& about_base_url() const { return m_about_base_url; }
+    void set_about_base_url(Optional<URL::URL> url) { m_about_base_url = move(url); }
 
     [[nodiscard]] Vector<NestedHistory> const& nested_histories() const { return m_nested_histories; }
     [[nodiscard]] Vector<NestedHistory>& nested_histories() { return m_nested_histories; }
@@ -95,7 +95,7 @@ private:
     Optional<HTML::Origin> m_origin;
 
     // https://html.spec.whatwg.org/multipage/browsing-the-web.html#document-state-about-base-url
-    Optional<URL> m_about_base_url = {};
+    Optional<URL::URL> m_about_base_url = {};
 
     // https://html.spec.whatwg.org/multipage/browsing-the-web.html#document-state-nested-histories
     Vector<NestedHistory> m_nested_histories;

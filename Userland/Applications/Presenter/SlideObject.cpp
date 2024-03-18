@@ -7,10 +7,10 @@
 #include "SlideObject.h"
 #include "Presentation.h"
 #include <AK/JsonObject.h>
-#include <AK/URL.h>
 #include <LibGUI/PropertyDeserializer.h>
 #include <LibGfx/Font/FontStyleMapping.h>
 #include <LibGfx/Rect.h>
+#include <LibURL/URL.h>
 
 static ByteString to_css_length(float design_value, Presentation const& presentation)
 {

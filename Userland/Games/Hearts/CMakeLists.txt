@@ -17,4 +17,4 @@ set(SOURCES
 )
 
 serenity_app(Hearts ICON app-hearts)
-target_link_libraries(Hearts PRIVATE LibCards LibGUI LibGfx LibCore LibConfig LibMain LibDesktop)
+target_link_libraries(Hearts PRIVATE LibCards LibGUI LibGfx LibCore LibConfig LibMain LibDesktop LibURL)

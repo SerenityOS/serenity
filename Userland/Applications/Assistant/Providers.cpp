@@ -8,7 +8,6 @@
 #include <AK/BinaryHeap.h>
 #include <AK/FuzzyMatch.h>
 #include <AK/LexicalPath.h>
-#include <AK/URL.h>
 #include <LibCore/Directory.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/StandardPaths.h>
@@ -20,6 +19,7 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/ValueInlines.h>
 #include <LibJS/Script.h>
+#include <LibURL/URL.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <serenity.h>
@@ -261,7 +261,7 @@ void URLProvider::query(ByteString const& query, Function<void(Vector<NonnullRef
     if (query.is_empty() || query.starts_with('=') || query.starts_with('$'))
         return;
 
-    URL url = URL(query);
+    URL::URL url = URL::URL(query);
 
     if (url.scheme().is_empty())
         url.set_scheme("http"_string);

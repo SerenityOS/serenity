@@ -50,7 +50,7 @@ static ByteString bookmarks_file_path()
     return builder.to_byte_string();
 }
 
-BrowserWindow::BrowserWindow(WebView::CookieJar& cookie_jar, Vector<URL> const& initial_urls, StringView const man_file)
+BrowserWindow::BrowserWindow(WebView::CookieJar& cookie_jar, Vector<URL::URL> const& initial_urls, StringView const man_file)
     : m_cookie_jar(cookie_jar)
     , m_window_actions(*this)
 {
@@ -278,7 +278,7 @@ void BrowserWindow::build_menus(StringView const man_file)
         "Set Homepage URL...", g_icon_bag.go_home, [this](auto&) {
             String homepage_url = String::from_byte_string(Config::read_string("Browser"sv, "Preferences"sv, "Home"sv, Browser::default_homepage_url)).release_value_but_fixme_should_propagate_errors();
             if (GUI::InputBox::show(this, homepage_url, "Enter a URL:"sv, "Change Homepage"sv) == GUI::InputBox::ExecResult::OK) {
-                if (URL(homepage_url).is_valid()) {
+                if (URL::URL(homepage_url).is_valid()) {
                     Config::write_string("Browser"sv, "Preferences"sv, "Home"sv, homepage_url);
                     Browser::g_home_url = homepage_url.to_byte_string();
                 } else {
@@ -531,7 +531,7 @@ void BrowserWindow::set_window_title_for_tab(Tab const& tab)
     set_title(ByteString::formatted("{} - Ladybird", title.is_empty() ? url.to_byte_string() : title));
 }
 
-Tab& BrowserWindow::create_new_tab(URL const& url, Web::HTML::ActivateTab activate)
+Tab& BrowserWindow::create_new_tab(URL::URL const& url, Web::HTML::ActivateTab activate)
 {
     auto& new_tab = m_tab_widget->add_tab<Browser::Tab>("New tab"_string, *this);
 
@@ -618,7 +618,7 @@ Tab& BrowserWindow::create_new_tab(URL const& url, Web::HTML::ActivateTab activa
     return new_tab;
 }
 
-void BrowserWindow::create_new_window(URL const& url)
+void BrowserWindow::create_new_window(URL::URL const& url)
 {
     GUI::Process::spawn_or_show_error(this, "/bin/Browser"sv, Array { url.to_byte_string() });
 }

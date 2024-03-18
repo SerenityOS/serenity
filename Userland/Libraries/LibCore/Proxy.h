@@ -9,8 +9,8 @@
 #include <AK/Error.h>
 #include <AK/IPv4Address.h>
 #include <AK/Types.h>
-#include <AK/URL.h>
 #include <LibIPC/Forward.h>
+#include <LibURL/URL.h>
 
 namespace Core {
 // FIXME: Username/password support.
@@ -25,7 +25,7 @@ struct ProxyData {
 
     bool operator==(ProxyData const& other) const = default;
 
-    static ErrorOr<ProxyData> parse_url(URL const& url)
+    static ErrorOr<ProxyData> parse_url(URL::URL const& url)
     {
         if (!url.is_valid())
             return Error::from_string_literal("Invalid proxy URL");

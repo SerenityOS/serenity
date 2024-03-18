@@ -5,7 +5,6 @@
  */
 
 #include <AK/StringView.h>
-#include <AK/URL.h>
 #include <LibGemini/Document.h>
 #include <stddef.h>
 #include <stdint.h>

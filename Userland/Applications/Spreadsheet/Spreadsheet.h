@@ -53,9 +53,9 @@ public:
     Optional<size_t> column_index(StringView column_name) const;
     Optional<ByteString> column_arithmetic(StringView column_name, int offset);
 
-    Cell* from_url(const URL&);
-    Cell const* from_url(const URL& url) const { return const_cast<Sheet*>(this)->from_url(url); }
-    Optional<Position> position_from_url(const URL& url) const;
+    Cell* from_url(const URL::URL&);
+    Cell const* from_url(const URL::URL& url) const { return const_cast<Sheet*>(this)->from_url(url); }
+    Optional<Position> position_from_url(const URL::URL& url) const;
 
     /// Resolve 'offset' to an absolute position assuming 'base' is at 'offset_base'.
     /// Effectively, "Walk the distance between 'offset' and 'offset_base' away from 'base'".

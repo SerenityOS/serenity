@@ -26,7 +26,7 @@ void RequestManagerQt::reply_finished(QNetworkReply* reply)
     request->did_finish();
 }
 
-RefPtr<Web::ResourceLoaderConnectorRequest> RequestManagerQt::start_request(ByteString const& method, URL const& url, HashMap<ByteString, ByteString> const& request_headers, ReadonlyBytes request_body, Core::ProxyData const& proxy)
+RefPtr<Web::ResourceLoaderConnectorRequest> RequestManagerQt::start_request(ByteString const& method, URL::URL const& url, HashMap<ByteString, ByteString> const& request_headers, ReadonlyBytes request_body, Core::ProxyData const& proxy)
 {
     if (!url.scheme().bytes_as_string_view().is_one_of_ignoring_ascii_case("http"sv, "https"sv)) {
         return nullptr;
@@ -40,7 +40,7 @@ RefPtr<Web::ResourceLoaderConnectorRequest> RequestManagerQt::start_request(Byte
     return request;
 }
 
-ErrorOr<NonnullRefPtr<RequestManagerQt::Request>> RequestManagerQt::Request::create(QNetworkAccessManager& qnam, ByteString const& method, URL const& url, HashMap<ByteString, ByteString> const& request_headers, ReadonlyBytes request_body, Core::ProxyData const&)
+ErrorOr<NonnullRefPtr<RequestManagerQt::Request>> RequestManagerQt::Request::create(QNetworkAccessManager& qnam, ByteString const& method, URL::URL const& url, HashMap<ByteString, ByteString> const& request_headers, ReadonlyBytes request_body, Core::ProxyData const&)
 {
     QNetworkRequest request { QString(url.to_byte_string().characters()) };
     request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::ManualRedirectPolicy);
@@ -78,7 +78,7 @@ ErrorOr<NonnullRefPtr<RequestManagerQt::Request>> RequestManagerQt::Request::cre
     return adopt_ref(*new Request(*reply));
 }
 
-RefPtr<Web::WebSockets::WebSocketClientSocket> RequestManagerQt::websocket_connect(AK::URL const& url, AK::ByteString const& origin, Vector<AK::ByteString> const& protocols)
+RefPtr<Web::WebSockets::WebSocketClientSocket> RequestManagerQt::websocket_connect(URL::URL const& url, AK::ByteString const& origin, Vector<AK::ByteString> const& protocols)
 {
     WebSocket::ConnectionInfo connection_info(url);
     connection_info.set_origin(origin);

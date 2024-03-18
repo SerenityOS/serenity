@@ -20,4 +20,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_app(2048 ICON app-2048)
-target_link_libraries(2048 PRIVATE LibConfig LibCore LibGfx LibGUI LibMain LibDesktop)
+target_link_libraries(2048 PRIVATE LibConfig LibCore LibGfx LibGUI LibMain LibDesktop LibURL)

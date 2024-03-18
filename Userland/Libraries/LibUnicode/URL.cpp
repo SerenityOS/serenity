@@ -33,11 +33,11 @@ static ErrorOr<String> domain_to_ascii(StringView domain, bool be_strict)
 }
 
 // https://url.spec.whatwg.org/#concept-host-parser
-ErrorOr<URL> create_unicode_url(String const& url_string)
+ErrorOr<URL::URL> create_unicode_url(String const& url_string)
 {
-    // NOTE: 1.-4. are implemented in URLParser::parse_host
+    // NOTE: 1.-4. are implemented in URL::Parser::parse_host
 
-    URL url = url_string;
+    URL::URL url = url_string;
     if (!url.is_valid() || !url.host().has<String>())
         return url;
 
@@ -49,7 +49,7 @@ ErrorOr<URL> create_unicode_url(String const& url_string)
     // 6. If asciiDomain is failure, then return failure.
     auto ascii_domain = TRY(domain_to_ascii(domain.bytes_as_string_view(), false));
 
-    // FIXME: Reimplement 7. or call into URLParser::parse_host using ascii_domain (8. & 9. do not apply)
+    // FIXME: Reimplement 7. or call into URL::Parser::parse_host using ascii_domain (8. & 9. do not apply)
     url.set_host(ascii_domain);
     return url;
 }

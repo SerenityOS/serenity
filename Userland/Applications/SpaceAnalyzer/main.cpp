@@ -10,7 +10,6 @@
 #include "TreeMapWidget.h"
 #include <AK/LexicalPath.h>
 #include <AK/String.h>
-#include <AK/URL.h>
 #include <LibDesktop/Launcher.h>
 #include <LibFileSystem/FileSystem.h>
 #include <LibGUI/Application.h>
@@ -25,6 +24,7 @@
 #include <LibGUI/Statusbar.h>
 #include <LibGfx/Bitmap.h>
 #include <LibMain/Main.h>
+#include <LibURL/URL.h>
 
 static auto const APP_NAME = "Space Analyzer"_string;
 

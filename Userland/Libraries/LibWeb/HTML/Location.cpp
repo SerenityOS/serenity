@@ -7,11 +7,11 @@
 
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
-#include <AK/URLParser.h>
 #include <LibJS/Heap/MarkedVector.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/PropertyDescriptor.h>
 #include <LibJS/Runtime/PropertyKey.h>
+#include <LibURL/Parser.h>
 #include <LibWeb/Bindings/LocationPrototype.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/CrossOrigin/AbstractOperations.h>
@@ -74,7 +74,7 @@ static Bindings::NavigationHistoryBehavior to_navigation_history_behavior(Histor
 }
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#location-object-navigate
-WebIDL::ExceptionOr<void> Location::navigate(URL url, HistoryHandlingBehavior history_handling)
+WebIDL::ExceptionOr<void> Location::navigate(URL::URL url, HistoryHandlingBehavior history_handling)
 {
     // 1. Let navigable be location's relevant global object's navigable.
     auto navigable = verify_cast<HTML::Window>(HTML::relevant_global_object(*this)).navigable();
@@ -97,7 +97,7 @@ WebIDL::ExceptionOr<void> Location::navigate(URL url, HistoryHandlingBehavior hi
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#concept-location-url
-URL Location::url() const
+URL::URL Location::url() const
 {
     // A Location object has an associated url, which is this Location object's relevant Document's URL,
     // if this Location object's relevant Document is non-null, and about:blank otherwise.
@@ -348,7 +348,7 @@ WebIDL::ExceptionOr<void> Location::set_hash(String const& value)
     copy_url.set_fragment(String {});
 
     // 6. Basic URL parse input, with copyURL as url and fragment state as state override.
-    auto result_url = URLParser::basic_parse(input, {}, copy_url, URLParser::State::Fragment);
+    auto result_url = URL::Parser::basic_parse(input, {}, copy_url, URL::Parser::State::Fragment);
 
     // 7. If copyURL's fragment is this's url's fragment, then return.
     if (copy_url.fragment() == this->url().fragment())

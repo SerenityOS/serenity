@@ -22,7 +22,7 @@ public:
     HTTP::Job& job() { return m_job; }
     HTTP::Job const& job() const { return m_job; }
 
-    virtual URL url() const override { return m_job->url(); }
+    virtual URL::URL url() const override { return m_job->url(); }
 
 private:
     explicit HttpRequest(ConnectionFromClient&, NonnullRefPtr<HTTP::Job>, NonnullOwnPtr<Core::File>&&, i32);

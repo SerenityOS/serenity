@@ -11,19 +11,19 @@
 
 namespace Core {
 
-Vector<URL> MimeData::urls() const
+Vector<URL::URL> MimeData::urls() const
 {
     auto it = m_data.find("text/uri-list"sv);
     if (it == m_data.end())
         return {};
-    Vector<URL> urls;
+    Vector<URL::URL> urls;
     for (auto& line : StringView(it->value).split_view('\n')) {
-        urls.append(URL(line));
+        urls.append(URL::URL(line));
     }
     return urls;
 }
 
-ErrorOr<void> MimeData::set_urls(Vector<URL> const& urls)
+ErrorOr<void> MimeData::set_urls(Vector<URL::URL> const& urls)
 {
     StringBuilder builder;
     for (auto& url : urls) {

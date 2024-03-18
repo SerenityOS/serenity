@@ -11,7 +11,7 @@
 
 namespace WebView {
 
-String highlight_source(URL const&, StringView);
+String highlight_source(URL::URL const&, StringView);
 
 constexpr inline StringView HTML_HIGHLIGHTER_STYLE = R"~~~(
     .html {

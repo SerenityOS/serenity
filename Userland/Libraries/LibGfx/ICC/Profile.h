@@ -12,7 +12,6 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/Span.h>
-#include <AK/URL.h>
 #include <LibCrypto/Hash/MD5.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/CIELAB.h>
@@ -20,11 +19,12 @@
 #include <LibGfx/ICC/TagTypes.h>
 #include <LibGfx/Matrix3x3.h>
 #include <LibGfx/Vector3.h>
+#include <LibURL/URL.h>
 
 namespace Gfx::ICC {
 
-URL device_manufacturer_url(DeviceManufacturer);
-URL device_model_url(DeviceModel);
+URL::URL device_manufacturer_url(DeviceManufacturer);
+URL::URL device_model_url(DeviceModel);
 
 // ICC v4, 7.2.4 Profile version field
 class Version {

@@ -18,7 +18,7 @@ set(SOURCES
 )
 
 serenity_lib(LibShell shell)
-target_link_libraries(LibShell PRIVATE LibCore LibFileSystem LibLine LibSyntax LibRegex)
+target_link_libraries(LibShell PRIVATE LibCore LibFileSystem LibLine LibSyntax LibRegex LibURL)
 
 if (SERENITYOS)
     target_sources(LibShell PRIVATE SyntaxHighlighter.cpp)

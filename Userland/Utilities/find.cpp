@@ -10,13 +10,13 @@
 #include <AK/NonnullOwnPtr.h>
 #include <AK/OwnPtr.h>
 #include <AK/Time.h>
-#include <AK/URL.h>
 #include <AK/Vector.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/System.h>
 #include <LibFileSystem/FileSystem.h>
 #include <LibMain/Main.h>
 #include <LibRegex/Regex.h>
+#include <LibURL/URL.h>
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>

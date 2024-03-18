@@ -6,10 +6,10 @@
 
 #include "SpreadsheetModel.h"
 #include "ConditionalFormatting.h"
-#include <AK/URL.h>
 #include <LibGUI/AbstractView.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/Object.h>
+#include <LibURL/URL.h>
 
 namespace Spreadsheet {
 

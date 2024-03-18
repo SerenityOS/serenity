@@ -10,11 +10,11 @@
 #include <AK/IPv4Address.h>
 #include <AK/StringBuilder.h>
 #include <AK/Time.h>
-#include <AK/URL.h>
 #include <AK/Vector.h>
 #include <LibCore/Promise.h>
 #include <LibSQL/TupleDescriptor.h>
 #include <LibSQL/Value.h>
+#include <LibURL/URL.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWebView/CookieJar.h>
 #include <LibWebView/Database.h>
@@ -84,7 +84,7 @@ CookieJar::CookieJar(TransientStorage storage)
 {
 }
 
-String CookieJar::get_cookie(const URL& url, Web::Cookie::Source source)
+String CookieJar::get_cookie(const URL::URL& url, Web::Cookie::Source source)
 {
     purge_expired_cookies();
 
@@ -107,7 +107,7 @@ String CookieJar::get_cookie(const URL& url, Web::Cookie::Source source)
     return MUST(builder.to_string());
 }
 
-void CookieJar::set_cookie(const URL& url, Web::Cookie::ParsedCookie const& parsed_cookie, Web::Cookie::Source source)
+void CookieJar::set_cookie(const URL::URL& url, Web::Cookie::ParsedCookie const& parsed_cookie, Web::Cookie::Source source)
 {
     auto domain = canonicalize_domain(url);
     if (!domain.has_value())
@@ -181,7 +181,7 @@ Vector<Web::Cookie::Cookie> CookieJar::get_all_cookies()
 }
 
 // https://w3c.github.io/webdriver/#dfn-associated-cookies
-Vector<Web::Cookie::Cookie> CookieJar::get_all_cookies(URL const& url)
+Vector<Web::Cookie::Cookie> CookieJar::get_all_cookies(URL::URL const& url)
 {
     auto domain = canonicalize_domain(url);
     if (!domain.has_value())
@@ -190,7 +190,7 @@ Vector<Web::Cookie::Cookie> CookieJar::get_all_cookies(URL const& url)
     return get_matching_cookies(url, domain.value(), Web::Cookie::Source::Http, MatchingCookiesSpecMode::WebDriver);
 }
 
-Optional<Web::Cookie::Cookie> CookieJar::get_named_cookie(URL const& url, StringView name)
+Optional<Web::Cookie::Cookie> CookieJar::get_named_cookie(URL::URL const& url, StringView name)
 {
     auto domain = canonicalize_domain(url);
     if (!domain.has_value())
@@ -206,7 +206,7 @@ Optional<Web::Cookie::Cookie> CookieJar::get_named_cookie(URL const& url, String
     return {};
 }
 
-Optional<String> CookieJar::canonicalize_domain(const URL& url)
+Optional<String> CookieJar::canonicalize_domain(const URL::URL& url)
 {
     // https://tools.ietf.org/html/rfc6265#section-5.1.2
     if (!url.is_valid())
@@ -266,7 +266,7 @@ bool CookieJar::path_matches(StringView request_path, StringView cookie_path)
     return false;
 }
 
-String CookieJar::default_path(const URL& url)
+String CookieJar::default_path(const URL::URL& url)
 {
     // https://tools.ietf.org/html/rfc6265#section-5.1.4
 
@@ -288,7 +288,7 @@ String CookieJar::default_path(const URL& url)
     return MUST(String::from_utf8(uri_path.substring_view(0, last_separator)));
 }
 
-void CookieJar::store_cookie(Web::Cookie::ParsedCookie const& parsed_cookie, const URL& url, String canonicalized_domain, Web::Cookie::Source source)
+void CookieJar::store_cookie(Web::Cookie::ParsedCookie const& parsed_cookie, const URL::URL& url, String canonicalized_domain, Web::Cookie::Source source)
 {
     // https://tools.ietf.org/html/rfc6265#section-5.3
 
@@ -397,7 +397,7 @@ void CookieJar::store_cookie(Web::Cookie::ParsedCookie const& parsed_cookie, con
     MUST(sync_promise->await());
 }
 
-Vector<Web::Cookie::Cookie> CookieJar::get_matching_cookies(const URL& url, StringView canonicalized_domain, Web::Cookie::Source source, MatchingCookiesSpecMode mode)
+Vector<Web::Cookie::Cookie> CookieJar::get_matching_cookies(const URL::URL& url, StringView canonicalized_domain, Web::Cookie::Source source, MatchingCookiesSpecMode mode)
 {
     // https://tools.ietf.org/html/rfc6265#section-5.4
 

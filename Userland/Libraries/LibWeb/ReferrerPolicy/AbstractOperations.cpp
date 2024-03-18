@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/URL.h>
+#include <LibURL/URL.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOMURL/DOMURL.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Requests.h>
@@ -17,7 +17,7 @@
 namespace Web::ReferrerPolicy {
 
 // https://w3c.github.io/webappsec-referrer-policy/#determine-requests-referrer
-Optional<URL> determine_requests_referrer(Fetch::Infrastructure::Request const& request)
+Optional<URL::URL> determine_requests_referrer(Fetch::Infrastructure::Request const& request)
 {
     // 1. Let policy be request’s referrer policy.
     auto const& policy = request.referrer_policy();
@@ -28,7 +28,7 @@ Optional<URL> determine_requests_referrer(Fetch::Infrastructure::Request const& 
     // 3. Switch on request’s referrer:
     auto referrer_source = request.referrer().visit(
         // "client"
-        [&](Fetch::Infrastructure::Request::Referrer referrer) -> Optional<URL> {
+        [&](Fetch::Infrastructure::Request::Referrer referrer) -> Optional<URL::URL> {
             // Note: If request’s referrer is "no-referrer", Fetch will not call into this algorithm.
             VERIFY(referrer == Fetch::Infrastructure::Request::Referrer::Client);
 
@@ -56,7 +56,7 @@ Optional<URL> determine_requests_referrer(Fetch::Infrastructure::Request const& 
             }
         },
         // a URL
-        [&](URL const& url) -> Optional<URL> {
+        [&](URL::URL const& url) -> Optional<URL::URL> {
             // Let referrerSource be request’s referrer.
             return url;
         });
@@ -164,7 +164,7 @@ Optional<URL> determine_requests_referrer(Fetch::Infrastructure::Request const& 
     }
 }
 
-Optional<URL> strip_url_for_use_as_referrer(Optional<URL> url, OriginOnly origin_only)
+Optional<URL::URL> strip_url_for_use_as_referrer(Optional<URL::URL> url, OriginOnly origin_only)
 {
     // 1. If url is null, return no referrer.
     if (!url.has_value())

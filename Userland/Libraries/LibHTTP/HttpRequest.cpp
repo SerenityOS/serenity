@@ -7,9 +7,9 @@
 
 #include <AK/Base64.h>
 #include <AK/StringBuilder.h>
-#include <AK/URLParser.h>
 #include <LibHTTP/HttpRequest.h>
 #include <LibHTTP/Job.h>
+#include <LibURL/Parser.h>
 
 namespace HTTP {
 
@@ -269,7 +269,7 @@ void HttpRequest::set_headers(HashMap<ByteString, ByteString> const& headers)
         m_headers.append({ it.key, it.value });
 }
 
-Optional<HttpRequest::Header> HttpRequest::get_http_basic_authentication_header(URL const& url)
+Optional<HttpRequest::Header> HttpRequest::get_http_basic_authentication_header(URL::URL const& url)
 {
     if (!url.includes_credentials())
         return {};

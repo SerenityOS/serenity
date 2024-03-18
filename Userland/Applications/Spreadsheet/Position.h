@@ -8,7 +8,7 @@
 
 #include <AK/ByteString.h>
 #include <AK/Types.h>
-#include <AK/URL.h>
+#include <LibURL/URL.h>
 
 namespace Spreadsheet {
 
@@ -38,7 +38,7 @@ struct Position {
     }
 
     ByteString to_cell_identifier(Sheet const& sheet) const;
-    URL to_url(Sheet const& sheet) const;
+    URL::URL to_url(Sheet const& sheet) const;
 
     size_t column { 0 };
     size_t row { 0 };

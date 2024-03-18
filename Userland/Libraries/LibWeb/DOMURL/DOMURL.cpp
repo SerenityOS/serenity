@@ -8,7 +8,7 @@
 
 #include <AK/IPv4Address.h>
 #include <AK/IPv6Address.h>
-#include <AK/URLParser.h>
+#include <LibURL/Parser.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/DOMURL/DOMURL.h>
 #include <LibWeb/FileAPI/Blob.h>
@@ -18,24 +18,24 @@ namespace Web::DOMURL {
 
 JS_DEFINE_ALLOCATOR(DOMURL);
 
-JS::NonnullGCPtr<DOMURL> DOMURL::create(JS::Realm& realm, URL url, JS::NonnullGCPtr<URLSearchParams> query)
+JS::NonnullGCPtr<DOMURL> DOMURL::create(JS::Realm& realm, URL::URL url, JS::NonnullGCPtr<URLSearchParams> query)
 {
     return realm.heap().allocate<DOMURL>(realm, realm, move(url), move(query));
 }
 
 // https://url.spec.whatwg.org/#api-url-parser
-static Optional<URL> parse_api_url(String const& url, Optional<String> const& base)
+static Optional<URL::URL> parse_api_url(String const& url, Optional<String> const& base)
 {
     // FIXME: We somewhat awkwardly have two failure states encapsulated in the return type (and convert between them in the steps),
     //        ideally we'd get rid of URL's valid flag
 
     // 1. Let parsedBase be null.
-    Optional<URL> parsed_base;
+    Optional<URL::URL> parsed_base;
 
     // 2. If base is non-null:
     if (base.has_value()) {
         // 1. Set parsedBase to the result of running the basic URL parser on base.
-        auto parsed_base_url = URLParser::basic_parse(*base);
+        auto parsed_base_url = URL::Parser::basic_parse(*base);
 
         // 2. If parsedBase is failure, then return failure.
         if (!parsed_base_url.is_valid())
@@ -45,8 +45,8 @@ static Optional<URL> parse_api_url(String const& url, Optional<String> const& ba
     }
 
     // 3. Return the result of running the basic URL parser on url with parsedBase.
-    auto parsed = URLParser::basic_parse(url, parsed_base);
-    return parsed.is_valid() ? parsed : Optional<URL> {};
+    auto parsed = URL::Parser::basic_parse(url, parsed_base);
+    return parsed.is_valid() ? parsed : Optional<URL::URL> {};
 }
 
 // https://url.spec.whatwg.org/#dom-url-url
@@ -75,7 +75,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMURL>> DOMURL::construct_impl(JS::Realm& 
     return result_url;
 }
 
-DOMURL::DOMURL(JS::Realm& realm, URL url, JS::NonnullGCPtr<URLSearchParams> query)
+DOMURL::DOMURL(JS::Realm& realm, URL::URL url, JS::NonnullGCPtr<URLSearchParams> query)
     : PlatformObject(realm)
     , m_url(move(url))
     , m_query(move(query))
@@ -166,7 +166,7 @@ WebIDL::ExceptionOr<void> DOMURL::set_href(String const& href)
     auto& vm = realm().vm();
 
     // 1. Let parsedURL be the result of running the basic URL parser on the given value.
-    URL parsed_url = href;
+    URL::URL parsed_url = href;
 
     // 2. If parsedURL is failure, then throw a TypeError.
     if (!parsed_url.is_valid())
@@ -212,7 +212,7 @@ WebIDL::ExceptionOr<void> DOMURL::set_protocol(String const& protocol)
 
     // The protocol setter steps are to basic URL parse the given value, followed by U+003A (:), with this’s URL as
     // url and scheme start state as state override.
-    auto result_url = URLParser::basic_parse(TRY_OR_THROW_OOM(vm, String::formatted("{}:", protocol)), {}, m_url, URLParser::State::SchemeStart);
+    auto result_url = URL::Parser::basic_parse(TRY_OR_THROW_OOM(vm, String::formatted("{}:", protocol)), {}, m_url, URL::Parser::State::SchemeStart);
     if (result_url.is_valid())
         m_url = move(result_url);
     return {};
@@ -286,7 +286,7 @@ void DOMURL::set_host(String const& host)
         return;
 
     // 2. Basic URL parse the given value with this’s URL as url and host state as state override.
-    auto result_url = URLParser::basic_parse(host, {}, m_url, URLParser::State::Host);
+    auto result_url = URL::Parser::basic_parse(host, {}, m_url, URL::Parser::State::Host);
     if (result_url.is_valid())
         m_url = move(result_url);
 }
@@ -312,7 +312,7 @@ void DOMURL::set_hostname(String const& hostname)
         return;
 
     // 2. Basic URL parse the given value with this’s URL as url and hostname state as state override.
-    auto result_url = URLParser::basic_parse(hostname, {}, m_url, URLParser::State::Hostname);
+    auto result_url = URL::Parser::basic_parse(hostname, {}, m_url, URL::Parser::State::Hostname);
     if (result_url.is_valid())
         m_url = move(result_url);
 }
@@ -343,7 +343,7 @@ void DOMURL::set_port(String const& port)
     }
     // 3. Otherwise, basic URL parse the given value with this’s URL as url and port state as state override.
     else {
-        auto result_url = URLParser::basic_parse(port, {}, m_url, URLParser::State::Port);
+        auto result_url = URL::Parser::basic_parse(port, {}, m_url, URL::Parser::State::Port);
         if (result_url.is_valid())
             m_url = move(result_url);
     }
@@ -371,7 +371,7 @@ void DOMURL::set_pathname(String const& pathname)
     url.set_paths({});
 
     // 3. Basic URL parse the given value with this’s URL as url and path start state as state override.
-    auto result_url = URLParser::basic_parse(pathname, {}, move(url), URLParser::State::PathStart);
+    auto result_url = URL::Parser::basic_parse(pathname, {}, move(url), URL::Parser::State::PathStart);
     if (result_url.is_valid())
         m_url = move(result_url);
 }
@@ -421,7 +421,7 @@ WebIDL::ExceptionOr<void> DOMURL::set_search(String const& search)
     url_copy.set_query(String {});
 
     // 5. Basic URL parse input with url as url and query state as state override.
-    auto result_url = URLParser::basic_parse(input, {}, move(url_copy), URLParser::State::Query);
+    auto result_url = URL::Parser::basic_parse(input, {}, move(url_copy), URL::Parser::State::Query);
     if (result_url.is_valid()) {
         m_url = move(result_url);
 
@@ -476,15 +476,15 @@ void DOMURL::set_hash(String const& hash)
     url.set_fragment(String {});
 
     // 4. Basic URL parse input with this’s URL as url and fragment state as state override.
-    auto result_url = URLParser::basic_parse(input, {}, move(url), URLParser::State::Fragment);
+    auto result_url = URL::Parser::basic_parse(input, {}, move(url), URL::Parser::State::Fragment);
     if (result_url.is_valid())
         m_url = move(result_url);
 }
 
 // https://url.spec.whatwg.org/#concept-url-origin
-HTML::Origin url_origin(URL const& url)
+HTML::Origin url_origin(URL::URL const& url)
 {
-    // FIXME: We should probably have an extended version of AK::URL for LibWeb instead of standalone functions like this.
+    // FIXME: We should probably have an extended version of URL::URL for LibWeb instead of standalone functions like this.
 
     // The origin of a URL url is the origin returned by running these steps, switching on url’s scheme:
     // -> "blob"
@@ -563,12 +563,12 @@ void strip_trailing_spaces_from_an_opaque_path(DOMURL& url)
 }
 
 // https://url.spec.whatwg.org/#concept-url-parser
-URL parse(StringView input, Optional<URL> const& base_url)
+URL::URL parse(StringView input, Optional<URL::URL> const& base_url)
 {
-    // FIXME: We should probably have an extended version of AK::URL for LibWeb instead of standalone functions like this.
+    // FIXME: We should probably have an extended version of URL::URL for LibWeb instead of standalone functions like this.
 
     // 1. Let url be the result of running the basic URL parser on input with base and encoding.
-    auto url = URLParser::basic_parse(input, base_url);
+    auto url = URL::Parser::basic_parse(input, base_url);
 
     // 2. If url is failure, return failure.
     if (!url.is_valid())

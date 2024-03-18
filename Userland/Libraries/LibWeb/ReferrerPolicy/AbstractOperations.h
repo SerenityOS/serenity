@@ -16,7 +16,7 @@ enum class OriginOnly {
     No,
 };
 
-Optional<URL> determine_requests_referrer(Fetch::Infrastructure::Request const&);
-Optional<URL> strip_url_for_use_as_referrer(Optional<URL>, OriginOnly origin_only = OriginOnly::No);
+Optional<URL::URL> determine_requests_referrer(Fetch::Infrastructure::Request const&);
+Optional<URL::URL> strip_url_for_use_as_referrer(Optional<URL::URL>, OriginOnly origin_only = OriginOnly::No);
 
 }

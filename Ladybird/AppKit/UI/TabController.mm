@@ -106,17 +106,17 @@ enum class IsHistoryNavigation {
 
 #pragma mark - Public methods
 
-- (void)loadURL:(URL const&)url
+- (void)loadURL:(URL::URL const&)url
 {
     [[self tab].web_view loadURL:url];
 }
 
-- (void)loadHTML:(StringView)html url:(URL const&)url
+- (void)loadHTML:(StringView)html url:(URL::URL const&)url
 {
     [[self tab].web_view loadHTML:html];
 }
 
-- (void)onLoadStart:(URL const&)url isRedirect:(BOOL)isRedirect
+- (void)onLoadStart:(URL::URL const&)url isRedirect:(BOOL)isRedirect
 {
     if (isRedirect) {
         m_history.replace_current(url, m_title);

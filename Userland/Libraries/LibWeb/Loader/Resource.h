@@ -11,10 +11,10 @@
 #include <AK/HashTable.h>
 #include <AK/Noncopyable.h>
 #include <AK/RefCounted.h>
-#include <AK/URL.h>
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
 #include <LibGfx/Forward.h>
+#include <LibURL/URL.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/Loader/LoadRequest.h>
 
@@ -50,7 +50,7 @@ public:
 
     bool has_encoded_data() const { return !m_encoded_data.is_empty(); }
 
-    const URL& url() const { return m_request.url(); }
+    const URL::URL& url() const { return m_request.url(); }
     ByteBuffer const& encoded_data() const { return m_encoded_data; }
 
     HashMap<ByteString, ByteString, CaseInsensitiveStringTraits> const& response_headers() const { return m_response_headers; }

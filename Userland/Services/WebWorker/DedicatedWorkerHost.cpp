@@ -19,7 +19,7 @@
 
 namespace WebWorker {
 
-DedicatedWorkerHost::DedicatedWorkerHost(URL url, String type)
+DedicatedWorkerHost::DedicatedWorkerHost(URL::URL url, String type)
     : m_url(move(url))
     , m_type(move(type))
 {

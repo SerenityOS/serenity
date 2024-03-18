@@ -29,7 +29,7 @@ ByteString Document::render_to_html() const
     return html_builder.to_byte_string();
 }
 
-NonnullRefPtr<Document> Document::parse(StringView lines, const URL& url)
+NonnullRefPtr<Document> Document::parse(StringView lines, const URL::URL& url)
 {
     auto document = adopt_ref(*new Document(url));
     document->read_lines(lines);

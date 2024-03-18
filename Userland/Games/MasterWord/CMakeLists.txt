@@ -13,4 +13,4 @@ set(SOURCES
 )
 
 serenity_app(MasterWord ICON app-masterword)
-target_link_libraries(MasterWord PRIVATE LibCore LibGfx LibGUI LibConfig LibMain LibDesktop)
+target_link_libraries(MasterWord PRIVATE LibCore LibGfx LibGUI LibConfig LibMain LibDesktop LibURL)

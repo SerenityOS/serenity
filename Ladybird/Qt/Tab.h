@@ -33,7 +33,7 @@ public:
 
     WebContentView& view() { return *m_view; }
 
-    void navigate(URL const&);
+    void navigate(URL::URL const&);
     void load_html(StringView);
 
     void back();
@@ -69,9 +69,9 @@ private:
     void recreate_toolbar_icons();
     void update_hover_label();
 
-    void open_link(URL const&);
-    void open_link_in_new_tab(URL const&);
-    void copy_link_url(URL const&);
+    void open_link(URL::URL const&);
+    void open_link_in_new_tab(URL::URL const&);
+    void copy_link_url(URL::URL const&);
 
     void close_sub_widgets();
 
@@ -91,11 +91,11 @@ private:
 
     QMenu* m_link_context_menu { nullptr };
     QAction* m_link_context_menu_copy_url_action { nullptr };
-    URL m_link_context_menu_url;
+    URL::URL m_link_context_menu_url;
 
     QMenu* m_image_context_menu { nullptr };
     Gfx::ShareableBitmap m_image_context_menu_bitmap;
-    URL m_image_context_menu_url;
+    URL::URL m_image_context_menu_url;
 
     QMenu* m_audio_context_menu { nullptr };
     QMenu* m_video_context_menu { nullptr };
@@ -107,7 +107,7 @@ private:
     QAction* m_media_context_menu_mute_unmute_action { nullptr };
     QAction* m_media_context_menu_controls_action { nullptr };
     QAction* m_media_context_menu_loop_action { nullptr };
-    URL m_media_context_menu_url;
+    URL::URL m_media_context_menu_url;
 
     QMenu* m_select_dropdown { nullptr };
 

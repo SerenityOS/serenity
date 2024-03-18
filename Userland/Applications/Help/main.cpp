@@ -8,13 +8,13 @@
  */
 
 #include "MainWidget.h"
-#include <AK/URL.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Window.h>
 #include <LibMain/Main.h>
+#include <LibURL/URL.h>
 
 using namespace Help;
 

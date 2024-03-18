@@ -1335,9 +1335,9 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
         }
 
         // 11. If httpRequest’s referrer is a URL, then:
-        if (http_request->referrer().has<URL>()) {
+        if (http_request->referrer().has<URL::URL>()) {
             // 1. Let referrerValue be httpRequest’s referrer, serialized and isomorphic encoded.
-            auto referrer_value = TRY_OR_THROW_OOM(vm, ByteBuffer::copy(http_request->referrer().get<URL>().serialize().bytes()));
+            auto referrer_value = TRY_OR_THROW_OOM(vm, ByteBuffer::copy(http_request->referrer().get<URL::URL>().serialize().bytes()));
 
             // 2. Append (`Referer`, referrerValue) to httpRequest’s header list.
             auto header = Infrastructure::Header {
