@@ -679,8 +679,8 @@ void StyleComputer::set_property_expanding_shorthands(StyleProperties& style, CS
     for_each_property_expanding_shorthands(property_id, value, [&](PropertyID shorthand_id, StyleValue const& shorthand_value) {
         if (shorthand_value.is_revert()) {
             auto& property_in_previous_cascade_origin = properties_for_revert[to_underlying(shorthand_id)];
-            if (property_in_previous_cascade_origin.has_value())
-                style.set_property(shorthand_id, property_in_previous_cascade_origin->style, property_in_previous_cascade_origin->declaration, StyleProperties::Inherited::No, important);
+            if (property_in_previous_cascade_origin.style)
+                style.set_property(shorthand_id, *property_in_previous_cascade_origin.style, property_in_previous_cascade_origin.declaration, StyleProperties::Inherited::No, important);
         } else {
             style.set_property(shorthand_id, shorthand_value, declaration, StyleProperties::Inherited::No, important);
         }
@@ -694,16 +694,16 @@ void StyleComputer::set_all_properties(DOM::Element& element, Optional<CSS::Sele
 
         if (value.is_revert()) {
             style.m_property_values[to_underlying(property_id)] = properties_for_revert[to_underlying(property_id)];
-            style.m_property_values[to_underlying(property_id)]->important = important;
+            style.m_property_values[to_underlying(property_id)].important = important;
             continue;
         }
 
         if (value.is_unset()) {
             if (is_inherited_property(property_id))
-                style.m_property_values[to_underlying(property_id)] = { { get_inherit_value(document.realm(), property_id, &element, pseudo_element), nullptr } };
+                style.m_property_values[to_underlying(property_id)] = { get_inherit_value(document.realm(), property_id, &element, pseudo_element), nullptr };
             else
-                style.m_property_values[to_underlying(property_id)] = { { property_initial_value(document.realm(), property_id), nullptr } };
-            style.m_property_values[to_underlying(property_id)]->important = important;
+                style.m_property_values[to_underlying(property_id)] = { property_initial_value(document.realm(), property_id), nullptr };
+            style.m_property_values[to_underlying(property_id)].important = important;
             continue;
         }
 
@@ -713,7 +713,7 @@ void StyleComputer::set_all_properties(DOM::Element& element, Optional<CSS::Sele
         if (!property_value->is_unresolved())
             set_property_expanding_shorthands(style, property_id, property_value, declaration, properties_for_revert);
 
-        style.m_property_values[to_underlying(property_id)]->important = important;
+        style.m_property_values[to_underlying(property_id)].important = important;
 
         set_property_expanding_shorthands(style, property_id, value, declaration, properties_for_revert, important);
     }
@@ -1491,8 +1491,8 @@ void StyleComputer::compute_cascaded_values(StyleProperties& style, DOM::Element
             for (auto i = to_underlying(CSS::first_property_id); i <= to_underlying(CSS::last_property_id); ++i) {
                 auto property_id = (CSS::PropertyID)i;
                 auto& property = style.m_property_values[i];
-                if (property.has_value() && property->style->is_unresolved())
-                    property->style = Parser::Parser::resolve_unresolved_style_value({}, Parser::ParsingContext { document() }, element, pseudo_element, property_id, property->style->as_unresolved());
+                if (property.style && property.style->is_unresolved())
+                    property.style = Parser::Parser::resolve_unresolved_style_value({}, Parser::ParsingContext { document() }, element, pseudo_element, property_id, property.style->as_unresolved());
             }
         }
     }
@@ -1600,35 +1600,35 @@ void StyleComputer::compute_defaulted_property_value(StyleProperties& style, DOM
     // FIXME: If we don't know the correct initial value for a property, we fall back to InitialStyleValue.
 
     auto& value_slot = style.m_property_values[to_underlying(property_id)];
-    if (!value_slot.has_value()) {
+    if (!value_slot.style) {
         if (is_inherited_property(property_id))
-            style.m_property_values[to_underlying(property_id)] = { { get_inherit_value(document().realm(), property_id, element, pseudo_element), nullptr, StyleProperties::Important::No, StyleProperties::Inherited::Yes } };
+            style.m_property_values[to_underlying(property_id)] = { get_inherit_value(document().realm(), property_id, element, pseudo_element), nullptr, StyleProperties::Important::No, StyleProperties::Inherited::Yes };
         else
-            style.m_property_values[to_underlying(property_id)] = { { property_initial_value(document().realm(), property_id), nullptr } };
+            style.m_property_values[to_underlying(property_id)] = { property_initial_value(document().realm(), property_id), nullptr };
         return;
     }
 
-    if (value_slot->style->is_initial()) {
-        value_slot->style = property_initial_value(document().realm(), property_id);
+    if (value_slot.style->is_initial()) {
+        value_slot.style = property_initial_value(document().realm(), property_id);
         return;
     }
 
-    if (value_slot->style->is_inherit()) {
-        value_slot->style = get_inherit_value(document().realm(), property_id, element, pseudo_element);
-        value_slot->inherited = StyleProperties::Inherited::Yes;
+    if (value_slot.style->is_inherit()) {
+        value_slot.style = get_inherit_value(document().realm(), property_id, element, pseudo_element);
+        value_slot.inherited = StyleProperties::Inherited::Yes;
         return;
     }
 
     // https://www.w3.org/TR/css-cascade-4/#inherit-initial
     // If the cascaded value of a property is the unset keyword,
-    if (value_slot->style->is_unset()) {
+    if (value_slot.style->is_unset()) {
         if (is_inherited_property(property_id)) {
             // then if it is an inherited property, this is treated as inherit,
-            value_slot->style = get_inherit_value(document().realm(), property_id, element, pseudo_element);
-            value_slot->inherited = StyleProperties::Inherited::Yes;
+            value_slot.style = get_inherit_value(document().realm(), property_id, element, pseudo_element);
+            value_slot.inherited = StyleProperties::Inherited::Yes;
         } else {
             // and if it is not, this is treated as initial.
-            value_slot->style = property_initial_value(document().realm(), property_id);
+            value_slot.style = property_initial_value(document().realm(), property_id);
         }
     }
 }
@@ -2065,24 +2065,24 @@ void StyleComputer::absolutize_values(StyleProperties& style) const
     //       We have to resolve them right away, so that the *computed* line-height is ready for inheritance.
     //       We can't simply absolutize *all* percentage values against the font size,
     //       because most percentages are relative to containing block metrics.
-    auto line_height_value_slot = style.m_property_values[to_underlying(CSS::PropertyID::LineHeight)].map([](auto& x) -> auto& { return x.style; });
-    if (line_height_value_slot.has_value() && (*line_height_value_slot)->is_percentage()) {
-        *line_height_value_slot = LengthStyleValue::create(
-            Length::make_px(CSSPixels::nearest_value_for(font_size * static_cast<double>((*line_height_value_slot)->as_percentage().percentage().as_fraction()))));
+    auto& line_height_value_slot = style.m_property_values[to_underlying(CSS::PropertyID::LineHeight)].style;
+    if (line_height_value_slot && line_height_value_slot->is_percentage()) {
+        line_height_value_slot = LengthStyleValue::create(
+            Length::make_px(CSSPixels::nearest_value_for(font_size * static_cast<double>(line_height_value_slot->as_percentage().percentage().as_fraction()))));
     }
 
     auto line_height = style.compute_line_height(viewport_rect(), font_metrics, m_root_element_font_metrics);
     font_metrics.line_height = line_height;
 
     // NOTE: line-height might be using lh which should be resolved against the parent line height (like we did here already)
-    if (line_height_value_slot.has_value() && (*line_height_value_slot)->is_length())
-        (*line_height_value_slot) = LengthStyleValue::create(Length::make_px(line_height));
+    if (line_height_value_slot && line_height_value_slot->is_length())
+        line_height_value_slot = LengthStyleValue::create(Length::make_px(line_height));
 
     for (size_t i = 0; i < style.m_property_values.size(); ++i) {
         auto& value_slot = style.m_property_values[i];
-        if (!value_slot.has_value())
+        if (!value_slot.style)
             continue;
-        value_slot->style = value_slot->style->absolutized(viewport_rect(), font_metrics, m_root_element_font_metrics);
+        value_slot.style = value_slot.style->absolutized(viewport_rect(), font_metrics, m_root_element_font_metrics);
     }
 
     style.set_line_height({}, line_height);
