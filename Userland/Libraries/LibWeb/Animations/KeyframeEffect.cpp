@@ -830,13 +830,16 @@ WebIDL::ExceptionOr<void> KeyframeEffect::set_keyframes(Optional<JS::Handle<JS::
 
     auto keyframe_set = adopt_ref(*new KeyFrameSet);
     m_target_properties.clear();
+    auto target = this->target();
 
     for (auto& keyframe : m_keyframes) {
         Animations::KeyframeEffect::KeyFrameSet::ResolvedKeyFrame resolved_keyframe;
 
         auto key = static_cast<u64>(keyframe.computed_offset.value() * 100 * AnimationKeyFrameKeyScaleFactor);
 
-        for (auto const& [property_id, property_value] : keyframe.parsed_properties()) {
+        for (auto [property_id, property_value] : keyframe.parsed_properties()) {
+            if (property_value->is_unresolved() && target)
+                property_value = CSS::Parser::Parser::resolve_unresolved_style_value(CSS::Parser::ParsingContext { target->document() }, *target, pseudo_element_type(), property_id, property_value->as_unresolved());
             CSS::StyleComputer::for_each_property_expanding_shorthands(property_id, property_value, CSS::StyleComputer::AllowUnresolved::Yes, [&](CSS::PropertyID shorthand_id, CSS::StyleValue const& shorthand_value) {
                 m_target_properties.set(shorthand_id);
                 resolved_keyframe.properties.set(shorthand_id, NonnullRefPtr<CSS::StyleValue const> { shorthand_value });
