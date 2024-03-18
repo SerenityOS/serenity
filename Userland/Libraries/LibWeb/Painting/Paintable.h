@@ -206,6 +206,17 @@ public:
 
     CSSPixelPoint box_type_agnostic_position() const;
 
+    enum class SelectionState : u8 {
+        None,        // No selection
+        Start,       // Selection starts in this Node
+        End,         // Selection ends in this Node
+        StartAndEnd, // Selection starts and ends in this Node
+        Full,        // Selection starts before and ends after this Node
+    };
+
+    SelectionState selection_state() const { return m_selection_state; }
+    void set_selection_state(SelectionState state) { m_selection_state = state; }
+
 protected:
     explicit Paintable(Layout::Node const&);
 
@@ -218,6 +229,8 @@ private:
     Optional<JS::GCPtr<PaintableBox>> mutable m_containing_block;
 
     OwnPtr<StackingContext> m_stacking_context;
+
+    SelectionState m_selection_state { SelectionState::None };
 
     bool m_visible : 1 { false };
     bool m_positioned : 1 { false };

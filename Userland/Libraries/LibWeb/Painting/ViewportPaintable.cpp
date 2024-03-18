@@ -4,11 +4,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/DOM/Range.h>
 #include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Painting/SVGPaintable.h>
 #include <LibWeb/Painting/SVGSVGPaintable.h>
 #include <LibWeb/Painting/StackingContext.h>
 #include <LibWeb/Painting/ViewportPaintable.h>
+#include <LibWeb/Selection/Selection.h>
 
 namespace Web::Painting {
 
@@ -438,6 +440,77 @@ void ViewportPaintable::resolve_paint_only_properties()
 
         return TraversalDecision::Continue;
     });
+}
+
+JS::GCPtr<Selection::Selection> ViewportPaintable::selection() const
+{
+    return const_cast<DOM::Document&>(document()).get_selection();
+}
+
+void ViewportPaintable::recompute_selection_states()
+{
+    // 1. Start by resetting the selection state of all layout nodes to None.
+    for_each_in_inclusive_subtree([&](auto& layout_node) {
+        layout_node.set_selection_state(SelectionState::None);
+        return TraversalDecision::Continue;
+    });
+
+    // 2. If there is no active Selection or selected Range, return.
+    auto selection = document().get_selection();
+    if (!selection)
+        return;
+    auto range = selection->range();
+    if (!range)
+        return;
+
+    auto* start_container = range->start_container();
+    auto* end_container = range->end_container();
+
+    // 3. If the selection starts and ends in the same node:
+    if (start_container == end_container) {
+        // 1. If the selection starts and ends at the same offset, return.
+        if (range->start_offset() == range->end_offset()) {
+            // NOTE: A zero-length selection should not be visible.
+            return;
+        }
+
+        // 2. If it's a text node, mark it as StartAndEnd and return.
+        if (is<DOM::Text>(*start_container)) {
+            if (auto* paintable = start_container->paintable()) {
+                paintable->set_selection_state(SelectionState::StartAndEnd);
+            }
+            return;
+        }
+    }
+
+    if (start_container == end_container && is<DOM::Text>(*start_container)) {
+        if (auto* paintable = start_container->paintable()) {
+            paintable->set_selection_state(SelectionState::StartAndEnd);
+        }
+        return;
+    }
+
+    // 4. Mark the selection start node as Start (if text) or Full (if anything else).
+    if (auto* paintable = start_container->paintable()) {
+        if (is<DOM::Text>(*start_container))
+            paintable->set_selection_state(SelectionState::Start);
+        else
+            paintable->set_selection_state(SelectionState::Full);
+    }
+
+    // 5. Mark the selection end node as End (if text) or Full (if anything else).
+    if (auto* paintable = end_container->paintable()) {
+        if (is<DOM::Text>(*end_container))
+            paintable->set_selection_state(SelectionState::End);
+        else
+            paintable->set_selection_state(SelectionState::Full);
+    }
+
+    // 6. Mark the nodes between start node and end node (in tree order) as Full.
+    for (auto* node = start_container->next_in_pre_order(); node && node != end_container; node = node->next_in_pre_order()) {
+        if (auto* paintable = node->paintable())
+            paintable->set_selection_state(SelectionState::Full);
+    }
 }
 
 }

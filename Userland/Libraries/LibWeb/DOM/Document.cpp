@@ -1110,7 +1110,7 @@ void Document::update_layout()
         page().client().page_did_layout();
     }
 
-    m_layout_root->recompute_selection_states();
+    paintable()->recompute_selection_states();
 
     m_needs_layout = false;
     m_layout_update_timer->stop();

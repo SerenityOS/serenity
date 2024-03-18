@@ -8,7 +8,6 @@
 
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Layout/BlockContainer.h>
-#include <LibWeb/Selection/Selection.h>
 
 namespace Web::Layout {
 
@@ -20,10 +19,6 @@ public:
     virtual ~Viewport() override;
 
     const DOM::Document& dom_node() const { return static_cast<const DOM::Document&>(*Node::dom_node()); }
-
-    JS::GCPtr<Selection::Selection> selection() const;
-
-    void recompute_selection_states();
 
 private:
     virtual JS::GCPtr<Painting::Paintable> create_paintable() const override;

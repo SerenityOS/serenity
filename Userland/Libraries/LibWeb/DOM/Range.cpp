@@ -25,6 +25,7 @@
 #include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Namespace.h>
 #include <LibWeb/Painting/Paintable.h>
+#include <LibWeb/Painting/ViewportPaintable.h>
 
 namespace Web::DOM {
 
@@ -97,9 +98,9 @@ void Range::update_associated_selection()
 {
     if (!m_associated_selection)
         return;
-    if (auto* layout_root = m_associated_selection->document()->layout_node(); layout_root && layout_root->paintable()) {
-        layout_root->recompute_selection_states();
-        layout_root->paintable()->set_needs_display();
+    if (auto* viewport = m_associated_selection->document()->paintable()) {
+        viewport->recompute_selection_states();
+        viewport->set_needs_display();
     }
 
     // https://w3c.github.io/selection-api/#selectionchange-event

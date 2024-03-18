@@ -61,16 +61,16 @@ int PaintableFragment::text_index_at(CSSPixels x) const
 
 CSSPixelRect PaintableFragment::selection_rect(Gfx::Font const& font) const
 {
-    if (layout_node().selection_state() == Layout::Node::SelectionState::None)
+    if (paintable().selection_state() == Paintable::SelectionState::None)
         return {};
 
-    if (layout_node().selection_state() == Layout::Node::SelectionState::Full)
+    if (paintable().selection_state() == Paintable::SelectionState::Full)
         return absolute_rect();
 
     if (!is<Layout::TextNode>(layout_node()))
         return {};
 
-    auto selection = layout_node().root().selection();
+    auto selection = paintable().document().get_selection();
     if (!selection)
         return {};
     auto range = selection->range();
@@ -84,7 +84,7 @@ CSSPixelRect PaintableFragment::selection_rect(Gfx::Font const& font) const
     auto& layout_text = verify_cast<Layout::TextNode>(layout_node());
     auto text = layout_text.text_for_rendering().bytes_as_string_view().substring_view(m_start, m_length);
 
-    if (layout_node().selection_state() == Layout::Node::SelectionState::StartAndEnd) {
+    if (paintable().selection_state() == Paintable::SelectionState::StartAndEnd) {
         // we are in the start/end node (both the same)
         if (start_index > range->end_offset())
             return {};
@@ -105,7 +105,7 @@ CSSPixelRect PaintableFragment::selection_rect(Gfx::Font const& font) const
 
         return rect;
     }
-    if (layout_node().selection_state() == Layout::Node::SelectionState::Start) {
+    if (paintable().selection_state() == Paintable::SelectionState::Start) {
         // we are in the start node
         if (end_index < range->start_offset())
             return {};
@@ -121,7 +121,7 @@ CSSPixelRect PaintableFragment::selection_rect(Gfx::Font const& font) const
 
         return rect;
     }
-    if (layout_node().selection_state() == Layout::Node::SelectionState::End) {
+    if (paintable().selection_state() == Paintable::SelectionState::End) {
         // we are in the end node
         if (start_index > range->end_offset())
             return {};
