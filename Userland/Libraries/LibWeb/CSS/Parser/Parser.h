@@ -69,7 +69,7 @@ public:
 
     Optional<ComponentValue> parse_as_component_value();
 
-    static NonnullRefPtr<StyleValue> resolve_unresolved_style_value(Badge<StyleComputer>, ParsingContext const&, DOM::Element&, Optional<CSS::Selector::PseudoElement::Type>, PropertyID, UnresolvedStyleValue const&);
+    static NonnullRefPtr<StyleValue> resolve_unresolved_style_value(ParsingContext const&, DOM::Element&, Optional<CSS::Selector::PseudoElement::Type>, PropertyID, UnresolvedStyleValue const&);
 
     [[nodiscard]] LengthOrCalculated parse_as_sizes_attribute();
 
