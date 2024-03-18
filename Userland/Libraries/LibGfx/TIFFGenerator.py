@@ -154,6 +154,8 @@ known_tags: List[Tag] = [
     Tag('325', [TIFFType.UnsignedShort, TIFFType.UnsignedLong], [], None, "TileByteCounts"),
     Tag('338', [TIFFType.UnsignedShort], [], None, "ExtraSamples", ExtraSample),
     Tag('339', [TIFFType.UnsignedShort], [], SampleFormat.Unsigned, "SampleFormat", SampleFormat),
+    Tag('340', [TIFFType.Float], [], None, "SMinSampleValue"),
+    Tag('341', [TIFFType.Float], [], None, "SMaxSampleValue"),
     Tag('34665', [TIFFType.UnsignedLong, TIFFType.IFD], [1], None, "ExifIFD"),
     Tag('34675', [TIFFType.Undefined], [], None, "ICCProfile"),
 ]
