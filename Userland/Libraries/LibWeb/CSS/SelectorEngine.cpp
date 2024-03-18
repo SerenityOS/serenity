@@ -569,10 +569,10 @@ static inline bool matches(CSS::Selector::SimpleSelector const& component, Optio
         switch (qualified_name.namespace_type) {
         case CSS::Selector::SimpleSelector::QualifiedName::NamespaceType::Default:
             // "if no default namespace has been declared for selectors, this is equivalent to *|E."
-            if (!style_sheet_for_rule.has_value() || !style_sheet_for_rule->default_namespace().has_value())
+            if (!style_sheet_for_rule.has_value() || !style_sheet_for_rule->default_namespace_rule())
                 return true;
             // "Otherwise it is equivalent to ns|E where ns is the default namespace."
-            return element.namespace_uri() == style_sheet_for_rule->default_namespace();
+            return element.namespace_uri() == style_sheet_for_rule->default_namespace_rule()->namespace_uri();
         case CSS::Selector::SimpleSelector::QualifiedName::NamespaceType::None:
             // "elements with name E without a namespace"
             return !element.namespace_uri().has_value();
