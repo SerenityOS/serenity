@@ -371,7 +371,7 @@ static void sort_matching_rules(Vector<MatchingRule>& matching_rules)
         auto const& b_selector = b.rule->selectors()[b.selector_index];
         auto a_specificity = a_selector->specificity();
         auto b_specificity = b_selector->specificity();
-        if (a_selector->specificity() == b_selector->specificity()) {
+        if (a_specificity == b_specificity) {
             if (a.style_sheet_index == b.style_sheet_index)
                 return a.rule_index < b.rule_index;
             return a.style_sheet_index < b.style_sheet_index;
