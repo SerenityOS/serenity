@@ -443,11 +443,6 @@ JS::GCPtr<Layout::Node> Element::create_layout_node_for_display_type(DOM::Docume
     return document.heap().allocate_without_realm<Layout::InlineNode>(document, element, move(style));
 }
 
-CSS::CSSStyleDeclaration const* Element::inline_style() const
-{
-    return m_inline_style.ptr();
-}
-
 void Element::run_attribute_change_steps(FlyString const& local_name, Optional<String> const& old_value, Optional<String> const& value, Optional<FlyString> const& namespace_)
 {
     attribute_change_steps(local_name, old_value, value, namespace_);

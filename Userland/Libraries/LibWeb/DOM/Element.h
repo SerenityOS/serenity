@@ -183,7 +183,7 @@ public:
 
     void reset_animated_css_properties();
 
-    CSS::CSSStyleDeclaration const* inline_style() const;
+    JS::GCPtr<CSS::ElementInlineCSSStyleDeclaration const> inline_style() const { return m_inline_style; }
 
     CSS::CSSStyleDeclaration* style_for_bindings();
 
