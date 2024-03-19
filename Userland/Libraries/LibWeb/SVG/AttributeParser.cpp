@@ -262,7 +262,7 @@ void AttributeParser::parse_elliptical_arc()
     parse_whitespace();
 
     while (true) {
-        m_instructions.append({ PathInstructionType::EllipticalArc, absolute, parse_elliptical_arg_argument() });
+        m_instructions.append({ PathInstructionType::EllipticalArc, absolute, parse_elliptical_arc_argument() });
         if (match_comma_whitespace())
             parse_comma_whitespace();
         if (!match_coordinate())
@@ -342,7 +342,7 @@ Vector<float> AttributeParser::parse_coordinate_pair_triplet()
     return coordinates;
 }
 
-Vector<float> AttributeParser::parse_elliptical_arg_argument()
+Vector<float> AttributeParser::parse_elliptical_arc_argument()
 {
     Vector<float> numbers;
     numbers.append(parse_number());

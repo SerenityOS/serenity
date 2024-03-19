@@ -180,7 +180,7 @@ private:
     Vector<Vector<float>> parse_coordinate_pair_sequence();
     Vector<float> parse_coordinate_pair_double();
     Vector<float> parse_coordinate_pair_triplet();
-    Vector<float> parse_elliptical_arg_argument();
+    Vector<float> parse_elliptical_arc_argument();
     void parse_whitespace(bool must_match_once = false);
     void parse_comma_whitespace();
     float parse_number();
