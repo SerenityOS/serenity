@@ -207,6 +207,8 @@ void Node::set_text_content(Optional<String> const& maybe_content)
 
     document().invalidate_style();
     document().invalidate_layout();
+
+    document().bump_dom_tree_version();
 }
 
 // https://dom.spec.whatwg.org/#dom-node-nodevalue
@@ -510,6 +512,8 @@ void Node::insert_before(JS::NonnullGCPtr<Node> node, JS::GCPtr<Node> child, boo
     invalidate_style();
 
     document().invalidate_layout();
+
+    document().bump_dom_tree_version();
 }
 
 // https://dom.spec.whatwg.org/#concept-node-pre-insert
@@ -703,6 +707,8 @@ void Node::remove(bool suppress_observers)
     // In the future, we should find a way to only invalidate the parts that actually need it.
     document().invalidate_style();
     document().invalidate_layout();
+
+    document().bump_dom_tree_version();
 }
 
 // https://dom.spec.whatwg.org/#concept-node-replace

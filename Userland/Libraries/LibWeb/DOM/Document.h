@@ -97,6 +97,11 @@ public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> construct_impl(JS::Realm&);
     virtual ~Document() override;
 
+    // AD-HOC: This number increments whenever a node is added or removed from the document, or an element attribute changes.
+    //         It can be used as a crude invalidation mechanism for caches that depend on the DOM structure.
+    u64 dom_tree_version() const { return m_dom_tree_version; }
+    void bump_dom_tree_version() { ++m_dom_tree_version; }
+
     WebIDL::ExceptionOr<void> populate_with_html_head_and_body();
 
     JS::GCPtr<Selection::Selection> get_selection() const;
@@ -846,6 +851,8 @@ private:
     mutable JS::GCPtr<WebIDL::ObservableArray> m_adopted_style_sheets;
 
     Vector<JS::NonnullGCPtr<DOM::ShadowRoot>> m_shadow_roots;
+
+    u64 m_dom_tree_version { 0 };
 };
 
 template<>
