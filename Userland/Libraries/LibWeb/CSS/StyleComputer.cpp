@@ -358,8 +358,14 @@ Vector<MatchingRule> StyleComputer::collect_matching_rules(DOM::Element const& e
             continue;
 
         auto const& selector = rule_to_run.rule->selectors()[rule_to_run.selector_index];
-        if (SelectorEngine::matches(selector, *rule_to_run.sheet, element, pseudo_element))
-            matching_rules.append(rule_to_run);
+        if (rule_to_run.can_use_fast_matches) {
+            if (!SelectorEngine::fast_matches(selector, *rule_to_run.sheet, element))
+                continue;
+        } else {
+            if (!SelectorEngine::matches(selector, *rule_to_run.sheet, element, pseudo_element))
+                continue;
+        }
+        matching_rules.append(rule_to_run);
     }
     return matching_rules;
 }
@@ -2331,6 +2337,9 @@ NonnullOwnPtr<StyleComputer::RuleCache> StyleComputer::make_rule_cache_for_casca
                     selector_index,
                     selector.specificity(),
                     cascade_origin,
+                    false,
+                    false,
+                    SelectorEngine::can_use_fast_matches(selector),
                 };
 
                 for (auto const& simple_selector : selector.compound_selectors().last().simple_selectors) {

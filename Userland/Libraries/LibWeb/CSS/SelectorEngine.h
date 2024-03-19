@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2024, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,5 +12,8 @@
 namespace Web::SelectorEngine {
 
 bool matches(CSS::Selector const&, Optional<CSS::CSSStyleSheet const&> style_sheet_for_rule, DOM::Element const&, Optional<CSS::Selector::PseudoElement::Type> = {}, JS::GCPtr<DOM::ParentNode const> scope = {});
+
+[[nodiscard]] bool fast_matches(CSS::Selector const&, Optional<CSS::CSSStyleSheet const&> style_sheet_for_rule, DOM::Element const&);
+[[nodiscard]] bool can_use_fast_matches(CSS::Selector const&);
 
 }
