@@ -492,9 +492,9 @@ void Element::attribute_changed(FlyString const& name, Optional<String> const& v
     }
 }
 
-Element::RequiredInvalidationAfterStyleChange Element::compute_required_invalidation(CSS::StyleProperties const& old_style, CSS::StyleProperties const& new_style)
+static CSS::RequiredInvalidationAfterStyleChange compute_required_invalidation(CSS::StyleProperties const& old_style, CSS::StyleProperties const& new_style)
 {
-    Element::RequiredInvalidationAfterStyleChange invalidation;
+    CSS::RequiredInvalidationAfterStyleChange invalidation;
 
     if (!old_style.computed_font_list().equals(new_style.computed_font_list()))
         invalidation.relayout = true;
@@ -506,51 +506,12 @@ Element::RequiredInvalidationAfterStyleChange Element::compute_required_invalida
         if (!old_value && !new_value)
             continue;
 
-        bool const property_value_changed = (!old_value || !new_value) || *old_value != *new_value;
-        if (!property_value_changed)
-            continue;
-
-        // NOTE: If the computed CSS display property changes, we have to rebuild the entire layout tree.
-        //       In the future, we should figure out ways to rebuild a smaller part of the tree.
-        if (property_id == CSS::PropertyID::Display) {
-            return Element::RequiredInvalidationAfterStyleChange::full();
-        }
-
-        // NOTE: If one of the overflow properties change, we rebuild the entire layout tree.
-        //       This ensures that overflow propagation from root/body to viewport happens correctly.
-        //       In the future, we can make this invalidation narrower.
-        if (property_id == CSS::PropertyID::OverflowX || property_id == CSS::PropertyID::OverflowY) {
-            return Element::RequiredInvalidationAfterStyleChange::full();
-        }
-
-        // OPTIMIZATION: Special handling for CSS `visibility`:
-        if (property_id == CSS::PropertyID::Visibility) {
-            // We don't need to relayout if the visibility changes from visible to hidden or vice versa. Only collapse requires relayout.
-            if ((old_value && old_value->to_identifier() == CSS::ValueID::Collapse) != (new_value && new_value->to_identifier() == CSS::ValueID::Collapse))
-                invalidation.relayout = true;
-            // Of course, we still have to repaint on any visibility change.
-            invalidation.repaint = true;
-        } else if (CSS::property_affects_layout(property_id)) {
-            invalidation.relayout = true;
-        }
-        if (property_id == CSS::PropertyID::Opacity) {
-            // OPTIMIZATION: An element creates a stacking context when its opacity changes from 1 to less than 1
-            //               and stops to create one when opacity returns to 1. So stacking context tree rebuild is
-            //               not required for opacity changes within the range below 1.
-            auto old_value_opacity = old_style.opacity();
-            auto new_value_opacity = new_style.opacity();
-            if (old_value_opacity != new_value_opacity && (old_value_opacity == 1 || new_value_opacity == 1)) {
-                invalidation.rebuild_stacking_context_tree = true;
-            }
-        } else if (CSS::property_affects_stacking_context(property_id)) {
-            invalidation.rebuild_stacking_context_tree = true;
-        }
-        invalidation.repaint = true;
+        invalidation |= CSS::compute_property_invalidation(property_id, old_value, new_value);
     }
     return invalidation;
 }
 
-Element::RequiredInvalidationAfterStyleChange Element::recompute_style()
+CSS::RequiredInvalidationAfterStyleChange Element::recompute_style()
 {
     set_needs_style_update(false);
     VERIFY(parent());
@@ -565,11 +526,11 @@ Element::RequiredInvalidationAfterStyleChange Element::recompute_style()
             new_computed_css_values->set_property(CSS::PropertyID::TextAlign, CSS::IdentifierStyleValue::create(CSS::ValueID::Start));
     }
 
-    RequiredInvalidationAfterStyleChange invalidation;
+    CSS::RequiredInvalidationAfterStyleChange invalidation;
     if (m_computed_css_values)
         invalidation = compute_required_invalidation(*m_computed_css_values, *new_computed_css_values);
     else
-        invalidation = RequiredInvalidationAfterStyleChange::full();
+        invalidation = CSS::RequiredInvalidationAfterStyleChange::full();
 
     if (invalidation.is_none())
         return invalidation;

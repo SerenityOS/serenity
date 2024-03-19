@@ -23,8 +23,6 @@ public:
 
     static NonnullRefPtr<StyleProperties> create() { return adopt_ref(*new StyleProperties); }
 
-    NonnullRefPtr<StyleProperties> clone() const;
-
     template<typename Callback>
     inline void for_each_property(Callback callback) const
     {
@@ -55,6 +53,7 @@ public:
     auto& properties() { return m_property_values; }
     auto const& properties() const { return m_property_values; }
 
+    HashMap<CSS::PropertyID, NonnullRefPtr<StyleValue const>> const& animated_property_values() const { return m_animated_property_values; }
     void reset_animated_properties();
 
     bool is_property_important(CSS::PropertyID property_id) const;
@@ -181,6 +180,8 @@ public:
     Optional<CSS::ScrollbarWidth> scrollbar_width() const;
 
     static NonnullRefPtr<Gfx::Font const> font_fallback(bool monospace, bool bold);
+
+    static float resolve_opacity_value(CSS::StyleValue const& value);
 
 private:
     friend class StyleComputer;

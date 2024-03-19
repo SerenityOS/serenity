@@ -1116,10 +1116,10 @@ void Document::update_layout()
     m_layout_update_timer->stop();
 }
 
-[[nodiscard]] static Element::RequiredInvalidationAfterStyleChange update_style_recursively(Node& node)
+[[nodiscard]] static CSS::RequiredInvalidationAfterStyleChange update_style_recursively(Node& node)
 {
     bool const needs_full_style_update = node.document().needs_full_style_update();
-    Element::RequiredInvalidationAfterStyleChange invalidation;
+    CSS::RequiredInvalidationAfterStyleChange invalidation;
 
     // NOTE: If the current node has `display:none`, we can disregard all invalidation
     //       caused by its children, as they will not be rendered anyway.
