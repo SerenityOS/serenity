@@ -39,6 +39,7 @@ public:
             Selection,
             SliderRunnableTrack,
             SliderThumb,
+            Backdrop,
 
             // Keep this last.
             KnownPseudoElementCount,
