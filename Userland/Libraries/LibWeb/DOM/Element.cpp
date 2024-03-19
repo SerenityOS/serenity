@@ -374,19 +374,6 @@ Vector<String> Element::get_attribute_names() const
     return names;
 }
 
-bool Element::has_class(FlyString const& class_name, CaseSensitivity case_sensitivity) const
-{
-    if (case_sensitivity == CaseSensitivity::CaseSensitive) {
-        return any_of(m_classes, [&](auto& it) {
-            return it == class_name;
-        });
-    } else {
-        return any_of(m_classes, [&](auto& it) {
-            return it.equals_ignoring_ascii_case(class_name);
-        });
-    }
-}
-
 JS::GCPtr<Layout::Node> Element::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
 {
     if (local_name() == "noscript" && document().is_scripting_enabled())

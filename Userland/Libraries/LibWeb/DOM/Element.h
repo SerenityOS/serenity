@@ -470,6 +470,18 @@ inline Element const* Node::parent_element() const
     return static_cast<Element const*>(parent);
 }
 
+inline bool Element::has_class(FlyString const& class_name, CaseSensitivity case_sensitivity) const
+{
+    if (case_sensitivity == CaseSensitivity::CaseSensitive) {
+        return any_of(m_classes, [&](auto& it) {
+            return it == class_name;
+        });
+    }
+    return any_of(m_classes, [&](auto& it) {
+        return it.equals_ignoring_ascii_case(class_name);
+    });
+}
+
 WebIDL::ExceptionOr<QualifiedName> validate_and_extract(JS::Realm&, Optional<FlyString> namespace_, FlyString const& qualified_name);
 
 }
