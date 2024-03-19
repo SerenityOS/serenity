@@ -686,6 +686,8 @@ static bool fast_matches_simple_selector(CSS::Selector::SimpleSelector const& si
         return simple_selector.name() == element.id();
     case CSS::Selector::SimpleSelector::Type::Attribute:
         return matches_attribute(simple_selector.attribute(), style_sheet_for_rule, element);
+    case CSS::Selector::SimpleSelector::Type::PseudoClass:
+        return matches_pseudo_class(simple_selector.pseudo_class(), style_sheet_for_rule, element, nullptr);
     default:
         VERIFY_NOT_REACHED();
     }
@@ -765,7 +767,28 @@ bool can_use_fast_matches(CSS::Selector const& selector)
         }
 
         for (auto const& simple_selector : compound_selector.simple_selectors) {
-            if (simple_selector.type != CSS::Selector::SimpleSelector::Type::TagName
+            if (simple_selector.type == CSS::Selector::SimpleSelector::Type::PseudoClass) {
+                auto const pseudo_class = simple_selector.pseudo_class().type;
+                if (pseudo_class != CSS::PseudoClass::FirstChild
+                    && pseudo_class != CSS::PseudoClass::LastChild
+                    && pseudo_class != CSS::PseudoClass::OnlyChild
+                    && pseudo_class != CSS::PseudoClass::Hover
+                    && pseudo_class != CSS::PseudoClass::Active
+                    && pseudo_class != CSS::PseudoClass::Focus
+                    && pseudo_class != CSS::PseudoClass::FocusVisible
+                    && pseudo_class != CSS::PseudoClass::FocusWithin
+                    && pseudo_class != CSS::PseudoClass::Link
+                    && pseudo_class != CSS::PseudoClass::AnyLink
+                    && pseudo_class != CSS::PseudoClass::Visited
+                    && pseudo_class != CSS::PseudoClass::LocalLink
+                    && pseudo_class != CSS::PseudoClass::Empty
+                    && pseudo_class != CSS::PseudoClass::Root
+                    && pseudo_class != CSS::PseudoClass::Enabled
+                    && pseudo_class != CSS::PseudoClass::Disabled
+                    && pseudo_class != CSS::PseudoClass::Checked) {
+                    return false;
+                }
+            } else if (simple_selector.type != CSS::Selector::SimpleSelector::Type::TagName
                 && simple_selector.type != CSS::Selector::SimpleSelector::Type::Universal
                 && simple_selector.type != CSS::Selector::SimpleSelector::Type::Class
                 && simple_selector.type != CSS::Selector::SimpleSelector::Type::Id
