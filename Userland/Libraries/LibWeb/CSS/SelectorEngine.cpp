@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2024, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -665,6 +665,117 @@ bool matches(CSS::Selector const& selector, Optional<CSS::CSSStyleSheet const&> 
     if (!pseudo_element.has_value() && selector.pseudo_element().has_value())
         return false;
     return matches(selector, style_sheet_for_rule, selector.compound_selectors().size() - 1, element, scope);
+}
+
+static bool fast_matches_simple_selector(CSS::Selector::SimpleSelector const& simple_selector, Optional<CSS::CSSStyleSheet const&> style_sheet_for_rule, DOM::Element const& element)
+{
+    switch (simple_selector.type) {
+    case CSS::Selector::SimpleSelector::Type::Universal:
+        return matches_namespace(simple_selector.qualified_name(), element, style_sheet_for_rule);
+    case CSS::Selector::SimpleSelector::Type::TagName:
+        if (element.document().document_type() == DOM::Document::Type::HTML) {
+            if (simple_selector.qualified_name().name.lowercase_name != element.local_name())
+                return false;
+        } else if (!Infra::is_ascii_case_insensitive_match(simple_selector.qualified_name().name.name, element.local_name())) {
+            return false;
+        }
+        return matches_namespace(simple_selector.qualified_name(), element, style_sheet_for_rule);
+    case CSS::Selector::SimpleSelector::Type::Class:
+        return element.has_class(simple_selector.name());
+    case CSS::Selector::SimpleSelector::Type::Id:
+        return simple_selector.name() == element.id();
+    case CSS::Selector::SimpleSelector::Type::Attribute:
+        return matches_attribute(simple_selector.attribute(), style_sheet_for_rule, element);
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
+static bool fast_matches_compound_selector(CSS::Selector::CompoundSelector const& compound_selector, Optional<CSS::CSSStyleSheet const&> style_sheet_for_rule, DOM::Element const& element)
+{
+    for (auto const& simple_selector : compound_selector.simple_selectors) {
+        if (!fast_matches_simple_selector(simple_selector, style_sheet_for_rule, element))
+            return false;
+    }
+    return true;
+}
+
+FLATTEN bool fast_matches(CSS::Selector const& selector, Optional<CSS::CSSStyleSheet const&> style_sheet_for_rule, DOM::Element const& element_to_match)
+{
+    DOM::Element const* current = &element_to_match;
+
+    ssize_t compound_selector_index = selector.compound_selectors().size() - 1;
+
+    if (!fast_matches_compound_selector(selector.compound_selectors().last(), style_sheet_for_rule, *current))
+        return false;
+
+    // NOTE: If we fail after following a child combinator, we may need to backtrack
+    //       to the last matched descendant. We store the state here.
+    struct {
+        DOM::Element const* element = nullptr;
+        ssize_t compound_selector_index = 0;
+    } backtrack_state;
+
+    for (;;) {
+        // NOTE: There should always be a leftmost compound selector without combinator that kicks us out of this loop.
+        VERIFY(compound_selector_index >= 0);
+
+        auto const* compound_selector = &selector.compound_selectors()[compound_selector_index];
+
+        switch (compound_selector->combinator) {
+        case CSS::Selector::Combinator::None:
+            return true;
+        case CSS::Selector::Combinator::Descendant:
+            backtrack_state = { current->parent_element(), compound_selector_index };
+            compound_selector = &selector.compound_selectors()[--compound_selector_index];
+            for (current = current->parent_element(); current; current = current->parent_element()) {
+                if (fast_matches_compound_selector(*compound_selector, style_sheet_for_rule, *current))
+                    break;
+            }
+            if (!current)
+                return false;
+            break;
+        case CSS::Selector::Combinator::ImmediateChild:
+            compound_selector = &selector.compound_selectors()[--compound_selector_index];
+            current = current->parent_element();
+            if (!current)
+                return false;
+            if (!fast_matches_compound_selector(*compound_selector, style_sheet_for_rule, *current)) {
+                if (backtrack_state.element) {
+                    current = backtrack_state.element;
+                    compound_selector_index = backtrack_state.compound_selector_index;
+                    continue;
+                }
+                return false;
+            }
+            break;
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    }
+}
+
+bool can_use_fast_matches(CSS::Selector const& selector)
+{
+    for (auto const& compound_selector : selector.compound_selectors()) {
+        if (compound_selector.combinator != CSS::Selector::Combinator::None
+            && compound_selector.combinator != CSS::Selector::Combinator::Descendant
+            && compound_selector.combinator != CSS::Selector::Combinator::ImmediateChild) {
+            return false;
+        }
+
+        for (auto const& simple_selector : compound_selector.simple_selectors) {
+            if (simple_selector.type != CSS::Selector::SimpleSelector::Type::TagName
+                && simple_selector.type != CSS::Selector::SimpleSelector::Type::Universal
+                && simple_selector.type != CSS::Selector::SimpleSelector::Type::Class
+                && simple_selector.type != CSS::Selector::SimpleSelector::Type::Id
+                && simple_selector.type != CSS::Selector::SimpleSelector::Type::Attribute) {
+                return false;
+            }
+        }
+    }
+
+    return true;
 }
 
 }
