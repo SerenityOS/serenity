@@ -1,3 +1,6 @@
+file(STRINGS "${SERENITY_SOURCE_DIR}/Meta/emoji-file-list.txt" EMOJI)
+list(TRANSFORM EMOJI PREPEND "${SERENITY_SOURCE_DIR}/Base/res/emoji/")
+
 set(FONTS
     CsillaBold10.font
     CsillaBold12.font
@@ -124,8 +127,11 @@ function(copy_resource_set subdir)
 endfunction()
 
 function(copy_resources_to_build base_directory bundle_target)
-
     add_custom_target("${bundle_target}_build_resource_files")
+
+    copy_resource_set(emoji RESOURCES ${EMOJI}
+        DESTINATION ${base_directory} TARGET ${bundle_target}
+    )
 
     copy_resource_set(fonts RESOURCES ${FONTS}
         DESTINATION ${base_directory} TARGET ${bundle_target}
@@ -167,6 +173,7 @@ function(copy_resources_to_build base_directory bundle_target)
 endfunction()
 
 function(install_ladybird_resources destination component)
+    install(FILES ${EMOJI} DESTINATION "${destination}/emoji" COMPONENT ${component})
     install(FILES ${FONTS} DESTINATION "${destination}/fonts" COMPONENT ${component})
     install(FILES ${16x16_ICONS} DESTINATION "${destination}/icons/16x16" COMPONENT ${component})
     install(FILES ${32x32_ICONS} DESTINATION "${destination}/icons/32x32" COMPONENT ${component})
