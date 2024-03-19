@@ -6,6 +6,7 @@ shared_library("LibWebSocket") {
     "//Userland/Libraries/LibCore",
     "//Userland/Libraries/LibCrypto",
     "//Userland/Libraries/LibTLS",
+    "//Userland/Libraries/LibURL",
   ]
   sources = [
     "ConnectionInfo.cpp",

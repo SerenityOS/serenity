@@ -80,7 +80,6 @@ tests = [
   "TestTypeTraits",
   "TestTypedTransfer",
   "TestUFixedBigInt",
-  "TestURL",
   "TestUtf16",
   "TestUtf8",
   "TestVariant",

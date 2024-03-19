@@ -4,7 +4,6 @@ source_set("Canvas") {
   sources = [
     "CanvasDrawImage.cpp",
     "CanvasPath.cpp",
-    "CanvasPathClipper.cpp",
     "CanvasState.cpp",
   ]
 }

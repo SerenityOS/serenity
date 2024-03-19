@@ -377,6 +377,7 @@ shared_library("LibWeb") {
            "//Userland/Libraries/LibSoftGPU",
            "//Userland/Libraries/LibSyntax",
            "//Userland/Libraries/LibTextCodec",
+           "//Userland/Libraries/LibURL",
            "//Userland/Libraries/LibUnicode",
            "//Userland/Libraries/LibVideo",
            "//Userland/Libraries/LibWasm",
