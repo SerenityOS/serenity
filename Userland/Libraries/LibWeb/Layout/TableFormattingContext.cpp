@@ -1577,11 +1577,9 @@ void TableFormattingContext::finish_grid_initialization(TableGrid const& table_g
     }
 }
 
-void TableFormattingContext::run(Box const& box, LayoutMode layout_mode, AvailableSpace const& available_space)
+void TableFormattingContext::run_until_width_calculation(Box const& box, AvailableSpace const& available_space)
 {
     m_available_space = available_space;
-
-    auto total_captions_height = run_caption_layout(layout_mode, CSS::CaptionSide::Top);
 
     // Determine the number of rows/columns the table requires.
     finish_grid_initialization(TableGrid::calculate_row_column_grid(box, m_cells, m_rows));
@@ -1603,6 +1601,15 @@ void TableFormattingContext::run(Box const& box, LayoutMode layout_mode, Availab
 
     // Compute the width of the table.
     compute_table_width();
+}
+
+void TableFormattingContext::run(Box const& box, LayoutMode layout_mode, AvailableSpace const& available_space)
+{
+    m_available_space = available_space;
+
+    auto total_captions_height = run_caption_layout(layout_mode, CSS::CaptionSide::Top);
+
+    run_until_width_calculation(box, available_space);
 
     if (available_space.width.is_intrinsic_sizing_constraint() && !available_space.height.is_intrinsic_sizing_constraint()) {
         return;

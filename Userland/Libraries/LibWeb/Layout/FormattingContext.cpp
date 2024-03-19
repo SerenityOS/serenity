@@ -405,11 +405,6 @@ CSSPixels FormattingContext::compute_table_box_width_inside_table_wrapper(Box co
     // table-wrapper can't have borders or paddings but it might have margin taken from table-root.
     auto available_width = width_of_containing_block - margin_left.to_px(box) - margin_right.to_px(box);
 
-    LayoutState throwaway_state(&m_state);
-    auto context = create_independent_formatting_context_if_needed(throwaway_state, box);
-    VERIFY(context);
-    context->run(box, LayoutMode::IntrinsicSizing, m_state.get(box).available_inner_space_or_constraints_from(available_space));
-
     Optional<Box const&> table_box;
     box.for_each_in_subtree_of_type<Box>([&](Box const& child_box) {
         if (child_box.display().is_table_inside()) {
@@ -419,6 +414,16 @@ CSSPixels FormattingContext::compute_table_box_width_inside_table_wrapper(Box co
         return IterationDecision::Continue;
     });
     VERIFY(table_box.has_value());
+
+    LayoutState throwaway_state(&m_state);
+
+    auto& table_box_state = throwaway_state.get_mutable(*table_box);
+    auto const& table_box_computed_values = table_box->computed_values();
+    table_box_state.border_left = table_box_computed_values.border_left().width;
+    table_box_state.border_right = table_box_computed_values.border_right().width;
+
+    auto context = make<TableFormattingContext>(throwaway_state, *table_box, this);
+    context->run_until_width_calculation(*table_box, m_state.get(*table_box).available_inner_space_or_constraints_from(available_space));
 
     auto table_used_width = throwaway_state.get(*table_box).border_box_width();
     return available_space.width.is_definite() ? min(table_used_width, available_width) : table_used_width;
