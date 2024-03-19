@@ -166,13 +166,13 @@ public:
 
     void quadratic_bezier_curve_to(FloatPoint through, FloatPoint point)
     {
-        append_segment<PathSegment::QuadraticBezierCurveTo>(point, through);
+        append_segment<PathSegment::QuadraticBezierCurveTo>(through, point);
         invalidate_split_lines();
     }
 
     void cubic_bezier_curve_to(FloatPoint c1, FloatPoint c2, FloatPoint p2)
     {
-        append_segment<PathSegment::CubicBezierCurveTo>(p2, c1, c2);
+        append_segment<PathSegment::CubicBezierCurveTo>(c1, c2, p2);
         invalidate_split_lines();
     }
 
@@ -254,14 +254,14 @@ private:
     void segmentize_path();
 
     template<PathSegment::Command command, typename... Args>
-    void append_segment(FloatPoint point, Args&&... args)
+    void append_segment(Args&&... args)
     {
-        constexpr auto point_count = sizeof...(Args) + 1;
+        constexpr auto point_count = sizeof...(Args);
         static_assert(point_count == PathSegment::points_per_command(command));
-        m_commands.append(command);
-        // Place the current path point after any extra control points so `m_points.last()` is always the last point.
-        FloatPoint points[] { args..., point };
+        FloatPoint points[] { args... };
+        // Note: This should maintain the invariant that `m_points.last()` is always the last point in the path.
         m_points.append(points, point_count);
+        m_commands.append(command);
     }
 
     Vector<FloatPoint> m_points {};
