@@ -330,20 +330,6 @@ bool Node::is_connected() const
     return shadow_including_root().is_document();
 }
 
-Element* Node::parent_element()
-{
-    if (!parent() || !is<Element>(parent()))
-        return nullptr;
-    return verify_cast<Element>(parent());
-}
-
-Element const* Node::parent_element() const
-{
-    if (!parent() || !is<Element>(parent()))
-        return nullptr;
-    return verify_cast<Element>(parent());
-}
-
 // https://dom.spec.whatwg.org/#concept-node-ensure-pre-insertion-validity
 WebIDL::ExceptionOr<void> Node::ensure_pre_insertion_validity(JS::NonnullGCPtr<Node> node, JS::GCPtr<Node> child) const
 {

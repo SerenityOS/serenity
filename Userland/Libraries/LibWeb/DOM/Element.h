@@ -454,6 +454,22 @@ private:
 template<>
 inline bool Node::fast_is<Element>() const { return is_element(); }
 
+inline Element* Node::parent_element()
+{
+    auto* parent = this->parent();
+    if (!parent || !is<Element>(parent))
+        return nullptr;
+    return static_cast<Element*>(parent);
+}
+
+inline Element const* Node::parent_element() const
+{
+    auto const* parent = this->parent();
+    if (!parent || !is<Element>(parent))
+        return nullptr;
+    return static_cast<Element const*>(parent);
+}
+
 WebIDL::ExceptionOr<QualifiedName> validate_and_extract(JS::Realm&, Optional<FlyString> namespace_, FlyString const& qualified_name);
 
 }
