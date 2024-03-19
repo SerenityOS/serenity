@@ -2,6 +2,7 @@
  * Copyright (c) 2020, Matthew Olsson <mattco@serenityos.org>
  * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2023, MacDue <macdue@dueutil.tech>
+ * Copyright (c) 2024, Tim Ledbetter <timledbetter@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -29,8 +30,11 @@ Vector<PathInstruction> AttributeParser::parse_path_data(StringView input)
 {
     AttributeParser parser { input };
     parser.parse_whitespace();
-    while (!parser.done())
-        parser.parse_drawto();
+    while (!parser.done()) {
+        auto maybe_error = parser.parse_drawto();
+        if (maybe_error.is_error())
+            break;
+    }
     if (!parser.m_instructions.is_empty() && parser.m_instructions[0].type != PathInstructionType::Move) {
         // Invalid. "A path data segment (if there is one) must begin with a "moveto" command."
         return {};
@@ -42,13 +46,12 @@ Optional<float> AttributeParser::parse_coordinate(StringView input)
 {
     AttributeParser parser { input };
     parser.parse_whitespace();
-    if (parser.match_coordinate()) {
-        float result = parser.parse_coordinate();
-        parser.parse_whitespace();
-        if (parser.done())
-            return result;
-    }
-
+    auto result_or_error = parser.parse_coordinate();
+    if (result_or_error.is_error())
+        return {};
+    parser.parse_whitespace();
+    if (parser.done())
+        return result_or_error.value();
     return {};
 }
 
@@ -56,12 +59,12 @@ Optional<float> AttributeParser::parse_length(StringView input)
 {
     AttributeParser parser { input };
     parser.parse_whitespace();
-    if (parser.match_coordinate()) {
-        float result = parser.parse_length();
-        parser.parse_whitespace();
-        if (parser.done())
-            return result;
-    }
+    auto result_or_error = parser.parse_length();
+    if (result_or_error.is_error())
+        return {};
+    parser.parse_whitespace();
+    if (parser.done())
+        return result_or_error.value();
 
     return {};
 }
@@ -77,15 +80,16 @@ Optional<NumberPercentage> AttributeParser::parse_number_percentage(StringView i
 {
     AttributeParser parser { input };
     parser.parse_whitespace();
-    if (parser.match_number()) {
-        float number = parser.parse_number();
-        bool is_percentage = parser.match('%');
-        if (is_percentage)
-            parser.consume();
-        parser.parse_whitespace();
-        if (parser.done())
-            return NumberPercentage(number, is_percentage);
-    }
+
+    auto number_or_error = parser.parse_number();
+    if (number_or_error.is_error())
+        return {};
+    bool is_percentage = parser.match('%');
+    if (is_percentage)
+        parser.consume();
+    parser.parse_whitespace();
+    if (parser.done())
+        return NumberPercentage(number_or_error.value(), is_percentage);
 
     return {};
 }
@@ -106,15 +110,11 @@ Vector<Gfx::FloatPoint> AttributeParser::parse_points(StringView input)
 
     parser.parse_whitespace();
 
-    // FIXME: "If an odd number of coordinates is provided, then the element is in error, with the same user agent behavior
-    //        as occurs with an incorrectly specified ‘path’ element. In such error cases the user agent will drop the last,
-    //        odd coordinate and otherwise render the shape."
-    //        The parser currently doesn't notice that there is a missing coordinate, so make it notice!
-    auto coordinate_pair_sequence = parser.parse_coordinate_pair_sequence();
-
-    parser.parse_whitespace();
-    if (!parser.done())
+    auto coordinate_pair_sequence_or_error = parser.parse_coordinate_pair_sequence();
+    if (coordinate_pair_sequence_or_error.is_error())
         return {};
+
+    auto coordinate_pair_sequence = coordinate_pair_sequence_or_error.release_value();
 
     // FIXME: This is awkward. Can we return Gfx::FloatPoints from some of these parsing methods instead of Vector<float>?
     Vector<Gfx::FloatPoint> points;
@@ -126,47 +126,50 @@ Vector<Gfx::FloatPoint> AttributeParser::parse_points(StringView input)
     return points;
 }
 
-void AttributeParser::parse_drawto()
+ErrorOr<void> AttributeParser::parse_drawto()
 {
     if (match('M') || match('m')) {
-        parse_moveto();
+        return parse_moveto();
     } else if (match('Z') || match('z')) {
         parse_closepath();
+        return {};
     } else if (match('L') || match('l')) {
-        parse_lineto();
+        return parse_lineto();
     } else if (match('H') || match('h')) {
-        parse_horizontal_lineto();
+        return parse_horizontal_lineto();
     } else if (match('V') || match('v')) {
-        parse_vertical_lineto();
+        return parse_vertical_lineto();
     } else if (match('C') || match('c')) {
-        parse_curveto();
+        return parse_curveto();
     } else if (match('S') || match('s')) {
-        parse_smooth_curveto();
+        return parse_smooth_curveto();
     } else if (match('Q') || match('q')) {
-        parse_quadratic_bezier_curveto();
+        return parse_quadratic_bezier_curveto();
     } else if (match('T') || match('t')) {
-        parse_smooth_quadratic_bezier_curveto();
+        return parse_smooth_quadratic_bezier_curveto();
     } else if (match('A') || match('a')) {
-        parse_elliptical_arc();
-    } else {
-        dbgln("AttributeParser::parse_drawto failed to match: '{}'", ch());
-        TODO();
+        return parse_elliptical_arc();
     }
+
+    dbgln("AttributeParser::parse_drawto failed to match: '{}'", ch());
+    return Error::from_string_literal("Invalid drawto command");
 }
 
 // https://www.w3.org/TR/SVG2/paths.html#PathDataMovetoCommands
-void AttributeParser::parse_moveto()
+ErrorOr<void> AttributeParser::parse_moveto()
 {
     bool absolute = consume() == 'M';
     parse_whitespace();
 
     bool is_first = true;
-    for (auto& pair : parse_coordinate_pair_sequence()) {
+    for (auto& pair : TRY(parse_coordinate_pair_sequence())) {
         // NOTE: "M 1 2 3 4" is equivalent to "M 1 2 L 3 4".
         auto type = is_first ? PathInstructionType::Move : PathInstructionType::Line;
         m_instructions.append({ type, absolute, pair });
         is_first = false;
     }
+
+    return {};
 }
 
 void AttributeParser::parse_closepath()
@@ -176,128 +179,152 @@ void AttributeParser::parse_closepath()
     m_instructions.append({ PathInstructionType::ClosePath, absolute, {} });
 }
 
-void AttributeParser::parse_lineto()
+ErrorOr<void> AttributeParser::parse_lineto()
 {
     bool absolute = consume() == 'L';
     parse_whitespace();
-    for (auto& pair : parse_coordinate_pair_sequence())
+    for (auto& pair : TRY(parse_coordinate_pair_sequence()))
         m_instructions.append({ PathInstructionType::Line, absolute, pair });
+
+    return {};
 }
 
-void AttributeParser::parse_horizontal_lineto()
+ErrorOr<void> AttributeParser::parse_horizontal_lineto()
 {
     bool absolute = consume() == 'H';
     parse_whitespace();
-    for (auto coordinate : parse_coordinate_sequence())
+    for (auto coordinate : TRY(parse_coordinate_sequence()))
         m_instructions.append({ PathInstructionType::HorizontalLine, absolute, { coordinate } });
+
+    return {};
 }
 
-void AttributeParser::parse_vertical_lineto()
+ErrorOr<void> AttributeParser::parse_vertical_lineto()
 {
     bool absolute = consume() == 'V';
     parse_whitespace();
-    for (auto coordinate : parse_coordinate_sequence())
+    for (auto coordinate : TRY(parse_coordinate_sequence()))
         m_instructions.append({ PathInstructionType::VerticalLine, absolute, { coordinate } });
+
+    return {};
 }
 
-void AttributeParser::parse_curveto()
+ErrorOr<void> AttributeParser::parse_curveto()
 {
     bool absolute = consume() == 'C';
     parse_whitespace();
 
     while (true) {
-        m_instructions.append({ PathInstructionType::Curve, absolute, parse_coordinate_pair_triplet() });
+        m_instructions.append({ PathInstructionType::Curve, absolute, TRY(parse_coordinate_pair_triplet()) });
         if (match_comma_whitespace())
             parse_comma_whitespace();
         if (!match_coordinate())
             break;
     }
+
+    return {};
 }
 
-void AttributeParser::parse_smooth_curveto()
+ErrorOr<void> AttributeParser::parse_smooth_curveto()
 {
     bool absolute = consume() == 'S';
     parse_whitespace();
 
     while (true) {
-        m_instructions.append({ PathInstructionType::SmoothCurve, absolute, parse_coordinate_pair_double() });
+        m_instructions.append({ PathInstructionType::SmoothCurve, absolute, TRY(parse_coordinate_pair_double()) });
         if (match_comma_whitespace())
             parse_comma_whitespace();
         if (!match_coordinate())
             break;
     }
+
+    return {};
 }
 
-void AttributeParser::parse_quadratic_bezier_curveto()
+ErrorOr<void> AttributeParser::parse_quadratic_bezier_curveto()
 {
     bool absolute = consume() == 'Q';
     parse_whitespace();
 
     while (true) {
-        m_instructions.append({ PathInstructionType::QuadraticBezierCurve, absolute, parse_coordinate_pair_double() });
+        m_instructions.append({ PathInstructionType::QuadraticBezierCurve, absolute, TRY(parse_coordinate_pair_double()) });
         if (match_comma_whitespace())
             parse_comma_whitespace();
         if (!match_coordinate())
             break;
     }
+
+    return {};
 }
 
-void AttributeParser::parse_smooth_quadratic_bezier_curveto()
+ErrorOr<void> AttributeParser::parse_smooth_quadratic_bezier_curveto()
 {
     bool absolute = consume() == 'T';
     parse_whitespace();
 
     while (true) {
-        m_instructions.append({ PathInstructionType::SmoothQuadraticBezierCurve, absolute, parse_coordinate_pair() });
+        m_instructions.append({ PathInstructionType::SmoothQuadraticBezierCurve, absolute, TRY(parse_coordinate_pair()) });
         if (match_comma_whitespace())
             parse_comma_whitespace();
         if (!match_coordinate())
             break;
     }
+
+    return {};
 }
 
-void AttributeParser::parse_elliptical_arc()
+ErrorOr<void> AttributeParser::parse_elliptical_arc()
 {
     bool absolute = consume() == 'A';
     parse_whitespace();
 
     while (true) {
-        m_instructions.append({ PathInstructionType::EllipticalArc, absolute, parse_elliptical_arc_argument() });
+        auto argument = TRY(parse_elliptical_arc_argument());
+        m_instructions.append({ PathInstructionType::EllipticalArc, absolute, move(argument) });
         if (match_comma_whitespace())
             parse_comma_whitespace();
         if (!match_coordinate())
             break;
     }
+
+    return {};
 }
 
-float AttributeParser::parse_length()
+ErrorOr<float> AttributeParser::parse_length()
 {
     // https://www.w3.org/TR/SVG11/types.html#DataTypeLength
     return parse_number();
 }
 
-float AttributeParser::parse_coordinate()
+ErrorOr<float> AttributeParser::parse_coordinate()
 {
     // https://www.w3.org/TR/SVG11/types.html#DataTypeCoordinate
     // coordinate ::= length
     return parse_length();
 }
 
-Vector<float> AttributeParser::parse_coordinate_pair()
+ErrorOr<Vector<float>> AttributeParser::parse_coordinate_pair()
 {
     Vector<float> coordinates;
-    coordinates.append(parse_coordinate());
+    coordinates.append(TRY(parse_coordinate()));
     if (match_comma_whitespace())
         parse_comma_whitespace();
-    coordinates.append(parse_coordinate());
+    coordinates.append(TRY(parse_coordinate()));
     return coordinates;
 }
 
-Vector<float> AttributeParser::parse_coordinate_sequence()
+ErrorOr<Vector<float>> AttributeParser::parse_coordinate_sequence()
 {
     Vector<float> sequence;
+    bool is_first = true;
     while (true) {
-        sequence.append(parse_coordinate());
+        auto coordinate_or_error = parse_coordinate();
+        if (coordinate_or_error.is_error()) {
+            if (is_first)
+                return Error::from_string_literal("Expected coordinate sequence");
+        }
+        is_first = false;
+        sequence.append(coordinate_or_error.release_value());
         if (match_comma_whitespace())
             parse_comma_whitespace();
         if (!match_comma_whitespace() && !match_coordinate())
@@ -306,11 +333,19 @@ Vector<float> AttributeParser::parse_coordinate_sequence()
     return sequence;
 }
 
-Vector<Vector<float>> AttributeParser::parse_coordinate_pair_sequence()
+ErrorOr<Vector<Vector<float>>> AttributeParser::parse_coordinate_pair_sequence()
 {
     Vector<Vector<float>> sequence;
+    bool is_first = true;
     while (true) {
-        sequence.append(parse_coordinate_pair());
+        auto coordinate_pair_or_error = parse_coordinate_pair();
+        if (coordinate_pair_or_error.is_error()) {
+            if (is_first)
+                return Error::from_string_literal("Expected coordinate pair sequence");
+            break;
+        }
+        is_first = false;
+        sequence.append(coordinate_pair_or_error.release_value());
         if (match_comma_whitespace())
             parse_comma_whitespace();
         if (!match_comma_whitespace() && !match_coordinate())
@@ -319,47 +354,48 @@ Vector<Vector<float>> AttributeParser::parse_coordinate_pair_sequence()
     return sequence;
 }
 
-Vector<float> AttributeParser::parse_coordinate_pair_double()
+ErrorOr<Vector<float>> AttributeParser::parse_coordinate_pair_double()
 {
     Vector<float> coordinates;
-    coordinates.extend(parse_coordinate_pair());
+    coordinates.extend(TRY(parse_coordinate_pair()));
     if (match_comma_whitespace())
         parse_comma_whitespace();
-    coordinates.extend(parse_coordinate_pair());
+    coordinates.extend(TRY(parse_coordinate_pair()));
     return coordinates;
 }
 
-Vector<float> AttributeParser::parse_coordinate_pair_triplet()
+ErrorOr<Vector<float>> AttributeParser::parse_coordinate_pair_triplet()
 {
     Vector<float> coordinates;
-    coordinates.extend(parse_coordinate_pair());
+    coordinates.extend(TRY(parse_coordinate_pair()));
     if (match_comma_whitespace())
         parse_comma_whitespace();
-    coordinates.extend(parse_coordinate_pair());
+    coordinates.extend(TRY(parse_coordinate_pair()));
     if (match_comma_whitespace())
         parse_comma_whitespace();
-    coordinates.extend(parse_coordinate_pair());
+    coordinates.extend(TRY(parse_coordinate_pair()));
     return coordinates;
 }
 
-Vector<float> AttributeParser::parse_elliptical_arc_argument()
+ErrorOr<Vector<float>> AttributeParser::parse_elliptical_arc_argument()
 {
     Vector<float> numbers;
-    numbers.append(parse_number());
+    numbers.append(TRY(parse_number()));
     if (match_comma_whitespace())
         parse_comma_whitespace();
-    numbers.append(parse_number());
+    numbers.append(TRY(parse_number()));
     if (match_comma_whitespace())
         parse_comma_whitespace();
-    numbers.append(parse_number());
-    parse_comma_whitespace();
-    numbers.append(parse_flag());
+    numbers.append(TRY(parse_number()));
     if (match_comma_whitespace())
         parse_comma_whitespace();
-    numbers.append(parse_flag());
+    numbers.append(TRY(parse_flag()));
     if (match_comma_whitespace())
         parse_comma_whitespace();
-    numbers.extend(parse_coordinate_pair());
+    numbers.append(TRY(parse_flag()));
+    if (match_comma_whitespace())
+        parse_comma_whitespace();
+    numbers.extend(TRY(parse_coordinate_pair()));
 
     return numbers;
 }
@@ -389,18 +425,19 @@ void AttributeParser::parse_comma_whitespace()
 }
 
 // https://www.w3.org/TR/SVG11/types.html#DataTypeNumber
-float AttributeParser::parse_number()
+ErrorOr<float> AttributeParser::parse_number()
 {
     auto sign = parse_sign();
-    return sign * parse_nonnegative_number();
+    return sign * TRY(parse_nonnegative_number());
 }
 
 // https://www.w3.org/TR/SVG11/paths.html#PathDataBNF
-float AttributeParser::parse_nonnegative_number()
+ErrorOr<float> AttributeParser::parse_nonnegative_number()
 {
     // NOTE: The grammar is almost a floating point except we cannot have a sign
     //       at the start. That condition should have been checked by the caller.
-    VERIFY(!match('+') && !match('-'));
+    if (match('+') || match('-') || !match_number())
+        return Error::from_string_literal("Expected number");
 
     auto remaining_source_text = m_lexer.remaining();
     char const* start = remaining_source_text.characters_without_null_termination();
@@ -412,10 +449,10 @@ float AttributeParser::parse_nonnegative_number()
     return maybe_float.value;
 }
 
-float AttributeParser::parse_flag()
+ErrorOr<float> AttributeParser::parse_flag()
 {
     if (!match('0') && !match('1'))
-        VERIFY_NOT_REACHED();
+        return Error::from_string_literal("Expected flag");
     return consume() - '0';
 }
 
@@ -542,15 +579,17 @@ Optional<Vector<Transform>> AttributeParser::parse_transform()
     // FIXME: This parsing is quite lenient, so will accept (with default values) some transforms that should be rejected.
     auto parse_optional_number = [&](float default_value = 0.0f) {
         consume_comma_whitespace();
-        if (match_number())
-            return parse_number();
-        return default_value;
+        auto number_or_error = parse_number();
+        if (number_or_error.is_error())
+            return default_value;
+        return number_or_error.value();
     };
 
     auto try_parse_number = [&]() -> Optional<float> {
-        if (match_number())
-            return parse_number();
-        return {};
+        auto number_or_error = parse_number();
+        if (number_or_error.is_error())
+            return {};
+        return number_or_error.value();
     };
 
     auto parse_function = [&](auto body) -> Optional<Transform> {
@@ -691,7 +730,17 @@ bool AttributeParser::match_number() const
 
 bool AttributeParser::match_length() const
 {
-    return !done() && (isdigit(ch()) || ch() == '-' || ch() == '+' || ch() == '.');
+    if (done())
+        return false;
+
+    size_t offset = 0;
+    if (ch() == '-' || ch() == '+')
+        offset++;
+
+    if (ch(offset) == '.')
+        offset++;
+
+    return !done() && isdigit(ch(offset));
 }
 
 }

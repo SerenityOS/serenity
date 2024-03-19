@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020, Matthew Olsson <mattco@serenityos.org>
  * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2024, Tim Ledbetter <timledbetter@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -159,33 +160,33 @@ public:
 private:
     AttributeParser(StringView source);
 
-    void parse_drawto();
-    void parse_moveto();
+    ErrorOr<void> parse_drawto();
+    ErrorOr<void> parse_moveto();
     void parse_closepath();
-    void parse_lineto();
-    void parse_horizontal_lineto();
-    void parse_vertical_lineto();
-    void parse_curveto();
-    void parse_smooth_curveto();
-    void parse_quadratic_bezier_curveto();
-    void parse_smooth_quadratic_bezier_curveto();
-    void parse_elliptical_arc();
+    ErrorOr<void> parse_lineto();
+    ErrorOr<void> parse_horizontal_lineto();
+    ErrorOr<void> parse_vertical_lineto();
+    ErrorOr<void> parse_curveto();
+    ErrorOr<void> parse_smooth_curveto();
+    ErrorOr<void> parse_quadratic_bezier_curveto();
+    ErrorOr<void> parse_smooth_quadratic_bezier_curveto();
+    ErrorOr<void> parse_elliptical_arc();
 
     Optional<Vector<Transform>> parse_transform();
 
-    float parse_length();
-    float parse_coordinate();
-    Vector<float> parse_coordinate_pair();
-    Vector<float> parse_coordinate_sequence();
-    Vector<Vector<float>> parse_coordinate_pair_sequence();
-    Vector<float> parse_coordinate_pair_double();
-    Vector<float> parse_coordinate_pair_triplet();
-    Vector<float> parse_elliptical_arc_argument();
+    ErrorOr<float> parse_length();
+    ErrorOr<float> parse_coordinate();
+    ErrorOr<Vector<float>> parse_coordinate_pair();
+    ErrorOr<Vector<float>> parse_coordinate_sequence();
+    ErrorOr<Vector<Vector<float>>> parse_coordinate_pair_sequence();
+    ErrorOr<Vector<float>> parse_coordinate_pair_double();
+    ErrorOr<Vector<float>> parse_coordinate_pair_triplet();
+    ErrorOr<Vector<float>> parse_elliptical_arc_argument();
     void parse_whitespace(bool must_match_once = false);
     void parse_comma_whitespace();
-    float parse_number();
-    float parse_nonnegative_number();
-    float parse_flag();
+    ErrorOr<float> parse_number();
+    ErrorOr<float> parse_nonnegative_number();
+    ErrorOr<float> parse_flag();
     // -1 if negative, +1 otherwise
     int parse_sign();
 
@@ -197,7 +198,7 @@ private:
     bool match(char c) const { return !done() && ch() == c; }
 
     bool done() const { return m_lexer.is_eof(); }
-    char ch() const { return m_lexer.peek(); }
+    char ch(size_t offset = 0) const { return m_lexer.peek(offset); }
     char consume() { return m_lexer.consume(); }
 
     GenericLexer m_lexer;
