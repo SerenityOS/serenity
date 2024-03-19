@@ -730,7 +730,7 @@ void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& e
     auto properties_for_revert = style.properties();
 
     for (auto const& match : matching_rules) {
-        for (auto const& property : verify_cast<PropertyOwningCSSStyleDeclaration>(match.rule->declaration()).properties()) {
+        for (auto const& property : match.rule->declaration().properties()) {
             if (important != property.important)
                 continue;
 
@@ -772,7 +772,7 @@ static void cascade_custom_properties(DOM::Element& element, Optional<CSS::Selec
 {
     size_t needed_capacity = 0;
     for (auto const& matching_rule : matching_rules)
-        needed_capacity += verify_cast<PropertyOwningCSSStyleDeclaration>(matching_rule.rule->declaration()).custom_properties().size();
+        needed_capacity += matching_rule.rule->declaration().custom_properties().size();
 
     if (!pseudo_element.has_value()) {
         if (auto const inline_style = element.inline_style())
@@ -783,7 +783,7 @@ static void cascade_custom_properties(DOM::Element& element, Optional<CSS::Selec
     custom_properties.ensure_capacity(needed_capacity);
 
     for (auto const& matching_rule : matching_rules) {
-        for (auto const& it : verify_cast<PropertyOwningCSSStyleDeclaration>(matching_rule.rule->declaration()).custom_properties())
+        for (auto const& it : matching_rule.rule->declaration().custom_properties())
             custom_properties.set(it.key, it.value);
     }
 
