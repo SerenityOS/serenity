@@ -34,17 +34,6 @@
 
 namespace Web::CSS {
 
-NonnullRefPtr<StyleProperties> StyleProperties::clone() const
-{
-    auto clone = adopt_ref(*new StyleProperties);
-    clone->m_property_values = m_property_values;
-    clone->m_animated_property_values = m_animated_property_values;
-    clone->m_font_list = m_font_list;
-    clone->m_line_height = m_line_height;
-    clone->m_math_depth = m_math_depth;
-    return clone;
-}
-
 bool StyleProperties::is_property_important(CSS::PropertyID property_id) const
 {
     return m_property_values[to_underlying(property_id)].style && m_property_values[to_underlying(property_id)].important == Important::Yes;
@@ -289,7 +278,7 @@ Optional<int> StyleProperties::z_index() const
     return {};
 }
 
-static float resolve_opacity_value(CSS::StyleValue const& value)
+float StyleProperties::resolve_opacity_value(CSS::StyleValue const& value)
 {
     float unclamped_opacity = 1.0f;
 

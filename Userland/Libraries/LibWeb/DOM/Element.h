@@ -12,6 +12,7 @@
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Bindings/ShadowRootPrototype.h>
 #include <LibWeb/CSS/Selector.h>
+#include <LibWeb/CSS/StyleInvalidation.h>
 #include <LibWeb/CSS/StyleProperty.h>
 #include <LibWeb/DOM/ChildNode.h>
 #include <LibWeb/DOM/NonDocumentTypeChildNode.h>
@@ -148,27 +149,7 @@ public:
     void run_attribute_change_steps(FlyString const& local_name, Optional<String> const& old_value, Optional<String> const& value, Optional<FlyString> const& namespace_);
     virtual void attribute_changed(FlyString const& name, Optional<String> const& value);
 
-    struct [[nodiscard]] RequiredInvalidationAfterStyleChange {
-        bool repaint { false };
-        bool rebuild_stacking_context_tree { false };
-        bool relayout { false };
-        bool rebuild_layout_tree { false };
-
-        void operator|=(RequiredInvalidationAfterStyleChange const& other)
-        {
-            repaint |= other.repaint;
-            rebuild_stacking_context_tree |= other.rebuild_stacking_context_tree;
-            relayout |= other.relayout;
-            rebuild_layout_tree |= other.rebuild_layout_tree;
-        }
-
-        [[nodiscard]] bool is_none() const { return !repaint && !rebuild_stacking_context_tree && !relayout && !rebuild_layout_tree; }
-        static RequiredInvalidationAfterStyleChange full() { return { true, true, true, true }; }
-    };
-
-    static Element::RequiredInvalidationAfterStyleChange compute_required_invalidation(CSS::StyleProperties const& old_style, CSS::StyleProperties const& new_style);
-
-    RequiredInvalidationAfterStyleChange recompute_style();
+    CSS::RequiredInvalidationAfterStyleChange recompute_style();
 
     Optional<CSS::Selector::PseudoElement::Type> use_pseudo_element() const { return m_use_pseudo_element; }
     void set_use_pseudo_element(Optional<CSS::Selector::PseudoElement::Type> use_pseudo_element) { m_use_pseudo_element = move(use_pseudo_element); }

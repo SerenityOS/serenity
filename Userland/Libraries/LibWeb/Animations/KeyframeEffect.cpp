@@ -871,6 +871,27 @@ void KeyframeEffect::visit_edges(Cell::Visitor& visitor)
         visitor.visit(keyframe);
 }
 
+static CSS::RequiredInvalidationAfterStyleChange compute_required_invalidation(HashMap<CSS::PropertyID, NonnullRefPtr<CSS::StyleValue const>> const& old_properties, HashMap<CSS::PropertyID, NonnullRefPtr<CSS::StyleValue const>> const& new_properties)
+{
+    CSS::RequiredInvalidationAfterStyleChange invalidation;
+    auto old_and_new_properties = MUST(Bitmap::create(to_underlying(CSS::last_property_id) + 1, 0));
+    for (auto const& [property_id, _] : old_properties)
+        old_and_new_properties.set(to_underlying(property_id), 1);
+    for (auto const& [property_id, _] : new_properties)
+        old_and_new_properties.set(to_underlying(property_id), 1);
+    for (auto i = to_underlying(CSS::first_property_id); i <= to_underlying(CSS::last_property_id); ++i) {
+        if (!old_and_new_properties.get(i))
+            continue;
+        auto property_id = static_cast<CSS::PropertyID>(i);
+        auto old_value = old_properties.get(property_id).value_or({});
+        auto new_value = new_properties.get(property_id).value_or({});
+        if (!old_value && !new_value)
+            continue;
+        invalidation |= compute_property_invalidation(property_id, old_value, new_value);
+    }
+    return invalidation;
+}
+
 void KeyframeEffect::update_style_properties()
 {
     if (!target())
@@ -886,7 +907,7 @@ void KeyframeEffect::update_style_properties()
     if (!style)
         return;
 
-    auto style_before_animation_update = style->clone();
+    auto animated_properties_before_update = style->animated_property_values();
 
     auto& document = target()->document();
     document.style_computer().collect_animation_into(*this, *style, CSS::StyleComputer::AnimationRefresh::Yes);
@@ -908,7 +929,7 @@ void KeyframeEffect::update_style_properties()
         return IterationDecision::Continue;
     });
 
-    auto invalidation = DOM::Element::compute_required_invalidation(style_before_animation_update, *style);
+    auto invalidation = compute_required_invalidation(animated_properties_before_update, style->animated_property_values());
 
     if (target()->layout_node())
         target()->layout_node()->apply_style(*style);

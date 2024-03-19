@@ -89,6 +89,7 @@ set(SOURCES
     CSS/Serialize.cpp
     CSS/Size.cpp
     CSS/StyleComputer.cpp
+    CSS/StyleInvalidation.cpp
     CSS/StyleProperties.cpp
     CSS/StyleProperty.cpp
     CSS/StyleSheet.cpp
