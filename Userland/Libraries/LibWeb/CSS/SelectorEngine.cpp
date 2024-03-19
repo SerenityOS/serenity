@@ -547,6 +547,38 @@ static inline bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoCla
     return false;
 }
 
+static ALWAYS_INLINE bool matches_namespace(
+    CSS::Selector::SimpleSelector::QualifiedName const& qualified_name,
+    DOM::Element const& element,
+    Optional<CSS::CSSStyleSheet const&> style_sheet_for_rule)
+{
+    switch (qualified_name.namespace_type) {
+    case CSS::Selector::SimpleSelector::QualifiedName::NamespaceType::Default:
+        // "if no default namespace has been declared for selectors, this is equivalent to *|E."
+        if (!style_sheet_for_rule.has_value() || !style_sheet_for_rule->default_namespace_rule())
+            return true;
+        // "Otherwise it is equivalent to ns|E where ns is the default namespace."
+        return element.namespace_uri() == style_sheet_for_rule->default_namespace_rule()->namespace_uri();
+    case CSS::Selector::SimpleSelector::QualifiedName::NamespaceType::None:
+        // "elements with name E without a namespace"
+        return !element.namespace_uri().has_value();
+    case CSS::Selector::SimpleSelector::QualifiedName::NamespaceType::Any:
+        // "elements with name E in any namespace, including those without a namespace"
+        return true;
+    case CSS::Selector::SimpleSelector::QualifiedName::NamespaceType::Named:
+        // "elements with name E in namespace ns"
+        // Unrecognized namespace prefixes are invalid, so don't match.
+        // (We can't detect this at parse time, since a namespace rule may be inserted later.)
+        // So, if we don't have a context to look up namespaces from, we fail to match.
+        if (!style_sheet_for_rule.has_value())
+            return false;
+
+        auto selector_namespace = style_sheet_for_rule->namespace_uri(qualified_name.namespace_);
+        return selector_namespace.has_value() && selector_namespace.value() == element.namespace_uri();
+    }
+    VERIFY_NOT_REACHED();
+}
+
 static inline bool matches(CSS::Selector::SimpleSelector const& component, Optional<CSS::CSSStyleSheet const&> style_sheet_for_rule, DOM::Element const& element, JS::GCPtr<DOM::ParentNode const> scope)
 {
     switch (component.type) {
@@ -565,32 +597,7 @@ static inline bool matches(CSS::Selector::SimpleSelector const& component, Optio
             }
         }
 
-        // Match the namespace
-        switch (qualified_name.namespace_type) {
-        case CSS::Selector::SimpleSelector::QualifiedName::NamespaceType::Default:
-            // "if no default namespace has been declared for selectors, this is equivalent to *|E."
-            if (!style_sheet_for_rule.has_value() || !style_sheet_for_rule->default_namespace_rule())
-                return true;
-            // "Otherwise it is equivalent to ns|E where ns is the default namespace."
-            return element.namespace_uri() == style_sheet_for_rule->default_namespace_rule()->namespace_uri();
-        case CSS::Selector::SimpleSelector::QualifiedName::NamespaceType::None:
-            // "elements with name E without a namespace"
-            return !element.namespace_uri().has_value();
-        case CSS::Selector::SimpleSelector::QualifiedName::NamespaceType::Any:
-            // "elements with name E in any namespace, including those without a namespace"
-            return true;
-        case CSS::Selector::SimpleSelector::QualifiedName::NamespaceType::Named:
-            // "elements with name E in namespace ns"
-            // Unrecognized namespace prefixes are invalid, so don't match.
-            // (We can't detect this at parse time, since a namespace rule may be inserted later.)
-            // So, if we don't have a context to look up namespaces from, we fail to match.
-            if (!style_sheet_for_rule.has_value())
-                return false;
-
-            auto selector_namespace = style_sheet_for_rule->namespace_uri(qualified_name.namespace_);
-            return selector_namespace.has_value() && selector_namespace.value() == element.namespace_uri();
-        }
-        VERIFY_NOT_REACHED();
+        return matches_namespace(qualified_name, element, style_sheet_for_rule);
     }
     case CSS::Selector::SimpleSelector::Type::Id:
         return component.name() == element.id();
