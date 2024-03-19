@@ -44,6 +44,7 @@ public:
         VERIFY(m_command == Command::CubicBezierCurveTo);
         return m_points[1];
     }
+    ALWAYS_INLINE ReadonlySpan<FloatPoint> points() const { return m_points; }
 
     static constexpr int points_per_command(Command command)
     {
