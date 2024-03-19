@@ -31,6 +31,7 @@ struct Emoji {
 struct EmojiData {
     UniqueStringStorage unique_strings;
     Vector<Emoji> emojis;
+    Vector<String> emoji_file_list;
 };
 
 static void set_image_path_for_emoji(StringView emoji_resource_path, EmojiData& emoji_data, Emoji& emoji)
@@ -168,6 +169,28 @@ static ErrorOr<void> parse_emoji_serenity_data(Core::InputBufferedFile& file, Em
     return {};
 }
 
+static ErrorOr<void> parse_emoji_file_list(Core::InputBufferedFile& file, EmojiData& emoji_data)
+{
+    HashTable<String> seen_emojis;
+    Array<u8, 1024> buffer;
+
+    while (TRY(file.can_read_line())) {
+        auto line = TRY(file.read_line(buffer));
+        if (line.is_empty())
+            continue;
+
+        if (seen_emojis.contains(line)) {
+            warnln("\x1b[1;31mError!\x1b[0m Duplicate emoji \x1b[35m{}\x1b[0m listed in emoji-file-list.txt.", line);
+            return Error::from_errno(EEXIST);
+        }
+
+        emoji_data.emoji_file_list.append(TRY(String::from_utf8(line)));
+        seen_emojis.set(emoji_data.emoji_file_list.last());
+    }
+
+    return {};
+}
+
 static ErrorOr<void> validate_emoji(StringView emoji_resource_path, EmojiData& emoji_data)
 {
     TRY(Core::Directory::for_each_entry(emoji_resource_path, Core::DirIterator::SkipDots, [&](auto& entry, auto&) -> ErrorOr<IterationDecision> {
@@ -194,6 +217,11 @@ static ErrorOr<void> validate_emoji(StringView emoji_resource_path, EmojiData& e
 
         if (it == emoji_data.emojis.end()) {
             warnln("\x1b[1;31mError!\x1b[0m Emoji data for \x1b[35m{}\x1b[0m not found. Please check emoji-test.txt and emoji-serenity.txt.", entry.name);
+            return Error::from_errno(ENOENT);
+        }
+
+        if (!emoji_data.emoji_file_list.contains_slow(lexical_path.string().view())) {
+            warnln("\x1b[1;31mError!\x1b[0m Emoji entry for \x1b[35m{}\x1b[0m not found. Please check emoji-file-list.txt.", lexical_path);
             return Error::from_errno(ENOENT);
         }
 
@@ -385,6 +413,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView generated_installation_path;
     StringView emoji_test_path;
     StringView emoji_serenity_path;
+    StringView emoji_file_list_path;
     StringView emoji_resource_path;
 
     Core::ArgsParser args_parser;
@@ -393,6 +422,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(generated_installation_path, "Path to the emoji.txt file to generate", "generated-installation-path", 'i', "generated-installation-path");
     args_parser.add_option(emoji_test_path, "Path to emoji-test.txt file", "emoji-test-path", 'e', "emoji-test-path");
     args_parser.add_option(emoji_serenity_path, "Path to emoji-serenity.txt file", "emoji-serenity-path", 's', "emoji-serenity-path");
+    args_parser.add_option(emoji_file_list_path, "Path to the emoji-file-list.txt file", "emoji-file-list-path", 'f', "emoji-file-list-path");
     args_parser.add_option(emoji_resource_path, "Path to the /res/emoji directory", "emoji-resource-path", 'r', "emoji-resource-path");
     args_parser.parse(arguments);
 
@@ -403,9 +433,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     EmojiData emoji_data {};
     TRY(parse_emoji_test_data(*emoji_test_file, emoji_data));
 
-    if (!emoji_serenity_path.is_empty()) {
+    if (!emoji_serenity_path.is_empty() && !emoji_file_list_path.is_empty()) {
         auto emoji_serenity_file = TRY(open_file(emoji_serenity_path, Core::File::OpenMode::Read));
         TRY(parse_emoji_serenity_data(*emoji_serenity_file, emoji_data));
+
+        auto emoji_file_list_file = TRY(open_file(emoji_file_list_path, Core::File::OpenMode::Read));
+        TRY(parse_emoji_file_list(*emoji_file_list_file, emoji_data));
 
         TRY(validate_emoji(emoji_resource_path, emoji_data));
     }
