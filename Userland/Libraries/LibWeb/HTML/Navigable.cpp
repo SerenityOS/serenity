@@ -29,7 +29,6 @@
 #include <LibWeb/HTML/TraversableNavigable.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/HTML/WindowProxy.h>
-#include <LibWeb/HighResolutionTime/TimeOrigin.h>
 #include <LibWeb/Infra/Strings.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Loader/GeneratedPagesLoader.h>
@@ -1949,9 +1948,6 @@ void Navigable::scroll_offset_did_change()
 
     // 3. Append doc to doc’s pending scroll event targets.
     doc->pending_scroll_event_targets().append(*doc);
-
-    // OPTIMIZATION: We do this here instead of in HTML::EventLoop::process() to avoid redundant work.
-    doc->run_the_update_intersection_observations_steps(HighResolutionTime::unsafe_shared_current_time());
 }
 
 CSSPixelRect Navigable::to_top_level_rect(CSSPixelRect const& a_rect)

@@ -1114,9 +1114,6 @@ void Document::update_layout()
 
     m_needs_layout = false;
     m_layout_update_timer->stop();
-
-    // OPTIMIZATION: We do this here instead of in HTML::EventLoop::process() to avoid redundant work.
-    run_the_update_intersection_observations_steps(HighResolutionTime::unsafe_shared_current_time());
 }
 
 [[nodiscard]] static Element::RequiredInvalidationAfterStyleChange update_style_recursively(Node& node)
