@@ -14,12 +14,12 @@ namespace Web::CSS {
 
 JS_DEFINE_ALLOCATOR(CSSStyleRule);
 
-JS::NonnullGCPtr<CSSStyleRule> CSSStyleRule::create(JS::Realm& realm, Vector<NonnullRefPtr<Web::CSS::Selector>>&& selectors, CSSStyleDeclaration& declaration)
+JS::NonnullGCPtr<CSSStyleRule> CSSStyleRule::create(JS::Realm& realm, Vector<NonnullRefPtr<Web::CSS::Selector>>&& selectors, PropertyOwningCSSStyleDeclaration& declaration)
 {
     return realm.heap().allocate<CSSStyleRule>(realm, realm, move(selectors), declaration);
 }
 
-CSSStyleRule::CSSStyleRule(JS::Realm& realm, Vector<NonnullRefPtr<Selector>>&& selectors, CSSStyleDeclaration& declaration)
+CSSStyleRule::CSSStyleRule(JS::Realm& realm, Vector<NonnullRefPtr<Selector>>&& selectors, PropertyOwningCSSStyleDeclaration& declaration)
     : CSSRule(realm)
     , m_selectors(move(selectors))
     , m_declaration(declaration)

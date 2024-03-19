@@ -694,15 +694,14 @@ ErrorOr<void> dump_style_rule(StringBuilder& builder, CSS::CSSStyleRule const& r
     }
     indent(builder, indent_levels);
     builder.append("  Declarations:\n"sv);
-    auto& style_declaration = verify_cast<CSS::PropertyOwningCSSStyleDeclaration>(rule.declaration());
-    for (auto& property : style_declaration.properties()) {
+    for (auto& property : rule.declaration().properties()) {
         indent(builder, indent_levels);
         builder.appendff("    {}: '{}'", CSS::string_from_property_id(property.property_id), property.value->to_string());
         if (property.important == CSS::Important::Yes)
             builder.append(" \033[31;1m!important\033[0m"sv);
         builder.append('\n');
     }
-    for (auto& property : style_declaration.custom_properties()) {
+    for (auto& property : rule.declaration().custom_properties()) {
         indent(builder, indent_levels);
         builder.appendff("    {}: '{}'", property.key, property.value.value->to_string());
         if (property.value.important == CSS::Important::Yes)
