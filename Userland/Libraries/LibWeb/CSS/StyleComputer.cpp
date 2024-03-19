@@ -319,7 +319,7 @@ Vector<MatchingRule> StyleComputer::collect_matching_rules(DOM::Element const& e
             }
         } else {
             for (auto const& rule : rules) {
-                if (filter_namespace_rule(element, rule))
+                if (!rule.contains_pseudo_element && filter_namespace_rule(element, rule))
                     rules_to_run.unchecked_append(rule);
             }
         }
