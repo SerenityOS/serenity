@@ -144,6 +144,7 @@ executable("ladybird_executable") {
   if (current_os != "mac") {
     data_deps += [
       ":ladybird_copy_config_resources",
+      ":ladybird_copy_emoji",
       ":ladybird_copy_fonts",
       ":ladybird_copy_icons_16x16",
       ":ladybird_copy_icons_32x32",
@@ -186,6 +187,13 @@ executable("headless-browser") {
     "HelperProcess.cpp",
     "Utilities.cpp",
   ]
+}
+
+_emoji = read_file("//Meta/emoji-file-list.txt", "list lines")
+emoji = []
+
+foreach(file, _emoji) {
+  emoji += [ "//Base/res/emoji/" + file ]
 }
 
 fonts = [
@@ -271,6 +279,11 @@ config_resources = [
 ]
 
 if (current_os != "mac") {
+  copy("ladybird_copy_emoji") {
+    sources = emoji
+    outputs = [ "$root_out_dir/share/Lagom/emoji/{{source_file_part}}" ]
+  }
+
   copy("ladybird_copy_fonts") {
     sources = fonts
     outputs = [ "$root_out_dir/share/Lagom/fonts/{{source_file_part}}" ]
@@ -427,6 +440,11 @@ if (current_os != "mac") {
     outputs = [ "{{bundle_contents_dir}}/lib/{{source_file_part}}" ]
   }
 
+  bundle_data("ladybird_emoji") {
+    sources = emoji
+    outputs = [ "{{bundle_resources_dir}}/emoji/{{source_file_part}}" ]
+  }
+
   bundle_data("ladybird_fonts") {
     sources = fonts
     outputs = [ "{{bundle_resources_dir}}/fonts/{{source_file_part}}" ]
@@ -514,6 +532,7 @@ if (current_os != "mac") {
       ":ladybird_bundle_info_plist",
       ":ladybird_bundle_libs",
       ":ladybird_config_resources",
+      ":ladybird_emoji",
       ":ladybird_fonts",
       ":ladybird_icon",
       ":ladybird_icons_16x16",

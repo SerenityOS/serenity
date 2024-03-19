@@ -131,13 +131,16 @@ if (enable_unicode_database_download) {
       "-s",
       rebase_path("//Base/home/anon/Documents/emoji-serenity.txt",
                   root_build_dir),
+      "-f",
+      rebase_path("//Meta/emoji-file-list.txt", root_build_dir),
       "-r",
       rebase_path("//Base/res/emoji", root_build_dir),
     ]
 
-    # FIXME: How to add file/directory dependencies on
+    # FIXME: How to add file/directory dependencies on:
     #        "//Base/home/anon/Documents/emoji-serenity.txt"
-    #        and "//Base/res/emoji"?
+    #        "//Base/res/emoji"
+    #        "//Meta/emoji-file-list.txt"
   }
 
   compiled_action("generate_idna_sources") {
