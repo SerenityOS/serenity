@@ -838,11 +838,11 @@ public:
     // This returns how many output pixels one input pixel can encode after the color indexing transform.
     //
     // The spec isn't very explicit about this, but this affects all images after the color indexing transform:
-    // If a webp file contains a 32x32 image and it contains a color indexing transform with a 4-color palette, then the in-memory size of all images
-    // after the color indexing transform assume a bitmap size of (32/4)x32 = 8x32.
+    // If a webp file contains a 29x32 image and it contains a color indexing transform with a 4-color palette, then the in-memory size of all images
+    // after the color indexing transform assume a bitmap size of ceil_div(29, 4)x32 = 8x32.
     // That is, the sizes of transforms after the color indexing transform are computed relative to the size 8x32,
-    // the main image's meta prefix image's size (if present) is comptued relative to the size 8x32,
-    // the main image is 8x32, and only applying the color indexing transform resizes the image back to 32x32.
+    // the main image's meta prefix image's size (if present) is computed relative to the size 8x32,
+    // the main image is 8x32, and only applying the color indexing transform resizes the image back to 29x32.
     int pixels_per_pixel() const { return m_pixels_per_pixel; }
 
 private:
@@ -868,7 +868,7 @@ ErrorOr<NonnullOwnPtr<ColorIndexingTransform>> ColorIndexingTransform::read(Litt
     IntSize palette_image_size { color_table_size, 1 };
     auto palette_bitmap = TRY(decode_webp_chunk_VP8L_image(ImageKind::EntropyCoded, BitmapFormat::BGRA8888, palette_image_size, bit_stream));
 
-    // "When the color table is small (equal to or less than 16 colors), several pixels are bundled into a single pixel...."
+    // "When the color table is small (equal to or less than 16 colors), several pixels are bundled into a single pixel..."
     int pixels_per_pixel = 1;
     if (color_table_size <= 2)
         pixels_per_pixel = 8;
@@ -913,7 +913,7 @@ ErrorOr<NonnullRefPtr<Bitmap>> ColorIndexingTransform::transform(NonnullRefPtr<B
         for (int x = 0, new_x = 0; x < bitmap->width(); ++x, new_x += pixels_per_pixel()) {
             u8 indexes = Color::from_argb(bitmap_scanline[x]).green();
 
-            for (int i = 0; i < pixels_per_pixel(); ++i) {
+            for (int i = 0; i < pixels_per_pixel() && new_x + i < new_bitmap->width(); ++i) {
                 u8 index = indexes & pixel_mask;
                 new_bitmap_scanline[new_x + i] = index < m_palette_bitmap->width() ? m_palette_bitmap->scanline(0)[index] : 0;
                 indexes >>= bits_per_pixel;
