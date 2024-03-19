@@ -23,6 +23,8 @@ public:
     explicit TableFormattingContext(LayoutState&, Box const&, FormattingContext* parent);
     ~TableFormattingContext();
 
+    void run_until_width_calculation(Box const&, AvailableSpace const& available_space);
+
     virtual void run(Box const&, LayoutMode, AvailableSpace const&) override;
     virtual CSSPixels automatic_content_width() const override;
     virtual CSSPixels automatic_content_height() const override;
@@ -146,7 +148,7 @@ private:
     static TableFormattingContext::ConflictingEdge const& winning_conflicting_edge(TableFormattingContext::ConflictingEdge const& a, TableFormattingContext::ConflictingEdge const& b);
 
     static const CSS::BorderData& border_data_conflicting_edge(ConflictingEdge const& conflicting_edge);
-    static const Painting::PaintableBox::BorderDataWithElementKind border_data_with_element_kind_from_conflicting_edge(ConflictingEdge const& conflicting_edge);
+    static Painting::PaintableBox::BorderDataWithElementKind const border_data_with_element_kind_from_conflicting_edge(ConflictingEdge const& conflicting_edge);
 
     class BorderConflictFinder {
     public:
