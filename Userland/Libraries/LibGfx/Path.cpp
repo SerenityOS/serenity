@@ -291,40 +291,30 @@ void Path::close_all_subpaths()
 
 ByteString Path::to_byte_string() const
 {
+    // Dumps this path as an SVG compatible string.
     StringBuilder builder;
-    builder.append("Path { "sv);
+    if (is_empty() || m_commands.first() != PathSegment::MoveTo)
+        builder.append("M 0,0"sv);
     for (auto segment : *this) {
+        if (!builder.is_empty())
+            builder.append(' ');
         switch (segment.command()) {
         case PathSegment::MoveTo:
-            builder.append("MoveTo"sv);
+            builder.append('M');
             break;
         case PathSegment::LineTo:
-            builder.append("LineTo"sv);
+            builder.append('L');
             break;
         case PathSegment::QuadraticBezierCurveTo:
-            builder.append("QuadraticBezierCurveTo"sv);
+            builder.append('Q');
             break;
         case PathSegment::CubicBezierCurveTo:
-            builder.append("CubicBezierCurveTo"sv);
+            builder.append('C');
             break;
         }
-        builder.appendff("({}", segment.point());
-
-        switch (segment.command()) {
-        case PathSegment::QuadraticBezierCurveTo:
-            builder.appendff(", {}"sv, segment.through());
-            break;
-        case PathSegment::CubicBezierCurveTo:
-            builder.appendff(", {}"sv, segment.through_0());
-            builder.appendff(", {}"sv, segment.through_1());
-            break;
-        default:
-            break;
-        }
-
-        builder.append(") "sv);
+        for (auto point : segment.points())
+            builder.appendff(" {},{}", point.x(), point.y());
     }
-    builder.append('}');
     return builder.to_byte_string();
 }
 
