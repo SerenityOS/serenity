@@ -70,11 +70,31 @@ PDFErrorOr<Value> DocumentParser::parse_object_with_index(u32 index)
     if (!m_xref_table->is_object_in_use(index))
         return nullptr;
 
+    // If this is called to resolve an indirect object reference while parsing another object,
+    // make sure to restore the current position after parsing the indirect object, so that the
+    // parser can keep parsing the original object stream afterwards.
+    // parse_compressed_object_with_index() also moves the reader's position, so this needs
+    // to be before the potential call to parse_compressed_object_with_index().
+    class SavePoint {
+    public:
+        SavePoint(Reader& reader)
+            : m_reader(reader)
+        {
+            m_reader.save();
+        }
+        ~SavePoint() { m_reader.load(); }
+
+    private:
+        Reader& m_reader;
+    };
+    SavePoint restore_current_position { m_reader };
+
     if (m_xref_table->is_object_compressed(index))
         // The object can be found in a object stream
         return parse_compressed_object_with_index(index);
 
     auto byte_offset = m_xref_table->byte_offset_for_object(index);
+
     m_reader.move_to(byte_offset);
     auto indirect_value = TRY(parse_indirect_value());
     VERIFY(indirect_value->index() == index);

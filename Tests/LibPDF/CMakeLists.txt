@@ -12,6 +12,7 @@ set(TEST_FILES
     complex.pdf
     encoding.pdf
     encryption_nocopy.pdf
+    jbig2-globals.pdf
     linearized.pdf
     non-linearized.pdf
     oss-fuzz-testcase-62065.pdf
