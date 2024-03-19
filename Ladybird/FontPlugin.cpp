@@ -8,11 +8,10 @@
 #include "FontPlugin.h"
 #include <AK/ByteString.h>
 #include <AK/String.h>
+#include <LibCore/Resource.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGfx/Font/Emoji.h>
 #include <LibGfx/Font/FontDatabase.h>
-
-extern ByteString s_serenity_resource_root;
 
 namespace Ladybird {
 
@@ -26,7 +25,10 @@ FontPlugin::FontPlugin(bool is_layout_test_mode)
     Gfx::FontDatabase::set_default_font_query("Katica 10 400 0");
     Gfx::FontDatabase::set_fixed_width_font_query("Csilla 10 400 0");
 
-    Gfx::Emoji::set_emoji_lookup_path(String::formatted("{}/res/emoji", s_serenity_resource_root).release_value_but_fixme_should_propagate_errors());
+    auto emoji_path = MUST(Core::Resource::load_from_uri("resource://emoji"sv));
+    VERIFY(emoji_path->is_directory());
+
+    Gfx::Emoji::set_emoji_lookup_path(emoji_path->filesystem_path());
 
     update_generic_fonts();
 
