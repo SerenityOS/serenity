@@ -97,6 +97,7 @@ shared_library("LibGfx") {
     "Painter.cpp",
     "Palette.cpp",
     "Path.cpp",
+    "PathClipper.cpp",
     "Point.cpp",
     "Rect.cpp",
     "ShareableBitmap.cpp",
@@ -122,6 +123,7 @@ shared_library("LibGfx") {
     "//Userland/Libraries/LibIPC",
     "//Userland/Libraries/LibRIFF",
     "//Userland/Libraries/LibTextCodec",
+    "//Userland/Libraries/LibURL",
     "//Userland/Libraries/LibUnicode",
   ]
 }

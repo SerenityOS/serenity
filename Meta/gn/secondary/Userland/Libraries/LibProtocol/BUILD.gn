@@ -34,6 +34,7 @@ shared_library("LibProtocol") {
     "//AK",
     "//Userland/Libraries/LibCore",
     "//Userland/Libraries/LibIPC",
+    "//Userland/Libraries/LibURL",
   ]
   sources = [
     "Request.cpp",

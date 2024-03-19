@@ -177,7 +177,10 @@ source_set("LibUnicode") {
     "URL.cpp",
     "UnicodeUtils.cpp",
   ]
-  deps = [ "//AK" ]
+  deps = [
+    "//AK",
+    "//Userland/Libraries/LibURL",
+  ]
 
   if (enable_unicode_database_download) {
     deps += [

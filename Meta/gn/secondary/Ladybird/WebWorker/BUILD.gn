@@ -15,6 +15,7 @@ executable("WebWorker") {
     "//Userland/Libraries/LibLocale",
     "//Userland/Libraries/LibMain",
     "//Userland/Libraries/LibProtocol",
+    "//Userland/Libraries/LibURL",
     "//Userland/Libraries/LibWeb",
     "//Userland/Libraries/LibWeb:WebWorkerClientEndpoint",
     "//Userland/Libraries/LibWeb:WebWorkerServerEndpoint",

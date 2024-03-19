@@ -52,6 +52,7 @@ source_set("CSS") {
     "Serialize.cpp",
     "Size.cpp",
     "StyleComputer.cpp",
+    "StyleInvalidation.cpp",
     "StyleProperties.cpp",
     "StyleProperty.cpp",
     "StyleSheet.cpp",
