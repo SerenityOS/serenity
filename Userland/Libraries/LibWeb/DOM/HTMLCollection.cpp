@@ -6,6 +6,7 @@
  */
 
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/HTMLCollection.h>
 #include <LibWeb/DOM/ParentNode.h>
@@ -45,24 +46,33 @@ void HTMLCollection::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_root);
+    for (auto& element : m_cached_elements)
+        visitor.visit(element);
 }
 
 JS::MarkedVector<Element*> HTMLCollection::collect_matching_elements() const
 {
-    JS::MarkedVector<Element*> elements(m_root->heap());
-    if (m_scope == Scope::Descendants) {
-        m_root->for_each_in_subtree_of_type<Element>([&](auto& element) {
-            if (m_filter(element))
-                elements.append(const_cast<Element*>(&element));
-            return IterationDecision::Continue;
-        });
-    } else {
-        m_root->for_each_child_of_type<Element>([&](auto& element) {
-            if (m_filter(element))
-                elements.append(const_cast<Element*>(&element));
-            return IterationDecision::Continue;
-        });
+    if (m_cached_dom_tree_version != root()->document().dom_tree_version()) {
+        m_cached_elements.clear();
+        if (m_scope == Scope::Descendants) {
+            m_root->for_each_in_subtree_of_type<Element>([&](auto& element) {
+                if (m_filter(element))
+                    m_cached_elements.append(element);
+                return IterationDecision::Continue;
+            });
+        } else {
+            m_root->for_each_child_of_type<Element>([&](auto& element) {
+                if (m_filter(element))
+                    m_cached_elements.append(element);
+                return IterationDecision::Continue;
+            });
+        }
+        m_cached_dom_tree_version = root()->document().dom_tree_version();
     }
+
+    JS::MarkedVector<Element*> elements(heap());
+    for (auto& element : m_cached_elements)
+        elements.append(element);
     return elements;
 }
 
