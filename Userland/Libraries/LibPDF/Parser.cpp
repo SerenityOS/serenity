@@ -140,6 +140,8 @@ PDFErrorOr<Value> Parser::parse_possible_indirect_value_or_ref()
 
 PDFErrorOr<NonnullRefPtr<IndirectValue>> Parser::parse_indirect_value(u32 index, u32 generation)
 {
+    dbgln_if(PDF_DEBUG, "Parsing indirect value {} {}", index, generation);
+
     if (!m_reader.matches("obj"))
         return error("Expected \"obj\" at beginning of indirect value");
     m_reader.move_by(3);
@@ -154,6 +156,8 @@ PDFErrorOr<NonnullRefPtr<IndirectValue>> Parser::parse_indirect_value(u32 index,
     m_reader.consume_whitespace();
 
     pop_reference();
+
+    dbgln_if(PDF_DEBUG, "Done parsing indirect value {} {}", index, generation);
 
     return make_object<IndirectValue>(index, generation, value);
 }
