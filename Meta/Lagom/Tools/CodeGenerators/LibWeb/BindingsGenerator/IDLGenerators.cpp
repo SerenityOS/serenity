@@ -2741,7 +2741,14 @@ void @class_name@::initialize(JS::Realm& realm)
 
 )~~~");
 
-    if (interface.prototype_base_class == "ObjectPrototype") {
+    if (interface.name == "DOMException"sv) {
+        generator.append(R"~~~(
+
+    set_prototype(realm.intrinsics().error_prototype());
+)~~~");
+    }
+
+    else if (interface.prototype_base_class == "ObjectPrototype") {
         generator.append(R"~~~(
 
     set_prototype(realm.intrinsics().object_prototype());
