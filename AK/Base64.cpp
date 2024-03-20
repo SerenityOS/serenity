@@ -47,36 +47,39 @@ ErrorOr<ByteBuffer> decode_base64_impl(StringView input)
         return { result };
     };
 
-    Vector<u8> output;
-    output.ensure_capacity(calculate_base64_decoded_length(input));
+    ByteBuffer output;
+    TRY(output.try_resize(calculate_base64_decoded_length(input)));
 
-    size_t offset = 0;
-    while (offset < input.length()) {
+    size_t input_offset = 0;
+    size_t output_offset = 0;
+
+    while (input_offset < input.length()) {
         bool in2_is_padding = false;
         bool in3_is_padding = false;
 
         bool parsed_something = false;
 
-        const u8 in0 = TRY(get(offset, nullptr, parsed_something));
-        const u8 in1 = TRY(get(offset, nullptr, parsed_something));
-        const u8 in2 = TRY(get(offset, &in2_is_padding, parsed_something));
-        const u8 in3 = TRY(get(offset, &in3_is_padding, parsed_something));
+        const u8 in0 = TRY(get(input_offset, nullptr, parsed_something));
+        const u8 in1 = TRY(get(input_offset, nullptr, parsed_something));
+        const u8 in2 = TRY(get(input_offset, &in2_is_padding, parsed_something));
+        const u8 in3 = TRY(get(input_offset, &in3_is_padding, parsed_something));
 
         if (!parsed_something)
             break;
 
-        const u8 out0 = (in0 << 2) | ((in1 >> 4) & 3);
-        const u8 out1 = ((in1 & 0xf) << 4) | ((in2 >> 2) & 0xf);
-        const u8 out2 = ((in2 & 0x3) << 6) | in3;
+        output[output_offset++] = (in0 << 2) | ((in1 >> 4) & 3);
 
-        output.append(out0);
         if (!in2_is_padding)
-            output.append(out1);
+            output[output_offset++] = ((in1 & 0xf) << 4) | ((in2 >> 2) & 0xf);
+
         if (!in3_is_padding)
-            output.append(out2);
+            output[output_offset++] = ((in2 & 0x3) << 6) | in3;
     }
 
-    return ByteBuffer::copy(output);
+    if (output_offset < output.size())
+        output.trim(output_offset, false);
+
+    return output;
 }
 
 template<auto alphabet>
