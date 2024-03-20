@@ -57,6 +57,15 @@ static ErrorOr<void> invert_cmyk(LoadedImage& image)
     return {};
 }
 
+static ErrorOr<void> crop_image(LoadedImage& image, Gfx::IntRect const& rect)
+{
+    if (!image.bitmap.has<RefPtr<Gfx::Bitmap>>())
+        return Error::from_string_view("Can't --crop CMYK bitmaps yet"sv);
+    auto& frame = image.bitmap.get<RefPtr<Gfx::Bitmap>>();
+    frame = TRY(frame->cropped(rect));
+    return {};
+}
+
 static ErrorOr<void> move_alpha_to_rgb(LoadedImage& image)
 {
     if (!image.bitmap.has<RefPtr<Gfx::Bitmap>>())
@@ -189,6 +198,7 @@ struct Options {
     bool no_output = false;
     int frame_index = 0;
     bool invert_cmyk = false;
+    Optional<Gfx::IntRect> crop_rect;
     bool move_alpha_to_rgb = false;
     bool strip_alpha = false;
     StringView assign_color_profile_path;
@@ -197,6 +207,28 @@ struct Options {
     bool ppm_ascii = false;
     u8 quality = 75;
 };
+
+template<class T>
+static ErrorOr<Vector<T>> parse_comma_separated_numbers(StringView rect_string)
+{
+    auto parts = rect_string.split_view(',');
+    Vector<T> part_numbers;
+    for (size_t i = 0; i < parts.size(); ++i) {
+        auto part = parts[i].to_number<T>();
+        if (!part.has_value())
+            return Error::from_string_view("comma-separated parts must be numbers"sv);
+        TRY(part_numbers.try_append(part.value()));
+    }
+    return part_numbers;
+}
+
+static ErrorOr<Gfx::IntRect> parse_rect_string(StringView rect_string)
+{
+    auto numbers = TRY(parse_comma_separated_numbers<i32>(rect_string));
+    if (numbers.size() != 4)
+        return Error::from_string_view("rect must have 4 comma-separated parts"sv);
+    return Gfx::IntRect { numbers[0], numbers[1], numbers[2], numbers[3] };
+}
 
 static ErrorOr<Options> parse_options(Main::Arguments arguments)
 {
@@ -207,6 +239,8 @@ static ErrorOr<Options> parse_options(Main::Arguments arguments)
     args_parser.add_option(options.no_output, "Do not write output (only useful for benchmarking image decoding)", "no-output", {});
     args_parser.add_option(options.frame_index, "Which frame of a multi-frame input image (0-based)", "frame-index", {}, "INDEX");
     args_parser.add_option(options.invert_cmyk, "Invert CMYK channels", "invert-cmyk", {});
+    StringView crop_rect_string;
+    args_parser.add_option(crop_rect_string, "Crop to a rectangle", "crop", {}, "x,y,w,h");
     args_parser.add_option(options.move_alpha_to_rgb, "Copy alpha channel to rgb, clear alpha", "move-alpha-to-rgb", {});
     args_parser.add_option(options.strip_alpha, "Remove alpha channel", "strip-alpha", {});
     args_parser.add_option(options.assign_color_profile_path, "Load color profile from file and assign it to output image", "assign-color-profile", {}, "FILE");
@@ -218,6 +252,9 @@ static ErrorOr<Options> parse_options(Main::Arguments arguments)
 
     if (options.out_path.is_empty() ^ options.no_output)
         return Error::from_string_view("exactly one of -o or --no-output is required"sv);
+
+    if (!crop_rect_string.is_empty())
+        options.crop_rect = TRY(parse_rect_string(crop_rect_string));
 
     return options;
 }
@@ -235,6 +272,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (options.invert_cmyk)
         TRY(invert_cmyk(image));
+
+    if (options.crop_rect.has_value())
+        TRY(crop_image(image, options.crop_rect.value()));
 
     if (options.move_alpha_to_rgb)
         TRY(move_alpha_to_rgb(image));
