@@ -72,8 +72,18 @@ void CanvasPath::quadratic_curve_to(float cpx, float cpy, float x, float y)
     m_path.quadratic_bezier_curve_to(transform.map(Gfx::FloatPoint { cpx, cpy }), transform.map(Gfx::FloatPoint { x, y }));
 }
 
+// https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-beziercurveto
 void CanvasPath::bezier_curve_to(double cp1x, double cp1y, double cp2x, double cp2y, double x, double y)
 {
+    // 1. If any of the arguments are infinite or NaN, then return.
+    if (!isfinite(cp1x) || !isfinite(cp1y) || !isfinite(cp2x) || !isfinite(cp2y) || !isfinite(x) || !isfinite(y))
+        return;
+
+    // 2. Ensure there is a subpath for (cp1x, cp1y)
+    ensure_subpath(cp1x, cp1y);
+
+    // 3. Connect the last point in the subpath to the given point (x, y) using a cubic Bézier curve with control poits (cp1x, cp1y) and (cp2x, cp2y).
+    // 4. Add the point (x, y) to the subpath.
     auto transform = active_transform();
     m_path.cubic_bezier_curve_to(
         transform.map(Gfx::FloatPoint { cp1x, cp1y }), transform.map(Gfx::FloatPoint { cp2x, cp2y }), transform.map(Gfx::FloatPoint { x, y }));
