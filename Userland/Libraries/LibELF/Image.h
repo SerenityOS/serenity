@@ -221,8 +221,12 @@ public:
     bool is_dynamic() const { return header().e_type == ET_DYN; }
 
     VirtualAddress entry() const { return VirtualAddress(header().e_entry); }
+    Elf64_Quarter machine() const { return header().e_machine; }
     FlatPtr base_address() const { return (FlatPtr)m_buffer; }
     size_t size() const { return m_size; }
+
+    unsigned char elf_class() const { return header().e_ident[EI_CLASS]; }
+    unsigned char byte_order() const { return header().e_ident[EI_DATA]; }
 
     static Optional<StringView> object_file_type_to_string(Elf_Half type);
     static Optional<StringView> object_machine_type_to_string(Elf_Half type);
