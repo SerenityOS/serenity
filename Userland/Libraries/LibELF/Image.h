@@ -125,7 +125,6 @@ public:
         FlatPtr address() const { return m_section_header.sh_addr; }
         char const* raw_data() const { return m_image.raw_data(m_section_header.sh_offset); }
         ReadonlyBytes bytes() const { return { raw_data(), size() }; }
-        Optional<RelocationSection> relocations() const;
         auto flags() const { return m_section_header.sh_flags; }
         bool is_writable() const { return flags() & SHF_WRITE; }
         bool is_executable() const { return flags() & PF_X; }
