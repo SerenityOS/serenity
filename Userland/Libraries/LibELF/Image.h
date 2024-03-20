@@ -148,13 +148,16 @@ public:
 
         template<VoidFunction<Image::Relocation&> F>
         void for_each_relocation(F) const;
+
+        bool addend_used() const { return type() == SHT_RELA; }
     };
 
     class Relocation {
     public:
-        Relocation(Image const& image, Elf_Rel const& rel)
+        Relocation(Image const& image, Elf_Rela const& rel, bool addend_used)
             : m_image(image)
             , m_rel(rel)
+            , m_addend_used(addend_used)
         {
         }
 
@@ -171,9 +174,17 @@ public:
             return m_image.symbol(symbol_index());
         }
 
+        bool addend_used() const { return m_addend_used; }
+        unsigned addend() const
+        {
+            VERIFY(m_addend_used);
+            return m_rel.r_addend;
+        }
+
     private:
         Image const& m_image;
-        Elf_Rel const& m_rel;
+        Elf_Rela const& m_rel;
+        bool m_addend_used;
     };
 
     unsigned symbol_count() const;
