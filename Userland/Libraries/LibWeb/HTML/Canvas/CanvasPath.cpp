@@ -184,13 +184,13 @@ WebIDL::ExceptionOr<void> CanvasPath::arc_to(double x1, double y1, double x2, do
         return {};
 
     // 2. Ensure there is a subpath for (x1, y1).
-    auto transform = active_transform();
-    if (m_path.is_empty())
-        m_path.move_to(transform.map(Gfx::FloatPoint { x1, y1 }));
+    ensure_subpath(x1, y1);
 
     // 3. If radius is negative, then throw an "IndexSizeError" DOMException.
     if (radius < 0)
         return WebIDL::IndexSizeError::create(m_self->realm(), MUST(String::formatted("The radius provided ({}) is negative.", radius)));
+
+    auto transform = active_transform();
 
     // 4. Let the point (x0, y0) be the last point in the subpath,
     //    transformed by the inverse of the current transformation matrix
