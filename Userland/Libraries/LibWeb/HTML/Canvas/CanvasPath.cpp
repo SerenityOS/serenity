@@ -22,8 +22,14 @@ void CanvasPath::close_path()
     m_path.close();
 }
 
+// https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-moveto
 void CanvasPath::move_to(float x, float y)
 {
+    // 1. If either of the arguments are infinite or NaN, then return.
+    if (!isfinite(x) || !isfinite(y))
+        return;
+
+    // 2. Create a new subpath with the specified point as its first (and only) point.
     m_path.move_to(active_transform().map(Gfx::FloatPoint { x, y }));
 }
 
