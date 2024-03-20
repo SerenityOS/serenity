@@ -38,6 +38,7 @@ public:
     TaskQueue const& microtask_queue() const { return m_microtask_queue; }
 
     void spin_until(JS::SafeFunction<bool()> goal_condition);
+    void spin_processing_tasks_with_source_until(Task::Source, JS::SafeFunction<bool()> goal_condition);
     void process();
 
     // https://html.spec.whatwg.org/multipage/browsing-the-web.html#termination-nesting-level
@@ -110,6 +111,8 @@ private:
     size_t m_termination_nesting_level { 0 };
 
     bool m_execution_paused { false };
+
+    bool m_skip_event_loop_processing_steps { false };
 };
 
 EventLoop& main_thread_event_loop();

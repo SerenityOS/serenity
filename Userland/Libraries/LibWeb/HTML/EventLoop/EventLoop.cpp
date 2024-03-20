@@ -92,9 +92,49 @@ void EventLoop::spin_until(JS::SafeFunction<bool()> goal_condition)
     // NOTE: This is achieved by returning from the function.
 }
 
+void EventLoop::spin_processing_tasks_with_source_until(Task::Source source, JS::SafeFunction<bool()> goal_condition)
+{
+    m_vm->save_execution_context_stack();
+    m_vm->clear_execution_context_stack();
+
+    perform_a_microtask_checkpoint();
+
+    // NOTE: HTML event loop processing steps could run a task with arbitrary source
+    m_skip_event_loop_processing_steps = true;
+
+    Platform::EventLoopPlugin::the().spin_until([&] {
+        if (goal_condition())
+            return true;
+        if (m_task_queue.has_runnable_tasks()) {
+            auto tasks = m_task_queue.take_tasks_matching([&](auto& task) {
+                return task.source() == source;
+            });
+
+            for (auto& task : tasks.value()) {
+                m_currently_running_task = task.ptr();
+                task->execute();
+                m_currently_running_task = nullptr;
+            }
+        }
+
+        // FIXME: Remove the platform event loop plugin so that this doesn't look out of place
+        Core::EventLoop::current().wake();
+        return goal_condition();
+    });
+
+    m_skip_event_loop_processing_steps = false;
+
+    schedule();
+
+    m_vm->restore_execution_context_stack();
+}
+
 // https://html.spec.whatwg.org/multipage/webappapis.html#event-loop-processing-model
 void EventLoop::process()
 {
+    if (m_skip_event_loop_processing_steps)
+        return;
+
     // An event loop must continually run through the following steps for as long as it exists:
 
     // 1. Let oldestTask be null.
