@@ -215,6 +215,81 @@ void ArithmeticDecoder::BYTEIN()
     }
 }
 
+// Annex A, Arithmetic integer decoding procedure
+class ArithmeticIntegerDecoder {
+public:
+    ArithmeticIntegerDecoder(ArithmeticDecoder&);
+
+    // A.2 Procedure for decoding values (except IAID)
+    // Returns OptionalNone for OOB.
+    Optional<i32> decode();
+
+private:
+    ArithmeticDecoder& m_decoder;
+    u16 PREV { 0 };
+    Vector<ArithmeticDecoder::Context> contexts;
+};
+
+ArithmeticIntegerDecoder::ArithmeticIntegerDecoder(ArithmeticDecoder& decoder)
+    : m_decoder(decoder)
+{
+    contexts.resize(1 << 9);
+}
+
+Optional<int> ArithmeticIntegerDecoder::decode()
+{
+    // A.2 Procedure for decoding values (except IAID)
+    // "1) Set:
+    //    PREV = 1"
+    u16 PREV = 1;
+
+    // "2) Follow the flowchart in Figure A.1. Decode each bit with CX equal to "IAx + PREV" where "IAx" represents the identifier
+    //     of the current arithmetic integer decoding procedure, "+" represents concatenation, and the rightmost 9 bits of PREV are used."
+    auto decode_bit = [&]() {
+        bool D = m_decoder.get_next_bit(contexts[PREV & 0x1FF]);
+        // "3) After each bit is decoded:
+        //     If PREV < 256 set:
+        //         PREV = (PREV << 1) OR D
+        //     Otherwise set:
+        //         PREV = (((PREV << 1) OR D) AND 511) OR 256
+        //     where D represents the value of the just-decoded bit.
+        if (PREV < 256)
+            PREV = (PREV << 1) | (u16)D;
+        else
+            PREV = (((PREV << 1) | (u16)D) & 511) | 256;
+        return D;
+    };
+
+    auto decode_bits = [&](int n) {
+        u32 result = 0;
+        for (int i = 0; i < n; ++i)
+            result = (result << 1) | decode_bit();
+        return result;
+    };
+
+    // Figure A.1 – Flowchart for the integer arithmetic decoding procedures (except IAID)
+    u8 S = decode_bit();
+    u32 V;
+    if (!decode_bit())
+        V = decode_bits(2);
+    else if (!decode_bit())
+        V = decode_bits(4) + 4;
+    else if (!decode_bit())
+        V = decode_bits(6) + 20;
+    else if (!decode_bit())
+        V = decode_bits(8) + 84;
+    else if (!decode_bit())
+        V = decode_bits(12) + 340;
+    else
+        V = decode_bits(32) + 4436;
+
+    // "4) The sequence of bits decoded, interpreted according to Table A.1, gives the value that is the result of this invocation
+    //     of the integer arithmetic decoding procedure."
+    if (S == 1 && V == 0)
+        return {};
+    return S ? -V : V;
+}
+
 }
 
 // JBIG2 spec, Annex D, D.4.1 ID string
