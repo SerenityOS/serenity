@@ -656,9 +656,6 @@ private:
     Optional<Color> m_active_link_color;
     Optional<Color> m_visited_link_color;
 
-    RefPtr<Core::Timer> m_style_update_timer;
-    RefPtr<Core::Timer> m_layout_update_timer;
-
     JS::GCPtr<HTML::HTMLParser> m_parser;
     bool m_active_parser_was_aborted { false };
 
