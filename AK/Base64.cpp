@@ -24,10 +24,9 @@ size_t calculate_base64_encoded_length(ReadonlyBytes input)
     return ((4 * input.size() / 3) + 3) & ~3;
 }
 
-ErrorOr<ByteBuffer> decode_base64(StringView input)
+template<auto alphabet_lookup_table>
+ErrorOr<ByteBuffer> decode_base64_impl(StringView input)
 {
-    auto alphabet_lookup_table = base64_lookup_table();
-
     auto get = [&](size_t& offset, bool* is_padding, bool& parsed_something) -> ErrorOr<u8> {
         while (offset < input.length() && is_ascii_space(input[offset]))
             ++offset;
@@ -80,7 +79,8 @@ ErrorOr<ByteBuffer> decode_base64(StringView input)
     return ByteBuffer::copy(output);
 }
 
-ErrorOr<String> encode_base64(ReadonlyBytes input)
+template<auto alphabet>
+ErrorOr<String> encode_base64_impl(ReadonlyBytes input)
 {
     StringBuilder output(calculate_base64_encoded_length(input));
 
@@ -106,10 +106,10 @@ ErrorOr<String> encode_base64(ReadonlyBytes input)
         const u8 index2 = ((in1 << 2) | (in2 >> 6)) & 0x3f;
         const u8 index3 = in2 & 0x3f;
 
-        char const out0 = base64_alphabet[index0];
-        char const out1 = base64_alphabet[index1];
-        char const out2 = is_16bit ? '=' : base64_alphabet[index2];
-        char const out3 = is_8bit ? '=' : base64_alphabet[index3];
+        char const out0 = alphabet[index0];
+        char const out1 = alphabet[index1];
+        char const out2 = is_16bit ? '=' : alphabet[index2];
+        char const out3 = is_8bit ? '=' : alphabet[index3];
 
         TRY(output.try_append(out0));
         TRY(output.try_append(out1));
@@ -118,6 +118,25 @@ ErrorOr<String> encode_base64(ReadonlyBytes input)
     }
 
     return output.to_string();
+}
+
+ErrorOr<ByteBuffer> decode_base64(StringView input)
+{
+    return decode_base64_impl<base64_lookup_table()>(input);
+}
+
+ErrorOr<ByteBuffer> decode_base64url(StringView input)
+{
+    return decode_base64_impl<base64url_lookup_table()>(input);
+}
+
+ErrorOr<String> encode_base64(ReadonlyBytes input)
+{
+    return encode_base64_impl<base64_alphabet>(input);
+}
+ErrorOr<String> encode_base64url(ReadonlyBytes input)
+{
+    return encode_base64_impl<base64url_alphabet>(input);
 }
 
 }
