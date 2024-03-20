@@ -237,8 +237,9 @@ Image::ProgramHeader Image::program_header(unsigned index) const
 Image::Relocation Image::RelocationSection::relocation(unsigned index) const
 {
     VERIFY(index < relocation_count());
-    auto* rels = reinterpret_cast<Elf_Rel const*>(m_image.raw_data(offset()));
-    return Relocation(m_image, rels[index]);
+    unsigned offset_in_section = index * entry_size();
+    auto relocation_address = bit_cast<Elf_Rela*>(m_image.raw_data(offset() + offset_in_section));
+    return Relocation(m_image, *relocation_address, addend_used());
 }
 
 Optional<Image::RelocationSection> Image::Section::relocations() const
