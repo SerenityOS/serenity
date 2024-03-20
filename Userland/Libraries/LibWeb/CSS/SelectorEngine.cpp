@@ -702,7 +702,7 @@ static bool fast_matches_compound_selector(CSS::Selector::CompoundSelector const
     return true;
 }
 
-FLATTEN bool fast_matches(CSS::Selector const& selector, Optional<CSS::CSSStyleSheet const&> style_sheet_for_rule, DOM::Element const& element_to_match)
+bool fast_matches(CSS::Selector const& selector, Optional<CSS::CSSStyleSheet const&> style_sheet_for_rule, DOM::Element const& element_to_match)
 {
     DOM::Element const* current = &element_to_match;
 
