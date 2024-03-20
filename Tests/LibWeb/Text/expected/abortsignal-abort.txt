@@ -1,4 +1,4 @@
 Aborted: true
-Reason: "[object DOMException]"
+Reason: "AbortError: Aborted without reason"
 Aborted: true
 Reason: "This is a test"

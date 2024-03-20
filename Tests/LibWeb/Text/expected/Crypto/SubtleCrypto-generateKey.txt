@@ -10,6 +10,6 @@ privateKey type: private
 privateKey extractable: true
 privateKey usages: decrypt,unwrapKey
 invalid usages throw
-Error: [object DOMException]
+Error: SyntaxError: Invalid key usage 'sign'
 no usages for private key throws
-Error: [object DOMException]
+Error: SyntaxError: usages must not be empty
