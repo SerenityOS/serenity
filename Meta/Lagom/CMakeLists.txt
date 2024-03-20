@@ -552,6 +552,8 @@ if (BUILD_LAGOM)
             lagom_utility(adjtime SOURCES ../../Userland/Utilities/adjtime.cpp LIBS LibMain)
         endif()
 
+        lagom_utility(base64 SOURCES ../../Userland/Utilities/base64.cpp LIBS LibMain)
+
         # FIXME: Excluding arm64 is a temporary hack to circumvent a build problem
         #        for Lagom on Apple M1
         if (NOT CMAKE_SYSTEM_PROCESSOR MATCHES "arm64" AND NOT EMSCRIPTEN)
