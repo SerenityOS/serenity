@@ -82,7 +82,8 @@ ErrorOr<ByteBuffer> decode_base64_impl(StringView input)
 template<auto alphabet>
 ErrorOr<String> encode_base64_impl(ReadonlyBytes input)
 {
-    StringBuilder output(calculate_base64_encoded_length(input));
+    Vector<u8> output;
+    TRY(output.try_ensure_capacity(calculate_base64_encoded_length(input)));
 
     auto get = [&](const size_t offset, bool* need_padding = nullptr) -> u8 {
         if (offset >= input.size()) {
@@ -106,18 +107,13 @@ ErrorOr<String> encode_base64_impl(ReadonlyBytes input)
         const u8 index2 = ((in1 << 2) | (in2 >> 6)) & 0x3f;
         const u8 index3 = in2 & 0x3f;
 
-        char const out0 = alphabet[index0];
-        char const out1 = alphabet[index1];
-        char const out2 = is_16bit ? '=' : alphabet[index2];
-        char const out3 = is_8bit ? '=' : alphabet[index3];
-
-        TRY(output.try_append(out0));
-        TRY(output.try_append(out1));
-        TRY(output.try_append(out2));
-        TRY(output.try_append(out3));
+        output.unchecked_append(alphabet[index0]);
+        output.unchecked_append(alphabet[index1]);
+        output.unchecked_append(is_16bit ? '=' : alphabet[index2]);
+        output.unchecked_append(is_8bit ? '=' : alphabet[index3]);
     }
 
-    return output.to_string_without_validation();
+    return String::from_utf8_without_validation(output);
 }
 
 ErrorOr<ByteBuffer> decode_base64(StringView input)
