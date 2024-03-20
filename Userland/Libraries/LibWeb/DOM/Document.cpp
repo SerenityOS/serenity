@@ -356,14 +356,6 @@ Document::Document(JS::Realm& realm, const URL::URL& url)
     };
 
     HTML::main_thread_event_loop().register_document({}, *this);
-
-    m_style_update_timer = Core::Timer::create_single_shot(0, [this] {
-        update_style();
-    }).release_value_but_fixme_should_propagate_errors();
-
-    m_layout_update_timer = Core::Timer::create_single_shot(0, [this] {
-        update_layout();
-    }).release_value_but_fixme_should_propagate_errors();
 }
 
 Document::~Document()
@@ -681,16 +673,14 @@ void Document::set_origin(HTML::Origin const& origin)
 
 void Document::schedule_style_update()
 {
-    if (m_style_update_timer->is_active())
-        return;
-    m_style_update_timer->start();
+    // NOTE: Update of the style is a step in HTML event loop processing.
+    HTML::main_thread_event_loop().schedule();
 }
 
 void Document::schedule_layout_update()
 {
-    if (m_layout_update_timer->is_active())
-        return;
-    m_layout_update_timer->start();
+    // NOTE: Update of the layout is a step in HTML event loop processing.
+    HTML::main_thread_event_loop().schedule();
 }
 
 bool Document::is_child_allowed(Node const& node) const
@@ -1113,7 +1103,6 @@ void Document::update_layout()
     paintable()->recompute_selection_states();
 
     m_needs_layout = false;
-    m_layout_update_timer->stop();
 }
 
 [[nodiscard]] static CSS::RequiredInvalidationAfterStyleChange update_style_recursively(Node& node)
@@ -1196,7 +1185,6 @@ void Document::update_style()
             invalidate_stacking_context_tree();
     }
     m_needs_full_style_update = false;
-    m_style_update_timer->stop();
 }
 
 void Document::update_paint_and_hit_testing_properties_if_needed()
