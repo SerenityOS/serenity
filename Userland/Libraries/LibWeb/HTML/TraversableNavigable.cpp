@@ -543,7 +543,7 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
         // AD-HOC: Since currently populate_session_history_entry_document does not run in parallel
         //         we call spin_until to interrupt execution of this function and let document population
         //         to complete.
-        Platform::EventLoopPlugin::the().spin_until([&] {
+        main_thread_event_loop().spin_processing_tasks_with_source_until(Task::Source::NavigationAndTraversal, [&] {
             return !changing_navigable_continuations.is_empty() || completed_change_jobs == total_change_jobs;
         });
 
@@ -679,7 +679,7 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
     // AD-HOC: Since currently populate_session_history_entry_document does not run in parallel
     //         we call spin_until to interrupt execution of this function and let document population
     //         to complete.
-    Platform::EventLoopPlugin::the().spin_until([&] {
+    main_thread_event_loop().spin_processing_tasks_with_source_until(Task::Source::NavigationAndTraversal, [&] {
         return completed_non_changing_jobs == total_non_changing_jobs;
     });
 

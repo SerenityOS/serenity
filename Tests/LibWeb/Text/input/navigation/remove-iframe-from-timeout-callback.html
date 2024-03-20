@@ -1,0 +1,12 @@
+<script src="../include.js"></script>
+<div id="foo">
+    <iframe></iframe>
+    <script>
+        setTimeout(function () {
+            foo.remove();
+            // Pass (didn't crash)
+            internals.signalTextTestIsDone();
+        }, 0);
+    </script>
+</div>
+<iframe></iframe>
