@@ -242,20 +242,6 @@ Image::Relocation Image::RelocationSection::relocation(unsigned index) const
     return Relocation(m_image, *relocation_address, addend_used());
 }
 
-Optional<Image::RelocationSection> Image::Section::relocations() const
-{
-    StringBuilder builder;
-    builder.append(".rel"sv);
-    builder.append(name());
-
-    auto relocation_section = m_image.lookup_section(builder.string_view());
-    if (!relocation_section.has_value())
-        return {};
-
-    dbgln_if(ELF_IMAGE_DEBUG, "Found relocations for {} in {}", name(), relocation_section.value().name());
-    return static_cast<RelocationSection>(relocation_section.value());
-}
-
 Optional<Image::Section> Image::lookup_section(StringView name) const
 {
     VERIFY(m_valid);
