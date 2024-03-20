@@ -17,6 +17,12 @@ Gfx::AffineTransform CanvasPath::active_transform() const
     return {};
 }
 
+void CanvasPath::ensure_subpath(float x, float y)
+{
+    if (m_path.is_empty())
+        m_path.move_to(active_transform().map(Gfx::FloatPoint { x, y }));
+}
+
 void CanvasPath::close_path()
 {
     m_path.close();
@@ -33,9 +39,21 @@ void CanvasPath::move_to(float x, float y)
     m_path.move_to(active_transform().map(Gfx::FloatPoint { x, y }));
 }
 
+// https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-lineto
 void CanvasPath::line_to(float x, float y)
 {
-    m_path.line_to(active_transform().map(Gfx::FloatPoint { x, y }));
+    // 1. If either of the arguments are infinite or NaN, then return.
+    if (!isfinite(x) || !isfinite(y))
+        return;
+
+    if (m_path.is_empty()) {
+        // 2. If the object's path has no subpaths, then ensure there is a subpath for (x, y).
+        ensure_subpath(x, y);
+    } else {
+        // 3. Otherwise, connect the last point in the subpath to the given point (x, y) using a straight line,
+        // and then add the given point (x, y) to the subpath.
+        m_path.line_to(active_transform().map(Gfx::FloatPoint { x, y }));
+    }
 }
 
 void CanvasPath::quadratic_curve_to(float cx, float cy, float x, float y)

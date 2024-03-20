@@ -48,6 +48,8 @@ protected:
 private:
     Gfx::AffineTransform active_transform() const;
 
+    void ensure_subpath(float x, float y);
+
     JS::NonnullGCPtr<Bindings::PlatformObject> m_self;
     Optional<CanvasState const&> m_canvas_state;
     Gfx::Path m_path;
