@@ -56,10 +56,20 @@ void CanvasPath::line_to(float x, float y)
     }
 }
 
-void CanvasPath::quadratic_curve_to(float cx, float cy, float x, float y)
+// https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-quadraticcurveto
+void CanvasPath::quadratic_curve_to(float cpx, float cpy, float x, float y)
 {
+    // 1. If any of the arguments are infinite or NaN, then return.
+    if (!isfinite(cpx) || !isfinite(cpy) || !isfinite(x) || !isfinite(y))
+        return;
+
+    // 2. Ensure there is a subpath for (cpx, cpy)
+    ensure_subpath(cpx, cpy);
+
+    // 3. Connect the last point in the subpath to the given point (x, y) using a quadratic Bézier curve with control point (cpx, cpy).
+    // 4. Add the given point (x, y) to the subpath.
     auto transform = active_transform();
-    m_path.quadratic_bezier_curve_to(transform.map(Gfx::FloatPoint { cx, cy }), transform.map(Gfx::FloatPoint { x, y }));
+    m_path.quadratic_bezier_curve_to(transform.map(Gfx::FloatPoint { cpx, cpy }), transform.map(Gfx::FloatPoint { x, y }));
 }
 
 void CanvasPath::bezier_curve_to(double cp1x, double cp1y, double cp2x, double cp2y, double x, double y)
