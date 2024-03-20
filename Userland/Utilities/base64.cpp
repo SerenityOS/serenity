@@ -7,6 +7,7 @@
 #include <AK/Base64.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <LibCore/MappedFile.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 
@@ -36,18 +37,27 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(filepath, "", "file", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
-    auto file = TRY(Core::File::open_file_or_standard_stream(filepath, Core::File::OpenMode::Read));
-    ByteBuffer buffer = TRY(file->read_until_eof());
+    Variant<Empty, ByteBuffer, NonnullOwnPtr<Core::MappedFile>> buffer_or_file;
+    ReadonlyBytes input_bytes;
+
+    if (filepath.is_empty() || filepath == "-"sv) {
+        auto file = TRY(Core::File::standard_input());
+        buffer_or_file = TRY(file->read_until_eof());
+        input_bytes = buffer_or_file.get<ByteBuffer>();
+    } else if (TRY(Core::System::stat(filepath)).st_size > 0) {
+        buffer_or_file = TRY(Core::MappedFile::map(filepath));
+        input_bytes = buffer_or_file.get<NonnullOwnPtr<Core::MappedFile>>()->bytes();
+    }
 
     TRY(Core::System::pledge("stdio"));
 
     if (decode) {
-        auto decoded = TRY(decode_base64(buffer));
+        auto decoded = TRY(decode_base64(input_bytes));
         out("{}", StringView(decoded.bytes()));
         return 0;
     }
 
-    auto encoded = TRY(encode_base64(buffer));
+    auto encoded = TRY(encode_base64(input_bytes));
 
     if (maybe_column.has_value() && *maybe_column > 0) {
         print_wrapped_output(*maybe_column, encoded);
