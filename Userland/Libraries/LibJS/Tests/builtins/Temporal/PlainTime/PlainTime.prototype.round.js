@@ -122,5 +122,23 @@ describe("errors", () => {
         expect(() => {
             plainTime.round({ smallestUnit: "second", roundingIncrement: Infinity });
         }).toThrowWithMessage(RangeError, "inf is not a valid value for option roundingIncrement");
+        expect(() => {
+            plainTime.round({ smallestUnit: "hours", roundingIncrement: 24 });
+        }).toThrowWithMessage(RangeError, "24 is not a valid value for option roundingIncrement");
+        expect(() => {
+            plainTime.round({ smallestUnit: "minutes", roundingIncrement: 60 });
+        }).toThrowWithMessage(RangeError, "60 is not a valid value for option roundingIncrement");
+        expect(() => {
+            plainTime.round({ smallestUnit: "seconds", roundingIncrement: 60 });
+        }).toThrowWithMessage(RangeError, "60 is not a valid value for option roundingIncrement");
+        expect(() => {
+            plainTime.round({ smallestUnit: "milliseconds", roundingIncrement: 1000 });
+        }).toThrowWithMessage(RangeError, "1000 is not a valid value for option roundingIncrement");
+        expect(() => {
+            plainTime.round({ smallestUnit: "microseconds", roundingIncrement: 1000 });
+        }).toThrowWithMessage(RangeError, "1000 is not a valid value for option roundingIncrement");
+        expect(() => {
+            plainTime.round({ smallestUnit: "nanoseconds", roundingIncrement: 1000 });
+        }).toThrowWithMessage(RangeError, "1000 is not a valid value for option roundingIncrement");
     });
 });
