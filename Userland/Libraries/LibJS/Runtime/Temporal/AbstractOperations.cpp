@@ -274,48 +274,60 @@ ThrowCompletionOr<String> to_show_offset_option(VM& vm, Object const& normalized
 }
 
 // 13.12 ToTemporalRoundingIncrement ( normalizedOptions, dividend, inclusive ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalroundingincrement
-ThrowCompletionOr<u64> to_temporal_rounding_increment(VM& vm, Object const& normalized_options, Optional<double> dividend, bool inclusive)
+ThrowCompletionOr<double> to_temporal_rounding_increment(VM& vm, Object const& normalized_options)
 {
-    double maximum;
-    // 1. If dividend is undefined, then
-    if (!dividend.has_value()) {
-        // a. Let maximum be +∞𝔽.
-        maximum = INFINITY;
-    }
-    // 2. Else if inclusive is true, then
-    else if (inclusive) {
-        // a. Let maximum be 𝔽(dividend).
-        maximum = *dividend;
-    }
-    // 3. Else if dividend is more than 1, then
-    else if (*dividend > 1) {
-        // a. Let maximum be 𝔽(dividend - 1).
-        maximum = *dividend - 1;
-    }
-    // 4. Else,
-    else {
-        // a. Let maximum be 1𝔽.
-        maximum = 1;
-    }
-
-    // 5. Let increment be ? GetOption(normalizedOptions, "roundingIncrement", "number", undefined, 1𝔽).
+    // 1. Let increment be ? GetOption(normalizedOptions, "roundingIncrement", "number", undefined, 1𝔽)
     auto increment_value = TRY(get_option(vm, normalized_options, vm.names.roundingIncrement, OptionType::Number, {}, 1.0));
     VERIFY(increment_value.is_number());
     auto increment = increment_value.as_double();
 
-    // 6. If increment < 1𝔽 or increment > maximum, throw a RangeError exception.
-    if (increment < 1 || increment > maximum)
+    // 2. If increment is not finite, throw a RangeError exception
+    if (!increment_value.is_finite_number())
         return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, increment, "roundingIncrement");
 
-    // 7. Set increment to floor(ℝ(increment)).
+    // 3. If increment < 1𝔽, throw a RangeError exception.
+    if (increment < 1) {
+        return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, increment, "roundingIncrement");
+    }
+
+    // 4. Return increment
+    return increment;
+}
+
+// 13.13 ValidateTemporalRoundingIncrement ( increment, dividend, inclusive ), https://tc39.es/proposal-temporal/#sec-validatetemporalroundingincrement
+ThrowCompletionOr<u64> validate_temporal_rounding_increment(VM& vm, double increment, double dividend, bool inclusive)
+{
+    double maximum;
+    // 1. If inclusive is true, then
+    if (inclusive) {
+        // a. Let maximum be 𝔽(dividend).
+        maximum = dividend;
+    }
+    // 2. Else if dividend is more than 1, then
+    else if (dividend > 1) {
+        // a. Let maximum be 𝔽(dividend - 1)
+        maximum = dividend - 1;
+    }
+    // 3. Else
+    else {
+        // a. Let maximum be 1𝔽.
+        maximum = 1;
+    }
+    // 4. If increment > maximum, throw a RangeError exception.
+    if (increment > maximum) {
+        return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, increment, "roundingIncrement");
+    }
+
+    // 5. Set increment to floor(ℝ(increment)).
     auto floored_increment = static_cast<u64>(increment);
 
-    // 8. If dividend is not undefined and dividend modulo increment ≠ 0, then
-    if (dividend.has_value() && static_cast<u64>(*dividend) % floored_increment != 0)
+    // 6. If dividend modulo increment is not zero, then
+    if (modulo(floor(dividend), floored_increment) != 0) {
         // a. Throw a RangeError exception.
         return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, increment, "roundingIncrement");
+    }
 
-    // 9. Return increment.
+    // 7. Return increment.
     return floored_increment;
 }
 
@@ -336,8 +348,11 @@ ThrowCompletionOr<u64> to_temporal_date_time_rounding_increment(VM& vm, Object c
         maximum = *maximum_temporal_duration_rounding_increment(smallest_unit);
     }
 
-    // 3. Return ? ToTemporalRoundingIncrement(normalizedOptions, maximum, false).
-    return to_temporal_rounding_increment(vm, normalized_options, maximum, false);
+    // 3. Let increment be ? ToTemporalRoundingIncrement(normalizedOptions).
+    auto increment = TRY(to_temporal_rounding_increment(vm, normalized_options));
+
+    // 4. Return ? ValidateTemporalRoundingIncrement(increment, maximum, false).
+    return validate_temporal_rounding_increment(vm, increment, maximum, false);
 }
 
 // 13.14 ToSecondsStringPrecision ( normalizedOptions ), https://tc39.es/proposal-temporal/#sec-temporal-tosecondsstringprecision
@@ -1946,15 +1961,27 @@ ThrowCompletionOr<DifferenceSettings> get_difference_settings(VM& vm, Difference
     // 11. Let maximum be ! MaximumTemporalDurationRoundingIncrement(smallestUnit).
     auto maximum = maximum_temporal_duration_rounding_increment(*smallest_unit);
 
-    // 12. Let roundingIncrement be ? ToTemporalRoundingIncrement(options, maximum, false).
-    auto rounding_increment = TRY(to_temporal_rounding_increment(vm, *options, Optional<double> { maximum }, false));
+    // 12. Let roundingIncrement be ? ToTemporalRoundingIncrement(options).
+    auto rounding_increment = TRY(to_temporal_rounding_increment(vm, *options));
+
+    u64 floored_rounding_increment;
+    // 13. If maximum is undefined, then
+    if (!maximum.has_value()) {
+        // a. Set roundingIncrement to floor(ℝ(roundingIncrement)).
+        floored_rounding_increment = static_cast<u64>(rounding_increment);
+    }
+    // 14. Else
+    else {
+        // a. Set roundingIncrement to ? ValidateTemporalRoundingIncrement(roundingIncrement, maximum, false).
+        floored_rounding_increment = TRY(validate_temporal_rounding_increment(vm, rounding_increment, *maximum, false));
+    }
 
     // 13. Return the Record { [[SmallestUnit]]: smallestUnit, [[LargestUnit]]: largestUnit, [[RoundingMode]]: roundingMode, [[RoundingIncrement]]: roundingIncrement, [[Options]]: options }.
     return DifferenceSettings {
         .smallest_unit = smallest_unit.release_value(),
         .largest_unit = largest_unit.release_value(),
         .rounding_mode = move(rounding_mode),
-        .rounding_increment = rounding_increment,
+        .rounding_increment = floored_rounding_increment,
         .options = *options,
     };
 }
