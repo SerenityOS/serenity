@@ -340,8 +340,8 @@ ThrowCompletionOr<u64> to_temporal_date_time_rounding_increment(VM& vm, Object c
     return to_temporal_rounding_increment(vm, normalized_options, maximum, false);
 }
 
-// 13.14 ToSecondsStringPrecision ( normalizedOptions ), https://tc39.es/proposal-temporal/#sec-temporal-tosecondsstringprecision
-ThrowCompletionOr<SecondsStringPrecision> to_seconds_string_precision(VM& vm, Object const& normalized_options)
+// 13.14 ToSecondsStringPrecisionRecord ( normalizedOptions ), https://tc39.es/proposal-temporal/#sec-temporal-tosecondsstringprecisionrecord
+ThrowCompletionOr<SecondsStringPrecision> to_seconds_string_precision_record(VM& vm, Object const& normalized_options)
 {
     // 1. Let smallestUnit be ? GetTemporalUnit(normalizedOptions, "smallestUnit", time, undefined).
     auto smallest_unit = TRY(get_temporal_unit(vm, normalized_options, vm.names.smallestUnit, UnitGroup::Time, Optional<StringView> {}));

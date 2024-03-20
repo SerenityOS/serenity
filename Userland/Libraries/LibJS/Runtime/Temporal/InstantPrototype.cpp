@@ -301,8 +301,8 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_string)
         time_zone = TRY(to_temporal_time_zone(vm, time_zone));
     }
 
-    // 6. Let precision be ? ToSecondsStringPrecision(options).
-    auto precision = TRY(to_seconds_string_precision(vm, *options));
+    // 6. Let precision be ? ToSecondsStringPrecisionRecord(options).
+    auto precision = TRY(to_seconds_string_precision_record(vm, *options));
 
     // 7. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
     auto rounding_mode = TRY(to_temporal_rounding_mode(vm, *options, "trunc"sv));
