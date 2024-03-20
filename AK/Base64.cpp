@@ -117,7 +117,7 @@ ErrorOr<String> encode_base64_impl(ReadonlyBytes input)
         TRY(output.try_append(out3));
     }
 
-    return output.to_string();
+    return output.to_string_without_validation();
 }
 
 ErrorOr<ByteBuffer> decode_base64(StringView input)
