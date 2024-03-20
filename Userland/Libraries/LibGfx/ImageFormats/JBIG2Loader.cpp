@@ -768,6 +768,11 @@ static ErrorOr<void> warn_about_multiple_pages(JBIG2LoadingContext& context)
     return {};
 }
 
+struct AdaptiveTemplatePixel {
+    i8 x { 0 };
+    i8 y { 0 };
+};
+
 // 6.2.2 Input parameters
 struct GenericRegionDecodingInputParameters {
     bool is_modified_modified_read { false }; // "MMR" in spec.
@@ -778,10 +783,6 @@ struct GenericRegionDecodingInputParameters {
     bool is_extended_reference_template_used { false }; // "EXTTEMPLATE" in spec.
     Optional<NonnullOwnPtr<BitBuffer>> skip_pattern;    // "USESKIP", "SKIP" in spec.
 
-    struct AdaptiveTemplatePixel {
-        i8 x { 0 };
-        i8 y { 0 };
-    };
     Array<AdaptiveTemplatePixel, 12> adaptive_template_pixels; // "GBATX" / "GBATY" in spec.
     // FIXME: GBCOLS, GBCOMBOP, COLEXTFLAG
 };
@@ -952,7 +953,7 @@ static ErrorOr<void> decode_immediate_generic_region(JBIG2LoadingContext& contex
     data = data.slice(sizeof(flags));
 
     // 7.4.6.3 Generic region segment AT flags
-    Array<GenericRegionDecodingInputParameters::AdaptiveTemplatePixel, 12> adaptive_template_pixels {};
+    Array<AdaptiveTemplatePixel, 12> adaptive_template_pixels {};
     if (!uses_mmr) {
         dbgln_if(JBIG2_DEBUG, "Non-MMR generic region, GBTEMPLATE={} TPGDON={} EXTTEMPLATE={}", arithmetic_coding_template, typical_prediction_generic_decoding_on, uses_extended_reference_template);
 
