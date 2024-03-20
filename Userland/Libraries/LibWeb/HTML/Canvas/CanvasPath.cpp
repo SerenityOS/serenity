@@ -96,11 +96,16 @@ WebIDL::ExceptionOr<void> CanvasPath::arc(float x, float y, float radius, float 
     return ellipse(x, y, radius, radius, 0, start_angle, end_angle, counter_clockwise);
 }
 
+// https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-ellipse
 WebIDL::ExceptionOr<void> CanvasPath::ellipse(float x, float y, float radius_x, float radius_y, float rotation, float start_angle, float end_angle, bool counter_clockwise)
 {
+    // 1. If any of the arguments are infinite or NaN, then return.
+    if (!isfinite(x) || !isfinite(y) || !isfinite(radius_x) || !isfinite(radius_y) || !isfinite(rotation) || !isfinite(start_angle) || !isfinite(end_angle))
+        return {};
+
+    // 2. If either radiusX or radiusY are negative, then throw an "IndexSizeError" DOMException.
     if (radius_x < 0)
         return WebIDL::IndexSizeError::create(m_self->realm(), MUST(String::formatted("The major-axis radius provided ({}) is negative.", radius_x)));
-
     if (radius_y < 0)
         return WebIDL::IndexSizeError::create(m_self->realm(), MUST(String::formatted("The minor-axis radius provided ({}) is negative.", radius_y)));
 
@@ -154,7 +159,14 @@ WebIDL::ExceptionOr<void> CanvasPath::ellipse(float x, float y, float radius_x, 
     auto delta_theta = end_angle - start_angle;
 
     auto transform = active_transform();
-    m_path.move_to(transform.map(start_point));
+
+    // 3. If canvasPath's path has any subpaths, then add a straight line from the last point in the subpath to the start point of the arc.
+    if (!m_path.is_empty())
+        m_path.line_to(transform.map(start_point));
+    else
+        m_path.move_to(transform.map(start_point));
+
+    // 4. Add the start and end points of the arc to the subpath, and connect them with an arc.
     m_path.elliptical_arc_to(
         transform.map(Gfx::FloatPoint { end_point }),
         transform.map(Gfx::FloatSize { radius_x, radius_y }),
