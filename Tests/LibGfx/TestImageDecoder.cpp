@@ -343,7 +343,7 @@ TEST_CASE(test_jbig2_generic_region_arithmetic_code)
     auto plugin_decoder = TRY_OR_FAIL(Gfx::JBIG2ImageDecoderPlugin::create(file->bytes()));
 
     auto bmp_file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("bmp/bitmap.bmp"sv)));
-    auto bmp_plugin_decoder = TRY_OR_FAIL(Gfx::JBIG2ImageDecoderPlugin::create(file->bytes()));
+    auto bmp_plugin_decoder = TRY_OR_FAIL(Gfx::BMPImageDecoderPlugin::create(bmp_file->bytes()));
 
     auto frame = TRY_OR_FAIL(expect_single_frame_of_size(*plugin_decoder, { 399, 400 }));
     auto bmp_frame = TRY_OR_FAIL(expect_single_frame_of_size(*bmp_plugin_decoder, { 399, 400 }));
@@ -360,7 +360,7 @@ TEST_CASE(test_jbig2_generic_region_arithmetic_code_tpgdon)
     auto plugin_decoder = TRY_OR_FAIL(Gfx::JBIG2ImageDecoderPlugin::create(file->bytes()));
 
     auto bmp_file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("bmp/bitmap.bmp"sv)));
-    auto bmp_plugin_decoder = TRY_OR_FAIL(Gfx::JBIG2ImageDecoderPlugin::create(file->bytes()));
+    auto bmp_plugin_decoder = TRY_OR_FAIL(Gfx::BMPImageDecoderPlugin::create(bmp_file->bytes()));
 
     auto frame = TRY_OR_FAIL(expect_single_frame_of_size(*plugin_decoder, { 399, 400 }));
     auto bmp_frame = TRY_OR_FAIL(expect_single_frame_of_size(*bmp_plugin_decoder, { 399, 400 }));
