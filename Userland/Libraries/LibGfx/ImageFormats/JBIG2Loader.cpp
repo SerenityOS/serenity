@@ -440,11 +440,15 @@ enum class CombinationOperator {
     And = 1,
     Xor = 2,
     XNor = 3,
+    Replace = 4,
 };
 
 struct Page {
     IntSize size;
+
+    // This is never CombinationOperator::Replace for Pages.
     CombinationOperator default_combination_operator { CombinationOperator::Or };
+
     OwnPtr<BitBuffer> bits;
 };
 
@@ -656,15 +660,6 @@ struct [[gnu::packed]] RegionSegmentInformationField {
     BigEndian<u32> y_location;
     u8 flags;
 
-    // FIXME: Or have just ::CombinationOperator represent both page and segment operators?
-    enum class CombinationOperator {
-        Or = 0,
-        And = 1,
-        Xor = 2,
-        XNor = 3,
-        Replace = 4,
-    };
-
     CombinationOperator external_combination_operator() const
     {
         VERIFY((flags & 0x7) <= 4);
@@ -690,7 +685,7 @@ static ErrorOr<RegionSegmentInformationField> decode_region_segment_information_
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid region segment information field operator");
 
     // NOTE 3 – If the colour extension flag (COLEXTFLAG) is equal to 1, the external combination operator must be REPLACE.
-    if (result.is_color_bitmap() && result.external_combination_operator() != RegionSegmentInformationField::CombinationOperator::Replace)
+    if (result.is_color_bitmap() && result.external_combination_operator() != CombinationOperator::Replace)
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid colored region segment information field operator");
 
     return result;
@@ -996,9 +991,9 @@ static ErrorOr<void> decode_immediate_generic_region(JBIG2LoadingContext& contex
         || information_field.y_location + information_field.height > (u32)context.page.size.height()) {
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Region bounds outsize of page bounds");
     }
-    if (information_field.external_combination_operator() != RegionSegmentInformationField::CombinationOperator::Or
-        && information_field.external_combination_operator() != RegionSegmentInformationField::CombinationOperator::Xor
-        && information_field.external_combination_operator() != RegionSegmentInformationField::CombinationOperator::Replace)
+    if (information_field.external_combination_operator() != CombinationOperator::Or
+        && information_field.external_combination_operator() != CombinationOperator::Xor
+        && information_field.external_combination_operator() != CombinationOperator::Replace)
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot handle external combination operator other than OR, XOR, and REPLACE yet");
 
     for (size_t y = 0; y < information_field.height; ++y) {
