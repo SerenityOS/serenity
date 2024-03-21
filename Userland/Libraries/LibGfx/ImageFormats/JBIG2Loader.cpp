@@ -1092,9 +1092,6 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_refinement_region_decoding_proc
     }
     // GRTEMPLATE 1 never uses adaptive pixels.
 
-    if (inputs.gr_template == 1)
-        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode GRTEMPLATE 1 yet");
-
     // 6.3.5.3 Fixed templates and adaptive templates
     static constexpr auto get_pixel = [](BitBuffer const& buffer, int x, int y) -> bool {
         if (x < 0 || x >= (int)buffer.width() || y < 0 || y >= (int)buffer.height())
@@ -1103,7 +1100,7 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_refinement_region_decoding_proc
     };
 
     // Figure 12 – 13-pixel refinement template showing the AT pixels at their nominal locations
-    constexpr auto compute_context = [](BitBuffer const& reference, int reference_x, int reference_y, BitBuffer const& buffer, int x, int y) -> u16 {
+    constexpr auto compute_context_0 = [](BitBuffer const& reference, int reference_x, int reference_y, BitBuffer const& buffer, int x, int y) -> u16 {
         u16 result = 0;
 
         for (int dy = -1; dy <= 1; ++dy)
@@ -1116,6 +1113,27 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_refinement_region_decoding_proc
 
         return result;
     };
+
+    // Figure 13 – 10-pixel refinement template
+    constexpr auto compute_context_1 = [](BitBuffer const& reference, int reference_x, int reference_y, BitBuffer const& buffer, int x, int y) -> u16 {
+        u16 result = 0;
+
+        for (int dy = -1; dy <= 1; ++dy) {
+            for (int dx = -1; dx <= 1; ++dx) {
+                if ((dy == -1 && (dx == -1 || dx == 1)) || (dy == 1 && dx == -1))
+                    continue;
+                result = (result << 1) | (u16)get_pixel(reference, reference_x + dx, reference_y + dy);
+            }
+        }
+
+        for (int i = 0; i < 3; ++i)
+            result = (result << 1) | (u16)get_pixel(buffer, x - 1 + i, y - 1);
+        result = (result << 1) | (u16)get_pixel(buffer, x - 1, y);
+
+        return result;
+    };
+
+    auto compute_context = inputs.gr_template == 0 ? compute_context_0 : compute_context_1;
 
     // 6.3.5.6 Decoding the refinement bitmap
     auto result = TRY(BitBuffer::create(inputs.region_width, inputs.region_height));
@@ -1257,7 +1275,7 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
     JBIG2::ArithmeticIntegerDecoder has_refinement_image_decoder(decoder);
     Vector<JBIG2::ArithmeticDecoder::Context> refinement_contexts;
     if (inputs.uses_refinement_coding)
-        refinement_contexts.resize(1 << 13);
+        refinement_contexts.resize(1 << (inputs.refinement_template == 0 ? 13 : 10));
     OwnPtr<BitBuffer> refinement_result;
     auto read_bitmap = [&](u32 id) -> ErrorOr<BitBuffer const*> {
         if (id >= inputs.symbols.size())
@@ -1598,7 +1616,7 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
         refinement_inputs.is_typical_prediction_used = false;
         refinement_inputs.adaptive_template_pixels = inputs.refinement_adaptive_template_pixels;
         if (refinement_contexts.is_empty())
-            refinement_contexts.resize(1 << 13);
+            refinement_contexts.resize(1 << (inputs.refinement_template == 0 ? 13 : 10));
         return generic_refinement_region_decoding_procedure(refinement_inputs, decoder, refinement_contexts);
     };
 
