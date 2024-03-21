@@ -1485,6 +1485,25 @@ RefPtr<AST::Node> Parser::parse_string_inner(StringEndCondition condition)
 
                 break;
             }
+            case '0':
+            case 'o':
+            case 'c': {
+                auto read_anything = false;
+                u8 byte = 0;
+                auto start = m_offset;
+                while (!at_end() && is_ascii_octal_digit(peek())) {
+                    if (byte > 32)
+                        break;
+                    read_anything = true;
+                    byte *= 8;
+                    byte += consume() - '0';
+                }
+                if (read_anything)
+                    builder.append(byte);
+                else
+                    builder.append(m_input.substring_view(start, m_offset - start));
+                break;
+            }
             case 'a':
                 builder.append('\a');
                 break;
