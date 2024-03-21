@@ -623,6 +623,11 @@ void BlockFormattingContext::layout_block_level_box(Box const& box, BlockContain
 
     auto independent_formatting_context = create_independent_formatting_context_if_needed(m_state, box);
 
+    if (!independent_formatting_context && !is<BlockContainer>(box)) {
+        dbgln("FIXME: Block-level box is not BlockContainer but does not create formatting context: {}", box.debug_description());
+        return;
+    }
+
     m_margin_state.update_block_waiting_for_final_y_position();
     CSSPixels margin_top = m_margin_state.current_collapsed_margin();
 
