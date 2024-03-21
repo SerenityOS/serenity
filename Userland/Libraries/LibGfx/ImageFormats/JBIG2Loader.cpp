@@ -1481,9 +1481,6 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
     if (inputs.uses_huffman_encoding)
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode huffman symbol dictionaries yet");
 
-    if (inputs.uses_refinement_or_aggregate_coding)
-        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode SDREFAGG symbol dictionaries yet");
-
     auto decoder = TRY(JBIG2::ArithmeticDecoder::initialize(data));
     Vector<JBIG2::ArithmeticDecoder::Context> contexts;
     contexts.resize(1 << number_of_context_bits_for_template(inputs.symbol_template));
@@ -1511,25 +1508,103 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
     // 6.5.8 Symbol bitmap
     // "This field is only present if SDHUFF = 0 or SDREFAGG = 1. This field takes one of two forms; SDREFAGG
     //  determines which form is used."
-    // FIXME: Add support for SDEFRAG = 1.
+
+    // 6.5.8.2.1 Number of symbol instances in aggregation
+    // If SDHUFF is 1, decode a value using the Huffman table specified by SDHUFFAGGINST.
+    // If SDHUFF is 0, decode a value using the IAAI integer arithmetic decoding procedure (see Annex A).
+    // FIXME: Implement support for SDHUFF = 1.
+    Optional<JBIG2::ArithmeticIntegerDecoder> number_of_symbol_instances_decoder;
+    auto read_number_of_symbol_instances = [&]() -> i32 {
+        if (!number_of_symbol_instances_decoder.has_value())
+            number_of_symbol_instances_decoder = JBIG2::ArithmeticIntegerDecoder(decoder);
+        return number_of_symbol_instances_decoder->decode().value();
+    };
+
     // 6.5.8.1 Direct-coded symbol bitmap
-    // "If SDREFAGG is 0, then decode the symbol's bitmap using a generic region decoding procedure as described in 6.2.
-    //  Set the parameters to this decoding procedure as shown in Table 16."
-    auto read_bitmap = [&](u32 width, u32 height) {
-        GenericRegionDecodingInputParameters generic_inputs;
-        generic_inputs.is_modified_modified_read = false;
-        generic_inputs.region_width = width;
-        generic_inputs.region_height = height;
-        generic_inputs.gb_template = inputs.symbol_template;
-        for (int i = 0; i < 4; ++i)
-            generic_inputs.adaptive_template_pixels[i] = inputs.adaptive_template_pixels[i];
-        generic_inputs.arithmetic_decoder = &decoder;
-        return generic_region_decoding_procedure(generic_inputs, {}, contexts);
+    Optional<JBIG2::ArithmeticIntegerIDDecoder> id_decoder;
+    Optional<JBIG2::ArithmeticIntegerDecoder> refinement_x_offset_decoder;
+    Optional<JBIG2::ArithmeticIntegerDecoder> refinement_y_offset_decoder;
+
+    // FIXME: When we implement REFAGGNINST > 1 support, do these need to be shared with
+    // text_region_decoding_procedure() then?
+    Vector<JBIG2::ArithmeticDecoder::Context> refinement_contexts;
+
+    // This belongs in 6.5.5 1) below, but also needs to be captured by read_bitmap here.
+    Vector<NonnullRefPtr<Symbol>> new_symbols;
+
+    auto read_symbol_bitmap = [&](u32 width, u32 height) -> ErrorOr<NonnullOwnPtr<BitBuffer>> {
+        // "If SDREFAGG is 0, then decode the symbol's bitmap using a generic region decoding procedure as described in 6.2.
+        //  Set the parameters to this decoding procedure as shown in Table 16."
+        if (!inputs.uses_refinement_or_aggregate_coding) {
+            // Table 16 – Parameters used to decode a symbol's bitmap using generic bitmap decoding
+            GenericRegionDecodingInputParameters generic_inputs;
+            generic_inputs.is_modified_modified_read = false;
+            generic_inputs.region_width = width;
+            generic_inputs.region_height = height;
+            generic_inputs.gb_template = inputs.symbol_template;
+            generic_inputs.is_extended_reference_template_used = false; // Missing from spec in table 16.
+            for (int i = 0; i < 4; ++i)
+                generic_inputs.adaptive_template_pixels[i] = inputs.adaptive_template_pixels[i];
+            generic_inputs.arithmetic_decoder = &decoder;
+            return generic_region_decoding_procedure(generic_inputs, {}, contexts);
+        }
+
+        // 6.5.8.2 Refinement/aggregate-coded symbol bitmap
+        // "1) Decode the number of symbol instances contained in the aggregation, as specified in 6.5.8.2.1. Let REFAGGNINST be the value decoded."
+        auto number_of_symbol_instances = read_number_of_symbol_instances(); // "REFAGGNINST" in spec.
+        dbgln_if(JBIG2_DEBUG, "Number of symbol instances: {}", number_of_symbol_instances);
+
+        if (number_of_symbol_instances > 1) {
+            // "2) If REFAGGNINST is greater than one, then decode the bitmap itself using a text region decoding procedure
+            //     as described in 6.4. Set the parameters to this decoding procedure as shown in Table 17."
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode symbol bitmaps with more than one symbol instance yet");
+        }
+
+        // "3) If REFAGGNINST is equal to one, then decode the bitmap as described in 6.5.8.2.2."
+
+        // 6.5.8.2.3 Setting SBSYMCODES and SBSYMCODELEN
+        // FIXME: Implement support for SDHUFF = 1
+        u32 code_length = ceil(log2(inputs.input_symbols.size() + inputs.number_of_new_symbols));
+
+        // 6.5.8.2.2 Decoding a bitmap when REFAGGNINST = 1
+        // FIXME: This is missing some setps for the SDHUFF = 1 case.
+        if (number_of_symbol_instances != 1)
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Unexpected number of symbol instances");
+
+        if (!id_decoder.has_value())
+            id_decoder = JBIG2::ArithmeticIntegerIDDecoder(decoder, code_length);
+        u32 symbol_id = id_decoder->decode();
+
+        if (!refinement_x_offset_decoder.has_value())
+            refinement_x_offset_decoder = JBIG2::ArithmeticIntegerDecoder(decoder);
+        i32 refinement_x_offset = refinement_x_offset_decoder->decode().value();
+
+        if (!refinement_y_offset_decoder.has_value())
+            refinement_y_offset_decoder = JBIG2::ArithmeticIntegerDecoder(decoder);
+        i32 refinement_y_offset = refinement_y_offset_decoder->decode().value();
+
+        if (symbol_id >= inputs.input_symbols.size() && symbol_id - inputs.input_symbols.size() >= new_symbols.size())
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Refinement/aggregate symbol ID out of range");
+
+        auto IBO = (symbol_id < inputs.input_symbols.size()) ? inputs.input_symbols[symbol_id] : new_symbols[symbol_id - inputs.input_symbols.size()];
+        // Table 18 – Parameters used to decode a symbol's bitmap when REFAGGNINST = 1
+        GenericRefinementRegionDecodingInputParameters refinement_inputs;
+        refinement_inputs.region_width = width;
+        refinement_inputs.region_height = height;
+        refinement_inputs.gr_template = inputs.refinement_template;
+        refinement_inputs.reference_bitmap = &IBO->bitmap();
+        refinement_inputs.reference_x_offset = refinement_x_offset;
+        refinement_inputs.reference_y_offset = refinement_y_offset;
+        refinement_inputs.is_typical_prediction_used = false;
+        refinement_inputs.adaptive_template_pixels = inputs.refinement_adaptive_template_pixels;
+        if (refinement_contexts.is_empty())
+            refinement_contexts.resize(1 << 13);
+        return generic_refinement_region_decoding_procedure(refinement_inputs, decoder, refinement_contexts);
     };
 
     // 6.5.5 Decoding the symbol dictionary
     // "1) Create an array SDNEWSYMS of bitmaps, having SDNUMNEWSYMS entries."
-    Vector<NonnullRefPtr<Symbol>> new_symbols;
+    // Done above read_bitmap().
 
     // "2) If SDHUFF is 1 and SDREFAGG is 0, create an array SDNEWSYMWIDTHS of integers, having SDNUMNEWSYMS entries."
     // FIXME: Implement support for SDHUFF = 1.
@@ -1574,7 +1649,7 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
             //          SDNEWSYMS[NSYMSDECODED] = BS"
             // FIXME: Implement support for SDHUFF = 1.
             // FIXME: Doing this eagerly is pretty wasteful. Decode on demand instead?
-            auto bitmap = TRY(read_bitmap(symbol_width, height_class_height));
+            auto bitmap = TRY(read_symbol_bitmap(symbol_width, height_class_height));
             new_symbols.append(Symbol::create(move(bitmap)));
 
             // "iii) If SDHUFF is 1 and SDREFAGG is 0, then set:
