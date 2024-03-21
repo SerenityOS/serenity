@@ -992,9 +992,6 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
     if (inputs.uses_huffman_encoding)
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode huffman text regions yet");
 
-    if (inputs.uses_refinement_coding)
-        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode refined text regions yet");
-
     if (inputs.is_transposed)
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode transposed text regions yet");
 
@@ -1057,6 +1054,27 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
         }
         prev = prev - (1 << inputs.id_symbol_code_length);
         return prev;
+    };
+
+    // 6.4.11 Symbol instance bitmap
+    JBIG2::ArithmeticIntegerDecoder has_refinement_image_decoder(decoder);
+    auto read_bitmap = [&](u32 id) -> ErrorOr<BitBuffer const*> {
+        bool has_refinement_image = false; // "R_I" in spec.
+        if (inputs.uses_refinement_coding) {
+            // "• If SBHUFF is 1, then read one bit and set RI to the value of that bit.
+            //  • If SBHUFF is 0, then decode one bit using the IARI integer arithmetic decoding procedure and set RI to the value of that bit."
+            // FIXME: Implement support for SBHUFF = 1.
+            has_refinement_image = has_refinement_image_decoder.decode().value();
+        }
+
+        if (!has_refinement_image) {
+            if (id >= inputs.symbols.size())
+                return Error::from_string_literal("JBIG2ImageDecoderPlugin: Symbol ID out of range");
+            auto const& symbol = inputs.symbols[id]->bitmap();
+            return &symbol;
+        }
+
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode refined text regions yet");
     };
 
     // 6.4.5 Decoding the text region
@@ -1123,9 +1141,7 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
 
             //     "v) Determine the symbol instance's bitmap IBI as described in 6.4.11. The width and height of this
             //         bitmap shall be denoted as WI and HI respectively."
-            if (id >= inputs.symbols.size())
-                return Error::from_string_literal("JBIG2ImageDecoderPlugin: Symbol ID out of range");
-            auto const& symbol = inputs.symbols[id]->bitmap();
+            auto const& symbol = *TRY(read_bitmap(id));
 
             //     "vi) Update CURS as follows:
             //      • If TRANSPOSED is 0, and REFCORNER is TOPRIGHT or BOTTOMRIGHT, set:
