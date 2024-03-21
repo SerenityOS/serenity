@@ -1665,11 +1665,6 @@ static ErrorOr<void> decode_immediate_text_region(JBIG2LoadingContext& context, 
     return {};
 }
 
-static ErrorOr<void> decode_immediate_lossless_text_region(JBIG2LoadingContext&, SegmentData const&)
-{
-    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode immediate lossless text region yet");
-}
-
 static ErrorOr<void> decode_pattern_dictionary(JBIG2LoadingContext&, SegmentData const&)
 {
     return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode pattern dictionary yet");
@@ -1943,10 +1938,13 @@ static ErrorOr<void> decode_data(JBIG2LoadingContext& context)
             TRY(decode_intermediate_text_region(context, segment));
             break;
         case SegmentType::ImmediateTextRegion:
-            TRY(decode_immediate_text_region(context, segment));
-            break;
         case SegmentType::ImmediateLosslessTextRegion:
-            TRY(decode_immediate_lossless_text_region(context, segment));
+            // 7.4.3 Text region segment syntax
+            // "The data parts of all three of the text region segment types ("intermediate text region", "immediate text region" and
+            //  "immediate lossless text region") are coded identically, but are acted upon differently, see 8.2."
+            // But 8.2 only describes a difference between intermediate and immediate regions as far as I can tell,
+            // and calling the immediate text region handler for immediate lossless text regions seems to do the right thing (?).
+            TRY(decode_immediate_text_region(context, segment));
             break;
         case SegmentType::PatternDictionary:
             TRY(decode_pattern_dictionary(context, segment));
