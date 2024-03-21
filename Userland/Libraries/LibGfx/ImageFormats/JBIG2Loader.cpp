@@ -950,6 +950,25 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(Gener
     return result;
 }
 
+// 6.3.2 Input parameters
+// Table 6 – Parameters for the generic refinement region decoding procedure
+struct GenericRefinementRegionDecodingInputParameters {
+    u32 region_width;                                         // "GRW" in spec.
+    u32 region_height;                                        // "GRH" in spec.
+    u8 gr_template;                                           // "GRTEMPLATE" in spec.
+    BitBuffer const* reference_bitmap;                        // "GRREFERENCE" in spec.
+    i32 reference_x_offset;                                   // "GRREFERENCEDX" in spec.
+    i32 reference_y_offset;                                   // "GRREFERENCEDY" in spec.
+    bool is_typical_prediction_used;                          // "TPGDON" in spec.
+    Array<AdaptiveTemplatePixel, 2> adaptive_template_pixels; // "GRATX" / "GRATY" in spec.
+};
+
+// 6.3 Generic Refinement Region Decoding Procedure
+static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_refinement_region_decoding_procedure(GenericRefinementRegionDecodingInputParameters&)
+{
+    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode generic refinement regions yet");
+}
+
 // 6.4.2 Input parameters
 // Table 9 – Parameters for the text region decoding procedure
 struct TextRegionDecodingInputParameters {
@@ -1056,9 +1075,42 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
         return prev;
     };
 
+    // 6.4.11.1 Symbol instance refinement delta width
+    // FIXME: Implement support for SBHUFF = 1.
+    JBIG2::ArithmeticIntegerDecoder refinement_delta_width_decoder(decoder);
+    auto read_refinement_delta_width = [&]() -> i32 {
+        return refinement_delta_width_decoder.decode().value();
+    };
+
+    // 6.4.11.2 Symbol instance refinement delta width
+    // FIXME: Implement support for SBHUFF = 1.
+    JBIG2::ArithmeticIntegerDecoder refinement_delta_height_decoder(decoder);
+    auto read_refinement_delta_height = [&]() -> i32 {
+        return refinement_delta_height_decoder.decode().value();
+    };
+
+    // 6.4.11.3 Symbol instance refinement X offset
+    // FIXME: Implement support for SBHUFF = 1.
+    JBIG2::ArithmeticIntegerDecoder refinement_x_offset_decoder(decoder);
+    auto read_refinement_x_offset = [&]() -> i32 {
+        return refinement_x_offset_decoder.decode().value();
+    };
+
+    // 6.4.11.4 Symbol instance refinement Y offset
+    // FIXME: Implement support for SBHUFF = 1.
+    JBIG2::ArithmeticIntegerDecoder refinement_y_offset_decoder(decoder);
+    auto read_refinement_y_offset = [&]() -> i32 {
+        return refinement_y_offset_decoder.decode().value();
+    };
+
     // 6.4.11 Symbol instance bitmap
     JBIG2::ArithmeticIntegerDecoder has_refinement_image_decoder(decoder);
+    OwnPtr<BitBuffer> refinement_result;
     auto read_bitmap = [&](u32 id) -> ErrorOr<BitBuffer const*> {
+        if (id >= inputs.symbols.size())
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Symbol ID out of range");
+        auto const& symbol = inputs.symbols[id]->bitmap();
+
         bool has_refinement_image = false; // "R_I" in spec.
         if (inputs.uses_refinement_coding) {
             // "• If SBHUFF is 1, then read one bit and set RI to the value of that bit.
@@ -1067,14 +1119,29 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
             has_refinement_image = has_refinement_image_decoder.decode().value();
         }
 
-        if (!has_refinement_image) {
-            if (id >= inputs.symbols.size())
-                return Error::from_string_literal("JBIG2ImageDecoderPlugin: Symbol ID out of range");
-            auto const& symbol = inputs.symbols[id]->bitmap();
+        if (!has_refinement_image)
             return &symbol;
-        }
 
-        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode refined text regions yet");
+        auto refinement_delta_width = read_refinement_delta_width();
+        auto refinement_delta_height = read_refinement_delta_height();
+        auto refinement_x_offset = read_refinement_x_offset();
+        auto refinement_y_offset = read_refinement_y_offset();
+        // FIXME: This is missing some steps needed for the SBHUFF = 1 case.
+
+        dbgln_if(JBIG2_DEBUG, "refinement delta width: {}, refinement delta height: {}, refinement x offset: {}, refinement y offset: {}", refinement_delta_width, refinement_delta_height, refinement_x_offset, refinement_y_offset);
+
+        // Table 12 – Parameters used to decode a symbol instance's bitmap using refinement
+        GenericRefinementRegionDecodingInputParameters refinement_inputs;
+        refinement_inputs.region_width = symbol.width() + refinement_delta_width;
+        refinement_inputs.region_height = symbol.height() + refinement_delta_height;
+        refinement_inputs.gr_template = inputs.refinement_template;
+        refinement_inputs.reference_bitmap = &symbol;
+        refinement_inputs.reference_x_offset = refinement_delta_width / 2 + refinement_x_offset;
+        refinement_inputs.reference_y_offset = refinement_delta_height / 2 + refinement_y_offset;
+        refinement_inputs.is_typical_prediction_used = false;
+        refinement_inputs.adaptive_template_pixels = inputs.refinement_adaptive_template_pixels;
+        refinement_result = TRY(generic_refinement_region_decoding_procedure(refinement_inputs));
+        return refinement_result.ptr();
     };
 
     // 6.4.5 Decoding the text region
