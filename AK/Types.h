@@ -171,7 +171,7 @@ static constexpr FlatPtr explode_byte(u8 b)
     FlatPtr value = b;
     if constexpr (sizeof(FlatPtr) == 4)
         return value << 24 | value << 16 | value << 8 | value;
-    else if (sizeof(FlatPtr) == 8)
+    else if constexpr (sizeof(FlatPtr) == 8)
         return value << 56 | value << 48 | value << 40 | value << 32 | value << 24 | value << 16 | value << 8 | value;
 }
 
