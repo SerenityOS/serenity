@@ -1636,7 +1636,7 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
     return exported_symbols;
 }
 
-static ErrorOr<void> decode_symbol_dictionary(JBIG2LoadingContext&, SegmentData& segment)
+static ErrorOr<void> decode_symbol_dictionary(JBIG2LoadingContext& context, SegmentData& segment)
 {
     // 7.4.2 Symbol dictionary segment syntax
 
@@ -1733,8 +1733,17 @@ static ErrorOr<void> decode_symbol_dictionary(JBIG2LoadingContext&, SegmentData&
     // Done!
 
     // "2) Decode (or retrieve the results of decoding) any referred-to symbol dictionary and tables segments."
-    if (segment.header.referred_to_segment_numbers.size() != 0)
-        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode referred-to symbol dictionary segments yet");
+    Vector<NonnullRefPtr<Symbol>> symbols;
+    for (auto referred_to_segment_number : segment.header.referred_to_segment_numbers) {
+        auto opt_referred_to_segment = context.segments_by_number.get(referred_to_segment_number);
+        if (!opt_referred_to_segment.has_value())
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Symbol segment refers to non-existent segment");
+        dbgln_if(JBIG2_DEBUG, "Symbol segment refers to segment id {} index {}", referred_to_segment_number, opt_referred_to_segment.value());
+        auto const& referred_to_segment = context.segments[opt_referred_to_segment.value()];
+        if (!referred_to_segment.symbols.has_value())
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Symbol segment referred-to segment without symbols");
+        symbols.extend(referred_to_segment.symbols.value());
+    }
 
     // "3) If the "bitmap coding context used" bit in the header was 1, ..."
     if (bitmap_coding_context_used)
@@ -1751,7 +1760,7 @@ static ErrorOr<void> decode_symbol_dictionary(JBIG2LoadingContext&, SegmentData&
     SymbolDictionaryDecodingInputParameters inputs;
     inputs.uses_huffman_encoding = uses_huffman_encoding;
     inputs.uses_refinement_or_aggregate_coding = uses_refinement_or_aggregate_coding;
-    inputs.input_symbols = {};
+    inputs.input_symbols = move(symbols);
     inputs.number_of_new_symbols = number_of_new_symbols;
     inputs.number_of_exported_symbols = number_of_exported_symbols;
     // FIXME: SDHUFFDH, SDHUFFDW, SDHUFFBMSIZE, SDHUFFAGGINST
