@@ -1,7 +1,6 @@
 // https://html.spec.whatwg.org/multipage/urls-and-fetching.html#cors-settings-attribute
-[MissingValueDefault=, InvalidValueDefault=anonymous]
+[InvalidValueDefault=anonymous]
 enum CORSSettingsAttribute {
     "anonymous",
-    "",
     "use-credentials"
 };
