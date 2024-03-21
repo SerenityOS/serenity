@@ -15,9 +15,6 @@ CORSSettingAttribute cors_setting_attribute_from_keyword(Optional<String> const&
         // its missing value default is the No CORS state
         return CORSSettingAttribute::NoCORS;
     }
-    if (keyword->is_empty() || keyword->bytes_as_string_view().equals_ignoring_ascii_case("anonymous"sv)) {
-        return CORSSettingAttribute::Anonymous;
-    }
     if (keyword->bytes_as_string_view().equals_ignoring_ascii_case("use-credentials"sv)) {
         return CORSSettingAttribute::UseCredentials;
     }
