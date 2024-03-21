@@ -2962,6 +2962,7 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.getter_callback@)
 )~~~");
         }
 
+        // https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#reflecting-content-attributes-in-idl-attributes
         if (attribute.extended_attributes.contains("Reflect")) {
             if (attribute.type->name() == "DOMString") {
                 if (!attribute.type->is_nullable()) {
@@ -2993,26 +2994,32 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.getter_callback@)
                         auto valid_enumerations = interface.enumerations.get(valid_enumerations_type).value();
 
                         auto missing_value_default = valid_enumerations.extended_attributes.get("MissingValueDefault");
+                        auto invalid_value_default = valid_enumerations.extended_attributes.get("InvalidValueDefault");
 
-                        attribute_generator.set("has_missing_enum_default", missing_value_default.has_value() ? "true"sv : "false"sv);
                         attribute_generator.set("missing_enum_default_value", missing_value_default.has_value() ? missing_value_default.value().view() : ""sv);
-                        attribute_generator.set("valid_enum_values", MUST(String::join(", "sv, valid_enumerations.values.values(), "\"{}\"sv"sv)));
-                        attribute_generator.append(R"~~~(
-    auto valid_values = Vector { @valid_enum_values@ };
-)~~~");
+                        attribute_generator.set("invalid_enum_default_value", invalid_value_default.has_value() ? invalid_value_default.value().view() : ""sv);
+                        attribute_generator.set("valid_enum_values", MUST(String::join(", "sv, valid_enumerations.values.values(), "\"{}\"_string"sv)));
 
                         // 1. If contentAttributeValue does not correspond to any state of attributeDefinition (e.g., it is null and there is no missing value default),
                         //    or that it is in a state of attributeDefinition with no associated keyword value, then return the empty string.
+                        //    NOTE: @invalid_enum_default_value@ is set to the empty string if it isn't present.
                         attribute_generator.append(R"~~~(
-    if (!valid_values.contains_slow(retval)) {
-        retval = {};
-    }
-    )~~~");
-                        attribute_generator.append(R"~~~(
-    auto has_default_value = @has_missing_enum_default@;
-    if (!contentAttributeValue.has_value() && has_default_value) {
+    if (!contentAttributeValue.has_value())
         retval = "@missing_enum_default_value@"_string;
+
+    Array valid_values { @valid_enum_values@ };
+    
+    auto found = false;
+    for (auto const& value : valid_values) {
+        if (value.equals_ignoring_ascii_case(retval)) {
+            found = true;
+            retval = value;
+            break;
+        }
     }
+
+    if (!found)
+        retval = "@invalid_enum_default_value@"_string;
     )~~~");
 
                         // 2. Return the canonical keyword for the state of attributeDefinition that contentAttributeValue corresponds to.
@@ -3029,8 +3036,7 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.getter_callback@)
                     // 8. Return the canonical keyword for the state of attributeDefinition that contentAttributeValue corresponds to.
                     // NOTE: We run step 8 here to have a field to assign to
                     attribute_generator.append(R"~~~(
-    auto retval = impl->attribute(HTML::AttributeNames::@attribute.reflect_name@);
-    auto contentAttributeValue = retval.value_or(String {});
+    auto retval = impl->attribute(HTML::AttributeNames::@attribute.reflect_name@);    
 )~~~");
 
                     // 3. Let attributeDefinition be the attribute definition of element's content attribute whose namespace is null
@@ -3047,14 +3053,45 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.getter_callback@)
                     auto valid_enumerations_type = attribute.extended_attributes.get("Enumerated").value();
                     auto valid_enumerations = interface.enumerations.get(valid_enumerations_type).value();
 
-                    attribute_generator.set("valid_enum_values", MUST(String::join(", "sv, valid_enumerations.values.values(), "\"{}\"sv"sv)));
-                    attribute_generator.append(R"~~~(
-    auto valid_values = Vector { @valid_enum_values@ };
-)~~~");
-                    attribute_generator.append(R"~~~(
-    VERIFY(valid_values.contains_slow(contentAttributeValue));
-)~~~");
+                    auto missing_value_default = valid_enumerations.extended_attributes.get("MissingValueDefault");
+                    auto invalid_value_default = valid_enumerations.extended_attributes.get("InvalidValueDefault");
 
+                    attribute_generator.set("missing_enum_default_value", missing_value_default.has_value() ? missing_value_default.value().view() : ""sv);
+                    attribute_generator.set("invalid_enum_default_value", invalid_value_default.has_value() ? invalid_value_default.value().view() : ""sv);
+                    attribute_generator.set("valid_enum_values", MUST(String::join(", "sv, valid_enumerations.values.values(), "\"{}\"_string"sv)));
+
+                    attribute_generator.append(R"~~~(
+    Array valid_values { @valid_enum_values@ };
+    )~~~");
+                    if (invalid_value_default.has_value()) {
+                        attribute_generator.append(R"~~~(
+    
+    if (retval.has_value()) {
+        auto found = false;
+        for (auto const& value : valid_values) {
+            if (value.equals_ignoring_ascii_case(retval.value())) {
+                found = true;
+                retval = value;
+                break;
+            }
+        }
+
+        if (!found)
+            retval = "@invalid_enum_default_value@"_string;
+    }
+    )~~~");
+                    }
+
+                    if (missing_value_default.has_value()) {
+                        attribute_generator.append(R"~~~(
+    if (!retval.has_value())
+        retval = "@missing_enum_default_value@"_string;
+    )~~~");
+                    }
+
+                    attribute_generator.append(R"~~~(
+    VERIFY(!retval.has_value() || valid_values.contains_slow(retval.value()));
+)~~~");
                     // FIXME: 7. If contentAttributeValue corresponds to a state of attributeDefinition with no associated keyword value, then return null.
                 }
             } else if (attribute.type->name() != "boolean") {
