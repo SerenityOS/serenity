@@ -2049,9 +2049,18 @@ static ErrorOr<void> decode_end_of_page(JBIG2LoadingContext&, SegmentData const&
     return {};
 }
 
-static ErrorOr<void> decode_end_of_stripe(JBIG2LoadingContext&, SegmentData const&)
+static ErrorOr<void> decode_end_of_stripe(JBIG2LoadingContext&, SegmentData const& segment)
 {
-    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode end of stripe yet");
+    // 7.4.10 End of stripe segment syntax
+    // "The segment data of an end of stripe segment consists of one four-byte value, specifying the Y coordinate of the end row."
+    if (segment.data.size() != 4)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: End of strip segment has wrong size");
+
+    // FIXME: Once we implement support for images with initially indeterminate height, we need these values to determine the height at the end.
+    u32 y_coordinate = *reinterpret_cast<BigEndian<u32> const*>(segment.data.data());
+    dbgln_if(JBIG2_DEBUG, "End of stripe: y={}", y_coordinate);
+
+    return {};
 }
 
 static ErrorOr<void> decode_end_of_file(JBIG2LoadingContext&, SegmentData const& segment)
