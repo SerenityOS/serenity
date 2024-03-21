@@ -345,11 +345,6 @@ struct SegmentHeader {
     Optional<u32> data_length;
 };
 
-struct SegmentData {
-    SegmentHeader header;
-    ReadonlyBytes data;
-};
-
 class BitBuffer {
 public:
     static ErrorOr<NonnullOwnPtr<BitBuffer>> create(size_t width, size_t height);
@@ -433,6 +428,11 @@ BitBuffer::BitBuffer(ByteBuffer bits, size_t width, size_t height, size_t pitch)
     , m_pitch(pitch)
 {
 }
+
+struct SegmentData {
+    SegmentHeader header;
+    ReadonlyBytes data;
+};
 
 // 7.4.8.5 Page segment flags
 enum class CombinationOperator {
