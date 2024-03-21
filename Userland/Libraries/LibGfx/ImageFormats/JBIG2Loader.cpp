@@ -292,6 +292,16 @@ Optional<int> ArithmeticIntegerDecoder::decode()
 
 }
 
+static u8 number_of_context_bits_for_template(u8 template_)
+{
+    if (template_ == 0)
+        return 16;
+    if (template_ == 1)
+        return 13;
+    VERIFY(template_ == 2 || template_ == 3);
+    return 10;
+}
+
 // JBIG2 spec, Annex D, D.4.1 ID string
 static constexpr u8 id_string[] = { 0x97, 0x4A, 0x42, 0x32, 0x0D, 0x0A, 0x1A, 0x0A };
 
@@ -879,17 +889,23 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(Gener
     }
 
     // 6.2.5 Decoding using a template and arithmetic coding
-    if (inputs.gb_template != 0)
-        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode GBTEMPLATE != 0 yet");
-
-    if (inputs.adaptive_template_pixels[0].x != 3 || inputs.adaptive_template_pixels[0].y != -1
-        || inputs.adaptive_template_pixels[1].x != -3 || inputs.adaptive_template_pixels[1].y != -1
-        || inputs.adaptive_template_pixels[2].x != 2 || inputs.adaptive_template_pixels[2].y != -2
-        || inputs.adaptive_template_pixels[3].x != -2 || inputs.adaptive_template_pixels[3].y != -2)
-        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot handle custom adaptive pixels yet");
-
     if (inputs.is_extended_reference_template_used)
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode EXTTEMPLATE yet");
+
+    if (inputs.gb_template == 0) {
+        if (inputs.adaptive_template_pixels[0].x != 3 || inputs.adaptive_template_pixels[0].y != -1
+            || inputs.adaptive_template_pixels[1].x != -3 || inputs.adaptive_template_pixels[1].y != -1
+            || inputs.adaptive_template_pixels[2].x != 2 || inputs.adaptive_template_pixels[2].y != -2
+            || inputs.adaptive_template_pixels[3].x != -2 || inputs.adaptive_template_pixels[3].y != -2)
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot handle custom adaptive pixels yet");
+    } else if (inputs.gb_template == 1) {
+        if (inputs.adaptive_template_pixels[0].x != 3 || inputs.adaptive_template_pixels[0].y != -1)
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot handle custom adaptive pixels yet");
+    } else {
+        VERIFY(inputs.gb_template == 2 || inputs.gb_template == 3);
+        if (inputs.adaptive_template_pixels[0].x != 2 || inputs.adaptive_template_pixels[0].y != -1)
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot handle custom adaptive pixels yet");
+    }
 
     if (inputs.skip_pattern.has_value())
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode USESKIP yet");
@@ -903,7 +919,7 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(Gener
     };
 
     // Figure 3(a) – Template when GBTEMPLATE = 0 and EXTTEMPLATE = 0,
-    auto compute_context = [&get_pixel](NonnullOwnPtr<BitBuffer> const& buffer, int x, int y) -> u16 {
+    auto compute_context_0 = [&get_pixel](NonnullOwnPtr<BitBuffer> const& buffer, int x, int y) -> u16 {
         u16 result = 0;
         for (int i = 0; i < 5; ++i)
             result = (result << 1) | (u16)get_pixel(buffer, x - 2 + i, y - 2);
@@ -912,6 +928,51 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(Gener
         for (int i = 0; i < 4; ++i)
             result = (result << 1) | (u16)get_pixel(buffer, x - 4 + i, y);
         return result;
+    };
+
+    // Figure 4 – Template when GBTEMPLATE = 1
+    auto compute_context_1 = [&get_pixel](NonnullOwnPtr<BitBuffer> const& buffer, int x, int y) -> u16 {
+        u16 result = 0;
+        for (int i = 0; i < 4; ++i)
+            result = (result << 1) | (u16)get_pixel(buffer, x - 1 + i, y - 2);
+        for (int i = 0; i < 6; ++i)
+            result = (result << 1) | (u16)get_pixel(buffer, x - 2 + i, y - 1);
+        for (int i = 0; i < 3; ++i)
+            result = (result << 1) | (u16)get_pixel(buffer, x - 3 + i, y);
+        return result;
+    };
+
+    // Figure 5 – Template when GBTEMPLATE = 2
+    auto compute_context_2 = [&get_pixel](NonnullOwnPtr<BitBuffer> const& buffer, int x, int y) -> u16 {
+        u16 result = 0;
+        for (int i = 0; i < 3; ++i)
+            result = (result << 1) | (u16)get_pixel(buffer, x - 1 + i, y - 2);
+        for (int i = 0; i < 5; ++i)
+            result = (result << 1) | (u16)get_pixel(buffer, x - 2 + i, y - 1);
+        for (int i = 0; i < 2; ++i)
+            result = (result << 1) | (u16)get_pixel(buffer, x - 2 + i, y);
+        return result;
+    };
+
+    // Figure 6 – Template when GBTEMPLATE = 3
+    auto compute_context_3 = [&get_pixel](NonnullOwnPtr<BitBuffer> const& buffer, int x, int y) -> u16 {
+        u16 result = 0;
+        for (int i = 0; i < 6; ++i)
+            result = (result << 1) | (u16)get_pixel(buffer, x - 3 + i, y - 1);
+        for (int i = 0; i < 4; ++i)
+            result = (result << 1) | (u16)get_pixel(buffer, x - 4 + i, y);
+        return result;
+    };
+
+    auto compute_context = [&inputs, &compute_context_0, &compute_context_1, &compute_context_2, &compute_context_3](NonnullOwnPtr<BitBuffer> const& buffer, int x, int y) -> u16 {
+        if (inputs.gb_template == 0)
+            return compute_context_0(buffer, x, y);
+        if (inputs.gb_template == 1)
+            return compute_context_1(buffer, x, y);
+        if (inputs.gb_template == 2)
+            return compute_context_2(buffer, x, y);
+        VERIFY(inputs.gb_template == 3);
+        return compute_context_3(buffer, x, y);
     };
 
     // "The values of the pixels in this neighbourhood define a context. Each context has its own adaptive probability estimate
@@ -925,13 +986,33 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(Gener
     // Figure 8 – Reused context for coding the SLTP value when GBTEMPLATE is 0
     constexpr u16 sltp_context_for_template_0 = 0b10011'0110010'0101;
 
+    // Figure 9 – Reused context for coding the SLTP value when GBTEMPLATE is 1
+    constexpr u16 sltp_context_for_template_1 = 0b0011'110010'101;
+
+    // Figure 10 – Reused context for coding the SLTP value when GBTEMPLATE is 2
+    constexpr u16 sltp_context_for_template_2 = 0b001'11001'01;
+
+    // Figure 11 – Reused context for coding the SLTP value when GBTEMPLATE is 3
+    constexpr u16 sltp_context_for_template_3 = 0b011001'0101;
+
+    u16 sltp_context = [](u8 gb_template) {
+        if (gb_template == 0)
+            return sltp_context_for_template_0;
+        if (gb_template == 1)
+            return sltp_context_for_template_1;
+        if (gb_template == 2)
+            return sltp_context_for_template_2;
+        VERIFY(gb_template == 3);
+        return sltp_context_for_template_3;
+    }(inputs.gb_template);
+
     // 6.2.5.7 Decoding the bitmap
     JBIG2::ArithmeticDecoder& decoder = *inputs.arithmetic_decoder;
     bool ltp = false; // "LTP" in spec. "Line (uses) Typical Prediction" maybe?
     for (size_t y = 0; y < inputs.region_height; ++y) {
         if (inputs.is_typical_prediction_used) {
             // "SLTP" in spec. "Swap LTP" or "Switch LTP" maybe?
-            bool sltp = decoder.get_next_bit(contexts[sltp_context_for_template_0]);
+            bool sltp = decoder.get_next_bit(contexts[sltp_context]);
             ltp = ltp ^ sltp;
             if (ltp) {
                 for (size_t x = 0; x < inputs.region_width; ++x)
@@ -1383,8 +1464,7 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
 
     auto decoder = TRY(JBIG2::ArithmeticDecoder::initialize(data));
     Vector<JBIG2::ArithmeticDecoder::Context> contexts;
-    u8 template_size = inputs.symbol_template == 0 ? 16 : (inputs.symbol_template == 1 ? 13 : 10);
-    contexts.resize(1 << template_size);
+    contexts.resize(1 << number_of_context_bits_for_template(inputs.symbol_template));
 
     // 6.5.6 Height class delta height
     // "If SDHUFF is 1, decode a value using the Huffman table specified by SDHUFFDH.
@@ -1875,7 +1955,7 @@ static ErrorOr<void> decode_immediate_generic_region(JBIG2LoadingContext& contex
     // Done above.
     // "2) As described in E.3.7, reset all the arithmetic coding statistics to zero."
     Vector<JBIG2::ArithmeticDecoder::Context> contexts;
-    contexts.resize(1 << 16);
+    contexts.resize(1 << number_of_context_bits_for_template(arithmetic_coding_template));
 
     // "3) Invoke the generic region decoding procedure described in 6.2, with the parameters to the generic region decoding procedure set as shown in Table 37."
     GenericRegionDecodingInputParameters inputs;
