@@ -964,8 +964,23 @@ struct GenericRefinementRegionDecodingInputParameters {
 };
 
 // 6.3 Generic Refinement Region Decoding Procedure
-static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_refinement_region_decoding_procedure(GenericRefinementRegionDecodingInputParameters&)
+static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_refinement_region_decoding_procedure(GenericRefinementRegionDecodingInputParameters& inputs)
 {
+    VERIFY(inputs.gr_template == 0 || inputs.gr_template == 1);
+
+    if (inputs.is_typical_prediction_used)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode typical prediction in generic refinement regions yet");
+
+    if (inputs.gr_template == 0) {
+        if (inputs.adaptive_template_pixels[0].x != -1 || inputs.adaptive_template_pixels[0].y != -1
+            || inputs.adaptive_template_pixels[1].x != -1 || inputs.adaptive_template_pixels[1].y != -1)
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot handle custom adaptive pixels in refinement regions yet");
+    }
+    // GRTEMPLATE 1 never uses adaptive pixels.
+
+    if (inputs.gr_template == 1)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode GRTEMPLATE 1 yet");
+
     return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode generic refinement regions yet");
 }
 
