@@ -429,9 +429,30 @@ BitBuffer::BitBuffer(ByteBuffer bits, size_t width, size_t height, size_t pitch)
 {
 }
 
+class Symbol : public RefCounted<Symbol> {
+public:
+    static NonnullRefPtr<Symbol> create(NonnullOwnPtr<BitBuffer> bitmap)
+    {
+        return adopt_ref(*new Symbol(move(bitmap)));
+    }
+
+    BitBuffer const& bitmap() const { return *m_bitmap; }
+
+private:
+    Symbol(NonnullOwnPtr<BitBuffer> bitmap)
+        : m_bitmap(move(bitmap))
+    {
+    }
+
+    NonnullOwnPtr<BitBuffer> m_bitmap;
+};
+
 struct SegmentData {
     SegmentHeader header;
     ReadonlyBytes data;
+
+    // Set on dictionary segments after they've been decoded.
+    Optional<Vector<NonnullRefPtr<Symbol>>> symbols;
 };
 
 // 7.4.8.5 Page segment flags
@@ -647,7 +668,7 @@ static ErrorOr<void> decode_segment_headers(JBIG2LoadingContext& context, Readon
     if (segment_headers.size() != segment_datas.size())
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Segment headers and segment datas have different sizes");
     for (size_t i = 0; i < segment_headers.size(); ++i)
-        context.segments.append({ segment_headers[i], segment_datas[i] });
+        context.segments.append({ segment_headers[i], segment_datas[i], {} });
 
     return {};
 }
@@ -881,9 +902,343 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(Gener
     return result;
 }
 
-static ErrorOr<void> decode_symbol_dictionary(JBIG2LoadingContext&, SegmentData const&)
+// 6.5.2 Input parameters
+// Table 13 – Parameters for the symbol dictionary decoding procedure
+struct SymbolDictionaryDecodingInputParameters {
+
+    bool uses_huffman_encoding { false };               // "SDHUFF" in spec.
+    bool uses_refinement_or_aggregate_coding { false }; // "SDREFAGG" in spec.
+
+    Vector<NonnullRefPtr<Symbol>> input_symbols; // "SDNUMINSYMS", "SDINSYMS" in spec.
+
+    u32 number_of_new_symbols { 0 };      // "SDNUMNEWSYMS" in spec.
+    u32 number_of_exported_symbols { 0 }; // "SDNUMEXSYMS" in spec.
+
+    // FIXME: SDHUFFDH, SDHUFFDW, SDHUFFBMSIZE, SDHUFFAGGINST
+
+    u8 symbol_template { 0 };                                 // "SDTEMPLATE" in spec.
+    Array<AdaptiveTemplatePixel, 4> adaptive_template_pixels; // "SDATX" / "SDATY" in spec.
+
+    u8 refinement_template { 0 };                                        // "SDRTEMPLATE" in spec;
+    Array<AdaptiveTemplatePixel, 2> refinement_adaptive_template_pixels; // "SDRATX" / "SDRATY" in spec.
+};
+
+// 6.5 Symbol Dictionary Decoding Procedure
+static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedure(SymbolDictionaryDecodingInputParameters const& inputs, ReadonlyBytes data)
 {
-    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode symbol dictionary yet");
+    if (inputs.uses_huffman_encoding)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode huffman symbol dictionaries yet");
+
+    if (inputs.uses_refinement_or_aggregate_coding)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode SDREFAGG symbol dictionaries yet");
+
+    auto decoder = TRY(JBIG2::ArithmeticDecoder::initialize(data));
+    Vector<JBIG2::ArithmeticDecoder::Context> contexts;
+    u8 template_size = inputs.symbol_template == 0 ? 16 : (inputs.symbol_template == 1 ? 13 : 10);
+    contexts.resize(1 << template_size);
+
+    // 6.5.6 Height class delta height
+    // "If SDHUFF is 1, decode a value using the Huffman table specified by SDHUFFDH.
+    //  If SDHUFF is 0, decode a value using the IADH integer arithmetic decoding procedure (see Annex A)."
+    // FIXME: Implement support for SDHUFF = 1.
+    JBIG2::ArithmeticIntegerDecoder delta_height_integer_decoder(decoder);
+    auto read_delta_height = [&]() -> i32 {
+        // No OOB values for delta height.
+        return delta_height_integer_decoder.decode().value();
+    };
+
+    // 6.5.7 Delta width
+    // "If SDHUFF is 1, decode a value using the Huffman table specified by SDHUFFDW.
+    //  If SDHUFF is 0, decode a value using the IADW integer arithmetic decoding procedure (see Annex A).
+    //  In either case it is possible that the result of this decoding is the out-of-band value OOB."
+    // FIXME: Implement support for SDHUFF = 1.
+    JBIG2::ArithmeticIntegerDecoder delta_width_integer_decoder(decoder);
+    auto read_delta_width = [&]() -> Optional<i32> {
+        return delta_width_integer_decoder.decode();
+    };
+
+    // 6.5.8 Symbol bitmap
+    // "This field is only present if SDHUFF = 0 or SDREFAGG = 1. This field takes one of two forms; SDREFAGG
+    //  determines which form is used."
+    // FIXME: Add support for SDEFRAG = 1.
+    // 6.5.8.1 Direct-coded symbol bitmap
+    // "If SDREFAGG is 0, then decode the symbol's bitmap using a generic region decoding procedure as described in 6.2.
+    //  Set the parameters to this decoding procedure as shown in Table 16."
+    auto read_bitmap = [&](u32 width, u32 height) {
+        GenericRegionDecodingInputParameters generic_inputs;
+        generic_inputs.is_modified_modified_read = false;
+        generic_inputs.region_width = width;
+        generic_inputs.region_height = height;
+        generic_inputs.gb_template = inputs.symbol_template;
+        for (int i = 0; i < 4; ++i)
+            generic_inputs.adaptive_template_pixels[i] = inputs.adaptive_template_pixels[i];
+        generic_inputs.arithmetic_decoder = &decoder;
+        return generic_region_decoding_procedure(generic_inputs, {}, contexts);
+    };
+
+    // 6.5.5 Decoding the symbol dictionary
+    // "1) Create an array SDNEWSYMS of bitmaps, having SDNUMNEWSYMS entries."
+    Vector<NonnullRefPtr<Symbol>> new_symbols;
+
+    // "2) If SDHUFF is 1 and SDREFAGG is 0, create an array SDNEWSYMWIDTHS of integers, having SDNUMNEWSYMS entries."
+    // FIXME: Implement support for SDHUFF = 1.
+
+    // "3) Set:
+    //      HCHEIGHT = 0
+    //      NSYMSDECODED = 0"
+    u32 height_class_height = 0;
+    u32 number_of_symbols_decoded = 0;
+
+    // "4) Decode each height class as follows:
+    //      a) If NSYMSDECODED == SDNUMNEWSYMS then all the symbols in the dictionary have been decoded; proceed to step 5)."
+    while (number_of_symbols_decoded < inputs.number_of_new_symbols) {
+        // "b) Decode the height class delta height as described in 6.5.6. Let HCDH be the decoded value. Set:
+        //      HCHEIGHT = HCEIGHT + HCDH
+        //      SYMWIDTH = 0
+        //      TOTWIDTH = 0
+        //      HCFIRSTSYM = NSYMSDECODED"
+        i32 delta_height = read_delta_height();
+        height_class_height += delta_height;
+        u32 symbol_width = 0;
+        u32 total_width = 0;
+        u32 height_class_first_symbol = number_of_symbols_decoded;
+        // "c) Decode each symbol within the height class as follows:"
+        while (true) {
+            // "i) Decode the delta width for the symbol as described in 6.5.7."
+            auto opt_delta_width = read_delta_width();
+            // "   If the result of this decoding is OOB then all the symbols in this height class have been decoded; proceed to step 4 d)."
+            if (!opt_delta_width.has_value())
+                break;
+
+            VERIFY(number_of_symbols_decoded < inputs.number_of_new_symbols);
+            // "   Otherwise let DW be the decoded value and set:"
+            //         SYMWIDTH = SYMWIDTH + DW
+            //         TOTWIDTH = TOTWIDTH + SYMWIDTH"
+            i32 delta_width = opt_delta_width.value();
+            symbol_width += delta_width;
+            total_width += symbol_width;
+
+            // "ii) If SDHUFF is 0 or SDREFAGG is 1, then decode the symbol's bitmap as described in 6.5.8.
+            //      Let BS be the decoded bitmap (this bitmap has width SYMWIDTH and height HCHEIGHT). Set:
+            //          SDNEWSYMS[NSYMSDECODED] = BS"
+            // FIXME: Implement support for SDHUFF = 1.
+            // FIXME: Doing this eagerly is pretty wasteful. Decode on demand instead?
+            auto bitmap = TRY(read_bitmap(symbol_width, height_class_height));
+            new_symbols.append(Symbol::create(move(bitmap)));
+
+            // "iii) If SDHUFF is 1 and SDREFAGG is 0, then set:
+            //      SDNEWSYMWIDTHS[NSYMSDECODED] = SYMWIDTH"
+            // FIXME: Implement support for SDHUFF = 1.
+            (void)total_width;
+            (void)height_class_first_symbol;
+
+            // "iv) Set:
+            //      NSYMSDECODED = NSYMSDECODED + 1"
+            number_of_symbols_decoded++;
+        }
+        //  d) If SDHUFF is 1 and SDREFAGG is 0, [...long text elided...]
+        // FIXME: Implement support for SDHUFF = 1.
+    }
+
+    //  5) Determine which symbol bitmaps are exported from this symbol dictionary, as described in 6.5.10. These
+    //     bitmaps can be drawn from the symbols that are used as input to the symbol dictionary decoding
+    //     procedure as well as the new symbols produced by the decoding procedure."
+    JBIG2::ArithmeticIntegerDecoder export_integer_decoder(decoder);
+
+    // 6.5.10 Exported symbols
+    Vector<bool> export_flags;
+    export_flags.resize(inputs.input_symbols.size() + inputs.number_of_new_symbols);
+
+    // "1) Set:
+    //      EXINDEX = 0
+    //      CUREXFLAG = 0"
+    u32 exported_index = 0;
+    bool current_export_flag = false;
+
+    do {
+        // "2) Decode a value using Table B.1 if SDHUFF is 1, or the IAEX integer arithmetic decoding procedure if
+        //  SDHUFF is 0. Let EXRUNLENGTH be the decoded value."
+        // FIXME: Implement support for SDHUFF = 1.
+        i32 export_run_length = export_integer_decoder.decode().value(); // No OOB value.
+
+        // "3) Set EXFLAGS[EXINDEX] through EXFLAGS[EXINDEX + EXRUNLENGTH – 1] to CUREXFLAG.
+        //  If EXRUNLENGTH = 0, then this step does not change any values."
+        for (int i = 0; i < export_run_length; ++i)
+            export_flags[exported_index + i] = current_export_flag;
+
+        // "4) Set:
+        //      EXINDEX = EXINDEX + EXRUNLENGTH
+        //      CUREXFLAG = NOT(CUREXFLAG)"
+        exported_index += export_run_length;
+        current_export_flag = !current_export_flag;
+
+        //  5) Repeat steps 2) through 4) until EXINDEX == SDNUMINSYMS + SDNUMNEWSYMS.
+    } while (exported_index < inputs.input_symbols.size() + inputs.number_of_new_symbols);
+
+    // "6) The array EXFLAGS now contains 1 for each symbol that is exported from the dictionary, and 0 for each
+    //  symbol that is not exported."
+    Vector<NonnullRefPtr<Symbol>> exported_symbols;
+
+    // "7) Set:
+    //      I = 0
+    //      J = 0
+    //  8) For each value of I from 0 to SDNUMINSYMS + SDNUMNEWSYMS – 1,"
+    for (size_t i = 0; i < inputs.input_symbols.size() + inputs.number_of_new_symbols; ++i) {
+        // "if EXFLAGS[I] == 1 then perform the following steps:"
+        if (!export_flags[i])
+            continue;
+        //  "a) If I < SDNUMINSYMS then set:
+        //       SDEXSYMS[J] = SDINSYMS[I]
+        //       J = J + 1"
+        if (i < inputs.input_symbols.size())
+            exported_symbols.append(inputs.input_symbols[i]);
+
+        //  "b) If I >= SDNUMINSYMS then set:
+        //       SDEXSYMS[J] = SDNEWSYMS[I – SDNUMINSYMS]
+        //       J = J + 1"
+        if (i >= inputs.input_symbols.size())
+            exported_symbols.append(move(new_symbols[i - inputs.input_symbols.size()]));
+    }
+
+    if (exported_symbols.size() != inputs.number_of_exported_symbols)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Unexpected number of exported symbols");
+
+    return exported_symbols;
+}
+
+static ErrorOr<void> decode_symbol_dictionary(JBIG2LoadingContext&, SegmentData& segment)
+{
+    // 7.4.2 Symbol dictionary segment syntax
+
+    // 7.4.2.1 Symbol dictionary segment data header
+    FixedMemoryStream stream(segment.data);
+
+    // 7.4.2.1.1 Symbol dictionary flags
+    u16 flags = TRY(stream.read_value<BigEndian<u16>>());
+    bool uses_huffman_encoding = (flags & 1) != 0;               // "SDHUFF" in spec.
+    bool uses_refinement_or_aggregate_coding = (flags & 2) != 0; // "SDREFAGG" in spec.
+
+    u8 huffman_table_selection_for_height_differences = (flags >> 2) & 0b11; // "SDHUFFDH" in spec.
+    if (huffman_table_selection_for_height_differences == 2)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid huffman_table_selection_for_height_differences");
+    if (!uses_huffman_encoding && huffman_table_selection_for_height_differences != 0)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid huffman_table_selection_for_height_differences");
+
+    u8 huffman_table_selection_for_width_differences = (flags >> 4) & 0b11; // "SDHUFFDW" in spec.
+    if (huffman_table_selection_for_width_differences == 2)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid huffman_table_selection_for_width_differences");
+    if (!uses_huffman_encoding && huffman_table_selection_for_width_differences != 0)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid huffman_table_selection_for_width_differences");
+
+    bool uses_user_supplied_size_table = (flags >> 6) & 1; // "SDHUFFBMSIZE" in spec.
+    if (!uses_huffman_encoding && uses_user_supplied_size_table)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid uses_user_supplied_size_table");
+
+    bool uses_user_supplied_aggregate_table = (flags >> 7) & 1; // "SDHUFFAGGINST" in spec.
+    if (!uses_huffman_encoding && uses_user_supplied_aggregate_table)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid uses_user_supplied_aggregate_table");
+
+    bool bitmap_coding_context_used = (flags >> 8) & 1;
+    if (uses_huffman_encoding && !uses_refinement_or_aggregate_coding && bitmap_coding_context_used)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid bitmap_coding_context_used");
+
+    bool bitmap_coding_context_retained = (flags >> 9) & 1;
+    if (uses_huffman_encoding && !uses_refinement_or_aggregate_coding && bitmap_coding_context_retained)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid bitmap_coding_context_retained");
+
+    u8 template_used = (flags >> 10) & 0b11; // "SDTEMPLATE" in spec.
+    if (uses_huffman_encoding && template_used != 0)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid template_used");
+
+    u8 refinement_template_used = (flags >> 12) & 0b11; // "SDREFTEMPLATE" in spec.
+    if (!uses_refinement_or_aggregate_coding && refinement_template_used != 0)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid refinement_template_used");
+
+    if (flags & 0b1110'0000'0000'0000)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid symbol dictionary flags");
+
+    // 7.4.2.1.2 Symbol dictionary AT flags
+    Array<AdaptiveTemplatePixel, 4> adaptive_template {};
+    if (!uses_huffman_encoding) {
+        int number_of_adaptive_template_pixels = template_used == 0 ? 4 : 1;
+        for (int i = 0; i < number_of_adaptive_template_pixels; ++i) {
+            adaptive_template[i].x = TRY(stream.read_value<i8>());
+            adaptive_template[i].y = TRY(stream.read_value<i8>());
+        }
+    }
+
+    // 7.4.2.1.3 Symbol dictionary refinement AT flags
+    Array<AdaptiveTemplatePixel, 2> adaptive_refinement_template {};
+    if (uses_refinement_or_aggregate_coding && refinement_template_used == 0) {
+        for (size_t i = 0; i < adaptive_refinement_template.size(); ++i) {
+            adaptive_refinement_template[i].x = TRY(stream.read_value<i8>());
+            adaptive_refinement_template[i].y = TRY(stream.read_value<i8>());
+        }
+    }
+
+    // 7.4.2.1.4 Number of exported symbols (SDNUMEXSYMS)
+    u32 number_of_exported_symbols = TRY(stream.read_value<BigEndian<u32>>());
+
+    // 7.4.2.1.5 Number of new symbols (SDNUMNEWSYMS)
+    u32 number_of_new_symbols = TRY(stream.read_value<BigEndian<u32>>());
+
+    dbgln_if(JBIG2_DEBUG, "Symbol dictionary: uses_huffman_encoding={}", uses_huffman_encoding);
+    dbgln_if(JBIG2_DEBUG, "Symbol dictionary: uses_refinement_or_aggregate_coding={}", uses_refinement_or_aggregate_coding);
+    dbgln_if(JBIG2_DEBUG, "Symbol dictionary: huffman_table_selection_for_height_differences={}", huffman_table_selection_for_height_differences);
+    dbgln_if(JBIG2_DEBUG, "Symbol dictionary: huffman_table_selection_for_width_differences={}", huffman_table_selection_for_width_differences);
+    dbgln_if(JBIG2_DEBUG, "Symbol dictionary: uses_user_supplied_size_table={}", uses_user_supplied_size_table);
+    dbgln_if(JBIG2_DEBUG, "Symbol dictionary: uses_user_supplied_aggregate_table={}", uses_user_supplied_aggregate_table);
+    dbgln_if(JBIG2_DEBUG, "Symbol dictionary: bitmap_coding_context_used={}", bitmap_coding_context_used);
+    dbgln_if(JBIG2_DEBUG, "Symbol dictionary: bitmap_coding_context_retained={}", bitmap_coding_context_retained);
+    dbgln_if(JBIG2_DEBUG, "Symbol dictionary: template_used={}", template_used);
+    dbgln_if(JBIG2_DEBUG, "Symbol dictionary: refinement_template_used={}", refinement_template_used);
+    dbgln_if(JBIG2_DEBUG, "Symbol dictionary: number_of_exported_symbols={}", number_of_exported_symbols);
+    dbgln_if(JBIG2_DEBUG, "Symbol dictionary: number_of_new_symbols={}", number_of_new_symbols);
+
+    // 7.4.2.1.6 Symbol dictionary segment Huffman table selection
+    // FIXME
+
+    // 7.4.2.2 Decoding a symbol dictionary segment
+    // "1) Interpret its header, as described in 7.4.2.1."
+    // Done!
+
+    // "2) Decode (or retrieve the results of decoding) any referred-to symbol dictionary and tables segments."
+    if (segment.header.referred_to_segment_numbers.size() != 0)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode referred-to symbol dictionary segments yet");
+
+    // "3) If the "bitmap coding context used" bit in the header was 1, ..."
+    if (bitmap_coding_context_used)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode bitmap coding context segment yet");
+
+    // "4) If the "bitmap coding context used" bit in the header was 0, then, as described in E.3.7,
+    //     reset all the arithmetic coding statistics for the generic region and generic refinement region decoding procedures to zero."
+    // Nothing to do.
+
+    // "5) Reset the arithmetic coding statistics for all the contexts of all the arithmetic integer coders to zero."
+    // FIXME
+
+    // "6) Invoke the symbol dictionary decoding procedure described in 6.5, with the parameters to the symbol dictionary decoding procedure set as shown in Table 31."
+    SymbolDictionaryDecodingInputParameters inputs;
+    inputs.uses_huffman_encoding = uses_huffman_encoding;
+    inputs.uses_refinement_or_aggregate_coding = uses_refinement_or_aggregate_coding;
+    inputs.input_symbols = {};
+    inputs.number_of_new_symbols = number_of_new_symbols;
+    inputs.number_of_exported_symbols = number_of_exported_symbols;
+    // FIXME: SDHUFFDH, SDHUFFDW, SDHUFFBMSIZE, SDHUFFAGGINST
+    inputs.symbol_template = template_used;
+    inputs.adaptive_template_pixels = adaptive_template;
+    inputs.refinement_template = refinement_template_used;
+    inputs.refinement_adaptive_template_pixels = adaptive_refinement_template;
+    auto result = TRY(symbol_dictionary_decoding_procedure(inputs, segment.data.slice(TRY(stream.tell()))));
+
+    // "7) If the "bitmap coding context retained" bit in the header was 1, then, as described in E.3.8, preserve the current contents
+    //     of the arithmetic coding statistics for the generic region and generic refinement region decoding procedures."
+    if (bitmap_coding_context_retained)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot retain bitmap coding context yet");
+
+    segment.symbols = move(result);
+
+    return {};
 }
 
 static ErrorOr<void> decode_intermediate_text_region(JBIG2LoadingContext&, SegmentData const&)
@@ -1172,7 +1527,7 @@ static ErrorOr<void> decode_data(JBIG2LoadingContext& context)
     TRY(warn_about_multiple_pages(context));
 
     for (size_t i = 0; i < context.segments.size(); ++i) {
-        auto const& segment = context.segments[i];
+        auto& segment = context.segments[i];
 
         if (segment.header.page_association != 0 && segment.header.page_association != 1)
             continue;
