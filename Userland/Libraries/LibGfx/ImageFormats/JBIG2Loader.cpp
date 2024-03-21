@@ -532,6 +532,7 @@ struct JBIG2LoadingContext {
     Optional<u32> number_of_pages;
 
     Vector<SegmentData> segments;
+    HashMap<u32, u32> segments_by_number;
 };
 
 static ErrorOr<void> decode_jbig2_header(JBIG2LoadingContext& context, ReadonlyBytes data)
@@ -712,8 +713,10 @@ static ErrorOr<void> decode_segment_headers(JBIG2LoadingContext& context, Readon
 
     if (segment_headers.size() != segment_datas.size())
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Segment headers and segment datas have different sizes");
-    for (size_t i = 0; i < segment_headers.size(); ++i)
+    for (size_t i = 0; i < segment_headers.size(); ++i) {
         context.segments.append({ segment_headers[i], segment_datas[i], {} });
+        context.segments_by_number.set(segment_headers[i].segment_number, context.segments.size() - 1);
+    }
 
     return {};
 }
@@ -944,6 +947,274 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(Gener
         }
     }
 
+    return result;
+}
+
+// 6.4.2 Input parameters
+// Table 9 – Parameters for the text region decoding procedure
+struct TextRegionDecodingInputParameters {
+    bool uses_huffman_encoding { false };     // "SBHUFF" in spec.
+    bool uses_refinement_coding { false };    // "SBREFINE" in spec.
+    u32 region_width { 0 };                   // "SBW" in spec.
+    u32 region_height { 0 };                  // "SBH" in spec.
+    u32 number_of_instances { 0 };            // "SBNUMINSTANCES" in spec.
+    u32 size_of_symbol_instance_strips { 0 }; // "SBSTRIPS" in spec.
+    // "SBNUMSYMS" is `symbols.size()` below.
+
+    // FIXME: SBSYMCODES
+    u32 id_symbol_code_length { 0 };       // "SBSYMCODELEN" in spec.
+    Vector<NonnullRefPtr<Symbol>> symbols; // "SBNUMSYMS" / "SBSYMS" in spec.
+    u8 default_pixel { 0 };                // "SBDEFPIXEL" in spec.
+
+    CombinationOperator operator_ { CombinationOperator::Or }; // "SBCOMBOP" in spec.
+
+    bool is_transposed { false }; // "TRANSPOSED" in spec.
+
+    enum class Corner {
+        BottomLeft = 0,
+        TopLeft = 1,
+        BottomRight = 2,
+        TopRight = 3,
+    };
+    Corner reference_corner { Corner::TopLeft }; // "REFCORNER" in spec.
+
+    i8 delta_s_offset { 0 }; // "SBDSOFFSET" in spec.
+    // FIXME: SBHUFFFS, SBHUFFFDS, SBHUFFDT, SBHUFFRDW, SBHUFFRDH, SBHUFFRDX, SBHUFFRDY, SBHUFFRSIZE
+
+    u8 refinement_template { 0 };                                        // "SBRTEMPLATE" in spec.
+    Array<AdaptiveTemplatePixel, 2> refinement_adaptive_template_pixels; // "SBRATX" / "SBRATY" in spec.
+    // FIXME: COLEXTFLAG, SBCOLS
+};
+
+// 6.4 Text Region Decoding Procedure
+static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegionDecodingInputParameters const& inputs, ReadonlyBytes data)
+{
+    if (inputs.uses_huffman_encoding)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode huffman text regions yet");
+
+    if (inputs.uses_refinement_coding)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode refined text regions yet");
+
+    if (inputs.is_transposed)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode transposed text regions yet");
+
+    auto decoder = TRY(JBIG2::ArithmeticDecoder::initialize(data));
+
+    // 6.4.6 Strip delta T
+    // "If SBHUFF is 1, decode a value using the Huffman table specified by SBHUFFDT and multiply the resulting value by SBSTRIPS.
+    //  If SBHUFF is 0, decode a value using the IADT integer arithmetic decoding procedure (see Annex A) and multiply the resulting value by SBSTRIPS."
+    // FIXME: Implement support for SBHUFF = 1.
+    JBIG2::ArithmeticIntegerDecoder delta_t_integer_decoder(decoder);
+    auto read_delta_t = [&]() -> i32 {
+        return delta_t_integer_decoder.decode().value() * inputs.size_of_symbol_instance_strips;
+    };
+
+    // 6.4.7 First symbol instance S coordinate
+    // "If SBHUFF is 1, decode a value using the Huffman table specified by SBHUFFFS.
+    //  If SBHUFF is 0, decode a value using the IAFS integer arithmetic decoding procedure (see Annex A)."
+    // FIXME: Implement support for SBHUFF = 1.
+    JBIG2::ArithmeticIntegerDecoder first_s_integer_decoder(decoder);
+    auto read_first_s = [&]() -> i32 {
+        return first_s_integer_decoder.decode().value();
+    };
+
+    // 6.4.8 Subsequent symbol instance S coordinate
+    // "If SBHUFF is 1, decode a value using the Huffman table specified by SBHUFFDS.
+    //  If SBHUFF is 0, decode a value using the IADS integer arithmetic decoding procedure (see Annex A).
+    //  In either case it is possible that the result of this decoding is the out-of-band value OOB.""
+    // FIXME: Implement support for SBHUFF = 1.
+    JBIG2::ArithmeticIntegerDecoder subsequent_s_integer_decoder(decoder);
+    auto read_subsequent_s = [&]() -> Optional<i32> {
+        return subsequent_s_integer_decoder.decode();
+    };
+
+    // 6.4.9 Symbol instance T coordinate
+    // "If SBSTRIPS == 1, then the value decoded is always zero. Otherwise:
+    //  • If SBHUFF is 1, decode a value by reading ceil(log2(SBSTRIPS)) bits directly from the bitstream.
+    //  • If SBHUFF is 0, decode a value using the IAIT integer arithmetic decoding procedure (see Annex A)."
+    // FIXME: Implement support for SBHUFF = 1.
+    JBIG2::ArithmeticIntegerDecoder instance_t_integer_decoder(decoder);
+    auto read_instance_t = [&]() -> i32 {
+        if (inputs.size_of_symbol_instance_strips == 1)
+            return 0;
+        return instance_t_integer_decoder.decode().value();
+    };
+
+    // 6.4.10 Symbol instance symbol ID
+    // "If SBHUFF is 1, decode a value by reading one bit at a time until the resulting bit string is equal to one of the entries in
+    //  SBSYMCODES. The resulting value, which is IDI, is the index of the entry in SBSYMCODES that is read.
+    //  If SBHUFF is 0, decode a value using the IAID integer arithmetic decoding procedure (see Annex A). Set IDI to the
+    //  resulting value.""
+    // FIXME: Implement support for SBHUFF = 1.
+    Vector<JBIG2::ArithmeticDecoder::Context> id_contexts;
+    id_contexts.resize(1 << (inputs.id_symbol_code_length + 1));
+    auto read_id = [&]() -> u32 {
+        // A.3 The IAID decoding procedure
+        u32 prev = 1;
+        for (u8 i = 0; i < inputs.id_symbol_code_length; ++i) {
+            bool bit = decoder.get_next_bit(id_contexts[prev]);
+            prev = (prev << 1) | bit;
+        }
+        prev = prev - (1 << inputs.id_symbol_code_length);
+        return prev;
+    };
+
+    // 6.4.5 Decoding the text region
+
+    // "1) Fill a bitmap SBREG, of the size given by SBW and SBH, with the SBDEFPIXEL value."
+    auto result = TRY(BitBuffer::create(inputs.region_width, inputs.region_height));
+    if (inputs.default_pixel != 0)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot handle SBDEFPIXEL not equal to 0 yet");
+    result->fill(inputs.default_pixel != 0);
+
+    // "2) Decode the initial STRIPT value as described in 6.4.6. Negate the decoded value and assign this negated value to the variable STRIPT.
+    //     Assign the value 0 to FIRSTS. Assign the value 0 to NINSTANCES."
+    i32 strip_t = -read_delta_t();
+    i32 first_s = 0;
+    u32 n_instances = 0;
+
+    // "3) If COLEXTFLAG is 1, decode the colour section as described in 6.4.12."
+    // FIXME: Implement support for colors one day.
+
+    // "4) Decode each strip as follows:
+    //      a) If NINSTANCES is equal to SBNUMINSTANCES then there are no more strips to decode,
+    //         and the process of decoding the text region is complete; proceed to step 4)."
+    // Implementor's note. The spec means "proceed to step 5)" at the end of 4a).
+    while (n_instances < inputs.number_of_instances) {
+        // "b) Decode the strip's delta T value as described in 6.4.6. Let DT be the decoded value. Set:
+        //         STRIPT = STRIPT + DT"
+        i32 delta_t = read_delta_t();
+        strip_t += delta_t;
+
+        i32 cur_s;
+        bool is_first_symbol = true;
+        while (true) {
+            // "c) Decode each symbol instance in the strip as follows:
+            //      i) If the current symbol instance is the first symbol instance in the strip, then decode the first
+            //         symbol instance's S coordinate as described in 6.4.7. Let DFS be the decoded value. Set:
+            //              FIRSTS = FIRSTS + DFS
+            //              CURS = FIRSTS
+            //      ii) Otherwise, if the current symbol instance is not the first symbol instance in the strip, decode
+            //          the symbol instance's S coordinate as described in 6.4.8. If the result of this decoding is OOB
+            //          then the last symbol instance of the strip has been decoded; proceed to step 3 d). Otherwise, let
+            //          IDS be the decoded value. Set:
+            //              CURS = CURS + IDS + SBDSOFFSET"
+            // Implementor's note: The spec means "proceed to step 4 d)" in 4c ii).
+            if (is_first_symbol) {
+                i32 delta_first_s = read_first_s();
+                first_s += delta_first_s;
+                cur_s = first_s;
+                is_first_symbol = false;
+            } else {
+                auto subsequent_s = read_subsequent_s();
+                if (!subsequent_s.has_value())
+                    break;
+                i32 instance_delta_s = subsequent_s.value();
+                cur_s += instance_delta_s + inputs.delta_s_offset;
+            }
+
+            //     "iii) Decode the symbol instance's T coordinate as described in 6.4.9. Let CURT be the decoded value. Set:
+            //              TI = STRIPT + CURT"
+            i32 cur_t = read_instance_t();
+            i32 t_instance = strip_t + cur_t;
+
+            //     "iv) Decode the symbol instance's symbol ID as described in 6.4.10. Let IDI be the decoded value."
+            u32 id = read_id();
+
+            //     "v) Determine the symbol instance's bitmap IBI as described in 6.4.11. The width and height of this
+            //         bitmap shall be denoted as WI and HI respectively."
+            if (id >= inputs.symbols.size())
+                return Error::from_string_literal("JBIG2ImageDecoderPlugin: Symbol ID out of range");
+            auto const& symbol = inputs.symbols[id]->bitmap();
+
+            //     "vi) Update CURS as follows:
+            //      • If TRANSPOSED is 0, and REFCORNER is TOPRIGHT or BOTTOMRIGHT, set:
+            //              CURS = CURS + WI – 1
+            //      • If TRANSPOSED is 1, and REFCORNER is BOTTOMLEFT or BOTTOMRIGHT, set:
+            //              CURS = CURS + HI –1
+            //      • Otherwise, do not change CURS in this step."
+            using enum TextRegionDecodingInputParameters::Corner;
+            if (!inputs.is_transposed && (inputs.reference_corner == TopRight || inputs.reference_corner == BottomRight))
+                cur_s += symbol.width() - 1;
+            if (inputs.is_transposed && (inputs.reference_corner == BottomLeft || inputs.reference_corner == BottomRight))
+                cur_s += symbol.height() - 1;
+
+            //     "vii) Set:
+            //              SI = CURS"
+            auto s_instance = cur_s;
+
+            //     "viii) Determine the location of the symbol instance bitmap with respect to SBREG as follows:
+            //          • If TRANSPOSED is 0, then:
+            //              – If REFCORNER is TOPLEFT then the top left pixel of the symbol instance bitmap
+            //                IBI shall be placed at SBREG[SI, TI].
+            //              – If REFCORNER is TOPRIGHT then the top right pixel of the symbol instance
+            //                bitmap IBI shall be placed at SBREG[SI, TI].
+            //              – If REFCORNER is BOTTOMLEFT then the bottom left pixel of the symbol
+            //                instance bitmap IBI shall be placed at SBREG[SI, TI].
+            //              – If REFCORNER is BOTTOMRIGHT then the bottom right pixel of the symbol
+            //                instance bitmap IBI shall be placed at SBREG[SI, TI].
+            //          • If TRANSPOSED is 1, then:
+            //              – If REFCORNER is TOPLEFT then the top left pixel of the symbol instance bitmap
+            //                IBI shall be placed at SBREG[TI, SI].
+            //              – If REFCORNER is TOPRIGHT then the top right pixel of the symbol instance
+            //                bitmap IBI shall be placed at SBREG[TI, SI].
+            //              – If REFCORNER is BOTTOMLEFT then the bottom left pixel of the symbol
+            //                instance bitmap IBI shall be placed at SBREG[TI, SI].
+            //              – If REFCORNER is BOTTOMRIGHT then the bottom right pixel of the symbol
+            //                instance bitmap IBI shall be placed at SBREG[TI, SI].
+            //          If any part of IBI, when placed at this location, lies outside the bounds of SBREG, then ignore
+            //          this part of IBI in step 3 c) ix)."
+            // Implementor's note: The spec means "ignore this part of IBI in step 3 c) x)" in 3c viii)'s last sentence.
+            // FIXME: Support all reference corners and transpose values.
+            if (!inputs.is_transposed) {
+                switch (inputs.reference_corner) {
+                case TopLeft:
+                    break;
+                case TopRight:
+                    s_instance -= symbol.width() - 1;
+                    break;
+                case BottomLeft:
+                    t_instance -= symbol.height() - 1;
+                    break;
+                case BottomRight:
+                    s_instance -= symbol.width() - 1;
+                    t_instance -= symbol.height() - 1;
+                    break;
+                }
+            } else {
+                TODO();
+            }
+
+            //     "ix) If COLEXTFLAG is 1, set the colour specified by SBCOLS[SBFGCOLID[NINSTANCES]]
+            //          to the foreground colour of the symbol instance bitmap IBI."
+            // FIXME: Implement support for colors one day.
+
+            //     "x) Draw IBI into SBREG. Combine each pixel of IBI with the current value of the corresponding
+            //         pixel in SBREG, using the combination operator specified by SBCOMBOP. Write the results
+            //         of each combination into that pixel in SBREG."
+            composite_bitbuffer(*result, symbol, { s_instance, t_instance }, inputs.operator_);
+
+            //     "xi) Update CURS as follows:
+            //          • If TRANSPOSED is 0, and REFCORNER is TOPLEFT or BOTTOMLEFT, set:
+            //              CURS = CURS + WI –1
+            //          • If TRANSPOSED is 1, and REFCORNER is TOPLEFT or TOPRIGHT, set:
+            //              CURS = CURS + HI –1
+            //          • Otherwise, do not change CURS in this step."
+            if (!inputs.is_transposed && (inputs.reference_corner == TopLeft || inputs.reference_corner == BottomLeft))
+                cur_s += symbol.width() - 1;
+            if (inputs.is_transposed && (inputs.reference_corner == TopLeft || inputs.reference_corner == TopRight))
+                cur_s += symbol.height() - 1;
+
+            //      "xii) Set:
+            //              NINSTANCES = NINSTANCES + 1"
+            ++n_instances;
+        }
+        //  "d) When the strip has been completely decoded, decode the next strip."
+        // (Done in the next loop iteration.)
+    }
+
+    //  "5) After all the strips have been decoded, the current contents of SBREG are the results that shall be
+    //      obtained by every decoder, whether it performs this exact sequence of steps or not."
     return result;
 }
 
@@ -1291,9 +1562,107 @@ static ErrorOr<void> decode_intermediate_text_region(JBIG2LoadingContext&, Segme
     return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode intermediate text region yet");
 }
 
-static ErrorOr<void> decode_immediate_text_region(JBIG2LoadingContext&, SegmentData const&)
+static ErrorOr<void> decode_immediate_text_region(JBIG2LoadingContext& context, SegmentData const& segment)
 {
-    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode immediate text region yet");
+    // 7.4.3 Text region segment syntax
+    auto data = segment.data;
+    auto information_field = TRY(decode_region_segment_information_field(data));
+    data = data.slice(sizeof(information_field));
+
+    dbgln_if(JBIG2_DEBUG, "Text region: width={}, height={}, x={}, y={}, flags={:#x}", information_field.width, information_field.height, information_field.x_location, information_field.y_location, information_field.flags);
+
+    FixedMemoryStream stream(data);
+
+    // 7.4.3.1.1 Text region segment flags
+    u16 text_region_segment_flags = TRY(stream.read_value<BigEndian<u16>>());
+    bool uses_huffman_encoding = (text_region_segment_flags & 1) != 0;  // "SBHUFF" in spec.
+    bool uses_refinement_coding = (text_region_segment_flags >> 1) & 1; // "SBREFINE" in spec.
+    u8 log_strip_size = (text_region_segment_flags >> 2) & 3;           // "LOGSBSTRIPS" in spec.
+    u8 strip_size = 1u << log_strip_size;
+    u8 reference_corner = (text_region_segment_flags >> 4) & 3;     // "REFCORNER"
+    bool is_transposed = (text_region_segment_flags >> 6) & 1;      // "TRANSPOSED" in spec.
+    u8 combination_operator = (text_region_segment_flags >> 7) & 3; // "SBCOMBOP" in spec.
+    if (combination_operator > 4)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid text region combination operator");
+
+    u8 default_pixel_value = (text_region_segment_flags >> 9) & 1; // "SBDEFPIXEL" in spec.
+
+    u8 delta_s_offset_value = (text_region_segment_flags >> 10) & 0x1f; // "SBDSOFFSET" in spec.
+    i8 delta_s_offset = delta_s_offset_value;
+    if (delta_s_offset_value & 0x10) {
+        // This is converting a 5-bit two's complement number ot i8.
+        // FIXME: There's probably a simpler way to do this? Probably just sign-extend by or-ing in the top 3 bits?
+        delta_s_offset_value = (~delta_s_offset_value + 1) & 0x1f;
+        delta_s_offset = -delta_s_offset_value;
+    }
+
+    u8 refinement_template = (text_region_segment_flags >> 15) != 0; // "SBRTEMPLATE" in spec.
+    if (!uses_refinement_coding && refinement_template != 0)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid refinement_template");
+
+    // 7.4.3.1.2 Text region segment Huffman flags
+    // "This field is only present if SBHUFF is 1."
+    // FIXME: Support this eventually.
+    if (uses_huffman_encoding)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode huffman text regions yet");
+
+    // 7.4.3.1.3 Text region refinement AT flags
+    // "This field is only present if SBREFINE is 1 and SBRTEMPLATE is 0."
+    // FIXME: Support this eventually.
+    if (uses_refinement_coding && refinement_template == 0)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode text region refinement AT flags yet");
+
+    // 7.4.3.1.4 Number of symbol instances (SBNUMINSTANCES)
+    u32 number_of_symbol_instances = TRY(stream.read_value<BigEndian<u32>>());
+
+    // 7.4.3.1.5 Text region segment symbol ID Huffman decoding table
+    // "It is only present if SBHUFF is 1."
+    // FIXME: Support this eventually.
+
+    // 7.4.3.2 Decoding a text region segment
+    // "1) Interpret its header, as described in 7.4.3.1."
+    // Done!
+
+    // "2) Decode (or retrieve the results of decoding) any referred-to symbol dictionary and tables segments."
+    Vector<NonnullRefPtr<Symbol>> symbols;
+    for (auto referred_to_segment_number : segment.header.referred_to_segment_numbers) {
+        auto opt_referred_to_segment = context.segments_by_number.get(referred_to_segment_number);
+        if (!opt_referred_to_segment.has_value())
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Text segment refers to non-existent segment");
+        dbgln_if(JBIG2_DEBUG, "Text segment refers to segment id {} index {}", referred_to_segment_number, opt_referred_to_segment.value());
+        auto const& referred_to_segment = context.segments[opt_referred_to_segment.value()];
+        if (!referred_to_segment.symbols.has_value())
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Text segment referred-to segment without symbols");
+        symbols.extend(referred_to_segment.symbols.value());
+    }
+
+    // "3) As described in E.3.7, reset all the arithmetic coding statistics to zero."
+    // FIXME
+
+    // "4) Invoke the text region decoding procedure described in 6.4, with the parameters to the text region decoding procedure set as shown in Table 34."
+    TextRegionDecodingInputParameters inputs;
+    inputs.uses_huffman_encoding = uses_huffman_encoding;
+    inputs.uses_refinement_coding = uses_refinement_coding;
+    inputs.default_pixel = default_pixel_value;
+    inputs.operator_ = static_cast<CombinationOperator>(combination_operator);
+    inputs.is_transposed = is_transposed;
+    inputs.reference_corner = static_cast<TextRegionDecodingInputParameters::Corner>(reference_corner);
+    inputs.delta_s_offset = delta_s_offset;
+    inputs.region_width = information_field.width;
+    inputs.region_height = information_field.height;
+    inputs.number_of_instances = number_of_symbol_instances;
+    inputs.size_of_symbol_instance_strips = strip_size;
+    inputs.id_symbol_code_length = ceil(log2(symbols.size()));
+    inputs.symbols = move(symbols);
+    // FIXME: Huffman tables.
+    inputs.refinement_template = refinement_template;
+    // FIXME: inputs.refinement_adaptive_template_pixels;
+
+    auto result = TRY(text_region_decoding_procedure(inputs, data.slice(TRY(stream.tell()))));
+
+    composite_bitbuffer(*context.page.bits, *result, { information_field.x_location, information_field.y_location }, information_field.external_combination_operator());
+
+    return {};
 }
 
 static ErrorOr<void> decode_immediate_lossless_text_region(JBIG2LoadingContext&, SegmentData const&)
