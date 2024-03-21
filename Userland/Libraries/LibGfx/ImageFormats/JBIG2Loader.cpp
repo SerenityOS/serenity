@@ -912,14 +912,14 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(Gener
 
     auto result = TRY(BitBuffer::create(inputs.region_width, inputs.region_height));
 
-    auto get_pixel = [&inputs](NonnullOwnPtr<BitBuffer> const& buffer, int x, int y) -> bool {
-        if (x < 0 || x >= (int)inputs.region_width || y < 0)
+    static constexpr auto get_pixel = [](NonnullOwnPtr<BitBuffer> const& buffer, int x, int y) -> bool {
+        if (x < 0 || x >= (int)buffer->width() || y < 0)
             return false;
         return buffer->get_bit(x, y);
     };
 
     // Figure 3(a) – Template when GBTEMPLATE = 0 and EXTTEMPLATE = 0,
-    auto compute_context_0 = [&get_pixel](NonnullOwnPtr<BitBuffer> const& buffer, int x, int y) -> u16 {
+    constexpr auto compute_context_0 = [](NonnullOwnPtr<BitBuffer> const& buffer, int x, int y) -> u16 {
         u16 result = 0;
         for (int i = 0; i < 5; ++i)
             result = (result << 1) | (u16)get_pixel(buffer, x - 2 + i, y - 2);
@@ -931,7 +931,7 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(Gener
     };
 
     // Figure 4 – Template when GBTEMPLATE = 1
-    auto compute_context_1 = [&get_pixel](NonnullOwnPtr<BitBuffer> const& buffer, int x, int y) -> u16 {
+    auto compute_context_1 = [](NonnullOwnPtr<BitBuffer> const& buffer, int x, int y) -> u16 {
         u16 result = 0;
         for (int i = 0; i < 4; ++i)
             result = (result << 1) | (u16)get_pixel(buffer, x - 1 + i, y - 2);
@@ -943,7 +943,7 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(Gener
     };
 
     // Figure 5 – Template when GBTEMPLATE = 2
-    auto compute_context_2 = [&get_pixel](NonnullOwnPtr<BitBuffer> const& buffer, int x, int y) -> u16 {
+    auto compute_context_2 = [](NonnullOwnPtr<BitBuffer> const& buffer, int x, int y) -> u16 {
         u16 result = 0;
         for (int i = 0; i < 3; ++i)
             result = (result << 1) | (u16)get_pixel(buffer, x - 1 + i, y - 2);
@@ -955,7 +955,7 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(Gener
     };
 
     // Figure 6 – Template when GBTEMPLATE = 3
-    auto compute_context_3 = [&get_pixel](NonnullOwnPtr<BitBuffer> const& buffer, int x, int y) -> u16 {
+    auto compute_context_3 = [](NonnullOwnPtr<BitBuffer> const& buffer, int x, int y) -> u16 {
         u16 result = 0;
         for (int i = 0; i < 6; ++i)
             result = (result << 1) | (u16)get_pixel(buffer, x - 3 + i, y - 1);
