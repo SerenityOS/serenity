@@ -4064,8 +4064,6 @@ void Document::ensure_animation_timer()
                 for (auto& animation : timeline->associated_animations())
                     dispatch_events_for_animation_if_necessary(animation);
             }
-
-            m_needs_animated_style_update = true;
         }));
     }
 
