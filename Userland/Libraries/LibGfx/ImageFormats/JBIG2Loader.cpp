@@ -1608,9 +1608,13 @@ static ErrorOr<void> decode_immediate_text_region(JBIG2LoadingContext& context, 
 
     // 7.4.3.1.3 Text region refinement AT flags
     // "This field is only present if SBREFINE is 1 and SBRTEMPLATE is 0."
-    // FIXME: Support this eventually.
-    if (uses_refinement_coding && refinement_template == 0)
-        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode text region refinement AT flags yet");
+    Array<AdaptiveTemplatePixel, 2> adaptive_refinement_template {};
+    if (uses_refinement_coding && refinement_template == 0) {
+        for (size_t i = 0; i < adaptive_refinement_template.size(); ++i) {
+            adaptive_refinement_template[i].x = TRY(stream.read_value<i8>());
+            adaptive_refinement_template[i].y = TRY(stream.read_value<i8>());
+        }
+    }
 
     // 7.4.3.1.4 Number of symbol instances (SBNUMINSTANCES)
     u32 number_of_symbol_instances = TRY(stream.read_value<BigEndian<u32>>());
@@ -1656,7 +1660,7 @@ static ErrorOr<void> decode_immediate_text_region(JBIG2LoadingContext& context, 
     inputs.symbols = move(symbols);
     // FIXME: Huffman tables.
     inputs.refinement_template = refinement_template;
-    // FIXME: inputs.refinement_adaptive_template_pixels;
+    inputs.refinement_adaptive_template_pixels = adaptive_refinement_template;
 
     auto result = TRY(text_region_decoding_procedure(inputs, data.slice(TRY(stream.tell()))));
 
