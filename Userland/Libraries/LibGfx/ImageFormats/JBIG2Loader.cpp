@@ -964,7 +964,7 @@ struct GenericRefinementRegionDecodingInputParameters {
 };
 
 // 6.3 Generic Refinement Region Decoding Procedure
-static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_refinement_region_decoding_procedure(GenericRefinementRegionDecodingInputParameters& inputs)
+static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_refinement_region_decoding_procedure(GenericRefinementRegionDecodingInputParameters& inputs, JBIG2::ArithmeticDecoder& decoder, Vector<JBIG2::ArithmeticDecoder::Context>& contexts)
 {
     VERIFY(inputs.gr_template == 0 || inputs.gr_template == 1);
 
@@ -981,7 +981,39 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_refinement_region_decoding_proc
     if (inputs.gr_template == 1)
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode GRTEMPLATE 1 yet");
 
-    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode generic refinement regions yet");
+    // 6.3.5.3 Fixed templates and adaptive templates
+    static constexpr auto get_pixel = [](BitBuffer const& buffer, int x, int y) -> bool {
+        if (x < 0 || x >= (int)buffer.width() || y < 0 || y >= (int)buffer.height())
+            return false;
+        return buffer.get_bit(x, y);
+    };
+
+    // Figure 12 – 13-pixel refinement template showing the AT pixels at their nominal locations
+    constexpr auto compute_context = [](BitBuffer const& reference, int reference_x, int reference_y, BitBuffer const& buffer, int x, int y) -> u16 {
+        u16 result = 0;
+
+        for (int dy = -1; dy <= 1; ++dy)
+            for (int dx = -1; dx <= 1; ++dx)
+                result = (result << 1) | (u16)get_pixel(reference, reference_x + dx, reference_y + dy);
+
+        for (int i = 0; i < 3; ++i)
+            result = (result << 1) | (u16)get_pixel(buffer, x - 1 + i, y - 1);
+        result = (result << 1) | (u16)get_pixel(buffer, x - 1, y);
+
+        return result;
+    };
+
+    // 6.3.5.6 Decoding the refinement bitmap
+    auto result = TRY(BitBuffer::create(inputs.region_width, inputs.region_height));
+    for (size_t y = 0; y < result->height(); ++y) {
+        for (size_t x = 0; x < result->width(); ++x) {
+            u16 context = compute_context(*inputs.reference_bitmap, x - inputs.reference_x_offset, y - inputs.reference_y_offset, *result, x, y);
+            bool bit = decoder.get_next_bit(contexts[context]);
+            result->set_bit(x, y, bit);
+        }
+    }
+
+    return result;
 }
 
 // 6.4.2 Input parameters
@@ -1120,6 +1152,9 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
 
     // 6.4.11 Symbol instance bitmap
     JBIG2::ArithmeticIntegerDecoder has_refinement_image_decoder(decoder);
+    Vector<JBIG2::ArithmeticDecoder::Context> refinement_contexts;
+    if (inputs.uses_refinement_coding)
+        refinement_contexts.resize(1 << 13);
     OwnPtr<BitBuffer> refinement_result;
     auto read_bitmap = [&](u32 id) -> ErrorOr<BitBuffer const*> {
         if (id >= inputs.symbols.size())
@@ -1155,7 +1190,7 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
         refinement_inputs.reference_y_offset = refinement_delta_height / 2 + refinement_y_offset;
         refinement_inputs.is_typical_prediction_used = false;
         refinement_inputs.adaptive_template_pixels = inputs.refinement_adaptive_template_pixels;
-        refinement_result = TRY(generic_refinement_region_decoding_procedure(refinement_inputs));
+        refinement_result = TRY(generic_refinement_region_decoding_procedure(refinement_inputs, decoder, refinement_contexts));
         return refinement_result.ptr();
     };
 
