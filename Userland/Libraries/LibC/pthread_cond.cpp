@@ -155,7 +155,7 @@ int pthread_cond_broadcast(pthread_cond_t* cond)
     pthread_mutex_t* mutex = AK::atomic_load(&cond->mutex, AK::memory_order_relaxed);
     VERIFY(mutex);
 
-    int rc = futex(&cond->value, FUTEX_REQUEUE | FUTEX_PRIVATE_FLAG, 1, nullptr, &mutex->lock, INT_MAX);
+    int rc = futex(&cond->value, FUTEX_REQUEUE | FUTEX_PRIVATE_FLAG, -1, nullptr, &mutex->lock, INT_MAX);
     VERIFY(rc >= 0);
     return 0;
 }
