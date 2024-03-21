@@ -769,6 +769,7 @@ struct AdaptiveTemplatePixel {
 };
 
 // 6.2.2 Input parameters
+// Table 2 – Parameters for the generic region decoding procedure
 struct GenericRegionDecodingInputParameters {
     bool is_modified_modified_read { false }; // "MMR" in spec.
     u32 region_width { 0 };                   // "GBW" in spec.
@@ -780,10 +781,13 @@ struct GenericRegionDecodingInputParameters {
 
     Array<AdaptiveTemplatePixel, 12> adaptive_template_pixels; // "GBATX" / "GBATY" in spec.
     // FIXME: GBCOLS, GBCOMBOP, COLEXTFLAG
+
+    // If is_modified_modified_read is false, generic_region_decoding_procedure() reads data off this decoder.
+    JBIG2::ArithmeticDecoder* arithmetic_decoder { nullptr };
 };
 
 // 6.2 Generic region decoding procedure
-static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(GenericRegionDecodingInputParameters const& inputs, ReadonlyBytes data)
+static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(GenericRegionDecodingInputParameters const& inputs, ReadonlyBytes data, Vector<JBIG2::ArithmeticDecoder::Context>& contexts)
 {
     if (inputs.is_modified_modified_read) {
         dbgln_if(JBIG2_DEBUG, "JBIG2ImageDecoderPlugin: MMR image data");
@@ -823,7 +827,6 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(Gener
 
     auto result = TRY(BitBuffer::create(inputs.region_width, inputs.region_height));
 
-    auto decoder = MUST(JBIG2::ArithmeticDecoder::initialize(data));
     auto get_pixel = [&inputs](NonnullOwnPtr<BitBuffer> const& buffer, int x, int y) -> bool {
         if (x < 0 || x >= (int)inputs.region_width || y < 0)
             return false;
@@ -848,16 +851,13 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(Gener
     //    concatenating the label "GB" and the 10-16 pixel values gathered in CONTEXT."
     // Implementor's note: What this is supposed to mean is that we have a bunch of independent contexts, and we pick the
     // context for the current pixel based on pixel values in the neighborhood. The "GB" part just means this context is
-    // independent from other contexts in the spec. At the moment, these are the only contexts we have, so we just
-    // create them on demand here.
-    // I can't find where the spec says this, but the contexts all start out zero-initialized.
-    Vector<JBIG2::ArithmeticDecoder::Context> contexts;
-    contexts.resize(1 << 16);
+    // independent from other contexts in the spec. They are passed in to this function.
 
     // Figure 8 – Reused context for coding the SLTP value when GBTEMPLATE is 0
     constexpr u16 sltp_context_for_template_0 = 0b10011'0110010'0101;
 
     // 6.2.5.7 Decoding the bitmap
+    JBIG2::ArithmeticDecoder& decoder = *inputs.arithmetic_decoder;
     bool ltp = false; // "LTP" in spec. "Line (uses) Typical Prediction" maybe?
     for (size_t y = 0; y < inputs.region_height; ++y) {
         if (inputs.is_typical_prediction_used) {
@@ -973,7 +973,9 @@ static ErrorOr<void> decode_immediate_generic_region(JBIG2LoadingContext& contex
     // "1) Interpret its header, as described in 7.4.6.1"
     // Done above.
     // "2) As described in E.3.7, reset all the arithmetic coding statistics to zero."
-    // FIXME: Implement this once we support arithmetic coding.
+    Vector<JBIG2::ArithmeticDecoder::Context> contexts;
+    contexts.resize(1 << 16);
+
     // "3) Invoke the generic region decoding procedure described in 6.2, with the parameters to the generic region decoding procedure set as shown in Table 37."
     GenericRegionDecodingInputParameters inputs;
     inputs.is_modified_modified_read = uses_mmr;
@@ -984,7 +986,14 @@ static ErrorOr<void> decode_immediate_generic_region(JBIG2LoadingContext& contex
     inputs.is_extended_reference_template_used = uses_extended_reference_template;
     inputs.skip_pattern = OptionalNone {};
     inputs.adaptive_template_pixels = adaptive_template_pixels;
-    auto result = TRY(generic_region_decoding_procedure(inputs, data));
+
+    Optional<JBIG2::ArithmeticDecoder> decoder;
+    if (!uses_mmr) {
+        decoder = TRY(JBIG2::ArithmeticDecoder::initialize(data));
+        inputs.arithmetic_decoder = &decoder.value();
+    }
+
+    auto result = TRY(generic_region_decoding_procedure(inputs, data, contexts));
 
     // 8.2 Page image composition step 5)
     if (information_field.x_location + information_field.width > (u32)context.page.size.width()
