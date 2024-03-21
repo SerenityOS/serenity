@@ -290,6 +290,38 @@ Optional<int> ArithmeticIntegerDecoder::decode()
     return S ? -V : V;
 }
 
+class ArithmeticIntegerIDDecoder {
+public:
+    ArithmeticIntegerIDDecoder(ArithmeticDecoder&, u32 code_length);
+
+    // A.3 The IAID decoding procedure
+    u32 decode();
+
+private:
+    ArithmeticDecoder& m_decoder;
+    u32 m_code_length { 0 };
+    Vector<ArithmeticDecoder::Context> contexts;
+};
+
+ArithmeticIntegerIDDecoder::ArithmeticIntegerIDDecoder(ArithmeticDecoder& decoder, u32 code_length)
+    : m_decoder(decoder)
+    , m_code_length(code_length)
+{
+    contexts.resize(1 << (code_length + 1));
+}
+
+u32 ArithmeticIntegerIDDecoder::decode()
+{
+    // A.3 The IAID decoding procedure
+    u32 prev = 1;
+    for (u8 i = 0; i < m_code_length; ++i) {
+        bool bit = m_decoder.get_next_bit(contexts[prev]);
+        prev = (prev << 1) | bit;
+    }
+    prev = prev - (1 << m_code_length);
+    return prev;
+}
+
 }
 
 static u8 number_of_context_bits_for_template(u8 template_)
@@ -1191,18 +1223,7 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
     //  If SBHUFF is 0, decode a value using the IAID integer arithmetic decoding procedure (see Annex A). Set IDI to the
     //  resulting value.""
     // FIXME: Implement support for SBHUFF = 1.
-    Vector<JBIG2::ArithmeticDecoder::Context> id_contexts;
-    id_contexts.resize(1 << (inputs.id_symbol_code_length + 1));
-    auto read_id = [&]() -> u32 {
-        // A.3 The IAID decoding procedure
-        u32 prev = 1;
-        for (u8 i = 0; i < inputs.id_symbol_code_length; ++i) {
-            bool bit = decoder.get_next_bit(id_contexts[prev]);
-            prev = (prev << 1) | bit;
-        }
-        prev = prev - (1 << inputs.id_symbol_code_length);
-        return prev;
-    };
+    JBIG2::ArithmeticIntegerIDDecoder id_decoder(decoder, inputs.id_symbol_code_length);
 
     // 6.4.11.1 Symbol instance refinement delta width
     // FIXME: Implement support for SBHUFF = 1.
@@ -1336,7 +1357,7 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
             i32 t_instance = strip_t + cur_t;
 
             //     "iv) Decode the symbol instance's symbol ID as described in 6.4.10. Let IDI be the decoded value."
-            u32 id = read_id();
+            u32 id = id_decoder.decode();
 
             //     "v) Determine the symbol instance's bitmap IBI as described in 6.4.11. The width and height of this
             //         bitmap shall be denoted as WI and HI respectively."
