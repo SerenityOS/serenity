@@ -355,6 +355,9 @@ public:
     ErrorOr<NonnullRefPtr<Gfx::Bitmap>> to_gfx_bitmap() const;
     ErrorOr<ByteBuffer> to_byte_buffer() const;
 
+    size_t width() const { return m_width; }
+    size_t height() const { return m_height; }
+
 private:
     BitBuffer(ByteBuffer, size_t width, size_t height, size_t pitch);
 
@@ -463,6 +466,48 @@ enum class CombinationOperator {
     XNor = 3,
     Replace = 4,
 };
+
+static void composite_bitbuffer(BitBuffer& out, BitBuffer const& bitmap, Gfx::IntPoint position, CombinationOperator operator_)
+{
+    size_t start_x = 0, end_x = bitmap.width();
+    size_t start_y = 0, end_y = bitmap.height();
+    if (position.x() < 0) {
+        start_x = -position.x();
+        position.set_x(0);
+    }
+    if (position.y() < 0) {
+        start_y = -position.y();
+        position.set_y(0);
+    }
+    if (position.x() + bitmap.width() > out.width())
+        end_x = out.width() - position.x();
+    if (position.y() + bitmap.height() > out.height())
+        end_y = out.height() - position.y();
+
+    for (size_t y = start_y; y < end_y; ++y) {
+        for (size_t x = start_x; x < end_x; ++x) {
+            bool bit = bitmap.get_bit(x, y);
+            switch (operator_) {
+            case CombinationOperator::Or:
+                bit = bit || out.get_bit(position.x() + x, position.y() + y);
+                break;
+            case CombinationOperator::And:
+                bit = bit && out.get_bit(position.x() + x, position.y() + y);
+                break;
+            case CombinationOperator::Xor:
+                bit = bit ^ out.get_bit(position.x() + x, position.y() + y);
+                break;
+            case CombinationOperator::XNor:
+                bit = !(bit ^ out.get_bit(position.x() + x, position.y() + y));
+                break;
+            case CombinationOperator::Replace:
+                // Nothing to do.
+                break;
+            }
+            out.set_bit(position.x() + x, position.y() + y, bit);
+        }
+    }
+}
 
 struct Page {
     IntSize size;
@@ -1355,17 +1400,8 @@ static ErrorOr<void> decode_immediate_generic_region(JBIG2LoadingContext& contex
         || information_field.y_location + information_field.height > (u32)context.page.size.height()) {
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Region bounds outsize of page bounds");
     }
-    if (information_field.external_combination_operator() != CombinationOperator::Or
-        && information_field.external_combination_operator() != CombinationOperator::Xor
-        && information_field.external_combination_operator() != CombinationOperator::Replace)
-        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot handle external combination operator other than OR, XOR, and REPLACE yet");
 
-    for (size_t y = 0; y < information_field.height; ++y) {
-        for (size_t x = 0; x < information_field.width; ++x) {
-            // FIXME: Honor segment's combination operator instead of just copying.
-            context.page.bits->set_bit(information_field.x_location + x, information_field.y_location + y, result->get_bit(x, y));
-        }
-    }
+    composite_bitbuffer(*context.page.bits, *result, { information_field.x_location, information_field.y_location }, information_field.external_combination_operator());
 
     return {};
 }
@@ -1413,8 +1449,6 @@ static ErrorOr<void> decode_page_information(JBIG2LoadingContext& context, Segme
     context.page.bits = TRY(BitBuffer::create(page_information.bitmap_width, height));
 
     // "3) Fill the page buffer with the page's default pixel value."
-    if (default_color == 1)
-        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Can only handle white default color for now");
     context.page.bits->fill(default_color != 0);
 
     return {};
