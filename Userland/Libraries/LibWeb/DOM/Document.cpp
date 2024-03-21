@@ -1151,17 +1151,7 @@ void Document::update_style()
     if (!browsing_context())
         return;
 
-    for (auto& timeline : m_associated_animation_timelines) {
-        for (auto& animation : timeline->associated_animations()) {
-            if (auto effect = animation->effect(); effect && effect->target())
-                effect->target()->reset_animated_css_properties();
-        }
-
-        for (auto& animation : timeline->associated_animations()) {
-            if (auto effect = animation->effect())
-                effect->update_style_properties();
-        }
-    }
+    update_animated_style_if_needed();
 
     if (!needs_full_style_update() && !needs_style_update() && !child_needs_style_update())
         return;
@@ -1185,6 +1175,25 @@ void Document::update_style()
             invalidate_stacking_context_tree();
     }
     m_needs_full_style_update = false;
+}
+
+void Document::update_animated_style_if_needed()
+{
+    if (!m_needs_animated_style_update)
+        return;
+
+    for (auto& timeline : m_associated_animation_timelines) {
+        for (auto& animation : timeline->associated_animations()) {
+            if (auto effect = animation->effect(); effect && effect->target())
+                effect->target()->reset_animated_css_properties();
+        }
+
+        for (auto& animation : timeline->associated_animations()) {
+            if (auto effect = animation->effect())
+                effect->update_style_properties();
+        }
+    }
+    m_needs_animated_style_update = false;
 }
 
 void Document::update_paint_and_hit_testing_properties_if_needed()
@@ -4055,6 +4064,8 @@ void Document::ensure_animation_timer()
                 for (auto& animation : timeline->associated_animations())
                     dispatch_events_for_animation_if_necessary(animation);
             }
+
+            m_needs_animated_style_update = true;
         }));
     }
 

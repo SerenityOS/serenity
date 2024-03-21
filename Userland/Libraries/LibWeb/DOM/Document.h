@@ -211,6 +211,7 @@ public:
     void update_style();
     void update_layout();
     void update_paint_and_hit_testing_properties_if_needed();
+    void update_animated_style_if_needed();
 
     void set_needs_layout();
 
@@ -735,6 +736,8 @@ private:
     bool m_needs_layout { false };
 
     bool m_needs_full_style_update { false };
+
+    bool m_needs_animated_style_update { false };
 
     HashTable<JS::GCPtr<NodeIterator>> m_node_iterators;
 
