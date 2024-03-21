@@ -964,16 +964,17 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(Gener
         return result;
     };
 
-    auto compute_context = [&inputs, &compute_context_0, &compute_context_1, &compute_context_2, &compute_context_3](NonnullOwnPtr<BitBuffer> const& buffer, int x, int y) -> u16 {
-        if (inputs.gb_template == 0)
-            return compute_context_0(buffer, x, y);
-        if (inputs.gb_template == 1)
-            return compute_context_1(buffer, x, y);
-        if (inputs.gb_template == 2)
-            return compute_context_2(buffer, x, y);
+    u16 (*compute_context)(NonnullOwnPtr<BitBuffer> const&, int, int);
+    if (inputs.gb_template == 0)
+        compute_context = compute_context_0;
+    else if (inputs.gb_template == 1)
+        compute_context = compute_context_1;
+    else if (inputs.gb_template == 2)
+        compute_context = compute_context_2;
+    else {
         VERIFY(inputs.gb_template == 3);
-        return compute_context_3(buffer, x, y);
-    };
+        compute_context = compute_context_3;
+    }
 
     // "The values of the pixels in this neighbourhood define a context. Each context has its own adaptive probability estimate
     //  used by the arithmetic coder (see Annex E)."
