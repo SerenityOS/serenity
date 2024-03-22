@@ -26,7 +26,7 @@ struct BoxHeader {
     u64 contents_size { 0 };
 };
 
-ErrorOr<BoxHeader> read_box_header(Stream& stream);
+ErrorOr<BoxHeader> read_box_header(BoxStream& stream);
 
 struct Box {
     Box() = default;

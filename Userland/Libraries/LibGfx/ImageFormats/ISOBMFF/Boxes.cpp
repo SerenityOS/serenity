@@ -8,7 +8,7 @@
 
 namespace Gfx::ISOBMFF {
 
-ErrorOr<BoxHeader> read_box_header(Stream& stream)
+ErrorOr<BoxHeader> read_box_header(BoxStream& stream)
 {
     BoxHeader header;
     u64 total_size = TRY(stream.read_value<BigEndian<u32>>());
@@ -16,12 +16,16 @@ ErrorOr<BoxHeader> read_box_header(Stream& stream)
 
     u64 data_size_read = sizeof(u32) + sizeof(BoxType);
 
-    if (total_size == 1) {
-        total_size = TRY(stream.read_value<BigEndian<u64>>());
-        data_size_read += sizeof(u64);
-    }
+    if (total_size == 0) {
+        header.contents_size = stream.remaining();
+    } else {
+        if (total_size == 1) {
+            total_size = TRY(stream.read_value<BigEndian<u64>>());
+            data_size_read += sizeof(u64);
+        }
 
-    header.contents_size = total_size - data_size_read;
+        header.contents_size = total_size - data_size_read;
+    }
     return header;
 }
 

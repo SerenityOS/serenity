@@ -23,14 +23,16 @@ public:
     ErrorOr<Vector<BrandIdentifier>> get_minor_brands();
 
 private:
-    Reader(MaybeOwned<SeekableStream> stream)
+    Reader(MaybeOwned<SeekableStream> stream, size_t size)
         : m_stream(move(stream))
+        , m_box_stream(*m_stream, size)
     {
     }
 
     ErrorOr<void> parse_initial_data();
 
     MaybeOwned<SeekableStream> m_stream;
+    BoxStream m_box_stream;
 };
 
 }
