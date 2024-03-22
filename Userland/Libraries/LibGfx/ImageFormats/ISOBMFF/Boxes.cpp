@@ -88,7 +88,7 @@ ErrorOr<void> FileTypeBox::read_from_stream(BoxStream& stream)
 
 void FileTypeBox::dump(String const& prepend) const
 {
-    FullBox::dump(prepend);
+    Box::dump(prepend);
 
     auto indented_prepend = add_indent(prepend);
 
