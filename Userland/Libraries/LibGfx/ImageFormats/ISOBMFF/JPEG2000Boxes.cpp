@@ -13,6 +13,8 @@ ErrorOr<void> JPEG2000HeaderBox::read_from_stream(BoxStream& stream)
 {
     auto make_subbox = [](BoxType type, BoxStream& stream) -> ErrorOr<Optional<NonnullOwnPtr<Box>>> {
         switch (type) {
+        case BoxType::JPEG2000ChannelDefinitionBox:
+            return TRY(JPEG2000ChannelDefinitionBox::create_from_stream(stream));
         case BoxType::JPEG2000ColorSpecificationBox:
             return TRY(JPEG2000ColorSpecificationBox::create_from_stream(stream));
         case BoxType::JPEG2000ImageHeaderBox:
@@ -87,6 +89,39 @@ void JPEG2000ColorSpecificationBox::dump(String const& prepend) const
         outln("{}- enumerated_color_space = {}", prepend, enumerated_color_space);
     if (method == 2)
         outln("{}- icc_data = {} bytes", prepend, icc_data.size());
+}
+
+ErrorOr<void> JPEG2000ChannelDefinitionBox::read_from_stream(BoxStream& stream)
+{
+    u16 count = TRY(stream.read_value<BigEndian<u16>>());
+    for (u32 i = 0; i < count; ++i) {
+        Channel channel;
+        channel.channel_index = TRY(stream.read_value<BigEndian<u16>>());
+        channel.channel_type = TRY(stream.read_value<BigEndian<u16>>());
+        channel.channel_association = TRY(stream.read_value<BigEndian<u16>>());
+        channels.append(channel);
+    }
+    return {};
+}
+
+void JPEG2000ChannelDefinitionBox::dump(String const& prepend) const
+{
+    Box::dump(prepend);
+    for (auto const& channel : channels) {
+        outln("{}- channel_index = {}", prepend, channel.channel_index);
+
+        out("{}- channel_type = {}", prepend, channel.channel_type);
+        if (channel.channel_type == 0)
+            outln(" (color)");
+        else if (channel.channel_type == 1)
+            outln(" (opacity)");
+        else if (channel.channel_type == 2)
+            outln(" (premultiplied opacity)");
+        else
+            outln(" (unknown)");
+
+        outln("{}- channel_association = {}", prepend, channel.channel_association);
+    }
 }
 
 ErrorOr<void> JPEG2000ResolutionBox::read_from_stream(BoxStream& stream)

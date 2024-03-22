@@ -38,6 +38,18 @@ struct JPEG2000ColorSpecificationBox final : public Box {
     ByteBuffer icc_data;              // Only set if method == 2
 };
 
+// I.5.3.6 Channel Definition box
+struct JPEG2000ChannelDefinitionBox final : public Box {
+    BOX_SUBTYPE(JPEG2000ChannelDefinitionBox);
+
+    struct Channel {
+        u16 channel_index;
+        u16 channel_type;
+        u16 channel_association;
+    };
+    Vector<Channel> channels;
+};
+
 // I.5.3.7 Resolution box
 struct JPEG2000ResolutionBox final : public SuperBox {
     BOX_SUBTYPE(JPEG2000ResolutionBox);
