@@ -627,7 +627,7 @@ WebIDL::ExceptionOr<void> fetch_response_handover(JS::Realm& realm, Infrastructu
         auto task_destination = fetch_params.task_destination().get<JS::NonnullGCPtr<JS::Object>>();
 
         // 5. Queue a fetch task to run processResponseEndOfBodyTask with fetchParams’s task destination.
-        Infrastructure::queue_fetch_task(task_destination, move(process_response_end_of_body_task));
+        Infrastructure::queue_fetch_task(fetch_params.controller(), task_destination, move(process_response_end_of_body_task));
     };
 
     // FIXME: Handle 'parallel queue' task destination
@@ -636,7 +636,7 @@ WebIDL::ExceptionOr<void> fetch_response_handover(JS::Realm& realm, Infrastructu
     // 4. If fetchParams’s process response is non-null, then queue a fetch task to run fetchParams’s process response
     //    given response, with fetchParams’s task destination.
     if (fetch_params.algorithms()->process_response()) {
-        Infrastructure::queue_fetch_task(task_destination, [&fetch_params, &response]() {
+        Infrastructure::queue_fetch_task(fetch_params.controller(), task_destination, [&fetch_params, &response]() {
             fetch_params.algorithms()->process_response()(response);
         });
     }
@@ -674,7 +674,7 @@ WebIDL::ExceptionOr<void> fetch_response_handover(JS::Realm& realm, Infrastructu
         // 3. If internalResponse's body is null, then queue a fetch task to run processBody given null, with
         //    fetchParams’s task destination.
         if (!internal_response->body()) {
-            Infrastructure::queue_fetch_task(task_destination, [process_body = move(process_body)]() {
+            Infrastructure::queue_fetch_task(fetch_params.controller(), task_destination, [process_body = move(process_body)]() {
                 process_body({});
             });
         }

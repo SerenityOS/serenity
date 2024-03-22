@@ -10,12 +10,14 @@
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/GCPtr.h>
 #include <LibJS/SafeFunction.h>
+#include <LibWeb/Forward.h>
 
 namespace Web::Fetch::Infrastructure {
 
 // FIXME: 'or a parallel queue'
 using TaskDestination = Variant<Empty, JS::NonnullGCPtr<JS::Object>>;
 
-void queue_fetch_task(JS::Object&, JS::SafeFunction<void()>);
+int queue_fetch_task(JS::Object&, JS::SafeFunction<void()>);
+int queue_fetch_task(JS::NonnullGCPtr<FetchController>, JS::Object&, JS::SafeFunction<void()>);
 
 }
