@@ -20,6 +20,9 @@ public:
 
     ErrorOr<BoxList> read_entire_file();
 
+    using BoxCallback = Function<ErrorOr<Optional<NonnullOwnPtr<Box>>>(BoxType, BoxStream&)>;
+    ErrorOr<BoxList> read_entire_file(BoxCallback);
+
 private:
     Reader(MaybeOwned<BoxStream> stream)
         : m_box_stream(move(stream))

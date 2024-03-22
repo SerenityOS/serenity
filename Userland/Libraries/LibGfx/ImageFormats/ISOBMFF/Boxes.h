@@ -95,7 +95,9 @@ struct FileTypeBox final : public Box {
 // A box that contains other boxes.
 struct SuperBox : public Box {
     SuperBox() = default;
-    ErrorOr<void> read_from_stream(BoxStream&);
+
+    using BoxCallback = Function<ErrorOr<Optional<NonnullOwnPtr<Box>>>(BoxType, BoxStream&)>;
+    ErrorOr<void> read_from_stream(BoxStream&, BoxCallback);
     virtual void dump(String const& prepend = {}) const override;
 
 private:
