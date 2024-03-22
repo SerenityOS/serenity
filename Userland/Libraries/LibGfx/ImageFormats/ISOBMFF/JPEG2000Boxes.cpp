@@ -17,6 +17,8 @@ ErrorOr<void> JPEG2000HeaderBox::read_from_stream(BoxStream& stream)
             return TRY(JPEG2000ColorSpecificationBox::create_from_stream(stream));
         case BoxType::JPEG2000ImageHeaderBox:
             return TRY(JPEG2000ImageHeaderBox::create_from_stream(stream));
+        case BoxType::JPEG2000ResolutionBox:
+            return TRY(JPEG2000ResolutionBox::create_from_stream(stream));
         default:
             return OptionalNone {};
         }
@@ -85,6 +87,24 @@ void JPEG2000ColorSpecificationBox::dump(String const& prepend) const
         outln("{}- enumerated_color_space = {}", prepend, enumerated_color_space);
     if (method == 2)
         outln("{}- icc_data = {} bytes", prepend, icc_data.size());
+}
+
+ErrorOr<void> JPEG2000ResolutionBox::read_from_stream(BoxStream& stream)
+{
+    auto make_subbox = [](BoxType type, BoxStream&) -> ErrorOr<Optional<NonnullOwnPtr<Box>>> {
+        switch (type) {
+        default:
+            return OptionalNone {};
+        }
+    };
+
+    TRY(SuperBox::read_from_stream(stream, move(make_subbox)));
+    return {};
+}
+
+void JPEG2000ResolutionBox::dump(String const& prepend) const
+{
+    SuperBox::dump(prepend);
 }
 
 ErrorOr<void> JPEG2000SignatureBox::read_from_stream(BoxStream& stream)
