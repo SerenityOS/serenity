@@ -1105,10 +1105,13 @@ void Document::update_layout()
     m_needs_layout = false;
 }
 
-[[nodiscard]] static CSS::RequiredInvalidationAfterStyleChange update_style_recursively(Node& node)
+[[nodiscard]] static CSS::RequiredInvalidationAfterStyleChange update_style_recursively(Node& node, CSS::StyleComputer& style_computer)
 {
     bool const needs_full_style_update = node.document().needs_full_style_update();
     CSS::RequiredInvalidationAfterStyleChange invalidation;
+
+    if (node.is_element())
+        style_computer.push_ancestor(static_cast<Element const&>(node));
 
     // NOTE: If the current node has `display:none`, we can disregard all invalidation
     //       caused by its children, as they will not be rendered anyway.
@@ -1125,7 +1128,7 @@ void Document::update_layout()
         if (node.is_element()) {
             if (auto* shadow_root = static_cast<DOM::Element&>(node).shadow_root_internal()) {
                 if (needs_full_style_update || shadow_root->needs_style_update() || shadow_root->child_needs_style_update()) {
-                    auto subtree_invalidation = update_style_recursively(*shadow_root);
+                    auto subtree_invalidation = update_style_recursively(*shadow_root, style_computer);
                     if (!is_display_none)
                         invalidation |= subtree_invalidation;
                 }
@@ -1134,7 +1137,7 @@ void Document::update_layout()
 
         node.for_each_child([&](auto& child) {
             if (needs_full_style_update || child.needs_style_update() || child.child_needs_style_update()) {
-                auto subtree_invalidation = update_style_recursively(child);
+                auto subtree_invalidation = update_style_recursively(child, style_computer);
                 if (!is_display_none)
                     invalidation |= subtree_invalidation;
             }
@@ -1143,6 +1146,10 @@ void Document::update_layout()
     }
 
     node.set_child_needs_style_update(false);
+
+    if (node.is_element())
+        style_computer.pop_ancestor(static_cast<Element const&>(node));
+
     return invalidation;
 }
 
@@ -1165,7 +1172,9 @@ void Document::update_style()
 
     evaluate_media_rules();
 
-    auto invalidation = update_style_recursively(*this);
+    style_computer().reset_ancestor_filter();
+
+    auto invalidation = update_style_recursively(*this, style_computer());
     if (invalidation.rebuild_layout_tree) {
         invalidate_layout();
     } else {

@@ -242,12 +242,18 @@ public:
     u32 specificity() const;
     String serialize() const;
 
+    auto const& ancestor_hashes() const { return m_ancestor_hashes; }
+
 private:
     explicit Selector(Vector<CompoundSelector>&&);
 
     Vector<CompoundSelector> m_compound_selectors;
     mutable Optional<u32> m_specificity;
     Optional<Selector::PseudoElement> m_pseudo_element;
+
+    void collect_ancestor_hashes();
+
+    Array<u32, 8> m_ancestor_hashes;
 };
 
 String serialize_a_group_of_selectors(Vector<NonnullRefPtr<Selector>> const& selectors);
