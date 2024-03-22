@@ -1432,6 +1432,8 @@ static void dequantize(JPEGLoadingContext& context, Vector<Macroblock>& macroblo
 
 static void inverse_dct_8x8(i16* block_component)
 {
+    // Does a 2-D IDCT by doing two 1-D IDCTs as described in https://unix4lyfe.org/dct/
+    // The 1-D DCT idea is described at https://unix4lyfe.org/dct-1d/, read aan.cc from bottom to top.
     static float const m0 = 2.0f * AK::cos(1.0f / 16.0f * 2.0f * AK::Pi<float>);
     static float const m1 = 2.0f * AK::cos(2.0f / 16.0f * 2.0f * AK::Pi<float>);
     static float const m3 = 2.0f * AK::cos(2.0f / 16.0f * 2.0f * AK::Pi<float>);
