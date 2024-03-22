@@ -69,7 +69,7 @@ template<>
 struct AK::Formatter<Gfx::ISOBMFF::BoxType> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, Gfx::ISOBMFF::BoxType const& box_type)
     {
-        StringView format_string = Gfx::ISOBMFF::is_valid_box_type(box_type) ? "('{}')"sv : "Unknown Box ('{}')"sv;
+        StringView format_string = Gfx::ISOBMFF::is_valid_box_type(box_type) ? "({})"sv : "Unknown Box ({})"sv;
         return Formatter<FormatString>::format(builder, format_string, RIFF::ChunkID::from_big_endian_number(to_underlying(box_type)));
     }
 };
