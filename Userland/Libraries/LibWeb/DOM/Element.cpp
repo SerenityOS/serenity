@@ -678,11 +678,11 @@ WebIDL::ExceptionOr<DOM::Element const*> Element::closest(StringView selectors) 
 
     auto matches_selectors = [this](CSS::SelectorList const& selector_list, Element const* element) {
         // 4. For each element in elements, if match a selector against an element, using s, element, and scoping root this, returns success, return element.
-        for (auto& selector : selector_list) {
-            if (!SelectorEngine::matches(selector, {}, *element, {}, this))
-                return false;
+        for (auto const& selector : selector_list) {
+            if (SelectorEngine::matches(selector, {}, *element, {}, this))
+                return true;
         }
-        return true;
+        return false;
     };
 
     auto const selector_list = maybe_selectors.release_value();
