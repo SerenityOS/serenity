@@ -20,14 +20,12 @@ public:
     ErrorOr<BoxList> read_entire_file();
 
 private:
-    Reader(MaybeOwned<SeekableStream> stream, size_t size)
-        : m_stream(move(stream))
-        , m_box_stream(*m_stream, size)
+    Reader(MaybeOwned<BoxStream> stream)
+        : m_box_stream(move(stream))
     {
     }
 
-    MaybeOwned<SeekableStream> m_stream;
-    BoxStream m_box_stream;
+    MaybeOwned<BoxStream> m_box_stream;
 };
 
 }
