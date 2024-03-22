@@ -13,17 +13,17 @@
 namespace Gfx::ISOBMFF {
 
 // Define all Box types:
-#define ENUMERATE_ALL()               \
-    ENUMERATE_ONE(FileTypeBox, ftyp)  \
-    ENUMERATE_ONE(MetaBox, meta)      \
-    ENUMERATE_ONE(MovieBox, moov)     \
-    ENUMERATE_ONE(MediaDataBox, mdat) \
-    ENUMERATE_ONE(FreeBox, free)
+#define ENUMERATE_ALL()                 \
+    ENUMERATE_ONE(FileTypeBox, "ftyp")  \
+    ENUMERATE_ONE(MetaBox, "meta")      \
+    ENUMERATE_ONE(MovieBox, "moov")     \
+    ENUMERATE_ONE(MediaDataBox, "mdat") \
+    ENUMERATE_ONE(FreeBox, "free")
 
 enum class BoxType : u32 {
     None = 0,
 
-#define ENUMERATE_ONE(box_name, box_4cc) box_name = RIFF::ChunkID(#box_4cc).as_number(),
+#define ENUMERATE_ONE(box_name, box_4cc) box_name = RIFF::ChunkID(box_4cc).as_number(),
 
     ENUMERATE_ALL()
 
