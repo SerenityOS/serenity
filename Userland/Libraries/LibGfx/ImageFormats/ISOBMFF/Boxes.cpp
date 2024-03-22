@@ -5,6 +5,7 @@
  */
 
 #include "Boxes.h"
+#include "Reader.h"
 
 namespace Gfx::ISOBMFF {
 
@@ -101,6 +102,21 @@ void FileTypeBox::dump(String const& prepend) const
         compatible_brands_string.appendff("{}, ", compatible_brands[i]);
     compatible_brands_string.appendff("{} }}", compatible_brands[compatible_brands.size() - 1]);
     outln("{}{}", prepend, compatible_brands_string.string_view());
+}
+
+ErrorOr<void> SuperBox::read_from_stream(BoxStream& stream)
+{
+    auto reader = TRY(Gfx::ISOBMFF::Reader::create(MaybeOwned { stream }));
+    m_child_boxes = TRY(reader.read_entire_file());
+    return {};
+}
+
+void SuperBox::dump(String const& prepend) const
+{
+    Box::dump(prepend);
+    auto indented_prepend = add_indent(prepend);
+    for (auto const& child_box : m_child_boxes)
+        child_box->dump(indented_prepend);
 }
 
 }

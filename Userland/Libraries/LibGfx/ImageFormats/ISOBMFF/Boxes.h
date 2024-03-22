@@ -93,4 +93,25 @@ struct FileTypeBox final : public Box {
     Vector<BrandIdentifier> compatible_brands;
 };
 
+// A box that contains other boxes.
+struct SuperBox : public Box {
+    static ErrorOr<NonnullOwnPtr<SuperBox>> create_from_stream(BoxType type, BoxStream& stream)
+    {
+        auto box = TRY(try_make<SuperBox>(type));
+        TRY(box->read_from_stream(stream));
+        return box;
+    }
+    SuperBox(BoxType type)
+        : m_box_type(type)
+    {
+    }
+    virtual ErrorOr<void> read_from_stream(BoxStream&) override;
+    virtual BoxType box_type() const override { return m_box_type; }
+    virtual void dump(String const& prepend = {}) const override;
+
+private:
+    BoxType m_box_type { BoxType::None };
+    BoxList m_child_boxes;
+};
+
 }

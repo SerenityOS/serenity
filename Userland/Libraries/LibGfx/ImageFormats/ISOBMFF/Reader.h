@@ -16,6 +16,7 @@ namespace Gfx::ISOBMFF {
 class Reader {
 public:
     static ErrorOr<Reader> create(MaybeOwned<SeekableStream> stream);
+    static ErrorOr<Reader> create(MaybeOwned<BoxStream> stream);
 
     ErrorOr<BoxList> read_entire_file();
 
