@@ -76,6 +76,7 @@ shared_library("LibGfx") {
     "ImageFormats/ISOBMFF/Reader.cpp",
     "ImageFormats/ImageDecoder.cpp",
     "ImageFormats/JBIG2Loader.cpp",
+    "ImageFormats/JPEG2000Loader.cpp",
     "ImageFormats/JPEGLoader.cpp",
     "ImageFormats/JPEGWriter.cpp",
     "ImageFormats/JPEGXLLoader.cpp",

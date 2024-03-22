@@ -113,6 +113,7 @@ static Array const s_registered_mime_type = {
     MimeType { .name = "image/bmp"sv, .common_extensions = { ".bmp"sv }, .description = "BMP image data"sv, .magic_bytes = Vector<u8> { 'B', 'M' } },
     MimeType { .name = "image/gif"sv, .common_extensions = { ".gif"sv }, .description = "GIF image data"sv, .magic_bytes = Vector<u8> { 'G', 'I', 'F', '8', '7', 'a' } },
     MimeType { .name = "image/gif"sv, .common_extensions = { ".gif"sv }, .description = "GIF image data"sv, .magic_bytes = Vector<u8> { 'G', 'I', 'F', '8', '9', 'a' } },
+    MimeType { .name = "image/jp2"sv, .common_extensions = { ".jp2"sv, ".jpx"sv }, .description = "JPEG2000 image data"sv, .magic_bytes = Vector<u8> { 0x00, 0x00, 0x00, 0x0C, 0x6A, 0x50, 0x20, 0x20, 0x0D, 0x0A, 0x87, 0x0A } },
     MimeType { .name = "image/jpeg"sv, .common_extensions = { ".jpg"sv, ".jpeg"sv }, .description = "JPEG image data"sv, .magic_bytes = Vector<u8> { 0xFF, 0xD8, 0xFF } },
     MimeType { .name = "image/jxl"sv, .common_extensions = { ".jxl"sv }, .description = "JPEG XL image data"sv, .magic_bytes = Vector<u8> { 0xFF, 0x0A } },
     MimeType { .name = "image/png"sv, .common_extensions = { ".png"sv }, .description = "PNG image data"sv, .magic_bytes = Vector<u8> { 0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A } },
