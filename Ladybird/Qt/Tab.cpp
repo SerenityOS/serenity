@@ -430,6 +430,7 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
     m_page_context_menu->addAction(&m_window->reload_action());
     m_page_context_menu->addSeparator();
     m_page_context_menu->addAction(&m_window->copy_selection_action());
+    m_page_context_menu->addAction(&m_window->paste_action());
     m_page_context_menu->addAction(&m_window->select_all_action());
     m_page_context_menu->addSeparator();
     m_page_context_menu->addAction(search_selected_text_action);

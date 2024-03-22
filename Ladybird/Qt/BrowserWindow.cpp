@@ -110,6 +110,12 @@ BrowserWindow::BrowserWindow(Vector<URL::URL> const& initial_urls, WebView::Cook
     edit_menu->addAction(m_copy_selection_action);
     QObject::connect(m_copy_selection_action, &QAction::triggered, this, &BrowserWindow::copy_selected_text);
 
+    m_paste_action = new QAction("&Paste", this);
+    m_paste_action->setIcon(load_icon_from_uri("resource://icons/16x16/paste.png"sv));
+    m_paste_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Paste));
+    edit_menu->addAction(m_paste_action);
+    QObject::connect(m_paste_action, &QAction::triggered, this, &BrowserWindow::paste);
+
     m_select_all_action = new QAction("Select &All", this);
     m_select_all_action->setIcon(load_icon_from_uri("resource://icons/16x16/select-all.png"sv));
     m_select_all_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::SelectAll));
@@ -719,6 +725,15 @@ void BrowserWindow::select_all()
         return;
 
     m_current_tab->view().select_all();
+}
+
+void BrowserWindow::paste()
+{
+    if (!m_current_tab)
+        return;
+
+    auto* clipboard = QGuiApplication::clipboard();
+    m_current_tab->view().paste(ak_string_from_qstring(clipboard->text()));
 }
 
 void BrowserWindow::update_displayed_zoom_level()

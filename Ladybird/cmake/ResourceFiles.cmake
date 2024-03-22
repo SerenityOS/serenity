@@ -32,6 +32,7 @@ set(16x16_ICONS
     layout.png
     new-tab.png
     open-parent-directory.png
+    paste.png
     pause.png
     play.png
     select-all.png

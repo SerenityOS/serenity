@@ -910,6 +910,18 @@ void ConnectionFromClient::select_all(u64 page_id)
     page.page().focused_context().select_all();
 }
 
+void ConnectionFromClient::paste(u64 page_id, String const& text)
+{
+    auto maybe_page = page(page_id);
+    if (!maybe_page.has_value()) {
+        dbgln("ConnectionFromClient::paste: No page with ID {}", page_id);
+        return;
+    }
+    auto& page = maybe_page.release_value();
+
+    page.page().focused_context().paste(text);
+}
+
 Messages::WebContentServer::DumpLayoutTreeResponse ConnectionFromClient::dump_layout_tree(u64 page_id)
 {
     auto maybe_page = page(page_id);

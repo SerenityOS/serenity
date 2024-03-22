@@ -868,6 +868,21 @@ bool EventHandler::handle_keyup(KeyCode key, u32 modifiers, u32 code_point)
     return !fire_keyboard_event(UIEvents::EventNames::keyup, m_browsing_context, key, modifiers, code_point);
 }
 
+void EventHandler::handle_paste(String const& text)
+{
+    auto* active_document = m_browsing_context->active_document();
+    if (!active_document)
+        return;
+    if (!active_document->is_fully_active())
+        return;
+
+    if (auto cursor_position = m_browsing_context->cursor_position()) {
+        active_document->update_layout();
+        m_edit_event_handler->handle_insert(*cursor_position, text);
+        cursor_position->set_offset(cursor_position->offset() + text.code_points().length());
+    }
+}
+
 void EventHandler::set_mouse_event_tracking_paintable(Painting::Paintable* paintable)
 {
     m_mouse_event_tracking_paintable = paintable;

@@ -59,6 +59,11 @@ public:
         return *m_select_all_action;
     }
 
+    QAction& paste_action()
+    {
+        return *m_paste_action;
+    }
+
     QAction& view_source_action()
     {
         return *m_view_source_action;
@@ -90,6 +95,7 @@ public slots:
     void reset_zoom();
     void update_zoom_menu();
     void select_all();
+    void paste();
     void copy_selected_text();
 
 protected:
@@ -131,6 +137,7 @@ private:
     QAction* m_go_forward_action { nullptr };
     QAction* m_reload_action { nullptr };
     QAction* m_copy_selection_action { nullptr };
+    QAction* m_paste_action { nullptr };
     QAction* m_select_all_action { nullptr };
     QAction* m_view_source_action { nullptr };
     QAction* m_inspect_dom_node_action { nullptr };

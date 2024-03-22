@@ -165,6 +165,11 @@ void ViewImplementation::select_all()
     client().async_select_all(page_id());
 }
 
+void ViewImplementation::paste(String const& text)
+{
+    client().async_paste(page_id(), text);
+}
+
 void ViewImplementation::get_source()
 {
     client().async_get_source(page_id());

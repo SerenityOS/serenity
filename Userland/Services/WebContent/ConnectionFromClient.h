@@ -125,6 +125,8 @@ private:
     virtual Messages::WebContentServer::GetSelectedTextResponse get_selected_text(u64 page_id) override;
     virtual void select_all(u64 page_id) override;
 
+    virtual void paste(u64 page_id, String const& text) override;
+
     void report_finished_handling_input_event(u64 page_id, bool event_was_handled);
 
     NonnullOwnPtr<PageHost> m_page_host;
