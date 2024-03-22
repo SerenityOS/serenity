@@ -14,6 +14,11 @@ ErrorOr<Reader> Reader::create(MaybeOwned<SeekableStream> stream)
     return Reader(make<BoxStream>(move(stream), size));
 }
 
+ErrorOr<Reader> Reader::create(MaybeOwned<BoxStream> stream)
+{
+    return Reader(move(stream));
+}
+
 ErrorOr<BoxList> Reader::read_entire_file()
 {
     BoxList top_level_boxes;
@@ -25,6 +30,9 @@ ErrorOr<BoxList> Reader::read_entire_file()
         switch (box_header.type) {
         case BoxType::FileTypeBox:
             TRY(top_level_boxes.try_append(TRY(FileTypeBox::create_from_stream(box_stream))));
+            break;
+        case BoxType::JPEG2000HeaderBox:
+            TRY(top_level_boxes.try_append(TRY(SuperBox::create_from_stream(box_header.type, box_stream))));
             break;
         default:
             TRY(top_level_boxes.try_append(TRY(UnknownBox::create_from_stream(box_header.type, box_stream))));
