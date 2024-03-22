@@ -11,16 +11,16 @@ namespace Gfx::ISOBMFF {
 ErrorOr<Reader> Reader::create(MaybeOwned<SeekableStream> stream)
 {
     size_t size = TRY(stream->size());
-    return Reader(move(stream), size);
+    return Reader(make<BoxStream>(move(stream), size));
 }
 
 ErrorOr<BoxList> Reader::read_entire_file()
 {
     BoxList top_level_boxes;
 
-    while (!m_stream->is_eof()) {
-        auto box_header = TRY(read_box_header(m_box_stream));
-        BoxStream box_stream { m_box_stream, static_cast<size_t>(box_header.contents_size) };
+    while (!m_box_stream->is_eof()) {
+        auto box_header = TRY(read_box_header(*m_box_stream));
+        BoxStream box_stream { MaybeOwned<Stream> { *m_box_stream }, static_cast<size_t>(box_header.contents_size) };
 
         switch (box_header.type) {
         case BoxType::FileTypeBox:
