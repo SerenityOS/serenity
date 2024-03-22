@@ -8,6 +8,17 @@
 
 namespace Gfx::ISOBMFF {
 
+ErrorOr<void> JPEG2000HeaderBox::read_from_stream(BoxStream& stream)
+{
+    TRY(SuperBox::read_from_stream(stream));
+    return {};
+}
+
+void JPEG2000HeaderBox::dump(String const& prepend) const
+{
+    SuperBox::dump(prepend);
+}
+
 ErrorOr<void> JPEG2000SignatureBox::read_from_stream(BoxStream& stream)
 {
     signature = TRY(stream.read_value<BigEndian<u32>>());
