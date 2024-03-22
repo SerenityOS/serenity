@@ -19,17 +19,12 @@ public:
 
     ErrorOr<BoxList> read_entire_file();
 
-    ErrorOr<BrandIdentifier> get_major_brand();
-    ErrorOr<Vector<BrandIdentifier>> get_minor_brands();
-
 private:
     Reader(MaybeOwned<SeekableStream> stream, size_t size)
         : m_stream(move(stream))
         , m_box_stream(*m_stream, size)
     {
     }
-
-    ErrorOr<void> parse_initial_data();
 
     MaybeOwned<SeekableStream> m_stream;
     BoxStream m_box_stream;
