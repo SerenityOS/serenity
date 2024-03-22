@@ -7,6 +7,7 @@
 #include <AK/Debug.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/EventLoop.h>
+#include <LibCore/Promise.h>
 #include <LibCore/Timer.h>
 #include <LibTLS/TLSv12.h>
 
@@ -51,45 +52,38 @@ ErrorOr<size_t> TLSv12::write_some(ReadonlyBytes bytes)
 
 ErrorOr<NonnullOwnPtr<TLSv12>> TLSv12::connect(ByteString const& host, u16 port, Options options)
 {
-    Core::EventLoop loop;
+    auto promise = Core::Promise<Empty>::construct();
     OwnPtr<Core::Socket> tcp_socket = TRY(Core::TCPSocket::connect(host, port));
     TRY(tcp_socket->set_blocking(false));
     auto tls_socket = make<TLSv12>(move(tcp_socket), move(options));
     tls_socket->set_sni(host);
     tls_socket->on_connected = [&] {
-        loop.quit(0);
+        promise->resolve({});
     };
     tls_socket->on_tls_error = [&](auto alert) {
-        loop.quit(256 - to_underlying(alert));
+        tls_socket->try_disambiguate_error();
+        promise->reject(AK::Error::from_string_view(enum_to_string(alert)));
     };
-    auto result = loop.exec();
-    if (result == 0)
-        return tls_socket;
 
-    tls_socket->try_disambiguate_error();
-    // FIXME: Should return richer information here.
-    return AK::Error::from_string_view(enum_to_string(static_cast<AlertDescription>(256 - result)));
+    TRY(promise->await());
+    return tls_socket;
 }
 
 ErrorOr<NonnullOwnPtr<TLSv12>> TLSv12::connect(ByteString const& host, Core::Socket& underlying_stream, Options options)
 {
+    auto promise = Core::Promise<Empty>::construct();
     TRY(underlying_stream.set_blocking(false));
     auto tls_socket = make<TLSv12>(&underlying_stream, move(options));
     tls_socket->set_sni(host);
-    Core::EventLoop loop;
     tls_socket->on_connected = [&] {
-        loop.quit(0);
+        promise->resolve({});
     };
     tls_socket->on_tls_error = [&](auto alert) {
-        loop.quit(256 - to_underlying(alert));
+        tls_socket->try_disambiguate_error();
+        promise->reject(AK::Error::from_string_view(enum_to_string(alert)));
     };
-    auto result = loop.exec();
-    if (result == 0)
-        return tls_socket;
-
-    tls_socket->try_disambiguate_error();
-    // FIXME: Should return richer information here.
-    return AK::Error::from_string_view(enum_to_string(static_cast<AlertDescription>(256 - result)));
+    TRY(promise->await());
+    return tls_socket;
 }
 
 void TLSv12::setup_connection()
