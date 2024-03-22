@@ -85,7 +85,7 @@ private:
     virtual void dump(String const& prepend = {}) const override;
 
 // 4.3 File Type Box
-struct FileTypeBox final : public FullBox {
+struct FileTypeBox final : public Box {
     BOX_SUBTYPE(FileTypeBox);
 
     BrandIdentifier major_brand { BrandIdentifier::None };
