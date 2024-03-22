@@ -46,6 +46,7 @@ set(SOURCES
     ImageFormats/ILBMLoader.cpp
     ImageFormats/ImageDecoder.cpp
     ImageFormats/ISOBMFF/Boxes.cpp
+    ImageFormats/ISOBMFF/JPEG2000Boxes.cpp
     ImageFormats/ISOBMFF/Reader.cpp
     ImageFormats/JBIG2Loader.cpp
     ImageFormats/JPEGLoader.cpp
