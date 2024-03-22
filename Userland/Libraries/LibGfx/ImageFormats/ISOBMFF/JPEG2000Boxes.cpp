@@ -99,4 +99,23 @@ void JPEG2000SignatureBox::dump(String const& prepend) const
     outln("{}- signature = {:#08x}", prepend, signature);
 }
 
+ErrorOr<void> JPEG2000UUIDInfoBox::read_from_stream(BoxStream& stream)
+{
+    auto make_subbox = [](BoxType type, BoxStream&) -> ErrorOr<Optional<NonnullOwnPtr<Box>>> {
+        switch (type) {
+        default:
+            return OptionalNone {};
+        }
+    };
+
+    TRY(SuperBox::read_from_stream(stream, move(make_subbox)));
+    return {};
+}
+
+void JPEG2000UUIDInfoBox::dump(String const& prepend) const
+{
+    SuperBox::dump(prepend);
+}
+
+
 }
