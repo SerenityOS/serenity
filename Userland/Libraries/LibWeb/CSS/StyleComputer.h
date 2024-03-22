@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2024, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -19,6 +19,55 @@
 #include <LibWeb/Forward.h>
 
 namespace Web::CSS {
+
+// A counting bloom filter with 2 hash functions.
+// NOTE: If a counter overflows, it's kept maxed-out until the whole filter is cleared.
+template<typename CounterType, size_t key_bits>
+class CountingBloomFilter {
+public:
+    CountingBloomFilter() { }
+
+    void clear() { __builtin_memset(m_buckets, 0, sizeof(m_buckets)); }
+
+    void increment(u32 key)
+    {
+        auto& first = bucket1(key);
+        if (first < NumericLimits<CounterType>::max())
+            ++first;
+        auto& second = bucket2(key);
+        if (second < NumericLimits<CounterType>::max())
+            ++second;
+    }
+
+    void decrement(u32 key)
+    {
+        auto& first = bucket1(key);
+        if (first < NumericLimits<CounterType>::max())
+            --first;
+        auto& second = bucket2(key);
+        if (second < NumericLimits<CounterType>::max())
+            --second;
+    }
+
+    [[nodiscard]] bool may_contain(u32 hash) const
+    {
+        return bucket1(hash) && bucket2(hash);
+    }
+
+private:
+    static constexpr u32 bucket_count = 1 << key_bits;
+    static constexpr u32 key_mask = bucket_count - 1;
+
+    [[nodiscard]] u32 hash1(u32 key) const { return key & key_mask; }
+    [[nodiscard]] u32 hash2(u32 key) const { return (key >> 16) & key_mask; }
+
+    [[nodiscard]] CounterType& bucket1(u32 key) { return m_buckets[hash1(key)]; }
+    [[nodiscard]] CounterType& bucket2(u32 key) { return m_buckets[hash2(key)]; }
+    [[nodiscard]] CounterType bucket1(u32 key) const { return m_buckets[hash1(key)]; }
+    [[nodiscard]] CounterType bucket2(u32 key) const { return m_buckets[hash2(key)]; }
+
+    CounterType m_buckets[bucket_count];
+};
 
 // https://www.w3.org/TR/css-cascade/#origin
 enum class CascadeOrigin : u8 {
@@ -69,6 +118,10 @@ public:
     DOM::Document& document() { return m_document; }
     DOM::Document const& document() const { return m_document; }
 
+    void reset_ancestor_filter();
+    void push_ancestor(DOM::Element const&);
+    void pop_ancestor(DOM::Element const&);
+
     NonnullRefPtr<StyleProperties> create_document_style() const;
 
     NonnullRefPtr<StyleProperties> compute_style(DOM::Element&, Optional<CSS::Selector::PseudoElement::Type> = {}) const;
@@ -102,6 +155,8 @@ private:
 
     class FontLoader;
     struct MatchingFontCandidate;
+
+    [[nodiscard]] bool should_reject_with_ancestor_filter(Selector const&) const;
 
     RefPtr<StyleProperties> compute_style_impl(DOM::Element&, Optional<CSS::Selector::PseudoElement::Type>, ComputeStyleMode) const;
     void compute_cascaded_values(StyleProperties&, DOM::Element&, Optional<CSS::Selector::PseudoElement::Type>, bool& did_match_any_pseudo_element_rules, ComputeStyleMode) const;
@@ -167,6 +222,8 @@ private:
     Length::FontMetrics m_root_element_font_metrics;
 
     CSSPixelRect m_viewport_rect;
+
+    CountingBloomFilter<u8, 14> m_ancestor_filter;
 };
 
 }

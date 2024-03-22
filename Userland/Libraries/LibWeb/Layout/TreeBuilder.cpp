@@ -290,6 +290,14 @@ i32 TreeBuilder::calculate_list_item_index(DOM::Node& dom_node)
 
 void TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::Context& context)
 {
+    if (dom_node.is_element())
+        dom_node.document().style_computer().push_ancestor(static_cast<DOM::Element const&>(dom_node));
+
+    ScopeGuard pop_ancestor_guard = [&] {
+        if (dom_node.is_element())
+            dom_node.document().style_computer().pop_ancestor(static_cast<DOM::Element const&>(dom_node));
+    };
+
     JS::GCPtr<Layout::Node> layout_node;
     Optional<TemporaryChange<bool>> has_svg_root_change;
 
@@ -468,6 +476,8 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::Context& 
 JS::GCPtr<Layout::Node> TreeBuilder::build(DOM::Node& dom_node)
 {
     VERIFY(dom_node.is_document());
+
+    dom_node.document().style_computer().reset_ancestor_filter();
 
     Context context;
     m_quote_nesting_level = 0;

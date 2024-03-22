@@ -61,6 +61,7 @@
 #include <LibWeb/CSS/StyleValues/TransformationStyleValue.h>
 #include <LibWeb/CSS/StyleValues/UnresolvedStyleValue.h>
 #include <LibWeb/CSS/StyleValues/UnsetStyleValue.h>
+#include <LibWeb/DOM/Attr.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/ShadowRoot.h>
@@ -302,6 +303,17 @@ StyleComputer::RuleCache const& StyleComputer::rule_cache_for_cascade_origin(Cas
     return true;
 }
 
+bool StyleComputer::should_reject_with_ancestor_filter(Selector const& selector) const
+{
+    for (u32 hash : selector.ancestor_hashes()) {
+        if (hash == 0)
+            break;
+        if (!m_ancestor_filter.may_contain(hash))
+            return true;
+    }
+    return false;
+}
+
 Vector<MatchingRule> StyleComputer::collect_matching_rules(DOM::Element const& element, CascadeOrigin cascade_origin, Optional<CSS::Selector::PseudoElement::Type> pseudo_element) const
 {
     auto const& root_node = element.root();
@@ -358,6 +370,10 @@ Vector<MatchingRule> StyleComputer::collect_matching_rules(DOM::Element const& e
             continue;
 
         auto const& selector = rule_to_run.rule->selectors()[rule_to_run.selector_index];
+
+        if (should_reject_with_ancestor_filter(*selector))
+            continue;
+
         if (rule_to_run.can_use_fast_matches) {
             if (!SelectorEngine::fast_matches(selector, *rule_to_run.sheet, element))
                 continue;
@@ -2583,6 +2599,37 @@ void StyleComputer::compute_math_depth(StyleProperties& style, DOM::Element cons
     }
     // - Otherwise, the computed value of math-depth of the element is the inherited one.
     style.set_math_depth(inherited_math_depth());
+}
+
+static void for_each_element_hash(DOM::Element const& element, auto callback)
+{
+    callback(element.local_name().hash());
+    if (element.id().has_value())
+        callback(element.id().value().hash());
+    for (auto const& class_ : element.class_names())
+        callback(class_.hash());
+    element.for_each_attribute([&](auto& attribute) {
+        callback(attribute.local_name().hash());
+    });
+}
+
+void StyleComputer::reset_ancestor_filter()
+{
+    m_ancestor_filter.clear();
+}
+
+void StyleComputer::push_ancestor(DOM::Element const& element)
+{
+    for_each_element_hash(element, [&](u32 hash) {
+        m_ancestor_filter.increment(hash);
+    });
+}
+
+void StyleComputer::pop_ancestor(DOM::Element const& element)
+{
+    for_each_element_hash(element, [&](u32 hash) {
+        m_ancestor_filter.decrement(hash);
+    });
 }
 
 }
