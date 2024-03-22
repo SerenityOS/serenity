@@ -80,4 +80,15 @@ struct JPEG2000UUIDListBox final : public Box {
     Vector<Array<u8, 16>> uuids;
 };
 
+// I.7.3.2 Data Entry URL box
+struct JPEG2000URLBox final : public Box {
+    BOX_SUBTYPE(JPEG2000URLBox);
+
+    ErrorOr<String> url_as_string() const;
+
+    u8 version_number;
+    u32 flag;
+    ByteBuffer url_bytes;
+};
+
 }
