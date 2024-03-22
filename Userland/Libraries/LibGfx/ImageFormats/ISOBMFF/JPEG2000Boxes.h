@@ -38,6 +38,11 @@ struct JPEG2000ColorSpecificationBox final : public Box {
     ByteBuffer icc_data;              // Only set if method == 2
 };
 
+// I.5.3.7 Resolution box
+struct JPEG2000ResolutionBox final : public SuperBox {
+    BOX_SUBTYPE(JPEG2000ResolutionBox);
+};
+
 struct JPEG2000SignatureBox final : public Box {
     BOX_SUBTYPE(JPEG2000SignatureBox);
 
