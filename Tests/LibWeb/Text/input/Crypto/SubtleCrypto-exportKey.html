@@ -21,8 +21,6 @@
             "unwrapKey",
         ]);
 
-        // FIXME: Create a roundtrip test that starts with a key object and imports it, then exports it.
-
         let exportedPublicKey = await window.crypto.subtle.exportKey("jwk", key.publicKey);
         println(`exportedPublicKey kwt: ${exportedPublicKey.kty}`);
         println(`exportedPublicKey alg: ${exportedPublicKey.alg}`);
