@@ -44,4 +44,8 @@ struct JPEG2000SignatureBox final : public Box {
     u32 signature { 0 };
 };
 
+struct JPEG2000UUIDInfoBox final : public SuperBox {
+    BOX_SUBTYPE(JPEG2000UUIDInfoBox);
+};
+
 }
