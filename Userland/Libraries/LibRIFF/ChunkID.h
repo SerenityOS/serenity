@@ -32,14 +32,22 @@ struct ChunkID {
     constexpr ChunkID(ChunkID const&) = default;
     constexpr ChunkID(ChunkID&&) = default;
     constexpr ChunkID& operator=(ChunkID const&) = default;
-    static constexpr ChunkID from_big_endian_number(u32 number) { return bit_cast<Array<u8, chunk_id_size>>(AK::convert_between_host_and_big_endian(number)); }
+    static constexpr ChunkID from_number(u32 number)
+    {
+        return Array<u8, chunk_id_size> { {
+            static_cast<u8>((number >> 24) & 0xff),
+            static_cast<u8>((number >> 16) & 0xff),
+            static_cast<u8>((number >> 8) & 0xff),
+            static_cast<u8>(number & 0xff),
+        } };
+    }
 
     static ErrorOr<ChunkID> read_from_stream(Stream& stream);
 
     StringView as_ascii_string() const;
-    constexpr u32 as_big_endian_number() const
+    constexpr u32 as_number() const
     {
-        return AK::convert_between_host_and_big_endian((id_data[0] << 24) | (id_data[1] << 16) | (id_data[2] << 8) | id_data[3]);
+        return (id_data[0] << 24) | (id_data[1] << 16) | (id_data[2] << 8) | id_data[3];
     }
 
     bool operator==(ChunkID const&) const = default;
