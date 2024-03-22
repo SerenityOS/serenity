@@ -6,6 +6,7 @@
 
 #include <LibCrypto/ASN1/PEM.h>
 #include <LibCrypto/Hash/SHA2.h>
+#include <LibCrypto/PK/PK.h>
 #include <LibCrypto/PK/RSA.h>
 #include <LibTest/TestCase.h>
 #include <cstring>
@@ -119,13 +120,18 @@ sV/ETwIDAQABAkBpC37UJkjWQRHyxP83xuasExuO6/mT5sQN692kcppTJ9wHNWoD
 RwIhAIDSm8Ajgf7m3RQEoLVrCe/l8WtCqsuWliOsr6rbQq4hAiEAx8R16wvOtZlN
 W4jvSU1+WwAaBZl21lfKf8OhLRXrmNkCIG9IRdcSiNR/Ut8QfD3N9Bb1HsUm+Bvz
 c8yGzl89pYST
------END PRIVATE KEY-----)"sv;
+-----END PRIVATE KEY-----
+)"sv;
     auto decoded = Crypto::decode_pem(keypem.bytes());
     auto keypair = Crypto::PK::RSA::parse_rsa_key(decoded);
     auto priv_der = MUST(keypair.private_key.export_as_der());
-    auto priv_pem = MUST(Crypto::encode_pem(priv_der, Crypto::PEMType::PrivateKey));
+    auto rsa_encryption_oid = Array<int, 7> { 1, 2, 840, 113549, 1, 1, 1 };
+    auto wrapped_priv_der = MUST(Crypto::PK::wrap_in_private_key_info(keypair.private_key, rsa_encryption_oid));
+    auto priv_pem = MUST(Crypto::encode_pem(wrapped_priv_der, Crypto::PEMType::PrivateKey));
     auto rsa_from_pair = Crypto::PK::RSA(keypair.public_key, keypair.private_key);
     auto rsa_from_pem = Crypto::PK::RSA(priv_pem);
+
+    EXPECT_EQ(keypem, StringView(priv_pem));
 
     u8 enc_buffer[rsa_from_pair.output_size()];
     u8 dec_buffer[rsa_from_pair.output_size()];
