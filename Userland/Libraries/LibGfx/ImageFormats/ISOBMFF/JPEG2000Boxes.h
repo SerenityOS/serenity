@@ -43,6 +43,18 @@ struct JPEG2000ResolutionBox final : public SuperBox {
     BOX_SUBTYPE(JPEG2000ResolutionBox);
 };
 
+// I.5.3.7.1 Capture Resolution box
+struct JPEG2000CaptureResolutionBox final : public Box {
+    BOX_SUBTYPE(JPEG2000CaptureResolutionBox);
+
+    u16 vertical_capture_grid_resolution_numerator { 0 };
+    u16 vertical_capture_grid_resolution_denominator { 0 };
+    u16 horizontal_capture_grid_resolution_numerator { 0 };
+    u16 horizontal_capture_grid_resolution_denominator { 0 };
+    i8 vertical_capture_grid_resolution_exponent { 0 };
+    i8 horizontal_capture_grid_resolution_exponent { 0 };
+};
+
 struct JPEG2000SignatureBox final : public Box {
     BOX_SUBTYPE(JPEG2000SignatureBox);
 

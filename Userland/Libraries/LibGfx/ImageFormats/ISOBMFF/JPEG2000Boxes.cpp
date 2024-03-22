@@ -91,8 +91,10 @@ void JPEG2000ColorSpecificationBox::dump(String const& prepend) const
 
 ErrorOr<void> JPEG2000ResolutionBox::read_from_stream(BoxStream& stream)
 {
-    auto make_subbox = [](BoxType type, BoxStream&) -> ErrorOr<Optional<NonnullOwnPtr<Box>>> {
+    auto make_subbox = [](BoxType type, BoxStream& stream) -> ErrorOr<Optional<NonnullOwnPtr<Box>>> {
         switch (type) {
+        case BoxType::JPEG2000CaptureResolutionBox:
+            return TRY(JPEG2000CaptureResolutionBox::create_from_stream(stream));
         default:
             return OptionalNone {};
         }
@@ -105,6 +107,24 @@ ErrorOr<void> JPEG2000ResolutionBox::read_from_stream(BoxStream& stream)
 void JPEG2000ResolutionBox::dump(String const& prepend) const
 {
     SuperBox::dump(prepend);
+}
+
+ErrorOr<void> JPEG2000CaptureResolutionBox::read_from_stream(BoxStream& stream)
+{
+    vertical_capture_grid_resolution_numerator = TRY(stream.read_value<BigEndian<u16>>());
+    vertical_capture_grid_resolution_denominator = TRY(stream.read_value<BigEndian<u16>>());
+    horizontal_capture_grid_resolution_numerator = TRY(stream.read_value<BigEndian<u16>>());
+    horizontal_capture_grid_resolution_denominator = TRY(stream.read_value<BigEndian<u16>>());
+    vertical_capture_grid_resolution_exponent = TRY(stream.read_value<i8>());
+    horizontal_capture_grid_resolution_exponent = TRY(stream.read_value<i8>());
+    return {};
+}
+
+void JPEG2000CaptureResolutionBox::dump(String const& prepend) const
+{
+    Box::dump(prepend);
+    outln("{}- vertical_capture_grid_resolution = {}/{} * 10^{}", prepend, vertical_capture_grid_resolution_numerator, vertical_capture_grid_resolution_denominator, vertical_capture_grid_resolution_exponent);
+    outln("{}- horizontal_capture_grid_resolution = {}/{} * 10^{}", prepend, horizontal_capture_grid_resolution_numerator, horizontal_capture_grid_resolution_denominator, horizontal_capture_grid_resolution_exponent);
 }
 
 ErrorOr<void> JPEG2000SignatureBox::read_from_stream(BoxStream& stream)
