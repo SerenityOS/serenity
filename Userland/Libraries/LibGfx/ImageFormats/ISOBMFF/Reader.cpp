@@ -27,6 +27,8 @@ ErrorOr<BoxList> Reader::read_entire_file()
         switch (type) {
         case BoxType::FileTypeBox:
             return TRY(FileTypeBox::create_from_stream(stream));
+        case BoxType::JPEG2000ContiguousCodestreamBox:
+            return TRY(JPEG2000ContiguousCodestreamBox::create_from_stream(stream));
         case BoxType::JPEG2000HeaderBox:
             return TRY(JPEG2000HeaderBox::create_from_stream(stream));
         case BoxType::JPEG2000SignatureBox:

@@ -127,6 +127,22 @@ void JPEG2000CaptureResolutionBox::dump(String const& prepend) const
     outln("{}- horizontal_capture_grid_resolution = {}/{} * 10^{}", prepend, horizontal_capture_grid_resolution_numerator, horizontal_capture_grid_resolution_denominator, horizontal_capture_grid_resolution_exponent);
 }
 
+ErrorOr<void> JPEG2000ContiguousCodestreamBox::read_from_stream(BoxStream& stream)
+{
+    // FIXME: It's wasteful to make a copy of all the image data here. Having just a ReadonlyBytes
+    // or streaming it into the jpeg2000 decoder would be nicer.
+    ByteBuffer local_codestream = TRY(ByteBuffer::create_uninitialized(stream.remaining()));
+    TRY(stream.read_until_filled(local_codestream));
+    codestream = move(local_codestream);
+    return {};
+}
+
+void JPEG2000ContiguousCodestreamBox::dump(String const& prepend) const
+{
+    Box::dump(prepend);
+    outln("{}- codestream = {} bytes", prepend, codestream.size());
+}
+
 ErrorOr<void> JPEG2000SignatureBox::read_from_stream(BoxStream& stream)
 {
     signature = TRY(stream.read_value<BigEndian<u32>>());

@@ -55,6 +55,13 @@ struct JPEG2000CaptureResolutionBox final : public Box {
     i8 horizontal_capture_grid_resolution_exponent { 0 };
 };
 
+// I.5.4 Contiguous Codestream box
+struct JPEG2000ContiguousCodestreamBox final : public Box {
+    BOX_SUBTYPE(JPEG2000ContiguousCodestreamBox);
+
+    ByteBuffer codestream;
+};
+
 struct JPEG2000SignatureBox final : public Box {
     BOX_SUBTYPE(JPEG2000SignatureBox);
 
