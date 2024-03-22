@@ -978,6 +978,7 @@ U+1F6E9.png
 U+1F6EB.png
 U+1F6EC.png
 U+1F6F0.png
+U+1F6F3.png
 U+1F6F4.png
 U+1F6F5.png
 U+1F6F6.png
