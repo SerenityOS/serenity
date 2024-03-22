@@ -100,6 +100,8 @@ struct SuperBox : public Box {
     ErrorOr<void> read_from_stream(BoxStream&, BoxCallback);
     virtual void dump(String const& prepend = {}) const override;
 
+    BoxList const& child_boxes() const { return m_child_boxes; }
+
 private:
     BoxList m_child_boxes;
 };
