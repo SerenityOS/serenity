@@ -262,7 +262,8 @@ ErrorOr<void> Encoder::write_length(size_t value)
     if (value < 0x80)
         return write_byte(value);
 
-    size_t size = ceil_div(AK::ceil_log2(value), 3ul);
+    size_t size_in_bits = AK::ceil_log2(value);
+    size_t size = ceil_div(size_in_bits, 8ul);
     TRY(write_byte(0x80 | size));
 
     for (size_t i = 0; i < size; i++) {
