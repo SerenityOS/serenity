@@ -27,6 +27,17 @@ struct JPEG2000ImageHeaderBox final : public Box {
     u8 contains_intellectual_property_rights { 0 };
 };
 
+// I.5.3.3 Colour Specification box
+struct JPEG2000ColorSpecificationBox final : public Box {
+    BOX_SUBTYPE(JPEG2000ColorSpecificationBox);
+
+    u8 method { 0 };
+    i8 precedence { 0 };
+    u8 approximation { 0 };
+    u32 enumerated_color_space { 0 }; // Only set if method == 1
+    ByteBuffer icc_data;              // Only set if method == 2
+};
+
 struct JPEG2000SignatureBox final : public Box {
     BOX_SUBTYPE(JPEG2000SignatureBox);
 

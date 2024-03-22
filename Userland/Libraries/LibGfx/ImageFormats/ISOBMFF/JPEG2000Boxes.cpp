@@ -13,6 +13,8 @@ ErrorOr<void> JPEG2000HeaderBox::read_from_stream(BoxStream& stream)
 {
     auto make_subbox = [](BoxType type, BoxStream& stream) -> ErrorOr<Optional<NonnullOwnPtr<Box>>> {
         switch (type) {
+        case BoxType::JPEG2000ColorSpecificationBox:
+            return TRY(JPEG2000ColorSpecificationBox::create_from_stream(stream));
         case BoxType::JPEG2000ImageHeaderBox:
             return TRY(JPEG2000ImageHeaderBox::create_from_stream(stream));
         default:
@@ -56,6 +58,33 @@ void JPEG2000ImageHeaderBox::dump(String const& prepend) const
     outln("{}- compression_type = {}", prepend, compression_type);
     outln("{}- is_colorspace_unknown = {}", prepend, is_colorspace_unknown);
     outln("{}- contains_intellectual_property_rights = {}", prepend, contains_intellectual_property_rights);
+}
+
+ErrorOr<void> JPEG2000ColorSpecificationBox::read_from_stream(BoxStream& stream)
+{
+    method = TRY(stream.read_value<u8>());
+    precedence = TRY(stream.read_value<i8>());
+    approximation = TRY(stream.read_value<u8>());
+    if (method == 1)
+        enumerated_color_space = TRY(stream.read_value<BigEndian<u32>>());
+    if (method == 2) {
+        ByteBuffer local_icc_data = TRY(ByteBuffer::create_uninitialized(stream.remaining()));
+        TRY(stream.read_until_filled(local_icc_data));
+        icc_data = move(local_icc_data);
+    }
+    return {};
+}
+
+void JPEG2000ColorSpecificationBox::dump(String const& prepend) const
+{
+    Box::dump(prepend);
+    outln("{}- method = {}", prepend, method);
+    outln("{}- precedence = {}", prepend, precedence);
+    outln("{}- approximation = {}", prepend, approximation);
+    if (method == 1)
+        outln("{}- enumerated_color_space = {}", prepend, enumerated_color_space);
+    if (method == 2)
+        outln("{}- icc_data = {} bytes", prepend, icc_data.size());
 }
 
 ErrorOr<void> JPEG2000SignatureBox::read_from_stream(BoxStream& stream)
