@@ -161,6 +161,8 @@ ErrorOr<void> JPEG2000UUIDInfoBox::read_from_stream(BoxStream& stream)
         switch (type) {
         case BoxType::JPEG2000UUIDListBox:
             return TRY(JPEG2000UUIDListBox::create_from_stream(stream));
+        case BoxType::JPEG2000URLBox:
+            return TRY(JPEG2000URLBox::create_from_stream(stream));
         default:
             return OptionalNone {};
         }
@@ -196,6 +198,39 @@ void JPEG2000UUIDListBox::dump(String const& prepend) const
         }
         outln();
     }
+}
+
+ErrorOr<String> JPEG2000URLBox::url_as_string() const
+{
+    // Zero-terminated UTF-8 per spec.
+    if (url_bytes.is_empty() || url_bytes.bytes().last() != '\0')
+        return Error::from_string_literal("URL not zero-terminated");
+    return String::from_utf8(StringView { url_bytes.bytes().trim(url_bytes.size() - 1) });
+}
+
+ErrorOr<void> JPEG2000URLBox::read_from_stream(BoxStream& stream)
+{
+    version_number = TRY(stream.read_value<u8>());
+    flag = TRY(stream.read_value<u8>()) << 16;
+    flag |= TRY(stream.read_value<BigEndian<u16>>());
+
+    url_bytes = TRY(ByteBuffer::create_uninitialized(stream.remaining()));
+    TRY(stream.read_until_filled(url_bytes));
+
+    return {};
+}
+
+void JPEG2000URLBox::dump(String const& prepend) const
+{
+    Box::dump(prepend);
+    outln("{}- version_number = {}", prepend, version_number);
+    outln("{}- flag = {:#06x}", prepend, flag);
+
+    auto url_or_err = url_as_string();
+    if (url_or_err.is_error())
+        outln("{}- url = <invalid {}; {} bytes>", prepend, url_or_err.release_error(), url_bytes.size());
+    else
+        outln("{}- url = {}", prepend, url_or_err.release_value());
 }
 
 }
