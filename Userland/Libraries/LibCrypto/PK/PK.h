@@ -14,6 +14,36 @@
 
 namespace Crypto::PK {
 
+template<typename ExportableKey>
+ErrorOr<ByteBuffer> wrap_in_private_key_info(ExportableKey key, Span<int> algorithm_identifier)
+requires requires(ExportableKey k) {
+    k.export_as_der();
+}
+{
+    ASN1::Encoder encoder;
+    TRY(encoder.write_constructed(ASN1::Class::Universal, ASN1::Kind::Sequence, [&]() -> ErrorOr<void> {
+        TRY(encoder.write(0x00u)); // version
+
+        // AlgorithmIdentifier
+        TRY(encoder.write_constructed(ASN1::Class::Universal, ASN1::Kind::Sequence, [&]() -> ErrorOr<void> {
+            TRY(encoder.write(algorithm_identifier)); // algorithm
+
+            // FIXME: This assumes we have a NULL parameter, this is not always the case
+            TRY(encoder.write(nullptr)); // parameters
+
+            return {};
+        }));
+
+        // PrivateKey
+        auto data = TRY(key.export_as_der());
+        TRY(encoder.write(data));
+
+        return {};
+    }));
+
+    return encoder.finish();
+}
+
 // FIXME: Fixing name up for grabs
 template<typename PrivKeyT, typename PubKeyT>
 class PKSystem {
