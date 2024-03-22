@@ -12,7 +12,7 @@ ErrorOr<BoxHeader> read_box_header(Stream& stream)
 {
     BoxHeader header;
     u64 total_size = TRY(stream.read_value<BigEndian<u32>>());
-    header.type = TRY(stream.read_value<BoxType>());
+    header.type = TRY(stream.read_value<BigEndian<BoxType>>());
 
     u64 data_size_read = sizeof(u32) + sizeof(BoxType);
 
@@ -68,7 +68,7 @@ void UnknownBox::dump(String const& prepend) const
 ErrorOr<void> FileTypeBox::read_from_stream(BoxStream& stream)
 {
     // unsigned int(32) major_brand;
-    major_brand = TRY(stream.read_value<BrandIdentifier>());
+    major_brand = TRY(stream.read_value<BigEndian<BrandIdentifier>>());
     // unsigned int(32) minor_version;
     minor_version = TRY(stream.read_value<BigEndian<u32>>());
 
@@ -77,7 +77,7 @@ ErrorOr<void> FileTypeBox::read_from_stream(BoxStream& stream)
         return Error::from_string_literal("FileTypeBox compatible_brands contains a partial brand");
 
     for (auto minor_brand_count = stream.remaining() / sizeof(BrandIdentifier); minor_brand_count > 0; minor_brand_count--)
-        TRY(compatible_brands.try_append(TRY(stream.read_value<BrandIdentifier>())));
+        TRY(compatible_brands.try_append(TRY(stream.read_value<BigEndian<BrandIdentifier>>())));
 
     return {};
 }
