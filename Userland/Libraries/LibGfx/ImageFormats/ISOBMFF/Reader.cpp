@@ -5,6 +5,8 @@
  */
 
 #include "Reader.h"
+#include "JPEG2000Boxes.h"
+#include <AK/Function.h>
 
 namespace Gfx::ISOBMFF {
 
@@ -33,6 +35,9 @@ ErrorOr<BoxList> Reader::read_entire_file()
             break;
         case BoxType::JPEG2000HeaderBox:
             TRY(top_level_boxes.try_append(TRY(SuperBox::create_from_stream(box_header.type, box_stream))));
+            break;
+        case BoxType::JPEG2000SignatureBox:
+            TRY(top_level_boxes.try_append(TRY(JPEG2000SignatureBox::create_from_stream(box_stream))));
             break;
         default:
             TRY(top_level_boxes.try_append(TRY(UnknownBox::create_from_stream(box_header.type, box_stream))));
