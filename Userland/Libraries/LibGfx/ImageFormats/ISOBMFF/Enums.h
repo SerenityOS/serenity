@@ -14,11 +14,11 @@ namespace Gfx::ISOBMFF {
 
 // Define all Box types:
 #define ENUMERATE_ALL()                 \
+    ENUMERATE_ONE(FreeBox, "free")      \
     ENUMERATE_ONE(FileTypeBox, "ftyp")  \
-    ENUMERATE_ONE(MetaBox, "meta")      \
-    ENUMERATE_ONE(MovieBox, "moov")     \
     ENUMERATE_ONE(MediaDataBox, "mdat") \
-    ENUMERATE_ONE(FreeBox, "free")
+    ENUMERATE_ONE(MetaBox, "meta")      \
+    ENUMERATE_ONE(MovieBox, "moov")
 
 enum class BoxType : u32 {
     None = 0,
