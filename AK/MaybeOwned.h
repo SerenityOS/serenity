@@ -32,6 +32,12 @@ public:
     MaybeOwned(MaybeOwned&&) = default;
     MaybeOwned& operator=(MaybeOwned&&) = default;
 
+    template<DerivedFrom<T> U>
+    MaybeOwned(MaybeOwned<U>&& other)
+        : m_handle(downcast<U, T>(move(other.m_handle)))
+    {
+    }
+
     T* ptr()
     {
         if (m_handle.template has<T*>())
@@ -57,7 +63,22 @@ public:
     bool is_owned() const { return m_handle.template has<NonnullOwnPtr<T>>(); }
 
 private:
-    Variant<NonnullOwnPtr<T>, T*> m_handle;
+    template<typename F>
+    friend class MaybeOwned;
+
+    template<typename HT>
+    using Handle = Variant<NonnullOwnPtr<HT>, HT*>;
+
+    template<typename U, typename D>
+    Handle<D> downcast(Handle<U>&& variant)
+    {
+        if (variant.template has<U*>())
+            return variant.template get<U*>();
+        else
+            return static_cast<NonnullOwnPtr<T>&&>(move(variant.template get<NonnullOwnPtr<U>>()));
+    }
+
+    Handle<T> m_handle;
 };
 
 }
