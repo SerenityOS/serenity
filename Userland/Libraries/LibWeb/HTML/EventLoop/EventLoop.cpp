@@ -339,7 +339,7 @@ void EventLoop::process()
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#queue-a-global-task
-void queue_global_task(HTML::Task::Source source, JS::Object& global_object, JS::SafeFunction<void()> steps)
+int queue_global_task(HTML::Task::Source source, JS::Object& global_object, JS::SafeFunction<void()> steps)
 {
     // 1. Let event loop be global's relevant agent's event loop.
     auto& global_custom_data = verify_cast<Bindings::WebEngineCustomData>(*global_object.vm().custom_data());
@@ -354,6 +354,8 @@ void queue_global_task(HTML::Task::Source source, JS::Object& global_object, JS:
 
     // 3. Queue a task given source, event loop, document, and steps.
     event_loop.task_queue().add(HTML::Task::create(source, document, move(steps)));
+
+    return event_loop.task_queue().last_added_task()->id();
 }
 
 // https://html.spec.whatwg.org/#queue-a-microtask
