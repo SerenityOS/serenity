@@ -6,6 +6,7 @@
 
 #include "Boxes.h"
 #include "Reader.h"
+#include <AK/Function.h>
 
 namespace Gfx::ISOBMFF {
 
@@ -104,10 +105,10 @@ void FileTypeBox::dump(String const& prepend) const
     outln("{}{}", prepend, compatible_brands_string.string_view());
 }
 
-ErrorOr<void> SuperBox::read_from_stream(BoxStream& stream)
+ErrorOr<void> SuperBox::read_from_stream(BoxStream& stream, BoxCallback box_factory)
 {
     auto reader = TRY(Gfx::ISOBMFF::Reader::create(MaybeOwned { stream }));
-    m_child_boxes = TRY(reader.read_entire_file());
+    m_child_boxes = TRY(reader.read_entire_file(move(box_factory)));
     return {};
 }
 

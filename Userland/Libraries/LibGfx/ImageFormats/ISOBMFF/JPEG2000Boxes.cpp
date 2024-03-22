@@ -5,12 +5,17 @@
  */
 
 #include "JPEG2000Boxes.h"
+#include <AK/Function.h>
 
 namespace Gfx::ISOBMFF {
 
 ErrorOr<void> JPEG2000HeaderBox::read_from_stream(BoxStream& stream)
 {
-    TRY(SuperBox::read_from_stream(stream));
+    auto make_subbox = [](BoxType, BoxStream&) -> ErrorOr<Optional<NonnullOwnPtr<Box>>> {
+        return OptionalNone {};
+    };
+
+    TRY(SuperBox::read_from_stream(stream, move(make_subbox)));
     return {};
 }
 
