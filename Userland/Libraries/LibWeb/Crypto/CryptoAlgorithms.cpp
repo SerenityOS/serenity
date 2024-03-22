@@ -83,7 +83,12 @@ ErrorOr<String> base64_url_uint_encode(::Crypto::UnsignedBigInteger integer)
     for (size_t i = 0; i < data_size; ++i)
         byte_swapped_data.append(data_slice[data_size - i - 1]);
 
-    return encode_base64(byte_swapped_data);
+    auto encoded = TRY(encode_base64url(byte_swapped_data));
+
+    // FIXME: create a version of encode_base64url that omits padding bytes
+    if (auto first_padding_byte = encoded.find_byte_offset('='); first_padding_byte.has_value())
+        return encoded.substring_from_byte_offset(0, first_padding_byte.value());
+    return encoded;
 }
 
 AlgorithmParams::~AlgorithmParams() = default;
