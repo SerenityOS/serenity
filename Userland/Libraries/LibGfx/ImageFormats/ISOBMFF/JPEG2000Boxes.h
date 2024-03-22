@@ -10,6 +10,10 @@
 
 namespace Gfx::ISOBMFF {
 
+struct JPEG2000HeaderBox final : public SuperBox {
+    BOX_SUBTYPE(JPEG2000HeaderBox);
+};
+
 struct JPEG2000SignatureBox final : public Box {
     BOX_SUBTYPE(JPEG2000SignatureBox);
 

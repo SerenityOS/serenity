@@ -34,7 +34,7 @@ ErrorOr<BoxList> Reader::read_entire_file()
             TRY(top_level_boxes.try_append(TRY(FileTypeBox::create_from_stream(box_stream))));
             break;
         case BoxType::JPEG2000HeaderBox:
-            TRY(top_level_boxes.try_append(TRY(SuperBox::create_from_stream(box_header.type, box_stream))));
+            TRY(top_level_boxes.try_append(TRY(JPEG2000HeaderBox::create_from_stream(box_stream))));
             break;
         case BoxType::JPEG2000SignatureBox:
             TRY(top_level_boxes.try_append(TRY(JPEG2000SignatureBox::create_from_stream(box_stream))));
