@@ -61,8 +61,16 @@ struct JPEG2000SignatureBox final : public Box {
     u32 signature { 0 };
 };
 
+// I.7.3 UUID Info boxes (superbox)
 struct JPEG2000UUIDInfoBox final : public SuperBox {
     BOX_SUBTYPE(JPEG2000UUIDInfoBox);
+};
+
+// I.7.3.1 UUID List box
+struct JPEG2000UUIDListBox final : public Box {
+    BOX_SUBTYPE(JPEG2000UUIDListBox);
+
+    Vector<Array<u8, 16>> uuids;
 };
 
 }

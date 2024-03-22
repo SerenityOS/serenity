@@ -141,8 +141,10 @@ void JPEG2000SignatureBox::dump(String const& prepend) const
 
 ErrorOr<void> JPEG2000UUIDInfoBox::read_from_stream(BoxStream& stream)
 {
-    auto make_subbox = [](BoxType type, BoxStream&) -> ErrorOr<Optional<NonnullOwnPtr<Box>>> {
+    auto make_subbox = [](BoxType type, BoxStream& stream) -> ErrorOr<Optional<NonnullOwnPtr<Box>>> {
         switch (type) {
+        case BoxType::JPEG2000UUIDListBox:
+            return TRY(JPEG2000UUIDListBox::create_from_stream(stream));
         default:
             return OptionalNone {};
         }
@@ -157,5 +159,27 @@ void JPEG2000UUIDInfoBox::dump(String const& prepend) const
     SuperBox::dump(prepend);
 }
 
+ErrorOr<void> JPEG2000UUIDListBox::read_from_stream(BoxStream& stream)
+{
+    u16 count = TRY(stream.read_value<BigEndian<u16>>());
+    for (u32 i = 0; i < count; ++i) {
+        Array<u8, 16> uuid;
+        TRY(stream.read_until_filled(uuid));
+        uuids.append(uuid);
+    }
+    return {};
+}
+
+void JPEG2000UUIDListBox::dump(String const& prepend) const
+{
+    Box::dump(prepend);
+    for (auto const& uuid : uuids) {
+        out("{}- ", prepend);
+        for (auto byte : uuid) {
+            out("{:02x}", byte);
+        }
+        outln();
+    }
+}
 
 }
