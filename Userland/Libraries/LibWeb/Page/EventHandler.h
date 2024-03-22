@@ -38,6 +38,8 @@ public:
 
     void set_edit_event_handler(NonnullOwnPtr<EditEventHandler> value) { m_edit_event_handler = move(value); }
 
+    void handle_paste(String const& text);
+
     void visit_edges(JS::Cell::Visitor& visitor) const;
 
 private:

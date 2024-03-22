@@ -63,6 +63,7 @@ public:
     ByteString selected_text();
     Optional<String> selected_text_with_whitespace_collapsed();
     void select_all();
+    void paste(String const&);
 
     void get_source();
 

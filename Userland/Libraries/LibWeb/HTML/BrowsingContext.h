@@ -130,6 +130,7 @@ public:
 
     String selected_text() const;
     void select_all();
+    void paste(String const&);
 
     void did_edit(Badge<EditEventHandler>);
 

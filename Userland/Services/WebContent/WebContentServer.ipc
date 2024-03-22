@@ -65,6 +65,7 @@ endpoint WebContentServer
 
     get_selected_text(u64 page_id) => (ByteString selection)
     select_all(u64 page_id) =|
+    paste(u64 page_id, String text) =|
 
     set_content_filters(u64 page_id, Vector<String> filters) =|
     set_autoplay_allowed_on_all_websites(u64 page_id) =|

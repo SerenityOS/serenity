@@ -441,6 +441,15 @@ void BrowsingContext::select_all()
     (void)selection->select_all_children(*document->body());
 }
 
+void BrowsingContext::paste(String const& text)
+{
+    auto* document = active_document();
+    if (!document)
+        return;
+
+    m_event_handler.handle_paste(text);
+}
+
 bool BrowsingContext::increment_cursor_position_offset()
 {
     if (!m_cursor_position->increment_offset())

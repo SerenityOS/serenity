@@ -94,12 +94,19 @@ void EditEventHandler::handle_delete(DOM::Range& range)
 
 void EditEventHandler::handle_insert(JS::NonnullGCPtr<DOM::Position> position, u32 code_point)
 {
+    StringBuilder builder;
+    builder.append_code_point(code_point);
+    handle_insert(position, MUST(builder.to_string()));
+}
+
+void EditEventHandler::handle_insert(JS::NonnullGCPtr<DOM::Position> position, String data)
+{
     if (is<DOM::Text>(*position->node())) {
         auto& node = verify_cast<DOM::Text>(*position->node());
 
         StringBuilder builder;
         builder.append(node.data().bytes_as_string_view().substring_view(0, position->offset()));
-        builder.append_code_point(code_point);
+        builder.append(data);
         builder.append(node.data().bytes_as_string_view().substring_view(position->offset()));
 
         // Cut string by max length
@@ -113,9 +120,7 @@ void EditEventHandler::handle_insert(JS::NonnullGCPtr<DOM::Position> position, u
     } else {
         auto& node = *position->node();
         auto& realm = node.realm();
-        StringBuilder builder;
-        builder.append_code_point(code_point);
-        auto text = realm.heap().allocate<DOM::Text>(realm, node.document(), MUST(builder.to_string()));
+        auto text = realm.heap().allocate<DOM::Text>(realm, node.document(), data);
         MUST(node.append_child(*text));
         position->set_node(text);
         position->set_offset(1);
