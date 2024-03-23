@@ -800,6 +800,7 @@ TEST_CASE(ECMA262_unicode_sets_parser_error)
 
     constexpr _test tests[] {
         { "[[]"sv, regex::Error::InvalidPattern },
+        { "[[x[]]]"sv, regex::Error::NoError }, // #23691, should not crash on empty charclass within AndOr.
     };
 
     for (auto test : tests) {
