@@ -120,9 +120,9 @@ void InlineFormattingContext::dimension_box_on_line(Box const& box, LayoutMode l
     if (box_is_sized_as_replaced_element(box)) {
         box_state.set_content_width(compute_width_for_replaced_element(box, *m_available_space));
         box_state.set_content_height(compute_height_for_replaced_element(box, *m_available_space));
-
-        if (is<SVGSVGBox>(box))
-            (void)layout_inside(box, layout_mode, box_state.available_inner_space_or_constraints_from(*m_available_space));
+        auto independent_formatting_context = layout_inside(box, layout_mode, box_state.available_inner_space_or_constraints_from(*m_available_space));
+        if (independent_formatting_context)
+            independent_formatting_context->parent_context_did_dimension_child_root_box();
         return;
     }
 
