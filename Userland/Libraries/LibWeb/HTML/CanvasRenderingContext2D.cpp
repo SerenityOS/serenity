@@ -374,9 +374,9 @@ void CanvasRenderingContext2D::fill(Path2D& path, StringView fill_rule)
     return fill_internal(transformed_path, parse_fill_rule(fill_rule));
 }
 
-JS::GCPtr<ImageData> CanvasRenderingContext2D::create_image_data(int width, int height) const
+WebIDL::ExceptionOr<JS::NonnullGCPtr<ImageData>> CanvasRenderingContext2D::create_image_data(int width, int height) const
 {
-    return ImageData::create_with_size(realm(), width, height);
+    return ImageData::create(realm(), width, height);
 }
 
 // https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-getimagedata
@@ -392,7 +392,7 @@ WebIDL::ExceptionOr<JS::GCPtr<ImageData>> CanvasRenderingContext2D::get_image_da
 
     // 3. Let imageData be a new ImageData object.
     // 4. Initialize imageData given sw, sh, settings set to settings, and defaultColorSpace set to this's color space.
-    auto image_data = ImageData::create_with_size(realm(), width, height);
+    auto image_data = TRY(ImageData::create(realm(), width, height));
 
     // NOTE: We don't attempt to create the underlying bitmap here; if it doesn't exist, it's like copying only transparent black pixels (which is a no-op).
     if (!canvas_element().bitmap())

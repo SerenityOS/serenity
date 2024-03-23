@@ -25,8 +25,6 @@ public:
     [[nodiscard]] static WebIDL::ExceptionOr<JS::NonnullGCPtr<ImageData>> create(JS::Realm&, u32 sw, u32 sh, Optional<ImageDataSettings> const& settings = {});
     [[nodiscard]] static WebIDL::ExceptionOr<JS::NonnullGCPtr<ImageData>> construct_impl(JS::Realm&, u32 sw, u32 sh, Optional<ImageDataSettings> const& settings = {});
 
-    static JS::GCPtr<ImageData> create_with_size(JS::Realm&, int width, int height);
-
     virtual ~ImageData() override;
 
     unsigned width() const;
