@@ -31,7 +31,6 @@ ErrorOr<BoxHeader> read_box_header(BoxStream& stream);
 struct Box {
     Box() = default;
     virtual ~Box() = default;
-    virtual ErrorOr<void> read_from_stream(BoxStream&) { return {}; }
     virtual BoxType box_type() const { return BoxType::None; }
     virtual void dump(String const& prepend = {}) const;
 };
@@ -39,7 +38,7 @@ struct Box {
 using BoxList = Vector<NonnullOwnPtr<Box>>;
 
 struct FullBox : public Box {
-    virtual ErrorOr<void> read_from_stream(BoxStream& stream) override;
+    ErrorOr<void> read_from_stream(BoxStream& stream);
     virtual void dump(String const& prepend = {}) const override;
 
     u8 version { 0 };
@@ -59,7 +58,7 @@ struct UnknownBox final : public Box {
     {
     }
     virtual ~UnknownBox() override = default;
-    virtual ErrorOr<void> read_from_stream(BoxStream&) override;
+    ErrorOr<void> read_from_stream(BoxStream&);
     virtual BoxType box_type() const override { return m_box_type; }
     virtual void dump(String const& prepend = {}) const override;
 
@@ -77,7 +76,7 @@ private:
     }                                                                            \
     BoxName() = default;                                                         \
     virtual ~BoxName() override = default;                                       \
-    virtual ErrorOr<void> read_from_stream(BoxStream& stream) override;          \
+    ErrorOr<void> read_from_stream(BoxStream& stream);                           \
     virtual BoxType box_type() const override                                    \
     {                                                                            \
         return BoxType::BoxName;                                                 \
@@ -96,7 +95,7 @@ struct FileTypeBox final : public Box {
 // A box that contains other boxes.
 struct SuperBox : public Box {
     SuperBox() = default;
-    virtual ErrorOr<void> read_from_stream(BoxStream&) override;
+    ErrorOr<void> read_from_stream(BoxStream&);
     virtual void dump(String const& prepend = {}) const override;
 
 private:
