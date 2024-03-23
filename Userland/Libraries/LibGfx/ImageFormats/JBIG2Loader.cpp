@@ -259,13 +259,13 @@ enum class Organization {
 };
 
 struct SegmentHeader {
-    u32 segment_number;
-    SegmentType type;
+    u32 segment_number { 0 };
+    SegmentType type { SegmentType::Extension };
     Vector<u32> referred_to_segment_numbers;
 
     // 7.2.6 Segment page association
     // "The first page must be numbered "1". This field may contain a value of zero; this value indicates that this segment is not associated with any page."
-    u32 page_association;
+    u32 page_association { 0 };
 
     Optional<u32> data_length;
 };
@@ -289,9 +289,9 @@ private:
     BitBuffer(ByteBuffer, size_t width, size_t height, size_t pitch);
 
     ByteBuffer m_bits;
-    size_t m_width;
-    size_t m_height;
-    size_t m_pitch;
+    size_t m_width { 0 };
+    size_t m_height { 0 };
+    size_t m_pitch { 0 };
 };
 
 ErrorOr<NonnullOwnPtr<BitBuffer>> BitBuffer::create(size_t width, size_t height)
@@ -369,7 +369,7 @@ enum class CombinationOperator {
 
 struct Page {
     IntSize size;
-    CombinationOperator default_combination_operator;
+    CombinationOperator default_combination_operator { CombinationOperator::Or };
     OwnPtr<BitBuffer> bits;
 };
 
@@ -695,18 +695,19 @@ static ErrorOr<void> warn_about_multiple_pages(JBIG2LoadingContext& context)
 
 // 6.2.2 Input parameters
 struct GenericRegionDecodingInputParameters {
-    bool is_modified_modified_read; // "MMR" in spec.
-    u32 region_width;               // "GBW" in spec.
-    u32 region_height;              // "GBH" in spec.
-    u8 gb_template;
-    bool is_typical_prediction_used;                 // "TPGDON" in spec.
-    bool is_extended_reference_template_used;        // "EXTTEMPLATE" in spec.
-    Optional<NonnullOwnPtr<BitBuffer>> skip_pattern; // "USESKIP", "SKIP" in spec.
+    bool is_modified_modified_read { false }; // "MMR" in spec.
+    u32 region_width { 0 };                   // "GBW" in spec.
+    u32 region_height { 0 };                  // "GBH" in spec.
+    u8 gb_template { 0 };
+    bool is_typical_prediction_used { false };          // "TPGDON" in spec.
+    bool is_extended_reference_template_used { false }; // "EXTTEMPLATE" in spec.
+    Optional<NonnullOwnPtr<BitBuffer>> skip_pattern;    // "USESKIP", "SKIP" in spec.
 
     struct AdaptiveTemplatePixel {
-        i8 x, y;
+        i8 x { 0 };
+        i8 y { 0 };
     };
-    AdaptiveTemplatePixel adaptive_template_pixels[12]; // "GBATX" / "GBATY" in spec.
+    Array<AdaptiveTemplatePixel, 12> adaptive_template_pixels; // "GBATX" / "GBATY" in spec.
     // FIXME: GBCOLS, GBCOMBOP, COLEXTFLAG
 };
 
@@ -876,7 +877,7 @@ static ErrorOr<void> decode_immediate_generic_region(JBIG2LoadingContext& contex
     data = data.slice(sizeof(flags));
 
     // 7.4.6.3 Generic region segment AT flags
-    GenericRegionDecodingInputParameters::AdaptiveTemplatePixel adaptive_template_pixels[12] = {};
+    Array<GenericRegionDecodingInputParameters::AdaptiveTemplatePixel, 12> adaptive_template_pixels {};
     if (!uses_mmr) {
         dbgln_if(JBIG2_DEBUG, "Non-MMR generic region, GBTEMPLATE={} TPGDON={} EXTTEMPLATE={}", arithmetic_coding_template, typical_prediction_generic_decoding_on, uses_extended_reference_template);
 
@@ -911,8 +912,7 @@ static ErrorOr<void> decode_immediate_generic_region(JBIG2LoadingContext& contex
     inputs.is_typical_prediction_used = typical_prediction_generic_decoding_on;
     inputs.is_extended_reference_template_used = uses_extended_reference_template;
     inputs.skip_pattern = OptionalNone {};
-    static_assert(sizeof(inputs.adaptive_template_pixels) == sizeof(adaptive_template_pixels));
-    memcpy(inputs.adaptive_template_pixels, adaptive_template_pixels, sizeof(adaptive_template_pixels));
+    inputs.adaptive_template_pixels = adaptive_template_pixels;
     auto result = TRY(generic_region_decoding_procedure(inputs, data));
 
     // 8.2 Page image composition step 5)
