@@ -567,7 +567,7 @@ Token Lexer::next()
     // This is being used to communicate info about invalid tokens to the parser, which then
     // can turn that into more specific error messages - instead of us having to make up a
     // bunch of Invalid* tokens (bad numeric literals, unterminated comments etc.)
-    ByteString token_message;
+    StringView token_message;
 
     Optional<DeprecatedFlyString> identifier;
     size_t identifier_length = 0;
@@ -643,7 +643,7 @@ Token Lexer::next()
             m_parsed_identifiers->identifiers.set(*identifier);
         } else {
             token_type = TokenType::Invalid;
-            token_message = "Start of private name '#' but not followed by valid identifier";
+            token_message = "Start of private name '#' but not followed by valid identifier"sv;
         }
     } else if (auto code_point = is_identifier_start(identifier_length); code_point.has_value()) {
         bool has_escaped_character = false;
@@ -734,7 +734,7 @@ Token Lexer::next()
         }
         if (is_invalid_numeric_literal) {
             token_type = TokenType::Invalid;
-            token_message = "Invalid numeric literal";
+            token_message = "Invalid numeric literal"sv;
         }
     } else if (m_current_char == '"' || m_current_char == '\'') {
         char stop_char = m_current_char;
@@ -761,7 +761,7 @@ Token Lexer::next()
     } else if (m_eof) {
         if (unterminated_comment) {
             token_type = TokenType::Invalid;
-            token_message = "Unterminated multi-line comment";
+            token_message = "Unterminated multi-line comment"sv;
         } else {
             token_type = TokenType::Eof;
         }
@@ -844,7 +844,7 @@ Token Lexer::next()
     } else {
         m_current_token = Token(
             token_type,
-            String::from_byte_string(token_message).release_value_but_fixme_should_propagate_errors(),
+            token_message,
             m_source.substring_view(trivia_start - 1, value_start - trivia_start),
             m_source.substring_view(value_start - 1, m_position - value_start),
             m_filename,
