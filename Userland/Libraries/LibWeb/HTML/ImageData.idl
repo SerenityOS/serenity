@@ -1,7 +1,14 @@
 // https://html.spec.whatwg.org/multipage/canvas.html#imagedata
+
+enum PredefinedColorSpace { "srgb", "display-p3" };
+
+dictionary ImageDataSettings {
+  PredefinedColorSpace colorSpace;
+};
+
 [Exposed=(Window,Worker), Serializable]
 interface ImageData {
-
+    constructor(unsigned long sw, unsigned long sh, optional ImageDataSettings settings = {});
     readonly attribute unsigned long width;
     readonly attribute unsigned long height;
     readonly attribute Uint8ClampedArray data;
