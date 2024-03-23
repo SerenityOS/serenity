@@ -320,8 +320,10 @@ Node& Node::shadow_including_root()
     // The shadow-including root of an object is its root’s host’s shadow-including root,
     // if the object’s root is a shadow root; otherwise its root.
     auto& node_root = root();
-    if (is<ShadowRoot>(node_root))
-        return static_cast<ShadowRoot&>(node_root).host()->shadow_including_root();
+    if (is<ShadowRoot>(node_root)) {
+        if (auto* host = static_cast<ShadowRoot&>(node_root).host(); host)
+            return host->shadow_including_root();
+    }
     return node_root;
 }
 
