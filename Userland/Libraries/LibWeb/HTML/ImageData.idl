@@ -9,8 +9,9 @@ dictionary ImageDataSettings {
 [Exposed=(Window,Worker), Serializable]
 interface ImageData {
     constructor(unsigned long sw, unsigned long sh, optional ImageDataSettings settings = {});
+    // FIXME: constructor(Uint8ClampedArray data, unsigned long sw, optional unsigned long sh, optional ImageDataSettings settings = {});
     readonly attribute unsigned long width;
     readonly attribute unsigned long height;
     readonly attribute Uint8ClampedArray data;
-
+    // FIXME: readonly attribute PredefinedColorSpace colorSpace;
 };
