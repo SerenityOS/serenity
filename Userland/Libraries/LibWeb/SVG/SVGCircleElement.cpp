@@ -85,8 +85,10 @@ JS::NonnullGCPtr<SVGAnimatedLength> SVGCircleElement::cx() const
 {
     // FIXME: Create a proper animated value when animations are supported.
     auto make_length = [&] {
-        if (auto cx = computed_css_values()->length_percentage(CSS::PropertyID::Cx); cx.has_value())
-            return SVGLength::from_length_percentage(realm(), *cx);
+        if (auto const* style = computed_css_values(); style) {
+            if (auto cx = style->length_percentage(CSS::PropertyID::Cx); cx.has_value())
+                return SVGLength::from_length_percentage(realm(), *cx);
+        }
         return SVGLength::create(realm(), 0, 0.0f);
     };
     return SVGAnimatedLength::create(realm(), make_length(), make_length());
@@ -97,8 +99,10 @@ JS::NonnullGCPtr<SVGAnimatedLength> SVGCircleElement::cy() const
 {
     // FIXME: Create a proper animated value when animations are supported.
     auto make_length = [&] {
-        if (auto cy = computed_css_values()->length_percentage(CSS::PropertyID::Cy); cy.has_value())
-            return SVGLength::from_length_percentage(realm(), *cy);
+        if (auto const* style = computed_css_values(); style) {
+            if (auto cy = style->length_percentage(CSS::PropertyID::Cy); cy.has_value())
+                return SVGLength::from_length_percentage(realm(), *cy);
+        }
         return SVGLength::create(realm(), 0, 0.0f);
     };
     return SVGAnimatedLength::create(realm(), make_length(), make_length());
@@ -109,8 +113,10 @@ JS::NonnullGCPtr<SVGAnimatedLength> SVGCircleElement::r() const
 {
     // FIXME: Create a proper animated value when animations are supported.
     auto make_length = [&] {
-        if (auto r = computed_css_values()->length_percentage(CSS::PropertyID::R); r.has_value())
-            return SVGLength::from_length_percentage(realm(), *r);
+        if (auto const* style = computed_css_values(); style) {
+            if (auto r = computed_css_values()->length_percentage(CSS::PropertyID::R); r.has_value())
+                return SVGLength::from_length_percentage(realm(), *r);
+        }
         return SVGLength::create(realm(), 0, 0.0f);
     };
     return SVGAnimatedLength::create(realm(), make_length(), make_length());
