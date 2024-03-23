@@ -21,6 +21,8 @@ public:
 
     Optional<String> for_() const { return attribute(HTML::AttributeNames::for_); }
 
+    JS::GCPtr<HTMLElement> control() const;
+
 private:
     HTMLLabelElement(DOM::Document&, DOM::QualifiedName);
 

@@ -30,10 +30,8 @@ bool TextPaintable::wants_mouse_events() const
 
 DOM::Node* TextPaintable::mouse_event_target() const
 {
-    if (auto* label = layout_node().first_ancestor_of_type<Layout::Label>()) {
-        if (auto* control = const_cast<Layout::Label*>(label)->labeled_control())
-            return &control->dom_node();
-    }
+    if (auto const* label = layout_node().first_ancestor_of_type<Layout::Label>())
+        return label->dom_node().control().ptr();
     return nullptr;
 }
 
