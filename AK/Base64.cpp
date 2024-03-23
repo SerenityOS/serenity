@@ -24,8 +24,7 @@ size_t calculate_base64_encoded_length(ReadonlyBytes input)
     return ((4 * input.size() / 3) + 3) & ~3;
 }
 
-template<auto alphabet_lookup_table>
-ErrorOr<ByteBuffer> decode_base64_impl(StringView input)
+static ErrorOr<ByteBuffer> decode_base64_impl(StringView input, ReadonlySpan<i16> alphabet_lookup_table)
 {
     auto get = [&](size_t& offset, bool* is_padding, bool& parsed_something) -> ErrorOr<u8> {
         while (offset < input.length() && is_ascii_space(input[offset]))
@@ -82,8 +81,7 @@ ErrorOr<ByteBuffer> decode_base64_impl(StringView input)
     return output;
 }
 
-template<auto alphabet>
-ErrorOr<String> encode_base64_impl(ReadonlyBytes input)
+static ErrorOr<String> encode_base64_impl(ReadonlyBytes input, ReadonlySpan<char> alphabet)
 {
     Vector<u8> output;
     TRY(output.try_ensure_capacity(calculate_base64_encoded_length(input)));
@@ -121,21 +119,23 @@ ErrorOr<String> encode_base64_impl(ReadonlyBytes input)
 
 ErrorOr<ByteBuffer> decode_base64(StringView input)
 {
-    return decode_base64_impl<base64_lookup_table()>(input);
+    static constexpr auto lookup_table = base64_lookup_table();
+    return decode_base64_impl(input, lookup_table);
 }
 
 ErrorOr<ByteBuffer> decode_base64url(StringView input)
 {
-    return decode_base64_impl<base64url_lookup_table()>(input);
+    static constexpr auto lookup_table = base64url_lookup_table();
+    return decode_base64_impl(input, lookup_table);
 }
 
 ErrorOr<String> encode_base64(ReadonlyBytes input)
 {
-    return encode_base64_impl<base64_alphabet>(input);
+    return encode_base64_impl(input, base64_alphabet);
 }
 ErrorOr<String> encode_base64url(ReadonlyBytes input)
 {
-    return encode_base64_impl<base64url_alphabet>(input);
+    return encode_base64_impl(input, base64url_alphabet);
 }
 
 }
