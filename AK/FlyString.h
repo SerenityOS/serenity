@@ -77,6 +77,11 @@ public:
     }
 
 private:
+    explicit FlyString(Detail::StringBase data)
+        : m_data(move(data))
+    {
+    }
+
     Detail::StringBase m_data;
 };
 
