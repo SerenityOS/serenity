@@ -34,6 +34,7 @@
     T(ILBMLoader)            \
     T(IMAPParser)            \
     T(JBIG2Loader)           \
+    T(JPEG2000Loader)        \
     T(JPEGLoader)            \
     T(Js)                    \
     T(JsonParser)            \
