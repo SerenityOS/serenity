@@ -137,11 +137,17 @@ namespace Web::HTML {
         return m_queued_tokens.dequeue();               \
     } while (0)
 
-#define EMIT_CURRENT_TOKEN                              \
+#define EMIT_CURRENT_TOKEN_FOLLOWED_BY_EOF              \
     do {                                                \
         VERIFY(m_current_builder.is_empty());           \
         will_emit(m_current_token);                     \
         m_queued_tokens.enqueue(move(m_current_token)); \
+                                                        \
+        m_has_emitted_eof = true;                       \
+        create_new_token(HTMLToken::Type::EndOfFile);   \
+        will_emit(m_current_token);                     \
+        m_queued_tokens.enqueue(move(m_current_token)); \
+                                                        \
         return m_queued_tokens.dequeue();               \
     } while (0)
 
@@ -1428,7 +1434,7 @@ _StartOfFunction:
                 ON_EOF
                 {
                     log_parse_error();
-                    EMIT_EOF;
+                    EMIT_CURRENT_TOKEN_FOLLOWED_BY_EOF;
                 }
                 ANYTHING_ELSE
                 {
@@ -1460,7 +1466,7 @@ _StartOfFunction:
                 {
                     log_parse_error();
                     m_current_token.set_comment(consume_current_builder());
-                    EMIT_EOF;
+                    EMIT_CURRENT_TOKEN_FOLLOWED_BY_EOF;
                 }
                 ANYTHING_ELSE
                 {
@@ -1491,7 +1497,7 @@ _StartOfFunction:
                 {
                     log_parse_error();
                     m_current_token.set_comment(consume_current_builder());
-                    EMIT_EOF;
+                    EMIT_CURRENT_TOKEN_FOLLOWED_BY_EOF;
                 }
                 ANYTHING_ELSE
                 {
@@ -1519,7 +1525,7 @@ _StartOfFunction:
                 {
                     log_parse_error();
                     m_current_token.set_comment(consume_current_builder());
-                    EMIT_EOF;
+                    EMIT_CURRENT_TOKEN_FOLLOWED_BY_EOF;
                 }
                 ANYTHING_ELSE
                 {
@@ -1540,7 +1546,7 @@ _StartOfFunction:
                 {
                     log_parse_error();
                     m_current_token.set_comment(consume_current_builder());
-                    EMIT_EOF;
+                    EMIT_CURRENT_TOKEN_FOLLOWED_BY_EOF;
                 }
                 ANYTHING_ELSE
                 {
