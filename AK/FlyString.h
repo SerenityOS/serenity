@@ -48,7 +48,7 @@ public:
 
     [[nodiscard]] int operator<=>(FlyString const& other) const;
 
-    static void did_destroy_fly_string_data(Badge<Detail::StringData>, StringView);
+    static void did_destroy_fly_string_data(Badge<Detail::StringData>, Detail::StringData const&);
     [[nodiscard]] Detail::StringBase data(Badge<String>) const;
 
     // This is primarily interesting to unit tests.

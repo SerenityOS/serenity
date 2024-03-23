@@ -8,14 +8,21 @@
 #include <AK/FlyString.h>
 #include <AK/HashMap.h>
 #include <AK/Singleton.h>
+#include <AK/String.h>
+#include <AK/StringData.h>
 #include <AK/StringView.h>
 #include <AK/Utf8View.h>
 
 namespace AK {
 
+struct FlyStringTableHashTraits : public Traits<Detail::StringData const*> {
+    static u32 hash(Detail::StringData const* string) { return string->hash(); }
+    static bool equals(Detail::StringData const* a, Detail::StringData const* b) { return *a == *b; }
+};
+
 static auto& all_fly_strings()
 {
-    static Singleton<HashMap<StringView, Detail::StringBase>> table;
+    static Singleton<HashTable<Detail::StringData const*, FlyStringTableHashTraits>> table;
     return *table;
 }
 
@@ -31,14 +38,19 @@ FlyString::FlyString(String const& string)
         return;
     }
 
-    auto it = all_fly_strings().find(string.bytes_as_string_view());
+    if (string.m_data->is_fly_string()) {
+        m_data = string;
+        return;
+    }
+
+    auto it = all_fly_strings().find(string.m_data);
     if (it == all_fly_strings().end()) {
         m_data = string;
-
-        all_fly_strings().set(string.bytes_as_string_view(), m_data);
-        string.did_create_fly_string({});
+        all_fly_strings().set(string.m_data);
+        string.m_data->set_fly_string(true);
     } else {
-        m_data = it->value;
+        m_data.m_data = *it;
+        m_data.m_data->ref();
     }
 }
 
@@ -104,9 +116,9 @@ bool FlyString::operator==(char const* string) const
     return bytes_as_string_view() == string;
 }
 
-void FlyString::did_destroy_fly_string_data(Badge<Detail::StringData>, StringView string_data)
+void FlyString::did_destroy_fly_string_data(Badge<Detail::StringData>, Detail::StringData const& string_data)
 {
-    all_fly_strings().remove(string_data);
+    all_fly_strings().remove(&string_data);
 }
 
 Detail::StringBase FlyString::data(Badge<String>) const
