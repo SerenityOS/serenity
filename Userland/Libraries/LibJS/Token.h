@@ -181,9 +181,9 @@ class Token {
 public:
     Token() = default;
 
-    Token(TokenType type, String message, StringView trivia, StringView value, StringView filename, size_t line_number, size_t line_column, size_t offset)
+    Token(TokenType type, StringView message, StringView trivia, StringView value, StringView filename, size_t line_number, size_t line_column, size_t offset)
         : m_type(type)
-        , m_message(move(message))
+        , m_message(message)
         , m_trivia(trivia)
         , m_original_value(value)
         , m_value(value)
@@ -200,7 +200,7 @@ public:
     char const* name() const;
     static char const* name(TokenType);
 
-    String const& message() const { return m_message; }
+    StringView message() const { return m_message; }
     StringView trivia() const { return m_trivia; }
     StringView original_value() const { return m_original_value; }
     StringView value() const
@@ -246,7 +246,7 @@ public:
 
 private:
     TokenType m_type { TokenType::Invalid };
-    String m_message;
+    StringView m_message;
     StringView m_trivia;
     StringView m_original_value;
     Variant<Empty, StringView, DeprecatedFlyString> m_value {};
