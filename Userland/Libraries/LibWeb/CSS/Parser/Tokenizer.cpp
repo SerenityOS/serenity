@@ -238,7 +238,7 @@ ErrorOr<Vector<Token>> Tokenizer::tokenize(StringView input, StringView encoding
             }
             return {};
         }));
-        return builder.to_string();
+        return builder.to_string_without_validation();
     };
 
     Tokenizer tokenizer { TRY(filter_code_points(input, encoding)) };
@@ -623,7 +623,7 @@ ErrorOr<FlyString> Tokenizer::consume_an_ident_sequence()
         break;
     }
 
-    return result.to_fly_string();
+    return result.to_fly_string_without_validation();
 }
 
 // https://www.w3.org/TR/css-syntax-3/#consume-url-token

@@ -161,6 +161,11 @@ String StringBuilder::to_string_without_validation() const
     return String::from_utf8_without_validation(string_view().bytes());
 }
 
+FlyString StringBuilder::to_fly_string_without_validation() const
+{
+    return FlyString::from_utf8_without_validation(string_view().bytes());
+}
+
 ErrorOr<FlyString> StringBuilder::to_fly_string() const
 {
     return FlyString::from_utf8(string_view());
