@@ -31,6 +31,11 @@ ErrorOr<FlyString> FlyString::from_utf8(StringView string)
     return FlyString { TRY(String::from_utf8(string)) };
 }
 
+FlyString FlyString::from_utf8_without_validation(ReadonlyBytes string)
+{
+    return FlyString { String::from_utf8_without_validation(string) };
+}
+
 FlyString::FlyString(String const& string)
 {
     if (string.is_short_string()) {
