@@ -90,12 +90,6 @@ bool StringBase::operator==(StringBase const& other) const
     return bytes() == other.bytes();
 }
 
-void StringBase::did_create_fly_string(Badge<FlyString>) const
-{
-    VERIFY(!is_short_string());
-    m_data->set_fly_string(true);
-}
-
 ErrorOr<Bytes> StringBase::replace_with_uninitialized_buffer(size_t byte_count)
 {
     if (byte_count <= MAX_SHORT_STRING_BYTE_COUNT)

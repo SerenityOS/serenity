@@ -44,22 +44,15 @@ public:
 
     void operator delete(void* ptr)
     {
-        free(ptr);
-    }
-
-    void unref() const
-    {
-        if (m_is_fly_string && m_ref_count == 2) {
-            m_is_fly_string = false; // Otherwise unref from did_destroy_fly_string_data will cause infinite recursion.
-            FlyString::did_destroy_fly_string_data({}, *this);
-        }
-        RefCounted::unref();
+        kfree_sized(ptr, allocation_size_for_string_data(static_cast<StringData const*>(ptr)->m_byte_count));
     }
 
     ~StringData()
     {
         if (m_substring)
             substring_data().superstring->unref();
+        if (m_is_fly_string)
+            FlyString::did_destroy_fly_string_data({}, *this);
     }
 
     SubstringData const& substring_data() const

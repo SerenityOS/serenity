@@ -186,7 +186,7 @@ public:
     static ErrorOr<String> from_byte_string(T&&) = delete;
 
 private:
-    friend FlyString;
+    friend class ::AK::FlyString;
 
     using ShortString = Detail::ShortString;
 
