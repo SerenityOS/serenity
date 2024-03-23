@@ -479,6 +479,7 @@ if (BUILD_LAGOM)
         TLS
         Video
         Wasm
+        Wayland
         WebSocket
         XML
     )
