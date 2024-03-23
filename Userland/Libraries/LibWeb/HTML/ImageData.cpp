@@ -37,25 +37,6 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<ImageData>> ImageData::construct_impl(JS::R
     return ImageData::create(realm, sw, sh, settings);
 }
 
-JS::GCPtr<ImageData> ImageData::create_with_size(JS::Realm& realm, int width, int height)
-{
-    if (width <= 0 || height <= 0)
-        return nullptr;
-
-    if (width > 16384 || height > 16384)
-        return nullptr;
-
-    auto data_or_error = JS::Uint8ClampedArray::create(realm, width * height * 4);
-    if (data_or_error.is_error())
-        return nullptr;
-    auto data = JS::NonnullGCPtr<JS::Uint8ClampedArray>(*data_or_error.release_value());
-
-    auto bitmap_or_error = Gfx::Bitmap::create_wrapper(Gfx::BitmapFormat::RGBA8888, Gfx::IntSize(width, height), 1, width * sizeof(u32), data->data().data());
-    if (bitmap_or_error.is_error())
-        return nullptr;
-    return realm.heap().allocate<ImageData>(realm, realm, bitmap_or_error.release_value(), move(data));
-}
-
 ImageData::ImageData(JS::Realm& realm, NonnullRefPtr<Gfx::Bitmap> bitmap, JS::NonnullGCPtr<JS::Uint8ClampedArray> data)
     : PlatformObject(realm)
     , m_bitmap(move(bitmap))

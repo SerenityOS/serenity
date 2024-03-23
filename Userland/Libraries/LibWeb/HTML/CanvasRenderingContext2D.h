@@ -80,7 +80,7 @@ public:
     virtual void fill(StringView fill_rule) override;
     virtual void fill(Path2D& path, StringView fill_rule) override;
 
-    virtual JS::GCPtr<ImageData> create_image_data(int width, int height) const override;
+    virtual WebIDL::ExceptionOr<JS::NonnullGCPtr<ImageData>> create_image_data(int width, int height) const override;
     virtual WebIDL::ExceptionOr<JS::GCPtr<ImageData>> get_image_data(int x, int y, int width, int height) const override;
     virtual void put_image_data(ImageData const&, float x, float y) override;
 
