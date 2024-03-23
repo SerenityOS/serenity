@@ -356,6 +356,7 @@ TEST_CASE(test_jbig2_decode)
     Array test_inputs = {
         TEST_INPUT("jbig2/bitmap.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-tpgdon.jbig2"sv),
+        TEST_INPUT("jbig2/bitmap-symbol.jbig2"sv),
     };
 
     for (auto test_input : test_inputs) {
