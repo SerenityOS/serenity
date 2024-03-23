@@ -81,9 +81,6 @@ private:
     Optional<size_t> m_hit_invalid_unicode;
 
     static HashMap<DeprecatedFlyString, TokenType> s_keywords;
-    static HashMap<ByteString, TokenType> s_three_char_tokens;
-    static HashMap<ByteString, TokenType> s_two_char_tokens;
-    static HashMap<char, TokenType> s_single_char_tokens;
 
     struct ParsedIdentifiers : public RefCounted<ParsedIdentifiers> {
         // Resolved identifiers must be kept alive for the duration of the parsing stage, otherwise

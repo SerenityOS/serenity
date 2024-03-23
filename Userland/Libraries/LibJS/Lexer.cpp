@@ -17,9 +17,113 @@
 namespace JS {
 
 HashMap<DeprecatedFlyString, TokenType> Lexer::s_keywords;
-HashMap<ByteString, TokenType> Lexer::s_three_char_tokens;
-HashMap<ByteString, TokenType> Lexer::s_two_char_tokens;
-HashMap<char, TokenType> Lexer::s_single_char_tokens;
+
+static constexpr TokenType parse_two_char_token(StringView view)
+{
+    if (view == "=>"sv)
+        return TokenType::Arrow;
+    if (view == "+="sv)
+        return TokenType::PlusEquals;
+    if (view == "-="sv)
+        return TokenType::MinusEquals;
+    if (view == "*="sv)
+        return TokenType::AsteriskEquals;
+    if (view == "/="sv)
+        return TokenType::SlashEquals;
+    if (view == "%="sv)
+        return TokenType::PercentEquals;
+    if (view == "&="sv)
+        return TokenType::AmpersandEquals;
+    if (view == "|="sv)
+        return TokenType::PipeEquals;
+    if (view == "^="sv)
+        return TokenType::CaretEquals;
+    if (view == "&&"sv)
+        return TokenType::DoubleAmpersand;
+    if (view == "||"sv)
+        return TokenType::DoublePipe;
+    if (view == "??"sv)
+        return TokenType::DoubleQuestionMark;
+    if (view == "**"sv)
+        return TokenType::DoubleAsterisk;
+    if (view == "=="sv)
+        return TokenType::EqualsEquals;
+    if (view == "<="sv)
+        return TokenType::LessThanEquals;
+    if (view == ">="sv)
+        return TokenType::GreaterThanEquals;
+    if (view == "!="sv)
+        return TokenType::ExclamationMarkEquals;
+    if (view == "--"sv)
+        return TokenType::MinusMinus;
+    if (view == "++"sv)
+        return TokenType::PlusPlus;
+    if (view == "<<"sv)
+        return TokenType::ShiftLeft;
+    if (view == ">>"sv)
+        return TokenType::ShiftRight;
+    if (view == "?."sv)
+        return TokenType::QuestionMarkPeriod;
+    return TokenType::Invalid;
+}
+
+static constexpr TokenType parse_three_char_token(StringView view)
+{
+    if (view == "==="sv)
+        return TokenType::EqualsEqualsEquals;
+    if (view == "!=="sv)
+        return TokenType::ExclamationMarkEqualsEquals;
+    if (view == "**="sv)
+        return TokenType::DoubleAsteriskEquals;
+    if (view == "<<="sv)
+        return TokenType::ShiftLeftEquals;
+    if (view == ">>="sv)
+        return TokenType::ShiftRightEquals;
+    if (view == "&&="sv)
+        return TokenType::DoubleAmpersandEquals;
+    if (view == "||="sv)
+        return TokenType::DoublePipeEquals;
+    if (view == "\?\?="sv)
+        return TokenType::DoubleQuestionMarkEquals;
+    if (view == ">>>"sv)
+        return TokenType::UnsignedShiftRight;
+    if (view == "..."sv)
+        return TokenType::TripleDot;
+    return TokenType::Invalid;
+}
+
+static consteval Array<TokenType, 256> make_single_char_tokens_array()
+{
+    Array<TokenType, 256> array;
+    array.fill(TokenType::Invalid);
+    array['&'] = TokenType::Ampersand;
+    array['*'] = TokenType::Asterisk;
+    array['['] = TokenType::BracketOpen;
+    array[']'] = TokenType::BracketClose;
+    array['^'] = TokenType::Caret;
+    array[':'] = TokenType::Colon;
+    array[','] = TokenType::Comma;
+    array['{'] = TokenType::CurlyOpen;
+    array['}'] = TokenType::CurlyClose;
+    array['='] = TokenType::Equals;
+    array['!'] = TokenType::ExclamationMark;
+    array['-'] = TokenType::Minus;
+    array['('] = TokenType::ParenOpen;
+    array[')'] = TokenType::ParenClose;
+    array['%'] = TokenType::Percent;
+    array['.'] = TokenType::Period;
+    array['|'] = TokenType::Pipe;
+    array['+'] = TokenType::Plus;
+    array['?'] = TokenType::QuestionMark;
+    array[';'] = TokenType::Semicolon;
+    array['/'] = TokenType::Slash;
+    array['~'] = TokenType::Tilde;
+    array['<'] = TokenType::LessThan;
+    array['>'] = TokenType::GreaterThan;
+    return array;
+}
+
+static constexpr auto s_single_char_tokens = make_single_char_tokens_array();
 
 Lexer::Lexer(StringView source, StringView filename, size_t line_number, size_t line_column)
     : m_source(source)
@@ -72,70 +176,6 @@ Lexer::Lexer(StringView source, StringView filename, size_t line_number, size_t 
         s_keywords.set("yield", TokenType::Yield);
     }
 
-    if (s_three_char_tokens.is_empty()) {
-        s_three_char_tokens.set("===", TokenType::EqualsEqualsEquals);
-        s_three_char_tokens.set("!==", TokenType::ExclamationMarkEqualsEquals);
-        s_three_char_tokens.set("**=", TokenType::DoubleAsteriskEquals);
-        s_three_char_tokens.set("<<=", TokenType::ShiftLeftEquals);
-        s_three_char_tokens.set(">>=", TokenType::ShiftRightEquals);
-        s_three_char_tokens.set("&&=", TokenType::DoubleAmpersandEquals);
-        s_three_char_tokens.set("||=", TokenType::DoublePipeEquals);
-        s_three_char_tokens.set("\?\?=", TokenType::DoubleQuestionMarkEquals);
-        s_three_char_tokens.set(">>>", TokenType::UnsignedShiftRight);
-        s_three_char_tokens.set("...", TokenType::TripleDot);
-    }
-
-    if (s_two_char_tokens.is_empty()) {
-        s_two_char_tokens.set("=>", TokenType::Arrow);
-        s_two_char_tokens.set("+=", TokenType::PlusEquals);
-        s_two_char_tokens.set("-=", TokenType::MinusEquals);
-        s_two_char_tokens.set("*=", TokenType::AsteriskEquals);
-        s_two_char_tokens.set("/=", TokenType::SlashEquals);
-        s_two_char_tokens.set("%=", TokenType::PercentEquals);
-        s_two_char_tokens.set("&=", TokenType::AmpersandEquals);
-        s_two_char_tokens.set("|=", TokenType::PipeEquals);
-        s_two_char_tokens.set("^=", TokenType::CaretEquals);
-        s_two_char_tokens.set("&&", TokenType::DoubleAmpersand);
-        s_two_char_tokens.set("||", TokenType::DoublePipe);
-        s_two_char_tokens.set("??", TokenType::DoubleQuestionMark);
-        s_two_char_tokens.set("**", TokenType::DoubleAsterisk);
-        s_two_char_tokens.set("==", TokenType::EqualsEquals);
-        s_two_char_tokens.set("<=", TokenType::LessThanEquals);
-        s_two_char_tokens.set(">=", TokenType::GreaterThanEquals);
-        s_two_char_tokens.set("!=", TokenType::ExclamationMarkEquals);
-        s_two_char_tokens.set("--", TokenType::MinusMinus);
-        s_two_char_tokens.set("++", TokenType::PlusPlus);
-        s_two_char_tokens.set("<<", TokenType::ShiftLeft);
-        s_two_char_tokens.set(">>", TokenType::ShiftRight);
-        s_two_char_tokens.set("?.", TokenType::QuestionMarkPeriod);
-    }
-
-    if (s_single_char_tokens.is_empty()) {
-        s_single_char_tokens.set('&', TokenType::Ampersand);
-        s_single_char_tokens.set('*', TokenType::Asterisk);
-        s_single_char_tokens.set('[', TokenType::BracketOpen);
-        s_single_char_tokens.set(']', TokenType::BracketClose);
-        s_single_char_tokens.set('^', TokenType::Caret);
-        s_single_char_tokens.set(':', TokenType::Colon);
-        s_single_char_tokens.set(',', TokenType::Comma);
-        s_single_char_tokens.set('{', TokenType::CurlyOpen);
-        s_single_char_tokens.set('}', TokenType::CurlyClose);
-        s_single_char_tokens.set('=', TokenType::Equals);
-        s_single_char_tokens.set('!', TokenType::ExclamationMark);
-        s_single_char_tokens.set('-', TokenType::Minus);
-        s_single_char_tokens.set('(', TokenType::ParenOpen);
-        s_single_char_tokens.set(')', TokenType::ParenClose);
-        s_single_char_tokens.set('%', TokenType::Percent);
-        s_single_char_tokens.set('.', TokenType::Period);
-        s_single_char_tokens.set('|', TokenType::Pipe);
-        s_single_char_tokens.set('+', TokenType::Plus);
-        s_single_char_tokens.set('?', TokenType::QuestionMark);
-        s_single_char_tokens.set(';', TokenType::Semicolon);
-        s_single_char_tokens.set('/', TokenType::Slash);
-        s_single_char_tokens.set('~', TokenType::Tilde);
-        s_single_char_tokens.set('<', TokenType::LessThan);
-        s_single_char_tokens.set('>', TokenType::GreaterThan);
-    }
     consume();
 }
 
@@ -780,38 +820,35 @@ Token Lexer::next()
         bool found_three_char_token = false;
         if (!found_four_char_token && m_position + 1 < m_source.length()) {
             auto three_chars_view = m_source.substring_view(m_position - 1, 3);
-            auto it = s_three_char_tokens.find(three_chars_view.hash(), [&](auto& entry) { return entry.key == three_chars_view; });
-            if (it != s_three_char_tokens.end()) {
+            if (auto type = parse_three_char_token(three_chars_view); type != TokenType::Invalid) {
                 found_three_char_token = true;
                 consume();
                 consume();
                 consume();
-                token_type = it->value;
+                token_type = type;
             }
         }
 
         bool found_two_char_token = false;
         if (!found_four_char_token && !found_three_char_token && m_position < m_source.length()) {
             auto two_chars_view = m_source.substring_view(m_position - 1, 2);
-            auto it = s_two_char_tokens.find(two_chars_view.hash(), [&](auto& entry) { return entry.key == two_chars_view; });
-            if (it != s_two_char_tokens.end()) {
+            if (auto type = parse_two_char_token(two_chars_view); type != TokenType::Invalid) {
                 // OptionalChainingPunctuator :: ?. [lookahead ∉ DecimalDigit]
-                if (!(it->value == TokenType::QuestionMarkPeriod && m_position + 1 < m_source.length() && is_ascii_digit(m_source[m_position + 1]))) {
+                if (!(type == TokenType::QuestionMarkPeriod && m_position + 1 < m_source.length() && is_ascii_digit(m_source[m_position + 1]))) {
                     found_two_char_token = true;
                     consume();
                     consume();
-                    token_type = it->value;
+                    token_type = type;
                 }
             }
         }
 
         bool found_one_char_token = false;
         if (!found_four_char_token && !found_three_char_token && !found_two_char_token) {
-            auto it = s_single_char_tokens.find(m_current_char);
-            if (it != s_single_char_tokens.end()) {
+            if (auto type = s_single_char_tokens[static_cast<u8>(m_current_char)]; type != TokenType::Invalid) {
                 found_one_char_token = true;
                 consume();
-                token_type = it->value;
+                token_type = type;
             }
         }
 
