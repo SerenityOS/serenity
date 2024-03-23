@@ -28,8 +28,6 @@ public:
     void handle_mouseup_on_label(Badge<Painting::TextPaintable>, CSSPixelPoint, unsigned button);
     void handle_mousemove_on_label(Badge<Painting::TextPaintable>, CSSPixelPoint, unsigned button);
 
-    LabelableNode* labeled_control();
-
 private:
     virtual bool is_label() const override { return true; }
 
