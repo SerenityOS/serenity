@@ -66,7 +66,7 @@ public:
     bool is_character_data() const { return type() == NodeType::TEXT_NODE || type() == NodeType::COMMENT_NODE; }
     bool is_document_fragment() const { return type() == NodeType::DOCUMENT_FRAGMENT_NODE; }
     bool is_parent_node() const { return is_element() || is_document() || is_document_fragment(); }
-    bool is_slottable() const { return is_element() || is_text(); }
+    bool is_slottable() const { return is_element() || is_text() || is_cdata_section(); }
     bool is_attribute() const { return type() == NodeType::ATTRIBUTE_NODE; }
     bool is_cdata_section() const { return type() == NodeType::CDATA_SECTION_NODE; }
     virtual bool is_shadow_root() const { return false; }
