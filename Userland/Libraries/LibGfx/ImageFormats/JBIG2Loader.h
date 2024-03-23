@@ -22,8 +22,8 @@ namespace JBIG2 {
 class ArithmeticDecoder {
 public:
     struct Context {
-        u8 I;      // Index I stored for context CX (E.2.4)
-        u8 is_mps; // "More probable symbol" (E.1.1). 0 or 1.
+        u8 I { 0 };      // Index I stored for context CX (E.2.4)
+        u8 is_mps { 0 }; // "More probable symbol" (E.1.1). 0 or 1.
     };
 
     static ErrorOr<ArithmeticDecoder> initialize(ReadonlyBytes data);
@@ -55,15 +55,15 @@ private:
     void BYTEIN();
 
     u8 B(size_t offset = 0) const; // Byte pointed to by BP.
-    size_t BP;                     // Pointer into compressed data.
+    size_t BP { 0 };               // Pointer into compressed data.
 
     // E.3.1 Decoder code register conventions
-    u32 C; // Consists of u16 C_high, C_low.
-    u16 A; // Current value of the fraction. Fixed precision; 0x8000 is equivalent to 0.75.
+    u32 C { 0 }; // Consists of u16 C_high, C_low.
+    u16 A { 0 }; // Current value of the fraction. Fixed precision; 0x8000 is equivalent to 0.75.
 
-    u8 CT; // Count of the number of bits in C.
+    u8 CT { 0 }; // Count of the number of bits in C.
 
-    Context* CX;
+    Context* CX { nullptr };
     static u8& I(Context* cx) { return cx->I; }
     static u8& MPS(Context* cx) { return cx->is_mps; }
     static u16 Qe(u16);
