@@ -28,11 +28,23 @@ static auto& all_fly_strings()
 
 ErrorOr<FlyString> FlyString::from_utf8(StringView string)
 {
+    if (string.is_empty())
+        return FlyString {};
+    if (string.length() <= Detail::MAX_SHORT_STRING_BYTE_COUNT)
+        return FlyString { TRY(String::from_utf8(string)) };
+    if (auto it = all_fly_strings().find(string.hash(), [&](auto& entry) { return entry->bytes_as_string_view() == string; }); it != all_fly_strings().end())
+        return FlyString { Detail::StringBase(**it) };
     return FlyString { TRY(String::from_utf8(string)) };
 }
 
 FlyString FlyString::from_utf8_without_validation(ReadonlyBytes string)
 {
+    if (string.is_empty())
+        return FlyString {};
+    if (string.size() <= Detail::MAX_SHORT_STRING_BYTE_COUNT)
+        return FlyString { String::from_utf8_without_validation(string) };
+    if (auto it = all_fly_strings().find(StringView(string).hash(), [&](auto& entry) { return entry->bytes_as_string_view() == string; }); it != all_fly_strings().end())
+        return FlyString { Detail::StringBase(**it) };
     return FlyString { String::from_utf8_without_validation(string) };
 }
 
