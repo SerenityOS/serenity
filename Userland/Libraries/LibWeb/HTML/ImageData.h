@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2024, Kenneth Myhra <kennethmyhra@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,15 +8,23 @@
 #pragma once
 
 #include <LibGfx/Forward.h>
+#include <LibWeb/Bindings/ImageDataPrototype.h>
 #include <LibWeb/Bindings/PlatformObject.h>
 
 namespace Web::HTML {
+
+struct ImageDataSettings {
+    Bindings::PredefinedColorSpace color_space;
+};
 
 class ImageData final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(ImageData, Bindings::PlatformObject);
     JS_DECLARE_ALLOCATOR(ImageData);
 
 public:
+    [[nodiscard]] static WebIDL::ExceptionOr<JS::NonnullGCPtr<ImageData>> create(JS::Realm&, u32 sw, u32 sh, Optional<ImageDataSettings> const& settings = {});
+    [[nodiscard]] static WebIDL::ExceptionOr<JS::NonnullGCPtr<ImageData>> construct_impl(JS::Realm&, u32 sw, u32 sh, Optional<ImageDataSettings> const& settings = {});
+
     static JS::GCPtr<ImageData> create_with_size(JS::Realm&, int width, int height);
 
     virtual ~ImageData() override;
