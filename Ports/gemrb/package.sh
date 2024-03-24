@@ -1,17 +1,17 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='gemrb'
-version='0.9.1'
+version='0.9.2'
 useconfigure='true'
 files=(
-    "https://github.com/gemrb/gemrb/archive/refs/tags/v${version}.tar.gz#6e5dbcf7398d5566751f434b0d4647196bfbe9a813e3b65ad6a4ee2f1bbfb9ba"
+    "https://github.com/gemrb/gemrb/archive/refs/tags/v${version}.tar.gz#ea614c067483606dab680ab18cd50527f56803bd46e0888e3c786eec05d3bb7d"
 )
 depends=(
-	'freetype'
-	'libiconv'
-	'python3'
-	'SDL2'
+    'freetype'
+    'libiconv'
+    'python3'
+    'SDL2'
     'SDL2_mixer'
-	'zlib'
+    'zlib'
 )
 configopts=(
     "-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt"

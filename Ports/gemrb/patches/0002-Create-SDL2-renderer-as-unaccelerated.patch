@@ -8,15 +8,15 @@ Subject: [PATCH] Create SDL2 renderer as unaccelerated
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/gemrb/plugins/SDLVideo/SDL20Video.cpp b/gemrb/plugins/SDLVideo/SDL20Video.cpp
-index 36dc17caffc89bed2610d26d19e97290905bcf20..158ee2fe5eb1b396c1a63b1e7bc898bd1ae224fc 100644
+index 8d906ec6066cac11a91ebcc372810b3e0a4f71db..741f4085458a6b7cc03c7613e8fa93beb7a60a2d 100644
 --- a/gemrb/plugins/SDLVideo/SDL20Video.cpp
 +++ b/gemrb/plugins/SDLVideo/SDL20Video.cpp
-@@ -139,7 +139,7 @@ int SDL20VideoDriver::CreateSDLDisplay(const char* title)
+@@ -171,7 +171,7 @@ int SDL20VideoDriver::CreateSDLDisplay(const char* title, bool vsync)
  	SetWindowIcon(window);
  #endif
  
--	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_TARGETTEXTURE | SDL_RENDERER_ACCELERATED);
-+	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_TARGETTEXTURE);
- 	SDL_RendererInfo info;
- 	SDL_GetRendererInfo(renderer, &info);
- 	Log(DEBUG, "SDL20Video", "Renderer: {}", info.name);
+-	int rendererFlags = SDL_RENDERER_TARGETTEXTURE | SDL_RENDERER_ACCELERATED;
++	int rendererFlags = SDL_RENDERER_TARGETTEXTURE;
+ 	if (vsync) {
+ 		rendererFlags |= SDL_RENDERER_PRESENTVSYNC;
+ 	}
