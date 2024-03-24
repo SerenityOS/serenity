@@ -728,6 +728,7 @@ Tab::Tab(BrowserWindow& window)
     m_page_context_menu->add_action(window.reload_action());
     m_page_context_menu->add_separator();
     m_page_context_menu->add_action(window.copy_selection_action());
+    m_page_context_menu->add_action(window.paste_action());
     m_page_context_menu->add_action(window.select_all_action());
     // FIXME: It would be nice to have a separator here, but the below action is sometimes hidden, and WindowServer
     //        does not hide successive separators like other toolkits.

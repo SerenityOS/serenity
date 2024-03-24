@@ -37,6 +37,7 @@ public:
     GUI::Action& go_home_action() { return *m_go_home_action; }
     GUI::Action& reload_action() { return *m_reload_action; }
     GUI::Action& copy_selection_action() { return *m_copy_selection_action; }
+    GUI::Action& paste_action() { return *m_paste_action; }
     GUI::Action& select_all_action() { return *m_select_all_action; }
     GUI::Action& view_source_action() { return *m_view_source_action; }
     GUI::Action& inspect_dom_tree_action() { return *m_inspect_dom_tree_action; }
@@ -69,6 +70,7 @@ private:
     RefPtr<GUI::Action> m_go_home_action;
     RefPtr<GUI::Action> m_reload_action;
     RefPtr<GUI::Action> m_copy_selection_action;
+    RefPtr<GUI::Action> m_paste_action;
     RefPtr<GUI::Action> m_select_all_action;
     RefPtr<GUI::Action> m_view_source_action;
     RefPtr<GUI::Action> m_inspect_dom_tree_action;
