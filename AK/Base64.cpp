@@ -59,10 +59,10 @@ ErrorOr<ByteBuffer> decode_base64_impl(StringView input)
 
         bool parsed_something = false;
 
-        const u8 in0 = TRY(get(input_offset, nullptr, parsed_something));
-        const u8 in1 = TRY(get(input_offset, nullptr, parsed_something));
-        const u8 in2 = TRY(get(input_offset, &in2_is_padding, parsed_something));
-        const u8 in3 = TRY(get(input_offset, &in3_is_padding, parsed_something));
+        u8 const in0 = TRY(get(input_offset, nullptr, parsed_something));
+        u8 const in1 = TRY(get(input_offset, nullptr, parsed_something));
+        u8 const in2 = TRY(get(input_offset, &in2_is_padding, parsed_something));
+        u8 const in3 = TRY(get(input_offset, &in3_is_padding, parsed_something));
 
         if (!parsed_something)
             break;
@@ -88,7 +88,7 @@ ErrorOr<String> encode_base64_impl(ReadonlyBytes input)
     Vector<u8> output;
     TRY(output.try_ensure_capacity(calculate_base64_encoded_length(input)));
 
-    auto get = [&](const size_t offset, bool* need_padding = nullptr) -> u8 {
+    auto get = [&](size_t const offset, bool* need_padding = nullptr) -> u8 {
         if (offset >= input.size()) {
             if (need_padding)
                 *need_padding = true;
@@ -101,14 +101,14 @@ ErrorOr<String> encode_base64_impl(ReadonlyBytes input)
         bool is_8bit = false;
         bool is_16bit = false;
 
-        const u8 in0 = get(i);
-        const u8 in1 = get(i + 1, &is_16bit);
-        const u8 in2 = get(i + 2, &is_8bit);
+        u8 const in0 = get(i);
+        u8 const in1 = get(i + 1, &is_16bit);
+        u8 const in2 = get(i + 2, &is_8bit);
 
-        const u8 index0 = (in0 >> 2) & 0x3f;
-        const u8 index1 = ((in0 << 4) | (in1 >> 4)) & 0x3f;
-        const u8 index2 = ((in1 << 2) | (in2 >> 6)) & 0x3f;
-        const u8 index3 = in2 & 0x3f;
+        u8 const index0 = (in0 >> 2) & 0x3f;
+        u8 const index1 = ((in0 << 4) | (in1 >> 4)) & 0x3f;
+        u8 const index2 = ((in1 << 2) | (in2 >> 6)) & 0x3f;
+        u8 const index3 = in2 & 0x3f;
 
         output.unchecked_append(alphabet[index0]);
         output.unchecked_append(alphabet[index1]);
