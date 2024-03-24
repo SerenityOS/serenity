@@ -58,6 +58,17 @@ ErrorOr<NonnullOwnPtr<DeviceTree>> DeviceTree::parse(ReadonlyBytes flattened_dev
             },
         }));
 
+    // FIXME: While growing the a nodes children map, we might have reallocated it's storage
+    //        breaking the parent pointers of the children, so we need to fix them here
+    auto fix_parent = [](auto self, DeviceTreeNodeView& node) -> void {
+        for (auto& [name, child] : node.children()) {
+            child.m_parent = &node;
+            self(self, child);
+        }
+    };
+
+    fix_parent(fix_parent, *device_tree);
+
     return device_tree;
 }
 
