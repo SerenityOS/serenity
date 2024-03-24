@@ -26,6 +26,7 @@ public:
 
     virtual Gfx::ScaledFontMetrics metrics(float x_scale, float y_scale) const override { return m_input_font->metrics(x_scale, y_scale); }
     virtual Gfx::ScaledGlyphMetrics glyph_metrics(u32 glyph_id, float x_scale, float y_scale, float point_width, float point_height) const override { return m_input_font->glyph_metrics(glyph_id, x_scale, y_scale, point_width, point_height); }
+    virtual float glyph_advance(u32 glyph_id, float x_scale, float y_scale, float point_width, float point_height) const override { return m_input_font->glyph_advance(glyph_id, x_scale, y_scale, point_width, point_height); }
     virtual float glyphs_horizontal_kerning(u32 left_glyph_id, u32 right_glyph_id, float x_scale) const override { return m_input_font->glyphs_horizontal_kerning(left_glyph_id, right_glyph_id, x_scale); }
     virtual RefPtr<Gfx::Bitmap> rasterize_glyph(u32 glyph_id, float x_scale, float y_scale, Gfx::GlyphSubpixelOffset subpixel_offset) const override { return m_input_font->rasterize_glyph(glyph_id, x_scale, y_scale, subpixel_offset); }
     virtual bool append_glyph_path_to(Gfx::Path& path, u32 glyph_id, float x_scale, float y_scale) const override { return m_input_font->append_glyph_path_to(path, glyph_id, x_scale, y_scale); }

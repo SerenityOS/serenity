@@ -413,6 +413,21 @@ Font::EmbeddedBitmapData Font::embedded_bitmap_data_for_glyph(u32 glyph_id) cons
     return Empty {};
 }
 
+float Font::glyph_advance(u32 glyph_id, float x_scale, float y_scale, float point_width, float point_height) const
+{
+    if (has_color_bitmaps())
+        return glyph_metrics(glyph_id, x_scale, y_scale, point_width, point_height).advance_width;
+
+    if (!m_hmtx.has_value())
+        return 0;
+
+    if (glyph_id >= glyph_count())
+        glyph_id = 0;
+
+    auto horizontal_metrics = m_hmtx->get_glyph_horizontal_metrics(glyph_id);
+    return static_cast<float>(horizontal_metrics.advance_width) * x_scale;
+}
+
 Gfx::ScaledGlyphMetrics Font::glyph_metrics(u32 glyph_id, float x_scale, float y_scale, float point_width, float point_height) const
 {
     auto embedded_bitmap_metrics = embedded_bitmap_data_for_glyph(glyph_id).visit(
