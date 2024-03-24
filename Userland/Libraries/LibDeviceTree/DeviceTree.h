@@ -19,6 +19,20 @@
 namespace DeviceTree {
 
 struct DeviceTreeProperty {
+    class ValueStream : public FixedMemoryStream {
+    public:
+        using AK::FixedMemoryStream::FixedMemoryStream;
+
+        ErrorOr<FlatPtr> read_cells(u32 cell_size)
+        {
+            // FIXME: There are rare cases of 3 cell size big values, even in addresses, especially in addresses
+            VERIFY(cell_size <= 2);
+            if (cell_size == 1)
+                return read_value<BigEndian<u32>>();
+            return read_value<BigEndian<u64>>();
+        }
+    };
+
     ReadonlyBytes raw_data;
 
     size_t size() const { return raw_data.size(); }
@@ -73,7 +87,7 @@ struct DeviceTreeProperty {
         return {};
     }
 
-    FixedMemoryStream as_stream() const { return FixedMemoryStream { raw_data }; }
+    ValueStream as_stream() const { return ValueStream { raw_data }; }
 };
 
 class DeviceTreeNodeView {
