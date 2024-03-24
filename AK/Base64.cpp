@@ -15,7 +15,14 @@ namespace AK {
 
 size_t calculate_base64_decoded_length(StringView input)
 {
-    return input.length() * 3 / 4;
+    auto length = input.length() * 3 / 4;
+
+    if (input.ends_with("="sv))
+        --length;
+    if (input.ends_with("=="sv))
+        --length;
+
+    return length;
 }
 
 size_t calculate_base64_encoded_length(ReadonlyBytes input)
@@ -69,9 +76,6 @@ static ErrorOr<ByteBuffer> decode_base64_impl(StringView input, ReadonlySpan<i16
         if (!in3_is_padding)
             output[output_offset++] = ((in2 & 0x3) << 6) | in3;
     }
-
-    if (output_offset < output.size())
-        output.trim(output_offset, false);
 
     return output;
 }
