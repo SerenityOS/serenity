@@ -1298,6 +1298,12 @@ void Document::set_hovered_node(Node* node)
     else
         invalidate_style();
 
+    // https://w3c.github.io/uievents/#mouseout
+    if (old_hovered_node && old_hovered_node != m_hovered_node) {
+        auto event = UIEvents::MouseEvent::create(realm(), UIEvents::EventNames::mouseout);
+        old_hovered_node->dispatch_event(event);
+    }
+
     // https://w3c.github.io/uievents/#mouseleave
     if (old_hovered_node && (!m_hovered_node || !m_hovered_node->is_descendant_of(*old_hovered_node))) {
         // FIXME: Check if we need to dispatch these events in a specific order.
@@ -1305,6 +1311,12 @@ void Document::set_hovered_node(Node* node)
             // FIXME: Populate the event with mouse coordinates, etc.
             target->dispatch_event(UIEvents::MouseEvent::create(realm(), UIEvents::EventNames::mouseleave));
         }
+    }
+
+    // https://w3c.github.io/uievents/#mouseover
+    if (m_hovered_node && m_hovered_node != old_hovered_node) {
+        auto event = UIEvents::MouseEvent::create(realm(), UIEvents::EventNames::mouseover);
+        m_hovered_node->dispatch_event(event);
     }
 
     // https://w3c.github.io/uievents/#mouseenter
