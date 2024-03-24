@@ -83,6 +83,12 @@ void Internals::click(double x, double y)
     page.handle_mouseup({ x, y }, { x, y }, 1, 0, 0);
 }
 
+void Internals::move_pointer_to(double x, double y)
+{
+    auto& page = global_object().browsing_context()->page();
+    page.handle_mousemove({ x, y }, { x, y }, 0, 0);
+}
+
 void Internals::wheel(double x, double y, double delta_x, double delta_y)
 {
     auto& page = global_object().browsing_context()->page();
