@@ -58,11 +58,6 @@ enum class ApplyPercentDecoding {
     No
 };
 
-struct DataURL {
-    String mime_type;
-    ByteBuffer body;
-};
-
 void append_percent_encoded_if_necessary(StringBuilder&, u32 code_point, PercentEncodeSet set = PercentEncodeSet::Userinfo);
 void append_percent_encoded(StringBuilder&, u32 code_point);
 bool code_point_is_in_percent_encode_set(u32 code_point, PercentEncodeSet);
@@ -142,8 +137,6 @@ public:
     bool equals(URL const& other, ExcludeFragment = ExcludeFragment::No) const;
 
     URL complete_url(StringView) const;
-
-    ErrorOr<DataURL> process_data_url() const;
 
     bool operator==(URL const& other) const { return equals(other, ExcludeFragment::No); }
 

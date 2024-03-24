@@ -8,7 +8,11 @@
 #pragma once
 
 #include <AK/Array.h>
-#include <LibURL/URL.h>
+#include <AK/ByteBuffer.h>
+#include <AK/Error.h>
+#include <AK/String.h>
+#include <AK/StringView.h>
+#include <LibURL/Forward.h>
 
 namespace Web::Fetch::Infrastructure {
 
@@ -33,8 +37,15 @@ inline constexpr Array FETCH_SCHEMES = {
     "resource"sv
 };
 
+// https://fetch.spec.whatwg.org/#data-url-struct
+struct DataURL {
+    String mime_type;
+    ByteBuffer body;
+};
+
 [[nodiscard]] bool is_local_url(URL::URL const&);
 [[nodiscard]] bool is_fetch_scheme(StringView);
 [[nodiscard]] bool is_http_or_https_scheme(StringView);
+ErrorOr<DataURL> process_data_url(URL::URL const&);
 
 }
