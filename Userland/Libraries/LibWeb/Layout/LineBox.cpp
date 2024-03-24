@@ -15,7 +15,7 @@
 
 namespace Web::Layout {
 
-void LineBox::add_fragment(Node const& layout_node, int start, int length, CSSPixels leading_size, CSSPixels trailing_size, CSSPixels leading_margin, CSSPixels trailing_margin, CSSPixels content_width, CSSPixels content_height, CSSPixels border_box_top, CSSPixels border_box_bottom, Span<Gfx::DrawGlyphOrEmoji const> glyph_run)
+void LineBox::add_fragment(Node const& layout_node, int start, int length, CSSPixels leading_size, CSSPixels trailing_size, CSSPixels leading_margin, CSSPixels trailing_margin, CSSPixels content_width, CSSPixels content_height, CSSPixels border_box_top, CSSPixels border_box_bottom, Vector<Gfx::DrawGlyphOrEmoji> glyph_run)
 {
     bool text_align_is_justify = layout_node.computed_values().text_align() == CSS::TextAlign::Justify;
     if (!text_align_is_justify && !m_fragments.is_empty() && &m_fragments.last().layout_node() == &layout_node) {
@@ -24,15 +24,14 @@ void LineBox::add_fragment(Node const& layout_node, int start, int length, CSSPi
         // Expand the last fragment instead of adding a new one with the same Layout::Node.
         m_fragments.last().m_length = (start - m_fragments.last().m_start) + length;
         m_fragments.last().set_width(m_fragments.last().width() + content_width);
-        for (auto glyph : glyph_run) {
+        for (auto& glyph : glyph_run) {
             glyph.visit([&](auto& glyph) { glyph.position.translate_by(fragment_width.to_float(), 0); });
             m_fragments.last().m_glyph_run->append(glyph);
         }
     } else {
-        Vector<Gfx::DrawGlyphOrEmoji> glyph_run_copy { glyph_run };
         CSSPixels x_offset = leading_margin + leading_size + m_width;
         CSSPixels y_offset = 0;
-        m_fragments.append(LineBoxFragment { layout_node, start, length, CSSPixelPoint(x_offset, y_offset), CSSPixelSize(content_width, content_height), border_box_top, move(glyph_run_copy) });
+        m_fragments.append(LineBoxFragment { layout_node, start, length, CSSPixelPoint(x_offset, y_offset), CSSPixelSize(content_width, content_height), border_box_top, move(glyph_run) });
     }
     m_width += leading_margin + leading_size + content_width + trailing_size + trailing_margin;
     m_height = max(m_height, content_height + border_box_top + border_box_bottom);
