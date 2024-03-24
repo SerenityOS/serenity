@@ -110,8 +110,7 @@ float ScaledFont::glyph_left_bearing(u32 code_point) const
 float ScaledFont::glyph_width(u32 code_point) const
 {
     auto id = glyph_id_for_code_point(code_point);
-    auto metrics = glyph_metrics(id);
-    return metrics.advance_width;
+    return m_font->glyph_advance(id, m_x_scale, m_y_scale, m_point_width, m_point_height);
 }
 
 template<typename CodePointIterator>
