@@ -688,7 +688,7 @@
                                     <action selector="toggleClipText:" target="-1" id="qxg-tH-KXd"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Show images" state="on" id="ArW-nr-ktv">
+                            <menuItem title="Show Images" state="on" id="ArW-nr-ktv">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="toggleShowImages:" target="-1" id="mNE-9J-Nle"/>
