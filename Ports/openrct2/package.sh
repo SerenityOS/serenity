@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='openrct2'
-version='0.4.8'
+version='0.4.9'
 depends=(
     'curl'
     'flac'
@@ -18,8 +18,8 @@ depends=(
     'zlib'
 )
 files=(
-    "https://github.com/OpenRCT2/OpenRCT2/archive/refs/tags/v${version}.tar.gz#b79bdfd91e2676b0238a94ef3a53bf13a6b6ba417a8d77056a8ea2a903967fd1"
-    "https://github.com/OpenRCT2/OpenRCT2/releases/download/v${version}/OpenRCT2-${version}-linux-jammy-x86_64.tar.gz#a9152601612e2c5249324bce849c5fbdbfe40886128cf3848aae4b62b0c51936"
+    "https://github.com/OpenRCT2/OpenRCT2/archive/refs/tags/v${version}.tar.gz#d9eb7bb99923152122716707888a6182491662e106bef91b86106fa7b45b4309"
+    "https://github.com/OpenRCT2/OpenRCT2/releases/download/v${version}/OpenRCT2-${version}-linux-jammy-x86_64.tar.gz#f388d46956f32755a504df1582fea7b800a8c100333667cb3f9c495c5c9d7201"
 )
 useconfigure='true'
 workdir="OpenRCT2-${version}"
