@@ -25,8 +25,8 @@ TEST_CASE(test_decode)
     decode_equal("Zm9vYg=="sv, "foob"sv);
     decode_equal("Zm9vYmE="sv, "fooba"sv);
     decode_equal("Zm9vYmFy"sv, "foobar"sv);
-    decode_equal("Z m\r9\n   v\v  Ym\tFy"sv, "foobar"sv);
-    EXPECT_EQ(decode_base64(" ZD Qg\r\nPS An Zm91cic\r\n 7"sv).value(), decode_base64("ZDQgPSAnZm91cic7"sv).value());
+    decode_equal(" Zm9vYmFy "sv, "foobar"sv);
+    decode_equal("  \n\r \t Zm9vYmFy \n"sv, "foobar"sv);
 
     decode_equal("aGVsbG8/d29ybGQ="sv, "hello?world"sv);
 }
@@ -88,7 +88,8 @@ TEST_CASE(test_urldecode)
     decode_equal("Zm9vYg=="sv, "foob"sv);
     decode_equal("Zm9vYmE="sv, "fooba"sv);
     decode_equal("Zm9vYmFy"sv, "foobar"sv);
-    decode_equal("Z m\r9\n   v\v  Ym\tFy"sv, "foobar"sv);
+    decode_equal(" Zm9vYmFy "sv, "foobar"sv);
+    decode_equal("  \n\r \t Zm9vYmFy \n"sv, "foobar"sv);
 
     decode_equal("TG9yZW0gaXBzdW0gZG9sb3Igc2l0IGFtZXQsIGNvbnNlY3RldHVyIGFkaXBpc2NpbmcgZWxpdCwgc2VkIGRvIGVpdXNtb2QgdGVtcG9yIGluY2lkaWR1bnQgdXQgbGFib3JlIGV0IGRvbG9yZSBtYWduYSBhbGlxdWEu"sv, "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."sv);
     decode_equal("aGVsbG8_d29ybGQ="sv, "hello?world"sv);

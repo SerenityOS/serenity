@@ -6,7 +6,6 @@
 
 #include <AK/Assertions.h>
 #include <AK/Base64.h>
-#include <AK/CharacterTypes.h>
 #include <AK/Error.h>
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
@@ -26,19 +25,20 @@ size_t calculate_base64_encoded_length(ReadonlyBytes input)
 
 static ErrorOr<ByteBuffer> decode_base64_impl(StringView input, ReadonlySpan<i16> alphabet_lookup_table)
 {
-    auto get = [&](size_t& offset, bool* is_padding, bool& parsed_something) -> ErrorOr<u8> {
-        while (offset < input.length() && is_ascii_space(input[offset]))
-            ++offset;
+    input = input.trim_whitespace();
+
+    auto get = [&](size_t offset, bool* is_padding) -> ErrorOr<u8> {
         if (offset >= input.length())
             return 0;
-        auto ch = static_cast<unsigned char>(input[offset++]);
-        parsed_something = true;
+
+        auto ch = static_cast<unsigned char>(input[offset]);
         if (ch == '=') {
             if (!is_padding)
                 return Error::from_string_literal("Invalid '=' character outside of padding in base64 data");
             *is_padding = true;
             return 0;
         }
+
         i16 result = alphabet_lookup_table[ch];
         if (result < 0)
             return Error::from_string_literal("Invalid character in base64 data");
@@ -56,15 +56,10 @@ static ErrorOr<ByteBuffer> decode_base64_impl(StringView input, ReadonlySpan<i16
         bool in2_is_padding = false;
         bool in3_is_padding = false;
 
-        bool parsed_something = false;
-
-        u8 const in0 = TRY(get(input_offset, nullptr, parsed_something));
-        u8 const in1 = TRY(get(input_offset, nullptr, parsed_something));
-        u8 const in2 = TRY(get(input_offset, &in2_is_padding, parsed_something));
-        u8 const in3 = TRY(get(input_offset, &in3_is_padding, parsed_something));
-
-        if (!parsed_something)
-            break;
+        u8 const in0 = TRY(get(input_offset++, nullptr));
+        u8 const in1 = TRY(get(input_offset++, nullptr));
+        u8 const in2 = TRY(get(input_offset++, &in2_is_padding));
+        u8 const in3 = TRY(get(input_offset++, &in3_is_padding));
 
         output[output_offset++] = (in0 << 2) | ((in1 >> 4) & 3);
 
