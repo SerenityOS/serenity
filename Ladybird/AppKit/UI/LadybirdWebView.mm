@@ -873,6 +873,15 @@ static void copy_data_to_clipboard(StringView data, NSPasteboardType pasteboard_
     copy_data_to_clipboard(m_web_view_bridge->selected_text(), NSPasteboardTypeString);
 }
 
+- (void)paste:(id)sender
+{
+    auto* paste_board = [NSPasteboard generalPasteboard];
+
+    if (auto* contents = [paste_board stringForType:NSPasteboardTypeString]) {
+        m_web_view_bridge->paste(Ladybird::ns_string_to_string(contents));
+    }
+}
+
 - (void)selectAll:(id)sender
 {
     m_web_view_bridge->select_all();
@@ -1002,6 +1011,9 @@ static void copy_data_to_clipboard(StringView data, NSPasteboardType pasteboard_
 
         [_page_context_menu addItem:[[NSMenuItem alloc] initWithTitle:@"Copy"
                                                                action:@selector(copy:)
+                                                        keyEquivalent:@""]];
+        [_page_context_menu addItem:[[NSMenuItem alloc] initWithTitle:@"Paste"
+                                                               action:@selector(paste:)
                                                         keyEquivalent:@""]];
         [_page_context_menu addItem:[[NSMenuItem alloc] initWithTitle:@"Select All"
                                                                action:@selector(selectAll:)
