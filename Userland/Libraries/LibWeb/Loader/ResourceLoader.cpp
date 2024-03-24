@@ -13,6 +13,7 @@
 #include <LibCore/Resource.h>
 #include <LibWeb/Cookie/Cookie.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
+#include <LibWeb/Fetch/Infrastructure/URL.h>
 #include <LibWeb/Loader/ContentFilter.h>
 #include <LibWeb/Loader/GeneratedPagesLoader.h>
 #include <LibWeb/Loader/LoadRequest.h>
@@ -251,7 +252,7 @@ void ResourceLoader::load(LoadRequest& request, SuccessCallback success_callback
     }
 
     if (url.scheme() == "data") {
-        auto data_url_or_error = url.process_data_url();
+        auto data_url_or_error = Fetch::Infrastructure::process_data_url(url);
         if (data_url_or_error.is_error()) {
             auto error_message = data_url_or_error.error().string_literal();
             log_failure(request, error_message);

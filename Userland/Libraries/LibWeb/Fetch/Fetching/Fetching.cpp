@@ -805,7 +805,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> scheme_fetch(JS::Realm& r
     // -> "data"
     else if (request->current_url().scheme() == "data"sv) {
         // 1. Let dataURLStruct be the result of running the data: URL processor on request’s current URL.
-        auto data_url_struct = request->current_url().process_data_url();
+        auto data_url_struct = Infrastructure::process_data_url(request->current_url());
 
         // 2. If dataURLStruct is failure, then return a network error.
         if (data_url_struct.is_error())

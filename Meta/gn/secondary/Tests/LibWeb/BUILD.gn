@@ -12,6 +12,15 @@ unittest("TestCSSPixels") {
   deps = [ "//Userland/Libraries/LibWeb" ]
 }
 
+unittest("TestFetchURL") {
+  include_dirs = [ "//Userland/Libraries" ]
+  sources = [ "TestFetchURL.cpp" ]
+  deps = [
+    "//Userland/Libraries/LibURL",
+    "//Userland/Libraries/LibWeb",
+  ]
+}
+
 unittest("TestHTMLTokenizer") {
   include_dirs = [ "//Userland/Libraries" ]
   sources = [ "TestHTMLTokenizer.cpp" ]
@@ -41,6 +50,7 @@ group("LibWeb") {
   deps = [
     ":TestCSSIDSpeed",
     ":TestCSSPixels",
+    ":TestFetchURL",
     ":TestHTMLTokenizer",
     ":TestMicrosyntax",
     ":TestMimeSniff",
