@@ -196,6 +196,22 @@ void EventLoop::process()
         }
     };
 
+    // AD-HOC: Since event loop processing steps do not constantly running in parallel, and
+    //         something must trigger them, we need to manually schedule a repaint for all
+    //         navigables that do not have a rendering opportunity at this event loop iteration.
+    //         Otherwise their repaint will be delayed until something else will trigger event
+    //         loop processing.
+    for_each_fully_active_document_in_docs([&](DOM::Document& document) {
+        auto navigable = document.navigable();
+        if (navigable && navigable->has_a_rendering_opportunity())
+            return;
+        auto* browsing_context = document.browsing_context();
+        if (!browsing_context)
+            return;
+        auto& page = browsing_context->page();
+        page.client().schedule_repaint();
+    });
+
     // 2. Rendering opportunities: Remove from docs all Document objects whose node navigables do not have a rendering opportunity.
     docs.remove_all_matching([&](auto& document) {
         auto navigable = document->navigable();

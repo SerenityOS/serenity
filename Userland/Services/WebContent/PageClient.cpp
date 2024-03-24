@@ -105,8 +105,11 @@ void PageClient::ready_to_paint()
 {
     auto old_paint_state = exchange(m_paint_state, PaintState::Ready);
 
-    if (old_paint_state == PaintState::PaintWhenReady)
-        schedule_repaint();
+    if (old_paint_state == PaintState::PaintWhenReady) {
+        // NOTE: Repainting always has to be scheduled from HTML event loop processing steps
+        //       to make sure style and layout are up-to-date.
+        page().top_level_traversable()->set_needs_display();
+    }
 }
 
 void PageClient::add_backing_store(i32 front_bitmap_id, Gfx::ShareableBitmap const& front_bitmap, i32 back_bitmap_id, Gfx::ShareableBitmap const& back_bitmap)
