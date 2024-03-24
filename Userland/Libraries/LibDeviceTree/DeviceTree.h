@@ -91,6 +91,13 @@ struct DeviceTreeProperty {
 };
 
 class DeviceTreeNodeView {
+    // FIXME: This struct only holds true for memory mapped nodes,
+    //        eg PCI devices have 96-bit addresses in their "reg" property
+    struct Reg {
+        FlatPtr address;
+        size_t length;
+    };
+
 public:
     bool has_property(StringView prop) const { return m_properties.contains(prop); }
     bool has_child(StringView child) const { return m_children.contains(child); }
@@ -123,6 +130,33 @@ public:
             return return_value;
         }
         return false;
+    }
+
+    FlatPtr to_root_address(FlatPtr value) const;
+
+    Optional<DeviceTreeProperty> raw_reg() const { return get_property("reg"sv); }
+
+    Vector<Reg, 2> reg() const
+    {
+        auto reg_property = raw_reg();
+        if (!reg_property.has_value())
+            return {};
+
+        auto address_cells = get_property("#address-cells"sv);
+        auto size_cells = get_property("#size-cells"sv);
+
+        if (!address_cells.has_value() || !size_cells.has_value())
+            return {};
+
+        Vector<Reg, 2> result;
+        auto value_stream = reg_property->as_stream();
+        while (!value_stream.is_eof()) {
+            auto address = value_stream.read_cells(address_cells->as<u32>());
+            auto length = value_stream.read_cells(size_cells->as<u32>());
+            result.append({ to_root_address(address.value()), length.value() });
+        }
+
+        return result;
     }
 
     StringView device_type() const

@@ -35,9 +35,6 @@ void initialize()
     // These values must be present in the root node
     // And all connected simple-bus nodes have the same values for these, unless
     // they also have a "ranges" property, which is not supported by us, for now
-    auto address_cells = device_tree.get_property("#address-cells"sv).value().as<u32>();
-    [[maybe_unused]] auto size_cells = device_tree.get_property("#size-cells"sv).value().as<u32>();
-
     enum class ControllerCompatible {
         Unknown,
         ECAM,
@@ -45,7 +42,7 @@ void initialize()
 
     Optional<u32> domain_counter;
     MUST(device_tree.for_each_connected_pci_controller(
-        [&domain_counter, address_cells](StringView node_name, DeviceTree::DeviceTreeNodeView const& node) -> ErrorOr<IterationDecision> {
+        [&domain_counter](StringView node_name, DeviceTree::DeviceTreeNodeView const& node) -> ErrorOr<IterationDecision> {
             if (auto device_type = node.get_property("device_type"sv); !device_type.has_value() || device_type->as_string() != "pci"sv) {
                 // Technically, the device_type property is deprecated, but if it is present,
                 // no harm's done in checking it anyway
@@ -78,12 +75,10 @@ void initialize()
                 return IterationDecision::Continue;
             }
 
-            auto maybe_reg = node.get_property("reg"sv);
-            if (!maybe_reg.has_value()) {
+            if (!node.has_property("reg"sv)) {
                 dmesgln("PCI: Devicetree node for {} does not have a physical address assigned to it, rejecting", node_name);
                 return IterationDecision::Continue;
             }
-            auto reg = maybe_reg.value();
 
             Array<u8, 2> bus_range { 0, 255 };
             auto maybe_bus_range = node.get_property("bus-range"sv);
@@ -114,14 +109,16 @@ void initialize()
 
             switch (controller_compatibility) {
             case ControllerCompatible::ECAM: {
-                // FIXME: Make this use a nice helper function
+                auto reg = node.reg();
+
+                if (reg.size() != 1) {
+                    // FIXME: Some devices have a `reg-map` property which we may be able to use
+                    dmesgln("PCI: Devicetree node for {}, deduced as ECAM compatible has multiple `reg` ranges", node_name);
+                    return IterationDecision::Continue;
+                }
+
                 // FIXME: Use the provided size field
-                auto stream = reg.as_stream();
-                FlatPtr paddr;
-                if (address_cells == 1)
-                    paddr = MUST(stream.read_value<BigEndian<u32>>());
-                else
-                    paddr = MUST(stream.read_value<BigEndian<u64>>());
+                auto [paddr, size] = reg[0];
 
                 Access::the().add_host_controller(
                     MemoryBackedHostBridge::must_create(

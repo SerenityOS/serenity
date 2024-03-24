@@ -7,9 +7,71 @@
 #include "DeviceTree.h"
 #include "FlattenedDeviceTree.h"
 #include <AK/NonnullOwnPtr.h>
+#include <AK/StringBuilder.h>
 #include <AK/Types.h>
 
 namespace DeviceTree {
+
+FlatPtr DeviceTreeNodeView::to_root_address(FlatPtr value) const
+{
+    // FIXME: Handle address sizes other than 32 and 64
+    // FIXME: `dma_ranges` looks very similar to this,
+    //        so maybe we can make this use this code as well
+    // ranges: [<own-addr(#address-cells)> <parent-addr(::#address-cells)> <length(#size-cells)>]
+
+    // The root node:
+    if (m_parent == nullptr)
+        return value;
+
+    auto own_ranges = get_property("ranges"sv);
+    // Note: If you hit this, you should probably call this on the parent node of your current node
+    //       This is because the most prominent user `reg` uses the parents address space
+    VERIFY(own_ranges.has_value());
+
+    if (own_ranges->size() == 0)
+        return m_parent->to_root_address(value);
+
+    auto own_address_size = get_property("#address-cells"sv);
+    VERIFY(own_address_size.has_value());
+    auto own_length_size = get_property("#size-cells"sv);
+    VERIFY(own_length_size.has_value());
+
+    auto parent_address_size = m_parent->get_property("#address-cells"sv);
+    VERIFY(parent_address_size.has_value());
+
+    if (own_ranges->size() % (own_address_size->as<u32>() + parent_address_size->as<u32>() + own_length_size->as<u32>()) != 0) {
+        dbgln("DeviceTree: Ranges property has invalid length {}, expected a multiple of {}",
+            own_ranges->size(), own_address_size->as<u32>() + parent_address_size->as<u32>() + own_length_size->as<u32>());
+        VERIFY_NOT_REACHED();
+    }
+
+    auto range_stream = own_ranges->as_stream();
+    while (!range_stream.is_eof()) {
+        FlatPtr own_address = MUST(range_stream.read_cells(own_address_size->as<u32>()));
+        FlatPtr parent_address = MUST(range_stream.read_cells(parent_address_size->as<u32>()));
+        FlatPtr length = MUST(range_stream.read_cells(own_length_size->as<u32>()));
+
+        if (value >= own_address && value < own_address + length)
+            return m_parent->to_root_address(parent_address + (value - own_address));
+    }
+
+    // FIXME: Getting this error half way through translation is not very helpful
+    //        It'd be nice to get the translation chain leading to this error
+    dbgln("DeviceTree: Address {} not found in ranges property", value);
+
+    StringBuilder builder;
+    range_stream = own_ranges->as_stream();
+    while (!range_stream.is_eof()) {
+        FlatPtr own_address = MUST(range_stream.read_cells(own_address_size->as<u32>()));
+        FlatPtr parent_address = MUST(range_stream.read_cells(parent_address_size->as<u32>()));
+        FlatPtr length = MUST(range_stream.read_cells(own_length_size->as<u32>()));
+
+        builder.appendff("(own:{:#08x} parent:{:#08x} size:{:#x}),", own_address, parent_address, length);
+    }
+
+    dbgln("DeviceTree: ranges: [{}]", builder.string_view());
+    VERIFY_NOT_REACHED();
+}
 
 ErrorOr<NonnullOwnPtr<DeviceTree>> DeviceTree::parse(ReadonlyBytes flattened_device_tree)
 {
