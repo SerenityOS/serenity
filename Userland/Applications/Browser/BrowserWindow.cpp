@@ -227,6 +227,16 @@ void BrowserWindow::build_menus(StringView const man_file)
             GUI::Clipboard::the().set_plain_text(selected_text);
     });
 
+    m_paste_action = GUI::CommonActions::make_paste_action([this](auto&) {
+        auto& tab = active_tab();
+
+        auto [data, mime_type, metadata] = GUI::Clipboard::the().fetch_data_and_type();
+        if (data.is_empty() || !mime_type.starts_with("text/"sv))
+            return;
+
+        tab.view().paste(MUST(String::from_utf8(StringView { data })));
+    });
+
     m_select_all_action = GUI::CommonActions::make_select_all_action([this](auto&) {
         active_tab().view().select_all();
     });
