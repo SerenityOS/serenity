@@ -40,6 +40,11 @@ TEST_CASE(test_decode_invalid)
 
     EXPECT(decode_base64("aGVsbG8_d29ybGQ="sv).is_error());
     EXPECT(decode_base64url("aGVsbG8/d29ybGQ="sv).is_error());
+
+    EXPECT(decode_base64("Y"sv).is_error());
+    EXPECT(decode_base64("YQ"sv).is_error());
+    EXPECT(decode_base64("YQ="sv).is_error());
+    EXPECT(decode_base64("PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMC42MDUiIGhlaWdodD0iMTUuNTU1Ij48cGF0aCBmaWxsPSIjODg5IiBkPSJtMi44MjggMTUuNTU1IDcuNzc3LTcuNzc5TDIuODI4IDAgMCAyLjgyOGw0Ljk0OSA0Ljk0OEwwIDEyLjcyN2wyLjgyOCAyLjgyOHoiLz48L3N2Zz4"sv).is_error());
 }
 
 TEST_CASE(test_decode_only_padding)

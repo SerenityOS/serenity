@@ -34,6 +34,9 @@ static ErrorOr<ByteBuffer> decode_base64_impl(StringView input, ReadonlySpan<i16
 {
     input = input.trim_whitespace();
 
+    if (input.length() % 4 != 0)
+        return Error::from_string_literal("Invalid length of Base64 encoded string");
+
     auto get = [&](size_t offset, bool* is_padding) -> ErrorOr<u8> {
         if (offset >= input.length())
             return 0;
