@@ -12,7 +12,7 @@ this is to hard-code these paths in the header file.
  1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/cmake/cmake_config.h.in b/cmake/cmake_config.h.in
-index 17584b33da6e9cc610d8be7d1a4f28b8b587844a..02a6214f4215723eb4c90b65f67aea6d508be193 100644
+index 8368c3b0e9b1b67b9cbf18a1abd8b2194733094b..4bc1c7b283dce482b1e40561c46a82c954d79ac9 100644
 --- a/cmake/cmake_config.h.in
 +++ b/cmake/cmake_config.h.in
 @@ -10,9 +10,9 @@
