@@ -570,13 +570,31 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::round)
     // 7. Let roundingMode be ? ToTemporalRoundingMode(roundTo, "halfExpand").
     auto rounding_mode = TRY(to_temporal_rounding_mode(vm, *round_to, "halfExpand"sv));
 
-    // 8. Let roundingIncrement be ? ToTemporalDateTimeRoundingIncrement(roundTo, smallestUnit).
-    auto rounding_increment = TRY(to_temporal_date_time_rounding_increment(vm, *round_to, *smallest_unit));
+    // 8. If smallestUnit is "day", then
+    Optional<u16> maximum;
+    if (smallest_unit == "day"sv) {
+        // a. Let maximum be 1.
+        maximum = 1;
+    }
+    // 9. Else
+    else {
+        // a. Let maximum be ! MaximumTemporalDurationRoundingIncrement(smallestUnit)
+        maximum = maximum_temporal_duration_rounding_increment(*smallest_unit);
 
-    // 9. Let result be ! RoundISODateTime(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]], roundingIncrement, smallestUnit, roundingMode).
-    auto result = round_iso_date_time(date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->iso_hour(), date_time->iso_minute(), date_time->iso_second(), date_time->iso_millisecond(), date_time->iso_microsecond(), date_time->iso_nanosecond(), rounding_increment, *smallest_unit, rounding_mode);
+        // b. Assert: maximum is not undefined
+        VERIFY(maximum.has_value());
+    }
 
-    // 10. Return ? CreateTemporalDateTime(result.[[Year]], result.[[Month]], result.[[Day]], result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]], dateTime.[[Calendar]]).
+    // 10. Let roundingIncrement be ? ToTemporalDateTimeRoundingIncrement(roundTo).
+    auto rounding_increment = TRY(to_temporal_rounding_increment(vm, *round_to));
+
+    // 11. Set roundingIncrement to ? ValidateTemporalRoundingIncrement(roundingIncrement, maximum, false).
+    auto floored_rounding_increment = TRY(validate_temporal_rounding_increment(vm, rounding_increment, *maximum, false));
+
+    // 12. Let result be ! RoundISODateTime(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]], roundingIncrement, smallestUnit, roundingMode).
+    auto result = round_iso_date_time(date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->iso_hour(), date_time->iso_minute(), date_time->iso_second(), date_time->iso_millisecond(), date_time->iso_microsecond(), date_time->iso_nanosecond(), floored_rounding_increment, *smallest_unit, rounding_mode);
+
+    // 13. Return ? CreateTemporalDateTime(result.[[Year]], result.[[Month]], result.[[Day]], result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]], dateTime.[[Calendar]]).
     return TRY(create_temporal_date_time(vm, result.year, result.month, result.day, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond, date_time->calendar()));
 }
 

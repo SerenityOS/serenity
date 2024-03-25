@@ -331,30 +331,6 @@ ThrowCompletionOr<u64> validate_temporal_rounding_increment(VM& vm, double incre
     return floored_increment;
 }
 
-// 13.13 ToTemporalDateTimeRoundingIncrement ( normalizedOptions, smallestUnit ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaldatetimeroundingincrement
-ThrowCompletionOr<u64> to_temporal_date_time_rounding_increment(VM& vm, Object const& normalized_options, StringView smallest_unit)
-{
-    u16 maximum;
-
-    // 1. If smallestUnit is "day", then
-    if (smallest_unit == "day"sv) {
-        // a. Let maximum be 1.
-        maximum = 1;
-    }
-    // 2. Else,
-    else {
-        // a. Let maximum be ! MaximumTemporalDurationRoundingIncrement(smallestUnit).
-        // b. Assert: maximum is not undefined.
-        maximum = *maximum_temporal_duration_rounding_increment(smallest_unit);
-    }
-
-    // 3. Let increment be ? ToTemporalRoundingIncrement(normalizedOptions).
-    auto increment = TRY(to_temporal_rounding_increment(vm, normalized_options));
-
-    // 4. Return ? ValidateTemporalRoundingIncrement(increment, maximum, false).
-    return validate_temporal_rounding_increment(vm, increment, maximum, false);
-}
-
 // 13.14 ToSecondsStringPrecisionRecord ( normalizedOptions ), https://tc39.es/proposal-temporal/#sec-temporal-tosecondsstringprecisionrecord
 ThrowCompletionOr<SecondsStringPrecision> to_seconds_string_precision_record(VM& vm, Object const& normalized_options)
 {
