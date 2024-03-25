@@ -17,8 +17,6 @@ Paintable::Paintable(Layout::Node const& layout_node)
     , m_browsing_context(const_cast<HTML::BrowsingContext&>(layout_node.browsing_context()))
 {
     auto& computed_values = layout_node.computed_values();
-    m_visible = computed_values.visibility() == CSS::Visibility::Visible && computed_values.opacity() != 0;
-
     if (layout_node.is_grid_item() && computed_values.z_index().has_value()) {
         // https://www.w3.org/TR/css-grid-2/#z-order
         // grid items with z_index should behave as if position were "relative"
@@ -46,6 +44,12 @@ void Paintable::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_browsing_context);
     if (m_containing_block.has_value())
         visitor.visit(m_containing_block.value());
+}
+
+bool Paintable::is_visible() const
+{
+    auto const& computed_values = this->computed_values();
+    return computed_values.visibility() == CSS::Visibility::Visible && computed_values.opacity() != 0;
 }
 
 void Paintable::set_dom_node(JS::GCPtr<DOM::Node> dom_node)
