@@ -297,6 +297,9 @@ struct PartialDurationRecord;
 };
 
 template<typename T>
+class HeapFunction;
+
+template<typename T>
 requires(!IsLvalueReference<T>)
 class ThrowCompletionOr;
 

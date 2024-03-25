@@ -86,8 +86,8 @@ VM::VM(OwnPtr<CustomData> custom_data, ErrorMessages error_messages)
         enqueue_finalization_registry_cleanup_job(finalization_registry);
     };
 
-    host_enqueue_promise_job = [this](Function<ThrowCompletionOr<Value>()> job, Realm* realm) {
-        enqueue_promise_job(move(job), realm);
+    host_enqueue_promise_job = [this](NonnullGCPtr<HeapFunction<ThrowCompletionOr<Value>()>> job, Realm* realm) {
+        enqueue_promise_job(job, realm);
     };
 
     host_make_job_callback = [](FunctionObject& function_object) {
@@ -214,6 +214,9 @@ void VM::gather_roots(HashMap<Cell*, HeapRoot>& roots)
     gather_roots_from_execution_context_stack(m_execution_context_stack);
     for (auto& saved_stack : m_saved_execution_context_stacks)
         gather_roots_from_execution_context_stack(saved_stack);
+
+    for (auto& job : m_promise_jobs)
+        roots.set(job, HeapRoot { .type = HeapRoot::Type::VM });
 }
 
 ThrowCompletionOr<Value> VM::named_evaluation_if_anonymous_function(ASTNode const& expression, DeprecatedFlyString const& name)
@@ -636,19 +639,19 @@ void VM::run_queued_promise_jobs()
         auto job = m_promise_jobs.take_first();
         dbgln_if(PROMISE_DEBUG, "Calling promise job function");
 
-        [[maybe_unused]] auto result = job();
+        [[maybe_unused]] auto result = job->function()();
     }
 }
 
 // 9.5.4 HostEnqueuePromiseJob ( job, realm ), https://tc39.es/ecma262/#sec-hostenqueuepromisejob
-void VM::enqueue_promise_job(Function<ThrowCompletionOr<Value>()> job, Realm*)
+void VM::enqueue_promise_job(NonnullGCPtr<HeapFunction<ThrowCompletionOr<Value>()>> job, Realm*)
 {
     // An implementation of HostEnqueuePromiseJob must conform to the requirements in 9.5 as well as the following:
     // - FIXME: If realm is not null, each time job is invoked the implementation must perform implementation-defined steps such that execution is prepared to evaluate ECMAScript code at the time of job's invocation.
     // - FIXME: Let scriptOrModule be GetActiveScriptOrModule() at the time HostEnqueuePromiseJob is invoked. If realm is not null, each time job is invoked the implementation must perform implementation-defined steps
     //          such that scriptOrModule is the active script or module at the time of job's invocation.
     // - Jobs must run in the same order as the HostEnqueuePromiseJob invocations that scheduled them.
-    m_promise_jobs.append(move(job));
+    m_promise_jobs.append(job);
 }
 
 void VM::run_queued_finalization_registry_cleanup_jobs()
