@@ -257,11 +257,11 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::round)
     // 14. Let roundingIncrement be ? ToTemporalRoundingIncrement(options).
     auto rounding_increment = TRY(to_temporal_rounding_increment(vm, *round_to));
 
-    // 15. Set roundingIncrement to ? ValidateTemporalRoundingIncrement(roundingIncrement, maximum, true).
-    auto floored_rounding_increment = TRY(validate_temporal_rounding_increment(vm, rounding_increment, maximum, true));
+    // 15. Perform ? ValidateTemporalRoundingIncrement(roundingIncrement, maximum, true).
+    TRY(validate_temporal_rounding_increment(vm, rounding_increment, maximum, true));
 
     // 16. Let roundedNs be ! RoundTemporalInstant(instant.[[Nanoseconds]], roundingIncrement, smallestUnit, roundingMode).
-    auto* rounded_ns = round_temporal_instant(vm, instant->nanoseconds(), floored_rounding_increment, smallest_unit, rounding_mode);
+    auto* rounded_ns = round_temporal_instant(vm, instant->nanoseconds(), rounding_increment, smallest_unit, rounding_mode);
 
     // 17. Return ! CreateTemporalInstant(roundedNs).
     return MUST(create_temporal_instant(vm, *rounded_ns));
