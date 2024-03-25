@@ -5,11 +5,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/LexicalPath.h>
 #include <AK/String.h>
 #include <LibCore/System.h>
 #include <LibFileSystem/FileSystem.h>
-#include <LibUnicode/URL.h>
 #include <LibWebView/URL.h>
 
 #if defined(ENABLE_PUBLIC_SUFFIX)
@@ -18,31 +16,15 @@
 
 namespace WebView {
 
-static Optional<URL::URL> create_url_with_url_or_path(String const& url_or_path)
-{
-    auto url = Unicode::create_unicode_url(url_or_path);
-    if (!url.is_error() && url.value().is_valid())
-        return url.release_value();
-
-    auto path = LexicalPath::canonicalized_path(url_or_path.to_byte_string());
-    auto url_from_path = URL::create_with_file_scheme(path);
-    if (url_from_path.is_valid())
-        return url_from_path;
-
-    return {};
-}
-
 static Optional<URL::URL> query_public_suffix_list(StringView url_string)
 {
     auto out = MUST(String::from_utf8(url_string));
     if (!out.starts_with_bytes("about:"sv) && !out.contains("://"sv))
         out = MUST(String::formatted("https://{}"sv, out));
 
-    auto maybe_url = create_url_with_url_or_path(out);
-    if (!maybe_url.has_value())
+    auto url = URL::create_with_url_or_path(out.to_byte_string());
+    if (!url.is_valid())
         return {};
-
-    auto url = maybe_url.release_value();
 
     if (url.host().has<URL::IPv4Address>() || url.host().has<URL::IPv6Address>())
         return url;

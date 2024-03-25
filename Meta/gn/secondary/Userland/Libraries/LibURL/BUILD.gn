@@ -8,5 +8,8 @@ shared_library("LibURL") {
     "URL.cpp",
     "URL.h",
   ]
-  deps = [ "//AK" ]
+  deps = [
+    "//AK",
+    "//Userland/Libraries/LibUnicode",
+  ]
 }

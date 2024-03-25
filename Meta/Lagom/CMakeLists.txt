@@ -357,6 +357,7 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "BSD$" OR HAIKU)
     target_link_libraries(AK PRIVATE execinfo)
 endif()
 
+add_serenity_subdirectory(Userland/Libraries/LibUnicode)
 add_serenity_subdirectory(Userland/Libraries/LibURL)
 
 # LibCore
@@ -481,7 +482,6 @@ if (BUILD_LAGOM)
         TextCodec
         Threading
         TLS
-        Unicode
         Video
         Wasm
         WebSocket
