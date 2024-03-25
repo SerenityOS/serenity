@@ -1,12 +1,24 @@
+# These are the minimal set of sources needed to build the code generators. We separate them to allow
+# LibCore to depend on generated sources.
 set(SOURCES
-    AnonymousBuffer.cpp
     ArgsParser.cpp
-    Command.cpp
     ConfigFile.cpp
-    DateTime.cpp
     Directory.cpp
     DirectoryEntry.cpp
     DirIterator.cpp
+    File.cpp
+    StandardPaths.cpp
+    System.cpp
+    Version.cpp
+)
+
+serenity_lib(LibCoreMinimal coreminimal TYPE OBJECT)
+target_link_libraries(LibCoreMinimal PRIVATE LibSystem)
+
+set(SOURCES
+    AnonymousBuffer.cpp
+    Command.cpp
+    DateTime.cpp
     ElapsedTimer.cpp
     Environment.cpp
     Event.cpp
@@ -14,7 +26,6 @@ set(SOURCES
     EventLoopImplementation.cpp
     EventLoopImplementationUnix.cpp
     EventReceiver.cpp
-    File.cpp
     LockFile.cpp
     MappedFile.cpp
     MimeData.cpp
@@ -29,14 +40,11 @@ set(SOURCES
     SessionManagement.cpp
     Socket.cpp
     SOCKSProxyClient.cpp
-    StandardPaths.cpp
-    System.cpp
     SystemServerTakeover.cpp
     TCPServer.cpp
     ThreadEventQueue.cpp
     Timer.cpp
     UDPServer.cpp
-    Version.cpp
 )
 if (NOT ANDROID AND NOT WIN32 AND NOT EMSCRIPTEN)
     list(APPEND SOURCES
@@ -62,7 +70,7 @@ else()
 endif()
 
 serenity_lib(LibCore core)
-target_link_libraries(LibCore PRIVATE LibCrypt LibSystem LibURL)
+target_link_libraries(LibCore PRIVATE LibCoreMinimal LibCrypt LibSystem LibURL)
 
 if (APPLE)
     target_link_libraries(LibCore PUBLIC "-framework CoreFoundation")
