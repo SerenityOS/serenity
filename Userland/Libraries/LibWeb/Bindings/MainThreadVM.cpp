@@ -249,7 +249,7 @@ ErrorOr<void> initialize_main_thread_vm()
     };
 
     // 8.1.5.4.3 HostEnqueuePromiseJob(job, realm), https://html.spec.whatwg.org/multipage/webappapis.html#hostenqueuepromisejob
-    s_main_thread_vm->host_enqueue_promise_job = [](Function<JS::ThrowCompletionOr<JS::Value>()> job, JS::Realm* realm) {
+    s_main_thread_vm->host_enqueue_promise_job = [](JS::NonnullGCPtr<JS::HeapFunction<JS::ThrowCompletionOr<JS::Value>()>> job, JS::Realm* realm) {
         // 1. If realm is not null, then let job settings be the settings object for realm. Otherwise, let job settings be null.
         HTML::EnvironmentSettingsObject* job_settings { nullptr };
         if (realm)
@@ -296,7 +296,7 @@ ErrorOr<void> initialize_main_thread_vm()
             }
 
             // 3. Let result be job().
-            [[maybe_unused]] auto result = job();
+            auto result = job->function()();
 
             // 4. If job settings is not null, then clean up after running script with job settings.
             if (job_settings) {

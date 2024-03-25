@@ -210,7 +210,7 @@ public:
     CommonPropertyNames names;
 
     void run_queued_promise_jobs();
-    void enqueue_promise_job(Function<ThrowCompletionOr<Value>()> job, Realm*);
+    void enqueue_promise_job(NonnullGCPtr<HeapFunction<ThrowCompletionOr<Value>()>> job, Realm*);
 
     void run_queued_finalization_registry_cleanup_jobs();
     void enqueue_finalization_registry_cleanup_job(FinalizationRegistry&);
@@ -254,7 +254,7 @@ public:
     Function<void(Promise&, Promise::RejectionOperation)> host_promise_rejection_tracker;
     Function<ThrowCompletionOr<Value>(JobCallback&, Value, ReadonlySpan<Value>)> host_call_job_callback;
     Function<void(FinalizationRegistry&)> host_enqueue_finalization_registry_cleanup_job;
-    Function<void(Function<ThrowCompletionOr<Value>()>, Realm*)> host_enqueue_promise_job;
+    Function<void(NonnullGCPtr<HeapFunction<ThrowCompletionOr<Value>()>>, Realm*)> host_enqueue_promise_job;
     Function<JS::NonnullGCPtr<JobCallback>(FunctionObject&)> host_make_job_callback;
     Function<ThrowCompletionOr<void>(Realm&)> host_ensure_can_compile_strings;
     Function<ThrowCompletionOr<void>(Object&)> host_ensure_can_add_private_element;
@@ -300,7 +300,7 @@ private:
     // GlobalSymbolRegistry, https://tc39.es/ecma262/#table-globalsymbolregistry-record-fields
     HashMap<String, NonnullGCPtr<Symbol>> m_global_symbol_registry;
 
-    Vector<Function<ThrowCompletionOr<Value>()>> m_promise_jobs;
+    Vector<NonnullGCPtr<HeapFunction<ThrowCompletionOr<Value>()>>> m_promise_jobs;
 
     Vector<GCPtr<FinalizationRegistry>> m_finalization_registry_cleanup_jobs;
 

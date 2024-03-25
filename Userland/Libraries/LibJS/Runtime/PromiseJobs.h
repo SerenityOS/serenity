@@ -15,7 +15,7 @@
 namespace JS {
 
 struct PromiseJob {
-    Function<ThrowCompletionOr<Value>()> job;
+    NonnullGCPtr<HeapFunction<ThrowCompletionOr<Value>()>> job;
     GCPtr<Realm> realm;
 };
 
