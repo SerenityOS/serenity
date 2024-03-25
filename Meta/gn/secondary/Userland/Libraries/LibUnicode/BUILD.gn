@@ -177,13 +177,9 @@ source_set("LibUnicode") {
     "Punycode.cpp",
     "Segmentation.cpp",
     "String.cpp",
-    "URL.cpp",
     "UnicodeUtils.cpp",
   ]
-  deps = [
-    "//AK",
-    "//Userland/Libraries/LibURL",
-  ]
+  deps = [ "//AK" ]
 
   if (enable_unicode_database_download) {
     deps += [

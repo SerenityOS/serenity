@@ -15,6 +15,7 @@
 #include <AK/StringUtils.h>
 #include <AK/Utf8View.h>
 #include <LibURL/Parser.h>
+#include <LibUnicode/IDNA.h>
 
 namespace URL {
 
@@ -574,6 +575,29 @@ static bool ends_in_a_number_checker(StringView input)
     return false;
 }
 
+// https://url.spec.whatwg.org/#concept-domain-to-ascii
+static ErrorOr<String> domain_to_ascii(StringView domain, bool be_strict)
+{
+    // 1. Let result be the result of running Unicode ToASCII with domain_name set to domain, UseSTD3ASCIIRules set to beStrict, CheckHyphens set to false, CheckBidi set to true, CheckJoiners set to true, Transitional_Processing set to false, and VerifyDnsLength set to beStrict. [UTS46]
+    // 2. If result is a failure value, domain-to-ASCII validation error, return failure.
+    Unicode::IDNA::ToAsciiOptions const options {
+        Unicode::IDNA::CheckHyphens::No,
+        Unicode::IDNA::CheckBidi::Yes,
+        Unicode::IDNA::CheckJoiners::Yes,
+        be_strict ? Unicode::IDNA::UseStd3AsciiRules::Yes : Unicode::IDNA::UseStd3AsciiRules::No,
+        Unicode::IDNA::TransitionalProcessing::No,
+        be_strict ? Unicode::IDNA::VerifyDnsLength::Yes : Unicode::IDNA::VerifyDnsLength::No
+    };
+    auto result = TRY(Unicode::IDNA::to_ascii(Utf8View(domain), options));
+
+    // 3. If result is the empty string, domain-to-ASCII validation error, return failure.
+    if (result.is_empty())
+        return Error::from_string_literal("Empty domain");
+
+    // 4. Return result.
+    return result;
+}
+
 // https://url.spec.whatwg.org/#concept-host-parser
 // NOTE: This is a very bare-bones implementation.
 static Optional<Host> parse_host(StringView input, bool is_opaque = false)
@@ -603,10 +627,10 @@ static Optional<Host> parse_host(StringView input, bool is_opaque = false)
     // FIXME: 4. Let domain be the result of running UTF-8 decode without BOM on the percent-decoding of input.
     auto domain = percent_decode(input);
 
-    // NOTE: This is handled in Unicode::create_unicode_url, to work around the fact that we can't call into LibUnicode here
-    // FIXME: 5. Let asciiDomain be the result of running domain to ASCII with domain and false.
-    // FIXME: 6. If asciiDomain is failure, then return failure.
-    auto ascii_domain_or_error = String::from_byte_string(domain);
+    // 5. Let asciiDomain be the result of running domain to ASCII with domain and false.
+    auto ascii_domain_or_error = domain_to_ascii(domain, false);
+
+    // 6. If asciiDomain is failure, then return failure.
     if (ascii_domain_or_error.is_error())
         return {};
 
