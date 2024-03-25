@@ -9,7 +9,7 @@ template("lagom_tool") {
       "//Userland/Libraries",
     ]
     deps += [
-      "//Userland/Libraries/LibCore",
+      "//Userland/Libraries/LibCore:minimal",
       "//Userland/Libraries/LibFileSystem",
     ]
   }
