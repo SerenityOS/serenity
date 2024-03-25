@@ -953,13 +953,13 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(Gener
 // 6.3.2 Input parameters
 // Table 6 – Parameters for the generic refinement region decoding procedure
 struct GenericRefinementRegionDecodingInputParameters {
-    u32 region_width;                                         // "GRW" in spec.
-    u32 region_height;                                        // "GRH" in spec.
-    u8 gr_template;                                           // "GRTEMPLATE" in spec.
-    BitBuffer const* reference_bitmap;                        // "GRREFERENCE" in spec.
-    i32 reference_x_offset;                                   // "GRREFERENCEDX" in spec.
-    i32 reference_y_offset;                                   // "GRREFERENCEDY" in spec.
-    bool is_typical_prediction_used;                          // "TPGDON" in spec.
+    u32 region_width { 0 };                                   // "GRW" in spec.
+    u32 region_height { 0 };                                  // "GRH" in spec.
+    u8 gr_template { 0 };                                     // "GRTEMPLATE" in spec.
+    BitBuffer const* reference_bitmap { nullptr };            // "GRREFERENCE" in spec.
+    i32 reference_x_offset { 0 };                             // "GRREFERENCEDX" in spec.
+    i32 reference_y_offset { 0 };                             // "GRREFERENCEDY" in spec.
+    bool is_typical_prediction_used { false };                // "TPGDON" in spec.
     Array<AdaptiveTemplatePixel, 2> adaptive_template_pixels; // "GRATX" / "GRATY" in spec.
 };
 
