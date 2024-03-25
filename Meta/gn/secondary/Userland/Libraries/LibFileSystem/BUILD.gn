@@ -8,7 +8,7 @@ shared_library("LibFileSystem") {
   ]
   deps = [
     "//AK",
-    "//Userland/Libraries/LibCore",
+    "//Userland/Libraries/LibCore:minimal",
   ]
   output_name = "filesystem"
 }
