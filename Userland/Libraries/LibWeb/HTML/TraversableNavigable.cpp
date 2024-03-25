@@ -572,7 +572,7 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
         // AD-HOC: Since currently populate_session_history_entry_document does not run in parallel
         //         we call spin_until to interrupt execution of this function and let document population
         //         to complete.
-        main_thread_event_loop().spin_processing_tasks_with_source_until(Task::Source::NavigationAndTraversal, [&] {
+        main_thread_event_loop().spin_until([&] {
             return !changing_navigable_continuations.is_empty() || completed_change_jobs == total_change_jobs;
         });
 
