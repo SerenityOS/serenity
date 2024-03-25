@@ -147,7 +147,6 @@ ThrowCompletionOr<String> to_time_zone_name_option(VM&, Object const& normalized
 ThrowCompletionOr<String> to_show_offset_option(VM&, Object const& normalized_options);
 ThrowCompletionOr<double> to_temporal_rounding_increment(VM& vm, Object const& normalized_options);
 ThrowCompletionOr<u64> validate_temporal_rounding_increment(VM& vm, double increment, double dividend, bool inclusive);
-ThrowCompletionOr<u64> to_temporal_date_time_rounding_increment(VM&, Object const& normalized_options, StringView smallest_unit);
 ThrowCompletionOr<SecondsStringPrecision> to_seconds_string_precision_record(VM&, Object const& normalized_options);
 ThrowCompletionOr<Optional<String>> get_temporal_unit(VM&, Object const& normalized_options, PropertyKey const&, UnitGroup, TemporalUnitDefault const& default_, Vector<StringView> const& extra_values = {});
 
