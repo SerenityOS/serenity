@@ -29,6 +29,11 @@ steps:
           key: '"toolchain" | "${{ parameters.arch }}" | Toolchain/BuildGNU.sh | Toolchain/Patches/binutils/*.patch | Toolchain/Patches/gcc/*.patch | Userland/Libraries/LibC/**/*.h'
           path: $(Build.SourcesDirectory)/Toolchain/Cache
         displayName: 'Toolchain Prebuilt Cache'
+    - task: Cache@2
+        inputs:
+          key: '"jakt-toolchain" | "${{ parameters.arch }}" | Toolchain/BuildJakt.sh | Userland/Libraries/LibC/**/*.h'
+          path: $(Build.SourcesDirectory)/Toolchain/Local/jakt
+        displayName: 'Jakt Toolchain Cache'
 
     - ${{ if ne(parameters.toolchain_ccache_path, '') }}:
       - task: Cache@2

@@ -104,12 +104,19 @@ jobs:
           # However, we want to avoid false cache hits at all costs.
           key: ${{ runner.os }}-toolchain-${{ matrix.arch }}-${{ steps.stamps.outputs.libc_headers }}
 
+      - name: Jakt toolchain cache
+        uses: actions/cache/restore@v4
+        id: jakt-toolchain-cache
+        with:
+          path: ${{ github.workspace }}/Toolchain/Local/jakt
+          key: ${{ runner.os }}-jakt-toolchain-${{ matrix.arch }}-${{ steps.stamps.outputs.libc_headers }}
+
       - name: Build toolchain
         if: ${{ !steps.toolchain-cache.outputs.cache-hit }}
         run: ARCH="${{ matrix.arch }}" ${{ github.workspace }}/Toolchain/BuildGNU.sh
 
-      # NOTE: This should also be cached eventually :P
       - name: Build jakt toolchain
+        if: ${{ !steps.jakt-toolchain-cache.outputs.cache-hit }}
         run: ARCH="${{ matrix.arch }}" CXX=g++-12 ${{ github.workspace }}/Toolchain/BuildJakt.sh
 
       - name: Update toolchain cache
