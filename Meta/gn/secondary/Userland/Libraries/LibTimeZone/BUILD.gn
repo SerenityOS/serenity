@@ -69,16 +69,12 @@ source_set("LibTimeZone") {
     "$target_gen_dir/..",
   ]
   sources = [
-    "DateTime.cpp",
-    "DateTime.h",
     "Forward.h",
     "TimeZone.cpp",
     "TimeZone.h",
   ]
-  deps = [
-    "//AK",
-    "//Userland/Libraries/LibCore",
-  ]
+  deps = [ "//AK" ]
+
   if (enable_timezone_database_download) {
     deps += [ ":generate_timezone_sources" ]
     sources += get_target_outputs(":generate_timezone_sources")

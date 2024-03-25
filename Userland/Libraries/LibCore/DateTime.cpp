@@ -11,14 +11,36 @@
 #include <AK/StringBuilder.h>
 #include <AK/Time.h>
 #include <LibCore/DateTime.h>
-#include <LibTimeZone/DateTime.h>
+#include <LibTimeZone/TimeZone.h>
 #include <errno.h>
 #include <time.h>
 
 namespace Core {
 
-Optional<StringView> __attribute__((weak)) parse_time_zone_name(GenericLexer&) { return {}; }
-void __attribute__((weak)) apply_time_zone_offset(StringView, UnixDateTime&) { }
+static Optional<StringView> parse_time_zone_name(GenericLexer& lexer)
+{
+    auto start_position = lexer.tell();
+
+    Optional<StringView> canonicalized_time_zone;
+
+    lexer.ignore_until([&](auto) {
+        auto time_zone = lexer.input().substring_view(start_position, lexer.tell() - start_position + 1);
+
+        canonicalized_time_zone = TimeZone::canonicalize_time_zone(time_zone);
+        return canonicalized_time_zone.has_value();
+    });
+
+    if (canonicalized_time_zone.has_value())
+        lexer.ignore();
+
+    return canonicalized_time_zone;
+}
+
+static void apply_time_zone_offset(StringView time_zone, UnixDateTime& time)
+{
+    if (auto offset = TimeZone::get_time_zone_offset(time_zone, time); offset.has_value())
+        time -= Duration::from_seconds(offset->seconds);
+}
 
 DateTime DateTime::now()
 {
