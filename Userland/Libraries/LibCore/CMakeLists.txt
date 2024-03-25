@@ -50,7 +50,7 @@ if (NOT WIN32 AND NOT EMSCRIPTEN)
     list(APPEND SOURCES LocalServer.cpp)
 endif()
 
-# FIXME: Implement Core::FileWatcher for macOS, *BSD, and Windows.
+# FIXME: Implement Core::FileWatcher for *BSD and Windows.
 if (SERENITYOS)
     list(APPEND SOURCES FileWatcherSerenity.cpp)
 elseif (LINUX AND NOT EMSCRIPTEN)
