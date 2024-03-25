@@ -41,6 +41,8 @@ void EventReceiver::event(Core::Event& event)
 {
     switch (event.type()) {
     case Core::Event::Timer:
+        if (!m_timer_id)
+            break; // Too late, the timer was already stopped.
         return timer_event(static_cast<TimerEvent&>(event));
     case Core::Event::ChildAdded:
     case Core::Event::ChildRemoved:
