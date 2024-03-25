@@ -1579,9 +1579,6 @@ void StyleComputer::compute_cascaded_values(StyleProperties& style, DOM::Element
 
     auto animations = element.get_animations({ .subtree = false });
     for (auto& animation : animations) {
-        if (!animation->is_relevant())
-            continue;
-
         if (auto effect = animation->effect(); effect && effect->is_keyframe_effect()) {
             auto& keyframe_effect = *static_cast<Animations::KeyframeEffect*>(effect.ptr());
             if (keyframe_effect.pseudo_element_type() == pseudo_element)
