@@ -1,0 +1,34 @@
+<!-- https://github.com/SerenityOS/serenity/issues/23716 -->
+<!DOCTYPE html>
+<style>
+    #foo {
+        animation: anim .025s;
+    }
+    @keyframes anim {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+</style>
+<div id="foo"></div>
+<script src="../../include.js"></script>
+<script>
+    asyncTest(done => {
+        const foo = document.getElementById("foo");
+        let finishCount = 0;
+        foo.getAnimations()[0].onfinish = () => {
+            finishCount += 1;
+        }
+
+        // Cause a few style invalidations, which shouldn't mess with the animation at all
+        setInterval(() => foo.style = "", 50);
+
+        setTimeout(() => {
+            println(`finish count: ${finishCount}`);
+            done();
+        }, 200);
+    })
+</script>
