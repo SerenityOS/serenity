@@ -32,6 +32,8 @@ private:
     ByteString history_file_path();
     ErrorOr<void> load_history();
     ErrorOr<void> save_history();
+    void prepend_history(ByteString const& input);
+    void remove_all_matching_from_history(ByteString const& input);
 
     Vector<ByteString> m_path_history;
     NonnullRefPtr<GUI::ItemListModel<ByteString>> m_path_history_model;
