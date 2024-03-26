@@ -130,6 +130,8 @@ ErrorOr<void> JPEG2000ResolutionBox::read_from_stream(BoxStream& stream)
         switch (type) {
         case BoxType::JPEG2000CaptureResolutionBox:
             return TRY(JPEG2000CaptureResolutionBox::create_from_stream(stream));
+        case BoxType::JPEG2000DefaultDisplayResolutionBox:
+            return TRY(JPEG2000DefaultDisplayResolutionBox::create_from_stream(stream));
         default:
             return OptionalNone {};
         }
@@ -168,6 +170,16 @@ ErrorOr<void> JPEG2000CaptureResolutionBox::read_from_stream(BoxStream& stream)
 }
 
 void JPEG2000CaptureResolutionBox::dump(String const& prepend) const
+{
+    JPEG2000ResolutionSubboxBase::dump(prepend);
+}
+
+ErrorOr<void> JPEG2000DefaultDisplayResolutionBox::read_from_stream(BoxStream& stream)
+{
+    return JPEG2000ResolutionSubboxBase::read_from_stream(stream);
+}
+
+void JPEG2000DefaultDisplayResolutionBox::dump(String const& prepend) const
 {
     JPEG2000ResolutionSubboxBase::dump(prepend);
 }
