@@ -1690,11 +1690,11 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
             //      NSYMSDECODED = NSYMSDECODED + 1"
             number_of_symbols_decoded++;
         }
-        //  d) If SDHUFF is 1 and SDREFAGG is 0, [...long text elided...]
+        // "d) If SDHUFF is 1 and SDREFAGG is 0, [...long text elided...]"
         // FIXME: Implement support for SDHUFF = 1.
     }
 
-    //  5) Determine which symbol bitmaps are exported from this symbol dictionary, as described in 6.5.10. These
+    // "5) Determine which symbol bitmaps are exported from this symbol dictionary, as described in 6.5.10. These
     //     bitmaps can be drawn from the symbols that are used as input to the symbol dictionary decoding
     //     procedure as well as the new symbols produced by the decoding procedure."
     JBIG2::ArithmeticIntegerDecoder export_integer_decoder(decoder);
