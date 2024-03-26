@@ -120,4 +120,28 @@ void SuperBox::dump(String const& prepend) const
         child_box->dump(indented_prepend);
 }
 
+ErrorOr<void> UserExtensionBox::read_from_stream(BoxStream& stream)
+{
+    // unsigned int(8)[16] uuid;
+    TRY(stream.read_until_filled(uuid));
+    // unsigned int(8) data[];
+    data = TRY(ByteBuffer::create_uninitialized(stream.remaining()));
+    TRY(stream.read_until_filled(data));
+    return {};
+}
+
+void UserExtensionBox::dump(String const& prepend) const
+{
+    Box::dump(prepend);
+
+    auto indented_prepend = add_indent(prepend);
+
+    out("{}- uuid = ", prepend);
+    for (auto byte : uuid)
+        out("{:02x}"sv, byte);
+    outln();
+
+    outln("{}- data = [ {} bytes ]", prepend, data.size());
+}
+
 }
