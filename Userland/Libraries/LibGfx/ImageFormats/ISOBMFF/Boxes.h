@@ -106,4 +106,11 @@ private:
     BoxList m_child_boxes;
 };
 
+struct UserExtensionBox final : public Box {
+    BOX_SUBTYPE(UserExtensionBox);
+
+    Array<u8, 16> uuid;
+    ByteBuffer data;
+};
+
 }
