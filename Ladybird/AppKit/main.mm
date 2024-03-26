@@ -13,6 +13,7 @@
 #include <LibMain/Main.h>
 #include <LibWebView/CookieJar.h>
 #include <LibWebView/Database.h>
+#include <LibWebView/ProcessManager.h>
 #include <LibWebView/URL.h>
 
 #import <Application/Application.h>
@@ -80,6 +81,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         .use_lagom_networking = Ladybird::UseLagomNetworking::Yes,
         .wait_for_debugger = debug_web_content ? Ladybird::WaitForDebugger::Yes : Ladybird::WaitForDebugger::No,
     };
+
+    WebView::ProcessManager::initialize();
 
     auto* delegate = [[ApplicationDelegate alloc] init:move(initial_urls)
                                          newTabPageURL:move(new_tab_page_url)
