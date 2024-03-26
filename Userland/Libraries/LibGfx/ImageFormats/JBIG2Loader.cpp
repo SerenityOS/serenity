@@ -1632,7 +1632,7 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
 
     // 6.5.5 Decoding the symbol dictionary
     // "1) Create an array SDNEWSYMS of bitmaps, having SDNUMNEWSYMS entries."
-    // Done above read_bitmap().
+    // Done above read_symbol_bitmap's definition.
 
     // "2) If SDHUFF is 1 and SDREFAGG is 0, create an array SDNEWSYMWIDTHS of integers, having SDNUMNEWSYMS entries."
     // FIXME: Implement support for SDHUFF = 1.
