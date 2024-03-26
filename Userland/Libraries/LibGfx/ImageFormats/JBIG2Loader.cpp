@@ -224,6 +224,9 @@ public:
     // Returns OptionalNone for OOB.
     Optional<i32> decode();
 
+    // Returns Error for OOB.
+    ErrorOr<i32> decode_non_oob();
+
 private:
     ArithmeticDecoder& m_decoder;
     u16 PREV { 0 };
@@ -288,6 +291,14 @@ Optional<int> ArithmeticIntegerDecoder::decode()
     if (S == 1 && V == 0)
         return {};
     return S ? -V : V;
+}
+
+ErrorOr<i32> ArithmeticIntegerDecoder::decode_non_oob()
+{
+    auto result = decode();
+    if (!result.has_value())
+        return Error::from_string_literal("ArithmeticIntegerDecoder: Unexpected OOB");
+    return result.value();
 }
 
 class ArithmeticIntegerIDDecoder {
@@ -1200,8 +1211,8 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
     //  If SBHUFF is 0, decode a value using the IADT integer arithmetic decoding procedure (see Annex A) and multiply the resulting value by SBSTRIPS."
     // FIXME: Implement support for SBHUFF = 1.
     JBIG2::ArithmeticIntegerDecoder delta_t_integer_decoder(decoder);
-    auto read_delta_t = [&]() -> i32 {
-        return delta_t_integer_decoder.decode().value() * inputs.size_of_symbol_instance_strips;
+    auto read_delta_t = [&]() -> ErrorOr<i32> {
+        return TRY(delta_t_integer_decoder.decode_non_oob()) * inputs.size_of_symbol_instance_strips;
     };
 
     // 6.4.7 First symbol instance S coordinate
@@ -1209,8 +1220,8 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
     //  If SBHUFF is 0, decode a value using the IAFS integer arithmetic decoding procedure (see Annex A)."
     // FIXME: Implement support for SBHUFF = 1.
     JBIG2::ArithmeticIntegerDecoder first_s_integer_decoder(decoder);
-    auto read_first_s = [&]() -> i32 {
-        return first_s_integer_decoder.decode().value();
+    auto read_first_s = [&]() -> ErrorOr<i32> {
+        return first_s_integer_decoder.decode_non_oob();
     };
 
     // 6.4.8 Subsequent symbol instance S coordinate
@@ -1229,10 +1240,10 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
     //  • If SBHUFF is 0, decode a value using the IAIT integer arithmetic decoding procedure (see Annex A)."
     // FIXME: Implement support for SBHUFF = 1.
     JBIG2::ArithmeticIntegerDecoder instance_t_integer_decoder(decoder);
-    auto read_instance_t = [&]() -> i32 {
+    auto read_instance_t = [&]() -> ErrorOr<i32> {
         if (inputs.size_of_symbol_instance_strips == 1)
             return 0;
-        return instance_t_integer_decoder.decode().value();
+        return instance_t_integer_decoder.decode_non_oob();
     };
 
     // 6.4.10 Symbol instance symbol ID
@@ -1246,29 +1257,29 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
     // 6.4.11.1 Symbol instance refinement delta width
     // FIXME: Implement support for SBHUFF = 1.
     JBIG2::ArithmeticIntegerDecoder refinement_delta_width_decoder(decoder);
-    auto read_refinement_delta_width = [&]() -> i32 {
-        return refinement_delta_width_decoder.decode().value();
+    auto read_refinement_delta_width = [&]() -> ErrorOr<i32> {
+        return refinement_delta_width_decoder.decode_non_oob();
     };
 
     // 6.4.11.2 Symbol instance refinement delta width
     // FIXME: Implement support for SBHUFF = 1.
     JBIG2::ArithmeticIntegerDecoder refinement_delta_height_decoder(decoder);
-    auto read_refinement_delta_height = [&]() -> i32 {
-        return refinement_delta_height_decoder.decode().value();
+    auto read_refinement_delta_height = [&]() -> ErrorOr<i32> {
+        return refinement_delta_height_decoder.decode_non_oob();
     };
 
     // 6.4.11.3 Symbol instance refinement X offset
     // FIXME: Implement support for SBHUFF = 1.
     JBIG2::ArithmeticIntegerDecoder refinement_x_offset_decoder(decoder);
-    auto read_refinement_x_offset = [&]() -> i32 {
-        return refinement_x_offset_decoder.decode().value();
+    auto read_refinement_x_offset = [&]() -> ErrorOr<i32> {
+        return refinement_x_offset_decoder.decode_non_oob();
     };
 
     // 6.4.11.4 Symbol instance refinement Y offset
     // FIXME: Implement support for SBHUFF = 1.
     JBIG2::ArithmeticIntegerDecoder refinement_y_offset_decoder(decoder);
-    auto read_refinement_y_offset = [&]() -> i32 {
-        return refinement_y_offset_decoder.decode().value();
+    auto read_refinement_y_offset = [&]() -> ErrorOr<i32> {
+        return refinement_y_offset_decoder.decode_non_oob();
     };
 
     // 6.4.11 Symbol instance bitmap
@@ -1287,16 +1298,16 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
             // "• If SBHUFF is 1, then read one bit and set RI to the value of that bit.
             //  • If SBHUFF is 0, then decode one bit using the IARI integer arithmetic decoding procedure and set RI to the value of that bit."
             // FIXME: Implement support for SBHUFF = 1.
-            has_refinement_image = has_refinement_image_decoder.decode().value();
+            has_refinement_image = TRY(has_refinement_image_decoder.decode_non_oob());
         }
 
         if (!has_refinement_image)
             return &symbol;
 
-        auto refinement_delta_width = read_refinement_delta_width();
-        auto refinement_delta_height = read_refinement_delta_height();
-        auto refinement_x_offset = read_refinement_x_offset();
-        auto refinement_y_offset = read_refinement_y_offset();
+        auto refinement_delta_width = TRY(read_refinement_delta_width());
+        auto refinement_delta_height = TRY(read_refinement_delta_height());
+        auto refinement_x_offset = TRY(read_refinement_x_offset());
+        auto refinement_y_offset = TRY(read_refinement_y_offset());
         // FIXME: This is missing some steps needed for the SBHUFF = 1 case.
 
         dbgln_if(JBIG2_DEBUG, "refinement delta width: {}, refinement delta height: {}, refinement x offset: {}, refinement y offset: {}", refinement_delta_width, refinement_delta_height, refinement_x_offset, refinement_y_offset);
@@ -1325,7 +1336,7 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
 
     // "2) Decode the initial STRIPT value as described in 6.4.6. Negate the decoded value and assign this negated value to the variable STRIPT.
     //     Assign the value 0 to FIRSTS. Assign the value 0 to NINSTANCES."
-    i32 strip_t = -read_delta_t();
+    i32 strip_t = -TRY(read_delta_t());
     i32 first_s = 0;
     u32 n_instances = 0;
 
@@ -1339,7 +1350,7 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
     while (n_instances < inputs.number_of_instances) {
         // "b) Decode the strip's delta T value as described in 6.4.6. Let DT be the decoded value. Set:
         //         STRIPT = STRIPT + DT"
-        i32 delta_t = read_delta_t();
+        i32 delta_t = TRY(read_delta_t());
         strip_t += delta_t;
 
         i32 cur_s;
@@ -1357,7 +1368,7 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
             //              CURS = CURS + IDS + SBDSOFFSET"
             // Implementor's note: The spec means "proceed to step 4 d)" in 4c ii).
             if (is_first_symbol) {
-                i32 delta_first_s = read_first_s();
+                i32 delta_first_s = TRY(read_first_s());
                 first_s += delta_first_s;
                 cur_s = first_s;
                 is_first_symbol = false;
@@ -1371,7 +1382,7 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
 
             //     "iii) Decode the symbol instance's T coordinate as described in 6.4.9. Let CURT be the decoded value. Set:
             //              TI = STRIPT + CURT"
-            i32 cur_t = read_instance_t();
+            i32 cur_t = TRY(read_instance_t());
             i32 t_instance = strip_t + cur_t;
 
             //     "iv) Decode the symbol instance's symbol ID as described in 6.4.10. Let IDI be the decoded value."
@@ -1508,9 +1519,8 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
     //  If SDHUFF is 0, decode a value using the IADH integer arithmetic decoding procedure (see Annex A)."
     // FIXME: Implement support for SDHUFF = 1.
     JBIG2::ArithmeticIntegerDecoder delta_height_integer_decoder(decoder);
-    auto read_delta_height = [&]() -> i32 {
-        // No OOB values for delta height.
-        return delta_height_integer_decoder.decode().value();
+    auto read_delta_height = [&]() -> ErrorOr<i32> {
+        return delta_height_integer_decoder.decode_non_oob();
     };
 
     // 6.5.7 Delta width
@@ -1532,10 +1542,10 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
     // If SDHUFF is 0, decode a value using the IAAI integer arithmetic decoding procedure (see Annex A).
     // FIXME: Implement support for SDHUFF = 1.
     Optional<JBIG2::ArithmeticIntegerDecoder> number_of_symbol_instances_decoder;
-    auto read_number_of_symbol_instances = [&]() -> i32 {
+    auto read_number_of_symbol_instances = [&]() -> ErrorOr<i32> {
         if (!number_of_symbol_instances_decoder.has_value())
             number_of_symbol_instances_decoder = JBIG2::ArithmeticIntegerDecoder(decoder);
-        return number_of_symbol_instances_decoder->decode().value();
+        return number_of_symbol_instances_decoder->decode_non_oob();
     };
 
     // 6.5.8.1 Direct-coded symbol bitmap
@@ -1569,7 +1579,7 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
 
         // 6.5.8.2 Refinement/aggregate-coded symbol bitmap
         // "1) Decode the number of symbol instances contained in the aggregation, as specified in 6.5.8.2.1. Let REFAGGNINST be the value decoded."
-        auto number_of_symbol_instances = read_number_of_symbol_instances(); // "REFAGGNINST" in spec.
+        auto number_of_symbol_instances = TRY(read_number_of_symbol_instances()); // "REFAGGNINST" in spec.
         dbgln_if(JBIG2_DEBUG, "Number of symbol instances: {}", number_of_symbol_instances);
 
         if (number_of_symbol_instances > 1) {
@@ -1595,11 +1605,11 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
 
         if (!refinement_x_offset_decoder.has_value())
             refinement_x_offset_decoder = JBIG2::ArithmeticIntegerDecoder(decoder);
-        i32 refinement_x_offset = refinement_x_offset_decoder->decode().value();
+        i32 refinement_x_offset = TRY(refinement_x_offset_decoder->decode_non_oob());
 
         if (!refinement_y_offset_decoder.has_value())
             refinement_y_offset_decoder = JBIG2::ArithmeticIntegerDecoder(decoder);
-        i32 refinement_y_offset = refinement_y_offset_decoder->decode().value();
+        i32 refinement_y_offset = TRY(refinement_y_offset_decoder->decode_non_oob());
 
         if (symbol_id >= inputs.input_symbols.size() && symbol_id - inputs.input_symbols.size() >= new_symbols.size())
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Refinement/aggregate symbol ID out of range");
@@ -1641,7 +1651,7 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
         //      SYMWIDTH = 0
         //      TOTWIDTH = 0
         //      HCFIRSTSYM = NSYMSDECODED"
-        i32 delta_height = read_delta_height();
+        i32 delta_height = TRY(read_delta_height());
         height_class_height += delta_height;
         u32 symbol_width = 0;
         u32 total_width = 0;
@@ -1703,7 +1713,7 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
         // "2) Decode a value using Table B.1 if SDHUFF is 1, or the IAEX integer arithmetic decoding procedure if
         //  SDHUFF is 0. Let EXRUNLENGTH be the decoded value."
         // FIXME: Implement support for SDHUFF = 1.
-        i32 export_run_length = export_integer_decoder.decode().value(); // No OOB value.
+        i32 export_run_length = TRY(export_integer_decoder.decode_non_oob());
 
         // "3) Set EXFLAGS[EXINDEX] through EXFLAGS[EXINDEX + EXRUNLENGTH – 1] to CUREXFLAG.
         //  If EXRUNLENGTH = 0, then this step does not change any values."
