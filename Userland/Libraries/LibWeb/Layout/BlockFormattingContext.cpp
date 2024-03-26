@@ -826,10 +826,9 @@ BlockFormattingContext::DidIntroduceClearance BlockFormattingContext::clear_floa
         }
     };
 
-    // Flex-items don't float and also don't clear.
-    if ((computed_values.clear() == CSS::Clear::Left || computed_values.clear() == CSS::Clear::Both) && !child_box.is_flex_item())
+    if (computed_values.clear() == CSS::Clear::Left || computed_values.clear() == CSS::Clear::Both)
         clear_floating_boxes(m_left_floats);
-    if ((computed_values.clear() == CSS::Clear::Right || computed_values.clear() == CSS::Clear::Both) && !child_box.is_flex_item())
+    if (computed_values.clear() == CSS::Clear::Right || computed_values.clear() == CSS::Clear::Both)
         clear_floating_boxes(m_right_floats);
 
     return result;
