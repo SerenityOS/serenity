@@ -143,8 +143,8 @@ void FlexFormattingContext::run(Box const& run_box, LayoutMode, AvailableSpace c
     // 14. Align all flex items along the cross-axis
     align_all_flex_items_along_the_cross_axis();
 
-    // 15. Determine the flex container’s used cross size:
-    determine_flex_container_used_cross_size();
+    // 15. Determine the flex container’s used cross size
+    // NOTE: This is handled by the parent formatting context.
 
     {
         // https://drafts.csswg.org/css-flexbox-1/#definite-sizes
@@ -1432,45 +1432,6 @@ void FlexFormattingContext::align_all_flex_items_along_the_cross_axis()
                 break;
             }
         }
-    }
-}
-
-// https://www.w3.org/TR/css-flexbox-1/#algo-cross-container
-void FlexFormattingContext::determine_flex_container_used_cross_size()
-{
-    CSSPixels cross_size = 0;
-    if (has_definite_cross_size(m_flex_container_state)) {
-        // Flex container has definite cross size: easy-peasy.
-        cross_size = inner_cross_size(m_flex_container_state);
-    } else {
-        // Flex container has indefinite cross size.
-        auto cross_size_value = is_row_layout() ? flex_container().computed_values().height() : flex_container().computed_values().width();
-        if (cross_size_value.is_auto() || cross_size_value.contains_percentage()) {
-            // If a content-based cross size is needed, use the sum of the flex lines' cross sizes.
-            CSSPixels sum_of_flex_lines_cross_sizes = 0;
-            for (auto& flex_line : m_flex_lines) {
-                sum_of_flex_lines_cross_sizes += flex_line.cross_size;
-            }
-            cross_size = sum_of_flex_lines_cross_sizes;
-
-            if (cross_size_value.contains_percentage()) {
-                // FIXME: Handle percentage values here! Right now we're just treating them as "auto"
-            }
-        } else {
-            // Otherwise, resolve the indefinite size at this point.
-            cross_size = cross_size_value.to_px(flex_container(), inner_cross_size(m_state.get(*flex_container().containing_block())));
-        }
-    }
-
-    // AD-HOC: We don't apply min/max cross size constraints when sizing the flex container under an intrinsic sizing constraint.
-    if (!m_available_space_for_items->cross.is_intrinsic_sizing_constraint()) {
-        auto const& computed_min_size = this->computed_cross_min_size(flex_container());
-        auto const& computed_max_size = this->computed_cross_max_size(flex_container());
-        auto cross_min_size = (!computed_min_size.is_auto() && !computed_min_size.contains_percentage()) ? specified_cross_min_size(flex_container()) : 0;
-        auto cross_max_size = (!computed_max_size.is_none() && !computed_max_size.contains_percentage()) ? specified_cross_max_size(flex_container()) : CSSPixels::max();
-        set_cross_size(flex_container(), css_clamp(cross_size, cross_min_size, cross_max_size));
-    } else {
-        set_cross_size(flex_container(), cross_size);
     }
 }
 
