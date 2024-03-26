@@ -1137,7 +1137,17 @@ Interface& Parser::parse()
         for (auto& overloaded_function : overload_set.value)
             overloaded_function.is_overloaded = true;
     }
-    // FIXME: Add support for overloading constructors
+    for (auto& constructor : interface.constructors) {
+        auto& overload_set = interface.constructor_overload_sets.ensure(constructor.name);
+        constructor.overload_index = overload_set.size();
+        overload_set.append(constructor);
+    }
+    for (auto& overload_set : interface.constructor_overload_sets) {
+        if (overload_set.value.size() == 1)
+            continue;
+        for (auto& overloaded_constructor : overload_set.value)
+            overloaded_constructor.is_overloaded = true;
+    }
 
     // Check overload sets for repeated instances of the same function
     // as these will produce very cryptic errors if left alone.
