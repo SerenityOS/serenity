@@ -17,6 +17,7 @@ namespace Web::HTML {
 
 JS_DEFINE_ALLOCATOR(ImageData);
 
+// https://html.spec.whatwg.org/multipage/canvas.html#dom-imagedata
 WebIDL::ExceptionOr<JS::NonnullGCPtr<ImageData>> ImageData::create(JS::Realm& realm, u32 sw, u32 sh, Optional<ImageDataSettings> const&)
 {
     auto& vm = realm.vm();
