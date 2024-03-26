@@ -1595,7 +1595,7 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
         u32 code_length = ceil(log2(inputs.input_symbols.size() + inputs.number_of_new_symbols));
 
         // 6.5.8.2.2 Decoding a bitmap when REFAGGNINST = 1
-        // FIXME: This is missing some setps for the SDHUFF = 1 case.
+        // FIXME: This is missing some steps for the SDHUFF = 1 case.
         if (number_of_symbol_instances != 1)
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Unexpected number of symbol instances");
 
