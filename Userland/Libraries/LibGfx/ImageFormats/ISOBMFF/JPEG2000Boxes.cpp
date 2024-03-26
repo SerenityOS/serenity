@@ -144,7 +144,7 @@ void JPEG2000ResolutionBox::dump(String const& prepend) const
     SuperBox::dump(prepend);
 }
 
-ErrorOr<void> JPEG2000CaptureResolutionBox::read_from_stream(BoxStream& stream)
+ErrorOr<void> JPEG2000ResolutionSubboxBase::read_from_stream(BoxStream& stream)
 {
     vertical_capture_grid_resolution_numerator = TRY(stream.read_value<BigEndian<u16>>());
     vertical_capture_grid_resolution_denominator = TRY(stream.read_value<BigEndian<u16>>());
@@ -155,11 +155,21 @@ ErrorOr<void> JPEG2000CaptureResolutionBox::read_from_stream(BoxStream& stream)
     return {};
 }
 
-void JPEG2000CaptureResolutionBox::dump(String const& prepend) const
+void JPEG2000ResolutionSubboxBase::dump(String const& prepend) const
 {
     Box::dump(prepend);
     outln("{}- vertical_capture_grid_resolution = {}/{} * 10^{}", prepend, vertical_capture_grid_resolution_numerator, vertical_capture_grid_resolution_denominator, vertical_capture_grid_resolution_exponent);
     outln("{}- horizontal_capture_grid_resolution = {}/{} * 10^{}", prepend, horizontal_capture_grid_resolution_numerator, horizontal_capture_grid_resolution_denominator, horizontal_capture_grid_resolution_exponent);
+}
+
+ErrorOr<void> JPEG2000CaptureResolutionBox::read_from_stream(BoxStream& stream)
+{
+    return JPEG2000ResolutionSubboxBase::read_from_stream(stream);
+}
+
+void JPEG2000CaptureResolutionBox::dump(String const& prepend) const
+{
+    JPEG2000ResolutionSubboxBase::dump(prepend);
 }
 
 ErrorOr<void> JPEG2000ContiguousCodestreamBox::read_from_stream(BoxStream& stream)
