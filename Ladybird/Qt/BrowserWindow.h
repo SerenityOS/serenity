@@ -24,6 +24,7 @@ namespace Ladybird {
 
 class SettingsDialog;
 class WebContentView;
+class TaskManagerWindow;
 
 class BrowserWindow : public QMainWindow {
     Q_OBJECT
@@ -132,6 +133,9 @@ private:
     QString tool_tip_for_page_mute_state(Tab&) const;
     QTabBar::ButtonPosition audio_button_position_for_tab(int tab_index) const;
 
+    void show_task_manager_window();
+    void close_task_manager_window();
+
     QScreen* m_current_screen;
     double m_device_pixel_ratio { 0 };
 
@@ -149,6 +153,9 @@ private:
     QAction* m_inspect_dom_node_action { nullptr };
 
     SettingsDialog* m_settings_dialog { nullptr };
+
+    // FIXME: This should be owned at a higher level in case we have multiple browser windows
+    TaskManagerWindow* m_task_manager_window { nullptr };
 
     WebView::CookieJar& m_cookie_jar;
 

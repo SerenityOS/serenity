@@ -12,6 +12,7 @@
 #include "Settings.h"
 #include "SettingsDialog.h"
 #include "StringUtils.h"
+#include "TaskManagerWindow.h"
 #include "WebContentView.h"
 #include <AK/TypeCasts.h>
 #include <Ladybird/Utilities.h>
@@ -21,6 +22,7 @@
 #include <LibWebView/UserAgent.h>
 #include <QAction>
 #include <QActionGroup>
+#include <QApplication>
 #include <QClipboard>
 #include <QGuiApplication>
 #include <QInputDialog>
@@ -211,6 +213,14 @@ BrowserWindow::BrowserWindow(Vector<URL::URL> const& initial_urls, WebView::Cook
         if (m_current_tab) {
             m_current_tab->show_inspector_window();
         }
+    });
+
+    auto* task_manager_action = new QAction("Open Task &Manager", this);
+    task_manager_action->setIcon(load_icon_from_uri("resource://icons/16x16/app-system-monitor.png"sv));
+    task_manager_action->setShortcuts({ QKeySequence("Ctrl+Shift+M") });
+    inspect_menu->addAction(task_manager_action);
+    QObject::connect(task_manager_action, &QAction::triggered, this, [this] {
+        show_task_manager_window();
     });
 
     auto* debug_menu = menuBar()->addMenu("&Debug");
@@ -888,6 +898,22 @@ void BrowserWindow::closeEvent(QCloseEvent* event)
     Settings::the()->set_is_maximized(isMaximized());
 
     QMainWindow::closeEvent(event);
+}
+
+void BrowserWindow::show_task_manager_window()
+{
+    if (!m_task_manager_window) {
+        m_task_manager_window = new TaskManagerWindow(this);
+    }
+    m_task_manager_window->show();
+    m_task_manager_window->activateWindow();
+    m_task_manager_window->raise();
+}
+
+void BrowserWindow::close_task_manager_window()
+{
+    if (m_task_manager_window)
+        m_task_manager_window->close();
 }
 
 }

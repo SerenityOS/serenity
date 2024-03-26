@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/String.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/System.h>
 #include <LibWebView/ProcessManager.h>
@@ -112,6 +113,72 @@ void ProcessManager::update_all_processes()
     }
 
     // FIXME: Actually gather stats in a platform-specific way
+}
+
+String ProcessManager::generate_html()
+{
+    StringBuilder builder;
+    auto processes = m_processes;
+
+    builder.append(R"(
+        <html>
+        <head>
+        <style>
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                }
+                th {
+                    text-align: left;
+                    border-bottom: 1px solid #aaa;
+                }
+                td, th {
+                    padding: 4px;
+                    border: 1px solid #aaa;
+                }
+                tr:nth-child(odd) {
+                    background: #f7f7f7;
+                }
+        </style>
+        </head>
+        <body>
+        <table>
+                <thead>
+                <tr>
+                        <th>Type</th>
+                        <th>PID</th>
+                        <th>Memory Usage</th>
+                        <th>CPU %</th>
+                </tr>
+                </thead>
+                <tbody>
+    )"sv);
+
+    for (auto& process : processes) {
+        builder.append("<tr>"sv);
+        builder.append("<td>"sv);
+        builder.append(WebView::process_name_from_type(process.type));
+        builder.append("</td>"sv);
+        builder.append("<td>"sv);
+        builder.append(MUST(String::number(process.pid)));
+        builder.append("</td>"sv);
+        builder.append("<td>"sv);
+        builder.append(MUST(String::formatted("{} KB", process.memory_usage_kib)));
+        builder.append("</td>"sv);
+        builder.append("<td>"sv);
+        builder.append(MUST(String::formatted("{:.1f}", process.cpu_percent)));
+        builder.append("</td>"sv);
+        builder.append("</tr>"sv);
+    }
+
+    builder.append(R"(
+                </tbody>
+                </table>
+                </body>
+                </html>
+    )"sv);
+
+    return builder.to_string_without_validation();
 }
 
 }
