@@ -285,11 +285,11 @@ public:
     virtual void request_file(FileRequest) = 0;
 
     // https://html.spec.whatwg.org/multipage/input.html#show-the-picker,-if-applicable
-    virtual void page_did_request_color_picker([[maybe_unused]] Color current_color) {};
-    virtual void page_did_request_file_picker([[maybe_unused]] HTML::FileFilter accepted_file_types, Web::HTML::AllowMultipleFiles) {};
-    virtual void page_did_request_select_dropdown([[maybe_unused]] Web::CSSPixelPoint content_position, [[maybe_unused]] Web::CSSPixels minimum_width, [[maybe_unused]] Vector<Web::HTML::SelectItem> items) {};
+    virtual void page_did_request_color_picker([[maybe_unused]] Color current_color) { }
+    virtual void page_did_request_file_picker([[maybe_unused]] HTML::FileFilter accepted_file_types, Web::HTML::AllowMultipleFiles) { }
+    virtual void page_did_request_select_dropdown([[maybe_unused]] Web::CSSPixelPoint content_position, [[maybe_unused]] Web::CSSPixels minimum_width, [[maybe_unused]] Vector<Web::HTML::SelectItem> items) { }
 
-    virtual void page_did_finish_text_test() {};
+    virtual void page_did_finish_text_test() { }
 
     virtual void page_did_change_theme_color(Gfx::Color) { }
 
