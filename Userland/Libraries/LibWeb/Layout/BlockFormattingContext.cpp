@@ -914,6 +914,11 @@ void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer 
     resolve_vertical_box_model_metrics(box);
 
     compute_width(box, available_space, layout_mode);
+
+    // NOTE: Flex containers with `auto` height are treated as `max-content`, so we can compute their height early.
+    if (box.is_replaced_box() || box.display().is_flex_inside())
+        compute_height(box, available_space);
+
     auto independent_formatting_context = layout_inside(box, layout_mode, box_state.available_inner_space_or_constraints_from(available_space));
     compute_height(box, available_space);
 
