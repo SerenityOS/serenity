@@ -315,10 +315,6 @@ function(serenity_lib name fs_name)
     lagom_lib(${name} ${fs_name} LIBRARY_TYPE ${SERENITY_LIB_TYPE} SOURCES ${SOURCES} ${GENERATED_SOURCES})
 endfunction()
 
-function(serenity_lib_static name fs_name)
-    lagom_lib(${name} ${fs_name} LIBRARY_TYPE STATIC SOURCES ${SOURCES} ${GENERATED_SOURCES})
-endfunction()
-
 function(serenity_install_headers dir)
 endfunction()
 
