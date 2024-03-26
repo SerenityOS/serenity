@@ -15,6 +15,7 @@ class Database;
 class History;
 class InspectorClient;
 class OutOfProcessWebView;
+class ProcessManager;
 class ViewImplementation;
 class WebContentClient;
 

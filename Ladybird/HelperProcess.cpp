@@ -6,6 +6,7 @@
 
 #include "HelperProcess.h"
 #include <LibCore/Environment.h>
+#include <LibWebView/ProcessManager.h>
 
 ErrorOr<NonnullRefPtr<WebView::WebContentClient>> launch_web_content_process(
     WebView::ViewImplementation& view,
@@ -24,7 +25,8 @@ ErrorOr<NonnullRefPtr<WebView::WebContentClient>> launch_web_content_process(
     int ui_fd_passing_fd = fd_passing_socket_fds[0];
     int wc_fd_passing_fd = fd_passing_socket_fds[1];
 
-    if (auto child_pid = TRY(Core::System::fork()); child_pid == 0) {
+    auto child_pid = TRY(Core::System::fork());
+    if (child_pid == 0) {
         TRY(Core::System::close(ui_fd_passing_fd));
         TRY(Core::System::close(ui_fd));
 
@@ -94,6 +96,8 @@ ErrorOr<NonnullRefPtr<WebView::WebContentClient>> launch_web_content_process(
         dbgln();
     }
 
+    WebView::ProcessManager::the().add_process(WebView::ProcessType::WebContent, child_pid);
+
     return new_client;
 }
 
@@ -112,7 +116,8 @@ ErrorOr<NonnullRefPtr<Client>> launch_generic_server_process(ReadonlySpan<ByteSt
     int ui_fd_passing_fd = fd_passing_socket_fds[0];
     int server_fd_passing_fd = fd_passing_socket_fds[1];
 
-    if (auto child_pid = TRY(Core::System::fork()); child_pid == 0) {
+    auto child_pid = TRY(Core::System::fork());
+    if (child_pid == 0) {
         TRY(Core::System::close(ui_fd));
         TRY(Core::System::close(ui_fd_passing_fd));
 
@@ -160,6 +165,8 @@ ErrorOr<NonnullRefPtr<Client>> launch_generic_server_process(ReadonlySpan<ByteSt
 
     auto new_client = TRY(try_make_ref_counted<Client>(move(socket)));
     new_client->set_fd_passing_socket(TRY(Core::LocalSocket::adopt_fd(ui_fd_passing_fd)));
+
+    WebView::ProcessManager::the().add_process(WebView::process_type_from_name(server_name), child_pid);
 
     return new_client;
 }

@@ -18,6 +18,7 @@
 #include <LibMain/Main.h>
 #include <LibWebView/CookieJar.h>
 #include <LibWebView/Database.h>
+#include <LibWebView/ProcessManager.h>
 #include <LibWebView/URL.h>
 #include <QApplication>
 #include <QFileOpenEvent>
@@ -156,6 +157,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         .use_lagom_networking = enable_qt_networking ? Ladybird::UseLagomNetworking::No : Ladybird::UseLagomNetworking::Yes,
         .wait_for_debugger = debug_web_content ? Ladybird::WaitForDebugger::Yes : Ladybird::WaitForDebugger::No,
     };
+
+    WebView::ProcessManager::initialize();
 
     Ladybird::BrowserWindow window(initial_urls, cookie_jar, web_content_options, webdriver_content_ipc_path);
     window.setWindowTitle("Ladybird");
