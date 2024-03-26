@@ -525,7 +525,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::fill)
         final = min(relative_end, length);
 
     // 14. Set taRecord to MakeTypedArrayWithBufferWitnessRecord(O, seq-cst).
-    typed_array_record = TRY(validate_typed_array(vm, *typed_array, ArrayBuffer::Order::SeqCst));
+    typed_array_record = make_typed_array_with_buffer_witness_record(*typed_array, ArrayBuffer::Order::SeqCst);
 
     // 15. If IsTypedArrayOutOfBounds(taRecord) is true, throw a TypeError exception.
     if (is_typed_array_out_of_bounds(typed_array_record))
