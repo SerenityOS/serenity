@@ -30,6 +30,7 @@
 #include <LibWeb/Cookie/Cookie.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/ActivateTab.h>
+#include <LibWeb/HTML/AudioPlayState.h>
 #include <LibWeb/HTML/ColorPickerUpdateState.h>
 #include <LibWeb/HTML/FileFilter.h>
 #include <LibWeb/HTML/SelectItem.h>
@@ -294,6 +295,8 @@ public:
     virtual void page_did_change_theme_color(Gfx::Color) { }
 
     virtual void page_did_insert_clipboard_entry([[maybe_unused]] String data, [[maybe_unused]] String presentation_style, [[maybe_unused]] String mime_type) { }
+
+    virtual void page_did_change_audio_play_state(HTML::AudioPlayState) { }
 
     virtual WebView::SocketPair request_worker_agent() { return { -1, -1 }; }
 

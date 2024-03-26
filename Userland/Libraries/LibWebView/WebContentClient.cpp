@@ -870,6 +870,18 @@ void WebContentClient::did_insert_clipboard_entry(u64 page_id, String const& dat
         view.on_insert_clipboard_entry(data, presentation_style, mime_type);
 }
 
+void WebContentClient::did_change_audio_play_state(u64 page_id, Web::HTML::AudioPlayState play_state)
+{
+    auto maybe_view = m_views.get(page_id);
+    if (!maybe_view.has_value()) {
+        dbgln("Received insert clipboard entry for unknown page ID {}", page_id);
+        return;
+    }
+
+    auto& view = *maybe_view.value();
+    view.did_change_audio_play_state({}, play_state);
+}
+
 void WebContentClient::inspector_did_load(u64 page_id)
 {
     auto maybe_view = m_views.get(page_id);

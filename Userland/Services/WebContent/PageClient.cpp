@@ -577,6 +577,11 @@ void PageClient::page_did_insert_clipboard_entry(String data, String presentatio
     client().async_did_insert_clipboard_entry(m_id, move(data), move(presentation_style), move(mime_type));
 }
 
+void PageClient::page_did_change_audio_play_state(Web::HTML::AudioPlayState play_state)
+{
+    client().async_did_change_audio_play_state(m_id, play_state);
+}
+
 WebView::SocketPair PageClient::request_worker_agent()
 {
     auto response = client().send_sync_but_allow_failure<Messages::WebContentClient::RequestWorkerAgent>(m_id);
