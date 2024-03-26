@@ -1,6 +1,7 @@
 set(TEST_SOURCES
     TestCSSIDSpeed.cpp
     TestCSSPixels.cpp
+    TestFetchInfrastructure.cpp
     TestFetchURL.cpp
     TestHTMLTokenizer.cpp
     TestMicrosyntax.cpp

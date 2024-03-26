@@ -72,10 +72,7 @@ ErrorOr<String> collect_an_http_quoted_string(GenericLexer& lexer, HttpQuotedStr
         return value.to_string();
 
     // 7. Return the code points from positionStart to position, inclusive, within input.
-    auto position = lexer.tell();
-    auto number_of_characters_to_consume = position - position_start + 1;
-    lexer.retreat(number_of_characters_to_consume);
-    return String::from_utf8(lexer.consume(number_of_characters_to_consume));
+    return String::from_utf8(lexer.input().substring_view(position_start, lexer.tell() - position_start));
 }
 
 }
