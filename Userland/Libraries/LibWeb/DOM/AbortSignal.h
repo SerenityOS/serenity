@@ -43,8 +43,6 @@ public:
 
     JS::ThrowCompletionOr<void> throw_if_aborted() const;
 
-    void follow(JS::NonnullGCPtr<AbortSignal> parent_signal);
-
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<AbortSignal>> abort(JS::VM&, JS::Value reason);
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<AbortSignal>> timeout(JS::VM&, Web::WebIDL::UnsignedLongLong milliseconds);
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<AbortSignal>> any(JS::VM&, JS::Value signals);
