@@ -85,7 +85,7 @@ RecursionDecision List::walk(Visitor& visitor) const
     return RecursionDecision::Continue;
 }
 
-OwnPtr<List> List::parse(LineIterator& lines)
+OwnPtr<List> List::parse(LineIterator& lines, bool is_interrupting_paragraph)
 {
     Vector<OwnPtr<ContainerBlock>> items;
 
@@ -95,6 +95,7 @@ OwnPtr<List> List::parse(LineIterator& lines)
     bool is_tight = true;
     bool has_trailing_blank_lines = false;
     size_t start_number = 1;
+    char list_bullet = 0;
 
     while (!lines.is_end()) {
 
@@ -107,8 +108,22 @@ OwnPtr<List> List::parse(LineIterator& lines)
         while (offset < line.length() && line[offset] == ' ')
             ++offset;
 
+        // Optional initial indentation of maximum three spaces (example 289)
+        if (offset > 3) {
+            if (first)
+                return {};
+
+            break;
+        }
+
         if (offset + 2 <= line.length()) {
             if (line[offset + 1] == ' ' && (line[offset] == '*' || line[offset] == '-' || line[offset] == '+')) {
+                // Changing the bullet starts a new list (example 301)
+                if (first)
+                    list_bullet = line[offset];
+                else if (list_bullet != line[offset])
+                    break;
+
                 appears_unordered = true;
                 offset++;
             }
@@ -124,13 +139,22 @@ OwnPtr<List> List::parse(LineIterator& lines)
                     auto maybe_start_number = line.substring_view(offset, i - offset).to_number<size_t>();
                     if (!maybe_start_number.has_value())
                         break;
-                    if (first)
+                    if (first) {
                         start_number = maybe_start_number.value();
+                        // Only ordered lists starting with 1 can iterrupt a paragraph (example 304)
+                        if (is_interrupting_paragraph && start_number != 1)
+                            return {};
+                        list_bullet = ch;
+                    }
                     appears_ordered = true;
                     offset = i + 1;
                 }
             break;
         }
+
+        // Changing the ordered list delimiter starts a new list (example 302)
+        if (appears_ordered && line[offset - 1] != list_bullet)
+            break;
 
         VERIFY(!(appears_unordered && appears_ordered));
         if (!appears_unordered && !appears_ordered) {
@@ -140,8 +164,18 @@ OwnPtr<List> List::parse(LineIterator& lines)
             break;
         }
 
+        VERIFY(line[offset] == ' ');
+
+        size_t fallback_context_indent = offset + 1;
+
         while (offset < line.length() && line[offset] == ' ')
             offset++;
+
+        size_t context_indent = offset;
+
+        // Item starting with indented code (example 273)
+        if (1 + offset - fallback_context_indent > 4)
+            context_indent = fallback_context_indent;
 
         if (first) {
             is_ordered = appears_ordered;
@@ -151,7 +185,7 @@ OwnPtr<List> List::parse(LineIterator& lines)
 
         is_tight = is_tight && !has_trailing_blank_lines;
 
-        lines.push_context(LineIterator::Context::list_item(offset));
+        lines.push_context(LineIterator::Context::list_item(context_indent));
 
         auto list_item = ContainerBlock::parse(lines);
         is_tight = is_tight && !list_item->has_blank_lines();

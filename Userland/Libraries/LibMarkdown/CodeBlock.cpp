@@ -88,13 +88,17 @@ RecursionDecision CodeBlock::walk(Visitor& visitor) const
     return RecursionDecision::Continue;
 }
 
-static Regex<ECMA262> open_fence_re("^ {0,3}(([\\`\\~])\\2{2,})\\s*([\\*_]*)\\s*([^\\*_\\s]*).*$");
-static Regex<ECMA262> close_fence_re("^ {0,3}(([\\`\\~])\\2{2,})\\s*$");
+// Separate regexes are used here because,
+// - Info strings for backtick code blocks cannot contain backticks (example 145)
+// - Info strings for tilde code blocks can contain backticks and tildes (example 146)
+static Regex<ECMA262> backtick_open_fence_re(R"#(^ {0,3}(\`{3,})\s*([\*_]*)\s*([^\*_\s\`]*)[^\`]*$)#");
+static Regex<ECMA262> tilde_open_fence_re(R"#(^ {0,3}(\~{3,})\s*([\*_]*)\s*([^\*_\s]*).*$)#");
+static Regex<ECMA262> close_fence_re(R"#(^ {0,3}(([\`\~])\2{2,})\s*$)#");
 
-static Optional<int> line_block_prefix(StringView const& line)
+static Optional<size_t> line_block_prefix(StringView const& line)
 {
-    int characters = 0;
-    int indents = 0;
+    size_t characters = 0;
+    size_t indents = 0;
 
     for (char ch : line) {
         if (indents == 4)
@@ -117,14 +121,21 @@ static Optional<int> line_block_prefix(StringView const& line)
     return {};
 }
 
-OwnPtr<CodeBlock> CodeBlock::parse(LineIterator& lines, Heading* current_section)
+OwnPtr<CodeBlock> CodeBlock::parse(LineIterator& lines, Heading* current_section, bool is_interrupting_paragraph)
 {
     if (lines.is_end())
         return {};
 
     StringView line = *lines;
-    if (open_fence_re.match(line).success)
-        return parse_backticks(lines, current_section);
+
+    if (auto backtick_match_result = backtick_open_fence_re.match(line); backtick_match_result.success)
+        return parse_backticks(lines, current_section, backtick_match_result);
+    else if (auto tilde_match_result = tilde_open_fence_re.match(line); tilde_match_result.success)
+        return parse_backticks(lines, current_section, tilde_match_result);
+
+    // An indented code block cannot interrupt a paragraph (example 113)
+    if (is_interrupting_paragraph)
+        return {};
 
     if (line_block_prefix(line).has_value())
         return parse_indent(lines);
@@ -132,7 +143,7 @@ OwnPtr<CodeBlock> CodeBlock::parse(LineIterator& lines, Heading* current_section
     return {};
 }
 
-OwnPtr<CodeBlock> CodeBlock::parse_backticks(LineIterator& lines, Heading* current_section)
+OwnPtr<CodeBlock> CodeBlock::parse_backticks(LineIterator& lines, Heading* current_section, RegexResult match_result)
 {
     StringView line = *lines;
 
@@ -148,10 +159,14 @@ OwnPtr<CodeBlock> CodeBlock::parse_backticks(LineIterator& lines, Heading* curre
     // and if possible syntax-highlighted
     // as appropriate for a shell script.
 
-    auto matches = open_fence_re.match(line).capture_group_matches[0];
+    auto matches = match_result.capture_group_matches[0];
     auto fence = matches[0].view.string_view();
-    auto style = matches[2].view.string_view();
-    auto language = matches[3].view.string_view();
+    auto style = matches[1].view.string_view();
+    auto language = matches[2].view.string_view();
+
+    size_t fence_indent = 0;
+    while (fence_indent < line.length() && line[fence_indent] == ' ')
+        ++fence_indent;
 
     ++lines;
 
@@ -169,7 +184,14 @@ OwnPtr<CodeBlock> CodeBlock::parse_backticks(LineIterator& lines, Heading* curre
             if (close_fence[0] == fence[0] && close_fence.length() >= fence.length())
                 break;
         }
-        builder.append(line);
+
+        // If the opening fence is indented, content lines will have equivalent
+        // opening indentation removed, if present. (example 131, 132 and 133)
+        size_t offset = 0;
+        while (offset < line.length() && offset < fence_indent && line[offset] == ' ')
+            ++offset;
+
+        builder.append(line.substring_view(offset));
         builder.append('\n');
     }
 
@@ -179,6 +201,7 @@ OwnPtr<CodeBlock> CodeBlock::parse_backticks(LineIterator& lines, Heading* curre
 OwnPtr<CodeBlock> CodeBlock::parse_indent(LineIterator& lines)
 {
     StringBuilder builder;
+    u32 blank_lines_after_last_chunk = 0;
 
     while (true) {
         if (lines.is_end())
@@ -186,11 +209,26 @@ OwnPtr<CodeBlock> CodeBlock::parse_indent(LineIterator& lines)
         StringView line = *lines;
 
         auto prefix_length = line_block_prefix(line);
-        if (!prefix_length.has_value())
+
+        if (!prefix_length.has_value() || prefix_length.value() == line.length()) {
+            // An indented code block is composed of one or more indented chunks
+            // separated by blank lines. (example 111 and 117)
+            if (line == ""sv || line.is_whitespace()) {
+                ++lines;
+                ++blank_lines_after_last_chunk;
+                continue;
+            }
+
             break;
+        }
 
         line = line.substring_view(prefix_length.value());
         ++lines;
+
+        if (blank_lines_after_last_chunk) {
+            builder.append_repeated('\n', blank_lines_after_last_chunk);
+            blank_lines_after_last_chunk = 0;
+        }
 
         builder.append(line);
         builder.append('\n');

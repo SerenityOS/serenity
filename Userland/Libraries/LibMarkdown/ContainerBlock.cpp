@@ -14,6 +14,7 @@
 #include <LibMarkdown/Paragraph.h>
 #include <LibMarkdown/Table.h>
 #include <LibMarkdown/Visitor.h>
+#include <LibRegex/Regex.h>
 
 namespace Markdown {
 
@@ -68,9 +69,19 @@ RecursionDecision ContainerBlock::walk(Visitor& visitor) const
 }
 
 template<class CodeBlock>
-static bool try_parse_block(LineIterator& lines, Vector<NonnullOwnPtr<Block>>& blocks, Heading* current_section)
+static bool try_parse_block(LineIterator& lines, Vector<NonnullOwnPtr<Block>>& blocks, Heading* current_section, bool is_interrupting_paragraph)
 {
-    OwnPtr<CodeBlock> block = CodeBlock::parse(lines, current_section);
+    OwnPtr<CodeBlock> block = CodeBlock::parse(lines, current_section, is_interrupting_paragraph);
+    if (!block)
+        return false;
+    blocks.append(block.release_nonnull());
+    return true;
+}
+
+template<class BlockType>
+static bool try_parse_block(LineIterator& lines, Vector<NonnullOwnPtr<Block>>& blocks, bool is_interrupting_paragraph)
+{
+    OwnPtr<BlockType> block = BlockType::parse(lines, is_interrupting_paragraph);
     if (!block)
         return false;
     blocks.append(block.release_nonnull());
@@ -85,6 +96,22 @@ static bool try_parse_block(LineIterator& lines, Vector<NonnullOwnPtr<Block>>& b
         return false;
     blocks.append(block.release_nonnull());
     return true;
+}
+
+namespace {
+Optional<size_t> try_parse_setext_heading_underline(StringView maybe_underline)
+{
+    static Regex<ECMA262> regex_setext_heading_underline_h1(R"~(^ {0,3}=+\s*$)~");
+    static Regex<ECMA262> regex_setext_heading_underline_h2(R"~(^ {0,3}-+\s*$)~");
+
+    if (regex_setext_heading_underline_h1.match(maybe_underline).success)
+        return 1;
+
+    if (regex_setext_heading_underline_h2.match(maybe_underline).success)
+        return 2;
+
+    return {};
+}
 }
 
 OwnPtr<ContainerBlock> ContainerBlock::parse(LineIterator& lines)
@@ -119,16 +146,22 @@ OwnPtr<ContainerBlock> ContainerBlock::parse(LineIterator& lines)
             has_blank_lines = has_blank_lines || has_trailing_blank_lines;
         }
 
+        bool is_interrupting_paragraph = not paragraph_text.is_empty();
+
+        Optional<size_t> setext_heading_level;
+        if (is_interrupting_paragraph)
+            setext_heading_level = try_parse_setext_heading_underline(*lines);
+
         bool heading = false;
         if ((heading = try_parse_block<Heading>(lines, blocks)))
             current_section = dynamic_cast<Heading*>(blocks.last().ptr());
 
         bool any = heading
             || try_parse_block<Table>(lines, blocks)
-            || try_parse_block<HorizontalRule>(lines, blocks)
-            || try_parse_block<List>(lines, blocks)
+            || (not setext_heading_level.has_value() && try_parse_block<HorizontalRule>(lines, blocks))
             // CodeBlock needs to know the current section's name for proper indentation
-            || try_parse_block<CodeBlock>(lines, blocks, current_section)
+            || try_parse_block<CodeBlock>(lines, blocks, current_section, is_interrupting_paragraph)
+            || try_parse_block<List>(lines, blocks, is_interrupting_paragraph)
             || try_parse_block<CommentBlock>(lines, blocks)
             || try_parse_block<BlockQuote>(lines, blocks);
 
@@ -138,6 +171,14 @@ OwnPtr<ContainerBlock> ContainerBlock::parse(LineIterator& lines)
                 flush_paragraph();
                 blocks.append(move(last_block));
             }
+            continue;
+        } else if (setext_heading_level.has_value()) {
+            OwnPtr<Heading> setext_heading = make<Heading>(Text::parse(paragraph_text.string_view()), setext_heading_level.value());
+            current_section = setext_heading.ptr();
+            blocks.append(setext_heading.release_nonnull());
+
+            paragraph_text.clear();
+            ++lines;
             continue;
         }
 

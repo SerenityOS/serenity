@@ -29,7 +29,7 @@ public:
     virtual Vector<ByteString> render_lines_for_terminal(size_t view_width = 0) const override;
     virtual RecursionDecision walk(Visitor&) const override;
 
-    static OwnPtr<List> parse(LineIterator& lines);
+    static OwnPtr<List> parse(LineIterator& lines, bool is_interrupting_paragraph);
 
 private:
     Vector<OwnPtr<ContainerBlock>> m_items;

@@ -15,17 +15,17 @@ struct TestCase {
 
 static constexpr Array image_size_tests {
     // No image size:
-    TestCase { .markdown = "![](foo.png)"sv, .expected_html = R"(<p><img src="foo.png" alt="" ></p>)"sv },
+    TestCase { .markdown = "![](foo.png)"sv, .expected_html = R"(<p><img src="foo.png" alt="" /></p>)"sv },
     // Only width given:
-    TestCase { .markdown = "![](foo.png =100x)"sv, .expected_html = R"(<p><img src="foo.png" style="width: 100px;" alt="" ></p>)"sv },
+    TestCase { .markdown = "![](foo.png =100x)"sv, .expected_html = R"(<p><img src="foo.png" style="width: 100px;" alt="" /></p>)"sv },
     // Only height given:
-    TestCase { .markdown = "![](foo.png =x200)"sv, .expected_html = R"(<p><img src="foo.png" style="height: 200px;" alt="" ></p>)"sv },
+    TestCase { .markdown = "![](foo.png =x200)"sv, .expected_html = R"(<p><img src="foo.png" style="height: 200px;" alt="" /></p>)"sv },
     // Both width and height given
-    TestCase { .markdown = "![](foo.png =50x25)"sv, .expected_html = R"(<p><img src="foo.png" style="width: 50px;height: 25px;" alt="" ></p>)"sv },
+    TestCase { .markdown = "![](foo.png =50x25)"sv, .expected_html = R"(<p><img src="foo.png" style="width: 50px;height: 25px;" alt="" /></p>)"sv },
     // Size contains invalid width
-    TestCase { .markdown = "![](foo.png =1oox50)"sv, .expected_html = R"(<p><img src="foo.png =1oox50" alt="" ></p>)"sv },
+    TestCase { .markdown = "![](foo.png =1oox50)"sv, .expected_html = R"(<p><img src="foo.png =1oox50" alt="" /></p>)"sv },
     // Size contains invalid height
-    TestCase { .markdown = "![](foo.png =900xfour)"sv, .expected_html = R"(<p><img src="foo.png =900xfour" alt="" ></p>)"sv },
+    TestCase { .markdown = "![](foo.png =900xfour)"sv, .expected_html = R"(<p><img src="foo.png =900xfour" alt="" /></p>)"sv },
 };
 
 TEST_CASE(test_image_size_markdown_extension)
