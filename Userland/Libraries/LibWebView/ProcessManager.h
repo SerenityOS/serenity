@@ -44,6 +44,8 @@ class ProcessManager : public Core::EventReceiver {
     void update_all_processes();
     Vector<ProcessInfo> processes() const { return m_processes; }
 
+    String generate_html();
+
 private:
     ProcessManager();
     ~ProcessManager();
