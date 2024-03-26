@@ -306,7 +306,13 @@ function(serenity_bin name)
 endfunction()
 
 function(serenity_lib name fs_name)
-    lagom_lib(${name} ${fs_name} SOURCES ${SOURCES} ${GENERATED_SOURCES})
+    cmake_parse_arguments(PARSE_ARGV 2 SERENITY_LIB "" "TYPE" "")
+
+    if ("${SERENITY_LIB_TYPE}" STREQUAL "")
+        set(SERENITY_LIB_TYPE SHARED)
+    endif()
+
+    lagom_lib(${name} ${fs_name} LIBRARY_TYPE ${SERENITY_LIB_TYPE} SOURCES ${SOURCES} ${GENERATED_SOURCES})
 endfunction()
 
 function(serenity_lib_static name fs_name)

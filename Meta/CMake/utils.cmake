@@ -53,9 +53,15 @@ endfunction()
 
 if (NOT COMMAND serenity_lib)
     function(serenity_lib target_name fs_name)
+        cmake_parse_arguments(PARSE_ARGV 2 SERENITY_LIB "" "TYPE" "")
+
+        if ("${SERENITY_LIB_TYPE}" STREQUAL "")
+            set(SERENITY_LIB_TYPE SHARED)
+        endif()
+
         serenity_install_headers(${target_name})
         serenity_install_sources()
-        add_library(${target_name} SHARED ${SOURCES} ${GENERATED_SOURCES})
+        add_library(${target_name} ${SERENITY_LIB_TYPE} ${SOURCES} ${GENERATED_SOURCES})
         set_target_properties(${target_name} PROPERTIES EXCLUDE_FROM_ALL TRUE)
         set_target_properties(${target_name} PROPERTIES VERSION "serenity")
         install(TARGETS ${target_name} DESTINATION ${CMAKE_INSTALL_LIBDIR} OPTIONAL)
