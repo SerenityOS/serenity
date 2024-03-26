@@ -49,13 +49,13 @@ public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<AbortSignal>> timeout(JS::VM&, Web::WebIDL::UnsignedLongLong milliseconds);
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<AbortSignal>> any(JS::VM&, JS::Value signals);
 
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<AbortSignal>> create_dependent_abort_signal(JS::Realm&, Vector<JS::Handle<AbortSignal>> const&);
+
 private:
     explicit AbortSignal(JS::Realm&);
 
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(JS::Cell::Visitor&) override;
-
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<AbortSignal>> create_dependent_abort_signal(JS::Realm&, Vector<JS::Handle<AbortSignal>> const&);
 
     bool dependent() const { return m_dependent; }
     void set_dependent(bool dependent) { m_dependent = dependent; }
