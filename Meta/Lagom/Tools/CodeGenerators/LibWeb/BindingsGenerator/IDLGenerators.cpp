@@ -605,7 +605,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     auto @cpp_name@ = JS::make_handle(TRY(@js_name@@js_suffix@.to_object(vm)));
 )~~~");
         }
-    } else if (parameter.type->name() == "BufferSource" || parameter.type->name() == "Float32Array" || parameter.type->name() == "Float64Array" || parameter.type->name() == "Uint8Array") {
+    } else if (parameter.type->name().is_one_of("BufferSource", "Float32Array", "Float64Array", "Uint8Array", "Uint8ClampedArray")) {
         if (optional) {
             scoped_generator.append(R"~~~(
     Optional<JS::Handle<WebIDL::BufferSource>> @cpp_name@;
