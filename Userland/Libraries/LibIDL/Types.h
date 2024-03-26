@@ -169,6 +169,8 @@ struct Constructor {
     ByteString name;
     Vector<Parameter> parameters;
     HashMap<ByteString, ByteString> extended_attributes;
+    size_t overload_index { 0 };
+    bool is_overloaded { false };
 
     size_t shortest_length() const { return get_function_shortest_length(*this); }
 };
@@ -308,6 +310,7 @@ public:
 
     HashMap<ByteString, Vector<Function&>> overload_sets;
     HashMap<ByteString, Vector<Function&>> static_overload_sets;
+    HashMap<ByteString, Vector<Constructor&>> constructor_overload_sets;
 
     // https://webidl.spec.whatwg.org/#dfn-support-indexed-properties
     bool supports_indexed_properties() const { return indexed_property_getter.has_value(); }

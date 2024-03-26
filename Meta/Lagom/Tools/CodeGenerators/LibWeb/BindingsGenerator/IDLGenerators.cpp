@@ -3,7 +3,7 @@
  * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021-2023, Luke Wilde <lukew@serenityos.org>
  * Copyright (c) 2022, Ali Mohammad Pur <mpfard@serenityos.org>
- * Copyright (c) 2023, Kenneth Myhra <kennethmyhra@serenityos.org>
+ * Copyright (c) 2023-2024, Kenneth Myhra <kennethmyhra@serenityos.org>
  * Copyright (c) 2023-2024, Shannon Booth <shannon@serenityos.org>
  * Copyright (c) 2023-2024, Matthew Olsson <mattco@serenityos.org>
  *
@@ -1865,6 +1865,11 @@ enum class StaticFunction {
     Yes,
 };
 
+enum class IsConstructor {
+    No,
+    Yes
+};
+
 static void generate_return_statement(SourceGenerator& generator, IDL::Type const& return_type, IDL::Interface const& interface)
 {
     return generate_wrap_statement(generator, "retval", return_type, interface, "return"sv);
@@ -2159,15 +2164,30 @@ static size_t resolve_distinguishing_argument_index(Interface const& interface, 
     VERIFY_NOT_REACHED();
 }
 
-static void generate_overload_arbiter(SourceGenerator& generator, auto const& overload_set, IDL::Interface const& interface, ByteString const& class_name)
+static void generate_overload_arbiter(SourceGenerator& generator, auto const& overload_set, IDL::Interface const& interface, ByteString const& class_name, IsConstructor is_constructor)
 {
     auto function_generator = generator.fork();
-    function_generator.set("class_name", class_name);
+    if (is_constructor == IsConstructor::Yes)
+        function_generator.set("constructor_class", class_name);
+    else
+        function_generator.set("class_name", class_name);
+
     function_generator.set("function.name:snakecase", make_input_acceptable_cpp(overload_set.key.to_snakecase()));
 
-    function_generator.append(R"~~~(
+    if (is_constructor == IsConstructor::Yes) {
+        function_generator.append(R"~~~(
+JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> @constructor_class@::construct(JS::FunctionObject& new_target)
+{
+    auto& vm = this->vm();
+)~~~");
+    } else {
+        function_generator.append(R"~~~(
 JS_DEFINE_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@)
 {
+)~~~");
+    }
+
+    function_generator.append(R"~~~(
     Optional<IDL::EffectiveOverloadSet> effective_overload_set;
 )~~~");
 
@@ -2264,8 +2284,16 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@)
         function_generator.set("overload_id", ByteString::number(i));
         function_generator.append(R"~~~(
     case @overload_id@:
+)~~~");
+        if (is_constructor == IsConstructor::Yes) {
+            function_generator.append(R"~~~(
+        return construct@overload_id@(new_target);
+)~~~");
+        } else {
+            function_generator.append(R"~~~(
         return @function.name:snakecase@@overload_id@(vm);
 )~~~");
+        }
     }
 
     function_generator.append(R"~~~(
@@ -2274,6 +2302,236 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@)
     }
 }
 )~~~");
+}
+
+static void generate_html_constructor(SourceGenerator& generator, IDL::Constructor const& constructor, IDL::Interface const& interface)
+{
+    auto constructor_generator = generator.fork();
+    // NOTE: A HTMLConstrcuctor must not have any parameters.
+    constructor_generator.set("constructor.length", "0");
+
+    // https://html.spec.whatwg.org/multipage/dom.html#html-element-constructors
+    // NOTE: The active function object in this context is always going to be the current constructor that has just been called.
+
+    // The [HTMLConstructor] extended attribute must take no arguments, and must only appear on constructor operations. It must
+    // appear only once on a constructor operation, and the interface must contain only the single, annotated constructor
+    // operation, and no others
+    if (interface.constructors.size() != 1) {
+        dbgln("Interface {}'s constructor annotated with [HTMLConstructor] must be the only constructor", interface.name);
+        VERIFY_NOT_REACHED();
+    }
+
+    if (!constructor.parameters.is_empty()) {
+        dbgln("Interface {}'s constructor marked with [HTMLConstructor] must not have any parameters", interface.name);
+        VERIFY_NOT_REACHED();
+    }
+
+    constructor_generator.append(R"~~~(
+    auto& window = verify_cast<HTML::Window>(HTML::current_global_object());
+
+    // 1. Let registry be the current global object's CustomElementRegistry object.
+    auto registry = TRY(throw_dom_exception_if_needed(vm, [&] { return window.custom_elements(); }));
+
+    // 2. If NewTarget is equal to the active function object, then throw a TypeError.
+    if (&new_target == vm.active_function_object())
+        return vm.throw_completion<JS::TypeError>("Cannot directly construct an HTML element, it must be inherited"sv);
+
+    // 3. Let definition be the entry in registry with constructor equal to NewTarget. If there is no such definition, then throw a TypeError.
+    auto definition = registry->get_definition_from_new_target(new_target);
+    if (!definition)
+        return vm.throw_completion<JS::TypeError>("There is no custom element definition assigned to the given constructor"sv);
+
+    // 4. Let is value be null.
+    Optional<String> is_value;
+
+    // 5. If definition's local name is equal to definition's name (i.e., definition is for an autonomous custom element), then:
+    if (definition->local_name() == definition->name()) {
+        // 1. If the active function object is not HTMLElement, then throw a TypeError.
+)~~~");
+
+    if (interface.name != "HTMLElement") {
+        constructor_generator.append(R"~~~(
+        return vm.throw_completion<JS::TypeError>("Autonomous custom elements can only inherit from HTMLElement"sv);
+)~~~");
+    } else {
+        constructor_generator.append(R"~~~(
+        // Do nothing, as this is the HTMLElement constructor.
+)~~~");
+    }
+
+    constructor_generator.append(R"~~~(
+    }
+
+    // 6. Otherwise (i.e., if definition is for a customized built-in element):
+    else {
+        // 1. Let valid local names be the list of local names for elements defined in this specification or in other applicable specifications that use the active function object as their element interface.
+        static auto valid_local_names = MUST(DOM::valid_local_names_for_given_html_element_interface("@name@"sv));
+
+        // 2. If valid local names does not contain definition's local name, then throw a TypeError.
+        if (!valid_local_names.contains_slow(definition->local_name()))
+            return vm.throw_completion<JS::TypeError>(MUST(String::formatted("Local name '{}' of customized built-in element is not a valid local name for @name@"sv, definition->local_name())));
+
+        // 3. Set is value to definition's name.
+        is_value = definition->name();
+    }
+
+    // 7. If definition's construction stack is empty, then:
+    if (definition->construction_stack().is_empty()) {
+        // 1. Let element be the result of internally creating a new object implementing the interface to which the active function object corresponds, given the current Realm Record and NewTarget.
+        // 2. Set element's node document to the current global object's associated Document.
+        // 3. Set element's namespace to the HTML namespace.
+        // 4. Set element's namespace prefix to null.
+        // 5. Set element's local name to definition's local name.
+        auto element = realm.heap().allocate<@fully_qualified_name@>(realm, window.associated_document(), DOM::QualifiedName { definition->local_name(), {}, Namespace::HTML });
+
+        // https://webidl.spec.whatwg.org/#internally-create-a-new-object-implementing-the-interface
+        // Important steps from "internally create a new object implementing the interface"
+        // 3.2: Let prototype be ? Get(newTarget, "prototype").
+        auto prototype = TRY(new_target.get(vm.names.prototype));
+
+        // 3.3. If Type(prototype) is not Object, then:
+        if (!prototype.is_object()) {
+            // 1. Let targetRealm be ? GetFunctionRealm(newTarget).
+            auto* target_realm = TRY(JS::get_function_realm(vm, new_target));
+
+            // 2. Set prototype to the interface prototype object for interface in targetRealm.
+            VERIFY(target_realm);
+            prototype = &Bindings::ensure_web_prototype<@prototype_class@>(*target_realm, "@name@"_fly_string);
+        }
+
+        // 7. Set instance.[[Prototype]] to prototype.
+        VERIFY(prototype.is_object());
+        MUST(element->internal_set_prototype_of(&prototype.as_object()));
+
+        // 6. Set element's custom element state to "custom".
+        // 7. Set element's custom element definition to definition.
+        // 8. Set element's is value to is value.
+        element->setup_custom_element_from_constructor(*definition, is_value);
+
+        // 9. Return element.
+        return *element;
+    }
+
+    // 8. Let prototype be ? Get(NewTarget, "prototype").
+    auto prototype = TRY(new_target.get(vm.names.prototype));
+
+    // 9. If Type(prototype) is not Object, then:
+    if (!prototype.is_object()) {
+        // 1. Let realm be ? GetFunctionRealm(NewTarget).
+        auto* function_realm = TRY(JS::get_function_realm(vm, new_target));
+
+        // 2. Set prototype to the interface prototype object of realm whose interface is the same as the interface of the active function object.
+        VERIFY(function_realm);
+        prototype = &Bindings::ensure_web_prototype<@prototype_class@>(*function_realm, "@name@"_fly_string);
+    }
+
+    VERIFY(prototype.is_object());
+
+    // 10. Let element be the last entry in definition's construction stack.
+    auto& element = definition->construction_stack().last();
+
+    // 11. If element is an already constructed marker, then throw an "InvalidStateError" DOMException.
+    if (element.has<HTML::AlreadyConstructedCustomElementMarker>())
+        return JS::throw_completion(WebIDL::InvalidStateError::create(realm, "Custom element has already been constructed"_fly_string));
+
+    // 12. Perform ? element.[[SetPrototypeOf]](prototype).
+    auto actual_element = element.get<JS::Handle<DOM::Element>>();
+    TRY(actual_element->internal_set_prototype_of(&prototype.as_object()));
+
+    // 13. Replace the last entry in definition's construction stack with an already constructed marker.
+    definition->construction_stack().last() = HTML::AlreadyConstructedCustomElementMarker {};
+
+    // 14. Return element.
+    return *actual_element;
+}
+)~~~");
+}
+
+static void generate_constructor(SourceGenerator& generator, IDL::Constructor const& constructor, IDL::Interface const& interface, bool is_html_constructor)
+{
+    auto constructor_generator = generator.fork();
+    constructor_generator.set("constructor_class", interface.constructor_class);
+    constructor_generator.set("interface_fully_qualified_name", interface.fully_qualified_name);
+    constructor_generator.set("overload_suffix", constructor.is_overloaded ? ByteString::number(constructor.overload_index) : ByteString::empty());
+
+    constructor_generator.append(R"~~~(
+JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> @constructor_class@::construct@overload_suffix@([[maybe_unused]] FunctionObject& new_target)
+{
+)~~~");
+
+    generator.append(R"~~~(
+    auto& vm = this->vm();
+    auto& realm = *vm.current_realm();
+)~~~");
+
+    if (is_html_constructor) {
+        generate_html_constructor(generator, constructor, interface);
+    } else {
+        if (!constructor.parameters.is_empty()) {
+            generate_argument_count_check(generator, constructor.name, constructor.shortest_length());
+
+            StringBuilder arguments_builder;
+            generate_arguments(generator, constructor.parameters, arguments_builder, interface);
+            constructor_generator.set(".constructor_arguments", arguments_builder.string_view());
+
+            constructor_generator.append(R"~~~(
+    auto impl = TRY(throw_dom_exception_if_needed(vm, [&] { return @fully_qualified_name@::construct_impl(realm, @.constructor_arguments@); }));
+)~~~");
+        } else {
+            constructor_generator.append(R"~~~(
+    auto impl = TRY(throw_dom_exception_if_needed(vm, [&] { return @fully_qualified_name@::construct_impl(realm); }));
+)~~~");
+        }
+
+        constructor_generator.append(R"~~~(
+    return *impl;
+}
+)~~~");
+    }
+}
+
+static void generate_constructors(SourceGenerator& generator, IDL::Interface const& interface)
+{
+    auto shortest_length = interface.constructors.is_empty() ? 0u : NumericLimits<size_t>::max();
+    bool has_html_constructor = false;
+    for (auto const& constructor : interface.constructors) {
+        shortest_length = min(shortest_length, constructor.shortest_length());
+
+        if (constructor.extended_attributes.contains("HTMLConstructor"sv)) {
+            has_html_constructor = true;
+            break;
+        }
+    }
+
+    if (has_html_constructor && interface.constructors.size() != 1) {
+        dbgln("Interface {}'s constructor annotated with [HTMLConstructor] must be the only constructor", interface.name);
+        VERIFY_NOT_REACHED();
+    }
+
+    generator.set("constructor.length", ByteString::number(shortest_length));
+
+    // Implementation: Constructors
+    if (interface.constructors.is_empty()) {
+        // No constructor
+        generator.append(R"~~~(
+JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> @constructor_class@::construct([[maybe_unused]] FunctionObject& new_target)
+{
+)~~~");
+        generator.set("constructor.length", "0");
+        generator.append(R"~~~(
+    return vm().throw_completion<JS::TypeError>(JS::ErrorType::NotAConstructor, "@namespaced_name@");
+}
+)~~~");
+    } else {
+        for (auto& constructor : interface.constructors) {
+            generate_constructor(generator, constructor, interface, has_html_constructor);
+        }
+    }
+    for (auto const& overload_set : interface.constructor_overload_sets) {
+        if (overload_set.value.size() == 1)
+            continue;
+        generate_overload_arbiter(generator, overload_set, interface, interface.constructor_class, IsConstructor::Yes);
+    }
 }
 
 static void generate_prototype_or_global_mixin_declarations(IDL::Interface const& interface, StringBuilder& builder)
@@ -3304,7 +3562,7 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.setter_callback@)
     for (auto const& overload_set : interface.overload_sets) {
         if (overload_set.value.size() == 1)
             continue;
-        generate_overload_arbiter(generator, overload_set, interface, class_name);
+        generate_overload_arbiter(generator, overload_set, interface, class_name, IsConstructor::No);
     }
 
     if (interface.has_stringifier) {
@@ -3551,7 +3809,7 @@ void @namespace_class@::visit_edges(JS::Cell::Visitor& visitor)
     for (auto const& overload_set : interface.overload_sets) {
         if (overload_set.value.size() == 1)
             continue;
-        generate_overload_arbiter(generator, overload_set, interface, interface.namespace_class);
+        generate_overload_arbiter(generator, overload_set, interface, interface.namespace_class, IsConstructor::No);
     }
 
     generator.append(R"~~~(
@@ -3587,6 +3845,18 @@ private:
     virtual bool has_constructor() const override { return true; }
 )~~~");
 
+    for (auto const& overload_set : interface.constructor_overload_sets) {
+        auto constructor_generator = generator.fork();
+        if (overload_set.value.size() > 1) {
+            for (auto i = 0u; i < overload_set.value.size(); ++i) {
+                constructor_generator.set("overload_suffix", ByteString::number(i));
+                constructor_generator.append(R"~~~(
+    JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> construct@overload_suffix@(JS::FunctionObject& new_target);
+)~~~");
+            }
+        }
+    }
+
     for (auto const& overload_set : interface.static_overload_sets) {
         auto function_generator = generator.fork();
         function_generator.set("function.name:snakecase", make_input_acceptable_cpp(overload_set.key.to_snakecase()));
@@ -3621,6 +3891,7 @@ void generate_constructor_implementation(IDL::Interface const& interface, String
     generator.set("fully_qualified_name", interface.fully_qualified_name);
 
     generator.append(R"~~~(
+#include <LibIDL/Types.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibJS/Runtime/DataView.h>
@@ -3678,6 +3949,7 @@ void generate_constructor_implementation(IDL::Interface const& interface, String
 #include <LibWeb/WebIDL/Buffers.h>
 #include <LibWeb/WebIDL/CallbackType.h>
 #include <LibWeb/WebIDL/Types.h>
+#include <LibWeb/WebIDL/OverloadResolution.h>
 
 )~~~");
 
@@ -3746,263 +4018,11 @@ JS::ThrowCompletionOr<JS::Value> @constructor_class@::call()
     return vm().throw_completion<JS::TypeError>(JS::ErrorType::ConstructorWithoutNew, "@namespaced_name@");
 }
 
-JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> @constructor_class@::construct([[maybe_unused]] FunctionObject& new_target)
-{
 )~~~");
 
-    // FIXME: Unify this code with the overload arbiter and possibly WebIDL::resolve_overload
-    if (interface.constructors.is_empty()) {
-        // No constructor
-        generator.set("constructor.length", "0");
-        generator.append(R"~~~(
-    return vm().throw_completion<JS::TypeError>(JS::ErrorType::NotAConstructor, "@namespaced_name@");
-)~~~");
-    } else {
-        auto shortest_length = NumericLimits<size_t>::max();
-        Optional<IDL::Constructor> html_constructor;
-
-        for (auto const& constructor : interface.constructors) {
-            shortest_length = min(shortest_length, constructor.shortest_length());
-
-            if (constructor.extended_attributes.contains("HTMLConstructor"sv)) {
-                html_constructor = constructor;
-                break;
-            }
-        }
-
-        generator.set("constructor.length", ByteString::number(shortest_length));
-
-        generator.append(R"~~~(
-    auto& vm = this->vm();
-    auto& realm = *vm.current_realm();
-)~~~");
-
-        if (!html_constructor.has_value()) {
-            if (interface.constructors.size() == 1) {
-                auto const& constructor = interface.constructors[0];
-
-                if (!constructor.parameters.is_empty()) {
-                    generate_argument_count_check(generator, constructor.name, constructor.shortest_length());
-
-                    StringBuilder arguments_builder;
-                    generate_arguments(generator, constructor.parameters, arguments_builder, interface);
-                    generator.set(".constructor_arguments", arguments_builder.string_view());
-
-                    generator.append(R"~~~(
-    auto impl = TRY(throw_dom_exception_if_needed(vm, [&] { return @fully_qualified_name@::construct_impl(realm, @.constructor_arguments@); }));
-)~~~");
-                } else {
-                    generator.append(R"~~~(
-    auto impl = TRY(throw_dom_exception_if_needed(vm, [&] { return @fully_qualified_name@::construct_impl(realm); }));
-)~~~");
-                }
-
-                generator.append(R"~~~(
-    return *impl;
-)~~~");
-            } else {
-                HashTable<size_t> observed_parameter_counts;
-
-                generator.append(R"~~~(
-    switch (vm.argument_count()) {
-)~~~");
-
-                for (auto const& constructor : interface.constructors) {
-                    for (ssize_t i = static_cast<ssize_t>(constructor.parameters.size()); i >= 0; --i) {
-                        if (observed_parameter_counts.contains(i)) {
-                            dbgln("Interface {} has multiple constructors that can accept {} parameters", interface.name, i);
-                            VERIFY_NOT_REACHED();
-                        }
-                        observed_parameter_counts.set(i);
-
-                        generator.set("parameter_count", MUST(String::number(i)));
-                        generator.append(R"~~~(
-    case @parameter_count@:
-)~~~");
-
-                        if (!constructor.parameters[i - 1].optional)
-                            break;
-                    }
-
-                    generator.append(R"~~~(
-    {
-)~~~");
-
-                    if (!constructor.parameters.is_empty()) {
-                        StringBuilder arguments_builder;
-                        generate_arguments(generator, constructor.parameters, arguments_builder, interface);
-                        generator.set(".constructor_arguments", arguments_builder.string_view());
-
-                        generator.append(R"~~~(
-        auto impl = TRY(throw_dom_exception_if_needed(vm, [&] { return @fully_qualified_name@::construct_impl(realm, @.constructor_arguments@); }));
-        return *impl;
-)~~~");
-                    } else {
-                        generator.append(R"~~~(
-        auto impl = TRY(throw_dom_exception_if_needed(vm, [&] { return @fully_qualified_name@::construct_impl(realm); }));
-        return *impl;
-)~~~");
-                    }
-
-                    generator.append(R"~~~(
-    }
-)~~~");
-                }
-
-                if (shortest_length == 1) {
-                    generator.set(".bad_arg_count", "JS::ErrorType::BadArgCountOne");
-                    generator.set(".arg_count_suffix", "");
-                } else {
-                    generator.set(".bad_arg_count", "JS::ErrorType::BadArgCountMany");
-                    generator.set(".arg_count_suffix", ByteString::formatted(", \"{}\"", shortest_length));
-                }
-
-                generator.append(R"~~~(
-    default:
-        return vm.throw_completion<JS::TypeError>(@.bad_arg_count@, "constructor"@.arg_count_suffix@);
-    }
-)~~~");
-            }
-        } else {
-            // https://html.spec.whatwg.org/multipage/dom.html#html-element-constructors
-            // NOTE: The active function object in this context is always going to be the current constructor that has just been called.
-
-            // The [HTMLConstructor] extended attribute must take no arguments, and must only appear on constructor operations. It must
-            // appear only once on a constructor operation, and the interface must contain only the single, annotated constructor
-            // operation, and no others
-            if (interface.constructors.size() != 1) {
-                dbgln("Interface {}'s constructor annotated with [HTMLConstructor] must be the only constructor", interface.name);
-                VERIFY_NOT_REACHED();
-            }
-
-            if (!interface.constructors[0].parameters.is_empty()) {
-                dbgln("Interface {}'s constructor marked with [HTMLConstructor] must not have any parameters", interface.name);
-                VERIFY_NOT_REACHED();
-            }
-
-            generator.append(R"~~~(
-    auto& window = verify_cast<HTML::Window>(HTML::current_global_object());
-
-    // 1. Let registry be the current global object's CustomElementRegistry object.
-    auto registry = TRY(throw_dom_exception_if_needed(vm, [&] { return window.custom_elements(); }));
-
-    // 2. If NewTarget is equal to the active function object, then throw a TypeError.
-    if (&new_target == vm.active_function_object())
-        return vm.throw_completion<JS::TypeError>("Cannot directly construct an HTML element, it must be inherited"sv);
-
-    // 3. Let definition be the entry in registry with constructor equal to NewTarget. If there is no such definition, then throw a TypeError.
-    auto definition = registry->get_definition_from_new_target(new_target);
-    if (!definition)
-        return vm.throw_completion<JS::TypeError>("There is no custom element definition assigned to the given constructor"sv);
-
-    // 4. Let is value be null.
-    Optional<String> is_value;
-
-    // 5. If definition's local name is equal to definition's name (i.e., definition is for an autonomous custom element), then:
-    if (definition->local_name() == definition->name()) {
-        // 1. If the active function object is not HTMLElement, then throw a TypeError.
-)~~~");
-
-            if (interface.name != "HTMLElement") {
-                generator.append(R"~~~(
-        return vm.throw_completion<JS::TypeError>("Autonomous custom elements can only inherit from HTMLElement"sv);
-)~~~");
-            } else {
-                generator.append(R"~~~(
-        // Do nothing, as this is the HTMLElement constructor.
-)~~~");
-            }
-
-            generator.append(R"~~~(
-    }
-
-    // 6. Otherwise (i.e., if definition is for a customized built-in element):
-    else {
-        // 1. Let valid local names be the list of local names for elements defined in this specification or in other applicable specifications that use the active function object as their element interface.
-        static auto valid_local_names = MUST(DOM::valid_local_names_for_given_html_element_interface("@name@"sv));
-
-        // 2. If valid local names does not contain definition's local name, then throw a TypeError.
-        if (!valid_local_names.contains_slow(definition->local_name()))
-            return vm.throw_completion<JS::TypeError>(MUST(String::formatted("Local name '{}' of customized built-in element is not a valid local name for @name@"sv, definition->local_name())));
-
-        // 3. Set is value to definition's name.
-        is_value = definition->name();
-    }
-
-    // 7. If definition's construction stack is empty, then:
-    if (definition->construction_stack().is_empty()) {
-        // 1. Let element be the result of internally creating a new object implementing the interface to which the active function object corresponds, given the current Realm Record and NewTarget.
-        // 2. Set element's node document to the current global object's associated Document.
-        // 3. Set element's namespace to the HTML namespace.
-        // 4. Set element's namespace prefix to null.
-        // 5. Set element's local name to definition's local name.
-        auto element = realm.heap().allocate<@fully_qualified_name@>(realm, window.associated_document(), DOM::QualifiedName { definition->local_name(), {}, Namespace::HTML });
-
-        // https://webidl.spec.whatwg.org/#internally-create-a-new-object-implementing-the-interface
-        // Important steps from "internally create a new object implementing the interface"
-        // 3.2: Let prototype be ? Get(newTarget, "prototype").
-        auto prototype = TRY(new_target.get(vm.names.prototype));
-
-        // 3.3. If Type(prototype) is not Object, then:
-        if (!prototype.is_object()) {
-            // 1. Let targetRealm be ? GetFunctionRealm(newTarget).
-            auto* target_realm = TRY(JS::get_function_realm(vm, new_target));
-
-            // 2. Set prototype to the interface prototype object for interface in targetRealm.
-            VERIFY(target_realm);
-            prototype = &Bindings::ensure_web_prototype<@prototype_class@>(*target_realm, "@name@"_fly_string);
-        }
-
-        // 7. Set instance.[[Prototype]] to prototype.
-        VERIFY(prototype.is_object());
-        MUST(element->internal_set_prototype_of(&prototype.as_object()));
-
-        // 6. Set element's custom element state to "custom".
-        // 7. Set element's custom element definition to definition.
-        // 8. Set element's is value to is value.
-        element->setup_custom_element_from_constructor(*definition, is_value);
-
-        // 9. Return element.
-        return *element;
-    }
-
-    // 8. Let prototype be ? Get(NewTarget, "prototype").
-    auto prototype = TRY(new_target.get(vm.names.prototype));
-
-    // 9. If Type(prototype) is not Object, then:
-    if (!prototype.is_object()) {
-        // 1. Let realm be ? GetFunctionRealm(NewTarget).
-        auto* function_realm = TRY(JS::get_function_realm(vm, new_target));
-
-        // 2. Set prototype to the interface prototype object of realm whose interface is the same as the interface of the active function object.
-        VERIFY(function_realm);
-        prototype = &Bindings::ensure_web_prototype<@prototype_class@>(*function_realm, "@name@"_fly_string);
-    }
-
-    VERIFY(prototype.is_object());
-
-    // 10. Let element be the last entry in definition's construction stack.
-    auto& element = definition->construction_stack().last();
-
-    // 11. If element is an already constructed marker, then throw an "InvalidStateError" DOMException.
-    if (element.has<HTML::AlreadyConstructedCustomElementMarker>())
-        return JS::throw_completion(WebIDL::InvalidStateError::create(realm, "Custom element has already been constructed"_fly_string));
-
-    // 12. Perform ? element.[[SetPrototypeOf]](prototype).
-    auto actual_element = element.get<JS::Handle<DOM::Element>>();
-    TRY(actual_element->internal_set_prototype_of(&prototype.as_object()));
-
-    // 13. Replace the last entry in definition's construction stack with an already constructed marker.
-    definition->construction_stack().last() = HTML::AlreadyConstructedCustomElementMarker {};
-
-    // 14. Return element.
-    return *actual_element;
-)~~~");
-        }
-    }
+    generate_constructors(generator, interface);
 
     generator.append(R"~~~(
-}
 
 void @constructor_class@::initialize(JS::Realm& realm)
 {
@@ -4048,7 +4068,7 @@ void @constructor_class@::initialize(JS::Realm& realm)
     for (auto const& overload_set : interface.static_overload_sets) {
         if (overload_set.value.size() == 1)
             continue;
-        generate_overload_arbiter(generator, overload_set, interface, interface.constructor_class);
+        generate_overload_arbiter(generator, overload_set, interface, interface.constructor_class, IsConstructor::No);
     }
 
     generator.append(R"~~~(
