@@ -72,6 +72,11 @@ struct JPEG2000CaptureResolutionBox final : public JPEG2000ResolutionSubboxBase 
     BOX_SUBTYPE(JPEG2000CaptureResolutionBox);
 };
 
+// I.5.3.7.2 Default Display Resolution box
+struct JPEG2000DefaultDisplayResolutionBox final : public JPEG2000ResolutionSubboxBase {
+    BOX_SUBTYPE(JPEG2000DefaultDisplayResolutionBox);
+};
+
 // I.5.4 Contiguous Codestream box
 struct JPEG2000ContiguousCodestreamBox final : public Box {
     BOX_SUBTYPE(JPEG2000ContiguousCodestreamBox);
