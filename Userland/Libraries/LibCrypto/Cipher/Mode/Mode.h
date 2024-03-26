@@ -48,9 +48,12 @@ protected:
         auto size = data.size();
         switch (m_cipher.padding_mode()) {
         case PaddingMode::CMS: {
+            // rfc5652 Cryptographic Message Syntax (CMS):
+            //     the input shall be padded at the trailing end with k-(lth mod k) octets
+            //     all having value k-(lth mod k), where lth is the length of the input.
             auto maybe_padding_length = data[size - 1];
-            if (maybe_padding_length >= T::block_size()) {
-                // cannot be padding (the entire block cannot be padding)
+            if (maybe_padding_length > T::block_size()) {
+                // Invalid padding length (too long)
                 return;
             }
             for (auto i = size - maybe_padding_length; i < size; ++i) {
