@@ -67,7 +67,7 @@ class Request final
     JS_DECLARE_ALLOCATOR(Request);
 
 public:
-    [[nodiscard]] static JS::NonnullGCPtr<Request> create(JS::Realm&, JS::NonnullGCPtr<Infrastructure::Request>, Headers::Guard);
+    [[nodiscard]] static JS::NonnullGCPtr<Request> create(JS::Realm&, JS::NonnullGCPtr<Infrastructure::Request>, Headers::Guard, JS::NonnullGCPtr<DOM::AbortSignal>);
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> construct_impl(JS::Realm&, RequestInfo const& input, RequestInit const& init = {});
 
     virtual ~Request() override;
