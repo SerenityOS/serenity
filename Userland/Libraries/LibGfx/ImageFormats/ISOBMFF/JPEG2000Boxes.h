@@ -55,9 +55,9 @@ struct JPEG2000ResolutionBox final : public SuperBox {
     BOX_SUBTYPE(JPEG2000ResolutionBox);
 };
 
-// I.5.3.7.1 Capture Resolution box
-struct JPEG2000CaptureResolutionBox final : public Box {
-    BOX_SUBTYPE(JPEG2000CaptureResolutionBox);
+struct JPEG2000ResolutionSubboxBase : public Box {
+    ErrorOr<void> read_from_stream(BoxStream&);
+    virtual void dump(String const& prepend) const override;
 
     u16 vertical_capture_grid_resolution_numerator { 0 };
     u16 vertical_capture_grid_resolution_denominator { 0 };
@@ -65,6 +65,11 @@ struct JPEG2000CaptureResolutionBox final : public Box {
     u16 horizontal_capture_grid_resolution_denominator { 0 };
     i8 vertical_capture_grid_resolution_exponent { 0 };
     i8 horizontal_capture_grid_resolution_exponent { 0 };
+};
+
+// I.5.3.7.1 Capture Resolution box
+struct JPEG2000CaptureResolutionBox final : public JPEG2000ResolutionSubboxBase {
+    BOX_SUBTYPE(JPEG2000CaptureResolutionBox);
 };
 
 // I.5.4 Contiguous Codestream box
