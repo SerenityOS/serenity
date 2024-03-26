@@ -17,6 +17,7 @@
 #include <LibGfx/StandardCursor.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/ActivateTab.h>
+#include <LibWeb/HTML/AudioPlayState.h>
 #include <LibWeb/HTML/ColorPickerUpdateState.h>
 #include <LibWeb/HTML/FileFilter.h>
 #include <LibWeb/HTML/SelectItem.h>
@@ -101,6 +102,9 @@ public:
     void toggle_media_loop_state();
     void toggle_media_controls_state();
 
+    void did_change_audio_play_state(Badge<WebContentClient>, Web::HTML::AudioPlayState);
+    Web::HTML::AudioPlayState audio_play_state() const { return m_audio_play_state; }
+
     enum class ScreenshotType {
         Visible,
         Full,
@@ -178,6 +182,7 @@ public:
     Function<void()> on_text_test_finish;
     Function<void(Gfx::Color)> on_theme_color_change;
     Function<void(String const&, String const&, String const&)> on_insert_clipboard_entry;
+    Function<void(Web::HTML::AudioPlayState)> on_audio_play_state_changed;
     Function<void()> on_inspector_loaded;
     Function<void(i32, Optional<Web::CSS::Selector::PseudoElement::Type> const&)> on_inspector_selected_dom_node;
     Function<void(i32, String const&)> on_inspector_set_dom_node_text;
@@ -252,6 +257,8 @@ protected:
     RefPtr<Core::Timer> m_repeated_crash_timer;
 
     RefPtr<Core::Promise<LexicalPath>> m_pending_screenshot;
+
+    Web::HTML::AudioPlayState m_audio_play_state { Web::HTML::AudioPlayState::Paused };
 };
 
 }

@@ -18,6 +18,7 @@
 #include <LibWeb/Fetch/Infrastructure/FetchController.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Requests.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Responses.h>
+#include <LibWeb/HTML/AudioPlayState.h>
 #include <LibWeb/HTML/AudioTrack.h>
 #include <LibWeb/HTML/AudioTrackList.h>
 #include <LibWeb/HTML/CORSSettingAttribute.h>
@@ -35,6 +36,7 @@
 #include <LibWeb/HTML/VideoTrackList.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/MimeSniff/MimeType.h>
+#include <LibWeb/Page/Page.h>
 #include <LibWeb/Painting/Paintable.h>
 #include <LibWeb/WebIDL/Promise.h>
 
@@ -1602,6 +1604,9 @@ void HTMLMediaElement::set_paused(bool paused)
     if (auto* paintable = this->paintable())
         paintable->set_needs_display();
     set_needs_style_update(true);
+
+    if (m_audio_tracks->has_enabled_track())
+        document().page().client().page_did_change_audio_play_state(paused ? AudioPlayState::Paused : AudioPlayState::Playing);
 }
 
 // https://html.spec.whatwg.org/multipage/media.html#blocked-media-element
