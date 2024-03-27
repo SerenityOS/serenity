@@ -107,6 +107,9 @@ public:
 
     virtual void update_style_properties() override;
 
+    Optional<CSS::AnimationPlayState> last_css_animation_play_state() const { return m_last_css_animation_play_state; }
+    void set_last_css_animation_play_state(CSS::AnimationPlayState state) { m_last_css_animation_play_state = state; }
+
 private:
     KeyframeEffect(JS::Realm&);
     virtual ~KeyframeEffect() override = default;
@@ -130,6 +133,8 @@ private:
     Vector<JS::Object*> m_keyframe_objects {};
 
     RefPtr<KeyFrameSet const> m_key_frame_set {};
+
+    Optional<CSS::AnimationPlayState> m_last_css_animation_play_state;
 };
 
 }

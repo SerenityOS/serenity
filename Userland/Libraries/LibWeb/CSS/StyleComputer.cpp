@@ -1410,11 +1410,7 @@ void StyleComputer::collect_animation_into(DOM::Element& element, Optional<CSS::
     }
 }
 
-enum class AnimationIsNew {
-    Yes,
-    No,
-};
-static void apply_animation_properties(DOM::Document& document, StyleProperties& style, Animations::Animation& animation, AnimationIsNew animation_is_new)
+static void apply_animation_properties(DOM::Document& document, StyleProperties& style, Animations::Animation& animation)
 {
     auto& effect = verify_cast<Animations::KeyframeEffect>(*animation.effect());
 
@@ -1472,13 +1468,16 @@ static void apply_animation_properties(DOM::Document& document, StyleProperties&
     effect.set_fill_mode(Animations::css_fill_mode_to_bindings_fill_mode(fill_mode));
     effect.set_playback_direction(Animations::css_animation_direction_to_bindings_playback_direction(direction));
 
-    // If this is a new animation, we always want to play it
-    if (play_state == CSS::AnimationPlayState::Running && (animation_is_new == AnimationIsNew::Yes || animation.play_state() == Bindings::AnimationPlayState::Paused)) {
-        HTML::TemporaryExecutionContext context(document.relevant_settings_object());
-        animation.play().release_value_but_fixme_should_propagate_errors();
-    } else if (play_state == CSS::AnimationPlayState::Paused && animation.play_state() != Bindings::AnimationPlayState::Paused) {
-        HTML::TemporaryExecutionContext context(document.relevant_settings_object());
-        animation.pause().release_value_but_fixme_should_propagate_errors();
+    if (play_state != effect.last_css_animation_play_state()) {
+        if (play_state == CSS::AnimationPlayState::Running && animation.play_state() == Bindings::AnimationPlayState::Paused) {
+            HTML::TemporaryExecutionContext context(document.relevant_settings_object());
+            animation.play().release_value_but_fixme_should_propagate_errors();
+        } else if (play_state == CSS::AnimationPlayState::Paused && animation.play_state() != Bindings::AnimationPlayState::Paused) {
+            HTML::TemporaryExecutionContext context(document.relevant_settings_object());
+            animation.pause().release_value_but_fixme_should_propagate_errors();
+        }
+
+        effect.set_last_css_animation_play_state(play_state);
     }
 }
 
@@ -1559,7 +1558,7 @@ void StyleComputer::compute_cascaded_values(StyleProperties& style, DOM::Element
                 animation->set_timeline(m_document->timeline());
                 animation->set_owning_element(element);
                 animation->set_effect(effect);
-                apply_animation_properties(m_document, style, animation, AnimationIsNew::Yes);
+                apply_animation_properties(m_document, style, animation);
                 if (pseudo_element.has_value())
                     effect->set_pseudo_element(Selector::PseudoElement { pseudo_element.value() });
 
@@ -1569,9 +1568,12 @@ void StyleComputer::compute_cascaded_values(StyleProperties& style, DOM::Element
 
                 effect->set_target(&element);
                 element.set_cached_animation_name_animation(animation);
+
+                HTML::TemporaryExecutionContext context(m_document->relevant_settings_object());
+                animation->play().release_value_but_fixme_should_propagate_errors();
             } else {
                 // The animation hasn't changed, but some properties of the animation may have
-                apply_animation_properties(m_document, style, *element.cached_animation_name_animation(), AnimationIsNew::No);
+                apply_animation_properties(m_document, style, *element.cached_animation_name_animation());
             }
         }
     } else {
