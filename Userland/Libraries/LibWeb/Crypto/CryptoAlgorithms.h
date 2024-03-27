@@ -167,6 +167,11 @@ public:
         return WebIDL::NotSupportedError::create(m_realm, "sign is not supported"_fly_string);
     }
 
+    virtual WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::ArrayBuffer>> verify(AlgorithmParams const&, JS::NonnullGCPtr<CryptoKey>, ByteBuffer const&, ByteBuffer const&)
+    {
+        return WebIDL::NotSupportedError::create(m_realm, "verify is not supported"_fly_string);
+    }
+
     virtual WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::ArrayBuffer>> digest(AlgorithmParams const&, ByteBuffer const&)
     {
         return WebIDL::NotSupportedError::create(m_realm, "digest is not supported"_fly_string);

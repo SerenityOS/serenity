@@ -520,6 +520,70 @@ JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Promise>> SubtleCrypto::sign(Algorith
     return verify_cast<JS::Promise>(*promise->promise());
 }
 
+// https://w3c.github.io/webcrypto/#dfn-SubtleCrypto-method-verify
+JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Promise>> SubtleCrypto::verify(AlgorithmIdentifier const& algorithm, JS::NonnullGCPtr<CryptoKey> key, JS::Handle<WebIDL::BufferSource> const& signature_data, JS::Handle<WebIDL::BufferSource> const& data_parameter)
+{
+    auto& realm = this->realm();
+    auto& vm = this->vm();
+    // 1. Let algorithm and key be the algorithm and key parameters passed to the verify() method, respectively.
+
+    // 2. Let signature be the result of getting a copy of the bytes held by the signature parameter passed to the verify() method.
+    auto signature_or_error = WebIDL::get_buffer_source_copy(*signature_data->raw_object());
+    if (signature_or_error.is_error()) {
+        VERIFY(signature_or_error.error().code() == ENOMEM);
+        return WebIDL::create_rejected_promise_from_exception(realm, vm.throw_completion<JS::InternalError>(vm.error_message(JS::VM::ErrorMessage::OutOfMemory)));
+    }
+    auto signature = signature_or_error.release_value();
+
+    // 3. Let data be the result of getting a copy of the bytes held by the data parameter passed to the verify() method.
+    auto data_or_error = WebIDL::get_buffer_source_copy(*data_parameter->raw_object());
+    if (data_or_error.is_error()) {
+        VERIFY(data_or_error.error().code() == ENOMEM);
+        return WebIDL::create_rejected_promise_from_exception(realm, vm.throw_completion<JS::InternalError>(vm.error_message(JS::VM::ErrorMessage::OutOfMemory)));
+    }
+    auto data = data_or_error.release_value();
+
+    // 3. Let normalizedAlgorithm be the result of normalizing an algorithm, with alg set to algorithm and op set to "verify".
+    auto normalized_algorithm = normalize_an_algorithm(realm, algorithm, "verify"_string);
+
+    // 5. If an error occurred, return a Promise rejected with normalizedAlgorithm.
+    if (normalized_algorithm.is_error())
+        return WebIDL::create_rejected_promise_from_exception(realm, normalized_algorithm.release_error());
+
+    // 6. Let promise be a new Promise.
+    auto promise = WebIDL::create_promise(realm);
+
+    // 7. Return promise and perform the remaining steps in parallel.
+    Platform::EventLoopPlugin::the().deferred_invoke([&realm, normalized_algorithm = normalized_algorithm.release_value(), promise, key, signature = move(signature), data = move(data)]() -> void {
+        HTML::TemporaryExecutionContext context(Bindings::host_defined_environment_settings_object(realm), HTML::TemporaryExecutionContext::CallbacksEnabled::Yes);
+        // 8. If the following steps or referenced procedures say to throw an error, reject promise with the returned error and then terminate the algorithm.
+
+        // 9. If the name member of normalizedAlgorithm is not equal to the name attribute of the [[algorithm]] internal slot of key then throw an InvalidAccessError.
+        if (normalized_algorithm.parameter->name != key->algorithm_name()) {
+            WebIDL::reject_promise(realm, promise, WebIDL::InvalidAccessError::create(realm, "Algorithm mismatch"_fly_string));
+            return;
+        }
+
+        // 10. If the [[usages]] internal slot of key does not contain an entry that is "verify", then throw an InvalidAccessError.
+        if (!key->internal_usages().contains_slow(Bindings::KeyUsage::Verify)) {
+            WebIDL::reject_promise(realm, promise, WebIDL::InvalidAccessError::create(realm, "Key does not support verification"_fly_string));
+            return;
+        }
+
+        // 11. Let result be the result of performing the verify operation specified by normalizedAlgorithm using key, algorithm and signature and with data as message.
+        auto result = normalized_algorithm.methods->verify(*normalized_algorithm.parameter, key, signature, data);
+        if (result.is_error()) {
+            WebIDL::reject_promise(realm, promise, Bindings::dom_exception_to_throw_completion(realm.vm(), result.release_error()).release_value().value());
+            return;
+        }
+
+        // 12. Resolve promise with result.
+        WebIDL::resolve_promise(realm, promise, result.release_value());
+    });
+
+    return verify_cast<JS::Promise>(*promise->promise());
+}
+
 SupportedAlgorithmsMap& supported_algorithms_internal()
 {
     static SupportedAlgorithmsMap s_supported_algorithms;
