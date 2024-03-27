@@ -101,4 +101,10 @@ WebIDL::ExceptionOr<bool> Internals::dispatch_user_activated_event(DOM::EventTar
     return target.dispatch_event(event);
 }
 
+JS::NonnullGCPtr<InternalAnimationTimeline> Internals::create_internal_animation_timeline()
+{
+    auto& realm = this->realm();
+    return realm.heap().allocate<InternalAnimationTimeline>(realm, realm);
+}
+
 }
