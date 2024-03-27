@@ -26,8 +26,13 @@ public:
     {
         m_timer = Core::Timer::create_single_shot(0, [this] {
             while (m_queue.size() > 0) {
+                if (m_depth > 0)
+                    return;
+                VERIFY(m_depth == 0);
                 auto entry = m_queue.take_first();
+                m_depth++;
                 entry.steps();
+                m_depth--;
             }
         }).release_value_but_fixme_should_propagate_errors();
     }
@@ -60,14 +65,18 @@ public:
     void process()
     {
         while (m_queue.size() > 0) {
+            VERIFY(m_depth == 0);
             auto entry = m_queue.take_first();
+            m_depth++;
             entry.steps();
+            m_depth--;
         }
     }
 
 private:
     Vector<SessionHistoryTraversalQueueEntry> m_queue;
     RefPtr<Core::Timer> m_timer;
+    int m_depth { 0 };
 };
 
 }
