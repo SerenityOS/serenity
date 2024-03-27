@@ -183,7 +183,7 @@ void Navigable::activate_history_entry(JS::GCPtr<SessionHistoryEntry> entry)
     // FIXME: 1. Save persisted state to the navigable's active session history entry.
 
     // 2. Let newDocument be entry's document.
-    JS::GCPtr<DOM::Document> new_document = entry->document_state()->document().ptr();
+    JS::GCPtr<DOM::Document> new_document = entry->document().ptr();
 
     // 3. Assert: newDocument's is initial about:blank is false, i.e., we never traverse
     //    back to the initial about:blank Document because it always gets replaced when we
@@ -205,7 +205,7 @@ void Navigable::activate_history_entry(JS::GCPtr<SessionHistoryEntry> entry)
 JS::GCPtr<DOM::Document> Navigable::active_document()
 {
     // A navigable's active document is its active session history entry's document.
-    return m_active_session_history_entry->document_state()->document();
+    return m_active_session_history_entry->document();
 }
 
 // https://html.spec.whatwg.org/multipage/document-sequences.html#nav-bc
@@ -1097,7 +1097,7 @@ WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(
             // FIXME: https://github.com/whatwg/html/issues/9767
             // We probably are expected to skip to steps 13 and 14 and return after doing this
             entry->document_state()->set_document(attempt_to_create_a_non_fetch_scheme_document(navigation_params.get<NonFetchSchemeNavigationParams>()));
-            if (entry->document_state()->document()) {
+            if (entry->document()) {
                 entry->document_state()->set_ever_populated(true);
             }
             completion_steps();
@@ -1131,7 +1131,7 @@ WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(
             }));
 
             // 2. Set entry's document state's document's salvageable to false.
-            entry->document_state()->document()->set_salvageable(false);
+            entry->document()->set_salvageable(false);
 
             // FIXME: 3. If navigationParams is not null, then:
             if (!navigation_params.has<Empty>()) {
@@ -1174,7 +1174,7 @@ WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(
         //     What is "request" here?
 
         // 13. If entry's document state's document is not null, then set entry's document state's ever populated to true.
-        if (entry->document_state()->document()) {
+        if (entry->document()) {
             entry->document_state()->set_ever_populated(true);
         }
 
@@ -1805,7 +1805,7 @@ void finalize_a_cross_document_navigation(JS::NonnullGCPtr<Navigable> navigable,
     navigable->set_delaying_load_events(false);
 
     // 3. If historyEntry's document is null, then return.
-    if (!history_entry->document_state()->document())
+    if (!history_entry->document())
         return;
 
     // 4. If all of the following are true:
@@ -1813,7 +1813,7 @@ void finalize_a_cross_document_navigation(JS::NonnullGCPtr<Navigable> navigable,
     //    - historyEntry's document's browsing context is not an auxiliary browsing context whose opener browsing context is non-null; and
     //    - historyEntry's document's origin is not navigable's active document's origin
     //    then set historyEntry's document state's navigable target name to the empty string.
-    if (navigable->parent() == nullptr && history_entry->document_state()->document()->browsing_context()->opener_browsing_context() != nullptr && history_entry->document_state()->document()->origin() != navigable->active_document()->origin())
+    if (navigable->parent() == nullptr && history_entry->document()->browsing_context()->opener_browsing_context() != nullptr && history_entry->document()->origin() != navigable->active_document()->origin())
         history_entry->document_state()->set_navigable_target_name(String {});
 
     // 5. Let entryToReplace be navigable's active session history entry if historyHandling is "replace", otherwise null.

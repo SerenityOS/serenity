@@ -1272,7 +1272,7 @@ bool Navigation::fire_a_traverse_navigate_event(JS::NonnullGCPtr<SessionHistoryE
 
     // 8. Set destination's is same document to true if destinationSHE's document is equal to
     //    navigation's relevant global object's associated Document; otherwise false.
-    destination->set_is_same_document(destination_she->document_state()->document() == &verify_cast<Window>(relevant_global_object(*this)).associated_document());
+    destination->set_is_same_document(destination_she->document() == &verify_cast<Window>(relevant_global_object(*this)).associated_document());
 
     // 9. Return the result of performing the inner navigate event firing algorithm given navigation, "traverse", event, destination, userInvolvement, null, and null.
     // AD-HOC: We don't pass the event, but we do pass the classic_history_api state at the end to be set later
