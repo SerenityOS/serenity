@@ -100,7 +100,7 @@ WebIDL::ExceptionOr<NormalizedAlgorithmAndParameter> normalize_an_algorithm(JS::
     } else {
         // Otherwise:
         // Return a new NotSupportedError and terminate this algorithm.
-        return WebIDL::NotSupportedError::create(realm, MUST(String::formatted("Algorithm '{}' is not supported", algorithm_name)));
+        return WebIDL::NotSupportedError::create(realm, MUST(String::formatted("Algorithm '{}' is not supported for operation '{}'", algorithm_name, operation)));
     }
 
     // 8. Let normalizedAlgorithm be the result of converting the ECMAScript object represented by alg
