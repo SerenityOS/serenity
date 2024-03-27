@@ -28,4 +28,13 @@ SessionHistoryEntry::SessionHistoryEntry()
 {
 }
 
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#she-document
+JS::GCPtr<DOM::Document> SessionHistoryEntry::document() const
+{
+    // To get a session history entry's document, return its document state's document.
+    if (!m_document_state)
+        return {};
+    return m_document_state->document();
+}
+
 }

@@ -249,7 +249,7 @@ Vector<JS::Handle<Navigable>> TraversableNavigable::get_all_navigables_whose_cur
         }
 
         // 3. If targetEntry's document is navigable's document, and targetEntry's document state's reload pending is false, then extend navigablesToCheck with the child navigables of navigable.
-        if (target_entry->document_state()->document() == navigable->active_document() && !target_entry->document_state()->reload_pending()) {
+        if (target_entry->document() == navigable->active_document() && !target_entry->document_state()->reload_pending()) {
             navigables_to_check.extend(navigable->child_navigables());
         }
     }
@@ -318,7 +318,7 @@ Vector<JS::Handle<Navigable>> TraversableNavigable::get_all_navigables_that_migh
         // 2. If targetEntry's document is not navigable's document or targetEntry's document state's reload pending is true, then append navigable to results.
         // NOTE: Although navigable's active history entry can change synchronously, the new entry will always have the same Document,
         //       so accessing navigable's document is reliable.
-        if (target_entry->document_state()->document() != navigable->active_document() || target_entry->document_state()->reload_pending()) {
+        if (target_entry->document() != navigable->active_document() || target_entry->document_state()->reload_pending()) {
             results.append(navigable);
         }
 
@@ -421,7 +421,7 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
 
             // 3. Let changingNavigableContinuation be a changing navigable continuation state with:
             auto changing_navigable_continuation = ChangingNavigableContinuationState {
-                .displayed_document = displayed_entry->document_state()->document(),
+                .displayed_document = displayed_entry->document(),
                 .target_entry = target_entry,
                 .navigable = navigable,
                 .update_only = false
@@ -444,13 +444,13 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
 
             auto after_document_populated = [old_origin, target_entry, changing_navigable_continuation, &changing_navigable_continuations, &vm, &navigable]() mutable {
                 // 1. If targetEntry's document is null, then set changingNavigableContinuation's update-only to true.
-                if (!target_entry->document_state()->document()) {
+                if (!target_entry->document()) {
                     changing_navigable_continuation.update_only = true;
                 }
 
                 else {
                     // 2. If targetEntry's document's origin is not oldOrigin, then set targetEntry's classic history API state to StructuredSerializeForStorage(null).
-                    if (target_entry->document_state()->document()->origin() != old_origin) {
+                    if (target_entry->document()->origin() != old_origin) {
                         target_entry->set_classic_history_api_state(MUST(structured_serialize_for_storage(vm, JS::js_null())));
                     }
 
@@ -460,7 +460,7 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
                     //     - targetEntry's document's origin is not oldOrigin,
                     //    then set targetEntry's document state's navigable target name to the empty string.
                     if (navigable->parent() != nullptr
-                        && target_entry->document_state()->document()->browsing_context()->opener_browsing_context() == nullptr
+                        && target_entry->document()->browsing_context()->opener_browsing_context() == nullptr
                         && target_entry->document_state()->origin() != old_origin) {
                         target_entry->document_state()->set_navigable_target_name(String {});
                     }
@@ -471,7 +471,7 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
             };
 
             // 6. If targetEntry's document is null, or targetEntry's document state's reload pending is true, then:
-            if (!target_entry->document_state()->document() || target_entry->document_state()->reload_pending()) {
+            if (!target_entry->document() || target_entry->document_state()->reload_pending()) {
                 // FIXME: 1. Let navTimingType be "back_forward" if targetEntry's document is null; otherwise "reload".
 
                 // 2. Let targetSnapshotParams be the result of snapshotting target snapshot params given navigable.
@@ -593,9 +593,9 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
             // 1. If changingNavigableContinuation's update-only is false, then:
             if (!update_only) {
                 // 1. If targetEntry's document does not equal displayedDocument, then:
-                if (target_entry->document_state()->document().ptr() != displayed_document.ptr()) {
+                if (target_entry->document().ptr() != displayed_document.ptr()) {
                     // 1. Unload displayedDocument given targetEntry's document.
-                    displayed_document->unload(target_entry->document_state()->document());
+                    displayed_document->unload(target_entry->document());
 
                     // 2. For each childNavigable of displayedDocument's descendant navigables, queue a global task on the navigation and traversal task source given
                     //    childNavigable's active window to unload childNavigable's active document.
@@ -624,16 +624,16 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
             // 3. Let updateDocument be an algorithm step which performs update document for history step application given targetEntry's document,
             //    targetEntry, changingNavigableContinuation's update-only, scriptHistoryLength, scriptHistoryIndex, and entriesForNavigationAPI.
             auto update_document = JS::SafeFunction<void()>([target_entry, update_only, script_history_length, script_history_index, entries_for_navigation_api = move(entries_for_navigation_api)] {
-                target_entry->document_state()->document()->update_for_history_step_application(*target_entry, update_only, script_history_length, script_history_index, entries_for_navigation_api);
+                target_entry->document()->update_for_history_step_application(*target_entry, update_only, script_history_length, script_history_index, entries_for_navigation_api);
             });
 
             // 4. If targetEntry's document is equal to displayedDocument, then perform updateDocument.
-            if (target_entry->document_state()->document() == displayed_document.ptr()) {
+            if (target_entry->document() == displayed_document.ptr()) {
                 update_document();
             }
             // 5. Otherwise, queue a global task on the navigation and traversal task source given targetEntry's document's relevant global object to perform updateDocument
             else {
-                queue_global_task(Task::Source::NavigationAndTraversal, relevant_global_object(*target_entry->document_state()->document()), move(update_document));
+                queue_global_task(Task::Source::NavigationAndTraversal, relevant_global_object(*target_entry->document()), move(update_document));
             }
 
             // 6. Increment completedChangeJobs.
@@ -898,7 +898,7 @@ void TraversableNavigable::destroy_top_level_traversable()
     // 2. For each historyEntry in traversable's session history entries:
     for (auto& history_entry : m_session_history_entries) {
         // 1. Let document be historyEntry's document.
-        auto document = history_entry->document_state()->document();
+        auto document = history_entry->document();
 
         // 2. If document is not null, then destroy document.
         if (document)

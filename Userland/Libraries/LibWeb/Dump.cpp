@@ -53,7 +53,7 @@ static void indent(StringBuilder& builder, int levels)
 static ErrorOr<void> dump_session_history_entry(StringBuilder& builder, HTML::SessionHistoryEntry const& session_history_entry, int indent_levels)
 {
     indent(builder, indent_levels);
-    auto const& document = session_history_entry.document_state()->document();
+    auto const& document = session_history_entry.document();
     TRY(builder.try_appendff("step=({}) url=({}) is-active=({})\n", session_history_entry.step().get<int>(), session_history_entry.url(), document && document->is_active()));
     for (auto const& nested_history : session_history_entry.document_state()->nested_histories()) {
         for (auto const& nested_she : nested_history.entries) {
