@@ -177,6 +177,11 @@ public:
         return WebIDL::NotSupportedError::create(m_realm, "digest is not supported"_fly_string);
     }
 
+    virtual WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::ArrayBuffer>> derive_bits(AlgorithmParams const&, JS::NonnullGCPtr<CryptoKey>, u32)
+    {
+        return WebIDL::NotSupportedError::create(m_realm, "deriveBits is not supported"_fly_string);
+    }
+
     virtual WebIDL::ExceptionOr<JS::NonnullGCPtr<CryptoKey>> import_key(AlgorithmParams const&, Bindings::KeyFormat, CryptoKey::InternalKeyData, bool, Vector<Bindings::KeyUsage> const&)
     {
         return WebIDL::NotSupportedError::create(m_realm, "importKey is not supported"_fly_string);
