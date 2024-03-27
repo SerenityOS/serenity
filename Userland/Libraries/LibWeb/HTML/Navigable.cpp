@@ -77,7 +77,7 @@ Vector<JS::Handle<Navigable>> Navigable::child_navigables() const
 {
     Vector<JS::Handle<Navigable>> results;
     for (auto& entry : all_navigables()) {
-        if (entry->current_session_history_entry()->step == SessionHistoryEntry::Pending::Tag)
+        if (entry->current_session_history_entry()->step() == SessionHistoryEntry::Pending::Tag)
             continue;
         if (entry->parent() == this)
             results.append(entry);
@@ -140,10 +140,10 @@ ErrorOr<void> Navigable::initialize_navigable(JS::NonnullGCPtr<DocumentState> do
     JS::NonnullGCPtr<SessionHistoryEntry> entry = *heap().allocate_without_realm<SessionHistoryEntry>();
 
     // URL: document's URL
-    entry->url = document_state->document()->url();
+    entry->set_url(document_state->document()->url());
 
     // document state: documentState
-    entry->document_state = document_state;
+    entry->set_document_state(document_state);
 
     // 2. Set navigable's current session history entry to entry.
     m_current_session_history_entry = entry;
@@ -166,9 +166,9 @@ JS::GCPtr<SessionHistoryEntry> Navigable::get_the_target_history_entry(int targe
     // 2. Return the item in entries that has the greatest step less than or equal to step.
     JS::GCPtr<SessionHistoryEntry> result = nullptr;
     for (auto& entry : entries) {
-        auto entry_step = entry->step.get<int>();
+        auto entry_step = entry->step().get<int>();
         if (entry_step <= target_step) {
-            if (!result || result->step.get<int>() < entry_step) {
+            if (!result || result->step().get<int>() < entry_step) {
                 result = entry;
             }
         }
@@ -183,7 +183,7 @@ void Navigable::activate_history_entry(JS::GCPtr<SessionHistoryEntry> entry)
     // FIXME: 1. Save persisted state to the navigable's active session history entry.
 
     // 2. Let newDocument be entry's document.
-    JS::GCPtr<DOM::Document> new_document = entry->document_state->document().ptr();
+    JS::GCPtr<DOM::Document> new_document = entry->document_state()->document().ptr();
 
     // 3. Assert: newDocument's is initial about:blank is false, i.e., we never traverse
     //    back to the initial about:blank Document because it always gets replaced when we
@@ -205,7 +205,7 @@ void Navigable::activate_history_entry(JS::GCPtr<SessionHistoryEntry> entry)
 JS::GCPtr<DOM::Document> Navigable::active_document()
 {
     // A navigable's active document is its active session history entry's document.
-    return m_active_session_history_entry->document_state->document();
+    return m_active_session_history_entry->document_state()->document();
 }
 
 // https://html.spec.whatwg.org/multipage/document-sequences.html#nav-bc
@@ -240,7 +240,7 @@ JS::GCPtr<HTML::Window> Navigable::active_window()
 String Navigable::target_name() const
 {
     // A navigable's target name is its active session history entry's document state's navigable target name.
-    return active_session_history_entry()->document_state->navigable_target_name();
+    return active_session_history_entry()->document_state()->navigable_target_name();
 }
 
 // https://html.spec.whatwg.org/multipage/document-sequences.html#nav-container
@@ -478,7 +478,7 @@ Vector<JS::NonnullGCPtr<SessionHistoryEntry>>& Navigable::get_session_history_en
 
     // 5. For each entry of traversable's session history entries, append entry's document state to docStates.
     for (auto& entry : traversable->session_history_entries())
-        doc_states.append(entry->document_state);
+        doc_states.append(entry->document_state());
 
     // 6. For each docState of docStates:
     while (!doc_states.is_empty()) {
@@ -492,7 +492,7 @@ Vector<JS::NonnullGCPtr<SessionHistoryEntry>>& Navigable::get_session_history_en
 
             // 2. For each entry of nestedHistory's entries, append entry's document state to docStates.
             for (auto& entry : nested_history.entries)
-                doc_states.append(entry->document_state);
+                doc_states.append(entry->document_state());
         }
     }
 
@@ -585,7 +585,7 @@ static WebIDL::ExceptionOr<NavigationParams> create_navigation_params_from_a_src
     auto& realm = navigable->active_window()->realm();
 
     // 1. Let documentResource be entry's document state's resource.
-    auto document_resource = entry->document_state->resource();
+    auto document_resource = entry->document_state()->resource();
     VERIFY(document_resource.has<String>());
 
     // 2. Let response be a new response with
@@ -599,7 +599,7 @@ static WebIDL::ExceptionOr<NavigationParams> create_navigation_params_from_a_src
     response->set_body(TRY(Fetch::Infrastructure::byte_sequence_as_body(realm, document_resource.get<String>().bytes())));
 
     // 3. Let responseOrigin be the result of determining the origin given response's URL, targetSnapshotParams's sandboxing flags, and entry's document state's origin.
-    auto response_origin = determine_the_origin(*response->url(), target_snapshot_params.sandboxing_flags, entry->document_state->origin());
+    auto response_origin = determine_the_origin(*response->url(), target_snapshot_params.sandboxing_flags, entry->document_state()->origin());
 
     // 4. Let coop be a new cross-origin opener policy.
     CrossOriginOpenerPolicy coop = {};
@@ -616,7 +616,7 @@ static WebIDL::ExceptionOr<NavigationParams> create_navigation_params_from_a_src
 
     // 6. Let policyContainer be the result of determining navigation params policy container given response's URL,
     //    entry's document state's history policy container, null, navigable's container document's policy container, and null.
-    Optional<PolicyContainer> history_policy_container = entry->document_state->history_policy_container().visit(
+    Optional<PolicyContainer> history_policy_container = entry->document_state()->history_policy_container().visit(
         [](PolicyContainer const& c) -> Optional<PolicyContainer> { return c; },
         [](DocumentState::Client) -> Optional<PolicyContainer> { return {}; });
     PolicyContainer policy_container;
@@ -655,7 +655,7 @@ static WebIDL::ExceptionOr<NavigationParams> create_navigation_params_from_a_src
         .policy_container = policy_container,
         .final_sandboxing_flag_set = target_snapshot_params.sandboxing_flags,
         .cross_origin_opener_policy = move(coop),
-        .about_base_url = entry->document_state->about_base_url(),
+        .about_base_url = entry->document_state()->about_base_url(),
     };
 }
 
@@ -671,7 +671,7 @@ static WebIDL::ExceptionOr<Variant<Empty, NavigationParams, NonFetchSchemeNaviga
     // FIXME: 1. Assert: this is running in parallel.
 
     // 2. Let documentResource be entry's document state's resource.
-    auto document_resource = entry->document_state->resource();
+    auto document_resource = entry->document_state()->resource();
 
     // 3. Let request be a new request, with
     //    url: entry's URL
@@ -685,7 +685,7 @@ static WebIDL::ExceptionOr<Variant<Empty, NavigationParams, NonFetchSchemeNaviga
     //    referrer: entry's document state's request referrer
     //    referrer policy: entry's document state's request referrer policy
     auto request = Fetch::Infrastructure::Request::create(vm);
-    request->set_url(entry->url);
+    request->set_url(entry->url());
     request->set_client(source_snapshot_params.fetch_client);
     request->set_destination(Fetch::Infrastructure::Request::Destination::Document);
     request->set_credentials_mode(Fetch::Infrastructure::Request::CredentialsMode::Include);
@@ -693,7 +693,7 @@ static WebIDL::ExceptionOr<Variant<Empty, NavigationParams, NonFetchSchemeNaviga
     request->set_redirect_mode(Fetch::Infrastructure::Request::RedirectMode::Manual);
     request->set_replaces_client_id(active_document.relevant_settings_object().id);
     request->set_mode(Fetch::Infrastructure::Request::Mode::Navigate);
-    request->set_referrer(entry->document_state->request_referrer());
+    request->set_referrer(entry->document_state()->request_referrer());
 
     // 4. If documentResource is a POST resource, then:
     if (document_resource.has<POSTResource>()) {
@@ -722,11 +722,11 @@ static WebIDL::ExceptionOr<Variant<Empty, NavigationParams, NonFetchSchemeNaviga
     }
 
     // 5. If entry's document state's reload pending is true, then set request's reload-navigation flag.
-    if (entry->document_state->reload_pending())
+    if (entry->document_state()->reload_pending())
         request->set_reload_navigation(true);
 
     // 6. Otherwise, if entry's document state's ever populated is true, then set request's history-navigation flag.
-    if (entry->document_state->ever_populated())
+    if (entry->document_state()->ever_populated())
         request->set_history_navigation(true);
 
     // 7. If sourceSnapshotParams's has transient activation is true, then set request's user-activation to true.
@@ -777,7 +777,7 @@ static WebIDL::ExceptionOr<Variant<Empty, NavigationParams, NonFetchSchemeNaviga
         .url = active_document.url(),
         .origin = active_document.origin(),
         .cross_origin_opener_policy = active_document.cross_origin_opener_policy(),
-        .current_context_is_navigation_source = entry->document_state->initiator_origin().has_value() && active_document.origin().is_same_origin(*entry->document_state->initiator_origin())
+        .current_context_is_navigation_source = entry->document_state()->initiator_origin().has_value() && active_document.origin().is_same_origin(*entry->document_state()->initiator_origin())
     };
 
     // 13. Let finalSandboxFlags be an empty sandboxing flag set.
@@ -856,14 +856,14 @@ static WebIDL::ExceptionOr<Variant<Empty, NavigationParams, NonFetchSchemeNaviga
 
         // 8. If request's body is null, then set entry's document state's resource to null.
         if (!request->body().has<Empty>()) {
-            entry->document_state->set_resource(Empty {});
+            entry->document_state()->set_resource(Empty {});
         }
 
         // FIXME 9. Set responsePolicyContainer to the result of creating a policy container from a fetch response given response and request's reserved client.
         // FIXME 10. Set finalSandboxFlags to the union of targetSnapshotParams's sandboxing flags and responsePolicyContainer's CSP list's CSP-derived sandboxing flags.
 
         // 11. Set responseOrigin to the result of determining the origin given response's URL, finalSandboxFlags, and entry's document state's initiator origin.
-        response_origin = determine_the_origin(*response_holder->response()->url(), final_sandbox_flags, entry->document_state->initiator_origin());
+        response_origin = determine_the_origin(*response_holder->response()->url(), final_sandbox_flags, entry->document_state()->initiator_origin());
 
         // 12. If navigable is a top-level traversable, then:
         if (navigable->is_top_level_traversable()) {
@@ -898,10 +898,10 @@ static WebIDL::ExceptionOr<Variant<Empty, NavigationParams, NonFetchSchemeNaviga
         VERIFY(location_url.value()->is_valid());
 
         // 17. Set entry's classic history API state to StructuredSerializeForStorage(null).
-        entry->classic_history_api_state = MUST(structured_serialize_for_storage(vm, JS::js_null()));
+        entry->set_classic_history_api_state(MUST(structured_serialize_for_storage(vm, JS::js_null())));
 
         // 18. Let oldDocState be entry's document state.
-        auto old_doc_state = entry->document_state;
+        auto old_doc_state = entry->document_state();
 
         // 19. Set entry's document state to a new document state, with
         // history policy container: a clone of the oldDocState's history policy container if it is non-null; null otherwise
@@ -911,19 +911,20 @@ static WebIDL::ExceptionOr<Variant<Empty, NavigationParams, NonFetchSchemeNaviga
         // resource: oldDocState's resource
         // ever populated: oldDocState's ever populated
         // navigable target name: oldDocState's navigable target name
-        entry->document_state = navigable->heap().allocate_without_realm<DocumentState>();
-        entry->document_state->set_history_policy_container(old_doc_state->history_policy_container());
-        entry->document_state->set_request_referrer(old_doc_state->request_referrer());
-        entry->document_state->set_request_referrer_policy(old_doc_state->request_referrer_policy());
-        entry->document_state->set_origin(old_doc_state->origin());
-        entry->document_state->set_resource(old_doc_state->resource());
-        entry->document_state->set_ever_populated(old_doc_state->ever_populated());
-        entry->document_state->set_navigable_target_name(old_doc_state->navigable_target_name());
+        auto new_document_state = navigable->heap().allocate_without_realm<DocumentState>();
+        new_document_state->set_history_policy_container(old_doc_state->history_policy_container());
+        new_document_state->set_request_referrer(old_doc_state->request_referrer());
+        new_document_state->set_request_referrer_policy(old_doc_state->request_referrer_policy());
+        new_document_state->set_origin(old_doc_state->origin());
+        new_document_state->set_resource(old_doc_state->resource());
+        new_document_state->set_ever_populated(old_doc_state->ever_populated());
+        new_document_state->set_navigable_target_name(old_doc_state->navigable_target_name());
+        entry->set_document_state(new_document_state);
 
         // 20. If locationURL's scheme is not an HTTP(S) scheme, then:
         if (!Fetch::Infrastructure::is_http_or_https_scheme(location_url.value()->scheme())) {
             // 1. Set entry's document state's resource to null.
-            entry->document_state->set_resource(Empty {});
+            entry->document_state()->set_resource(Empty {});
 
             // 2. Break.
             break;
@@ -933,7 +934,7 @@ static WebIDL::ExceptionOr<Variant<Empty, NavigationParams, NonFetchSchemeNaviga
         current_url = location_url.value().value();
 
         // 22. Set entry's URL to currentURL.
-        entry->url = current_url;
+        entry->set_url(current_url);
     }
 
     // 20. If locationURL is a URL whose scheme is not a fetch scheme, then return a new non-fetch scheme navigation params, with
@@ -970,7 +971,7 @@ static WebIDL::ExceptionOr<Variant<Empty, NavigationParams, NonFetchSchemeNaviga
 
     // 23. Let resultPolicyContainer be the result of determining navigation params policy container given response's URL,
     //     entry's document state's history policy container, sourceSnapshotParams's source policy container, null, and responsePolicyContainer.
-    Optional<PolicyContainer> history_policy_container = entry->document_state->history_policy_container().visit(
+    Optional<PolicyContainer> history_policy_container = entry->document_state()->history_policy_container().visit(
         [](PolicyContainer const& c) -> Optional<PolicyContainer> { return c; },
         [](DocumentState::Client) -> Optional<PolicyContainer> { return {}; });
     auto result_policy_container = determine_navigation_params_policy_container(*response_holder->response()->url(), history_policy_container, source_snapshot_params.source_policy_container, {}, response_policy_container);
@@ -1007,7 +1008,7 @@ static WebIDL::ExceptionOr<Variant<Empty, NavigationParams, NonFetchSchemeNaviga
         .policy_container = result_policy_container,
         .final_sandboxing_flag_set = final_sandbox_flags,
         .cross_origin_opener_policy = response_coop,
-        .about_base_url = entry->document_state->about_base_url(),
+        .about_base_url = entry->document_state()->about_base_url(),
     };
 
     return navigation_params;
@@ -1035,7 +1036,7 @@ WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(
     [[maybe_unused]] auto current_browsing_context = active_browsing_context();
 
     // 4. Let documentResource be entry's document state's resource.
-    auto document_resource = entry->document_state->resource();
+    auto document_resource = entry->document_state()->resource();
 
     // 5. If navigationParams is null, then:
     if (navigation_params.has<Empty>()) {
@@ -1048,11 +1049,11 @@ WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(
         // 2. Otherwise, if both of the following are true:
         //    - entry's URL's scheme is a fetch scheme; and
         //    - documentResource is null, or allowPOST is true and documentResource's request body is not failure (FIXME: check if request body is not failure)
-        else if (Fetch::Infrastructure::is_fetch_scheme(entry->url.scheme()) && (document_resource.has<Empty>() || allow_POST)) {
+        else if (Fetch::Infrastructure::is_fetch_scheme(entry->url().scheme()) && (document_resource.has<Empty>() || allow_POST)) {
             navigation_params = TRY(create_navigation_params_by_fetching(entry, this, source_snapshot_params, target_snapshot_params, csp_navigation_type, navigation_id));
         }
         // 3. Otherwise, if entry's URL's scheme is not a fetch scheme, then set navigationParams to a new non-fetch scheme navigation params, with:
-        else if (!Fetch::Infrastructure::is_fetch_scheme(entry->url.scheme())) {
+        else if (!Fetch::Infrastructure::is_fetch_scheme(entry->url().scheme())) {
             // - id: navigationId
             // - navigable: navigable
             // - URL: entry's URL
@@ -1063,10 +1064,10 @@ WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(
             navigation_params = NonFetchSchemeNavigationParams {
                 .id = navigation_id,
                 .navigable = this,
-                .url = entry->url,
+                .url = entry->url(),
                 .target_snapshot_sandboxing_flags = target_snapshot_params.sandboxing_flags,
                 .source_snapshot_has_transient_activation = source_snapshot_params.has_transient_activation,
-                .initiator_origin = *entry->document_state->initiator_origin(),
+                .initiator_origin = *entry->document_state()->initiator_origin(),
             };
         }
     }
@@ -1095,9 +1096,9 @@ WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(
         if (navigation_params.has<NonFetchSchemeNavigationParams>()) {
             // FIXME: https://github.com/whatwg/html/issues/9767
             // We probably are expected to skip to steps 13 and 14 and return after doing this
-            entry->document_state->set_document(attempt_to_create_a_non_fetch_scheme_document(navigation_params.get<NonFetchSchemeNavigationParams>()));
-            if (entry->document_state->document()) {
-                entry->document_state->set_ever_populated(true);
+            entry->document_state()->set_document(attempt_to_create_a_non_fetch_scheme_document(navigation_params.get<NonFetchSchemeNavigationParams>()));
+            if (entry->document_state()->document()) {
+                entry->document_state()->set_ever_populated(true);
             }
             completion_steps();
             return;
@@ -1122,15 +1123,15 @@ WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(
             // 1. Set entry's document state's document to the result of creating a document for inline content that doesn't have a DOM, given navigable, null, and navTimingType.
             //    The inline content should indicate to the user the sort of error that occurred.
             // FIXME: Add error message to generated error page
-            auto error_html = load_error_page(entry->url).release_value_but_fixme_should_propagate_errors();
-            entry->document_state->set_document(create_document_for_inline_content(this, navigation_id, [error_html](auto& document) {
+            auto error_html = load_error_page(entry->url()).release_value_but_fixme_should_propagate_errors();
+            entry->document_state()->set_document(create_document_for_inline_content(this, navigation_id, [error_html](auto& document) {
                 auto parser = HTML::HTMLParser::create(document, error_html, "utf-8");
                 document.set_url(URL::URL("about:error"));
                 parser->run();
             }));
 
             // 2. Set entry's document state's document's salvageable to false.
-            entry->document_state->document()->set_salvageable(false);
+            entry->document_state()->document()->set_salvageable(false);
 
             // FIXME: 3. If navigationParams is not null, then:
             if (!navigation_params.has<Empty>()) {
@@ -1162,10 +1163,10 @@ WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(
             }
 
             // 3. Set entry's document state's document to document.
-            entry->document_state->set_document(document.ptr());
+            entry->document_state()->set_document(document.ptr());
 
             // 4. Set entry's document state's origin to document's origin.
-            entry->document_state->set_origin(document->origin());
+            entry->document_state()->set_origin(document->origin());
         }
 
         // FIXME: 12. If entry's document state's request referrer is "client", then set it to request's referrer.
@@ -1173,8 +1174,8 @@ WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(
         //     What is "request" here?
 
         // 13. If entry's document state's document is not null, then set entry's document state's ever populated to true.
-        if (entry->document_state->document()) {
-            entry->document_state->set_ever_populated(true);
+        if (entry->document_state()->document()) {
+            entry->document_state()->set_ever_populated(true);
         }
 
         // 14. Run completionSteps.
@@ -1273,7 +1274,7 @@ WebIDL::ExceptionOr<void> Navigable::navigate(NavigateParams params)
     //    - url's fragment is non-null
     if (document_resource.has<Empty>()
         && !response
-        && url.equals(active_session_history_entry()->url, URL::ExcludeFragment::Yes)
+        && url.equals(active_session_history_entry()->url(), URL::ExcludeFragment::Yes)
         && url.fragment().has_value()) {
         // 1. Navigate to a fragment given navigable, url, historyHandling, userInvolvement, navigationAPIState, and navigationId.
         TRY(navigate_to_a_fragment(url, to_history_handling_behavior(history_handling), user_involvement, navigation_api_state, navigation_id));
@@ -1402,8 +1403,8 @@ WebIDL::ExceptionOr<void> Navigable::navigate(NavigateParams params)
 
         // 6. Let historyEntry be a new session history entry, with its URL set to url and its document state set to documentState.
         JS::NonnullGCPtr<SessionHistoryEntry> history_entry = *heap().allocate_without_realm<SessionHistoryEntry>();
-        history_entry->url = url;
-        history_entry->document_state = document_state;
+        history_entry->set_url(url);
+        history_entry->set_document_state(document_state);
 
         // 7. Let navigationParams be null.
         Variant<Empty, NavigationParams, NonFetchSchemeNavigationParams> navigation_params = Empty {};
@@ -1445,7 +1446,7 @@ WebIDL::ExceptionOr<void> Navigable::navigate_to_a_fragment(URL::URL const& url,
 
     // 2. Let destinationNavigationAPIState be navigable's active session history entry's navigation API state.
     // 3. If navigationAPIState is not null, then set destinationNavigationAPIState to navigationAPIState.
-    auto destination_navigation_api_state = navigation_api_state.has_value() ? *navigation_api_state : active_session_history_entry()->navigation_api_state;
+    auto destination_navigation_api_state = navigation_api_state.has_value() ? *navigation_api_state : active_session_history_entry()->navigation_api_state();
 
     // 4. Let continue be the result of firing a push/replace/reload navigate event at navigation with navigationType set to historyHandling, isSameDocument set to true,
     //    userInvolvement set to userInvolvement, and destinationURL set to url, and navigationAPIState set to destinationNavigationAPIState.
@@ -1462,10 +1463,10 @@ WebIDL::ExceptionOr<void> Navigable::navigate_to_a_fragment(URL::URL const& url,
     //      navigation API state: destinationNavigationAPIState
     //      scroll restoration mode: navigable's active session history entry's scroll restoration mode
     JS::NonnullGCPtr<SessionHistoryEntry> history_entry = heap().allocate_without_realm<SessionHistoryEntry>();
-    history_entry->url = url;
-    history_entry->document_state = active_session_history_entry()->document_state;
-    history_entry->navigation_api_state = destination_navigation_api_state;
-    history_entry->scroll_restoration_mode = active_session_history_entry()->scroll_restoration_mode;
+    history_entry->set_url(url);
+    history_entry->set_document_state(active_session_history_entry()->document_state());
+    history_entry->set_navigation_api_state(destination_navigation_api_state);
+    history_entry->set_scroll_restoration_mode(active_session_history_entry()->scroll_restoration_mode());
 
     // 7. Let entryToReplace be navigable's active session history entry if historyHandling is "replace", otherwise null.
     auto entry_to_replace = history_handling == HistoryHandlingBehavior::Replace ? active_session_history_entry() : nullptr;
@@ -1658,7 +1659,7 @@ WebIDL::ExceptionOr<void> Navigable::navigate_to_a_javascript_url(URL::URL const
     auto entry_to_replace = active_session_history_entry();
 
     // 10. Let oldDocState be entryToReplace's document state.
-    auto old_doc_state = entry_to_replace->document_state;
+    auto old_doc_state = entry_to_replace->document_state();
 
     // 11. Let documentState be a new document state with
     //     document: newDocument
@@ -1686,8 +1687,8 @@ WebIDL::ExceptionOr<void> Navigable::navigate_to_a_javascript_url(URL::URL const
     //     URL: entryToReplace's URL
     //     document state: documentState
     JS::NonnullGCPtr<SessionHistoryEntry> history_entry = *heap().allocate_without_realm<SessionHistoryEntry>();
-    history_entry->url = entry_to_replace->url;
-    history_entry->document_state = document_state;
+    history_entry->set_url(entry_to_replace->url());
+    history_entry->set_document_state(document_state);
 
     // 13. Append session history traversal steps to targetNavigable's traversable to finalize a cross-document navigation with targetNavigable, historyHandling, and historyEntry.
     traversable_navigable()->append_session_history_traversal_steps([this, history_entry, history_handling, navigation_id] {
@@ -1701,7 +1702,7 @@ WebIDL::ExceptionOr<void> Navigable::navigate_to_a_javascript_url(URL::URL const
 void Navigable::reload()
 {
     // 1. Set navigable's active session history entry's document state's reload pending to true.
-    active_session_history_entry()->document_state->set_reload_pending(true);
+    active_session_history_entry()->document_state()->set_reload_pending(true);
 
     // 2. Let traversable be navigable's traversable navigable.
     auto traversable = traversable_navigable();
@@ -1804,7 +1805,7 @@ void finalize_a_cross_document_navigation(JS::NonnullGCPtr<Navigable> navigable,
     navigable->set_delaying_load_events(false);
 
     // 3. If historyEntry's document is null, then return.
-    if (!history_entry->document_state->document())
+    if (!history_entry->document_state()->document())
         return;
 
     // 4. If all of the following are true:
@@ -1812,8 +1813,8 @@ void finalize_a_cross_document_navigation(JS::NonnullGCPtr<Navigable> navigable,
     //    - historyEntry's document's browsing context is not an auxiliary browsing context whose opener browsing context is non-null; and
     //    - historyEntry's document's origin is not navigable's active document's origin
     //    then set historyEntry's document state's navigable target name to the empty string.
-    if (navigable->parent() == nullptr && history_entry->document_state->document()->browsing_context()->opener_browsing_context() != nullptr && history_entry->document_state->document()->origin() != navigable->active_document()->origin())
-        history_entry->document_state->set_navigable_target_name(String {});
+    if (navigable->parent() == nullptr && history_entry->document_state()->document()->browsing_context()->opener_browsing_context() != nullptr && history_entry->document_state()->document()->origin() != navigable->active_document()->origin())
+        history_entry->document_state()->set_navigable_target_name(String {});
 
     // 5. Let entryToReplace be navigable's active session history entry if historyHandling is "replace", otherwise null.
     auto entry_to_replace = history_handling == HistoryHandlingBehavior::Replace ? navigable->active_session_history_entry() : nullptr;
@@ -1836,7 +1837,7 @@ void finalize_a_cross_document_navigation(JS::NonnullGCPtr<Navigable> navigable,
         target_step = traversable->current_session_history_step() + 1;
 
         // 3. Set historyEntry's step to targetStep.
-        history_entry->step = target_step;
+        history_entry->set_step(target_step);
 
         // 4. Append historyEntry to targetEntries.
         target_entries.append(history_entry);
@@ -1845,12 +1846,12 @@ void finalize_a_cross_document_navigation(JS::NonnullGCPtr<Navigable> navigable,
         *(target_entries.find(*entry_to_replace)) = history_entry;
 
         // 2. Set historyEntry's step to entryToReplace's step.
-        history_entry->step = entry_to_replace->step;
+        history_entry->set_step(entry_to_replace->step());
 
         // 3. If historyEntry's document state's origin is same origin with entryToReplace's document state's origin,
         //    then set historyEntry's navigation API key to entryToReplace's navigation API key.
-        if (history_entry->document_state->origin().has_value() && entry_to_replace->document_state->origin().has_value() && history_entry->document_state->origin()->is_same_origin(*entry_to_replace->document_state->origin())) {
-            history_entry->navigation_api_key = entry_to_replace->navigation_api_key;
+        if (history_entry->document_state()->origin().has_value() && entry_to_replace->document_state()->origin().has_value() && history_entry->document_state()->origin()->is_same_origin(*entry_to_replace->document_state()->origin())) {
+            history_entry->set_navigation_api_key(entry_to_replace->navigation_api_key());
         }
 
         // 4. Set targetStep to traversable's current session history step.
@@ -1878,10 +1879,10 @@ void perform_url_and_history_update_steps(DOM::Document& document, URL::URL new_
     //      scroll restoration mode: activeEntry's scroll restoration mode
     // FIXME: persisted user state: activeEntry's persisted user state
     JS::NonnullGCPtr<SessionHistoryEntry> new_entry = document.heap().allocate_without_realm<SessionHistoryEntry>();
-    new_entry->url = new_url;
-    new_entry->classic_history_api_state = serialized_data.value_or(active_entry->classic_history_api_state);
-    new_entry->document_state = active_entry->document_state;
-    new_entry->scroll_restoration_mode = active_entry->scroll_restoration_mode;
+    new_entry->set_url(new_url);
+    new_entry->set_classic_history_api_state(serialized_data.value_or(active_entry->classic_history_api_state()));
+    new_entry->set_document_state(active_entry->document_state());
+    new_entry->set_scroll_restoration_mode(active_entry->scroll_restoration_mode());
 
     // 4. If document's is initial about:blank is true, then set historyHandling to "replace".
     if (document.is_initial_about_blank()) {

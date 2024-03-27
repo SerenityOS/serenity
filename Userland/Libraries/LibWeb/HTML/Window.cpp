@@ -866,7 +866,7 @@ void Window::set_name(String const& name)
         return;
 
     // 2. Set this's navigable's active session history entry's document state's navigable target name to the given value.
-    navigable()->active_session_history_entry()->document_state->set_navigable_target_name(name);
+    navigable()->active_session_history_entry()->document_state()->set_navigable_target_name(name);
 }
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-window-status

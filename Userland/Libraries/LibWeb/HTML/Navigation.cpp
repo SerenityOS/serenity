@@ -140,7 +140,7 @@ WebIDL::ExceptionOr<void> Navigation::update_current_entry(NavigationUpdateCurre
     auto serialized_state = TRY(structured_serialize_for_storage(vm(), options.state));
 
     // 4. Set current's session history entry's navigation API state to serializedState.
-    current->session_history_entry().navigation_api_state = serialized_state;
+    current->session_history_entry().set_navigation_api_state(serialized_state);
 
     // 5. Fire an event named currententrychange at this using NavigationCurrentEntryChangeEvent,
     //    with its navigationType attribute initialized to null and its from initialized to current.
@@ -310,7 +310,7 @@ WebIDL::ExceptionOr<NavigationResult> Navigation::reload(NavigationReloadOptions
 
         // 2. If current is not null, then set serializedState to current's session history entry's navigation API state.
         if (current != nullptr)
-            serialized_state = current->session_history_entry().navigation_api_state;
+            serialized_state = current->session_history_entry().navigation_api_state();
     }
 
     // 5. If document is not fully active, then return an early error result for an "InvalidStateError" DOMException.
@@ -347,7 +347,7 @@ WebIDL::ExceptionOr<NavigationResult> Navigation::traverse_to(String key, Naviga
     // 2. If this's entry list does not contain a NavigationHistoryEntry whose session history entry's navigation API key equals key,
     //    then return an early error result for an "InvalidStateError" DOMException.
     auto it = m_entry_list.find_if([&key](auto const& entry) {
-        return entry->session_history_entry().navigation_api_key == key;
+        return entry->session_history_entry().navigation_api_key() == key;
     });
     if (it == m_entry_list.end())
         return early_error_result(WebIDL::InvalidStateError::create(realm, "Cannot traverseTo: key not found in session history list"_fly_string));
@@ -367,7 +367,7 @@ WebIDL::ExceptionOr<NavigationResult> Navigation::back(NavigationOptions const& 
         return early_error_result(WebIDL::InvalidStateError::create(realm, "Cannot navigate back: no previous session history entry"_fly_string));
 
     // 2. Let key be this's entry list[this's current entry index − 1]'s session history entry's navigation API key.
-    auto key = m_entry_list[m_current_entry_index - 1]->session_history_entry().navigation_api_key;
+    auto key = m_entry_list[m_current_entry_index - 1]->session_history_entry().navigation_api_key();
 
     // 3. Return the result of performing a navigation API traversal given this, key, and options.
     return perform_a_navigation_api_traversal(key, options);
@@ -385,7 +385,7 @@ WebIDL::ExceptionOr<NavigationResult> Navigation::forward(NavigationOptions cons
         return early_error_result(WebIDL::InvalidStateError::create(realm, "Cannot navigate forward: no next session history entry"_fly_string));
 
     // 2. Let key be this's entry list[this's current entry index + 1]'s session history entry's navigation API key.
-    auto key = m_entry_list[m_current_entry_index + 1]->session_history_entry().navigation_api_key;
+    auto key = m_entry_list[m_current_entry_index + 1]->session_history_entry().navigation_api_key();
 
     // 3. Return the result of performing a navigation API traversal given this, key, and options.
     return perform_a_navigation_api_traversal(key, options);
@@ -622,7 +622,7 @@ WebIDL::ExceptionOr<NavigationResult> Navigation::perform_a_navigation_api_trave
 
     // 5. If key equals current's session history entry's navigation API key, then return
     //    «[ "committed" → a promise resolved with current, "finished" → a promise resolved with current ]».
-    if (key == current->session_history_entry().navigation_api_key) {
+    if (key == current->session_history_entry().navigation_api_key()) {
         return NavigationResult {
             .committed = WebIDL::create_resolved_promise(realm, current)->promise(),
             .finished = WebIDL::create_resolved_promise(realm, current)->promise()
@@ -656,7 +656,7 @@ WebIDL::ExceptionOr<NavigationResult> Navigation::perform_a_navigation_api_trave
 
         // 2. Let targetSHE be the session history entry in navigableSHEs whose navigation API key is key. If no such entry exists, then:
         auto it = navigable_shes.find_if([&key](auto const& entry) {
-            return entry->navigation_api_key == key;
+            return entry->navigation_api_key() == key;
         });
         if (it == navigable_shes.end()) {
             // NOTE: This path is taken if navigation's entry list was outdated compared to navigableSHEs,
@@ -684,7 +684,7 @@ WebIDL::ExceptionOr<NavigationResult> Navigation::perform_a_navigation_api_trave
 
         // 4. Let result be the result of applying the traverse history step given by targetSHE's step to traversable,
         //    given sourceSnapshotParams, navigable, and "none".
-        auto result = traversable->apply_the_traverse_history_step(target_she->step.get<int>(), source_snapshot_params, navigable, UserNavigationInvolvement::None);
+        auto result = traversable->apply_the_traverse_history_step(target_she->step().get<int>(), source_snapshot_params, navigable, UserNavigationInvolvement::None);
 
         // NOTE: When result is "canceled-by-beforeunload" or "initiator-disallowed", the navigate event was never fired,
         //       aborting the ongoing navigation would not be correct; it would result in a navigateerror event without a
@@ -885,7 +885,7 @@ void Navigation::notify_about_the_committed_to_entry(JS::NonnullGCPtr<Navigation
     if (api_method_tracker->serialized_state.has_value()) {
         // NOTE: At this point, apiMethodTracker's serialized state is no longer needed.
         //       Implementations might want to clear it out to avoid keeping it alive for the lifetime of the navigation API method tracker.
-        nhe->session_history_entry().navigation_api_state = *api_method_tracker->serialized_state;
+        nhe->session_history_entry().set_navigation_api_state(*api_method_tracker->serialized_state);
         api_method_tracker->serialized_state = {};
     }
 
@@ -1244,7 +1244,7 @@ bool Navigation::fire_a_traverse_navigate_event(JS::NonnullGCPtr<SessionHistoryE
     auto destination = NavigationDestination::create(realm);
 
     // 4. Set destination's URL to destinationSHE's URL.
-    destination->set_url(destination_she->url);
+    destination->set_url(destination_she->url());
 
     // 5. Let destinationNHE be the NavigationHistoryEntry in navigation's entry list whose session history entry is destinationSHE,
     //    or null if no such NavigationHistoryEntry exists.
@@ -1258,7 +1258,7 @@ bool Navigation::fire_a_traverse_navigate_event(JS::NonnullGCPtr<SessionHistoryE
         destination->set_entry(*destination_nhe);
 
         // 2. Set destination's state to destinationSHE's navigation API state.
-        destination->set_state(destination_she->navigation_api_state);
+        destination->set_state(destination_she->navigation_api_state());
     }
 
     // 7. Otherwise:
@@ -1272,7 +1272,7 @@ bool Navigation::fire_a_traverse_navigate_event(JS::NonnullGCPtr<SessionHistoryE
 
     // 8. Set destination's is same document to true if destinationSHE's document is equal to
     //    navigation's relevant global object's associated Document; otherwise false.
-    destination->set_is_same_document(destination_she->document_state->document() == &verify_cast<Window>(relevant_global_object(*this)).associated_document());
+    destination->set_is_same_document(destination_she->document_state()->document() == &verify_cast<Window>(relevant_global_object(*this)).associated_document());
 
     // 9. Return the result of performing the inner navigate event firing algorithm given navigation, "traverse", event, destination, userInvolvement, null, and null.
     // AD-HOC: We don't pass the event, but we do pass the classic_history_api state at the end to be set later

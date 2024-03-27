@@ -59,13 +59,13 @@ WebIDL::ExceptionOr<Optional<String>> NavigationHistoryEntry::url() const
 
     // 4. If she's document does not equal document, and she's document state's request referrer policy
     //    is "no-referrer" or "origin", then return null.
-    if ((she->document_state->document() != &document)
-        && (she->document_state->request_referrer_policy() == ReferrerPolicy::ReferrerPolicy::NoReferrer
-            || she->document_state->request_referrer_policy() == ReferrerPolicy::ReferrerPolicy::Origin))
+    if ((she->document_state()->document() != &document)
+        && (she->document_state()->request_referrer_policy() == ReferrerPolicy::ReferrerPolicy::NoReferrer
+            || she->document_state()->request_referrer_policy() == ReferrerPolicy::ReferrerPolicy::Origin))
         return OptionalNone {};
 
     // 5. Return she's URL, serialized.
-    return TRY_OR_THROW_OOM(vm(), String::from_byte_string(she->url.serialize()));
+    return TRY_OR_THROW_OOM(vm(), String::from_byte_string(she->url().serialize()));
 }
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#concept-navigationhistoryentry-key
@@ -78,7 +78,7 @@ String NavigationHistoryEntry::key() const
         return {};
 
     // 2. Return nhe's session history entry's navigation API key.
-    return m_session_history_entry->navigation_api_key;
+    return m_session_history_entry->navigation_api_key();
 }
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#concept-navigationhistoryentry-id
@@ -91,7 +91,7 @@ String NavigationHistoryEntry::id() const
         return {};
 
     // 2. Return nhe's session history entry's navigation API ID.
-    return m_session_history_entry->navigation_api_id;
+    return m_session_history_entry->navigation_api_id();
 }
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#concept-navigationhistoryentry-index
@@ -120,7 +120,7 @@ bool NavigationHistoryEntry::same_document() const
         return false;
 
     // 3. Return true if this's session history entry's document equals document, and false otherwise.
-    return m_session_history_entry->document_state->document() == &document;
+    return m_session_history_entry->document_state()->document() == &document;
 }
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-navigationhistoryentry-getstate
@@ -135,7 +135,7 @@ WebIDL::ExceptionOr<JS::Value> NavigationHistoryEntry::get_state()
     // 2. Return StructuredDeserialize(this's session history entry's navigation API state). Rethrow any exceptions.
     //    NOTE: This can in theory throw an exception, if attempting to deserialize a large ArrayBuffer
     //          when not enough memory is available.
-    return structured_deserialize(vm(), m_session_history_entry->navigation_api_state, realm(), {});
+    return structured_deserialize(vm(), m_session_history_entry->navigation_api_state(), realm(), {});
 }
 
 void NavigationHistoryEntry::set_ondispose(WebIDL::CallbackType* event_handler)
