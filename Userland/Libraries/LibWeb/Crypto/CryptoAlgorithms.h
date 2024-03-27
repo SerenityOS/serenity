@@ -117,6 +117,22 @@ struct RsaOaepParams : public AlgorithmParams {
 
     static JS::ThrowCompletionOr<NonnullOwnPtr<AlgorithmParams>> from_value(JS::VM&, JS::Value);
 };
+
+// https://w3c.github.io/webcrypto/#dfn-EcdsaParams
+struct EcdsaParams : public AlgorithmParams {
+    virtual ~EcdsaParams() override;
+
+    EcdsaParams(String name, HashAlgorithmIdentifier hash)
+        : AlgorithmParams(move(name))
+        , hash(move(hash))
+    {
+    }
+
+    HashAlgorithmIdentifier hash;
+
+    static JS::ThrowCompletionOr<NonnullOwnPtr<AlgorithmParams>> from_value(JS::VM&, JS::Value);
+};
+
 // https://w3c.github.io/webcrypto/#dfn-EcKeyGenParams
 struct EcKeyGenParams : public AlgorithmParams {
     virtual ~EcKeyGenParams() override;
@@ -229,6 +245,8 @@ private:
 
 class ECDSA : public AlgorithmMethods {
 public:
+    virtual WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::ArrayBuffer>> sign(AlgorithmParams const&, JS::NonnullGCPtr<CryptoKey>, ByteBuffer const&) override;
+
     virtual WebIDL::ExceptionOr<Variant<JS::NonnullGCPtr<CryptoKey>, JS::NonnullGCPtr<CryptoKeyPair>>> generate_key(AlgorithmParams const&, bool, Vector<Bindings::KeyUsage> const&) override;
 
     static NonnullOwnPtr<AlgorithmMethods> create(JS::Realm& realm) { return adopt_own(*new ECDSA(realm)); }

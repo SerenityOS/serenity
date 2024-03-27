@@ -345,6 +345,29 @@ JS::ThrowCompletionOr<NonnullOwnPtr<AlgorithmParams>> RsaOaepParams::from_value(
 
     return adopt_own<AlgorithmParams>(*new RsaOaepParams { name, move(label) });
 }
+
+EcdsaParams::~EcdsaParams() = default;
+
+JS::ThrowCompletionOr<NonnullOwnPtr<AlgorithmParams>> EcdsaParams::from_value(JS::VM& vm, JS::Value value)
+{
+    auto& object = value.as_object();
+
+    auto name_value = TRY(object.get("name"));
+    auto name = TRY(name_value.to_string(vm));
+
+    auto hash_value = TRY(object.get("hash"));
+    auto hash = Variant<Empty, HashAlgorithmIdentifier> { Empty {} };
+    if (hash_value.is_string()) {
+        auto hash_string = TRY(hash_value.to_string(vm));
+        hash = HashAlgorithmIdentifier { hash_string };
+    } else {
+        auto hash_object = TRY(hash_value.to_object(vm));
+        hash = HashAlgorithmIdentifier { hash_object };
+    }
+
+    return adopt_own<AlgorithmParams>(*new EcdsaParams { name, hash.get<HashAlgorithmIdentifier>() });
+}
+
 EcKeyGenParams::~EcKeyGenParams() = default;
 
 JS::ThrowCompletionOr<NonnullOwnPtr<AlgorithmParams>> EcKeyGenParams::from_value(JS::VM& vm, JS::Value value)
@@ -1041,6 +1064,44 @@ WebIDL::ExceptionOr<Variant<JS::NonnullGCPtr<CryptoKey>, JS::NonnullGCPtr<Crypto
     // 22. Set the privateKey attribute of result to be privateKey.
     // 23. Return the result of converting result to an ECMAScript Object, as defined by [WebIDL].
     return Variant<JS::NonnullGCPtr<CryptoKey>, JS::NonnullGCPtr<CryptoKeyPair>> { CryptoKeyPair::create(m_realm, public_key, private_key) };
+}
+
+// https://w3c.github.io/webcrypto/#ecdsa-operations
+WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::ArrayBuffer>> ECDSA::sign(AlgorithmParams const& params, JS::NonnullGCPtr<CryptoKey> key, ByteBuffer const& message)
+{
+    auto& realm = m_realm;
+    auto& vm = realm.vm();
+    auto const& normalized_algorithm = static_cast<EcdsaParams const&>(params);
+
+    (void)vm;
+    (void)message;
+
+    // 1. If the [[type]] internal slot of key is not "private", then throw an InvalidAccessError.
+    if (key->type() != Bindings::KeyType::Private)
+        return WebIDL::InvalidAccessError::create(realm, "Key is not a private key"_fly_string);
+
+    // 2. Let hashAlgorithm be the hash member of normalizedAlgorithm.
+    [[maybe_unused]] auto const& hash_algorithm = normalized_algorithm.hash;
+
+    // NOTE: We dont have sign() on the SECPxxxr1 curves, so we can't implement this yet
+    // FIXME: 3. Let M be the result of performing the digest operation specified by hashAlgorithm using message.
+    // FIXME: 4. Let d be the ECDSA private key associated with key.
+    // FIXME: 5. Let params be the EC domain parameters associated with key.
+    // FIXME: 6. If the namedCurve attribute of the [[algorithm]] internal slot of key is "P-256", "P-384" or "P-521":
+
+    // FIXME: 1. Perform the ECDSA signing process, as specified in [RFC6090], Section 5.4, with M as the message, using params as the EC domain parameters, and with d as the private key.
+    // FIXME: 2. Let r and s be the pair of integers resulting from performing the ECDSA signing process.
+    // FIXME: 3. Let result be an empty byte sequence.
+    // FIXME: 4. Let n be the smallest integer such that n * 8 is greater than the logarithm to base 2 of the order of the base point of the elliptic curve identified by params.
+    // FIXME: 5. Convert r to an octet string of length n and append this sequence of bytes to result.
+    // FIXME: 6. Convert s to an octet string of length n and append this sequence of bytes to result.
+
+    // FIXME: Otherwise, the namedCurve attribute of the [[algorithm]] internal slot of key is a value specified in an applicable specification:
+    // FIXME: Perform the ECDSA signature steps specified in that specification, passing in M, params and d and resulting in result.
+
+    // NOTE: The spec jumps to 9 here for some reason
+    // FIXME: 9. Return the result of creating an ArrayBuffer containing result.
+    return WebIDL::NotSupportedError::create(realm, "ECDSA signing is not supported yet"_fly_string);
 }
 
 }
