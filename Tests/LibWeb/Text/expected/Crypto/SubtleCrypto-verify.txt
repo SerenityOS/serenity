@@ -1,0 +1,2 @@
+FIXME: This will fail as we dont support ECDSA sign()
+FAIL: Verification not ok

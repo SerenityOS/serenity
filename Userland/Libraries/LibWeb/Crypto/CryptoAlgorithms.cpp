@@ -1104,4 +1104,110 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::ArrayBuffer>> ECDSA::sign(AlgorithmPara
     return WebIDL::NotSupportedError::create(realm, "ECDSA signing is not supported yet"_fly_string);
 }
 
+// https://w3c.github.io/webcrypto/#ecdsa-operations
+WebIDL::ExceptionOr<JS::Value> ECDSA::verify(AlgorithmParams const& params, JS::NonnullGCPtr<CryptoKey> key, ByteBuffer const& signature, ByteBuffer const& message)
+{
+    auto& realm = m_realm;
+    auto const& normalized_algorithm = static_cast<EcdsaParams const&>(params);
+
+    // 1. If the [[type]] internal slot of key is not "public", then throw an InvalidAccessError.
+    if (key->type() != Bindings::KeyType::Public)
+        return WebIDL::InvalidAccessError::create(realm, "Key is not a public key"_fly_string);
+
+    // 2. Let hashAlgorithm be the hash member of normalizedAlgorithm.
+    [[maybe_unused]] auto const& hash_algorithm = TRY(normalized_algorithm.hash.visit(
+        [](String const& name) -> JS::ThrowCompletionOr<String> { return name; },
+        [&](JS::Handle<JS::Object> const& obj) -> JS::ThrowCompletionOr<String> {
+                        auto name_property = TRY(obj->get("name"));
+                        return name_property.to_string(m_realm.vm()); }));
+
+    // 3. Let M be the result of performing the digest operation specified by hashAlgorithm using message.
+    ::Crypto::Hash::HashKind hash_kind;
+    if (hash_algorithm.equals_ignoring_ascii_case("SHA-1"sv)) {
+        hash_kind = ::Crypto::Hash::HashKind::SHA1;
+    } else if (hash_algorithm.equals_ignoring_ascii_case("SHA-256"sv)) {
+        hash_kind = ::Crypto::Hash::HashKind::SHA256;
+    } else if (hash_algorithm.equals_ignoring_ascii_case("SHA-384"sv)) {
+        hash_kind = ::Crypto::Hash::HashKind::SHA384;
+    } else if (hash_algorithm.equals_ignoring_ascii_case("SHA-512"sv)) {
+        hash_kind = ::Crypto::Hash::HashKind::SHA512;
+    } else {
+        return WebIDL::NotSupportedError::create(m_realm, MUST(String::formatted("Invalid hash function '{}'", hash_algorithm)));
+    }
+    ::Crypto::Hash::Manager hash { hash_kind };
+    hash.update(message);
+    auto digest = hash.digest();
+
+    auto result_buffer = ByteBuffer::copy(digest.immutable_data(), hash.digest_size());
+    if (result_buffer.is_error())
+        return WebIDL::OperationError::create(m_realm, "Failed to create result buffer"_fly_string);
+
+    auto M = result_buffer.release_value();
+
+    // 4. Let Q be the ECDSA public key associated with key.
+    auto Q = key->handle().visit(
+        [](ByteBuffer data) -> ByteBuffer {
+            return data;
+        },
+        [](auto) -> ByteBuffer { VERIFY_NOT_REACHED(); });
+
+    // FIXME: 5. Let params be the EC domain parameters associated with key.
+
+    // 6. If the namedCurve attribute of the [[algorithm]] internal slot of key is "P-256", "P-384" or "P-521":
+    auto const& internal_algorithm = static_cast<EcKeyAlgorithm const&>(*key->algorithm());
+    auto const& named_curve = internal_algorithm.named_curve();
+
+    auto result = false;
+
+    Variant<Empty, ::Crypto::Curves::SECP256r1, ::Crypto::Curves::SECP384r1> curve;
+    if (named_curve.is_one_of("P-256"sv, "P-384"sv, "P-521"sv)) {
+        if (named_curve.equals_ignoring_ascii_case("P-256"sv))
+            curve = ::Crypto::Curves::SECP256r1 {};
+
+        if (named_curve.equals_ignoring_ascii_case("P-384"sv))
+            curve = ::Crypto::Curves::SECP384r1 {};
+
+        // FIXME: Support P-521
+        if (named_curve.equals_ignoring_ascii_case("P-521"sv))
+            return WebIDL::NotSupportedError::create(m_realm, "'P-521' is not supported yet"_fly_string);
+
+        // Perform the ECDSA verifying process, as specified in [RFC6090], Section 5.3,
+        // with M as the received message,
+        // signature as the received signature
+        // and using params as the EC domain parameters,
+        // and Q as the public key.
+
+        // NOTE: verify() takes the signature in X.509 format but JS uses IEEE P1363 format, so we need to convert it
+        // FIXME: Dont construct an ASN1 object here just to pass it to verify
+        auto half_size = signature.size() / 2;
+        auto r = ::Crypto::UnsignedBigInteger::import_data(signature.data(), half_size);
+        auto s = ::Crypto::UnsignedBigInteger::import_data(signature.data() + half_size, half_size);
+
+        ::Crypto::ASN1::Encoder encoder;
+        (void)encoder.write_constructed(::Crypto::ASN1::Class::Universal, ::Crypto::ASN1::Kind::Sequence, [&] {
+            (void)encoder.write(r);
+            (void)encoder.write(s);
+        });
+        auto encoded_signature = encoder.finish();
+
+        auto maybe_result = curve.visit(
+            [](Empty const&) -> ErrorOr<bool> { return Error::from_string_view("Failed to create valid crypto instance"sv); },
+            [&](auto instance) { return instance.verify(M, Q, encoded_signature); });
+
+        if (maybe_result.is_error()) {
+            auto error_message = MUST(FlyString::from_utf8(maybe_result.error().string_literal()));
+            return WebIDL::OperationError::create(m_realm, error_message);
+        }
+
+        result = maybe_result.release_value();
+    } else {
+        // FIXME: Otherwise, the namedCurve attribute of the [[algorithm]] internal slot of key is a value specified in an applicable specification:
+        // FIXME: Perform the ECDSA verification steps specified in that specification passing in M, signature, params and Q and resulting in an indication of whether or not the purported signature is valid.
+    }
+
+    // 9. Let result be a boolean with the value true if the signature is valid and the value false otherwise.
+    // 10. Return result.
+    return JS::Value(result);
+}
+
 }
