@@ -598,6 +598,13 @@ ErrorOr<void> ftruncate(int fd, off_t length)
     return {};
 }
 
+ErrorOr<void> fsync(int fd)
+{
+    if (::fsync(fd) < 0)
+        return Error::from_syscall("fsync"sv, -errno);
+    return {};
+}
+
 ErrorOr<struct stat> stat(StringView path)
 {
     if (!path.characters_without_null_termination())

@@ -127,6 +127,7 @@ ErrorOr<int> open(StringView path, int options, mode_t mode = 0);
 ErrorOr<int> openat(int fd, StringView path, int options, mode_t mode = 0);
 ErrorOr<void> close(int fd);
 ErrorOr<void> ftruncate(int fd, off_t length);
+ErrorOr<void> fsync(int fd);
 ErrorOr<struct stat> stat(StringView path);
 ErrorOr<struct stat> lstat(StringView path);
 ErrorOr<ssize_t> read(int fd, Bytes buffer);
