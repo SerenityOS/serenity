@@ -91,6 +91,21 @@ void SVGPathPaintable::paint(PaintContext& context, PaintPhase phase) const
         return Gfx::FloatRect { { 0, 0 }, svg_element_rect.size().to_type<float>() };
     }();
 
+    if (context.draw_svg_geometry_for_clip_path()) {
+        // https://drafts.fxtf.org/css-masking/#ClipPathElement:
+        // The raw geometry of each child element exclusive of rendering properties such as fill, stroke, stroke-width
+        // within a clipPath conceptually defines a 1-bit mask (with the possible exception of anti-aliasing along
+        // the edge of the geometry) which represents the silhouette of the graphics associated with that element.
+        context.recording_painter().fill_path({
+            .path = closed_path(),
+            .color = Color::Black,
+            // FIXME: Support clip-rule.
+            .winding_rule = Gfx::Painter::WindingRule::Nonzero,
+            .translation = offset,
+        });
+        return;
+    }
+
     SVG::SVGPaintContext paint_context {
         .viewport = svg_viewport,
         .path_bounding_box = computed_path()->bounding_box(),
