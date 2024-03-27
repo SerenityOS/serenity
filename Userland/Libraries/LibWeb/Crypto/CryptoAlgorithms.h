@@ -167,7 +167,7 @@ public:
         return WebIDL::NotSupportedError::create(m_realm, "sign is not supported"_fly_string);
     }
 
-    virtual WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::ArrayBuffer>> verify(AlgorithmParams const&, JS::NonnullGCPtr<CryptoKey>, ByteBuffer const&, ByteBuffer const&)
+    virtual WebIDL::ExceptionOr<JS::Value> verify(AlgorithmParams const&, JS::NonnullGCPtr<CryptoKey>, ByteBuffer const&, ByteBuffer const&)
     {
         return WebIDL::NotSupportedError::create(m_realm, "verify is not supported"_fly_string);
     }
@@ -251,6 +251,7 @@ private:
 class ECDSA : public AlgorithmMethods {
 public:
     virtual WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::ArrayBuffer>> sign(AlgorithmParams const&, JS::NonnullGCPtr<CryptoKey>, ByteBuffer const&) override;
+    virtual WebIDL::ExceptionOr<JS::Value> verify(AlgorithmParams const&, JS::NonnullGCPtr<CryptoKey>, ByteBuffer const&, ByteBuffer const&) override;
 
     virtual WebIDL::ExceptionOr<Variant<JS::NonnullGCPtr<CryptoKey>, JS::NonnullGCPtr<CryptoKeyPair>>> generate_key(AlgorithmParams const&, bool, Vector<Bindings::KeyUsage> const&) override;
 
