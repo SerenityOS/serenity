@@ -14,6 +14,17 @@
 // https://www.itu.int/rec/T-REC-T.88-201808-I
 // Annex H has a datastream example.
 
+// That spec was published in 2018 and contains all previous amendments. Its history is:
+// * 2002: Original spec published, describes decoding only. Has generic regions,
+//         symbol regions, text regions, halftone regions, and pattern regions.
+// * 2003: Amendment 1 approved. Describes encoding. Not interesting for us.
+//   * 2004: (Amendment 1 erratum 1 approved. Not interesting for us.)
+// * 2003: Amendment 2 approved. Added support for EXTTEMPLATE.
+// * 2011: Amendment 3 approved. Added support for color coding
+//         (COLEXTFLAG, CPCOMPLEN, CPDEFCOLS, CPEXCOLS, CPNCOMP, CPNVALS, GBCOLS,
+//         GBCOMBOP, GBFGCOLID, SBCOLS, SBCOLSECTSIZE and SBFGCOLID).
+// This history might explain why EXTTEMPLATE and colors are very rare in practice.
+
 namespace Gfx {
 
 namespace JBIG2 {
