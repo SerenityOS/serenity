@@ -47,6 +47,8 @@ public:
 
     JS::GCPtr<SVG::SVGMaskElement const> mask() const;
 
+    JS::GCPtr<SVG::SVGClipPathElement const> clip_path() const;
+
 protected:
     SVGGraphicsElement(DOM::Document&, DOM::QualifiedName);
 
