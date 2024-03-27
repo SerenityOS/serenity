@@ -1978,7 +1978,30 @@ bool box_is_sized_as_replaced_element(Box const& box)
     // replaced element with a natural aspect ratio and no natural size in that axis, see e.g. CSS2 §10
     // and CSS Flexible Box Model Level 1 §9.2.
     // https://www.w3.org/TR/css-sizing-4/#aspect-ratio-automatic
-    return is<ReplacedBox>(box) || box.has_preferred_aspect_ratio();
+    if (is<ReplacedBox>(box))
+        return true;
+
+    if (box.has_preferred_aspect_ratio()) {
+        // From CSS2:
+        // If height and width both have computed values of auto and the element has an intrinsic ratio but no intrinsic height or width,
+        // then the used value of width is undefined in CSS 2.
+        // However, it is suggested that, if the containing block’s width does not itself depend on the replaced element’s width,
+        // then the used value of width is calculated from the constraint equation used for block-level, non-replaced elements in normal flow.
+
+        // AD-HOC: For inline-level boxes, we don't want to end up in a situation where we apply stretch-fit sizing,
+        //         since that would not match other browsers. Because of that, we specifically reject this case here
+        //         instead of allowing it to proceed.
+        if (box.display().is_inline_outside()
+            && box.computed_values().height().is_auto()
+            && box.computed_values().width().is_auto()
+            && !box.has_natural_width()
+            && !box.has_natural_height()) {
+            return false;
+        }
+        return true;
+    }
+
+    return false;
 }
 
 bool FormattingContext::should_treat_max_width_as_none(Box const& box, AvailableSize const& available_width) const
