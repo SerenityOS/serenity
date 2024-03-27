@@ -26,6 +26,7 @@
 #include <LibWeb/Layout/ListItemBox.h>
 #include <LibWeb/Layout/ListItemMarkerBox.h>
 #include <LibWeb/Layout/Node.h>
+#include <LibWeb/Layout/SVGClipBox.h>
 #include <LibWeb/Layout/SVGMaskBox.h>
 #include <LibWeb/Layout/TableGrid.h>
 #include <LibWeb/Layout/TableWrapper.h>
@@ -349,10 +350,15 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::Context& 
         display = CSS::Display(CSS::DisplayOutside::Inline, CSS::DisplayInside::Flow);
     }
 
-    if (context.layout_svg_mask && is<SVG::SVGMaskElement>(dom_node)) {
-        layout_node = document.heap().allocate_without_realm<Layout::SVGMaskBox>(document, static_cast<SVG::SVGMaskElement&>(dom_node), *style);
-        // We're here if our parent is a use of an SVG mask, but we don't want to lay out any <mask> elements that could be a child of this mask.
-        context.layout_svg_mask = false;
+    if (context.layout_svg_mask_or_clip_path) {
+        if (is<SVG::SVGMaskElement>(dom_node))
+            layout_node = document.heap().allocate_without_realm<Layout::SVGMaskBox>(document, static_cast<SVG::SVGMaskElement&>(dom_node), *style);
+        else if (is<SVG::SVGClipPathElement>(dom_node))
+            layout_node = document.heap().allocate_without_realm<Layout::SVGClipBox>(document, static_cast<SVG::SVGClipPathElement&>(dom_node), *style);
+        else
+            VERIFY_NOT_REACHED();
+        // Only layout direct uses of SVG masks/clipPaths.
+        context.layout_svg_mask_or_clip_path = false;
     }
 
     if (!layout_node)
@@ -419,15 +425,20 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::Context& 
 
     if (is<SVG::SVGGraphicsElement>(dom_node)) {
         auto& graphics_element = static_cast<SVG::SVGGraphicsElement&>(dom_node);
-        // Create the layout tree for the SVG mask as a child of the masked element. Note: This will create
-        // a new subtree for each use of the mask (so there's  not a 1-to-1 mapping from DOM node to mask
-        // layout node). Each use of a mask may be laid out differently so this duplication is necessary.
-        if (auto mask = graphics_element.mask()) {
-            TemporaryChange<bool> layout_mask(context.layout_svg_mask, true);
+        // Create the layout tree for the SVG mask/clip paths as a child of the masked element.
+        // Note: This will create a new subtree for each use of the mask (so there's  not a 1-to-1 mapping
+        // from DOM node to mask layout node). Each use of a mask may be laid out differently so this
+        // duplication is necessary.
+        auto layout_mask_or_clip_path = [&](JS::GCPtr<SVG::SVGElement const> mask_or_clip_path) {
+            TemporaryChange<bool> layout_mask(context.layout_svg_mask_or_clip_path, true);
             push_parent(verify_cast<NodeWithStyle>(*layout_node));
-            create_layout_tree(const_cast<SVG::SVGMaskElement&>(*mask), context);
+            create_layout_tree(const_cast<SVG::SVGElement&>(*mask_or_clip_path), context);
             pop_parent();
-        }
+        };
+        if (auto mask = graphics_element.mask())
+            layout_mask_or_clip_path(mask);
+        if (auto clip_path = graphics_element.clip_path())
+            layout_mask_or_clip_path(clip_path);
     }
 
     // https://html.spec.whatwg.org/multipage/rendering.html#button-layout

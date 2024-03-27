@@ -476,6 +476,7 @@ set(SOURCES
     Layout/SVGGraphicsBox.cpp
     Layout/SVGSVGBox.cpp
     Layout/SVGMaskBox.cpp
+    Layout/SVGClipBox.cpp
     Layout/SVGTextBox.cpp
     Layout/SVGTextPathBox.cpp
     Layout/TableFormattingContext.cpp
@@ -531,6 +532,7 @@ set(SOURCES
     Painting/SVGPathPaintable.cpp
     Painting/SVGGraphicsPaintable.cpp
     Painting/SVGMaskPaintable.cpp
+    Painting/SVGClipPaintable.cpp
     Painting/SVGPaintable.cpp
     Painting/SVGSVGPaintable.cpp
     Painting/ShadowPainting.cpp
