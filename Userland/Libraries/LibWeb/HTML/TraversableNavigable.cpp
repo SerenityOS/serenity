@@ -396,11 +396,17 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
     // 10. Let completedChangeJobs be 0.
     size_t completed_change_jobs = 0;
 
+    enum class PopulatedClonedTargetSHE {
+        Yes,
+        No,
+    };
+
     struct ChangingNavigableContinuationState {
         JS::Handle<DOM::Document> displayed_document;
         JS::Handle<SessionHistoryEntry> target_entry;
         JS::Handle<Navigable> navigable;
         bool update_only = false;
+        PopulatedClonedTargetSHE populated_cloned_target_she = PopulatedClonedTargetSHE::No; /* Not in the spec */
     };
 
     // 11. Let changingNavigableContinuations be an empty queue of changing navigable continuation states.
@@ -471,7 +477,12 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
             //    and oldOrigin is the same as navigable's current session history entry's document state's origin,
             //    then fire a traverse navigate event given targetEntry and userInvolvementForNavigateEvents.
 
-            auto after_document_populated = [old_origin, target_entry, changing_navigable_continuation, &changing_navigable_continuations, &vm, &navigable]() mutable {
+            auto after_document_populated = [old_origin, changing_navigable_continuation, &changing_navigable_continuations, &vm, &navigable](PopulatedClonedTargetSHE populated_cloned_target_she, JS::NonnullGCPtr<SessionHistoryEntry> target_entry) mutable {
+                // NOTE: Not in the spec, but we need to keep information about whether the target entry was populated or not
+                //       so later we can decide whether we need to set active SHE to cloned target SHE in case it was populated.
+                changing_navigable_continuation.target_entry = target_entry;
+                changing_navigable_continuation.populated_cloned_target_she = populated_cloned_target_she;
+
                 // 1. If targetEntry's document is null, then set changingNavigableContinuation's update-only to true.
                 if (!target_entry->document()) {
                     changing_navigable_continuation.update_only = true;
@@ -520,21 +531,25 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
                 // 6. Let allowPOST be targetEntry's document state's reload pending.
                 auto allow_POST = target_entry->document_state()->reload_pending();
 
+                // https://github.com/whatwg/html/issues/9869
+                // Not in the spec:
+                // In case of reloads we need to clone the target entry before passing it to populate_session_history_entry_document()
+                // otherwise active SHE's document will be changed and tasks scheduled on active window's object won't be able to run.
+                auto target_entry_clone = target_entry->clone();
+
                 // 7. In parallel, attempt to populate the history entry's document for targetEntry, given navigable, potentiallyTargetSpecificSourceSnapshotParams,
                 //    targetSnapshotParams, with allowPOST set to allowPOST and completionSteps set to queue a global task on the navigation and traversal task source given
                 //    navigable's active window to run afterDocumentPopulated.
-                Platform::EventLoopPlugin::the().deferred_invoke([target_entry, potentially_target_specific_source_snapshot_params, target_snapshot_params, this, allow_POST, navigable, after_document_populated] {
-                    navigable->populate_session_history_entry_document(target_entry, *potentially_target_specific_source_snapshot_params, target_snapshot_params, {}, Empty {}, CSPNavigationType::Other, allow_POST, [this, after_document_populated]() mutable {
-                                 queue_global_task(Task::Source::NavigationAndTraversal, *active_window(), [after_document_populated]() mutable {
-                                     after_document_populated();
-                                 });
+                Platform::EventLoopPlugin::the().deferred_invoke([target_entry_clone, potentially_target_specific_source_snapshot_params, target_snapshot_params, allow_POST, navigable, after_document_populated] {
+                    navigable->populate_session_history_entry_document(target_entry_clone, *potentially_target_specific_source_snapshot_params, target_snapshot_params, {}, Empty {}, CSPNavigationType::Other, allow_POST, [after_document_populated, target_entry_clone]() mutable {
+                                 after_document_populated(PopulatedClonedTargetSHE::Yes, *target_entry_clone);
                              })
                         .release_value_but_fixme_should_propagate_errors();
                 });
             }
             // Otherwise, run afterDocumentPopulated immediately.
             else {
-                after_document_populated();
+                after_document_populated(PopulatedClonedTargetSHE::No, *target_entry);
             }
         });
     }
@@ -613,10 +628,17 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
         auto entries_for_navigation_api = get_session_history_entries_for_the_navigation_api(*navigable, target_step);
 
         // 11. Queue a global task on the navigation and traversal task source given navigable's active window to run the steps:
-        queue_global_task(Task::Source::NavigationAndTraversal, *navigable->active_window(), [&completed_change_jobs, target_entry, navigable, displayed_document, update_only = changing_navigable_continuation.update_only, script_history_length, script_history_index, entries_for_navigation_api = move(entries_for_navigation_api), user_involvement_for_navigate_events]() mutable {
+        auto populated_cloned_target_she = changing_navigable_continuation.populated_cloned_target_she;
+        queue_global_task(Task::Source::NavigationAndTraversal, *navigable->active_window(), [&completed_change_jobs, target_entry, navigable, displayed_document, populated_cloned_target_she, update_only = changing_navigable_continuation.update_only, script_history_length, script_history_index, entries_for_navigation_api = move(entries_for_navigation_api), user_involvement_for_navigate_events]() mutable {
             // NOTE: This check is not in the spec but we should not continue navigation if navigable has been destroyed.
             if (navigable->has_been_destroyed()) {
                 return;
+            }
+
+            // Not in the spec:
+            // If cloned target SHE was populated, we need to set active SHE to it.
+            if (populated_cloned_target_she == PopulatedClonedTargetSHE::Yes) {
+                navigable->set_active_session_history_entry(*target_entry);
             }
 
             // 1. If changingNavigableContinuation's update-only is false, then:
