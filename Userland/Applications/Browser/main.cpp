@@ -26,6 +26,7 @@
 #include <LibWebView/CookieJar.h>
 #include <LibWebView/Database.h>
 #include <LibWebView/OutOfProcessWebView.h>
+#include <LibWebView/ProcessManager.h>
 #include <LibWebView/RequestServerAdapter.h>
 #include <LibWebView/SearchEngine.h>
 #include <LibWebView/URL.h>
@@ -93,6 +94,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         warnln("Refusing to run as root");
         return 1;
     }
+
+    TRY(Core::System::pledge("sigaction stdio recvfd sendfd unix fattr cpath rpath wpath proc exec"));
+
+    WebView::ProcessManager::initialize();
 
     TRY(Core::System::pledge("stdio recvfd sendfd unix fattr cpath rpath wpath proc exec"));
 
