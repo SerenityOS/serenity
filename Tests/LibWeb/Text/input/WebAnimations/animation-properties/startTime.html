@@ -4,6 +4,7 @@
 <script>
     asyncTest(async done => {
         const foo = document.getElementById("foo");
+
         let animation = foo.animate({ opacity: [0, 1] }, { duration: 1000 });
         println(`Animation's startTime is initially null: ${animation.startTime === null}`);
         animation.startTime = 100;
@@ -20,14 +21,17 @@
         animation.currentTime = 100;
         println(`Animation's startTime is null after calling pause() and setting currentTime: ${animation.startTime === null}`);
 
-        animation = foo.animate({ opacity: [0, 1] }, { duration: 1000 });
+        const timeline = internals.createInternalAnimationTimeline();
+        timeline.setTime(0);
+
+        animation = foo.animate({ opacity: [0, 1] }, { duration: 1000, timeline });
         animation.startTime = 100;
         animation.playbackRate = -1;
-        println(`Animation's startTime updates after reversing playbackRate: ${animation.startTime > -150 && animation.startTime < -50}`);
+        println(`Animation's startTime updates after reversing playbackRate: ${animation.startTime === -100}`);
 
-        animation = foo.animate({ opacity: [0, 1] }, { duration: 1000 });
+        animation = foo.animate({ opacity: [0, 1] }, { duration: 1000, timeline });
         animation.finish();
-        println(`Animation's startTime updates after calling finish(): ${animation.startTime > -1050 && animation.startTime < -950}`);
+        println(`Animation's startTime updates after calling finish(): ${animation.startTime === -1000}`);
 
         done();
     });
