@@ -466,7 +466,6 @@ void LayoutState::UsedValues::set_node(NodeWithStyle& node, UsedValues const* co
             }
             return false;
         }
-        // FIXME: Determine if calc() value is definite.
         return false;
     };
 
