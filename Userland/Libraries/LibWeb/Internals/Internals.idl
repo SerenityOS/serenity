@@ -1,7 +1,9 @@
 #import <DOM/EventTarget.idl>
 #import <HTML/HTMLElement.idl>
+#import <Internals/InternalAnimationTimeline.idl>
 
-[Exposed=Nobody] interface Internals {
+[Exposed=Nobody]
+interface Internals {
 
     undefined signalTextTestIsDone();
     undefined gc();
@@ -16,4 +18,5 @@
 
     boolean dispatchUserActivatedEvent(EventTarget target, Event event);
 
+    InternalAnimationTimeline createInternalAnimationTimeline();
 };
