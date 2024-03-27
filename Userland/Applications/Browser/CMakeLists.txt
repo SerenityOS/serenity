@@ -23,6 +23,7 @@ set(SOURCES
     StorageModel.cpp
     StorageWidget.cpp
     Tab.cpp
+    TaskManagerWidget.cpp
     URLBox.cpp
     WindowActions.cpp
     main.cpp

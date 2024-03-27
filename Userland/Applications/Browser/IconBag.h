@@ -52,5 +52,6 @@ struct IconBag final {
     RefPtr<Gfx::Bitmap> mute { nullptr };
     RefPtr<Gfx::Bitmap> unmute { nullptr };
     RefPtr<Gfx::Bitmap> search { nullptr };
+    RefPtr<Gfx::Bitmap> task_manager { nullptr };
 };
 }

@@ -12,6 +12,7 @@
 #include "Browser.h"
 #include "InspectorWidget.h"
 #include "Tab.h"
+#include "TaskManagerWidget.h"
 #include <Applications/Browser/BrowserWindowGML.h>
 #include <Applications/BrowserSettings/Defaults.h>
 #include <LibConfig/Client.h>
@@ -263,9 +264,16 @@ void BrowserWindow::build_menus(StringView const man_file)
         this);
     m_inspect_dom_node_action->set_status_tip("Open inspector for this element"_string);
 
+    m_task_manager_action = GUI::Action::create(
+        "Task &Manager", g_icon_bag.task_manager, [this](auto&) {
+            show_task_manager_window();
+        },
+        this);
+
     auto inspect_menu = add_menu("&Inspect"_string);
     inspect_menu->add_action(*m_view_source_action);
     inspect_menu->add_action(*m_inspect_dom_tree_action);
+    inspect_menu->add_action(*m_task_manager_action);
 
     auto storage_window_action = GUI::Action::create(
         "Open S&torage Inspector", g_icon_bag.cookie, [this](auto&) {
@@ -742,6 +750,11 @@ void BrowserWindow::event(Core::Event& event)
     case GUI::Event::Resize:
         broadcast_window_size(static_cast<GUI::ResizeEvent&>(event).size());
         break;
+    case GUI::Event::WindowCloseRequest:
+        // FIXME: If we have multiple browser windows, this won't be correct anymore
+        //     For now, this makes sure that we close the TaskManagerWindow when the user clicks the (X) button
+        close_task_manager_window();
+        break;
     default:
         break;
     }
@@ -760,6 +773,28 @@ void BrowserWindow::update_displayed_zoom_level()
 {
     active_tab().update_reset_zoom_button();
     update_zoom_menu();
+}
+
+void BrowserWindow::show_task_manager_window()
+{
+    if (!m_task_manager_window) {
+        m_task_manager_window = GUI::Window::construct();
+        m_task_manager_window->set_window_mode(GUI::WindowMode::Modeless);
+        m_task_manager_window->resize(400, 300);
+        m_task_manager_window->set_title("Task Manager");
+
+        (void)m_task_manager_window->set_main_widget<TaskManagerWidget>();
+    }
+
+    m_task_manager_window->show();
+    m_task_manager_window->move_to_front();
+}
+
+void BrowserWindow::close_task_manager_window()
+{
+    if (m_task_manager_window) {
+        m_task_manager_window->close();
+    }
 }
 
 }
