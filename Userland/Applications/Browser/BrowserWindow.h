@@ -65,6 +65,9 @@ private:
 
     void update_displayed_zoom_level();
 
+    void show_task_manager_window();
+    void close_task_manager_window();
+
     RefPtr<GUI::Action> m_go_back_action;
     RefPtr<GUI::Action> m_go_forward_action;
     RefPtr<GUI::Action> m_go_home_action;
@@ -75,6 +78,7 @@ private:
     RefPtr<GUI::Action> m_view_source_action;
     RefPtr<GUI::Action> m_inspect_dom_tree_action;
     RefPtr<GUI::Action> m_inspect_dom_node_action;
+    RefPtr<GUI::Action> m_task_manager_action;
 
     RefPtr<GUI::Menu> m_zoom_menu;
 
@@ -82,6 +86,9 @@ private:
     WindowActions m_window_actions;
     RefPtr<GUI::TabWidget> m_tab_widget;
     RefPtr<BookmarksBarWidget> m_bookmarks_bar;
+
+    // FIXME: This should be owned at a higher level in case we have multiple browser windows
+    RefPtr<GUI::Window> m_task_manager_window;
 
     GUI::ActionGroup m_user_agent_spoof_actions;
     GUI::ActionGroup m_search_engine_actions;
