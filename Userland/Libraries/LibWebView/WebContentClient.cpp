@@ -5,6 +5,7 @@
  */
 
 #include "WebContentClient.h"
+#include "ProcessManager.h"
 #include "ViewImplementation.h"
 #include <LibWeb/Cookie/ParsedCookie.h>
 
@@ -31,6 +32,12 @@ void WebContentClient::register_view(u64 page_id, ViewImplementation& view)
 void WebContentClient::unregister_view(u64 page_id)
 {
     m_views.remove(page_id);
+}
+
+void WebContentClient::notify_process_information(WebView::ProcessHandle const& handle)
+{
+    dbgln_if(SPAM_DEBUG, "handle: WebContentClient::NotifyProcessInformation! pid={}", handle.pid);
+    ProcessManager::the().add_process(ProcessType::WebContent, handle.pid);
 }
 
 void WebContentClient::did_paint(u64 page_id, Gfx::IntRect const& rect, i32 bitmap_id)
