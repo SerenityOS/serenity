@@ -112,18 +112,18 @@ WebIDL::ExceptionOr<void> NavigableContainer::create_new_child_navigable()
     traversable->append_session_history_traversal_steps([traversable, navigable, parent_navigable, history_entry] {
         // 1. Let parentDocState be parentNavigable's active session history entry's document state.
 
-        auto parent_doc_state = parent_navigable->active_session_history_entry()->document_state;
+        auto parent_doc_state = parent_navigable->active_session_history_entry()->document_state();
 
         // 2. Let parentNavigableEntries be the result of getting session history entries for parentNavigable.
         auto parent_navigable_entries = parent_navigable->get_session_history_entries();
 
         // 3. Let targetStepSHE be the first session history entry in parentNavigableEntries whose document state equals parentDocState.
         auto target_step_she = *parent_navigable_entries.find_if([parent_doc_state](auto& entry) {
-            return entry->document_state == parent_doc_state;
+            return entry->document_state() == parent_doc_state;
         });
 
         // 4. Set historyEntry's step to targetStepSHE's step.
-        history_entry->step = target_step_she->step;
+        history_entry->set_step(target_step_she->step());
 
         // 5. Let nestedHistory be a new nested history whose id is navigable's id and entries list is « historyEntry ».
         DocumentState::NestedHistory nested_history {
@@ -267,7 +267,7 @@ void NavigableContainer::destroy_the_child_navigable()
     navigable->active_document()->destroy();
 
     // 6. Let parentDocState be container's node navigable's active session history entry's document state.
-    auto parent_doc_state = this->navigable()->active_session_history_entry()->document_state;
+    auto parent_doc_state = this->navigable()->active_session_history_entry()->document_state();
 
     // 7. Remove the nested history from parentDocState's nested histories whose id equals navigable's id.
     parent_doc_state->nested_histories().remove_all_matching([&](auto& nested_history) {

@@ -483,7 +483,7 @@ struct POSTResource;
 struct ScrollOptions;
 struct ScrollToOptions;
 struct SerializedFormData;
-struct SessionHistoryEntry;
+class SessionHistoryEntry;
 struct ToggleTaskTracker;
 }
 

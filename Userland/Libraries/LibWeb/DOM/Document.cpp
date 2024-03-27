@@ -2974,7 +2974,7 @@ void Document::destroy()
 
     // 7. Set document's node navigable's active session history entry's document state's document to null.
     if (navigable()) {
-        navigable()->active_session_history_entry()->document_state->set_document(nullptr);
+        navigable()->active_session_history_entry()->document_state()->set_document(nullptr);
     }
 
     // FIXME: 8. Remove document from the owner set of each WorkerGlobalScope object whose set contains document.
@@ -3790,7 +3790,7 @@ void Document::restore_the_history_object_state(JS::NonnullGCPtr<HTML::SessionHi
 
     // 2. Let state be StructuredDeserialize(entry's classic history API state, targetRealm). If this throws an exception, catch it and let state be null.
     // 3. Set document's history object's state to state.
-    auto state_or_error = HTML::structured_deserialize(target_realm.vm(), entry->classic_history_api_state, target_realm, {});
+    auto state_or_error = HTML::structured_deserialize(target_realm.vm(), entry->classic_history_api_state(), target_realm, {});
     if (state_or_error.is_error())
         m_history->set_state(JS::js_null());
     else
@@ -3818,7 +3818,7 @@ void Document::update_for_history_step_application(JS::NonnullGCPtr<HTML::Sessio
     //      The doNotReactivate argument distinguishes between these two cases.
     if (documents_entry_changed) {
         // 1. Let oldURL be document's latest entry's URL.
-        auto old_url = m_latest_entry ? m_latest_entry->url : URL::URL {};
+        auto old_url = m_latest_entry ? m_latest_entry->url() : URL::URL {};
 
         // 2. Set document's latest entry to entry.
         m_latest_entry = entry;
