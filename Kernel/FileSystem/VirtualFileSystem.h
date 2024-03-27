@@ -12,6 +12,7 @@
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
+#include <AK/Stack.h>
 #include <Kernel/FileSystem/FileBackedFileSystem.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/Initializer.h>
@@ -63,6 +64,7 @@ public:
     ErrorOr<void> remount(Custody& mount_point, int new_flags);
     ErrorOr<void> unmount(Custody& mount_point);
     ErrorOr<void> unmount(Inode& guest_inode, StringView custody_path);
+    ErrorOr<void> unmount_all(Badge<PowerManagementTask>);
 
     ErrorOr<NonnullRefPtr<OpenFileDescription>> open(Credentials const&, StringView path, int options, mode_t mode, Custody& base, Optional<UidAndGid> = {});
     ErrorOr<NonnullRefPtr<OpenFileDescription>> open(Process const&, Credentials const&, StringView path, int options, mode_t mode, Custody& base, Optional<UidAndGid> = {});
@@ -115,6 +117,9 @@ private:
     bool mount_point_exists_at_custody(Custody& mount_point);
 
     ErrorOr<void> apply_to_mount_for_host_custody(Custody const& current_custody, Function<void(Mount&)>);
+
+    Stack<Mount*, 16> get_mounts_stack();
+    ErrorOr<void> unmount(Mount&);
 
     RefPtr<Inode> m_root_inode;
 

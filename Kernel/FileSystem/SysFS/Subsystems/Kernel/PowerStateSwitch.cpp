@@ -8,7 +8,7 @@
 
 #include <AK/Platform.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/PowerStateSwitch.h>
-#include <Kernel/Tasks/PowerStateSwitchTask.h>
+#include <Kernel/Tasks/PowerManagementTask.h>
 #include <Kernel/Tasks/Process.h>
 
 namespace Kernel {
@@ -52,10 +52,10 @@ ErrorOr<size_t> SysFSPowerStateSwitchNode::write_bytes(off_t offset, size_t coun
     TRY(data.read(buf, 1));
     switch (buf[0]) {
     case '1':
-        PowerStateSwitchTask::reboot();
+        PowerManagementTask::reboot();
         return 1;
     case '2':
-        PowerStateSwitchTask::shutdown();
+        PowerManagementTask::shutdown();
         return 1;
     default:
         return Error::from_errno(EINVAL);
