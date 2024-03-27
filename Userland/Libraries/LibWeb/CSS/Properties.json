@@ -702,6 +702,20 @@
       "unitless-length"
     ]
   },
+  "clip-path": {
+    "animation-type": "none",
+    "affects-layout": false,
+    "affects-stacking-context": true,
+    "inherited": false,
+    "valid-identifiers": [
+      "none"
+    ],
+    "__comment": "FIXME: This should be a <clip-source> | [ <basic-shape> || <geometry-box> ]",
+    "valid-types": [
+      "url"
+    ],
+    "initial": "none"
+  },
   "color": {
     "affects-layout": false,
     "animation-type": "by-computed-value",

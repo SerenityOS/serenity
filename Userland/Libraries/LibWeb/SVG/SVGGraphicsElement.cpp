@@ -13,6 +13,7 @@
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/SVG/AttributeNames.h>
 #include <LibWeb/SVG/AttributeParser.h>
+#include <LibWeb/SVG/SVGClipPathElement.h>
 #include <LibWeb/SVG/SVGGradientElement.h>
 #include <LibWeb/SVG/SVGGraphicsElement.h>
 #include <LibWeb/SVG/SVGMaskElement.h>
@@ -74,6 +75,14 @@ JS::GCPtr<SVG::SVGMaskElement const> SVGGraphicsElement::mask() const
     if (!mask_reference.has_value())
         return {};
     return try_resolve_url_to<SVG::SVGMaskElement const>(mask_reference->url());
+}
+
+JS::GCPtr<SVG::SVGClipPathElement const> SVGGraphicsElement::clip_path() const
+{
+    auto const& clip_path_reference = layout_node()->computed_values().clip_path();
+    if (!clip_path_reference.has_value())
+        return {};
+    return try_resolve_url_to<SVG::SVGClipPathElement const>(clip_path_reference->url());
 }
 
 Gfx::AffineTransform transform_from_transform_list(ReadonlySpan<Transform> transform_list)
@@ -144,7 +153,8 @@ void SVGGraphicsElement::apply_presentational_hints(CSS::StyleProperties& style)
         NamedPropertyID(CSS::PropertyID::TextAnchor),
         NamedPropertyID(CSS::PropertyID::FontSize),
         NamedPropertyID(CSS::PropertyID::Mask),
-        NamedPropertyID(CSS::PropertyID::MaskType)
+        NamedPropertyID(CSS::PropertyID::MaskType),
+        NamedPropertyID(CSS::PropertyID::ClipPath),
     };
 
     CSS::Parser::ParsingContext parsing_context { document(), CSS::Parser::ParsingContext::Mode::SVGPresentationAttribute };
