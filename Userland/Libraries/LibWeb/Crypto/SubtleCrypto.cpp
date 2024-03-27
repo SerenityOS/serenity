@@ -584,6 +584,53 @@ JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Promise>> SubtleCrypto::verify(Algori
     return verify_cast<JS::Promise>(*promise->promise());
 }
 
+// https://w3c.github.io/webcrypto/#SubtleCrypto-method-deriveBits
+JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Promise>> SubtleCrypto::derive_bits(AlgorithmIdentifier algorithm, JS::NonnullGCPtr<CryptoKey> base_key, u32 length)
+{
+    auto& realm = this->realm();
+    // 1. Let algorithm, baseKey and length, be the algorithm, baseKey and length parameters passed to the deriveBits() method, respectively.
+
+    // 2. Let normalizedAlgorithm be the result of normalizing an algorithm, with alg set to algorithm and op set to "deriveBits".
+    auto normalized_algorithm = normalize_an_algorithm(realm, algorithm, "deriveBits"_string);
+
+    // 3. If an error occurred, return a Promise rejected with normalizedAlgorithm.
+    if (normalized_algorithm.is_error())
+        return WebIDL::create_rejected_promise_from_exception(realm, normalized_algorithm.release_error());
+
+    // 4. Let promise be a new Promise object.
+    auto promise = WebIDL::create_promise(realm);
+
+    // 5. Return promise and perform the remaining steps in parallel.
+    Platform::EventLoopPlugin::the().deferred_invoke([&realm, normalized_algorithm = normalized_algorithm.release_value(), promise, base_key, length]() -> void {
+        HTML::TemporaryExecutionContext context(Bindings::host_defined_environment_settings_object(realm), HTML::TemporaryExecutionContext::CallbacksEnabled::Yes);
+        // 6. If the following steps or referenced procedures say to throw an error, reject promise with the returned error and then terminate the algorithm.
+
+        // 7. If the name member of normalizedAlgorithm is not equal to the name attribute of the [[algorithm]] internal slot of baseKey then throw an InvalidAccessError.
+        if (normalized_algorithm.parameter->name != base_key->algorithm_name()) {
+            WebIDL::reject_promise(realm, promise, WebIDL::InvalidAccessError::create(realm, "Algorithm mismatch"_fly_string));
+            return;
+        }
+
+        // 8. If the [[usages]] internal slot of baseKey does not contain an entry that is "deriveBits", then throw an InvalidAccessError.
+        if (!base_key->internal_usages().contains_slow(Bindings::KeyUsage::Derivebits)) {
+            WebIDL::reject_promise(realm, promise, WebIDL::InvalidAccessError::create(realm, "Key does not support deriving bits"_fly_string));
+            return;
+        }
+
+        // 9. Let result be the result of creating an ArrayBuffer containing the result of performing the derive bits operation specified by normalizedAlgorithm using baseKey, algorithm and length.
+        auto result = normalized_algorithm.methods->derive_bits(*normalized_algorithm.parameter, base_key, length);
+        if (result.is_error()) {
+            WebIDL::reject_promise(realm, promise, Bindings::dom_exception_to_throw_completion(realm.vm(), result.release_error()).release_value().value());
+            return;
+        }
+
+        // 10. Resolve promise with result.
+        WebIDL::resolve_promise(realm, promise, result.release_value());
+    });
+
+    return verify_cast<JS::Promise>(*promise->promise());
+}
+
 SupportedAlgorithmsMap& supported_algorithms_internal()
 {
     static SupportedAlgorithmsMap s_supported_algorithms;
