@@ -641,6 +641,7 @@ SupportedAlgorithmsMap supported_algorithms()
 
     // https://w3c.github.io/webcrypto/#ecdsa
     define_an_algorithm<ECDSA, EcdsaParams>("sign"_string, "ECDSA"_string);
+    define_an_algorithm<ECDSA, EcdsaParams>("verify"_string, "ECDSA"_string);
     define_an_algorithm<ECDSA, EcKeyGenParams>("generateKey"_string, "ECDSA"_string);
 
     return internal_object;

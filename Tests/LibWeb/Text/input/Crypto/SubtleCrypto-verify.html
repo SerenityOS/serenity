@@ -1,0 +1,45 @@
+<script src="../include.js"></script>
+<script>
+    asyncTest(async done => {
+        const encoder = new TextEncoder();
+        const message = "Hello friends";
+        const encoded_message = encoder.encode(message);
+
+        const key_algorithm = {
+            name: "ECDSA",
+            namedCurve: "P-384",
+        };
+        const extractable = true;
+        const usages = ["sign", "verify"];
+        const key = await window.crypto.subtle.generateKey(key_algorithm, extractable, usages);
+
+        console.log(key.publicKey);
+
+        const signature_algorithm = {
+            name: "ECDSA",
+            hash: { name: "SHA-384" },
+        };
+        const signature = await window.crypto.subtle.sign(
+            signature_algorithm,
+            key.privateKey,
+            encoded_message
+        );
+
+        let result = await window.crypto.subtle.verify(
+            signature_algorithm,
+            key.publicKey,
+            signature,
+            encoded_message
+        );
+
+        println(`FIXME: This will fail as we dont support ECDSA sign()`);
+
+        if (result) {
+            println(`Verified OK`);
+        } else {
+            println(`FAIL: Verification not ok`);
+        }
+
+        done();
+    });
+</script>
