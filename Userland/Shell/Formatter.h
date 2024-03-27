@@ -30,8 +30,11 @@ public:
             return;
 
         size_t offset = 0;
-        for (auto ptr = m_source.end() - 1; ptr >= m_source.begin() && isspace(*ptr); --ptr)
+        for (auto ptr = m_source.end() - 1; isspace(*ptr); --ptr) {
             ++offset;
+            if (ptr == m_source.begin())
+                break;
+        }
 
         m_trivia = m_source.substring_view(m_source.length() - offset, offset);
     }
