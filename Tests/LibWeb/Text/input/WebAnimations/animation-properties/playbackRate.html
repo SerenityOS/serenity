@@ -2,34 +2,30 @@
 <div id="foo"></div>
 <script src="../../include.js"></script>
 <script>
-    asyncTest(async done => {
-        const wait = async (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
+    test(() => {
         const foo = document.getElementById("foo");
-        const animation = foo.animate({ opacity: [0, 1] }, { duration: 1000 });
+        const timeline = internals.createInternalAnimationTimeline();
+        const animation = foo.animate({ opacity: [0, 1] }, { duration: 1000, timeline });
         animation.playbackRate = 2;
 
-        // Allow 50ms of error for each test
-        await wait(100);
-        if (animation.currentTime >= 150 && animation.currentTime <= 250)
+        timeline.setTime(100);
+        if (animation.currentTime === 200)
             println("Animation has expected currentTime value after 100ms");
 
         animation.playbackRate = 0.5;
-        await wait(100);
-        if (animation.currentTime >= 200 && animation.currentTime <= 300)
+        timeline.setTime(200);
+        if (animation.currentTime === 250)
             println("Animation has expected currentTime value after 200ms");
 
         animation.playbackRate = -1;
-        await wait(100);
-        if (animation.currentTime >= 100 && animation.currentTime <= 200)
+        timeline.setTime(300);
+        if (animation.currentTime === 150)
             println("Animation has expected currentTime value after 300ms");
 
         animation.playbackRate = 0;
         const originalTime = animation.currentTime;
-        await wait(100);
+        timeline.setTime(400);
         if (animation.currentTime === originalTime)
             println("Animation has expected currentTime value after 400ms");
-
-        done();
     });
 </script>
