@@ -208,7 +208,7 @@ private:
     Vector<ByteString> m_certificates;
 };
 
-static ErrorOr<NonnullRefPtr<Core::Timer>> load_page_for_screenshot_and_exit(Core::EventLoop& event_loop, HeadlessWebContentView& view, int screenshot_timeout)
+static ErrorOr<NonnullRefPtr<Core::Timer>> load_page_for_screenshot_and_exit(Core::EventLoop& event_loop, HeadlessWebContentView& view, URL::URL url, int screenshot_timeout)
 {
     // FIXME: Allow passing the output path as an argument.
     static constexpr auto output_file_path = "output.png"sv;
@@ -234,6 +234,7 @@ static ErrorOr<NonnullRefPtr<Core::Timer>> load_page_for_screenshot_and_exit(Cor
             event_loop.quit(0);
         }));
 
+    view.load(url);
     timer->start();
     return timer;
 }
@@ -713,7 +714,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     if (web_driver_ipc_path.is_empty()) {
-        auto timer = TRY(load_page_for_screenshot_and_exit(event_loop, *view, screenshot_timeout));
+        auto timer = TRY(load_page_for_screenshot_and_exit(event_loop, *view, url.value(), screenshot_timeout));
         return event_loop.exec();
     }
 
