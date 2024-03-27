@@ -575,6 +575,9 @@ SupportedAlgorithmsMap supported_algorithms()
     define_an_algorithm<RSAOAEP, RsaOaepParams>("encrypt"_string, "RSA-OAEP"_string);
     define_an_algorithm<RSAOAEP, RsaOaepParams>("decrypt"_string, "RSA-OAEP"_string);
 
+    // https://w3c.github.io/webcrypto/#ecdsa
+    define_an_algorithm<ECDSA, EcKeyGenParams>("generateKey"_string, "ECDSA"_string);
+
     return internal_object;
 }
 
