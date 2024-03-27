@@ -96,8 +96,6 @@ ErrorOr<NonnullRefPtr<WebView::WebContentClient>> launch_web_content_process(
         dbgln();
     }
 
-    WebView::ProcessManager::the().add_process(WebView::ProcessType::WebContent, child_pid);
-
     return new_client;
 }
 

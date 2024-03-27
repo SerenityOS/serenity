@@ -15,9 +15,12 @@
 #include <LibWeb/Page/Page.h>
 #include <LibWebView/Attribute.h>
 #include <LibWebView/SocketPair.h>
+#include <LibWebView/ProcessHandle.h>
 
 endpoint WebContentClient
 {
+    notify_process_information(WebView::ProcessHandle handle) =|
+
     did_start_loading(u64 page_id, URL::URL url, bool is_redirect) =|
     did_finish_loading(u64 page_id, URL::URL url) =|
     did_update_url(u64 page_id, URL::URL url, Web::HTML::HistoryHandlingBehavior history_behavior) =|
