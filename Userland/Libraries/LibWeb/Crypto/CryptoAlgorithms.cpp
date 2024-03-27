@@ -7,9 +7,13 @@
 #include <AK/Base64.h>
 #include <AK/QuickSort.h>
 #include <LibCrypto/ASN1/DER.h>
+#include <LibCrypto/Authentication/HMAC.h>
 #include <LibCrypto/Curves/Ed25519.h>
 #include <LibCrypto/Curves/SECPxxxr1.h>
 #include <LibCrypto/Hash/HashManager.h>
+#include <LibCrypto/Hash/PBKDF2.h>
+#include <LibCrypto/Hash/SHA1.h>
+#include <LibCrypto/Hash/SHA2.h>
 #include <LibCrypto/PK/RSA.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibJS/Runtime/DataView.h>
@@ -235,16 +239,9 @@ JS::ThrowCompletionOr<NonnullOwnPtr<AlgorithmParams>> PBKDF2Params::from_value(J
     auto iterations = TRY(iterations_value.to_u32(vm));
 
     auto hash_value = TRY(object.get("hash"));
-    auto hash = Variant<Empty, HashAlgorithmIdentifier> { Empty {} };
-    if (hash_value.is_string()) {
-        auto hash_string = TRY(hash_value.to_string(vm));
-        hash = HashAlgorithmIdentifier { hash_string };
-    } else {
-        auto hash_object = TRY(hash_value.to_object(vm));
-        hash = HashAlgorithmIdentifier { hash_object };
-    }
+    auto hash = TRY(hash_value.to_string(vm));
 
-    return adopt_own<AlgorithmParams>(*new PBKDF2Params { name, salt, iterations, hash.downcast<HashAlgorithmIdentifier>() });
+    return adopt_own<AlgorithmParams>(*new PBKDF2Params { name, salt, iterations, hash });
 }
 
 RsaKeyGenParams::~RsaKeyGenParams() = default;
@@ -1340,6 +1337,64 @@ WebIDL::ExceptionOr<JS::Value> ED25519::verify([[maybe_unused]] AlgorithmParams 
 
     // 10. Return result.
     return JS::Value(result);
+}
+
+WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::ArrayBuffer>> PBKDF2::derive_bits(AlgorithmParams const& params, JS::NonnullGCPtr<CryptoKey> key, u32 length)
+{
+    auto& realm = m_realm;
+    auto const& normalized_algorithm = static_cast<PBKDF2Params const&>(params);
+
+    // 1. If length is null or zero, or is not a multiple of 8, then throw an OperationError.
+    if (length == 0 || length % 8 != 0)
+        return WebIDL::OperationError::create(realm, "Length must be greater than 0 and divisible by 8"_fly_string);
+
+    // 2. If the iterations member of normalizedAlgorithm is zero, then throw an OperationError.
+    if (normalized_algorithm.iterations == 0)
+        return WebIDL::OperationError::create(realm, "Iterations must be greater than 0"_fly_string);
+
+    // 3. Let prf be the MAC Generation function described in Section 4 of [FIPS-198-1] using the hash function described by the hash member of normalizedAlgorithm.
+    auto const& hash_algorithm = TRY(normalized_algorithm.hash.visit(
+        [](String const& name) -> JS::ThrowCompletionOr<String> { return name; },
+        [&](JS::Handle<JS::Object> const& obj) -> JS::ThrowCompletionOr<String> {
+                        auto name_property = TRY(obj->get("name"));
+                        return name_property.to_string(m_realm.vm()); }));
+
+    // 4. Let result be the result of performing the PBKDF2 operation defined in Section 5.2 of [RFC8018]
+    // using prf as the pseudo-random function, PRF,
+    // the password represented by [[handle]] internal slot of key as the password, P,
+    // the contents of the salt attribute of normalizedAlgorithm as the salt, S,
+    // the value of the iterations attribute of normalizedAlgorithm as the iteration count, c,
+    // and length divided by 8 as the intended key length, dkLen.
+    ErrorOr<ByteBuffer> result = Error::from_string_view("noop error"sv);
+
+    auto password = key->handle().visit(
+        [](ByteBuffer data) -> ByteBuffer {
+            return data;
+        },
+        [](auto) -> ByteBuffer { VERIFY_NOT_REACHED(); });
+
+    auto salt = normalized_algorithm.salt;
+    auto iterations = normalized_algorithm.iterations;
+    auto derived_key_length_bytes = length / 8;
+
+    if (hash_algorithm.equals_ignoring_ascii_case("SHA-1"sv)) {
+        result = ::Crypto::Hash::PBKDF2::derive_key<::Crypto::Authentication::HMAC<::Crypto::Hash::SHA1>>(password, salt, iterations, derived_key_length_bytes);
+    } else if (hash_algorithm.equals_ignoring_ascii_case("SHA-256"sv)) {
+        result = ::Crypto::Hash::PBKDF2::derive_key<::Crypto::Authentication::HMAC<::Crypto::Hash::SHA256>>(password, salt, iterations, derived_key_length_bytes);
+    } else if (hash_algorithm.equals_ignoring_ascii_case("SHA-384"sv)) {
+        result = ::Crypto::Hash::PBKDF2::derive_key<::Crypto::Authentication::HMAC<::Crypto::Hash::SHA384>>(password, salt, iterations, derived_key_length_bytes);
+    } else if (hash_algorithm.equals_ignoring_ascii_case("SHA-512"sv)) {
+        result = ::Crypto::Hash::PBKDF2::derive_key<::Crypto::Authentication::HMAC<::Crypto::Hash::SHA512>>(password, salt, iterations, derived_key_length_bytes);
+    } else {
+        return WebIDL::NotSupportedError::create(m_realm, MUST(String::formatted("Invalid hash function '{}'", hash_algorithm)));
+    }
+
+    // 5. If the key derivation operation fails, then throw an OperationError.
+    if (result.is_error())
+        return WebIDL::OperationError::create(realm, "Failed to derive key"_fly_string);
+
+    // 6. Return result
+    return JS::ArrayBuffer::create(realm, result.release_value());
 }
 
 }

@@ -676,7 +676,7 @@ SupportedAlgorithmsMap supported_algorithms()
 
     // https://w3c.github.io/webcrypto/#pbkdf2
     define_an_algorithm<PBKDF2>("importKey"_string, "PBKDF2"_string);
-    // FIXME: define_an_algorithm("deriveBits"_string, "PBKDF2"_string, "Pbkdf2Params"_string);
+    define_an_algorithm<PBKDF2, PBKDF2Params>("deriveBits"_string, "PBKDF2"_string);
     // FIXME: define_an_algorithm("get key length"_string, "PBKDF2"_string, ""_string);
 
     // https://w3c.github.io/webcrypto/#rsa-oaep
