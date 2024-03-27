@@ -1339,12 +1339,14 @@ WebIDL::ExceptionOr<JS::Value> ED25519::verify([[maybe_unused]] AlgorithmParams 
     return JS::Value(result);
 }
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::ArrayBuffer>> PBKDF2::derive_bits(AlgorithmParams const& params, JS::NonnullGCPtr<CryptoKey> key, u32 length)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::ArrayBuffer>> PBKDF2::derive_bits(AlgorithmParams const& params, JS::NonnullGCPtr<CryptoKey> key, Optional<u32> length_optional)
 {
     auto& realm = m_realm;
     auto const& normalized_algorithm = static_cast<PBKDF2Params const&>(params);
 
     // 1. If length is null or zero, or is not a multiple of 8, then throw an OperationError.
+    auto length = length_optional.value_or(0);
+
     if (length == 0 || length % 8 != 0)
         return WebIDL::OperationError::create(realm, "Length must be greater than 0 and divisible by 8"_fly_string);
 

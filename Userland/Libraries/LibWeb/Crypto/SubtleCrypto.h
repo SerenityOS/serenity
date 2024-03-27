@@ -36,6 +36,7 @@ public:
 
     JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Promise>> generate_key(AlgorithmIdentifier algorithm, bool extractable, Vector<Bindings::KeyUsage> key_usages);
     JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Promise>> derive_bits(AlgorithmIdentifier algorithm, JS::NonnullGCPtr<CryptoKey> base_key, u32 length);
+    JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Promise>> derive_key(AlgorithmIdentifier algorithm, JS::NonnullGCPtr<CryptoKey> base_key, AlgorithmIdentifier derived_key_type, bool extractable, Vector<Bindings::KeyUsage> key_usages);
 
     JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Promise>> import_key(Bindings::KeyFormat format, KeyDataType key_data, AlgorithmIdentifier algorithm, bool extractable, Vector<Bindings::KeyUsage> key_usages);
     JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Promise>> export_key(Bindings::KeyFormat format, JS::NonnullGCPtr<CryptoKey> key);

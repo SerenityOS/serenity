@@ -631,6 +631,99 @@ JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Promise>> SubtleCrypto::derive_bits(A
     return verify_cast<JS::Promise>(*promise->promise());
 }
 
+JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Promise>> SubtleCrypto::derive_key(AlgorithmIdentifier algorithm, JS::NonnullGCPtr<CryptoKey> base_key, AlgorithmIdentifier derived_key_type, bool extractable, Vector<Bindings::KeyUsage> key_usages)
+{
+    auto& realm = this->realm();
+    auto& vm = this->vm();
+    // 1. Let algorithm, baseKey, derivedKeyType, extractable and usages be the algorithm, baseKey, derivedKeyType, extractable and keyUsages parameters passed to the deriveKey() method, respectively.
+
+    // 2. Let normalizedAlgorithm be the result of normalizing an algorithm, with alg set to algorithm and op set to "deriveBits".
+    auto normalized_algorithm = normalize_an_algorithm(realm, algorithm, "deriveBits"_string);
+
+    // 3. If an error occurred, return a Promise rejected with normalizedAlgorithm.
+    if (normalized_algorithm.is_error())
+        return WebIDL::create_rejected_promise_from_exception(realm, normalized_algorithm.release_error());
+
+    // 4. Let normalizedDerivedKeyAlgorithmImport be the result of normalizing an algorithm, with alg set to derivedKeyType and op set to "importKey".
+    auto normalized_derived_key_algorithm_import = normalize_an_algorithm(realm, derived_key_type, "importKey"_string);
+
+    // 5. If an error occurred, return a Promise rejected with normalizedDerivedKeyAlgorithmImport.
+    if (normalized_derived_key_algorithm_import.is_error())
+        return WebIDL::create_rejected_promise_from_exception(realm, normalized_derived_key_algorithm_import.release_error());
+
+    // 6. Let normalizedDerivedKeyAlgorithmLength be the result of normalizing an algorithm, with alg set to derivedKeyType and op set to "get key length".
+    auto normalized_derived_key_algorithm_length = normalize_an_algorithm(realm, derived_key_type, "get key length"_string);
+
+    // 7. If an error occurred, return a Promise rejected with normalizedDerivedKeyAlgorithmLength.
+    if (normalized_derived_key_algorithm_length.is_error())
+        return WebIDL::create_rejected_promise_from_exception(realm, normalized_derived_key_algorithm_length.release_error());
+
+    // 8. Let promise be a new Promise.
+    auto promise = WebIDL::create_promise(realm);
+
+    // 9. Return promise and perform the remaining steps in parallel.
+    Platform::EventLoopPlugin::the().deferred_invoke([&realm, &vm, normalized_algorithm = normalized_algorithm.release_value(), promise, normalized_derived_key_algorithm_import = normalized_derived_key_algorithm_import.release_value(), normalized_derived_key_algorithm_length = normalized_derived_key_algorithm_length.release_value(), base_key = move(base_key), extractable, key_usages = move(key_usages)]() -> void {
+        HTML::TemporaryExecutionContext context(Bindings::host_defined_environment_settings_object(realm), HTML::TemporaryExecutionContext::CallbacksEnabled::Yes);
+        // 10. If the following steps or referenced procedures say to throw an error, reject promise with the returned error and then terminate the algorithm.
+
+        // 11. If the name member of normalizedAlgorithm is not equal to the name attribute of the [[algorithm]] internal slot of baseKey then throw an InvalidAccessError.
+        if (normalized_algorithm.parameter->name != base_key->algorithm_name()) {
+            WebIDL::reject_promise(realm, promise, WebIDL::InvalidAccessError::create(realm, "Algorithm mismatch"_fly_string));
+            return;
+        }
+
+        // 12. If the [[usages]] internal slot of baseKey does not contain an entry that is "deriveKey", then throw an InvalidAccessError.
+        if (!base_key->internal_usages().contains_slow(Bindings::KeyUsage::Derivekey)) {
+            WebIDL::reject_promise(realm, promise, WebIDL::InvalidAccessError::create(realm, "Key does not support deriving keys"_fly_string));
+            return;
+        }
+
+        // 13. Let length be the result of performing the get key length algorithm specified by normalizedDerivedKeyAlgorithmLength using derivedKeyType.
+        auto length_result = normalized_derived_key_algorithm_length.methods->get_key_length(*normalized_derived_key_algorithm_length.parameter);
+        if (length_result.is_error()) {
+            WebIDL::reject_promise(realm, promise, Bindings::dom_exception_to_throw_completion(realm.vm(), length_result.release_error()).release_value().value());
+            return;
+        }
+
+        auto length_raw_value = length_result.release_value();
+        Optional<u32> length = {};
+        if (length_raw_value.is_number()) {
+            auto maybe_length = length_raw_value.to_u32(vm);
+            if (!maybe_length.has_value()) {
+                WebIDL::reject_promise(realm, promise, maybe_length.release_error().release_value().value());
+                return;
+            }
+
+            length = maybe_length.value();
+        }
+
+        // 14. Let secret be the result of performing the derive bits operation specified by normalizedAlgorithm using key, algorithm and length.
+        auto secret = normalized_algorithm.methods->derive_bits(*normalized_algorithm.parameter, base_key, length);
+        if (secret.is_error()) {
+            WebIDL::reject_promise(realm, promise, Bindings::dom_exception_to_throw_completion(realm.vm(), secret.release_error()).release_value().value());
+            return;
+        }
+
+        // 15. Let result be the result of performing the import key operation specified by normalizedDerivedKeyAlgorithmImport using "raw" as format, secret as keyData, derivedKeyType as algorithm and using extractable and usages.
+        auto result = normalized_derived_key_algorithm_import.methods->import_key(*normalized_derived_key_algorithm_import.parameter, Bindings::KeyFormat::Raw, secret.release_value()->buffer(), extractable, key_usages);
+        if (result.is_error()) {
+            WebIDL::reject_promise(realm, promise, Bindings::dom_exception_to_throw_completion(realm.vm(), result.release_error()).release_value().value());
+            return;
+        }
+
+        // 16. If the [[type]] internal slot of result is "secret" or "private" and usages is empty, then throw a SyntaxError.
+        if ((result.release_value()->type() == Bindings::KeyType::Secret || result.release_value()->type() == Bindings::KeyType::Private) && key_usages.is_empty()) {
+            WebIDL::reject_promise(realm, promise, WebIDL::SyntaxError::create(realm, "usages must not be empty"_fly_string));
+            return;
+        }
+
+        // 17. Resolve promise with result.
+        WebIDL::resolve_promise(realm, promise, result.release_value());
+    });
+
+    return verify_cast<JS::Promise>(*promise->promise());
+}
+
 SupportedAlgorithmsMap& supported_algorithms_internal()
 {
     static SupportedAlgorithmsMap s_supported_algorithms;
