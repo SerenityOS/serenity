@@ -21,6 +21,7 @@ namespace Web::Crypto {
 
 using AlgorithmIdentifier = Variant<JS::Handle<JS::Object>, String>;
 using HashAlgorithmIdentifier = AlgorithmIdentifier;
+using NamedCurve = String;
 using KeyDataType = Variant<JS::Handle<WebIDL::BufferSource>, Bindings::JsonWebKey>;
 
 // https://w3c.github.io/webcrypto/#algorithm-overview
@@ -116,6 +117,20 @@ struct RsaOaepParams : public AlgorithmParams {
 
     static JS::ThrowCompletionOr<NonnullOwnPtr<AlgorithmParams>> from_value(JS::VM&, JS::Value);
 };
+// https://w3c.github.io/webcrypto/#dfn-EcKeyGenParams
+struct EcKeyGenParams : public AlgorithmParams {
+    virtual ~EcKeyGenParams() override;
+
+    EcKeyGenParams(String name, NamedCurve named_curve)
+        : AlgorithmParams(move(name))
+        , named_curve(move(named_curve))
+    {
+    }
+
+    NamedCurve named_curve;
+
+    static JS::ThrowCompletionOr<NonnullOwnPtr<AlgorithmParams>> from_value(JS::VM&, JS::Value);
+};
 
 class AlgorithmMethods {
 public:
@@ -207,6 +222,19 @@ public:
 
 private:
     explicit SHA(JS::Realm& realm)
+        : AlgorithmMethods(realm)
+    {
+    }
+};
+
+class ECDSA : public AlgorithmMethods {
+public:
+    virtual WebIDL::ExceptionOr<Variant<JS::NonnullGCPtr<CryptoKey>, JS::NonnullGCPtr<CryptoKeyPair>>> generate_key(AlgorithmParams const&, bool, Vector<Bindings::KeyUsage> const&) override;
+
+    static NonnullOwnPtr<AlgorithmMethods> create(JS::Realm& realm) { return adopt_own(*new ECDSA(realm)); }
+
+private:
+    explicit ECDSA(JS::Realm& realm)
         : AlgorithmMethods(realm)
     {
     }
