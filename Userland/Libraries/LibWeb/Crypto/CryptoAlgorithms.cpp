@@ -1397,4 +1397,10 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::ArrayBuffer>> PBKDF2::derive_bits(Algor
     return JS::ArrayBuffer::create(realm, result.release_value());
 }
 
+WebIDL::ExceptionOr<JS::Value> PBKDF2::get_key_length(AlgorithmParams const&)
+{
+    // 1. Return null.
+    return JS::js_null();
+}
+
 }
