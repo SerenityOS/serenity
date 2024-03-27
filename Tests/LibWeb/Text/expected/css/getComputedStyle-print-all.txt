@@ -47,6 +47,7 @@ box-sizing: content-box
 caption-side: top
 clear: none
 clip: auto
+clip-path: none
 color: rgb(0, 0, 0)
 column-count: auto
 column-gap: auto
@@ -83,7 +84,7 @@ grid-row-start: auto
 grid-template-areas: 
 grid-template-columns: 
 grid-template-rows: 
-height: 1445px
+height: 1462px
 image-rendering: auto
 inline-size: auto
 inset-block-end: auto

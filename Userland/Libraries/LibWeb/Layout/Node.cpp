@@ -193,7 +193,7 @@ bool Node::establishes_stacking_context() const
     // - perspective
     // - clip-path
     // - mask / mask-image / mask-border
-    if (computed_values().mask().has_value())
+    if (computed_values().mask().has_value() || computed_values().clip_path().has_value())
         return true;
 
     return computed_values().opacity() < 1.0f;
@@ -795,6 +795,9 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
 
     if (auto mask = computed_style.property(CSS::PropertyID::Mask); mask->is_url())
         computed_values.set_mask(mask->as_url().url());
+
+    if (auto clip_path = computed_style.property(CSS::PropertyID::ClipPath); clip_path->is_url())
+        computed_values.set_clip_path(clip_path->as_url().url());
 
     if (auto fill_rule = computed_style.fill_rule(); fill_rule.has_value())
         computed_values.set_fill_rule(*fill_rule);

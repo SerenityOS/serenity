@@ -230,6 +230,21 @@ private:
     URL::URL m_url;
 };
 
+// https://drafts.fxtf.org/css-masking/#the-clip-path
+class ClipPathReference {
+public:
+    // TODO: Support clip sources.
+    ClipPathReference(URL::URL const& url)
+        : m_url(url)
+    {
+    }
+
+    URL::URL const& url() const { return m_url; }
+
+private:
+    URL::URL m_url;
+};
+
 struct BackgroundLayerData {
     RefPtr<CSS::AbstractImageStyleValue const> background_image { nullptr };
     CSS::BackgroundAttachment attachment { CSS::BackgroundAttachment::Scroll };
@@ -414,6 +429,7 @@ public:
     CSS::TextAnchor text_anchor() const { return m_inherited.text_anchor; }
     Optional<MaskReference> const& mask() const { return m_noninherited.mask; }
     CSS::MaskType mask_type() const { return m_noninherited.mask_type; }
+    Optional<ClipPathReference> const& clip_path() const { return m_noninherited.clip_path; }
 
     LengthPercentage const& cx() const { return m_noninherited.cx; }
     LengthPercentage const& cy() const { return m_noninherited.cy; }
@@ -579,6 +595,7 @@ protected:
 
         Optional<MaskReference> mask;
         CSS::MaskType mask_type { InitialValues::mask_type() };
+        Optional<ClipPathReference> clip_path;
 
         LengthPercentage cx { InitialValues::cx() };
         LengthPercentage cy { InitialValues::cy() };
@@ -713,6 +730,7 @@ public:
     void set_outline_width(CSS::Length value) { m_noninherited.outline_width = value; }
     void set_mask(MaskReference value) { m_noninherited.mask = value; }
     void set_mask_type(CSS::MaskType value) { m_noninherited.mask_type = value; }
+    void set_clip_path(ClipPathReference value) { m_noninherited.clip_path = value; }
 
     void set_cx(LengthPercentage cx) { m_noninherited.cx = cx; }
     void set_cy(LengthPercentage cy) { m_noninherited.cy = cy; }
