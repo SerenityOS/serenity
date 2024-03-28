@@ -352,6 +352,11 @@ void EventLoop::process()
     // If there are eligible tasks in the queue, schedule a new round of processing. :^)
     if (m_task_queue.has_runnable_tasks() || (!m_microtask_queue.is_empty() && !m_performing_a_microtask_checkpoint))
         schedule();
+
+    // For each doc of docs, process top layer removals given doc.
+    for_each_fully_active_document_in_docs([&](DOM::Document& document) {
+        document.process_top_layer_removals();
+    });
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#queue-a-global-task

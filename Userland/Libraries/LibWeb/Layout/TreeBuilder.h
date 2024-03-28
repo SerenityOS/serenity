@@ -24,6 +24,7 @@ private:
     struct Context {
         bool has_svg_root = false;
         bool layout_svg_mask = false;
+        bool layout_top_layer = false;
     };
 
     i32 calculate_list_item_index(DOM::Node&);

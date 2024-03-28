@@ -290,6 +290,11 @@ i32 TreeBuilder::calculate_list_item_index(DOM::Node& dom_node)
 
 void TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::Context& context)
 {
+    if (dom_node.is_element()) {
+        auto& element = static_cast<DOM::Element&>(dom_node);
+        if (element.in_top_layer() && !context.layout_top_layer)
+            return;
+    }
     if (dom_node.is_element())
         dom_node.document().style_computer().push_ancestor(static_cast<DOM::Element const&>(dom_node));
 
@@ -381,6 +386,14 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::Context& 
             // This is the same as verify_cast<DOM::ParentNode>(dom_node).for_each_child
             for (auto* node = verify_cast<DOM::ParentNode>(dom_node).first_child(); node; node = node->next_sibling())
                 create_layout_tree(*node, context);
+        }
+
+        if (dom_node.is_document()) {
+            // Elements in the top layer do not lay out normally based on their position in the document; instead they
+            // generate boxes as if they were siblings of the root element.
+            TemporaryChange<bool> layout_mask(context.layout_top_layer, true);
+            for (auto const& top_layer_element : document.top_layer_elements())
+                create_layout_tree(top_layer_element, context);
         }
         pop_parent();
     }

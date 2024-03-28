@@ -615,6 +615,13 @@ public:
     void unregister_shadow_root(Badge<DOM::ShadowRoot>, DOM::ShadowRoot&);
     void for_each_shadow_root(Function<void(DOM::ShadowRoot&)>&& callback);
 
+    void add_an_element_to_the_top_layer(JS::NonnullGCPtr<Element>);
+    void request_an_element_to_be_remove_from_the_top_layer(JS::NonnullGCPtr<Element>);
+    void remove_an_element_from_the_top_layer_immediately(JS::NonnullGCPtr<Element>);
+    void process_top_layer_removals();
+
+    OrderedHashTable<JS::NonnullGCPtr<Element>> const& top_layer_elements() const { return m_top_layer_elements; }
+
 protected:
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
@@ -854,6 +861,13 @@ private:
     Vector<JS::NonnullGCPtr<DOM::ShadowRoot>> m_shadow_roots;
 
     u64 m_dom_tree_version { 0 };
+
+    // https://drafts.csswg.org/css-position-4/#document-top-layer
+    // Documents have a top layer, an ordered set containing elements from the document.
+    // Elements in the top layer do not lay out normally based on their position in the document;
+    // instead they generate boxes as if they were siblings of the root element.
+    OrderedHashTable<JS::NonnullGCPtr<Element>> m_top_layer_elements;
+    OrderedHashTable<JS::NonnullGCPtr<Element>> m_top_layer_pending_removals;
 };
 
 template<>

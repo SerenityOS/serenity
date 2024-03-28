@@ -361,6 +361,9 @@ public:
         return nullptr;
     }
 
+    void set_in_top_layer(bool in_top_layer) { m_in_top_layer = in_top_layer; }
+    bool in_top_layer() const { return m_in_top_layer; }
+
 protected:
     Element(Document&, DOM::QualifiedName);
     virtual void initialize(JS::Realm&) override;
@@ -430,6 +433,8 @@ private:
     OwnPtr<Vector<IntersectionObserver::IntersectionObserverRegistration>> m_registered_intersection_observers;
 
     Array<CSSPixelPoint, 3> m_scroll_offset;
+
+    bool m_in_top_layer { false };
 };
 
 template<>
