@@ -435,6 +435,7 @@ set(SOURCES
     Infra/JSON.cpp
     Infra/Strings.cpp
     Internals/Inspector.cpp
+    Internals/InternalAnimationTimeline.cpp
     Internals/Internals.cpp
     IntersectionObserver/IntersectionObserver.cpp
     IntersectionObserver/IntersectionObserverEntry.cpp

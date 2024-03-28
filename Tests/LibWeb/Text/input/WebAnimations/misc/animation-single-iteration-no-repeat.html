@@ -2,7 +2,8 @@
 <!DOCTYPE html>
 <style>
     #foo {
-        animation: anim .025s;
+        animation: anim 1s;
+        animation-play-state: paused;
     }
     @keyframes anim {
         from {
@@ -16,19 +17,39 @@
 <div id="foo"></div>
 <script src="../../include.js"></script>
 <script>
-    asyncTest(done => {
+    const animationFrame = () => {
+        const { promise, resolve } = Promise.withResolvers();
+        requestAnimationFrame(resolve);
+        return promise;
+    };
+
+    asyncTest(async done => {
         const foo = document.getElementById("foo");
+        const timeline = internals.createInternalAnimationTimeline();
+        timeline.setTime(0);
+
+        const anim = foo.getAnimations()[0];
+        anim.timeline = timeline;
         let finishCount = 0;
-        foo.getAnimations()[0].onfinish = () => {
-            finishCount += 1;
-        }
+        anim.onfinish = () => { finishCount++; }
+
+        anim.play();
 
         // Cause a few style invalidations, which shouldn't mess with the animation at all
-        setInterval(() => foo.style = "", 50);
+        await animationFrame();
+        foo.style = "";
+        timeline.setTime(500);
 
-        setTimeout(() => {
-            println(`finish count: ${finishCount}`);
-            done();
-        }, 200);
-    })
+        await animationFrame();
+        foo.style = "";
+        timeline.setTime(1000);
+
+        await animationFrame();
+        foo.style = "";
+        timeline.setTime(1500);
+
+        await animationFrame();
+        println(`finish count: ${finishCount}`);
+        done();
+    });
 </script>
