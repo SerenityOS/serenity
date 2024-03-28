@@ -1512,9 +1512,9 @@ WebIDL::ExceptionOr<void> Navigable::navigate_to_a_fragment(URL::URL const& url,
     auto traversable = traversable_navigable();
 
     // 17. Append the following session history synchronous navigation steps involving navigable to traversable:
-    traversable->append_session_history_synchronous_navigation_steps(*this, [this, traversable, history_entry, entry_to_replace, navigation_id] {
+    traversable->append_session_history_synchronous_navigation_steps(*this, [this, traversable, history_entry, entry_to_replace, navigation_id, history_handling] {
         // 1. Finalize a same-document navigation given traversable, navigable, historyEntry, and entryToReplace.
-        finalize_a_same_document_navigation(*traversable, *this, history_entry, entry_to_replace);
+        finalize_a_same_document_navigation(*traversable, *this, history_entry, entry_to_replace, history_handling);
 
         // FIXME: 2. Invoke WebDriver BiDi fragment navigated with navigable's active browsing context and a new WebDriver BiDi
         //            navigation status whose id is navigationId, url is url, and status is "complete".
@@ -1860,7 +1860,7 @@ void finalize_a_cross_document_navigation(JS::NonnullGCPtr<Navigable> navigable,
     }
 
     // 10. Apply the push/replace history step targetStep to traversable.
-    traversable->apply_the_push_or_replace_history_step(target_step);
+    traversable->apply_the_push_or_replace_history_step(target_step, history_handling);
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#url-and-history-update-steps
@@ -1924,9 +1924,9 @@ void perform_url_and_history_update_steps(DOM::Document& document, URL::URL new_
     auto traversable = navigable->traversable_navigable();
 
     // 13. Append the following session history synchronous navigation steps involving navigable to traversable:
-    traversable->append_session_history_synchronous_navigation_steps(*navigable, [traversable, navigable, new_entry, entry_to_replace] {
+    traversable->append_session_history_synchronous_navigation_steps(*navigable, [traversable, navigable, new_entry, entry_to_replace, history_handling] {
         // 1. Finalize a same-document navigation given traversable, navigable, newEntry, and entryToReplace.
-        finalize_a_same_document_navigation(*traversable, *navigable, new_entry, entry_to_replace);
+        finalize_a_same_document_navigation(*traversable, *navigable, new_entry, entry_to_replace, history_handling);
     });
 
     // FIXME: Implement synchronous session history steps.
