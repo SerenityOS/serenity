@@ -69,7 +69,7 @@ JS::ThrowCompletionOr<ResolvedOverload> resolve_overload(JS::VM& vm, IDL::Effect
 
     // 5. If S is empty, then throw a TypeError.
     if (overloads.is_empty())
-        return vm.throw_completion<JS::TypeError>(JS::ErrorType::OverloadResolutionFailed);
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::OverloadResolutionFailed, overloads.name());
 
     // 6. Initialize d to −1.
     auto distinguishing_argument_index = -1;
@@ -363,7 +363,7 @@ JS::ThrowCompletionOr<ResolvedOverload> resolve_overload(JS::VM& vm, IDL::Effect
         else {
             // FIXME: Remove this message once all the above sub-steps are implemented.
             dbgln("Failed to determine IDL overload. (Probably because of unimplemented steps.)");
-            return vm.throw_completion<JS::TypeError>(JS::ErrorType::OverloadResolutionFailed);
+            return vm.throw_completion<JS::TypeError>(JS::ErrorType::OverloadResolutionFailed, overloads.name());
         }
     }
 

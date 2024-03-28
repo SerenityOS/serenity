@@ -417,8 +417,9 @@ public:
         Vector<Optionality> optionality_values;
     };
 
-    EffectiveOverloadSet(Vector<Item> items, size_t distinguishing_argument_index)
-        : m_items(move(items))
+    EffectiveOverloadSet(StringView name, Vector<Item> items, size_t distinguishing_argument_index)
+        : m_name(name)
+        , m_items(move(items))
         , m_distinguishing_argument_index(distinguishing_argument_index)
     {
     }
@@ -434,6 +435,8 @@ public:
 
     bool is_empty() const { return m_items.is_empty(); }
     size_t size() const { return m_items.size(); }
+
+    StringView name() const { return m_name; }
 
     size_t distinguishing_argument_index() const { return m_distinguishing_argument_index; }
 
@@ -454,6 +457,7 @@ public:
     void remove_all_other_entries();
 
 private:
+    StringView m_name;
     // FIXME: This should be an "ordered set".
     Vector<Item> m_items;
     size_t m_distinguishing_argument_index { 0 };
