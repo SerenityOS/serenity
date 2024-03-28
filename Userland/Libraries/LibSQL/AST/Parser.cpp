@@ -901,9 +901,70 @@ NonnullRefPtr<ColumnDefinition> Parser::parse_column_definition()
         // https://www.sqlite.org/datatype3.html: If no type is specified then the column has affinity BLOB.
         : create_ast_node<TypeName>("BLOB", Vector<NonnullRefPtr<SignedNumber>> {});
 
-    // FIXME: Parse "column-constraint".
+    auto column_constraint = parse_column_constraint();
+    return create_ast_node<ColumnDefinition>(move(name), move(type_name), move(column_constraint));
+}
 
-    return create_ast_node<ColumnDefinition>(move(name), move(type_name));
+RefPtr<ColumnConstraint> Parser::parse_column_constraint()
+{
+    // https://sqlite.org/syntax/column-constraint.html
+    Optional<ByteString> name = {};
+    if (consume_if(TokenType::Constraint)) {
+        name = consume(TokenType::Identifier).value();
+    }
+
+    if (consume_if(TokenType::Primary)) {
+        consume(TokenType::Key);
+        auto order = parse_order();
+        auto conflict_resolution = parse_conflict_resolution();
+        auto is_auto_increment = consume_if(TokenType::Autoincrement);
+        return create_ast_node<PrimaryKeyColumnConstraint>(move(name), move(order), move(conflict_resolution), is_auto_increment);
+    }
+    if (consume_if(TokenType::Not)) {
+        consume(TokenType::Null);
+        auto conflict_resolution = parse_conflict_resolution();
+        return create_ast_node<NotNullColumnConstraint>(move(name), move(conflict_resolution));
+    }
+    if (consume_if(TokenType::Unique)) {
+        auto conflict_resolution = parse_conflict_resolution();
+        return create_ast_node<UniqueColumnConstraint>(move(name), move(conflict_resolution));
+    }
+    if (consume_if(TokenType::Check)) {
+        auto expression = parse_expression();
+        return create_ast_node<CheckColumnConstraint>(move(name), move(expression));
+    }
+    if (consume_if(TokenType::Default)) {
+        if (consume_if(TokenType::ParenOpen)) {
+            auto expression = parse_expression();
+            consume(TokenType::ParenClose);
+            return create_ast_node<DefaultColumnConstraint>(move(name), move(expression));
+        }
+        auto maybe_expression = parse_literal_value_expression();
+        if (maybe_expression.is_null()) {
+            expected("a literal value"sv);
+            return {};
+        }
+        auto expression = maybe_expression.release_nonnull();
+        return create_ast_node<DefaultColumnConstraint>(move(name), move(expression));
+    }
+    if (consume_if(TokenType::Collate)) {
+        auto collation_name = consume(TokenType::Identifier).value();
+        return create_ast_node<CollateColumnConstraint>(move(name), move(collation_name));
+    }
+    if (match(TokenType::References)) {
+        // FIXME: foreign-key-clause
+    }
+    if (consume_if(TokenType::Generated)) {
+        consume(TokenType::Always);
+    }
+    if (consume_if(TokenType::As)) {
+        consume(TokenType::ParenOpen);
+        auto expression = parse_expression();
+        consume(TokenType::ParenClose);
+        auto computation_strategy = parse_computation_strategy();
+        return create_ast_node<GeneratedColumnConstraint>(move(name), move(expression), move(computation_strategy));
+    }
+    return {};
 }
 
 NonnullRefPtr<TypeName> Parser::parse_type_name()
@@ -1073,8 +1134,7 @@ NonnullRefPtr<OrderingTerm> Parser::parse_ordering_term()
         collation_name = consume(TokenType::Identifier).value();
     }
 
-    Order order = consume_if(TokenType::Desc) ? Order::Descending : Order::Ascending;
-    consume_if(TokenType::Asc); // ASC is the default, so ignore it if specified.
+    Order order = parse_order();
 
     Nulls nulls = order == Order::Ascending ? Nulls::First : Nulls::Last;
     if (consume_if(TokenType::Nulls)) {
@@ -1104,7 +1164,7 @@ void Parser::parse_schema_and_table_name(ByteString& schema_name, ByteString& ta
 ConflictResolution Parser::parse_conflict_resolution()
 {
     // https://sqlite.org/lang_conflict.html
-    if (consume_if(TokenType::Or)) {
+    if (consume_if(TokenType::On)) {
         if (consume_if(TokenType::Abort))
             return ConflictResolution::Abort;
         if (consume_if(TokenType::Fail))
@@ -1120,6 +1180,20 @@ ConflictResolution Parser::parse_conflict_resolution()
     }
 
     return ConflictResolution::Abort;
+}
+
+Order Parser::parse_order()
+{
+    auto order = consume_if(TokenType::Desc) ? Order::Descending : Order::Ascending;
+    consume_if(TokenType::Asc); // ASC is the default, so ignore it if specified.
+    return order;
+}
+
+GeneratedColumnConstraint::ComputationStrategy Parser::parse_computation_strategy()
+{
+    auto strategy = consume_if(TokenType::Stored) ? GeneratedColumnConstraint::ComputationStrategy::Stored : GeneratedColumnConstraint::ComputationStrategy::Virtual;
+    consume_if(TokenType::Virtual); // Virtual is the default, so ignore it if specified.
+    return strategy;
 }
 
 Token Parser::consume()

@@ -89,6 +89,7 @@ private:
     RefPtr<Expression> parse_in_expression(NonnullRefPtr<Expression> expression, bool invert_expression);
 
     NonnullRefPtr<ColumnDefinition> parse_column_definition();
+    RefPtr<ColumnConstraint> parse_column_constraint();
     NonnullRefPtr<TypeName> parse_type_name();
     NonnullRefPtr<SignedNumber> parse_signed_number();
     NonnullRefPtr<CommonTableExpression> parse_common_table_expression();
@@ -99,6 +100,8 @@ private:
     NonnullRefPtr<OrderingTerm> parse_ordering_term();
     void parse_schema_and_table_name(ByteString& schema_name, ByteString& table_name);
     ConflictResolution parse_conflict_resolution();
+    Order parse_order();
+    GeneratedColumnConstraint::ComputationStrategy parse_computation_strategy();
 
     template<typename ParseCallback>
     void parse_comma_separated_list(bool surrounded_by_parentheses, ParseCallback&& parse_callback)

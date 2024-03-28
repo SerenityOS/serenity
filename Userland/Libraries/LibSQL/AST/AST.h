@@ -69,20 +69,158 @@ private:
     Vector<NonnullRefPtr<SignedNumber>> m_signed_numbers;
 };
 
+enum class ConflictResolution {
+    Abort,
+    Fail,
+    Ignore,
+    Replace,
+    Rollback,
+};
+
+class ColumnConstraint : public ASTNode {
+public:
+    ColumnConstraint(Optional<ByteString> name)
+        : m_name(move(name))
+    {
+    }
+
+    Optional<ByteString> const& name() const { return m_name; }
+
+private:
+    Optional<ByteString> m_name;
+};
+
+class PrimaryKeyColumnConstraint : public ColumnConstraint {
+public:
+    PrimaryKeyColumnConstraint(Optional<ByteString> name, Order order, ConflictResolution conflict_resolution, bool autoincrement)
+        : ColumnConstraint(move(name))
+        , m_order(move(order))
+        , m_conflict_resolution(move(conflict_resolution))
+        , m_autoincrement(autoincrement)
+    {
+    }
+
+    Order const& order() const { return m_order; }
+    ConflictResolution const& conflict_resolution() const { return m_conflict_resolution; }
+    bool is_autoincrement() const { return m_autoincrement; }
+
+private:
+    Order m_order;
+    ConflictResolution m_conflict_resolution;
+    bool m_autoincrement;
+};
+
+class NotNullColumnConstraint : public ColumnConstraint {
+public:
+    NotNullColumnConstraint(Optional<ByteString> name, ConflictResolution conflict_resolution)
+        : ColumnConstraint(move(name))
+        , m_conflict_resolution(move(conflict_resolution))
+    {
+    }
+
+    ConflictResolution const& conflict_resolution() const { return m_conflict_resolution; }
+
+private:
+    ConflictResolution m_conflict_resolution;
+};
+
+class UniqueColumnConstraint : public ColumnConstraint {
+public:
+    UniqueColumnConstraint(Optional<ByteString> name, ConflictResolution conflict_resolution)
+        : ColumnConstraint(move(name))
+        , m_conflict_resolution(move(conflict_resolution))
+    {
+    }
+
+    ConflictResolution const& conflict_resolution() const { return m_conflict_resolution; }
+
+private:
+    ConflictResolution m_conflict_resolution;
+};
+
+class CheckColumnConstraint : public ColumnConstraint {
+public:
+    CheckColumnConstraint(Optional<ByteString> name, NonnullRefPtr<Expression> expression)
+        : ColumnConstraint(move(name))
+        , m_expression(move(expression))
+    {
+    }
+
+    NonnullRefPtr<Expression> const& expression() const { return m_expression; }
+
+private:
+    NonnullRefPtr<Expression> m_expression;
+};
+
+class DefaultColumnConstraint : public ColumnConstraint {
+public:
+    DefaultColumnConstraint(Optional<ByteString> name, NonnullRefPtr<Expression> expression)
+        : ColumnConstraint(move(name))
+        , m_expression(move(expression))
+    {
+    }
+
+    NonnullRefPtr<Expression> const& expression() const { return m_expression; }
+
+private:
+    NonnullRefPtr<Expression> m_expression;
+};
+
+class CollateColumnConstraint : public ColumnConstraint {
+public:
+    CollateColumnConstraint(Optional<ByteString> name, ByteString collation_name)
+        : ColumnConstraint(move(name))
+        , m_collation_name(move(collation_name))
+    {
+    }
+
+    ByteString const& collation_name() const { return m_collation_name; }
+
+private:
+    ByteString m_collation_name;
+};
+
+class ReferencesColumnConstraint : public ColumnConstraint { };
+
+class GeneratedColumnConstraint : public ColumnConstraint {
+public:
+    enum class ComputationStrategy {
+        Virtual,
+        Stored,
+    };
+
+    GeneratedColumnConstraint(Optional<ByteString> name, NonnullRefPtr<Expression> expression, ComputationStrategy computation_strategy)
+        : ColumnConstraint(move(name))
+        , m_expression(move(expression))
+        , m_computation_strategy(move(computation_strategy))
+    {
+    }
+
+    NonnullRefPtr<Expression> const& expression() const { return m_expression; }
+    ComputationStrategy const& computation_strategy() const { return m_computation_strategy; }
+
+private:
+    NonnullRefPtr<Expression> m_expression;
+    ComputationStrategy m_computation_strategy;
+};
+
 class ColumnDefinition : public ASTNode {
 public:
-    ColumnDefinition(ByteString name, NonnullRefPtr<TypeName> type_name)
+    ColumnDefinition(ByteString name, NonnullRefPtr<TypeName> type_name, RefPtr<ColumnConstraint> column_constraint)
         : m_name(move(name))
         , m_type_name(move(type_name))
+        , m_column_constraint(move(column_constraint))
     {
     }
 
     ByteString const& name() const { return m_name; }
     NonnullRefPtr<TypeName> const& type_name() const { return m_type_name; }
+    RefPtr<ColumnConstraint> const& column_constraint() const { return m_column_constraint; }
 
 private:
     ByteString m_name;
     NonnullRefPtr<TypeName> m_type_name;
+    RefPtr<ColumnConstraint> m_column_constraint;
 };
 
 class CommonTableExpression : public ASTNode {
@@ -924,14 +1062,6 @@ private:
     ByteString m_schema_name;
     ByteString m_table_name;
     bool m_is_error_if_table_does_not_exist;
-};
-
-enum class ConflictResolution {
-    Abort,
-    Fail,
-    Ignore,
-    Replace,
-    Rollback,
 };
 
 class Insert : public Statement {

@@ -144,6 +144,7 @@ namespace SQL::AST {
     __ENUMERATE_SQL_TOKEN("SCHEMA", Schema, Keyword)                      \
     __ENUMERATE_SQL_TOKEN("SELECT", Select, Keyword)                      \
     __ENUMERATE_SQL_TOKEN("SET", Set, Keyword)                            \
+    __ENUMERATE_SQL_TOKEN("STORED", Stored, Keyword)                      \
     __ENUMERATE_SQL_TOKEN("TABLE", Table, Keyword)                        \
     __ENUMERATE_SQL_TOKEN("TEMP", Temp, Keyword)                          \
     __ENUMERATE_SQL_TOKEN("TEMPORARY", Temporary, Keyword)                \
