@@ -18,6 +18,7 @@ from pathlib import Path
 from shutil import which
 from subprocess import run
 from typing import Any, Callable, Literal
+import shlex
 
 QEMU_MINIMUM_REQUIRED_MAJOR_VERSION = 6
 QEMU_MINIMUM_REQUIRED_MINOR_VERSION = 2
@@ -688,7 +689,7 @@ hostfwd=tcp:{config.host_ip}:2222-10.0.2.15:22"
 
 def set_up_kernel(config: Configuration):
     if config.architecture == Arch.Aarch64:
-        config.kernel_and_initrd_arguments = ["-kernel", "Kernel/Kernel"]
+        config.kernel_and_initrd_arguments = ["-kernel", "Kernel/kernel8.img"]
     elif config.architecture == Arch.RISCV64:
         config.kernel_and_initrd_arguments = ["-kernel", "Kernel/Kernel.bin"]
     elif config.architecture == Arch.x86_64:
@@ -830,6 +831,8 @@ def assemble_arguments(config: Configuration) -> list[str | Path]:
         boch_src = Path(config.serenity_src or ".", "Meta/bochsrc")
         return [config.bochs_binary, "-q", "-f", boch_src]
 
+    passed_qemu_args = shlex.split(environ.get("SERENITY_EXTRA_QEMU_ARGS", ""))
+
     return [
         config.qemu_binary or "",
         # Deviate from standard order here:
@@ -855,6 +858,7 @@ def assemble_arguments(config: Configuration) -> list[str | Path]:
         *config.network_default_arguments,
         *config.boot_drive_arguments,
         *config.character_device_arguments,
+        *passed_qemu_args,
     ]
 
 

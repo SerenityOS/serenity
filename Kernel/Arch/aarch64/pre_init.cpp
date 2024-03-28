@@ -19,15 +19,17 @@ namespace Kernel {
 
 extern "C" [[noreturn]] void init();
 
-extern "C" [[noreturn]] void pre_init();
-extern "C" [[noreturn]] void pre_init()
+// https://github.com/raspberrypi/linux/blob/rpi-5.10.y/Documentation/arm/booting.rst#6-calling-the-kernel-image
+// FIXME: Depending on the machine type, the third argument might not a pointer to the flattened device tree
+extern "C" [[noreturn]] void pre_init(PhysicalPtr);
+extern "C" [[noreturn]] void pre_init(PhysicalPtr fdt_ptr)
 {
     // We want to drop to EL1 as soon as possible, because that is the
     // exception level the kernel should run at.
     initialize_exceptions();
 
     // Next step is to set up page tables and enable the MMU.
-    Memory::init_page_tables();
+    Memory::init_page_tables(fdt_ptr);
 
     // At this point the MMU is enabled, physical memory is identity mapped,
     // and the kernel is also mapped into higher virtual memory. However we are still executing

@@ -15,6 +15,7 @@
 #include <Kernel/Boot/BootInfo.h>
 #include <Kernel/Boot/Multiboot.h>
 #include <Kernel/FileSystem/Inode.h>
+#include <Kernel/Firmware/Devicetree/Devicetree.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/Interrupts/InterruptDisabler.h>
 #include <Kernel/KSyms.h>
@@ -281,13 +282,13 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
 #endif
         global_data.used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::Kernel, PhysicalAddress(virtual_to_low_physical((FlatPtr)start_of_kernel_image)), PhysicalAddress(page_round_up(virtual_to_low_physical((FlatPtr)end_of_kernel_image)).release_value_but_fixme_should_propagate_errors()) });
 
-#if ARCH(RISCV64)
-        // FIXME: AARCH64 might be able to make use of this code path
-        //        Some x86 platforms also provide flattened device trees
-        parse_memory_map_fdt(global_data, s_fdt_storage);
-#else
-        parse_memory_map_multiboot(global_data);
-#endif
+        // FIXME: Not having a (valid) FDT does not mean we have a multiboot memory map
+        //        AARCH64, which can boot without us having received a FDT,
+        //        creates an artificial memory map, so this works in that case
+        if (verify_fdt())
+            parse_memory_map_fdt(global_data, s_fdt_storage);
+        else
+            parse_memory_map_multiboot(global_data);
 
         // Now we need to setup the physical regions we will use later
         struct ContiguousPhysicalVirtualRange {
@@ -386,6 +387,17 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map_fdt(MemoryManager::GlobalD
     auto fdt_buffer = ReadonlyBytes(fdt_addr, fdt_header.totalsize);
 
     // FIXME: Parse the MemoryReservationBlock
+    auto const* mem_reserve_block = reinterpret_cast<DeviceTree::FlattenedDeviceTreeReserveEntry const*>(&fdt_buffer[fdt_header.off_mem_rsvmap]);
+
+    u64 next_block_offset = fdt_header.off_mem_rsvmap + sizeof(DeviceTree::FlattenedDeviceTreeReserveEntry);
+    while ((next_block_offset < fdt_header.off_dt_struct) && (*mem_reserve_block != DeviceTree::FlattenedDeviceTreeReserveEntry {})) {
+        dbgln("MM: Reserved Range /mem_reserve_block: address: {} size {:#x}", PhysicalAddress { mem_reserve_block->address }, mem_reserve_block->size);
+        global_data.physical_memory_ranges.append(PhysicalMemoryRange { PhysicalMemoryRangeType::Reserved, PhysicalAddress { mem_reserve_block->address }, mem_reserve_block->size });
+        // FIXME: Not all of these are "used", only those in "memory" are actually "used"
+        global_data.used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::BootModule, PhysicalAddress { mem_reserve_block->address }, PhysicalAddress { mem_reserve_block->address + mem_reserve_block->size } });
+        ++mem_reserve_block;
+        next_block_offset += sizeof(DeviceTree::FlattenedDeviceTreeReserveEntry);
+    }
 
     // Schema:
     // https://github.com/devicetree-org/dt-schema/blob/main/dtschema/schemas/root-node.yaml
@@ -458,6 +470,12 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map_fdt(MemoryManager::GlobalD
                     break;
                 case State::InReservedMemoryChild:
                     // FIXME: Handle non static allocations,
+                    if (!state.start.has_value()) {
+                        VERIFY(state.size.has_value());
+                        dbgln("MM: Non static reserved memory range {} of size {:#x}, skipping for now", node_name, state.size.value());
+                        state.state = State::InReservedMemory;
+                        break;
+                    }
                     VERIFY(state.start.has_value() && state.size.has_value());
                     dbgln("MM: Reserved Range {}: address: {} size {:#x}", node_name, PhysicalAddress { state.start.value() }, state.size.value());
                     global_data.physical_memory_ranges.append(PhysicalMemoryRange { PhysicalMemoryRangeType::Reserved, PhysicalAddress { state.start.value() }, state.size.value() });

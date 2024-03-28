@@ -11,6 +11,7 @@
 #include <Kernel/Arch/riscv64/PageDirectory.h>
 #include <Kernel/Arch/riscv64/SBI.h>
 #include <Kernel/Arch/riscv64/pre_init.h>
+#include <Kernel/Firmware/Devicetree/Devicetree.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Sections.h>
 #include <LibDeviceTree/FlattenedDeviceTree.h>

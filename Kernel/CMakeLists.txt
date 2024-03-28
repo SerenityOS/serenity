@@ -232,6 +232,7 @@ set(KERNEL_SOURCES
     Firmware/ACPI/Initialize.cpp
     Firmware/ACPI/Parser.cpp
     Firmware/ACPI/StaticParsing.cpp
+    Firmware/Devicetree/Devicetree.cpp
     Interrupts/GenericInterruptHandler.cpp
     Interrupts/IRQHandler.cpp
     Interrupts/PCIIRQHandler.cpp

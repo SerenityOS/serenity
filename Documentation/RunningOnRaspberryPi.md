@@ -14,12 +14,22 @@ Currently only UART output is supported, no display.
 
 Please follow [build instructions](BuildInstructions.md) to download and build Serenity. Make sure everything builds successfully for x86.
 
+It is also recommended to download an appropriate devicetree blob for your Raspberry Pi model.
+You can find them in the [Raspberry Pi firmware repository](https://github.com/raspberrypi/firmware/tree/master/boot),
+for example `bcm2710-rpi-3-b.dtb` for Raspberry Pi 3B.
+
 ### Step 2: Build and run in emulator
 
 Use the following command to build and run the AArch64 version of the system:
 
 ```console
 Meta/serenity.sh run aarch64
+```
+
+If you have a devicetree blob, you can pass it to QEMU using the `SERENITY_EXTRA_QEMU_ARGS` environment variable:
+
+```console
+SERENITY_EXTRA_QEMU_ARGS="-dtb PATH_TO_YOUR_DEVICETREE_BLOB" Meta/serenity.sh run aarch64
 ```
 
 It should build Serenity and open a QEMU window, similar to the x86 version. You should see some messages in the terminal.

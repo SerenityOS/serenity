@@ -14,10 +14,25 @@
 #include <AK/MemoryStream.h>
 #include <AK/Optional.h>
 #include <AK/Span.h>
+#include <AK/Vector.h>
 
 namespace DeviceTree {
 
 struct DeviceTreeProperty {
+    class ValueStream : public FixedMemoryStream {
+    public:
+        using AK::FixedMemoryStream::FixedMemoryStream;
+
+        ErrorOr<FlatPtr> read_cells(u32 cell_size)
+        {
+            // FIXME: There are rare cases of 3 cell size big values, even in addresses, especially in addresses
+            VERIFY(cell_size <= 2);
+            if (cell_size == 1)
+                return read_value<BigEndian<u32>>();
+            return read_value<BigEndian<u64>>();
+        }
+    };
+
     ReadonlyBytes raw_data;
 
     size_t size() const { return raw_data.size(); }
@@ -72,10 +87,17 @@ struct DeviceTreeProperty {
         return {};
     }
 
-    FixedMemoryStream as_stream() const { return FixedMemoryStream { raw_data }; }
+    ValueStream as_stream() const { return ValueStream { raw_data }; }
 };
 
 class DeviceTreeNodeView {
+    // FIXME: This struct only holds true for memory mapped nodes,
+    //        eg PCI devices have 96-bit addresses in their "reg" property
+    struct Reg {
+        FlatPtr address;
+        size_t length;
+    };
+
 public:
     bool has_property(StringView prop) const { return m_properties.contains(prop); }
     bool has_child(StringView child) const { return m_children.contains(child); }
@@ -91,6 +113,59 @@ public:
     HashMap<StringView, DeviceTreeProperty> const& properties() const { return m_properties; }
 
     DeviceTreeNodeView const* parent() const { return m_parent; }
+
+    // Note: When checking for multiple drivers, prefer iterating over the string array instead,
+    //       as the compatible strings are sorted by preference, which this function cannot account for
+    bool is_compatible_with(StringView compatible) const
+    {
+        if (auto compatible_property = get_property("compatible"sv); compatible_property.has_value()) {
+            bool return_value = false;
+            compatible_property.value().for_each_string([compatible, &return_value](StringView compatible_string) -> IterationDecision {
+                if (compatible_string.matches(compatible)) {
+                    return_value = true;
+                    return IterationDecision::Break;
+                }
+                return IterationDecision::Continue;
+            });
+            return return_value;
+        }
+        return false;
+    }
+
+    FlatPtr to_root_address(FlatPtr value) const;
+
+    Optional<DeviceTreeProperty> raw_reg() const { return get_property("reg"sv); }
+
+    Vector<Reg, 2> reg() const
+    {
+        auto reg_property = raw_reg();
+        if (!reg_property.has_value())
+            return {};
+
+        auto address_cells = get_property("#address-cells"sv);
+        auto size_cells = get_property("#size-cells"sv);
+
+        if (!address_cells.has_value() || !size_cells.has_value())
+            return {};
+
+        Vector<Reg, 2> result;
+        auto value_stream = reg_property->as_stream();
+        while (!value_stream.is_eof()) {
+            auto address = value_stream.read_cells(address_cells->as<u32>());
+            auto length = value_stream.read_cells(size_cells->as<u32>());
+            result.append({ to_root_address(address.value()), length.value() });
+        }
+
+        return result;
+    }
+
+    StringView device_type() const
+    {
+        if (auto device_type_property = get_property("device_type"sv); device_type_property.has_value()) {
+            return device_type_property.value().as_string();
+        }
+        return {};
+    }
 
     // FIXME: Add convenience functions for common properties like "reg" and "compatible"
     // Note: The "reg" property is a list of address and size pairs, but the address is not always a u32 or u64
@@ -163,10 +238,47 @@ public:
         return node->get_property(property_name);
     }
 
-    // FIXME: Add a helper to iterate over each descendant fulfilling some properties
-    //        Like each node with a "compatible" property containing "pci" or "usb",
-    //        bonus points if it could automatically recurse in the tree under some conditions,
-    //        like "simple-bus" or "pci-bridge" nodes
+    template<CallableAs<ErrorOr<IterationDecision>, StringView, DeviceTreeNodeView const&> Callback>
+    ErrorOr<void> for_each_node_in_connected_simple_bus(Callback&& callback) const
+    {
+        struct SimpleBusInfo {
+            StringView name;
+            DeviceTreeNodeView const& node;
+        };
+        Vector<SimpleBusInfo, 2> busses;
+        TRY(busses.try_append({ "/"sv, *this }));
+        while (busses.size()) {
+            auto bus = busses.take_last();
+            if (auto ranges = bus.node.get_property("ranges"sv); ranges.has_value() && ranges->size() != 0) {
+                // FIXME: Add interfaces for this
+                dbgln("DeviceTree: Found simple-bus '{}' with non-null ranges property, handling this may need address translation, skipping for now", bus.name);
+                continue;
+            }
+            for (auto const& [name, child] : bus.node.children()) {
+                if (child.is_compatible_with("simple-bus"sv))
+                    TRY(busses.try_append({ name, child }));
+                else if (TRY(callback(name, child)) == IterationDecision::Break)
+                    return {};
+            }
+        }
+
+        return {};
+    }
+
+    template<CallableAs<ErrorOr<IterationDecision>, StringView, DeviceTreeNodeView const&> Callback>
+    ErrorOr<void> for_each_connected_pci_controller(Callback&& callback) const
+    {
+        return for_each_node_in_connected_simple_bus(
+            [callback = forward<Callback>(callback)](StringView node_name, auto const& node) -> ErrorOr<IterationDecision> {
+                // FIXME: /pcie?/ is only a "recommended" name for PCI controllers
+                //        There does not seem to be anything better in the spec though
+                //        So it is technically possible to have a pci device with a different name,
+                //        and not even a device_type property to go by
+                if (node_name.starts_with("pci"sv))
+                    return callback(node_name, node);
+                return IterationDecision::Continue;
+            });
+    }
 
     DeviceTreeNodeView const* phandle(u32 phandle) const
     {
