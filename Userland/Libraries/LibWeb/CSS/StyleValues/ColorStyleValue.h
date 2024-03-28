@@ -3,12 +3,14 @@
  * Copyright (c) 2021, Tobias Christiansen <tobyase@serenityos.org>
  * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2022-2023, MacDue <macdue@dueutil.tech>
+ * Copyright (c) 2024, Tim Ledbetter <timledbetter@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
+#include <AK/FlyString.h>
 #include <LibGfx/Color.h>
 #include <LibWeb/CSS/StyleValue.h>
 
@@ -26,14 +28,32 @@ public:
 
     bool properties_equal(ColorStyleValue const& other) const { return m_color == other.m_color; }
 
-private:
+protected:
     explicit ColorStyleValue(Color color)
         : StyleValueWithDefaultOperators(Type::Color)
         , m_color(color)
     {
     }
 
+private:
     Color m_color;
+};
+
+class NamedColorStyleValue : public ColorStyleValue {
+public:
+    static ValueComparingNonnullRefPtr<ColorStyleValue> create(Color, FlyString const& color_name);
+    virtual ~NamedColorStyleValue() = default;
+
+    virtual String to_string() const override;
+
+private:
+    NamedColorStyleValue(Color color, FlyString const& color_name)
+        : ColorStyleValue(color)
+        , m_color_name(color_name)
+    {
+    }
+
+    FlyString m_color_name;
 };
 
 }

@@ -1,0 +1,4 @@
+#lowercase { stop-color: cyan; }
+#uppercase { background-color: magenta; }
+#mixed-case { border-color: yellow; }
+#hex-value-not-preserved { color: rgb(170, 187, 204); }
