@@ -41,6 +41,10 @@ static ErrorOr<off_t> find_seek_pos(Core::File& file, int wanted_lines, bool sta
 
     if (start_from_end) {
         off_t pos = TRY(file.seek(0, SeekMode::FromEndPosition));
+
+        if (wanted_lines == 0)
+            return pos;
+
         off_t end = pos;
         for (; pos >= 1; pos--) {
             TRY(file.seek(pos - 1, SeekMode::SetPosition));
@@ -55,6 +59,10 @@ static ErrorOr<off_t> find_seek_pos(Core::File& file, int wanted_lines, bool sta
         return pos;
     }
 
+    // If we want the first or zeroeth line, we don't need to seek at all.
+    if (wanted_lines == 0 || wanted_lines == 1)
+        return 0;
+
     off_t file_size = TRY(file.size());
     off_t pos = 0;
 
@@ -62,7 +70,7 @@ static ErrorOr<off_t> find_seek_pos(Core::File& file, int wanted_lines, bool sta
         auto ch = TRY(file.read_value<u8>());
         if (ch == '\n') {
             lines++;
-            if (lines == wanted_lines)
+            if (lines + 1 == wanted_lines)
                 break;
         }
     }
@@ -75,6 +83,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio rpath"));
 
     bool follow = false;
+    size_t wanted_byte_count = 0;
+    bool byte_mode = false;
     size_t wanted_line_count = DEFAULT_LINE_COUNT;
     bool start_from_end = true;
     StringView file;
@@ -106,6 +116,30 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return true;
         },
     });
+    args_parser.add_option(Core::ArgsParser::Option {
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
+        .help_string = "output the last NUM bytes; or use -c +NUM to"
+                       " output starting with byte NUM",
+        .long_name = "bytes",
+        .short_name = 'c',
+        .value_name = "[+]NUM",
+        .accept_value = [&](StringView bytes) -> ErrorOr<bool> {
+            Optional<size_t> value;
+            if (bytes.starts_with('+')) {
+                value = bytes.substring_view(1, bytes.length() - 1).to_number<size_t>();
+                start_from_end = false;
+            } else {
+                value = bytes.to_number<size_t>();
+            }
+            if (!value.has_value()) {
+                warnln("Invalid number: {}", bytes);
+                return false;
+            }
+            wanted_byte_count = value.value();
+            byte_mode = true;
+            return true;
+        },
+    });
     args_parser.add_positional_argument(file, "File path", "file", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
@@ -126,6 +160,26 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             size_t line_index = 0;
             StringBuilder line;
+
+            if (byte_mode) {
+                if (start_from_end) {
+                    if (wanted_byte_count > bytes.size()) {
+                        out("{}", StringView { bytes });
+                        continue;
+                    }
+                    out("{}", StringView { bytes }.substring_view(bytes.size() - wanted_byte_count, wanted_byte_count));
+                    continue;
+                }
+
+                if (wanted_byte_count > bytes.size())
+                    continue;
+
+                if (wanted_byte_count > 0)
+                    out("{}", StringView { bytes }.substring_view(wanted_byte_count - 1, bytes.size() - wanted_byte_count + 1));
+                else
+                    out("{}", StringView { bytes });
+                continue;
+            }
 
             if (!line_count && wanted_line_count) {
                 out("{}", StringView { bytes });
@@ -169,7 +223,23 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 0;
     }
 
-    auto pos = TRY(find_seek_pos(*f, wanted_line_count, start_from_end));
+    off_t pos = 0;
+    if (byte_mode) {
+        auto file_size = TRY(f->size());
+        if (wanted_byte_count > file_size)
+            wanted_byte_count = file_size;
+        if (start_from_end) {
+            TRY(f->seek(wanted_byte_count * -1, SeekMode::FromEndPosition));
+        } else {
+            if (wanted_byte_count > 0 && wanted_byte_count < file_size)
+                TRY(f->seek(wanted_byte_count - 1, SeekMode::SetPosition));
+            else
+                TRY(f->seek(0, SeekMode::FromEndPosition));
+        }
+        pos = TRY(f->tell());
+    } else {
+        pos = TRY(find_seek_pos(*f, wanted_line_count, start_from_end));
+    }
     TRY(tail_from_pos(*f, pos));
 
     if (follow) {
