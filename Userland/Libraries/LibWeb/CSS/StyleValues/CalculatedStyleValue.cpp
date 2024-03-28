@@ -2460,6 +2460,7 @@ void CalculatedStyleValue::CalculationResult::multiply_by(CalculationResult cons
 {
     // We know from validation when resolving the type, that at least one side must be a <number> or <integer>.
     // Both of these are represented as a double.
+    //FIXME:context should not be empty
     if(!context.has_value()) return;
     VERIFY(m_value.has<Number>() || other.m_value.has<Number>());
     bool other_is_number = other.m_value.has<Number>();
