@@ -1349,9 +1349,15 @@ void FormattingContext::compute_inset(NodeWithStyleAndBoxModelMetrics const& box
     if (box.computed_values().position() != CSS::Positioning::Relative)
         return;
 
-    auto resolve_two_opposing_insets = [&](CSS::LengthPercentage const& computed_first, CSS::LengthPercentage const& computed_second, CSSPixels& used_start, CSSPixels& used_end, CSSPixels reference_for_percentage) {
+    auto resolve_two_opposing_insets = [&](CSS::LengthPercentage const& computed_first, CSS::LengthPercentage const& computed_second, CSSPixels& used_start, CSSPixels& used_end, CSSPixels reference_for_percentage, bool containing_block_has_definite_size) {
         auto resolved_first = computed_first.to_px(box, reference_for_percentage);
         auto resolved_second = computed_second.to_px(box, reference_for_percentage);
+
+        // Avoid resolving against indefinite sizes.
+        if (computed_first.is_calculated() && computed_first.calculated()->contains_percentage() && !containing_block_has_definite_size)
+            resolved_first = 0;
+        if (computed_second.is_calculated() && computed_second.calculated()->contains_percentage() && !containing_block_has_definite_size)
+            resolved_second = 0;
 
         if (computed_first.is_auto() && computed_second.is_auto()) {
             // If opposing inset properties in an axis both compute to auto (their initial values),
@@ -1377,10 +1383,11 @@ void FormattingContext::compute_inset(NodeWithStyleAndBoxModelMetrics const& box
 
     auto& box_state = m_state.get_mutable(box);
     auto const& computed_values = box.computed_values();
+    auto const& containing_block_state = m_state.get(*box.containing_block());
 
     // FIXME: Respect the containing block's writing-mode.
-    resolve_two_opposing_insets(computed_values.inset().left(), computed_values.inset().right(), box_state.inset_left, box_state.inset_right, containing_block_width_for(box));
-    resolve_two_opposing_insets(computed_values.inset().top(), computed_values.inset().bottom(), box_state.inset_top, box_state.inset_bottom, containing_block_height_for(box));
+    resolve_two_opposing_insets(computed_values.inset().left(), computed_values.inset().right(), box_state.inset_left, box_state.inset_right, containing_block_width_for(box), containing_block_state.has_definite_width());
+    resolve_two_opposing_insets(computed_values.inset().top(), computed_values.inset().bottom(), box_state.inset_top, box_state.inset_bottom, containing_block_height_for(box), containing_block_state.has_definite_height());
 }
 
 // https://drafts.csswg.org/css-sizing-3/#fit-content-size
