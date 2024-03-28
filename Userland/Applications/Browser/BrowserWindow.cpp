@@ -32,6 +32,7 @@
 #include <LibGUI/Widget.h>
 #include <LibWeb/CSS/PreferredColorScheme.h>
 #include <LibWeb/Dump.h>
+#include <LibWeb/HTML/AudioPlayState.h>
 #include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWebView/CookieJar.h>
@@ -556,6 +557,18 @@ Tab& BrowserWindow::create_new_tab(URL::URL const& url, Web::HTML::ActivateTab a
 
     new_tab.on_favicon_change = [this, &new_tab](auto& bitmap) {
         m_tab_widget->set_tab_icon(new_tab, &bitmap);
+    };
+
+    new_tab.view().on_audio_play_state_changed = [this, &new_tab](auto play_state) {
+        switch (play_state) {
+        case Web::HTML::AudioPlayState::Paused:
+            m_tab_widget->set_tab_action_icon(new_tab, nullptr);
+            break;
+
+        case Web::HTML::AudioPlayState::Playing:
+            m_tab_widget->set_tab_action_icon(new_tab, g_icon_bag.unmute);
+            break;
+        }
     };
 
     new_tab.on_tab_open_request = [this](auto& url) {
