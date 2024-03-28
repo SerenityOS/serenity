@@ -534,7 +534,6 @@ Tab& BrowserWindow::create_new_tab(Web::HTML::ActivateTab activate_tab)
 
 void BrowserWindow::initialize_tab(Tab* tab)
 {
-
     QObject::connect(tab, &Tab::title_changed, this, &BrowserWindow::tab_title_changed);
     QObject::connect(tab, &Tab::favicon_changed, this, &BrowserWindow::tab_favicon_changed);
 
@@ -591,6 +590,8 @@ void BrowserWindow::initialize_tab(Tab* tab)
     tab->view().on_update_cookie = [this](auto const& cookie) {
         m_cookie_jar.update_cookie(cookie);
     };
+
+    m_tabs_container->setTabIcon(m_tabs_container->indexOf(tab), tab->favicon());
 
     tab->focus_location_editor();
 }

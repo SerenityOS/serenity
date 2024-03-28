@@ -51,14 +51,16 @@ public:
     };
     void show_inspector_window(InspectorTarget = InspectorTarget::Document);
 
+    QIcon const& favicon() const { return m_favicon; }
+
 public slots:
     void focus_location_editor();
     void location_edit_return_pressed();
     void select_dropdown_action();
 
 signals:
-    void title_changed(int id, QString);
-    void favicon_changed(int id, QIcon);
+    void title_changed(int id, QString const&);
+    void favicon_changed(int id, QIcon const&);
 
 private:
     void select_dropdown_add_item(QMenu* menu, Web::HTML::SelectItem const& item);
@@ -85,6 +87,7 @@ private:
     WebView::History m_history;
     QString m_title;
     QLabel* m_hover_label { nullptr };
+    QIcon m_favicon;
 
     QMenu* m_page_context_menu { nullptr };
     Optional<String> m_page_context_menu_search_text;

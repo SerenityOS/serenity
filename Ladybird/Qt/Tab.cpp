@@ -82,6 +82,8 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
 
     recreate_toolbar_icons();
 
+    m_favicon = load_icon_from_uri("resource://icons/16x16/app-browser.png"sv);
+
     m_toolbar->addAction(&m_window->go_back_action());
     m_toolbar->addAction(&m_window->go_forward_action());
     m_toolbar->addAction(&m_window->reload_action());
@@ -128,7 +130,12 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
             m_history.replace_current(url, m_title.toUtf8().data());
         }
 
-        m_location_edit->setText(url.to_byte_string().characters());
+        auto url_serialized = qstring_from_ak_string(url.serialize());
+
+        m_title = url_serialized;
+        emit title_changed(tab_index(), url_serialized);
+
+        m_location_edit->setText(url_serialized);
         m_location_edit->setCursorPosition(0);
 
         // Don't add to history if back or forward is pressed
@@ -166,7 +173,9 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
         auto qpixmap = QPixmap::fromImage(qimage);
         if (qpixmap.isNull())
             return;
-        emit favicon_changed(tab_index(), QIcon(qpixmap));
+
+        m_favicon = qpixmap;
+        emit favicon_changed(tab_index(), m_favicon);
     };
 
     view().on_request_alert = [this](auto const& message) {
