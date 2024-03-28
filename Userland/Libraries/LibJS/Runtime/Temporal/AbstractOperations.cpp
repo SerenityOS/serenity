@@ -15,6 +15,7 @@
 #include <LibJS/Runtime/Date.h>
 #include <LibJS/Runtime/Iterator.h>
 #include <LibJS/Runtime/PropertyKey.h>
+#include <LibJS/Runtime/StringPrototype.h>
 #include <LibJS/Runtime/Temporal/AbstractOperations.h>
 #include <LibJS/Runtime/Temporal/Calendar.h>
 #include <LibJS/Runtime/Temporal/Duration.h>
@@ -911,6 +912,71 @@ ThrowCompletionOr<String> format_seconds_string_part(VM& vm, u8 second, u16 mill
 
     // 7. Return the string-concatenation of secondsString, the code unit 0x002E (FULL STOP), and fraction.
     return TRY_OR_THROW_OOM(vm, String::formatted("{}.{}", seconds_string, fraction_string));
+}
+
+// 13.25 FormatFractionalSeconds ( subSecondNanoseconds, precision ), https://tc39.es/proposal-temporal/#sec-temporal-formatfractionalseconds
+ThrowCompletionOr<String> format_fractional_seconds(VM& vm, u64 sub_second_nanoseconds, Variant<StringView, u8> precision)
+{
+    String fraction_string;
+
+    // 1. If precision is "auto", then
+    if (precision.has<StringView>() && precision.get<StringView>() == "auto"sv) {
+        // a. If subSecondNanoseconds is 0, return the empty String.
+        if (sub_second_nanoseconds == 0)
+            return fraction_string;
+
+        // b. Let fractionString be ToZeroPaddedDecimalString(subSecondNanoseconds, 9).
+        fraction_string = TRY(to_zero_padded_decimal_string(vm, sub_second_nanoseconds, 9));
+
+        // c. Set fractionString to the longest prefix of fractionString ending with a code unit other than 0x0030 (DIGIT ZERO).
+        fraction_string = TRY_OR_THROW_OOM(vm, fraction_string.trim("0"sv, TrimMode::Right));
+    } else {
+        // 2. Else,
+
+        VERIFY(precision.has<u8>());
+
+        // a. If precision is 0, return the empty String.
+        if (precision.get<u8>() == 0)
+            return fraction_string;
+
+        // b. Let fractionString be ToZeroPaddedDecimalString(subSecondNanoseconds, 9).
+        fraction_string = TRY(to_zero_padded_decimal_string(vm, sub_second_nanoseconds, 9));
+
+        // c. Set fractionString to the substring of fractionString from 0 to precision.
+        fraction_string = TRY_OR_THROW_OOM(vm, fraction_string.substring_from_byte_offset(0, precision.get<u8>()));
+    }
+
+    // 3. Return the string-concatenation of the code unit 0x002E (FULL STOP) and fractionString.
+    return TRY_OR_THROW_OOM(vm, String::formatted(".{}", fraction_string));
+}
+
+// 13.26 FormatTimeString ( hour, minute, second, subSecondNanoseconds, precision [ , style ] ), https://tc39.es/proposal-temporal/#sec-temporal-formattimestring
+ThrowCompletionOr<String> format_time_string(VM& vm, u8 hour, u8 minute, u8 second, u64 sub_second_nanoseconds, Variant<StringView, u8> precision, Optional<Style> style)
+{
+    String separator = ":"_string;
+
+    // 1. If style is present and style is unseparated, let separator be the empty String; otherwise, let separator be ":".
+    if (style.has_value() && *style == Style::Unseparated)
+        separator = ""_string;
+
+    // 2. Let hh be ToZeroPaddedDecimalString(hour, 2).
+    auto hh = TRY(to_zero_padded_decimal_string(vm, hour, 2));
+
+    // 3. Let mm be ToZeroPaddedDecimalString(minute, 2).
+    auto mm = TRY(to_zero_padded_decimal_string(vm, minute, 2));
+
+    // 4. If precision is "minute", return the string-concatenation of hh, separator, and mm.
+    if (precision.has<StringView>() && precision.get<StringView>() == "minute"sv)
+        return TRY_OR_THROW_OOM(vm, String::formatted("{}{}{}", hh, separator, mm));
+
+    // 5. Let ss be ToZeroPaddedDecimalString(second, 2).
+    auto ss = TRY(to_zero_padded_decimal_string(vm, second, 2));
+
+    // 6. Let subSecondsPart be FormatFractionalSeconds(subSecondNanoseconds, precision).
+    auto subseconds_part = TRY(format_fractional_seconds(vm, sub_second_nanoseconds, precision));
+
+    // 7. Return the string-concatenation of hh, separator, mm, separator, ss, and subSecondsPart.
+    return TRY_OR_THROW_OOM(vm, String::formatted("{}{}{}{}{}{}", hh, separator, mm, separator, ss, subseconds_part));
 }
 
 // 13.23 GetUnsignedRoundingMode ( roundingMode, isNegative ), https://tc39.es/proposal-temporal/#sec-temporal-getunsignedroundingmode
