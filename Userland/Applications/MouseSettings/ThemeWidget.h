@@ -56,6 +56,7 @@ public:
     virtual int column_count(const GUI::ModelIndex&) const override { return 1; }
 
     virtual GUI::Variant data(const GUI::ModelIndex& index, GUI::ModelRole role) const override;
+    virtual Vector<GUI::ModelIndex> matches(StringView, unsigned = GUI::Model::MatchesFlag::AllMatching, GUI::ModelIndex const& = GUI::ModelIndex()) override;
     virtual void invalidate() override;
 
 private:

@@ -124,11 +124,7 @@ void CardSettingsWidget::reset_default_values()
 {
     m_background_color_input->set_color(Gfx::Color::from_rgb(0x008000));
     set_card_back_image_path(default_card_back_image_path);
-    // FIXME: `set_text()` on a combobox doesn't trigger the `on_change` callback, but it probably should!
-    //        Until then, we have to manually tell the preview to update.
     m_card_front_images_combo_box->set_text(default_card_front_image_set);
-    Cards::CardPainter::the().set_front_images_set_name(card_front_images_set_name());
-    m_preview_frame->update();
 }
 
 bool CardSettingsWidget::set_card_back_image_path(StringView path)
