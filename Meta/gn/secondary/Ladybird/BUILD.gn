@@ -229,6 +229,7 @@ icons_16x16 = [
   "//Base/res/icons/16x16/layout.png",
   "//Base/res/icons/16x16/new-tab.png",
   "//Base/res/icons/16x16/open-parent-directory.png",
+  "//Base/res/icons/16x16/paste.png",
   "//Base/res/icons/16x16/pause.png",
   "//Base/res/icons/16x16/play.png",
   "//Base/res/icons/16x16/select-all.png",

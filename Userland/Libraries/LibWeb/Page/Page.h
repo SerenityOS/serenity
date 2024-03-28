@@ -30,6 +30,7 @@
 #include <LibWeb/Cookie/Cookie.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/ActivateTab.h>
+#include <LibWeb/HTML/AudioPlayState.h>
 #include <LibWeb/HTML/ColorPickerUpdateState.h>
 #include <LibWeb/HTML/FileFilter.h>
 #include <LibWeb/HTML/SelectItem.h>
@@ -285,15 +286,17 @@ public:
     virtual void request_file(FileRequest) = 0;
 
     // https://html.spec.whatwg.org/multipage/input.html#show-the-picker,-if-applicable
-    virtual void page_did_request_color_picker([[maybe_unused]] Color current_color) {};
-    virtual void page_did_request_file_picker([[maybe_unused]] HTML::FileFilter accepted_file_types, Web::HTML::AllowMultipleFiles) {};
-    virtual void page_did_request_select_dropdown([[maybe_unused]] Web::CSSPixelPoint content_position, [[maybe_unused]] Web::CSSPixels minimum_width, [[maybe_unused]] Vector<Web::HTML::SelectItem> items) {};
+    virtual void page_did_request_color_picker([[maybe_unused]] Color current_color) { }
+    virtual void page_did_request_file_picker([[maybe_unused]] HTML::FileFilter accepted_file_types, Web::HTML::AllowMultipleFiles) { }
+    virtual void page_did_request_select_dropdown([[maybe_unused]] Web::CSSPixelPoint content_position, [[maybe_unused]] Web::CSSPixels minimum_width, [[maybe_unused]] Vector<Web::HTML::SelectItem> items) { }
 
-    virtual void page_did_finish_text_test() {};
+    virtual void page_did_finish_text_test() { }
 
     virtual void page_did_change_theme_color(Gfx::Color) { }
 
     virtual void page_did_insert_clipboard_entry([[maybe_unused]] String data, [[maybe_unused]] String presentation_style, [[maybe_unused]] String mime_type) { }
+
+    virtual void page_did_change_audio_play_state(HTML::AudioPlayState) { }
 
     virtual WebView::SocketPair request_worker_agent() { return { -1, -1 }; }
 

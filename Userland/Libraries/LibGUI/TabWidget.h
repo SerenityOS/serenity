@@ -69,6 +69,7 @@ public:
 
     void set_tab_title(Widget& tab, String title);
     void set_tab_icon(Widget& tab, Gfx::Bitmap const*);
+    void set_tab_action_icon(Widget& tab, Gfx::Bitmap const*);
 
     bool is_tab_modified(Widget& tab);
     void set_tab_modified(Widget& tab, bool modified);
@@ -132,6 +133,7 @@ private:
     struct TabData {
         int width(Gfx::Font const&) const;
         String title;
+        RefPtr<Gfx::Bitmap const> action_icon;
         RefPtr<Gfx::Bitmap const> icon;
         Widget* widget { nullptr };
         bool modified { false };

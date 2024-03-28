@@ -10,6 +10,7 @@
 
 #include <LibAccelGfx/Forward.h>
 #include <LibGfx/Rect.h>
+#include <LibWeb/HTML/AudioPlayState.h>
 #include <LibWeb/HTML/FileFilter.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/PixelUnits.h>
@@ -140,6 +141,7 @@ private:
     virtual void page_did_finish_text_test() override;
     virtual void page_did_change_theme_color(Gfx::Color color) override;
     virtual void page_did_insert_clipboard_entry(String data, String presentation_style, String mime_type) override;
+    virtual void page_did_change_audio_play_state(Web::HTML::AudioPlayState) override;
     virtual WebView::SocketPair request_worker_agent() override;
     virtual void inspector_did_load() override;
     virtual void inspector_did_select_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement::Type> const& pseudo_element) override;

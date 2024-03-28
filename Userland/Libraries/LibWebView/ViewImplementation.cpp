@@ -315,6 +315,14 @@ void ViewImplementation::toggle_media_controls_state()
     client().async_toggle_media_controls_state(page_id());
 }
 
+void ViewImplementation::did_change_audio_play_state(Badge<WebContentClient>, Web::HTML::AudioPlayState play_state)
+{
+    m_audio_play_state = play_state;
+
+    if (on_audio_play_state_changed)
+        on_audio_play_state_changed(m_audio_play_state);
+}
+
 void ViewImplementation::handle_resize()
 {
     resize_backing_stores_if_needed(WindowResizeInProgress::Yes);

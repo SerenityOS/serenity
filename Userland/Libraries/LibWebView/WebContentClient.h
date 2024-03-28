@@ -96,6 +96,7 @@ private:
     virtual void did_finish_text_test(u64 page_id) override;
     virtual void did_change_theme_color(u64 page_id, Gfx::Color color) override;
     virtual void did_insert_clipboard_entry(u64 page_id, String const& data, String const& presentation_style, String const& mime_type) override;
+    virtual void did_change_audio_play_state(u64 page_id, Web::HTML::AudioPlayState) override;
     virtual void inspector_did_load(u64 page_id) override;
     virtual void inspector_did_select_dom_node(u64 page_id, i32 node_id, Optional<Web::CSS::Selector::PseudoElement::Type> const& pseudo_element) override;
     virtual void inspector_did_set_dom_node_text(u64 page_id, i32 node_id, String const& text) override;

@@ -534,9 +534,9 @@ Tab& BrowserWindow::create_new_tab(Web::HTML::ActivateTab activate_tab)
 
 void BrowserWindow::initialize_tab(Tab* tab)
 {
-
     QObject::connect(tab, &Tab::title_changed, this, &BrowserWindow::tab_title_changed);
     QObject::connect(tab, &Tab::favicon_changed, this, &BrowserWindow::tab_favicon_changed);
+    QObject::connect(tab, &Tab::audio_play_state_changed, this, &BrowserWindow::tab_audio_play_state_changed);
 
     QObject::connect(&tab->view(), &WebContentView::urls_dropped, this, [this](auto& urls) {
         VERIFY(urls.size());
@@ -592,6 +592,8 @@ void BrowserWindow::initialize_tab(Tab* tab)
         m_cookie_jar.update_cookie(cookie);
     };
 
+    m_tabs_container->setTabIcon(m_tabs_container->indexOf(tab), tab->favicon());
+
     tab->focus_location_editor();
 }
 
@@ -643,6 +645,28 @@ void BrowserWindow::tab_title_changed(int index, QString const& title)
 void BrowserWindow::tab_favicon_changed(int index, QIcon const& icon)
 {
     m_tabs_container->setTabIcon(index, icon);
+}
+
+void BrowserWindow::tab_audio_play_state_changed(int index, Web::HTML::AudioPlayState play_state)
+{
+    switch (play_state) {
+    case Web::HTML::AudioPlayState::Paused:
+        m_tabs_container->tabBar()->setTabButton(index, QTabBar::LeftSide, nullptr);
+        break;
+
+    case Web::HTML::AudioPlayState::Playing:
+        auto icon = style()->standardIcon(QStyle::SP_MediaVolume);
+
+        auto* button = new QPushButton(icon, {});
+        button->setFlat(true);
+        button->resize({ 20, 20 });
+
+        // FIXME: Add a click handler to mute the tab.
+        button->setEnabled(false);
+
+        m_tabs_container->tabBar()->setTabButton(index, QTabBar::LeftSide, button);
+        break;
+    }
 }
 
 void BrowserWindow::open_next_tab()
