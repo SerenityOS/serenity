@@ -125,7 +125,6 @@ public:
         FlatPtr address() const { return m_section_header.sh_addr; }
         char const* raw_data() const { return m_image.raw_data(m_section_header.sh_offset); }
         ReadonlyBytes bytes() const { return { raw_data(), size() }; }
-        Optional<RelocationSection> relocations() const;
         auto flags() const { return m_section_header.sh_flags; }
         bool is_writable() const { return flags() & SHF_WRITE; }
         bool is_executable() const { return flags() & PF_X; }
@@ -148,13 +147,16 @@ public:
 
         template<VoidFunction<Image::Relocation&> F>
         void for_each_relocation(F) const;
+
+        bool addend_used() const { return type() == SHT_RELA; }
     };
 
     class Relocation {
     public:
-        Relocation(Image const& image, Elf_Rel const& rel)
+        Relocation(Image const& image, Elf_Rela const& rel, bool addend_used)
             : m_image(image)
             , m_rel(rel)
+            , m_addend_used(addend_used)
         {
         }
 
@@ -171,9 +173,17 @@ public:
             return m_image.symbol(symbol_index());
         }
 
+        bool addend_used() const { return m_addend_used; }
+        unsigned addend() const
+        {
+            VERIFY(m_addend_used);
+            return m_rel.r_addend;
+        }
+
     private:
         Image const& m_image;
-        Elf_Rel const& m_rel;
+        Elf_Rela const& m_rel;
+        bool m_addend_used;
     };
 
     unsigned symbol_count() const;
@@ -211,8 +221,12 @@ public:
     bool is_dynamic() const { return header().e_type == ET_DYN; }
 
     VirtualAddress entry() const { return VirtualAddress(header().e_entry); }
+    Elf64_Quarter machine() const { return header().e_machine; }
     FlatPtr base_address() const { return (FlatPtr)m_buffer; }
     size_t size() const { return m_size; }
+
+    unsigned char elf_class() const { return header().e_ident[EI_CLASS]; }
+    unsigned char byte_order() const { return header().e_ident[EI_DATA]; }
 
     static Optional<StringView> object_file_type_to_string(Elf_Half type);
     static Optional<StringView> object_machine_type_to_string(Elf_Half type);

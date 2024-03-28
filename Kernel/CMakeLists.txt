@@ -866,3 +866,5 @@ serenity_install_sources(Kernel)
 if ("${SERENITY_ARCH}" STREQUAL "x86_64")
     add_subdirectory(Prekernel)
 endif()
+
+add_subdirectory(EFIPrekernel)

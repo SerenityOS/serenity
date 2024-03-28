@@ -405,6 +405,18 @@ lagom_lib(LibGUI_GML gui_gml
     SOURCES ${LIBGUI_GML_SOURCES}
 )
 
+# LibELF
+# This is used by the PrekernelPEImageGenerator and therefore always needed.
+if (NOT EMSCRIPTEN)
+    # FIXME: Create a LIBELF_SOURCES macro similar to AK
+    file(GLOB LIBELF_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibELF/*.cpp")
+    # There's no way we can reliably make the dynamic loading classes cross platform
+    list(FILTER LIBELF_SOURCES EXCLUDE REGEX ".*Dynamic.*.cpp$")
+    lagom_lib(LibELF elf
+        SOURCES ${LIBELF_SOURCES}
+    )
+endif()
+
 # Manually install AK headers
 install(
     DIRECTORY "${SERENITY_PROJECT_ROOT}/AK"
@@ -502,13 +514,6 @@ if (BUILD_LAGOM)
     endif()
 
     if (NOT EMSCRIPTEN)
-        # FIXME: Create a LIBELF_SOURCES macro similar to AK
-        file(GLOB LIBELF_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibELF/*.cpp")
-        # There's no way we can reliably make the dynamic loading classes cross platform
-        list(FILTER LIBELF_SOURCES EXCLUDE REGEX ".*Dynamic.*.cpp$")
-        lagom_lib(LibELF elf
-            SOURCES ${LIBELF_SOURCES}
-        )
         list(APPEND lagom_standard_libraries X86)
     endif()
 
