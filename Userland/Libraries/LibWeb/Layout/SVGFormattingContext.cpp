@@ -12,12 +12,14 @@
 #include <LibGfx/Font/ScaledFont.h>
 #include <LibGfx/TextLayout.h>
 #include <LibWeb/Layout/BlockFormattingContext.h>
+#include <LibWeb/Layout/SVGClipBox.h>
 #include <LibWeb/Layout/SVGFormattingContext.h>
 #include <LibWeb/Layout/SVGGeometryBox.h>
 #include <LibWeb/Layout/SVGMaskBox.h>
 #include <LibWeb/Layout/SVGSVGBox.h>
 #include <LibWeb/Layout/SVGTextBox.h>
 #include <LibWeb/Layout/SVGTextPathBox.h>
+#include <LibWeb/SVG/SVGClipPathElement.h>
 #include <LibWeb/SVG/SVGForeignObjectElement.h>
 #include <LibWeb/SVG/SVGGElement.h>
 #include <LibWeb/SVG/SVGMaskElement.h>
@@ -290,7 +292,7 @@ void SVGFormattingContext::run(Box const& box, LayoutMode layout_mode, Available
     }();
 
     for_each_in_subtree(box, [&](Node const& descendant) {
-        if (is<SVGMaskBox>(descendant))
+        if (is<SVGMaskBox>(descendant) || is<SVGClipBox>(descendant))
             return TraversalDecision::SkipChildrenAndContinue;
         if (is<SVG::SVGViewport>(descendant.dom_node())) {
             // Layout for a nested SVG viewport.
@@ -400,8 +402,8 @@ void SVGFormattingContext::run(Box const& box, LayoutMode layout_mode, Available
             for_each_in_subtree(descendant, [&](Node const& child_of_svg_container) {
                 if (!is<SVGBox>(child_of_svg_container))
                     return TraversalDecision::Continue;
-                // Masks do not change the bounding box of their parents.
-                if (is<SVGMaskBox>(child_of_svg_container))
+                // Masks/clips do not change the bounding box of their parents.
+                if (is<SVGMaskBox>(child_of_svg_container) || is<SVGClipBox>(child_of_svg_container))
                     return TraversalDecision::SkipChildrenAndContinue;
                 auto& box_state = m_state.get(static_cast<SVGBox const&>(child_of_svg_container));
                 bounding_box.add_point(box_state.offset);
@@ -420,27 +422,34 @@ void SVGFormattingContext::run(Box const& box, LayoutMode layout_mode, Available
         return IterationDecision::Continue;
     });
 
-    // Lay out masks last (as their parent needs to be sized first).
-    box.for_each_in_subtree_of_type<SVGMaskBox>([&](SVGMaskBox const& mask_box) {
-        auto& mask_state = m_state.get_mutable(static_cast<Box const&>(mask_box));
+    // Lay out masks/clip paths last (as their parent needs to be sized first).
+    for_each_in_subtree(box, [&](Node const& descendant) {
+        SVG::SVGUnits content_units {};
+        if (is<SVGMaskBox>(descendant))
+            content_units = static_cast<SVGMaskBox const&>(descendant).dom_node().mask_content_units();
+        else if (is<SVGClipBox>(descendant))
+            content_units = static_cast<SVGClipBox const&>(descendant).dom_node().clip_path_units();
+        else
+            return TraversalDecision::Continue;
+        // FIXME: Somehow limit <clipPath> contents to: shape elements, <text>, and <use>.
+        auto& layout_state = m_state.get_mutable(static_cast<Box const&>(descendant));
         auto parent_viewbox_transform = viewbox_transform;
-        if (mask_box.dom_node().mask_content_units() == SVG::MaskContentUnits::ObjectBoundingBox) {
-            auto* masked_node = mask_box.parent();
-            auto& masked_node_state = m_state.get(*masked_node);
-            mask_state.set_content_width(masked_node_state.content_width());
-            mask_state.set_content_height(masked_node_state.content_height());
-            parent_viewbox_transform = Gfx::AffineTransform {}.translate(masked_node_state.offset.to_type<float>());
+        if (content_units == SVG::SVGUnits::ObjectBoundingBox) {
+            auto* parent_node = descendant.parent();
+            auto& parent_node_state = m_state.get(*parent_node);
+            layout_state.set_content_width(parent_node_state.content_width());
+            layout_state.set_content_height(parent_node_state.content_height());
+            parent_viewbox_transform = Gfx::AffineTransform {}.translate(parent_node_state.offset.to_type<float>());
         } else {
-            mask_state.set_content_width(viewport_width);
-            mask_state.set_content_height(viewport_height);
+            layout_state.set_content_width(viewport_width);
+            layout_state.set_content_height(viewport_height);
         }
-        // Pretend masks are a viewport so we can scale the contents depending on the `maskContentUnits`.
-        SVGFormattingContext nested_context(m_state, static_cast<Box const&>(mask_box), this, parent_viewbox_transform);
-        mask_state.set_has_definite_width(true);
-        mask_state.set_has_definite_height(true);
-        nested_context.run(static_cast<Box const&>(mask_box), layout_mode, available_space);
-        return IterationDecision::Continue;
+        // Pretend masks/clips are a viewport so we can scale the contents depending on the `contentUnits`.
+        SVGFormattingContext nested_context(m_state, static_cast<Box const&>(descendant), this, parent_viewbox_transform);
+        layout_state.set_has_definite_width(true);
+        layout_state.set_has_definite_height(true);
+        nested_context.run(static_cast<Box const&>(descendant), layout_mode, available_space);
+        return TraversalDecision::SkipChildrenAndContinue;
     });
 }
-
 }
