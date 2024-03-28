@@ -42,7 +42,7 @@ TabWidget::TabWidget()
 
 ErrorOr<void> TabWidget::try_add_widget(Widget& widget)
 {
-    TRY(m_tabs.try_append({ widget.title(), nullptr, &widget, false }));
+    TRY(m_tabs.try_append({ widget.title(), nullptr, nullptr, &widget, false }));
     TRY(try_add_child(widget));
     update_focus_policy();
     if (on_tab_count_change)
@@ -235,15 +235,23 @@ void TabWidget::paint_event(PaintEvent& event)
         Gfx::StylePainter::paint_frame(painter, container_rect(), palette(), Gfx::FrameStyle::RaisedContainer);
     }
 
-    auto paint_tab_icon_if_needed = [&](auto& icon, auto& button_rect, auto& text_rect) {
-        if (!icon)
-            return;
+    auto make_icon_rect = [](auto const& button_rect) {
         Gfx::IntRect icon_rect { button_rect.x(), button_rect.y(), 16, 16 };
         icon_rect.translate_by(4, (button_rect.height() / 2) - (icon_rect.height() / 2));
 
+        return icon_rect;
+    };
+
+    auto paint_tab_icon_if_needed = [&](auto& icon, auto& button_rect, auto& icon_rect, auto& text_rect) {
+        if (!icon)
+            return;
+
         painter.draw_scaled_bitmap(icon_rect, *icon, icon->rect());
+
         text_rect.set_x(icon_rect.right() + 4);
         text_rect.intersect(button_rect);
+
+        icon_rect.set_x(text_rect.x());
     };
 
     bool accented = Desktop::the().system_effects().tab_accents();
@@ -256,8 +264,10 @@ void TabWidget::paint_event(PaintEvent& event)
         Gfx::StylePainter::paint_tab_button(painter, button_rect, palette(), false, hovered, m_tabs[i].widget->is_enabled(), m_tab_position, window()->is_active(), accented);
 
         auto tab_button_content_rect = button_rect.shrunken(8, 0);
+        auto icon_rect = make_icon_rect(button_rect);
 
-        paint_tab_icon_if_needed(m_tabs[i].icon, button_rect, tab_button_content_rect);
+        paint_tab_icon_if_needed(m_tabs[i].action_icon, button_rect, icon_rect, tab_button_content_rect);
+        paint_tab_icon_if_needed(m_tabs[i].icon, button_rect, icon_rect, tab_button_content_rect);
         tab_button_content_rect.set_width(tab_button_content_rect.width() - (m_close_button_enabled ? 16 : 0));
 
         painter.draw_text(tab_button_content_rect, m_tabs[i].title, m_text_alignment, palette().button_text(), Gfx::TextElision::Right);
@@ -302,9 +312,12 @@ void TabWidget::paint_event(PaintEvent& event)
         }
 
         auto tab_button_content_rect = button_rect.shrunken(8, 0);
+        auto icon_rect = make_icon_rect(button_rect);
+
         Gfx::StylePainter::paint_tab_button(painter, button_rect, palette(), true, hovered, m_tabs[i].widget->is_enabled(), m_tab_position, window()->is_active(), accented);
 
-        paint_tab_icon_if_needed(m_tabs[i].icon, button_rect, tab_button_content_rect);
+        paint_tab_icon_if_needed(m_tabs[i].action_icon, button_rect, icon_rect, tab_button_content_rect);
+        paint_tab_icon_if_needed(m_tabs[i].icon, button_rect, icon_rect, tab_button_content_rect);
         tab_button_content_rect.set_width(tab_button_content_rect.width() - (m_close_button_enabled ? 16 : 0));
 
         painter.draw_text(tab_button_content_rect, m_tabs[i].title, m_text_alignment, palette().button_text(), Gfx::TextElision::Right);
@@ -597,6 +610,19 @@ void TabWidget::set_tab_icon(Widget& tab, Gfx::Bitmap const* icon)
     for (auto& t : m_tabs) {
         if (t.widget == &tab) {
             t.icon = icon;
+            update();
+            return;
+        }
+    }
+}
+
+// FIXME: Also accept an action to be triggered when the action icon is clicked. If the action is non-null, then also
+//        paint the icon as a button (with hover/click effects).
+void TabWidget::set_tab_action_icon(Widget& tab, Gfx::Bitmap const* action_icon)
+{
+    for (auto& t : m_tabs) {
+        if (t.widget == &tab) {
+            t.action_icon = action_icon;
             update();
             return;
         }
