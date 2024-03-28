@@ -23,7 +23,10 @@ class ImageData final : public Bindings::PlatformObject {
 
 public:
     [[nodiscard]] static WebIDL::ExceptionOr<JS::NonnullGCPtr<ImageData>> create(JS::Realm&, u32 sw, u32 sh, Optional<ImageDataSettings> const& settings = {});
+    [[nodiscard]] static WebIDL::ExceptionOr<JS::NonnullGCPtr<ImageData>> create(JS::Realm&, JS::Handle<WebIDL::BufferSource> const& data, u32 sw, Optional<u32> sh = {}, Optional<ImageDataSettings> const& settings = {});
+
     [[nodiscard]] static WebIDL::ExceptionOr<JS::NonnullGCPtr<ImageData>> construct_impl(JS::Realm&, u32 sw, u32 sh, Optional<ImageDataSettings> const& settings = {});
+    [[nodiscard]] static WebIDL::ExceptionOr<JS::NonnullGCPtr<ImageData>> construct_impl(JS::Realm&, JS::Handle<WebIDL::BufferSource> const& data, u32 sw, Optional<u32> sh = {}, Optional<ImageDataSettings> const& settings = {});
 
     virtual ~ImageData() override;
 
