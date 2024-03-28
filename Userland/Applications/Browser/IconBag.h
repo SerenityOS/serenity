@@ -13,6 +13,7 @@ namespace Browser {
 struct IconBag final {
     static ErrorOr<IconBag> try_create();
 
+    RefPtr<Gfx::Bitmap> default_favicon { nullptr };
     RefPtr<Gfx::Bitmap> filetype_html { nullptr };
     RefPtr<Gfx::Bitmap> filetype_text { nullptr };
     RefPtr<Gfx::Bitmap> filetype_javascript { nullptr };

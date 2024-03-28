@@ -112,6 +112,8 @@ Tab::Tab(BrowserWindow& window)
 {
     load_from_gml(tab_gml).release_value_but_fixme_should_propagate_errors();
 
+    m_icon = g_icon_bag.default_favicon;
+
     m_toolbar_container = *find_descendant_of_type_named<GUI::ToolbarContainer>("toolbar_container");
     auto& toolbar = *find_descendant_of_type_named<GUI::Toolbar>("toolbar");
 
@@ -222,10 +224,16 @@ Tab::Tab(BrowserWindow& window)
             m_history.replace_current(url, title());
         }
 
+        auto url_serialized = url.serialize();
+
+        m_title = url_serialized;
+        if (on_title_change)
+            on_title_change(m_title);
+
         update_status();
 
         m_location_box->set_icon(nullptr);
-        m_location_box->set_text(url.to_byte_string());
+        m_location_box->set_text(url_serialized);
 
         // don't add to history if back or forward is pressed
         if (!m_is_history_navigation)
@@ -233,7 +241,7 @@ Tab::Tab(BrowserWindow& window)
         m_is_history_navigation = false;
 
         update_actions();
-        update_bookmark_button(url.to_byte_string());
+        update_bookmark_button(url_serialized);
 
         if (m_dom_inspector_widget)
             m_dom_inspector_widget->reset();
