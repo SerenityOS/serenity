@@ -389,6 +389,10 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
         clipboard->setMimeData(mime_data);
     };
 
+    view().on_audio_play_state_changed = [this](auto play_state) {
+        emit audio_play_state_changed(tab_index(), play_state);
+    };
+
     auto* search_selected_text_action = new QAction("&Search for <query>", this);
     search_selected_text_action->setIcon(load_icon_from_uri("resource://icons/16x16/find.png"sv));
     QObject::connect(search_selected_text_action, &QAction::triggered, this, [this]() {

@@ -9,6 +9,7 @@
 
 #include "LocationEdit.h"
 #include "WebContentView.h"
+#include <LibWeb/HTML/AudioPlayState.h>
 #include <LibWebView/History.h>
 #include <QBoxLayout>
 #include <QLabel>
@@ -61,6 +62,7 @@ public slots:
 signals:
     void title_changed(int id, QString const&);
     void favicon_changed(int id, QIcon const&);
+    void audio_play_state_changed(int id, Web::HTML::AudioPlayState);
 
 private:
     void select_dropdown_add_item(QMenu* menu, Web::HTML::SelectItem const& item);
