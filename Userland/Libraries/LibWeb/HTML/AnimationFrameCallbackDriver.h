@@ -56,7 +56,7 @@ struct AnimationFrameCallbackDriver {
     }
 
 private:
-    HashMap<i32, Callback> m_callbacks;
+    OrderedHashMap<i32, Callback> m_callbacks;
     IDAllocator m_id_allocator;
     RefPtr<Platform::Timer> m_timer;
 };
