@@ -7,6 +7,7 @@
 #include <AK/Base64.h>
 #include <AK/QuickSort.h>
 #include <LibCrypto/ASN1/DER.h>
+#include <LibCrypto/Curves/SECPxxxr1.h>
 #include <LibCrypto/Hash/HashManager.h>
 #include <LibCrypto/PK/RSA.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
@@ -343,6 +344,43 @@ JS::ThrowCompletionOr<NonnullOwnPtr<AlgorithmParams>> RsaOaepParams::from_value(
     }
 
     return adopt_own<AlgorithmParams>(*new RsaOaepParams { name, move(label) });
+}
+
+EcdsaParams::~EcdsaParams() = default;
+
+JS::ThrowCompletionOr<NonnullOwnPtr<AlgorithmParams>> EcdsaParams::from_value(JS::VM& vm, JS::Value value)
+{
+    auto& object = value.as_object();
+
+    auto name_value = TRY(object.get("name"));
+    auto name = TRY(name_value.to_string(vm));
+
+    auto hash_value = TRY(object.get("hash"));
+    auto hash = Variant<Empty, HashAlgorithmIdentifier> { Empty {} };
+    if (hash_value.is_string()) {
+        auto hash_string = TRY(hash_value.to_string(vm));
+        hash = HashAlgorithmIdentifier { hash_string };
+    } else {
+        auto hash_object = TRY(hash_value.to_object(vm));
+        hash = HashAlgorithmIdentifier { hash_object };
+    }
+
+    return adopt_own<AlgorithmParams>(*new EcdsaParams { name, hash.get<HashAlgorithmIdentifier>() });
+}
+
+EcKeyGenParams::~EcKeyGenParams() = default;
+
+JS::ThrowCompletionOr<NonnullOwnPtr<AlgorithmParams>> EcKeyGenParams::from_value(JS::VM& vm, JS::Value value)
+{
+    auto& object = value.as_object();
+
+    auto name_value = TRY(object.get("name"));
+    auto name = TRY(name_value.to_string(vm));
+
+    auto curve_value = TRY(object.get("namedCurve"));
+    auto curve = TRY(curve_value.to_string(vm));
+
+    return adopt_own<AlgorithmParams>(*new EcKeyGenParams { name, curve });
 }
 
 // https://w3c.github.io/webcrypto/#rsa-oaep-operations
@@ -925,6 +963,236 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::ArrayBuffer>> SHA::digest(AlgorithmPara
         return WebIDL::OperationError::create(m_realm, "Failed to create result buffer"_fly_string);
 
     return JS::ArrayBuffer::create(m_realm, result_buffer.release_value());
+}
+
+// https://w3c.github.io/webcrypto/#ecdsa-operations
+WebIDL::ExceptionOr<Variant<JS::NonnullGCPtr<CryptoKey>, JS::NonnullGCPtr<CryptoKeyPair>>> ECDSA::generate_key(AlgorithmParams const& params, bool extractable, Vector<Bindings::KeyUsage> const& key_usages)
+{
+    // 1. If usages contains a value which is not one of "sign" or "verify", then throw a SyntaxError.
+    for (auto const& usage : key_usages) {
+        if (usage != Bindings::KeyUsage::Sign && usage != Bindings::KeyUsage::Verify) {
+            return WebIDL::SyntaxError::create(m_realm, MUST(String::formatted("Invalid key usage '{}'", idl_enum_to_string(usage))));
+        }
+    }
+
+    auto const& normalized_algorithm = static_cast<EcKeyGenParams const&>(params);
+
+    // 2. If the namedCurve member of normalizedAlgorithm is "P-256", "P-384" or "P-521":
+    // Generate an Elliptic Curve key pair, as defined in [RFC6090]
+    // with domain parameters for the curve identified by the namedCurve member of normalizedAlgorithm.
+    Variant<Empty, ::Crypto::Curves::SECP256r1, ::Crypto::Curves::SECP384r1> curve;
+    if (normalized_algorithm.named_curve.is_one_of("P-256"sv, "P-384"sv, "P-521"sv)) {
+        if (normalized_algorithm.named_curve.equals_ignoring_ascii_case("P-256"sv))
+            curve = ::Crypto::Curves::SECP256r1 {};
+
+        if (normalized_algorithm.named_curve.equals_ignoring_ascii_case("P-384"sv))
+            curve = ::Crypto::Curves::SECP384r1 {};
+
+        // FIXME: Support P-521
+        if (normalized_algorithm.named_curve.equals_ignoring_ascii_case("P-521"sv))
+            return WebIDL::NotSupportedError::create(m_realm, "'P-521' is not supported yet"_fly_string);
+    } else {
+        // If the namedCurve member of normalizedAlgorithm is a value specified in an applicable specification:
+        // Perform the ECDSA generation steps specified in that specification,
+        // passing in normalizedAlgorithm and resulting in an elliptic curve key pair.
+
+        // Otherwise: throw a NotSupportedError
+        return WebIDL::NotSupportedError::create(m_realm, "Only 'P-256', 'P-384' and 'P-521' is supported"_fly_string);
+    }
+
+    // NOTE: Spec jumps to 6 here for some reason
+    // 6. If performing the key generation operation results in an error, then throw an OperationError.
+    auto maybe_private_key_data = curve.visit(
+        [](Empty const&) -> ErrorOr<ByteBuffer> { return Error::from_string_view("noop error"sv); },
+        [](auto instance) { return instance.generate_private_key(); });
+
+    if (maybe_private_key_data.is_error())
+        return WebIDL::OperationError::create(m_realm, "Failed to create valid crypto instance"_fly_string);
+
+    auto private_key_data = maybe_private_key_data.release_value();
+
+    auto maybe_public_key_data = curve.visit(
+        [](Empty const&) -> ErrorOr<ByteBuffer> { return Error::from_string_view("noop error"sv); },
+        [&](auto instance) { return instance.generate_public_key(private_key_data); });
+
+    if (maybe_public_key_data.is_error())
+        return WebIDL::OperationError::create(m_realm, "Failed to create valid crypto instance"_fly_string);
+
+    auto public_key_data = maybe_public_key_data.release_value();
+
+    // 7. Let algorithm be a new EcKeyAlgorithm object.
+    auto algorithm = EcKeyAlgorithm::create(m_realm);
+
+    // 8. Set the name attribute of algorithm to "ECDSA".
+    algorithm->set_name("ECDSA"_string);
+
+    // 9. Set the namedCurve attribute of algorithm to equal the namedCurve member of normalizedAlgorithm.
+    algorithm->set_named_curve(normalized_algorithm.named_curve);
+
+    // 10. Let publicKey be a new CryptoKey representing the public key of the generated key pair.
+    auto public_key = CryptoKey::create(m_realm, CryptoKey::InternalKeyData { public_key_data });
+
+    // 11. Set the [[type]] internal slot of publicKey to "public"
+    public_key->set_type(Bindings::KeyType::Public);
+
+    // 12. Set the [[algorithm]] internal slot of publicKey to algorithm.
+    public_key->set_algorithm(algorithm);
+
+    // 13. Set the [[extractable]] internal slot of publicKey to true.
+    public_key->set_extractable(true);
+
+    // 14. Set the [[usages]] internal slot of publicKey to be the usage intersection of usages and [ "verify" ].
+    public_key->set_usages(usage_intersection(key_usages, { { Bindings::KeyUsage::Verify } }));
+
+    // 15. Let privateKey be a new CryptoKey representing the private key of the generated key pair.
+    auto private_key = CryptoKey::create(m_realm, CryptoKey::InternalKeyData { private_key_data });
+
+    // 16. Set the [[type]] internal slot of privateKey to "private"
+    private_key->set_type(Bindings::KeyType::Private);
+
+    // 17. Set the [[algorithm]] internal slot of privateKey to algorithm.
+    private_key->set_algorithm(algorithm);
+
+    // 18. Set the [[extractable]] internal slot of privateKey to extractable.
+    private_key->set_extractable(extractable);
+
+    // 19. Set the [[usages]] internal slot of privateKey to be the usage intersection of usages and [ "sign" ].
+    private_key->set_usages(usage_intersection(key_usages, { { Bindings::KeyUsage::Sign } }));
+
+    // 20. Let result be a new CryptoKeyPair dictionary.
+    // 21. Set the publicKey attribute of result to be publicKey.
+    // 22. Set the privateKey attribute of result to be privateKey.
+    // 23. Return the result of converting result to an ECMAScript Object, as defined by [WebIDL].
+    return Variant<JS::NonnullGCPtr<CryptoKey>, JS::NonnullGCPtr<CryptoKeyPair>> { CryptoKeyPair::create(m_realm, public_key, private_key) };
+}
+
+// https://w3c.github.io/webcrypto/#ecdsa-operations
+WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::ArrayBuffer>> ECDSA::sign(AlgorithmParams const& params, JS::NonnullGCPtr<CryptoKey> key, ByteBuffer const& message)
+{
+    auto& realm = m_realm;
+    auto& vm = realm.vm();
+    auto const& normalized_algorithm = static_cast<EcdsaParams const&>(params);
+
+    // 1. If the [[type]] internal slot of key is not "private", then throw an InvalidAccessError.
+    if (key->type() != Bindings::KeyType::Private)
+        return WebIDL::InvalidAccessError::create(realm, "Key is not a private key"_fly_string);
+
+    // 2. Let hashAlgorithm be the hash member of normalizedAlgorithm.
+    [[maybe_unused]] auto const& hash_algorithm = normalized_algorithm.hash;
+
+    // NOTE: We dont have sign() on the SECPxxxr1 curves, so we can't implement this yet
+    // FIXME: 3. Let M be the result of performing the digest operation specified by hashAlgorithm using message.
+    // FIXME: 4. Let d be the ECDSA private key associated with key.
+    // FIXME: 5. Let params be the EC domain parameters associated with key.
+    // FIXME: 6. If the namedCurve attribute of the [[algorithm]] internal slot of key is "P-256", "P-384" or "P-521":
+
+    // FIXME: 1. Perform the ECDSA signing process, as specified in [RFC6090], Section 5.4, with M as the message, using params as the EC domain parameters, and with d as the private key.
+    // FIXME: 2. Let r and s be the pair of integers resulting from performing the ECDSA signing process.
+    // FIXME: 3. Let result be an empty byte sequence.
+    // FIXME: 4. Let n be the smallest integer such that n * 8 is greater than the logarithm to base 2 of the order of the base point of the elliptic curve identified by params.
+    // FIXME: 5. Convert r to an octet string of length n and append this sequence of bytes to result.
+    // FIXME: 6. Convert s to an octet string of length n and append this sequence of bytes to result.
+
+    // FIXME: Otherwise, the namedCurve attribute of the [[algorithm]] internal slot of key is a value specified in an applicable specification:
+    // FIXME: Perform the ECDSA signature steps specified in that specification, passing in M, params and d and resulting in result.
+
+    // FIXME: 9. Return the result of creating an ArrayBuffer containing result.
+    auto result = TRY_OR_THROW_OOM(vm, ByteBuffer::copy(message));
+    return JS::ArrayBuffer::create(realm, move(result));
+}
+
+// https://w3c.github.io/webcrypto/#ecdsa-operations
+WebIDL::ExceptionOr<JS::Value> ECDSA::verify(AlgorithmParams const& params, JS::NonnullGCPtr<CryptoKey> key, ByteBuffer const& signature, ByteBuffer const& message)
+{
+    auto& realm = m_realm;
+    auto const& normalized_algorithm = static_cast<EcdsaParams const&>(params);
+
+    // 1. If the [[type]] internal slot of key is not "public", then throw an InvalidAccessError.
+    if (key->type() != Bindings::KeyType::Public)
+        return WebIDL::InvalidAccessError::create(realm, "Key is not a public key"_fly_string);
+
+    // 2. Let hashAlgorithm be the hash member of normalizedAlgorithm.
+    [[maybe_unused]] auto const& hash_algorithm = TRY(normalized_algorithm.hash.visit(
+        [](String const& name) -> JS::ThrowCompletionOr<String> { return name; },
+        [&](JS::Handle<JS::Object> const& obj) -> JS::ThrowCompletionOr<String> {
+                        auto name_property = TRY(obj->get("name"));
+                        return name_property.to_string(m_realm.vm()); }));
+
+    // 3. Let M be the result of performing the digest operation specified by hashAlgorithm using message.
+    ::Crypto::Hash::HashKind hash_kind;
+    if (hash_algorithm.equals_ignoring_ascii_case("SHA-1"sv)) {
+        hash_kind = ::Crypto::Hash::HashKind::SHA1;
+    } else if (hash_algorithm.equals_ignoring_ascii_case("SHA-256"sv)) {
+        hash_kind = ::Crypto::Hash::HashKind::SHA256;
+    } else if (hash_algorithm.equals_ignoring_ascii_case("SHA-384"sv)) {
+        hash_kind = ::Crypto::Hash::HashKind::SHA384;
+    } else if (hash_algorithm.equals_ignoring_ascii_case("SHA-512"sv)) {
+        hash_kind = ::Crypto::Hash::HashKind::SHA512;
+    } else {
+        return WebIDL::NotSupportedError::create(m_realm, MUST(String::formatted("Invalid hash function '{}'", hash_algorithm)));
+    }
+    ::Crypto::Hash::Manager hash { hash_kind };
+    hash.update(message);
+    auto digest = hash.digest();
+
+    auto result_buffer = ByteBuffer::copy(digest.immutable_data(), hash.digest_size());
+    if (result_buffer.is_error())
+        return WebIDL::OperationError::create(m_realm, "Failed to create result buffer"_fly_string);
+
+    auto M = result_buffer.release_value();
+
+    // 4. Let Q be the ECDSA public key associated with key.
+    auto Q = key->handle().visit(
+        [](ByteBuffer data) -> ByteBuffer {
+            return data;
+        },
+        [](auto) -> ByteBuffer { VERIFY_NOT_REACHED(); });
+
+    // FIXME: 5. Let params be the EC domain parameters associated with key.
+
+    // 6. If the namedCurve attribute of the [[algorithm]] internal slot of key is "P-256", "P-384" or "P-521":
+    auto const& internal_algorithm = static_cast<EcKeyAlgorithm const&>(*key->algorithm());
+    auto const& named_curve = internal_algorithm.named_curve();
+
+    auto result = false;
+
+    Variant<Empty, ::Crypto::Curves::SECP256r1, ::Crypto::Curves::SECP384r1> curve;
+    if (named_curve.is_one_of("P-256"sv, "P-384"sv, "P-521"sv)) {
+        if (named_curve.equals_ignoring_ascii_case("P-256"sv))
+            curve = ::Crypto::Curves::SECP256r1 {};
+
+        if (named_curve.equals_ignoring_ascii_case("P-384"sv))
+            curve = ::Crypto::Curves::SECP384r1 {};
+
+        // FIXME: Support P-521
+        if (named_curve.equals_ignoring_ascii_case("P-521"sv))
+            return WebIDL::NotSupportedError::create(m_realm, "'P-521' is not supported yet"_fly_string);
+
+        // Perform the ECDSA verifying process, as specified in [RFC6090], Section 5.3,
+        // with M as the received message,
+        // signature as the received signature
+        // and using params as the EC domain parameters,
+        // and Q as the public key.
+
+        // FIXME: verify() takes the signature in X.509 format but JS uses IEEE P1363 format, so we need to convert it
+        auto maybe_result = curve.visit(
+            [](Empty const&) -> ErrorOr<bool> { return Error::from_string_view("Failed to create valid crypto instance"sv); },
+            [&](auto instance) { return instance.verify(M, Q, signature); });
+
+        if (maybe_result.is_error()) {
+            auto error_message = MUST(FlyString::from_utf8(maybe_result.error().string_literal()));
+            return WebIDL::OperationError::create(m_realm, error_message);
+        }
+
+        result = maybe_result.release_value();
+    } else {
+        // FIXME: Otherwise, the namedCurve attribute of the [[algorithm]] internal slot of key is a value specified in an applicable specification:
+        // FIXME: Perform the ECDSA verification steps specified in that specification passing in M, signature, params and Q and resulting in an indication of whether or not the purported signature is valid.
+    }
+
+    // 9. Let result be a boolean with the value true if the signature is valid and the value false otherwise.
+    // 10. Return result.
+    return JS::Value(result);
 }
 
 }
