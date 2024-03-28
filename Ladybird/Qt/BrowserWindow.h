@@ -11,6 +11,7 @@
 #include <Ladybird/Types.h>
 #include <LibCore/Forward.h>
 #include <LibWeb/HTML/ActivateTab.h>
+#include <LibWeb/HTML/AudioPlayState.h>
 #include <LibWebView/Forward.h>
 #include <QIcon>
 #include <QLineEdit>
@@ -78,6 +79,7 @@ public slots:
     void device_pixel_ratio_changed(qreal dpi);
     void tab_title_changed(int index, QString const&);
     void tab_favicon_changed(int index, QIcon const& icon);
+    void tab_audio_play_state_changed(int index, Web::HTML::AudioPlayState);
     Tab& new_tab_from_url(URL::URL const&, Web::HTML::ActivateTab);
     Tab& new_tab_from_content(StringView html, Web::HTML::ActivateTab);
     Tab& new_child_tab(Web::HTML::ActivateTab, Tab& parent, Web::HTML::WebViewHints, Optional<u64> page_index);
