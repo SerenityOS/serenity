@@ -468,8 +468,10 @@ struct JPEGLoadingContext {
     RefPtr<Gfx::CMYKBitmap> cmyk_bitmap;
 
     u16 dc_restart_interval { 0 };
-    HashMap<u8, HuffmanTable> dc_tables;
-    HashMap<u8, HuffmanTable> ac_tables;
+    Array<HuffmanTable, 4> dc_tables {};
+    Array<bool, 4> registered_dc_tables {};
+    Array<HuffmanTable, 4> ac_tables {};
+    Array<bool, 4> registered_ac_tables {};
     Array<i16, 4> previous_dc_values {};
     MacroblockMeta mblock_meta;
     JPEGStream stream;
@@ -518,13 +520,7 @@ enum class JPEGDecodingMode {
 template<JPEGDecodingMode DecodingMode>
 static ErrorOr<void> add_dc(JPEGLoadingContext& context, Macroblock& macroblock, ScanComponent const& scan_component)
 {
-    auto maybe_table = context.dc_tables.get(scan_component.dc_destination_id);
-    if (!maybe_table.has_value()) {
-        dbgln_if(JPEG_DEBUG, "Unable to find a DC table with id: {}", scan_component.dc_destination_id);
-        return Error::from_string_literal("Unable to find corresponding DC table");
-    }
-
-    auto& dc_table = maybe_table.value();
+    auto& dc_table = context.dc_tables[scan_component.dc_destination_id];
     auto& scan = *context.current_scan;
 
     auto* select_component = get_component(macroblock, scan_component.component.index);
@@ -599,13 +595,7 @@ static bool is_progressive(StartOfFrame::FrameType frame_type)
 template<JPEGDecodingMode DecodingMode>
 static ErrorOr<void> add_ac(JPEGLoadingContext& context, Macroblock& macroblock, ScanComponent const& scan_component)
 {
-    auto maybe_table = context.ac_tables.get(scan_component.ac_destination_id);
-    if (!maybe_table.has_value()) {
-        dbgln_if(JPEG_DEBUG, "Unable to find a AC table with id: {}", scan_component.ac_destination_id);
-        return Error::from_string_literal("Unable to find corresponding AC table");
-    }
-
-    auto& ac_table = maybe_table.value();
+    auto& ac_table = context.ac_tables[scan_component.ac_destination_id];
     auto* select_component = get_component(macroblock, scan_component.component.index);
 
     auto& scan = *context.current_scan;
@@ -918,11 +908,16 @@ static ErrorOr<u16> read_effective_chunk_size(JPEGStream& stream)
     return stored_size - 2;
 }
 
-static ErrorOr<void> ensure_quantization_tables_are_present(JPEGLoadingContext& context)
+static ErrorOr<void> ensure_tables_are_present(JPEGLoadingContext& context)
 {
-    for (auto const& component : context.current_scan->components) {
+    auto const& current_scan = context.current_scan.value();
+    for (auto const& component : current_scan.components) {
         if (!context.registered_quantization_tables[component.component.quantization_table_id])
             return Error::from_string_literal("Unknown quantization table id");
+        if (current_scan.spectral_selection_start == 0 && !context.registered_dc_tables[component.dc_destination_id])
+            return Error::from_string_literal("Unable to find corresponding DC table");
+        if (current_scan.spectral_selection_end > 0 && !context.registered_ac_tables[component.ac_destination_id])
+            return Error::from_string_literal("Unable to find corresponding AC table");
     }
     return {};
 }
@@ -994,7 +989,7 @@ static ErrorOr<void> read_start_of_scan(JPEGStream& stream, JPEGLoadingContext& 
 
     context.current_scan = move(current_scan);
 
-    TRY(ensure_quantization_tables_are_present(context));
+    TRY(ensure_tables_are_present(context));
 
     return {};
 }
@@ -1059,7 +1054,9 @@ static ErrorOr<void> read_huffman_table(JPEGStream& stream, JPEGLoadingContext& 
         TRY(table.generate_codes());
 
         auto& huffman_table = table.type == 0 ? context.dc_tables : context.ac_tables;
-        huffman_table.set(table.destination_id, table);
+        auto& table_register = table.type == 0 ? context.registered_dc_tables : context.registered_ac_tables;
+        huffman_table[table.destination_id] = table;
+        table_register[table.destination_id] = true;
 
         bytes_to_read -= 1 + 16 + total_codes;
     }
