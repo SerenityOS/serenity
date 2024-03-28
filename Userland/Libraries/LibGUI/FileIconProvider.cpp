@@ -32,6 +32,16 @@ static Icon s_inaccessible_directory_icon;
 static Icon s_desktop_directory_icon;
 static Icon s_home_directory_icon;
 static Icon s_home_directory_open_icon;
+static Icon s_documents_directory_icon;
+static Icon s_documents_directory_open_icon;
+static Icon s_downloads_directory_icon;
+static Icon s_downloads_directory_open_icon;
+static Icon s_music_directory_icon;
+static Icon s_music_directory_open_icon;
+static Icon s_pictures_directory_icon;
+static Icon s_pictures_directory_open_icon;
+static Icon s_videos_directory_icon;
+static Icon s_videos_directory_open_icon;
 static Icon s_git_directory_icon;
 static Icon s_git_directory_open_icon;
 static Icon s_file_icon;
@@ -80,6 +90,16 @@ static void initialize_if_needed()
     s_inaccessible_directory_icon = Icon::default_icon("filetype-folder-inaccessible"sv);
     s_home_directory_icon = Icon::default_icon("home-directory"sv);
     s_home_directory_open_icon = Icon::default_icon("home-directory-open"sv);
+    s_documents_directory_icon = Icon::default_icon("documents-directory"sv);
+    s_documents_directory_open_icon = Icon::default_icon("documents-directory-open"sv);
+    s_downloads_directory_icon = Icon::default_icon("downloads-directory"sv);
+    s_downloads_directory_open_icon = Icon::default_icon("downloads-directory-open"sv);
+    s_music_directory_icon = Icon::default_icon("music-directory"sv);
+    s_music_directory_open_icon = Icon::default_icon("music-directory-open"sv);
+    s_pictures_directory_icon = Icon::default_icon("pictures-directory"sv);
+    s_pictures_directory_open_icon = Icon::default_icon("pictures-directory-open"sv);
+    s_videos_directory_icon = Icon::default_icon("videos-directory"sv);
+    s_videos_directory_open_icon = Icon::default_icon("videos-directory-open"sv);
     s_git_directory_icon = Icon::default_icon("git-directory"sv);
     s_git_directory_open_icon = Icon::default_icon("git-directory-open"sv);
     s_desktop_directory_icon = Icon::default_icon("desktop"sv);
@@ -126,6 +146,66 @@ Icon FileIconProvider::home_directory_open_icon()
 {
     initialize_if_needed();
     return s_home_directory_open_icon;
+}
+
+Icon FileIconProvider::documents_directory_icon()
+{
+    initialize_if_needed();
+    return s_documents_directory_icon;
+}
+
+Icon FileIconProvider::documents_directory_open_icon()
+{
+    initialize_if_needed();
+    return s_documents_directory_open_icon;
+}
+
+Icon FileIconProvider::downloads_directory_icon()
+{
+    initialize_if_needed();
+    return s_downloads_directory_icon;
+}
+
+Icon FileIconProvider::downloads_directory_open_icon()
+{
+    initialize_if_needed();
+    return s_downloads_directory_open_icon;
+}
+
+Icon FileIconProvider::music_directory_icon()
+{
+    initialize_if_needed();
+    return s_music_directory_icon;
+}
+
+Icon FileIconProvider::music_directory_open_icon()
+{
+    initialize_if_needed();
+    return s_music_directory_open_icon;
+}
+
+Icon FileIconProvider::pictures_directory_icon()
+{
+    initialize_if_needed();
+    return s_pictures_directory_icon;
+}
+
+Icon FileIconProvider::pictures_directory_open_icon()
+{
+    initialize_if_needed();
+    return s_pictures_directory_open_icon;
+}
+
+Icon FileIconProvider::videos_directory_icon()
+{
+    initialize_if_needed();
+    return s_videos_directory_icon;
+}
+
+Icon FileIconProvider::videos_directory_open_icon()
+{
+    initialize_if_needed();
+    return s_videos_directory_open_icon;
 }
 
 Icon FileIconProvider::git_directory_icon()
@@ -249,6 +329,16 @@ Icon FileIconProvider::icon_for_path(StringView path, mode_t mode)
             return s_home_directory_icon;
         if (path == Core::StandardPaths::desktop_directory())
             return s_desktop_directory_icon;
+        if (path == Core::StandardPaths::documents_directory())
+            return s_documents_directory_icon;
+        if (path == Core::StandardPaths::downloads_directory())
+            return s_downloads_directory_icon;
+        if (path == Core::StandardPaths::music_directory())
+            return s_music_directory_icon;
+        if (path == Core::StandardPaths::pictures_directory())
+            return s_pictures_directory_icon;
+        if (path == Core::StandardPaths::videos_directory())
+            return s_videos_directory_icon;
         if (Core::System::access(path, R_OK | X_OK).is_error())
             return s_inaccessible_directory_icon;
         if (path.ends_with(".git"sv))

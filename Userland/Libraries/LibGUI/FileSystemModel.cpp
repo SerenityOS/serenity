@@ -674,13 +674,38 @@ Icon FileSystemModel::icon_for(Node const& node) const
                 return FileIconProvider::home_directory_open_icon();
             return FileIconProvider::home_directory_icon();
         }
+        if (node.full_path() == Core::StandardPaths::desktop_directory())
+            return FileIconProvider::desktop_directory_icon();
+        if (node.full_path() == Core::StandardPaths::documents_directory()) {
+            if (node.is_selected())
+                return FileIconProvider::documents_directory_open_icon();
+            return FileIconProvider::documents_directory_icon();
+        }
+        if (node.full_path() == Core::StandardPaths::downloads_directory()) {
+            if (node.is_selected())
+                return FileIconProvider::downloads_directory_open_icon();
+            return FileIconProvider::downloads_directory_icon();
+        }
+        if (node.full_path() == Core::StandardPaths::music_directory()) {
+            if (node.is_selected())
+                return FileIconProvider::music_directory_open_icon();
+            return FileIconProvider::music_directory_icon();
+        }
+        if (node.full_path() == Core::StandardPaths::pictures_directory()) {
+            if (node.is_selected())
+                return FileIconProvider::pictures_directory_open_icon();
+            return FileIconProvider::pictures_directory_icon();
+        }
+        if (node.full_path() == Core::StandardPaths::videos_directory()) {
+            if (node.is_selected())
+                return FileIconProvider::videos_directory_open_icon();
+            return FileIconProvider::videos_directory_icon();
+        }
         if (node.full_path().ends_with(".git"sv)) {
             if (node.is_selected())
                 return FileIconProvider::git_directory_open_icon();
             return FileIconProvider::git_directory_icon();
         }
-        if (node.full_path() == Core::StandardPaths::desktop_directory())
-            return FileIconProvider::desktop_directory_icon();
         if (node.is_selected() && node.is_accessible_directory)
             return FileIconProvider::directory_open_icon();
     }

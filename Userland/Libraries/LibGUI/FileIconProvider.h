@@ -23,6 +23,16 @@ public:
     static Icon directory_open_icon();
     static Icon home_directory_icon();
     static Icon home_directory_open_icon();
+    static Icon documents_directory_icon();
+    static Icon documents_directory_open_icon();
+    static Icon downloads_directory_icon();
+    static Icon downloads_directory_open_icon();
+    static Icon music_directory_icon();
+    static Icon music_directory_open_icon();
+    static Icon pictures_directory_icon();
+    static Icon pictures_directory_open_icon();
+    static Icon videos_directory_icon();
+    static Icon videos_directory_open_icon();
     static Icon git_directory_icon();
     static Icon git_directory_open_icon();
     static Icon desktop_directory_icon();
