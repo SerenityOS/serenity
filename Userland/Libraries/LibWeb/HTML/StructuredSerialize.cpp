@@ -313,12 +313,15 @@ public:
         else if (value.is_object() && is<Bindings::Serializable>(value.as_object())) {
             auto& serializable = dynamic_cast<Bindings::Serializable&>(value.as_object());
 
-            serialize_enum(m_serialized, ValueTag::SerializableObject);
+            // FIXME: 1. If value has a [[Detached]] internal slot whose value is true, then throw a "DataCloneError" DOMException.
 
+            // 2. Let typeString be the identifier of the primary interface of value.
+            // 3. Set serialized to { [[Type]]: typeString }.
+            serialize_enum(m_serialized, ValueTag::SerializableObject);
             TRY(serialize_string(m_vm, m_serialized, serializable.interface_name()));
 
-            // 1. Perform the serialization steps for value's primary interface, given value, serialized, and forStorage.
-            TRY(serializable.serialization_steps(m_serialized, m_for_storage, m_memory));
+            // 4. Set deep to true
+            deep = true;
         }
 
         // 20. Otherwise, if value is a platform object, then throw a "DataCloneError" DOMException.
@@ -397,7 +400,11 @@ public:
                 }
             }
 
-            // FIXME: 3. Otherwise, if value is a platform object that is a serializable object, then perform the serialization steps for value's primary interface, given value, serialized, and forStorage.
+            // 3. Otherwise, if value is a platform object that is a serializable object, then perform the serialization steps for value's primary interface, given value, serialized, and forStorage.
+            else if (value.is_object() && is<Bindings::Serializable>(value.as_object())) {
+                auto& serializable = dynamic_cast<Bindings::Serializable&>(value.as_object());
+                TRY(serializable.serialization_steps(m_serialized, m_for_storage, m_memory));
+            }
 
             // 4. Otherwise, for each key in ! EnumerableOwnProperties(value, key):
             else {
