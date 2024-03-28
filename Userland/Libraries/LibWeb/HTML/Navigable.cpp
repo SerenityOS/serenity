@@ -136,22 +136,23 @@ ErrorOr<void> Navigable::initialize_navigable(JS::NonnullGCPtr<DocumentState> do
     static int next_id = 0;
     m_id = TRY(String::number(next_id++));
 
-    // 1. Let entry be a new session history entry, with
-    JS::NonnullGCPtr<SessionHistoryEntry> entry = *heap().allocate_without_realm<SessionHistoryEntry>();
+    // 1. Assert: documentState's document is non-null.
+    VERIFY(document_state->document());
 
+    // 2. Let entry be a new session history entry, with
+    JS::NonnullGCPtr<SessionHistoryEntry> entry = *heap().allocate_without_realm<SessionHistoryEntry>();
     // URL: document's URL
     entry->set_url(document_state->document()->url());
-
     // document state: documentState
     entry->set_document_state(document_state);
 
-    // 2. Set navigable's current session history entry to entry.
+    // 3. Set navigable's current session history entry to entry.
     m_current_session_history_entry = entry;
 
-    // 3. Set navigable's active session history entry to entry.
+    // 4. Set navigable's active session history entry to entry.
     m_active_session_history_entry = entry;
 
-    // 4. Set navigable's parent to parent.
+    // 5. Set navigable's parent to parent.
     m_parent = parent;
 
     return {};
