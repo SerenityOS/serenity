@@ -13,7 +13,7 @@
 #include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/CrossOrigin/CrossOriginPropertyDescriptorMap.h>
-#include <LibWeb/HTML/HistoryHandlingBehavior.h>
+#include <LibWeb/HTML/Navigable.h>
 
 namespace Web::HTML {
 
@@ -76,7 +76,7 @@ private:
 
     JS::GCPtr<DOM::Document> relevant_document() const;
     URL::URL url() const;
-    WebIDL::ExceptionOr<void> navigate(URL::URL, HistoryHandlingBehavior = HistoryHandlingBehavior::Default);
+    WebIDL::ExceptionOr<void> navigate(URL::URL, Bindings::NavigationHistoryBehavior = Bindings::NavigationHistoryBehavior::Auto);
 
     // [[CrossOriginPropertyDescriptorMap]], https://html.spec.whatwg.org/multipage/browsers.html#crossoriginpropertydescriptormap
     HTML::CrossOriginPropertyDescriptorMap m_cross_origin_property_descriptor_map;
