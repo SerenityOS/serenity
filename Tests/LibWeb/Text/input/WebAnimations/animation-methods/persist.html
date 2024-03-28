@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<div id="foo"></div>
+<script src="../../include.js"></script>
+<script>
+    const animationFrame = () => {
+        const { promise, resolve } = Promise.withResolvers();
+        requestAnimationFrame(resolve);
+        return promise;
+    };
+
+    asyncTest(async done => {
+        const foo = document.getElementById("foo");
+
+        let anim = foo.animate({}, {});
+        const prevReplaceState = anim.replaceState;
+        anim.persist();
+        if (prevReplaceState === "active" && anim.replaceState === "persisted")
+            println("persist() sets animation's replaceState to persist");
+
+        const timeline = internals.createInternalAnimationTimeline();
+        let anim1 = foo.animate({ opacity: 0 }, { duration: 1000, fill: "forwards", timeline });
+        let anim2 = foo.animate({ opacity: 0 }, { duration: 500, fill: "forwards", timeline });
+        timeline.setTime(1500);
+        await animationFrame();
+        if (anim1.replaceState === "removed" && anim2.replaceState === "active")
+            println("Animations are properly replaced when covered by another animation");
+
+        anim1 = foo.animate({ opacity: 0 }, { duration: 1000, fill: "forwards", timeline });
+        anim2 = foo.animate({ opacity: 0 }, { duration: 500, fill: "forwards", timeline });
+        anim1.persist();
+        timeline.setTime(1500);
+        await animationFrame();
+        if (anim1.replaceState === "persisted" && anim2.replaceState === "active")
+            println("persist() keeps an animation from being replaced");
+
+        done();
+    });
+</script>
