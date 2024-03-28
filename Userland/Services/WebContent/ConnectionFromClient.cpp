@@ -1247,7 +1247,7 @@ void ConnectionFromClient::file_picker_closed(u64 page_id, Vector<Web::HTML::Sel
     page.page().file_picker_closed(const_cast<Vector<Web::HTML::SelectedFile>&>(selected_files));
 }
 
-void ConnectionFromClient::select_dropdown_closed(u64 page_id, Optional<String> const& value)
+void ConnectionFromClient::select_dropdown_closed(u64 page_id, Optional<u32> const& selected_item_id)
 {
     auto maybe_page = page(page_id);
     if (!maybe_page.has_value()) {
@@ -1256,7 +1256,7 @@ void ConnectionFromClient::select_dropdown_closed(u64 page_id, Optional<String> 
     }
     auto& page = maybe_page.release_value();
 
-    page.page().select_dropdown_closed(value);
+    page.page().select_dropdown_closed(selected_item_id);
 }
 
 void ConnectionFromClient::toggle_media_play_state(u64 page_id)

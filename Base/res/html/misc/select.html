@@ -28,6 +28,17 @@
         Value: <span id="a-value">?</span>
     </p>
 
+    <p>Basic select with no values and some disabled:</p>
+    <p>
+        <select>
+            <option value="">One</option>
+            <option value="" disabled>Two</option>
+            <option value="">Three</option>
+            <option value="">Four</option>
+            <option value="" disabled>Five</option>
+        </select>
+    </p>
+
     <p>Basic select with separators:</p>
     <p>
         <select onchange="document.getElementById('b-value').textContent = this.value" style="width: 50%;">
@@ -63,7 +74,7 @@
                 <option value="8.01.3">Lecture 03: Vectors
                 <hr>
                 <option value="8.01.4">Lecture 04: Random
-            <optgroup label="8.02 Electricity and Magnetism">
+            <optgroup label="8.02 Electricity and Magnetism" disabled>
                 <option value="8.02.1">Lecture 01: What holds our world together?
                 <option value="8.02.2">Lecture 02: Electric Field
                 <option value="8.02.3">Lecture 03: Electric Flux

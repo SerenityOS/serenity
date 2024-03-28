@@ -9,7 +9,7 @@
         // 1. Get select value of unedited
         testPart(() => {
             const select = document.createElement('select');
-            // FIXME: Remove selected attribute (currently this is needed because the DIN children are not loaded to select first item in test run)
+            // FIXME: Remove selected attribute (currently this is needed because the children are not loaded to select first item in test run)
             select.innerHTML = `
                 <option value="one" selected>One</option>
                 <option value="two">Two</option>
@@ -21,7 +21,7 @@
         // 2. Get select selectedIndex
         testPart(() => {
             const select = document.createElement('select');
-            // FIXME: Remove selected attribute (currently this is needed because the DIN children are not loaded to select first item in test run)
+            // FIXME: Remove selected attribute (currently this is needed because the children are not loaded to select first item in test run)
             select.innerHTML = `
                 <option value="one" selected>One</option>
                 <option value="two">Two</option>
@@ -60,6 +60,17 @@
                 <option value="one">One</option>
                 <option value="two">Two</option>
                 <option value="three" selected>Three</option>
+            `;
+            return select.value;
+        });
+
+        // 6. Get select value without option values
+        testPart(() => {
+            const select = document.createElement('select');
+            select.innerHTML = `
+                <option>One</option>
+                <option>Two</option>
+                <option selected>Three</option>
             `;
             return select.value;
         });
