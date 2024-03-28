@@ -1,6 +1,6 @@
 ## Name
 
-![Icon](/res/icons/16x16/filetype-image.png) Image Viewer - SerenityOS image viewer
+![Icon](/res/icons/16x16/app-image-viewer.png) Image Viewer - SerenityOS image viewer
 
 [Open](file:///bin/ImageViewer)
 
@@ -29,4 +29,3 @@ ImageViewer is even smart enough to detect other images and display them when cl
 ```sh
 $ ImageViewer /res/graphics/buggie.png
 ```
-

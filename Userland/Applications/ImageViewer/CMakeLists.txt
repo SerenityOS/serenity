@@ -11,5 +11,5 @@ set(SOURCES
         ViewWidget.cpp
 )
 
-serenity_app(ImageViewer ICON filetype-image)
+serenity_app(ImageViewer ICON app-image-viewer)
 target_link_libraries(ImageViewer PRIVATE LibCore LibDesktop LibFileSystemAccessClient LibGUI LibGfx LibConfig LibImageDecoderClient LibMain LibURL)
