@@ -473,7 +473,7 @@ Optional<LocaleID> parse_unicode_locale_id(StringView locale)
     return locale_id;
 }
 
-static void perform_hard_coded_key_value_substitutions(StringView key, String& value)
+static String perform_hard_coded_key_value_substitutions(StringView key, String const& value)
 {
     // FIXME: In the XML export of CLDR, there are some aliases defined in the following files:
     // https://github.com/unicode-org/cldr-staging/blob/master/production/common/bcp47/calendar.xml
@@ -483,91 +483,88 @@ static void perform_hard_coded_key_value_substitutions(StringView key, String& v
     // https://github.com/unicode-org/cldr-staging/blob/master/production/common/bcp47/transform.xml
     //
     // There isn't yet a counterpart in the JSON export. See: https://unicode-org.atlassian.net/browse/CLDR-14571
-    Optional<StringView> result;
-
     if (key == "ca"sv) {
         if (value == "islamicc"sv)
-            result = "islamic-civil"sv;
-        else if (value == "ethiopic-amete-alem"sv)
-            result = "ethioaa"sv;
+            return "islamic-civil"_string;
+        if (value == "ethiopic-amete-alem"sv)
+            return "ethioaa"_string;
     } else if (key.is_one_of("kb"sv, "kc"sv, "kh"sv, "kk"sv, "kn"sv) && (value == "yes"sv)) {
-        result = "true"sv;
+        return "true"_string;
     } else if (key == "ks"sv) {
         if (value == "primary"sv)
-            result = "level1"sv;
-        else if (value == "tertiary"sv)
-            result = "level3"sv;
+            return "level1"_string;
+        if (value == "tertiary"sv)
+            return "level3"_string;
         // Note: There are also aliases for "secondary", "quaternary", "quarternary", and "identical",
         // but those are semantically incorrect values (they are too long), so they can be skipped.
     } else if ((key == "m0"sv) && (value == "names"sv)) {
-        result = "prprname"sv;
+        return "prprname"_string;
     } else if ((key == "ms"sv) && (value == "imperial"sv)) {
-        result = "uksystem"sv;
+        return "uksystem"_string;
     } else if (key == "tz"sv) {
         // Formatter disabled because this block is easier to read / check against timezone.xml as one-liners.
         // clang-format off
-        if (value == "aqams"sv) result = "nzakl"sv;
-        else if (value == "cnckg"sv) result = "cnsha"sv;
-        else if (value == "cnhrb"sv) result = "cnsha"sv;
-        else if (value == "cnkhg"sv) result = "cnurc"sv;
-        else if (value == "cuba"sv) result = "cuhav"sv;
-        else if (value == "egypt"sv) result = "egcai"sv;
-        else if (value == "eire"sv) result = "iedub"sv;
-        else if (value == "est"sv) result = "utcw05"sv;
-        else if (value == "gmt0"sv) result = "gmt"sv;
-        else if (value == "hongkong"sv) result = "hkhkg"sv;
-        else if (value == "hst"sv) result = "utcw10"sv;
-        else if (value == "iceland"sv) result = "isrey"sv;
-        else if (value == "iran"sv) result = "irthr"sv;
-        else if (value == "israel"sv) result = "jeruslm"sv;
-        else if (value == "jamaica"sv) result = "jmkin"sv;
-        else if (value == "japan"sv) result = "jptyo"sv;
-        else if (value == "kwajalein"sv) result = "mhkwa"sv;
-        else if (value == "libya"sv) result = "lytip"sv;
-        else if (value == "mst"sv) result = "utcw07"sv;
-        else if (value == "navajo"sv) result = "usden"sv;
-        else if (value == "poland"sv) result = "plwaw"sv;
-        else if (value == "portugal"sv) result = "ptlis"sv;
-        else if (value == "prc"sv) result = "cnsha"sv;
-        else if (value == "roc"sv) result = "twtpe"sv;
-        else if (value == "rok"sv) result = "krsel"sv;
-        else if (value == "singapore"sv) result = "sgsin"sv;
-        else if (value == "turkey"sv) result = "trist"sv;
-        else if (value == "uct"sv) result = "utc"sv;
-        else if (value == "usnavajo"sv) result = "usden"sv;
-        else if (value == "zulu"sv) result = "utc"sv;
+        if (value == "aqams"sv) return "nzakl"_string;
+        if (value == "cnckg"sv) return "cnsha"_string;
+        if (value == "cnhrb"sv) return "cnsha"_string;
+        if (value == "cnkhg"sv) return "cnurc"_string;
+        if (value == "cuba"sv) return "cuhav"_string;
+        if (value == "egypt"sv) return "egcai"_string;
+        if (value == "eire"sv) return "iedub"_string;
+        if (value == "est"sv) return "utcw05"_string;
+        if (value == "gmt0"sv) return "gmt"_string;
+        if (value == "hongkong"sv) return "hkhkg"_string;
+        if (value == "hst"sv) return "utcw10"_string;
+        if (value == "iceland"sv) return "isrey"_string;
+        if (value == "iran"sv) return "irthr"_string;
+        if (value == "israel"sv) return "jeruslm"_string;
+        if (value == "jamaica"sv) return "jmkin"_string;
+        if (value == "japan"sv) return "jptyo"_string;
+        if (value == "kwajalein"sv) return "mhkwa"_string;
+        if (value == "libya"sv) return "lytip"_string;
+        if (value == "mst"sv) return "utcw07"_string;
+        if (value == "navajo"sv) return "usden"_string;
+        if (value == "poland"sv) return "plwaw"_string;
+        if (value == "portugal"sv) return "ptlis"_string;
+        if (value == "prc"sv) return "cnsha"_string;
+        if (value == "roc"sv) return "twtpe"_string;
+        if (value == "rok"sv) return "krsel"_string;
+        if (value == "singapore"sv) return "sgsin"_string;
+        if (value == "turkey"sv) return "trist"_string;
+        if (value == "uct"sv) return "utc"_string;
+        if (value == "usnavajo"sv) return "usden"_string;
+        if (value == "zulu"sv) return "utc"_string;
         // clang-format on
     }
 
-    if (result.has_value())
-        value = MUST(String::from_utf8(*result));
+    return value;
 }
 
-void canonicalize_unicode_extension_values(StringView key, String& value, bool remove_true)
+String canonicalize_unicode_extension_values(StringView key, String const& value, RemoveTrue remove_true)
 {
-    value = MUST(value.to_lowercase());
-    perform_hard_coded_key_value_substitutions(key, value);
+    auto result = MUST(value.to_lowercase());
+    result = perform_hard_coded_key_value_substitutions(key, result);
 
     // Note: The spec says to remove "true" type and tfield values but that is believed to be a bug in the spec
     // because, for tvalues, that would result in invalid syntax:
     //     https://unicode-org.atlassian.net/browse/CLDR-14318
     // This has also been noted by test262:
     //     https://github.com/tc39/test262/blob/18bb955771669541c56c28748603f6afdb2e25ff/test/intl402/Intl/getCanonicalLocales/transformed-ext-canonical.js
-    if (remove_true && (value == "true"sv)) {
-        value = {};
-        return;
-    }
+    if (remove_true == RemoveTrue::Yes && (result == "true"sv))
+        return {};
 
     if (key.is_one_of("sd"sv, "rg"sv)) {
-        if (auto alias = resolve_subdivision_alias(value); alias.has_value()) {
+        if (auto alias = resolve_subdivision_alias(result); alias.has_value()) {
             auto aliases = alias->split_view(' ');
 
             // FIXME: Subdivision subtags do not appear in the CLDR likelySubtags.json file.
             //        Implement the spec's recommendation of using just the first alias for now,
             //        but we should determine if there's anything else needed here.
-            value = MUST(String::from_utf8(aliases[0]));
+            return MUST(String::from_utf8(aliases[0]));
         }
     }
+
+    return result;
 }
 
 static void transform_unicode_locale_id_to_canonical_syntax(LocaleID& locale_id)
@@ -643,7 +640,7 @@ static void transform_unicode_locale_id_to_canonical_syntax(LocaleID& locale_id)
 
                 for (auto& keyword : ext.keywords) {
                     keyword.key = MUST(keyword.key.to_lowercase());
-                    canonicalize_unicode_extension_values(keyword.key, keyword.value, true);
+                    keyword.value = canonicalize_unicode_extension_values(keyword.key, keyword.value, RemoveTrue::Yes);
                 }
 
                 quick_sort(ext.attributes);
@@ -655,7 +652,7 @@ static void transform_unicode_locale_id_to_canonical_syntax(LocaleID& locale_id)
 
                 for (auto& field : ext.fields) {
                     field.key = MUST(field.key.to_lowercase());
-                    canonicalize_unicode_extension_values(field.key, field.value, false);
+                    field.value = canonicalize_unicode_extension_values(field.key, field.value, RemoveTrue::No);
                 }
 
                 quick_sort(ext.fields, [](auto const& a, auto const& b) { return a.key < b.key; });
