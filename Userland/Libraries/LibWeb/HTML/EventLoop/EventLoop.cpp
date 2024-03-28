@@ -253,7 +253,13 @@ void EventLoop::process()
     });
 
     // 10. For each fully active Document in docs, update animations and send events for that Document, passing in now as the timestamp. [WEBANIMATIONS]
-    // Note: This is handled by the document's animation timer
+    // Note: This is handled by the document's animation timer, however, if a document has any requestAnimationFrame callbacks, we need
+    //       to dispatch events before that happens below. Not dispatching here would be observable.
+    for_each_fully_active_document_in_docs([&](DOM::Document& document) {
+        if (document.window()->animation_frame_callback_driver().has_callbacks()) {
+            document.update_animations_and_send_events(document.window()->performance()->now());
+        }
+    });
 
     // FIXME:     11. For each fully active Document in docs, run the fullscreen steps for that Document, passing in now as the timestamp. [FULLSCREEN]
 
