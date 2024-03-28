@@ -1,0 +1,3 @@
+   persist() sets animation's replaceState to persist
+Animations are properly replaced when covered by another animation
+persist() keeps an animation from being replaced
