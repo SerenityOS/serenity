@@ -186,6 +186,7 @@ bool Navigation::can_go_forward() const
     return (m_current_entry_index != static_cast<i64>(m_entry_list.size()));
 }
 
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#history-handling-behavior
 HistoryHandlingBehavior to_history_handling_behavior(Bindings::NavigationHistoryBehavior b)
 {
     // A history handling behavior is a NavigationHistoryBehavior that is either "push" or "replace",
@@ -200,6 +201,21 @@ HistoryHandlingBehavior to_history_handling_behavior(Bindings::NavigationHistory
     case Bindings::NavigationHistoryBehavior::Auto:
         VERIFY_NOT_REACHED();
     };
+    VERIFY_NOT_REACHED();
+}
+
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#history-handling-behavior
+Bindings::NavigationHistoryBehavior to_navigation_history_behavior(HistoryHandlingBehavior b)
+{
+    // A history handling behavior is a NavigationHistoryBehavior that is either "push" or "replace",
+    // i.e., that has been resolved away from any initial "auto" value.
+
+    switch (b) {
+    case HistoryHandlingBehavior::Push:
+        return Bindings::NavigationHistoryBehavior::Push;
+    case HistoryHandlingBehavior::Replace:
+        return Bindings::NavigationHistoryBehavior::Replace;
+    }
     VERIFY_NOT_REACHED();
 }
 
