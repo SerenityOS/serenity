@@ -3975,6 +3975,11 @@ void Document::update_animations_and_send_events(Optional<double> const& timesta
     //    the previous step.
     for (auto const& event : events_to_dispatch)
         event.target->dispatch_event(event.event);
+
+    for (auto& timeline : m_associated_animation_timelines) {
+        for (auto& animation : timeline->associated_animations())
+            dispatch_events_for_animation_if_necessary(animation);
+    }
 }
 
 // https://www.w3.org/TR/web-animations-1/#remove-replaced-animations
@@ -4086,11 +4091,6 @@ void Document::ensure_animation_timer()
             }
 
             update_animations_and_send_events(window()->performance()->now());
-
-            for (auto& timeline : m_associated_animation_timelines) {
-                for (auto& animation : timeline->associated_animations())
-                    dispatch_events_for_animation_if_necessary(animation);
-            }
         }));
     }
 
