@@ -139,6 +139,7 @@ target_link_libraries(run-tests PRIVATE LibCoredump LibDebug LibFileSystem LibRe
 target_link_libraries(rm PRIVATE LibFileSystem)
 target_link_libraries(sed PRIVATE LibRegex LibFileSystem)
 target_link_libraries(shot PRIVATE LibFileSystem LibGfx LibGUI LibIPC LibURL)
+target_link_libraries(shred PRIVATE LibFileSystem)
 target_link_libraries(slugify PRIVATE LibUnicode)
 target_link_libraries(sql PRIVATE LibFileSystem LibIPC LibLine LibSQL)
 target_link_libraries(su PRIVATE LibCrypt)
