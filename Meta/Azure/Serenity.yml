@@ -37,6 +37,11 @@ jobs:
       env:
         TRY_USE_LOCAL_TOOLCHAIN: 'y'
 
+    - script: ./Toolchain/BuildJakt.sh
+      displayName: Build Jakt Toolchain
+      env:
+        CXX=g++-12
+
     - script: |
         mkdir -p Build/superbuild
       displayName: 'Create Build Directory'
