@@ -6,6 +6,8 @@ set(SOURCES
     Database.cpp
     History.cpp
     InspectorClient.cpp
+    ProcessHandle.cpp
+    ProcessManager.cpp
     RequestServerAdapter.cpp
     SearchEngine.cpp
     SocketPair.cpp

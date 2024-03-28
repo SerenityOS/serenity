@@ -75,6 +75,7 @@ private:
     RefPtr<GUI::Action> m_view_source_action;
     RefPtr<GUI::Action> m_inspect_dom_tree_action;
     RefPtr<GUI::Action> m_inspect_dom_node_action;
+    RefPtr<GUI::Action> m_task_manager_action;
 
     RefPtr<GUI::Menu> m_zoom_menu;
 

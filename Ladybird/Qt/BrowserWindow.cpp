@@ -12,6 +12,7 @@
 #include "Settings.h"
 #include "SettingsDialog.h"
 #include "StringUtils.h"
+#include "TaskManagerWindow.h"
 #include "WebContentView.h"
 #include <AK/TypeCasts.h>
 #include <Ladybird/Utilities.h>
@@ -21,6 +22,7 @@
 #include <LibWebView/UserAgent.h>
 #include <QAction>
 #include <QActionGroup>
+#include <QApplication>
 #include <QClipboard>
 #include <QGuiApplication>
 #include <QInputDialog>
@@ -211,6 +213,14 @@ BrowserWindow::BrowserWindow(Vector<URL::URL> const& initial_urls, WebView::Cook
         if (m_current_tab) {
             m_current_tab->show_inspector_window();
         }
+    });
+
+    auto* task_manager_action = new QAction("Open Task &Manager", this);
+    task_manager_action->setIcon(load_icon_from_uri("resource://icons/16x16/app-system-monitor.png"sv));
+    task_manager_action->setShortcuts({ QKeySequence("Ctrl+Shift+M") });
+    inspect_menu->addAction(task_manager_action);
+    QObject::connect(task_manager_action, &QAction::triggered, this, [] {
+        show_task_manager_window();
     });
 
     auto* debug_menu = menuBar()->addMenu("&Debug");
@@ -404,6 +414,7 @@ BrowserWindow::BrowserWindow(Vector<URL::URL> const& initial_urls, WebView::Cook
         m_settings_dialog->setFocus();
     });
     QObject::connect(quit_action, &QAction::triggered, this, &QMainWindow::close);
+    QObject::connect(quit_action, &QAction::triggered, this, [] { close_task_manager_window(); });
     QObject::connect(m_tabs_container, &QTabWidget::currentChanged, [this](int index) {
         setWindowTitle(QString("%1 - Ladybird").arg(m_tabs_container->tabText(index)));
         set_current_tab(verify_cast<Tab>(m_tabs_container->widget(index)));
@@ -817,6 +828,10 @@ void BrowserWindow::closeEvent(QCloseEvent* event)
     Settings::the()->set_is_maximized(isMaximized());
 
     QMainWindow::closeEvent(event);
+
+    // FIXME: If we have multiple browser windows, this won't be correct anymore
+    //     For now, this makes sure that we close the TaskManagerWindow when the user clicks the (X) button
+    close_task_manager_window();
 }
 
 }
