@@ -275,6 +275,27 @@ static constexpr CGFloat const WINDOW_HEIGHT = 800;
     [self updateTabTitleAndFavicon];
 }
 
+- (void)onAudioPlayStateChange:(Web::HTML::AudioPlayState)play_state
+{
+    switch (play_state) {
+    case Web::HTML::AudioPlayState::Paused:
+        [[self tab] setAccessoryView:nil];
+        break;
+
+    case Web::HTML::AudioPlayState::Playing:
+        auto* icon = [NSImage imageNamed:NSImageNameTouchBarAudioOutputVolumeHighTemplate];
+        auto* button = [NSButton buttonWithImage:icon target:nil action:nil];
+
+        // FIXME: Add a click handler to mute the tab.
+        NSButtonCell* cell = [button cell];
+        [cell setImageDimsWhenDisabled:NO];
+        [button setEnabled:NO];
+
+        [[self tab] setAccessoryView:button];
+        break;
+    }
+}
+
 - (void)onNavigateBack
 {
     [[self tabController] navigateBack:nil];

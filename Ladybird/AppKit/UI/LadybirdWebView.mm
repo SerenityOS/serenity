@@ -809,6 +809,10 @@ static void copy_data_to_clipboard(StringView data, NSPasteboardType pasteboard_
         if (pasteboard_type)
             copy_data_to_clipboard(data, pasteboard_type);
     };
+
+    m_web_view_bridge->on_audio_play_state_changed = [self](auto play_state) {
+        [self.observer onAudioPlayStateChange:play_state];
+    };
 }
 
 - (void)selectDropdownAdd:(NSMenu*)menu item:(Web::HTML::SelectItem const&)item
