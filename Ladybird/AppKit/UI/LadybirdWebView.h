@@ -11,6 +11,7 @@
 #include <LibURL/Forward.h>
 #include <LibWeb/CSS/PreferredColorScheme.h>
 #include <LibWeb/HTML/ActivateTab.h>
+#include <LibWeb/HTML/AudioPlayState.h>
 #include <LibWebView/Forward.h>
 
 #import <System/Cocoa.h>
@@ -30,6 +31,7 @@
 
 - (void)onTitleChange:(ByteString const&)title;
 - (void)onFaviconChange:(Gfx::Bitmap const&)bitmap;
+- (void)onAudioPlayStateChange:(Web::HTML::AudioPlayState)play_state;
 
 - (void)onNavigateBack;
 - (void)onNavigateForward;
