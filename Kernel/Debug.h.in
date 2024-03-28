@@ -87,6 +87,10 @@
 #cmakedefine01 FORK_DEBUG
 #endif
 
+#ifndef FUSE_DEBUG
+#cmakedefine01 FUSE_DEBUG
+#endif
+
 #ifndef FUTEX_DEBUG
 #cmakedefine01 FUTEX_DEBUG
 #endif

@@ -58,7 +58,7 @@ public:
     ~VirtualFileSystem();
 
     ErrorOr<void> mount_root(FileSystem&);
-    ErrorOr<void> mount(MountFile&, OpenFileDescription*, Custody& mount_point, int flags);
+    ErrorOr<void> mount(MountFile&, OpenFileDescription*, Custody& mount_point, int flags, ProcessID pid);
     ErrorOr<void> bind_mount(Custody& source, Custody& mount_point, int flags);
     ErrorOr<void> remount(Custody& mount_point, int new_flags);
     ErrorOr<void> unmount(Custody& mount_point);

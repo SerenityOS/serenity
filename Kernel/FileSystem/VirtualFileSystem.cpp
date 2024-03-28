@@ -29,6 +29,7 @@
 #include <Kernel/FileSystem/DevPtsFS/FileSystem.h>
 #include <Kernel/FileSystem/Ext2FS/FileSystem.h>
 #include <Kernel/FileSystem/FATFS/FileSystem.h>
+#include <Kernel/FileSystem/FUSE/FileSystem.h>
 #include <Kernel/FileSystem/ISO9660FS/FileSystem.h>
 #include <Kernel/FileSystem/Plan9FS/FileSystem.h>
 #include <Kernel/FileSystem/ProcFS/FileSystem.h>
@@ -70,6 +71,7 @@ static constexpr FileSystemInitializer s_initializers[] = {
     { "iso9660"sv, "ISO9660FS"sv, true, true, true, ISO9660FS::try_create, {}, handle_mount_boolean_flag_as_invalid, handle_mount_unsigned_integer_flag_as_invalid, handle_mount_signed_integer_flag_as_invalid, handle_mount_ascii_string_flag_as_invalid },
     { "fat"sv, "FATFS"sv, true, true, true, FATFS::try_create, {}, handle_mount_boolean_flag_as_invalid, handle_mount_unsigned_integer_flag_as_invalid, handle_mount_signed_integer_flag_as_invalid, handle_mount_ascii_string_flag_as_invalid },
     { "devloop"sv, "DevLoopFS"sv, false, false, false, {}, DevLoopFS::try_create, handle_mount_boolean_flag_as_invalid, handle_mount_unsigned_integer_flag_as_invalid, handle_mount_signed_integer_flag_as_invalid, handle_mount_ascii_string_flag_as_invalid },
+    { "fuse"sv, "FUSE"sv, false, false, false, {}, FUSE::try_create, handle_mount_boolean_flag_as_invalid, FUSE::handle_mount_unsigned_integer_flag, handle_mount_signed_integer_flag_as_invalid, handle_mount_ascii_string_flag_as_invalid },
 };
 
 ErrorOr<FileSystemInitializer const*> VirtualFileSystem::find_filesystem_type_initializer(StringView fs_type)
@@ -163,7 +165,7 @@ ErrorOr<void> VirtualFileSystem::add_file_system_to_mount_table(FileSystem& file
     });
 }
 
-ErrorOr<void> VirtualFileSystem::mount(MountFile& mount_file, OpenFileDescription* source_description, Custody& mount_point, int flags)
+ErrorOr<void> VirtualFileSystem::mount(MountFile& mount_file, OpenFileDescription* source_description, Custody& mount_point, int flags, ProcessID pid)
 {
     auto const& file_system_initializer = mount_file.file_system_initializer();
     if (!source_description) {
@@ -173,7 +175,7 @@ ErrorOr<void> VirtualFileSystem::mount(MountFile& mount_file, OpenFileDescriptio
             return ENOTSUP;
         RefPtr<FileSystem> fs;
         TRY(mount_file.mount_file_system_specific_data().with_exclusive([&](auto& mount_specific_data) -> ErrorOr<void> {
-            fs = TRY(file_system_initializer.create(mount_specific_data->bytes()));
+            fs = TRY(file_system_initializer.create(pid, mount_specific_data->bytes()));
             return {};
         }));
         VERIFY(fs);

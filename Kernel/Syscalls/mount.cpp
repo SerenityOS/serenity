@@ -57,7 +57,7 @@ ErrorOr<FlatPtr> Process::sys$fsmount(Userspace<Syscall::SC_fsmount_params const
     auto target = TRY(try_copy_kstring_from_user(params.target));
     auto target_custody = TRY(VirtualFileSystem::the().resolve_path(credentials, target->view(), current_directory()));
     auto flags = mount_description->mount_file()->mount_flags();
-    TRY(VirtualFileSystem::the().mount(*mount_description->mount_file(), source_description.ptr(), target_custody, flags));
+    TRY(VirtualFileSystem::the().mount(*mount_description->mount_file(), source_description.ptr(), target_custody, flags, pid()));
     return 0;
 }
 

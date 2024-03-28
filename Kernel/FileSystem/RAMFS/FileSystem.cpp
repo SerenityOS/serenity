@@ -11,7 +11,7 @@
 
 namespace Kernel {
 
-ErrorOr<NonnullRefPtr<FileSystem>> RAMFS::try_create(ReadonlyBytes)
+ErrorOr<NonnullRefPtr<FileSystem>> RAMFS::try_create(ProcessID, ReadonlyBytes)
 {
     return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) RAMFS));
 }

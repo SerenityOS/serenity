@@ -20,7 +20,7 @@ class ProcFS final : public FileSystem {
 
 public:
     virtual ~ProcFS() override;
-    static ErrorOr<NonnullRefPtr<FileSystem>> try_create(ReadonlyBytes);
+    static ErrorOr<NonnullRefPtr<FileSystem>> try_create(ProcessID, ReadonlyBytes);
 
     virtual ErrorOr<void> initialize() override;
     virtual StringView class_name() const override { return "ProcFS"sv; }

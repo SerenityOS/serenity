@@ -66,6 +66,7 @@ set(KERNEL_SOURCES
     Devices/CharacterDevice.cpp
     Devices/Device.cpp
     Devices/DeviceManagement.cpp
+    Devices/FUSEDevice.cpp
     Devices/KCOVDevice.cpp
     Devices/KCOVInstance.cpp
     Devices/PCISerialDevice.cpp
@@ -152,6 +153,8 @@ set(KERNEL_SOURCES
     FileSystem/File.cpp
     FileSystem/FileBackedFileSystem.cpp
     FileSystem/FileSystem.cpp
+    FileSystem/FUSE/FileSystem.cpp
+    FileSystem/FUSE/Inode.cpp
     FileSystem/Inode.cpp
     FileSystem/InodeFile.cpp
     FileSystem/InodeMetadata.cpp

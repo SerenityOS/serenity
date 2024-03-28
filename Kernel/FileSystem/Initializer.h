@@ -22,7 +22,7 @@ struct FileSystemInitializer {
     bool requires_block_device { false };
     bool requires_seekable_file { false };
     ErrorOr<NonnullRefPtr<FileSystem>> (*create_with_fd)(OpenFileDescription&, ReadonlyBytes) = nullptr;
-    ErrorOr<NonnullRefPtr<FileSystem>> (*create)(ReadonlyBytes) = nullptr;
+    ErrorOr<NonnullRefPtr<FileSystem>> (*create)(ProcessID, ReadonlyBytes) = nullptr;
     ErrorOr<void> (*handle_mount_boolean_flag)(Span<u8>, StringView key, bool) = nullptr;
     ErrorOr<void> (*handle_mount_unsigned_integer_flag)(Span<u8>, StringView key, u64) = nullptr;
     ErrorOr<void> (*handle_mount_signed_integer_flag)(Span<u8>, StringView key, i64) = nullptr;

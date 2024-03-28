@@ -12,7 +12,7 @@
 
 namespace Kernel {
 
-ErrorOr<NonnullRefPtr<FileSystem>> ProcFS::try_create(ReadonlyBytes)
+ErrorOr<NonnullRefPtr<FileSystem>> ProcFS::try_create(ProcessID, ReadonlyBytes)
 {
     return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) ProcFS));
 }
