@@ -482,6 +482,12 @@ void Document::visit_edges(Cell::Visitor& visitor)
 
     for (auto& shadow_root : m_shadow_roots)
         visitor.visit(shadow_root);
+
+    for (auto& element : m_top_layer_elements)
+        visitor.visit(element);
+
+    for (auto& element : m_top_layer_pending_removals)
+        visitor.visit(element);
 }
 
 // https://w3c.github.io/selection-api/#dom-document-getselection
@@ -4662,6 +4668,72 @@ void Document::for_each_shadow_root(Function<void(DOM::ShadowRoot&)>&& callback)
 {
     for (auto& shadow_root : m_shadow_roots)
         callback(shadow_root);
+}
+
+// https://drafts.csswg.org/css-position-4/#add-an-element-to-the-top-layer
+void Document::add_an_element_to_the_top_layer(JS::NonnullGCPtr<Element> element)
+{
+    // 1. Let doc be el’s node document.
+
+    // 2. If el is already contained in doc’s top layer:
+    if (m_top_layer_elements.contains(element)) {
+        // Assert: el is also in doc’s pending top layer removals. (Otherwise, this is a spec error.)
+        VERIFY(m_top_layer_pending_removals.contains(element));
+
+        // Remove el from both doc’s top layer and pending top layer removals.
+        m_top_layer_elements.remove(element);
+        m_top_layer_pending_removals.remove(element);
+    }
+
+    // 3. Append el to doc’s top layer.
+    m_top_layer_elements.set(element);
+
+    element->set_in_top_layer(true);
+
+    // FIXME: 4. At the UA !important cascade origin, add a rule targeting el containing an overlay: auto declaration.
+}
+
+// https://drafts.csswg.org/css-position-4/#request-an-element-to-be-removed-from-the-top-layer
+void Document::request_an_element_to_be_remove_from_the_top_layer(JS::NonnullGCPtr<Element> element)
+{
+    // 1. Let doc be el’s node document.
+
+    // 2. If el is not contained doc’s top layer, or el is already contained in doc’s pending top layer removals, return.
+    if (!m_top_layer_elements.contains(element) || m_top_layer_pending_removals.contains(element))
+        return;
+
+    // FIXME: 3. Remove the UA !important overlay: auto rule targeting el.
+
+    // 4. Append el to doc’s pending top layer removals.
+    m_top_layer_pending_removals.set(element);
+}
+
+// https://drafts.csswg.org/css-position-4/#remove-an-element-from-the-top-layer-immediately
+void Document::remove_an_element_from_the_top_layer_immediately(JS::NonnullGCPtr<Element> element)
+{
+    // 1. Let doc be el’s node document.
+
+    // 2. Remove el from doc’s top layer and pending top layer removals.
+    m_top_layer_elements.remove(element);
+
+    element->set_in_top_layer(false);
+
+    // FIXME: 3. Remove the UA !important overlay: auto rule targeting el, if it exists.
+}
+
+// https://drafts.csswg.org/css-position-4/#process-top-layer-removals
+void Document::process_top_layer_removals()
+{
+    // 1. For each element el in doc’s pending top layer removals: if el’s computed value of overlay is none, or el is
+    //    not rendered, remove el from doc’s top layer and pending top layer removals.
+    for (auto& element : m_top_layer_pending_removals) {
+        // FIXME: Check overlay property
+        if (!element->paintable()) {
+            m_top_layer_elements.remove(element);
+            m_top_layer_pending_removals.remove(element);
+            element->set_in_top_layer(false);
+        }
+    }
 }
 
 }

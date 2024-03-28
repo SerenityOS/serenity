@@ -5,6 +5,7 @@
  */
 
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/HTML/Focus.h>
 #include <LibWeb/HTML/HTMLDialogElement.h>
@@ -24,6 +25,20 @@ void HTMLDialogElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
     WEB_SET_PROTOTYPE_FOR_INTERFACE(HTMLDialogElement);
+}
+
+void HTMLDialogElement::removed_from(Node* old_parent)
+{
+    HTMLElement::removed_from(old_parent);
+
+    // FIXME: 1. If removedNode's close watcher is not null, then:
+    //           1. Destroy removedNode's close watcher.
+    //           2. Set removedNode's close watcher to null.
+
+    // 2. If removedNode's node document's top layer contains removedNode, then remove an element from the top layer
+    //    immediately given removedNode.
+    if (document().top_layer_elements().contains(*this))
+        document().remove_an_element_from_the_top_layer_immediately(*this);
 }
 
 // https://html.spec.whatwg.org/multipage/interactive-elements.html#dom-dialog-show
@@ -49,9 +64,50 @@ WebIDL::ExceptionOr<void> HTMLDialogElement::show()
 }
 
 // https://html.spec.whatwg.org/multipage/interactive-elements.html#dom-dialog-showmodal
-void HTMLDialogElement::show_modal()
+WebIDL::ExceptionOr<void> HTMLDialogElement::show_modal()
 {
-    dbgln("(STUBBED) HTMLDialogElement::show_modal()");
+    // 1. If this has an open attribute and the is modal flag of this is true, then return.
+    if (has_attribute(AttributeNames::open) && m_is_modal)
+        return {};
+
+    // 2. If this has an open attribute, then throw an "InvalidStateError" DOMException.
+    if (has_attribute(AttributeNames::open))
+        return WebIDL::InvalidStateError::create(realm(), "Dialog already open"_fly_string);
+
+    // 3. If this is not connected, then throw an "InvalidStateError" DOMException.
+    if (!is_connected())
+        return WebIDL::InvalidStateError::create(realm(), "Dialog not connected"_fly_string);
+
+    // FIXME: 4. If this is in the popover showing state, then throw an "InvalidStateError" DOMException.
+
+    // 5. Add an open attribute to this, whose value is the empty string.
+    TRY(set_attribute(AttributeNames::open, {}));
+
+    // 6. Set the is modal flag of this to true.
+    m_is_modal = true;
+
+    // FIXME: 7. Let this's node document be blocked by the modal dialog this.
+
+    // 8. If this's node document's top layer does not already contain this, then add an element to the top layer given this.
+    if (!document().top_layer_elements().contains(*this))
+        document().add_an_element_to_the_top_layer(*this);
+
+    // FIXME: 9. Set this's close watcher to the result of establishing a close watcher given this's relevant global object, with:
+    //            - cancelAction being to return the result of firing an event named cancel at this, with the cancelable
+    //              attribute initialized to true.
+    //            - closeAction being to close the dialog given this and null.
+
+    // FIXME: 10. Set this's previously focused element to the focused element.
+
+    // FIXME: 11. Let hideUntil be the result of running topmost popover ancestor given this, null, and false.
+
+    // FIXME: 12. If hideUntil is null, then set hideUntil to this's node document.
+
+    // FIXME: 13. Run hide all popovers until given hideUntil, false, and true.
+
+    // FIXME: 14. Run the dialog focusing steps given this.
+
+    return {};
 }
 
 // https://html.spec.whatwg.org/multipage/interactive-elements.html#dom-dialog-close
@@ -84,9 +140,13 @@ void HTMLDialogElement::close_the_dialog(Optional<String> result)
     // 2. Remove subject's open attribute.
     remove_attribute(AttributeNames::open);
 
-    // FIXME: 3. If the is modal flag of subject is true, then request an element to be removed from the top layer given subject.
+    // 3. If the is modal flag of subject is true, then request an element to be removed from the top layer given subject.
+    if (m_is_modal)
+        document().request_an_element_to_be_remove_from_the_top_layer(*this);
     // FIXME: 4. Let wasModal be the value of subject's is modal flag.
-    // FIXME: 5. Set the is modal flag of subject to false.
+
+    // 5. Set the is modal flag of subject to false.
+    m_is_modal = false;
 
     // 6. If result is not null, then set the returnValue attribute to result.
     if (result.has_value())
