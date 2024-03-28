@@ -164,7 +164,7 @@ static JS::NonnullGCPtr<HTML::BrowsingContext> obtain_a_browsing_context_to_use_
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#initialise-the-document-object
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> Document::create_and_initialize(Type type, String content_type, HTML::NavigationParams& navigation_params)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> Document::create_and_initialize(Type type, String content_type, HTML::NavigationParams const& navigation_params)
 {
     // 1. Let browsingContext be navigationParams's navigable's active browsing context.
     auto browsing_context = navigation_params.navigable->active_browsing_context();

@@ -12,7 +12,7 @@
 namespace Web {
 
 bool build_xml_document(DOM::Document& document, ByteBuffer const& data, Optional<String> content_encoding);
-JS::GCPtr<DOM::Document> load_document(HTML::NavigationParams navigation_params);
+JS::GCPtr<DOM::Document> load_document(HTML::NavigationParams const& navigation_params);
 
 // https://html.spec.whatwg.org/multipage/document-lifecycle.html#read-ua-inline
 template<typename MutateDocument>

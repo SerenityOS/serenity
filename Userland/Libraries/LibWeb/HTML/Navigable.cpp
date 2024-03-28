@@ -1154,7 +1154,7 @@ WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(
         else {
             // 1. Let document be the result of loading a document given navigationParams, sourceSnapshotParams,
             //    and entry's document state's initiator origin.
-            auto document = load_document(move(navigation_params.get<NavigationParams>()));
+            auto document = load_document(navigation_params.get<NavigationParams>());
 
             // 2. If document is null, then run completionSteps and return.
             if (!document) {
@@ -1622,7 +1622,7 @@ WebIDL::ExceptionOr<JS::GCPtr<DOM::Document>> Navigable::evaluate_javascript_url
     };
 
     // 17. Return the result of loading an HTML document given navigationParams.
-    return load_document(move(navigation_params));
+    return load_document(navigation_params);
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigate-to-a-javascript:-url
