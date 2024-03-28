@@ -340,7 +340,8 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
     bool check_for_cancelation,
     Optional<SourceSnapshotParams> source_snapshot_params,
     JS::GCPtr<Navigable> initiator_to_check,
-    Optional<UserNavigationInvolvement> user_involvement_for_navigate_events)
+    Optional<UserNavigationInvolvement> user_involvement_for_navigate_events,
+    Optional<Bindings::NavigationType> navigation_type)
 {
     auto& vm = this->vm();
     // FIXME: 1. Assert: This is running within traversable's session history traversal queue.
@@ -439,8 +440,36 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
                 return;
             }
 
-            // 5. Let oldOrigin be targetEntry's document state's origin.
+            // 5. Switch on navigationType:
+            if (navigation_type.has_value()) {
+                switch (navigation_type.value()) {
+                case Bindings::NavigationType::Reload:
+                    // - "reload": Assert: targetEntry's document state's reload pending is true.
+                    VERIFY(target_entry->document_state()->reload_pending());
+                    break;
+                case Bindings::NavigationType::Traverse:
+                    // - "traverse": Assert: targetEntry's document state's ever populated is true.
+                    VERIFY(target_entry->document_state()->ever_populated());
+                    break;
+                case Bindings::NavigationType::Replace:
+                    // FIXME: Add ever populated check
+                    // - "replace": Assert: targetEntry's step is displayedEntry's step and targetEntry's document state's ever populated is false.
+                    VERIFY(target_entry->step() == displayed_entry->step());
+                    break;
+                case Bindings::NavigationType::Push:
+                    // FIXME: Add ever populated check, and fix the bug where top level traversable's step is not updated when a child navigable navigates
+                    // - "push": Assert: targetEntry's step is displayedEntry's step + 1 and targetEntry's document state's ever populated is false.
+                    VERIFY(target_entry->step().get<int>() > displayed_entry->step().get<int>());
+                    break;
+                }
+            }
+
+            // 6. Let oldOrigin be targetEntry's document state's origin.
             auto old_origin = target_entry->document_state()->origin();
+
+            // FIXME: 7. If navigable is not traversable, and targetEntry is not navigable's current session history entry,
+            //    and oldOrigin is the same as navigable's current session history entry's document state's origin,
+            //    then fire a traverse navigate event given targetEntry and userInvolvementForNavigateEvents.
 
             auto after_document_populated = [old_origin, target_entry, changing_navigable_continuation, &changing_navigable_continuations, &vm, &navigable]() mutable {
                 // 1. If targetEntry's document is null, then set changingNavigableContinuation's update-only to true.
@@ -470,7 +499,7 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
                 changing_navigable_continuations.enqueue(move(changing_navigable_continuation));
             };
 
-            // 6. If targetEntry's document is null, or targetEntry's document state's reload pending is true, then:
+            // 8. If targetEntry's document is null, or targetEntry's document state's reload pending is true, then:
             if (!target_entry->document() || target_entry->document_state()->reload_pending()) {
                 // FIXME: 1. Let navTimingType be "back_forward" if targetEntry's document is null; otherwise "reload".
 
@@ -842,8 +871,8 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::update_for_navigab
     // 1. Let step be traversable's current session history step.
     auto step = current_session_history_step();
 
-    // 2. Return the result of applying the history step step to traversable given, false, null, null, and null.
-    return apply_the_history_step(step, false, {}, {}, {});
+    // 2. Return the result of applying the history step to traversable given false, null, null, null, and null.
+    return apply_the_history_step(step, false, {}, {}, {}, {});
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#apply-the-reload-history-step
@@ -852,20 +881,21 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_reload_h
     // 1. Let step be traversable's current session history step.
     auto step = current_session_history_step();
 
-    // 2. Return the result of applying the history step step to traversable given true, null, null, and null.
-    return apply_the_history_step(step, true, {}, {}, {});
+    // 2. Return the result of applying the history step step to traversable given true, null, null, null, and "reload".
+    return apply_the_history_step(step, true, {}, {}, {}, Bindings::NavigationType::Reload);
 }
 
-TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_push_or_replace_history_step(int step)
+TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_push_or_replace_history_step(int step, HistoryHandlingBehavior history_handling)
 {
-    // 1. Return the result of applying the history step step to traversable given false, null, null, and null.
-    return apply_the_history_step(step, false, {}, {}, {});
+    // 1. Return the result of applying the history step step to traversable given false, null, null, null, and historyHandling.
+    auto navigation_type = history_handling == HistoryHandlingBehavior::Replace ? Bindings::NavigationType::Replace : Bindings::NavigationType::Push;
+    return apply_the_history_step(step, false, {}, {}, {}, navigation_type);
 }
 
 TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_traverse_history_step(int step, Optional<SourceSnapshotParams> source_snapshot_params, JS::GCPtr<Navigable> initiator_to_check, UserNavigationInvolvement user_involvement)
 {
-    // 1. Return the result of applying the history step step to traversable given true, sourceSnapshotParams, initiatorToCheck, and userInvolvement.
-    return apply_the_history_step(step, true, move(source_snapshot_params), initiator_to_check, user_involvement);
+    // 1. Return the result of applying the history step step to traversable given true, sourceSnapshotParams, initiatorToCheck, userInvolvement, and "traverse".
+    return apply_the_history_step(step, true, move(source_snapshot_params), initiator_to_check, user_involvement, Bindings::NavigationType::Traverse);
 }
 
 // https://html.spec.whatwg.org/multipage/document-sequences.html#close-a-top-level-traversable
@@ -925,7 +955,7 @@ void TraversableNavigable::destroy_top_level_traversable()
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#finalize-a-same-document-navigation
-void finalize_a_same_document_navigation(JS::NonnullGCPtr<TraversableNavigable> traversable, JS::NonnullGCPtr<Navigable> target_navigable, JS::NonnullGCPtr<SessionHistoryEntry> target_entry, JS::GCPtr<SessionHistoryEntry> entry_to_replace)
+void finalize_a_same_document_navigation(JS::NonnullGCPtr<TraversableNavigable> traversable, JS::NonnullGCPtr<Navigable> target_navigable, JS::NonnullGCPtr<SessionHistoryEntry> target_entry, JS::GCPtr<SessionHistoryEntry> entry_to_replace, HistoryHandlingBehavior history_handling)
 {
     // NOTE: This is not in the spec but we should not navigate destroyed navigable.
     if (target_navigable->has_been_destroyed())
@@ -968,8 +998,8 @@ void finalize_a_same_document_navigation(JS::NonnullGCPtr<TraversableNavigable> 
         target_step = traversable->current_session_history_step();
     }
 
-    // 6. Apply the push/replace history step targetStep to traversable.
-    traversable->apply_the_push_or_replace_history_step(*target_step);
+    // 6. Apply the push/replace history step targetStep to traversable given historyHandling.
+    traversable->apply_the_push_or_replace_history_step(*target_step, history_handling);
 }
 
 // https://html.spec.whatwg.org/multipage/interaction.html#system-visibility-state
