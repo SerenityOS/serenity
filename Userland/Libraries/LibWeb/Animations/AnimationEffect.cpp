@@ -142,9 +142,14 @@ WebIDL::ExceptionOr<void> AnimationEffect::update_timing(OptionalEffectTiming ti
     if (duration.has_value() && duration->has<double>() && (duration->get<double>() < 0.0 || isnan(duration->get<double>())))
         return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Invalid duration value"sv };
 
-    // FIXME:
     // 4. If the easing member of input exists but cannot be parsed using the <easing-function> production
     //    [CSS-EASING-1], throw a TypeError and abort this procedure.
+    RefPtr<CSS::StyleValue const> easing_value;
+    if (timing.easing.has_value()) {
+        easing_value = parse_easing_string(realm(), timing.easing.value());
+        if (!easing_value)
+            return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Invalid easing function"sv };
+    }
 
     // 5. Assign each member that exists in input to the corresponding timing property of effect as follows:
 
@@ -177,13 +182,9 @@ WebIDL::ExceptionOr<void> AnimationEffect::update_timing(OptionalEffectTiming ti
         m_playback_direction = timing.direction.value();
 
     //    - easing → timing function
-    if (timing.easing.has_value()) {
+    if (easing_value) {
         m_easing_function = timing.easing.value();
-        if (auto timing_function = parse_easing_string(realm(), m_easing_function)) {
-            m_timing_function = TimingFunction::from_easing_style_value(timing_function->as_easing());
-        } else {
-            m_timing_function = Animations::linear_timing_function;
-        }
+        m_timing_function = TimingFunction::from_easing_style_value(easing_value->as_easing());
     }
 
     if (auto animation = m_associated_animation)
