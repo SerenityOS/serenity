@@ -1540,7 +1540,8 @@ static Bytecode::CodeGenerationErrorOr<BaseAndValue> get_base_and_value_from_mem
             base,
             generator.intern_identifier(verify_cast<PrivateIdentifier>(member_expression.property()).string()));
     } else {
-        generator.emit_get_by_id(value, base, generator.intern_identifier(verify_cast<Identifier>(member_expression.property()).string()));
+        auto base_identifier = generator.intern_identifier_for_expression(member_expression.object());
+        generator.emit_get_by_id(value, base, generator.intern_identifier(verify_cast<Identifier>(member_expression.property()).string()), move(base_identifier));
     }
 
     return BaseAndValue { base, value };

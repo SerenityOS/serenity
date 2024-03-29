@@ -74,6 +74,13 @@ public:
     ByteString const& get_string(StringTableIndex index) const { return string_table->get(index); }
     DeprecatedFlyString const& get_identifier(IdentifierTableIndex index) const { return identifier_table->get(index); }
 
+    Optional<DeprecatedFlyString const&> get_identifier(Optional<IdentifierTableIndex> const& index) const
+    {
+        if (!index.has_value())
+            return {};
+        return get_identifier(*index);
+    }
+
     void dump() const;
 
 private:

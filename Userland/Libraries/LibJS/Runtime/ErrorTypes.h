@@ -302,6 +302,9 @@
     M(ThisHasNotBeenInitialized, "|this| has not been initialized")                                                                     \
     M(ThisIsAlreadyInitialized, "|this| is already initialized")                                                                        \
     M(ToObjectNullOrUndefined, "ToObject on null or undefined")                                                                         \
+    M(ToObjectNullOrUndefinedWithName, "\"{}\" is {}")                                                                                  \
+    M(ToObjectNullOrUndefinedWithProperty, "Cannot access property \"{}\" on {} object")                                                \
+    M(ToObjectNullOrUndefinedWithPropertyAndName, "Cannot access property \"{}\" on {} object \"{}\"")                                  \
     M(TopLevelVariableAlreadyDeclared, "Redeclaration of top level variable '{}'")                                                      \
     M(ToPrimitiveReturnedObject, "Can't convert {} to primitive with hint \"{}\", its @@toPrimitive method returned an object")         \
     M(TypedArrayContentTypeMismatch, "Can't create {} from {}")                                                                         \

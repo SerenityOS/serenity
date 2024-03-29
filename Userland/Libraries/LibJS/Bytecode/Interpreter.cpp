@@ -1083,9 +1083,13 @@ ThrowCompletionOr<void> SetLocal::execute_impl(Bytecode::Interpreter&) const
 
 ThrowCompletionOr<void> GetById::execute_impl(Bytecode::Interpreter& interpreter) const
 {
+    auto base_identifier = interpreter.current_executable().get_identifier(m_base_identifier);
+    auto const& property_identifier = interpreter.current_executable().get_identifier(m_property);
+
     auto base_value = interpreter.get(base());
     auto& cache = interpreter.current_executable().property_lookup_caches[m_cache_index];
-    interpreter.set(dst(), TRY(get_by_id(interpreter.vm(), interpreter.current_executable().get_identifier(m_property), base_value, base_value, cache)));
+
+    interpreter.set(dst(), TRY(get_by_id(interpreter.vm(), base_identifier, property_identifier, base_value, base_value, cache)));
     return {};
 }
 
@@ -1094,7 +1098,7 @@ ThrowCompletionOr<void> GetByIdWithThis::execute_impl(Bytecode::Interpreter& int
     auto base_value = interpreter.get(m_base);
     auto this_value = interpreter.get(m_this_value);
     auto& cache = interpreter.current_executable().property_lookup_caches[m_cache_index];
-    interpreter.set(dst(), TRY(get_by_id(interpreter.vm(), interpreter.current_executable().get_identifier(m_property), base_value, this_value, cache)));
+    interpreter.set(dst(), TRY(get_by_id(interpreter.vm(), {}, interpreter.current_executable().get_identifier(m_property), base_value, this_value, cache)));
     return {};
 }
 
@@ -1499,7 +1503,9 @@ ThrowCompletionOr<void> Await::execute_impl(Bytecode::Interpreter& interpreter) 
 
 ThrowCompletionOr<void> GetByValue::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    interpreter.set(dst(), TRY(get_by_value(interpreter.vm(), interpreter.get(m_base), interpreter.get(m_property))));
+    auto base_identifier = interpreter.current_executable().get_identifier(m_base_identifier);
+
+    interpreter.set(dst(), TRY(get_by_value(interpreter.vm(), base_identifier, interpreter.get(m_base), interpreter.get(m_property))));
     return {};
 }
 

@@ -629,11 +629,12 @@ private:
 
 class GetById final : public Instruction {
 public:
-    GetById(Operand dst, Operand base, IdentifierTableIndex property, u32 cache_index)
+    GetById(Operand dst, Operand base, IdentifierTableIndex property, Optional<IdentifierTableIndex> base_identifier, u32 cache_index)
         : Instruction(Type::GetById, sizeof(*this))
         , m_dst(dst)
         , m_base(base)
         , m_property(property)
+        , m_base_identifier(move(base_identifier))
         , m_cache_index(cache_index)
     {
     }
@@ -650,6 +651,7 @@ private:
     Operand m_dst;
     Operand m_base;
     IdentifierTableIndex m_property;
+    Optional<IdentifierTableIndex> m_base_identifier;
     u32 m_cache_index { 0 };
 };
 
@@ -874,11 +876,12 @@ private:
 
 class GetByValue final : public Instruction {
 public:
-    explicit GetByValue(Operand dst, Operand base, Operand property)
+    GetByValue(Operand dst, Operand base, Operand property, Optional<IdentifierTableIndex> base_identifier = {})
         : Instruction(Type::GetByValue, sizeof(*this))
         , m_dst(dst)
         , m_base(base)
         , m_property(property)
+        , m_base_identifier(move(base_identifier))
     {
     }
 
@@ -889,10 +892,13 @@ public:
     Operand base() const { return m_base; }
     Operand property() const { return m_property; }
 
+    Optional<DeprecatedFlyString const&> base_identifier(Bytecode::Interpreter const&) const;
+
 private:
     Operand m_dst;
     Operand m_base;
     Operand m_property;
+    Optional<IdentifierTableIndex> m_base_identifier;
 };
 
 class GetByValueWithThis final : public Instruction {

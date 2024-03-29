@@ -253,13 +253,16 @@ CodeGenerationErrorOr<Generator::ReferenceOperands> Generator::emit_load_from_re
         super_reference.loaded_value = dst;
         return super_reference;
     }
+
     auto base = TRY(expression.object().generate_bytecode(*this)).value();
+    auto base_identifier = intern_identifier_for_expression(expression.object());
+
     if (expression.is_computed()) {
         auto property = TRY(expression.property().generate_bytecode(*this)).value();
         auto saved_property = Operand(allocate_register());
         emit<Bytecode::Op::Mov>(saved_property, property);
         auto dst = preferred_dst.has_value() ? preferred_dst.value() : Operand(allocate_register());
-        emit<Bytecode::Op::GetByValue>(dst, base, property);
+        emit<Bytecode::Op::GetByValue>(dst, base, property, move(base_identifier));
         return ReferenceOperands {
             .base = base,
             .referenced_name = saved_property,
@@ -270,7 +273,7 @@ CodeGenerationErrorOr<Generator::ReferenceOperands> Generator::emit_load_from_re
     if (expression.property().is_identifier()) {
         auto identifier_table_ref = intern_identifier(verify_cast<Identifier>(expression.property()).string());
         auto dst = preferred_dst.has_value() ? preferred_dst.value() : Operand(allocate_register());
-        emit_get_by_id(dst, base, identifier_table_ref);
+        emit_get_by_id(dst, base, identifier_table_ref, move(base_identifier));
         return ReferenceOperands {
             .base = base,
             .referenced_identifier = identifier_table_ref,
@@ -443,6 +446,39 @@ void Generator::emit_set_variable(JS::Identifier const& identifier, Operand valu
     }
 }
 
+static Optional<ByteString> expression_identifier(Expression const& expression)
+{
+    if (expression.is_identifier()) {
+        auto const& identifier = static_cast<Identifier const&>(expression);
+        return identifier.string();
+    }
+
+    if (expression.is_member_expression()) {
+        auto const& member_expression = static_cast<MemberExpression const&>(expression);
+        StringBuilder builder;
+
+        if (auto identifer = expression_identifier(member_expression.object()); identifer.has_value())
+            builder.append(*identifer);
+
+        if (auto identifer = expression_identifier(member_expression.property()); identifer.has_value()) {
+            if (!builder.is_empty())
+                builder.append('.');
+            builder.append(*identifer);
+        }
+
+        return builder.to_byte_string();
+    }
+
+    return {};
+}
+
+Optional<IdentifierTableIndex> Generator::intern_identifier_for_expression(Expression const& expression)
+{
+    if (auto identifer = expression_identifier(expression); identifer.has_value())
+        return intern_identifier(identifer.release_value());
+    return {};
+}
+
 void Generator::generate_scoped_jump(JumpType type)
 {
     TemporaryChange temp { m_current_unwind_context, m_current_unwind_context };
@@ -596,9 +632,9 @@ CodeGenerationErrorOr<Optional<Operand>> Generator::emit_named_evaluation_if_ano
     return expression.generate_bytecode(*this, preferred_dst);
 }
 
-void Generator::emit_get_by_id(Operand dst, Operand base, IdentifierTableIndex id)
+void Generator::emit_get_by_id(Operand dst, Operand base, IdentifierTableIndex property_identifier, Optional<IdentifierTableIndex> base_identifier)
 {
-    emit<Op::GetById>(dst, base, id, m_next_property_lookup_cache++);
+    emit<Op::GetById>(dst, base, property_identifier, move(base_identifier), m_next_property_lookup_cache++);
 }
 
 void Generator::emit_get_by_id_with_this(Operand dst, Operand base, IdentifierTableIndex id, Operand this_value)
