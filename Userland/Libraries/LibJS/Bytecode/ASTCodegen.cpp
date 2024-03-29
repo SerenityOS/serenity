@@ -489,16 +489,17 @@ Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> AssignmentExpressio
                     generator.emit_set_variable(identifier, rval);
                 } else if (is<MemberExpression>(*lhs)) {
                     auto& expression = static_cast<MemberExpression const&>(*lhs);
+                    auto base_identifier = generator.intern_identifier_for_expression(expression.object());
 
                     if (expression.is_computed()) {
                         if (!lhs_is_super_expression)
-                            generator.emit<Bytecode::Op::PutByValue>(*base, *computed_property, rval);
+                            generator.emit<Bytecode::Op::PutByValue>(*base, *computed_property, rval, Bytecode::Op::PropertyKind::KeyValue, move(base_identifier));
                         else
                             generator.emit<Bytecode::Op::PutByValueWithThis>(*base, *computed_property, *this_value, rval);
                     } else if (expression.property().is_identifier()) {
                         auto identifier_table_ref = generator.intern_identifier(verify_cast<Identifier>(expression.property()).string());
                         if (!lhs_is_super_expression)
-                            generator.emit<Bytecode::Op::PutById>(*base, identifier_table_ref, rval, Bytecode::Op::PropertyKind::KeyValue, generator.next_property_lookup_cache());
+                            generator.emit<Bytecode::Op::PutById>(*base, identifier_table_ref, rval, Bytecode::Op::PropertyKind::KeyValue, generator.next_property_lookup_cache(), move(base_identifier));
                         else
                             generator.emit<Bytecode::Op::PutByIdWithThis>(*base, *this_value, identifier_table_ref, rval, Bytecode::Op::PropertyKind::KeyValue, generator.next_property_lookup_cache());
                     } else if (expression.property().is_private_identifier()) {

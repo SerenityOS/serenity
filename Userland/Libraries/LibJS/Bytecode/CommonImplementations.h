@@ -248,14 +248,18 @@ inline ThrowCompletionOr<Value> get_global(Bytecode::Interpreter& interpreter, D
     return vm.throw_completion<ReferenceError>(ErrorType::UnknownIdentifier, identifier);
 }
 
-inline ThrowCompletionOr<void> put_by_property_key(VM& vm, Value base, Value this_value, Value value, PropertyKey name, Op::PropertyKind kind, PropertyLookupCache* cache = nullptr)
+inline ThrowCompletionOr<void> put_by_property_key(VM& vm, Value base, Value this_value, Value value, Optional<DeprecatedFlyString const&> const& base_identifier, PropertyKey name, Op::PropertyKind kind, PropertyLookupCache* cache = nullptr)
 {
     // Better error message than to_object would give
     if (vm.in_strict_mode() && base.is_nullish())
         return vm.throw_completion<TypeError>(ErrorType::ReferenceNullishSetProperty, name, base.to_string_without_side_effects());
 
     // a. Let baseObj be ? ToObject(V.[[Base]]).
-    auto object = TRY(base.to_object(vm));
+    auto maybe_object = base.to_object(vm);
+    if (maybe_object.is_error())
+        return throw_null_or_undefined_property_access(vm, base, base_identifier, name);
+    auto object = maybe_object.release_value();
+
     if (kind == Op::PropertyKind::Getter || kind == Op::PropertyKind::Setter) {
         // The generator should only pass us functions for getters and setters.
         VERIFY(value.is_function());
@@ -411,7 +415,7 @@ inline Value new_function(VM& vm, FunctionExpression const& function_node, Optio
     return value;
 }
 
-inline ThrowCompletionOr<void> put_by_value(VM& vm, Value base, Value property_key_value, Value value, Op::PropertyKind kind)
+inline ThrowCompletionOr<void> put_by_value(VM& vm, Value base, Optional<DeprecatedFlyString const&> const& base_identifier, Value property_key_value, Value value, Op::PropertyKind kind)
 {
     // OPTIMIZATION: Fast path for simple Int32 indexes in array-like objects.
     if ((kind == Op::PropertyKind::KeyValue || kind == Op::PropertyKind::DirectKeyValue)
@@ -489,7 +493,7 @@ inline ThrowCompletionOr<void> put_by_value(VM& vm, Value base, Value property_k
     }
 
     auto property_key = kind != Op::PropertyKind::Spread ? TRY(property_key_value.to_property_key(vm)) : PropertyKey {};
-    TRY(put_by_property_key(vm, base, base, value, property_key, kind));
+    TRY(put_by_property_key(vm, base, base, value, base_identifier, property_key, kind));
     return {};
 }
 

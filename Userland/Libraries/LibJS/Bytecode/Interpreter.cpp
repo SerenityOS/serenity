@@ -1132,9 +1132,10 @@ ThrowCompletionOr<void> PutById::execute_impl(Bytecode::Interpreter& interpreter
     auto& vm = interpreter.vm();
     auto value = interpreter.get(m_src);
     auto base = interpreter.get(m_base);
+    auto base_identifier = interpreter.current_executable().get_identifier(m_base_identifier);
     PropertyKey name = interpreter.current_executable().get_identifier(m_property);
     auto& cache = interpreter.current_executable().property_lookup_caches[m_cache_index];
-    TRY(put_by_property_key(vm, base, base, value, name, m_kind, &cache));
+    TRY(put_by_property_key(vm, base, base, value, base_identifier, name, m_kind, &cache));
     return {};
 }
 
@@ -1145,7 +1146,7 @@ ThrowCompletionOr<void> PutByIdWithThis::execute_impl(Bytecode::Interpreter& int
     auto base = interpreter.get(m_base);
     PropertyKey name = interpreter.current_executable().get_identifier(m_property);
     auto& cache = interpreter.current_executable().property_lookup_caches[m_cache_index];
-    TRY(put_by_property_key(vm, base, interpreter.get(m_this_value), value, name, m_kind, &cache));
+    TRY(put_by_property_key(vm, base, interpreter.get(m_this_value), value, {}, name, m_kind, &cache));
     return {};
 }
 
@@ -1523,7 +1524,8 @@ ThrowCompletionOr<void> PutByValue::execute_impl(Bytecode::Interpreter& interpre
 {
     auto& vm = interpreter.vm();
     auto value = interpreter.get(m_src);
-    TRY(put_by_value(vm, interpreter.get(m_base), interpreter.get(m_property), value, m_kind));
+    auto base_identifier = interpreter.current_executable().get_identifier(m_base_identifier);
+    TRY(put_by_value(vm, interpreter.get(m_base), base_identifier, interpreter.get(m_property), value, m_kind));
     return {};
 }
 
@@ -1533,7 +1535,7 @@ ThrowCompletionOr<void> PutByValueWithThis::execute_impl(Bytecode::Interpreter& 
     auto value = interpreter.get(m_src);
     auto base = interpreter.get(m_base);
     auto property_key = m_kind != PropertyKind::Spread ? TRY(interpreter.get(m_property).to_property_key(vm)) : PropertyKey {};
-    TRY(put_by_property_key(vm, base, interpreter.get(m_this_value), value, property_key, m_kind));
+    TRY(put_by_property_key(vm, base, interpreter.get(m_this_value), value, {}, property_key, m_kind));
     return {};
 }
 

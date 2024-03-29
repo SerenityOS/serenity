@@ -7,7 +7,15 @@ test("null/undefined object", () => {
         }).toThrowWithMessage(TypeError, `Cannot access property "bar" on ${value} object "foo"`);
 
         expect(() => {
+            foo.bar = 1;
+        }).toThrowWithMessage(TypeError, `Cannot access property "bar" on ${value} object "foo"`);
+
+        expect(() => {
             foo[0];
+        }).toThrowWithMessage(TypeError, `Cannot access property "0" on ${value} object "foo"`);
+
+        expect(() => {
+            foo[0] = 1;
         }).toThrowWithMessage(TypeError, `Cannot access property "0" on ${value} object "foo"`);
     });
 });
@@ -22,6 +30,13 @@ test("null/undefined object key", () => {
             TypeError,
             `Cannot access property "baz" on ${value} object "foo.bar"`
         );
+
+        expect(() => {
+            foo.bar.baz = 1;
+        }).toThrowWithMessage(
+            TypeError,
+            `Cannot access property "baz" on ${value} object "foo.bar"`
+        );
     });
 });
 
@@ -31,6 +46,10 @@ test("null/undefined array index", () => {
 
         expect(() => {
             foo[0].bar;
+        }).toThrowWithMessage(TypeError, `Cannot access property "bar" on ${value} object`);
+
+        expect(() => {
+            foo[0].bar = 1;
         }).toThrowWithMessage(TypeError, `Cannot access property "bar" on ${value} object`);
     });
 });

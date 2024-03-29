@@ -741,13 +741,14 @@ enum class PropertyKind {
 
 class PutById final : public Instruction {
 public:
-    explicit PutById(Operand base, IdentifierTableIndex property, Operand src, PropertyKind kind, u32 cache_index)
+    explicit PutById(Operand base, IdentifierTableIndex property, Operand src, PropertyKind kind, u32 cache_index, Optional<IdentifierTableIndex> base_identifier = {})
         : Instruction(Type::PutById, sizeof(*this))
         , m_base(base)
         , m_property(property)
         , m_src(src)
         , m_kind(kind)
         , m_cache_index(cache_index)
+        , m_base_identifier(move(base_identifier))
     {
     }
 
@@ -766,6 +767,7 @@ private:
     Operand m_src;
     PropertyKind m_kind;
     u32 m_cache_index { 0 };
+    Optional<IdentifierTableIndex> m_base_identifier {};
 };
 
 class PutByIdWithThis final : public Instruction {
@@ -929,12 +931,13 @@ private:
 
 class PutByValue final : public Instruction {
 public:
-    PutByValue(Operand base, Operand property, Operand src, PropertyKind kind = PropertyKind::KeyValue)
+    PutByValue(Operand base, Operand property, Operand src, PropertyKind kind = PropertyKind::KeyValue, Optional<IdentifierTableIndex> base_identifier = {})
         : Instruction(Type::PutByValue, sizeof(*this))
         , m_base(base)
         , m_property(property)
         , m_src(src)
         , m_kind(kind)
+        , m_base_identifier(move(base_identifier))
     {
     }
 
@@ -951,6 +954,7 @@ private:
     Operand m_property;
     Operand m_src;
     PropertyKind m_kind;
+    Optional<IdentifierTableIndex> m_base_identifier;
 };
 
 class PutByValueWithThis final : public Instruction {
