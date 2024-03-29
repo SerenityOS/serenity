@@ -6,13 +6,15 @@ set(SOURCES
     Directory.cpp
     DirectoryEntry.cpp
     DirIterator.cpp
+    Environment.cpp
     File.cpp
+    SessionManagement.cpp
     StandardPaths.cpp
     System.cpp
     Version.cpp
 )
 
-serenity_lib(LibCoreMinimal coreminimal TYPE OBJECT)
+serenity_lib(LibCoreMinimal coreminimal)
 target_link_libraries(LibCoreMinimal PRIVATE LibSystem)
 
 set(SOURCES
@@ -20,7 +22,6 @@ set(SOURCES
     Command.cpp
     DateTime.cpp
     ElapsedTimer.cpp
-    Environment.cpp
     Event.cpp
     EventLoop.cpp
     EventLoopImplementation.cpp
@@ -37,7 +38,6 @@ set(SOURCES
     ResourceImplementation.cpp
     ResourceImplementationFile.cpp
     SecretString.cpp
-    SessionManagement.cpp
     Socket.cpp
     SOCKSProxyClient.cpp
     SystemServerTakeover.cpp
@@ -70,7 +70,8 @@ else()
 endif()
 
 serenity_lib(LibCore core)
-target_link_libraries(LibCore PRIVATE LibCoreMinimal LibCrypt LibSystem LibTimeZone LibURL)
+target_link_libraries(LibCore PRIVATE LibCrypt LibSystem LibTimeZone LibURL)
+target_link_libraries(LibCore PUBLIC LibCoreMinimal)
 
 if (APPLE)
     target_link_libraries(LibCore PUBLIC "-framework CoreFoundation")
