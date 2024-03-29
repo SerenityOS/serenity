@@ -58,7 +58,30 @@ inline void fast_typed_array_set_element(TypedArrayBase& typed_array, u32 index,
     *slot = value;
 }
 
-ALWAYS_INLINE ThrowCompletionOr<NonnullGCPtr<Object>> base_object_for_get(VM& vm, Value base_value)
+template<typename BaseType, typename PropertyType>
+ALWAYS_INLINE Completion throw_null_or_undefined_property_access(VM& vm, Value base_value, BaseType const& base_identifier, PropertyType const& property_identifier)
+{
+    VERIFY(base_value.is_nullish());
+
+    bool has_base_identifier = true;
+    bool has_property_identifier = true;
+
+    if constexpr (requires { base_identifier.has_value(); })
+        has_base_identifier = base_identifier.has_value();
+    if constexpr (requires { property_identifier.has_value(); })
+        has_property_identifier = property_identifier.has_value();
+
+    if (has_base_identifier && has_property_identifier)
+        return vm.throw_completion<TypeError>(ErrorType::ToObjectNullOrUndefinedWithPropertyAndName, property_identifier, base_value, base_identifier);
+    if (has_property_identifier)
+        return vm.throw_completion<TypeError>(ErrorType::ToObjectNullOrUndefinedWithProperty, property_identifier, base_value);
+    if (has_base_identifier)
+        return vm.throw_completion<TypeError>(ErrorType::ToObjectNullOrUndefinedWithName, base_identifier, base_value);
+    return vm.throw_completion<TypeError>(ErrorType::ToObjectNullOrUndefined);
+}
+
+template<typename BaseType, typename PropertyType>
+ALWAYS_INLINE ThrowCompletionOr<NonnullGCPtr<Object>> base_object_for_get(VM& vm, Value base_value, BaseType const& base_identifier, PropertyType property_identifier)
 {
     if (base_value.is_object()) [[likely]]
         return base_value.as_object();
@@ -77,10 +100,10 @@ ALWAYS_INLINE ThrowCompletionOr<NonnullGCPtr<Object>> base_object_for_get(VM& vm
         return realm.intrinsics().symbol_prototype();
 
     // NOTE: At this point this is guaranteed to throw (null or undefined).
-    return base_value.to_object(vm);
+    return throw_null_or_undefined_property_access(vm, base_value, base_identifier, property_identifier);
 }
 
-inline ThrowCompletionOr<Value> get_by_id(VM& vm, DeprecatedFlyString const& property, Value base_value, Value this_value, PropertyLookupCache& cache)
+inline ThrowCompletionOr<Value> get_by_id(VM& vm, Optional<DeprecatedFlyString const&> const& base_identifier, DeprecatedFlyString const& property, Value base_value, Value this_value, PropertyLookupCache& cache)
 {
     if (base_value.is_string()) {
         auto string_value = TRY(base_value.as_string().get(vm, property));
@@ -88,7 +111,7 @@ inline ThrowCompletionOr<Value> get_by_id(VM& vm, DeprecatedFlyString const& pro
             return *string_value;
     }
 
-    auto base_obj = TRY(base_object_for_get(vm, base_value));
+    auto base_obj = TRY(base_object_for_get(vm, base_value, base_identifier, property));
 
     // OPTIMIZATION: Fast path for the magical "length" property on Array objects.
     if (base_obj->has_magical_length_property() && property == vm.names.length.as_string()) {
@@ -112,7 +135,7 @@ inline ThrowCompletionOr<Value> get_by_id(VM& vm, DeprecatedFlyString const& pro
     return value;
 }
 
-inline ThrowCompletionOr<Value> get_by_value(VM& vm, Value base_value, Value property_key_value)
+inline ThrowCompletionOr<Value> get_by_value(VM& vm, Optional<DeprecatedFlyString const&> const& base_identifier, Value base_value, Value property_key_value)
 {
     // OPTIMIZATION: Fast path for simple Int32 indexes in array-like objects.
     if (base_value.is_object() && property_key_value.is_int32() && property_key_value.as_i32() >= 0) {
@@ -169,7 +192,7 @@ inline ThrowCompletionOr<Value> get_by_value(VM& vm, Value base_value, Value pro
         }
     }
 
-    auto object = TRY(base_object_for_get(vm, base_value));
+    auto object = TRY(base_object_for_get(vm, base_value, base_identifier, property_key_value));
 
     auto property_key = TRY(property_key_value.to_property_key(vm));
 

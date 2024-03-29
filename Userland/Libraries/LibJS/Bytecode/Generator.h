@@ -183,6 +183,8 @@ public:
         return m_identifier_table->insert(move(string));
     }
 
+    Optional<IdentifierTableIndex> intern_identifier_for_expression(Expression const& expression);
+
     bool is_in_generator_or_async_function() const { return m_enclosing_function_kind == FunctionKind::Async || m_enclosing_function_kind == FunctionKind::Generator || m_enclosing_function_kind == FunctionKind::AsyncGenerator; }
     bool is_in_generator_function() const { return m_enclosing_function_kind == FunctionKind::Generator || m_enclosing_function_kind == FunctionKind::AsyncGenerator; }
     bool is_in_async_function() const { return m_enclosing_function_kind == FunctionKind::Async || m_enclosing_function_kind == FunctionKind::AsyncGenerator; }
@@ -247,7 +249,7 @@ public:
         m_boundaries.take_last();
     }
 
-    void emit_get_by_id(Operand dst, Operand base, IdentifierTableIndex);
+    void emit_get_by_id(Operand dst, Operand base, IdentifierTableIndex property_identifier, Optional<IdentifierTableIndex> base_identifier = {});
 
     void emit_get_by_id_with_this(Operand dst, Operand base, IdentifierTableIndex, Operand this_value);
 
