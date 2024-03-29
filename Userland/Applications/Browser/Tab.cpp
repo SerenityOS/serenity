@@ -43,6 +43,7 @@
 #include <LibGUI/Window.h>
 #include <LibURL/URL.h>
 #include <LibWeb/HTML/BrowsingContext.h>
+#include <LibWeb/HTML/HistoryHandlingBehavior.h>
 #include <LibWeb/HTML/SelectedFile.h>
 #include <LibWeb/HTML/SyntaxHighlighter/SyntaxHighlighter.h>
 #include <LibWeb/Layout/BlockContainer.h>
@@ -255,6 +256,23 @@ Tab::Tab(BrowserWindow& window)
 
         if (m_dom_inspector_widget)
             m_dom_inspector_widget->inspect();
+    };
+
+    view().on_url_updated = [this](auto const& url, auto history_behavior) {
+        switch (history_behavior) {
+        case Web::HTML::HistoryHandlingBehavior::Push:
+            m_history.push(url, m_title);
+            break;
+        case Web::HTML::HistoryHandlingBehavior::Replace:
+            m_history.replace_current(url, m_title);
+            break;
+        }
+
+        auto url_serialized = url.serialize();
+        m_location_box->set_text(url_serialized);
+
+        update_actions();
+        update_bookmark_button(url_serialized);
     };
 
     view().on_navigate_back = [this]() {
