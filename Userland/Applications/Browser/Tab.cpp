@@ -231,6 +231,10 @@ Tab::Tab(BrowserWindow& window)
         if (on_title_change)
             on_title_change(m_title);
 
+        m_icon = g_icon_bag.default_favicon;
+        if (on_favicon_change)
+            on_favicon_change(*m_icon);
+
         update_status();
 
         m_location_box->set_icon(nullptr);

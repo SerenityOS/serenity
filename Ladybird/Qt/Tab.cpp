@@ -42,6 +42,12 @@
 
 namespace Ladybird {
 
+static QIcon default_favicon()
+{
+    static QIcon icon = load_icon_from_uri("resource://icons/16x16/app-browser.png"sv);
+    return icon;
+}
+
 static QIcon create_tvg_icon_with_theme_colors(QString name, QPalette const& palette)
 {
     auto path = QString(":/Icons/%1.tvg").arg(name);
@@ -83,7 +89,7 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
 
     recreate_toolbar_icons();
 
-    m_favicon = load_icon_from_uri("resource://icons/16x16/app-browser.png"sv);
+    m_favicon = default_favicon();
 
     m_toolbar->addAction(&m_window->go_back_action());
     m_toolbar->addAction(&m_window->go_forward_action());
@@ -135,6 +141,9 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
 
         m_title = url_serialized;
         emit title_changed(tab_index(), url_serialized);
+
+        m_favicon = default_favicon();
+        emit favicon_changed(tab_index(), m_favicon);
 
         m_location_edit->setText(url_serialized);
         m_location_edit->setCursorPosition(0);
