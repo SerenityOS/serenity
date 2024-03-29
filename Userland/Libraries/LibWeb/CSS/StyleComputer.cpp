@@ -684,6 +684,14 @@ void StyleComputer::for_each_property_expanding_shorthands(PropertyID property_i
     }
 
     if (property_id == CSS::PropertyID::Transition) {
+        if (!value.is_transition()) {
+            // Handle `none` as a shorthand for `all 0s ease 0s`.
+            set_longhand_property(CSS::PropertyID::TransitionProperty, IdentifierStyleValue::create(CSS::ValueID::All));
+            set_longhand_property(CSS::PropertyID::TransitionDuration, TimeStyleValue::create(CSS::Time::make_seconds(0)));
+            set_longhand_property(CSS::PropertyID::TransitionDelay, TimeStyleValue::create(CSS::Time::make_seconds(0)));
+            set_longhand_property(CSS::PropertyID::TransitionTimingFunction, IdentifierStyleValue::create(CSS::ValueID::Ease));
+            return;
+        }
         auto const& transitions = value.as_transition().transitions();
         Array<Vector<ValueComparingNonnullRefPtr<StyleValue const>>, 4> transition_values;
         for (auto const& transition : transitions) {
