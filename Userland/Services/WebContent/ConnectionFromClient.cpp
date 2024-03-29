@@ -67,66 +67,55 @@ void ConnectionFromClient::die()
     Web::Platform::EventLoopPlugin::the().quit();
 }
 
-Optional<PageClient&> ConnectionFromClient::page(u64 index)
+Optional<PageClient&> ConnectionFromClient::page(u64 index, SourceLocation location)
 {
-    return m_page_host->page(index);
+    if (auto page = m_page_host->page(index); page.has_value())
+        return *page;
+
+    dbgln("ConnectionFromClient::{}: Did not find a page with ID {}", location.function_name(), index);
+    return {};
 }
 
-Optional<PageClient const&> ConnectionFromClient::page(u64 index) const
+Optional<PageClient const&> ConnectionFromClient::page(u64 index, SourceLocation location) const
 {
-    return m_page_host->page(index);
+    if (auto page = m_page_host->page(index); page.has_value())
+        return *page;
+
+    dbgln("ConnectionFromClient::{}: Did not find a page with ID {}", location.function_name(), index);
+    return {};
 }
 
 Messages::WebContentServer::GetWindowHandleResponse ConnectionFromClient::get_window_handle(u64 page_id)
 {
-    auto maybe_page = page(page_id);
-    if (!maybe_page.has_value()) {
-        dbgln("ConnectionFromClient::get_window_handle: No page with ID {}", page_id);
-        return String {};
-    }
-    auto& page = maybe_page.release_value();
-
-    return page.page().top_level_traversable()->window_handle();
+    if (auto page = this->page(page_id); page.has_value())
+        return page->page().top_level_traversable()->window_handle();
+    return String {};
 }
 
 void ConnectionFromClient::set_window_handle(u64 page_id, String const& handle)
 {
-    auto maybe_page = page(page_id);
-    if (!maybe_page.has_value()) {
-        dbgln("ConnectionFromClient::set_window_handle: No page with ID {}", page_id);
-        return;
-    }
-    auto& page = maybe_page.release_value();
-
-    page.page().top_level_traversable()->set_window_handle(handle);
+    if (auto page = this->page(page_id); page.has_value())
+        page->page().top_level_traversable()->set_window_handle(handle);
 }
 
 void ConnectionFromClient::connect_to_webdriver(u64 page_id, ByteString const& webdriver_ipc_path)
 {
-    auto maybe_page = page(page_id);
-    if (!maybe_page.has_value()) {
-        dbgln("ConnectionFromClient::connect_to_webdriver: No page with ID {}", page_id);
-        return;
+    if (auto page = this->page(page_id); page.has_value()) {
+        // FIXME: Propagate this error back to the browser.
+        if (auto result = page->connect_to_webdriver(webdriver_ipc_path); result.is_error())
+            dbgln("Unable to connect to the WebDriver process: {}", result.error());
     }
-    auto& page = maybe_page.release_value();
-
-    // FIXME: Propagate this error back to the browser.
-    if (auto result = page.connect_to_webdriver(webdriver_ipc_path); result.is_error())
-        dbgln("Unable to connect to the WebDriver process: {}", result.error());
 }
 
 void ConnectionFromClient::update_system_theme(u64 page_id, Core::AnonymousBuffer const& theme_buffer)
 {
-    auto maybe_page = page(page_id);
-    if (!maybe_page.has_value()) {
-        dbgln("ConnectionFromClient::update_system_theme: No page with ID {}", page_id);
+    auto page = this->page(page_id);
+    if (!page.has_value())
         return;
-    }
-    auto& page = maybe_page.release_value();
 
     Gfx::set_system_theme(theme_buffer);
     auto impl = Gfx::PaletteImpl::create_with_anonymous_buffer(theme_buffer);
-    page.set_palette_impl(*impl);
+    page->set_palette_impl(*impl);
 }
 
 void ConnectionFromClient::update_system_fonts(u64, ByteString const& default_font_query, ByteString const& fixed_width_font_query, ByteString const& window_title_font_query)
@@ -138,25 +127,16 @@ void ConnectionFromClient::update_system_fonts(u64, ByteString const& default_fo
 
 void ConnectionFromClient::update_screen_rects(u64 page_id, Vector<Web::DevicePixelRect> const& rects, u32 main_screen)
 {
-    auto maybe_page = page(page_id);
-    if (!maybe_page.has_value()) {
-        dbgln("ConnectionFromClient::update_screen_rects: No page with ID {}", page_id);
-        return;
-    }
-    auto& page = maybe_page.release_value();
-
-    page.set_screen_rects(rects, main_screen);
+    if (auto page = this->page(page_id); page.has_value())
+        page->set_screen_rects(rects, main_screen);
 }
 
 void ConnectionFromClient::load_url(u64 page_id, const URL::URL& url)
 {
     dbgln_if(SPAM_DEBUG, "handle: WebContentServer::LoadURL: url={}", url);
-    auto maybe_page = page(page_id);
-    if (!maybe_page.has_value()) {
-        dbgln("ConnectionFromClient::load_url: No page with ID {}", page_id);
+    auto page = this->page(page_id);
+    if (!page.has_value())
         return;
-    }
-    auto& page = maybe_page.release_value();
 
 #if defined(AK_OS_SERENITY)
     ByteString process_name;
@@ -168,57 +148,33 @@ void ConnectionFromClient::load_url(u64 page_id, const URL::URL& url)
     pthread_setname_np(pthread_self(), process_name.characters());
 #endif
 
-    page.page().load(url);
+    page->page().load(url);
 }
 
 void ConnectionFromClient::load_html(u64 page_id, ByteString const& html)
 {
     dbgln_if(SPAM_DEBUG, "handle: WebContentServer::LoadHTML: html={}", html);
-    auto maybe_page = page(page_id);
-    if (!maybe_page.has_value()) {
-        dbgln("ConnectionFromClient::load_html: No page with ID {}", page_id);
-        return;
-    }
-    auto& page = maybe_page.release_value();
-
-    page.page().load_html(html);
+    if (auto page = this->page(page_id); page.has_value())
+        page->page().load_html(html);
 }
 
 void ConnectionFromClient::set_viewport_rect(u64 page_id, Web::DevicePixelRect const& rect)
 {
     dbgln_if(SPAM_DEBUG, "handle: WebContentServer::SetViewportRect: rect={}", rect);
-    auto maybe_page = page(page_id);
-    if (!maybe_page.has_value()) {
-        dbgln("ConnectionFromClient::set_viewport_rect: No page with ID {}", page_id);
-        return;
-    }
-    auto& page = maybe_page.release_value();
-
-    page.set_viewport_rect(rect);
+    if (auto page = this->page(page_id); page.has_value())
+        page->set_viewport_rect(rect);
 }
 
 void ConnectionFromClient::add_backing_store(u64 page_id, i32 front_bitmap_id, Gfx::ShareableBitmap const& front_bitmap, i32 back_bitmap_id, Gfx::ShareableBitmap const& back_bitmap)
 {
-    auto maybe_page = page(page_id);
-    if (!maybe_page.has_value()) {
-        dbgln("ConnectionFromClient::add_backing_store: No page with ID {}", page_id);
-        return;
-    }
-    auto& page = maybe_page.release_value();
-
-    page.add_backing_store(front_bitmap_id, front_bitmap, back_bitmap_id, back_bitmap);
+    if (auto page = this->page(page_id); page.has_value())
+        page->add_backing_store(front_bitmap_id, front_bitmap, back_bitmap_id, back_bitmap);
 }
 
 void ConnectionFromClient::ready_to_paint(u64 page_id)
 {
-    auto maybe_page = page(page_id);
-    if (!maybe_page.has_value()) {
-        dbgln("ConnectionFromClient::ready_to_paint: No page with ID {}", page_id);
-        return;
-    }
-    auto& page = maybe_page.release_value();
-
-    page.ready_to_paint();
+    if (auto page = this->page(page_id); page.has_value())
+        page->ready_to_paint();
 }
 
 void ConnectionFromClient::process_next_input_event()
@@ -228,40 +184,37 @@ void ConnectionFromClient::process_next_input_event()
 
     auto event = m_input_event_queue.dequeue();
 
-    auto maybe_page = page(event.page_id);
-    if (!maybe_page.has_value()) {
-        dbgln("ConnectionFromClient::process_next_input_event: No page with ID {}", event.page_id);
+    auto page = this->page(event.page_id);
+    if (!page.has_value())
         return;
-    }
-    auto& page = maybe_page->page();
 
     auto handled = event.event.visit(
         [&](Web::KeyEvent const& event) {
             switch (event.type) {
             case Web::KeyEvent::Type::KeyDown:
-                return page.handle_keydown(event.key, event.modifiers, event.code_point);
+                return page->page().handle_keydown(event.key, event.modifiers, event.code_point);
             case Web::KeyEvent::Type::KeyUp:
-                return page.handle_keyup(event.key, event.modifiers, event.code_point);
+                return page->page().handle_keyup(event.key, event.modifiers, event.code_point);
             }
             VERIFY_NOT_REACHED();
         },
         [&](Web::MouseEvent const& event) {
             switch (event.type) {
             case Web::MouseEvent::Type::MouseDown:
-                return page.handle_mousedown(event.position, event.screen_position, event.button, event.buttons, event.modifiers);
+                return page->page().handle_mousedown(event.position, event.screen_position, event.button, event.buttons, event.modifiers);
             case Web::MouseEvent::Type::MouseUp:
-                return page.handle_mouseup(event.position, event.screen_position, event.button, event.buttons, event.modifiers);
+                return page->page().handle_mouseup(event.position, event.screen_position, event.button, event.buttons, event.modifiers);
             case Web::MouseEvent::Type::MouseMove:
-                return page.handle_mousemove(event.position, event.screen_position, event.buttons, event.modifiers);
+                return page->page().handle_mousemove(event.position, event.screen_position, event.buttons, event.modifiers);
             case Web::MouseEvent::Type::MouseWheel:
-                return page.handle_mousewheel(event.position, event.screen_position, event.button, event.buttons, event.modifiers, event.wheel_delta_x, event.wheel_delta_y);
+                return page->page().handle_mousewheel(event.position, event.screen_position, event.button, event.buttons, event.modifiers, event.wheel_delta_x, event.wheel_delta_y);
             case Web::MouseEvent::Type::DoubleClick:
-                return page.handle_doubleclick(event.position, event.screen_position, event.button, event.buttons, event.modifiers);
+                return page->page().handle_doubleclick(event.position, event.screen_position, event.button, event.buttons, event.modifiers);
             }
             VERIFY_NOT_REACHED();
         });
 
-    // We have to notify the client about coalesced events, so we do that by saying none of them were handled by the web page.
+    // We have to notify the client about coalesced events, so we do that by saying none of them were handled by the web page->
     for (size_t i = 0; i < event.coalesced_event_count; ++i)
         report_finished_handling_input_event(event.page_id, false);
     report_finished_handling_input_event(event.page_id, handled);
@@ -322,26 +275,23 @@ void ConnectionFromClient::report_finished_handling_input_event(u64 page_id, boo
 
 void ConnectionFromClient::debug_request(u64 page_id, ByteString const& request, ByteString const& argument)
 {
-    auto maybe_page = page(page_id);
-    if (!maybe_page.has_value()) {
-        dbgln("ConnectionFromClient::debug_request: No page with ID {}", page_id);
+    auto page = this->page(page_id);
+    if (!page.has_value())
         return;
-    }
-    auto& page = maybe_page.release_value();
 
     if (request == "dump-session-history") {
-        auto const& traversable = page.page().top_level_traversable();
+        auto const& traversable = page->page().top_level_traversable();
         Web::dump_tree(*traversable);
     }
 
     if (request == "dump-dom-tree") {
-        if (auto* doc = page.page().top_level_browsing_context().active_document())
+        if (auto* doc = page->page().top_level_browsing_context().active_document())
             Web::dump_tree(*doc);
         return;
     }
 
     if (request == "dump-layout-tree") {
-        if (auto* doc = page.page().top_level_browsing_context().active_document()) {
+        if (auto* doc = page->page().top_level_browsing_context().active_document()) {
             if (auto* viewport = doc->layout_node())
                 Web::dump_tree(*viewport);
         }
@@ -349,7 +299,7 @@ void ConnectionFromClient::debug_request(u64 page_id, ByteString const& request,
     }
 
     if (request == "dump-paint-tree") {
-        if (auto* doc = page.page().top_level_browsing_context().active_document()) {
+        if (auto* doc = page->page().top_level_browsing_context().active_document()) {
             if (auto* paintable = doc->paintable())
                 Web::dump_tree(*paintable);
         }
@@ -357,7 +307,7 @@ void ConnectionFromClient::debug_request(u64 page_id, ByteString const& request,
     }
 
     if (request == "dump-stacking-context-tree") {
-        if (auto* doc = page.page().top_level_browsing_context().active_document()) {
+        if (auto* doc = page->page().top_level_browsing_context().active_document()) {
             if (auto* viewport = doc->layout_node()) {
                 if (auto* stacking_context = viewport->paintable_box()->stacking_context())
                     stacking_context->dump();
@@ -367,7 +317,7 @@ void ConnectionFromClient::debug_request(u64 page_id, ByteString const& request,
     }
 
     if (request == "dump-style-sheets") {
-        if (auto* doc = page.page().top_level_browsing_context().active_document()) {
+        if (auto* doc = page->page().top_level_browsing_context().active_document()) {
             for (auto& sheet : doc->style_sheets().sheets()) {
                 if (auto result = Web::dump_sheet(sheet); result.is_error())
                     dbgln("Failed to dump style sheets: {}", result.error());
@@ -377,7 +327,7 @@ void ConnectionFromClient::debug_request(u64 page_id, ByteString const& request,
     }
 
     if (request == "dump-all-resolved-styles") {
-        if (auto* doc = page.page().top_level_browsing_context().active_document()) {
+        if (auto* doc = page->page().top_level_browsing_context().active_document()) {
             Queue<Web::DOM::Node*> elements_to_visit;
             elements_to_visit.enqueue(doc->document_element());
             while (!elements_to_visit.is_empty()) {
@@ -404,8 +354,8 @@ void ConnectionFromClient::debug_request(u64 page_id, ByteString const& request,
 
     if (request == "set-line-box-borders") {
         bool state = argument == "on";
-        page.set_should_show_line_box_borders(state);
-        page.page().top_level_traversable()->set_needs_display(page.page().top_level_traversable()->viewport_rect());
+        page->set_should_show_line_box_borders(state);
+        page->page().top_level_traversable()->set_needs_display(page->page().top_level_traversable()->viewport_rect());
         return;
     }
 
@@ -420,31 +370,31 @@ void ConnectionFromClient::debug_request(u64 page_id, ByteString const& request,
     }
 
     if (request == "same-origin-policy") {
-        page.page().set_same_origin_policy_enabled(argument == "on");
+        page->page().set_same_origin_policy_enabled(argument == "on");
         return;
     }
 
     if (request == "scripting") {
-        page.page().set_is_scripting_enabled(argument == "on");
+        page->page().set_is_scripting_enabled(argument == "on");
         return;
     }
 
     if (request == "block-pop-ups") {
-        page.page().set_should_block_pop_ups(argument == "on");
+        page->page().set_should_block_pop_ups(argument == "on");
         return;
     }
 
     if (request == "dump-local-storage") {
-        if (auto* document = page.page().top_level_browsing_context().active_document())
+        if (auto* document = page->page().top_level_browsing_context().active_document())
             document->window()->local_storage().release_value_but_fixme_should_propagate_errors()->dump();
         return;
     }
 
     if (request == "load-reference-page") {
-        if (auto* document = page.page().top_level_browsing_context().active_document()) {
+        if (auto* document = page->page().top_level_browsing_context().active_document()) {
             auto maybe_link = document->query_selector("link[rel=match]"sv);
             if (maybe_link.is_error() || !maybe_link.value()) {
-                // To make sure that we fail the ref-test if the link is missing, load the error page.
+                // To make sure that we fail the ref-test if the link is missing, load the error page->
                 load_html(page_id, "<h1>Failed to find &lt;link rel=&quot;match&quot; /&gt; in ref test page!</h1> Make sure you added it.");
             } else {
                 auto link = maybe_link.release_value();
@@ -458,42 +408,27 @@ void ConnectionFromClient::debug_request(u64 page_id, ByteString const& request,
 
 void ConnectionFromClient::get_source(u64 page_id)
 {
-    auto maybe_page = page(page_id);
-    if (!maybe_page.has_value()) {
-        dbgln("ConnectionFromClient::get_source: No page with ID {}", page_id);
-        return;
-    }
-    auto& page = maybe_page.release_value();
-
-    if (auto* doc = page.page().top_level_browsing_context().active_document()) {
-        async_did_get_source(page_id, doc->url(), doc->source().to_byte_string());
+    if (auto page = this->page(page_id); page.has_value()) {
+        if (auto* doc = page->page().top_level_browsing_context().active_document())
+            async_did_get_source(page_id, doc->url(), doc->source().to_byte_string());
     }
 }
 
 void ConnectionFromClient::inspect_dom_tree(u64 page_id)
 {
-    auto maybe_page = page(page_id);
-    if (!maybe_page.has_value()) {
-        dbgln("ConnectionFromClient::inspect_dom_tree: No page with ID {}", page_id);
-        return;
-    }
-    auto& page = maybe_page.release_value();
-
-    if (auto* doc = page.page().top_level_browsing_context().active_document()) {
-        async_did_inspect_dom_tree(page_id, doc->dump_dom_tree_as_json().to_byte_string());
+    if (auto page = this->page(page_id); page.has_value()) {
+        if (auto* doc = page->page().top_level_browsing_context().active_document())
+            async_did_inspect_dom_tree(page_id, doc->dump_dom_tree_as_json().to_byte_string());
     }
 }
 
 void ConnectionFromClient::inspect_dom_node(u64 page_id, i32 node_id, Optional<Web::CSS::Selector::PseudoElement::Type> const& pseudo_element)
 {
-    auto maybe_page = page(page_id);
-    if (!maybe_page.has_value()) {
-        dbgln("ConnectionFromClient::inspect_dom_node: No page with ID {}", page_id);
+    auto page = this->page(page_id);
+    if (!page.has_value())
         return;
-    }
-    auto& page = maybe_page.release_value();
 
-    auto& top_context = page.page().top_level_browsing_context();
+    auto& top_context = page->page().top_level_browsing_context();
 
     top_context.for_each_in_inclusive_subtree([&](auto& ctx) {
         if (ctx.active_document() != nullptr) {
@@ -608,7 +543,7 @@ void ConnectionFromClient::inspect_dom_node(u64 page_id, i32 node_id, Optional<W
             // FIXME: Pseudo-elements only exist as Layout::Nodes, which don't have style information
             //        in a format we can use. So, we run the StyleComputer again to get the specified
             //        values, and have to ignore the computed values and custom properties.
-            auto pseudo_element_style = page.page().focused_context().active_document()->style_computer().compute_style(element, pseudo_element);
+            auto pseudo_element_style = page->page().focused_context().active_document()->style_computer().compute_style(element, pseudo_element);
             ByteString computed_values = serialize_json(pseudo_element_style);
             ByteString resolved_values = "{}";
             ByteString custom_properties_json = serialize_custom_properties_json(element, pseudo_element);
@@ -633,30 +568,21 @@ void ConnectionFromClient::inspect_dom_node(u64 page_id, i32 node_id, Optional<W
 
 void ConnectionFromClient::inspect_accessibility_tree(u64 page_id)
 {
-    auto maybe_page = page(page_id);
-    if (!maybe_page.has_value()) {
-        dbgln("ConnectionFromClient::inspect_accessibility_tree: No page with ID {}", page_id);
-        return;
-    }
-    auto& page = maybe_page.release_value();
-
-    if (auto* doc = page.page().top_level_browsing_context().active_document()) {
-        async_did_inspect_accessibility_tree(page_id, doc->dump_accessibility_tree_as_json().to_byte_string());
+    if (auto page = this->page(page_id); page.has_value()) {
+        if (auto* doc = page->page().top_level_browsing_context().active_document())
+            async_did_inspect_accessibility_tree(page_id, doc->dump_accessibility_tree_as_json().to_byte_string());
     }
 }
 
 void ConnectionFromClient::get_hovered_node_id(u64 page_id)
 {
-    auto maybe_page = page(page_id);
-    if (!maybe_page.has_value()) {
-        dbgln("ConnectionFromClient::get_hovered_node_id: No page with ID {}", page_id);
+    auto page = this->page(page_id);
+    if (!page.has_value())
         return;
-    }
-    auto& page = maybe_page.release_value();
 
     i32 node_id = 0;
 
-    if (auto* document = page.page().top_level_browsing_context().active_document()) {
+    if (auto* document = page->page().top_level_browsing_context().active_document()) {
         if (auto* hovered_node = document->hovered_node())
             node_id = hovered_node->unique_id();
     }
@@ -786,14 +712,11 @@ void ConnectionFromClient::clone_dom_node(u64 page_id, i32 node_id)
 
 void ConnectionFromClient::remove_dom_node(u64 page_id, i32 node_id)
 {
-    auto maybe_page = page(page_id);
-    if (!maybe_page.has_value()) {
-        dbgln("ConnectionFromClient::remove_dom_node: No page with ID {}", page_id);
+    auto page = this->page(page_id);
+    if (!page.has_value())
         return;
-    }
-    auto& page = maybe_page.release_value();
 
-    auto* active_document = page.page().top_level_browsing_context().active_document();
+    auto* active_document = page->page().top_level_browsing_context().active_document();
     if (!active_document) {
         async_did_finish_editing_dom_node(page_id, {});
         return;
@@ -835,36 +758,30 @@ void ConnectionFromClient::get_dom_node_html(u64 page_id, i32 node_id)
 
 void ConnectionFromClient::take_document_screenshot(u64 page_id)
 {
-    auto maybe_page = page(page_id);
-    if (!maybe_page.has_value()) {
-        dbgln("ConnectionFromClient::take_document_screenshot: No page with ID {}", page_id);
+    auto page = this->page(page_id);
+    if (!page.has_value())
         return;
-    }
-    auto& page = maybe_page.release_value();
 
-    auto* document = page.page().top_level_browsing_context().active_document();
+    auto* document = page->page().top_level_browsing_context().active_document();
     if (!document || !document->document_element()) {
         async_did_take_screenshot(page_id, {});
         return;
     }
 
-    auto const& content_size = page.content_size();
+    auto const& content_size = page->content_size();
     Web::DevicePixelRect rect { { 0, 0 }, content_size };
 
     auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, rect.size().to_type<int>()).release_value_but_fixme_should_propagate_errors();
-    page.paint(rect, *bitmap);
+    page->paint(rect, *bitmap);
 
     async_did_take_screenshot(page_id, bitmap->to_shareable_bitmap());
 }
 
 void ConnectionFromClient::take_dom_node_screenshot(u64 page_id, i32 node_id)
 {
-    auto maybe_page = page(page_id);
-    if (!maybe_page.has_value()) {
-        dbgln("ConnectionFromClient::take_dom_node_screenshot: No page with ID {}", page_id);
+    auto page = this->page(page_id);
+    if (!page.has_value())
         return;
-    }
-    auto& page = maybe_page.release_value();
 
     auto* dom_node = Web::DOM::Node::from_unique_id(node_id);
     if (!dom_node || !dom_node->paintable_box()) {
@@ -872,10 +789,10 @@ void ConnectionFromClient::take_dom_node_screenshot(u64 page_id, i32 node_id)
         return;
     }
 
-    auto rect = page.page().enclosing_device_rect(dom_node->paintable_box()->absolute_border_box_rect());
+    auto rect = page->page().enclosing_device_rect(dom_node->paintable_box()->absolute_border_box_rect());
 
     auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, rect.size().to_type<int>()).release_value_but_fixme_should_propagate_errors();
-    page.paint(rect, *bitmap, { .paint_overlay = Web::PaintOptions::PaintOverlay::No });
+    page->paint(rect, *bitmap, { .paint_overlay = Web::PaintOptions::PaintOverlay::No });
 
     async_did_take_screenshot(page_id, bitmap->to_shareable_bitmap());
 }
@@ -888,50 +805,30 @@ Messages::WebContentServer::DumpGcGraphResponse ConnectionFromClient::dump_gc_gr
 
 Messages::WebContentServer::GetSelectedTextResponse ConnectionFromClient::get_selected_text(u64 page_id)
 {
-    auto maybe_page = page(page_id);
-    if (!maybe_page.has_value()) {
-        dbgln("ConnectionFromClient::get_selected_text: No page with ID {}", page_id);
-        return ByteString {};
-    }
-    auto& page = maybe_page.release_value();
-
-    return page.page().focused_context().selected_text().to_byte_string();
+    if (auto page = this->page(page_id); page.has_value())
+        return page->page().focused_context().selected_text().to_byte_string();
+    return ByteString {};
 }
 
 void ConnectionFromClient::select_all(u64 page_id)
 {
-    auto maybe_page = page(page_id);
-    if (!maybe_page.has_value()) {
-        dbgln("ConnectionFromClient::select_all: No page with ID {}", page_id);
-        return;
-    }
-    auto& page = maybe_page.release_value();
-
-    page.page().focused_context().select_all();
+    if (auto page = this->page(page_id); page.has_value())
+        page->page().focused_context().select_all();
 }
 
 void ConnectionFromClient::paste(u64 page_id, String const& text)
 {
-    auto maybe_page = page(page_id);
-    if (!maybe_page.has_value()) {
-        dbgln("ConnectionFromClient::paste: No page with ID {}", page_id);
-        return;
-    }
-    auto& page = maybe_page.release_value();
-
-    page.page().focused_context().paste(text);
+    if (auto page = this->page(page_id); page.has_value())
+        page->page().focused_context().paste(text);
 }
 
 Messages::WebContentServer::DumpLayoutTreeResponse ConnectionFromClient::dump_layout_tree(u64 page_id)
 {
-    auto maybe_page = page(page_id);
-    if (!maybe_page.has_value()) {
-        dbgln("ConnectionFromClient::dump_layout_tree: No page with ID {}", page_id);
+    auto page = this->page(page_id);
+    if (!page.has_value())
         return ByteString { "(no page)" };
-    }
-    auto& page = maybe_page.release_value();
 
-    auto* document = page.page().top_level_browsing_context().active_document();
+    auto* document = page->page().top_level_browsing_context().active_document();
     if (!document)
         return ByteString { "(no DOM tree)" };
     document->update_layout();
@@ -945,14 +842,11 @@ Messages::WebContentServer::DumpLayoutTreeResponse ConnectionFromClient::dump_la
 
 Messages::WebContentServer::DumpPaintTreeResponse ConnectionFromClient::dump_paint_tree(u64 page_id)
 {
-    auto maybe_page = page(page_id);
-    if (!maybe_page.has_value()) {
-        dbgln("ConnectionFromClient::dump_paint_tree: No page with ID {}", page_id);
+    auto page = this->page(page_id);
+    if (!page.has_value())
         return ByteString { "(no page)" };
-    }
-    auto& page = maybe_page.release_value();
 
-    auto* document = page.page().top_level_browsing_context().active_document();
+    auto* document = page->page().top_level_browsing_context().active_document();
     if (!document)
         return ByteString { "(no DOM tree)" };
     document->update_layout();
@@ -968,14 +862,11 @@ Messages::WebContentServer::DumpPaintTreeResponse ConnectionFromClient::dump_pai
 
 Messages::WebContentServer::DumpTextResponse ConnectionFromClient::dump_text(u64 page_id)
 {
-    auto maybe_page = page(page_id);
-    if (!maybe_page.has_value()) {
-        dbgln("ConnectionFromClient::dump_text: No page with ID {}", page_id);
+    auto page = this->page(page_id);
+    if (!page.has_value())
         return ByteString { "(no page)" };
-    }
-    auto& page = maybe_page.release_value();
 
-    auto* document = page.page().top_level_browsing_context().active_document();
+    auto* document = page->page().top_level_browsing_context().active_document();
     if (!document)
         return ByteString { "(no DOM tree)" };
     if (!document->body())
@@ -1018,100 +909,58 @@ void ConnectionFromClient::set_proxy_mappings(u64, Vector<ByteString> const& pro
 
 void ConnectionFromClient::set_preferred_color_scheme(u64 page_id, Web::CSS::PreferredColorScheme const& color_scheme)
 {
-    auto maybe_page = page(page_id);
-    if (!maybe_page.has_value()) {
-        dbgln("ConnectionFromClient::set_preferred_color_scheme: No page with ID {}", page_id);
-        return;
-    }
-    auto& page = maybe_page.release_value();
-
-    page.set_preferred_color_scheme(color_scheme);
+    if (auto page = this->page(page_id); page.has_value())
+        page->set_preferred_color_scheme(color_scheme);
 }
 
 void ConnectionFromClient::set_has_focus(u64 page_id, bool has_focus)
 {
-    auto maybe_page = page(page_id);
-    if (!maybe_page.has_value()) {
-        dbgln("ConnectionFromClient::set_has_focus: No page with ID {}", page_id);
-        return;
-    }
-    auto& page = maybe_page.release_value();
-
-    page.set_has_focus(has_focus);
+    if (auto page = this->page(page_id); page.has_value())
+        page->set_has_focus(has_focus);
 }
 
 void ConnectionFromClient::set_is_scripting_enabled(u64 page_id, bool is_scripting_enabled)
 {
-    auto maybe_page = page(page_id);
-    if (!maybe_page.has_value()) {
-        dbgln("ConnectionFromClient::set_is_scripting_enabled: No page with ID {}", page_id);
-        return;
-    }
-    auto& page = maybe_page.release_value();
-
-    page.set_is_scripting_enabled(is_scripting_enabled);
+    if (auto page = this->page(page_id); page.has_value())
+        page->set_is_scripting_enabled(is_scripting_enabled);
 }
 
 void ConnectionFromClient::set_device_pixels_per_css_pixel(u64 page_id, float device_pixels_per_css_pixel)
 {
-    auto maybe_page = page(page_id);
-    if (!maybe_page.has_value()) {
-        dbgln("ConnectionFromClient::set_device_pixels_per_css_pixel: No page with ID {}", page_id);
-        return;
-    }
-    auto& page = maybe_page.release_value();
-
-    page.set_device_pixels_per_css_pixel(device_pixels_per_css_pixel);
+    if (auto page = this->page(page_id); page.has_value())
+        page->set_device_pixels_per_css_pixel(device_pixels_per_css_pixel);
 }
 
 void ConnectionFromClient::set_window_position(u64 page_id, Web::DevicePixelPoint position)
 {
-    auto maybe_page = page(page_id);
-    if (!maybe_page.has_value()) {
-        dbgln("ConnectionFromClient::set_window_position: No page with ID {}", page_id);
-        return;
-    }
-    auto& page = maybe_page.release_value();
-
-    page.set_window_position(position);
+    if (auto page = this->page(page_id); page.has_value())
+        page->set_window_position(position);
 }
 
 void ConnectionFromClient::set_window_size(u64 page_id, Web::DevicePixelSize size)
 {
-    auto maybe_page = page(page_id);
-    if (!maybe_page.has_value()) {
-        dbgln("ConnectionFromClient::set_window_size: No page with ID {}", page_id);
-        return;
-    }
-    auto& page = maybe_page.release_value();
-
-    page.set_window_size(size);
+    if (auto page = this->page(page_id); page.has_value())
+        page->set_window_size(size);
 }
 
 Messages::WebContentServer::GetLocalStorageEntriesResponse ConnectionFromClient::get_local_storage_entries(u64 page_id)
 {
-    auto maybe_page = page(page_id);
-    if (!maybe_page.has_value()) {
-        dbgln("ConnectionFromClient::get_local_storage_entries: No page with ID {}", page_id);
+    auto page = this->page(page_id);
+    if (!page.has_value())
         return OrderedHashMap<String, String> {};
-    }
-    auto& page = maybe_page.release_value();
 
-    auto* document = page.page().top_level_browsing_context().active_document();
+    auto* document = page->page().top_level_browsing_context().active_document();
     auto local_storage = document->window()->local_storage().release_value_but_fixme_should_propagate_errors();
     return local_storage->map();
 }
 
 Messages::WebContentServer::GetSessionStorageEntriesResponse ConnectionFromClient::get_session_storage_entries(u64 page_id)
 {
-    auto maybe_page = page(page_id);
-    if (!maybe_page.has_value()) {
-        dbgln("ConnectionFromClient::get_session_storage_entries: No page with ID {}", page_id);
+    auto page = this->page(page_id);
+    if (!page.has_value())
         return OrderedHashMap<String, String> {};
-    }
-    auto& page = maybe_page.release_value();
 
-    auto* document = page.page().top_level_browsing_context().active_document();
+    auto* document = page->page().top_level_browsing_context().active_document();
     auto session_storage = document->window()->session_storage().release_value_but_fixme_should_propagate_errors();
     return session_storage->map();
 }
@@ -1138,185 +987,99 @@ void ConnectionFromClient::request_file(u64 page_id, Web::FileRequest file_reque
 
 void ConnectionFromClient::set_system_visibility_state(u64 page_id, bool visible)
 {
-    auto maybe_page = page(page_id);
-    if (!maybe_page.has_value()) {
-        dbgln("ConnectionFromClient::set_system_visibility_state: No page with ID {}", page_id);
-        return;
+    if (auto page = this->page(page_id); page.has_value()) {
+        page->page().top_level_traversable()->set_system_visibility_state(
+            visible
+                ? Web::HTML::VisibilityState::Visible
+                : Web::HTML::VisibilityState::Hidden);
     }
-    auto& page = maybe_page.release_value();
-
-    page.page().top_level_traversable()->set_system_visibility_state(
-        visible
-            ? Web::HTML::VisibilityState::Visible
-            : Web::HTML::VisibilityState::Hidden);
 }
 
 void ConnectionFromClient::js_console_input(u64 page_id, ByteString const& js_source)
 {
-    auto maybe_page = page(page_id);
-    if (!maybe_page.has_value()) {
-        dbgln("ConnectionFromClient::js_console_input: No page with ID {}", page_id);
+    auto page = this->page(page_id);
+    if (!page.has_value())
         return;
-    }
-    auto& page = maybe_page.release_value();
 
-    page.js_console_input(js_source);
+    page->js_console_input(js_source);
 }
 
 void ConnectionFromClient::run_javascript(u64 page_id, ByteString const& js_source)
 {
-    auto maybe_page = page(page_id);
-    if (!maybe_page.has_value()) {
-        dbgln("ConnectionFromClient::run_javascript: No page with ID {}", page_id);
-        return;
-    }
-    auto& page = maybe_page.release_value();
-
-    page.run_javascript(js_source);
+    if (auto page = this->page(page_id); page.has_value())
+        page->run_javascript(js_source);
 }
 
 void ConnectionFromClient::js_console_request_messages(u64 page_id, i32 start_index)
 {
-    auto maybe_page = page(page_id);
-    if (!maybe_page.has_value()) {
-        dbgln("ConnectionFromClient::js_console_request_messages: No page with ID {}", page_id);
-        return;
-    }
-    auto& page = maybe_page.release_value();
-
-    page.js_console_request_messages(start_index);
+    if (auto page = this->page(page_id); page.has_value())
+        page->js_console_request_messages(start_index);
 }
 
 void ConnectionFromClient::alert_closed(u64 page_id)
 {
-    auto maybe_page = page(page_id);
-    if (!maybe_page.has_value()) {
-        dbgln("ConnectionFromClient::alert_closed: No page with ID {}", page_id);
-        return;
-    }
-    auto& page = maybe_page.release_value();
-
-    page.page().alert_closed();
+    if (auto page = this->page(page_id); page.has_value())
+        page->page().alert_closed();
 }
 
 void ConnectionFromClient::confirm_closed(u64 page_id, bool accepted)
 {
-    auto maybe_page = page(page_id);
-    if (!maybe_page.has_value()) {
-        dbgln("ConnectionFromClient::confirm_closed: No page with ID {}", page_id);
-        return;
-    }
-    auto& page = maybe_page.release_value();
-
-    page.page().confirm_closed(accepted);
+    if (auto page = this->page(page_id); page.has_value())
+        page->page().confirm_closed(accepted);
 }
 
 void ConnectionFromClient::prompt_closed(u64 page_id, Optional<String> const& response)
 {
-    auto maybe_page = page(page_id);
-    if (!maybe_page.has_value()) {
-        dbgln("ConnectionFromClient::prompt_closed: No page with ID {}", page_id);
-        return;
-    }
-    auto& page = maybe_page.release_value();
-
-    page.page().prompt_closed(response);
+    if (auto page = this->page(page_id); page.has_value())
+        page->page().prompt_closed(response);
 }
 
 void ConnectionFromClient::color_picker_update(u64 page_id, Optional<Color> const& picked_color, Web::HTML::ColorPickerUpdateState const& state)
 {
-    auto maybe_page = page(page_id);
-    if (!maybe_page.has_value()) {
-        dbgln("ConnectionFromClient::color_picker_update: No page with ID {}", page_id);
-        return;
-    }
-    auto& page = maybe_page.release_value();
-
-    page.page().color_picker_update(picked_color, state);
+    if (auto page = this->page(page_id); page.has_value())
+        page->page().color_picker_update(picked_color, state);
 }
 
 void ConnectionFromClient::file_picker_closed(u64 page_id, Vector<Web::HTML::SelectedFile> const& selected_files)
 {
-    auto maybe_page = page(page_id);
-    if (!maybe_page.has_value()) {
-        dbgln("ConnectionFromClient::color_picker_update: No page with ID {}", page_id);
-        return;
-    }
-
-    auto& page = maybe_page.release_value();
-    page.page().file_picker_closed(const_cast<Vector<Web::HTML::SelectedFile>&>(selected_files));
+    if (auto page = this->page(page_id); page.has_value())
+        page->page().file_picker_closed(const_cast<Vector<Web::HTML::SelectedFile>&>(selected_files));
 }
 
 void ConnectionFromClient::select_dropdown_closed(u64 page_id, Optional<String> const& value)
 {
-    auto maybe_page = page(page_id);
-    if (!maybe_page.has_value()) {
-        dbgln("ConnectionFromClient::select_dropdown_closed: No page with ID {}", page_id);
-        return;
-    }
-    auto& page = maybe_page.release_value();
-
-    page.page().select_dropdown_closed(value);
+    if (auto page = this->page(page_id); page.has_value())
+        page->page().select_dropdown_closed(value);
 }
 
 void ConnectionFromClient::toggle_media_play_state(u64 page_id)
 {
-    auto maybe_page = page(page_id);
-    if (!maybe_page.has_value()) {
-        dbgln("ConnectionFromClient::toggle_media_play_state: No page with ID {}", page_id);
-        return;
-    }
-    auto& page = maybe_page.release_value();
-
-    page.page().toggle_media_play_state().release_value_but_fixme_should_propagate_errors();
+    if (auto page = this->page(page_id); page.has_value())
+        page->page().toggle_media_play_state().release_value_but_fixme_should_propagate_errors();
 }
 
 void ConnectionFromClient::toggle_media_mute_state(u64 page_id)
 {
-    auto maybe_page = page(page_id);
-    if (!maybe_page.has_value()) {
-        dbgln("ConnectionFromClient::toggle_media_mute_state: No page with ID {}", page_id);
-        return;
-    }
-    auto& page = maybe_page.release_value();
-
-    page.page().toggle_media_mute_state();
+    if (auto page = this->page(page_id); page.has_value())
+        page->page().toggle_media_mute_state();
 }
 
 void ConnectionFromClient::toggle_media_loop_state(u64 page_id)
 {
-    auto maybe_page = page(page_id);
-    if (!maybe_page.has_value()) {
-        dbgln("ConnectionFromClient::toggle_media_loop_state: No page with ID {}", page_id);
-        return;
-    }
-    auto& page = maybe_page.release_value();
-
-    page.page().toggle_media_loop_state().release_value_but_fixme_should_propagate_errors();
+    if (auto page = this->page(page_id); page.has_value())
+        page->page().toggle_media_loop_state().release_value_but_fixme_should_propagate_errors();
 }
 
 void ConnectionFromClient::toggle_media_controls_state(u64 page_id)
 {
-    auto maybe_page = page(page_id);
-    if (!maybe_page.has_value()) {
-        dbgln("ConnectionFromClient::toggle_media_controls_state: No page with ID {}", page_id);
-        return;
-    }
-    auto& page = maybe_page.release_value();
-
-    page.page().toggle_media_controls_state().release_value_but_fixme_should_propagate_errors();
+    if (auto page = this->page(page_id); page.has_value())
+        page->page().toggle_media_controls_state().release_value_but_fixme_should_propagate_errors();
 }
 
 void ConnectionFromClient::set_user_style(u64 page_id, String const& source)
 {
-    auto maybe_page = page(page_id);
-    if (!maybe_page.has_value()) {
-        dbgln("ConnectionFromClient::set_user_style: No page with ID {}", page_id);
-        return;
-    }
-    auto& page = maybe_page.release_value();
-
-    page.page().set_user_style(source);
+    if (auto page = this->page(page_id); page.has_value())
+        page->page().set_user_style(source);
 }
 
 void ConnectionFromClient::enable_inspector_prototype(u64)
