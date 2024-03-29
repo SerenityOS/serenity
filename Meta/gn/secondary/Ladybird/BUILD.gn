@@ -403,6 +403,7 @@ if (current_os != "mac") {
       "$root_out_dir/lib/liblagom-ak.dylib",
       "$root_out_dir/lib/liblagom-audio.dylib",
       "$root_out_dir/lib/liblagom-compress.dylib",
+      "$root_out_dir/lib/liblagom-core-minimal.dylib",
       "$root_out_dir/lib/liblagom-core.dylib",
       "$root_out_dir/lib/liblagom-crypto.dylib",
       "$root_out_dir/lib/liblagom-diff.dylib",

@@ -1,6 +1,8 @@
 # These are the minimal set of sources needed to build the code generators. We separate them to allow
 # LibCore to depend on generated sources.
-source_set("minimal") {
+shared_library("minimal") {
+  output_name = "core-minimal"
+
   include_dirs = [ "//Userland/Libraries" ]
 
   sources = [
@@ -14,9 +16,13 @@ source_set("minimal") {
     "Directory.h",
     "DirectoryEntry.cpp",
     "DirectoryEntry.h",
+    "Environment.cpp",
+    "Environment.h",
     "File.cpp",
     "File.h",
     "Forward.h",
+    "SessionManagement.cpp",
+    "SessionManagement.h",
     "StandardPaths.cpp",
     "StandardPaths.h",
     "System.cpp",
@@ -45,8 +51,6 @@ source_set("sources") {
     "DeferredInvocationContext.h",
     "ElapsedTimer.cpp",
     "ElapsedTimer.h",
-    "Environment.cpp",
-    "Environment.h",
     "Event.cpp",
     "Event.h",
     "EventLoop.cpp",
@@ -81,8 +85,6 @@ source_set("sources") {
     "SOCKSProxyClient.h",
     "SecretString.cpp",
     "SecretString.h",
-    "SessionManagement.cpp",
-    "SessionManagement.h",
     "SharedCircularQueue.h",
     "Socket.cpp",
     "Socket.h",
@@ -151,7 +153,6 @@ shared_library("LibCore") {
 
   deps = [
     ":filewatcher",
-    ":minimal",
     ":sources",
     "//Meta/gn/build/libs/crypt",
     "//Meta/gn/build/libs/pthread",
@@ -159,4 +160,6 @@ shared_library("LibCore") {
     "//Userland/Libraries/LibTimeZone",
     "//Userland/Libraries/LibURL",
   ]
+
+  public_deps = [ ":minimal" ]
 }
