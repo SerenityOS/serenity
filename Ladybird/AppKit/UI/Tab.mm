@@ -34,8 +34,6 @@ static constexpr CGFloat const WINDOW_HEIGHT = 800;
 
 @property (nonatomic, strong) InspectorController* inspector_controller;
 
-@property (nonatomic, assign) URL::URL last_url;
-
 @end
 
 @implementation Tab
@@ -223,10 +221,6 @@ static constexpr CGFloat const WINDOW_HEIGHT = 800;
 
 - (void)onLoadStart:(URL::URL const&)url isRedirect:(BOOL)is_redirect
 {
-    if (url != self.last_url) {
-        self.last_url = url;
-    }
-
     [[self tabController] onLoadStart:url isRedirect:is_redirect];
 
     self.title = Ladybird::string_to_ns_string(url.serialize());
