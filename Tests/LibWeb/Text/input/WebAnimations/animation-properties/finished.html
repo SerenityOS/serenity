@@ -2,7 +2,7 @@
 <div id="foo"></div>
 <script src="../../include.js"></script>
 <script>
-    asyncTest(async done => {
+    promiseTest(async () => {
         const foo = document.getElementById("foo");
         let animation = foo.animate({ opacity: [0, 1] }, { duration: 100 });
         let finishedPromise = animation.finished;
@@ -21,14 +21,13 @@
         finishedPromise = animation.finished;
 
         // Upon cancellation, the finished promise should be rejected
-        finishedPromise.then(() => {
-            println("Unexpected finished promise resolution");
-        }).catch(() => {
-            println("Expected finished promise cancellation");
-        });
         animation.cancel();
-
         println(`cancel() updates finished promise: ${!Object.is(finishedPromise, animation.finished)}`);
-        done();
+        try {
+            await finishedPromise;
+            println("Unexpected finished promise resolution");
+        } catch {
+            println("Expected finished promise cancellation");
+        }
     });
 </script>

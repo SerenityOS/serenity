@@ -2,7 +2,7 @@
 <div id="foo"></div>
 <script src="../../include.js"></script>
 <script>
-    asyncTest(async done => {
+    promiseTest(async () => {
         const foo = document.getElementById("foo");
         const animation = foo.animate({}, {});
 
@@ -45,10 +45,8 @@
         println(`Calling cancel() recreates the finished promise: ${!Object.is(previousFinishedPromise, animation.finished)}`);
         println(`Calling cancel() resets the start time: ${animation.startTime === null}`);
 
-        requestAnimationFrame(() => {
-            println(`Calling cancel() sends a cancel event: ${receivedEvents.cancel}`);
-            println(`Calling cancel() does not send a finish or remove event: ${!receivedEvents.finish && !receivedEvents.remove}`);
-            done();
-        });
+        await animationFrame();
+        println(`Calling cancel() sends a cancel event: ${receivedEvents.cancel}`);
+        println(`Calling cancel() does not send a finish or remove event: ${!receivedEvents.finish && !receivedEvents.remove}`);
     });
 </script>

@@ -2,7 +2,7 @@
 <div id="foo"></div>
 <script src="../../include.js"></script>
 <script>
-    asyncTest(async done => {
+    promiseTest(async () => {
         const foo = document.getElementById("foo");
 
         let animation = foo.animate({ opacity: [0, 1] }, { duration: 1000 });
@@ -32,7 +32,5 @@
         animation = foo.animate({ opacity: [0, 1] }, { duration: 1000, timeline });
         animation.finish();
         println(`Animation's startTime updates after calling finish(): ${animation.startTime === -1000}`);
-
-        done();
     });
 </script>

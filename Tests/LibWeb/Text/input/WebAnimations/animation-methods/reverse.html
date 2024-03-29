@@ -2,13 +2,7 @@
 <div id="foo"></div>
 <script src="../../include.js"></script>
 <script>
-    const animationFrame = () => {
-        const { promise, resolve } = Promise.withResolvers();
-        requestAnimationFrame(resolve);
-        return promise;
-    };
-
-    asyncTest(async done => {
+    promiseTest(async () => {
         const foo = document.getElementById("foo");
 
         // FIXME: passing a null timeline here is broken, needs [ExplicitNull] support for dictionary members
@@ -38,7 +32,5 @@
         }
         if (anim.playbackRate === -1)
             println("reverse() does not update the playback rate if calling play() would throw an exception");
-
-        done();
     });
 </script>

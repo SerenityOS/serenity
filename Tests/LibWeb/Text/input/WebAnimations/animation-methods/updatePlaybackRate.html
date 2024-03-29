@@ -2,13 +2,7 @@
 <div id="foo"></div>
 <script src="../../include.js"></script>
 <script>
-    const animationFrame = () => {
-        const { promise, resolve } = Promise.withResolvers();
-        requestAnimationFrame(resolve);
-        return promise;
-    }
-
-    asyncTest(async done => {
+    promiseTest(async () => {
 		const foo = document.getElementById("foo");
 
 		let anim = foo.animate({}, { duration: Infinity });
@@ -43,7 +37,5 @@
 		anim.updatePlaybackRate(2.0);
 		if (anim.playbackRate === 2.0)
 			println("updatePlaybackRate() updates a finished animation's playback rate after an animation frame");
-
-        done();
     });
 </script>
