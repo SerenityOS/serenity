@@ -397,6 +397,8 @@ static void generate_to_integral(SourceGenerator& scoped_generator, ParameterTyp
 
     VERIFY(it != idl_type_map.end());
     scoped_generator.set("cpp_type"sv, it->cpp_type);
+    scoped_generator.set("enforce_range", parameter.extended_attributes.contains("EnforceRange") ? "Yes" : "No");
+    scoped_generator.set("clamp", parameter.extended_attributes.contains("Clamp") ? "Yes" : "No");
 
     if ((!optional && !parameter.type->is_nullable()) || optional_default_value.has_value()) {
         scoped_generator.append(R"~~~(
@@ -418,14 +420,13 @@ static void generate_to_integral(SourceGenerator& scoped_generator, ParameterTyp
 )~~~");
     }
 
-    // FIXME: pass through [EnforceRange] and [Clamp] extended attributes
     if (it->cpp_type == "bool"sv) {
         scoped_generator.append(R"~~~(
     @cpp_name@ = @js_name@@js_suffix@.to_boolean();
 )~~~");
     } else {
         scoped_generator.append(R"~~~(
-    @cpp_name@ = TRY(WebIDL::convert_to_int<@cpp_type@>(vm, @js_name@@js_suffix@));
+    @cpp_name@ = TRY(WebIDL::convert_to_int<@cpp_type@>(vm, @js_name@@js_suffix@, WebIDL::EnforceRange::@enforce_range@, WebIDL::Clamp::@clamp@));
 )~~~");
     }
 
