@@ -5,6 +5,8 @@
  */
 
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/DOM/Document.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/Internals/InternalAnimationTimeline.h>
 
 namespace Web::Internals {
@@ -26,6 +28,9 @@ InternalAnimationTimeline::InternalAnimationTimeline(JS::Realm& realm)
     : AnimationTimeline(realm)
 {
     m_current_time = 0.0;
+
+    auto& document = static_cast<HTML::Window&>(global_object()).associated_document();
+    document.associate_with_timeline(*this);
 }
 
 void InternalAnimationTimeline::initialize(JS::Realm& realm)
