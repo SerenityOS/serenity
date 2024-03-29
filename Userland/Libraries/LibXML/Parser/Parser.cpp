@@ -568,26 +568,22 @@ ErrorOr<void, ParseError> Parser::parse_doctype_decl()
     TRY(skip_whitespace(Required::Yes));
     doctype.type = TRY(parse_name());
     if (auto result = skip_whitespace(Required::Yes); !result.is_error()) {
-        auto id_start = m_lexer.tell();
         if (auto id_result = parse_external_id(); !id_result.is_error()) {
             doctype.external_id = id_result.release_value();
             if (m_options.resolve_external_resource) {
                 auto resource_result = m_options.resolve_external_resource(doctype.external_id->system_id, doctype.external_id->public_id);
-                if (resource_result.is_error()) {
-                    return parse_error(
-                        id_start,
-                        ByteString::formatted("Failed to resolve external subset '{}': {}", doctype.external_id->system_id.system_literal, resource_result.error()));
+                if (!resource_result.is_error()) {
+                    StringView resolved_source = resource_result.value();
+                    TemporaryChange source { m_source, resolved_source };
+                    TemporaryChange lexer { m_lexer, LineTrackingLexer(m_source) };
+                    auto declarations = TRY(parse_external_subset());
+                    if (!m_lexer.is_eof()) {
+                        return parse_error(
+                            m_lexer.tell(),
+                            ByteString::formatted("Failed to resolve external subset '{}': garbage after declarations", doctype.external_id->system_id.system_literal));
+                    }
+                    doctype.markup_declarations.extend(move(declarations));
                 }
-                StringView resolved_source = resource_result.value();
-                TemporaryChange source { m_source, resolved_source };
-                TemporaryChange lexer { m_lexer, LineTrackingLexer(m_source) };
-                auto declarations = TRY(parse_external_subset());
-                if (!m_lexer.is_eof()) {
-                    return parse_error(
-                        m_lexer.tell(),
-                        ByteString::formatted("Failed to resolve external subset '{}': garbage after declarations", doctype.external_id->system_id.system_literal));
-                }
-                doctype.markup_declarations.extend(move(declarations));
             }
         }
     }
