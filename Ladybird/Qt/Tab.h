@@ -72,6 +72,7 @@ private:
 
     void recreate_toolbar_icons();
     void update_hover_label();
+    void update_navigation_button_states();
 
     void open_link(URL::URL const&);
     void open_link_in_new_tab(URL::URL const&);
