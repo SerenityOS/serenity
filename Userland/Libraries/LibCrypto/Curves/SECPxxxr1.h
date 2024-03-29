@@ -186,6 +186,11 @@ public:
         auto r_bigint = TRY(asn1_decoder.read<Crypto::UnsignedBigInteger>(Crypto::ASN1::Class::Universal, Crypto::ASN1::Kind::Integer));
         auto s_bigint = TRY(asn1_decoder.read<Crypto::UnsignedBigInteger>(Crypto::ASN1::Class::Universal, Crypto::ASN1::Kind::Integer));
 
+        size_t expected_word_count = KEY_BIT_SIZE / 32;
+        if (r_bigint.length() < expected_word_count || s_bigint.length() < expected_word_count) {
+            return false;
+        }
+
         StorageType r = 0u;
         StorageType s = 0u;
         for (size_t i = 0; i < (KEY_BIT_SIZE / 32); i++) {
