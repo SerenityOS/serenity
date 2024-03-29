@@ -14,6 +14,7 @@
 #include <AK/TemporaryChange.h>
 #include <LibGfx/ImageFormats/BMPWriter.h>
 #include <LibGfx/Painter.h>
+#include <LibWeb/HTML/HistoryHandlingBehavior.h>
 #include <LibWeb/HTML/SelectedFile.h>
 #include <LibWebView/SearchEngine.h>
 #include <LibWebView/SourceHighlighter.h>
@@ -144,9 +145,7 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
         }
         m_is_history_navigation = false;
 
-        m_window->go_back_action().setEnabled(m_history.can_go_back());
-        m_window->go_forward_action().setEnabled(m_history.can_go_forward());
-        m_window->reload_action().setEnabled(!m_history.is_empty());
+        update_navigation_button_states();
 
         if (m_inspector_widget)
             m_inspector_widget->reset();
@@ -155,6 +154,20 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
     view().on_load_finish = [this](auto&) {
         if (m_inspector_widget != nullptr && m_inspector_widget->isVisible())
             m_inspector_widget->inspect();
+    };
+
+    view().on_url_updated = [this](auto const& url, auto history_behavior) {
+        switch (history_behavior) {
+        case Web::HTML::HistoryHandlingBehavior::Push:
+            m_history.push(url, m_title.toUtf8().data());
+            break;
+        case Web::HTML::HistoryHandlingBehavior::Replace:
+            m_history.replace_current(url, m_title.toUtf8().data());
+            break;
+        }
+
+        m_location_edit->setText(qstring_from_ak_string(url.serialize()));
+        update_navigation_button_states();
     };
 
     QObject::connect(m_location_edit, &QLineEdit::returnPressed, this, &Tab::location_edit_return_pressed);
@@ -840,6 +853,13 @@ void Tab::update_hover_label()
     m_hover_label->resize(QFontMetrics(m_hover_label->font()).boundingRect(m_hover_label->text()).adjusted(-4, -2, 4, 2).size());
     m_hover_label->move(6, height() - m_hover_label->height() - 8);
     m_hover_label->raise();
+}
+
+void Tab::update_navigation_button_states()
+{
+    m_window->go_back_action().setEnabled(m_history.can_go_back());
+    m_window->go_forward_action().setEnabled(m_history.can_go_forward());
+    m_window->reload_action().setEnabled(!m_history.is_empty());
 }
 
 bool Tab::event(QEvent* event)
