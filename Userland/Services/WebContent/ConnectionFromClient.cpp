@@ -9,7 +9,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Debug.h>
 #include <AK/JsonObject.h>
 #include <AK/QuickSort.h>
 #include <LibGfx/Bitmap.h>
@@ -133,7 +132,6 @@ void ConnectionFromClient::update_screen_rects(u64 page_id, Vector<Web::DevicePi
 
 void ConnectionFromClient::load_url(u64 page_id, const URL::URL& url)
 {
-    dbgln_if(SPAM_DEBUG, "handle: WebContentServer::LoadURL: url={}", url);
     auto page = this->page(page_id);
     if (!page.has_value())
         return;
@@ -153,14 +151,12 @@ void ConnectionFromClient::load_url(u64 page_id, const URL::URL& url)
 
 void ConnectionFromClient::load_html(u64 page_id, ByteString const& html)
 {
-    dbgln_if(SPAM_DEBUG, "handle: WebContentServer::LoadHTML: html={}", html);
     if (auto page = this->page(page_id); page.has_value())
         page->page().load_html(html);
 }
 
 void ConnectionFromClient::set_viewport_rect(u64 page_id, Web::DevicePixelRect const& rect)
 {
-    dbgln_if(SPAM_DEBUG, "handle: WebContentServer::SetViewportRect: rect={}", rect);
     if (auto page = this->page(page_id); page.has_value())
         page->set_viewport_rect(rect);
 }
