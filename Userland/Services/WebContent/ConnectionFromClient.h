@@ -10,6 +10,7 @@
 
 #include <AK/HashMap.h>
 #include <AK/Queue.h>
+#include <AK/SourceLocation.h>
 #include <LibIPC/ConnectionFromClient.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Handle.h>
@@ -45,8 +46,8 @@ public:
 private:
     explicit ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket>);
 
-    Optional<PageClient&> page(u64 index);
-    Optional<PageClient const&> page(u64 index) const;
+    Optional<PageClient&> page(u64 index, SourceLocation = SourceLocation::current());
+    Optional<PageClient const&> page(u64 index, SourceLocation = SourceLocation::current()) const;
 
     virtual Messages::WebContentServer::GetWindowHandleResponse get_window_handle(u64 page_id) override;
     virtual void set_window_handle(u64 page_id, String const& handle) override;
