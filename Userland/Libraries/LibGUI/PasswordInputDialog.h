@@ -15,6 +15,8 @@ class PasswordInputDialog : public Dialog {
     C_OBJECT(PasswordInputDialog);
 
 public:
+    ErrorOr<NonnullRefPtr<GUI::Widget>> try_create();
+
     virtual ~PasswordInputDialog() override = default;
 
     static ExecResult show(Window* parent_window, ByteString& text_value, ByteString title, ByteString server, ByteString username);

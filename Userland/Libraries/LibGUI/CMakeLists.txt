@@ -6,7 +6,7 @@ stringify_gml(EmojiInputDialog.gml EmojiInputDialogGML.h emoji_input_dialog_gml)
 stringify_gml(FontPickerDialog.gml FontPickerDialogGML.h font_picker_dialog_gml)
 stringify_gml(FilePickerDialog.gml FilePickerDialogGML.h file_picker_dialog_gml)
 stringify_gml(IncrementalSearchBanner.gml IncrementalSearchBannerGML.h incremental_search_banner_gml)
-stringify_gml(PasswordInputDialog.gml PasswordInputDialogGML.h password_input_dialog_gml)
+compile_gml(PasswordInputDialog.gml PasswordInputDialogGML.cpp)
 
 set(SOURCES
     AboutDialog.cpp
@@ -92,6 +92,7 @@ set(SOURCES
     OpacitySlider.cpp
     Painter.cpp
     PasswordInputDialog.cpp
+    PasswordInputDialogGML.cpp
     PathBreadcrumbbar.cpp
     PersistentModelIndex.cpp
     Process.cpp
@@ -152,7 +153,6 @@ set(GENERATED_SOURCES
     FilePickerDialogGML.h
     FontPickerDialogGML.h
     IncrementalSearchBannerGML.h
-    PasswordInputDialogGML.h
 )
 
 serenity_lib(LibGUI gui)
