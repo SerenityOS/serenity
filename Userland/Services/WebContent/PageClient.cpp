@@ -326,7 +326,7 @@ void PageClient::page_did_leave_tooltip_area()
     client().async_did_leave_tooltip_area(m_id);
 }
 
-void PageClient::page_did_hover_link(const URL::URL& url)
+void PageClient::page_did_hover_link(URL::URL const& url)
 {
     client().async_did_hover_link(m_id, url);
 }
@@ -336,12 +336,12 @@ void PageClient::page_did_unhover_link()
     client().async_did_unhover_link(m_id);
 }
 
-void PageClient::page_did_middle_click_link(const URL::URL& url, [[maybe_unused]] ByteString const& target, [[maybe_unused]] unsigned modifiers)
+void PageClient::page_did_middle_click_link(URL::URL const& url, [[maybe_unused]] ByteString const& target, [[maybe_unused]] unsigned modifiers)
 {
     client().async_did_middle_click_link(m_id, url, target, modifiers);
 }
 
-void PageClient::page_did_start_loading(const URL::URL& url, bool is_redirect)
+void PageClient::page_did_start_loading(URL::URL const& url, bool is_redirect)
 {
     client().async_did_start_loading(m_id, url, is_redirect);
 }
@@ -356,7 +356,7 @@ void PageClient::page_did_destroy_document(Web::DOM::Document& document)
     destroy_js_console(document);
 }
 
-void PageClient::page_did_finish_loading(const URL::URL& url)
+void PageClient::page_did_finish_loading(URL::URL const& url)
 {
     client().async_did_finish_loading(m_id, url);
 }
@@ -482,7 +482,7 @@ Optional<Web::Cookie::Cookie> PageClient::page_did_request_named_cookie(URL::URL
     return client().did_request_named_cookie(m_id, url, name);
 }
 
-String PageClient::page_did_request_cookie(const URL::URL& url, Web::Cookie::Source source)
+String PageClient::page_did_request_cookie(URL::URL const& url, Web::Cookie::Source source)
 {
     auto response = client().send_sync_but_allow_failure<Messages::WebContentClient::DidRequestCookie>(m_id, move(url), source);
     if (!response) {
@@ -492,7 +492,7 @@ String PageClient::page_did_request_cookie(const URL::URL& url, Web::Cookie::Sou
     return response->take_cookie();
 }
 
-void PageClient::page_did_set_cookie(const URL::URL& url, Web::Cookie::ParsedCookie const& cookie, Web::Cookie::Source source)
+void PageClient::page_did_set_cookie(URL::URL const& url, Web::Cookie::ParsedCookie const& cookie, Web::Cookie::Source source)
 {
     auto response = client().send_sync_but_allow_failure<Messages::WebContentClient::DidSetCookie>(m_id, url, cookie, source);
     if (!response) {
