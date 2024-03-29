@@ -1,4 +1,4 @@
-@GUI::Widget {
+@GUI::PasswordInputDialogWidget {
     fill_with_background_color: true
     layout: @GUI::HorizontalBoxLayout {
         margins: [8]
