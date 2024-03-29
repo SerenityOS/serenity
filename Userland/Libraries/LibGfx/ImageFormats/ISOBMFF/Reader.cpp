@@ -59,8 +59,10 @@ ErrorOr<BoxList> Reader::read_entire_file(BoxCallback box_factory)
             TRY(top_level_boxes.try_append(TRY(UnknownBox::create_from_stream(box_header.type, box_stream))));
         }
 
-        if (!box_stream.is_eof())
+        if (!box_stream.is_eof()) {
+            dbgln("Reader did not consume all data for box type {}, {} bytes remaining", RIFF::ChunkID::from_number(to_underlying(box_header.type)), box_stream.remaining());
             return Error::from_string_literal("Reader did not consume all data");
+        }
     }
     return top_level_boxes;
 }
