@@ -76,6 +76,21 @@ void WebContentClient::did_finish_loading(u64 page_id, URL::URL const& url)
         view.on_load_finish(url);
 }
 
+void WebContentClient::did_update_url(u64 page_id, URL::URL const& url, Web::HTML::HistoryHandlingBehavior history_behavior)
+{
+    auto maybe_view = m_views.get(page_id);
+    if (!maybe_view.has_value()) {
+        dbgln("Received finish loading for unknown page ID {}", page_id);
+        return;
+    }
+    auto& view = *maybe_view.value();
+
+    view.set_url({}, url);
+
+    if (view.on_url_updated)
+        view.on_url_updated(url, history_behavior);
+}
+
 void WebContentClient::did_finish_text_test(u64 page_id)
 {
     auto maybe_view = m_views.get(page_id);
