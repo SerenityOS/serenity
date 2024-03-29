@@ -583,6 +583,20 @@ TEST_CASE(test_jpeg2000_simple)
     EXPECT_EQ(icc_bytes->size(), 3144u);
 }
 
+TEST_CASE(test_jpeg2000_gray)
+{
+    auto file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("jpeg2000/buggie-gray.jpf"sv)));
+    EXPECT(Gfx::JPEG2000ImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = TRY_OR_FAIL(Gfx::JPEG2000ImageDecoderPlugin::create(file->bytes()));
+
+    EXPECT_EQ(plugin_decoder->size(), Gfx::IntSize(64, 138));
+
+    // The file contains both a simple and a real profile. Make sure we get the bigger one.
+    auto icc_bytes = MUST(plugin_decoder->icc_data());
+    EXPECT(icc_bytes.has_value());
+    EXPECT_EQ(icc_bytes->size(), 912u);
+}
+
 TEST_CASE(test_pam_rgb)
 {
     auto file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("pnm/2x1.pam"sv)));

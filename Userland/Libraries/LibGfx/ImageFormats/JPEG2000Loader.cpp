@@ -108,9 +108,18 @@ static ErrorOr<void> decode_jpeg2000_header(JPEG2000LoadingContext& context, Rea
             image_header_box_index = i;
         }
         if (subbox->box_type() == ISOBMFF::BoxType::JPEG2000ColorSpecificationBox) {
-            if (color_header_box_index.has_value())
-                return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Multiple Color Specification boxes");
-            color_header_box_index = i;
+            // T.800 says there should be just one 'colr' box, but T.801 allows several and says to pick the one with highest precedence.
+            bool use_this_color_box;
+            if (!color_header_box_index.has_value()) {
+                use_this_color_box = true;
+            } else {
+                auto const& new_header_box = static_cast<ISOBMFF::JPEG2000ColorSpecificationBox const&>(*header_box.child_boxes()[i]);
+                auto const& current_color_box = static_cast<ISOBMFF::JPEG2000ColorSpecificationBox const&>(*header_box.child_boxes()[color_header_box_index.value()]);
+                use_this_color_box = new_header_box.precedence > current_color_box.precedence;
+            }
+
+            if (use_this_color_box)
+                color_header_box_index = i;
         }
     }
 
@@ -123,7 +132,7 @@ static ErrorOr<void> decode_jpeg2000_header(JPEG2000LoadingContext& context, Rea
     context.size = { image_header_box.width, image_header_box.height };
 
     auto const& color_header_box = static_cast<ISOBMFF::JPEG2000ColorSpecificationBox const&>(*header_box.child_boxes()[color_header_box_index.value()]);
-    if (color_header_box.method == 2)
+    if (color_header_box.method == 2 || color_header_box.method == 3)
         context.icc_data = color_header_box.icc_data.bytes();
 
     return {};

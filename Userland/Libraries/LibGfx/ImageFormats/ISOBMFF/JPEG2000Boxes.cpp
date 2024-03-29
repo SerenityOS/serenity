@@ -76,6 +76,19 @@ ErrorOr<void> JPEG2000ColorSpecificationBox::read_from_stream(BoxStream& stream)
         TRY(stream.read_until_filled(local_icc_data));
         icc_data = move(local_icc_data);
     }
+
+    // T.801 JPX extended file format syntax,
+    // Table M.22 – Legal METH values
+    if (method == 3) {
+        ByteBuffer local_icc_data = TRY(ByteBuffer::create_uninitialized(stream.remaining()));
+        TRY(stream.read_until_filled(local_icc_data));
+        icc_data = move(local_icc_data);
+    }
+    if (method == 4)
+        return Error::from_string_literal("Method 4 is not yet implemented");
+    if (method == 5)
+        return Error::from_string_literal("Method 5 is not yet implemented");
+
     return {};
 }
 
@@ -87,7 +100,7 @@ void JPEG2000ColorSpecificationBox::dump(String const& prepend) const
     outln("{}- approximation = {}", prepend, approximation);
     if (method == 1)
         outln("{}- enumerated_color_space = {}", prepend, enumerated_color_space);
-    if (method == 2)
+    if (method == 2 || method == 3)
         outln("{}- icc_data = {} bytes", prepend, icc_data.size());
 }
 
