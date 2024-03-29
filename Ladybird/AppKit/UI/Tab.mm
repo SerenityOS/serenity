@@ -221,11 +221,11 @@ static constexpr CGFloat const WINDOW_HEIGHT = 800;
 
 - (void)onLoadStart:(URL::URL const&)url isRedirect:(BOOL)is_redirect
 {
-    [[self tabController] onLoadStart:url isRedirect:is_redirect];
-
     self.title = Ladybird::string_to_ns_string(url.serialize());
     self.favicon = [Tab defaultFavicon];
     [self updateTabTitleAndFavicon];
+
+    [[self tabController] onLoadStart:url isRedirect:is_redirect];
 
     if (self.inspector_controller != nil) {
         auto* inspector = (Inspector*)[self.inspector_controller window];
@@ -239,6 +239,12 @@ static constexpr CGFloat const WINDOW_HEIGHT = 800;
         auto* inspector = (Inspector*)[self.inspector_controller window];
         [inspector inspect];
     }
+}
+
+- (void)onURLUpdated:(URL::URL const&)url
+     historyBehavior:(Web::HTML::HistoryHandlingBehavior)history_behavior
+{
+    [[self tabController] onURLUpdated:url historyBehavior:history_behavior];
 }
 
 - (void)onTitleChange:(ByteString const&)title

@@ -8,6 +8,7 @@
 
 #include <AK/Forward.h>
 #include <LibURL/URL.h>
+#include <LibWeb/HTML/HistoryHandlingBehavior.h>
 
 #import <System/Cocoa.h>
 
@@ -27,6 +28,8 @@ struct TabSettings {
 - (void)loadHTML:(StringView)html url:(URL::URL const&)url;
 
 - (void)onLoadStart:(URL::URL const&)url isRedirect:(BOOL)isRedirect;
+- (void)onURLUpdated:(URL::URL const&)url
+     historyBehavior:(Web::HTML::HistoryHandlingBehavior)history_behavior;
 - (void)onTitleChange:(ByteString const&)title;
 
 - (void)navigateBack:(id)sender;

@@ -12,6 +12,7 @@
 #include <LibWeb/CSS/PreferredColorScheme.h>
 #include <LibWeb/HTML/ActivateTab.h>
 #include <LibWeb/HTML/AudioPlayState.h>
+#include <LibWeb/HTML/HistoryHandlingBehavior.h>
 #include <LibWebView/Forward.h>
 
 #import <System/Cocoa.h>
@@ -28,6 +29,8 @@
 - (void)loadURL:(URL::URL const&)url;
 - (void)onLoadStart:(URL::URL const&)url isRedirect:(BOOL)is_redirect;
 - (void)onLoadFinish:(URL::URL const&)url;
+- (void)onURLUpdated:(URL::URL const&)url
+     historyBehavior:(Web::HTML::HistoryHandlingBehavior)history_behavior;
 
 - (void)onTitleChange:(ByteString const&)title;
 - (void)onFaviconChange:(Gfx::Bitmap const&)bitmap;
