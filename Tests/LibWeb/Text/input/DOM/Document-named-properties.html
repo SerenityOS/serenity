@@ -5,6 +5,7 @@
 <img id="baz" src="http://www.example.com" alt="Example" />
 <form name="foo">
 </form>
+<meta name="kangaroo" />
 <script src="../include.js"></script>
 <script>
     test(() => {
@@ -41,5 +42,7 @@
         document.body.removeChild(document.greg);
 
         println(`no more greg or banana: ${document.greg === undefined}, ${document.banana === undefined}`);
+
+        println(`meta tag does not match: ${document.kangaroo === undefined}`);
     });
 </script>
