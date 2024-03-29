@@ -223,6 +223,7 @@ standard_idl_files = [
   "//Userland/Libraries/LibWeb/HTML/WorkerLocation.idl",
   "//Userland/Libraries/LibWeb/HTML/WorkerNavigator.idl",
   "//Userland/Libraries/LibWeb/Internals/Inspector.idl",
+  "//Userland/Libraries/LibWeb/Internals/InternalAnimationTimeline.idl",
   "//Userland/Libraries/LibWeb/Internals/Internals.idl",
   "//Userland/Libraries/LibWeb/IntersectionObserver/IntersectionObserver.idl",
   "//Userland/Libraries/LibWeb/IntersectionObserver/IntersectionObserverEntry.idl",
