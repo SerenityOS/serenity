@@ -1,13 +1,14 @@
-#include <LibURL/URL.h>
 #include <LibCore/AnonymousBuffer.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/ShareableBitmap.h>
+#include <LibURL/URL.h>
 #include <LibWeb/Cookie/Cookie.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/CSS/Selector.h>
 #include <LibWeb/HTML/ActivateTab.h>
 #include <LibWeb/HTML/AudioPlayState.h>
 #include <LibWeb/HTML/FileFilter.h>
+#include <LibWeb/HTML/HistoryHandlingBehavior.h>
 #include <LibWeb/HTML/SelectedFile.h>
 #include <LibWeb/HTML/SelectItem.h>
 #include <LibWeb/HTML/WebViewHints.h>
@@ -19,6 +20,7 @@ endpoint WebContentClient
 {
     did_start_loading(u64 page_id, URL::URL url, bool is_redirect) =|
     did_finish_loading(u64 page_id, URL::URL url) =|
+    did_update_url(u64 page_id, URL::URL url, Web::HTML::HistoryHandlingBehavior history_behavior) =|
     did_request_navigate_back(u64 page_id) =|
     did_request_navigate_forward(u64 page_id) =|
     did_request_refresh(u64 page_id) =|

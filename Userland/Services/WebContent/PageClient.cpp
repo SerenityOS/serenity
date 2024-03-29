@@ -361,6 +361,11 @@ void PageClient::page_did_finish_loading(URL::URL const& url)
     client().async_did_finish_loading(m_id, url);
 }
 
+void PageClient::page_did_update_url(URL::URL const& url, Web::HTML::HistoryHandlingBehavior history_behavior)
+{
+    client().async_did_update_url(m_id, url, history_behavior);
+}
+
 void PageClient::page_did_finish_text_test()
 {
     client().async_did_finish_text_test(m_id);

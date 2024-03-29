@@ -138,6 +138,7 @@ public:
     Function<void(ByteString const&)> on_title_change;
     Function<void(URL::URL const&, bool)> on_load_start;
     Function<void(URL::URL const&)> on_load_finish;
+    Function<void(URL::URL const&, Web::HTML::HistoryHandlingBehavior)> on_url_updated;
     Function<void(ByteString const& path, i32)> on_request_file;
     Function<void()> on_navigate_back;
     Function<void()> on_navigate_forward;

@@ -209,7 +209,7 @@ WebIDL::ExceptionOr<void> History::shared_history_push_replace_state(JS::Value d
 
     auto navigable = document->navigable();
     if (navigable->is_top_level_traversable()) {
-        navigable->active_browsing_context()->page().client().page_did_start_loading(new_url, false);
+        navigable->active_browsing_context()->page().client().page_did_update_url(new_url, history_handling);
     }
 
     // 10. Run the URL and history update steps given document and newURL, with serializedData set to
