@@ -6,7 +6,6 @@
 
 #include "WebContentClient.h"
 #include "ViewImplementation.h"
-#include <AK/Debug.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 
 namespace WebView {
@@ -117,7 +116,6 @@ void WebContentClient::did_request_cursor_change(u64 page_id, i32 cursor_type)
 
 void WebContentClient::did_layout(u64 page_id, Gfx::IntSize content_size)
 {
-    dbgln_if(SPAM_DEBUG, "handle: WebContentClient::DidLayout! content_size={}", content_size);
     if (auto view = view_for_page_id(page_id); view.has_value()) {
         if (view->on_did_layout)
             view->on_did_layout(content_size);
@@ -126,7 +124,6 @@ void WebContentClient::did_layout(u64 page_id, Gfx::IntSize content_size)
 
 void WebContentClient::did_change_title(u64 page_id, ByteString const& title)
 {
-    dbgln_if(SPAM_DEBUG, "handle: WebContentClient::DidChangeTitle! title={}", title);
     if (auto view = view_for_page_id(page_id); view.has_value()) {
         if (!view->on_title_change)
             return;
@@ -172,7 +169,6 @@ void WebContentClient::did_leave_tooltip_area(u64 page_id)
 
 void WebContentClient::did_hover_link(u64 page_id, URL::URL const& url)
 {
-    dbgln_if(SPAM_DEBUG, "handle: WebContentClient::DidHoverLink! url={}", url);
     if (auto view = view_for_page_id(page_id); view.has_value()) {
         if (view->on_link_hover)
             view->on_link_hover(url);
@@ -181,7 +177,6 @@ void WebContentClient::did_hover_link(u64 page_id, URL::URL const& url)
 
 void WebContentClient::did_unhover_link(u64 page_id)
 {
-    dbgln_if(SPAM_DEBUG, "handle: WebContentClient::DidUnhoverLink!");
     if (auto view = view_for_page_id(page_id); view.has_value()) {
         if (view->on_link_unhover)
             view->on_link_unhover();
