@@ -133,6 +133,22 @@ enum class IsHistoryNavigation {
     [self updateNavigationButtonStates];
 }
 
+- (void)onURLUpdated:(URL::URL const&)url
+     historyBehavior:(Web::HTML::HistoryHandlingBehavior)history_behavior
+{
+    switch (history_behavior) {
+    case Web::HTML::HistoryHandlingBehavior::Push:
+        m_history.push(url, m_title);
+        break;
+    case Web::HTML::HistoryHandlingBehavior::Replace:
+        m_history.replace_current(url, m_title);
+        break;
+    }
+
+    [self setLocationFieldText:url.serialize()];
+    [self updateNavigationButtonStates];
+}
+
 - (void)onTitleChange:(ByteString const&)title
 {
     m_title = title;

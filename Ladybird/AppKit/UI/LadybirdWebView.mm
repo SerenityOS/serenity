@@ -282,6 +282,10 @@ static void copy_data_to_clipboard(StringView data, NSPasteboardType pasteboard_
         [self.observer onLoadFinish:url];
     };
 
+    m_web_view_bridge->on_url_updated = [self](auto const& url, auto history_behavior) {
+        [self.observer onURLUpdated:url historyBehavior:history_behavior];
+    };
+
     m_web_view_bridge->on_title_change = [self](auto const& title) {
         [self.observer onTitleChange:title];
     };
