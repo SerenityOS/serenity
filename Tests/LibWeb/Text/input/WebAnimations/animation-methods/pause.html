@@ -2,7 +2,7 @@
 <div id="foo"></div>
 <script src="../../include.js"></script>
 <script>
-    asyncTest(done => {
+    promiseTest(async () => {
     	const foo = document.getElementById("foo");
 
     	let anim = foo.animate({}, { duration: Infinity });
@@ -37,17 +37,13 @@
     		println("Calling pause() does not synchronously resolve animation's ready promise");
 
     	// Ensure we cross both a task boundary and an animation frame boundary
-    	requestAnimationFrame(() => {
-    		setTimeout(() => {
-    			if (!events.remove && !events.finish && !events.cancel)
-    				println("Calling pause() does not send any events");
-    			if (anim.playbackRate === 2.0)
-    				println("Calling pause() does asynchronously update pending playback rate");
-    			if (readyResolved)
-    				println("Calling pause() asynchronously resolves animation's ready promise");
-
-                done();
-    		});
-    	});
+        await animationFrame();
+        await timeout(0);
+        if (!events.remove && !events.finish && !events.cancel)
+        	println("Calling pause() does not send any events");
+        if (anim.playbackRate === 2.0)
+        	println("Calling pause() does asynchronously update pending playback rate");
+        if (readyResolved)
+        	println("Calling pause() asynchronously resolves animation's ready promise");
     });
 </script>

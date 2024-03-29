@@ -4,7 +4,7 @@
 <script>
     // Note: The "persisted" state will be tested in the Animation.persist() test
 
-    asyncTest(async done => {
+    promiseTest(async () => {
         const foo = document.getElementById("foo");
         const animation1 = foo.animate({ opacity: [0, 1] }, { duration: 10, fill: "forwards" });
         println(`Animation's replaceState is active initially: ${animation1.replaceState === "active"}`);
@@ -17,7 +17,5 @@
 
         await animation2.finished;
         println(`Animation's replaceState is removed after new animation finishes: ${animation1.replaceState === "removed"}`);
-
-        done();
     });
 </script>

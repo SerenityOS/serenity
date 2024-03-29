@@ -2,13 +2,7 @@
 <div id="foo"></div>
 <script src="../../include.js"></script>
 <script>
-    const animationFrame = () => {
-        const { promise, resolve } = Promise.withResolvers();
-        requestAnimationFrame(resolve);
-        return promise;
-    };
-
-    asyncTest(async done => {
+    promiseTest(async () => {
         const foo = document.getElementById("foo");
 
         let anim = foo.animate({}, {});
@@ -32,7 +26,5 @@
         await animationFrame();
         if (anim1.replaceState === "persisted" && anim2.replaceState === "active")
             println("persist() keeps an animation from being replaced");
-
-        done();
     });
 </script>

@@ -2,7 +2,7 @@
 <div id="foo"></div>
 <script src="../../include.js"></script>
 <script>
-    asyncTest(async done => {
+    promiseTest(async () => {
         const foo = document.getElementById("foo");
         const animation = foo.animate({}, { duration: 100 });
 
@@ -17,7 +17,5 @@
 
         await animation.ready;
         println(`Animation is not pending after ready promise resolves: ${!animation.pending}`);
-
-        done();
     });
 </script>

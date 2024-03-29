@@ -17,13 +17,7 @@
 <div id="foo"></div>
 <script src="../../include.js"></script>
 <script>
-    const animationFrame = () => {
-        const { promise, resolve } = Promise.withResolvers();
-        requestAnimationFrame(resolve);
-        return promise;
-    };
-
-    asyncTest(async done => {
+    promiseTest(async () => {
         const foo = document.getElementById("foo");
         const timeline = internals.createInternalAnimationTimeline();
         timeline.setTime(0);
@@ -50,6 +44,5 @@
 
         await animationFrame();
         println(`finish count: ${finishCount}`);
-        done();
     });
 </script>

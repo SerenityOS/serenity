@@ -2,7 +2,7 @@
 <div id="foo"></div>
 <script src="../../include.js"></script>
 <script>
-    test(() => {
+    promiseTest(async () => {
         const foo = document.getElementById("foo");
 
         let anim = foo.animate({}, {});
@@ -45,19 +45,17 @@
         let finishCount = 0;
         anim.onfinish = () => { finishCount++; }
         anim.finish();
-        requestAnimationFrame(() => {
-            if (finishCount === 1)
-                println("finish() sends an onfinish event");
-        })
+        await animationFrame();
+        if (finishCount === 1)
+            println("finish() sends an onfinish event");
 
         anim = foo.animate({}, { duration: 1000 });
         let finished = false;
         anim.finished.then(() => finished = true);
         anim.finish();
 
-        requestAnimationFrame(() => {
-            if (finished)
-                println("finish() recreated the animation's finished promise");
-        });
+        await animationFrame();
+        if (finished)
+            println("finish() recreated the animation's finished promise");
     });
 </script>

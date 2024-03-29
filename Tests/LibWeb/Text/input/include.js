@@ -24,6 +24,18 @@ function printElement(e) {
     println(element_string);
 }
 
+function animationFrame() {
+    const { promise, resolve } = Promise.withResolvers();
+    requestAnimationFrame(resolve);
+    return promise;
+}
+
+function timeout(ms) {
+    const { promise, resolve } = Promise.withResolvers();
+    setTimeout(resolve, ms);
+    return promise;
+}
+
 document.addEventListener("DOMContentLoaded", function () {
     __outputElement = document.createElement("pre");
     __outputElement.setAttribute("id", "out");
@@ -45,5 +57,14 @@ function asyncTest(f) {
     };
     document.addEventListener("DOMContentLoaded", () => {
         f(done);
+    });
+}
+
+function promiseTest(f) {
+    document.addEventListener("DOMContentLoaded", () => {
+        f().then(() => {
+            __preventMultipleTestFunctions();
+            internals.signalTextTestIsDone();
+        });
     });
 }
