@@ -56,7 +56,7 @@ void Page::set_focused_browsing_context(Badge<EventHandler>, HTML::BrowsingConte
     m_focused_context = browsing_context.make_weak_ptr();
 }
 
-void Page::load(const URL::URL& url)
+void Page::load(URL::URL const& url)
 {
     (void)top_level_traversable()->navigate({ .url = url, .source_document = *top_level_traversable()->active_document(), .user_involvement = HTML::UserNavigationInvolvement::BrowserUI });
 }

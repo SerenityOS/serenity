@@ -70,7 +70,7 @@ public:
 
     void set_focused_browsing_context(Badge<EventHandler>, HTML::BrowsingContext&);
 
-    void load(const URL::URL&);
+    void load(URL::URL const&);
 
     void load_html(StringView);
 
@@ -245,19 +245,19 @@ public:
     virtual Gfx::IntRect page_did_request_maximize_window() { return {}; }
     virtual Gfx::IntRect page_did_request_minimize_window() { return {}; }
     virtual Gfx::IntRect page_did_request_fullscreen_window() { return {}; }
-    virtual void page_did_start_loading(const URL::URL&, bool is_redirect) { (void)is_redirect; }
+    virtual void page_did_start_loading(URL::URL const&, bool is_redirect) { (void)is_redirect; }
     virtual void page_did_create_new_document(Web::DOM::Document&) { }
     virtual void page_did_destroy_document(Web::DOM::Document&) { }
-    virtual void page_did_finish_loading(const URL::URL&) { }
+    virtual void page_did_finish_loading(URL::URL const&) { }
     virtual void page_did_request_cursor_change(Gfx::StandardCursor) { }
     virtual void page_did_request_context_menu(CSSPixelPoint) { }
     virtual void page_did_request_link_context_menu(CSSPixelPoint, URL::URL const&, [[maybe_unused]] ByteString const& target, [[maybe_unused]] unsigned modifiers) { }
     virtual void page_did_request_image_context_menu(CSSPixelPoint, URL::URL const&, [[maybe_unused]] ByteString const& target, [[maybe_unused]] unsigned modifiers, Gfx::Bitmap const*) { }
     virtual void page_did_request_media_context_menu(CSSPixelPoint, [[maybe_unused]] ByteString const& target, [[maybe_unused]] unsigned modifiers, Page::MediaContextMenu) { }
-    virtual void page_did_middle_click_link(const URL::URL&, [[maybe_unused]] ByteString const& target, [[maybe_unused]] unsigned modifiers) { }
+    virtual void page_did_middle_click_link(URL::URL const&, [[maybe_unused]] ByteString const& target, [[maybe_unused]] unsigned modifiers) { }
     virtual void page_did_enter_tooltip_area(CSSPixelPoint, ByteString const&) { }
     virtual void page_did_leave_tooltip_area() { }
-    virtual void page_did_hover_link(const URL::URL&) { }
+    virtual void page_did_hover_link(URL::URL const&) { }
     virtual void page_did_unhover_link() { }
     virtual void page_did_change_favicon(Gfx::Bitmap const&) { }
     virtual void page_did_layout() { }
@@ -271,8 +271,8 @@ public:
     virtual void page_did_request_dismiss_dialog() { }
     virtual Vector<Web::Cookie::Cookie> page_did_request_all_cookies(URL::URL const&) { return {}; }
     virtual Optional<Web::Cookie::Cookie> page_did_request_named_cookie(URL::URL const&, String const&) { return {}; }
-    virtual String page_did_request_cookie(const URL::URL&, Cookie::Source) { return {}; }
-    virtual void page_did_set_cookie(const URL::URL&, Cookie::ParsedCookie const&, Cookie::Source) { }
+    virtual String page_did_request_cookie(URL::URL const&, Cookie::Source) { return {}; }
+    virtual void page_did_set_cookie(URL::URL const&, Cookie::ParsedCookie const&, Cookie::Source) { }
     virtual void page_did_update_cookie(Web::Cookie::Cookie) { }
     virtual void page_did_update_resource_count(i32) { }
     struct NewWebViewResult {
