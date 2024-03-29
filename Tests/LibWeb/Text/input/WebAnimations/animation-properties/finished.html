@@ -4,15 +4,14 @@
 <script>
     promiseTest(async () => {
         const foo = document.getElementById("foo");
-        let animation = foo.animate({ opacity: [0, 1] }, { duration: 100 });
+        const timeline = internals.createInternalAnimationTimeline();
+        let animation = foo.animate({ opacity: [0, 1] }, { duration: 100, timeline });
         let finishedPromise = animation.finished;
 
-        // FIXME: Figure out how to consistently test timings
-        // const currentTime = performance.now();
+        timeline.setTime(100);
+
+        // This should finish. If not, the test will time out and result in a failure
         await finishedPromise;
-        // const elapsedTime = performance.now() - currentTime;
-        // if (elapsedTime > 95 && elapsedTime < 105)
-        //     println("Animation time after 100ms is correct")
 
         println(`finished promise remains after finishing: ${Object.is(finishedPromise, animation.finished)}`);
 
