@@ -339,7 +339,32 @@ CalculatedStyleValue::CalculationResult SumCalculationNode::resolve(Optional<Len
 {
     Optional<CalculatedStyleValue::CalculationResult> total;
 
+    auto validate_percentage_basis = [&]() -> Optional<CalculatedStyleValue::CalculationResult> {
+        if (percentage_basis.has<Angle>() && percentage_basis.get<Angle>().to_degrees() == 0)
+            return CalculatedStyleValue::CalculationResult(percentage_basis.get<Angle>());
+
+        if (percentage_basis.has<Flex>() && percentage_basis.get<Flex>().to_fr() == 0)
+            return CalculatedStyleValue::CalculationResult(percentage_basis.get<Flex>());
+
+        if (percentage_basis.has<Frequency>() && percentage_basis.get<Frequency>().to_hertz() == 0)
+            return CalculatedStyleValue::CalculationResult(percentage_basis.get<Frequency>());
+
+        if (percentage_basis.has<Length>() && percentage_basis.get<Length>().to_px(*context) == 0)
+            return CalculatedStyleValue::CalculationResult(percentage_basis.get<Length>());
+
+        if (percentage_basis.has<Time>() && percentage_basis.get<Time>().to_seconds() == 0)
+            return CalculatedStyleValue::CalculationResult(percentage_basis.get<Time>());
+
+        return {};
+    };
+
     for (auto& additional_product : m_values) {
+        if (additional_product->contains_percentage()) {
+            auto zero_value_or_empty = validate_percentage_basis();
+            if (zero_value_or_empty.has_value())
+                return zero_value_or_empty.value();
+        }
+
         auto additional_value = additional_product->resolve(context, percentage_basis);
         if (!total.has_value()) {
             total = additional_value;
