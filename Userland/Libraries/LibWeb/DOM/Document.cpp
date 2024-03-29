@@ -4336,16 +4336,14 @@ JS::GCPtr<Element const> Document::scrolling_element() const
 // https://html.spec.whatwg.org/multipage/dom.html#exposed
 static bool is_exposed(Element const& element)
 {
-    if (is<HTML::HTMLObjectElement>(element) || is<HTML::HTMLEmbedElement>(element)) {
-        // FIXME: An embed or object element is said to be exposed if it has no exposed object ancestor, and,
-        //        for object elements, is additionally either not showing its fallback content or has no object or embed descendants.
-        return true;
-    }
+    VERIFY(is<HTML::HTMLEmbedElement>(element) || is<HTML::HTMLObjectElement>(element));
 
+    // FIXME: An embed or object element is said to be exposed if it has no exposed object ancestor, and,
+    //        for object elements, is additionally either not showing its fallback content or has no object or embed descendants.
     return true;
 }
 
-// https://html.spec.whatwg.org/multipage/dom.html#dom-document-nameditem-which
+// https://html.spec.whatwg.org/multipage/dom.html#dom-tree-accessors:supported-property-names
 Vector<FlyString> Document::supported_property_names() const
 {
     // The supported property names of a Document object document at any moment consist of the following,
@@ -4353,62 +4351,77 @@ Vector<FlyString> Document::supported_property_names() const
     // and with values from id attributes coming before values from name attributes when the same element contributes both:
     OrderedHashTable<FlyString> names;
 
-    // the value of the name content attribute for all exposed embed, form, iframe, img, and exposed object elements
-    // that have a non-empty name content attribute and are in a document tree with document as their root;
-
-    // the value of the id content attribute for all exposed object elements that have a non-empty id content attribute
-    // and are in a document tree with document as their root; and
-
-    // the value of the id content attribute for all img elements that have both a non-empty id content attribute
-    // and a non-empty name content attribute, and are in a document tree with document as their root.
-
     for (auto const& element : m_potentially_named_elements) {
-        if (!is_exposed(element))
-            continue;
+        // - the value of the name content attribute for all exposed embed, form, iframe, img, and exposed object elements
+        //   that have a non-empty name content attribute and are in a document tree with document as their root;
+        if ((is<HTML::HTMLEmbedElement>(*element) && is_exposed(element))
+            || is<HTML::HTMLFormElement>(*element)
+            || is<HTML::HTMLIFrameElement>(*element)
+            || is<HTML::HTMLImageElement>(*element)
+            || (is<HTML::HTMLObjectElement>(*element) && is_exposed(element))) {
+            if (auto name = element->name(); name.has_value()) {
+                names.set(name.value());
+            }
+        }
 
-        if (is<HTML::HTMLObjectElement>(*element)) {
-            if (auto id = element->id(); id.has_value())
+        // - the value of the id content attribute for all exposed object elements that have a non-empty id content attribute
+        //   and are in a document tree with document as their root; and
+        if (is<HTML::HTMLObjectElement>(*element) && is_exposed(element)) {
+            if (auto id = element->id(); id.has_value()) {
                 names.set(id.value());
-        }
-        if (is<HTML::HTMLImageElement>(*element)) {
-            auto maybe_name = element->name();
-            // Only set id if both name and id have value, for img elements. clear as mud
-            if (auto maybe_id = element->id(); maybe_name.has_value() && maybe_id.has_value())
-                names.set(maybe_id.value());
+            }
         }
 
-        if (auto name = element->name(); name.has_value())
-            names.set(name.value());
+        // - the value of the id content attribute for all img elements that have both a non-empty id content attribute
+        //   and a non-empty name content attribute, and are in a document tree with document as their root.
+        if (is<HTML::HTMLImageElement>(*element)) {
+            if (auto id = element->id(); id.has_value() && element->name().has_value()) {
+                names.set(id.value());
+            }
+        }
     }
 
     return names.values();
 }
 
-// https://html.spec.whatwg.org/multipage/dom.html#dom-document-nameditem-filter
-static Vector<JS::NonnullGCPtr<DOM::Element>> named_elements_with_name(Document const& document, FlyString const& name)
+static bool is_named_element_with_name(Element const& element, FlyString const& name)
 {
     // Named elements with the name name, for the purposes of the above algorithm, are those that are either:
 
-    // - Exposed embed, form, iframe, img, or exposed object elements that have a name content attribute whose value is name, or
+    // - Exposed embed, form, iframe, img, or exposed object elements that have a name content attribute whose value
+    //   is name, or
+    if ((is<HTML::HTMLEmbedElement>(element) && is_exposed(element))
+        || is<HTML::HTMLFormElement>(element)
+        || is<HTML::HTMLIFrameElement>(element)
+        || is<HTML::HTMLImageElement>(element)
+        || (is<HTML::HTMLObjectElement>(element) && is_exposed(element))) {
+        if (element.name() == name)
+            return true;
+    }
+
     // - Exposed object elements that have an id content attribute whose value is name, or
-    // - img elements that have an id content attribute whose value is name, and that have a non-empty name content attribute present also.
+    if (is<HTML::HTMLObjectElement>(element) && is_exposed(element)) {
+        if (element.id() == name)
+            return true;
+    }
 
+    // - img elements that have an id content attribute whose value is name, and that have a non-empty name content
+    //   attribute present also.
+    if (is<HTML::HTMLImageElement>(element)) {
+        if (element.id() == name && element.name().has_value())
+            return true;
+    }
+
+    return false;
+}
+
+static Vector<JS::NonnullGCPtr<DOM::Element>> named_elements_with_name(Document const& document, FlyString const& name)
+{
     Vector<JS::NonnullGCPtr<DOM::Element>> named_elements;
+
     for (auto const& element : document.potentially_named_elements()) {
-        if (!is_exposed(*element))
-            continue;
-
-        if (is<HTML::HTMLObjectElement>(*element)) {
-            if (element->id() == name)
-                named_elements.append(element);
-        } else if (is<HTML::HTMLImageElement>(*element)) {
-            if (element->id() == name && element->name().has_value())
-                named_elements.append(element);
-        }
-
-        if (element->name() == name) {
-            named_elements.append(*element);
-        }
+        if (is_named_element_with_name(element, name))
+            named_elements.append(element);
     }
 
     return named_elements;
@@ -4434,20 +4447,9 @@ WebIDL::ExceptionOr<JS::Value> Document::named_item_value(FlyString const& name)
         return elements.first();
 
     // 4. Otherwise return an HTMLCollection rooted at the Document node, whose filter matches only named elements with the name name.
-    auto collection = HTMLCollection::create(*const_cast<Document*>(this), HTMLCollection::Scope::Descendants, [name](auto& element) {
-        if (!is_potentially_named_element(element) || !is_exposed(element))
-            return false;
-
-        if (is<HTML::HTMLObjectElement>(element)) {
-            if (element.id() == name)
-                return true;
-        } else if (is<HTML::HTMLImageElement>(element)) {
-            if (element.id() == name && element.name().has_value())
-                return true;
-        }
-        return (element.name() == name);
+    return HTMLCollection::create(*const_cast<Document*>(this), HTMLCollection::Scope::Descendants, [name](auto& element) {
+        return is_named_element_with_name(element, name);
     });
-    return collection;
 }
 
 // https://w3c.github.io/editing/docs/execCommand/#execcommand()
