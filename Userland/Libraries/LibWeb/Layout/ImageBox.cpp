@@ -36,16 +36,21 @@ void ImageBox::prepare_for_replaced_layout()
 
     if (renders_as_alt_text()) {
         auto const& element = verify_cast<HTML::HTMLElement>(dom_node());
-        auto& font = Platform::FontPlugin::the().default_font();
         auto alt = element.get_attribute_value(HTML::AttributeNames::alt);
 
-        CSSPixels alt_text_width = 0;
-        if (!m_cached_alt_text_width.has_value())
-            m_cached_alt_text_width = CSSPixels::nearest_value_for(font.width(alt));
-        alt_text_width = m_cached_alt_text_width.value();
+        if (alt.is_empty()) {
+            set_natural_width(0);
+            set_natural_height(0);
+        } else {
+            auto const& font = Platform::FontPlugin::the().default_font();
+            CSSPixels alt_text_width = 0;
+            if (!m_cached_alt_text_width.has_value())
+                m_cached_alt_text_width = CSSPixels::nearest_value_for(font.width(alt));
+            alt_text_width = m_cached_alt_text_width.value();
 
-        set_natural_width(alt_text_width + 16);
-        set_natural_height(CSSPixels::nearest_value_for(font.pixel_size()) + 16);
+            set_natural_width(alt_text_width + 16);
+            set_natural_height(CSSPixels::nearest_value_for(font.pixel_size()) + 16);
+        }
     }
 
     if (!has_natural_width() && !has_natural_height()) {
