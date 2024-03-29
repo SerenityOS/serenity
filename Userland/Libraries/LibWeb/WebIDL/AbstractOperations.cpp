@@ -341,7 +341,7 @@ JS::ThrowCompletionOr<T> convert_to_int(JS::VM& vm, JS::Value value, EnforceRang
     double lower_bound = 0;
 
     // 1. If bitLength is 64, then:
-    if constexpr (sizeof(T) == 4) {
+    if constexpr (sizeof(T) == 8) {
         // 1. Let upperBound be 2^(53) − 1
         upper_bound = JS::MAX_ARRAY_LIKE_INDEX;
 
