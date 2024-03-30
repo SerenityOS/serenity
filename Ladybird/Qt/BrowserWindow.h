@@ -129,6 +129,7 @@ private:
     }
 
     QIcon icon_for_page_mute_state() const;
+    QString tool_tip_for_page_mute_state() const;
 
     QScreen* m_current_screen;
     double m_device_pixel_ratio { 0 };

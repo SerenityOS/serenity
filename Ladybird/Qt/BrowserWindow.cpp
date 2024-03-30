@@ -657,6 +657,7 @@ void BrowserWindow::tab_audio_play_state_changed(int index, Web::HTML::AudioPlay
 
     case Web::HTML::AudioPlayState::Playing:
         auto* button = new QPushButton(icon_for_page_mute_state(), {});
+        button->setToolTip(tool_tip_for_page_mute_state());
         button->setFlat(true);
         button->resize({ 20, 20 });
 
@@ -670,6 +671,7 @@ void BrowserWindow::tab_audio_play_state_changed(int index, Web::HTML::AudioPlay
             case Web::HTML::AudioPlayState::Playing:
                 auto* button = m_tabs_container->tabBar()->tabButton(index, QTabBar::LeftSide);
                 verify_cast<QPushButton>(button)->setIcon(icon_for_page_mute_state());
+                button->setToolTip(tool_tip_for_page_mute_state());
                 break;
             }
         });
@@ -686,6 +688,18 @@ QIcon BrowserWindow::icon_for_page_mute_state() const
         return style()->standardIcon(QStyle::SP_MediaVolumeMuted);
     case Web::HTML::MuteState::Unmuted:
         return style()->standardIcon(QStyle::SP_MediaVolume);
+    }
+
+    VERIFY_NOT_REACHED();
+}
+
+QString BrowserWindow::tool_tip_for_page_mute_state() const
+{
+    switch (view().page_mute_state()) {
+    case Web::HTML::MuteState::Muted:
+        return "Unmute tab";
+    case Web::HTML::MuteState::Unmuted:
+        return "Mute tab";
     }
 
     VERIFY_NOT_REACHED();
