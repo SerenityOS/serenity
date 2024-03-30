@@ -65,6 +65,13 @@ void HTMLMediaElement::initialize(JS::Realm& realm)
         // the document is active again.
         pause_element().release_value_but_fixme_should_propagate_errors();
     });
+
+    document().page().register_media_element({}, unique_id());
+}
+
+void HTMLMediaElement::finalize()
+{
+    document().page().unregister_media_element({}, unique_id());
 }
 
 // https://html.spec.whatwg.org/multipage/media.html#queue-a-media-element-task

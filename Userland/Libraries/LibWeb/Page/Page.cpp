@@ -390,6 +390,18 @@ void Page::select_dropdown_closed(Optional<String> value)
     }
 }
 
+void Page::register_media_element(Badge<HTML::HTMLMediaElement>, int media_id)
+{
+    m_media_elements.append(media_id);
+}
+
+void Page::unregister_media_element(Badge<HTML::HTMLMediaElement>, int media_id)
+{
+    m_media_elements.remove_all_matching([&](auto candidate_id) {
+        return candidate_id == media_id;
+    });
+}
+
 void Page::did_request_media_context_menu(i32 media_id, CSSPixelPoint position, ByteString const& target, unsigned modifiers, MediaContextMenu menu)
 {
     m_media_context_menu_element_id = media_id;
