@@ -3,7 +3,7 @@ compile_gml(DynamicWidgetContainerControls.gml DynamicWidgetContainerControls.cp
 compile_gml(AboutDialog.gml AboutDialogGML.cpp)
 stringify_gml(DatePickerDialog.gml DatePickerDialogGML.h date_picker_dialog_gml)
 stringify_gml(EmojiInputDialog.gml EmojiInputDialogGML.h emoji_input_dialog_gml)
-stringify_gml(FontPickerDialog.gml FontPickerDialogGML.h font_picker_dialog_gml)
+compile_gml(FontPickerDialog.gml FontPickerDialogGML.cpp)
 compile_gml(FilePickerDialog.gml FilePickerDialogGML.cpp)
 stringify_gml(IncrementalSearchBanner.gml IncrementalSearchBannerGML.h incremental_search_banner_gml)
 compile_gml(PasswordInputDialog.gml PasswordInputDialogGML.cpp)
@@ -54,6 +54,7 @@ set(SOURCES
     FileSystemModel.cpp
     FilteringProxyModel.cpp
     FontPicker.cpp
+    FontPickerDialogGML.cpp
     Frame.cpp
     GitCommitLexer.cpp
     GitCommitSyntaxHighlighter.cpp
@@ -151,7 +152,6 @@ set(GENERATED_SOURCES
     ../../Services/WindowServer/WindowServerEndpoint.h
     DatePickerDialogGML.h
     EmojiInputDialogGML.h
-    FontPickerDialogGML.h
     IncrementalSearchBannerGML.h
 )
 
