@@ -651,22 +651,44 @@ void BrowserWindow::tab_audio_play_state_changed(int index, Web::HTML::AudioPlay
 {
     switch (play_state) {
     case Web::HTML::AudioPlayState::Paused:
-        m_tabs_container->tabBar()->setTabButton(index, QTabBar::LeftSide, nullptr);
+        if (view().page_mute_state() == Web::HTML::MuteState::Unmuted)
+            m_tabs_container->tabBar()->setTabButton(index, QTabBar::LeftSide, nullptr);
         break;
 
     case Web::HTML::AudioPlayState::Playing:
-        auto icon = style()->standardIcon(QStyle::SP_MediaVolume);
-
-        auto* button = new QPushButton(icon, {});
+        auto* button = new QPushButton(icon_for_page_mute_state(), {});
         button->setFlat(true);
         button->resize({ 20, 20 });
 
-        // FIXME: Add a click handler to mute the tab.
-        button->setEnabled(false);
+        connect(button, &QPushButton::clicked, this, [this, index]() {
+            view().toggle_page_mute_state();
+
+            switch (view().audio_play_state()) {
+            case Web::HTML::AudioPlayState::Paused:
+                m_tabs_container->tabBar()->setTabButton(index, QTabBar::LeftSide, nullptr);
+                break;
+            case Web::HTML::AudioPlayState::Playing:
+                auto* button = m_tabs_container->tabBar()->tabButton(index, QTabBar::LeftSide);
+                verify_cast<QPushButton>(button)->setIcon(icon_for_page_mute_state());
+                break;
+            }
+        });
 
         m_tabs_container->tabBar()->setTabButton(index, QTabBar::LeftSide, button);
         break;
     }
+}
+
+QIcon BrowserWindow::icon_for_page_mute_state() const
+{
+    switch (view().page_mute_state()) {
+    case Web::HTML::MuteState::Muted:
+        return style()->standardIcon(QStyle::SP_MediaVolumeMuted);
+    case Web::HTML::MuteState::Unmuted:
+        return style()->standardIcon(QStyle::SP_MediaVolume);
+    }
+
+    VERIFY_NOT_REACHED();
 }
 
 void BrowserWindow::open_next_tab()
