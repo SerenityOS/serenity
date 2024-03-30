@@ -19,7 +19,9 @@ JS_DEFINE_ALLOCATOR(DocumentTimeline);
 JS::NonnullGCPtr<DocumentTimeline> DocumentTimeline::create(JS::Realm& realm, DOM::Document& document, HighResolutionTime::DOMHighResTimeStamp origin_time)
 {
     auto timeline = realm.heap().allocate<DocumentTimeline>(realm, realm, document, origin_time);
-    timeline->set_current_time(document.window()->performance()->now());
+    auto* window_or_worker = dynamic_cast<HTML::WindowOrWorkerGlobalScopeMixin*>(&realm.global_object());
+    VERIFY(window_or_worker);
+    timeline->set_current_time(window_or_worker->performance()->now());
     return timeline;
 }
 

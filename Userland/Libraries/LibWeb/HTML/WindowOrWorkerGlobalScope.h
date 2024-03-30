@@ -63,6 +63,8 @@ public:
 
     void run_steps_after_a_timeout(i32 timeout, Function<void()> completion_step);
 
+    [[nodiscard]] JS::NonnullGCPtr<HighResolutionTime::Performance> performance();
+
 protected:
     void initialize(JS::Realm&);
     void visit_edges(JS::Cell::Visitor&);
@@ -91,6 +93,8 @@ private:
     // a performance entry buffer map map, keyed on a DOMString, representing the entry type to which the buffer belongs. The map's value is the following tuple:
     // NOTE: See the PerformanceEntryTuple struct above for the map's value tuple.
     OrderedHashMap<FlyString, PerformanceTimeline::PerformanceEntryTuple> m_performance_entry_buffer_map;
+
+    JS::GCPtr<HighResolutionTime::Performance> m_performance;
 };
 
 }

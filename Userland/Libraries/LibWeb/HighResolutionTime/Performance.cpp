@@ -20,9 +20,9 @@ namespace Web::HighResolutionTime {
 
 JS_DEFINE_ALLOCATOR(Performance);
 
-Performance::Performance(HTML::Window& window)
-    : DOM::EventTarget(window.realm())
-    , m_window(window)
+Performance::Performance(HTML::WindowOrWorkerGlobalScopeMixin& window_or_worker)
+    : DOM::EventTarget(window_or_worker.this_impl().realm())
+    , m_window_or_worker(window_or_worker)
     , m_timer(Core::TimerType::Precise)
 {
     m_timer.start();
@@ -39,14 +39,14 @@ void Performance::initialize(JS::Realm& realm)
 void Performance::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_window);
     visitor.visit(m_timing);
+    visitor.visit(m_window_or_worker->this_impl());
 }
 
 JS::GCPtr<NavigationTiming::PerformanceTiming> Performance::timing()
 {
     if (!m_timing)
-        m_timing = heap().allocate<NavigationTiming::PerformanceTiming>(realm(), *m_window);
+        m_timing = heap().allocate<NavigationTiming::PerformanceTiming>(realm(), *m_window_or_worker);
     return m_timing;
 }
 

@@ -51,6 +51,7 @@ public:
     using WindowOrWorkerGlobalScopeMixin::clear_interval;
     using WindowOrWorkerGlobalScopeMixin::clear_timeout;
     using WindowOrWorkerGlobalScopeMixin::fetch;
+    using WindowOrWorkerGlobalScopeMixin::performance;
     using WindowOrWorkerGlobalScopeMixin::queue_microtask;
     using WindowOrWorkerGlobalScopeMixin::set_interval;
     using WindowOrWorkerGlobalScopeMixin::set_timeout;

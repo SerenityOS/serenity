@@ -5,7 +5,6 @@
 #import <DOM/Document.idl>
 #import <DOM/EventHandler.idl>
 #import <DOM/EventTarget.idl>
-#import <HighResolutionTime/Performance.idl>
 #import <HTML/AnimationFrameProvider.idl>
 #import <HTML/CustomElements/CustomElementRegistry.idl>
 #import <HTML/History.idl>
@@ -105,10 +104,6 @@ interface Window : EventTarget {
 
     // https://w3c.github.io/selection-api/#extensions-to-window-interface
     Selection? getSelection();
-
-    // FIXME: Everything from here on should be shared through WindowOrWorkerGlobalScope
-    // https://w3c.github.io/hr-time/#the-performance-attribute
-    [Replaceable] readonly attribute Performance performance;
 
     // https://w3c.github.io/webcrypto/#crypto-interface
     [SameObject] readonly attribute Crypto crypto;

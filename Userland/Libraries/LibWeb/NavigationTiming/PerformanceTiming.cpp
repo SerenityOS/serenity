@@ -10,9 +10,9 @@ namespace Web::NavigationTiming {
 
 JS_DEFINE_ALLOCATOR(PerformanceTiming);
 
-PerformanceTiming::PerformanceTiming(HTML::Window& window)
-    : PlatformObject(window.realm())
-    , m_window(window)
+PerformanceTiming::PerformanceTiming(HTML::WindowOrWorkerGlobalScopeMixin& window_or_worker)
+    : PlatformObject(window_or_worker.this_impl().realm())
+    , m_window_or_worker(window_or_worker)
 {
 }
 
@@ -27,7 +27,8 @@ void PerformanceTiming::initialize(JS::Realm& realm)
 void PerformanceTiming::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_window);
+    if (m_window_or_worker)
+        visitor.visit(m_window_or_worker->this_impl());
 }
 
 }
