@@ -16,7 +16,7 @@
 #include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/FileIconProvider.h>
 #include <LibGUI/FilePicker.h>
-#include <LibGUI/FilePickerDialogGML.h>
+#include <LibGUI/FilePickerDialogWidget.h>
 #include <LibGUI/FileSystemModel.h>
 #include <LibGUI/FileTypeFilter.h>
 #include <LibGUI/InputBox.h>
@@ -99,8 +99,8 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
     }
     resize(560, 320);
 
-    auto widget = set_main_widget<GUI::Widget>();
-    widget->load_from_gml(file_picker_dialog_gml).release_value_but_fixme_should_propagate_errors();
+    auto widget = GUI::FilePickerDialogWidget::try_create().release_value_but_fixme_should_propagate_errors();
+    set_main_widget(widget);
 
     auto& toolbar = *widget->find_descendant_of_type_named<GUI::Toolbar>("toolbar");
 
