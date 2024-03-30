@@ -1,4 +1,4 @@
-@GUI::Widget {
+@GUI::FilePickerDialogWidget {
     fill_with_background_color: true
     layout: @GUI::HorizontalBoxLayout {
         margins: [4]
@@ -83,7 +83,6 @@
 
                 @GUI::ComboBox {
                     name: "allowed_file_type_filters_combo"
-                    model_only: true
                 }
 
                 @GUI::DialogButton {
