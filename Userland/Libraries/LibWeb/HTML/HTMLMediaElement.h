@@ -132,6 +132,7 @@ protected:
     HTMLMediaElement(DOM::Document&, DOM::QualifiedName);
 
     virtual void initialize(JS::Realm&) override;
+    virtual void finalize() override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     virtual void attribute_changed(FlyString const& name, Optional<String> const& value) override;

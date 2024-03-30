@@ -150,6 +150,9 @@ public:
         Select,
     };
 
+    void register_media_element(Badge<HTML::HTMLMediaElement>, int media_id);
+    void unregister_media_element(Badge<HTML::HTMLMediaElement>, int media_id);
+
     struct MediaContextMenu {
         URL::URL media_url;
         bool is_video { false };
@@ -204,6 +207,7 @@ private:
     PendingNonBlockingDialog m_pending_non_blocking_dialog { PendingNonBlockingDialog::None };
     WeakPtr<HTML::HTMLElement> m_pending_non_blocking_dialog_target;
 
+    Vector<int> m_media_elements;
     Optional<int> m_media_context_menu_element_id;
 
     Optional<String> m_user_style_sheet_source;
