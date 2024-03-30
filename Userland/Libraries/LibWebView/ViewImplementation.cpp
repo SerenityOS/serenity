@@ -317,9 +317,25 @@ void ViewImplementation::toggle_media_controls_state()
 
 void ViewImplementation::did_change_audio_play_state(Badge<WebContentClient>, Web::HTML::AudioPlayState play_state)
 {
-    m_audio_play_state = play_state;
+    bool state_changed = false;
 
-    if (on_audio_play_state_changed)
+    switch (play_state) {
+    case Web::HTML::AudioPlayState::Paused:
+        if (--m_number_of_elements_playing_audio == 0) {
+            m_audio_play_state = play_state;
+            state_changed = true;
+        }
+        break;
+
+    case Web::HTML::AudioPlayState::Playing:
+        if (m_number_of_elements_playing_audio++ == 0) {
+            m_audio_play_state = play_state;
+            state_changed = true;
+        }
+        break;
+    }
+
+    if (state_changed && on_audio_play_state_changed)
         on_audio_play_state_changed(m_audio_play_state);
 }
 
