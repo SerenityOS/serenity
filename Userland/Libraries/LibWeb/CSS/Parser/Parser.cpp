@@ -5367,6 +5367,16 @@ RefPtr<StyleValue> Parser::parse_transition_value(TokenStream<ComponentValue>& t
                 continue;
             }
 
+            if (auto easing = parse_easing_value(tokens)) {
+                if (transition.easing) {
+                    dbgln_if(CSS_PARSER_DEBUG, "Transition property has multiple easing values");
+                    return {};
+                }
+
+                transition.easing = easing->as_easing();
+                continue;
+            }
+
             if (tokens.peek_token().is(Token::Type::Ident)) {
                 if (transition.property_name) {
                     dbgln_if(CSS_PARSER_DEBUG, "Transition property has multiple property identifiers");
@@ -5376,16 +5386,12 @@ RefPtr<StyleValue> Parser::parse_transition_value(TokenStream<ComponentValue>& t
                 auto ident = tokens.next_token().token().ident();
                 if (auto property = property_id_from_string(ident); property.has_value())
                     transition.property_name = CustomIdentStyleValue::create(ident);
+
+                continue;
             }
 
-            if (auto easing = parse_easing_value(tokens)) {
-                if (transition.easing) {
-                    dbgln_if(CSS_PARSER_DEBUG, "Transition property has multiple easing values");
-                    return {};
-                }
-
-                transition.easing = easing->as_easing();
-            }
+            dbgln_if(CSS_PARSER_DEBUG, "Transition property has unexpected token \"{}\"", tokens.peek_token().to_string());
+            return {};
         }
 
         if (!transition.property_name)
