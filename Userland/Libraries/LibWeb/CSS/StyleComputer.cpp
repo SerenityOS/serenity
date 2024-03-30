@@ -43,6 +43,7 @@
 #include <LibWeb/CSS/StyleValues/DisplayStyleValue.h>
 #include <LibWeb/CSS/StyleValues/EasingStyleValue.h>
 #include <LibWeb/CSS/StyleValues/FilterValueListStyleValue.h>
+#include <LibWeb/CSS/StyleValues/FrequencyStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackPlacementStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackSizeListStyleValue.h>
 #include <LibWeb/CSS/StyleValues/IdentifierStyleValue.h>
@@ -1231,8 +1232,48 @@ static NonnullRefPtr<StyleValue const> interpolate_box_shadow(DOM::Element& elem
 
 static NonnullRefPtr<StyleValue const> interpolate_value(DOM::Element& element, StyleValue const& from, StyleValue const& to, float delta)
 {
-    if (from.type() != to.type())
-        return delta >= 0.5f ? to : from;
+    if (from.type() != to.type()) {
+        // Handle mixed percentage and dimension types
+        static constexpr auto numeric_base_type = [](StyleValue const& value) -> Optional<CSSNumericType::BaseType> {
+            switch (value.type()) {
+            case StyleValue::Type::Length:
+                return CSSNumericType::BaseType::Length;
+            case StyleValue::Type::Angle:
+                return CSSNumericType::BaseType::Angle;
+            case StyleValue::Type::Time:
+                return CSSNumericType::BaseType::Time;
+            case StyleValue::Type::Frequency:
+                return CSSNumericType::BaseType::Frequency;
+            case StyleValue::Type::Percentage:
+                return CSSNumericType::BaseType::Percent;
+            default:
+                return {};
+            }
+        };
+        static constexpr auto to_calculation_node = [](StyleValue const& value) {
+            if (value.is_percentage())
+                return NumericCalculationNode::create(value.as_percentage().percentage());
+            if (value.is_length())
+                return NumericCalculationNode::create(value.as_length().length());
+            if (value.is_angle())
+                return NumericCalculationNode::create(value.as_angle().angle());
+            if (value.is_frequency())
+                return NumericCalculationNode::create(value.as_frequency().frequency());
+            if (value.is_time())
+                return NumericCalculationNode::create(value.as_time().time());
+            VERIFY_NOT_REACHED();
+        };
+
+        auto from_base_type = numeric_base_type(from);
+        auto to_base_type = numeric_base_type(to);
+
+        if (!from_base_type.has_value() || !to_base_type.has_value() || (*from_base_type != CSSNumericType::BaseType::Percent && *to_base_type != CSSNumericType::BaseType::Percent))
+            return delta >= 0.5f ? to : from;
+
+        auto node = InterpolationCalculationNode::create(to_calculation_node(from), to_calculation_node(to), delta);
+        auto non_percentage_base_type = *from_base_type == CSSNumericType::BaseType::Percent ? *to_base_type : *from_base_type;
+        return CalculatedStyleValue::create(node.release_nonnull<CalculationNode>(), CSSNumericType { non_percentage_base_type, 1 });
+    }
 
     switch (from.type()) {
     case StyleValue::Type::Angle:

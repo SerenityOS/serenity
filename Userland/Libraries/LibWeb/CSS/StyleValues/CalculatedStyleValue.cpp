@@ -2309,6 +2309,89 @@ bool RemCalculationNode::equals(CalculationNode const& other) const
         && m_y->equals(*static_cast<RemCalculationNode const&>(other).m_y);
 }
 
+NonnullOwnPtr<InterpolationCalculationNode> InterpolationCalculationNode::create(NonnullOwnPtr<CalculationNode> from, NonnullOwnPtr<CalculationNode> to, float delta)
+{
+    auto delta_value = NumericCalculationNode::create(Number { Number::Type::Number, static_cast<double>(delta) });
+    return adopt_own(*new (nothrow) InterpolationCalculationNode(move(from), move(to), move(delta_value)));
+}
+
+InterpolationCalculationNode::InterpolationCalculationNode(NonnullOwnPtr<CalculationNode> from, NonnullOwnPtr<CalculationNode> to, NonnullOwnPtr<CalculationNode> delta)
+    : CalculationNode(Type::Interpolation)
+    , m_from(move(from))
+    , m_to(move(to))
+    , m_delta(move(delta))
+{
+}
+
+InterpolationCalculationNode::~InterpolationCalculationNode() = default;
+
+String InterpolationCalculationNode::to_string() const
+{
+    return MUST(String::formatted("interpolation({} -> {}, {})", m_from->to_string(), m_to->to_string(), m_delta->to_string()));
+}
+
+Optional<CalculatedStyleValue::ResolvedType> InterpolationCalculationNode::resolved_type() const
+{
+    // Note: StyleComputer guarantees one of the two values is a dimension type
+    auto from_type = m_from->resolved_type();
+    auto to_type = m_to->resolved_type();
+    return from_type == CalculatedStyleValue::ResolvedType::Percentage ? to_type : from_type;
+}
+
+Optional<CSSNumericType> InterpolationCalculationNode::determine_type(PropertyID property_id) const
+{
+    auto from_type = m_from->determine_type(property_id);
+    auto to_type = m_to->determine_type(property_id);
+    if (!from_type.has_value() || !to_type.has_value())
+        return {};
+    return from_type->added_to(*to_type);
+}
+
+bool InterpolationCalculationNode::contains_percentage() const
+{
+    return true;
+}
+
+CalculatedStyleValue::CalculationResult InterpolationCalculationNode::resolve(Optional<Length::ResolutionContext const&> context, CalculatedStyleValue::PercentageBasis const& percentage_bases) const
+{
+    auto resolved_from = m_from->resolve(context, percentage_bases);
+    auto resolved_to = m_to->resolve(context, percentage_bases);
+    auto resolved_delta = m_delta->resolve(context, percentage_bases);
+
+    // from + (to - from) * delta
+    auto result = resolved_to;
+    result.subtract(resolved_from, context, percentage_bases);
+    result.multiply_by(resolved_delta, context);
+    result.add(resolved_from, context, percentage_bases);
+
+    auto result_value = resolve_value(result.value(), context);
+    auto resolved_type = m_from->resolved_type().value();
+    return to_resolved_type(resolved_type, result_value);
+}
+
+void InterpolationCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const& callback)
+{
+    m_from->for_each_child_node(callback);
+    m_to->for_each_child_node(callback);
+    callback(m_from);
+    callback(m_to);
+}
+
+void InterpolationCalculationNode::dump(StringBuilder& builder, int indent) const
+{
+    builder.appendff("{: >{}}INTERP: {}\n", "", indent, to_string());
+}
+
+bool InterpolationCalculationNode::equals(CalculationNode const& other) const
+{
+    if (this == &other)
+        return true;
+    if (type() != other.type())
+        return false;
+    auto const& other_interpolation = static_cast<InterpolationCalculationNode const&>(other);
+    return m_from->equals(*other_interpolation.m_from) && m_to->equals(*other_interpolation.m_to) && m_delta->equals(*other_interpolation.m_delta);
+}
+
 void CalculatedStyleValue::CalculationResult::add(CalculationResult const& other, Optional<Length::ResolutionContext const&> context, PercentageBasis const& percentage_basis)
 {
     add_or_subtract_internal(SumOperation::Add, other, context, percentage_basis);

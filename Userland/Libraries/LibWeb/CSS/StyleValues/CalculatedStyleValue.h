@@ -196,6 +196,9 @@ public:
         Mod,
         Rem,
 
+        // Internal type used by StyleComputer
+        Interpolation,
+
         // This only exists during parsing.
         Unparsed,
     };
@@ -791,6 +794,31 @@ private:
     RemCalculationNode(NonnullOwnPtr<CalculationNode>, NonnullOwnPtr<CalculationNode>);
     NonnullOwnPtr<CalculationNode> m_x;
     NonnullOwnPtr<CalculationNode> m_y;
+};
+
+// This is an internal node used by StyleComputer that allows the interpolation of two unresolvable
+// StyleValues to be delayed until calculation resolution
+class InterpolationCalculationNode final : public CalculationNode {
+public:
+    static NonnullOwnPtr<InterpolationCalculationNode> create(NonnullOwnPtr<CalculationNode> from, NonnullOwnPtr<CalculationNode> to, float delta);
+    ~InterpolationCalculationNode();
+
+    virtual String to_string() const override;
+    virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
+    virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
+    virtual bool contains_percentage() const override;
+    virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
+    virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override;
+
+    virtual void dump(StringBuilder&, int indent) const override;
+    virtual bool equals(CalculationNode const&) const override;
+
+private:
+    InterpolationCalculationNode(NonnullOwnPtr<CalculationNode> from, NonnullOwnPtr<CalculationNode> to, NonnullOwnPtr<CalculationNode> delta);
+
+    NonnullOwnPtr<CalculationNode> m_from;
+    NonnullOwnPtr<CalculationNode> m_to;
+    NonnullOwnPtr<CalculationNode> m_delta;
 };
 
 }
