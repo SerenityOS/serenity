@@ -1,16 +1,12 @@
-<script src="../include.js"></script><div id="foo"><iframe></iframe><script>
-    setTimeout(function () {
-        foo.remove();
-        window.done = true;
-    }, 0);
-</script></div><iframe></iframe><script>
-    asyncTest(function (done) {
-        let internalId;
-        internalId = setInterval(function () {
-            if (window.done) {
-                clearInterval(internalId);
-                done();
-            }
+<script src="../include.js"></script>
+<div id="foo">
+    <iframe></iframe>
+    <script>
+        setTimeout(function () {
+            foo.remove();
+            // Pass (didn't crash)
+            internals.signalTextTestIsDone();
         }, 0);
-    });
-</script>PASS: did not crash
+    </script>
+</div>
+<iframe></iframe>
