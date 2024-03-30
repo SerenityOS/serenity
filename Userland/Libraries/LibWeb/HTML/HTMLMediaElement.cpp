@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
- * Copyright (c) 2023, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2023-2024, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -1578,6 +1578,9 @@ void HTMLMediaElement::notify_about_playing()
     });
 
     on_playing();
+
+    if (m_audio_tracks->has_enabled_track())
+        document().page().client().page_did_change_audio_play_state(AudioPlayState::Playing);
 }
 
 void HTMLMediaElement::set_show_poster(bool show_poster)
@@ -1598,15 +1601,16 @@ void HTMLMediaElement::set_paused(bool paused)
 
     m_paused = paused;
 
-    if (m_paused)
+    if (m_paused) {
         on_paused();
+
+        if (m_audio_tracks->has_enabled_track())
+            document().page().client().page_did_change_audio_play_state(AudioPlayState::Paused);
+    }
 
     if (auto* paintable = this->paintable())
         paintable->set_needs_display();
     set_needs_style_update(true);
-
-    if (m_audio_tracks->has_enabled_track())
-        document().page().client().page_did_change_audio_play_state(paused ? AudioPlayState::Paused : AudioPlayState::Playing);
 }
 
 // https://html.spec.whatwg.org/multipage/media.html#blocked-media-element
