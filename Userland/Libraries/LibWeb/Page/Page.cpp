@@ -470,6 +470,18 @@ WebIDL::ExceptionOr<void> Page::toggle_media_controls_state()
     return {};
 }
 
+void Page::toggle_page_mute_state()
+{
+    m_mute_state = HTML::invert_mute_state(m_mute_state);
+
+    for (auto media_id : m_media_elements) {
+        if (auto* node = DOM::Node::from_unique_id(media_id)) {
+            auto& media_element = verify_cast<HTML::HTMLMediaElement>(*node);
+            media_element.page_mute_state_changed({});
+        }
+    }
+}
+
 JS::GCPtr<HTML::HTMLMediaElement> Page::media_context_menu_element()
 {
     if (!m_media_context_menu_element_id.has_value())

@@ -315,6 +315,12 @@ void ViewImplementation::toggle_media_controls_state()
     client().async_toggle_media_controls_state(page_id());
 }
 
+void ViewImplementation::toggle_page_mute_state()
+{
+    m_mute_state = Web::HTML::invert_mute_state(m_mute_state);
+    client().async_toggle_page_mute_state(page_id());
+}
+
 void ViewImplementation::did_change_audio_play_state(Badge<WebContentClient>, Web::HTML::AudioPlayState play_state)
 {
     bool state_changed = false;

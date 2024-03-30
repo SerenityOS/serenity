@@ -98,6 +98,8 @@ public:
     bool muted() const { return m_muted; }
     void set_muted(bool);
 
+    void page_mute_state_changed(Badge<Page>);
+
     double effective_media_volume() const;
 
     JS::NonnullGCPtr<AudioTrackList> audio_tracks() const { return *m_audio_tracks; }

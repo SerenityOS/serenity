@@ -1072,6 +1072,12 @@ void ConnectionFromClient::toggle_media_controls_state(u64 page_id)
         page->page().toggle_media_controls_state().release_value_but_fixme_should_propagate_errors();
 }
 
+void ConnectionFromClient::toggle_page_mute_state(u64 page_id)
+{
+    if (auto page = this->page(page_id); page.has_value())
+        page->page().toggle_page_mute_state();
+}
+
 void ConnectionFromClient::set_user_style(u64 page_id, String const& source)
 {
     if (auto page = this->page(page_id); page.has_value())

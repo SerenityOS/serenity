@@ -102,6 +102,9 @@ public:
     void toggle_media_loop_state();
     void toggle_media_controls_state();
 
+    Web::HTML::MuteState page_mute_state() const { return m_mute_state; }
+    void toggle_page_mute_state();
+
     void did_change_audio_play_state(Badge<WebContentClient>, Web::HTML::AudioPlayState);
     Web::HTML::AudioPlayState audio_play_state() const { return m_audio_play_state; }
 
@@ -261,6 +264,8 @@ protected:
 
     Web::HTML::AudioPlayState m_audio_play_state { Web::HTML::AudioPlayState::Paused };
     size_t m_number_of_elements_playing_audio { 0 };
+
+    Web::HTML::MuteState m_mute_state { Web::HTML::MuteState::Unmuted };
 };
 
 }
