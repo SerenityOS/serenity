@@ -649,29 +649,32 @@ void BrowserWindow::tab_favicon_changed(int index, QIcon const& icon)
 
 void BrowserWindow::tab_audio_play_state_changed(int index, Web::HTML::AudioPlayState play_state)
 {
+    auto* tab = verify_cast<Tab>(m_tabs_container->widget(index));
+
     switch (play_state) {
     case Web::HTML::AudioPlayState::Paused:
-        if (view().page_mute_state() == Web::HTML::MuteState::Unmuted)
+        if (tab->view().page_mute_state() == Web::HTML::MuteState::Unmuted)
             m_tabs_container->tabBar()->setTabButton(index, QTabBar::LeftSide, nullptr);
         break;
 
     case Web::HTML::AudioPlayState::Playing:
-        auto* button = new QPushButton(icon_for_page_mute_state(), {});
-        button->setToolTip(tool_tip_for_page_mute_state());
+        auto* button = new QPushButton(icon_for_page_mute_state(*tab), {});
+        button->setToolTip(tool_tip_for_page_mute_state(*tab));
         button->setFlat(true);
         button->resize({ 20, 20 });
 
-        connect(button, &QPushButton::clicked, this, [this, index]() {
-            view().toggle_page_mute_state();
+        connect(button, &QPushButton::clicked, this, [this, tab]() {
+            tab->view().toggle_page_mute_state();
+            auto index = tab_index(tab);
 
-            switch (view().audio_play_state()) {
+            switch (tab->view().audio_play_state()) {
             case Web::HTML::AudioPlayState::Paused:
                 m_tabs_container->tabBar()->setTabButton(index, QTabBar::LeftSide, nullptr);
                 break;
             case Web::HTML::AudioPlayState::Playing:
                 auto* button = m_tabs_container->tabBar()->tabButton(index, QTabBar::LeftSide);
-                verify_cast<QPushButton>(button)->setIcon(icon_for_page_mute_state());
-                button->setToolTip(tool_tip_for_page_mute_state());
+                verify_cast<QPushButton>(button)->setIcon(icon_for_page_mute_state(*tab));
+                button->setToolTip(tool_tip_for_page_mute_state(*tab));
                 break;
             }
         });
@@ -681,9 +684,9 @@ void BrowserWindow::tab_audio_play_state_changed(int index, Web::HTML::AudioPlay
     }
 }
 
-QIcon BrowserWindow::icon_for_page_mute_state() const
+QIcon BrowserWindow::icon_for_page_mute_state(Tab& tab) const
 {
-    switch (view().page_mute_state()) {
+    switch (tab.view().page_mute_state()) {
     case Web::HTML::MuteState::Muted:
         return style()->standardIcon(QStyle::SP_MediaVolumeMuted);
     case Web::HTML::MuteState::Unmuted:
@@ -693,9 +696,9 @@ QIcon BrowserWindow::icon_for_page_mute_state() const
     VERIFY_NOT_REACHED();
 }
 
-QString BrowserWindow::tool_tip_for_page_mute_state() const
+QString BrowserWindow::tool_tip_for_page_mute_state(Tab& tab) const
 {
-    switch (view().page_mute_state()) {
+    switch (tab.view().page_mute_state()) {
     case Web::HTML::MuteState::Muted:
         return "Unmute tab";
     case Web::HTML::MuteState::Unmuted:
