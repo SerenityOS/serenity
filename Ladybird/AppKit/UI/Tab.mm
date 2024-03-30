@@ -192,6 +192,7 @@ static constexpr CGFloat const WINDOW_HEIGHT = 800;
 
     case Web::HTML::AudioPlayState::Playing:
         [button setImage:[self iconForPageMuteState]];
+        [button setToolTip:[self toolTipForPageMuteState]];
         break;
     }
 }
@@ -205,6 +206,20 @@ static constexpr CGFloat const WINDOW_HEIGHT = 800;
         return [NSImage imageNamed:NSImageNameTouchBarAudioOutputVolumeOffTemplate];
     case Web::HTML::MuteState::Unmuted:
         return [NSImage imageNamed:NSImageNameTouchBarAudioOutputVolumeHighTemplate];
+    }
+
+    VERIFY_NOT_REACHED();
+}
+
+- (NSString*)toolTipForPageMuteState
+{
+    auto& view = [[self web_view] view];
+
+    switch (view.page_mute_state()) {
+    case Web::HTML::MuteState::Muted:
+        return @"Unmute tab";
+    case Web::HTML::MuteState::Unmuted:
+        return @"Mute tab";
     }
 
     VERIFY_NOT_REACHED();
@@ -321,6 +336,8 @@ static constexpr CGFloat const WINDOW_HEIGHT = 800;
         auto* button = [NSButton buttonWithImage:[self iconForPageMuteState]
                                           target:self
                                           action:@selector(togglePageMuteState:)];
+        [button setToolTip:[self toolTipForPageMuteState]];
+
         [[self tab] setAccessoryView:button];
         break;
     }
