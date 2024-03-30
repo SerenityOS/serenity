@@ -135,11 +135,14 @@ public:
     String name() const;
     void set_name(String const&);
     String status() const;
+    void close();
+    bool closed() const;
     void set_status(String const&);
     [[nodiscard]] JS::NonnullGCPtr<Location> location();
     JS::NonnullGCPtr<History> history() const;
     JS::NonnullGCPtr<Navigation> navigation();
     void focus();
+    void blur();
 
     JS::NonnullGCPtr<WindowProxy> frames() const;
     u32 length();

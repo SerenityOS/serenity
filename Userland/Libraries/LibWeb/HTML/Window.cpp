@@ -874,6 +874,21 @@ String Window::status() const
     return m_status;
 }
 
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-window-close
+void Window::close()
+{
+    // FIXME: Implement this properly
+    dbgln("(STUBBED) Window::close()");
+}
+
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-window-closed
+bool Window::closed() const
+{
+    // FIXME: Implement this properly
+    dbgln("(STUBBED) Window::closed");
+    return false;
+}
+
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-window-status
 void Window::set_status(String const& status)
 {
@@ -916,6 +931,12 @@ void Window::focus()
 
     // FIXME: 4. If current is a top-level traversable, user agents are encouraged to trigger some sort of notification to
     //           indicate to the user that the page is attempting to gain focus.
+}
+
+// https://html.spec.whatwg.org/multipage/interaction.html#dom-window-blur
+void Window::blur()
+{
+    // The blur() method steps are to do nothing.
 }
 
 // https://html.spec.whatwg.org/multipage/window-object.html#dom-frames
