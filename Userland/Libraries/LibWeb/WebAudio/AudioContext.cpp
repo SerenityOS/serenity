@@ -155,10 +155,10 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> AudioContext::resume()
     }
 
     // 7.5: queue a media element task to execute the following steps:
-    queue_a_media_element_task([&realm, &promise, this]() {
+    queue_a_media_element_task([&realm, promise, this]() {
         // 7.5.1: Resolve all promises from [[pending resume promises]] in order.
-        for (auto const& promise : m_pending_resume_promises) {
-            *promise->resolve();
+        for (auto const& pending_resume_promise : m_pending_resume_promises) {
+            *pending_resume_promise->resolve();
         }
 
         // 7.5.2: Clear [[pending resume promises]].
@@ -220,7 +220,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> AudioContext::suspend()
     set_rendering_state(Bindings::AudioContextState::Suspended);
 
     // 7.3: queue a media element task to execute the following steps:
-    queue_a_media_element_task([&realm, &promise, this]() {
+    queue_a_media_element_task([&realm, promise, this]() {
         // 7.3.1: Resolve promise.
         *promise->resolve();
 
@@ -270,7 +270,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> AudioContext::close()
     // FIXME: 5.3: If this control message is being run in a reaction to the document being unloaded, abort this algorithm.
 
     // 5.4: queue a media element task to execute the following steps:
-    queue_a_media_element_task([&realm, &promise, this]() {
+    queue_a_media_element_task([&realm, promise, this]() {
         // 5.4.1: Resolve promise.
         *promise->resolve();
 
