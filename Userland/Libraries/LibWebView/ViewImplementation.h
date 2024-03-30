@@ -260,6 +260,7 @@ protected:
     RefPtr<Core::Promise<LexicalPath>> m_pending_screenshot;
 
     Web::HTML::AudioPlayState m_audio_play_state { Web::HTML::AudioPlayState::Paused };
+    size_t m_number_of_elements_playing_audio { 0 };
 };
 
 }
