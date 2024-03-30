@@ -4185,8 +4185,9 @@ void Document::ensure_animation_timer()
                 m_animation_driver_timer->stop();
                 return;
             }
-
-            update_animations_and_send_events(window()->performance()->now());
+            auto* window_or_worker = dynamic_cast<HTML::WindowOrWorkerGlobalScopeMixin*>(&realm().global_object());
+            VERIFY(window_or_worker);
+            update_animations_and_send_events(window_or_worker->performance()->now());
         }));
     }
 
