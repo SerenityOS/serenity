@@ -36,6 +36,7 @@ source_set("Layout") {
     "RadioButton.cpp",
     "ReplacedBox.cpp",
     "SVGBox.cpp",
+    "SVGClipBox.cpp",
     "SVGFormattingContext.cpp",
     "SVGGeometryBox.cpp",
     "SVGGraphicsBox.cpp",

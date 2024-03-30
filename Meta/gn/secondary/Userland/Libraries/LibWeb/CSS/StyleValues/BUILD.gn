@@ -32,6 +32,7 @@ source_set("StyleValues") {
     "ShorthandStyleValue.cpp",
     "StyleValueList.cpp",
     "TransformationStyleValue.cpp",
+    "TransitionStyleValue.cpp",
     "UnresolvedStyleValue.cpp",
   ]
 }
