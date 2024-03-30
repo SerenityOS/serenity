@@ -167,6 +167,9 @@ public:
     WebIDL::ExceptionOr<void> toggle_media_loop_state();
     WebIDL::ExceptionOr<void> toggle_media_controls_state();
 
+    HTML::MuteState page_mute_state() const { return m_mute_state; }
+    void toggle_page_mute_state();
+
     Optional<String> const& user_style() const { return m_user_style_sheet_source; }
     void set_user_style(String source);
 
@@ -209,6 +212,8 @@ private:
 
     Vector<int> m_media_elements;
     Optional<int> m_media_context_menu_element_id;
+
+    Web::HTML::MuteState m_mute_state { Web::HTML::MuteState::Unmuted };
 
     Optional<String> m_user_style_sheet_source;
 

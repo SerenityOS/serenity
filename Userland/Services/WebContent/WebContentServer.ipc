@@ -98,6 +98,8 @@ endpoint WebContentServer
     toggle_media_loop_state(u64 page_id) =|
     toggle_media_controls_state(u64 page_id) =|
 
+    toggle_page_mute_state(u64 page_id) =|
+
     set_user_style(u64 page_id, String source) =|
 
     enable_inspector_prototype(u64 page_id) =|
