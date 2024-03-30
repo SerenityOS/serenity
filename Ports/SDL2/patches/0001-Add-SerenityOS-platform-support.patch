@@ -145,7 +145,7 @@ index c4aec174e35ee653c4c4e0449939054e0f68ad9d..2f88b7f8790df95838e7de7a45789804
 +    set(SDL_THREAD_PTHREAD_RECURSIVE_MUTEX 1)
 +    set(HAVE_VIDEO_OPENGL TRUE)
 +    set(SDL_VIDEO_OPENGL 1)
-+    list(APPEND EXTRA_LIBS ipc gui gfx gl core)
++    list(APPEND EXTRA_LIBS ipc gui gfx gl core coreminimal)
 +endmacro(CheckSerenity)
 +
  # Requires:
