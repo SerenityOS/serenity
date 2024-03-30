@@ -10,7 +10,7 @@ useconfigure=true
 use_fresh_config_sub=true
 configopts=("--prefix=/usr/local" "--disable-utmp" "--disable-strip" "--sysconfdir=/etc/ssh" "--with-ssl-dir=${SERENITY_INSTALL_ROOT}/usr/local/lib")
 
-export LDFLAGS="-lcrypt -lcore"
+export LDFLAGS="-lcrypt -lcore -lcoreminimal"
 
 pre_configure() {
     run autoreconf

@@ -41,7 +41,7 @@ index e29f9d5ad78d6da367579dfda7b8e9c0d09be2c9..769c2fd8b5a7e0000c85d6d44ec30f64
      LIBS_unix := -ljvm, \
      LIBS_linux := $(LIBDL), \
      LIBS_aix := $(LIBDL) $(LIBM),\
-+    LIBS_serenity := $(LIBDL) -lcore, \
++    LIBS_serenity := $(LIBDL) -lcore -lcoreminimal, \
      LIBS_macosx := -framework CoreFoundation \
          -framework Foundation \
          -framework SystemConfiguration, \
