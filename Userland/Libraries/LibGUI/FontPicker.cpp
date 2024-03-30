@@ -8,7 +8,7 @@
 #include <AK/QuickSort.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/FontPicker.h>
-#include <LibGUI/FontPickerDialogGML.h>
+#include <LibGUI/FontPickerDialogWidget.h>
 #include <LibGUI/ItemListModel.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/ListView.h>
@@ -26,8 +26,8 @@ FontPicker::FontPicker(Window* parent_window, Gfx::Font const* current_font, boo
     resize(430, 280);
     set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-font-editor.png"sv).release_value_but_fixme_should_propagate_errors());
 
-    auto widget = set_main_widget<GUI::Widget>();
-    widget->load_from_gml(font_picker_dialog_gml).release_value_but_fixme_should_propagate_errors();
+    auto widget = FontPickerDialogWidget::try_create().release_value_but_fixme_should_propagate_errors();
+    set_main_widget(widget);
 
     m_family_list_view = *widget->find_descendant_of_type_named<ListView>("family_list_view");
     m_family_list_view->set_model(ItemListModel<FlyString>::create(m_families));
