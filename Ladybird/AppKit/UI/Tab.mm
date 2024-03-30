@@ -11,6 +11,7 @@
 #include <LibGfx/ImageFormats/PNGWriter.h>
 #include <LibGfx/ShareableBitmap.h>
 #include <LibURL/URL.h>
+#include <LibWebView/ViewImplementation.h>
 
 #import <Application/ApplicationDelegate.h>
 #import <UI/Inspector.h>
@@ -179,6 +180,36 @@ static constexpr CGFloat const WINDOW_HEIGHT = 800;
     [[self tab] setAttributedTitle:title_and_favicon];
 }
 
+- (void)togglePageMuteState:(id)button
+{
+    auto& view = [[self web_view] view];
+    view.toggle_page_mute_state();
+
+    switch (view.audio_play_state()) {
+    case Web::HTML::AudioPlayState::Paused:
+        [[self tab] setAccessoryView:nil];
+        break;
+
+    case Web::HTML::AudioPlayState::Playing:
+        [button setImage:[self iconForPageMuteState]];
+        break;
+    }
+}
+
+- (NSImage*)iconForPageMuteState
+{
+    auto& view = [[self web_view] view];
+
+    switch (view.page_mute_state()) {
+    case Web::HTML::MuteState::Muted:
+        return [NSImage imageNamed:NSImageNameTouchBarAudioOutputVolumeOffTemplate];
+    case Web::HTML::MuteState::Unmuted:
+        return [NSImage imageNamed:NSImageNameTouchBarAudioOutputVolumeHighTemplate];
+    }
+
+    VERIFY_NOT_REACHED();
+}
+
 - (void)onContentScroll:(NSNotification*)notification
 {
     [[self web_view] handleScroll];
@@ -277,20 +308,19 @@ static constexpr CGFloat const WINDOW_HEIGHT = 800;
 
 - (void)onAudioPlayStateChange:(Web::HTML::AudioPlayState)play_state
 {
+    auto& view = [[self web_view] view];
+
     switch (play_state) {
     case Web::HTML::AudioPlayState::Paused:
-        [[self tab] setAccessoryView:nil];
+        if (view.page_mute_state() == Web::HTML::MuteState::Unmuted) {
+            [[self tab] setAccessoryView:nil];
+        }
         break;
 
     case Web::HTML::AudioPlayState::Playing:
-        auto* icon = [NSImage imageNamed:NSImageNameTouchBarAudioOutputVolumeHighTemplate];
-        auto* button = [NSButton buttonWithImage:icon target:nil action:nil];
-
-        // FIXME: Add a click handler to mute the tab.
-        NSButtonCell* cell = [button cell];
-        [cell setImageDimsWhenDisabled:NO];
-        [button setEnabled:NO];
-
+        auto* button = [NSButton buttonWithImage:[self iconForPageMuteState]
+                                          target:self
+                                          action:@selector(togglePageMuteState:)];
         [[self tab] setAccessoryView:button];
         break;
     }
