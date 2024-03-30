@@ -578,6 +578,10 @@ TEST_CASE(test_jpeg2000_simple)
     auto plugin_decoder = TRY_OR_FAIL(Gfx::JPEG2000ImageDecoderPlugin::create(file->bytes()));
 
     EXPECT_EQ(plugin_decoder->size(), Gfx::IntSize(119, 101));
+
+    auto icc_bytes = MUST(plugin_decoder->icc_data());
+    EXPECT(icc_bytes.has_value());
+    EXPECT_EQ(icc_bytes->size(), 3144u);
 }
 
 TEST_CASE(test_pam_rgb)
