@@ -37,8 +37,6 @@ public:
 
     void visit_edges(Cell::Visitor&) override;
 
-    JS::NonnullGCPtr<SessionHistoryEntry> clone() const;
-
     JS::GCPtr<DOM::Document> document() const;
 
     enum class Pending {
