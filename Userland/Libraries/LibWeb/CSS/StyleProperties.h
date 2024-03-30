@@ -63,6 +63,7 @@ public:
     void set_animated_property(CSS::PropertyID, NonnullRefPtr<StyleValue const> value);
     NonnullRefPtr<StyleValue const> property(CSS::PropertyID) const;
     RefPtr<StyleValue const> maybe_null_property(CSS::PropertyID) const;
+    RefPtr<StyleValue const> maybe_null_property_ignoring_animations(CSS::PropertyID) const;
     CSS::CSSStyleDeclaration const* property_source_declaration(CSS::PropertyID) const;
 
     CSS::Size size_value(CSS::PropertyID) const;

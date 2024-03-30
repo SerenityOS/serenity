@@ -1377,7 +1377,7 @@ static ValueComparingRefPtr<StyleValue const> interpolate_property(DOM::Element&
     }
 }
 
-void StyleComputer::collect_animation_into(DOM::Element& element, Optional<CSS::Selector::PseudoElement::Type> pseudo_element, JS::NonnullGCPtr<Animations::KeyframeEffect> effect, StyleProperties& style_properties, AnimationRefresh refresh) const
+void StyleComputer::collect_animation_into(DOM::Element& element, Optional<CSS::Selector::PseudoElement::Type> pseudo_element, JS::NonnullGCPtr<Animations::KeyframeEffect> effect, StyleProperties& style_properties) const
 {
     auto animation = effect->associated_animation();
     if (!animation)
@@ -1430,9 +1430,9 @@ void StyleComputer::collect_animation_into(DOM::Element& element, Optional<CSS::
         auto resolve_property = [&](auto& property) {
             return property.visit(
                 [&](Animations::KeyframeEffect::KeyFrameSet::UseInitial) -> RefPtr<StyleValue const> {
-                    if (refresh == AnimationRefresh::Yes)
-                        return {};
-                    return style_properties.maybe_null_property(it.key);
+                    // maybe_null_property() can return the result of the last animation effect stack, but we need the
+                    // element's underlying value here
+                    return style_properties.maybe_null_property_ignoring_animations(it.key);
                 },
                 [&](RefPtr<StyleValue const> value) -> RefPtr<StyleValue const> {
                     if (value->is_unresolved())

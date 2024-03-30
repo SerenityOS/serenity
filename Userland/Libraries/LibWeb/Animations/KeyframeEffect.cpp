@@ -914,7 +914,7 @@ void KeyframeEffect::update_style_properties()
     auto animated_properties_before_update = style->animated_property_values();
 
     auto& document = target->document();
-    document.style_computer().collect_animation_into(*target, pseudo_element_type(), *this, *style, CSS::StyleComputer::AnimationRefresh::Yes);
+    document.style_computer().collect_animation_into(*target, pseudo_element_type(), *this, *style);
 
     // Traversal of the subtree is necessary to update the animated properties inherited from the target element.
     target->for_each_in_subtree_of_type<DOM::Element>([&](auto& element) {

@@ -75,6 +75,11 @@ RefPtr<StyleValue const> StyleProperties::maybe_null_property(CSS::PropertyID pr
     return m_property_values[to_underlying(property_id)].style;
 }
 
+RefPtr<StyleValue const> StyleProperties::maybe_null_property_ignoring_animations(CSS::PropertyID property_id) const
+{
+    return m_property_values[to_underlying(property_id)].style;
+}
+
 CSS::CSSStyleDeclaration const* StyleProperties::property_source_declaration(CSS::PropertyID property_id) const
 {
     return m_property_values[to_underlying(property_id)].declaration;
