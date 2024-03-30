@@ -58,7 +58,6 @@
 #include <LibWeb/HTML/TraversableNavigable.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/HTML/WindowProxy.h>
-#include <LibWeb/HighResolutionTime/Performance.h>
 #include <LibWeb/HighResolutionTime/TimeOrigin.h>
 #include <LibWeb/Infra/Base64.h>
 #include <LibWeb/Infra/CharacterTypes.h>
@@ -121,7 +120,6 @@ void Window::visit_edges(JS::Cell::Visitor& visitor)
 
     visitor.visit(m_associated_document);
     visitor.visit(m_current_event);
-    visitor.visit(m_performance);
     visitor.visit(m_screen);
     visitor.visit(m_location);
     visitor.visit(m_crypto);
@@ -1570,14 +1568,6 @@ JS::GCPtr<Selection::Selection> Window::get_selection() const
 {
     // The method must invoke and return the result of getSelection() on this's Window.document attribute.
     return associated_document().get_selection();
-}
-
-// https://w3c.github.io/hr-time/#dom-windoworworkerglobalscope-performance
-JS::NonnullGCPtr<HighResolutionTime::Performance> Window::performance()
-{
-    if (!m_performance)
-        m_performance = heap().allocate<HighResolutionTime::Performance>(realm(), *this);
-    return JS::NonnullGCPtr { *m_performance };
 }
 
 // https://w3c.github.io/webcrypto/#dom-windoworworkerglobalscope-crypto

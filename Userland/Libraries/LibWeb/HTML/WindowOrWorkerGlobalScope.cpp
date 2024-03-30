@@ -25,6 +25,7 @@
 #include <LibWeb/HTML/Timer.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/HTML/WindowOrWorkerGlobalScope.h>
+#include <LibWeb/HighResolutionTime/Performance.h>
 #include <LibWeb/HighResolutionTime/SupportedPerformanceTypes.h>
 #include <LibWeb/Infra/Base64.h>
 #include <LibWeb/PerformanceTimeline/EntryTypes.h>
@@ -57,6 +58,7 @@ void WindowOrWorkerGlobalScopeMixin::initialize(JS::Realm&)
 
 void WindowOrWorkerGlobalScopeMixin::visit_edges(JS::Cell::Visitor& visitor)
 {
+    visitor.visit(m_performance);
     for (auto& it : m_timers)
         visitor.visit(it.value);
     for (auto& observer : m_registered_performance_observer_objects)
@@ -583,6 +585,14 @@ void WindowOrWorkerGlobalScopeMixin::run_steps_after_a_timeout_impl(i32 timeout,
     // FIXME:    5. If timerKey is a non-numeric value, remove global's map of active timers[timerKey].
 
     timer->start();
+}
+
+// https://w3c.github.io/hr-time/#dom-windoworworkerglobalscope-performance
+JS::NonnullGCPtr<HighResolutionTime::Performance> WindowOrWorkerGlobalScopeMixin::performance()
+{
+    if (!m_performance)
+        m_performance = this_impl().heap().allocate<HighResolutionTime::Performance>(this_impl().realm(), *this);
+    return JS::NonnullGCPtr { *m_performance };
 }
 
 }

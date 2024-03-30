@@ -1,5 +1,6 @@
 #import <Fetch/Request.idl>
 #import <Fetch/Response.idl>
+#import <HighResolutionTime/Performance.idl>
 #import <HTML/MessagePort.idl>
 
 // FIXME: Support VoidFunction in the IDL parser
@@ -38,4 +39,7 @@ interface mixin WindowOrWorkerGlobalScope {
 
     // https://fetch.spec.whatwg.org/#fetch-method
     [NewObject] Promise<Response> fetch(RequestInfo input, optional RequestInit init = {});
+
+    // https://w3c.github.io/hr-time/#the-performance-attribute
+    [Replaceable] readonly attribute Performance performance;
 };

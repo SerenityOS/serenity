@@ -9,6 +9,7 @@
 
 #include <LibCore/ElapsedTimer.h>
 #include <LibWeb/DOM/EventTarget.h>
+#include <LibWeb/HTML/WindowOrWorkerGlobalScope.h>
 #include <LibWeb/UserTiming/PerformanceMark.h>
 #include <LibWeb/UserTiming/PerformanceMeasure.h>
 
@@ -36,7 +37,7 @@ public:
     WebIDL::ExceptionOr<Vector<JS::Handle<PerformanceTimeline::PerformanceEntry>>> get_entries_by_name(String const& name, Optional<String> type) const;
 
 private:
-    explicit Performance(HTML::Window&);
+    explicit Performance(HTML::WindowOrWorkerGlobalScopeMixin&);
 
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
@@ -44,7 +45,7 @@ private:
     WebIDL::ExceptionOr<HighResolutionTime::DOMHighResTimeStamp> convert_name_to_timestamp(JS::Realm& realm, String const& name);
     WebIDL::ExceptionOr<HighResolutionTime::DOMHighResTimeStamp> convert_mark_to_timestamp(JS::Realm& realm, Variant<String, HighResolutionTime::DOMHighResTimeStamp> mark);
 
-    JS::NonnullGCPtr<HTML::Window> m_window;
+    JS::NonnullGCPtr<HTML::WindowOrWorkerGlobalScopeMixin> m_window_or_worker;
     JS::GCPtr<NavigationTiming::PerformanceTiming> m_timing;
 
     Core::ElapsedTimer m_timer;

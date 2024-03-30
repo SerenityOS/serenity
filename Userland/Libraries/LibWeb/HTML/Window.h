@@ -196,8 +196,6 @@ public:
 
     JS::GCPtr<Selection::Selection> get_selection() const;
 
-    [[nodiscard]] JS::NonnullGCPtr<HighResolutionTime::Performance> performance();
-
     [[nodiscard]] JS::NonnullGCPtr<Crypto::Crypto> crypto();
 
     [[nodiscard]] JS::NonnullGCPtr<CustomElementRegistry> custom_elements();
@@ -246,7 +244,6 @@ private:
     // https://html.spec.whatwg.org/multipage/webappapis.html#import-maps-allowed
     bool m_import_maps_allowed { true };
 
-    JS::GCPtr<HighResolutionTime::Performance> m_performance;
     JS::GCPtr<Crypto::Crypto> m_crypto;
     JS::GCPtr<CSS::Screen> m_screen;
     JS::GCPtr<Navigator> m_navigator;
