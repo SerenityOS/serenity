@@ -399,7 +399,7 @@ public:
 
 private:
     Vector<Optional<Reference>> m_elements;
-    TableType const& m_type;
+    TableType m_type;
 };
 
 class MemoryInstance {
@@ -459,7 +459,7 @@ private:
     {
     }
 
-    MemoryType const& m_type;
+    MemoryType m_type;
     size_t m_size { 0 };
     ByteBuffer m_data;
 };
