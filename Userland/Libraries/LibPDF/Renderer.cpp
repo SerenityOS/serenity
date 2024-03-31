@@ -1166,6 +1166,13 @@ PDFErrorOr<Renderer::LoadedImage> Renderer::load_image(NonnullRefPtr<StreamObjec
 
     int const n_components = color_space->number_of_components();
 
+    Vector<float> decode_array;
+    if (image_dict->contains(CommonNames::Decode)) {
+        decode_array = MUST(image_dict->get_array(m_document, CommonNames::Decode))->float_elements();
+    } else {
+        decode_array = color_space->default_decode();
+    }
+
     Vector<u8> resampled_storage;
     if (bits_per_component < 8) {
         UpsampleMode mode = color_space->family() == ColorSpaceFamily::Indexed ? UpsampleMode::StoreValuesUnchanged : UpsampleMode::UpsampleTo8Bit;
@@ -1187,12 +1194,6 @@ PDFErrorOr<Renderer::LoadedImage> Renderer::load_image(NonnullRefPtr<StreamObjec
         bits_per_component = 8;
     }
 
-    Vector<float> decode_array;
-    if (image_dict->contains(CommonNames::Decode)) {
-        decode_array = MUST(image_dict->get_array(m_document, CommonNames::Decode))->float_elements();
-    } else {
-        decode_array = color_space->default_decode();
-    }
     Vector<LinearInterpolation1D> component_value_decoders;
     component_value_decoders.ensure_capacity(decode_array.size());
     for (size_t i = 0; i < decode_array.size(); i += 2) {
