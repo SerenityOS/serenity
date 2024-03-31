@@ -9,6 +9,7 @@
 #include <AK/Types.h>
 #include <LibGUI/Dialog.h>
 
+namespace TwentyFourtyEight {
 class GameSizeDialog : public GUI::Dialog {
     C_OBJECT(GameSizeDialog)
 public:
@@ -25,3 +26,4 @@ private:
     bool m_evil_ai;
     bool m_temporary { false };
 };
+}

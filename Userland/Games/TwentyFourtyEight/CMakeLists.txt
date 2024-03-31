@@ -4,19 +4,16 @@ serenity_component(
     TARGETS 2048
 )
 
-stringify_gml(GameSizeDialog.gml GameSizeDialogGML.h game_size_dialog_gml)
-stringify_gml(GameWindow.gml GameWindowGML.h game_window_gml)
+compile_gml(GameSizeDialog.gml GameSizeDialogGML.cpp)
+compile_gml(GameWindowWidget.gml GameWindowWidgetGML.cpp)
 
 set(SOURCES
     BoardView.cpp
     Game.cpp
     GameSizeDialog.cpp
+    GameSizeDialogGML.cpp
+    GameWindowWidgetGML.cpp
     main.cpp
-)
-
-set(GENERATED_SOURCES
-    GameSizeDialogGML.h
-    GameWindowGML.h
 )
 
 serenity_app(2048 ICON app-2048)
