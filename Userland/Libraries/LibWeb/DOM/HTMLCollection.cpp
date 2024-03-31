@@ -50,7 +50,7 @@ void HTMLCollection::visit_edges(Cell::Visitor& visitor)
         visitor.visit(element);
 }
 
-JS::MarkedVector<Element*> HTMLCollection::collect_matching_elements() const
+JS::MarkedVector<JS::NonnullGCPtr<Element>> HTMLCollection::collect_matching_elements() const
 {
     if (m_cached_dom_tree_version != root()->document().dom_tree_version()) {
         m_cached_elements.clear();
@@ -70,7 +70,7 @@ JS::MarkedVector<Element*> HTMLCollection::collect_matching_elements() const
         m_cached_dom_tree_version = root()->document().dom_tree_version();
     }
 
-    JS::MarkedVector<Element*> elements(heap());
+    JS::MarkedVector<JS::NonnullGCPtr<Element>> elements(heap());
     for (auto& element : m_cached_elements)
         elements.append(element);
     return elements;
