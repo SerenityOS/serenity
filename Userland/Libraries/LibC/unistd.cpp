@@ -448,6 +448,9 @@ static int ttyname_r_for_directory(char const* directory_name, dev_t device_mode
             }
 
             name_path = (char*)malloc(name_length);
+            // FIXME: ttyname_r() is not allowed to return ENOMEM, find better way to store name_path,
+            //        perhaps a static storage.
+            VERIFY(name_path);
             memset(name_path, 0, name_length);
             memcpy(name_path, directory_name, strlen(directory_name));
             memcpy(&name_path[strlen(directory_name)], entry->d_name, strlen(entry->d_name));
