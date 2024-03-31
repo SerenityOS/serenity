@@ -1,1 +1,1 @@
-Signed OK ... [13 bytes total] (Hello friends)
+Signed OK
