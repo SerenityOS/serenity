@@ -7,6 +7,7 @@
 
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/CSS/StyleProperties.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/HTML/DOMStringMap.h>
@@ -105,6 +106,19 @@ void SVGElement::focus()
 void SVGElement::blur()
 {
     dbgln("(STUBBED) SVGElement::blur()");
+}
+
+JS::NonnullGCPtr<SVGAnimatedLength> SVGElement::svg_animated_length_for_property(CSS::PropertyID property) const
+{
+    // FIXME: Create a proper animated value when animations are supported.
+    auto make_length = [&] {
+        if (auto const* style = computed_css_values(); style) {
+            if (auto length = style->length_percentage(property); length.has_value())
+                return SVGLength::from_length_percentage(realm(), *length);
+        }
+        return SVGLength::create(realm(), 0, 0.0f);
+    };
+    return SVGAnimatedLength::create(realm(), make_length(), make_length());
 }
 
 }
