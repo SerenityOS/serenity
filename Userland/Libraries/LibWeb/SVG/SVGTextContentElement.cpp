@@ -51,10 +51,16 @@ ByteString SVGTextContentElement::text_contents() const
 }
 
 // https://svgwg.org/svg2-draft/text.html#__svg__SVGTextContentElement__getNumberOfChars
-WebIDL::ExceptionOr<int> SVGTextContentElement::get_number_of_chars() const
+WebIDL::ExceptionOr<WebIDL::Long> SVGTextContentElement::get_number_of_chars() const
 {
     auto chars = TRY_OR_THROW_OOM(vm(), utf8_to_utf16(text_contents()));
-    return static_cast<int>(chars.size());
+    return static_cast<WebIDL::Long>(chars.size());
+}
+
+JS::NonnullGCPtr<Geometry::DOMPoint> SVGTextContentElement::get_start_position_of_char(WebIDL::UnsignedLong charnum)
+{
+    dbgln("(STUBBED) SVGTextContentElement::get_start_position_of_char(charnum={}). Called on: {}", charnum, debug_description());
+    return Geometry::DOMPoint::from_point(vm(), Geometry::DOMPointInit {});
 }
 
 }
