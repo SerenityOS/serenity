@@ -12,7 +12,7 @@
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/SpinBox.h>
-#include <Userland/Games/2048/GameSizeDialogGML.h>
+#include <Userland/Games/TwentyFourtyEight/GameSizeDialogGML.h>
 
 GameSizeDialog::GameSizeDialog(GUI::Window* parent, size_t board_size, size_t target, bool evil_ai)
     : GUI::Dialog(parent)
