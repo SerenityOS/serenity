@@ -484,7 +484,8 @@ bool Parser::match_unary_expression()
         || type == Token::Type::Tilde
         || type == Token::Type::Plus
         || type == Token::Type::Minus
-        || type == Token::Type::And;
+        || type == Token::Type::And
+        || type == Token::Type::Asterisk;
 }
 
 NonnullRefPtr<UnaryExpression const> Parser::parse_unary_expression(ASTNode const& parent)
@@ -510,6 +511,9 @@ NonnullRefPtr<UnaryExpression const> Parser::parse_unary_expression(ASTNode cons
         break;
     case Token::Type::And:
         op = UnaryOp::Address;
+        break;
+    case Token::Type::Asterisk:
+        op = UnaryOp::Dereference;
         break;
     default:
         break;
