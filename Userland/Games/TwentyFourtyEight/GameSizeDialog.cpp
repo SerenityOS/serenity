@@ -6,14 +6,15 @@
 
 #include "GameSizeDialog.h"
 #include "Game.h"
+#include "GameSizeDialogWidget.h"
 #include <AK/IntegralMath.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/SpinBox.h>
-#include <Userland/Games/TwentyFourtyEight/GameSizeDialogGML.h>
 
+namespace TwentyFourtyEight {
 GameSizeDialog::GameSizeDialog(GUI::Window* parent, size_t board_size, size_t target, bool evil_ai)
     : GUI::Dialog(parent)
     , m_board_size(board_size)
@@ -25,8 +26,8 @@ GameSizeDialog::GameSizeDialog(GUI::Window* parent, size_t board_size, size_t ta
     set_icon(parent->icon());
     set_resizable(false);
 
-    auto main_widget = set_main_widget<GUI::Widget>();
-    main_widget->load_from_gml(game_size_dialog_gml).release_value_but_fixme_should_propagate_errors();
+    auto main_widget = GameSizeDialogWidget::try_create().release_value_but_fixme_should_propagate_errors();
+    set_main_widget(main_widget);
 
     auto board_size_spinbox = main_widget->find_descendant_of_type_named<GUI::SpinBox>("board_size_spinbox");
     board_size_spinbox->set_value(m_board_size);
@@ -64,4 +65,5 @@ GameSizeDialog::GameSizeDialog(GUI::Window* parent, size_t board_size, size_t ta
     ok_button->on_click = [this](auto) {
         done(ExecResult::OK);
     };
+}
 }

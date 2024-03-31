@@ -7,7 +7,7 @@
 #include "BoardView.h"
 #include "Game.h"
 #include "GameSizeDialog.h"
-#include <Games/TwentyFourtyEight/GameWindowGML.h>
+#include "GameWindowWidget.h"
 #include <LibConfig/Client.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
@@ -65,8 +65,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_title("2048");
     window->resize(315, 336);
 
-    auto main_widget = window->set_main_widget<GUI::Widget>();
-    TRY(main_widget->load_from_gml(game_window_gml));
+    auto main_widget = TwentyFourtyEight::GameWindowWidget::try_create().release_value_but_fixme_should_propagate_errors();
+    window->set_main_widget(main_widget);
 
     Game game { board_size, target_tile, evil_ai };
 
@@ -119,7 +119,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     redo_action->set_enabled(false);
 
     auto change_settings = [&] {
-        auto size_dialog = GameSizeDialog::construct(window, board_size, target_tile, evil_ai);
+        auto size_dialog = TwentyFourtyEight::GameSizeDialog::construct(window, board_size, target_tile, evil_ai);
         if (size_dialog->exec() != GUI::Dialog::ExecResult::OK)
             return;
 
