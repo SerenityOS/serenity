@@ -592,6 +592,7 @@ set(SOURCES
     SVG/SVGAnimatedNumber.cpp
     SVG/SVGAnimatedRect.cpp
     SVG/SVGAnimatedString.cpp
+    SVG/SVGAnimatedTransformList.cpp
     SVG/SVGClipPathElement.cpp
     SVG/SVGDecodedImageData.cpp
     SVG/SVGDefsElement.cpp
