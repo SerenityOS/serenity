@@ -1443,20 +1443,10 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
             // Implementor's note: The spec means "ignore this part of IBI in step 3 c) x)" in 3c viii)'s last sentence.
             // FIXME: Support all reference corners and transpose values.
             if (!inputs.is_transposed) {
-                switch (inputs.reference_corner) {
-                case TopLeft:
-                    break;
-                case TopRight:
+                if (inputs.reference_corner == TopRight || inputs.reference_corner == BottomRight)
                     s_instance -= symbol.width() - 1;
-                    break;
-                case BottomLeft:
+                if (inputs.reference_corner == BottomLeft || inputs.reference_corner == BottomRight)
                     t_instance -= symbol.height() - 1;
-                    break;
-                case BottomRight:
-                    s_instance -= symbol.width() - 1;
-                    t_instance -= symbol.height() - 1;
-                    break;
-                }
             } else {
                 TODO();
             }
