@@ -6,7 +6,6 @@
 
 #include "MouseWidget.h"
 
-#include <Applications/MouseSettings/MouseWidgetGML.h>
 #include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/HorizontalSlider.h>
 #include <LibGUI/ImageWidget.h>
@@ -20,16 +19,9 @@ constexpr double speed_slider_scale = 100.0;
 constexpr int default_scroll_length = 4;
 constexpr int double_click_speed_default = 250;
 
-ErrorOr<NonnullRefPtr<MouseWidget>> MouseWidget::try_create()
+namespace MouseSettings {
+ErrorOr<void> MouseWidget::initialize()
 {
-    auto widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) MouseWidget()));
-    TRY(widget->setup());
-    return widget;
-}
-
-ErrorOr<void> MouseWidget::setup()
-{
-    TRY(load_from_gml(mouse_widget_gml));
     m_speed_label = *find_descendant_of_type_named<GUI::Label>("speed_label");
     m_speed_slider = *find_descendant_of_type_named<GUI::HorizontalSlider>("speed_slider");
     m_speed_slider->set_range(WindowServer::mouse_accel_min * speed_slider_scale, WindowServer::mouse_accel_max * speed_slider_scale);
@@ -116,4 +108,5 @@ void MouseWidget::update_switch_buttons_image_label()
     } else {
         m_switch_buttons_image->load_from_file("/res/graphics/mouse-button-left.png"sv);
     }
+}
 }

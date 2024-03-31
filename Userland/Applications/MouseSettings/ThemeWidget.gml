@@ -1,4 +1,4 @@
-@GUI::Frame {
+@MouseSettings::ThemeWidget {
     fill_with_background_color: true
     layout: @GUI::VerticalBoxLayout {
         margins: [8]
@@ -19,7 +19,6 @@
 
             @GUI::ComboBox {
                 name: "theme_name_box"
-                model_only: true
             }
         }
 

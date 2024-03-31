@@ -12,10 +12,13 @@
 #include <LibGUI/Slider.h>
 #include <LibGUI/Window.h>
 
+namespace MouseSettings {
 class HighlightWidget final : public GUI::SettingsWindow::Tab {
     C_OBJECT_ABSTRACT(HighlightWidget)
 public:
     static ErrorOr<NonnullRefPtr<HighlightWidget>> try_create();
+    ErrorOr<void> initialize();
+
     virtual ~HighlightWidget() override = default;
 
     virtual void apply_settings() override;
@@ -23,7 +26,6 @@ public:
 
 private:
     HighlightWidget() = default;
-    ErrorOr<void> setup();
 
     Gfx::Color highlight_color();
 
@@ -34,3 +36,4 @@ private:
     RefPtr<GUI::Slider> m_highlight_opacity_slider;
     RefPtr<GUI::Slider> m_highlight_radius_slider;
 };
+}

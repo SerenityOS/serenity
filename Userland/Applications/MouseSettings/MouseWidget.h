@@ -11,10 +11,13 @@
 #include <LibGUI/SettingsWindow.h>
 #include <LibGUI/Window.h>
 
+namespace MouseSettings {
 class MouseWidget final : public GUI::SettingsWindow::Tab {
     C_OBJECT_ABSTRACT(MouseWidget)
 public:
     static ErrorOr<NonnullRefPtr<MouseWidget>> try_create();
+    ErrorOr<void> initialize();
+
     virtual ~MouseWidget() override = default;
 
     virtual void apply_settings() override;
@@ -22,7 +25,6 @@ public:
 
 private:
     MouseWidget() = default;
-    ErrorOr<void> setup();
 
     void update_speed_label();
     void update_double_click_speed_label();
@@ -38,3 +40,4 @@ private:
     RefPtr<GUI::CheckBox> m_natural_scroll_checkbox;
     RefPtr<MouseSettings::DoubleClickArrowWidget> m_double_click_arrow_widget;
 };
+}
