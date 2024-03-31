@@ -1278,4 +1278,38 @@ WebIDL::ExceptionOr<Variant<JS::NonnullGCPtr<CryptoKey>, JS::NonnullGCPtr<Crypto
     return Variant<JS::NonnullGCPtr<CryptoKey>, JS::NonnullGCPtr<CryptoKeyPair>> { CryptoKeyPair::create(m_realm, public_key, private_key) };
 }
 
+WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::ArrayBuffer>> ED25519::sign([[maybe_unused]] AlgorithmParams const& params, JS::NonnullGCPtr<CryptoKey> key, ByteBuffer const& message)
+{
+    auto& realm = m_realm;
+    auto& vm = realm.vm();
+
+    // 1. If the [[type]] internal slot of key is not "private", then throw an InvalidAccessError.
+    if (key->type() != Bindings::KeyType::Private)
+        return WebIDL::InvalidAccessError::create(realm, "Key is not a private key"_fly_string);
+
+    // 2. Perform the Ed25519 signing process, as specified in [RFC8032], Section 5.1.6,
+    // with message as M, using the Ed25519 private key associated with key.
+    auto private_key = key->handle().visit(
+        [](ByteBuffer data) -> ByteBuffer {
+            return data;
+        },
+        [](auto) -> ByteBuffer { VERIFY_NOT_REACHED(); });
+
+    ::Crypto::Curves::Ed25519 curve;
+    auto maybe_public_key = curve.generate_public_key(private_key);
+    if (maybe_public_key.is_error())
+        return WebIDL::OperationError::create(realm, "Failed to generate public key"_fly_string);
+    auto public_key = maybe_public_key.release_value();
+
+    auto maybe_signature = curve.sign(public_key, private_key, message);
+    if (maybe_signature.is_error())
+        return WebIDL::OperationError::create(realm, "Failed to sign message"_fly_string);
+    auto signature = maybe_signature.release_value();
+
+    // 3. Return a new ArrayBuffer associated with the relevant global object of this [HTML],
+    // and containing the bytes of the signature resulting from performing the Ed25519 signing process.
+    auto result = TRY_OR_THROW_OOM(vm, ByteBuffer::copy(signature));
+    return JS::ArrayBuffer::create(realm, move(result));
+}
+
 }
