@@ -244,4 +244,18 @@ Optional<float> SVGGraphicsElement::stroke_width() const
     return width.to_px(*layout_node(), scaled_viewport_size).to_double();
 }
 
+JS::NonnullGCPtr<Geometry::DOMRect> SVGGraphicsElement::get_b_box(Optional<SVGBoundingBoxOptions>)
+{
+    dbgln("(STUBBED) SVGGraphicsElement::get_b_box(). Called on: {}", debug_description());
+    return Geometry::DOMRect::create(realm());
+}
+
+JS::NonnullGCPtr<SVGAnimatedTransformList> SVGGraphicsElement::transform() const
+{
+    dbgln("(STUBBED) SVGGraphicsElement::transform(). Called on: {}", debug_description());
+    auto base_val = SVGTransformList::create(realm());
+    auto anim_val = SVGTransformList::create(realm());
+    return SVGAnimatedTransformList::create(realm(), base_val, anim_val);
+}
+
 }
