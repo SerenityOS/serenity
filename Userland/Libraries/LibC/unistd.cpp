@@ -432,6 +432,7 @@ static int ttyname_r_for_directory(char const* directory_name, dev_t device_mode
 
     struct dirent* entry = nullptr;
     char* name_path = nullptr;
+    auto const directory_name_length = strlen(directory_name);
 
     // FIXME: Use LibCore DirIterator here instead
     while ((entry = readdir(dirstream)) != nullptr) {
@@ -440,7 +441,7 @@ static int ttyname_r_for_directory(char const* directory_name, dev_t device_mode
             && strcmp(entry->d_name, "stdout")
             && strcmp(entry->d_name, "stderr")) {
 
-            size_t name_length = strlen(directory_name) + strlen(entry->d_name) + 1;
+            size_t name_length = directory_name_length + strlen(entry->d_name) + 1;
 
             if (name_length > size) {
                 errno = ERANGE;
@@ -452,8 +453,8 @@ static int ttyname_r_for_directory(char const* directory_name, dev_t device_mode
             //        perhaps a static storage.
             VERIFY(name_path);
             memset(name_path, 0, name_length);
-            memcpy(name_path, directory_name, strlen(directory_name));
-            memcpy(&name_path[strlen(directory_name)], entry->d_name, strlen(entry->d_name));
+            memcpy(name_path, directory_name, directory_name_length);
+            memcpy(&name_path[directory_name_length], entry->d_name, strlen(entry->d_name));
             struct stat st;
             if (lstat(name_path, &st) < 0) {
                 free(name_path);
