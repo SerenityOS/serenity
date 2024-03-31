@@ -1173,6 +1173,30 @@ PDFErrorOr<Renderer::LoadedImage> Renderer::load_image(NonnullRefPtr<StreamObjec
         decode_array = color_space->default_decode();
     }
 
+    if (bits_per_component == 1 && color_space->family() == ColorSpaceFamily::DeviceGray) {
+        // Fast path for 1bpp grayscale. Used for masks and scanned pages (CCITT or JBIG2).
+        // FIXME: This fast path could work for CalGray and Indexed too,
+        //        but IndexedColorSpace::default_decode() currently assumes 8bpp.
+        auto bitmap = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { width, height }));
+
+        Color colors[] = {
+            TRY(color_space->style({ &decode_array[0], 1 })).get<Color>(),
+            TRY(color_space->style({ &decode_array[1], 1 })).get<Color>(),
+        };
+
+        auto const bytes_per_line = ceil_div(width, 8);
+        for (int y = 0; y < height; ++y) {
+            for (int x = 0; x < width; ++x) {
+                auto byte = content[y * bytes_per_line + x / 8];
+                auto bit = 7 - (x % 8);
+                auto color = colors[(byte >> bit) & 1];
+                bitmap->set_pixel(x, y, color);
+            }
+        }
+
+        return LoadedImage { bitmap, is_image_mask };
+    }
+
     Vector<u8> resampled_storage;
     if (bits_per_component < 8) {
         UpsampleMode mode = color_space->family() == ColorSpaceFamily::Indexed ? UpsampleMode::StoreValuesUnchanged : UpsampleMode::UpsampleTo8Bit;
