@@ -419,9 +419,9 @@ ssize_t pwrite(int fd, void const* buf, size_t count, off_t offset)
 }
 
 // Note: Be sure to send to directory_name parameter a directory name ended with trailing slash.
-static int ttyname_r_for_directory(char const* directory_name, dev_t device_mode, ino_t inode_number, char* buffer, size_t size)
+static int ttyname_r_for_directory(StringView directory_name, dev_t device_mode, ino_t inode_number, char* buffer, size_t size)
 {
-    DIR* dirstream = opendir(directory_name);
+    DIR* dirstream = opendir(directory_name.characters_without_null_termination());
     if (!dirstream) {
         return -1;
     }
@@ -432,6 +432,7 @@ static int ttyname_r_for_directory(char const* directory_name, dev_t device_mode
 
     struct dirent* entry = nullptr;
     char* name_path = nullptr;
+    auto directory_name_length = directory_name.length();
 
     // FIXME: Use LibCore DirIterator here instead
     while ((entry = readdir(dirstream)) != nullptr) {
@@ -440,7 +441,7 @@ static int ttyname_r_for_directory(char const* directory_name, dev_t device_mode
             && strcmp(entry->d_name, "stdout")
             && strcmp(entry->d_name, "stderr")) {
 
-            size_t name_length = strlen(directory_name) + strlen(entry->d_name) + 1;
+            size_t name_length = directory_name_length + strlen(entry->d_name) + 1;
 
             if (name_length > size) {
                 errno = ERANGE;
@@ -449,8 +450,8 @@ static int ttyname_r_for_directory(char const* directory_name, dev_t device_mode
 
             name_path = (char*)malloc(name_length);
             memset(name_path, 0, name_length);
-            memcpy(name_path, directory_name, strlen(directory_name));
-            memcpy(&name_path[strlen(directory_name)], entry->d_name, strlen(entry->d_name));
+            VERIFY(directory_name.copy_characters_to_buffer(name_path, name_length));
+            memcpy(&name_path[directory_name_length], entry->d_name, strlen(entry->d_name));
             struct stat st;
             if (lstat(name_path, &st) < 0) {
                 free(name_path);
@@ -478,8 +479,8 @@ int ttyname_r(int fd, char* buffer, size_t size)
         return -1;
     dev_t major_minor_numbers = stat.st_rdev;
     ino_t inode_number = stat.st_ino;
-    if (ttyname_r_for_directory("/dev/", major_minor_numbers, inode_number, buffer, size) < 0) {
-        if (ttyname_r_for_directory("/dev/pts/", major_minor_numbers, inode_number, buffer, size) < 0) {
+    if (ttyname_r_for_directory("/dev/"sv, major_minor_numbers, inode_number, buffer, size) < 0) {
+        if (ttyname_r_for_directory("/dev/pts/"sv, major_minor_numbers, inode_number, buffer, size) < 0) {
             errno = ENOTTY;
             return -1;
         }
