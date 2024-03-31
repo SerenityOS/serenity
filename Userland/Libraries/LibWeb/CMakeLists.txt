@@ -623,6 +623,7 @@ set(SOURCES
     SVG/SVGTextPositioningElement.cpp
     SVG/SVGTitleElement.cpp
     SVG/SVGTransform.cpp
+    SVG/SVGTransformList.cpp
     SVG/SVGTSpanElement.cpp
     SVG/SVGUseElement.cpp
     SVG/TagNames.cpp
