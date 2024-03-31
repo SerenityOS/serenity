@@ -264,6 +264,19 @@ private:
     }
 };
 
+class ED25519 : public AlgorithmMethods {
+public:
+    virtual WebIDL::ExceptionOr<Variant<JS::NonnullGCPtr<CryptoKey>, JS::NonnullGCPtr<CryptoKeyPair>>> generate_key(AlgorithmParams const&, bool, Vector<Bindings::KeyUsage> const&) override;
+
+    static NonnullOwnPtr<AlgorithmMethods> create(JS::Realm& realm) { return adopt_own(*new ED25519(realm)); }
+
+private:
+    explicit ED25519(JS::Realm& realm)
+        : AlgorithmMethods(realm)
+    {
+    }
+};
+
 ErrorOr<String> base64_url_uint_encode(::Crypto::UnsignedBigInteger);
 WebIDL::ExceptionOr<::Crypto::UnsignedBigInteger> base64_url_uint_decode(JS::Realm&, String const& base64_url_string);
 
