@@ -1,4 +1,4 @@
-@GUI::Frame {
+@MailSettings::MailSettingsWidget {
     fill_with_background_color: true
     layout: @GUI::VerticalBoxLayout {
         margins: [8]

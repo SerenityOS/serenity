@@ -4,15 +4,12 @@ serenity_component(
     TARGETS MailSettings
 )
 
-stringify_gml(MailSettingsWidget.gml MailSettingsWidgetGML.h mail_settings_widget_gml)
+compile_gml(MailSettingsWidget.gml MailSettingsWidgetGML.cpp)
 
 set(SOURCES
     main.cpp
     MailSettingsWidget.cpp
-)
-
-set(GENERATED_SOURCES
-    MailSettingsWidgetGML.h
+    MailSettingsWidgetGML.cpp
 )
 
 serenity_app(MailSettings ICON app-mail)

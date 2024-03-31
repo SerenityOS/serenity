@@ -11,18 +11,19 @@
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Window.h>
 
+namespace MailSettings {
 class MailSettingsWidget final : public GUI::SettingsWindow::Tab {
     C_OBJECT_ABSTRACT(MailSettingsWidget)
 
 public:
     static ErrorOr<NonnullRefPtr<MailSettingsWidget>> try_create();
+    ErrorOr<void> initialize();
 
     virtual void apply_settings() override;
     virtual void reset_default_values() override;
 
 private:
     MailSettingsWidget() = default;
-    ErrorOr<void> setup();
 
     ByteString m_server;
     ByteString m_port;
@@ -35,3 +36,4 @@ private:
     RefPtr<GUI::CheckBox> m_tls_checkbox;
     RefPtr<GUI::TextBox> m_email_inputbox;
 };
+}
