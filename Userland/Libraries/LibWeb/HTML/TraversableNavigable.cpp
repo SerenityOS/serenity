@@ -334,6 +334,49 @@ Vector<JS::Handle<Navigable>> TraversableNavigable::get_all_navigables_that_migh
     return results;
 }
 
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#deactivate-a-document-for-a-cross-document-navigation
+static void deactivate_a_document_for_cross_document_navigation(JS::NonnullGCPtr<DOM::Document> displayed_document, Optional<UserNavigationInvolvement>, JS::NonnullGCPtr<SessionHistoryEntry> target_entry, JS::SafeFunction<void()> after_potential_unloads)
+{
+    // 1. Let navigable be displayedDocument's node navigable.
+    auto navigable = displayed_document->navigable();
+
+    // 2. Let potentiallyTriggerViewTransition be false.
+    auto potentially_trigger_view_transition = false;
+
+    // FIXME: 3. Let isBrowserUINavigation be true if userNavigationInvolvement is "browser UI"; otherwise false.
+
+    // FIXME: 4. Set potentiallyTriggerViewTransition to the result of calling can navigation trigger a cross-document
+    //           view-transition? given displayedDocument, targetEntry's document, navigationType, and isBrowserUINavigation.
+
+    // 5. If potentiallyTriggerViewTransition is false, then:
+    if (!potentially_trigger_view_transition) {
+        // FIXME 1. Let firePageSwapBeforeUnload be the following step
+        //            1. Fire the pageswap event given displayedDocument, targetEntry, navigationType, and null.
+
+        // 2. Set the ongoing navigation for navigable to null.
+        navigable->set_ongoing_navigation({});
+
+        // 3. Unload a document and its descendants given displayedDocument, targetEntry's document, afterPotentialUnloads, and firePageSwapBeforeUnload.
+        displayed_document->unload_a_document_and_its_descendants(target_entry->document(), move(after_potential_unloads));
+    }
+    // FIXME: 6. Otherwise, queue a global task on the navigation and traversal task source given navigable's active window to run the steps:
+    else {
+        // FIXME: 1. Let proceedWithNavigationAfterViewTransitionCapture be the following step:
+        //            1. Append the following session history traversal steps to navigable's traversable navigable:
+        //               1. Set the ongoing navigation for navigable to null.
+        //               2. Unload a document and its descendants given displayedDocument, targetEntry's document, and afterPotentialUnloads.
+
+        // FIXME: 2. Let viewTransition be the result of setting up a cross-document view-transition given displayedDocument,
+        //           targetEntry's document, navigationType, and proceedWithNavigationAfterViewTransitionCapture.
+
+        // FIXME: 3. Fire the pageswap event given displayedDocument, targetEntry, navigationType, and viewTransition.
+
+        // FIXME: 4. If viewTransition is null, then run proceedWithNavigationAfterViewTransitionCapture.
+
+        TODO();
+    }
+}
+
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#apply-the-history-step
 TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_step(
     int step,
@@ -598,76 +641,61 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
         if (navigable->has_been_destroyed())
             continue;
 
-        // 7. Set navigable's ongoing navigation to null.
-        navigable->set_ongoing_navigation({});
-
-        // 8. Let (scriptHistoryLength, scriptHistoryIndex) be the result of getting the history object length and index given traversable and targetStep.
+        // 7. Let (scriptHistoryLength, scriptHistoryIndex) be the result of getting the history object length and index given traversable and targetStep.
         auto history_object_length_and_index = get_the_history_object_length_and_index(target_step);
         auto script_history_length = history_object_length_and_index.script_history_length;
         auto script_history_index = history_object_length_and_index.script_history_index;
 
-        // 9. Append navigable to navigablesThatMustWaitBeforeHandlingSyncNavigation.
+        // 8. Append navigable to navigablesThatMustWaitBeforeHandlingSyncNavigation.
         navigables_that_must_wait_before_handling_sync_navigation.append(*navigable);
 
-        // 10. Let entriesForNavigationAPI be the result of getting session history entries for the navigation API given navigable and targetStep.
+        // 9. Let entriesForNavigationAPI be the result of getting session history entries for the navigation API given navigable and targetStep.
         auto entries_for_navigation_api = get_session_history_entries_for_the_navigation_api(*navigable, target_step);
 
-        // 11. Queue a global task on the navigation and traversal task source given navigable's active window to run the steps:
-        queue_global_task(Task::Source::NavigationAndTraversal, *navigable->active_window(), [&completed_change_jobs, target_entry, navigable, displayed_document, update_only = changing_navigable_continuation.update_only, script_history_length, script_history_index, entries_for_navigation_api = move(entries_for_navigation_api), user_involvement_for_navigate_events]() mutable {
-            // NOTE: This check is not in the spec but we should not continue navigation if navigable has been destroyed.
-            if (navigable->has_been_destroyed()) {
-                return;
-            }
+        // 12. In both cases, let afterPotentialUnloads be the following steps:
+        auto after_potential_unload = JS::SafeFunction<void()>([changing_navigable_continuation, target_entry, displayed_document, &completed_change_jobs, script_history_length, script_history_index, entries_for_navigation_api = move(entries_for_navigation_api)] {
+            // 1. If changingNavigableContinuation's update-only is false, then activate history entry targetEntry for navigable.
+            if (!changing_navigable_continuation.update_only)
+                changing_navigable_continuation.navigable->activate_history_entry(*changing_navigable_continuation.target_entry);
 
-            // 1. If changingNavigableContinuation's update-only is false, then:
-            if (!update_only) {
-                // 1. If targetEntry's document does not equal displayedDocument, then:
-                if (target_entry->document().ptr() != displayed_document.ptr()) {
-                    // 1. Unload displayedDocument given targetEntry's document.
-                    displayed_document->unload(target_entry->document());
-
-                    // 2. For each childNavigable of displayedDocument's descendant navigables, queue a global task on the navigation and traversal task source given
-                    //    childNavigable's active window to unload childNavigable's active document.
-                    for (auto child_navigable : displayed_document->descendant_navigables()) {
-                        queue_global_task(Task::Source::NavigationAndTraversal, *navigable->active_window(), [child_navigable] {
-                            child_navigable->active_document()->unload();
-                        });
-                    }
-                }
-
-                // 3. Activate history entry targetEntry for navigable.
-                navigable->activate_history_entry(*target_entry);
-            }
-
-            // 2. If navigable is not traversable, and targetEntry is not navigable's current session history entry, and targetEntry's document state's origin is the same as
-            //    navigable's current session history entry's document state's origin, then fire a traverse navigate event given targetEntry and userInvolvementForNavigateEvents.
-            auto target_origin = target_entry->document_state()->origin();
-            auto current_origin = navigable->current_session_history_entry()->document_state()->origin();
-            bool const is_same_origin = target_origin.has_value() && current_origin.has_value() && target_origin->is_same_origin(*current_origin);
-            if (!navigable->is_traversable()
-                && target_entry.ptr() != navigable->current_session_history_entry()
-                && is_same_origin) {
-                navigable->active_window()->navigation()->fire_a_traverse_navigate_event(*target_entry, user_involvement_for_navigate_events.value_or(UserNavigationInvolvement::None));
-            }
-
-            // 3. Let updateDocument be an algorithm step which performs update document for history step application given targetEntry's document,
-            //    targetEntry, changingNavigableContinuation's update-only, scriptHistoryLength, scriptHistoryIndex, and entriesForNavigationAPI.
-            auto update_document = JS::SafeFunction<void()>([target_entry, update_only, script_history_length, script_history_index, entries_for_navigation_api = move(entries_for_navigation_api)] {
-                target_entry->document()->update_for_history_step_application(*target_entry, update_only, script_history_length, script_history_index, entries_for_navigation_api);
+            // 2. Let updateDocument be an algorithm step which performs update document for history step application given
+            //    targetEntry's document, targetEntry, changingNavigableContinuation's update-only, scriptHistoryLength,
+            //    scriptHistoryIndex, navigationType, entriesForNavigationAPI, and displayedEntry.
+            auto update_document = JS::SafeFunction<void()>([changing_navigable_continuation, script_history_length, script_history_index, entries_for_navigation_api = move(entries_for_navigation_api)] {
+                changing_navigable_continuation.target_entry->document()->update_for_history_step_application(*changing_navigable_continuation.target_entry, changing_navigable_continuation.update_only, script_history_length, script_history_index, entries_for_navigation_api);
             });
 
-            // 4. If targetEntry's document is equal to displayedDocument, then perform updateDocument.
-            if (target_entry->document() == displayed_document.ptr()) {
+            // 3. If targetEntry's document is equal to displayedDocument, then perform updateDocument.
+            if (target_entry->document().ptr() == displayed_document.ptr()) {
                 update_document();
             }
             // 5. Otherwise, queue a global task on the navigation and traversal task source given targetEntry's document's relevant global object to perform updateDocument
             else {
-                queue_global_task(Task::Source::NavigationAndTraversal, relevant_global_object(*target_entry->document()), move(update_document));
+                queue_global_task(Task::Source::NavigationAndTraversal, relevant_global_object(*target_entry->document()), [update_document = move(update_document)]() {
+                    update_document();
+                });
             }
 
             // 6. Increment completedChangeJobs.
             completed_change_jobs++;
         });
+
+        // 10. If changingNavigableContinuation's update-only is true, or targetEntry's document is displayedDocument, then:
+        if (changing_navigable_continuation.update_only || target_entry->document().ptr() == displayed_document.ptr()) {
+            // 1. Set the ongoing navigation for navigable to null.
+            navigable->set_ongoing_navigation({});
+
+            // 2. Queue a global task on the navigation and traversal task source given navigable's active window to perform afterPotentialUnloads.
+            queue_global_task(Task::Source::NavigationAndTraversal, *navigable->active_window(), move(after_potential_unload));
+        }
+        // 11. Otherwise:
+        else {
+            // 1. Assert: navigationType is not null.
+            VERIFY(navigation_type.has_value());
+
+            // 2. Deactivate displayedDocument, given userNavigationInvolvement, targetEntry, navigationType, and afterPotentialUnloads.
+            deactivate_a_document_for_cross_document_navigation(*displayed_document, user_involvement_for_navigate_events, *target_entry, move(after_potential_unload));
+        }
     }
 
     // 15. Let totalNonchangingJobs be the size of nonchangingNavigablesThatStillNeedUpdates.

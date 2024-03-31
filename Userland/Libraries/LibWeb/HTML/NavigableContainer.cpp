@@ -20,6 +20,7 @@
 #include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/Scripting/WindowEnvironmentSettingsObject.h>
 #include <LibWeb/HTML/TraversableNavigable.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/HighResolutionTime/TimeOrigin.h>
 #include <LibWeb/Page/Page.h>
 
@@ -263,8 +264,12 @@ void NavigableContainer::destroy_the_child_navigable()
 
     // FIXME: 4. Inform the navigation API about child navigable destruction given navigable.
 
-    // 5. Destroy navigable's active document.
-    navigable->active_document()->destroy();
+    // 5. Destroy a document and its descendants given navigable's active document.
+    navigable->active_document()->destroy_a_document_and_its_descendants({});
+
+    // Not in the spec
+    navigable->set_has_been_destroyed();
+    HTML::all_navigables().remove(navigable);
 
     // 6. Let parentDocState be container's node navigable's active session history entry's document state.
     auto parent_doc_state = this->navigable()->active_session_history_entry()->document_state();
@@ -277,13 +282,9 @@ void NavigableContainer::destroy_the_child_navigable()
     // 8. Let traversable be container's node navigable's traversable navigable.
     auto traversable = this->navigable()->traversable_navigable();
 
-    // Not in the spec
-    navigable->set_has_been_destroyed();
-    HTML::all_navigables().remove(navigable);
-
     // 9. Append the following session history traversal steps to traversable:
     traversable->append_session_history_traversal_steps([traversable] {
-        // 1. Apply pending history changes to traversable.
+        // 1. Update for navigable creation/destruction given traversable.
         traversable->update_for_navigable_creation_or_destruction();
     });
 }
