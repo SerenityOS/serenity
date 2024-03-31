@@ -40,6 +40,8 @@ protected:
 
     JS::GCPtr<HTML::DOMStringMap> m_dataset;
 
+    JS::NonnullGCPtr<SVGAnimatedLength> svg_animated_length_for_property(CSS::PropertyID) const;
+
 private:
     virtual bool is_svg_element() const final { return true; }
 };

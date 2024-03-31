@@ -83,43 +83,19 @@ Gfx::Path SVGCircleElement::get_path(CSSPixelSize viewport_size)
 // https://www.w3.org/TR/SVG11/shapes.html#CircleElementCXAttribute
 JS::NonnullGCPtr<SVGAnimatedLength> SVGCircleElement::cx() const
 {
-    // FIXME: Create a proper animated value when animations are supported.
-    auto make_length = [&] {
-        if (auto const* style = computed_css_values(); style) {
-            if (auto cx = style->length_percentage(CSS::PropertyID::Cx); cx.has_value())
-                return SVGLength::from_length_percentage(realm(), *cx);
-        }
-        return SVGLength::create(realm(), 0, 0.0f);
-    };
-    return SVGAnimatedLength::create(realm(), make_length(), make_length());
+    return svg_animated_length_for_property(CSS::PropertyID::Cx);
 }
 
 // https://www.w3.org/TR/SVG11/shapes.html#CircleElementCYAttribute
 JS::NonnullGCPtr<SVGAnimatedLength> SVGCircleElement::cy() const
 {
-    // FIXME: Create a proper animated value when animations are supported.
-    auto make_length = [&] {
-        if (auto const* style = computed_css_values(); style) {
-            if (auto cy = style->length_percentage(CSS::PropertyID::Cy); cy.has_value())
-                return SVGLength::from_length_percentage(realm(), *cy);
-        }
-        return SVGLength::create(realm(), 0, 0.0f);
-    };
-    return SVGAnimatedLength::create(realm(), make_length(), make_length());
+    return svg_animated_length_for_property(CSS::PropertyID::Cy);
 }
 
 // https://www.w3.org/TR/SVG11/shapes.html#CircleElementRAttribute
 JS::NonnullGCPtr<SVGAnimatedLength> SVGCircleElement::r() const
 {
-    // FIXME: Create a proper animated value when animations are supported.
-    auto make_length = [&] {
-        if (auto const* style = computed_css_values(); style) {
-            if (auto r = computed_css_values()->length_percentage(CSS::PropertyID::R); r.has_value())
-                return SVGLength::from_length_percentage(realm(), *r);
-        }
-        return SVGLength::create(realm(), 0, 0.0f);
-    };
-    return SVGAnimatedLength::create(realm(), make_length(), make_length());
+    return svg_animated_length_for_property(CSS::PropertyID::R);
 }
 
 }
