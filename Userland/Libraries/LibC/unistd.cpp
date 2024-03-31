@@ -449,6 +449,7 @@ static int ttyname_r_for_directory(StringView directory_name, dev_t device_mode,
             }
 
             name_path = (char*)malloc(name_length);
+            VERIFY(name_path);
             memset(name_path, 0, name_length);
             VERIFY(directory_name.copy_characters_to_buffer(name_path, name_length));
             memcpy(&name_path[directory_name_length], entry->d_name, strlen(entry->d_name));
