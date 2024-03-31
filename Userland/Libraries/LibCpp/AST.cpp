@@ -382,6 +382,9 @@ void UnaryExpression::dump(FILE* output, size_t indent) const
     case UnaryOp::Address:
         op_string = "&";
         break;
+    case UnaryOp::Dereference:
+        op_string = "*";
+        break;
     default:
         op_string = "<invalid>";
     }

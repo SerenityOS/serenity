@@ -1,0 +1,5 @@
+int foo()
+{
+    &bar;
+    *bar;
+}
