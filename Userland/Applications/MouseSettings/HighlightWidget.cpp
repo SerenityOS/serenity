@@ -6,20 +6,11 @@
 
 #include "HighlightWidget.h"
 
-#include <Applications/MouseSettings/HighlightWidgetGML.h>
 #include <LibGUI/ConnectionToWindowServer.h>
 
-ErrorOr<NonnullRefPtr<HighlightWidget>> HighlightWidget::try_create()
+namespace MouseSettings {
+ErrorOr<void> HighlightWidget::initialize()
 {
-    auto widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) HighlightWidget()));
-    TRY(widget->setup());
-    return widget;
-}
-
-ErrorOr<void> HighlightWidget::setup()
-{
-    TRY(load_from_gml(highlight_widget_gml));
-
     m_highlight_preview = find_descendant_of_type_named<GUI::Frame>("preview_frame")->add<MouseSettings::HighlightPreviewWidget>(palette());
 
     auto current_highlight_color = GUI::ConnectionToWindowServer::the().get_cursor_highlight_color();
@@ -84,4 +75,5 @@ void HighlightWidget::reset_default_values()
         // Avoid artifact due to setting both color and opacity sliders:
         m_highlight_preview->update();
     });
+}
 }

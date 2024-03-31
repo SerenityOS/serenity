@@ -1,4 +1,4 @@
-@GUI::Frame {
+@MouseSettings::HighlightWidget {
     fill_with_background_color: true
     layout: @GUI::VerticalBoxLayout {
         margins: [8]
@@ -29,7 +29,7 @@
 
         @GUI::ColorInput {
             name: "highlight_color_input"
-            has_alpha_channel: false
+            color_has_alpha_channel: false
         }
 
         @GUI::Layout::Spacer {}
