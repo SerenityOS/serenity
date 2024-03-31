@@ -1312,4 +1312,34 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::ArrayBuffer>> ED25519::sign([[maybe_unu
     return JS::ArrayBuffer::create(realm, move(result));
 }
 
+WebIDL::ExceptionOr<JS::Value> ED25519::verify([[maybe_unused]] AlgorithmParams const& params, JS::NonnullGCPtr<CryptoKey> key, ByteBuffer const& signature, ByteBuffer const& message)
+{
+    auto& realm = m_realm;
+
+    // 1. If the [[type]] internal slot of key is not "public", then throw an InvalidAccessError.
+    if (key->type() != Bindings::KeyType::Public)
+        return WebIDL::InvalidAccessError::create(realm, "Key is not a public key"_fly_string);
+
+    // NOTE: this is checked by ED25519::verify()
+    // 2. If the key data of key represents an invalid point or a small-order element on the Elliptic Curve of Ed25519, return false.
+    // 3. If the point R, encoded in the first half of signature, represents an invalid point or a small-order element on the Elliptic Curve of Ed25519, return false.
+
+    // 4. Perform the Ed25519 verification steps, as specified in [RFC8032], Section 5.1.7,
+    // using the cofactorless (unbatched) equation, [S]B = R + [k]A', on the signature,
+    // with message as M, using the Ed25519 public key associated with key.
+
+    auto public_key = key->handle().visit(
+        [](ByteBuffer data) -> ByteBuffer {
+            return data;
+        },
+        [](auto) -> ByteBuffer { VERIFY_NOT_REACHED(); });
+
+    // 9. Let result be a boolean with the value true if the signature is valid and the value false otherwise.
+    ::Crypto::Curves::Ed25519 curve;
+    auto result = curve.verify(public_key, signature, message);
+
+    // 10. Return result.
+    return JS::Value(result);
+}
+
 }
