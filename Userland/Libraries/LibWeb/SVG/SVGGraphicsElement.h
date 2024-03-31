@@ -11,12 +11,20 @@
 #include <LibGfx/Path.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/SVG/AttributeParser.h>
+#include <LibWeb/SVG/SVGAnimatedTransformList.h>
 #include <LibWeb/SVG/SVGElement.h>
 #include <LibWeb/SVG/SVGGradientElement.h>
 #include <LibWeb/SVG/TagNames.h>
 #include <LibWeb/SVG/ViewBox.h>
 
 namespace Web::SVG {
+
+struct SVGBoundingBoxOptions {
+    bool fill { true };
+    bool stroke { false };
+    bool markers { false };
+    bool clipped { false };
+};
 
 class SVGGraphicsElement : public SVGElement {
     WEB_PLATFORM_OBJECT(SVGGraphicsElement, SVGElement);
@@ -46,8 +54,10 @@ public:
     Optional<Gfx::PaintStyle const&> stroke_paint_style(SVGPaintContext const&) const;
 
     JS::GCPtr<SVG::SVGMaskElement const> mask() const;
-
     JS::GCPtr<SVG::SVGClipPathElement const> clip_path() const;
+
+    JS::NonnullGCPtr<Geometry::DOMRect> get_b_box(Optional<SVGBoundingBoxOptions>);
+    JS::NonnullGCPtr<SVGAnimatedTransformList> transform() const;
 
 protected:
     SVGGraphicsElement(DOM::Document&, DOM::QualifiedName);
