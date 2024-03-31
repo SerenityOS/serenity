@@ -7,7 +7,7 @@
 #include "BoardView.h"
 #include "Game.h"
 #include "GameSizeDialog.h"
-#include <Games/2048/GameWindowGML.h>
+#include <Games/TwentyFourtyEight/GameWindowGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
