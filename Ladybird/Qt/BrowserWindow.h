@@ -128,8 +128,9 @@ private:
         }
     }
 
-    QIcon icon_for_page_mute_state() const;
-    QString tool_tip_for_page_mute_state() const;
+    QIcon icon_for_page_mute_state(Tab&) const;
+    QString tool_tip_for_page_mute_state(Tab&) const;
+    QTabBar::ButtonPosition audio_button_position_for_tab(int tab_index) const;
 
     QScreen* m_current_screen;
     double m_device_pixel_ratio { 0 };

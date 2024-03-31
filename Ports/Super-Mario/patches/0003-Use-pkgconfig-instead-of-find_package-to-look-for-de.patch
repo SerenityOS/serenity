@@ -35,6 +35,6 @@ index 616d876..d1aa020 100644
  add_executable (uMario ${uMario_SOURCES})
  
 -target_link_libraries(uMario ${SDL2_LIBRARY} ${SDL2_IMAGE_LIBRARY} ${SDL2_MIXER_LIBRARY})
-+target_link_libraries(uMario ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES} ${SDL2_MIXER_LIBRARIES}-lSDL2_mixer -lpthread -lm -lgfx -lgui -lipc -lcore)
++target_link_libraries(uMario ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES} ${SDL2_MIXER_LIBRARIES}-lSDL2_mixer -lpthread -lm -lgfx -lgui -lipc -lcore -lcoreminimal)
  
  install(TARGETS uMario RUNTIME DESTINATION ${BIN_DIR})

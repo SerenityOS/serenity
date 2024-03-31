@@ -30,7 +30,7 @@ index b65eb85244acec722b2f240976f184f06db11a27..840845dc1f5d7459bfbb339071b817ad
  endif
  
 +xmp_SOURCES += sound_serenity.cpp
-+xmp_LDADD   += -lcore -lipc -laudio -lstdc++
++xmp_LDADD   += -lcore -lcoreminimal -lipc -laudio -lstdc++
 +
  man_MANS = xmp.1
  

@@ -19,7 +19,7 @@ configure() {
         --enable-webp-shared='false' \
         --disable-static \
         --enable-shared \
-        LDFLAGS='-lgui -lgfx -lipc -lcore -lm'
+        LDFLAGS='-lgui -lgfx -lipc -lcore -lcoreminimal -lm'
 }
 
 build() {

@@ -14,7 +14,7 @@ index 0000000000000000000000000000000000000000..3e038d0ac1660d7ee485bc32ddaec5a1
 --- /dev/null
 +++ b/cnf/hints/serenity
 @@ -0,0 +1,24 @@
-+libs='-ldl -lm -lcrypt -lcore'
++libs='-ldl -lm -lcrypt -lcore -lcoreminimal'
 +
 +# Use OS's malloc() by default.
 +case "$usemymalloc" in

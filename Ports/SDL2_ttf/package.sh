@@ -18,5 +18,5 @@ configure() {
         --disable-static \
         --enable-shared \
         FT2_CFLAGS="-I${SERENITY_INSTALL_ROOT}/usr/local/include/freetype2" \
-        LIBS='-lgui -lgfx -lipc -lcore -lcompress'
+        LIBS='-lgui -lgfx -lipc -lcore -lcoreminimal -lcompress'
 }

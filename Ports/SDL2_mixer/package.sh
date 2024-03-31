@@ -22,7 +22,7 @@ configure() {
         --enable-music-opus-shared='false' \
         --disable-static \
         --enable-shared \
-        EXTRA_LDFLAGS='-lgui -lgfx -lipc -lcore -lcompression'
+        EXTRA_LDFLAGS='-lgui -lgfx -lipc -lcore -lcoreminimal -lcompression'
 }
 
 post_configure() {
