@@ -41,6 +41,7 @@ static bool is_platform_object(Type const& type)
         "CryptoKey"sv,
         "Document"sv,
         "DocumentType"sv,
+        "DOMRectReadOnly"sv,
         "EventTarget"sv,
         "FileList"sv,
         "FormData"sv,
@@ -3269,7 +3270,7 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.getter_callback@)
         retval = "@missing_enum_default_value@"_string;
 
     Array valid_values { @valid_enum_values@ };
-    
+
     auto found = false;
     for (auto const& value : valid_values) {
         if (value.equals_ignoring_ascii_case(retval)) {
@@ -3297,7 +3298,7 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.getter_callback@)
                     // 8. Return the canonical keyword for the state of attributeDefinition that contentAttributeValue corresponds to.
                     // NOTE: We run step 8 here to have a field to assign to
                     attribute_generator.append(R"~~~(
-    auto retval = impl->attribute(HTML::AttributeNames::@attribute.reflect_name@);    
+    auto retval = impl->attribute(HTML::AttributeNames::@attribute.reflect_name@);
 )~~~");
 
                     // 3. Let attributeDefinition be the attribute definition of element's content attribute whose namespace is null
@@ -3326,7 +3327,7 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.getter_callback@)
     )~~~");
                     if (invalid_value_default.has_value()) {
                         attribute_generator.append(R"~~~(
-    
+
     if (retval.has_value()) {
         auto found = false;
         for (auto const& value : valid_values) {
