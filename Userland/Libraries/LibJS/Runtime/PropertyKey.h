@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/DeprecatedFlyString.h>
+#include <AK/FlyString.h>
 #include <LibJS/Heap/Handle.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/StringOrSymbol.h>
@@ -68,6 +69,12 @@ public:
     PropertyKey(ByteString const& string)
         : m_type(Type::String)
         , m_string(DeprecatedFlyString(string))
+    {
+    }
+
+    PropertyKey(FlyString const& string)
+        : m_type(Type::String)
+        , m_string(string.to_deprecated_fly_string())
     {
     }
 
