@@ -644,6 +644,9 @@ SupportedAlgorithmsMap supported_algorithms()
     define_an_algorithm<ECDSA, EcdsaParams>("verify"_string, "ECDSA"_string);
     define_an_algorithm<ECDSA, EcKeyGenParams>("generateKey"_string, "ECDSA"_string);
 
+    // https://wicg.github.io/webcrypto-secure-curves/#ed25519
+    define_an_algorithm<ED25519>("generateKey"_string, "Ed25519"_string);
+
     return internal_object;
 }
 
