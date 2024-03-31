@@ -646,6 +646,7 @@ SupportedAlgorithmsMap supported_algorithms()
 
     // https://wicg.github.io/webcrypto-secure-curves/#ed25519
     define_an_algorithm<ED25519>("sign"_string, "Ed25519"_string);
+    define_an_algorithm<ED25519>("verify"_string, "Ed25519"_string);
     define_an_algorithm<ED25519>("generateKey"_string, "Ed25519"_string);
 
     return internal_object;
