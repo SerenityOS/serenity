@@ -6,7 +6,6 @@
  */
 
 #include "MailSettingsWidget.h"
-#include <Applications/MailSettings/MailSettingsWidgetGML.h>
 #include <LibConfig/Client.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/CheckBox.h>
@@ -15,6 +14,7 @@
 #include <LibGUI/Label.h>
 #include <LibGUI/TextBox.h>
 
+namespace MailSettings {
 void MailSettingsWidget::reset_default_values()
 {
     m_server_inputbox->set_text(""sv);
@@ -36,20 +36,11 @@ void MailSettingsWidget::apply_settings()
     Config::write_string("Mail"sv, "User"sv, "Username"sv, m_email);
 }
 
-ErrorOr<NonnullRefPtr<MailSettingsWidget>> MailSettingsWidget::try_create()
-{
-    auto widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) MailSettingsWidget()));
-    TRY(widget->setup());
-    return widget;
-}
-
-ErrorOr<void> MailSettingsWidget::setup()
+ErrorOr<void> MailSettingsWidget::initialize()
 {
     // Common port values for email fetching
     m_common_ports.append("143");
     m_common_ports.append("993");
-
-    TRY(load_from_gml(mail_settings_widget_gml));
 
     m_server_inputbox = *find_descendant_of_type_named<GUI::TextBox>("server_input");
     m_server_inputbox->set_text(Config::read_string("Mail"sv, "Connection"sv, "Server"sv, ""sv));
@@ -78,4 +69,5 @@ ErrorOr<void> MailSettingsWidget::setup()
     };
 
     return {};
+}
 }
