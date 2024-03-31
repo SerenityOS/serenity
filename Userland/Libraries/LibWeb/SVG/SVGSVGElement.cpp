@@ -11,11 +11,13 @@
 #include <LibWeb/CSS/StyleValues/PercentageStyleValue.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
+#include <LibWeb/DOM/StaticNodeList.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/Layout/SVGSVGBox.h>
 #include <LibWeb/SVG/AttributeNames.h>
 #include <LibWeb/SVG/SVGAnimatedRect.h>
 #include <LibWeb/SVG/SVGSVGElement.h>
+#include <LibWeb/Selection/Selection.h>
 
 namespace Web::SVG {
 
@@ -147,6 +149,103 @@ Optional<ViewBox> SVGSVGElement::view_box() const
         return m_fallback_view_box_for_svg_as_image;
 
     return {};
+}
+
+JS::NonnullGCPtr<SVGAnimatedLength> SVGSVGElement::x() const
+{
+    return svg_animated_length_for_property(CSS::PropertyID::X);
+}
+
+JS::NonnullGCPtr<SVGAnimatedLength> SVGSVGElement::y() const
+{
+    return svg_animated_length_for_property(CSS::PropertyID::Y);
+}
+
+JS::NonnullGCPtr<SVGAnimatedLength> SVGSVGElement::width() const
+{
+    return svg_animated_length_for_property(CSS::PropertyID::Width);
+}
+
+JS::NonnullGCPtr<SVGAnimatedLength> SVGSVGElement::height() const
+{
+    return svg_animated_length_for_property(CSS::PropertyID::Height);
+}
+
+float SVGSVGElement::current_scale() const
+{
+    dbgln("(STUBBED) SVGSVGElement::current_scale(). Called on: {}", debug_description());
+    return 1.0f;
+}
+
+void SVGSVGElement::set_current_scale(float)
+{
+    dbgln("(STUBBED) SVGSVGElement::set_current_scale(). Called on: {}", debug_description());
+}
+
+JS::NonnullGCPtr<Geometry::DOMPointReadOnly> SVGSVGElement::current_translate() const
+{
+    dbgln("(STUBBED) SVGSVGElement::current_translate(). Called on: {}", debug_description());
+    return Geometry::DOMPointReadOnly::create(realm());
+}
+
+JS::NonnullGCPtr<DOM::NodeList> SVGSVGElement::get_intersection_list(JS::NonnullGCPtr<Geometry::DOMRectReadOnly>, JS::GCPtr<SVGElement>) const
+{
+    dbgln("(STUBBED) SVGSVGElement::get_intersection_list(). Called on: {}", debug_description());
+    return DOM::StaticNodeList::create(realm(), {});
+}
+
+JS::NonnullGCPtr<DOM::NodeList> SVGSVGElement::get_enclosure_list(JS::NonnullGCPtr<Geometry::DOMRectReadOnly>, JS::GCPtr<SVGElement>) const
+{
+    dbgln("(STUBBED) SVGSVGElement::get_enclosure_list(). Called on: {}", debug_description());
+    return DOM::StaticNodeList::create(realm(), {});
+}
+
+bool SVGSVGElement::check_intersection(JS::NonnullGCPtr<SVGElement>, JS::NonnullGCPtr<Geometry::DOMRectReadOnly>) const
+{
+    dbgln("(STUBBED) SVGSVGElement::check_intersection(). Called on: {}", debug_description());
+    return false;
+}
+
+bool SVGSVGElement::check_enclosure(JS::NonnullGCPtr<SVGElement>, JS::NonnullGCPtr<Geometry::DOMRectReadOnly>) const
+{
+    dbgln("(STUBBED) SVGSVGElement::check_enclosure(). Called on: {}", debug_description());
+    return false;
+}
+
+void SVGSVGElement::deselect_all() const
+{
+    // This is equivalent to calling document.getSelection().removeAllRanges() on the document that this ‘svg’ element is in.
+    if (auto selection = document().get_selection())
+        selection->remove_all_ranges();
+}
+
+JS::NonnullGCPtr<SVGLength> SVGSVGElement::create_svg_length() const
+{
+    // A new, detached SVGLength object whose value is the unitless <number> 0.
+    return SVGLength::create(realm(), SVGLength::SVG_LENGTHTYPE_NUMBER, 0);
+}
+
+JS::NonnullGCPtr<Geometry::DOMPoint> SVGSVGElement::create_svg_point() const
+{
+    // A new, detached DOMPoint object whose coordinates are all 0.
+    return Geometry::DOMPoint::from_point(vm(), Geometry::DOMPointInit {});
+}
+
+JS::NonnullGCPtr<Geometry::DOMMatrix> SVGSVGElement::create_svg_matrix() const
+{
+    // A new, detached DOMMatrix object representing the identity matrix.
+    return Geometry::DOMMatrix::create(realm());
+}
+
+JS::NonnullGCPtr<Geometry::DOMRect> SVGSVGElement::create_svg_rect() const
+{
+    // A new, DOMRect object whose x, y, width and height are all 0.
+    return Geometry::DOMRect::construct_impl(realm(), 0, 0, 0, 0).release_value_but_fixme_should_propagate_errors();
+}
+
+JS::NonnullGCPtr<SVGTransform> SVGSVGElement::create_svg_transform() const
+{
+    return SVGTransform::create(realm());
 }
 
 }
