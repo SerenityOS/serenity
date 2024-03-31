@@ -1212,9 +1212,6 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
     if (inputs.uses_huffman_encoding)
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode huffman text regions yet");
 
-    if (inputs.is_transposed)
-        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode transposed text regions yet");
-
     auto decoder = TRY(JBIG2::ArithmeticDecoder::initialize(data));
 
     // 6.4.6 Strip delta T
@@ -1441,15 +1438,12 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
             //          If any part of IBI, when placed at this location, lies outside the bounds of SBREG, then ignore
             //          this part of IBI in step 3 c) ix)."
             // Implementor's note: The spec means "ignore this part of IBI in step 3 c) x)" in 3c viii)'s last sentence.
-            // FIXME: Support all reference corners and transpose values.
-            if (!inputs.is_transposed) {
-                if (inputs.reference_corner == TopRight || inputs.reference_corner == BottomRight)
-                    s_instance -= symbol.width() - 1;
-                if (inputs.reference_corner == BottomLeft || inputs.reference_corner == BottomRight)
-                    t_instance -= symbol.height() - 1;
-            } else {
-                TODO();
-            }
+            if (inputs.reference_corner == TopRight || inputs.reference_corner == BottomRight)
+                s_instance -= symbol.width() - 1;
+            if (inputs.reference_corner == BottomLeft || inputs.reference_corner == BottomRight)
+                t_instance -= symbol.height() - 1;
+            if (inputs.is_transposed)
+                swap(s_instance, t_instance);
 
             //     "ix) If COLEXTFLAG is 1, set the colour specified by SBCOLS[SBFGCOLID[NINSTANCES]]
             //          to the foreground colour of the symbol instance bitmap IBI."
