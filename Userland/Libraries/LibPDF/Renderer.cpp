@@ -1172,13 +1172,6 @@ PDFErrorOr<Renderer::LoadedImage> Renderer::load_image(NonnullRefPtr<StreamObjec
         resampled_storage = upsample_to_8_bit(content, width * n_components, bits_per_component, mode);
         content = resampled_storage;
         bits_per_component = 8;
-
-        if (is_image_mask) {
-            // "a sample value of 0 marks the page with the current color, and a 1 leaves the previous contents unchanged."
-            // That's opposite of the normal alpha convention, and we're upsampling masks to 8 bit and use that as normal alpha.
-            for (u8& byte : resampled_storage)
-                byte = ~byte;
-        }
     } else if (bits_per_component == 16) {
         if (color_space->family() == ColorSpaceFamily::Indexed)
             return Error(Error::Type::RenderingUnsupported, "16 bpp indexed images not yet supported");
@@ -1347,7 +1340,9 @@ PDFErrorOr<void> Renderer::show_image(NonnullRefPtr<StreamObject> image)
         // Move mask to alpha channel, and put current color in RGB.
         auto current_color = state().paint_style.get<Gfx::Color>();
         for (auto& pixel : *image_bitmap.bitmap) {
-            u8 mask_alpha = Color::from_argb(pixel).luminosity();
+            // "a sample value of 0 marks the page with the current color, and a 1 leaves the previous contents unchanged."
+            // That's opposite of the normal alpha convention, and we're upsampling masks to 8 bit and use that as normal alpha.
+            u8 mask_alpha = 255 - Color::from_argb(pixel).luminosity();
             pixel = current_color.with_alpha(mask_alpha).value();
         }
     } else if (image_dict->contains(CommonNames::SMask)) {
