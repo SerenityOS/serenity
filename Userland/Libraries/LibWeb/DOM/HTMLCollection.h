@@ -21,10 +21,6 @@ namespace Web::DOM {
 // The filter is a simple Function object that answers the question
 // "is this Element part of the collection?"
 
-// FIXME: HTMLCollection currently does no caching. It will re-filter on every access!
-//        We should teach it how to cache results. The main challenge is invalidating
-//        these caches, since this needs to happen on various kinds of DOM mutation.
-
 class HTMLCollection : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(HTMLCollection, Bindings::PlatformObject);
     JS_DECLARE_ALLOCATOR(HTMLCollection);
