@@ -282,7 +282,7 @@ NonnullRefPtr<Type const> Parser::parse_type()
     return adopt_ref(*new Type(builder.to_byte_string(), nullable));
 }
 
-void Parser::parse_attribute(HashMap<ByteString, ByteString>& extended_attributes, Interface& interface)
+void Parser::parse_attribute(HashMap<ByteString, ByteString>& extended_attributes, Interface& interface, IsStatic is_static)
 {
     bool inherit = lexer.consume_specific("inherit"sv);
     if (inherit)
@@ -316,7 +316,10 @@ void Parser::parse_attribute(HashMap<ByteString, ByteString>& extended_attribute
         move(getter_callback_name),
         move(setter_callback_name),
     };
-    interface.attributes.append(move(attribute));
+    if (is_static == IsStatic::No)
+        interface.attributes.append(move(attribute));
+    else
+        interface.static_attributes.append(move(attribute));
 }
 
 void Parser::parse_constant(Interface& interface)
@@ -391,14 +394,9 @@ Vector<Parameter> Parser::parse_parameters()
     return parameters;
 }
 
-Function Parser::parse_function(HashMap<ByteString, ByteString>& extended_attributes, Interface& interface, IsSpecialOperation is_special_operation)
+Function Parser::parse_function(HashMap<ByteString, ByteString>& extended_attributes, Interface& interface, IsStatic is_static, IsSpecialOperation is_special_operation)
 {
     auto position = lexer.current_position();
-    bool static_ = false;
-    if (lexer.consume_specific("static"sv)) {
-        static_ = true;
-        consume_whitespace();
-    }
 
     auto return_type = parse_type();
     consume_whitespace();
@@ -414,7 +412,7 @@ Function Parser::parse_function(HashMap<ByteString, ByteString>& extended_attrib
 
     // "Defining a special operation with an identifier is equivalent to separating the special operation out into its own declaration without an identifier."
     if (is_special_operation == IsSpecialOperation::No || (is_special_operation == IsSpecialOperation::Yes && !name.is_empty())) {
-        if (!static_)
+        if (is_static == IsStatic::No)
             interface.functions.append(function);
         else
             interface.static_functions.append(function);
@@ -476,7 +474,7 @@ void Parser::parse_getter(HashMap<ByteString, ByteString>& extended_attributes, 
 {
     assert_string("getter"sv);
     consume_whitespace();
-    auto function = parse_function(extended_attributes, interface, IsSpecialOperation::Yes);
+    auto function = parse_function(extended_attributes, interface, IsStatic::No, IsSpecialOperation::Yes);
 
     if (function.parameters.size() != 1)
         report_parsing_error(ByteString::formatted("Named/indexed property getters must have only 1 parameter, got {} parameters.", function.parameters.size()), filename, input, lexer.tell());
@@ -510,7 +508,7 @@ void Parser::parse_setter(HashMap<ByteString, ByteString>& extended_attributes, 
 {
     assert_string("setter"sv);
     consume_whitespace();
-    auto function = parse_function(extended_attributes, interface, IsSpecialOperation::Yes);
+    auto function = parse_function(extended_attributes, interface, IsStatic::No, IsSpecialOperation::Yes);
 
     if (function.parameters.size() != 2)
         report_parsing_error(ByteString::formatted("Named/indexed property setters must have only 2 parameters, got {} parameter(s).", function.parameters.size()), filename, input, lexer.tell());
@@ -550,7 +548,7 @@ void Parser::parse_deleter(HashMap<ByteString, ByteString>& extended_attributes,
 {
     assert_string("deleter"sv);
     consume_whitespace();
-    auto function = parse_function(extended_attributes, interface, IsSpecialOperation::Yes);
+    auto function = parse_function(extended_attributes, interface, IsStatic::No, IsSpecialOperation::Yes);
 
     if (function.parameters.size() != 1)
         report_parsing_error(ByteString::formatted("Named property deleter must have only 1 parameter, got {} parameters.", function.parameters.size()), filename, input, lexer.tell());
@@ -647,7 +645,17 @@ void Parser::parse_interface(Interface& interface)
             continue;
         }
 
-        parse_function(extended_attributes, interface);
+        bool is_static = lexer.consume_specific("static");
+        if (!is_static) {
+            parse_function(extended_attributes, interface, IsStatic::No);
+        } else {
+            consume_whitespace();
+            if (lexer.next_is("readonly") || lexer.next_is("attribute")) {
+                parse_attribute(extended_attributes, interface, IsStatic::Yes);
+            } else {
+                parse_function(extended_attributes, interface, IsStatic::Yes);
+            }
+        }
     }
 
     if (auto legacy_namespace = interface.extended_attributes.get("LegacyNamespace"sv); legacy_namespace.has_value())
@@ -1080,6 +1088,8 @@ Interface& Parser::parse()
 
     // Resolve typedefs
     for (auto& attribute : interface.attributes)
+        resolve_typedef(interface, attribute.type, &attribute.extended_attributes);
+    for (auto& attribute : interface.static_attributes)
         resolve_typedef(interface, attribute.type, &attribute.extended_attributes);
     for (auto& constant : interface.constants)
         resolve_typedef(interface, constant.type);
