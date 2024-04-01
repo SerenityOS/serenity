@@ -122,10 +122,15 @@ void DateTime::set_date(Core::DateTime const& other)
     set_time(other.year(), other.month(), other.day(), hour(), minute(), second());
 }
 
-ErrorOr<String> DateTime::to_string(StringView format) const
+ErrorOr<String> DateTime::to_string(StringView format, LocalTime local_time) const
 {
     struct tm tm;
-    localtime_r(&m_timestamp, &tm);
+
+    if (local_time == LocalTime::Yes)
+        localtime_r(&m_timestamp, &tm);
+    else
+        gmtime_r(&m_timestamp, &tm);
+
     StringBuilder builder;
     size_t const format_len = format.length();
 
@@ -315,9 +320,9 @@ ErrorOr<String> DateTime::to_string(StringView format) const
     return builder.to_string();
 }
 
-ByteString DateTime::to_byte_string(StringView format) const
+ByteString DateTime::to_byte_string(StringView format, LocalTime local_time) const
 {
-    return MUST(to_string(format)).to_byte_string();
+    return MUST(to_string(format, local_time)).to_byte_string();
 }
 
 Optional<DateTime> DateTime::parse(StringView format, StringView string)
