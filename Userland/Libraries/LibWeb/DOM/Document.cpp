@@ -301,6 +301,10 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> Document::create_and_initialize(
 
     document->m_window = window;
 
+    // NOTE: Non-standard: Pull out the Last-Modified header for use in the lastModified property.
+    if (auto maybe_last_modified = MUST(navigation_params.response->header_list()->get("Last-Modified"sv.bytes())); maybe_last_modified.has_value())
+        document->m_last_modified = Core::DateTime::parse("%a, %d %b %Y %H:%M:%S %Z"sv, maybe_last_modified.value());
+
     // 11. Set window's associated Document to document.
     window->set_associated_document(*document);
 
@@ -2156,6 +2160,36 @@ void Document::update_readiness(HTML::DocumentReadyState readiness_value)
             m_needs_to_call_page_did_load = true;
         }
     }
+}
+
+// https://html.spec.whatwg.org/multipage/dom.html#dom-document-lastmodified
+String Document::last_modified() const
+{
+    // The lastModified attribute, on getting, must return the date and time of the Document's source file's
+    // last modification, in the user's local time zone, in the following format:
+
+    // 1. The month component of the date.
+    // 2. A U+002F SOLIDUS character (/).
+    // 3. The day component of the date.
+    // 4. A U+002F SOLIDUS character (/).
+    // 5. The year component of the date.
+    // 6. A U+0020 SPACE character.
+    // 7. The hours component of the time.
+    // 8. A U+003A COLON character (:).
+    // 9. The minutes component of the time.
+    // 10. A U+003A COLON character (:).
+    // 11. The seconds component of the time.
+
+    // The Document's source file's last modification date and time must be derived from relevant features
+    // of the networking protocols used, e.g. from the value of the HTTP `Last-Modified` header of the document,
+    // or from metadata in the file system for local files. If the last modification date and time are not known,
+    // the attribute must return the current date and time in the above format.
+    constexpr auto format_string = "%m/%d/%Y %H:%M:%S"sv;
+
+    if (m_last_modified.has_value())
+        return MUST(m_last_modified.value().to_string(format_string));
+
+    return MUST(Core::DateTime::now().to_string(format_string));
 }
 
 Page& Document::page()
