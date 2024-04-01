@@ -3849,6 +3849,20 @@ private:
     virtual bool has_constructor() const override { return true; }
 )~~~");
 
+    for (auto& attribute : interface.static_attributes) {
+        auto attribute_generator = generator.fork();
+        attribute_generator.set("attribute.name:snakecase", attribute.name.to_snakecase());
+        attribute_generator.append(R"~~~(
+    JS_DECLARE_NATIVE_FUNCTION(@attribute.name:snakecase@_getter);
+)~~~");
+
+        if (!attribute.readonly) {
+            attribute_generator.append(R"~~~(
+    JS_DECLARE_NATIVE_FUNCTION(@attribute.name:snakecase@_setter);
+)~~~");
+        }
+    }
+
     for (auto const& overload_set : interface.constructor_overload_sets) {
         auto constructor_generator = generator.fork();
         if (overload_set.value.size() > 1) {
@@ -4050,6 +4064,22 @@ void @constructor_class@::initialize(JS::Realm& realm)
 )~~~");
     }
 
+    for (auto& attribute : interface.static_attributes) {
+        auto attribute_generator = generator.fork();
+        attribute_generator.set("attribute.name", attribute.name);
+        attribute_generator.set("attribute.getter_callback", attribute.getter_callback_name);
+        attribute_generator.set("attribute.getter_callback", attribute.getter_callback_name);
+
+        if (!attribute.readonly)
+            attribute_generator.set("attribute.setter_callback", attribute.setter_callback_name);
+        else
+            attribute_generator.set("attribute.setter_callback", "nullptr");
+
+        attribute_generator.append(R"~~~(
+    define_native_accessor(realm, "@attribute.name@", @attribute.getter_callback@, @attribute.setter_callback@, default_attributes);
+)~~~");
+    }
+
     // https://webidl.spec.whatwg.org/#es-operations
     for (auto const& overload_set : interface.static_overload_sets) {
         auto function_generator = generator.fork();
@@ -4065,6 +4095,35 @@ void @constructor_class@::initialize(JS::Realm& realm)
     generator.append(R"~~~(
 }
 )~~~");
+
+    // Implementation: Static Attributes
+    for (auto& attribute : interface.static_attributes) {
+        auto attribute_generator = generator.fork();
+        attribute_generator.set("attribute.name", attribute.name);
+        attribute_generator.set("attribute.getter_callback", attribute.getter_callback_name);
+        attribute_generator.set("attribute.setter_callback", attribute.setter_callback_name);
+
+        if (attribute.extended_attributes.contains("ImplementedAs")) {
+            auto implemented_as = attribute.extended_attributes.get("ImplementedAs").value();
+            attribute_generator.set("attribute.cpp_name", implemented_as);
+        } else {
+            attribute_generator.set("attribute.cpp_name", attribute.name.to_snakecase());
+        }
+
+        attribute_generator.append(R"~~~(
+JS_DEFINE_NATIVE_FUNCTION(@constructor_class@::@attribute.getter_callback@)
+{
+    auto retval = TRY(throw_dom_exception_if_needed(vm, [&] { return @fully_qualified_name@::@attribute.cpp_name@(vm); }));
+)~~~");
+
+        generate_return_statement(generator, *attribute.type, interface);
+
+        attribute_generator.append(R"~~~(
+}
+)~~~");
+
+        // FIXME: Add support for static attribute setters.
+    }
 
     // Implementation: Static Functions
     for (auto& function : interface.static_functions)

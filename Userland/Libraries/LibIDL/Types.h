@@ -270,6 +270,7 @@ public:
     HashMap<ByteString, ByteString> extended_attributes;
 
     Vector<Attribute> attributes;
+    Vector<Attribute> static_attributes;
     Vector<Constant> constants;
     Vector<Constructor> constructors;
     Vector<Function> functions;
