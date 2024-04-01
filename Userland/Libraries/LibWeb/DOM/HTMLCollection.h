@@ -56,6 +56,8 @@ protected:
 private:
     virtual void visit_edges(Cell::Visitor&) override;
 
+    void update_cache_if_needed() const;
+
     mutable u64 m_cached_dom_tree_version { 0 };
     mutable Vector<JS::NonnullGCPtr<Element>> m_cached_elements;
 
