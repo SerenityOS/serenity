@@ -31,6 +31,7 @@ ResizeObservation::ResizeObservation(JS::Realm& realm, DOM::Element& target, Bin
 void ResizeObservation::visit_edges(JS::Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
+    visitor.visit(m_realm);
     visitor.visit(m_target);
     for (auto& size : m_last_reported_sizes)
         visitor.visit(size);
