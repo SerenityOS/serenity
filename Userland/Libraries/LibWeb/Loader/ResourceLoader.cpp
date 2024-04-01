@@ -7,6 +7,7 @@
 
 #include <AK/Debug.h>
 #include <AK/JsonObject.h>
+#include <LibCore/DateTime.h>
 #include <LibCore/Directory.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/MimeData.h>
@@ -166,7 +167,7 @@ static void store_response_cookies(Page& page, URL::URL const& url, ByteString c
 
 static size_t resource_id = 0;
 
-static HashMap<ByteString, ByteString, CaseInsensitiveStringTraits> response_headers_for_file(StringView path)
+static HashMap<ByteString, ByteString, CaseInsensitiveStringTraits> response_headers_for_file(StringView path, Optional<time_t> const& modified_time)
 {
     // For file:// and resource:// URLs, we have to guess the MIME type, since there's no HTTP header to tell us what
     // it is. We insert a fake Content-Type header here, so that clients can use it to learn the MIME type.
@@ -174,6 +175,11 @@ static HashMap<ByteString, ByteString, CaseInsensitiveStringTraits> response_hea
 
     HashMap<ByteString, ByteString, CaseInsensitiveStringTraits> response_headers;
     response_headers.set("Content-Type"sv, mime_type);
+
+    if (modified_time.has_value()) {
+        auto const datetime = Core::DateTime::from_timestamp(modified_time.value());
+        response_headers.set("Last-Modified"sv, datetime.to_byte_string("%a, %d %b %Y %H:%M:%S GMT"sv, Core::DateTime::LocalTime::No));
+    }
 
     return response_headers;
 }
@@ -293,7 +299,7 @@ void ResourceLoader::load(LoadRequest& request, SuccessCallback success_callback
         }
 
         auto data = resource.value()->data();
-        auto response_headers = response_headers_for_file(url.serialize_path());
+        auto response_headers = response_headers_for_file(url.serialize_path(), resource.value()->modified_time());
 
         log_success(request);
         success_callback(data, response_headers, {});
@@ -333,6 +339,14 @@ void ResourceLoader::load(LoadRequest& request, SuccessCallback success_callback
                 return;
             }
 
+            auto st_or_error = Core::System::fstat(fd);
+            if (st_or_error.is_error()) {
+                log_failure(request, st_or_error.error());
+                if (error_callback)
+                    error_callback(ByteString::formatted("{}", st_or_error.error()), 500u, {}, {});
+                return;
+            }
+
             // Try to read file normally
             auto maybe_file = Core::File::adopt_fd(fd, Core::File::OpenMode::Read);
             if (maybe_file.is_error()) {
@@ -352,7 +366,7 @@ void ResourceLoader::load(LoadRequest& request, SuccessCallback success_callback
             }
 
             auto data = maybe_data.release_value();
-            auto response_headers = response_headers_for_file(request.url().serialize_path());
+            auto response_headers = response_headers_for_file(request.url().serialize_path(), st_or_error.value().st_mtime);
 
             log_success(request);
             success_callback(data, response_headers, {});
