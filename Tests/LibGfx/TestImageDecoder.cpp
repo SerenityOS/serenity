@@ -366,6 +366,7 @@ TEST_CASE(test_jbig2_decode)
         TEST_INPUT("jbig2/bitmap-symbol.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-textrefine.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-symbolrefine.jbig2"sv),
+        TEST_INPUT("jbig2/bitmap-symbol-texttranspose.jbig2"sv),
     };
 
     for (auto test_input : test_inputs) {
