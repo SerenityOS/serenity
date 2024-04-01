@@ -19,6 +19,7 @@
 #import <DOM/Range.idl>
 #import <DOM/Text.idl>
 #import <DOM/TreeWalker.idl>
+#import <HTML/HTMLAllCollection.idl>
 #import <HTML/HTMLElement.idl>
 #import <HTML/HTMLHeadElement.idl>
 #import <HTML/HTMLScriptElement.idl>
@@ -75,8 +76,7 @@ interface Document : Node {
     [SameObject] readonly attribute HTMLCollection forms;
     [SameObject] readonly attribute HTMLCollection scripts;
 
-    // FIXME: Should return an HTMLAllCollection
-    readonly attribute HTMLCollection all;
+    readonly attribute HTMLAllCollection all;
 
     [CEReactions, NewObject] Element createElement(DOMString tagName, optional (DOMString or ElementCreationOptions) options = {});
     [CEReactions, NewObject] Element createElementNS([FlyString] DOMString? namespace, DOMString qualifiedName, optional (DOMString or ElementCreationOptions) options = {});

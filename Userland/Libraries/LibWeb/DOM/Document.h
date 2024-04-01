@@ -240,7 +240,7 @@ public:
     JS::NonnullGCPtr<HTMLCollection> links();
     JS::NonnullGCPtr<HTMLCollection> forms();
     JS::NonnullGCPtr<HTMLCollection> scripts();
-    JS::NonnullGCPtr<HTMLCollection> all();
+    JS::NonnullGCPtr<HTML::HTMLAllCollection> all();
 
     String const& source() const { return m_source; }
     void set_source(String source) { m_source = move(source); }
@@ -782,7 +782,7 @@ private:
     JS::GCPtr<HTMLCollection> m_links;
     JS::GCPtr<HTMLCollection> m_forms;
     JS::GCPtr<HTMLCollection> m_scripts;
-    JS::GCPtr<HTMLCollection> m_all;
+    JS::GCPtr<HTML::HTMLAllCollection> m_all;
 
     // https://html.spec.whatwg.org/#completely-loaded-time
     Optional<AK::UnixDateTime> m_completely_loaded_time;
