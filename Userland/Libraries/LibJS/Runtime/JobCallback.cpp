@@ -18,6 +18,7 @@ JS::NonnullGCPtr<JobCallback> JobCallback::create(JS::VM& vm, FunctionObject& ca
 
 void JobCallback::visit_edges(Visitor& visitor)
 {
+    Base::visit_edges(visitor);
     visitor.visit(m_callback);
 }
 
