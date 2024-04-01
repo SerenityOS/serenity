@@ -86,17 +86,18 @@ JS::MarkedVector<JS::NonnullGCPtr<Element>> HTMLCollection::collect_matching_ele
 size_t HTMLCollection::length() const
 {
     // The length getter steps are to return the number of nodes represented by the collection.
-    return collect_matching_elements().size();
+    update_cache_if_needed();
+    return m_cached_elements.size();
 }
 
 // https://dom.spec.whatwg.org/#dom-htmlcollection-item
 Element* HTMLCollection::item(size_t index) const
 {
     // The item(index) method steps are to return the indexth element in the collection. If there is no indexth element in the collection, then the method must return null.
-    auto elements = collect_matching_elements();
-    if (index >= elements.size())
+    update_cache_if_needed();
+    if (index >= m_cached_elements.size())
         return nullptr;
-    return elements[index];
+    return m_cached_elements[index];
 }
 
 // https://dom.spec.whatwg.org/#dom-htmlcollection-nameditem-key
@@ -105,7 +106,10 @@ Element* HTMLCollection::named_item(FlyString const& name) const
     // 1. If key is the empty string, return null.
     if (name.is_empty())
         return nullptr;
-    auto elements = collect_matching_elements();
+
+    update_cache_if_needed();
+    auto const& elements = m_cached_elements;
+
     // 2. Return the first element in the collection for which at least one of the following is true:
     //      - it has an ID which is key;
     if (auto it = elements.find_if([&](auto& entry) { return entry->id().has_value() && entry->id().value() == name; }); it != elements.end())
@@ -124,9 +128,8 @@ Vector<FlyString> HTMLCollection::supported_property_names() const
     Vector<FlyString> result;
 
     // 2. For each element represented by the collection, in tree order:
-    auto elements = collect_matching_elements();
-
-    for (auto& element : elements) {
+    update_cache_if_needed();
+    for (auto const& element : m_cached_elements) {
         // 1. If element has an ID which is not in result, append element’s ID to result.
         if (auto const& id = element->id(); id.has_value()) {
             if (!result.contains_slow(id.value()))
