@@ -46,6 +46,8 @@ public:
 
     void append_to_observer_buffer(Badge<HTML::WindowOrWorkerGlobalScopeMixin>, JS::NonnullGCPtr<PerformanceTimeline::PerformanceEntry>);
 
+    static JS::NonnullGCPtr<JS::Object> supported_entry_types(JS::VM&);
+
 private:
     PerformanceObserver(JS::Realm&, JS::GCPtr<WebIDL::CallbackType>);
 

@@ -12,6 +12,7 @@
 #include <AK/Utf8View.h>
 #include <AK/Vector.h>
 #include <LibJS/Heap/HeapFunction.h>
+#include <LibJS/Runtime/Array.h>
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Fetch/FetchMethod.h>
@@ -59,6 +60,7 @@ void WindowOrWorkerGlobalScopeMixin::initialize(JS::Realm&)
 void WindowOrWorkerGlobalScopeMixin::visit_edges(JS::Cell::Visitor& visitor)
 {
     visitor.visit(m_performance);
+    visitor.visit(m_supported_entry_types_array);
     for (auto& it : m_timers)
         visitor.visit(it.value);
     for (auto& observer : m_registered_performance_observer_objects)
@@ -593,6 +595,30 @@ JS::NonnullGCPtr<HighResolutionTime::Performance> WindowOrWorkerGlobalScopeMixin
     if (!m_performance)
         m_performance = this_impl().heap().allocate<HighResolutionTime::Performance>(this_impl().realm(), *this);
     return JS::NonnullGCPtr { *m_performance };
+}
+
+// https://w3c.github.io/performance-timeline/#dfn-frozen-array-of-supported-entry-types
+JS::NonnullGCPtr<JS::Object> WindowOrWorkerGlobalScopeMixin::supported_entry_types() const
+{
+    // Each global object has an associated frozen array of supported entry types, which is initialized to the
+    // FrozenArray created from the sequence of strings among the registry that are supported for the global
+    // object, in alphabetical order.
+    auto& vm = this_impl().vm();
+    auto& realm = this_impl().realm();
+
+    if (!m_supported_entry_types_array) {
+        Vector<JS::Value> supported_entry_types;
+
+#define __ENUMERATE_SUPPORTED_PERFORMANCE_ENTRY_TYPES(entry_type, cpp_class) \
+    supported_entry_types.append(JS::PrimitiveString::create(vm, entry_type));
+        ENUMERATE_SUPPORTED_PERFORMANCE_ENTRY_TYPES
+#undef __ENUMERATE_SUPPORTED_PERFORMANCE_ENTRY_TYPES
+
+        m_supported_entry_types_array = JS::Array::create_from(realm, supported_entry_types);
+        MUST(m_supported_entry_types_array->set_integrity_level(JS::Object::IntegrityLevel::Frozen));
+    }
+
+    return *m_supported_entry_types_array;
 }
 
 }
