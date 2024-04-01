@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
- * Copyright (c) 2023, Shannon Booth <shannon@serenityos.org>
+ * Copyright (c) 2023-2024, Shannon Booth <shannon@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,6 +14,7 @@
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <AK/WeakPtr.h>
+#include <LibCore/DateTime.h>
 #include <LibCore/Forward.h>
 #include <LibJS/Forward.h>
 #include <LibURL/URL.h>
@@ -322,6 +323,8 @@ public:
     StringView ready_state() const;
     HTML::DocumentReadyState readiness() const { return m_readiness; }
     void update_readiness(HTML::DocumentReadyState);
+
+    String last_modified() const;
 
     [[nodiscard]] JS::GCPtr<HTML::Window> window() const { return m_window; }
 
@@ -871,6 +874,8 @@ private:
     mutable JS::GCPtr<WebIDL::ObservableArray> m_adopted_style_sheets;
 
     Vector<JS::NonnullGCPtr<DOM::ShadowRoot>> m_shadow_roots;
+
+    Optional<Core::DateTime> m_last_modified;
 
     u64 m_dom_tree_version { 0 };
 

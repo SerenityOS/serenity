@@ -103,6 +103,7 @@ interface Document : Node {
     readonly attribute HTMLHeadElement? head;
     readonly attribute HTMLScriptElement? currentScript;
 
+    readonly attribute DOMString lastModified;
     readonly attribute DOMString readyState;
 
     [CEReactions] attribute DOMString title;
