@@ -150,8 +150,7 @@ bool HTMLCollection::is_supported_property_index(u32 index) const
 {
     // The object’s supported property indices are the numbers in the range zero to one less than the number of elements represented by the collection.
     // If there are no such elements, then there are no supported property indices.
-    auto elements = collect_matching_elements();
-    return index < elements.size();
+    return index < length();
 }
 
 WebIDL::ExceptionOr<JS::Value> HTMLCollection::item_value(size_t index) const
