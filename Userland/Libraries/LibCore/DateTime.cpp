@@ -127,7 +127,7 @@ ErrorOr<String> DateTime::to_string(StringView format) const
     struct tm tm;
     localtime_r(&m_timestamp, &tm);
     StringBuilder builder;
-    int const format_len = format.length();
+    size_t const format_len = format.length();
 
     auto format_time_zone_offset = [&](bool with_separator) -> ErrorOr<void> {
         struct tm gmt_tm;
@@ -154,7 +154,7 @@ ErrorOr<String> DateTime::to_string(StringView format) const
         return {};
     };
 
-    for (int i = 0; i < format_len; ++i) {
+    for (size_t i = 0; i < format_len; ++i) {
         if (format[i] != '%') {
             TRY(builder.try_append(format[i]));
         } else {
