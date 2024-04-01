@@ -25,19 +25,19 @@ ResourceImplementation& ResourceImplementation::the()
     return *s_the;
 }
 
-NonnullRefPtr<Resource> ResourceImplementation::make_resource(String full_path, NonnullOwnPtr<Core::MappedFile> file)
+NonnullRefPtr<Resource> ResourceImplementation::make_resource(String full_path, NonnullOwnPtr<Core::MappedFile> file, time_t modified_time)
 {
-    return adopt_ref(*new Resource(move(full_path), Resource::Scheme::Resource, move(file)));
+    return adopt_ref(*new Resource(move(full_path), Resource::Scheme::Resource, move(file), modified_time));
 }
 
-NonnullRefPtr<Resource> ResourceImplementation::make_resource(String full_path, ByteBuffer buffer)
+NonnullRefPtr<Resource> ResourceImplementation::make_resource(String full_path, ByteBuffer buffer, time_t modified_time)
 {
-    return adopt_ref(*new Resource(move(full_path), Resource::Scheme::Resource, move(buffer)));
+    return adopt_ref(*new Resource(move(full_path), Resource::Scheme::Resource, move(buffer), modified_time));
 }
 
-NonnullRefPtr<Resource> ResourceImplementation::make_directory_resource(String full_path)
+NonnullRefPtr<Resource> ResourceImplementation::make_directory_resource(String full_path, time_t modified_time)
 {
-    return adopt_ref(*new Resource(move(full_path), Resource::Scheme::Resource, Resource::DirectoryTag {}));
+    return adopt_ref(*new Resource(move(full_path), Resource::Scheme::Resource, Resource::DirectoryTag {}, modified_time));
 }
 
 ErrorOr<NonnullRefPtr<Resource>> ResourceImplementation::load_from_uri(StringView uri)
@@ -51,10 +51,11 @@ ErrorOr<NonnullRefPtr<Resource>> ResourceImplementation::load_from_uri(StringVie
     if (uri.starts_with(file_scheme)) {
         auto path = uri.substring_view(file_scheme.length());
         auto utf8_path = TRY(String::from_utf8(path));
-        if (is_directory(path))
-            return adopt_ref(*new Resource(utf8_path, Resource::Scheme::File, Resource::DirectoryTag {}));
+        auto st = TRY(System::stat(utf8_path));
+        if (S_ISDIR(st.st_mode))
+            return adopt_ref(*new Resource(utf8_path, Resource::Scheme::File, Resource::DirectoryTag {}, st.st_mtime));
         auto mapped_file = TRY(MappedFile::map(path));
-        return adopt_ref(*new Resource(utf8_path, Resource::Scheme::File, move(mapped_file)));
+        return adopt_ref(*new Resource(utf8_path, Resource::Scheme::File, move(mapped_file), st.st_mtime));
     }
 
     dbgln("ResourceImplementation: Unknown scheme for {}", uri);
@@ -87,16 +88,6 @@ String ResourceImplementation::filesystem_path(Resource const& resource)
     VERIFY(resource.m_scheme == Resource::Scheme::File);
 
     return resource.m_path;
-}
-
-// Note: This is a copy of the impl in LibFilesystem, but we can't link that to LibCore
-bool ResourceImplementation::is_directory(StringView filesystem_path)
-{
-    auto st_or_error = System::stat(filesystem_path);
-    if (st_or_error.is_error())
-        return false;
-    auto st = st_or_error.release_value();
-    return S_ISDIR(st.st_mode);
 }
 
 }

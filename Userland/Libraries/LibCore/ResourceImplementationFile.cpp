@@ -9,6 +9,7 @@
 #include <LibCore/DirIterator.h>
 #include <LibCore/Resource.h>
 #include <LibCore/ResourceImplementationFile.h>
+#include <LibCore/System.h>
 
 namespace Core {
 
@@ -25,10 +26,13 @@ ErrorOr<NonnullRefPtr<Resource>> ResourceImplementationFile::load_from_resource_
 
     auto path = TRY(String::from_utf8(uri.substring_view(resource_scheme.length())));
     auto full_path = TRY(String::from_byte_string(LexicalPath::join(m_base_directory, path).string()));
-    if (is_directory(full_path))
-        return make_directory_resource(move(path));
 
-    return make_resource(path, TRY(MappedFile::map(full_path)));
+    auto st = TRY(System::stat(full_path));
+
+    if (S_ISDIR(st.st_mode))
+        return make_directory_resource(move(path), st.st_mtime);
+
+    return make_resource(path, TRY(MappedFile::map(full_path)), st.st_mtime);
 }
 
 Vector<String> ResourceImplementationFile::child_names_for_resource_scheme(Resource const& resource)

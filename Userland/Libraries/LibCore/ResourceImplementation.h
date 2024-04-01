@@ -28,11 +28,9 @@ protected:
     virtual Vector<String> child_names_for_resource_scheme(Resource const&) = 0;
     virtual String filesystem_path_for_resource_scheme(String const&) = 0;
 
-    static bool is_directory(StringView filesystem_path);
-
-    static NonnullRefPtr<Resource> make_resource(String full_path, NonnullOwnPtr<Core::MappedFile>);
-    static NonnullRefPtr<Resource> make_resource(String full_path, ByteBuffer);
-    static NonnullRefPtr<Resource> make_directory_resource(String full_path);
+    static NonnullRefPtr<Resource> make_resource(String full_path, NonnullOwnPtr<Core::MappedFile>, time_t modified_time);
+    static NonnullRefPtr<Resource> make_resource(String full_path, ByteBuffer, time_t modified_time);
+    static NonnullRefPtr<Resource> make_directory_resource(String full_path, time_t modified_time);
 };
 
 }

@@ -31,6 +31,7 @@ public:
     [[nodiscard]] String filename() const;
     [[nodiscard]] String filesystem_path() const;
     [[nodiscard]] String file_url() const;
+    [[nodiscard]] Optional<time_t> modified_time() const;
 
     [[nodiscard]] ByteBuffer clone_data() const;
     [[nodiscard]] ByteBuffer release_data() &&;
@@ -55,14 +56,15 @@ private:
         Resource,
     };
 
-    Resource(String path, Scheme, NonnullOwnPtr<Core::MappedFile>);
-    Resource(String path, Scheme, ByteBuffer);
-    Resource(String path, Scheme, DirectoryTag);
+    Resource(String path, Scheme, NonnullOwnPtr<Core::MappedFile>, time_t modified_time);
+    Resource(String path, Scheme, ByteBuffer, time_t modified_time);
+    Resource(String path, Scheme, DirectoryTag, time_t modified_time);
 
     String m_path; // Relative to scheme root. File: abspath, Resource: resource root
     Scheme m_scheme;
 
     Variant<DirectoryTag, NonnullOwnPtr<Core::MappedFile>, ByteBuffer> m_data;
+    time_t m_modified_time {};
 };
 
 template<IteratorFunction<Resource const&> Callback>
