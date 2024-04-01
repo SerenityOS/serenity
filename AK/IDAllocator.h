@@ -16,15 +16,20 @@ enum class IDAllocatorMode {
     Random,
     Increasing,
 };
+enum class IDAllocatorTypeMode {
+    Signed,
+    Unsigned,
+};
 
 // This class manages a pool of random ID's in the range N1 (default of 1) to N2 (default of INT32_MAX)
 class IDAllocator {
 
 public:
-    IDAllocator(int minimum_value = 1, int maximum_value = INT32_MAX, IDAllocatorMode mode = IDAllocatorMode::Random)
+    IDAllocator(int minimum_value = 1, int maximum_value = INT32_MAX, IDAllocatorMode mode = IDAllocatorMode::Random, IDAllocatorTypeMode type_mode = IDAllocatorTypeMode::Signed)
         : m_minimum_value(minimum_value)
         , m_maximum_value(maximum_value)
         , m_mode(mode)
+        , m_type_mode(type_mode)
     {
     }
 
@@ -32,7 +37,17 @@ public:
 
     int allocate()
     {
-        VERIFY(static_cast<int>(m_allocated_ids.size()) < (m_maximum_value - 2));
+
+        switch (m_type_mode) {
+
+        case IDAllocatorTypeMode::Signed:
+            VERIFY(static_cast<int>(m_allocated_ids.size()) < (m_maximum_value - m_minimum_value - 1));
+            break;
+        case IDAllocatorTypeMode::Unsigned:
+            VERIFY(static_cast<uint>(m_allocated_ids.size()) < static_cast<uint>(m_maximum_value) - static_cast<uint>(m_minimum_value) - 1);
+            break;
+        }
+
         int id = 0;
         if (m_mode == IDAllocatorMode::Random) {
             for (;;) {
@@ -47,7 +62,15 @@ public:
             for (;;) {
                 if (m_allocated_ids.set(id) == AK::HashSetResult::InsertedNewEntry)
                     break;
-                ++id;
+
+                switch (m_type_mode) {
+                case IDAllocatorTypeMode::Signed:
+                    ++id;
+                    break;
+                case IDAllocatorTypeMode::Unsigned:
+                    id = static_cast<int>(static_cast<uint>(id) + 1);
+                    break;
+                }
             }
         }
 
@@ -64,6 +87,7 @@ private:
     int m_minimum_value;
     int m_maximum_value;
     IDAllocatorMode m_mode;
+    IDAllocatorTypeMode m_type_mode;
 };
 }
 
