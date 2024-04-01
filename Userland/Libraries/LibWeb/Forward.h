@@ -347,6 +347,7 @@ class EventLoop;
 class FormAssociatedElement;
 class FormDataEvent;
 class History;
+class HTMLAllCollection;
 class HTMLAnchorElement;
 class HTMLAreaElement;
 class HTMLAudioElement;
