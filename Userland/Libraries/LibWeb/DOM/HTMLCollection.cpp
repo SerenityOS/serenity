@@ -50,26 +50,32 @@ void HTMLCollection::visit_edges(Cell::Visitor& visitor)
         visitor.visit(element);
 }
 
+void HTMLCollection::update_cache_if_needed() const
+{
+    // Nothing to do, the DOM hasn't updated since we last built the cache.
+    if (m_cached_dom_tree_version == root()->document().dom_tree_version())
+        return;
+
+    m_cached_elements.clear();
+    if (m_scope == Scope::Descendants) {
+        m_root->for_each_in_subtree_of_type<Element>([&](auto& element) {
+            if (m_filter(element))
+                m_cached_elements.append(element);
+            return IterationDecision::Continue;
+        });
+    } else {
+        m_root->for_each_child_of_type<Element>([&](auto& element) {
+            if (m_filter(element))
+                m_cached_elements.append(element);
+            return IterationDecision::Continue;
+        });
+    }
+    m_cached_dom_tree_version = root()->document().dom_tree_version();
+}
+
 JS::MarkedVector<JS::NonnullGCPtr<Element>> HTMLCollection::collect_matching_elements() const
 {
-    if (m_cached_dom_tree_version != root()->document().dom_tree_version()) {
-        m_cached_elements.clear();
-        if (m_scope == Scope::Descendants) {
-            m_root->for_each_in_subtree_of_type<Element>([&](auto& element) {
-                if (m_filter(element))
-                    m_cached_elements.append(element);
-                return IterationDecision::Continue;
-            });
-        } else {
-            m_root->for_each_child_of_type<Element>([&](auto& element) {
-                if (m_filter(element))
-                    m_cached_elements.append(element);
-                return IterationDecision::Continue;
-            });
-        }
-        m_cached_dom_tree_version = root()->document().dom_tree_version();
-    }
-
+    update_cache_if_needed();
     JS::MarkedVector<JS::NonnullGCPtr<Element>> elements(heap());
     for (auto& element : m_cached_elements)
         elements.append(element);
