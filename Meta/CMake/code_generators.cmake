@@ -91,3 +91,29 @@ function(generate_state_machine source header)
         add_dependencies(all_generated ${target_name})
     endif()
 endfunction()
+
+function(compile_wayland_protocol source protocol_name)
+    if (NOT IS_ABSOLUTE ${source})
+        set(source ${CMAKE_CURRENT_SOURCE_DIR}/${source})
+    endif()
+    set(output_1 ${CMAKE_CURRENT_BINARY_DIR}/${protocol_name}-protocol.cpp)
+    set(output_2 ${CMAKE_CURRENT_BINARY_DIR}/${protocol_name}-protocol.h)
+    set(output_3 ${CMAKE_CURRENT_BINARY_DIR}/${protocol_name}-private-protocol.h)
+
+    add_custom_command(
+        OUTPUT ${output_1} ${output_2} ${output_3}
+        COMMAND $<TARGET_FILE:Lagom::WaylandTranspiler> ${source} ${CMAKE_CURRENT_BINARY_DIR}
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different ${output_1}.tmp ${output_1}
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different ${output_2}.tmp ${output_2}
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different ${output_3}.tmp ${output_3}
+        COMMAND "${CMAKE_COMMAND}" -E remove ${output_1}.tmp
+        COMMAND "${CMAKE_COMMAND}" -E remove ${output_2}.tmp
+        COMMAND "${CMAKE_COMMAND}" -E remove ${output_3}.tmp
+        VERBATIM
+        DEPENDS Lagom::WaylandTranspiler
+        MAIN_DEPENDENCY ${source}
+    )
+    
+    add_custom_target(generate_${protocol_name}-protocol DEPENDS ${output_1} ${output_2} ${output_3})
+    add_dependencies(all_generated generate_${protocol_name}-protocol)
+endfunction()

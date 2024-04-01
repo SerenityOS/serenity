@@ -1,0 +1,32 @@
+<!ELEMENT protocol (copyright?, description?, interface+)>
+  <!ATTLIST protocol name CDATA #REQUIRED>
+<!ELEMENT copyright (#PCDATA)>
+<!ELEMENT interface (description?,(request|event|enum)+)>
+  <!ATTLIST interface name CDATA #REQUIRED>
+  <!ATTLIST interface version CDATA #REQUIRED>
+<!ELEMENT request (description?,arg*)>
+  <!ATTLIST request name CDATA #REQUIRED>
+  <!ATTLIST request type CDATA #IMPLIED>
+  <!ATTLIST request since CDATA #IMPLIED>
+<!ELEMENT event (description?,arg*)>
+  <!ATTLIST event name CDATA #REQUIRED>
+  <!ATTLIST event type CDATA #IMPLIED>
+  <!ATTLIST event since CDATA #IMPLIED>
+<!ELEMENT enum (description?,entry*)>
+  <!ATTLIST enum name CDATA #REQUIRED>
+  <!ATTLIST enum since CDATA #IMPLIED>
+  <!ATTLIST enum bitfield CDATA #IMPLIED>
+<!ELEMENT entry (description?)>
+  <!ATTLIST entry name CDATA #REQUIRED>
+  <!ATTLIST entry value CDATA #REQUIRED>
+  <!ATTLIST entry summary CDATA #IMPLIED>
+  <!ATTLIST entry since CDATA #IMPLIED>
+<!ELEMENT arg (description?)>
+  <!ATTLIST arg name CDATA #REQUIRED>
+  <!ATTLIST arg type CDATA #REQUIRED>
+  <!ATTLIST arg summary CDATA #IMPLIED>
+  <!ATTLIST arg interface CDATA #IMPLIED>
+  <!ATTLIST arg allow-null CDATA #IMPLIED>
+  <!ATTLIST arg enum CDATA #IMPLIED>
+<!ELEMENT description (#PCDATA)>
+  <!ATTLIST description summary CDATA #REQUIRED>

@@ -1,13 +1,22 @@
 set(SOURCES
     Connection.cpp
+    Message.cpp
+)
+
+compile_wayland_protocol(wayland.xml wayland)
+
+set(GENERATED_SOURCES
+    wayland-protocol
 )
 
 serenity_lib(LibWayland wayland)
 target_link_libraries(LibWayland PRIVATE LibCore)
 
+
 set(SOURCES
-    Transpiler.cpp
+    Testing.cpp
 )
-serenity_bin(WaylandTranspiler)
-target_link_libraries(WaylandTranspiler PRIVATE LibCore LibMain LibXML LibFileSystem)
-install(TARGETS ${TARGET_NAME} RUNTIME DESTINATION bin OPTIONAL)
+set(GENERATED_SOURCES
+)
+serenity_bin(WaylandTest waylandtest)
+target_link_libraries(WaylandTest PRIVATE LibWayland LibMain LibCore)
