@@ -65,6 +65,8 @@ public:
 
     [[nodiscard]] JS::NonnullGCPtr<HighResolutionTime::Performance> performance();
 
+    JS::NonnullGCPtr<JS::Object> supported_entry_types() const;
+
 protected:
     void initialize(JS::Realm&);
     void visit_edges(JS::Cell::Visitor&);
@@ -95,6 +97,8 @@ private:
     OrderedHashMap<FlyString, PerformanceTimeline::PerformanceEntryTuple> m_performance_entry_buffer_map;
 
     JS::GCPtr<HighResolutionTime::Performance> m_performance;
+
+    mutable JS::GCPtr<JS::Object> m_supported_entry_types_array;
 };
 
 }
