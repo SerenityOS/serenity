@@ -642,8 +642,7 @@ static ErrorOr<SegmentHeader> decode_segment_header(SeekableStream& stream)
     bool segment_page_association_size_is_32_bits = (flags & 0b100'0000) != 0;
     bool segment_retained_only_by_itself_and_extension_segments = (flags & 0b1000'00000) != 0;
 
-    // FIXME: Do something with these.
-    (void)segment_page_association_size_is_32_bits;
+    // FIXME: Do something with this?
     (void)segment_retained_only_by_itself_and_extension_segments;
 
     // 7.2.4 Referred-to segment count and retention flags
