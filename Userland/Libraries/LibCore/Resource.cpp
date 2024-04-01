@@ -11,24 +11,27 @@
 
 namespace Core {
 
-Resource::Resource(String path, Scheme scheme, NonnullOwnPtr<Core::MappedFile> file)
+Resource::Resource(String path, Scheme scheme, NonnullOwnPtr<Core::MappedFile> file, time_t modified_time)
     : m_path(move(path))
     , m_scheme(scheme)
     , m_data(move(file))
+    , m_modified_time(modified_time)
 {
 }
 
-Resource::Resource(String path, Scheme scheme, ByteBuffer buffer)
+Resource::Resource(String path, Scheme scheme, ByteBuffer buffer, time_t modified_time)
     : m_path(move(path))
     , m_scheme(scheme)
     , m_data(move(buffer))
+    , m_modified_time(modified_time)
 {
 }
 
-Resource::Resource(String path, Scheme scheme, DirectoryTag)
+Resource::Resource(String path, Scheme scheme, DirectoryTag, time_t modified_time)
     : m_path(move(path))
     , m_scheme(scheme)
     , m_data(DirectoryTag {})
+    , m_modified_time(modified_time)
 {
 }
 
@@ -64,6 +67,11 @@ String Resource::file_url() const
         return uri();
 
     return MUST(String::formatted("file://{}", filesystem_path()));
+}
+
+Optional<time_t> Resource::modified_time() const
+{
+    return m_modified_time;
 }
 
 String Resource::filename() const
