@@ -534,6 +534,7 @@ void ECMAScriptFunctionObject::visit_edges(Visitor& visitor)
     visitor.visit(m_private_environment);
     visitor.visit(m_realm);
     visitor.visit(m_home_object);
+    visitor.visit(m_name_string);
 
     visitor.visit(m_bytecode_executable);
     for (auto& executable : m_default_parameter_bytecode_executables)
