@@ -72,6 +72,9 @@ void ResizeObserverEntry::visit_edges(JS::Cell::Visitor& visitor)
         visitor.visit(size);
     for (auto& size : m_border_box_size)
         visitor.visit(size);
+    for (auto& size : m_device_pixel_content_box_size)
+        visitor.visit(size);
+    visitor.visit(m_content_rect);
 }
 
 static JS::NonnullGCPtr<JS::Object> to_js_array(JS::Realm& realm, Vector<JS::NonnullGCPtr<ResizeObserverSize>> const& sizes)
