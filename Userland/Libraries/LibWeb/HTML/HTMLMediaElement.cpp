@@ -44,7 +44,6 @@ namespace Web::HTML {
 
 HTMLMediaElement::HTMLMediaElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
-    , m_pending_play_promises(heap())
 {
 }
 
@@ -91,6 +90,8 @@ void HTMLMediaElement::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_document_observer);
     visitor.visit(m_source_element_selector);
     visitor.visit(m_fetch_controller);
+    for (auto& promise : m_pending_play_promises)
+        visitor.visit(promise);
 }
 
 void HTMLMediaElement::attribute_changed(FlyString const& name, Optional<String> const& value)
@@ -1847,7 +1848,8 @@ JS::MarkedVector<JS::NonnullGCPtr<WebIDL::Promise>> HTMLMediaElement::take_pendi
     // 1. Let promises be an empty list of promises.
     // 2. Copy the media element's list of pending play promises to promises.
     // 3. Clear the media element's list of pending play promises.
-    auto promises = move(m_pending_play_promises);
+    JS::MarkedVector<JS::NonnullGCPtr<WebIDL::Promise>> promises(heap());
+    promises.extend(move(m_pending_play_promises));
 
     // 4. Return promises.
     return promises;

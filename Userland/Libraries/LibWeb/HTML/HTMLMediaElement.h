@@ -242,7 +242,7 @@ private:
     double m_duration { NAN };
 
     // https://html.spec.whatwg.org/multipage/media.html#list-of-pending-play-promises
-    JS::MarkedVector<JS::NonnullGCPtr<WebIDL::Promise>> m_pending_play_promises;
+    Vector<JS::NonnullGCPtr<WebIDL::Promise>> m_pending_play_promises;
 
     // https://html.spec.whatwg.org/multipage/media.html#dom-media-paused
     bool m_paused { true };
