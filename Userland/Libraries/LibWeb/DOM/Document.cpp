@@ -61,6 +61,7 @@
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/Focus.h>
+#include <LibWeb/HTML/HTMLAllCollection.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/HTML/HTMLAreaElement.h>
 #include <LibWeb/HTML/HTMLBaseElement.h>
@@ -1442,10 +1443,11 @@ JS::NonnullGCPtr<HTMLCollection> Document::scripts()
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#dom-document-all
-JS::NonnullGCPtr<HTMLCollection> Document::all()
+JS::NonnullGCPtr<HTML::HTMLAllCollection> Document::all()
 {
     if (!m_all) {
-        m_all = HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [](Element const&) {
+        // The all attribute must return an HTMLAllCollection rooted at the Document node, whose filter matches all elements.
+        m_all = HTML::HTMLAllCollection::create(*this, HTML::HTMLAllCollection::Scope::Descendants, [](Element const&) {
             return true;
         });
     }
