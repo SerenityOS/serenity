@@ -158,14 +158,14 @@ WebIDL::ExceptionOr<JS::Value> HTMLCollection::item_value(size_t index) const
     auto* element = item(index);
     if (!element)
         return JS::js_undefined();
-    return const_cast<Element*>(element);
+    return element;
 }
 
-WebIDL::ExceptionOr<JS::Value> HTMLCollection::named_item_value(FlyString const& index) const
+WebIDL::ExceptionOr<JS::Value> HTMLCollection::named_item_value(FlyString const& name) const
 {
-    auto* element = named_item(index);
+    auto* element = named_item(name);
     if (!element)
         return JS::js_undefined();
-    return const_cast<Element*>(element);
+    return element;
 }
 }
