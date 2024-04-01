@@ -3492,7 +3492,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> writable_stream_add_write
 bool writable_stream_close_queued_or_in_flight(WritableStream const& stream)
 {
     // 1. If stream.[[closeRequest]] is undefined and stream.[[inFlightCloseRequest]] is undefined, return false.
-    if (!stream.close_request() && !stream.in_flight_write_request())
+    if (!stream.close_request() && !stream.in_flight_close_request())
         return false;
 
     // 2. Return true.
