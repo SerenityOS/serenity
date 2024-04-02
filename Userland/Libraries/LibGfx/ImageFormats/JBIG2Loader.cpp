@@ -1451,6 +1451,7 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
             //     "x) Draw IBI into SBREG. Combine each pixel of IBI with the current value of the corresponding
             //         pixel in SBREG, using the combination operator specified by SBCOMBOP. Write the results
             //         of each combination into that pixel in SBREG."
+            dbgln_if(JBIG2_DEBUG, "combining symbol {} ({}x{}) at ({}, {}) with operator {}", id, symbol.width(), symbol.height(), s_instance, t_instance, (int)inputs.operator_);
             composite_bitbuffer(*result, symbol, { s_instance, t_instance }, inputs.operator_);
 
             //     "xi) Update CURS as follows:
@@ -1963,6 +1964,10 @@ static ErrorOr<void> decode_immediate_text_region(JBIG2LoadingContext& context, 
     // 7.4.3.1.5 Text region segment symbol ID Huffman decoding table
     // "It is only present if SBHUFF is 1."
     // FIXME: Support this eventually.
+
+    dbgln_if(JBIG2_DEBUG, "Text region: uses_huffman_encoding={}, uses_refinement_coding={}, strip_size={}, reference_corner={}, is_transposed={}", uses_huffman_encoding, uses_refinement_coding, strip_size, reference_corner, is_transposed);
+    dbgln_if(JBIG2_DEBUG, "Text region: combination_operator={}, default_pixel_value={}, delta_s_offset={}, refinement_template={}, number_of_symbol_instances={}", combination_operator, default_pixel_value, delta_s_offset, refinement_template, number_of_symbol_instances);
+    dbgln_if(JBIG2_DEBUG, "Text region: number_of_symbol_instances={}", number_of_symbol_instances);
 
     // 7.4.3.2 Decoding a text region segment
     // "1) Interpret its header, as described in 7.4.3.1."
