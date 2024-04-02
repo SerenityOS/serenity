@@ -107,7 +107,7 @@ void EventLoop::spin_processing_tasks_with_source_until(Task::Source source, JS:
             return true;
         if (m_task_queue.has_runnable_tasks()) {
             auto tasks = m_task_queue.take_tasks_matching([&](auto& task) {
-                return task.source() == source;
+                return task.source() == source && task.is_runnable();
             });
 
             for (auto& task : tasks.value()) {
