@@ -671,6 +671,7 @@ void BrowserWindow::tab_audio_play_state_changed(int index, Web::HTML::AudioPlay
     case Web::HTML::AudioPlayState::Playing:
         auto* button = new QPushButton(icon_for_page_mute_state(*tab), {});
         button->setToolTip(tool_tip_for_page_mute_state(*tab));
+        button->setObjectName("LadybirdAudioState");
         button->setFlat(true);
         button->resize({ 20, 20 });
 
@@ -721,8 +722,11 @@ QString BrowserWindow::tool_tip_for_page_mute_state(Tab& tab) const
 
 QTabBar::ButtonPosition BrowserWindow::audio_button_position_for_tab(int tab_index) const
 {
-    if (m_tabs_container->tabBar()->tabButton(tab_index, QTabBar::LeftSide))
-        return QTabBar::RightSide;
+    if (auto* button = m_tabs_container->tabBar()->tabButton(tab_index, QTabBar::LeftSide)) {
+        if (button->objectName() != "LadybirdAudioState")
+            return QTabBar::RightSide;
+    }
+
     return QTabBar::LeftSide;
 }
 
