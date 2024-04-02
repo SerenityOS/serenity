@@ -461,9 +461,10 @@ static Optional<ByteString> expression_identifier(Expression const& expression)
             builder.append(*identifer);
 
         if (auto identifer = expression_identifier(member_expression.property()); identifer.has_value()) {
-            if (!builder.is_empty())
-                builder.append('.');
-            builder.append(*identifer);
+            if (member_expression.is_computed())
+                builder.appendff("[{}]", *identifer);
+            else
+                builder.appendff(".{}", *identifer);
         }
 
         return builder.to_byte_string();

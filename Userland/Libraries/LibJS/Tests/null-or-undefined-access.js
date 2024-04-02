@@ -43,6 +43,7 @@ test("null/undefined object key", () => {
 test("null/undefined array index", () => {
     [null, undefined].forEach(value => {
         let foo = [value];
+        let index = 0;
 
         expect(() => {
             foo[0].bar;
@@ -51,5 +52,19 @@ test("null/undefined array index", () => {
         expect(() => {
             foo[0].bar = 1;
         }).toThrowWithMessage(TypeError, `Cannot access property "bar" on ${value} object`);
+
+        expect(() => {
+            foo[index].bar;
+        }).toThrowWithMessage(
+            TypeError,
+            `Cannot access property "bar" on ${value} object "foo[index]"`
+        );
+
+        expect(() => {
+            foo[index].bar = 1;
+        }).toThrowWithMessage(
+            TypeError,
+            `Cannot access property "bar" on ${value} object "foo[index]"`
+        );
     });
 });
