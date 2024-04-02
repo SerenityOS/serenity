@@ -1,4 +1,4 @@
-@GUI::Widget {
+@GUI::IncrementalSearchBanner {
     fill_with_background_color: true
     visible: false
     layout: @GUI::HorizontalBoxLayout {
@@ -20,7 +20,7 @@
 
         @GUI::Button {
             name: "incremental_search_banner_previous_button"
-            icon: "/res/icons/16x16/go-up.png"
+            icon_from_path: "/res/icons/16x16/go-up.png"
             fixed_width: 18
             button_style: "Coolbar"
             focus_policy: "NoFocus"
@@ -28,7 +28,7 @@
 
         @GUI::Button {
             name: "incremental_search_banner_next_button"
-            icon: "/res/icons/16x16/go-down.png"
+            icon_from_path: "/res/icons/16x16/go-down.png"
             fixed_width: 18
             button_style: "Coolbar"
             focus_policy: "NoFocus"
@@ -51,7 +51,7 @@
         @GUI::Button {
             name: "incremental_search_banner_wrap_search_button"
             fixed_width: 24
-            icon: "/res/icons/16x16/reload.png"
+            icon_from_path: "/res/icons/16x16/reload.png"
             tooltip: "Wrap Search"
             checkable: true
             checked: true
@@ -62,7 +62,7 @@
         @GUI::Button {
             name: "incremental_search_banner_match_case_button"
             fixed_width: 24
-            icon: "/res/icons/16x16/app-font-editor.png"
+            icon_from_path: "/res/icons/16x16/app-font-editor.png"
             tooltip: "Match Case"
             checkable: true
             button_style: "Coolbar"

@@ -67,7 +67,7 @@ TextEditor::TextEditor(Type type)
     if (is_multi_line()) {
         set_font(Gfx::FontDatabase::default_fixed_width_font());
         set_wrapping_mode(WrappingMode::WrapAtWords);
-        m_search_banner = GUI::IncrementalSearchBanner::construct(*this);
+        m_search_banner = GUI::IncrementalSearchBanner::try_create(*this).release_value_but_fixme_should_propagate_errors();
         set_banner_widget(m_search_banner);
     }
     vertical_scrollbar().set_step(line_height());

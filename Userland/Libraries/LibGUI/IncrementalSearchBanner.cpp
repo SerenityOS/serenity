@@ -7,7 +7,6 @@
 
 #include <LibGUI/Button.h>
 #include <LibGUI/IncrementalSearchBanner.h>
-#include <LibGUI/IncrementalSearchBannerGML.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Layout.h>
 #include <LibGUI/Painter.h>
@@ -16,10 +15,15 @@
 
 namespace GUI {
 
-IncrementalSearchBanner::IncrementalSearchBanner(TextEditor& editor)
-    : m_editor(editor)
+ErrorOr<NonnullRefPtr<IncrementalSearchBanner>> IncrementalSearchBanner::try_create(TextEditor& editor)
 {
-    load_from_gml(incremental_search_banner_gml).release_value_but_fixme_should_propagate_errors();
+    auto widget = TRY(IncrementalSearchBanner::try_create());
+    widget->m_editor = editor;
+    return widget;
+}
+
+ErrorOr<void> IncrementalSearchBanner::initialize()
+{
     m_index_label = find_descendant_of_type_named<Label>("incremental_search_banner_index_label");
 
     m_wrap_search_button = find_descendant_of_type_named<Button>("incremental_search_banner_wrap_search_button");
@@ -69,6 +73,7 @@ IncrementalSearchBanner::IncrementalSearchBanner(TextEditor& editor)
     m_search_textbox->on_escape_pressed = [this]() {
         hide();
     };
+    return {};
 }
 
 void IncrementalSearchBanner::show()

@@ -5,7 +5,7 @@ stringify_gml(DatePickerDialog.gml DatePickerDialogGML.h date_picker_dialog_gml)
 compile_gml(EmojiInputDialog.gml EmojiInputDialogGML.cpp)
 compile_gml(FontPickerDialog.gml FontPickerDialogGML.cpp)
 compile_gml(FilePickerDialog.gml FilePickerDialogGML.cpp)
-stringify_gml(IncrementalSearchBanner.gml IncrementalSearchBannerGML.h incremental_search_banner_gml)
+compile_gml(IncrementalSearchBanner.gml IncrementalSearchBannerGML.cpp)
 compile_gml(PasswordInputDialog.gml PasswordInputDialogGML.cpp)
 
 set(SOURCES
@@ -70,6 +70,7 @@ set(SOURCES
     IconView.cpp
     ImageWidget.cpp
     IncrementalSearchBanner.cpp
+    IncrementalSearchBannerGML.cpp
     INILexer.cpp
     INISyntaxHighlighter.cpp
     InputBox.cpp
@@ -152,7 +153,6 @@ set(GENERATED_SOURCES
     ../../Services/WindowServer/WindowManagerServerEndpoint.h
     ../../Services/WindowServer/WindowServerEndpoint.h
     DatePickerDialogGML.h
-    IncrementalSearchBannerGML.h
 )
 
 serenity_lib(LibGUI gui)

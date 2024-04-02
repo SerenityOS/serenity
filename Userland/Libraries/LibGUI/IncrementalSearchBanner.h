@@ -15,21 +15,25 @@ class IncrementalSearchBanner final : public Widget {
     C_OBJECT(IncrementalSearchBanner);
 
 public:
+    static ErrorOr<NonnullRefPtr<IncrementalSearchBanner>> try_create(TextEditor& editor);
+    ErrorOr<void> initialize();
+
     virtual ~IncrementalSearchBanner() override = default;
 
     void show();
     void hide();
 
 protected:
-    explicit IncrementalSearchBanner(TextEditor&);
-
     virtual void paint_event(PaintEvent&) override;
     virtual Optional<UISize> calculated_min_size() const override;
 
 private:
+    IncrementalSearchBanner() = default;
+
+    static ErrorOr<NonnullRefPtr<IncrementalSearchBanner>> try_create();
     void search(TextEditor::SearchDirection);
 
-    NonnullRefPtr<TextEditor> m_editor;
+    RefPtr<TextEditor> m_editor;
     RefPtr<Button> m_close_button;
     RefPtr<Button> m_next_button;
     RefPtr<Button> m_previous_button;
