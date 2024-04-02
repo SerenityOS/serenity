@@ -37,6 +37,20 @@ test("null/undefined object key", () => {
             TypeError,
             `Cannot access property "baz" on ${value} object "foo.bar"`
         );
+
+        expect(() => {
+            foo["bar"].baz;
+        }).toThrowWithMessage(
+            TypeError,
+            `Cannot access property "baz" on ${value} object "foo['bar']"`
+        );
+
+        expect(() => {
+            foo["bar"].baz = 1;
+        }).toThrowWithMessage(
+            TypeError,
+            `Cannot access property "baz" on ${value} object "foo['bar']"`
+        );
     });
 });
 

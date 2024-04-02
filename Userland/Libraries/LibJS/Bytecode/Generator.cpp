@@ -458,6 +458,11 @@ static Optional<ByteString> expression_identifier(Expression const& expression)
         return literal.value().to_string_without_side_effects().to_byte_string();
     }
 
+    if (expression.is_string_literal()) {
+        auto const& literal = static_cast<StringLiteral const&>(expression);
+        return ByteString::formatted("'{}'", literal.value());
+    }
+
     if (expression.is_member_expression()) {
         auto const& member_expression = static_cast<MemberExpression const&>(expression);
         StringBuilder builder;
