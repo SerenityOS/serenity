@@ -37,6 +37,7 @@ source_set("HTML") {
     "FormControlInfrastructure.cpp",
     "FormDataEvent.cpp",
     "GlobalEventHandlers.cpp",
+    "HTMLAllCollection.cpp",
     "HTMLAnchorElement.cpp",
     "HTMLAreaElement.cpp",
     "HTMLAudioElement.cpp",
