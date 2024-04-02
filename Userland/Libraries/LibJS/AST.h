@@ -91,6 +91,7 @@ public:
     virtual bool is_import_call() const { return false; }
     virtual bool is_array_expression() const { return false; }
     virtual bool is_object_expression() const { return false; }
+    virtual bool is_numeric_literal() const { return false; }
     virtual bool is_string_literal() const { return false; }
     virtual bool is_update_expression() const { return false; }
     virtual bool is_call_expression() const { return false; }
@@ -1182,6 +1183,8 @@ public:
     virtual Value value() const override { return m_value; }
 
 private:
+    virtual bool is_numeric_literal() const override { return true; }
+
     Value m_value;
 };
 
