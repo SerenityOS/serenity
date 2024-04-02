@@ -1214,7 +1214,7 @@ public:
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::Operand> preferred_dst = {}) const override;
 
-    StringView value() const { return m_value; }
+    ByteString const& value() const { return m_value; }
 
 private:
     virtual bool is_string_literal() const override { return true; }
