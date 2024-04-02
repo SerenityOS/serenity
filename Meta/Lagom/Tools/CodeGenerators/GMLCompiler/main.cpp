@@ -325,7 +325,7 @@ static ErrorOr<void> generate_loader_for_object(GUI::GML::Object const& gml_obje
 
         // Handle the current two special cases of child adding.
         if (gml_object.name() == "GUI::ScrollableContainerWidget"sv)
-            TRY(append(child_generator, "static_ptr_cast<GUI::ScrollableContainerWidget>(@object_name@)->set_widget(*@child_variable_name@);"));
+            TRY(append(child_generator, "static_ptr_cast<GUI::ScrollableContainerWidget>(@object_name@)->set_widget(@child_variable_name@);"));
         else if (gml_object.name() == "GUI::TabWidget"sv)
             TRY(append(child_generator, "static_ptr_cast<GUI::TabWidget>(@object_name@)->add_widget(*@child_variable_name@);"));
         else
