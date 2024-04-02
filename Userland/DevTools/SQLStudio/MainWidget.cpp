@@ -6,7 +6,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <DevTools/SQLStudio/SQLStudioGML.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/StandardPaths.h>
 #include <LibDesktop/Launcher.h>
@@ -60,17 +59,7 @@ static Vector<ByteString> lookup_database_names()
     return database_names;
 }
 
-ErrorOr<NonnullRefPtr<MainWidget>> MainWidget::create()
-{
-    auto widget = TRY(try_make_ref_counted<MainWidget>());
-
-    TRY(widget->load_from_gml(sql_studio_gml));
-    TRY(widget->setup());
-
-    return widget;
-}
-
-ErrorOr<void> MainWidget::setup()
+ErrorOr<void> MainWidget::initialize()
 {
     m_new_action = GUI::Action::create("&New", { Mod_Ctrl, Key_N }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"sv)), [this](auto&) {
         open_new_script();

@@ -12,12 +12,12 @@
         @GUI::TabWidget {
             name: "script_tab_widget"
             reorder_allowed: true
-            show_close_buttons: true
+            close_button_enabled: true
         }
 
         @GUI::TabWidget {
             name: "action_tab_widget"
-            show_close_buttons: true
+            close_button_enabled: true
             visible: false
         }
     }
