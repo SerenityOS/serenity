@@ -1403,7 +1403,7 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
             //      • If TRANSPOSED is 0, and REFCORNER is TOPRIGHT or BOTTOMRIGHT, set:
             //              CURS = CURS + WI – 1
             //      • If TRANSPOSED is 1, and REFCORNER is BOTTOMLEFT or BOTTOMRIGHT, set:
-            //              CURS = CURS + HI –1
+            //              CURS = CURS + HI – 1
             //      • Otherwise, do not change CURS in this step."
             using enum TextRegionDecodingInputParameters::Corner;
             if (!inputs.is_transposed && (inputs.reference_corner == TopRight || inputs.reference_corner == BottomRight))
@@ -1455,9 +1455,9 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
 
             //     "xi) Update CURS as follows:
             //          • If TRANSPOSED is 0, and REFCORNER is TOPLEFT or BOTTOMLEFT, set:
-            //              CURS = CURS + WI –1
+            //              CURS = CURS + WI – 1
             //          • If TRANSPOSED is 1, and REFCORNER is TOPLEFT or TOPRIGHT, set:
-            //              CURS = CURS + HI –1
+            //              CURS = CURS + HI – 1
             //          • Otherwise, do not change CURS in this step."
             if (!inputs.is_transposed && (inputs.reference_corner == TopLeft || inputs.reference_corner == BottomLeft))
                 cur_s += symbol.width() - 1;
