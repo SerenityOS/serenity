@@ -9,13 +9,78 @@ Usage is a bit clunky (use Build/lagom/bin/file to get the dimensions):
 % open foo.pdf
 """
 
+from dataclasses import dataclass
 import argparse
-import sys
+import struct
 import textwrap
+
+
+EndOfFile = 51
 
 
 def dedent(b):
     return textwrap.dedent(b.decode('latin1')).encode('latin1')
+
+
+@dataclass
+class SegmentHeader:
+    segment_header_size: int
+    type: int
+    bytes: bytes
+    data_size: int
+
+
+def read_segment_header(data, offset):
+    segment_number, = struct.unpack_from('>I', data, offset)
+    flags = data[offset + 4]
+    segment_page_association_size_is_32_bits = (flags & 0b100_0000) != 0
+    type = (flags & 0b11_1111)
+
+    referred_segments_count = data[offset + 5] >> 5
+    if referred_segments_count > 4:
+        raise Exception('cannot handle more than 4 referred-to segments')
+
+    if segment_number <= 256:
+        ref_size = 1
+    elif segment_number <= 65536:
+        ref_size = 2
+    else:
+        ref_size = 4
+    segment_header_size = 4 + 1 + 1 + ref_size * referred_segments_count
+
+    if segment_page_association_size_is_32_bits:
+        segment_header_size += 4
+    else:
+        segment_header_size += 1
+
+    data_size, = struct.unpack_from('>I', data, offset + segment_header_size)
+    if data_size == 0xffff_ffff:
+        raise Exception('cannot handle indeterminate length')
+    segment_header_size += 4
+
+    bytes = data[offset:offset + segment_header_size]
+    return SegmentHeader(segment_header_size, type, bytes, data_size)
+
+
+def random_access_to_sequential(data):
+    offset = 0
+
+    segment_headers = []
+    while True:
+        segment_header = read_segment_header(data, offset)
+        segment_headers.append(segment_header)
+
+        offset += segment_header.segment_header_size
+        if segment_header.type == EndOfFile:
+            break
+
+    out_data = bytes()
+    for segment_header in segment_headers:
+        out_data += segment_header.bytes
+        out_data += data[offset:offset + segment_header.data_size]
+        offset += segment_header.data_size
+
+    return out_data
 
 
 def main():
@@ -36,12 +101,13 @@ def main():
 
     # strip jbig2 header
     image_data = image_data[8:]
-    if image_data[0] & 1 == 0:
-        print('random-access jbig2 does not work', file=sys.stderr)
-        sys.exit(1)
+    is_random_access = image_data[0] & 1 == 0
     if image_data[0] & 2 == 0:
         image_data = image_data[4:]
     image_data = image_data[1:]
+
+    if is_random_access:
+        image_data = random_access_to_sequential(image_data)
 
     start = dedent(b'''\
               %PDF-1.4
