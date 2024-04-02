@@ -259,17 +259,23 @@ void NavigableContainer::destroy_the_child_navigable()
     if (!navigable)
         return;
 
-    // 3. Set container's content navigable to null.
-    m_content_navigable = nullptr;
+    // Not in the spec:
+    // Setting container's content navigable makes document *not* be "fully active".
+    // Therefore, it is moved to run in afterAllDestruction callback of "destroy a document and its descendants"
+    // when all queued tasks are done.
+    // "Has been destroyed" flag is used instead to check whether navigable is already destroyed.
+    if (navigable->has_been_destroyed())
+        return;
+    navigable->set_has_been_destroyed();
+    HTML::all_navigables().remove(navigable);
 
     // FIXME: 4. Inform the navigation API about child navigable destruction given navigable.
 
     // 5. Destroy a document and its descendants given navigable's active document.
-    navigable->active_document()->destroy_a_document_and_its_descendants({});
-
-    // Not in the spec
-    navigable->set_has_been_destroyed();
-    HTML::all_navigables().remove(navigable);
+    navigable->active_document()->destroy_a_document_and_its_descendants([this] {
+        // 3. Set container's content navigable to null.
+        m_content_navigable = nullptr;
+    });
 
     // 6. Let parentDocState be container's node navigable's active session history entry's document state.
     auto parent_doc_state = this->navigable()->active_session_history_entry()->document_state();
