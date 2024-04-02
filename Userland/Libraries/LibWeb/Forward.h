@@ -172,6 +172,7 @@ class ResolutionOrCalculated;
 class ResolutionStyleValue;
 class RevertStyleValue;
 class Screen;
+class ScreenOrientation;
 class Selector;
 class ShadowStyleValue;
 class ShorthandStyleValue;

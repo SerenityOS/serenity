@@ -1,3 +1,5 @@
+#import <CSS/ScreenOrientation.idl>
+
 // https://w3c.github.io/csswg-drafts/cssom-view-1/#screen
 [Exposed=Window]
 interface Screen {
@@ -7,4 +9,7 @@ interface Screen {
     readonly attribute long height;
     readonly attribute unsigned long colorDepth;
     readonly attribute unsigned long pixelDepth;
+
+    // https://w3c.github.io/screen-orientation/#extensions-to-the-screen-interface
+    [SameObject] readonly attribute ScreenOrientation orientation;
 };
