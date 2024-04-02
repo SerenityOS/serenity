@@ -106,7 +106,7 @@ ErrorOr<void> Connection::write()
 
     for (size_t i = 0; i < m_queue_outgoing.size();) {
         auto& msg = m_queue_outgoing.at(i);
-        auto *buffer = msg->serialize();
+        auto* buffer = msg->serialize();
         auto bytes = buffer->bytes();
         (void)TRY(m_socket->write_some(bytes));
         m_fds_to_send.extend(msg->fds());
@@ -162,7 +162,7 @@ ErrorOr<void> Connection::read()
         auto obj = get_object_by_id(raw_message_header.object_id);
         auto** methods = !obj.is_null() ? obj->interface().events : nullptr;
         auto incoming_msg = make<MessageIncoming>(obj, raw_message_header.second_arg, methods);
-        
+
         // FIXME
         // if we don't have enough bytes to fill the message, then we store it for later and discard the MsgIncoming object
         if (incoming_msg->amount_of_args_bytes() > unprocessed_bytes.bytes().size() - sizeof(raw_message_header)) {
@@ -201,7 +201,7 @@ ErrorOr<void> Connection::read()
                     break;
                 }
                 // FIXME
-                ByteString string = ByteString::formatted("{}", (const char*)data.data());
+                ByteString string = ByteString::formatted("{}", (char const*)data.data());
                 VERIFY(string != nullptr);
                 if (arg.type->type.nullable) {
                     args_resolved.append(make<ResolvedArgument>(arg.type, Optional<ByteString>(string)));
@@ -227,7 +227,7 @@ ErrorOr<void> Connection::read()
     }
 
     for (size_t i = 0; i < m_queue_incoming.size();) {
-        auto &msg = m_queue_incoming.at(i);
+        auto& msg = m_queue_incoming.at(i);
 
         if (msg->is_resolved()) {
             msg->submit();
@@ -249,7 +249,7 @@ ErrorOr<void> Connection::read()
 
 Connection::Connection(NonnullOwnPtr<Core::LocalSocket> socket)
     : m_socket(move(socket))
-    , m_id_allocator(2, static_cast<int>(MAX_CLIENT_ID), AK::IDAllocatorMode::Increasing)
+    , m_id_allocator(2, static_cast<int>(MAX_CLIENT_ID), AK::IDAllocatorMode::Increasing, AK::IDAllocatorTypeMode::Unsigned)
 {
     // We setup our own notifiers, as we also want to listen on error/hangups
     auto wayland_fd = m_socket->fd().value();
