@@ -115,6 +115,10 @@ def main():
 
               ''')
 
+    operators = dedent(b'''\
+                  %d 0 0 %d 0 0 cm
+                  /Im Do''' % (width, height))
+
     objs = [dedent(b'''\
               1 0 obj
               <<
@@ -152,13 +156,14 @@ def main():
 
             dedent(b'''\
               4 0 obj
-              <</Length 25>>
+              <</Length %d>>
               stream
-              %d 0 0 %d 0 0 cm
-              /Im Do
+              ''' % len(operators)) +
+            operators +
+            dedent(b'''
               endstream
               endobj
-              ''' % (width, height)),
+              '''),
 
             dedent(b'''\
               5 0 obj
