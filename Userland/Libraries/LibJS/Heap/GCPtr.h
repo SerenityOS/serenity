@@ -177,7 +177,7 @@ public:
 
     T* ptr() const { return m_ptr; }
 
-    operator bool() const { return !!m_ptr; }
+    explicit operator bool() const { return !!m_ptr; }
     bool operator!() const { return !m_ptr; }
 
     operator T*() const { return m_ptr; }
