@@ -4,8 +4,8 @@
 Creates a PDF that embeds a jbig2 image. Useful for viewing .jbig2 files in
 PDF viewers, since all PDF viewers support .jbig2 but few image viewers do.
 
-Usage is a bit clunky (use Build/lagom/bin/file to get the dimensions):
-% Meta/jbig2_to_pdf.py -o foo.pdf path/to/bitmap.jbig2 399 400
+Usage :
+% Meta/jbig2_to_pdf.py -o foo.pdf path/to/bitmap.jbig2
 % open foo.pdf
 """
 
@@ -15,6 +15,7 @@ import struct
 import textwrap
 
 
+PageInformation = 48
 EndOfFile = 51
 
 
@@ -28,6 +29,7 @@ class SegmentHeader:
     type: int
     bytes: bytes
     data_size: int
+    data: bytes
 
 
 def read_segment_header(data, offset):
@@ -59,28 +61,48 @@ def read_segment_header(data, offset):
     segment_header_size += 4
 
     bytes = data[offset:offset + segment_header_size]
-    return SegmentHeader(segment_header_size, type, bytes, data_size)
+    return SegmentHeader(segment_header_size, type, bytes, data_size, None)
 
 
-def random_access_to_sequential(data):
+def read_segment_headers(data, is_random_access):
     offset = 0
 
     segment_headers = []
-    while True:
+    while offset < len(data):
         segment_header = read_segment_header(data, offset)
+        offset += segment_header.segment_header_size
+
+        if not is_random_access:
+            segment_header.data = data[offset:offset + segment_header.data_size]
+            offset += segment_header.data_size
+
         segment_headers.append(segment_header)
 
-        offset += segment_header.segment_header_size
         if segment_header.type == EndOfFile:
             break
 
+    if is_random_access:
+        for segment_header in segment_headers:
+            segment_header.data = data[offset:offset + segment_header.data_size]
+            offset += segment_header.data_size
+
+    return segment_headers
+
+
+def random_access_to_sequential(segment_headers):
     out_data = bytes()
     for segment_header in segment_headers:
         out_data += segment_header.bytes
-        out_data += data[offset:offset + segment_header.data_size]
-        offset += segment_header.data_size
-
+        out_data += segment_header.data
     return out_data
+
+
+def get_dimensions(segment_headers):
+    for segment_header in segment_headers:
+        if segment_header.type != PageInformation:
+            continue
+        return struct.unpack_from('>II', segment_header.data)
+    raise Exception('did not find PageInformation')
 
 
 def main():
@@ -88,16 +110,11 @@ def main():
         epilog=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument("image", help="Input image")
-    parser.add_argument("width", type=int, help="image width")
-    parser.add_argument("height", type=int, help="image height")
     parser.add_argument("-o", "--output", help="Path to output PDF")
     args = parser.parse_args()
 
-    width, height = args.width, args.height
-
     with open(args.image, 'rb') as f:
         image_data = f.read()
-        print(f'dims {width}x{height}')
 
     # strip jbig2 header
     image_data = image_data[8:]
@@ -106,8 +123,13 @@ def main():
         image_data = image_data[4:]
     image_data = image_data[1:]
 
+    segment_headers = read_segment_headers(image_data, is_random_access)
+
+    width, height = get_dimensions(segment_headers)
+    print(f'dims {width}x{height}')
+
     if is_random_access:
-        image_data = random_access_to_sequential(image_data)
+        image_data = random_access_to_sequential(segment_headers)
 
     start = dedent(b'''\
               %PDF-1.4
