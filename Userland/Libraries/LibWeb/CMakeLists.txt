@@ -85,6 +85,7 @@ set(SOURCES
     CSS/Resolution.cpp
     CSS/ResolvedCSSStyleDeclaration.cpp
     CSS/Screen.cpp
+    CSS/ScreenOrientation.cpp
     CSS/Selector.cpp
     CSS/SelectorEngine.cpp
     CSS/Serialize.cpp

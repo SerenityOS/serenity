@@ -26,6 +26,7 @@ public:
     i32 avail_height() const { return screen_rect().height(); }
     u32 color_depth() const { return 24; }
     u32 pixel_depth() const { return 24; }
+    JS::NonnullGCPtr<ScreenOrientation> orientation();
 
 private:
     explicit Screen(HTML::Window&);
@@ -38,6 +39,7 @@ private:
     Gfx::IntRect screen_rect() const;
 
     JS::NonnullGCPtr<HTML::Window> m_window;
+    JS::GCPtr<ScreenOrientation> m_orientation;
 };
 
 }
