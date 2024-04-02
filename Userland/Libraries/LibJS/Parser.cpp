@@ -4519,7 +4519,7 @@ ModuleRequest Parser::parse_module_request()
     while (!done() && !match(TokenType::CurlyClose)) {
         ByteString key;
         if (match(TokenType::StringLiteral)) {
-            key = parse_string_literal(m_state.current_token)->value().to_byte_string();
+            key = parse_string_literal(m_state.current_token)->value();
             consume();
         } else if (match_identifier_name()) {
             key = consume().value();
@@ -4535,7 +4535,7 @@ ModuleRequest Parser::parse_module_request()
                 if (entries.key == key)
                     syntax_error(ByteString::formatted("Duplicate attribute clauses with name: {}", key));
             }
-            request.add_attribute(move(key), parse_string_literal(m_state.current_token)->value().to_byte_string());
+            request.add_attribute(move(key), parse_string_literal(m_state.current_token)->value());
         }
         consume(TokenType::StringLiteral);
 
