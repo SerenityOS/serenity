@@ -453,6 +453,11 @@ static Optional<ByteString> expression_identifier(Expression const& expression)
         return identifier.string();
     }
 
+    if (expression.is_numeric_literal()) {
+        auto const& literal = static_cast<NumericLiteral const&>(expression);
+        return literal.value().to_string_without_side_effects().to_byte_string();
+    }
+
     if (expression.is_member_expression()) {
         auto const& member_expression = static_cast<MemberExpression const&>(expression);
         StringBuilder builder;

@@ -47,11 +47,17 @@ test("null/undefined array index", () => {
 
         expect(() => {
             foo[0].bar;
-        }).toThrowWithMessage(TypeError, `Cannot access property "bar" on ${value} object`);
+        }).toThrowWithMessage(
+            TypeError,
+            `Cannot access property "bar" on ${value} object "foo[0]"`
+        );
 
         expect(() => {
             foo[0].bar = 1;
-        }).toThrowWithMessage(TypeError, `Cannot access property "bar" on ${value} object`);
+        }).toThrowWithMessage(
+            TypeError,
+            `Cannot access property "bar" on ${value} object "foo[0]"`
+        );
 
         expect(() => {
             foo[index].bar;
