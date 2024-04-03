@@ -653,8 +653,33 @@ Tab::Tab(BrowserWindow& window)
         m_select_dropdown_closed_by_action = false;
         m_select_dropdown->remove_all_actions();
         m_select_dropdown->set_minimum_width(minimum_width);
+
+        auto add_menu_item = [this](Web::HTML::SelectItemOption const& item_option) {
+            auto action = GUI::Action::create(item_option.label.to_byte_string(), [this, item_option](GUI::Action&) {
+                m_select_dropdown_closed_by_action = true;
+                view().select_dropdown_closed(item_option.id);
+            });
+            action->set_checkable(true);
+            action->set_checked(item_option.selected);
+            m_select_dropdown->add_action(action);
+        };
+
         for (auto const& item : items) {
-            select_dropdown_add_item(*m_select_dropdown, item);
+            if (item.has<Web::HTML::SelectItemOptionGroup>()) {
+                auto const& item_option_group = item.get<Web::HTML::SelectItemOptionGroup>();
+                auto subtitle = GUI::Action::create(item_option_group.label.to_byte_string(), nullptr);
+                subtitle->set_enabled(false);
+                m_select_dropdown->add_action(subtitle);
+
+                for (auto const& item_option : item_option_group.items)
+                    add_menu_item(item_option);
+            }
+
+            if (item.has<Web::HTML::SelectItemOption>())
+                add_menu_item(item.get<Web::HTML::SelectItemOption>());
+
+            if (item.has<Web::HTML::SelectItemSeparator>())
+                m_select_dropdown->add_separator();
         }
 
         m_select_dropdown->popup(view().screen_relative_rect().location().translated(content_position));
@@ -792,31 +817,6 @@ Tab::Tab(BrowserWindow& window)
         auto screen_position = view().screen_relative_rect().location().translated(widget_position);
         m_page_context_menu->popup(screen_position);
     };
-}
-
-void Tab::select_dropdown_add_item(GUI::Menu& menu, Web::HTML::SelectItem const& item)
-{
-    if (item.type == Web::HTML::SelectItem::Type::OptionGroup) {
-        auto subtitle = GUI::Action::create(MUST(ByteString::from_utf8(item.label.value_or(""_string))), nullptr);
-        subtitle->set_enabled(false);
-        menu.add_action(subtitle);
-
-        for (auto const& item : *item.items) {
-            select_dropdown_add_item(menu, item);
-        }
-    }
-    if (item.type == Web::HTML::SelectItem::Type::Option) {
-        auto action = GUI::Action::create(MUST(ByteString::from_utf8(item.label.value_or(""_string))), [this, item](GUI::Action&) {
-            m_select_dropdown_closed_by_action = true;
-            view().select_dropdown_closed(item.value.value_or(""_string));
-        });
-        action->set_checkable(true);
-        action->set_checked(item.selected);
-        menu.add_action(action);
-    }
-    if (item.type == Web::HTML::SelectItem::Type::Separator) {
-        menu.add_separator();
-    }
 }
 
 void Tab::update_reset_zoom_button()

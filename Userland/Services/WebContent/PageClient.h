@@ -62,7 +62,7 @@ public:
     void confirm_closed(bool accepted);
     void prompt_closed(Optional<String> response);
     void color_picker_update(Optional<Color> picked_color, Web::HTML::ColorPickerUpdateState state);
-    void select_dropdown_closed(Optional<String> value);
+    void select_dropdown_closed(Optional<u32> const& selected_item_id);
 
     void set_user_style(String source);
 

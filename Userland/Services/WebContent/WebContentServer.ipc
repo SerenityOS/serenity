@@ -91,7 +91,7 @@ endpoint WebContentServer
     prompt_closed(u64 page_id, Optional<String> response) =|
     color_picker_update(u64 page_id, Optional<Color> picked_color, Web::HTML::ColorPickerUpdateState state) =|
     file_picker_closed(u64 page_id, Vector<Web::HTML::SelectedFile> selected_files) =|
-    select_dropdown_closed(u64 page_id, Optional<String> value) =|
+    select_dropdown_closed(u64 page_id, Optional<u32> selected_item_id) =|
 
     toggle_media_play_state(u64 page_id) =|
     toggle_media_mute_state(u64 page_id) =|

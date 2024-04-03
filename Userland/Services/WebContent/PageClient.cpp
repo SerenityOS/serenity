@@ -434,9 +434,9 @@ void PageClient::color_picker_update(Optional<Color> picked_color, Web::HTML::Co
     page().color_picker_update(picked_color, state);
 }
 
-void PageClient::select_dropdown_closed(Optional<String> value)
+void PageClient::select_dropdown_closed(Optional<u32> const& selected_item_id)
 {
-    page().select_dropdown_closed(value);
+    page().select_dropdown_closed(selected_item_id);
 }
 
 Web::WebIDL::ExceptionOr<void> PageClient::toggle_media_play_state()
