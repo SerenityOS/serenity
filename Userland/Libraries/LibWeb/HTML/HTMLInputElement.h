@@ -223,7 +223,7 @@ private:
     virtual void visit_edges(Cell::Visitor&) override;
 
     Optional<double> convert_string_to_number(StringView input) const;
-    String covert_number_to_string(double input) const;
+    String convert_number_to_string(double input) const;
 
     WebIDL::ExceptionOr<JS::GCPtr<JS::Date>> convert_string_to_date(StringView input) const;
     String covert_date_to_string(JS::NonnullGCPtr<JS::Date> input) const;

@@ -1581,7 +1581,7 @@ Optional<double> HTMLInputElement::convert_string_to_number(StringView input) co
 }
 
 // https://html.spec.whatwg.org/multipage/input.html#concept-input-value-string-number
-String HTMLInputElement::covert_number_to_string(double input) const
+String HTMLInputElement::convert_number_to_string(double input) const
 {
     // https://html.spec.whatwg.org/multipage/input.html#number-state-(type=number):concept-input-value-number-string
     if (type_state() == TypeAttributeState::Number)
@@ -1591,7 +1591,7 @@ String HTMLInputElement::covert_number_to_string(double input) const
     if (type_state() == TypeAttributeState::Range)
         return MUST(String::number(input));
 
-    dbgln("HTMLInputElement::covert_number_to_string() not implemented for input type {}", type());
+    dbgln("HTMLInputElement::convert_number_to_string() not implemented for input type {}", type());
     return {};
 }
 
@@ -1841,7 +1841,7 @@ WebIDL::ExceptionOr<void> HTMLInputElement::set_value_as_number(double value)
     }
 
     // Otherwise, run the algorithm to convert a number to a string, as defined for that state, on the new value, and set the value of the element to the resulting string.
-    TRY(set_value(covert_number_to_string(value)));
+    TRY(set_value(convert_number_to_string(value)));
     return {};
 }
 
@@ -1932,7 +1932,7 @@ WebIDL::ExceptionOr<void> HTMLInputElement::step_up_or_down(bool is_down, WebIDL
 
     // 11. Let value as string be the result of running the algorithm to convert a number to a string,
     // as defined for the input element's type attribute's current state, on value.
-    auto value_as_string = covert_number_to_string(value);
+    auto value_as_string = convert_number_to_string(value);
 
     // 12. Set the value of the element to value as string.
     TRY(set_value(value_as_string));
