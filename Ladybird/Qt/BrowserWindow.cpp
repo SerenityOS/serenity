@@ -644,6 +644,8 @@ void BrowserWindow::device_pixel_ratio_changed(qreal dpi)
 void BrowserWindow::tab_title_changed(int index, QString const& title)
 {
     m_tabs_container->setTabText(index, title);
+    m_tabs_container->setTabToolTip(index, title);
+
     if (m_tabs_container->currentIndex() == index)
         setWindowTitle(QString("%1 - Ladybird").arg(title));
 }
