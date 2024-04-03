@@ -661,6 +661,7 @@ Tab::Tab(BrowserWindow& window)
             });
             action->set_checkable(true);
             action->set_checked(item_option.selected);
+            action->set_enabled(!item_option.disabled);
             m_select_dropdown->add_action(action);
         };
 

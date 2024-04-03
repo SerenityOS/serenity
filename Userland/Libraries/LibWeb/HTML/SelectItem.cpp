@@ -15,6 +15,7 @@ ErrorOr<void> IPC::encode(Encoder& encoder, Web::HTML::SelectItemOption const& i
     TRY(encoder.encode(item.label));
     TRY(encoder.encode(item.value));
     TRY(encoder.encode(item.selected));
+    TRY(encoder.encode(item.disabled));
     return {};
 }
 
@@ -25,7 +26,8 @@ ErrorOr<Web::HTML::SelectItemOption> IPC::decode(Decoder& decoder)
     auto label = TRY(decoder.decode<String>());
     auto value = TRY(decoder.decode<String>());
     auto selected = TRY(decoder.decode<bool>());
-    return Web::HTML::SelectItemOption { id, move(label), move(value), selected };
+    auto disabled = TRY(decoder.decode<bool>());
+    return Web::HTML::SelectItemOption { id, move(label), move(value), selected, disabled };
 }
 
 template<>
