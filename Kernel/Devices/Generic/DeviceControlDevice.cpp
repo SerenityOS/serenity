@@ -69,15 +69,15 @@ ErrorOr<void> DeviceControlDevice::ioctl(OpenFileDescription&, unsigned request,
     case DEVCTL_DESTROY_LOOP_DEVICE: {
         unsigned index { 0 };
         TRY(copy_from_user(&index, static_ptr_cast<unsigned*>(arg)));
-        return LoopDevice::all_instances().with([index](auto& list) -> ErrorOr<void> {
+        auto device = TRY(LoopDevice::all_instances().with([index](auto& list) -> ErrorOr<NonnullRefPtr<LoopDevice>> {
             for (auto& device : list) {
-                if (device.index() == index) {
-                    device.remove({});
-                    return {};
-                }
+                if (device.index() == index)
+                    return device;
             }
             return Error::from_errno(ENODEV);
-        });
+        }));
+        TRY(device->remove({}));
+        return {};
     }
     default:
         return Error::from_errno(EINVAL);

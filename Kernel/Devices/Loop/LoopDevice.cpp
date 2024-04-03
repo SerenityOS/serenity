@@ -21,10 +21,34 @@ SpinlockProtected<LoopDevice::List, LockRank::None>& LoopDevice::all_instances()
     return s_all_instances;
 }
 
-void LoopDevice::remove(Badge<DeviceControlDevice>)
+ErrorOr<NonnullRefPtr<OpenFileDescription>> LoopDevice::open(int options)
 {
-    LoopDevice::all_instances().with([&](auto&) {
+    return m_attach_count.with([this, options](auto&) -> ErrorOr<NonnullRefPtr<OpenFileDescription>> {
+        // NOTE: If the device is marked as removed, it means we removed it *just* now,
+        // so return ENODEV to indicate that this device can't be opened
+        // anymore.
+        if (m_set_to_be_removed.was_set())
+            return Error::from_errno(ENODEV);
+
+        return Device::open(options);
+    });
+}
+
+ErrorOr<void> LoopDevice::remove(Badge<DeviceControlDevice>)
+{
+    return LoopDevice::all_instances().with([this](auto&) -> ErrorOr<void> {
+        // NOTE: It's safe to rely on the m_attach_count spinlock as we know
+        // that if the attach count is 0, then nobody uses the device.
+        TRY(m_attach_count.with([this](auto& count) -> ErrorOr<void> {
+            // NOTE: If we have attach count of more than zero, which means that the device
+            // is in use by something else besides the list, then refuse to remove it.
+            if (count > 0)
+                return Error::from_errno(EBUSY);
+            m_set_to_be_removed.set();
+            return {};
+        }));
         m_list_node.remove();
+        return {};
     });
 }
 
@@ -130,5 +154,4 @@ ErrorOr<void> LoopDevice::ioctl(OpenFileDescription&, unsigned, Userspace<void*>
 {
     return EINVAL;
 }
-
 }

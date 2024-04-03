@@ -22,11 +22,12 @@ public:
     virtual bool unref() const override;
     virtual ~LoopDevice() = default;
 
-    void remove(Badge<DeviceControlDevice>);
+    ErrorOr<void> remove(Badge<DeviceControlDevice>);
     static ErrorOr<NonnullRefPtr<LoopDevice>> create_with_file_description(OpenFileDescription&);
 
     virtual StringView class_name() const override { return "LoopDevice"sv; }
 
+    virtual ErrorOr<NonnullRefPtr<OpenFileDescription>> open(int options) override;
     virtual ErrorOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;
     virtual ErrorOr<size_t> write(OpenFileDescription&, u64, UserOrKernelBuffer const&, size_t) override;
     virtual bool can_read(OpenFileDescription const&, u64) const override;
@@ -50,6 +51,8 @@ private:
 
     NonnullRefPtr<Custody> const m_backing_custody;
     unsigned const m_index { 0 };
+
+    SetOnce m_set_to_be_removed;
 
     mutable IntrusiveListNode<LoopDevice, NonnullRefPtr<LoopDevice>> m_list_node;
 
