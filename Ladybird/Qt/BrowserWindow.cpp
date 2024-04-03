@@ -15,6 +15,7 @@
 #include "TaskManagerWindow.h"
 #include "WebContentView.h"
 #include <AK/TypeCasts.h>
+#include <Ladybird/Qt/TabBar.h>
 #include <Ladybird/Utilities.h>
 #include <LibWeb/CSS/PreferredColorScheme.h>
 #include <LibWeb/Loader/ResourceLoader.h>
@@ -669,11 +670,9 @@ void BrowserWindow::tab_audio_play_state_changed(int index, Web::HTML::AudioPlay
         break;
 
     case Web::HTML::AudioPlayState::Playing:
-        auto* button = new QPushButton(icon_for_page_mute_state(*tab), {});
+        auto* button = new TabBarButton(icon_for_page_mute_state(*tab));
         button->setToolTip(tool_tip_for_page_mute_state(*tab));
         button->setObjectName("LadybirdAudioState");
-        button->setFlat(true);
-        button->resize({ 20, 20 });
 
         connect(button, &QPushButton::clicked, this, [this, tab, position]() {
             tab->view().toggle_page_mute_state();
@@ -685,7 +684,7 @@ void BrowserWindow::tab_audio_play_state_changed(int index, Web::HTML::AudioPlay
                 break;
             case Web::HTML::AudioPlayState::Playing:
                 auto* button = m_tabs_container->tabBar()->tabButton(index, position);
-                verify_cast<QPushButton>(button)->setIcon(icon_for_page_mute_state(*tab));
+                verify_cast<TabBarButton>(button)->setIcon(icon_for_page_mute_state(*tab));
                 button->setToolTip(tool_tip_for_page_mute_state(*tab));
                 break;
             }

@@ -20,6 +20,7 @@ moc_qt_objects("generate_moc") {
     "Qt/LocationEdit.h",
     "Qt/SettingsDialog.h",
     "Qt/Tab.h",
+    "Qt/TabBar.h",
     "Qt/TaskManagerWindow.h",
     "Qt/WebContentView.h",
   ]
@@ -96,6 +97,7 @@ executable("ladybird_executable") {
       "Qt/StringUtils.cpp",
       "Qt/TVGIconEngine.cpp",
       "Qt/Tab.cpp",
+      "Qt/TabBar.cpp",
       "Qt/TaskManagerWindow.cpp",
       "Qt/WebContentView.cpp",
       "Qt/main.cpp",
