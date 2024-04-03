@@ -104,22 +104,20 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::finally)
     // 6. Else,
     else {
         // a. Let thenFinallyClosure be a new Abstract Closure with parameters (value) that captures onFinally and C and performs the following steps when called:
-        auto then_finally_closure = [constructor_handle = make_handle(constructor), on_finally_handle = make_handle(&on_finally.as_function())](auto& vm) -> ThrowCompletionOr<Value> {
+        auto then_finally_closure = [constructor, on_finally](auto& vm) -> ThrowCompletionOr<Value> {
             auto& realm = *vm.current_realm();
-            auto& constructor = const_cast<FunctionObject&>(*constructor_handle.cell());
-            auto& on_finally = const_cast<FunctionObject&>(*on_finally_handle.cell());
             auto value = vm.argument(0);
 
             // i. Let result be ? Call(onFinally, undefined).
             auto result = TRY(call(vm, on_finally, js_undefined()));
 
             // ii. Let promise be ? PromiseResolve(C, result).
-            auto promise = TRY(promise_resolve(vm, constructor, result));
+            auto promise = TRY(promise_resolve(vm, *constructor, result));
 
             // iii. Let returnValue be a new Abstract Closure with no parameters that captures value and performs the following steps when called:
-            auto return_value = [value_handle = make_handle(value)](auto&) -> ThrowCompletionOr<Value> {
+            auto return_value = [value](auto&) -> ThrowCompletionOr<Value> {
                 // 1. Return value.
-                return value_handle.value();
+                return value;
             };
 
             // iv. Let valueThunk be CreateBuiltinFunction(returnValue, 0, "", « »).
@@ -133,22 +131,20 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::finally)
         then_finally = NativeFunction::create(realm, move(then_finally_closure), 1, "");
 
         // c. Let catchFinallyClosure be a new Abstract Closure with parameters (reason) that captures onFinally and C and performs the following steps when called:
-        auto catch_finally_closure = [constructor_handle = make_handle(constructor), on_finally_handle = make_handle(&on_finally.as_function())](auto& vm) -> ThrowCompletionOr<Value> {
+        auto catch_finally_closure = [constructor, on_finally](auto& vm) -> ThrowCompletionOr<Value> {
             auto& realm = *vm.current_realm();
-            auto& constructor = const_cast<FunctionObject&>(*constructor_handle.cell());
-            auto& on_finally = const_cast<FunctionObject&>(*on_finally_handle.cell());
             auto reason = vm.argument(0);
 
             // i. Let result be ? Call(onFinally, undefined).
             auto result = TRY(call(vm, on_finally, js_undefined()));
 
             // ii. Let promise be ? PromiseResolve(C, result).
-            auto promise = TRY(promise_resolve(vm, constructor, result));
+            auto promise = TRY(promise_resolve(vm, *constructor, result));
 
             // iii. Let throwReason be a new Abstract Closure with no parameters that captures reason and performs the following steps when called:
-            auto throw_reason = [reason_handle = make_handle(reason)](auto&) -> ThrowCompletionOr<Value> {
+            auto throw_reason = [reason](auto&) -> ThrowCompletionOr<Value> {
                 // 1. Return ThrowCompletion(reason).
-                return throw_completion(reason_handle.value());
+                return throw_completion(reason);
             };
 
             // iv. Let thrower be CreateBuiltinFunction(throwReason, 0, "", « »).
