@@ -1765,6 +1765,22 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
     return exported_symbols;
 }
 
+// 6.7.2 Input parameters
+// Table 24 – Parameters for the pattern dictionary decoding procedure
+struct PatternDictionaryDecodingInputParameters {
+    bool uses_mmr { false }; // "HDMMR" in spec.
+    u32 width { 0 };         // "HDPW" in spec.
+    u32 height { 0 };        // "HDPH" in spec.
+    u32 gray_max { 0 };      // "GRAYMAX" in spec.
+    u8 hd_template { 0 };    // "HDTEMPLATE" in spec.
+};
+
+// 6.7 Pattern Dictionary Decoding Procedure
+static ErrorOr<void> pattern_dictionary_decoding_procedure(PatternDictionaryDecodingInputParameters const&, ReadonlyBytes)
+{
+    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode pattern dictionary yet");
+}
+
 static ErrorOr<void> decode_symbol_dictionary(JBIG2LoadingContext& context, SegmentData& segment)
 {
     // 7.4.2 Symbol dictionary segment syntax
@@ -2025,9 +2041,52 @@ static ErrorOr<void> decode_immediate_text_region(JBIG2LoadingContext& context, 
     return {};
 }
 
-static ErrorOr<void> decode_pattern_dictionary(JBIG2LoadingContext&, SegmentData const&)
+static ErrorOr<void> decode_pattern_dictionary(JBIG2LoadingContext&, SegmentData const& segment)
 {
-    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode pattern dictionary yet");
+    // 7.4.4 Pattern dictionary segment syntax
+    FixedMemoryStream stream(segment.data);
+
+    // 7.4.4.1.1 Pattern dictionary flags
+    u8 flags = TRY(stream.read_value<u8>());
+    bool uses_mmr = flags & 1;
+    u8 hd_template = (flags >> 1) & 3;
+    if (uses_mmr && hd_template != 0)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid hd_template");
+    if (flags & 0b1111'1000)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid flags");
+
+    // 7.4.4.1.2 Width of the patterns in the pattern dictionary (HDPW)
+    u8 width = TRY(stream.read_value<u8>());
+    if (width == 0)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid width");
+
+    // 7.4.4.1.3 Height of the patterns in the pattern dictionary (HDPH)
+    u8 height = TRY(stream.read_value<u8>());
+    if (height == 0)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid height");
+
+    // 7.4.4.1.4 Largest gray-scale value (GRAYMAX)
+    u32 gray_max = TRY(stream.read_value<BigEndian<u32>>());
+
+    // 7.4.4.2 Decoding a pattern dictionary segment
+    dbgln_if(JBIG2_DEBUG, "Pattern dictionary: uses_mmr={}, hd_template={}, width={}, height={}, gray_max={}", uses_mmr, hd_template, width, height, gray_max);
+
+    // "1) Interpret its header, as described in 7.4.4.1."
+    // Done!
+
+    // "2) As described in E.3.7, reset all the arithmetic coding statistics to zero."
+    // FIXME
+
+    // "3) Invoke the pattern dictionary decoding procedure described in 6.7, with the parameters to the pattern
+    //     dictionary decoding procedure set as shown in Table 35."
+    PatternDictionaryDecodingInputParameters inputs;
+    inputs.uses_mmr = uses_mmr;
+    inputs.width = width;
+    inputs.height = height;
+    inputs.gray_max = gray_max;
+    inputs.hd_template = hd_template;
+    TRY(pattern_dictionary_decoding_procedure(inputs, segment.data.slice(TRY(stream.tell()))));
+    return {};
 }
 
 static ErrorOr<void> decode_intermediate_halftone_region(JBIG2LoadingContext&, SegmentData const&)
