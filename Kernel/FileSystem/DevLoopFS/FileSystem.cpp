@@ -66,7 +66,7 @@ ErrorOr<NonnullRefPtr<Inode>> DevLoopFS::get_inode(InodeIdentifier inode_id) con
     inode->m_metadata.size = 0;
     inode->m_metadata.uid = 0;
     inode->m_metadata.gid = 0;
-    inode->m_metadata.mode = S_IFCHR | S_IRUSR | S_IWUSR;
+    inode->m_metadata.mode = S_IFBLK | S_IRUSR | S_IWUSR;
     inode->m_metadata.major_device = device->major();
     inode->m_metadata.minor_device = device->minor();
     inode->m_metadata.mtime = TimeManagement::boot_time();
