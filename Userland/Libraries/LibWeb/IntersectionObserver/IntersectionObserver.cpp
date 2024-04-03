@@ -50,9 +50,9 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<IntersectionObserver>> IntersectionObserver
 IntersectionObserver::IntersectionObserver(JS::Realm& realm, JS::GCPtr<WebIDL::CallbackType> callback, Optional<Variant<JS::Handle<DOM::Element>, JS::Handle<DOM::Document>>> const& root, Vector<double>&& thresholds)
     : PlatformObject(realm)
     , m_callback(callback)
-    , m_root(root)
     , m_thresholds(move(thresholds))
 {
+    m_root = root.has_value() ? root->visit([](auto& value) -> JS::GCPtr<DOM::Node> { return *value; }) : nullptr;
     intersection_root().visit([this](auto& node) {
         m_document = node->document();
     });
@@ -76,6 +76,7 @@ void IntersectionObserver::initialize(JS::Realm& realm)
 void IntersectionObserver::visit_edges(JS::Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
+    visitor.visit(m_root);
     visitor.visit(m_callback);
     for (auto& entry : m_queued_entries)
         visitor.visit(entry);
@@ -152,9 +153,13 @@ Vector<JS::Handle<IntersectionObserverEntry>> IntersectionObserver::take_records
 
 Variant<JS::Handle<DOM::Element>, JS::Handle<DOM::Document>, Empty> IntersectionObserver::root() const
 {
-    if (!m_root.has_value())
+    if (!m_root)
         return Empty {};
-    return m_root.value();
+    if (m_root->is_element())
+        return JS::make_handle(static_cast<DOM::Element&>(*m_root));
+    if (m_root->is_document())
+        return JS::make_handle(static_cast<DOM::Document&>(*m_root));
+    VERIFY_NOT_REACHED();
 }
 
 // https://www.w3.org/TR/intersection-observer/#intersectionobserver-intersection-root
@@ -162,8 +167,13 @@ Variant<JS::Handle<DOM::Element>, JS::Handle<DOM::Document>> IntersectionObserve
 {
     // The intersection root for an IntersectionObserver is the value of its root attribute
     // if the attribute is non-null;
-    if (m_root.has_value())
-        return m_root.value();
+    if (m_root) {
+        if (m_root->is_element())
+            return JS::make_handle(static_cast<DOM::Element&>(*m_root));
+        if (m_root->is_document())
+            return JS::make_handle(static_cast<DOM::Document&>(*m_root));
+        VERIFY_NOT_REACHED();
+    }
 
     // otherwise, it is the top-level browsing context’s document node, referred to as the implicit root.
     return JS::make_handle(global_object().page().top_level_browsing_context().active_document());
