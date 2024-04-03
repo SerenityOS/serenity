@@ -124,6 +124,7 @@ if (ENABLE_QT)
         Qt/Settings.cpp
         Qt/SettingsDialog.cpp
         Qt/Tab.cpp
+        Qt/TabBar.cpp
         Qt/TaskManagerWindow.cpp
         Qt/TVGIconEngine.cpp
         Qt/StringUtils.cpp
