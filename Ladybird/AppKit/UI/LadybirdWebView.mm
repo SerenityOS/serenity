@@ -711,9 +711,9 @@ static void copy_data_to_clipboard(StringView data, NSPasteboardType pasteboard_
         [self.select_dropdown removeAllItems];
         self.select_dropdown.minimumWidth = minimum_width;
 
-        auto add_menu_item = [self](Web::HTML::SelectItemOption const& item_option) {
+        auto add_menu_item = [self](Web::HTML::SelectItemOption const& item_option, bool in_option_group) {
             NSMenuItem* menuItem = [[NSMenuItem alloc]
-                initWithTitle:Ladybird::string_to_ns_string(item_option.label)
+                initWithTitle:Ladybird::string_to_ns_string(in_option_group ? MUST(String::formatted("    {}", item_option.label)) : item_option.label)
                        action:item_option.disabled ? nil : @selector(selectDropdownAction:)
                 keyEquivalent:@""];
             menuItem.representedObject = [NSNumber numberWithUnsignedInt:item_option.id];
@@ -731,11 +731,11 @@ static void copy_data_to_clipboard(StringView data, NSPasteboardType pasteboard_
                 [self.select_dropdown addItem:subtitle];
 
                 for (auto const& item_option : item_option_group.items)
-                    add_menu_item(item_option);
+                    add_menu_item(item_option, true);
             }
 
             if (item.has<Web::HTML::SelectItemOption>())
-                add_menu_item(item.get<Web::HTML::SelectItemOption>());
+                add_menu_item(item.get<Web::HTML::SelectItemOption>(), false);
 
             if (item.has<Web::HTML::SelectItemSeparator>())
                 [self.select_dropdown addItem:[NSMenuItem separatorItem]];
