@@ -1315,7 +1315,7 @@ void Renderer::show_empty_image(Gfx::IntSize size)
     m_painter.stroke_path(rect_path(image_border), Color::Black, 1);
 }
 
-static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> apply_alpha_channel(NonnullRefPtr<Gfx::Bitmap> image_bitmap, NonnullRefPtr<const Gfx::Bitmap> mask_bitmap)
+static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> apply_alpha_channel(NonnullRefPtr<Gfx::Bitmap> image_bitmap, NonnullRefPtr<const Gfx::Bitmap> mask_bitmap, bool invert_alpha = false)
 {
     // Make alpha mask same size as image.
     if (mask_bitmap->size() != image_bitmap->size()) {
@@ -1333,7 +1333,10 @@ static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> apply_alpha_channel(NonnullRefPtr<Gfx
         for (int i = 0; i < image_bitmap->width(); ++i) {
             auto image_color = image_bitmap->get_pixel(i, j);
             auto mask_color = mask_bitmap->get_pixel(i, j);
-            image_color = image_color.with_alpha(mask_color.luminosity());
+            u8 alpha = mask_color.luminosity();
+            if (invert_alpha)
+                alpha = 255 - alpha;
+            image_color = image_color.with_alpha(alpha);
             image_bitmap->set_pixel(i, j, image_color);
         }
     }
@@ -1377,7 +1380,8 @@ PDFErrorOr<void> Renderer::show_image(NonnullRefPtr<StreamObject> image)
         auto mask_object = TRY(image_dict->get_object(m_document, CommonNames::Mask));
         if (mask_object->is<StreamObject>()) {
             auto mask_bitmap = TRY(load_image(mask_object->cast<StreamObject>()));
-            image_bitmap.bitmap = TRY(apply_alpha_channel(image_bitmap.bitmap, mask_bitmap.bitmap));
+            bool invert_alpha = mask_bitmap.is_image_mask;
+            image_bitmap.bitmap = TRY(apply_alpha_channel(image_bitmap.bitmap, mask_bitmap.bitmap, invert_alpha));
         } else if (mask_object->is<ArrayObject>()) {
             auto mask_bitmap = TRY(make_mask_bitmap_from_array(mask_object->cast<ArrayObject>(), image));
             image_bitmap.bitmap = TRY(apply_alpha_channel(image_bitmap.bitmap, mask_bitmap));
