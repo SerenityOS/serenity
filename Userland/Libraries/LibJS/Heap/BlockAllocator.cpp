@@ -13,6 +13,7 @@
 
 #ifdef HAS_ADDRESS_SANITIZER
 #    include <sanitizer/asan_interface.h>
+#    include <sanitizer/lsan_interface.h>
 #endif
 
 // FIXME: Implement MADV_FREE and/or MADV_DONTNEED on SerenityOS.
@@ -43,6 +44,7 @@ void* BlockAllocator::allocate_block([[maybe_unused]] char const* name)
         size_t random_index = get_random_uniform(m_blocks.size());
         auto* block = m_blocks.unstable_take(random_index);
         ASAN_UNPOISON_MEMORY_REGION(block, HeapBlock::block_size);
+        LSAN_REGISTER_ROOT_REGION(block, HeapBlock::block_size);
 #ifdef AK_OS_SERENITY
         if (set_mmap_name(block, HeapBlock::block_size, name) < 0) {
             perror("set_mmap_name");
@@ -58,6 +60,7 @@ void* BlockAllocator::allocate_block([[maybe_unused]] char const* name)
     auto* block = (HeapBlock*)mmap(nullptr, HeapBlock::block_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
 #endif
     VERIFY(block != MAP_FAILED);
+    LSAN_REGISTER_ROOT_REGION(block, HeapBlock::block_size);
     return block;
 }
 
@@ -88,6 +91,7 @@ void BlockAllocator::deallocate_block(void* block)
 #endif
 
     ASAN_POISON_MEMORY_REGION(block, HeapBlock::block_size);
+    LSAN_UNREGISTER_ROOT_REGION(block, HeapBlock::block_size);
     m_blocks.append(block);
 }
 

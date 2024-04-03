@@ -218,9 +218,13 @@
 #    define HAS_ADDRESS_SANITIZER
 #    define ASAN_POISON_MEMORY_REGION(addr, size) __asan_poison_memory_region(addr, size)
 #    define ASAN_UNPOISON_MEMORY_REGION(addr, size) __asan_unpoison_memory_region(addr, size)
+#    define LSAN_REGISTER_ROOT_REGION(base, size) __lsan_register_root_region(base, size)
+#    define LSAN_UNREGISTER_ROOT_REGION(base, size) __lsan_unregister_root_region(base, size)
 #else
 #    define ASAN_POISON_MEMORY_REGION(addr, size)
 #    define ASAN_UNPOISON_MEMORY_REGION(addr, size)
+#    define LSAN_REGISTER_ROOT_REGION(base, size)
+#    define LSAN_UNREGISTER_ROOT_REGION(base, size)
 #endif
 
 #ifndef AK_OS_SERENITY
