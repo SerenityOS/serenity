@@ -152,6 +152,8 @@ shared_library("LibWebView") {
       "OutOfProcessWebView.cpp",
       "Platform/ProcessStatisticsSerenity.cpp",
     ]
+  } else if (current_os == "linux") {
+    sources += [ "Platform/ProcessStatisticsLinux.cpp" ]
   } else {
     sources += [ "Platform/ProcessStatisticsNoop.cpp" ]
   }

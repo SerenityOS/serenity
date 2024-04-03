@@ -27,6 +27,10 @@ if (SERENITYOS)
         OutOfProcessWebView.cpp
         Platform/ProcessStatisticsSerenity.cpp
     )
+elseif(LINUX AND NOT ANDROID)
+    list(APPEND SOURCES
+        Platform/ProcessStatisticsLinux.cpp
+    )
 else()
     list(APPEND SOURCES
         Platform/ProcessStatisticsNoop.cpp
