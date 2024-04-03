@@ -71,7 +71,7 @@ ErrorOr<void> DeviceControlDevice::ioctl(OpenFileDescription&, unsigned request,
         return LoopDevice::all_instances().with([index](auto& list) -> ErrorOr<void> {
             for (auto& device : list) {
                 if (device.index() == index) {
-                    device.remove({});
+                    TRY(device.remove({}));
                     return {};
                 }
             }

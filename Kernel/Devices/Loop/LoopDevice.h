@@ -22,7 +22,7 @@ public:
     virtual bool unref() const override;
     virtual ~LoopDevice() = default;
 
-    void remove(Badge<DeviceControlDevice>);
+    ErrorOr<void> remove(Badge<DeviceControlDevice>);
     static ErrorOr<NonnullRefPtr<LoopDevice>> create_with_file_description(OpenFileDescription&);
 
     virtual StringView class_name() const override { return "LoopDevice"sv; }
