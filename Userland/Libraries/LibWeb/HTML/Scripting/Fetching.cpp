@@ -828,7 +828,7 @@ void fetch_descendants_of_and_link_a_module_script(JS::Realm& realm,
     auto& loading_promise = record->load_requested_modules(state);
 
     // 6. Upon fulfillment of loadingPromise, run the following steps:
-    WebIDL::upon_fulfillment(loading_promise, [&realm, record, &module_script, on_complete](auto const&) -> WebIDL::ExceptionOr<JS::Value> {
+    WebIDL::upon_fulfillment(loading_promise, JS::create_heap_function(realm.heap(), [&realm, record, &module_script, on_complete](JS::Value) -> WebIDL::ExceptionOr<JS::Value> {
         // 1. Perform record.Link().
         auto linking_result = record->link(realm.vm());
 
@@ -840,10 +840,10 @@ void fetch_descendants_of_and_link_a_module_script(JS::Realm& realm,
         on_complete->function()(module_script);
 
         return JS::js_undefined();
-    });
+    }));
 
     // 7. Upon rejection of loadingPromise, run the following steps:
-    WebIDL::upon_rejection(loading_promise, [state, &module_script, on_complete](auto const&) -> WebIDL::ExceptionOr<JS::Value> {
+    WebIDL::upon_rejection(loading_promise, JS::create_heap_function(realm.heap(), [state, &module_script, on_complete](JS::Value) -> WebIDL::ExceptionOr<JS::Value> {
         // 1. If state.[[ParseError]] is not null, set moduleScript's error to rethrow to state.[[ParseError]] and run
         //    onComplete given moduleScript.
         if (!state->parse_error.is_null()) {
@@ -857,7 +857,7 @@ void fetch_descendants_of_and_link_a_module_script(JS::Realm& realm,
         }
 
         return JS::js_undefined();
-    });
+    }));
 
     fetch_client.clean_up_after_running_callback();
     realm.vm().pop_execution_context();
