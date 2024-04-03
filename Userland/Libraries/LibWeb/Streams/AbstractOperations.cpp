@@ -127,7 +127,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> readable_stream_cancel(Re
 
     // 8. Return the result of reacting to sourceCancelPromise with a fulfillment step that returns undefined.
     auto react_result = WebIDL::react_to_promise(*source_cancel_promise,
-        [](auto const&) -> WebIDL::ExceptionOr<JS::Value> { return JS::js_undefined(); },
+        JS::create_heap_function(stream.heap(), [](JS::Value) -> WebIDL::ExceptionOr<JS::Value> { return JS::js_undefined(); }),
         {});
 
     return WebIDL::create_resolved_promise(realm, react_result);
@@ -535,7 +535,7 @@ WebIDL::ExceptionOr<ReadableStreamPair> readable_stream_default_tee(JS::Realm& r
     params->branch2 = MUST(create_readable_stream(realm, start_algorithm, pull_algorithm, cancel2_algorithm));
 
     // 19. Upon rejection of reader.[[closedPromise]] with reason r,
-    WebIDL::upon_rejection(*reader->closed_promise_capability(), [&realm, params, cancel_promise](auto reason) -> WebIDL::ExceptionOr<JS::Value> {
+    WebIDL::upon_rejection(*reader->closed_promise_capability(), JS::create_heap_function(realm.heap(), [&realm, params, cancel_promise](JS::Value reason) -> WebIDL::ExceptionOr<JS::Value> {
         auto controller1 = params->branch1->controller()->get<JS::NonnullGCPtr<ReadableStreamDefaultController>>();
         auto controller2 = params->branch2->controller()->get<JS::NonnullGCPtr<ReadableStreamDefaultController>>();
 
@@ -551,7 +551,7 @@ WebIDL::ExceptionOr<ReadableStreamPair> readable_stream_default_tee(JS::Realm& r
         }
 
         return JS::js_undefined();
-    });
+    }));
 
     // 20. Return « branch1, branch2 ».
     return ReadableStreamPair { *params->branch1, *params->branch2 };
@@ -964,7 +964,7 @@ WebIDL::ExceptionOr<ReadableStreamPair> readable_byte_stream_tee(JS::Realm& real
         // 1. Upon rejection of thisReader.[[closedPromise]] with reason r,
         auto closed_promise = this_reader.visit([](auto const& underlying_reader) { return underlying_reader->closed_promise_capability(); });
 
-        WebIDL::upon_rejection(*closed_promise, [&realm, this_reader, params, cancel_promise](auto reason) -> WebIDL::ExceptionOr<JS::Value> {
+        WebIDL::upon_rejection(*closed_promise, JS::create_heap_function(realm.heap(), [&realm, this_reader, params, cancel_promise](JS::Value reason) -> WebIDL::ExceptionOr<JS::Value> {
             auto controller1 = params->branch1->controller()->get<JS::NonnullGCPtr<ReadableByteStreamController>>();
             auto controller2 = params->branch2->controller()->get<JS::NonnullGCPtr<ReadableByteStreamController>>();
 
@@ -985,7 +985,7 @@ WebIDL::ExceptionOr<ReadableStreamPair> readable_byte_stream_tee(JS::Realm& real
             }
 
             return JS::js_undefined();
-        });
+        }));
     });
 
     // 15. Let pullWithDefaultReader be the following steps:
@@ -1938,7 +1938,7 @@ WebIDL::ExceptionOr<void> readable_stream_default_controller_can_pull_if_needed(
     auto pull_promise = TRY(controller.pull_algorithm()->function()());
 
     // 7. Upon fulfillment of pullPromise,
-    WebIDL::upon_fulfillment(*pull_promise, [&](auto const&) -> WebIDL::ExceptionOr<JS::Value> {
+    WebIDL::upon_fulfillment(*pull_promise, JS::create_heap_function(controller.heap(), [&controller](JS::Value) -> WebIDL::ExceptionOr<JS::Value> {
         // 1. Set controller.[[pulling]] to false.
         controller.set_pulling(false);
 
@@ -1952,15 +1952,15 @@ WebIDL::ExceptionOr<void> readable_stream_default_controller_can_pull_if_needed(
         }
 
         return JS::js_undefined();
-    });
+    }));
 
     // 8. Upon rejection of pullPromise with reason e,
-    WebIDL::upon_rejection(*pull_promise, [&](auto const& e) -> WebIDL::ExceptionOr<JS::Value> {
+    WebIDL::upon_rejection(*pull_promise, JS::create_heap_function(controller.heap(), [&controller](JS::Value e) -> WebIDL::ExceptionOr<JS::Value> {
         // 1. Perform ! ReadableStreamDefaultControllerError(controller, e).
         readable_stream_default_controller_error(controller, e);
 
         return JS::js_undefined();
-    });
+    }));
 
     return {};
 }
@@ -2345,7 +2345,7 @@ WebIDL::ExceptionOr<void> set_up_readable_stream_default_controller(ReadableStre
     auto start_promise = WebIDL::create_resolved_promise(realm, start_result);
 
     // 11. Upon fulfillment of startPromise,
-    WebIDL::upon_fulfillment(start_promise, [&](auto const&) -> WebIDL::ExceptionOr<JS::Value> {
+    WebIDL::upon_fulfillment(start_promise, JS::create_heap_function(controller.heap(), [&controller](JS::Value) -> WebIDL::ExceptionOr<JS::Value> {
         // 1. Set controller.[[started]] to true.
         controller.set_started(true);
 
@@ -2359,15 +2359,15 @@ WebIDL::ExceptionOr<void> set_up_readable_stream_default_controller(ReadableStre
         TRY(readable_stream_default_controller_can_pull_if_needed(controller));
 
         return JS::js_undefined();
-    });
+    }));
 
     // 12. Upon rejection of startPromise with reason r,
-    WebIDL::upon_rejection(start_promise, [&](auto const& r) -> WebIDL::ExceptionOr<JS::Value> {
+    WebIDL::upon_rejection(start_promise, JS::create_heap_function(controller.heap(), [&controller](JS::Value r) -> WebIDL::ExceptionOr<JS::Value> {
         // 1. Perform ! ReadableStreamDefaultControllerError(controller, r).
         readable_stream_default_controller_error(controller, r);
 
         return JS::js_undefined();
-    });
+    }));
 
     return {};
 }
@@ -2454,7 +2454,7 @@ WebIDL::ExceptionOr<void> readable_byte_stream_controller_call_pull_if_needed(Re
     auto pull_promise = TRY(controller.pull_algorithm()->function()());
 
     // 7. Upon fulfillment of pullPromise,
-    WebIDL::upon_fulfillment(*pull_promise, [&](auto const&) -> WebIDL::ExceptionOr<JS::Value> {
+    WebIDL::upon_fulfillment(*pull_promise, JS::create_heap_function(controller.heap(), [&controller](JS::Value) -> WebIDL::ExceptionOr<JS::Value> {
         // 1. Set controller.[[pulling]] to false.
         controller.set_pulling(false);
 
@@ -2468,15 +2468,15 @@ WebIDL::ExceptionOr<void> readable_byte_stream_controller_call_pull_if_needed(Re
         }
 
         return JS::js_undefined();
-    });
+    }));
 
     // 8. Upon rejection of pullPromise with reason e,
-    WebIDL::upon_rejection(*pull_promise, [&](auto const& error) -> WebIDL::ExceptionOr<JS::Value> {
+    WebIDL::upon_rejection(*pull_promise, JS::create_heap_function(controller.heap(), [&controller](JS::Value error) -> WebIDL::ExceptionOr<JS::Value> {
         // 1. Perform ! ReadableByteStreamControllerError(controller, e).
         readable_byte_stream_controller_error(controller, error);
 
         return JS::js_undefined();
-    });
+    }));
 
     return {};
 }
@@ -2967,7 +2967,7 @@ WebIDL::ExceptionOr<void> set_up_readable_byte_stream_controller(ReadableStream&
     auto start_promise = WebIDL::create_resolved_promise(realm, start_result);
 
     // 16. Upon fulfillment of startPromise,
-    WebIDL::upon_fulfillment(start_promise, [&](auto const&) -> WebIDL::ExceptionOr<JS::Value> {
+    WebIDL::upon_fulfillment(start_promise, JS::create_heap_function(controller.heap(), [&controller](JS::Value) -> WebIDL::ExceptionOr<JS::Value> {
         // 1. Set controller.[[started]] to true.
         controller.set_started(true);
 
@@ -2981,15 +2981,15 @@ WebIDL::ExceptionOr<void> set_up_readable_byte_stream_controller(ReadableStream&
         TRY(readable_byte_stream_controller_call_pull_if_needed(controller));
 
         return JS::js_undefined();
-    });
+    }));
 
     // 17. Upon rejection of startPromise with reason r,
-    WebIDL::upon_rejection(start_promise, [&](auto const& r) -> WebIDL::ExceptionOr<JS::Value> {
+    WebIDL::upon_rejection(start_promise, JS::create_heap_function(controller.heap(), [&controller](JS::Value r) -> WebIDL::ExceptionOr<JS::Value> {
         // 1. Perform ! ReadableByteStreamControllerError(controller, r).
         readable_byte_stream_controller_error(controller, r);
 
         return JS::js_undefined();
-    });
+    }));
 
     return {};
 }
@@ -3577,7 +3577,7 @@ WebIDL::ExceptionOr<void> writable_stream_finish_erroring(WritableStream& stream
     auto promise = TRY(stream.controller()->abort_steps(abort_request.reason));
 
     // 13. Upon fulfillment of promise,
-    WebIDL::upon_fulfillment(*promise, [&, abort_promise = abort_request.promise](auto const&) -> WebIDL::ExceptionOr<JS::Value> {
+    WebIDL::upon_fulfillment(*promise, JS::create_heap_function(realm.heap(), [&realm, &stream, abort_promise = abort_request.promise](JS::Value) -> WebIDL::ExceptionOr<JS::Value> {
         // 1. Resolve abortRequest’s promise with undefined.
         WebIDL::resolve_promise(realm, abort_promise, JS::js_undefined());
 
@@ -3585,10 +3585,10 @@ WebIDL::ExceptionOr<void> writable_stream_finish_erroring(WritableStream& stream
         writable_stream_reject_close_and_closed_promise_if_needed(stream);
 
         return JS::js_undefined();
-    });
+    }));
 
     // 14. Upon rejection of promise with reason reason,
-    WebIDL::upon_rejection(*promise, [&, abort_promise = abort_request.promise](auto const& reason) -> WebIDL::ExceptionOr<JS::Value> {
+    WebIDL::upon_rejection(*promise, JS::create_heap_function(realm.heap(), [&realm, &stream, abort_promise = abort_request.promise](JS::Value reason) -> WebIDL::ExceptionOr<JS::Value> {
         // 1. Reject abortRequest’s promise with reason.
         WebIDL::reject_promise(realm, abort_promise, reason);
 
@@ -3596,7 +3596,7 @@ WebIDL::ExceptionOr<void> writable_stream_finish_erroring(WritableStream& stream
         writable_stream_reject_close_and_closed_promise_if_needed(stream);
 
         return JS::js_undefined();
-    });
+    }));
 
     return {};
 }
@@ -4085,7 +4085,7 @@ WebIDL::ExceptionOr<void> set_up_writable_stream_default_controller(WritableStre
     auto start_promise = WebIDL::create_resolved_promise(realm, start_result);
 
     // 17. Upon fulfillment of startPromise,
-    WebIDL::upon_fulfillment(*start_promise, [&](auto const&) -> WebIDL::ExceptionOr<JS::Value> {
+    WebIDL::upon_fulfillment(*start_promise, JS::create_heap_function(realm.heap(), [&controller, &stream](JS::Value) -> WebIDL::ExceptionOr<JS::Value> {
         // 1. Assert: stream.[[state]] is "writable" or "erroring".
         auto state = stream.state();
         VERIFY(state == WritableStream::State::Writable || state == WritableStream::State::Erroring);
@@ -4097,10 +4097,10 @@ WebIDL::ExceptionOr<void> set_up_writable_stream_default_controller(WritableStre
         TRY(writable_stream_default_controller_advance_queue_if_needed(controller));
 
         return JS::js_undefined();
-    });
+    }));
 
     // 18. Upon rejection of startPromise with reason r,
-    WebIDL::upon_rejection(*start_promise, [&](JS::Value reason) -> WebIDL::ExceptionOr<JS::Value> {
+    WebIDL::upon_rejection(*start_promise, JS::create_heap_function(realm.heap(), [&stream, &controller](JS::Value reason) -> WebIDL::ExceptionOr<JS::Value> {
         // 1. Assert: stream.[[state]] is "writable" or "erroring".
         auto state = stream.state();
         VERIFY(state == WritableStream::State::Writable || state == WritableStream::State::Erroring);
@@ -4112,7 +4112,7 @@ WebIDL::ExceptionOr<void> set_up_writable_stream_default_controller(WritableStre
         TRY(writable_stream_deal_with_rejection(stream, reason));
 
         return JS::js_undefined();
-    });
+    }));
 
     return {};
 }
@@ -4342,20 +4342,20 @@ WebIDL::ExceptionOr<void> writable_stream_default_controller_process_close(Writa
     writable_stream_default_controller_clear_algorithms(controller);
 
     // 7. Upon fulfillment of sinkClosePromise,
-    WebIDL::upon_fulfillment(*sink_close_promise, [&, stream = stream](auto const&) -> WebIDL::ExceptionOr<JS::Value> {
+    WebIDL::upon_fulfillment(*sink_close_promise, JS::create_heap_function(controller.heap(), [stream](JS::Value) -> WebIDL::ExceptionOr<JS::Value> {
         // 1. Perform ! WritableStreamFinishInFlightClose(stream).
         writable_stream_finish_in_flight_close(*stream);
 
         return JS::js_undefined();
-    });
+    }));
 
     // 8. Upon rejection of sinkClosePromise with reason reason,
-    WebIDL::upon_rejection(*sink_close_promise, [&, stream = stream](auto const& reason) -> WebIDL::ExceptionOr<JS::Value> {
+    WebIDL::upon_rejection(*sink_close_promise, JS::create_heap_function(controller.heap(), [stream = stream](JS::Value reason) -> WebIDL::ExceptionOr<JS::Value> {
         // 1. Perform ! WritableStreamFinishInFlightCloseWithError(stream, reason).
         TRY(writable_stream_finish_in_flight_close_with_error(*stream, reason));
 
         return JS::js_undefined();
-    });
+    }));
 
     return {};
 }
@@ -4373,7 +4373,7 @@ WebIDL::ExceptionOr<void> writable_stream_default_controller_process_write(Writa
     auto sink_write_promise = TRY(controller.write_algorithm()->function()(chunk));
 
     // 4. Upon fulfillment of sinkWritePromise,
-    WebIDL::upon_fulfillment(*sink_write_promise, [&, stream = stream](auto const&) -> WebIDL::ExceptionOr<JS::Value> {
+    WebIDL::upon_fulfillment(*sink_write_promise, JS::create_heap_function(controller.heap(), [&controller, stream](JS::Value) -> WebIDL::ExceptionOr<JS::Value> {
         // 1. Perform ! WritableStreamFinishInFlightWrite(stream).
         writable_stream_finish_in_flight_write(*stream);
 
@@ -4399,10 +4399,10 @@ WebIDL::ExceptionOr<void> writable_stream_default_controller_process_write(Writa
         TRY(writable_stream_default_controller_advance_queue_if_needed(controller));
 
         return JS::js_undefined();
-    });
+    }));
 
     // 5. Upon rejection of sinkWritePromise with reason,
-    WebIDL::upon_rejection(*sink_write_promise, [&, stream = stream](auto const& reason) -> WebIDL::ExceptionOr<JS::Value> {
+    WebIDL::upon_rejection(*sink_write_promise, JS::create_heap_function(controller.heap(), [&controller, stream](JS::Value reason) -> WebIDL::ExceptionOr<JS::Value> {
         // 1. If stream.[[state]] is "writable", perform ! WritableStreamDefaultControllerClearAlgorithms(controller).
         if (stream->state() == WritableStream::State::Writable)
             writable_stream_default_controller_clear_algorithms(controller);
@@ -4411,7 +4411,7 @@ WebIDL::ExceptionOr<void> writable_stream_default_controller_process_write(Writa
         TRY(writable_stream_finish_in_flight_write_with_error(*stream, reason));
 
         return JS::js_undefined();
-    });
+    }));
 
     return {};
 }
@@ -4700,13 +4700,13 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> transform_stream_default_
     // 2. Return the result of reacting to transformPromise with the following rejection steps given the argument r:
     auto react_result = WebIDL::react_to_promise(*transform_promise,
         {},
-        [&](auto const& reason) -> WebIDL::ExceptionOr<JS::Value> {
+        JS::create_heap_function(realm.heap(), [&controller](JS::Value reason) -> WebIDL::ExceptionOr<JS::Value> {
             // 1. Perform ! TransformStreamError(controller.[[stream]], r).
             TRY(transform_stream_error(*controller.stream(), reason));
 
             // 2. Throw r.
             return JS::throw_completion(reason);
-        });
+        }));
 
     return WebIDL::create_resolved_promise(realm, react_result);
 }
@@ -4744,7 +4744,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> transform_stream_default_
     auto react_result = WebIDL::react_to_promise(
         *flush_promise,
         // 1. If flushPromise was fulfilled, then:
-        [readable](auto const&) -> WebIDL::ExceptionOr<JS::Value> {
+        JS::create_heap_function(realm.heap(), [readable](JS::Value) -> WebIDL::ExceptionOr<JS::Value> {
             // 1. If readable.[[state]] is "errored", throw readable.[[storedError]].
             if (readable->state() == ReadableStream::State::Errored)
                 return JS::throw_completion(readable->stored_error());
@@ -4754,15 +4754,15 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> transform_stream_default_
             readable_stream_default_controller_close(readable->controller().value().get<JS::NonnullGCPtr<ReadableStreamDefaultController>>());
 
             return JS::js_undefined();
-        },
+        }),
         // 2. If flushPromise was rejected with reason r, then:
-        [&stream, readable](auto const& reason) -> WebIDL::ExceptionOr<JS::Value> {
+        JS::create_heap_function(realm.heap(), [&stream, readable](JS::Value reason) -> WebIDL::ExceptionOr<JS::Value> {
             // 1. Perform ! TransformStreamError(stream, r).
             TRY(transform_stream_error(stream, reason));
 
             // 2. Throw readable.[[storedError]].
             return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, readable->stored_error().as_string().utf8_string() };
-        });
+        }));
 
     return WebIDL::create_resolved_promise(realm, react_result);
 }
@@ -4788,7 +4788,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> transform_stream_default_
 
         // 3. Return the result of reacting to backpressureChangePromise with the following fulfillment steps:
         auto react_result = WebIDL::react_to_promise(*backpressure_change_promise,
-            [&stream, controller, chunk](auto const&) -> WebIDL::ExceptionOr<JS::Value> {
+            JS::create_heap_function(realm.heap(), [&stream, controller, chunk](JS::Value) -> WebIDL::ExceptionOr<JS::Value> {
                 // 1. Let writable be stream.[[writable]].
                 auto writable = stream.writable();
 
@@ -4804,7 +4804,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> transform_stream_default_
 
                 // 5. Return ! TransformStreamDefaultControllerPerformTransform(controller, chunk).
                 return TRY(transform_stream_default_controller_perform_transform(*controller, chunk))->promise();
-            },
+            }),
             {});
 
         return WebIDL::create_resolved_promise(realm, react_result);

@@ -375,7 +375,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> Blob::text()
     auto promise = TRY(reader->read_all_bytes_deprecated());
 
     // 4. Return the result of transforming promise by a fulfillment handler that returns the result of running UTF-8 decode on its first argument.
-    return WebIDL::upon_fulfillment(*promise, [&](auto const& first_argument) -> WebIDL::ExceptionOr<JS::Value> {
+    return WebIDL::upon_fulfillment(*promise, JS::create_heap_function(heap(), [&vm](JS::Value first_argument) -> WebIDL::ExceptionOr<JS::Value> {
         auto const& object = first_argument.as_object();
         VERIFY(is<JS::ArrayBuffer>(object));
         auto const& buffer = static_cast<const JS::ArrayBuffer&>(object).buffer();
@@ -383,7 +383,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> Blob::text()
         auto decoder = TextCodec::decoder_for("UTF-8"sv);
         auto utf8_text = TRY_OR_THROW_OOM(vm, TextCodec::convert_input_to_utf8_using_given_decoder_unless_there_is_a_byte_order_mark(*decoder, buffer));
         return JS::PrimitiveString::create(vm, move(utf8_text));
-    });
+    }));
 }
 
 // https://w3c.github.io/FileAPI/#dom-blob-arraybuffer
@@ -404,13 +404,13 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> Blob::array_buffer()
     auto promise = TRY(reader->read_all_bytes_deprecated());
 
     // 4. Return the result of transforming promise by a fulfillment handler that returns a new ArrayBuffer whose contents are its first argument.
-    return WebIDL::upon_fulfillment(*promise, [&](auto const& first_argument) -> WebIDL::ExceptionOr<JS::Value> {
+    return WebIDL::upon_fulfillment(*promise, JS::create_heap_function(heap(), [&realm](JS::Value first_argument) -> WebIDL::ExceptionOr<JS::Value> {
         auto const& object = first_argument.as_object();
         VERIFY(is<JS::ArrayBuffer>(object));
         auto const& buffer = static_cast<const JS::ArrayBuffer&>(object).buffer();
 
         return JS::ArrayBuffer::create(realm, buffer);
-    });
+    }));
 }
 
 }

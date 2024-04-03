@@ -93,7 +93,7 @@ void reject_promise(JS::Realm& realm, Promise const& promise, JS::Value reason)
 }
 
 // https://webidl.spec.whatwg.org/#dfn-perform-steps-once-promise-is-settled
-JS::NonnullGCPtr<JS::Promise> react_to_promise(Promise const& promise, Optional<ReactionSteps> on_fulfilled_callback, Optional<ReactionSteps> on_rejected_callback)
+JS::NonnullGCPtr<JS::Promise> react_to_promise(Promise const& promise, JS::GCPtr<ReactionSteps> on_fulfilled_callback, JS::GCPtr<ReactionSteps> on_rejected_callback)
 {
     auto& realm = promise.promise()->shape().realm();
     auto& vm = realm.vm();
@@ -104,8 +104,8 @@ JS::NonnullGCPtr<JS::Promise> react_to_promise(Promise const& promise, Optional<
         auto value = vm.argument(0);
 
         // 2. If there is a set of steps to be run if the promise was fulfilled, then let result be the result of performing them, given value if T is not undefined. Otherwise, let result be value.
-        auto result = on_fulfilled_callback.has_value()
-            ? TRY(Bindings::throw_dom_exception_if_needed(vm, [&] { return (*on_fulfilled_callback)(value); }))
+        auto result = on_fulfilled_callback
+            ? TRY(Bindings::throw_dom_exception_if_needed(vm, [&] { return on_fulfilled_callback->function()(value); }))
             : value;
 
         // 3. Return result, converted to an ECMAScript value.
@@ -121,8 +121,8 @@ JS::NonnullGCPtr<JS::Promise> react_to_promise(Promise const& promise, Optional<
         auto reason = vm.argument(0);
 
         // 2. If there is a set of steps to be run if the promise was rejected, then let result be the result of performing them, given reason. Otherwise, let result be a promise rejected with reason.
-        auto result = on_rejected_callback.has_value()
-            ? TRY(Bindings::throw_dom_exception_if_needed(vm, [&] { return (*on_rejected_callback)(reason); }))
+        auto result = on_rejected_callback
+            ? TRY(Bindings::throw_dom_exception_if_needed(vm, [&] { return on_rejected_callback->function()(reason); }))
             : WebIDL::create_rejected_promise(realm, reason)->promise();
 
         // 3. Return result, converted to an ECMAScript value.
@@ -146,32 +146,24 @@ JS::NonnullGCPtr<JS::Promise> react_to_promise(Promise const& promise, Optional<
 }
 
 // https://webidl.spec.whatwg.org/#upon-fulfillment
-JS::NonnullGCPtr<JS::Promise> upon_fulfillment(Promise const& promise, ReactionSteps steps)
+JS::NonnullGCPtr<JS::Promise> upon_fulfillment(Promise const& promise, JS::NonnullGCPtr<ReactionSteps> steps)
 {
     // 1. Return the result of reacting to promise:
     return react_to_promise(promise,
         // - If promise was fulfilled with value v, then:
-        [steps = move(steps)](auto value) {
-            // 1. Perform steps with v.
-            // NOTE: The `return` is not immediately obvious, but `steps` may be something like
-            // "Return the result of ...", which we also need to do _here_.
-            return steps(value);
-        },
+        // 1. Perform steps with v.
+        steps,
         {});
 }
 
 // https://webidl.spec.whatwg.org/#upon-rejection
-JS::NonnullGCPtr<JS::Promise> upon_rejection(Promise const& promise, ReactionSteps steps)
+JS::NonnullGCPtr<JS::Promise> upon_rejection(Promise const& promise, JS::NonnullGCPtr<ReactionSteps> steps)
 {
     // 1. Return the result of reacting to promise:
     return react_to_promise(promise, {},
         // - If promise was rejected with reason r, then:
-        [steps = move(steps)](auto reason) {
-            // 1. Perform steps with r.
-            // NOTE: The `return` is not immediately obvious, but `steps` may be something like
-            // "Return the result of ...", which we also need to do _here_.
-            return steps(reason);
-        });
+        // 1. Perform steps with r.
+        steps);
 }
 
 // https://webidl.spec.whatwg.org/#mark-a-promise-as-handled
