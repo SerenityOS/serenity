@@ -47,6 +47,7 @@ source_set("CSS") {
     "Resolution.cpp",
     "ResolvedCSSStyleDeclaration.cpp",
     "Screen.cpp",
+    "ScreenOrientation.cpp",
     "Selector.cpp",
     "SelectorEngine.cpp",
     "Serialize.cpp",

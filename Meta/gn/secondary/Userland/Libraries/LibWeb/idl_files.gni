@@ -49,6 +49,7 @@ standard_idl_files = [
   "//Userland/Libraries/LibWeb/CSS/MediaQueryList.idl",
   "//Userland/Libraries/LibWeb/CSS/MediaQueryListEvent.idl",
   "//Userland/Libraries/LibWeb/CSS/Screen.idl",
+  "//Userland/Libraries/LibWeb/CSS/ScreenOrientation.idl",
   "//Userland/Libraries/LibWeb/CSS/StyleSheet.idl",
   "//Userland/Libraries/LibWeb/CSS/StyleSheetList.idl",
   "//Userland/Libraries/LibWeb/CSS/VisualViewport.idl",
