@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2023, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2024, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,6 +8,7 @@
 #include <AK/StringBuilder.h>
 #include <LibURL/URL.h>
 #include <LibWeb/Crypto/Crypto.h>
+#include <LibWeb/DOM/Document.h>
 #include <LibWeb/FileAPI/Blob.h>
 #include <LibWeb/FileAPI/BlobURLStore.h>
 #include <LibWeb/HTML/Origin.h>
@@ -87,6 +89,21 @@ ErrorOr<void> remove_entry_from_blob_url_store(StringView url)
     // 3. Remove store[url string].
     store.remove(url_string);
     return {};
+}
+
+// https://w3c.github.io/FileAPI/#lifeTime
+void run_unloading_cleanup_steps(JS::NonnullGCPtr<DOM::Document> document)
+{
+    // 1.  Let environment be the Document's relevant settings object.
+    auto& environment = document->relevant_settings_object();
+
+    // 2.  Let store be the user agent’s blob URL store;
+    auto& store = FileAPI::blob_url_store();
+
+    // 3. Remove from store any entries for which the value's environment is equal to environment.
+    store.remove_all_matching([&](auto&, auto& value) {
+        return value.environment == &environment;
+    });
 }
 
 }

@@ -28,4 +28,6 @@ ErrorOr<String> generate_new_blob_url();
 ErrorOr<String> add_entry_to_blob_url_store(JS::NonnullGCPtr<Blob> object);
 ErrorOr<void> remove_entry_from_blob_url_store(StringView url);
 
+void run_unloading_cleanup_steps(JS::NonnullGCPtr<DOM::Document>);
+
 }
