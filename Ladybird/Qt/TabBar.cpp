@@ -31,7 +31,6 @@ TabWidget::TabWidget(QWidget* parent)
     setDocumentMode(true);
     setElideMode(Qt::TextElideMode::ElideRight);
     setMovable(true);
-    setTabBarAutoHide(true);
     setTabsClosable(true);
 
     installEventFilter(parent);
