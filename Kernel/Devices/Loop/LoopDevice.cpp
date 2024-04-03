@@ -45,6 +45,8 @@ bool LoopDevice::unref() const
 
 ErrorOr<NonnullRefPtr<LoopDevice>> LoopDevice::create_with_file_description(OpenFileDescription& description)
 {
+    if (!(description.is_readable() && description.is_writable()))
+        return Error::from_errno(EPERM);
     auto custody = description.custody();
     if (!custody)
         return Error::from_errno(EINVAL);
