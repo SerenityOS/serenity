@@ -12,6 +12,7 @@
 #include <AK/HashMap.h>
 #include <LibCore/EventReceiver.h>
 #include <LibCore/Proxy.h>
+#include <LibJS/SafeFunction.h>
 #include <LibURL/URL.h>
 #include <LibWeb/Loader/Resource.h>
 #include <LibWeb/Page/Page.h>
@@ -115,9 +116,9 @@ public:
 
     RefPtr<Resource> load_resource(Resource::Type, LoadRequest&);
 
-    using SuccessCallback = Function<void(ReadonlyBytes, HashMap<ByteString, ByteString, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> status_code)>;
-    using ErrorCallback = Function<void(ByteString const&, Optional<u32> status_code, ReadonlyBytes payload, HashMap<ByteString, ByteString, CaseInsensitiveStringTraits> const& response_headers)>;
-    using TimeoutCallback = Function<void()>;
+    using SuccessCallback = JS::SafeFunction<void(ReadonlyBytes, HashMap<ByteString, ByteString, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> status_code)>;
+    using ErrorCallback = JS::SafeFunction<void(ByteString const&, Optional<u32> status_code, ReadonlyBytes payload, HashMap<ByteString, ByteString, CaseInsensitiveStringTraits> const& response_headers)>;
+    using TimeoutCallback = JS::SafeFunction<void()>;
 
     void load(LoadRequest&, SuccessCallback success_callback, ErrorCallback error_callback = nullptr, Optional<u32> timeout = {}, TimeoutCallback timeout_callback = nullptr);
 
