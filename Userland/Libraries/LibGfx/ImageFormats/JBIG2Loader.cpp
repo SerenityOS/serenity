@@ -416,6 +416,8 @@ public:
     void set_bit(size_t x, size_t y, bool b);
     void fill(bool b);
 
+    ErrorOr<NonnullOwnPtr<BitBuffer>> subbitmap(Gfx::IntRect const& rect) const;
+
     ErrorOr<NonnullRefPtr<Gfx::Bitmap>> to_gfx_bitmap() const;
     ErrorOr<ByteBuffer> to_byte_buffer() const;
 
@@ -471,6 +473,23 @@ void BitBuffer::fill(bool b)
         byte = fill_byte;
 }
 
+ErrorOr<NonnullOwnPtr<BitBuffer>> BitBuffer::subbitmap(Gfx::IntRect const& rect) const
+{
+    VERIFY(rect.x() >= 0);
+    VERIFY(rect.width() >= 0);
+    VERIFY(static_cast<size_t>(rect.right()) <= width());
+
+    VERIFY(rect.y() >= 0);
+    VERIFY(rect.height() >= 0);
+    VERIFY(static_cast<size_t>(rect.bottom()) <= height());
+
+    auto subbitmap = TRY(create(rect.width(), rect.height()));
+    for (int y = 0; y < rect.height(); ++y)
+        for (int x = 0; x < rect.width(); ++x)
+            subbitmap->set_bit(x, y, get_bit(rect.x() + x, rect.y() + y));
+    return subbitmap;
+}
+
 ErrorOr<NonnullRefPtr<Gfx::Bitmap>> BitBuffer::to_gfx_bitmap() const
 {
     auto bitmap = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { m_width, m_height }));
@@ -520,6 +539,9 @@ struct SegmentData {
 
     // Set on dictionary segments after they've been decoded.
     Optional<Vector<NonnullRefPtr<Symbol>>> symbols;
+
+    // Set on pattern segments after they've been decoded.
+    Optional<Vector<NonnullRefPtr<Symbol>>> patterns;
 };
 
 // 7.4.8.5 Page segment flags
@@ -777,7 +799,7 @@ static ErrorOr<void> decode_segment_headers(JBIG2LoadingContext& context, Readon
     if (segment_headers.size() != segment_datas.size())
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Segment headers and segment datas have different sizes");
     for (size_t i = 0; i < segment_headers.size(); ++i) {
-        context.segments.append({ segment_headers[i], segment_datas[i], {} });
+        context.segments.append({ segment_headers[i], segment_datas[i], {}, {} });
         context.segments_by_number.set(segment_headers[i].segment_number, context.segments.size() - 1);
     }
 
@@ -1776,9 +1798,44 @@ struct PatternDictionaryDecodingInputParameters {
 };
 
 // 6.7 Pattern Dictionary Decoding Procedure
-static ErrorOr<void> pattern_dictionary_decoding_procedure(PatternDictionaryDecodingInputParameters const&, ReadonlyBytes)
+static ErrorOr<Vector<NonnullRefPtr<Symbol>>> pattern_dictionary_decoding_procedure(PatternDictionaryDecodingInputParameters const& inputs, ReadonlyBytes data, Vector<JBIG2::ArithmeticDecoder::Context>& contexts)
 {
-    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode pattern dictionary yet");
+    // Table 27 – Parameters used to decode a pattern dictionary's collective bitmap
+    GenericRegionDecodingInputParameters generic_inputs;
+    generic_inputs.is_modified_modified_read = inputs.uses_mmr;
+    generic_inputs.region_width = (inputs.gray_max + 1) * inputs.width;
+    generic_inputs.region_height = inputs.height;
+    generic_inputs.gb_template = inputs.hd_template;
+    generic_inputs.is_typical_prediction_used = false;
+    generic_inputs.is_extended_reference_template_used = false; // Missing from spec in table 27.
+    generic_inputs.skip_pattern = OptionalNone {};
+    generic_inputs.adaptive_template_pixels[0].x = -inputs.width;
+    generic_inputs.adaptive_template_pixels[0].y = 0;
+    generic_inputs.adaptive_template_pixels[1].x = -3;
+    generic_inputs.adaptive_template_pixels[1].y = -1;
+    generic_inputs.adaptive_template_pixels[2].x = 2;
+    generic_inputs.adaptive_template_pixels[2].y = -2;
+    generic_inputs.adaptive_template_pixels[3].x = -2;
+    generic_inputs.adaptive_template_pixels[3].y = -2;
+
+    Optional<JBIG2::ArithmeticDecoder> decoder;
+    if (!inputs.uses_mmr) {
+        decoder = TRY(JBIG2::ArithmeticDecoder::initialize(data));
+        generic_inputs.arithmetic_decoder = &decoder.value();
+    }
+
+    auto bitmap = TRY(generic_region_decoding_procedure(generic_inputs, data, contexts));
+
+    Vector<NonnullRefPtr<Symbol>> patterns;
+    for (u32 gray = 0; gray <= inputs.gray_max; ++gray) {
+        int x = gray * inputs.width;
+        auto pattern = TRY(bitmap->subbitmap({ x, 0, static_cast<int>(inputs.width), static_cast<int>(inputs.height) }));
+        patterns.append(Symbol::create(move(pattern)));
+    }
+
+    dbgln_if(JBIG2_DEBUG, "Pattern dictionary: {} patterns", patterns.size());
+
+    return patterns;
 }
 
 static ErrorOr<void> decode_symbol_dictionary(JBIG2LoadingContext& context, SegmentData& segment)
@@ -2041,7 +2098,7 @@ static ErrorOr<void> decode_immediate_text_region(JBIG2LoadingContext& context, 
     return {};
 }
 
-static ErrorOr<void> decode_pattern_dictionary(JBIG2LoadingContext&, SegmentData const& segment)
+static ErrorOr<void> decode_pattern_dictionary(JBIG2LoadingContext&, SegmentData& segment)
 {
     // 7.4.4 Pattern dictionary segment syntax
     FixedMemoryStream stream(segment.data);
@@ -2070,12 +2127,15 @@ static ErrorOr<void> decode_pattern_dictionary(JBIG2LoadingContext&, SegmentData
 
     // 7.4.4.2 Decoding a pattern dictionary segment
     dbgln_if(JBIG2_DEBUG, "Pattern dictionary: uses_mmr={}, hd_template={}, width={}, height={}, gray_max={}", uses_mmr, hd_template, width, height, gray_max);
+    auto data = segment.data.slice(TRY(stream.tell()));
 
     // "1) Interpret its header, as described in 7.4.4.1."
     // Done!
 
     // "2) As described in E.3.7, reset all the arithmetic coding statistics to zero."
-    // FIXME
+    Vector<JBIG2::ArithmeticDecoder::Context> contexts;
+    if (!uses_mmr)
+        contexts.resize(1 << number_of_context_bits_for_template(hd_template));
 
     // "3) Invoke the pattern dictionary decoding procedure described in 6.7, with the parameters to the pattern
     //     dictionary decoding procedure set as shown in Table 35."
@@ -2085,7 +2145,10 @@ static ErrorOr<void> decode_pattern_dictionary(JBIG2LoadingContext&, SegmentData
     inputs.height = height;
     inputs.gray_max = gray_max;
     inputs.hd_template = hd_template;
-    TRY(pattern_dictionary_decoding_procedure(inputs, segment.data.slice(TRY(stream.tell()))));
+    auto result = TRY(pattern_dictionary_decoding_procedure(inputs, data, contexts));
+
+    segment.patterns = move(result);
+
     return {};
 }
 
