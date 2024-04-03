@@ -46,18 +46,12 @@ static QIcon const& app_icon()
 }
 
 BrowserWindow::BrowserWindow(Vector<URL::URL> const& initial_urls, WebView::CookieJar& cookie_jar, WebContentOptions const& web_content_options, StringView webdriver_content_ipc_path)
-    : m_cookie_jar(cookie_jar)
+    : m_tabs_container(new TabWidget(this))
+    , m_cookie_jar(cookie_jar)
     , m_web_content_options(web_content_options)
     , m_webdriver_content_ipc_path(webdriver_content_ipc_path)
 {
     setWindowIcon(app_icon());
-    m_tabs_container = new QTabWidget(this);
-    m_tabs_container->installEventFilter(this);
-    m_tabs_container->setElideMode(Qt::TextElideMode::ElideRight);
-    m_tabs_container->setMovable(true);
-    m_tabs_container->setTabsClosable(true);
-    m_tabs_container->setDocumentMode(true);
-    m_tabs_container->setTabBarAutoHide(true);
 
     // Listen for DPI changes
     m_device_pixel_ratio = devicePixelRatio();
