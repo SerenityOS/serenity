@@ -73,7 +73,7 @@ private:
     JS::GCPtr<WebIDL::CallbackType> m_callback;
 
     // https://www.w3.org/TR/intersection-observer/#dom-intersectionobserver-root
-    Optional<Variant<JS::Handle<DOM::Element>, JS::Handle<DOM::Document>>> m_root;
+    JS::GCPtr<DOM::Node> m_root;
 
     // https://www.w3.org/TR/intersection-observer/#dom-intersectionobserver-thresholds
     Vector<double> m_thresholds;
