@@ -23,7 +23,7 @@ class PendingResponse : public JS::Cell {
     JS_DECLARE_ALLOCATOR(PendingResponse);
 
 public:
-    using Callback = JS::SafeFunction<void(JS::NonnullGCPtr<Infrastructure::Response>)>;
+    using Callback = Function<void(JS::NonnullGCPtr<Infrastructure::Response>)>;
 
     [[nodiscard]] static JS::NonnullGCPtr<PendingResponse> create(JS::VM&, JS::NonnullGCPtr<Infrastructure::Request>);
     [[nodiscard]] static JS::NonnullGCPtr<PendingResponse> create(JS::VM&, JS::NonnullGCPtr<Infrastructure::Request>, JS::NonnullGCPtr<Infrastructure::Response>);
@@ -38,7 +38,7 @@ private:
 
     void run_callback();
 
-    Callback m_callback;
+    JS::GCPtr<JS::HeapFunction<void(JS::NonnullGCPtr<Infrastructure::Response>)>> m_callback;
     JS::NonnullGCPtr<Infrastructure::Request> m_request;
     JS::GCPtr<Infrastructure::Response> m_response;
 };

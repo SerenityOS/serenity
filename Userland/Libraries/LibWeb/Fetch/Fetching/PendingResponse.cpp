@@ -34,6 +34,7 @@ PendingResponse::PendingResponse(JS::NonnullGCPtr<Infrastructure::Request> reque
 void PendingResponse::visit_edges(JS::Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
+    visitor.visit(m_callback);
     visitor.visit(m_request);
     visitor.visit(m_response);
 }
@@ -41,7 +42,7 @@ void PendingResponse::visit_edges(JS::Cell::Visitor& visitor)
 void PendingResponse::when_loaded(Callback callback)
 {
     VERIFY(!m_callback);
-    m_callback = move(callback);
+    m_callback = JS::create_heap_function(heap(), move(callback));
     if (m_response)
         run_callback();
 }
@@ -59,7 +60,9 @@ void PendingResponse::run_callback()
     VERIFY(m_callback);
     VERIFY(m_response);
     Platform::EventLoopPlugin::the().deferred_invoke([this] {
-        m_callback(*m_response);
+        VERIFY(m_callback);
+        VERIFY(m_response);
+        m_callback->function()(*m_response);
         m_request->remove_pending_response({}, *this);
     });
 }
