@@ -604,6 +604,7 @@ void BrowserWindow::initialize_tab(Tab* tab)
     };
 
     m_tabs_container->setTabIcon(m_tabs_container->indexOf(tab), tab->favicon());
+    create_close_button_for_tab(tab);
 
     tab->focus_location_editor();
 }
@@ -656,6 +657,22 @@ void BrowserWindow::tab_title_changed(int index, QString const& title)
 void BrowserWindow::tab_favicon_changed(int index, QIcon const& icon)
 {
     m_tabs_container->setTabIcon(index, icon);
+}
+
+void BrowserWindow::create_close_button_for_tab(Tab* tab)
+{
+    auto index = m_tabs_container->indexOf(tab);
+    m_tabs_container->setTabIcon(index, tab->favicon());
+
+    auto* button = new TabBarButton(create_tvg_icon_with_theme_colors("close", palette()));
+    auto position = audio_button_position_for_tab(index) == QTabBar::LeftSide ? QTabBar::RightSide : QTabBar::LeftSide;
+
+    connect(button, &QPushButton::clicked, this, [this, tab]() {
+        auto index = m_tabs_container->indexOf(tab);
+        close_tab(index);
+    });
+
+    m_tabs_container->tabBar()->setTabButton(index, position, button);
 }
 
 void BrowserWindow::tab_audio_play_state_changed(int index, Web::HTML::AudioPlayState play_state)
