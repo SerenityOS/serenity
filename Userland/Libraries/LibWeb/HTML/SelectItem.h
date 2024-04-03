@@ -8,31 +8,47 @@
 
 #include <AK/String.h>
 #include <LibIPC/Forward.h>
+#include <LibWeb/HTML/HTMLOptionElement.h>
 
 namespace Web::HTML {
 
-struct SelectItem {
-    enum class Type {
-        OptionGroup,
-        Option,
-        Separator,
-    };
-
-    Type type;
-    Optional<String> label = {};
-    Optional<String> value = {};
-    Optional<Vector<SelectItem>> items = {};
-    bool selected = false;
+struct SelectItemOption {
+    u32 id { 0 };
+    String label {};
+    String value {};
+    bool selected { false };
+    JS::GCPtr<HTMLOptionElement> option_element {};
 };
+
+struct SelectItemOptionGroup {
+    String label = {};
+    Vector<SelectItemOption> items = {};
+};
+
+struct SelectItemSeparator { };
+
+using SelectItem = Variant<SelectItemOption, SelectItemOptionGroup, SelectItemSeparator>;
 
 }
 
 namespace IPC {
 
 template<>
-ErrorOr<void> encode(Encoder&, Web::HTML::SelectItem const&);
+ErrorOr<void> encode(Encoder&, Web::HTML::SelectItemOption const&);
 
 template<>
-ErrorOr<Web::HTML::SelectItem> decode(Decoder&);
+ErrorOr<Web::HTML::SelectItemOption> decode(Decoder&);
+
+template<>
+ErrorOr<void> encode(Encoder&, Web::HTML::SelectItemOptionGroup const&);
+
+template<>
+ErrorOr<Web::HTML::SelectItemOptionGroup> decode(Decoder&);
+
+template<>
+ErrorOr<void> encode(Encoder&, Web::HTML::SelectItemSeparator const&);
+
+template<>
+ErrorOr<Web::HTML::SelectItemSeparator> decode(Decoder&);
 
 }

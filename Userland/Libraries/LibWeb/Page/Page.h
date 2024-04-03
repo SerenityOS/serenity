@@ -141,7 +141,7 @@ public:
     void file_picker_closed(Span<HTML::SelectedFile> selected_files);
 
     void did_request_select_dropdown(WeakPtr<HTML::HTMLSelectElement> target, Web::CSSPixelPoint content_position, Web::CSSPixels minimum_width, Vector<Web::HTML::SelectItem> items);
-    void select_dropdown_closed(Optional<String> value);
+    void select_dropdown_closed(Optional<u32> const& selected_item_id);
 
     enum class PendingNonBlockingDialog {
         None,

@@ -95,7 +95,7 @@ public:
     void prompt_closed(Optional<String> response);
     void color_picker_update(Optional<Color> picked_color, Web::HTML::ColorPickerUpdateState state);
     void file_picker_closed(Vector<Web::HTML::SelectedFile> selected_files);
-    void select_dropdown_closed(Optional<String> value);
+    void select_dropdown_closed(Optional<u32> const& selected_item_id);
 
     void toggle_media_play_state();
     void toggle_media_mute_state();

@@ -65,8 +65,6 @@ signals:
     void audio_play_state_changed(int id, Web::HTML::AudioPlayState);
 
 private:
-    void select_dropdown_add_item(QMenu* menu, Web::HTML::SelectItem const& item);
-
     virtual void resizeEvent(QResizeEvent*) override;
     virtual bool event(QEvent*) override;
 

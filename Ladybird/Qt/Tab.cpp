@@ -331,8 +331,32 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
     view().on_request_select_dropdown = [this](Gfx::IntPoint content_position, i32 minimum_width, Vector<Web::HTML::SelectItem> items) {
         m_select_dropdown->clear();
         m_select_dropdown->setMinimumWidth(minimum_width / view().device_pixel_ratio());
+
+        auto add_menu_item = [this](Web::HTML::SelectItemOption const& item_option) {
+            QAction* action = new QAction(qstring_from_ak_string(item_option.label), this);
+            action->setCheckable(true);
+            action->setChecked(item_option.selected);
+            action->setData(QVariant(static_cast<uint>(item_option.id)));
+            QObject::connect(action, &QAction::triggered, this, &Tab::select_dropdown_action);
+            m_select_dropdown->addAction(action);
+        };
+
         for (auto const& item : items) {
-            select_dropdown_add_item(m_select_dropdown, item);
+            if (item.has<Web::HTML::SelectItemOptionGroup>()) {
+                auto const& item_option_group = item.get<Web::HTML::SelectItemOptionGroup>();
+                QAction* subtitle = new QAction(qstring_from_ak_string(item_option_group.label), this);
+                subtitle->setDisabled(true);
+                m_select_dropdown->addAction(subtitle);
+
+                for (auto const& item_option : item_option_group.items)
+                    add_menu_item(item_option);
+            }
+
+            if (item.has<Web::HTML::SelectItemOption>())
+                add_menu_item(item.get<Web::HTML::SelectItemOption>());
+
+            if (item.has<Web::HTML::SelectItemSeparator>())
+                m_select_dropdown->addSeparator();
         }
 
         m_select_dropdown->exec(view().map_point_to_global_position(content_position));
@@ -705,35 +729,10 @@ Tab::~Tab()
     delete m_inspector_widget;
 }
 
-void Tab::select_dropdown_add_item(QMenu* menu, Web::HTML::SelectItem const& item)
-{
-    if (item.type == Web::HTML::SelectItem::Type::OptionGroup) {
-        QAction* subtitle = new QAction(qstring_from_ak_string(item.label.value_or(""_string)), this);
-        subtitle->setDisabled(true);
-        menu->addAction(subtitle);
-
-        for (auto const& item : *item.items) {
-            select_dropdown_add_item(menu, item);
-        }
-    }
-    if (item.type == Web::HTML::SelectItem::Type::Option) {
-        QAction* action = new QAction(qstring_from_ak_string(item.label.value_or(""_string)), this);
-        action->setCheckable(true);
-        action->setChecked(item.selected);
-        action->setData(QVariant(qstring_from_ak_string(item.value.value_or(""_string))));
-        QObject::connect(action, &QAction::triggered, this, &Tab::select_dropdown_action);
-        menu->addAction(action);
-    }
-    if (item.type == Web::HTML::SelectItem::Type::Separator) {
-        menu->addSeparator();
-    }
-}
-
 void Tab::select_dropdown_action()
 {
     QAction* action = qobject_cast<QAction*>(sender());
-    auto value = action->data().value<QString>();
-    view().select_dropdown_closed(ak_string_from_qstring(value));
+    view().select_dropdown_closed(action->data().value<uint>());
 }
 
 void Tab::update_reset_zoom_button()

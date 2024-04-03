@@ -46,6 +46,17 @@ void HTMLSelectElement::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_options);
     visitor.visit(m_inner_text_element);
     visitor.visit(m_chevron_icon_element);
+
+    for (auto const& item : m_select_items) {
+        if (item.has<SelectItemOption>())
+            visitor.visit(item.get<SelectItemOption>().option_element);
+
+        if (item.has<SelectItemOptionGroup>()) {
+            auto item_option_group = item.get<SelectItemOptionGroup>();
+            for (auto const& item : item_option_group.items)
+                visitor.visit(item.option_element);
+        }
+    }
 }
 
 void HTMLSelectElement::adjust_computed_style(CSS::StyleProperties& style)
@@ -213,7 +224,12 @@ WebIDL::ExceptionOr<void> HTMLSelectElement::set_value(String const& value)
     for (auto const& option_element : list_of_options())
         option_element->set_selected(option_element->value() == value);
     update_inner_text_element();
+    queue_input_and_change_events();
+    return {};
+}
 
+void HTMLSelectElement::queue_input_and_change_events()
+{
     // When the user agent is to send select update notifications, queue an element task on the user interaction task source given the select element to run these steps:
     queue_an_element_task(HTML::Task::Source::UserInteraction, [this] {
         // FIXME: 1. Set the select element's user interacted to true.
@@ -229,7 +245,6 @@ WebIDL::ExceptionOr<void> HTMLSelectElement::set_value(String const& value)
         change_event->set_bubbles(true);
         dispatch_event(*change_event);
     });
-    return {};
 }
 
 void HTMLSelectElement::set_is_open(bool open)
@@ -246,7 +261,7 @@ bool HTMLSelectElement::has_activation_behavior() const
     return true;
 }
 
-static Optional<String> strip_newlines(Optional<String> string)
+static String strip_newlines(Optional<String> string)
 {
     // FIXME: Move this to a more general function
     if (!string.has_value())
@@ -266,48 +281,65 @@ static Optional<String> strip_newlines(Optional<String> string)
 void HTMLSelectElement::activation_behavior(DOM::Event const&)
 {
     // Populate select items
-    Vector<SelectItem> items;
+    m_select_items.clear();
+    u32 id_counter = 1;
     for (auto const& child : children_as_vector()) {
         if (is<HTMLOptGroupElement>(*child)) {
             auto& opt_group_element = verify_cast<HTMLOptGroupElement>(*child);
-            Vector<SelectItem> opt_group_items;
+            Vector<SelectItemOption> option_group_items;
             for (auto const& child : opt_group_element.children_as_vector()) {
                 if (is<HTMLOptionElement>(*child)) {
                     auto& option_element = verify_cast<HTMLOptionElement>(*child);
-                    auto option_value = option_element.value();
-                    opt_group_items.append(SelectItem { SelectItem::Type::Option, strip_newlines(option_element.text_content()), option_value, {}, option_element.selected() });
-                }
-                if (is<HTMLHRElement>(*child)) {
-                    opt_group_items.append(SelectItem { SelectItem::Type::Separator });
+                    option_group_items.append(SelectItemOption { id_counter++, strip_newlines(option_element.text_content()), option_element.value(), option_element.selected(), option_element });
                 }
             }
-            items.append(SelectItem { SelectItem::Type::OptionGroup, opt_group_element.get_attribute(AttributeNames::label), {}, opt_group_items });
+            m_select_items.append(SelectItemOptionGroup { opt_group_element.get_attribute(AttributeNames::label).value_or(String {}), option_group_items });
         }
 
         if (is<HTMLOptionElement>(*child)) {
             auto& option_element = verify_cast<HTMLOptionElement>(*child);
-            auto option_value = option_element.value();
-            items.append(SelectItem { SelectItem::Type::Option, strip_newlines(option_element.text_content()), option_value, {}, option_element.selected() });
+            m_select_items.append(SelectItemOption { id_counter++, strip_newlines(option_element.text_content()), option_element.value(), option_element.selected(), option_element });
         }
-        if (is<HTMLHRElement>(*child)) {
-            items.append(SelectItem { SelectItem::Type::Separator });
-        }
+
+        if (is<HTMLHRElement>(*child))
+            m_select_items.append(SelectItemSeparator {});
     }
 
     // Request select dropdown
     auto weak_element = make_weak_ptr<HTMLSelectElement>();
     auto rect = get_bounding_client_rect();
     auto position = document().navigable()->to_top_level_position(Web::CSSPixelPoint { rect->x(), rect->y() });
-    document().page().did_request_select_dropdown(weak_element, position, CSSPixels(rect->width()), items);
+    document().page().did_request_select_dropdown(weak_element, position, CSSPixels(rect->width()), m_select_items);
     set_is_open(true);
 }
 
-void HTMLSelectElement::did_select_value(Optional<String> value)
+void HTMLSelectElement::did_select_item(Optional<u32> const& id)
 {
     set_is_open(false);
-    if (value.has_value()) {
-        MUST(set_value(*value));
+
+    if (!id.has_value())
+        return;
+
+    for (auto const& option_element : list_of_options())
+        option_element->set_selected(false);
+
+    for (auto const& item : m_select_items) {
+        if (item.has<SelectItemOption>()) {
+            auto const& item_option = item.get<SelectItemOption>();
+            if (item_option.id == *id)
+                item_option.option_element->set_selected(true);
+        }
+        if (item.has<SelectItemOptionGroup>()) {
+            auto item_option_group = item.get<SelectItemOptionGroup>();
+            for (auto const& item_option : item_option_group.items) {
+                if (item_option.id == *id)
+                    item_option.option_element->set_selected(true);
+            }
+        }
     }
+
+    update_inner_text_element();
+    queue_input_and_change_events();
 }
 
 void HTMLSelectElement::form_associated_element_was_inserted()

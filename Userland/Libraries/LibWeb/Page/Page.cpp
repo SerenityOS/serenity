@@ -377,14 +377,14 @@ void Page::did_request_select_dropdown(WeakPtr<HTML::HTMLSelectElement> target, 
     }
 }
 
-void Page::select_dropdown_closed(Optional<String> value)
+void Page::select_dropdown_closed(Optional<u32> const& selected_item_id)
 {
     if (m_pending_non_blocking_dialog == PendingNonBlockingDialog::Select) {
         m_pending_non_blocking_dialog = PendingNonBlockingDialog::None;
 
         if (m_pending_non_blocking_dialog_target) {
             auto& select_element = verify_cast<HTML::HTMLSelectElement>(*m_pending_non_blocking_dialog_target);
-            select_element.did_select_value(move(value));
+            select_element.did_select_item(selected_item_id);
             m_pending_non_blocking_dialog_target.clear();
         }
     }

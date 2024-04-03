@@ -12,6 +12,7 @@
 #include <LibWeb/HTML/FormAssociatedElement.h>
 #include <LibWeb/HTML/HTMLElement.h>
 #include <LibWeb/HTML/HTMLOptionsCollection.h>
+#include <LibWeb/HTML/SelectItem.h>
 
 namespace Web::HTML {
 
@@ -78,7 +79,7 @@ public:
     virtual void form_associated_element_was_inserted() override;
     virtual void form_associated_element_was_removed(DOM::Node*) override;
 
-    void did_select_value(Optional<String> value);
+    void did_select_item(Optional<u32> const& id);
 
 private:
     HTMLSelectElement(DOM::Document&, DOM::QualifiedName);
@@ -93,9 +94,11 @@ private:
 
     void create_shadow_tree_if_needed();
     void update_inner_text_element();
+    void queue_input_and_change_events();
 
     JS::GCPtr<HTMLOptionsCollection> m_options;
     bool m_is_open { false };
+    Vector<SelectItem> m_select_items;
     JS::GCPtr<DOM::Element> m_inner_text_element;
     JS::GCPtr<DOM::Element> m_chevron_icon_element;
 };
