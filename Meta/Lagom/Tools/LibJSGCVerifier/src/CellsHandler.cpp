@@ -176,7 +176,8 @@ void CollectCellsHandler::run(clang::ast_matchers::MatchFinder::MatchResult cons
 
     // Cell triggers a bunch of warnings for its empty visit_edges implementation, but
     // it doesn't have any members anyways so it's fine to just ignore.
-    if (record->getQualifiedNameAsString() == "JS::Cell")
+    auto qualified_name = record->getQualifiedNameAsString();
+    if (qualified_name == "JS::Cell")
         return;
 
     auto& diag_engine = result.Context->getDiagnostics();
@@ -216,11 +217,13 @@ void CollectCellsHandler::run(clang::ast_matchers::MatchFinder::MatchResult cons
     // ensuring the classes use JS_CELL/JS_OBJECT, as Base will not be defined if they do not.
 
     MatchFinder base_visit_edges_finder;
-    SimpleCollectMatchesCallback<clang::CXXMemberCallExpr> base_visit_edges_callback("member-call");
+    SimpleCollectMatchesCallback<clang::MemberExpr> base_visit_edges_callback("member-call");
 
-    auto base_visit_edges_matcher = cxxMemberCallExpr(
-        callee(memberExpr(member(hasName("visit_edges")))))
-                                        .bind("member-call");
+    auto base_visit_edges_matcher = cxxMethodDecl(
+        ofClass(hasName(qualified_name)),
+        functionDecl(hasName("visit_edges")),
+        isOverride(),
+        hasDescendant(memberExpr(member(hasName("visit_edges"))).bind("member-call")));
 
     base_visit_edges_finder.addMatcher(base_visit_edges_matcher, &base_visit_edges_callback);
     base_visit_edges_finder.matchAST(*result.Context);
