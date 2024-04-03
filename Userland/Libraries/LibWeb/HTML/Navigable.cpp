@@ -57,6 +57,7 @@ public:
 
     virtual void visit_edges(Cell::Visitor& visitor) override
     {
+        Base::visit_edges(visitor);
         visitor.visit(m_response);
     }
 

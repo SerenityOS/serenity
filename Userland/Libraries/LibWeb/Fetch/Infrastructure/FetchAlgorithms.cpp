@@ -47,6 +47,7 @@ FetchAlgorithms::FetchAlgorithms(
 
 void FetchAlgorithms::visit_edges(JS::Cell::Visitor& visitor)
 {
+    Base::visit_edges(visitor);
     visitor.visit(m_process_request_body_chunk_length);
     visitor.visit(m_process_request_end_of_body);
     visitor.visit(m_process_early_hints_response);
