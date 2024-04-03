@@ -105,8 +105,8 @@ WebIDL::ExceptionOr<Infrastructure::BodyWithType> extract_body(JS::Realm& realm,
         },
         [&](JS::Handle<DOMURL::URLSearchParams> const& url_search_params) -> WebIDL::ExceptionOr<void> {
             // Set source to the result of running the application/x-www-form-urlencoded serializer with object’s list.
-            auto search_params_bytes = TRY(url_search_params->to_string()).bytes();
-            source = TRY_OR_THROW_OOM(vm, ByteBuffer::copy(search_params_bytes));
+            auto search_params_string = TRY(url_search_params->to_string());
+            source = TRY_OR_THROW_OOM(vm, ByteBuffer::copy(search_params_string.bytes()));
             // Set type to `application/x-www-form-urlencoded;charset=UTF-8`.
             type = TRY_OR_THROW_OOM(vm, ByteBuffer::copy("application/x-www-form-urlencoded;charset=UTF-8"sv.bytes()));
             return {};
