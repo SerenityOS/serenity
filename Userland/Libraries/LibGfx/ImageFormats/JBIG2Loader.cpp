@@ -2096,9 +2096,11 @@ static ErrorOr<void> decode_immediate_generic_region(JBIG2LoadingContext& contex
     // 7.4.6.4 Decoding a generic region segment
     // "1) Interpret its header, as described in 7.4.6.1"
     // Done above.
+
     // "2) As described in E.3.7, reset all the arithmetic coding statistics to zero."
     Vector<JBIG2::ArithmeticDecoder::Context> contexts;
-    contexts.resize(1 << number_of_context_bits_for_template(arithmetic_coding_template));
+    if (!uses_mmr)
+        contexts.resize(1 << number_of_context_bits_for_template(arithmetic_coding_template));
 
     // "3) Invoke the generic region decoding procedure described in 6.2, with the parameters to the generic region decoding procedure set as shown in Table 37."
     GenericRegionDecodingInputParameters inputs;
