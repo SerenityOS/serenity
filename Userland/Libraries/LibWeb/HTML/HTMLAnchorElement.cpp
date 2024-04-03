@@ -1,13 +1,19 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2024, Shannon Booth <shannon@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibWeb/ARIA/Roles.h>
+#include <LibWeb/DOM/Event.h>
+#include <LibWeb/HTML/AttributeNames.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
+#include <LibWeb/HTML/HTMLImageElement.h>
 #include <LibWeb/HTML/Window.h>
+#include <LibWeb/PixelUnits.h>
 #include <LibWeb/ReferrerPolicy/ReferrerPolicy.h>
+#include <LibWeb/UIEvents/MouseEvent.h>
 
 namespace Web::HTML {
 
@@ -61,23 +67,30 @@ void HTMLAnchorElement::activation_behavior(Web::DOM::Event const& event)
     // 2. Let hyperlinkSuffix be null.
     Optional<String> hyperlink_suffix {};
 
-    // FIXME: 3. If element is an a element, and event's target is an img with an ismap attribute specified, then:
-    //
-    //   3.1. Let x and y be 0.
-    //
-    //   3.2. If event's isTrusted attribute is initialized to true, then
-    //   set x to the distance in CSS pixels from the left edge of the image
-    //   to the location of the click, and set y to the distance in CSS
-    //   pixels from the top edge of the image to the location of the click.
-    //
-    //   3.3. If x is negative, set x to 0.
-    //
-    //   3.4. If y is negative, set y to 0.
-    //
-    //   3.5. Set hyperlinkSuffix to the concatenation of U+003F (?), the
-    //   value of x expressed as a base-ten integer using ASCII digits,
-    //   U+002C (,), and the value of y expressed as a base-ten integer
-    //   using ASCII digits.
+    // 3. If element is an a element, and event's target is an img with an ismap attribute specified, then:
+    if (event.target() && is<HTMLImageElement>(*event.target()) && static_cast<HTMLImageElement const&>(*event.target()).has_attribute(AttributeNames::ismap)) {
+        // 1. Let x and y be 0.
+        CSSPixels x { 0 };
+        CSSPixels y { 0 };
+
+        // 2. If event's isTrusted attribute is initialized to true, then set x to the distance in CSS pixels from the left edge of the image
+        //    to the location of the click, and set y to the distance in CSS pixels from the top edge of the image to the location of the click.
+        if (event.is_trusted() && is<UIEvents::MouseEvent>(event)) {
+            auto const& mouse_event = static_cast<UIEvents::MouseEvent const&>(event);
+            x = CSSPixels { mouse_event.offset_x() };
+            y = CSSPixels { mouse_event.offset_y() };
+        }
+
+        // 3. If x is negative, set x to 0.
+        x = max(x, 0);
+
+        // 4. If y is negative, set y to 0.
+        y = max(y, 0);
+
+        // 5. Set hyperlinkSuffix to the concatenation of U+003F (?), the value of x expressed as a base-ten integer using ASCII digits,
+        //    U+002C (,), and the value of y expressed as a base-ten integer using ASCII digits.
+        hyperlink_suffix = MUST(String::formatted("?{},{}", x.to_int(), y.to_int()));
+    }
 
     // 4. Let userInvolvement be event's user navigation involvement.
     auto user_involvement = user_navigation_involvement(event);
