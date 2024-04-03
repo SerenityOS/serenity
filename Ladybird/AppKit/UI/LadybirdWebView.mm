@@ -714,7 +714,7 @@ static void copy_data_to_clipboard(StringView data, NSPasteboardType pasteboard_
         auto add_menu_item = [self](Web::HTML::SelectItemOption const& item_option) {
             NSMenuItem* menuItem = [[NSMenuItem alloc]
                 initWithTitle:Ladybird::string_to_ns_string(item_option.label)
-                       action:@selector(selectDropdownAction:)
+                       action:item_option.disabled ? nil : @selector(selectDropdownAction:)
                 keyEquivalent:@""];
             menuItem.representedObject = [NSNumber numberWithUnsignedInt:item_option.id];
             menuItem.state = item_option.selected ? NSControlStateValueOn : NSControlStateValueOff;

@@ -336,6 +336,7 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
             QAction* action = new QAction(qstring_from_ak_string(item_option.label), this);
             action->setCheckable(true);
             action->setChecked(item_option.selected);
+            action->setDisabled(item_option.disabled);
             action->setData(QVariant(static_cast<uint>(item_option.id)));
             QObject::connect(action, &QAction::triggered, this, &Tab::select_dropdown_action);
             m_select_dropdown->addAction(action);
