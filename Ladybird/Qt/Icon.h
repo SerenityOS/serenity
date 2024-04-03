@@ -12,5 +12,6 @@
 namespace Ladybird {
 
 QIcon load_icon_from_uri(StringView);
+QIcon create_tvg_icon_with_theme_colors(QString const& name, QPalette const& palette);
 
 }

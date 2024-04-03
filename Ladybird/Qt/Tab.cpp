@@ -10,7 +10,6 @@
 #include "InspectorWidget.h"
 #include "Settings.h"
 #include "StringUtils.h"
-#include "TVGIconEngine.h"
 #include <AK/TemporaryChange.h>
 #include <LibGfx/ImageFormats/BMPWriter.h>
 #include <LibGfx/Painter.h>
@@ -46,21 +45,6 @@ static QIcon default_favicon()
 {
     static QIcon icon = load_icon_from_uri("resource://icons/16x16/app-browser.png"sv);
     return icon;
-}
-
-static QIcon create_tvg_icon_with_theme_colors(QString name, QPalette const& palette)
-{
-    auto path = QString(":/Icons/%1.tvg").arg(name);
-    auto icon_engine = TVGIconEngine::from_file(path);
-    VERIFY(icon_engine);
-    auto icon_filter = [](QColor color) {
-        return [color = Color::from_argb(color.rgba64().toArgb32())](Gfx::Color icon_color) {
-            return color.with_alpha((icon_color.alpha() * color.alpha()) / 255);
-        };
-    };
-    icon_engine->add_filter(QIcon::Mode::Normal, icon_filter(palette.color(QPalette::ColorGroup::Normal, QPalette::ColorRole::ButtonText)));
-    icon_engine->add_filter(QIcon::Mode::Disabled, icon_filter(palette.color(QPalette::ColorGroup::Disabled, QPalette::ColorRole::ButtonText)));
-    return QIcon(icon_engine);
 }
 
 Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, StringView webdriver_content_ipc_path, RefPtr<WebView::WebContentClient> parent_client, size_t page_index)
