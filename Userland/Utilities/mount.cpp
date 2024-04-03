@@ -213,7 +213,6 @@ static ErrorOr<void> mount_using_loop_device(int inode_fd, StringView mountpoint
     int loop_device_fd = TRY(Core::System::open(loop_device_path.bytes_as_string_view(), O_RDONLY));
 
     auto result = Core::System::mount(loop_device_fd, mountpoint, fs_type, flags);
-    TRY(Core::System::ioctl(devctl_fd, DEVCTL_DESTROY_LOOP_DEVICE, &loop_device_index));
     return result;
 }
 
