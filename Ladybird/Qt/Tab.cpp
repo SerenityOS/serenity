@@ -332,8 +332,8 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
         m_select_dropdown->clear();
         m_select_dropdown->setMinimumWidth(minimum_width / view().device_pixel_ratio());
 
-        auto add_menu_item = [this](Web::HTML::SelectItemOption const& item_option) {
-            QAction* action = new QAction(qstring_from_ak_string(item_option.label), this);
+        auto add_menu_item = [this](Web::HTML::SelectItemOption const& item_option, bool in_option_group) {
+            QAction* action = new QAction(qstring_from_ak_string(in_option_group ? MUST(String::formatted("    {}", item_option.label)) : item_option.label), this);
             action->setCheckable(true);
             action->setChecked(item_option.selected);
             action->setDisabled(item_option.disabled);
@@ -350,11 +350,11 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
                 m_select_dropdown->addAction(subtitle);
 
                 for (auto const& item_option : item_option_group.items)
-                    add_menu_item(item_option);
+                    add_menu_item(item_option, true);
             }
 
             if (item.has<Web::HTML::SelectItemOption>())
-                add_menu_item(item.get<Web::HTML::SelectItemOption>());
+                add_menu_item(item.get<Web::HTML::SelectItemOption>(), false);
 
             if (item.has<Web::HTML::SelectItemSeparator>())
                 m_select_dropdown->addSeparator();

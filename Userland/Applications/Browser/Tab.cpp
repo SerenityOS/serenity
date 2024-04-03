@@ -654,8 +654,8 @@ Tab::Tab(BrowserWindow& window)
         m_select_dropdown->remove_all_actions();
         m_select_dropdown->set_minimum_width(minimum_width);
 
-        auto add_menu_item = [this](Web::HTML::SelectItemOption const& item_option) {
-            auto action = GUI::Action::create(item_option.label.to_byte_string(), [this, item_option](GUI::Action&) {
+        auto add_menu_item = [this](Web::HTML::SelectItemOption const& item_option, bool in_option_group) {
+            auto action = GUI::Action::create(in_option_group ? ByteString::formatted("    {}", item_option.label) : item_option.label.to_byte_string(), [this, item_option](GUI::Action&) {
                 m_select_dropdown_closed_by_action = true;
                 view().select_dropdown_closed(item_option.id);
             });
@@ -673,11 +673,11 @@ Tab::Tab(BrowserWindow& window)
                 m_select_dropdown->add_action(subtitle);
 
                 for (auto const& item_option : item_option_group.items)
-                    add_menu_item(item_option);
+                    add_menu_item(item_option, true);
             }
 
             if (item.has<Web::HTML::SelectItemOption>())
-                add_menu_item(item.get<Web::HTML::SelectItemOption>());
+                add_menu_item(item.get<Web::HTML::SelectItemOption>(), false);
 
             if (item.has<Web::HTML::SelectItemSeparator>())
                 m_select_dropdown->add_separator();
