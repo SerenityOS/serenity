@@ -16,7 +16,8 @@
 
 namespace Web::WebIDL {
 
-using ReactionSteps = JS::SafeFunction<WebIDL::ExceptionOr<JS::Value>(JS::Value)>;
+// NOTE: This is Function, not SafeFunction, because they get stored in a NativeFunction anyway, which will protect captures.
+using ReactionSteps = Function<WebIDL::ExceptionOr<JS::Value>(JS::Value)>;
 
 // https://webidl.spec.whatwg.org/#es-promise
 using Promise = JS::PromiseCapability;
