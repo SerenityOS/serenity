@@ -267,31 +267,33 @@ void NavigableContainer::destroy_the_child_navigable()
     if (navigable->has_been_destroyed())
         return;
     navigable->set_has_been_destroyed();
-    HTML::all_navigables().remove(navigable);
 
     // FIXME: 4. Inform the navigation API about child navigable destruction given navigable.
 
     // 5. Destroy a document and its descendants given navigable's active document.
-    navigable->active_document()->destroy_a_document_and_its_descendants([this] {
+    navigable->active_document()->destroy_a_document_and_its_descendants([this, navigable] {
         // 3. Set container's content navigable to null.
         m_content_navigable = nullptr;
-    });
 
-    // 6. Let parentDocState be container's node navigable's active session history entry's document state.
-    auto parent_doc_state = this->navigable()->active_session_history_entry()->document_state();
+        // Not in the spec:
+        HTML::all_navigables().remove(navigable);
 
-    // 7. Remove the nested history from parentDocState's nested histories whose id equals navigable's id.
-    parent_doc_state->nested_histories().remove_all_matching([&](auto& nested_history) {
-        return navigable->id() == nested_history.id;
-    });
+        // 6. Let parentDocState be container's node navigable's active session history entry's document state.
+        auto parent_doc_state = this->navigable()->active_session_history_entry()->document_state();
 
-    // 8. Let traversable be container's node navigable's traversable navigable.
-    auto traversable = this->navigable()->traversable_navigable();
+        // 7. Remove the nested history from parentDocState's nested histories whose id equals navigable's id.
+        parent_doc_state->nested_histories().remove_all_matching([&](auto& nested_history) {
+            return navigable->id() == nested_history.id;
+        });
 
-    // 9. Append the following session history traversal steps to traversable:
-    traversable->append_session_history_traversal_steps([traversable] {
-        // 1. Update for navigable creation/destruction given traversable.
-        traversable->update_for_navigable_creation_or_destruction();
+        // 8. Let traversable be container's node navigable's traversable navigable.
+        auto traversable = this->navigable()->traversable_navigable();
+
+        // 9. Append the following session history traversal steps to traversable:
+        traversable->append_session_history_traversal_steps([traversable] {
+            // 1. Update for navigable creation/destruction given traversable.
+            traversable->update_for_navigable_creation_or_destruction();
+        });
     });
 }
 
