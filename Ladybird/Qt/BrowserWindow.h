@@ -129,6 +129,8 @@ private:
         }
     }
 
+    void create_close_button_for_tab(Tab*);
+
     QIcon icon_for_page_mute_state(Tab&) const;
     QString tool_tip_for_page_mute_state(Tab&) const;
     QTabBar::ButtonPosition audio_button_position_for_tab(int tab_index) const;

@@ -2,6 +2,7 @@
     <qresource>
         <file>../Icons/ladybird.png</file>
         <file>../Icons/back.tvg</file>
+        <file>../Icons/close.tvg</file>
         <file>../Icons/forward.tvg</file>
         <file>../Icons/reload.tvg</file>
     </qresource>
