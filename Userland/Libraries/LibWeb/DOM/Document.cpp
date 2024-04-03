@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2024, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021-2023, Luke Wilde <lukew@serenityos.org>
  * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
@@ -52,6 +52,7 @@
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/DOM/TreeWalker.h>
 #include <LibWeb/Dump.h>
+#include <LibWeb/FileAPI/BlobURLStore.h>
 #include <LibWeb/HTML/AttributeNames.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/CustomElements/CustomElementDefinition.h>
@@ -2988,6 +2989,8 @@ void Document::run_unloading_cleanup_steps()
         // 2. Clear window's map of active timers.
         window->clear_map_of_active_timers();
     }
+
+    FileAPI::run_unloading_cleanup_steps(*this);
 }
 
 // https://html.spec.whatwg.org/multipage/document-lifecycle.html#destroy-a-document
