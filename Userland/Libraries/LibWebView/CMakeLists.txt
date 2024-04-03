@@ -23,7 +23,14 @@ set(SOURCES
 set(GENERATED_SOURCES ${CURRENT_LIB_GENERATED})
 
 if (SERENITYOS)
-    list(APPEND SOURCES OutOfProcessWebView.cpp)
+    list(APPEND SOURCES
+        OutOfProcessWebView.cpp
+        Platform/ProcessStatisticsSerenity.cpp
+    )
+else()
+    list(APPEND SOURCES
+        Platform/ProcessStatisticsNoop.cpp
+    )
 endif()
 
 embed_as_string_view(

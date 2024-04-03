@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/NumberFormat.h>
 #include <AK/String.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/System.h>
@@ -84,12 +85,12 @@ void ProcessManager::initialize()
 void ProcessManager::add_process(ProcessType type, pid_t pid)
 {
     dbgln("ProcessManager::add_process({}, {})", process_name_from_type(type), pid);
-    m_processes.append({ type, pid, 0, 0 });
+    m_statistics.processes.append({ type, pid, 0, 0 });
 }
 
 void ProcessManager::remove_process(pid_t pid)
 {
-    m_processes.remove_first_matching([&](auto& info) {
+    m_statistics.processes.remove_first_matching([&](auto& info) {
         if (info.pid == pid) {
             dbgln("ProcessManager: Remove process {} ({})", process_name_from_type(info.type), pid);
             return true;
@@ -112,13 +113,13 @@ void ProcessManager::update_all_processes()
         }
     }
 
-    // FIXME: Actually gather stats in a platform-specific way
+    (void)update_process_statistics(m_statistics);
 }
 
 String ProcessManager::generate_html()
 {
     StringBuilder builder;
-    auto processes = m_processes;
+    auto processes = m_statistics.processes;
 
     builder.append(R"(
         <html>
@@ -163,7 +164,7 @@ String ProcessManager::generate_html()
         builder.append(MUST(String::number(process.pid)));
         builder.append("</td>"sv);
         builder.append("<td>"sv);
-        builder.append(MUST(String::formatted("{} KB", process.memory_usage_kib)));
+        builder.append(human_readable_size(process.memory_usage_bytes));
         builder.append("</td>"sv);
         builder.append("<td>"sv);
         builder.append(MUST(String::formatted("{:.1f}", process.cpu_percent)));
