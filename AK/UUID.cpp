@@ -101,15 +101,15 @@ ErrorOr<String> UUID::to_string() const
 {
     auto buffer_span = m_uuid_buffer.span();
     StringBuilder builder(36);
-    TRY(builder.try_append(encode_hex(buffer_span.trim(4)).view()));
+    TRY(builder.try_append(encode_hex(buffer_span.trim(4))));
     TRY(builder.try_append('-'));
-    TRY(builder.try_append(encode_hex(buffer_span.slice(4, 2)).view()));
+    TRY(builder.try_append(encode_hex(buffer_span.slice(4, 2))));
     TRY(builder.try_append('-'));
-    TRY(builder.try_append(encode_hex(buffer_span.slice(6, 2)).view()));
+    TRY(builder.try_append(encode_hex(buffer_span.slice(6, 2))));
     TRY(builder.try_append('-'));
-    TRY(builder.try_append(encode_hex(buffer_span.slice(8, 2)).view()));
+    TRY(builder.try_append(encode_hex(buffer_span.slice(8, 2))));
     TRY(builder.try_append('-'));
-    TRY(builder.try_append(encode_hex(buffer_span.slice(10, 6)).view()));
+    TRY(builder.try_append(encode_hex(buffer_span.slice(10, 6))));
     return builder.to_string();
 }
 #endif

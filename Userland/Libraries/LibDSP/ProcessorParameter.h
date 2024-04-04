@@ -186,7 +186,7 @@ struct AK::Formatter<DSP::ProcessorRangeParameter> : AK::StandardFormatter {
         m_width = m_width.value_or(0);
         m_precision = m_precision.value_or(NumericLimits<size_t>::max());
 
-        TRY(builder.put_literal(TRY(String::formatted("[{} - {}]: {}", value.min_value(), value.max_value(), value.value())).bytes_as_string_view()));
+        TRY(builder.put_literal(TRY(String::formatted("[{} - {}]: {}", value.min_value(), value.max_value(), value.value()))));
         return {};
     }
 };

@@ -426,7 +426,7 @@ ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path
             auto const filesystem_event_type = perf_event.get("fs_event_type"sv).value_or("").as_string();
             if (filesystem_event_type == "open"sv) {
                 auto const string_index = perf_event.get_addr("filename_index"sv).value_or(0);
-                auto const filename = profile_strings.get(string_index).value_or("").view();
+                auto const filename = profile_strings.get(string_index).value_or("");
                 fsdata.data = Event::OpenEventData {
                     .dirfd = perf_event.get_integer<int>("dirfd"sv).value_or(0),
                     .path = filename,
@@ -435,28 +435,28 @@ ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path
                 };
             } else if (filesystem_event_type == "close"sv) {
                 auto const string_index = perf_event.get_addr("filename_index"sv).value_or(0);
-                auto const filename = profile_strings.get(string_index).value_or("").view();
+                auto const filename = profile_strings.get(string_index).value_or("");
                 fsdata.data = Event::CloseEventData {
                     .fd = perf_event.get_integer<int>("fd"sv).value_or(0),
                     .path = filename,
                 };
             } else if (filesystem_event_type == "readv"sv) {
                 auto const string_index = perf_event.get_addr("filename_index"sv).value_or(0);
-                auto const filename = profile_strings.get(string_index).value().view();
+                auto const filename = profile_strings.get(string_index).value();
                 fsdata.data = Event::ReadvEventData {
                     .fd = perf_event.get_integer<int>("fd"sv).value_or(0),
                     .path = filename,
                 };
             } else if (filesystem_event_type == "read"sv) {
                 auto const string_index = perf_event.get_addr("filename_index"sv).value_or(0);
-                auto const filename = profile_strings.get(string_index).value().view();
+                auto const filename = profile_strings.get(string_index).value();
                 fsdata.data = Event::ReadEventData {
                     .fd = perf_event.get_integer<int>("fd"sv).value_or(0),
                     .path = filename,
                 };
             } else if (filesystem_event_type == "pread"sv) {
                 auto const string_index = perf_event.get_addr("filename_index"sv).value_or(0);
-                auto const filename = profile_strings.get(string_index).value().view();
+                auto const filename = profile_strings.get(string_index).value();
                 fsdata.data = Event::PreadEventData {
                     .fd = perf_event.get_integer<int>("fd"sv).value_or(0),
                     .path = filename,

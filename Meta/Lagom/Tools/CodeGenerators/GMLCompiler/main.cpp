@@ -261,12 +261,12 @@ static ErrorOr<void> generate_loader_for_object(GUI::GML::Object const& gml_obje
     generator.set("class_name", gml_object.name());
 
     auto append = [&]<size_t N>(auto& generator, char const(&text)[N]) -> ErrorOr<void> {
-        generator.append(TRY(String::repeated(' ', indentation * 4)).bytes_as_string_view());
+        generator.append(TRY(String::repeated(' ', indentation * 4)));
         generator.appendln(text);
         return {};
     };
 
-    generator.append(TRY(String::repeated(' ', (indentation - 1) * 4)).bytes_as_string_view());
+    generator.append(TRY(String::repeated(' ', (indentation - 1) * 4)));
     generator.appendln("{");
     if (use_object_constructor == UseObjectConstructor::Yes)
         TRY(append(generator, "@object_name@ = TRY(@class_name@::try_create());"));
@@ -336,7 +336,7 @@ static ErrorOr<void> generate_loader_for_object(GUI::GML::Object const& gml_obje
 
     TRY(append(generator, "TRY(::GUI::initialize(*@object_name@));"));
 
-    generator.append(TRY(String::repeated(' ', (indentation - 1) * 4)).bytes_as_string_view());
+    generator.append(TRY(String::repeated(' ', (indentation - 1) * 4)));
     generator.appendln("}");
 
     return {};
@@ -365,7 +365,7 @@ static ErrorOr<String> generate_cpp(NonnullRefPtr<GUI::GML::GMLFile> gml, Lexica
     };
     TRY(necessary_includes.try_set_from(always_necessary_includes));
     for (auto const& include : necessary_includes)
-        generator.appendln(TRY(String::formatted("#include {}", include)).bytes_as_string_view());
+        generator.appendln(TRY(String::formatted("#include {}", include)));
 
     // FIXME: Use a UTF-8 aware function once possible.
     generator.set("main_class_name", main_class.name());
