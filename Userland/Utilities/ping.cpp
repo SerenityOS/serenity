@@ -32,6 +32,7 @@ static int min_ms;
 static int max_ms;
 static ByteString host;
 static int payload_size = -1;
+static bool adaptive = false;
 static bool quiet = false;
 static Optional<size_t> ttl;
 static timespec interval_timespec { .tv_sec = 1, .tv_nsec = 0 };
@@ -92,6 +93,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(payload_size, "Amount of bytes to send as payload in the ECHO_REQUEST packets.", "size", 's', "size");
     args_parser.add_option(quiet, "Quiet mode. Only display summary when finished.", "quiet", 'q');
     args_parser.add_option(ttl, "Set the TTL (time-to-live) value on the ICMP packets.", nullptr, 't', "ttl");
+    args_parser.add_option(adaptive, "Adaptive ping. The interval between each ping adapts to round-trip-time.", "adaptive", 'A');
+
     args_parser.parse(arguments);
 
     if (count.has_value() && (count.value() < 1 || count.value() > UINT32_MAX)) {
@@ -212,8 +215,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             struct timeval tv_diff;
             timersub(&tv_receive, &tv_send, &tv_diff);
-
+            if (adaptive)
+                TIMEVAL_TO_TIMESPEC(&tv_diff, &interval_timespec);
             int ms = tv_diff.tv_sec * 1000 + tv_diff.tv_usec / 1000;
+
             successful_pings++;
             int seq_dif = ntohs(ping_hdr->un.echo.sequence) - ntohs(pong_hdr->un.echo.sequence);
 
