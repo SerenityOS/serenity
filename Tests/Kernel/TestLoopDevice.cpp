@@ -46,9 +46,9 @@ TEST_CASE(create_attach_and_destory_loop_device)
     auto loop_device_index = value;
     auto loop_device_fd_or_error = open_loop_device(loop_device_index);
     EXPECT(loop_device_fd_or_error >= 0);
-    auto cleanup_loop_device_fd_guard = ScopeGuard([&] {
-        close(loop_device_fd_or_error);
-    });
+
+    auto close_result = close(loop_device_fd_or_error);
+    EXPECT_EQ(close_result, 0);
 
     auto destroy_result = ioctl(devctl_fd, DEVCTL_DESTROY_LOOP_DEVICE, &loop_device_index);
     EXPECT_EQ(destroy_result, 0);
