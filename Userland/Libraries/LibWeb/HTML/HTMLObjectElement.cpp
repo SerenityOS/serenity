@@ -255,8 +255,10 @@ void HTMLObjectElement::run_object_representation_handler_steps(Optional<ByteStr
     // * If the resource type is an XML MIME type, or if the resource type does not start with "image/"
     if (resource_type.has_value() && (is_xml_mime_type(*resource_type) || !resource_type->starts_with("image/"sv))) {
         // If the object element's content navigable is null, then create a new child navigable for the element.
-        if (!m_content_navigable)
+        if (!m_content_navigable) {
             MUST(create_new_child_navigable());
+            set_content_navigable_initialized();
+        }
 
         // NOTE: Creating a new nested browsing context can fail if the document is not attached to a browsing context
         if (!m_content_navigable)
