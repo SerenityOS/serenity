@@ -28,7 +28,7 @@ public:
     struct Definition {
         StringView key;
         Vector<StringView> parameters;
-        StringView value;
+        String value;
         FlyString filename;
         size_t line { 0 };
         size_t column { 0 };
