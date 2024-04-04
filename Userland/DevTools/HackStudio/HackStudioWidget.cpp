@@ -1699,7 +1699,7 @@ bool HackStudioWidget::any_document_is_dirty() const
 
 void HackStudioWidget::update_gml_preview()
 {
-    auto gml_content = current_editor_wrapper().filename().ends_with(".gml"sv) ? current_editor_wrapper().editor().text().view() : ""sv;
+    auto gml_content = current_editor_wrapper().filename().ends_with(".gml"sv) ? current_editor_wrapper().editor().text() : ByteString::empty();
     m_gml_preview_widget->load_gml(gml_content);
 }
 
