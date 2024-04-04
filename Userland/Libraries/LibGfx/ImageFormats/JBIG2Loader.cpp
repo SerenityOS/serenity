@@ -900,6 +900,17 @@ struct AdaptiveTemplatePixel {
     i8 y { 0 };
 };
 
+// Figure 7 – Field to which AT pixel locations are restricted
+static ErrorOr<void> check_valid_adaptive_template_pixel(AdaptiveTemplatePixel const& adaptive_template_pixel)
+{
+    // Don't have to check < -127 or > 127: The offsets are stored in an i8, so they can't be out of those bounds.
+    if (adaptive_template_pixel.y > 0)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Adaptive pixel y too big");
+    if (adaptive_template_pixel.y == 0 && adaptive_template_pixel.x > -1)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Adaptive pixel x too big");
+    return {};
+}
+
 // 6.2.2 Input parameters
 // Table 2 – Parameters for the generic region decoding procedure
 struct GenericRegionDecodingInputParameters {
@@ -945,19 +956,9 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(Gener
     if (inputs.is_extended_reference_template_used)
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode EXTTEMPLATE yet");
 
-    // Figure 7 – Field to which AT pixel locations are restricted
-    int number_of_adaptive_template_pixels = 0;
-    if (inputs.gb_template == 0)
-        number_of_adaptive_template_pixels = 4;
-    else
-        number_of_adaptive_template_pixels = 1;
-    for (int i = 0; i < number_of_adaptive_template_pixels; ++i) {
-        // Don't have to check < -127 or > 127: The offsets are stored in an i8, so they can't be out of those bounds.
-        if (inputs.adaptive_template_pixels[i].y > 0)
-            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Adaptive pixel y too big");
-        if (inputs.adaptive_template_pixels[i].y == 0 && inputs.adaptive_template_pixels[i].x > -1)
-            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Adaptive pixel x too big");
-    }
+    int number_of_adaptive_template_pixels = inputs.gb_template == 0 ? 4 : 1;
+    for (int i = 0; i < number_of_adaptive_template_pixels; ++i)
+        TRY(check_valid_adaptive_template_pixel(inputs.adaptive_template_pixels[i]));
 
     if (inputs.skip_pattern.has_value())
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode USESKIP yet");
