@@ -414,7 +414,7 @@ JS::ThrowCompletionOr<bool> PlatformObject::internal_prevent_extensions()
 // https://webidl.spec.whatwg.org/#legacy-platform-object-ownpropertykeys
 JS::ThrowCompletionOr<JS::MarkedVector<JS::Value>> PlatformObject::internal_own_property_keys() const
 {
-    if (!m_legacy_platform_object_flags.has_value())
+    if (!m_legacy_platform_object_flags.has_value() || m_legacy_platform_object_flags->has_global_interface_extended_attribute)
         return Base::internal_own_property_keys();
 
     auto& vm = this->vm();
