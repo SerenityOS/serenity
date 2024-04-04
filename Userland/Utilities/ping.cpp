@@ -33,6 +33,7 @@ static int max_ms;
 static ByteString host;
 static int payload_size = -1;
 static bool adaptive = false;
+static bool flood = false;
 static bool quiet = false;
 static Optional<size_t> ttl;
 static timespec interval_timespec { .tv_sec = 1, .tv_nsec = 0 };
@@ -64,16 +65,17 @@ static void print_closing_statistics()
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio id inet unix sigaction"));
-
+    bool user_specified_request_interval = false;
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(host, "Host to ping", "host");
     args_parser.add_option(count, "Stop after sending specified number of ECHO_REQUEST packets.", "count", 'c', "count");
     args_parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
-        .help_string = "Wait `interval` seconds between sending each packet. Fractional seconds are allowed.",
+        .help_string = "Wait `interval` seconds between sending each packet. Fractional seconds are allowed."
+                       "Only super-user can set the interval value less than 0.2 seconds",
         .short_name = 'i',
         .value_name = "interval",
-        .accept_value = [](StringView interval_in_seconds_string) {
+        .accept_value = [&user_specified_request_interval](StringView interval_in_seconds_string) {
             if (interval_in_seconds_string.is_empty())
                 return false;
 
@@ -87,6 +89,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 .tv_sec = whole_seconds,
                 .tv_nsec = static_cast<long>(fractional_seconds * 1'000'000'000)
             };
+
+            user_specified_request_interval = true;
             return true;
         },
     });
@@ -94,7 +98,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(quiet, "Quiet mode. Only display summary when finished.", "quiet", 'q');
     args_parser.add_option(ttl, "Set the TTL (time-to-live) value on the ICMP packets.", nullptr, 't', "ttl");
     args_parser.add_option(adaptive, "Adaptive ping. The interval between each ping adapts to round-trip-time.", "adaptive", 'A');
-
+    args_parser.add_option(flood, "Flood ping. For every request sent a period '.' is prented, while for every reply a backspace is printed."
+                                  " This provides a rapid display of how many packets are being droped. If interval is not given, it sets interval"
+                                  " to zero and outputs packets as fast as they come back. Only super-user may use this option with zero interval.",
+        "flood", 'f');
     args_parser.parse(arguments);
 
     if (count.has_value() && (count.value() < 1 || count.value() > UINT32_MAX)) {
@@ -118,10 +125,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio inet unix sigaction"));
 
     struct timeval timeout {
-        1, 0
+        .tv_sec = 1, .tv_usec = 0
     };
-
     TRY(Core::System::setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)));
+
+    if (flood && !user_specified_request_interval) {
+        interval_timespec = { .tv_sec = 0, .tv_nsec = 0 };
+    }
+
+    if (interval_timespec.tv_sec == 0 && interval_timespec.tv_nsec < 2'000'000 && geteuid() != 0) {
+        warnln("Minimal interval for normal users is 0.2ms!");
+        return 1;
+    }
+
     if (ttl.has_value()) {
         TRY(Core::System::setsockopt(fd, IPPROTO_IP, IP_TTL, &ttl.value(), sizeof(ttl.value())));
     }
@@ -172,6 +188,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         gettimeofday(&tv_send, nullptr);
 
         TRY(Core::System::sendto(fd, ping_packet.data(), ping_packet.size(), 0, (const struct sockaddr*)&peer_address, sizeof(sockaddr_in)));
+        // In flood mode, for each request output a '.'
+        if (flood)
+            out(".");
 
         for (;;) {
             auto pong_packet_result = ByteBuffer::create_uninitialized(
@@ -183,10 +202,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             auto& pong_packet = pong_packet_result.value();
             socklen_t peer_address_size = sizeof(peer_address);
             auto result = Core::System::recvfrom(fd, pong_packet.data(), pong_packet.size(), 0, (struct sockaddr*)&peer_address, &peer_address_size);
+
             uint8_t const pong_ttl = pong_packet[8];
             if (result.is_error()) {
                 if (result.error().code() == EAGAIN) {
-                    if (!quiet)
+                    if (!quiet && !flood)
                         outln("Request (seq={}) timed out.", ntohs(ping_hdr->un.echo.sequence));
 
                     break;
@@ -215,7 +235,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             struct timeval tv_diff;
             timersub(&tv_receive, &tv_send, &tv_diff);
-            if (adaptive)
+            if (adaptive && !flood)
                 TIMEVAL_TO_TIMESPEC(&tv_diff, &interval_timespec);
             int ms = tv_diff.tv_sec * 1000 + tv_diff.tv_usec / 1000;
 
@@ -235,7 +255,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 max_ms = ms;
 
             char addr_buf[INET_ADDRSTRLEN];
-            if (!quiet)
+            if (!quiet && !flood)
                 outln("Pong from {}: id={}, seq={}{}, ttl={}, time={}ms, size={}",
                     inet_ntop(AF_INET, &peer_address.sin_addr, addr_buf, sizeof(addr_buf)),
                     ntohs(pong_hdr->un.echo.id),
@@ -247,6 +267,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             // If this was a response to an earlier packet, we still need to wait for the current one.
             if (pong_hdr->un.echo.sequence != ping_hdr->un.echo.sequence)
                 continue;
+
+            // In flood mode, for each response we print a backspace
+            if (flood)
+                out("{}", "\b ");
+
             break;
         }
 
