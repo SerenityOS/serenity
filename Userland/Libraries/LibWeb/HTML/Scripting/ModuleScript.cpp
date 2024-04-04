@@ -62,7 +62,7 @@ WebIDL::ExceptionOr<JS::GCPtr<JavaScriptModuleScript>> JavaScriptModuleScript::c
         dbgln("JavaScriptModuleScript: Failed to parse: {}", parse_error.to_byte_string());
 
         // 1. Set script's parse error to result[0].
-        script->set_parse_error(JS::SyntaxError::create(settings_object.realm(), parse_error.to_string().release_value_but_fixme_should_propagate_errors()));
+        script->set_parse_error(JS::SyntaxError::create(settings_object.realm(), parse_error.to_string()));
 
         // 2. Return script.
         return script;

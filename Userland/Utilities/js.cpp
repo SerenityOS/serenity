@@ -222,7 +222,7 @@ static ErrorOr<bool> parse_and_run(JS::Realm& realm, StringView source, StringVi
             if (!hint.is_empty())
                 outln("{}", hint);
 
-            auto error_string = TRY(error.to_string());
+            auto error_string = error.to_string();
             outln("{}", error_string);
             result = vm.throw_completion<JS::SyntaxError>(move(error_string));
         } else {
@@ -236,7 +236,7 @@ static ErrorOr<bool> parse_and_run(JS::Realm& realm, StringView source, StringVi
             if (!hint.is_empty())
                 outln("{}", hint);
 
-            auto error_string = TRY(error.to_string());
+            auto error_string = error.to_string();
             outln("{}", error_string);
             result = vm.throw_completion<JS::SyntaxError>(move(error_string));
         } else {
