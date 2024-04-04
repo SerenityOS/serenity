@@ -1085,8 +1085,10 @@ void HTMLInputElement::form_associated_element_attribute_changed(FlyString const
             update_shadow_tree();
         }
     } else if (name == HTML::AttributeNames::placeholder) {
-        if (m_placeholder_text_node)
+        if (m_placeholder_text_node) {
             m_placeholder_text_node->set_data(placeholder());
+            update_placeholder_visibility();
+        }
     } else if (name == HTML::AttributeNames::readonly) {
         handle_readonly_attribute(value);
     } else if (name == HTML::AttributeNames::src) {
