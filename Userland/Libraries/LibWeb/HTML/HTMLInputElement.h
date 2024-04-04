@@ -248,7 +248,7 @@ private:
 
     void handle_maxlength_attribute();
     void handle_readonly_attribute(Optional<String> const& value);
-    WebIDL::ExceptionOr<void> handle_src_attribute(StringView value);
+    WebIDL::ExceptionOr<void> handle_src_attribute(String const& value);
 
     // https://html.spec.whatwg.org/multipage/input.html#value-sanitization-algorithm
     String value_sanitization_algorithm(String const&) const;
@@ -308,6 +308,8 @@ private:
 
     TypeAttributeState m_type { TypeAttributeState::Text };
     String m_value;
+
+    String m_last_src_value;
 
     bool m_has_uncommitted_changes { false };
 };
