@@ -237,7 +237,7 @@ void MapWidget::context_menu_event(GUI::ContextMenuEvent& event)
     m_context_menu = GUI::Menu::construct();
     m_context_menu->add_action(GUI::Action::create(
         "&Copy Coordinates to Clipboard", MUST(Gfx::Bitmap::load_from_file("/res/icons/16x16/edit-copy.png"sv)), [this](auto&) {
-            GUI::Clipboard::the().set_plain_text(MUST(String::formatted("{}, {}", m_context_menu_latlng.latitude, m_context_menu_latlng.longitude)).bytes_as_string_view());
+            GUI::Clipboard::the().set_plain_text(MUST(String::formatted("{}, {}", m_context_menu_latlng.latitude, m_context_menu_latlng.longitude)));
         }));
     m_context_menu->add_separator();
     if (!m_context_menu_actions.is_empty()) {

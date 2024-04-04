@@ -14,7 +14,7 @@ namespace Markdown {
 
 ByteString Heading::render_to_html(bool) const
 {
-    auto input = Unicode::normalize(m_text.render_for_raw_print().view(), Unicode::NormalizationForm::NFD);
+    auto input = Unicode::normalize(m_text.render_for_raw_print(), Unicode::NormalizationForm::NFD);
     auto slugified = MUST(AK::slugify(input));
     return ByteString::formatted("<h{} id='{}'><a href='#{}'>#</a> {}</h{}>\n", m_level, slugified, slugified, m_text.render_to_html(), m_level);
 }
