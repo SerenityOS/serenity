@@ -23,21 +23,19 @@ class Supports final : public RefCounted<Supports> {
 public:
     struct Declaration {
         String declaration;
-        JS::Handle<JS::Realm> realm;
-        bool evaluate() const;
+        [[nodiscard]] bool evaluate(JS::Realm&) const;
         String to_string() const;
     };
 
     struct Selector {
         String selector;
-        JS::Handle<JS::Realm> realm;
-        bool evaluate() const;
+        [[nodiscard]] bool evaluate(JS::Realm&) const;
         String to_string() const;
     };
 
     struct Feature {
         Variant<Declaration, Selector> value;
-        bool evaluate() const;
+        [[nodiscard]] bool evaluate(JS::Realm&) const;
         String to_string() const;
     };
 
@@ -45,7 +43,7 @@ public:
     struct InParens {
         Variant<NonnullOwnPtr<Condition>, Feature, GeneralEnclosed> value;
 
-        bool evaluate() const;
+        [[nodiscard]] bool evaluate(JS::Realm&) const;
         String to_string() const;
     };
 
@@ -58,20 +56,20 @@ public:
         Type type;
         Vector<InParens> children;
 
-        bool evaluate() const;
+        [[nodiscard]] bool evaluate(JS::Realm&) const;
         String to_string() const;
     };
 
-    static NonnullRefPtr<Supports> create(NonnullOwnPtr<Condition>&& condition)
+    static NonnullRefPtr<Supports> create(JS::Realm& realm, NonnullOwnPtr<Condition>&& condition)
     {
-        return adopt_ref(*new Supports(move(condition)));
+        return adopt_ref(*new Supports(realm, move(condition)));
     }
 
     bool matches() const { return m_matches; }
     String to_string() const;
 
 private:
-    Supports(NonnullOwnPtr<Condition>&&);
+    Supports(JS::Realm&, NonnullOwnPtr<Condition>&&);
 
     NonnullOwnPtr<Condition> m_condition;
     bool m_matches { false };
