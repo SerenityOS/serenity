@@ -1112,9 +1112,8 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_refinement_region_decoding_proc
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode typical prediction in generic refinement regions yet");
 
     if (inputs.gr_template == 0) {
-        if (inputs.adaptive_template_pixels[0].x != -1 || inputs.adaptive_template_pixels[0].y != -1
-            || inputs.adaptive_template_pixels[1].x != -1 || inputs.adaptive_template_pixels[1].y != -1)
-            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot handle custom adaptive pixels in refinement regions yet");
+        TRY(check_valid_adaptive_template_pixel(inputs.adaptive_template_pixels[0]));
+        // inputs.adaptive_template_pixels[1] is allowed to contain any value.
     }
     // GRTEMPLATE 1 never uses adaptive pixels.
 
@@ -1126,22 +1125,28 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_refinement_region_decoding_proc
     };
 
     // Figure 12 – 13-pixel refinement template showing the AT pixels at their nominal locations
-    constexpr auto compute_context_0 = [](BitBuffer const& reference, int reference_x, int reference_y, BitBuffer const& buffer, int x, int y) -> u16 {
+    constexpr auto compute_context_0 = [](ReadonlySpan<AdaptiveTemplatePixel> adaptive_pixels, BitBuffer const& reference, int reference_x, int reference_y, BitBuffer const& buffer, int x, int y) -> u16 {
         u16 result = 0;
 
-        for (int dy = -1; dy <= 1; ++dy)
-            for (int dx = -1; dx <= 1; ++dx)
-                result = (result << 1) | (u16)get_pixel(reference, reference_x + dx, reference_y + dy);
+        for (int dy = -1; dy <= 1; ++dy) {
+            for (int dx = -1; dx <= 1; ++dx) {
+                if (dy == -1 && dx == -1)
+                    result = (result << 1) | (u16)get_pixel(reference, reference_x + adaptive_pixels[1].x, reference_y + adaptive_pixels[1].y);
+                else
+                    result = (result << 1) | (u16)get_pixel(reference, reference_x + dx, reference_y + dy);
+            }
+        }
 
-        for (int i = 0; i < 3; ++i)
-            result = (result << 1) | (u16)get_pixel(buffer, x - 1 + i, y - 1);
+        result = (result << 1) | (u16)get_pixel(buffer, x + adaptive_pixels[0].x, y + adaptive_pixels[0].y);
+        for (int i = 0; i < 2; ++i)
+            result = (result << 1) | (u16)get_pixel(buffer, x + i, y - 1);
         result = (result << 1) | (u16)get_pixel(buffer, x - 1, y);
 
         return result;
     };
 
     // Figure 13 – 10-pixel refinement template
-    constexpr auto compute_context_1 = [](BitBuffer const& reference, int reference_x, int reference_y, BitBuffer const& buffer, int x, int y) -> u16 {
+    constexpr auto compute_context_1 = [](ReadonlySpan<AdaptiveTemplatePixel>, BitBuffer const& reference, int reference_x, int reference_y, BitBuffer const& buffer, int x, int y) -> u16 {
         u16 result = 0;
 
         for (int dy = -1; dy <= 1; ++dy) {
@@ -1165,7 +1170,7 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_refinement_region_decoding_proc
     auto result = TRY(BitBuffer::create(inputs.region_width, inputs.region_height));
     for (size_t y = 0; y < result->height(); ++y) {
         for (size_t x = 0; x < result->width(); ++x) {
-            u16 context = compute_context(*inputs.reference_bitmap, x - inputs.reference_x_offset, y - inputs.reference_y_offset, *result, x, y);
+            u16 context = compute_context(inputs.adaptive_template_pixels, *inputs.reference_bitmap, x - inputs.reference_x_offset, y - inputs.reference_y_offset, *result, x, y);
             bool bit = decoder.get_next_bit(contexts[context]);
             result->set_bit(x, y, bit);
         }
