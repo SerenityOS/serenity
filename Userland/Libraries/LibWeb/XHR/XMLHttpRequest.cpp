@@ -295,21 +295,22 @@ void XMLHttpRequest::set_document_response()
         return;
 
     // 5. If finalMIME is an HTML MIME type, then:
-    Optional<StringView> charset;
+    Optional<String> charset;
     JS::GCPtr<DOM::Document> document;
     if (final_mine.is_html()) {
         // 5.1. Let charset be the result of get a final encoding for xhr.
-        charset = MUST(get_final_encoding());
+        if (auto final_encoding = MUST(get_final_encoding()); final_encoding.has_value())
+            charset = MUST(String::from_utf8(*final_encoding));
 
         // 5.2. If charset is null, prescan the first 1024 bytes of xhr’s received bytes and if that does not terminate unsuccessfully then let charset be the return value.
         document = DOM::Document::create(realm());
         if (!charset.has_value())
             if (auto found_charset = HTML::run_prescan_byte_stream_algorithm(*document, m_received_bytes); found_charset.has_value())
-                charset = MUST(String::from_byte_string(found_charset.value())).bytes_as_string_view();
+                charset = MUST(String::from_byte_string(found_charset.value()));
 
         // 5.3. If charset is null, then set charset to UTF-8.
         if (!charset.has_value())
-            charset = "UTF-8"sv;
+            charset = "UTF-8"_string;
 
         // 5.4. Let document be a document that represents the result parsing xhr’s received bytes following the rules set forth in the HTML Standard for an HTML parser with scripting disabled and a known definite encoding charset.
         auto parser = HTML::HTMLParser::create(*document, m_received_bytes, charset.value());
@@ -330,10 +331,10 @@ void XMLHttpRequest::set_document_response()
 
     // 7. If charset is null, then set charset to UTF-8.
     if (!charset.has_value())
-        charset = "UTF-8"sv;
+        charset = "UTF-8"_string;
 
     // 8. Set document’s encoding to charset.
-    document->set_encoding(MUST(String::from_utf8(charset.value())));
+    document->set_encoding(move(charset));
 
     // 9. Set document’s content type to finalMIME.
     document->set_content_type(MUST(final_mine.serialized()));
