@@ -39,7 +39,7 @@ ErrorOr<void> update_process_statistics(ProcessStatistics& statistics)
         return Error::from_string_literal("Failed to parse /proc/stat");
 
     u64 const total_time_scheduled = user_time + system_time + idle_time + irq_time + softirq_time;
-    float const total_time_scheduled_diff = static_cast<float>(total_time_scheduled) - statistics.total_time_scheduled;
+    float const total_time_scheduled_diff = total_time_scheduled - statistics.total_time_scheduled;
     statistics.total_time_scheduled = total_time_scheduled;
 
     for (auto& process : statistics.processes) {
@@ -63,7 +63,7 @@ ErrorOr<void> update_process_statistics(ProcessStatistics& statistics)
         process.memory_usage_bytes = rss * page_size;
 
         u64 const time_process = utime + stime;
-        float const time_scheduled_diff = static_cast<float>(time_process) - process.time_spent_in_process;
+        float const time_scheduled_diff = time_process - process.time_spent_in_process;
         process.time_spent_in_process = time_process;
 
         process.cpu_percent = 0.0;
