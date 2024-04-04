@@ -53,3 +53,42 @@ TEST_CASE(create_attach_and_destory_loop_device)
     auto destroy_result = ioctl(devctl_fd, DEVCTL_DESTROY_LOOP_DEVICE, &loop_device_index);
     EXPECT_EQ(destroy_result, 0);
 }
+
+TEST_CASE(create_attach_and_destory_loop_device_without_first_closing_device)
+{
+    constexpr char const* test_path = "/tmp/create_attach_and_destory_loop_device_without_first_closing_device";
+
+    int devctl_fd = open("/dev/devctl", O_RDONLY);
+    VERIFY(devctl_fd >= 0);
+    auto cleanup_devctl_fd_guard = ScopeGuard([&] {
+        close(devctl_fd);
+    });
+
+    u8 buf[0x1000];
+    memset(buf, 0, sizeof(buf));
+    int fd = open(test_path, O_RDWR | O_CREAT, 0644);
+    VERIFY(fd >= 0);
+    auto cleanup_fd_guard = ScopeGuard([&] {
+        close(fd);
+        unlink(test_path);
+    });
+    auto rc = write(fd, buf, sizeof(buf));
+    VERIFY(rc == sizeof(buf));
+
+    int value = fd;
+    auto create_result = ioctl(devctl_fd, DEVCTL_CREATE_LOOP_DEVICE, &value);
+    EXPECT_EQ(create_result, 0);
+
+    auto loop_device_index = value;
+    auto loop_device_fd_or_error = open_loop_device(loop_device_index);
+    EXPECT(loop_device_fd_or_error >= 0);
+
+    auto destroy_result = ioctl(devctl_fd, DEVCTL_DESTROY_LOOP_DEVICE, &loop_device_index);
+    EXPECT_NE(destroy_result, 0);
+
+    auto close_result = close(loop_device_fd_or_error);
+    EXPECT_EQ(close_result, 0);
+
+    destroy_result = ioctl(devctl_fd, DEVCTL_DESTROY_LOOP_DEVICE, &loop_device_index);
+    EXPECT_EQ(destroy_result, 0);
+}
