@@ -62,16 +62,19 @@ protected:
     // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#navigate-an-iframe-or-frame
     void navigate_an_iframe_or_frame(URL::URL url, ReferrerPolicy::ReferrerPolicy referrer_policy, Optional<String> srcdoc_string = {});
 
-    WebIDL::ExceptionOr<void> create_new_child_navigable();
+    WebIDL::ExceptionOr<void> create_new_child_navigable(JS::SafeFunction<void()> afterSessionHistoryUpdate = {});
 
     // https://html.spec.whatwg.org/multipage/document-sequences.html#content-navigable
     JS::GCPtr<Navigable> m_content_navigable { nullptr };
 
     void set_potentially_delays_the_load_event(bool value) { m_potentially_delays_the_load_event = value; }
 
+    void set_content_navigable_initialized() { m_content_navigable_initialized = true; }
+
 private:
     virtual bool is_navigable_container() const override { return true; }
     bool m_potentially_delays_the_load_event { true };
+    bool m_content_navigable_initialized { false };
 };
 
 }
