@@ -178,7 +178,7 @@ RefPtr<Supports> Parser::parse_a_supports(TokenStream<T>& tokens)
     auto maybe_condition = parse_supports_condition(token_stream);
     token_stream.skip_whitespace();
     if (maybe_condition && !token_stream.has_next_token())
-        return Supports::create(maybe_condition.release_nonnull());
+        return Supports::create(m_context.realm(), maybe_condition.release_nonnull());
 
     return {};
 }
@@ -303,7 +303,7 @@ Optional<Supports::Feature> Parser::parse_supports_feature(TokenStream<Component
         if (auto declaration = consume_a_declaration(block_tokens); declaration.has_value()) {
             transaction.commit();
             return Supports::Feature {
-                Supports::Declaration { declaration->to_string(), JS::make_handle(m_context.realm()) }
+                Supports::Declaration { declaration->to_string() }
             };
         }
     }
@@ -316,7 +316,7 @@ Optional<Supports::Feature> Parser::parse_supports_feature(TokenStream<Component
             builder.append(item.to_string());
         transaction.commit();
         return Supports::Feature {
-            Supports::Selector { builder.to_string().release_value_but_fixme_should_propagate_errors(), JS::make_handle(m_context.realm()) }
+            Supports::Selector { builder.to_string().release_value_but_fixme_should_propagate_errors() }
         };
     }
 
