@@ -1098,6 +1098,8 @@ void HTMLInputElement::form_associated_element_attribute_changed(FlyString const
             did_update_alt_text(verify_cast<Layout::ImageBox>(*layout_node()));
     } else if (name == HTML::AttributeNames::maxlength) {
         handle_maxlength_attribute();
+    } else if (name == HTML::AttributeNames::multiple) {
+        update_shadow_tree();
     }
 }
 
