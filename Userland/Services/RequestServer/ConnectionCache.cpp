@@ -56,6 +56,9 @@ void request_did_finish(URL::URL const& url, Core::Socket const* socket)
                 connection->job_data = {};
                 connection->removal_timer->on_timeout = [ptr = connection.ptr(), &cache_entry, key = move(key), &cache]() mutable {
                     Core::deferred_invoke([&, key = move(key), ptr] {
+                        if (ptr->has_started)
+                            return;
+
                         dbgln_if(REQUESTSERVER_DEBUG, "Removing no-longer-used connection {} (socket {})", ptr, ptr->socket);
                         auto did_remove = cache_entry.remove_first_matching([&](auto& entry) { return entry == ptr; });
                         VERIFY(did_remove);
