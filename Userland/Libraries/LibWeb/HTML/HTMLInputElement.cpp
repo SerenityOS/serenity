@@ -1085,6 +1085,15 @@ void HTMLInputElement::form_associated_element_attribute_changed(FlyString const
 
         set_shadow_root(nullptr);
         create_shadow_tree_if_needed();
+
+        // https://html.spec.whatwg.org/multipage/input.html#image-button-state-(type=image):the-input-element-4
+        // the input element's type attribute is changed back to the Image Button state, and the src attribute is present,
+        // and its value has changed since the last time the type attribute was in the Image Button state
+        if (type_state() == TypeAttributeState::ImageButton) {
+            if (auto src = attribute(AttributeNames::src); src.has_value() && src != m_last_src_value)
+                handle_src_attribute(*src).release_value_but_fixme_should_propagate_errors();
+        }
+
     } else if (name == HTML::AttributeNames::value) {
         if (!m_dirty_value) {
             if (!value.has_value()) {
@@ -1115,13 +1124,15 @@ void HTMLInputElement::form_associated_element_attribute_changed(FlyString const
 }
 
 // https://html.spec.whatwg.org/multipage/input.html#attr-input-src
-WebIDL::ExceptionOr<void> HTMLInputElement::handle_src_attribute(StringView value)
+WebIDL::ExceptionOr<void> HTMLInputElement::handle_src_attribute(String const& value)
 {
     auto& realm = this->realm();
     auto& vm = realm.vm();
 
     if (type_state() != TypeAttributeState::ImageButton)
         return {};
+
+    m_last_src_value = value;
 
     // 1. Let url be the result of encoding-parsing a URL given the src attribute's value, relative to the element's
     //    node document.
