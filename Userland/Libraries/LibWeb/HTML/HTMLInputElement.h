@@ -265,6 +265,7 @@ private:
     JS::GCPtr<DOM::Element> m_placeholder_element;
     JS::GCPtr<DOM::Text> m_placeholder_text_node;
 
+    void update_text_input_shadow_tree();
     JS::GCPtr<DOM::Element> m_inner_text_element;
     JS::GCPtr<DOM::Text> m_text_node;
     bool m_checked { false };
