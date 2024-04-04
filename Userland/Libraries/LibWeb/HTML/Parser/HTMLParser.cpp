@@ -132,7 +132,7 @@ static bool is_html_integration_point(DOM::Element const& element)
     return false;
 }
 
-HTMLParser::HTMLParser(DOM::Document& document, StringView input, ByteString const& encoding)
+HTMLParser::HTMLParser(DOM::Document& document, StringView input, StringView encoding)
     : m_tokenizer(input, encoding)
     , m_scripting_enabled(document.is_scripting_enabled())
     , m_document(JS::make_handle(document))
@@ -4144,7 +4144,7 @@ Vector<JS::Handle<DOM::Node>> HTMLParser::parse_html_fragment(DOM::Element& cont
     temp_document->set_quirks_mode(context_element.document().mode());
 
     // 3. Create a new HTML parser, and associate it with the just created Document node.
-    auto parser = HTMLParser::create(*temp_document, markup, "utf-8");
+    auto parser = HTMLParser::create(*temp_document, markup, "utf-8"sv);
     parser->m_context_element = JS::make_handle(context_element);
     parser->m_parsing_fragment = true;
 
@@ -4239,7 +4239,7 @@ JS::NonnullGCPtr<HTMLParser> HTMLParser::create_with_uncertain_encoding(DOM::Doc
     return document.heap().allocate_without_realm<HTMLParser>(document, input, encoding);
 }
 
-JS::NonnullGCPtr<HTMLParser> HTMLParser::create(DOM::Document& document, StringView input, ByteString const& encoding)
+JS::NonnullGCPtr<HTMLParser> HTMLParser::create(DOM::Document& document, StringView input, StringView encoding)
 {
     return document.heap().allocate_without_realm<HTMLParser>(document, input, encoding);
 }
