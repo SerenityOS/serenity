@@ -86,6 +86,9 @@ ErrorOr<void> initialize_main_thread_vm()
     //       This avoids doing an exhaustive garbage collection on process exit.
     s_main_thread_vm->ref();
 
+    auto& custom_data = verify_cast<WebEngineCustomData>(*s_main_thread_vm->custom_data());
+    custom_data.event_loop = s_main_thread_vm->heap().allocate_without_realm<HTML::EventLoop>();
+
     // These strings could potentially live on the VM similar to CommonPropertyNames.
     DOM::MutationType::initialize_strings();
     HTML::AttributeNames::initialize_strings();
@@ -102,8 +105,6 @@ ErrorOr<void> initialize_main_thread_vm()
     WebGL::EventNames::initialize_strings();
     XHR::EventNames::initialize_strings();
     XLink::AttributeNames::initialize_strings();
-
-    static_cast<WebEngineCustomData*>(s_main_thread_vm->custom_data())->event_loop.set_vm(*s_main_thread_vm);
 
     // 8.1.5.1 HostEnsureCanAddPrivateElement(O), https://html.spec.whatwg.org/multipage/webappapis.html#the-hostensurecanaddprivateelement-implementation
     s_main_thread_vm->host_ensure_can_add_private_element = [](JS::Object const& object) -> JS::ThrowCompletionOr<void> {

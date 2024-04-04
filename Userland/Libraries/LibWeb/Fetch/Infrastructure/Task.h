@@ -17,7 +17,7 @@ namespace Web::Fetch::Infrastructure {
 // FIXME: 'or a parallel queue'
 using TaskDestination = Variant<Empty, JS::NonnullGCPtr<JS::Object>>;
 
-int queue_fetch_task(JS::Object&, JS::SafeFunction<void()>);
-int queue_fetch_task(JS::NonnullGCPtr<FetchController>, JS::Object&, JS::SafeFunction<void()>);
+int queue_fetch_task(JS::Object&, Function<void()>);
+int queue_fetch_task(JS::NonnullGCPtr<FetchController>, JS::Object&, Function<void()>);
 
 }

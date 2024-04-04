@@ -40,7 +40,7 @@ struct WebEngineCustomData final : public JS::VM::CustomData {
 
     virtual void spin_event_loop_until(JS::SafeFunction<bool()> goal_condition) override;
 
-    HTML::EventLoop event_loop;
+    JS::Handle<HTML::EventLoop> event_loop;
 
     // FIXME: These should only be on similar-origin window agents, but we don't currently differentiate agent types.
 

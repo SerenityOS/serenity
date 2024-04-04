@@ -289,9 +289,9 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> AudioContext::close()
     return JS::NonnullGCPtr { verify_cast<JS::Promise>(*promise->promise()) };
 }
 
-void AudioContext::queue_a_media_element_task(JS::SafeFunction<void()> steps)
+void AudioContext::queue_a_media_element_task(Function<void()> steps)
 {
-    auto task = HTML::Task::create(m_media_element_event_task_source.source, HTML::current_settings_object().responsible_document(), move(steps));
+    auto task = HTML::Task::create(vm(), m_media_element_event_task_source.source, HTML::current_settings_object().responsible_document(), JS::create_heap_function(heap(), move(steps)));
     HTML::main_thread_event_loop().task_queue().add(move(task));
 }
 

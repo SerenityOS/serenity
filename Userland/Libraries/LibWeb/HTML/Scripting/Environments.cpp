@@ -42,6 +42,7 @@ void EnvironmentSettingsObject::initialize(JS::Realm& realm)
 void EnvironmentSettingsObject::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
+    visitor.visit(m_responsible_event_loop);
     visitor.visit(target_browsing_context);
     visitor.visit(m_module_map);
     visitor.ignore(m_outstanding_rejected_promises_weak_set);
@@ -84,8 +85,8 @@ EventLoop& EnvironmentSettingsObject::responsible_event_loop()
 
     auto& vm = global_object().vm();
     auto& event_loop = verify_cast<Bindings::WebEngineCustomData>(vm.custom_data())->event_loop;
-    m_responsible_event_loop = &event_loop;
-    return event_loop;
+    m_responsible_event_loop = event_loop;
+    return *event_loop;
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#check-if-we-can-run-script

@@ -122,7 +122,7 @@ private:
     NonnullOwnPtr<JS::ExecutionContext> m_realm_execution_context;
     JS::GCPtr<ModuleMap> m_module_map;
 
-    EventLoop* m_responsible_event_loop { nullptr };
+    JS::GCPtr<EventLoop> m_responsible_event_loop;
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#outstanding-rejected-promises-weak-set
     // The outstanding rejected promises weak set must not create strong references to any of its members, and implementations are free to limit its size, e.g. by removing old entries from it when new ones are added.

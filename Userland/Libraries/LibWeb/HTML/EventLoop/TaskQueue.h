@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2024, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,24 +7,27 @@
 #pragma once
 
 #include <AK/Queue.h>
+#include <LibJS/Heap/Cell.h>
 #include <LibWeb/HTML/EventLoop/Task.h>
 
 namespace Web::HTML {
 
-class TaskQueue {
+class TaskQueue : public JS::Cell {
+    JS_CELL(TaskQueue, Cell);
+
 public:
     explicit TaskQueue(HTML::EventLoop&);
-    ~TaskQueue();
+    virtual ~TaskQueue() override;
 
     bool is_empty() const { return m_tasks.is_empty(); }
 
     bool has_runnable_tasks() const;
 
-    void add(NonnullOwnPtr<HTML::Task>);
-    OwnPtr<HTML::Task> take_first_runnable();
+    void add(JS::NonnullGCPtr<HTML::Task>);
+    JS::GCPtr<HTML::Task> take_first_runnable();
 
-    void enqueue(NonnullOwnPtr<HTML::Task> task) { add(move(task)); }
-    OwnPtr<HTML::Task> dequeue()
+    void enqueue(JS::NonnullGCPtr<HTML::Task> task) { add(task); }
+    JS::GCPtr<HTML::Task> dequeue()
     {
         if (m_tasks.is_empty())
             return {};
@@ -32,14 +35,16 @@ public:
     }
 
     void remove_tasks_matching(Function<bool(HTML::Task const&)>);
-    ErrorOr<Vector<NonnullOwnPtr<Task>>> take_tasks_matching(Function<bool(HTML::Task const&)>);
+    JS::MarkedVector<JS::NonnullGCPtr<Task>> take_tasks_matching(Function<bool(HTML::Task const&)>);
 
     Task const* last_added_task() const;
 
 private:
-    HTML::EventLoop& m_event_loop;
+    virtual void visit_edges(Visitor&) override;
 
-    Vector<NonnullOwnPtr<HTML::Task>> m_tasks;
+    JS::NonnullGCPtr<HTML::EventLoop> m_event_loop;
+
+    Vector<JS::NonnullGCPtr<HTML::Task>> m_tasks;
 };
 
 }

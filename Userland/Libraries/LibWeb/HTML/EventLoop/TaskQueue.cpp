@@ -1,9 +1,10 @@
 /*
- * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2024, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Heap/MarkedVector.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/EventLoop/TaskQueue.h>
 
@@ -16,15 +17,23 @@ TaskQueue::TaskQueue(HTML::EventLoop& event_loop)
 
 TaskQueue::~TaskQueue() = default;
 
-void TaskQueue::add(NonnullOwnPtr<Task> task)
+void TaskQueue::visit_edges(Visitor& visitor)
 {
-    m_tasks.append(move(task));
-    m_event_loop.schedule();
+    Base::visit_edges(visitor);
+    visitor.visit(m_event_loop);
+    for (auto& task : m_tasks)
+        visitor.visit(task);
 }
 
-OwnPtr<Task> TaskQueue::take_first_runnable()
+void TaskQueue::add(JS::NonnullGCPtr<Task> task)
 {
-    if (m_event_loop.execution_paused())
+    m_tasks.append(task);
+    m_event_loop->schedule();
+}
+
+JS::GCPtr<Task> TaskQueue::take_first_runnable()
+{
+    if (m_event_loop->execution_paused())
         return nullptr;
 
     for (size_t i = 0; i < m_tasks.size(); ++i) {
@@ -36,7 +45,7 @@ OwnPtr<Task> TaskQueue::take_first_runnable()
 
 bool TaskQueue::has_runnable_tasks() const
 {
-    if (m_event_loop.execution_paused())
+    if (m_event_loop->execution_paused())
         return false;
 
     for (auto& task : m_tasks) {
@@ -53,15 +62,15 @@ void TaskQueue::remove_tasks_matching(Function<bool(HTML::Task const&)> filter)
     });
 }
 
-ErrorOr<Vector<NonnullOwnPtr<Task>>> TaskQueue::take_tasks_matching(Function<bool(HTML::Task const&)> filter)
+JS::MarkedVector<JS::NonnullGCPtr<Task>> TaskQueue::take_tasks_matching(Function<bool(HTML::Task const&)> filter)
 {
-    Vector<NonnullOwnPtr<Task>> matching_tasks;
+    JS::MarkedVector<JS::NonnullGCPtr<Task>> matching_tasks(heap());
 
     for (size_t i = 0; i < m_tasks.size();) {
         auto& task = m_tasks.at(i);
 
         if (filter(*task)) {
-            TRY(matching_tasks.try_append(move(task)));
+            matching_tasks.append(task);
             m_tasks.remove(i);
         } else {
             ++i;

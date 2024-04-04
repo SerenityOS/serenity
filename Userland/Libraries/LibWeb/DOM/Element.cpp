@@ -785,9 +785,9 @@ void Element::make_html_uppercased_qualified_name()
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#queue-an-element-task
-int Element::queue_an_element_task(HTML::Task::Source source, JS::SafeFunction<void()> steps)
+int Element::queue_an_element_task(HTML::Task::Source source, Function<void()> steps)
 {
-    auto task = HTML::Task::create(source, &document(), move(steps));
+    auto task = HTML::Task::create(vm(), source, &document(), JS::create_heap_function(heap(), move(steps)));
     auto id = task->id();
 
     HTML::main_thread_event_loop().task_queue().add(move(task));

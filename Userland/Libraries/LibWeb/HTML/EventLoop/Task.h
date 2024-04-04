@@ -1,15 +1,13 @@
 /*
- * Copyright (c) 2021-2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2024, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
-#include <AK/Function.h>
-#include <AK/NonnullOwnPtr.h>
-#include <AK/RefPtr.h>
-#include <LibJS/Heap/Handle.h>
+#include <LibJS/Heap/Cell.h>
+#include <LibJS/Heap/CellAllocator.h>
 #include <LibJS/SafeFunction.h>
 #include <LibWeb/Forward.h>
 
@@ -17,7 +15,10 @@ namespace Web::HTML {
 
 struct UniqueTaskSource;
 
-class Task {
+class Task final : public JS::Cell {
+    JS_CELL(Task, Cell);
+    JS_DECLARE_ALLOCATOR(Task);
+
 public:
     // https://html.spec.whatwg.org/multipage/webappapis.html#generic-task-sources
     enum class Source {
@@ -59,11 +60,10 @@ public:
         UniqueTaskSourceStart
     };
 
-    static NonnullOwnPtr<Task> create(Source source, DOM::Document const* document, JS::SafeFunction<void()> steps)
-    {
-        return adopt_own(*new Task(source, document, move(steps)));
-    }
-    ~Task();
+    static JS::NonnullGCPtr<Task> create(JS::VM&, Source, JS::GCPtr<DOM::Document const>, JS::NonnullGCPtr<JS::HeapFunction<void()>> steps);
+
+    virtual ~Task() override;
+    virtual void finalize() override;
 
     int id() const { return m_id; }
     Source source() const { return m_source; }
@@ -74,12 +74,14 @@ public:
     bool is_runnable() const;
 
 private:
-    Task(Source, DOM::Document const*, JS::SafeFunction<void()> steps);
+    Task(Source, JS::GCPtr<DOM::Document const>, JS::NonnullGCPtr<JS::HeapFunction<void()>> steps);
+
+    virtual void visit_edges(Visitor&) override;
 
     int m_id { 0 };
     Source m_source { Source::Unspecified };
-    JS::SafeFunction<void()> m_steps;
-    JS::Handle<DOM::Document const> m_document;
+    JS::NonnullGCPtr<JS::HeapFunction<void()>> m_steps;
+    JS::GCPtr<DOM::Document const> m_document;
 };
 
 struct UniqueTaskSource {
