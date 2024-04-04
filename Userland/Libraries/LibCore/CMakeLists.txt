@@ -69,6 +69,10 @@ else()
     list(APPEND SOURCES FileWatcherUnimplemented.cpp)
 endif()
 
+if (APPLE OR CMAKE_SYSTEM_NAME STREQUAL "GNU")
+    list(APPEND SOURCES MachPort.cpp)
+endif()
+
 serenity_lib(LibCore core)
 target_link_libraries(LibCore PRIVATE LibCrypt LibSystem LibTimeZone LibURL)
 target_link_libraries(LibCore PUBLIC LibCoreMinimal)
