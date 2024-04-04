@@ -178,10 +178,10 @@ ErrorOr<void> ConfigFile::sync()
     TRY(m_file->seek(0, SeekMode::SetPosition));
 
     for (auto& it : m_groups) {
-        TRY(m_file->write_until_depleted(ByteString::formatted("[{}]\n", it.key).bytes()));
+        TRY(m_file->write_until_depleted(ByteString::formatted("[{}]\n", it.key)));
         for (auto& jt : it.value)
-            TRY(m_file->write_until_depleted(ByteString::formatted("{}={}\n", jt.key, jt.value).bytes()));
-        TRY(m_file->write_until_depleted("\n"sv.bytes()));
+            TRY(m_file->write_until_depleted(ByteString::formatted("{}={}\n", jt.key, jt.value)));
+        TRY(m_file->write_until_depleted("\n"sv));
     }
 
     m_dirty = false;
