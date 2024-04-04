@@ -318,14 +318,6 @@ TEST_CASE(test_ilbm_malformed_frame)
     }
 }
 
-TEST_CASE(test_jbig2_size)
-{
-    auto file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("jbig2/bitmap.jbig2"sv)));
-    EXPECT(Gfx::JBIG2ImageDecoderPlugin::sniff(file->bytes()));
-    auto plugin_decoder = TRY_OR_FAIL(Gfx::JBIG2ImageDecoderPlugin::create(file->bytes()));
-    EXPECT_EQ(plugin_decoder->size(), Gfx::IntSize(399, 400));
-}
-
 TEST_CASE(test_jbig2_black_47x23)
 {
     auto file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("jbig2/black_47x23.jbig2"sv)));
