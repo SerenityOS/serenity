@@ -128,7 +128,7 @@ public:
         return m_value.get<bool>();
     }
 
-    ByteString as_string() const
+    ByteString const& as_string() const
     {
         return m_value.get<ByteString>();
     }
