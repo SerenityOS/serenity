@@ -7,9 +7,11 @@
 
 #pragma once
 
+#include <AK/Concepts.h>
 #include <AK/Error.h>
 #include <AK/Format.h>
 #include <AK/Forward.h>
+#include <AK/StringView.h>
 #include <AK/Traits.h>
 
 namespace AK {
@@ -46,6 +48,12 @@ public:
     /// Same as write, but does not return until either the entire buffer
     /// contents are written or an error occurs.
     virtual ErrorOr<void> write_until_depleted(ReadonlyBytes);
+
+    template<Concepts::AnyString T>
+    ErrorOr<void> write_until_depleted(T const& buffer)
+    {
+        return write_until_depleted(StringView { buffer }.bytes());
+    }
 
     template<typename T>
     requires(requires(Stream& stream) { { T::read_from_stream(stream) } -> SameAs<ErrorOr<T>>; })
