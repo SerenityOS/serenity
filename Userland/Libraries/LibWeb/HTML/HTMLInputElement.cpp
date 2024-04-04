@@ -612,6 +612,14 @@ void HTMLInputElement::update_placeholder_visibility()
     }
 }
 
+void HTMLInputElement::update_text_input_shadow_tree()
+{
+    if (m_text_node) {
+        m_text_node->set_data(m_value);
+        update_placeholder_visibility();
+    }
+}
+
 // https://html.spec.whatwg.org/multipage/input.html#the-input-element:attr-input-readonly-3
 static bool is_allowed_to_be_readonly(HTML::HTMLInputElement::TypeAttributeState state)
 {
@@ -746,6 +754,7 @@ void HTMLInputElement::update_shadow_tree()
         update_slider_thumb_element();
         break;
     default:
+        update_text_input_shadow_tree();
         break;
     }
 }
@@ -1073,6 +1082,9 @@ void HTMLInputElement::form_associated_element_attribute_changed(FlyString const
         }
     } else if (name == HTML::AttributeNames::type) {
         m_type = parse_type_attribute(value.value_or(String {}));
+
+        set_shadow_root(nullptr);
+        create_shadow_tree_if_needed();
     } else if (name == HTML::AttributeNames::value) {
         if (!m_dirty_value) {
             if (!value.has_value()) {
@@ -1081,7 +1093,6 @@ void HTMLInputElement::form_associated_element_attribute_changed(FlyString const
                 m_value = value_sanitization_algorithm(*value);
             }
 
-            update_placeholder_visibility();
             update_shadow_tree();
         }
     } else if (name == HTML::AttributeNames::placeholder) {
