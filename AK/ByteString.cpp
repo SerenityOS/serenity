@@ -81,14 +81,14 @@ ByteString ByteString::substring(size_t start) const
     return { characters() + start, length() - start };
 }
 
-StringView ByteString::substring_view(size_t start, size_t length) const
+StringView ByteString::substring_view(size_t start, size_t length) const&
 {
     VERIFY(!Checked<size_t>::addition_would_overflow(start, length));
     VERIFY(start + length <= m_impl->length());
     return { characters() + start, length };
 }
 
-StringView ByteString::substring_view(size_t start) const
+StringView ByteString::substring_view(size_t start) const&
 {
     VERIFY(start <= length());
     return { characters() + start, length() - start };
@@ -123,7 +123,7 @@ Vector<ByteString> ByteString::split_limit(char separator, size_t limit, SplitBe
     return v;
 }
 
-Vector<StringView> ByteString::split_view(Function<bool(char)> separator, SplitBehavior split_behavior) const
+Vector<StringView> ByteString::split_view(Function<bool(char)> separator, SplitBehavior split_behavior) const&
 {
     if (is_empty())
         return {};
@@ -147,7 +147,7 @@ Vector<StringView> ByteString::split_view(Function<bool(char)> separator, SplitB
     return v;
 }
 
-Vector<StringView> ByteString::split_view(char const separator, SplitBehavior split_behavior) const
+Vector<StringView> ByteString::split_view(char const separator, SplitBehavior split_behavior) const&
 {
     return split_view([separator](char ch) { return ch == separator; }, split_behavior);
 }
