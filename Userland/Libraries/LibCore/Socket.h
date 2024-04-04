@@ -68,7 +68,7 @@ protected:
         Inet,
     };
 
-    Socket(PreventSIGPIPE prevent_sigpipe = PreventSIGPIPE::No)
+    explicit Socket(PreventSIGPIPE prevent_sigpipe = PreventSIGPIPE::Yes)
         : m_prevent_sigpipe(prevent_sigpipe == PreventSIGPIPE::Yes)
     {
     }
@@ -87,7 +87,7 @@ protected:
     }
 
 private:
-    bool m_prevent_sigpipe { false };
+    bool m_prevent_sigpipe { true };
 };
 
 /// A reusable socket maintains state about being connected in addition to
@@ -195,7 +195,7 @@ public:
     virtual ~TCPSocket() override { close(); }
 
 private:
-    TCPSocket(PreventSIGPIPE prevent_sigpipe = PreventSIGPIPE::No)
+    explicit TCPSocket(PreventSIGPIPE prevent_sigpipe = PreventSIGPIPE::Yes)
         : Socket(prevent_sigpipe)
     {
     }
@@ -269,7 +269,7 @@ public:
     virtual ~UDPSocket() override { close(); }
 
 private:
-    UDPSocket(PreventSIGPIPE prevent_sigpipe = PreventSIGPIPE::No)
+    explicit UDPSocket(PreventSIGPIPE prevent_sigpipe = PreventSIGPIPE::Yes)
         : Socket(prevent_sigpipe)
     {
     }
@@ -290,8 +290,8 @@ private:
 
 class LocalSocket final : public Socket {
 public:
-    static ErrorOr<NonnullOwnPtr<LocalSocket>> connect(ByteString const& path, PreventSIGPIPE = PreventSIGPIPE::No);
-    static ErrorOr<NonnullOwnPtr<LocalSocket>> adopt_fd(int fd, PreventSIGPIPE = PreventSIGPIPE::No);
+    static ErrorOr<NonnullOwnPtr<LocalSocket>> connect(ByteString const& path, PreventSIGPIPE = PreventSIGPIPE::Yes);
+    static ErrorOr<NonnullOwnPtr<LocalSocket>> adopt_fd(int fd, PreventSIGPIPE = PreventSIGPIPE::Yes);
 
     LocalSocket(LocalSocket&& other)
         : Socket(static_cast<Socket&&>(other))
@@ -343,7 +343,7 @@ public:
     virtual ~LocalSocket() { close(); }
 
 private:
-    LocalSocket(PreventSIGPIPE prevent_sigpipe = PreventSIGPIPE::No)
+    explicit LocalSocket(PreventSIGPIPE prevent_sigpipe = PreventSIGPIPE::Yes)
         : Socket(prevent_sigpipe)
     {
     }

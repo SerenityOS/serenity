@@ -107,12 +107,12 @@ WebIDL::ExceptionOr<void> MessagePort::transfer_receiving_steps(HTML::TransferDa
     auto fd_tag = data_holder.data.take_first();
     if (fd_tag == IPC_FILE_TAG) {
         auto fd = data_holder.fds.take_first();
-        m_socket = MUST(Core::LocalSocket::adopt_fd(fd.take_fd(), Core::LocalSocket::PreventSIGPIPE::Yes));
+        m_socket = MUST(Core::LocalSocket::adopt_fd(fd.take_fd()));
 
         fd_tag = data_holder.data.take_first();
         VERIFY(fd_tag == IPC_FILE_TAG);
         fd = data_holder.fds.take_first();
-        m_fd_passing_socket = MUST(Core::LocalSocket::adopt_fd(fd.take_fd(), Core::LocalSocket::PreventSIGPIPE::Yes));
+        m_fd_passing_socket = MUST(Core::LocalSocket::adopt_fd(fd.take_fd()));
 
         m_socket->on_ready_to_read = [strong_this = JS::make_handle(this)]() {
             strong_this->read_from_socket();
@@ -155,10 +155,10 @@ void MessagePort::entangle_with(MessagePort& remote_port)
     auto create_paired_sockets = []() -> Array<NonnullOwnPtr<Core::LocalSocket>, 2> {
         int fds[2] = {};
         MUST(Core::System::socketpair(AF_LOCAL, SOCK_STREAM, 0, fds));
-        auto socket0 = MUST(Core::LocalSocket::adopt_fd(fds[0], Core::LocalSocket::PreventSIGPIPE::Yes));
+        auto socket0 = MUST(Core::LocalSocket::adopt_fd(fds[0]));
         MUST(socket0->set_blocking(false));
         MUST(socket0->set_close_on_exec(true));
-        auto socket1 = MUST(Core::LocalSocket::adopt_fd(fds[1], Core::LocalSocket::PreventSIGPIPE::Yes));
+        auto socket1 = MUST(Core::LocalSocket::adopt_fd(fds[1]));
         MUST(socket1->set_blocking(false));
         MUST(socket1->set_close_on_exec(true));
 
