@@ -188,19 +188,22 @@ bool AppFile::spawn_with_escalation(ReadonlySpan<StringView> user_arguments) con
 
     StringView exe;
     Vector<StringView, 2> args;
+
+    auto executable = AppFile::executable();
+
     // FIXME: These single quotes won't be enough for executables with single quotes in their name.
-    auto pls_with_executable = ByteString::formatted("/bin/pls '{}'", executable());
+    auto pls_with_executable = ByteString::formatted("/bin/pls '{}'", executable);
     if (run_in_terminal() && !requires_root()) {
         exe = "/bin/Terminal"sv;
-        args = { "-e"sv, executable().view() };
+        args = { "-e"sv, executable };
     } else if (!run_in_terminal() && requires_root()) {
         exe = "/bin/Escalator"sv;
-        args = { executable().view() };
+        args = { executable };
     } else if (run_in_terminal() && requires_root()) {
         exe = "/bin/Terminal"sv;
-        args = { "-e"sv, pls_with_executable.view() };
+        args = { "-e"sv, pls_with_executable };
     } else {
-        exe = executable().view();
+        exe = executable;
     }
     args.extend(Vector(user_arguments));
 
