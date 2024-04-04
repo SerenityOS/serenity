@@ -111,6 +111,10 @@
 #    define AK_OS_GNU_HURD
 #endif
 
+#if defined(__MACH__)
+#    define AK_OS_MACH
+#endif
+
 #if defined(_WIN32) || defined(_WIN64)
 #    define AK_OS_WINDOWS
 #endif
