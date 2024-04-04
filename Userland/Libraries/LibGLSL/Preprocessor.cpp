@@ -366,7 +366,7 @@ ErrorOr<Optional<Preprocessor::Definition>> Preprocessor::create_definition(Stri
     }
 
     if (token_index < tokens.size())
-        definition.value = TRY(remove_escaped_newlines(line.substring_view(tokens[token_index].start().column))).bytes_as_string_view();
+        definition.value = TRY(remove_escaped_newlines(line.substring_view(tokens[token_index].start().column)));
 
     return definition;
 }
