@@ -27,8 +27,11 @@ unsigned TarFileHeader::expected_checksum() const
 ErrorOr<void> TarFileHeader::calculate_checksum()
 {
     memset(m_checksum, ' ', sizeof(m_checksum));
-    bool copy_successful = TRY(String::formatted("{:06o}", expected_checksum())).bytes_as_string_view().copy_characters_to_buffer(m_checksum, sizeof(m_checksum));
+
+    auto octal = TRY(String::formatted("{:06o}", expected_checksum()));
+    bool copy_successful = octal.bytes_as_string_view().copy_characters_to_buffer(m_checksum, sizeof(m_checksum));
     VERIFY(copy_successful);
+
     return {};
 }
 

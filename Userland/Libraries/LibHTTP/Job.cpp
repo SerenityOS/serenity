@@ -313,8 +313,11 @@ void Job::on_socket_connected()
                 // responds with nothing (content-length = 0 with normal encoding); if that's the case,
                 // quit early as we won't be reading anything anyway.
                 if (auto result = m_headers.get("Content-Length"sv).value_or(""sv).to_number<unsigned>(); result.has_value()) {
-                    if (result.value() == 0 && !m_headers.get("Transfer-Encoding"sv).value_or(""sv).view().trim_whitespace().equals_ignoring_ascii_case("chunked"sv))
-                        return finish_up();
+                    if (result.value() == 0) {
+                        auto transfer_encoding = m_headers.get("Transfer-Encoding"sv);
+                        if (!transfer_encoding.has_value() || !transfer_encoding->view().trim_whitespace().equals_ignoring_ascii_case("chunked"sv))
+                            return finish_up();
+                    }
                 }
                 // There's also the possibility that the server responds with 204 (No Content),
                 // and manages to set a Content-Length anyway, in such cases ignore Content-Length and quit early;

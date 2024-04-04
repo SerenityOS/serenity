@@ -42,8 +42,8 @@ ErrorOr<void> EventManager::save(FileSystemAccessClient::File& file)
     set_filename(file.filename());
 
     auto stream = file.release_stream();
-    auto json = TRY(serialize_events());
-    TRY(stream->write_some(json.to_byte_string().bytes()));
+    auto json = TRY(serialize_events()).to_byte_string();
+    TRY(stream->write_some(json.bytes()));
     stream->close();
 
     m_dirty = false;

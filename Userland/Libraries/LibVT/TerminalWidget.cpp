@@ -1209,10 +1209,13 @@ void TerminalWidget::drop_event(GUI::DropEvent& event)
             if (!first)
                 send_non_user_input(" "sv.bytes());
 
-            if (url.scheme() == "file")
-                send_non_user_input(url.serialize_path().bytes());
-            else
-                send_non_user_input(url.to_byte_string().bytes());
+            if (url.scheme() == "file") {
+                auto path = url.serialize_path();
+                send_non_user_input(path.bytes());
+            } else {
+                auto url_string = url.to_byte_string();
+                send_non_user_input(url_string.bytes());
+            }
 
             first = false;
         }

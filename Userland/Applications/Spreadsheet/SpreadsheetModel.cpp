@@ -128,7 +128,8 @@ GUI::Variant SheetModel::data(const GUI::ModelIndex& index, GUI::ModelRole role)
                 else
                     builder.appendff("  while evaluating builtin '{}'\n", frame.function_name);
             } else if (frame.source_range().filename().starts_with("cell "sv)) {
-                builder.appendff("  in cell '{}', at line {}, column {}\n", frame.source_range().filename().substring_view(5), frame.source_range().start.line, frame.source_range().start.column);
+                auto filename = frame.source_range().filename();
+                builder.appendff("  in cell '{}', at line {}, column {}\n", filename.substring_view(5), frame.source_range().start.line, frame.source_range().start.column);
             }
         }
         return builder.to_byte_string();

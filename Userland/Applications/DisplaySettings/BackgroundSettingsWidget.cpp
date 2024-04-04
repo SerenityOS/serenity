@@ -87,8 +87,10 @@ ErrorOr<void> BackgroundSettingsWidget::create_frame()
     m_copy_action = GUI::CommonActions::make_copy_action(
         [this](auto&) {
             auto wallpaper = m_monitor_widget->wallpaper();
-            if (wallpaper.has_value())
-                GUI::Clipboard::the().set_data(URL::create_with_file_scheme(wallpaper.value().to_byte_string()).to_byte_string().bytes(), "text/uri-list");
+            if (wallpaper.has_value()) {
+                auto url = URL::create_with_file_scheme(wallpaper.value()).to_byte_string();
+                GUI::Clipboard::the().set_data(url.bytes(), "text/uri-list");
+            }
         },
         this);
     m_context_menu->add_action(*m_copy_action);

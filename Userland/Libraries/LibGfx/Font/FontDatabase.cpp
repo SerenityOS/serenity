@@ -118,7 +118,8 @@ void FontDatabase::load_all_fonts_from_uri(StringView uri)
     auto root = root_or_error.release_value();
 
     root->for_each_descendant_file([this](Core::Resource const& resource) -> IterationDecision {
-        auto path = LexicalPath(resource.uri().bytes_as_string_view());
+        auto uri = resource.uri();
+        auto path = LexicalPath(uri.bytes_as_string_view());
         if (path.has_extension(".font"sv)) {
             if (auto font_or_error = Gfx::BitmapFont::try_load_from_resource(resource); !font_or_error.is_error()) {
                 auto font = font_or_error.release_value();
