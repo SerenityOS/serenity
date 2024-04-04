@@ -23,6 +23,10 @@
 #include <QApplication>
 #include <QFileOpenEvent>
 
+#if defined(AK_OS_MACOS)
+#    include <Ladybird/MachPortServer.h>
+#endif
+
 namespace Ladybird {
 
 bool is_using_dark_system_theme(QWidget& widget)
@@ -125,6 +129,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(certificates, "Path to a certificate file", "certificate", 'C', "certificate");
     args_parser.parse(arguments);
 
+    WebView::ProcessManager::initialize();
+
+#if defined(AK_OS_MACOS)
+    auto mach_port_server = make<Ladybird::MachPortServer>();
+    set_mach_server_name(mach_port_server->server_port_name());
+    mach_port_server->on_receive_child_mach_port = [](auto pid, auto port) {
+        WebView::ProcessManager::the().add_process(pid, move(port));
+    };
+#endif
+
     RefPtr<WebView::Database> database;
 
     if (!disable_sql_database) {
@@ -157,8 +171,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         .use_lagom_networking = enable_qt_networking ? Ladybird::UseLagomNetworking::No : Ladybird::UseLagomNetworking::Yes,
         .wait_for_debugger = debug_web_content ? Ladybird::WaitForDebugger::Yes : Ladybird::WaitForDebugger::No,
     };
-
-    WebView::ProcessManager::initialize();
 
     Ladybird::BrowserWindow window(initial_urls, cookie_jar, web_content_options, webdriver_content_ipc_path);
     window.setWindowTitle("Ladybird");

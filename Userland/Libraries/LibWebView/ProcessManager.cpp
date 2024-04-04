@@ -80,6 +80,12 @@ void ProcessManager::initialize()
     MUST(Core::System::sigaction(SIGCHLD, &action, nullptr));
 
     the().add_process(WebView::ProcessType::Chrome, getpid());
+#ifdef AK_OS_MACH
+    auto self_send_port = mach_task_self();
+    auto res = mach_port_mod_refs(mach_task_self(), self_send_port, MACH_PORT_RIGHT_SEND, +1);
+    VERIFY(res == KERN_SUCCESS);
+    the().add_process(getpid(), Core::MachPort::adopt_right(self_send_port, Core::MachPort::PortRight::Send));
+#endif
 }
 
 void ProcessManager::add_process(ProcessType type, pid_t pid)

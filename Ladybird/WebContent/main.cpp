@@ -45,6 +45,10 @@
 #    endif
 #endif
 
+#if defined(AK_OS_MACOS)
+#    include <LibWebView/Platform/ProcessStatisticsMach.h>
+#endif
+
 static ErrorOr<void> load_content_filters();
 static ErrorOr<void> load_autoplay_allowlist();
 static ErrorOr<void> initialize_lagom_networking(Vector<ByteString> const& certificates);
@@ -78,6 +82,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     StringView command_line {};
     StringView executable_path {};
+    StringView mach_server_name {};
     Vector<ByteString> certificates;
     int webcontent_fd_passing_socket { -1 };
     bool is_layout_test_mode = false;
@@ -94,6 +99,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(use_lagom_networking, "Enable Lagom servers for networking", "use-lagom-networking", 0);
     args_parser.add_option(use_gpu_painting, "Enable GPU painting", "use-gpu-painting", 0);
     args_parser.add_option(wait_for_debugger, "Wait for debugger", "wait-for-debugger", 0);
+    args_parser.add_option(mach_server_name, "Mach server name", "mach-server-name", 0, "mach_server_name");
 
     args_parser.parse(arguments);
 
@@ -106,6 +112,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (use_gpu_painting) {
         WebContent::PageClient::set_use_gpu_painter();
     }
+
+#if defined(AK_OS_MACOS)
+    if (!mach_server_name.is_empty()) {
+        WebView::register_with_mach_server(mach_server_name);
+    }
+#endif
 
 #if defined(HAVE_QT)
     if (!use_lagom_networking)

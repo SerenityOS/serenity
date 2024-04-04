@@ -5,6 +5,7 @@
  */
 
 #include <BrowserSettings/Defaults.h>
+#include <Ladybird/MachPortServer.h>
 #include <Ladybird/Types.h>
 #include <Ladybird/Utilities.h>
 #include <LibCore/ArgsParser.h>
@@ -56,6 +57,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(certificates, "Path to a certificate file", "certificate", 'C', "certificate");
     args_parser.parse(arguments);
 
+    WebView::ProcessManager::initialize();
+
+    auto mach_port_server = make<Ladybird::MachPortServer>();
+    set_mach_server_name(mach_port_server->server_port_name());
+    mach_port_server->on_receive_child_mach_port = [](auto pid, auto port) {
+        WebView::ProcessManager::the().add_process(pid, move(port));
+    };
+
     auto sql_server_paths = TRY(get_paths_for_helper_process("SQLServer"sv));
     auto database = TRY(WebView::Database::create(move(sql_server_paths)));
     auto cookie_jar = TRY(WebView::CookieJar::create(*database));
@@ -81,8 +90,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         .use_lagom_networking = Ladybird::UseLagomNetworking::Yes,
         .wait_for_debugger = debug_web_content ? Ladybird::WaitForDebugger::Yes : Ladybird::WaitForDebugger::No,
     };
-
-    WebView::ProcessManager::initialize();
 
     auto* delegate = [[ApplicationDelegate alloc] init:move(initial_urls)
                                          newTabPageURL:move(new_tab_page_url)

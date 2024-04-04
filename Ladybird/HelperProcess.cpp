@@ -5,6 +5,7 @@
  */
 
 #include "HelperProcess.h"
+#include "Utilities.h"
 #include <LibCore/Environment.h>
 #include <LibWebView/ProcessManager.h>
 
@@ -64,6 +65,10 @@ ErrorOr<NonnullRefPtr<WebView::WebContentClient>> launch_web_content_process(
                 arguments.append("--use-gpu-painting"sv);
             if (web_content_options.wait_for_debugger == Ladybird::WaitForDebugger::Yes)
                 arguments.append("--wait-for-debugger"sv);
+            if (auto server = mach_server_name(); server.has_value()) {
+                arguments.append("--mach-server-name"sv);
+                arguments.append(server.value());
+            }
             Vector<ByteString> certificate_args;
             for (auto const& certificate : web_content_options.certificates) {
                 certificate_args.append(ByteString::formatted("--certificate={}", certificate));
