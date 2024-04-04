@@ -945,19 +945,18 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(Gener
     if (inputs.is_extended_reference_template_used)
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode EXTTEMPLATE yet");
 
-    if (inputs.gb_template == 0) {
-        if (inputs.adaptive_template_pixels[0].x != 3 || inputs.adaptive_template_pixels[0].y != -1
-            || inputs.adaptive_template_pixels[1].x != -3 || inputs.adaptive_template_pixels[1].y != -1
-            || inputs.adaptive_template_pixels[2].x != 2 || inputs.adaptive_template_pixels[2].y != -2
-            || inputs.adaptive_template_pixels[3].x != -2 || inputs.adaptive_template_pixels[3].y != -2)
-            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot handle custom adaptive pixels yet");
-    } else if (inputs.gb_template == 1) {
-        if (inputs.adaptive_template_pixels[0].x != 3 || inputs.adaptive_template_pixels[0].y != -1)
-            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot handle custom adaptive pixels yet");
-    } else {
-        VERIFY(inputs.gb_template == 2 || inputs.gb_template == 3);
-        if (inputs.adaptive_template_pixels[0].x != 2 || inputs.adaptive_template_pixels[0].y != -1)
-            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot handle custom adaptive pixels yet");
+    // Figure 7 – Field to which AT pixel locations are restricted
+    int number_of_adaptive_template_pixels = 0;
+    if (inputs.gb_template == 0)
+        number_of_adaptive_template_pixels = 4;
+    else
+        number_of_adaptive_template_pixels = 1;
+    for (int i = 0; i < number_of_adaptive_template_pixels; ++i) {
+        // Don't have to check < -127 or > 127: The offsets are stored in an i8, so they can't be out of those bounds.
+        if (inputs.adaptive_template_pixels[i].y > 0)
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Adaptive pixel y too big");
+        if (inputs.adaptive_template_pixels[i].y == 0 && inputs.adaptive_template_pixels[i].x > -1)
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Adaptive pixel x too big");
     }
 
     if (inputs.skip_pattern.has_value())
@@ -972,23 +971,26 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(Gener
     };
 
     // Figure 3(a) – Template when GBTEMPLATE = 0 and EXTTEMPLATE = 0,
-    constexpr auto compute_context_0 = [](NonnullOwnPtr<BitBuffer> const& buffer, int x, int y) -> u16 {
+    constexpr auto compute_context_0 = [](NonnullOwnPtr<BitBuffer> const& buffer, ReadonlySpan<AdaptiveTemplatePixel> adaptive_pixels, int x, int y) -> u16 {
         u16 result = 0;
+        for (int i = 0; i < 4; ++i)
+            result = (result << 1) | (u16)get_pixel(buffer, x + adaptive_pixels[i].x, y + adaptive_pixels[i].y);
+        for (int i = 0; i < 3; ++i)
+            result = (result << 1) | (u16)get_pixel(buffer, x - 1 + i, y - 2);
         for (int i = 0; i < 5; ++i)
-            result = (result << 1) | (u16)get_pixel(buffer, x - 2 + i, y - 2);
-        for (int i = 0; i < 7; ++i)
-            result = (result << 1) | (u16)get_pixel(buffer, x - 3 + i, y - 1);
+            result = (result << 1) | (u16)get_pixel(buffer, x - 2 + i, y - 1);
         for (int i = 0; i < 4; ++i)
             result = (result << 1) | (u16)get_pixel(buffer, x - 4 + i, y);
         return result;
     };
 
     // Figure 4 – Template when GBTEMPLATE = 1
-    auto compute_context_1 = [](NonnullOwnPtr<BitBuffer> const& buffer, int x, int y) -> u16 {
+    auto compute_context_1 = [](NonnullOwnPtr<BitBuffer> const& buffer, ReadonlySpan<AdaptiveTemplatePixel> adaptive_pixels, int x, int y) -> u16 {
         u16 result = 0;
+        result = (result << 1) | (u16)get_pixel(buffer, x + adaptive_pixels[0].x, y + adaptive_pixels[0].y);
         for (int i = 0; i < 4; ++i)
             result = (result << 1) | (u16)get_pixel(buffer, x - 1 + i, y - 2);
-        for (int i = 0; i < 6; ++i)
+        for (int i = 0; i < 5; ++i)
             result = (result << 1) | (u16)get_pixel(buffer, x - 2 + i, y - 1);
         for (int i = 0; i < 3; ++i)
             result = (result << 1) | (u16)get_pixel(buffer, x - 3 + i, y);
@@ -996,11 +998,12 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(Gener
     };
 
     // Figure 5 – Template when GBTEMPLATE = 2
-    auto compute_context_2 = [](NonnullOwnPtr<BitBuffer> const& buffer, int x, int y) -> u16 {
+    auto compute_context_2 = [](NonnullOwnPtr<BitBuffer> const& buffer, ReadonlySpan<AdaptiveTemplatePixel> adaptive_pixels, int x, int y) -> u16 {
         u16 result = 0;
+        result = (result << 1) | (u16)get_pixel(buffer, x + adaptive_pixels[0].x, y + adaptive_pixels[0].y);
         for (int i = 0; i < 3; ++i)
             result = (result << 1) | (u16)get_pixel(buffer, x - 1 + i, y - 2);
-        for (int i = 0; i < 5; ++i)
+        for (int i = 0; i < 4; ++i)
             result = (result << 1) | (u16)get_pixel(buffer, x - 2 + i, y - 1);
         for (int i = 0; i < 2; ++i)
             result = (result << 1) | (u16)get_pixel(buffer, x - 2 + i, y);
@@ -1008,16 +1011,17 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(Gener
     };
 
     // Figure 6 – Template when GBTEMPLATE = 3
-    auto compute_context_3 = [](NonnullOwnPtr<BitBuffer> const& buffer, int x, int y) -> u16 {
+    auto compute_context_3 = [](NonnullOwnPtr<BitBuffer> const& buffer, ReadonlySpan<AdaptiveTemplatePixel> adaptive_pixels, int x, int y) -> u16 {
         u16 result = 0;
-        for (int i = 0; i < 6; ++i)
+        result = (result << 1) | (u16)get_pixel(buffer, x + adaptive_pixels[0].x, y + adaptive_pixels[0].y);
+        for (int i = 0; i < 5; ++i)
             result = (result << 1) | (u16)get_pixel(buffer, x - 3 + i, y - 1);
         for (int i = 0; i < 4; ++i)
             result = (result << 1) | (u16)get_pixel(buffer, x - 4 + i, y);
         return result;
     };
 
-    u16 (*compute_context)(NonnullOwnPtr<BitBuffer> const&, int, int);
+    u16 (*compute_context)(NonnullOwnPtr<BitBuffer> const&, ReadonlySpan<AdaptiveTemplatePixel>, int, int);
     if (inputs.gb_template == 0)
         compute_context = compute_context_0;
     else if (inputs.gb_template == 1)
@@ -1076,7 +1080,7 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(Gener
         }
 
         for (size_t x = 0; x < inputs.region_width; ++x) {
-            u16 context = compute_context(result, x, y);
+            u16 context = compute_context(result, inputs.adaptive_template_pixels, x, y);
             bool bit = decoder.get_next_bit(contexts[context]);
             result->set_bit(x, y, bit);
         }
