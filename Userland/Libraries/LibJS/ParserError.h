@@ -19,7 +19,7 @@ struct ParserError {
     ByteString message;
     Optional<Position> position;
 
-    ErrorOr<String> to_string() const;
+    String to_string() const;
     ByteString to_byte_string() const;
     ByteString source_location_hint(StringView source, char const spacer = ' ', char const indicator = '^') const;
 };

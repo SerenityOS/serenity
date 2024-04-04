@@ -12,11 +12,11 @@
 
 namespace JS {
 
-ErrorOr<String> ParserError::to_string() const
+String ParserError::to_string() const
 {
     if (!position.has_value())
-        return String::from_byte_string(message);
-    return String::formatted("{} (line: {}, column: {})", message, position.value().line, position.value().column);
+        return MUST(String::from_byte_string(message));
+    return MUST(String::formatted("{} (line: {}, column: {})", message, position.value().line, position.value().column));
 }
 
 ByteString ParserError::to_byte_string() const
