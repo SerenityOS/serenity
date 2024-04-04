@@ -75,7 +75,7 @@ static ErrorOr<void> launch_server(ByteString const& socket_path, ByteString con
 
         if (server_pid != 0) {
             auto server_pid_file = TRY(Core::File::open(pid_path, Core::File::OpenMode::Write));
-            TRY(server_pid_file->write_until_depleted(ByteString::number(server_pid).bytes()));
+            TRY(server_pid_file->write_until_depleted(ByteString::number(server_pid)));
 
             TRY(Core::System::kill(getpid(), SIGTERM));
         }

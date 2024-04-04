@@ -320,7 +320,7 @@ void write_per_file(HashMap<size_t, TestResult> const& result_map, Vector<ByteSt
     complete_results.set("duration", time_taken_in_ms / 1000.);
     complete_results.set("results", result_object);
 
-    if (file->write_until_depleted(complete_results.to_byte_string().bytes()).is_error())
+    if (file->write_until_depleted(complete_results.to_byte_string()).is_error())
         warnln("Failed to write per-file");
     file->close();
 }

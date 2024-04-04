@@ -249,7 +249,7 @@ ErrorOr<Vector<Color>> PaletteWidget::load_palette_path(ByteString const& file_p
 ErrorOr<void> PaletteWidget::save_palette_file(Vector<Color> palette, NonnullOwnPtr<Core::File> file)
 {
     for (auto& color : palette) {
-        TRY(file->write_until_depleted(color.to_byte_string_without_alpha().bytes()));
+        TRY(file->write_until_depleted(color.to_byte_string_without_alpha()));
         TRY(file->write_until_depleted({ "\n", 1 }));
     }
     return {};

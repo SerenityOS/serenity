@@ -119,7 +119,7 @@ ErrorOr<void> XtermSuggestionDisplay::display(SuggestionManager const& manager)
             TRY(stderr_stream->write_until_depleted(suggestion.display_trivia_string().bytes()));
         } else {
             auto field = ByteString::formatted("{: <{}}  {}", suggestion.text_string(), longest_suggestion_byte_length_without_trivia, suggestion.display_trivia_string());
-            TRY(stderr_stream->write_until_depleted(ByteString::formatted("{: <{}}", field, longest_suggestion_byte_length + 2).bytes()));
+            TRY(stderr_stream->write_until_depleted(ByteString::formatted("{: <{}}", field, longest_suggestion_byte_length + 2)));
             num_printed += longest_suggestion_length + 2;
         }
 

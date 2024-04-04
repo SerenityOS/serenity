@@ -135,7 +135,7 @@ ErrorOr<void> ProjectBuilder::initialize_build_directory()
         MUST(FileSystem::remove(cmake_file_path, FileSystem::RecursionMode::Disallowed));
 
     auto cmake_file = TRY(Core::File::open(cmake_file_path, Core::File::OpenMode::Write));
-    TRY(cmake_file->write_until_depleted(generate_cmake_file_content().bytes()));
+    TRY(cmake_file->write_until_depleted(generate_cmake_file_content()));
 
     TRY(m_terminal->run_command(ByteString::formatted("cmake -S {} -DHACKSTUDIO_BUILD=ON -DHACKSTUDIO_BUILD_CMAKE_FILE={}"
                                                       " -DENABLE_UNICODE_DATABASE_DOWNLOAD=OFF",

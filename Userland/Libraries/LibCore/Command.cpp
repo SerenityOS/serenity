@@ -85,7 +85,7 @@ ErrorOr<void> Command::write_lines(Span<ByteString> lines)
     });
 
     for (ByteString const& line : lines)
-        TRY(m_stdin->write_until_depleted(ByteString::formatted("{}\n", line).bytes()));
+        TRY(m_stdin->write_until_depleted(ByteString::formatted("{}\n", line)));
 
     return {};
 }

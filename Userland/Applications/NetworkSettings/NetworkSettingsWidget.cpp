@@ -165,7 +165,7 @@ ErrorOr<void> NetworkSettingsWidget::apply_settings_impl()
         (void)TRY(Core::System::posix_spawn("/bin/Escalator"sv, &file_actions, nullptr, const_cast<char**>(argv), environ));
 
         auto outfile = TRY(Core::File::adopt_fd(pipefds[1], Core::File::OpenMode::Write, Core::File::ShouldCloseFileDescriptor::No));
-        TRY(outfile->write_until_depleted(json.serialized<StringBuilder>().bytes()));
+        TRY(outfile->write_until_depleted(json.serialized<StringBuilder>()));
     }
 
     return {};
