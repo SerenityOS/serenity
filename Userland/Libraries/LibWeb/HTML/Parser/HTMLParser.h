@@ -51,7 +51,7 @@ public:
 
     static JS::NonnullGCPtr<HTMLParser> create_for_scripting(DOM::Document&);
     static JS::NonnullGCPtr<HTMLParser> create_with_uncertain_encoding(DOM::Document&, ByteBuffer const& input);
-    static JS::NonnullGCPtr<HTMLParser> create(DOM::Document&, StringView input, ByteString const& encoding);
+    static JS::NonnullGCPtr<HTMLParser> create(DOM::Document&, StringView input, StringView encoding);
 
     void run(HTMLTokenizer::StopAtInsertionPoint = HTMLTokenizer::StopAtInsertionPoint::No);
     void run(const URL::URL&, HTMLTokenizer::StopAtInsertionPoint = HTMLTokenizer::StopAtInsertionPoint::No);
@@ -84,7 +84,7 @@ public:
     size_t script_nesting_level() const { return m_script_nesting_level; }
 
 private:
-    HTMLParser(DOM::Document&, StringView input, ByteString const& encoding);
+    HTMLParser(DOM::Document&, StringView input, StringView encoding);
     HTMLParser(DOM::Document&);
 
     virtual void visit_edges(Cell::Visitor&) override;

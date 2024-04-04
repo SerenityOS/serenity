@@ -77,7 +77,7 @@ static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOM::Document>> load_markdown_docume
             if (!markdown_document)
                 return;
 
-            auto parser = HTML::HTMLParser::create(document, markdown_document->render_to_html(extra_head_contents), "utf-8");
+            auto parser = HTML::HTMLParser::create(document, markdown_document->render_to_html(extra_head_contents), "utf-8"sv);
             parser->run(url);
         };
 

@@ -53,7 +53,7 @@ JS::NonnullGCPtr<DOM::Document> DOMParser::parse_from_string(StringView string, 
         // 2. Create an HTML parser parser, associated with document.
         // 3. Place string into the input stream for parser. The encoding confidence is irrelevant.
         // FIXME: We don't have the concept of encoding confidence yet.
-        auto parser = HTMLParser::create(*document, string, "UTF-8");
+        auto parser = HTMLParser::create(*document, string, "UTF-8"sv);
 
         // 4. Start parser and let it run until it has consumed all the characters just inserted into the input stream.
         // FIXME: This is to match the default URL. Instead, pass in this's relevant global object's associated Document's URL.

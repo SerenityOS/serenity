@@ -1127,7 +1127,7 @@ WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(
             // FIXME: Add error message to generated error page
             auto error_html = load_error_page(entry->url()).release_value_but_fixme_should_propagate_errors();
             entry->document_state()->set_document(create_document_for_inline_content(this, navigation_id, [error_html](auto& document) {
-                auto parser = HTML::HTMLParser::create(document, error_html, "utf-8");
+                auto parser = HTML::HTMLParser::create(document, error_html, "utf-8"sv);
                 document.set_url(URL::URL("about:error"));
                 parser->run();
             }));
