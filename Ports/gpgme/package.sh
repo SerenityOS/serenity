@@ -18,3 +18,7 @@ configopts=(
     "--with-libassuan-prefix=${SERENITY_INSTALL_ROOT}/usr/local"
     "--with-sysroot=${SERENITY_INSTALL_ROOT}"
 )
+
+post_install() {
+    run sed -i 's#/usr/local#${CMAKE_SYSROOT}/usr/local#g' ${SERENITY_INSTALL_ROOT}/usr/local/lib/cmake/Gpgmepp/GpgmeppConfig.cmake
+}
