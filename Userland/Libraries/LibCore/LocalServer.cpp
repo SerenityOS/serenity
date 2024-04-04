@@ -133,7 +133,7 @@ ErrorOr<NonnullOwnPtr<LocalSocket>> LocalServer::accept()
     (void)fcntl(accepted_fd, F_SETFD, FD_CLOEXEC);
 #endif
 
-    return LocalSocket::adopt_fd(accepted_fd, Socket::PreventSIGPIPE::Yes);
+    return LocalSocket::adopt_fd(accepted_fd);
 }
 
 }
