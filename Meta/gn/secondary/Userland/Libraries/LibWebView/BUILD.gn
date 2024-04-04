@@ -154,6 +154,8 @@ shared_library("LibWebView") {
     ]
   } else if (current_os == "linux") {
     sources += [ "Platform/ProcessStatisticsLinux.cpp" ]
+  } else if (current_os == "mac") {
+    sources += [ "Platform/ProcessStatisticsMach.cpp" ]
   } else {
     sources += [ "Platform/ProcessStatisticsNoop.cpp" ]
   }

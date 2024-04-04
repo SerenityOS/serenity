@@ -145,7 +145,10 @@ executable("ladybird_executable") {
     ]
   }
 
-  if (current_os != "mac") {
+  if (current_os == "mac") {
+    sources += [ "MachPortServer.cpp" ]
+    deps += [ "//Userland/Libraries/LibThreading" ]
+  } else {
     data_deps += [
       ":ladybird_copy_config_resources",
       ":ladybird_copy_emoji",

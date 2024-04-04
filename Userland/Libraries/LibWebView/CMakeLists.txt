@@ -31,6 +31,10 @@ elseif(LINUX AND NOT ANDROID)
     list(APPEND SOURCES
         Platform/ProcessStatisticsLinux.cpp
     )
+elseif(APPLE)
+    list(APPEND SOURCES
+        Platform/ProcessStatisticsMach.cpp
+    )
 else()
     list(APPEND SOURCES
         Platform/ProcessStatisticsNoop.cpp
