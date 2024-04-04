@@ -77,7 +77,7 @@ ErrorOr<String> String::repeated(u32 code_point, size_t count)
     return result;
 }
 
-StringView String::bytes_as_string_view() const
+StringView String::bytes_as_string_view() const&
 {
     return StringView(bytes());
 }
@@ -197,7 +197,7 @@ u32 String::ascii_case_insensitive_hash() const
     return case_insensitive_string_hash(reinterpret_cast<char const*>(bytes().data()), bytes().size());
 }
 
-Utf8View String::code_points() const
+Utf8View String::code_points() const&
 {
     return Utf8View(bytes_as_string_view());
 }

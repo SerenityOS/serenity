@@ -107,13 +107,15 @@ public:
     ErrorOr<String> substring_from_byte_offset_with_shared_superstring(size_t start) const;
 
     // Returns an iterable view over the Unicode code points.
-    [[nodiscard]] Utf8View code_points() const;
+    [[nodiscard]] Utf8View code_points() const&;
+    [[nodiscard]] Utf8View code_points() const&& = delete;
 
     // Returns true if the String is zero-length.
     [[nodiscard]] bool is_empty() const;
 
     // Returns a StringView covering the full length of the string. Note that iterating this will go byte-at-a-time, not code-point-at-a-time.
-    [[nodiscard]] StringView bytes_as_string_view() const;
+    [[nodiscard]] StringView bytes_as_string_view() const&;
+    [[nodiscard]] StringView bytes_as_string_view() const&& = delete;
 
     [[nodiscard]] size_t count(StringView needle) const { return StringUtils::count(bytes_as_string_view(), needle); }
 
