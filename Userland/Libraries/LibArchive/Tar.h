@@ -84,7 +84,8 @@ static void set_field(char (&field)[N], TSource&& source)
 template<class TSource, size_t N>
 static ErrorOr<void> set_octal_field(char (&field)[N], TSource&& source)
 {
-    set_field(field, TRY(String::formatted("{:o}", forward<TSource>(source))).bytes_as_string_view());
+    auto octal = TRY(String::formatted("{:o}", forward<TSource>(source)));
+    set_field(field, octal.bytes_as_string_view());
     return {};
 }
 

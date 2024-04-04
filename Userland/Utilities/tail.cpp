@@ -148,7 +148,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                     if (line_index >= wanted_line_count)
                         line.append(ch);
                 }
-                out("{}", line.to_byte_string().substring_view(1, line.length() - 1));
+
+                auto line_string = line.to_byte_string();
+                out("{}", line_string.substring_view(1, line.length() - 1));
+
                 continue;
             }
 

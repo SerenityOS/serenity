@@ -101,7 +101,7 @@ ErrorOr<NonnullRefPtr<Node const>> Node::try_find_from_help_url(URL::URL const& 
         child_node_found = false;
         auto children = TRY(current_node->children());
         for (auto const& child : children) {
-            if (TRY(child->name()) == url.path_segment_at_index(i).view()) {
+            if (auto path = url.path_segment_at_index(i); TRY(child->name()) == path.view()) {
                 child_node_found = true;
                 current_node = child;
                 break;

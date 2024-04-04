@@ -171,7 +171,7 @@ void do_copy(Vector<ByteString> const& selected_file_paths, FileOperation file_o
         auto url = URL::create_with_file_scheme(path);
         copy_text.appendff("{}\n", url);
     }
-    GUI::Clipboard::the().set_data(copy_text.to_byte_string().bytes(), "text/uri-list");
+    GUI::Clipboard::the().set_data(copy_text.string_view().bytes(), "text/uri-list");
 }
 
 void do_paste(ByteString const& target_directory, GUI::Window* window)

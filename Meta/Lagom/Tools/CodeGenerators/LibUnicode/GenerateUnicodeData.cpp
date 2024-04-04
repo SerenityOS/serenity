@@ -370,7 +370,7 @@ static ErrorOr<void> parse_prop_list(Core::InputBufferedFile& file, PropList& pr
             properties = { segments[1].trim_whitespace() };
 
         for (auto& property : properties) {
-            auto& code_points = prop_list.ensure(sanitize_property ? sanitize_entry(property).trim_whitespace().view() : property.trim_whitespace());
+            auto& code_points = prop_list.ensure(sanitize_property ? sanitize_entry(property).trim_whitespace() : ByteString { property.trim_whitespace() });
             code_points.append(code_point_range);
         }
     }
@@ -490,11 +490,11 @@ static ErrorOr<void> parse_value_alias_list(Core::InputBufferedFile& file, Strin
         VERIFY((segments.size() == 3) || (segments.size() == 4));
         auto value = primary_value_is_first ? segments[1].trim_whitespace() : segments[2].trim_whitespace();
         auto alias = primary_value_is_first ? segments[2].trim_whitespace() : segments[1].trim_whitespace();
-        append_alias(sanitize_alias ? sanitize_entry(alias).view() : alias, value);
+        append_alias(sanitize_alias ? sanitize_entry(alias) : ByteString { alias }, value);
 
         if (segments.size() == 4) {
             alias = segments[3].trim_whitespace();
-            append_alias(sanitize_alias ? sanitize_entry(alias).view() : alias, value);
+            append_alias(sanitize_alias ? sanitize_entry(alias) : ByteString { alias }, value);
         }
     }
 

@@ -219,7 +219,7 @@ void WebSocket::send_client_handshake()
     builder.append("\r\n"sv);
 
     m_state = WebSocket::InternalState::WaitingForServerHandshake;
-    auto success = m_impl->send(builder.to_byte_string().bytes());
+    auto success = m_impl->send(builder.string_view().bytes());
     VERIFY(success);
 }
 

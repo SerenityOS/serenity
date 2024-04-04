@@ -189,7 +189,9 @@ FileFilter HTMLInputElement::parse_accept_attribute() const
 
     // If specified, the attribute must consist of a set of comma-separated tokens, each of which must be an ASCII
     // case-insensitive match for one of the following:
-    get_attribute_value(HTML::AttributeNames::accept).bytes_as_string_view().for_each_split_view(',', SplitBehavior::Nothing, [&](StringView value) {
+    auto accept = get_attribute_value(HTML::AttributeNames::accept);
+
+    accept.bytes_as_string_view().for_each_split_view(',', SplitBehavior::Nothing, [&](StringView value) {
         // The string "audio/*"
         //     Indicates that sound files are accepted.
         if (value.equals_ignoring_ascii_case("audio/*"sv))
