@@ -74,7 +74,7 @@ void HTMLMediaElement::finalize()
 }
 
 // https://html.spec.whatwg.org/multipage/media.html#queue-a-media-element-task
-void HTMLMediaElement::queue_a_media_element_task(JS::SafeFunction<void()> steps)
+void HTMLMediaElement::queue_a_media_element_task(Function<void()> steps)
 {
     // To queue a media element task with a media element element and a series of steps steps, queue an element task on the media element's
     // media element event task source given element and steps.
@@ -469,16 +469,14 @@ double HTMLMediaElement::effective_media_volume() const
 // https://html.spec.whatwg.org/multipage/media.html#media-element-load-algorithm
 WebIDL::ExceptionOr<void> HTMLMediaElement::load_element()
 {
-    auto& vm = this->vm();
-
     m_first_data_load_event_since_load_start = true;
 
     // FIXME: 1. Abort any already-running instance of the resource selection algorithm for this element.
 
     // 2. Let pending tasks be a list of all tasks from the media element's media element event task source in one of the task queues.
-    [[maybe_unused]] auto pending_tasks = TRY_OR_THROW_OOM(vm, HTML::main_thread_event_loop().task_queue().take_tasks_matching([&](auto& task) {
+    [[maybe_unused]] auto pending_tasks = HTML::main_thread_event_loop().task_queue().take_tasks_matching([&](auto& task) {
         return task.source() == media_element_event_task_source();
-    }));
+    });
 
     // FIXME: 3. For each task in pending tasks that would resolve pending play promises or reject pending play promises, immediately resolve or
     //           reject those promises in the order the corresponding tasks were queued.

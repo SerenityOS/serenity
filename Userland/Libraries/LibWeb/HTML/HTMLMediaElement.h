@@ -40,7 +40,8 @@ public:
 
     virtual bool is_focusable() const override { return true; }
 
-    void queue_a_media_element_task(JS::SafeFunction<void()> steps);
+    // NOTE: The function is wrapped in a JS::HeapFunction immediately.
+    void queue_a_media_element_task(Function<void()>);
 
     JS::GCPtr<MediaError> error() const { return m_error; }
     WebIDL::ExceptionOr<void> set_decoder_error(String error_message);

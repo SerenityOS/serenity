@@ -22,12 +22,23 @@
 namespace Web::HTML {
 
 EventLoop::EventLoop()
-    : m_task_queue(*this)
-    , m_microtask_queue(*this)
 {
+    m_task_queue = heap().allocate_without_realm<TaskQueue>(*this);
+    m_microtask_queue = heap().allocate_without_realm<TaskQueue>(*this);
 }
 
 EventLoop::~EventLoop() = default;
+
+void EventLoop::visit_edges(Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_task_queue);
+    visitor.visit(m_microtask_queue);
+    visitor.visit(m_currently_running_task);
+
+    for (auto& settings : m_backup_incumbent_settings_object_stack)
+        visitor.visit(settings);
+}
 
 void EventLoop::schedule()
 {
@@ -41,15 +52,9 @@ void EventLoop::schedule()
         m_system_event_loop_timer->restart();
 }
 
-void EventLoop::set_vm(JS::VM& vm)
-{
-    VERIFY(!m_vm);
-    m_vm = &vm;
-}
-
 EventLoop& main_thread_event_loop()
 {
-    return static_cast<Bindings::WebEngineCustomData*>(Bindings::main_thread_vm().custom_data())->event_loop;
+    return *static_cast<Bindings::WebEngineCustomData*>(Bindings::main_thread_vm().custom_data())->event_loop;
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#spin-the-event-loop
@@ -62,8 +67,9 @@ void EventLoop::spin_until(JS::SafeFunction<bool()> goal_condition)
 
     // 3. Let old stack be a copy of the JavaScript execution context stack.
     // 4. Empty the JavaScript execution context stack.
-    m_vm->save_execution_context_stack();
-    m_vm->clear_execution_context_stack();
+    auto& vm = this->vm();
+    vm.save_execution_context_stack();
+    vm.clear_execution_context_stack();
 
     // 5. Perform a microtask checkpoint.
     perform_a_microtask_checkpoint();
@@ -78,7 +84,7 @@ void EventLoop::spin_until(JS::SafeFunction<bool()> goal_condition)
     Platform::EventLoopPlugin::the().spin_until([&] {
         if (goal_condition())
             return true;
-        if (m_task_queue.has_runnable_tasks()) {
+        if (m_task_queue->has_runnable_tasks()) {
             schedule();
             // FIXME: Remove the platform event loop plugin so that this doesn't look out of place
             Core::EventLoop::current().wake();
@@ -86,7 +92,7 @@ void EventLoop::spin_until(JS::SafeFunction<bool()> goal_condition)
         return goal_condition();
     });
 
-    m_vm->restore_execution_context_stack();
+    vm.restore_execution_context_stack();
 
     // 7. Stop task, allowing whatever algorithm that invoked it to resume.
     // NOTE: This is achieved by returning from the function.
@@ -94,8 +100,9 @@ void EventLoop::spin_until(JS::SafeFunction<bool()> goal_condition)
 
 void EventLoop::spin_processing_tasks_with_source_until(Task::Source source, JS::SafeFunction<bool()> goal_condition)
 {
-    m_vm->save_execution_context_stack();
-    m_vm->clear_execution_context_stack();
+    auto& vm = this->vm();
+    vm.save_execution_context_stack();
+    vm.clear_execution_context_stack();
 
     perform_a_microtask_checkpoint();
 
@@ -105,12 +112,12 @@ void EventLoop::spin_processing_tasks_with_source_until(Task::Source source, JS:
     Platform::EventLoopPlugin::the().spin_until([&] {
         if (goal_condition())
             return true;
-        if (m_task_queue.has_runnable_tasks()) {
-            auto tasks = m_task_queue.take_tasks_matching([&](auto& task) {
+        if (m_task_queue->has_runnable_tasks()) {
+            auto tasks = m_task_queue->take_tasks_matching([&](auto& task) {
                 return task.source() == source && task.is_runnable();
             });
 
-            for (auto& task : tasks.value()) {
+            for (auto& task : tasks) {
                 m_currently_running_task = task.ptr();
                 task->execute();
                 m_currently_running_task = nullptr;
@@ -126,7 +133,7 @@ void EventLoop::spin_processing_tasks_with_source_until(Task::Source source, JS:
 
     schedule();
 
-    m_vm->restore_execution_context_stack();
+    vm.restore_execution_context_stack();
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#event-loop-processing-model
@@ -138,7 +145,7 @@ void EventLoop::process()
     // An event loop must continually run through the following steps for as long as it exists:
 
     // 1. Let oldestTask be null.
-    OwnPtr<Task> oldest_task;
+    JS::GCPtr<Task> oldest_task;
 
     // 2. Let taskStartTime be the current high resolution time.
     // FIXME: 'current high resolution time' in hr-time-3 takes a global object,
@@ -149,7 +156,7 @@ void EventLoop::process()
     // 3. Let taskQueue be one of the event loop's task queues, chosen in an implementation-defined manner,
     //    with the constraint that the chosen task queue must contain at least one runnable task.
     //    If there is no such task queue, then jump to the microtasks step below.
-    auto& task_queue = m_task_queue;
+    auto& task_queue = *m_task_queue;
 
     // 4. Set oldestTask to the first runnable task in taskQueue, and remove it from taskQueue.
     oldest_task = task_queue.take_first_runnable();
@@ -333,7 +340,7 @@ void EventLoop::process()
     // - this event loop's microtask queue is empty
     // - hasARenderingOpportunity is false
     // FIXME: has_a_rendering_opportunity is always true
-    if (m_type == Type::Window && !task_queue.has_runnable_tasks() && m_microtask_queue.is_empty() /*&& !has_a_rendering_opportunity*/) {
+    if (m_type == Type::Window && !task_queue.has_runnable_tasks() && m_microtask_queue->is_empty() /*&& !has_a_rendering_opportunity*/) {
         // 1. Set this event loop's last idle period start time to the current high resolution time.
         m_last_idle_period_start_time = HighResolutionTime::unsafe_shared_current_time();
 
@@ -356,7 +363,7 @@ void EventLoop::process()
     // FIXME:     2. If there are no tasks in the event loop's task queues and the WorkerGlobalScope object's closing flag is true, then destroy the event loop, aborting these steps, resuming the run a worker steps described in the Web workers section below.
 
     // If there are eligible tasks in the queue, schedule a new round of processing. :^)
-    if (m_task_queue.has_runnable_tasks() || (!m_microtask_queue.is_empty() && !m_performing_a_microtask_checkpoint))
+    if (m_task_queue->has_runnable_tasks() || (!m_microtask_queue->is_empty() && !m_performing_a_microtask_checkpoint))
         schedule();
 
     // For each doc of docs, process top layer removals given doc.
@@ -366,7 +373,7 @@ void EventLoop::process()
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#queue-a-global-task
-int queue_global_task(HTML::Task::Source source, JS::Object& global_object, JS::SafeFunction<void()> steps)
+int queue_global_task(HTML::Task::Source source, JS::Object& global_object, Function<void()> steps)
 {
     // 1. Let event loop be global's relevant agent's event loop.
     auto& global_custom_data = verify_cast<Bindings::WebEngineCustomData>(*global_object.vm().custom_data());
@@ -380,13 +387,14 @@ int queue_global_task(HTML::Task::Source source, JS::Object& global_object, JS::
     }
 
     // 3. Queue a task given source, event loop, document, and steps.
-    event_loop.task_queue().add(HTML::Task::create(source, document, move(steps)));
+    auto& vm = global_object.vm();
+    event_loop->task_queue().add(HTML::Task::create(vm, source, document, JS::create_heap_function(vm.heap(), move(steps))));
 
-    return event_loop.task_queue().last_added_task()->id();
+    return event_loop->task_queue().last_added_task()->id();
 }
 
 // https://html.spec.whatwg.org/#queue-a-microtask
-void queue_a_microtask(DOM::Document const* document, JS::SafeFunction<void()> steps)
+void queue_a_microtask(DOM::Document const* document, Function<void()> steps)
 {
     // 1. If event loop was not given, set event loop to the implied event loop.
     auto& event_loop = HTML::main_thread_event_loop();
@@ -397,12 +405,13 @@ void queue_a_microtask(DOM::Document const* document, JS::SafeFunction<void()> s
     // 4. Set microtask's steps to steps.
     // 5. Set microtask's source to the microtask task source.
     // 6. Set microtask's document to document.
-    auto microtask = HTML::Task::create(HTML::Task::Source::Microtask, document, move(steps));
+    auto& vm = event_loop.vm();
+    auto microtask = HTML::Task::create(vm, HTML::Task::Source::Microtask, document, JS::create_heap_function(vm.heap(), move(steps)));
 
     // FIXME: 7. Set microtask's script evaluation environment settings object set to an empty set.
 
     // 8. Enqueue microtask on event loop's microtask queue.
-    event_loop.microtask_queue().enqueue(move(microtask));
+    event_loop.microtask_queue().enqueue(microtask);
 }
 
 void perform_a_microtask_checkpoint()
@@ -421,9 +430,9 @@ void EventLoop::perform_a_microtask_checkpoint()
     m_performing_a_microtask_checkpoint = true;
 
     // 3. While the event loop's microtask queue is not empty:
-    while (!m_microtask_queue.is_empty()) {
+    while (!m_microtask_queue->is_empty()) {
         // 1. Let oldestMicrotask be the result of dequeuing from the event loop's microtask queue.
-        auto oldest_microtask = m_microtask_queue.dequeue();
+        auto oldest_microtask = m_microtask_queue->dequeue();
 
         // 2. Set the event loop's currently running task to oldestMicrotask.
         m_currently_running_task = oldest_microtask;
@@ -486,12 +495,12 @@ EnvironmentSettingsObject& EventLoop::top_of_backup_incumbent_settings_object_st
 
 void EventLoop::register_environment_settings_object(Badge<EnvironmentSettingsObject>, EnvironmentSettingsObject& environment_settings_object)
 {
-    m_related_environment_settings_objects.append(environment_settings_object);
+    m_related_environment_settings_objects.append(&environment_settings_object);
 }
 
 void EventLoop::unregister_environment_settings_object(Badge<EnvironmentSettingsObject>, EnvironmentSettingsObject& environment_settings_object)
 {
-    bool did_remove = m_related_environment_settings_objects.remove_first_matching([&](auto& entry) { return entry.ptr() == &environment_settings_object; });
+    bool did_remove = m_related_environment_settings_objects.remove_first_matching([&](auto& entry) { return entry == &environment_settings_object; });
     VERIFY(did_remove);
 }
 

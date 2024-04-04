@@ -3166,7 +3166,7 @@ void Document::unload(JS::GCPtr<Document>)
     auto intend_to_store_in_bfcache = false;
 
     // 6. Let eventLoop be oldDocument's relevant agent's event loop.
-    auto& event_loop = verify_cast<Bindings::WebEngineCustomData>(*vm.custom_data()).event_loop;
+    auto& event_loop = *verify_cast<Bindings::WebEngineCustomData>(*vm.custom_data()).event_loop;
 
     // 7. Increase eventLoop's termination nesting level by 1.
     event_loop.increment_termination_nesting_level();

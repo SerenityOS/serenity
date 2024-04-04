@@ -1097,7 +1097,7 @@ void Animation::update_finished_state(DidSeek did_seek, SynchronouslyNotify sync
     //    steps:
     if (current_finished_state && !m_is_finished) {
         // 1. Let finish notification steps refer to the following procedure:
-        JS::SafeFunction<void()> finish_notification_steps = [&]() {
+        auto finish_notification_steps = JS::create_heap_function(heap(), [this, &realm]() {
             // 1. If animation’s play state is not equal to finished, abort these steps.
             if (play_state() != Bindings::AnimationPlayState::Finished)
                 return;
@@ -1135,13 +1135,14 @@ void Animation::update_finished_state(DidSeek did_seek, SynchronouslyNotify sync
             else {
                 // Manually create a task so its ID can be saved
                 auto& document = verify_cast<HTML::Window>(realm.global_object()).associated_document();
-                auto task = HTML::Task::create(HTML::Task::Source::DOMManipulation, &document, [this, finish_event]() {
-                    dispatch_event(finish_event);
-                });
+                auto task = HTML::Task::create(vm(), HTML::Task::Source::DOMManipulation, &document,
+                    JS::create_heap_function(heap(), [this, finish_event]() {
+                        dispatch_event(finish_event);
+                    }));
                 m_pending_finish_microtask_id = task->id();
-                HTML::main_thread_event_loop().task_queue().add(move(task));
+                HTML::main_thread_event_loop().task_queue().add(task);
             }
-        };
+        });
 
         // 2. If synchronously notify is true, cancel any queued microtask to run the finish notification steps for this
         //    animation, and run the finish notification steps immediately.
@@ -1151,13 +1152,13 @@ void Animation::update_finished_state(DidSeek did_seek, SynchronouslyNotify sync
                     return task.id() == id;
                 });
             }
-            finish_notification_steps();
+            finish_notification_steps->function()();
         }
         //    Otherwise, if synchronously notify is false, queue a microtask to run finish notification steps for
         //    animation unless there is already a microtask queued to run those steps for animation.
         else if (!m_pending_finish_microtask_id.has_value()) {
             auto& document = verify_cast<HTML::Window>(realm.global_object()).associated_document();
-            auto task = HTML::Task::create(HTML::Task::Source::DOMManipulation, &document, move(finish_notification_steps));
+            auto task = HTML::Task::create(vm(), HTML::Task::Source::DOMManipulation, &document, move(finish_notification_steps));
             m_pending_finish_microtask_id = task->id();
             HTML::main_thread_event_loop().task_queue().add(move(task));
         }

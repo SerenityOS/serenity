@@ -190,7 +190,8 @@ public:
     void set_custom_properties(Optional<CSS::Selector::PseudoElement::Type>, HashMap<FlyString, CSS::StyleProperty> custom_properties);
     [[nodiscard]] HashMap<FlyString, CSS::StyleProperty> const& custom_properties(Optional<CSS::Selector::PseudoElement::Type>) const;
 
-    int queue_an_element_task(HTML::Task::Source, JS::SafeFunction<void()>);
+    // NOTE: The function is wrapped in a JS::HeapFunction immediately.
+    int queue_an_element_task(HTML::Task::Source, Function<void()>);
 
     bool is_void_element() const;
     bool serializes_as_void() const;

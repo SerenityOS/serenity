@@ -54,7 +54,7 @@ private:
     bool m_suspended_by_user = false;
     HTML::UniqueTaskSource m_media_element_event_task_source {};
 
-    void queue_a_media_element_task(JS::SafeFunction<void()> steps);
+    void queue_a_media_element_task(Function<void()> steps);
     bool start_rendering_audio_graph();
 };
 
