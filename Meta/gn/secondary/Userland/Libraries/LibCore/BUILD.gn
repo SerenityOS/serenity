@@ -116,6 +116,9 @@ source_set("sources") {
       "LocalServer.h",
     ]
   }
+  if (current_os == "mac") {
+    sources += [ "MachPort.cpp" ]
+  }
 }
 
 source_set("filewatcher") {
