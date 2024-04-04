@@ -302,6 +302,7 @@ write_cmake_config("ak_debug_gen") {
     "LOOKUPSERVER_DEBUG=",
     "LZMA_DEBUG=",
     "LZW_DEBUG=",
+    "MACH_PORT_DEBUG=",
     "MALLOC_DEBUG=",
     "MARKDOWN_DEBUG=",
     "MATROSKA_DEBUG=",

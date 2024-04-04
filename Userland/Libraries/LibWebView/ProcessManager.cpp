@@ -84,12 +84,31 @@ void ProcessManager::initialize()
 
 void ProcessManager::add_process(ProcessType type, pid_t pid)
 {
+    Threading::MutexLocker locker { m_lock };
     dbgln("ProcessManager::add_process({}, {})", process_name_from_type(type), pid);
-    m_statistics.processes.append({ type, pid, 0, 0 });
+    if (auto existing_process = m_statistics.processes.find_if([&](auto& info) { return info.pid == pid; }); !existing_process.is_end()) {
+        existing_process->type = type;
+        return;
+    }
+    m_statistics.processes.append({ type, pid });
 }
+
+#if defined(AK_OS_MACH)
+void ProcessManager::add_process(pid_t pid, Core::MachPort&& port)
+{
+    Threading::MutexLocker locker { m_lock };
+    dbgln("ProcessManager::add_process({}, {:p})", pid, port.port());
+    if (auto existing_process = m_statistics.processes.find_if([&](auto& info) { return info.pid == pid; }); !existing_process.is_end()) {
+        existing_process->child_task_port = move(port);
+        return;
+    }
+    m_statistics.processes.append({ pid, move(port) });
+}
+#endif
 
 void ProcessManager::remove_process(pid_t pid)
 {
+    Threading::MutexLocker locker { m_lock };
     m_statistics.processes.remove_first_matching([&](auto& info) {
         if (info.pid == pid) {
             dbgln("ProcessManager: Remove process {} ({})", process_name_from_type(info.type), pid);
@@ -113,13 +132,15 @@ void ProcessManager::update_all_processes()
         }
     }
 
+    Threading::MutexLocker locker { m_lock };
     (void)update_process_statistics(m_statistics);
 }
 
 String ProcessManager::generate_html()
 {
+    Threading::MutexLocker locker { m_lock };
     StringBuilder builder;
-    auto processes = m_statistics.processes;
+    auto const& processes = m_statistics.processes;
 
     builder.append(R"(
         <html>
@@ -170,7 +191,7 @@ String ProcessManager::generate_html()
                 <tbody>
     )"sv);
 
-    for (auto& process : processes) {
+    for (auto const& process : processes) {
         builder.append("<tr>"sv);
         builder.append("<td>"sv);
         builder.append(WebView::process_name_from_type(process.type));

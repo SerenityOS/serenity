@@ -173,6 +173,11 @@ else()
     add_library(ladybird STATIC ${SOURCES})
 endif()
 
+if (APPLE)
+    target_sources(ladybird PRIVATE MachPortServer.cpp)
+    target_link_libraries(ladybird PRIVATE LibThreading)
+endif()
+
 target_sources(ladybird PUBLIC FILE_SET ladybird TYPE HEADERS
     BASE_DIRS ${SERENITY_SOURCE_DIR}
     FILES ${LADYBIRD_HEADERS}
