@@ -1,10 +1,18 @@
 #import <HTML/HTMLCanvasElement.idl>
 #import <HTML/HTMLImageElement.idl>
 
+typedef (HTMLImageElement or
+// FIXME: We should use HTMLOrSVGImageElement instead of HTMLImageElement
+// FIXME: HTMLVideoElement or
+         HTMLCanvasElement
+// FIXME: ImageBitmap
+// FIXME: OffscreenCanvas
+// FIXME: VideoFrame
+         ) CanvasImageSource;
+
 // https://html.spec.whatwg.org/multipage/canvas.html#canvasdrawimage
 interface mixin CanvasDrawImage {
-    // FIXME: These `image` params should be CanvasImageSource
-    undefined drawImage((HTMLImageElement or HTMLCanvasElement) image, unrestricted double dx, unrestricted double dy);
-    undefined drawImage((HTMLImageElement or HTMLCanvasElement) image, unrestricted double dx, unrestricted double dy, unrestricted double dw, unrestricted double dh);
-    undefined drawImage((HTMLImageElement or HTMLCanvasElement) image, unrestricted double sx, unrestricted double sy, unrestricted double sw, unrestricted double sh, unrestricted double dx, unrestricted double dy, unrestricted double dw, unrestricted double dh);
+    undefined drawImage(CanvasImageSource image, unrestricted double dx, unrestricted double dy);
+    undefined drawImage(CanvasImageSource image, unrestricted double dx, unrestricted double dy, unrestricted double dw, unrestricted double dh);
+    undefined drawImage(CanvasImageSource image, unrestricted double sx, unrestricted double sy, unrestricted double sw, unrestricted double sh, unrestricted double dx, unrestricted double dy, unrestricted double dw, unrestricted double dh);
 };
