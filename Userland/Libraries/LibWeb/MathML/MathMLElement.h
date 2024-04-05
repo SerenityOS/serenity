@@ -34,6 +34,8 @@ protected:
 private:
     MathMLElement(DOM::Document&, DOM::QualifiedName);
 
+    virtual void visit_edges(Visitor&) override;
+
     virtual void initialize(JS::Realm&) override;
 
     JS::GCPtr<HTML::DOMStringMap> m_dataset;

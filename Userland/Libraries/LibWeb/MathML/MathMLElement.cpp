@@ -45,4 +45,10 @@ void MathMLElement::blur()
     dbgln("(STUBBED) MathMLElement::blur()");
 }
 
+void MathMLElement::visit_edges(JS::Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_dataset);
+}
+
 }
