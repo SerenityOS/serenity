@@ -350,6 +350,7 @@ class DOMStringMap;
 class ErrorEvent;
 class EventHandler;
 class EventLoop;
+class EventSource;
 class FormAssociatedElement;
 class FormDataEvent;
 class History;
