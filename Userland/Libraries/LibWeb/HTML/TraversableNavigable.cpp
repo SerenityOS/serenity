@@ -454,8 +454,10 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
     for (auto& navigable : changing_navigables) {
         queue_global_task(Task::Source::NavigationAndTraversal, *navigable->active_window(), [&] {
             // NOTE: This check is not in the spec but we should not continue navigation if navigable has been destroyed.
-            if (navigable->has_been_destroyed())
+            if (navigable->has_been_destroyed()) {
+                completed_change_jobs++;
                 return;
+            }
 
             // 1. Let displayedEntry be navigable's active session history entry.
             auto displayed_entry = navigable->active_session_history_entry();
