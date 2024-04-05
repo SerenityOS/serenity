@@ -887,7 +887,7 @@ bool Node::is_root_element() const
     return is<HTML::HTMLHtmlElement>(*dom_node());
 }
 
-ByteString Node::debug_description() const
+String Node::debug_description() const
 {
     StringBuilder builder;
     builder.append(class_name());
@@ -903,7 +903,7 @@ ByteString Node::debug_description() const
     } else {
         builder.append("(anonymous)"sv);
     }
-    return builder.to_byte_string();
+    return MUST(builder.to_string());
 }
 
 CSS::Display Node::display() const

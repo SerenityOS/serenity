@@ -154,11 +154,8 @@ void XMLDocumentBuilder::text(StringView data)
         text_node.set_data(MUST(text_builder.to_string()));
         text_builder.clear();
     } else {
-        auto string = ByteString::empty();
-        if (!data.is_null())
-            string = data.to_byte_string();
-        if (!string.is_empty()) {
-            auto node = m_document->create_text_node(MUST(String::from_byte_string(string)));
+        if (!data.is_empty()) {
+            auto node = m_document->create_text_node(MUST(String::from_utf8(data)));
             MUST(m_current_node->append_child(node));
         }
     }
@@ -168,10 +165,7 @@ void XMLDocumentBuilder::comment(StringView data)
 {
     if (m_has_error)
         return;
-    auto string = ByteString::empty();
-    if (!data.is_null())
-        string = data.to_byte_string();
-    MUST(m_document->append_child(m_document->create_comment(MUST(String::from_byte_string(string)))));
+    MUST(m_document->append_child(m_document->create_comment(MUST(String::from_utf8(data)))));
 }
 
 void XMLDocumentBuilder::document_end()

@@ -3374,8 +3374,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Attr>> Document::create_attribute(String co
 
     // 2. If this is an HTML document, then set localName to localName in ASCII lowercase.
     // 3. Return a new attribute whose local name is localName and node document is this.
-    auto deprecated_local_name = local_name.to_byte_string();
-    return Attr::create(*this, MUST(FlyString::from_deprecated_fly_string(is_html_document() ? deprecated_local_name.to_lowercase() : deprecated_local_name)));
+    return Attr::create(*this, is_html_document() ? MUST(Infra::to_ascii_lowercase(local_name)) : local_name);
 }
 
 // https://dom.spec.whatwg.org/#dom-document-createattributens

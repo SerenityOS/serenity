@@ -58,7 +58,7 @@ public:
         {
             return m_fill_or_stroke_style.visit(
                 [&](Gfx::Color color) -> JsFillOrStrokeStyle {
-                    return MUST(String::from_byte_string(color.to_byte_string()));
+                    return color.to_string();
                 },
                 [&](auto handle) -> JsFillOrStrokeStyle {
                     return handle;

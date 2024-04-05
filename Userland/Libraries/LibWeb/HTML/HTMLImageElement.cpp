@@ -372,7 +372,7 @@ ErrorOr<void> HTMLImageElement::update_the_image_data(bool restart_animations, b
         // 1. Parse selected source, relative to the element's node document.
         //    If that is not successful, then abort this inner set of steps.
         //    Otherwise, let urlString be the resulting URL string.
-        auto url_string = document().parse_url(selected_source.value().to_byte_string());
+        auto url_string = document().parse_url(selected_source.value());
         if (!url_string.is_valid())
             goto after_step_7;
 

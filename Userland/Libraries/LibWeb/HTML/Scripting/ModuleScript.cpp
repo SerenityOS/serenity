@@ -59,7 +59,7 @@ WebIDL::ExceptionOr<JS::GCPtr<JavaScriptModuleScript>> JavaScriptModuleScript::c
     // 8. If result is a list of errors, then:
     if (result.is_error()) {
         auto& parse_error = result.error().first();
-        dbgln("JavaScriptModuleScript: Failed to parse: {}", parse_error.to_byte_string());
+        dbgln("JavaScriptModuleScript: Failed to parse: {}", parse_error.to_string());
 
         // 1. Set script's parse error to result[0].
         script->set_parse_error(JS::SyntaxError::create(settings_object.realm(), parse_error.to_string()));

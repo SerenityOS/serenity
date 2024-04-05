@@ -1783,8 +1783,8 @@ ErrorOr<String> Node::name_or_description(NameOrDescription target, Document con
         //   process its IDREFs in the order they occur:
         auto aria_labelled_by = element->aria_labelled_by();
         auto aria_described_by = element->aria_described_by();
-        if ((target == NameOrDescription::Name && aria_labelled_by.has_value() && Node::first_valid_id(aria_labelled_by->to_byte_string(), document).has_value())
-            || (target == NameOrDescription::Description && aria_described_by.has_value() && Node::first_valid_id(aria_described_by->to_byte_string(), document).has_value())) {
+        if ((target == NameOrDescription::Name && aria_labelled_by.has_value() && Node::first_valid_id(*aria_labelled_by, document).has_value())
+            || (target == NameOrDescription::Description && aria_described_by.has_value() && Node::first_valid_id(*aria_described_by, document).has_value())) {
 
             // i. Set the accumulated text to the empty string.
             total_accumulated_text.clear();

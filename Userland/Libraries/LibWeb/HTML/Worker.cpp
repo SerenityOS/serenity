@@ -60,7 +60,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Worker>> Worker::create(String const& scrip
     auto& outside_settings = current_settings_object();
 
     // 3. Parse the scriptURL argument relative to outside settings.
-    auto url = document.parse_url(script_url.to_byte_string());
+    auto url = document.parse_url(script_url);
 
     // 4. If this fails, throw a "SyntaxError" DOMException.
     if (!url.is_valid()) {
