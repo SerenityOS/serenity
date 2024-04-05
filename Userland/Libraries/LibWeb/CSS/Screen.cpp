@@ -22,7 +22,7 @@ JS::NonnullGCPtr<Screen> Screen::create(HTML::Window& window)
 }
 
 Screen::Screen(HTML::Window& window)
-    : PlatformObject(window.realm())
+    : DOM::EventTarget(window.realm())
     , m_window(window)
 {
 }
@@ -56,6 +56,25 @@ JS::NonnullGCPtr<ScreenOrientation> Screen::orientation()
     if (!m_orientation)
         m_orientation = ScreenOrientation::create(realm());
     return *m_orientation;
+}
+
+// https://w3c.github.io/window-management/#dom-screen-isextended
+bool Screen::is_extended() const
+{
+    dbgln("FIXME: Unimplemented Screen::is_extended");
+    return false;
+}
+
+// https://w3c.github.io/window-management/#dom-screen-onchange
+void Screen::set_onchange(JS::GCPtr<WebIDL::CallbackType> event_handler)
+{
+    set_event_handler_attribute(HTML::EventNames::change, event_handler);
+}
+
+// https://w3c.github.io/window-management/#dom-screen-onchange
+JS::GCPtr<WebIDL::CallbackType> Screen::onchange()
+{
+    return event_handler_attribute(HTML::EventNames::change);
 }
 
 }
