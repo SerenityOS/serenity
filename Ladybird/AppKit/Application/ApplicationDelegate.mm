@@ -558,7 +558,7 @@
 
     m_initial_urls.clear();
 
-    [self checkAndRegisterHandlers];
+    [self checkAndRegisterHandlers: tab];
 }
 
 - (void)applicationWillFinishLaunching:(NSNotification*)notification
@@ -570,7 +570,7 @@
     andEventID:kAEGetURL];   
 }
 
-- (void)checkAndRegisterHandlers 
+- (void)checkAndRegisterHandlers:(Tab*)tab
 {
     // Honour the user's wishes by suppressing the alert.
     if ([[NSUserDefaults standardUserDefaults] boolForKey: @"suppressDefaultBrowserAlert"]) {
@@ -583,22 +583,26 @@
 
     // Check if Ladybird isn't the default browser.
     if (![[appBundleURL absoluteString] isEqualToString:[defaultBrowserURL absoluteString]]) {
+        NSLog(@"Ladybird is not the default browser!");
         NSAlert *alert = [[NSAlert alloc] init];
         [alert addButtonWithTitle:@"Yes"];
         [alert addButtonWithTitle:@"No"];
         [alert setMessageText:@"Set Ladybird as your default browser?"];
         [alert setShowsSuppressionButton:YES];
         [alert setAlertStyle:NSAlertStyleInformational];
-        if ([alert runModal] == NSAlertFirstButtonReturn) {
-            [[NSWorkspace sharedWorkspace] setDefaultApplicationAtURL:appBundleURL 
-            toOpenURLsWithScheme:@"http"
-            completionHandler:(void (^)(NSError *error)){}]; 
-            [[NSWorkspace sharedWorkspace] setDefaultApplicationAtURL:appBundleURL 
-            toOpenURLsWithScheme:@"https"
-            completionHandler:(void (^)(NSError *error)){}]; 
-        }
-        [[NSUserDefaults standardUserDefaults] setBool: [[alert suppressionButton] state] forKey: @"suppressDefaultBrowserAlert"];
-        [[NSUserDefaults standardUserDefaults] synchronize];
+        [alert beginSheetModalForWindow:tab
+            completionHandler:^(NSModalResponse response) {
+                if (response == NSAlertFirstButtonReturn) {
+                    [[NSWorkspace sharedWorkspace] setDefaultApplicationAtURL:appBundleURL 
+                        toOpenURLsWithScheme:@"http"
+                        completionHandler:(void (^)(NSError *error)){}]; 
+                        [[NSWorkspace sharedWorkspace] setDefaultApplicationAtURL:appBundleURL 
+                        toOpenURLsWithScheme:@"https"
+                        completionHandler:(void (^)(NSError *error)){}]; 
+                }
+                [[NSUserDefaults standardUserDefaults] setBool: [[alert suppressionButton] state] forKey: @"suppressDefaultBrowserAlert"];
+                [[NSUserDefaults standardUserDefaults] synchronize];
+        }];
     }
 }
 
