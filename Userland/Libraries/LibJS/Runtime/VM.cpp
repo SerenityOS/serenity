@@ -183,7 +183,7 @@ struct ExecutionContextRootsCollector : public Cell::Visitor {
         VERIFY_NOT_REACHED();
     }
 
-    HashTable<Cell*> roots;
+    HashTable<GCPtr<Cell>> roots;
 };
 
 void VM::gather_roots(HashMap<Cell*, HeapRoot>& roots)
@@ -207,7 +207,7 @@ void VM::gather_roots(HashMap<Cell*, HeapRoot>& roots)
         for (auto const& execution_context : stack) {
             ExecutionContextRootsCollector visitor;
             execution_context->visit_edges(visitor);
-            for (auto* cell : visitor.roots)
+            for (auto cell : visitor.roots)
                 roots.set(cell, HeapRoot { .type = HeapRoot::Type::VM });
         }
     };
