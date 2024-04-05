@@ -942,7 +942,7 @@ struct GenericRegionDecodingInputParameters {
     u8 gb_template { 0 };
     bool is_typical_prediction_used { false };          // "TPGDON" in spec.
     bool is_extended_reference_template_used { false }; // "EXTTEMPLATE" in spec.
-    Optional<NonnullOwnPtr<BitBuffer>> skip_pattern;    // "USESKIP", "SKIP" in spec.
+    Optional<BitBuffer const&> skip_pattern;            // "USESKIP", "SKIP" in spec.
 
     Array<AdaptiveTemplatePixel, 12> adaptive_template_pixels; // "GBATX" / "GBATY" in spec.
     // FIXME: GBCOLS, GBCOMBOP, COLEXTFLAG
@@ -1787,7 +1787,102 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
     return exported_symbols;
 }
 
+// Annex C Gray-scale image decoding procedure
+
+// C.2 Input parameters
+// Table C.1 – Parameters for the gray-scale image decoding procedure
+struct GrayscaleInputParameters {
+    bool uses_mmr { false }; // "GSMMR" in spec.
+
+    Optional<BitBuffer const&> skip_pattern; // "GSUSESKIP" / "GSKIP" in spec.
+
+    u8 bpp { 0 };         // "GSBPP" in spec.
+    u32 width { 0 };      // "GSW" in spec.
+    u32 height { 0 };     // "GSH" in spec.
+    u8 template_id { 0 }; // "GSTEMPLATE" in spec.
+
+    // If uses_mmr is false, grayscale_image_decoding_procedure() reads data off this decoder.
+    JBIG2::ArithmeticDecoder* arithmetic_decoder { nullptr };
+};
+
+static ErrorOr<Vector<u8>> grayscale_image_decoding_procedure(GrayscaleInputParameters const& inputs, ReadonlyBytes data, Vector<JBIG2::ArithmeticDecoder::Context>& contexts)
+{
+    // FIXME: Support this. generic_region_decoding_procedure() currently doesn't tell us how much data it
+    //        reads for MMR bitmaps, so we can't currently read more than one MMR bitplane here.
+    if (inputs.uses_mmr)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode MMR grayscale images yet");
+
+    // Table C.4 – Parameters used to decode a bitplane of the gray-scale image
+    GenericRegionDecodingInputParameters generic_inputs;
+    generic_inputs.is_modified_modified_read = inputs.uses_mmr;
+    generic_inputs.region_width = inputs.width;
+    generic_inputs.region_height = inputs.height;
+    generic_inputs.gb_template = inputs.template_id;
+    generic_inputs.is_typical_prediction_used = false;
+    generic_inputs.is_extended_reference_template_used = false; // Missing from spec.
+    generic_inputs.skip_pattern = inputs.skip_pattern;
+    generic_inputs.adaptive_template_pixels[0].x = inputs.template_id <= 1 ? 3 : 2;
+    generic_inputs.adaptive_template_pixels[0].y = -1;
+    generic_inputs.adaptive_template_pixels[1].x = -3;
+    generic_inputs.adaptive_template_pixels[1].y = -1;
+    generic_inputs.adaptive_template_pixels[2].x = 2;
+    generic_inputs.adaptive_template_pixels[2].y = -2;
+    generic_inputs.adaptive_template_pixels[3].x = -2;
+    generic_inputs.adaptive_template_pixels[3].y = -2;
+    generic_inputs.arithmetic_decoder = inputs.arithmetic_decoder;
+
+    // C.5 Decoding the gray-scale image
+    // "The gray-scale image is obtained by decoding GSBPP bitplanes. These bitplanes are denoted (from least significant to
+    //  most significant) GSPLANES[0], GSPLANES[1], . . . , GSPLANES[GSBPP – 1]. The bitplanes are Gray-coded, so
+    //  that each bitplane's true value is equal to its coded value XORed with the next-more-significant bitplane."
+    Vector<OwnPtr<BitBuffer>> bitplanes;
+    bitplanes.resize(inputs.bpp);
+
+    // "1) Decode GSPLANES[GSBPP – 1] using the generic region decoding procedure. The parameters to the
+    //     generic region decoding procedure are as shown in Table C.4."
+    bitplanes[inputs.bpp - 1] = TRY(generic_region_decoding_procedure(generic_inputs, data, contexts));
+
+    // "2) Set J = GSBPP – 2."
+    int j = inputs.bpp - 2;
+
+    // "3) While J >= 0, perform the following steps:"
+    while (j >= 0) {
+        // "a) Decode GSPLANES[J] using the generic region decoding procedure. The parameters to the generic
+        //     region decoding procedure are as shown in Table C.4."
+        bitplanes[j] = TRY(generic_region_decoding_procedure(generic_inputs, data, contexts));
+
+        // "b) For each pixel (x, y) in GSPLANES[J], set:
+        //     GSPLANES[J][x, y] = GSPLANES[J + 1][x, y] XOR GSPLANES[J][x, y]"
+        for (u32 y = 0; y < inputs.height; ++y) {
+            for (u32 x = 0; x < inputs.width; ++x) {
+                bool bit = bitplanes[j + 1]->get_bit(x, y) ^ bitplanes[j]->get_bit(x, y);
+                bitplanes[j]->set_bit(x, y, bit);
+            }
+        }
+
+        // "c) Set J = J – 1."
+        j = j - 1;
+    }
+
+    // "4) For each (x, y), set:
+    //     GSVALS [x, y] = sum_{J = 0}^{GSBPP - 1} GSPLANES[J][x,y] × 2**J)"
+    Vector<u8> result;
+    result.resize(inputs.width * inputs.height);
+    for (u32 y = 0; y < inputs.height; ++y) {
+        for (u32 x = 0; x < inputs.width; ++x) {
+            u8 value = 0;
+            for (int j = 0; j < inputs.bpp; ++j) {
+                if (bitplanes[j]->get_bit(x, y))
+                    value |= 1 << j;
+            }
+            result[y * inputs.width + x] = value;
+        }
+    }
+    return result;
+}
+
 // 6.6.2 Input parameters
+// Table 20 – Parameters for the halftone region decoding procedure
 struct HalftoneRegionDecodingInputParameters {
     u32 region_width { 0 };                                               // "HBW" in spec.
     u32 region_height { 0 };                                              // "HBH" in spec.
@@ -1808,9 +1903,105 @@ struct HalftoneRegionDecodingInputParameters {
 };
 
 // 6.6 Halftone Region Decoding Procedure
-static ErrorOr<NonnullOwnPtr<BitBuffer>> halftone_region_decoding_procedure(HalftoneRegionDecodingInputParameters const&, ReadonlyBytes)
+static ErrorOr<NonnullOwnPtr<BitBuffer>> halftone_region_decoding_procedure(HalftoneRegionDecodingInputParameters const& inputs, ReadonlyBytes data, Vector<JBIG2::ArithmeticDecoder::Context>& contexts)
 {
-    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Halftone region decoding not implemented yet");
+    // 6.6.5 Decoding the halftone region
+    // "1) Fill a bitmap HTREG, of the size given by HBW and HBH, with the HDEFPIXEL value."
+    auto result = TRY(BitBuffer::create(inputs.region_width, inputs.region_height));
+    result->fill(inputs.default_pixel_value);
+
+    // "2) If HENABLESKIP equals 1, compute a bitmap HSKIP as shown in 6.6.5.1."
+    Optional<BitBuffer const&> skip_pattern;
+    OwnPtr<BitBuffer> skip_pattern_storage;
+    if (inputs.enable_skip) {
+        // FIXME: This is untested; I haven't found a sample that uses HENABLESKIP yet.
+        //        But generic_region_decoding_procedure() currently doesn't implement skip_pattern anyways
+        //        and errors out on it, so we'll notice when this gets hit.
+        skip_pattern_storage = TRY(BitBuffer::create(inputs.pattern_width, inputs.pattern_height));
+        skip_pattern = *skip_pattern_storage;
+
+        // 6.6.5.1 Computing HSKIP
+        // "1) For each value of mg between 0 and HGH – 1, beginning from 0, perform the following steps:"
+        for (int m_g = 0; m_g < (int)inputs.grayscale_height; ++m_g) {
+            // "a) For each value of ng between 0 and HGW – 1, beginning from 0, perform the following steps:"
+            for (int n_g = 0; n_g < (int)inputs.grayscale_width; ++n_g) {
+                // "i) Set:
+                //      x = (HGX + m_g × HRY + n_g × HRX) >> 8
+                //      y = (HGY + m_g × HRX – n_g × HRY) >> 8"
+                auto x = (inputs.grid_origin_x_offset + m_g * inputs.grid_vector_y + n_g * inputs.grid_vector_x) >> 8;
+                auto y = (inputs.grid_origin_y_offset + m_g * inputs.grid_vector_x - n_g * inputs.grid_vector_y) >> 8;
+
+                // "ii) If ((x + HPW <= 0) OR (x >= HBW) OR (y + HPH <= 0) OR (y >= HBH)) then set:
+                //          HSKIP[n_g, m_g] = 1
+                //      Otherwise, set:
+                //          HSKIP[n_g, m_g] = 0"
+                if (x + inputs.pattern_width <= 0 || x >= (int)inputs.region_width || y + inputs.pattern_height <= 0 || y >= (int)inputs.region_height)
+                    skip_pattern_storage->set_bit(n_g, m_g, true);
+                else
+                    skip_pattern_storage->set_bit(n_g, m_g, false);
+            }
+        }
+    }
+
+    // "3) Set HBPP to ⌈log2 (HNUMPATS)⌉."
+    u8 bits_per_pattern = ceil(log2(inputs.patterns.size()));
+
+    // "4) Decode an image GI of size HGW by HGH with HBPP bits per pixel using the gray-scale image decoding
+    //     procedure as described in Annex C. Set the parameters to this decoding procedure as shown in Table 23.
+    //     Let GI be the results of invoking this decoding procedure."
+    GrayscaleInputParameters grayscale_inputs;
+    grayscale_inputs.uses_mmr = inputs.uses_mmr;
+    grayscale_inputs.width = inputs.grayscale_width;
+    grayscale_inputs.height = inputs.grayscale_height;
+    grayscale_inputs.bpp = bits_per_pattern;
+    grayscale_inputs.skip_pattern = skip_pattern;
+    grayscale_inputs.template_id = inputs.halftone_template;
+
+    Optional<JBIG2::ArithmeticDecoder> decoder;
+    if (!inputs.uses_mmr) {
+        decoder = TRY(JBIG2::ArithmeticDecoder::initialize(data));
+        grayscale_inputs.arithmetic_decoder = &decoder.value();
+    }
+
+    auto grayscale_image = TRY(grayscale_image_decoding_procedure(grayscale_inputs, data, contexts));
+
+    // "5) Place sequentially the patterns corresponding to the values in GI into HTREG by the procedure described in 6.6.5.2.
+    //     The rendering procedure is illustrated in Figure 26. The outline of two patterns are marked by dotted boxes."
+    {
+        // 6.6.5.2 Rendering the patterns
+        // "Draw the patterns into HTREG using the following procedure:
+        //  1) For each value of m_g between 0 and HGH – 1, beginning from 0, perform the following steps."
+        for (int m_g = 0; m_g < (int)inputs.grayscale_height; ++m_g) {
+            // "a) For each value of n_g between 0 and HGW – 1, beginning from 0, perform the following steps."
+            for (int n_g = 0; n_g < (int)inputs.grayscale_width; ++n_g) {
+                // "i) Set:
+                //      x = (HGX + m_g × HRY + n_g × HRX) >> 8
+                //      y = (HGY + m_g × HRX – n_g × HRY) >> 8"
+                auto x = (inputs.grid_origin_x_offset + m_g * inputs.grid_vector_y + n_g * inputs.grid_vector_x) >> 8;
+                auto y = (inputs.grid_origin_y_offset + m_g * inputs.grid_vector_x - n_g * inputs.grid_vector_y) >> 8;
+
+                // "ii) Draw the pattern HPATS[GI[n_g, m_g]] into HTREG such that its upper left pixel is at location (x, y) in HTREG.
+                //
+                //      A pattern is drawn into HTREG as follows. Each pixel of the pattern shall be combined with
+                //      the current value of the corresponding pixel in the halftone-coded bitmap, using the
+                //      combination operator specified by HCOMBOP. The results of each combination shall be
+                //      written into that pixel in the halftone-coded bitmap.
+                //
+                //      If any part of a decoded pattern, when placed at location (x, y) lies outside the actual halftone-
+                //      coded bitmap, then this part of the pattern shall be ignored in the process of combining the
+                //      pattern with the bitmap."
+                u8 grayscale_value = grayscale_image[n_g + m_g * inputs.grayscale_width];
+                if (grayscale_value >= inputs.patterns.size())
+                    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Grayscale value out of range");
+                auto const& pattern = inputs.patterns[grayscale_value];
+                composite_bitbuffer(*result, pattern->bitmap(), { x, y }, inputs.combination_operator);
+            }
+        }
+    }
+
+    // "6) After all the patterns have been placed on the bitmap, the current contents of the halftone-coded bitmap are
+    //     the results that shall be obtained by every decoder, whether it performs this exact sequence of steps or not."
+    return result;
 }
 
 // 6.7.2 Input parameters
@@ -2249,7 +2440,9 @@ static ErrorOr<void> decode_immediate_halftone_region(JBIG2LoadingContext& conte
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Halftone segment without patterns");
 
     // "3) As described in E.3.7, reset all the arithmetic coding statistics to zero."
-    // FIXME
+    Vector<JBIG2::ArithmeticDecoder::Context> contexts;
+    if (!uses_mmr)
+        contexts.resize(1 << number_of_context_bits_for_template(template_used));
 
     // "4) Invoke the halftone region decoding procedure described in 6.6, with the parameters to the halftone
     //     region decoding procedure set as shown in Table 36."
@@ -2271,7 +2464,7 @@ static ErrorOr<void> decode_immediate_halftone_region(JBIG2LoadingContext& conte
     inputs.patterns = move(patterns);
     inputs.pattern_width = inputs.patterns[0]->bitmap().width();
     inputs.pattern_height = inputs.patterns[0]->bitmap().height();
-    auto result = TRY(halftone_region_decoding_procedure(inputs, data));
+    auto result = TRY(halftone_region_decoding_procedure(inputs, data, contexts));
 
     composite_bitbuffer(*context.page.bits, *result, { information_field.x_location, information_field.y_location }, information_field.external_combination_operator());
 
