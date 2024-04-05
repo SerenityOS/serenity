@@ -369,6 +369,31 @@ void EventLoop::process()
     });
 }
 
+// https://html.spec.whatwg.org/multipage/webappapis.html#queue-a-task
+int queue_a_task(HTML::Task::Source source, JS::GCPtr<EventLoop> event_loop, JS::GCPtr<DOM::Document> document, JS::NonnullGCPtr<JS::HeapFunction<void()>> steps)
+{
+    // 1. If event loop was not given, set event loop to the implied event loop.
+    if (!event_loop)
+        event_loop = main_thread_event_loop();
+
+    // FIXME: 2. If document was not given, set document to the implied document.
+
+    // 3. Let task be a new task.
+    // 4. Set task's steps to steps.
+    // 5. Set task's source to source.
+    // 6. Set task's document to the document.
+    // 7. Set task's script evaluation environment settings object set to an empty set.
+    auto task = HTML::Task::create(event_loop->vm(), source, document, steps);
+
+    // 8. Let queue be the task queue to which source is associated on event loop.
+    auto& queue = event_loop->task_queue();
+
+    // 9. Append task to queue.
+    queue.add(task);
+
+    return queue.last_added_task()->id();
+}
+
 // https://html.spec.whatwg.org/multipage/webappapis.html#queue-a-global-task
 int queue_global_task(HTML::Task::Source source, JS::Object& global_object, JS::NonnullGCPtr<JS::HeapFunction<void()>> steps)
 {
@@ -384,10 +409,7 @@ int queue_global_task(HTML::Task::Source source, JS::Object& global_object, JS::
     }
 
     // 3. Queue a task given source, event loop, document, and steps.
-    auto& vm = global_object.vm();
-    event_loop->task_queue().add(HTML::Task::create(vm, source, document, steps));
-
-    return event_loop->task_queue().last_added_task()->id();
+    return queue_a_task(source, *event_loop, document, steps);
 }
 
 // https://html.spec.whatwg.org/#queue-a-microtask
