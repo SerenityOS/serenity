@@ -2,7 +2,13 @@ cmake_minimum_required(VERSION 3.24)
 
 project(LibJSGCVerifier C CXX)
 
-find_package(Clang CONFIG REQUIRED HINTS "../../../../Toolchain/Local/clang")
+set(LAGOM_BUILD OFF CACHE BOOL "Build without the serenity toolchain Clang")
+
+if (LAGOM_BUILD)
+    find_package(Clang 16 CONFIG REQUIRED)
+else()
+    find_package(Clang CONFIG REQUIRED HINTS "../../../../Toolchain/Local/clang")
+endif()
 
 add_executable(LibJSGCVerifier src/main.cpp src/CellsHandler.cpp)
 
