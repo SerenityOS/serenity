@@ -60,6 +60,8 @@ private:
     RegExpObject(Object& prototype);
     RegExpObject(Regex<ECMA262> regex, ByteString pattern, ByteString flags, Object& prototype);
 
+    virtual void visit_edges(Visitor&) override;
+
     ByteString m_pattern;
     ByteString m_flags;
     bool m_legacy_features_enabled { false }; // [[LegacyFeaturesEnabled]]
