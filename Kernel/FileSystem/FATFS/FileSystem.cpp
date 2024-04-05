@@ -122,11 +122,11 @@ ErrorOr<void> FATFS::initialize_while_locked()
 
     if constexpr (FAT_DEBUG) {
         dbgln("FATFS: oem_identifier: {}", block->oem_identifier);
-        dbgln("FATFS: bytes_per_sector: {}", block->bytes_per_sector);
+        dbgln("FATFS: bytes_per_sector: {}", static_cast<u16>(block->bytes_per_sector));
         dbgln("FATFS: sectors_per_cluster: {}", block->sectors_per_cluster);
         dbgln("FATFS: reserved_sector_count: {}", block->reserved_sector_count);
         dbgln("FATFS: fat_count: {}", block->fat_count);
-        dbgln("FATFS: root_directory_entry_count: {}", block->root_directory_entry_count);
+        dbgln("FATFS: root_directory_entry_count: {}", static_cast<u16>(block->root_directory_entry_count));
         dbgln("FATFS: media_descriptor_type: {}", block->media_descriptor_type);
         dbgln("FATFS: sectors_per_track: {}", block->sectors_per_track);
         dbgln("FATFS: head_count: {}", block->head_count);
@@ -144,7 +144,7 @@ ErrorOr<void> FATFS::initialize_while_locked()
             dbgln("FATFS: fs_info_sector: {}", dos7_boot_record->fs_info_sector);
             dbgln("FATFS: backup_boot_sector: {}", dos7_boot_record->backup_boot_sector);
             dbgln("FATFS: drive_number: {}", dos7_boot_record->drive_number);
-            dbgln("FATFS: volume_id: {}", dos7_boot_record->volume_id);
+            dbgln("FATFS: volume_id: {}", static_cast<u32>(dos7_boot_record->volume_id));
         } else if (ebpb_version == DOSBIOSParameterBlockVersion::DOS_BPB_3 || ebpb_version == DOSBIOSParameterBlockVersion::DOS_BPB_4) {
             DOS4BIOSParameterBlock const* dos4_boot_record = ebpb.dos4_bpb();
             if (ebpb_version == DOSBIOSParameterBlockVersion::DOS_BPB_3) {
@@ -154,7 +154,7 @@ ErrorOr<void> FATFS::initialize_while_locked()
             }
             dbgln("FATFS: drive_number: {}", dos4_boot_record->drive_number);
             dbgln("FATFS: flags: {}", dos4_boot_record->flags);
-            dbgln("FATFS: volume_id: {}", dos4_boot_record->volume_id);
+            dbgln("FATFS: volume_id: {}", static_cast<u32>(dos4_boot_record->volume_id));
 
             // volume_label_string and file_system_type are only valid when
             // ebpb_version == DOSBIOSParameterBlockVersion::DOS4.
