@@ -207,15 +207,15 @@ void StackingContext::paint_internal(PaintContext& context) const
     // Draw positioned descendants with z-index `0` or `auto` in tree order. (step 8)
     // FIXME: There's more to this step that we have yet to understand and implement.
     for (auto const& paintable : m_positioned_descendants_with_stack_level_0_and_stacking_contexts) {
-        if (!paintable.is_positioned())
+        if (!paintable->is_positioned())
             continue;
 
         // At this point, `paintable_box` is a positioned descendant with z-index: auto.
         // FIXME: This is basically duplicating logic found elsewhere in this same function. Find a way to make this more elegant.
-        auto* parent_paintable = paintable.parent();
+        auto* parent_paintable = paintable->parent();
         if (parent_paintable)
             parent_paintable->before_children_paint(context, PaintPhase::Foreground);
-        if (auto* child = paintable.stacking_context()) {
+        if (auto* child = paintable->stacking_context()) {
             paint_child(context, *child);
         } else {
             paint_node_as_stacking_context(paintable, context);
@@ -354,11 +354,11 @@ TraversalDecision StackingContext::hit_test(CSSPixelPoint position, HitTestType 
 
     // 6. the child stacking contexts with stack level 0 and the positioned descendants with stack level 0.
     for (auto const& paintable : m_positioned_descendants_with_stack_level_0_and_stacking_contexts.in_reverse()) {
-        if (paintable.stacking_context()) {
-            if (paintable.stacking_context()->hit_test(transformed_position, type, callback) == TraversalDecision::Break)
+        if (paintable->stacking_context()) {
+            if (paintable->stacking_context()->hit_test(transformed_position, type, callback) == TraversalDecision::Break)
                 return TraversalDecision::Break;
         } else {
-            if (paintable.hit_test(transformed_position, type, callback) == TraversalDecision::Break)
+            if (paintable->hit_test(transformed_position, type, callback) == TraversalDecision::Break)
                 return TraversalDecision::Break;
         }
     }
@@ -375,7 +375,7 @@ TraversalDecision StackingContext::hit_test(CSSPixelPoint position, HitTestType 
 
     // 4. the non-positioned floats.
     for (auto const& paintable : m_non_positioned_floating_descendants.in_reverse()) {
-        if (paintable.hit_test(transformed_position, type, callback) == TraversalDecision::Break)
+        if (paintable->hit_test(transformed_position, type, callback) == TraversalDecision::Break)
             return TraversalDecision::Break;
     }
 

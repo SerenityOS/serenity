@@ -72,7 +72,7 @@ void ViewportPaintable::assign_scroll_frames()
         if (paintable_box.has_scrollable_overflow()) {
             auto scroll_frame = adopt_ref(*new ScrollFrame());
             scroll_frame->id = next_id++;
-            scroll_state.set(&paintable_box, move(scroll_frame));
+            scroll_state.set(paintable_box, move(scroll_frame));
         }
         return TraversalDecision::Continue;
     });
@@ -102,7 +102,7 @@ void ViewportPaintable::assign_clip_frames()
         auto has_hidden_overflow = overflow_x != CSS::Overflow::Visible && overflow_y != CSS::Overflow::Visible;
         if (has_hidden_overflow || paintable_box.get_clip_rect().has_value()) {
             auto clip_frame = adopt_ref(*new ClipFrame());
-            clip_state.set(&paintable_box, move(clip_frame));
+            clip_state.set(paintable_box, move(clip_frame));
         }
         return TraversalDecision::Continue;
     });

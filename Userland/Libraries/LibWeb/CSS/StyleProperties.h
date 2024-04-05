@@ -11,6 +11,7 @@
 #include <LibGfx/Font/Font.h>
 #include <LibGfx/FontCascadeList.h>
 #include <LibGfx/Forward.h>
+#include <LibJS/Heap/GCPtr.h>
 #include <LibWeb/CSS/ComputedValues.h>
 #include <LibWeb/CSS/LengthBox.h>
 #include <LibWeb/CSS/PropertyID.h>
@@ -44,7 +45,7 @@ public:
 
     struct StyleAndSourceDeclaration {
         RefPtr<StyleValue const> style;
-        CSS::CSSStyleDeclaration const* declaration = nullptr;
+        JS::GCPtr<CSS::CSSStyleDeclaration const> declaration;
         Important important { Important::No };
         Inherited inherited { Inherited::No };
     };

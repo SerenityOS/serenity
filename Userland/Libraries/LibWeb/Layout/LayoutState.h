@@ -176,7 +176,7 @@ struct LayoutState {
     // NOTE: get() will not CoW the UsedValues.
     UsedValues const& get(NodeWithStyle const&) const;
 
-    HashMap<Layout::Node const*, NonnullOwnPtr<UsedValues>> used_values_per_layout_node;
+    HashMap<JS::NonnullGCPtr<Layout::Node const>, NonnullOwnPtr<UsedValues>> used_values_per_layout_node;
 
     // We cache intrinsic sizes once determined, as they will not change over the course of a full layout.
     // This avoids computing them several times while performing flex layout.

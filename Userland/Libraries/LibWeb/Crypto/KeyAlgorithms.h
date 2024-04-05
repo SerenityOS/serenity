@@ -38,7 +38,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(name_getter);
 
     String m_name;
-    JS::Realm& m_realm;
+    JS::NonnullGCPtr<JS::Realm> m_realm;
 };
 
 // https://w3c.github.io/webcrypto/#RsaKeyAlgorithm-dictionary

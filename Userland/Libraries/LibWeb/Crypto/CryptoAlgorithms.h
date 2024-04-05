@@ -210,7 +210,7 @@ protected:
     {
     }
 
-    JS::Realm& m_realm;
+    JS::NonnullGCPtr<JS::Realm> m_realm;
 };
 
 class RSAOAEP : public AlgorithmMethods {

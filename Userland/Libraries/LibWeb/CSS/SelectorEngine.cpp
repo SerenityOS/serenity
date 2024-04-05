@@ -714,7 +714,7 @@ bool fast_matches(CSS::Selector const& selector, Optional<CSS::CSSStyleSheet con
     // NOTE: If we fail after following a child combinator, we may need to backtrack
     //       to the last matched descendant. We store the state here.
     struct {
-        DOM::Element const* element = nullptr;
+        JS::GCPtr<DOM::Element const> element;
         ssize_t compound_selector_index = 0;
     } backtrack_state;
 
