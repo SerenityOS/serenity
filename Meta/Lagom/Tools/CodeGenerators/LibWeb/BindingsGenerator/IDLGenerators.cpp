@@ -2814,7 +2814,7 @@ private:
     virtual JS::ThrowCompletionOr<bool> internal_set_prototype_of(JS::Object* prototype) override;
     virtual JS::ThrowCompletionOr<bool> internal_prevent_extensions() override;
 
-    JS::Realm& m_realm; // [[Realm]]
+    JS::NonnullGCPtr<JS::Realm> m_realm; // [[Realm]]
 };
 )~~~");
 }
