@@ -16,6 +16,7 @@
 #include <LibWeb/HTML/CanvasRenderingContext2D.h>
 #include <LibWeb/HTML/HTMLCanvasElement.h>
 #include <LibWeb/HTML/HTMLImageElement.h>
+#include <LibWeb/HTML/ImageBitmap.h>
 #include <LibWeb/HTML/ImageData.h>
 #include <LibWeb/HTML/Path2D.h>
 #include <LibWeb/HTML/TextMetrics.h>
@@ -636,6 +637,14 @@ WebIDL::ExceptionOr<CanvasImageSourceUsability> check_usability_of_image(CanvasI
             if (canvas_element->width() == 0 || canvas_element->height() == 0)
                 return WebIDL::InvalidStateError::create(canvas_element->realm(), "Canvas width or height is zero"_fly_string);
             return Optional<CanvasImageSourceUsability> {};
+        },
+
+        // ImageBitmap
+        // FIXME: VideoFrame
+        [](JS::Handle<ImageBitmap> const& image_bitmap) -> WebIDL::ExceptionOr<Optional<CanvasImageSourceUsability>> {
+            if (image_bitmap->is_detached())
+                return WebIDL::InvalidStateError::create(image_bitmap->realm(), "Image bitmap is detached"_fly_string);
+            return Optional<CanvasImageSourceUsability> {};
         }));
     if (usability.has_value())
         return usability.release_value();
@@ -659,8 +668,7 @@ bool image_is_not_origin_clean(CanvasImageSource const& image)
         // image's media data is CORS-cross-origin.
 
         // HTMLCanvasElement
-        // FIXME: ImageBitmap
-        [](JS::Handle<HTMLCanvasElement> const&) {
+        [](OneOf<JS::Handle<HTMLCanvasElement>, JS::Handle<ImageBitmap>> auto const&) {
             // FIXME: image's bitmap's origin-clean flag is false.
             return false;
         });

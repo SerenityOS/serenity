@@ -50,6 +50,7 @@ public:
 
     // Implementation specific:
     void set_bitmap(RefPtr<Gfx::Bitmap>);
+    Gfx::Bitmap* bitmap() const;
 
 private:
     explicit ImageBitmap(JS::Realm&);
