@@ -47,6 +47,12 @@ void Memory::initialize(JS::Realm& realm)
     WEB_SET_PROTOTYPE_FOR_INTERFACE_WITH_CUSTOM_NAME(Memory, WebAssembly.Memory);
 }
 
+void Memory::visit_edges(Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_buffer);
+}
+
 // https://webassembly.github.io/spec/js-api/#dom-memory-grow
 WebIDL::ExceptionOr<u32> Memory::grow(u32 delta)
 {
