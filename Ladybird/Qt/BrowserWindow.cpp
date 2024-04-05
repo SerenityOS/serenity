@@ -613,6 +613,9 @@ void BrowserWindow::close_tab(int index)
     auto* tab = m_tabs_container->widget(index);
     m_tabs_container->removeTab(index);
     tab->deleteLater();
+
+    if (m_tabs_container->count() == 0)
+        close();
 }
 
 void BrowserWindow::open_file()
@@ -623,9 +626,6 @@ void BrowserWindow::open_file()
 void BrowserWindow::close_current_tab()
 {
     close_tab(m_tabs_container->currentIndex());
-
-    if (m_tabs_container->count() == 0)
-        close();
 }
 
 int BrowserWindow::tab_index(Tab* tab)
