@@ -1011,7 +1011,9 @@ void finalize_a_same_document_navigation(JS::NonnullGCPtr<TraversableNavigable> 
     auto& target_entries = target_navigable->get_session_history_entries();
 
     // 5. If entryToReplace is null, then:
-    if (!entry_to_replace) {
+    // FIXME: Checking containment of entryToReplace should not be needed.
+    //        For more details see https://github.com/whatwg/html/issues/10232#issuecomment-2037543137
+    if (!entry_to_replace || !target_entries.contains_slow(JS::NonnullGCPtr { *entry_to_replace })) {
         // 1. Clear the forward session history of traversable.
         traversable->clear_the_forward_session_history();
 
