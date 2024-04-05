@@ -3118,7 +3118,8 @@ void Document::run_unloading_cleanup_steps()
 
     // 4. If document's salvageable state is false, then:
     if (!m_salvageable) {
-        // FIXME: 1. For each EventSource object eventSource whose relevant global object is equal to window, forcibly close eventSource.
+        // 1. For each EventSource object eventSource whose relevant global object is equal to window, forcibly close eventSource.
+        window->forcibly_close_all_event_sources();
 
         // 2. Clear window's map of active timers.
         window->clear_map_of_active_timers();

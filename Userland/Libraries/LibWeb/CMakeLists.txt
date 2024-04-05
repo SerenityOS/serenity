@@ -272,6 +272,7 @@ set(SOURCES
     HTML/DataTransfer.cpp
     HTML/ErrorEvent.cpp
     HTML/EventHandler.cpp
+    HTML/EventSource.cpp
     HTML/EventLoop/EventLoop.cpp
     HTML/EventLoop/Task.cpp
     HTML/EventLoop/TaskQueue.cpp
