@@ -49,6 +49,8 @@ public:
 private:
     explicit AudioTrackList(JS::Realm&);
 
+    virtual void visit_edges(Visitor&) override;
+
     virtual void initialize(JS::Realm&) override;
     virtual JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> internal_get_own_property(JS::PropertyKey const& property_name) const override;
 
