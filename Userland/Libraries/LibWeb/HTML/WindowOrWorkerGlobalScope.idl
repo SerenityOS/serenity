@@ -1,6 +1,7 @@
 #import <Fetch/Request.idl>
 #import <Fetch/Response.idl>
 #import <HighResolutionTime/Performance.idl>
+#import <HTML/ImageBitmap.idl>
 #import <HTML/MessagePort.idl>
 
 // FIXME: Support VoidFunction in the IDL parser
@@ -31,8 +32,8 @@ interface mixin WindowOrWorkerGlobalScope {
     undefined queueMicrotask(VoidFunction callback);
 
     // ImageBitmap
-    // FIXME: Promise<ImageBitmap> createImageBitmap(ImageBitmapSource image, optional ImageBitmapOptions options = {});
-    // FIXME: Promise<ImageBitmap> createImageBitmap(ImageBitmapSource image, long sx, long sy, long sw, long sh, optional ImageBitmapOptions options = {});
+    Promise<ImageBitmap> createImageBitmap(ImageBitmapSource image, optional ImageBitmapOptions options = {});
+    Promise<ImageBitmap> createImageBitmap(ImageBitmapSource image, long sx, long sy, long sw, long sh, optional ImageBitmapOptions options = {});
 
     // structured cloning
     any structuredClone(any value, optional StructuredSerializeOptions options = {});

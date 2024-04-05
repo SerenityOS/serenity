@@ -423,6 +423,7 @@ class HTMLTrackElement;
 class HTMLUListElement;
 class HTMLUnknownElement;
 class HTMLVideoElement;
+class ImageBitmap;
 class ImageData;
 class ImageRequest;
 class ListOfAvailableImages;
