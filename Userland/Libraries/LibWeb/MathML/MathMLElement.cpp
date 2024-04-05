@@ -27,6 +27,12 @@ void MathMLElement::initialize(JS::Realm& realm)
     m_dataset = HTML::DOMStringMap::create(*this);
 }
 
+void MathMLElement::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_dataset);
+}
+
 Optional<ARIA::Role> MathMLElement::default_role() const
 {
     // https://www.w3.org/TR/html-aria/#el-math
