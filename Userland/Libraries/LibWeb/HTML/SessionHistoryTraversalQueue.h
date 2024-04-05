@@ -25,9 +25,15 @@ public:
     SessionHistoryTraversalQueue()
     {
         m_timer = Core::Timer::create_single_shot(0, [this] {
+            if (m_is_task_running && m_queue.size() > 0) {
+                m_timer->start();
+                return;
+            }
             while (m_queue.size() > 0) {
+                m_is_task_running = true;
                 auto entry = m_queue.take_first();
                 entry.steps();
+                m_is_task_running = false;
             }
         }).release_value_but_fixme_should_propagate_errors();
     }
@@ -60,6 +66,7 @@ public:
 private:
     Vector<SessionHistoryTraversalQueueEntry> m_queue;
     RefPtr<Core::Timer> m_timer;
+    bool m_is_task_running { false };
 };
 
 }
