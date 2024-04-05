@@ -50,7 +50,11 @@ public:
 
     HistoryStepResult apply_the_traverse_history_step(int, Optional<SourceSnapshotParams>, JS::GCPtr<Navigable>, UserNavigationInvolvement);
     HistoryStepResult apply_the_reload_history_step();
-    HistoryStepResult apply_the_push_or_replace_history_step(int step, HistoryHandlingBehavior history_handling);
+    enum class SynchronousNavigation : bool {
+        Yes,
+        No,
+    };
+    HistoryStepResult apply_the_push_or_replace_history_step(int step, HistoryHandlingBehavior history_handling, SynchronousNavigation);
     HistoryStepResult update_for_navigable_creation_or_destruction();
 
     int get_the_used_step(int step) const;
@@ -98,7 +102,8 @@ private:
         Optional<SourceSnapshotParams>,
         JS::GCPtr<Navigable> initiator_to_check,
         Optional<UserNavigationInvolvement> user_involvement_for_navigate_events,
-        Optional<Bindings::NavigationType> navigation_type);
+        Optional<Bindings::NavigationType> navigation_type,
+        SynchronousNavigation);
 
     Vector<JS::NonnullGCPtr<SessionHistoryEntry>> get_session_history_entries_for_the_navigation_api(JS::NonnullGCPtr<Navigable>, int);
 

@@ -384,7 +384,8 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
     Optional<SourceSnapshotParams> source_snapshot_params,
     JS::GCPtr<Navigable> initiator_to_check,
     Optional<UserNavigationInvolvement> user_involvement_for_navigate_events,
-    Optional<Bindings::NavigationType> navigation_type)
+    Optional<Bindings::NavigationType> navigation_type,
+    SynchronousNavigation synchronous_navigation)
 {
     auto& vm = this->vm();
     // FIXME: 1. Assert: This is running within traversable's session history traversal queue.
@@ -474,7 +475,7 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
             };
 
             // 4. If displayedEntry is targetEntry and targetEntry's document state's reload pending is false, then:
-            if (displayed_entry == target_entry && !target_entry->document_state()->reload_pending()) {
+            if (synchronous_navigation == SynchronousNavigation::Yes && !target_entry->document_state()->reload_pending()) {
                 // 1. Set changingNavigableContinuation's update-only to true.
                 changing_navigable_continuation.update_only = true;
 
@@ -907,7 +908,7 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::update_for_navigab
     auto step = current_session_history_step();
 
     // 2. Return the result of applying the history step to traversable given false, null, null, null, and null.
-    return apply_the_history_step(step, false, {}, {}, {}, {});
+    return apply_the_history_step(step, false, {}, {}, {}, {}, SynchronousNavigation::No);
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#apply-the-reload-history-step
@@ -917,20 +918,20 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_reload_h
     auto step = current_session_history_step();
 
     // 2. Return the result of applying the history step step to traversable given true, null, null, null, and "reload".
-    return apply_the_history_step(step, true, {}, {}, {}, Bindings::NavigationType::Reload);
+    return apply_the_history_step(step, true, {}, {}, {}, Bindings::NavigationType::Reload, SynchronousNavigation::No);
 }
 
-TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_push_or_replace_history_step(int step, HistoryHandlingBehavior history_handling)
+TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_push_or_replace_history_step(int step, HistoryHandlingBehavior history_handling, SynchronousNavigation synchronous_navigation)
 {
     // 1. Return the result of applying the history step step to traversable given false, null, null, null, and historyHandling.
     auto navigation_type = history_handling == HistoryHandlingBehavior::Replace ? Bindings::NavigationType::Replace : Bindings::NavigationType::Push;
-    return apply_the_history_step(step, false, {}, {}, {}, navigation_type);
+    return apply_the_history_step(step, false, {}, {}, {}, navigation_type, synchronous_navigation);
 }
 
 TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_traverse_history_step(int step, Optional<SourceSnapshotParams> source_snapshot_params, JS::GCPtr<Navigable> initiator_to_check, UserNavigationInvolvement user_involvement)
 {
     // 1. Return the result of applying the history step step to traversable given true, sourceSnapshotParams, initiatorToCheck, userInvolvement, and "traverse".
-    return apply_the_history_step(step, true, move(source_snapshot_params), initiator_to_check, user_involvement, Bindings::NavigationType::Traverse);
+    return apply_the_history_step(step, true, move(source_snapshot_params), initiator_to_check, user_involvement, Bindings::NavigationType::Traverse, SynchronousNavigation::No);
 }
 
 // https://html.spec.whatwg.org/multipage/document-sequences.html#close-a-top-level-traversable
@@ -1034,7 +1035,7 @@ void finalize_a_same_document_navigation(JS::NonnullGCPtr<TraversableNavigable> 
     }
 
     // 6. Apply the push/replace history step targetStep to traversable given historyHandling.
-    traversable->apply_the_push_or_replace_history_step(*target_step, history_handling);
+    traversable->apply_the_push_or_replace_history_step(*target_step, history_handling, TraversableNavigable::SynchronousNavigation::Yes);
 }
 
 // https://html.spec.whatwg.org/multipage/interaction.html#system-visibility-state
