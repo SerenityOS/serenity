@@ -5,6 +5,7 @@
  */
 
 #include <LibWeb/HTML/Canvas/CanvasDrawImage.h>
+#include <LibWeb/HTML/ImageBitmap.h>
 
 namespace Web::HTML {
 

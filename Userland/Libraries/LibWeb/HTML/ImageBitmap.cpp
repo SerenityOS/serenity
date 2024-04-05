@@ -104,4 +104,9 @@ void ImageBitmap::set_bitmap(RefPtr<Gfx::Bitmap> bitmap)
     m_height = m_bitmap->height();
 }
 
+Gfx::Bitmap* ImageBitmap::bitmap() const
+{
+    return m_bitmap.ptr();
+}
+
 }

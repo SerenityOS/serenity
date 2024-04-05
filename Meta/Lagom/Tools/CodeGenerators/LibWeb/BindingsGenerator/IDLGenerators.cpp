@@ -46,6 +46,7 @@ static bool is_platform_object(Type const& type)
         "FileList"sv,
         "FormData"sv,
         "HTMLCollection"sv,
+        "ImageBitmap"sv,
         "ImageData"sv,
         "Instance"sv,
         "IntersectionObserverEntry"sv,

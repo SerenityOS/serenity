@@ -1,11 +1,12 @@
 #import <HTML/HTMLCanvasElement.idl>
 #import <HTML/HTMLImageElement.idl>
+#import <HTML/ImageBitmap.idl>
 
 typedef (HTMLImageElement or
 // FIXME: We should use HTMLOrSVGImageElement instead of HTMLImageElement
 // FIXME: HTMLVideoElement or
-         HTMLCanvasElement
-// FIXME: ImageBitmap
+         HTMLCanvasElement or
+         ImageBitmap
 // FIXME: OffscreenCanvas
 // FIXME: VideoFrame
          ) CanvasImageSource;
