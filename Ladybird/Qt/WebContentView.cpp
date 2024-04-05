@@ -74,6 +74,14 @@ WebContentView::WebContentView(QWidget* window, WebContentOptions const& web_con
         update_viewport_rect();
     });
 
+    QObject::connect(qGuiApp, &QGuiApplication::screenRemoved, [this](QScreen*) {
+        update_screen_rects();
+    });
+
+    QObject::connect(qGuiApp, &QGuiApplication::screenAdded, [this](QScreen*) {
+        update_screen_rects();
+    });
+
     initialize_client((parent_client == nullptr) ? CreateNewClient::Yes : CreateNewClient::No);
 
     on_did_layout = [this](auto content_size) {
@@ -538,8 +546,6 @@ void WebContentView::update_screen_rects()
             auto geometry = screen->geometry();
             screen_rects.append(Web::DevicePixelRect(geometry.x(), geometry.y(), geometry.width(), geometry.height()));
         }
-
-        // FIXME: Update the screens again when QGuiApplication::screenAdded/Removed signals are emitted
 
         // NOTE: The first item in QGuiApplication::screens is always the primary screen.
         //       This is not specified in the documentation but QGuiApplication::primaryScreen
