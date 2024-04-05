@@ -1787,6 +1787,32 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
     return exported_symbols;
 }
 
+// 6.6.2 Input parameters
+struct HalftoneRegionDecodingInputParameters {
+    u32 region_width { 0 };                                               // "HBW" in spec.
+    u32 region_height { 0 };                                              // "HBH" in spec.
+    bool uses_mmr { false };                                              // "HMMR" in spec.
+    u8 halftone_template { 0 };                                           // "HTEMPLATE" in spec.
+    Vector<NonnullRefPtr<Symbol>> patterns;                               // "HNUMPATS" / "HPATS" in spec.
+    bool default_pixel_value { false };                                   // "HDEFPIXEL" in spec.
+    CombinationOperator combination_operator { CombinationOperator::Or }; // "HCOMBOP" in spec.
+    bool enable_skip { false };                                           // "HENABLESKIP" in spec.
+    u32 grayscale_width { 0 };                                            // "HGW" in spec.
+    u32 grayscale_height { 0 };                                           // "HGH" in spec.
+    i32 grid_origin_x_offset { 0 };                                       // "HGX" in spec.
+    i32 grid_origin_y_offset { 0 };                                       // "HGY" in spec.
+    u16 grid_vector_x { 0 };                                              // "HRY" in spec.
+    u16 grid_vector_y { 0 };                                              // "HRX" in spec.
+    u8 pattern_width { 0 };                                               // "HPW" in spec.
+    u8 pattern_height { 0 };                                              // "HPH" in spec.
+};
+
+// 6.6 Halftone Region Decoding Procedure
+static ErrorOr<NonnullOwnPtr<BitBuffer>> halftone_region_decoding_procedure(HalftoneRegionDecodingInputParameters const&, ReadonlyBytes)
+{
+    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Halftone region decoding not implemented yet");
+}
+
 // 6.7.2 Input parameters
 // Table 24 – Parameters for the pattern dictionary decoding procedure
 struct PatternDictionaryDecodingInputParameters {
@@ -2157,9 +2183,99 @@ static ErrorOr<void> decode_intermediate_halftone_region(JBIG2LoadingContext&, S
     return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode intermediate halftone region yet");
 }
 
-static ErrorOr<void> decode_immediate_halftone_region(JBIG2LoadingContext&, SegmentData const&)
+static ErrorOr<void> decode_immediate_halftone_region(JBIG2LoadingContext& context, SegmentData const& segment)
 {
-    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode immediate halftone region yet");
+    // 7.4.5 Halftone region segment syntax
+    auto data = segment.data;
+    auto information_field = TRY(decode_region_segment_information_field(data));
+    data = data.slice(sizeof(information_field));
+
+    dbgln_if(JBIG2_DEBUG, "Halftone region: width={}, height={}, x={}, y={}, flags={:#x}", information_field.width, information_field.height, information_field.x_location, information_field.y_location, information_field.flags);
+
+    FixedMemoryStream stream(data);
+
+    // 7.4.5.1.1 Halftone region segment flags
+    u8 flags = TRY(stream.read_value<u8>());
+    bool uses_mmr = flags & 1;           // "HMMR" in spec.
+    u8 template_used = (flags >> 1) & 3; // "HTTEMPLATE" in spec.
+    if (uses_mmr && template_used != 0)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid template_used");
+    bool enable_skip = (flags >> 3) & 1;        // "HENABLESKIP" in spec.
+    u8 combination_operator = (flags >> 4) & 7; // "HCOMBOP" in spec.
+    if (combination_operator > 4)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid combination_operator");
+    bool default_pixel_value = (flags >> 7) & 1; // "HDEFPIXEL" in spec.
+
+    dbgln_if(JBIG2_DEBUG, "Halftone region: uses_mmr={}, template_used={}, enable_skip={}, combination_operator={}, default_pixel_value={}", uses_mmr, template_used, enable_skip, combination_operator, default_pixel_value);
+
+    // 7.4.5.1.2 Halftone grid position and size
+    // 7.4.5.1.2.1 Width of the gray-scale image (HGW)
+    u32 gray_width = TRY(stream.read_value<BigEndian<u32>>());
+
+    // 7.4.5.1.2.2 Height of the gray-scale image (HGH)
+    u32 gray_height = TRY(stream.read_value<BigEndian<u32>>());
+
+    // 7.4.5.1.2.3 Horizontal offset of the grid (HGX)
+    i32 grid_x = TRY(stream.read_value<BigEndian<i32>>());
+
+    // 7.4.5.1.2.4 Vertical offset of the grid (HGY)
+    i32 grid_y = TRY(stream.read_value<BigEndian<i32>>());
+
+    // 7.4.5.1.3 Halftone grid vector
+    // 7.4.5.1.3.1 Horizontal coordinate of the halftone grid vector (HRX)
+    u16 grid_vector_x = TRY(stream.read_value<BigEndian<u16>>());
+
+    // 7.4.5.1.3.2 Vertical coordinate of the halftone grid vector (HRY)
+    u16 grid_vector_y = TRY(stream.read_value<BigEndian<u16>>());
+
+    dbgln_if(JBIG2_DEBUG, "Halftone region: gray_width={}, gray_height={}, grid_x={}, grid_y={}, grid_vector_x={}, grid_vector_y={}", gray_width, gray_height, grid_x, grid_y, grid_vector_x, grid_vector_y);
+
+    // 7.4.5.2 Decoding a halftone region segment
+    // "1) Interpret its header, as described in 7.4.5.1."
+    // Done!
+
+    // "2) Decode (or retrieve the results of decoding) the referred-to pattern dictionary segment."
+    if (segment.header.referred_to_segment_numbers.size() != 1)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Halftone segment refers to wrong number of segments");
+    auto opt_referred_to_segment = context.segments_by_number.get(segment.header.referred_to_segment_numbers[0]);
+    if (!opt_referred_to_segment.has_value())
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Halftone segment refers to non-existent segment");
+    dbgln_if(JBIG2_DEBUG, "Halftone segment refers to segment id {} index {}", segment.header.referred_to_segment_numbers[0], opt_referred_to_segment.value());
+    auto const& referred_to_segment = context.segments[opt_referred_to_segment.value()];
+    if (!referred_to_segment.patterns.has_value())
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Halftone segment referred-to segment without patterns");
+    Vector<NonnullRefPtr<Symbol>> patterns = referred_to_segment.patterns.value();
+    if (patterns.is_empty())
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Halftone segment without patterns");
+
+    // "3) As described in E.3.7, reset all the arithmetic coding statistics to zero."
+    // FIXME
+
+    // "4) Invoke the halftone region decoding procedure described in 6.6, with the parameters to the halftone
+    //     region decoding procedure set as shown in Table 36."
+    data = data.slice(TRY(stream.tell()));
+    HalftoneRegionDecodingInputParameters inputs;
+    inputs.region_width = information_field.width;
+    inputs.region_height = information_field.height;
+    inputs.uses_mmr = uses_mmr;
+    inputs.halftone_template = template_used;
+    inputs.enable_skip = enable_skip;
+    inputs.combination_operator = static_cast<CombinationOperator>(combination_operator);
+    inputs.default_pixel_value = default_pixel_value;
+    inputs.grayscale_width = gray_width;
+    inputs.grayscale_height = gray_height;
+    inputs.grid_origin_x_offset = grid_x;
+    inputs.grid_origin_y_offset = grid_y;
+    inputs.grid_vector_x = grid_vector_x;
+    inputs.grid_vector_y = grid_vector_y;
+    inputs.patterns = move(patterns);
+    inputs.pattern_width = inputs.patterns[0]->bitmap().width();
+    inputs.pattern_height = inputs.patterns[0]->bitmap().height();
+    auto result = TRY(halftone_region_decoding_procedure(inputs, data));
+
+    composite_bitbuffer(*context.page.bits, *result, { information_field.x_location, information_field.y_location }, information_field.external_combination_operator());
+
+    return {};
 }
 
 static ErrorOr<void> decode_immediate_lossless_halftone_region(JBIG2LoadingContext&, SegmentData const&)
