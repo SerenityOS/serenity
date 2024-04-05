@@ -86,8 +86,8 @@ std::vector<clang::QualType> get_all_qualified_types(clang::QualType const& type
 
     if (auto const* template_specialization = type->getAs<clang::TemplateSpecializationType>()) {
         auto specialization_name = template_specialization->getTemplateName().getAsTemplateDecl()->getQualifiedNameAsString();
-        // Do not unwrap GCPtr/NonnullGCPtr
-        if (specialization_name == "JS::GCPtr" || specialization_name == "JS::NonnullGCPtr" || specialization_name == "JS::RawGCPtr") {
+        // Do not unwrap GCPtr/NonnullGCPtr/MarkedVector
+        if (specialization_name == "JS::GCPtr" || specialization_name == "JS::NonnullGCPtr" || specialization_name == "JS::RawGCPtr" || specialization_name == "JS::MarkedVector") {
             qualified_types.push_back(type);
         } else {
             auto const template_arguments = template_specialization->template_arguments();
