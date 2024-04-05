@@ -1281,8 +1281,6 @@ WebIDL::ExceptionOr<void> Navigable::navigate(NavigateParams params)
         // 1. Navigate to a fragment given navigable, url, historyHandling, userInvolvement, navigationAPIState, and navigationId.
         TRY(navigate_to_a_fragment(url, to_history_handling_behavior(history_handling), user_involvement, navigation_api_state, navigation_id));
 
-        traversable_navigable()->process_session_history_traversal_queue();
-
         // 2. Return.
         return {};
     }
@@ -1934,9 +1932,6 @@ void perform_url_and_history_update_steps(DOM::Document& document, URL::URL new_
         // 1. Finalize a same-document navigation given traversable, navigable, newEntry, and entryToReplace.
         finalize_a_same_document_navigation(*traversable, *navigable, new_entry, entry_to_replace, history_handling);
     });
-
-    // FIXME: Implement synchronous session history steps.
-    traversable->process_session_history_traversal_queue();
 }
 
 void Navigable::scroll_offset_did_change()

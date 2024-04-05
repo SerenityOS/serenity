@@ -79,11 +79,6 @@ public:
         m_session_history_traversal_queue.append_sync(move(steps), target_navigable);
     }
 
-    void process_session_history_traversal_queue()
-    {
-        m_session_history_traversal_queue.process();
-    }
-
     Page& page() { return m_page; }
     Page const& page() const { return m_page; }
 
