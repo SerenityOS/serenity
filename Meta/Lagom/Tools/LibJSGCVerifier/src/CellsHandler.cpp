@@ -210,6 +210,12 @@ void CollectCellsHandler::run(clang::ast_matchers::MatchFinder::MatchResult cons
 
     clang::DeclarationName const name = &result.Context->Idents.get("visit_edges");
     auto const* visit_edges_method = record->lookup(name).find_first<clang::CXXMethodDecl>();
+    if (!visit_edges_method && !fields_that_need_visiting.empty()) {
+        auto diag_id = diag_engine.getCustomDiagID(clang::DiagnosticsEngine::Warning, "JS::Cell-inheriting class %0 contains a GC-allocated member %1 but has no visit_edges method");
+        auto builder = diag_engine.Report(record->getLocation(), diag_id);
+        builder << record->getName()
+                << fields_that_need_visiting[0];
+    }
     if (!visit_edges_method || !visit_edges_method->getBody())
         return;
 
