@@ -125,11 +125,11 @@ private:
     Vector<Variant<NonnullOwnPtr<CallFrame>, CallFrame*>> m_call_frames;
     Span<Value> m_current_call_frame;
     BasicBlock const* m_scheduled_jump { nullptr };
-    Executable* m_current_executable { nullptr };
+    GCPtr<Executable> m_current_executable { nullptr };
     BasicBlock const* m_current_block { nullptr };
-    Realm* m_realm { nullptr };
-    Object* m_global_object { nullptr };
-    DeclarativeEnvironment* m_global_declarative_environment { nullptr };
+    GCPtr<Realm> m_realm { nullptr };
+    GCPtr<Object> m_global_object { nullptr };
+    GCPtr<DeclarativeEnvironment> m_global_declarative_environment { nullptr };
     Optional<InstructionStreamIterator&> m_pc {};
 };
 

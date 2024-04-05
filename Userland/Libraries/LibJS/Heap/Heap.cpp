@@ -186,8 +186,8 @@ public:
         while (!m_work_queue.is_empty()) {
             auto ptr = reinterpret_cast<FlatPtr>(&m_work_queue.last());
             m_node_being_visited = &m_graph.ensure(ptr);
-            m_node_being_visited->class_name = m_work_queue.last().class_name();
-            m_work_queue.take_last().visit_edges(*this);
+            m_node_being_visited->class_name = m_work_queue.last()->class_name();
+            m_work_queue.take_last()->visit_edges(*this);
             m_node_being_visited = nullptr;
         }
     }
@@ -244,7 +244,7 @@ private:
     };
 
     GraphNode* m_node_being_visited { nullptr };
-    Vector<Cell&> m_work_queue;
+    Vector<NonnullGCPtr<Cell>> m_work_queue;
     HashMap<FlatPtr, GraphNode> m_graph;
 
     Heap& m_heap;
@@ -438,13 +438,13 @@ public:
     void mark_all_live_cells()
     {
         while (!m_work_queue.is_empty()) {
-            m_work_queue.take_last().visit_edges(*this);
+            m_work_queue.take_last()->visit_edges(*this);
         }
     }
 
 private:
     Heap& m_heap;
-    Vector<Cell&> m_work_queue;
+    Vector<NonnullGCPtr<Cell>> m_work_queue;
     HashTable<HeapBlock*> m_all_live_heap_blocks;
     FlatPtr m_min_block_address;
     FlatPtr m_max_block_address;

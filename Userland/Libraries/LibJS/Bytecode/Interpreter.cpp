@@ -474,11 +474,11 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable& executa
 {
     dbgln_if(JS_BYTECODE_DEBUG, "Bytecode::Interpreter will run unit {:p}", &executable);
 
-    TemporaryChange restore_executable { m_current_executable, &executable };
+    TemporaryChange restore_executable { m_current_executable, GCPtr { executable } };
     TemporaryChange restore_saved_jump { m_scheduled_jump, static_cast<BasicBlock const*>(nullptr) };
-    TemporaryChange restore_realm { m_realm, vm().current_realm() };
-    TemporaryChange restore_global_object { m_global_object, &m_realm->global_object() };
-    TemporaryChange restore_global_declarative_environment { m_global_declarative_environment, &m_realm->global_environment().declarative_record() };
+    TemporaryChange restore_realm { m_realm, GCPtr { vm().current_realm() } };
+    TemporaryChange restore_global_object { m_global_object, GCPtr { m_realm->global_object() } };
+    TemporaryChange restore_global_declarative_environment { m_global_declarative_environment, GCPtr { m_realm->global_environment().declarative_record() } };
 
     VERIFY(!vm().execution_context_stack().is_empty());
 
