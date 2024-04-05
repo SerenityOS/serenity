@@ -9,26 +9,33 @@ import subprocess
 import sys
 
 # Relative to Userland directory
-PATHS_TO_SEARCH = [
+COMMON_PATHS_TO_SEARCH = [
+    'Libraries/LibJS',
+    'Libraries/LibMarkdown',
+    'Libraries/LibWeb',
+    'Services/WebContent',
+    'Services/WebWorker',
+]
+SERENITY_PATHS_TO_SEARCH = COMMON_PATHS_TO_SEARCH + [
     'Applications/Assistant',
     'Applications/Browser',
     'Applications/Spreadsheet',
     'Applications/TextEditor',
     'DevTools/HackStudio',
-    'Libraries/LibJS',
-    'Libraries/LibMarkdown',
-    'Libraries/LibWeb',
-    'Services/WebContent',
 ]
 
 parser = argparse.ArgumentParser('LibJSGCVerifier', description='A Clang tool to validate usage of the LibJS GC')
 parser.add_argument('-b', '--build-path', required=True, help='Path to the project Build folder')
+parser.add_argument('-l', '--lagom', action='store_true', required=False,
+                    help='Use the lagom build instead of the serenity build')
 args = parser.parse_args()
 
 build_path = Path(args.build_path).resolve()
 userland_path = build_path / '..' / 'Userland'
-include_path = build_path / 'x86_64clang' / 'Root' / 'usr' / 'include'
-compile_commands_path = build_path / 'x86_64clang' / 'compile_commands.json'
+if args.lagom:
+    compile_commands_path = build_path / 'lagom' / 'compile_commands.json'
+else:
+    compile_commands_path = build_path / 'x86_64clang' / 'compile_commands.json'
 
 if not compile_commands_path.exists():
     print(f'Could not find compile_commands.json in {compile_commands_path.parent}')
@@ -36,7 +43,11 @@ if not compile_commands_path.exists():
 
 paths = []
 
-for containing_path in PATHS_TO_SEARCH:
+if args.lagom:
+    paths_to_search = COMMON_PATHS_TO_SEARCH
+else:
+    paths_to_search = SERENITY_PATHS_TO_SEARCH
+for containing_path in paths_to_search:
     for root, dirs, files in os.walk(userland_path / containing_path):
         for file in files:
             if file.endswith('.cpp'):
