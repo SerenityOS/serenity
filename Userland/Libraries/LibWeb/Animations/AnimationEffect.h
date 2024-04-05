@@ -152,6 +152,8 @@ protected:
     AnimationEffect(JS::Realm&);
     virtual ~AnimationEffect() = default;
 
+    virtual void visit_edges(Visitor&) override;
+
     virtual void initialize(JS::Realm&) override;
 
     // https://www.w3.org/TR/web-animations-1/#start-delay
