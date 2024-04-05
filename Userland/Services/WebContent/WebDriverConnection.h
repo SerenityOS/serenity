@@ -117,7 +117,7 @@ private:
     ErrorOr<ScriptArguments, Web::WebDriver::Error> extract_the_script_arguments_from_a_request(JsonValue const& payload);
     void delete_cookies(Optional<StringView> const& name = {});
 
-    Web::PageClient& m_page_client;
+    JS::NonnullGCPtr<Web::PageClient> m_page_client;
 
     // https://w3c.github.io/webdriver/#dfn-page-load-strategy
     Web::WebDriver::PageLoadStrategy m_page_load_strategy { Web::WebDriver::PageLoadStrategy::Normal };
