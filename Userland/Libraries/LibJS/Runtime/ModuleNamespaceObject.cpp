@@ -228,4 +228,10 @@ ThrowCompletionOr<MarkedVector<Value>> ModuleNamespaceObject::internal_own_prope
     return exports;
 }
 
+void ModuleNamespaceObject::visit_edges(JS::Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_module);
+}
+
 }
