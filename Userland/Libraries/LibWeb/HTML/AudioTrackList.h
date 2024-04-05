@@ -52,7 +52,7 @@ private:
     virtual void initialize(JS::Realm&) override;
     virtual JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> internal_get_own_property(JS::PropertyKey const& property_name) const override;
 
-    JS::MarkedVector<JS::NonnullGCPtr<AudioTrack>> m_audio_tracks;
+    Vector<JS::NonnullGCPtr<AudioTrack>> m_audio_tracks;
 };
 
 }
