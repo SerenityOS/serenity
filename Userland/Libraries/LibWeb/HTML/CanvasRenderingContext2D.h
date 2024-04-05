@@ -37,10 +37,6 @@
 
 namespace Web::HTML {
 
-// https://html.spec.whatwg.org/multipage/canvas.html#canvasimagesource
-// NOTE: This is the Variant created by the IDL wrapper generator, and needs to be updated accordingly.
-using CanvasImageSource = Variant<JS::Handle<HTMLImageElement>, JS::Handle<HTMLCanvasElement>>;
-
 class CanvasRenderingContext2D
     : public Bindings::PlatformObject
     , public CanvasPath
