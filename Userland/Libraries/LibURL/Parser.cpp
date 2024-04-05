@@ -580,6 +580,15 @@ static ErrorOr<String> domain_to_ascii(StringView domain, bool be_strict)
 {
     // 1. Let result be the result of running Unicode ToASCII with domain_name set to domain, UseSTD3ASCIIRules set to beStrict, CheckHyphens set to false, CheckBidi set to true, CheckJoiners set to true, Transitional_Processing set to false, and VerifyDnsLength set to beStrict. [UTS46]
     // 2. If result is a failure value, domain-to-ASCII validation error, return failure.
+
+    // OPTIMIZATION: Fast path for all-ASCII domain strings.
+    if (all_of(domain, is_ascii)) {
+        // 3. If result is the empty string, domain-to-ASCII validation error, return failure.
+        if (domain.is_empty())
+            return Error::from_string_literal("Empty domain");
+        return String::from_utf8_without_validation(domain.bytes());
+    }
+
     Unicode::IDNA::ToAsciiOptions const options {
         Unicode::IDNA::CheckHyphens::No,
         Unicode::IDNA::CheckBidi::Yes,
