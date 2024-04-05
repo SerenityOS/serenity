@@ -4,6 +4,7 @@
         <file>../Icons/back.tvg</file>
         <file>../Icons/close.tvg</file>
         <file>../Icons/forward.tvg</file>
+        <file>../Icons/new_tab.tvg</file>
         <file>../Icons/reload.tvg</file>
     </qresource>
 </RCC>
