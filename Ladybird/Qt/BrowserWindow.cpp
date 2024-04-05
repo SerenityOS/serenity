@@ -78,10 +78,9 @@ BrowserWindow::BrowserWindow(Vector<URL::URL> const& initial_urls, WebView::Cook
 
     menu->addSeparator();
 
-    auto* new_tab_action = new QAction("New &Tab", this);
-    new_tab_action->setIcon(load_icon_from_uri("resource://icons/16x16/new-tab.png"sv));
-    new_tab_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::AddTab));
-    menu->addAction(new_tab_action);
+    m_new_tab_action = new QAction("New &Tab", this);
+    m_new_tab_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::AddTab));
+    menu->addAction(m_new_tab_action);
 
     auto* close_current_tab_action = new QAction("&Close Current Tab", this);
     close_current_tab_action->setIcon(load_icon_from_uri("resource://icons/16x16/close-tab.png"sv));
@@ -396,7 +395,7 @@ BrowserWindow::BrowserWindow(Vector<URL::URL> const& initial_urls, WebView::Cook
     QObject::connect(about_action, &QAction::triggered, this, [this] {
         new_tab_from_url("about:version"sv, Web::HTML::ActivateTab::Yes);
     });
-    QObject::connect(new_tab_action, &QAction::triggered, this, [this] {
+    QObject::connect(m_new_tab_action, &QAction::triggered, this, [this] {
         new_tab_from_url(ak_url_from_qstring(Settings::the()->new_tab_page()), Web::HTML::ActivateTab::Yes);
     });
     QObject::connect(open_file_action, &QAction::triggered, this, &BrowserWindow::open_file);

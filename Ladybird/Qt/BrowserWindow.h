@@ -51,6 +51,11 @@ public:
         return *m_reload_action;
     }
 
+    QAction& new_tab_action()
+    {
+        return *m_new_tab_action;
+    }
+
     QAction& copy_selection_action()
     {
         return *m_copy_selection_action;
@@ -148,6 +153,7 @@ private:
     QAction* m_go_back_action { nullptr };
     QAction* m_go_forward_action { nullptr };
     QAction* m_reload_action { nullptr };
+    QAction* m_new_tab_action { nullptr };
     QAction* m_copy_selection_action { nullptr };
     QAction* m_paste_action { nullptr };
     QAction* m_select_all_action { nullptr };

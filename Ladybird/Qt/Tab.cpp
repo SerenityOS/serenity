@@ -79,6 +79,7 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
     m_toolbar->addAction(&m_window->go_forward_action());
     m_toolbar->addAction(&m_window->reload_action());
     m_toolbar->addWidget(m_location_edit);
+    m_toolbar->addAction(&m_window->new_tab_action());
     m_toolbar->setIconSize({ 16, 16 });
     // This is a little awkward, but without this Qt shrinks the button to the size of the icon.
     // Note: toolButtonStyle="0" -> ToolButtonIconOnly.
@@ -870,6 +871,7 @@ void Tab::recreate_toolbar_icons()
     m_window->go_back_action().setIcon(create_tvg_icon_with_theme_colors("back", palette()));
     m_window->go_forward_action().setIcon(create_tvg_icon_with_theme_colors("forward", palette()));
     m_window->reload_action().setIcon(create_tvg_icon_with_theme_colors("reload", palette()));
+    m_window->new_tab_action().setIcon(create_tvg_icon_with_theme_colors("new_tab", palette()));
 }
 
 void Tab::show_inspector_window(InspectorTarget inspector_target)
