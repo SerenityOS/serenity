@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
+#include <LibCrypto/ASN1/DER.h>
 
 #ifndef KERNEL
 #    include <AK/ByteString.h>
@@ -37,6 +38,35 @@ requires requires(ExportableKey k) {
         // PrivateKey
         auto data = TRY(key.export_as_der());
         TRY(encoder.write(data));
+
+        return {};
+    }));
+
+    return encoder.finish();
+}
+
+template<typename ExportableKey>
+ErrorOr<ByteBuffer> wrap_in_subject_public_key_info(ExportableKey key, Span<int> algorithm_identifier)
+requires requires(ExportableKey k) {
+    k.export_as_der();
+}
+{
+    ASN1::Encoder encoder;
+    TRY(encoder.write_constructed(ASN1::Class::Universal, ASN1::Kind::Sequence, [&]() -> ErrorOr<void> {
+        // AlgorithmIdentifier
+        TRY(encoder.write_constructed(ASN1::Class::Universal, ASN1::Kind::Sequence, [&]() -> ErrorOr<void> {
+            TRY(encoder.write(algorithm_identifier)); // algorithm
+
+            // FIXME: This assumes we have a NULL parameter, this is not always the case
+            TRY(encoder.write(nullptr)); // parameters
+
+            return {};
+        }));
+
+        // subjectPublicKey
+        auto data = TRY(key.export_as_der());
+        auto bitstring = ::Crypto::ASN1::BitStringView(data, 0);
+        TRY(encoder.write(bitstring));
 
         return {};
     }));

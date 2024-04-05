@@ -788,18 +788,26 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Object>> RSAOAEP::export_key(Bindings::
         if (key->type() != Bindings::KeyType::Public)
             return WebIDL::InvalidAccessError::create(realm, "Key is not public"_fly_string);
 
-        // FIXME: 2. Let data be an instance of the subjectPublicKeyInfo ASN.1 structure defined in [RFC5280] with the following properties:
+        // 2. Let data be an instance of the subjectPublicKeyInfo ASN.1 structure defined in [RFC5280] with the following properties:
         // - Set the algorithm field to an AlgorithmIdentifier ASN.1 type with the following properties:
         //   - Set the algorithm field to the OID rsaEncryption defined in [RFC3447].
         //   - Set the params field to the ASN.1 type NULL.
         // - Set the subjectPublicKey field to the result of DER-encoding an RSAPublicKey ASN.1 type, as defined in [RFC3447], Appendix A.1.1,
         //   that represents the RSA public key represented by the [[handle]] internal slot of key
+        auto maybe_data = handle.visit(
+            [&](::Crypto::PK::RSAPublicKey<> const& public_key) -> ErrorOr<ByteBuffer> {
+                auto rsa_encryption_oid = Array<int, 7> { 1, 2, 840, 113549, 1, 1, 1 };
+                return TRY(::Crypto::PK::wrap_in_subject_public_key_info(public_key, rsa_encryption_oid));
+            },
+            [](auto) -> ErrorOr<ByteBuffer> {
+                VERIFY_NOT_REACHED();
+            });
+        // FIXME: clang-format butchers the visit if we do the TRY inline
+        auto data = TRY_OR_THROW_OOM(vm, maybe_data);
 
-        // FIXME: 3. Let result be the result of creating an ArrayBuffer containing data.
-        result = JS::ArrayBuffer::create(realm, TRY_OR_THROW_OOM(vm, ByteBuffer::copy(("FIXME"sv).bytes())));
+        // 3. Let result be the result of creating an ArrayBuffer containing data.
+        result = JS::ArrayBuffer::create(realm, data);
     }
-
-    // FIXME: If format is "pkcs8"
 
     // If format is "jwk"
     else if (format == Bindings::KeyFormat::Jwk) {
