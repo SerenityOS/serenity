@@ -63,6 +63,8 @@ def thread_execute(file_path):
         './build/LibJSGCVerifier',
         '--extra-arg',
         '-DUSING_AK_GLOBALLY=1',  # To avoid errors about USING_AK_GLOBALLY not being defined at all
+        '--extra-arg',
+        '-DNULL=0',  # To avoid errors about NULL not being defined at all
         '-p',
         compile_commands_path,
         file_path
