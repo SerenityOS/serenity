@@ -39,8 +39,8 @@ public:
     void set_max_length(Optional<size_t> max_length) { m_max_length = move(max_length); }
 
     template<DerivedFrom<EditableTextNodeOwner> T>
-    void set_editable_text_node_owner(Badge<T>, EditableTextNodeOwner& owner_element) { m_owner = &owner_element; }
-    EditableTextNodeOwner* editable_text_node_owner() { return m_owner.ptr(); }
+    void set_editable_text_node_owner(Badge<T>, Element& owner_element) { m_owner = &owner_element; }
+    EditableTextNodeOwner* editable_text_node_owner();
 
     WebIDL::ExceptionOr<JS::NonnullGCPtr<Text>> split_text(size_t offset);
 
@@ -55,7 +55,7 @@ protected:
     virtual void visit_edges(Cell::Visitor&) override;
 
 private:
-    JS::GCPtr<EditableTextNodeOwner> m_owner;
+    JS::GCPtr<Element> m_owner;
 
     bool m_always_editable { false };
     Optional<size_t> m_max_length {};
