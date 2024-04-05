@@ -42,12 +42,16 @@ ErrorOr<NonnullLockRefPtr<Memory::VMObject>> File::vmobject_for_mmap(Process&, M
 
 ErrorOr<void> File::attach(OpenFileDescription&)
 {
-    m_attach_count++;
+    m_attach_count.with([](auto& count) {
+        count++;
+    });
     return {};
 }
 
 void File::detach(OpenFileDescription&)
 {
-    m_attach_count--;
+    m_attach_count.with([](auto& count) {
+        count--;
+    });
 }
 }

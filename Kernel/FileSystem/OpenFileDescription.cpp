@@ -354,9 +354,24 @@ MasterPTY* OpenFileDescription::master_pty()
 
 ErrorOr<void> OpenFileDescription::close()
 {
-    if (m_file->attach_count() > 0)
-        return {};
-    return m_file->close();
+    if (m_file->is_socket()) {
+        // FIXME: This is an horrible way to lock the Socket mutex before
+        // trying to close this file descriptor and we do this only because
+        // otherwise we could accidentally try to lock a mutex within a
+        // spinlock scope, so first try to grab the Socket mutex and then
+        // the actual attach_count spinlock.
+        MutexLocker locker(socket()->mutex());
+        return m_file->attach_count({}).with([this](auto& count) -> ErrorOr<void> {
+            if (count > 0)
+                return {};
+            return m_file->close();
+        });
+    }
+    return m_file->attach_count({}).with([this](auto& count) -> ErrorOr<void> {
+        if (count > 0)
+            return {};
+        return m_file->close();
+    });
 }
 
 ErrorOr<NonnullOwnPtr<KString>> OpenFileDescription::original_absolute_path() const

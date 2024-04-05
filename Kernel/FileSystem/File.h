@@ -121,7 +121,7 @@ public:
 
     virtual FileBlockerSet& blocker_set() { return m_blocker_set; }
 
-    size_t attach_count() const { return m_attach_count; }
+    SpinlockProtected<size_t, LockRank::None> const& attach_count(Badge<OpenFileDescription>) const { return m_attach_count; }
 
 protected:
     File();
@@ -141,6 +141,8 @@ protected:
         }
     }
 
+    SpinlockProtected<size_t, LockRank::None> m_attach_count { 0 };
+
 private:
     ALWAYS_INLINE void do_evaluate_block_conditions()
     {
@@ -149,7 +151,6 @@ private:
     }
 
     FileBlockerSet m_blocker_set;
-    size_t m_attach_count { 0 };
 };
 
 }
