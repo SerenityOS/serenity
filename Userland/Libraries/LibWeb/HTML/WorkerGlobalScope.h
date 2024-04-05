@@ -50,6 +50,7 @@ public:
     using WindowOrWorkerGlobalScopeMixin::btoa;
     using WindowOrWorkerGlobalScopeMixin::clear_interval;
     using WindowOrWorkerGlobalScopeMixin::clear_timeout;
+    using WindowOrWorkerGlobalScopeMixin::create_image_bitmap;
     using WindowOrWorkerGlobalScopeMixin::fetch;
     using WindowOrWorkerGlobalScopeMixin::performance;
     using WindowOrWorkerGlobalScopeMixin::queue_microtask;
