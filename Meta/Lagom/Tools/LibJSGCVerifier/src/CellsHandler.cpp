@@ -87,7 +87,7 @@ std::vector<clang::QualType> get_all_qualified_types(clang::QualType const& type
     if (auto const* template_specialization = type->getAs<clang::TemplateSpecializationType>()) {
         auto specialization_name = template_specialization->getTemplateName().getAsTemplateDecl()->getQualifiedNameAsString();
         // Do not unwrap GCPtr/NonnullGCPtr
-        if (specialization_name == "JS::GCPtr" || specialization_name == "JS::NonnullGCPtr") {
+        if (specialization_name == "JS::GCPtr" || specialization_name == "JS::NonnullGCPtr" || specialization_name == "JS::RawGCPtr") {
             qualified_types.push_back(type);
         } else {
             auto const template_arguments = template_specialization->template_arguments();
@@ -141,7 +141,7 @@ FieldValidationResult validate_field(clang::FieldDecl const* field_decl)
             }
         } else if (auto const* specialization = qualified_type->getAs<clang::TemplateSpecializationType>()) {
             auto template_type_name = specialization->getTemplateName().getAsTemplateDecl()->getName();
-            if (template_type_name != "GCPtr" && template_type_name != "NonnullGCPtr")
+            if (template_type_name != "GCPtr" && template_type_name != "NonnullGCPtr" && template_type_name != "RawGCPtr")
                 return result;
 
             auto const template_args = specialization->template_arguments();
@@ -159,7 +159,7 @@ FieldValidationResult validate_field(clang::FieldDecl const* field_decl)
 
             result.is_wrapped_in_gcptr = true;
             result.is_valid = record_inherits_from_cell(*record_decl);
-            result.needs_visiting = true;
+            result.needs_visiting = template_type_name != "RawGCPtr";
         }
     }
 

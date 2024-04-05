@@ -32,7 +32,7 @@ public:
 private:
     explicit WeakSet(Object& prototype);
 
-    HashTable<GCPtr<Cell>> m_values; // This stores Cell pointers instead of Object pointers to aide with sweeping
+    HashTable<RawGCPtr<Cell>> m_values; // This stores Cell pointers instead of Object pointers to aide with sweeping
 };
 
 }

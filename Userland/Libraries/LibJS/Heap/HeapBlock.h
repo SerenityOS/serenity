@@ -100,7 +100,7 @@ private:
     struct FreelistEntry final : public Cell {
         JS_CELL(FreelistEntry, Cell);
 
-        GCPtr<FreelistEntry> next;
+        RawGCPtr<FreelistEntry> next;
     };
 
     Cell* cell(size_t index)
