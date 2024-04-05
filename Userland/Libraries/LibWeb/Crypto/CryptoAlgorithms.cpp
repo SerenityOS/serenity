@@ -809,6 +809,35 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Object>> RSAOAEP::export_key(Bindings::
         result = JS::ArrayBuffer::create(realm, data);
     }
 
+    // If format is "pkcs8"
+    else if (format == Bindings::KeyFormat::Pkcs8) {
+        // 1. If the [[type]] internal slot of key is not "private", then throw an InvalidAccessError.
+        if (key->type() != Bindings::KeyType::Private)
+            return WebIDL::InvalidAccessError::create(realm, "Key is not private"_fly_string);
+
+        // 2. Let data be the result of encoding a privateKeyInfo structure with the following properties:
+        // - Set the version field to 0.
+        // - Set the privateKeyAlgorithm field to an PrivateKeyAlgorithmIdentifier ASN.1 type with the following properties:
+        // - - Set the algorithm field to the OID rsaEncryption defined in [RFC3447].
+        // - - Set the params field to the ASN.1 type NULL.
+        // - Set the privateKey field to the result of DER-encoding an RSAPrivateKey ASN.1 type, as defined in [RFC3447], Appendix A.1.2,
+        // that represents the RSA private key represented by the [[handle]] internal slot of key
+        auto maybe_data = handle.visit(
+            [&](::Crypto::PK::RSAPrivateKey<> const& private_key) -> ErrorOr<ByteBuffer> {
+                auto rsa_encryption_oid = Array<int, 7> { 1, 2, 840, 113549, 1, 1, 1 };
+                return TRY(::Crypto::PK::wrap_in_private_key_info(private_key, rsa_encryption_oid));
+            },
+            [](auto) -> ErrorOr<ByteBuffer> {
+                VERIFY_NOT_REACHED();
+            });
+
+        // FIXME: clang-format butchers the visit if we do the TRY inline
+        auto data = TRY_OR_THROW_OOM(vm, maybe_data);
+
+        // 3. Let result be the result of creating an ArrayBuffer containing data.
+        result = JS::ArrayBuffer::create(realm, data);
+    }
+
     // If format is "jwk"
     else if (format == Bindings::KeyFormat::Jwk) {
         // 1. Let jwk be a new JsonWebKey dictionary.
