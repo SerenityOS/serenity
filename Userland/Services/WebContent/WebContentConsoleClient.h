@@ -37,7 +37,7 @@ private:
         m_current_message_style.append(';');
     }
 
-    PageClient& m_client;
+    JS::NonnullGCPtr<PageClient> m_client;
     JS::Handle<ConsoleGlobalEnvironmentExtensions> m_console_global_environment_extensions;
 
     void clear_output();

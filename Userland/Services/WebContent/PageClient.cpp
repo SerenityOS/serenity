@@ -678,12 +678,12 @@ void PageClient::initialize_js_console(Web::DOM::Document& document)
         m_top_level_document_console_client = console_client->make_weak_ptr();
     }
 
-    m_console_clients.set(&document, move(console_client));
+    m_console_clients.set(document, move(console_client));
 }
 
 void PageClient::destroy_js_console(Web::DOM::Document& document)
 {
-    m_console_clients.remove(&document);
+    m_console_clients.remove(document);
 }
 
 void PageClient::js_console_input(ByteString const& js_source)
