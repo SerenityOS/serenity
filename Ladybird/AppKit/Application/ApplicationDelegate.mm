@@ -557,6 +557,63 @@
     }
 
     m_initial_urls.clear();
+
+    [self checkAndRegisterHandlers];
+}
+
+- (void)applicationWillFinishLaunching:(NSNotification*)notification
+{
+    [[NSAppleEventManager sharedAppleEventManager]
+    setEventHandler:self
+    andSelector:@selector(urlHandler:withReplyEvent:)
+    forEventClass:kInternetEventClass
+    andEventID:kAEGetURL];   
+}
+
+- (void)checkAndRegisterHandlers 
+{
+    // Honour the user's wishes by suppressing the alert.
+    if ([[NSUserDefaults standardUserDefaults] boolForKey: @"suppressDefaultBrowserAlert"]) {
+        return;
+    }
+
+    NSURL *url = [NSURL URLWithString: @"http://example.com/"];
+    NSURL *defaultBrowserURL = [[NSWorkspace sharedWorkspace] URLForApplicationToOpenURL: url];
+    NSURL *appBundleURL = [[NSBundle mainBundle] bundleURL];
+
+    // Check if Ladybird isn't the default browser.
+    if (![[appBundleURL absoluteString] isEqualToString:[defaultBrowserURL absoluteString]]) {
+        NSAlert *alert = [[NSAlert alloc] init];
+        [alert addButtonWithTitle:@"Yes"];
+        [alert addButtonWithTitle:@"No"];
+        [alert setMessageText:@"Set Ladybird as your default browser?"];
+        [alert setShowsSuppressionButton:YES];
+        [alert setAlertStyle:NSAlertStyleInformational];
+        if ([alert runModal] == NSAlertFirstButtonReturn) {
+            [[NSWorkspace sharedWorkspace] setDefaultApplicationAtURL:appBundleURL 
+            toOpenURLsWithScheme:@"http"
+            completionHandler:(void (^)(NSError *error)){}]; 
+            [[NSWorkspace sharedWorkspace] setDefaultApplicationAtURL:appBundleURL 
+            toOpenURLsWithScheme:@"https"
+            completionHandler:(void (^)(NSError *error)){}]; 
+        }
+        [[NSUserDefaults standardUserDefaults] setBool: [[alert suppressionButton] state] forKey: @"suppressDefaultBrowserAlert"];
+        [[NSUserDefaults standardUserDefaults] synchronize];
+    }
+}
+
+- (void)urlHandler:(NSAppleEventDescriptor*)event
+        withReplyEvent:(NSAppleEventDescriptor*)replyEvent
+{
+    NSString *url = [[event paramDescriptorForKeyword:keyDirectObject] stringValue];
+    auto* current_tab = [NSApp keyWindow];
+    if (![current_tab isKindOfClass:[Tab class]]) {
+        return;
+    }
+
+    [self createNewTab:URL::URL([url UTF8String])
+        fromTab:(Tab*)current_tab
+        activateTab:Web::HTML::ActivateTab::Yes];
 }
 
 - (void)applicationWillTerminate:(NSNotification*)notification
