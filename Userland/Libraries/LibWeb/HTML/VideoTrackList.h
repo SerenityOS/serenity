@@ -47,7 +47,7 @@ private:
     virtual void initialize(JS::Realm&) override;
     virtual JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> internal_get_own_property(JS::PropertyKey const& property_name) const override;
 
-    JS::MarkedVector<JS::NonnullGCPtr<VideoTrack>> m_video_tracks;
+    Vector<JS::NonnullGCPtr<VideoTrack>> m_video_tracks;
 };
 
 }
