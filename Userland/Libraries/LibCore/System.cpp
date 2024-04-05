@@ -1739,6 +1739,11 @@ ErrorOr<void> posix_fallocate(int fd, off_t offset, off_t length)
 // the distinction between these libraries moot.
 static constexpr StringView INTERNAL_DEFAULT_PATH_SV = "/usr/local/sbin:/usr/local/bin:/usr/bin:/bin"sv;
 
+unsigned hardware_concurrency()
+{
+    return sysconf(_SC_NPROCESSORS_ONLN);
+}
+
 ErrorOr<String> resolve_executable_from_environment(StringView filename, int flags)
 {
     if (filename.is_empty())
