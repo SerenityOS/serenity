@@ -567,7 +567,7 @@
         setEventHandler:self
             andSelector:@selector(urlHandler:withReplyEvent:)
           forEventClass:kInternetEventClass
-             andEventID:kAEGetURL];   
+             andEventID:kAEGetURL];
 }
 
 - (void)checkAndRegisterHandlers:(Tab*)tab
@@ -593,14 +593,14 @@
         [alert beginSheetModalForWindow:tab
                       completionHandler:^(NSModalResponse response) {
                           if (response == NSAlertFirstButtonReturn) {
-                              [[NSWorkspace sharedWorkspace] setDefaultApplicationAtURL:appBundleURL 
+                              [[NSWorkspace sharedWorkspace] setDefaultApplicationAtURL:appBundleURL
                                                                    toOpenURLsWithScheme:@"http"
-                                                                      completionHandler:(void (^)(NSError *error)){}]; 
-                              [[NSWorkspace sharedWorkspace] setDefaultApplicationAtURL:appBundleURL 
+                                                                      completionHandler:(void (^)(NSError* error)) {}];
+                              [[NSWorkspace sharedWorkspace] setDefaultApplicationAtURL:appBundleURL
                                                                    toOpenURLsWithScheme:@"https"
-                                                                      completionHandler:(void (^)(NSError *error)){}]; 
+                                                                      completionHandler:(void (^)(NSError* error)) {}];
                           }
-                          [[NSUserDefaults standardUserDefaults] setBool: [[alert suppressionButton] state] forKey: @"suppressDefaultBrowserAlert"];
+                          [[NSUserDefaults standardUserDefaults] setBool:[[alert suppressionButton] state] forKey:@"suppressDefaultBrowserAlert"];
                           [[NSUserDefaults standardUserDefaults] synchronize];
                       }];
     }
