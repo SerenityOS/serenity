@@ -1359,8 +1359,10 @@ WebIDL::ExceptionOr<void> Navigable::navigate(NavigateParams params)
     // 20. In parallel, run these steps:
     Platform::EventLoopPlugin::the().deferred_invoke([this, source_snapshot_params, target_snapshot_params, csp_navigation_type, document_resource, url, navigation_id, referrer_policy, initiator_origin_snapshot, response, history_handling, initiator_base_url_snapshot] {
         // NOTE: Not in the spec but subsequent steps will fail because destroyed navigable does not have active document.
-        if (has_been_destroyed())
+        if (has_been_destroyed()) {
+            set_delaying_load_events(false);
             return;
+        }
 
         // FIXME: 1. Let unloadPromptCanceled be the result of checking if unloading is user-canceled for navigable's active document's inclusive descendant navigables.
 
@@ -1369,6 +1371,7 @@ WebIDL::ExceptionOr<void> Navigable::navigate(NavigateParams params)
             // FIXME: 1. Invoke WebDriver BiDi navigation failed with targetBrowsingContext and a new WebDriver BiDi navigation status whose id is navigationId, status is "canceled", and url is url.
 
             // 2. Abort these steps.
+            set_delaying_load_events(false);
             return;
         }
 
@@ -1424,10 +1427,12 @@ WebIDL::ExceptionOr<void> Navigable::navigate(NavigateParams params)
             traversable_navigable()->append_session_history_traversal_steps([this, history_entry, history_handling, navigation_id] {
                 if (this->has_been_destroyed()) {
                     // NOTE: This check is not in the spec but we should not continue navigation if navigable has been destroyed.
+                    set_delaying_load_events(false);
                     return;
                 }
                 if (this->ongoing_navigation() != navigation_id) {
                     // NOTE: This check is not in the spec but we should not continue navigation if ongoing navigation id has changed.
+                    set_delaying_load_events(false);
                     return;
                 }
                 finalize_a_cross_document_navigation(*this, to_history_handling_behavior(history_handling), history_entry);
