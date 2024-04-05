@@ -84,7 +84,7 @@ public:
 
     bool is_root_element() const;
 
-    ByteString debug_description() const;
+    String debug_description() const;
 
     bool has_style() const { return m_has_style; }
     bool has_style_or_parent_with_style() const;

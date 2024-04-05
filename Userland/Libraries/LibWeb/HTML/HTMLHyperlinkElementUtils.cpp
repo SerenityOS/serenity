@@ -504,7 +504,7 @@ void HTMLHyperlinkElementUtils::follow_the_hyperlink(Optional<String> hyperlink_
     if (!url.is_valid())
         return;
 
-    auto url_string = url.to_byte_string();
+    auto url_string = MUST(url.to_string());
 
     // 10. If hyperlinkSuffix is non-null, then append it to urlString.
     if (hyperlink_suffix.has_value()) {
@@ -512,7 +512,7 @@ void HTMLHyperlinkElementUtils::follow_the_hyperlink(Optional<String> hyperlink_
         url_builder.append(url_string);
         url_builder.append(*hyperlink_suffix);
 
-        url_string = url_builder.to_byte_string();
+        url_string = MUST(url_builder.to_string());
     }
 
     // FIXME: 11. Let referrerPolicy be the current state of subject's referrerpolicy content attribute.

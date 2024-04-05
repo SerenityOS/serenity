@@ -56,7 +56,7 @@ JS::NonnullGCPtr<ClassicScript> ClassicScript::create(ByteString filename, Strin
     // 11. If result is a list of errors, then:
     if (result.is_error()) {
         auto& parse_error = result.error().first();
-        dbgln_if(HTML_SCRIPT_DEBUG, "ClassicScript: Failed to parse: {}", parse_error.to_byte_string());
+        dbgln_if(HTML_SCRIPT_DEBUG, "ClassicScript: Failed to parse: {}", parse_error.to_string());
 
         // 1. Set script's parse error and its error to rethrow to result[0].
         script->set_parse_error(JS::SyntaxError::create(environment_settings_object.realm(), parse_error.to_string()));

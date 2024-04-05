@@ -514,7 +514,7 @@ CanvasRenderingContext2D::PreparedText CanvasRenderingContext2D::prepare_text(By
     for (auto c : text) {
         builder.append(Infra::is_ascii_whitespace(c) ? ' ' : c);
     }
-    auto replaced_text = builder.to_byte_string();
+    auto replaced_text = builder.string_view();
 
     // 3. Let font be the current font of target, as given by that object's font attribute.
     auto font = current_font();
