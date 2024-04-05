@@ -1128,7 +1128,7 @@ BlockFormattingContext::SpaceUsedAndContainingMarginForFloats BlockFormattingCon
                 + floating_box.used_values.content_width()
                 + floating_box.used_values.margin_box_right();
             space_and_containing_margin.left_total_containing_margin = offset_from_containing_block_chain_margins_between_here_and_root;
-            space_and_containing_margin.matching_left_float_box = floating_box.box.ptr();
+            space_and_containing_margin.matching_left_float_box = floating_box.box;
             break;
         }
     }

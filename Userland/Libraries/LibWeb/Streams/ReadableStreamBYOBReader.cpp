@@ -100,7 +100,7 @@ private:
     }
 
     JS::NonnullGCPtr<JS::Realm> m_realm;
-    WebIDL::Promise& m_promise;
+    JS::NonnullGCPtr<WebIDL::Promise> m_promise;
 };
 
 // https://streams.spec.whatwg.org/#byob-reader-read

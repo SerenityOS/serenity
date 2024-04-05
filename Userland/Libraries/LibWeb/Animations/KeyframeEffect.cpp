@@ -779,7 +779,7 @@ Optional<CSS::Selector::PseudoElement::Type> KeyframeEffect::pseudo_element_type
 }
 
 // https://www.w3.org/TR/web-animations-1/#dom-keyframeeffect-getkeyframes
-WebIDL::ExceptionOr<Vector<JS::Object*>> KeyframeEffect::get_keyframes()
+WebIDL::ExceptionOr<JS::MarkedVector<JS::Object*>> KeyframeEffect::get_keyframes()
 {
     if (m_keyframe_objects.size() != m_keyframes.size()) {
         auto& vm = this->vm();
@@ -814,7 +814,10 @@ WebIDL::ExceptionOr<Vector<JS::Object*>> KeyframeEffect::get_keyframes()
         }
     }
 
-    return m_keyframe_objects;
+    JS::MarkedVector<JS::Object*> keyframes { heap() };
+    for (auto const& keyframe : m_keyframe_objects)
+        keyframes.append(keyframe);
+    return keyframes;
 }
 
 // https://www.w3.org/TR/web-animations-1/#dom-keyframeeffect-setkeyframes

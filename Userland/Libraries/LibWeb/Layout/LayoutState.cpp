@@ -31,14 +31,14 @@ LayoutState::~LayoutState()
 
 LayoutState::UsedValues& LayoutState::get_mutable(NodeWithStyle const& node)
 {
-    if (auto* used_values = used_values_per_layout_node.get(&node).value_or(nullptr))
+    if (auto* used_values = used_values_per_layout_node.get(node).value_or(nullptr))
         return *used_values;
 
     for (auto const* ancestor = m_parent; ancestor; ancestor = ancestor->m_parent) {
-        if (auto* ancestor_used_values = ancestor->used_values_per_layout_node.get(&node).value_or(nullptr)) {
+        if (auto* ancestor_used_values = ancestor->used_values_per_layout_node.get(node).value_or(nullptr)) {
             auto cow_used_values = adopt_own(*new UsedValues(*ancestor_used_values));
             auto* cow_used_values_ptr = cow_used_values.ptr();
-            used_values_per_layout_node.set(&node, move(cow_used_values));
+            used_values_per_layout_node.set(node, move(cow_used_values));
             return *cow_used_values_ptr;
         }
     }
@@ -48,17 +48,17 @@ LayoutState::UsedValues& LayoutState::get_mutable(NodeWithStyle const& node)
     auto new_used_values = adopt_own(*new UsedValues);
     auto* new_used_values_ptr = new_used_values.ptr();
     new_used_values->set_node(const_cast<NodeWithStyle&>(node), containing_block_used_values);
-    used_values_per_layout_node.set(&node, move(new_used_values));
+    used_values_per_layout_node.set(node, move(new_used_values));
     return *new_used_values_ptr;
 }
 
 LayoutState::UsedValues const& LayoutState::get(NodeWithStyle const& node) const
 {
-    if (auto const* used_values = used_values_per_layout_node.get(&node).value_or(nullptr))
+    if (auto const* used_values = used_values_per_layout_node.get(node).value_or(nullptr))
         return *used_values;
 
     for (auto const* ancestor = m_parent; ancestor; ancestor = ancestor->m_parent) {
-        if (auto const* ancestor_used_values = ancestor->used_values_per_layout_node.get(&node).value_or(nullptr))
+        if (auto const* ancestor_used_values = ancestor->used_values_per_layout_node.get(node).value_or(nullptr))
             return *ancestor_used_values;
     }
 
@@ -67,7 +67,7 @@ LayoutState::UsedValues const& LayoutState::get(NodeWithStyle const& node) const
     auto new_used_values = adopt_own(*new UsedValues);
     auto* new_used_values_ptr = new_used_values.ptr();
     new_used_values->set_node(const_cast<NodeWithStyle&>(node), containing_block_used_values);
-    const_cast<LayoutState*>(this)->used_values_per_layout_node.set(&node, move(new_used_values));
+    const_cast<LayoutState*>(this)->used_values_per_layout_node.set(node, move(new_used_values));
     return *new_used_values_ptr;
 }
 

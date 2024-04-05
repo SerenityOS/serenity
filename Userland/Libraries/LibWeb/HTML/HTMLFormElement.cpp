@@ -888,7 +888,7 @@ void HTMLFormElement::plan_to_navigate_to(URL::URL url, Variant<Empty, String, P
     // NOTE: `this`, `actual_resource` and `target_navigable` are protected by JS::SafeFunction.
     queue_an_element_task(Task::Source::DOMManipulation, [this, url, post_resource, target_navigable, history_handling, referrer_policy, user_involvement]() {
         // 1. Set the form's planned navigation to null.
-        m_planned_navigation = nullptr;
+        m_planned_navigation = {};
 
         // 2. Navigate targetNavigable to url using the form element's node document, with historyHandling set to historyHandling,
         //    referrerPolicy set to referrerPolicy, documentResource set to postResource, and cspNavigationType set to "form-submission".

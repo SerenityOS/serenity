@@ -61,16 +61,16 @@ public:
 
     virtual ~SVGPageClient() override = default;
 
-    Page& m_host_page;
-    Page* m_svg_page { nullptr };
+    JS::NonnullGCPtr<Page> m_host_page;
+    JS::GCPtr<Page> m_svg_page;
 
     virtual Page& page() override { return *m_svg_page; }
     virtual Page const& page() const override { return *m_svg_page; }
     virtual bool is_connection_open() const override { return false; }
-    virtual Gfx::Palette palette() const override { return m_host_page.client().palette(); }
+    virtual Gfx::Palette palette() const override { return m_host_page->client().palette(); }
     virtual DevicePixelRect screen_rect() const override { return {}; }
     virtual double device_pixels_per_css_pixel() const override { return 1.0; }
-    virtual CSS::PreferredColorScheme preferred_color_scheme() const override { return m_host_page.client().preferred_color_scheme(); }
+    virtual CSS::PreferredColorScheme preferred_color_scheme() const override { return m_host_page->client().preferred_color_scheme(); }
     virtual void request_file(FileRequest) override { }
     virtual void paint(DevicePixelRect const&, Gfx::Bitmap&, Web::PaintOptions = {}) override { }
     virtual void schedule_repaint() override { }

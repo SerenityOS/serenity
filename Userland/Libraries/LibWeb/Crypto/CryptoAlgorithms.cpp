@@ -384,7 +384,7 @@ JS::ThrowCompletionOr<NonnullOwnPtr<AlgorithmParams>> EcKeyGenParams::from_value
 // https://w3c.github.io/webcrypto/#rsa-oaep-operations
 WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::ArrayBuffer>> RSAOAEP::encrypt(AlgorithmParams const& params, JS::NonnullGCPtr<CryptoKey> key, ByteBuffer const& plaintext)
 {
-    auto& realm = m_realm;
+    auto& realm = *m_realm;
     auto& vm = realm.vm();
     auto const& normalized_algorithm = static_cast<RsaOaepParams const&>(params);
 
@@ -412,7 +412,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::ArrayBuffer>> RSAOAEP::encrypt(Algorith
 // https://w3c.github.io/webcrypto/#rsa-oaep-operations
 WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::ArrayBuffer>> RSAOAEP::decrypt(AlgorithmParams const& params, JS::NonnullGCPtr<CryptoKey> key, AK::ByteBuffer const& ciphertext)
 {
-    auto& realm = m_realm;
+    auto& realm = *m_realm;
     auto& vm = realm.vm();
     auto const& normalized_algorithm = static_cast<RsaOaepParams const&>(params);
 
@@ -508,7 +508,7 @@ WebIDL::ExceptionOr<Variant<JS::NonnullGCPtr<CryptoKey>, JS::NonnullGCPtr<Crypto
 // https://w3c.github.io/webcrypto/#rsa-oaep-operations
 WebIDL::ExceptionOr<JS::NonnullGCPtr<CryptoKey>> RSAOAEP::import_key(Web::Crypto::AlgorithmParams const& params, Bindings::KeyFormat key_format, CryptoKey::InternalKeyData key_data, bool extractable, Vector<Bindings::KeyUsage> const& usages)
 {
-    auto& realm = m_realm;
+    auto& realm = *m_realm;
 
     // 1. Let keyData be the key data to be imported.
 
@@ -678,7 +678,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<CryptoKey>> RSAOAEP::import_key(Web::Crypto
             // 2. If normalizedHash is not equal to the hash member of normalizedAlgorithm, throw a DataError.
             if (normalized_hash.parameter->name != TRY(normalized_algorithm.hash.visit([](String const& name) -> JS::ThrowCompletionOr<String> { return name; }, [&](JS::Handle<JS::Object> const& obj) -> JS::ThrowCompletionOr<String> {
                         auto name_property = TRY(obj->get("name"));
-                        return name_property.to_string(m_realm.vm()); })))
+                        return name_property.to_string(m_realm->vm()); })))
                 return WebIDL::DataError::create(m_realm, "Invalid hash"_fly_string);
         }
 
@@ -771,7 +771,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<CryptoKey>> RSAOAEP::import_key(Web::Crypto
 // https://w3c.github.io/webcrypto/#rsa-oaep-operations
 WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Object>> RSAOAEP::export_key(Bindings::KeyFormat format, JS::NonnullGCPtr<CryptoKey> key)
 {
-    auto& realm = m_realm;
+    auto& realm = *m_realm;
     auto& vm = realm.vm();
 
     // 1. Let key be the key to be exported.
@@ -1104,7 +1104,7 @@ WebIDL::ExceptionOr<Variant<JS::NonnullGCPtr<CryptoKey>, JS::NonnullGCPtr<Crypto
 // https://w3c.github.io/webcrypto/#ecdsa-operations
 WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::ArrayBuffer>> ECDSA::sign(AlgorithmParams const& params, JS::NonnullGCPtr<CryptoKey> key, ByteBuffer const& message)
 {
-    auto& realm = m_realm;
+    auto& realm = *m_realm;
     auto& vm = realm.vm();
     auto const& normalized_algorithm = static_cast<EcdsaParams const&>(params);
 
@@ -1142,7 +1142,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::ArrayBuffer>> ECDSA::sign(AlgorithmPara
 // https://w3c.github.io/webcrypto/#ecdsa-operations
 WebIDL::ExceptionOr<JS::Value> ECDSA::verify(AlgorithmParams const& params, JS::NonnullGCPtr<CryptoKey> key, ByteBuffer const& signature, ByteBuffer const& message)
 {
-    auto& realm = m_realm;
+    auto& realm = *m_realm;
     auto const& normalized_algorithm = static_cast<EcdsaParams const&>(params);
 
     // 1. If the [[type]] internal slot of key is not "public", then throw an InvalidAccessError.
@@ -1154,7 +1154,7 @@ WebIDL::ExceptionOr<JS::Value> ECDSA::verify(AlgorithmParams const& params, JS::
         [](String const& name) -> JS::ThrowCompletionOr<String> { return name; },
         [&](JS::Handle<JS::Object> const& obj) -> JS::ThrowCompletionOr<String> {
                         auto name_property = TRY(obj->get("name"));
-                        return name_property.to_string(m_realm.vm()); }));
+                        return name_property.to_string(m_realm->vm()); }));
 
     // 3. Let M be the result of performing the digest operation specified by hashAlgorithm using message.
     ::Crypto::Hash::HashKind hash_kind;
@@ -1314,7 +1314,7 @@ WebIDL::ExceptionOr<Variant<JS::NonnullGCPtr<CryptoKey>, JS::NonnullGCPtr<Crypto
 
 WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::ArrayBuffer>> ED25519::sign([[maybe_unused]] AlgorithmParams const& params, JS::NonnullGCPtr<CryptoKey> key, ByteBuffer const& message)
 {
-    auto& realm = m_realm;
+    auto& realm = *m_realm;
     auto& vm = realm.vm();
 
     // 1. If the [[type]] internal slot of key is not "private", then throw an InvalidAccessError.
@@ -1348,7 +1348,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::ArrayBuffer>> ED25519::sign([[maybe_unu
 
 WebIDL::ExceptionOr<JS::Value> ED25519::verify([[maybe_unused]] AlgorithmParams const& params, JS::NonnullGCPtr<CryptoKey> key, ByteBuffer const& signature, ByteBuffer const& message)
 {
-    auto& realm = m_realm;
+    auto& realm = *m_realm;
 
     // 1. If the [[type]] internal slot of key is not "public", then throw an InvalidAccessError.
     if (key->type() != Bindings::KeyType::Public)
@@ -1378,7 +1378,7 @@ WebIDL::ExceptionOr<JS::Value> ED25519::verify([[maybe_unused]] AlgorithmParams 
 
 WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::ArrayBuffer>> PBKDF2::derive_bits(AlgorithmParams const& params, JS::NonnullGCPtr<CryptoKey> key, Optional<u32> length_optional)
 {
-    auto& realm = m_realm;
+    auto& realm = *m_realm;
     auto const& normalized_algorithm = static_cast<PBKDF2Params const&>(params);
 
     // 1. If length is null or zero, or is not a multiple of 8, then throw an OperationError.
@@ -1396,7 +1396,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::ArrayBuffer>> PBKDF2::derive_bits(Algor
         [](String const& name) -> JS::ThrowCompletionOr<String> { return name; },
         [&](JS::Handle<JS::Object> const& obj) -> JS::ThrowCompletionOr<String> {
                         auto name_property = TRY(obj->get("name"));
-                        return name_property.to_string(m_realm.vm()); }));
+                        return name_property.to_string(m_realm->vm()); }));
 
     // 4. Let result be the result of performing the PBKDF2 operation defined in Section 5.2 of [RFC8018]
     // using prf as the pseudo-random function, PRF,

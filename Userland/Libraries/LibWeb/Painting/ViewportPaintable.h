@@ -20,11 +20,11 @@ public:
     void paint_all_phases(PaintContext&);
     void build_stacking_context_tree_if_needed();
 
-    HashMap<PaintableBox const*, RefPtr<ScrollFrame>> scroll_state;
+    HashMap<JS::GCPtr<PaintableBox const>, RefPtr<ScrollFrame>> scroll_state;
     void assign_scroll_frames();
     void refresh_scroll_state();
 
-    HashMap<PaintableBox const*, RefPtr<ClipFrame>> clip_state;
+    HashMap<JS::GCPtr<PaintableBox const>, RefPtr<ClipFrame>> clip_state;
     void assign_clip_frames();
     void refresh_clip_state();
 
