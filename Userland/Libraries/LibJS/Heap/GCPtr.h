@@ -186,6 +186,10 @@ private:
     T* m_ptr { nullptr };
 };
 
+// Non-Owning GCPtr
+template<typename T>
+using RawGCPtr = GCPtr<T>;
+
 template<typename T, typename U>
 inline bool operator==(GCPtr<T> const& a, GCPtr<U> const& b)
 {
