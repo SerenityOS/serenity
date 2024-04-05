@@ -57,14 +57,6 @@ public:
         return index.has_value() ? m_queue.take(*index) : SessionHistoryTraversalQueueEntry {};
     }
 
-    void process()
-    {
-        while (m_queue.size() > 0) {
-            auto entry = m_queue.take_first();
-            entry.steps();
-        }
-    }
-
 private:
     Vector<SessionHistoryTraversalQueueEntry> m_queue;
     RefPtr<Core::Timer> m_timer;
