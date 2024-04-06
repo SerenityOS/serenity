@@ -14,6 +14,7 @@ namespace Web::Layout {
 
 class SVGClipBox : public SVGBox {
     JS_CELL(SVGClipBox, SVGBox);
+    JS_DECLARE_ALLOCATOR(SVGClipBox);
 
 public:
     SVGClipBox(DOM::Document&, SVG::SVGClipPathElement&, NonnullRefPtr<CSS::StyleProperties>);

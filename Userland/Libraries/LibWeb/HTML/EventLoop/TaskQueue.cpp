@@ -10,6 +10,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(TaskQueue);
+
 TaskQueue::TaskQueue(HTML::EventLoop& event_loop)
     : m_event_loop(event_loop)
 {

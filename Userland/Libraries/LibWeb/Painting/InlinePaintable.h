@@ -14,6 +14,7 @@ namespace Web::Painting {
 
 class InlinePaintable final : public Paintable {
     JS_CELL(InlinePaintable, Paintable);
+    JS_DECLARE_ALLOCATOR(InlinePaintable);
 
 public:
     static JS::NonnullGCPtr<InlinePaintable> create(Layout::InlineNode const&);

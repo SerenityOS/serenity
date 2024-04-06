@@ -176,6 +176,7 @@ void mark_promise_as_handled(Promise const& promise)
 
 struct WaitForAllResults : JS::Cell {
     JS_CELL(WaitForAllResults, JS::Cell);
+    JS_DECLARE_ALLOCATOR(WaitForAllResults);
 
     WaitForAllResults(JS::NonnullGCPtr<JS::HeapFunction<void(Vector<JS::Value> const&)>> s, size_t t)
         : success_steps(s)
@@ -201,6 +202,8 @@ struct WaitForAllResults : JS::Cell {
     size_t total = 0;
     size_t fulfilled_count = 0;
 };
+
+JS_DEFINE_ALLOCATOR(WaitForAllResults);
 
 // https://webidl.spec.whatwg.org/#wait-for-all
 void wait_for_all(JS::Realm& realm, Vector<JS::NonnullGCPtr<Promise>> const& promises, Function<void(Vector<JS::Value> const&)> success_steps, Function<void(JS::Value)> failure_steps)

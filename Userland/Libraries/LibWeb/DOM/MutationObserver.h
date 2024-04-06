@@ -93,6 +93,7 @@ private:
 // https://dom.spec.whatwg.org/#transient-registered-observer
 class TransientRegisteredObserver final : public RegisteredObserver {
     JS_CELL(TransientRegisteredObserver, RegisteredObserver);
+    JS_DECLARE_ALLOCATOR(TransientRegisteredObserver);
 
 public:
     static JS::NonnullGCPtr<TransientRegisteredObserver> create(MutationObserver&, MutationObserverInit const&, RegisteredObserver& source);

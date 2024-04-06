@@ -17,6 +17,8 @@
 
 namespace Web::Bindings {
 
+JS_DEFINE_ALLOCATOR(OptionConstructor);
+
 OptionConstructor::OptionConstructor(JS::Realm& realm)
     : NativeFunction(realm.intrinsics().function_prototype())
 {

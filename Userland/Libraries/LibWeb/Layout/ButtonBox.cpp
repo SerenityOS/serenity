@@ -11,6 +11,8 @@
 
 namespace Web::Layout {
 
+JS_DEFINE_ALLOCATOR(ButtonBox);
+
 ButtonBox::ButtonBox(DOM::Document& document, HTML::HTMLInputElement& element, NonnullRefPtr<CSS::StyleProperties> style)
     : FormAssociatedLabelableNode(document, element, move(style))
 {

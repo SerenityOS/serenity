@@ -13,6 +13,7 @@ namespace Web::Layout {
 
 class ListItemBox final : public BlockContainer {
     JS_CELL(ListItemBox, BlockContainer);
+    JS_DECLARE_ALLOCATOR(ListItemBox);
 
 public:
     ListItemBox(DOM::Document&, DOM::Element*, NonnullRefPtr<CSS::StyleProperties>);

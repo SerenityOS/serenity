@@ -20,6 +20,7 @@ using BufferableObject = Variant<
 
 class BufferableObjectBase : public JS::Cell {
     JS_CELL(BufferableObjectBase, JS::Cell);
+    JS_DECLARE_ALLOCATOR(BufferableObjectBase);
 
 public:
     virtual ~BufferableObjectBase() override = default;
@@ -54,6 +55,7 @@ protected:
 //          Float32Array or Float64Array or DataView) ArrayBufferView;
 class ArrayBufferView : public BufferableObjectBase {
     JS_CELL(ArrayBufferView, BufferableObjectBase);
+    JS_DECLARE_ALLOCATOR(ArrayBufferView);
 
 public:
     using BufferableObjectBase::BufferableObjectBase;
@@ -71,6 +73,7 @@ public:
 // typedef (ArrayBufferView or ArrayBuffer) BufferSource;
 class BufferSource : public BufferableObjectBase {
     JS_CELL(BufferSource, BufferableObjectBase);
+    JS_DECLARE_ALLOCATOR(BufferSource);
 
 public:
     using BufferableObjectBase::BufferableObjectBase;

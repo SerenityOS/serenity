@@ -10,6 +10,8 @@
 
 namespace Web::Layout {
 
+JS_DEFINE_ALLOCATOR(AudioBox);
+
 AudioBox::AudioBox(DOM::Document& document, DOM::Element& element, NonnullRefPtr<CSS::StyleProperties> style)
     : ReplacedBox(document, element, move(style))
 {

@@ -13,6 +13,7 @@ namespace Web::Layout {
 
 class SVGTextPathBox final : public SVGGraphicsBox {
     JS_CELL(SVGTextPathBox, SVGGraphicsBox);
+    JS_DECLARE_ALLOCATOR(SVGTextPathBox);
 
 public:
     SVGTextPathBox(DOM::Document&, SVG::SVGTextPathElement&, NonnullRefPtr<CSS::StyleProperties>);

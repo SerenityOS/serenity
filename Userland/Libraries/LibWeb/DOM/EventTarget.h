@@ -19,6 +19,7 @@ namespace Web::DOM {
 
 class EventTarget : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(EventTarget, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(EventTarget);
 
 public:
     virtual ~EventTarget() override;

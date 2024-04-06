@@ -12,6 +12,7 @@ namespace Web::DOM {
 
 class ParentNode : public Node {
     WEB_PLATFORM_OBJECT(ParentNode, Node);
+    JS_DECLARE_ALLOCATOR(ParentNode);
 
 public:
     template<typename F>

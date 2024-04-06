@@ -11,6 +11,8 @@
 
 namespace Web::CSS {
 
+JS_DEFINE_ALLOCATOR(CSSTransition);
+
 JS::NonnullGCPtr<CSSTransition> CSSTransition::create(JS::Realm& realm, PropertyID property_id, size_t transition_generation)
 {
     return realm.heap().allocate<CSSTransition>(realm, realm, property_id, transition_generation);

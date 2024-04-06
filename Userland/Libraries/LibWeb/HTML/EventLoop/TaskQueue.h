@@ -14,6 +14,7 @@ namespace Web::HTML {
 
 class TaskQueue : public JS::Cell {
     JS_CELL(TaskQueue, Cell);
+    JS_DECLARE_ALLOCATOR(TaskQueue);
 
 public:
     explicit TaskQueue(HTML::EventLoop&);

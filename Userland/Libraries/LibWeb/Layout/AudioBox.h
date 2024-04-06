@@ -14,6 +14,7 @@ namespace Web::Layout {
 
 class AudioBox final : public ReplacedBox {
     JS_CELL(AudioBox, ReplacedBox);
+    JS_DECLARE_ALLOCATOR(AudioBox);
 
 public:
     HTML::HTMLAudioElement& dom_node();

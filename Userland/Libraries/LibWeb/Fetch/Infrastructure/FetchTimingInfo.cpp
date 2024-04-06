@@ -10,6 +10,8 @@
 
 namespace Web::Fetch::Infrastructure {
 
+JS_DEFINE_ALLOCATOR(FetchTimingInfo);
+
 FetchTimingInfo::FetchTimingInfo() = default;
 
 JS::NonnullGCPtr<FetchTimingInfo> FetchTimingInfo::create(JS::VM& vm)

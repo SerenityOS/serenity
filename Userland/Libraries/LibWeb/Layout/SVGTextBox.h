@@ -14,6 +14,7 @@ namespace Web::Layout {
 
 class SVGTextBox final : public SVGGraphicsBox {
     JS_CELL(SVGTextBox, SVGGraphicsBox);
+    JS_DECLARE_ALLOCATOR(SVGTextBox);
 
 public:
     SVGTextBox(DOM::Document&, SVG::SVGTextPositioningElement&, NonnullRefPtr<CSS::StyleProperties>);

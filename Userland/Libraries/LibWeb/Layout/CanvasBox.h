@@ -13,6 +13,7 @@ namespace Web::Layout {
 
 class CanvasBox final : public ReplacedBox {
     JS_CELL(CanvasBox, ReplacedBox);
+    JS_DECLARE_ALLOCATOR(CanvasBox);
 
 public:
     CanvasBox(DOM::Document&, HTML::HTMLCanvasElement&, NonnullRefPtr<CSS::StyleProperties>);

@@ -14,6 +14,8 @@
 
 namespace Web::Painting {
 
+JS_DEFINE_ALLOCATOR(NestedBrowsingContextPaintable);
+
 JS::NonnullGCPtr<NestedBrowsingContextPaintable> NestedBrowsingContextPaintable::create(Layout::FrameBox const& layout_box)
 {
     return layout_box.heap().allocate_without_realm<NestedBrowsingContextPaintable>(layout_box);

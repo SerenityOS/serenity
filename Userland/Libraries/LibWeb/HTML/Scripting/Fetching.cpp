@@ -28,6 +28,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(FetchContext);
+
 OnFetchScriptComplete create_on_fetch_script_complete(JS::Heap& heap, Function<void(JS::GCPtr<Script>)> function)
 {
     return JS::create_heap_function(heap, move(function));

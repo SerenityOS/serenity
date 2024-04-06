@@ -13,6 +13,8 @@
 
 namespace Web::Painting {
 
+JS_DEFINE_ALLOCATOR(InlinePaintable);
+
 JS::NonnullGCPtr<InlinePaintable> InlinePaintable::create(Layout::InlineNode const& layout_node)
 {
     return layout_node.heap().allocate_without_realm<InlinePaintable>(layout_node);

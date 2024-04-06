@@ -11,6 +11,10 @@
 
 namespace Web::WebIDL {
 
+JS_DEFINE_ALLOCATOR(BufferableObjectBase);
+JS_DEFINE_ALLOCATOR(ArrayBufferView);
+JS_DEFINE_ALLOCATOR(BufferSource);
+
 u32 BufferableObjectBase::byte_length() const
 {
     return m_bufferable_object.visit(

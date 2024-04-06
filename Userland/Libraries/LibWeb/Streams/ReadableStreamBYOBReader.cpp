@@ -62,6 +62,7 @@ void ReadableStreamBYOBReader::visit_edges(Cell::Visitor& visitor)
 
 class BYOBReaderReadIntoRequest : public ReadIntoRequest {
     JS_CELL(BYOBReaderReadIntoRequest, ReadIntoRequest);
+    JS_DECLARE_ALLOCATOR(BYOBReaderReadIntoRequest);
 
 public:
     BYOBReaderReadIntoRequest(JS::Realm& realm, WebIDL::Promise& promise)
@@ -102,6 +103,8 @@ private:
     JS::NonnullGCPtr<JS::Realm> m_realm;
     JS::NonnullGCPtr<WebIDL::Promise> m_promise;
 };
+
+JS_DEFINE_ALLOCATOR(BYOBReaderReadIntoRequest);
 
 // https://streams.spec.whatwg.org/#byob-reader-read
 WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> ReadableStreamBYOBReader::read(JS::Handle<WebIDL::ArrayBufferView>& view)

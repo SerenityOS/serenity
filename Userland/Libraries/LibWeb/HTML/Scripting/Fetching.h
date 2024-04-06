@@ -56,6 +56,7 @@ ScriptFetchOptions default_classic_script_fetch_options();
 
 class FetchContext : public JS::GraphLoadingState::HostDefined {
     JS_CELL(FetchContext, JS::GraphLoadingState::HostDefined);
+    JS_DECLARE_ALLOCATOR(FetchContext);
 
 public:
     JS::Value parse_error;                                    // [[ParseError]]

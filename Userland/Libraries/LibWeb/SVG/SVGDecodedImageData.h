@@ -52,6 +52,7 @@ private:
 
 class SVGDecodedImageData::SVGPageClient final : public PageClient {
     JS_CELL(SVGDecodedImageData::SVGPageClient, PageClient);
+    JS_DECLARE_ALLOCATOR(SVGDecodedImageData::SVGPageClient);
 
 public:
     static JS::NonnullGCPtr<SVGPageClient> create(JS::VM& vm, Page& page)

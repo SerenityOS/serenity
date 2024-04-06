@@ -13,6 +13,7 @@ namespace Web::Layout {
 
 class ListItemMarkerBox final : public Box {
     JS_CELL(ListItemMarkerBox, Box);
+    JS_DECLARE_ALLOCATOR(ListItemMarkerBox);
 
 public:
     explicit ListItemMarkerBox(DOM::Document&, CSS::ListStyleType, CSS::ListStylePosition, size_t index, NonnullRefPtr<CSS::StyleProperties>);

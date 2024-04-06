@@ -14,6 +14,8 @@
 
 namespace Web::Painting {
 
+JS_DEFINE_ALLOCATOR(ViewportPaintable);
+
 JS::NonnullGCPtr<ViewportPaintable> ViewportPaintable::create(Layout::Viewport const& layout_viewport)
 {
     return layout_viewport.heap().allocate_without_realm<ViewportPaintable>(layout_viewport);

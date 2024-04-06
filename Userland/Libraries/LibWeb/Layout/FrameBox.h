@@ -13,6 +13,7 @@ namespace Web::Layout {
 
 class FrameBox final : public ReplacedBox {
     JS_CELL(FrameBox, ReplacedBox);
+    JS_DECLARE_ALLOCATOR(FrameBox);
 
 public:
     FrameBox(DOM::Document&, DOM::Element&, NonnullRefPtr<CSS::StyleProperties>);

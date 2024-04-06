@@ -24,6 +24,7 @@
 namespace Web::SVG {
 
 JS_DEFINE_ALLOCATOR(SVGDecodedImageData);
+JS_DEFINE_ALLOCATOR(SVGDecodedImageData::SVGPageClient);
 
 ErrorOr<JS::NonnullGCPtr<SVGDecodedImageData>> SVGDecodedImageData::create(JS::Realm& realm, JS::NonnullGCPtr<Page> host_page, URL::URL const& url, ByteBuffer data)
 {

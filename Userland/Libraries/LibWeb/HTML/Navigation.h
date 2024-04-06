@@ -47,6 +47,7 @@ struct NavigationResult {
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#navigation-api-method-tracker
 struct NavigationAPIMethodTracker final : public JS::Cell {
     JS_CELL(NavigationAPIMethodTracker, JS::Cell);
+    JS_DECLARE_ALLOCATOR(NavigationAPIMethodTracker);
 
     NavigationAPIMethodTracker(JS::NonnullGCPtr<Navigation> navigation,
         Optional<String> key,

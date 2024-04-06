@@ -12,6 +12,7 @@ namespace Web::Painting {
 
 class ViewportPaintable final : public PaintableWithLines {
     JS_CELL(ViewportPaintable, PaintableWithLines);
+    JS_DECLARE_ALLOCATOR(ViewportPaintable);
 
 public:
     static JS::NonnullGCPtr<ViewportPaintable> create(Layout::Viewport const&);

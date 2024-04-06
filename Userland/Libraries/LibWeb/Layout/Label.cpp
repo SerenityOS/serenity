@@ -15,6 +15,8 @@
 
 namespace Web::Layout {
 
+JS_DEFINE_ALLOCATOR(Label);
+
 Label::Label(DOM::Document& document, HTML::HTMLLabelElement* element, NonnullRefPtr<CSS::StyleProperties> style)
     : BlockContainer(document, element, move(style))
 {

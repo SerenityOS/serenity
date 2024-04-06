@@ -38,6 +38,8 @@
 
 namespace Web::DOM {
 
+JS_DEFINE_ALLOCATOR(EventTarget);
+
 EventTarget::EventTarget(JS::Realm& realm, MayInterfereWithIndexedPropertyAccess may_interfere_with_indexed_property_access)
     : PlatformObject(realm, may_interfere_with_indexed_property_access)
 {

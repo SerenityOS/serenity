@@ -18,6 +18,8 @@
 
 namespace Web::Painting {
 
+JS_DEFINE_ALLOCATOR(ImagePaintable);
+
 JS::NonnullGCPtr<ImagePaintable> ImagePaintable::create(Layout::ImageBox const& layout_box)
 {
     auto alt = layout_box.dom_node().get_attribute_value(HTML::AttributeNames::alt);

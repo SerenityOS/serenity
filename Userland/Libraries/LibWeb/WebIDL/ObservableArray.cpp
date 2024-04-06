@@ -9,6 +9,8 @@
 
 namespace Web::WebIDL {
 
+JS_DEFINE_ALLOCATOR(ObservableArray);
+
 JS::NonnullGCPtr<ObservableArray> ObservableArray::create(JS::Realm& realm)
 {
     auto prototype = realm.intrinsics().array_prototype();

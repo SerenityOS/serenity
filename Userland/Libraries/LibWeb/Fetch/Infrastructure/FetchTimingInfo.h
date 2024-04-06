@@ -19,6 +19,7 @@ namespace Web::Fetch::Infrastructure {
 // https://fetch.spec.whatwg.org/#fetch-timing-info
 class FetchTimingInfo : public JS::Cell {
     JS_CELL(FetchTimingInfo, JS::Cell);
+    JS_DECLARE_ALLOCATOR(FetchTimingInfo);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<FetchTimingInfo> create(JS::VM&);

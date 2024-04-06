@@ -13,6 +13,9 @@ namespace Web::WebIDL {
 
 // https://webidl.spec.whatwg.org/#idl-observable-array
 class ObservableArray final : public JS::Array {
+    JS_OBJECT(ObservableArray, JS::Array);
+    JS_DECLARE_ALLOCATOR(ObservableArray);
+
 public:
     static JS::NonnullGCPtr<ObservableArray> create(JS::Realm& realm);
 

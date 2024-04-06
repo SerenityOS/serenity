@@ -13,6 +13,7 @@ namespace Web::Layout {
 
 class Viewport final : public BlockContainer {
     JS_CELL(Viewport, BlockContainer);
+    JS_DECLARE_ALLOCATOR(Viewport);
 
 public:
     explicit Viewport(DOM::Document&, NonnullRefPtr<CSS::StyleProperties>);
