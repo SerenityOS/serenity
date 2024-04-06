@@ -92,3 +92,17 @@ with multiprocessing.Pool(processes=multiprocessing.cpu_count() - 2, initializer
     except KeyboardInterrupt:
         pool.terminate()
         pool.join()
+
+# Process output data
+clang_results = {r['name']: r for r in clang_results}
+leaf_objects = set(clang_results.keys())
+for result in clang_results.values():
+    leaf_objects.difference_update(result['parents'])
+
+for key, value in clang_results.items():
+    if key == 'JS::HeapBlock::FreelistEntry' or key == 'JS::HeapFunction':
+        # These are Heap-related classes and don't need their own allocator
+        continue
+
+    if not value['has_cell_allocator'] and (key in leaf_objects or value['has_js_constructor']):
+        print(f'Class {key} is missing a JS_DECLARE_ALLOCATOR() declaration in its header file')
