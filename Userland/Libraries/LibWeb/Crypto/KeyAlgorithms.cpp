@@ -57,6 +57,12 @@ JS_DEFINE_NATIVE_FUNCTION(KeyAlgorithm::name_getter)
     return JS::PrimitiveString::create(vm, name);
 }
 
+void KeyAlgorithm::visit_edges(Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_realm);
+}
+
 JS::NonnullGCPtr<RsaKeyAlgorithm> RsaKeyAlgorithm::create(JS::Realm& realm)
 {
     return realm.heap().allocate<RsaKeyAlgorithm>(realm, realm);
@@ -141,11 +147,6 @@ JS_DEFINE_NATIVE_FUNCTION(EcKeyAlgorithm::named_curve_getter)
 {
     auto* impl = TRY(impl_from<EcKeyAlgorithm>(vm, "EcKeyAlgorithm"sv));
     return JS::PrimitiveString::create(vm, impl->named_curve());
-}
-
-void EcKeyAlgorithm::visit_edges(Visitor& visitor)
-{
-    Base::visit_edges(visitor);
 }
 
 JS::NonnullGCPtr<RsaHashedKeyAlgorithm> RsaHashedKeyAlgorithm::create(JS::Realm& realm)

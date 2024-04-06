@@ -2814,6 +2814,8 @@ private:
     virtual JS::ThrowCompletionOr<bool> internal_set_prototype_of(JS::Object* prototype) override;
     virtual JS::ThrowCompletionOr<bool> internal_prevent_extensions() override;
 
+    virtual void visit_edges(Visitor&) override;
+
     JS::NonnullGCPtr<JS::Realm> m_realm; // [[Realm]]
 };
 )~~~");
@@ -2952,6 +2954,12 @@ JS::ThrowCompletionOr<bool> @named_properties_class@::internal_prevent_extension
     // 1. Return false.
     // Note: this keeps named properties object extensible by making [[PreventExtensions]] fail.
     return false;
+}
+
+void @named_properties_class@::visit_edges(Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_realm);
 }
 )~~~");
 }

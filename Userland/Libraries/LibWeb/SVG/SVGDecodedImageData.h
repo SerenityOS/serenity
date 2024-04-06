@@ -81,6 +81,8 @@ private:
         : m_host_page(host_page)
     {
     }
+
+    virtual void visit_edges(Visitor&) override;
 };
 
 }

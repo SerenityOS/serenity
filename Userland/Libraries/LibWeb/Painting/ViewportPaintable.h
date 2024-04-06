@@ -37,6 +37,8 @@ private:
     void build_stacking_context_tree();
 
     explicit ViewportPaintable(Layout::Viewport const&);
+
+    virtual void visit_edges(Visitor&) override;
 };
 
 }
