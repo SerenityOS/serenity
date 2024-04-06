@@ -21,6 +21,7 @@ Optional<FunctionAndArgumentIndex> get_function_and_argument_index(StringView so
 
 class SheetGlobalObject final : public JS::GlobalObject {
     JS_OBJECT(SheetGlobalObject, JS::GlobalObject);
+    JS_DECLARE_ALLOCATOR(SheetGlobalObject);
 
 public:
     SheetGlobalObject(JS::Realm&, Sheet&);
@@ -47,6 +48,7 @@ private:
 
 class WorkbookObject final : public JS::Object {
     JS_OBJECT(WorkbookObject, JS::Object);
+    JS_DECLARE_ALLOCATOR(WorkbookObject);
 
 public:
     WorkbookObject(JS::Realm&, Workbook&);
