@@ -20,7 +20,7 @@ struct Unicode::CodePointDecomposition { };
 namespace Unicode {
 
 Optional<CodePointDecomposition const> __attribute__((weak)) code_point_decomposition(u32) { return {}; }
-Optional<CodePointDecomposition const> __attribute__((weak)) code_point_decomposition_by_index(size_t) { return {}; }
+Optional<u32> __attribute__((weak)) code_point_composition(u32, u32) { return {}; }
 
 NormalizationForm normalization_form_from_string(StringView form)
 {
@@ -126,20 +126,9 @@ static u32 combine_hangul_code_points(u32 a, u32 b)
 static u32 combine_code_points([[maybe_unused]] u32 a, [[maybe_unused]] u32 b)
 {
 #if ENABLE_UNICODE_DATA
-    Array<u32, 2> const points { a, b };
-
-    // FIXME: Do something better than linear search to find reverse mappings.
-    for (size_t index = 0;; ++index) {
-        auto mapping_maybe = Unicode::code_point_decomposition_by_index(index);
-        if (!mapping_maybe.has_value())
-            break;
-        auto& mapping = mapping_maybe.value();
-        if (mapping.tag == CompatibilityFormattingTag::Canonical && mapping.decomposition == points) {
-            if (code_point_has_property(mapping.code_point, Property::Full_Composition_Exclusion))
-                continue;
-            return mapping.code_point;
-        }
-    }
+    auto composition = code_point_composition(a, b);
+    if (composition.has_value())
+        return composition.value();
 #endif
 
     return 0;
