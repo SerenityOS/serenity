@@ -36,7 +36,12 @@ static bool adaptive = false;
 static bool flood = false;
 static bool quiet = false;
 static Optional<size_t> ttl;
-static timespec interval_timespec { .tv_sec = 1, .tv_nsec = 0 };
+static timespec interval_timespec {
+    .tv_sec = 1, .tv_nsec = 0
+};
+struct timeval timeout {
+    .tv_sec = 1, .tv_usec = 0
+};
 // variable part of header can be 0 to 40 bytes
 // https://datatracker.ietf.org/doc/html/rfc791#section-3.1
 static constexpr int max_optional_header_size_in_bytes = 40;
@@ -65,43 +70,70 @@ static void print_closing_statistics()
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio id inet unix sigaction"));
+
+    auto parse_interval_string = [](StringView interval_in_seconds_string, time_t& whole_seconds, double& fractional_seconds) -> bool {
+        if (interval_in_seconds_string.is_empty())
+            return false;
+
+        auto interval_in_seconds = interval_in_seconds_string.to_number<double>();
+        if (!interval_in_seconds.has_value() || interval_in_seconds.value() < 0 || interval_in_seconds.value() > UINT32_MAX)
+            return false;
+
+        whole_seconds = static_cast<time_t>(interval_in_seconds.value());
+        fractional_seconds = interval_in_seconds.value() - static_cast<double>(whole_seconds);
+
+        return true;
+    };
     bool user_specified_request_interval = false;
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(host, "Host to ping", "host");
-    args_parser.add_option(count, "Stop after sending specified number of ECHO_REQUEST packets.", "count", 'c', "count");
+    args_parser.add_option(count, "Stop after sending specified number of ECHO_REQUEST packets", "count", 'c', "count");
     args_parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
-        .help_string = "Wait `interval` seconds between sending each packet. Fractional seconds are allowed."
-                       "Only super-user can set the interval value less than 0.2 seconds",
+        .help_string = "Wait `interval` seconds between sending each packet. Fractional seconds are allowed",
         .short_name = 'i',
         .value_name = "interval",
-        .accept_value = [&user_specified_request_interval](StringView interval_in_seconds_string) {
-            if (interval_in_seconds_string.is_empty())
+        .accept_value = [&parse_interval_string, &user_specified_request_interval](StringView interval_in_seconds_string) {
+            time_t whole_seconds {};
+            double fractional_seconds {};
+
+            if (!parse_interval_string(interval_in_seconds_string, whole_seconds, fractional_seconds))
                 return false;
 
-            auto interval_in_seconds = interval_in_seconds_string.to_number<double>();
-            if (!interval_in_seconds.has_value() || interval_in_seconds.value() <= 0 || interval_in_seconds.value() > UINT32_MAX)
-                return false;
-
-            auto whole_seconds = static_cast<time_t>(interval_in_seconds.value());
-            auto fractional_seconds = interval_in_seconds.value() - static_cast<double>(whole_seconds);
             interval_timespec = {
                 .tv_sec = whole_seconds,
                 .tv_nsec = static_cast<long>(fractional_seconds * 1'000'000'000)
             };
-
             user_specified_request_interval = true;
             return true;
         },
     });
-    args_parser.add_option(payload_size, "Amount of bytes to send as payload in the ECHO_REQUEST packets.", "size", 's', "size");
-    args_parser.add_option(quiet, "Quiet mode. Only display summary when finished.", "quiet", 'q');
-    args_parser.add_option(ttl, "Set the TTL (time-to-live) value on the ICMP packets.", nullptr, 't', "ttl");
-    args_parser.add_option(adaptive, "Adaptive ping. The interval between each ping adapts to round-trip-time.", "adaptive", 'A');
-    args_parser.add_option(flood, "Flood ping. For every request sent a period '.' is prented, while for every reply a backspace is printed."
-                                  " This provides a rapid display of how many packets are being droped. If interval is not given, it sets interval"
-                                  " to zero and outputs packets as fast as they come back. Only super-user may use this option with zero interval.",
-        "flood", 'f');
+    args_parser.add_option(Core::ArgsParser::Option {
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
+        .help_string = "Time to wait for response",
+        .short_name
+        = 'W',
+        .value_name = "interval",
+        .accept_value = [&parse_interval_string](StringView interval_in_seconds_string) {
+            time_t whole_seconds {};
+            double fractional_seconds {};
+
+            if (!parse_interval_string(interval_in_seconds_string, whole_seconds, fractional_seconds))
+                return false;
+
+            timeout = {
+                .tv_sec = whole_seconds,
+                .tv_usec = static_cast<long>(fractional_seconds * 1'000'000)
+            };
+
+            return true;
+        },
+    });
+    args_parser.add_option(payload_size, "Amount of bytes to send as payload in the ECHO_REQUEST packets", "size", 's', "size");
+    args_parser.add_option(quiet, "Quiet mode. Only display summary when finished", "quiet", 'q');
+    args_parser.add_option(ttl, "Set the TTL (time-to-live) value on the ICMP packets", nullptr, 't', "ttl");
+    args_parser.add_option(adaptive, "Use adaptive ping", "adaptive", 'A');
+    args_parser.add_option(flood, "Flood ping", "flood", 'f');
     args_parser.parse(arguments);
 
     if (count.has_value() && (count.value() < 1 || count.value() > UINT32_MAX)) {
@@ -124,9 +156,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::drop_privileges());
     TRY(Core::System::pledge("stdio inet unix sigaction"));
 
-    struct timeval timeout {
-        .tv_sec = 1, .tv_usec = 0
-    };
+    // Set the time to wait for each response
     TRY(Core::System::setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)));
 
     if (flood && !user_specified_request_interval) {
@@ -255,7 +285,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 max_ms = ms;
 
             char addr_buf[INET_ADDRSTRLEN];
-            if (!quiet && !flood)
+            if (!quiet && !flood && seq_dif == 0)
                 outln("Pong from {}: id={}, seq={}{}, ttl={}, time={}ms, size={}",
                     inet_ntop(AF_INET, &peer_address.sin_addr, addr_buf, sizeof(addr_buf)),
                     ntohs(pong_hdr->un.echo.id),
