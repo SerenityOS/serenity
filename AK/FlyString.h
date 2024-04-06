@@ -97,7 +97,7 @@ struct Formatter<FlyString> : Formatter<StringView> {
 
 struct ASCIICaseInsensitiveFlyStringTraits : public Traits<String> {
     static unsigned hash(FlyString const& s) { return s.ascii_case_insensitive_hash(); }
-    static bool equals(FlyString const& a, FlyString const& b) { return a.bytes().data() == b.bytes().data() || a.bytes_as_string_view().equals_ignoring_ascii_case(b.bytes_as_string_view()); }
+    static bool equals(FlyString const& a, FlyString const& b) { return a.equals_ignoring_ascii_case(b); }
 };
 
 }
