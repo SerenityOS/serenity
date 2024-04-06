@@ -3,13 +3,14 @@ set(TEST_SOURCES
     TestASN1.cpp
     TestBigFraction.cpp
     TestBigInteger.cpp
-    TestChecksum.cpp
     TestChaCha20.cpp
     TestChacha20Poly1305.cpp
+    TestChecksum.cpp
     TestCurves.cpp
     TestEd25519.cpp
     TestHash.cpp
     TestHMAC.cpp
+    TestMGF.cpp
     TestPBKDF2.cpp
     TestPoly1305.cpp
     TestRSA.cpp
