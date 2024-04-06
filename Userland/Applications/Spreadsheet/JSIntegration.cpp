@@ -16,6 +16,9 @@
 
 namespace Spreadsheet {
 
+JS_DEFINE_ALLOCATOR(SheetGlobalObject);
+JS_DEFINE_ALLOCATOR(WorkbookObject);
+
 Optional<FunctionAndArgumentIndex> get_function_and_argument_index(StringView source)
 {
     JS::Lexer lexer { source };
