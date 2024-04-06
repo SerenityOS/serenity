@@ -9,6 +9,8 @@
 
 namespace Web::CSS {
 
+JS_DEFINE_ALLOCATOR(AnimationEvent);
+
 JS::NonnullGCPtr<AnimationEvent> AnimationEvent::create(JS::Realm& realm, FlyString const& type, AnimationEventInit const& event_init)
 {
     return realm.heap().allocate<AnimationEvent>(realm, realm, type, event_init);

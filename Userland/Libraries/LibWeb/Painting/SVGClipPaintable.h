@@ -13,6 +13,7 @@ namespace Web::Painting {
 
 class SVGClipPaintable : public SVGPaintable {
     JS_CELL(SVGClipPaintable, SVGPaintable);
+    JS_DECLARE_ALLOCATOR(SVGClipPaintable);
 
 public:
     static JS::NonnullGCPtr<SVGClipPaintable> create(Layout::SVGClipBox const&);

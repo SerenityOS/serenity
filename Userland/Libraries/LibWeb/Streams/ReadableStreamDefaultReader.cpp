@@ -24,6 +24,7 @@
 namespace Web::Streams {
 
 JS_DEFINE_ALLOCATOR(ReadableStreamDefaultReader);
+JS_DEFINE_ALLOCATOR(ReadLoopReadRequest);
 
 void ReadLoopReadRequest::visit_edges(Visitor& visitor)
 {
@@ -116,6 +117,7 @@ void ReadLoopReadRequest::on_error(JS::Value error)
 
 class DefaultReaderReadRequest final : public ReadRequest {
     JS_CELL(DefaultReaderReadRequest, Cell);
+    JS_DECLARE_ALLOCATOR(DefaultReaderReadRequest);
 
 public:
     DefaultReaderReadRequest(JS::Realm& realm, WebIDL::Promise& promise)
@@ -150,6 +152,8 @@ private:
     JS::NonnullGCPtr<JS::Realm> m_realm;
     JS::NonnullGCPtr<WebIDL::Promise> m_promise;
 };
+
+JS_DEFINE_ALLOCATOR(DefaultReaderReadRequest);
 
 // https://streams.spec.whatwg.org/#default-reader-read
 WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> ReadableStreamDefaultReader::read()

@@ -16,6 +16,7 @@ class VideoBox final
     : public ReplacedBox
     , public DOM::Document::ViewportClient {
     JS_CELL(VideoBox, ReplacedBox);
+    JS_DECLARE_ALLOCATOR(VideoBox);
 
 public:
     virtual void prepare_for_replaced_layout() override;

@@ -13,6 +13,7 @@ namespace Web::Painting {
 
 class SVGSVGPaintable final : public PaintableBox {
     JS_CELL(SVGSVGPaintable, PaintableBox);
+    JS_DECLARE_ALLOCATOR(SVGSVGPaintable);
 
 public:
     static JS::NonnullGCPtr<SVGSVGPaintable> create(Layout::SVGSVGBox const&);

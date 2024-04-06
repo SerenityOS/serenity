@@ -13,6 +13,7 @@ namespace Web::Layout {
 
 class ButtonBox final : public FormAssociatedLabelableNode {
     JS_CELL(ButtonBox, FormAssociatedLabelableNode);
+    JS_DECLARE_ALLOCATOR(ButtonBox);
 
 public:
     ButtonBox(DOM::Document&, HTML::HTMLInputElement&, NonnullRefPtr<CSS::StyleProperties>);

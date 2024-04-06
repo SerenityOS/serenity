@@ -13,6 +13,7 @@ namespace Web::Layout {
 
 class RadioButton final : public FormAssociatedLabelableNode {
     JS_CELL(RadioButton, FormAssociatedLabelableNode);
+    JS_DECLARE_ALLOCATOR(RadioButton);
 
 public:
     RadioButton(DOM::Document&, HTML::HTMLInputElement&, NonnullRefPtr<CSS::StyleProperties>);

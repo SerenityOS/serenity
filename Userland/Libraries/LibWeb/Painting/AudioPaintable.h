@@ -13,6 +13,7 @@ namespace Web::Painting {
 
 class AudioPaintable final : public MediaPaintable {
     JS_CELL(AudioPaintable, MediaPaintable);
+    JS_DECLARE_ALLOCATOR(AudioPaintable);
 
 public:
     static JS::NonnullGCPtr<AudioPaintable> create(Layout::AudioBox const&);

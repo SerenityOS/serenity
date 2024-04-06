@@ -16,6 +16,7 @@ namespace Web::CSS {
 
 class CSSTransition : public Animations::Animation {
     WEB_PLATFORM_OBJECT(CSSTransition, Animations::Animation);
+    JS_DECLARE_ALLOCATOR(CSSTransition);
 
 public:
     static JS::NonnullGCPtr<CSSTransition> create(JS::Realm&, PropertyID, size_t transition_generation);

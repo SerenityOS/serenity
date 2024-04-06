@@ -13,6 +13,7 @@ namespace Web::Painting {
 
 class NestedBrowsingContextPaintable final : public PaintableBox {
     JS_CELL(NestedBrowsingContextPaintable, PaintableBox);
+    JS_DECLARE_ALLOCATOR(NestedBrowsingContextPaintable);
 
 public:
     static JS::NonnullGCPtr<NestedBrowsingContextPaintable> create(Layout::FrameBox const&);

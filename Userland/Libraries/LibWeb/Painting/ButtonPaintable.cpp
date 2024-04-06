@@ -13,6 +13,8 @@
 
 namespace Web::Painting {
 
+JS_DEFINE_ALLOCATOR(ButtonPaintable);
+
 JS::NonnullGCPtr<ButtonPaintable> ButtonPaintable::create(Layout::ButtonBox const& layout_box)
 {
     return layout_box.heap().allocate_without_realm<ButtonPaintable>(layout_box);

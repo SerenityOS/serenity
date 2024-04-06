@@ -12,6 +12,9 @@
 namespace Web::Bindings {
 
 class OptionConstructor final : public JS::NativeFunction {
+    JS_OBJECT(OptionConstructor, JS::NativeFunction);
+    JS_DECLARE_ALLOCATOR(OptionConstructor);
+
 public:
     explicit OptionConstructor(JS::Realm&);
     virtual void initialize(JS::Realm&) override;
@@ -22,7 +25,6 @@ public:
 
 private:
     virtual bool has_constructor() const override { return true; }
-    virtual StringView class_name() const override { return "OptionConstructor"sv; }
 };
 
 }

@@ -11,6 +11,8 @@
 
 namespace Web::CSS {
 
+JS_DEFINE_ALLOCATOR(CSSAnimation);
+
 JS::NonnullGCPtr<CSSAnimation> CSSAnimation::create(JS::Realm& realm)
 {
     return realm.heap().allocate<CSSAnimation>(realm, realm);

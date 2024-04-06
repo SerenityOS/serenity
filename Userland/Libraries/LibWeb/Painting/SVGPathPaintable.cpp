@@ -11,6 +11,8 @@
 
 namespace Web::Painting {
 
+JS_DEFINE_ALLOCATOR(SVGPathPaintable);
+
 JS::NonnullGCPtr<SVGPathPaintable> SVGPathPaintable::create(Layout::SVGGraphicsBox const& layout_box)
 {
     return layout_box.heap().allocate_without_realm<SVGPathPaintable>(layout_box);

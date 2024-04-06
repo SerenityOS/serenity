@@ -14,6 +14,7 @@ namespace Web::Layout {
 
 class SVGGeometryBox final : public SVGGraphicsBox {
     JS_CELL(SVGGeometryBox, SVGGraphicsBox);
+    JS_DECLARE_ALLOCATOR(SVGGeometryBox);
 
 public:
     SVGGeometryBox(DOM::Document&, SVG::SVGGeometryElement&, NonnullRefPtr<CSS::StyleProperties>);

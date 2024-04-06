@@ -33,6 +33,7 @@ public:
 
 class ReadLoopReadRequest final : public ReadRequest {
     JS_CELL(ReadLoopReadRequest, JS::Cell);
+    JS_DECLARE_ALLOCATOR(ReadLoopReadRequest);
 
 public:
     // successSteps, which is an algorithm accepting a byte sequence

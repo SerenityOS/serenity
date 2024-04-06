@@ -25,6 +25,8 @@
 
 namespace Web::Fetch::Infrastructure {
 
+JS_DEFINE_ALLOCATOR(HeaderList);
+
 template<typename T>
 requires(IsSameIgnoringCV<T, u8>) struct CaseInsensitiveBytesTraits : public Traits<Span<T>> {
     static constexpr bool equals(Span<T> const& a, Span<T> const& b)

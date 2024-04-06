@@ -8,6 +8,8 @@
 
 namespace Web::Painting {
 
+JS_DEFINE_ALLOCATOR(SVGClipPaintable);
+
 JS::NonnullGCPtr<SVGClipPaintable> SVGClipPaintable::create(Layout::SVGClipBox const& layout_box)
 {
     return layout_box.heap().allocate_without_realm<SVGClipPaintable>(layout_box);

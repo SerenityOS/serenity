@@ -12,6 +12,7 @@ namespace Web::Painting {
 
 class TextPaintable final : public Paintable {
     JS_CELL(TextPaintable, Paintable);
+    JS_DECLARE_ALLOCATOR(TextPaintable);
 
 public:
     static JS::NonnullGCPtr<TextPaintable> create(Layout::TextNode const&, String const& text_for_rendering);

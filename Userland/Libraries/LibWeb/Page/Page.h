@@ -22,8 +22,8 @@
 #include <LibGfx/Size.h>
 #include <LibGfx/StandardCursor.h>
 #include <LibIPC/Forward.h>
-#include <LibJS/Heap/Cell.h>
 #include <LibJS/Heap/Handle.h>
+#include <LibJS/Heap/Heap.h>
 #include <LibURL/URL.h>
 #include <LibWeb/CSS/PreferredColorScheme.h>
 #include <LibWeb/CSS/Selector.h>
@@ -47,6 +47,7 @@ class PageClient;
 
 class Page final : public JS::Cell {
     JS_CELL(Page, JS::Cell);
+    JS_DECLARE_ALLOCATOR(Page);
 
 public:
     static JS::NonnullGCPtr<Page> create(JS::VM&, JS::NonnullGCPtr<PageClient>);

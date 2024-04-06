@@ -16,6 +16,8 @@
 
 namespace Web::Layout {
 
+JS_DEFINE_ALLOCATOR(TextNode);
+
 TextNode::TextNode(DOM::Document& document, DOM::Text& text)
     : Node(document, &text)
 {

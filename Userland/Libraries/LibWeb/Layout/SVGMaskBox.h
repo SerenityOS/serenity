@@ -14,6 +14,7 @@ namespace Web::Layout {
 
 class SVGMaskBox : public SVGGraphicsBox {
     JS_CELL(SVGMaskBox, SVGBox);
+    JS_DECLARE_ALLOCATOR(SVGMaskBox);
 
 public:
     SVGMaskBox(DOM::Document&, SVG::SVGMaskElement&, NonnullRefPtr<CSS::StyleProperties>);

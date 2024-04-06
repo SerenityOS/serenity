@@ -19,6 +19,8 @@
 
 namespace Web::DOM {
 
+JS_DEFINE_ALLOCATOR(ParentNode);
+
 // https://dom.spec.whatwg.org/#dom-parentnode-queryselector
 WebIDL::ExceptionOr<JS::GCPtr<Element>> ParentNode::query_selector(StringView selector_text)
 {

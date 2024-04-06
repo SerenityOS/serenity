@@ -16,6 +16,7 @@ class LineBoxFragment;
 
 class TextNode final : public Node {
     JS_CELL(TextNode, Node);
+    JS_DECLARE_ALLOCATOR(TextNode);
 
 public:
     TextNode(DOM::Document&, DOM::Text&);

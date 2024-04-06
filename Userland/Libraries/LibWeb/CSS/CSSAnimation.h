@@ -15,6 +15,7 @@ namespace Web::CSS {
 // https://www.w3.org/TR/css-animations-2/#cssanimation
 class CSSAnimation : public Animations::Animation {
     WEB_PLATFORM_OBJECT(CSSAnimation, Animations::Animation);
+    JS_DECLARE_ALLOCATOR(CSSAnimation);
 
 public:
     static JS::NonnullGCPtr<CSSAnimation> create(JS::Realm&);

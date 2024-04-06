@@ -13,6 +13,7 @@ namespace Web::Layout {
 
 class ImageBox final : public ReplacedBox {
     JS_CELL(ImageBox, ReplacedBox);
+    JS_DECLARE_ALLOCATOR(ImageBox);
 
 public:
     ImageBox(DOM::Document&, DOM::Element&, NonnullRefPtr<CSS::StyleProperties>, ImageProvider const&);

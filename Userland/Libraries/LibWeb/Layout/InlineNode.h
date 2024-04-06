@@ -12,6 +12,7 @@ namespace Web::Layout {
 
 class InlineNode final : public NodeWithStyleAndBoxModelMetrics {
     JS_CELL(InlineNode, NodeWithStyleAndBoxModelMetrics);
+    JS_DECLARE_ALLOCATOR(InlineNode);
 
 public:
     InlineNode(DOM::Document&, DOM::Element*, NonnullRefPtr<CSS::StyleProperties>);

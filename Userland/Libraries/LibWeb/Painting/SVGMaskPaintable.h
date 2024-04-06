@@ -13,6 +13,7 @@ namespace Web::Painting {
 
 class SVGMaskPaintable : public SVGGraphicsPaintable {
     JS_CELL(SVGMaskPaintable, SVGGraphicsPaintable);
+    JS_DECLARE_ALLOCATOR(SVGMaskPaintable);
 
 public:
     static JS::NonnullGCPtr<SVGMaskPaintable> create(Layout::SVGMaskBox const&);
