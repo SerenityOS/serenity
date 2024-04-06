@@ -88,6 +88,7 @@ private:
     u32 cluster_number(KBuffer const& fat_sector, u32 entry_cluster_number, u32 entry_offset) const;
 
     ErrorOr<u32> fat_read(u32 cluster);
+    ErrorOr<void> fat_write(u32 cluster, u32 value);
 
     OwnPtr<KBuffer> m_boot_record;
     OwnPtr<DOSBIOSParameterBlock> m_parameter_block;

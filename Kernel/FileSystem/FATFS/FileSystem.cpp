@@ -365,6 +365,67 @@ ErrorOr<u32> FATFS::fat_read(u32 cluster)
     return cluster_number(*fat_sector, cluster, entry_offset);
 }
 
+ErrorOr<void> FATFS::fat_write(u32 cluster, u32 value)
+{
+    dbgln_if(FAT_DEBUG, "FATFS: Writing FAT entry for cluster {} with value {}", cluster, value);
+
+    u32 fat_offset = fat_offset_for_cluster(cluster);
+    u32 fat_sector_index = m_parameter_block->common_bpb()->reserved_sector_count + (fat_offset / m_device_block_size);
+    u32 entry_offset = fat_offset % m_device_block_size;
+
+    // See the comment in fat_read().
+    bool need_extra_block = m_fat_version == FATVersion::FAT12 && entry_offset == m_device_block_size - 1;
+    size_t buffer_size = m_device_block_size;
+    if (need_extra_block)
+        buffer_size += m_device_block_size;
+
+    auto fat_sector = TRY(KBuffer::try_create_with_size("FATFS: FAT read buffer"sv, buffer_size));
+    auto fat_sector_buffer = UserOrKernelBuffer::for_kernel_buffer(fat_sector->data());
+
+    MutexLocker locker(m_lock);
+
+    if (need_extra_block)
+        TRY(read_blocks(fat_sector_index, 2, fat_sector_buffer));
+    else
+        TRY(read_block(fat_sector_index, &fat_sector_buffer, m_device_block_size));
+
+    switch (m_fat_version) {
+    case FATVersion::FAT12: {
+        auto write_misaligned_u16 = [&](u16 word) {
+            *bit_cast<u8*>(&fat_sector->data()[entry_offset]) = word & 0xFF;
+            *(bit_cast<u8*>(&fat_sector->data()[entry_offset]) + 1) = word >> 8;
+        };
+        u16 existing_bytes_le = 0;
+        ByteReader::load<u16>(fat_sector->bytes().offset(entry_offset), existing_bytes_le);
+        u16 existing_bytes = AK::convert_between_host_and_little_endian(existing_bytes_le);
+        if (cluster % 2 == 0) {
+            existing_bytes &= 0xF000;
+            existing_bytes |= static_cast<u16>(value) & 0xFFF;
+        } else {
+            existing_bytes &= 0x000F;
+            existing_bytes |= static_cast<u16>(value) << 4;
+        }
+        write_misaligned_u16(AK::convert_between_host_and_little_endian(existing_bytes));
+        break;
+    }
+    case FATVersion::FAT16: {
+        *bit_cast<u16*>(&fat_sector->data()[entry_offset]) = AK::convert_between_host_and_little_endian(static_cast<u16>(value));
+        break;
+    }
+    case FATVersion::FAT32: {
+        *bit_cast<u32*>(&fat_sector->data()[entry_offset]) = AK::convert_between_host_and_little_endian(value);
+        break;
+    }
+    }
+
+    if (need_extra_block)
+        TRY(write_blocks(fat_sector_index, 2, fat_sector_buffer));
+    else
+        TRY(write_block(fat_sector_index, fat_sector_buffer, m_device_block_size));
+
+    return {};
+}
+
 u8 FATFS::internal_file_type_to_directory_entry_type(DirectoryEntryView const& entry) const
 {
     FATAttributes attrib = static_cast<FATAttributes>(entry.file_type);
