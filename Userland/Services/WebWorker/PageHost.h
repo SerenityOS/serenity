@@ -15,6 +15,7 @@ namespace WebWorker {
 
 class PageHost final : public Web::PageClient {
     JS_CELL(PageHost, Web::PageClient);
+    JS_DECLARE_ALLOCATOR(PageHost);
 
 public:
     static JS::NonnullGCPtr<PageHost> create(JS::VM& vm, ConnectionFromClient& client);

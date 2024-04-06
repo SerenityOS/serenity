@@ -15,6 +15,7 @@ namespace WebContent {
 
 class ConsoleGlobalEnvironmentExtensions final : public JS::Object {
     JS_OBJECT(ConsoleGlobalEnvironmentExtensions, JS::Object);
+    JS_DECLARE_ALLOCATOR(ConsoleGlobalEnvironmentExtensions);
 
 public:
     ConsoleGlobalEnvironmentExtensions(JS::Realm&, Web::HTML::Window&);
