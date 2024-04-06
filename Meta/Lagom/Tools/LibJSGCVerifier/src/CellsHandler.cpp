@@ -14,6 +14,7 @@
 #include <clang/Frontend/CompilerInstance.h>
 #include <filesystem>
 #include <llvm/Support/Casting.h>
+#include <llvm/Support/JSON.h>
 #include <llvm/Support/raw_ostream.h>
 #include <unordered_set>
 #include <vector>
@@ -230,6 +231,33 @@ FieldValidationResult validate_field(clang::FieldDecl const* field_decl)
     return result;
 }
 
+void emit_record_json_data(clang::CXXRecordDecl const& record)
+{
+    llvm::json::Object obj;
+    obj.insert({ "name", record.getQualifiedNameAsString() });
+
+    std::vector<std::string> bases;
+    record.forallBases([&](clang::CXXRecordDecl const* base) {
+        bases.push_back(base->getQualifiedNameAsString());
+        return true;
+    });
+    obj.insert({ "parents", bases });
+
+    bool has_cell_allocator = false;
+    bool has_js_constructor = false;
+    for (auto const& decl : record.decls()) {
+        if (auto* var_decl = llvm::dyn_cast<clang::VarDecl>(decl); var_decl && var_decl->getQualifiedNameAsString().ends_with("::cell_allocator")) {
+            has_cell_allocator = true;
+        } else if (auto* fn_decl = llvm::dyn_cast<clang::CXXMethodDecl>(decl); fn_decl && fn_decl->getQualifiedNameAsString().ends_with("::construct_impl")) {
+            has_js_constructor = true;
+        }
+    }
+    obj.insert({ "has_cell_allocator", has_cell_allocator });
+    obj.insert({ "has_js_constructor", has_js_constructor });
+
+    llvm::outs() << std::move(obj) << "\n";
+}
+
 void CollectCellsHandler::run(clang::ast_matchers::MatchFinder::MatchResult const& result)
 {
     check_cells(result);
@@ -277,6 +305,8 @@ void CollectCellsHandler::check_cells(clang::ast_matchers::MatchFinder::MatchRes
 
     if (!record_inherits_from_cell(*record))
         return;
+
+    emit_record_json_data(*record);
 
     clang::DeclarationName const name = &result.Context->Idents.get("visit_edges");
     auto const* visit_edges_method = record->lookup(name).find_first<clang::CXXMethodDecl>();
