@@ -39,6 +39,8 @@ namespace WebContent {
 
 static bool s_use_gpu_painter = false;
 
+JS_DEFINE_ALLOCATOR(PageClient);
+
 void PageClient::set_use_gpu_painter()
 {
     s_use_gpu_painter = true;

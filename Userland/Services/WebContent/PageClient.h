@@ -24,6 +24,7 @@ namespace WebContent {
 
 class PageClient final : public Web::PageClient {
     JS_CELL(PageClient, Web::PageClient);
+    JS_DECLARE_ALLOCATOR(PageClient);
 
 public:
     static JS::NonnullGCPtr<PageClient> create(JS::VM& vm, PageHost& page_host, u64 id);
