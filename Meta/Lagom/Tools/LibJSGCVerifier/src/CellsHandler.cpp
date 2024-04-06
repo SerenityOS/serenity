@@ -124,20 +124,6 @@ CollectCellsHandler::CollectCellsHandler()
         this);
 }
 
-bool CollectCellsHandler::handleBeginSource(clang::CompilerInstance& ci)
-{
-    auto const& source_manager = ci.getSourceManager();
-    auto file_id = source_manager.getMainFileID();
-    auto const* file_entry = source_manager.getFileEntryForID(file_id);
-    if (!file_entry)
-        return false;
-
-    auto current_filepath = std::filesystem::canonical(file_entry->getName().str());
-    llvm::outs() << "Processing " << current_filepath.string() << "\n";
-
-    return true;
-}
-
 bool record_inherits_from_cell(clang::CXXRecordDecl const& record)
 {
     if (!record.isCompleteDefinition())

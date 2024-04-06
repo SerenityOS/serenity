@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import json
 import multiprocessing
 import os
 from pathlib import Path
@@ -69,14 +70,25 @@ def thread_execute(file_path):
         compile_commands_path,
         file_path
     ]
-    proc = subprocess.Popen(clang_args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    sys.stdout.buffer.write(proc.communicate()[0])
-    sys.stdout.buffer.flush()
+    proc = subprocess.Popen(clang_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = proc.communicate()
+    print(f'Processed {file_path.resolve()}')
+    if stderr:
+        print(stderr.decode(), file=sys.stderr)
+
+    results = []
+    if stdout:
+        for line in stdout.split(b'\n'):
+            if line:
+                results.append(json.loads(line))
+    return results
 
 
 with multiprocessing.Pool(processes=multiprocessing.cpu_count() - 2, initializer=thread_init) as pool:
     try:
-        pool.map(thread_execute, paths)
+        clang_results = []
+        for results in pool.map(thread_execute, paths):
+            clang_results.extend(results)
     except KeyboardInterrupt:
         pool.terminate()
         pool.join()
