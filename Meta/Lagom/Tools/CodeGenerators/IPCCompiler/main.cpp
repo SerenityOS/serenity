@@ -109,6 +109,37 @@ Vector<Endpoint> parse(ByteBuffer const& file_contents)
             lexer.ignore_until('\n');
     };
 
+    auto parse_parameter_type = [&]() {
+        ByteString parameter_type = lexer.consume_until([](char ch) { return ch == '<' || isspace(ch); });
+        if (lexer.peek() == '<') {
+            lexer.consume();
+
+            StringBuilder builder;
+            builder.append(parameter_type);
+            builder.append('<');
+            auto nesting_level = 1;
+            while (nesting_level > 0) {
+                auto inner_type = lexer.consume_until([](char ch) { return ch == '<' || ch == '>'; });
+                if (lexer.is_eof()) {
+                    warnln("Unexpected EOF when parsing parameter type");
+                    VERIFY_NOT_REACHED();
+                }
+                builder.append(inner_type);
+                if (lexer.peek() == '<') {
+                    nesting_level++;
+                } else if (lexer.peek() == '>') {
+                    nesting_level--;
+                }
+
+                builder.append(lexer.consume());
+            }
+
+            parameter_type = builder.to_byte_string();
+        }
+
+        return parameter_type;
+    };
+
     auto parse_parameter = [&](Vector<Parameter>& storage) {
         for (;;) {
             Parameter parameter;
@@ -133,14 +164,7 @@ Vector<Endpoint> parse(ByteBuffer const& file_contents)
                     consume_whitespace();
                 }
             }
-            // FIXME: This is not entirely correct. Types can have spaces, for example `HashMap<int, ByteString>`.
-            //        Maybe we should use LibCpp::Parser for parsing types.
-            parameter.type = lexer.consume_until([](char ch) { return isspace(ch); });
-            if (parameter.type.ends_with(',')) {
-                warnln("Parameter type '{}' looks invalid!", parameter.type);
-                warnln("Note that templates must not include spaces.");
-                VERIFY_NOT_REACHED();
-            }
+            parameter.type = parse_parameter_type();
             VERIFY(!lexer.is_eof());
             consume_whitespace();
             parameter.name = lexer.consume_until([](char ch) { return isspace(ch) || ch == ',' || ch == ')'; });
