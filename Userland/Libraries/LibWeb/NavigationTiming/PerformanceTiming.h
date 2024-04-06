@@ -42,12 +42,9 @@ public:
     u64 load_event_end() { return 0; }
 
 private:
-    explicit PerformanceTiming(HTML::WindowOrWorkerGlobalScopeMixin&);
+    explicit PerformanceTiming(JS::Realm&);
 
     virtual void initialize(JS::Realm&) override;
-    virtual void visit_edges(Cell::Visitor&) override;
-
-    JS::GCPtr<HTML::WindowOrWorkerGlobalScopeMixin> m_window_or_worker;
 };
 
 }
