@@ -140,8 +140,8 @@ Vector<Endpoint> parse(ByteBuffer const& file_contents)
         return parameter_type;
     };
 
-    auto parse_parameter = [&](Vector<Parameter>& storage) {
-        for (;;) {
+    auto parse_parameter = [&](Vector<Parameter>& storage, StringView message_name) {
+        for (auto parameter_index = 1;; ++parameter_index) {
             Parameter parameter;
             if (lexer.is_eof()) {
                 warnln("EOF when parsing parameter");
@@ -165,6 +165,10 @@ Vector<Endpoint> parse(ByteBuffer const& file_contents)
                 }
             }
             parameter.type = parse_parameter_type();
+            if (parameter.type.ends_with(',') || parameter.type.ends_with(')')) {
+                warnln("Parameter {} of method: {} must be named", parameter_index, message_name);
+                VERIFY_NOT_REACHED();
+            }
             VERIFY(!lexer.is_eof());
             consume_whitespace();
             parameter.name = lexer.consume_until([](char ch) { return isspace(ch) || ch == ',' || ch == ')'; });
@@ -177,10 +181,10 @@ Vector<Endpoint> parse(ByteBuffer const& file_contents)
         }
     };
 
-    auto parse_parameters = [&](Vector<Parameter>& storage) {
+    auto parse_parameters = [&](Vector<Parameter>& storage, StringView message_name) {
         for (;;) {
             consume_whitespace();
-            parse_parameter(storage);
+            parse_parameter(storage, message_name);
             consume_whitespace();
             if (lexer.consume_specific(','))
                 continue;
@@ -195,7 +199,7 @@ Vector<Endpoint> parse(ByteBuffer const& file_contents)
         message.name = lexer.consume_until([](char ch) { return isspace(ch) || ch == '('; });
         consume_whitespace();
         assert_specific('(');
-        parse_parameters(message.inputs);
+        parse_parameters(message.inputs, message.name);
         assert_specific(')');
         consume_whitespace();
         assert_specific('=');
@@ -212,7 +216,7 @@ Vector<Endpoint> parse(ByteBuffer const& file_contents)
 
         if (message.is_synchronous) {
             assert_specific('(');
-            parse_parameters(message.outputs);
+            parse_parameters(message.outputs, message.name);
             assert_specific(')');
         }
 
