@@ -696,8 +696,8 @@ void StyleComputer::for_each_property_expanding_shorthands(PropertyID property_i
         Array<Vector<ValueComparingNonnullRefPtr<StyleValue const>>, 4> transition_values;
         for (auto const& transition : transitions) {
             transition_values[0].append(*transition.property_name);
-            transition_values[1].append(TimeStyleValue::create(transition.duration));
-            transition_values[2].append(TimeStyleValue::create(transition.delay));
+            transition_values[1].append(transition.duration.as_style_value());
+            transition_values[2].append(transition.delay.as_style_value());
             if (transition.easing)
                 transition_values[3].append(*transition.easing);
         }
