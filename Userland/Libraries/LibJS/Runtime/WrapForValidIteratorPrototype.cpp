@@ -10,6 +10,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(WrapForValidIteratorPrototype);
+
 // 3.1.1.2.2.1 The %WrapForValidIteratorPrototype% Object, https://tc39.es/proposal-iterator-helpers/#sec-wrapforvaliditeratorprototype-object
 WrapForValidIteratorPrototype::WrapForValidIteratorPrototype(Realm& realm)
     : PrototypeObject(realm.intrinsics().iterator_prototype())

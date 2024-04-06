@@ -15,6 +15,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(SetPrototype);
+
 SetPrototype::SetPrototype(Realm& realm)
     : PrototypeObject(realm.intrinsics().object_prototype())
 {

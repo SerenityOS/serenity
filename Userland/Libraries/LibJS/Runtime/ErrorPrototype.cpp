@@ -125,6 +125,8 @@ JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::stack_setter)
 }
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType)               \
+    JS_DEFINE_ALLOCATOR(PrototypeName);                                                                \
+                                                                                                       \
     PrototypeName::PrototypeName(Realm& realm)                                                         \
         : PrototypeObject(realm.intrinsics().error_prototype())                                        \
     {                                                                                                  \
