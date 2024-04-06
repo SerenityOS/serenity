@@ -86,7 +86,7 @@ void ReadLoopReadRequest::on_chunk(JS::Value chunk)
     auto const& buffer = array.viewed_array_buffer()->buffer();
 
     // 2. Append the bytes represented by chunk to bytes.
-    m_bytes.append(buffer);
+    m_byte_chunks.append(buffer);
 
     // FIXME: As the spec suggests, implement this non-recursively - instead of directly. It is not too big of a deal currently
     //        as we enqueue the entire blob buffer in one go, meaning that we only recurse a single time. Once we begin queuing
@@ -104,7 +104,7 @@ void ReadLoopReadRequest::on_chunk(JS::Value chunk)
 void ReadLoopReadRequest::on_close()
 {
     // 1. Call successSteps with bytes.
-    m_success_steps(m_bytes);
+    m_success_steps(m_byte_chunks);
 }
 
 // error steps, given e
@@ -206,8 +206,12 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> ReadableStreamDefaultRead
 
     auto promise = WebIDL::create_promise(realm);
 
-    auto success_steps = [promise, &realm](ByteBuffer bytes) {
-        auto buffer = JS::ArrayBuffer::create(realm, move(bytes));
+    auto success_steps = [promise, &realm](Vector<ByteBuffer> const& byte_chunks) {
+        ByteBuffer concatenated_byte_chunks;
+        for (auto const& chunk : byte_chunks)
+            concatenated_byte_chunks.append(chunk);
+
+        auto buffer = JS::ArrayBuffer::create(realm, move(concatenated_byte_chunks));
         WebIDL::resolve_promise(realm, promise, buffer);
     };
 
