@@ -17,7 +17,7 @@ namespace Web::Crypto {
 
 // https://w3c.github.io/webcrypto/#key-algorithm-dictionary
 class KeyAlgorithm : public JS::Object {
-    JS_OBJECT(KeyAlgorithm, Object);
+    JS_OBJECT(KeyAlgorithm, JS::Object);
     JS_DECLARE_ALLOCATOR(KeyAlgorithm);
 
 public:
@@ -33,6 +33,7 @@ protected:
     KeyAlgorithm(JS::Realm&);
 
     virtual void initialize(JS::Realm&) override;
+    virtual void visit_edges(Visitor&) override;
 
 private:
     JS_DECLARE_NATIVE_FUNCTION(name_getter);
@@ -113,7 +114,6 @@ protected:
     EcKeyAlgorithm(JS::Realm&);
 
     virtual void initialize(JS::Realm&) override;
-    virtual void visit_edges(Visitor&) override;
 
 private:
     JS_DECLARE_NATIVE_FUNCTION(named_curve_getter);

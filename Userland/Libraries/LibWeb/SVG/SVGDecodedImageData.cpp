@@ -167,4 +167,11 @@ Optional<CSSPixelFraction> SVGDecodedImageData::intrinsic_aspect_ratio() const
     return {};
 }
 
+void SVGDecodedImageData::SVGPageClient::visit_edges(Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_host_page);
+    visitor.visit(m_svg_page);
+}
+
 }
