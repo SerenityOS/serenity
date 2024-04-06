@@ -20,9 +20,8 @@ namespace Web::HighResolutionTime {
 
 JS_DEFINE_ALLOCATOR(Performance);
 
-Performance::Performance(HTML::WindowOrWorkerGlobalScopeMixin& window_or_worker)
-    : DOM::EventTarget(window_or_worker.this_impl().realm())
-    , m_window_or_worker(window_or_worker)
+Performance::Performance(JS::Realm& realm)
+    : DOM::EventTarget(realm)
     , m_timer(Core::TimerType::Precise)
 {
     m_timer.start();
@@ -40,13 +39,13 @@ void Performance::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_timing);
-    visitor.visit(m_window_or_worker->this_impl());
 }
 
 JS::GCPtr<NavigationTiming::PerformanceTiming> Performance::timing()
 {
+    auto& realm = this->realm();
     if (!m_timing)
-        m_timing = heap().allocate<NavigationTiming::PerformanceTiming>(realm(), *m_window_or_worker);
+        m_timing = heap().allocate<NavigationTiming::PerformanceTiming>(realm, realm);
     return m_timing;
 }
 
@@ -64,9 +63,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<UserTiming::PerformanceMark>> Performance::
     auto entry = TRY(UserTiming::PerformanceMark::construct_impl(realm, mark_name, mark_options));
 
     // 2. Queue entry.
-    auto* window_or_worker = dynamic_cast<HTML::WindowOrWorkerGlobalScopeMixin*>(&realm.global_object());
-    VERIFY(window_or_worker);
-    window_or_worker->queue_performance_entry(entry);
+    window_or_worker().queue_performance_entry(entry);
 
     // 3. Add entry to the performance entry buffer.
     // FIXME: This seems to be a holdover from moving to the `queue` structure for PerformanceObserver, as this would cause a double append.
@@ -77,18 +74,14 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<UserTiming::PerformanceMark>> Performance::
 
 void Performance::clear_marks(Optional<String> mark_name)
 {
-    auto& realm = this->realm();
-    auto* window_or_worker = dynamic_cast<HTML::WindowOrWorkerGlobalScopeMixin*>(&realm.global_object());
-    VERIFY(window_or_worker);
-
     // 1. If markName is omitted, remove all PerformanceMark objects from the performance entry buffer.
     if (!mark_name.has_value()) {
-        window_or_worker->clear_performance_entry_buffer({}, PerformanceTimeline::EntryTypes::mark);
+        window_or_worker().clear_performance_entry_buffer({}, PerformanceTimeline::EntryTypes::mark);
         return;
     }
 
     // 2. Otherwise, remove all PerformanceMark objects listed in the performance entry buffer whose name is markName.
-    window_or_worker->remove_entries_from_performance_entry_buffer({}, PerformanceTimeline::EntryTypes::mark, mark_name.value());
+    window_or_worker().remove_entries_from_performance_entry_buffer({}, PerformanceTimeline::EntryTypes::mark, mark_name.value());
 
     // 3. Return undefined.
 }
@@ -145,10 +138,7 @@ WebIDL::ExceptionOr<HighResolutionTime::DOMHighResTimeStamp> Performance::conver
         // 2. Otherwise, if mark is a DOMString, let end time be the value of the startTime attribute from the most recent occurrence
         //    of a PerformanceMark object in the performance entry buffer whose name is mark. If no matching entry is found, throw a
         //    SyntaxError.
-        auto* window_or_worker = dynamic_cast<HTML::WindowOrWorkerGlobalScopeMixin*>(&realm.global_object());
-        VERIFY(window_or_worker);
-
-        auto& tuple = window_or_worker->relevant_performance_entry_tuple(PerformanceTimeline::EntryTypes::mark);
+        auto& tuple = window_or_worker().relevant_performance_entry_tuple(PerformanceTimeline::EntryTypes::mark);
         auto& performance_entry_buffer = tuple.performance_entry_buffer;
 
         auto maybe_entry = performance_entry_buffer.last_matching([&mark_string](JS::Handle<PerformanceTimeline::PerformanceEntry> const& entry) {
@@ -176,8 +166,6 @@ WebIDL::ExceptionOr<HighResolutionTime::DOMHighResTimeStamp> Performance::conver
 WebIDL::ExceptionOr<JS::NonnullGCPtr<UserTiming::PerformanceMeasure>> Performance::measure(String const& measure_name, Variant<String, UserTiming::PerformanceMeasureOptions> const& start_or_measure_options, Optional<String> end_mark)
 {
     auto& realm = this->realm();
-    auto* window_or_worker = dynamic_cast<HTML::WindowOrWorkerGlobalScopeMixin*>(&realm.global_object());
-    VERIFY(window_or_worker);
     auto& vm = this->vm();
 
     // 1. If startOrMeasureOptions is a PerformanceMeasureOptions object and at least one of start, end, duration, and detail
@@ -296,7 +284,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<UserTiming::PerformanceMeasure>> Performanc
     auto entry = realm.heap().allocate<UserTiming::PerformanceMeasure>(realm, realm, measure_name, start_time, duration, detail);
 
     // 10. Queue entry.
-    window_or_worker->queue_performance_entry(entry);
+    window_or_worker().queue_performance_entry(entry);
 
     // 11. Add entry to the performance entry buffer.
     // FIXME: This seems to be a holdover from moving to the `queue` structure for PerformanceObserver, as this would cause a double append.
@@ -308,18 +296,14 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<UserTiming::PerformanceMeasure>> Performanc
 // https://w3c.github.io/user-timing/#dom-performance-clearmeasures
 void Performance::clear_measures(Optional<String> measure_name)
 {
-    auto& realm = this->realm();
-    auto* window_or_worker = dynamic_cast<HTML::WindowOrWorkerGlobalScopeMixin*>(&realm.global_object());
-    VERIFY(window_or_worker);
-
     // 1. If measureName is omitted, remove all PerformanceMeasure objects in the performance entry buffer.
     if (!measure_name.has_value()) {
-        window_or_worker->clear_performance_entry_buffer({}, PerformanceTimeline::EntryTypes::measure);
+        window_or_worker().clear_performance_entry_buffer({}, PerformanceTimeline::EntryTypes::measure);
         return;
     }
 
     // 2. Otherwise remove all PerformanceMeasure objects listed in the performance entry buffer whose name is measureName.
-    window_or_worker->remove_entries_from_performance_entry_buffer({}, PerformanceTimeline::EntryTypes::measure, measure_name.value());
+    window_or_worker().remove_entries_from_performance_entry_buffer({}, PerformanceTimeline::EntryTypes::measure, measure_name.value());
 
     // 3. Return undefined.
 }
@@ -327,41 +311,44 @@ void Performance::clear_measures(Optional<String> measure_name)
 // https://www.w3.org/TR/performance-timeline/#getentries-method
 WebIDL::ExceptionOr<Vector<JS::Handle<PerformanceTimeline::PerformanceEntry>>> Performance::get_entries() const
 {
-    auto& realm = this->realm();
     auto& vm = this->vm();
-    auto* window_or_worker = dynamic_cast<HTML::WindowOrWorkerGlobalScopeMixin*>(&realm.global_object());
-    VERIFY(window_or_worker);
 
     // Returns a PerformanceEntryList object returned by the filter buffer map by name and type algorithm with name and
     // type set to null.
-    return TRY_OR_THROW_OOM(vm, window_or_worker->filter_buffer_map_by_name_and_type(/* name= */ Optional<String> {}, /* type= */ Optional<String> {}));
+    return TRY_OR_THROW_OOM(vm, window_or_worker().filter_buffer_map_by_name_and_type(/* name= */ Optional<String> {}, /* type= */ Optional<String> {}));
 }
 
 // https://www.w3.org/TR/performance-timeline/#dom-performance-getentriesbytype
 WebIDL::ExceptionOr<Vector<JS::Handle<PerformanceTimeline::PerformanceEntry>>> Performance::get_entries_by_type(String const& type) const
 {
-    auto& realm = this->realm();
     auto& vm = this->vm();
-    auto* window_or_worker = dynamic_cast<HTML::WindowOrWorkerGlobalScopeMixin*>(&realm.global_object());
-    VERIFY(window_or_worker);
 
     // Returns a PerformanceEntryList object returned by filter buffer map by name and type algorithm with name set to null,
     // and type set to the method's input type parameter.
-    return TRY_OR_THROW_OOM(vm, window_or_worker->filter_buffer_map_by_name_and_type(/* name= */ Optional<String> {}, type));
+    return TRY_OR_THROW_OOM(vm, window_or_worker().filter_buffer_map_by_name_and_type(/* name= */ Optional<String> {}, type));
 }
 
 // https://www.w3.org/TR/performance-timeline/#dom-performance-getentriesbyname
 WebIDL::ExceptionOr<Vector<JS::Handle<PerformanceTimeline::PerformanceEntry>>> Performance::get_entries_by_name(String const& name, Optional<String> type) const
 {
-    auto& realm = this->realm();
     auto& vm = this->vm();
-    auto* window_or_worker = dynamic_cast<HTML::WindowOrWorkerGlobalScopeMixin*>(&realm.global_object());
-    VERIFY(window_or_worker);
 
     // Returns a PerformanceEntryList object returned by filter buffer map by name and type algorithm with name set to the
     // method input name parameter, and type set to null if optional entryType is omitted, or set to the method's input type
     // parameter otherwise.
-    return TRY_OR_THROW_OOM(vm, window_or_worker->filter_buffer_map_by_name_and_type(name, type));
+    return TRY_OR_THROW_OOM(vm, window_or_worker().filter_buffer_map_by_name_and_type(name, type));
+}
+
+HTML::WindowOrWorkerGlobalScopeMixin& Performance::window_or_worker()
+{
+    auto* window_or_worker = dynamic_cast<HTML::WindowOrWorkerGlobalScopeMixin*>(&realm().global_object());
+    VERIFY(window_or_worker);
+    return *window_or_worker;
+}
+
+HTML::WindowOrWorkerGlobalScopeMixin const& Performance::window_or_worker() const
+{
+    return const_cast<Performance*>(this)->window_or_worker();
 }
 
 }

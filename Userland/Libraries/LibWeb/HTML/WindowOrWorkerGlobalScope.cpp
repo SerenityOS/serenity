@@ -592,8 +592,9 @@ void WindowOrWorkerGlobalScopeMixin::run_steps_after_a_timeout_impl(i32 timeout,
 // https://w3c.github.io/hr-time/#dom-windoworworkerglobalscope-performance
 JS::NonnullGCPtr<HighResolutionTime::Performance> WindowOrWorkerGlobalScopeMixin::performance()
 {
+    auto& realm = this_impl().realm();
     if (!m_performance)
-        m_performance = this_impl().heap().allocate<HighResolutionTime::Performance>(this_impl().realm(), *this);
+        m_performance = this_impl().heap().allocate<HighResolutionTime::Performance>(realm, realm);
     return JS::NonnullGCPtr { *m_performance };
 }
 
