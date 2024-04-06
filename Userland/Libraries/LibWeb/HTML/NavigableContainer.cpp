@@ -112,7 +112,6 @@ WebIDL::ExceptionOr<void> NavigableContainer::create_new_child_navigable(JS::Saf
     // 12. Append the following session history traversal steps to traversable:
     traversable->append_session_history_traversal_steps([traversable, navigable, parent_navigable, history_entry, afterSessionHistoryUpdate = move(afterSessionHistoryUpdate)] {
         // 1. Let parentDocState be parentNavigable's active session history entry's document state.
-
         auto parent_doc_state = parent_navigable->active_session_history_entry()->document_state();
 
         // 2. Let parentNavigableEntries be the result of getting session history entries for parentNavigable.
@@ -132,10 +131,10 @@ WebIDL::ExceptionOr<void> NavigableContainer::create_new_child_navigable(JS::Saf
             .entries { *history_entry },
         };
 
-        // 5. Append nestedHistory to parentDocState's nested histories.
+        // 6. Append nestedHistory to parentDocState's nested histories.
         parent_doc_state->nested_histories().append(move(nested_history));
 
-        // 6. Update for navigable creation/destruction given traversable
+        // 7. Update for navigable creation/destruction given traversable
         traversable->update_for_navigable_creation_or_destruction();
 
         if (afterSessionHistoryUpdate) {
