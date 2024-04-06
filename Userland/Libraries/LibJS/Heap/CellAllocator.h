@@ -14,10 +14,10 @@
 #include <LibJS/Heap/HeapBlock.h>
 
 #define JS_DECLARE_ALLOCATOR(ClassName) \
-    static JS::TypeIsolatingCellAllocator<ClassName> cell_allocator;
+    static JS::TypeIsolatingCellAllocator<ClassName> cell_allocator
 
 #define JS_DEFINE_ALLOCATOR(ClassName) \
-    JS::TypeIsolatingCellAllocator<ClassName> ClassName::cell_allocator { #ClassName };
+    JS::TypeIsolatingCellAllocator<ClassName> ClassName::cell_allocator { #ClassName }
 
 namespace JS {
 
