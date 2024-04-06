@@ -208,11 +208,11 @@ static void canonical_ordering_algorithm(Span<u32> code_points)
 // See Section 3.11, D115 of Version 15.0.0 of the Unicode Standard.
 static bool is_blocked(Span<u32> code_points, size_t a, size_t c)
 {
-    if (!is_starter(code_points[a]) || a == c - 1)
+    if (a == c - 1)
         return false;
     auto const c_combining_class = Unicode::canonical_combining_class(code_points[c]);
     auto const b_combining_class = Unicode::canonical_combining_class(code_points[c - 1]);
-    return b_combining_class == 0 || b_combining_class >= c_combining_class;
+    return b_combining_class >= c_combining_class;
 }
 
 // The Canonical Composition Algorithm, as specified in Version 15.0.0 of the Unicode Standard.
@@ -220,30 +220,40 @@ static bool is_blocked(Span<u32> code_points, size_t a, size_t c)
 // https://www.unicode.org/versions/Unicode15.0.0/ch03.pdf#G50628
 static void canonical_composition_algorithm(Vector<u32>& code_points)
 {
+    if (code_points.size() <= 1)
+        return;
+    ssize_t last_starter = is_starter(code_points[0]) ? 0 : -1;
     for (size_t i = 1; i < code_points.size(); ++i) {
         auto const current_character = code_points[i];
         // R1. Seek back (left) to find the last Starter L preceding C in the character sequence
-        for (ssize_t j = i - 1; j >= 0; --j) {
-            if (!is_starter(code_points[j]))
-                continue;
-            // R2. If there is such an L, and C is not blocked from L,
-            //     and there exists a Primary Composite P which is canonically equivalent to <L, C>,
-            //     then replace L by P in the sequence and delete C from the sequence.
-            if (is_blocked(code_points.span(), j, i))
-                continue;
-
-            auto composite = combine_hangul_code_points(code_points[j], current_character);
-
-            if (composite == 0)
-                composite = combine_code_points(code_points[j], current_character);
-
-            if (composite != 0) {
-                code_points[j] = composite;
-                code_points.remove(i);
-                --i;
-                break;
-            }
+        if (last_starter == -1) {
+            if (is_starter(current_character))
+                last_starter = i;
+            continue;
         }
+        // R2. If there is such an L, and C is not blocked from L,
+        //     and there exists a Primary Composite P which is canonically equivalent to <L, C>,
+        //     then replace L by P in the sequence and delete C from the sequence.
+        if (is_blocked(code_points.span(), last_starter, i)) {
+            if (is_starter(current_character))
+                last_starter = i;
+            continue;
+        }
+
+        auto composite = combine_hangul_code_points(code_points[last_starter], current_character);
+
+        if (composite == 0)
+            composite = combine_code_points(code_points[last_starter], current_character);
+
+        if (composite == 0) {
+            if (is_starter(current_character))
+                last_starter = i;
+            continue;
+        }
+
+        code_points[last_starter] = composite;
+        code_points.remove(i);
+        --i;
     }
 }
 
