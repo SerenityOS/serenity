@@ -70,7 +70,7 @@ endpoint WebContentServer
     set_content_filters(u64 page_id, Vector<String> filters) =|
     set_autoplay_allowed_on_all_websites(u64 page_id) =|
     set_autoplay_allowlist(u64 page_id, Vector<String> allowlist) =|
-    set_proxy_mappings(u64 page_id, Vector<ByteString> proxies, HashMap<ByteString,size_t> mappings) =|
+    set_proxy_mappings(u64 page_id, Vector<ByteString> proxies, HashMap<ByteString, size_t> mappings) =|
     set_preferred_color_scheme(u64 page_id, Web::CSS::PreferredColorScheme color_scheme) =|
     set_has_focus(u64 page_id, bool has_focus) =|
     set_is_scripting_enabled(u64 page_id, bool is_scripting_enabled) =|
@@ -79,8 +79,8 @@ endpoint WebContentServer
     set_window_position(u64 page_id, Web::DevicePixelPoint position) =|
     set_window_size(u64 page_id, Web::DevicePixelSize size) =|
 
-    get_local_storage_entries(u64 page_id) => (OrderedHashMap<String,String> entries)
-    get_session_storage_entries(u64 page_id) => (OrderedHashMap<String,String> entries)
+    get_local_storage_entries(u64 page_id) => (OrderedHashMap<String, String> entries)
+    get_session_storage_entries(u64 page_id) => (OrderedHashMap<String, String> entries)
 
     handle_file_return(u64 page_id, i32 error, Optional<IPC::File> file, i32 request_id) =|
 
