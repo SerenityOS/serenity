@@ -1,12 +1,14 @@
 /*
  * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2023-2024, Shannon Booth <shannon@serenityos.org>
+ * Copyright (c) 2024, Kenneth Myhra <kennethmyhra@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibJS/Runtime/PromiseCapability.h>
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/DOM/AbortSignal.h>
 #include <LibWeb/Streams/AbstractOperations.h>
 #include <LibWeb/Streams/ReadableByteStreamController.h>
 #include <LibWeb/Streams/ReadableStream.h>
@@ -106,6 +108,31 @@ WebIDL::ExceptionOr<ReadableStreamReader> ReadableStream::get_reader(ReadableStr
 
     // 3. Return ? AcquireReadableStreamBYOBReader(this).
     return ReadableStreamReader { TRY(acquire_readable_stream_byob_reader(*this)) };
+}
+
+WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Object>> ReadableStream::pipe_to(WritableStream& destination, StreamPipeOptions const& options)
+{
+    auto& realm = this->realm();
+
+    // 1. If ! IsReadableStreamLocked(this) is true, return a promise rejected with a TypeError exception.
+    if (is_readable_stream_locked(*this)) {
+        auto promise = WebIDL::create_promise(realm);
+        WebIDL::reject_promise(realm, promise, JS::TypeError::create(realm, "Failed to execute 'pipeTo' on 'ReadableStream': Cannot pipe a locked stream"sv));
+        return promise->promise();
+    }
+
+    // 2. If ! IsWritableStreamLocked(destination) is true, return a promise rejected with a TypeError exception.
+    if (is_writable_stream_locked(destination)) {
+        auto promise = WebIDL::create_promise(realm);
+        WebIDL::reject_promise(realm, promise, JS::TypeError::create(realm, "Failed to execute 'pipeTo' on 'ReadableStream':  Cannot pipe to a locked stream"sv));
+        return promise->promise();
+    }
+
+    // 3. Let signal be options["signal"] if it exists, or undefined otherwise.
+    auto signal = options.signal.has_value() ? JS::Value(options.signal.value().ptr()) : JS::js_undefined();
+
+    // 4. Return ! ReadableStreamPipeTo(this, destination, options["preventClose"], options["preventAbort"], options["preventCancel"], signal).
+    return MUST(readable_stream_pipe_to(*this, destination, options.prevent_close, options.prevent_abort, options.prevent_cancel, signal))->promise();
 }
 
 // https://streams.spec.whatwg.org/#readablestream-tee
