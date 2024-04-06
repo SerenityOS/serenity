@@ -476,8 +476,6 @@ ErrorOr<void> FATInode::traverse_as_directory(Function<ErrorOr<void>(FileSystem:
     VERIFY(has_flag(m_entry.attributes, FATAttributes::Directory));
 
     [[maybe_unused]] auto inode = TRY(const_cast<FATInode&>(*this).traverse([&callback](auto inode) -> ErrorOr<bool> {
-        if (inode->m_filename->view() == "" || inode->m_filename->view() == "." || inode->m_filename->view() == "..")
-            return false;
         TRY(callback({ inode->m_filename->view(), inode->identifier(), static_cast<u8>(inode->m_entry.attributes) }));
         return false;
     }));
