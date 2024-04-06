@@ -17,6 +17,7 @@ JS_DEFINE_ALLOCATOR(RemainingElements);
 JS_DEFINE_ALLOCATOR(PromiseValueList);
 JS_DEFINE_ALLOCATOR(PromiseResolvingElementFunction);
 JS_DEFINE_ALLOCATOR(PromiseAllResolveElementFunction);
+JS_DEFINE_ALLOCATOR(PromiseAllSettledResolveElementFunction);
 JS_DEFINE_ALLOCATOR(PromiseAllSettledRejectElementFunction);
 JS_DEFINE_ALLOCATOR(PromiseAnyRejectElementFunction);
 

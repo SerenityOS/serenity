@@ -88,6 +88,7 @@ private:
 // 27.2.4.2.2 Promise.allSettled Resolve Element Functions, https://tc39.es/ecma262/#sec-promise.allsettled-resolve-element-functions
 class PromiseAllSettledResolveElementFunction final : public PromiseResolvingElementFunction {
     JS_OBJECT(PromiseResolvingFunction, NativeFunction);
+    JS_DECLARE_ALLOCATOR(PromiseAllSettledResolveElementFunction);
 
 public:
     static NonnullGCPtr<PromiseAllSettledResolveElementFunction> create(Realm&, size_t, PromiseValueList&, NonnullGCPtr<PromiseCapability const>, RemainingElements&);

@@ -59,6 +59,7 @@ struct ResolvedBinding {
 // https://tc39.es/ecma262/#graphloadingstate-record
 struct GraphLoadingState : public Cell {
     JS_CELL(GraphLoadingState, Cell);
+    JS_DECLARE_ALLOCATOR(GraphLoadingState);
 
 public:
     struct HostDefined : Cell {
