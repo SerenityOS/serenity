@@ -555,6 +555,9 @@ enum class CombinationOperator {
 
 static void composite_bitbuffer(BitBuffer& out, BitBuffer const& bitmap, Gfx::IntPoint position, CombinationOperator operator_)
 {
+    if (!IntRect { position, { bitmap.width(), bitmap.height() } }.intersects(IntRect { { 0, 0 }, { out.width(), out.height() } }))
+        return;
+
     size_t start_x = 0, end_x = bitmap.width();
     size_t start_y = 0, end_y = bitmap.height();
     if (position.x() < 0) {
