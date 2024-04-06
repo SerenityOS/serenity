@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibWeb/CSS/CalculatedOr.h>
 #include <LibWeb/CSS/StyleValue.h>
 #include <LibWeb/CSS/StyleValues/CustomIdentStyleValue.h>
 #include <LibWeb/CSS/StyleValues/EasingStyleValue.h>
@@ -17,8 +18,8 @@ class TransitionStyleValue final : public StyleValueWithDefaultOperators<Transit
 public:
     struct Transition {
         ValueComparingRefPtr<CustomIdentStyleValue> property_name;
-        CSS::Time duration { CSS::Time::make_seconds(0.0) };
-        CSS::Time delay { CSS::Time::make_seconds(0.0) };
+        TimeOrCalculated duration { CSS::Time::make_seconds(0.0) };
+        TimeOrCalculated delay { CSS::Time::make_seconds(0.0) };
         ValueComparingRefPtr<EasingStyleValue> easing;
 
         bool operator==(Transition const&) const = default;

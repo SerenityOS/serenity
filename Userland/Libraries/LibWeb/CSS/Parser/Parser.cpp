@@ -5354,10 +5354,10 @@ RefPtr<StyleValue> Parser::parse_transition_value(TokenStream<ComponentValue>& t
             if (auto time = parse_time(tokens); time.has_value()) {
                 switch (time_value_count) {
                 case 0:
-                    transition.duration = time.release_value().value();
+                    transition.duration = time.release_value();
                     break;
                 case 1:
-                    transition.delay = time.release_value().value();
+                    transition.delay = time.release_value();
                     break;
                 default:
                     dbgln_if(CSS_PARSER_DEBUG, "Transition property has more than two time values");
