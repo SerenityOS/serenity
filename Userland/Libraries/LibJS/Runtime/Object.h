@@ -161,7 +161,7 @@ public:
 
     // 14.7.5 The for-in, for-of, and for-await-of Statements
 
-    Optional<Completion> enumerate_object_properties(Function<Optional<Completion>(Value)>) const;
+    Optional<Completion> enumerate_object_properties(NOESCAPE Function<Optional<Completion>(Value)>) const;
 
     // Implementation-specific storage abstractions
 
