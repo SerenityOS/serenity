@@ -55,6 +55,8 @@ public:
     bool copy_selected_hex_to_clipboard();
     bool copy_selected_hex_to_clipboard_as_c_code();
 
+    void set_show_offsets_column(bool);
+
     size_t bytes_per_group() const { return m_bytes_per_group; }
     void set_bytes_per_group(size_t);
     size_t groups_per_row() const { return m_groups_per_row; }
@@ -95,6 +97,7 @@ private:
     size_t m_content_length { 0 };
     size_t m_bytes_per_group { 4 };
     size_t m_groups_per_row { 4 };
+    bool m_show_offsets_column { true };
     bool m_in_drag_select { false };
     Selection m_selection;
     size_t m_position { 0 };
