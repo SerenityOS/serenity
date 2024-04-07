@@ -96,7 +96,7 @@ public:
     using KeyType = KeyT;
     using BlockType = BlockT;
 
-    explicit Cipher<KeyT, BlockT>(PaddingMode mode)
+    explicit Cipher(PaddingMode mode)
         : m_padding_mode(mode)
     {
     }
