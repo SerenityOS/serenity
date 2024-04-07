@@ -28,7 +28,7 @@ UNMAP_AFTER_INIT NonnullLockRefPtr<KCOVDevice> KCOVDevice::must_create()
 }
 
 UNMAP_AFTER_INIT KCOVDevice::KCOVDevice()
-    : CharacterDevice(30, 0)
+    : BlockDevice(30, 0)
 {
     proc_instance = new HashMap<ProcessID, KCOVInstance*>();
     thread_instance = new HashMap<ThreadID, KCOVInstance*>();

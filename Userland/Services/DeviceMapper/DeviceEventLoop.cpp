@@ -195,7 +195,6 @@ struct PluggableOnceCharacterDeviceNodeMatch {
 
 static constexpr PluggableOnceCharacterDeviceNodeMatch s_simple_matchers[] = {
     { "/dev/beep"sv, 0666, 1, 10 },
-    { "/dev/kcov"sv, 0666, 30, 0 },
 };
 
 static ErrorOr<void> create_pluggable_once_char_device_node(PluggableOnceCharacterDeviceNodeMatch const& match)
@@ -251,10 +250,6 @@ ErrorOr<void> DeviceEventLoop::drain_events_from_devctl()
             VERIFY(event.is_block_device == 1 || event.is_block_device == 0);
             TRY(register_new_device(event.is_block_device ? DeviceNodeFamily::Type::BlockDevice : DeviceNodeFamily::Type::CharacterDevice, event.major_number, event.minor_number));
         } else if (event.state == DeviceEvent::State::Removed) {
-            if (event.major_number == 30 && event.minor_number == 0 && !event.is_block_device) {
-                dbgln("DeviceMapper: unregistering device failed: kcov tried to de-register itself!?");
-                continue;
-            }
             if (auto error_or_void = unregister_device(event.is_block_device ? DeviceNodeFamily::Type::BlockDevice : DeviceNodeFamily::Type::CharacterDevice, event.major_number, event.minor_number); error_or_void.is_error())
                 dbgln("DeviceMapper: unregistering device failed: {}", error_or_void.error());
         } else {
