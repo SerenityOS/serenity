@@ -381,11 +381,11 @@ static void deactivate_a_document_for_cross_document_navigation(JS::NonnullGCPtr
 TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_step(
     int step,
     bool check_for_cancelation,
-    Optional<SourceSnapshotParams> source_snapshot_params,
+    IGNORE_USE_IN_ESCAPING_LAMBDA Optional<SourceSnapshotParams> source_snapshot_params,
     JS::GCPtr<Navigable> initiator_to_check,
     Optional<UserNavigationInvolvement> user_involvement_for_navigate_events,
-    Optional<Bindings::NavigationType> navigation_type,
-    SynchronousNavigation synchronous_navigation)
+    IGNORE_USE_IN_ESCAPING_LAMBDA Optional<Bindings::NavigationType> navigation_type,
+    IGNORE_USE_IN_ESCAPING_LAMBDA SynchronousNavigation synchronous_navigation)
 {
     auto& vm = this->vm();
     // FIXME: 1. Assert: This is running within traversable's session history traversal queue.
@@ -438,7 +438,7 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
     auto total_change_jobs = changing_navigables.size();
 
     // 10. Let completedChangeJobs be 0.
-    size_t completed_change_jobs = 0;
+    IGNORE_USE_IN_ESCAPING_LAMBDA size_t completed_change_jobs = 0;
 
     struct ChangingNavigableContinuationState {
         JS::Handle<DOM::Document> displayed_document;
@@ -449,7 +449,7 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
 
     // 11. Let changingNavigableContinuations be an empty queue of changing navigable continuation states.
     // NOTE: This queue is used to split the operations on changingNavigables into two parts. Specifically, changingNavigableContinuations holds data for the second part.
-    Queue<ChangingNavigableContinuationState> changing_navigable_continuations;
+    IGNORE_USE_IN_ESCAPING_LAMBDA Queue<ChangingNavigableContinuationState> changing_navigable_continuations;
 
     // 12. For each navigable of changingNavigables, queue a global task on the navigation and traversal task source of navigable's active window to run the steps:
     for (auto& navigable : changing_navigables) {
@@ -705,12 +705,12 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
     auto total_non_changing_jobs = non_changing_navigables_that_still_need_updates.size();
 
     // 16. Let completedNonchangingJobs be 0.
-    auto completed_non_changing_jobs = 0u;
+    IGNORE_USE_IN_ESCAPING_LAMBDA auto completed_non_changing_jobs = 0u;
 
     // 17. Let (scriptHistoryLength, scriptHistoryIndex) be the result of getting the history object length and index given traversable and targetStep.
     auto length_and_index = get_the_history_object_length_and_index(target_step);
-    auto script_history_length = length_and_index.script_history_length;
-    auto script_history_index = length_and_index.script_history_index;
+    IGNORE_USE_IN_ESCAPING_LAMBDA auto script_history_length = length_and_index.script_history_length;
+    IGNORE_USE_IN_ESCAPING_LAMBDA auto script_history_index = length_and_index.script_history_index;
 
     // 18. For each navigable of nonchangingNavigablesThatStillNeedUpdates, queue a global task on the navigation and traversal task source given navigable's active window to run the steps:
     for (auto& navigable : non_changing_navigables_that_still_need_updates) {

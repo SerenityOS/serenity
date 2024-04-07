@@ -39,8 +39,9 @@ ThrowCompletionOr<Value> await(VM& vm, Value value)
     // 2. Let promise be ? PromiseResolve(%Promise%, value).
     auto* promise_object = TRY(promise_resolve(vm, realm.intrinsics().promise_constructor(), value));
 
-    Optional<bool> success;
-    Value result;
+    IGNORE_USE_IN_ESCAPING_LAMBDA Optional<bool> success;
+    IGNORE_USE_IN_ESCAPING_LAMBDA Value result;
+
     // 3. Let fulfilledClosure be a new Abstract Closure with parameters (value) that captures asyncContext and performs the following steps when called:
     auto fulfilled_closure = [&success, &result](VM& vm) -> ThrowCompletionOr<Value> {
         // a. Let prevContext be the running execution context.
