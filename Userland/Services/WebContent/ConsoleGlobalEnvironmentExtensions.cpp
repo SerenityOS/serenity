@@ -35,6 +35,7 @@ void ConsoleGlobalEnvironmentExtensions::visit_edges(Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_window_object);
+    visitor.visit(m_most_recent_result);
 }
 
 static JS::ThrowCompletionOr<ConsoleGlobalEnvironmentExtensions*> get_console(JS::VM& vm)
