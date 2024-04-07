@@ -160,6 +160,10 @@ FieldValidationResult validate_field(clang::FieldDecl const* field_decl)
             result.is_wrapped_in_gcptr = true;
             result.is_valid = record_inherits_from_cell(*record_decl);
             result.needs_visiting = template_type_name != "RawGCPtr";
+        } else if (auto const* record = qualified_type->getAsCXXRecordDecl()) {
+            if (record->getQualifiedNameAsString() == "JS::Value") {
+                result.needs_visiting = true;
+            }
         }
     }
 
