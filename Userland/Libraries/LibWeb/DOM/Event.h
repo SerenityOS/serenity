@@ -148,6 +148,7 @@ public:
     bool fast_is() const = delete;
 
     virtual bool is_mouse_event() const { return false; }
+    virtual bool is_pointer_event() const { return false; }
 
 protected:
     void initialize_event(String const&, bool, bool);

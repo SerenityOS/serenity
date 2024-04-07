@@ -635,6 +635,7 @@ set(SOURCES
     UIEvents/FocusEvent.cpp
     UIEvents/KeyboardEvent.cpp
     UIEvents/MouseEvent.cpp
+    UIEvents/PointerEvent.cpp
     UIEvents/UIEvent.cpp
     UIEvents/WheelEvent.cpp
     UserTiming/PerformanceMark.cpp
