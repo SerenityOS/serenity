@@ -513,7 +513,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 )~~~");
             } else {
                 scoped_generator.append(R"~~~(
-    Optional<JS::NonnullGCPtr<@parameter.type.name@>> @cpp_name@;
+    JS::GCPtr<@parameter.type.name@> @cpp_name@;
     if (!@js_name@@js_suffix@.is_undefined()) {
         if (!@js_name@@js_suffix@.is_object() || !is<@parameter.type.name@>(@js_name@@js_suffix@.as_object()))
             return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "@parameter.type.name@");

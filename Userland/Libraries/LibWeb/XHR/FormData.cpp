@@ -18,13 +18,13 @@ namespace Web::XHR {
 JS_DEFINE_ALLOCATOR(FormData);
 
 // https://xhr.spec.whatwg.org/#dom-formdata
-WebIDL::ExceptionOr<JS::NonnullGCPtr<FormData>> FormData::construct_impl(JS::Realm& realm, Optional<JS::NonnullGCPtr<HTML::HTMLFormElement>> form)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<FormData>> FormData::construct_impl(JS::Realm& realm, JS::GCPtr<HTML::HTMLFormElement> form)
 {
     Vector<FormDataEntry> list;
     // 1. If form is given, then:
-    if (form.has_value()) {
+    if (form) {
         // 1. Let list be the result of constructing the entry list for form.
-        auto entry_list = TRY(construct_entry_list(realm, form.value()));
+        auto entry_list = TRY(construct_entry_list(realm, *form));
         // 2. If list is null, then throw an "InvalidStateError" DOMException.
         if (!entry_list.has_value())
             return WebIDL::InvalidStateError::create(realm, "Form element does not contain any entries."_fly_string);

@@ -21,7 +21,7 @@ struct EventListenerOptions {
 struct AddEventListenerOptions : public EventListenerOptions {
     bool passive { false };
     bool once { false };
-    Optional<JS::NonnullGCPtr<AbortSignal>> signal;
+    JS::GCPtr<AbortSignal> signal;
 };
 
 class IDLEventListener final : public JS::Object {
