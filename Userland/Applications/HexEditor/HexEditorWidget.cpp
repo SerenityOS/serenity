@@ -326,6 +326,11 @@ ErrorOr<void> HexEditorWidget::setup()
         Config::write_bool("HexEditor"sv, "Layout"sv, "ShowSearchResults"sv, action.is_checked());
     });
 
+    m_show_offsets_column_action = GUI::Action::create_checkable("Show &Offsets Column", [&](auto& action) {
+        m_editor->set_show_offsets_column(action.is_checked());
+        Config::write_bool("HexEditor"sv, "Layout"sv, "ShowOffsetsColumn"sv, action.is_checked());
+    });
+
     m_copy_hex_action = GUI::Action::create("Copy &Hex", { Mod_Ctrl, Key_C }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/hex.png"sv)), [&](const GUI::Action&) {
         m_editor->copy_selected_hex_to_clipboard();
     });
@@ -623,6 +628,12 @@ ErrorOr<void> HexEditorWidget::initialize_menubar(GUI::Window& window)
     view_menu->add_action(*m_layout_annotations_action);
     view_menu->add_action(*m_layout_search_results_action);
     view_menu->add_action(*m_layout_value_inspector_action);
+    view_menu->add_separator();
+
+    auto show_offsets_column = Config::read_bool("HexEditor"sv, "Layout"sv, "ShowOffsetsColumn"sv, true);
+    m_show_offsets_column_action->set_checked(show_offsets_column);
+    m_editor->set_show_offsets_column(show_offsets_column);
+    view_menu->add_action(*m_show_offsets_column_action);
     view_menu->add_separator();
 
     auto bytes_per_row = Config::read_i32("HexEditor"sv, "Layout"sv, "BytesPerRow"sv, 16);
