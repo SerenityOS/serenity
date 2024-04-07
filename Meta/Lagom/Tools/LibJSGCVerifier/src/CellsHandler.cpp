@@ -18,6 +18,19 @@
 #include <unordered_set>
 #include <vector>
 
+AST_MATCHER_P(clang::Decl, hasAnnotation, std::string, name)
+{
+    (void)Builder;
+    (void)Finder;
+    for (auto const* attr : Node.attrs()) {
+        if (auto const* annotate_attr = llvm::dyn_cast<clang::AnnotateAttr>(attr)) {
+            if (annotate_attr->getAnnotation() == name)
+                return true;
+        }
+    }
+    return false;
+}
+
 template<typename T>
 class SimpleCollectMatchesCallback : public clang::ast_matchers::MatchFinder::MatchCallback {
 public:
@@ -47,6 +60,67 @@ CollectCellsHandler::CollectCellsHandler()
         traverse(
             clang::TK_IgnoreUnlessSpelledInSource,
             cxxRecordDecl(decl().bind("record-decl"))),
+        this);
+
+    auto non_capturable_var_decl = varDecl(
+        hasLocalStorage(),
+        unless(
+            anyOf(
+                // The declaration has an annotation:
+                //     IGNORE_USE_IN_ESCAPING_LAMBDA Foo foo;
+                hasAnnotation("serenity::ignore_use_in_escaping_lambda"),
+                // The declaration is a reference:
+                //     Foo& foo_ref = get_foo_ref();
+                //     Foo* foo_ptr = get_foo_ptr();
+                //     do_something([&foo_ref, &foo_ptr] {
+                //         foo_ref.foo();  // Fine, foo_ref references the underlying Foo instance
+                //         foo_ptr->foo(); // Bad, foo_ptr references the pointer on the stack above
+                //     });
+                hasType(references(TypeMatcher(anything()))))));
+
+    auto bad_lambda_capture = lambdaCapture(anyOf(capturesThis(), capturesVar(non_capturable_var_decl))).bind("lambda-capture");
+
+    auto lambda_with_bad_capture = lambdaExpr(
+        anyOf(
+            // These are both required as they have slightly different behavior.
+            //
+            // We need forEachLambdaCapture because we need to go over every explicit capture in the capture list, as
+            // hasAnyCapture will just take the first capture in the list that matches the criteria (usually the `this`
+            // capture). Without it, if the first capture in the list was flagged as bad but is actually fine (e.g. the
+            // `this` capture, or a var capture by value), but there was a second capture in the list that was invalid,
+            // it would be skipped.
+            //
+            // But forEachLambdaCapture doesn't seem to find implicit captures, so we also need hasAnyCapture to handle
+            // captures that aren't explicitly listed in the capture list, but are still invalid.
+            forEachLambdaCapture(bad_lambda_capture),
+            hasAnyCapture(bad_lambda_capture)));
+
+    // Bind this varDecl so we can reference it later to make sure it isn't being called
+    auto lambda_with_bad_capture_decl = varDecl(hasInitializer(lambda_with_bad_capture)).bind("lambda");
+
+    m_finder.addMatcher(
+        traverse(
+            clang::TK_IgnoreUnlessSpelledInSource,
+            callExpr(
+                forEachArgumentWithParam(
+                    anyOf(
+                        // Match a lambda given directly in the function call
+                        lambda_with_bad_capture,
+                        // Matches an expression with a possibly-deeply-nested reference to a variable with a lambda type, e.g:
+                        //     auto lambda = [...] { ... };
+                        //     some_func(move(lambda));
+                        has(declRefExpr(
+                            to(lambda_with_bad_capture_decl),
+                            // Avoid immediately invoked lambdas (i.e. match `move(lambda)` but not `move(lambda())`)
+                            unless(hasParent(
+                                // <lambda struct>::operator()(...)
+                                cxxOperatorCallExpr(has(declRefExpr(to(equalsBoundNode("lambda")))))))))),
+                    parmVarDecl(
+                        allOf(
+                            // It's important that the parameter has a RecordType, as a templated type can never escape its function
+                            hasType(cxxRecordDecl()),
+                            unless(hasAnnotation("serenity::noescape"))))
+                        .bind("lambda-param-ref")))),
         this);
 }
 
@@ -172,6 +246,12 @@ FieldValidationResult validate_field(clang::FieldDecl const* field_decl)
 
 void CollectCellsHandler::run(clang::ast_matchers::MatchFinder::MatchResult const& result)
 {
+    check_cells(result);
+    check_lambda_captures(result);
+}
+
+void CollectCellsHandler::check_cells(clang::ast_matchers::MatchFinder::MatchResult const& result)
+{
     using namespace clang::ast_matchers;
 
     clang::CXXRecordDecl const* record = result.Nodes.getNodeAs<clang::CXXRecordDecl>("record-decl");
@@ -283,5 +363,31 @@ void CollectCellsHandler::run(clang::ast_matchers::MatchFinder::MatchResult cons
             auto builder = diag_engine.Report(field->getBeginLoc(), diag_id);
             builder << record->getName();
         }
+    }
+}
+
+void CollectCellsHandler::check_lambda_captures(clang::ast_matchers::MatchFinder::MatchResult const& result)
+{
+    auto& diag_engine = result.Context->getDiagnostics();
+
+    if (auto const* capture = result.Nodes.getNodeAs<clang::LambdaCapture>("lambda-capture")) {
+        if (capture->capturesThis() || capture->getCaptureKind() != clang::LCK_ByRef)
+            return;
+
+        auto diag_id = diag_engine.getCustomDiagID(clang::DiagnosticsEngine::Warning, "Variable with local storage is captured by reference in a lambda that may be asynchronously executed");
+        diag_engine.Report(capture->getLocation(), diag_id);
+
+        clang::SourceLocation captured_var_location;
+        if (auto const* var_decl = llvm::dyn_cast<clang::VarDecl>(capture->getCapturedVar())) {
+            captured_var_location = var_decl->getTypeSourceInfo()->getTypeLoc().getBeginLoc();
+        } else {
+            captured_var_location = capture->getCapturedVar()->getLocation();
+        }
+        diag_id = diag_engine.getCustomDiagID(clang::DiagnosticsEngine::Note, "Annotate the variable declaration with IGNORE_USE_IN_ESCAPING_LAMBDA if it outlives the lambda");
+        diag_engine.Report(captured_var_location, diag_id);
+
+        auto const* param = result.Nodes.getNodeAs<clang::ParmVarDecl>("lambda-param-ref");
+        diag_id = diag_engine.getCustomDiagID(clang::DiagnosticsEngine::Note, "Annotate the parameter with NOESCAPE if the lambda will not outlive the function call");
+        diag_engine.Report(param->getTypeSourceInfo()->getTypeLoc().getBeginLoc(), diag_id);
     }
 }
