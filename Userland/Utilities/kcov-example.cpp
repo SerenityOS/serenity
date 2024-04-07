@@ -19,7 +19,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
 {
     constexpr size_t num_entries = 1024 * 100;
 
-    int fd = TRY(Core::System::open("/dev/kcov0"sv, O_RDWR));
+    int fd = TRY(Core::System::open("/dev/kcov"sv, O_RDWR));
     TRY(Core::System::ioctl(fd, KCOV_SETBUFSIZE, num_entries));
     kcov_pc_t* cover = (kcov_pc_t*)TRY(Core::System::mmap(NULL, num_entries * KCOV_ENTRY_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0));
     TRY(Core::System::ioctl(fd, KCOV_ENABLE));
