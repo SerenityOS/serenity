@@ -821,7 +821,7 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::select_resource()
     // -> If mode is attribute
     case SelectMode::Attribute: {
         auto failed_with_attribute = [this](auto error_message) {
-            bool ran_media_element_task = false;
+            IGNORE_USE_IN_ESCAPING_LAMBDA bool ran_media_element_task = false;
 
             // 6. Failed with attribute: Reaching this step indicates that the media resource failed to load or that the given URL could not be parsed. Take
             //    pending play promises and queue a media element task given the media element to run the dedicated media source failure steps with the result.

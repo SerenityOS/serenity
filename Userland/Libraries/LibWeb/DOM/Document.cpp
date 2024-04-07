@@ -3048,7 +3048,7 @@ void Document::destroy_a_document_and_its_descendants(JS::SafeFunction<void()> a
     auto child_navigables = document_tree_child_navigables();
 
     // 3. Let numberDestroyed be 0.
-    size_t number_destroyed = 0;
+    IGNORE_USE_IN_ESCAPING_LAMBDA size_t number_destroyed = 0;
 
     // 3. For each childNavigable of childNavigable's, queue a global task on the navigation and traversal task source
     //    given childNavigable's active window to perform the following steps:
@@ -3249,7 +3249,7 @@ void Document::unload_a_document_and_its_descendants(JS::GCPtr<Document> new_doc
     auto child_navigables = document_tree_child_navigables();
 
     // 2. Let numberUnloaded be 0.
-    size_t number_unloaded = 0;
+    IGNORE_USE_IN_ESCAPING_LAMBDA size_t number_unloaded = 0;
 
     // Spec FIXME: in what order?
     // 3. For each childNavigable of childNavigable's, queue a global task on the navigation and traversal task source
