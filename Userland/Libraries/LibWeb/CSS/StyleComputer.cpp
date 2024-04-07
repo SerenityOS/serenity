@@ -119,8 +119,11 @@ public:
     virtual void resource_did_load() override
     {
         auto result = try_load_font();
-        if (result.is_error())
-            return start_loading_next_url();
+        if (result.is_error()) {
+            dbgln("Failed to parse font: {}", result.error());
+            start_loading_next_url();
+            return;
+        }
         m_vector_font = result.release_value();
         m_style_computer.did_load_font(m_family_name);
     }
@@ -160,19 +163,15 @@ private:
     ErrorOr<NonnullRefPtr<Gfx::VectorFont>> try_load_font()
     {
         // FIXME: This could maybe use the format() provided in @font-face as well, since often the mime type is just application/octet-stream and we have to try every format
-        auto mime_type = resource()->mime_type();
+        auto const& mime_type = resource()->mime_type();
         if (mime_type == "font/ttf"sv || mime_type == "application/x-font-ttf"sv)
-            return TRY(OpenType::Font::try_load_from_externally_owned_memory(resource()->encoded_data()));
+            return OpenType::Font::try_load_from_externally_owned_memory(resource()->encoded_data());
         if (mime_type == "font/woff"sv || mime_type == "application/font-woff"sv)
-            return TRY(WOFF::Font::try_load_from_externally_owned_memory(resource()->encoded_data()));
-        if (mime_type == "font/woff2"sv || mime_type == "application/font-woff2"sv) {
-            auto woff2 = WOFF2::Font::try_load_from_externally_owned_memory(resource()->encoded_data());
-            if (woff2.is_error()) {
-                dbgln("WOFF2 error: {}", woff2.error());
-                return woff2.release_error();
-            }
-            return woff2.release_value();
-        }
+            return WOFF::Font::try_load_from_externally_owned_memory(resource()->encoded_data());
+        if (mime_type == "font/woff2"sv || mime_type == "application/font-woff2"sv)
+            return WOFF2::Font::try_load_from_externally_owned_memory(resource()->encoded_data());
+
+        // We don't have the luxury of knowing the MIME type, so we have to try all formats.
         auto ttf = OpenType::Font::try_load_from_externally_owned_memory(resource()->encoded_data());
         if (!ttf.is_error())
             return ttf.release_value();
@@ -182,7 +181,7 @@ private:
         auto woff2 = WOFF2::Font::try_load_from_externally_owned_memory(resource()->encoded_data());
         if (!woff2.is_error())
             return woff2.release_value();
-        return woff2.release_error();
+        return Error::from_string_literal("Automatic format detection failed");
     }
 
     StyleComputer& m_style_computer;
