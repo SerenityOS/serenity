@@ -4,6 +4,11 @@
 #import <Streams/ReadableStreamDefaultReader.idl>
 #import <Streams/WritableStream.idl>
 
+dictionary ReadableWritablePair {
+  required ReadableStream readable;
+  required WritableStream writable;
+};
+
 dictionary StreamPipeOptions {
     boolean preventClose = false;
     boolean preventAbort = false;
@@ -30,7 +35,7 @@ interface ReadableStream {
 
     Promise<undefined> cancel(optional any reason);
     ReadableStreamReader getReader(optional ReadableStreamGetReaderOptions options = {});
-    // FIXME: ReadableStream pipeThrough(ReadableWritablePair transform, optional StreamPipeOptions options = {});
+    ReadableStream pipeThrough(ReadableWritablePair transform, optional StreamPipeOptions options = {});
     Promise<undefined> pipeTo(WritableStream destination, optional StreamPipeOptions options = {});
     sequence<ReadableStream> tee();
 
