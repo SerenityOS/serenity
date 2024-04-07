@@ -381,8 +381,7 @@ bool HTMLElement::fire_a_synthetic_pointer_event(FlyString const& type, DOM::Ele
 {
     // 1. Let event be the result of creating an event using PointerEvent.
     // 2. Initialize event's type attribute to e.
-    // FIXME: Actually create a PointerEvent!
-    auto event = UIEvents::MouseEvent::create(realm(), type);
+    auto event = UIEvents::PointerEvent::create(realm(), type);
 
     // 3. Initialize event's bubbles and cancelable attributes to true.
     event->set_bubbles(true);
@@ -419,7 +418,7 @@ void HTMLElement::click()
     // 3. Set this element's click in progress flag.
     m_click_in_progress = true;
 
-    // FIXME: 4. Fire a synthetic pointer event named click at this element, with the not trusted flag set.
+    // 4. Fire a synthetic pointer event named click at this element, with the not trusted flag set.
     fire_a_synthetic_pointer_event(HTML::EventNames::click, *this, true);
 
     // 5. Unset this element's click in progress flag.
