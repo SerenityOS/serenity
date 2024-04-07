@@ -109,7 +109,7 @@ public:
     // Abstract Operations
     bool has_entries_and_events_disabled() const;
     i64 get_the_navigation_api_entry_index(SessionHistoryEntry const&) const;
-    void abort_the_ongoing_navigation(Optional<JS::NonnullGCPtr<WebIDL::DOMException>> error = {});
+    void abort_the_ongoing_navigation(JS::GCPtr<WebIDL::DOMException> error = {});
     bool fire_a_traverse_navigate_event(JS::NonnullGCPtr<SessionHistoryEntry> destination_she, UserNavigationInvolvement = UserNavigationInvolvement::None);
     bool fire_a_push_replace_reload_navigate_event(
         Bindings::NavigationType,

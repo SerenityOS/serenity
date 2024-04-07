@@ -735,7 +735,7 @@ WebIDL::ExceptionOr<NavigationResult> Navigation::perform_a_navigation_api_trave
 }
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#abort-the-ongoing-navigation
-void Navigation::abort_the_ongoing_navigation(Optional<JS::NonnullGCPtr<WebIDL::DOMException>> error)
+void Navigation::abort_the_ongoing_navigation(JS::GCPtr<WebIDL::DOMException> error)
 {
     auto& realm = relevant_realm(*this);
 
@@ -754,17 +754,17 @@ void Navigation::abort_the_ongoing_navigation(Optional<JS::NonnullGCPtr<WebIDL::
     m_suppress_scroll_restoration_during_ongoing_navigation = false;
 
     // 5. If error was not given, then let error be a new "AbortError" DOMException created in navigation's relevant realm.
-    if (!error.has_value())
+    if (!error)
         error = WebIDL::AbortError::create(realm, "Navigation aborted"_fly_string);
 
-    VERIFY(error.has_value());
+    VERIFY(error);
 
     // 6. If event's dispatch flag is set, then set event's canceled flag to true.
     if (event->dispatched())
         event->set_cancelled(true);
 
     // 7. Signal abort on event's abort controller given error.
-    event->abort_controller()->abort(error.value());
+    event->abort_controller()->abort(error);
 
     // 8. Set navigation's ongoing navigate event to null.
     m_ongoing_navigate_event = nullptr;
@@ -773,7 +773,7 @@ void Navigation::abort_the_ongoing_navigation(Optional<JS::NonnullGCPtr<WebIDL::
     //   and message, filename, lineno, and colno initialized to appropriate values that can be extracted
     //   from error and the current JavaScript stack in the same underspecified way that the report the exception algorithm does.
     ErrorEventInit event_init = {};
-    event_init.error = error.value();
+    event_init.error = error;
     // FIXME: Extract information from the exception and the JS context in the wishy-washy way the spec says here.
     event_init.filename = String {};
     event_init.colno = 0;
@@ -784,12 +784,12 @@ void Navigation::abort_the_ongoing_navigation(Optional<JS::NonnullGCPtr<WebIDL::
 
     // 10. If navigation's ongoing API method tracker is non-null, then reject the finished promise for apiMethodTracker with error.
     if (m_ongoing_api_method_tracker != nullptr)
-        WebIDL::reject_promise(realm, m_ongoing_api_method_tracker->finished_promise, error.value());
+        WebIDL::reject_promise(realm, m_ongoing_api_method_tracker->finished_promise, error);
 
     // 11. If navigation's transition is not null, then:
     if (m_transition != nullptr) {
         // 1. Reject navigation's transition's finished promise with error.
-        m_transition->finished()->reject(error.value());
+        m_transition->finished()->reject(error);
 
         // 2. Set navigation's transition to null.
         m_transition = nullptr;
