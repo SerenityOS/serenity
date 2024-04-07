@@ -2460,8 +2460,6 @@ void CalculatedStyleValue::CalculationResult::multiply_by(CalculationResult cons
 {
     // We know from validation when resolving the type, that at least one side must be a <number> or <integer>.
     // Both of these are represented as a double.
-    //FIXME:context should not be empty
-    if(!context.has_value()) return;
     VERIFY(m_value.has<Number>() || other.m_value.has<Number>());
     bool other_is_number = other.m_value.has<Number>();
 
@@ -2486,6 +2484,9 @@ void CalculatedStyleValue::CalculationResult::multiply_by(CalculationResult cons
             m_value = Frequency::make_hertz(frequency.to_hertz() * other.m_value.get<Number>().value());
         },
         [&](Length const& length) {
+            //FIXME:context should not be empty
+            if(!context.has_value()) 
+                return;            
             m_value = Length::make_px(CSSPixels::nearest_value_for(length.to_px(*context) * static_cast<double>(other.m_value.get<Number>().value())));
         },
         [&](Resolution const& resolution) {
