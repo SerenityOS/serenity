@@ -557,6 +557,31 @@ ErrorOr<NonnullRefPtr<Inode>> FATInode::create_child(StringView name, mode_t mod
 
     entry.first_cluster_low = allocated_cluster & 0xFFFF;
 
+    if (mode & S_IFDIR) {
+        auto create_directory_entry = [&](StringView entry_name) {
+            VERIFY(entry_name.length() <= 8);
+            FATEntry directory_entry {};
+            memset(directory_entry.filename, ' ', 8);
+            memset(directory_entry.extension, ' ', 3);
+            for (size_t i = 0; i < entry_name.length(); ++i)
+                directory_entry.filename[i] = entry_name[i];
+            directory_entry.attributes |= FATAttributes::Directory;
+            return directory_entry;
+        };
+
+        FATEntry current_directory = create_directory_entry("."sv);
+
+        current_directory.first_cluster_low = entry.first_cluster_low;
+        if (fs().m_fat_version == FATVersion::FAT32)
+            current_directory.first_cluster_high = entry.first_cluster_high;
+
+        FATEntry parent_directory = create_directory_entry(".."sv);
+
+        auto block = BlockBasedFileSystem::BlockIndex { fs().first_block_of_cluster(allocated_cluster).start_block.value() };
+        TRY(fs().write_block(block, UserOrKernelBuffer::for_kernel_buffer(bit_cast<u8*>(&current_directory)), sizeof(FATEntry), 0));
+        TRY(fs().write_block(block, UserOrKernelBuffer::for_kernel_buffer(bit_cast<u8*>(&parent_directory)), sizeof(FATEntry), sizeof(FATEntry)));
+    }
+
     // FIXME: If we fail here we should clean up the entries we wrote
     TRY(fs().write_block(entries[lfn_entries.size()].block, UserOrKernelBuffer::for_kernel_buffer(bit_cast<u8*>(&entry)), sizeof(FATEntry), entries[lfn_entries.size()].entry * sizeof(FATEntry)));
 
