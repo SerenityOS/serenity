@@ -38,6 +38,16 @@
 
 namespace AK {
 
+// These annotations are used to avoid capturing a variable with local storage in a lambda that outlives it
+#if defined(AK_COMPILER_CLANG)
+#    define NOESCAPE [[clang::annotate("serenity::noescape")]]
+// FIXME: When we get C++23, change this to be applied to the lambda directly instead of to the types of its captures
+#    define IGNORE_USE_IN_ESCAPING_LAMBDA [[clang::annotate("serenity::ignore_use_in_escaping_lambda")]]
+#else
+#    define NOESCAPE
+#    define IGNORE_USE_IN_ESCAPING_LAMBDA
+#endif
+
 template<typename>
 class Function;
 

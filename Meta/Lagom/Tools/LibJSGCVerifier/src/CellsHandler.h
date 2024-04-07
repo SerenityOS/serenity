@@ -25,6 +25,9 @@ public:
     clang::ast_matchers::MatchFinder& finder() { return m_finder; }
 
 private:
+    void check_cells(clang::ast_matchers::MatchFinder::MatchResult const& result);
+    void check_lambda_captures(clang::ast_matchers::MatchFinder::MatchResult const& result);
+
     std::unordered_set<std::string> m_visited_classes;
     clang::ast_matchers::MatchFinder m_finder;
 };
