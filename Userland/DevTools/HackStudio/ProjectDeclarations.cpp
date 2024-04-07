@@ -20,6 +20,7 @@ ProjectDeclarations& ProjectDeclarations::the()
     static ProjectDeclarations s_instance;
     return s_instance;
 }
+
 void ProjectDeclarations::set_declared_symbols(ByteString const& filename, Vector<CodeComprehension::Declaration> const& declarations)
 {
     m_document_to_declarations.set(filename, declarations);

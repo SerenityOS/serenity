@@ -34,8 +34,8 @@ public:
         return m_tasks.take_first();
     }
 
-    void remove_tasks_matching(Function<bool(HTML::Task const&)>);
-    JS::MarkedVector<JS::NonnullGCPtr<Task>> take_tasks_matching(Function<bool(HTML::Task const&)>);
+    void remove_tasks_matching(NOESCAPE Function<bool(HTML::Task const&)>);
+    JS::MarkedVector<JS::NonnullGCPtr<Task>> take_tasks_matching(NOESCAPE Function<bool(HTML::Task const&)>);
 
     Task const* last_added_task() const;
 

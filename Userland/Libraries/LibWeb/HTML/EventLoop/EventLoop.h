@@ -38,8 +38,8 @@ public:
     TaskQueue& microtask_queue() { return *m_microtask_queue; }
     TaskQueue const& microtask_queue() const { return *m_microtask_queue; }
 
-    void spin_until(JS::SafeFunction<bool()> goal_condition);
-    void spin_processing_tasks_with_source_until(Task::Source, JS::SafeFunction<bool()> goal_condition);
+    void spin_until(NOESCAPE JS::SafeFunction<bool()> goal_condition);
+    void spin_processing_tasks_with_source_until(Task::Source, NOESCAPE JS::SafeFunction<bool()> goal_condition);
     void process();
 
     // https://html.spec.whatwg.org/multipage/browsing-the-web.html#termination-nesting-level
