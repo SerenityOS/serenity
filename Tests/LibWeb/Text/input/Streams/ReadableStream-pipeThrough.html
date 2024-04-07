@@ -1,0 +1,57 @@
+<script src="../include.js"></script>
+<script>
+    const CHUNK1 =  "well,";
+    const CHUNK2 =  "hello";
+    const CHUNK3 =  "friends!";
+
+    asyncTest((done) => {
+        const transformStream = new TransformStream({
+            transform(chunk, controller) {
+                controller.enqueue(
+                    new TextDecoder("utf-8")
+                        .decode(chunk)
+                        .toUpperCase()
+                );
+            }
+        });
+
+        const stream = new ReadableStream({
+            start(controller) {
+                pullCount = 0;
+            },
+
+            pull(controller) {
+                const textEncoder = new TextEncoder();
+
+                ++pullCount;
+
+                if (pullCount == 1) {
+                    controller.enqueue(textEncoder.encode(CHUNK1));
+                } else if (pullCount == 2) {
+                    controller.enqueue(textEncoder.encode(CHUNK2));
+                } else if (pullCount == 3) {
+                    controller.enqueue(textEncoder.encode(CHUNK3));
+                } else {
+                    controller.close();
+                }
+            },
+
+            cancel() {},
+        });
+
+
+        const reader = transformStream.readable.getReader();
+        reader.read().then(function processText({done, value}) {
+            if (done)
+                return;
+
+            println(value);
+            reader.read().then(processText);
+        }).then(() => {
+            done();
+        });
+
+        stream.pipeThrough(transformStream);
+
+    });
+</script>
