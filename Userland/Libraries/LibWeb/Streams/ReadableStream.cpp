@@ -110,6 +110,29 @@ WebIDL::ExceptionOr<ReadableStreamReader> ReadableStream::get_reader(ReadableStr
     return ReadableStreamReader { TRY(acquire_readable_stream_byob_reader(*this)) };
 }
 
+WebIDL::ExceptionOr<JS::NonnullGCPtr<ReadableStream>> ReadableStream::pipe_through(ReadableWritablePair transform, StreamPipeOptions const& options)
+{
+    // 1. If ! IsReadableStreamLocked(this) is true, throw a TypeError exception.
+    if (is_readable_stream_locked(*this))
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Failed to execute 'pipeThrough' on 'ReadableStream': Cannot pipe a locked stream"sv };
+
+    // 2. If ! IsWritableStreamLocked(transform["writable"]) is true, throw a TypeError exception.
+    if (is_writable_stream_locked(*transform.writable))
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Failed to execute 'pipeThrough' on 'ReadableStream': parameter 1's 'writable' is locked"sv };
+
+    // 3. Let signal be options["signal"] if it exists, or undefined otherwise.
+    auto signal = options.signal.has_value() ? JS::Value(options.signal.value().ptr()) : JS::js_undefined();
+
+    // 4. Let promise be ! ReadableStreamPipeTo(this, transform["writable"], options["preventClose"], options["preventAbort"], options["preventCancel"], signal).
+    auto promise = MUST(readable_stream_pipe_to(*this, *transform.writable, options.prevent_close, options.prevent_abort, options.prevent_cancel, signal));
+
+    // 5. Set promise.[[PromiseIsHandled]] to true.
+    WebIDL::mark_promise_as_handled(*promise);
+
+    // 6. Return transform["readable"].
+    return JS::NonnullGCPtr { *transform.readable };
+}
+
 WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Object>> ReadableStream::pipe_to(WritableStream& destination, StreamPipeOptions const& options)
 {
     auto& realm = this->realm();
