@@ -36,7 +36,7 @@ struct StreamPipeOptions {
     bool prevent_close { false };
     bool prevent_abort { false };
     bool prevent_cancel { false };
-    Optional<JS::NonnullGCPtr<DOM::AbortSignal>> signal;
+    JS::GCPtr<DOM::AbortSignal> signal;
 };
 
 struct ReadableStreamPair {

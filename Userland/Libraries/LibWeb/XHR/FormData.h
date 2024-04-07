@@ -23,7 +23,7 @@ class FormData : public Bindings::PlatformObject {
 public:
     virtual ~FormData() override;
 
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<FormData>> construct_impl(JS::Realm&, Optional<JS::NonnullGCPtr<HTML::HTMLFormElement>> form = {});
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<FormData>> construct_impl(JS::Realm&, JS::GCPtr<HTML::HTMLFormElement> form = {});
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<FormData>> construct_impl(JS::Realm&, Vector<FormDataEntry> entry_list);
 
     WebIDL::ExceptionOr<void> append(String const& name, String const& value);

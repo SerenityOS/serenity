@@ -121,7 +121,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<ReadableStream>> ReadableStream::pipe_throu
         return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Failed to execute 'pipeThrough' on 'ReadableStream': parameter 1's 'writable' is locked"sv };
 
     // 3. Let signal be options["signal"] if it exists, or undefined otherwise.
-    auto signal = options.signal.has_value() ? JS::Value(options.signal.value().ptr()) : JS::js_undefined();
+    auto signal = options.signal ? JS::Value(options.signal) : JS::js_undefined();
 
     // 4. Let promise be ! ReadableStreamPipeTo(this, transform["writable"], options["preventClose"], options["preventAbort"], options["preventCancel"], signal).
     auto promise = MUST(readable_stream_pipe_to(*this, *transform.writable, options.prevent_close, options.prevent_abort, options.prevent_cancel, signal));
@@ -152,7 +152,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Object>> ReadableStream::pipe_to(Writab
     }
 
     // 3. Let signal be options["signal"] if it exists, or undefined otherwise.
-    auto signal = options.signal.has_value() ? JS::Value(options.signal.value().ptr()) : JS::js_undefined();
+    auto signal = options.signal ? JS::Value(options.signal) : JS::js_undefined();
 
     // 4. Return ! ReadableStreamPipeTo(this, destination, options["preventClose"], options["preventAbort"], options["preventCancel"], signal).
     return MUST(readable_stream_pipe_to(*this, destination, options.prevent_close, options.prevent_abort, options.prevent_cancel, signal))->promise();
