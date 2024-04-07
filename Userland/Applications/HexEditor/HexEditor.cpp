@@ -421,6 +421,60 @@ void HexEditor::scroll_position_into_view(size_t position)
     scroll_into_view(rect, true, true);
 }
 
+size_t HexEditor::total_rows() const
+{
+    return ceil_div(m_content_length, bytes_per_row());
+}
+
+size_t HexEditor::line_height() const
+{
+    return font().pixel_size_rounded_up() + m_line_spacing;
+}
+
+size_t HexEditor::character_width() const
+{
+    return font().glyph_fixed_width();
+}
+
+size_t HexEditor::cell_gap() const
+{
+    return character_width() / 2;
+}
+
+size_t HexEditor::cell_width() const
+{
+    return character_width() * 2 + cell_gap();
+}
+
+size_t HexEditor::group_gap() const
+{
+    return character_width() * 1.5;
+}
+
+size_t HexEditor::group_width() const
+{
+    return (character_width() * 2 * bytes_per_group())
+        + (cell_gap() * (bytes_per_group() - 1))
+        + group_gap();
+}
+
+int HexEditor::offset_area_width() const
+{
+    return m_padding + font().width_rounded_up("0X12345678"sv) + m_padding;
+}
+
+int HexEditor::hex_area_width() const
+{
+    return m_padding
+        + groups_per_row() * group_width() - group_gap()
+        + m_padding;
+}
+
+int HexEditor::text_area_width() const
+{
+    return m_padding + bytes_per_row() * character_width() + m_padding;
+}
+
 void HexEditor::keydown_event(GUI::KeyEvent& event)
 {
     dbgln_if(HEX_DEBUG, "Editor::keydown_event key={}", static_cast<u8>(event.key()));
