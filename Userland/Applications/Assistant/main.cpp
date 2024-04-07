@@ -258,7 +258,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
 
         mark_selected_item();
-        Core::deferred_invoke([&] { window->resize(GUI::Desktop::the().rect().width() / 3, {}); });
+        Core::deferred_invoke([window] { window->resize(GUI::Desktop::the().rect().width() / 3, {}); });
     }));
 
     db.on_new_results = [&](auto results) {
