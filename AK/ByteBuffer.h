@@ -92,6 +92,21 @@ public:
         return copy(bytes.data(), bytes.size());
     }
 
+    [[nodiscard]] static ErrorOr<ByteBuffer> xor_buffers(ReadonlyBytes first, ReadonlyBytes second)
+    {
+        if (first.size() != second.size())
+            return Error::from_errno(EINVAL);
+
+        auto buffer = TRY(create_uninitialized(first.size()));
+        auto buffer_data = buffer.data();
+        auto first_data = first.data();
+        auto second_data = second.data();
+        for (size_t i = 0; i < first.size(); ++i)
+            buffer_data[i] = first_data[i] ^ second_data[i];
+
+        return { move(buffer) };
+    }
+
     template<size_t other_inline_capacity>
     bool operator==(ByteBuffer<other_inline_capacity> const& other) const
     {
