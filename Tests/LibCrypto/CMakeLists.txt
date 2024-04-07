@@ -11,6 +11,7 @@ set(TEST_SOURCES
     TestHash.cpp
     TestHMAC.cpp
     TestMGF.cpp
+    TestOAEP.cpp
     TestPBKDF2.cpp
     TestPoly1305.cpp
     TestRSA.cpp
