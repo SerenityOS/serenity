@@ -34,6 +34,15 @@
 
 namespace HexEditor {
 
+HexEditor::OffsetFormat HexEditor::offset_format_from_string(StringView string)
+{
+    if (string.equals_ignoring_ascii_case("decimal"sv)) {
+        return OffsetFormat::Decimal;
+    }
+    // Default to hex if invalid
+    return OffsetFormat::Hexadecimal;
+}
+
 HexEditor::HexEditor()
     : m_document(make<HexDocumentMemory>(ByteBuffer::create_zeroed(0).release_value_but_fixme_should_propagate_errors()))
 {
@@ -246,6 +255,15 @@ void HexEditor::set_show_offsets_column(bool value)
         return;
 
     m_show_offsets_column = value;
+    update_content_size();
+}
+
+void HexEditor::set_offset_format(OffsetFormat format)
+{
+    if (format == m_offset_format)
+        return;
+
+    m_offset_format = format;
     update_content_size();
 }
 
@@ -471,6 +489,8 @@ int HexEditor::offset_area_width() const
 {
     if (!m_show_offsets_column)
         return 0;
+    // By a fun coincidence, decimal and hexadecimal are both 10 characters for the 32-bit range.
+    // (decimal is up to 10 digits; hex is 8 digits with a 2-character prefix)
     return m_padding + font().width_rounded_up("0X12345678"sv) + m_padding;
 }
 
@@ -721,7 +741,15 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
             };
 
             bool is_current_line = (m_position / bytes_per_row()) == row;
-            auto offset_text = String::formatted("{:#08X}", row * bytes_per_row()).release_value_but_fixme_should_propagate_errors();
+            String offset_text;
+            switch (m_offset_format) {
+            case OffsetFormat::Decimal:
+                offset_text = MUST(String::formatted("{:010d}", row * bytes_per_row()));
+                break;
+            case OffsetFormat::Hexadecimal:
+                offset_text = MUST(String::formatted("{:#08X}", row * bytes_per_row()));
+                break;
+            }
             painter.draw_text(
                 side_offset_rect,
                 offset_text,

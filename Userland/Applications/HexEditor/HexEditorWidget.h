@@ -88,6 +88,7 @@ private:
     RefPtr<GUI::Action> m_fill_selection_action;
 
     RefPtr<GUI::Action> m_show_offsets_column_action;
+    GUI::ActionGroup m_offset_format_actions;
 
     GUI::ActionGroup m_bytes_per_row_actions;
     GUI::ActionGroup m_value_inspector_mode_actions;

@@ -634,6 +634,31 @@ ErrorOr<void> HexEditorWidget::initialize_menubar(GUI::Window& window)
     m_show_offsets_column_action->set_checked(show_offsets_column);
     m_editor->set_show_offsets_column(show_offsets_column);
     view_menu->add_action(*m_show_offsets_column_action);
+
+    auto offset_format = HexEditor::offset_format_from_string(Config::read_string("HexEditor"sv, "Layout"sv, "OffsetFormat"sv));
+    m_editor->set_offset_format(offset_format);
+    m_offset_format_actions.set_exclusive(true);
+    auto offset_format_menu = view_menu->add_submenu("Offset Format"_string);
+    auto offset_format_decimal_action = GUI::Action::create_checkable("&Decimal", [this](auto&) {
+        m_editor->set_offset_format(HexEditor::OffsetFormat::Decimal);
+        Config::write_string("HexEditor"sv, "Layout"sv, "OffsetFormat"sv, "decimal"sv);
+    });
+    auto offset_format_hexadecimal_action = GUI::Action::create_checkable("&Hexadecimal", [this](auto&) {
+        m_editor->set_offset_format(HexEditor::OffsetFormat::Hexadecimal);
+        Config::write_string("HexEditor"sv, "Layout"sv, "OffsetFormat"sv, "hexadecimal"sv);
+    });
+    switch (offset_format) {
+    case HexEditor::OffsetFormat::Decimal:
+        offset_format_decimal_action->set_checked(true);
+        break;
+    case HexEditor::OffsetFormat::Hexadecimal:
+        offset_format_hexadecimal_action->set_checked(true);
+        break;
+    }
+    m_offset_format_actions.add_action(offset_format_decimal_action);
+    m_offset_format_actions.add_action(offset_format_hexadecimal_action);
+    offset_format_menu->add_action(offset_format_decimal_action);
+    offset_format_menu->add_action(offset_format_hexadecimal_action);
     view_menu->add_separator();
 
     auto bytes_per_row = Config::read_i32("HexEditor"sv, "Layout"sv, "BytesPerRow"sv, 16);
