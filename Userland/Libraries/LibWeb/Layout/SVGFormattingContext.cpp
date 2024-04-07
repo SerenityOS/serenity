@@ -16,9 +16,6 @@
 #include <LibWeb/Layout/SVGFormattingContext.h>
 #include <LibWeb/Layout/SVGGeometryBox.h>
 #include <LibWeb/Layout/SVGMaskBox.h>
-#include <LibWeb/Layout/SVGSVGBox.h>
-#include <LibWeb/Layout/SVGTextBox.h>
-#include <LibWeb/Layout/SVGTextPathBox.h>
 #include <LibWeb/SVG/SVGClipPathElement.h>
 #include <LibWeb/SVG/SVGForeignObjectElement.h>
 #include <LibWeb/SVG/SVGGElement.h>
@@ -168,37 +165,7 @@ static bool is_container_element(Node const& node)
     return false;
 }
 
-enum class TraversalDecision {
-    Continue,
-    SkipChildrenAndContinue,
-    Break,
-};
-
-// FIXME: Add TraversalDecision::SkipChildrenAndContinue to TreeNode's implementation.
-template<typename Callback>
-static TraversalDecision for_each_in_inclusive_subtree(Layout::Node const& node, Callback callback)
-{
-    if (auto decision = callback(node); decision != TraversalDecision::Continue)
-        return decision;
-    for (auto* child = node.first_child(); child; child = child->next_sibling()) {
-        if (for_each_in_inclusive_subtree(*child, callback) == TraversalDecision::Break)
-            return TraversalDecision::Break;
-    }
-    return TraversalDecision::Continue;
-}
-
-// FIXME: Add TraversalDecision::SkipChildrenAndContinue to TreeNode's implementation.
-template<typename Callback>
-static TraversalDecision for_each_in_subtree(Layout::Node const& node, Callback callback)
-{
-    for (auto* child = node.first_child(); child; child = child->next_sibling()) {
-        if (for_each_in_inclusive_subtree(*child, callback) == TraversalDecision::Break)
-            return TraversalDecision::Break;
-    }
-    return TraversalDecision::Continue;
-}
-
-void SVGFormattingContext::run(Box const& box, LayoutMode layout_mode, AvailableSpace const& available_space)
+void SVGFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const& available_space)
 {
     // NOTE: SVG doesn't have a "formatting context" in the spec, but this is the most
     //       obvious way to drive SVG layout in our engine at the moment.
@@ -223,10 +190,8 @@ void SVGFormattingContext::run(Box const& box, LayoutMode layout_mode, Available
         }
     }
 
-    auto viewbox_transform = [&] {
-        if (!viewbox.has_value())
-            return m_parent_viewbox_transform;
-
+    m_current_viewbox_transform = m_parent_viewbox_transform;
+    if (viewbox.has_value()) {
         // FIXME: This should allow just one of width or height to be specified.
         // E.g. We should be able to layout <svg width="100%"> where height is unspecified/auto.
         if (!svg_box_state.has_definite_width() || !svg_box_state.has_definite_height()) {
@@ -241,11 +206,11 @@ void SVGFormattingContext::run(Box const& box, LayoutMode layout_mode, Available
         auto viewbox_offset_and_scale = scale_and_align_viewbox_content(preserve_aspect_ratio, *viewbox, { scale_width, scale_height }, svg_box_state);
 
         CSSPixelPoint offset = viewbox_offset_and_scale.offset;
-        return Gfx::AffineTransform { m_parent_viewbox_transform }.multiply(Gfx::AffineTransform {}
-                                                                                .translate(offset.to_type<float>())
-                                                                                .scale(viewbox_offset_and_scale.scale_factor_x, viewbox_offset_and_scale.scale_factor_y)
-                                                                                .translate({ -viewbox->min_x, -viewbox->min_y }));
-    }();
+        m_current_viewbox_transform = Gfx::AffineTransform { m_current_viewbox_transform }.multiply(Gfx::AffineTransform {}
+                                                                                                        .translate(offset.to_type<float>())
+                                                                                                        .scale(viewbox_offset_and_scale.scale_factor_x, viewbox_offset_and_scale.scale_factor_y)
+                                                                                                        .translate({ -viewbox->min_x, -viewbox->min_y }));
+    }
 
     if (svg_box_state.has_definite_width() && svg_box_state.has_definite_height()) {
         // Scale the box of the viewport based on the parent's viewBox transform.
@@ -260,18 +225,6 @@ void SVGFormattingContext::run(Box const& box, LayoutMode layout_mode, Available
         svg_box_state.set_has_definite_width(true);
         svg_box_state.set_has_definite_height(true);
     }
-
-    auto root_offset = svg_box_state.offset;
-    box.for_each_child_of_type<BlockContainer>([&](BlockContainer const& child_box) {
-        if (is<SVG::SVGForeignObjectElement>(child_box.dom_node())) {
-            Layout::BlockFormattingContext bfc(m_state, child_box, this);
-            bfc.run(child_box, LayoutMode::Normal, available_space);
-
-            auto& child_state = m_state.get_mutable(child_box);
-            child_state.set_content_offset(child_state.offset.translated(root_offset));
-        }
-        return IterationDecision::Continue;
-    });
 
     auto viewport_width = [&] {
         if (viewbox.has_value())
@@ -291,165 +244,217 @@ void SVGFormattingContext::run(Box const& box, LayoutMode layout_mode, Available
         return CSSPixels {};
     }();
 
-    for_each_in_subtree(box, [&](Node const& descendant) {
-        if (is<SVGMaskBox>(descendant) || is<SVGClipBox>(descendant))
-            return TraversalDecision::SkipChildrenAndContinue;
-        if (is<SVG::SVGViewport>(descendant.dom_node())) {
-            // Layout for a nested SVG viewport.
-            // https://svgwg.org/svg2-draft/coords.html#EstablishingANewSVGViewport.
-            SVGFormattingContext nested_context(m_state, static_cast<Box const&>(descendant), this, viewbox_transform);
-            auto& nested_viewport_state = m_state.get_mutable(static_cast<Box const&>(descendant));
-            auto resolve_dimension = [](auto& node, auto size, auto reference_value) {
-                // The value auto for width and height on the ‘svg’ element is treated as 100%.
-                // https://svgwg.org/svg2-draft/geometry.html#Sizing
-                if (size.is_auto())
-                    return reference_value;
-                return size.to_px(node, reference_value);
-            };
+    m_available_space = available_space;
+    m_svg_offset = svg_box_state.offset;
+    m_viewport_size = { viewport_width, viewport_height };
 
-            auto nested_viewport_x = descendant.computed_values().x().to_px(descendant, viewport_width);
-            auto nested_viewport_y = descendant.computed_values().y().to_px(descendant, viewport_height);
-            auto nested_viewport_width = resolve_dimension(descendant, descendant.computed_values().width(), viewport_width);
-            auto nested_viewport_height = resolve_dimension(descendant, descendant.computed_values().height(), viewport_height);
-            nested_viewport_state.set_content_offset({ nested_viewport_x, nested_viewport_y });
-            nested_viewport_state.set_content_width(nested_viewport_width);
-            nested_viewport_state.set_content_height(nested_viewport_height);
-            nested_viewport_state.set_has_definite_width(true);
-            nested_viewport_state.set_has_definite_height(true);
-            nested_context.run(static_cast<Box const&>(descendant), layout_mode, available_space);
-            return TraversalDecision::SkipChildrenAndContinue;
-        }
-        if (is<SVGGraphicsBox>(descendant)) {
-            auto const& graphics_box = static_cast<SVGGraphicsBox const&>(descendant);
-            auto& dom_node = const_cast<SVGGraphicsBox&>(graphics_box).dom_node();
-            auto& graphics_box_state = m_state.get_mutable(graphics_box);
-
-            auto svg_transform = dom_node.get_transform();
-            graphics_box_state.set_computed_svg_transforms(Painting::SVGGraphicsPaintable::ComputedTransforms(viewbox_transform, svg_transform));
-            auto to_css_pixels_transform = Gfx::AffineTransform {}.multiply(viewbox_transform).multiply(svg_transform);
-
-            Gfx::Path path;
-            if (is<SVGGeometryBox>(descendant)) {
-                path = static_cast<SVG::SVGGeometryElement&>(dom_node).get_path({ viewport_width, viewport_height });
-            } else if (is<SVGTextBox>(descendant)) {
-                auto& text_element = static_cast<SVG::SVGTextPositioningElement&>(dom_node);
-
-                auto& font = graphics_box.first_available_font();
-                auto text_contents = text_element.text_contents();
-                Utf8View text_utf8 { text_contents };
-                auto text_width = font.width(text_utf8);
-
-                auto text_offset = text_element.get_offset();
-                // https://svgwg.org/svg2-draft/text.html#TextAnchoringProperties
-                switch (text_element.text_anchor().value_or(SVG::TextAnchor::Start)) {
-                case SVG::TextAnchor::Start:
-                    // The rendered characters are aligned such that the start of the resulting rendered text is at the initial
-                    // current text position.
-                    break;
-                case SVG::TextAnchor::Middle: {
-                    // The rendered characters are shifted such that the geometric middle of the resulting rendered text
-                    // (determined from the initial and final current text position before applying the text-anchor property)
-                    // is at the initial current text position.
-                    text_offset.translate_by(-text_width / 2, 0);
-                    break;
-                }
-                case SVG::TextAnchor::End: {
-                    // The rendered characters are shifted such that the end of the resulting rendered text (final current text
-                    // position before applying the text-anchor property) is at the initial current text position.
-                    text_offset.translate_by(-text_width, 0);
-                    break;
-                }
-                default:
-                    VERIFY_NOT_REACHED();
-                }
-
-                path.move_to(text_offset);
-                path.text(text_utf8, font);
-            } else if (is<SVGTextPathBox>(descendant)) {
-                auto& text_path_element = static_cast<SVG::SVGTextPathElement&>(dom_node);
-                auto path_or_shape = text_path_element.path_or_shape();
-                if (!path_or_shape)
-                    return TraversalDecision::Continue;
-
-                auto& font = graphics_box.first_available_font();
-                auto text_contents = text_path_element.text_contents();
-                Utf8View text_utf8 { text_contents };
-
-                auto shape_path = const_cast<SVG::SVGGeometryElement&>(*path_or_shape).get_path({ viewport_width, viewport_height });
-                path = shape_path.place_text_along(text_utf8, font);
-            }
-
-            auto path_bounding_box = to_css_pixels_transform.map(path.bounding_box()).to_type<CSSPixels>();
-            // Stroke increases the path's size by stroke_width/2 per side.
-            CSSPixels stroke_width = CSSPixels::nearest_value_for(graphics_box.dom_node().visible_stroke_width() * viewbox_transform.x_scale());
-            path_bounding_box.inflate(stroke_width, stroke_width);
-            graphics_box_state.set_content_offset(path_bounding_box.top_left());
-            graphics_box_state.set_content_width(path_bounding_box.width());
-            graphics_box_state.set_content_height(path_bounding_box.height());
-            graphics_box_state.set_has_definite_width(true);
-            graphics_box_state.set_has_definite_height(true);
-            graphics_box_state.set_computed_svg_path(move(path));
-        }
-        return TraversalDecision::Continue;
-    });
-
-    // https://svgwg.org/svg2-draft/struct.html#Groups
-    // 5.2. Grouping: the ‘g’ element
-    // The ‘g’ element is a container element for grouping together related graphics elements.
-    box.for_each_in_subtree_of_type<SVGBox>([&](SVGBox const& descendant) {
-        if (is_container_element(descendant)) {
-            Gfx::BoundingBox<CSSPixels> bounding_box;
-            for_each_in_subtree(descendant, [&](Node const& child_of_svg_container) {
-                if (!is<SVGBox>(child_of_svg_container))
-                    return TraversalDecision::Continue;
-                // Masks/clips do not change the bounding box of their parents.
-                if (is<SVGMaskBox>(child_of_svg_container) || is<SVGClipBox>(child_of_svg_container))
-                    return TraversalDecision::SkipChildrenAndContinue;
-                auto& box_state = m_state.get(static_cast<SVGBox const&>(child_of_svg_container));
-                bounding_box.add_point(box_state.offset);
-                bounding_box.add_point(box_state.offset.translated(box_state.content_width(), box_state.content_height()));
-                return TraversalDecision::Continue;
-            });
-
-            auto& box_state = m_state.get_mutable(descendant);
-            box_state.set_content_x(bounding_box.x());
-            box_state.set_content_y(bounding_box.y());
-            box_state.set_content_width(bounding_box.width());
-            box_state.set_content_height(bounding_box.height());
-            box_state.set_has_definite_width(true);
-            box_state.set_has_definite_height(true);
-        }
-        return IterationDecision::Continue;
-    });
-
-    // Lay out masks/clip paths last (as their parent needs to be sized first).
-    for_each_in_subtree(box, [&](Node const& descendant) {
-        SVG::SVGUnits content_units {};
-        if (is<SVGMaskBox>(descendant))
-            content_units = static_cast<SVGMaskBox const&>(descendant).dom_node().mask_content_units();
-        else if (is<SVGClipBox>(descendant))
-            content_units = static_cast<SVGClipBox const&>(descendant).dom_node().clip_path_units();
-        else
-            return TraversalDecision::Continue;
-        // FIXME: Somehow limit <clipPath> contents to: shape elements, <text>, and <use>.
-        auto& layout_state = m_state.get_mutable(static_cast<Box const&>(descendant));
-        auto parent_viewbox_transform = viewbox_transform;
-        if (content_units == SVG::SVGUnits::ObjectBoundingBox) {
-            auto* parent_node = descendant.parent();
-            auto& parent_node_state = m_state.get(*parent_node);
-            layout_state.set_content_width(parent_node_state.content_width());
-            layout_state.set_content_height(parent_node_state.content_height());
-            parent_viewbox_transform = Gfx::AffineTransform {}.translate(parent_node_state.offset.to_type<float>());
-        } else {
-            layout_state.set_content_width(viewport_width);
-            layout_state.set_content_height(viewport_height);
-        }
-        // Pretend masks/clips are a viewport so we can scale the contents depending on the `contentUnits`.
-        SVGFormattingContext nested_context(m_state, static_cast<Box const&>(descendant), this, parent_viewbox_transform);
-        layout_state.set_has_definite_width(true);
-        layout_state.set_has_definite_height(true);
-        nested_context.run(static_cast<Box const&>(descendant), layout_mode, available_space);
-        return TraversalDecision::SkipChildrenAndContinue;
+    box.for_each_child_of_type<Box>([&](Box const& child) {
+        layout_svg_element(child);
     });
 }
+
+void SVGFormattingContext::layout_svg_element(Box const& child)
+{
+    if (is<SVG::SVGViewport>(child.dom_node())) {
+        layout_nested_viewport(child);
+    } else if (is<SVG::SVGForeignObjectElement>(child.dom_node()) && is<BlockContainer>(child)) {
+        Layout::BlockFormattingContext bfc(m_state, static_cast<BlockContainer const&>(child), this);
+        bfc.run(child, LayoutMode::Normal, *m_available_space);
+        auto& child_state = m_state.get_mutable(child);
+        child_state.set_content_offset(child_state.offset.translated(m_svg_offset));
+    } else if (is<SVGGraphicsBox>(child)) {
+        layout_graphics_element(static_cast<SVGGraphicsBox const&>(child));
+    }
+}
+
+void SVGFormattingContext::layout_nested_viewport(Box const& viewport)
+{
+    // Layout for a nested SVG viewport.
+    // https://svgwg.org/svg2-draft/coords.html#EstablishingANewSVGViewport.
+    SVGFormattingContext nested_context(m_state, viewport, this, m_current_viewbox_transform);
+    auto& nested_viewport_state = m_state.get_mutable(viewport);
+    auto resolve_dimension = [](auto& node, auto size, auto reference_value) {
+        // The value auto for width and height on the ‘svg’ element is treated as 100%.
+        // https://svgwg.org/svg2-draft/geometry.html#Sizing
+        if (size.is_auto())
+            return reference_value;
+        return size.to_px(node, reference_value);
+    };
+
+    auto nested_viewport_x = viewport.computed_values().x().to_px(viewport, m_viewport_size.width());
+    auto nested_viewport_y = viewport.computed_values().y().to_px(viewport, m_viewport_size.height());
+    auto nested_viewport_width = resolve_dimension(viewport, viewport.computed_values().width(), m_viewport_size.width());
+    auto nested_viewport_height = resolve_dimension(viewport, viewport.computed_values().height(), m_viewport_size.height());
+    nested_viewport_state.set_content_offset({ nested_viewport_x, nested_viewport_y });
+    nested_viewport_state.set_content_width(nested_viewport_width);
+    nested_viewport_state.set_content_height(nested_viewport_height);
+    nested_viewport_state.set_has_definite_width(true);
+    nested_viewport_state.set_has_definite_height(true);
+    nested_context.run(static_cast<Box const&>(viewport), LayoutMode::Normal, *m_available_space);
+}
+
+Gfx::Path SVGFormattingContext::compute_path_for_text(SVGTextBox const& text_box)
+{
+    auto& text_element = static_cast<SVG::SVGTextPositioningElement const&>(text_box.dom_node());
+    auto& font = text_box.first_available_font();
+    auto text_contents = text_element.text_contents();
+    Utf8View text_utf8 { text_contents };
+    auto text_width = font.width(text_utf8);
+    auto text_offset = text_element.get_offset();
+
+    // https://svgwg.org/svg2-draft/text.html#TextAnchoringProperties
+    switch (text_element.text_anchor().value_or(SVG::TextAnchor::Start)) {
+    case SVG::TextAnchor::Start:
+        // The rendered characters are aligned such that the start of the resulting rendered text is at the initial
+        // current text position.
+        break;
+    case SVG::TextAnchor::Middle: {
+        // The rendered characters are shifted such that the geometric middle of the resulting rendered text
+        // (determined from the initial and final current text position before applying the text-anchor property)
+        // is at the initial current text position.
+        text_offset.translate_by(-text_width / 2, 0);
+        break;
+    }
+    case SVG::TextAnchor::End: {
+        // The rendered characters are shifted such that the end of the resulting rendered text (final current text
+        // position before applying the text-anchor property) is at the initial current text position.
+        text_offset.translate_by(-text_width, 0);
+        break;
+    }
+    default:
+        VERIFY_NOT_REACHED();
+    }
+
+    Gfx::Path path;
+    path.move_to(text_offset);
+    path.text(text_utf8, font);
+    return path;
+}
+
+Gfx::Path SVGFormattingContext::compute_path_for_text_path(SVGTextPathBox const& text_path_box)
+{
+    auto& text_path_element = static_cast<SVG::SVGTextPathElement const&>(text_path_box.dom_node());
+    auto path_or_shape = text_path_element.path_or_shape();
+    if (!path_or_shape)
+        return {};
+
+    auto& font = text_path_box.first_available_font();
+    auto text_contents = text_path_element.text_contents();
+    Utf8View text_utf8 { text_contents };
+
+    auto shape_path = const_cast<SVG::SVGGeometryElement&>(*path_or_shape).get_path(m_viewport_size);
+    return shape_path.place_text_along(text_utf8, font);
+}
+
+void SVGFormattingContext::layout_path_like_element(SVGGraphicsBox const& graphics_box)
+{
+    auto& graphics_box_state = m_state.get_mutable(graphics_box);
+    VERIFY(graphics_box_state.computed_svg_transforms().has_value());
+
+    auto to_css_pixels_transform = Gfx::AffineTransform {}
+                                       .multiply(m_current_viewbox_transform)
+                                       .multiply(graphics_box_state.computed_svg_transforms()->svg_transform());
+
+    Gfx::Path path;
+    if (is<SVGGeometryBox>(graphics_box)) {
+        auto& geometry_box = static_cast<SVGGeometryBox const&>(graphics_box);
+        path = const_cast<SVGGeometryBox&>(geometry_box).dom_node().get_path(m_viewport_size);
+    } else if (is<SVGTextBox>(graphics_box)) {
+        auto& text_box = static_cast<SVGTextBox const&>(graphics_box);
+        path = compute_path_for_text(text_box);
+        // <text> and <tspan> elements can contain more text elements.
+        text_box.for_each_child_of_type<SVGGraphicsBox>([&](auto& child) {
+            if (is<SVGTextBox>(child) || is<SVGTextPathBox>(child))
+                layout_graphics_element(child);
+        });
+    } else if (is<SVGTextPathBox>(graphics_box)) {
+        // FIXME: Support <tspan> in <textPath>.
+        path = compute_path_for_text_path(static_cast<SVGTextPathBox const&>(graphics_box));
+    }
+
+    auto path_bounding_box = to_css_pixels_transform.map(path.bounding_box()).to_type<CSSPixels>();
+    // Stroke increases the path's size by stroke_width/2 per side.
+    CSSPixels stroke_width = CSSPixels::nearest_value_for(graphics_box.dom_node().visible_stroke_width() * m_current_viewbox_transform.x_scale());
+    path_bounding_box.inflate(stroke_width, stroke_width);
+    graphics_box_state.set_content_offset(path_bounding_box.top_left());
+    graphics_box_state.set_content_width(path_bounding_box.width());
+    graphics_box_state.set_content_height(path_bounding_box.height());
+    graphics_box_state.set_has_definite_width(true);
+    graphics_box_state.set_has_definite_height(true);
+    graphics_box_state.set_computed_svg_path(move(path));
+}
+
+void SVGFormattingContext::layout_graphics_element(SVGGraphicsBox const& graphics_box)
+{
+    auto& graphics_box_state = m_state.get_mutable(graphics_box);
+    auto svg_transform = const_cast<SVGGraphicsBox&>(graphics_box).dom_node().get_transform();
+    graphics_box_state.set_computed_svg_transforms(Painting::SVGGraphicsPaintable::ComputedTransforms(m_current_viewbox_transform, svg_transform));
+
+    if (is_container_element(graphics_box)) {
+        // https://svgwg.org/svg2-draft/struct.html#Groups
+        // 5.2. Grouping: the ‘g’ element
+        // The ‘g’ element is a container element for grouping together related graphics elements.
+        layout_container_element(graphics_box);
+    } else {
+        // Assume this is a path-like element.
+        layout_path_like_element(graphics_box);
+    }
+
+    if (auto* mask_box = graphics_box.first_child_of_type<SVGMaskBox>())
+        layout_mask_or_clip(*mask_box);
+
+    if (auto* clip_box = graphics_box.first_child_of_type<SVGClipBox>())
+        layout_mask_or_clip(*clip_box);
+}
+
+void SVGFormattingContext::layout_mask_or_clip(SVGBox const& mask_or_clip)
+{
+    SVG::SVGUnits content_units {};
+    if (is<SVGMaskBox>(mask_or_clip))
+        content_units = static_cast<SVGMaskBox const&>(mask_or_clip).dom_node().mask_content_units();
+    else if (is<SVGClipBox>(mask_or_clip))
+        content_units = static_cast<SVGClipBox const&>(mask_or_clip).dom_node().clip_path_units();
+    else
+        VERIFY_NOT_REACHED();
+    // FIXME: Somehow limit <clipPath> contents to: shape elements, <text>, and <use>.
+    auto& layout_state = m_state.get_mutable(mask_or_clip);
+    auto parent_viewbox_transform = m_current_viewbox_transform;
+    if (content_units == SVG::SVGUnits::ObjectBoundingBox) {
+        auto* parent_node = mask_or_clip.parent();
+        auto& parent_node_state = m_state.get(*parent_node);
+        layout_state.set_content_width(parent_node_state.content_width());
+        layout_state.set_content_height(parent_node_state.content_height());
+        parent_viewbox_transform = Gfx::AffineTransform {}.translate(parent_node_state.offset.to_type<float>());
+    } else {
+        layout_state.set_content_width(m_viewport_size.width());
+        layout_state.set_content_height(m_viewport_size.height());
+    }
+    // Pretend masks/clips are a viewport so we can scale the contents depending on the `contentUnits`.
+    SVGFormattingContext nested_context(m_state, mask_or_clip, this, parent_viewbox_transform);
+    layout_state.set_has_definite_width(true);
+    layout_state.set_has_definite_height(true);
+    nested_context.run(static_cast<Box const&>(mask_or_clip), LayoutMode::Normal, *m_available_space);
+}
+
+void SVGFormattingContext::layout_container_element(SVGBox const& container)
+{
+    auto& box_state = m_state.get_mutable(container);
+    Gfx::BoundingBox<CSSPixels> bounding_box;
+    container.for_each_child_of_type<Box>([&](Box const& child) {
+        // Masks/clips do not change the bounding box of their parents.
+        if (is<SVGMaskBox>(child) || is<SVGClipBox>(child))
+            return;
+        layout_svg_element(child);
+        auto& child_state = m_state.get(child);
+        bounding_box.add_point(child_state.offset);
+        bounding_box.add_point(child_state.offset.translated(child_state.content_width(), child_state.content_height()));
+    });
+    box_state.set_content_x(bounding_box.x());
+    box_state.set_content_y(bounding_box.y());
+    box_state.set_content_width(bounding_box.width());
+    box_state.set_content_height(bounding_box.height());
+    box_state.set_has_definite_width(true);
+    box_state.set_has_definite_height(true);
+}
+
 }
