@@ -9,6 +9,7 @@
 #include <AK/Variant.h>
 #include <LibWeb/DOM/HTMLCollection.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
+#include <LibWeb/WebIDL/Types.h>
 
 namespace Web::HTML {
 
@@ -22,6 +23,8 @@ class HTMLOptionsCollection final : public DOM::HTMLCollection {
 public:
     [[nodiscard]] static JS::NonnullGCPtr<HTMLOptionsCollection> create(DOM::ParentNode& root, Function<bool(DOM::Element const&)> filter);
     virtual ~HTMLOptionsCollection() override;
+
+    WebIDL::ExceptionOr<void> set_length(WebIDL::UnsignedLong);
 
     WebIDL::ExceptionOr<void> add(HTMLOptionOrOptGroupElement element, Optional<HTMLElementOrElementIndex> before = {});
 

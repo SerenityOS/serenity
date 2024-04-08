@@ -100,10 +100,16 @@ JS::GCPtr<HTMLOptionsCollection> const& HTMLSelectElement::options()
 }
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#dom-select-length
-size_t HTMLSelectElement::length()
+WebIDL::UnsignedLong HTMLSelectElement::length()
 {
     // The length IDL attribute must return the number of nodes represented by the options collection. On setting, it must act like the attribute of the same name on the options collection.
     return const_cast<HTMLOptionsCollection&>(*options()).length();
+}
+
+WebIDL::ExceptionOr<void> HTMLSelectElement::set_length(WebIDL::UnsignedLong length)
+{
+    // On setting, it must act like the attribute of the same name on the options collection.
+    return const_cast<HTMLOptionsCollection&>(*options()).set_length(length);
 }
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#dom-select-item

@@ -34,7 +34,8 @@ public:
 
     JS::GCPtr<HTMLOptionsCollection> const& options();
 
-    size_t length();
+    WebIDL::UnsignedLong length();
+    WebIDL::ExceptionOr<void> set_length(WebIDL::UnsignedLong);
     DOM::Element* item(size_t index);
     DOM::Element* named_item(FlyString const& name);
     WebIDL::ExceptionOr<void> add(HTMLOptionOrOptGroupElement element, Optional<HTMLElementOrElementIndex> before = {});

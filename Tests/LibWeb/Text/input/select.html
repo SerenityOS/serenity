@@ -95,5 +95,45 @@
             const select = document.createElement('select');
             return select.size;
         });
+
+        // 10. Use select set length to remove options
+        testPart(() => {
+            const select = document.createElement('select');
+            for (let i = 0; i < 10; i++) {
+                select.appendChild(document.createElement('option'));
+            }
+            select.length = 3;
+            return select.length;
+        });
+
+        // 11. Use select set length to add options
+        testPart(() => {
+            const select = document.createElement('select');
+            for (let i = 0; i < 10; i++) {
+                select.appendChild(document.createElement('option'));
+            }
+            select.length = 999;
+            return select.length;
+        });
+
+        // 12. Use select set length to add options with invalid large size
+        testPart(() => {
+            const select = document.createElement('select');
+            for (let i = 0; i < 10; i++) {
+                select.appendChild(document.createElement('option'));
+            }
+            select.length = 100_001;
+            return select.length;
+        });
+
+        // 13. Use select set length to add options with invalid small size
+        testPart(() => {
+            const select = document.createElement('select');
+            for (let i = 0; i < 10; i++) {
+                select.appendChild(document.createElement('option'));
+            }
+            select.length = -10;
+            return select.length;
+        });
     });
 </script>
