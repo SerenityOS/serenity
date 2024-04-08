@@ -583,6 +583,7 @@ public:
     void ensure_animation_timer();
 
     bool ready_to_run_scripts() const { return m_ready_to_run_scripts; }
+    void set_ready_to_run_scripts() { m_ready_to_run_scripts = true; }
 
     JS::GCPtr<HTML::SessionHistoryEntry> latest_entry() const { return m_latest_entry; }
     void set_latest_entry(JS::GCPtr<HTML::SessionHistoryEntry> e) { m_latest_entry = e; }
