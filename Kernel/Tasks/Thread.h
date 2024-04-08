@@ -1069,6 +1069,7 @@ public:
     void set_allocation_enabled(bool value) { m_allocation_enabled = value; }
 
     ErrorOr<NonnullOwnPtr<KString>> backtrace();
+    void print_backtrace();
 
     Blocker const* blocker() const { return m_blocker; }
     Kernel::Mutex const* blocking_mutex() const { return m_blocking_mutex; }

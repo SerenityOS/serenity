@@ -561,12 +561,7 @@ void Thread::finalize()
     }
 
     if (m_dump_backtrace_on_finalization) {
-        auto trace_or_error = backtrace();
-        if (!trace_or_error.is_error()) {
-            auto trace = trace_or_error.release_value();
-            dbgln("Backtrace:");
-            kernelputstr(trace->characters(), trace->length());
-        }
+        print_backtrace();
     }
 
     drop_thread_count();
@@ -1348,6 +1343,16 @@ ErrorOr<NonnullOwnPtr<KString>> Thread::backtrace()
             break;
     }
     return KString::try_create(builder.string_view());
+}
+
+void Thread::print_backtrace()
+{
+    auto trace_or_error = this->backtrace();
+    if (!trace_or_error.is_error()) {
+        auto trace = trace_or_error.release_value();
+        dbgln("Backtrace:");
+        kernelputstr(trace->characters(), trace->length());
+    }
 }
 
 ErrorOr<void> Thread::make_thread_specific_region(Badge<Process>)
