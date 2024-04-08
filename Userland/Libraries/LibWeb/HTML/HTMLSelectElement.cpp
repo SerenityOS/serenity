@@ -18,6 +18,7 @@
 #include <LibWeb/HTML/HTMLOptGroupElement.h>
 #include <LibWeb/HTML/HTMLOptionElement.h>
 #include <LibWeb/HTML/HTMLSelectElement.h>
+#include <LibWeb/HTML/Numbers.h>
 #include <LibWeb/Infra/Strings.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Namespace.h>
@@ -65,6 +66,22 @@ void HTMLSelectElement::adjust_computed_style(CSS::StyleProperties& style)
     //         This is required for the internal shadow tree to work correctly in layout.
     if (style.display().is_inline_outside() && style.display().is_flow_inside())
         style.set_property(CSS::PropertyID::Display, CSS::DisplayStyleValue::create(CSS::Display::from_short(CSS::Display::Short::InlineBlock)));
+}
+
+// https://html.spec.whatwg.org/multipage/form-elements.html#dom-select-size
+WebIDL::UnsignedLong HTMLSelectElement::size() const
+{
+    // The size IDL attribute must reflect the respective content attributes of the same name. The size IDL attribute has a default value of 0.
+    if (auto size_string = get_attribute(HTML::AttributeNames::size); size_string.has_value()) {
+        if (auto size = parse_non_negative_integer(*size_string); size.has_value())
+            return *size;
+    }
+    return 0;
+}
+
+WebIDL::ExceptionOr<void> HTMLSelectElement::set_size(WebIDL::UnsignedLong size)
+{
+    return set_attribute(HTML::AttributeNames::size, MUST(String::number(size)));
 }
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#dom-select-options

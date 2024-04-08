@@ -74,5 +74,26 @@
             `;
             return select.value;
         });
+
+        // 7. Set select size property
+        testPart(() => {
+            const select = document.createElement('select');
+            select.size = '45';
+            return select.size;
+        });
+
+        // 8. Set select size property invalid
+        testPart(() => {
+            const select = document.createElement('select');
+            select.size = '12';
+            select.size = 'fadsfsd';
+            return select.size;
+        });
+
+        // 9. Get select size default
+        testPart(() => {
+            const select = document.createElement('select');
+            return select.size;
+        });
     });
 </script>
