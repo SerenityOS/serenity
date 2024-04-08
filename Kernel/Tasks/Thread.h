@@ -1259,6 +1259,11 @@ public:
     using GlobalList = IntrusiveList<&Thread::m_global_thread_list_node>;
 
     static SpinlockProtected<GlobalList, LockRank::None>& all_instances();
+
+#ifdef ENABLE_KERNEL_COVERAGE_COLLECTION
+    // Used by __sanitizer_cov_trace_pc to identify traced threads.
+    bool m_kcov_enabled { false };
+#endif
 };
 
 AK_ENUM_BITWISE_OPERATORS(Thread::FileBlocker::BlockFlags);
