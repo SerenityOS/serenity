@@ -28,6 +28,9 @@ public:
 
     WebIDL::ExceptionOr<void> add(HTMLOptionOrOptGroupElement element, Optional<HTMLElementOrElementIndex> before = {});
 
+    WebIDL::Long selected_index() const;
+    void set_selected_index(WebIDL::Long);
+
 private:
     HTMLOptionsCollection(DOM::ParentNode& root, Function<bool(DOM::Element const&)> filter);
 
