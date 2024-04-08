@@ -13,6 +13,7 @@
 #include <AK/IntrusiveList.h>
 #include <AK/Optional.h>
 #include <AK/OwnPtr.h>
+#include <AK/Platform.h>
 #include <AK/Time.h>
 #include <AK/Variant.h>
 #include <AK/Vector.h>
@@ -94,8 +95,8 @@ public:
         return m_is_joinable;
     }
 
-    Process& process() { return m_process; }
-    Process const& process() const { return m_process; }
+    NO_SANITIZE_COVERAGE Process& process() { return m_process; }
+    NO_SANITIZE_COVERAGE Process const& process() const { return m_process; }
 
     using Name = FixedStringBuffer<64>;
     SpinlockProtected<Name, LockRank::None> const& name() const

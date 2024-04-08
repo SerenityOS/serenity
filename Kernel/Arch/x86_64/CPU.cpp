@@ -5,13 +5,14 @@
  */
 
 #include <AK/Assertions.h>
+#include <AK/Platform.h>
 #include <Kernel/Arch/CPU.h>
 #include <Kernel/Library/Panic.h>
 #include <Kernel/Tasks/Process.h>
 
 using namespace Kernel;
 
-void __assertion_failed(char const* msg, char const* file, unsigned line, char const* func)
+NO_SANITIZE_COVERAGE void __assertion_failed(char const* msg, char const* file, unsigned line, char const* func)
 {
     asm volatile("cli");
     critical_dmesgln("ASSERTION FAILED: {}", msg);

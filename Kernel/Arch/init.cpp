@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Platform.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/CPU.h>
 #include <Kernel/Arch/InterruptManagement.h>
@@ -165,7 +166,7 @@ Atomic<Graphics::Console*> g_boot_console;
 READONLY_AFTER_INIT static u8 s_command_line_buffer[512];
 #endif
 
-extern "C" [[noreturn]] UNMAP_AFTER_INIT void init([[maybe_unused]] BootInfo const& boot_info)
+extern "C" [[noreturn]] UNMAP_AFTER_INIT NO_SANITIZE_COVERAGE void init([[maybe_unused]] BootInfo const& boot_info)
 {
     g_in_early_boot = true;
 

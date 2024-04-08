@@ -182,6 +182,15 @@
 #endif
 #define RETURNS_NONNULL __attribute__((returns_nonnull))
 
+#ifdef NO_SANITIZE_COVERAGE
+#    undef NO_SANITIZE_COVERAGE
+#endif
+#if defined(AK_COMPILER_CLANG)
+#    define NO_SANITIZE_COVERAGE __attribute__((no_sanitize("coverage")))
+#else
+#    define NO_SANITIZE_COVERAGE __attribute__((no_sanitize_coverage))
+#endif
+
 #ifdef NO_SANITIZE_ADDRESS
 #    undef NO_SANITIZE_ADDRESS
 #endif

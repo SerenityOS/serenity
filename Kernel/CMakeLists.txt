@@ -716,18 +716,15 @@ if (ENABLE_KERNEL_COVERAGE_COLLECTION)
     )
 
     add_compile_options(-fsanitize-coverage=trace-pc)
+    # To avoid __sanitizer_cov_trace_pc from causing an infinite recursion,
+    # don't instrument any even transitively used code. You can either skip
+    # individual function via the NO_SANITIZE_COVERAGE macro or by excluding
+    # the whole file by adding it to KCOV_EXCLUDED_SOURCES.
+    # Note that you can only add .cpp and not .h files to KCOV_EXCLUDED_SOURCES.
     set(KCOV_EXCLUDED_SOURCES
-        # Make sure we don't instrument any code called from __sanitizer_cov_trace_pc
-        # otherwise we'll end up with recursive calls to that function.
-        ../AK/Error.cpp
-        ../AK/Format.cpp
-        ../AK/StringBuilder.cpp
-        ../Kernel/Arch/x86_64/Processor.cpp
+        # Skip core KCOV code.
         ../Kernel/Devices/KCOVDevice.cpp
         ../Kernel/Devices/KCOVInstance.cpp
-        ../Kernel/FileSystem/File.cpp
-        ../Kernel/FileSystem/OpenFileDescription.cpp
-        ../Kernel/init.cpp
         ../Kernel/SanCov.cpp
         # GCC assumes that the caller saves registers for functions according
         # to the System V ABI and happily inserts coverage calls into the
