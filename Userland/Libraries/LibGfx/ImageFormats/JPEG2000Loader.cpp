@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Debug.h>
 #include <AK/MemoryStream.h>
 #include <LibGfx/ImageFormats/ISOBMFF/JPEG2000Boxes.h>
 #include <LibGfx/ImageFormats/ISOBMFF/Reader.h>
@@ -59,9 +60,48 @@ static constexpr u8 jp2_id_string[] = { 0x00, 0x00, 0x00, 0x0C, 0x6A, 0x50, 0x20
 #define J2K_CRG 0xFF63 // "Component registration"
 #define J2K_COM 0xFF64 // "Comment"
 
+// A.4.2 Start of tile-part (SOT)
+struct StartOfTilePart {
+    // "Tile index. This number refers to the tiles in raster order starting at the number 0."
+    u16 tile_index { 0 }; // "Isot" in spec.
+
+    // "Length, in bytes, from the beginning of the first byte of this SOT marker segment of the tile-part to
+    //  the end of the data of that tile-part. Figure A.16 shows this alignment. Only the last tile-part in the
+    //  codestream may contain a 0 for Psot. If the Psot is 0, this tile-part is assumed to contain all data until
+    //  the EOC marker."
+    u32 tile_part_length { 0 }; // "Psot" in spec.
+
+    // "Tile-part index. There is a specific order required for decoding tile-parts; this index denotes the order
+    //  from 0. If there is only one tile-part for a tile, then this value is zero. The tile-parts of this tile shall
+    //  appear in the codestream in this order, although not necessarily consecutively."
+    u8 tile_part_index { 0 }; // "TPsot" in spec.
+
+    // "Number of tile-parts of a tile in the codestream. Two values are allowed: the correct number of tile-
+    //  parts for that tile and zero. A zero value indicates that the number of tile-parts of this tile is not
+    //  specified in this tile-part.
+    u8 number_of_tile_parts { 0 }; // "TNsot" in spec.
+};
+
+static ErrorOr<StartOfTilePart> read_start_of_tile_part(ReadonlyBytes data)
+{
+    if (data.size() < 8)
+        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Not enough data for SOT marker segment");
+
+    StartOfTilePart sot;
+    sot.tile_index = *reinterpret_cast<AK::BigEndian<u16> const*>(data.data());
+    sot.tile_part_length = *reinterpret_cast<AK::BigEndian<u32> const*>(data.data() + 2);
+    sot.tile_part_index = data[6];
+    sot.number_of_tile_parts = data[7];
+
+    dbgln_if(JPEG2000_DEBUG, "JPEG2000ImageDecoderPlugin: SOT marker segment: tile_index={}, tile_part_length={}, tile_part_index={}, number_of_tile_parts={}", sot.tile_index, sot.tile_part_length, sot.tile_part_index, sot.number_of_tile_parts);
+
+    return sot;
+}
+
 struct JPEG2000LoadingContext {
     enum class State {
         NotDecoded = 0,
+        DecodedTileHeaders,
         Error,
     };
     State state { State::NotDecoded };
@@ -151,11 +191,91 @@ static ErrorOr<void> parse_codestream_main_header(JPEG2000LoadingContext& contex
             break;
         }
         case J2K_SOT:
+            // SOT terminates the main header.
             return {};
         default:
             return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Unexpected marker in main header");
         }
     }
+}
+
+static ErrorOr<void> parse_codestream_tile_header(JPEG2000LoadingContext& context)
+{
+    // Figure A.4 – Construction of the first tile-part header of a given tile
+    // Figure A.5 – Construction of a non-first tile-part header
+
+    // "Required as the first marker segment of every tile-part header"
+    auto tile_start = context.codestream_cursor;
+    auto marker = TRY(read_marker_at_cursor(context));
+    if (marker.marker != J2K_SOT)
+        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Expected SOT marker");
+    auto start_of_tile = TRY(read_start_of_tile_part(marker.data.value()));
+    // FIXME: Store start_of_tile on context somewhere.
+
+    bool found_start_of_data = false;
+    while (!found_start_of_data) {
+        u16 marker = TRY(peek_marker(context));
+        switch (marker) {
+        case J2K_SOD:
+            // "Required as the last marker segment of every tile-part header"
+            context.codestream_cursor += 2;
+            found_start_of_data = true;
+            break;
+        // FIXME: COD, COC, QCD, QCC are only valid on the first tile part header, reject them in non-first tile part headers.
+        case J2K_COD:
+        case J2K_COC:
+        case J2K_QCD:
+        case J2K_QCC:
+        case J2K_RGN:
+        case J2K_POC:
+        case J2K_PPT:
+        case J2K_PLT:
+        case J2K_COM: {
+            // FIXME: These are valid tile part header markers. Parse contents.
+            auto marker = TRY(read_marker_at_cursor(context));
+            dbgln("JPEG2000ImageDecoderPlugin: marker {:#04x} not yet implemented in tile header", marker.marker);
+            break;
+        }
+        default:
+            return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Unexpected marker in tile header");
+        }
+    }
+
+    u32 tile_bitstream_length;
+    if (start_of_tile.tile_part_length == 0) {
+        // Leave room for EOC marker.
+        if (context.codestream_data.size() - context.codestream_cursor < 2)
+            return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Not enough data for EOC marker");
+        tile_bitstream_length = context.codestream_data.size() - context.codestream_cursor - 2;
+    } else {
+        u32 tile_header_length = context.codestream_cursor - tile_start;
+        tile_bitstream_length = start_of_tile.tile_part_length - tile_header_length;
+    }
+
+    if (context.codestream_cursor + tile_bitstream_length > context.codestream_data.size())
+        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Not enough data for tile bitstream");
+    // FIXME: Store context.codestream_data.slice(context.codestream_cursor, tile_bitstream_length) somewhere on the context.
+
+    context.codestream_cursor += tile_bitstream_length;
+    dbgln_if(JPEG2000_DEBUG, "JPEG2000ImageDecoderPlugin: Tile bitstream length: {}", tile_bitstream_length);
+
+    return {};
+}
+
+static ErrorOr<void> parse_codestream_tile_headers(JPEG2000LoadingContext& context)
+{
+    while (true) {
+        auto marker = TRY(peek_marker(context));
+        if (marker == J2K_EOC) {
+            context.codestream_cursor += 2;
+            break;
+        }
+        TRY(parse_codestream_tile_header(context));
+    }
+
+    if (context.codestream_cursor < context.codestream_data.size())
+        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Unexpected data after EOC marker");
+    return {};
 }
 
 static ErrorOr<void> decode_jpeg2000_header(JPEG2000LoadingContext& context, ReadonlyBytes data)
@@ -282,6 +402,11 @@ ErrorOr<ImageFrameDescriptor> JPEG2000ImageDecoderPlugin::frame(size_t index, Op
 
     if (m_context->state == JPEG2000LoadingContext::State::Error)
         return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Decoding failed");
+
+    if (m_context->state < JPEG2000LoadingContext::State::DecodedTileHeaders) {
+        TRY(parse_codestream_tile_headers(*m_context));
+        m_context->state = JPEG2000LoadingContext::State::DecodedTileHeaders;
+    }
 
     return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Draw the rest of the owl");
 }
