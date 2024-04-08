@@ -135,5 +135,16 @@
             select.length = -10;
             return select.length;
         });
+
+        // 14. OptionsCollection selectedIndex is the same as select selectedIndex
+        testPart(() => {
+            const select = document.createElement('select');
+            for (let i = 0; i < 10; i++) {
+                const option = document.createElement('option');
+                if (i == 5) option.selected = true;
+                select.appendChild(option);
+            }
+            return `${select.options.selectedIndex} ${select.selectedIndex}`;
+        });
     });
 </script>
