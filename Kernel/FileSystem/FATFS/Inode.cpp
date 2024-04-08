@@ -84,7 +84,7 @@ ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> FATInode::compute_block_list()
         u32 fat_sector_index = fs().m_parameter_block->common_bpb()->reserved_sector_count + (fat_offset / fs().m_device_block_size);
         u32 entry_offset = fat_offset % fs().m_device_block_size;
 
-        TRY(fs().raw_read(fat_sector_index, fat_sector_buffer));
+        TRY(fs().read_block(fat_sector_index, &fat_sector_buffer, m_device_block_size));
 
         // Look up the next cluster to read, or read End of Chain marker from table.
         cluster = cluster_number(*fat_sector, cluster, entry_offset);
@@ -191,7 +191,7 @@ ErrorOr<NonnullOwnPtr<KBuffer>> FATInode::read_block_list()
 
     for (BlockBasedFileSystem::BlockIndex block : m_block_list) {
         dbgln_if(FAT_DEBUG, "FATFS: reading block: {}", block);
-        TRY(fs().raw_read(block, buf));
+        TRY(fs().read_block(block, &buf, sizeof(buffer)));
         TRY(builder.append((char const*)buffer, fs().m_device_block_size));
     }
 
