@@ -51,6 +51,8 @@ public:
     // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#potentially-delays-the-load-event
     bool currently_delays_the_load_event() const;
 
+    bool content_navigable_initialized() const { return m_content_navigable_initialized; }
+
 protected:
     NavigableContainer(DOM::Document&, DOM::QualifiedName);
 
