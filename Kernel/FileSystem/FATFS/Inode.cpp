@@ -346,6 +346,7 @@ ErrorOr<void> FATInode::remove_last_cluster_from_chain()
 
     dbgln_if(FAT_DEBUG, "FATInode[{}]::remove_last_cluster_from_chain(): freeing cluster {}", identifier(), last_cluster);
 
+    TRY(fs().notify_cluster_freed());
     m_cluster_list.remove(m_cluster_list.size() - 1);
 
     if (m_cluster_list.is_empty() || (m_cluster_list.size() == 1 && first_cluster() <= 1)) {

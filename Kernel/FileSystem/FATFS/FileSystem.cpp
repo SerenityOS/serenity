@@ -371,6 +371,17 @@ u32 FATFS::end_of_chain_marker() const
     }
 }
 
+ErrorOr<void> FATFS::set_free_cluster_count(u32 value)
+{
+    VERIFY(m_fat_version == FATVersion::FAT32);
+
+    m_fs_info.last_known_free_cluster_count = value;
+    auto fs_info_buffer = UserOrKernelBuffer::for_kernel_buffer(bit_cast<u8*>(&m_fs_info));
+    TRY(write_block(m_parameter_block->dos7_bpb()->fs_info_sector, fs_info_buffer, sizeof(m_fs_info)));
+
+    return {};
+}
+
 ErrorOr<u32> FATFS::allocate_cluster()
 {
     u32 start_cluster;
@@ -393,12 +404,24 @@ ErrorOr<u32> FATFS::allocate_cluster()
     for (u32 i = start_cluster; i < m_parameter_block->sector_count() / m_parameter_block->common_bpb()->sectors_per_cluster; i++) {
         if (TRY(fat_read(i)) == 0) {
             dbgln_if(FAT_DEBUG, "FATFS: Allocating cluster {}", i);
+
+            if (m_fat_version == FATVersion::FAT32 && m_fs_info.last_known_free_cluster_count != fs_info_data_unknown)
+                TRY(set_free_cluster_count(m_fs_info.last_known_free_cluster_count - 1));
+
             TRY(fat_write(i, end_of_chain_marker()));
             return i;
         }
     }
 
     return Error::from_errno(ENOSPC);
+}
+
+ErrorOr<void> FATFS::notify_cluster_freed()
+{
+    if (m_fat_version == FATVersion::FAT32 && m_fs_info.last_known_free_cluster_count != fs_info_data_unknown)
+        TRY(set_free_cluster_count(m_fs_info.last_known_free_cluster_count + 1));
+
+    return {};
 }
 
 ErrorOr<u32> FATFS::fat_read(u32 cluster)
