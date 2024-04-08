@@ -54,7 +54,7 @@ Usage: $NAME COMMAND [TARGET] [TOOLCHAIN] [ARGS...]
         Runs the Lagom-built js(1) REPL
     $NAME test lagom
         Runs the unit tests on the build host
-    $NAME kaddr2line x86_64 0x12345678
+    $NAME kaddr2line x86_64 GNU 0x12345678
         Resolves the address 0x12345678 in the Kernel binary
     $NAME addr2line x86_64 WindowServer 0x12345678
         Resolves the address 0x12345678 in the WindowServer binary
