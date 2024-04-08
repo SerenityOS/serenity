@@ -24,8 +24,8 @@ interface HTMLSelectElement : HTMLElement {
     // FIXME: Element is really HTMLOptionElement
     Element? namedItem(DOMString name);
     [CEReactions] undefined add((HTMLOptionElement or HTMLOptGroupElement) element, optional (HTMLElement or long)? before = null);
-    // FIXME: [CEReactions] undefined remove(); // ChildNode overload
-    // FIXME: [CEReactions] undefined remove(long index);
+    [CEReactions] undefined remove(); // ChildNode overload
+    [CEReactions] undefined remove(long index);
     // FIXME: [CEReactions] setter undefined (unsigned long index, HTMLOptionElement? option);
 
     // FIXME: [SameObject] readonly attribute HTMLCollection selectedOptions;

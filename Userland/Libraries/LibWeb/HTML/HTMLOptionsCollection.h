@@ -28,6 +28,8 @@ public:
 
     WebIDL::ExceptionOr<void> add(HTMLOptionOrOptGroupElement element, Optional<HTMLElementOrElementIndex> before = {});
 
+    void remove(WebIDL::Long);
+
     WebIDL::Long selected_index() const;
     void set_selected_index(WebIDL::Long);
 
