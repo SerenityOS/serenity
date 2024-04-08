@@ -567,6 +567,15 @@ WebIDL::ExceptionOr<void> Document::run_the_document_write_steps(StringView inpu
 // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-document-open
 WebIDL::ExceptionOr<Document*> Document::open(Optional<String> const&, Optional<String> const&)
 {
+    // If document belongs to a child navigable, we need to make sure its initial navigation is done,
+    // because subsequent steps will modify "initial about:blank" to false, which would cause
+    // initial navigation to fail in case it was "about:blank".
+    if (auto navigable = this->navigable(); navigable->container() && !navigable->container()->content_navigable_initialized()) {
+        HTML::main_thread_event_loop().spin_processing_tasks_with_source_until(HTML::Task::Source::NavigationAndTraversal, [navigable_container = navigable->container()] {
+            return navigable_container->content_navigable_initialized();
+        });
+    }
+
     // 1. If document is an XML document, then throw an "InvalidStateError" DOMException exception.
     if (m_type == Type::XML)
         return WebIDL::InvalidStateError::create(realm(), "open() called on XML document."_fly_string);
