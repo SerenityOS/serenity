@@ -66,12 +66,97 @@ struct JPEG2000LoadingContext {
     };
     State state { State::NotDecoded };
     ReadonlyBytes codestream_data;
+    size_t codestream_cursor { 0 };
     Optional<ReadonlyBytes> icc_data;
 
     IntSize size;
 
     ISOBMFF::BoxList boxes;
 };
+
+struct MarkerSegment {
+    u16 marker;
+
+    // OptionalNone for markers that don't have data.
+    // For markers that do have data, this does not include the marker length data. (`data.size() + 2` is the value of the marker length field.)
+    Optional<ReadonlyBytes> data;
+};
+
+static ErrorOr<u16> peek_marker(JPEG2000LoadingContext& context)
+{
+    if (context.codestream_cursor + 2 > context.codestream_data.size())
+        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Not enough data for marker");
+    return *reinterpret_cast<AK::BigEndian<u16> const*>(context.codestream_data.data() + context.codestream_cursor);
+}
+
+static ErrorOr<MarkerSegment> read_marker_at_cursor(JPEG2000LoadingContext& context)
+{
+    u16 marker = TRY(peek_marker(context));
+    // "All markers with the marker code between 0xFF30 and 0xFF3F have no marker segment parameters. They shall be skipped by the decoder."
+    // "The SOC, SOD and EOC are delimiting markers not marker segments, and have no explicit length information or other parameters."
+    bool is_marker_segment = !(marker >= 0xFF30 && marker <= 0xFF3F) && marker != J2K_SOC && marker != J2K_SOD && marker != J2K_EOC;
+
+    MarkerSegment marker_segment;
+    marker_segment.marker = marker;
+
+    if (is_marker_segment) {
+        if (context.codestream_cursor + 4 > context.codestream_data.size())
+            return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Not enough data for marker segment length");
+        u16 marker_length = *reinterpret_cast<AK::BigEndian<u16> const*>(context.codestream_data.data() + context.codestream_cursor + 2);
+        if (marker_length < 2)
+            return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Marker segment length too small");
+        if (context.codestream_cursor + 2 + marker_length > context.codestream_data.size())
+            return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Not enough data for marker segment data");
+        marker_segment.data = ReadonlyBytes { context.codestream_data.data() + context.codestream_cursor + 4, marker_length - 2u };
+    }
+
+    context.codestream_cursor += 2;
+    if (is_marker_segment)
+        context.codestream_cursor += 2 + marker_segment.data->size();
+
+    return marker_segment;
+}
+
+static ErrorOr<void> parse_codestream_main_header(JPEG2000LoadingContext& context)
+{
+    // Figure A.3 – Construction of the main header
+    // "Required as the first marker"
+    auto marker = TRY(read_marker_at_cursor(context));
+    if (marker.marker != J2K_SOC)
+        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Expected SOC marker");
+
+    // "Required as the second marker segment"
+    marker = TRY(read_marker_at_cursor(context));
+    if (marker.marker != J2K_SIZ)
+        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Expected SIZ marker");
+    // FIXME: Parse SIZ marker.
+
+    while (true) {
+        u16 marker = TRY(peek_marker(context));
+        switch (marker) {
+        case J2K_COD:
+        case J2K_COC:
+        case J2K_QCD:
+        case J2K_QCC:
+        case J2K_RGN:
+        case J2K_POC:
+        case J2K_PPM:
+        case J2K_TLM:
+        case J2K_PLM:
+        case J2K_CRG:
+        case J2K_COM: {
+            // FIXME: These are valid main header markers. Parse contents.
+            auto marker = TRY(read_marker_at_cursor(context));
+            dbgln("JPEG2000ImageDecoderPlugin: marker {:#04x} not yet implemented", marker.marker);
+            break;
+        }
+        case J2K_SOT:
+            return {};
+        default:
+            return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Unexpected marker in main header");
+        }
+    }
+}
 
 static ErrorOr<void> decode_jpeg2000_header(JPEG2000LoadingContext& context, ReadonlyBytes data)
 {
@@ -162,6 +247,8 @@ static ErrorOr<void> decode_jpeg2000_header(JPEG2000LoadingContext& context, Rea
     auto const& color_header_box = static_cast<ISOBMFF::JPEG2000ColorSpecificationBox const&>(*header_box.child_boxes()[color_header_box_index.value()]);
     if (color_header_box.method == 2 || color_header_box.method == 3)
         context.icc_data = color_header_box.icc_data.bytes();
+
+    TRY(parse_codestream_main_header(context));
 
     return {};
 }
