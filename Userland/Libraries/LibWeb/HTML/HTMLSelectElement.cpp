@@ -133,6 +133,19 @@ WebIDL::ExceptionOr<void> HTMLSelectElement::add(HTMLOptionOrOptGroupElement ele
     return const_cast<HTMLOptionsCollection&>(*options()).add(move(element), move(before));
 }
 
+// https://html.spec.whatwg.org/multipage/form-elements.html#dom-select-remove
+void HTMLSelectElement::remove()
+{
+    // The remove() method must act like its namesake method on that same options collection when it has arguments,
+    // and like its namesake method on the ChildNode interface implemented by the HTMLSelectElement ancestor interface Element when it has no arguments.
+    ChildNode::remove_binding();
+}
+
+void HTMLSelectElement::remove(WebIDL::Long index)
+{
+    const_cast<HTMLOptionsCollection&>(*options()).remove(index);
+}
+
 // https://html.spec.whatwg.org/multipage/form-elements.html#concept-select-option-list
 Vector<JS::Handle<HTMLOptionElement>> HTMLSelectElement::list_of_options() const
 {

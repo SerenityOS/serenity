@@ -39,6 +39,8 @@ public:
     DOM::Element* item(size_t index);
     DOM::Element* named_item(FlyString const& name);
     WebIDL::ExceptionOr<void> add(HTMLOptionOrOptGroupElement element, Optional<HTMLElementOrElementIndex> before = {});
+    void remove();
+    void remove(WebIDL::Long);
 
     int selected_index() const;
     void set_selected_index(int);

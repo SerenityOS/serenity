@@ -111,6 +111,24 @@ WebIDL::ExceptionOr<void> HTMLOptionsCollection::add(HTMLOptionOrOptGroupElement
     return {};
 }
 
+// https://html.spec.whatwg.org/#dom-htmloptionscollection-remove
+void HTMLOptionsCollection::remove(WebIDL::Long index)
+{
+    // 1. If the number of nodes represented by the collection is zero, return.
+    if (length() == 0)
+        return;
+
+    // 2. If index is not a number greater than or equal to 0 and less than the number of nodes represented by the collection, return.
+    if (index < 0 || static_cast<WebIDL::UnsignedLong>(index) >= length())
+        return;
+
+    // 3. Let element be the indexth element in the collection.
+    auto* element = this->item(index);
+
+    // 4. Remove element from its parent node.
+    element->remove();
+}
+
 // https://html.spec.whatwg.org/#dom-htmloptionscollection-selectedindex
 WebIDL::Long HTMLOptionsCollection::selected_index() const
 {

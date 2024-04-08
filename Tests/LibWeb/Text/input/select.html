@@ -146,5 +146,27 @@
             }
             return `${select.options.selectedIndex} ${select.selectedIndex}`;
         });
+
+        // 15. Remove select options
+        testPart(() => {
+            const select = document.createElement('select');
+            for (let i = 0; i < 10; i++) {
+                select.appendChild(document.createElement('option'));
+            }
+            select.remove(5);
+            select.options.remove(6);
+            return select.length;
+        });
+
+        // 16. Remove select options invalid
+        testPart(() => {
+            const select = document.createElement('select');
+            for (let i = 0; i < 10; i++) {
+                select.appendChild(document.createElement('option'));
+            }
+            select.remove(-1);
+            select.options.remove(11);
+            return select.length;
+        });
     });
 </script>
