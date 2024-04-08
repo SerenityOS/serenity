@@ -281,7 +281,7 @@ static ErrorOr<void> parse_codestream_tile_headers(JPEG2000LoadingContext& conte
 static ErrorOr<void> decode_jpeg2000_header(JPEG2000LoadingContext& context, ReadonlyBytes data)
 {
     if (!JPEG2000ImageDecoderPlugin::sniff(data))
-        return Error::from_string_literal("JBIG2LoadingContext: Invalid JBIG2 header");
+        return Error::from_string_literal("JPEG2000LoadingContext: Invalid JPEG2000 header");
 
     auto reader = TRY(Gfx::ISOBMFF::Reader::create(TRY(try_make<FixedMemoryStream>(data))));
     context.boxes = TRY(reader.read_entire_file());
