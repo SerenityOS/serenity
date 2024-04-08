@@ -249,6 +249,8 @@ static ErrorOr<void> parse_codestream_tile_header(JPEG2000LoadingContext& contex
         tile_bitstream_length = context.codestream_data.size() - context.codestream_cursor - 2;
     } else {
         u32 tile_header_length = context.codestream_cursor - tile_start;
+        if (start_of_tile.tile_part_length < tile_header_length)
+            return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Invalid tile part length");
         tile_bitstream_length = start_of_tile.tile_part_length - tile_header_length;
     }
 
