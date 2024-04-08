@@ -1409,7 +1409,7 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
         asm volatile("frstor %0" ::"m"(to_thread->fpu_state()));
 }
 
-extern "C" FlatPtr do_init_context(Thread* thread, u32 flags)
+extern "C" NO_SANITIZE_COVERAGE FlatPtr do_init_context(Thread* thread, u32 flags)
 {
     VERIFY_INTERRUPTS_DISABLED();
     thread->regs().set_flags(flags);
@@ -1461,7 +1461,7 @@ NAKED void thread_context_first_enter(void)
         "    jmp common_trap_exit \n");
 }
 
-NAKED void do_assume_context(Thread*, u32)
+NAKED NO_SANITIZE_COVERAGE void do_assume_context(Thread*, u32)
 {
     // clang-format off
     // FIXME: I hope (Thread* thread, u32 flags) aren't compiled away

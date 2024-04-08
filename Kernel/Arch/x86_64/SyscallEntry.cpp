@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Platform.h>
 #include <Kernel/API/Syscall.h>
 #include <Kernel/Arch/Processor.h>
 #include <Kernel/Arch/TrapFrame.h>
@@ -18,7 +19,7 @@
 using namespace Kernel;
 
 extern "C" void syscall_entry();
-extern "C" [[gnu::naked]] void syscall_entry()
+extern "C" NO_SANITIZE_COVERAGE [[gnu::naked]] void syscall_entry()
 {
     // clang-format off
     asm(

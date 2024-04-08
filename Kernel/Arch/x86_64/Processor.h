@@ -156,7 +156,7 @@ public:
 };
 
 template<typename T>
-ALWAYS_INLINE Thread* ProcessorBase<T>::current_thread()
+ALWAYS_INLINE NO_SANITIZE_COVERAGE Thread* ProcessorBase<T>::current_thread()
 {
     // If we were to use ProcessorBase::current here, we'd have to
     // disable interrupts to prevent a race where we may get pre-empted
@@ -224,7 +224,7 @@ ALWAYS_INLINE void ProcessorBase<T>::enter_critical()
 }
 
 template<typename T>
-ALWAYS_INLINE bool ProcessorBase<T>::are_interrupts_enabled()
+ALWAYS_INLINE NO_SANITIZE_COVERAGE bool ProcessorBase<T>::are_interrupts_enabled()
 {
     return Kernel::are_interrupts_enabled();
 }
@@ -297,7 +297,7 @@ ALWAYS_INLINE void ProcessorBase<T>::wait_check()
 }
 
 template<typename T>
-ALWAYS_INLINE FlatPtr ProcessorBase<T>::current_in_irq()
+ALWAYS_INLINE NO_SANITIZE_COVERAGE FlatPtr ProcessorBase<T>::current_in_irq()
 {
     return read_gs_ptr(__builtin_offsetof(Processor, m_in_irq));
 }
