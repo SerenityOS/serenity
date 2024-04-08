@@ -36,8 +36,8 @@ public:
 
     WebIDL::UnsignedLong length();
     WebIDL::ExceptionOr<void> set_length(WebIDL::UnsignedLong);
-    DOM::Element* item(size_t index);
-    DOM::Element* named_item(FlyString const& name);
+    HTMLOptionElement* item(WebIDL::UnsignedLong index);
+    HTMLOptionElement* named_item(FlyString const& name);
     WebIDL::ExceptionOr<void> add(HTMLOptionOrOptGroupElement element, Optional<HTMLElementOrElementIndex> before = {});
     void remove();
     void remove(WebIDL::Long);

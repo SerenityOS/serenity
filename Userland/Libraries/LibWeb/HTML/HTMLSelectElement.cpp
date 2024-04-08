@@ -114,17 +114,17 @@ WebIDL::ExceptionOr<void> HTMLSelectElement::set_length(WebIDL::UnsignedLong len
 }
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#dom-select-item
-DOM::Element* HTMLSelectElement::item(size_t index)
+HTMLOptionElement* HTMLSelectElement::item(WebIDL::UnsignedLong index)
 {
     // The item(index) method must return the value returned by the method of the same name on the options collection, when invoked with the same argument.
-    return const_cast<HTMLOptionsCollection&>(*options()).item(index);
+    return verify_cast<HTMLOptionElement>(const_cast<HTMLOptionsCollection&>(*options()).item(index));
 }
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#dom-select-nameditem
-DOM::Element* HTMLSelectElement::named_item(FlyString const& name)
+HTMLOptionElement* HTMLSelectElement::named_item(FlyString const& name)
 {
     // The namedItem(name) method must return the value returned by the method of the same name on the options collection, when invoked with the same argument.
-    return const_cast<HTMLOptionsCollection&>(*options()).named_item(name);
+    return verify_cast<HTMLOptionElement>(const_cast<HTMLOptionsCollection&>(*options()).named_item(name));
 }
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#dom-select-add
