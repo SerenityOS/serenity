@@ -13,6 +13,7 @@
 #include <LibWeb/HTML/HTMLElement.h>
 #include <LibWeb/HTML/HTMLOptionsCollection.h>
 #include <LibWeb/HTML/SelectItem.h>
+#include <LibWeb/WebIDL/Types.h>
 
 namespace Web::HTML {
 
@@ -27,6 +28,9 @@ public:
     virtual ~HTMLSelectElement() override;
 
     virtual void adjust_computed_style(CSS::StyleProperties&) override;
+
+    WebIDL::UnsignedLong size() const;
+    WebIDL::ExceptionOr<void> set_size(WebIDL::UnsignedLong);
 
     JS::GCPtr<HTMLOptionsCollection> const& options();
 

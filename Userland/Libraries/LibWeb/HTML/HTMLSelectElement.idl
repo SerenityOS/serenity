@@ -13,7 +13,7 @@ interface HTMLSelectElement : HTMLElement {
     [CEReactions, Reflect] attribute boolean multiple;
     [CEReactions, Reflect] attribute DOMString name;
     [CEReactions, Reflect] attribute boolean required;
-    // FIXME: [CEReactions] attribute unsigned long size;
+    [CEReactions] attribute unsigned long size;
 
     readonly attribute DOMString type;
 
