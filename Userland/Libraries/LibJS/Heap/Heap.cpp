@@ -10,6 +10,7 @@
 #include <AK/HashTable.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
+#include <AK/Platform.h>
 #include <AK/StackInfo.h>
 #include <AK/TemporaryChange.h>
 #include <LibCore/ElapsedTimer.h>
@@ -309,7 +310,7 @@ void Heap::gather_roots(HashMap<Cell*, HeapRoot>& roots)
 }
 
 #ifdef HAS_ADDRESS_SANITIZER
-__attribute__((no_sanitize("address"))) void Heap::gather_asan_fake_stack_roots(HashMap<FlatPtr, HeapRoot>& possible_pointers, FlatPtr addr, FlatPtr min_block_address, FlatPtr max_block_address)
+NO_SANITIZE_ADDRESS void Heap::gather_asan_fake_stack_roots(HashMap<FlatPtr, HeapRoot>& possible_pointers, FlatPtr addr, FlatPtr min_block_address, FlatPtr max_block_address)
 {
     void* begin = nullptr;
     void* end = nullptr;
@@ -330,7 +331,7 @@ void Heap::gather_asan_fake_stack_roots(HashMap<FlatPtr, HeapRoot>&, FlatPtr, Fl
 }
 #endif
 
-__attribute__((no_sanitize("address"))) void Heap::gather_conservative_roots(HashMap<Cell*, HeapRoot>& roots)
+NO_SANITIZE_ADDRESS void Heap::gather_conservative_roots(HashMap<Cell*, HeapRoot>& roots)
 {
     FlatPtr dummy;
 
