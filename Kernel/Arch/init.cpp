@@ -30,7 +30,9 @@
 #include <Kernel/Devices/Generic/SelfTTYDevice.h>
 #include <Kernel/Devices/Generic/ZeroDevice.h>
 #include <Kernel/Devices/HID/Management.h>
-#include <Kernel/Devices/KCOVDevice.h>
+#ifdef ENABLE_KERNEL_COVERAGE_COLLECTION
+#    include <Kernel/Devices/KCOVDevice.h>
+#endif
 #include <Kernel/Devices/PCISerialDevice.h>
 #include <Kernel/Devices/SerialDevice.h>
 #include <Kernel/Devices/Storage/StorageManagement.h>

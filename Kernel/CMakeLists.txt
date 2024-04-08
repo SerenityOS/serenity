@@ -66,8 +66,6 @@ set(KERNEL_SOURCES
     Devices/CharacterDevice.cpp
     Devices/Device.cpp
     Devices/DeviceManagement.cpp
-    Devices/KCOVDevice.cpp
-    Devices/KCOVInstance.cpp
     Devices/PCISerialDevice.cpp
     Devices/SerialDevice.cpp
     Devices/HID/AllMiceDevice.cpp
@@ -136,7 +134,6 @@ set(KERNEL_SOURCES
     Devices/Storage/StorageDevice.cpp
     Devices/Storage/StorageManagement.cpp
     Devices/Storage/StorageDevicePartition.cpp
-    SanCov.cpp
     FileSystem/AnonymousFile.cpp
     FileSystem/BlockBasedFileSystem.cpp
     FileSystem/Custody.cpp
@@ -630,18 +627,6 @@ set(PARTITION_SOURCES
     ../Userland/Libraries/LibPartition/PartitionTable.cpp
 )
 
-set(SOURCES
-    ${KERNEL_SOURCES}
-    ${GENERATED_SOURCES}
-    ${AK_SOURCES}
-    ${DT_SOURCES}
-    ${EDID_SOURCES}
-    ${ELF_SOURCES}
-    ${VT_SOURCES}
-    ${CRYPTO_SOURCES}
-    ${PARTITION_SOURCES}
-)
-
 add_compile_options(-fsigned-char)
 add_compile_options(-Wno-unknown-warning-option -Wvla -Wnull-dereference)
 add_compile_options(-fno-rtti -ffreestanding -fbuiltin)
@@ -723,6 +708,13 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-pie")
 # secure to run in production builds. Useful for coverage guided fuzzing.
 if (ENABLE_KERNEL_COVERAGE_COLLECTION)
     add_definitions(-DENABLE_KERNEL_COVERAGE_COLLECTION)
+    set(KERNEL_SOURCES
+        ${KERNEL_SOURCES}
+        Devices/KCOVDevice.cpp
+        Devices/KCOVInstance.cpp
+        SanCov.cpp
+    )
+
     add_compile_options(-fsanitize-coverage=trace-pc)
     set(KCOV_EXCLUDED_SOURCES
         # Make sure we don't instrument any code called from __sanitizer_cov_trace_pc
@@ -746,7 +738,9 @@ if (ENABLE_KERNEL_COVERAGE_COLLECTION)
         ../Kernel/Syscall/SyscallHandler.cpp
     )
     set_source_files_properties(${KCOV_EXCLUDED_SOURCES} PROPERTIES COMPILE_FLAGS "-fno-sanitize-coverage=trace-pc")
-elseif (ENABLE_USERSPACE_COVERAGE_COLLECTION)
+endif()
+
+if (ENABLE_USERSPACE_COVERAGE_COLLECTION)
     # Disable checking open() pledges and the veil for coverage data when building userspace with coverage
     # so that binaries can write out coverage data even with pledges/veil
     add_compile_definitions(SKIP_PATH_VALIDATION_FOR_COVERAGE_INSTRUMENTATION)
@@ -776,6 +770,18 @@ if ("${SERENITY_ARCH}" STREQUAL "aarch64")
     # those unaligned accesses, this flag is added.
     add_compile_options(-mstrict-align -Wno-cast-align)
 endif()
+
+set(SOURCES
+    ${KERNEL_SOURCES}
+    ${GENERATED_SOURCES}
+    ${AK_SOURCES}
+    ${DT_SOURCES}
+    ${EDID_SOURCES}
+    ${ELF_SOURCES}
+    ${VT_SOURCES}
+    ${CRYPTO_SOURCES}
+    ${PARTITION_SOURCES}
+)
 
 add_compile_definitions(KERNEL)
 add_link_options(LINKER:-z,notext)
