@@ -14,9 +14,6 @@ class KCOVDevice final : public BlockDevice {
     friend class DeviceManagement;
 
 public:
-    static HashMap<ProcessID, KCOVInstance*>* proc_instance;
-    static HashMap<ThreadID, KCOVInstance*>* thread_instance;
-
     static NonnullLockRefPtr<KCOVDevice> must_create();
     static void free_thread();
     static void free_process();

@@ -18,6 +18,9 @@
 #include <Kernel/API/POSIX/select.h>
 #include <Kernel/API/POSIX/sys/resource.h>
 #include <Kernel/API/Syscall.h>
+#ifdef ENABLE_KERNEL_COVERAGE_COLLECTION
+#    include <Kernel/Devices/KCOVInstance.h>
+#endif
 #include <Kernel/FileSystem/InodeMetadata.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/FileSystem/UnveilNode.h>
@@ -222,7 +225,19 @@ public:
     bool is_profiling() const { return m_profiling; }
     void set_profiling(bool profiling) { m_profiling = profiling; }
 
-    bool should_generate_coredump() const { return m_should_generate_coredump; }
+#ifdef ENABLE_KERNEL_COVERAGE_COLLECTION
+    NO_SANITIZE_COVERAGE KCOVInstance* kcov_instance()
+    {
+        return m_kcov_instance;
+    }
+    void set_kcov_instance(KCOVInstance* kcov_instance) { m_kcov_instance = kcov_instance; }
+    static bool is_kcov_busy();
+#endif
+
+    bool should_generate_coredump() const
+    {
+        return m_should_generate_coredump;
+    }
     void set_should_generate_coredump(bool b) { m_should_generate_coredump = b; }
 
     bool is_dying() const { return m_state.load(AK::MemoryOrder::memory_order_acquire) != State::Running; }
@@ -914,6 +929,10 @@ private:
     bool m_profiling { false };
     Atomic<bool, AK::MemoryOrder::memory_order_relaxed> m_is_stopped { false };
     bool m_should_generate_coredump { false };
+
+#ifdef ENABLE_KERNEL_COVERAGE_COLLECTION
+    KCOVInstance* m_kcov_instance { nullptr };
+#endif
 
     SpinlockProtected<RefPtr<Custody>, LockRank::None> m_executable;
 

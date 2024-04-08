@@ -14,7 +14,6 @@
 #include <Kernel/Arch/SmapDisabler.h>
 #include <Kernel/Arch/TrapFrame.h>
 #include <Kernel/Debug.h>
-#include <Kernel/Devices/KCOVDevice.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Interrupts/InterruptDisabler.h>
 #include <Kernel/KSyms.h>
@@ -441,9 +440,6 @@ void Thread::exit(void* exit_value)
             space->deallocate_region(*region);
         });
     }
-#ifdef ENABLE_KERNEL_COVERAGE_COLLECTION
-    KCOVDevice::free_thread();
-#endif
     die_if_needed();
 }
 

@@ -15,15 +15,18 @@ namespace Kernel {
 #define KCOV_MAX_ENTRIES (10 * 1024 * 1024)
 
 /*
- * One KCOVInstance is allocated per process, when the process opens /dev/kcov
- * for the first time. At this point it is in state OPENED. When a thread in
- * the same process then uses the KCOV_ENABLE ioctl on the block device, the
- * instance enters state TRACING.
- *
- * A KCOVInstance in state TRACING can return to state OPENED by either the
- * KCOV_DISABLE ioctl or by killing the thread. A KCOVInstance in state OPENED
- * can return to state UNUSED only when the process dies. At this point
- * KCOVDevice::free_process will delete the KCOVInstance.
+ * 1. When a thread opens /dev/kcov for the first time, a KCOVInstance is
+ * allocated and tracked via an OwnPtr on the Kernel::Process object.
+ * 2. When a thread in the same process then uses the KCOV_SETBUFSIZE ioctl
+ * on the block device, a Memory::Region is allocated and tracked via an
+ * OwnPtr on the KCOVInstance.
+ * 3. When a thread in the same process then uses the KCOV_ENABLE ioctl on
+ * the block device, a flag is set in the Thread object and __sanitizer_cov_trace_pc
+ * will start recording this threads visited code paths .
+ * 3. When the same thread then uses the KCOV_DISABLE ioctl on the block device,
+ * a flag is unset in the Thread object and __sanitizer_cov_trace_pc will
+ * no longer record this threads visited code paths.
+ * 4. When the Process dies, the KCOVInstance and Memory::Region are GCed.
  */
 class KCOVInstance final {
 public:
@@ -32,15 +35,6 @@ public:
     ErrorOr<void> buffer_allocate(size_t buffer_size_in_entries);
     bool has_buffer() const { return m_buffer != nullptr; }
     void buffer_add_pc(u64 pc);
-
-    enum State {
-        UNUSED = 0,
-        OPENED = 1,
-        TRACING = 2,
-    } m_state { UNUSED };
-
-    State state() const { return m_state; }
-    void set_state(State state) { m_state = state; }
 
     Memory::VMObject* vmobject() { return m_vmobject; }
 

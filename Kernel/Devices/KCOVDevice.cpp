@@ -16,9 +16,6 @@
 
 namespace Kernel {
 
-HashMap<ProcessID, KCOVInstance*>* KCOVDevice::proc_instance;
-HashMap<ThreadID, KCOVInstance*>* KCOVDevice::thread_instance;
-
 UNMAP_AFTER_INIT NonnullLockRefPtr<KCOVDevice> KCOVDevice::must_create()
 {
     auto kcov_device_or_error = DeviceManagement::try_create_device<KCOVDevice>();
@@ -30,85 +27,45 @@ UNMAP_AFTER_INIT NonnullLockRefPtr<KCOVDevice> KCOVDevice::must_create()
 UNMAP_AFTER_INIT KCOVDevice::KCOVDevice()
     : BlockDevice(30, 0)
 {
-    proc_instance = new HashMap<ProcessID, KCOVInstance*>();
-    thread_instance = new HashMap<ThreadID, KCOVInstance*>();
     dbgln("KCOVDevice created");
-}
-
-void KCOVDevice::free_thread()
-{
-    auto thread = Thread::current();
-    auto tid = thread->tid();
-
-    auto maybe_kcov_instance = thread_instance->get(tid);
-    if (!maybe_kcov_instance.has_value())
-        return;
-
-    auto kcov_instance = maybe_kcov_instance.value();
-    VERIFY(kcov_instance->state() == KCOVInstance::TRACING);
-    kcov_instance->set_state(KCOVInstance::OPENED);
-    thread_instance->remove(tid);
-}
-
-void KCOVDevice::free_process()
-{
-    auto pid = Process::current().pid();
-
-    auto maybe_kcov_instance = proc_instance->get(pid);
-    if (!maybe_kcov_instance.has_value())
-        return;
-
-    auto kcov_instance = maybe_kcov_instance.value();
-    VERIFY(kcov_instance->state() == KCOVInstance::OPENED);
-    kcov_instance->set_state(KCOVInstance::UNUSED);
-    proc_instance->remove(pid);
-    delete kcov_instance;
 }
 
 ErrorOr<NonnullRefPtr<OpenFileDescription>> KCOVDevice::open(int options)
 {
-    auto pid = Process::current().pid();
-    if (proc_instance->get(pid).has_value())
+    auto& proc = Process::current();
+    auto* kcov_instance = proc.kcov_instance();
+    if (kcov_instance != nullptr)
         return EBUSY; // This process already open()ed the kcov device
-    auto kcov_instance = new KCOVInstance(pid);
-    kcov_instance->set_state(KCOVInstance::OPENED);
-    proc_instance->set(pid, kcov_instance);
 
+    proc.set_kcov_instance(new KCOVInstance(proc.pid()));
     return Device::open(options);
 }
 
 ErrorOr<void> KCOVDevice::ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg)
 {
-    auto thread = Thread::current();
-    auto tid = thread->tid();
-    auto pid = thread->pid();
-    auto maybe_kcov_instance = proc_instance->get(pid);
-    if (!maybe_kcov_instance.has_value())
-        return ENXIO; // This proc hasn't opened the kcov dev yet
-    auto kcov_instance = maybe_kcov_instance.value();
+    auto& proc = Process::current();
+    auto* thread = Thread::current();
+    auto* kcov_instance = proc.kcov_instance();
+    if (kcov_instance == nullptr) {
+        VERIFY(!Process::is_kcov_busy()); // No thread should be tracing at this point.
+        return ENXIO;                     // This proc hasn't opened the kcov dev yet
+    }
 
     SpinlockLocker locker(kcov_instance->spinlock());
     switch (request) {
     case KCOV_SETBUFSIZE:
-        if (kcov_instance->state() >= KCOVInstance::TRACING)
+        if (Process::is_kcov_busy())
+            // Buffer is shared among all proc threads, hence we need to check if any of them
+            // are currently tracing. If so, don't mess with the buffer.
             return EBUSY;
         return kcov_instance->buffer_allocate((FlatPtr)arg.unsafe_userspace_ptr());
     case KCOV_ENABLE:
-        if (kcov_instance->state() >= KCOVInstance::TRACING)
-            return EBUSY;
         if (!kcov_instance->has_buffer())
             return ENOBUFS;
-        VERIFY(kcov_instance->state() == KCOVInstance::OPENED);
-        kcov_instance->set_state(KCOVInstance::TRACING);
-        thread_instance->set(tid, kcov_instance);
+        thread->m_kcov_enabled = true;
         return {};
     case KCOV_DISABLE: {
-        auto maybe_kcov_instance = thread_instance->get(tid);
-        if (!maybe_kcov_instance.has_value())
-            return ENOENT;
-        VERIFY(kcov_instance->state() == KCOVInstance::TRACING);
-        kcov_instance->set_state(KCOVInstance::OPENED);
-        thread_instance->remove(tid);
+        thread->m_kcov_enabled = false;
         return {};
     }
     default:
@@ -118,10 +75,8 @@ ErrorOr<void> KCOVDevice::ioctl(OpenFileDescription&, unsigned request, Userspac
 
 ErrorOr<NonnullLockRefPtr<Memory::VMObject>> KCOVDevice::vmobject_for_mmap(Process& process, Memory::VirtualRange const&, u64&, bool)
 {
-    auto pid = process.pid();
-    auto maybe_kcov_instance = proc_instance->get(pid);
-    VERIFY(maybe_kcov_instance.has_value()); // Should happen on fd open()
-    auto kcov_instance = maybe_kcov_instance.value();
+    auto* kcov_instance = process.kcov_instance();
+    VERIFY(kcov_instance != nullptr); // Should have happened on fd open()
 
     if (!kcov_instance->vmobject())
         return ENOBUFS; // mmaped, before KCOV_SETBUFSIZE
