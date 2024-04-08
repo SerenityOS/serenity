@@ -5,6 +5,7 @@
  */
 
 #include <AK/Debug.h>
+#include <AK/Enumerate.h>
 #include <AK/MemoryStream.h>
 #include <LibGfx/ImageFormats/ISOBMFF/JPEG2000Boxes.h>
 #include <LibGfx/ImageFormats/ISOBMFF/Reader.h>
@@ -98,6 +99,92 @@ static ErrorOr<StartOfTilePart> read_start_of_tile_part(ReadonlyBytes data)
     return sot;
 }
 
+// A.5.1 Image and tile size (SIZ)
+struct ImageAndTileSize {
+    // "Denotes capabilities that a decoder needs to properly decode the codestream."
+    u16 needed_decoder_capabilities { 0 }; // "Rsiz" in spec.
+
+    // "Width of the reference grid."
+    u32 width { 0 }; // "Xsiz" in spec.
+
+    // "Height of the reference grid."
+    u32 height { 0 }; // "Ysiz" in spec.
+
+    // "Horizontal offset from the origin of the reference grid to the left side of the image area."
+    u32 x_offset { 0 }; // "XOsiz" in spec.
+
+    // "Vertical offset from the origin of the reference grid to the top side of the image area."
+    u32 y_offset { 0 }; // "YOsiz" in spec.
+
+    // "Width of one reference tile with respect to the reference grid."
+    u32 tile_width { 0 }; // "XTsiz" in spec.
+
+    // "Height of one reference tile with respect to the reference grid."
+    u32 tile_height { 0 }; // "YTsiz" in spec.
+
+    // "Horizontal offset from the origin of the reference grid to the left side of the first tile."
+    u32 tile_x_offset { 0 }; // "XTOsiz" in spec.
+
+    // "Vertical offset from the origin of the reference grid to the top side of the first tile."
+    u32 tile_y_offset { 0 }; // "YTOsiz" in spec.
+
+    // "Csiz" isn't stored in this struct. It corresponds to `components.size()`.
+
+    struct ComponentInformation {
+        // "Precision (depth) in bits and sign of the ith component samples."
+        u8 depth_and_sign { 0 }; // "Ssiz" in spec.
+
+        // Table A.11 – Component Ssiz parameter
+        u8 bit_depth() const { return (depth_and_sign & 0x7F) + 1; }
+        bool is_signed() const { return depth_and_sign & 0x80; }
+
+        // "Horizontal separation of a sample of the ith component with respect to the reference grid."
+        u8 horizontal_separation { 0 }; // "XRsiz" in spec.
+
+        // "Vertical separation of a sample of the ith component with respect to the reference grid."
+        u8 vertical_separation { 0 }; // "YRsiz" in spec.
+    };
+    Vector<ComponentInformation> components;
+};
+
+static ErrorOr<ImageAndTileSize> read_image_and_tile_size(ReadonlyBytes data)
+{
+    if (data.size() < 36)
+        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Not enough data for SIZ marker segment");
+
+    ImageAndTileSize siz;
+    siz.needed_decoder_capabilities = *reinterpret_cast<AK::BigEndian<u16> const*>(data.data());
+    siz.width = *reinterpret_cast<AK::BigEndian<u32> const*>(data.data() + 2);
+    siz.height = *reinterpret_cast<AK::BigEndian<u32> const*>(data.data() + 6);
+    siz.x_offset = *reinterpret_cast<AK::BigEndian<u32> const*>(data.data() + 10);
+    siz.y_offset = *reinterpret_cast<AK::BigEndian<u32> const*>(data.data() + 14);
+    siz.tile_width = *reinterpret_cast<AK::BigEndian<u32> const*>(data.data() + 18);
+    siz.tile_height = *reinterpret_cast<AK::BigEndian<u32> const*>(data.data() + 22);
+    siz.tile_x_offset = *reinterpret_cast<AK::BigEndian<u32> const*>(data.data() + 26);
+    siz.tile_y_offset = *reinterpret_cast<AK::BigEndian<u32> const*>(data.data() + 30);
+    u16 component_count = *reinterpret_cast<AK::BigEndian<u16> const*>(data.data() + 34); // "Csiz" in spec.
+
+    if (data.size() < 36u + component_count * 3u)
+        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Not enough data for SIZ marker segment component information");
+
+    for (size_t i = 0; i < component_count; ++i) {
+        ImageAndTileSize::ComponentInformation component;
+        component.depth_and_sign = data[36 + i * 3];
+        if (component.bit_depth() > 38)
+            return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Invalid component depth");
+        component.horizontal_separation = data[37 + i * 3];
+        component.vertical_separation = data[38 + i * 3];
+        siz.components.append(component);
+    }
+
+    dbgln_if(JPEG2000_DEBUG, "JPEG2000ImageDecoderPlugin: SIZ marker segment: needed_decoder_capabilities={}, width={}, height={}, x_offset={}, y_offset={}, tile_width={}, tile_height={}, tile_x_offset={}, tile_y_offset={}", siz.needed_decoder_capabilities, siz.width, siz.height, siz.x_offset, siz.y_offset, siz.tile_width, siz.tile_height, siz.tile_x_offset, siz.tile_y_offset);
+    dbgln_if(JPEG2000_DEBUG, "JPEG2000ImageDecoderPlugin: SIZ marker segment: {} components:", component_count);
+    for (auto [i, component] : enumerate(siz.components))
+        dbgln_if(JPEG2000_DEBUG, "JPEG2000ImageDecoderPlugin: SIZ marker segment: component[{}]: is_signed={}, bit_depth={}, horizontal_separation={}, vertical_separation={}", i, component.is_signed(), component.bit_depth(), component.horizontal_separation, component.vertical_separation);
+
+    return siz;
+}
+
 struct JPEG2000LoadingContext {
     enum class State {
         NotDecoded = 0,
@@ -112,6 +199,9 @@ struct JPEG2000LoadingContext {
     IntSize size;
 
     ISOBMFF::BoxList boxes;
+
+    // Data from marker segments:
+    ImageAndTileSize siz;
 };
 
 struct MarkerSegment {
@@ -169,7 +259,7 @@ static ErrorOr<void> parse_codestream_main_header(JPEG2000LoadingContext& contex
     marker = TRY(read_marker_at_cursor(context));
     if (marker.marker != J2K_SIZ)
         return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Expected SIZ marker");
-    // FIXME: Parse SIZ marker.
+    context.siz = TRY(read_image_and_tile_size(marker.data.value()));
 
     while (true) {
         u16 marker = TRY(peek_marker(context));
