@@ -18,8 +18,7 @@ interface HTMLSelectElement : HTMLElement {
     readonly attribute DOMString type;
 
     [SameObject] readonly attribute HTMLOptionsCollection options;
-    // FIXME: This isn't readonly
-    [CEReactions] readonly attribute unsigned long length;
+    [CEReactions] attribute unsigned long length;
     // FIXME: Element is really HTMLOptionElement
     getter Element? item(unsigned long index);
     // FIXME: Element is really HTMLOptionElement
