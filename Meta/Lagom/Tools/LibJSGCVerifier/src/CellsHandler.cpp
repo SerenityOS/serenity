@@ -308,6 +308,20 @@ void CollectCellsHandler::check_cells(clang::ast_matchers::MatchFinder::MatchRes
 
     emit_record_json_data(*record);
 
+    bool has_base = false;
+    for (auto const& decl : record->decls()) {
+        if (auto* alias_decl = llvm::dyn_cast<clang::TypeAliasDecl>(decl); alias_decl && alias_decl->getQualifiedNameAsString().ends_with("::Base")) {
+            has_base = true;
+            break;
+        }
+    }
+
+    if (!has_base) {
+        auto diag_id = diag_engine.getCustomDiagID(clang::DiagnosticsEngine::Warning, "JS::Cell-inheriting class %0 is missing a JS_CELL() call in its header file");
+        auto builder = diag_engine.Report(record->getLocation(), diag_id);
+        builder << record->getName();
+    }
+
     clang::DeclarationName const name = &result.Context->Idents.get("visit_edges");
     auto const* visit_edges_method = record->lookup(name).find_first<clang::CXXMethodDecl>();
     if (!visit_edges_method && !fields_that_need_visiting.empty()) {

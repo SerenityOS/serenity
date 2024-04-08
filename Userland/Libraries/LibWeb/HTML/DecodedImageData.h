@@ -15,6 +15,8 @@ namespace Web::HTML {
 
 // https://html.spec.whatwg.org/multipage/images.html#img-req-data
 class DecodedImageData : public JS::Cell {
+    JS_CELL(DecodedImageData, JS::Cell);
+
 public:
     virtual ~DecodedImageData();
 
