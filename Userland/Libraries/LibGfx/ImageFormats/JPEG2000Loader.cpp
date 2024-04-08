@@ -185,6 +185,141 @@ static ErrorOr<ImageAndTileSize> read_image_and_tile_size(ReadonlyBytes data)
     return siz;
 }
 
+// A.6.1 Coding style default (COD)
+struct CodingStyleDefault {
+    // Table A.13 – Coding style parameter values for the Scod parameter
+    bool has_explicit_precinct_size { false };
+    bool may_use_SOP_marker { false };
+    bool may_use_EPH_marker { false };
+
+    // Table A.16 – Progression order for the SGcod, SPcoc, and Ppoc parameters
+    enum ProgressionOrder {
+        LayerResolutionComponentPosition = 0,
+        ResolutionLayerComponentPosition = 1,
+        ResolutionPositionComponentLayer = 2,
+        PositionComponentResolutionLayer = 3,
+        ComponentPositionResolutionLayer = 4,
+    };
+
+    // Table A.17 – Multiple component transformation for the SGcod parameters
+    enum MultipleComponentTransformationType {
+        None = 0,
+        MultipleComponentTransformationUsed = 1, // See Annex G
+    };
+
+    // Table A.14 – Coding style parameter values of the SGcod parameter
+    ProgressionOrder progression_order { LayerResolutionComponentPosition };
+    u16 number_of_layers { 0 };
+    MultipleComponentTransformationType multiple_component_transformation_type { None };
+
+    // Table A.20 – Transformation for the SPcod and SPcoc parameters
+    enum Transformation {
+        Irreversible_9_7_Filter = 0,
+        Reversible_5_3_Filter = 1,
+    };
+
+    // Table A.15 – Coding style parameter values of the SPcod and SPcoc parameters
+    // "Number of decomposition levels, NL, Zero implies no transformation."
+    u8 number_of_decomposition_levels { 0 };
+    u8 code_block_width_exponent { 0 };  // "xcb" in spec; 2 already added.
+    u8 code_block_height_exponent { 0 }; // "ycb" in spec; 2 already added.
+    u8 code_block_style { 0 };
+    Transformation transformation { Irreversible_9_7_Filter };
+
+    // Table A.19 – Code-block style for the SPcod and SPcoc parameters
+    bool uses_selective_arithmetic_coding_bypass() const { return code_block_style & 1; }
+    bool reset_context_probabilities() const { return code_block_style & 2; }
+    bool uses_termination_on_each_coding_pass() const { return code_block_style & 4; }
+    bool uses_vertically_causal_context() const { return code_block_style & 8; }
+    bool uses_predictable_termination() const { return code_block_style & 0x10; }
+    bool uses_segmentation_symbols() const { return code_block_style & 0x20; }
+
+    // If has_explicit_precinct_size is false, this contains the default { 15, 15 } number_of_decomposition_levels + 1 times.
+    // If has_explicit_precinct_size is true, this contains number_of_decomposition_levels + 1 explicit values stored in the COD marker segment.
+    struct PrecinctSize {
+        u8 PPx { 0 };
+        u8 PPy { 0 };
+    };
+    Vector<PrecinctSize> precinct_sizes;
+};
+
+static ErrorOr<CodingStyleDefault> read_coding_style_default(ReadonlyBytes data)
+{
+    if (data.size() < 10)
+        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Not enough data for COD marker segment");
+
+    CodingStyleDefault cod;
+
+    u8 Scod = data[0];
+    cod.has_explicit_precinct_size = Scod & 1;
+    cod.may_use_SOP_marker = Scod & 2;
+    cod.may_use_EPH_marker = Scod & 4;
+
+    u32 SGcod = *reinterpret_cast<AK::BigEndian<u32> const*>(data.data() + 1);
+    u8 progression_order = SGcod >> 24;
+    if (progression_order > 4)
+        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Invalid progression order");
+    cod.progression_order = static_cast<CodingStyleDefault::ProgressionOrder>(progression_order);
+
+    cod.number_of_layers = (SGcod >> 8) & 0xFFFF;
+    if (cod.number_of_layers == 0)
+        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Invalid number of layers");
+
+    u8 multiple_component_transformation_type = SGcod & 0xFF;
+    if (multiple_component_transformation_type > 1)
+        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Invalid multiple component transformation type");
+    cod.multiple_component_transformation_type = static_cast<CodingStyleDefault::MultipleComponentTransformationType>(multiple_component_transformation_type);
+
+    cod.number_of_decomposition_levels = data[5];
+    if (cod.number_of_decomposition_levels > 32)
+        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Invalid number of decomposition levels");
+
+    // Table A.18 – Width or height exponent of the code-blocks for the SPcod and SPcoc parameters
+    u8 xcb = (data[6] & 0xF) + 2;
+    u8 ycb = (data[7] & 0xF) + 2;
+    if (xcb > 10 || ycb > 10 || xcb + ycb > 12)
+        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Invalid code block size");
+    cod.code_block_width_exponent = xcb;
+    cod.code_block_height_exponent = ycb;
+
+    cod.code_block_style = data[8];
+
+    u8 transformation = data[9];
+    if (transformation > 1)
+        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Invalid transformation");
+    cod.transformation = static_cast<CodingStyleDefault::Transformation>(transformation);
+
+    if (cod.has_explicit_precinct_size) {
+        if (data.size() < 10u + cod.number_of_decomposition_levels + 1u)
+            return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Not enough data for COD marker segment precinct sizes");
+        for (size_t i = 0; i < cod.number_of_decomposition_levels + 1u; ++i) {
+            u8 b = data[10 + i];
+
+            // Table A.21 – Precinct width and height for the SPcod and SPcoc parameters
+            CodingStyleDefault::PrecinctSize precinct_size;
+            precinct_size.PPx = b & 0xF;
+            precinct_size.PPy = b >> 4;
+            if ((precinct_size.PPx == 0 || precinct_size.PPy == 0) && i > 0)
+                return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Invalid precinct size");
+            cod.precinct_sizes.append(precinct_size);
+        }
+    } else {
+        for (size_t i = 0; i < cod.number_of_decomposition_levels + 1u; ++i)
+            cod.precinct_sizes.append({ 15, 15 });
+    }
+
+    dbgln_if(JPEG2000_DEBUG, "JPEG2000ImageDecoderPlugin: COD marker segment: has_explicit_precinct_size={}, may_use_SOP_marker={}, may_use_EPH_marker={}, progression_order={}, number_of_layers={}", cod.has_explicit_precinct_size, cod.may_use_SOP_marker, cod.may_use_EPH_marker, (int)cod.progression_order, cod.number_of_layers);
+    dbgln_if(JPEG2000_DEBUG, "JPEG2000ImageDecoderPlugin: COD marker segment: multiple_component_transformation_type={}, number_of_decomposition_levels={}, code_block_width_exponent={}, code_block_height_exponent={}", (int)cod.multiple_component_transformation_type, cod.number_of_decomposition_levels, cod.code_block_width_exponent, cod.code_block_height_exponent);
+    dbgln_if(JPEG2000_DEBUG, "JPEG2000ImageDecoderPlugin: COD marker segment: code_block_style={}, transformation={}", cod.code_block_style, (int)cod.transformation);
+    if (cod.has_explicit_precinct_size) {
+        dbgln_if(JPEG2000_DEBUG, "JPEG2000ImageDecoderPlugin: COD marker segment: {} explicit precinct sizes:", cod.precinct_sizes.size());
+        for (auto [i, precinct_size] : enumerate(cod.precinct_sizes))
+            dbgln_if(JPEG2000_DEBUG, "JPEG2000ImageDecoderPlugin: COD marker segment: precinct_size[{}]: PPx={}, PPy={}", i, precinct_size.PPx, precinct_size.PPy);
+    }
+
+    return cod;
+}
+
 struct JPEG2000LoadingContext {
     enum class State {
         NotDecoded = 0,
@@ -202,6 +337,7 @@ struct JPEG2000LoadingContext {
 
     // Data from marker segments:
     ImageAndTileSize siz;
+    CodingStyleDefault cod;
 };
 
 struct MarkerSegment {
@@ -261,6 +397,7 @@ static ErrorOr<void> parse_codestream_main_header(JPEG2000LoadingContext& contex
         return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Expected SIZ marker");
     context.siz = TRY(read_image_and_tile_size(marker.data.value()));
 
+    bool saw_COD_marker = false;
     while (true) {
         u16 marker = TRY(peek_marker(context));
         switch (marker) {
@@ -275,13 +412,22 @@ static ErrorOr<void> parse_codestream_main_header(JPEG2000LoadingContext& contex
         case J2K_PLM:
         case J2K_CRG:
         case J2K_COM: {
-            // FIXME: These are valid main header markers. Parse contents.
             auto marker = TRY(read_marker_at_cursor(context));
-            dbgln("JPEG2000ImageDecoderPlugin: marker {:#04x} not yet implemented", marker.marker);
+            if (marker.marker == J2K_COD) {
+                if (saw_COD_marker)
+                    return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Multiple COD markers in main header");
+                context.cod = TRY(read_coding_style_default(marker.data.value()));
+                saw_COD_marker = true;
+            } else {
+                // FIXME: These are valid main header markers. Parse contents.
+                dbgln("JPEG2000ImageDecoderPlugin: marker {:#04x} not yet implemented", marker.marker);
+            }
             break;
         }
         case J2K_SOT:
             // SOT terminates the main header.
+            if (!saw_COD_marker)
+                return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Required COD marker not present in main header");
             return {};
         default:
             return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Unexpected marker in main header");
