@@ -31,6 +31,34 @@ namespace Gfx {
 // T.800 Annex I, JP2 file format syntax, I.5.1 JPEG 2000 Signature box
 static constexpr u8 jp2_id_string[] = { 0x00, 0x00, 0x00, 0x0C, 0x6A, 0x50, 0x20, 0x20, 0x0D, 0x0A, 0x87, 0x0A };
 
+// Table A.2 – List of markers and marker segments
+// "Delimiting markers and marker segments"
+#define J2K_SOC 0xFF4F // "Start of codestream"
+#define J2K_SOT 0xFF90 // "Start of tile-part"
+#define J2K_SOD 0xFF93 // "Start of data"
+#define J2K_EOC 0xFFD9 // "End of codestream"
+// "Fixed information marker segments"
+#define J2K_SIZ 0xFF51 // "Image and tile size"
+// "Functional marker segments"
+#define J2K_COD 0xFF52 // "Coding style default"
+#define J2K_COC 0xFF53 // "Coding style component"
+#define J2K_RGN 0xFF5E // "Region-of-interest"
+#define J2K_QCD 0xFF5C // "Quantization default"
+#define J2K_QCC 0xFF5D // "Quantization component"
+#define J2K_POC 0xFF5F // "Progression order change"
+// "Pointer marker segments"
+#define J2K_TLM 0xFF55 // "Tile-part lengths"
+#define J2K_PLM 0xFF57 // "Packet length, main header"
+#define J2K_PLT 0xFF58 // "Packet length, tile-part header"
+#define J2K_PPM 0xFF60 // "Packed packet headers, main header"
+#define J2K_PPT 0xFF61 // "Packed packet headers, tile-part header"
+// "In-bit-stream markers and marker segments"
+#define J2K_SOP 0xFF91 // "Start of packet"
+#define J2K_EPH 0xFF92 // "End of packet header"
+// "Informational marker segments"
+#define J2K_CRG 0xFF63 // "Component registration"
+#define J2K_COM 0xFF64 // "Comment"
+
 struct JPEG2000LoadingContext {
     enum class State {
         NotDecoded = 0,
