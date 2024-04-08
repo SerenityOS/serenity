@@ -707,7 +707,11 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-pie")
 # kernel code that has been run to user space. It's rather slow and likely not
 # secure to run in production builds. Useful for coverage guided fuzzing.
 if (ENABLE_KERNEL_COVERAGE_COLLECTION)
-    add_definitions(-DENABLE_KERNEL_COVERAGE_COLLECTION)
+    add_compile_definitions(ENABLE_KERNEL_COVERAGE_COLLECTION)
+    if(ENABLE_KERNEL_COVERAGE_COLLECTION_DEBUG)
+        add_compile_definitions(ENABLE_KERNEL_COVERAGE_COLLECTION_DEBUG)
+    endif()
+
     set(KERNEL_SOURCES
         ${KERNEL_SOURCES}
         Devices/KCOVDevice.cpp
