@@ -42,8 +42,10 @@ public:
     void remove();
     void remove(WebIDL::Long);
 
-    int selected_index() const;
-    void set_selected_index(int);
+    JS::NonnullGCPtr<DOM::HTMLCollection> selected_options();
+
+    WebIDL::Long selected_index() const;
+    void set_selected_index(WebIDL::Long);
 
     virtual String value() const override;
     WebIDL::ExceptionOr<void> set_value(String const&);
@@ -104,6 +106,7 @@ private:
     void queue_input_and_change_events();
 
     JS::GCPtr<HTMLOptionsCollection> m_options;
+    JS::GCPtr<DOM::HTMLCollection> m_selected_options;
     bool m_is_open { false };
     Vector<SelectItem> m_select_items;
     JS::GCPtr<DOM::Element> m_inner_text_element;
