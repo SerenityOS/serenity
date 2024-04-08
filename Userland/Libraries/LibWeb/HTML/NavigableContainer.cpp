@@ -219,7 +219,12 @@ Optional<URL::URL> NavigableContainer::shared_attribute_processing_steps_for_ifr
 
     // 4. If url matches about:blank and initialInsertion is true, then perform the URL and history update steps given element's content navigable's active document and url.
     if (url_matches_about_blank(url) && initial_insertion) {
-        perform_url_and_history_update_steps(*m_content_navigable->active_document(), url);
+        auto& document = *m_content_navigable->active_document();
+
+        perform_url_and_history_update_steps(document, url);
+
+        // Spec issue: https://github.com/whatwg/html/issues/10261
+        document.set_ready_to_run_scripts();
     }
 
     // 5. Return url.
