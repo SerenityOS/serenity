@@ -168,5 +168,18 @@
             select.options.remove(11);
             return select.length;
         });
+
+        // 17. Get selected selected options
+        testPart(() => {
+            const select = document.createElement('select');
+            for (let i = 0; i < 10; i++) {
+                const option = document.createElement('option');
+                option.textContent = i;
+                if (i == 5) option.selected = true;
+                select.appendChild(option);
+            }
+            select.options[2].selected = true;
+            return select.selectedOptions[0].textContent;
+        });
     });
 </script>

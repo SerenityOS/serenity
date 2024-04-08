@@ -28,7 +28,7 @@ interface HTMLSelectElement : HTMLElement {
     [CEReactions] undefined remove(long index);
     // FIXME: [CEReactions] setter undefined (unsigned long index, HTMLOptionElement? option);
 
-    // FIXME: [SameObject] readonly attribute HTMLCollection selectedOptions;
+    [SameObject] readonly attribute HTMLCollection selectedOptions;
     attribute long selectedIndex;
     attribute DOMString value;
 

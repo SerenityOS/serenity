@@ -45,6 +45,7 @@ void HTMLSelectElement::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_options);
+    visitor.visit(m_selected_options);
     visitor.visit(m_inner_text_element);
     visitor.visit(m_chevron_icon_element);
 
@@ -146,6 +147,23 @@ void HTMLSelectElement::remove(WebIDL::Long index)
     const_cast<HTMLOptionsCollection&>(*options()).remove(index);
 }
 
+// https://html.spec.whatwg.org/multipage/form-elements.html#dom-select-selectedoptions
+JS::NonnullGCPtr<DOM::HTMLCollection> HTMLSelectElement::selected_options()
+{
+    // The selectedOptions IDL attribute must return an HTMLCollection rooted at the select node,
+    // whose filter matches the elements in the list of options that have their selectedness set to true.
+    if (!m_selected_options) {
+        m_selected_options = DOM::HTMLCollection::create(*this, DOM::HTMLCollection::Scope::Descendants, [](Element const& element) {
+            if (is<HTML::HTMLOptionElement>(element)) {
+                auto const& option_element = verify_cast<HTMLOptionElement>(element);
+                return option_element.selected();
+            }
+            return false;
+        });
+    }
+    return *m_selected_options;
+}
+
 // https://html.spec.whatwg.org/multipage/form-elements.html#concept-select-option-list
 Vector<JS::Handle<HTMLOptionElement>> HTMLSelectElement::list_of_options() const
 {
@@ -181,12 +199,12 @@ void HTMLSelectElement::reset_algorithm()
 }
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#dom-select-selectedindex
-int HTMLSelectElement::selected_index() const
+WebIDL::Long HTMLSelectElement::selected_index() const
 {
     // The selectedIndex IDL attribute, on getting, must return the index of the first option element in the list of options
     // in tree order that has its selectedness set to true, if any. If there isn't one, then it must return −1.
 
-    int index = 0;
+    WebIDL::Long index = 0;
     for (auto const& option_element : list_of_options()) {
         if (option_element->selected())
             return index;
@@ -195,7 +213,7 @@ int HTMLSelectElement::selected_index() const
     return -1;
 }
 
-void HTMLSelectElement::set_selected_index(int index)
+void HTMLSelectElement::set_selected_index(WebIDL::Long index)
 {
     // On setting, the selectedIndex attribute must set the selectedness of all the option elements in the list of options to false,
     // and then the option element in the list of options whose index is the given new value,
