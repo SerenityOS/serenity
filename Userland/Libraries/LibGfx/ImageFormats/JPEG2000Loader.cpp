@@ -345,7 +345,7 @@ struct QuantizationDefault {
     StepSizeType step_sizes;
 };
 
-static ErrorOr<QuantizationDefault> read_quantization_default(ReadonlyBytes data)
+static ErrorOr<QuantizationDefault> read_quantization_default(ReadonlyBytes data, StringView marker_name = "QCD"sv)
 {
     if (data.size() < 1)
         return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Not enough data for COD marker segment");
@@ -390,23 +390,47 @@ static ErrorOr<QuantizationDefault> read_quantization_default(ReadonlyBytes data
         return irreversible_step_sizes;
     }());
 
-    dbgln_if(JPEG2000_DEBUG, "JPEG2000ImageDecoderPlugin: QCD marker segment: quantization_style={}, number_of_guard_bits={}", (int)qcd.quantization_style, qcd.number_of_guard_bits);
+    dbgln_if(JPEG2000_DEBUG, "JPEG2000ImageDecoderPlugin: {} marker segment: quantization_style={}, number_of_guard_bits={}", marker_name, (int)qcd.quantization_style, qcd.number_of_guard_bits);
     qcd.step_sizes.visit(
         [](Empty) { VERIFY_NOT_REACHED(); },
-        [](Vector<QuantizationDefault::ReversibleStepSize> const& step_sizes) {
-            dbgln_if(JPEG2000_DEBUG, "JPEG2000ImageDecoderPlugin: QCD marker segment: {} step sizes:", step_sizes.size());
+        [&](Vector<QuantizationDefault::ReversibleStepSize> const& step_sizes) {
+            dbgln_if(JPEG2000_DEBUG, "JPEG2000ImageDecoderPlugin: {} marker segment: {} step sizes:", marker_name, step_sizes.size());
             for (auto [i, step_size] : enumerate(step_sizes)) {
-                dbgln_if(JPEG2000_DEBUG, "JPEG2000ImageDecoderPlugin: QCD marker segment: step_size[{}]: exponent={}", i, step_size.exponent);
+                dbgln_if(JPEG2000_DEBUG, "JPEG2000ImageDecoderPlugin: {} marker segment: step_size[{}]: exponent={}", marker_name, i, step_size.exponent);
             }
         },
-        [](Vector<QuantizationDefault::IrreversibleStepSize> const& step_sizes) {
-            dbgln_if(JPEG2000_DEBUG, "JPEG2000ImageDecoderPlugin: QCD marker segment: {} step sizes:", step_sizes.size());
+        [&](Vector<QuantizationDefault::IrreversibleStepSize> const& step_sizes) {
+            dbgln_if(JPEG2000_DEBUG, "JPEG2000ImageDecoderPlugin: {} marker segment: {} step sizes:", marker_name, step_sizes.size());
             for (auto [i, step_size] : enumerate(step_sizes)) {
-                dbgln_if(JPEG2000_DEBUG, "JPEG2000ImageDecoderPlugin: QCD marker segment: step_size[{}]: mantissa={}, exponent={}", i, step_size.mantissa, step_size.exponent);
+                dbgln_if(JPEG2000_DEBUG, "JPEG2000ImageDecoderPlugin: {} marker segment: step_size[{}]: mantissa={}, exponent={}", marker_name, i, step_size.mantissa, step_size.exponent);
             }
         });
 
     return qcd;
+}
+
+// A.6.5 Quantization component (QCC)
+struct QuantizationComponent {
+    u16 component_index { 0 }; // "Cqcc" in spec.
+    QuantizationDefault qcd;
+};
+
+static ErrorOr<QuantizationComponent> read_quantization_component(ReadonlyBytes data, size_t number_of_components)
+{
+    size_t cqcc_size = number_of_components < 257 ? 1 : 2;
+    if (data.size() < cqcc_size)
+        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Not enough data for QCC marker segment");
+
+    QuantizationComponent qcc;
+    if (number_of_components < 257)
+        qcc.component_index = data[0];
+    else
+        qcc.component_index = *reinterpret_cast<AK::BigEndian<u16> const*>(data.data());
+
+    dbgln_if(JPEG2000_DEBUG, "JPEG2000ImageDecoderPlugin: QCC marker segment: component_index={}", qcc.component_index);
+    qcc.qcd = TRY(read_quantization_default(data.slice(cqcc_size), "QCC"sv));
+
+    return qcc;
 }
 
 // A.9.2 Comment (COM)
@@ -467,6 +491,7 @@ struct JPEG2000LoadingContext {
     ImageAndTileSize siz;
     CodingStyleDefault cod;
     QuantizationDefault qcd;
+    Vector<QuantizationComponent> qccs;
     Vector<Comment> coms;
     Vector<TileData> tiles;
 };
@@ -555,6 +580,8 @@ static ErrorOr<void> parse_codestream_main_header(JPEG2000LoadingContext& contex
                     return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Multiple QCD markers in main header");
                 context.qcd = TRY(read_quantization_default(marker.data.value()));
                 saw_QCD_marker = true;
+            } else if (marker.marker == J2K_QCC) {
+                context.qccs.append(TRY(read_quantization_component(marker.data.value(), context.siz.components.size())));
             } else if (marker.marker == J2K_COM) {
                 context.coms.append(TRY(read_comment(marker.data.value())));
             } else {
