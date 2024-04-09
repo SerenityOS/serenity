@@ -90,8 +90,8 @@ static ErrorOr<StartOfTilePart> read_start_of_tile_part(ReadonlyBytes data)
         return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Not enough data for SOT marker segment");
 
     StartOfTilePart sot;
-    sot.tile_index = *reinterpret_cast<AK::BigEndian<u16> const*>(data.data());
-    sot.tile_part_length = *reinterpret_cast<AK::BigEndian<u32> const*>(data.data() + 2);
+    sot.tile_index = *reinterpret_cast<BigEndian<u32> const*>(data.data());
+    sot.tile_part_length = *reinterpret_cast<BigEndian<u32> const*>(data.data() + 2);
     sot.tile_part_index = data[6];
     sot.number_of_tile_parts = data[7];
 
@@ -154,16 +154,16 @@ static ErrorOr<ImageAndTileSize> read_image_and_tile_size(ReadonlyBytes data)
         return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Not enough data for SIZ marker segment");
 
     ImageAndTileSize siz;
-    siz.needed_decoder_capabilities = *reinterpret_cast<AK::BigEndian<u16> const*>(data.data());
-    siz.width = *reinterpret_cast<AK::BigEndian<u32> const*>(data.data() + 2);
-    siz.height = *reinterpret_cast<AK::BigEndian<u32> const*>(data.data() + 6);
-    siz.x_offset = *reinterpret_cast<AK::BigEndian<u32> const*>(data.data() + 10);
-    siz.y_offset = *reinterpret_cast<AK::BigEndian<u32> const*>(data.data() + 14);
-    siz.tile_width = *reinterpret_cast<AK::BigEndian<u32> const*>(data.data() + 18);
-    siz.tile_height = *reinterpret_cast<AK::BigEndian<u32> const*>(data.data() + 22);
-    siz.tile_x_offset = *reinterpret_cast<AK::BigEndian<u32> const*>(data.data() + 26);
-    siz.tile_y_offset = *reinterpret_cast<AK::BigEndian<u32> const*>(data.data() + 30);
-    u16 component_count = *reinterpret_cast<AK::BigEndian<u16> const*>(data.data() + 34); // "Csiz" in spec.
+    siz.needed_decoder_capabilities = *reinterpret_cast<BigEndian<u16> const*>(data.data());
+    siz.width = *reinterpret_cast<BigEndian<u32> const*>(data.data() + 2);
+    siz.height = *reinterpret_cast<BigEndian<u32> const*>(data.data() + 6);
+    siz.x_offset = *reinterpret_cast<BigEndian<u32> const*>(data.data() + 10);
+    siz.y_offset = *reinterpret_cast<BigEndian<u32> const*>(data.data() + 14);
+    siz.tile_width = *reinterpret_cast<BigEndian<u32> const*>(data.data() + 18);
+    siz.tile_height = *reinterpret_cast<BigEndian<u32> const*>(data.data() + 22);
+    siz.tile_x_offset = *reinterpret_cast<BigEndian<u32> const*>(data.data() + 26);
+    siz.tile_y_offset = *reinterpret_cast<BigEndian<u32> const*>(data.data() + 30);
+    u16 component_count = *reinterpret_cast<BigEndian<u16> const*>(data.data() + 34); // "Csiz" in spec.
 
     if (data.size() < 36u + component_count * 3u)
         return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Not enough data for SIZ marker segment component information");
@@ -256,7 +256,7 @@ static ErrorOr<CodingStyleDefault> read_coding_style_default(ReadonlyBytes data)
     cod.may_use_SOP_marker = Scod & 2;
     cod.may_use_EPH_marker = Scod & 4;
 
-    u32 SGcod = *reinterpret_cast<AK::BigEndian<u32> const*>(data.data() + 1);
+    u32 SGcod = *reinterpret_cast<BigEndian<u32> const*>(data.data() + 1);
     u8 progression_order = SGcod >> 24;
     if (progression_order > 4)
         return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Invalid progression order");
@@ -381,7 +381,7 @@ static ErrorOr<QuantizationDefault> read_quantization_default(ReadonlyBytes data
 
         Vector<QuantizationDefault::IrreversibleStepSize> irreversible_step_sizes;
         for (size_t i = 0; i < 1u + 3u * number_of_decomposition_levels; ++i) {
-            u16 value = *reinterpret_cast<AK::BigEndian<u16> const*>(data.data() + 1 + i * 2);
+            u16 value = *reinterpret_cast<BigEndian<u16> const*>(data.data() + 1 + i * 2);
             QuantizationDefault::IrreversibleStepSize step_size;
             step_size.mantissa = value & 0x7FF;
             step_size.exponent = value >> 11;
@@ -425,7 +425,7 @@ static ErrorOr<QuantizationComponent> read_quantization_component(ReadonlyBytes 
     if (number_of_components < 257)
         qcc.component_index = data[0];
     else
-        qcc.component_index = *reinterpret_cast<AK::BigEndian<u16> const*>(data.data());
+        qcc.component_index = *reinterpret_cast<BigEndian<u16> const*>(data.data());
 
     dbgln_if(JPEG2000_DEBUG, "JPEG2000ImageDecoderPlugin: QCC marker segment: component_index={}", qcc.component_index);
     qcc.qcd = TRY(read_quantization_default(data.slice(cqcc_size), "QCC"sv));
@@ -449,7 +449,7 @@ static ErrorOr<Comment> read_comment(ReadonlyBytes data)
         return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Not enough data for COM marker segment");
 
     Comment com;
-    u16 comment_type = *reinterpret_cast<AK::BigEndian<u16> const*>(data.data());
+    u16 comment_type = *reinterpret_cast<BigEndian<u16> const*>(data.data());
     if (comment_type > 1)
         return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Invalid comment type");
     com.type = static_cast<Comment::CommentType>(comment_type);
@@ -510,7 +510,7 @@ static ErrorOr<u16> peek_marker(JPEG2000LoadingContext& context)
 {
     if (context.codestream_cursor + 2 > context.codestream_data.size())
         return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Not enough data for marker");
-    return *reinterpret_cast<AK::BigEndian<u16> const*>(context.codestream_data.data() + context.codestream_cursor);
+    return *reinterpret_cast<BigEndian<u16> const*>(context.codestream_data.data() + context.codestream_cursor);
 }
 
 static ErrorOr<MarkerSegment> read_marker_at_cursor(JPEG2000LoadingContext& context)
@@ -526,7 +526,7 @@ static ErrorOr<MarkerSegment> read_marker_at_cursor(JPEG2000LoadingContext& cont
     if (is_marker_segment) {
         if (context.codestream_cursor + 4 > context.codestream_data.size())
             return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Not enough data for marker segment length");
-        u16 marker_length = *reinterpret_cast<AK::BigEndian<u16> const*>(context.codestream_data.data() + context.codestream_cursor + 2);
+        u16 marker_length = *reinterpret_cast<BigEndian<u16> const*>(context.codestream_data.data() + context.codestream_cursor + 2);
         if (marker_length < 2)
             return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Marker segment length too small");
         if (context.codestream_cursor + 2 + marker_length > context.codestream_data.size())
