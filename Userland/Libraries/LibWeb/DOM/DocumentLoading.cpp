@@ -21,6 +21,7 @@
 #include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/Loader/GeneratedPagesLoader.h>
 #include <LibWeb/Namespace.h>
+#include <LibWeb/Platform/EventLoopPlugin.h>
 #include <LibWeb/XML/XMLDocumentBuilder.h>
 
 namespace Web {
@@ -149,8 +150,10 @@ static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOM::Document>> load_html_document(H
     else {
         // FIXME: Parse as we receive the document data, instead of waiting for the whole document to be fetched first.
         auto process_body = [document, url = navigation_params.response->url().value()](ByteBuffer data) {
-            auto parser = HTML::HTMLParser::create_with_uncertain_encoding(document, data);
-            parser->run(url);
+            Platform::EventLoopPlugin::the().deferred_invoke([document = document, data = move(data), url = url] {
+                auto parser = HTML::HTMLParser::create_with_uncertain_encoding(document, data);
+                parser->run(url);
+            });
         };
 
         auto process_body_error = [](auto) {
