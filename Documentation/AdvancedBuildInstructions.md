@@ -224,10 +224,7 @@ clangd that are aware of SerenityOS as a valid target. These tools will be insta
 the script. Pointing your editor's plugins to the custom-built clang tools and a ``compile_commands.json`` from a clang build
 of Serenity can enable richer error reporting than the tools that are installed for the build host.
 
-To enable building clangd as part of the clang toolchain, set ``CLANG_ENABLE_CLANGD`` to ON in
-``Toolchain/CMake/LLVMConfig.cmake`` before running BuildClang.sh. If you already built the clang toolchain and would like to
-enable the custom clangd build, change the CMake cache variable ``CLANG_ENABLE_CLANGD`` to ON in ``Toolchain/Build/clang/llvm``
-and re-install with ``cd Toolchain/Build/clang/llvm && cmake ../../../Tarballs/llvm-project-$LLVM_VERSION.src/llvm -DCLANG_ENABLE_CLANGD=ON && ninja install/strip``, where $LLVM_VERSION should be tab-completable in your shell.
+To enable building clangd as part of the clang toolchain, set ``CLANG_ENABLE_CLANGD`` environment variable to ``ON``, then run ``Toolchain/BuildClang.sh``.
 
 ## Clang-format updates
 
