@@ -680,6 +680,23 @@ ErrorOr<void> FATInode::remove_child(StringView name)
                 for (auto const& lfn_entry_location : lfn_entry_locations)
                     TRY(fs().write_block(lfn_entry_location.block, UserOrKernelBuffer::for_kernel_buffer(bit_cast<u8*>(&unused_entry)), sizeof(FATEntry), lfn_entry_location.entry * sizeof(FATEntry)));
 
+                u32 entry_first_cluster = entry->first_cluster_low;
+                if (fs().m_fat_version == FATVersion::FAT32)
+                    entry_first_cluster |= (static_cast<u32>(entry->first_cluster_high) << 16);
+
+                auto cluster_list = TRY(compute_cluster_list(fs(), entry_first_cluster));
+
+                // NOTE: The '.' directory entry has the same first cluster as its parent directory.
+                if (entry_first_cluster != first_cluster()) {
+                    for (auto cluster : cluster_list) {
+                        if (cluster <= 1)
+                            continue;
+
+                        TRY(fs().notify_cluster_freed());
+                        TRY(fs().fat_write(cluster, 0));
+                    }
+                }
+
                 return {};
             }
             lfn_entries.clear_with_capacity();
