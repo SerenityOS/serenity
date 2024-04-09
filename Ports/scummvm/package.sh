@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='scummvm'
 useconfigure='true'
-version='2.8.0'
+version='2.8.1'
 files=(
-    "https://downloads.scummvm.org/frs/scummvm/${version}/scummvm-${version}.tar.xz#d6e9fbee06a924706635dea225dfd560ff6770f35aa99d59570a3eb883795a72"
+    "https://downloads.scummvm.org/frs/scummvm/${version}/scummvm-${version}.tar.xz#7e97f4a13d22d570b70c9b357c941999be71deb9186039c87d82bbd9c20727b7"
 )
 depends=(
     'freetype'
@@ -26,8 +26,6 @@ launcher_command='/usr/local/bin/scummvm'
 icon_file='icons/scummvm.ico'
 
 export CPPFLAGS='-fvisibility=hidden'
-export FREETYPE2_CFLAGS="-I${SERENITY_INSTALL_ROOT}/usr/local/include/freetype2"
-export SDL_CFLAGS="-I${SERENITY_INSTALL_ROOT}/usr/local/include/SDL2"
 
 function post_install() {
     icons_build_dir="${PORT_BUILD_DIR}/scummvm-icons"
