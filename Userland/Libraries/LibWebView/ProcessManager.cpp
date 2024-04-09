@@ -125,6 +125,24 @@ String ProcessManager::generate_html()
         <html>
         <head>
         <style>
+                @media (prefers-color-scheme: dark) {
+                    /* FIXME: We should be able to remove the HTML style when "color-scheme" is supported */
+                    html {
+                        background-color: rgb(30, 30, 30);
+                        color: white;
+                    }
+
+                    tr:nth-child(even) {
+                        background: rgb(57, 57, 57);
+                    }
+                }
+
+                @media (prefers-color-scheme: light) {
+                    tr:nth-child(even) {
+                        background: #f7f7f7;
+                    }
+                }
+
                 table {
                     width: 100%;
                     border-collapse: collapse;
@@ -136,9 +154,6 @@ String ProcessManager::generate_html()
                 td, th {
                     padding: 4px;
                     border: 1px solid #aaa;
-                }
-                tr:nth-child(odd) {
-                    background: #f7f7f7;
                 }
         </style>
         </head>
