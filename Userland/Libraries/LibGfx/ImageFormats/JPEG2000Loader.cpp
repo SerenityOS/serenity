@@ -453,7 +453,7 @@ static ErrorOr<Comment> read_comment(ReadonlyBytes data)
     if (comment_type > 1)
         return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Invalid comment type");
     com.type = static_cast<Comment::CommentType>(comment_type);
-    com.data = data.slice(1);
+    com.data = data.slice(2);
 
     dbgln_if(JPEG2000_DEBUG, "JPEG2000ImageDecoderPlugin: COM marker segment: comment_type={}, size()={}", (int)com.type, com.data.size());
     if (com.type == Comment::ISO_IEC_8859_15)
