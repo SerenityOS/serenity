@@ -10,6 +10,7 @@
 #include <LibGfx/ImageFormats/ISOBMFF/JPEG2000Boxes.h>
 #include <LibGfx/ImageFormats/ISOBMFF/Reader.h>
 #include <LibGfx/ImageFormats/JPEG2000Loader.h>
+#include <LibTextCodec/Decoder.h>
 
 // Core coding system spec (.jp2 format): T-REC-T.800-201511-S!!PDF-E.pdf available here:
 // https://www.itu.int/rec/dologin_pub.asp?lang=e&id=T-REC-T.800-201511-S!!PDF-E&type=items
@@ -408,6 +409,35 @@ static ErrorOr<QuantizationDefault> read_quantization_default(ReadonlyBytes data
     return qcd;
 }
 
+// A.9.2 Comment (COM)
+struct Comment {
+    enum CommentType {
+        Binary = 0,
+        ISO_IEC_8859_15 = 1,
+    };
+    CommentType type { Binary }; // "Rcom" in spec.
+    ReadonlyBytes data;
+};
+
+static ErrorOr<Comment> read_comment(ReadonlyBytes data)
+{
+    if (data.size() < 2)
+        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Not enough data for COM marker segment");
+
+    Comment com;
+    u16 comment_type = *reinterpret_cast<AK::BigEndian<u16> const*>(data.data());
+    if (comment_type > 1)
+        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Invalid comment type");
+    com.type = static_cast<Comment::CommentType>(comment_type);
+    com.data = data.slice(1);
+
+    dbgln_if(JPEG2000_DEBUG, "JPEG2000ImageDecoderPlugin: COM marker segment: comment_type={}, size()={}", (int)com.type, com.data.size());
+    if (com.type == Comment::ISO_IEC_8859_15)
+        dbgln_if(JPEG2000_DEBUG, "JPEG2000ImageDecoderPlugin: COM marker segment, ISO/IEC 8859-15 text: '{}'", TRY(TextCodec::decoder_for("ISO-8859-1"sv)->to_utf8(StringView { com.data })));
+
+    return com;
+}
+
 struct JPEG2000LoadingContext {
     enum class State {
         NotDecoded = 0,
@@ -427,6 +457,7 @@ struct JPEG2000LoadingContext {
     ImageAndTileSize siz;
     CodingStyleDefault cod;
     QuantizationDefault qcd;
+    Vector<Comment> coms;
 };
 
 struct MarkerSegment {
@@ -513,6 +544,8 @@ static ErrorOr<void> parse_codestream_main_header(JPEG2000LoadingContext& contex
                     return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Multiple QCD markers in main header");
                 context.qcd = TRY(read_quantization_default(marker.data.value()));
                 saw_QCD_marker = true;
+            } else if (marker.marker == J2K_COM) {
+                context.coms.append(TRY(read_comment(marker.data.value())));
             } else {
                 // FIXME: These are valid main header markers. Parse contents.
                 dbgln("JPEG2000ImageDecoderPlugin: marker {:#04x} not yet implemented", marker.marker);
