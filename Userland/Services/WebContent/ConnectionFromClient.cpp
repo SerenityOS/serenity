@@ -745,11 +745,18 @@ void ConnectionFromClient::get_dom_node_html(u64 page_id, i32 node_id)
     if (!dom_node)
         return;
 
-    // FIXME: Implement Element's outerHTML attribute.
-    auto container = Web::DOM::create_element(dom_node->document(), Web::HTML::TagNames::div, Web::Namespace::HTML).release_value_but_fixme_should_propagate_errors();
-    container->append_child(dom_node->clone_node(nullptr, true)).release_value_but_fixme_should_propagate_errors();
+    String html;
 
-    auto html = container->inner_html().release_value_but_fixme_should_propagate_errors();
+    if (dom_node->is_element()) {
+        auto const& element = static_cast<Web::DOM::Element const&>(*dom_node);
+        html = element.outer_html().release_value_but_fixme_should_propagate_errors();
+    } else if (dom_node->is_text() || dom_node->is_comment()) {
+        auto const& character_data = static_cast<Web::DOM::CharacterData const&>(*dom_node);
+        html = character_data.data();
+    } else {
+        return;
+    }
+
     async_did_get_dom_node_html(page_id, move(html));
 }
 
