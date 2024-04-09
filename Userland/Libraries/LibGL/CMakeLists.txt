@@ -1,6 +1,7 @@
 include(libgl_generators)
 
 set(SOURCES
+    Blending.cpp
     Buffer/Buffer.cpp
     Buffer.cpp
     ClipPlane.cpp
