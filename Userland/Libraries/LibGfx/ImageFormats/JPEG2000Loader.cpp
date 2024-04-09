@@ -86,14 +86,13 @@ struct StartOfTilePart {
 
 static ErrorOr<StartOfTilePart> read_start_of_tile_part(ReadonlyBytes data)
 {
-    if (data.size() < 8)
-        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Not enough data for SOT marker segment");
+    FixedMemoryStream stream { data };
 
     StartOfTilePart sot;
-    sot.tile_index = *reinterpret_cast<BigEndian<u32> const*>(data.data());
-    sot.tile_part_length = *reinterpret_cast<BigEndian<u32> const*>(data.data() + 2);
-    sot.tile_part_index = data[6];
-    sot.number_of_tile_parts = data[7];
+    sot.tile_index = TRY(stream.read_value<BigEndian<u16>>());
+    sot.tile_part_length = TRY(stream.read_value<BigEndian<u32>>());
+    sot.tile_part_index = TRY(stream.read_value<u8>());
+    sot.number_of_tile_parts = TRY(stream.read_value<u8>());
 
     dbgln_if(JPEG2000_DEBUG, "JPEG2000ImageDecoderPlugin: SOT marker segment: tile_index={}, tile_part_length={}, tile_part_index={}, number_of_tile_parts={}", sot.tile_index, sot.tile_part_length, sot.tile_part_index, sot.number_of_tile_parts);
 
@@ -150,31 +149,27 @@ struct ImageAndTileSize {
 
 static ErrorOr<ImageAndTileSize> read_image_and_tile_size(ReadonlyBytes data)
 {
-    if (data.size() < 36)
-        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Not enough data for SIZ marker segment");
+    FixedMemoryStream stream { data };
 
     ImageAndTileSize siz;
-    siz.needed_decoder_capabilities = *reinterpret_cast<BigEndian<u16> const*>(data.data());
-    siz.width = *reinterpret_cast<BigEndian<u32> const*>(data.data() + 2);
-    siz.height = *reinterpret_cast<BigEndian<u32> const*>(data.data() + 6);
-    siz.x_offset = *reinterpret_cast<BigEndian<u32> const*>(data.data() + 10);
-    siz.y_offset = *reinterpret_cast<BigEndian<u32> const*>(data.data() + 14);
-    siz.tile_width = *reinterpret_cast<BigEndian<u32> const*>(data.data() + 18);
-    siz.tile_height = *reinterpret_cast<BigEndian<u32> const*>(data.data() + 22);
-    siz.tile_x_offset = *reinterpret_cast<BigEndian<u32> const*>(data.data() + 26);
-    siz.tile_y_offset = *reinterpret_cast<BigEndian<u32> const*>(data.data() + 30);
-    u16 component_count = *reinterpret_cast<BigEndian<u16> const*>(data.data() + 34); // "Csiz" in spec.
-
-    if (data.size() < 36u + component_count * 3u)
-        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Not enough data for SIZ marker segment component information");
+    siz.needed_decoder_capabilities = TRY(stream.read_value<BigEndian<u16>>());
+    siz.width = TRY(stream.read_value<BigEndian<u32>>());
+    siz.height = TRY(stream.read_value<BigEndian<u32>>());
+    siz.x_offset = TRY(stream.read_value<BigEndian<u32>>());
+    siz.y_offset = TRY(stream.read_value<BigEndian<u32>>());
+    siz.tile_width = TRY(stream.read_value<BigEndian<u32>>());
+    siz.tile_height = TRY(stream.read_value<BigEndian<u32>>());
+    siz.tile_x_offset = TRY(stream.read_value<BigEndian<u32>>());
+    siz.tile_y_offset = TRY(stream.read_value<BigEndian<u32>>());
+    u16 component_count = TRY(stream.read_value<BigEndian<u16>>()); // "Csiz" in spec.
 
     for (size_t i = 0; i < component_count; ++i) {
         ImageAndTileSize::ComponentInformation component;
-        component.depth_and_sign = data[36 + i * 3];
+        component.depth_and_sign = TRY(stream.read_value<u8>());
         if (component.bit_depth() > 38)
             return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Invalid component depth");
-        component.horizontal_separation = data[37 + i * 3];
-        component.vertical_separation = data[38 + i * 3];
+        component.horizontal_separation = TRY(stream.read_value<u8>());
+        component.vertical_separation = TRY(stream.read_value<u8>());
         siz.components.append(component);
     }
 
@@ -246,17 +241,16 @@ struct CodingStyleDefault {
 
 static ErrorOr<CodingStyleDefault> read_coding_style_default(ReadonlyBytes data)
 {
-    if (data.size() < 10)
-        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Not enough data for COD marker segment");
+    FixedMemoryStream stream { data };
 
     CodingStyleDefault cod;
 
-    u8 Scod = data[0];
+    u8 Scod = TRY(stream.read_value<u8>());
     cod.has_explicit_precinct_size = Scod & 1;
     cod.may_use_SOP_marker = Scod & 2;
     cod.may_use_EPH_marker = Scod & 4;
 
-    u32 SGcod = *reinterpret_cast<BigEndian<u32> const*>(data.data() + 1);
+    u32 SGcod = TRY(stream.read_value<BigEndian<u32>>());
     u8 progression_order = SGcod >> 24;
     if (progression_order > 4)
         return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Invalid progression order");
@@ -271,30 +265,28 @@ static ErrorOr<CodingStyleDefault> read_coding_style_default(ReadonlyBytes data)
         return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Invalid multiple component transformation type");
     cod.multiple_component_transformation_type = static_cast<CodingStyleDefault::MultipleComponentTransformationType>(multiple_component_transformation_type);
 
-    cod.number_of_decomposition_levels = data[5];
+    cod.number_of_decomposition_levels = TRY(stream.read_value<u8>());
     if (cod.number_of_decomposition_levels > 32)
         return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Invalid number of decomposition levels");
 
     // Table A.18 – Width or height exponent of the code-blocks for the SPcod and SPcoc parameters
-    u8 xcb = (data[6] & 0xF) + 2;
-    u8 ycb = (data[7] & 0xF) + 2;
+    u8 xcb = (TRY(stream.read_value<u8>()) & 0xF) + 2;
+    u8 ycb = (TRY(stream.read_value<u8>()) & 0xF) + 2;
     if (xcb > 10 || ycb > 10 || xcb + ycb > 12)
         return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Invalid code block size");
     cod.code_block_width_exponent = xcb;
     cod.code_block_height_exponent = ycb;
 
-    cod.code_block_style = data[8];
+    cod.code_block_style = TRY(stream.read_value<u8>());
 
-    u8 transformation = data[9];
+    u8 transformation = TRY(stream.read_value<u8>());
     if (transformation > 1)
         return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Invalid transformation");
     cod.transformation = static_cast<CodingStyleDefault::Transformation>(transformation);
 
     if (cod.has_explicit_precinct_size) {
-        if (data.size() < 10u + cod.number_of_decomposition_levels + 1u)
-            return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Not enough data for COD marker segment precinct sizes");
         for (size_t i = 0; i < cod.number_of_decomposition_levels + 1u; ++i) {
-            u8 b = data[10 + i];
+            u8 b = TRY(stream.read_value<u8>());
 
             // Table A.21 – Precinct width and height for the SPcod and SPcoc parameters
             CodingStyleDefault::PrecinctSize precinct_size;
@@ -347,12 +339,11 @@ struct QuantizationDefault {
 
 static ErrorOr<QuantizationDefault> read_quantization_default(ReadonlyBytes data, StringView marker_name = "QCD"sv)
 {
-    if (data.size() < 1)
-        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Not enough data for COD marker segment");
+    FixedMemoryStream stream { data };
 
     QuantizationDefault qcd;
 
-    u8 sqcd = data[0];
+    u8 sqcd = TRY(stream.read_value<u8>());
     u8 quantization_style = sqcd & 0x1F;
     if (quantization_style > 2)
         return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Invalid quantization style");
@@ -368,7 +359,7 @@ static ErrorOr<QuantizationDefault> read_quantization_default(ReadonlyBytes data
 
             Vector<QuantizationDefault::ReversibleStepSize> reversible_step_sizes;
             for (size_t i = 0; i < 1u + 3u * number_of_decomposition_levels; ++i)
-                reversible_step_sizes.append({ static_cast<u8>(data[1 + i] >> 3) });
+                reversible_step_sizes.append({ static_cast<u8>(TRY(stream.read_value<u8>()) >> 3) });
             return reversible_step_sizes;
         }
 
@@ -381,7 +372,7 @@ static ErrorOr<QuantizationDefault> read_quantization_default(ReadonlyBytes data
 
         Vector<QuantizationDefault::IrreversibleStepSize> irreversible_step_sizes;
         for (size_t i = 0; i < 1u + 3u * number_of_decomposition_levels; ++i) {
-            u16 value = *reinterpret_cast<BigEndian<u16> const*>(data.data() + 1 + i * 2);
+            u16 value = TRY(stream.read_value<BigEndian<u16>>());
             QuantizationDefault::IrreversibleStepSize step_size;
             step_size.mantissa = value & 0x7FF;
             step_size.exponent = value >> 11;
@@ -417,18 +408,16 @@ struct QuantizationComponent {
 
 static ErrorOr<QuantizationComponent> read_quantization_component(ReadonlyBytes data, size_t number_of_components)
 {
-    size_t cqcc_size = number_of_components < 257 ? 1 : 2;
-    if (data.size() < cqcc_size)
-        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Not enough data for QCC marker segment");
+    FixedMemoryStream stream { data };
 
     QuantizationComponent qcc;
     if (number_of_components < 257)
-        qcc.component_index = data[0];
+        qcc.component_index = TRY(stream.read_value<u8>());
     else
-        qcc.component_index = *reinterpret_cast<BigEndian<u16> const*>(data.data());
+        qcc.component_index = TRY(stream.read_value<BigEndian<u16>>());
 
     dbgln_if(JPEG2000_DEBUG, "JPEG2000ImageDecoderPlugin: QCC marker segment: component_index={}", qcc.component_index);
-    qcc.qcd = TRY(read_quantization_default(data.slice(cqcc_size), "QCC"sv));
+    qcc.qcd = TRY(read_quantization_default(data.slice(TRY(stream.tell())), "QCC"sv));
 
     return qcc;
 }
@@ -445,15 +434,14 @@ struct Comment {
 
 static ErrorOr<Comment> read_comment(ReadonlyBytes data)
 {
-    if (data.size() < 2)
-        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Not enough data for COM marker segment");
+    FixedMemoryStream stream { data };
 
     Comment com;
-    u16 comment_type = *reinterpret_cast<BigEndian<u16> const*>(data.data());
+    u16 comment_type = TRY(stream.read_value<BigEndian<u16>>());
     if (comment_type > 1)
         return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Invalid comment type");
     com.type = static_cast<Comment::CommentType>(comment_type);
-    com.data = data.slice(2);
+    com.data = data.slice(TRY(stream.tell()));
 
     dbgln_if(JPEG2000_DEBUG, "JPEG2000ImageDecoderPlugin: COM marker segment: comment_type={}, size()={}", (int)com.type, com.data.size());
     if (com.type == Comment::ISO_IEC_8859_15)
