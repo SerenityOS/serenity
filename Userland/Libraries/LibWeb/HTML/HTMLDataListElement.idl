@@ -5,5 +5,5 @@
 interface HTMLDataListElement : HTMLElement {
     [HTMLConstructor] constructor();
 
-    // FIXME: [SameObject] readonly attribute HTMLCollection options;
+    [SameObject] readonly attribute HTMLCollection options;
 };
