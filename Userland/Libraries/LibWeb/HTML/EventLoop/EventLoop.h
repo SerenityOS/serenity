@@ -39,6 +39,10 @@ public:
     TaskQueue& microtask_queue() { return *m_microtask_queue; }
     TaskQueue const& microtask_queue() const { return *m_microtask_queue; }
 
+    bool is_task_source_blocked(Task::Source source) const;
+    void block_task_source(Task::Source source);
+    void unblock_task_source(Task::Source source);
+
     void spin_until(NOESCAPE JS::SafeFunction<bool()> goal_condition);
     void spin_processing_tasks_with_source_until(Task::Source, NOESCAPE JS::SafeFunction<bool()> goal_condition);
     void process();
@@ -113,6 +117,8 @@ private:
     bool m_execution_paused { false };
 
     bool m_skip_event_loop_processing_steps { false };
+
+    Array<bool, to_underlying(Task::Source::UniqueTaskSourceStart)> m_blocked_task_sources;
 };
 
 EventLoop& main_thread_event_loop();
