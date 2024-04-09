@@ -8,6 +8,19 @@
 
 namespace GL {
 
+void GLContext::gl_blend_color(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_blend_color, red, green, blue, alpha);
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+
+    m_blend_color = { red, green, blue, alpha };
+    m_blend_color.clamp(0.f, 1.f);
+
+    auto options = m_rasterizer->options();
+    options.blend_color = m_blend_color;
+    m_rasterizer->set_options(options);
+}
+
 void GLContext::gl_blend_equation_separate(GLenum rgb_mode, GLenum alpha_mode)
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_blend_equation_separate, rgb_mode, alpha_mode);
@@ -119,6 +132,14 @@ void GLContext::gl_blend_func(GLenum src_factor, GLenum dst_factor)
             return GPU::BlendFactor::DstAlpha;
         case GL_ONE_MINUS_DST_ALPHA:
             return GPU::BlendFactor::OneMinusDstAlpha;
+        case GL_CONSTANT_COLOR:
+            return GPU::BlendFactor::ConstantColor;
+        case GL_ONE_MINUS_CONSTANT_COLOR:
+            return GPU::BlendFactor::OneMinusConstantColor;
+        case GL_CONSTANT_ALPHA:
+            return GPU::BlendFactor::ConstantAlpha;
+        case GL_ONE_MINUS_CONSTANT_ALPHA:
+            return GPU::BlendFactor::OneMinusConstantAlpha;
         case GL_SRC_ALPHA_SATURATE:
             return GPU::BlendFactor::SrcAlphaSaturate;
         default:
