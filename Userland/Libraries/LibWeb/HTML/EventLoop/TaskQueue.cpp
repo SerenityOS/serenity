@@ -39,7 +39,10 @@ JS::GCPtr<Task> TaskQueue::take_first_runnable()
         return nullptr;
 
     for (size_t i = 0; i < m_tasks.size(); ++i) {
-        if (m_tasks[i]->is_runnable())
+        auto const& task = m_tasks[i];
+        if (m_event_loop->is_task_source_blocked(task->source()))
+            continue;
+        if (task->is_runnable())
             return m_tasks.take(i);
     }
     return nullptr;
@@ -51,6 +54,8 @@ bool TaskQueue::has_runnable_tasks() const
         return false;
 
     for (auto& task : m_tasks) {
+        if (m_event_loop->is_task_source_blocked(task->source()))
+            continue;
         if (task->is_runnable())
             return true;
     }
