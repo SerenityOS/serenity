@@ -7,6 +7,6 @@ interface HTMLMapElement : HTMLElement {
     [HTMLConstructor] constructor();
 
     [CEReactions, Reflect] attribute DOMString name;
-    // FIXME: [SameObject] readonly attribute HTMLCollection areas;
+    [SameObject] readonly attribute HTMLCollection areas;
 
 };
