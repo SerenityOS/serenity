@@ -85,6 +85,8 @@ interface Element : Node {
     undefined insertAdjacentText(DOMString where, DOMString data);
     [CEReactions] undefined insertAdjacentHTML(DOMString position, DOMString text);
 
+    [CEReactions, LegacyNullToEmptyString] attribute DOMString outerHTML;
+
     undefined scrollIntoView(optional (boolean or ScrollIntoViewOptions) arg = {});
 
     undefined scroll(optional ScrollToOptions options = {});

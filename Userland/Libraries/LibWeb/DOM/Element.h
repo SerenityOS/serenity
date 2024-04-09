@@ -175,6 +175,9 @@ public:
 
     WebIDL::ExceptionOr<void> insert_adjacent_html(String const& position, String const& text);
 
+    WebIDL::ExceptionOr<String> outer_html() const;
+    WebIDL::ExceptionOr<void> set_outer_html(String const&);
+
     bool is_focused() const;
     bool is_active() const;
     bool is_target() const;
