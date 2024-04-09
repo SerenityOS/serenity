@@ -440,6 +440,7 @@ static ErrorOr<Comment> read_comment(ReadonlyBytes data)
 
 struct TilePartData {
     StartOfTilePart sot;
+    Vector<Comment> coms;
     ReadonlyBytes data;
 };
 
@@ -631,9 +632,13 @@ static ErrorOr<void> parse_codestream_tile_header(JPEG2000LoadingContext& contex
         case J2K_PPT:
         case J2K_PLT:
         case J2K_COM: {
-            // FIXME: These are valid tile part header markers. Parse contents.
             auto marker = TRY(read_marker_at_cursor(context));
-            dbgln("JPEG2000ImageDecoderPlugin: marker {:#04x} not yet implemented in tile header", marker.marker);
+            if (marker.marker == J2K_COM) {
+                tile_part.coms.append(TRY(read_comment(marker.data.value())));
+            } else {
+                // FIXME: These are valid main header markers. Parse contents.
+                dbgln("JPEG2000ImageDecoderPlugin: marker {:#04x} not yet implemented in tile header", marker.marker);
+            }
             break;
         }
         default:
