@@ -673,6 +673,7 @@ static ErrorOr<void> parse_codestream_tile_header(JPEG2000LoadingContext& contex
             } else {
                 // FIXME: These are valid main header markers. Parse contents.
                 dbgln("JPEG2000ImageDecoderPlugin: marker {:#04x} not yet implemented in tile header", marker.marker);
+                return Error::from_string_literal("JPEG2000ImageDecoderPlugin: marker not yet implemented in tile header");
             }
             break;
         }
