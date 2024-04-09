@@ -597,12 +597,14 @@ static ErrorOr<void> parse_codestream_tile_header(JPEG2000LoadingContext& contex
             context.codestream_cursor += 2;
             found_start_of_data = true;
             break;
-        // FIXME: COD, COC, QCD, QCC are only valid on the first tile part header, reject them in non-first tile part headers.
         case J2K_COD:
         case J2K_COC:
         case J2K_QCD:
         case J2K_QCC:
         case J2K_RGN:
+            if (start_of_tile.tile_part_index != 0)
+                return Error::from_string_literal("JPEG2000ImageDecoderPlugin: COD, COC, QCD, QCC, RGN markers are only valid in the first tile-part header");
+            [[fallthrough]];
         case J2K_POC:
         case J2K_PPT:
         case J2K_PLT:
