@@ -555,11 +555,14 @@ static ErrorOr<void> parse_codestream_main_header(JPEG2000LoadingContext& contex
         }
         case J2K_SOT: {
             // SOT terminates the main header.
+            // A.4.2: "There shall be at least one SOT in a codestream."
             if (!saw_COD_marker)
                 return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Required COD marker not present in main header");
             if (!saw_QCD_marker)
                 return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Required QCD marker not present in main header");
 
+            // A.6.4: "there is not necessarily a correspondence with the number of sub-bands present because the sub-bands
+            //         can be truncated with no requirement to correct [the QCD] marker segment."
             size_t step_sizes_count = context.qcd.step_sizes.visit(
                 [](Empty) -> size_t { VERIFY_NOT_REACHED(); },
                 [](Vector<QuantizationDefault::ReversibleStepSize> const& step_sizes) { return step_sizes.size(); },
