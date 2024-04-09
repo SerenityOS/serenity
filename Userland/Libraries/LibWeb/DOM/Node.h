@@ -45,6 +45,11 @@ struct GetRootNodeOptions {
     bool composed { false };
 };
 
+enum class FragmentSerializationMode {
+    Inner,
+    Outer,
+};
+
 class Node : public EventTarget {
     WEB_PLATFORM_OBJECT(Node, EventTarget);
 
@@ -242,7 +247,7 @@ public:
     i32 unique_id() const { return m_unique_id; }
     static Node* from_unique_id(i32);
 
-    WebIDL::ExceptionOr<String> serialize_fragment(DOMParsing::RequireWellFormed) const;
+    WebIDL::ExceptionOr<String> serialize_fragment(DOMParsing::RequireWellFormed, FragmentSerializationMode = FragmentSerializationMode::Inner) const;
 
     void replace_all(JS::GCPtr<Node>);
     void string_replace_all(String const&);

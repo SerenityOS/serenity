@@ -4275,8 +4275,89 @@ static String escape_string(StringView string, AttributeMode attribute_mode)
 }
 
 // https://html.spec.whatwg.org/multipage/parsing.html#html-fragment-serialisation-algorithm
-String HTMLParser::serialize_html_fragment(DOM::Node const& node)
+String HTMLParser::serialize_html_fragment(DOM::Node const& node, DOM::FragmentSerializationMode fragment_serialization_mode)
 {
+    // NOTE: Steps in this function are jumbled a bit to accommodate the Element.outerHTML API.
+    //       When called with FragmentSerializationMode::Outer, we will serialize the element itself,
+    //       not just its children.
+
+    // 2. Let s be a string, and initialize it to the empty string.
+    StringBuilder builder;
+
+    auto serialize_element = [&](DOM::Element const& element) {
+        // 1. If current node is an element in the HTML namespace, the MathML namespace, or the SVG namespace, then let tagname be current node's local name.
+        //    Otherwise, let tagname be current node's qualified name.
+        FlyString tag_name;
+
+        if (element.namespace_uri().has_value() && element.namespace_uri()->is_one_of(Namespace::HTML, Namespace::MathML, Namespace::SVG))
+            tag_name = element.local_name();
+        else
+            tag_name = element.qualified_name();
+
+        // 2. Append a U+003C LESS-THAN SIGN character (<), followed by tagname.
+        builder.append('<');
+        builder.append(tag_name);
+
+        // 3. If current node's is value is not null, and the element does not have an is attribute in its attribute list,
+        //    then append the string " is="", followed by current node's is value escaped as described below in attribute mode,
+        //    followed by a U+0022 QUOTATION MARK character (").
+        if (element.is_value().has_value() && !element.has_attribute(AttributeNames::is)) {
+            builder.append(" is=\""sv);
+            builder.append(escape_string(element.is_value().value(), AttributeMode::Yes));
+            builder.append('"');
+        }
+
+        // 4. For each attribute that the element has, append a U+0020 SPACE character, the attribute's serialized name as described below, a U+003D EQUALS SIGN character (=),
+        //    a U+0022 QUOTATION MARK character ("), the attribute's value, escaped as described below in attribute mode, and a second U+0022 QUOTATION MARK character (").
+        //    NOTE: The order of attributes is implementation-defined. The only constraint is that the order must be stable.
+        element.for_each_attribute([&](auto const& attribute) {
+            builder.append(' ');
+
+            // An attribute's serialized name for the purposes of the previous paragraph must be determined as follows:
+
+            // NOTE: As far as I can tell, these steps are equivalent to just using the qualified name.
+            //
+            // -> If the attribute has no namespace:
+            //         The attribute's serialized name is the attribute's local name.
+            // -> If the attribute is in the XML namespace:
+            //         The attribute's serialized name is the string "xml:" followed by the attribute's local name.
+            // -> If the attribute is in the XMLNS namespace and the attribute's local name is xmlns:
+            //         The attribute's serialized name is the string "xmlns".
+            // -> If the attribute is in the XMLNS namespace and the attribute's local name is not xmlns:
+            //         The attribute's serialized name is the string "xmlns:" followed by the attribute's local name.
+            // -> If the attribute is in the XLink namespace:
+            //         The attribute's serialized name is the string "xlink:" followed by the attribute's local name.
+            // -> If the attribute is in some other namespace:
+            //         The attribute's serialized name is the attribute's qualified name.
+            builder.append(attribute.name());
+
+            builder.append("=\""sv);
+            builder.append(escape_string(attribute.value(), AttributeMode::Yes));
+            builder.append('"');
+        });
+
+        // 5. Append a U+003E GREATER-THAN SIGN character (>).
+        builder.append('>');
+
+        // 6. If current node serializes as void, then continue on to the next child node at this point.
+        if (element.serializes_as_void())
+            return IterationDecision::Continue;
+
+        // 7. Append the value of running the HTML fragment serialization algorithm on the current node element (thus recursing into this algorithm for that element),
+        //    followed by a U+003C LESS-THAN SIGN character (<), a U+002F SOLIDUS character (/), tagname again, and finally a U+003E GREATER-THAN SIGN character (>).
+        builder.append(serialize_html_fragment(element));
+        builder.append("</"sv);
+        builder.append(tag_name);
+        builder.append('>');
+
+        return IterationDecision::Continue;
+    };
+
+    if (fragment_serialization_mode == DOM::FragmentSerializationMode::Outer) {
+        serialize_element(verify_cast<DOM::Element>(node));
+        return builder.to_string_without_validation();
+    }
+
     // The algorithm takes as input a DOM Element, Document, or DocumentFragment referred to as the node.
     VERIFY(node.is_element() || node.is_document() || node.is_document_fragment());
     JS::NonnullGCPtr<DOM::Node const> actual_node = node;
@@ -4295,9 +4376,6 @@ String HTMLParser::serialize_html_fragment(DOM::Node const& node)
             actual_node = verify_cast<HTML::HTMLTemplateElement>(element).content();
     }
 
-    // 2. Let s be a string, and initialize it to the empty string.
-    StringBuilder builder;
-
     // 4. For each child node of the node, in tree order, run the following steps:
     actual_node->for_each_child([&](DOM::Node& current_node) {
         // 1. Let current node be the child node being processed.
@@ -4307,73 +4385,7 @@ String HTMLParser::serialize_html_fragment(DOM::Node const& node)
         if (is<DOM::Element>(current_node)) {
             // -> If current node is an Element
             auto& element = verify_cast<DOM::Element>(current_node);
-
-            // 1. If current node is an element in the HTML namespace, the MathML namespace, or the SVG namespace, then let tagname be current node's local name.
-            //    Otherwise, let tagname be current node's qualified name.
-            FlyString tag_name;
-
-            if (element.namespace_uri().has_value() && element.namespace_uri()->is_one_of(Namespace::HTML, Namespace::MathML, Namespace::SVG))
-                tag_name = element.local_name();
-            else
-                tag_name = element.qualified_name();
-
-            // 2. Append a U+003C LESS-THAN SIGN character (<), followed by tagname.
-            builder.append('<');
-            builder.append(tag_name);
-
-            // 3. If current node's is value is not null, and the element does not have an is attribute in its attribute list,
-            //    then append the string " is="", followed by current node's is value escaped as described below in attribute mode,
-            //    followed by a U+0022 QUOTATION MARK character (").
-            if (element.is_value().has_value() && !element.has_attribute(AttributeNames::is)) {
-                builder.append(" is=\""sv);
-                builder.append(escape_string(element.is_value().value(), AttributeMode::Yes));
-                builder.append('"');
-            }
-
-            // 4. For each attribute that the element has, append a U+0020 SPACE character, the attribute's serialized name as described below, a U+003D EQUALS SIGN character (=),
-            //    a U+0022 QUOTATION MARK character ("), the attribute's value, escaped as described below in attribute mode, and a second U+0022 QUOTATION MARK character (").
-            //    NOTE: The order of attributes is implementation-defined. The only constraint is that the order must be stable.
-            element.for_each_attribute([&](auto const& attribute) {
-                builder.append(' ');
-
-                // An attribute's serialized name for the purposes of the previous paragraph must be determined as follows:
-
-                // NOTE: As far as I can tell, these steps are equivalent to just using the qualified name.
-                //
-                // -> If the attribute has no namespace:
-                //         The attribute's serialized name is the attribute's local name.
-                // -> If the attribute is in the XML namespace:
-                //         The attribute's serialized name is the string "xml:" followed by the attribute's local name.
-                // -> If the attribute is in the XMLNS namespace and the attribute's local name is xmlns:
-                //         The attribute's serialized name is the string "xmlns".
-                // -> If the attribute is in the XMLNS namespace and the attribute's local name is not xmlns:
-                //         The attribute's serialized name is the string "xmlns:" followed by the attribute's local name.
-                // -> If the attribute is in the XLink namespace:
-                //         The attribute's serialized name is the string "xlink:" followed by the attribute's local name.
-                // -> If the attribute is in some other namespace:
-                //         The attribute's serialized name is the attribute's qualified name.
-                builder.append(attribute.name());
-
-                builder.append("=\""sv);
-                builder.append(escape_string(attribute.value(), AttributeMode::Yes));
-                builder.append('"');
-            });
-
-            // 5. Append a U+003E GREATER-THAN SIGN character (>).
-            builder.append('>');
-
-            // 6. If current node serializes as void, then continue on to the next child node at this point.
-            if (element.serializes_as_void())
-                return IterationDecision::Continue;
-
-            // 7. Append the value of running the HTML fragment serialization algorithm on the current node element (thus recursing into this algorithm for that element),
-            //    followed by a U+003C LESS-THAN SIGN character (<), a U+002F SOLIDUS character (/), tagname again, and finally a U+003E GREATER-THAN SIGN character (>).
-            builder.append(serialize_html_fragment(element));
-            builder.append("</"sv);
-            builder.append(tag_name);
-            builder.append('>');
-
-            return IterationDecision::Continue;
+            return serialize_element(element);
         }
 
         if (is<DOM::Text>(current_node)) {

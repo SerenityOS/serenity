@@ -1402,6 +1402,19 @@ bool Element::is_actually_disabled() const
     return false;
 }
 
+// https://w3c.github.io/DOM-Parsing/#dom-element-outerhtml
+WebIDL::ExceptionOr<String> Element::outer_html() const
+{
+    return serialize_fragment(DOMParsing::RequireWellFormed::Yes, FragmentSerializationMode::Outer);
+}
+
+// https://w3c.github.io/DOM-Parsing/#dom-element-outerhtml
+WebIDL::ExceptionOr<void> Element::set_outer_html(String const&)
+{
+    dbgln("FIXME: Implement Element::set_outer_html()");
+    return {};
+}
+
 // https://w3c.github.io/DOM-Parsing/#dom-element-insertadjacenthtml
 WebIDL::ExceptionOr<void> Element::insert_adjacent_html(String const& position, String const& text)
 {
