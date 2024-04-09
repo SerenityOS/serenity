@@ -549,6 +549,7 @@ static ErrorOr<void> parse_codestream_main_header(JPEG2000LoadingContext& contex
             } else {
                 // FIXME: These are valid main header markers. Parse contents.
                 dbgln("JPEG2000ImageDecoderPlugin: marker {:#04x} not yet implemented", marker.marker);
+                return Error::from_string_literal("JPEG2000ImageDecoderPlugin: marker not yet implemented");
             }
             break;
         }
