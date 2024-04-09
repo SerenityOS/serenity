@@ -438,6 +438,15 @@ static ErrorOr<Comment> read_comment(ReadonlyBytes data)
     return com;
 }
 
+struct TilePartData {
+    StartOfTilePart sot;
+    ReadonlyBytes data;
+};
+
+struct TileData {
+    Vector<TilePartData> tile_parts;
+};
+
 struct JPEG2000LoadingContext {
     enum class State {
         NotDecoded = 0,
@@ -458,6 +467,7 @@ struct JPEG2000LoadingContext {
     CodingStyleDefault cod;
     QuantizationDefault qcd;
     Vector<Comment> coms;
+    Vector<TileData> tiles;
 };
 
 struct MarkerSegment {
@@ -591,6 +601,15 @@ static ErrorOr<void> parse_codestream_tile_header(JPEG2000LoadingContext& contex
     auto start_of_tile = TRY(read_start_of_tile_part(marker.data.value()));
     // FIXME: Store start_of_tile on context somewhere.
 
+    context.tiles.resize(max(context.tiles.size(), (size_t)start_of_tile.tile_index + 1));
+    auto& tile = context.tiles[start_of_tile.tile_index];
+
+    if (tile.tile_parts.size() != start_of_tile.tile_part_index)
+        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Tile part index out of order");
+    tile.tile_parts.append({});
+    auto& tile_part = tile.tile_parts.last();
+    tile_part.sot = start_of_tile;
+
     bool found_start_of_data = false;
     while (!found_start_of_data) {
         u16 marker = TRY(peek_marker(context));
@@ -637,7 +656,7 @@ static ErrorOr<void> parse_codestream_tile_header(JPEG2000LoadingContext& contex
 
     if (context.codestream_cursor + tile_bitstream_length > context.codestream_data.size())
         return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Not enough data for tile bitstream");
-    // FIXME: Store context.codestream_data.slice(context.codestream_cursor, tile_bitstream_length) somewhere on the context.
+    tile_part.data = context.codestream_data.slice(context.codestream_cursor, tile_bitstream_length);
 
     context.codestream_cursor += tile_bitstream_length;
     dbgln_if(JPEG2000_DEBUG, "JPEG2000ImageDecoderPlugin: Tile bitstream length: {}", tile_bitstream_length);
