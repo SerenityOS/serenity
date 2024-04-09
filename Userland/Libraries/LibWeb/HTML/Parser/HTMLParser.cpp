@@ -4244,6 +4244,36 @@ JS::NonnullGCPtr<HTMLParser> HTMLParser::create(DOM::Document& document, StringV
     return document.heap().allocate_without_realm<HTMLParser>(document, input, encoding);
 }
 
+enum class AttributeMode {
+    No,
+    Yes,
+};
+
+static String escape_string(StringView string, AttributeMode attribute_mode)
+{
+    // https://html.spec.whatwg.org/multipage/parsing.html#escapingString
+    StringBuilder builder;
+    for (auto code_point : Utf8View { string }) {
+        // 1. Replace any occurrence of the "&" character by the string "&amp;".
+        if (code_point == '&')
+            builder.append("&amp;"sv);
+        // 2. Replace any occurrences of the U+00A0 NO-BREAK SPACE character by the string "&nbsp;".
+        else if (code_point == 0xA0)
+            builder.append("&nbsp;"sv);
+        // 3. If the algorithm was invoked in the attribute mode, replace any occurrences of the """ character by the string "&quot;".
+        else if (code_point == '"' && attribute_mode == AttributeMode::Yes)
+            builder.append("&quot;"sv);
+        // 4. If the algorithm was not invoked in the attribute mode, replace any occurrences of the "<" character by the string "&lt;", and any occurrences of the ">" character by the string "&gt;".
+        else if (code_point == '<' && attribute_mode == AttributeMode::No)
+            builder.append("&lt;"sv);
+        else if (code_point == '>' && attribute_mode == AttributeMode::No)
+            builder.append("&gt;"sv);
+        else
+            builder.append_code_point(code_point);
+    }
+    return builder.to_string_without_validation();
+}
+
 // https://html.spec.whatwg.org/multipage/parsing.html#html-fragment-serialisation-algorithm
 String HTMLParser::serialize_html_fragment(DOM::Node const& node)
 {
@@ -4264,35 +4294,6 @@ String HTMLParser::serialize_html_fragment(DOM::Node const& node)
         if (is<HTML::HTMLTemplateElement>(element))
             actual_node = verify_cast<HTML::HTMLTemplateElement>(element).content();
     }
-
-    enum class AttributeMode {
-        No,
-        Yes,
-    };
-
-    auto escape_string = [](StringView string, AttributeMode attribute_mode) -> String {
-        // https://html.spec.whatwg.org/multipage/parsing.html#escapingString
-        StringBuilder builder;
-        for (auto code_point : Utf8View { string }) {
-            // 1. Replace any occurrence of the "&" character by the string "&amp;".
-            if (code_point == '&')
-                builder.append("&amp;"sv);
-            // 2. Replace any occurrences of the U+00A0 NO-BREAK SPACE character by the string "&nbsp;".
-            else if (code_point == 0xA0)
-                builder.append("&nbsp;"sv);
-            // 3. If the algorithm was invoked in the attribute mode, replace any occurrences of the """ character by the string "&quot;".
-            else if (code_point == '"' && attribute_mode == AttributeMode::Yes)
-                builder.append("&quot;"sv);
-            // 4. If the algorithm was not invoked in the attribute mode, replace any occurrences of the "<" character by the string "&lt;", and any occurrences of the ">" character by the string "&gt;".
-            else if (code_point == '<' && attribute_mode == AttributeMode::No)
-                builder.append("&lt;"sv);
-            else if (code_point == '>' && attribute_mode == AttributeMode::No)
-                builder.append("&gt;"sv);
-            else
-                builder.append_code_point(code_point);
-        }
-        return MUST(builder.to_string());
-    };
 
     // 2. Let s be a string, and initialize it to the empty string.
     StringBuilder builder;
