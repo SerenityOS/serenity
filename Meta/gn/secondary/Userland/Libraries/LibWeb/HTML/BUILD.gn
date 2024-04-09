@@ -114,6 +114,7 @@ source_set("HTML") {
     "HTMLUnknownElement.cpp",
     "HTMLVideoElement.cpp",
     "History.cpp",
+    "ImageBitmap.cpp",
     "ImageData.cpp",
     "ImageRequest.cpp",
     "ListOfAvailableImages.cpp",
