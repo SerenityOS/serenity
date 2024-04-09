@@ -320,6 +320,94 @@ static ErrorOr<CodingStyleDefault> read_coding_style_default(ReadonlyBytes data)
     return cod;
 }
 
+// A.6.4 Quantization default (QCD)
+struct QuantizationDefault {
+    enum QuantizationStyle {
+        NoQuantization = 0,
+        ScalarDerived = 1,
+        ScalarExpounded = 2,
+    };
+    QuantizationStyle quantization_style { NoQuantization };
+    u8 number_of_guard_bits { 0 };
+
+    struct ReversibleStepSize {
+        u8 exponent { 0 };
+    };
+    struct IrreversibleStepSize {
+        u16 mantissa { 0 };
+        u8 exponent { 0 };
+    };
+
+    // Stores a Vector<ReversibleStepSize> if quantization_style is NoQuantization, and a Vector<IrreversibleStepSize> otherwise.
+    // The size of the vector is >= 3*number_of_decomposition_levels + 1 if quantization_style is not ScalarDerived, and 1 otherwise.
+    using StepSizeType = Variant<Empty, Vector<ReversibleStepSize>, Vector<IrreversibleStepSize>>;
+    StepSizeType step_sizes;
+};
+
+static ErrorOr<QuantizationDefault> read_quantization_default(ReadonlyBytes data)
+{
+    if (data.size() < 1)
+        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Not enough data for COD marker segment");
+
+    QuantizationDefault qcd;
+
+    u8 sqcd = data[0];
+    u8 quantization_style = sqcd & 0x1F;
+    if (quantization_style > 2)
+        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Invalid quantization style");
+    qcd.quantization_style = static_cast<QuantizationDefault::QuantizationStyle>(quantization_style);
+    qcd.number_of_guard_bits = sqcd >> 5;
+
+    qcd.step_sizes = TRY([&]() -> ErrorOr<QuantizationDefault::StepSizeType> {
+        if (quantization_style == QuantizationDefault::NoQuantization) {
+            // Table A.29 – Reversible step size values for the SPqcd and SPqcc parameters (reversible transform only)
+            if (data.size() < 2)
+                return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Not enough data for QCD marker segment");
+            u8 number_of_decomposition_levels = (data.size() - 2) / 3;
+
+            Vector<QuantizationDefault::ReversibleStepSize> reversible_step_sizes;
+            for (size_t i = 0; i < 1u + 3u * number_of_decomposition_levels; ++i)
+                reversible_step_sizes.append({ static_cast<u8>(data[1 + i] >> 3) });
+            return reversible_step_sizes;
+        }
+
+        // Table A.30 – Quantization values for the SPqcd and SPqcc parameters (irreversible transformation only)
+        if (data.size() < 3)
+            return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Not enough data for QCD marker segment");
+        u8 number_of_decomposition_levels = 0;
+        if (quantization_style == QuantizationDefault::ScalarExpounded)
+            number_of_decomposition_levels = (data.size() - 3) / 6;
+
+        Vector<QuantizationDefault::IrreversibleStepSize> irreversible_step_sizes;
+        for (size_t i = 0; i < 1u + 3u * number_of_decomposition_levels; ++i) {
+            u16 value = *reinterpret_cast<AK::BigEndian<u16> const*>(data.data() + 1 + i * 2);
+            QuantizationDefault::IrreversibleStepSize step_size;
+            step_size.mantissa = value & 0x7FF;
+            step_size.exponent = value >> 11;
+            irreversible_step_sizes.append(step_size);
+        }
+        return irreversible_step_sizes;
+    }());
+
+    dbgln_if(JPEG2000_DEBUG, "JPEG2000ImageDecoderPlugin: QCD marker segment: quantization_style={}, number_of_guard_bits={}", (int)qcd.quantization_style, qcd.number_of_guard_bits);
+    qcd.step_sizes.visit(
+        [](Empty) { VERIFY_NOT_REACHED(); },
+        [](Vector<QuantizationDefault::ReversibleStepSize> const& step_sizes) {
+            dbgln_if(JPEG2000_DEBUG, "JPEG2000ImageDecoderPlugin: QCD marker segment: {} step sizes:", step_sizes.size());
+            for (auto [i, step_size] : enumerate(step_sizes)) {
+                dbgln_if(JPEG2000_DEBUG, "JPEG2000ImageDecoderPlugin: QCD marker segment: step_size[{}]: exponent={}", i, step_size.exponent);
+            }
+        },
+        [](Vector<QuantizationDefault::IrreversibleStepSize> const& step_sizes) {
+            dbgln_if(JPEG2000_DEBUG, "JPEG2000ImageDecoderPlugin: QCD marker segment: {} step sizes:", step_sizes.size());
+            for (auto [i, step_size] : enumerate(step_sizes)) {
+                dbgln_if(JPEG2000_DEBUG, "JPEG2000ImageDecoderPlugin: QCD marker segment: step_size[{}]: mantissa={}, exponent={}", i, step_size.mantissa, step_size.exponent);
+            }
+        });
+
+    return qcd;
+}
+
 struct JPEG2000LoadingContext {
     enum class State {
         NotDecoded = 0,
@@ -338,6 +426,7 @@ struct JPEG2000LoadingContext {
     // Data from marker segments:
     ImageAndTileSize siz;
     CodingStyleDefault cod;
+    QuantizationDefault qcd;
 };
 
 struct MarkerSegment {
@@ -398,6 +487,7 @@ static ErrorOr<void> parse_codestream_main_header(JPEG2000LoadingContext& contex
     context.siz = TRY(read_image_and_tile_size(marker.data.value()));
 
     bool saw_COD_marker = false;
+    bool saw_QCD_marker = false;
     while (true) {
         u16 marker = TRY(peek_marker(context));
         switch (marker) {
@@ -418,17 +508,33 @@ static ErrorOr<void> parse_codestream_main_header(JPEG2000LoadingContext& contex
                     return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Multiple COD markers in main header");
                 context.cod = TRY(read_coding_style_default(marker.data.value()));
                 saw_COD_marker = true;
+            } else if (marker.marker == J2K_QCD) {
+                if (saw_QCD_marker)
+                    return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Multiple QCD markers in main header");
+                context.qcd = TRY(read_quantization_default(marker.data.value()));
+                saw_QCD_marker = true;
             } else {
                 // FIXME: These are valid main header markers. Parse contents.
                 dbgln("JPEG2000ImageDecoderPlugin: marker {:#04x} not yet implemented", marker.marker);
             }
             break;
         }
-        case J2K_SOT:
+        case J2K_SOT: {
             // SOT terminates the main header.
             if (!saw_COD_marker)
                 return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Required COD marker not present in main header");
+            if (!saw_QCD_marker)
+                return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Required QCD marker not present in main header");
+
+            size_t step_sizes_count = context.qcd.step_sizes.visit(
+                [](Empty) -> size_t { VERIFY_NOT_REACHED(); },
+                [](Vector<QuantizationDefault::ReversibleStepSize> const& step_sizes) { return step_sizes.size(); },
+                [](Vector<QuantizationDefault::IrreversibleStepSize> const& step_sizes) { return step_sizes.size(); });
+            if (context.qcd.quantization_style != QuantizationDefault::ScalarDerived && step_sizes_count < context.cod.number_of_decomposition_levels * 3u + 1u)
+                return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Not enough step sizes for number of decomposition levels");
+
             return {};
+        }
         default:
             return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Unexpected marker in main header");
         }
