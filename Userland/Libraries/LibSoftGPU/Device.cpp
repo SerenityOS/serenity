@@ -137,37 +137,50 @@ ALWAYS_INLINE static void test_alpha(PixelQuad& quad, GPU::AlphaTestFunction alp
 
 ALWAYS_INLINE static bool is_blend_factor_constant(GPU::BlendFactor blend_factor)
 {
-    return (blend_factor == GPU::BlendFactor::One || blend_factor == GPU::BlendFactor::Zero);
+    return blend_factor == GPU::BlendFactor::Zero
+        || blend_factor == GPU::BlendFactor::One
+        || blend_factor == GPU::BlendFactor::ConstantColor
+        || blend_factor == GPU::BlendFactor::OneMinusConstantColor
+        || blend_factor == GPU::BlendFactor::ConstantAlpha
+        || blend_factor == GPU::BlendFactor::OneMinusConstantAlpha;
 }
 
 // OpenGL 2.0 § 4.1.8, table 4.2
-ALWAYS_INLINE static Vector4<f32x4> get_blend_factor(GPU::BlendFactor blend_factor, Vector4<f32x4> const& source_color, Vector4<f32x4> const& destination_color)
+ALWAYS_INLINE static Vector4<f32x4> get_blend_factor(GPU::BlendFactor blend_factor, FloatVector4 blend_color, Vector4<f32x4> const& source_color, Vector4<f32x4> const& destination_color)
 {
     switch (blend_factor) {
-    case GPU::BlendFactor::DstAlpha:
-        return to_vec4(destination_color.w());
-    case GPU::BlendFactor::DstColor:
-        return destination_color;
+    case GPU::BlendFactor::Zero:
+        return to_vec4(expand4(0.f));
     case GPU::BlendFactor::One:
         return to_vec4(expand4(1.f));
-    case GPU::BlendFactor::OneMinusDstAlpha:
-        return to_vec4(1.f - destination_color.w());
-    case GPU::BlendFactor::OneMinusDstColor:
-        return to_vec4(expand4(1.f)) - destination_color;
-    case GPU::BlendFactor::OneMinusSrcAlpha:
-        return to_vec4(1.f - source_color.w());
+    case GPU::BlendFactor::SrcColor:
+        return source_color;
     case GPU::BlendFactor::OneMinusSrcColor:
         return to_vec4(expand4(1.f)) - source_color;
+    case GPU::BlendFactor::DstColor:
+        return destination_color;
+    case GPU::BlendFactor::OneMinusDstColor:
+        return to_vec4(expand4(1.f)) - destination_color;
     case GPU::BlendFactor::SrcAlpha:
         return to_vec4(source_color.w());
+    case GPU::BlendFactor::OneMinusSrcAlpha:
+        return to_vec4(1.f - source_color.w());
+    case GPU::BlendFactor::DstAlpha:
+        return to_vec4(destination_color.w());
+    case GPU::BlendFactor::OneMinusDstAlpha:
+        return to_vec4(1.f - destination_color.w());
+    case GPU::BlendFactor::ConstantColor:
+        return expand4(blend_color);
+    case GPU::BlendFactor::OneMinusConstantColor:
+        return expand4(FloatVector4 { 1.f, 1.f, 1.f, 1.f } - blend_color);
+    case GPU::BlendFactor::ConstantAlpha:
+        return to_vec4(expand4(blend_color.w()));
+    case GPU::BlendFactor::OneMinusConstantAlpha:
+        return to_vec4(expand4(1.f - blend_color.w()));
     case GPU::BlendFactor::SrcAlphaSaturate: {
         auto saturated = min(source_color.w(), 1.f - destination_color.w());
         return { saturated, saturated, saturated, expand4(1.f) };
     }
-    case GPU::BlendFactor::SrcColor:
-        return source_color;
-    case GPU::BlendFactor::Zero:
-        return to_vec4(expand4(0.f));
     default:
         VERIFY_NOT_REACHED();
     }
@@ -282,9 +295,9 @@ ALWAYS_INLINE void Device::rasterize(Gfx::IntRect& render_bounds, CB1 set_covera
     auto const destination_weights_are_constant = is_blend_factor_constant(m_options.blend_destination_factor);
     if (m_options.enable_blending) {
         if (source_weights_are_constant)
-            source_weights = get_blend_factor(m_options.blend_source_factor, {}, {});
+            source_weights = get_blend_factor(m_options.blend_source_factor, m_options.blend_color, {}, {});
         if (destination_weights_are_constant)
-            destination_weights = get_blend_factor(m_options.blend_destination_factor, {}, {});
+            destination_weights = get_blend_factor(m_options.blend_destination_factor, m_options.blend_color, {}, {});
     }
 
     // Rasterize all quads
@@ -480,9 +493,9 @@ ALWAYS_INLINE void Device::rasterize(Gfx::IntRect& render_bounds, CB1 set_covera
                 auto const destination_color = to_vec4(dst_u32);
 
                 if (!source_weights_are_constant)
-                    source_weights = get_blend_factor(m_options.blend_source_factor, source_color, destination_color);
+                    source_weights = get_blend_factor(m_options.blend_source_factor, m_options.blend_color, source_color, destination_color);
                 if (!destination_weights_are_constant)
-                    destination_weights = get_blend_factor(m_options.blend_destination_factor, source_color, destination_color);
+                    destination_weights = get_blend_factor(m_options.blend_destination_factor, m_options.blend_color, source_color, destination_color);
 
                 out_color = blend_colors(m_options.blend_equation_rgb, m_options.blend_equation_alpha, source_color, source_weights, destination_color, destination_weights);
             }

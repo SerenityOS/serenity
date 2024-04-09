@@ -48,6 +48,11 @@
             {"type": "GLubyte const*", "name": "bitmap"}
         ]
     },
+    "BlendColor": {
+        "arguments": [
+            {"type": "GLclampf", "name": ["red", "green", "blue", "alpha"]}
+        ]
+    },
     "BlendEquation": {
         "arguments": [
             {"type": "GLenum", "name": "mode"},

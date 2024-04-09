@@ -33,14 +33,18 @@ enum class BlendEquation {
 enum class BlendFactor {
     Zero,
     One,
-    SrcAlpha,
-    OneMinusSrcAlpha,
     SrcColor,
     OneMinusSrcColor,
-    DstAlpha,
-    OneMinusDstAlpha,
     DstColor,
     OneMinusDstColor,
+    SrcAlpha,
+    OneMinusSrcAlpha,
+    DstAlpha,
+    OneMinusDstAlpha,
+    ConstantColor,
+    OneMinusConstantColor,
+    ConstantAlpha,
+    OneMinusConstantAlpha,
     SrcAlphaSaturate,
 };
 

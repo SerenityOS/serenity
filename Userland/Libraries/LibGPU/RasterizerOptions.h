@@ -23,6 +23,7 @@ struct RasterizerOptions {
     AlphaTestFunction alpha_test_func { AlphaTestFunction::Always };
     float alpha_test_ref_value { 0 };
     bool enable_blending { false };
+    FloatVector4 blend_color { 0.f, 0.f, 0.f, 0.f };
     BlendEquation blend_equation_rgb { BlendEquation::Add };
     BlendEquation blend_equation_alpha { BlendEquation::Add };
     BlendFactor blend_source_factor { BlendFactor::One };
