@@ -167,6 +167,18 @@ void RsaHashedKeyAlgorithm::initialize(JS::Realm& realm)
     define_native_accessor(realm, "hash", hash_getter, {}, JS::Attribute::Enumerable | JS::Attribute::Configurable);
 }
 
+JS::ThrowCompletionOr<String> RsaHashedKeyAlgorithm::hash_name(JS::VM& vm) const
+{
+    auto value = m_hash.visit(
+        [](String const& name) -> JS::ThrowCompletionOr<String> { return name; },
+        [&](JS::Handle<JS::Object> const& obj) -> JS::ThrowCompletionOr<String> {
+            auto name_property = TRY(obj->get("name"));
+            return name_property.to_string(vm);
+        });
+
+    return value;
+}
+
 JS_DEFINE_NATIVE_FUNCTION(RsaHashedKeyAlgorithm::hash_getter)
 {
     auto* impl = TRY(impl_from<RsaHashedKeyAlgorithm>(vm, "RsaHashedKeyAlgorithm"sv));

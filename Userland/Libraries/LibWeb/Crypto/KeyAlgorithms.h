@@ -85,6 +85,7 @@ public:
 
     HashAlgorithmIdentifier const& hash() const { return m_hash; }
     void set_hash(HashAlgorithmIdentifier hash) { m_hash = move(hash); }
+    JS::ThrowCompletionOr<String> hash_name(JS::VM& vm) const;
 
 protected:
     RsaHashedKeyAlgorithm(JS::Realm&);

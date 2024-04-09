@@ -399,9 +399,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::ArrayBuffer>> RSAOAEP::encrypt(Algorith
 
     auto const& handle = key->handle();
     auto public_key = handle.get<::Crypto::PK::RSAPublicKey<>>();
-    auto hash = TRY(verify_cast<RsaHashedKeyAlgorithm>(*key->algorithm()).hash().visit([](String const& name) -> JS::ThrowCompletionOr<String> { return name; }, [&](JS::Handle<JS::Object> const& obj) -> JS::ThrowCompletionOr<String> {
-                auto name_property = TRY(obj->get("name"));
-                return name_property.to_string(realm.vm()); }));
+    auto hash = TRY(verify_cast<RsaHashedKeyAlgorithm>(*key->algorithm()).hash_name(vm));
 
     // 3. Perform the encryption operation defined in Section 7.1 of [RFC3447] with the key represented by key as the recipient's RSA public key,
     //    the contents of plaintext as the message to be encrypted, M and label as the label, L, and with the hash function specified by the hash attribute
@@ -877,9 +875,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Object>> RSAOAEP::export_key(Bindings::
         jwk.kty = "RSA"_string;
 
         // 4. Let hash be the name attribute of the hash attribute of the [[algorithm]] internal slot of key.
-        auto hash = TRY(verify_cast<RsaHashedKeyAlgorithm>(*key->algorithm()).hash().visit([](String const& name) -> JS::ThrowCompletionOr<String> { return name; }, [&](JS::Handle<JS::Object> const& obj) -> JS::ThrowCompletionOr<String> {
-                auto name_property = TRY(obj->get("name"));
-                return name_property.to_string(realm.vm()); }));
+        auto hash = TRY(verify_cast<RsaHashedKeyAlgorithm>(*key->algorithm()).hash_name(vm));
 
         // 4. If hash is "SHA-1":
         //      - Set the alg attribute of jwk to the string "RSA-OAEP".
