@@ -2484,9 +2484,6 @@ void CalculatedStyleValue::CalculationResult::multiply_by(CalculationResult cons
             m_value = Frequency::make_hertz(frequency.to_hertz() * other.m_value.get<Number>().value());
         },
         [&](Length const& length) {
-            //FIXME:context should not be empty
-            if(!context.has_value()) 
-                return;
             m_value = Length::make_px(CSSPixels::nearest_value_for(length.to_px(*context) * static_cast<double>(other.m_value.get<Number>().value())));
         },
         [&](Resolution const& resolution) {
