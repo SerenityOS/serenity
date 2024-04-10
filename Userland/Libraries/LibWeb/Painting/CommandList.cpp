@@ -183,9 +183,6 @@ void CommandList::execute(CommandExecutor& executor)
                 return executor.draw_signed_distance_field(command.rect, command.color, command.sdf,
                     command.smoothing);
             },
-            [&](PaintFrame const& command) {
-                return executor.paint_frame(command.rect, command.palette, command.style);
-            },
             [&](ApplyBackdropFilter const& command) {
                 return executor.apply_backdrop_filter(command.backdrop_region, command.backdrop_filter);
             },

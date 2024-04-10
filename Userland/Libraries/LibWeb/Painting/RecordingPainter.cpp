@@ -290,11 +290,6 @@ void RecordingPainter::pop_stacking_context()
     append(PopStackingContext {});
 }
 
-void RecordingPainter::paint_frame(Gfx::IntRect rect, Palette palette, Gfx::FrameStyle style)
-{
-    append(PaintFrame { state().translation.map(rect), palette, style });
-}
-
 void RecordingPainter::apply_backdrop_filter(Gfx::IntRect const& backdrop_region, BorderRadiiData const& border_radii_data, CSS::ResolvedBackdropFilter const& backdrop_filter)
 {
     append(ApplyBackdropFilter {
