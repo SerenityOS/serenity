@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "Concepts.h"
+#include "Find.h"
 #include <AK/BitCast.h>
 #include <AK/Concepts.h>
 #include <AK/Forward.h>
@@ -13,6 +15,11 @@
 #include <AK/StringHash.h>
 
 namespace AK {
+
+template<typename T>
+concept HasEqualityOperator = requires(T a, T b) {
+    { a == b } -> SameAs<bool>;
+};
 
 template<typename T>
 struct DefaultTraits {
@@ -44,6 +51,26 @@ struct Traits<T> : public DefaultTraits<T> {
             return int_hash(value);
         else
             return u64_hash(value);
+    }
+};
+
+template<typename T>
+requires  (HasEqualityOperator<T> && !Detail::IsPointerOfType<char, T>)
+struct Traits<T*> : public DefaultTraits<T*> {
+    static constexpr bool is_trivial() { return true; }
+    static unsigned hash(T* p) { return ptr_hash(bit_cast<FlatPtr>(p)); }
+    static constexpr bool equals(T* const& lhs, T* const& rhs) {
+        return *lhs == *rhs;
+    }
+};
+
+template<typename T>
+requires (HasEqualityOperator<T> && !Detail::IsPointerOfType<char, T>)
+struct Traits<T const*> : public DefaultTraits<T const*> {
+    static constexpr bool is_trivial() { return true; }
+    static unsigned hash(T const* p) { return ptr_hash(bit_cast<FlatPtr>(p)); }
+    static constexpr bool equals(T const* const& lhs, T const* const& rhs) {
+        return *lhs == *rhs;
     }
 };
 
