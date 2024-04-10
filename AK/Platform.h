@@ -189,7 +189,11 @@
 #ifdef NO_SANITIZE_ADDRESS
 #    undef NO_SANITIZE_ADDRESS
 #endif
-#define NO_SANITIZE_ADDRESS __attribute__((no_sanitize_address))
+#if defined(AK_COMPILER_CLANG)
+#    define NO_SANITIZE_ADDRESS __attribute__((no_sanitize("address")))
+#else
+#    define NO_SANITIZE_ADDRESS __attribute__((no_sanitize_address))
+#endif
 
 #ifdef NAKED
 #    undef NAKED
