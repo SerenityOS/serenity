@@ -5,6 +5,7 @@
  */
 
 #include <AK/Badge.h>
+#include <AK/IDAllocator.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/Weakable.h>
@@ -21,18 +22,63 @@
 namespace RequestServer {
 
 static HashMap<int, RefPtr<ConnectionFromClient>> s_connections;
+static IDAllocator s_client_ids;
 
 ConnectionFromClient::ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket> socket)
-    : IPC::ConnectionFromClient<RequestClientEndpoint, RequestServerEndpoint>(*this, move(socket), 1)
+    : IPC::ConnectionFromClient<RequestClientEndpoint, RequestServerEndpoint>(*this, move(socket), s_client_ids.allocate())
 {
-    s_connections.set(1, *this);
+    s_connections.set(client_id(), *this);
 }
 
 void ConnectionFromClient::die()
 {
-    s_connections.remove(client_id());
+    auto client_id = this->client_id();
+    s_connections.remove(client_id);
+    s_client_ids.deallocate(client_id);
+
     if (s_connections.is_empty())
         Core::EventLoop::current().quit(0);
+}
+
+Messages::RequestServer::ConnectNewClientResponse ConnectionFromClient::connect_new_client()
+{
+    int socket_fds[2] {};
+    if (auto err = Core::System::socketpair(AF_LOCAL, SOCK_STREAM, 0, socket_fds); err.is_error()) {
+        dbgln("Failed to create client socketpair: {}", err.error());
+        return { -1, -1 };
+    }
+
+    auto client_socket_or_error = Core::LocalSocket::adopt_fd(socket_fds[0]);
+    if (client_socket_or_error.is_error()) {
+        close(socket_fds[0]);
+        close(socket_fds[1]);
+        dbgln("Failed to adopt client socket: {}", client_socket_or_error.error());
+        return { -1, -1 };
+    }
+    auto client_socket = client_socket_or_error.release_value();
+    // Note: A ref is stored in the static s_connections map
+    auto client = adopt_ref(*new ConnectionFromClient(move(client_socket)));
+
+    int fd_passing_socket_fds[2] {};
+    if (auto err = Core::System::socketpair(AF_LOCAL, SOCK_STREAM, 0, fd_passing_socket_fds); err.is_error()) {
+        close(socket_fds[1]);
+        dbgln("Failed to create fd-passing socketpair: {}", err.error());
+        return { -1, -1 };
+    }
+
+    auto fd_passing_socket_or_error = Core::LocalSocket::adopt_fd(fd_passing_socket_fds[0]);
+    if (fd_passing_socket_or_error.is_error()) {
+        // socket_fds[0] is already owned by client
+        close(socket_fds[1]);
+        close(fd_passing_socket_fds[0]);
+        close(fd_passing_socket_fds[1]);
+        dbgln("Failed to adopt fd-passing socket: {}", fd_passing_socket_or_error.error());
+        return { -1, -1 };
+    }
+    auto fd_passing_socket = fd_passing_socket_or_error.release_value();
+    client->set_fd_passing_socket(move(fd_passing_socket));
+
+    return { IPC::File(socket_fds[1], IPC::File::CloseAfterSending), IPC::File(fd_passing_socket_fds[1], IPC::File::CloseAfterSending) };
 }
 
 Messages::RequestServer::IsSupportedProtocolResponse ConnectionFromClient::is_supported_protocol(ByteString const& protocol)

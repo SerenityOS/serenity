@@ -32,6 +32,7 @@ public:
 private:
     explicit ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket>);
 
+    virtual Messages::RequestServer::ConnectNewClientResponse connect_new_client() override;
     virtual Messages::RequestServer::IsSupportedProtocolResponse is_supported_protocol(ByteString const&) override;
     virtual void start_request(i32 request_id, ByteString const&, URL::URL const&, HashMap<ByteString, ByteString> const&, ByteBuffer const&, Core::ProxyData const&) override;
     virtual Messages::RequestServer::StopRequestResponse stop_request(i32) override;
