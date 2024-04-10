@@ -23,7 +23,8 @@ namespace Web::HTML {
 JS_DEFINE_ALLOCATOR(TraversableNavigable);
 
 TraversableNavigable::TraversableNavigable(JS::NonnullGCPtr<Page> page)
-    : m_page(page)
+    : m_session_history_traversal_queue(vm().heap().allocate_without_realm<SessionHistoryTraversalQueue>())
+    , m_page(page)
 {
 }
 
@@ -35,6 +36,7 @@ void TraversableNavigable::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_page);
     for (auto& entry : m_session_history_entries)
         visitor.visit(entry);
+    visitor.visit(m_session_history_traversal_queue);
 }
 
 static OrderedHashTable<TraversableNavigable*>& user_agent_top_level_traversable_set()
@@ -600,15 +602,15 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
             //   1. Let steps be the first item in traversable's session history traversal queue's algorithm set
             //    that is synchronous navigation steps with a target navigable not contained in navigablesThatMustWaitBeforeHandlingSyncNavigation.
             //   2. Remove steps from traversable's session history traversal queue's algorithm set.
-            for (auto steps = m_session_history_traversal_queue.first_synchronous_navigation_steps_with_target_navigable_not_contained_in(navigables_that_must_wait_before_handling_sync_navigation);
-                 steps.target_navigable != nullptr;
-                 steps = m_session_history_traversal_queue.first_synchronous_navigation_steps_with_target_navigable_not_contained_in(navigables_that_must_wait_before_handling_sync_navigation)) {
+            for (auto entry = m_session_history_traversal_queue->first_synchronous_navigation_steps_with_target_navigable_not_contained_in(navigables_that_must_wait_before_handling_sync_navigation);
+                 entry;
+                 entry = m_session_history_traversal_queue->first_synchronous_navigation_steps_with_target_navigable_not_contained_in(navigables_that_must_wait_before_handling_sync_navigation)) {
 
                 // 3. Set traversable's running nested apply history step to true.
                 m_running_nested_apply_history_step = true;
 
                 // 4. Run steps.
-                steps.steps();
+                entry->execute_steps();
 
                 // 5. Set traversable's running nested apply history step to false.
                 m_running_nested_apply_history_step = false;

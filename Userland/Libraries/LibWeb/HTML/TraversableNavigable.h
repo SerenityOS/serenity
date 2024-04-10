@@ -69,14 +69,14 @@ public:
     void close_top_level_traversable();
     void destroy_top_level_traversable();
 
-    void append_session_history_traversal_steps(JS::SafeFunction<void()> steps)
+    void append_session_history_traversal_steps(Function<void()> steps)
     {
-        m_session_history_traversal_queue.append(move(steps));
+        m_session_history_traversal_queue->append(move(steps));
     }
 
-    void append_session_history_synchronous_navigation_steps(JS::NonnullGCPtr<Navigable> target_navigable, JS::SafeFunction<void()> steps)
+    void append_session_history_synchronous_navigation_steps(JS::NonnullGCPtr<Navigable> target_navigable, Function<void()> steps)
     {
-        m_session_history_traversal_queue.append_sync(move(steps), target_navigable);
+        m_session_history_traversal_queue->append_sync(move(steps), target_navigable);
     }
 
     Page& page() { return m_page; }
@@ -116,7 +116,7 @@ private:
     // https://html.spec.whatwg.org/multipage/document-sequences.html#system-visibility-state
     VisibilityState m_system_visibility_state { VisibilityState::Visible };
 
-    SessionHistoryTraversalQueue m_session_history_traversal_queue;
+    JS::NonnullGCPtr<SessionHistoryTraversalQueue> m_session_history_traversal_queue;
 
     JS::NonnullGCPtr<Page> m_page;
 

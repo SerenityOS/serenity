@@ -8,63 +8,57 @@
 
 #include <AK/Vector.h>
 #include <LibCore/Timer.h>
+#include <LibJS/Forward.h>
+#include <LibJS/Heap/Cell.h>
+#include <LibJS/Heap/CellAllocator.h>
 #include <LibJS/Heap/GCPtr.h>
+#include <LibJS/Heap/HeapFunction.h>
 #include <LibJS/SafeFunction.h>
 #include <LibWeb/Forward.h>
 
 namespace Web::HTML {
 
-struct SessionHistoryTraversalQueueEntry {
-    JS::SafeFunction<void()> steps;
-    JS::GCPtr<HTML::Navigable> target_navigable;
+struct SessionHistoryTraversalQueueEntry : public JS::Cell {
+    JS_CELL(SessionHistoryTraversalQueueEntry, JS::Cell);
+    JS_DECLARE_ALLOCATOR(SessionHistoryTraversalQueueEntry);
+
+public:
+    static JS::NonnullGCPtr<SessionHistoryTraversalQueueEntry> create(JS::VM& vm, Function<void()> steps, JS::GCPtr<HTML::Navigable> target_navigable);
+
+    JS::GCPtr<HTML::Navigable> target_navigable() const { return m_target_navigable; }
+    void execute_steps() const { m_steps->function()(); }
+
+private:
+    SessionHistoryTraversalQueueEntry(JS::NonnullGCPtr<JS::HeapFunction<void()>> steps, JS::GCPtr<HTML::Navigable> target_navigable)
+        : m_steps(steps)
+        , m_target_navigable(target_navigable)
+    {
+    }
+
+    virtual void visit_edges(Cell::Visitor&) override;
+
+    JS::NonnullGCPtr<JS::HeapFunction<void()>> m_steps;
+    JS::GCPtr<HTML::Navigable> m_target_navigable;
 };
 
 // https://html.spec.whatwg.org/multipage/document-sequences.html#tn-session-history-traversal-queue
-class SessionHistoryTraversalQueue {
+class SessionHistoryTraversalQueue : public JS::Cell {
+    JS_CELL(SessionHistoryTraversalQueue, Cell);
+    JS_DECLARE_ALLOCATOR(SessionHistoryTraversalQueue);
+
 public:
-    SessionHistoryTraversalQueue()
-    {
-        m_timer = Core::Timer::create_single_shot(0, [this] {
-            if (m_is_task_running && m_queue.size() > 0) {
-                m_timer->start();
-                return;
-            }
-            while (m_queue.size() > 0) {
-                m_is_task_running = true;
-                auto entry = m_queue.take_first();
-                entry.steps();
-                m_is_task_running = false;
-            }
-        }).release_value_but_fixme_should_propagate_errors();
-    }
+    SessionHistoryTraversalQueue();
 
-    void append(JS::SafeFunction<void()> steps)
-    {
-        m_queue.append({ move(steps), nullptr });
-        if (!m_timer->is_active()) {
-            m_timer->start();
-        }
-    }
-
-    void append_sync(JS::SafeFunction<void()> steps, JS::GCPtr<Navigable> target_navigable)
-    {
-        m_queue.append({ move(steps), target_navigable });
-        if (!m_timer->is_active()) {
-            m_timer->start();
-        }
-    }
+    void append(Function<void()> steps);
+    void append_sync(Function<void()> steps, JS::GCPtr<Navigable> target_navigable);
 
     // https://html.spec.whatwg.org/multipage/browsing-the-web.html#sync-navigations-jump-queue
-    SessionHistoryTraversalQueueEntry first_synchronous_navigation_steps_with_target_navigable_not_contained_in(Vector<JS::GCPtr<Navigable>> const& list)
-    {
-        auto index = m_queue.find_first_index_if([&list](auto const& entry) -> bool {
-            return (entry.target_navigable != nullptr) && !list.contains_slow(entry.target_navigable);
-        });
-        return index.has_value() ? m_queue.take(*index) : SessionHistoryTraversalQueueEntry {};
-    }
+    JS::GCPtr<SessionHistoryTraversalQueueEntry> first_synchronous_navigation_steps_with_target_navigable_not_contained_in(Vector<JS::GCPtr<Navigable>> const& list);
 
 private:
-    Vector<SessionHistoryTraversalQueueEntry> m_queue;
+    virtual void visit_edges(Cell::Visitor&) override;
+
+    Vector<JS::NonnullGCPtr<SessionHistoryTraversalQueueEntry>> m_queue;
     RefPtr<Core::Timer> m_timer;
     bool m_is_task_running { false };
 };
