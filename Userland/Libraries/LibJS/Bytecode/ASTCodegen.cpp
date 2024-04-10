@@ -2510,8 +2510,13 @@ Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> TryStatement::gener
     if (m_finalizer)
         generator.end_boundary(Bytecode::Generator::BlockBoundaryType::ReturnToFinally);
     if (m_handler) {
-        if (!m_finalizer)
-            unwind_context.emplace(generator, OptionalNone());
+        if (!m_finalizer) {
+            auto const* parent_unwind_context = generator.current_unwind_context();
+            if (parent_unwind_context)
+                unwind_context.emplace(generator, parent_unwind_context->finalizer());
+            else
+                unwind_context.emplace(generator, OptionalNone());
+        }
         unwind_context->set_handler(handler_target.value());
     }
 

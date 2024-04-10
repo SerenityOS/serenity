@@ -276,6 +276,8 @@ public:
         return Operand(Operand::Type::Constant, m_constants.size() - 1);
     }
 
+    UnwindContext const* current_unwind_context() const { return m_current_unwind_context; }
+
 private:
     VM& m_vm;
 

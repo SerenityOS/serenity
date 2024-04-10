@@ -53,3 +53,53 @@ test("Nested try/catch/finally with exceptions", () => {
     expect(level3CatchHasBeenExecuted).toBeTrue();
     expect(level3FinallyHasBeenExecuted).toBeTrue();
 });
+
+test("Nested try/catch/finally with return in inner context", () => {
+    success = false;
+    (() => {
+        try {
+            try {
+                return;
+            } catch (e) {
+                expect().fail();
+            }
+        } finally {
+            success = true;
+        }
+        expect().fail();
+    })();
+    expect(success).toBeTrue();
+});
+
+test("Deeply nested try/catch/finally with return in inner context", () => {
+    success = 0;
+    (() => {
+        try {
+            try {
+                try {
+                    try {
+                        try {
+                            return;
+                        } catch (e) {
+                            expect().fail();
+                        } finally {
+                            success += 4;
+                        }
+                    } catch (e) {
+                        expect().fail();
+                    }
+                } catch (e) {
+                    expect().fail();
+                } finally {
+                    success += 2;
+                }
+            } catch (e) {
+                expect().fail();
+            }
+        } finally {
+            success += 1;
+        }
+        expect().fail();
+    })();
+    expect(success).toBe(7);
+});
