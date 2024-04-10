@@ -630,3 +630,12 @@ TEST_CASE(uses_inline_capacity_when_constructed_from_span)
     for (auto& el : v)
         EXPECT(is_inline_element(el, v));
 }
+
+TEST_CASE(find_test)
+{
+    int* y = nullptr;
+    Vector<int const*> vector;
+
+    auto it = AK::find(vector.begin(), vector.end(), y);
+    (void)it;
+}
