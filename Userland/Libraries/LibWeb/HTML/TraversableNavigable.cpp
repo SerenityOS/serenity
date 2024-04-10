@@ -587,9 +587,17 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
         });
     }
 
-    main_thread_event_loop().spin_processing_tasks_with_source_until(Task::Source::NavigationAndTraversal, [&] {
+    auto check_if_document_population_tasks_completed = JS::SafeFunction<bool()>([&] {
         return changing_navigable_continuations.size() + completed_change_jobs == total_change_jobs;
     });
+
+    if (synchronous_navigation == SynchronousNavigation::Yes) {
+        // NOTE: Synchronous navigation should never require document population, so it is safe to process only NavigationAndTraversal source.
+        main_thread_event_loop().spin_processing_tasks_with_source_until(Task::Source::NavigationAndTraversal, move(check_if_document_population_tasks_completed));
+    } else {
+        // NOTE: Process all task sources while waiting because reloading or back/forward navigation might require fetching to populate a document.
+        main_thread_event_loop().spin_until(move(check_if_document_population_tasks_completed));
+    }
 
     // 13. Let navigablesThatMustWaitBeforeHandlingSyncNavigation be an empty set.
     Vector<JS::GCPtr<Navigable>> navigables_that_must_wait_before_handling_sync_navigation;
