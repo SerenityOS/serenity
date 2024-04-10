@@ -89,7 +89,8 @@ WebIDL::ExceptionOr<void> History::go(WebIDL::Long delta = 0)
     VERIFY(m_associated_document->navigable());
 
     // 3. If delta is 0, then reload document's node navigable.
-    m_associated_document->navigable()->reload();
+    if (delta == 0)
+        m_associated_document->navigable()->reload();
 
     // 4. Traverse the history by a delta given document's node navigable's traversable navigable, delta, and with sourceDocument set to document.
     auto traversable = m_associated_document->navigable()->traversable_navigable();
