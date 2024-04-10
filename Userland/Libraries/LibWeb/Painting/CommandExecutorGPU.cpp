@@ -272,12 +272,6 @@ CommandResult CommandExecutorGPU::draw_signed_distance_field(Gfx::IntRect const&
     return CommandResult::Continue;
 }
 
-CommandResult CommandExecutorGPU::paint_frame(Gfx::IntRect const&, Palette const&, Gfx::FrameStyle)
-{
-    // FIXME
-    return CommandResult::Continue;
-}
-
 CommandResult CommandExecutorGPU::apply_backdrop_filter(Gfx::IntRect const&, Web::CSS::ResolvedBackdropFilter const&)
 {
     // FIXME

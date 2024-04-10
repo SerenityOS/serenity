@@ -129,8 +129,6 @@ public:
     void sample_under_corners(u32 id, CornerRadii corner_radii, Gfx::IntRect border_rect, CornerClip corner_clip);
     void blit_corner_clipping(u32 id, Gfx::IntRect border_rect);
 
-    void paint_frame(Gfx::IntRect rect, Palette palette, Gfx::FrameStyle style);
-
     void apply_backdrop_filter(Gfx::IntRect const& backdrop_region, BorderRadiiData const& border_radii_data, CSS::ResolvedBackdropFilter const& backdrop_filter);
 
     void paint_outer_box_shadow_params(PaintOuterBoxShadowParams params);

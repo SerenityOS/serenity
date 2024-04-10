@@ -378,12 +378,6 @@ CommandResult CommandExecutorCPU::draw_signed_distance_field(Gfx::IntRect const&
     return CommandResult::Continue;
 }
 
-CommandResult CommandExecutorCPU::paint_frame(Gfx::IntRect const& rect, Palette const& palette, Gfx::FrameStyle style)
-{
-    Gfx::StylePainter::paint_frame(painter(), rect, palette, style);
-    return CommandResult::Continue;
-}
-
 CommandResult CommandExecutorCPU::apply_backdrop_filter(Gfx::IntRect const& backdrop_region, Web::CSS::ResolvedBackdropFilter const& backdrop_filter)
 {
     auto& painter = this->painter();
