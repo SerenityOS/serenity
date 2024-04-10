@@ -587,11 +587,15 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
         });
     }
 
+    main_thread_event_loop().spin_processing_tasks_with_source_until(Task::Source::NavigationAndTraversal, [&] {
+        return changing_navigable_continuations.size() + completed_change_jobs == total_change_jobs;
+    });
+
     // 13. Let navigablesThatMustWaitBeforeHandlingSyncNavigation be an empty set.
     Vector<JS::GCPtr<Navigable>> navigables_that_must_wait_before_handling_sync_navigation;
 
     // 14. While completedChangeJobs does not equal totalChangeJobs:
-    while (completed_change_jobs != total_change_jobs) {
+    while (!changing_navigable_continuations.is_empty()) {
         // NOTE: Synchronous navigations that are intended to take place before this traversal jump the queue at this point,
         //       so they can be added to the correct place in traversable's session history entries before this traversal
         //       potentially unloads their document. More details can be found here (https://html.spec.whatwg.org/multipage/browsing-the-web.html#sync-navigation-steps-queue-jumping-examples)
@@ -615,17 +619,6 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
                 // 5. Set traversable's running nested apply history step to false.
                 m_running_nested_apply_history_step = false;
             }
-        }
-
-        // AD-HOC: Since currently populate_session_history_entry_document does not run in parallel
-        //         we call spin_until to interrupt execution of this function and let document population
-        //         to complete.
-        main_thread_event_loop().spin_processing_tasks_with_source_until(Task::Source::NavigationAndTraversal, [&] {
-            return !changing_navigable_continuations.is_empty() || completed_change_jobs == total_change_jobs;
-        });
-
-        if (changing_navigable_continuations.is_empty()) {
-            continue;
         }
 
         // 2. Let changingNavigableContinuation be the result of dequeuing from changingNavigableContinuations.
@@ -702,6 +695,10 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
             deactivate_a_document_for_cross_document_navigation(*displayed_document, user_involvement_for_navigate_events, *target_entry, move(after_potential_unload));
         }
     }
+
+    main_thread_event_loop().spin_processing_tasks_with_source_until(Task::Source::NavigationAndTraversal, [&] {
+        return completed_change_jobs == total_change_jobs;
+    });
 
     // 15. Let totalNonchangingJobs be the size of nonchangingNavigablesThatStillNeedUpdates.
     auto total_non_changing_jobs = non_changing_navigables_that_still_need_updates.size();
