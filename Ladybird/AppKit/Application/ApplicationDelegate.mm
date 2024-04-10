@@ -11,13 +11,14 @@
 #import <UI/LadybirdWebView.h>
 #import <UI/Tab.h>
 #import <UI/TabController.h>
+#import <UI/TaskManagerController.h>
 #import <Utilities/Conversions.h>
 
 #if !__has_feature(objc_arc)
 #    error "This project requires ARC"
 #endif
 
-@interface ApplicationDelegate ()
+@interface ApplicationDelegate () <TaskManagerDelegate>
 {
     Vector<URL::URL> m_initial_urls;
     URL::URL m_new_tab_page_url;
@@ -34,6 +35,8 @@
 }
 
 @property (nonatomic, strong) NSMutableArray<TabController*>* managed_tabs;
+
+@property (nonatomic, strong) TaskManagerController* task_manager_controller;
 
 - (NSMenuItem*)createApplicationMenu;
 - (NSMenuItem*)createFileMenu;
@@ -119,6 +122,12 @@
 - (void)removeTab:(TabController*)controller
 {
     [self.managed_tabs removeObject:controller];
+
+    if ([self.managed_tabs count] == 0u) {
+        if (self.task_manager_controller != nil) {
+            [self.task_manager_controller.window close];
+        }
+    }
 }
 
 - (WebView::CookieJar&)cookieJar
@@ -183,6 +192,17 @@
 {
     auto* current_window = [NSApp keyWindow];
     [current_window close];
+}
+
+- (void)openTaskManager:(id)sender
+{
+    if (self.task_manager_controller != nil) {
+        [self.task_manager_controller.window makeKeyAndOrderFront:sender];
+        return;
+    }
+
+    self.task_manager_controller = [[TaskManagerController alloc] init:self];
+    [self.task_manager_controller showWindow:nil];
 }
 
 - (void)openLocation:(id)sender
@@ -430,6 +450,9 @@
     [submenu addItem:[[NSMenuItem alloc] initWithTitle:@"Open Inspector"
                                                 action:@selector(openInspector:)
                                          keyEquivalent:@"I"]];
+    [submenu addItem:[[NSMenuItem alloc] initWithTitle:@"Open Task Manager"
+                                                action:@selector(openTaskManager:)
+                                         keyEquivalent:@"M"]];
 
     [menu setSubmenu:submenu];
     return menu;
@@ -584,6 +607,13 @@
     }
 
     return YES;
+}
+
+#pragma mark - TaskManagerDelegate
+
+- (void)onTaskManagerClosed
+{
+    self.task_manager_controller = nil;
 }
 
 @end

@@ -148,6 +148,8 @@ elseif (APPLE)
         AppKit/UI/Palette.mm
         AppKit/UI/Tab.mm
         AppKit/UI/TabController.mm
+        AppKit/UI/TaskManager.mm
+        AppKit/UI/TaskManagerController.mm
         AppKit/Utilities/Conversions.mm
     )
     target_include_directories(ladybird PRIVATE AppKit)
