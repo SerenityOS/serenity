@@ -27,6 +27,14 @@ DOMHighResTimeStamp coarsen_time(DOMHighResTimeStamp timestamp, bool cross_origi
     return timestamp;
 }
 
+// https://w3c.github.io/hr-time/#dfn-current-high-resolution-time
+DOMHighResTimeStamp current_high_resolution_time(JS::Object const& global)
+{
+    // The current high resolution time given a global object current global must return the result
+    // of relative high resolution time given unsafe shared current time and current global.
+    return HighResolutionTime::relative_high_resolution_time(HighResolutionTime::unsafe_shared_current_time(), global);
+}
+
 // https://w3c.github.io/hr-time/#dfn-relative-high-resolution-time
 DOMHighResTimeStamp relative_high_resolution_time(DOMHighResTimeStamp time, JS::Object const& global)
 {
