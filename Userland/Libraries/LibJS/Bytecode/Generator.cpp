@@ -532,7 +532,10 @@ void Generator::generate_scoped_jump(JumpType type)
             switch_to_basic_block(block);
             last_was_finally = true;
             break;
-        };
+        }
+        case LeaveFinally:
+            emit<Op::LeaveFinally>();
+            break;
         }
     }
     VERIFY_NOT_REACHED();

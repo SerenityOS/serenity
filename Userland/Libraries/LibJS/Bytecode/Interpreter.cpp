@@ -368,9 +368,6 @@ void Interpreter::run_bytecode()
                 auto& running_execution_context = vm().running_execution_context();
                 auto const* old_scheduled_jump = running_execution_context.previously_scheduled_jumps.take_last();
                 if (m_scheduled_jump) {
-                    // FIXME: If we `break` or `continue` in the finally, we need to clear
-                    //        this field
-                    //        Same goes for popping an old_scheduled_jump form the stack
                     m_current_block = exchange(m_scheduled_jump, nullptr);
                 } else {
                     m_current_block = &static_cast<Op::ContinuePendingUnwind const&>(instruction).resume_target().block();
@@ -534,6 +531,12 @@ void Interpreter::catch_exception(Operand dst)
 
 void Interpreter::restore_scheduled_jump()
 {
+    m_scheduled_jump = call_frame().previously_scheduled_jumps.take_last();
+}
+
+void Interpreter::leave_finally()
+{
+    reg(Register::exception()) = {};
     m_scheduled_jump = call_frame().previously_scheduled_jumps.take_last();
 }
 
@@ -1017,6 +1020,12 @@ ThrowCompletionOr<void> EnterObjectEnvironment::execute_impl(Bytecode::Interpret
 ThrowCompletionOr<void> Catch::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     interpreter.catch_exception(dst());
+    return {};
+}
+
+ThrowCompletionOr<void> LeaveFinally::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    interpreter.leave_finally();
     return {};
 }
 
@@ -2235,6 +2244,11 @@ ByteString Catch::to_byte_string_impl(Bytecode::Executable const& executable) co
 {
     return ByteString::formatted("Catch {}",
         format_operand("dst"sv, m_dst, executable));
+}
+
+ByteString LeaveFinally::to_byte_string_impl(Bytecode::Executable const&) const
+{
+    return ByteString::formatted("LeaveFinally");
 }
 
 ByteString RestoreScheduledJump::to_byte_string_impl(Bytecode::Executable const&) const
