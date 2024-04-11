@@ -28,6 +28,7 @@ shared_library("LibGL") {
   include_dirs = [ "//Userland/Libraries" ]
   public_configs = [ ":gl_headers" ]
   sources = [
+    "Blending.cpp",
     "Buffer.cpp",
     "Buffer/Buffer.cpp",
     "ClipPlane.cpp",
