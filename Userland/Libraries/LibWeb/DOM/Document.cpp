@@ -2148,7 +2148,7 @@ void Document::update_readiness(HTML::DocumentReadyState readiness_value)
     // 3. If document is associated with an HTML parser, then:
     if (m_parser) {
         // 1. Let now be the current high resolution time given document's relevant global object.
-        auto now = HighResolutionTime::unsafe_shared_current_time();
+        auto now = HighResolutionTime::current_high_resolution_time(relevant_global_object(*this));
 
         // 2. If readinessValue is "complete", and document's load timing info's DOM complete time is 0,
         //    then set document's load timing info's DOM complete time to now.

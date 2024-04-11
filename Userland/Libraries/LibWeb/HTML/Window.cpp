@@ -604,8 +604,7 @@ bool Window::has_transient_activation() const
     static constexpr HighResolutionTime::DOMHighResTimeStamp transient_activation_duration_ms = 5000;
 
     // When the current high resolution time given W
-    auto unsafe_shared_time = HighResolutionTime::unsafe_shared_current_time();
-    auto current_time = HighResolutionTime::relative_high_resolution_time(unsafe_shared_time, realm().global_object());
+    auto current_time = HighResolutionTime::current_high_resolution_time(*this);
 
     // is greater than or equal to the last activation timestamp in W
     if (current_time >= m_last_activation_timestamp) {

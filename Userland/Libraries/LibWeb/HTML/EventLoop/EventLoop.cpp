@@ -179,10 +179,7 @@ void EventLoop::process()
     // 1. Let oldestTask be null.
     JS::GCPtr<Task> oldest_task;
 
-    // 2. Let taskStartTime be the current high resolution time.
-    // FIXME: 'current high resolution time' in hr-time-3 takes a global object,
-    //        the HTML spec has not been updated to reflect this, let's use the shared timer.
-    //        - https://github.com/whatwg/html/issues/7776
+    // 2. Set taskStartTime to the unsafe shared current time.
     double task_start_time = HighResolutionTime::unsafe_shared_current_time();
 
     // 3. Let taskQueue be one of the event loop's task queues, chosen in an implementation-defined manner,
@@ -377,7 +374,7 @@ void EventLoop::process()
     // - hasARenderingOpportunity is false
     // FIXME: has_a_rendering_opportunity is always true
     if (m_type == Type::Window && !task_queue.has_runnable_tasks() && m_microtask_queue->is_empty() /*&& !has_a_rendering_opportunity*/) {
-        // 1. Set this event loop's last idle period start time to the current high resolution time.
+        // 1. Set this event loop's last idle period start time to the unsafe shared current time.
         m_last_idle_period_start_time = HighResolutionTime::unsafe_shared_current_time();
 
         // 2. Let computeDeadline be the following steps:
