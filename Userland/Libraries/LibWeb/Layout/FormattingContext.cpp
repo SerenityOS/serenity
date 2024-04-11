@@ -1163,7 +1163,7 @@ CSSPixelRect FormattingContext::content_box_rect_in_static_position_ancestor_coo
     auto rect = content_box_rect(box);
     if (&box == &ancestor_box)
         return rect;
-    for (auto const* current = box.parent(); current; current = current->parent()) {
+    for (auto const* current = box.static_position_containing_block(); current; current = current->static_position_containing_block()) {
         if (current == &ancestor_box)
             return rect;
         auto const& current_state = m_state.get(*current);
@@ -1210,9 +1210,8 @@ CSSPixelPoint FormattingContext::calculate_static_position(Box const& box) const
         }
     } else {
         auto const& box_state = m_state.get(box);
-        x = box_state.margin_left;
         // We're among block siblings, Y can be calculated easily.
-        y = box_state.margin_top + box_state.vertical_offset_of_parent_block_container;
+        y = box_state.vertical_offset_of_parent_block_container;
     }
     auto offset_to_static_parent = content_box_rect_in_static_position_ancestor_coordinate_space(box, *box.containing_block());
     return offset_to_static_parent.location().translated(x, y);
@@ -1257,15 +1256,27 @@ void FormattingContext::layout_absolutely_positioned_element(Box const& box, Ava
     compute_height_for_absolutely_positioned_element(box, available_space, BeforeOrAfterInsideLayout::After);
 
     CSSPixelPoint used_offset;
-    used_offset.set_x(box_state.inset_left + box_state.margin_box_left());
-    used_offset.set_y(box_state.inset_top + box_state.margin_box_top());
-    // NOTE: Absolutely positioned boxes are relative to the *padding edge* of the containing block.
-    //       Padding offset only need to be compensated when top/left/bottom/right is not auto because otherwise
-    //       the box is positioned at the static position of the containing block.
-    if (!box.computed_values().inset().top().is_auto() || !box.computed_values().inset().bottom().is_auto())
+
+    auto static_position = calculate_static_position(box);
+
+    if (box.computed_values().inset().top().is_auto() && box.computed_values().inset().bottom().is_auto()) {
+        used_offset.set_y(static_position.y());
+    } else {
+        used_offset.set_y(box_state.inset_top);
+        // NOTE: Absolutely positioned boxes are relative to the *padding edge* of the containing block.
         used_offset.translate_by(0, -containing_block_state.padding_top);
-    if (!box.computed_values().inset().left().is_auto() || !box.computed_values().inset().right().is_auto())
+    }
+
+    if (box.computed_values().inset().left().is_auto() && box.computed_values().inset().right().is_auto()) {
+        used_offset.set_x(static_position.x());
+    } else {
+        used_offset.set_x(box_state.inset_left);
+        // NOTE: Absolutely positioned boxes are relative to the *padding edge* of the containing block.
         used_offset.translate_by(-containing_block_state.padding_left, 0);
+    }
+
+    used_offset.translate_by(box_state.margin_box_left(), box_state.margin_box_top());
+
     box_state.set_content_offset(used_offset);
 
     if (independent_formatting_context)
