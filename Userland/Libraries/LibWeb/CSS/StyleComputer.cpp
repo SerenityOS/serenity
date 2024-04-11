@@ -68,6 +68,7 @@
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/HTML/HTMLBRElement.h>
 #include <LibWeb/HTML/HTMLHtmlElement.h>
+#include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/HTML/Scripting/TemporaryExecutionContext.h>
 #include <LibWeb/HighResolutionTime/TimeOrigin.h>
 #include <LibWeb/Layout/Node.h>
@@ -1507,6 +1508,19 @@ static void apply_animation_properties(DOM::Document& document, StyleProperties&
     }
 }
 
+static void apply_dimension_attribute(StyleProperties& style, DOM::Element const& element, FlyString const& attribute_name, CSS::PropertyID property_id)
+{
+    auto attribute = element.attribute(attribute_name);
+    if (!attribute.has_value())
+        return;
+
+    auto parsed_value = HTML::parse_dimension_value(*attribute);
+    if (!parsed_value)
+        return;
+
+    style.set_property(property_id, parsed_value.release_nonnull());
+}
+
 // https://www.w3.org/TR/css-cascade/#cascading
 void StyleComputer::compute_cascaded_values(StyleProperties& style, DOM::Element& element, Optional<CSS::Selector::PseudoElement::Type> pseudo_element, bool& did_match_any_pseudo_element_rules, ComputeStyleMode mode) const
 {
@@ -1542,6 +1556,11 @@ void StyleComputer::compute_cascaded_values(StyleProperties& style, DOM::Element
     // Author presentational hints (NOTE: The spec doesn't say exactly how to prioritize these.)
     if (!pseudo_element.has_value()) {
         element.apply_presentational_hints(style);
+
+        if (element.supports_dimension_attributes()) {
+            apply_dimension_attribute(style, element, HTML::AttributeNames::width, CSS::PropertyID::Width);
+            apply_dimension_attribute(style, element, HTML::AttributeNames::height, CSS::PropertyID::Height);
+        }
 
         // SVG presentation attributes are parsed as CSS values, so we need to handle potential custom properties here.
         if (element.is_svg_element()) {

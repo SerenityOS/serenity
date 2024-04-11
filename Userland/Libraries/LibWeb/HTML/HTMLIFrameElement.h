@@ -30,8 +30,6 @@ public:
     Optional<HighResolutionTime::DOMHighResTimeStamp> const& pending_resource_start_time() const { return m_pending_resource_start_time; }
     void set_pending_resource_start_time(Optional<HighResolutionTime::DOMHighResTimeStamp> time) { m_pending_resource_start_time = time; }
 
-    virtual void apply_presentational_hints(CSS::StyleProperties&) const override;
-
     virtual void visit_edges(Cell::Visitor&) override;
 
 private:
@@ -44,6 +42,9 @@ private:
     virtual void removed_from(Node*) override;
     virtual void attribute_changed(FlyString const& name, Optional<String> const& value) override;
     virtual i32 default_tab_index_value() const override;
+
+    // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-iframe-element:dimension-attributes
+    virtual bool supports_dimension_attributes() const override { return true; }
 
     // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#process-the-iframe-attributes
     void process_the_iframe_attributes(bool initial_insertion = false);
