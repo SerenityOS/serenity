@@ -34,6 +34,7 @@ public:
     u64 m_index { 0 };
     u64 m_length { 0 };
 
+    JS::Value unsafe_state() const;
     void set_state(JS::Value s) { m_state = s; }
 
 private:

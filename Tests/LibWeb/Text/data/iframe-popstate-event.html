@@ -1,0 +1,9 @@
+<script>
+    window.history.pushState({}, '', '');
+
+    window.addEventListener('popstate', (e) => {
+        parent.postMessage('popstate event from iframe', '*');
+    });
+
+    window.history.back();
+</script>

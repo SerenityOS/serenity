@@ -88,6 +88,7 @@
 #include <LibWeb/HTML/Numbers.h>
 #include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
+#include <LibWeb/HTML/PopStateEvent.h>
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
 #include <LibWeb/HTML/Scripting/ExceptionReporter.h>
 #include <LibWeb/HTML/Scripting/WindowEnvironmentSettingsObject.h>
@@ -3993,9 +3994,15 @@ void Document::update_for_history_step_application(JS::NonnullGCPtr<HTML::Sessio
                 navigation->update_the_navigation_api_entries_for_a_same_document_navigation(entry, Bindings::NavigationType::Traverse);
             }
 
-            // FIXME: 2. Fire an event named popstate at document's relevant global object, using PopStateEvent,
-            //           with the state attribute initialized to document's history object's state and hasUAVisualTransition initialized to true
-            //           if a visual transition, to display a cached rendered state of the latest entry, was done by the user agent.
+            // 2. Fire an event named popstate at document's relevant global object, using PopStateEvent,
+            //    with the state attribute initialized to document's history object's state and hasUAVisualTransition initialized to true
+            //    if a visual transition, to display a cached rendered state of the latest entry, was done by the user agent.
+            // FIXME: Initialise hasUAVisualTransition
+            HTML::PopStateEventInit popstate_event_init;
+            popstate_event_init.state = history()->unsafe_state();
+            auto& relevant_global_object = verify_cast<HTML::Window>(HTML::relevant_global_object(*this));
+            auto pop_state_event = HTML::PopStateEvent::create(realm(), "popstate"_fly_string, popstate_event_init);
+            relevant_global_object.dispatch_event(pop_state_event);
 
             // FIXME: 3. Restore persisted state given entry.
 

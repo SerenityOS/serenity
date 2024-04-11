@@ -380,6 +380,7 @@ set(SOURCES
     HTML/Origin.cpp
     HTML/PageTransitionEvent.cpp
     HTML/PolicyContainers.cpp
+    HTML/PopStateEvent.cpp
     HTML/Parser/Entities.cpp
     HTML/Parser/HTMLEncodingDetection.cpp
     HTML/Parser/HTMLParser.cpp
