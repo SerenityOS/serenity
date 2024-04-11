@@ -227,6 +227,8 @@ WebIDL::ExceptionOr<BrowsingContext::BrowsingContextAndDocument> BrowsingContext
 
     // is initial about:blank: true
     document->set_is_initial_about_blank(true);
+    // Spec issue: https://github.com/whatwg/html/issues/10261
+    document->set_ready_to_run_scripts();
 
     // about base URL: creatorBaseURL
     document->set_about_base_url(creator_base_url);
