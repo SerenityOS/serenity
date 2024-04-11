@@ -452,6 +452,17 @@ private:
     Operand m_dst;
 };
 
+class RestoreScheduledJump final : public Instruction {
+public:
+    explicit RestoreScheduledJump()
+        : Instruction(Type::RestoreScheduledJump, sizeof(*this))
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
+};
+
 class CreateVariable final : public Instruction {
 public:
     explicit CreateVariable(IdentifierTableIndex identifier, EnvironmentMode mode, bool is_immutable, bool is_global = false, bool is_strict = false)
