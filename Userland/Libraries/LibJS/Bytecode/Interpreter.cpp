@@ -410,11 +410,6 @@ void Interpreter::run_bytecode()
                 }
                 if (finalizer) {
                     m_current_block = finalizer;
-                    // If an exception was thrown inside the corresponding `catch` block, we need to rethrow it
-                    // from the `finally` block. But if the exception is from the `try` block, and has already been
-                    // handled by `catch`, we swallow it.
-                    if (!unwind_context.handler_called)
-                        reg(Register::exception()) = {};
                     goto start;
                 }
                 // An unwind context with no handler or finalizer? We have nowhere to jump, and continuing on will make us crash on the next `Call` to a non-native function if there's an exception! So let's crash here instead.

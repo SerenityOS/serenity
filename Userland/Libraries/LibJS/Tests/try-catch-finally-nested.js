@@ -103,3 +103,18 @@ test("Deeply nested try/catch/finally with return in inner context", () => {
     })();
     expect(success).toBe(7);
 });
+
+test("Nested try/finally/catch with exception in inner context ", () => {
+    success = 0;
+    try {
+        try {
+            throw Error("Error in inner try");
+        } finally {
+            success += 1;
+        }
+        expect.fail();
+    } catch (e) {
+        success += 1;
+    }
+    expect(success).toBe(2);
+});
