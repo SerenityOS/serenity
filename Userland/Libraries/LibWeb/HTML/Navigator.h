@@ -48,6 +48,8 @@ public:
     [[nodiscard]] JS::NonnullGCPtr<PluginArray> plugins();
     [[nodiscard]] JS::NonnullGCPtr<Clipboard::Clipboard> clipboard();
 
+    static WebIDL::Long max_touch_points();
+
     virtual ~Navigator() override;
 
 protected:
