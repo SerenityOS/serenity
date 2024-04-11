@@ -38,7 +38,7 @@ double IdleDeadline::time_remaining() const
 {
     auto const& event_loop = HTML::main_thread_event_loop();
     // 1. Let now be a DOMHighResTimeStamp representing current high resolution time in milliseconds.
-    auto now = HighResolutionTime::unsafe_shared_current_time();
+    auto now = HighResolutionTime::current_high_resolution_time(global_object());
     // 2. Let deadline be the result of calling IdleDeadline's get deadline time algorithm.
     auto deadline = event_loop.compute_deadline();
     // 3. Let timeRemaining be deadline - now.
