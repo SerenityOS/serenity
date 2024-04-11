@@ -355,6 +355,12 @@ void PageClient::page_did_create_new_document(Web::DOM::Document& document)
     initialize_js_console(document);
 }
 
+void PageClient::page_did_change_active_document_in_top_level_browsing_context(Web::DOM::Document& document)
+{
+    VERIFY(m_console_clients.contains(document));
+    m_top_level_document_console_client = *m_console_clients.get(document).value();
+}
+
 void PageClient::page_did_destroy_document(Web::DOM::Document& document)
 {
     destroy_js_console(document);
@@ -674,11 +680,6 @@ void PageClient::initialize_js_console(Web::DOM::Document& document)
     auto console_object = realm.intrinsics().console_object();
     auto console_client = make<WebContentConsoleClient>(console_object->console(), document.realm(), *this);
     console_object->console().set_client(*console_client);
-
-    VERIFY(document.browsing_context());
-    if (document.browsing_context()->is_top_level()) {
-        m_top_level_document_console_client = console_client->make_weak_ptr();
-    }
 
     m_console_clients.set(document, move(console_client));
 }

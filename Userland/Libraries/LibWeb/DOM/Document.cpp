@@ -378,6 +378,8 @@ void Document::initialize(JS::Realm& realm)
     m_selection = heap().allocate<Selection::Selection>(realm, realm, *this);
 
     m_list_of_available_images = heap().allocate<HTML::ListOfAvailableImages>(realm);
+
+    page().client().page_did_create_new_document(*this);
 }
 
 // https://html.spec.whatwg.org/multipage/document-lifecycle.html#populate-with-html/head/body
@@ -3407,6 +3409,10 @@ void Document::make_active()
 
     // 2. Set document's browsing context's WindowProxy's [[Window]] internal slot value to window.
     m_browsing_context->window_proxy()->set_window(window);
+
+    if (m_browsing_context->is_top_level()) {
+        page().client().page_did_change_active_document_in_top_level_browsing_context(*this);
+    }
 
     // 3. Set document's visibility state to document's node navigable's traversable navigable's system visibility state.
     if (navigable()) {

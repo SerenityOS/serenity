@@ -197,10 +197,6 @@ void Navigable::activate_history_entry(JS::GCPtr<SessionHistoryEntry> entry)
 
     // 5. Make active newDocument.
     new_document->make_active();
-
-    // Not in the spec:
-    VERIFY(active_browsing_context());
-    active_browsing_context()->page().client().page_did_create_new_document(*new_document);
 }
 
 // https://html.spec.whatwg.org/multipage/document-sequences.html#nav-document
