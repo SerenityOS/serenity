@@ -37,6 +37,10 @@ AudioTrack::AudioTrack(JS::Realm& realm, JS::NonnullGCPtr<HTMLMediaElement> medi
         auto playback_position = static_cast<double>(position.to_milliseconds()) / 1000.0;
         m_media_element->set_current_playback_position(playback_position);
     };
+
+    m_audio_plugin->on_decoder_error = [this](String error_message) {
+        m_media_element->set_decoder_error(error_message).release_value_but_fixme_should_propagate_errors();
+    };
 }
 
 AudioTrack::~AudioTrack()

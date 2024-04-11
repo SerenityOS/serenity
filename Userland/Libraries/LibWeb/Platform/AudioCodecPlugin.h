@@ -35,6 +35,7 @@ public:
     virtual Duration duration() = 0;
 
     Function<void(Duration)> on_playback_position_updated;
+    Function<void(String)> on_decoder_error;
 
 protected:
     AudioCodecPlugin();
