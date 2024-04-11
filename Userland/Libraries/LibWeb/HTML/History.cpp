@@ -77,6 +77,11 @@ WebIDL::ExceptionOr<JS::Value> History::state() const
     return m_state;
 }
 
+JS::Value History::unsafe_state() const
+{
+    return m_state;
+}
+
 // https://html.spec.whatwg.org/multipage/history.html#dom-history-go
 WebIDL::ExceptionOr<void> History::go(WebIDL::Long delta = 0)
 {
