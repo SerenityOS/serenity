@@ -11,6 +11,7 @@
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/DOM/ShadowRoot.h>
+#include <LibWeb/HighResolutionTime/TimeOrigin.h>
 
 namespace Web::DOM {
 
@@ -26,13 +27,16 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Event>> Event::construct_impl(JS::Realm& re
     return create(realm, event_name, event_init);
 }
 
+// https://dom.spec.whatwg.org/#inner-event-creation-steps
 Event::Event(JS::Realm& realm, FlyString const& type)
     : PlatformObject(realm)
     , m_type(type)
     , m_initialized(true)
+    , m_time_stamp(HighResolutionTime::current_high_resolution_time(HTML::relevant_global_object(*this)))
 {
 }
 
+// https://dom.spec.whatwg.org/#inner-event-creation-steps
 Event::Event(JS::Realm& realm, FlyString const& type, EventInit const& event_init)
     : PlatformObject(realm)
     , m_type(type)
@@ -40,6 +44,7 @@ Event::Event(JS::Realm& realm, FlyString const& type, EventInit const& event_ini
     , m_cancelable(event_init.cancelable)
     , m_composed(event_init.composed)
     , m_initialized(true)
+    , m_time_stamp(HighResolutionTime::current_high_resolution_time(HTML::relevant_global_object(*this)))
 {
 }
 

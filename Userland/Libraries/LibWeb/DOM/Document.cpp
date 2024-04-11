@@ -1661,9 +1661,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Event>> Document::create_event(StringView i
     // NOTE: These are done in the if-chain above
     // 5. Let event be the result of creating an event given constructor.
     // 6. Initialize event’s type attribute to the empty string.
+    // 7. Initialize event’s timeStamp attribute to the result of calling current high resolution time with this’s relevant global object.
     // NOTE: This is handled by each constructor.
-
-    // FIXME: 7. Initialize event’s timeStamp attribute to the result of calling current high resolution time with this’s relevant global object.
 
     // 8. Initialize event’s isTrusted attribute to false.
     event->set_is_trusted(false);
