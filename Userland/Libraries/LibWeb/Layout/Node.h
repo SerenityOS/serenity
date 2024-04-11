@@ -132,6 +132,9 @@ public:
     Box const* containing_block() const;
     Box* containing_block() { return const_cast<Box*>(const_cast<Node const*>(this)->containing_block()); }
 
+    [[nodiscard]] Box const* static_position_containing_block() const;
+    [[nodiscard]] Box* static_position_containing_block() { return const_cast<Box*>(const_cast<Node const*>(this)->static_position_containing_block()); }
+
     // Closest non-anonymous ancestor box, to be used when resolving percentage values.
     // Anonymous block boxes are ignored when resolving percentage values that would refer to it:
     // the closest non-anonymous ancestor box is used instead.
