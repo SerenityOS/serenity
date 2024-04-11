@@ -209,6 +209,7 @@ public:
         Continue,
         Unwind,
         ReturnToFinally,
+        LeaveFinally,
         LeaveLexicalEnvironment,
     };
     template<typename OpType>
@@ -232,6 +233,9 @@ public:
                 break;
             case ReturnToFinally:
                 return;
+            case LeaveFinally:
+                emit<Bytecode::Op::LeaveFinally>();
+                break;
             };
         }
     }

@@ -118,3 +118,24 @@ test("Nested try/finally/catch with exception in inner context ", () => {
     }
     expect(success).toBe(2);
 });
+
+test("Nested try/catch/finally with exception in inner most finally inside loop", () => {
+    success = 0;
+    try {
+        try {
+            do {
+                try {
+                    throw 1;
+                } finally {
+                    break;
+                }
+                expect.fail();
+            } while (expect.fail());
+        } catch (e) {
+            expect.fail();
+        }
+    } finally {
+        success = 1;
+    }
+    expect(success).toBe(1);
+});

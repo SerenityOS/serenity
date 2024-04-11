@@ -39,8 +39,8 @@
     O(Div)                             \
     O(Dump)                            \
     O(End)                             \
-    O(EnterUnwindContext)              \
     O(EnterObjectEnvironment)          \
+    O(EnterUnwindContext)              \
     O(Exp)                             \
     O(GetById)                         \
     O(GetByIdWithThis)                 \
@@ -48,10 +48,10 @@
     O(GetByValueWithThis)              \
     O(GetCalleeAndThisFromEnvironment) \
     O(GetIterator)                     \
-    O(GetObjectFromIteratorRecord)     \
     O(GetMethod)                       \
     O(GetNewTarget)                    \
     O(GetNextMethodFromIteratorRecord) \
+    O(GetObjectFromIteratorRecord)     \
     O(GetImportMeta)                   \
     O(GetObjectPropertyIterator)       \
     O(GetPrivateById)                  \
@@ -71,6 +71,7 @@
     O(JumpIf)                          \
     O(JumpNullish)                     \
     O(JumpUndefined)                   \
+    O(LeaveFinally)                    \
     O(LeaveLexicalEnvironment)         \
     O(LeaveUnwindContext)              \
     O(LeftShift)                       \

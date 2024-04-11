@@ -2443,7 +2443,11 @@ Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> TryStatement::gener
         auto& finalizer_block = generator.make_block();
         generator.switch_to_basic_block(finalizer_block);
         generator.emit<Bytecode::Op::LeaveUnwindContext>();
+
+        generator.start_boundary(Bytecode::Generator::BlockBoundaryType::LeaveFinally);
         (void)TRY(m_finalizer->generate_bytecode(generator));
+        generator.end_boundary(Bytecode::Generator::BlockBoundaryType::LeaveFinally);
+
         if (!generator.is_current_block_terminated()) {
             next_block = &generator.make_block();
             auto next_target = Bytecode::Label { *next_block };
