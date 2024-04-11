@@ -141,6 +141,9 @@ public:
     bool has_class(FlyString const&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
     Vector<FlyString> const& class_names() const { return m_classes; }
 
+    // https://html.spec.whatwg.org/multipage/embedded-content-other.html#dimension-attributes
+    virtual bool supports_dimension_attributes() const { return false; }
+
     virtual void apply_presentational_hints(CSS::StyleProperties&) const { }
 
     // https://dom.spec.whatwg.org/#concept-element-attributes-change-ext

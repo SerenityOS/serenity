@@ -169,20 +169,6 @@ void HTMLIFrameElement::removed_from(DOM::Node* node)
     destroy_the_child_navigable();
 }
 
-// https://html.spec.whatwg.org/multipage/rendering.html#attributes-for-embedded-content-and-images
-void HTMLIFrameElement::apply_presentational_hints(CSS::StyleProperties& style) const
-{
-    for_each_attribute([&](auto& name, auto& value) {
-        if (name == HTML::AttributeNames::width) {
-            if (auto parsed_value = parse_dimension_value(value))
-                style.set_property(CSS::PropertyID::Width, parsed_value.release_nonnull());
-        } else if (name == HTML::AttributeNames::height) {
-            if (auto parsed_value = parse_dimension_value(value))
-                style.set_property(CSS::PropertyID::Height, parsed_value.release_nonnull());
-        }
-    });
-}
-
 // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#iframe-load-event-steps
 void run_iframe_load_event_steps(HTML::HTMLIFrameElement& element)
 {

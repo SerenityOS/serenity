@@ -1525,24 +1525,6 @@ i32 HTMLInputElement::default_tab_index_value() const
     return 0;
 }
 
-// https://html.spec.whatwg.org/multipage/input.html#image-button-state-(type=image):the-input-element-11
-void HTMLInputElement::apply_presentational_hints(CSS::StyleProperties& style) const
-{
-    // The input element supports dimension attributes.
-    if (type_state() != TypeAttributeState::ImageButton)
-        return;
-
-    for_each_attribute([&](auto& name, auto& value) {
-        if (name == HTML::AttributeNames::width) {
-            if (auto parsed_value = parse_dimension_value(value))
-                style.set_property(CSS::PropertyID::Width, parsed_value.release_nonnull());
-        } else if (name == HTML::AttributeNames::height) {
-            if (auto parsed_value = parse_dimension_value(value))
-                style.set_property(CSS::PropertyID::Height, parsed_value.release_nonnull());
-        }
-    });
-}
-
 //  https://html.spec.whatwg.org/multipage/input.html#dom-input-maxlength
 WebIDL::Long HTMLInputElement::max_length() const
 {
