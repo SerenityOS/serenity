@@ -84,4 +84,11 @@ JS::NonnullGCPtr<Clipboard::Clipboard> Navigator::clipboard()
     return *m_clipboard;
 }
 
+// https://w3c.github.io/pointerevents/#dom-navigator-maxtouchpoints
+WebIDL::Long Navigator::max_touch_points()
+{
+    dbgln("FIXME: Unimplemented Navigator.maxTouchPoints");
+    return 0;
+}
+
 }

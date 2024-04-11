@@ -14,6 +14,9 @@ interface Navigator {
 
     // https://w3c.github.io/clipboard-apis/#navigator-interface
     [SecureContext, SameObject] readonly attribute Clipboard clipboard;
+
+    // https://w3c.github.io/pointerevents/#extensions-to-the-navigator-interface
+    readonly attribute long maxTouchPoints;
 };
 
 // NOTE: As NavigatorContentUtils, NavigatorCookies, NavigatorPlugins, and NavigatorAutomationInformation
