@@ -537,6 +537,11 @@ void Interpreter::catch_exception(Operand dst)
     vm().running_execution_context().lexical_environment = context.lexical_environment;
 }
 
+void Interpreter::restore_scheduled_jump()
+{
+    m_scheduled_jump = call_frame().previously_scheduled_jumps.take_last();
+}
+
 void Interpreter::enter_object_environment(Object& object)
 {
     auto& running_execution_context = vm().running_execution_context();
@@ -1017,6 +1022,12 @@ ThrowCompletionOr<void> EnterObjectEnvironment::execute_impl(Bytecode::Interpret
 ThrowCompletionOr<void> Catch::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     interpreter.catch_exception(dst());
+    return {};
+}
+
+ThrowCompletionOr<void> RestoreScheduledJump::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    interpreter.restore_scheduled_jump();
     return {};
 }
 
@@ -2229,6 +2240,11 @@ ByteString Catch::to_byte_string_impl(Bytecode::Executable const& executable) co
 {
     return ByteString::formatted("Catch {}",
         format_operand("dst"sv, m_dst, executable));
+}
+
+ByteString RestoreScheduledJump::to_byte_string_impl(Bytecode::Executable const&) const
+{
+    return ByteString::formatted("RestoreScheduledJump");
 }
 
 ByteString GetObjectFromIteratorRecord::to_byte_string_impl(Bytecode::Executable const& executable) const

@@ -68,6 +68,7 @@ public:
     void enter_unwind_context();
     void leave_unwind_context();
     void catch_exception(Operand dst);
+    void restore_scheduled_jump();
 
     void enter_object_environment(Object&);
 

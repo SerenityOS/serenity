@@ -98,6 +98,7 @@
     O(PutPrivateById)                  \
     O(ResolveThisBinding)              \
     O(ResolveSuperBase)                \
+    O(RestoreScheduledJump)            \
     O(Return)                          \
     O(RightShift)                      \
     O(ScheduleJump)                    \

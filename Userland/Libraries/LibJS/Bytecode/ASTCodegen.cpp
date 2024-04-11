@@ -2461,8 +2461,10 @@ Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> TryStatement::gener
         auto caught_value = Bytecode::Operand { generator.allocate_register() };
         generator.emit<Bytecode::Op::Catch>(caught_value);
 
-        if (!m_finalizer)
+        if (!m_finalizer) {
             generator.emit<Bytecode::Op::LeaveUnwindContext>();
+            generator.emit<Bytecode::Op::RestoreScheduledJump>();
+        }
 
         // OPTIMIZATION: We avoid creating a lexical environment if the catch clause has no parameter.
         bool did_create_variable_scope_for_catch_clause = false;
