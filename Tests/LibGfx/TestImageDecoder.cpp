@@ -606,6 +606,59 @@ TEST_CASE(test_jpeg2000_gray)
     EXPECT_EQ(icc_bytes->size(), 912u);
 }
 
+TEST_CASE(test_jpeg2000_tag_tree)
+{
+    {
+        // The example from the NOTE at the end of B.10.2 Tag trees:
+        auto tree = TRY_OR_FAIL(Gfx::JPEG2000::TagTree::create(6, 3));
+        auto bits = to_array<u8>({
+            0, 1, 1, 1, 1, // q3(0, 0)
+            0, 0, 1,       // q3(1, 0)
+            1, 0, 1,       // q3(2, 0)
+        });
+        size_t index = 0;
+        Function<ErrorOr<bool>()> read_bit = [&]() -> bool {
+            return bits[index++];
+        };
+        EXPECT_EQ(1u, MUST(tree.read_value(0, 0, read_bit)));
+        EXPECT_EQ(index, 5u);
+        EXPECT_EQ(3u, MUST(tree.read_value(1, 0, read_bit)));
+        EXPECT_EQ(index, 8u);
+        EXPECT_EQ(2u, MUST(tree.read_value(2, 0, read_bit)));
+        EXPECT_EQ(index, 11u);
+    }
+
+    {
+        // The inclusion tag tree bits from Table B.5 – Example packet header bit stream.
+        auto tree = TRY_OR_FAIL(Gfx::JPEG2000::TagTree::create(3, 2));
+        auto bits = to_array<u8>({
+            1, 1, 1, // Code-block 0, 0 included for the first time (partial inclusion tag tree)
+            1,       // Code-block 1, 0 included for the first time (partial inclusion tag tree)
+            0,       // Code-block 2, 0 not yet included (partial tag tree)
+            0,       // Code-block 0, 1 not yet included
+            0,       // Code-block 1, 2 not yet included
+            // Code-block 2, 1 not yet included (no data needed, already conveyed by partial tag tree for code-block 2, 0)
+        });
+        size_t index = 0;
+        Function<ErrorOr<bool>()> read_bit = [&]() -> bool {
+            return bits[index++];
+        };
+        u32 next_layer = 1;
+        EXPECT_EQ(0u, MUST(tree.read_value(0, 0, read_bit, next_layer)));
+        EXPECT_EQ(index, 3u);
+        EXPECT_EQ(0u, MUST(tree.read_value(1, 0, read_bit, next_layer)));
+        EXPECT_EQ(index, 4u);
+        EXPECT_EQ(1u, MUST(tree.read_value(2, 0, read_bit, next_layer)));
+        EXPECT_EQ(index, 5u);
+        EXPECT_EQ(1u, MUST(tree.read_value(0, 1, read_bit, next_layer)));
+        EXPECT_EQ(index, 6u);
+        EXPECT_EQ(1u, MUST(tree.read_value(1, 1, read_bit, next_layer)));
+        EXPECT_EQ(index, 7u);
+        EXPECT_EQ(1u, MUST(tree.read_value(2, 1, read_bit, next_layer)));
+        EXPECT_EQ(index, 7u); // Didn't change!
+    }
+}
+
 TEST_CASE(test_pam_rgb)
 {
     auto file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("pnm/2x1.pam"sv)));
