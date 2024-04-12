@@ -31,6 +31,8 @@ public:
 
     virtual ~DocumentState();
 
+    JS::NonnullGCPtr<DocumentState> clone() const;
+
     enum class Client {
         Tag,
     };
