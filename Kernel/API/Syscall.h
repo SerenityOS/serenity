@@ -50,6 +50,7 @@ enum class NeedsBigProcessLock {
     S(adjtime, NeedsBigProcessLock::No)                    \
     S(alarm, NeedsBigProcessLock::No)                      \
     S(allocate_tls, NeedsBigProcessLock::No)               \
+    S(archctl, NeedsBigProcessLock::No)                    \
     S(anon_create, NeedsBigProcessLock::No)                \
     S(annotate_mapping, NeedsBigProcessLock::No)           \
     S(bind, NeedsBigProcessLock::No)                       \
