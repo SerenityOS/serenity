@@ -114,6 +114,7 @@ set(LADYBIRD_HEADERS
 if (ENABLE_QT)
     qt_add_executable(ladybird ${SOURCES})
     target_sources(ladybird PRIVATE
+        Qt/Application.cpp
         Qt/AutoComplete.cpp
         Qt/BrowserWindow.cpp
         Qt/EventLoopImplementationQt.cpp

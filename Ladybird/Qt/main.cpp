@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "Application.h"
 #include "BrowserWindow.h"
 #include "EventLoopImplementationQt.h"
 #include "Settings.h"
@@ -20,8 +21,6 @@
 #include <LibWebView/Database.h>
 #include <LibWebView/ProcessManager.h>
 #include <LibWebView/URL.h>
-#include <QApplication>
-#include <QFileOpenEvent>
 
 #if defined(AK_OS_MACOS)
 #    include <Ladybird/MachPortServer.h>
@@ -59,42 +58,11 @@ static ErrorOr<void> handle_attached_debugger()
     return {};
 }
 
-class LadybirdApplication : public QApplication {
-public:
-    LadybirdApplication(int& argc, char** argv)
-        : QApplication(argc, argv)
-    {
-    }
-
-    Function<void(URL::URL)> on_open_file;
-
-    bool event(QEvent* event) override
-    {
-        switch (event->type()) {
-        case QEvent::FileOpen: {
-            if (!on_open_file)
-                break;
-
-            auto const& open_event = *static_cast<QFileOpenEvent const*>(event);
-            auto file = ak_string_from_qstring(open_event.file());
-
-            if (auto file_url = WebView::sanitize_url(file); file_url.has_value())
-                on_open_file(file_url.release_value());
-        }
-
-        default:
-            break;
-        }
-
-        return QApplication::event(event);
-    }
-};
-
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     AK::set_rich_debug_enabled(true);
 
-    LadybirdApplication app(arguments.argc, arguments.argv);
+    Ladybird::Application app(arguments.argc, arguments.argv);
 
     Core::EventLoopManager::install(*new Ladybird::EventLoopManagerQt);
     Core::EventLoop event_loop;
