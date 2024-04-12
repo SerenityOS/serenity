@@ -386,6 +386,8 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
     set(KERNEL_SOURCES
         ${KERNEL_SOURCES}
 
+        Arch/x86_64/archctl.cpp
+
         Arch/x86_64/CMOS.cpp
         Arch/x86_64/DebugOutput.cpp
         Arch/x86_64/Delay.cpp
@@ -485,6 +487,7 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
 
         Arch/aarch64/Firmware/ACPI/StaticParsing.cpp
 
+        Arch/aarch64/archctl.cpp
         Arch/aarch64/boot.S
         Arch/aarch64/BootPPMParser.cpp
         Arch/aarch64/CPUID.cpp
@@ -528,6 +531,7 @@ elseif("${SERENITY_ARCH}" STREQUAL "riscv64")
 
         Arch/riscv64/Firmware/ACPI/StaticParsing.cpp
 
+        Arch/riscv64/archctl.cpp
         Arch/riscv64/boot.S
         Arch/riscv64/CPU.cpp
         Arch/riscv64/CurrentTime.cpp

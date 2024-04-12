@@ -52,6 +52,7 @@ set(LIBC_SOURCES
     string.cpp
     strings.cpp
     stubs.cpp
+    sys/archctl.cpp
     sys/auxv.cpp
     sys/file.cpp
     sys/mman.cpp

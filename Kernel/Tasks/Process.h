@@ -482,6 +482,7 @@ public:
     ErrorOr<FlatPtr> sys$get_root_session_id(pid_t force_sid);
     ErrorOr<FlatPtr> sys$remount(Userspace<Syscall::SC_remount_params const*> user_params);
     ErrorOr<FlatPtr> sys$bindmount(Userspace<Syscall::SC_bindmount_params const*> user_params);
+    ErrorOr<FlatPtr> sys$archctl(int option, FlatPtr arg1);
 
     enum SockOrPeerName {
         SockName,
