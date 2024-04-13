@@ -706,7 +706,7 @@ ErrorOr<RefPtr<Job>> Shell::run_command(const AST::Command& command)
 
     // Resolve redirections.
     Vector<NonnullRefPtr<AST::Rewiring>> rewirings;
-    auto resolve_redirection = [&](auto& redirection) -> ErrorOr<void> {
+    auto resolve_redirection = [&](NonnullRefPtr<AST::Redirection> const& redirection) -> ErrorOr<void> {
         auto rewiring = TRY(redirection->apply());
 
         if (rewiring->fd_action != AST::Rewiring::Close::ImmediatelyCloseNew)
