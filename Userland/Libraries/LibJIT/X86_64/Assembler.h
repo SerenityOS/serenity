@@ -815,8 +815,6 @@ struct X86_64Assembler {
 
     void push_callee_saved_registers()
     {
-        // FIXME: Don't push RBX twice :^)
-        push(Operand::Register(Reg::RBX));
         push(Operand::Register(Reg::RBX));
         push(Operand::Register(Reg::R12));
         push(Operand::Register(Reg::R13));
@@ -831,8 +829,6 @@ struct X86_64Assembler {
         pop(Operand::Register(Reg::R13));
         pop(Operand::Register(Reg::R12));
 
-        // FIXME: Don't pop RBX twice :^)
-        pop(Operand::Register(Reg::RBX));
         pop(Operand::Register(Reg::RBX));
     }
 
