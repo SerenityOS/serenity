@@ -1390,7 +1390,7 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
     }
 
     auto& processor = Processor::current();
-    Processor::set_thread_specific_data(to_thread->thread_specific_data());
+    Processor::set_fs_base(to_thread->arch_specific_data().fs_base);
 
     if (from_regs.cr3 != to_regs.cr3)
         write_cr3(to_regs.cr3);
@@ -1717,11 +1717,10 @@ UNMAP_AFTER_INIT void ProcessorBase<T>::initialize_context_switching(Thread& ini
     VERIFY_NOT_REACHED();
 }
 
-template<typename T>
-void ProcessorBase<T>::set_thread_specific_data(VirtualAddress thread_specific_data)
+void Processor::set_fs_base(FlatPtr fs_base)
 {
     MSR fs_base_msr(MSR_FS_BASE);
-    fs_base_msr.set(thread_specific_data.get());
+    fs_base_msr.set(fs_base);
 }
 
 template<typename T>

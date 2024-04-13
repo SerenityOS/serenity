@@ -153,6 +153,8 @@ public:
 
     static void smp_unicast(u32 cpu, Function<void()>, bool async);
     static void smp_broadcast_flush_tlb(Memory::PageDirectory const*, VirtualAddress, size_t);
+
+    static void set_fs_base(FlatPtr);
 };
 
 template<typename T>

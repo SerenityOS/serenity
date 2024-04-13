@@ -33,9 +33,6 @@ struct LoadResult {
     FlatPtr load_base { 0 };
     FlatPtr entry_eip { 0 };
     size_t size { 0 };
-    LockWeakPtr<Memory::Region> tls_region;
-    size_t tls_size { 0 };
-    size_t tls_alignment { 0 };
     LockWeakPtr<Memory::Region> stack_region;
 };
 
@@ -258,18 +255,13 @@ static ErrorOr<FlatPtr> get_load_offset(Elf_Ehdr const& main_program_header, Ope
     return random_load_offset_in_range(selected_range.start, selected_range.end - selected_range.start);
 }
 
-enum class ShouldAllocateTls {
-    No,
-    Yes,
-};
-
 enum class ShouldAllowSyscalls {
     No,
     Yes,
 };
 
 static ErrorOr<LoadResult> load_elf_object(Memory::AddressSpace& new_space, OpenFileDescription& object_description,
-    FlatPtr load_offset, ShouldAllocateTls should_allocate_tls, ShouldAllowSyscalls should_allow_syscalls, Optional<size_t> minimum_stack_size = {})
+    FlatPtr load_offset, ShouldAllowSyscalls should_allow_syscalls, Optional<size_t> minimum_stack_size = {})
 {
     auto& inode = *(object_description.inode());
     auto vmobject = TRY(Memory::SharedInodeVMObject::try_create_with_inode(inode));
@@ -288,9 +280,6 @@ static ErrorOr<LoadResult> load_elf_object(Memory::AddressSpace& new_space, Open
     if (!elf_image.is_valid())
         return ENOEXEC;
 
-    Memory::Region* master_tls_region { nullptr };
-    size_t master_tls_size = 0;
-    size_t master_tls_alignment = 0;
     FlatPtr load_base_address = 0;
     size_t stack_size = Thread::default_userspace_stack_size;
 
@@ -301,24 +290,6 @@ static ErrorOr<LoadResult> load_elf_object(Memory::AddressSpace& new_space, Open
     VERIFY(!Processor::in_critical());
 
     Memory::MemoryManager::enter_address_space(new_space);
-
-    auto load_tls_section = [&](auto& program_header) -> ErrorOr<void> {
-        VERIFY(should_allocate_tls == ShouldAllocateTls::Yes);
-        VERIFY(program_header.size_in_memory());
-
-        if (!elf_image.is_within_image(program_header.raw_data(), program_header.size_in_image())) {
-            dbgln("Shenanigans! ELF PT_TLS header sneaks outside of executable.");
-            return ENOEXEC;
-        }
-
-        auto region_name = TRY(KString::formatted("{} (master-tls)", elf_name));
-        master_tls_region = TRY(new_space.allocate_region(Memory::RandomizeVirtualAddress::Yes, {}, program_header.size_in_memory(), PAGE_SIZE, region_name->view(), PROT_READ | PROT_WRITE, AllocationStrategy::Reserve));
-        master_tls_size = program_header.size_in_memory();
-        master_tls_alignment = program_header.alignment();
-
-        TRY(copy_to_user(master_tls_region->vaddr().as_ptr(), program_header.raw_data(), program_header.size_in_image()));
-        return {};
-    };
 
     auto load_writable_section = [&](auto& program_header) -> ErrorOr<void> {
         // Writable section: create a copy in memory.
@@ -385,9 +356,6 @@ static ErrorOr<LoadResult> load_elf_object(Memory::AddressSpace& new_space, Open
     };
 
     auto load_elf_program_header = [&](auto& program_header) -> ErrorOr<void> {
-        if (program_header.type() == PT_TLS)
-            return load_tls_section(program_header);
-
         if (program_header.type() == PT_LOAD)
             return load_section(program_header);
 
@@ -416,9 +384,6 @@ static ErrorOr<LoadResult> load_elf_object(Memory::AddressSpace& new_space, Open
         load_base_address,
         elf_image.entry().offset(load_offset).get(),
         executable_size,
-        TRY(AK::try_make_weak_ptr_if_nonnull(master_tls_region)),
-        master_tls_size,
-        master_tls_alignment,
         TRY(stack_region->try_make_weak_ptr())
     };
 }
@@ -429,24 +394,10 @@ Process::load(Memory::AddressSpace& new_space, NonnullRefPtr<OpenFileDescription
 {
     auto load_offset = TRY(get_load_offset(main_program_header, main_program_description, interpreter_description));
 
-    if (interpreter_description.is_null()) {
-        auto load_result = TRY(load_elf_object(new_space, main_program_description, load_offset, ShouldAllocateTls::Yes, ShouldAllowSyscalls::No, minimum_stack_size));
-        m_master_tls.with([&load_result](auto& master_tls) {
-            master_tls.region = load_result.tls_region;
-            master_tls.size = load_result.tls_size;
-            master_tls.alignment = load_result.tls_alignment;
-        });
-        return load_result;
-    }
+    if (interpreter_description.is_null())
+        return TRY(load_elf_object(new_space, main_program_description, load_offset, ShouldAllowSyscalls::No, minimum_stack_size));
 
-    auto interpreter_load_result = TRY(load_elf_object(new_space, *interpreter_description, load_offset, ShouldAllocateTls::No, ShouldAllowSyscalls::Yes, minimum_stack_size));
-
-    // TLS allocation will be done in userspace by the loader
-    VERIFY(!interpreter_load_result.tls_region);
-    VERIFY(!interpreter_load_result.tls_alignment);
-    VERIFY(!interpreter_load_result.tls_size);
-
-    return interpreter_load_result;
+    return TRY(load_elf_object(new_space, *interpreter_description, load_offset, ShouldAllowSyscalls::Yes, minimum_stack_size));
 }
 
 void Process::clear_signal_handlers_for_exec()
@@ -492,13 +443,6 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
 
     auto allocated_space = TRY(Memory::AddressSpace::try_create(*this, nullptr));
     OwnPtr<Memory::AddressSpace> old_space;
-    auto old_master_tls = m_master_tls.with([](auto& master_tls) {
-        auto old = master_tls;
-        master_tls.region = nullptr;
-        master_tls.size = 0;
-        master_tls.alignment = 0;
-        return old;
-    });
     auto& new_space = m_space.with([&](auto& space) -> Memory::AddressSpace& {
         old_space = move(space);
         space = move(allocated_space);
@@ -508,9 +452,6 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
         // If we failed at any point from now on we have to revert back to the old address space
         m_space.with([&](auto& space) {
             space = old_space.release_nonnull();
-        });
-        m_master_tls.with([&](auto& master_tls) {
-            master_tls = old_master_tls;
         });
         Memory::MemoryManager::enter_process_address_space(*this);
     });
@@ -703,11 +644,6 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
         protected_data.pid = new_main_thread->tid().value();
     });
 
-    auto tsr_result = new_main_thread->make_thread_specific_region({});
-    if (tsr_result.is_error()) {
-        // FIXME: We cannot fail this late. Refactor this so the allocation happens before we commit to the new executable.
-        VERIFY_NOT_REACHED();
-    }
     new_main_thread->reset_fpu_state();
 
     auto& regs = new_main_thread->m_regs;

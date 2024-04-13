@@ -471,7 +471,6 @@ public:
     ErrorOr<FlatPtr> sys$recvfd(int sockfd, int options);
     ErrorOr<FlatPtr> sys$sysconf(int name);
     ErrorOr<FlatPtr> sys$disown(ProcessID);
-    ErrorOr<FlatPtr> sys$allocate_tls(Userspace<char const*> initial_data, size_t);
     ErrorOr<FlatPtr> sys$prctl(int option, FlatPtr arg1, FlatPtr arg2, FlatPtr arg3);
     ErrorOr<FlatPtr> sys$anon_create(size_t, int options);
     ErrorOr<FlatPtr> sys$statvfs(Userspace<Syscall::SC_statvfs_params const*> user_params);
@@ -954,13 +953,6 @@ public:
 private:
     SpinlockProtected<RefPtr<ProcessList>, LockRank::None> m_jail_process_list;
     SpinlockProtected<RefPtr<Jail>, LockRank::Process> m_attached_jail {};
-
-    struct MasterThreadLocalStorage {
-        LockWeakPtr<Memory::Region> region;
-        size_t size { 0 };
-        size_t alignment { 0 };
-    };
-    SpinlockProtected<MasterThreadLocalStorage, LockRank::None> m_master_tls;
 
     Mutex m_big_lock { "Process"sv, Mutex::MutexBehavior::BigLock };
     Mutex m_ptrace_lock { "ptrace"sv };

@@ -84,16 +84,6 @@ int posix_madvise(void* address, size_t len, int advice)
     return madvise(address, len, advice);
 }
 
-void* allocate_tls(char const* initial_data, size_t size)
-{
-    ptrdiff_t rc = syscall(SC_allocate_tls, initial_data, size);
-    if (rc < 0 && rc > -EMAXERRNO) {
-        errno = -rc;
-        return MAP_FAILED;
-    }
-    return (void*)rc;
-}
-
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/mlock.html
 int mlock(void const*, size_t)
 {

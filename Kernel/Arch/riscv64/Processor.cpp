@@ -499,8 +499,6 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
 
     to_thread->set_cpu(Processor::current().id());
 
-    Processor::set_thread_specific_data(to_thread->thread_specific_data());
-
     auto in_critical = to_thread->saved_critical();
     VERIFY(in_critical > 0);
     Processor::restore_critical(in_critical);
@@ -544,12 +542,6 @@ template<typename T>
 StringView ProcessorBase<T>::platform_string()
 {
     return "riscv64"sv;
-}
-
-template<typename T>
-void ProcessorBase<T>::set_thread_specific_data(VirtualAddress)
-{
-    // FIXME: Add support for thread-local storage on RISC-V
 }
 
 template<typename T>

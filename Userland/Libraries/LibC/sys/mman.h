@@ -20,7 +20,6 @@ int mprotect(void*, size_t, int prot);
 int set_mmap_name(void*, size_t, char const*);
 int madvise(void*, size_t, int advice);
 int posix_madvise(void*, size_t, int advice);
-void* allocate_tls(char const* initial_data, size_t);
 int mlock(void const*, size_t);
 int munlock(void const*, size_t);
 int msync(void*, size_t, int flags);

@@ -43,6 +43,7 @@ void dump_registers(RegisterState const& regs)
     dbgln("Saved Program Status: (NZCV({:#b}) DAIF({:#b}) M({:#b})) / {:#x}", ((regs.spsr_el1 >> 28) & 0b1111), ((regs.spsr_el1 >> 6) & 0b1111), regs.spsr_el1 & 0b1111, regs.spsr_el1);
     dbgln("Exception Link Register: {:#x}", regs.elr_el1);
     dbgln("Stack Pointer (EL0): {:#x}", regs.sp_el0);
+    dbgln("Software Thread ID Register (EL0): {:#x}", regs.tpidr_el0);
 
     dbgln(" x0={:p}  x1={:p}  x2={:p}  x3={:p}  x4={:p}", regs.x[0], regs.x[1], regs.x[2], regs.x[3], regs.x[4]);
     dbgln(" x5={:p}  x6={:p}  x7={:p}  x8={:p}  x9={:p}", regs.x[5], regs.x[6], regs.x[7], regs.x[8], regs.x[9]);

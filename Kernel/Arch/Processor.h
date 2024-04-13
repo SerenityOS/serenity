@@ -165,8 +165,6 @@ public:
 
     static void deferred_call_queue(Function<void()> callback);
 
-    static void set_thread_specific_data(VirtualAddress thread_specific_data);
-
     [[noreturn]] void initialize_context_switching(Thread& initial_thread);
     NEVER_INLINE void switch_context(Thread*& from_thread, Thread*& to_thread);
     [[noreturn]] static void assume_context(Thread& thread, InterruptsState new_interrupts_state);

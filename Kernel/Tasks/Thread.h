@@ -790,7 +790,6 @@ public:
     State state() const { return m_state; }
     StringView state_string() const;
 
-    VirtualAddress thread_specific_data() const { return m_thread_specific_data; }
     ArchSpecificThreadData& arch_specific_data() { return m_arch_specific_data; }
     ArchSpecificThreadData const& arch_specific_data() const { return m_arch_specific_data; }
 
@@ -891,8 +890,6 @@ public:
     [[nodiscard]] bool is_in_alternative_signal_stack() const;
 
     FPUState& fpu_state() { return m_fpu_state; }
-
-    ErrorOr<void> make_thread_specific_region(Badge<Process>);
 
     unsigned syscall_count() const { return m_syscall_count; }
     void did_syscall() { ++m_syscall_count; }
@@ -1186,8 +1183,6 @@ private:
     FlatPtr m_kernel_stack_base { 0 };
     FlatPtr m_kernel_stack_top { 0 };
     NonnullOwnPtr<Memory::Region> m_kernel_stack_region;
-    VirtualAddress m_thread_specific_data;
-    Optional<Memory::VirtualRange> m_thread_specific_range;
     Array<Optional<u32>, NSIG> m_signal_action_masks;
     Array<ProcessID, NSIG> m_signal_senders;
     Blocker* m_blocker { nullptr };
