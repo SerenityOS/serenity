@@ -17,6 +17,8 @@
 #include <LibWeb/HTML/HTMLScriptElement.h>
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
 #include <LibWeb/HTML/Scripting/Fetching.h>
+#include <LibWeb/HTML/Scripting/ImportMapParseResult.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/Infra/CharacterTypes.h>
 #include <LibWeb/Infra/Strings.h>
 #include <LibWeb/MimeSniff/MimeType.h>
@@ -127,9 +129,11 @@ void HTMLScriptElement::execute_script()
 
         // 2. Run the module script given by el's result.
         (void)verify_cast<JavaScriptModuleScript>(*m_result.get<JS::NonnullGCPtr<Script>>()).run();
-    } else if (m_script_type == ScriptType::ImportMap) {
-        // FIXME: 1. Register an import map given el's relevant global object and el's result.
-        dbgln("FIXME: HTMLScriptElement import map support");
+    }
+    // -> "importmap"
+    else if (m_script_type == ScriptType::ImportMap) {
+        // 1. Register an import map given el's relevant global object and el's result.
+        m_result.get<JS::NonnullGCPtr<ImportMapParseResult>>()->register_import_map(verify_cast<Window>(relevant_global_object(*this)));
     }
 
     // 7. Decrement the ignore-destructive-writes counter of document, if it was incremented in the earlier step.
@@ -433,13 +437,26 @@ void HTMLScriptElement::prepare_script()
         }
         // -> "importmap"
         else if (m_script_type == ScriptType::ImportMap) {
-            // FIXME: 1. If el's relevant global object's import maps allowed is false, then queue an element task on the DOM manipulation task source given el to fire an event named error at el, and return.
+            // FIXME: need to check if relevant global object is a Window - is this correct?
+            auto& global = relevant_global_object(*this);
 
-            // FIXME: 2. Set el's relevant global object's import maps allowed to false.
+            // 1. If el's relevant global object's import maps allowed is false, then queue an element task on the DOM manipulation task source given el to fire an event named error at el, and return.
+            if (is<Window>(global) && !verify_cast<Window>(global).import_maps_allowed()) {
+                queue_an_element_task(HTML::Task::Source::DOMManipulation, [this] {
+                    dispatch_event(DOM::Event::create(realm(), HTML::EventNames::error));
+                });
+                return;
+            }
 
-            // FIXME: 3. Let result be the result of creating an import map parse result given source text and base URL.
+            // 2. Set el's relevant global object's import maps allowed to false.
+            if (is<Window>(global))
+                verify_cast<Window>(global).set_import_maps_allowed(false);
 
-            // FIXME: 4. Mark as ready el given result.
+            // 3. Let result be the result of creating an import map parse result given source text and base URL.
+            auto result = ImportMapParseResult::create(realm(), source_text.to_byte_string(), base_url);
+
+            // 4. Mark as ready el given result.
+            mark_as_ready(Result(move(result)));
         }
     }
 

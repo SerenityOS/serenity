@@ -399,6 +399,8 @@ set(SOURCES
     HTML/Scripting/EnvironmentSettingsSnapshot.cpp
     HTML/Scripting/ExceptionReporter.cpp
     HTML/Scripting/Fetching.cpp
+    HTML/Scripting/ImportMap.cpp
+    HTML/Scripting/ImportMapParseResult.cpp
     HTML/Scripting/ModuleMap.cpp
     HTML/Scripting/ModuleScript.cpp
     HTML/Scripting/Script.cpp
