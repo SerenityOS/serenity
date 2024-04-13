@@ -142,6 +142,9 @@ JS::NonnullGCPtr<JS::Promise> fetch(JS::VM& vm, RequestInfo const& input, Reques
         // 3. Abort controller with requestObject’s signal’s abort reason.
         controller->abort(relevant_realm, request_object->signal()->reason());
 
+        // AD-HOC: An execution context is required for Promise functions.
+        HTML::TemporaryExecutionContext execution_context { Bindings::host_defined_environment_settings_object(relevant_realm) };
+
         // 4. Abort the fetch() call with p, request, responseObject, and requestObject’s signal’s abort reason.
         abort_fetch(relevant_realm, *promise_capability, request, response_object, request_object->signal()->reason());
     });
