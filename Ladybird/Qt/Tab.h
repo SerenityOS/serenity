@@ -54,6 +54,8 @@ public:
 
     QIcon const& favicon() const { return m_favicon; }
 
+    void update_navigation_buttons_state();
+
 public slots:
     void focus_location_editor();
     void location_edit_return_pressed();
@@ -63,6 +65,7 @@ signals:
     void title_changed(int id, QString const&);
     void favicon_changed(int id, QIcon const&);
     void audio_play_state_changed(int id, Web::HTML::AudioPlayState);
+    void navigation_buttons_state_changed(int id);
 
 private:
     virtual void resizeEvent(QResizeEvent*) override;
@@ -70,7 +73,6 @@ private:
 
     void recreate_toolbar_icons();
     void update_hover_label();
-    void update_navigation_button_states();
 
     void open_link(URL::URL const&);
     void open_link_in_new_tab(URL::URL const&);
@@ -85,7 +87,6 @@ private:
     LocationEdit* m_location_edit { nullptr };
     WebContentView* m_view { nullptr };
     BrowserWindow* m_window { nullptr };
-    WebView::History m_history;
     QString m_title;
     QLabel* m_hover_label { nullptr };
     QIcon m_favicon;
@@ -117,11 +118,12 @@ private:
 
     int tab_index();
 
-    bool m_is_history_navigation { false };
-
     Ladybird::InspectorWidget* m_inspector_widget { nullptr };
 
     QPointer<QDialog> m_dialog;
+
+    bool m_can_navigate_back { false };
+    bool m_can_navigate_forward { false };
 };
 
 }

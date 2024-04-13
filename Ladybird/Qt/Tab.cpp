@@ -115,12 +115,9 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
         m_hover_label->hide();
     };
 
-    view().on_load_start = [this](const URL::URL& url, bool is_redirect) {
-        // If we are loading due to a redirect, we replace the current history entry
-        // with the loaded URL
-        if (is_redirect) {
-            m_history.replace_current(url, m_title.toUtf8().data());
-        }
+    view().on_load_start = [this](const URL::URL& url, bool) {
+        if (m_inspector_widget)
+            m_inspector_widget->reset();
 
         auto url_serialized = qstring_from_ak_string(url.serialize());
 
@@ -132,17 +129,6 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
 
         m_location_edit->setText(url_serialized);
         m_location_edit->setCursorPosition(0);
-
-        // Don't add to history if back or forward is pressed
-        if (!m_is_history_navigation) {
-            m_history.push(url, m_title.toUtf8().data());
-        }
-        m_is_history_navigation = false;
-
-        update_navigation_button_states();
-
-        if (m_inspector_widget)
-            m_inspector_widget->reset();
     };
 
     view().on_load_finish = [this](auto&) {
@@ -150,25 +136,14 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
             m_inspector_widget->inspect();
     };
 
-    view().on_history_api_push_or_replace = [this](auto const& url, auto history_behavior) {
-        switch (history_behavior) {
-        case Web::HTML::HistoryHandlingBehavior::Push:
-            m_history.push(url, m_title.toUtf8().data());
-            break;
-        case Web::HTML::HistoryHandlingBehavior::Replace:
-            m_history.replace_current(url, m_title.toUtf8().data());
-            break;
-        }
-
+    view().on_url_change = [this](auto const& url) {
         m_location_edit->setText(qstring_from_ak_string(url.serialize()));
-        update_navigation_button_states();
     };
 
     QObject::connect(m_location_edit, &QLineEdit::returnPressed, this, &Tab::location_edit_return_pressed);
 
     view().on_title_change = [this](auto const& title) {
         m_title = qstring_from_ak_string(title);
-        m_history.update_title(title);
 
         emit title_changed(tab_index(), m_title);
     };
@@ -423,6 +398,12 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
 
     view().on_audio_play_state_changed = [this](auto play_state) {
         emit audio_play_state_changed(tab_index(), play_state);
+    };
+
+    view().on_navigation_buttons_state_changed = [this](auto back_enabled, auto forward_enabled) {
+        m_can_navigate_back = back_enabled;
+        m_can_navigate_forward = forward_enabled;
+        emit navigation_buttons_state_changed(tab_index());
     };
 
     auto* search_selected_text_action = new QAction("&Search for <query>", this);
@@ -766,22 +747,12 @@ void Tab::load_html(StringView html)
 
 void Tab::back()
 {
-    if (!m_history.can_go_back())
-        return;
-
-    m_is_history_navigation = true;
-    m_history.go_back();
-    view().load(m_history.current().url.to_byte_string());
+    view().traverse_the_history_by_delta(-1);
 }
 
 void Tab::forward()
 {
-    if (!m_history.can_go_forward())
-        return;
-
-    m_is_history_navigation = true;
-    m_history.go_forward();
-    view().load(m_history.current().url.to_byte_string());
+    view().traverse_the_history_by_delta(1);
 }
 
 void Tab::reload()
@@ -825,10 +796,7 @@ int Tab::tab_index()
 
 void Tab::debug_request(ByteString const& request, ByteString const& argument)
 {
-    if (request == "dump-history")
-        m_history.dump();
-    else
-        m_view->debug_request(request, argument);
+    m_view->debug_request(request, argument);
 }
 
 void Tab::resizeEvent(QResizeEvent* event)
@@ -845,11 +813,10 @@ void Tab::update_hover_label()
     m_hover_label->raise();
 }
 
-void Tab::update_navigation_button_states()
+void Tab::update_navigation_buttons_state()
 {
-    m_window->go_back_action().setEnabled(m_history.can_go_back());
-    m_window->go_forward_action().setEnabled(m_history.can_go_forward());
-    m_window->reload_action().setEnabled(!m_history.is_empty());
+    m_window->go_back_action().setEnabled(m_can_navigate_back);
+    m_window->go_forward_action().setEnabled(m_can_navigate_forward);
 }
 
 bool Tab::event(QEvent* event)

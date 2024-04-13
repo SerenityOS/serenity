@@ -86,6 +86,7 @@ public slots:
     void tab_title_changed(int index, QString const&);
     void tab_favicon_changed(int index, QIcon const& icon);
     void tab_audio_play_state_changed(int index, Web::HTML::AudioPlayState);
+    void tab_navigation_buttons_state_changed(int index);
     Tab& new_tab_from_url(URL::URL const&, Web::HTML::ActivateTab);
     Tab& new_tab_from_content(StringView html, Web::HTML::ActivateTab);
     Tab& new_child_tab(Web::HTML::ActivateTab, Tab& parent, Web::HTML::WebViewHints, Optional<u64> page_index);
