@@ -267,14 +267,6 @@ BrowserWindow::BrowserWindow(Vector<URL::URL> const& initial_urls, WebView::Cook
         debug_request("dump-all-resolved-styles");
     });
 
-    auto* dump_history_action = new QAction("Dump &History", this);
-    dump_history_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_H));
-    dump_history_action->setIcon(load_icon_from_uri("resource://icons/16x16/history.png"sv));
-    debug_menu->addAction(dump_history_action);
-    QObject::connect(dump_history_action, &QAction::triggered, this, [this] {
-        debug_request("dump-history");
-    });
-
     auto* dump_cookies_action = new QAction("Dump C&ookies", this);
     dump_cookies_action->setIcon(load_icon_from_uri("resource://icons/browser/cookie.png"sv));
     debug_menu->addAction(dump_cookies_action);
@@ -441,7 +433,7 @@ BrowserWindow::BrowserWindow(Vector<URL::URL> const& initial_urls, WebView::Cook
     m_reload_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Refresh));
     m_go_back_action->setEnabled(false);
     m_go_forward_action->setEnabled(false);
-    m_reload_action->setEnabled(false);
+    m_reload_action->setEnabled(true);
 
     for (int i = 0; i <= 7; ++i) {
         new QShortcut(QKeySequence(Qt::CTRL | static_cast<Qt::Key>(Qt::Key_1 + i)), this, [this, i] {
@@ -470,8 +462,10 @@ BrowserWindow::BrowserWindow(Vector<URL::URL> const& initial_urls, WebView::Cook
 void BrowserWindow::set_current_tab(Tab* tab)
 {
     m_current_tab = tab;
-    if (tab)
+    if (tab) {
         update_displayed_zoom_level();
+        tab->update_navigation_buttons_state();
+    }
 }
 
 void BrowserWindow::debug_request(ByteString const& request, ByteString const& argument)
@@ -541,6 +535,7 @@ void BrowserWindow::initialize_tab(Tab* tab)
     QObject::connect(tab, &Tab::title_changed, this, &BrowserWindow::tab_title_changed);
     QObject::connect(tab, &Tab::favicon_changed, this, &BrowserWindow::tab_favicon_changed);
     QObject::connect(tab, &Tab::audio_play_state_changed, this, &BrowserWindow::tab_audio_play_state_changed);
+    QObject::connect(tab, &Tab::navigation_buttons_state_changed, this, &BrowserWindow::tab_navigation_buttons_state_changed);
 
     QObject::connect(&tab->view(), &WebContentView::urls_dropped, this, [this](auto& urls) {
         VERIFY(urls.size());
@@ -705,6 +700,12 @@ void BrowserWindow::tab_audio_play_state_changed(int index, Web::HTML::AudioPlay
         m_tabs_container->tabBar()->setTabButton(index, position, button);
         break;
     }
+}
+
+void BrowserWindow::tab_navigation_buttons_state_changed(int index)
+{
+    auto* tab = verify_cast<Tab>(m_tabs_container->widget(index));
+    tab->update_navigation_buttons_state();
 }
 
 QIcon BrowserWindow::icon_for_page_mute_state(Tab& tab) const
