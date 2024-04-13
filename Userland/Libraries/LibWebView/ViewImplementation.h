@@ -110,6 +110,8 @@ public:
     void did_change_audio_play_state(Badge<WebContentClient>, Web::HTML::AudioPlayState);
     Web::HTML::AudioPlayState audio_play_state() const { return m_audio_play_state; }
 
+    void did_update_navigation_buttons_state(Badge<WebContentClient>, bool back_enabled, bool forward_enabled) const;
+
     enum class ScreenshotType {
         Visible,
         Full,
@@ -189,6 +191,7 @@ public:
     Function<void(Gfx::Color)> on_theme_color_change;
     Function<void(String const&, String const&, String const&)> on_insert_clipboard_entry;
     Function<void(Web::HTML::AudioPlayState)> on_audio_play_state_changed;
+    Function<void(bool, bool)> on_navigation_buttons_state_changed;
     Function<void()> on_inspector_loaded;
     Function<void(i32, Optional<Web::CSS::Selector::PseudoElement::Type> const&)> on_inspector_selected_dom_node;
     Function<void(i32, String const&)> on_inspector_set_dom_node_text;

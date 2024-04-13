@@ -782,6 +782,12 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
     // 20. Set traversable's current session history step to targetStep.
     m_current_session_history_step = target_step;
 
+    // Not in the spec:
+    auto back_enabled = m_current_session_history_step > 0;
+    VERIFY(m_session_history_entries.size() > 0);
+    auto forward_enabled = m_current_session_history_step < static_cast<int>(m_session_history_entries.size()) - 1;
+    page().client().page_did_update_navigation_buttons_state(back_enabled, forward_enabled);
+
     // 21. Return "applied".
     return HistoryStepResult::Applied;
 }
