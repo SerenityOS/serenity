@@ -57,6 +57,7 @@ private:
     virtual void update_screen_rects(u64 page_id, Vector<Web::DevicePixelRect> const&, u32) override;
     virtual void load_url(u64 page_id, URL::URL const&) override;
     virtual void load_html(u64 page_id, ByteString const&) override;
+    virtual void reload(u64 page_id) override;
     virtual void set_viewport_rect(u64 page_id, Web::DevicePixelRect const&) override;
     virtual void key_event(u64 page_id, Web::KeyEvent const&) override;
     virtual void mouse_event(u64 page_id, Web::MouseEvent const&) override;

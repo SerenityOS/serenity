@@ -156,6 +156,12 @@ void ConnectionFromClient::load_html(u64 page_id, ByteString const& html)
         page->page().load_html(html);
 }
 
+void ConnectionFromClient::reload(u64 page_id)
+{
+    if (auto page = this->page(page_id); page.has_value())
+        page->page().reload();
+}
+
 void ConnectionFromClient::set_viewport_rect(u64 page_id, Web::DevicePixelRect const& rect)
 {
     if (auto page = this->page(page_id); page.has_value())
