@@ -265,7 +265,7 @@ public:
     virtual void page_did_change_active_document_in_top_level_browsing_context(Web::DOM::Document&) { }
     virtual void page_did_destroy_document(Web::DOM::Document&) { }
     virtual void page_did_finish_loading(URL::URL const&) { }
-    virtual void page_did_update_url(URL::URL const&, Web::HTML::HistoryHandlingBehavior) { }
+    virtual void page_did_history_api_push_or_replace(URL::URL const&, Web::HTML::HistoryHandlingBehavior) { }
     virtual void page_did_request_cursor_change(Gfx::StandardCursor) { }
     virtual void page_did_request_context_menu(CSSPixelPoint) { }
     virtual void page_did_request_link_context_menu(CSSPixelPoint, URL::URL const&, [[maybe_unused]] ByteString const& target, [[maybe_unused]] unsigned modifiers) { }

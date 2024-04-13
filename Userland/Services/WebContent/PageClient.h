@@ -120,7 +120,7 @@ private:
     virtual void page_did_change_active_document_in_top_level_browsing_context(Web::DOM::Document&) override;
     virtual void page_did_destroy_document(Web::DOM::Document&) override;
     virtual void page_did_finish_loading(URL::URL const&) override;
-    virtual void page_did_update_url(URL::URL const&, Web::HTML::HistoryHandlingBehavior) override;
+    virtual void page_did_history_api_push_or_replace(URL::URL const&, Web::HTML::HistoryHandlingBehavior) override;
     virtual void page_did_request_alert(String const&) override;
     virtual void page_did_request_confirm(String const&) override;
     virtual void page_did_request_prompt(String const&, String const&) override;

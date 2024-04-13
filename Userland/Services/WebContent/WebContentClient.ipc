@@ -23,7 +23,7 @@ endpoint WebContentClient
 
     did_start_loading(u64 page_id, URL::URL url, bool is_redirect) =|
     did_finish_loading(u64 page_id, URL::URL url) =|
-    did_update_url(u64 page_id, URL::URL url, Web::HTML::HistoryHandlingBehavior history_behavior) =|
+    did_history_api_push_or_replace(u64 page_id, URL::URL url, Web::HTML::HistoryHandlingBehavior history_behavior) =|
     did_request_navigate_back(u64 page_id) =|
     did_request_navigate_forward(u64 page_id) =|
     did_request_refresh(u64 page_id) =|
