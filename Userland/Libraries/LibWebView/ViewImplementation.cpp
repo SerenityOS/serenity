@@ -355,6 +355,12 @@ void ViewImplementation::did_change_audio_play_state(Badge<WebContentClient>, We
         on_audio_play_state_changed(m_audio_play_state);
 }
 
+void ViewImplementation::did_update_navigation_buttons_state(Badge<WebContentClient>, bool back_enabled, bool forward_enabled) const
+{
+    if (on_navigation_buttons_state_changed)
+        on_navigation_buttons_state_changed(back_enabled, forward_enabled);
+}
+
 void ViewImplementation::handle_resize()
 {
     resize_backing_stores_if_needed(WindowResizeInProgress::Yes);
