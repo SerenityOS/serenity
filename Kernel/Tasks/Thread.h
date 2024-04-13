@@ -20,6 +20,7 @@
 #include <Kernel/API/POSIX/sched.h>
 #include <Kernel/API/POSIX/select.h>
 #include <Kernel/API/POSIX/signal_numbers.h>
+#include <Kernel/Arch/ArchSpecificThreadData.h>
 #include <Kernel/Arch/RegisterState.h>
 #include <Kernel/Arch/ThreadRegisters.h>
 #include <Kernel/Debug.h>
@@ -790,6 +791,8 @@ public:
     StringView state_string() const;
 
     VirtualAddress thread_specific_data() const { return m_thread_specific_data; }
+    ArchSpecificThreadData& arch_specific_data() { return m_arch_specific_data; }
+    ArchSpecificThreadData const& arch_specific_data() const { return m_arch_specific_data; }
 
     ALWAYS_INLINE void yield_if_should_be_stopped()
     {
@@ -1193,6 +1196,7 @@ private:
     IntrusiveListNode<Thread> m_blocked_threads_list_node;
     LockRank m_lock_rank_mask {};
     bool m_allocation_enabled { true };
+    ArchSpecificThreadData m_arch_specific_data;
 
     // FIXME: remove this after annihilating Process::m_big_lock
     IntrusiveListNode<Thread> m_big_lock_blocked_threads_list_node;

@@ -1210,6 +1210,7 @@ ErrorOr<NonnullRefPtr<Thread>> Thread::clone(NonnullRefPtr<Process> process)
     clone->m_signal_mask = m_signal_mask;
     clone->m_fpu_state = m_fpu_state;
     clone->m_thread_specific_data = m_thread_specific_data;
+    clone->m_arch_specific_data = m_arch_specific_data;
     return clone;
 }
 
