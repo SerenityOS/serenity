@@ -97,7 +97,7 @@ foreach(RELATIVE_HEADER_PATH IN LISTS LIBC_HEADERS)
     )
 endforeach()
 
-file(GLOB ELF_SOURCES CONFIGURE_DEPENDS "../LibELF/*.cpp")
+file(GLOB ELF_SOURCES CONFIGURE_DEPENDS "../LibELF/*.cpp" "../LibELF/Arch/${SERENITY_ARCH}/*.cpp")
 
 if ("${SERENITY_ARCH}" STREQUAL "aarch64")
     set(LIBC_SOURCES ${LIBC_SOURCES} "arch/aarch64/fenv.cpp")
