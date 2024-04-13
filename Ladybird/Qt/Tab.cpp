@@ -786,11 +786,7 @@ void Tab::forward()
 
 void Tab::reload()
 {
-    if (m_history.is_empty())
-        return;
-
-    m_is_history_navigation = true;
-    view().load(m_history.current().url.to_byte_string());
+    view().reload();
 }
 
 void Tab::open_link(URL::URL const& url)
