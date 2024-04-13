@@ -40,7 +40,7 @@ private:
     virtual void notify_process_information(WebView::ProcessHandle const&) override;
     virtual void did_paint(u64 page_id, Gfx::IntRect const&, i32) override;
     virtual void did_finish_loading(u64 page_id, URL::URL const&) override;
-    virtual void did_update_url(u64 page_id, URL::URL const& url, Web::HTML::HistoryHandlingBehavior history_behavior) override;
+    virtual void did_history_api_push_or_replace(u64 page_id, URL::URL const& url, Web::HTML::HistoryHandlingBehavior history_behavior) override;
     virtual void did_request_navigate_back(u64 page_id) override;
     virtual void did_request_navigate_forward(u64 page_id) override;
     virtual void did_request_refresh(u64 page_id) override;

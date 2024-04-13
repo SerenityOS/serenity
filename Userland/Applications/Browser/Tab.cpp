@@ -262,7 +262,7 @@ Tab::Tab(BrowserWindow& window)
             m_dom_inspector_widget->inspect();
     };
 
-    view().on_url_updated = [this](auto const& url, auto history_behavior) {
+    view().on_history_api_push_or_replace = [this](auto const& url, auto history_behavior) {
         switch (history_behavior) {
         case Web::HTML::HistoryHandlingBehavior::Push:
             m_history.push(url, m_title);
