@@ -76,6 +76,8 @@ public:
 
     void load_html(StringView);
 
+    void reload();
+
     CSSPixelPoint device_to_css_point(DevicePixelPoint) const;
     DevicePixelPoint css_to_device_point(CSSPixelPoint) const;
     DevicePixelRect css_to_device_rect(CSSPixelRect) const;

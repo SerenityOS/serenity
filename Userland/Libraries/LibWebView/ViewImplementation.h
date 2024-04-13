@@ -49,6 +49,7 @@ public:
     void load(URL::URL const&);
     void load_html(StringView);
     void load_empty_document();
+    void reload();
 
     void zoom_in();
     void zoom_out();

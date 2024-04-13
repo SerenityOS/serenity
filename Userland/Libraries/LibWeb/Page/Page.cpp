@@ -74,6 +74,11 @@ void Page::load_html(StringView html)
         .user_involvement = HTML::UserNavigationInvolvement::BrowserUI });
 }
 
+void Page::reload()
+{
+    top_level_traversable()->reload();
+}
+
 Gfx::Palette Page::palette() const
 {
     return m_client->palette();

@@ -90,6 +90,11 @@ void ViewImplementation::load_empty_document()
     load_html(""sv);
 }
 
+void ViewImplementation::reload()
+{
+    client().async_reload(page_id());
+}
+
 void ViewImplementation::zoom_in()
 {
     if (m_zoom_level >= ZOOM_MAX_LEVEL)
