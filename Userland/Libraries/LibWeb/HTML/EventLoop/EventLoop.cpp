@@ -27,9 +27,6 @@ EventLoop::EventLoop()
 {
     m_task_queue = heap().allocate_without_realm<TaskQueue>(*this);
     m_microtask_queue = heap().allocate_without_realm<TaskQueue>(*this);
-
-    for (size_t i = 0; i < m_blocked_task_sources.size(); ++i)
-        m_blocked_task_sources[i] = false;
 }
 
 EventLoop::~EventLoop() = default;
@@ -60,31 +57,6 @@ void EventLoop::schedule()
 EventLoop& main_thread_event_loop()
 {
     return *static_cast<Bindings::WebEngineCustomData*>(Bindings::main_thread_vm().custom_data())->event_loop;
-}
-
-bool EventLoop::is_task_source_blocked(Task::Source source) const
-{
-    if (source == Task::Source::Unspecified)
-        return false;
-    if (static_cast<size_t>(to_underlying(source)) < m_blocked_task_sources.size())
-        return m_blocked_task_sources[to_underlying(source)];
-    return false;
-}
-
-void EventLoop::block_task_source(Task::Source source)
-{
-    if (source == Task::Source::Unspecified)
-        return;
-    if (static_cast<size_t>(to_underlying(source)) < m_blocked_task_sources.size())
-        m_blocked_task_sources[to_underlying(source)] = true;
-}
-
-void EventLoop::unblock_task_source(Task::Source source)
-{
-    if (source == Task::Source::Unspecified)
-        return;
-    if (static_cast<size_t>(to_underlying(source)) < m_blocked_task_sources.size())
-        m_blocked_task_sources[to_underlying(source)] = false;
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#spin-the-event-loop
@@ -147,13 +119,11 @@ void EventLoop::spin_processing_tasks_with_source_until(Task::Source source, JS:
                 return task.source() == source && task.is_runnable();
             });
 
-            block_task_source(source);
             for (auto& task : tasks) {
                 m_currently_running_task = task.ptr();
                 task->execute();
                 m_currently_running_task = nullptr;
             }
-            unblock_task_source(source);
         }
 
         // FIXME: Remove the platform event loop plugin so that this doesn't look out of place
@@ -191,8 +161,6 @@ void EventLoop::process()
     oldest_task = task_queue.take_first_runnable();
 
     if (oldest_task) {
-        block_task_source(oldest_task->source());
-
         // 5. Set the event loop's currently running task to oldestTask.
         m_currently_running_task = oldest_task.ptr();
 
@@ -201,8 +169,6 @@ void EventLoop::process()
 
         // 7. Set the event loop's currently running task back to null.
         m_currently_running_task = nullptr;
-
-        unblock_task_source(oldest_task->source());
     }
 
     // 8. Microtasks: Perform a microtask checkpoint.
