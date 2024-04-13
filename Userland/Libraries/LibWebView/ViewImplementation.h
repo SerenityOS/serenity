@@ -50,6 +50,7 @@ public:
     void load_html(StringView);
     void load_empty_document();
     void reload();
+    void traverse_the_history_by_delta(int delta);
 
     void zoom_in();
     void zoom_out();

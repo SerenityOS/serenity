@@ -79,6 +79,11 @@ void Page::reload()
     top_level_traversable()->reload();
 }
 
+void Page::traverse_the_history_by_delta(int delta)
+{
+    top_level_traversable()->traverse_the_history_by_delta(delta);
+}
+
 Gfx::Palette Page::palette() const
 {
     return m_client->palette();
