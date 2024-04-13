@@ -95,6 +95,11 @@ void ViewImplementation::reload()
     client().async_reload(page_id());
 }
 
+void ViewImplementation::traverse_the_history_by_delta(int delta)
+{
+    client().async_traverse_the_history_by_delta(page_id(), delta);
+}
+
 void ViewImplementation::zoom_in()
 {
     if (m_zoom_level >= ZOOM_MAX_LEVEL)
