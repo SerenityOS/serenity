@@ -1840,7 +1840,7 @@ void Element::enqueue_an_element_on_the_appropriate_element_queue()
 
         // 4. Queue a microtask to perform the following steps:
         // NOTE: `this` is protected by JS::SafeFunction
-        HTML::queue_a_microtask(&document(), [this]() {
+        HTML::queue_a_microtask(&document(), JS::create_heap_function(relevant_agent.heap(), [this]() {
             auto& relevant_agent = HTML::relevant_agent(*this);
             auto* custom_data = verify_cast<Bindings::WebEngineCustomData>(relevant_agent.custom_data());
             auto& reactions_stack = custom_data->custom_element_reactions_stack;
@@ -1850,7 +1850,7 @@ void Element::enqueue_an_element_on_the_appropriate_element_queue()
 
             // 2. Unset reactionsStack's processing the backup element queue flag.
             reactions_stack.processing_the_backup_element_queue = false;
-        });
+        }));
 
         return;
     }

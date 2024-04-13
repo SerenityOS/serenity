@@ -117,7 +117,7 @@ private:
 
 EventLoop& main_thread_event_loop();
 int queue_global_task(HTML::Task::Source, JS::Object&, Function<void()> steps);
-void queue_a_microtask(DOM::Document const*, Function<void()> steps);
+void queue_a_microtask(DOM::Document const*, JS::NonnullGCPtr<JS::HeapFunction<void()>> steps);
 void perform_a_microtask_checkpoint();
 
 }
