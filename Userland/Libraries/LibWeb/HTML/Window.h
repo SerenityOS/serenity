@@ -93,6 +93,7 @@ public:
     JS::GCPtr<Navigable> navigable() const;
 
     ImportMap const& import_map() const { return m_import_map; }
+    void set_import_map(ImportMap const& import_map) { m_import_map = import_map; }
 
     bool import_maps_allowed() const { return m_import_maps_allowed; }
     void set_import_maps_allowed(bool import_maps_allowed) { m_import_maps_allowed = import_maps_allowed; }
