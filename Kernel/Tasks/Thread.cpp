@@ -434,12 +434,6 @@ void Thread::exit(void* exit_value)
     set_should_die();
     u32 unlock_count;
     [[maybe_unused]] auto rc = unlock_process_if_locked(unlock_count);
-    if (m_thread_specific_range.has_value()) {
-        process().address_space().with([&](auto& space) {
-            auto* region = space->find_region_from_range(m_thread_specific_range.value());
-            space->deallocate_region(*region);
-        });
-    }
     die_if_needed();
 }
 
@@ -1209,7 +1203,6 @@ ErrorOr<NonnullRefPtr<Thread>> Thread::clone(NonnullRefPtr<Process> process)
     m_signal_action_masks.span().copy_to(clone->m_signal_action_masks);
     clone->m_signal_mask = m_signal_mask;
     clone->m_fpu_state = m_fpu_state;
-    clone->m_thread_specific_data = m_thread_specific_data;
     clone->m_arch_specific_data = m_arch_specific_data;
     return clone;
 }
@@ -1354,34 +1347,6 @@ void Thread::print_backtrace()
         dbgln("Backtrace:");
         kernelputstr(trace->characters(), trace->length());
     }
-}
-
-ErrorOr<void> Thread::make_thread_specific_region(Badge<Process>)
-{
-    return process().m_master_tls.with([&](auto& master_tls) -> ErrorOr<void> {
-        // The process may not require a TLS region, or allocate TLS later with sys$allocate_tls (which is what dynamically loaded programs do)
-        if (!master_tls.region)
-            return {};
-
-        return process().address_space().with([&](auto& space) -> ErrorOr<void> {
-            auto region_alignment = max(master_tls.alignment, alignof(ThreadSpecificData));
-            auto region_size = align_up_to(master_tls.size, region_alignment) + sizeof(ThreadSpecificData);
-            auto* region = TRY(space->allocate_region(Memory::RandomizeVirtualAddress::Yes, {}, region_size, PAGE_SIZE, "Thread-specific"sv, PROT_READ | PROT_WRITE));
-
-            m_thread_specific_range = region->range();
-
-            SmapDisabler disabler;
-            auto* thread_specific_data = (ThreadSpecificData*)region->vaddr().offset(align_up_to(master_tls.size, region_alignment)).as_ptr();
-            auto* thread_local_storage = (u8*)((u8*)thread_specific_data) - align_up_to(master_tls.size, master_tls.size);
-            m_thread_specific_data = VirtualAddress(thread_specific_data);
-            thread_specific_data->self = thread_specific_data;
-
-            if (master_tls.size != 0)
-                memcpy(thread_local_storage, master_tls.region.unsafe_ptr()->vaddr().as_ptr(), master_tls.size);
-
-            return {};
-        });
-    });
 }
 
 RefPtr<Thread> Thread::from_tid_in_same_jail(ThreadID tid)

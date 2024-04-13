@@ -149,6 +149,7 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
     child_regs.spsr_el1 = regs.spsr_el1;
     child_regs.elr_el1 = regs.elr_el1;
     child_regs.sp_el0 = regs.sp_el0;
+    child_regs.tpidr_el0 = regs.tpidr_el0;
 #elif ARCH(RISCV64)
     for (size_t i = 0; i < array_size(child_regs.x); ++i)
         child_regs.x[i] = regs.x[i];
@@ -162,27 +163,15 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
 #endif
 
     TRY(address_space().with([&](auto& parent_space) {
-        return m_master_tls.with([&](auto& parent_master_tls) -> ErrorOr<void> {
-            return child->address_space().with([&](auto& child_space) -> ErrorOr<void> {
-                child_space->set_enforces_syscall_regions(parent_space->enforces_syscall_regions());
-                for (auto& region : parent_space->region_tree().regions()) {
-                    dbgln_if(FORK_DEBUG, "fork: cloning Region '{}' @ {}", region.name(), region.vaddr());
-                    auto region_clone = TRY(region.try_clone());
-                    TRY(region_clone->map(child_space->page_directory(), Memory::ShouldFlushTLB::No));
-                    TRY(child_space->region_tree().place_specifically(*region_clone, region.range()));
-                    auto* child_region = region_clone.leak_ptr();
-
-                    if (&region == parent_master_tls.region.unsafe_ptr()) {
-                        TRY(child->m_master_tls.with([&](auto& child_master_tls) -> ErrorOr<void> {
-                            child_master_tls.region = TRY(child_region->try_make_weak_ptr());
-                            child_master_tls.size = parent_master_tls.size;
-                            child_master_tls.alignment = parent_master_tls.alignment;
-                            return {};
-                        }));
-                    }
-                }
-                return {};
-            });
+        return child->address_space().with([&](auto& child_space) -> ErrorOr<void> {
+            child_space->set_enforces_syscall_regions(parent_space->enforces_syscall_regions());
+            for (auto& region : parent_space->region_tree().regions()) {
+                dbgln_if(FORK_DEBUG, "fork: cloning Region '{}' @ {}", region.name(), region.vaddr());
+                auto region_clone = TRY(region.try_clone());
+                TRY(region_clone->map(child_space->page_directory(), Memory::ShouldFlushTLB::No));
+                TRY(child_space->region_tree().place_specifically(*region_clone, region.range()));
+                (void)region_clone.leak_ptr();
+            }
             return {};
         });
     }));

@@ -17,6 +17,7 @@ struct ThreadRegisters {
     u64 spsr_el1;
     u64 elr_el1;
     u64 sp_el0;
+    u64 tpidr_el0;
     u64 ttbr0_el1;
 
     FlatPtr ip() const { return elr_el1; }

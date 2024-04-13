@@ -337,6 +337,7 @@ FlatPtr ProcessorBase<T>::init_context(Thread& thread, bool leave_crit)
     }
     eretframe.elr_el1 = thread_regs.elr_el1;
     eretframe.sp_el0 = thread_regs.sp_el0;
+    eretframe.tpidr_el0 = thread_regs.tpidr_el0;
     eretframe.spsr_el1 = thread_regs.spsr_el1;
 
     // Push a TrapFrame onto the stack
@@ -472,8 +473,6 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
 
     to_thread->set_cpu(Processor::current().id());
 
-    Processor::set_thread_specific_data(to_thread->thread_specific_data());
-
     auto in_critical = to_thread->saved_critical();
     VERIFY(in_critical > 0);
     Processor::restore_critical(in_critical);
@@ -485,12 +484,6 @@ template<typename T>
 StringView ProcessorBase<T>::platform_string()
 {
     return "aarch64"sv;
-}
-
-template<typename T>
-void ProcessorBase<T>::set_thread_specific_data(VirtualAddress thread_specific_data)
-{
-    Aarch64::Asm::set_tpidr_el0(thread_specific_data.get());
 }
 
 template<typename T>

@@ -49,7 +49,6 @@ enum class NeedsBigProcessLock {
     S(accept4, NeedsBigProcessLock::No)                    \
     S(adjtime, NeedsBigProcessLock::No)                    \
     S(alarm, NeedsBigProcessLock::No)                      \
-    S(allocate_tls, NeedsBigProcessLock::No)               \
     S(archctl, NeedsBigProcessLock::No)                    \
     S(anon_create, NeedsBigProcessLock::No)                \
     S(annotate_mapping, NeedsBigProcessLock::No)           \
@@ -375,6 +374,7 @@ struct SC_create_thread_params {
     void* stack_location;                      // nullptr means any, o.w. process virtual address
     void* (*entry)(void*);
     void* entry_argument;
+    void* tls_pointer;
 };
 
 struct SC_realpath_params {

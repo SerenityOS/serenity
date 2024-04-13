@@ -18,6 +18,7 @@
 #include <AK/Vector.h>
 #include <Kernel/API/VirtualMemoryAnnotations.h>
 #include <Kernel/API/prctl_numbers.h>
+#include <LibELF/Arch/tls.h>
 #include <LibELF/AuxiliaryVector.h>
 #include <LibELF/DynamicLinker.h>
 #include <LibELF/DynamicLoader.h>
@@ -54,7 +55,9 @@ extern "C" [[noreturn]] void _invoke_entry(int argc, char** argv, char** envp, E
 
 struct TLSData {
     size_t total_tls_size { 0 };
+    void* tls_template { nullptr };
     size_t tls_template_size { 0 };
+    size_t alignment { 0 };
 };
 static TLSData s_tls_data;
 
@@ -234,6 +237,40 @@ static Result<void, DlErrorMessage> map_dependencies(ByteString const& path)
     return {};
 }
 
+struct ThreadSpecificData {
+    ThreadSpecificData* self;
+};
+
+static ErrorOr<FlatPtr> __create_new_tls_region()
+{
+    auto static_tls_region_alignment = max(s_tls_data.alignment, alignof(ThreadSpecificData));
+    auto static_tls_region_size = align_up_to(s_tls_data.tls_template_size, static_tls_region_alignment) + sizeof(ThreadSpecificData);
+    void* thread_specific_ptr = serenity_mmap(nullptr, static_tls_region_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, 0, 0, static_tls_region_alignment, "Static TLS Data");
+    if (thread_specific_ptr == MAP_FAILED)
+        return Error::from_syscall("mmap"sv, -errno);
+
+    auto* thread_specific_data = bit_cast<ThreadSpecificData*>(bit_cast<FlatPtr>(thread_specific_ptr) + (align_up_to(s_tls_data.tls_template_size, static_tls_region_alignment)));
+    thread_specific_data->self = thread_specific_data;
+
+    auto* thread_local_storage = bit_cast<u8*>(bit_cast<FlatPtr>(thread_specific_data) - align_up_to(s_tls_data.tls_template_size, s_tls_data.alignment));
+
+    if (s_tls_data.tls_template_size != 0)
+        memcpy(thread_local_storage, s_tls_data.tls_template, s_tls_data.tls_template_size);
+
+    return bit_cast<FlatPtr>(thread_specific_data);
+}
+
+static ErrorOr<void> __free_tls_region(FlatPtr thread_pointer)
+{
+    auto static_tls_region_alignment = max(s_tls_data.alignment, alignof(ThreadSpecificData));
+    auto static_tls_region_size = align_up_to(s_tls_data.tls_template_size, static_tls_region_alignment) + sizeof(ThreadSpecificData);
+
+    if (munmap(bit_cast<void*>(bit_cast<FlatPtr>(thread_pointer) - align_up_to(s_tls_data.tls_template_size, s_tls_data.alignment)), static_tls_region_size) != 0)
+        return Error::from_syscall("mmap"sv, -errno);
+
+    return {};
+}
+
 static void allocate_tls()
 {
     for (auto const& data : s_loaders) {
@@ -244,25 +281,23 @@ static void allocate_tls()
     if (s_tls_data.total_tls_size == 0)
         return;
 
-    auto page_aligned_size = align_up_to(s_tls_data.total_tls_size, PAGE_SIZE);
-    auto initial_tls_data_result = ByteBuffer::create_zeroed(page_aligned_size);
-    if (initial_tls_data_result.is_error()) {
-        dbgln("Failed to allocate initial TLS data");
+    s_tls_data.tls_template_size = align_up_to(s_tls_data.total_tls_size, PAGE_SIZE);
+    s_tls_data.alignment = PAGE_SIZE;
+    s_tls_data.tls_template = mmap_with_name(nullptr, s_tls_data.tls_template_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, 0, 0, "TLS Template");
+
+    if (s_tls_data.tls_template == MAP_FAILED) {
+        dbgln("Failed to allocate memory for the TLS template");
         VERIFY_NOT_REACHED();
     }
 
-    auto& initial_tls_data = initial_tls_data_result.value();
+    auto tls_template = Bytes(s_tls_data.tls_template, s_tls_data.tls_template_size);
 
     // Initialize TLS data
     for (auto const& entry : s_loaders) {
-        entry.value->copy_initial_tls_data_into(initial_tls_data);
+        entry.value->copy_initial_tls_data_into(tls_template);
     }
 
-    void* master_tls = ::allocate_tls((char*)initial_tls_data.data(), initial_tls_data.size());
-    VERIFY(master_tls != (void*)-1);
-    dbgln_if(DYNAMIC_LOAD_DEBUG, "from userspace, master_tls: {:p}", master_tls);
-
-    s_tls_data.tls_template_size = initial_tls_data.size();
+    set_thread_pointer_register(MUST(__create_new_tls_region()));
 }
 
 static int __dl_iterate_phdr(DlIteratePhdrCallbackFunction callback, void* data)
@@ -648,6 +683,8 @@ void ELF::DynamicLinker::linker_main(ByteString&& main_program_path, int main_pr
     s_magic_weak_symbols.set("environ"sv, make_ref_counted<MagicWeakSymbol>(STT_OBJECT, s_envp));
     s_magic_weak_symbols.set("__stack_chk_guard"sv, make_ref_counted<MagicWeakSymbol>(STT_OBJECT, stack_guard));
     s_magic_weak_symbols.set("__call_fini_functions"sv, make_ref_counted<MagicWeakSymbol>(STT_FUNC, __call_fini_functions));
+    s_magic_weak_symbols.set("__create_new_tls_region"sv, make_ref_counted<MagicWeakSymbol>(STT_FUNC, __create_new_tls_region));
+    s_magic_weak_symbols.set("__free_tls_region"sv, make_ref_counted<MagicWeakSymbol>(STT_FUNC, __free_tls_region));
     s_magic_weak_symbols.set("__dl_iterate_phdr"sv, make_ref_counted<MagicWeakSymbol>(STT_FUNC, __dl_iterate_phdr));
     s_magic_weak_symbols.set("__dlclose"sv, make_ref_counted<MagicWeakSymbol>(STT_FUNC, __dlclose));
     s_magic_weak_symbols.set("__dlopen"sv, make_ref_counted<MagicWeakSymbol>(STT_FUNC, __dlopen));

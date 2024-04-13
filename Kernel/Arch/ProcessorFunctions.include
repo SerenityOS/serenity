@@ -26,7 +26,6 @@ template bool ProcessorBase<Processor>::are_interrupts_enabled();
 template void ProcessorBase<Processor>::wait_for_interrupt() const;
 template Processor& ProcessorBase<Processor>::by_id(u32 id);
 template StringView ProcessorBase<Processor>::platform_string();
-template void ProcessorBase<Processor>::set_thread_specific_data(VirtualAddress thread_specific_data);
 template void ProcessorBase<Processor>::initialize_context_switching(Thread& initial_thread);
 template void ProcessorBase<Processor>::switch_context(Thread*& from_thread, Thread*& to_thread);
 template void ProcessorBase<Processor>::assume_context(Thread& thread, InterruptsState new_interrupts_state);

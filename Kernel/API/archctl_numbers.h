@@ -5,3 +5,5 @@
  */
 
 #pragma once
+
+#define ARCHCTL_X86_64_SET_FS_BASE_FOR_CURRENT_THREAD 1

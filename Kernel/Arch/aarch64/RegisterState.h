@@ -17,11 +17,12 @@ VALIDATE_IS_AARCH64()
 
 namespace Kernel {
 
-struct RegisterState {
-    u64 x[31];    // Saved general purpose registers
-    u64 spsr_el1; // Save Processor Status Register, EL1
-    u64 elr_el1;  // Exception Link Register, EL1
-    u64 sp_el0;   // EL0 stack pointer
+struct alignas(16) RegisterState {
+    u64 x[31];     // Saved general purpose registers
+    u64 spsr_el1;  // Save Processor Status Register, EL1
+    u64 elr_el1;   // Exception Link Register, EL1
+    u64 sp_el0;    // EL0 stack pointer
+    u64 tpidr_el0; // EL0 Software Thread ID Register
 
     FlatPtr userspace_sp() const { return sp_el0; }
     void set_userspace_sp(FlatPtr value)
@@ -51,7 +52,7 @@ struct RegisterState {
     }
 };
 
-#define REGISTER_STATE_SIZE (34 * 8)
+#define REGISTER_STATE_SIZE (36 * 8)
 static_assert(AssertSize<RegisterState, REGISTER_STATE_SIZE>());
 
 inline void copy_kernel_registers_into_ptrace_registers(PtraceRegisters& ptrace_regs, RegisterState const& kernel_regs)
