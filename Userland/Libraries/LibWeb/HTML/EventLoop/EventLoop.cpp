@@ -393,7 +393,7 @@ int queue_global_task(HTML::Task::Source source, JS::Object& global_object, Func
 }
 
 // https://html.spec.whatwg.org/#queue-a-microtask
-void queue_a_microtask(DOM::Document const* document, Function<void()> steps)
+void queue_a_microtask(DOM::Document const* document, JS::NonnullGCPtr<JS::HeapFunction<void()>> steps)
 {
     // 1. If event loop was not given, set event loop to the implied event loop.
     auto& event_loop = HTML::main_thread_event_loop();
@@ -405,7 +405,7 @@ void queue_a_microtask(DOM::Document const* document, Function<void()> steps)
     // 5. Set microtask's source to the microtask task source.
     // 6. Set microtask's document to document.
     auto& vm = event_loop.vm();
-    auto microtask = HTML::Task::create(vm, HTML::Task::Source::Microtask, document, JS::create_heap_function(vm.heap(), move(steps)));
+    auto microtask = HTML::Task::create(vm, HTML::Task::Source::Microtask, document, steps);
 
     // FIXME: 7. Set microtask's script evaluation environment settings object set to an empty set.
 

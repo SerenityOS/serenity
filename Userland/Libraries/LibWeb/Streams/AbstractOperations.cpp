@@ -391,7 +391,7 @@ public:
     virtual void on_chunk(JS::Value chunk) override
     {
         // 1. Queue a microtask to perform the following steps:
-        HTML::queue_a_microtask(nullptr, [this, chunk]() {
+        HTML::queue_a_microtask(nullptr, JS::create_heap_function(m_realm->heap(), [this, chunk]() {
             HTML::TemporaryExecutionContext execution_context { Bindings::host_defined_environment_settings_object(m_realm) };
 
             auto controller1 = m_params->branch1->controller()->get<JS::NonnullGCPtr<ReadableStreamDefaultController>>();
@@ -450,7 +450,7 @@ public:
             if (m_params->read_again) {
                 MUST(m_params->pull_algorithm->function()());
             }
-        });
+        }));
 
         // NOTE: The microtask delay here is necessary because it takes at least a microtask to detect errors, when we
         //       use reader.[[closedPromise]] below. We want errors in stream to error both branches immediately, so we
@@ -700,7 +700,7 @@ public:
     virtual void on_chunk(JS::Value chunk) override
     {
         // 1. Queue a microtask to perform the following steps:
-        HTML::queue_a_microtask(nullptr, [this, chunk]() mutable {
+        HTML::queue_a_microtask(nullptr, JS::create_heap_function(m_realm->heap(), [this, chunk]() mutable {
             HTML::TemporaryExecutionContext execution_context { Bindings::host_defined_environment_settings_object(m_realm) };
 
             auto controller1 = m_params->branch1->controller()->get<JS::NonnullGCPtr<ReadableByteStreamController>>();
@@ -767,7 +767,7 @@ public:
             else if (m_params->read_again_for_branch2) {
                 MUST(m_params->pull2_algorithm->function()());
             }
-        });
+        }));
 
         // NOTE: The microtask delay here is necessary because it takes at least a microtask to detect errors, when we
         //       use reader.[[closedPromise]] below. We want errors in stream to error both branches immediately, so we
@@ -864,7 +864,7 @@ public:
         auto chunk_view = m_realm->vm().heap().allocate<WebIDL::ArrayBufferView>(m_realm, chunk.as_object());
 
         // 1. Queue a microtask to perform the following steps:
-        HTML::queue_a_microtask(nullptr, [this, chunk = chunk_view]() {
+        HTML::queue_a_microtask(nullptr, JS::create_heap_function(m_realm->heap(), [this, chunk = chunk_view]() {
             HTML::TemporaryExecutionContext execution_context { Bindings::host_defined_environment_settings_object(m_realm) };
 
             auto byob_controller = m_byob_branch->controller()->get<JS::NonnullGCPtr<ReadableByteStreamController>>();
@@ -934,7 +934,7 @@ public:
             else if (m_params->read_again_for_branch2) {
                 MUST(m_params->pull2_algorithm->function()());
             }
-        });
+        }));
 
         // NOTE: The microtask delay here is necessary because it takes at least a microtask to detect errors, when we
         //       use reader.[[closedPromise]] below. We want errors in stream to error both branches immediately, so we

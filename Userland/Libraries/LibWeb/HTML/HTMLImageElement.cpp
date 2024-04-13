@@ -422,7 +422,7 @@ ErrorOr<void> HTMLImageElement::update_the_image_data(bool restart_animations, b
     }
 after_step_7:
     // 8. Queue a microtask to perform the rest of this algorithm, allowing the task that invoked this algorithm to continue.
-    queue_a_microtask(&document(), [this, restart_animations, maybe_omit_events, previous_url]() mutable {
+    queue_a_microtask(&document(), JS::create_heap_function(this->heap(), [this, restart_animations, maybe_omit_events, previous_url]() mutable {
         // FIXME: 9. If another instance of this algorithm for this img element was started after this instance
         //           (even if it aborted and is no longer running), then return.
 
@@ -572,7 +572,7 @@ after_step_7:
         }
 
         image_request->fetch_image(realm(), request);
-    });
+    }));
     return {};
 }
 
