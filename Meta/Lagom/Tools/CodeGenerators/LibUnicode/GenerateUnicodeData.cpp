@@ -1724,42 +1724,44 @@ struct PropertyMetadata {
 // this process reduces over 1 million entries (0x10ffff) to ~44,030.
 //
 // For much more in-depth reading, see: https://icu.unicode.org/design/struct/utrie
+static constexpr auto MAX_CODE_POINT = 0x10ffffu;
+
+template<typename T>
+static ErrorOr<void> update_tables(u32 code_point, CodePointTables<T>& tables, auto& metadata, auto const& values)
+{
+    static constexpr auto BLOCK_SIZE = CODE_POINT_TABLES_LSB_MASK + 1;
+
+    size_t unique_properties_index = 0;
+    if (auto block_index = tables.unique_properties.find_first_index(values); block_index.has_value()) {
+        unique_properties_index = *block_index;
+    } else {
+        unique_properties_index = tables.unique_properties.size();
+        TRY(tables.unique_properties.try_append(values));
+    }
+
+    TRY(metadata.current_block.try_append(unique_properties_index));
+
+    if (metadata.current_block.size() == BLOCK_SIZE || code_point == MAX_CODE_POINT) {
+        size_t stage2_index = 0;
+        if (auto block_index = metadata.unique_blocks.get(metadata.current_block); block_index.has_value()) {
+            stage2_index = *block_index;
+        } else {
+            stage2_index = tables.stage2.size();
+            TRY(tables.stage2.try_extend(metadata.current_block));
+
+            TRY(metadata.unique_blocks.try_set(metadata.current_block, stage2_index));
+        }
+
+        TRY(tables.stage1.try_append(stage2_index));
+        metadata.current_block.clear_with_capacity();
+    }
+
+    return {};
+}
+
 static ErrorOr<void> create_code_point_tables(UnicodeData& unicode_data)
 {
-    static constexpr auto MAX_CODE_POINT = 0x10ffffu;
-
-    auto update_tables = [&](auto code_point, auto& tables, auto& metadata, auto const& values) -> ErrorOr<void> {
-        static constexpr auto BLOCK_SIZE = CODE_POINT_TABLES_LSB_MASK + 1;
-
-        size_t unique_properties_index = 0;
-        if (auto block_index = tables.unique_properties.find_first_index(values); block_index.has_value()) {
-            unique_properties_index = *block_index;
-        } else {
-            unique_properties_index = tables.unique_properties.size();
-            TRY(tables.unique_properties.try_append(values));
-        }
-
-        TRY(metadata.current_block.try_append(unique_properties_index));
-
-        if (metadata.current_block.size() == BLOCK_SIZE || code_point == MAX_CODE_POINT) {
-            size_t stage2_index = 0;
-            if (auto block_index = metadata.unique_blocks.get(metadata.current_block); block_index.has_value()) {
-                stage2_index = *block_index;
-            } else {
-                stage2_index = tables.stage2.size();
-                TRY(tables.stage2.try_extend(metadata.current_block));
-
-                TRY(metadata.unique_blocks.try_set(metadata.current_block, stage2_index));
-            }
-
-            TRY(tables.stage1.try_append(stage2_index));
-            metadata.current_block.clear_with_capacity();
-        }
-
-        return {};
-    };
-
-    auto update_casing_tables = [&](auto code_point, auto& tables, auto& metadata) -> ErrorOr<void> {
+    auto update_casing_tables = [&]<typename T>(u32 code_point, CodePointTables<T>& tables, CasingMetadata& metadata) -> ErrorOr<void> {
         CasingTable casing {};
 
         while (metadata.iterator != metadata.end) {
@@ -1778,7 +1780,7 @@ static ErrorOr<void> create_code_point_tables(UnicodeData& unicode_data)
         return {};
     };
 
-    auto update_property_tables = [&](auto code_point, auto& tables, auto& metadata) -> ErrorOr<void> {
+    auto update_property_tables = [&]<typename T>(u32 code_point, CodePointTables<T>& tables, PropertyMetadata& metadata) -> ErrorOr<void> {
         static Unicode::CodePointRangeComparator comparator {};
 
         for (auto& property_values : metadata.property_values) {
