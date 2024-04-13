@@ -68,8 +68,8 @@ echo PREFIX is "$PREFIX"
 
 mkdir -p "$DIR/Tarballs"
 
-LLVM_VERSION="16.0.6"
-LLVM_MD5SUM="dc13938a604f70379d3b38d09031de98"
+LLVM_VERSION="18.1.3"
+LLVM_MD5SUM="4f2cbf1e35f9c9377c6c89e67364c3fd"
 LLVM_NAME="llvm-project-$LLVM_VERSION.src"
 LLVM_PKG="$LLVM_NAME.tar.xz"
 LLVM_URL="https://github.com/llvm/llvm-project/releases/download/llvmorg-$LLVM_VERSION/$LLVM_PKG"
@@ -269,18 +269,6 @@ for arch in $ARCHS; do
 done
 unset SRC_ROOT
 
-# === COPY LIBRARY STUBS ===
-
-for arch in $USERLAND_ARCHS; do
-    pushd "$BUILD/${arch}clang"
-        mkdir -p Root/usr/lib/
-        for lib in "$DIR/Stubs/${arch}clang/"*".so"; do
-            lib_name=$(basename "$lib")
-            [ ! -f "Root/usr/lib/${lib_name}" ] && cp "$lib" "Root/usr/lib/${lib_name}"
-        done
-    popd
-done
-
 # === COMPILE AND INSTALL ===
 
 rm -rf "$PREFIX"
@@ -296,6 +284,9 @@ pushd "$DIR/Build/clang"
             -DSERENITY_x86_64-pc-serenity_SYSROOT="$BUILD/x86_64clang/Root" \
             -DSERENITY_aarch64-pc-serenity_SYSROOT="$BUILD/aarch64clang/Root" \
             -DSERENITY_riscv64-pc-serenity_SYSROOT="$BUILD/riscv64clang/Root" \
+            -DSERENITY_x86_64-pc-serenity_STUBS="$DIR/Stubs/x86_64" \
+            -DSERENITY_aarch64-pc-serenity_STUBS="$DIR/Stubs/aarch64" \
+            -DSERENITY_riscv64-pc-serenity_STUBS="$DIR/Stubs/riscv64" \
             -DCMAKE_INSTALL_PREFIX="$PREFIX" \
             -DSERENITY_MODULE_PATH="$DIR/CMake" \
             -C "$DIR/CMake/LLVMConfig.cmake" \
@@ -308,23 +299,6 @@ pushd "$DIR/Build/clang"
         buildstep_ninja "llvm/build" ninja -j "$MAKEJOBS"
         buildstep_ninja "llvm/install" ninja install/strip
     popd
-
-    for arch in $ARCHS; do
-        mkdir -p runtimes/"$arch"
-        pushd runtimes/"$arch"
-            buildstep "runtimes/$arch/configure" cmake "$DIR/Tarballs/$LLVM_NAME/runtimes" \
-                -G Ninja \
-                -DSERENITY_TOOLCHAIN_ARCH="$arch" \
-                -DSERENITY_TOOLCHAIN_ROOT="$PREFIX" \
-                -DSERENITY_BUILD_DIR="$BUILD/${arch}clang/" \
-                -DSERENITY_MODULE_PATH="$DIR/CMake" \
-                -DCMAKE_INSTALL_PREFIX="$PREFIX" \
-                -C "$DIR/CMake/LLVMRuntimesConfig.cmake"
-
-            buildstep_ninja "runtimes/$arch/build" ninja -j "$MAKEJOBS"
-            buildstep_ninja "runtimes/$arch/install" ninja install
-        popd
-    done
 popd
 
 pushd "$DIR/Local/clang/bin/"
