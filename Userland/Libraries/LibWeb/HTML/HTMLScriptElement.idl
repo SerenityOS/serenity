@@ -10,7 +10,7 @@ interface HTMLScriptElement : HTMLElement {
     [CEReactions, Reflect] attribute DOMString src;
     [CEReactions, Reflect] attribute DOMString type;
     [CEReactions, Reflect=nomodule] attribute boolean noModule;
-    // FIXME: [CEReactions] attribute boolean async;
+    [CEReactions] attribute boolean async;
     [CEReactions, Reflect] attribute boolean defer;
     [CEReactions, Reflect=crossorigin, Enumerated=CORSSettingsAttribute] attribute DOMString? crossOrigin;
     [CEReactions] attribute DOMString text;

@@ -584,4 +584,34 @@ void HTMLScriptElement::unmark_as_parser_inserted(Badge<DOM::Range>)
     m_parser_document = nullptr;
 }
 
+// https://html.spec.whatwg.org/multipage/scripting.html#dom-script-async
+bool HTMLScriptElement::async() const
+{
+    // 1. If this's force async is true, then return true.
+    if (m_force_async)
+        return true;
+
+    // 2. If this's async content attribute is present, then return true.
+    if (has_attribute(HTML::AttributeNames::async))
+        return true;
+
+    // 3. Return false.
+    return false;
+}
+
+void HTMLScriptElement::set_async(bool async)
+{
+    // 1. Set this's force async to false.
+    m_force_async = false;
+
+    // 2. If the given value is true, then set this's async content attribute to the empty string.
+    if (async) {
+        MUST(set_attribute(HTML::AttributeNames::async, ""_string));
+    }
+    // 3. Otherwise, remove this's async content attribute.
+    else {
+        remove_attribute(HTML::AttributeNames::async);
+    }
+}
+
 }
