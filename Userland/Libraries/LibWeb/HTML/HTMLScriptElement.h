@@ -58,6 +58,9 @@ public:
     String text() { return child_text_content(); }
     void set_text(String const& text) { string_replace_all(text); }
 
+    [[nodiscard]] bool async() const;
+    void set_async(bool);
+
 private:
     HTMLScriptElement(DOM::Document&, DOM::QualifiedName);
 
