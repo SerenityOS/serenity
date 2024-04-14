@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWebView/History.h>
 #include <LibWebView/SearchEngine.h>
 #include <LibWebView/URL.h>
 
@@ -29,11 +28,6 @@ static NSString* const TOOLBAR_ZOOM_IDENTIFIER = @"ToolbarZoomIdentifier";
 static NSString* const TOOLBAR_NEW_TAB_IDENTIFIER = @"ToolbarNewTabIdentifier";
 static NSString* const TOOLBAR_TAB_OVERVIEW_IDENTIFIER = @"ToolbarTabOverviewIdentifer";
 
-enum class IsHistoryNavigation {
-    Yes,
-    No,
-};
-
 @interface LocationSearchField : NSSearchField
 
 - (BOOL)becomeFirstResponder;
@@ -56,10 +50,10 @@ enum class IsHistoryNavigation {
 {
     ByteString m_title;
 
-    WebView::History m_history;
-    IsHistoryNavigation m_is_history_navigation;
-
     TabSettings m_settings;
+
+    bool m_can_navigate_back;
+    bool m_can_navigate_forward;
 }
 
 @property (nonatomic, strong) NSToolbar* toolbar;
@@ -97,8 +91,9 @@ enum class IsHistoryNavigation {
         [self.toolbar setAllowsUserCustomization:NO];
         [self.toolbar setSizeMode:NSToolbarSizeModeRegular];
 
-        m_is_history_navigation = IsHistoryNavigation::No;
         m_settings = {};
+        m_can_navigate_back = false;
+        m_can_navigate_forward = false;
     }
 
     return self;
@@ -118,41 +113,25 @@ enum class IsHistoryNavigation {
 
 - (void)onLoadStart:(URL::URL const&)url isRedirect:(BOOL)isRedirect
 {
-    if (isRedirect) {
-        m_history.replace_current(url, m_title);
-    }
-
     [self setLocationFieldText:url.serialize()];
-
-    if (m_is_history_navigation == IsHistoryNavigation::Yes) {
-        m_is_history_navigation = IsHistoryNavigation::No;
-    } else {
-        m_history.push(url, m_title);
-    }
-
-    [self updateNavigationButtonStates];
 }
 
-- (void)onURLUpdated:(URL::URL const&)url
-     historyBehavior:(Web::HTML::HistoryHandlingBehavior)history_behavior
+- (void)onURLChange:(URL::URL const&)url
 {
-    switch (history_behavior) {
-    case Web::HTML::HistoryHandlingBehavior::Push:
-        m_history.push(url, m_title);
-        break;
-    case Web::HTML::HistoryHandlingBehavior::Replace:
-        m_history.replace_current(url, m_title);
-        break;
-    }
-
     [self setLocationFieldText:url.serialize()];
+}
+
+- (void)onBackNavigationEnabled:(BOOL)back_enabled
+       forwardNavigationEnabled:(BOOL)forward_enabled
+{
+    m_can_navigate_back = back_enabled;
+    m_can_navigate_forward = forward_enabled;
     [self updateNavigationButtonStates];
 }
 
 - (void)onTitleChange:(ByteString const&)title
 {
     m_title = title;
-    m_history.update_title(m_title);
 }
 
 - (void)zoomIn:(id)sender
@@ -175,55 +154,27 @@ enum class IsHistoryNavigation {
 
 - (void)navigateBack:(id)sender
 {
-    if (!m_history.can_go_back()) {
-        return;
-    }
-
-    m_is_history_navigation = IsHistoryNavigation::Yes;
-    m_history.go_back();
-
-    auto url = m_history.current().url;
-    [self loadURL:url];
+    [[[self tab] web_view] navigateBack];
 }
 
 - (void)navigateForward:(id)sender
 {
-    if (!m_history.can_go_forward()) {
-        return;
-    }
-
-    m_is_history_navigation = IsHistoryNavigation::Yes;
-    m_history.go_forward();
-
-    auto url = m_history.current().url;
-    [self loadURL:url];
+    [[[self tab] web_view] navigateForward];
 }
 
 - (void)reload:(id)sender
 {
-    if (m_history.is_empty()) {
-        return;
-    }
-
-    m_is_history_navigation = IsHistoryNavigation::Yes;
-
-    auto url = m_history.current().url;
-    [self loadURL:url];
+    [[[self tab] web_view] reload];
 }
 
 - (void)clearHistory
 {
-    m_history.clear();
-    [self updateNavigationButtonStates];
+    // FIXME: Reimplement clearing history using WebContent's history.
 }
 
 - (void)debugRequest:(ByteString const&)request argument:(ByteString const&)argument
 {
-    if (request == "dump-history") {
-        m_history.dump();
-    } else {
-        [[[self tab] web_view] debugRequest:request argument:argument];
-    }
+    [[[self tab] web_view] debugRequest:request argument:argument];
 }
 
 - (void)viewSource:(id)sender
@@ -298,13 +249,10 @@ enum class IsHistoryNavigation {
 - (void)updateNavigationButtonStates
 {
     auto* navigate_back_button = (NSButton*)[[self navigate_back_toolbar_item] view];
-    [navigate_back_button setEnabled:m_history.can_go_back()];
+    [navigate_back_button setEnabled:m_can_navigate_back];
 
     auto* navigate_forward_button = (NSButton*)[[self navigate_forward_toolbar_item] view];
-    [navigate_forward_button setEnabled:m_history.can_go_forward()];
-
-    auto* reload_button = (NSButton*)[[self reload_toolbar_item] view];
-    [reload_button setEnabled:!m_history.is_empty()];
+    [navigate_forward_button setEnabled:m_can_navigate_forward];
 }
 
 - (void)showTabOverview:(id)sender
@@ -357,7 +305,7 @@ enum class IsHistoryNavigation {
 
 - (void)dumpHistory:(id)sender
 {
-    [self debugRequest:"dump-history" argument:""];
+    [self debugRequest:"dump-session-history" argument:""];
 }
 
 - (void)dumpLocalStorage:(id)sender
