@@ -697,7 +697,7 @@ macro (set_new_alignment alignment)
 endmacro()
 
 if ("${SERENITY_ARCH}" STREQUAL "x86_64")
-    add_compile_options(-mcmodel=large -mno-red-zone)
+    add_compile_options(-mno-red-zone)
     set_new_alignment(8)
 endif()
 
