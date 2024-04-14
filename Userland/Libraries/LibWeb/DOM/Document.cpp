@@ -699,12 +699,18 @@ void Document::set_origin(HTML::Origin const& origin)
 
 void Document::schedule_style_update()
 {
+    if (!browsing_context())
+        return;
+
     // NOTE: Update of the style is a step in HTML event loop processing.
     HTML::main_thread_event_loop().schedule();
 }
 
 void Document::schedule_layout_update()
 {
+    if (!browsing_context())
+        return;
+
     // NOTE: Update of the layout is a step in HTML event loop processing.
     HTML::main_thread_event_loop().schedule();
 }
