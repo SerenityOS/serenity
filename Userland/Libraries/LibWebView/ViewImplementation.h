@@ -146,7 +146,6 @@ public:
     Function<void(URL::URL const&)> on_url_change;
     Function<void(URL::URL const&, bool)> on_load_start;
     Function<void(URL::URL const&)> on_load_finish;
-    Function<void(URL::URL const&, Web::HTML::HistoryHandlingBehavior)> on_history_api_push_or_replace;
     Function<void(ByteString const& path, i32)> on_request_file;
     Function<void()> on_navigate_back;
     Function<void()> on_navigate_forward;
