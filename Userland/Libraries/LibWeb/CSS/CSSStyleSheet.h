@@ -62,6 +62,7 @@ public:
     bool evaluate_media_queries(HTML::Window const&);
     void for_each_effective_keyframes_at_rule(Function<void(CSSKeyframesRule const&)> const& callback) const;
 
+    JS::GCPtr<StyleSheetList> style_sheet_list() const { return m_style_sheet_list; }
     void set_style_sheet_list(Badge<StyleSheetList>, StyleSheetList*);
 
     Optional<FlyString> default_namespace() const;

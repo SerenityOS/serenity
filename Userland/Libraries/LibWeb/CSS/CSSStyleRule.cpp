@@ -8,6 +8,7 @@
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/CSS/CSSStyleRule.h>
 #include <LibWeb/CSS/Parser/Parser.h>
+#include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::CSS {
@@ -102,8 +103,16 @@ void CSSStyleRule::set_selector_text(StringView selector_text)
     auto parsed_selectors = parse_selector(Parser::ParsingContext { realm() }, selector_text);
 
     // 2. If the algorithm returns a non-null value replace the associated group of selectors with the returned value.
-    if (parsed_selectors.has_value())
+    if (parsed_selectors.has_value()) {
         m_selectors = parsed_selectors.release_value();
+        if (auto* sheet = parent_style_sheet()) {
+            if (auto style_sheet_list = sheet->style_sheet_list()) {
+                auto& document = style_sheet_list->document();
+                document.style_computer().invalidate_rule_cache();
+                document.invalidate_style();
+            }
+        }
+    }
 
     // 3. Otherwise, if the algorithm returns a null value, do nothing.
 }
