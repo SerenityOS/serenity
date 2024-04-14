@@ -23,6 +23,14 @@ public:
     static PDFErrorOr<NonnullRefPtr<Type1FontProgram>> create(ReadonlyBytes const&, RefPtr<Encoding>, size_t cleartext_length, size_t encrypted_length);
 
 private:
+    static Error error(
+        ByteString const& message
+#ifdef PDF_DEBUG
+        ,
+        SourceLocation loc = SourceLocation::current()
+#endif
+    );
+
     PDFErrorOr<void> parse_encrypted_portion(ByteBuffer const&);
     PDFErrorOr<Vector<ByteBuffer>> parse_subroutines(Reader&) const;
     static PDFErrorOr<Vector<float>> parse_number_array(Reader&, size_t length);

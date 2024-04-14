@@ -137,6 +137,14 @@ public:
     static PDFErrorOr<Vector<SID>> parse_charset(Stream&&, size_t);
     static PDFErrorOr<Vector<u8>> parse_fdselect(Stream&&, size_t);
     static PDFErrorOr<Vector<u8>> parse_encoding(Stream&&, HashMap<Card8, SID>& supplemental);
+
+    static Error error(
+        ByteString const& message
+#ifdef PDF_DEBUG
+        ,
+        SourceLocation loc = SourceLocation::current()
+#endif
+    );
 };
 
 }
