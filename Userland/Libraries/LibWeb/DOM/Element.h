@@ -134,6 +134,7 @@ public:
     int client_left() const;
     int client_width() const;
     int client_height() const;
+    [[nodiscard]] double current_css_zoom() const;
 
     void for_each_attribute(NOESCAPE Function<void(Attr const&)>) const;
 

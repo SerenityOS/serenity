@@ -992,6 +992,13 @@ int Element::client_height() const
     return paintable_box()->absolute_padding_box_rect().height().to_int();
 }
 
+// https://drafts.csswg.org/cssom-view/#dom-element-currentcsszoom
+double Element::current_css_zoom() const
+{
+    dbgln("FIXME: Implement Element::current_css_zoom()");
+    return 1.0;
+}
+
 void Element::inserted()
 {
     Base::inserted();

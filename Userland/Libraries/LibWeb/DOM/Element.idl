@@ -92,7 +92,7 @@ interface Element : Node {
     readonly attribute long clientLeft;
     readonly attribute long clientWidth;
     readonly attribute long clientHeight;
-    // FIXME: readonly attribute double currentCSSZoom;
+    readonly attribute double currentCSSZoom;
 
     // https://w3c.github.io/DOM-Parsing/#extensions-to-the-element-interface
     [CEReactions, LegacyNullToEmptyString] attribute DOMString outerHTML;
