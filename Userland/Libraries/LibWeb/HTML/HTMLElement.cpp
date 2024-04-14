@@ -566,4 +566,11 @@ void HTMLElement::did_receive_focus()
     browsing_context->set_cursor_position(DOM::Position::create(realm(), *this, 0));
 }
 
+// https://html.spec.whatwg.org/multipage/interaction.html#dom-accesskeylabel
+String HTMLElement::access_key_label() const
+{
+    dbgln("FIXME: Implement HTMLElement::access_key_label()");
+    return String {};
+}
+
 }

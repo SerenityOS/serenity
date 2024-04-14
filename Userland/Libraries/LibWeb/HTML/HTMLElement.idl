@@ -20,7 +20,7 @@ interface HTMLElement : Element {
     // FIXME: [CEReactions] attribute boolean inert;
     undefined click();
     // FIXME: [CEReactions] attribute DOMString accessKey;
-    // FIXME: readonly attribute DOMString accessKeyLabel;
+    readonly attribute DOMString accessKeyLabel;
     // FIXME: [CEReactions] attribute boolean draggable;
     // FIXME: [CEReactions] attribute boolean spellcheck;
     // FIXME: [CEReactions] attribute DOMString autocapitalize;
