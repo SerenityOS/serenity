@@ -5,8 +5,18 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Platform.h>
 #include <AK/Types.h>
 #include <LibCrypto/Hash/SHA2.h>
+
+#if (ARCH(I386) || ARCH(X86_64)) && !defined KERNEL && defined(AK_COMPILER_GCC)
+#    include <AK/SIMD.h>
+#    include <AK/SIMDExtras.h>
+#    define SHA256_ATTRIBUTE_TARGET_DEFAULT __attribute__((target("default")))
+#    define SHA256_ATTRIBUTE_TARGET_X86 __attribute__((target("sha"), used))
+#else
+#    define SHA256_ATTRIBUTE_TARGET_DEFAULT
+#endif
 
 namespace Crypto::Hash {
 constexpr static auto ROTRIGHT(u32 a, size_t b) { return (a >> b) | (a << (32 - b)); }
@@ -25,9 +35,12 @@ constexpr static auto EP1(u64 x) { return ROTRIGHT(x, 14) ^ ROTRIGHT(x, 18) ^ RO
 constexpr static auto SIGN0(u64 x) { return ROTRIGHT(x, 1) ^ ROTRIGHT(x, 8) ^ (x >> 7); }
 constexpr static auto SIGN1(u64 x) { return ROTRIGHT(x, 19) ^ ROTRIGHT(x, 61) ^ (x >> 6); }
 
-inline void SHA256::transform(u8 const* data)
+SHA256_ATTRIBUTE_TARGET_DEFAULT static void SHA256_transform_impl(u32 (&state)[8], u8 const (&data)[64])
 {
-    u32 m[64];
+    constexpr static auto BlockSize = 64;
+    constexpr static auto Rounds = 64;
+
+    u32 m[BlockSize];
 
     size_t i = 0;
     for (size_t j = 0; i < 16; ++i, j += 4) {
@@ -38,10 +51,10 @@ inline void SHA256::transform(u8 const* data)
         m[i] = SIGN1(m[i - 2]) + m[i - 7] + SIGN0(m[i - 15]) + m[i - 16];
     }
 
-    auto a = m_state[0], b = m_state[1],
-         c = m_state[2], d = m_state[3],
-         e = m_state[4], f = m_state[5],
-         g = m_state[6], h = m_state[7];
+    auto a = state[0], b = state[1],
+         c = state[2], d = state[3],
+         e = state[4], f = state[5],
+         g = state[6], h = state[7];
 
     for (i = 0; i < Rounds; ++i) {
         auto temp0 = h + EP1(e) + CH(e, f, g) + SHA256Constants::RoundConstants[i] + m[i];
@@ -56,14 +69,67 @@ inline void SHA256::transform(u8 const* data)
         a = temp0 + temp1;
     }
 
-    m_state[0] += a;
-    m_state[1] += b;
-    m_state[2] += c;
-    m_state[3] += d;
-    m_state[4] += e;
-    m_state[5] += f;
-    m_state[6] += g;
-    m_state[7] += h;
+    state[0] += a;
+    state[1] += b;
+    state[2] += c;
+    state[3] += d;
+    state[4] += e;
+    state[5] += f;
+    state[6] += g;
+    state[7] += h;
+}
+
+#if (ARCH(I386) || ARCH(X86_64)) && !defined KERNEL && defined(AK_COMPILER_GCC)
+
+SHA256_ATTRIBUTE_TARGET_X86 static void SHA256_transform_impl(u32 (&state)[8], u8 const (&data)[64])
+{
+    using AK::SIMD::i32x4;
+
+    i32x4 states[2] {};
+    states[0] = AK::SIMD::load_unaligned<i32x4>(&state[0]);
+    states[1] = AK::SIMD::load_unaligned<i32x4>(&state[4]);
+    auto tmp = i32x4 { states[0][1], states[0][0], states[0][3], states[0][2] };
+    states[1] = i32x4 { states[1][3], states[1][2], states[1][1], states[1][0] };
+    states[0] = i32x4 { states[1][2], states[1][3], tmp[0], tmp[1] };
+    states[1] = i32x4 { states[1][0], states[1][1], tmp[2], tmp[3] };
+
+    i32x4 msgs[4] {};
+    i32x4 old[2] { states[0], states[1] };
+    for (int i = 0; i != 16; ++i) {
+        i32x4 msg {};
+        if (i < 4) {
+            msgs[i] = AK::SIMD::load_unaligned<i32x4>(&data[i * 16]);
+            msgs[i] = AK::SIMD::elementwise_byte_reverse(msgs[i]);
+            tmp = AK::SIMD::load_unaligned<i32x4>(&SHA256Constants::RoundConstants[i * 4]);
+            msg = msgs[i] + tmp;
+        } else {
+            msgs[(i + 0) % 4] = __builtin_ia32_sha256msg1(msgs[(i + 0) % 4], msgs[(i + 1) % 4]);
+            tmp = i32x4 { msgs[(i + 2) % 4][1], msgs[(i + 2) % 4][2], msgs[(i + 2) % 4][3], msgs[(i + 3) % 4][0] };
+            msgs[(i + 0) % 4] += tmp;
+            msgs[(i + 0) % 4] = __builtin_ia32_sha256msg2(msgs[(i + 0) % 4], msgs[(i + 3) % 4]);
+            tmp = AK::SIMD::load_unaligned<i32x4>(&SHA256Constants::RoundConstants[i * 4]);
+            msg = msgs[(i + 0) % 4] + tmp;
+        }
+        states[1] = __builtin_ia32_sha256rnds2(states[1], states[0], msg);
+        msg = i32x4 { msg[2], msg[3], 0, 0 };
+        states[0] = __builtin_ia32_sha256rnds2(states[0], states[1], msg);
+    }
+    states[0] += old[0];
+    states[1] += old[1];
+
+    tmp = i32x4 { states[0][3], states[0][2], states[0][1], states[0][0] };
+    states[1] = i32x4 { states[1][1], states[1][0], states[1][3], states[1][2] };
+    states[0] = i32x4 { tmp[0], tmp[1], states[1][2], states[1][3] };
+    states[1] = i32x4 { tmp[2], tmp[3], states[1][0], states[1][1] };
+    AK::SIMD::store_unaligned(&state[0], states[0]);
+    AK::SIMD::store_unaligned(&state[4], states[1]);
+}
+
+#endif
+
+inline void SHA256::transform(u8 const (&data)[BlockSize])
+{
+    SHA256_transform_impl(m_state, data);
 }
 
 template<size_t BlockSize, typename Callback>
