@@ -13,7 +13,6 @@
 #include <LibPDF/Encoding.h>
 #include <LibPDF/Error.h>
 #include <LibPDF/Fonts/CFF.h>
-#include <LibPDF/Reader.h>
 
 namespace PDF {
 
@@ -97,15 +96,15 @@ static constexpr auto s_predefined_charset_expert_subset = to_array<CFF::SID>({
 
 PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPtr<Encoding> encoding)
 {
-    Reader reader(cff_bytes);
+    FixedMemoryStream reader(cff_bytes);
 
     // CFF spec, "6 Header"
     // skip major, minor version
-    reader.consume(2);
-    auto header_size = TRY(reader.try_read<Card8>());
+    TRY(reader.discard(2));
+    auto header_size = TRY(reader.read_value<Card8>());
     // skip offset size
-    reader.consume(1);
-    reader.move_to(header_size);
+    TRY(reader.discard(1));
+    TRY(reader.seek(header_size));
 
     // CFF spec, "7 Name INDEX"
     Vector<String> font_names;
@@ -157,7 +156,7 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
     dbgln_if(CFF_DEBUG, "CFF has {} gsubr entries", global_subroutines.size());
 
     // Create glyphs (now that we have the subroutines) and associate missing information to store them and their encoding
-    auto glyphs = TRY(parse_charstrings(Reader(cff_bytes.slice(top_dict.charstrings_offset)), top_dict.local_subroutines, global_subroutines));
+    auto glyphs = TRY(parse_charstrings(FixedMemoryStream(cff_bytes.slice(top_dict.charstrings_offset)), top_dict.local_subroutines, global_subroutines));
 
     // CFF spec, "Table 16 Encoding ID"
     // FIXME: Only read this if the built-in encoding is actually needed? (ie. `if (!encoding)`)
@@ -216,7 +215,7 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
     // CFF spec, "18 CID-keyed Fonts"
     Vector<TopDict> font_dicts;
     if (top_dict.fdarray_offset != 0) {
-        Reader fdarray_reader { cff_bytes.slice(top_dict.fdarray_offset) };
+        FixedMemoryStream fdarray_reader { cff_bytes.slice(top_dict.fdarray_offset) };
         font_dicts = TRY(parse_top_dicts(fdarray_reader, cff_bytes));
         dbgln_if(CFF_DEBUG, "CFF has {} FDArray entries", font_dicts.size());
     }
@@ -294,7 +293,7 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
     return cff;
 }
 
-PDFErrorOr<Vector<CFF::TopDict>> CFF::parse_top_dicts(Reader& reader, ReadonlyBytes const& cff_bytes)
+PDFErrorOr<Vector<CFF::TopDict>> CFF::parse_top_dicts(FixedMemoryStream& reader, ReadonlyBytes const& cff_bytes)
 {
     Vector<TopDict> top_dicts;
 
@@ -379,7 +378,7 @@ PDFErrorOr<Vector<CFF::TopDict>> CFF::parse_top_dicts(Reader& reader, ReadonlyBy
                         // CFF spec, "16 Local/Global Subrs INDEXes"
                         // "Local subrs are stored in an INDEX structure which is located via the offset operand of the Subrs operator in the Private DICT."
                         auto subrs_offset = operands[0].get<int>();
-                        Reader subrs_reader { cff_bytes.slice(private_dict_offset + subrs_offset) };
+                        FixedMemoryStream subrs_reader { cff_bytes.slice(private_dict_offset + subrs_offset) };
                         TRY(parse_index(subrs_reader, [&](ReadonlyBytes const& subroutine_bytes) -> PDFErrorOr<void> {
                             return TRY(top_dict.local_subroutines.try_append(TRY(ByteBuffer::copy(subroutine_bytes))));
                         }));
@@ -831,7 +830,7 @@ static constexpr Array s_cff_builtin_names {
     "Semibold"sv,
 };
 
-PDFErrorOr<Vector<StringView>> CFF::parse_strings(Reader& reader)
+PDFErrorOr<Vector<StringView>> CFF::parse_strings(FixedMemoryStream& reader)
 {
     // CFF spec "10 String Index"
     Vector<StringView> strings;
@@ -940,7 +939,7 @@ PDFErrorOr<Vector<u8>> CFF::parse_fdselect(Stream&& reader, size_t glyph_count)
     return fd_selector_array;
 }
 
-PDFErrorOr<Vector<CFF::Glyph>> CFF::parse_charstrings(Reader&& reader, Vector<ByteBuffer> const& local_subroutines, Vector<ByteBuffer> const& global_subroutines)
+PDFErrorOr<Vector<CFF::Glyph>> CFF::parse_charstrings(FixedMemoryStream&& reader, Vector<ByteBuffer> const& local_subroutines, Vector<ByteBuffer> const& global_subroutines)
 {
     // CFF spec, "14 CharStrings INDEX"
     Vector<Glyph> glyphs;
@@ -1034,19 +1033,19 @@ PDFErrorOr<OperatorT> CFF::parse_dict_operator(u8 b0, Stream& reader)
 
 template PDFErrorOr<CFF::TopDictOperator> CFF::parse_dict_operator(u8, Stream&);
 
-PDFErrorOr<void> CFF::parse_index(Reader& reader, IndexDataHandler&& data_handler)
+PDFErrorOr<void> CFF::parse_index(FixedMemoryStream& reader, IndexDataHandler&& data_handler)
 {
     // CFF spec, "5 INDEX Data"
-    Card16 count = TRY(reader.try_read<BigEndian<Card16>>());
+    Card16 count = TRY(reader.read_value<BigEndian<Card16>>());
     if (count == 0)
         return {};
-    auto offset_size = TRY(reader.try_read<OffSize>());
+    auto offset_size = TRY(reader.read_value<OffSize>());
     if (offset_size > 4)
         return error("CFF INDEX Data offset_size > 4 not supported");
     return parse_index_data(offset_size, count, reader, data_handler);
 }
 
-PDFErrorOr<void> CFF::parse_index_data(OffSize offset_size, Card16 count, Reader& reader, IndexDataHandler& handler)
+PDFErrorOr<void> CFF::parse_index_data(OffSize offset_size, Card16 count, FixedMemoryStream& reader, IndexDataHandler& handler)
 {
     // CFF spec, "5 INDEX Data"
     u32 last_data_end = 1;
@@ -1054,24 +1053,24 @@ PDFErrorOr<void> CFF::parse_index_data(OffSize offset_size, Card16 count, Reader
     auto read_offset = [&]() -> PDFErrorOr<u32> {
         u32 offset = 0;
         for (OffSize i = 0; i < offset_size; ++i)
-            offset = (offset << 8) | TRY(reader.try_read<u8>());
+            offset = (offset << 8) | TRY(reader.read_value<u8>());
         return offset;
     };
 
     auto offset_refpoint = reader.offset() + offset_size * (count + 1) - 1;
     for (u16 i = 0; i < count; i++) {
-        reader.save();
+        auto saved_offset = TRY(reader.tell());
 
-        reader.move_by(offset_size * i);
+        TRY(reader.seek(offset_size * i, SeekMode::FromCurrentPosition));
         u32 data_start = TRY(read_offset());
         last_data_end = TRY(read_offset());
 
         auto data_size = last_data_end - data_start;
-        reader.move_to(offset_refpoint + data_start);
-        TRY(handler(reader.bytes().slice(reader.offset(), data_size)));
-        reader.load();
+        TRY(reader.seek(offset_refpoint + data_start));
+        TRY(handler(TRY(reader.read_in_place<u8 const>(data_size))));
+        TRY(reader.seek(saved_offset));
     }
-    reader.move_to(offset_refpoint + last_data_end);
+    TRY(reader.seek(offset_refpoint + last_data_end));
     return {};
 }
 

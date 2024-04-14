@@ -12,8 +12,6 @@
 
 namespace PDF {
 
-class Reader;
-
 // CFF spec: https://adobe-type-tools.github.io/font-tech-notes/pdfs/5176.CFF.pdf
 
 class CFF : public Type1FontProgram {
@@ -104,9 +102,9 @@ public:
     static PDFErrorOr<DictOperand> load_dict_operand(u8, Stream&);
 
     using IndexDataHandler = Function<PDFErrorOr<void>(ReadonlyBytes const&)>;
-    static PDFErrorOr<void> parse_index(Reader& reader, IndexDataHandler&&);
+    static PDFErrorOr<void> parse_index(FixedMemoryStream&, IndexDataHandler&&);
 
-    static PDFErrorOr<void> parse_index_data(OffSize offset_size, Card16 count, Reader& reader, IndexDataHandler&);
+    static PDFErrorOr<void> parse_index_data(OffSize offset_size, Card16 count, FixedMemoryStream&, IndexDataHandler&);
 
     template<typename OperatorT>
     using DictEntryHandler = Function<PDFErrorOr<void>(OperatorT, Vector<DictOperand> const&)>;
@@ -129,11 +127,11 @@ public:
         int fdselect_offset = 0;
         int fdarray_offset = 0;
     };
-    static PDFErrorOr<Vector<TopDict>> parse_top_dicts(Reader&, ReadonlyBytes const& cff_bytes);
+    static PDFErrorOr<Vector<TopDict>> parse_top_dicts(FixedMemoryStream&, ReadonlyBytes const& cff_bytes);
 
-    static PDFErrorOr<Vector<StringView>> parse_strings(Reader&);
+    static PDFErrorOr<Vector<StringView>> parse_strings(FixedMemoryStream&);
 
-    static PDFErrorOr<Vector<CFF::Glyph>> parse_charstrings(Reader&&, Vector<ByteBuffer> const& local_subroutines, Vector<ByteBuffer> const& global_subroutines);
+    static PDFErrorOr<Vector<CFF::Glyph>> parse_charstrings(FixedMemoryStream&&, Vector<ByteBuffer> const& local_subroutines, Vector<ByteBuffer> const& global_subroutines);
 
     static DeprecatedFlyString resolve_sid(SID, Vector<StringView> const&);
     static PDFErrorOr<Vector<SID>> parse_charset(Stream&&, size_t);
