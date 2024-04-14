@@ -143,6 +143,7 @@ public:
     Function<void(URL::URL const&, ByteString const& target, unsigned modifiers)> on_link_click;
     Function<void(URL::URL const&, ByteString const& target, unsigned modifiers)> on_link_middle_click;
     Function<void(ByteString const&)> on_title_change;
+    Function<void(URL::URL const&)> on_url_change;
     Function<void(URL::URL const&, bool)> on_load_start;
     Function<void(URL::URL const&)> on_load_finish;
     Function<void(URL::URL const&, Web::HTML::HistoryHandlingBehavior)> on_history_api_push_or_replace;

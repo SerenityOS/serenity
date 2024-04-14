@@ -95,6 +95,7 @@ private:
     virtual void page_did_request_cursor_change(Gfx::StandardCursor) override;
     virtual void page_did_layout() override;
     virtual void page_did_change_title(ByteString const&) override;
+    virtual void page_did_change_url(URL::URL const&) override;
     virtual void page_did_request_navigate_back() override;
     virtual void page_did_request_navigate_forward() override;
     virtual void page_did_request_refresh() override;

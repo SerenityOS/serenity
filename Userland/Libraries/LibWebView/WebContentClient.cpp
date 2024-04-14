@@ -142,6 +142,14 @@ void WebContentClient::did_change_title(u64 page_id, ByteString const& title)
     }
 }
 
+void WebContentClient::did_change_url(u64 page_id, URL::URL const& url)
+{
+    if (auto view = view_for_page_id(page_id); view.has_value()) {
+        if (view->on_url_change)
+            view->on_url_change(url);
+    }
+}
+
 void WebContentClient::did_request_scroll(u64 page_id, i32 x_delta, i32 y_delta)
 {
     if (auto view = view_for_page_id(page_id); view.has_value()) {
