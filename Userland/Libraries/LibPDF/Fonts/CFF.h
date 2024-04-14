@@ -99,9 +99,9 @@ public:
         return operand.get<float>();
     }
 
-    static int load_int_dict_operand(u8 b0, Reader&);
-    static float load_float_dict_operand(Reader&);
-    static PDFErrorOr<DictOperand> load_dict_operand(u8, Reader&);
+    static ErrorOr<int> load_int_dict_operand(u8 b0, Stream&);
+    static ErrorOr<float> load_float_dict_operand(Stream&);
+    static PDFErrorOr<DictOperand> load_dict_operand(u8, Stream&);
 
     using IndexDataHandler = Function<PDFErrorOr<void>(ReadonlyBytes const&)>;
     static PDFErrorOr<void> parse_index(Reader& reader, IndexDataHandler&&);
@@ -112,10 +112,10 @@ public:
     using DictEntryHandler = Function<PDFErrorOr<void>(OperatorT, Vector<DictOperand> const&)>;
 
     template<typename OperatorT>
-    static PDFErrorOr<void> parse_dict(Reader& reader, DictEntryHandler<OperatorT>&& handler);
+    static PDFErrorOr<void> parse_dict(Stream&, DictEntryHandler<OperatorT>&& handler);
 
     template<typename OperatorT>
-    static PDFErrorOr<OperatorT> parse_dict_operator(u8, Reader&);
+    static PDFErrorOr<OperatorT> parse_dict_operator(u8, Stream&);
 
     // CFF spec, "8 Top DICT INDEX"
     struct TopDict {
