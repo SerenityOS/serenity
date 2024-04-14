@@ -10,7 +10,6 @@
 #include "LocationEdit.h"
 #include "WebContentView.h"
 #include <LibWeb/HTML/AudioPlayState.h>
-#include <LibWebView/History.h>
 #include <QBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
