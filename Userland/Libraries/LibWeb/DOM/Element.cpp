@@ -2130,6 +2130,18 @@ void Element::scroll(HTML::ScrollToOptions const&)
     dbgln("FIXME: Implement Element::scroll(ScrollToOptions)");
 }
 
+// https://drafts.csswg.org/cssom-view/#dom-window-scrollby
+void Element::scroll_by(double x, double y)
+{
+    dbgln("FIXME: Implement Element::scroll_by({}, {})", x, y);
+}
+
+// https://drafts.csswg.org/cssom-view/#dom-window-scrollby
+void Element::scroll_by(HTML::ScrollToOptions const&)
+{
+    dbgln("FIXME: Implement Element::scroll_by(ScrollToOptions)");
+}
+
 bool Element::id_reference_exists(String const& id_reference) const
 {
     return document().get_element_by_id(id_reference);

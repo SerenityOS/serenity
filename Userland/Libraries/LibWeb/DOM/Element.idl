@@ -82,8 +82,8 @@ interface Element : Node {
     undefined scroll(unrestricted double x, unrestricted double y);
     [ImplementedAs=scroll] undefined scrollTo(optional ScrollToOptions options = {});
     [ImplementedAs=scroll] undefined scrollTo(unrestricted double x, unrestricted double y);
-    // FIXME: undefined scrollBy(optional ScrollToOptions options = {});
-    // FIXME: undefined scrollBy(unrestricted double x, unrestricted double y);
+    undefined scrollBy(optional ScrollToOptions options = {});
+    undefined scrollBy(unrestricted double x, unrestricted double y);
     attribute unrestricted double scrollTop;
     attribute unrestricted double scrollLeft;
     readonly attribute long scrollWidth;
