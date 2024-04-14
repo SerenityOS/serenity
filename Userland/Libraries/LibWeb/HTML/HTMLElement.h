@@ -59,6 +59,8 @@ public:
 
     void blur();
 
+    [[nodiscard]] String access_key_label() const;
+
     bool fire_a_synthetic_pointer_event(FlyString const& type, DOM::Element& target, bool not_trusted);
 
     // https://html.spec.whatwg.org/multipage/forms.html#category-label
