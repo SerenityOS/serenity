@@ -56,6 +56,8 @@ public:
 
     Attr const* get_attribute_with_lowercase_qualified_name(FlyString const&) const;
 
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<Attr>> remove_attribute_node(JS::NonnullGCPtr<Attr>);
+
 private:
     explicit NamedNodeMap(Element&);
 

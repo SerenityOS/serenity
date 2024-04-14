@@ -51,7 +51,7 @@ interface Element : Node {
     Attr? getAttributeNodeNS([FlyString] DOMString? namespace, [FlyString] DOMString localName);
     [CEReactions] Attr? setAttributeNode(Attr attr);
     [CEReactions] Attr? setAttributeNodeNS(Attr attr);
-    // FIXME: [CEReactions] Attr removeAttributeNode(Attr attr);
+    [CEReactions] Attr removeAttributeNode(Attr attr);
 
     ShadowRoot attachShadow(ShadowRootInit init);
     readonly attribute ShadowRoot? shadowRoot;

@@ -305,6 +305,12 @@ void Element::remove_attribute_ns(Optional<FlyString> const& namespace_, FlyStri
     m_attributes->remove_attribute_ns(namespace_, name);
 }
 
+// https://dom.spec.whatwg.org/#dom-element-removeattributenode
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Attr>> Element::remove_attribute_node(JS::NonnullGCPtr<Attr> attr)
+{
+    return m_attributes->remove_attribute_node(attr);
+}
+
 // https://dom.spec.whatwg.org/#dom-element-hasattribute
 bool Element::has_attribute(FlyString const& name) const
 {
