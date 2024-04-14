@@ -220,6 +220,7 @@ BrowserWindow::BrowserWindow(Vector<URL::URL> const& initial_urls, WebView::Cook
     auto* debug_menu = menuBar()->addMenu("&Debug");
 
     auto* dump_session_history_tree_action = new QAction("Dump Session History Tree", this);
+    dump_session_history_tree_action->setIcon(load_icon_from_uri("resource://icons/16x16/history.png"sv));
     debug_menu->addAction(dump_session_history_tree_action);
     QObject::connect(dump_session_history_tree_action, &QAction::triggered, this, [this] {
         debug_request("dump-session-history");
