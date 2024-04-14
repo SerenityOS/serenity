@@ -224,7 +224,7 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
     // CFF spec, "19 FDSelect"
     Vector<u8> fdselect;
     if (top_dict.fdselect_offset != 0) {
-        fdselect = TRY(parse_fdselect(Reader { cff_bytes.slice(top_dict.fdselect_offset) }, glyphs.size()));
+        fdselect = TRY(parse_fdselect(FixedMemoryStream { cff_bytes.slice(top_dict.fdselect_offset) }, glyphs.size()));
         dbgln_if(CFF_DEBUG, "CFF has {} FDSelect entries", fdselect.size());
     }
 
@@ -895,12 +895,12 @@ PDFErrorOr<Vector<CFF::SID>> CFF::parse_charset(Reader&& reader, size_t glyph_co
     return names;
 }
 
-PDFErrorOr<Vector<u8>> CFF::parse_fdselect(Reader&& reader, size_t glyph_count)
+PDFErrorOr<Vector<u8>> CFF::parse_fdselect(Stream&& reader, size_t glyph_count)
 {
     Vector<u8> fd_selector_array; // Maps GIDs to their FD index.
 
     // CFF spec, "19 FDSelect"
-    auto format = TRY(reader.try_read<Card8>());
+    auto format = TRY(reader.read_value<Card8>());
 
     if (format == 0) {
         // CFF spec, "Table 27 Format 0"
@@ -908,23 +908,23 @@ PDFErrorOr<Vector<u8>> CFF::parse_fdselect(Reader&& reader, size_t glyph_count)
         dbgln_if(CFF_DEBUG, "CFF fdselect format 0");
         fd_selector_array.ensure_capacity(glyph_count);
         for (size_t i = 0; i < glyph_count; i++)
-            fd_selector_array.append(TRY(reader.try_read<Card8>()));
+            fd_selector_array.append(TRY(reader.read_value<Card8>()));
     } else if (format == 3) {
         // CFF spec, "Table 28 Format 3"
         dbgln_if(CFF_DEBUG, "CFF fdselect format 3");
 
         // The spec presents this as n "Card16 first; Card8 fd;" struct entries followed by a Char16 sentinel value.
         // But the code is shorter if we treat it as a Char16 start value followed by n "Card8 fd; Card16 end;" struct entries.
-        Card16 n_ranges = TRY(reader.try_read<BigEndian<Card16>>());
-        Card16 begin = TRY(reader.try_read<BigEndian<Card16>>());
+        Card16 n_ranges = TRY(reader.read_value<BigEndian<Card16>>());
+        Card16 begin = TRY(reader.read_value<BigEndian<Card16>>());
 
         // "The first range must have a 'first' GID of 0."
         if (begin != 0)
             return error("CFF fdselect format 3 first range must have a 'first' GID of 0");
 
         for (Card16 i = 0; i < n_ranges; i++) {
-            auto fd = TRY(reader.try_read<Card8>());
-            auto end = TRY(reader.try_read<BigEndian<Card16>>());
+            auto fd = TRY(reader.read_value<Card8>());
+            auto end = TRY(reader.read_value<BigEndian<Card16>>());
             for (Card16 j = begin; j < end; j++)
                 fd_selector_array.append(fd);
             begin = end;

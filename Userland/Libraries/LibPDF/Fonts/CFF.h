@@ -137,7 +137,7 @@ public:
 
     static DeprecatedFlyString resolve_sid(SID, Vector<StringView> const&);
     static PDFErrorOr<Vector<SID>> parse_charset(Reader&&, size_t);
-    static PDFErrorOr<Vector<u8>> parse_fdselect(Reader&&, size_t);
+    static PDFErrorOr<Vector<u8>> parse_fdselect(Stream&&, size_t);
     static PDFErrorOr<Vector<u8>> parse_encoding(Stream&&, HashMap<Card8, SID>& supplemental);
 };
 
