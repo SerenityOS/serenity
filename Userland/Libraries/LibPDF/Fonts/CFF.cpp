@@ -301,7 +301,7 @@ PDFErrorOr<Vector<CFF::TopDict>> CFF::parse_top_dicts(Reader& reader, ReadonlyBy
     TRY(parse_index(reader, [&](ReadonlyBytes const& element_data) -> PDFErrorOr<void> {
         TopDict top_dict;
 
-        Reader element_reader { element_data };
+        FixedMemoryStream element_reader { element_data };
         TRY(parse_dict<TopDictOperator>(element_reader, [&](TopDictOperator op, Vector<DictOperand> const& operands) -> PDFErrorOr<void> {
             switch (op) {
             case TopDictOperator::Version:
@@ -353,7 +353,7 @@ PDFErrorOr<Vector<CFF::TopDict>> CFF::parse_top_dicts(Reader& reader, ReadonlyBy
             case TopDictOperator::Private: {
                 auto private_dict_size = operands[0].get<int>();
                 auto private_dict_offset = operands[1].get<int>();
-                Reader priv_dict_reader { cff_bytes.slice(private_dict_offset, private_dict_size) };
+                FixedMemoryStream priv_dict_reader { cff_bytes.slice(private_dict_offset, private_dict_size) };
                 TRY(parse_dict<PrivDictOperator>(priv_dict_reader, [&](PrivDictOperator op, Vector<DictOperand> const& operands) -> PDFErrorOr<void> {
                     switch (op) {
                     case PrivDictOperator::BlueValues:
@@ -997,12 +997,12 @@ PDFErrorOr<Vector<u8>> CFF::parse_encoding(Stream&& reader, HashMap<Card8, SID>&
 }
 
 template<typename OperatorT>
-PDFErrorOr<void> CFF::parse_dict(Reader& reader, DictEntryHandler<OperatorT>&& handler)
+PDFErrorOr<void> CFF::parse_dict(Stream& reader, DictEntryHandler<OperatorT>&& handler)
 {
     // CFF spec, "4 DICT data"
     Vector<DictOperand> operands;
-    while (reader.remaining() > 0) {
-        auto b0 = reader.read<u8>();
+    while (!reader.is_eof()) {
+        auto b0 = TRY(reader.read_value<u8>());
         // "Operators and operands may be distinguished by inspection of their first byte: 0-21 specify operators"
         if (b0 <= 21) {
             auto op = TRY(parse_dict_operator<OperatorT>(b0, reader));
@@ -1016,11 +1016,11 @@ PDFErrorOr<void> CFF::parse_dict(Reader& reader, DictEntryHandler<OperatorT>&& h
     return {};
 }
 
-template PDFErrorOr<void> CFF::parse_dict<CFF::TopDictOperator>(Reader&, DictEntryHandler<TopDictOperator>&&);
-template PDFErrorOr<void> CFF::parse_dict<CFF::PrivDictOperator>(Reader&, DictEntryHandler<PrivDictOperator>&&);
+template PDFErrorOr<void> CFF::parse_dict<CFF::TopDictOperator>(Stream&, DictEntryHandler<TopDictOperator>&&);
+template PDFErrorOr<void> CFF::parse_dict<CFF::PrivDictOperator>(Stream&, DictEntryHandler<PrivDictOperator>&&);
 
 template<typename OperatorT>
-PDFErrorOr<OperatorT> CFF::parse_dict_operator(u8 b0, Reader& reader)
+PDFErrorOr<OperatorT> CFF::parse_dict_operator(u8 b0, Stream& reader)
 {
     // CFF spec, "4 DICT data"
     VERIFY(b0 <= 21);
@@ -1028,11 +1028,11 @@ PDFErrorOr<OperatorT> CFF::parse_dict_operator(u8 b0, Reader& reader)
     // "Two-byte operators have an initial escape byte of 12."
     if (b0 != 12)
         return OperatorT { (int)b0 };
-    auto b1 = TRY(reader.try_read<u8>());
+    auto b1 = TRY(reader.read_value<u8>());
     return OperatorT { b0 << 8 | b1 };
 }
 
-template PDFErrorOr<CFF::TopDictOperator> CFF::parse_dict_operator(u8, Reader&);
+template PDFErrorOr<CFF::TopDictOperator> CFF::parse_dict_operator(u8, Stream&);
 
 PDFErrorOr<void> CFF::parse_index(Reader& reader, IndexDataHandler&& data_handler)
 {
@@ -1075,36 +1075,36 @@ PDFErrorOr<void> CFF::parse_index_data(OffSize offset_size, Card16 count, Reader
     return {};
 }
 
-int CFF::load_int_dict_operand(u8 b0, Reader& reader)
+ErrorOr<int> CFF::load_int_dict_operand(u8 b0, Stream& reader)
 {
     // CFF spec, "Table 3 Operand Encoding"
     if (b0 >= 32 && b0 <= 246) {
         return b0 - 139;
     }
     if (b0 >= 247 && b0 <= 250) {
-        auto b1 = reader.read<u8>();
+        auto b1 = TRY(reader.read_value<u8>());
         return (b0 - 247) * 256 + b1 + 108;
     }
     if (b0 >= 251 && b0 <= 254) {
-        auto b1 = reader.read<u8>();
+        auto b1 = TRY(reader.read_value<u8>());
         return -(b0 - 251) * 256 - b1 - 108;
     }
     if (b0 == 28) {
-        auto b1 = reader.read<u8>();
-        auto b2 = reader.read<u8>();
+        auto b1 = TRY(reader.read_value<u8>());
+        auto b2 = TRY(reader.read_value<u8>());
         return b1 << 8 | b2;
     }
     if (b0 == 29) {
-        auto b1 = reader.read<u8>();
-        auto b2 = reader.read<u8>();
-        auto b3 = reader.read<u8>();
-        auto b4 = reader.read<u8>();
+        auto b1 = TRY(reader.read_value<u8>());
+        auto b2 = TRY(reader.read_value<u8>());
+        auto b3 = TRY(reader.read_value<u8>());
+        auto b4 = TRY(reader.read_value<u8>());
         return b1 << 24 | b2 << 16 | b3 << 8 | b4;
     }
     VERIFY_NOT_REACHED();
 }
 
-float CFF::load_float_dict_operand(Reader& reader)
+ErrorOr<float> CFF::load_float_dict_operand(Stream& reader)
 {
     // CFF spec, "Table 5 Nibble Definitions"
     StringBuilder sb;
@@ -1121,7 +1121,7 @@ float CFF::load_float_dict_operand(Reader& reader)
             sb.append('-');
     };
     while (true) {
-        auto byte = reader.read<u8>();
+        auto byte = TRY(reader.read_value<u8>());
         char nibble1 = (byte & 0xf0) >> 4;
         char nibble2 = byte & 0x0f;
         if (nibble1 == 0xf)
@@ -1135,13 +1135,14 @@ float CFF::load_float_dict_operand(Reader& reader)
     return result.release_value();
 }
 
-PDFErrorOr<CFF::DictOperand> CFF::load_dict_operand(u8 b0, Reader& reader)
+PDFErrorOr<CFF::DictOperand> CFF::load_dict_operand(u8 b0, Stream& reader)
 {
     // CFF spec, "4 DICT data"
     if (b0 == 30)
-        return load_float_dict_operand(reader);
+        return DictOperand { TRY(load_float_dict_operand(reader)) };
     if (b0 >= 28)
-        return load_int_dict_operand(b0, reader);
+        return DictOperand { TRY(load_int_dict_operand(b0, reader)) };
     return Error { Error::Type::MalformedPDF, ByteString::formatted("Unknown CFF dict element prefix: {}", b0) };
 }
+
 }
