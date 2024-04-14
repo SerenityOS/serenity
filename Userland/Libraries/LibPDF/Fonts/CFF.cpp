@@ -185,7 +185,7 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
     Vector<SID> charset;                       // Maps GID to CIDs for CID-keyed, to SIDs otherwise.
     Vector<DeprecatedFlyString> charset_names; // Only valid for non-CID-keyed fonts.
     if (top_dict.is_cid_keyed) {
-        charset = TRY(parse_charset(Reader { cff_bytes.slice(top_dict.charset_offset) }, glyphs.size()));
+        charset = TRY(parse_charset(FixedMemoryStream { cff_bytes.slice(top_dict.charset_offset) }, glyphs.size()));
     } else {
         switch (top_dict.charset_offset) {
         case 0:
@@ -205,7 +205,7 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
                 TRY(charset_names.try_append(resolve_sid(sid, strings)));
             break;
         default: {
-            charset = TRY(parse_charset(Reader { cff_bytes.slice(top_dict.charset_offset) }, glyphs.size()));
+            charset = TRY(parse_charset(FixedMemoryStream { cff_bytes.slice(top_dict.charset_offset) }, glyphs.size()));
             for (SID sid : charset)
                 TRY(charset_names.try_append(resolve_sid(sid, strings)));
             break;
@@ -854,18 +854,18 @@ DeprecatedFlyString CFF::resolve_sid(SID sid, Vector<StringView> const& strings)
     return DeprecatedFlyString("space");
 }
 
-PDFErrorOr<Vector<CFF::SID>> CFF::parse_charset(Reader&& reader, size_t glyph_count)
+PDFErrorOr<Vector<CFF::SID>> CFF::parse_charset(Stream&& reader, size_t glyph_count)
 {
     // CFF spec, "13 Charsets"
 
     // Maps `GID - 1` to a SID (or CID, for CID-keyed fonts). The name of GID 0 is implicitly ".notdef".
     Vector<SID> names;
-    auto format = TRY(reader.try_read<Card8>());
+    auto format = TRY(reader.read_value<Card8>());
     if (format == 0) {
         // CFF spec, "Table 17 Format 0"
         dbgln_if(CFF_DEBUG, "CFF charset format 0");
         for (size_t i = 0; i < glyph_count - 1; i++) {
-            SID sid = TRY(reader.try_read<BigEndian<SID>>());
+            SID sid = TRY(reader.read_value<BigEndian<SID>>());
             TRY(names.try_append(sid));
         }
     } else if (format == 1) {
@@ -873,8 +873,8 @@ PDFErrorOr<Vector<CFF::SID>> CFF::parse_charset(Reader&& reader, size_t glyph_co
         dbgln_if(CFF_DEBUG, "CFF charset format 1");
         while (names.size() < glyph_count - 1) {
             // CFF spec, "Table 19 Range1 Format (Charset)"
-            auto first_sid = TRY(reader.try_read<BigEndian<SID>>());
-            int left = TRY(reader.try_read<Card8>());
+            auto first_sid = TRY(reader.read_value<BigEndian<SID>>());
+            int left = TRY(reader.read_value<Card8>());
             for (SID sid = first_sid; left >= 0; left--, sid++)
                 TRY(names.try_append(sid));
         }
@@ -884,8 +884,8 @@ PDFErrorOr<Vector<CFF::SID>> CFF::parse_charset(Reader&& reader, size_t glyph_co
         dbgln_if(CFF_DEBUG, "CFF charset format 2");
         while (names.size() < glyph_count - 1) {
             // CFF spec, "Table 21 Range2 Format"
-            auto first_sid = TRY(reader.try_read<BigEndian<SID>>());
-            int left = TRY(reader.try_read<BigEndian<Card16>>());
+            auto first_sid = TRY(reader.read_value<BigEndian<SID>>());
+            int left = TRY(reader.read_value<BigEndian<Card16>>());
             for (SID sid = first_sid; left >= 0; left--, sid++)
                 TRY(names.try_append(sid));
         }
