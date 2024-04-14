@@ -1472,6 +1472,24 @@ JS::NonnullGCPtr<HTML::HTMLAllCollection> Document::all()
     return *m_all;
 }
 
+// https://html.spec.whatwg.org/multipage/obsolete.html#dom-document-clear
+void Document::clear()
+{
+    // Do nothing
+}
+
+// https://html.spec.whatwg.org/multipage/obsolete.html#dom-document-captureevents
+void Document::capture_events()
+{
+    // Do nothing
+}
+
+// https://html.spec.whatwg.org/multipage/obsolete.html#dom-document-releaseevents
+void Document::release_events()
+{
+    // Do nothing
+}
+
 Color Document::link_color() const
 {
     if (m_link_color.has_value())
