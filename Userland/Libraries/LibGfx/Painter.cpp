@@ -570,17 +570,21 @@ void Painter::draw_rect(IntRect const& a_rect, Color color, bool rough)
     int scale = this->scale();
 
     if (rect.top() >= clipped_rect.top() && rect.top() < clipped_rect.bottom()) {
-        int start_x = rough ? max(rect.x() + 1, clipped_rect.x()) : clipped_rect.x();
-        int width = rough ? min(rect.width() - 2, clipped_rect.width()) : clipped_rect.width();
-        for (int i = 0; i < scale; ++i)
-            fill_physical_scanline_with_draw_op(rect.top() * scale + i, start_x * scale, width * scale, color);
+        int width = rough ? max(0, min(rect.width() - 2, clipped_rect.width())) : clipped_rect.width();
+        if (width > 0) {
+            int start_x = rough ? max(rect.x() + 1, clipped_rect.x()) : clipped_rect.x();
+            for (int i = 0; i < scale; ++i)
+                fill_physical_scanline_with_draw_op(rect.top() * scale + i, start_x * scale, width * scale, color);
+        }
         ++min_y;
     }
     if (rect.bottom() > clipped_rect.top() && rect.bottom() <= clipped_rect.bottom()) {
-        int start_x = rough ? max(rect.x() + 1, clipped_rect.x()) : clipped_rect.x();
-        int width = rough ? min(rect.width() - 2, clipped_rect.width()) : clipped_rect.width();
-        for (int i = 0; i < scale; ++i)
-            fill_physical_scanline_with_draw_op(max_y * scale + i, start_x * scale, width * scale, color);
+        int width = rough ? max(0, min(rect.width() - 2, clipped_rect.width())) : clipped_rect.width();
+        if (width > 0) {
+            int start_x = rough ? max(rect.x() + 1, clipped_rect.x()) : clipped_rect.x();
+            for (int i = 0; i < scale; ++i)
+                fill_physical_scanline_with_draw_op(max_y * scale + i, start_x * scale, width * scale, color);
+        }
         --max_y;
     }
 

@@ -45,3 +45,11 @@ TEST_CASE(draw_scaled_bitmap_with_transform)
         }
     }
 }
+
+TEST_CASE(draw_rect_rough_bounds)
+{
+    auto bitmap = MUST(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { 10, 10 }));
+    Gfx::Painter painter(*bitmap);
+    painter.draw_rect(Gfx::IntRect(0, 0, 1, 1), Color::Black, true);
+    painter.draw_rect(Gfx::IntRect(9, 9, 1, 1), Color::Black, true);
+}
