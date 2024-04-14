@@ -202,6 +202,9 @@ public:
 
     [[nodiscard]] JS::NonnullGCPtr<Crypto::Crypto> crypto();
 
+    void capture_events();
+    void release_events();
+
     [[nodiscard]] JS::NonnullGCPtr<CustomElementRegistry> custom_elements();
 
     HighResolutionTime::DOMHighResTimeStamp get_last_activation_timestamp() const { return m_last_activation_timestamp; }

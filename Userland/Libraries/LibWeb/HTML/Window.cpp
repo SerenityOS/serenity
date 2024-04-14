@@ -1600,6 +1600,18 @@ JS::NonnullGCPtr<Crypto::Crypto> Window::crypto()
     return JS::NonnullGCPtr { *m_crypto };
 }
 
+// https://html.spec.whatwg.org/multipage/obsolete.html#dom-window-captureevents
+void Window::capture_events()
+{
+    // Do nothing.
+}
+
+// https://html.spec.whatwg.org/multipage/obsolete.html#dom-document-releaseevents
+void Window::release_events()
+{
+    // Do nothing.
+}
+
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-navigation
 JS::NonnullGCPtr<Navigation> Window::navigation()
 {
