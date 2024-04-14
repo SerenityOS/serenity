@@ -10,7 +10,6 @@
 #include <LibGUI/FilteringProxyModel.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Widget.h>
-#include <LibWebView/History.h>
 
 namespace Browser {
 
@@ -20,7 +19,7 @@ class HistoryWidget final : public GUI::Widget {
 public:
     virtual ~HistoryWidget() override = default;
 
-    void set_history_entries(Vector<WebView::History::URLTitlePair> entries);
+    void set_history_entries(Vector<URLTitlePair> entries);
     void clear_history_entries();
 
 private:

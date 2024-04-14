@@ -377,7 +377,7 @@ void BrowserWindow::build_menus(StringView const man_file)
         },
         this));
     debug_menu->add_action(GUI::Action::create("Dump &History", { Mod_Ctrl, Key_H }, g_icon_bag.history, [this](auto&) {
-        active_tab().m_history.dump();
+        active_tab().view().debug_request("dump-session-history");
     }));
     debug_menu->add_action(GUI::Action::create("Dump C&ookies", g_icon_bag.cookie, [this](auto&) {
         m_cookie_jar.dump_cookies();
