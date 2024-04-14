@@ -7,8 +7,20 @@
 
 #include <AK/Endian.h>
 #include <AK/Memory.h>
+#include <AK/Platform.h>
 #include <AK/Types.h>
 #include <LibCrypto/Hash/SHA1.h>
+
+// FIXME: Clang does not support the `sha` target in function multiversioning
+#if (ARCH(I386) || ARCH(X86_64)) && defined(AK_COMPILER_GCC)
+#    include <AK/SIMD.h>
+#    include <AK/SIMDExtras.h>
+#    define SHA1_ATTRIBUTE_TARGET_DEFAULT __attribute__((target("default")))
+#    define SHA1_ATTRIBUTE_TARGET_X86 __attribute__((target("sha"), used))
+
+#else
+#    define SHA1_ATTRIBUTE_TARGET_DEFAULT
+#endif
 
 namespace Crypto::Hash {
 
@@ -17,8 +29,10 @@ static constexpr auto ROTATE_LEFT(u32 value, size_t bits)
     return (value << bits) | (value >> (32 - bits));
 }
 
-inline void SHA1::transform(u8 const* data)
+SHA1_ATTRIBUTE_TARGET_DEFAULT static void transform_impl(u32 (&state)[5], u8 const (&data)[64])
 {
+    constexpr static auto Rounds = 80;
+
     u32 blocks[80];
     for (size_t i = 0; i < 16; ++i)
         blocks[i] = AK::convert_between_host_and_network_endian(((u32 const*)data)[i]);
@@ -27,7 +41,7 @@ inline void SHA1::transform(u8 const* data)
     for (size_t i = 16; i < Rounds; ++i)
         blocks[i] = ROTATE_LEFT(blocks[i - 3] ^ blocks[i - 8] ^ blocks[i - 14] ^ blocks[i - 16], 1);
 
-    auto a = m_state[0], b = m_state[1], c = m_state[2], d = m_state[3], e = m_state[4];
+    auto a = state[0], b = state[1], c = state[2], d = state[3], e = state[4];
     u32 f, k;
 
     for (size_t i = 0; i < Rounds; ++i) {
@@ -52,11 +66,11 @@ inline void SHA1::transform(u8 const* data)
         a = temp;
     }
 
-    m_state[0] += a;
-    m_state[1] += b;
-    m_state[2] += c;
-    m_state[3] += d;
-    m_state[4] += e;
+    state[0] += a;
+    state[1] += b;
+    state[2] += c;
+    state[3] += d;
+    state[4] += e;
 
     // "security" measures, as if SHA1 is secure
     a = 0;
@@ -65,6 +79,64 @@ inline void SHA1::transform(u8 const* data)
     d = 0;
     e = 0;
     secure_zero(blocks, 16 * sizeof(u32));
+}
+
+#if (ARCH(I386) || ARCH(X86_64)) && defined(AK_COMPILER_GCC)
+
+SHA1_ATTRIBUTE_TARGET_X86 static void transform_impl(u32 (&state)[5], u8 const (&data)[64])
+{
+    using AK::SIMD::i32x4;
+
+    i32x4 abcd[2] {};
+    i32x4 msgs[4] {};
+
+    abcd[0] = AK::SIMD::load_unaligned<i32x4>(&state[0]);
+    abcd[0] = AK::SIMD::item_reverse(abcd[0]);
+    i32x4 e { 0, 0, 0, static_cast<i32>(state[4]) };
+
+    auto group = [&]<int i_group>() {
+        // FIXME: Test if unrolling the loop is worth it
+        //          GCC: #pragma GCC unroll(5)
+        //        Clang: #pragma unroll
+        for (size_t i_pack = 0; i_pack != 5; ++i_pack) {
+            size_t i_msg = i_group * 5 + i_pack;
+            if (i_msg < 4) {
+                msgs[i_msg] = AK::SIMD::load_unaligned<i32x4>(&data[i_msg * 16]);
+                msgs[i_msg] = AK::SIMD::byte_reverse(msgs[i_msg]);
+            } else {
+                msgs[i_msg % 4] = __builtin_ia32_sha1msg1(msgs[i_msg % 4], msgs[(i_msg + 1) % 4]);
+                msgs[i_msg % 4] ^= msgs[(i_msg + 2) % 4];
+                msgs[i_msg % 4] = __builtin_ia32_sha1msg2(msgs[i_msg % 4], msgs[(i_msg + 3) % 4]);
+            }
+            if (i_msg == 0) {
+                e += msgs[0];
+            } else {
+                e = __builtin_ia32_sha1nexte(abcd[(i_msg + 1) % 2], msgs[(i_msg + 0) % 4]);
+            }
+            abcd[(i_msg + 1) % 2] = __builtin_ia32_sha1rnds4(abcd[(i_msg + 0) % 2], e, i_group);
+        }
+    };
+
+    auto old_abcd = abcd[0];
+    auto old_e = e;
+    group.operator()<0>();
+    group.operator()<1>();
+    group.operator()<2>();
+    group.operator()<3>();
+    e = __builtin_ia32_sha1nexte(abcd[1], i32x4 {});
+    abcd[0] += old_abcd;
+    e += old_e;
+
+    abcd[0] = AK::SIMD::item_reverse(abcd[0]);
+    AK::SIMD::store_unaligned(&state[0], abcd[0]);
+    state[4] = static_cast<u32>(e[3]);
+}
+
+#endif
+
+inline void SHA1::transform(u8 const (&data)[BlockSize])
+{
+    transform_impl(m_state, data);
 }
 
 void SHA1::update(u8 const* message, size_t length)
