@@ -31,9 +31,9 @@ HistoryWidget::HistoryWidget()
     m_table_view->set_alternating_row_colors(true);
 }
 
-void HistoryWidget::set_history_entries(Vector<WebView::History::URLTitlePair> entries)
+void HistoryWidget::set_history_entries(Vector<URLTitlePair> entries)
 {
-    m_model->set_items(entries);
+    m_model->set_items(move(entries));
 }
 
 void HistoryWidget::clear_history_entries()

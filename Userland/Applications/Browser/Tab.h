@@ -14,7 +14,6 @@
 #include <LibHTTP/Job.h>
 #include <LibURL/URL.h>
 #include <LibWeb/Forward.h>
-#include <LibWebView/History.h>
 #include <LibWebView/ViewImplementation.h>
 
 namespace WebView {
@@ -40,16 +39,11 @@ public:
 
     URL::URL url() const;
 
-    enum class LoadType {
-        Normal,
-        HistoryNavigation,
-    };
-
-    void load(URL::URL const&, LoadType = LoadType::Normal);
+    void load(URL::URL const&);
 
     void reload();
-    void go_back(int steps = 1);
-    void go_forward(int steps = 1);
+    void go_back();
+    void go_forward();
 
     void did_become_active();
     void context_menu_requested(Gfx::IntPoint screen_position);
@@ -109,8 +103,6 @@ private:
     void update_status(Optional<String> text_override = {}, i32 count_waiting = 0);
     void close_sub_widgets();
 
-    WebView::History m_history;
-
     RefPtr<WebView::OutOfProcessWebView> m_web_content_view;
 
     RefPtr<URLBox> m_location_box;
@@ -158,7 +150,9 @@ private:
     Optional<URL::URL> m_navigating_url;
 
     bool m_loaded { false };
-    bool m_is_history_navigation { false };
+
+    bool m_can_navigate_back { false };
+    bool m_can_navigate_forward { false };
 };
 
 }
