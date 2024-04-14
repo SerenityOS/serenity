@@ -146,8 +146,18 @@ void HTMLElement::set_inner_text(StringView text)
     set_needs_style_update(true);
 }
 
-String HTMLElement::inner_text()
+// https://html.spec.whatwg.org/multipage/dom.html#the-innertext-idl-attribute:dom-outertext-2
+WebIDL::ExceptionOr<void> HTMLElement::set_outer_text(String)
 {
+    dbgln("FIXME: Implement HTMLElement::set_outer_text()");
+    return {};
+}
+
+// https://html.spec.whatwg.org/multipage/dom.html#get-the-text-steps
+String HTMLElement::get_the_text_steps()
+{
+    // FIXME: Implement this according to spec.
+
     StringBuilder builder;
 
     // innerText for element being rendered takes visibility into account, so force a layout and then walk the layout tree.
@@ -167,6 +177,20 @@ String HTMLElement::inner_text()
     recurse(*layout_node());
 
     return MUST(builder.to_string());
+}
+
+// https://html.spec.whatwg.org/multipage/dom.html#dom-innertext
+String HTMLElement::inner_text()
+{
+    // The innerText and outerText getter steps are to return the result of running get the text steps with this.
+    return get_the_text_steps();
+}
+
+// https://html.spec.whatwg.org/multipage/dom.html#dom-outertext
+String HTMLElement::outer_text()
+{
+    // The innerText and outerText getter steps are to return the result of running get the text steps with this.
+    return get_the_text_steps();
 }
 
 // https://www.w3.org/TR/cssom-view-1/#dom-htmlelement-offsetparent

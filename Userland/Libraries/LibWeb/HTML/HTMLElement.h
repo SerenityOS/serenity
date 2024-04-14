@@ -42,6 +42,9 @@ public:
     String inner_text();
     void set_inner_text(StringView);
 
+    [[nodiscard]] String outer_text();
+    WebIDL::ExceptionOr<void> set_outer_text(String);
+
     int offset_top() const;
     int offset_left() const;
     int offset_width() const;
@@ -86,6 +89,8 @@ private:
     // ^HTML::GlobalEventHandlers
     virtual JS::GCPtr<DOM::EventTarget> global_event_handlers_to_event_target(FlyString const&) override { return *this; }
     virtual void did_receive_focus() override;
+
+    [[nodiscard]] String get_the_text_steps();
 
     JS::GCPtr<DOMStringMap> m_dataset;
 
