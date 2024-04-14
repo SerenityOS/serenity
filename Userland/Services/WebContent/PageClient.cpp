@@ -257,6 +257,11 @@ void PageClient::page_did_change_title(ByteString const& title)
     client().async_did_change_title(m_id, title);
 }
 
+void PageClient::page_did_change_url(URL::URL const& url)
+{
+    client().async_did_change_url(m_id, url);
+}
+
 void PageClient::page_did_request_navigate_back()
 {
     client().async_did_request_navigate_back(m_id);

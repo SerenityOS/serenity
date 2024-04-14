@@ -788,6 +788,8 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
     auto forward_enabled = m_current_session_history_step < static_cast<int>(m_session_history_entries.size()) - 1;
     page().client().page_did_update_navigation_buttons_state(back_enabled, forward_enabled);
 
+    page().client().page_did_change_url(current_session_history_entry()->url());
+
     // 21. Return "applied".
     return HistoryStepResult::Applied;
 }
