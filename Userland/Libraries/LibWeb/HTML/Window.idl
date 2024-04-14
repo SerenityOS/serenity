@@ -110,6 +110,9 @@ interface Window : EventTarget {
 
     // https://w3c.github.io/webcrypto/#crypto-interface
     [SameObject] readonly attribute Crypto crypto;
+
+    undefined captureEvents();
+    undefined releaseEvents();
 };
 Window includes AnimationFrameProvider;
 Window includes GlobalEventHandlers;
