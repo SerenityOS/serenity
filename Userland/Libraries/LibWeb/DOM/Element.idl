@@ -29,49 +29,61 @@ interface Element : Node {
     readonly attribute DOMString localName;
     readonly attribute DOMString tagName;
 
+    [Reflect, CEReactions] attribute DOMString id;
+    [Reflect=class, CEReactions] attribute DOMString className;
+    [SameObject, PutForwards=value] readonly attribute DOMTokenList classList;
+    [Reflect, CEReactions, Unscopable] attribute DOMString slot;
+
+    boolean hasAttributes();
+    [SameObject] readonly attribute NamedNodeMap attributes;
+    sequence<DOMString> getAttributeNames();
     DOMString? getAttribute(DOMString qualifiedName);
     DOMString? getAttributeNS([FlyString] DOMString? namespace, [FlyString] DOMString localName);
     [CEReactions] undefined setAttribute(DOMString qualifiedName, DOMString value);
     [CEReactions] undefined setAttributeNS([FlyString] DOMString? namespace , [FlyString] DOMString qualifiedName , DOMString value);
-    [CEReactions] Attr? setAttributeNode(Attr attr);
-    [CEReactions] Attr? setAttributeNodeNS(Attr attr);
-
     [CEReactions] undefined removeAttribute([FlyString] DOMString qualifiedName);
     [CEReactions] undefined removeAttributeNS([FlyString] DOMString? namespace, [FlyString] DOMString localName);
     [CEReactions] boolean toggleAttribute(DOMString qualifiedName, optional boolean force);
     boolean hasAttribute(DOMString qualifiedName);
     boolean hasAttributeNS([FlyString] DOMString? namespace, [FlyString] DOMString localName);
-    boolean hasAttributes();
-    [SameObject] readonly attribute NamedNodeMap attributes;
-    sequence<DOMString> getAttributeNames();
 
     Attr? getAttributeNode([FlyString] DOMString qualifiedName);
     Attr? getAttributeNodeNS([FlyString] DOMString? namespace, [FlyString] DOMString localName);
-
-    HTMLCollection getElementsByTagName(DOMString tagName);
-    HTMLCollection getElementsByTagNameNS(DOMString? namespace, DOMString localName);
-    HTMLCollection getElementsByClassName(DOMString className);
-
-    [Reflect, CEReactions] attribute DOMString id;
-    [Reflect=class, CEReactions] attribute DOMString className;
-    [SameObject, PutForwards=value] readonly attribute DOMTokenList classList;
-    [Reflect, CEReactions, Unscopable] attribute DOMString slot;
+    [CEReactions] Attr? setAttributeNode(Attr attr);
+    [CEReactions] Attr? setAttributeNodeNS(Attr attr);
+    // FIXME: [CEReactions] Attr removeAttributeNode(Attr attr);
 
     ShadowRoot attachShadow(ShadowRootInit init);
     readonly attribute ShadowRoot? shadowRoot;
 
     boolean matches(DOMString selectors);
     Element? closest(DOMString selectors);
+    [ImplementedAs=matches] boolean webkitMatchesSelector(DOMString selectors); // legacy alias of .matches
 
-    // legacy alias of .matches
-    [ImplementedAs=matches] boolean webkitMatchesSelector(DOMString selectors);
+    HTMLCollection getElementsByTagName(DOMString tagName);
+    HTMLCollection getElementsByTagNameNS(DOMString? namespace, DOMString localName);
+    HTMLCollection getElementsByClassName(DOMString className);
 
+    [CEReactions] Element? insertAdjacentElement(DOMString where, Element element); // legacy
+    undefined insertAdjacentText(DOMString where, DOMString data); // legacy
+
+    // https://dom.spec.whatwg.org/#interface-nondocumenttypechildnode
     readonly attribute Element? nextElementSibling;
     readonly attribute Element? previousElementSibling;
 
-    DOMRect getBoundingClientRect();
+    // https://drafts.csswg.org/cssom-view/#extension-to-the-element-interface
     DOMRectList getClientRects();
+    DOMRect getBoundingClientRect();
 
+    // FIXME: boolean checkVisibility(optional CheckVisibilityOptions options = {});
+
+    undefined scrollIntoView(optional (boolean or ScrollIntoViewOptions) arg = {});
+    undefined scroll(optional ScrollToOptions options = {});
+    undefined scroll(unrestricted double x, unrestricted double y);
+    [ImplementedAs=scroll] undefined scrollTo(optional ScrollToOptions options = {});
+    [ImplementedAs=scroll] undefined scrollTo(unrestricted double x, unrestricted double y);
+    // FIXME: undefined scrollBy(optional ScrollToOptions options = {});
+    // FIXME: undefined scrollBy(unrestricted double x, unrestricted double y);
     attribute unrestricted double scrollTop;
     attribute unrestricted double scrollLeft;
     readonly attribute long scrollWidth;
@@ -80,19 +92,11 @@ interface Element : Node {
     readonly attribute long clientLeft;
     readonly attribute long clientWidth;
     readonly attribute long clientHeight;
+    // FIXME: readonly attribute double currentCSSZoom;
 
-    [CEReactions] Element? insertAdjacentElement(DOMString where, Element element);
-    undefined insertAdjacentText(DOMString where, DOMString data);
-    [CEReactions] undefined insertAdjacentHTML(DOMString position, DOMString text);
-
+    // https://w3c.github.io/DOM-Parsing/#extensions-to-the-element-interface
     [CEReactions, LegacyNullToEmptyString] attribute DOMString outerHTML;
-
-    undefined scrollIntoView(optional (boolean or ScrollIntoViewOptions) arg = {});
-
-    undefined scroll(optional ScrollToOptions options = {});
-    undefined scroll(unrestricted double x, unrestricted double y);
-    [ImplementedAs=scroll] undefined scrollTo(optional ScrollToOptions options = {});
-    [ImplementedAs=scroll] undefined scrollTo(unrestricted double x, unrestricted double y);
+    [CEReactions] undefined insertAdjacentHTML(DOMString position, DOMString text);
 
 };
 
