@@ -342,4 +342,19 @@ WebIDL::ExceptionOr<JS::Value> NamedNodeMap::named_item_value(FlyString const& n
     return node;
 }
 
+// https://dom.spec.whatwg.org/#dom-element-removeattributenode
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Attr>> NamedNodeMap::remove_attribute_node(JS::NonnullGCPtr<Attr> attr)
+{
+    // 1. If this’s attribute list does not contain attr, then throw a "NotFoundError" DOMException.
+    auto index = m_attributes.find_first_index(attr);
+    if (!index.has_value())
+        return WebIDL::NotFoundError::create(realm(), "Attribute not found"_fly_string);
+
+    // 2. Remove attr.
+    remove_attribute_at_index(index.value());
+
+    // 3. Return attr.
+    return attr;
+}
+
 }
