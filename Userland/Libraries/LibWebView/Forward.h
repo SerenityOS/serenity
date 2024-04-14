@@ -12,7 +12,6 @@ namespace WebView {
 
 class CookieJar;
 class Database;
-class History;
 class InspectorClient;
 class OutOfProcessWebView;
 class ProcessManager;
