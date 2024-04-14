@@ -128,6 +128,21 @@ struct HideCursor {
     m_web_view_bridge->load_html(html);
 }
 
+- (void)navigateBack
+{
+    m_web_view_bridge->traverse_the_history_by_delta(-1);
+}
+
+- (void)navigateForward
+{
+    m_web_view_bridge->traverse_the_history_by_delta(1);
+}
+
+- (void)reload
+{
+    m_web_view_bridge->reload();
+}
+
 - (WebView::ViewImplementation&)view
 {
     return *m_web_view_bridge;
@@ -282,8 +297,13 @@ static void copy_data_to_clipboard(StringView data, NSPasteboardType pasteboard_
         [self.observer onLoadFinish:url];
     };
 
-    m_web_view_bridge->on_history_api_push_or_replace = [self](auto const& url, auto history_behavior) {
-        [self.observer onURLUpdated:url historyBehavior:history_behavior];
+    m_web_view_bridge->on_url_change = [self](auto const& url) {
+        [self.observer onURLChange:url];
+    };
+
+    m_web_view_bridge->on_navigation_buttons_state_changed = [self](auto back_enabled, auto forward_enabled) {
+        [self.observer onBackNavigationEnabled:back_enabled
+                      forwardNavigationEnabled:forward_enabled];
     };
 
     m_web_view_bridge->on_title_change = [self](auto const& title) {
@@ -402,15 +422,15 @@ static void copy_data_to_clipboard(StringView data, NSPasteboardType pasteboard_
     };
 
     m_web_view_bridge->on_navigate_back = [self]() {
-        [self.observer onNavigateBack];
+        [self navigateBack];
     };
 
     m_web_view_bridge->on_navigate_forward = [self]() {
-        [self.observer onNavigateForward];
+        [self navigateForward];
     };
 
     m_web_view_bridge->on_refresh = [self]() {
-        [self.observer onReload];
+        [self reload];
     };
 
     m_web_view_bridge->on_enter_tooltip_area = [self](auto, auto const& tooltip) {

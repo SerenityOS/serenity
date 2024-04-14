@@ -287,10 +287,16 @@ static constexpr CGFloat const WINDOW_HEIGHT = 800;
     }
 }
 
-- (void)onURLUpdated:(URL::URL const&)url
-     historyBehavior:(Web::HTML::HistoryHandlingBehavior)history_behavior
+- (void)onURLChange:(URL::URL const&)url
 {
-    [[self tabController] onURLUpdated:url historyBehavior:history_behavior];
+    [[self tabController] onURLChange:url];
+}
+
+- (void)onBackNavigationEnabled:(BOOL)back_enabled
+       forwardNavigationEnabled:(BOOL)forward_enabled
+{
+    [[self tabController] onBackNavigationEnabled:back_enabled
+                         forwardNavigationEnabled:forward_enabled];
 }
 
 - (void)onTitleChange:(ByteString const&)title
@@ -341,21 +347,6 @@ static constexpr CGFloat const WINDOW_HEIGHT = 800;
         [[self tab] setAccessoryView:button];
         break;
     }
-}
-
-- (void)onNavigateBack
-{
-    [[self tabController] navigateBack:nil];
-}
-
-- (void)onNavigateForward
-{
-    [[self tabController] navigateForward:nil];
-}
-
-- (void)onReload
-{
-    [[self tabController] reload:nil];
 }
 
 #pragma mark - NSWindow
