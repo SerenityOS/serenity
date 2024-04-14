@@ -78,6 +78,10 @@ interface Document : Node {
 
     readonly attribute HTMLAllCollection all;
 
+    undefined clear();
+    undefined captureEvents();
+    undefined releaseEvents();
+
     [CEReactions, NewObject] Element createElement(DOMString tagName, optional (DOMString or ElementCreationOptions) options = {});
     [CEReactions, NewObject] Element createElementNS([FlyString] DOMString? namespace, DOMString qualifiedName, optional (DOMString or ElementCreationOptions) options = {});
     DocumentFragment createDocumentFragment();

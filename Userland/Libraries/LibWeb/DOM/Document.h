@@ -243,6 +243,10 @@ public:
     JS::NonnullGCPtr<HTMLCollection> scripts();
     JS::NonnullGCPtr<HTML::HTMLAllCollection> all();
 
+    void clear();
+    void capture_events();
+    void release_events();
+
     String const& source() const { return m_source; }
     void set_source(String source) { m_source = move(source); }
 
