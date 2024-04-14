@@ -207,8 +207,6 @@ public:
     Color visited_link_color() const;
     void set_visited_link_color(Color);
 
-    void force_layout();
-
     void update_style();
     void update_layout();
     void update_paint_and_hit_testing_properties_if_needed();
