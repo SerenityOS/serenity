@@ -143,6 +143,7 @@ source_set("HTML") {
     "Plugin.cpp",
     "PluginArray.cpp",
     "PolicyContainers.cpp",
+    "PopStateEvent.cpp",
     "PotentialCORSRequest.cpp",
     "PromiseRejectionEvent.cpp",
     "SelectItem.cpp",

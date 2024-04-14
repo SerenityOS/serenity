@@ -212,6 +212,7 @@ standard_idl_files = [
   "//Userland/Libraries/LibWeb/HTML/Path2D.idl",
   "//Userland/Libraries/LibWeb/HTML/Plugin.idl",
   "//Userland/Libraries/LibWeb/HTML/PluginArray.idl",
+  "//Userland/Libraries/LibWeb/HTML/PopStateEvent.idl",
   "//Userland/Libraries/LibWeb/HTML/PromiseRejectionEvent.idl",
   "//Userland/Libraries/LibWeb/HTML/Storage.idl",
   "//Userland/Libraries/LibWeb/HTML/SubmitEvent.idl",
