@@ -7,8 +7,16 @@
 
 #include <AK/Endian.h>
 #include <AK/Memory.h>
+#include <AK/Platform.h>
 #include <AK/Types.h>
 #include <LibCrypto/Hash/SHA1.h>
+
+#if (ARCH(I386) || ARCH(X86_64))
+#    include <AK/SIMD.h>
+#    include <AK/SIMDExtras.h>
+#    include <cpuid.h>
+#    pragma GCC diagnostic ignored "-Wpsabi"
+#endif
 
 namespace Crypto::Hash {
 
@@ -17,8 +25,10 @@ static constexpr auto ROTATE_LEFT(u32 value, size_t bits)
     return (value << bits) | (value >> (32 - bits));
 }
 
-inline void SHA1::transform(u8 const* data)
+static void transform_impl_base(u32 (&state)[5], u8 const (&data)[64])
 {
+    constexpr static auto Rounds = 80;
+
     u32 blocks[80];
     for (size_t i = 0; i < 16; ++i)
         blocks[i] = AK::convert_between_host_and_network_endian(((u32 const*)data)[i]);
@@ -27,7 +37,7 @@ inline void SHA1::transform(u8 const* data)
     for (size_t i = 16; i < Rounds; ++i)
         blocks[i] = ROTATE_LEFT(blocks[i - 3] ^ blocks[i - 8] ^ blocks[i - 14] ^ blocks[i - 16], 1);
 
-    auto a = m_state[0], b = m_state[1], c = m_state[2], d = m_state[3], e = m_state[4];
+    auto a = state[0], b = state[1], c = state[2], d = state[3], e = state[4];
     u32 f, k;
 
     for (size_t i = 0; i < Rounds; ++i) {
@@ -52,11 +62,11 @@ inline void SHA1::transform(u8 const* data)
         a = temp;
     }
 
-    m_state[0] += a;
-    m_state[1] += b;
-    m_state[2] += c;
-    m_state[3] += d;
-    m_state[4] += e;
+    state[0] += a;
+    state[1] += b;
+    state[2] += c;
+    state[3] += d;
+    state[4] += e;
 
     // "security" measures, as if SHA1 is secure
     a = 0;
@@ -65,6 +75,97 @@ inline void SHA1::transform(u8 const* data)
     d = 0;
     e = 0;
     secure_zero(blocks, 16 * sizeof(u32));
+}
+
+#if (ARCH(I386) || ARCH(X86_64))
+// Note: The SHA extension was introduced with
+//       Intel Goldmont (SSE4.2), Ice Lake (AVX512), Rocket Lake (AVX512), and AMD Zen (AVX2)
+//       So it's safe to assume that if we have SHA we have at least SSE4.2
+//      ~https://en.wikipedia.org/wiki/Intel_SHA_extensions
+[[gnu::target("sha,sse4.2")]] static void transform_impl_sha1(u32 (&state)[5], u8 const (&data)[64])
+{
+    using AK::SIMD::u32x4, AK::SIMD::i32x4;
+    // Note: These need to be unsigned, as we add to them and expect them to wrap around,
+    //       and signed overflow is UB;
+    //  BUT: GCC -for some reason- expects the input types to the SHA intrinsics to be signed
+    //       and there does not seem to be a way to temporarily enable -flax-vector-conversions
+    //       so this leads to a few bit_casts further down
+    u32x4 abcd[2] {};
+    u32x4 msgs[4] {};
+
+    abcd[0] = AK::SIMD::load_unaligned<u32x4>(&state[0]);
+    abcd[0] = AK::SIMD::item_reverse(abcd[0]);
+    u32x4 e { 0, 0, 0, state[4] };
+
+    auto sha_msg1 = [] [[gnu::target("sha,sse4.2"), gnu::always_inline]] (u32x4 a, u32x4 b) { return bit_cast<u32x4>(__builtin_ia32_sha1msg1(bit_cast<i32x4>(a), bit_cast<i32x4>(b))); };
+    auto sha_msg2 = [] [[gnu::target("sha,sse4.2"), gnu::always_inline]] (u32x4 a, u32x4 b) { return bit_cast<u32x4>(__builtin_ia32_sha1msg2(bit_cast<i32x4>(a), bit_cast<i32x4>(b))); };
+    auto sha_next_e = [] [[gnu::target("sha,sse4.2"), gnu::always_inline]] (u32x4 a, u32x4 b) { return bit_cast<u32x4>(__builtin_ia32_sha1nexte(bit_cast<i32x4>(a), bit_cast<i32x4>(b))); };
+    auto sha_rnds4 = []<int i> [[gnu::target("sha,sse4.2"), gnu::always_inline]] (u32x4 a, u32x4 b) { return bit_cast<u32x4>(__builtin_ia32_sha1rnds4(bit_cast<i32x4>(a), bit_cast<i32x4>(b), i)); };
+
+    auto group = [&]<int i_group> [[gnu::target("sha,sse4.2")]] () {
+        //" // FIXME: Trailing quote to fix syntax highlighting, somethings off with function like attributes and templated lambdas in VsCode
+        // FIXME: Test if unrolling the loop is worth it
+        //          GCC: #pragma GCC unroll(5)
+        //        Clang: #pragma unroll
+        for (size_t i_pack = 0; i_pack != 5; ++i_pack) {
+            size_t i_msg = i_group * 5 + i_pack;
+            if (i_msg < 4) {
+                msgs[i_msg] = AK::SIMD::load_unaligned<u32x4>(&data[i_msg * 16]);
+                msgs[i_msg] = AK::SIMD::byte_reverse(msgs[i_msg]);
+            } else {
+                msgs[i_msg % 4] = sha_msg1(msgs[i_msg % 4], msgs[(i_msg + 1) % 4]);
+                msgs[i_msg % 4] ^= msgs[(i_msg + 2) % 4];
+                msgs[i_msg % 4] = sha_msg2(msgs[i_msg % 4], msgs[(i_msg + 3) % 4]);
+            }
+            if (i_msg == 0) {
+                e += msgs[0];
+            } else {
+                e = sha_next_e(abcd[(i_msg + 1) % 2], msgs[(i_msg + 0) % 4]);
+            }
+            abcd[(i_msg + 1) % 2] = sha_rnds4.operator()<i_group>(abcd[(i_msg + 0) % 2], e);
+        }
+    };
+
+    auto old_abcd = abcd[0];
+    auto old_e = e;
+    group.operator()<0>();
+    group.operator()<1>();
+    group.operator()<2>();
+    group.operator()<3>();
+    e = sha_next_e(abcd[1], u32x4 {});
+    abcd[0] += old_abcd;
+    e += old_e;
+
+    abcd[0] = AK::SIMD::item_reverse(abcd[0]);
+    AK::SIMD::store_unaligned(&state[0], abcd[0]);
+    state[4] = e[3];
+}
+
+// FIXME: We need a custom resolver as Clang and GCC either refuse or silently ignore the `sha` target
+//        for function multiversioning
+[[gnu::ifunc("resolve_transform_impl")]] static void transform_impl(u32 (&state)[5], u8 const (&data)[64]);
+namespace {
+extern "C" [[gnu::used]] decltype(&transform_impl) resolve_transform_impl()
+{
+    // FIXME: Use __builtin_cpu_supports("sha") when compilers support it
+    constexpr u32 cpuid_sha_ebx = 1 << 29;
+    u32 eax, ebx, ecx, edx;
+    __cpuid_count(7, 0, eax, ebx, ecx, edx);
+    if (ebx & cpuid_sha_ebx)
+        return transform_impl_sha1;
+
+    // FIXME: Investigate if more target clones (avx) make sense
+
+    return transform_impl_base;
+}
+}
+#else
+#    define transform_impl transform_impl_base
+#endif
+
+inline void SHA1::transform(u8 const (&data)[BlockSize])
+{
+    transform_impl(m_state, data);
 }
 
 void SHA1::update(u8 const* message, size_t length)
