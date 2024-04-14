@@ -145,6 +145,8 @@ void WebContentClient::did_change_title(u64 page_id, ByteString const& title)
 void WebContentClient::did_change_url(u64 page_id, URL::URL const& url)
 {
     if (auto view = view_for_page_id(page_id); view.has_value()) {
+        view->set_url({}, url);
+
         if (view->on_url_change)
             view->on_url_change(url);
     }
