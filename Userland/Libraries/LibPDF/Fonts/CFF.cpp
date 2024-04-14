@@ -176,7 +176,7 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
                 TRY(encoding_supplemental.try_set(i, s_predefined_encoding_expert[i]));
             break;
         default:
-            encoding_codes = TRY(parse_encoding(Reader(cff_bytes.slice(top_dict.encoding_offset)), encoding_supplemental));
+            encoding_codes = TRY(parse_encoding(FixedMemoryStream(cff_bytes.slice(top_dict.encoding_offset)), encoding_supplemental));
             break;
         }
     }
@@ -953,28 +953,28 @@ PDFErrorOr<Vector<CFF::Glyph>> CFF::parse_charstrings(Reader&& reader, Vector<By
     return glyphs;
 }
 
-PDFErrorOr<Vector<u8>> CFF::parse_encoding(Reader&& reader, HashMap<Card8, SID>& supplemental)
+PDFErrorOr<Vector<u8>> CFF::parse_encoding(Stream&& reader, HashMap<Card8, SID>& supplemental)
 {
     // CFF spec, "12 Encodings"
     Vector<u8> encoding_codes;
-    auto format_raw = TRY(reader.try_read<Card8>());
+    auto format_raw = TRY(reader.read_value<Card8>());
 
     auto format = format_raw & 0x7f;
     if (format == 0) {
         // CFF spec, "Table 11 Format 0"
-        auto n_codes = TRY(reader.try_read<Card8>());
+        auto n_codes = TRY(reader.read_value<Card8>());
         dbgln_if(CFF_DEBUG, "CFF encoding format 0, {} codes", n_codes);
         for (u8 i = 0; i < n_codes; i++) {
-            TRY(encoding_codes.try_append(TRY(reader.try_read<Card8>())));
+            TRY(encoding_codes.try_append(TRY(reader.read_value<Card8>())));
         }
     } else if (format == 1) {
         // CFF spec, "Table 12 Format 1"
-        auto n_ranges = TRY(reader.try_read<Card8>());
+        auto n_ranges = TRY(reader.read_value<Card8>());
         dbgln_if(CFF_DEBUG, "CFF encoding format 1, {} ranges", n_ranges);
         for (u8 i = 0; i < n_ranges; i++) {
             // CFF spec, "Table 13 Range1 Format (Encoding)"
-            auto first_code = TRY(reader.try_read<Card8>());
-            int left = TRY(reader.try_read<Card8>());
+            auto first_code = TRY(reader.read_value<Card8>());
+            int left = TRY(reader.read_value<Card8>());
             for (u8 code = first_code; left >= 0; left--, code++)
                 TRY(encoding_codes.try_append(code));
         }
@@ -983,12 +983,12 @@ PDFErrorOr<Vector<u8>> CFF::parse_encoding(Reader&& reader, HashMap<Card8, SID>&
 
     if (format_raw & 0x80) {
         // CFF spec, "Table 14 Supplemental Encoding Data"
-        auto n_sups = TRY(reader.try_read<Card8>());
+        auto n_sups = TRY(reader.read_value<Card8>());
         dbgln_if(CFF_DEBUG, "CFF encoding, {} supplemental entries", n_sups);
         for (u8 i = 0; i < n_sups; i++) {
             // CFF spec, "Table 15 Supplement Format"
-            auto code = TRY(reader.try_read<Card8>());
-            SID name = TRY(reader.try_read<SID>());
+            auto code = TRY(reader.read_value<Card8>());
+            SID name = TRY(reader.read_value<SID>());
             TRY(supplemental.try_set(code, name));
         }
     }
