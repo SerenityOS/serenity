@@ -80,7 +80,7 @@ private:
     };
 
 public:
-    static PDFErrorOr<NonnullRefPtr<CFF>> create(ReadonlyBytes const&, RefPtr<Encoding> encoding);
+    static ErrorOr<NonnullRefPtr<CFF>> create(ReadonlyBytes const&, RefPtr<Encoding> encoding);
 
     // to private
     using Card8 = u8;
@@ -99,21 +99,21 @@ public:
 
     static ErrorOr<int> load_int_dict_operand(u8 b0, Stream&);
     static ErrorOr<float> load_float_dict_operand(Stream&);
-    static PDFErrorOr<DictOperand> load_dict_operand(u8, Stream&);
+    static ErrorOr<DictOperand> load_dict_operand(u8, Stream&);
 
-    using IndexDataHandler = Function<PDFErrorOr<void>(ReadonlyBytes const&)>;
-    static PDFErrorOr<void> parse_index(FixedMemoryStream&, IndexDataHandler&&);
+    using IndexDataHandler = Function<ErrorOr<void>(ReadonlyBytes const&)>;
+    static ErrorOr<void> parse_index(FixedMemoryStream&, IndexDataHandler&&);
 
-    static PDFErrorOr<void> parse_index_data(OffSize offset_size, Card16 count, FixedMemoryStream&, IndexDataHandler&);
-
-    template<typename OperatorT>
-    using DictEntryHandler = Function<PDFErrorOr<void>(OperatorT, Vector<DictOperand> const&)>;
+    static ErrorOr<void> parse_index_data(OffSize offset_size, Card16 count, FixedMemoryStream&, IndexDataHandler&);
 
     template<typename OperatorT>
-    static PDFErrorOr<void> parse_dict(Stream&, DictEntryHandler<OperatorT>&& handler);
+    using DictEntryHandler = Function<ErrorOr<void>(OperatorT, Vector<DictOperand> const&)>;
 
     template<typename OperatorT>
-    static PDFErrorOr<OperatorT> parse_dict_operator(u8, Stream&);
+    static ErrorOr<void> parse_dict(Stream&, DictEntryHandler<OperatorT>&& handler);
+
+    template<typename OperatorT>
+    static ErrorOr<OperatorT> parse_dict_operator(u8, Stream&);
 
     // CFF spec, "8 Top DICT INDEX"
     struct TopDict {
@@ -127,24 +127,16 @@ public:
         int fdselect_offset = 0;
         int fdarray_offset = 0;
     };
-    static PDFErrorOr<Vector<TopDict>> parse_top_dicts(FixedMemoryStream&, ReadonlyBytes const& cff_bytes);
+    static ErrorOr<Vector<TopDict>> parse_top_dicts(FixedMemoryStream&, ReadonlyBytes const& cff_bytes);
 
-    static PDFErrorOr<Vector<StringView>> parse_strings(FixedMemoryStream&);
+    static ErrorOr<Vector<StringView>> parse_strings(FixedMemoryStream&);
 
-    static PDFErrorOr<Vector<CFF::Glyph>> parse_charstrings(FixedMemoryStream&&, Vector<ByteBuffer> const& local_subroutines, Vector<ByteBuffer> const& global_subroutines);
+    static ErrorOr<Vector<CFF::Glyph>> parse_charstrings(FixedMemoryStream&&, Vector<ByteBuffer> const& local_subroutines, Vector<ByteBuffer> const& global_subroutines);
 
     static DeprecatedFlyString resolve_sid(SID, Vector<StringView> const&);
-    static PDFErrorOr<Vector<SID>> parse_charset(Stream&&, size_t);
-    static PDFErrorOr<Vector<u8>> parse_fdselect(Stream&&, size_t);
-    static PDFErrorOr<Vector<u8>> parse_encoding(Stream&&, HashMap<Card8, SID>& supplemental);
-
-    static Error error(
-        ByteString const& message
-#ifdef PDF_DEBUG
-        ,
-        SourceLocation loc = SourceLocation::current()
-#endif
-    );
+    static ErrorOr<Vector<SID>> parse_charset(Stream&&, size_t);
+    static ErrorOr<Vector<u8>> parse_fdselect(Stream&&, size_t);
+    static ErrorOr<Vector<u8>> parse_encoding(Stream&&, HashMap<Card8, SID>& supplemental);
 };
 
 }
