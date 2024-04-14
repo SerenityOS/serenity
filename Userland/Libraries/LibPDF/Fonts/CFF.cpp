@@ -11,7 +11,6 @@
 #include <AK/String.h>
 #include <LibGfx/Forward.h>
 #include <LibPDF/Encoding.h>
-#include <LibPDF/Error.h>
 #include <LibPDF/Fonts/CFF.h>
 
 namespace PDF {
@@ -94,7 +93,7 @@ static constexpr auto s_predefined_charset_expert_subset = to_array<CFF::SID>({
 });
 // clang-format on
 
-PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPtr<Encoding> encoding)
+ErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPtr<Encoding> encoding)
 {
     FixedMemoryStream reader(cff_bytes);
 
@@ -108,39 +107,39 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
 
     // CFF spec, "7 Name INDEX"
     Vector<String> font_names;
-    TRY(parse_index(reader, [&](ReadonlyBytes const& data) -> PDFErrorOr<void> {
+    TRY(parse_index(reader, [&](ReadonlyBytes const& data) -> ErrorOr<void> {
         auto font_name = TRY(String::from_utf8(data));
         dbgln_if(CFF_DEBUG, "CFF font name '{}'", font_name);
         return TRY(font_names.try_append(font_name));
     }));
 
     if (font_names.size() != 1)
-        return error("CFFs with more than one font not yet implemented");
+        return AK::Error::from_string_literal("CFFs with more than one font not yet implemented");
 
     auto cff = adopt_ref(*new CFF());
     cff->set_font_matrix({ 0.001f, 0.0f, 0.0f, 0.001f, 0.0f, 0.0f });
 
     auto top_dicts = TRY(parse_top_dicts(reader, cff_bytes));
     if (top_dicts.size() != 1)
-        return error("CFFs with more than one font not yet implemented");
+        return AK::Error::from_string_literal("CFFs with more than one font not yet implemented");
     auto const& top_dict = top_dicts[0];
 
     if (top_dict.is_cid_keyed) {
         // CFF spec, "18 CID-keyed Fonts"
         // "* The FDArray operator is expected to be present"
         if (top_dict.fdarray_offset == 0)
-            return error("CID-keyed CFFs must have an FDArray");
+            return AK::Error::from_string_literal("CID-keyed CFFs must have an FDArray");
 
         // "* The charset data, although in the same format as non-CIDFonts, will represent CIDs rather than SIDs"
         // (Done below.)
 
         // "* The Top DICT will include an FDSelect operator"
         if (top_dict.fdselect_offset == 0)
-            return error("CID-keyed CFFs must have FDSelect");
+            return AK::Error::from_string_literal("CID-keyed CFFs must have FDSelect");
 
         // "* no Encoding operator will be present and the default StandardEncoding should not be applied"
         if (top_dict.encoding_offset != 0)
-            return error("CID-keyed CFFs must not have Encoding");
+            return AK::Error::from_string_literal("CID-keyed CFFs must not have Encoding");
 
         cff->set_kind(CFF::Kind::CIDKeyed);
     }
@@ -150,7 +149,7 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
     // CFF spec "16 Local/Global Subrs INDEXes"
     // "Global subrs are stored in an INDEX structure which follows the String INDEX."
     Vector<ByteBuffer> global_subroutines;
-    TRY(parse_index(reader, [&](ReadonlyBytes const& subroutine_bytes) -> PDFErrorOr<void> {
+    TRY(parse_index(reader, [&](ReadonlyBytes const& subroutine_bytes) -> ErrorOr<void> {
         return TRY(global_subroutines.try_append(TRY(ByteBuffer::copy(subroutine_bytes))));
     }));
     dbgln_if(CFF_DEBUG, "CFF has {} gsubr entries", global_subroutines.size());
@@ -293,15 +292,15 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
     return cff;
 }
 
-PDFErrorOr<Vector<CFF::TopDict>> CFF::parse_top_dicts(FixedMemoryStream& reader, ReadonlyBytes const& cff_bytes)
+ErrorOr<Vector<CFF::TopDict>> CFF::parse_top_dicts(FixedMemoryStream& reader, ReadonlyBytes const& cff_bytes)
 {
     Vector<TopDict> top_dicts;
 
-    TRY(parse_index(reader, [&](ReadonlyBytes const& element_data) -> PDFErrorOr<void> {
+    TRY(parse_index(reader, [&](ReadonlyBytes const& element_data) -> ErrorOr<void> {
         TopDict top_dict;
 
         FixedMemoryStream element_reader { element_data };
-        TRY(parse_dict<TopDictOperator>(element_reader, [&](TopDictOperator op, Vector<DictOperand> const& operands) -> PDFErrorOr<void> {
+        TRY(parse_dict<TopDictOperator>(element_reader, [&](TopDictOperator op, Vector<DictOperand> const& operands) -> ErrorOr<void> {
             switch (op) {
             case TopDictOperator::Version:
             case TopDictOperator::Notice:
@@ -353,7 +352,7 @@ PDFErrorOr<Vector<CFF::TopDict>> CFF::parse_top_dicts(FixedMemoryStream& reader,
                 auto private_dict_size = operands[0].get<int>();
                 auto private_dict_offset = operands[1].get<int>();
                 FixedMemoryStream priv_dict_reader { cff_bytes.slice(private_dict_offset, private_dict_size) };
-                TRY(parse_dict<PrivDictOperator>(priv_dict_reader, [&](PrivDictOperator op, Vector<DictOperand> const& operands) -> PDFErrorOr<void> {
+                TRY(parse_dict<PrivDictOperator>(priv_dict_reader, [&](PrivDictOperator op, Vector<DictOperand> const& operands) -> ErrorOr<void> {
                     switch (op) {
                     case PrivDictOperator::BlueValues:
                     case PrivDictOperator::OtherBlues:
@@ -379,7 +378,7 @@ PDFErrorOr<Vector<CFF::TopDict>> CFF::parse_top_dicts(FixedMemoryStream& reader,
                         // "Local subrs are stored in an INDEX structure which is located via the offset operand of the Subrs operator in the Private DICT."
                         auto subrs_offset = operands[0].get<int>();
                         FixedMemoryStream subrs_reader { cff_bytes.slice(private_dict_offset + subrs_offset) };
-                        TRY(parse_index(subrs_reader, [&](ReadonlyBytes const& subroutine_bytes) -> PDFErrorOr<void> {
+                        TRY(parse_index(subrs_reader, [&](ReadonlyBytes const& subroutine_bytes) -> ErrorOr<void> {
                             return TRY(top_dict.local_subroutines.try_append(TRY(ByteBuffer::copy(subroutine_bytes))));
                         }));
                         dbgln_if(CFF_DEBUG, "CFF has {} subr entries", top_dict.local_subroutines.size());
@@ -830,11 +829,11 @@ static constexpr Array s_cff_builtin_names {
     "Semibold"sv,
 };
 
-PDFErrorOr<Vector<StringView>> CFF::parse_strings(FixedMemoryStream& reader)
+ErrorOr<Vector<StringView>> CFF::parse_strings(FixedMemoryStream& reader)
 {
     // CFF spec "10 String Index"
     Vector<StringView> strings;
-    TRY(parse_index(reader, [&](ReadonlyBytes const& string) -> PDFErrorOr<void> {
+    TRY(parse_index(reader, [&](ReadonlyBytes const& string) -> ErrorOr<void> {
         return TRY(strings.try_append(string));
     }));
     dbgln_if(CFF_DEBUG, "CFF has {} additional strings in string table", strings.size());
@@ -853,7 +852,7 @@ DeprecatedFlyString CFF::resolve_sid(SID sid, Vector<StringView> const& strings)
     return DeprecatedFlyString("space");
 }
 
-PDFErrorOr<Vector<CFF::SID>> CFF::parse_charset(Stream&& reader, size_t glyph_count)
+ErrorOr<Vector<CFF::SID>> CFF::parse_charset(Stream&& reader, size_t glyph_count)
 {
     // CFF spec, "13 Charsets"
 
@@ -894,7 +893,7 @@ PDFErrorOr<Vector<CFF::SID>> CFF::parse_charset(Stream&& reader, size_t glyph_co
     return names;
 }
 
-PDFErrorOr<Vector<u8>> CFF::parse_fdselect(Stream&& reader, size_t glyph_count)
+ErrorOr<Vector<u8>> CFF::parse_fdselect(Stream&& reader, size_t glyph_count)
 {
     Vector<u8> fd_selector_array; // Maps GIDs to their FD index.
 
@@ -919,7 +918,7 @@ PDFErrorOr<Vector<u8>> CFF::parse_fdselect(Stream&& reader, size_t glyph_count)
 
         // "The first range must have a 'first' GID of 0."
         if (begin != 0)
-            return error("CFF fdselect format 3 first range must have a 'first' GID of 0");
+            return AK::Error::from_string_literal("CFF fdselect format 3 first range must have a 'first' GID of 0");
 
         for (Card16 i = 0; i < n_ranges; i++) {
             auto fd = TRY(reader.read_value<Card8>());
@@ -931,7 +930,7 @@ PDFErrorOr<Vector<u8>> CFF::parse_fdselect(Stream&& reader, size_t glyph_count)
 
         // "The sentinel GID is set equal to the number of glyphs in the font."
         if (begin != glyph_count)
-            return error("CFF fdselect format 3 last range must end at the number of glyphs in the font");
+            return AK::Error::from_string_literal("CFF fdselect format 3 last range must end at the number of glyphs in the font");
     } else {
         dbgln("CFF: Unknown fdselect format {}", format);
     }
@@ -939,11 +938,11 @@ PDFErrorOr<Vector<u8>> CFF::parse_fdselect(Stream&& reader, size_t glyph_count)
     return fd_selector_array;
 }
 
-PDFErrorOr<Vector<CFF::Glyph>> CFF::parse_charstrings(FixedMemoryStream&& reader, Vector<ByteBuffer> const& local_subroutines, Vector<ByteBuffer> const& global_subroutines)
+ErrorOr<Vector<CFF::Glyph>> CFF::parse_charstrings(FixedMemoryStream&& reader, Vector<ByteBuffer> const& local_subroutines, Vector<ByteBuffer> const& global_subroutines)
 {
     // CFF spec, "14 CharStrings INDEX"
     Vector<Glyph> glyphs;
-    TRY(parse_index(reader, [&](ReadonlyBytes const& charstring_data) -> PDFErrorOr<void> {
+    TRY(parse_index(reader, [&](ReadonlyBytes const& charstring_data) -> ErrorOr<void> {
         GlyphParserState state;
         auto glyph = TRY(parse_glyph(charstring_data, local_subroutines, global_subroutines, state, true));
         return TRY(glyphs.try_append(glyph));
@@ -952,7 +951,7 @@ PDFErrorOr<Vector<CFF::Glyph>> CFF::parse_charstrings(FixedMemoryStream&& reader
     return glyphs;
 }
 
-PDFErrorOr<Vector<u8>> CFF::parse_encoding(Stream&& reader, HashMap<Card8, SID>& supplemental)
+ErrorOr<Vector<u8>> CFF::parse_encoding(Stream&& reader, HashMap<Card8, SID>& supplemental)
 {
     // CFF spec, "12 Encodings"
     Vector<u8> encoding_codes;
@@ -977,8 +976,10 @@ PDFErrorOr<Vector<u8>> CFF::parse_encoding(Stream&& reader, HashMap<Card8, SID>&
             for (u8 code = first_code; left >= 0; left--, code++)
                 TRY(encoding_codes.try_append(code));
         }
-    } else
-        return error(ByteString::formatted("Invalid encoding format: {}", format));
+    } else {
+        dbgln("Invalid encoding format: {}", format);
+        return AK::Error::from_string_literal("Invalid encoding format");
+    }
 
     if (format_raw & 0x80) {
         // CFF spec, "Table 14 Supplemental Encoding Data"
@@ -996,7 +997,7 @@ PDFErrorOr<Vector<u8>> CFF::parse_encoding(Stream&& reader, HashMap<Card8, SID>&
 }
 
 template<typename OperatorT>
-PDFErrorOr<void> CFF::parse_dict(Stream& reader, DictEntryHandler<OperatorT>&& handler)
+ErrorOr<void> CFF::parse_dict(Stream& reader, DictEntryHandler<OperatorT>&& handler)
 {
     // CFF spec, "4 DICT data"
     Vector<DictOperand> operands;
@@ -1015,11 +1016,11 @@ PDFErrorOr<void> CFF::parse_dict(Stream& reader, DictEntryHandler<OperatorT>&& h
     return {};
 }
 
-template PDFErrorOr<void> CFF::parse_dict<CFF::TopDictOperator>(Stream&, DictEntryHandler<TopDictOperator>&&);
-template PDFErrorOr<void> CFF::parse_dict<CFF::PrivDictOperator>(Stream&, DictEntryHandler<PrivDictOperator>&&);
+template ErrorOr<void> CFF::parse_dict<CFF::TopDictOperator>(Stream&, DictEntryHandler<TopDictOperator>&&);
+template ErrorOr<void> CFF::parse_dict<CFF::PrivDictOperator>(Stream&, DictEntryHandler<PrivDictOperator>&&);
 
 template<typename OperatorT>
-PDFErrorOr<OperatorT> CFF::parse_dict_operator(u8 b0, Stream& reader)
+ErrorOr<OperatorT> CFF::parse_dict_operator(u8 b0, Stream& reader)
 {
     // CFF spec, "4 DICT data"
     VERIFY(b0 <= 21);
@@ -1031,9 +1032,9 @@ PDFErrorOr<OperatorT> CFF::parse_dict_operator(u8 b0, Stream& reader)
     return OperatorT { b0 << 8 | b1 };
 }
 
-template PDFErrorOr<CFF::TopDictOperator> CFF::parse_dict_operator(u8, Stream&);
+template ErrorOr<CFF::TopDictOperator> CFF::parse_dict_operator(u8, Stream&);
 
-PDFErrorOr<void> CFF::parse_index(FixedMemoryStream& reader, IndexDataHandler&& data_handler)
+ErrorOr<void> CFF::parse_index(FixedMemoryStream& reader, IndexDataHandler&& data_handler)
 {
     // CFF spec, "5 INDEX Data"
     Card16 count = TRY(reader.read_value<BigEndian<Card16>>());
@@ -1041,16 +1042,16 @@ PDFErrorOr<void> CFF::parse_index(FixedMemoryStream& reader, IndexDataHandler&& 
         return {};
     auto offset_size = TRY(reader.read_value<OffSize>());
     if (offset_size > 4)
-        return error("CFF INDEX Data offset_size > 4 not supported");
+        return AK::Error::from_string_literal("CFF INDEX Data offset_size > 4 not supported");
     return parse_index_data(offset_size, count, reader, data_handler);
 }
 
-PDFErrorOr<void> CFF::parse_index_data(OffSize offset_size, Card16 count, FixedMemoryStream& reader, IndexDataHandler& handler)
+ErrorOr<void> CFF::parse_index_data(OffSize offset_size, Card16 count, FixedMemoryStream& reader, IndexDataHandler& handler)
 {
     // CFF spec, "5 INDEX Data"
     u32 last_data_end = 1;
 
-    auto read_offset = [&]() -> PDFErrorOr<u32> {
+    auto read_offset = [&]() -> ErrorOr<u32> {
         u32 offset = 0;
         for (OffSize i = 0; i < offset_size; ++i)
             offset = (offset << 8) | TRY(reader.read_value<u8>());
@@ -1134,30 +1135,15 @@ ErrorOr<float> CFF::load_float_dict_operand(Stream& reader)
     return result.release_value();
 }
 
-PDFErrorOr<CFF::DictOperand> CFF::load_dict_operand(u8 b0, Stream& reader)
+ErrorOr<CFF::DictOperand> CFF::load_dict_operand(u8 b0, Stream& reader)
 {
     // CFF spec, "4 DICT data"
     if (b0 == 30)
         return DictOperand { TRY(load_float_dict_operand(reader)) };
     if (b0 >= 28)
         return DictOperand { TRY(load_int_dict_operand(b0, reader)) };
-    return Error { Error::Type::MalformedPDF, ByteString::formatted("Unknown CFF dict element prefix: {}", b0) };
-}
-
-
-Error CFF::error(
-    ByteString const& message
-#ifdef PDF_DEBUG
-    ,
-    SourceLocation loc
-#endif
-)
-{
-#ifdef PDF_DEBUG
-    dbgln("\033[31m{} Type 1 font error: {}\033[0m", loc, message);
-#endif
-
-    return Error { Error::Type::MalformedPDF, message };
+    dbgln("Unknown CFF dict element prefix: {}", b0);
+    return AK::Error::from_string_literal("Unknown CFF dict element prefix");
 }
 
 }
