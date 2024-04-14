@@ -17,9 +17,9 @@ interface HTMLElement : Element {
 
     // user interaction
     [Reflect, CEReactions] attribute boolean hidden;
-    // FIXME: [CEReactions] attribute boolean inert;
+    [Reflect, CEReactions] attribute boolean inert;
     undefined click();
-    // FIXME: [CEReactions] attribute DOMString accessKey;
+    [Reflect=accesskey, CEReactions] attribute DOMString accessKey;
     readonly attribute DOMString accessKeyLabel;
     // FIXME: [CEReactions] attribute boolean draggable;
     // FIXME: [CEReactions] attribute boolean spellcheck;

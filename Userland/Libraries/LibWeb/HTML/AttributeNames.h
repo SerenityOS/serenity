@@ -16,6 +16,7 @@ namespace AttributeNames {
     __ENUMERATE_HTML_ATTRIBUTE(abbr)                       \
     __ENUMERATE_HTML_ATTRIBUTE(accept)                     \
     __ENUMERATE_HTML_ATTRIBUTE(accept_charset)             \
+    __ENUMERATE_HTML_ATTRIBUTE(accesskey)                  \
     __ENUMERATE_HTML_ATTRIBUTE(action)                     \
     __ENUMERATE_HTML_ATTRIBUTE(align)                      \
     __ENUMERATE_HTML_ATTRIBUTE(alink)                      \
