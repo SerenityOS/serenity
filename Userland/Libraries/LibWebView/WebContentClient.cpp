@@ -66,16 +66,6 @@ void WebContentClient::did_finish_loading(u64 page_id, URL::URL const& url)
     }
 }
 
-void WebContentClient::did_history_api_push_or_replace(u64 page_id, URL::URL const& url, Web::HTML::HistoryHandlingBehavior history_behavior)
-{
-    if (auto view = view_for_page_id(page_id); view.has_value()) {
-        view->set_url({}, url);
-
-        if (view->on_history_api_push_or_replace)
-            view->on_history_api_push_or_replace(url, history_behavior);
-    }
-}
-
 void WebContentClient::did_finish_text_test(u64 page_id)
 {
     if (auto view = view_for_page_id(page_id); view.has_value()) {
