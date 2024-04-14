@@ -165,12 +165,21 @@ private:
     {
         // FIXME: This could maybe use the format() provided in @font-face as well, since often the mime type is just application/octet-stream and we have to try every format
         auto const& mime_type = resource()->mime_type();
-        if (mime_type == "font/ttf"sv || mime_type == "application/x-font-ttf"sv)
-            return OpenType::Font::try_load_from_externally_owned_memory(resource()->encoded_data());
-        if (mime_type == "font/woff"sv || mime_type == "application/font-woff"sv)
-            return WOFF::Font::try_load_from_externally_owned_memory(resource()->encoded_data());
-        if (mime_type == "font/woff2"sv || mime_type == "application/font-woff2"sv)
-            return WOFF2::Font::try_load_from_externally_owned_memory(resource()->encoded_data());
+        if (mime_type == "font/ttf"sv || mime_type == "application/x-font-ttf"sv) {
+            if (auto result = OpenType::Font::try_load_from_externally_owned_memory(resource()->encoded_data()); !result.is_error()) {
+                return result;
+            }
+        }
+        if (mime_type == "font/woff"sv || mime_type == "application/font-woff"sv) {
+            if (auto result = WOFF::Font::try_load_from_externally_owned_memory(resource()->encoded_data()); !result.is_error()) {
+                return result;
+            }
+        }
+        if (mime_type == "font/woff2"sv || mime_type == "application/font-woff2"sv) {
+            if (auto result = WOFF2::Font::try_load_from_externally_owned_memory(resource()->encoded_data()); !result.is_error()) {
+                return result;
+            }
+        }
 
         // We don't have the luxury of knowing the MIME type, so we have to try all formats.
         auto ttf = OpenType::Font::try_load_from_externally_owned_memory(resource()->encoded_data());
