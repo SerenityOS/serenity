@@ -115,7 +115,7 @@ public:
     }
 
 private:
-    inline void transform(u8 const*);
+    inline void transform(u8 const (&data)[BlockSize]);
 
     u8 m_data_buffer[BlockSize] {};
     size_t m_data_length { 0 };
