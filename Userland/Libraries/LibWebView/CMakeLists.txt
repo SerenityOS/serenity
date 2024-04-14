@@ -4,7 +4,6 @@ set(SOURCES
     Attribute.cpp
     CookieJar.cpp
     Database.cpp
-    History.cpp
     InspectorClient.cpp
     ProcessHandle.cpp
     ProcessManager.cpp
