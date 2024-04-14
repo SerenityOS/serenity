@@ -26,7 +26,7 @@ interface HTMLElement : Element {
     // FIXME: [CEReactions] attribute DOMString autocapitalize;
 
     [LegacyNullToEmptyString, CEReactions] attribute DOMString innerText;
-    // FIXME: [LegacyNullToEmptyString, CEReactions] attribute DOMString outerText;
+    [LegacyNullToEmptyString, CEReactions] attribute DOMString outerText;
 
     // FIXME: ElementInternals attachInternals();
 
