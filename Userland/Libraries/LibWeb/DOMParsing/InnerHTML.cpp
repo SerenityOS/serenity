@@ -52,9 +52,10 @@ WebIDL::ExceptionOr<void> inner_html_setter(JS::NonnullGCPtr<DOM::Node> context_
     if (!is<HTML::HTMLTemplateElement>(*context_object)) {
         context_object->set_needs_style_update(true);
 
-        // NOTE: Since the DOM has changed, we have to rebuild the layout tree.
-        context_object->document().invalidate_layout();
-        context_object->document().set_needs_layout();
+        if (context_object->is_connected()) {
+            // NOTE: Since the DOM has changed, we have to rebuild the layout tree.
+            context_object->document().invalidate_layout();
+        }
     }
 
     return {};
