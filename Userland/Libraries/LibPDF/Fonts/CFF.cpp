@@ -1144,4 +1144,20 @@ PDFErrorOr<CFF::DictOperand> CFF::load_dict_operand(u8 b0, Stream& reader)
     return Error { Error::Type::MalformedPDF, ByteString::formatted("Unknown CFF dict element prefix: {}", b0) };
 }
 
+
+Error CFF::error(
+    ByteString const& message
+#ifdef PDF_DEBUG
+    ,
+    SourceLocation loc
+#endif
+)
+{
+#ifdef PDF_DEBUG
+    dbgln("\033[31m{} Type 1 font error: {}\033[0m", loc, message);
+#endif
+
+    return Error { Error::Type::MalformedPDF, message };
+}
+
 }

@@ -136,14 +136,14 @@ void Type1FontProgram::consolidate_glyphs()
     }
 }
 
-PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes const& data, Vector<ByteBuffer> const& local_subroutines, Vector<ByteBuffer> const& global_subroutines, GlyphParserState& state, bool is_type2)
+ErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes const& data, Vector<ByteBuffer> const& local_subroutines, Vector<ByteBuffer> const& global_subroutines, GlyphParserState& state, bool is_type2)
 {
     // Type 1 Font Format: https://adobe-type-tools.github.io/font-tech-notes/pdfs/T1_SPEC.pdf (Chapter 6: CharStrings dictionary)
     // Type 2 Charstring Format: https://adobe-type-tools.github.io/font-tech-notes/pdfs/5177.Type2.pdf
 
-    auto push = [&](float value) -> PDFErrorOr<void> {
+    auto push = [&](float value) -> ErrorOr<void> {
         if (state.sp >= state.stack.size())
-            return error("Operand stack overflow");
+            return AK::Error::from_string_literal("Operand stack overflow");
         state.stack[state.sp++] = value;
         return {};
     };
@@ -260,9 +260,9 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
 
     // Parse the stream of parameters and commands that make up a glyph outline.
     for (size_t i = 0; i < data.size(); ++i) {
-        auto require = [&](unsigned num) -> PDFErrorOr<void> {
+        auto require = [&](unsigned num) -> ErrorOr<void> {
             if (i + num >= data.size())
-                return error("Malformed glyph outline definition");
+                return AK::Error::from_string_literal("Malformed glyph outline definition");
             return {};
         };
 
@@ -299,7 +299,7 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
                 i += 2;
                 TRY(push(a));
             } else {
-                return error("CFF Subr command 28 only valid in type2 data");
+                return AK::Error::from_string_literal("CFF Subr command 28 only valid in type2 data");
             }
         } else {
             // Not a parameter but a command byte.
@@ -389,7 +389,7 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
 
             case CallGsubr:
                 if (!is_type2)
-                    return error(ByteString::formatted("CFF Gsubr only valid in type2 data"));
+                    return AK::Error::from_string_literal("CFF Gsubr only valid in type2 data");
                 [[fallthrough]];
             case CallSubr: {
                 Vector<ByteBuffer> const& subroutines = v == CallSubr ? local_subroutines : global_subroutines;
@@ -410,11 +410,11 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
                 }
 
                 if (static_cast<size_t>(subr_number) >= subroutines.size())
-                    return error("Subroutine index out of range");
+                    return AK::Error::from_string_literal("Subroutine index out of range");
 
                 auto const& subr = subroutines[subr_number];
                 if (subr.is_empty())
-                    return error("Empty subroutine");
+                    return AK::Error::from_string_literal("Empty subroutine");
 
                 TRY(parse_glyph(subr, local_subroutines, global_subroutines, state, is_type2));
                 break;
@@ -483,7 +483,7 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
                     switch ((OtherSubrCommand)othersubr_number) {
                     case EndFlex: {
                         if (n != 3)
-                            return error("Unexpected argument code for othersubr 0");
+                            return AK::Error::from_string_literal("Unexpected argument code for othersubr 0");
 
                         auto y = pop();
                         auto x = pop();
@@ -512,14 +512,14 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
                     }
                     case StartFlex:
                         if (n != 0)
-                            return error("Unexpected argument code for othersubr 1");
+                            return AK::Error::from_string_literal("Unexpected argument code for othersubr 1");
                         state.flex_feature = true;
                         state.flex_index = 0;
                         state.sp = 0;
                         break;
                     case AddFlexPoint:
                         if (n != 0)
-                            return error("Unexpected argument code for othersubr 2");
+                            return AK::Error::from_string_literal("Unexpected argument code for othersubr 2");
                         // We do this directly in move_to().
                         state.sp = 0;
                         break;
@@ -633,7 +633,7 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
 
                 default:
                     dbgln("Unhandled command: 12 {}", data[i]);
-                    return error("Unhandled command");
+                    return AK::Error::from_string_literal("Unhandled command");
                 }
                 break;
             }
@@ -745,21 +745,6 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
     }
 
     return state.glyph;
-}
-
-Error Type1FontProgram::error(
-    ByteString const& message
-#ifdef PDF_DEBUG
-    ,
-    SourceLocation loc
-#endif
-)
-{
-#ifdef PDF_DEBUG
-    dbgln("\033[31m{} Type 1 font error: {}\033[0m", loc, message);
-#endif
-
-    return Error { Error::Type::MalformedPDF, message };
 }
 
 }

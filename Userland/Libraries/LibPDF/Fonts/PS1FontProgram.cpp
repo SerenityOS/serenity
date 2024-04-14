@@ -237,4 +237,19 @@ bool PS1FontProgram::seek_name(Reader& reader, ByteString const& name)
     return false;
 }
 
+Error PS1FontProgram::error(
+    ByteString const& message
+#ifdef PDF_DEBUG
+    ,
+    SourceLocation loc
+#endif
+)
+{
+#ifdef PDF_DEBUG
+    dbgln("\033[31m{} Type 1 font error: {}\033[0m", loc, message);
+#endif
+
+    return Error { Error::Type::MalformedPDF, message };
+}
+
 }
