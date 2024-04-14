@@ -743,11 +743,6 @@ void ConnectionFromClient::remove_dom_node(u64 page_id, i32 node_id)
 
     dom_node->remove();
 
-    // FIXME: When nodes are removed from the DOM, the associated layout nodes become stale and still
-    //        remain in the layout tree. This has to be fixed, this just causes everything to be recomputed
-    //        which really hurts performance.
-    active_document->force_layout();
-
     async_did_finish_editing_dom_node(page_id, previous_dom_node->unique_id());
 }
 
