@@ -637,6 +637,7 @@ class SVGAnimatedRect;
 class SVGCircleElement;
 class SVGClipPathElement;
 class SVGDefsElement;
+class SVGDescElement;
 class SVGElement;
 class SVGEllipseElement;
 class SVGForeignObjectElement;

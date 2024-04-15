@@ -263,6 +263,7 @@ standard_idl_files = [
   "//Userland/Libraries/LibWeb/SVG/SVGCircleElement.idl",
   "//Userland/Libraries/LibWeb/SVG/SVGClipPathElement.idl",
   "//Userland/Libraries/LibWeb/SVG/SVGDefsElement.idl",
+  "//Userland/Libraries/LibWeb/SVG/SVGDescElement.idl",
   "//Userland/Libraries/LibWeb/SVG/SVGElement.idl",
   "//Userland/Libraries/LibWeb/SVG/SVGEllipseElement.idl",
   "//Userland/Libraries/LibWeb/SVG/SVGForeignObjectElement.idl",
