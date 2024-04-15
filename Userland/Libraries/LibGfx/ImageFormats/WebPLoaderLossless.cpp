@@ -472,8 +472,7 @@ static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L_image(ImageKind ima
             unsigned index = symbol - (256 + 24);
 
             // "b. Get ARGB color from the color cache at that index."
-            if (index >= color_cache_size)
-                return Error::from_string_literal("WebPImageDecoderPlugin: Color cache index out of bounds");
+            // `symbol` is bounds-checked at the start of the loop.
             *pixel++ = color_cache[index];
         }
     }
