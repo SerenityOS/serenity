@@ -52,9 +52,12 @@ using CallFiniFunctionsFunction = void (*)();
 
 extern "C" [[noreturn]] void _invoke_entry(int argc, char** argv, char** envp, EntryPointFunction entry);
 
-static size_t s_current_tls_offset = 0;
-static size_t s_total_tls_size = 0;
-static size_t s_allocated_tls_block_size = 0;
+struct TLSData {
+    size_t total_tls_size { 0 };
+    size_t tls_template_size { 0 };
+};
+static TLSData s_tls_data;
+
 static char** s_envp = nullptr;
 static __pthread_mutex_t s_loader_lock = __PTHREAD_MUTEX_INITIALIZER;
 static ByteString s_cwd;
@@ -122,6 +125,8 @@ static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(ByteStri
     auto loader = TRY(ELF::DynamicLoader::try_create(fd, filepath));
 
     s_loaders.set(filepath, *loader);
+
+    static size_t s_current_tls_offset = 0;
 
     s_current_tls_offset -= loader->tls_size_of_current_object();
     if (loader->tls_alignment_of_current_object())
@@ -231,16 +236,15 @@ static Result<void, DlErrorMessage> map_dependencies(ByteString const& path)
 
 static void allocate_tls()
 {
-    s_total_tls_size = 0;
     for (auto const& data : s_loaders) {
         dbgln_if(DYNAMIC_LOAD_DEBUG, "{}: TLS Size: {}, TLS Alignment: {}", data.key, data.value->tls_size_of_current_object(), data.value->tls_alignment_of_current_object());
-        s_total_tls_size += data.value->tls_size_of_current_object() + data.value->tls_alignment_of_current_object();
+        s_tls_data.total_tls_size += data.value->tls_size_of_current_object() + data.value->tls_alignment_of_current_object();
     }
 
-    if (!s_total_tls_size)
+    if (s_tls_data.total_tls_size == 0)
         return;
 
-    auto page_aligned_size = align_up_to(s_total_tls_size, PAGE_SIZE);
+    auto page_aligned_size = align_up_to(s_tls_data.total_tls_size, PAGE_SIZE);
     auto initial_tls_data_result = ByteBuffer::create_zeroed(page_aligned_size);
     if (initial_tls_data_result.is_error()) {
         dbgln("Failed to allocate initial TLS data");
@@ -258,7 +262,7 @@ static void allocate_tls()
     VERIFY(master_tls != (void*)-1);
     dbgln_if(DYNAMIC_LOAD_DEBUG, "from userspace, master_tls: {:p}", master_tls);
 
-    s_allocated_tls_block_size = initial_tls_data.size();
+    s_tls_data.tls_template_size = initial_tls_data.size();
 }
 
 static int __dl_iterate_phdr(DlIteratePhdrCallbackFunction callback, void* data)
@@ -431,7 +435,7 @@ static Optional<DlErrorMessage> verify_tls_for_dlopen(DynamicLoader const& loade
     if (loader.tls_size_of_current_object() == 0)
         return {};
 
-    if (s_total_tls_size + loader.tls_size_of_current_object() + loader.tls_alignment_of_current_object() > s_allocated_tls_block_size)
+    if (s_tls_data.total_tls_size + loader.tls_size_of_current_object() + loader.tls_alignment_of_current_object() > s_tls_data.tls_template_size)
         return DlErrorMessage("TLS size too large");
 
     bool tls_data_is_all_zero = true;
@@ -492,7 +496,7 @@ static Result<void*, DlErrorMessage> __dlopen(char const* filename, int flags)
 
     TRY(link_main_library(loader->filepath(), flags));
 
-    s_total_tls_size += loader->tls_size_of_current_object() + loader->tls_alignment_of_current_object();
+    s_tls_data.total_tls_size += loader->tls_size_of_current_object() + loader->tls_alignment_of_current_object();
 
     auto object = s_global_objects.get(library_path.value());
     if (!object.has_value())
