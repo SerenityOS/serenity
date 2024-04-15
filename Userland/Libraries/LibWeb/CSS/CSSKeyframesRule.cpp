@@ -20,8 +20,7 @@ JS::NonnullGCPtr<CSSKeyframesRule> CSSKeyframesRule::create(JS::Realm& realm, Fl
 void CSSKeyframesRule::visit_edges(Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    for (auto& keyframe : m_keyframes)
-        visitor.visit(keyframe);
+    visitor.visit(m_keyframes);
 }
 
 void CSSKeyframesRule::initialize(JS::Realm& realm)

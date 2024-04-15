@@ -64,11 +64,9 @@ void Event::visit_edges(Visitor& visitor)
         visitor.visit(it.invocation_target);
         visitor.visit(it.shadow_adjusted_target);
         visitor.visit(it.related_target);
-        for (auto& itit : it.touch_target_list)
-            visitor.visit(itit);
+        visitor.visit(it.touch_target_list);
     }
-    for (auto& it : m_touch_target_list)
-        visitor.visit(it);
+    visitor.visit(m_touch_target_list);
 }
 
 // https://dom.spec.whatwg.org/#concept-event-path-append

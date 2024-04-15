@@ -122,8 +122,7 @@ WebIDL::CallbackType* AudioTrackList::onremovetrack()
 void AudioTrackList::visit_edges(JS::Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    for (auto const& track : m_audio_tracks)
-        visitor.visit(track);
+    visitor.visit(m_audio_tracks);
 }
 
 }

@@ -65,10 +65,8 @@ void WindowOrWorkerGlobalScopeMixin::visit_edges(JS::Cell::Visitor& visitor)
 {
     visitor.visit(m_performance);
     visitor.visit(m_supported_entry_types_array);
-    for (auto& it : m_timers)
-        visitor.visit(it.value);
-    for (auto& observer : m_registered_performance_observer_objects)
-        visitor.visit(observer);
+    visitor.visit(m_timers);
+    visitor.visit(m_registered_performance_observer_objects);
     for (auto& entry : m_performance_entry_buffer_map)
         entry.value.visit_edges(visitor);
 }

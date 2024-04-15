@@ -129,8 +129,7 @@ WebIDL::CallbackType* VideoTrackList::onremovetrack()
 void VideoTrackList::visit_edges(JS::Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    for (auto const& track : m_video_tracks)
-        visitor.visit(track);
+    visitor.visit(m_video_tracks);
 }
 
 }

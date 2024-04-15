@@ -53,8 +53,7 @@ void Executable::dump() const
 void Executable::visit_edges(Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    for (auto constant : constants)
-        visitor.visit(constant);
+    visitor.visit(constants);
 }
 
 }

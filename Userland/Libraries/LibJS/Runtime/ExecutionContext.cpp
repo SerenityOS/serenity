@@ -59,10 +59,8 @@ void ExecutionContext::visit_edges(Cell::Visitor& visitor)
     if (instruction_stream_iterator.has_value())
         visitor.visit(const_cast<Bytecode::Executable*>(instruction_stream_iterator.value().executable()));
     visitor.visit(function_name);
-    for (auto argument : arguments)
-        visitor.visit(argument);
-    for (auto local : locals)
-        visitor.visit(local);
+    visitor.visit(arguments);
+    visitor.visit(locals);
     script_or_module.visit(
         [](Empty) {},
         [&](auto& script_or_module) {

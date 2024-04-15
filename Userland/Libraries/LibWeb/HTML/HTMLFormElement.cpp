@@ -59,8 +59,7 @@ void HTMLFormElement::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_elements);
-    for (auto& element : m_associated_elements)
-        visitor.visit(element);
+    visitor.visit(m_associated_elements);
     visitor.visit(m_planned_navigation);
 }
 

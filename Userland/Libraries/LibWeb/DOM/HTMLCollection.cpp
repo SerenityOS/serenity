@@ -46,8 +46,7 @@ void HTMLCollection::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_root);
-    for (auto& element : m_cached_elements)
-        visitor.visit(element);
+    visitor.visit(m_cached_elements);
 }
 
 void HTMLCollection::update_cache_if_needed() const

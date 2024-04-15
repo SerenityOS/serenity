@@ -48,8 +48,7 @@ void CSSRuleList::initialize(JS::Realm& realm)
 void CSSRuleList::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    for (auto& rule : m_rules)
-        visitor.visit(rule);
+    visitor.visit(m_rules);
 }
 
 bool CSSRuleList::is_supported_property_index(u32 index) const

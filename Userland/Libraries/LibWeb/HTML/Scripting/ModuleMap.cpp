@@ -17,8 +17,7 @@ void ModuleMap::visit_edges(Visitor& visitor)
         visitor.visit(it.value.module_script);
 
     for (auto const& it : m_callbacks)
-        for (auto const& callback : it.value)
-            visitor.visit(callback);
+        visitor.visit(it.value);
 }
 
 bool ModuleMap::is_fetching(URL::URL const& url, ByteString const& type) const

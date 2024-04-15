@@ -35,8 +35,7 @@ Location::~Location() = default;
 void Location::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    for (auto& property : m_default_properties)
-        visitor.visit(property);
+    visitor.visit(m_default_properties);
 }
 
 void Location::initialize(JS::Realm& realm)

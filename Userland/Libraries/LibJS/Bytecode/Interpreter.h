@@ -26,10 +26,8 @@ struct CallFrame {
 
     void visit_edges(Cell::Visitor& visitor)
     {
-        for (auto const& value : registers())
-            visitor.visit(value);
-        for (auto const& environment : saved_lexical_environments)
-            visitor.visit(environment);
+        visitor.visit(registers());
+        visitor.visit(saved_lexical_environments);
         for (auto& context : unwind_contexts) {
             visitor.visit(context.lexical_environment);
         }

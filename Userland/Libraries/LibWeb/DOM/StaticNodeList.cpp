@@ -29,8 +29,7 @@ StaticNodeList::~StaticNodeList() = default;
 void StaticNodeList::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    for (auto& node : m_static_nodes)
-        visitor.visit(node);
+    visitor.visit(m_static_nodes);
 }
 
 // https://dom.spec.whatwg.org/#dom-nodelist-length

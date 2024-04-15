@@ -16,8 +16,7 @@ StackOfOpenElements::~StackOfOpenElements() = default;
 
 void StackOfOpenElements::visit_edges(JS::Cell::Visitor& visitor)
 {
-    for (auto& element : m_elements)
-        visitor.visit(element);
+    visitor.visit(m_elements);
 }
 
 bool StackOfOpenElements::has_in_scope_impl(FlyString const& tag_name, Vector<FlyString> const& list) const

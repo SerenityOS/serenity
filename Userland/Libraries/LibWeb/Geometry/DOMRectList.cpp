@@ -40,8 +40,7 @@ void DOMRectList::initialize(JS::Realm& realm)
 void DOMRectList::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    for (auto& rect : m_rects)
-        visitor.visit(rect);
+    visitor.visit(m_rects);
 }
 
 // https://drafts.fxtf.org/geometry-1/#dom-domrectlist-length

@@ -43,12 +43,9 @@ void ResizeObserver::visit_edges(JS::Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_callback);
-    for (auto& observation : m_observation_targets)
-        visitor.visit(observation);
-    for (auto& observation : m_active_targets)
-        visitor.visit(observation);
-    for (auto& observation : m_skipped_targets)
-        visitor.visit(observation);
+    visitor.visit(m_observation_targets);
+    visitor.visit(m_active_targets);
+    visitor.visit(m_skipped_targets);
 }
 
 void ResizeObserver::finalize()

@@ -395,10 +395,8 @@ void Promise::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_result);
-    for (auto& reaction : m_fulfill_reactions)
-        visitor.visit(reaction);
-    for (auto& reaction : m_reject_reactions)
-        visitor.visit(reaction);
+    visitor.visit(m_fulfill_reactions);
+    visitor.visit(m_reject_reactions);
 }
 
 }

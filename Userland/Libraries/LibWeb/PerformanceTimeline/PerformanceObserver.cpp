@@ -41,8 +41,7 @@ void PerformanceObserver::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_callback);
-    for (auto& entry : m_observer_buffer)
-        visitor.visit(entry);
+    visitor.visit(m_observer_buffer);
 }
 
 // https://w3c.github.io/performance-timeline/#dom-performanceobserver-observe

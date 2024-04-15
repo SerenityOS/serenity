@@ -518,10 +518,8 @@ void ViewportPaintable::recompute_selection_states()
 void ViewportPaintable::visit_edges(Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    for (auto it : scroll_state)
-        visitor.visit(it.key);
-    for (auto it : clip_state)
-        visitor.visit(it.key);
+    visitor.visit(scroll_state);
+    visitor.visit(clip_state);
 }
 
 }

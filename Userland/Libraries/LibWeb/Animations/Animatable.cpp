@@ -96,8 +96,7 @@ void Animatable::disassociate_with_animation(JS::NonnullGCPtr<Animation> animati
 
 void Animatable::visit_edges(JS::Cell::Visitor& visitor)
 {
-    for (auto const& animation : m_associated_animations)
-        visitor.visit(animation);
+    visitor.visit(m_associated_animations);
     visitor.visit(m_cached_animation_name_source);
     visitor.visit(m_cached_animation_name_animation);
 }
