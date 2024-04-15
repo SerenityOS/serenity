@@ -6,6 +6,10 @@
         println(imageData.data);
         println(imageData.data.length);
 
+        imageData = new ImageData(1, 2);
+        println(imageData.data);
+        println(imageData.data.length);
+
         const arr = new Uint8ClampedArray(40_000);
         // Fill the array with the same RGBA values
         for (let i = 0; i < arr.length; i += 4) {
