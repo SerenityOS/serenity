@@ -28,8 +28,8 @@ bool Application::event(QEvent* event)
 
         if (auto file_url = WebView::sanitize_url(file); file_url.has_value())
             on_open_file(file_url.release_value());
+        break;
     }
-
     default:
         break;
     }
