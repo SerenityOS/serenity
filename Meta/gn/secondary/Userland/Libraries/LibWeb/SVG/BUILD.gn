@@ -13,6 +13,7 @@ source_set("SVG") {
     "SVGClipPathElement.cpp",
     "SVGDecodedImageData.cpp",
     "SVGDefsElement.cpp",
+    "SVGDescElement.cpp",
     "SVGElement.cpp",
     "SVGEllipseElement.cpp",
     "SVGForeignObjectElement.cpp",
