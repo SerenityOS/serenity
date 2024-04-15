@@ -277,6 +277,7 @@ set(SOURCES
     HTML/FormControlInfrastructure.cpp
     HTML/FormDataEvent.cpp
     HTML/GlobalEventHandlers.cpp
+    HTML/HashChangeEvent.cpp
     HTML/History.cpp
     HTML/HTMLAllCollection.cpp
     HTML/HTMLAnchorElement.cpp
