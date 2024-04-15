@@ -75,7 +75,7 @@ WebIDL::ExceptionOr<ImportMap> parse_import_map_string(JS::Realm& realm, ByteStr
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#normalizing-a-specifier-key
-WebIDL::ExceptionOr<Optional<DeprecatedFlyString>> normalise_specifier_key(JS::Realm& realm, DeprecatedFlyString specifier_key, URL::URL base_url)
+WebIDL::ExceptionOr<Optional<FlyString>> normalise_specifier_key(JS::Realm& realm, FlyString specifier_key, URL::URL base_url)
 {
     // 1. If specifierKey is the empty string, then:
     if (specifier_key.is_empty()) {
@@ -85,7 +85,7 @@ WebIDL::ExceptionOr<Optional<DeprecatedFlyString>> normalise_specifier_key(JS::R
             TRY_OR_THROW_OOM(realm.vm(), String::formatted("Specifier keys may not be empty")));
 
         // 2. Return null.
-        return Optional<DeprecatedFlyString> {};
+        return Optional<FlyString> {};
     }
 
     // 2. Let url be the result of resolving a URL-like module specifier, given specifierKey and baseURL.
