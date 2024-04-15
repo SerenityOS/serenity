@@ -79,6 +79,7 @@
 #include <LibWeb/HTML/HTMLObjectElement.h>
 #include <LibWeb/HTML/HTMLScriptElement.h>
 #include <LibWeb/HTML/HTMLTitleElement.h>
+#include <LibWeb/HTML/HashChangeEvent.h>
 #include <LibWeb/HTML/ListOfAvailableImages.h>
 #include <LibWeb/HTML/Location.h>
 #include <LibWeb/HTML/MessageEvent.h>
@@ -4023,10 +4024,19 @@ void Document::update_for_history_step_application(JS::NonnullGCPtr<HTML::Sessio
 
             // FIXME: 3. Restore persisted state given entry.
 
-            // FIXME: 4. If oldURL's fragment is not equal to entry's URL's fragment, then queue a global task on the DOM manipulation task source
-            //           given document's relevant global object to fire an event named hashchange at document's relevant global object,
-            //           using HashChangeEvent, with the oldURL attribute initialized to the serialization of oldURL and the newURL attribute
-            //           initialized to the serialization of entry's URL.
+            // 4. If oldURL's fragment is not equal to entry's URL's fragment, then queue a global task on the DOM manipulation task source
+            //    given document's relevant global object to fire an event named hashchange at document's relevant global object,
+            //    using HashChangeEvent, with the oldURL attribute initialized to the serialization of oldURL and the newURL attribute
+            //    initialized to the serialization of entry's URL.
+            if (old_url.fragment() != entry->url().fragment()) {
+                HTML::HashChangeEventInit hashchange_event_init;
+                hashchange_event_init.old_url = MUST(String::from_byte_string(old_url.serialize()));
+                hashchange_event_init.new_url = MUST(String::from_byte_string(entry->url().serialize()));
+                auto hashchange_event = HTML::HashChangeEvent::create(realm(), "hashchange"_fly_string, hashchange_event_init);
+                HTML::queue_global_task(HTML::Task::Source::DOMManipulation, relevant_global_object, [hashchange_event, &relevant_global_object]() {
+                    relevant_global_object.dispatch_event(hashchange_event);
+                });
+            }
         }
 
         // 6. Otherwise:

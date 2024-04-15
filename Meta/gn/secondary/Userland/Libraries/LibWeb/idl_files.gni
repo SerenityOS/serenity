@@ -117,6 +117,7 @@ standard_idl_files = [
   "//Userland/Libraries/LibWeb/HTML/DataTransfer.idl",
   "//Userland/Libraries/LibWeb/HTML/ErrorEvent.idl",
   "//Userland/Libraries/LibWeb/HTML/FormDataEvent.idl",
+  "//Userland/Libraries/LibWeb/HTML/HashChangeEvent.idl",
   "//Userland/Libraries/LibWeb/HTML/History.idl",
   "//Userland/Libraries/LibWeb/HTML/HTMLAllCollection.idl",
   "//Userland/Libraries/LibWeb/HTML/HTMLAnchorElement.idl",
