@@ -113,7 +113,7 @@ void HTMLLinkElement::attribute_changed(FlyString const& name, Optional<String> 
     // FIXME: Handle alternate stylesheets properly
     if (m_relationship & Relationship::Stylesheet && !(m_relationship & Relationship::Alternate)) {
         if (name == HTML::AttributeNames::disabled && m_loaded_style_sheet)
-            document_or_shadow_root_style_sheets().remove_sheet(*m_loaded_style_sheet);
+            document_or_shadow_root_style_sheets().remove_a_css_style_sheet(*m_loaded_style_sheet);
 
         // https://html.spec.whatwg.org/multipage/links.html#link-type-stylesheet:fetch-and-process-the-linked-resource
         // The appropriate times to fetch and process this type of link are:
@@ -312,7 +312,7 @@ void HTMLLinkElement::process_stylesheet_resource(bool success, Fetch::Infrastru
 
     // 3. If el has an associated CSS style sheet, remove the CSS style sheet.
     if (m_loaded_style_sheet) {
-        document_or_shadow_root_style_sheets().remove_sheet(*m_loaded_style_sheet);
+        document_or_shadow_root_style_sheets().remove_a_css_style_sheet(*m_loaded_style_sheet);
         m_loaded_style_sheet = nullptr;
     }
 
@@ -369,9 +369,17 @@ void HTMLLinkElement::process_stylesheet_resource(bool success, Fetch::Infrastru
                 m_loaded_style_sheet = parse_css_stylesheet(CSS::Parser::ParsingContext(document(), *response.url()), decoded_string);
 
                 if (m_loaded_style_sheet) {
-                    m_loaded_style_sheet->set_owner_node(this);
-                    m_loaded_style_sheet->set_media(attribute(HTML::AttributeNames::media).value_or({}));
-                    document().style_sheets().add_sheet(*m_loaded_style_sheet);
+                    document().style_sheets().create_a_css_style_sheet(
+                        "text/css"_string,
+                        this,
+                        attribute(HTML::AttributeNames::media).value_or({}),
+                        in_a_document_tree() ? attribute(HTML::AttributeNames::title).value_or({}) : String {},
+                        false,
+                        true,
+                        {},
+                        nullptr,
+                        nullptr,
+                        *m_loaded_style_sheet);
                 } else {
                     dbgln_if(CSS_LOADER_DEBUG, "HTMLLinkElement: Failed to parse stylesheet: {}", resource()->url());
                 }

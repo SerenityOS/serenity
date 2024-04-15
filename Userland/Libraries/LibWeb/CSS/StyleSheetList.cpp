@@ -15,6 +15,58 @@ namespace Web::CSS {
 
 JS_DEFINE_ALLOCATOR(StyleSheetList);
 
+// https://www.w3.org/TR/cssom/#remove-a-css-style-sheet
+void StyleSheetList::remove_a_css_style_sheet(CSS::CSSStyleSheet& sheet)
+{
+    // 1. Remove the CSS style sheet from the list of document or shadow root CSS style sheets.
+    remove_sheet(sheet);
+
+    // 2. Set the CSS style sheet’s parent CSS style sheet, owner node and owner CSS rule to null.
+    sheet.set_parent_css_style_sheet(nullptr);
+    sheet.set_owner_node(nullptr);
+    sheet.set_owner_css_rule(nullptr);
+}
+
+// https://www.w3.org/TR/cssom/#add-a-css-style-sheet
+void StyleSheetList::add_a_css_style_sheet(CSS::CSSStyleSheet& sheet)
+{
+    // 1. Add the CSS style sheet to the list of document or shadow root CSS style sheets at the appropriate location. The remainder of these steps deal with the disabled flag.
+    add_sheet(sheet);
+
+    // 2. If the disabled flag is set, then return.
+    if (sheet.disabled())
+        return;
+
+    // FIXME: 3. If the title is not the empty string, the alternate flag is unset, and preferred CSS style sheet set name is the empty string change the preferred CSS style sheet set name to the title.
+
+    // FIXME: 4. If any of the following is true, then unset the disabled flag and return:
+    //           The title is the empty string.
+    //           The last CSS style sheet set name is null and the title is a case-sensitive match for the preferred CSS style sheet set name.
+    //           The title is a case-sensitive match for the last CSS style sheet set name.
+
+    // FIXME: 5. Set the disabled flag.
+}
+
+// https://www.w3.org/TR/cssom/#create-a-css-style-sheet
+void StyleSheetList::create_a_css_style_sheet(String type, DOM::Element* owner_node, String media, String title, bool alternate, bool origin_clean, Optional<String> location, CSS::CSSStyleSheet* parent_style_sheet, CSS::CSSRule* owner_rule, CSS::CSSStyleSheet& sheet)
+{
+    // 1. Create a new CSS style sheet object and set its properties as specified.
+    // FIXME: We receive `sheet` from the caller already. This is weird.
+
+    sheet.set_parent_css_style_sheet(parent_style_sheet);
+    sheet.set_owner_css_rule(owner_rule);
+    sheet.set_owner_node(owner_node);
+    sheet.set_type(move(type));
+    sheet.set_media(move(media));
+    sheet.set_title(move(title));
+    sheet.set_alternate(alternate);
+    sheet.set_origin_clean(origin_clean);
+    sheet.set_location(move(location));
+
+    // 2. Then run the add a CSS style sheet steps for the newly created CSS style sheet.
+    add_a_css_style_sheet(sheet);
+}
+
 void StyleSheetList::add_sheet(CSSStyleSheet& sheet)
 {
     sheet.set_style_sheet_list({}, this);

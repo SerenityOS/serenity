@@ -33,7 +33,7 @@ void StyleElementUtils::update_a_style_block(DOM::Element& style_element)
     // 2. If element has an associated CSS style sheet, remove the CSS style sheet in question.
 
     if (m_associated_css_style_sheet) {
-        remove_a_css_style_sheet(style_element.document_or_shadow_root_style_sheets(), *m_associated_css_style_sheet);
+        style_element.document_or_shadow_root_style_sheets().remove_a_css_style_sheet(*m_associated_css_style_sheet);
 
         // FIXME: This should probably be handled by StyleSheet::set_owner_node().
         m_associated_css_style_sheet = nullptr;
@@ -60,8 +60,7 @@ void StyleElementUtils::update_a_style_block(DOM::Element& style_element)
     m_associated_css_style_sheet = sheet;
 
     // 6. Create a CSS style sheet with the following properties...
-    create_a_css_style_sheet(
-        style_element.document_or_shadow_root_style_sheets(),
+    style_element.document_or_shadow_root_style_sheets().create_a_css_style_sheet(
         "text/css"_string,
         &style_element,
         style_element.attribute(HTML::AttributeNames::media).value_or({}),
@@ -74,58 +73,6 @@ void StyleElementUtils::update_a_style_block(DOM::Element& style_element)
         nullptr,
         nullptr,
         *sheet);
-}
-
-// https://www.w3.org/TR/cssom/#remove-a-css-style-sheet
-void StyleElementUtils::remove_a_css_style_sheet(CSS::StyleSheetList& style_sheets, CSS::CSSStyleSheet& sheet)
-{
-    // 1. Remove the CSS style sheet from the list of document or shadow root CSS style sheets.
-    style_sheets.remove_sheet(sheet);
-
-    // 2. Set the CSS style sheet’s parent CSS style sheet, owner node and owner CSS rule to null.
-    sheet.set_parent_css_style_sheet(nullptr);
-    sheet.set_owner_node(nullptr);
-    sheet.set_owner_css_rule(nullptr);
-}
-
-// https://www.w3.org/TR/cssom/#create-a-css-style-sheet
-void StyleElementUtils::create_a_css_style_sheet(CSS::StyleSheetList& style_sheets, String type, DOM::Element* owner_node, String media, String title, bool alternate, bool origin_clean, Optional<String> location, CSS::CSSStyleSheet* parent_style_sheet, CSS::CSSRule* owner_rule, CSS::CSSStyleSheet& sheet)
-{
-    // 1. Create a new CSS style sheet object and set its properties as specified.
-    // FIXME: We receive `sheet` from the caller already. This is weird.
-
-    sheet.set_parent_css_style_sheet(parent_style_sheet);
-    sheet.set_owner_css_rule(owner_rule);
-    sheet.set_owner_node(owner_node);
-    sheet.set_type(move(type));
-    sheet.set_media(move(media));
-    sheet.set_title(move(title));
-    sheet.set_alternate(alternate);
-    sheet.set_origin_clean(origin_clean);
-    sheet.set_location(move(location));
-
-    // 2. Then run the add a CSS style sheet steps for the newly created CSS style sheet.
-    add_a_css_style_sheet(style_sheets, sheet);
-}
-
-// https://www.w3.org/TR/cssom/#add-a-css-style-sheet
-void StyleElementUtils::add_a_css_style_sheet(CSS::StyleSheetList& style_sheets, CSS::CSSStyleSheet& sheet)
-{
-    // 1. Add the CSS style sheet to the list of document or shadow root CSS style sheets at the appropriate location. The remainder of these steps deal with the disabled flag.
-    style_sheets.add_sheet(sheet);
-
-    // 2. If the disabled flag is set, then return.
-    if (sheet.disabled())
-        return;
-
-    // FIXME: 3. If the title is not the empty string, the alternate flag is unset, and preferred CSS style sheet set name is the empty string change the preferred CSS style sheet set name to the title.
-
-    // FIXME: 4. If any of the following is true, then unset the disabled flag and return:
-    //           The title is the empty string.
-    //           The last CSS style sheet set name is null and the title is a case-sensitive match for the preferred CSS style sheet set name.
-    //           The title is a case-sensitive match for the last CSS style sheet set name.
-
-    // FIXME: 5. Set the disabled flag.
 }
 
 }
