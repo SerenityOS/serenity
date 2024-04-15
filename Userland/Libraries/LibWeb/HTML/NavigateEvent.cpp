@@ -56,8 +56,7 @@ void NavigateEvent::initialize(JS::Realm& realm)
 void NavigateEvent::visit_edges(JS::Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    for (auto& handler : m_navigation_handler_list)
-        visitor.visit(handler);
+    visitor.visit(m_navigation_handler_list);
     visitor.visit(m_abort_controller);
     visitor.visit(m_destination);
     visitor.visit(m_signal);

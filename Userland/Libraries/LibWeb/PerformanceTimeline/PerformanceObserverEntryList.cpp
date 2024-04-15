@@ -32,8 +32,7 @@ void PerformanceObserverEntryList::initialize(JS::Realm& realm)
 void PerformanceObserverEntryList::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    for (auto& entry : m_entry_list)
-        visitor.visit(entry);
+    visitor.visit(m_entry_list);
 }
 
 // https://www.w3.org/TR/performance-timeline/#dfn-filter-buffer-by-name-and-type

@@ -50,8 +50,7 @@ void MutationObserver::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_callback);
-    for (auto& record : m_record_queue)
-        visitor.visit(record);
+    visitor.visit(m_record_queue);
 }
 
 // https://dom.spec.whatwg.org/#dom-mutationobserver-observe

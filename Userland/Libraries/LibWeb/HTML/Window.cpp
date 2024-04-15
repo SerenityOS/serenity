@@ -126,10 +126,8 @@ void Window::visit_edges(JS::Cell::Visitor& visitor)
     visitor.visit(m_navigator);
     visitor.visit(m_navigation);
     visitor.visit(m_custom_element_registry);
-    for (auto& plugin_object : m_pdf_viewer_plugin_objects)
-        visitor.visit(plugin_object);
-    for (auto& mime_type_object : m_pdf_viewer_mime_type_objects)
-        visitor.visit(mime_type_object);
+    visitor.visit(m_pdf_viewer_plugin_objects);
+    visitor.visit(m_pdf_viewer_mime_type_objects);
     visitor.visit(m_count_queuing_strategy_size_function);
     visitor.visit(m_byte_length_queuing_strategy_size_function);
 }

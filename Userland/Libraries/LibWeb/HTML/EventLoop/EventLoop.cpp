@@ -37,9 +37,7 @@ void EventLoop::visit_edges(Visitor& visitor)
     visitor.visit(m_task_queue);
     visitor.visit(m_microtask_queue);
     visitor.visit(m_currently_running_task);
-
-    for (auto& settings : m_backup_incumbent_settings_object_stack)
-        visitor.visit(settings);
+    visitor.visit(m_backup_incumbent_settings_object_stack);
 }
 
 void EventLoop::schedule()

@@ -83,14 +83,12 @@ void Navigation::initialize(JS::Realm& realm)
 void Navigation::visit_edges(JS::Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    for (auto& entry : m_entry_list)
-        visitor.visit(entry);
+    visitor.visit(m_entry_list);
     visitor.visit(m_transition);
     visitor.visit(m_ongoing_navigate_event);
     visitor.visit(m_ongoing_api_method_tracker);
     visitor.visit(m_upcoming_non_traverse_api_method_tracker);
-    for (auto& key_and_tracker : m_upcoming_traverse_api_method_trackers)
-        visitor.visit(key_and_tracker.value);
+    visitor.visit(m_upcoming_traverse_api_method_trackers);
 }
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-navigation-entries

@@ -34,8 +34,7 @@ void TraversableNavigable::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_page);
-    for (auto& entry : m_session_history_entries)
-        visitor.visit(entry);
+    visitor.visit(m_session_history_entries);
     visitor.visit(m_session_history_traversal_queue);
 }
 

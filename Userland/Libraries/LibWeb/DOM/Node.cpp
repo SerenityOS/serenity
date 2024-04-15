@@ -106,8 +106,7 @@ void Node::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_paintable);
 
     if (m_registered_observer_list) {
-        for (auto& registered_observer : *m_registered_observer_list)
-            visitor.visit(registered_observer);
+        visitor.visit(*m_registered_observer_list);
     }
 }
 

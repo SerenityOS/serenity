@@ -99,8 +99,7 @@ void Element::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_shadow_root);
     visitor.visit(m_custom_element_definition);
     if (m_pseudo_element_nodes) {
-        for (auto& pseudo_element_layout_node : *m_pseudo_element_nodes)
-            visitor.visit(pseudo_element_layout_node);
+        visitor.visit(m_pseudo_element_nodes->span());
     }
     if (m_registered_intersection_observers) {
         for (auto& registered_intersection_observers : *m_registered_intersection_observers)

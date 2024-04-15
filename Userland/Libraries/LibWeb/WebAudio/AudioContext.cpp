@@ -90,10 +90,8 @@ void AudioContext::initialize(JS::Realm& realm)
 void AudioContext::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    for (auto& promise : m_pending_promises)
-        visitor.visit(promise);
-    for (auto& promise : m_pending_resume_promises)
-        visitor.visit(promise);
+    visitor.visit(m_pending_promises);
+    visitor.visit(m_pending_resume_promises);
 }
 
 // https://www.w3.org/TR/webaudio/#dom-audiocontext-getoutputtimestamp

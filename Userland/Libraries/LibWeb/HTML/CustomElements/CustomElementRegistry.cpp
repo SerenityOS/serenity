@@ -39,10 +39,8 @@ void CustomElementRegistry::initialize(JS::Realm& realm)
 void CustomElementRegistry::visit_edges(Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    for (auto& definition : m_custom_element_definitions)
-        visitor.visit(definition);
-    for (auto& [name, promise] : m_when_defined_promise_map)
-        visitor.visit(promise);
+    visitor.visit(m_custom_element_definitions);
+    visitor.visit(m_when_defined_promise_map);
 }
 
 // https://webidl.spec.whatwg.org/#es-callback-function

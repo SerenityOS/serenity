@@ -23,8 +23,7 @@ void TaskQueue::visit_edges(Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_event_loop);
-    for (auto& task : m_tasks)
-        visitor.visit(task);
+    visitor.visit(m_tasks);
 }
 
 void TaskQueue::add(JS::NonnullGCPtr<Task> task)

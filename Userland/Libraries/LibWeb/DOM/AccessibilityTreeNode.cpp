@@ -76,8 +76,7 @@ void AccessibilityTreeNode::visit_edges(Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_value);
-    for (auto const& child : m_children)
-        visitor.visit(child);
+    visitor.visit(m_children);
 }
 
 }

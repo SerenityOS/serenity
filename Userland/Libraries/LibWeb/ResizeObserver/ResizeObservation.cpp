@@ -33,8 +33,7 @@ void ResizeObservation::visit_edges(JS::Cell::Visitor& visitor)
     Base::visit_edges(visitor);
     visitor.visit(m_realm);
     visitor.visit(m_target);
-    for (auto& size : m_last_reported_sizes)
-        visitor.visit(size);
+    visitor.visit(m_last_reported_sizes);
 }
 
 // https://drafts.csswg.org/resize-observer-1/#dom-resizeobservation-isactive

@@ -90,8 +90,7 @@ void HTMLMediaElement::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_document_observer);
     visitor.visit(m_source_element_selector);
     visitor.visit(m_fetch_controller);
-    for (auto& promise : m_pending_play_promises)
-        visitor.visit(promise);
+    visitor.visit(m_pending_play_promises);
 }
 
 void HTMLMediaElement::attribute_changed(FlyString const& name, Optional<String> const& value)

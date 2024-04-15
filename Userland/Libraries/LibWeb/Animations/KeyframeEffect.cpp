@@ -873,8 +873,7 @@ void KeyframeEffect::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_target_element);
-    for (auto const& keyframe : m_keyframe_objects)
-        visitor.visit(keyframe);
+    visitor.visit(m_keyframe_objects);
 }
 
 static CSS::RequiredInvalidationAfterStyleChange compute_required_invalidation(HashMap<CSS::PropertyID, NonnullRefPtr<CSS::StyleValue const>> const& old_properties, HashMap<CSS::PropertyID, NonnullRefPtr<CSS::StyleValue const>> const& new_properties)

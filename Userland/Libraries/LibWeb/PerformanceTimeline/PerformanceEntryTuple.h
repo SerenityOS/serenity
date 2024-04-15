@@ -48,8 +48,7 @@ struct PerformanceEntryTuple {
 
     void visit_edges(JS::Cell::Visitor& visitor)
     {
-        for (auto& entry : performance_entry_buffer)
-            visitor.visit(entry);
+        visitor.visit(performance_entry_buffer);
     }
 };
 

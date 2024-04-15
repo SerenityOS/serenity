@@ -49,8 +49,7 @@ void MessageEvent::visit_edges(Cell::Visitor& visitor)
     Base::visit_edges(visitor);
     visitor.visit(m_data);
     visitor.visit(m_ports_array);
-    for (auto& port : m_ports)
-        visitor.visit(port);
+    visitor.visit(m_ports);
 }
 
 Variant<JS::Handle<WindowProxy>, JS::Handle<MessagePort>, Empty> MessageEvent::source() const

@@ -102,8 +102,7 @@ void BoundFunction::visit_edges(Visitor& visitor)
 
     visitor.visit(m_bound_target_function);
     visitor.visit(m_bound_this);
-    for (auto argument : m_bound_arguments)
-        visitor.visit(argument);
+    visitor.visit(m_bound_arguments);
 }
 
 }

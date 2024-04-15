@@ -69,11 +69,8 @@ void EventTarget::visit_edges(Cell::Visitor& visitor)
     Base::visit_edges(visitor);
 
     if (auto const* data = m_data.ptr()) {
-        for (auto& event_listener : data->event_listener_list)
-            visitor.visit(event_listener);
-
-        for (auto& it : data->event_handler_map)
-            visitor.visit(it.value);
+        visitor.visit(data->event_listener_list);
+        visitor.visit(data->event_handler_map);
     }
 }
 

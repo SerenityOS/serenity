@@ -34,8 +34,7 @@ void Request::visit_edges(JS::Cell::Visitor& visitor)
     m_window.visit(
         [&](JS::GCPtr<HTML::EnvironmentSettingsObject> const& value) { visitor.visit(value); },
         [](auto const&) {});
-    for (auto const& pending_response : m_pending_responses)
-        visitor.visit(pending_response);
+    visitor.visit(m_pending_responses);
 }
 
 JS::NonnullGCPtr<Request> Request::create(JS::VM& vm)

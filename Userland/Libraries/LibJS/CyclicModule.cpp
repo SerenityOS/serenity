@@ -29,8 +29,7 @@ void CyclicModule::visit_edges(Cell::Visitor& visitor)
     Base::visit_edges(visitor);
     visitor.visit(m_cycle_root);
     visitor.visit(m_top_level_capability);
-    for (auto const& module : m_async_parent_modules)
-        visitor.visit(module);
+    visitor.visit(m_async_parent_modules);
     for (auto const& loaded_module : m_loaded_modules)
         visitor.visit(loaded_module.module);
 }
@@ -40,8 +39,7 @@ void GraphLoadingState::visit_edges(Cell::Visitor& visitor)
     Base::visit_edges(visitor);
     visitor.visit(promise_capability);
     visitor.visit(host_defined);
-    for (auto module : visited)
-        visitor.visit(module);
+    visitor.visit(visited);
 }
 
 // 16.2.1.5.1 LoadRequestedModules ( [ hostDefined ] ), https://tc39.es/ecma262/#sec-LoadRequestedModules

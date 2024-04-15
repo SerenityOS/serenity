@@ -126,8 +126,7 @@ void PageClient::visit_edges(JS::Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_page);
-    for (auto document : m_console_clients.keys())
-        visitor.visit(document);
+    visitor.visit(m_console_clients);
 }
 
 ConnectionFromClient& PageClient::client() const

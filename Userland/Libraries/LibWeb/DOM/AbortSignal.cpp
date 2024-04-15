@@ -98,14 +98,9 @@ void AbortSignal::visit_edges(JS::Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_abort_reason);
-    for (auto& algorithm : m_abort_algorithms)
-        visitor.visit(algorithm);
-
-    for (auto& source_signal : m_source_signals)
-        visitor.visit(source_signal);
-
-    for (auto& dependent_signal : m_dependent_signals)
-        visitor.visit(dependent_signal);
+    visitor.visit(m_abort_algorithms);
+    visitor.visit(m_source_signals);
+    visitor.visit(m_dependent_signals);
 }
 
 // https://dom.spec.whatwg.org/#dom-abortsignal-abort

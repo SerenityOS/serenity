@@ -43,8 +43,7 @@ void NamedNodeMap::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_element);
-    for (auto& attribute : m_attributes)
-        visitor.visit(attribute);
+    visitor.visit(m_attributes);
 }
 
 // https://dom.spec.whatwg.org/#ref-for-dfn-supported-property-indices%E2%91%A3

@@ -78,10 +78,8 @@ void IntersectionObserver::visit_edges(JS::Cell::Visitor& visitor)
     Base::visit_edges(visitor);
     visitor.visit(m_root);
     visitor.visit(m_callback);
-    for (auto& entry : m_queued_entries)
-        visitor.visit(entry);
-    for (auto& target : m_observation_targets)
-        visitor.visit(target);
+    visitor.visit(m_queued_entries);
+    visitor.visit(m_observation_targets);
 }
 
 // https://w3c.github.io/IntersectionObserver/#dom-intersectionobserver-observe

@@ -66,8 +66,7 @@ WebIDL::ExceptionOr<JS::Value> FileList::item_value(size_t index) const
 void FileList::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    for (auto file : m_files)
-        visitor.visit(file);
+    visitor.visit(m_files);
 }
 
 WebIDL::ExceptionOr<void> FileList::serialization_steps(HTML::SerializationRecord& serialized, bool for_storage, HTML::SerializationMemory& memory)

@@ -35,8 +35,7 @@ void BrowsingContextGroup::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_page);
-    for (auto& context : m_browsing_context_set)
-        visitor.visit(context);
+    visitor.visit(m_browsing_context_set);
 }
 
 // https://html.spec.whatwg.org/multipage/document-sequences.html#creating-a-new-browsing-context-group-and-document

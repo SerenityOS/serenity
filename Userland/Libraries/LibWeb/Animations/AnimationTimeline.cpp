@@ -64,8 +64,7 @@ void AnimationTimeline::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_associated_document);
-    for (auto const& animation : m_associated_animations)
-        visitor.visit(animation);
+    visitor.visit(m_associated_animations);
 }
 
 }

@@ -445,44 +445,25 @@ void Document::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_visual_viewport);
     visitor.visit(m_latest_entry);
     visitor.visit(m_default_timeline);
+    visitor.visit(m_scripts_to_execute_when_parsing_has_finished);
+    visitor.visit(m_scripts_to_execute_in_order_as_soon_as_possible);
+    visitor.visit(m_scripts_to_execute_as_soon_as_possible);
+    visitor.visit(m_node_iterators);
+    visitor.visit(m_document_observers);
+    visitor.visit(m_pending_scroll_event_targets);
+    visitor.visit(m_pending_scrollend_event_targets);
+    visitor.visit(m_intersection_observers);
+    visitor.visit(m_resize_observers);
 
-    for (auto& script : m_scripts_to_execute_when_parsing_has_finished)
-        visitor.visit(script);
-    for (auto& script : m_scripts_to_execute_in_order_as_soon_as_possible)
-        visitor.visit(script);
-    for (auto& script : m_scripts_to_execute_as_soon_as_possible)
-        visitor.visit(script);
+    visitor.visit(m_shared_image_requests);
 
-    for (auto& node_iterator : m_node_iterators)
-        visitor.visit(node_iterator);
-
-    for (auto& document_observer : m_document_observers)
-        visitor.visit(document_observer);
-
-    for (auto& target : m_pending_scroll_event_targets)
-        visitor.visit(target);
-    for (auto& target : m_pending_scrollend_event_targets)
-        visitor.visit(target);
-
-    for (auto& observer : m_intersection_observers)
-        visitor.visit(observer);
-
-    for (auto& observer : m_resize_observers)
-        visitor.visit(observer);
-
-    for (auto& image : m_shared_image_requests)
-        visitor.visit(image.value);
-
-    for (auto& timeline : m_associated_animation_timelines)
-        visitor.visit(timeline);
-
+    visitor.visit(m_associated_animation_timelines);
     visitor.visit(m_list_of_available_images);
 
     for (auto* form_associated_element : m_form_associated_elements_with_form_attribute)
         visitor.visit(form_associated_element->form_associated_element_to_html_element());
 
-    for (auto& element : m_potentially_named_elements)
-        visitor.visit(element);
+    visitor.visit(m_potentially_named_elements);
 
     for (auto& event : m_pending_animation_event_queue) {
         visitor.visit(event.event);
@@ -491,14 +472,10 @@ void Document::visit_edges(Cell::Visitor& visitor)
 
     visitor.visit(m_adopted_style_sheets);
 
-    for (auto& shadow_root : m_shadow_roots)
-        visitor.visit(shadow_root);
+    visitor.visit(m_shadow_roots);
 
-    for (auto& element : m_top_layer_elements)
-        visitor.visit(element);
-
-    for (auto& element : m_top_layer_pending_removals)
-        visitor.visit(element);
+    visitor.visit(m_top_layer_elements);
+    visitor.visit(m_top_layer_pending_removals);
 }
 
 // https://w3c.github.io/selection-api/#dom-document-getselection

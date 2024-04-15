@@ -43,9 +43,7 @@ SessionHistoryTraversalQueue::SessionHistoryTraversalQueue()
 void SessionHistoryTraversalQueue::visit_edges(JS::Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    for (auto const& entry : m_queue) {
-        visitor.visit(entry);
-    }
+    visitor.visit(m_queue);
 }
 
 void SessionHistoryTraversalQueue::append(Function<void()> steps)

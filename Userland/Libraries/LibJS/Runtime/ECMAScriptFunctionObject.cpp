@@ -537,8 +537,7 @@ void ECMAScriptFunctionObject::visit_edges(Visitor& visitor)
     visitor.visit(m_name_string);
 
     visitor.visit(m_bytecode_executable);
-    for (auto& executable : m_default_parameter_bytecode_executables)
-        visitor.visit(executable);
+    visitor.visit(m_default_parameter_bytecode_executables);
 
     for (auto& field : m_fields) {
         if (auto* property_key_ptr = field.name.get_pointer<PropertyKey>(); property_key_ptr && property_key_ptr->is_symbol())

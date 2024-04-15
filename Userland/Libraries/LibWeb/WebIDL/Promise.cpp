@@ -192,9 +192,7 @@ struct WaitForAllResults : JS::Cell {
     {
         Base::visit_edges(visitor);
         visitor.visit(success_steps);
-        for (auto& value : result) {
-            visitor.visit(value);
-        }
+        visitor.visit(result);
     }
 
     JS::NonnullGCPtr<JS::HeapFunction<void(Vector<JS::Value> const&)>> success_steps;

@@ -1394,9 +1394,7 @@ void Object::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_shape);
-
-    for (auto& value : m_storage)
-        visitor.visit(value);
+    visitor.visit(m_storage);
 
     m_indexed_properties.for_each_value([&visitor](auto& value) {
         visitor.visit(value);
