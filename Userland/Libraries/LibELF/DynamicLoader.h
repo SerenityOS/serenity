@@ -86,7 +86,7 @@ public:
     bool is_dynamic() const { return image().is_dynamic(); }
 
     static Optional<DynamicObject::SymbolLookupResult> lookup_symbol(const ELF::DynamicObject::Symbol&);
-    void copy_initial_tls_data_into(ByteBuffer& buffer) const;
+    void copy_initial_tls_data_into(Bytes buffer) const;
 
     DynamicObject const& dynamic_object() const;
 

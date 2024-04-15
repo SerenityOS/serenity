@@ -755,7 +755,7 @@ void DynamicLoader::do_relr_relocations()
     });
 }
 
-void DynamicLoader::copy_initial_tls_data_into(ByteBuffer& buffer) const
+void DynamicLoader::copy_initial_tls_data_into(Bytes buffer) const
 {
     image().for_each_program_header([this, &buffer](ELF::Image::ProgramHeader program_header) {
         if (program_header.type() != PT_TLS)
