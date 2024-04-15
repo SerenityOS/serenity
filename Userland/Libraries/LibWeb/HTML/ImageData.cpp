@@ -73,7 +73,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<ImageData>> ImageData::create(JS::Realm& re
         return WebIDL::IndexSizeError::create(realm, "Source height must be equal to the calculated height of the data."_fly_string);
 
     // 7. Initialize this given sw, sh, settings set to settings, and source set to data.
-    auto bitmap = TRY_OR_THROW_OOM(vm, Gfx::Bitmap::create_wrapper(Gfx::BitmapFormat::RGBA8888, Gfx::IntSize(sw, sw), 1, sw * sizeof(u32), uint8_clamped_array_data.data().data()));
+    auto bitmap = TRY_OR_THROW_OOM(vm, Gfx::Bitmap::create_wrapper(Gfx::BitmapFormat::RGBA8888, Gfx::IntSize(sw, height), 1, sw * sizeof(u32), uint8_clamped_array_data.data().data()));
 
     return realm.heap().allocate<ImageData>(realm, realm, bitmap, uint8_clamped_array_data);
 }
