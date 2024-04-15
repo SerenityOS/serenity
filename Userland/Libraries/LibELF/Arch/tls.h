@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Platform.h>
 #include <AK/Types.h>
 
 namespace ELF {
@@ -13,3 +14,13 @@ namespace ELF {
 void set_thread_pointer_register(FlatPtr);
 
 }
+
+#if ARCH(AARCH64)
+#    include <LibELF/Arch/aarch64/tls.h>
+#elif ARCH(RISCV64)
+#    include <LibELF/Arch/riscv64/tls.h>
+#elif ARCH(X86_64)
+#    include <LibELF/Arch/x86_64/tls.h>
+#else
+#    error Unknown architecture
+#endif
