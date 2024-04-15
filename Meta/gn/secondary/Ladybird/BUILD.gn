@@ -115,6 +115,7 @@ executable("ladybird_executable") {
   } else {
     sources += [
       "AppKit/Application/Application.mm",
+      "AppKit/Application/ApplicationBridge.cpp",
       "AppKit/Application/ApplicationDelegate.mm",
       "AppKit/Application/EventLoopImplementation.mm",
       "AppKit/UI/Event.mm",

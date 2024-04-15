@@ -139,6 +139,7 @@ elseif (APPLE)
         ${SOURCES}
         AppKit/main.mm
         AppKit/Application/Application.mm
+        AppKit/Application/ApplicationBridge.cpp
         AppKit/Application/ApplicationDelegate.mm
         AppKit/Application/EventLoopImplementation.mm
         AppKit/UI/Event.mm

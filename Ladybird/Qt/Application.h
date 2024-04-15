@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Function.h>
+#include <LibProtocol/RequestClient.h>
 #include <LibURL/URL.h>
 #include <QApplication>
 
@@ -21,6 +22,7 @@ public:
     virtual bool event(QEvent* event) override;
 
     Function<void(URL::URL)> on_open_file;
+    RefPtr<Protocol::RequestClient> request_server_client;
 };
 
 }
