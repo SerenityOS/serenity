@@ -388,8 +388,11 @@ static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L_image(ImageKind ima
     };
 
     while (pixel < end) {
+        // "For the current position (x, y) in the image, the decoder first identifies the corresponding prefix code group"
         auto const& group = prefix_group(pixel);
 
+        // "Next, read the symbol S from the bitstream using prefix code #1.
+        //  Note that S is any integer in the range 0 to (256 + 24 + color_cache_size - 1)."
         auto symbol = TRY(group[0].read_symbol(bit_stream));
         if (symbol >= 256u + 24u + color_cache_size)
             return Error::from_string_literal("WebPImageDecoderPlugin: Symbol out of bounds");
