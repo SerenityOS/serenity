@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2024, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,6 +9,7 @@
 #include <AK/Badge.h>
 #include <AK/Format.h>
 #include <AK/Forward.h>
+#include <AK/HashMap.h>
 #include <AK/Noncopyable.h>
 #include <AK/StringView.h>
 #include <LibJS/Forward.h>
@@ -71,6 +72,63 @@ public:
         void visit(NonnullGCPtr<T> cell)
         {
             visit_impl(const_cast<RemoveConst<T>&>(*cell.ptr()));
+        }
+
+        template<typename T>
+        void visit(ReadonlySpan<T> span)
+        {
+            for (auto& value : span)
+                visit(value);
+        }
+
+        template<typename T>
+        void visit(Span<T> span)
+        {
+            for (auto& value : span)
+                visit(value);
+        }
+
+        template<typename T>
+        void visit(Vector<T> const& vector)
+        {
+            for (auto& value : vector)
+                visit(value);
+        }
+
+        template<typename T>
+        void visit(HashTable<T> const& table)
+        {
+            for (auto& value : table)
+                visit(value);
+        }
+
+        template<typename T>
+        void visit(OrderedHashTable<T> const& table)
+        {
+            for (auto& value : table)
+                visit(value);
+        }
+
+        template<typename K, typename V, typename T>
+        void visit(HashMap<K, V, T> const& map)
+        {
+            for (auto& it : map) {
+                if constexpr (requires { visit(it.key); })
+                    visit(it.key);
+                if constexpr (requires { visit(it.value); })
+                    visit(it.value);
+            }
+        }
+
+        template<typename K, typename V, typename T>
+        void visit(OrderedHashMap<K, V, T> const& map)
+        {
+            for (auto& it : map) {
+                if constexpr (requires { visit(it.key); })
+                    visit(it.key);
+                if constexpr (requires { visit(it.value); })
+                    visit(it.value);
+            }
         }
 
         void visit(Value value);
