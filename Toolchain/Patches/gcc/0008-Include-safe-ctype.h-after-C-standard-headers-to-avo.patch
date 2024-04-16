@@ -1,73 +1,8 @@
-# Patches for gcc on SerenityOS
-
-## `0001-Add-a-gcc-driver-for-SerenityOS.patch`
-
-Add a gcc driver for SerenityOS
-
-This patch adds support for the `*-*-serenity` target to gcc.
-
-It specifies which flags need to be passed to the linker, defines the
-__serenity__ macro, sets the correct underlying type of `size_t` and
-`ptrdiff_t`, and enables IFUNCs.
-
-
-## `0002-fixincludes-Skip-for-SerenityOS-targets.patch`
-
-fixincludes: Skip for SerenityOS targets
-
-`fixincludes` is responsible for fixing mistakes in system headers that
-rely in compiler extensions that GCC doesn't support or cause errors in
-C++ mode.
-
-Our headers don't have such problems, so this hack is of no use for us.
-
-## `0003-libgcc-Build-for-SerenityOS.patch`
-
-libgcc: Build for SerenityOS
-
-This patch enables building gcc's own C runtime files, and sets up
-exception handling support.
-
-
-## `0004-libgcc-Do-not-link-libgcc_s-to-LibC.patch`
-
-libgcc: Do not link libgcc_s to LibC
-
-The toolchain is built before LibC, so linking to the C runtime library
-would fail.
-
-
-## `0005-i386-Disable-math-errno-for-SerenityOS.patch`
-
-i386: Disable math errno for SerenityOS
-
-SerenityOS uses exceptions for math error handling, which allows the
-compiler to do more optimizations on calls to math functions. This patch
-has the effect of setting -fno-math-errno by default.
-
-## `0006-libstdc-Support-SerenityOS.patch`
-
-libstdc++: Support SerenityOS
-
-During the toolchain build, SerenityOS libraries are not available, so
-we have to manually tell libstdc++ about what our LibC supports.
-
-In most places, we take the Newlib code paths.
-
-
-## `0007-libstdc-Build-static-library-with-fPIC.patch`
-
-libstdc++: Build static library with -fPIC
-
-We want the libstdc++.a library to contain -fPIC code in order to link
-it statically into LibC/our shared objects. However, the build system
-forces no-pic/pie instead.
-
-This hack is from https://gcc.gnu.org/bugzilla/show_bug.cgi?id=58638
-
-## `0008-Include-safe-ctype.h-after-C-standard-headers-to-avo.patch`
-
-Include safe-ctype.h after C++ standard headers, to avoid over-poisoning
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Francois-Xavier Coudert <fxcoudert@gcc.gnu.org>
+Date: Thu, 7 Mar 2024 14:36:03 +0100
+Subject: [PATCH] Include safe-ctype.h after C++ standard headers, to avoid
+ over-poisoning
 
 When building gcc's C++ sources against recent libc++, the poisoning of
 the ctype macros due to including safe-ctype.h before including C++
@@ -132,4 +67,71 @@ gcc/ChangeLog:
 
 Signed-off-by: Dimitry Andric <dimitry@andric.com>
 (cherry picked from commit 9970b576b7e4ae337af1268395ff221348c4b34a)
+---
+ gcc/system.h | 39 ++++++++++++++++++---------------------
+ 1 file changed, 18 insertions(+), 21 deletions(-)
 
+diff --git a/gcc/system.h b/gcc/system.h
+index cf45db3f97ed99dea13f602df76a587800d9b4f4..10f051dcfd7fad7f9b0cc78df8a8cc57d764aa09 100644
+--- a/gcc/system.h
++++ b/gcc/system.h
+@@ -194,27 +194,8 @@ extern int fprintf_unlocked (FILE *, const char *, ...);
+ #undef fread_unlocked
+ #undef fwrite_unlocked
+ 
+-/* Include <string> before "safe-ctype.h" to avoid GCC poisoning
+-   the ctype macros through safe-ctype.h */
+-
+-#ifdef __cplusplus
+-#ifdef INCLUDE_STRING
+-# include <string>
+-#endif
+-#endif
+-
+-/* There are an extraordinary number of issues with <ctype.h>.
+-   The last straw is that it varies with the locale.  Use libiberty's
+-   replacement instead.  */
+-#include "safe-ctype.h"
+-
+-#include <sys/types.h>
+-
+-#include <errno.h>
+-
+-#if !defined (errno) && defined (HAVE_DECL_ERRNO) && !HAVE_DECL_ERRNO
+-extern int errno;
+-#endif
++/* Include C++ standard headers before "safe-ctype.h" to avoid GCC
++   poisoning the ctype macros through safe-ctype.h */
+ 
+ #ifdef __cplusplus
+ #if defined (INCLUDE_ALGORITHM) || !defined (HAVE_SWAP_IN_UTILITY)
+@@ -229,6 +210,9 @@ extern int errno;
+ #ifdef INCLUDE_SET
+ # include <set>
+ #endif
++#ifdef INCLUDE_STRING
++# include <string>
++#endif
+ #ifdef INCLUDE_VECTOR
+ # include <vector>
+ #endif
+@@ -245,6 +229,19 @@ extern int errno;
+ # include <type_traits>
+ #endif
+ 
++/* There are an extraordinary number of issues with <ctype.h>.
++   The last straw is that it varies with the locale.  Use libiberty's
++   replacement instead.  */
++#include "safe-ctype.h"
++
++#include <sys/types.h>
++
++#include <errno.h>
++
++#if !defined (errno) && defined (HAVE_DECL_ERRNO) && !HAVE_DECL_ERRNO
++extern int errno;
++#endif
++
+ /* Some of glibc's string inlines cause warnings.  Plus we'd rather
+    rely on (and therefore test) GCC's string builtins.  */
+ #define __NO_STRING_INLINES
