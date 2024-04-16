@@ -15,3 +15,8 @@ endfunction()
 
 clang_plugin(LambdaCaptureClangPlugin SOURCES LambdaCapturePluginAction.cpp)
 clang_plugin(LibJSGCClangPlugin SOURCES LibJSGCPluginAction.cpp)
+
+function(depend_on_clang_plugin target_name plugin_name)
+    add_dependencies(${target_name} ${plugin_name}Target)
+    target_compile_options(${target_name} INTERFACE -fplugin=$<TARGET_FILE:${plugin_name}>)
+endfunction()

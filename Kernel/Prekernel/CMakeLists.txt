@@ -22,6 +22,7 @@ target_compile_options(${PREKERNEL_TARGET} PRIVATE -no-pie -fno-pic -fno-threads
 target_link_options(${PREKERNEL_TARGET} PRIVATE LINKER:-T ${CMAKE_CURRENT_SOURCE_DIR}/linker.ld -nostdlib LINKER:--no-pie)
 set_target_properties(${PREKERNEL_TARGET} PROPERTIES LINK_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/linker.ld)
 
+target_link_libraries(${PREKERNEL_TARGET} PUBLIC GenericClangPlugin)
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     target_link_libraries(${PREKERNEL_TARGET} PRIVATE gcc)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
