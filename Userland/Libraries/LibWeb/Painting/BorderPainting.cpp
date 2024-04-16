@@ -579,7 +579,7 @@ Optional<BordersData> borders_data_for_outline(Layout::Node const& layout_node, 
     if (outline_style == CSS::OutlineStyle::Auto) {
         // `auto` lets us do whatever we want for the outline. 2px of the link colour seems reasonable.
         line_style = CSS::LineStyle::Dotted;
-        outline_color = layout_node.document().link_color();
+        outline_color = layout_node.document().normal_link_color();
         outline_width = 2;
     } else {
         line_style = CSS::value_id_to_line_style(CSS::to_value_id(outline_style)).value_or(CSS::LineStyle::None);

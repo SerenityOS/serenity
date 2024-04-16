@@ -65,7 +65,7 @@ void HTMLBodyElement::attribute_changed(FlyString const& name, Optional<String> 
         // https://html.spec.whatwg.org/multipage/rendering.html#the-page:rules-for-parsing-a-legacy-colour-value-3
         auto color = parse_legacy_color_value(value.value_or(String {}));
         if (color.has_value())
-            document().set_link_color(color.value());
+            document().set_normal_link_color(color.value());
     } else if (name.equals_ignoring_ascii_case("alink"sv)) {
         // https://html.spec.whatwg.org/multipage/rendering.html#the-page:rules-for-parsing-a-legacy-colour-value-5
         auto color = parse_legacy_color_value(value.value_or(String {}));

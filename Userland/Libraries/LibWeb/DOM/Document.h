@@ -198,8 +198,8 @@ public:
     Color background_color() const;
     Vector<CSS::BackgroundLayerData> const* background_layers() const;
 
-    Color link_color() const;
-    void set_link_color(Color);
+    Color normal_link_color() const;
+    void set_normal_link_color(Color);
 
     Color active_link_color() const;
     void set_active_link_color(Color);
@@ -679,7 +679,7 @@ private:
 
     JS::GCPtr<Layout::Viewport> m_layout_root;
 
-    Optional<Color> m_link_color;
+    Optional<Color> m_normal_link_color;
     Optional<Color> m_active_link_color;
     Optional<Color> m_visited_link_color;
 
