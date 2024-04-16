@@ -15,6 +15,10 @@ add_subdirectory(CodeGenerators)
 add_subdirectory(ConfigureComponents)
 add_subdirectory(IPCMagicLinter)
 
+if (ENABLE_CLANG_PLUGINS AND CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
+    add_subdirectory(ClangPlugins)
+endif()
+
 if (ENABLE_JAKT)
     include(jakt)
 endif()
