@@ -3107,7 +3107,7 @@ void Document::destroy()
 }
 
 // https://html.spec.whatwg.org/multipage/document-lifecycle.html#destroy-a-document-and-its-descendants
-void Document::destroy_a_document_and_its_descendants(JS::SafeFunction<void()> after_all_destruction)
+void Document::destroy_a_document_and_its_descendants(JS::GCPtr<JS::HeapFunction<void()>> after_all_destruction)
 {
     // 1. Let childNavigables be document's child navigables.
     auto child_navigables = document_tree_child_navigables();
@@ -3118,13 +3118,13 @@ void Document::destroy_a_document_and_its_descendants(JS::SafeFunction<void()> a
     // 3. For each childNavigable of childNavigable's, queue a global task on the navigation and traversal task source
     //    given childNavigable's active window to perform the following steps:
     for (auto& child_navigable : child_navigables) {
-        HTML::queue_global_task(HTML::Task::Source::NavigationAndTraversal, *child_navigable->active_window(), [&number_destroyed, child_navigable = child_navigable.ptr()] {
+        HTML::queue_global_task(HTML::Task::Source::NavigationAndTraversal, *child_navigable->active_window(), JS::create_heap_function(heap(), [&heap = heap(), &number_destroyed, child_navigable = child_navigable.ptr()] {
             // 1. Let incrementDestroyed be an algorithm step which increments numberDestroyed.
-            auto increment_destroyed = [&number_destroyed] { ++number_destroyed; };
+            auto increment_destroyed = JS::create_heap_function(heap, [&number_destroyed] { ++number_destroyed; });
 
             // 2. Destroy a document and its descendants given childNavigable's active document and incrementDestroyed.
             child_navigable->active_document()->destroy_a_document_and_its_descendants(move(increment_destroyed));
-        });
+        }));
     }
 
     // 4. Wait until numberDestroyed equals childNavigable's size.
@@ -3133,14 +3133,14 @@ void Document::destroy_a_document_and_its_descendants(JS::SafeFunction<void()> a
     });
 
     // 4. Queue a global task on the navigation and traversal task source given document's relevant global object to perform the following steps:
-    HTML::queue_global_task(HTML::Task::Source::NavigationAndTraversal, relevant_global_object(*this), [after_all_destruction = move(after_all_destruction), this] {
+    HTML::queue_global_task(HTML::Task::Source::NavigationAndTraversal, relevant_global_object(*this), JS::create_heap_function(heap(), [after_all_destruction = move(after_all_destruction), this] {
         // 1. Destroy document.
         destroy();
 
         // 2. If afterAllDestruction was given, then run it.
         if (after_all_destruction)
-            after_all_destruction();
-    });
+            after_all_destruction->function()();
+    }));
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#abort-a-document
@@ -3187,7 +3187,7 @@ void Document::abort_a_document_and_its_descendants()
 
     // 3. For each descendantNavigable of descendantNavigables, queue a global task on the navigation and traversal task source given descendantNavigable's active window to perform the following steps:
     for (auto& descendant_navigable : descendant_navigables) {
-        HTML::queue_global_task(HTML::Task::Source::NavigationAndTraversal, *descendant_navigable->active_window(), [this, descendant_navigable = descendant_navigable.ptr()] {
+        HTML::queue_global_task(HTML::Task::Source::NavigationAndTraversal, *descendant_navigable->active_window(), JS::create_heap_function(heap(), [this, descendant_navigable = descendant_navigable.ptr()] {
             // NOTE: This is not in the spec but we need to abort ongoing navigations in all descendant navigables.
             //       See https://github.com/whatwg/html/issues/9711
             descendant_navigable->set_ongoing_navigation({});
@@ -3198,7 +3198,7 @@ void Document::abort_a_document_and_its_descendants()
             // 2. If descendantNavigable's active document's salvageable is false, then set document's salvageable to false.
             if (!descendant_navigable->active_document()->m_salvageable)
                 m_salvageable = false;
-        });
+        }));
     }
 
     // 4. Abort document.
@@ -3306,7 +3306,7 @@ void Document::unload(JS::GCPtr<Document>)
 }
 
 // https://html.spec.whatwg.org/multipage/document-lifecycle.html#unload-a-document-and-its-descendants
-void Document::unload_a_document_and_its_descendants(JS::GCPtr<Document> new_document, JS::SafeFunction<void()> after_all_unloads)
+void Document::unload_a_document_and_its_descendants(JS::GCPtr<Document> new_document, JS::GCPtr<JS::HeapFunction<void()>> after_all_unloads)
 {
     // Specification defines this algorithm in the following steps:
     // 1. Recursively unload (and destroy) documents in descendant navigables
@@ -3342,16 +3342,16 @@ void Document::unload_a_document_and_its_descendants(JS::GCPtr<Document> new_doc
 
     auto unloaded_documents_count = descendant_navigables.size() + 1;
 
-    HTML::queue_global_task(HTML::Task::Source::NavigationAndTraversal, HTML::relevant_global_object(*this), [&number_unloaded, this, new_document] {
+    HTML::queue_global_task(HTML::Task::Source::NavigationAndTraversal, HTML::relevant_global_object(*this), JS::create_heap_function(heap(), [&number_unloaded, this, new_document] {
         unload(new_document);
         ++number_unloaded;
-    });
+    }));
 
     for (auto& descendant_navigable : descendant_navigables) {
-        HTML::queue_global_task(HTML::Task::Source::NavigationAndTraversal, *descendant_navigable->active_window(), [&number_unloaded, descendant_navigable = descendant_navigable.ptr()] {
+        HTML::queue_global_task(HTML::Task::Source::NavigationAndTraversal, *descendant_navigable->active_window(), JS::create_heap_function(heap(), [&number_unloaded, descendant_navigable = descendant_navigable.ptr()] {
             descendant_navigable->active_document()->unload();
             ++number_unloaded;
-        });
+        }));
     }
 
     HTML::main_thread_event_loop().spin_until([&] {
@@ -3588,7 +3588,7 @@ void Document::queue_intersection_observer_task()
     m_intersection_observer_task_queued = true;
 
     // 3. Queue a task on the IntersectionObserver task source associated with the document's event loop to notify intersection observers.
-    HTML::queue_global_task(HTML::Task::Source::IntersectionObserver, *window, [this]() {
+    HTML::queue_global_task(HTML::Task::Source::IntersectionObserver, *window, JS::create_heap_function(heap(), [this]() {
         auto& realm = this->realm();
 
         // https://www.w3.org/TR/intersection-observer/#notify-intersection-observers
@@ -3627,7 +3627,7 @@ void Document::queue_intersection_observer_task()
             if (completion.is_abrupt())
                 HTML::report_exception(completion, realm);
         }
-    });
+    }));
 }
 
 // https://www.w3.org/TR/intersection-observer/#queue-an-intersectionobserverentry
@@ -4093,9 +4093,9 @@ void Document::update_for_history_step_application(JS::NonnullGCPtr<HTML::Sessio
                 hashchange_event_init.old_url = MUST(String::from_byte_string(old_url.serialize()));
                 hashchange_event_init.new_url = MUST(String::from_byte_string(entry->url().serialize()));
                 auto hashchange_event = HTML::HashChangeEvent::create(realm(), "hashchange"_fly_string, hashchange_event_init);
-                HTML::queue_global_task(HTML::Task::Source::DOMManipulation, relevant_global_object, [hashchange_event, &relevant_global_object]() {
+                HTML::queue_global_task(HTML::Task::Source::DOMManipulation, relevant_global_object, JS::create_heap_function(heap(), [hashchange_event, &relevant_global_object]() {
                     relevant_global_object.dispatch_event(hashchange_event);
-                });
+                }));
             }
         }
 
@@ -4309,9 +4309,9 @@ void Document::remove_replaced_animations()
             //   Otherwise, queue a task to dispatch removeEvent at animation. The task source for this task is the DOM
             //   manipulation task source.
             else {
-                HTML::queue_global_task(HTML::Task::Source::DOMManipulation, realm().global_object(), [animation, remove_event]() {
+                HTML::queue_global_task(HTML::Task::Source::DOMManipulation, realm().global_object(), JS::create_heap_function(heap(), [animation, remove_event]() {
                     animation->dispatch_event(remove_event);
-                });
+                }));
             }
         }
     }

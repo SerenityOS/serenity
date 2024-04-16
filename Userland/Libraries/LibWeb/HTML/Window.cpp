@@ -635,9 +635,9 @@ void Window::start_an_idle_period()
 
     // 5. Queue a task on the queue associated with the idle-task task source,
     //    which performs the steps defined in the invoke idle callbacks algorithm with window and getDeadline as parameters.
-    queue_global_task(Task::Source::IdleTask, *this, [this] {
+    queue_global_task(Task::Source::IdleTask, *this, JS::create_heap_function(heap(), [this] {
         invoke_idle_callbacks();
-    });
+    }));
 }
 
 // https://w3c.github.io/requestidlecallback/#invoke-idle-callbacks-algorithm
@@ -659,9 +659,9 @@ void Window::invoke_idle_callbacks()
             report_exception(result, realm());
         // 4. If window's list of runnable idle callbacks is not empty, queue a task which performs the steps
         //    in the invoke idle callbacks algorithm with getDeadline and window as a parameters and return from this algorithm
-        queue_global_task(Task::Source::IdleTask, *this, [this] {
+        queue_global_task(Task::Source::IdleTask, *this, JS::create_heap_function(heap(), [this] {
             invoke_idle_callbacks();
-        });
+        }));
     }
 }
 
@@ -1120,7 +1120,7 @@ WebIDL::ExceptionOr<void> Window::window_post_message_steps(JS::Value message, W
     auto serialize_with_transfer_result = TRY(structured_serialize_with_transfer(target_realm.vm(), message, transfer));
 
     // 8. Queue a global task on the posted message task source given targetWindow to run the following steps:
-    queue_global_task(Task::Source::PostedMessage, *this, [this, serialize_with_transfer_result = move(serialize_with_transfer_result), target_origin = move(target_origin), &incumbent_settings, &target_realm]() mutable {
+    queue_global_task(Task::Source::PostedMessage, *this, JS::create_heap_function(heap(), [this, serialize_with_transfer_result = move(serialize_with_transfer_result), target_origin = move(target_origin), &incumbent_settings, &target_realm]() mutable {
         // 1. If the targetOrigin argument is not a single literal U+002A ASTERISK character (*) and targetWindow's
         //    associated Document's origin is not same origin with targetOrigin, then return.
         // NOTE: Due to step 4 and 5 above, the only time it's not '*' is if target_origin contains an Origin.
@@ -1178,7 +1178,7 @@ WebIDL::ExceptionOr<void> Window::window_post_message_steps(JS::Value message, W
 
         auto message_event = MessageEvent::create(target_realm, EventNames::message, message_event_init);
         dispatch_event(message_event);
-    });
+    }));
 
     return {};
 }

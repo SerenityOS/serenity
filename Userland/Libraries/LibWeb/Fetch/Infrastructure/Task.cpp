@@ -16,7 +16,8 @@ int queue_fetch_task(JS::Object& task_destination, Function<void()> algorithm)
     // FIXME: 1. If taskDestination is a parallel queue, then enqueue algorithm to taskDestination.
 
     // 2. Otherwise, queue a global task on the networking task source with taskDestination and algorithm.
-    return HTML::queue_global_task(HTML::Task::Source::Networking, task_destination, move(algorithm));
+    auto& vm = task_destination.vm();
+    return HTML::queue_global_task(HTML::Task::Source::Networking, task_destination, JS::create_heap_function(vm.heap(), move(algorithm)));
 }
 
 // AD-HOC: This overload allows tracking the queued task within the fetch controller so that we may cancel queued tasks

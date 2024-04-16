@@ -109,13 +109,13 @@ void Range::update_associated_selection()
     // task source to fire an event named selectionchange, which does not bubble and is not cancelable, at the document
     // associated with the selection.
     auto document = m_associated_selection->document();
-    queue_global_task(HTML::Task::Source::UserInteraction, relevant_global_object(*document), [document] {
+    queue_global_task(HTML::Task::Source::UserInteraction, relevant_global_object(*document), JS::create_heap_function(document->heap(), [document] {
         EventInit event_init;
         event_init.bubbles = false;
         event_init.cancelable = false;
         auto event = DOM::Event::create(document->realm(), HTML::EventNames::selectionchange, event_init);
         document->dispatch_event(event);
-    });
+    }));
 }
 
 // https://dom.spec.whatwg.org/#concept-range-root
