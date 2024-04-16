@@ -1624,7 +1624,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Event>> Document::create_event(StringView i
     } else if (Infra::is_ascii_case_insensitive_match(interface, "focusevent"sv)) {
         event = UIEvents::FocusEvent::create(realm, FlyString {});
     } else if (Infra::is_ascii_case_insensitive_match(interface, "hashchangeevent"sv)) {
-        event = Event::create(realm, FlyString {}); // FIXME: Create HashChangeEvent
+        event = HTML::HashChangeEvent::create(realm, FlyString {}, {});
     } else if (Infra::is_ascii_case_insensitive_match(interface, "htmlevents"sv)) {
         event = Event::create(realm, FlyString {});
     } else if (Infra::is_ascii_case_insensitive_match(interface, "keyboardevent"sv)) {
