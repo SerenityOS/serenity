@@ -135,6 +135,11 @@ endif()
 
 CHECK_INCLUDE_FILE(pulse/pulseaudio.h HAVE_PULSEAUDIO)
 
+add_library(JSClangPlugin INTERFACE)
+add_library(GenericClangPlugin INTERFACE)
+# These need to be installed to avoid CMake complaining about them not being in the export set
+install(TARGETS GenericClangPlugin JSClangPlugin EXPORT LagomTargets)
+
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
     add_compile_options(-Wno-overloaded-virtual)
     # FIXME: Re-enable this check when the warning stops triggering, or document why we can't stop it from triggering.
@@ -147,6 +152,11 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
         set(LINKER_FLAGS "${LINKER_FLAGS} -fsanitize=fuzzer")
     endif()
 
+    if (ENABLE_CLANG_PLUGINS)
+        add_subdirectory(ClangPlugins)
+        depend_on_clang_plugin(JSClangPlugin LibJSGCClangPlugin)
+        depend_on_clang_plugin(GenericClangPlugin LambdaCaptureClangPlugin)
+    endif()
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     if (ENABLE_FUZZERS_LIBFUZZER)
         message(FATAL_ERROR
@@ -224,6 +234,7 @@ function(lagom_lib target_name fs_name)
         OUTPUT_NAME lagom-${fs_name}
     )
     target_link_libraries(${target_name} PRIVATE ${LAGOM_LIBRARY_LIBS})
+    target_link_libraries(${target_name} PUBLIC GenericClangPlugin)
 
     if (NOT "${target_name}" STREQUAL "AK")
         target_link_libraries(${target_name} PRIVATE AK)
@@ -289,6 +300,7 @@ endfunction()
 function(serenity_bin name)
     add_executable(${name} ${SOURCES} ${GENERATED_SOURCES})
     add_executable(Lagom::${name} ALIAS ${name})
+    target_link_libraries(${name} PUBLIC GenericClangPlugin)
     install(
         TARGETS ${target_name}
         EXPORT LagomTargets
@@ -630,6 +642,8 @@ if (BUILD_LAGOM)
             OBJECT
             "${SERENITY_PROJECT_ROOT}/Userland/Libraries/LibTest/TestMain.cpp"
         )
+        target_link_libraries(LibTest PUBLIC GenericClangPlugin)
+        target_link_libraries(LibTestMain PUBLIC GenericClangPlugin)
 
         # LibTest tests from Tests/
         set(TEST_DIRECTORIES
@@ -658,6 +672,9 @@ if (BUILD_LAGOM)
         endif()
         if (LINUX)
             list(APPEND TEST_DIRECTORIES LibELF)
+        endif()
+        if (ENABLE_CLANG_PLUGINS AND CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
+            list(APPEND TEST_DIRECTORIES ClangPlugins)
         endif()
 
         foreach (dir IN LISTS TEST_DIRECTORIES)

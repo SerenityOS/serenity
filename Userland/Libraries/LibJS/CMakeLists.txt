@@ -282,3 +282,4 @@ if("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "i.86.*")
 endif()
 
 target_compile_options(LibJS PRIVATE -fno-omit-frame-pointer)
+target_link_libraries(LibJS PUBLIC JSClangPlugin)

@@ -264,3 +264,6 @@ if (ENABLE_USB_IDS_DOWNLOAD AND NOT EXISTS "${USB_IDS_INSTALL_PATH}/${USB_IDS_FI
     download_file("${USB_IDS_URL}" "${USB_IDS_DOWNLOAD_PATH}")
     install(FILES "${USB_IDS_DOWNLOAD_PATH}" DESTINATION "${USB_IDS_INSTALL_PATH}")
 endif()
+
+add_library(GenericClangPlugin INTERFACE)
+add_library(JSClangPlugin INTERFACE)
