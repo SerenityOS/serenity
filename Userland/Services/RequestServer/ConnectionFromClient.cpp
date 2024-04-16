@@ -42,10 +42,12 @@ void ConnectionFromClient::die()
 
 Messages::RequestServer::ConnectNewClientResponse ConnectionFromClient::connect_new_client()
 {
+    Messages::RequestServer::ConnectNewClientResponse error_response = { IPC::File {}, IPC::File {} };
+
     int socket_fds[2] {};
     if (auto err = Core::System::socketpair(AF_LOCAL, SOCK_STREAM, 0, socket_fds); err.is_error()) {
         dbgln("Failed to create client socketpair: {}", err.error());
-        return { -1, -1 };
+        return error_response;
     }
 
     auto client_socket_or_error = Core::LocalSocket::adopt_fd(socket_fds[0]);
@@ -53,7 +55,7 @@ Messages::RequestServer::ConnectNewClientResponse ConnectionFromClient::connect_
         close(socket_fds[0]);
         close(socket_fds[1]);
         dbgln("Failed to adopt client socket: {}", client_socket_or_error.error());
-        return { -1, -1 };
+        return error_response;
     }
     auto client_socket = client_socket_or_error.release_value();
     // Note: A ref is stored in the static s_connections map
@@ -63,7 +65,7 @@ Messages::RequestServer::ConnectNewClientResponse ConnectionFromClient::connect_
     if (auto err = Core::System::socketpair(AF_LOCAL, SOCK_STREAM, 0, fd_passing_socket_fds); err.is_error()) {
         close(socket_fds[1]);
         dbgln("Failed to create fd-passing socketpair: {}", err.error());
-        return { -1, -1 };
+        return error_response;
     }
 
     auto fd_passing_socket_or_error = Core::LocalSocket::adopt_fd(fd_passing_socket_fds[0]);
@@ -73,12 +75,12 @@ Messages::RequestServer::ConnectNewClientResponse ConnectionFromClient::connect_
         close(fd_passing_socket_fds[0]);
         close(fd_passing_socket_fds[1]);
         dbgln("Failed to adopt fd-passing socket: {}", fd_passing_socket_or_error.error());
-        return { -1, -1 };
+        return error_response;
     }
     auto fd_passing_socket = fd_passing_socket_or_error.release_value();
     client->set_fd_passing_socket(move(fd_passing_socket));
 
-    return { IPC::File(socket_fds[1], IPC::File::CloseAfterSending), IPC::File(fd_passing_socket_fds[1], IPC::File::CloseAfterSending) };
+    return { IPC::File::adopt_fd(socket_fds[1]), IPC::File::adopt_fd(fd_passing_socket_fds[1]) };
 }
 
 Messages::RequestServer::IsSupportedProtocolResponse ConnectionFromClient::is_supported_protocol(ByteString const& protocol)
@@ -110,7 +112,7 @@ void ConnectionFromClient::start_request(i32 request_id, ByteString const& metho
     auto id = request->id();
     auto fd = request->request_fd();
     m_requests.set(id, move(request));
-    (void)post_message(Messages::RequestClient::RequestStarted(request_id, IPC::File(fd, IPC::File::CloseAfterSending)));
+    (void)post_message(Messages::RequestClient::RequestStarted(request_id, IPC::File::adopt_fd(fd)));
 }
 
 Messages::RequestServer::StopRequestResponse ConnectionFromClient::stop_request(i32 request_id)

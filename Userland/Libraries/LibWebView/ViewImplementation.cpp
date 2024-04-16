@@ -32,7 +32,7 @@ ViewImplementation::ViewImplementation()
         if (file.is_error())
             client().async_handle_file_return(page_id(), file.error().code(), {}, request_id);
         else
-            client().async_handle_file_return(page_id(), 0, IPC::File(*file.value()), request_id);
+            client().async_handle_file_return(page_id(), 0, IPC::File::adopt_file(file.release_value()), request_id);
     };
 }
 
