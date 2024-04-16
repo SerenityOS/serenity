@@ -55,14 +55,14 @@ static constexpr CGFloat const WINDOW_HEIGHT = 300;
 
         __weak TaskManager* weak_self = self;
 
-        m_update_timer = MUST(Core::Timer::create_repeating(1000, [weak_self] {
+        m_update_timer = Core::Timer::create_repeating(1000, [weak_self] {
             TaskManager* strong_self = weak_self;
             if (strong_self == nil) {
                 return;
             }
 
             [strong_self updateStatistics];
-        }));
+        });
 
         [self setContentView:scroll_view];
         [self setTitle:@"Task Manager"];

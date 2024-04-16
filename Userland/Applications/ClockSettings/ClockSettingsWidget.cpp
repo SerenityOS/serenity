@@ -94,9 +94,9 @@ ErrorOr<void> ClockSettingsWidget::setup()
         set_modified(true);
     };
 
-    m_clock_preview_update_timer = TRY(Core::Timer::create_repeating(1000, [&]() {
+    m_clock_preview_update_timer = Core::Timer::create_repeating(1000, [&]() {
         update_clock_preview();
-    }));
+    });
     m_clock_preview_update_timer->start();
     update_clock_preview();
 

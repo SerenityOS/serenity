@@ -44,7 +44,7 @@ TextTool::TextTool()
     m_text_editor->set_font(m_selected_font);
     m_cursor_blink_timer = Core::Timer::create_repeating(500, [&]() {
         m_cursor_blink_state = !m_cursor_blink_state;
-    }).release_value_but_fixme_should_propagate_errors();
+    });
 }
 
 void TextTool::on_primary_color_change(Color color)

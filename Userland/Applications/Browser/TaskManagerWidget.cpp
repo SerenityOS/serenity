@@ -15,9 +15,9 @@ TaskManagerWidget::~TaskManagerWidget() = default;
 
 TaskManagerWidget::TaskManagerWidget()
 {
-    m_update_timer = MUST(Core::Timer::create_repeating(1000, [this] {
+    m_update_timer = Core::Timer::create_repeating(1000, [this] {
         this->update_statistics();
-    }));
+    });
     m_update_timer->start();
 
     m_web_view = add<WebView::OutOfProcessWebView>();

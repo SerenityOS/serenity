@@ -291,7 +291,7 @@ BrowsingContext::BrowsingContext(JS::NonnullGCPtr<Page> page)
             m_cursor_blink_state = !m_cursor_blink_state;
             node->paintable()->set_needs_display();
         }
-    }).release_value_but_fixme_should_propagate_errors();
+    });
 }
 
 BrowsingContext::~BrowsingContext() = default;

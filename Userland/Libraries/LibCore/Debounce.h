@@ -20,7 +20,7 @@ auto debounce(int timeout, TFunction function)
             timer->stop();
             timer->on_timeout = move(apply_function);
         } else {
-            timer = Core::Timer::create_single_shot(timeout, move(apply_function)).release_value_but_fixme_should_propagate_errors();
+            timer = Core::Timer::create_single_shot(timeout, move(apply_function));
         }
         timer->start();
     };

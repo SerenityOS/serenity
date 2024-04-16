@@ -144,8 +144,7 @@ DHCPv4Client::DHCPv4Client(Vector<ByteString> interfaces_with_dhcp_enabled)
     }
 
     m_check_timer = Core::Timer::create_repeating(
-        1000, [this] { try_discover_ifs(); }, this)
-                        .release_value_but_fixme_should_propagate_errors();
+        1000, [this] { try_discover_ifs(); }, this);
 
     m_check_timer->start();
 
@@ -266,8 +265,7 @@ void DHCPv4Client::handle_ack(DHCPv4Packet const& packet, ParsedDHCPv4Options co
             transaction->has_ip = false;
             dhcp_discover(interface);
         },
-        this)
-        .release_value_but_fixme_should_propagate_errors();
+        this);
 
     Optional<IPv4Address> gateway;
     if (auto routers = options.get_many<IPv4Address>(DHCPOption::Router, 1); !routers.is_empty())
@@ -294,8 +292,7 @@ void DHCPv4Client::handle_nak(DHCPv4Packet const& packet, ParsedDHCPv4Options co
         [this, iface = InterfaceDescriptor { iface }] {
             dhcp_discover(iface);
         },
-        this)
-        .release_value_but_fixme_should_propagate_errors();
+        this);
 }
 
 void DHCPv4Client::process_incoming(DHCPv4Packet const& packet)

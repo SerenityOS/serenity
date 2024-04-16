@@ -946,7 +946,7 @@ void WindowFrame::start_flash_animation()
             invalidate_titlebar();
             if (!--m_flash_counter)
                 m_flash_timer->stop();
-        }).release_value_but_fixme_should_propagate_errors();
+        });
     }
     m_flash_counter = 8;
     m_flash_timer->start();

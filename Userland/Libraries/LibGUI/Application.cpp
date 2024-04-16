@@ -98,13 +98,13 @@ ErrorOr<NonnullRefPtr<Application>> Application::create(Main::Arguments const& a
             TRY(application->m_args.try_append(arg));
     }
 
-    application->m_tooltip_show_timer = TRY(Core::Timer::create_single_shot(700, [weak_application = application->make_weak_ptr<Application>()] {
+    application->m_tooltip_show_timer = Core::Timer::create_single_shot(700, [weak_application = application->make_weak_ptr<Application>()] {
         weak_application->request_tooltip_show();
-    }));
+    });
 
-    application->m_tooltip_hide_timer = TRY(Core::Timer::create_single_shot(50, [weak_application = application->make_weak_ptr<Application>()] {
+    application->m_tooltip_hide_timer = Core::Timer::create_single_shot(50, [weak_application = application->make_weak_ptr<Application>()] {
         weak_application->tooltip_hide_timer_did_fire();
-    }));
+    });
 
     return application;
 }

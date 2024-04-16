@@ -19,9 +19,9 @@ struct AnimationFrameCallbackDriver {
 
     AnimationFrameCallbackDriver()
     {
-        m_timer = MUST(Core::Timer::create_single_shot(16, [] {
+        m_timer = Core::Timer::create_single_shot(16, [] {
             HTML::main_thread_event_loop().schedule();
-        }));
+        });
     }
 
     i32 add(Callback handler)
