@@ -174,6 +174,16 @@ ErrorOr<void> TLSv12::read_from_socket()
         consume(read_bytes);
     } while (!read_bytes.is_empty() && !m_context.critical_error);
 
+    if (read_bytes.is_empty()) {
+        // read_some() returned an empty span, this is either an EOF (from improper closure)
+        // or some sort of weird even that is showing itself as an EOF.
+        // To guard against servers closing the connection weirdly or just improperly, make sure
+        // to check the connection state here and send the appropriate notifications.
+        stream.close();
+
+        check_connection_state(true);
+    }
+
     return {};
 }
 
@@ -204,6 +214,11 @@ bool TLSv12::check_connection_state(bool read)
         m_context.connection_finished = true;
         m_context.connection_status = ConnectionStatus::Disconnected;
         close();
+        m_context.has_invoked_finish_or_error_callback = true;
+        if (on_ready_to_read)
+            on_ready_to_read(); // Notify the client about the weird event.
+        if (on_tls_finished)
+            on_tls_finished();
         return false;
     }
 
@@ -291,7 +306,8 @@ ErrorOr<bool> TLSv12::flush()
 
 void TLSv12::close()
 {
-    alert(AlertLevel::FATAL, AlertDescription::CLOSE_NOTIFY);
+    if (underlying_stream().is_open())
+        alert(AlertLevel::FATAL, AlertDescription::CLOSE_NOTIFY);
     // bye bye.
     m_context.connection_status = ConnectionStatus::Disconnected;
 }
