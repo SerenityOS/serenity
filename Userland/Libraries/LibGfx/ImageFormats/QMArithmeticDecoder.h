@@ -10,6 +10,12 @@
 
 namespace Gfx {
 
+// This is the arithmetic decoder described in Annex E of the JBIG2 spec.
+// See JBIG2Loader.cpp for the JBIG2 spec link.
+//
+// It's also used in JPEG2000 and also described in Annex C of the JPEG2000 spec.
+// See JPEG2000Loader.cpp for the JPEG2000 spec link.
+
 // E.3 Arithmetic decoding procedure, but with the changes described in
 // Annex G Arithmetic decoding procedure (software conventions).
 // Exposed for testing.
