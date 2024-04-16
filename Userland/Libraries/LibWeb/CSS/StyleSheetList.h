@@ -54,6 +54,11 @@ private:
 
     JS::NonnullGCPtr<DOM::Document> m_document;
     Vector<JS::NonnullGCPtr<CSSStyleSheet>> m_sheets;
+
+    // https://www.w3.org/TR/cssom/#preferred-css-style-sheet-set-name
+    String m_preferred_css_style_sheet_set_name;
+    // https://www.w3.org/TR/cssom/#last-css-style-sheet-set-name
+    Optional<String> m_last_css_style_sheet_set_name;
 };
 
 }
