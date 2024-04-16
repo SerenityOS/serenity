@@ -16,6 +16,8 @@
 
 namespace JS {
 
+bool g_log_all_js_exceptions = false;
+
 Completion::Completion(ThrowCompletionOr<Value> const& throw_completion_or_value)
 {
     if (throw_completion_or_value.is_throw_completion()) {
@@ -122,9 +124,25 @@ ThrowCompletionOr<Value> await(VM& vm, Value value)
     return throw_completion(result);
 }
 
+static void log_exception(Value value)
+{
+    if (!value.is_object()) {
+        dbgln("\033[31;1mTHROW!\033[0m {}", value);
+        return;
+    }
+
+    auto& object = value.as_object();
+    auto& vm = object.vm();
+    dbgln("\033[31;1mTHROW!\033[0m {}", object.get(vm.names.message).value());
+    vm.dump_backtrace();
+}
+
 // 6.2.4.2 ThrowCompletion ( value ), https://tc39.es/ecma262/#sec-throwcompletion
 Completion throw_completion(Value value)
 {
+    if (g_log_all_js_exceptions)
+        log_exception(value);
+
     // 1. Return Completion Record { [[Type]]: throw, [[Value]]: value, [[Target]]: empty }.
     return { Completion::Type::Throw, value, {} };
 }
