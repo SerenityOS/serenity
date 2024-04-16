@@ -7,6 +7,7 @@
 #include <LibGfx/Bitmap.h>
 #include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/DocumentLoading.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/HTML/DecodedImageData.h>
 #include <LibWeb/HTML/HTMLMediaElement.h>
@@ -233,15 +234,6 @@ void HTMLObjectElement::resource_did_load()
     run_object_representation_handler_steps(resource_type.has_value() ? resource_type->to_byte_string() : ByteString::empty());
 }
 
-static bool is_xml_mime_type(StringView resource_type)
-{
-    auto mime_type = MimeSniff::MimeType::parse(resource_type).release_value_but_fixme_should_propagate_errors();
-    if (!mime_type.has_value())
-        return false;
-
-    return mime_type->is_xml();
-}
-
 // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-object-element:plugin-11
 void HTMLObjectElement::run_object_representation_handler_steps(Optional<ByteString> resource_type)
 {
@@ -252,8 +244,14 @@ void HTMLObjectElement::run_object_representation_handler_steps(Optional<ByteStr
     //     If plugins are being sandboxed, then jump to the step below labeled fallback.
     //     Otherwise, the user agent should use the plugin that supports resource type and pass the content of the resource to that plugin. If the plugin reports an error, then jump to the step below labeled fallback.
 
+    if (!resource_type.has_value()) {
+        run_object_representation_fallback_steps();
+        return;
+    }
+    auto mime_type = MimeSniff::MimeType::parse(*resource_type).release_value_but_fixme_should_propagate_errors();
+
     // * If the resource type is an XML MIME type, or if the resource type does not start with "image/"
-    if (resource_type.has_value() && (is_xml_mime_type(*resource_type) || !resource_type->starts_with("image/"sv))) {
+    if (mime_type.has_value() && can_load_document_with_type(*mime_type) && (mime_type->is_xml() || !mime_type->is_image())) {
         // If the object element's content navigable is null, then create a new child navigable for the element.
         if (!m_content_navigable) {
             MUST(create_new_child_navigable());

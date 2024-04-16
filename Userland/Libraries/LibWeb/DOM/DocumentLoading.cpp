@@ -414,6 +414,30 @@ static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOM::Document>> load_media_document(
     // be true for the Document.
 }
 
+bool can_load_document_with_type(MimeSniff::MimeType const& type)
+{
+    if (type.is_html())
+        return true;
+    if (type.is_xml())
+        return true;
+    if (type.is_javascript()
+        || type.is_json()
+        || type.essence() == "text/css"_string
+        || type.essence() == "text/plain"_string
+        || type.essence() == "text/vtt"_string) {
+        return true;
+    }
+    if (type.essence() == "multipart/x-mixed-replace"_string)
+        return true;
+    if (type.is_image() || type.is_audio_or_video())
+        return true;
+    if (type.essence() == "application/pdf"_string || type.essence() == "text/pdf"_string)
+        return true;
+    if (type.essence() == "text/markdown"sv)
+        return true;
+    return false;
+}
+
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#loading-a-document
 JS::GCPtr<DOM::Document> load_document(HTML::NavigationParams const& navigation_params)
 {
