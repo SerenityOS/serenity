@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <AK/Optional.h>
+
 namespace Web::CSS {
 
 class ColumnCount {

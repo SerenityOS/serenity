@@ -10,6 +10,7 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/WeakPtr.h>
 #include <LibJS/Heap/Cell.h>
+#include <LibJS/Heap/CellAllocator.h>
 #include <LibWeb/Forward.h>
 
 namespace Web::HTML {

@@ -8,6 +8,7 @@
 
 #include <LibGfx/Forward.h>
 #include <LibWeb/CSS/BackdropFilter.h>
+#include <LibWeb/CSS/ComputedValues.h>
 #include <LibWeb/Forward.h>
 
 namespace Web::Painting {

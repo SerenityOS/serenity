@@ -10,6 +10,7 @@
 
 #include <LibGfx/Color.h>
 #include <LibWeb/Forward.h>
+#include <LibWeb/PixelUnits.h>
 
 namespace Web::Painting {
 

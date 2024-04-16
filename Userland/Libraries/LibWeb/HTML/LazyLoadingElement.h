@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <LibJS/Heap/HeapFunction.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/AttributeNames.h>
 

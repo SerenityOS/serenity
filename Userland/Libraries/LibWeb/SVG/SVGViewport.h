@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Math.h>
+#include <LibWeb/PixelUnits.h>
 #include <LibWeb/SVG/AttributeParser.h>
 #include <LibWeb/SVG/ViewBox.h>
 

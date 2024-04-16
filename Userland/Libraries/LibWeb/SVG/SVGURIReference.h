@@ -8,6 +8,7 @@
 
 #include <LibWeb/SVG/AttributeNames.h>
 #include <LibWeb/SVG/SVGAnimatedString.h>
+#include <LibWeb/SVG/SVGElement.h>
 
 namespace Web::SVG {
 

@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/String.h>
+#include <LibWeb/CSS/Serialize.h>
 #include <LibWeb/CSS/StyleValue.h>
 
 namespace Web::CSS {

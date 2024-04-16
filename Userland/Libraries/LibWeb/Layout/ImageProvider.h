@@ -7,6 +7,7 @@
 #pragma once
 
 #include <LibGfx/Size.h>
+#include <LibJS/Heap/GCPtr.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/PixelUnits.h>
 

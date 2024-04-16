@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Forward.h>
+#include <LibJS/Heap/GCPtr.h>
 #include <LibWeb/Forward.h>
 
 #define ENUMERATE_WINDOW_EVENT_HANDLERS(E)                        \

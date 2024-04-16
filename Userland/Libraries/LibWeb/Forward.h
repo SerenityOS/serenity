@@ -45,6 +45,7 @@ enum class StateAndProperties;
 namespace Web::Bindings {
 class Intrinsics;
 class OptionConstructor;
+class PlatformObject;
 
 enum class AudioContextLatencyCategory;
 enum class CanPlayTypeResult;

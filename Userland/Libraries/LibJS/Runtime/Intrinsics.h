@@ -8,6 +8,7 @@
 
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Cell.h>
+#include <LibJS/Heap/CellAllocator.h>
 
 namespace JS {
 

@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <LibJS/Heap/GCPtr.h>
+#include <LibWeb/Forward.h>
 #include <LibWeb/HTML/PolicyContainers.h>
 #include <LibWeb/HTML/SandboxingFlagSet.h>
 

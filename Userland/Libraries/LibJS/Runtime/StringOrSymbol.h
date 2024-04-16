@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/DeprecatedFlyString.h>
+#include <AK/Traits.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/Symbol.h>
 #include <LibJS/Runtime/Value.h>

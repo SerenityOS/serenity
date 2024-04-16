@@ -9,6 +9,7 @@
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
 #include <AK/StringView.h>
+#include <AK/Traits.h>
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
 #include <LibJS/Forward.h>

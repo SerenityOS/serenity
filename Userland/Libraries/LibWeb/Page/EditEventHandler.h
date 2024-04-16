@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Types.h>
+#include <LibJS/Heap/GCPtr.h>
 #include <LibWeb/Forward.h>
 
 namespace Web {

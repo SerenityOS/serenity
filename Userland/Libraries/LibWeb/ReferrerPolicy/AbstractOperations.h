@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Forward.h>
+#include <LibURL/URL.h>
 #include <LibWeb/Forward.h>
 
 namespace Web::ReferrerPolicy {

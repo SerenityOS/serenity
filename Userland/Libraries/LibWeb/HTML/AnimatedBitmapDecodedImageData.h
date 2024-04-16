@@ -7,6 +7,7 @@
 #pragma once
 
 #include <LibGfx/ImmutableBitmap.h>
+#include <LibJS/Heap/CellAllocator.h>
 #include <LibWeb/HTML/DecodedImageData.h>
 
 namespace Web::HTML {

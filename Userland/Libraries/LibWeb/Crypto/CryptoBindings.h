@@ -11,6 +11,8 @@
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
+#include <LibJS/Forward.h>
+#include <LibJS/Heap/GCPtr.h>
 
 // FIXME: Generate these from IDL
 namespace Web::Bindings {
