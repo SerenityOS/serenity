@@ -1909,6 +1909,7 @@ static void generate_function(SourceGenerator& generator, IDL::Function const& f
     function_generator.append(R"~~~(
 JS_DEFINE_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@@overload_suffix@)
 {
+    WebIDL::log_trace(vm, "@class_name@::@function.name:snakecase@@overload_suffix@");
     [[maybe_unused]] auto& realm = *vm.current_realm();
 )~~~");
 
@@ -2185,11 +2186,13 @@ static void generate_overload_arbiter(SourceGenerator& generator, auto const& ov
 JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> @constructor_class@::construct(JS::FunctionObject& new_target)
 {
     auto& vm = this->vm();
+    WebIDL::log_trace(vm, "@constructor_class@::construct");
 )~~~");
     } else {
         function_generator.append(R"~~~(
 JS_DEFINE_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@)
 {
+    WebIDL::log_trace(vm, "@class_name@::@function.name:snakecase@");
 )~~~");
     }
 
@@ -2463,6 +2466,7 @@ static void generate_constructor(SourceGenerator& generator, IDL::Constructor co
     constructor_generator.append(R"~~~(
 JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> @constructor_class@::construct@overload_suffix@([[maybe_unused]] FunctionObject& new_target)
 {
+    WebIDL::log_trace(vm(), "@constructor_class@::construct@overload_suffix@");
 )~~~");
 
     generator.append(R"~~~(
@@ -2522,6 +2526,7 @@ static void generate_constructors(SourceGenerator& generator, IDL::Interface con
         generator.append(R"~~~(
 JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> @constructor_class@::construct([[maybe_unused]] FunctionObject& new_target)
 {
+    WebIDL::log_trace(vm(), "@constructor_class@::construct");
 )~~~");
         generator.set("constructor.length", "0");
         generator.append(R"~~~(
@@ -2769,6 +2774,7 @@ static void generate_default_to_json_function(SourceGenerator& generator, ByteSt
     function_generator.append(R"~~~(
 JS_DEFINE_NATIVE_FUNCTION(@class_name@::to_json)
 {
+    WebIDL::log_trace(vm, "@class_name@::to_json");
     auto& realm = *vm.current_realm();
     auto* impl = TRY(impl_from(vm));
 
@@ -3220,6 +3226,7 @@ static JS::ThrowCompletionOr<@fully_qualified_name@*> impl_from(JS::VM& vm)
         attribute_generator.append(R"~~~(
 JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.getter_callback@)
 {
+    WebIDL::log_trace(vm, "@class_name@::@attribute.getter_callback@");
     [[maybe_unused]] auto& realm = *vm.current_realm();
     auto* impl = TRY(impl_from(vm));
 )~~~");
@@ -3424,6 +3431,7 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.getter_callback@)
             attribute_generator.append(R"~~~(
 JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.setter_callback@)
 {
+    WebIDL::log_trace(vm, "@class_name@::@attribute.setter_callback@");
     [[maybe_unused]] auto& realm = *vm.current_realm();
     auto* impl = TRY(impl_from(vm));
 
@@ -3508,6 +3516,7 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.setter_callback@)
                 attribute_generator.append(R"~~~(
 JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.setter_callback@)
 {
+    WebIDL::log_trace(vm, "@class_name@::@attribute.setter_callback@");
     auto this_value = vm.this_value();
     JS::GCPtr<Window> window;
     if (this_value.is_object()) {
@@ -3532,6 +3541,7 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.setter_callback@)
                 attribute_generator.append(R"~~~(
 JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.setter_callback@)
 {
+    WebIDL::log_trace(vm, "@class_name@::@attribute.setter_callback@");
     auto this_value = vm.this_value();
     if (!this_value.is_object() || !is<@fully_qualified_name@>(this_value.as_object()))
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "@namespaced_name@");
@@ -3546,6 +3556,7 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.setter_callback@)
             attribute_generator.append(R"~~~(
 JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.setter_callback@)
 {
+    WebIDL::log_trace(vm, "@class_name@::@attribute.setter_callback@");
     auto* impl = TRY(impl_from(vm));
     auto value = vm.argument(0);
 
@@ -3588,6 +3599,7 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.setter_callback@)
         stringifier_generator.append(R"~~~(
 JS_DEFINE_NATIVE_FUNCTION(@class_name@::to_string)
 {
+    WebIDL::log_trace(vm, "@class_name@::to_string");
     [[maybe_unused]] auto& realm = *vm.current_realm();
     auto* impl = TRY(impl_from(vm));
 
@@ -3613,6 +3625,7 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::to_string)
         iterator_generator.append(R"~~~(
 JS_DEFINE_NATIVE_FUNCTION(@class_name@::entries)
 {
+    WebIDL::log_trace(vm, "@class_name@::entries");
     auto* impl = TRY(impl_from(vm));
 
     return TRY(throw_dom_exception_if_needed(vm, [&] { return @iterator_name@::create(*impl, Object::PropertyKind::KeyAndValue); }));
@@ -3620,6 +3633,7 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::entries)
 
 JS_DEFINE_NATIVE_FUNCTION(@class_name@::for_each)
 {
+    WebIDL::log_trace(vm, "@class_name@::for_each");
     [[maybe_unused]] auto& realm = *vm.current_realm();
     auto* impl = TRY(impl_from(vm));
 
@@ -3642,6 +3656,7 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::for_each)
 
 JS_DEFINE_NATIVE_FUNCTION(@class_name@::keys)
 {
+    WebIDL::log_trace(vm, "@class_name@::keys");
     auto* impl = TRY(impl_from(vm));
 
     return TRY(throw_dom_exception_if_needed(vm, [&] { return @iterator_name@::create(*impl, Object::PropertyKind::Key);  }));
@@ -3649,6 +3664,7 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::keys)
 
 JS_DEFINE_NATIVE_FUNCTION(@class_name@::values)
 {
+    WebIDL::log_trace(vm, "@class_name@::values");
     auto* impl = TRY(impl_from(vm));
 
     return TRY(throw_dom_exception_if_needed(vm, [&] { return @iterator_name@::create(*impl, Object::PropertyKind::Value); }));
@@ -3735,6 +3751,7 @@ void generate_namespace_implementation(IDL::Interface const& interface, StringBu
 #include <LibWeb/WebIDL/AbstractOperations.h>
 #include <LibWeb/WebIDL/Buffers.h>
 #include <LibWeb/WebIDL/OverloadResolution.h>
+#include <LibWeb/WebIDL/Tracing.h>
 #include <LibWeb/WebIDL/Types.h>
 
 )~~~");
@@ -3976,8 +3993,9 @@ void generate_constructor_implementation(IDL::Interface const& interface, String
 #include <LibWeb/WebIDL/AbstractOperations.h>
 #include <LibWeb/WebIDL/Buffers.h>
 #include <LibWeb/WebIDL/CallbackType.h>
-#include <LibWeb/WebIDL/Types.h>
 #include <LibWeb/WebIDL/OverloadResolution.h>
+#include <LibWeb/WebIDL/Tracing.h>
+#include <LibWeb/WebIDL/Types.h>
 
 )~~~");
 
@@ -4123,6 +4141,7 @@ void @constructor_class@::initialize(JS::Realm& realm)
         attribute_generator.append(R"~~~(
 JS_DEFINE_NATIVE_FUNCTION(@constructor_class@::@attribute.getter_callback@)
 {
+    WebIDL::log_trace(vm, "@constructor_class@::@attribute.getter_callback@");
     auto retval = TRY(throw_dom_exception_if_needed(vm, [&] { return @fully_qualified_name@::@attribute.cpp_name@(vm); }));
 )~~~");
 
@@ -4225,6 +4244,7 @@ void generate_prototype_implementation(IDL::Interface const& interface, StringBu
 #include <LibWeb/HTML/WindowProxy.h>
 #include <LibWeb/WebIDL/AbstractOperations.h>
 #include <LibWeb/WebIDL/Buffers.h>
+#include <LibWeb/WebIDL/Tracing.h>
 #include <LibWeb/WebIDL/OverloadResolution.h>
 #include <LibWeb/WebIDL/Types.h>
 
@@ -4417,6 +4437,7 @@ void generate_iterator_prototype_implementation(IDL::Interface const& interface,
 #include <LibWeb/Bindings/@prototype_class@.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/WebIDL/Tracing.h>
 
 #if __has_include(<LibWeb/@possible_include_path@.h>)
 #    include <LibWeb/@possible_include_path@.h>
@@ -4483,6 +4504,7 @@ static JS::ThrowCompletionOr<@fully_qualified_name@*> impl_from(JS::VM& vm)
 
 JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::next)
 {
+    WebIDL::log_trace(vm, "@prototype_class@::next");
     auto* impl = TRY(impl_from(vm));
     return TRY(throw_dom_exception_if_needed(vm, [&] { return impl->next(); }));
 }
@@ -4552,6 +4574,7 @@ void generate_global_mixin_implementation(IDL::Interface const& interface, Strin
 #include <LibWeb/HTML/WindowProxy.h>
 #include <LibWeb/WebIDL/AbstractOperations.h>
 #include <LibWeb/WebIDL/OverloadResolution.h>
+#include <LibWeb/WebIDL/Tracing.h>
 #include <LibWeb/WebIDL/Types.h>
 
 )~~~");

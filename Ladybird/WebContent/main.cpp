@@ -57,6 +57,10 @@ namespace JS {
 extern bool g_log_all_js_exceptions;
 }
 
+namespace Web::WebIDL {
+extern bool g_enable_idl_tracing;
+}
+
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     AK::set_rich_debug_enabled(true);
@@ -94,6 +98,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool use_gpu_painting = false;
     bool wait_for_debugger = false;
     bool log_all_js_exceptions = false;
+    bool enable_idl_tracing = false;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(command_line, "Chrome process command line", "command-line", 0, "command_line");
@@ -106,6 +111,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(wait_for_debugger, "Wait for debugger", "wait-for-debugger", 0);
     args_parser.add_option(mach_server_name, "Mach server name", "mach-server-name", 0, "mach_server_name");
     args_parser.add_option(log_all_js_exceptions, "Log all JavaScript exceptions", "log-all-js-exceptions", 0);
+    args_parser.add_option(enable_idl_tracing, "Enable IDL tracing", "enable-idl-tracing", 0);
 
     args_parser.parse(arguments);
 
@@ -142,6 +148,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (log_all_js_exceptions) {
         JS::g_log_all_js_exceptions = true;
+    }
+
+    if (enable_idl_tracing) {
+        Web::WebIDL::g_enable_idl_tracing = true;
     }
 
     auto maybe_content_filter_error = load_content_filters();

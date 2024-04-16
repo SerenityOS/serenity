@@ -40,6 +40,11 @@ enum class LogAllJSExceptions {
     Yes
 };
 
+enum class EnableIDLTracing {
+    No,
+    Yes
+};
+
 struct WebContentOptions {
     String command_line;
     String executable_path;
@@ -50,6 +55,7 @@ struct WebContentOptions {
     UseLagomNetworking use_lagom_networking { UseLagomNetworking::No };
     WaitForDebugger wait_for_debugger { WaitForDebugger::No };
     LogAllJSExceptions log_all_js_exceptions { LogAllJSExceptions::No };
+    EnableIDLTracing enable_idl_tracing { EnableIDLTracing::No };
 };
 
 }

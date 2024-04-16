@@ -117,6 +117,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool use_gpu_painting = false;
     bool debug_web_content = false;
     bool log_all_js_exceptions = false;
+    bool enable_idl_tracing = false;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("The Ladybird web browser :^)");
@@ -129,6 +130,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(debug_web_content, "Wait for debugger to attach to WebContent", "debug-web-content", 0);
     args_parser.add_option(certificates, "Path to a certificate file", "certificate", 'C', "certificate");
     args_parser.add_option(log_all_js_exceptions, "Log all JavaScript exceptions", "log-all-js-exceptions", 0);
+    args_parser.add_option(enable_idl_tracing, "Enable IDL tracing", "enable-idl-tracing", 0);
     args_parser.parse(arguments);
 
     WebView::ProcessManager::initialize();
@@ -173,6 +175,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         .use_lagom_networking = enable_qt_networking ? Ladybird::UseLagomNetworking::No : Ladybird::UseLagomNetworking::Yes,
         .wait_for_debugger = debug_web_content ? Ladybird::WaitForDebugger::Yes : Ladybird::WaitForDebugger::No,
         .log_all_js_exceptions = log_all_js_exceptions ? Ladybird::LogAllJSExceptions::Yes : Ladybird::LogAllJSExceptions::No,
+        .enable_idl_tracing = enable_idl_tracing ? Ladybird::EnableIDLTracing::Yes : Ladybird::EnableIDLTracing::No,
     };
 
     Ladybird::BrowserWindow window(initial_urls, cookie_jar, web_content_options, webdriver_content_ipc_path);
