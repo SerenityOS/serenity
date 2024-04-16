@@ -80,12 +80,12 @@ WebIDL::ExceptionOr<void> MessagePort::transfer_steps(HTML::TransferDataHolder& 
         // 2. Set dataHolder.[[RemotePort]] to remotePort.
         auto fd = MUST(m_socket->release_fd());
         m_socket = nullptr;
-        data_holder.fds.append(fd);
+        data_holder.fds.append(IPC::File(fd, IPC::File::CloseAfterSending));
         data_holder.data.append(IPC_FILE_TAG);
 
         auto fd_passing_socket = MUST(m_fd_passing_socket->release_fd());
         m_fd_passing_socket = nullptr;
-        data_holder.fds.append(fd_passing_socket);
+        data_holder.fds.append(IPC::File(fd_passing_socket, IPC::File::CloseAfterSending));
         data_holder.data.append(IPC_FILE_TAG);
     }
 
