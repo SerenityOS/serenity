@@ -177,9 +177,26 @@ void InlinePaintable::paint(PaintContext& context, PaintPhase phase) const
 
     if (phase == PaintPhase::Foreground) {
         for_each_fragment([&](auto const& fragment, bool, bool) {
+            if (is<Layout::TextNode>(fragment.layout_node())) {
+                auto& text_shadow = fragment.layout_node().computed_values().text_shadow();
+                if (!text_shadow.is_empty()) {
+                    Vector<ShadowData> resolved_shadow_data;
+                    resolved_shadow_data.ensure_capacity(text_shadow.size());
+                    for (auto const& layer : text_shadow) {
+                        resolved_shadow_data.empend(
+                            layer.color,
+                            layer.offset_x.to_px(fragment.layout_node()),
+                            layer.offset_y.to_px(fragment.layout_node()),
+                            layer.blur_radius.to_px(fragment.layout_node()),
+                            layer.spread_distance.to_px(fragment.layout_node()),
+                            ShadowPlacement::Outer);
+                    }
+                    paint_text_shadow(context, fragment, resolved_shadow_data);
+                }
+            }
             if (is<TextPaintable>(fragment.paintable()))
                 paint_text_fragment(context, static_cast<TextPaintable const&>(fragment.paintable()), fragment, phase);
-        });
+        });   
     }
 
     if (phase == PaintPhase::Overlay && layout_node().document().inspected_layout_node() == &layout_node()) {
