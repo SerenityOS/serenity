@@ -7450,6 +7450,12 @@ bool Parser::substitute_attr_function(DOM::Element& element, FlyString const& pr
     if (has_fallback_values)
         return expand_unresolved_values(element, property_name, attr_contents, dest);
 
+    if (attribute_type.equals_ignoring_ascii_case("string"_fly_string)) {
+        // If the <attr-type> argument is string, defaults to the empty string if omitted
+        dest.empend(Token::create_string({}));
+        return true;
+    }
+
     // 3. Otherwise, the property containing the attr() function is invalid at computed-value time.
     return false;
 }
