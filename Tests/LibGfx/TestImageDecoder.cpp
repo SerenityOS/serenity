@@ -389,7 +389,7 @@ TEST_CASE(test_jbig2_decode)
     }
 }
 
-TEST_CASE(test_jbig2_arithmetic_decoder)
+TEST_CASE(test_qm_arithmetic_decoder)
 {
     // https://www.itu.int/rec/T-REC-T.88-201808-I
     // H.2 Test sequence for arithmetic coder
@@ -409,8 +409,8 @@ TEST_CASE(test_jbig2_arithmetic_decoder)
     // clang-format on
 
     // "For this entire test, a single value of CX is used. I(CX) is initially 0 and MPS(CX) is initially 0."
-    Gfx::JBIG2::ArithmeticDecoder::Context context { 0, 0 };
-    auto decoder = MUST(Gfx::JBIG2::ArithmeticDecoder::initialize(input));
+    Gfx::QMArithmeticDecoder::Context context { 0, 0 };
+    auto decoder = MUST(Gfx::QMArithmeticDecoder::initialize(input));
 
     for (auto expected : output) {
         u8 actual = 0;

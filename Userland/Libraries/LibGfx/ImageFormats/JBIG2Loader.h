@@ -14,24 +14,22 @@ namespace Gfx {
 
 struct JBIG2LoadingContext;
 
-namespace JBIG2 {
-
 // E.3 Arithmetic decoding procedure, but with the changes described in
 // Annex G Arithmetic decoding procedure (software conventions).
 // Exposed for testing.
-class ArithmeticDecoder {
+class QMArithmeticDecoder {
 public:
     struct Context {
         u8 I { 0 };      // Index I stored for context CX (E.2.4)
         u8 is_mps { 0 }; // "More probable symbol" (E.1.1). 0 or 1.
     };
 
-    static ErrorOr<ArithmeticDecoder> initialize(ReadonlyBytes data);
+    static ErrorOr<QMArithmeticDecoder> initialize(ReadonlyBytes data);
 
     bool get_next_bit(Context& context);
 
 private:
-    ArithmeticDecoder(ReadonlyBytes data)
+    QMArithmeticDecoder(ReadonlyBytes data)
         : m_data(data)
     {
     }
@@ -71,8 +69,6 @@ private:
     static u8 NLPS(u16);
     static u8 SWITCH(u16);
 };
-
-}
 
 class JBIG2ImageDecoderPlugin : public ImageDecoderPlugin {
 public:
