@@ -223,8 +223,20 @@ void Job::on_socket_connected()
         }
 
         if (m_socket->is_eof()) {
-            dbgln_if(JOB_DEBUG, "Read failure: Actually EOF!");
-            return deferred_invoke([this] { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
+            // Some servers really like terminating connections by simply closing them (even TLS ones)
+            // to signal end-of-data, if there's no:
+            // - connection
+            // - content-size
+            // - transfer-encoding: chunked
+            // header, simply treat EOF as a termination signal.
+            if (m_headers.contains("connection"sv) || m_content_length.has_value() || m_current_chunk_total_size.has_value()) {
+                dbgln_if(JOB_DEBUG, "Read failure: Actually EOF!");
+                deferred_invoke([this] { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
+                return;
+            }
+
+            finish_up();
+            return;
         }
 
         while (m_state == State::InStatus) {
