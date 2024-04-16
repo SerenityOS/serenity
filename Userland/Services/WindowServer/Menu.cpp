@@ -551,7 +551,7 @@ void Menu::start_activation_animation(MenuItem& item)
         painter.clear_rect({ {}, animation->window->rect().size() }, Color::Transparent);
         painter.blit({}, original_bitmap, item_rect, opacity, true);
         animation->window->invalidate();
-    }).release_value_but_fixme_should_propagate_errors();
+    });
     timer->start();
 }
 

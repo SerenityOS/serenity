@@ -218,7 +218,7 @@ static ErrorOr<NonnullRefPtr<Core::Timer>> load_page_for_screenshot_and_exit(Cor
 
     outln("Taking screenshot after {} seconds", screenshot_timeout);
 
-    auto timer = TRY(Core::Timer::create_single_shot(
+    auto timer = Core::Timer::create_single_shot(
         screenshot_timeout * 1000,
         [&]() {
             if (auto screenshot = view.take_screenshot()) {
@@ -232,7 +232,7 @@ static ErrorOr<NonnullRefPtr<Core::Timer>> load_page_for_screenshot_and_exit(Cor
             }
 
             event_loop.quit(0);
-        }));
+        });
 
     view.load(url);
     timer->start();
@@ -272,10 +272,10 @@ static ErrorOr<TestResult> run_dump_test(HeadlessWebContentView& view, StringVie
     Core::EventLoop loop;
     bool did_timeout = false;
 
-    auto timeout_timer = TRY(Core::Timer::create_single_shot(timeout_in_milliseconds, [&] {
+    auto timeout_timer = Core::Timer::create_single_shot(timeout_in_milliseconds, [&] {
         did_timeout = true;
         loop.quit(0);
-    }));
+    });
 
     auto url = URL::create_with_file_scheme(TRY(FileSystem::real_path(input_path)));
 
@@ -373,10 +373,10 @@ static ErrorOr<TestResult> run_ref_test(HeadlessWebContentView& view, StringView
     Core::EventLoop loop;
     bool did_timeout = false;
 
-    auto timeout_timer = TRY(Core::Timer::create_single_shot(timeout_in_milliseconds, [&] {
+    auto timeout_timer = Core::Timer::create_single_shot(timeout_in_milliseconds, [&] {
         did_timeout = true;
         loop.quit(0);
-    }));
+    });
 
     RefPtr<Gfx::Bitmap> actual_screenshot, expectation_screenshot;
     view.on_load_finish = [&](auto const&) {

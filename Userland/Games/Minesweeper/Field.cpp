@@ -140,8 +140,7 @@ void Field::initialize()
             ++m_time_elapsed;
             m_time_label.set_text(human_readable_digital_time(m_time_elapsed));
         },
-        this)
-                  .release_value_but_fixme_should_propagate_errors();
+        this);
 
     // Square with mine will be filled with background color later, i.e. red
     m_mine_palette.set_color(Gfx::ColorRole::Base, Color::from_rgb(0xff4040));

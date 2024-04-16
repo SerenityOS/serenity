@@ -21,7 +21,7 @@ ErrorOr<NonnullRefPtr<PlaybackStream>> PlaybackStreamSerenity::create(OutputStat
     if (auto result = connection->try_set_self_sample_rate(sample_rate); result.is_error())
         return Error::from_string_literal("Failed to set sample rate");
 
-    auto polling_timer = TRY(Core::Timer::try_create());
+    auto polling_timer = Core::Timer::create();
     auto implementation = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) PlaybackStreamSerenity(connection, move(polling_timer), move(data_request_callback))));
     if (initial_state == OutputState::Playing)
         connection->async_start_playback();

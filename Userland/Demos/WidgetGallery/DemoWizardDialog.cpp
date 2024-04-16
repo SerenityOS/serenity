@@ -57,8 +57,7 @@ DemoWizardDialog::DemoWizardDialog(GUI::Window* parent_window)
                 replace_page(*m_back_page);
             }
         },
-        this)
-                         .release_value_but_fixme_should_propagate_errors();
+        this);
     m_page_2->on_page_enter = [&]() {
         m_page_2_progress_value = 0;
         m_page_2_timer->restart();

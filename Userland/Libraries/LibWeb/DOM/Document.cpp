@@ -3905,7 +3905,7 @@ void Document::shared_declarative_refresh_steps(StringView input, JS::GCPtr<HTML
 
         VERIFY(navigable());
         MUST(navigable()->navigate({ .url = url_record, .source_document = *this }));
-    }).release_value_but_fixme_should_propagate_errors();
+    });
 
     // For the purposes of the previous paragraph, a refresh is said to have come due as soon as the later of the
     // following two conditions occurs:
@@ -4238,7 +4238,7 @@ void Document::ensure_animation_timer()
 {
     constexpr static auto timer_delay_ms = 1000 / 60;
     if (!m_animation_driver_timer) {
-        m_animation_driver_timer = MUST(Core::Timer::create_repeating(timer_delay_ms, [this] {
+        m_animation_driver_timer = Core::Timer::create_repeating(timer_delay_ms, [this] {
             bool has_animations = false;
             for (auto& timeline : m_associated_animation_timelines) {
                 if (!timeline->associated_animations().is_empty()) {
@@ -4253,7 +4253,7 @@ void Document::ensure_animation_timer()
             auto* window_or_worker = dynamic_cast<HTML::WindowOrWorkerGlobalScopeMixin*>(&realm().global_object());
             VERIFY(window_or_worker);
             update_animations_and_send_events(window_or_worker->performance()->now());
-        }));
+        });
     }
 
     m_animation_driver_timer->start();

@@ -76,7 +76,7 @@ static Core::ConfigFile& ensure_domain_config(ByteString const& domain)
 
 ConnectionFromClient::ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket> client_socket, int client_id)
     : IPC::ConnectionFromClient<ConfigClientEndpoint, ConfigServerEndpoint>(*this, move(client_socket), client_id)
-    , m_sync_timer(Core::Timer::create_single_shot(s_disk_sync_delay_ms, [this]() { sync_dirty_domains_to_disk(); }).release_value_but_fixme_should_propagate_errors())
+    , m_sync_timer(Core::Timer::create_single_shot(s_disk_sync_delay_ms, [this]() { sync_dirty_domains_to_disk(); }))
 {
     s_connections.set(client_id, *this);
 }

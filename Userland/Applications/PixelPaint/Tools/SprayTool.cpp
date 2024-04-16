@@ -24,7 +24,7 @@ SprayTool::SprayTool()
 {
     m_timer = Core::Timer::create_repeating(200, [&]() {
         paint_it();
-    }).release_value_but_fixme_should_propagate_errors();
+    });
 }
 
 static double nrand()

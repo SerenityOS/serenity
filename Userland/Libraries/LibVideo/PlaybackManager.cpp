@@ -66,7 +66,7 @@ DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> PlaybackManager::create(NonnullOw
     auto frame_queue = DECODER_TRY_ALLOC(VideoFrameQueue::create());
     auto playback_manager = DECODER_TRY_ALLOC(try_make<PlaybackManager>(demuxer, track, move(decoder_non_null), move(frame_queue)));
 
-    playback_manager->m_state_update_timer = DECODER_TRY_ALLOC(Core::Timer::create_single_shot(0, [&self = *playback_manager] { self.timer_callback(); }));
+    playback_manager->m_state_update_timer = Core::Timer::create_single_shot(0, [&self = *playback_manager] { self.timer_callback(); });
 
     playback_manager->m_decode_thread = DECODER_TRY_ALLOC(Threading::Thread::try_create([&self = *playback_manager] {
         while (!self.m_stop_decoding.load())

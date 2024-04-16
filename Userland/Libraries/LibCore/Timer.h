@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2024, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -16,18 +16,11 @@ class Timer final : public EventReceiver {
     C_OBJECT(Timer);
 
 public:
-    static ErrorOr<NonnullRefPtr<Timer>> create_repeating(int interval_ms, Function<void()>&& timeout_handler, EventReceiver* parent = nullptr)
-    {
-        return adopt_nonnull_ref_or_enomem(new Timer(interval_ms, move(timeout_handler), parent));
-    }
-    static ErrorOr<NonnullRefPtr<Timer>> create_single_shot(int interval_ms, Function<void()>&& timeout_handler, EventReceiver* parent = nullptr)
-    {
-        auto timer = TRY(adopt_nonnull_ref_or_enomem(new Timer(interval_ms, move(timeout_handler), parent)));
-        timer->set_single_shot(true);
-        return timer;
-    }
+    static NonnullRefPtr<Timer> create();
+    static NonnullRefPtr<Timer> create_repeating(int interval_ms, Function<void()>&& timeout_handler, EventReceiver* parent = nullptr);
+    static NonnullRefPtr<Timer> create_single_shot(int interval_ms, Function<void()>&& timeout_handler, EventReceiver* parent = nullptr);
 
-    virtual ~Timer() override = default;
+    virtual ~Timer() override;
 
     void start();
     void start(int interval_ms);
