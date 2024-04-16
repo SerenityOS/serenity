@@ -884,16 +884,16 @@ JS::NonnullGCPtr<Geometry::DOMRectList> Element::get_client_rects() const
     const_cast<Document&>(document()).update_paint_and_hit_testing_properties_if_needed();
 
     Gfx::AffineTransform transform;
-    if (auto const* paintable_box = this->paintable_box())
-        transform = Gfx::extract_2d_affine_transform(paintable_box->transform());
     CSSPixelPoint scroll_offset;
-    for (auto const* containing_block = paintable()->containing_block(); containing_block; containing_block = containing_block->containing_block()) {
-        transform = Gfx::extract_2d_affine_transform(containing_block->transform()).multiply(transform);
-        scroll_offset.translate_by(containing_block->scroll_offset());
-    }
-
     auto const* paintable = this->paintable();
+
     if (auto const* paintable_box = this->paintable_box()) {
+        transform = Gfx::extract_2d_affine_transform(paintable_box->transform());
+        for (auto const* containing_block = paintable->containing_block(); containing_block; containing_block = containing_block->containing_block()) {
+            transform = Gfx::extract_2d_affine_transform(containing_block->transform()).multiply(transform);
+            scroll_offset.translate_by(containing_block->scroll_offset());
+        }
+
         auto absolute_rect = paintable_box->absolute_border_box_rect();
         auto transformed_rect = transform.map(absolute_rect.translated(-paintable_box->transform_origin()).to_type<float>())
                                     .to_type<CSSPixels>()
