@@ -171,7 +171,7 @@ ErrorOr<void> initialize_main_thread_vm()
 
             // 5. Queue a global task on the DOM manipulation task source given global to fire an event named rejectionhandled at global, using PromiseRejectionEvent,
             //    with the promise attribute initialized to promise, and the reason attribute initialized to the value of promise's [[PromiseResult]] internal slot.
-            HTML::queue_global_task(HTML::Task::Source::DOMManipulation, global, [&global, &promise] {
+            HTML::queue_global_task(HTML::Task::Source::DOMManipulation, global, JS::create_heap_function(s_main_thread_vm->heap(), [&global, &promise] {
                 // FIXME: This currently assumes that global is a WindowObject.
                 auto& window = verify_cast<HTML::Window>(global);
 
@@ -182,7 +182,7 @@ ErrorOr<void> initialize_main_thread_vm()
                 };
                 auto promise_rejection_event = HTML::PromiseRejectionEvent::create(HTML::relevant_realm(global), HTML::EventNames::rejectionhandled, event_init);
                 window.dispatch_event(promise_rejection_event);
-            });
+            }));
             break;
         }
         default:
@@ -226,7 +226,7 @@ ErrorOr<void> initialize_main_thread_vm()
         auto& global = finalization_registry.realm().global_object();
 
         // 2. Queue a global task on the JavaScript engine task source given global to perform the following steps:
-        HTML::queue_global_task(HTML::Task::Source::JavaScriptEngine, global, [&finalization_registry] {
+        HTML::queue_global_task(HTML::Task::Source::JavaScriptEngine, global, JS::create_heap_function(s_main_thread_vm->heap(), [&finalization_registry] {
             // 1. Let entry be finalizationRegistry.[[CleanupCallback]].[[Callback]].[[Realm]]'s environment settings object.
             auto& entry = host_defined_environment_settings_object(*finalization_registry.cleanup_callback().callback().realm());
 
@@ -246,7 +246,7 @@ ErrorOr<void> initialize_main_thread_vm()
             // 6. If result is an abrupt completion, then report the exception given by result.[[Value]].
             if (result.is_error())
                 HTML::report_exception(result, finalization_registry.realm());
-        });
+        }));
     };
 
     // 8.1.5.4.3 HostEnqueuePromiseJob(job, realm), https://html.spec.whatwg.org/multipage/webappapis.html#hostenqueuepromisejob

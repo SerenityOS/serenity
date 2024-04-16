@@ -291,7 +291,7 @@ void HTMLParser::the_end(JS::NonnullGCPtr<DOM::Document> document, JS::GCPtr<HTM
     }
 
     // 6. Queue a global task on the DOM manipulation task source given the Document's relevant global object to run the following substeps:
-    queue_global_task(HTML::Task::Source::DOMManipulation, *document, [document = document] {
+    queue_global_task(HTML::Task::Source::DOMManipulation, *document, JS::create_heap_function(document->heap(), [document = document] {
         // 1. Set the Document's load timing info's DOM content loaded event start time to the current high resolution time given the Document's relevant global object.
         document->load_timing_info().dom_content_loaded_event_start_time = HighResolutionTime::current_high_resolution_time(relevant_global_object(*document));
 
@@ -306,7 +306,7 @@ void HTMLParser::the_end(JS::NonnullGCPtr<DOM::Document> document, JS::GCPtr<HTM
         // FIXME: 4. Enable the client message queue of the ServiceWorkerContainer object whose associated service worker client is the Document object's relevant settings object.
 
         // FIXME: 5. Invoke WebDriver BiDi DOM content loaded with the Document's browsing context, and a new WebDriver BiDi navigation status whose id is the Document object's navigation id, status is "pending", and url is the Document object's URL.
-    });
+    }));
 
     // 7. Spin the event loop until the set of scripts that will execute as soon as possible and the list of scripts that will execute in order as soon as possible are empty.
     main_thread_event_loop().spin_until([&] {
@@ -319,7 +319,7 @@ void HTMLParser::the_end(JS::NonnullGCPtr<DOM::Document> document, JS::GCPtr<HTM
     });
 
     // 9. Queue a global task on the DOM manipulation task source given the Document's relevant global object to run the following steps:
-    queue_global_task(HTML::Task::Source::DOMManipulation, *document, [document = document] {
+    queue_global_task(HTML::Task::Source::DOMManipulation, *document, JS::create_heap_function(document->heap(), [document = document] {
         // 1. Update the current document readiness to "complete".
         document->update_readiness(HTML::DocumentReadyState::Complete);
 
@@ -358,7 +358,7 @@ void HTMLParser::the_end(JS::NonnullGCPtr<DOM::Document> document, JS::GCPtr<HTM
         document->completely_finish_loading();
 
         // FIXME: 13. Queue the navigation timing entry for the Document.
-    });
+    }));
 
     // FIXME: 10. If the Document's print when loaded flag is set, then run the printing steps.
 

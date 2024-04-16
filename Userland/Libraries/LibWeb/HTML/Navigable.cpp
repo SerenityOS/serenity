@@ -1084,7 +1084,7 @@ WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(
         return {};
 
     // 6. Queue a global task on the navigation and traversal task source, given navigable's active window, to run these steps:
-    queue_global_task(Task::Source::NavigationAndTraversal, *active_window(), [this, entry, navigation_params = move(navigation_params), navigation_id, completion_steps = move(completion_steps)]() mutable {
+    queue_global_task(Task::Source::NavigationAndTraversal, *active_window(), JS::create_heap_function(heap(), [this, entry, navigation_params = move(navigation_params), navigation_id, completion_steps = move(completion_steps)]() mutable {
         // NOTE: This check is not in the spec but we should not continue navigation if navigable has been destroyed.
         if (has_been_destroyed())
             return;
@@ -1187,7 +1187,7 @@ WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(
 
         // 14. Run completionSteps.
         completion_steps();
-    });
+    }));
 
     return {};
 }
@@ -1316,9 +1316,9 @@ WebIDL::ExceptionOr<void> Navigable::navigate(NavigateParams params)
     // 18. If url's scheme is "javascript", then:
     if (url.scheme() == "javascript"sv) {
         // 1. Queue a global task on the navigation and traversal task source given navigable's active window to navigate to a javascript: URL given navigable, url, historyHandling, initiatorOriginSnapshot, and cspNavigationType.
-        queue_global_task(Task::Source::NavigationAndTraversal, *active_window(), [this, url, history_handling, initiator_origin_snapshot, csp_navigation_type, navigation_id] {
+        queue_global_task(Task::Source::NavigationAndTraversal, *active_window(), JS::create_heap_function(heap(), [this, url, history_handling, initiator_origin_snapshot, csp_navigation_type, navigation_id] {
             (void)navigate_to_a_javascript_url(url, to_history_handling_behavior(history_handling), initiator_origin_snapshot, csp_navigation_type, navigation_id);
-        });
+        }));
 
         // 2. Return.
         return {};
@@ -1379,10 +1379,10 @@ WebIDL::ExceptionOr<void> Navigable::navigate(NavigateParams params)
         }
 
         // 3. Queue a global task on the navigation and traversal task source given navigable's active window to abort a document and its descendants given navigable's active document.
-        queue_global_task(Task::Source::NavigationAndTraversal, *active_window(), [this] {
+        queue_global_task(Task::Source::NavigationAndTraversal, *active_window(), JS::create_heap_function(heap(), [this] {
             VERIFY(this->active_document());
             this->active_document()->abort_a_document_and_its_descendants();
-        });
+        }));
 
         // 4. Let documentState be a new document state with
         //    request referrer policy: referrerPolicy
@@ -2090,7 +2090,7 @@ void Navigable::inform_the_navigation_api_about_aborting_navigation()
     // FIXME: 1. If this algorithm is running on navigable's active window's relevant agent's event loop, then continue on to the following steps.
     // Otherwise, queue a global task on the navigation and traversal task source given navigable's active window to run the following steps.
 
-    queue_global_task(Task::Source::NavigationAndTraversal, *active_window(), [this] {
+    queue_global_task(Task::Source::NavigationAndTraversal, *active_window(), JS::create_heap_function(heap(), [this] {
         // 2. Let navigation be navigable's active window's navigation API.
         auto navigation = active_window()->navigation();
 
@@ -2100,7 +2100,7 @@ void Navigable::inform_the_navigation_api_about_aborting_navigation()
 
         // 4. Abort the ongoing navigation given navigation.
         navigation->abort_the_ongoing_navigation();
-    });
+    }));
 }
 
 void Navigable::paint(Painting::RecordingPainter& recording_painter, PaintConfig config)

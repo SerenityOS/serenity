@@ -336,7 +336,7 @@ Vector<JS::Handle<Navigable>> TraversableNavigable::get_all_navigables_that_migh
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#deactivate-a-document-for-a-cross-document-navigation
-static void deactivate_a_document_for_cross_document_navigation(JS::NonnullGCPtr<DOM::Document> displayed_document, Optional<UserNavigationInvolvement>, JS::NonnullGCPtr<SessionHistoryEntry> target_entry, JS::SafeFunction<void()> after_potential_unloads)
+static void deactivate_a_document_for_cross_document_navigation(JS::NonnullGCPtr<DOM::Document> displayed_document, Optional<UserNavigationInvolvement>, JS::NonnullGCPtr<SessionHistoryEntry> target_entry, JS::NonnullGCPtr<JS::HeapFunction<void()>> after_potential_unloads)
 {
     // 1. Let navigable be displayedDocument's node navigable.
     auto navigable = displayed_document->navigable();
@@ -358,7 +358,7 @@ static void deactivate_a_document_for_cross_document_navigation(JS::NonnullGCPtr
         navigable->set_ongoing_navigation({});
 
         // 3. Unload a document and its descendants given displayedDocument, targetEntry's document, afterPotentialUnloads, and firePageSwapBeforeUnload.
-        displayed_document->unload_a_document_and_its_descendants(target_entry->document(), move(after_potential_unloads));
+        displayed_document->unload_a_document_and_its_descendants(target_entry->document(), after_potential_unloads);
     }
     // FIXME: 6. Otherwise, queue a global task on the navigation and traversal task source given navigable's active window to run the steps:
     else {
@@ -457,7 +457,7 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
 
     // 12. For each navigable of changingNavigables, queue a global task on the navigation and traversal task source of navigable's active window to run the steps:
     for (auto& navigable : changing_navigables) {
-        queue_global_task(Task::Source::NavigationAndTraversal, *navigable->active_window(), [&] {
+        queue_global_task(Task::Source::NavigationAndTraversal, *navigable->active_window(), JS::create_heap_function(heap(), [&] {
             // NOTE: This check is not in the spec but we should not continue navigation if navigable has been destroyed.
             if (navigable->has_been_destroyed()) {
                 completed_change_jobs++;
@@ -588,9 +588,9 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
                 //    navigable's active window to run afterDocumentPopulated.
                 Platform::EventLoopPlugin::the().deferred_invoke([populated_target_entry, potentially_target_specific_source_snapshot_params, target_snapshot_params, this, allow_POST, navigable, after_document_populated] {
                     navigable->populate_session_history_entry_document(populated_target_entry, *potentially_target_specific_source_snapshot_params, target_snapshot_params, {}, Empty {}, CSPNavigationType::Other, allow_POST, [this, after_document_populated, populated_target_entry]() mutable {
-                                 queue_global_task(Task::Source::NavigationAndTraversal, *active_window(), [after_document_populated, populated_target_entry]() mutable {
+                                 queue_global_task(Task::Source::NavigationAndTraversal, *active_window(), JS::create_heap_function(this->heap(), [after_document_populated, populated_target_entry]() mutable {
                                      after_document_populated(true, populated_target_entry);
-                                 });
+                                 }));
                              })
                         .release_value_but_fixme_should_propagate_errors();
                 });
@@ -599,7 +599,7 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
             else {
                 after_document_populated(false, *target_entry);
             }
-        });
+        }));
     }
 
     auto check_if_document_population_tasks_completed = JS::SafeFunction<bool()>([&] {
@@ -674,7 +674,7 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
         auto entries_for_navigation_api = get_session_history_entries_for_the_navigation_api(*navigable, target_step);
 
         // 12. In both cases, let afterPotentialUnloads be the following steps:
-        auto after_potential_unload = JS::SafeFunction<void()>([changing_navigable_continuation, displayed_document, &completed_change_jobs, script_history_length, script_history_index, entries_for_navigation_api = move(entries_for_navigation_api)] {
+        auto after_potential_unload = JS::create_heap_function(this->heap(), [changing_navigable_continuation, displayed_document, &completed_change_jobs, script_history_length, script_history_index, entries_for_navigation_api = move(entries_for_navigation_api), &heap = this->heap()] {
             auto const& target_entry = changing_navigable_continuation.target_entry;
             if (changing_navigable_continuation.populated_cloned_target_session_history_entry) {
                 auto const& populating_target_entry = changing_navigable_continuation.populated_target_entry;
@@ -700,9 +700,9 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
             }
             // 5. Otherwise, queue a global task on the navigation and traversal task source given targetEntry's document's relevant global object to perform updateDocument
             else {
-                queue_global_task(Task::Source::NavigationAndTraversal, relevant_global_object(*target_entry->document()), [update_document = move(update_document)]() {
+                queue_global_task(Task::Source::NavigationAndTraversal, relevant_global_object(*target_entry->document()), JS::create_heap_function(heap, [update_document = move(update_document)]() {
                     update_document();
-                });
+                }));
             }
 
             // 6. Increment completedChangeJobs.
@@ -715,7 +715,7 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
             navigable->set_ongoing_navigation({});
 
             // 2. Queue a global task on the navigation and traversal task source given navigable's active window to perform afterPotentialUnloads.
-            queue_global_task(Task::Source::NavigationAndTraversal, *navigable->active_window(), move(after_potential_unload));
+            queue_global_task(Task::Source::NavigationAndTraversal, *navigable->active_window(), after_potential_unload);
         }
         // 11. Otherwise:
         else {
@@ -723,7 +723,7 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
             VERIFY(navigation_type.has_value());
 
             // 2. Deactivate displayedDocument, given userNavigationInvolvement, targetEntry, navigationType, and afterPotentialUnloads.
-            deactivate_a_document_for_cross_document_navigation(*displayed_document, user_involvement_for_navigate_events, *populated_target_entry, move(after_potential_unload));
+            deactivate_a_document_for_cross_document_navigation(*displayed_document, user_involvement_for_navigate_events, *populated_target_entry, after_potential_unload);
         }
     }
 
@@ -749,7 +749,7 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
             continue;
         }
 
-        queue_global_task(Task::Source::NavigationAndTraversal, *navigable->active_window(), [&] {
+        queue_global_task(Task::Source::NavigationAndTraversal, *navigable->active_window(), JS::create_heap_function(heap(), [&] {
             // NOTE: This check is not in the spec but we should not continue navigation if navigable has been destroyed.
             if (navigable->has_been_destroyed()) {
                 ++completed_non_changing_jobs;
@@ -767,7 +767,7 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
 
             // 4. Increment completedNonchangingJobs.
             ++completed_non_changing_jobs;
-        });
+        }));
     }
 
     // 19. Wait for completedNonchangingJobs to equal totalNonchangingJobs.
@@ -1121,9 +1121,9 @@ void TraversableNavigable::set_system_visibility_state(VisibilityState visibilit
 
         // 2. Queue a global task on the user interaction task source given document's relevant global object
         //    to update the visibility state of document with newState.
-        queue_global_task(Task::Source::UserInteraction, relevant_global_object(*document), [visibility_state, document] {
+        queue_global_task(Task::Source::UserInteraction, relevant_global_object(*document), JS::create_heap_function(heap(), [visibility_state, document] {
             document->update_the_visibility_state(visibility_state);
-        });
+        }));
     }
 }
 
