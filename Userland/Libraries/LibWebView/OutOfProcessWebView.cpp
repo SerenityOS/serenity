@@ -44,7 +44,7 @@ OutOfProcessWebView::OutOfProcessWebView()
         if (file.is_error())
             client().async_handle_file_return(m_client_state.page_index, file.error().code(), {}, request_id);
         else
-            client().async_handle_file_return(m_client_state.page_index, 0, IPC::File(file.value().stream()), request_id);
+            client().async_handle_file_return(m_client_state.page_index, 0, IPC::File::adopt_file(file.release_value().release_stream()), request_id);
     };
 
     on_scroll_by_delta = [this](auto x_delta, auto y_delta) {

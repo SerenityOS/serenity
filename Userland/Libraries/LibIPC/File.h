@@ -10,7 +10,7 @@
 #include <AK/Noncopyable.h>
 #include <AK/StdLibExtras.h>
 #include <LibCore/File.h>
-#include <unistd.h>
+#include <LibCore/System.h>
 
 namespace IPC {
 
@@ -18,36 +18,26 @@ class File {
     AK_MAKE_NONCOPYABLE(File);
 
 public:
-    // Must have a default constructor, because LibIPC
-    // default-constructs arguments prior to decoding them.
     File() = default;
 
-    // Intentionally not `explicit`.
-    File(int fd)
-        : m_fd(fd)
+    static File adopt_file(NonnullOwnPtr<Core::File> file)
     {
+        return File(file->leak_fd(Badge<File> {}));
     }
 
-    // Tagged constructor for fd's that should be closed on destruction unless take_fd() is called.
-    // Note that the tags are the same, this is intentional to allow expressive invocation.
-    enum Tag {
-        ConstructWithReceivedFileDescriptor = 1,
-        CloseAfterSending = 1,
-    };
-    File(int fd, Tag)
-        : m_fd(fd)
-        , m_close_on_destruction(true)
+    static File adopt_fd(int fd)
     {
+        return File(fd);
     }
 
-    explicit File(Core::File& file)
-        : File(file.leak_fd(Badge<File> {}), CloseAfterSending)
+    static ErrorOr<File> clone_fd(int fd)
     {
+        int new_fd = TRY(Core::System::dup(fd));
+        return File(new_fd);
     }
 
     File(File&& other)
         : m_fd(exchange(other.m_fd, -1))
-        , m_close_on_destruction(exchange(other.m_close_on_destruction, false))
     {
     }
 
@@ -55,15 +45,14 @@ public:
     {
         if (this != &other) {
             m_fd = exchange(other.m_fd, -1);
-            m_close_on_destruction = exchange(other.m_close_on_destruction, false);
         }
         return *this;
     }
 
     ~File()
     {
-        if (m_close_on_destruction && m_fd != -1)
-            close(m_fd);
+        if (m_fd != -1)
+            (void)Core::System::close(m_fd);
     }
 
     int fd() const { return m_fd; }
@@ -75,8 +64,12 @@ public:
     }
 
 private:
+    explicit File(int fd)
+        : m_fd(fd)
+    {
+    }
+
     mutable int m_fd { -1 };
-    bool m_close_on_destruction { false };
 };
 
 }

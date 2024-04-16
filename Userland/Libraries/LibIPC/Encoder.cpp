@@ -105,10 +105,7 @@ ErrorOr<void> encode(Encoder& encoder, URL::URL const& value)
 template<>
 ErrorOr<void> encode(Encoder& encoder, File const& file)
 {
-    int fd = file.fd();
-
-    if (fd != -1)
-        fd = TRY(Core::System::dup(fd));
+    int fd = file.take_fd();
 
     TRY(encoder.append_file_descriptor(fd));
     return {};
@@ -127,7 +124,7 @@ ErrorOr<void> encode(Encoder& encoder, Core::AnonymousBuffer const& buffer)
 
     if (buffer.is_valid()) {
         TRY(encoder.encode_size(buffer.size()));
-        TRY(encoder.encode(IPC::File { buffer.fd() }));
+        TRY(encoder.encode(TRY(IPC::File::clone_fd(buffer.fd()))));
     }
 
     return {};

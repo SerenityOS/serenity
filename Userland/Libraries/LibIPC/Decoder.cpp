@@ -91,7 +91,7 @@ template<>
 ErrorOr<File> decode(Decoder& decoder)
 {
     int fd = TRY(decoder.socket().receive_fd(O_CLOEXEC));
-    return File { fd, File::ConstructWithReceivedFileDescriptor };
+    return File::adopt_fd(fd);
 }
 
 template<>

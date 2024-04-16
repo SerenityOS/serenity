@@ -30,7 +30,7 @@ ErrorOr<void> encode(Encoder& encoder, Gfx::ShareableBitmap const& shareable_bit
         return {};
 
     auto& bitmap = *shareable_bitmap.bitmap();
-    TRY(encoder.encode(IPC::File(bitmap.anonymous_buffer().fd())));
+    TRY(encoder.encode(TRY(IPC::File::clone_fd(bitmap.anonymous_buffer().fd()))));
     TRY(encoder.encode(bitmap.size()));
     TRY(encoder.encode(static_cast<u32>(bitmap.scale())));
     TRY(encoder.encode(static_cast<u32>(bitmap.format())));

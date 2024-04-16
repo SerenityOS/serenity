@@ -315,7 +315,7 @@ public:
 
     virtual void page_did_change_audio_play_state(HTML::AudioPlayState) { }
 
-    virtual WebView::SocketPair request_worker_agent() { return { -1, -1 }; }
+    virtual WebView::SocketPair request_worker_agent() { return { IPC::File {}, IPC::File {} }; }
 
     virtual void inspector_did_load() { }
     virtual void inspector_did_select_dom_node([[maybe_unused]] i32 node_id, [[maybe_unused]] Optional<CSS::Selector::PseudoElement::Type> const& pseudo_element) { }

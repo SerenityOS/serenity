@@ -64,7 +64,7 @@ void LanguageClient::open_file(ByteString const& path, int fd)
 {
     if (!m_connection_wrapper.connection())
         return;
-    m_connection_wrapper.connection()->async_file_opened(path, fd);
+    m_connection_wrapper.connection()->async_file_opened(path, MUST(IPC::File::clone_fd(fd)));
 }
 
 void LanguageClient::set_file_content(ByteString const& path, ByteString const& content)
