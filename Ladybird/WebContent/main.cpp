@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2024, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -53,6 +53,10 @@ static ErrorOr<void> load_content_filters();
 static ErrorOr<void> load_autoplay_allowlist();
 static ErrorOr<void> initialize_lagom_networking(Vector<ByteString> const& certificates);
 
+namespace JS {
+extern bool g_log_all_js_exceptions;
+}
+
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     AK::set_rich_debug_enabled(true);
@@ -89,6 +93,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool use_lagom_networking = false;
     bool use_gpu_painting = false;
     bool wait_for_debugger = false;
+    bool log_all_js_exceptions = false;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(command_line, "Chrome process command line", "command-line", 0, "command_line");
@@ -100,6 +105,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(use_gpu_painting, "Enable GPU painting", "use-gpu-painting", 0);
     args_parser.add_option(wait_for_debugger, "Wait for debugger", "wait-for-debugger", 0);
     args_parser.add_option(mach_server_name, "Mach server name", "mach-server-name", 0, "mach_server_name");
+    args_parser.add_option(log_all_js_exceptions, "Log all JavaScript exceptions", "log-all-js-exceptions", 0);
 
     args_parser.parse(arguments);
 
@@ -133,6 +139,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Web::Platform::FontPlugin::install(*new Ladybird::FontPlugin(is_layout_test_mode));
 
     TRY(Web::Bindings::initialize_main_thread_vm());
+
+    if (log_all_js_exceptions) {
+        JS::g_log_all_js_exceptions = true;
+    }
 
     auto maybe_content_filter_error = load_content_filters();
     if (maybe_content_filter_error.is_error())

@@ -35,6 +35,11 @@ enum class WaitForDebugger {
     Yes
 };
 
+enum class LogAllJSExceptions {
+    No,
+    Yes
+};
+
 struct WebContentOptions {
     String command_line;
     String executable_path;
@@ -44,6 +49,7 @@ struct WebContentOptions {
     IsLayoutTestMode is_layout_test_mode { IsLayoutTestMode::No };
     UseLagomNetworking use_lagom_networking { UseLagomNetworking::No };
     WaitForDebugger wait_for_debugger { WaitForDebugger::No };
+    LogAllJSExceptions log_all_js_exceptions { LogAllJSExceptions::No };
 };
 
 }
