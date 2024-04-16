@@ -67,6 +67,8 @@ ErrorOr<NonnullRefPtr<WebView::WebContentClient>> launch_web_content_process(
                 arguments.append("--wait-for-debugger"sv);
             if (web_content_options.log_all_js_exceptions == Ladybird::LogAllJSExceptions::Yes)
                 arguments.append("--log-all-js-exceptions"sv);
+            if (web_content_options.enable_idl_tracing == Ladybird::EnableIDLTracing::Yes)
+                arguments.append("--enable-idl-tracing"sv);
             if (auto server = mach_server_name(); server.has_value()) {
                 arguments.append("--mach-server-name"sv);
                 arguments.append(server.value());

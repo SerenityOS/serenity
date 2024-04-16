@@ -675,6 +675,7 @@ set(SOURCES
     WebIDL/ObservableArray.cpp
     WebIDL/OverloadResolution.cpp
     WebIDL/Promise.cpp
+    WebIDL/Tracing.cpp
     WebSockets/WebSocket.cpp
     XHR/EventNames.cpp
     XHR/FormData.cpp
