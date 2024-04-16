@@ -27,8 +27,6 @@
 
 namespace Gfx {
 
-namespace JBIG2 {
-
 // Table E.1 – Qe values and probability estimation process
 // See also E.1.2 Coding conventions and approximations
 // and E.2.5 Probability estimation.
@@ -88,14 +86,14 @@ constexpr auto qe_table = to_array<QeEntry>({
     { 0x5601, 46, 46, 0 },
 });
 
-ErrorOr<ArithmeticDecoder> ArithmeticDecoder::initialize(ReadonlyBytes data)
+ErrorOr<QMArithmeticDecoder> QMArithmeticDecoder::initialize(ReadonlyBytes data)
 {
-    ArithmeticDecoder decoder { data };
+    QMArithmeticDecoder decoder { data };
     decoder.INITDEC();
     return decoder;
 }
 
-bool ArithmeticDecoder::get_next_bit(Context& context)
+bool QMArithmeticDecoder::get_next_bit(Context& context)
 {
     CX = &context;
     // Useful for comparing to Table H.1 – Encoder and decoder trace data.
@@ -105,12 +103,12 @@ bool ArithmeticDecoder::get_next_bit(Context& context)
     return D;
 }
 
-u16 ArithmeticDecoder::Qe(u16 index) { return qe_table[index].qe; }
-u8 ArithmeticDecoder::NMPS(u16 index) { return qe_table[index].nmps; }
-u8 ArithmeticDecoder::NLPS(u16 index) { return qe_table[index].nlps; }
-u8 ArithmeticDecoder::SWITCH(u16 index) { return qe_table[index].switch_flag; }
+u16 QMArithmeticDecoder::Qe(u16 index) { return qe_table[index].qe; }
+u8 QMArithmeticDecoder::NMPS(u16 index) { return qe_table[index].nmps; }
+u8 QMArithmeticDecoder::NLPS(u16 index) { return qe_table[index].nlps; }
+u8 QMArithmeticDecoder::SWITCH(u16 index) { return qe_table[index].switch_flag; }
 
-u8 ArithmeticDecoder::B(size_t offset) const
+u8 QMArithmeticDecoder::B(size_t offset) const
 {
     // E.2.10 Minimization of the compressed data
     // "the convention is used in the decoder that when a marker code is encountered,
@@ -120,7 +118,7 @@ u8 ArithmeticDecoder::B(size_t offset) const
     return m_data[BP + offset];
 }
 
-void ArithmeticDecoder::INITDEC()
+void QMArithmeticDecoder::INITDEC()
 {
     // E.3.5 Initialization of the decoder (INITDEC)
     // Figure G.1 – Initialization of the software conventions decoder
@@ -137,7 +135,7 @@ void ArithmeticDecoder::INITDEC()
     A = 0x8000;
 }
 
-u8 ArithmeticDecoder::DECODE()
+u8 QMArithmeticDecoder::DECODE()
 {
     // E.3.2 Decoding a decision (DECODE)
     // Figure G.2 – Decoding an MPS or an LPS in the software-conventions decoder
@@ -158,7 +156,7 @@ u8 ArithmeticDecoder::DECODE()
     return D;
 }
 
-u8 ArithmeticDecoder::MPS_EXCHANGE()
+u8 QMArithmeticDecoder::MPS_EXCHANGE()
 {
     // Figure E.16 – Decoder MPS path conditional exchange procedure
     u8 D;
@@ -175,7 +173,7 @@ u8 ArithmeticDecoder::MPS_EXCHANGE()
     return D;
 }
 
-u8 ArithmeticDecoder::LPS_EXCHANGE()
+u8 QMArithmeticDecoder::LPS_EXCHANGE()
 {
     // Figure E.17 – Decoder LPS path conditional exchange procedure
     u8 D;
@@ -194,7 +192,7 @@ u8 ArithmeticDecoder::LPS_EXCHANGE()
     return D;
 }
 
-void ArithmeticDecoder::RENORMD()
+void QMArithmeticDecoder::RENORMD()
 {
     // E.3.3 Renormalization in the decoder (RENORMD)
     // Figure E.18 – Decoder renormalization procedure
@@ -207,7 +205,7 @@ void ArithmeticDecoder::RENORMD()
     } while ((A & 0x8000) == 0);
 }
 
-void ArithmeticDecoder::BYTEIN()
+void QMArithmeticDecoder::BYTEIN()
 {
     // E.3.4 Compressed data input (BYTEIN)
     // Figure G.3 – Inserting a new byte into the C register in the software-conventions decoder
@@ -226,10 +224,12 @@ void ArithmeticDecoder::BYTEIN()
     }
 }
 
+namespace JBIG2 {
+
 // Annex A, Arithmetic integer decoding procedure
 class ArithmeticIntegerDecoder {
 public:
-    ArithmeticIntegerDecoder(ArithmeticDecoder&);
+    ArithmeticIntegerDecoder(QMArithmeticDecoder&);
 
     // A.2 Procedure for decoding values (except IAID)
     // Returns OptionalNone for OOB.
@@ -239,12 +239,12 @@ public:
     ErrorOr<i32> decode_non_oob();
 
 private:
-    ArithmeticDecoder& m_decoder;
+    QMArithmeticDecoder& m_decoder;
     u16 PREV { 0 };
-    Vector<ArithmeticDecoder::Context> contexts;
+    Vector<QMArithmeticDecoder::Context> contexts;
 };
 
-ArithmeticIntegerDecoder::ArithmeticIntegerDecoder(ArithmeticDecoder& decoder)
+ArithmeticIntegerDecoder::ArithmeticIntegerDecoder(QMArithmeticDecoder& decoder)
     : m_decoder(decoder)
 {
     contexts.resize(1 << 9);
@@ -314,18 +314,18 @@ ErrorOr<i32> ArithmeticIntegerDecoder::decode_non_oob()
 
 class ArithmeticIntegerIDDecoder {
 public:
-    ArithmeticIntegerIDDecoder(ArithmeticDecoder&, u32 code_length);
+    ArithmeticIntegerIDDecoder(QMArithmeticDecoder&, u32 code_length);
 
     // A.3 The IAID decoding procedure
     u32 decode();
 
 private:
-    ArithmeticDecoder& m_decoder;
+    QMArithmeticDecoder& m_decoder;
     u32 m_code_length { 0 };
-    Vector<ArithmeticDecoder::Context> contexts;
+    Vector<QMArithmeticDecoder::Context> contexts;
 };
 
-ArithmeticIntegerIDDecoder::ArithmeticIntegerIDDecoder(ArithmeticDecoder& decoder, u32 code_length)
+ArithmeticIntegerIDDecoder::ArithmeticIntegerIDDecoder(QMArithmeticDecoder& decoder, u32 code_length)
     : m_decoder(decoder)
     , m_code_length(code_length)
 {
@@ -951,11 +951,11 @@ struct GenericRegionDecodingInputParameters {
     // FIXME: GBCOLS, GBCOMBOP, COLEXTFLAG
 
     // If is_modified_modified_read is false, generic_region_decoding_procedure() reads data off this decoder.
-    JBIG2::ArithmeticDecoder* arithmetic_decoder { nullptr };
+    QMArithmeticDecoder* arithmetic_decoder { nullptr };
 };
 
 // 6.2 Generic region decoding procedure
-static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(GenericRegionDecodingInputParameters const& inputs, ReadonlyBytes data, Vector<JBIG2::ArithmeticDecoder::Context>& contexts)
+static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(GenericRegionDecodingInputParameters const& inputs, ReadonlyBytes data, Vector<QMArithmeticDecoder::Context>& contexts)
 {
     if (inputs.is_modified_modified_read) {
         dbgln_if(JBIG2_DEBUG, "JBIG2ImageDecoderPlugin: MMR image data");
@@ -1091,7 +1091,7 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(Gener
     }(inputs.gb_template);
 
     // 6.2.5.7 Decoding the bitmap
-    JBIG2::ArithmeticDecoder& decoder = *inputs.arithmetic_decoder;
+    QMArithmeticDecoder& decoder = *inputs.arithmetic_decoder;
     bool ltp = false; // "LTP" in spec. "Line (uses) Typical Prediction" maybe?
     for (size_t y = 0; y < inputs.region_height; ++y) {
         if (inputs.is_typical_prediction_used) {
@@ -1129,7 +1129,7 @@ struct GenericRefinementRegionDecodingInputParameters {
 };
 
 // 6.3 Generic Refinement Region Decoding Procedure
-static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_refinement_region_decoding_procedure(GenericRefinementRegionDecodingInputParameters& inputs, JBIG2::ArithmeticDecoder& decoder, Vector<JBIG2::ArithmeticDecoder::Context>& contexts)
+static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_refinement_region_decoding_procedure(GenericRefinementRegionDecodingInputParameters& inputs, QMArithmeticDecoder& decoder, Vector<QMArithmeticDecoder::Context>& contexts)
 {
     VERIFY(inputs.gr_template == 0 || inputs.gr_template == 1);
 
@@ -1246,7 +1246,7 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
     if (inputs.uses_huffman_encoding)
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode huffman text regions yet");
 
-    auto decoder = TRY(JBIG2::ArithmeticDecoder::initialize(data));
+    auto decoder = TRY(QMArithmeticDecoder::initialize(data));
 
     // 6.4.6 Strip delta T
     // "If SBHUFF is 1, decode a value using the Huffman table specified by SBHUFFDT and multiply the resulting value by SBSTRIPS.
@@ -1326,7 +1326,7 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
 
     // 6.4.11 Symbol instance bitmap
     JBIG2::ArithmeticIntegerDecoder has_refinement_image_decoder(decoder);
-    Vector<JBIG2::ArithmeticDecoder::Context> refinement_contexts;
+    Vector<QMArithmeticDecoder::Context> refinement_contexts;
     if (inputs.uses_refinement_coding)
         refinement_contexts.resize(1 << (inputs.refinement_template == 0 ? 13 : 10));
     OwnPtr<BitBuffer> refinement_result;
@@ -1540,8 +1540,8 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
     if (inputs.uses_huffman_encoding)
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode huffman symbol dictionaries yet");
 
-    auto decoder = TRY(JBIG2::ArithmeticDecoder::initialize(data));
-    Vector<JBIG2::ArithmeticDecoder::Context> contexts;
+    auto decoder = TRY(QMArithmeticDecoder::initialize(data));
+    Vector<QMArithmeticDecoder::Context> contexts;
     contexts.resize(1 << number_of_context_bits_for_template(inputs.symbol_template));
 
     // 6.5.6 Height class delta height
@@ -1585,7 +1585,7 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
 
     // FIXME: When we implement REFAGGNINST > 1 support, do these need to be shared with
     // text_region_decoding_procedure() then?
-    Vector<JBIG2::ArithmeticDecoder::Context> refinement_contexts;
+    Vector<QMArithmeticDecoder::Context> refinement_contexts;
 
     // This belongs in 6.5.5 1) below, but also needs to be captured by read_bitmap here.
     Vector<NonnullRefPtr<Symbol>> new_symbols;
@@ -1805,10 +1805,10 @@ struct GrayscaleInputParameters {
     u8 template_id { 0 }; // "GSTEMPLATE" in spec.
 
     // If uses_mmr is false, grayscale_image_decoding_procedure() reads data off this decoder.
-    JBIG2::ArithmeticDecoder* arithmetic_decoder { nullptr };
+    QMArithmeticDecoder* arithmetic_decoder { nullptr };
 };
 
-static ErrorOr<Vector<u8>> grayscale_image_decoding_procedure(GrayscaleInputParameters const& inputs, ReadonlyBytes data, Vector<JBIG2::ArithmeticDecoder::Context>& contexts)
+static ErrorOr<Vector<u8>> grayscale_image_decoding_procedure(GrayscaleInputParameters const& inputs, ReadonlyBytes data, Vector<QMArithmeticDecoder::Context>& contexts)
 {
     // FIXME: Support this. generic_region_decoding_procedure() currently doesn't tell us how much data it
     //        reads for MMR bitmaps, so we can't currently read more than one MMR bitplane here.
@@ -1906,7 +1906,7 @@ struct HalftoneRegionDecodingInputParameters {
 };
 
 // 6.6 Halftone Region Decoding Procedure
-static ErrorOr<NonnullOwnPtr<BitBuffer>> halftone_region_decoding_procedure(HalftoneRegionDecodingInputParameters const& inputs, ReadonlyBytes data, Vector<JBIG2::ArithmeticDecoder::Context>& contexts)
+static ErrorOr<NonnullOwnPtr<BitBuffer>> halftone_region_decoding_procedure(HalftoneRegionDecodingInputParameters const& inputs, ReadonlyBytes data, Vector<QMArithmeticDecoder::Context>& contexts)
 {
     // 6.6.5 Decoding the halftone region
     // "1) Fill a bitmap HTREG, of the size given by HBW and HBH, with the HDEFPIXEL value."
@@ -1960,9 +1960,9 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> halftone_region_decoding_procedure(Half
     grayscale_inputs.skip_pattern = skip_pattern;
     grayscale_inputs.template_id = inputs.halftone_template;
 
-    Optional<JBIG2::ArithmeticDecoder> decoder;
+    Optional<QMArithmeticDecoder> decoder;
     if (!inputs.uses_mmr) {
-        decoder = TRY(JBIG2::ArithmeticDecoder::initialize(data));
+        decoder = TRY(QMArithmeticDecoder::initialize(data));
         grayscale_inputs.arithmetic_decoder = &decoder.value();
     }
 
@@ -2018,7 +2018,7 @@ struct PatternDictionaryDecodingInputParameters {
 };
 
 // 6.7 Pattern Dictionary Decoding Procedure
-static ErrorOr<Vector<NonnullRefPtr<Symbol>>> pattern_dictionary_decoding_procedure(PatternDictionaryDecodingInputParameters const& inputs, ReadonlyBytes data, Vector<JBIG2::ArithmeticDecoder::Context>& contexts)
+static ErrorOr<Vector<NonnullRefPtr<Symbol>>> pattern_dictionary_decoding_procedure(PatternDictionaryDecodingInputParameters const& inputs, ReadonlyBytes data, Vector<QMArithmeticDecoder::Context>& contexts)
 {
     // Table 27 – Parameters used to decode a pattern dictionary's collective bitmap
     GenericRegionDecodingInputParameters generic_inputs;
@@ -2038,9 +2038,9 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> pattern_dictionary_decoding_proced
     generic_inputs.adaptive_template_pixels[3].x = -2;
     generic_inputs.adaptive_template_pixels[3].y = -2;
 
-    Optional<JBIG2::ArithmeticDecoder> decoder;
+    Optional<QMArithmeticDecoder> decoder;
     if (!inputs.uses_mmr) {
-        decoder = TRY(JBIG2::ArithmeticDecoder::initialize(data));
+        decoder = TRY(QMArithmeticDecoder::initialize(data));
         generic_inputs.arithmetic_decoder = &decoder.value();
     }
 
@@ -2353,7 +2353,7 @@ static ErrorOr<void> decode_pattern_dictionary(JBIG2LoadingContext&, SegmentData
     // Done!
 
     // "2) As described in E.3.7, reset all the arithmetic coding statistics to zero."
-    Vector<JBIG2::ArithmeticDecoder::Context> contexts;
+    Vector<QMArithmeticDecoder::Context> contexts;
     if (!uses_mmr)
         contexts.resize(1 << number_of_context_bits_for_template(hd_template));
 
@@ -2443,7 +2443,7 @@ static ErrorOr<void> decode_immediate_halftone_region(JBIG2LoadingContext& conte
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Halftone segment without patterns");
 
     // "3) As described in E.3.7, reset all the arithmetic coding statistics to zero."
-    Vector<JBIG2::ArithmeticDecoder::Context> contexts;
+    Vector<QMArithmeticDecoder::Context> contexts;
     if (!uses_mmr)
         contexts.resize(1 << number_of_context_bits_for_template(template_used));
 
@@ -2530,11 +2530,9 @@ static ErrorOr<void> decode_immediate_generic_region(JBIG2LoadingContext& contex
     // 7.4.6.4 Decoding a generic region segment
     // "1) Interpret its header, as described in 7.4.6.1"
     // Done above.
-
     // "2) As described in E.3.7, reset all the arithmetic coding statistics to zero."
-    Vector<JBIG2::ArithmeticDecoder::Context> contexts;
-    if (!uses_mmr)
-        contexts.resize(1 << number_of_context_bits_for_template(arithmetic_coding_template));
+    Vector<QMArithmeticDecoder::Context> contexts;
+    contexts.resize(1 << number_of_context_bits_for_template(arithmetic_coding_template));
 
     // "3) Invoke the generic region decoding procedure described in 6.2, with the parameters to the generic region decoding procedure set as shown in Table 37."
     GenericRegionDecodingInputParameters inputs;
@@ -2547,9 +2545,9 @@ static ErrorOr<void> decode_immediate_generic_region(JBIG2LoadingContext& contex
     inputs.skip_pattern = OptionalNone {};
     inputs.adaptive_template_pixels = adaptive_template_pixels;
 
-    Optional<JBIG2::ArithmeticDecoder> decoder;
+    Optional<QMArithmeticDecoder> decoder;
     if (!uses_mmr) {
-        decoder = TRY(JBIG2::ArithmeticDecoder::initialize(data));
+        decoder = TRY(QMArithmeticDecoder::initialize(data));
         inputs.arithmetic_decoder = &decoder.value();
     }
 
