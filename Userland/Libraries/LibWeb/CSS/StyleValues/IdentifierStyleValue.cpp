@@ -215,7 +215,7 @@ Color IdentifierStyleValue::to_color(Optional<Layout::NodeWithStyle const&> node
 
     auto& document = node->document();
     if (id() == CSS::ValueID::LibwebLink || id() == ValueID::Linktext)
-        return document.link_color();
+        return document.normal_link_color();
 
     auto palette = document.page().palette();
     switch (id()) {

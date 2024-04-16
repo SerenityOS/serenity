@@ -1221,9 +1221,9 @@ void Document::update_paint_and_hit_testing_properties_if_needed()
         paintable->resolve_paint_only_properties();
 }
 
-void Document::set_link_color(Color color)
+void Document::set_normal_link_color(Color color)
 {
-    m_link_color = color;
+    m_normal_link_color = color;
 }
 
 void Document::set_active_link_color(Color color)
@@ -1468,10 +1468,10 @@ void Document::release_events()
     // Do nothing
 }
 
-Color Document::link_color() const
+Color Document::normal_link_color() const
 {
-    if (m_link_color.has_value())
-        return m_link_color.value();
+    if (m_normal_link_color.has_value())
+        return m_normal_link_color.value();
     return CSS::SystemColor::link_text();
 }
 
