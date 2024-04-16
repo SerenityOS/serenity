@@ -196,7 +196,7 @@ void InlinePaintable::paint(PaintContext& context, PaintPhase phase) const
             }
             if (is<TextPaintable>(fragment.paintable()))
                 paint_text_fragment(context, static_cast<TextPaintable const&>(fragment.paintable()), fragment, phase);
-        });   
+        });
     }
 
     if (phase == PaintPhase::Overlay && layout_node().document().inspected_layout_node() == &layout_node()) {
