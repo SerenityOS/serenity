@@ -50,8 +50,7 @@ void HTMLLinkElement::inserted()
 {
     HTMLElement::inserted();
 
-    // FIXME: Handle alternate stylesheets properly
-    if (m_relationship & Relationship::Stylesheet && !(m_relationship & Relationship::Alternate)) {
+    if (m_relationship & Relationship::Stylesheet) {
         // https://html.spec.whatwg.org/multipage/links.html#link-type-stylesheet:fetch-and-process-the-linked-resource
         // The appropriate times to fetch and process this type of link are:
         //  - When the external resource link is created on a link element that is already browsing-context connected.
@@ -110,8 +109,12 @@ void HTMLLinkElement::attribute_changed(FlyString const& name, Optional<String> 
         }
     }
 
-    // FIXME: Handle alternate stylesheets properly
-    if (m_relationship & Relationship::Stylesheet && !(m_relationship & Relationship::Alternate)) {
+    // https://html.spec.whatwg.org/multipage/semantics.html#the-link-element:explicitly-enabled
+    // Whenever the disabled attribute is removed, set the link element's explicitly enabled attribute to true.
+    if (!value.has_value() && name == HTML::AttributeNames::disabled)
+        m_explicitly_enabled = true;
+
+    if (m_relationship & Relationship::Stylesheet) {
         if (name == HTML::AttributeNames::disabled && m_loaded_style_sheet)
             document_or_shadow_root_style_sheets().remove_a_css_style_sheet(*m_loaded_style_sheet);
 
@@ -374,7 +377,7 @@ void HTMLLinkElement::process_stylesheet_resource(bool success, Fetch::Infrastru
                         this,
                         attribute(HTML::AttributeNames::media).value_or({}),
                         in_a_document_tree() ? attribute(HTML::AttributeNames::title).value_or({}) : String {},
-                        false,
+                        m_relationship & Relationship::Alternate && !m_explicitly_enabled,
                         true,
                         {},
                         nullptr,
