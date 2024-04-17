@@ -37,7 +37,7 @@ ErrorOr<void> MessageBuffer::append_file_descriptor(int fd)
     return {};
 }
 
-ErrorOr<void> MessageBuffer::transfer_message(Core::LocalSocket& fd_passing_socket, Core::LocalSocket& data_socket)
+ErrorOr<void> MessageBuffer::transfer_message(Core::LocalSocket& socket)
 {
     Checked<MessageSizeType> checked_message_size { m_data.size() };
     checked_message_size -= sizeof(MessageSizeType);
@@ -45,17 +45,30 @@ ErrorOr<void> MessageBuffer::transfer_message(Core::LocalSocket& fd_passing_sock
     if (checked_message_size.has_overflow())
         return Error::from_string_literal("Message is too large for IPC encoding");
 
-    auto message_size = checked_message_size.value();
+    MessageSizeType const message_size = checked_message_size.value();
     m_data.span().overwrite(0, reinterpret_cast<u8 const*>(&message_size), sizeof(message_size));
 
-    for (auto const& fd : m_fds)
-        TRY(fd_passing_socket.send_fd(fd->value()));
+    auto raw_fds = Vector<int, 1> {};
+    auto num_fds_to_transfer = m_fds.size();
+    if (num_fds_to_transfer > 0) {
+        raw_fds.ensure_capacity(num_fds_to_transfer);
+        for (auto& owned_fd : m_fds) {
+            raw_fds.unchecked_append(owned_fd->value());
+        }
+    }
 
     ReadonlyBytes bytes_to_write { m_data.span() };
     size_t writes_done = 0;
 
     while (!bytes_to_write.is_empty()) {
-        auto maybe_nwritten = data_socket.write_some(bytes_to_write);
+        ErrorOr<ssize_t> maybe_nwritten = 0;
+        if (num_fds_to_transfer > 0) {
+            maybe_nwritten = socket.send_message(bytes_to_write, 0, raw_fds);
+            if (!maybe_nwritten.is_error())
+                num_fds_to_transfer = 0;
+        } else {
+            maybe_nwritten = socket.write_some(bytes_to_write);
+        }
         ++writes_done;
 
         if (maybe_nwritten.is_error()) {

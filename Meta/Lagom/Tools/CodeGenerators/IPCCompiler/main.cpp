@@ -372,9 +372,9 @@ public:)~~~");
     static i32 static_message_id() { return (int)MessageID::@message.pascal_name@; }
     virtual const char* message_name() const override { return "@endpoint.name@::@message.pascal_name@"; }
 
-    static ErrorOr<NonnullOwnPtr<@message.pascal_name@>> decode(Stream& stream, Core::LocalSocket& socket)
+    static ErrorOr<NonnullOwnPtr<@message.pascal_name@>> decode(Stream& stream, Queue<IPC::File>& files)
     {
-        IPC::Decoder decoder { stream, socket };)~~~");
+        IPC::Decoder decoder { stream, files };)~~~");
 
     for (auto const& parameter : parameters) {
         auto parameter_generator = message_generator.fork();
@@ -620,7 +620,7 @@ public:
 
     static u32 static_magic() { return @endpoint.magic@; }
 
-    static ErrorOr<NonnullOwnPtr<IPC::Message>> decode_message(ReadonlyBytes buffer, [[maybe_unused]] Core::LocalSocket& socket)
+    static ErrorOr<NonnullOwnPtr<IPC::Message>> decode_message(ReadonlyBytes buffer, [[maybe_unused]] Queue<IPC::File>& files)
     {
         FixedMemoryStream stream { buffer };
         auto message_endpoint_magic = TRY(stream.read_value<u32>());)~~~");
@@ -649,7 +649,7 @@ public:
 
             message_generator.append(R"~~~(
         case (int)Messages::@endpoint.name@::MessageID::@message.pascal_name@:
-            return TRY(Messages::@endpoint.name@::@message.pascal_name@::decode(stream, socket));)~~~");
+            return TRY(Messages::@endpoint.name@::@message.pascal_name@::decode(stream, files));)~~~");
         };
 
         do_decode_message(message.name);
