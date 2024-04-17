@@ -153,12 +153,12 @@ CommandResult CommandExecutorCPU::push_stacking_context(
     // Use the whole matrix when we get better transformation support in LibGfx or use LibGL for drawing the bitmap
     auto affine_transform = Gfx::extract_2d_affine_transform(transform.matrix);
 
-    if (opacity == 1.0f && affine_transform.is_identity_or_translation()) {
+    if (affine_transform.is_identity_or_translation()) {
         // OPTIMIZATION: This is a simple translation use previous stacking context's painter.
         painter().translate(affine_transform.translation().to_rounded<int>() + post_transform_translation);
         stacking_contexts.append(StackingContext {
             .painter = MaybeOwned(painter()),
-            .opacity = 1,
+            .opacity = opacity,
             .destination = {},
             .scaling_mode = {} });
         return CommandResult::Continue;
