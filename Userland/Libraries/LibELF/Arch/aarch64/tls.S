@@ -60,4 +60,6 @@
 .type __tlsdesc_static,@function
 __tlsdesc_static:
     ldr x0, [x0, #8]
+    // The first static TLS block is 16 bytes after the thread pointer on AArch64.
+    add x0, x0, 16
     ret

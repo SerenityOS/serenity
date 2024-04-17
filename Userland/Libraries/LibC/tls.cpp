@@ -5,6 +5,7 @@
  */
 
 #include <AK/Types.h>
+#include <LibELF/Arch/tls.h>
 #include <sys/internals.h>
 
 extern "C" {
@@ -21,6 +22,6 @@ extern "C" {
 // changed if we support dynamically allocated TLS blocks.
 void* __tls_get_addr(__tls_index* index)
 {
-    return reinterpret_cast<void*>(reinterpret_cast<FlatPtr>(__builtin_thread_pointer()) + index->ti_module + index->ti_offset);
+    return reinterpret_cast<void*>(reinterpret_cast<FlatPtr>(__builtin_thread_pointer()) + index->ti_module + index->ti_offset + ELF::TLS_DTV_OFFSET);
 }
 }
