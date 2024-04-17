@@ -37,6 +37,14 @@ public:
         ++m_size;
     }
 
+    ErrorOr<T> try_dequeue()
+    {
+        if (is_empty())
+            return Error::from_errno(ENOENT);
+
+        return dequeue();
+    }
+
     T dequeue()
     {
         VERIFY(!is_empty());
