@@ -1,19 +1,12 @@
 #!/usr/bin/env -S bash ../.port_include.sh
-port=jq
-version=1.6
-useconfigure=true
-configopts=("--with-oniguruma=builtin" "--disable-maintainer-mode")
+port='jq'
+version='1.7.1'
+useconfigure='true'
+use_fresh_config_sub='true'
+config_sub_paths=('config/config.sub')
 files=(
-    "https://github.com/stedolan/jq/releases/download/jq-${version}/jq-${version}.tar.gz#5de8c8e29aaa3fb9cc6b47bb27299f271354ebb72514e3accadc7d38b5bbaa72"
+    "https://github.com/jqlang/jq/releases/download/jq-${version}/jq-${version}.tar.gz#478c9ca129fd2e3443fe27314b455e211e0d8c60bc8ff7df703873deeee580c2"
 )
-makeopts=("LDFLAGS=-all-static")
-use_fresh_config_sub=true
-config_sub_paths=("config/config.sub" "modules/oniguruma/config.sub")
-
-pre_configure() {
-    # FIXME: The maintainer forgot to run autoconf before creating the tarball.
-    # Remove this when the next update is released.
-    pushd $workdir/modules/oniguruma
-    autoreconf -i
-    popd
-}
+depends=(
+    'oniguruma'
+)
