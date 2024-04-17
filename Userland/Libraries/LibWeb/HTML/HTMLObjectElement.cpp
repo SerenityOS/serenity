@@ -258,7 +258,7 @@ void HTMLObjectElement::run_object_representation_handler_steps(Optional<ByteStr
     // * If the resource type is an XML MIME type, or if the resource type does not start with "image/"
     if (mime_type.has_value() && can_load_document_with_type(*mime_type) && (mime_type->is_xml() || !mime_type->is_image())) {
         // If the object element's content navigable is null, then create a new child navigable for the element.
-        if (!m_content_navigable) {
+        if (!m_content_navigable && in_a_document_tree()) {
             MUST(create_new_child_navigable());
             set_content_navigable_initialized();
         }
