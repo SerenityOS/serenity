@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include <AK/Platform.h>
 #include <LibIPC/ConnectionToServer.h>
 #include <LibSQL/Result.h>
 #include <SQLServer/SQLClientEndpoint.h>
@@ -54,9 +53,10 @@ class SQLClient
     IPC_CLIENT_CONNECTION(SQLClient, "/tmp/session/%sid/portal/sql"sv)
 
 public:
-#if !defined(AK_OS_SERENITY)
-    static ErrorOr<NonnullRefPtr<SQLClient>> launch_server_and_create_client(Vector<ByteString> candidate_server_paths);
-#endif
+    explicit SQLClient(NonnullOwnPtr<Core::LocalSocket> socket)
+        : IPC::ConnectionToServer<SQLClientEndpoint, SQLServerEndpoint>(*this, move(socket))
+    {
+    }
 
     virtual ~SQLClient() = default;
 
@@ -66,11 +66,6 @@ public:
     Function<void(ExecutionComplete)> on_results_exhausted;
 
 private:
-    explicit SQLClient(NonnullOwnPtr<Core::LocalSocket> socket)
-        : IPC::ConnectionToServer<SQLClientEndpoint, SQLServerEndpoint>(*this, move(socket))
-    {
-    }
-
     virtual void execution_success(u64 statement_id, u64 execution_id, Vector<ByteString> const& column_names, bool has_results, size_t created, size_t updated, size_t deleted) override;
     virtual void execution_error(u64 statement_id, u64 execution_id, SQLErrorCode const& code, ByteString const& message) override;
     virtual void next_result(u64 statement_id, u64 execution_id, Vector<SQL::Value> const&) override;
