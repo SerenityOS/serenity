@@ -105,15 +105,21 @@ ErrorOr<Bytes> PosixSocketHelper::read(Bytes buffer, int flags)
     }
 
     ssize_t nread = TRY(System::recv(m_fd, buffer.data(), buffer.size(), flags));
-    m_last_read_was_eof = nread == 0;
+    if (nread == 0)
+        did_reach_eof_on_read();
+
+    return buffer.trim(nread);
+}
+
+void PosixSocketHelper::did_reach_eof_on_read()
+{
+    m_last_read_was_eof = true;
 
     // If a socket read is EOF, then no more data can be read from it because
     // the protocol has disconnected. In this case, we can just disable the
     // notifier if we have one.
-    if (m_last_read_was_eof && m_notifier)
+    if (m_notifier)
         m_notifier->set_enabled(false);
-
-    return buffer.trim(nread);
 }
 
 ErrorOr<size_t> PosixSocketHelper::write(ReadonlyBytes buffer, int flags)
