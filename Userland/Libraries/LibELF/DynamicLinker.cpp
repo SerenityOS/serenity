@@ -58,6 +58,8 @@ struct TLSData {
     void* tls_template { nullptr };
     size_t tls_template_size { 0 };
     size_t alignment { 0 };
+    size_t static_tls_region_size { 0 };
+    size_t static_tls_region_alignment { 0 };
 };
 static TLSData s_tls_data;
 
@@ -131,10 +133,18 @@ static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(ByteStri
 
     static size_t s_current_tls_offset = 0;
 
-    s_current_tls_offset -= loader->tls_size_of_current_object();
-    if (loader->tls_alignment_of_current_object())
-        s_current_tls_offset = align_down_to(s_current_tls_offset, loader->tls_alignment_of_current_object());
-    loader->set_tls_offset(s_current_tls_offset);
+    if constexpr (TLS_VARIANT == 1) {
+        if (loader->tls_alignment_of_current_object() != 0)
+            s_current_tls_offset = align_up_to(s_current_tls_offset, loader->tls_alignment_of_current_object());
+        loader->set_tls_offset(s_current_tls_offset);
+
+        s_current_tls_offset += loader->tls_size_of_current_object();
+    } else if constexpr (TLS_VARIANT == 2) {
+        s_current_tls_offset -= loader->tls_size_of_current_object();
+        if (loader->tls_alignment_of_current_object() != 0)
+            s_current_tls_offset = align_down_to(s_current_tls_offset, loader->tls_alignment_of_current_object());
+        loader->set_tls_offset(s_current_tls_offset);
+    }
 
     // This actually maps the library at the intended and final place.
     auto main_library_object = loader->map();
@@ -237,35 +247,37 @@ static Result<void, DlErrorMessage> map_dependencies(ByteString const& path)
     return {};
 }
 
-struct ThreadSpecificData {
-    ThreadSpecificData* self;
-};
-
 static ErrorOr<FlatPtr> __create_new_tls_region()
 {
-    auto static_tls_region_alignment = max(s_tls_data.alignment, alignof(ThreadSpecificData));
-    auto static_tls_region_size = align_up_to(s_tls_data.tls_template_size, static_tls_region_alignment) + sizeof(ThreadSpecificData);
-    void* thread_specific_ptr = serenity_mmap(nullptr, static_tls_region_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, 0, 0, static_tls_region_alignment, "Static TLS Data");
-    if (thread_specific_ptr == MAP_FAILED)
+    void* static_tls_region = serenity_mmap(nullptr, s_tls_data.static_tls_region_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, 0, 0, s_tls_data.static_tls_region_alignment, "Static TLS Data");
+    if (static_tls_region == MAP_FAILED)
         return Error::from_syscall("mmap"sv, -errno);
 
-    auto* thread_specific_data = bit_cast<ThreadSpecificData*>(bit_cast<FlatPtr>(thread_specific_ptr) + (align_up_to(s_tls_data.tls_template_size, static_tls_region_alignment)));
-    thread_specific_data->self = thread_specific_data;
+    auto thread_pointer = calculate_tp_value_from_static_tls_region_address(bit_cast<FlatPtr>(static_tls_region), s_tls_data.tls_template_size, s_tls_data.static_tls_region_alignment);
+    VERIFY(thread_pointer % s_tls_data.static_tls_region_alignment == 0);
 
-    auto* thread_local_storage = bit_cast<u8*>(bit_cast<FlatPtr>(thread_specific_data) - align_up_to(s_tls_data.tls_template_size, s_tls_data.alignment));
+    auto* tcb = get_tcb_pointer_from_thread_pointer(thread_pointer);
+
+    // FIXME: Add support for dynamically-allocated TLS blocks.
+    tcb->dynamic_thread_vector = nullptr;
+
+#if ARCH(X86_64)
+    tcb->thread_pointer = bit_cast<void*>(thread_pointer);
+#endif
+
+    auto* static_tls_blocks = get_pointer_to_first_static_tls_block_from_thread_pointer(thread_pointer, s_tls_data.tls_template_size, s_tls_data.static_tls_region_alignment);
 
     if (s_tls_data.tls_template_size != 0)
-        memcpy(thread_local_storage, s_tls_data.tls_template, s_tls_data.tls_template_size);
+        memcpy(static_tls_blocks, s_tls_data.tls_template, s_tls_data.tls_template_size);
 
-    return bit_cast<FlatPtr>(thread_specific_data);
+    return thread_pointer;
 }
 
 static ErrorOr<void> __free_tls_region(FlatPtr thread_pointer)
 {
-    auto static_tls_region_alignment = max(s_tls_data.alignment, alignof(ThreadSpecificData));
-    auto static_tls_region_size = align_up_to(s_tls_data.tls_template_size, static_tls_region_alignment) + sizeof(ThreadSpecificData);
+    auto* static_tls_region = get_pointer_to_static_tls_region_from_thread_pointer(thread_pointer, s_tls_data.tls_template_size, s_tls_data.static_tls_region_alignment);
 
-    if (munmap(bit_cast<void*>(bit_cast<FlatPtr>(thread_pointer) - align_up_to(s_tls_data.tls_template_size, s_tls_data.alignment)), static_tls_region_size) != 0)
+    if (munmap(static_tls_region, s_tls_data.static_tls_region_size) != 0)
         return Error::from_syscall("mmap"sv, -errno);
 
     return {};
@@ -273,6 +285,12 @@ static ErrorOr<void> __free_tls_region(FlatPtr thread_pointer)
 
 static void allocate_tls()
 {
+    // FIXME: Use the max p_align of all TLS segments.
+    //        We currently pass s_tls_data.static_tls_region_alignment as the alignment to mmap,
+    //        so we would have to manually insert padding, as mmap only accepts alignments that
+    //        are multiples of PAGE_SIZE. Or instead use aligned_alloc/posix_memalign?
+    s_tls_data.alignment = PAGE_SIZE;
+
     for (auto const& data : s_loaders) {
         dbgln_if(DYNAMIC_LOAD_DEBUG, "{}: TLS Size: {}, TLS Alignment: {}", data.key, data.value->tls_size_of_current_object(), data.value->tls_alignment_of_current_object());
         s_tls_data.total_tls_size += data.value->tls_size_of_current_object() + data.value->tls_alignment_of_current_object();
@@ -282,13 +300,15 @@ static void allocate_tls()
         return;
 
     s_tls_data.tls_template_size = align_up_to(s_tls_data.total_tls_size, PAGE_SIZE);
-    s_tls_data.alignment = PAGE_SIZE;
     s_tls_data.tls_template = mmap_with_name(nullptr, s_tls_data.tls_template_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, 0, 0, "TLS Template");
 
     if (s_tls_data.tls_template == MAP_FAILED) {
         dbgln("Failed to allocate memory for the TLS template");
         VERIFY_NOT_REACHED();
     }
+
+    s_tls_data.static_tls_region_alignment = max(s_tls_data.alignment, sizeof(ThreadControlBlock));
+    s_tls_data.static_tls_region_size = calculate_static_tls_region_size(s_tls_data.tls_template_size, s_tls_data.static_tls_region_alignment);
 
     auto tls_template = Bytes(s_tls_data.tls_template, s_tls_data.tls_template_size);
 
