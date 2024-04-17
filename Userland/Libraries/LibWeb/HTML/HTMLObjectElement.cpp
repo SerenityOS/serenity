@@ -68,6 +68,11 @@ void HTMLObjectElement::form_associated_element_attribute_changed(FlyString cons
     }
 }
 
+void HTMLObjectElement::form_associated_element_was_removed(DOM::Node*)
+{
+    destroy_the_child_navigable();
+}
+
 // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#attr-object-data
 String HTMLObjectElement::data() const
 {
