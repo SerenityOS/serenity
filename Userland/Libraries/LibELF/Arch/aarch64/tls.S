@@ -24,7 +24,7 @@
 // };
 //
 // The resolver takes a pointer to the descriptor as an argument and returns
-// the symbol's offset to the thread pointer (tpidr_el1). The second field of
+// the symbol's offset to the thread pointer (tpidr_el0). The second field of
 // the descriptor is an implementation-defined value which the resolver uses to
 // identify the symbol.
 //
