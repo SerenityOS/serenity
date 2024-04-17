@@ -90,8 +90,12 @@ ErrorOr<URL::URL> decode(Decoder& decoder)
 template<>
 ErrorOr<File> decode(Decoder& decoder)
 {
-    int fd = TRY(decoder.socket().receive_fd(O_CLOEXEC));
-    return File::adopt_fd(fd);
+    auto file = TRY(decoder.files().try_dequeue());
+    auto fd = file.fd();
+
+    auto fd_flags = TRY(Core::System::fcntl(fd, F_GETFD));
+    TRY(Core::System::fcntl(fd, F_SETFD, fd_flags | FD_CLOEXEC));
+    return file;
 }
 
 template<>

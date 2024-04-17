@@ -44,7 +44,7 @@ public:
 
     ErrorOr<void> append_file_descriptor(int fd);
 
-    ErrorOr<void> transfer_message(Core::LocalSocket& fd_passing_socket, Core::LocalSocket& data_socket);
+    ErrorOr<void> transfer_message(Core::LocalSocket& socket);
 
 private:
     Vector<u8, 1024> m_data;

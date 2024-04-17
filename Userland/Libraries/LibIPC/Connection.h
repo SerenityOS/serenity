@@ -8,12 +8,14 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
+#include <AK/Queue.h>
 #include <AK/Try.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/Notifier.h>
 #include <LibCore/Socket.h>
 #include <LibCore/Timer.h>
+#include <LibIPC/File.h>
 #include <LibIPC/Forward.h>
 #include <LibIPC/Message.h>
 #include <errno.h>
@@ -38,7 +40,7 @@ class ConnectionBase : public Core::EventReceiver {
 public:
     virtual ~ConnectionBase() override = default;
 
-    void set_fd_passing_socket(NonnullOwnPtr<Core::LocalSocket>);
+    void set_fd_passing_socket(NonnullOwnPtr<Core::LocalSocket>) { }
     void set_deferred_invoker(NonnullOwnPtr<DeferredInvoker>);
     DeferredInvoker& deferred_invoker() { return *m_deferred_invoker; }
 
@@ -49,7 +51,7 @@ public:
     virtual void die() { }
 
     Core::LocalSocket& socket() { return *m_socket; }
-    Core::LocalSocket& fd_passing_socket();
+    Core::LocalSocket const& fd_passing_socket() const { return *m_socket; }
 
 protected:
     explicit ConnectionBase(IPC::Stub&, NonnullOwnPtr<Core::LocalSocket>, u32 local_endpoint_magic);
@@ -70,11 +72,11 @@ protected:
     IPC::Stub& m_local_stub;
 
     NonnullOwnPtr<Core::LocalSocket> m_socket;
-    OwnPtr<Core::LocalSocket> m_fd_passing_socket;
 
     RefPtr<Core::Timer> m_responsiveness_timer;
 
     Vector<NonnullOwnPtr<Message>> m_unprocessed_messages;
+    Queue<IPC::File> m_unprocessed_fds;
     ByteBuffer m_unprocessed_bytes;
 
     u32 m_local_endpoint_magic { 0 };
@@ -138,13 +140,13 @@ protected:
             index += sizeof(message_size);
             auto remaining_bytes = ReadonlyBytes { bytes.data() + index, message_size };
 
-            auto local_message = LocalEndpoint::decode_message(remaining_bytes, fd_passing_socket());
+            auto local_message = LocalEndpoint::decode_message(remaining_bytes, m_unprocessed_fds);
             if (!local_message.is_error()) {
                 m_unprocessed_messages.append(local_message.release_value());
                 continue;
             }
 
-            auto peer_message = PeerEndpoint::decode_message(remaining_bytes, fd_passing_socket());
+            auto peer_message = PeerEndpoint::decode_message(remaining_bytes, m_unprocessed_fds);
             if (!peer_message.is_error()) {
                 m_unprocessed_messages.append(peer_message.release_value());
                 continue;

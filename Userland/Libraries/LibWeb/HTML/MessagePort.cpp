@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/ByteReader.h>
 #include <AK/MemoryStream.h>
 #include <LibCore/Socket.h>
 #include <LibCore/System.h>
@@ -259,7 +260,7 @@ ErrorOr<void> MessagePort::send_message_on_socket(SerializedTransferRecord const
     IPC::Encoder encoder(buffer);
     MUST(encoder.encode(serialize_with_transfer_result));
 
-    TRY(buffer.transfer_message(*m_fd_passing_socket, *m_socket));
+    TRY(buffer.transfer_message(*m_socket));
     return {};
 }
 
@@ -276,41 +277,76 @@ void MessagePort::post_port_message(SerializedTransferRecord serialize_with_tran
     });
 }
 
-void MessagePort::read_from_socket()
+ErrorOr<MessagePort::ParseDecision> MessagePort::parse_message()
 {
-    auto num_bytes_ready = MUST(m_socket->pending_bytes());
+    static constexpr size_t HEADER_SIZE = sizeof(u32);
+
+    auto num_bytes_ready = m_buffered_data.size();
     switch (m_socket_state) {
     case SocketState::Header: {
-        if (num_bytes_ready < sizeof(u32))
-            break;
-        m_socket_incoming_message_size = MUST(m_socket->read_value<u32>());
-        num_bytes_ready -= sizeof(u32);
+        if (num_bytes_ready < HEADER_SIZE)
+            return ParseDecision::NotEnoughData;
+
+        m_socket_incoming_message_size = ByteReader::load32(m_buffered_data.data());
+        // NOTE: We don't decrement the number of ready bytes because we want to remove the entire
+        //       message + header from the buffer in one go on success
         m_socket_state = SocketState::Data;
-    }
         [[fallthrough]];
+    }
     case SocketState::Data: {
         if (num_bytes_ready < m_socket_incoming_message_size)
-            break;
+            return ParseDecision::NotEnoughData;
 
-        Vector<u8, 1024> data;
-        data.resize(m_socket_incoming_message_size, true);
-        MUST(m_socket->read_until_filled(data));
+        auto payload = m_buffered_data.span().slice(HEADER_SIZE, m_socket_incoming_message_size);
 
-        FixedMemoryStream stream { data, FixedMemoryStream::Mode::ReadOnly };
-        IPC::Decoder decoder(stream, *m_fd_passing_socket);
+        FixedMemoryStream stream { payload, FixedMemoryStream::Mode::ReadOnly };
+        IPC::Decoder decoder { stream, m_unprocessed_fds };
 
-        auto serialize_with_transfer_result = MUST(decoder.decode<SerializedTransferRecord>());
+        auto serialized_transfer_record = TRY(decoder.decode<SerializedTransferRecord>());
 
         // Make sure to advance our state machine before dispatching the MessageEvent,
         // as dispatching events can run arbitrary JS (and cause us to receive another message!)
         m_socket_state = SocketState::Header;
 
-        post_message_task_steps(serialize_with_transfer_result);
+        m_buffered_data.remove(0, HEADER_SIZE + m_socket_incoming_message_size);
+
+        post_message_task_steps(serialized_transfer_record);
+
         break;
     }
     case SocketState::Error:
-        VERIFY_NOT_REACHED();
-        break;
+        return Error::from_errno(ENOMSG);
+    }
+
+    return ParseDecision::ParseNextMessage;
+}
+
+void MessagePort::read_from_socket()
+{
+    u8 buffer[4096] {};
+
+    Vector<int> fds;
+    // FIXME: What if pending bytes is > 4096? Should we loop here?
+    auto maybe_bytes = m_socket->receive_message(buffer, MSG_NOSIGNAL, fds);
+    if (maybe_bytes.is_error()) {
+        dbgln("MessagePort::read_from_socket(): Failed to receive message: {}", maybe_bytes.error());
+        return;
+    }
+    auto bytes = maybe_bytes.release_value();
+
+    m_buffered_data.append(bytes.data(), bytes.size());
+
+    for (auto fd : fds)
+        m_unprocessed_fds.enqueue(IPC::File::adopt_fd(fd));
+
+    while (true) {
+        auto parse_decision_or_error = parse_message();
+        if (parse_decision_or_error.is_error()) {
+            dbgln("MessagePort::read_from_socket(): Failed to parse message: {}", parse_decision_or_error.error());
+            return;
+        }
+        if (parse_decision_or_error.value() == ParseDecision::NotEnoughData)
+            break;
     }
 }
 
