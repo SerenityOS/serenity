@@ -329,6 +329,10 @@ public:
 
     ErrorOr<int> receive_fd(int flags);
     ErrorOr<void> send_fd(int fd);
+
+    ErrorOr<Bytes> receive_message(Bytes buffer, int flags, Vector<int>& fds);
+    ErrorOr<ssize_t> send_message(ReadonlyBytes msg, int flags, Vector<int, 1> fds = {});
+
     ErrorOr<pid_t> peer_pid() const;
     ErrorOr<Bytes> read_without_waiting(Bytes buffer);
 
