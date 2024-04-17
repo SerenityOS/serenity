@@ -1423,7 +1423,7 @@ ImageEditor& MainWidget::create_new_editor(NonnullRefPtr<Image> image)
     };
 
     image_editor.on_scale_change = Core::debounce(100, [this](float scale) {
-        m_zoom_combobox->set_text(ByteString::formatted("{}%", roundf(scale * 100)));
+        m_zoom_combobox->set_text(ByteString::formatted("{}%", roundf(scale * 100)), GUI::AllowCallback::No);
         current_image_editor()->update_tool_cursor();
     });
 
