@@ -10,10 +10,10 @@ And make jv_mem_free() accept it.
  1 file changed, 9 insertions(+)
 
 diff --git a/src/jv_alloc.c b/src/jv_alloc.c
-index fd7b257..9f5ced8 100644
+index 40c244c57560816b8f1683c754f4dd25e60b5aea..915fc32e1a9a7a20d3fd2876e0ea04a2e23e1bbd 100644
 --- a/src/jv_alloc.c
 +++ b/src/jv_alloc.c
-@@ -130,7 +130,14 @@ void* jv_mem_alloc_unguarded(size_t sz) {
+@@ -149,7 +149,14 @@ void* jv_mem_alloc_unguarded(size_t sz) {
    return malloc(sz);
  }
  
@@ -28,7 +28,7 @@ index fd7b257..9f5ced8 100644
    void* p = calloc(nemb, sz);
    if (!p) {
      memory_exhausted();
-@@ -155,6 +162,8 @@ char* jv_mem_strdup_unguarded(const char *s) {
+@@ -174,6 +181,8 @@ char* jv_mem_strdup_unguarded(const char *s) {
  }
  
  void jv_mem_free(void* p) {
