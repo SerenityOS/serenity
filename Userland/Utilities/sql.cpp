@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2021-2024, Tim Flynn <trflynn89@serenityos.org>
  * Copyright (c) 2022, Alex Major
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -18,6 +18,10 @@
 #include <LibSQL/AST/Token.h>
 #include <LibSQL/SQLClient.h>
 #include <unistd.h>
+
+#if !defined(AK_OS_SERENITY)
+#    include <LibCore/SingletonProcess.h>
+#endif
 
 class SQLRepl {
 public:
@@ -360,7 +364,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto sql_client = TRY(SQL::SQLClient::try_create());
 #else
     VERIFY(!sql_server_path.is_empty());
-    auto sql_client = TRY(SQL::SQLClient::launch_server_and_create_client({ sql_server_path }));
+    auto sql_client = TRY(Core::launch_singleton_process<SQL::SQLClient>("SQLServer"sv, { { sql_server_path } }));
 #endif
 
     SQLRepl repl(loop, database_name, move(sql_client));

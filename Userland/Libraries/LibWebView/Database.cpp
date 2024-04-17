@@ -1,11 +1,15 @@
 /*
- * Copyright (c) 2022-2023, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2022-2024, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/StringView.h>
 #include <LibWebView/Database.h>
+
+#if !defined(AK_OS_SERENITY)
+#    include <LibCore/SingletonProcess.h>
+#endif
 
 namespace WebView {
 
@@ -19,9 +23,9 @@ ErrorOr<NonnullRefPtr<Database>> Database::create()
 
 #if !defined(AK_OS_SERENITY)
 
-ErrorOr<NonnullRefPtr<Database>> Database::create(Vector<ByteString> candidate_sql_server_paths)
+ErrorOr<NonnullRefPtr<Database>> Database::create(ReadonlySpan<ByteString> candidate_sql_server_paths)
 {
-    auto sql_client = TRY(SQL::SQLClient::launch_server_and_create_client(move(candidate_sql_server_paths)));
+    auto sql_client = TRY(Core::launch_singleton_process<SQL::SQLClient>("SQLServer"sv, candidate_sql_server_paths));
     return create(move(sql_client));
 }
 
