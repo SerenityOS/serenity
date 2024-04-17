@@ -64,11 +64,11 @@ String MediaFeature::to_string() const
     case Type::IsTrue:
         return MUST(String::from_utf8(string_from_media_feature_id(m_id)));
     case Type::ExactValue:
-        return MUST(String::formatted("{}:{}", string_from_media_feature_id(m_id), m_value->to_string()));
+        return MUST(String::formatted("{}: {}", string_from_media_feature_id(m_id), m_value->to_string()));
     case Type::MinValue:
-        return MUST(String::formatted("min-{}:{}", string_from_media_feature_id(m_id), m_value->to_string()));
+        return MUST(String::formatted("min-{}: {}", string_from_media_feature_id(m_id), m_value->to_string()));
     case Type::MaxValue:
-        return MUST(String::formatted("max-{}:{}", string_from_media_feature_id(m_id), m_value->to_string()));
+        return MUST(String::formatted("max-{}: {}", string_from_media_feature_id(m_id), m_value->to_string()));
     case Type::Range:
         if (!m_range->right_comparison.has_value())
             return MUST(String::formatted("{} {} {}", m_range->left_value.to_string(), comparison_string(m_range->left_comparison), string_from_media_feature_id(m_id)));
