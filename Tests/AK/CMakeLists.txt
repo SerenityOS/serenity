@@ -69,6 +69,7 @@ set(AK_TEST_SOURCES
     TestRefPtr.cpp
     TestSegmentedVector.cpp
     TestSIMD.cpp
+    TestSIMDExtras.cpp
     TestSinglyLinkedList.cpp
     TestSlugify.cpp
     TestSourceGenerator.cpp
