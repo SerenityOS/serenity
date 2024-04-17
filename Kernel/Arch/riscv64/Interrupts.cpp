@@ -42,6 +42,11 @@ extern "C" void trap_handler(TrapFrame& trap_frame)
 {
     auto scause = trap_frame.regs->scause;
 
+    // sepc has to point to the instruction following the ecall when returning from a syscall, unless it is changed by the syscall handler.
+    // We have to increment sepc before interrupts are re-enabled, as code triggered by interrupts also can cause sepc to be updated.
+    if (scause == RISCV64::CSR::SCAUSE::EnvironmentCallFromUMode)
+        trap_frame.regs->sepc += 4;
+
     if ((to_underlying(scause) & RISCV64::CSR::SCAUSE_INTERRUPT_MASK) != 0) {
         // Interrupt
 
@@ -105,7 +110,6 @@ extern "C" void trap_handler(TrapFrame& trap_frame)
         }
 
         case EnvironmentCallFromUMode:
-            trap_frame.regs->sepc += 4;
             syscall_handler(&trap_frame);
             break;
 
