@@ -475,7 +475,7 @@ void Element::attribute_changed(FlyString const& name, Optional<String> const& v
             m_class_list->associated_attribute_changed(value_or_empty);
     } else if (name == HTML::AttributeNames::style) {
         if (!value.has_value()) {
-            if (!m_inline_style) {
+            if (m_inline_style) {
                 m_inline_style = nullptr;
                 set_needs_style_update(true);
             }
