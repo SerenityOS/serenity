@@ -1096,7 +1096,7 @@ void BlockFormattingContext::layout_list_item_marker(ListItemBox const& list_ite
 
     marker_state.set_content_height(max(image_height, marker.first_available_font().pixel_size_rounded_up() + 1));
 
-    auto final_marker_width = marker_state.content_width() + default_marker_width;
+    auto final_marker_width = default_marker_width;
 
     if (marker.list_style_position() == CSS::ListStylePosition::Inside) {
         list_item_state.set_content_offset({ final_marker_width, list_item_state.offset.y() });

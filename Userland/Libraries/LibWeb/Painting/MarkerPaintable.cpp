@@ -41,7 +41,7 @@ void MarkerPaintable::paint(PaintContext& context, PaintPhase phase) const
     CSSPixelRect enclosing = absolute_rect().to_rounded<CSSPixels>();
     auto device_enclosing = context.enclosing_device_rect(enclosing);
 
-    CSSPixels marker_width = enclosing.height() / 2;
+    CSSPixels marker_width = enclosing.height() / 4;
 
     if (auto const* list_style_image = layout_box().list_style_image()) {
         CSSPixelRect image_rect {
