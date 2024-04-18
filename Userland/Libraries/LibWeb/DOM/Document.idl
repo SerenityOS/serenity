@@ -57,6 +57,13 @@ interface Document : Node {
 
     attribute DOMString cookie;
 
+    // https://html.spec.whatwg.org/#Document-partial
+    [CEReactions, LegacyNullToEmptyString] attribute DOMString fgColor;
+    [CEReactions, LegacyNullToEmptyString] attribute DOMString linkColor;
+    [CEReactions, LegacyNullToEmptyString] attribute DOMString vlinkColor;
+    [CEReactions, LegacyNullToEmptyString] attribute DOMString alinkColor;
+    [CEReactions, LegacyNullToEmptyString] attribute DOMString bgColor;
+
     readonly attribute USVString referrer;
 
     readonly attribute Element? activeElement;

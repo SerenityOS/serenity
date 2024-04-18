@@ -110,6 +110,21 @@ public:
     String cookie(Cookie::Source = Cookie::Source::NonHttp);
     void set_cookie(StringView, Cookie::Source = Cookie::Source::NonHttp);
 
+    String fg_color() const;
+    void set_fg_color(String const&);
+
+    String link_color() const;
+    void set_link_color(String const&);
+
+    String vlink_color() const;
+    void set_vlink_color(String const&);
+
+    String alink_color() const;
+    void set_alink_color(String const&);
+
+    String bg_color() const;
+    void set_bg_color(String const&);
+
     String referrer() const;
     void set_referrer(String);
 
