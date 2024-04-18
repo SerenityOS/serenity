@@ -3738,6 +3738,7 @@ void generate_namespace_implementation(IDL::Interface const& interface, StringBu
 
     generator.set("name", interface.name);
     generator.set("namespace_class", interface.namespace_class);
+    generator.set("interface_name", interface.name);
 
     generator.append(R"~~~(
 #include <AK/Function.h>
@@ -3795,7 +3796,7 @@ namespace Web::Bindings {
 JS_DEFINE_ALLOCATOR(@namespace_class@);
 
 @namespace_class@::@namespace_class@(JS::Realm& realm)
-    : Object(ConstructWithoutPrototypeTag::Tag, realm)
+    : Object(ConstructWithPrototypeTag::Tag, realm.intrinsics().object_prototype())
 {
 }
 
@@ -3809,6 +3810,8 @@ void @namespace_class@::initialize(JS::Realm& realm)
     [[maybe_unused]] u8 default_attributes = JS::Attribute::Enumerable;
 
     Base::initialize(realm);
+
+    define_direct_property(vm.well_known_symbol_to_string_tag(), JS::PrimitiveString::create(vm, "@interface_name@"_string), JS::Attribute::Configurable);
 
 )~~~");
 
