@@ -1315,7 +1315,7 @@ void Renderer::show_empty_image(Gfx::IntSize size)
     m_painter.stroke_path(rect_path(image_border), Color::Black, 1);
 }
 
-static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> apply_alpha_channel(NonnullRefPtr<Gfx::Bitmap> image_bitmap, NonnullRefPtr<const Gfx::Bitmap> mask_bitmap, bool invert_alpha = false)
+static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> apply_alpha_channel(NonnullRefPtr<Gfx::Bitmap> image_bitmap, NonnullRefPtr<Gfx::Bitmap const> mask_bitmap, bool invert_alpha = false)
 {
     // Make alpha mask same size as image.
     if (mask_bitmap->size() != image_bitmap->size()) {

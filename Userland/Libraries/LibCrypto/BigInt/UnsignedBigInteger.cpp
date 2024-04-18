@@ -545,8 +545,8 @@ u32 UnsignedBigInteger::hash() const
 
 void UnsignedBigInteger::set_bit_inplace(size_t bit_index)
 {
-    const size_t word_index = bit_index / UnsignedBigInteger::BITS_IN_WORD;
-    const size_t inner_word_index = bit_index % UnsignedBigInteger::BITS_IN_WORD;
+    size_t const word_index = bit_index / UnsignedBigInteger::BITS_IN_WORD;
+    size_t const inner_word_index = bit_index % UnsignedBigInteger::BITS_IN_WORD;
 
     m_words.ensure_capacity(word_index + 1);
 

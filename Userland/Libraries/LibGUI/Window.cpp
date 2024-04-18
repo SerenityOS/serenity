@@ -57,7 +57,7 @@ public:
 
 private:
     NonnullRefPtr<Gfx::Bitmap> m_bitmap;
-    const i32 m_serial;
+    i32 const m_serial;
     Gfx::IntSize m_visible_size;
 };
 

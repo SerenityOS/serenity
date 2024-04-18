@@ -51,10 +51,10 @@ constexpr KeyColor key_pattern[] = {
     White,
 };
 
-const Color note_pressed_color(64, 64, 255);
-const Color column_playing_color(128, 128, 255);
+Color const note_pressed_color(64, 64, 255);
+Color const column_playing_color(128, 128, 255);
 
-const Color left_wave_colors[] = {
+Color const left_wave_colors[] = {
     // Sine
     {
         255,
@@ -96,7 +96,7 @@ const Color left_wave_colors[] = {
 // HACK: make the display code shut up for now
 constexpr int RecordedSample = 5;
 
-const Color right_wave_colors[] = {
+Color const right_wave_colors[] = {
     // Sine
     {
         255,

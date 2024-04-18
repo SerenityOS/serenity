@@ -24,7 +24,7 @@ static int opt_interval = 2;
 static bool flag_noheader = false;
 static bool flag_beep_on_fail = false;
 static int volatile exit_code = 0;
-static volatile pid_t child_pid = -1;
+static pid_t volatile child_pid = -1;
 
 static struct termios g_save;
 

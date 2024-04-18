@@ -29,7 +29,7 @@ public:
     void set_selected(bool selected);
     Color color() const { return m_color; }
 
-    Function<void(const Color)> on_click;
+    Function<void(Color const)> on_click;
 
 protected:
     virtual void click(unsigned modifiers = 0) override;

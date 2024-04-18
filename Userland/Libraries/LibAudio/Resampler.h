@@ -90,8 +90,8 @@ public:
     u32 target() const { return m_target; }
 
 private:
-    const u32 m_source;
-    const u32 m_target;
+    u32 const m_source;
+    u32 const m_target;
     u32 m_current_ratio { 0 };
     SampleType m_last_sample_l {};
     SampleType m_last_sample_r {};

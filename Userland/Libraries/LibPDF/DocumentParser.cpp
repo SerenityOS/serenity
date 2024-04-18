@@ -464,7 +464,7 @@ PDFErrorOr<NonnullRefPtr<XRefTable>> DocumentParser::parse_xref_stream()
 
     auto field_to_long = [](ReadonlyBytes field) -> long {
         long value = 0;
-        const u8 max = (field.size() - 1) * 8;
+        u8 const max = (field.size() - 1) * 8;
         for (size_t i = 0; i < field.size(); ++i) {
             value |= static_cast<long>(field[i]) << (max - (i * 8));
         }
@@ -642,13 +642,13 @@ PDFErrorOr<DocumentParser::PageOffsetHintTable> DocumentParser::parse_page_offse
     size_t offset = 0;
 
     auto read_u32 = [&] {
-        u32 data = reinterpret_cast<const u32*>(hint_stream_bytes.data() + offset)[0];
+        u32 data = reinterpret_cast<u32 const*>(hint_stream_bytes.data() + offset)[0];
         offset += 4;
         return AK::convert_between_host_and_big_endian(data);
     };
 
     auto read_u16 = [&] {
-        u16 data = reinterpret_cast<const u16*>(hint_stream_bytes.data() + offset)[0];
+        u16 data = reinterpret_cast<u16 const*>(hint_stream_bytes.data() + offset)[0];
         offset += 2;
         return AK::convert_between_host_and_big_endian(data);
     };

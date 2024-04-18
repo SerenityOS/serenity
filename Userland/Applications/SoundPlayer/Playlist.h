@@ -41,8 +41,8 @@ private:
     class BloomFilter {
     public:
         void reset() { m_bitmap = 0; }
-        void add(const StringView key) { m_bitmap |= mask_for_key(key); }
-        bool maybe_contains(const StringView key) const
+        void add(StringView const key) { m_bitmap |= mask_for_key(key); }
+        bool maybe_contains(StringView const key) const
         {
             auto mask = mask_for_key(key);
             return (m_bitmap & mask) == mask;

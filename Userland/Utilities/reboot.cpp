@@ -13,7 +13,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
 {
     auto file = TRY(Core::File::open("/sys/kernel/power_state"sv, Core::File::OpenMode::Write));
 
-    const ByteString file_contents = "1";
+    ByteString const file_contents = "1";
     TRY(file->write_until_depleted(file_contents.bytes()));
     file->close();
 

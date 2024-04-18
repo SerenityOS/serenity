@@ -23,7 +23,7 @@ RefPtr<Database> Database::open(ByteString const& filename)
     return res;
 }
 
-const StringView Database::get_vendor(u16 vendor_id) const
+StringView const Database::get_vendor(u16 vendor_id) const
 {
     auto const& vendor = m_vendors.get(vendor_id);
     if (!vendor.has_value())
@@ -31,7 +31,7 @@ const StringView Database::get_vendor(u16 vendor_id) const
     return vendor.value()->name;
 }
 
-const StringView Database::get_device(u16 vendor_id, u16 device_id) const
+StringView const Database::get_device(u16 vendor_id, u16 device_id) const
 {
     auto const& vendor = m_vendors.get(vendor_id);
     if (!vendor.has_value())
@@ -42,7 +42,7 @@ const StringView Database::get_device(u16 vendor_id, u16 device_id) const
     return device.value()->name;
 }
 
-const StringView Database::get_subsystem(u16 vendor_id, u16 device_id, u16 subvendor_id, u16 subdevice_id) const
+StringView const Database::get_subsystem(u16 vendor_id, u16 device_id, u16 subvendor_id, u16 subdevice_id) const
 {
     auto const& vendor = m_vendors.get(vendor_id);
     if (!vendor.has_value())
@@ -56,7 +56,7 @@ const StringView Database::get_subsystem(u16 vendor_id, u16 device_id, u16 subve
     return subsystem.value()->name;
 }
 
-const StringView Database::get_class(u8 class_id) const
+StringView const Database::get_class(u8 class_id) const
 {
     auto const& xclass = m_classes.get(class_id);
     if (!xclass.has_value())
@@ -64,7 +64,7 @@ const StringView Database::get_class(u8 class_id) const
     return xclass.value()->name;
 }
 
-const StringView Database::get_subclass(u8 class_id, u8 subclass_id) const
+StringView const Database::get_subclass(u8 class_id, u8 subclass_id) const
 {
     auto const& xclass = m_classes.get(class_id);
     if (!xclass.has_value())
@@ -75,7 +75,7 @@ const StringView Database::get_subclass(u8 class_id, u8 subclass_id) const
     return subclass.value()->name;
 }
 
-const StringView Database::get_programming_interface(u8 class_id, u8 subclass_id, u8 programming_interface_id) const
+StringView const Database::get_programming_interface(u8 class_id, u8 subclass_id, u8 programming_interface_id) const
 {
     auto const& xclass = m_classes.get(class_id);
     if (!xclass.has_value())

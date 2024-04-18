@@ -128,7 +128,7 @@ FindInFilesWidget::FindInFilesWidget()
     m_result_view = add<GUI::TableView>();
 
     m_result_view->on_activation = [](auto& index) {
-        auto& match = *(const Match*)index.internal_data();
+        auto& match = *(Match const*)index.internal_data();
         open_file(match.filename);
         current_editor().set_selection(match.range);
         current_editor().set_focus(true);

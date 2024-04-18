@@ -183,13 +183,13 @@ public:
         TRY(state.try_empend(false, m_children.begin(), m_children.end()));
 
         auto invoke = [&](auto& current_node) -> ErrorOr<IterationDecision> {
-            if constexpr (VoidFunction<Fn, const BaseType&>) {
-                callback(static_cast<const BaseType&>(current_node));
+            if constexpr (VoidFunction<Fn, BaseType const&>) {
+                callback(static_cast<BaseType const&>(current_node));
                 return IterationDecision::Continue;
-            } else if constexpr (IsSpecializationOf<decltype(callback(declval<const BaseType&>())), ErrorOr>) {
-                return callback(static_cast<const BaseType&>(current_node));
-            } else if constexpr (IteratorFunction<Fn, const BaseType&>) {
-                return callback(static_cast<const BaseType&>(current_node));
+            } else if constexpr (IsSpecializationOf<decltype(callback(declval<BaseType const&>())), ErrorOr>) {
+                return callback(static_cast<BaseType const&>(current_node));
+            } else if constexpr (IteratorFunction<Fn, BaseType const&>) {
+                return callback(static_cast<BaseType const&>(current_node));
             } else {
                 static_assert(DependentFalse<Fn>, "Invalid iterator function type signature");
             }

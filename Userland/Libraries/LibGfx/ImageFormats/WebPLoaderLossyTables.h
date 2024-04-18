@@ -14,7 +14,7 @@ using Prob = u8;
 using TreeIndex = i8;
 
 // https://datatracker.ietf.org/doc/html/rfc6386#section-10 "Segment-Based Feature Adjustments"
-const TreeIndex MACROBLOCK_SEGMENT_TREE[2 * (4 - 1)] = {
+TreeIndex const MACROBLOCK_SEGMENT_TREE[2 * (4 - 1)] = {
     2, 4,   /* root: "0", "1" subtrees */
     -0, -1, /* "00" = 0th value, "01" = 1st value */
     -2, -3  /* "10" = 2nd value, "11" = 3rd value */

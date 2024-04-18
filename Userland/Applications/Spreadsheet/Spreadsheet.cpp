@@ -455,7 +455,7 @@ RefPtr<Sheet> Sheet::from_json(JsonObject const& object, Workbook& workbook)
             auto conditional_formats = obj.get_array("conditional_formats"sv);
             auto cformats = cell->conditional_formats();
             if (conditional_formats.has_value()) {
-                conditional_formats->for_each([&](const auto& fmt_val) {
+                conditional_formats->for_each([&](auto const& fmt_val) {
                     if (!fmt_val.is_object())
                         return IterationDecision::Continue;
 

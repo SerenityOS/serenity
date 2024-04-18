@@ -192,7 +192,7 @@ private:
     // FIXME: On aarch64, once there is code in place to differentiate IRQs from synchronous exceptions (syscalls),
     //        this member should be incremented. Also this member shouldn't be a FlatPtr.
     FlatPtr m_in_irq { 0 };
-    volatile u32 m_in_critical;
+    u32 volatile m_in_critical;
     // NOTE: Since these variables are accessed with atomic magic on x86 (through GP with a single load instruction),
     //       they need to be FlatPtrs or everything becomes highly unsound and breaks. They are actually just booleans.
     FlatPtr m_in_scheduler;

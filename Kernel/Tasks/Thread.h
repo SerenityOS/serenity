@@ -526,7 +526,7 @@ public:
 
     private:
         NonnullRefPtr<OpenFileDescription> m_blocked_description;
-        const BlockFlags m_flags;
+        BlockFlags const m_flags;
         BlockFlags& m_unblocked_flags;
         bool m_did_unblock { false };
     };

@@ -38,7 +38,7 @@ struct nothrow_t {
     explicit nothrow_t() = default;
 };
 
-extern const nothrow_t nothrow;
+extern nothrow_t const nothrow;
 
 enum class align_val_t : size_t {};
 };

@@ -215,7 +215,7 @@ public:
     bool focus_preempted() const { return m_focus_preempted; }
     void set_focus_preempted(bool b) { m_focus_preempted = b; }
 
-    Function<void(bool const, const FocusSource)> on_focus_change;
+    Function<void(bool const, FocusSource const)> on_focus_change;
 
     // Returns true if this widget or one of its descendants is focused.
     bool has_focus_within() const;

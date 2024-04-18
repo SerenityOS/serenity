@@ -56,7 +56,7 @@ void Gradient::timer_event(Core::TimerEvent&)
 
 void Gradient::draw()
 {
-    const Color colors[] {
+    Color const colors[] {
         Color::Blue,
         Color::Cyan,
         Color::Green,
@@ -65,7 +65,7 @@ void Gradient::draw()
         Color::Yellow,
     };
 
-    const Orientation orientations[] {
+    Orientation const orientations[] {
         Gfx::Orientation::Horizontal,
         Gfx::Orientation::Vertical
     };

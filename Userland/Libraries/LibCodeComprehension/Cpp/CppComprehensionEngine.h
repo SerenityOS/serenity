@@ -95,7 +95,7 @@ private:
         HashTable<ByteString> m_available_headers;
     };
 
-    Vector<CodeComprehension::AutocompleteResultEntry> autocomplete_property(DocumentData const&, MemberExpression const&, const ByteString partial_text) const;
+    Vector<CodeComprehension::AutocompleteResultEntry> autocomplete_property(DocumentData const&, MemberExpression const&, ByteString const partial_text) const;
     Vector<AutocompleteResultEntry> autocomplete_name(DocumentData const&, ASTNode const&, ByteString const& partial_text) const;
     ByteString type_of(DocumentData const&, Expression const&) const;
     ByteString type_of_property(DocumentData const&, Identifier const&) const;

@@ -140,7 +140,7 @@ struct NamedPropertyID {
 
 void SVGGraphicsElement::apply_presentational_hints(CSS::StyleProperties& style) const
 {
-    static const Array attribute_style_properties {
+    static Array const attribute_style_properties {
         // FIXME: The `fill` attribute and CSS `fill` property are not the same! But our support is limited enough that they are equivalent for now.
         NamedPropertyID(CSS::PropertyID::Fill),
         // FIXME: The `stroke` attribute and CSS `stroke` property are not the same! But our support is limited enough that they are equivalent for now.

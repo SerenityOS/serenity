@@ -163,7 +163,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 continue;
             }
 
-            const TreeNode* node = tree_map_widget.path_node(k);
+            TreeNode const* node = tree_map_widget.path_node(k);
 
             builder.append('/');
             builder.append(node->name());

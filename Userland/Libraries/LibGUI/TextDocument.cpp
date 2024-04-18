@@ -732,7 +732,7 @@ bool InsertTextCommand::merge_with(GUI::Command const& other)
 
 void InsertTextCommand::perform_formatting(TextDocument::Client const& client)
 {
-    const size_t tab_width = client.soft_tab_width();
+    size_t const tab_width = client.soft_tab_width();
     auto const& dest_line = m_document.line(m_range.start().line());
     bool const should_auto_indent = client.is_automatic_indentation_enabled();
 

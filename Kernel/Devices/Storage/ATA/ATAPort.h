@@ -148,7 +148,7 @@ protected:
     RefPtr<Memory::PhysicalPage> m_prdt_page;
     RefPtr<Memory::PhysicalPage> m_dma_buffer_page;
 
-    const u8 m_port_index;
+    u8 const m_port_index;
     Vector<NonnullLockRefPtr<ATADevice>> m_ata_devices;
     NonnullOwnPtr<KBuffer> m_ata_identify_data_buffer;
     NonnullLockRefPtr<ATAController> m_parent_ata_controller;

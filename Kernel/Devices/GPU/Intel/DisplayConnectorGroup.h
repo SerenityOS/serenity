@@ -86,11 +86,11 @@ private:
     Array<OwnPtr<IntelDisplayTranscoder>, 5> m_transcoders;
     Array<OwnPtr<IntelDisplayPlane>, 3> m_planes;
 
-    const MMIORegion m_mmio_first_region;
-    const MMIORegion m_mmio_second_region;
+    MMIORegion const m_mmio_first_region;
+    MMIORegion const m_mmio_second_region;
     MMIORegion const& m_assigned_mmio_registers_region;
 
-    const IntelGraphics::Generation m_generation;
+    IntelGraphics::Generation const m_generation;
     NonnullOwnPtr<Memory::Region> m_registers_region;
     NonnullOwnPtr<GMBusConnector> m_gmbus_connector;
 };

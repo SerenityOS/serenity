@@ -61,7 +61,7 @@ BLAKE2b::DigestType BLAKE2b::digest()
     return digest;
 }
 
-void BLAKE2b::increment_counter_by(const u64 amount)
+void BLAKE2b::increment_counter_by(u64 const amount)
 {
     m_internal_state.message_byte_offset[0] += amount;
     m_internal_state.message_byte_offset[1] += (m_internal_state.message_byte_offset[0] < amount);

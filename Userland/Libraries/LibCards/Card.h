@@ -103,7 +103,7 @@ public:
     bool is_disabled() const { return m_disabled; }
     Gfx::Color color() const { return (m_suit == Suit::Diamonds || m_suit == Suit::Hearts) ? Color::Red : Color::Black; }
 
-    void set_position(const Gfx::IntPoint p) { m_rect.set_location(p); }
+    void set_position(Gfx::IntPoint const p) { m_rect.set_location(p); }
     void set_moving(bool moving) { m_moving = moving; }
     void set_upside_down(bool upside_down) { m_upside_down = upside_down; }
     void set_inverted(bool inverted) { m_inverted = inverted; }

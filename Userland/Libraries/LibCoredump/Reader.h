@@ -105,7 +105,7 @@ private:
     // Private as we don't need anyone poking around in this JsonObject
     // manually - we know very well what should be included and expose that
     // as getters with the appropriate (non-JsonValue) types.
-    const JsonObject process_info() const;
+    JsonObject const process_info() const;
 
     // For uncompressed coredumps, we keep the MappedFile
     OwnPtr<Core::MappedFile> m_mapped_file;

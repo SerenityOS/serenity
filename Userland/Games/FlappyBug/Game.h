@@ -176,8 +176,8 @@ private:
     float m_difficulty {};
     float m_restart_cooldown {};
     NonnullRefPtr<Gfx::Bitmap> m_background_bitmap { Gfx::Bitmap::load_from_file("/res/graphics/flappybug/background.png"sv).release_value_but_fixme_should_propagate_errors() };
-    const Gfx::IntRect m_score_rect { 10, 10, 20, 20 };
-    const Gfx::IntRect m_text_rect { game_width / 2 - 80, game_height / 2 - 40, 160, 80 };
+    Gfx::IntRect const m_score_rect { 10, 10, 20, 20 };
+    Gfx::IntRect const m_text_rect { game_width / 2 - 80, game_height / 2 - 40, 160, 80 };
 
     Game(Bug, Cloud);
 };

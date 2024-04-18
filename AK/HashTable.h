@@ -280,8 +280,8 @@ public:
     }
 
     using ConstIterator = Conditional<IsOrdered,
-        OrderedHashTableIterator<const HashTable, const T, BucketType const>,
-        HashTableIterator<const HashTable, const T, BucketType const>>;
+        OrderedHashTableIterator<HashTable const, T const, BucketType const>,
+        HashTableIterator<HashTable const, T const, BucketType const>>;
 
     [[nodiscard]] ConstIterator begin() const
     {

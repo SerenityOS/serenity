@@ -124,7 +124,7 @@ ComboBox::ComboBox()
     m_list_view->set_activates_on_selection(true);
     m_list_view->on_selection_change = [this] {
         VERIFY(model());
-        const auto& index = m_list_view->selection().first();
+        auto const& index = m_list_view->selection().first();
         if (m_updating_model)
             selection_updated(index);
     };

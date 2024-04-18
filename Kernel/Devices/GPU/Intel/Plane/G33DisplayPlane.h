@@ -21,6 +21,6 @@ public:
     virtual ErrorOr<void> enable(Badge<IntelDisplayConnectorGroup>) override;
 
 private:
-    explicit IntelG33DisplayPlane(Memory::TypedMapping<volatile IntelDisplayPlane::PlaneRegisters> plane_registers_mapping);
+    explicit IntelG33DisplayPlane(Memory::TypedMapping<IntelDisplayPlane::PlaneRegisters volatile> plane_registers_mapping);
 };
 }

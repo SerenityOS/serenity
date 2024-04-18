@@ -17,7 +17,7 @@ namespace JS {
 
 JS_DEFINE_ALLOCATOR(BigIntConstructor);
 
-static const Crypto::SignedBigInteger BIGINT_ONE { 1 };
+static Crypto::SignedBigInteger const BIGINT_ONE { 1 };
 
 BigIntConstructor::BigIntConstructor(Realm& realm)
     : NativeFunction(realm.vm().names.BigInt.as_string(), realm.intrinsics().function_prototype())

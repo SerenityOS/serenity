@@ -17,7 +17,7 @@
 
 namespace Crypto::Authentication {
 
-void galois_multiply(u32 (&z)[4], const u32 (&x)[4], const u32 (&y)[4]);
+void galois_multiply(u32 (&z)[4], u32 const (&x)[4], u32 const (&y)[4]);
 
 struct GHashDigest {
     constexpr static size_t Size = 16;

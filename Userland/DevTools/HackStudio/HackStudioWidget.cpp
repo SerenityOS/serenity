@@ -1044,7 +1044,7 @@ void HackStudioWidget::initialize_debugger()
         m_project->root_path(),
         [this](PtraceRegisters const& regs) {
             VERIFY(Debugger::the().session());
-            const auto& debug_session = *Debugger::the().session();
+            auto const& debug_session = *Debugger::the().session();
             auto source_position = debug_session.get_source_position(regs.ip());
             if (!source_position.has_value()) {
                 dbgln("Could not find source position for address: {:p}", regs.ip());

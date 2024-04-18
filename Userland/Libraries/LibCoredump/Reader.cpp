@@ -146,7 +146,7 @@ Optional<FlatPtr> Reader::peek_memory(FlatPtr address) const
     return value;
 }
 
-const JsonObject Reader::process_info() const
+JsonObject const Reader::process_info() const
 {
     const ELF::Core::ProcessInfo* process_info_notes_entry = nullptr;
     NotesEntryIterator it(bit_cast<u8 const*>(m_coredump_image.program_header(m_notes_segment_index).raw_data()));

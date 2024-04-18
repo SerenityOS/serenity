@@ -439,7 +439,7 @@ static Optional<DlErrorMessage> verify_tls_for_dlopen(DynamicLoader const& loade
         if (program_header.type() != PT_TLS)
             return IterationDecision::Continue;
 
-        auto* tls_data = (const u8*)loader.image().base_address() + program_header.offset();
+        auto* tls_data = (u8 const*)loader.image().base_address() + program_header.offset();
         for (size_t i = 0; i < program_header.size_in_image(); ++i) {
             if (tls_data[i] != 0) {
                 tls_data_is_all_zero = false;

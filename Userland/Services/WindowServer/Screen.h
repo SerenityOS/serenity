@@ -50,7 +50,7 @@ public:
     void on_receive_keyboard_data(::KeyEvent);
 
     Gfx::IntPoint cursor_location() const { return m_cursor_location; }
-    void set_cursor_location(const Gfx::IntPoint point) { m_cursor_location = point; }
+    void set_cursor_location(Gfx::IntPoint const point) { m_cursor_location = point; }
 
 private:
     Gfx::IntPoint m_cursor_location;

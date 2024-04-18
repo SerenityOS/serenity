@@ -1947,7 +1947,7 @@ void TextEditor::did_change(AllowCallback allow_callback)
     if (on_change && allow_callback == AllowCallback::Yes)
         on_change();
 }
-void TextEditor::set_mode(const Mode mode)
+void TextEditor::set_mode(Mode const mode)
 {
     if (m_mode == mode)
         return;

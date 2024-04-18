@@ -50,12 +50,12 @@ private:
     bool determine_supported_version() const;
 
     struct [[gnu::packed]] TXDescriptor {
-        volatile u16 frame_length; // top 2 bits are reserved
-        volatile u16 flags;
-        volatile u16 vlan_tag;
-        volatile u16 vlan_flags;
-        volatile u32 buffer_address_low;
-        volatile u32 buffer_address_high;
+        u16 volatile frame_length; // top 2 bits are reserved
+        u16 volatile flags;
+        u16 volatile vlan_tag;
+        u16 volatile vlan_flags;
+        u32 volatile buffer_address_low;
+        u32 volatile buffer_address_high;
 
         // flags bit field
         static constexpr u16 Ownership = 0x8000u;
@@ -68,12 +68,12 @@ private:
     static_assert(AssertSize<TXDescriptor, 16u>());
 
     struct [[gnu::packed]] RXDescriptor {
-        volatile u16 buffer_size; // top 2 bits are reserved
-        volatile u16 flags;
-        volatile u16 vlan_tag;
-        volatile u16 vlan_flags;
-        volatile u32 buffer_address_low;
-        volatile u32 buffer_address_high;
+        u16 volatile buffer_size; // top 2 bits are reserved
+        u16 volatile flags;
+        u16 volatile vlan_tag;
+        u16 volatile vlan_flags;
+        u32 volatile buffer_address_low;
+        u32 volatile buffer_address_high;
 
         // flags bit field
         static constexpr u16 Ownership = 0x8000u;

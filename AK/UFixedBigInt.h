@@ -108,7 +108,7 @@ public:
     }
 
     template<UFixedInt T, size_t n>
-    requires((assumed_bit_size<T> * n) <= bit_size) constexpr UFixedBigInt(const T (&value)[n])
+    requires((assumed_bit_size<T> * n) <= bit_size) constexpr UFixedBigInt(T const (&value)[n])
     {
         size_t offset = 0;
 

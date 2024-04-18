@@ -206,7 +206,7 @@ Vector<StringView> CppComprehensionEngine::scope_of_reference_to_symbol(ASTNode 
     return scope_parts;
 }
 
-Vector<CodeComprehension::AutocompleteResultEntry> CppComprehensionEngine::autocomplete_property(DocumentData const& document, MemberExpression const& parent, const ByteString partial_text) const
+Vector<CodeComprehension::AutocompleteResultEntry> CppComprehensionEngine::autocomplete_property(DocumentData const& document, MemberExpression const& parent, ByteString const partial_text) const
 {
     VERIFY(parent.object());
     auto type = type_of(document, *parent.object());

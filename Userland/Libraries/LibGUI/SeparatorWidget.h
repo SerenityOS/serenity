@@ -25,7 +25,7 @@ private:
     virtual Optional<UISize> calculated_preferred_size() const override;
     virtual Optional<UISize> calculated_min_size() const override;
 
-    const Gfx::Orientation m_orientation;
+    Gfx::Orientation const m_orientation;
 };
 
 class VerticalSeparator final : public SeparatorWidget {
