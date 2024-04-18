@@ -515,6 +515,11 @@ void ViewportPaintable::recompute_selection_states()
     }
 }
 
+bool ViewportPaintable::handle_mousewheel(Badge<EventHandler>, CSSPixelPoint, unsigned, unsigned, int, int)
+{
+    return false;
+}
+
 void ViewportPaintable::visit_edges(Visitor& visitor)
 {
     Base::visit_edges(visitor);
