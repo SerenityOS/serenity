@@ -343,7 +343,7 @@ void PaintableBox::paint(PaintContext& context, PaintPhase phase) const
     }
 
     auto scrollbar_width = computed_values().scrollbar_width();
-    if (phase == PaintPhase::Overlay && scrollbar_width != CSS::ScrollbarWidth::None) {
+    if (!layout_box().is_viewport() && phase == PaintPhase::Overlay && scrollbar_width != CSS::ScrollbarWidth::None) {
         auto color = Color(Color::NamedColor::DarkGray).with_alpha(128);
         int thumb_corner_radius = static_cast<int>(context.rounded_device_pixels(scrollbar_thumb_thickness / 2));
         if (auto thumb_rect = scroll_thumb_rect(ScrollDirection::Horizontal); thumb_rect.has_value()) {
