@@ -285,7 +285,7 @@ ErrorOr<size_t> VirtualConsole::on_tty_write(UserOrKernelBuffer const& data, siz
 {
     SpinlockLocker global_lock(ConsoleManagement::the().tty_write_lock());
     auto result = data.read_buffered<512>(size, [&](ReadonlyBytes buffer) {
-        for (const auto& byte : buffer)
+        for (auto const& byte : buffer)
             m_console_impl.on_input(byte);
         return buffer.size();
     });

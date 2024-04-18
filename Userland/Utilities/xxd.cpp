@@ -274,7 +274,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     Array<u8, BUFSIZ> contents;
     Bytes bytes;
     size_t total_bytes_read = 0x0;
-    const size_t max_read_size = contents.size() - (contents.size() % line_length_config);
+    size_t const max_read_size = contents.size() - (contents.size() % line_length_config);
     bool is_input_remaining = true;
 
     // TODO: seek relative to current stdin file position

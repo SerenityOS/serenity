@@ -101,7 +101,7 @@ ErrorOr<ByteBuffer> BMPWriter::dump(Bitmap const& bitmap, Options options)
         m_include_alpha_channel = true;
     }
 
-    const size_t file_header_size = 14;
+    size_t const file_header_size = 14;
     size_t header_size = file_header_size + (u32)dib_header;
 
     int pixel_row_data_size = (m_bytes_per_pixel * 8 * bitmap.width() + 31) / 32 * 4;

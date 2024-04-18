@@ -45,8 +45,8 @@ ALWAYS_INLINE constexpr FloatVector3 matrix_row(FloatMatrix3x3 matrix, size_t ro
 ALWAYS_INLINE constexpr FloatMatrix3x3 generate_rgb_to_xyz_matrix(FloatVector2 red_xy, FloatVector2 green_xy, FloatVector2 blue_xy, FloatVector2 white_xy)
 {
     // http://www.brucelindbloom.com/index.html?Eqn_RGB_XYZ_Matrix.html
-    const FloatMatrix3x3 matrix = primaries_matrix(red_xy, green_xy, blue_xy);
-    const FloatVector3 scale_vector = matrix.inverse() * primaries_to_xyz(white_xy);
+    FloatMatrix3x3 const matrix = primaries_matrix(red_xy, green_xy, blue_xy);
+    FloatVector3 const scale_vector = matrix.inverse() * primaries_to_xyz(white_xy);
     return vectors_to_matrix(matrix_row(matrix, 0) * scale_vector, matrix_row(matrix, 1) * scale_vector, matrix_row(matrix, 2) * scale_vector);
 }
 

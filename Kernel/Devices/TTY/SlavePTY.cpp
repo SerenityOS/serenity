@@ -67,7 +67,7 @@ void SlavePTY::echo(u8 ch)
 void SlavePTY::on_master_write(UserOrKernelBuffer const& buffer, size_t size)
 {
     auto result = buffer.read_buffered<128>(size, [&](ReadonlyBytes data) {
-        for (const auto& byte : data)
+        for (auto const& byte : data)
             emit(byte, false);
         return data.size();
     });

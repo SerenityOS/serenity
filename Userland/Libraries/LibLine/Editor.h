@@ -217,7 +217,7 @@ public:
     void insert(ByteString const&);
     void insert(StringView);
     void insert(Utf32View const&);
-    void insert(const u32);
+    void insert(u32 const);
     void stylize(Span const&, Style const&);
     void strip_styles(bool strip_anchored = false);
 
@@ -246,7 +246,7 @@ public:
 
     bool is_editing() const { return m_is_editing; }
 
-    const Utf32View buffer_view() const { return { m_buffer.data(), m_buffer.size() }; }
+    Utf32View const buffer_view() const { return { m_buffer.data(), m_buffer.size() }; }
 
     auto prohibit_input()
     {

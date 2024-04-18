@@ -57,7 +57,7 @@ ErrorOr<size_t> SerialDevice::write(OpenFileDescription& description, u64, UserO
         return EAGAIN;
 
     return buffer.read_buffered<128>(size, [&](ReadonlyBytes bytes) {
-        for (const auto& byte : bytes)
+        for (auto const& byte : bytes)
             put_char(byte);
         return bytes.size();
     });

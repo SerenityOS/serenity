@@ -13,7 +13,7 @@
 
 #include "Mesh.h"
 
-const Color colors[] {
+Color const colors[] {
     Color::Red,
     Color::Green,
     Color::Blue,
@@ -36,17 +36,17 @@ void Mesh::draw(float uv_scale)
     for (u32 i = 0; i < m_triangle_list.size(); i++) {
         auto const& triangle = m_triangle_list[i];
 
-        const FloatVector3 vertex_a(
+        FloatVector3 const vertex_a(
             m_vertex_list.at(triangle.a).x,
             m_vertex_list.at(triangle.a).y,
             m_vertex_list.at(triangle.a).z);
 
-        const FloatVector3 vertex_b(
+        FloatVector3 const vertex_b(
             m_vertex_list.at(triangle.b).x,
             m_vertex_list.at(triangle.b).y,
             m_vertex_list.at(triangle.b).z);
 
-        const FloatVector3 vertex_c(
+        FloatVector3 const vertex_c(
             m_vertex_list.at(triangle.c).x,
             m_vertex_list.at(triangle.c).y,
             m_vertex_list.at(triangle.c).z);
@@ -70,8 +70,8 @@ void Mesh::draw(float uv_scale)
 
         } else {
             // Compute the triangle normal
-            const FloatVector3 vec_ab = vertex_b - vertex_a;
-            const FloatVector3 vec_ac = vertex_c - vertex_a;
+            FloatVector3 const vec_ab = vertex_b - vertex_a;
+            FloatVector3 const vec_ac = vertex_c - vertex_a;
             normal_a = vec_ab.cross(vec_ac).normalized();
             normal_b = normal_a;
             normal_c = normal_a;

@@ -10,8 +10,8 @@
 
 namespace JS {
 
-constexpr const size_t SPARSE_ARRAY_HOLE_THRESHOLD = 200;
-constexpr const size_t LENGTH_SETTER_GENERIC_STORAGE_THRESHOLD = 4 * MiB;
+constexpr size_t const SPARSE_ARRAY_HOLE_THRESHOLD = 200;
+constexpr size_t const LENGTH_SETTER_GENERIC_STORAGE_THRESHOLD = 4 * MiB;
 
 SimpleIndexedPropertyStorage::SimpleIndexedPropertyStorage(Vector<Value>&& initial_values)
     : IndexedPropertyStorage(IsSimpleStorage::Yes)

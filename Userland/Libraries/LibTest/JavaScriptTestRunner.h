@@ -384,7 +384,7 @@ inline JSFileResult TestRunner::run_file_test(ByteString const& test_path)
 
         VERIFY(suite_value.is_object());
 
-        suite_value.as_object().for_each_member([&](const ByteString& test_name, const JsonValue& test_value) {
+        suite_value.as_object().for_each_member([&](ByteString const& test_name, JsonValue const& test_value) {
             Test::Case test { test_name, Test::Result::Fail, "", 0 };
 
             VERIFY(test_value.is_object());

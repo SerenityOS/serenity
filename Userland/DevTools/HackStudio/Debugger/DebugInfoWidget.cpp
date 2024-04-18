@@ -81,7 +81,7 @@ DebugInfoWidget::DebugInfoWidget()
     variables_tab_widget.add_widget(build_registers_tab());
 
     m_backtrace_view->on_selection_change = [this] {
-        const auto& index = m_backtrace_view->selection().first();
+        auto const& index = m_backtrace_view->selection().first();
 
         if (!index.is_valid()) {
             return;

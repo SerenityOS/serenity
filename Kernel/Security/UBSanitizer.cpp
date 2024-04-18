@@ -188,8 +188,8 @@ void __ubsan_handle_implicit_conversion(ImplicitConversionData const& data, Valu
     print_location(data.location);
 }
 
-void __ubsan_handle_invalid_builtin(const InvalidBuiltinData) __attribute__((used));
-void __ubsan_handle_invalid_builtin(const InvalidBuiltinData data)
+void __ubsan_handle_invalid_builtin(InvalidBuiltinData const) __attribute__((used));
+void __ubsan_handle_invalid_builtin(InvalidBuiltinData const data)
 {
     critical_dmesgln("KUBSAN: passing invalid argument");
     print_location(data.location);

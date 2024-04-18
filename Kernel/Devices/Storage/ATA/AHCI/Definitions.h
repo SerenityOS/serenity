@@ -197,7 +197,7 @@ public:
 
 private:
     u32 volatile& m_bitfield;
-    const u32 m_bit_mask;
+    u32 const m_bit_mask;
 };
 
 enum Limits : u16 {

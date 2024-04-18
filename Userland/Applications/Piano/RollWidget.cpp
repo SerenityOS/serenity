@@ -237,8 +237,8 @@ void RollWidget::mousemove_event(GUI::MouseEvent& event)
         int const x_start = get_note_for_x(m_mousedown_event.value().x());
         int const x_end = get_note_for_x(event.x());
 
-        const u32 on_sample = round(roll_length * (static_cast<double>(min(x_start, x_end)) / m_num_notes));
-        const u32 off_sample = round(roll_length * (static_cast<double>(max(x_start, x_end) + 1) / m_num_notes)) - 1;
+        u32 const on_sample = round(roll_length * (static_cast<double>(min(x_start, x_end)) / m_num_notes));
+        u32 const off_sample = round(roll_length * (static_cast<double>(max(x_start, x_end) + 1) / m_num_notes)) - 1;
         auto const note = RollNote { on_sample, off_sample, get_pitch_for_y(m_mousedown_event.value().y()), 127 };
 
         m_track_manager.current_track()->set_note(note);

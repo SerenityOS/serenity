@@ -337,9 +337,9 @@ public:
     void write32(size_t offset, u32 value) const;
 
 private:
-    const Address m_address;
-    const CapabilityID m_id;
-    const u8 m_ptr;
+    Address const m_address;
+    CapabilityID const m_id;
+    u8 const m_ptr;
 };
 
 AK_TYPEDEF_DISTINCT_ORDERED_ID(u8, ClassCode);

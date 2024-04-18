@@ -56,12 +56,12 @@ public:
     static RefPtr<Database> open(ByteString const& filename);
     static RefPtr<Database> open() { return open("/res/pci.ids"); }
 
-    const StringView get_vendor(u16 vendor_id) const;
-    const StringView get_device(u16 vendor_id, u16 device_id) const;
-    const StringView get_subsystem(u16 vendor_id, u16 device_id, u16 subvendor_id, u16 subdevice_id) const;
-    const StringView get_class(u8 class_id) const;
-    const StringView get_subclass(u8 class_id, u8 subclass_id) const;
-    const StringView get_programming_interface(u8 class_id, u8 subclass_id, u8 programming_interface_id) const;
+    StringView const get_vendor(u16 vendor_id) const;
+    StringView const get_device(u16 vendor_id, u16 device_id) const;
+    StringView const get_subsystem(u16 vendor_id, u16 device_id, u16 subvendor_id, u16 subdevice_id) const;
+    StringView const get_class(u8 class_id) const;
+    StringView const get_subclass(u8 class_id, u8 subclass_id) const;
+    StringView const get_programming_interface(u8 class_id, u8 subclass_id, u8 programming_interface_id) const;
 
 private:
     explicit Database(NonnullOwnPtr<Core::MappedFile> file)

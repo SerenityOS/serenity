@@ -37,7 +37,7 @@ struct ValueTraits : public Traits<Value> {
 
         return u64_hash(value.encoded()); // FIXME: Is this the best way to hash pointers, doubles & ints?
     }
-    static bool equals(const Value a, const Value b)
+    static bool equals(Value const a, Value const b)
     {
         return same_value_zero(a, b);
     }

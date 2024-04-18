@@ -260,7 +260,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
         auto index = m_view->selection().first();
         auto& filter_model = (SortingProxyModel&)*m_view->model();
         auto local_index = filter_model.map_to_source(index);
-        const FileSystemModel::Node& node = m_model->node(local_index);
+        FileSystemModel::Node const& node = m_model->node(local_index);
 
         auto should_open_folder = m_mode == Mode::OpenFolder;
         if (should_open_folder == node.is_directory()) {
@@ -273,7 +273,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
     m_view->on_activation = [this](auto& index) {
         auto& filter_model = (SortingProxyModel&)*m_view->model();
         auto local_index = filter_model.map_to_source(index);
-        const FileSystemModel::Node& node = m_model->node(local_index);
+        FileSystemModel::Node const& node = m_model->node(local_index);
         auto path = node.full_path();
 
         if (node.is_directory() || node.is_symlink_to_directory()) {

@@ -28,7 +28,7 @@ u16 clip_1(u8 bit_depth, T x)
     if (x < 0) {
         return 0u;
     }
-    const T max = (1u << bit_depth) - 1u;
+    T const max = (1u << bit_depth) - 1u;
     if (x > max)
         return max;
     return x;

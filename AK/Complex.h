@@ -105,7 +105,7 @@ public:
     template<AK::Concepts::Arithmetic U>
     constexpr Complex<T> operator*=(Complex<U> const& x)
     {
-        const T real = m_real;
+        T const real = m_real;
         m_real = real * x.real() - m_imag * x.imag();
         m_imag = real * x.imag() + m_imag * x.real();
         return *this;
@@ -122,8 +122,8 @@ public:
     template<AK::Concepts::Arithmetic U>
     constexpr Complex<T> operator/=(Complex<U> const& x)
     {
-        const T real = m_real;
-        const T divisor = x.real() * x.real() + x.imag() * x.imag();
+        T const real = m_real;
+        T const divisor = x.real() * x.real() + x.imag() * x.imag();
         m_real = (real * x.real() + m_imag * x.imag()) / divisor;
         m_imag = (m_imag * x.real() - x.real() * x.imag()) / divisor;
         return *this;

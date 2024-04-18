@@ -76,7 +76,7 @@ static void wait_for_reply(MMIO& mmio)
 bool Mailbox::send_queue(void* queue, u32 queue_size) const
 {
     // According to Raspberry Pi specs this is the only channel implemented.
-    const u32 channel = ARM_TO_VIDEOCORE_CHANNEL;
+    u32 const channel = ARM_TO_VIDEOCORE_CHANNEL;
 
     auto message_header = reinterpret_cast<MessageHeader*>(queue);
     message_header->set_queue_size(queue_size);

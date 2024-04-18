@@ -44,10 +44,10 @@ UNMAP_AFTER_INIT bool APICTimer::calibrate(HardwareTimerBase& calibration_source
         size_t ticks_in_100ms { 0 };
         Atomic<size_t, AK::memory_order_relaxed> calibration_ticks { 0 };
 #ifdef APIC_TIMER_MEASURE_CPU_CLOCK
-        volatile u64 start_tsc { 0 }, end_tsc { 0 };
+        u64 volatile start_tsc { 0 }, end_tsc { 0 };
 #endif
-        volatile u64 start_reference { 0 }, end_reference { 0 };
-        volatile u32 start_apic_count { 0 }, end_apic_count { 0 };
+        u64 volatile start_reference { 0 }, end_reference { 0 };
+        u32 volatile start_apic_count { 0 }, end_apic_count { 0 };
         bool query_reference { false };
     } state;
 

@@ -537,7 +537,7 @@ void IconView::paint_event(PaintEvent& event)
 
         auto font = font_for_index(item_data.index);
 
-        const auto& text_rect = item_data.text_rect;
+        auto const& text_rect = item_data.text_rect;
 
         if (m_edit_index != item_data.index)
             painter.fill_rect(text_rect, background_color);
@@ -550,7 +550,7 @@ void IconView::paint_event(PaintEvent& event)
         if (!item_data.wrapped_text_lines.is_empty()) {
             // Item text would not fit in the item text rect, let's break it up into lines..
 
-            const auto& lines = item_data.wrapped_text_lines;
+            auto const& lines = item_data.wrapped_text_lines;
             size_t number_of_text_lines = min((size_t)text_rect.height() / font->pixel_size_rounded_up(), lines.size());
             size_t previous_line_lengths = 0;
             for (size_t line_index = 0; line_index < number_of_text_lines; ++line_index) {

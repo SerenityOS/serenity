@@ -86,7 +86,7 @@ GHash::TagType GHash::process(ReadonlyBytes aad, ReadonlyBytes cipher)
 
 /// Galois Field multiplication using <x^127 + x^7 + x^2 + x + 1>.
 /// Note that x, y, and z are strictly BE.
-void galois_multiply(u32 (&z)[4], const u32 (&_x)[4], const u32 (&_y)[4])
+void galois_multiply(u32 (&z)[4], u32 const (&_x)[4], u32 const (&_y)[4])
 {
     u32 x[4] { _x[0], _x[1], _x[2], _x[3] };
     u32 y[4] { _y[0], _y[1], _y[2], _y[3] };

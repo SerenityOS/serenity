@@ -121,7 +121,7 @@ ErrorOr<int> serenity_main(Main::Arguments main_arguments)
         if (items_used_for_this_command == 0) {
             child_argv.ensure_capacity(initial_arguments.size());
 
-            initial_arguments.for_each_joined_argument(item, [&](const ByteString& string) {
+            initial_arguments.for_each_joined_argument(item, [&](ByteString const& string) {
                 total_command_length += string.length();
                 child_argv.append(strdup(string.characters()));
             });

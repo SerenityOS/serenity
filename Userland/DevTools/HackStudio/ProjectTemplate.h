@@ -29,7 +29,7 @@ public:
     ByteString const& name() const { return m_name; }
     ByteString const& description() const { return m_description; }
     const GUI::Icon& icon() const { return m_icon; }
-    const ByteString content_path() const
+    ByteString const content_path() const
     {
         return LexicalPath::canonicalized_path(ByteString::formatted("{}/{}", templates_path(), m_id));
     }

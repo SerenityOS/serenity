@@ -34,6 +34,6 @@ private:
     virtual StringView class_name() const override { return "AudioChannel"sv; }
 
     LockWeakPtr<AudioController> m_controller;
-    const size_t m_channel_index;
+    size_t const m_channel_index;
 };
 }

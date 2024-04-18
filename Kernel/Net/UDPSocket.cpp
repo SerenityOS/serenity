@@ -91,7 +91,7 @@ ErrorOr<size_t> UDPSocket::protocol_send(UserOrKernelBuffer const& data, size_t 
         return set_so_error(EHOSTUNREACH);
     auto ipv4_payload_offset = routing_decision.adapter->ipv4_payload_offset();
     data_length = min(data_length, routing_decision.adapter->mtu() - ipv4_payload_offset - sizeof(UDPPacket));
-    const size_t udp_buffer_size = sizeof(UDPPacket) + data_length;
+    size_t const udp_buffer_size = sizeof(UDPPacket) + data_length;
     auto packet = routing_decision.adapter->acquire_packet_buffer(ipv4_payload_offset + udp_buffer_size);
     if (!packet)
         return set_so_error(ENOMEM);

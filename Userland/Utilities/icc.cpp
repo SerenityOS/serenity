@@ -537,7 +537,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             outln("    common name suffix: \"{}\"", named_colors.suffix());
             outln("    {} colors:", named_colors.size());
             for (size_t i = 0; i < min(named_colors.size(), 5u); ++i) {
-                const auto& pcs = named_colors.pcs_coordinates(i);
+                auto const& pcs = named_colors.pcs_coordinates(i);
 
                 // FIXME: Display decoded values? (See ICC v4 6.3.4.2 and 10.8.)
                 out("        \"{}\", PCS coordinates: {:#04x} {:#04x} {:#04x}", TRY(named_colors.color_name(i)), pcs.xyz.x, pcs.xyz.y, pcs.xyz.z);

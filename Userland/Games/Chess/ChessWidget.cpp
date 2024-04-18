@@ -121,8 +121,8 @@ void ChessWidget::paint_event(GUI::PaintEvent& event)
         float hdx = h * cosf(phi);
         float hdy = h * sinf(phi);
 
-        const auto cos_pi_2_phi = cosf(float { M_PI_2 } - phi);
-        const auto sin_pi_2_phi = sinf(float { M_PI_2 } - phi);
+        auto const cos_pi_2_phi = cosf(float { M_PI_2 } - phi);
+        auto const sin_pi_2_phi = sinf(float { M_PI_2 } - phi);
 
         Gfx::FloatPoint A1(A.x() - (w1 / 2) * cos_pi_2_phi, A.y() - (w1 / 2) * sin_pi_2_phi);
         Gfx::FloatPoint B3(A.x() + (w1 / 2) * cos_pi_2_phi, A.y() + (w1 / 2) * sin_pi_2_phi);

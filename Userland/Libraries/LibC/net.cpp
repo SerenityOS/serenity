@@ -11,8 +11,8 @@
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 
-const in6_addr in6addr_any = IN6ADDR_ANY_INIT;
-const in6_addr in6addr_loopback = IN6ADDR_LOOPBACK_INIT;
+in6_addr const in6addr_any = IN6ADDR_ANY_INIT;
+in6_addr const in6addr_loopback = IN6ADDR_LOOPBACK_INIT;
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/if_nametoindex.html
 unsigned int if_nametoindex([[maybe_unused]] char const* ifname)

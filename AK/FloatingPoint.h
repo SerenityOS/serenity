@@ -95,9 +95,9 @@ static_assert(AssertSize<FloatExtractor<f32>, sizeof(f32)>());
 template<size_t S, size_t E, size_t M>
 requires(S <= 1 && E >= 1 && M >= 1 && (S + E + M) <= 64) class FloatingPointBits final {
 public:
-    static const size_t signbit = S;
-    static const size_t exponentbits = E;
-    static const size_t mantissabits = M;
+    static size_t const signbit = S;
+    static size_t const exponentbits = E;
+    static size_t const mantissabits = M;
 
     template<typename T>
     requires(IsIntegral<T> && IsUnsigned<T> && sizeof(T) <= 8) constexpr FloatingPointBits(T bits)

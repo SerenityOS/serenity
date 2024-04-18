@@ -36,7 +36,7 @@ SyntaxElementCounter::SyntaxElementCounter()
 }
 
 template<typename T, size_t size>
-static void sum_arrays(T (&destination)[size], const T (&left)[size], const T (&right)[size])
+static void sum_arrays(T (&destination)[size], T const (&left)[size], T const (&right)[size])
 {
     for (size_t i = 0; i < size; i++) {
         destination[i] = left[i] + right[i];
@@ -44,7 +44,7 @@ static void sum_arrays(T (&destination)[size], const T (&left)[size], const T (&
 }
 
 template<typename T, size_t size, size_t size_2>
-static void sum_arrays(T (&destination)[size][size_2], const T (&left)[size][size_2], const T (&right)[size][size_2])
+static void sum_arrays(T (&destination)[size][size_2], T const (&left)[size][size_2], T const (&right)[size][size_2])
 {
     for (size_t i = 0; i < size; i++) {
         sum_arrays(destination[i], left[i], right[i]);

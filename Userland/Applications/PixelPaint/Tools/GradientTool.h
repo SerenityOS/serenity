@@ -72,7 +72,7 @@ private:
 
     void calculate_gradient_lines();
     void calculate_transversal_points(float scale_fraction);
-    void draw_gradient(GUI::Painter&, bool with_guidelines = false, const Gfx::FloatPoint drawing_offset = { 0.0f, 0.0f }, float scale = 1, Optional<Gfx::IntRect const&> gradient_clip = {});
+    void draw_gradient(GUI::Painter&, bool with_guidelines = false, Gfx::FloatPoint const drawing_offset = { 0.0f, 0.0f }, float scale = 1, Optional<Gfx::IntRect const&> gradient_clip = {});
     bool has_gradient_data() { return m_gradient_center.has_value() && m_gradient_end.has_value() && m_gradient_start.has_value(); }
     void move_gradient_position(Gfx::IntPoint const movement_delta);
     void rasterize_gradient();

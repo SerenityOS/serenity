@@ -268,7 +268,7 @@ Optional<Creator> parse_profile_creator(ICCHeader const& header)
 }
 
 template<size_t N>
-bool all_bytes_are_zero(const u8 (&bytes)[N])
+bool all_bytes_are_zero(u8 const (&bytes)[N])
 {
     for (u8 byte : bytes) {
         if (byte != 0)
@@ -1229,7 +1229,7 @@ Crypto::Hash::MD5::DigestType Profile::compute_id(ReadonlyBytes bytes)
     //  and profile ID field (bytes 84 to 99)
     //  in the profile header temporarily set to zeros (00h),
     //  shall be used to calculate the ID."
-    const u8 zero[16] = {};
+    u8 const zero[16] = {};
     Crypto::Hash::MD5 md5;
     md5.update(bytes.slice(0, 44));
     md5.update(ReadonlyBytes { zero, 4 }); // profile flags field

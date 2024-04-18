@@ -19,11 +19,11 @@ ClassViewWidget::ClassViewWidget()
     m_class_tree = add<GUI::TreeView>();
 
     m_class_tree->on_selection_change = [this] {
-        const auto& index = m_class_tree->selection().first();
+        auto const& index = m_class_tree->selection().first();
         if (!index.is_valid())
             return;
 
-        auto* node = static_cast<const ClassViewNode*>(index.internal_data());
+        auto* node = static_cast<ClassViewNode const*>(index.internal_data());
         if (!node->declaration)
             return;
 

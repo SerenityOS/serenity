@@ -51,22 +51,22 @@ protected:
     virtual StringView class_name() const override { return "E1000NetworkAdapter"sv; }
 
     struct [[gnu::packed]] e1000_rx_desc {
-        volatile uint64_t addr { 0 };
-        volatile uint16_t length { 0 };
-        volatile uint16_t checksum { 0 };
-        volatile uint8_t status { 0 };
-        volatile uint8_t errors { 0 };
-        volatile uint16_t special { 0 };
+        uint64_t volatile addr { 0 };
+        uint16_t volatile length { 0 };
+        uint16_t volatile checksum { 0 };
+        uint8_t volatile status { 0 };
+        uint8_t volatile errors { 0 };
+        uint16_t volatile special { 0 };
     };
 
     struct [[gnu::packed]] e1000_tx_desc {
-        volatile uint64_t addr { 0 };
-        volatile uint16_t length { 0 };
-        volatile uint8_t cso { 0 };
-        volatile uint8_t cmd { 0 };
-        volatile uint8_t status { 0 };
-        volatile uint8_t css { 0 };
-        volatile uint16_t special { 0 };
+        uint64_t volatile addr { 0 };
+        uint16_t volatile length { 0 };
+        uint8_t volatile cso { 0 };
+        uint8_t volatile cmd { 0 };
+        uint8_t volatile status { 0 };
+        uint8_t volatile css { 0 };
+        uint16_t volatile special { 0 };
     };
 
     virtual void detect_eeprom();

@@ -31,7 +31,7 @@ protected:
     virtual void keydown_event(GUI::KeyEvent&) override;
     virtual void keyup_event(GUI::KeyEvent&) override;
 
-    void set_current_map(const ByteString);
+    void set_current_map(ByteString const);
     void update_window_title();
 
 private:
@@ -39,8 +39,8 @@ private:
 
     Vector<KeyButton*> m_keys;
     RefPtr<GUI::Widget> m_map_group;
-    void add_map_radio_button(const StringView map_name, String button_text);
-    u32* map_from_name(const StringView map_name);
+    void add_map_radio_button(StringView const map_name, String button_text);
+    u32* map_from_name(StringView const map_name);
     void update_modifier_radio_buttons(GUI::KeyEvent&);
 
     ByteString m_filename;

@@ -54,7 +54,7 @@ ErrorOr<void> MountFile::ioctl(OpenFileDescription&, unsigned request, Userspace
             if ((mount_specific_data.value_type == MountSpecificFlag::ValueType::SignedInteger || mount_specific_data.value_type == MountSpecificFlag::ValueType::UnsignedInteger) && mount_specific_data.value_length != 8)
                 return EDOM;
 
-            Syscall::StringArgument user_key_string { reinterpret_cast<const char*>(mount_specific_data.key_string_addr), static_cast<size_t>(mount_specific_data.key_string_length) };
+            Syscall::StringArgument user_key_string { reinterpret_cast<char const*>(mount_specific_data.key_string_addr), static_cast<size_t>(mount_specific_data.key_string_length) };
             auto key_string = TRY(Process::get_syscall_name_string_fixed_buffer<MOUNT_SPECIFIC_FLAG_KEY_STRING_MAX_LENGTH>(user_key_string));
 
             if (mount_specific_data.value_type != MountSpecificFlag::ValueType::Boolean && mount_specific_data.value_length == 0)

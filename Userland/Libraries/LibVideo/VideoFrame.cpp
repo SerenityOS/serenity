@@ -78,7 +78,7 @@ ALWAYS_INLINE DecoderErrorOr<void> convert_to_bitmap_subsampled(Convert convert,
     interpolate_row<subsampling_horizontal>(0, width, plane_u.data(), plane_v.data(), u_row_a, v_row_a);
 
     // Do interpolation for all inner rows.
-    const u32 rows_end = height - subsampling_vertical;
+    u32 const rows_end = height - subsampling_vertical;
     for (u32 row = 0; row < rows_end; row += vertical_step) {
         // Horizontally scale the row if subsampled.
         auto uv_row = row >> subsampling_vertical;

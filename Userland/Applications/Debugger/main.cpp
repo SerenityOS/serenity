@@ -248,14 +248,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
 
         VERIFY(optional_regs.has_value());
-        const PtraceRegisters& regs = optional_regs.value();
+        PtraceRegisters const& regs = optional_regs.value();
 #if ARCH(X86_64)
-        const FlatPtr ip = regs.rip;
+        FlatPtr const ip = regs.rip;
 #elif ARCH(AARCH64)
-        const FlatPtr ip = 0; // FIXME
+        FlatPtr const ip = 0; // FIXME
         TODO_AARCH64();
 #elif ARCH(RISCV64)
-        const FlatPtr ip = 0; // FIXME
+        FlatPtr const ip = 0; // FIXME
         TODO_RISCV64();
 #else
 #    error Unknown architecture

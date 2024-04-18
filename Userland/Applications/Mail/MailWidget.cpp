@@ -475,7 +475,7 @@ void MailWidget::selected_email_to_load(GUI::ModelIndex const& index)
 
     auto& body_data = fetch_response_data.body_data();
     auto body_text_part_iterator = body_data.find_if([](Tuple<IMAP::FetchCommand::DataItem, ByteString>& data) {
-        const auto data_item = data.get<0>();
+        auto const data_item = data.get<0>();
         return data_item.section.has_value() && data_item.section->type == IMAP::FetchCommand::DataItem::SectionType::Parts;
     });
     VERIFY(body_text_part_iterator != body_data.end());

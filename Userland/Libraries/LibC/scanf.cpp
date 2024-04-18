@@ -316,7 +316,7 @@ private:
         return invert ^ scan_set.contains(c);
     }
 
-    const StringView scan_set;
+    StringView const scan_set;
     bool invert { false };
 };
 

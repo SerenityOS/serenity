@@ -639,7 +639,7 @@ void TableFormattingContext::distribute_width_to_columns()
 
     // The assignable table width is the used width of the table minus the total horizontal border spacing (if any).
     // This is the width that we will be able to allocate to the columns.
-    const CSSPixels available_width = m_state.get(table_box()).content_width() - total_horizontal_border_spacing;
+    CSSPixels const available_width = m_state.get(table_box()).content_width() - total_horizontal_border_spacing;
 
     Vector<CSSPixels> candidate_widths;
     candidate_widths.resize(m_columns.size());
@@ -1218,7 +1218,7 @@ const CSS::BorderData& TableFormattingContext::border_data_conflicting_edge(Tabl
     }
 }
 
-const Painting::PaintableBox::BorderDataWithElementKind TableFormattingContext::border_data_with_element_kind_from_conflicting_edge(ConflictingEdge const& conflicting_edge)
+Painting::PaintableBox::BorderDataWithElementKind const TableFormattingContext::border_data_with_element_kind_from_conflicting_edge(ConflictingEdge const& conflicting_edge)
 {
     auto const& border_data = border_data_conflicting_edge(conflicting_edge);
     return { .border_data = border_data, .element_kind = conflicting_edge.element_kind };

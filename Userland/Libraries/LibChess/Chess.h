@@ -117,7 +117,7 @@ struct Move {
     }
     bool operator==(Move const& other) const { return from == other.from && to == other.to && promote_to == other.promote_to; }
 
-    static Move from_algebraic(StringView algebraic, const Color turn, Board const& board);
+    static Move from_algebraic(StringView algebraic, Color const turn, Board const& board);
     ErrorOr<String> to_long_algebraic() const;
     ErrorOr<String> to_algebraic() const;
 };

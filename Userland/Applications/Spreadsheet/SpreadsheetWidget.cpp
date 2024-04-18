@@ -193,7 +193,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, Vector<NonnullR
         auto& sheet = *worksheet_ptr;
         auto& cells = sheet.selected_cells();
         VERIFY(!cells.is_empty());
-        const auto& data = GUI::Clipboard::the().fetch_data_and_type();
+        auto const& data = GUI::Clipboard::the().fetch_data_and_type();
         if (auto spreadsheet_data = data.metadata.get("text/x-spreadsheet-data"); spreadsheet_data.has_value()) {
             Vector<Spreadsheet::Position> source_positions, target_positions;
             auto lines = spreadsheet_data.value().split_view('\n');

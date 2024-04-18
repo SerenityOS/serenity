@@ -264,7 +264,7 @@ Optional<UnixDateTime> parse_date_time(StringView date_string)
         if (parts.size() != 3)
             return false;
 
-        for (const auto& part : parts) {
+        for (auto const& part : parts) {
             if (part.is_empty() || part.length() > 2)
                 return false;
         }

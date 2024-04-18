@@ -47,7 +47,7 @@ private:
     virtual void resize_event(ResizeEvent&) override;
 
     struct Segment {
-        RefPtr<const Gfx::Bitmap> icon;
+        RefPtr<Gfx::Bitmap const> icon;
         ByteString text;
         ByteString data;
         int width { 0 };

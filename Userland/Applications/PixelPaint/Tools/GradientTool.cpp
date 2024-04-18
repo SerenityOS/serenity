@@ -343,7 +343,7 @@ void GradientTool::calculate_gradient_lines()
     m_editor->update();
 }
 
-void GradientTool::draw_gradient(GUI::Painter& painter, bool with_guidelines, const Gfx::FloatPoint drawing_offset, float scale, Optional<Gfx::IntRect const&> gradient_clip)
+void GradientTool::draw_gradient(GUI::Painter& painter, bool with_guidelines, Gfx::FloatPoint const drawing_offset, float scale, Optional<Gfx::IntRect const&> gradient_clip)
 {
     auto t_gradient_begin_line = m_gradient_begin_line.scaled(scale, scale).translated(drawing_offset);
     auto t_gradient_center_line = m_gradient_center_line.scaled(scale, scale).translated(drawing_offset);

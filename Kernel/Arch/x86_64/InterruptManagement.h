@@ -34,10 +34,10 @@ public:
     u16 flags() const { return m_flags; }
 
 private:
-    const u8 m_bus;
-    const u8 m_source;
-    const u32 m_global_system_interrupt;
-    const u16 m_flags;
+    u8 const m_bus;
+    u8 const m_source;
+    u32 const m_global_system_interrupt;
+    u16 const m_flags;
 };
 
 class InterruptManagement {

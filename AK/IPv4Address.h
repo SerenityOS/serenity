@@ -41,7 +41,7 @@ public:
         m_data = (d << 24) | (c << 16) | (b << 8) | a;
     }
 
-    constexpr IPv4Address(const u8 data[4])
+    constexpr IPv4Address(u8 const data[4])
     {
         m_data = (u32(data[3]) << 24) | (u32(data[2]) << 16) | (u32(data[1]) << 8) | u32(data[0]);
     }
@@ -149,7 +149,7 @@ public:
     }
 
 private:
-    constexpr u32 octet(const SubnetClass subnet) const
+    constexpr u32 octet(SubnetClass const subnet) const
     {
         constexpr auto bits_per_byte = 8;
         auto const bits_to_shift = bits_per_byte * int(subnet);

@@ -80,7 +80,7 @@ static NonnullOwnPtr<HashMap<FlatPtr, X86::Instruction>> instrument_code()
             if (section.name() != ".text")
                 return IterationDecision::Continue;
 
-            X86::SimpleInstructionStream stream((const u8*)((uintptr_t)lib.file->data() + section.offset()), section.size());
+            X86::SimpleInstructionStream stream((u8 const*)((uintptr_t)lib.file->data() + section.offset()), section.size());
             X86::Disassembler disassembler(stream);
             for (;;) {
                 auto offset = stream.offset();
@@ -143,12 +143,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
 
 #if ARCH(X86_64)
-        const FlatPtr ip = regs.value().rip;
+        FlatPtr const ip = regs.value().rip;
 #elif ARCH(AARCH64)
-        const FlatPtr ip = 0; // FIXME
+        FlatPtr const ip = 0; // FIXME
         TODO_AARCH64();
 #elif ARCH(RISCV64)
-        const FlatPtr ip = 0; // FIXME
+        FlatPtr const ip = 0; // FIXME
         TODO_RISCV64();
 #else
 #    error Unknown architecture

@@ -81,7 +81,7 @@ static Optional<Location> locate_hunk(Vector<StringView> const& content, Hunk co
             line += prefix_fuzz;
 
             // Ensure that all of the lines in the hunk match starting from 'line', ignoring the specified number of context lines.
-            return all_of(hunk.lines.begin() + prefix_fuzz, hunk.lines.end() - suffix_fuzz, [&](const Line& hunk_line) {
+            return all_of(hunk.lines.begin() + prefix_fuzz, hunk.lines.end() - suffix_fuzz, [&](Line const& hunk_line) {
                 // Ignore additions in our increment of line and comparison as they are not part of the 'original file'
                 if (hunk_line.operation == Line::Operation::Addition)
                     return true;

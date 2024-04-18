@@ -31,7 +31,7 @@ template<>
 inline void swap(SizedObject const& a, SizedObject const& b)
 {
     VERIFY(a.size() == b.size());
-    const size_t size = a.size();
+    size_t const size = a.size();
     auto const a_data = reinterpret_cast<char*>(a.data());
     auto const b_data = reinterpret_cast<char*>(b.data());
     for (auto i = 0u; i < size; ++i) {
@@ -49,7 +49,7 @@ public:
         , m_element_size(element_size)
     {
     }
-    const SizedObject operator[](size_t index)
+    SizedObject const operator[](size_t index)
     {
         return { static_cast<char*>(m_data) + index * m_element_size, m_element_size };
     }

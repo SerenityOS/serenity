@@ -33,7 +33,7 @@ static constexpr size_t KMALLOC_DEFAULT_ALIGNMENT = 16;
 __attribute__((section(".heap"))) static u8 initial_kmalloc_memory[INITIAL_KMALLOC_MEMORY_SIZE];
 
 namespace std {
-const nothrow_t nothrow;
+nothrow_t const nothrow;
 }
 
 // FIXME: Figure out whether this can be MemoryManager.

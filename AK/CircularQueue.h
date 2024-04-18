@@ -80,7 +80,7 @@ public:
 
     private:
         friend class CircularQueue;
-        ConstIterator(CircularQueue const& queue, const size_t index)
+        ConstIterator(CircularQueue const& queue, size_t const index)
             : m_queue(queue)
             , m_index(index)
         {

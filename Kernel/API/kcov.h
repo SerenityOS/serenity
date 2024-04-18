@@ -8,5 +8,5 @@
 
 #include <AK/Types.h>
 
-typedef volatile u64 kcov_pc_t;
+typedef u64 volatile kcov_pc_t;
 #define KCOV_ENTRY_SIZE sizeof(kcov_pc_t)

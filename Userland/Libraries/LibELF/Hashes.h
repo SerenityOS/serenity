@@ -22,7 +22,7 @@ constexpr u32 compute_sysv_hash(StringView name)
         hash = hash << 4;
         hash += ch;
 
-        const u32 top_nibble_of_hash = hash & 0xf0000000u;
+        u32 const top_nibble_of_hash = hash & 0xf0000000u;
         hash ^= top_nibble_of_hash >> 24;
         hash &= ~top_nibble_of_hash;
     }

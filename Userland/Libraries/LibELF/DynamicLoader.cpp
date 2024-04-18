@@ -772,7 +772,7 @@ void DynamicLoader::copy_initial_tls_data_into(ByteBuffer& buffer) const
         VERIFY(program_header.size_in_image() <= program_header.size_in_memory());
         VERIFY(program_header.size_in_memory() <= m_tls_size_of_current_object);
         VERIFY(tls_start_in_buffer + program_header.size_in_memory() <= buffer.size());
-        memcpy(buffer.data() + tls_start_in_buffer, static_cast<const u8*>(m_file_data) + program_header.offset(), program_header.size_in_image());
+        memcpy(buffer.data() + tls_start_in_buffer, static_cast<u8 const*>(m_file_data) + program_header.offset(), program_header.size_in_image());
 
         return IterationDecision::Break;
     });

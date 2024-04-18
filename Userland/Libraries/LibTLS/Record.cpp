@@ -460,7 +460,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
 
                 length -= mac_size;
 
-                const u8* message_hmac = decrypted_span.offset(length);
+                u8 const* message_hmac = decrypted_span.offset(length);
                 u8 temp_buf[5];
                 memcpy(temp_buf, buffer.offset_pointer(0), 3);
                 *(u16*)(temp_buf + 3) = AK::convert_between_host_and_network_endian(length);

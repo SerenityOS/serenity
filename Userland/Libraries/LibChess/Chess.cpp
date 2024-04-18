@@ -116,7 +116,7 @@ ErrorOr<String> Move::to_long_algebraic() const
     return builder.to_string();
 }
 
-Move Move::from_algebraic(StringView algebraic, const Color turn, Board const& board)
+Move Move::from_algebraic(StringView algebraic, Color const turn, Board const& board)
 {
     auto move_string = algebraic;
     Move move({ 50, 50 }, { 50, 50 });
@@ -294,7 +294,7 @@ ErrorOr<String> Board::to_fen() const
     int empty = 0;
     for (int rank = 0; rank < 8; rank++) {
         for (int file = 0; file < 8; file++) {
-            const Piece p(get_piece({ 7 - rank, file }));
+            Piece const p(get_piece({ 7 - rank, file }));
             if (p.type == Type::None) {
                 empty++;
                 continue;

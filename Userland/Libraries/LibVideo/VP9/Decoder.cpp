@@ -1317,7 +1317,7 @@ inline DecoderErrorOr<void> Decoder::inverse_walsh_hadamard_transform(Span<Inter
 
 inline i32 Decoder::cos64(u8 angle)
 {
-    const i32 cos64_lookup[33] = { 16384, 16364, 16305, 16207, 16069, 15893, 15679, 15426, 15137, 14811, 14449, 14053, 13623, 13160, 12665, 12140, 11585, 11003, 10394, 9760, 9102, 8423, 7723, 7005, 6270, 5520, 4756, 3981, 3196, 2404, 1606, 804, 0 };
+    i32 const cos64_lookup[33] = { 16384, 16364, 16305, 16207, 16069, 15893, 15679, 15426, 15137, 14811, 14449, 14053, 13623, 13160, 12665, 12140, 11585, 11003, 10394, 9760, 9102, 8423, 7723, 7005, 6270, 5520, 4756, 3981, 3196, 2404, 1606, 804, 0 };
 
     // 1. Set a variable angle2 equal to angle & 127.
     angle &= 127;
@@ -1570,10 +1570,10 @@ inline void Decoder::inverse_asymmetric_discrete_sine_transform_output_array_per
 inline void Decoder::inverse_asymmetric_discrete_sine_transform_4(Span<Intermediate> data)
 {
     VERIFY(data.size() == 4);
-    const i64 sinpi_1_9 = 5283;
-    const i64 sinpi_2_9 = 9929;
-    const i64 sinpi_3_9 = 13377;
-    const i64 sinpi_4_9 = 15212;
+    i64 const sinpi_1_9 = 5283;
+    i64 const sinpi_2_9 = 9929;
+    i64 const sinpi_3_9 = 13377;
+    i64 const sinpi_4_9 = 15212;
 
     // Steps are derived from pseudocode in (8.7.1.6):
     // s0 = SINPI_1_9 * T[ 0 ]
