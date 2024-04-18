@@ -29,9 +29,8 @@ namespace Gfx {
 // or in a JP2 file, which is a container format based on boxes similar to ISOBMFF.
 
 // This is the marker for the codestream version. We don't support this yet.
-// If we add support, add a second `"image/jp2"` line to MimeData.cpp for this magic number.
 // T.800 Annex A, Codestream syntax, A.2 Information in the marker segments and A.3 Construction of the codestream
-[[maybe_unused]] static constexpr u8 marker_id_string[] = { 0xFF, 0x4F, 0xFF, 0x51 };
+static constexpr u8 marker_id_string[] = { 0xFF, 0x4F, 0xFF, 0x51 };
 
 // This is the marker for the box version.
 // T.800 Annex I, JP2 file format syntax, I.5.1 JPEG 2000 Signature box
@@ -717,6 +716,13 @@ static ErrorOr<void> decode_jpeg2000_header(JPEG2000LoadingContext& context, Rea
     if (!JPEG2000ImageDecoderPlugin::sniff(data))
         return Error::from_string_literal("JPEG2000LoadingContext: Invalid JPEG2000 header");
 
+    if (data.starts_with(marker_id_string)) {
+        context.codestream_data = data;
+        TRY(parse_codestream_main_header(context));
+        context.size = { context.siz.width, context.siz.height };
+        return {};
+    }
+
     auto reader = TRY(Gfx::ISOBMFF::Reader::create(TRY(try_make<FixedMemoryStream>(data))));
     context.boxes = TRY(reader.read_entire_file());
 
@@ -914,7 +920,7 @@ ErrorOr<u32> TagTree::read_value(u32 x, u32 y, Function<ErrorOr<bool>()> const& 
 
 bool JPEG2000ImageDecoderPlugin::sniff(ReadonlyBytes data)
 {
-    return data.starts_with(jp2_id_string);
+    return data.starts_with(jp2_id_string) || data.starts_with(marker_id_string);
 }
 
 JPEG2000ImageDecoderPlugin::JPEG2000ImageDecoderPlugin()
