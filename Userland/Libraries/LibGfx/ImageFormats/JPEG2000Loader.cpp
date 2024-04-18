@@ -801,6 +801,13 @@ static ErrorOr<void> decode_jpeg2000_header(JPEG2000LoadingContext& context, Rea
 
     TRY(parse_codestream_main_header(context));
 
+    auto size_from_siz = IntSize { context.siz.width, context.siz.height };
+    if (size_from_siz != context.size) {
+        // FIXME: If this is common, warn and use size from SIZ marker.
+        dbgln("JPEG2000ImageDecoderPlugin: Image size from SIZ marker ({}) does not match image size from JP2 header ({})", size_from_siz, context.size);
+        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Image size from SIZ marker does not match image size from JP2 header");
+    }
+
     return {};
 }
 
