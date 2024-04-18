@@ -2285,6 +2285,71 @@ void Document::set_cookie(StringView cookie_string, Cookie::Source source)
     page().client().page_did_set_cookie(m_url, cookie.value(), source);
 }
 
+String Document::fg_color() const
+{
+    if (auto* body_element = body(); body_element && !is<HTML::HTMLFrameSetElement>(*body_element))
+        return body_element->get_attribute_value(HTML::AttributeNames::text);
+    return ""_string;
+}
+
+void Document::set_fg_color(String const& value)
+{
+    if (auto* body_element = body(); body_element && !is<HTML::HTMLFrameSetElement>(*body_element))
+        MUST(body_element->set_attribute(HTML::AttributeNames::text, value));
+}
+
+String Document::link_color() const
+{
+    if (auto* body_element = body(); body_element && !is<HTML::HTMLFrameSetElement>(*body_element))
+        return body_element->get_attribute_value(HTML::AttributeNames::link);
+    return ""_string;
+}
+
+void Document::set_link_color(String const& value)
+{
+    if (auto* body_element = body(); body_element && !is<HTML::HTMLFrameSetElement>(*body_element))
+        MUST(body_element->set_attribute(HTML::AttributeNames::link, value));
+}
+
+String Document::vlink_color() const
+{
+    if (auto* body_element = body(); body_element && !is<HTML::HTMLFrameSetElement>(*body_element))
+        return body_element->get_attribute_value(HTML::AttributeNames::vlink);
+    return ""_string;
+}
+
+void Document::set_vlink_color(String const& value)
+{
+    if (auto* body_element = body(); body_element && !is<HTML::HTMLFrameSetElement>(*body_element))
+        MUST(body_element->set_attribute(HTML::AttributeNames::vlink, value));
+}
+
+String Document::alink_color() const
+{
+    if (auto* body_element = body(); body_element && !is<HTML::HTMLFrameSetElement>(*body_element))
+        return body_element->get_attribute_value(HTML::AttributeNames::alink);
+    return ""_string;
+}
+
+void Document::set_alink_color(String const& value)
+{
+    if (auto* body_element = body(); body_element && !is<HTML::HTMLFrameSetElement>(*body_element))
+        MUST(body_element->set_attribute(HTML::AttributeNames::alink, value));
+}
+
+String Document::bg_color() const
+{
+    if (auto* body_element = body(); body_element && !is<HTML::HTMLFrameSetElement>(*body_element))
+        return body_element->get_attribute_value(HTML::AttributeNames::bgcolor);
+    return ""_string;
+}
+
+void Document::set_bg_color(String const& value)
+{
+    if (auto* body_element = body(); body_element && !is<HTML::HTMLFrameSetElement>(*body_element))
+        MUST(body_element->set_attribute(HTML::AttributeNames::bgcolor, value));
+}
+
 String Document::dump_dom_tree_as_json() const
 {
     StringBuilder builder;
