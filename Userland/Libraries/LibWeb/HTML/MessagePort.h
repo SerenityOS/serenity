@@ -91,7 +91,6 @@ private:
     bool m_has_been_shipped { false };
 
     OwnPtr<Core::LocalSocket> m_socket;
-    OwnPtr<Core::LocalSocket> m_fd_passing_socket;
 
     enum class SocketState : u8 {
         Header,

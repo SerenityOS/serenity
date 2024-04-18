@@ -96,10 +96,10 @@ public:
             .is_layout_test_mode = is_layout_test_mode,
         };
 
-        auto request_server_sockets = TRY(connect_new_request_server_client(*request_client));
+        auto request_server_socket = TRY(connect_new_request_server_client(*request_client));
 
         auto candidate_web_content_paths = TRY(get_paths_for_helper_process("WebContent"sv));
-        view->m_client_state.client = TRY(launch_web_content_process(*view, candidate_web_content_paths, web_content_options, move(request_server_sockets)));
+        view->m_client_state.client = TRY(launch_web_content_process(*view, candidate_web_content_paths, web_content_options, move(request_server_socket)));
 #endif
 
         view->client().async_update_system_theme(0, move(theme));
@@ -196,7 +196,7 @@ private:
 #else
             auto worker_client = MUST(launch_web_worker_process(MUST(get_paths_for_helper_process("WebWorker"sv)), *m_request_client));
 #endif
-            return worker_client->dup_sockets();
+            return worker_client->dup_socket();
         };
     }
 

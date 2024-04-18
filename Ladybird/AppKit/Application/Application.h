@@ -8,8 +8,8 @@
 
 #include <AK/Error.h>
 #include <AK/Vector.h>
+#include <LibIPC/Forward.h>
 #include <LibWebView/Forward.h>
-#include <LibWebView/SocketPair.h>
 
 #import <System/Cocoa.h>
 
@@ -23,6 +23,6 @@ class WebViewBridge;
 
 - (ErrorOr<void>)launchRequestServer:(Vector<ByteString> const&)certificates;
 - (ErrorOr<NonnullRefPtr<WebView::WebContentClient>>)launchWebContent:(Ladybird::WebViewBridge&)web_view_bridge;
-- (ErrorOr<WebView::SocketPair>)launchWebWorker;
+- (ErrorOr<IPC::File>)launchWebWorker;
 
 @end

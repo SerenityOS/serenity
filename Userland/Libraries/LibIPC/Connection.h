@@ -40,7 +40,6 @@ class ConnectionBase : public Core::EventReceiver {
 public:
     virtual ~ConnectionBase() override = default;
 
-    void set_fd_passing_socket(NonnullOwnPtr<Core::LocalSocket>) { }
     void set_deferred_invoker(NonnullOwnPtr<DeferredInvoker>);
     DeferredInvoker& deferred_invoker() { return *m_deferred_invoker; }
 
@@ -51,7 +50,6 @@ public:
     virtual void die() { }
 
     Core::LocalSocket& socket() { return *m_socket; }
-    Core::LocalSocket const& fd_passing_socket() const { return *m_socket; }
 
 protected:
     explicit ConnectionBase(IPC::Stub&, NonnullOwnPtr<Core::LocalSocket>, u32 local_endpoint_magic);

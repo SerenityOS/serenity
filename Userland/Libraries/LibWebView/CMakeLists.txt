@@ -9,7 +9,6 @@ set(SOURCES
     ProcessManager.cpp
     RequestServerAdapter.cpp
     SearchEngine.cpp
-    SocketPair.cpp
     SourceHighlighter.cpp
     URL.cpp
     UserAgent.cpp

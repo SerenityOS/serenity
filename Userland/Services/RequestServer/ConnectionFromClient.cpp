@@ -42,12 +42,10 @@ void ConnectionFromClient::die()
 
 Messages::RequestServer::ConnectNewClientResponse ConnectionFromClient::connect_new_client()
 {
-    Messages::RequestServer::ConnectNewClientResponse error_response = { IPC::File {}, IPC::File {} };
-
     int socket_fds[2] {};
     if (auto err = Core::System::socketpair(AF_LOCAL, SOCK_STREAM, 0, socket_fds); err.is_error()) {
         dbgln("Failed to create client socketpair: {}", err.error());
-        return error_response;
+        return IPC::File {};
     }
 
     auto client_socket_or_error = Core::LocalSocket::adopt_fd(socket_fds[0]);
@@ -55,32 +53,13 @@ Messages::RequestServer::ConnectNewClientResponse ConnectionFromClient::connect_
         close(socket_fds[0]);
         close(socket_fds[1]);
         dbgln("Failed to adopt client socket: {}", client_socket_or_error.error());
-        return error_response;
+        return IPC::File {};
     }
     auto client_socket = client_socket_or_error.release_value();
     // Note: A ref is stored in the static s_connections map
     auto client = adopt_ref(*new ConnectionFromClient(move(client_socket)));
 
-    int fd_passing_socket_fds[2] {};
-    if (auto err = Core::System::socketpair(AF_LOCAL, SOCK_STREAM, 0, fd_passing_socket_fds); err.is_error()) {
-        close(socket_fds[1]);
-        dbgln("Failed to create fd-passing socketpair: {}", err.error());
-        return error_response;
-    }
-
-    auto fd_passing_socket_or_error = Core::LocalSocket::adopt_fd(fd_passing_socket_fds[0]);
-    if (fd_passing_socket_or_error.is_error()) {
-        // socket_fds[0] is already owned by client
-        close(socket_fds[1]);
-        close(fd_passing_socket_fds[0]);
-        close(fd_passing_socket_fds[1]);
-        dbgln("Failed to adopt fd-passing socket: {}", fd_passing_socket_or_error.error());
-        return error_response;
-    }
-    auto fd_passing_socket = fd_passing_socket_or_error.release_value();
-    client->set_fd_passing_socket(move(fd_passing_socket));
-
-    return { IPC::File::adopt_fd(socket_fds[1]), IPC::File::adopt_fd(fd_passing_socket_fds[1]) };
+    return IPC::File::adopt_fd(socket_fds[1]);
 }
 
 Messages::RequestServer::IsSupportedProtocolResponse ConnectionFromClient::is_supported_protocol(ByteString const& protocol)

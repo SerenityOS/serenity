@@ -38,7 +38,6 @@
 #include <LibWeb/HTML/WebViewHints.h>
 #include <LibWeb/Loader/FileRequest.h>
 #include <LibWeb/PixelUnits.h>
-#include <LibWebView/SocketPair.h>
 
 namespace Web {
 
@@ -315,7 +314,7 @@ public:
 
     virtual void page_did_change_audio_play_state(HTML::AudioPlayState) { }
 
-    virtual WebView::SocketPair request_worker_agent() { return { IPC::File {}, IPC::File {} }; }
+    virtual IPC::File request_worker_agent() { return IPC::File {}; }
 
     virtual void inspector_did_load() { }
     virtual void inspector_did_select_dom_node([[maybe_unused]] i32 node_id, [[maybe_unused]] Optional<CSS::Selector::PseudoElement::Type> const& pseudo_element) { }

@@ -75,7 +75,7 @@ OutOfProcessWebView::OutOfProcessWebView()
 
     on_request_worker_agent = []() {
         auto worker_client = MUST(Web::HTML::WebWorkerClient::try_create());
-        return worker_client->dup_sockets();
+        return worker_client->dup_socket();
     };
 }
 

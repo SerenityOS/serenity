@@ -665,7 +665,7 @@ Messages::WebContentClient::RequestWorkerAgentResponse WebContentClient::request
             return view->on_request_worker_agent();
     }
 
-    return WebView::SocketPair { IPC::File {}, IPC::File {} };
+    return IPC::File {};
 }
 
 Optional<ViewImplementation&> WebContentClient::view_for_page_id(u64 page_id, SourceLocation location)
