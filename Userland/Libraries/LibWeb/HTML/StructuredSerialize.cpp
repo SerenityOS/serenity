@@ -318,7 +318,9 @@ public:
             // 2. Let typeString be the identifier of the primary interface of value.
             // 3. Set serialized to { [[Type]]: typeString }.
             serialize_enum(m_serialized, ValueTag::SerializableObject);
-            TRY(serialize_string(m_vm, m_serialized, serializable.interface_name()));
+            DeprecatedFlyString interface_name_deprecated = serializable.interface_name();
+            FlyString interface_name = FlyString::from_deprecated_fly_string(interface_name_deprecated).release_value_but_fixme_should_propagate_errors();
+            TRY(serialize_string(m_vm, m_serialized, interface_name));
 
             // 4. Set deep to true
             deep = true;
@@ -544,7 +546,7 @@ WebIDL::ExceptionOr<void> serialize_bytes(JS::VM& vm, Vector<u32>& vector, Reado
 
 WebIDL::ExceptionOr<void> serialize_string(JS::VM& vm, Vector<u32>& vector, FlyString const& string)
 {
-    return serialize_bytes(vm, vector, string.view().bytes());
+    return serialize_bytes(vm, vector, string.bytes());
 }
 
 WebIDL::ExceptionOr<void> serialize_string(JS::VM& vm, Vector<u32>& vector, String const& string)
@@ -661,7 +663,7 @@ WebIDL::ExceptionOr<void> serialize_viewed_array_buffer(JS::VM& vm, Vector<u32>&
         //    [[ByteOffset]]: value.[[ByteOffset]], [[ArrayLength]]: value.[[ArrayLength]] }.
         serialize_enum(vector, ValueTag::ArrayBufferView);
         vector.extend(move(buffer_serialized));                 // [[ArrayBufferSerialized]]
-        TRY(serialize_string(vm, vector, view.element_name())); // [[Constructor]]
+        TRY(serialize_string(vm, vector, FlyString::from_deprecated_fly_string(view.element_name()).release_value_but_fixme_should_propagate_errors())); // [[Constructor]]
         serialize_primitive_type(vector, JS::typed_array_byte_length(view_record));
         serialize_primitive_type(vector, view.byte_offset());
         serialize_primitive_type(vector, JS::typed_array_length(view_record));

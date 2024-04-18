@@ -89,11 +89,11 @@ WebIDL::ExceptionOr<Optional<FlyString>> normalise_specifier_key(JS::Realm& real
     }
 
     // 2. Let url be the result of resolving a URL-like module specifier, given specifierKey and baseURL.
-    auto url = resolve_url_like_module_specifier(specifier_key, base_url);
+    auto url = resolve_url_like_module_specifier(specifier_key.to_string().to_byte_string(), base_url);
 
     // 3. If url is not null, then return the serialization of url.
     if (url.has_value())
-        return url->serialize();
+        return FlyString::from_deprecated_fly_string(url->serialize()).release_value_but_fixme_should_propagate_errors();
 
     // 4. Return specifierKey.
     return specifier_key;
@@ -110,7 +110,7 @@ WebIDL::ExceptionOr<ModuleSpecifierMap> sort_and_normalise_module_specifier_map(
         auto value = TRY(original_map.get(specifier_key.as_string()));
 
         // 1. Let normalizedSpecifierKey be the result of normalizing a specifier key given specifierKey and baseURL.
-        auto normalised_specifier_key = TRY(normalise_specifier_key(realm, specifier_key.as_string(), base_url));
+        auto normalised_specifier_key = TRY(normalise_specifier_key(realm, FlyString::from_deprecated_fly_string(specifier_key.as_string()).release_value_but_fixme_should_propagate_errors(), base_url));
 
         // 2. If normalizedSpecifierKey is null, then continue.
         if (!normalised_specifier_key.has_value())
@@ -124,7 +124,7 @@ WebIDL::ExceptionOr<ModuleSpecifierMap> sort_and_normalise_module_specifier_map(
                 TRY_OR_THROW_OOM(realm.vm(), String::formatted("Addresses need to be strings")));
 
             // 2. Set normalized[normalizedSpecifierKey] to null.
-            normalised.set(normalised_specifier_key.value(), {});
+            normalised.set(normalised_specifier_key.value().to_string().to_byte_string(), {});
 
             // 3. Continue.
             continue;
@@ -141,7 +141,7 @@ WebIDL::ExceptionOr<ModuleSpecifierMap> sort_and_normalise_module_specifier_map(
                 TRY_OR_THROW_OOM(realm.vm(), String::formatted("Address was invalid")));
 
             // 2. Set normalized[normalizedSpecifierKey] to null.
-            normalised.set(normalised_specifier_key.value(), {});
+            normalised.set(normalised_specifier_key.value().to_string().to_byte_string(), {});
 
             // 3. Continue.
             continue;
@@ -155,14 +155,14 @@ WebIDL::ExceptionOr<ModuleSpecifierMap> sort_and_normalise_module_specifier_map(
                 TRY_OR_THROW_OOM(realm.vm(), String::formatted("An invalid address was given for the specifier key ({}); since specifierKey ends with a slash, the address needs to as well", specifier_key.as_string())));
 
             // 2. Set normalized[normalizedSpecifierKey] to null.
-            normalised.set(normalised_specifier_key.value(), {});
+            normalised.set(normalised_specifier_key.value().to_string().to_byte_string(), {});
 
             // 3. Continue.
             continue;
         }
 
         // 7. Set normalized[normalizedSpecifierKey] to addressURL.
-        normalised.set(normalised_specifier_key.value(), address_url.value());
+        normalised.set(normalised_specifier_key.value().to_string().to_byte_string(), address_url.value());
     }
 
     // 3. Return the result of sorting in descending order normalized, with an entry a being less than an entry b if a's key is code unit less than b's key.
