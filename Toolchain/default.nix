@@ -27,4 +27,5 @@ mkShell.override { stdenv = gcc13Stdenv; } {
     qemu
     python3
   ];
+  hardeningDisable = [ "format" ];
 }
