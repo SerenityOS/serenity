@@ -308,13 +308,14 @@ bool String::equals_ignoring_ascii_case(StringView other) const
     return StringUtils::equals_ignoring_ascii_case(bytes_as_string_view(), other);
 }
 
-String String::repeated(String const& input, size_t count)
+ErrorOr<String> String::repeated(String const& input, size_t count)
 {
-    VERIFY(!Checked<size_t>::multiplication_would_overflow(count, input.bytes().size()));
+    if (Checked<size_t>::multiplication_would_overflow(count, input.bytes().size()))
+        return Error::from_errno(EOVERFLOW);
 
     String result;
     size_t input_size = input.bytes().size();
-    MUST(result.replace_with_new_string(count * input_size, [&](Bytes buffer) {
+    TRY(result.replace_with_new_string(count * input_size, [&](Bytes buffer) {
         if (input_size == 1) {
             buffer.fill(input.bytes().first());
         } else {
@@ -323,6 +324,7 @@ String String::repeated(String const& input, size_t count)
         }
         return ErrorOr<void> {};
     }));
+
     return result;
 }
 

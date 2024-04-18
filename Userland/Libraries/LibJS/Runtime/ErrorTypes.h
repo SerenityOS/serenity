@@ -230,6 +230,7 @@
     M(StringNonGlobalRegExp, "RegExp argument is non-global")                                                                           \
     M(StringRawCannotConvert, "Cannot convert property 'raw' to object from {}")                                                        \
     M(StringRepeatCountMustBe, "repeat count must be a {} number")                                                                      \
+    M(StringRepeatCountMustNotOverflow, "repeat count must not overflow")                                                               \
     M(TemporalAmbiguousMonthOfPlainMonthDay, "Accessing month of PlainMonthDay is ambiguous, use monthCode instead")                    \
     M(TemporalDifferentCalendars, "Cannot compare dates from two different calendars")                                                  \
     M(TemporalDifferentTimeZones, "Cannot compare dates from two different time zones")                                                 \
