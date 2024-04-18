@@ -662,7 +662,7 @@ WebIDL::ExceptionOr<void> serialize_viewed_array_buffer(JS::VM& vm, Vector<u32>&
         //    [[ArrayBufferSerialized]]: bufferSerialized, [[ByteLength]]: value.[[ByteLength]],
         //    [[ByteOffset]]: value.[[ByteOffset]], [[ArrayLength]]: value.[[ArrayLength]] }.
         serialize_enum(vector, ValueTag::ArrayBufferView);
-        vector.extend(move(buffer_serialized));                 // [[ArrayBufferSerialized]]
+        vector.extend(move(buffer_serialized));                                                                                                          // [[ArrayBufferSerialized]]
         TRY(serialize_string(vm, vector, FlyString::from_deprecated_fly_string(view.element_name()).release_value_but_fixme_should_propagate_errors())); // [[Constructor]]
         serialize_primitive_type(vector, JS::typed_array_byte_length(view_record));
         serialize_primitive_type(vector, view.byte_offset());
