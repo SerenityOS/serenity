@@ -219,12 +219,14 @@ static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOM::Document>> load_xml_document(HT
         if (!decoder->validate(data)) {
             // FIXME: Insert error message into the document.
             dbgln("XML Document contains improperly-encoded characters");
+            document->completely_finish_loading();
             return;
         }
         auto source = decoder->to_utf8(data);
         if (source.is_error()) {
             // FIXME: Insert error message into the document.
             dbgln("Failed to decode XML document: {}", source.error());
+            document->completely_finish_loading();
             return;
         }
         XML::Parser parser(source.value(), { .resolve_external_resource = resolve_xml_resource });
