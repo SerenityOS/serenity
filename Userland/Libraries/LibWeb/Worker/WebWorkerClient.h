@@ -10,7 +10,6 @@
 #include <LibIPC/ConnectionToServer.h>
 #include <LibWeb/Worker/WebWorkerClientEndpoint.h>
 #include <LibWeb/Worker/WebWorkerServerEndpoint.h>
-#include <LibWebView/SocketPair.h>
 
 namespace Web::HTML {
 
@@ -22,7 +21,7 @@ class WebWorkerClient final
 public:
     explicit WebWorkerClient(NonnullOwnPtr<Core::LocalSocket>);
 
-    WebView::SocketPair dup_sockets();
+    IPC::File dup_socket();
 
 private:
     virtual void die() override;

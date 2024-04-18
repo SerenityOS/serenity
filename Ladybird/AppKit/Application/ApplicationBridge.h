@@ -8,8 +8,8 @@
 
 #include <AK/NonnullOwnPtr.h>
 #include <AK/Vector.h>
+#include <LibIPC/Forward.h>
 #include <LibWebView/Forward.h>
-#include <LibWebView/SocketPair.h>
 
 namespace Ladybird {
 
@@ -23,7 +23,7 @@ public:
 
     ErrorOr<void> launch_request_server(Vector<ByteString> const& certificates);
     ErrorOr<NonnullRefPtr<WebView::WebContentClient>> launch_web_content(WebViewBridge&);
-    ErrorOr<WebView::SocketPair> launch_web_worker();
+    ErrorOr<IPC::File> launch_web_worker();
 
 private:
     NonnullOwnPtr<ApplicationBridgeImpl> m_impl;

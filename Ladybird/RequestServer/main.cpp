@@ -20,7 +20,6 @@
 #include <RequestServer/HttpProtocol.h>
 #include <RequestServer/HttpsProtocol.h>
 
-// FIXME: Share b/w RequestServer and WebSocket
 ErrorOr<ByteString> find_certificates(StringView serenity_resource_root)
 {
     auto cert_path = ByteString::formatted("{}/ladybird/cacert.pem", serenity_resource_root);
@@ -33,12 +32,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     AK::set_rich_debug_enabled(true);
 
-    int fd_passing_socket { -1 };
     StringView serenity_resource_root;
     Vector<ByteString> certificates;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(fd_passing_socket, "File descriptor of the fd passing socket", "fd-passing-socket", 'c', "fd-passing-socket");
     args_parser.add_option(certificates, "Path to a certificate file", "certificate", 'C', "certificate");
     args_parser.add_option(serenity_resource_root, "Absolute path to directory for serenity resources", "serenity-resource-root", 'r', "serenity-resource-root");
     args_parser.parse(arguments);
@@ -56,7 +53,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     RequestServer::HttpsProtocol::install();
 
     auto client = TRY(IPC::take_over_accepted_client_from_system_server<RequestServer::ConnectionFromClient>());
-    client->set_fd_passing_socket(TRY(Core::LocalSocket::adopt_fd(fd_passing_socket)));
 
     return event_loop.exec();
 }

@@ -45,7 +45,7 @@
     return m_application_bridge->launch_web_content(web_view_bridge);
 }
 
-- (ErrorOr<WebView::SocketPair>)launchWebWorker
+- (ErrorOr<IPC::File>)launchWebWorker
 {
     return m_application_bridge->launch_web_worker();
 }

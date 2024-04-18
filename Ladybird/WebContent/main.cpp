@@ -51,7 +51,7 @@
 
 static ErrorOr<void> load_content_filters();
 static ErrorOr<void> load_autoplay_allowlist();
-static ErrorOr<void> initialize_lagom_networking(int request_server_socket, int request_server_fd_passing_socket);
+static ErrorOr<void> initialize_lagom_networking(int request_server_socket);
 
 namespace JS {
 extern bool g_log_all_js_exceptions;
@@ -92,9 +92,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView executable_path {};
     StringView mach_server_name {};
     Vector<ByteString> certificates;
-    int webcontent_fd_passing_socket { -1 };
     int request_server_socket { -1 };
-    int request_server_fd_passing_socket { -1 };
     bool is_layout_test_mode = false;
     bool use_lagom_networking = false;
     bool use_gpu_painting = false;
@@ -105,9 +103,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Core::ArgsParser args_parser;
     args_parser.add_option(command_line, "Chrome process command line", "command-line", 0, "command_line");
     args_parser.add_option(executable_path, "Chrome process executable path", "executable-path", 0, "executable_path");
-    args_parser.add_option(webcontent_fd_passing_socket, "File descriptor of the passing socket for the WebContent connection", "webcontent-fd-passing-socket", 'c', "webcontent_fd_passing_socket");
     args_parser.add_option(request_server_socket, "File descriptor of the socket for the RequestServer connection", "request-server-socket", 'r', "request_server_socket");
-    args_parser.add_option(request_server_fd_passing_socket, "File descriptor of the fd passing socket for the RequestServer connection", "request-server-fd-passing-socket", 'f', "request_server_fd_passing_socket");
     args_parser.add_option(is_layout_test_mode, "Is layout test mode", "layout-test-mode", 0);
     args_parser.add_option(use_lagom_networking, "Enable Lagom servers for networking", "use-lagom-networking", 0);
     args_parser.add_option(use_gpu_painting, "Enable GPU painting", "use-gpu-painting", 0);
@@ -139,11 +135,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         Web::ResourceLoader::initialize(Ladybird::RequestManagerQt::create());
     else
 #endif
-        TRY(initialize_lagom_networking(request_server_socket, request_server_fd_passing_socket));
+        TRY(initialize_lagom_networking(request_server_socket));
 
     Web::HTML::Window::set_internals_object_exposed(is_layout_test_mode);
-
-    VERIFY(webcontent_fd_passing_socket >= 0);
 
     Web::Platform::FontPlugin::install(*new Ladybird::FontPlugin(is_layout_test_mode));
 
@@ -167,7 +161,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto webcontent_socket = TRY(Core::take_over_socket_from_system_server("WebContent"sv));
     auto webcontent_client = TRY(WebContent::ConnectionFromClient::try_create(move(webcontent_socket)));
-    webcontent_client->set_fd_passing_socket(TRY(Core::LocalSocket::adopt_fd(webcontent_fd_passing_socket)));
 
     return event_loop.exec();
 }
@@ -220,13 +213,12 @@ static ErrorOr<void> load_autoplay_allowlist()
     return {};
 }
 
-ErrorOr<void> initialize_lagom_networking(int request_server_socket, int request_server_fd_passing_socket)
+ErrorOr<void> initialize_lagom_networking(int request_server_socket)
 {
     auto socket = TRY(Core::LocalSocket::adopt_fd(request_server_socket));
     TRY(socket->set_blocking(true));
 
     auto new_client = TRY(try_make_ref_counted<Protocol::RequestClient>(move(socket)));
-    new_client->set_fd_passing_socket(TRY(Core::LocalSocket::adopt_fd(request_server_fd_passing_socket)));
 
     Web::ResourceLoader::initialize(TRY(WebView::RequestServerAdapter::try_create(move(new_client))));
     return {};

@@ -24,7 +24,6 @@
 #include <LibWeb/Painting/ViewportPaintable.h>
 #include <LibWeb/Platform/Timer.h>
 #include <LibWebView/Attribute.h>
-#include <LibWebView/SocketPair.h>
 #include <WebContent/ConnectionFromClient.h>
 #include <WebContent/PageClient.h>
 #include <WebContent/PageHost.h>
@@ -601,7 +600,7 @@ void PageClient::page_did_change_audio_play_state(Web::HTML::AudioPlayState play
     client().async_did_change_audio_play_state(m_id, play_state);
 }
 
-WebView::SocketPair PageClient::request_worker_agent()
+IPC::File PageClient::request_worker_agent()
 {
     auto response = client().send_sync_but_allow_failure<Messages::WebContentClient::RequestWorkerAgent>(m_id);
     if (!response) {
@@ -609,7 +608,7 @@ WebView::SocketPair PageClient::request_worker_agent()
         exit(0);
     }
 
-    return response->take_sockets();
+    return response->take_socket();
 }
 
 void PageClient::inspector_did_load()

@@ -33,14 +33,11 @@ void WorkerAgent::initialize(JS::Realm& realm)
 
     // NOTE: This blocking IPC call may launch another process.
     //    If spinning the event loop for this can cause other javascript to execute, we're in trouble.
-    auto worker_ipc_sockets = Bindings::host_defined_page(realm).client().request_worker_agent();
-    auto worker_socket = MUST(Core::LocalSocket::adopt_fd(worker_ipc_sockets.socket.take_fd()));
+    auto worker_socket_file = Bindings::host_defined_page(realm).client().request_worker_agent();
+    auto worker_socket = MUST(Core::LocalSocket::adopt_fd(worker_socket_file.take_fd()));
     MUST(worker_socket->set_blocking(true));
 
-    auto fd_passing_socket = MUST(Core::LocalSocket::adopt_fd(worker_ipc_sockets.fd_passing_socket.take_fd()));
-
     m_worker_ipc = make_ref_counted<WebWorkerClient>(move(worker_socket));
-    m_worker_ipc->set_fd_passing_socket(move(fd_passing_socket));
 
     m_worker_ipc->async_start_dedicated_worker(m_url, m_worker_options.type, m_worker_options.credentials, m_worker_options.name, move(data_holder), m_outside_settings->serialize());
 }

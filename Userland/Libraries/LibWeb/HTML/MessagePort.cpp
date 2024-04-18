@@ -83,11 +83,6 @@ WebIDL::ExceptionOr<void> MessagePort::transfer_steps(HTML::TransferDataHolder& 
         m_socket = nullptr;
         data_holder.fds.append(IPC::File::adopt_fd(fd));
         data_holder.data.append(IPC_FILE_TAG);
-
-        auto fd_passing_socket = MUST(m_fd_passing_socket->release_fd());
-        m_fd_passing_socket = nullptr;
-        data_holder.fds.append(IPC::File::adopt_fd(fd_passing_socket));
-        data_holder.data.append(IPC_FILE_TAG);
     }
 
     // 4. Otherwise, set dataHolder.[[RemotePort]] to null.
@@ -114,11 +109,6 @@ WebIDL::ExceptionOr<void> MessagePort::transfer_receiving_steps(HTML::TransferDa
         auto fd = data_holder.fds.take_first();
         m_socket = MUST(Core::LocalSocket::adopt_fd(fd.take_fd()));
 
-        fd_tag = data_holder.data.take_first();
-        VERIFY(fd_tag == IPC_FILE_TAG);
-        fd = data_holder.fds.take_first();
-        m_fd_passing_socket = MUST(Core::LocalSocket::adopt_fd(fd.take_fd()));
-
         m_socket->on_ready_to_read = [strong_this = JS::make_handle(this)]() {
             strong_this->read_from_socket();
         };
@@ -137,7 +127,6 @@ void MessagePort::disentangle()
     m_remote_port = nullptr;
 
     m_socket = nullptr;
-    m_fd_passing_socket = nullptr;
 }
 
 // https://html.spec.whatwg.org/multipage/web-messaging.html#entangle
@@ -181,10 +170,6 @@ void MessagePort::entangle_with(MessagePort& remote_port)
     m_remote_port->m_socket->on_ready_to_read = [remote_port = JS::make_handle(m_remote_port)]() {
         remote_port->read_from_socket();
     };
-
-    auto fd_sockets = create_paired_sockets();
-    m_fd_passing_socket = move(fd_sockets[0]);
-    m_remote_port->m_fd_passing_socket = move(fd_sockets[1]);
 }
 
 // https://html.spec.whatwg.org/multipage/web-messaging.html#dom-messageport-postmessage-options
@@ -408,7 +393,6 @@ void MessagePort::start()
         return;
 
     VERIFY(m_socket);
-    VERIFY(m_fd_passing_socket);
 
     // TODO: The start() method steps are to enable this's port message queue, if it is not already enabled.
 }
