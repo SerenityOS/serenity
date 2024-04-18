@@ -322,7 +322,8 @@ ErrorOr<FlatPtr> Process::sys$recvmsg(int sockfd, Userspace<struct msghdr*> user
             m_fds.with_exclusive([&](auto& fds) { fds[fd_allocation.fd].set(*description, 0); });
             fdnums.append(fd_allocation.fd);
         }
-        TRY(try_add_cmsg(SOL_SOCKET, SCM_RIGHTS, fdnums.data(), fdnums.size() * sizeof(int)));
+        if (!fdnums.is_empty())
+            TRY(try_add_cmsg(SOL_SOCKET, SCM_RIGHTS, fdnums.data(), fdnums.size() * sizeof(int)));
     }
 
     TRY(copy_to_user(&user_msg.unsafe_userspace_ptr()->msg_controllen, &current_cmsg_len));
