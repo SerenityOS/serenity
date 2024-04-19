@@ -102,7 +102,7 @@ void dump_jobs()
         dbgln(" - {}:{}", connection.key.hostname, connection.key.port);
         for (auto& entry : *connection.value) {
             dbgln("  - Connection {} (started={}) (socket={})", &entry, entry->has_started, entry->socket);
-            dbgln("    Currently loading {} ({} elapsed)", entry->current_url, entry->timer.is_valid() ? entry->timer.elapsed() : 0);
+            dbgln("    Currently loading {} ({} elapsed)", entry->current_url, entry->timer.is_valid() ? entry->timer.elapsed_milliseconds() : 0);
             dbgln("    Request Queue:");
             for (auto& job : entry->request_queue)
                 dbgln("    - {}", &job);
@@ -113,7 +113,7 @@ void dump_jobs()
         dbgln(" - {}:{}", connection.key.hostname, connection.key.port);
         for (auto& entry : *connection.value) {
             dbgln("  - Connection {} (started={}) (socket={})", &entry, entry->has_started, entry->socket);
-            dbgln("    Currently loading {} ({} elapsed)", entry->current_url, entry->timer.is_valid() ? entry->timer.elapsed() : 0);
+            dbgln("    Currently loading {} ({} elapsed)", entry->current_url, entry->timer.is_valid() ? entry->timer.elapsed_milliseconds() : 0);
             dbgln("    Request Queue:");
             for (auto& job : entry->request_queue)
                 dbgln("    - {}", &job);

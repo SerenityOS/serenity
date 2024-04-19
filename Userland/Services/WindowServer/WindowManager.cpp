@@ -1188,7 +1188,7 @@ auto WindowManager::DoubleClickInfo::metadata_for_button(MouseButton button) -> 
 
 bool WindowManager::is_considered_doubleclick(MouseEvent const& event, DoubleClickInfo::ClickMetadata const& metadata) const
 {
-    i64 elapsed_ms_since_last_click = metadata.clock.elapsed();
+    i64 elapsed_ms_since_last_click = metadata.clock.elapsed_milliseconds();
     if (elapsed_ms_since_last_click < m_double_click_speed) {
         auto diff = event.position() - metadata.last_position;
         auto distance_travelled_squared = diff.x() * diff.x() + diff.y() * diff.y();
@@ -1262,7 +1262,7 @@ void WindowManager::process_event_for_doubleclick(Window& window, MouseEvent& ev
         // clock
         metadata.clock.start();
     } else {
-        dbgln_if(DOUBLECLICK_DEBUG, "Transforming MouseUp to MouseDoubleClick ({} < {})!", metadata.clock.elapsed(), m_double_click_speed);
+        dbgln_if(DOUBLECLICK_DEBUG, "Transforming MouseUp to MouseDoubleClick ({} < {})!", metadata.clock.elapsed_milliseconds(), m_double_click_speed);
 
         event = MouseEvent(Event::MouseDoubleClick, event.position(), event.buttons(), event.button(), event.modifiers(), event.wheel_delta_x(), event.wheel_delta_y());
         // invalidate this now we've delivered a doubleclick, otherwise

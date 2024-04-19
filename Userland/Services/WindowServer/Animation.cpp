@@ -54,7 +54,7 @@ void Animation::was_removed(Badge<Compositor>)
 
 bool Animation::update(Gfx::Painter& painter, Screen& screen, Gfx::DisjointIntRectSet& flush_rects)
 {
-    i64 const elapsed_ms = m_timer.elapsed();
+    i64 const elapsed_ms = m_timer.elapsed_milliseconds();
     float progress = min((float)elapsed_ms / (float)m_duration, 1.0f);
 
     if (on_update)

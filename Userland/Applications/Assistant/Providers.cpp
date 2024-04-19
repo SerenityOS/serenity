@@ -235,7 +235,7 @@ void FileProvider::build_filesystem_cache()
                     return IterationDecision::Continue;
                 });
             }
-            dbgln("Built cache in {} ms", timer.elapsed());
+            dbgln("Built cache in {} ms", timer.elapsed_milliseconds());
             return 0;
         },
         [this](auto) -> ErrorOr<void> {

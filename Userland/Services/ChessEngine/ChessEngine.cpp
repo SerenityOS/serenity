@@ -48,7 +48,7 @@ void ChessEngine::handle_go(GoCommand const& command)
     }();
 
     int rounds = 0;
-    while (elapsed_time.elapsed() <= command.movetime.value()) {
+    while (elapsed_time.elapsed_milliseconds() <= command.movetime.value()) {
         mcts.do_round();
         ++rounds;
     }
