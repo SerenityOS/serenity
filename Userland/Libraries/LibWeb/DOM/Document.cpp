@@ -3293,7 +3293,7 @@ void Document::unload(JS::GCPtr<Document>)
 
     // 19. If oldDocument's salvageable state is false, then destroy oldDocument.
     if (!m_salvageable) {
-        destroy();
+        // NOTE: Document is destroyed from Document::unload_a_document_and_its_descendants()
     }
 
     // 20. Decrease oldDocument's unload counter by 1.
@@ -3308,41 +3308,57 @@ void Document::unload(JS::GCPtr<Document>)
 // https://html.spec.whatwg.org/multipage/document-lifecycle.html#unload-a-document-and-its-descendants
 void Document::unload_a_document_and_its_descendants(JS::GCPtr<Document> new_document, JS::SafeFunction<void()> after_all_unloads)
 {
-    // 1. FIXME: Assert: this is running within document's node navigable's traversable navigable's session history traversal queue.
+    // Specification defines this algorithm in the following steps:
+    // 1. Recursively unload (and destroy) documents in descendant navigables
+    // 2. Unload (and destroy) this document.
+    //
+    // Implementation of the spec will fail in the following scenario:
+    // 1. Unload iframe's (has attribute name="test") document
+    //    1.1. Destroy iframe's document
+    // 2. Unload iframe's parent document
+    //    2.1. Dispatch "unload" event
+    //       2.2. In "unload" event handler run `window["test"]`
+    //          2.2.1. Execute Window::document_tree_child_navigable_target_name_property_set()
+    //             2.2.1.1. Fail to access iframe's navigable active document because it was destroyed on step 1.1
+    //
+    // We change the algorithm to:
+    // 1. Unload all descendant documents without destroying them
+    // 2. Unload this document
+    // 3. Destroy all descendant documents
+    // 4. Destroy this document
+    //
+    // This way we maintain the invariant that all navigable containers present in the DOM tree
+    // have an active document while the document is being unloaded.
 
-    // 2. Let childNavigables be document's child navigables.
-    auto child_navigables = document_tree_child_navigables();
-
-    // 2. Let numberUnloaded be 0.
     IGNORE_USE_IN_ESCAPING_LAMBDA size_t number_unloaded = 0;
 
-    // Spec FIXME: in what order?
-    // 3. For each childNavigable of childNavigable's, queue a global task on the navigation and traversal task source
-    //    given childNavigable's active window to perform the following steps:
-    for (auto& child_navigable : child_navigables) {
-        HTML::queue_global_task(HTML::Task::Source::NavigationAndTraversal, *child_navigable->active_window(), [&number_unloaded, child_navigable = child_navigable.ptr()] {
-            // 1. Let incrementUnloaded be an algorithm step which increments numberUnloaded.
-            auto increment_unloaded = [&number_unloaded] { ++number_unloaded; };
+    auto navigable = this->navigable();
 
-            // 2. Unload a document and its descendants given childNavigable's active document, null, and incrementUnloaded.
-            child_navigable->active_document()->unload_a_document_and_its_descendants(nullptr, move(increment_unloaded));
+    Vector<JS::Handle<HTML::Navigable>> descendant_navigables;
+    for (auto& other_navigable : HTML::all_navigables()) {
+        if (navigable->is_ancestor_of(*other_navigable))
+            descendant_navigables.append(other_navigable);
+    }
+
+    auto unloaded_documents_count = descendant_navigables.size() + 1;
+
+    HTML::queue_global_task(HTML::Task::Source::NavigationAndTraversal, HTML::relevant_global_object(*this), [&number_unloaded, this, new_document] {
+        unload(new_document);
+        ++number_unloaded;
+    });
+
+    for (auto& descendant_navigable : descendant_navigables) {
+        HTML::queue_global_task(HTML::Task::Source::NavigationAndTraversal, *descendant_navigable->active_window(), [&number_unloaded, descendant_navigable = descendant_navigable.ptr()] {
+            descendant_navigable->active_document()->unload();
+            ++number_unloaded;
         });
     }
 
-    // 4. Wait until numberUnloaded equals childNavigable's size.
     HTML::main_thread_event_loop().spin_until([&] {
-        return number_unloaded == child_navigables.size();
+        return number_unloaded == unloaded_documents_count;
     });
 
-    // 5. Queue a global task on the navigation and traversal task source given document's relevant global object to perform the following steps:
-    HTML::queue_global_task(HTML::Task::Source::NavigationAndTraversal, HTML::relevant_global_object(*this), [this, new_document, after_all_unloads = move(after_all_unloads)] {
-        // 1. Unload document, passing along newDocument if it is not null.
-        unload(new_document);
-
-        // 2. If afterAllUnloads was given, then run it.
-        if (after_all_unloads)
-            after_all_unloads();
-    });
+    destroy_a_document_and_its_descendants(move(after_all_unloads));
 }
 
 // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#allowed-to-use
