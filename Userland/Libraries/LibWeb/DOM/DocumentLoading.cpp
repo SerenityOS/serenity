@@ -26,6 +26,17 @@
 
 namespace Web {
 
+// Replaces a document's content with a simple error message.
+static void convert_to_xml_error_document(DOM::Document& document, String error_string)
+{
+    auto html_element = MUST(DOM::create_element(document, HTML::TagNames::html, Namespace::HTML));
+    auto body_element = MUST(DOM::create_element(document, HTML::TagNames::body, Namespace::HTML));
+    MUST(html_element->append_child(body_element));
+    MUST(body_element->append_child(document.heap().allocate<DOM::Text>(document.realm(), document, error_string)));
+    document.remove_all_children();
+    MUST(document.append_child(html_element));
+}
+
 static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOM::Document>> load_markdown_document(HTML::NavigationParams const& navigation_params)
 {
     auto extra_head_contents = R"~~~(
@@ -108,8 +119,10 @@ bool build_xml_document(DOM::Document& document, ByteBuffer const& data, Optiona
     }
     VERIFY(decoder.has_value());
     // Well-formed XML documents contain only properly encoded characters
-    if (!decoder->validate(data))
+    if (!decoder->validate(data)) {
+        convert_to_xml_error_document(document, "XML Document contains improperly-encoded characters"_string);
         return false;
+    }
     auto source = decoder->to_utf8(data).release_value_but_fixme_should_propagate_errors();
     XML::Parser parser(source, { .resolve_external_resource = resolve_xml_resource });
     XMLDocumentBuilder builder { document };
@@ -198,7 +211,7 @@ static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOM::Document>> load_xml_document(HT
 
     // FIXME: Actually follow the spec! This is just the ad-hoc code we had before, modified somewhat.
 
-    auto document = TRY(DOM::Document::create_and_initialize(DOM::Document::Type::XML, "application/xhtml+xml"_string, navigation_params));
+    auto document = TRY(DOM::Document::create_and_initialize(DOM::Document::Type::XML, type.essence(), navigation_params));
 
     Optional<String> content_encoding;
     if (auto maybe_encoding = type.parameters().get("charset"sv); maybe_encoding.has_value())
@@ -219,6 +232,9 @@ static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOM::Document>> load_xml_document(HT
         if (!decoder->validate(data)) {
             // FIXME: Insert error message into the document.
             dbgln("XML Document contains improperly-encoded characters");
+            convert_to_xml_error_document(document, "XML Document contains improperly-encoded characters"_string);
+
+            // NOTE: This ensures that the `load` event gets fired for the frame loading this document.
             document->completely_finish_loading();
             return;
         }
@@ -226,6 +242,9 @@ static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOM::Document>> load_xml_document(HT
         if (source.is_error()) {
             // FIXME: Insert error message into the document.
             dbgln("Failed to decode XML document: {}", source.error());
+            convert_to_xml_error_document(document, MUST(String::formatted("Failed to decode XML document: {}", source.error())));
+
+            // NOTE: This ensures that the `load` event gets fired for the frame loading this document.
             document->completely_finish_loading();
             return;
         }
@@ -235,6 +254,9 @@ static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOM::Document>> load_xml_document(HT
         if (result.is_error()) {
             // FIXME: Insert error message into the document.
             dbgln("Failed to parse XML document: {}", result.error());
+            convert_to_xml_error_document(document, MUST(String::formatted("Failed to parse XML document: {}", result.error())));
+
+            // NOTE: XMLDocumentBuilder ensures that the `load` event gets fired. We don't need to do anything else here.
         }
     };
 
