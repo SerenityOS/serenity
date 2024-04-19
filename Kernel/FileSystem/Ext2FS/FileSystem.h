@@ -103,6 +103,8 @@ private:
     void uncache_inode(InodeIndex);
     ErrorOr<void> free_inode(Ext2FSInode&);
 
+    using BlockList = HashMap<BlockBasedFileSystem::BlockIndex, BlockBasedFileSystem::BlockIndex>;
+
     struct BlockListShape {
         unsigned direct_blocks { 0 };
         unsigned indirect_blocks { 0 };

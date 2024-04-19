@@ -619,10 +619,9 @@ ErrorOr<void> Ext2FS::free_inode(Ext2FSInode& inode)
     // Mark all blocks used by this inode as free.
     {
         auto blocks = TRY(inode.compute_block_list_with_meta_blocks());
-        for (auto block_index : blocks) {
-            VERIFY(block_index <= super_block().s_blocks_count);
-            if (block_index.value())
-                TRY(set_block_allocation_state(block_index, false));
+        for (auto const& [_, block_index] : blocks) {
+            VERIFY(block_index <= super_block().s_blocks_count && block_index != 0);
+            TRY(set_block_allocation_state(block_index, false));
         }
     }
 
