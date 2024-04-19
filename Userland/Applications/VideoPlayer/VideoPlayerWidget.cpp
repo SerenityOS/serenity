@@ -6,6 +6,7 @@
 
 #include <AK/NumberFormat.h>
 #include <LibConfig/Client.h>
+#include <LibDesktop/Launcher.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
@@ -418,6 +419,9 @@ ErrorOr<void> VideoPlayerWidget::initialize_menubar(GUI::Window& window)
 
     // Help menu
     auto help_menu = window.add_menu("&Help"_string);
+    help_menu->add_action(GUI::CommonActions::make_help_action([](auto&) {
+        Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/Applications/VideoPlayer.md"), "/bin/Help");
+    }));
     help_menu->add_action(GUI::CommonActions::make_about_action("Video Player"_string, TRY(GUI::Icon::try_create_default_icon("app-video-player"sv)), &window));
 
     return {};
