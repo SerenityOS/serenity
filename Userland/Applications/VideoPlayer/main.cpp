@@ -6,6 +6,7 @@
 
 #include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
+#include <LibDesktop/Launcher.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
@@ -25,6 +26,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app = TRY(GUI::Application::create(arguments));
     app->set_config_domain("VideoPlayer"_string);
+
+    TRY(Desktop::Launcher::add_allowed_handler_with_only_specific_urls("/bin/Help", { URL::create_with_file_scheme("/usr/share/man/man1/Applications/VideoPlayer.md") }));
+    TRY(Desktop::Launcher::seal_allowlist());
 
     auto window = GUI::Window::construct();
     window->resize(640, 480);
