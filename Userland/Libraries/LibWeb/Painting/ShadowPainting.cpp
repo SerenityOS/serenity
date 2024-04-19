@@ -136,8 +136,21 @@ static OuterBoxShadowMetrics get_outer_box_shadow_configuration(PaintOuterBoxSha
 
     auto spread_corner = [&](auto& corner) {
         if (corner) {
-            corner.horizontal_radius += spread_distance.value();
-            corner.vertical_radius += spread_distance.value();
+            auto spread_distance_value = spread_distance.value();
+            // When radii < spread distance, modify spread distance in each direction per last paragraph of https://drafts.csswg.org/css-backgrounds/#shadow-shape
+            auto horizontal_spread_distance = spread_distance_value;
+            if (corner.horizontal_radius < spread_distance_value) {
+                auto radius_spread_ratio = static_cast<float>(corner.horizontal_radius) / spread_distance_value;
+                horizontal_spread_distance *= 1 + pow((radius_spread_ratio - 1), 3);
+            }
+            corner.horizontal_radius += round(horizontal_spread_distance);
+
+            auto vertical_spread_distance = spread_distance_value;
+            if (corner.vertical_radius < spread_distance_value) {
+                auto radius_spread_ratio = static_cast<float>(corner.vertical_radius) / spread_distance_value;
+                vertical_spread_distance *= 1 + pow((radius_spread_ratio - 1), 3);
+            }
+            corner.vertical_radius += round(vertical_spread_distance);
         }
     };
 
