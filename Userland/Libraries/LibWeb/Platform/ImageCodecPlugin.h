@@ -9,6 +9,7 @@
 
 #include <AK/RefPtr.h>
 #include <AK/Vector.h>
+#include <LibCore/Promise.h>
 #include <LibGfx/Forward.h>
 
 namespace Web::Platform {
@@ -31,7 +32,8 @@ public:
 
     virtual ~ImageCodecPlugin();
 
-    virtual Optional<DecodedImage> decode_image(ReadonlyBytes) = 0;
+    virtual NonnullRefPtr<Core::Promise<DecodedImage>> decode_image(ReadonlyBytes, Function<ErrorOr<void>(DecodedImage&)> on_resolved, Function<void(Error&)> on_rejected) = 0;
+    Optional<DecodedImage> decode_image(ReadonlyBytes);
 };
 
 }
