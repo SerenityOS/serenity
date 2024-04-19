@@ -21,7 +21,7 @@ public:
     ImageCodecPluginSerenity();
     virtual ~ImageCodecPluginSerenity() override;
 
-    virtual Optional<Web::Platform::DecodedImage> decode_image(ReadonlyBytes) override;
+    virtual NonnullRefPtr<Core::Promise<Web::Platform::DecodedImage>> decode_image(ReadonlyBytes, Function<ErrorOr<void>(Web::Platform::DecodedImage&)> on_resolved, Function<void(Error&)> on_rejected) override;
 
 private:
     RefPtr<ImageDecoderClient::Client> m_client;

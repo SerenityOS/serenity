@@ -25,4 +25,13 @@ void ImageCodecPlugin::install(ImageCodecPlugin& plugin)
     s_the = &plugin;
 }
 
+Optional<DecodedImage> ImageCodecPlugin::decode_image(ReadonlyBytes encoded_data)
+{
+    auto promise = decode_image(encoded_data, {}, {});
+    auto result = promise->await();
+    if (result.is_error())
+        return {};
+    return result.release_value();
+}
+
 }
