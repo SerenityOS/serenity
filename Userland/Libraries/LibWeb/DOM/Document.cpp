@@ -2628,12 +2628,13 @@ static inline bool is_valid_name_character(u32 code_point)
         || (code_point >= 0x203f && code_point <= 0x2040);
 }
 
+// https://www.w3.org/TR/xml/#NT-Name
 bool Document::is_valid_name(String const& name)
 {
-    auto code_points = Utf8View { name };
-    auto it = code_points.begin();
-    if (code_points.is_empty())
+    if (name.is_empty())
         return false;
+    auto code_points = name.code_points();
+    auto it = code_points.begin();
 
     if (!is_valid_name_start_character(*it))
         return false;
