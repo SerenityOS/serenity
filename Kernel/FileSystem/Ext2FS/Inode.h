@@ -45,6 +45,9 @@ private:
     virtual ErrorOr<void> truncate_locked(u64) override;
     virtual ErrorOr<int> get_block_address(int) override;
 
+    BlockBasedFileSystem::BlockIndex get_block(BlockBasedFileSystem::BlockIndex) const;
+    ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> get_blocks(BlockBasedFileSystem::BlockIndex first_block_index, u64 count) const;
+
     ErrorOr<void> write_directory(Vector<Ext2FSDirectoryEntry>&);
     ErrorOr<void> populate_lookup_cache();
     ErrorOr<void> resize(u64);
@@ -56,16 +59,16 @@ private:
     ErrorOr<void> flush_block_list();
 
     ErrorOr<void> compute_block_list_with_exclusive_locking();
-    ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> compute_block_list() const;
-    ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> compute_block_list_with_meta_blocks() const;
-    ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> compute_block_list_impl(bool include_block_list_blocks) const;
-    ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> compute_block_list_impl_internal(ext2_inode const&, bool include_block_list_blocks) const;
+    ErrorOr<Ext2FS::BlockList> compute_block_list() const;
+    ErrorOr<Ext2FS::BlockList> compute_block_list_with_meta_blocks() const;
+    ErrorOr<Ext2FS::BlockList> compute_block_list_impl(bool include_block_list_blocks) const;
+    ErrorOr<Vector<Ext2FS::BlockIndex>> compute_block_list_impl_internal(ext2_inode const&, bool include_block_list_blocks) const;
 
     Ext2FS& fs();
     Ext2FS const& fs() const;
     Ext2FSInode(Ext2FS&, InodeIndex);
 
-    Vector<BlockBasedFileSystem::BlockIndex> m_block_list;
+    Ext2FS::BlockList m_block_list;
     HashMap<NonnullOwnPtr<KString>, InodeIndex> m_lookup_cache;
     ext2_inode m_raw_inode {};
 
