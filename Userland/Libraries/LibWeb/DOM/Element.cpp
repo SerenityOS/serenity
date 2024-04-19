@@ -167,13 +167,11 @@ JS::GCPtr<Attr> Element::get_attribute_node_ns(Optional<FlyString> const& namesp
 WebIDL::ExceptionOr<void> Element::set_attribute(FlyString const& name, String const& value)
 {
     // 1. If qualifiedName does not match the Name production in XML, then throw an "InvalidCharacterError" DOMException.
-    // FIXME: Proper name validation
-    if (name.is_empty())
-        return WebIDL::InvalidCharacterError::create(realm(), "Attribute name must not be empty"_fly_string);
+    if (!Document::is_valid_name(name.to_string()))
+        return WebIDL::InvalidCharacterError::create(realm(), "Attribute name must not be empty or contain invalid characters"_fly_string);
 
     // 2. If this is in the HTML namespace and its node document is an HTML document, then set qualifiedName to qualifiedName in ASCII lowercase.
-    // FIXME: Handle the second condition, assume it is an HTML document for now.
-    bool insert_as_lowercase = namespace_uri() == Namespace::HTML;
+    bool insert_as_lowercase = namespace_uri() == Namespace::HTML && document().document_type() == Document::Type::HTML;
 
     // 3. Let attribute be the first attribute in this’s attribute list whose qualified name is qualifiedName, and null otherwise.
     auto* attribute = m_attributes->get_attribute(name);
