@@ -203,7 +203,7 @@ JS::NonnullGCPtr<JS::Promise> WindowOrWorkerGlobalScopeMixin::create_image_bitma
     image.visit(
         [&](JS::Handle<FileAPI::Blob>& blob) {
             // Run these step in parallel:
-            Platform::EventLoopPlugin::the().deferred_invoke([=, this]() {
+            Platform::EventLoopPlugin::the().deferred_invoke([=]() {
                 // 1. Let imageData be the result of reading image's data. If an error occurs during reading of the
                 // object, then reject p with an "InvalidStateError" DOMException and abort these steps.
                 // FIXME: I guess this is always fine for us as the data is already read.
@@ -213,24 +213,27 @@ JS::NonnullGCPtr<JS::Promise> WindowOrWorkerGlobalScopeMixin::create_image_bitma
                 // 2. Apply the image sniffing rules to determine the file format of imageData, with MIME type of
                 // image (as given by image's type attribute) giving the official type.
 
-                // 3. If imageData is not in a supported image file format (e.g., it's not an image at all), or if
-                // imageData is corrupted in some fatal way such that the image dimensions cannot be obtained
-                // (e.g., a vector graphic with no natural size), then reject p with an "InvalidStateError" DOMException
-                // and abort these steps.
-                auto result = Web::Platform::ImageCodecPlugin::the().decode_image(image_data);
-                if (!result.has_value()) {
-                    p->reject(WebIDL::InvalidStateError::create(this_impl().realm(), "image does not contain a supported image format"_string));
-                    return;
-                }
+                auto on_failed_decode = [p = JS::Handle(*p)](Error&) {
+                    // 3. If imageData is not in a supported image file format (e.g., it's not an image at all), or if
+                    // imageData is corrupted in some fatal way such that the image dimensions cannot be obtained
+                    // (e.g., a vector graphic with no natural size), then reject p with an "InvalidStateError" DOMException
+                    // and abort these steps.
+                    p->reject(WebIDL::InvalidStateError::create(relevant_realm(*p), "image does not contain a supported image format"_string));
+                };
 
-                // 4. Set imageBitmap's bitmap data to imageData, cropped to the source rectangle with formatting.
-                // If this is an animated image, imageBitmap's bitmap data must only be taken from the default image
-                // of the animation (the one that the format defines is to be used when animation is not supported
-                // or is disabled), or, if there is no such image, the first frame of the animation.
-                image_bitmap->set_bitmap(result.value().frames.take_first().bitmap);
+                auto on_successful_decode = [image_bitmap = JS::Handle(*image_bitmap), p = JS::Handle(*p)](Web::Platform::DecodedImage& result) -> ErrorOr<void> {
+                    // 4. Set imageBitmap's bitmap data to imageData, cropped to the source rectangle with formatting.
+                    // If this is an animated image, imageBitmap's bitmap data must only be taken from the default image
+                    // of the animation (the one that the format defines is to be used when animation is not supported
+                    // or is disabled), or, if there is no such image, the first frame of the animation.
+                    image_bitmap->set_bitmap(result.frames.take_first().bitmap);
 
-                // 5. Resolve p with imageBitmap.
-                p->fulfill(image_bitmap);
+                    // 5. Resolve p with imageBitmap.
+                    p->fulfill(image_bitmap);
+                    return {};
+                };
+
+                (void)Web::Platform::ImageCodecPlugin::the().decode_image(image_data, move(on_successful_decode), move(on_failed_decode));
             });
         },
         [&](auto&) {

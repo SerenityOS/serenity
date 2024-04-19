@@ -182,11 +182,14 @@ WebIDL::ExceptionOr<void> HTMLVideoElement::determine_element_poster_frame(Optio
             m_fetch_controller = nullptr;
 
             // 6. If an image is thus obtained, the poster frame is that image. Otherwise, there is no poster frame.
-            auto image = Platform::ImageCodecPlugin::the().decode_image(image_data);
-            if (!image.has_value() || image->frames.is_empty())
-                return;
-
-            m_poster_frame = move(image.release_value().frames[0].bitmap);
+            (void)Platform::ImageCodecPlugin::the().decode_image(
+                image_data,
+                [strong_this = JS::Handle(*this)](Web::Platform::DecodedImage& image) -> ErrorOr<void> {
+                    if (!image.frames.is_empty())
+                        strong_this->m_poster_frame = move(image.frames[0].bitmap);
+                    return {};
+                },
+                [](auto&) {});
         });
 
         VERIFY(response->body());

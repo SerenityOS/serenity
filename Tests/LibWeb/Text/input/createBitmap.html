@@ -1,7 +1,7 @@
 <script src="include.js"></script>
 <canvas id="test" width="2" height="2" hidden="hidden"></canvas>
 <script>
-    test(() => {
+    asyncTest((done) => {
         // The blob is a JXL image for a 2x2 checkerboard
         // Made with the following tree on https://jxl-art.lucaversari.it/:
         // Width 2
@@ -40,6 +40,8 @@
                 println(`Invalid value in the bitmap`);
             else
                 println(`Bitmap is correctly loaded`);
+
+            done();
         })
     });
 </script>
