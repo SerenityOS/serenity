@@ -150,8 +150,8 @@ static OuterBoxShadowMetrics get_outer_box_shadow_configuration(PaintOuterBoxSha
     DevicePixelRect inner_bounding_rect = {
         device_content_rect.x() + offset_x - expansion,
         device_content_rect.y() + offset_y - expansion,
-        device_content_rect.width() + 2 * expansion,
-        device_content_rect.height() + 2 * expansion
+        max(0, (device_content_rect.width() + 2 * expansion).value()),
+        max(0, (device_content_rect.height() + 2 * expansion).value())
     };
 
     // Calculating and blurring the box-shadow full size is expensive, and wasteful - aside from the corners,
