@@ -100,12 +100,10 @@ ErrorOr<NonnullRefPtr<Client>> Client::create(StringView image_path, StringView 
     ScopeGuard guard = [&] { image_decoder->shutdown(); };
 
     auto byte_buffer = TRY(image_file->read_until_eof(16 * KiB));
-    auto maybe_image = image_decoder->decode_image(byte_buffer);
+    auto image_promise = image_decoder->decode_image(byte_buffer, {}, {});
+    auto image_result = TRY(image_promise->await());
 
-    if (!maybe_image.has_value())
-        return Error::from_string_view("Image could not be read"sv);
-
-    auto image = maybe_image->frames.take_first().bitmap;
+    auto image = image_result.frames.take_first().bitmap;
 
     // Make sure to not draw out of bounds; some servers will disconnect us for that!
     if (image->width() > canvas_size.width()) {

@@ -60,16 +60,6 @@ NonnullRefPtr<Core::Promise<DecodedImage>> Client::decode_image(ReadonlyBytes en
     return promise;
 }
 
-Optional<DecodedImage> Client::decode_image(ReadonlyBytes encoded_data, Optional<Gfx::IntSize> ideal_size, Optional<ByteString> mime_type)
-{
-    auto promise = decode_image(
-        encoded_data, [](auto) -> ErrorOr<void> { return {}; }, [](Error&) -> void {}, ideal_size, mime_type);
-    auto result = promise->await();
-    if (result.is_error())
-        return {};
-    return result.release_value();
-}
-
 void Client::did_decode_image(i64 image_id, bool is_animated, u32 loop_count, Vector<Gfx::ShareableBitmap> const& bitmaps, Vector<u32> const& durations, Gfx::FloatPoint scale)
 {
     VERIFY(!bitmaps.is_empty());

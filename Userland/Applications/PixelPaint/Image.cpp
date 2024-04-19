@@ -57,14 +57,9 @@ ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Image::decode_bitmap(ReadonlyBytes bitmap_da
     auto optional_mime_type = guessed_mime_type.map([](auto mime_type) { return mime_type.to_byte_string(); });
 
     // FIXME: Find a way to avoid the memory copying here.
-    auto maybe_decoded_image = client->decode_image(bitmap_data, OptionalNone {}, optional_mime_type);
-    if (!maybe_decoded_image.has_value())
-        return Error::from_string_literal("Image decode failed");
-
-    // FIXME: Support multi-frame images?
-    auto decoded_image = maybe_decoded_image.release_value();
-    if (decoded_image.frames.is_empty())
-        return Error::from_string_literal("Image decode failed (no frames)");
+    // FIXME: Support multi-frame images
+    // FIXME: Refactor image decoding to be more async-aware, and don't await this promise
+    auto decoded_image = TRY(client->decode_image(bitmap_data, {}, {}, OptionalNone {}, optional_mime_type)->await());
 
     return decoded_image.frames.first().bitmap;
 }
