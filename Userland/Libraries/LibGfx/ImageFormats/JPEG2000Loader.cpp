@@ -15,6 +15,9 @@
 // Core coding system spec (.jp2 format): T-REC-T.800-201511-S!!PDF-E.pdf available here:
 // https://www.itu.int/rec/dologin_pub.asp?lang=e&id=T-REC-T.800-201511-S!!PDF-E&type=items
 
+// There is a useful example bitstream in the spec in:
+// J.10 An example of decoding showing intermediate
+
 // Extensions (.jpx format): T-REC-T.801-202106-S!!PDF-E.pdf available here:
 // https://handle.itu.int/11.1002/1000/14666-en?locatt=format:pdf&auth
 
