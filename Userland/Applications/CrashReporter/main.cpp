@@ -60,7 +60,7 @@ static TitleAndText build_backtrace(Coredump::Reader const& coredump, ELF::Core:
 
     auto metadata = coredump.metadata();
 
-    dbgln("Generating backtrace took {} ms", timer.elapsed());
+    dbgln("Generating backtrace took {} ms", timer.elapsed_milliseconds());
 
     StringBuilder builder;
 

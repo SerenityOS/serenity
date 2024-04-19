@@ -1123,7 +1123,7 @@ ErrorOr<int> Shell::builtin_time(Main::Arguments arguments)
             block_on_job(job);
             exit_code = job->exit_code();
         }
-        iteration_times.add(static_cast<float>(timer.elapsed()));
+        iteration_times.add(static_cast<float>(timer.elapsed_milliseconds()));
     }
 
     if (number_of_iterations == 1) {

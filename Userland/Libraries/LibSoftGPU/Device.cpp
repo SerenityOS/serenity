@@ -1552,7 +1552,7 @@ void Device::draw_statistics_overlay(Gfx::Bitmap& target)
     frame_counter++;
     i64 milliseconds = 0;
     if (timer.is_valid())
-        milliseconds = timer.elapsed();
+        milliseconds = timer.elapsed_milliseconds();
     else
         timer.start();
 

@@ -31,18 +31,10 @@ public:
     i64 elapsed_milliseconds() const;
     Duration elapsed_time() const;
 
-    // FIXME: Move callers to elapsed_milliseconds(), remove this.
-    i64 elapsed() const // milliseconds
-    {
-        return elapsed_milliseconds();
-    }
-
     MonotonicTime const& origin_time() const { return m_origin_time; }
-
 private:
     MonotonicTime m_origin_time { MonotonicTime::now() };
     TimerType m_timer_type { TimerType::Coarse };
     bool m_valid { false };
 };
-
 }

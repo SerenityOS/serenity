@@ -104,7 +104,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (response.header.type != ICMP_ECHOREPLY && response.header.type != ICMP_TIME_EXCEEDED)
                 continue;
 
-            auto response_time = m_timer.elapsed();
+            auto response_time = m_timer.elapsed_milliseconds();
             auto* peer = gethostbyaddr(&peer_address.sin_addr, sizeof(peer_address.sin_addr), AF_INET);
 
             ByteString peer_name;

@@ -53,7 +53,7 @@ void DoubleClickArrowWidget::paint_event(GUI::PaintEvent& event)
 void DoubleClickArrowWidget::mousedown_event(GUI::MouseEvent&)
 {
     auto double_click_in_progress = m_double_click_timer.is_valid();
-    auto elapsed_ms = double_click_in_progress ? m_double_click_timer.elapsed() : 0;
+    auto elapsed_ms = double_click_in_progress ? m_double_click_timer.elapsed_milliseconds() : 0;
 
     if (!double_click_in_progress || elapsed_ms > m_double_click_speed) {
         m_double_click_timer.start();

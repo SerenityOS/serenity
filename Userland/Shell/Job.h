@@ -29,7 +29,7 @@ public:
     {
         if constexpr (SHELL_JOB_DEBUG) {
             if (m_active) {
-                auto elapsed = m_command_timer.elapsed();
+                auto elapsed = m_command_timer.elapsed_milliseconds();
                 // Don't mistake this for the command!
                 dbgln("Job entry '{}' deleted in {} ms", m_cmd, elapsed);
             }
