@@ -37,5 +37,4 @@ private:
     TimerType m_timer_type { TimerType::Coarse };
     bool m_valid { false };
 };
-
 }
