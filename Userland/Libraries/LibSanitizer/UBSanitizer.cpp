@@ -482,4 +482,23 @@ static void handle_float_cast_overflow(FloatCastOverflowData& data, ValueHandle)
     handle_float_cast_overflow(data, value);
     ABORT_ALWAYS();
 }
+
+static void handle_function_type_mismatch(FunctionTypeMismatchData& data, ValueHandle)
+{
+    auto location = data.location.permanently_clear();
+    if (!location.needs_logging())
+        return;
+    WARNLN_AND_DBGLN("UBSAN: call to function through pointer to incorrect function type {}", data.type.name());
+    print_location(location);
+}
+[[gnu::used]] void __ubsan_handle_function_type_mismatch(FunctionTypeMismatchData& data, ValueHandle value)
+{
+    handle_function_type_mismatch(data, value);
+    ABORT_IF_DEADLY();
+}
+[[gnu::used, noreturn]] void __ubsan_handle_function_type_mismatch_abort(FunctionTypeMismatchData& data, ValueHandle value)
+{
+    handle_function_type_mismatch(data, value);
+    ABORT_ALWAYS();
+}
 } // extern "C"

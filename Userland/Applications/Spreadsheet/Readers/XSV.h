@@ -107,7 +107,7 @@ public:
         size_t index() const { return m_index; }
         size_t size() const { return m_xsv.headers().size(); }
 
-        using ConstIterator = AK::SimpleIterator<const Row, StringView const>;
+        using ConstIterator = AK::SimpleIterator<Row const, StringView const>;
         using Iterator = AK::SimpleIterator<Row, StringView>;
 
         constexpr ConstIterator begin() const { return ConstIterator::begin(*this); }
@@ -168,7 +168,7 @@ public:
         size_t m_index { 0 };
     };
 
-    const Row operator[](size_t index) const;
+    Row const operator[](size_t index) const;
     Row operator[](size_t index);
 
     Row at(size_t index) const;

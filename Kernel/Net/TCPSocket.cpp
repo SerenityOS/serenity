@@ -733,7 +733,7 @@ void TCPSocket::retransmit_packets()
             packet.tx_counter++;
 
             if constexpr (TCP_SOCKET_DEBUG) {
-                auto& tcp_packet = *(const TCPPacket*)(packet.buffer->buffer->data() + packet.ipv4_payload_offset);
+                auto& tcp_packet = *(TCPPacket const*)(packet.buffer->buffer->data() + packet.ipv4_payload_offset);
                 dbgln("Sending TCP packet from {}:{} to {}:{} with ({}{}{}{}) seq_no={}, ack_no={}, tx_counter={}",
                     local_address(), local_port(),
                     peer_address(), peer_port(),

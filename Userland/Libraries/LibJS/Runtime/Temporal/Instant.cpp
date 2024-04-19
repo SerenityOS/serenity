@@ -190,7 +190,7 @@ ThrowCompletionOr<BigInt*> add_instant(VM& vm, BigInt const& epoch_nanoseconds, 
 // 8.5.6 DifferenceInstant ( ns1, ns2, roundingIncrement, smallestUnit, largestUnit, roundingMode ), https://tc39.es/proposal-temporal/#sec-temporal-differenceinstant
 TimeDurationRecord difference_instant(VM& vm, BigInt const& nanoseconds1, BigInt const& nanoseconds2, u64 rounding_increment, StringView smallest_unit, StringView largest_unit, StringView rounding_mode)
 {
-    static const Crypto::UnsignedBigInteger BIGINT_ONE_THOUSAND { 1'000 };
+    static Crypto::UnsignedBigInteger const BIGINT_ONE_THOUSAND { 1'000 };
 
     // 1. Let difference be ℝ(ns2) - ℝ(ns1).
     auto difference = nanoseconds2.big_integer().minus(nanoseconds1.big_integer());

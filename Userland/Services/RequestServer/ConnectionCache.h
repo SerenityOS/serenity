@@ -217,7 +217,7 @@ decltype(auto) get_or_create_connection(auto& cache, URL::URL const& url, auto j
         sockets_for_url.append(make<ConnectionType>(
             socket_result.release_value(),
             typename ConnectionType::QueueType {},
-            Core::Timer::create_single_shot(ConnectionKeepAliveTimeMilliseconds, nullptr).release_value_but_fixme_should_propagate_errors()));
+            Core::Timer::create_single_shot(ConnectionKeepAliveTimeMilliseconds, nullptr)));
         sockets_for_url.last()->proxy = move(proxy);
         did_add_new_connection = true;
     }

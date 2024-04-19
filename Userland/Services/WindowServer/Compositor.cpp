@@ -56,8 +56,7 @@ Compositor::Compositor()
         [this] {
             compose();
         },
-        this)
-                          .release_value_but_fixme_should_propagate_errors();
+        this);
     m_compose_timer->start();
 
     m_immediate_compose_timer = Core::Timer::create_single_shot(
@@ -65,8 +64,7 @@ Compositor::Compositor()
         [this] {
             compose();
         },
-        this)
-                                    .release_value_but_fixme_should_propagate_errors();
+        this);
     m_compose_timer->start();
 
     init_bitmaps();
@@ -376,9 +374,9 @@ void Compositor::compose()
         dbgln_if(COMPOSE_DEBUG, "  window {} frame rect: {}", window.title(), frame_rect);
 
         RefPtr<Gfx::Bitmap> backing_store = window.backing_store();
-        auto compose_window_rect = [&](Screen& screen, Gfx::Painter& painter, const Gfx::IntRect& rect) {
+        auto compose_window_rect = [&](Screen& screen, Gfx::Painter& painter, Gfx::IntRect const& rect) {
             if (!window.is_fullscreen()) {
-                rect.for_each_intersected(frame_rects, [&](const Gfx::IntRect& intersected_rect) {
+                rect.for_each_intersected(frame_rects, [&](Gfx::IntRect const& intersected_rect) {
                     Gfx::PainterStateSaver saver(painter);
                     painter.add_clip_rect(intersected_rect);
                     painter.translate(transition_offset);
@@ -392,7 +390,7 @@ void Compositor::compose()
             if (update_window_rect.is_empty())
                 return;
 
-            auto clear_window_rect = [&](const Gfx::IntRect& clear_rect) {
+            auto clear_window_rect = [&](Gfx::IntRect const& clear_rect) {
                 painter.fill_rect(clear_rect, wm.palette().window());
             };
 
@@ -470,7 +468,7 @@ void Compositor::compose()
         // Render opaque portions directly to the back buffer
         auto& opaque_rects = window.opaque_rects();
         if (!opaque_rects.is_empty()) {
-            opaque_rects.for_each_intersected(dirty_rects, [&](const Gfx::IntRect& render_rect) {
+            opaque_rects.for_each_intersected(dirty_rects, [&](Gfx::IntRect const& render_rect) {
                 for (auto* screen : window.screens()) {
                     auto screen_render_rect = render_rect.intersected(screen->rect());
                     if (screen_render_rect.is_empty())
@@ -491,7 +489,7 @@ void Compositor::compose()
         // the wallpaper
         auto& transparency_wallpaper_rects = window.transparency_wallpaper_rects();
         if (!transparency_wallpaper_rects.is_empty()) {
-            transparency_wallpaper_rects.for_each_intersected(dirty_rects, [&](const Gfx::IntRect& render_rect) {
+            transparency_wallpaper_rects.for_each_intersected(dirty_rects, [&](Gfx::IntRect const& render_rect) {
                 for (auto* screen : window.screens()) {
                     auto screen_rect = screen->rect();
                     auto screen_render_rect = render_rect.intersected(screen_rect);
@@ -508,7 +506,7 @@ void Compositor::compose()
         }
         auto& transparency_rects = window.transparency_rects();
         if (!transparency_rects.is_empty()) {
-            transparency_rects.for_each_intersected(dirty_rects, [&](const Gfx::IntRect& render_rect) {
+            transparency_rects.for_each_intersected(dirty_rects, [&](Gfx::IntRect const& render_rect) {
                 for (auto* screen : window.screens()) {
                     auto screen_rect = screen->rect();
                     auto screen_render_rect = render_rect.intersected(screen_rect);
@@ -689,7 +687,7 @@ void Compositor::flush(Screen& screen)
         //       rects from the backing bitmap to the display framebuffer.
 
         Gfx::ARGB32* to_ptr;
-        const Gfx::ARGB32* from_ptr;
+        Gfx::ARGB32 const* from_ptr;
 
         if (screen_data.m_screen_can_set_buffer) {
             to_ptr = back_ptr;
@@ -701,7 +699,7 @@ void Compositor::flush(Screen& screen)
 
         for (int y = 0; y < scaled_rect.height(); ++y) {
             fast_u32_copy(to_ptr, from_ptr, scaled_rect.width());
-            from_ptr = (const Gfx::ARGB32*)((const u8*)from_ptr + pitch);
+            from_ptr = (Gfx::ARGB32 const*)((u8 const*)from_ptr + pitch);
             to_ptr = (Gfx::ARGB32*)((u8*)to_ptr + pitch);
         }
         if (device_can_flush_buffers) {
@@ -1626,8 +1624,7 @@ void Compositor::start_window_stack_switch_overlay_timer()
         [this] {
             remove_window_stack_switch_overlays();
         },
-        this)
-                                       .release_value_but_fixme_should_propagate_errors();
+        this);
     m_stack_switch_overlay_timer->start();
 }
 

@@ -505,7 +505,7 @@ public:
     Iterator end() { return {}; }
     Iterator begin_from(K key) { return Iterator(static_cast<Node*>(BaseTree::find(this->m_root, key))); }
 
-    using ConstIterator = RedBlackTreeIterator<const RedBlackTree, V const>;
+    using ConstIterator = RedBlackTreeIterator<RedBlackTree const, V const>;
     friend ConstIterator;
     ConstIterator begin() const { return ConstIterator(static_cast<Node*>(this->m_minimum)); }
     ConstIterator end() const { return {}; }

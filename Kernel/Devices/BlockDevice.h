@@ -85,11 +85,11 @@ public:
 
 private:
     BlockDevice& m_block_device;
-    const RequestType m_request_type;
-    const u64 m_block_index;
-    const u32 m_block_count;
+    RequestType const m_request_type;
+    u64 const m_block_index;
+    u32 const m_block_count;
     UserOrKernelBuffer m_buffer;
-    const size_t m_buffer_size;
+    size_t const m_buffer_size;
 };
 
 }

@@ -89,7 +89,7 @@ ErrorOr<size_t> TTY::write(OpenFileDescription&, u64, UserOrKernelBuffer const& 
     return buffer.read_buffered<num_chars>(size, [&](ReadonlyBytes bytes) -> ErrorOr<size_t> {
         u8 modified_data[num_chars * 2];
         size_t modified_data_size = 0;
-        for (const auto& byte : bytes) {
+        for (auto const& byte : bytes) {
             process_output(byte, [&modified_data, &modified_data_size](u8 out_ch) {
                 modified_data[modified_data_size++] = out_ch;
             });

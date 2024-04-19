@@ -53,7 +53,7 @@ private:
     RefPtr<Menu> m_overflow_menu;
     RefPtr<Action> m_overflow_action;
     RefPtr<Button> m_overflow_button;
-    const Gfx::Orientation m_orientation;
+    Gfx::Orientation const m_orientation;
     int m_button_size { 24 };
     bool m_collapsible { false };
     bool m_grouped { false };

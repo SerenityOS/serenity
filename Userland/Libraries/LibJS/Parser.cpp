@@ -521,7 +521,7 @@ private:
     };
 
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence
-    static constexpr const OperatorPrecedence m_operator_precedence[] = {
+    static constexpr OperatorPrecedence const m_operator_precedence[] = {
         { TokenType::Period, 20 },
         { TokenType::BracketOpen, 20 },
         { TokenType::ParenOpen, 20 },

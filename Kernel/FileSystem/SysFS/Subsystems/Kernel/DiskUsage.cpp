@@ -45,13 +45,13 @@ ErrorOr<void> SysFSDiskUsage::try_generate(KBufferBuilder& builder)
             TRY(fs_object.add("source"sv, "unknown"));
         } else {
             if (fs.is_file_backed()) {
-                auto& file = static_cast<const FileBackedFileSystem&>(fs).file();
+                auto& file = static_cast<FileBackedFileSystem const&>(fs).file();
                 if (file.is_loop_device()) {
                     auto& device = static_cast<LoopDevice const&>(file);
                     auto path = TRY(device.custody().try_serialize_absolute_path());
                     TRY(fs_object.add("source"sv, path->view()));
                 } else {
-                    auto pseudo_path = TRY(static_cast<const FileBackedFileSystem&>(fs).file_description().pseudo_path());
+                    auto pseudo_path = TRY(static_cast<FileBackedFileSystem const&>(fs).file_description().pseudo_path());
                     TRY(fs_object.add("source"sv, pseudo_path->view()));
                 }
             } else {

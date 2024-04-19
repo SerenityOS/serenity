@@ -15,6 +15,7 @@
 #include <LibWebView/URL.h>
 #include <UI/LadybirdWebViewBridge.h>
 
+#import <Application/Application.h>
 #import <Application/ApplicationDelegate.h>
 #import <UI/Event.h>
 #import <UI/LadybirdWebView.h>
@@ -105,6 +106,8 @@ struct HideCursor {
 
         m_web_view_bridge = MUST(Ladybird::WebViewBridge::create(move(screen_rects), device_pixel_ratio, [delegate webContentOptions], [delegate webdriverContentIPCPath], [delegate preferredColorScheme]));
         [self setWebViewCallbacks];
+
+        m_web_view_bridge->initialize_client();
 
         auto* area = [[NSTrackingArea alloc] initWithRect:[self bounds]
                                                   options:NSTrackingActiveInKeyWindow | NSTrackingInVisibleRect | NSTrackingMouseMoved
@@ -275,6 +278,16 @@ static void copy_data_to_clipboard(StringView data, NSPasteboardType pasteboard_
     m_web_view_bridge->on_new_web_view = [self](auto activate_tab, auto, auto) {
         // FIXME: Create a child tab that re-uses the ConnectionFromClient of the parent tab
         return [self.observer onCreateNewTab:"about:blank"sv activateTab:activate_tab];
+    };
+
+    m_web_view_bridge->on_request_web_content = [self]() {
+        Application* application = NSApp;
+        return [application launchWebContent:*m_web_view_bridge].release_value_but_fixme_should_propagate_errors();
+    };
+
+    m_web_view_bridge->on_request_worker_agent = []() {
+        Application* application = NSApp;
+        return [application launchWebWorker].release_value_but_fixme_should_propagate_errors();
     };
 
     m_web_view_bridge->on_activate_tab = [self]() {

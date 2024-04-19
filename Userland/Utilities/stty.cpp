@@ -227,7 +227,7 @@ void print_human_readable(termios const& modes, winsize const& ws, bool verbose_
             out("\n");
     };
 
-    auto print_flags_of_type = [&](const TermiosFlag flags[], size_t flag_count, tcflag_t field_value, tcflag_t field_default) {
+    auto print_flags_of_type = [&](TermiosFlag const flags[], size_t flag_count, tcflag_t field_value, tcflag_t field_default) {
         bool first_in_line = true;
         for (size_t i = 0; i < flag_count; ++i) {
             auto& flag = flags[i];

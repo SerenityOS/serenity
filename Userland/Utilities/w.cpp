@@ -69,7 +69,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
         outln("\033[1m{:10} {:12} {:16} {:6} {}\033[0m", "USER", "TTY", "LOGIN@", "IDLE", "WHAT");
 
     TRY(json.as_object().try_for_each_member([&](ByteString const& tty, auto& value) -> ErrorOr<void> {
-        const JsonObject& entry = value.as_object();
+        JsonObject const& entry = value.as_object();
         auto uid = entry.get_u32("uid"sv).value_or(0);
         [[maybe_unused]] auto pid = entry.get_i32("pid"sv).value_or(0);
 

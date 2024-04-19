@@ -39,8 +39,8 @@ protected:
     ATADevice(ATAController const&, Address, u16, u16, u64);
 
     LockWeakPtr<ATAController> m_controller;
-    const Address m_ata_address;
-    const u16 m_capabilities;
+    Address const m_ata_address;
+    u16 const m_capabilities;
 };
 
 }

@@ -706,7 +706,7 @@ ErrorOr<RefPtr<Job>> Shell::run_command(const AST::Command& command)
 
     // Resolve redirections.
     Vector<NonnullRefPtr<AST::Rewiring>> rewirings;
-    auto resolve_redirection = [&](auto& redirection) -> ErrorOr<void> {
+    auto resolve_redirection = [&](NonnullRefPtr<AST::Redirection> const& redirection) -> ErrorOr<void> {
         auto rewiring = TRY(redirection->apply());
 
         if (rewiring->fd_action != AST::Rewiring::Close::ImmediatelyCloseNew)
@@ -2005,9 +2005,9 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
         true);
 
     Vector<Line::CompletionSuggestion> suggestions;
-    auto timer = TRY(Core::Timer::create_single_shot(300, [&] {
+    auto timer = Core::Timer::create_single_shot(300, [&] {
         Core::EventLoop::current().quit(1);
-    }));
+    });
     timer->start();
 
     // Restrict the process to effectively readonly access to the FS.

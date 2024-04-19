@@ -31,7 +31,7 @@
 
 static bool is_missing_file_acceptable(String const& filename)
 {
-    const StringView acceptable_missing_files[] = {
+    StringView const acceptable_missing_files[] = {
         // FIXME: Please write these manpages!
         "/usr/share/man/man2/exec.md"sv,
         "/usr/share/man/man2/fcntl.md"sv,

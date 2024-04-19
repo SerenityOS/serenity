@@ -180,12 +180,12 @@ static_assert(explode_byte(0x80) == static_cast<FlatPtr>(0x8080808080808080ull))
 static_assert(explode_byte(0x7f) == static_cast<FlatPtr>(0x7f7f7f7f7f7f7f7full));
 static_assert(explode_byte(0) == 0);
 
-constexpr size_t align_up_to(const size_t value, const size_t alignment)
+constexpr size_t align_up_to(size_t const value, size_t const alignment)
 {
     return (value + (alignment - 1)) & ~(alignment - 1);
 }
 
-constexpr size_t align_down_to(const size_t value, const size_t alignment)
+constexpr size_t align_down_to(size_t const value, size_t const alignment)
 {
     return value & ~(alignment - 1);
 }

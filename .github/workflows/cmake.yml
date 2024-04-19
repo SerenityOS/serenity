@@ -74,6 +74,12 @@ jobs:
       - name: Check versions
         run: set +e; g++ --version; g++-12 --version; clang-format --version; clang-format-16 --version; prettier --version; python --version; python3 --version; ninja --version; flake8 --version; ccache --version; qemu-system-i386 --version; gn --version
 
+      - name: Enable KVM group perms
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
       # === PREPARE FOR BUILDING ===
 
       - name: Lint (Phase 1/2)

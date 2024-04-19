@@ -57,7 +57,7 @@ public:
 
 private:
     NonnullRefPtr<Gfx::Bitmap> m_bitmap;
-    const i32 m_serial;
+    i32 const m_serial;
     Gfx::IntSize m_visible_size;
 };
 
@@ -983,7 +983,7 @@ void Window::set_current_backing_store(WindowBackingStore& backing_store, bool f
         m_window_id,
         32,
         bitmap.pitch(),
-        bitmap.anonymous_buffer().fd(),
+        MUST(IPC::File::clone_fd(bitmap.anonymous_buffer().fd())),
         backing_store.serial(),
         bitmap.has_alpha_channel(),
         bitmap.size(),

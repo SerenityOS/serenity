@@ -624,7 +624,7 @@ ErrorOr<void> IPv4Socket::ioctl(OpenFileDescription&, unsigned request, Userspac
         rtentry route;
         TRY(copy_from_user(&route, user_route));
 
-        Userspace<const char*> user_rt_dev((FlatPtr)route.rt_dev);
+        Userspace<char const*> user_rt_dev((FlatPtr)route.rt_dev);
         auto ifname = TRY(Process::get_syscall_name_string_fixed_buffer<IFNAMSIZ>(user_rt_dev));
         auto adapter = NetworkingManagement::the().lookup_by_name(ifname.representable_view());
         if (!adapter)

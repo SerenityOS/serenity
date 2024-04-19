@@ -31,7 +31,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     AK::set_rich_debug_enabled(true);
 
-    [Application sharedApplication];
+    Application* application = [Application sharedApplication];
 
     Core::EventLoopManager::install(*new Ladybird::CFEventLoopManager);
     Core::EventLoop event_loop;
@@ -71,6 +71,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto database = TRY(WebView::Database::create(move(sql_server_paths)));
     auto cookie_jar = TRY(WebView::CookieJar::create(*database));
 
+    // FIXME: Create an abstraction to re-spawn the RequestServer and re-hook up its client hooks to each tab on crash
+    TRY([application launchRequestServer:certificates]);
+
     URL::URL new_tab_page_url = Browser::default_new_tab_url;
     Vector<URL::URL> initial_urls;
 
@@ -87,7 +90,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Ladybird::WebContentOptions web_content_options {
         .command_line = MUST(command_line_builder.to_string()),
         .executable_path = MUST(String::from_byte_string(MUST(Core::System::current_executable_path()))),
-        .certificates = move(certificates),
         .enable_gpu_painting = use_gpu_painting ? Ladybird::EnableGPUPainting::Yes : Ladybird::EnableGPUPainting::No,
         .use_lagom_networking = Ladybird::UseLagomNetworking::Yes,
         .wait_for_debugger = debug_web_content ? Ladybird::WaitForDebugger::Yes : Ladybird::WaitForDebugger::No,

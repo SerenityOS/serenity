@@ -536,7 +536,7 @@ void TreeView::move_cursor(CursorMovement movement, SelectionUpdate selection_up
     if (!cursor_index().is_valid())
         set_cursor(model.index(0, model.tree_column(), cursor_index()), SelectionUpdate::Set);
 
-    auto find_last_index_in_tree = [&](const ModelIndex tree_index) -> ModelIndex {
+    auto find_last_index_in_tree = [&](ModelIndex const tree_index) -> ModelIndex {
         auto last_index = tree_index;
         size_t row_count = model.row_count(last_index);
         while (row_count > 0) {
@@ -555,7 +555,7 @@ void TreeView::move_cursor(CursorMovement movement, SelectionUpdate selection_up
         return last_index;
     };
 
-    auto step_up = [&](const ModelIndex current_index) -> ModelIndex {
+    auto step_up = [&](ModelIndex const current_index) -> ModelIndex {
         // Traverse into parent index if we're at the top of our subtree
         if (current_index.row() == 0) {
             auto parent_index = current_index.parent();
@@ -576,7 +576,7 @@ void TreeView::move_cursor(CursorMovement movement, SelectionUpdate selection_up
         return find_last_index_in_tree(previous_index);
     };
 
-    auto step_down = [&](const ModelIndex current_index) -> ModelIndex {
+    auto step_down = [&](ModelIndex const current_index) -> ModelIndex {
         if (!current_index.is_valid())
             return current_index;
 

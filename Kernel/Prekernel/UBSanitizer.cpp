@@ -130,14 +130,20 @@ void __ubsan_handle_implicit_conversion(ImplicitConversionData const& data, Valu
     print_location(data.location);
 }
 
-void __ubsan_handle_invalid_builtin(const InvalidBuiltinData) __attribute__((used));
-void __ubsan_handle_invalid_builtin(const InvalidBuiltinData data)
+void __ubsan_handle_invalid_builtin(InvalidBuiltinData const) __attribute__((used));
+void __ubsan_handle_invalid_builtin(InvalidBuiltinData const data)
 {
     print_location(data.location);
 }
 
 void __ubsan_handle_pointer_overflow(PointerOverflowData const&, ValueHandle, ValueHandle) __attribute__((used));
 void __ubsan_handle_pointer_overflow(PointerOverflowData const& data, ValueHandle, ValueHandle)
+{
+    print_location(data.location);
+}
+
+void __ubsan_handle_function_type_mismatch(FunctionTypeMismatchData const&, ValueHandle) __attribute__((used));
+void __ubsan_handle_function_type_mismatch(FunctionTypeMismatchData const& data, ValueHandle)
 {
     print_location(data.location);
 }

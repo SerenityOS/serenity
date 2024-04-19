@@ -26,7 +26,7 @@ Timer::Timer(JS::Object& window_or_worker_global_scope, i32 milliseconds, JS::No
 {
     m_timer = Core::Timer::create_single_shot(milliseconds, [this] {
         m_callback->function()();
-    }).release_value_but_fixme_should_propagate_errors();
+    });
 }
 
 void Timer::visit_edges(Cell::Visitor& visitor)

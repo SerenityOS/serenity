@@ -144,7 +144,7 @@ private:
     int m_wheel_raw_delta_x { 0 };
     int m_wheel_raw_delta_y { 0 };
     bool m_drag { false };
-    RefPtr<const Core::MimeData> m_mime_data;
+    RefPtr<Core::MimeData const> m_mime_data;
 };
 
 class ResizeEvent final : public Event {

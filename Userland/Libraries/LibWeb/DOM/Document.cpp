@@ -1221,9 +1221,9 @@ void Document::update_paint_and_hit_testing_properties_if_needed()
         paintable->resolve_paint_only_properties();
 }
 
-void Document::set_link_color(Color color)
+void Document::set_normal_link_color(Color color)
 {
-    m_link_color = color;
+    m_normal_link_color = color;
 }
 
 void Document::set_active_link_color(Color color)
@@ -1468,10 +1468,10 @@ void Document::release_events()
     // Do nothing
 }
 
-Color Document::link_color() const
+Color Document::normal_link_color() const
 {
-    if (m_link_color.has_value())
-        return m_link_color.value();
+    if (m_normal_link_color.has_value())
+        return m_normal_link_color.value();
     return CSS::SystemColor::link_text();
 }
 
@@ -1624,7 +1624,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Event>> Document::create_event(StringView i
     } else if (Infra::is_ascii_case_insensitive_match(interface, "focusevent"sv)) {
         event = UIEvents::FocusEvent::create(realm, FlyString {});
     } else if (Infra::is_ascii_case_insensitive_match(interface, "hashchangeevent"sv)) {
-        event = Event::create(realm, FlyString {}); // FIXME: Create HashChangeEvent
+        event = HTML::HashChangeEvent::create(realm, FlyString {}, {});
     } else if (Infra::is_ascii_case_insensitive_match(interface, "htmlevents"sv)) {
         event = Event::create(realm, FlyString {});
     } else if (Infra::is_ascii_case_insensitive_match(interface, "keyboardevent"sv)) {
@@ -2285,6 +2285,71 @@ void Document::set_cookie(StringView cookie_string, Cookie::Source source)
     page().client().page_did_set_cookie(m_url, cookie.value(), source);
 }
 
+String Document::fg_color() const
+{
+    if (auto* body_element = body(); body_element && !is<HTML::HTMLFrameSetElement>(*body_element))
+        return body_element->get_attribute_value(HTML::AttributeNames::text);
+    return ""_string;
+}
+
+void Document::set_fg_color(String const& value)
+{
+    if (auto* body_element = body(); body_element && !is<HTML::HTMLFrameSetElement>(*body_element))
+        MUST(body_element->set_attribute(HTML::AttributeNames::text, value));
+}
+
+String Document::link_color() const
+{
+    if (auto* body_element = body(); body_element && !is<HTML::HTMLFrameSetElement>(*body_element))
+        return body_element->get_attribute_value(HTML::AttributeNames::link);
+    return ""_string;
+}
+
+void Document::set_link_color(String const& value)
+{
+    if (auto* body_element = body(); body_element && !is<HTML::HTMLFrameSetElement>(*body_element))
+        MUST(body_element->set_attribute(HTML::AttributeNames::link, value));
+}
+
+String Document::vlink_color() const
+{
+    if (auto* body_element = body(); body_element && !is<HTML::HTMLFrameSetElement>(*body_element))
+        return body_element->get_attribute_value(HTML::AttributeNames::vlink);
+    return ""_string;
+}
+
+void Document::set_vlink_color(String const& value)
+{
+    if (auto* body_element = body(); body_element && !is<HTML::HTMLFrameSetElement>(*body_element))
+        MUST(body_element->set_attribute(HTML::AttributeNames::vlink, value));
+}
+
+String Document::alink_color() const
+{
+    if (auto* body_element = body(); body_element && !is<HTML::HTMLFrameSetElement>(*body_element))
+        return body_element->get_attribute_value(HTML::AttributeNames::alink);
+    return ""_string;
+}
+
+void Document::set_alink_color(String const& value)
+{
+    if (auto* body_element = body(); body_element && !is<HTML::HTMLFrameSetElement>(*body_element))
+        MUST(body_element->set_attribute(HTML::AttributeNames::alink, value));
+}
+
+String Document::bg_color() const
+{
+    if (auto* body_element = body(); body_element && !is<HTML::HTMLFrameSetElement>(*body_element))
+        return body_element->get_attribute_value(HTML::AttributeNames::bgcolor);
+    return ""_string;
+}
+
+void Document::set_bg_color(String const& value)
+{
+    if (auto* body_element = body(); body_element && !is<HTML::HTMLFrameSetElement>(*body_element))
+        MUST(body_element->set_attribute(HTML::AttributeNames::bgcolor, value));
+}
+
 String Document::dump_dom_tree_as_json() const
 {
     StringBuilder builder;
@@ -2503,6 +2568,7 @@ void Document::evaluate_media_rules()
     if (any_media_queries_changed_match_state) {
         style_computer().invalidate_rule_cache();
         invalidate_style();
+        invalidate_layout();
     }
 }
 
@@ -2562,12 +2628,13 @@ static inline bool is_valid_name_character(u32 code_point)
         || (code_point >= 0x203f && code_point <= 0x2040);
 }
 
+// https://www.w3.org/TR/xml/#NT-Name
 bool Document::is_valid_name(String const& name)
 {
-    auto code_points = Utf8View { name };
-    auto it = code_points.begin();
-    if (code_points.is_empty())
+    if (name.is_empty())
         return false;
+    auto code_points = name.code_points();
+    auto it = code_points.begin();
 
     if (!is_valid_name_start_character(*it))
         return false;
@@ -3905,7 +3972,7 @@ void Document::shared_declarative_refresh_steps(StringView input, JS::GCPtr<HTML
 
         VERIFY(navigable());
         MUST(navigable()->navigate({ .url = url_record, .source_document = *this }));
-    }).release_value_but_fixme_should_propagate_errors();
+    });
 
     // For the purposes of the previous paragraph, a refresh is said to have come due as soon as the later of the
     // following two conditions occurs:
@@ -4238,7 +4305,7 @@ void Document::ensure_animation_timer()
 {
     constexpr static auto timer_delay_ms = 1000 / 60;
     if (!m_animation_driver_timer) {
-        m_animation_driver_timer = MUST(Core::Timer::create_repeating(timer_delay_ms, [this] {
+        m_animation_driver_timer = Core::Timer::create_repeating(timer_delay_ms, [this] {
             bool has_animations = false;
             for (auto& timeline : m_associated_animation_timelines) {
                 if (!timeline->associated_animations().is_empty()) {
@@ -4253,7 +4320,7 @@ void Document::ensure_animation_timer()
             auto* window_or_worker = dynamic_cast<HTML::WindowOrWorkerGlobalScopeMixin*>(&realm().global_object());
             VERIFY(window_or_worker);
             update_animations_and_send_events(window_or_worker->performance()->now());
-        }));
+        });
     }
 
     m_animation_driver_timer->start();
@@ -4806,12 +4873,15 @@ WebIDL::ExceptionOr<void> Document::set_adopted_style_sheets(JS::Value new_value
 
 void Document::for_each_css_style_sheet(Function<void(CSS::CSSStyleSheet&)>&& callback) const
 {
-    for (auto& style_sheet : m_style_sheets->sheets())
-        callback(*style_sheet);
+    for (auto& style_sheet : m_style_sheets->sheets()) {
+        if (!(style_sheet->is_alternate() && style_sheet->disabled()))
+            callback(*style_sheet);
+    }
 
     if (m_adopted_style_sheets) {
         m_adopted_style_sheets->for_each<CSS::CSSStyleSheet>([&](auto& style_sheet) {
-            callback(style_sheet);
+            if (!(style_sheet.is_alternate() && style_sheet.disabled()))
+                callback(style_sheet);
         });
     }
 }

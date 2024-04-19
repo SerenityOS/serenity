@@ -299,7 +299,7 @@ ErrorOr<NonnullRefPtr<GUI::Action>> CalendarWidget::create_open_settings_action(
 void CalendarWidget::create_on_tile_doubleclick()
 {
     m_event_calendar->on_tile_doubleclick = [&] {
-        for (const auto& event : m_event_calendar->event_manager().events()) {
+        for (auto const& event : m_event_calendar->event_manager().events()) {
             auto start = event.start;
             auto selected_date = m_event_calendar->selected_date();
 

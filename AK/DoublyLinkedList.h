@@ -158,7 +158,7 @@ public:
     Iterator begin() { return Iterator(m_head); }
     Iterator end() { return Iterator::universal_end(); }
 
-    using ConstIterator = DoublyLinkedListIterator<const DoublyLinkedList, T const>;
+    using ConstIterator = DoublyLinkedListIterator<DoublyLinkedList const, T const>;
     friend ConstIterator;
     ConstIterator begin() const { return ConstIterator(m_head); }
     ConstIterator end() const { return ConstIterator::universal_end(); }

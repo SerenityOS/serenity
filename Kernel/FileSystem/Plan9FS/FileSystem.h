@@ -69,7 +69,7 @@ private:
     struct ReceiveCompletion final : public AtomicRefCounted<ReceiveCompletion> {
         mutable Spinlock<LockRank::None> lock {};
         bool completed { false };
-        const u16 tag;
+        u16 const tag;
         OwnPtr<Plan9FSMessage> message;
         ErrorOr<void> result;
 

@@ -16,7 +16,7 @@ public:
     ~SmapDisabler();
 
 private:
-    const FlatPtr m_flags;
+    FlatPtr const m_flags;
 };
 
 }

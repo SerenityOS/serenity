@@ -188,8 +188,8 @@ void __ubsan_handle_implicit_conversion(ImplicitConversionData const& data, Valu
     print_location(data.location);
 }
 
-void __ubsan_handle_invalid_builtin(const InvalidBuiltinData) __attribute__((used));
-void __ubsan_handle_invalid_builtin(const InvalidBuiltinData data)
+void __ubsan_handle_invalid_builtin(InvalidBuiltinData const) __attribute__((used));
+void __ubsan_handle_invalid_builtin(InvalidBuiltinData const data)
 {
     critical_dmesgln("KUBSAN: passing invalid argument");
     print_location(data.location);
@@ -206,6 +206,13 @@ void __ubsan_handle_pointer_overflow(PointerOverflowData const& data, ValueHandl
         critical_dmesgln("KUBSAN: applying non-zero offset to non-null pointer {:p} produced null pointer", base);
     else
         critical_dmesgln("KUBSAN: addition of unsigned offset to {:p} overflowed to {:p}", base, result);
+    print_location(data.location);
+}
+
+void __ubsan_handle_function_type_mismatch(FunctionTypeMismatchData const&) __attribute__((used));
+void __ubsan_handle_function_type_mismatch(FunctionTypeMismatchData const& data)
+{
+    critical_dmesgln("KUBSAN: call to function through pointer to incorrect function type {}", data.type.name());
     print_location(data.location);
 }
 }

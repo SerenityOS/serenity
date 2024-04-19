@@ -18,7 +18,7 @@
 extern "C" {
 #endif
 
-static const cc_t ttydefchars[NCCS] = {
+static cc_t const ttydefchars[NCCS] = {
     [VINTR] = CINTR,
     [VQUIT] = CQUIT,
     [VERASE] = CERASE,

@@ -65,3 +65,71 @@ forces no-pic/pie instead.
 
 This hack is from https://gcc.gnu.org/bugzilla/show_bug.cgi?id=58638
 
+## `0008-Include-safe-ctype.h-after-C-standard-headers-to-avo.patch`
+
+Include safe-ctype.h after C++ standard headers, to avoid over-poisoning
+
+When building gcc's C++ sources against recent libc++, the poisoning of
+the ctype macros due to including safe-ctype.h before including C++
+standard headers such as <list>, <map>, etc, causes many compilation
+errors, similar to:
+
+  In file included from /home/dim/src/gcc/master/gcc/gensupport.cc:23:
+  In file included from /home/dim/src/gcc/master/gcc/system.h:233:
+  In file included from /usr/include/c++/v1/vector:321:
+  In file included from
+  /usr/include/c++/v1/__format/formatter_bool.h:20:
+  In file included from
+  /usr/include/c++/v1/__format/formatter_integral.h:32:
+  In file included from /usr/include/c++/v1/locale:202:
+  /usr/include/c++/v1/__locale:546:5: error: '__abi_tag__' attribute
+  only applies to structs, variables, functions, and namespaces
+    546 |     _LIBCPP_INLINE_VISIBILITY
+        |     ^
+  /usr/include/c++/v1/__config:813:37: note: expanded from macro
+  '_LIBCPP_INLINE_VISIBILITY'
+    813 | #  define _LIBCPP_INLINE_VISIBILITY _LIBCPP_HIDE_FROM_ABI
+        |                                     ^
+  /usr/include/c++/v1/__config:792:26: note: expanded from macro
+  '_LIBCPP_HIDE_FROM_ABI'
+    792 |
+    __attribute__((__abi_tag__(_LIBCPP_TOSTRING(
+  _LIBCPP_VERSIONED_IDENTIFIER))))
+        |                          ^
+  In file included from /home/dim/src/gcc/master/gcc/gensupport.cc:23:
+  In file included from /home/dim/src/gcc/master/gcc/system.h:233:
+  In file included from /usr/include/c++/v1/vector:321:
+  In file included from
+  /usr/include/c++/v1/__format/formatter_bool.h:20:
+  In file included from
+  /usr/include/c++/v1/__format/formatter_integral.h:32:
+  In file included from /usr/include/c++/v1/locale:202:
+  /usr/include/c++/v1/__locale:547:37: error: expected ';' at end of
+  declaration list
+    547 |     char_type toupper(char_type __c) const
+        |                                     ^
+  /usr/include/c++/v1/__locale:553:48: error: too many arguments
+  provided to function-like macro invocation
+    553 |     const char_type* toupper(char_type* __low, const
+    char_type* __high) const
+        |                                                ^
+  /home/dim/src/gcc/master/gcc/../include/safe-ctype.h:146:9: note:
+  macro 'toupper' defined here
+    146 | #define toupper(c) do_not_use_toupper_with_safe_ctype
+        |         ^
+
+This is because libc++ uses different transitive includes than
+libstdc++, and some of those transitive includes pull in various ctype
+declarations (typically via <locale>).
+
+There was already a special case for including <string> before
+safe-ctype.h, so move the rest of the C++ standard header includes to
+the same location, to fix the problem.
+
+gcc/ChangeLog:
+
+	* system.h: Include safe-ctype.h after C++ standard headers.
+
+Signed-off-by: Dimitry Andric <dimitry@andric.com>
+(cherry picked from commit 9970b576b7e4ae337af1268395ff221348c4b34a)
+

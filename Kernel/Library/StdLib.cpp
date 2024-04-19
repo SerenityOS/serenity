@@ -213,7 +213,7 @@ ErrorOr<void> memset_user(void* dest_ptr, int c, size_t n)
 // See https://bugs.llvm.org/show_bug.cgi?id=39634
 FlatPtr missing_got_workaround()
 {
-    extern volatile FlatPtr _GLOBAL_OFFSET_TABLE_;
+    extern FlatPtr volatile _GLOBAL_OFFSET_TABLE_;
     return _GLOBAL_OFFSET_TABLE_;
 }
 #endif

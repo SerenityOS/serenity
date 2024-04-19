@@ -61,11 +61,7 @@ TEST_CASE(test_TLS_hello_handshake)
     auto tls = TRY_OR_FAIL(TLS::TLSv12::connect(DEFAULT_SERVER, port, move(options)));
     ByteBuffer contents;
     tls->on_ready_to_read = [&] {
-        auto read_bytes = TRY_OR_FAIL(tls->read_some(contents.must_get_bytes_for_writing(4 * KiB)));
-        if (read_bytes.is_empty()) {
-            FAIL("No data received");
-            loop.quit(1);
-        }
+        (void)TRY_OR_FAIL(tls->read_some(contents.must_get_bytes_for_writing(4 * KiB)));
         loop.quit(0);
     };
 

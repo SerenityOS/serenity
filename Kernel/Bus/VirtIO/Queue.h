@@ -87,8 +87,8 @@ private:
         QueueDeviceItem rings[];
     };
 
-    const u16 m_queue_size;
-    const u16 m_notify_offset;
+    u16 const m_queue_size;
+    u16 const m_notify_offset;
     u16 m_free_buffers;
     u16 m_free_head { 0 };
     u16 m_used_tail { 0 };

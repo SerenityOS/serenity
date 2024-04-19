@@ -144,7 +144,7 @@ private:
         return m_sign != Sign::Negative;
     }
 
-    const T m_base;
+    T const m_base;
     T m_num;
     T m_cutoff;
     int m_max_digit_after_cutoff;
@@ -313,7 +313,7 @@ static T c_str_to_floating_point(char const* str, char** endptr)
     // - One of INF or INFINITY, ignoring case
     // - One of NAN or NAN(n-char-sequenceopt), ignoring case in the NAN part
 
-    const Sign sign = strtosign(parse_ptr, &parse_ptr);
+    Sign const sign = strtosign(parse_ptr, &parse_ptr);
 
     if (is_infinity_string(parse_ptr, endptr)) {
         // Don't set errno to ERANGE here:
@@ -973,7 +973,7 @@ long long strtoll(char const* str, char** endptr, int base)
     // Parse spaces and sign
     char* parse_ptr = const_cast<char*>(str);
     strtons(parse_ptr, &parse_ptr);
-    const Sign sign = strtosign(parse_ptr, &parse_ptr);
+    Sign const sign = strtosign(parse_ptr, &parse_ptr);
 
     // Parse base
     if (base == 0) {

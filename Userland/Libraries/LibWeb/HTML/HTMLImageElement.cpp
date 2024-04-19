@@ -292,7 +292,7 @@ bool HTMLImageElement::uses_srcset_or_picture() const
 struct BatchingDispatcher {
 public:
     BatchingDispatcher()
-        : m_timer(Core::Timer::create_single_shot(1, [this] { process(); }).release_value_but_fixme_should_propagate_errors())
+        : m_timer(Core::Timer::create_single_shot(1, [this] { process(); }))
     {
     }
 

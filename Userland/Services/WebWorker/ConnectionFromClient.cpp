@@ -31,7 +31,7 @@ void ConnectionFromClient::request_file(Web::FileRequest request)
     if (file.is_error())
         handle_file_return(file.error().code(), {}, request_id);
     else
-        handle_file_return(0, IPC::File(*file.value()), request_id);
+        handle_file_return(0, IPC::File::adopt_file(file.release_value()), request_id);
 }
 
 ConnectionFromClient::ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket> socket)

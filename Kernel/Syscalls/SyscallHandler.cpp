@@ -31,7 +31,7 @@ struct HandlerMetadata {
 };
 
 #define __ENUMERATE_SYSCALL(sys_call, needs_lock) { bit_cast<Handler>(&Process::sys$##sys_call), needs_lock },
-static const HandlerMetadata s_syscall_table[] = {
+static HandlerMetadata const s_syscall_table[] = {
     ENUMERATE_SYSCALLS(__ENUMERATE_SYSCALL)
 };
 #undef __ENUMERATE_SYSCALL

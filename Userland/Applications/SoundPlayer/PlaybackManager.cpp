@@ -15,7 +15,7 @@ PlaybackManager::PlaybackManager(NonnullRefPtr<Audio::ConnectionToServer> connec
         if (!m_loader)
             return;
         next_buffer();
-    }).release_value_but_fixme_should_propagate_errors();
+    });
 }
 
 void PlaybackManager::set_loader(NonnullRefPtr<Audio::Loader>&& loader)

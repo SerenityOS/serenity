@@ -22,9 +22,9 @@ inline bool time_page_supports(clockid_t clock_id)
 }
 
 struct TimePage {
-    volatile u32 update1;
+    u32 volatile update1;
     struct timespec clocks[CLOCK_ID_COUNT];
-    volatile u32 update2;
+    u32 volatile update2;
 };
 
 }

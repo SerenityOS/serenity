@@ -26,20 +26,22 @@
 #include <LibWebView/WebSocketClientAdapter.h>
 #include <WebWorker/ConnectionFromClient.h>
 
-static ErrorOr<void> initialize_lagom_networking(Vector<ByteString> const& certificates);
+static ErrorOr<void> initialize_lagom_networking(int request_server_socket, int request_server_fd_passing_socket);
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     AK::set_rich_debug_enabled(true);
 
     int fd_passing_socket { -1 };
+    int request_server_socket { -1 };
+    int request_server_fd_passing_socket { -1 };
     StringView serenity_resource_root;
-    Vector<ByteString> certificates;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(fd_passing_socket, "File descriptor of the fd passing socket", "fd-passing-socket", 'c', "fd-passing-socket");
+    args_parser.add_option(request_server_socket, "File descriptor of the request server socket", "request-server-socket", 's', "request-server-socket");
+    args_parser.add_option(request_server_fd_passing_socket, "File descriptor of the request server fd passing socket", "request-server-fd-passing-socket", 'f', "request-server-fd-passing-socket");
     args_parser.add_option(serenity_resource_root, "Absolute path to directory for serenity resources", "serenity-resource-root", 'r', "serenity-resource-root");
-    args_parser.add_option(certificates, "Path to a certificate file", "certificate", 'C', "certificate");
     args_parser.parse(arguments);
 
     platform_init();
@@ -49,7 +51,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Web::Platform::FontPlugin::install(*new Web::Platform::FontPluginSerenity);
 
-    TRY(initialize_lagom_networking(certificates));
+    TRY(initialize_lagom_networking(request_server_socket, request_server_fd_passing_socket));
 
     VERIFY(fd_passing_socket >= 0);
 
@@ -61,11 +63,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     return event_loop.exec();
 }
 
-static ErrorOr<void> initialize_lagom_networking(Vector<ByteString> const& certificates)
+static ErrorOr<void> initialize_lagom_networking(int request_server_socket, int request_server_fd_passing_socket)
 {
-    auto candidate_request_server_paths = TRY(get_paths_for_helper_process("RequestServer"sv));
-    auto request_server_client = TRY(launch_request_server_process(candidate_request_server_paths, s_serenity_resource_root, certificates));
-    Web::ResourceLoader::initialize(TRY(WebView::RequestServerAdapter::try_create(move(request_server_client))));
+    auto socket = TRY(Core::LocalSocket::adopt_fd(request_server_socket));
+    TRY(socket->set_blocking(true));
+
+    auto new_client = TRY(try_make_ref_counted<Protocol::RequestClient>(move(socket)));
+    new_client->set_fd_passing_socket(TRY(Core::LocalSocket::adopt_fd(request_server_fd_passing_socket)));
+
+    Web::ResourceLoader::initialize(TRY(WebView::RequestServerAdapter::try_create(move(new_client))));
 
     return {};
 }

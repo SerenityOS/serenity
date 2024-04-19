@@ -271,7 +271,7 @@ void MonitorSettingsWidget::apply_settings()
             box->set_icon(window()->icon());
 
             // If after 10 seconds the user doesn't close the message box, just close it.
-            auto revert_timer_or_error = Core::Timer::create_repeating(1000, [&] {
+            auto revert_timer = Core::Timer::create_repeating(1000, [&] {
                 seconds_until_revert -= 1;
                 current_box_text_or_error = box_text();
                 if (current_box_text_or_error.is_error()) {
@@ -285,11 +285,6 @@ void MonitorSettingsWidget::apply_settings()
                     box->close();
                 }
             });
-            if (revert_timer_or_error.is_error()) {
-                GUI::MessageBox::show_error(window(), "Unable to apply changes"sv);
-                return;
-            }
-            auto revert_timer = revert_timer_or_error.release_value();
             revert_timer->start();
 
             // If the user selects "No", closes the window or the window gets closed by the 10 seconds timer, revert the changes.

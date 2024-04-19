@@ -1,5 +1,10 @@
 # This file specifies the options used for building the Clang compiler, LLD linker and the compiler builtins library
 
+if (CMAKE_VERSION VERSION_EQUAL "3.29.0" OR CMAKE_VERSION VERSION_EQUAL "3.29.1")
+    message(FATAL_ERROR "CMake versions 3.29.0 and 3.29.1 are known to not install LLVM correctly. "
+                        "Please either downgrade CMake or update it to 3.29.2+.")
+endif()
+
 # Note: We force the cmake module path for all dependent projects to include our custom directory
 # That has the Platform/SerenityOS.cmake definition
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${SERENITY_MODULE_PATH}" CACHE STRING "Modules for CMake")
@@ -9,7 +14,7 @@ set(CMAKE_BUILD_TYPE Release CACHE STRING "")
 set(LLVM_TARGETS_TO_BUILD "X86;AArch64;RISCV" CACHE STRING "")
 
 set(LLVM_ENABLE_PROJECTS "llvm;clang;lld;clang-tools-extra" CACHE STRING "")
-set(LLVM_ENABLE_RUNTIMES "compiler-rt" CACHE STRING "")
+set(LLVM_ENABLE_RUNTIMES "compiler-rt;libunwind;libcxxabi;libcxx" CACHE STRING "")
 
 set(LLVM_ENABLE_PER_TARGET_RUNTIME_DIR ON CACHE BOOL "")
 set(LLVM_ENABLE_BINDINGS OFF CACHE BOOL "")
@@ -24,13 +29,13 @@ set(LLVM_INSTALL_BINUTILS_SYMLINKS OFF CACHE BOOL "")
 
 set(CLANG_ENABLE_CLANGD OFF CACHE BOOL "")
 
-set(compiler_flags "-nostdlib -nostdlib++")
 foreach(target x86_64-pc-serenity;aarch64-pc-serenity;riscv64-pc-serenity)
     list(APPEND targets "${target}")
 
     set(RUNTIMES_${target}_CMAKE_BUILD_TYPE Release CACHE STRING "")
     set(RUNTIMES_${target}_CMAKE_SYSROOT ${SERENITY_${target}_SYSROOT} CACHE PATH "")
     # Prevent configure checks from trying to link to the not-yet-built startup files & libunwind.
+    set(compiler_flags "-Wno-unused-command-line-argument -nostartfiles -L${SERENITY_${target}_STUBS}")
     set(RUNTIMES_${target}_CMAKE_C_FLAGS ${compiler_flags} CACHE STRING "")
     set(RUNTIMES_${target}_CMAKE_CXX_FLAGS ${compiler_flags} CACHE STRING "")
     set(RUNTIMES_${target}_COMPILER_RT_BUILD_CRT ON CACHE BOOL "")
@@ -51,6 +56,25 @@ foreach(target x86_64-pc-serenity;aarch64-pc-serenity;riscv64-pc-serenity)
     set(BUILTINS_${target}_COMPILER_RT_EXCLUDE_ATOMIC_BUILTIN OFF CACHE BOOL "")
     set(BUILTINS_${target}_CMAKE_SYSTEM_NAME SerenityOS CACHE STRING "")
     set(BUILTINS_${target}_CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} CACHE STRING "")
+
+    set(RUNTIMES_${target}_LIBUNWIND_USE_COMPILER_RT ON CACHE BOOL "")
+    set(RUNTIMES_${target}_LIBCXXABI_USE_COMPILER_RT ON CACHE BOOL "")
+    set(RUNTIMES_${target}_LIBCXX_USE_COMPILER_RT ON CACHE BOOL "")
+
+    set(RUNTIMES_${target}_LIBCXX_ENABLE_STATIC_ABI_LIBRARY ON CACHE BOOL "")
+    set(RUNTIMES_${target}_LIBCXX_INCLUDE_BENCHMARKS OFF CACHE BOOL "")
+
+    # Hardcode autodetection results for libm, libdl, and libpthread.
+    # This keeps us from accidentially detecting those libraries as being present
+    # if we build the toolchain with a populated sysroot (which features the
+    # compability linker scripts).
+    # TODO: Figure out if we can always build against the Stubs directory instead.
+    set(RUNTIMES_${target}_LIBCXXABI_HAS_DL_LIB OFF CACHE BOOL "")
+    set(RUNTIMES_${target}_LIBCXXABI_HAS_PTHREAD_LIB OFF CACHE BOOL "")
+    set(RUNTIMES_${target}_LIBCXX_HAS_M_LIB OFF CACHE BOOL "")
+    set(RUNTIMES_${target}_LIBCXX_HAS_PTHREAD_LIB OFF CACHE BOOL "")
+    set(RUNTIMES_${target}_LIBUNWIND_HAS_DL_LIB OFF CACHE BOOL "")
+    set(RUNTIMES_${target}_LIBUNWIND_HAS_PTHREAD_LIB OFF CACHE BOOL "")
 endforeach()
 
 set(LLVM_TOOLCHAIN_TOOLS

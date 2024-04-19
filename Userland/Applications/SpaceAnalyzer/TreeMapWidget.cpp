@@ -122,12 +122,12 @@ void TreeMapWidget::lay_out_children(TreeNode const& node, Gfx::IntRect const& r
     Gfx::IntRect canvas = rect;
     bool remaining_nodes_are_too_small = false;
     for (size_t i = 0; !remaining_nodes_are_too_small && i < node.num_children(); i++) {
-        const i64 i_node_area = node.child_at(i).area();
+        i64 const i_node_area = node.child_at(i).area();
         if (i_node_area == 0)
             break;
 
-        const size_t long_side_size = max(canvas.width(), canvas.height());
-        const size_t short_side_size = min(canvas.width(), canvas.height());
+        size_t const long_side_size = max(canvas.width(), canvas.height());
+        size_t const short_side_size = min(canvas.width(), canvas.height());
 
         size_t row_or_column_size = long_side_size * i_node_area / total_area;
         i64 node_area_sum = i_node_area;
@@ -163,7 +163,7 @@ void TreeMapWidget::lay_out_children(TreeNode const& node, Gfx::IntRect const& r
 
         // Paint the elements from 'i' up to and including 'k-1'.
         {
-            const size_t fixed_side_size = row_or_column_size;
+            size_t const fixed_side_size = row_or_column_size;
             i64 placement_area = node_area_sum;
             size_t main_dim = short_side_size;
 

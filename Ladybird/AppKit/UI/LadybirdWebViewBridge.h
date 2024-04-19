@@ -23,6 +23,10 @@ public:
     static ErrorOr<NonnullOwnPtr<WebViewBridge>> create(Vector<Web::DevicePixelRect> screen_rects, float device_pixel_ratio, WebContentOptions const&, Optional<StringView> webdriver_content_ipc_path, Web::CSS::PreferredColorScheme);
     virtual ~WebViewBridge() override;
 
+    virtual void initialize_client(CreateNewClient = CreateNewClient::Yes) override;
+
+    WebContentOptions const& web_content_options() const { return m_web_content_options; }
+
     float device_pixel_ratio() const { return m_device_pixel_ratio; }
     void set_device_pixel_ratio(float device_pixel_ratio);
     float inverse_device_pixel_ratio() const { return 1.0f / m_device_pixel_ratio; }
@@ -47,6 +51,7 @@ public:
     };
     Optional<Paintable> paintable();
 
+    Function<NonnullRefPtr<WebView::WebContentClient>()> on_request_web_content;
     Function<void()> on_zoom_level_changed;
     Function<void(Gfx::IntPoint)> on_scroll;
 
@@ -57,8 +62,6 @@ private:
     virtual Web::DevicePixelRect viewport_rect() const override;
     virtual Gfx::IntPoint to_content_position(Gfx::IntPoint widget_position) const override;
     virtual Gfx::IntPoint to_widget_position(Gfx::IntPoint content_position) const override;
-
-    virtual void initialize_client(CreateNewClient) override;
 
     Vector<Web::DevicePixelRect> m_screen_rects;
     Gfx::IntRect m_viewport_rect;

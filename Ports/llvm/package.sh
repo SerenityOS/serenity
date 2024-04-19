@@ -1,13 +1,13 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='llvm'
 useconfigure='true'
-version='16.0.6'
+version='18.1.3'
 workdir="llvm-project-${version}.src"
 configopts=(
     "-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt"
 )
 files=(
-    "https://github.com/llvm/llvm-project/releases/download/llvmorg-${version}/llvm-project-${version}.src.tar.xz#ce5e71081d17ce9e86d7cbcfa28c4b04b9300f8fb7e78422b1feb6bc52c3028e"
+    "https://github.com/llvm/llvm-project/releases/download/llvmorg-${version}/llvm-project-${version}.src.tar.xz#2929f62d69dec0379e529eb632c40e15191e36f3bd58c2cb2df0413a0dc48651"
 )
 depends=(
     "ncurses"
@@ -54,7 +54,7 @@ configure() {
         -DLLVM_INSTALL_TOOLCHAIN_ONLY=ON \
         -DLLVM_OCAML_INSTALL_PATH="${SERENITY_INSTALL_ROOT}/usr/local/ocaml" \
         -DLLVM_PTHREAD_LIB=pthread \
-        -DLLVM_TARGETS_TO_BUILD=X86
+        -DLLVM_TARGETS_TO_BUILD="X86;AArch64;RISCV"
 }
 
 build() {

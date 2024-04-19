@@ -801,7 +801,7 @@ constexpr static StringView enum_to_string(AlertDescription descriptor)
 #undef _ENUM_KEY_VALUE
 }
 
-constexpr static const StringView enum_to_value(AlertDescription descriptor)
+constexpr static StringView const enum_to_value(AlertDescription descriptor)
 {
     switch (descriptor) {
     case AlertDescription::UNEXPECTED_MESSAGE:

@@ -202,21 +202,21 @@ struct OperationalRegisters {
     // 2.3.4 FRINDEX - Frame Index Register
     // Note: We use `volatile` to ensure 32 bit writes
     // Note: Only up to 14 bits are actually used, and the last 3 bits must never be `000` or `111`
-    volatile u32 frame_index;
+    u32 volatile frame_index;
 
     // 2.3.5 CTRLDSSEGMENT - Control Data Structure Segment Register
     // Note: We use `volatile` to ensure 32 bit writes
     // Note: Upper 32 bits of periodic-frame- and asynchronous-list pointers
-    volatile u32 segment_selector;
+    u32 volatile segment_selector;
 
     // 2.3.6 PERIODICLISTBASE - Periodic Frame List Base Address Register
     // Note: We use `volatile` to ensure 32 bit writes
     // Note: Page-aligned addresses only
-    volatile u32 frame_list_base_address;
+    u32 volatile frame_list_base_address;
     // 2.3.7 ASYNCLISTADDR - Current Asynchronous List Address Register
     // Note: We use `volatile` to ensure 32 bit writes
     // Note: 32 byte (cache-line) aligned addresses only
-    volatile u32 next_asynchronous_list_address;
+    u32 volatile next_asynchronous_list_address;
 
     u32 _padding[9];
 

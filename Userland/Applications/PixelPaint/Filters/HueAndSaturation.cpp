@@ -33,7 +33,7 @@ ErrorOr<RefPtr<GUI::Widget>> HueAndSaturation::get_settings_widget()
         auto settings_widget = GUI::Widget::construct();
         settings_widget->set_layout<GUI::VerticalBoxLayout>();
 
-        auto add_slider = [&](auto name, int min, int max, auto member) -> ErrorOr<void> {
+        auto add_slider = [&](StringView name, int min, int max, auto member) -> ErrorOr<void> {
             auto& name_label = settings_widget->add<GUI::Label>(TRY(String::from_utf8(name)));
             name_label.set_font_weight(Gfx::FontWeight::Bold);
             name_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);

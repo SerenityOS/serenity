@@ -56,7 +56,7 @@ private:
     bool initialize();
     bool m_valid { false };
     bool m_header_valid { false };
-    const u32 m_start_lba;
+    u32 const m_start_lba;
     ByteBuffer m_cached_header;
 };
 

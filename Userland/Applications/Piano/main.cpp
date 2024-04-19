@@ -54,10 +54,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto wav_progress_window = ExportProgressWindow::construct(*window, wav_percent_written);
     TRY(wav_progress_window->initialize());
 
-    auto main_widget_updater = TRY(Core::Timer::create_repeating(static_cast<int>((1 / 30.0) * 1000), [&] {
+    auto main_widget_updater = Core::Timer::create_repeating(static_cast<int>((1 / 30.0) * 1000), [&] {
         if (window->is_active())
             Core::EventLoop::current().post_event(main_widget, make<Core::CustomEvent>(0));
-    }));
+    });
     main_widget_updater->start();
 
     auto file_menu = window->add_menu("&File"_string);

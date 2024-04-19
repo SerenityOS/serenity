@@ -20,7 +20,7 @@ ErrorOr<SelectedFile> SelectedFile::from_file_path(ByteString const& file_path)
     auto name = LexicalPath::basename(file_path);
 
     auto file = TRY(Core::File::open(file_path, Core::File::OpenMode::Read));
-    return SelectedFile { move(name), IPC::File { *file } };
+    return SelectedFile { move(name), IPC::File::adopt_file(move(file)) };
 }
 
 SelectedFile::SelectedFile(ByteString name, ByteBuffer contents)

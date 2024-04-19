@@ -22,7 +22,7 @@
 namespace MasterWord {
 
 WordGame::WordGame()
-    : m_clear_message_timer(Core::Timer::create_single_shot(5000, [this] { clear_message(); }).release_value_but_fixme_should_propagate_errors())
+    : m_clear_message_timer(Core::Timer::create_single_shot(5000, [this] { clear_message(); }))
 {
     read_words();
     m_num_letters = Config::read_i32("MasterWord"sv, ""sv, "word_length"sv, 5);

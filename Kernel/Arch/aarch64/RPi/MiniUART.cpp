@@ -105,7 +105,7 @@ ErrorOr<size_t> MiniUART::write(Kernel::OpenFileDescription& description, u64, K
         return EAGAIN;
 
     return buffer.read_buffered<128>(size, [&](ReadonlyBytes bytes) {
-        for (const auto& byte : bytes)
+        for (auto const& byte : bytes)
             put_char(byte);
         return bytes.size();
     });

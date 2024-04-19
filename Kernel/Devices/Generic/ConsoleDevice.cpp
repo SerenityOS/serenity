@@ -50,7 +50,7 @@ ErrorOr<size_t> ConsoleDevice::write(OpenFileDescription&, u64, Kernel::UserOrKe
         return 0;
 
     return data.read_buffered<256>(size, [&](ReadonlyBytes readonly_bytes) {
-        for (const auto& byte : readonly_bytes)
+        for (auto const& byte : readonly_bytes)
             put_char(byte);
         return readonly_bytes.size();
     });

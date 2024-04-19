@@ -9,5 +9,6 @@ source_set("WebIDL") {
     "ObservableArray.cpp",
     "OverloadResolution.cpp",
     "Promise.cpp",
+    "Tracing.cpp",
   ]
 }

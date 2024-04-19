@@ -23,8 +23,8 @@ template<typename T>
 [[nodiscard]] Point<T> Point<T>::end_point_for_aspect_ratio(Point<T> const& previous_end_point, float aspect_ratio) const
 {
     VERIFY(aspect_ratio > 0);
-    const T x_sign = previous_end_point.x() >= x() ? 1 : -1;
-    const T y_sign = previous_end_point.y() >= y() ? 1 : -1;
+    T const x_sign = previous_end_point.x() >= x() ? 1 : -1;
+    T const y_sign = previous_end_point.y() >= y() ? 1 : -1;
     T dx = AK::abs(previous_end_point.x() - x());
     T dy = AK::abs(previous_end_point.y() - y());
     if (dx > dy) {
@@ -51,16 +51,21 @@ ByteString FloatPoint::to_byte_string() const
 
 namespace IPC {
 
-template<OneOf<Gfx::IntPoint, Gfx::FloatPoint> Point>
-ErrorOr<void> encode(Encoder& encoder, Point const& point)
+template<>
+ErrorOr<void> encode(Encoder& encoder, Gfx::IntPoint const& point)
 {
     TRY(encoder.encode(point.x()));
     TRY(encoder.encode(point.y()));
     return {};
 }
 
-template ErrorOr<void> encode(Encoder&, Gfx::IntPoint const& point);
-template ErrorOr<void> encode(Encoder&, Gfx::FloatPoint const& point);
+template<>
+ErrorOr<void> encode(Encoder& encoder, Gfx::FloatPoint const& point)
+{
+    TRY(encoder.encode(point.x()));
+    TRY(encoder.encode(point.y()));
+    return {};
+}
 
 template<>
 ErrorOr<Gfx::IntPoint> decode(Decoder& decoder)

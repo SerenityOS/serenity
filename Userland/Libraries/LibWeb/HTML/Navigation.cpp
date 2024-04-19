@@ -918,6 +918,10 @@ bool Navigation::inner_navigate_event_firing_algorithm(
     Optional<String> download_request_filename,
     Optional<SerializationRecord> classic_history_api_state)
 {
+    // NOTE: Specification assumes that ongoing navigation event is cancelled before dispatching next navigation event.
+    if (m_ongoing_navigate_event)
+        abort_the_ongoing_navigation();
+
     auto& realm = relevant_realm(*this);
 
     // 1. If navigation has entries and events disabled, then:

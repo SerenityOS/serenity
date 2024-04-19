@@ -340,9 +340,9 @@ void send_tcp_rst(IPv4Packet const& ipv4_packet, TCPPacket const& tcp_packet, Re
 
     auto ipv4_payload_offset = routing_decision.adapter->ipv4_payload_offset();
 
-    const size_t options_size = 0;
-    const size_t tcp_header_size = sizeof(TCPPacket) + options_size;
-    const size_t buffer_size = ipv4_payload_offset + tcp_header_size;
+    size_t const options_size = 0;
+    size_t const tcp_header_size = sizeof(TCPPacket) + options_size;
+    size_t const buffer_size = ipv4_payload_offset + tcp_header_size;
 
     auto packet = routing_decision.adapter->acquire_packet_buffer(buffer_size);
     if (!packet)

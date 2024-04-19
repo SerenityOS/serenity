@@ -1,20 +1,6 @@
 # Patches for llvm on SerenityOS
 
-## `0001-Support-Add-support-for-building-LLVM-on-SerenityOS.patch`
-
-Add support for building LLVM on SerenityOS
-
-Adds SerenityOS `#ifdef`s for platform-specific code.
-
-We stub out wait4, as SerenityOS doesn't support querying a child
-process's resource usage information.
-
-## `0002-Triple-Add-triple-for-SerenityOS.patch`
-
-Add triple for SerenityOS
-
-
-## `0003-Driver-Add-support-for-SerenityOS.patch`
+## `0001-clang-Add-support-for-SerenityOS.patch`
 
 Add support for SerenityOS
 
@@ -23,16 +9,39 @@ This makes the compiler look for libraries and headers in the right
 places, and enables some security mitigations like stack-smashing
 protection and position-independent code by default.
 
-## `0004-Driver-Default-to-ftls-model-initial-exec-on-Serenit.patch`
+## `0002-llvm-Add-support-for-building-LLVM-on-SerenityOS.patch`
 
-Default to -ftls-model=initial-exec on SerenityOS
+Add support for building LLVM on SerenityOS
 
-This is a hack to make Clang use the initial-exec TLS model instead of
-the default local-exec when building code for Serenity.
+Adds SerenityOS `#ifdef`s for platform-specific code.
 
-This patch should be removed when we implement proper TLS support.
+We stub out wait4, as SerenityOS doesn't support querying a child
+process's resource usage information.
 
-## `0005-libc-Add-support-for-SerenityOS.patch`
+POSIX shm is not supported by SerenityOS yet, so disable it in Orc.
+
+Serenity gives each thread a default of 1MiB of stack. Increase the
+default stack size for llvm applications when running on SerenityOS.
+
+## `0003-tools-Support-building-shared-libLLVM-and-libClang-f.patch`
+
+Support building shared libLLVM and libClang for SerenityOS
+
+This patch tells CMake that the --whole-archive linker option should be
+used for specifying the archives whose members will constitute these
+shared libraries.
+
+Symbol versioning is disabled, as the SerenityOS loader doesn't support
+it, and the ELF sections that store version data would just waste space.
+
+## `0004-compiler-rt-Enable-profile-instrumentation-for-Seren.patch`
+
+Enable profile instrumentation for SerenityOS
+
+Treat SerenityOS the same as other *NIX platforms that behave close
+enough to linux to use the pre-canned InstrProfiling implementation.
+
+## `0005-libcxx-Add-support-for-SerenityOS.patch`
 
 Add support for SerenityOS
 
@@ -47,54 +56,7 @@ LibC, namely:
   by LibC as there's a lot of extra porting work to convince the rest of
   locale.cpp to use our character type table properly.
 
-## `0006-compiler-rt-Build-crtbegin.o-crtend.o-for-SerenityOS.patch`
+## `0006-clang-Add-fvisibility-inlines-hidden-function-templa.patch`
 
-Build crtbegin.o/crtend.o for SerenityOS
-
-
-## `0007-cmake-Allow-undefined-symbols-on-SerenityOS.patch`
-
-Allow undefined symbols on SerenityOS
-
-Allow undefined symbols in LLVM libraries, which is needed because only
-stubs are available for SerenityOS libraries when libc++ and libunwind
-are built.
-
-## `0008-cmake-Support-building-shared-libLLVM-and-libClang-f.patch`
-
-Support building shared libLLVM and libClang for SerenityOS
-
-This patch tells CMake that the --whole-archive linker option should be
-used for specifying the archives whose members will constitute these
-shared libraries.
-
-Symbol versioning is disabled, as the SerenityOS loader doesn't support
-it, and the ELF sections that store version data would just waste space.
-
-## `0009-compiler-rt-llvm-Enable-profile-instrumentation-for-.patch`
-
-Enable profile instrumentation for SerenityOS
-
-Treat SerenityOS the same as other *NIX platforms that behave close
-enough to linux to use the pre-canned InstrProfiling implementation.
-
-Curiously, enabling profiling for the SerenityOS target changes the ELF
-OS ABI for userspace binaries to 3, or GNU/Linux.
-
-## `0010-Add-SerenityOS-to-config.guess.patch`
-
-Add SerenityOS to config.guess
-
-
-## `0011-llvm-Prevent-the-use-of-POSIX-shm-on-SerenityOS.patch`
-
-Prevent the use of POSIX shm on SerenityOS
-
-POSIX shm is not supported by SerenityOS yet, so this causes a
-compilation error.
-
-## `0012-cmake-Increase-the-default-stack-size-when-running-o.patch`
-
-cmake: Increase the default stack size when running on SerenityOS
-
+Add -fvisibility-inlines-hidden-function-templates
 

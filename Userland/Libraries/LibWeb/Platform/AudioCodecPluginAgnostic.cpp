@@ -31,7 +31,7 @@ ErrorOr<NonnullOwnPtr<AudioCodecPluginAgnostic>> AudioCodecPluginAgnostic::creat
 {
     auto duration = timestamp_from_samples(loader->total_samples(), loader->sample_rate());
 
-    auto update_timer = TRY(Core::Timer::try_create());
+    auto update_timer = Core::Timer::create();
     update_timer->set_interval(update_interval);
 
     auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) AudioCodecPluginAgnostic(loader, duration, move(update_timer))));

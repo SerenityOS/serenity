@@ -532,7 +532,7 @@ void DeflateCompressor::close()
 // Knuth's multiplicative hash on 4 bytes
 u16 DeflateCompressor::hash_sequence(u8 const* bytes)
 {
-    constexpr const u32 knuth_constant = 2654435761; // shares no common factors with 2^32
+    constexpr u32 const knuth_constant = 2654435761; // shares no common factors with 2^32
     return ((bytes[0] | bytes[1] << 8 | bytes[2] << 16 | bytes[3] << 24) * knuth_constant) >> (32 - hash_bits);
 }
 

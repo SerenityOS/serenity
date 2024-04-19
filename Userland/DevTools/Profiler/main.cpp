@@ -329,7 +329,7 @@ static bool prompt_to_stop_profiling(pid_t pid, ByteString const& process_name)
     clock.start();
     auto update_timer = Core::Timer::create_repeating(100, [&] {
         timer_label.set_text(String::formatted("{:.1} seconds", static_cast<float>(clock.elapsed()) / 1000.0f).release_value_but_fixme_should_propagate_errors());
-    }).release_value_but_fixme_should_propagate_errors();
+    });
     update_timer->start();
 
     auto& stop_button = widget->add<GUI::Button>("Stop"_string);

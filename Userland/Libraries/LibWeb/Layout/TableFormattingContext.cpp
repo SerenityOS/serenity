@@ -639,7 +639,7 @@ void TableFormattingContext::distribute_width_to_columns()
 
     // The assignable table width is the used width of the table minus the total horizontal border spacing (if any).
     // This is the width that we will be able to allocate to the columns.
-    const CSSPixels available_width = m_state.get(table_box()).content_width() - total_horizontal_border_spacing;
+    CSSPixels const available_width = m_state.get(table_box()).content_width() - total_horizontal_border_spacing;
 
     Vector<CSSPixels> candidate_widths;
     candidate_widths.resize(m_columns.size());
@@ -1080,30 +1080,29 @@ void TableFormattingContext::position_cell_boxes()
     for (auto& cell : m_cells) {
         auto& cell_state = m_state.get_mutable(cell.box);
         auto& row_state = m_state.get(m_rows[cell.row_index].box);
-        CSSPixels const cell_border_box_height = cell_state.content_height() + cell_state.border_box_top() + cell_state.border_box_bottom();
-        CSSPixels const row_content_height = compute_row_content_height(cell);
+        auto const row_content_height = compute_row_content_height(cell);
         auto const& vertical_align = cell.box->computed_values().vertical_align();
         // The following image shows various alignment lines of a row:
         // https://www.w3.org/TR/css-tables-3/images/cell-align-explainer.png
         if (vertical_align.has<CSS::VerticalAlign>()) {
-            auto height_diff = row_content_height - cell_border_box_height;
             switch (vertical_align.get<CSS::VerticalAlign>()) {
             case CSS::VerticalAlign::Middle: {
+                auto const height_diff = row_content_height - cell_state.border_box_height();
                 cell_state.padding_top += height_diff / 2;
                 cell_state.padding_bottom += height_diff / 2;
                 break;
             }
             case CSS::VerticalAlign::Top: {
-                cell_state.padding_bottom += height_diff;
+                cell_state.padding_bottom += row_content_height - cell_state.border_box_height();
                 break;
             }
             case CSS::VerticalAlign::Bottom: {
-                cell_state.padding_top += height_diff;
+                cell_state.padding_top += row_content_height - cell_state.border_box_height();
                 break;
             }
             case CSS::VerticalAlign::Baseline: {
                 cell_state.padding_top += m_rows[cell.row_index].baseline - cell.baseline;
-                cell_state.padding_bottom += height_diff;
+                cell_state.padding_bottom += row_content_height - cell_state.border_box_height();
                 break;
             }
             case CSS::VerticalAlign::Sub: {
@@ -1219,7 +1218,7 @@ const CSS::BorderData& TableFormattingContext::border_data_conflicting_edge(Tabl
     }
 }
 
-const Painting::PaintableBox::BorderDataWithElementKind TableFormattingContext::border_data_with_element_kind_from_conflicting_edge(ConflictingEdge const& conflicting_edge)
+Painting::PaintableBox::BorderDataWithElementKind const TableFormattingContext::border_data_with_element_kind_from_conflicting_edge(ConflictingEdge const& conflicting_edge)
 {
     auto const& border_data = border_data_conflicting_edge(conflicting_edge);
     return { .border_data = border_data, .element_kind = conflicting_edge.element_kind };

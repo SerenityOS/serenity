@@ -114,6 +114,7 @@ set(LADYBIRD_HEADERS
 if (ENABLE_QT)
     qt_add_executable(ladybird ${SOURCES})
     target_sources(ladybird PRIVATE
+        Qt/Application.cpp
         Qt/AutoComplete.cpp
         Qt/BrowserWindow.cpp
         Qt/EventLoopImplementationQt.cpp
@@ -138,6 +139,7 @@ elseif (APPLE)
         ${SOURCES}
         AppKit/main.mm
         AppKit/Application/Application.mm
+        AppKit/Application/ApplicationBridge.cpp
         AppKit/Application/ApplicationDelegate.mm
         AppKit/Application/EventLoopImplementation.mm
         AppKit/UI/Event.mm

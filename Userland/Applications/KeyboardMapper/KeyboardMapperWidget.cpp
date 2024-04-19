@@ -97,7 +97,7 @@ void KeyboardMapperWidget::create_frame()
     bottom_widget.add_spacer();
 }
 
-void KeyboardMapperWidget::add_map_radio_button(const StringView map_name, String button_text)
+void KeyboardMapperWidget::add_map_radio_button(StringView const map_name, String button_text)
 {
     auto& map_radio_button = m_map_group->add<GUI::RadioButton>(button_text);
     map_radio_button.set_name(map_name);
@@ -106,7 +106,7 @@ void KeyboardMapperWidget::add_map_radio_button(const StringView map_name, Strin
     };
 }
 
-u32* KeyboardMapperWidget::map_from_name(const StringView map_name)
+u32* KeyboardMapperWidget::map_from_name(StringView const map_name)
 {
     u32* map;
     if (map_name == "map"sv) {
@@ -234,7 +234,7 @@ void KeyboardMapperWidget::keyup_event(GUI::KeyEvent& event)
     }
 }
 
-void KeyboardMapperWidget::set_current_map(const ByteString current_map)
+void KeyboardMapperWidget::set_current_map(ByteString const current_map)
 {
     m_current_map_name = current_map;
     u32* map = map_from_name(m_current_map_name);

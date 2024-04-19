@@ -86,7 +86,7 @@ private:
     BLAKE2bState m_internal_state {};
 
     void mix(u64* work_vector, u64 a, u64 b, u64 c, u64 d, u64 x, u64 y);
-    void increment_counter_by(const u64 amount);
+    void increment_counter_by(u64 const amount);
     void transform(u8 const*);
 };
 

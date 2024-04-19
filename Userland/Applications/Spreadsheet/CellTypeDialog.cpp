@@ -145,7 +145,7 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, Vector<Position> const& po
         type_list.set_model(*GUI::ItemListModel<ByteString>::create(g_types));
         type_list.set_should_hide_unnecessary_scrollbars(true);
         type_list.on_selection_change = [&] {
-            const auto& index = type_list.selection().first();
+            auto const& index = type_list.selection().first();
             if (!index.is_valid()) {
                 m_type = nullptr;
                 return;

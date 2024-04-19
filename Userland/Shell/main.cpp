@@ -85,7 +85,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
             (void)shell->highlight(editor);
         };
-        editor->on_tab_complete = [&](const Line::Editor&) {
+        editor->on_tab_complete = [&](Line::Editor const&) {
             return shell->complete();
         };
         editor->on_paste = [&](Utf32View data, Line::Editor& editor) {

@@ -28,7 +28,7 @@ struct Array {
     constexpr static size_t size() { return Size; }
     constexpr T const& operator[](size_t index) const { return __data[index]; }
     constexpr T& operator[](size_t index) { return __data[index]; }
-    using ConstIterator = SimpleIterator<const Array, T const>;
+    using ConstIterator = SimpleIterator<Array const, T const>;
     using Iterator = SimpleIterator<Array, T>;
 
     constexpr ConstIterator begin() const { return ConstIterator::begin(*this); }

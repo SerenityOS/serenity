@@ -51,7 +51,7 @@ ImageEditor::ImageEditor(NonnullRefPtr<Image> image)
         m_marching_ants_offset %= (marching_ant_length * 2);
         if (!m_image->selection().is_empty() || m_image->selection().in_interactive_selection())
             update();
-    }).release_value_but_fixme_should_propagate_errors();
+    });
     m_marching_ants_timer->start();
 }
 
@@ -248,8 +248,8 @@ void ImageEditor::paint_event(GUI::PaintEvent& event)
         }
 
         // Mouse position indicator
-        const Gfx::IntPoint indicator_x({ m_mouse_position.x(), m_ruler_thickness });
-        const Gfx::IntPoint indicator_y({ m_ruler_thickness, m_mouse_position.y() });
+        Gfx::IntPoint const indicator_x({ m_mouse_position.x(), m_ruler_thickness });
+        Gfx::IntPoint const indicator_y({ m_ruler_thickness, m_mouse_position.y() });
         painter.draw_triangle(indicator_x, indicator_x + Gfx::IntPoint(-m_mouse_indicator_triangle_size, -m_mouse_indicator_triangle_size), indicator_x + Gfx::IntPoint(m_mouse_indicator_triangle_size, -m_mouse_indicator_triangle_size), mouse_indicator_color);
         painter.draw_triangle(indicator_y, indicator_y + Gfx::IntPoint(-m_mouse_indicator_triangle_size, -m_mouse_indicator_triangle_size), indicator_y + Gfx::IntPoint(-m_mouse_indicator_triangle_size, m_mouse_indicator_triangle_size), mouse_indicator_color);
 
@@ -276,15 +276,15 @@ int ImageEditor::calculate_ruler_step_size() const
 
 Gfx::IntRect ImageEditor::mouse_indicator_rect_x() const
 {
-    const Gfx::IntPoint top_left({ m_ruler_thickness, m_ruler_thickness - m_mouse_indicator_triangle_size });
-    const Gfx::IntSize size({ width() + 1, m_mouse_indicator_triangle_size + 1 });
+    Gfx::IntPoint const top_left({ m_ruler_thickness, m_ruler_thickness - m_mouse_indicator_triangle_size });
+    Gfx::IntSize const size({ width() + 1, m_mouse_indicator_triangle_size + 1 });
     return Gfx::IntRect(top_left, size);
 }
 
 Gfx::IntRect ImageEditor::mouse_indicator_rect_y() const
 {
-    const Gfx::IntPoint top_left({ m_ruler_thickness - m_mouse_indicator_triangle_size, m_ruler_thickness });
-    const Gfx::IntSize size({ m_mouse_indicator_triangle_size + 1, height() + 1 });
+    Gfx::IntPoint const top_left({ m_ruler_thickness - m_mouse_indicator_triangle_size, m_ruler_thickness });
+    Gfx::IntSize const size({ m_mouse_indicator_triangle_size + 1, height() + 1 });
     return Gfx::IntRect(top_left, size);
 }
 

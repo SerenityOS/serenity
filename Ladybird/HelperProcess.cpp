@@ -12,7 +12,8 @@
 ErrorOr<NonnullRefPtr<WebView::WebContentClient>> launch_web_content_process(
     WebView::ViewImplementation& view,
     ReadonlySpan<ByteString> candidate_web_content_paths,
-    Ladybird::WebContentOptions const& web_content_options)
+    Ladybird::WebContentOptions const& web_content_options,
+    Optional<WebView::SocketPair> request_server_sockets)
 {
     int socket_fds[2] {};
     TRY(Core::System::socketpair(AF_LOCAL, SOCK_STREAM, 0, socket_fds));
@@ -73,10 +74,14 @@ ErrorOr<NonnullRefPtr<WebView::WebContentClient>> launch_web_content_process(
                 arguments.append("--mach-server-name"sv);
                 arguments.append(server.value());
             }
-            Vector<ByteString> certificate_args;
-            for (auto const& certificate : web_content_options.certificates) {
-                certificate_args.append(ByteString::formatted("--certificate={}", certificate));
-                arguments.append(certificate_args.last().view());
+            Vector<String> fd_strings;
+            if (request_server_sockets.has_value()) {
+                arguments.append("--request-server-socket"sv);
+                fd_strings.append(MUST(String::number(request_server_sockets->socket.fd())));
+                arguments.append(fd_strings.last());
+                arguments.append("--request-server-fd-passing-socket"sv);
+                fd_strings.append(MUST(String::number(request_server_sockets->fd_passing_socket.fd())));
+                arguments.append(fd_strings.last());
             }
 
             result = Core::System::exec(arguments[0], arguments.span(), Core::System::SearchInPath::Yes);
@@ -109,7 +114,7 @@ ErrorOr<NonnullRefPtr<WebView::WebContentClient>> launch_web_content_process(
 }
 
 template<typename Client>
-ErrorOr<NonnullRefPtr<Client>> launch_generic_server_process(ReadonlySpan<ByteString> candidate_server_paths, StringView serenity_resource_root, Vector<ByteString> const& certificates, StringView server_name)
+ErrorOr<NonnullRefPtr<Client>> launch_generic_server_process(ReadonlySpan<ByteString> candidate_server_paths, StringView server_name, Vector<StringView> extra_arguments = {})
 {
     int socket_fds[2] {};
     TRY(Core::System::socketpair(AF_LOCAL, SOCK_STREAM, 0, socket_fds));
@@ -139,20 +144,14 @@ ErrorOr<NonnullRefPtr<Client>> launch_generic_server_process(ReadonlySpan<ByteSt
             if (Core::System::access(path, X_OK).is_error())
                 continue;
 
-            auto arguments = Vector<StringView, 5> {
+            auto arguments = Vector<StringView> {
                 path.view(),
                 "--fd-passing-socket"sv,
                 fd_passing_socket_string,
             };
-            if (!serenity_resource_root.is_empty()) {
-                arguments.append("--serenity-resource-root"sv);
-                arguments.append(serenity_resource_root);
-            }
-            Vector<ByteString> certificate_args;
-            for (auto const& certificate : certificates) {
-                certificate_args.append(ByteString::formatted("--certificate={}", certificate));
-                arguments.append(certificate_args.last().view());
-            }
+
+            if (!extra_arguments.is_empty())
+                arguments.extend(extra_arguments);
 
             result = Core::System::exec(arguments[0], arguments.span(), Core::System::SearchInPath::Yes);
             if (!result.is_error())
@@ -180,15 +179,59 @@ ErrorOr<NonnullRefPtr<Client>> launch_generic_server_process(ReadonlySpan<ByteSt
 
 ErrorOr<NonnullRefPtr<ImageDecoderClient::Client>> launch_image_decoder_process(ReadonlySpan<ByteString> candidate_image_decoder_paths)
 {
-    return launch_generic_server_process<ImageDecoderClient::Client>(candidate_image_decoder_paths, ""sv, {}, "ImageDecoder"sv);
+    return launch_generic_server_process<ImageDecoderClient::Client>(candidate_image_decoder_paths, "ImageDecoder"sv);
 }
 
-ErrorOr<NonnullRefPtr<Web::HTML::WebWorkerClient>> launch_web_worker_process(ReadonlySpan<ByteString> candidate_web_worker_paths, Vector<ByteString> const& certificates)
+ErrorOr<NonnullRefPtr<Web::HTML::WebWorkerClient>> launch_web_worker_process(ReadonlySpan<ByteString> candidate_web_worker_paths, NonnullRefPtr<Protocol::RequestClient> request_client)
 {
-    return launch_generic_server_process<Web::HTML::WebWorkerClient>(candidate_web_worker_paths, ""sv, certificates, "WebWorker"sv);
+    auto request_server_sockets = TRY(connect_new_request_server_client(move(request_client)));
+
+    Vector<StringView> arguments;
+    Vector<String> fd_strings;
+
+    arguments.append("--request-server-socket"sv);
+    fd_strings.append(MUST(String::number(request_server_sockets.socket.fd())));
+    arguments.append(fd_strings.last());
+    arguments.append("--request-server-fd-passing-socket"sv);
+    fd_strings.append(MUST(String::number(request_server_sockets.fd_passing_socket.fd())));
+    arguments.append(fd_strings.last());
+
+    return launch_generic_server_process<Web::HTML::WebWorkerClient>(candidate_web_worker_paths, "WebWorker"sv, move(arguments));
 }
 
 ErrorOr<NonnullRefPtr<Protocol::RequestClient>> launch_request_server_process(ReadonlySpan<ByteString> candidate_request_server_paths, StringView serenity_resource_root, Vector<ByteString> const& certificates)
 {
-    return launch_generic_server_process<Protocol::RequestClient>(candidate_request_server_paths, serenity_resource_root, certificates, "RequestServer"sv);
+    Vector<StringView> arguments;
+    if (!serenity_resource_root.is_empty()) {
+        arguments.append("--serenity-resource-root"sv);
+        arguments.append(serenity_resource_root);
+    }
+    Vector<ByteString> certificate_args;
+    for (auto const& certificate : certificates) {
+        certificate_args.append(ByteString::formatted("--certificate={}", certificate));
+        arguments.append(certificate_args.last().view());
+    }
+
+    return launch_generic_server_process<Protocol::RequestClient>(candidate_request_server_paths, "RequestServer"sv, move(arguments));
+}
+
+ErrorOr<WebView::SocketPair> connect_new_request_server_client(Protocol::RequestClient& client)
+{
+    auto new_sockets = client.send_sync_but_allow_failure<Messages::RequestServer::ConnectNewClient>();
+    if (!new_sockets)
+        return Error::from_string_literal("Failed to connect to RequestServer");
+
+    auto socket = new_sockets->take_client_socket();
+    auto fd_passing_socket = new_sockets->take_client_fd_passing_socket();
+
+    // FIXME: IPC::Files transferred over the wire are always set O_CLOEXEC during decoding.
+    //        Perhaps we should add an option to IPC::File to allow the receiver to decide whether to
+    //        make it O_CLOEXEC or not. Or an attribute in the .ipc file?
+    for (auto fd : { socket.fd(), fd_passing_socket.fd() }) {
+        auto fd_flags = MUST(Core::System::fcntl(fd, F_GETFD));
+        fd_flags &= ~FD_CLOEXEC;
+        MUST(Core::System::fcntl(fd, F_SETFD, fd_flags));
+    }
+
+    return WebView::SocketPair { move(socket), move(fd_passing_socket) };
 }

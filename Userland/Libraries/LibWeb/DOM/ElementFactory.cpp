@@ -87,6 +87,7 @@
 #include <LibWeb/SVG/SVGCircleElement.h>
 #include <LibWeb/SVG/SVGClipPathElement.h>
 #include <LibWeb/SVG/SVGDefsElement.h>
+#include <LibWeb/SVG/SVGDescElement.h>
 #include <LibWeb/SVG/SVGEllipseElement.h>
 #include <LibWeb/SVG/SVGForeignObjectElement.h>
 #include <LibWeb/SVG/SVGGElement.h>
@@ -439,6 +440,8 @@ static JS::GCPtr<SVG::SVGElement> create_svg_element(JS::Realm& realm, Document&
         return realm.heap().allocate<SVG::SVGCircleElement>(realm, document, move(qualified_name));
     if (local_name.equals_ignoring_ascii_case(SVG::TagNames::defs))
         return realm.heap().allocate<SVG::SVGDefsElement>(realm, document, move(qualified_name));
+    if (local_name == SVG::TagNames::desc)
+        return realm.heap().allocate<SVG::SVGDescElement>(realm, document, move(qualified_name));
     if (local_name == SVG::TagNames::ellipse)
         return realm.heap().allocate<SVG::SVGEllipseElement>(realm, document, move(qualified_name));
     if (local_name.equals_ignoring_ascii_case(SVG::TagNames::foreignObject))

@@ -110,6 +110,21 @@ public:
     String cookie(Cookie::Source = Cookie::Source::NonHttp);
     void set_cookie(StringView, Cookie::Source = Cookie::Source::NonHttp);
 
+    String fg_color() const;
+    void set_fg_color(String const&);
+
+    String link_color() const;
+    void set_link_color(String const&);
+
+    String vlink_color() const;
+    void set_vlink_color(String const&);
+
+    String alink_color() const;
+    void set_alink_color(String const&);
+
+    String bg_color() const;
+    void set_bg_color(String const&);
+
     String referrer() const;
     void set_referrer(String);
 
@@ -198,8 +213,8 @@ public:
     Color background_color() const;
     Vector<CSS::BackgroundLayerData> const* background_layers() const;
 
-    Color link_color() const;
-    void set_link_color(Color);
+    Color normal_link_color() const;
+    void set_normal_link_color(Color);
 
     Color active_link_color() const;
     void set_active_link_color(Color);
@@ -679,7 +694,7 @@ private:
 
     JS::GCPtr<Layout::Viewport> m_layout_root;
 
-    Optional<Color> m_link_color;
+    Optional<Color> m_normal_link_color;
     Optional<Color> m_active_link_color;
     Optional<Color> m_visited_link_color;
 

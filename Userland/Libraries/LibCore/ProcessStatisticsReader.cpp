@@ -25,7 +25,7 @@ ErrorOr<AllProcessesStatistics> ProcessStatisticsReader::get_all(SeekableStream&
     auto file_contents = TRY(proc_all_file.read_until_eof());
     auto json_obj = TRY(JsonValue::from_string(file_contents)).as_object();
     json_obj.get_array("processes"sv)->for_each([&](auto& value) {
-        const JsonObject& process_object = value.as_object();
+        JsonObject const& process_object = value.as_object();
         Core::ProcessStatistics process;
 
         // kernel data first

@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "Application.h"
 #include "BrowserWindow.h"
 #include "EventLoopImplementationQt.h"
 #include "Settings.h"
@@ -20,8 +21,6 @@
 #include <LibWebView/Database.h>
 #include <LibWebView/ProcessManager.h>
 #include <LibWebView/URL.h>
-#include <QApplication>
-#include <QFileOpenEvent>
 
 #if defined(AK_OS_MACOS)
 #    include <Ladybird/MachPortServer.h>
@@ -59,42 +58,11 @@ static ErrorOr<void> handle_attached_debugger()
     return {};
 }
 
-class LadybirdApplication : public QApplication {
-public:
-    LadybirdApplication(int& argc, char** argv)
-        : QApplication(argc, argv)
-    {
-    }
-
-    Function<void(URL::URL)> on_open_file;
-
-    bool event(QEvent* event) override
-    {
-        switch (event->type()) {
-        case QEvent::FileOpen: {
-            if (!on_open_file)
-                break;
-
-            auto const& open_event = *static_cast<QFileOpenEvent const*>(event);
-            auto file = ak_string_from_qstring(open_event.file());
-
-            if (auto file_url = WebView::sanitize_url(file); file_url.has_value())
-                on_open_file(file_url.release_value());
-        }
-
-        default:
-            break;
-        }
-
-        return QApplication::event(event);
-    }
-};
-
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     AK::set_rich_debug_enabled(true);
 
-    LadybirdApplication app(arguments.argc, arguments.argv);
+    Ladybird::Application app(arguments.argc, arguments.argv);
 
     Core::EventLoopManager::install(*new Ladybird::EventLoopManagerQt);
     Core::EventLoop event_loop;
@@ -164,12 +132,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         initial_urls.append(ak_string_from_qstring(new_tab_page));
     }
 
+    // NOTE: WebWorker *always* needs a request server connection, even if WebContent uses Qt Networking
+    // FIXME: Create an abstraction to re-spawn the RequestServer and re-hook up its client hooks to each tab on crash
+    auto request_server_paths = TRY(get_paths_for_helper_process("RequestServer"sv));
+    auto protocol_client = TRY(launch_request_server_process(request_server_paths, s_serenity_resource_root, certificates));
+    app.request_server_client = protocol_client;
+
     StringBuilder command_line_builder;
     command_line_builder.join(' ', arguments.strings);
     Ladybird::WebContentOptions web_content_options {
         .command_line = MUST(command_line_builder.to_string()),
         .executable_path = MUST(String::from_byte_string(MUST(Core::System::current_executable_path()))),
-        .certificates = move(certificates),
         .enable_callgrind_profiling = enable_callgrind_profiling ? Ladybird::EnableCallgrindProfiling::Yes : Ladybird::EnableCallgrindProfiling::No,
         .enable_gpu_painting = use_gpu_painting ? Ladybird::EnableGPUPainting::Yes : Ladybird::EnableGPUPainting::No,
         .use_lagom_networking = enable_qt_networking ? Ladybird::UseLagomNetworking::No : Ladybird::UseLagomNetworking::Yes,

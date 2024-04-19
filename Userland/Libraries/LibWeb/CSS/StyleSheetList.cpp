@@ -37,14 +37,29 @@ void StyleSheetList::add_a_css_style_sheet(CSS::CSSStyleSheet& sheet)
     if (sheet.disabled())
         return;
 
-    // FIXME: 3. If the title is not the empty string, the alternate flag is unset, and preferred CSS style sheet set name is the empty string change the preferred CSS style sheet set name to the title.
+    VERIFY(sheet.title().has_value());
 
-    // FIXME: 4. If any of the following is true, then unset the disabled flag and return:
-    //           The title is the empty string.
-    //           The last CSS style sheet set name is null and the title is a case-sensitive match for the preferred CSS style sheet set name.
-    //           The title is a case-sensitive match for the last CSS style sheet set name.
+    // 3. If the title is not the empty string, the alternate flag is unset, and preferred CSS style sheet set name is the empty string change the preferred CSS style sheet set name to the title.
+    if (!sheet.title()->is_empty() && !sheet.is_alternate() && m_preferred_css_style_sheet_set_name.is_empty()) {
+        m_preferred_css_style_sheet_set_name = sheet.title().value();
+    }
 
-    // FIXME: 5. Set the disabled flag.
+    // 4. If any of the following is true, then unset the disabled flag and return:
+    //    - The title is the empty string.
+    //    - The last CSS style sheet set name is null and the title is a case-sensitive match for the preferred CSS style sheet set name.
+    //    - The title is a case-sensitive match for the last CSS style sheet set name.
+    // NOTE: We don't enable alternate sheets with an empty title.  This isn't directly mentioned in the algorithm steps, but the
+    // HTML specification says that the title element must be specified with a non-empty value for alternative style sheets.
+    // See: https://html.spec.whatwg.org/multipage/links.html#the-link-is-an-alternative-stylesheet
+    if ((sheet.title()->is_empty() && !sheet.is_alternate())
+        || (!m_last_css_style_sheet_set_name.has_value() && sheet.title().value().equals_ignoring_case(m_preferred_css_style_sheet_set_name))
+        || (m_last_css_style_sheet_set_name.has_value() && sheet.title().value().equals_ignoring_case(m_last_css_style_sheet_set_name.value()))) {
+        sheet.set_disabled(false);
+        return;
+    }
+
+    // 5. Set the disabled flag.
+    sheet.set_disabled(true);
 }
 
 // https://www.w3.org/TR/cssom/#create-a-css-style-sheet

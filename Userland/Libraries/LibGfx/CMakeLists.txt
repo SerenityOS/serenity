@@ -60,6 +60,7 @@ set(SOURCES
     ImageFormats/PortableFormatWriter.cpp
     ImageFormats/PAMLoader.cpp
     ImageFormats/PPMLoader.cpp
+    ImageFormats/QMArithmeticDecoder.cpp
     ImageFormats/QOILoader.cpp
     ImageFormats/QOIWriter.cpp
     ImageFormats/TGALoader.cpp

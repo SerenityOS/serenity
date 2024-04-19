@@ -187,7 +187,7 @@ int Debugger::debugger_loop(Debug::DebugSession::DesiredInitialDebugeeState init
         }
         remove_temporary_breakpoints();
         VERIFY(optional_regs.has_value());
-        const PtraceRegisters& regs = optional_regs.value();
+        PtraceRegisters const& regs = optional_regs.value();
 
         auto source_position = m_debug_session->get_source_position(regs.ip());
         if (!source_position.has_value())

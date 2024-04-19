@@ -1947,7 +1947,7 @@ void TextEditor::did_change(AllowCallback allow_callback)
     if (on_change && allow_callback == AllowCallback::Yes)
         on_change();
 }
-void TextEditor::set_mode(const Mode mode)
+void TextEditor::set_mode(Mode const mode)
 {
     if (m_mode == mode)
         return;
@@ -2476,7 +2476,7 @@ void TextEditor::set_should_autocomplete_automatically(bool value)
         m_autocomplete_timer = Core::Timer::create_single_shot(m_automatic_autocomplete_delay_ms, [this] {
             if (m_autocomplete_box && !m_autocomplete_box->is_visible())
                 try_show_autocomplete(UserRequestedAutocomplete::No);
-        }).release_value_but_fixme_should_propagate_errors();
+        });
         return;
     }
 
