@@ -1,7 +1,7 @@
 #include <LibCore/AnonymousBuffer.h>
-#include <LibGfx/ShareableBitmap.h>
 
 endpoint ImageDecoderServer
 {
-    decode_image(Core::AnonymousBuffer data, Optional<Gfx::IntSize> ideal_size, Optional<ByteString> mime_type) => (bool is_animated, u32 loop_count, Vector<Gfx::ShareableBitmap> bitmaps, Vector<u32> durations, Gfx::FloatPoint scale)
+    decode_image(Core::AnonymousBuffer data, Optional<Gfx::IntSize> ideal_size, Optional<ByteString> mime_type) => (i64 image_id)
+    cancel_decoding(i64 image_id) =|
 }
