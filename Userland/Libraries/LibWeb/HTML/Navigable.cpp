@@ -92,6 +92,15 @@ bool Navigable::is_traversable() const
     return is<TraversableNavigable>(*this);
 }
 
+bool Navigable::is_ancestor_of(JS::NonnullGCPtr<Navigable> other) const
+{
+    for (auto ancestor = other->parent(); ancestor; ancestor = ancestor->parent()) {
+        if (ancestor == this)
+            return true;
+    }
+    return false;
+}
+
 Navigable::Navigable()
 {
     all_navigables().set(this);
