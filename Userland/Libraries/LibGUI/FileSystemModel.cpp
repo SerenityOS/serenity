@@ -717,9 +717,9 @@ static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> render_thumbnail(StringView path)
         }
 
         auto mime_type = Core::guess_mime_type_based_on_filename(path);
-        auto decoded_image = maybe_client->decode_image(file->bytes(), thumbnail_size, mime_type);
-        if (!decoded_image.has_value())
-            return Error::from_string_literal("Unable to decode the image.");
+
+        // FIXME: Refactor thumbnail rendering to be more async-aware. Possibly return this promise to the caller.
+        auto decoded_image = TRY(maybe_client->decode_image(file->bytes(), {}, {}, thumbnail_size, mime_type)->await());
 
         return decoded_image;
     }));

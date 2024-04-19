@@ -237,16 +237,15 @@ ErrorOr<void> ViewWidget::try_open_file(String const& path, Core::File& file)
         // Use out-of-process decoding for raster formats.
         auto client = TRY(ImageDecoderClient::Client::try_create());
         auto mime_type = Core::guess_mime_type_based_on_filename(path);
-        auto decoded_image = client->decode_image(file_data, OptionalNone {}, mime_type);
-        if (!decoded_image.has_value()) {
-            return Error::from_string_literal("Failed to decode image");
-        }
-        is_animated = decoded_image->is_animated;
-        loop_count = decoded_image->loop_count;
-        frames.ensure_capacity(decoded_image->frames.size());
-        for (u32 i = 0; i < decoded_image->frames.size(); i++) {
-            auto& frame_data = decoded_image->frames[i];
-            frames.unchecked_append({ BitmapImage::create(frame_data.bitmap, decoded_image->scale), int(frame_data.duration) });
+
+        // FIXME: Refactor file opening to be more async-aware, and don't await this promise
+        auto decoded_image = TRY(client->decode_image(file_data, {}, {}, OptionalNone {}, mime_type)->await());
+        is_animated = decoded_image.is_animated;
+        loop_count = decoded_image.loop_count;
+        frames.ensure_capacity(decoded_image.frames.size());
+        for (u32 i = 0; i < decoded_image.frames.size(); i++) {
+            auto& frame_data = decoded_image.frames[i];
+            frames.unchecked_append({ BitmapImage::create(frame_data.bitmap, decoded_image.scale), int(frame_data.duration) });
         }
     }
 

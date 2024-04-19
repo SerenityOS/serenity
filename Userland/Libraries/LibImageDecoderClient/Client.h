@@ -36,9 +36,6 @@ public:
 
     NonnullRefPtr<Core::Promise<DecodedImage>> decode_image(ReadonlyBytes, Function<ErrorOr<void>(DecodedImage&)> on_resolved, Function<void(Error&)> on_rejected, Optional<Gfx::IntSize> ideal_size = {}, Optional<ByteString> mime_type = {});
 
-    // FIXME: Move all clients to the promise-based API and get rid of this synchronous (i.e. EventLoop-spinning) one.
-    Optional<DecodedImage> decode_image(ReadonlyBytes, Optional<Gfx::IntSize> ideal_size = {}, Optional<ByteString> mime_type = {});
-
     Function<void()> on_death;
 
 private:
