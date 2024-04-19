@@ -463,21 +463,25 @@ void HTMLLinkElement::resource_did_load_favicon()
     document().check_favicon_after_loading_link_resource();
 }
 
-static bool decode_favicon(ReadonlyBytes favicon_data, URL::URL const& favicon_url, JS::GCPtr<Navigable> navigable)
+static NonnullRefPtr<Core::Promise<Web::Platform::DecodedImage>> decode_favicon(ReadonlyBytes favicon_data, URL::URL const& favicon_url, JS::GCPtr<Navigable> navigable)
 {
-    auto decoded_image = Platform::ImageCodecPlugin::the().decode_image(favicon_data);
-    if (!decoded_image.has_value() || decoded_image->frames.is_empty()) {
-        dbgln_if(IMAGE_DECODER_DEBUG, "Could not decode favicon {}", favicon_url);
-        return false;
-    }
+    auto on_failed_decode = [favicon_url]([[maybe_unused]] Error& error) {
+        dbgln_if(IMAGE_DECODER_DEBUG, "Failed to decode favicon {}: {}", favicon_url, error);
+    };
 
-    auto favicon_bitmap = decoded_image->frames[0].bitmap;
-    dbgln_if(IMAGE_DECODER_DEBUG, "Decoded favicon, {}", favicon_bitmap->size());
+    auto on_successful_decode = [navigable = JS::Handle(*navigable)](Web::Platform::DecodedImage& decoded_image) -> ErrorOr<void> {
+        auto favicon_bitmap = decoded_image.frames[0].bitmap;
+        dbgln_if(IMAGE_DECODER_DEBUG, "Decoded favicon, {}", favicon_bitmap->size());
 
-    if (navigable && navigable->is_traversable())
-        navigable->traversable_navigable()->page().client().page_did_change_favicon(*favicon_bitmap);
+        if (navigable && navigable->is_traversable())
+            navigable->traversable_navigable()->page().client().page_did_change_favicon(*favicon_bitmap);
 
-    return favicon_bitmap;
+        return {};
+    };
+
+    auto promise = Platform::ImageCodecPlugin::the().decode_image(favicon_data, move(on_successful_decode), move(on_failed_decode));
+
+    return promise;
 }
 
 bool HTMLLinkElement::load_favicon_and_use_if_window_is_active()
@@ -485,7 +489,10 @@ bool HTMLLinkElement::load_favicon_and_use_if_window_is_active()
     if (!has_loaded_icon())
         return false;
 
-    return decode_favicon(resource()->encoded_data(), resource()->url(), navigable());
+    // FIXME: Refactor the caller(s) to handle the async nature of image loading
+    auto promise = decode_favicon(resource()->encoded_data(), resource()->url(), navigable());
+    auto result = promise->await();
+    return !result.is_error();
 }
 
 // https://html.spec.whatwg.org/multipage/links.html#rel-icon:the-link-element-3
@@ -519,7 +526,7 @@ WebIDL::ExceptionOr<void> HTMLLinkElement::load_fallback_favicon_if_needed(JS::N
         auto global = JS::NonnullGCPtr { realm.global_object() };
 
         auto process_body = JS::create_heap_function(realm.heap(), [document, request](ByteBuffer body) {
-            decode_favicon(body, request->url(), document->navigable());
+            (void)decode_favicon(body, request->url(), document->navigable());
         });
         auto process_body_error = JS::create_heap_function(realm.heap(), [](JS::GCPtr<WebIDL::DOMException>) {
         });
