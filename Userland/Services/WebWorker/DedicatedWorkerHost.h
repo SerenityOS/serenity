@@ -23,7 +23,7 @@ public:
     void run(JS::NonnullGCPtr<Web::Page>, Web::HTML::TransferDataHolder message_port_data, Web::HTML::SerializedEnvironmentSettingsObject const&);
 
 private:
-    RefPtr<Web::HTML::WorkerDebugConsoleClient> m_console;
+    JS::Handle<Web::HTML::WorkerDebugConsoleClient> m_console;
 
     URL::URL m_url;
     String m_type;
