@@ -13,6 +13,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(WorkerDebugConsoleClient);
+
 WorkerDebugConsoleClient::WorkerDebugConsoleClient(JS::Console& console)
     : ConsoleClient(console)
 {
@@ -34,7 +36,7 @@ void WorkerDebugConsoleClient::end_group()
 // 2.3. Printer(logLevel, args[, options]), https://console.spec.whatwg.org/#printer
 JS::ThrowCompletionOr<JS::Value> WorkerDebugConsoleClient::printer(JS::Console::LogLevel log_level, PrinterArguments arguments)
 {
-    auto& vm = m_console.realm().vm();
+    auto& vm = m_console->realm().vm();
 
     auto indent = TRY_OR_THROW_OOM(vm, String::repeated(' ', m_group_stack_depth * 2));
 
@@ -59,7 +61,7 @@ JS::ThrowCompletionOr<JS::Value> WorkerDebugConsoleClient::printer(JS::Console::
     }
 
     auto output = TRY(generically_format_values(arguments.get<JS::MarkedVector<JS::Value>>()));
-    m_console.output_debug_message(log_level, output);
+    m_console->output_debug_message(log_level, output);
 
     switch (log_level) {
     case JS::Console::LogLevel::Debug:

@@ -196,7 +196,7 @@ private:
     BackingStores m_backing_stores;
 
     // NOTE: These documents are not visited, but manually removed from the map on document finalization.
-    HashMap<JS::RawGCPtr<Web::DOM::Document>, NonnullOwnPtr<WebContentConsoleClient>> m_console_clients;
+    HashMap<JS::RawGCPtr<Web::DOM::Document>, JS::NonnullGCPtr<WebContentConsoleClient>> m_console_clients;
     WeakPtr<WebContentConsoleClient> m_top_level_document_console_client;
 
     JS::Handle<JS::GlobalObject> m_console_global_object;
