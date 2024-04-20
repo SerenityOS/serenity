@@ -434,19 +434,29 @@ ErrorOr<size_t> FATInode::read_bytes_locked(off_t offset, size_t size, UserOrKer
     if (offset >= m_entry.file_size)
         return 0;
 
-    // FIXME: Read only the needed blocks instead of the whole file
-    auto blocks = TRY(const_cast<FATInode&>(*this).read_block_list());
+    auto block_list = TRY(const_cast<FATInode&>(*this).get_block_list());
 
-    // Take the minimum of the:
-    //   1. User-specified size parameter
-    //   2. The file size.
-    //   3. The number of blocks returned for reading.
-    size_t read_size = min(
-        min(size, m_entry.file_size - offset),
-        (m_cluster_list.size() * fs().m_device_block_size * fs().m_parameter_block->common_bpb()->sectors_per_cluster) - offset);
-    TRY(buffer.write(blocks->data() + offset, read_size));
+    u32 first_block_index = offset / fs().m_device_block_size;
+    u32 last_block_index = (offset + size - 1) / fs().m_device_block_size;
 
-    return read_size;
+    size_t offset_into_first_block = offset - first_block_index * fs().m_device_block_size;
+
+    size_t nread = 0;
+    size_t remaining_count = size;
+    for (u32 block_index = first_block_index; block_index <= last_block_index; ++block_index) {
+        size_t offset_into_block = block_index == first_block_index ? offset_into_first_block : 0;
+        size_t to_read = min(fs().m_device_block_size - offset_into_block, remaining_count);
+        auto buffer_offset = buffer.offset(nread);
+
+        dbgln_if(FAT_DEBUG, "FATInode[{}]::read_bytes_locked(): Reading {} byte(s) from block {} at offset {}", identifier(), to_read, block_list[block_index], offset_into_block);
+
+        TRY(fs().read_block(block_list[block_index], &buffer_offset, to_read, offset_into_block));
+
+        nread += to_read;
+        remaining_count -= to_read;
+    }
+
+    return size;
 }
 
 InodeMetadata FATInode::metadata() const
