@@ -21,12 +21,9 @@
 ErrorOr<NonnullRefPtr<WebView::WebContentClient>> launch_web_content_process(
     WebView::ViewImplementation& view,
     ReadonlySpan<ByteString> candidate_web_content_paths,
-    Ladybird::WebContentOptions const&,
-    Optional<IPC::File> request_server_socket = {});
+    Ladybird::WebContentOptions const&);
 
 ErrorOr<NonnullRefPtr<ImageDecoderClient::Client>> launch_image_decoder_process(ReadonlySpan<ByteString> candidate_image_decoder_paths);
-ErrorOr<NonnullRefPtr<Web::HTML::WebWorkerClient>> launch_web_worker_process(ReadonlySpan<ByteString> candidate_web_worker_paths, NonnullRefPtr<Protocol::RequestClient>);
+ErrorOr<NonnullRefPtr<Web::HTML::WebWorkerClient>> launch_web_worker_process(ReadonlySpan<ByteString> candidate_web_worker_paths);
 ErrorOr<NonnullRefPtr<Protocol::RequestClient>> launch_request_server_process(ReadonlySpan<ByteString> candidate_request_server_paths, StringView serenity_resource_root, Vector<ByteString> const& certificates);
 ErrorOr<NonnullRefPtr<SQL::SQLClient>> launch_sql_server_process(ReadonlySpan<ByteString> candidate_sql_server_paths);
-
-ErrorOr<IPC::File> connect_new_request_server_client(Protocol::RequestClient&);

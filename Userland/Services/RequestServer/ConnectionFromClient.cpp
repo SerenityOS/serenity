@@ -5,7 +5,6 @@
  */
 
 #include <AK/Badge.h>
-#include <AK/IDAllocator.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/Weakable.h>
@@ -22,22 +21,20 @@
 namespace RequestServer {
 
 static HashMap<int, RefPtr<ConnectionFromClient>> s_connections;
-static IDAllocator s_client_ids;
 
-ConnectionFromClient::ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket> socket)
-    : IPC::ConnectionFromClient<RequestClientEndpoint, RequestServerEndpoint>(*this, move(socket), s_client_ids.allocate())
+ConnectionFromClient::ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket> socket, int client_id)
+    : IPC::ConnectionFromClient<RequestClientEndpoint, RequestServerEndpoint>(*this, move(socket), client_id)
 {
-    s_connections.set(client_id(), *this);
+    s_connections.set(client_id, *this);
 }
 
 void ConnectionFromClient::die()
 {
     auto client_id = this->client_id();
     s_connections.remove(client_id);
-    s_client_ids.deallocate(client_id);
 
-    if (s_connections.is_empty())
-        Core::EventLoop::current().quit(0);
+    if (on_disconnect)
+        on_disconnect();
 }
 
 Messages::RequestServer::ConnectNewClientResponse ConnectionFromClient::connect_new_client()

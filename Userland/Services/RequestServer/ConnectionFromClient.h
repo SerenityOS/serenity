@@ -29,8 +29,10 @@ public:
     void did_progress_request(Badge<Request>, Request&);
     void did_request_certificates(Badge<Request>, Request&);
 
+    Function<void()> on_disconnect;
+
 private:
-    explicit ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket>);
+    explicit ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket>, int client_id);
 
     virtual Messages::RequestServer::ConnectNewClientResponse connect_new_client() override;
     virtual Messages::RequestServer::IsSupportedProtocolResponse is_supported_protocol(ByteString const&) override;

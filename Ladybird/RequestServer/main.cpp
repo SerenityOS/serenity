@@ -12,7 +12,7 @@
 #include <LibCore/LocalServer.h>
 #include <LibCore/System.h>
 #include <LibFileSystem/FileSystem.h>
-#include <LibIPC/SingleServer.h>
+#include <LibIPC/MultiServer.h>
 #include <LibMain/Main.h>
 #include <LibTLS/Certificate.h>
 #include <RequestServer/ConnectionFromClient.h>
@@ -36,15 +36,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     AK::set_rich_debug_enabled(true);
 
+    StringView pid_file;
     StringView serenity_resource_root;
     Vector<ByteString> certificates;
     StringView mach_server_name;
 
     Core::ArgsParser args_parser;
+    args_parser.add_option(pid_file, "Path to the PID file for the RequestServer singleton process", "pid-file", 'p', "pid_file");
     args_parser.add_option(certificates, "Path to a certificate file", "certificate", 'C', "certificate");
     args_parser.add_option(serenity_resource_root, "Absolute path to directory for serenity resources", "serenity-resource-root", 'r', "serenity-resource-root");
     args_parser.add_option(mach_server_name, "Mach server name", "mach-server-name", 0, "mach_server_name");
     args_parser.parse(arguments);
+
+    VERIFY(!pid_file.is_empty());
 
     // Ensure the certificates are read out here.
     if (certificates.is_empty())
@@ -63,7 +67,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     RequestServer::HttpProtocol::install();
     RequestServer::HttpsProtocol::install();
 
-    auto client = TRY(IPC::take_over_accepted_client_from_system_server<RequestServer::ConnectionFromClient>());
+    auto server = TRY(IPC::MultiServer<RequestServer::ConnectionFromClient>::try_create());
+    u64 connection_count { 0 };
+
+    server->on_new_client = [&](auto& client) {
+        ++connection_count;
+
+        client.on_disconnect = [&]() {
+            if (--connection_count == 0) {
+                MUST(Core::System::unlink(pid_file));
+                event_loop.quit(0);
+            }
+        };
+    };
 
     return event_loop.exec();
 }

@@ -6,7 +6,6 @@
  */
 
 #include "WebContentView.h"
-#include "Application.h"
 #include "StringUtils.h"
 #include <AK/Assertions.h>
 #include <AK/ByteBuffer.h>
@@ -122,8 +121,7 @@ WebContentView::WebContentView(QWidget* window, WebContentOptions const& web_con
     };
 
     on_request_worker_agent = []() {
-        auto& request_server_client = static_cast<Ladybird::Application*>(QApplication::instance())->request_server_client;
-        auto worker_client = MUST(launch_web_worker_process(MUST(get_paths_for_helper_process("WebWorker"sv)), *request_server_client));
+        auto worker_client = MUST(launch_web_worker_process(MUST(get_paths_for_helper_process("WebWorker"sv))));
         return worker_client->dup_socket();
     };
 }
@@ -533,17 +531,8 @@ void WebContentView::initialize_client(WebView::ViewImplementation::CreateNewCli
     if (create_new_client == CreateNewClient::Yes) {
         m_client_state = {};
 
-        Optional<IPC::File> request_server_socket;
-        if (m_web_content_options.use_lagom_networking == UseLagomNetworking::Yes) {
-            auto& protocol = static_cast<Ladybird::Application*>(QApplication::instance())->request_server_client;
-
-            // FIXME: Fail to open the tab, rather than crashing the whole application if this fails
-            auto socket = connect_new_request_server_client(*protocol).release_value_but_fixme_should_propagate_errors();
-            request_server_socket = AK::move(socket);
-        }
-
         auto candidate_web_content_paths = get_paths_for_helper_process("WebContent"sv).release_value_but_fixme_should_propagate_errors();
-        auto new_client = launch_web_content_process(*this, candidate_web_content_paths, m_web_content_options, AK::move(request_server_socket)).release_value_but_fixme_should_propagate_errors();
+        auto new_client = launch_web_content_process(*this, candidate_web_content_paths, m_web_content_options).release_value_but_fixme_should_propagate_errors();
 
         m_client_state.client = new_client;
     } else {

@@ -97,10 +97,8 @@ public:
             .is_layout_test_mode = is_layout_test_mode,
         };
 
-        auto request_server_socket = TRY(connect_new_request_server_client(*request_client));
-
         auto candidate_web_content_paths = TRY(get_paths_for_helper_process("WebContent"sv));
-        view->m_client_state.client = TRY(launch_web_content_process(*view, candidate_web_content_paths, web_content_options, move(request_server_socket)));
+        view->m_client_state.client = TRY(launch_web_content_process(*view, candidate_web_content_paths, web_content_options));
 #endif
 
         view->client().async_update_system_theme(0, move(theme));
@@ -190,12 +188,11 @@ private:
             m_cookie_jar.set_cookie(url, cookie, source);
         };
 
-        on_request_worker_agent = [this]() {
+        on_request_worker_agent = []() {
 #if defined(AK_OS_SERENITY)
             auto worker_client = MUST(Web::HTML::WebWorkerClient::try_create());
-            (void)this;
 #else
-            auto worker_client = MUST(launch_web_worker_process(MUST(get_paths_for_helper_process("WebWorker"sv)), *m_request_client));
+            auto worker_client = MUST(launch_web_worker_process(MUST(get_paths_for_helper_process("WebWorker"sv))));
 #endif
             return worker_client->dup_socket();
         };

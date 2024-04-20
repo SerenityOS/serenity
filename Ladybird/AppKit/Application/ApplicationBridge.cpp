@@ -47,11 +47,8 @@ ErrorOr<NonnullRefPtr<SQL::SQLClient>> ApplicationBridge::launch_sql_server()
 
 ErrorOr<NonnullRefPtr<WebView::WebContentClient>> ApplicationBridge::launch_web_content(WebViewBridge& web_view_bridge)
 {
-    // FIXME: Fail to open the tab, rather than crashing the whole application if this fails
-    auto request_server_socket = TRY(connect_new_request_server_client(*m_impl->request_server_client));
-
     auto web_content_paths = TRY(get_paths_for_helper_process("WebContent"sv));
-    auto web_content = TRY(launch_web_content_process(web_view_bridge, web_content_paths, web_view_bridge.web_content_options(), move(request_server_socket)));
+    auto web_content = TRY(launch_web_content_process(web_view_bridge, web_content_paths, web_view_bridge.web_content_options()));
 
     return web_content;
 }
@@ -59,7 +56,7 @@ ErrorOr<NonnullRefPtr<WebView::WebContentClient>> ApplicationBridge::launch_web_
 ErrorOr<IPC::File> ApplicationBridge::launch_web_worker()
 {
     auto web_worker_paths = TRY(get_paths_for_helper_process("WebWorker"sv));
-    auto worker_client = TRY(launch_web_worker_process(web_worker_paths, *m_impl->request_server_client));
+    auto worker_client = TRY(launch_web_worker_process(web_worker_paths));
 
     return worker_client->dup_socket();
 }

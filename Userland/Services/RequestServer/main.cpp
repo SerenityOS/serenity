@@ -8,7 +8,7 @@
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalServer.h>
 #include <LibCore/System.h>
-#include <LibIPC/SingleServer.h>
+#include <LibIPC/MultiServer.h>
 #include <LibMain/Main.h>
 #include <LibTLS/Certificate.h>
 #include <RequestServer/ConnectionFromClient.h>
@@ -49,7 +49,6 @@ ErrorOr<int> serenity_main(Main::Arguments)
     RequestServer::HttpProtocol::install();
     RequestServer::HttpsProtocol::install();
 
-    auto client = TRY(IPC::take_over_accepted_client_from_system_server<RequestServer::ConnectionFromClient>());
-
+    auto server = TRY(IPC::MultiServer<RequestServer::ConnectionFromClient>::try_create());
     return event_loop.exec();
 }

@@ -77,8 +77,7 @@ static ErrorOr<NonnullRefPtr<ClientType>> launch_singleton_server_process(
 ErrorOr<NonnullRefPtr<WebView::WebContentClient>> launch_web_content_process(
     WebView::ViewImplementation& view,
     ReadonlySpan<ByteString> candidate_web_content_paths,
-    Ladybird::WebContentOptions const& web_content_options,
-    Optional<IPC::File> request_server_socket)
+    Ladybird::WebContentOptions const& web_content_options)
 {
     Vector<ByteString> arguments {
         "--command-line"sv,
@@ -110,10 +109,6 @@ ErrorOr<NonnullRefPtr<WebView::WebContentClient>> launch_web_content_process(
         arguments.append("--mach-server-name"sv);
         arguments.append(server.value());
     }
-    if (request_server_socket.has_value()) {
-        arguments.append("--request-server-socket"sv);
-        arguments.append(ByteString::number(request_server_socket->fd()));
-    }
 
     auto web_content_client = TRY(launch_generic_server_process<WebView::WebContentClient>("WebContent"sv, candidate_web_content_paths, arguments, RegisterWithProcessManager::No, view));
 
@@ -132,16 +127,9 @@ ErrorOr<NonnullRefPtr<ImageDecoderClient::Client>> launch_image_decoder_process(
     return launch_generic_server_process<ImageDecoderClient::Client>("ImageDecoder"sv, candidate_image_decoder_paths, {}, RegisterWithProcessManager::Yes);
 }
 
-ErrorOr<NonnullRefPtr<Web::HTML::WebWorkerClient>> launch_web_worker_process(ReadonlySpan<ByteString> candidate_web_worker_paths, NonnullRefPtr<Protocol::RequestClient> request_client)
+ErrorOr<NonnullRefPtr<Web::HTML::WebWorkerClient>> launch_web_worker_process(ReadonlySpan<ByteString> candidate_web_worker_paths)
 {
-    auto socket = TRY(connect_new_request_server_client(move(request_client)));
-
-    Vector<ByteString> arguments {
-        "--request-server-socket"sv,
-        ByteString::number(socket.fd()),
-    };
-
-    return launch_generic_server_process<Web::HTML::WebWorkerClient>("WebWorker"sv, candidate_web_worker_paths, arguments, RegisterWithProcessManager::Yes);
+    return launch_generic_server_process<Web::HTML::WebWorkerClient>("WebWorker"sv, candidate_web_worker_paths, {}, RegisterWithProcessManager::Yes);
 }
 
 ErrorOr<NonnullRefPtr<Protocol::RequestClient>> launch_request_server_process(ReadonlySpan<ByteString> candidate_request_server_paths, StringView serenity_resource_root, Vector<ByteString> const& certificates)
@@ -161,7 +149,7 @@ ErrorOr<NonnullRefPtr<Protocol::RequestClient>> launch_request_server_process(Re
         arguments.append(server.value());
     }
 
-    return launch_generic_server_process<Protocol::RequestClient>("RequestServer"sv, candidate_request_server_paths, arguments, RegisterWithProcessManager::Yes);
+    return launch_singleton_server_process<Protocol::RequestClient>("RequestServer"sv, candidate_request_server_paths, arguments, RegisterWithProcessManager::Yes);
 }
 
 ErrorOr<NonnullRefPtr<SQL::SQLClient>> launch_sql_server_process(ReadonlySpan<ByteString> candidate_sql_server_paths)
@@ -174,23 +162,4 @@ ErrorOr<NonnullRefPtr<SQL::SQLClient>> launch_sql_server_process(ReadonlySpan<By
     }
 
     return launch_singleton_server_process<SQL::SQLClient>("SQLServer"sv, candidate_sql_server_paths, arguments, RegisterWithProcessManager::Yes);
-}
-
-ErrorOr<IPC::File> connect_new_request_server_client(Protocol::RequestClient& client)
-{
-    auto new_socket = client.send_sync_but_allow_failure<Messages::RequestServer::ConnectNewClient>();
-    if (!new_socket)
-        return Error::from_string_literal("Failed to connect to RequestServer");
-
-    auto socket = new_socket->take_client_socket();
-
-    // FIXME: IPC::Files transferred over the wire are always set O_CLOEXEC during decoding.
-    //        Perhaps we should add an option to IPC::File to allow the receiver to decide whether to
-    //        make it O_CLOEXEC or not. Or an attribute in the .ipc file?
-    auto fd = socket.fd();
-    auto fd_flags = MUST(Core::System::fcntl(fd, F_GETFD));
-    fd_flags &= ~FD_CLOEXEC;
-    MUST(Core::System::fcntl(fd, F_SETFD, fd_flags));
-
-    return socket;
 }
