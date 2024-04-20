@@ -78,27 +78,20 @@ static HashMap<StringView, DynamicObject::SymbolLookupResult> s_magic_functions;
 
 Optional<DynamicObject::SymbolLookupResult> DynamicLinker::lookup_global_symbol(StringView name)
 {
-    Optional<DynamicObject::SymbolLookupResult> weak_result;
-
     auto symbol = DynamicObject::HashSymbol { name };
 
     for (auto& lib : s_global_objects) {
         auto res = lib.value->lookup_symbol(symbol);
         if (!res.has_value())
             continue;
-        if (res.value().bind == STB_GLOBAL)
+        if (res.value().bind == STB_GLOBAL || res.value().bind == STB_WEAK)
             return res;
-        if (res.value().bind == STB_WEAK && !weak_result.has_value())
-            weak_result = res;
         // We don't want to allow local symbols to be pulled in to other modules
     }
 
-    if (!weak_result.has_value()) {
-        if (auto magic_lookup = s_magic_functions.get(name); magic_lookup.has_value())
-            weak_result = *magic_lookup;
-    }
-
-    return weak_result;
+    if (auto magic_lookup = s_magic_functions.get(name); magic_lookup.has_value())
+        return *magic_lookup;
+    return {};
 }
 
 static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(ByteString const& filepath, int fd)
