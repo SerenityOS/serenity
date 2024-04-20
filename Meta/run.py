@@ -407,11 +407,10 @@ def set_up_virtualization_support(config: Configuration):
     # even if we couldn't detect it otherwise; this is intended behavior.
     if provided_virtualization_enable is not None:
         config.virtualization_support = provided_virtualization_enable == "1"
-    else:
-        if (config.kvm_usable and config.architecture == Arch.x86_64 and os.uname().machine == Arch.x86_64.value) or (
-            config.qemu_kind == QEMUKind.NativeWindows and config.architecture == Arch.x86_64
-        ):
-            config.virtualization_support = True
+    elif config.architecture == Arch.x86_64 and os.uname().machine == Arch.x86_64.value:
+        # FIXME: Can RISC-V use hardware acceleration?
+        config.virtualization_support = (config.qemu_kind in [QEMUKind.NativeWindows, QEMUKind.MacOS]
+                                         or kvm_usable())
 
     if config.virtualization_support:
         available_accelerators = run(
