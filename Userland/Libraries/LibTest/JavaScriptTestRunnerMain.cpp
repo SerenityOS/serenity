@@ -115,7 +115,7 @@ int main(int argc, char** argv)
     });
 
     args_parser.add_option(print_json, "Show results as JSON", "json", 'j');
-    args_parser.add_option(per_file, "Show detailed per-file results as JSON (implies -j)", "per-file", 0);
+    args_parser.add_option(per_file, "Show detailed per-file results as JSON (implies -j)", "per-file");
     args_parser.add_option(g_collect_on_every_allocation, "Collect garbage after every allocation", "collect-often", 'g');
     args_parser.add_option(JS::Bytecode::g_dump_bytecode, "Dump the bytecode", "dump-bytecode", 'd');
     args_parser.add_option(test_glob, "Only run tests matching the given glob", "filter", 'f', "glob");

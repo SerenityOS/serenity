@@ -174,11 +174,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::ArgsParser parser;
     parser.add_option(command_to_run, "String to read commands from", "command-string", 'c', "command-string");
-    parser.add_option(skip_rc_files, "Skip running shellrc files", "skip-shellrc", 0);
+    parser.add_option(skip_rc_files, "Skip running shellrc files", "skip-shellrc");
     parser.add_option(format, "Format the given file into stdout and exit", "format", 0, "file");
     parser.add_option(should_format_live, "Enable live formatting", "live-formatting", 'f');
-    parser.add_option(keep_open, "Keep the shell open after running the specified command or file", "keep-open", 0);
-    parser.add_option(posix_mode, "Behave like a POSIX-compatible shell", "posix", 0);
+    parser.add_option(keep_open, "Keep the shell open after running the specified command or file", "keep-open");
+    parser.add_option(posix_mode, "Behave like a POSIX-compatible shell", "posix");
     parser.add_positional_argument(file_to_read_from, "File to read commands from", "file", Core::ArgsParser::Required::No);
     parser.add_positional_argument(script_args, "Extra arguments to pass to the script (via $* and co)", "argument", Core::ArgsParser::Required::No);
 

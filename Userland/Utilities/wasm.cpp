@@ -503,7 +503,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     parser.add_option(print, "Print the parsed module", "print", 'p');
     parser.add_option(attempt_instantiate, "Attempt to instantiate the module", "instantiate", 'i');
     parser.add_option(exported_function_to_execute, "Attempt to execute the named exported function from the module (implies -i)", "execute", 'e', "name");
-    parser.add_option(export_all_imports, "Export noop functions corresponding to imports", "export-noop", 0);
+    parser.add_option(export_all_imports, "Export noop functions corresponding to imports", "export-noop");
     parser.add_option(shell_mode, "Launch a REPL in the module's context (implies -i)", "shell", 's');
     parser.add_option(wasi, "Enable WASI", "wasi", 'w');
     parser.add_option(Core::ArgsParser::Option {

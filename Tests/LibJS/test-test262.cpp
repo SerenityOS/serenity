@@ -209,7 +209,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(runner_command, "Command to run", "runner-command", 'r', "command");
     args_parser.add_option(pass_through_parameters, "Parameters to pass through to the runner, will split on spaces", "pass-through", 'p', "parameters");
     args_parser.add_option(dont_print_progress, "Hide progress information", "quiet", 'q');
-    args_parser.add_option(dont_disable_core_dump, "Enabled core dumps for runner (i.e. don't pass --disable-core-dump)", "enable-core-dumps", 0);
+    args_parser.add_option(dont_disable_core_dump, "Enabled core dumps for runner (i.e. don't pass --disable-core-dump)", "enable-core-dumps");
     args_parser.parse(arguments);
 
     // Normalize the path to ensure filenames are consistent

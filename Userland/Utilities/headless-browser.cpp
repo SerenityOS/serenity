@@ -685,7 +685,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(dump_gc_graph, "Dump GC graph", "dump-gc-graph", 'G');
     args_parser.add_option(resources_folder, "Path of the base resources folder (defaults to /res)", "resources", 'r', "resources-root-path");
     args_parser.add_option(web_driver_ipc_path, "Path to the WebDriver IPC socket", "webdriver-ipc-path", 0, "path");
-    args_parser.add_option(is_layout_test_mode, "Enable layout test mode", "layout-test-mode", 0);
+    args_parser.add_option(is_layout_test_mode, "Enable layout test mode", "layout-test-mode");
     args_parser.add_option(certificates, "Path to a certificate file", "certificate", 'C', "certificate");
     args_parser.add_positional_argument(raw_url, "URL to open", "url", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);

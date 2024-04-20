@@ -244,13 +244,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(reencode_out_path, "Reencode ICC profile to this path", "reencode-to", 0, "FILE");
 
     bool debug_roundtrip = false;
-    args_parser.add_option(debug_roundtrip, "Check how many u8 colors roundtrip losslessly through the profile. For debugging.", "debug-roundtrip", 0);
+    args_parser.add_option(debug_roundtrip, "Check how many u8 colors roundtrip losslessly through the profile. For debugging.", "debug-roundtrip");
 
     bool measure = false;
-    args_parser.add_option(measure, "For RGB ICC profiles, print perceptually smallest and largest color step", "measure", 0);
+    args_parser.add_option(measure, "For RGB ICC profiles, print perceptually smallest and largest color step", "measure");
 
     bool force_print = false;
-    args_parser.add_option(force_print, "Print profile even when writing ICC files", "print", 0);
+    args_parser.add_option(force_print, "Print profile even when writing ICC files", "print");
 
     args_parser.parse(arguments);
 

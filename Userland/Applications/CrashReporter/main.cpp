@@ -175,7 +175,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Show information from an application crash coredump.");
     args_parser.add_positional_argument(coredump_path, "Coredump path", "coredump-path");
-    args_parser.add_option(unlink_on_exit, "Delete the coredump after its parsed", "unlink", 0);
+    args_parser.add_option(unlink_on_exit, "Delete the coredump after its parsed", "unlink");
     args_parser.parse(arguments);
 
     auto coredump = Coredump::Reader::create(coredump_path);

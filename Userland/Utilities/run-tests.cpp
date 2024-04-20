@@ -352,7 +352,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(print_all_output, "Show all test output", "verbose", 'v');
     args_parser.add_option(run_benchmarks, "Run benchmarks as well", "benchmarks", 'b');
     args_parser.add_option(run_skipped_tests, "Run all matching tests, even those marked as 'skip'", "all", 'a');
-    args_parser.add_option(unlink_coredumps, "Unlink coredumps after printing backtraces", "unlink-coredumps", 0);
+    args_parser.add_option(unlink_coredumps, "Unlink coredumps after printing backtraces", "unlink-coredumps");
     args_parser.add_option(test_glob, "Only run tests matching the given glob", "filter", 'f', "glob");
     args_parser.add_option(exclude_pattern, "Regular expression to use to exclude paths from being considered tests", "exclude-pattern", 'e', "pattern");
     args_parser.add_option(config_file, "Configuration file to use", "config-file", 'c', "filename");

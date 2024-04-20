@@ -39,7 +39,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(suppress_col3, "Suppress column 3 (lines common to both files)", nullptr, '3');
     args_parser.add_option(case_insensitive, "Use case-insensitive comparison of lines", nullptr, 'i');
     args_parser.add_option(color, "Always print colored output", "color", 'c');
-    args_parser.add_option(no_color, "Do not print colored output", "no-color", 0);
+    args_parser.add_option(no_color, "Do not print colored output", "no-color");
     args_parser.add_option(print_total, "Print a summary", "total", 't');
     args_parser.add_positional_argument(file1_path, "First file to compare", "file1");
     args_parser.add_positional_argument(file2_path, "Second file to compare", "file2");

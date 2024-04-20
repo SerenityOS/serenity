@@ -583,7 +583,7 @@ int main(int argc, char** argv)
     args_parser.add_option(s_parse_only, "Only parse the files", "parse-only", 'p');
     args_parser.add_option(timeout, "Seconds before test should timeout", "timeout", 't', "seconds");
     args_parser.add_option(enable_debug_printing, "Enable debug printing", "debug", 'd');
-    args_parser.add_option(disable_core_dumping, "Disable core dumping", "disable-core-dump", 0);
+    args_parser.add_option(disable_core_dumping, "Disable core dumping", "disable-core-dump");
     args_parser.parse(arguments);
 
 #ifdef AK_OS_GNU_HURD

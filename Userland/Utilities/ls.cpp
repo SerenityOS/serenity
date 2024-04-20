@@ -138,7 +138,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(flag_hide_group, "In long format, do not show group information. Implies '-l'", nullptr, 'o');
     args_parser.add_option(flag_hide_owner, "In long format, do not show owner information. Implies '-l'", nullptr, 'g');
     args_parser.add_option(flag_human_readable, "Print human-readable sizes", "human-readable", 'h');
-    args_parser.add_option(flag_human_readable_si, "Print human-readable sizes in SI units", "si", 0);
+    args_parser.add_option(flag_human_readable_si, "Print human-readable sizes in SI units", "si");
     args_parser.add_option(flag_disable_hyperlinks, "Disable hyperlinks", "no-hyperlinks", 'K');
     args_parser.add_option(flag_recursive, "List subdirectories recursively", "recursive", 'R');
     args_parser.add_option(flag_force_newline, "List one file per line", nullptr, '1');
