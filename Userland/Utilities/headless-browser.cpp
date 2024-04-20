@@ -570,7 +570,7 @@ static ErrorOr<void> collect_ref_tests(Vector<Test>& tests, StringView path)
     return {};
 }
 
-static ErrorOr<int> run_tests(HeadlessWebContentView& view, StringView test_root_path, StringView test_glob, bool dump_failed_ref_tests)
+static ErrorOr<int> run_tests(HeadlessWebContentView& view, StringView test_root_path, StringView test_glob, bool dump_failed_ref_tests, bool dump_gc_graph)
 {
     view.clear_content_filters();
 
@@ -643,6 +643,15 @@ static ErrorOr<int> run_tests(HeadlessWebContentView& view, StringView test_root
         outln("{}: {}", test_result_to_string(*test.result), test.input_path);
     }
 
+    if (dump_gc_graph) {
+        auto path = view.dump_gc_graph();
+        if (path.is_error()) {
+            warnln("Failed to dump GC graph: {}", path.error());
+        } else {
+            outln("GC graph dumped to {}", path.value());
+        }
+    }
+
     if (timeout_count == 0 && fail_count == 0)
         return 0;
     return 1;
@@ -659,6 +668,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool dump_failed_ref_tests = false;
     bool dump_layout_tree = false;
     bool dump_text = false;
+    bool dump_gc_graph = false;
     bool is_layout_test_mode = false;
     StringView test_root_path;
     ByteString test_glob;
@@ -672,6 +682,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(test_root_path, "Run tests in path", "run-tests", 'R', "test-root-path");
     args_parser.add_option(test_glob, "Only run tests matching the given glob", "filter", 'f', "glob");
     args_parser.add_option(dump_failed_ref_tests, "Dump screenshots of failing ref tests", "dump-failed-ref-tests", 'D');
+    args_parser.add_option(dump_gc_graph, "Dump GC graph", "dump-gc-graph", 'G');
     args_parser.add_option(resources_folder, "Path of the base resources folder (defaults to /res)", "resources", 'r', "resources-root-path");
     args_parser.add_option(web_driver_ipc_path, "Path to the WebDriver IPC socket", "webdriver-ipc-path", 0, "path");
     args_parser.add_option(is_layout_test_mode, "Enable layout test mode", "layout-test-mode", 0);
@@ -702,7 +713,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (!test_root_path.is_empty()) {
         test_glob = ByteString::formatted("*{}*", test_glob);
-        return run_tests(*view, test_root_path, test_glob, dump_failed_ref_tests);
+        return run_tests(*view, test_root_path, test_glob, dump_failed_ref_tests, dump_gc_graph);
     }
 
     auto url = WebView::sanitize_url(raw_url);
