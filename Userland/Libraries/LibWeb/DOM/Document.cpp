@@ -408,6 +408,12 @@ WebIDL::ExceptionOr<void> Document::populate_with_html_head_and_body()
     return {};
 }
 
+void Document::finalize()
+{
+    Base::finalize();
+    page().client().page_did_destroy_document(*this);
+}
+
 void Document::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
@@ -3070,8 +3076,6 @@ void Document::run_unloading_cleanup_steps()
 // https://html.spec.whatwg.org/multipage/document-lifecycle.html#destroy-a-document
 void Document::destroy()
 {
-    page().client().page_did_destroy_document(*this);
-
     // NOTE: Abort needs to happen before destory. There is currently bug in the spec: https://github.com/whatwg/html/issues/9148
     // 4. Abort document.
     abort();
