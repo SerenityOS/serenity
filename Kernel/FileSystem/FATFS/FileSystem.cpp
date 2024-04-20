@@ -340,16 +340,26 @@ ErrorOr<u32> FATFS::fat_read(u32 cluster)
 {
     dbgln_if(FAT_DEBUG, "FATFS: Reading FAT entry for cluster {}", cluster);
 
-    auto fat_sector = TRY(KBuffer::try_create_with_size("FATFS: FAT read buffer"sv, m_device_block_size));
-    auto fat_sector_buffer = UserOrKernelBuffer::for_kernel_buffer(fat_sector->data());
-
     u32 fat_offset = fat_offset_for_cluster(cluster);
     u32 fat_sector_index = m_parameter_block->common_bpb()->reserved_sector_count + (fat_offset / m_device_block_size);
     u32 entry_offset = fat_offset % m_device_block_size;
 
+    // NOTE: On FAT12, FATs aren't necessarily block aligned, so in the worst case we have to read
+    // an extra byte from the next block.
+    bool read_extra_block = m_fat_version == FATVersion::FAT12 && entry_offset == m_device_block_size - 1;
+    size_t buffer_size = m_device_block_size;
+    if (read_extra_block)
+        buffer_size += m_device_block_size;
+
+    auto fat_sector = TRY(KBuffer::try_create_with_size("FATFS: FAT read buffer"sv, buffer_size));
+    auto fat_sector_buffer = UserOrKernelBuffer::for_kernel_buffer(fat_sector->data());
+
     MutexLocker locker(m_lock);
 
-    TRY(read_block(fat_sector_index, &fat_sector_buffer, m_device_block_size));
+    if (read_extra_block)
+        TRY(read_blocks(fat_sector_index, 2, fat_sector_buffer));
+    else
+        TRY(read_block(fat_sector_index, &fat_sector_buffer, m_device_block_size));
 
     // Look up the next cluster to read, or read End of Chain marker from table.
     return cluster_number(*fat_sector, cluster, entry_offset);
