@@ -110,12 +110,11 @@ void RecordingPainter::draw_ellipse(Gfx::IntRect const& a_rect, Color color, int
     });
 }
 
-void RecordingPainter::fill_ellipse(Gfx::IntRect const& a_rect, Color color, Gfx::AntiAliasingPainter::BlendMode blend_mode)
+void RecordingPainter::fill_ellipse(Gfx::IntRect const& a_rect, Color color)
 {
     append(FillEllipse {
         .rect = state().translation.map(a_rect),
         .color = color,
-        .blend_mode = blend_mode,
     });
 }
 

@@ -261,7 +261,6 @@ struct DrawEllipse {
 struct FillEllipse {
     Gfx::IntRect rect;
     Color color;
-    Gfx::AntiAliasingPainter::BlendMode blend_mode;
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return rect; }
 
