@@ -173,12 +173,6 @@ function(embed_resource target section file)
     target_sources("${target}" PRIVATE "${asm_file}")
 endfunction()
 
-function(link_with_locale_data target)
-    if (ENABLE_UNICODE_DATABASE_DOWNLOAD AND SERENITYOS)
-        target_link_libraries("${target}" PRIVATE LibLocaleData)
-    endif()
-endfunction()
-
 function(remove_path_if_version_changed version version_file cache_path)
     set(version_differs YES)
 
