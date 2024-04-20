@@ -510,4 +510,20 @@ ErrorOr<IPCProcess::ProcessAndIPCSocket> IPCProcess::spawn_singleton_and_connect
     return ProcessAndIPCSocket { move(process), move(ipc_socket) };
 }
 
+ErrorOr<IPCProcess::ProcessAndIPCSocket> IPCProcess::connect_to_process(StringView process_name)
+{
+    auto [socket_path, pid_path] = TRY(paths_for_process(process_name));
+    auto pid = TRY(get_process_pid(process_name, pid_path));
+
+    if (!pid.has_value()) {
+        warnln("FIXME: Process {} died. Handle re-launching the process.", process_name);
+        VERIFY_NOT_REACHED();
+    }
+
+    auto socket = TRY(Core::LocalSocket::connect(socket_path));
+    TRY(socket->set_blocking(true));
+
+    return ProcessAndIPCSocket { Process { *pid }, move(socket) };
+}
+
 }

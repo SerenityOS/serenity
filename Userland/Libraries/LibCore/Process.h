@@ -138,6 +138,15 @@ public:
         return ProcessAndIPCClient<ClientType> { move(process), move(client) };
     }
 
+    template<typename ClientType, typename... ClientArguments>
+    static ErrorOr<ProcessAndIPCClient<ClientType>> connect_to_singleton_process(StringView process_name, ClientArguments&&... client_arguments)
+    {
+        auto [process, socket] = TRY(connect_to_process(process_name));
+        auto client = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) ClientType { move(socket), forward<ClientArguments>(client_arguments)... }));
+
+        return ProcessAndIPCClient<ClientType> { move(process), move(client) };
+    }
+
     pid_t pid() const { return m_process.pid(); }
 
 private:
@@ -147,6 +156,7 @@ private:
     };
     static ErrorOr<ProcessAndIPCSocket> spawn_and_connect_to_process(ProcessSpawnOptions const& options);
     static ErrorOr<ProcessAndIPCSocket> spawn_singleton_and_connect_to_process(ProcessSpawnOptions const& options);
+    static ErrorOr<ProcessAndIPCSocket> connect_to_process(StringView process_name);
 
     Process m_process;
 };
