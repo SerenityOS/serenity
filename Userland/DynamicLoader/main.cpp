@@ -16,9 +16,7 @@
 
 char* __static_environ[] = { nullptr }; // We don't get the environment without some libc workarounds..
 char** environ = __static_environ;
-
-// FIXME: Kernel should give us a random value for __stack_chk_guard.
-uintptr_t __stack_chk_guard = 0xe0e6'066b'b7ea'c300;
+uintptr_t __stack_chk_guard = 0;
 
 static void perform_self_relocations(auxv_t* auxvp)
 {
@@ -112,11 +110,22 @@ void _entry(int argc, char** argv, char** envp)
     }
 
     auxv_t* auxvp = (auxv_t*)++env;
+
+    bool at_random_found = false;
+    for (auxv_t* entry = auxvp; entry->a_type != AT_NULL; ++entry) {
+        if (entry->a_type == AT_RANDOM) {
+            at_random_found = true;
+            __stack_chk_guard = *reinterpret_cast<u64*>(entry->a_un.a_ptr);
+            break;
+        }
+    }
+    VERIFY(at_random_found);
+
     perform_self_relocations(auxvp);
 
     // Initialize the copy of libc included statically in Loader.so,
     // initialization of the dynamic libc.so is done by the DynamicLinker
-    __libc_init(0);
+    __libc_init();
 
     int main_program_fd = -1;
     ByteString main_program_path;
