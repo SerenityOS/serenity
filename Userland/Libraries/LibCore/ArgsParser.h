@@ -85,11 +85,11 @@ public:
     void print_version(FILE*);
 
     void add_option(Option&&);
-    void add_ignored(char const* long_name, char short_name, OptionHideMode hide_mode = OptionHideMode::None);
-    void add_option(bool& value, char const* help_string, char const* long_name, char short_name, OptionHideMode hide_mode = OptionHideMode::None);
+    void add_ignored(char const* long_name, char short_name = 0, OptionHideMode hide_mode = OptionHideMode::None);
+    void add_option(bool& value, char const* help_string, char const* long_name, char short_name = 0, OptionHideMode hide_mode = OptionHideMode::None);
     /// If the option is present, set the enum to have the given `new_value`.
     template<Enum T>
-    void add_option(T& value, T new_value, char const* help_string, char const* long_name, char short_name, OptionHideMode hide_mode = OptionHideMode::None)
+    void add_option(T& value, T new_value, char const* help_string, char const* long_name, char short_name = 0, OptionHideMode hide_mode = OptionHideMode::None)
     {
         add_option({ .argument_mode = Core::ArgsParser::OptionArgumentMode::None,
             .help_string = help_string,
