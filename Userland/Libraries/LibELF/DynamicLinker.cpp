@@ -315,15 +315,10 @@ static int __dl_iterate_phdr(DlIteratePhdrCallbackFunction callback, void* data)
 
 static void initialize_libc(DynamicObject& libc)
 {
-    uintptr_t stack_guard = get_random<uintptr_t>();
-    // We include an additional hardening: zero the first byte of the stack guard to avoid leaking
-    // or overwriting the stack guard with C-style string functions.
-    stack_guard &= ~0xffULL;
-
     auto res = libc.lookup_symbol("__libc_init"sv);
     VERIFY(res.has_value());
     using libc_init_func = decltype(__libc_init);
-    ((libc_init_func*)res.value().address.as_ptr())(stack_guard);
+    ((libc_init_func*)res.value().address.as_ptr())();
 }
 
 template<typename Callback>
