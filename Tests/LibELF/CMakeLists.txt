@@ -29,6 +29,7 @@ set(TEST_SOURCES
     test-elf.cpp
     TestDlOpen.cpp
     TestTLS.cpp
+    TestWeakSymbolResolution.cpp
 )
 
 foreach(source IN LISTS TEST_SOURCES)
@@ -42,3 +43,8 @@ target_link_libraries(TLSUse PRIVATE LibCore LibTest LibThreading TLSDef)
 set_target_properties(TLSUse PROPERTIES INSTALL_RPATH "$ORIGIN")
 target_link_libraries(TestTLS PRIVATE TLSUse)
 set_target_properties(TestTLS PROPERTIES INSTALL_RPATH "$ORIGIN")
+
+add_test_lib(TestWeakSymbolResolution1 TestWeakSymbolResolution1.cpp)
+add_test_lib(TestWeakSymbolResolution2 TestWeakSymbolResolution2.cpp)
+target_link_libraries(TestWeakSymbolResolution PRIVATE TestWeakSymbolResolution1 TestWeakSymbolResolution2)
+set_target_properties(TestWeakSymbolResolution PROPERTIES INSTALL_RPATH "$ORIGIN")
