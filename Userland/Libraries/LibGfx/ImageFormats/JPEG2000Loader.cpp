@@ -459,6 +459,7 @@ struct TilePartData {
 };
 
 struct TileData {
+    Optional<CodingStyleDefault> cod;
     Optional<QuantizationDefault> qcd;
     Vector<QuantizationComponent> qccs;
     Vector<TilePartData> tile_parts;
@@ -652,7 +653,11 @@ static ErrorOr<void> parse_codestream_tile_header(JPEG2000LoadingContext& contex
         case J2K_PLT:
         case J2K_COM: {
             auto marker = TRY(read_marker_at_cursor(context));
-            if (marker.marker == J2K_QCD) {
+            if (marker.marker == J2K_COD) {
+                if (tile.cod.has_value())
+                    return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Multiple COD markers in tile header");
+                tile.cod = TRY(read_coding_style_default(marker.data.value()));
+            } else if (marker.marker == J2K_QCD) {
                 if (tile.qcd.has_value())
                     return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Multiple QCD markers in tile header");
                 tile.qcd = TRY(read_quantization_default(marker.data.value()));
