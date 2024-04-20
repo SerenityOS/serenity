@@ -53,10 +53,10 @@ static thread_local SinglyLinkedList<CleanupHandler> cleanup_handlers;
 
 static __thread bool pending_cancellation = false;
 
-extern "C" {
+[[gnu::weak]] extern ErrorOr<FlatPtr> __create_new_tls_region() asm("__create_new_tls_region");
+[[gnu::weak]] extern ErrorOr<void> __free_tls_region(FlatPtr thread_pointer) asm("__free_tls_region");
 
-[[gnu::weak]] ErrorOr<FlatPtr> (*__create_new_tls_region)();
-[[gnu::weak]] ErrorOr<void> (*__free_tls_region)(FlatPtr thread_pointer);
+extern "C" {
 
 [[noreturn]] static void exit_thread(void* code, void* stack_location, size_t stack_size)
 {

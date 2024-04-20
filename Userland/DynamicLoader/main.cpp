@@ -15,16 +15,10 @@
 #include <unistd.h>
 
 char* __static_environ[] = { nullptr }; // We don't get the environment without some libc workarounds..
+char** environ = __static_environ;
 
-static void init_libc()
-{
-    environ = __static_environ;
-    __environ_is_malloced = false;
-    __stdio_is_initialized = false;
-    // Initialise the copy of libc included statically in Loader.so,
-    // initialisation of the dynamic libc.so is done by the DynamicLinker
-    __libc_init();
-}
+// FIXME: Kernel should give us a random value for __stack_chk_guard.
+uintptr_t __stack_chk_guard = 0xe0e6'066b'b7ea'c300;
 
 static void perform_self_relocations(auxv_t* auxvp)
 {
@@ -119,7 +113,10 @@ void _entry(int argc, char** argv, char** envp)
 
     auxv_t* auxvp = (auxv_t*)++env;
     perform_self_relocations(auxvp);
-    init_libc();
+
+    // Initialize the copy of libc included statically in Loader.so,
+    // initialization of the dynamic libc.so is done by the DynamicLinker
+    __libc_init(0);
 
     int main_program_fd = -1;
     ByteString main_program_path;

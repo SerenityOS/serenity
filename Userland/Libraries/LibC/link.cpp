@@ -7,15 +7,10 @@
 #include <assert.h>
 #include <link.h>
 
-extern "C" {
-
 using DlIteratePhdrCallbackFunction = int (*)(struct dl_phdr_info*, size_t, void*);
-using DlIteratePhdrFunction = int (*)(DlIteratePhdrCallbackFunction, void*);
+[[gnu::weak]] extern int __dl_iterate_phdr(DlIteratePhdrCallbackFunction, void*) asm("__dl_iterate_phdr");
 
-[[gnu::weak]] DlIteratePhdrFunction __dl_iterate_phdr;
-
-int dl_iterate_phdr(int (*callback)(struct dl_phdr_info* info, size_t size, void* data), void* data)
+extern "C" int dl_iterate_phdr(int (*callback)(struct dl_phdr_info* info, size_t size, void* data), void* data)
 {
     return __dl_iterate_phdr(callback, data);
-}
 }
