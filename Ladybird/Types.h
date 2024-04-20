@@ -45,6 +45,11 @@ enum class EnableIDLTracing {
     Yes
 };
 
+enum class ExposeInternalsObject {
+    No,
+    Yes
+};
+
 struct WebContentOptions {
     String command_line;
     String executable_path;
@@ -55,6 +60,7 @@ struct WebContentOptions {
     WaitForDebugger wait_for_debugger { WaitForDebugger::No };
     LogAllJSExceptions log_all_js_exceptions { LogAllJSExceptions::No };
     EnableIDLTracing enable_idl_tracing { EnableIDLTracing::No };
+    ExposeInternalsObject expose_internals_object { ExposeInternalsObject::No };
 };
 
 }

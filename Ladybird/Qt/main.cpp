@@ -82,6 +82,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool enable_callgrind_profiling = false;
     bool disable_sql_database = false;
     bool enable_qt_networking = false;
+    bool expose_internals_object = false;
     bool use_gpu_painting = false;
     bool debug_web_content = false;
     bool log_all_js_exceptions = false;
@@ -99,6 +100,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(certificates, "Path to a certificate file", "certificate", 'C', "certificate");
     args_parser.add_option(log_all_js_exceptions, "Log all JavaScript exceptions", "log-all-js-exceptions");
     args_parser.add_option(enable_idl_tracing, "Enable IDL tracing", "enable-idl-tracing");
+    args_parser.add_option(expose_internals_object, "Expose internals object", "expose-internals-object");
     args_parser.parse(arguments);
 
     WebView::ProcessManager::initialize();
@@ -149,6 +151,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         .wait_for_debugger = debug_web_content ? Ladybird::WaitForDebugger::Yes : Ladybird::WaitForDebugger::No,
         .log_all_js_exceptions = log_all_js_exceptions ? Ladybird::LogAllJSExceptions::Yes : Ladybird::LogAllJSExceptions::No,
         .enable_idl_tracing = enable_idl_tracing ? Ladybird::EnableIDLTracing::Yes : Ladybird::EnableIDLTracing::No,
+        .expose_internals_object = expose_internals_object ? Ladybird::ExposeInternalsObject::Yes : Ladybird::ExposeInternalsObject::No,
     };
 
     Ladybird::BrowserWindow window(initial_urls, cookie_jar, web_content_options, webdriver_content_ipc_path);

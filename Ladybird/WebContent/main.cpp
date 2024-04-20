@@ -94,6 +94,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Vector<ByteString> certificates;
     int request_server_socket { -1 };
     bool is_layout_test_mode = false;
+    bool expose_internals_object = false;
     bool use_lagom_networking = false;
     bool use_gpu_painting = false;
     bool wait_for_debugger = false;
@@ -105,6 +106,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(executable_path, "Chrome process executable path", "executable-path", 0, "executable_path");
     args_parser.add_option(request_server_socket, "File descriptor of the socket for the RequestServer connection", "request-server-socket", 'r', "request_server_socket");
     args_parser.add_option(is_layout_test_mode, "Is layout test mode", "layout-test-mode");
+    args_parser.add_option(expose_internals_object, "Expose internals object", "expose-internals-object");
     args_parser.add_option(use_lagom_networking, "Enable Lagom servers for networking", "use-lagom-networking");
     args_parser.add_option(use_gpu_painting, "Enable GPU painting", "use-gpu-painting");
     args_parser.add_option(wait_for_debugger, "Wait for debugger", "wait-for-debugger");
@@ -117,6 +119,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (wait_for_debugger) {
         Core::Process::wait_for_debugger_and_break();
     }
+
+    // Layout test mode implies internals object is exposed
+    if (is_layout_test_mode)
+        expose_internals_object = true;
 
     Web::set_chrome_process_command_line(command_line);
     Web::set_chrome_process_executable_path(executable_path);
@@ -137,7 +143,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 #endif
         TRY(initialize_lagom_networking(request_server_socket));
 
-    Web::HTML::Window::set_internals_object_exposed(is_layout_test_mode);
+    Web::HTML::Window::set_internals_object_exposed(expose_internals_object);
 
     Web::Platform::FontPlugin::install(*new Ladybird::FontPlugin(is_layout_test_mode));
 
