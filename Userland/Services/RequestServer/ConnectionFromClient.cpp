@@ -37,28 +37,6 @@ void ConnectionFromClient::die()
         on_disconnect();
 }
 
-Messages::RequestServer::ConnectNewClientResponse ConnectionFromClient::connect_new_client()
-{
-    int socket_fds[2] {};
-    if (auto err = Core::System::socketpair(AF_LOCAL, SOCK_STREAM, 0, socket_fds); err.is_error()) {
-        dbgln("Failed to create client socketpair: {}", err.error());
-        return IPC::File {};
-    }
-
-    auto client_socket_or_error = Core::LocalSocket::adopt_fd(socket_fds[0]);
-    if (client_socket_or_error.is_error()) {
-        close(socket_fds[0]);
-        close(socket_fds[1]);
-        dbgln("Failed to adopt client socket: {}", client_socket_or_error.error());
-        return IPC::File {};
-    }
-    auto client_socket = client_socket_or_error.release_value();
-    // Note: A ref is stored in the static s_connections map
-    auto client = adopt_ref(*new ConnectionFromClient(move(client_socket)));
-
-    return IPC::File::adopt_fd(socket_fds[1]);
-}
-
 Messages::RequestServer::IsSupportedProtocolResponse ConnectionFromClient::is_supported_protocol(ByteString const& protocol)
 {
     bool supported = Protocol::find_by_name(protocol.to_lowercase());

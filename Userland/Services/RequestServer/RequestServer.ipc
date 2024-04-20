@@ -3,8 +3,6 @@
 
 endpoint RequestServer
 {
-    connect_new_client() => (IPC::File client_socket)
-
     // Test if a specific protocol is supported, e.g "http"
     is_supported_protocol(ByteString protocol) => (bool supported)
 
