@@ -204,7 +204,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
             return true;
         },
     });
-    args_parser.add_option(disable_hyperlinks, "Disable hyperlinks", "no-hyperlinks", 0);
+    args_parser.add_option(disable_hyperlinks, "Disable hyperlinks", "no-hyperlinks");
     args_parser.add_option(count_lines, "Output line count instead of line contents", "count", 'c');
     args_parser.add_positional_argument(files, "File(s) to process", "file", Core::ArgsParser::Required::No);
     args_parser.parse(args);

@@ -117,7 +117,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(passes_to_dump_cfg, "Dump CFG after specified passes.", "dump-cfg", 0, "{all|last|<pass-name>|-<pass-name>[,...]}");
 
     bool silence_diagnostics = false;
-    args_parser.add_option(silence_diagnostics, "Silence all diagnostics.", "silence-diagnostics", 0);
+    args_parser.add_option(silence_diagnostics, "Silence all diagnostics.", "silence-diagnostics");
 
     args_parser.parse(arguments);
 

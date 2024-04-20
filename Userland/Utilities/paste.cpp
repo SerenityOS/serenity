@@ -57,7 +57,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Paste from the clipboard to stdout.");
-    args_parser.add_option(print_type, "Display the copied type", "print-type", 0);
+    args_parser.add_option(print_type, "Display the copied type", "print-type");
     args_parser.add_option(no_newline, "Do not append a newline", "no-newline", 'n');
     args_parser.add_option(watch, "Run a command when clipboard data changes", "watch", 'w');
     args_parser.add_positional_argument(watch_command, "Command to run in watch mode", "command", Core::ArgsParser::Required::No);

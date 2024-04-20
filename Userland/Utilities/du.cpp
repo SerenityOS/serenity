@@ -116,9 +116,9 @@ ErrorOr<void> parse_args(Main::Arguments arguments, Vector<ByteString>& files, D
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Display actual or apparent disk usage of files or directories.");
     args_parser.add_option(du_option.all, "Write counts for all files, not just directories", "all", 'a');
-    args_parser.add_option(du_option.apparent_size, "Print apparent sizes, rather than disk usage", "apparent-size", 0);
+    args_parser.add_option(du_option.apparent_size, "Print apparent sizes, rather than disk usage", "apparent-size");
     args_parser.add_option(du_option.human_readable, "Print human-readable sizes", "human-readable", 'h');
-    args_parser.add_option(du_option.human_readable_si, "Print human-readable sizes in SI units", "si", 0);
+    args_parser.add_option(du_option.human_readable_si, "Print human-readable sizes in SI units", "si");
     args_parser.add_option(du_option.max_depth, "Print the total for a directory or file only if it is N or fewer levels below the command line argument", "max-depth", 'd', "N");
     args_parser.add_option(summarize, "Display only a total for each argument", "summarize", 's');
     args_parser.add_option(du_option.threshold, "Exclude entries smaller than size if positive, or entries greater than size if negative", "threshold", 't', "size");

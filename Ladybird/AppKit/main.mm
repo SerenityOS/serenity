@@ -53,10 +53,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.set_general_help("The Ladybird web browser");
     args_parser.add_positional_argument(raw_urls, "URLs to open", "url", Core::ArgsParser::Required::No);
     args_parser.add_option(webdriver_content_ipc_path, "Path to WebDriver IPC for WebContent", "webdriver-content-path", 0, "path", Core::ArgsParser::OptionHideMode::CommandLineAndMarkdown);
-    args_parser.add_option(use_gpu_painting, "Enable GPU painting", "enable-gpu-painting", 0);
-    args_parser.add_option(debug_web_content, "Wait for debugger to attach to WebContent", "debug-web-content", 0);
+    args_parser.add_option(use_gpu_painting, "Enable GPU painting", "enable-gpu-painting");
+    args_parser.add_option(debug_web_content, "Wait for debugger to attach to WebContent", "debug-web-content");
     args_parser.add_option(certificates, "Path to a certificate file", "certificate", 'C', "certificate");
-    args_parser.add_option(log_all_js_exceptions, "Log all JavaScript exceptions", "log-all-js-exceptions", 0);
+    args_parser.add_option(log_all_js_exceptions, "Log all JavaScript exceptions", "log-all-js-exceptions");
     args_parser.parse(arguments);
 
     WebView::ProcessManager::initialize();

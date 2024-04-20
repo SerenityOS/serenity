@@ -128,11 +128,11 @@ int TestSuite::main(ByteString const& suite_name, Span<StringView> arguments)
     bool do_list_cases = false;
     StringView search_string = "*"sv;
 
-    args_parser.add_option(do_tests_only, "Only run tests.", "tests", 0);
-    args_parser.add_option(do_benchmarks_only, "Only run benchmarks.", "bench", 0);
+    args_parser.add_option(do_tests_only, "Only run tests.", "tests");
+    args_parser.add_option(do_benchmarks_only, "Only run benchmarks.", "bench");
     args_parser.add_option(m_benchmark_repetitions, "Number of times to repeat each benchmark (default 1)", "benchmark_repetitions", 0, "N");
     args_parser.add_option(m_randomized_runs, "Number of times to run each RANDOMIZED_TEST_CASE (default 100)", "randomized_runs", 0, "RUNS");
-    args_parser.add_option(do_list_cases, "List available test cases.", "list", 0);
+    args_parser.add_option(do_list_cases, "List available test cases.", "list");
     args_parser.add_positional_argument(search_string, "Only run matching cases.", "pattern", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 

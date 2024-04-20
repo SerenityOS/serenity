@@ -48,9 +48,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(list, "List contents", "list", 't');
     args_parser.add_option(verbose, "Print paths", "verbose", 'v');
     args_parser.add_option(gzip, "Compress or decompress file using gzip", "gzip", 'z');
-    args_parser.add_option(lzma, "Compress or decompress file using lzma", "lzma", 0);
+    args_parser.add_option(lzma, "Compress or decompress file using lzma", "lzma");
     args_parser.add_option(xz, "Compress or decompress file using xz", "xz", 'J');
-    args_parser.add_option(no_auto_compress, "Do not use the archive suffix to select the compression algorithm", "no-auto-compress", 0);
+    args_parser.add_option(no_auto_compress, "Do not use the archive suffix to select the compression algorithm", "no-auto-compress");
     args_parser.add_option(directory, "Directory to extract to/create from", "directory", 'C', "DIRECTORY");
     args_parser.add_option(archive_file, "Archive file", "file", 'f', "FILE");
     args_parser.add_option(dereference, "Follow symlinks", "dereference", 'h');

@@ -104,13 +104,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(command_line, "Chrome process command line", "command-line", 0, "command_line");
     args_parser.add_option(executable_path, "Chrome process executable path", "executable-path", 0, "executable_path");
     args_parser.add_option(request_server_socket, "File descriptor of the socket for the RequestServer connection", "request-server-socket", 'r', "request_server_socket");
-    args_parser.add_option(is_layout_test_mode, "Is layout test mode", "layout-test-mode", 0);
-    args_parser.add_option(use_lagom_networking, "Enable Lagom servers for networking", "use-lagom-networking", 0);
-    args_parser.add_option(use_gpu_painting, "Enable GPU painting", "use-gpu-painting", 0);
-    args_parser.add_option(wait_for_debugger, "Wait for debugger", "wait-for-debugger", 0);
+    args_parser.add_option(is_layout_test_mode, "Is layout test mode", "layout-test-mode");
+    args_parser.add_option(use_lagom_networking, "Enable Lagom servers for networking", "use-lagom-networking");
+    args_parser.add_option(use_gpu_painting, "Enable GPU painting", "use-gpu-painting");
+    args_parser.add_option(wait_for_debugger, "Wait for debugger", "wait-for-debugger");
     args_parser.add_option(mach_server_name, "Mach server name", "mach-server-name", 0, "mach_server_name");
-    args_parser.add_option(log_all_js_exceptions, "Log all JavaScript exceptions", "log-all-js-exceptions", 0);
-    args_parser.add_option(enable_idl_tracing, "Enable IDL tracing", "enable-idl-tracing", 0);
+    args_parser.add_option(log_all_js_exceptions, "Log all JavaScript exceptions", "log-all-js-exceptions");
+    args_parser.add_option(enable_idl_tracing, "Enable IDL tracing", "enable-idl-tracing");
 
     args_parser.parse(arguments);
 
