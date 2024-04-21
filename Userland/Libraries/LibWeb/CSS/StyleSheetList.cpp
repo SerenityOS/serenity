@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/QuickSort.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Bindings/StyleSheetListPrototype.h>
 #include <LibWeb/CSS/StyleComputer.h>
@@ -125,8 +124,6 @@ void StyleSheetList::remove_sheet(CSSStyleSheet& sheet)
         return;
     }
 
-    sort_sheets();
-
     m_document->style_computer().invalidate_rule_cache();
     m_document->invalidate_style();
 }
@@ -174,13 +171,6 @@ WebIDL::ExceptionOr<JS::Value> StyleSheetList::item_value(size_t index) const
         return JS::js_undefined();
 
     return m_sheets[index].ptr();
-}
-
-void StyleSheetList::sort_sheets()
-{
-    quick_sort(m_sheets, [](JS::NonnullGCPtr<StyleSheet> a, JS::NonnullGCPtr<StyleSheet> b) {
-        return a->owner_node()->is_before(*b->owner_node());
-    });
 }
 
 }
