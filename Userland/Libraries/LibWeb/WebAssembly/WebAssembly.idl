@@ -7,7 +7,7 @@ dictionary WebAssemblyInstantiatedSource {
 };
 
 // https://webassembly.github.io/spec/js-api/#webassembly-namespace
-[Exposed=*, WithGCVistor]
+[Exposed=*, WithGCVisitor]
 namespace WebAssembly {
     boolean validate(BufferSource bytes);
     Promise<Module> compile(BufferSource bytes);
