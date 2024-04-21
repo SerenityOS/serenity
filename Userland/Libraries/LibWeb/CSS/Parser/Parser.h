@@ -219,7 +219,7 @@ private:
     // NOTE: Implemented in generated code. (GenerateCSSMathFunctions.cpp)
     OwnPtr<CalculationNode> parse_math_function(PropertyID, Function const&);
     OwnPtr<CalculationNode> parse_a_calc_function_node(Function const&);
-    RefPtr<StyleValue> parse_dimension_value(ComponentValue const&);
+    RefPtr<StyleValue> parse_dimension_value(TokenStream<ComponentValue>&);
     RefPtr<StyleValue> parse_integer_value(TokenStream<ComponentValue>&);
     RefPtr<StyleValue> parse_number_value(TokenStream<ComponentValue>&);
     RefPtr<StyleValue> parse_number_or_percentage_value(TokenStream<ComponentValue>&);
