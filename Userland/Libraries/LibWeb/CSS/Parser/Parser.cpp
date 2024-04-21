@@ -2502,16 +2502,22 @@ Optional<Color> Parser::parse_color(ComponentValue const& component_value)
     return {};
 }
 
-RefPtr<StyleValue> Parser::parse_color_value(ComponentValue const& component_value)
+RefPtr<StyleValue> Parser::parse_color_value(TokenStream<ComponentValue>& tokens)
 {
-    auto color = parse_color(component_value);
-    if (color.has_value())
+    auto transaction = tokens.begin_transaction();
+    auto component_value = tokens.next_token();
+
+    if (auto color = parse_color(component_value); color.has_value()) {
+        transaction.commit();
         return ColorStyleValue::create(color.value());
+    }
 
     if (component_value.is(Token::Type::Ident)) {
         auto ident = value_id_from_string(component_value.token().ident());
-        if (ident.has_value() && IdentifierStyleValue::is_color(ident.value()))
+        if (ident.has_value() && IdentifierStyleValue::is_color(ident.value())) {
+            transaction.commit();
             return IdentifierStyleValue::create(ident.value());
+        }
     }
 
     return nullptr;
@@ -2565,10 +2571,8 @@ RefPtr<StyleValue> Parser::parse_paint_value(TokenStream<ComponentValue>& tokens
     // `<paint> = none | <color> | <url> [none | <color>]? | context-fill | context-stroke`
 
     auto parse_color_or_none = [&]() -> Optional<RefPtr<StyleValue>> {
-        if (auto color = parse_color_value(tokens.peek_token())) {
-            (void)tokens.next_token();
+        if (auto color = parse_color_value(tokens))
             return color;
-        }
 
         // NOTE: <color> also accepts identifiers, so we do this identifier check last.
         if (tokens.peek_token().is(Token::Type::Ident)) {
@@ -6499,10 +6503,8 @@ Optional<Parser::PropertyAndValue> Parser::parse_css_value_for_properties(Readon
     }
 
     if (auto property = any_property_accepts_type(property_ids, ValueType::Color); property.has_value()) {
-        if (auto maybe_color = parse_color_value(peek_token)) {
-            (void)tokens.next_token();
+        if (auto maybe_color = parse_color_value(tokens))
             return PropertyAndValue { *property, maybe_color };
-        }
     }
 
     if (auto property = any_property_accepts_type(property_ids, ValueType::Image); property.has_value()) {
