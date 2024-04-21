@@ -35,21 +35,14 @@ ErrorOr<JS::NonnullGCPtr<SVGDecodedImageData>> SVGDecodedImageData::create(JS::R
     JS::NonnullGCPtr<HTML::Navigable> navigable = page->top_level_traversable();
     auto response = Fetch::Infrastructure::Response::create(navigable->vm());
     response->url_list().append(url);
-    HTML::NavigationParams navigation_params {
-        .id = {},
-        .navigable = navigable,
-        .request = nullptr,
-        .response = response,
-        .fetch_controller = nullptr,
-        .commit_early_hints = nullptr,
-        .coop_enforcement_result = HTML::CrossOriginOpenerPolicyEnforcementResult {},
-        .reserved_environment = {},
-        .origin = HTML::Origin {},
-        .policy_container = HTML::PolicyContainer {},
-        .final_sandboxing_flag_set = HTML::SandboxingFlagSet {},
-        .cross_origin_opener_policy = HTML::CrossOriginOpenerPolicy {},
-        .about_base_url = {},
-    };
+    auto navigation_params = navigable->heap().allocate_without_realm<HTML::NavigationParams>();
+    navigation_params->navigable = navigable;
+    navigation_params->response = response;
+    navigation_params->origin = HTML::Origin {};
+    navigation_params->policy_container = HTML::PolicyContainer {};
+    navigation_params->final_sandboxing_flag_set = HTML::SandboxingFlagSet {};
+    navigation_params->cross_origin_opener_policy = HTML::CrossOriginOpenerPolicy {};
+
     // FIXME: Use Navigable::navigate() instead of manually replacing the navigable's document.
     auto document = DOM::Document::create_and_initialize(DOM::Document::Type::HTML, "text/html"_string, navigation_params).release_value_but_fixme_should_propagate_errors();
     navigable->set_ongoing_navigation({});
