@@ -83,10 +83,19 @@ public:
     static Optional<DynamicObject::SymbolLookupResult> lookup_symbol(const ELF::DynamicObject::Symbol&);
     void copy_initial_tls_data_into(Bytes buffer) const;
 
+    DynamicObject& dynamic_object() { return *m_dynamic_object; }
     DynamicObject const& dynamic_object() const { return *m_dynamic_object; }
 
     bool is_fully_relocated() const { return m_fully_relocated; }
     bool is_fully_initialized() const { return m_fully_initialized; }
+
+    void add_dependency(NonnullRefPtr<DynamicLoader> dependency)
+    {
+        // Dependencies that aren't actually true will be removed in compute_topological_order.
+        m_true_dependencies.append(move(dependency));
+    }
+
+    void compute_topological_order(Vector<NonnullRefPtr<DynamicLoader>>& topological_order);
 
 private:
     DynamicLoader(int fd, ByteString filepath, void* file_data, size_t file_size);
@@ -172,6 +181,14 @@ private:
 
     bool m_fully_relocated { false };
     bool m_fully_initialized { false };
+
+    enum class TopologicalOrderingState {
+        NotVisited,
+        Visiting,
+        Visited,
+    } m_topological_ordering_state { TopologicalOrderingState::NotVisited };
+
+    Vector<NonnullRefPtr<DynamicLoader>> m_true_dependencies;
 };
 
 template<typename F>

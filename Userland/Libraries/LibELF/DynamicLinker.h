@@ -12,10 +12,12 @@
 
 namespace ELF {
 
+using EntryPointFunction = int (*)(int, char**, char**);
+
 class DynamicLinker {
 public:
     static Optional<DynamicObject::SymbolLookupResult> lookup_global_symbol(StringView symbol);
-    [[noreturn]] static void linker_main(ByteString&& main_program_path, int fd, bool is_secure, int argc, char** argv, char** envp);
+    static EntryPointFunction linker_main(ByteString&& main_program_path, int fd, bool is_secure, char** envp);
 
     static Optional<ByteString> resolve_library(ByteString const& name, DynamicObject const& parent_object);
 

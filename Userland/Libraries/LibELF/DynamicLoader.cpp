@@ -823,4 +823,23 @@ Optional<DynamicObject::SymbolLookupResult> DynamicLoader::lookup_symbol(const E
     return DynamicObject::SymbolLookupResult { symbol.value(), symbol.size(), symbol.address(), symbol.bind(), symbol.type(), &symbol.object() };
 }
 
-} // end namespace ELF
+void DynamicLoader::compute_topological_order(Vector<NonnullRefPtr<DynamicLoader>>& topological_order)
+{
+    VERIFY(m_topological_ordering_state == TopologicalOrderingState::NotVisited);
+    m_topological_ordering_state = TopologicalOrderingState::Visiting;
+
+    Vector<NonnullRefPtr<DynamicLoader>> actual_dependencies;
+    for (auto const& dependency : m_true_dependencies) {
+        auto state = dependency->m_topological_ordering_state;
+        if (state == TopologicalOrderingState::NotVisited)
+            dependency->compute_topological_order(topological_order);
+        if (state == TopologicalOrderingState::Visited)
+            actual_dependencies.append(dependency);
+    }
+    m_true_dependencies = actual_dependencies;
+
+    m_topological_ordering_state = TopologicalOrderingState::Visited;
+    topological_order.append(*this);
+}
+
+}
