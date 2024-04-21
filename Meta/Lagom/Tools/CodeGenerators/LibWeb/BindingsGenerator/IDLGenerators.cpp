@@ -3697,7 +3697,7 @@ public:
 private:
 )~~~");
 
-    if (interface.extended_attributes.contains("WithGCVistor"sv)) {
+    if (interface.extended_attributes.contains("WithGCVisitor"sv)) {
         generator.append(R"~~~(
     virtual void visit_edges(JS::Cell::Visitor&) override;
 )~~~");
@@ -3825,7 +3825,7 @@ void @namespace_class@::initialize(JS::Realm& realm)
 }
 )~~~");
 
-    if (interface.extended_attributes.contains("WithGCVistor"sv)) {
+    if (interface.extended_attributes.contains("WithGCVisitor"sv)) {
         generator.append(R"~~~(
 void @namespace_class@::visit_edges(JS::Cell::Visitor& visitor)
 {
