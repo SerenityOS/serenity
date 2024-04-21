@@ -75,7 +75,7 @@ Optional<URL::URL> sanitize_url(StringView url, Optional<StringView> search_engi
 
     auto format_search_engine = [&]() -> Optional<URL::URL> {
         if (!search_engine.has_value())
-            return MUST(String::formatted("https://{}"sv, url));        
+            return MUST(String::formatted("https://{}"sv, url));
 
         return MUST(String::formatted(*search_engine, URL::percent_decode(url)));
     };
