@@ -653,7 +653,7 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
         auto displayed_document = changing_navigable_continuation.displayed_document;
 
         // 5. Let targetEntry be changingNavigableContinuation's target entry.
-        auto& populated_target_entry = changing_navigable_continuation.populated_target_entry;
+        JS::GCPtr<SessionHistoryEntry> const populated_target_entry = changing_navigable_continuation.populated_target_entry.ptr();
 
         // 6. Let navigable be changingNavigableContinuation's navigable.
         auto navigable = changing_navigable_continuation.navigable;
@@ -674,24 +674,25 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
         auto entries_for_navigation_api = get_session_history_entries_for_the_navigation_api(*navigable, target_step);
 
         // 12. In both cases, let afterPotentialUnloads be the following steps:
-        auto after_potential_unload = JS::create_heap_function(this->heap(), [changing_navigable_continuation, displayed_document, &completed_change_jobs, script_history_length, script_history_index, entries_for_navigation_api = move(entries_for_navigation_api), &heap = this->heap()] {
-            auto const& target_entry = changing_navigable_continuation.target_entry;
-            if (changing_navigable_continuation.populated_cloned_target_session_history_entry) {
-                auto const& populating_target_entry = changing_navigable_continuation.populated_target_entry;
-                target_entry->set_document_state(populating_target_entry->document_state());
-                target_entry->set_url(populating_target_entry->url());
-                target_entry->set_classic_history_api_state(populating_target_entry->classic_history_api_state());
+        bool const update_only = changing_navigable_continuation.update_only;
+        JS::GCPtr<SessionHistoryEntry> const target_entry = changing_navigable_continuation.target_entry.ptr();
+        bool const populated_cloned_target_session_history_entry = changing_navigable_continuation.populated_cloned_target_session_history_entry;
+        auto after_potential_unload = JS::create_heap_function(this->heap(), [navigable, update_only, target_entry, populated_target_entry, populated_cloned_target_session_history_entry, displayed_document, &completed_change_jobs, script_history_length, script_history_index, entries_for_navigation_api = move(entries_for_navigation_api), &heap = this->heap()] {
+            if (populated_cloned_target_session_history_entry) {
+                target_entry->set_document_state(populated_target_entry->document_state());
+                target_entry->set_url(populated_target_entry->url());
+                target_entry->set_classic_history_api_state(populated_target_entry->classic_history_api_state());
             }
 
             // 1. If changingNavigableContinuation's update-only is false, then activate history entry targetEntry for navigable.
-            if (!changing_navigable_continuation.update_only)
-                changing_navigable_continuation.navigable->activate_history_entry(*changing_navigable_continuation.target_entry);
+            if (!update_only)
+                navigable->activate_history_entry(*target_entry);
 
             // 2. Let updateDocument be an algorithm step which performs update document for history step application given
             //    targetEntry's document, targetEntry, changingNavigableContinuation's update-only, scriptHistoryLength,
             //    scriptHistoryIndex, navigationType, entriesForNavigationAPI, and displayedEntry.
-            auto update_document = JS::SafeFunction<void()>([changing_navigable_continuation, script_history_length, script_history_index, entries_for_navigation_api = move(entries_for_navigation_api)] {
-                changing_navigable_continuation.target_entry->document()->update_for_history_step_application(*changing_navigable_continuation.target_entry, changing_navigable_continuation.update_only, script_history_length, script_history_index, entries_for_navigation_api);
+            auto update_document = JS::SafeFunction<void()>([script_history_length, script_history_index, entries_for_navigation_api = move(entries_for_navigation_api), target_entry, update_only] {
+                target_entry->document()->update_for_history_step_application(*target_entry, update_only, script_history_length, script_history_index, entries_for_navigation_api);
             });
 
             // 3. If targetEntry's document is equal to displayedDocument, then perform updateDocument.
