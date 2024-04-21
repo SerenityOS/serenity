@@ -211,7 +211,7 @@ ALWAYS_INLINE void ProcessorBase<T>::wait_check()
 template<typename T>
 ALWAYS_INLINE u64 ProcessorBase<T>::read_cpu_counter()
 {
-    TODO_RISCV64();
+    return RISCV64::CSR::read(RISCV64::CSR::Address::CYCLE);
 }
 
 }
