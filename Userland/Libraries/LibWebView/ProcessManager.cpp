@@ -88,15 +88,23 @@ void ProcessManager::initialize()
 #endif
 }
 
+ProcessInfo* ProcessManager::find_process(pid_t pid)
+{
+    if (auto existing_process = m_statistics.processes.find_if([&](auto& info) { return info->pid == pid; }); !existing_process.is_end())
+        return verify_cast<ProcessInfo>(existing_process->ptr());
+
+    return nullptr;
+}
+
 void ProcessManager::add_process(ProcessType type, pid_t pid)
 {
     Threading::MutexLocker locker { m_lock };
     dbgln("ProcessManager::add_process({}, {})", process_name_from_type(type), pid);
-    if (auto existing_process = m_statistics.processes.find_if([&](auto& info) { return info.pid == pid; }); !existing_process.is_end()) {
+    if (auto* existing_process = find_process(pid)) {
         existing_process->type = type;
         return;
     }
-    m_statistics.processes.append({ type, pid });
+    m_statistics.processes.append(make<ProcessInfo>(type, pid));
 }
 
 #if defined(AK_OS_MACH)
@@ -104,20 +112,21 @@ void ProcessManager::add_process(pid_t pid, Core::MachPort&& port)
 {
     Threading::MutexLocker locker { m_lock };
     dbgln("ProcessManager::add_process({}, {:p})", pid, port.port());
-    if (auto existing_process = m_statistics.processes.find_if([&](auto& info) { return info.pid == pid; }); !existing_process.is_end()) {
+    if (auto* existing_process = find_process(pid)) {
         existing_process->child_task_port = move(port);
         return;
     }
-    m_statistics.processes.append({ pid, move(port) });
+    m_statistics.processes.append(make<ProcessInfo>(pid, move(port)));
 }
 #endif
 
 void ProcessManager::remove_process(pid_t pid)
 {
     Threading::MutexLocker locker { m_lock };
-    m_statistics.processes.remove_first_matching([&](auto& info) {
-        if (info.pid == pid) {
-            dbgln("ProcessManager: Remove process {} ({})", process_name_from_type(info.type), pid);
+    m_statistics.processes.remove_first_matching([&](auto const& info) {
+        if (info->pid == pid) {
+            auto type = verify_cast<ProcessInfo>(*info).type;
+            dbgln("ProcessManager: Remove process {} ({})", process_name_from_type(type), pid);
             return true;
         }
         return false;
@@ -146,7 +155,6 @@ String ProcessManager::generate_html()
 {
     Threading::MutexLocker locker { m_lock };
     StringBuilder builder;
-    auto const& processes = m_statistics.processes;
 
     builder.append(R"(
         <html>
@@ -197,7 +205,7 @@ String ProcessManager::generate_html()
                 <tbody>
     )"sv);
 
-    for (auto const& process : processes) {
+    m_statistics.for_each_process<ProcessInfo>([&](auto const& process) {
         builder.append("<tr>"sv);
         builder.append("<td>"sv);
         builder.append(WebView::process_name_from_type(process.type));
@@ -212,7 +220,7 @@ String ProcessManager::generate_html()
         builder.append(MUST(String::formatted("{:.1f}", process.cpu_percent)));
         builder.append("</td>"sv);
         builder.append("</tr>"sv);
-    }
+    });
 
     builder.append(R"(
                 </tbody>
