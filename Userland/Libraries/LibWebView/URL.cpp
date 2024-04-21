@@ -16,7 +16,7 @@
 
 namespace WebView {
 
-static Optional<URL::URL> query_public_suffix_list(StringView url_string)
+static Optional<URL::URL> query_public_suffix_list(StringView url_string, Optional<StringView> search_engine)
 {
     auto out = MUST(String::from_utf8(url_string));
     if (!out.starts_with_bytes("about:"sv) && !out.contains("://"sv))
@@ -40,6 +40,9 @@ static Optional<URL::URL> query_public_suffix_list(StringView url_string)
 
         if (host.ends_with_bytes(".local"sv) || host.ends_with_bytes("localhost"sv))
             return url;
+    }
+    if (!search_engine.has_value()) {
+        return url;
     }
 
     return {};
@@ -90,7 +93,7 @@ Optional<URL::URL> sanitize_url(StringView url, Optional<StringView> search_engi
         }
     }
 
-    auto result = query_public_suffix_list(url);
+    auto result = query_public_suffix_list(url, search_engine);
     if (!result.has_value())
         return format_search_engine();
 
