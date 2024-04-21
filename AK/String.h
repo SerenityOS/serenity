@@ -79,7 +79,7 @@ public:
     static ErrorOr<String> repeated(u32 code_point, size_t count);
 
     // Creates a new String from another string, repeated N times.
-    static String repeated(String const&, size_t count);
+    static ErrorOr<String> repeated(String const&, size_t count);
 
     // Creates a new String by case-transforming this String. Using these methods require linking LibUnicode into your application.
     ErrorOr<String> to_lowercase(Optional<StringView> const& locale = {}) const;

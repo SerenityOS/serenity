@@ -55,7 +55,7 @@ void DedicatedWorkerHost::run(JS::NonnullGCPtr<Web::Page> page, Web::HTML::Trans
     auto inner_settings = Web::HTML::WorkerEnvironmentSettingsObject::setup(page, move(realm_execution_context));
 
     auto& console_object = *inner_settings->realm().intrinsics().console_object();
-    m_console = adopt_ref(*new Web::HTML::WorkerDebugConsoleClient(console_object.console()));
+    m_console = console_object.heap().allocate_without_realm<Web::HTML::WorkerDebugConsoleClient>(console_object.console());
     VERIFY(m_console);
     console_object.console().set_client(*m_console);
 

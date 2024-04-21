@@ -275,7 +275,7 @@ void NavigableContainer::destroy_the_child_navigable()
     // FIXME: 4. Inform the navigation API about child navigable destruction given navigable.
 
     // 5. Destroy a document and its descendants given navigable's active document.
-    navigable->active_document()->destroy_a_document_and_its_descendants([this, navigable] {
+    navigable->active_document()->destroy_a_document_and_its_descendants(JS::create_heap_function(heap(), [this, navigable] {
         // 3. Set container's content navigable to null.
         m_content_navigable = nullptr;
 
@@ -298,7 +298,7 @@ void NavigableContainer::destroy_the_child_navigable()
             // 1. Update for navigable creation/destruction given traversable.
             traversable->update_for_navigable_creation_or_destruction();
         });
-    });
+    }));
 }
 
 // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#potentially-delays-the-load-event

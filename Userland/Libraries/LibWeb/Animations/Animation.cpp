@@ -457,9 +457,9 @@ void Animation::cancel(ShouldInvalidate should_invalidate)
                 scheduled_event_time = m_timeline->convert_a_timeline_time_to_an_origin_relative_time(m_timeline->current_time());
             document->append_pending_animation_event({ cancel_event, *this, scheduled_event_time });
         } else {
-            HTML::queue_global_task(HTML::Task::Source::DOMManipulation, realm.global_object(), [this, cancel_event]() {
+            HTML::queue_global_task(HTML::Task::Source::DOMManipulation, realm.global_object(), JS::create_heap_function(heap(), [this, cancel_event]() {
                 dispatch_event(cancel_event);
-            });
+            }));
         }
     }
 

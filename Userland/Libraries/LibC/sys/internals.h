@@ -13,7 +13,7 @@ __BEGIN_DECLS
 
 typedef void (*AtExitFunction)(void*);
 
-extern void __libc_init(void);
+extern void __libc_init();
 extern void __malloc_init(void);
 extern void __stdio_init(void);
 extern void __begin_atexit_locking(void);

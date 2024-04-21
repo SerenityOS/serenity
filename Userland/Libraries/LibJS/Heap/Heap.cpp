@@ -145,11 +145,12 @@ public:
             return IterationDecision::Continue;
         });
 
-        for (auto* root : roots.keys()) {
-            visit(root);
-            auto& graph_node = m_graph.ensure(reinterpret_cast<FlatPtr>(root));
+        for (auto& [root, root_origin] : roots) {
+            auto& graph_node = m_graph.ensure(bit_cast<FlatPtr>(root));
             graph_node.class_name = root->class_name();
-            graph_node.root_origin = *roots.get(root);
+            graph_node.root_origin = root_origin;
+
+            m_work_queue.append(*root);
         }
     }
 
@@ -185,10 +186,10 @@ public:
     void visit_all_cells()
     {
         while (!m_work_queue.is_empty()) {
-            auto ptr = reinterpret_cast<FlatPtr>(&m_work_queue.last());
-            m_node_being_visited = &m_graph.ensure(ptr);
-            m_node_being_visited->class_name = m_work_queue.last()->class_name();
-            m_work_queue.take_last()->visit_edges(*this);
+            auto cell = m_work_queue.take_last();
+            m_node_being_visited = &m_graph.ensure(bit_cast<FlatPtr>(cell.ptr()));
+            m_node_being_visited->class_name = cell->class_name();
+            cell->visit_edges(*this);
             m_node_being_visited = nullptr;
         }
     }

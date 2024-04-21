@@ -7,8 +7,11 @@
 #include <AK/Types.h>
 #include <assert.h>
 #include <errno.h>
+#include <sys/auxv.h>
 #include <sys/internals.h>
 #include <unistd.h>
+
+[[gnu::weak]] char** __environ_value() asm("__environ_value");
 
 extern "C" {
 
@@ -17,12 +20,14 @@ int errno_storage;
 #else
 __thread int errno_storage;
 #endif
-[[gnu::weak]] char** environ;
 bool __environ_is_malloced = false;
-bool __stdio_is_initialized;
-void* __auxiliary_vector;
+bool __stdio_is_initialized = false;
+void* __auxiliary_vector = reinterpret_cast<void*>(explode_byte(0xe1));
 
-static void __auxiliary_vector_init();
+#ifndef _DYNAMIC_LOADER
+char** environ = reinterpret_cast<char**>(explode_byte(0xe2));
+uintptr_t __stack_chk_guard;
+#endif
 
 int* __errno_location()
 {
@@ -31,17 +36,26 @@ int* __errno_location()
 
 void __libc_init()
 {
-    __auxiliary_vector_init();
+#ifndef _DYNAMIC_LOADER
+    // We can only call magic functions until __stack_chk_guard is initialized.
+    environ = __environ_value();
+#endif
+
+    char** env;
+    for (env = environ; *env; ++env)
+        ;
+    __auxiliary_vector = (void*)++env;
+
+#ifndef _DYNAMIC_LOADER
+    for (auxv_t* entry = reinterpret_cast<auxv_t*>(__auxiliary_vector); entry->a_type != AT_NULL; ++entry)
+        if (entry->a_type == AT_RANDOM)
+            __stack_chk_guard = *(reinterpret_cast<u64*>(entry->a_un.a_ptr) + 1);
+
+    // We include an additional hardening: zero the first byte of the stack guard to avoid leaking
+    // or overwriting the stack guard with C-style string functions.
+    __stack_chk_guard &= ~0xffULL;
+#endif
     __malloc_init();
     __stdio_init();
-}
-
-static void __auxiliary_vector_init()
-{
-    char** env;
-    for (env = environ; *env; ++env) {
-    }
-
-    __auxiliary_vector = (void*)++env;
 }
 }

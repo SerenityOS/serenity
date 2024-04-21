@@ -16,14 +16,22 @@ JS_DEFINE_ALLOCATOR(ConsoleObject);
 
 ConsoleObject::ConsoleObject(Realm& realm)
     : Object(ConstructWithPrototypeTag::Tag, realm.intrinsics().object_prototype())
-    , m_console(make<Console>(realm))
 {
+}
+
+ConsoleObject::~ConsoleObject() = default;
+
+void ConsoleObject::visit_edges(Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_console);
 }
 
 void ConsoleObject::initialize(Realm& realm)
 {
     auto& vm = this->vm();
     Base::initialize(realm);
+    m_console = vm.heap().allocate<Console>(realm, realm);
     u8 attr = Attribute::Writable | Attribute::Enumerable | Attribute::Configurable;
     define_native_function(realm, vm.names.assert, assert_, 0, attr);
     define_native_function(realm, vm.names.clear, clear, 0, attr);

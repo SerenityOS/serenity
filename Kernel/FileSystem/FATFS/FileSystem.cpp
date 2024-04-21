@@ -1,9 +1,11 @@
 /*
- * Copyright (c) 2022, Undefine <undefine@undefine.pl>
+ * Copyright (c) 2022-2024, Undefine <undefine@undefine.pl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/ByteReader.h>
+#include <AK/Endian.h>
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/FATFS/FileSystem.h>
 #include <Kernel/FileSystem/FATFS/Inode.h>
@@ -122,11 +124,11 @@ ErrorOr<void> FATFS::initialize_while_locked()
 
     if constexpr (FAT_DEBUG) {
         dbgln("FATFS: oem_identifier: {}", block->oem_identifier);
-        dbgln("FATFS: bytes_per_sector: {}", block->bytes_per_sector);
+        dbgln("FATFS: bytes_per_sector: {}", static_cast<u16>(block->bytes_per_sector));
         dbgln("FATFS: sectors_per_cluster: {}", block->sectors_per_cluster);
         dbgln("FATFS: reserved_sector_count: {}", block->reserved_sector_count);
         dbgln("FATFS: fat_count: {}", block->fat_count);
-        dbgln("FATFS: root_directory_entry_count: {}", block->root_directory_entry_count);
+        dbgln("FATFS: root_directory_entry_count: {}", static_cast<u16>(block->root_directory_entry_count));
         dbgln("FATFS: media_descriptor_type: {}", block->media_descriptor_type);
         dbgln("FATFS: sectors_per_track: {}", block->sectors_per_track);
         dbgln("FATFS: head_count: {}", block->head_count);
@@ -144,7 +146,7 @@ ErrorOr<void> FATFS::initialize_while_locked()
             dbgln("FATFS: fs_info_sector: {}", dos7_boot_record->fs_info_sector);
             dbgln("FATFS: backup_boot_sector: {}", dos7_boot_record->backup_boot_sector);
             dbgln("FATFS: drive_number: {}", dos7_boot_record->drive_number);
-            dbgln("FATFS: volume_id: {}", dos7_boot_record->volume_id);
+            dbgln("FATFS: volume_id: {}", static_cast<u32>(dos7_boot_record->volume_id));
         } else if (ebpb_version == DOSBIOSParameterBlockVersion::DOS_BPB_3 || ebpb_version == DOSBIOSParameterBlockVersion::DOS_BPB_4) {
             DOS4BIOSParameterBlock const* dos4_boot_record = ebpb.dos4_bpb();
             if (ebpb_version == DOSBIOSParameterBlockVersion::DOS_BPB_3) {
@@ -154,7 +156,7 @@ ErrorOr<void> FATFS::initialize_while_locked()
             }
             dbgln("FATFS: drive_number: {}", dos4_boot_record->drive_number);
             dbgln("FATFS: flags: {}", dos4_boot_record->flags);
-            dbgln("FATFS: volume_id: {}", dos4_boot_record->volume_id);
+            dbgln("FATFS: volume_id: {}", static_cast<u32>(dos4_boot_record->volume_id));
 
             // volume_label_string and file_system_type are only valid when
             // ebpb_version == DOSBIOSParameterBlockVersion::DOS4.
@@ -235,7 +237,25 @@ ErrorOr<void> FATFS::initialize_while_locked()
     }
 
     root_entry.attributes = FATAttributes::Directory;
-    m_root_inode = TRY(FATInode::create(*this, root_entry));
+    m_root_inode = TRY(FATInode::create(*this, root_entry, { 0, 1 }));
+
+    if (m_fat_version == FATVersion::FAT32) {
+        auto fs_info_buffer = UserOrKernelBuffer::for_kernel_buffer(bit_cast<u8*>(&m_fs_info));
+        // We know that there is a DOS7 BPB, because if it wasn't present
+        // we would have returned EINVAL above.
+        TRY(read_block(ebpb.dos7_bpb()->fs_info_sector, &fs_info_buffer, sizeof(m_fs_info)));
+
+        if (m_fs_info.lead_signature != fs_info_signature_1 || m_fs_info.struct_signature != fs_info_signature_2 || m_fs_info.trailing_signature != fs_info_signature_3) {
+            dbgln("FATFS: Invalid FSInfo struct signature");
+            dbgln_if(FAT_DEBUG, "FATFS: FSInfo signature1: {:#x}, expected: {:#x}", m_fs_info.lead_signature, fs_info_signature_1);
+            dbgln_if(FAT_DEBUG, "FATFS: FSInfo signature2: {:#x}, expected: {:#x}", m_fs_info.struct_signature, fs_info_signature_2);
+            dbgln_if(FAT_DEBUG, "FATFS: FSInfo signature3: {:#x}, expected: {:#x}", m_fs_info.trailing_signature, fs_info_signature_3);
+            return Error::from_errno(EINVAL);
+        }
+
+        dbgln_if(FAT_DEBUG, "FATFS: fs_info.last_known_free_cluster_count: {}", m_fs_info.last_known_free_cluster_count);
+        dbgln_if(FAT_DEBUG, "FATFS: fs_info.next_free_cluster_hint: {}", m_fs_info.next_free_cluster_hint);
+    }
 
     return {};
 }
@@ -268,6 +288,230 @@ FatBlockSpan FATFS::first_block_of_cluster(u32 cluster) const
             ebpb_block->sectors_per_cluster
         };
     }
+}
+
+size_t FATFS::fat_offset_for_cluster(u32 cluster) const
+{
+    switch (m_fat_version) {
+    case FATVersion::FAT12: {
+        // In FAT12, a cluster entry is stored in a byte, plus
+        // the low/high nibble of an adjacent byte.
+        //
+        // CLSTR:   0 1      2 3      4 5
+        // INDEX: [0 1 2], [3 4 5], [6 7 8]
+
+        // Every 2 clusters are represented using 3 bytes.
+        return (cluster * 3) / 2;
+    } break;
+    case FATVersion::FAT16:
+        return cluster * 2; // Each cluster is stored in 2 bytes.
+    case FATVersion::FAT32:
+        return cluster * 4; // Each cluster is stored in 4 bytes.
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
+u32 FATFS::cluster_number(KBuffer const& fat_sector, u32 entry_cluster_number, u32 entry_offset) const
+{
+    u32 cluster = 0;
+    switch (m_fat_version) {
+    case FATVersion::FAT12: {
+        u16 fat12_bytes_le = 0;
+        // Two FAT12 entries get stored in a total of 3 bytes, as follows:
+        // AB CD EF are grouped as [D AB] and [E FC] (little-endian).
+        // For a given cluster, we interpret the associated 2 bytes as a little-endian
+        // 16-bit value ({CD AB} or {EF CD}), and then shift/mask the extra high or low nibble.
+        ByteReader::load<u16>(fat_sector.bytes().offset(entry_offset), fat12_bytes_le);
+        cluster = AK::convert_between_host_and_little_endian(fat12_bytes_le);
+        if (entry_cluster_number % 2 == 0) {
+            // CD AB -> D AB
+            cluster &= 0x0FFF;
+        } else {
+            // EF CD -> E FC.
+            cluster = cluster >> 4;
+        }
+        break;
+    }
+    case FATVersion::FAT16: {
+        u16 cluster_u16_le = 0;
+        ByteReader::load<u16>(fat_sector.bytes().offset(entry_offset), cluster_u16_le);
+        cluster = AK::convert_between_host_and_little_endian(cluster_u16_le);
+        break;
+    }
+    case FATVersion::FAT32: {
+        u32 cluster_u32_le = 0;
+        ByteReader::load<u32>(fat_sector.bytes().offset(entry_offset), cluster_u32_le);
+        cluster = AK::convert_between_host_and_little_endian(cluster_u32_le);
+        // FAT32 entries use 28-bits to represent the cluster number. The top 4 bits
+        // may contain flags or other data and must be masked off.
+        cluster &= 0x0FFFFFFF;
+        break;
+    }
+    default:
+        VERIFY_NOT_REACHED();
+    }
+    return cluster;
+}
+
+u32 FATFS::end_of_chain_marker() const
+{
+    // Returns the end of chain entry for the given file system.
+    // Any FAT entry of this value or greater signifies the end
+    // of the chain has been reached for a given entry.
+    switch (m_fat_version) {
+    case FATVersion::FAT12:
+        return 0xFF8;
+    case FATVersion::FAT16:
+        return 0xFFF8;
+    case FATVersion::FAT32:
+        return 0x0FFFFFF8;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
+ErrorOr<void> FATFS::set_free_cluster_count(u32 value)
+{
+    VERIFY(m_fat_version == FATVersion::FAT32);
+
+    m_fs_info.last_known_free_cluster_count = value;
+    auto fs_info_buffer = UserOrKernelBuffer::for_kernel_buffer(bit_cast<u8*>(&m_fs_info));
+    TRY(write_block(m_parameter_block->dos7_bpb()->fs_info_sector, fs_info_buffer, sizeof(m_fs_info)));
+
+    return {};
+}
+
+ErrorOr<u32> FATFS::allocate_cluster()
+{
+    u32 start_cluster;
+    if (m_fat_version == FATVersion::FAT32) {
+        // If we have a hint, start there.
+        if (m_fs_info.next_free_cluster_hint != fs_info_data_unknown) {
+            start_cluster = m_fs_info.next_free_cluster_hint;
+        } else {
+            // Otherwise, start at the beginning of the data area.
+            start_cluster = first_data_cluster;
+        }
+    } else {
+        // For FAT12/16, start at the beginning of the data area, as there is no
+        // FSInfo struct to store the hint.
+        start_cluster = first_data_cluster;
+    }
+
+    MutexLocker locker(m_lock);
+
+    for (u32 i = start_cluster; i < m_parameter_block->sector_count() / m_parameter_block->common_bpb()->sectors_per_cluster; i++) {
+        if (TRY(fat_read(i)) == 0) {
+            dbgln_if(FAT_DEBUG, "FATFS: Allocating cluster {}", i);
+
+            if (m_fat_version == FATVersion::FAT32 && m_fs_info.last_known_free_cluster_count != fs_info_data_unknown)
+                TRY(set_free_cluster_count(m_fs_info.last_known_free_cluster_count - 1));
+
+            TRY(fat_write(i, end_of_chain_marker()));
+            return i;
+        }
+    }
+
+    return Error::from_errno(ENOSPC);
+}
+
+ErrorOr<void> FATFS::notify_cluster_freed()
+{
+    if (m_fat_version == FATVersion::FAT32 && m_fs_info.last_known_free_cluster_count != fs_info_data_unknown)
+        TRY(set_free_cluster_count(m_fs_info.last_known_free_cluster_count + 1));
+
+    return {};
+}
+
+ErrorOr<u32> FATFS::fat_read(u32 cluster)
+{
+    dbgln_if(FAT_DEBUG, "FATFS: Reading FAT entry for cluster {}", cluster);
+
+    u32 fat_offset = fat_offset_for_cluster(cluster);
+    u32 fat_sector_index = m_parameter_block->common_bpb()->reserved_sector_count + (fat_offset / m_device_block_size);
+    u32 entry_offset = fat_offset % m_device_block_size;
+
+    // NOTE: On FAT12, FATs aren't necessarily block aligned, so in the worst case we have to read
+    // an extra byte from the next block.
+    bool read_extra_block = m_fat_version == FATVersion::FAT12 && entry_offset == m_device_block_size - 1;
+    size_t buffer_size = m_device_block_size;
+    if (read_extra_block)
+        buffer_size += m_device_block_size;
+
+    auto fat_sector = TRY(KBuffer::try_create_with_size("FATFS: FAT read buffer"sv, buffer_size));
+    auto fat_sector_buffer = UserOrKernelBuffer::for_kernel_buffer(fat_sector->data());
+
+    MutexLocker locker(m_lock);
+
+    if (read_extra_block)
+        TRY(read_blocks(fat_sector_index, 2, fat_sector_buffer));
+    else
+        TRY(read_block(fat_sector_index, &fat_sector_buffer, m_device_block_size));
+
+    // Look up the next cluster to read, or read End of Chain marker from table.
+    return cluster_number(*fat_sector, cluster, entry_offset);
+}
+
+ErrorOr<void> FATFS::fat_write(u32 cluster, u32 value)
+{
+    dbgln_if(FAT_DEBUG, "FATFS: Writing FAT entry for cluster {} with value {}", cluster, value);
+
+    u32 fat_offset = fat_offset_for_cluster(cluster);
+    u32 fat_sector_index = m_parameter_block->common_bpb()->reserved_sector_count + (fat_offset / m_device_block_size);
+    u32 entry_offset = fat_offset % m_device_block_size;
+
+    // See the comment in fat_read().
+    bool need_extra_block = m_fat_version == FATVersion::FAT12 && entry_offset == m_device_block_size - 1;
+    size_t buffer_size = m_device_block_size;
+    if (need_extra_block)
+        buffer_size += m_device_block_size;
+
+    auto fat_sector = TRY(KBuffer::try_create_with_size("FATFS: FAT read buffer"sv, buffer_size));
+    auto fat_sector_buffer = UserOrKernelBuffer::for_kernel_buffer(fat_sector->data());
+
+    MutexLocker locker(m_lock);
+
+    if (need_extra_block)
+        TRY(read_blocks(fat_sector_index, 2, fat_sector_buffer));
+    else
+        TRY(read_block(fat_sector_index, &fat_sector_buffer, m_device_block_size));
+
+    switch (m_fat_version) {
+    case FATVersion::FAT12: {
+        auto write_misaligned_u16 = [&](u16 word) {
+            *bit_cast<u8*>(&fat_sector->data()[entry_offset]) = word & 0xFF;
+            *(bit_cast<u8*>(&fat_sector->data()[entry_offset]) + 1) = word >> 8;
+        };
+        u16 existing_bytes_le = 0;
+        ByteReader::load<u16>(fat_sector->bytes().offset(entry_offset), existing_bytes_le);
+        u16 existing_bytes = AK::convert_between_host_and_little_endian(existing_bytes_le);
+        if (cluster % 2 == 0) {
+            existing_bytes &= 0xF000;
+            existing_bytes |= static_cast<u16>(value) & 0xFFF;
+        } else {
+            existing_bytes &= 0x000F;
+            existing_bytes |= static_cast<u16>(value) << 4;
+        }
+        write_misaligned_u16(AK::convert_between_host_and_little_endian(existing_bytes));
+        break;
+    }
+    case FATVersion::FAT16: {
+        *bit_cast<u16*>(&fat_sector->data()[entry_offset]) = AK::convert_between_host_and_little_endian(static_cast<u16>(value));
+        break;
+    }
+    case FATVersion::FAT32: {
+        *bit_cast<u32*>(&fat_sector->data()[entry_offset]) = AK::convert_between_host_and_little_endian(value);
+        break;
+    }
+    }
+
+    if (need_extra_block)
+        TRY(write_blocks(fat_sector_index, 2, fat_sector_buffer));
+    else
+        TRY(write_block(fat_sector_index, fat_sector_buffer, m_device_block_size));
+
+    return {};
 }
 
 u8 FATFS::internal_file_type_to_directory_entry_type(DirectoryEntryView const& entry) const

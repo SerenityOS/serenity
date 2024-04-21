@@ -109,6 +109,7 @@ public:
     WebIDL::ExceptionOr<JS::GCPtr<Attr>> set_attribute_node(Attr&);
     WebIDL::ExceptionOr<JS::GCPtr<Attr>> set_attribute_node_ns(Attr&);
 
+    void append_attribute(FlyString const& name, String const& value);
     void append_attribute(Attr&);
     void remove_attribute(FlyString const& name);
     void remove_attribute_ns(Optional<FlyString> const& namespace_, FlyString const& name);

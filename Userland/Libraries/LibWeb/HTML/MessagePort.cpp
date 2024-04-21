@@ -252,14 +252,14 @@ ErrorOr<void> MessagePort::send_message_on_socket(SerializedTransferRecord const
 void MessagePort::post_port_message(SerializedTransferRecord serialize_with_transfer_result)
 {
     // FIXME: Use the correct task source?
-    queue_global_task(Task::Source::PostedMessage, relevant_global_object(*this), [this, serialize_with_transfer_result = move(serialize_with_transfer_result)]() mutable {
+    queue_global_task(Task::Source::PostedMessage, relevant_global_object(*this), JS::create_heap_function(heap(), [this, serialize_with_transfer_result = move(serialize_with_transfer_result)]() mutable {
         if (!m_socket || !m_socket->is_open())
             return;
         if (auto result = send_message_on_socket(serialize_with_transfer_result); result.is_error()) {
             dbgln("Failed to post message: {}", result.error());
             disentangle();
         }
-    });
+    }));
 }
 
 ErrorOr<MessagePort::ParseDecision> MessagePort::parse_message()

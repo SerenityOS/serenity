@@ -298,3 +298,122 @@ TEST_CASE(buffered_memory_stream_read_line)
     EXPECT(read_or_error.is_error());
     EXPECT_EQ(read_or_error.error().code(), EMSGSIZE);
 }
+
+TEST_CASE(buffered_memory_stream_read_line_with_resizing_where_stream_buffer_is_sufficient)
+{
+    auto array = Array<u8, 24> {};
+
+    // The first line is 8 A's, the second line is 14 A's, two bytes are newline characters.
+    array.fill('A');
+    array[8] = '\n';
+    array[23] = '\n';
+
+    auto memory_stream = make<FixedMemoryStream>(array.span(), FixedMemoryStream::Mode::ReadOnly);
+
+    auto buffered_stream = TRY_OR_FAIL(InputBufferedSeekable<FixedMemoryStream>::create(move(memory_stream), 64));
+
+    size_t initial_buffer_size = 4;
+    auto buffer = TRY_OR_FAIL(ByteBuffer::create_zeroed(initial_buffer_size));
+
+    auto read_bytes = TRY_OR_FAIL(buffered_stream->read_line_with_resize(buffer));
+
+    // The first line, which is 8 A's, should be read in.
+    EXPECT_EQ(read_bytes, "AAAAAAAA"sv);
+
+    read_bytes = TRY_OR_FAIL(buffered_stream->read_line_with_resize(buffer));
+
+    // The second line, which is 14 A's, should be read in.
+    EXPECT_EQ(read_bytes, "AAAAAAAAAAAAAA"sv);
+
+    // A resize should have happened because the user supplied buffer was too small.
+    EXPECT(buffer.size() > initial_buffer_size);
+
+    // Reading from the stream again should return an empty StringView.
+    read_bytes = TRY_OR_FAIL(buffered_stream->read_line_with_resize(buffer));
+    EXPECT(read_bytes.is_empty());
+}
+
+TEST_CASE(buffered_memory_stream_read_line_with_resizing_where_stream_buffer_is_not_sufficient)
+{
+    // This is the same as "buffered_memory_stream_read_line_with_resizing_where_stream_buffer_is_sufficient"
+    // but with a smaller stream buffer, meaning that the line must be read into the user supplied
+    // buffer in chunks. All assertions and invariants should remain unchanged.
+    auto array = Array<u8, 24> {};
+
+    // The first line is 8 A's, the second line is 14 A's, two bytes are newline characters.
+    array.fill('A');
+    array[8] = '\n';
+    array[23] = '\n';
+
+    auto memory_stream = make<FixedMemoryStream>(array.span(), FixedMemoryStream::Mode::ReadOnly);
+
+    auto buffered_stream = TRY_OR_FAIL(InputBufferedSeekable<FixedMemoryStream>::create(move(memory_stream), 6));
+
+    size_t initial_buffer_size = 4;
+    auto buffer = TRY_OR_FAIL(ByteBuffer::create_zeroed(initial_buffer_size));
+
+    auto read_bytes = TRY_OR_FAIL(buffered_stream->read_line_with_resize(buffer));
+
+    // The first line, which is 8 A's, should be read in.
+    EXPECT_EQ(read_bytes, "AAAAAAAA"sv);
+
+    read_bytes = TRY_OR_FAIL(buffered_stream->read_line_with_resize(buffer));
+
+    // The second line, which is 14 A's, should be read in.
+    EXPECT_EQ(read_bytes, "AAAAAAAAAAAAAA"sv);
+
+    // A resize should have happened because the user supplied buffer was too small.
+    EXPECT(buffer.size() > initial_buffer_size);
+
+    // Reading from the stream again should return an empty StringView.
+    read_bytes = TRY_OR_FAIL(buffered_stream->read_line_with_resize(buffer));
+    EXPECT(read_bytes.is_empty());
+}
+
+TEST_CASE(buffered_memory_stream_read_line_with_resizing_with_no_newline_where_stream_buffer_is_sufficient)
+{
+    auto array = Array<u8, 24> {};
+
+    array.fill('A');
+
+    auto memory_stream = make<FixedMemoryStream>(array.span(), FixedMemoryStream::Mode::ReadOnly);
+
+    auto buffered_stream = TRY_OR_FAIL(InputBufferedSeekable<FixedMemoryStream>::create(move(memory_stream), 64));
+
+    size_t initial_buffer_size = 4;
+    auto buffer = TRY_OR_FAIL(ByteBuffer::create_zeroed(initial_buffer_size));
+
+    auto read_bytes = TRY_OR_FAIL(buffered_stream->read_line_with_resize(buffer));
+
+    // All the contents of the buffer should have been read in.
+    EXPECT_EQ(read_bytes.length(), array.size());
+
+    // Reading from the stream again should return an empty StringView.
+    read_bytes = TRY_OR_FAIL(buffered_stream->read_line_with_resize(buffer));
+    EXPECT(read_bytes.is_empty());
+}
+
+TEST_CASE(buffered_memory_stream_read_line_with_resizing_with_no_newline_where_stream_buffer_is_not_sufficient)
+{
+    // This should behave as buffered_memory_stream_read_line_with_resizing_with_no_newline_where_stream_buffer_is_sufficient
+    // but the internal buffer of the stream must be copied over in chunks.
+    auto array = Array<u8, 24> {};
+
+    array.fill('A');
+
+    auto memory_stream = make<FixedMemoryStream>(array.span(), FixedMemoryStream::Mode::ReadOnly);
+
+    auto buffered_stream = TRY_OR_FAIL(InputBufferedSeekable<FixedMemoryStream>::create(move(memory_stream), 6));
+
+    size_t initial_buffer_size = 4;
+    auto buffer = TRY_OR_FAIL(ByteBuffer::create_zeroed(initial_buffer_size));
+
+    auto read_bytes = TRY_OR_FAIL(buffered_stream->read_line_with_resize(buffer));
+
+    // All the contents of the buffer should have been read in.
+    EXPECT_EQ(read_bytes.length(), array.size());
+
+    // Reading from the stream again should return an empty StringView.
+    read_bytes = TRY_OR_FAIL(buffered_stream->read_line_with_resize(buffer));
+    EXPECT(read_bytes.is_empty());
+}

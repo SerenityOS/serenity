@@ -528,12 +528,7 @@ if (BUILD_LAGOM)
     # FIXME: How about we don't include Kernel/API from random high-level libraries?
     install(FILES ${SERENITY_PROJECT_ROOT}/Kernel/API/KeyCode.h DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/Kernel/API")
 
-    # FIXME: LibLocaleData is an object lib in Lagom, because the weak symbol trick we use on serenity
-    #    straight up isn't supposed to work per ELF rules
     target_link_libraries(LibLocale PRIVATE LibTimeZone)
-    if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
-        install(TARGETS LibLocaleData EXPORT LagomTargets)
-    endif()
 
     add_serenity_subdirectory(Userland/Shell)
 

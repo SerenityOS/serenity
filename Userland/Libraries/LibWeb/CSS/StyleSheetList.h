@@ -50,8 +50,6 @@ private:
     void add_sheet(CSSStyleSheet&);
     void remove_sheet(CSSStyleSheet&);
 
-    void sort_sheets();
-
     JS::NonnullGCPtr<DOM::Document> m_document;
     Vector<JS::NonnullGCPtr<CSSStyleSheet>> m_sheets;
 

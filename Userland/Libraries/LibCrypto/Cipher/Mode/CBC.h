@@ -23,7 +23,7 @@ public:
 
     virtual ~CBC() = default;
     template<typename... Args>
-    explicit constexpr CBC<T>(Args... args)
+    explicit constexpr CBC(Args... args)
         : Mode<T>(args...)
     {
     }

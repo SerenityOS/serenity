@@ -30,6 +30,7 @@ enum class Address : u16 {
     SATP = 0x180,
 
     // Unprivileged Counters/Timers
+    CYCLE = 0xc00,
     TIME = 0xc01,
 };
 

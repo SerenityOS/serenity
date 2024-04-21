@@ -125,7 +125,6 @@ void PageClient::visit_edges(JS::Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_page);
-    visitor.visit(m_console_clients);
 }
 
 ConnectionFromClient& PageClient::client() const
@@ -681,10 +680,10 @@ void PageClient::initialize_js_console(Web::DOM::Document& document)
 {
     auto& realm = document.realm();
     auto console_object = realm.intrinsics().console_object();
-    auto console_client = make<WebContentConsoleClient>(console_object->console(), document.realm(), *this);
+    auto console_client = heap().allocate_without_realm<WebContentConsoleClient>(console_object->console(), document.realm(), *this);
     console_object->console().set_client(*console_client);
 
-    m_console_clients.set(document, move(console_client));
+    m_console_clients.set(document, console_client);
 }
 
 void PageClient::destroy_js_console(Web::DOM::Document& document)

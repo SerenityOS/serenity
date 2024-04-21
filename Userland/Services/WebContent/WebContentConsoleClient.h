@@ -20,14 +20,20 @@ namespace WebContent {
 
 class WebContentConsoleClient final : public JS::ConsoleClient
     , public Weakable<WebContentConsoleClient> {
+    JS_CELL(WebContentConsoleClient, JS::ConsoleClient);
+    JS_DECLARE_ALLOCATOR(WebContentConsoleClient);
+
 public:
-    WebContentConsoleClient(JS::Console&, JS::Realm&, PageClient&);
+    virtual ~WebContentConsoleClient() override;
 
     void handle_input(ByteString const& js_source);
     void send_messages(i32 start_index);
     void report_exception(JS::Error const&, bool) override;
 
 private:
+    WebContentConsoleClient(JS::Console&, JS::Realm&, PageClient&);
+
+    virtual void visit_edges(JS::Cell::Visitor&) override;
     virtual void clear() override;
     virtual JS::ThrowCompletionOr<JS::Value> printer(JS::Console::LogLevel log_level, PrinterArguments) override;
 
@@ -38,7 +44,7 @@ private:
     }
 
     JS::NonnullGCPtr<PageClient> m_client;
-    JS::Handle<ConsoleGlobalEnvironmentExtensions> m_console_global_environment_extensions;
+    JS::GCPtr<ConsoleGlobalEnvironmentExtensions> m_console_global_environment_extensions;
 
     void clear_output();
     void print_html(ByteString const& line);

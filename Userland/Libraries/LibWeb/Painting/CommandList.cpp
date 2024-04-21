@@ -173,7 +173,7 @@ void CommandList::execute(CommandExecutor& executor)
                 return executor.draw_ellipse(command.rect, command.color, command.thickness);
             },
             [&](FillEllipse const& command) {
-                return executor.fill_ellipse(command.rect, command.color, command.blend_mode);
+                return executor.fill_ellipse(command.rect, command.color);
             },
             [&](DrawLine const& command) {
                 return executor.draw_line(command.color, command.from, command.to, command.thickness,

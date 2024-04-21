@@ -314,7 +314,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Streams::ReadableStream>> Blob::get_stream(
             auto bytes = m_byte_buffer;
 
             // 2. Queue a global task on the file reading task source given blob’s relevant global object to perform the following steps:
-            HTML::queue_global_task(HTML::Task::Source::FileReading, realm.global_object(), [stream, bytes = move(bytes)]() {
+            HTML::queue_global_task(HTML::Task::Source::FileReading, realm.global_object(), JS::create_heap_function(heap(), [stream, bytes = move(bytes)]() {
                 // NOTE: Using an TemporaryExecutionContext here results in a crash in the method HTML::incumbent_settings_object()
                 //       since we end up in a state where we have no execution context + an event loop with an empty incumbent
                 //       settings object stack. We still need an execution context therefore we push the realm's execution context
@@ -348,7 +348,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Streams::ReadableStream>> Blob::get_stream(
                 //        Nowhere in the spec seems to mention this - but testing against other implementations the stream does appear to be closed after reading all data (closed callback is fired).
                 //        Probably there is a better way of doing this.
                 readable_stream_close(*stream);
-            });
+            }));
         }
     }
 
