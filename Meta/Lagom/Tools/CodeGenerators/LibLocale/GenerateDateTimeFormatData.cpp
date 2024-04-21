@@ -1796,10 +1796,10 @@ struct CalendarPatternImpl {
     CalendarPattern to_unicode_calendar_pattern() const {
         CalendarPattern calendar_pattern {};
 
-        calendar_pattern.skeleton = MUST(String::from_utf8(decode_string(skeleton)));
-        calendar_pattern.pattern = MUST(String::from_utf8(decode_string(pattern)));
+        calendar_pattern.skeleton = String::from_utf8_without_validation(decode_string(skeleton).bytes());
+        calendar_pattern.pattern = String::from_utf8_without_validation(decode_string(pattern).bytes());
         if (pattern12 != 0)
-            calendar_pattern.pattern12 = MUST(String::from_utf8(decode_string(pattern12)));
+            calendar_pattern.pattern12 = String::from_utf8_without_validation(decode_string(pattern12).bytes());
 
         convert_calendar_fields(*this, calendar_pattern);
         return calendar_pattern;
@@ -1828,9 +1828,9 @@ struct CalendarRangePatternImpl {
 
         if (field != -1)
             calendar_range_pattern.field = static_cast<CalendarRangePattern::Field>(field);
-        calendar_range_pattern.start_range = MUST(String::from_utf8(decode_string(start_range)));
+        calendar_range_pattern.start_range = String::from_utf8_without_validation(decode_string(start_range).bytes());
         calendar_range_pattern.separator = decode_string(separator);
-        calendar_range_pattern.end_range = MUST(String::from_utf8(decode_string(end_range)));
+        calendar_range_pattern.end_range = String::from_utf8_without_validation(decode_string(end_range).bytes());
 
         convert_calendar_fields(*this, calendar_range_pattern);
         return calendar_range_pattern;
