@@ -2582,121 +2582,154 @@ void HTMLParser::adjust_mathml_attributes(HTMLToken& token)
 
 void HTMLParser::adjust_svg_tag_names(HTMLToken& token)
 {
-    token.adjust_tag_name("altglyph"_fly_string, "altGlyph"_fly_string);
-    token.adjust_tag_name("altglyphdef"_fly_string, "altGlyphDef"_fly_string);
-    token.adjust_tag_name("altglyphitem"_fly_string, "altGlyphItem"_fly_string);
-    token.adjust_tag_name("animatecolor"_fly_string, "animateColor"_fly_string);
-    token.adjust_tag_name("animatemotion"_fly_string, "animateMotion"_fly_string);
-    token.adjust_tag_name("animatetransform"_fly_string, "animateTransform"_fly_string);
-    token.adjust_tag_name("clippath"_fly_string, "clipPath"_fly_string);
-    token.adjust_tag_name("feblend"_fly_string, "feBlend"_fly_string);
-    token.adjust_tag_name("fecolormatrix"_fly_string, "feColorMatrix"_fly_string);
-    token.adjust_tag_name("fecomponenttransfer"_fly_string, "feComponentTransfer"_fly_string);
-    token.adjust_tag_name("fecomposite"_fly_string, "feComposite"_fly_string);
-    token.adjust_tag_name("feconvolvematrix"_fly_string, "feConvolveMatrix"_fly_string);
-    token.adjust_tag_name("fediffuselighting"_fly_string, "feDiffuseLighting"_fly_string);
-    token.adjust_tag_name("fedisplacementmap"_fly_string, "feDisplacementMap"_fly_string);
-    token.adjust_tag_name("fedistantlight"_fly_string, "feDistantLight"_fly_string);
-    token.adjust_tag_name("fedropshadow"_fly_string, "feDropShadow"_fly_string);
-    token.adjust_tag_name("feflood"_fly_string, "feFlood"_fly_string);
-    token.adjust_tag_name("fefunca"_fly_string, "feFuncA"_fly_string);
-    token.adjust_tag_name("fefuncb"_fly_string, "feFuncB"_fly_string);
-    token.adjust_tag_name("fefuncg"_fly_string, "feFuncG"_fly_string);
-    token.adjust_tag_name("fefuncr"_fly_string, "feFuncR"_fly_string);
-    token.adjust_tag_name("fegaussianblur"_fly_string, "feGaussianBlur"_fly_string);
-    token.adjust_tag_name("feimage"_fly_string, "feImage"_fly_string);
-    token.adjust_tag_name("femerge"_fly_string, "feMerge"_fly_string);
-    token.adjust_tag_name("femergenode"_fly_string, "feMergeNode"_fly_string);
-    token.adjust_tag_name("femorphology"_fly_string, "feMorphology"_fly_string);
-    token.adjust_tag_name("feoffset"_fly_string, "feOffset"_fly_string);
-    token.adjust_tag_name("fepointlight"_fly_string, "fePointLight"_fly_string);
-    token.adjust_tag_name("fespecularlighting"_fly_string, "feSpecularLighting"_fly_string);
-    token.adjust_tag_name("fespotlight"_fly_string, "feSpotlight"_fly_string);
-    token.adjust_tag_name("foreignobject"_fly_string, "foreignObject"_fly_string);
-    token.adjust_tag_name("glyphref"_fly_string, "glyphRef"_fly_string);
-    token.adjust_tag_name("lineargradient"_fly_string, "linearGradient"_fly_string);
-    token.adjust_tag_name("radialgradient"_fly_string, "radialGradient"_fly_string);
-    token.adjust_tag_name("textpath"_fly_string, "textPath"_fly_string);
+    struct TagNameAdjustment {
+        FlyString from;
+        FlyString to;
+    };
+
+    static TagNameAdjustment adjustments[] = {
+        { "altglyph"_fly_string, "altGlyph"_fly_string },
+        { "altglyphdef"_fly_string, "altGlyphDef"_fly_string },
+        { "altglyphitem"_fly_string, "altGlyphItem"_fly_string },
+        { "animatecolor"_fly_string, "animateColor"_fly_string },
+        { "animatemotion"_fly_string, "animateMotion"_fly_string },
+        { "animatetransform"_fly_string, "animateTransform"_fly_string },
+        { "clippath"_fly_string, "clipPath"_fly_string },
+        { "feblend"_fly_string, "feBlend"_fly_string },
+        { "fecolormatrix"_fly_string, "feColorMatrix"_fly_string },
+        { "fecomponenttransfer"_fly_string, "feComponentTransfer"_fly_string },
+        { "fecomposite"_fly_string, "feComposite"_fly_string },
+        { "feconvolvematrix"_fly_string, "feConvolveMatrix"_fly_string },
+        { "fediffuselighting"_fly_string, "feDiffuseLighting"_fly_string },
+        { "fedisplacementmap"_fly_string, "feDisplacementMap"_fly_string },
+        { "fedistantlight"_fly_string, "feDistantLight"_fly_string },
+        { "fedropshadow"_fly_string, "feDropShadow"_fly_string },
+        { "feflood"_fly_string, "feFlood"_fly_string },
+        { "fefunca"_fly_string, "feFuncA"_fly_string },
+        { "fefuncb"_fly_string, "feFuncB"_fly_string },
+        { "fefuncg"_fly_string, "feFuncG"_fly_string },
+        { "fefuncr"_fly_string, "feFuncR"_fly_string },
+        { "fegaussianblur"_fly_string, "feGaussianBlur"_fly_string },
+        { "feimage"_fly_string, "feImage"_fly_string },
+        { "femerge"_fly_string, "feMerge"_fly_string },
+        { "femergenode"_fly_string, "feMergeNode"_fly_string },
+        { "femorphology"_fly_string, "feMorphology"_fly_string },
+        { "feoffset"_fly_string, "feOffset"_fly_string },
+        { "fepointlight"_fly_string, "fePointLight"_fly_string },
+        { "fespecularlighting"_fly_string, "feSpecularLighting"_fly_string },
+        { "fespotlight"_fly_string, "feSpotlight"_fly_string },
+        { "foreignobject"_fly_string, "foreignObject"_fly_string },
+        { "glyphref"_fly_string, "glyphRef"_fly_string },
+        { "lineargradient"_fly_string, "linearGradient"_fly_string },
+        { "radialgradient"_fly_string, "radialGradient"_fly_string },
+        { "textpath"_fly_string, "textPath"_fly_string },
+    };
+
+    for (auto const& adjustment : adjustments) {
+        token.adjust_tag_name(adjustment.from, adjustment.to);
+    }
 }
 
 void HTMLParser::adjust_svg_attributes(HTMLToken& token)
 {
-    token.adjust_attribute_name("attributename"_fly_string, "attributeName"_fly_string);
-    token.adjust_attribute_name("attributetype"_fly_string, "attributeType"_fly_string);
-    token.adjust_attribute_name("basefrequency"_fly_string, "baseFrequency"_fly_string);
-    token.adjust_attribute_name("baseprofile"_fly_string, "baseProfile"_fly_string);
-    token.adjust_attribute_name("calcmode"_fly_string, "calcMode"_fly_string);
-    token.adjust_attribute_name("clippathunits"_fly_string, "clipPathUnits"_fly_string);
-    token.adjust_attribute_name("diffuseconstant"_fly_string, "diffuseConstant"_fly_string);
-    token.adjust_attribute_name("edgemode"_fly_string, "edgeMode"_fly_string);
-    token.adjust_attribute_name("filterunits"_fly_string, "filterUnits"_fly_string);
-    token.adjust_attribute_name("glyphref"_fly_string, "glyphRef"_fly_string);
-    token.adjust_attribute_name("gradienttransform"_fly_string, "gradientTransform"_fly_string);
-    token.adjust_attribute_name("gradientunits"_fly_string, "gradientUnits"_fly_string);
-    token.adjust_attribute_name("kernelmatrix"_fly_string, "kernelMatrix"_fly_string);
-    token.adjust_attribute_name("kernelunitlength"_fly_string, "kernelUnitLength"_fly_string);
-    token.adjust_attribute_name("keypoints"_fly_string, "keyPoints"_fly_string);
-    token.adjust_attribute_name("keysplines"_fly_string, "keySplines"_fly_string);
-    token.adjust_attribute_name("keytimes"_fly_string, "keyTimes"_fly_string);
-    token.adjust_attribute_name("lengthadjust"_fly_string, "lengthAdjust"_fly_string);
-    token.adjust_attribute_name("limitingconeangle"_fly_string, "limitingConeAngle"_fly_string);
-    token.adjust_attribute_name("markerheight"_fly_string, "markerHeight"_fly_string);
-    token.adjust_attribute_name("markerunits"_fly_string, "markerUnits"_fly_string);
-    token.adjust_attribute_name("markerwidth"_fly_string, "markerWidth"_fly_string);
-    token.adjust_attribute_name("maskcontentunits"_fly_string, "maskContentUnits"_fly_string);
-    token.adjust_attribute_name("maskunits"_fly_string, "maskUnits"_fly_string);
-    token.adjust_attribute_name("numoctaves"_fly_string, "numOctaves"_fly_string);
-    token.adjust_attribute_name("pathlength"_fly_string, "pathLength"_fly_string);
-    token.adjust_attribute_name("patterncontentunits"_fly_string, "patternContentUnits"_fly_string);
-    token.adjust_attribute_name("patterntransform"_fly_string, "patternTransform"_fly_string);
-    token.adjust_attribute_name("patternunits"_fly_string, "patternUnits"_fly_string);
-    token.adjust_attribute_name("pointsatx"_fly_string, "pointsAtX"_fly_string);
-    token.adjust_attribute_name("pointsaty"_fly_string, "pointsAtY"_fly_string);
-    token.adjust_attribute_name("pointsatz"_fly_string, "pointsAtZ"_fly_string);
-    token.adjust_attribute_name("preservealpha"_fly_string, "preserveAlpha"_fly_string);
-    token.adjust_attribute_name("preserveaspectratio"_fly_string, "preserveAspectRatio"_fly_string);
-    token.adjust_attribute_name("primitiveunits"_fly_string, "primitiveUnits"_fly_string);
-    token.adjust_attribute_name("refx"_fly_string, "refX"_fly_string);
-    token.adjust_attribute_name("refy"_fly_string, "refY"_fly_string);
-    token.adjust_attribute_name("repeatcount"_fly_string, "repeatCount"_fly_string);
-    token.adjust_attribute_name("repeatdur"_fly_string, "repeatDur"_fly_string);
-    token.adjust_attribute_name("requiredextensions"_fly_string, "requiredExtensions"_fly_string);
-    token.adjust_attribute_name("requiredfeatures"_fly_string, "requiredFeatures"_fly_string);
-    token.adjust_attribute_name("specularconstant"_fly_string, "specularConstant"_fly_string);
-    token.adjust_attribute_name("specularexponent"_fly_string, "specularExponent"_fly_string);
-    token.adjust_attribute_name("spreadmethod"_fly_string, "spreadMethod"_fly_string);
-    token.adjust_attribute_name("startoffset"_fly_string, "startOffset"_fly_string);
-    token.adjust_attribute_name("stddeviation"_fly_string, "stdDeviation"_fly_string);
-    token.adjust_attribute_name("stitchtiles"_fly_string, "stitchTiles"_fly_string);
-    token.adjust_attribute_name("surfacescale"_fly_string, "surfaceScale"_fly_string);
-    token.adjust_attribute_name("systemlanguage"_fly_string, "systemLanguage"_fly_string);
-    token.adjust_attribute_name("tablevalues"_fly_string, "tableValues"_fly_string);
-    token.adjust_attribute_name("targetx"_fly_string, "targetX"_fly_string);
-    token.adjust_attribute_name("targety"_fly_string, "targetY"_fly_string);
-    token.adjust_attribute_name("textlength"_fly_string, "textLength"_fly_string);
-    token.adjust_attribute_name("viewbox"_fly_string, "viewBox"_fly_string);
-    token.adjust_attribute_name("viewtarget"_fly_string, "viewTarget"_fly_string);
-    token.adjust_attribute_name("xchannelselector"_fly_string, "xChannelSelector"_fly_string);
-    token.adjust_attribute_name("ychannelselector"_fly_string, "yChannelSelector"_fly_string);
-    token.adjust_attribute_name("zoomandpan"_fly_string, "zoomAndPan"_fly_string);
+    struct AttributeAdjustment {
+        FlyString from;
+        FlyString to;
+    };
+
+    static AttributeAdjustment adjustments[] = {
+        { "attributename"_fly_string, "attributeName"_fly_string },
+        { "attributetype"_fly_string, "attributeType"_fly_string },
+        { "basefrequency"_fly_string, "baseFrequency"_fly_string },
+        { "baseprofile"_fly_string, "baseProfile"_fly_string },
+        { "calcmode"_fly_string, "calcMode"_fly_string },
+        { "clippathunits"_fly_string, "clipPathUnits"_fly_string },
+        { "diffuseconstant"_fly_string, "diffuseConstant"_fly_string },
+        { "edgemode"_fly_string, "edgeMode"_fly_string },
+        { "filterunits"_fly_string, "filterUnits"_fly_string },
+        { "glyphref"_fly_string, "glyphRef"_fly_string },
+        { "gradienttransform"_fly_string, "gradientTransform"_fly_string },
+        { "gradientunits"_fly_string, "gradientUnits"_fly_string },
+        { "kernelmatrix"_fly_string, "kernelMatrix"_fly_string },
+        { "kernelunitlength"_fly_string, "kernelUnitLength"_fly_string },
+        { "keypoints"_fly_string, "keyPoints"_fly_string },
+        { "keysplines"_fly_string, "keySplines"_fly_string },
+        { "keytimes"_fly_string, "keyTimes"_fly_string },
+        { "lengthadjust"_fly_string, "lengthAdjust"_fly_string },
+        { "limitingconeangle"_fly_string, "limitingConeAngle"_fly_string },
+        { "markerheight"_fly_string, "markerHeight"_fly_string },
+        { "markerunits"_fly_string, "markerUnits"_fly_string },
+        { "markerwidth"_fly_string, "markerWidth"_fly_string },
+        { "maskcontentunits"_fly_string, "maskContentUnits"_fly_string },
+        { "maskunits"_fly_string, "maskUnits"_fly_string },
+        { "numoctaves"_fly_string, "numOctaves"_fly_string },
+        { "pathlength"_fly_string, "pathLength"_fly_string },
+        { "patterncontentunits"_fly_string, "patternContentUnits"_fly_string },
+        { "patterntransform"_fly_string, "patternTransform"_fly_string },
+        { "patternunits"_fly_string, "patternUnits"_fly_string },
+        { "pointsatx"_fly_string, "pointsAtX"_fly_string },
+        { "pointsaty"_fly_string, "pointsAtY"_fly_string },
+        { "pointsatz"_fly_string, "pointsAtZ"_fly_string },
+        { "preservealpha"_fly_string, "preserveAlpha"_fly_string },
+        { "preserveaspectratio"_fly_string, "preserveAspectRatio"_fly_string },
+        { "primitiveunits"_fly_string, "primitiveUnits"_fly_string },
+        { "refx"_fly_string, "refX"_fly_string },
+        { "refy"_fly_string, "refY"_fly_string },
+        { "repeatcount"_fly_string, "repeatCount"_fly_string },
+        { "repeatdur"_fly_string, "repeatDur"_fly_string },
+        { "requiredextensions"_fly_string, "requiredExtensions"_fly_string },
+        { "requiredfeatures"_fly_string, "requiredFeatures"_fly_string },
+        { "specularconstant"_fly_string, "specularConstant"_fly_string },
+        { "specularexponent"_fly_string, "specularExponent"_fly_string },
+        { "spreadmethod"_fly_string, "spreadMethod"_fly_string },
+        { "startoffset"_fly_string, "startOffset"_fly_string },
+        { "stddeviation"_fly_string, "stdDeviation"_fly_string },
+        { "stitchtiles"_fly_string, "stitchTiles"_fly_string },
+        { "surfacescale"_fly_string, "surfaceScale"_fly_string },
+        { "systemlanguage"_fly_string, "systemLanguage"_fly_string },
+        { "tablevalues"_fly_string, "tableValues"_fly_string },
+        { "targetx"_fly_string, "targetX"_fly_string },
+        { "targety"_fly_string, "targetY"_fly_string },
+        { "textlength"_fly_string, "textLength"_fly_string },
+        { "viewbox"_fly_string, "viewBox"_fly_string },
+        { "viewtarget"_fly_string, "viewTarget"_fly_string },
+        { "xchannelselector"_fly_string, "xChannelSelector"_fly_string },
+        { "ychannelselector"_fly_string, "yChannelSelector"_fly_string },
+        { "zoomandpan"_fly_string, "zoomAndPan"_fly_string },
+    };
+
+    for (auto const& adjustment : adjustments) {
+        token.adjust_attribute_name(adjustment.from, adjustment.to);
+    }
 }
 
 // https://html.spec.whatwg.org/multipage/parsing.html#adjust-foreign-attributes
 void HTMLParser::adjust_foreign_attributes(HTMLToken& token)
 {
-    token.adjust_foreign_attribute("xlink:actuate"_fly_string, "xlink"_fly_string, "actuate"_fly_string, Namespace::XLink);
-    token.adjust_foreign_attribute("xlink:arcrole"_fly_string, "xlink"_fly_string, "arcrole"_fly_string, Namespace::XLink);
-    token.adjust_foreign_attribute("xlink:href"_fly_string, "xlink"_fly_string, "href"_fly_string, Namespace::XLink);
-    token.adjust_foreign_attribute("xlink:role"_fly_string, "xlink"_fly_string, "role"_fly_string, Namespace::XLink);
-    token.adjust_foreign_attribute("xlink:show"_fly_string, "xlink"_fly_string, "show"_fly_string, Namespace::XLink);
-    token.adjust_foreign_attribute("xlink:title"_fly_string, "xlink"_fly_string, "title"_fly_string, Namespace::XLink);
-    token.adjust_foreign_attribute("xlink:type"_fly_string, "xlink"_fly_string, "type"_fly_string, Namespace::XLink);
+    struct ForeignAttributeAdjustment {
+        FlyString attribute_name;
+        Optional<FlyString> prefix;
+        FlyString local_name;
+        FlyString namespace_;
+    };
 
-    token.adjust_foreign_attribute("xml:lang"_fly_string, "xml"_fly_string, "lang"_fly_string, Namespace::XML);
-    token.adjust_foreign_attribute("xml:space"_fly_string, "xml"_fly_string, "space"_fly_string, Namespace::XML);
+    static ForeignAttributeAdjustment adjustments[] = {
+        { "xlink:actuate"_fly_string, "xlink"_fly_string, "actuate"_fly_string, Namespace::XLink },
+        { "xlink:arcrole"_fly_string, "xlink"_fly_string, "arcrole"_fly_string, Namespace::XLink },
+        { "xlink:href"_fly_string, "xlink"_fly_string, "href"_fly_string, Namespace::XLink },
+        { "xlink:role"_fly_string, "xlink"_fly_string, "role"_fly_string, Namespace::XLink },
+        { "xlink:show"_fly_string, "xlink"_fly_string, "show"_fly_string, Namespace::XLink },
+        { "xlink:title"_fly_string, "xlink"_fly_string, "title"_fly_string, Namespace::XLink },
+        { "xlink:type"_fly_string, "xlink"_fly_string, "type"_fly_string, Namespace::XLink },
+        { "xml:lang"_fly_string, "xml"_fly_string, "lang"_fly_string, Namespace::XML },
+        { "xml:space"_fly_string, "xml"_fly_string, "space"_fly_string, Namespace::XML },
+        { "xmlns"_fly_string, {}, "xmlns"_fly_string, Namespace::XMLNS },
+        { "xmlns:xlink"_fly_string, "xmlns"_fly_string, "xlink"_fly_string, Namespace::XMLNS },
+    };
 
-    token.adjust_foreign_attribute("xmlns"_fly_string, {}, "xmlns"_fly_string, Namespace::XMLNS);
-    token.adjust_foreign_attribute("xmlns:xlink"_fly_string, "xmlns"_fly_string, "xlink"_fly_string, Namespace::XMLNS);
+    for (auto const& adjustment : adjustments) {
+        token.adjust_foreign_attribute(adjustment.attribute_name, adjustment.prefix, adjustment.local_name, adjustment.namespace_);
+    }
 }
 
 void HTMLParser::increment_script_nesting_level()
