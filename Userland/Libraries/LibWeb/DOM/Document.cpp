@@ -4070,6 +4070,9 @@ void Document::update_for_history_step_application(JS::NonnullGCPtr<HTML::Sessio
 
         // 5. If documentIsNew is false, then:
         if (!document_is_new) {
+            // NOTE: Not in the spec, but otherwise document's url won't be updated in case of a same-document back/forward navigation.
+            set_url(entry->url());
+
             // AD HOC: Skip this in situations the spec steps don't account for
             if (update_navigation_api) {
                 // 1. Update the navigation API entries for a same-document navigation given navigation, entry, and "traverse".
