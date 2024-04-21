@@ -679,12 +679,12 @@ WebIDL::ExceptionOr<NavigationResult> Navigation::perform_a_navigation_api_trave
 
             // 1. Queue a global task on the navigation and traversal task source given navigation's relevant global object
             //    to reject the finished promise for apiMethodTracker with an "InvalidStateError" DOMException.
-            queue_global_task(HTML::Task::Source::NavigationAndTraversal, relevant_global_object(*this), [this, api_method_tracker] {
+            queue_global_task(HTML::Task::Source::NavigationAndTraversal, relevant_global_object(*this), JS::create_heap_function(heap(), [this, api_method_tracker] {
                 auto& reject_realm = relevant_realm(*this);
                 TemporaryExecutionContext execution_context { relevant_settings_object(*this) };
                 WebIDL::reject_promise(reject_realm, api_method_tracker->finished_promise,
                     WebIDL::InvalidStateError::create(reject_realm, "Cannot traverse with stale session history entry"_fly_string));
-            });
+            }));
 
             // 2. Abort these steps.
             return;
@@ -712,20 +712,20 @@ WebIDL::ExceptionOr<NavigationResult> Navigation::perform_a_navigation_api_trave
         auto& realm = relevant_realm(*this);
         auto& global = relevant_global_object(*this);
         if (result == TraversableNavigable::HistoryStepResult::CanceledByBeforeUnload) {
-            queue_global_task(Task::Source::NavigationAndTraversal, global, [this, api_method_tracker, &realm] {
+            queue_global_task(Task::Source::NavigationAndTraversal, global, JS::create_heap_function(heap(), [this, api_method_tracker, &realm] {
                 TemporaryExecutionContext execution_context { relevant_settings_object(*this) };
                 reject_the_finished_promise(api_method_tracker, WebIDL::AbortError::create(realm, "Navigation cancelled by beforeunload"_fly_string));
-            });
+            }));
         }
 
         // 6. If result is "initiator-disallowed", then queue a global task on the navigation and traversal task source
         //    given navigation's relevant global object to reject the finished promise for apiMethodTracker with a
         //    new "SecurityError" DOMException created in navigation's relevant realm.
         if (result == TraversableNavigable::HistoryStepResult::InitiatorDisallowed) {
-            queue_global_task(Task::Source::NavigationAndTraversal, global, [this, api_method_tracker, &realm] {
+            queue_global_task(Task::Source::NavigationAndTraversal, global, JS::create_heap_function(heap(), [this, api_method_tracker, &realm] {
                 TemporaryExecutionContext execution_context { relevant_settings_object(*this) };
                 reject_the_finished_promise(api_method_tracker, WebIDL::SecurityError::create(realm, "Navigation disallowed from this origin"_fly_string));
-            });
+            }));
         }
     });
 

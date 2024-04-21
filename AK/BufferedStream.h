@@ -115,6 +115,52 @@ public:
         return m_buffer.read(buffer);
     }
 
+    ErrorOr<StringView> read_line_with_resize(ByteBuffer& buffer)
+    {
+        return StringView { TRY(read_until_with_resize(buffer, "\n"sv)) };
+    }
+
+    ErrorOr<Bytes> read_until_with_resize(ByteBuffer& buffer, StringView candidate)
+    {
+        return read_until_any_of_with_resize(buffer, Array { candidate });
+    }
+
+    template<size_t N>
+    ErrorOr<Bytes> read_until_any_of_with_resize(ByteBuffer& buffer, Array<StringView, N> candidates)
+    {
+        if (!stream().is_open())
+            return Error::from_errno(ENOTCONN);
+
+        auto candidate = TRY(find_and_populate_until_any_of(candidates));
+
+        size_t bytes_read_to_user_buffer = 0;
+        while (!candidate.has_value()) {
+            if (m_buffer.used_space() == 0 && stream().is_eof()) {
+                // If we read to the very end of the buffered and unbuffered data,
+                // then treat the remainder as a full line (the last one), even if it
+                // doesn't end in the delimiter.
+                return buffer.span().trim(bytes_read_to_user_buffer);
+            }
+
+            if (buffer.size() - bytes_read_to_user_buffer < m_buffer.used_space()) {
+                // Resize the user supplied buffer because it cannot fit
+                // the contents of m_buffer.
+                TRY(buffer.try_resize(buffer.size() + m_buffer.used_space()));
+            }
+
+            // Read bytes into the buffer starting from the offset of how many bytes have previously been read.
+            bytes_read_to_user_buffer += m_buffer.read(buffer.span().slice(bytes_read_to_user_buffer)).size();
+            candidate = TRY(find_and_populate_until_any_of(candidates));
+        }
+
+        // Once the candidate has been found, read the contents of m_buffer into the buffer,
+        // offset by how many bytes have already been read in.
+        TRY(buffer.try_resize(bytes_read_to_user_buffer + candidate->offset));
+        m_buffer.read(buffer.span().slice(bytes_read_to_user_buffer));
+        TRY(m_buffer.discard(candidate->size));
+        return buffer.span();
+    }
+
     struct Match {
         size_t offset {};
         size_t size {};
@@ -307,6 +353,12 @@ public:
     template<size_t N>
     ErrorOr<Bytes> read_until_any_of(Bytes buffer, Array<StringView, N> candidates) { return m_helper.read_until_any_of(move(buffer), move(candidates)); }
     ErrorOr<bool> can_read_up_to_delimiter(ReadonlyBytes delimiter) { return m_helper.can_read_up_to_delimiter(delimiter); }
+
+    // Methods for reading stream into an auto-adjusting buffer
+    ErrorOr<StringView> read_line_with_resize(ByteBuffer& buffer) { return m_helper.read_line_with_resize(buffer); }
+    ErrorOr<Bytes> read_until_with_resize(ByteBuffer& buffer, StringView candidate) { return m_helper.read_until_with_resize(move(buffer), move(candidate)); }
+    template<size_t N>
+    ErrorOr<Bytes> read_until_any_of_with_resize(ByteBuffer& buffer, Array<StringView, N> candidates) { return m_helper.read_until_any_of_with_resize(move(buffer), move(candidates)); }
 
     size_t buffer_size() const { return m_helper.buffer_size(); }
 

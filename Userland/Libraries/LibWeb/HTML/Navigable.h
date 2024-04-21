@@ -59,6 +59,7 @@ public:
 
     String const& id() const { return m_id; }
     JS::GCPtr<Navigable> parent() const { return m_parent; }
+    bool is_ancestor_of(JS::NonnullGCPtr<Navigable>) const;
 
     bool is_closing() const { return m_closing; }
     void set_closing(bool value) { m_closing = value; }

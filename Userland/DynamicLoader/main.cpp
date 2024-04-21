@@ -15,16 +15,8 @@
 #include <unistd.h>
 
 char* __static_environ[] = { nullptr }; // We don't get the environment without some libc workarounds..
-
-static void init_libc()
-{
-    environ = __static_environ;
-    __environ_is_malloced = false;
-    __stdio_is_initialized = false;
-    // Initialise the copy of libc included statically in Loader.so,
-    // initialisation of the dynamic libc.so is done by the DynamicLinker
-    __libc_init();
-}
+char** environ = __static_environ;
+uintptr_t __stack_chk_guard = 0;
 
 static void perform_self_relocations(auxv_t* auxvp)
 {
@@ -118,8 +110,22 @@ void _entry(int argc, char** argv, char** envp)
     }
 
     auxv_t* auxvp = (auxv_t*)++env;
+
+    bool at_random_found = false;
+    for (auxv_t* entry = auxvp; entry->a_type != AT_NULL; ++entry) {
+        if (entry->a_type == AT_RANDOM) {
+            at_random_found = true;
+            __stack_chk_guard = *reinterpret_cast<u64*>(entry->a_un.a_ptr);
+            break;
+        }
+    }
+    VERIFY(at_random_found);
+
     perform_self_relocations(auxvp);
-    init_libc();
+
+    // Initialize the copy of libc included statically in Loader.so,
+    // initialization of the dynamic libc.so is done by the DynamicLinker
+    __libc_init();
 
     int main_program_fd = -1;
     ByteString main_program_path;

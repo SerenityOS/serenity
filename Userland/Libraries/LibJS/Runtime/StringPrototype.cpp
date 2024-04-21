@@ -776,8 +776,12 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::repeat)
     if (string.is_empty())
         return PrimitiveString::create(vm, String {});
 
+    auto repeated = String::repeated(string, n);
+    if (repeated.is_error())
+        return vm.throw_completion<RangeError>(ErrorType::StringRepeatCountMustNotOverflow);
+
     // 6. Return the String value that is made from n copies of S appended together.
-    return PrimitiveString::create(vm, String::repeated(string, n));
+    return PrimitiveString::create(vm, repeated.release_value());
 }
 
 // 22.1.3.19 String.prototype.replace ( searchValue, replaceValue ), https://tc39.es/ecma262/#sec-string.prototype.replace

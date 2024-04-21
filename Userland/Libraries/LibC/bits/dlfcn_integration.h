@@ -26,15 +26,3 @@ struct DlErrorMessage {
 
 struct __Dl_info;
 typedef struct __Dl_info Dl_info;
-
-typedef Result<void, DlErrorMessage> (*DlCloseFunction)(void*);
-typedef Result<void*, DlErrorMessage> (*DlOpenFunction)(char const*, int);
-typedef Result<void*, DlErrorMessage> (*DlSymFunction)(void*, char const*);
-typedef Result<void, DlErrorMessage> (*DlAddrFunction)(void const*, Dl_info*);
-
-extern "C" {
-extern DlCloseFunction __dlclose;
-extern DlOpenFunction __dlopen;
-extern DlSymFunction __dlsym;
-extern DlAddrFunction __dladdr;
-}

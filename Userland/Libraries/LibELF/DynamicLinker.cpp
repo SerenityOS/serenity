@@ -31,6 +31,7 @@
 #include <link.h>
 #include <pthread.h>
 #include <string.h>
+#include <sys/internals.h>
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <syscall.h>
@@ -73,54 +74,24 @@ static StringView s_ld_library_path;
 static StringView s_main_program_pledge_promises;
 static ByteString s_loader_pledge_promises;
 
-class MagicWeakSymbol : public RefCounted<MagicWeakSymbol> {
-    AK_MAKE_NONCOPYABLE(MagicWeakSymbol);
-    AK_MAKE_NONMOVABLE(MagicWeakSymbol);
-
-public:
-    template<typename T>
-    MagicWeakSymbol(unsigned int type, T value)
-    {
-        m_storage = reinterpret_cast<uintptr_t>(value);
-        m_lookup_result.size = 8;
-        m_lookup_result.type = type;
-        m_lookup_result.address = VirtualAddress { &m_storage };
-        m_lookup_result.bind = STB_GLOBAL;
-    }
-
-    auto lookup_result() const
-    {
-        return m_lookup_result;
-    }
-
-private:
-    DynamicObject::SymbolLookupResult m_lookup_result;
-    uintptr_t m_storage;
-};
-
-static HashMap<StringView, NonnullRefPtr<MagicWeakSymbol>> s_magic_weak_symbols;
+static HashMap<StringView, DynamicObject::SymbolLookupResult> s_magic_functions;
 
 Optional<DynamicObject::SymbolLookupResult> DynamicLinker::lookup_global_symbol(StringView name)
 {
-    Optional<DynamicObject::SymbolLookupResult> weak_result;
-
     auto symbol = DynamicObject::HashSymbol { name };
 
     for (auto& lib : s_global_objects) {
         auto res = lib.value->lookup_symbol(symbol);
         if (!res.has_value())
             continue;
-        if (res.value().bind == STB_GLOBAL)
+        if (res.value().bind == STB_GLOBAL || res.value().bind == STB_WEAK)
             return res;
-        if (res.value().bind == STB_WEAK && !weak_result.has_value())
-            weak_result = res;
         // We don't want to allow local symbols to be pulled in to other modules
     }
 
-    if (auto magic_lookup = s_magic_weak_symbols.get(name); magic_lookup.has_value())
-        weak_result = (*magic_lookup)->lookup_result();
-
-    return weak_result;
+    if (auto magic_lookup = s_magic_functions.get(name); magic_lookup.has_value())
+        return *magic_lookup;
+    return {};
 }
 
 static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(ByteString const& filepath, int fd)
@@ -346,7 +317,7 @@ static void initialize_libc(DynamicObject& libc)
 {
     auto res = libc.lookup_symbol("__libc_init"sv);
     VERIFY(res.has_value());
-    typedef void libc_init_func();
+    using libc_init_func = decltype(__libc_init);
     ((libc_init_func*)res.value().address.as_ptr())();
 }
 
@@ -661,6 +632,11 @@ static void __call_fini_functions()
     }
 }
 
+static char** __environ_value()
+{
+    return s_envp;
+}
+
 static void read_environment_variables()
 {
     for (char** env = s_envp; *env; ++env) {
@@ -692,24 +668,24 @@ void ELF::DynamicLinker::linker_main(ByteString&& main_program_path, int main_pr
 
     s_envp = envp;
 
-    uintptr_t stack_guard = get_random<uintptr_t>();
-
-#ifdef AK_ARCH_64_BIT
-    // For 64-bit platforms we include an additional hardening: zero the first byte of the stack guard to avoid
-    // leaking or overwriting the stack guard with C-style string functions.
-    stack_guard &= ~0xffULL;
-#endif
-
-    s_magic_weak_symbols.set("environ"sv, make_ref_counted<MagicWeakSymbol>(STT_OBJECT, s_envp));
-    s_magic_weak_symbols.set("__stack_chk_guard"sv, make_ref_counted<MagicWeakSymbol>(STT_OBJECT, stack_guard));
-    s_magic_weak_symbols.set("__call_fini_functions"sv, make_ref_counted<MagicWeakSymbol>(STT_FUNC, __call_fini_functions));
-    s_magic_weak_symbols.set("__create_new_tls_region"sv, make_ref_counted<MagicWeakSymbol>(STT_FUNC, __create_new_tls_region));
-    s_magic_weak_symbols.set("__free_tls_region"sv, make_ref_counted<MagicWeakSymbol>(STT_FUNC, __free_tls_region));
-    s_magic_weak_symbols.set("__dl_iterate_phdr"sv, make_ref_counted<MagicWeakSymbol>(STT_FUNC, __dl_iterate_phdr));
-    s_magic_weak_symbols.set("__dlclose"sv, make_ref_counted<MagicWeakSymbol>(STT_FUNC, __dlclose));
-    s_magic_weak_symbols.set("__dlopen"sv, make_ref_counted<MagicWeakSymbol>(STT_FUNC, __dlopen));
-    s_magic_weak_symbols.set("__dlsym"sv, make_ref_counted<MagicWeakSymbol>(STT_FUNC, __dlsym));
-    s_magic_weak_symbols.set("__dladdr"sv, make_ref_counted<MagicWeakSymbol>(STT_FUNC, __dladdr));
+    auto define_magic_function = [&](StringView name, auto function) {
+        s_magic_functions.set(name,
+            DynamicObject::SymbolLookupResult {
+                .size = 8,
+                .address = VirtualAddress { reinterpret_cast<void*>(function) },
+                .bind = STB_GLOBAL,
+                .type = STT_FUNC,
+            });
+    };
+    define_magic_function("__call_fini_functions"sv, __call_fini_functions);
+    define_magic_function("__create_new_tls_region"sv, __create_new_tls_region);
+    define_magic_function("__dl_iterate_phdr"sv, __dl_iterate_phdr);
+    define_magic_function("__dladdr"sv, __dladdr);
+    define_magic_function("__dlclose"sv, __dlclose);
+    define_magic_function("__dlopen"sv, __dlopen);
+    define_magic_function("__dlsym"sv, __dlsym);
+    define_magic_function("__environ_value"sv, __environ_value);
+    define_magic_function("__free_tls_region"sv, __free_tls_region);
 
     char* raw_current_directory = getcwd(nullptr, 0);
     s_cwd = raw_current_directory;

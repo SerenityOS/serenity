@@ -343,9 +343,9 @@ static T c_str_to_floating_point(char const* str, char** endptr)
     return 0;
 }
 
-extern "C" {
+[[gnu::weak]] extern void __call_fini_functions() asm("__call_fini_functions");
 
-[[gnu::weak]] void (*__call_fini_functions)();
+extern "C" {
 
 void exit(int status)
 {

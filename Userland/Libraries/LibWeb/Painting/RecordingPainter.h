@@ -82,7 +82,7 @@ public:
 
     void draw_ellipse(Gfx::IntRect const& a_rect, Color color, int thickness);
 
-    void fill_ellipse(Gfx::IntRect const& a_rect, Color color, Gfx::AntiAliasingPainter::BlendMode blend_mode = Gfx::AntiAliasingPainter::BlendMode::Normal);
+    void fill_ellipse(Gfx::IntRect const& a_rect, Color color);
 
     void fill_rect_with_linear_gradient(Gfx::IntRect const& gradient_rect, LinearGradientData const& data, Vector<Gfx::Path> const& clip_paths = {});
     void fill_rect_with_conic_gradient(Gfx::IntRect const& rect, ConicGradientData const& data, Gfx::IntPoint const& position, Vector<Gfx::Path> const& clip_paths = {});

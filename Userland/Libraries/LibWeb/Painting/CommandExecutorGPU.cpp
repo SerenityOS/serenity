@@ -246,7 +246,7 @@ CommandResult CommandExecutorGPU::draw_ellipse(Gfx::IntRect const&, Color const&
     return CommandResult::Continue;
 }
 
-CommandResult CommandExecutorGPU::fill_ellipse(Gfx::IntRect const& rect, Color const& color, Gfx::AntiAliasingPainter::BlendMode)
+CommandResult CommandExecutorGPU::fill_ellipse(Gfx::IntRect const& rect, Color const& color)
 {
     auto horizontal_radius = static_cast<float>(rect.width() / 2);
     auto vertical_radius = static_cast<float>(rect.height() / 2);

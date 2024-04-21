@@ -18,9 +18,21 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(Console);
+JS_DEFINE_ALLOCATOR(ConsoleClient);
+
 Console::Console(Realm& realm)
     : m_realm(realm)
 {
+}
+
+Console::~Console() = default;
+
+void Console::visit_edges(Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_realm);
+    visitor.visit(m_client);
 }
 
 // 1.1.1. assert(condition, ...data), https://console.spec.whatwg.org/#assert
@@ -543,10 +555,23 @@ ThrowCompletionOr<String> Console::format_time_since(Core::ElapsedTimer timer)
     return MUST(builder.to_string());
 }
 
+ConsoleClient::ConsoleClient(Console& console)
+    : m_console(console)
+{
+}
+
+ConsoleClient::~ConsoleClient() = default;
+
+void ConsoleClient::visit_edges(Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_console);
+}
+
 // 2.1. Logger(logLevel, args), https://console.spec.whatwg.org/#logger
 ThrowCompletionOr<Value> ConsoleClient::logger(Console::LogLevel log_level, MarkedVector<Value> const& args)
 {
-    auto& vm = m_console.realm().vm();
+    auto& vm = m_console->realm().vm();
 
     // 1. If args is empty, return.
     if (args.is_empty())
@@ -578,7 +603,7 @@ ThrowCompletionOr<Value> ConsoleClient::logger(Console::LogLevel log_level, Mark
 // 2.2. Formatter(args), https://console.spec.whatwg.org/#formatter
 ThrowCompletionOr<MarkedVector<Value>> ConsoleClient::formatter(MarkedVector<Value> const& args)
 {
-    auto& realm = m_console.realm();
+    auto& realm = m_console->realm();
     auto& vm = realm.vm();
 
     // 1. If args’s size is 1, return args.
@@ -691,7 +716,7 @@ ThrowCompletionOr<MarkedVector<Value>> ConsoleClient::formatter(MarkedVector<Val
 ThrowCompletionOr<String> ConsoleClient::generically_format_values(MarkedVector<Value> const& values)
 {
     AllocatingMemoryStream stream;
-    auto& vm = m_console.realm().vm();
+    auto& vm = m_console->realm().vm();
     PrintContext ctx { vm, stream, true };
     bool first = true;
     for (auto const& value : values) {

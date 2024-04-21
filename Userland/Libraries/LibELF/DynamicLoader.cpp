@@ -98,23 +98,6 @@ DynamicLoader::~DynamicLoader()
     }
 }
 
-DynamicObject const& DynamicLoader::dynamic_object() const
-{
-    if (!m_cached_dynamic_object) {
-        VirtualAddress dynamic_section_address;
-
-        image().for_each_program_header([&dynamic_section_address](auto program_header) {
-            if (program_header.type() == PT_DYNAMIC) {
-                dynamic_section_address = VirtualAddress(program_header.raw_data());
-            }
-        });
-        VERIFY(!dynamic_section_address.is_null());
-
-        m_cached_dynamic_object = ELF::DynamicObject::create(m_filepath, VirtualAddress(image().base_address()), dynamic_section_address);
-    }
-    return *m_cached_dynamic_object;
-}
-
 void DynamicLoader::find_tls_size_and_alignment()
 {
     image().for_each_program_header([this](auto program_header) {

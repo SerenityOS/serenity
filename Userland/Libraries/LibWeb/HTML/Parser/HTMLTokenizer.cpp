@@ -2892,7 +2892,7 @@ void HTMLTokenizer::restore_to(Utf8CodePointIterator const& new_iterator)
 
 String HTMLTokenizer::consume_current_builder()
 {
-    auto string = MUST(m_current_builder.to_string());
+    auto string = m_current_builder.to_string_without_validation();
     m_current_builder.clear();
     return string;
 }

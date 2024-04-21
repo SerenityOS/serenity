@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Undefine <undefine@undefine.pl>
+ * Copyright (c) 2022-2024, Undefine <undefine@undefine.pl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -78,11 +78,35 @@ private:
     static constexpr u8 signature_1 = 0x28;
     static constexpr u8 signature_2 = 0x29;
 
+    static constexpr u32 fs_info_signature_1 = 0x41615252;
+    static constexpr u32 fs_info_signature_2 = 0x61417272;
+    static constexpr u32 fs_info_signature_3 = 0xAA550000;
+
+    static constexpr u32 fs_info_data_unknown = 0xFFFFFFFF;
+
     static constexpr u32 first_data_cluster = 2;
 
     FatBlockSpan first_block_of_cluster(u32 cluster) const;
 
+    ErrorOr<void> set_free_cluster_count(u32);
+    ErrorOr<u32> allocate_cluster();
+    ErrorOr<void> notify_cluster_freed();
+
+    size_t fat_offset_for_cluster(u32 cluster) const;
+
+    // Reads the cluster number located at the offset within the table.
+    u32 cluster_number(KBuffer const& fat_sector, u32 entry_cluster_number, u32 entry_offset) const;
+
+    // Returns cluster number value that indicates the end of the chain
+    // has been reached. Any cluster value >= this value indicates this
+    // is the last cluster.
+    u32 end_of_chain_marker() const;
+
+    ErrorOr<u32> fat_read(u32 cluster);
+    ErrorOr<void> fat_write(u32 cluster, u32 value);
+
     OwnPtr<KBuffer> m_boot_record;
+    FAT32FSInfo m_fs_info;
     OwnPtr<DOSBIOSParameterBlock> m_parameter_block;
     RefPtr<FATInode> m_root_inode;
     u32 m_first_data_sector { 0 };

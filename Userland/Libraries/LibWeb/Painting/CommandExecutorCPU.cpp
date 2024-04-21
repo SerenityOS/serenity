@@ -354,10 +354,10 @@ CommandResult CommandExecutorCPU::draw_ellipse(Gfx::IntRect const& rect, Color c
     return CommandResult::Continue;
 }
 
-CommandResult CommandExecutorCPU::fill_ellipse(Gfx::IntRect const& rect, Color const& color, Gfx::AntiAliasingPainter::BlendMode blend_mode)
+CommandResult CommandExecutorCPU::fill_ellipse(Gfx::IntRect const& rect, Color const& color)
 {
     Gfx::AntiAliasingPainter aa_painter(painter());
-    aa_painter.fill_ellipse(rect, color, blend_mode);
+    aa_painter.fill_ellipse(rect, color);
     return CommandResult::Continue;
 }
 

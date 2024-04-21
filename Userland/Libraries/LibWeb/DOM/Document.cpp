@@ -408,6 +408,12 @@ WebIDL::ExceptionOr<void> Document::populate_with_html_head_and_body()
     return {};
 }
 
+void Document::finalize()
+{
+    Base::finalize();
+    page().client().page_did_destroy_document(*this);
+}
+
 void Document::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
@@ -3070,8 +3076,6 @@ void Document::run_unloading_cleanup_steps()
 // https://html.spec.whatwg.org/multipage/document-lifecycle.html#destroy-a-document
 void Document::destroy()
 {
-    page().client().page_did_destroy_document(*this);
-
     // NOTE: Abort needs to happen before destory. There is currently bug in the spec: https://github.com/whatwg/html/issues/9148
     // 4. Abort document.
     abort();
@@ -3107,7 +3111,7 @@ void Document::destroy()
 }
 
 // https://html.spec.whatwg.org/multipage/document-lifecycle.html#destroy-a-document-and-its-descendants
-void Document::destroy_a_document_and_its_descendants(JS::SafeFunction<void()> after_all_destruction)
+void Document::destroy_a_document_and_its_descendants(JS::GCPtr<JS::HeapFunction<void()>> after_all_destruction)
 {
     // 1. Let childNavigables be document's child navigables.
     auto child_navigables = document_tree_child_navigables();
@@ -3118,13 +3122,13 @@ void Document::destroy_a_document_and_its_descendants(JS::SafeFunction<void()> a
     // 3. For each childNavigable of childNavigable's, queue a global task on the navigation and traversal task source
     //    given childNavigable's active window to perform the following steps:
     for (auto& child_navigable : child_navigables) {
-        HTML::queue_global_task(HTML::Task::Source::NavigationAndTraversal, *child_navigable->active_window(), [&number_destroyed, child_navigable = child_navigable.ptr()] {
+        HTML::queue_global_task(HTML::Task::Source::NavigationAndTraversal, *child_navigable->active_window(), JS::create_heap_function(heap(), [&heap = heap(), &number_destroyed, child_navigable = child_navigable.ptr()] {
             // 1. Let incrementDestroyed be an algorithm step which increments numberDestroyed.
-            auto increment_destroyed = [&number_destroyed] { ++number_destroyed; };
+            auto increment_destroyed = JS::create_heap_function(heap, [&number_destroyed] { ++number_destroyed; });
 
             // 2. Destroy a document and its descendants given childNavigable's active document and incrementDestroyed.
             child_navigable->active_document()->destroy_a_document_and_its_descendants(move(increment_destroyed));
-        });
+        }));
     }
 
     // 4. Wait until numberDestroyed equals childNavigable's size.
@@ -3133,14 +3137,14 @@ void Document::destroy_a_document_and_its_descendants(JS::SafeFunction<void()> a
     });
 
     // 4. Queue a global task on the navigation and traversal task source given document's relevant global object to perform the following steps:
-    HTML::queue_global_task(HTML::Task::Source::NavigationAndTraversal, relevant_global_object(*this), [after_all_destruction = move(after_all_destruction), this] {
+    HTML::queue_global_task(HTML::Task::Source::NavigationAndTraversal, relevant_global_object(*this), JS::create_heap_function(heap(), [after_all_destruction = move(after_all_destruction), this] {
         // 1. Destroy document.
         destroy();
 
         // 2. If afterAllDestruction was given, then run it.
         if (after_all_destruction)
-            after_all_destruction();
-    });
+            after_all_destruction->function()();
+    }));
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#abort-a-document
@@ -3187,7 +3191,7 @@ void Document::abort_a_document_and_its_descendants()
 
     // 3. For each descendantNavigable of descendantNavigables, queue a global task on the navigation and traversal task source given descendantNavigable's active window to perform the following steps:
     for (auto& descendant_navigable : descendant_navigables) {
-        HTML::queue_global_task(HTML::Task::Source::NavigationAndTraversal, *descendant_navigable->active_window(), [this, descendant_navigable = descendant_navigable.ptr()] {
+        HTML::queue_global_task(HTML::Task::Source::NavigationAndTraversal, *descendant_navigable->active_window(), JS::create_heap_function(heap(), [this, descendant_navigable = descendant_navigable.ptr()] {
             // NOTE: This is not in the spec but we need to abort ongoing navigations in all descendant navigables.
             //       See https://github.com/whatwg/html/issues/9711
             descendant_navigable->set_ongoing_navigation({});
@@ -3198,7 +3202,7 @@ void Document::abort_a_document_and_its_descendants()
             // 2. If descendantNavigable's active document's salvageable is false, then set document's salvageable to false.
             if (!descendant_navigable->active_document()->m_salvageable)
                 m_salvageable = false;
-        });
+        }));
     }
 
     // 4. Abort document.
@@ -3293,7 +3297,7 @@ void Document::unload(JS::GCPtr<Document>)
 
     // 19. If oldDocument's salvageable state is false, then destroy oldDocument.
     if (!m_salvageable) {
-        destroy();
+        // NOTE: Document is destroyed from Document::unload_a_document_and_its_descendants()
     }
 
     // 20. Decrease oldDocument's unload counter by 1.
@@ -3306,43 +3310,59 @@ void Document::unload(JS::GCPtr<Document>)
 }
 
 // https://html.spec.whatwg.org/multipage/document-lifecycle.html#unload-a-document-and-its-descendants
-void Document::unload_a_document_and_its_descendants(JS::GCPtr<Document> new_document, JS::SafeFunction<void()> after_all_unloads)
+void Document::unload_a_document_and_its_descendants(JS::GCPtr<Document> new_document, JS::GCPtr<JS::HeapFunction<void()>> after_all_unloads)
 {
-    // 1. FIXME: Assert: this is running within document's node navigable's traversable navigable's session history traversal queue.
+    // Specification defines this algorithm in the following steps:
+    // 1. Recursively unload (and destroy) documents in descendant navigables
+    // 2. Unload (and destroy) this document.
+    //
+    // Implementation of the spec will fail in the following scenario:
+    // 1. Unload iframe's (has attribute name="test") document
+    //    1.1. Destroy iframe's document
+    // 2. Unload iframe's parent document
+    //    2.1. Dispatch "unload" event
+    //       2.2. In "unload" event handler run `window["test"]`
+    //          2.2.1. Execute Window::document_tree_child_navigable_target_name_property_set()
+    //             2.2.1.1. Fail to access iframe's navigable active document because it was destroyed on step 1.1
+    //
+    // We change the algorithm to:
+    // 1. Unload all descendant documents without destroying them
+    // 2. Unload this document
+    // 3. Destroy all descendant documents
+    // 4. Destroy this document
+    //
+    // This way we maintain the invariant that all navigable containers present in the DOM tree
+    // have an active document while the document is being unloaded.
 
-    // 2. Let childNavigables be document's child navigables.
-    auto child_navigables = document_tree_child_navigables();
-
-    // 2. Let numberUnloaded be 0.
     IGNORE_USE_IN_ESCAPING_LAMBDA size_t number_unloaded = 0;
 
-    // Spec FIXME: in what order?
-    // 3. For each childNavigable of childNavigable's, queue a global task on the navigation and traversal task source
-    //    given childNavigable's active window to perform the following steps:
-    for (auto& child_navigable : child_navigables) {
-        HTML::queue_global_task(HTML::Task::Source::NavigationAndTraversal, *child_navigable->active_window(), [&number_unloaded, child_navigable = child_navigable.ptr()] {
-            // 1. Let incrementUnloaded be an algorithm step which increments numberUnloaded.
-            auto increment_unloaded = [&number_unloaded] { ++number_unloaded; };
+    auto navigable = this->navigable();
 
-            // 2. Unload a document and its descendants given childNavigable's active document, null, and incrementUnloaded.
-            child_navigable->active_document()->unload_a_document_and_its_descendants(nullptr, move(increment_unloaded));
-        });
+    Vector<JS::Handle<HTML::Navigable>> descendant_navigables;
+    for (auto& other_navigable : HTML::all_navigables()) {
+        if (navigable->is_ancestor_of(*other_navigable))
+            descendant_navigables.append(other_navigable);
     }
 
-    // 4. Wait until numberUnloaded equals childNavigable's size.
-    HTML::main_thread_event_loop().spin_until([&] {
-        return number_unloaded == child_navigables.size();
-    });
+    auto unloaded_documents_count = descendant_navigables.size() + 1;
 
-    // 5. Queue a global task on the navigation and traversal task source given document's relevant global object to perform the following steps:
-    HTML::queue_global_task(HTML::Task::Source::NavigationAndTraversal, HTML::relevant_global_object(*this), [this, new_document, after_all_unloads = move(after_all_unloads)] {
-        // 1. Unload document, passing along newDocument if it is not null.
+    HTML::queue_global_task(HTML::Task::Source::NavigationAndTraversal, HTML::relevant_global_object(*this), JS::create_heap_function(heap(), [&number_unloaded, this, new_document] {
         unload(new_document);
+        ++number_unloaded;
+    }));
 
-        // 2. If afterAllUnloads was given, then run it.
-        if (after_all_unloads)
-            after_all_unloads();
+    for (auto& descendant_navigable : descendant_navigables) {
+        HTML::queue_global_task(HTML::Task::Source::NavigationAndTraversal, *descendant_navigable->active_window(), JS::create_heap_function(heap(), [&number_unloaded, descendant_navigable = descendant_navigable.ptr()] {
+            descendant_navigable->active_document()->unload();
+            ++number_unloaded;
+        }));
+    }
+
+    HTML::main_thread_event_loop().spin_until([&] {
+        return number_unloaded == unloaded_documents_count;
     });
+
+    destroy_a_document_and_its_descendants(move(after_all_unloads));
 }
 
 // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#allowed-to-use
@@ -3572,7 +3592,7 @@ void Document::queue_intersection_observer_task()
     m_intersection_observer_task_queued = true;
 
     // 3. Queue a task on the IntersectionObserver task source associated with the document's event loop to notify intersection observers.
-    HTML::queue_global_task(HTML::Task::Source::IntersectionObserver, *window, [this]() {
+    HTML::queue_global_task(HTML::Task::Source::IntersectionObserver, *window, JS::create_heap_function(heap(), [this]() {
         auto& realm = this->realm();
 
         // https://www.w3.org/TR/intersection-observer/#notify-intersection-observers
@@ -3611,7 +3631,7 @@ void Document::queue_intersection_observer_task()
             if (completion.is_abrupt())
                 HTML::report_exception(completion, realm);
         }
-    });
+    }));
 }
 
 // https://www.w3.org/TR/intersection-observer/#queue-an-intersectionobserverentry
@@ -4050,6 +4070,9 @@ void Document::update_for_history_step_application(JS::NonnullGCPtr<HTML::Sessio
 
         // 5. If documentIsNew is false, then:
         if (!document_is_new) {
+            // NOTE: Not in the spec, but otherwise document's url won't be updated in case of a same-document back/forward navigation.
+            set_url(entry->url());
+
             // AD HOC: Skip this in situations the spec steps don't account for
             if (update_navigation_api) {
                 // 1. Update the navigation API entries for a same-document navigation given navigation, entry, and "traverse".
@@ -4077,9 +4100,9 @@ void Document::update_for_history_step_application(JS::NonnullGCPtr<HTML::Sessio
                 hashchange_event_init.old_url = MUST(String::from_byte_string(old_url.serialize()));
                 hashchange_event_init.new_url = MUST(String::from_byte_string(entry->url().serialize()));
                 auto hashchange_event = HTML::HashChangeEvent::create(realm(), "hashchange"_fly_string, hashchange_event_init);
-                HTML::queue_global_task(HTML::Task::Source::DOMManipulation, relevant_global_object, [hashchange_event, &relevant_global_object]() {
+                HTML::queue_global_task(HTML::Task::Source::DOMManipulation, relevant_global_object, JS::create_heap_function(heap(), [hashchange_event, &relevant_global_object]() {
                     relevant_global_object.dispatch_event(hashchange_event);
-                });
+                }));
             }
         }
 
@@ -4293,9 +4316,9 @@ void Document::remove_replaced_animations()
             //   Otherwise, queue a task to dispatch removeEvent at animation. The task source for this task is the DOM
             //   manipulation task source.
             else {
-                HTML::queue_global_task(HTML::Task::Source::DOMManipulation, realm().global_object(), [animation, remove_event]() {
+                HTML::queue_global_task(HTML::Task::Source::DOMManipulation, realm().global_object(), JS::create_heap_function(heap(), [animation, remove_event]() {
                     animation->dispatch_event(remove_event);
-                });
+                }));
             }
         }
     }

@@ -5,16 +5,16 @@
  */
 
 #include <AK/ByteString.h>
+#include <AK/Result.h>
 #include <AK/Types.h>
 #include <bits/dlfcn_integration.h>
 #include <dlfcn.h>
 #include <string.h>
 
-// These are filled in by the dynamic loader.
-[[gnu::weak]] DlCloseFunction __dlclose;
-[[gnu::weak]] DlOpenFunction __dlopen;
-[[gnu::weak]] DlSymFunction __dlsym;
-[[gnu::weak]] DlAddrFunction __dladdr;
+[[gnu::weak]] Result<void, DlErrorMessage> __dlclose(void*) asm("__dlclose");
+[[gnu::weak]] Result<void*, DlErrorMessage> __dlopen(char const*, int) asm("__dlopen");
+[[gnu::weak]] Result<void*, DlErrorMessage> __dlsym(void*, char const*) asm("__dlsym");
+[[gnu::weak]] Result<void, DlErrorMessage> __dladdr(void const*, Dl_info*) asm("__dladdr");
 
 // FIXME: use thread_local and a String once TLS works
 #ifdef NO_TLS

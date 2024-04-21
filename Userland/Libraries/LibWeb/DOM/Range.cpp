@@ -109,13 +109,13 @@ void Range::update_associated_selection()
     // task source to fire an event named selectionchange, which does not bubble and is not cancelable, at the document
     // associated with the selection.
     auto document = m_associated_selection->document();
-    queue_global_task(HTML::Task::Source::UserInteraction, relevant_global_object(*document), [document] {
+    queue_global_task(HTML::Task::Source::UserInteraction, relevant_global_object(*document), JS::create_heap_function(document->heap(), [document] {
         EventInit event_init;
         event_init.bubbles = false;
         event_init.cancelable = false;
         auto event = DOM::Event::create(document->realm(), HTML::EventNames::selectionchange, event_init);
         document->dispatch_event(event);
-    });
+    }));
 }
 
 // https://dom.spec.whatwg.org/#concept-range-root
@@ -1118,7 +1118,7 @@ WebIDL::ExceptionOr<void> Range::delete_contents()
 
     // 4. Let nodes to remove be a list of all the nodes that are contained in this, in tree order, omitting any node whose parent is also contained in this.
     JS::MarkedVector<Node*> nodes_to_remove(heap());
-    for (Node const* node = start_container(); node != end_container()->next_in_pre_order(); node = node->next_in_pre_order()) {
+    for (Node const* node = start_container(); node != end_container()->next_sibling(); node = node->next_in_pre_order()) {
         if (contains_node(*node) && (!node->parent_node() || !contains_node(*node->parent_node())))
             nodes_to_remove.append(const_cast<Node*>(node));
     }

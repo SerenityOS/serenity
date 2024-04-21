@@ -22,6 +22,10 @@ test("throws correct range errors", () => {
     expect(() => {
         "foo".repeat(Infinity);
     }).toThrowWithMessage(RangeError, "repeat count must be a finite number");
+
+    expect(() => {
+        "foo".repeat(0xffffffffff);
+    }).toThrowWithMessage(RangeError, "repeat count must not overflow");
 });
 
 test("UTF-16", () => {

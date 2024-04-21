@@ -32,7 +32,7 @@ public:
     }
 
     template<typename U>
-    explicit constexpr Size(Size<U> const& other)
+    requires(IsConstructible<T, U>) explicit constexpr Size(Size<U> const& other)
         : m_width(other.width())
         , m_height(other.height())
     {

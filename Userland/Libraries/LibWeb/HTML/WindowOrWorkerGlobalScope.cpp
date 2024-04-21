@@ -396,9 +396,9 @@ i32 WindowOrWorkerGlobalScopeMixin::run_timer_initialization_steps(TimerHandler 
 
     // 11. Let completionStep be an algorithm step which queues a global task on the timer task source given global to run task.
     Function<void()> completion_step = [this, task = move(task)]() mutable {
-        queue_global_task(Task::Source::TimerTask, this_impl(), [task] {
+        queue_global_task(Task::Source::TimerTask, this_impl(), JS::create_heap_function(this_impl().heap(), [task] {
             task->function()();
-        });
+        }));
     };
 
     // 12. Run steps after a timeout given global, "setTimeout/setInterval", timeout, completionStep, and id.
@@ -565,7 +565,7 @@ void WindowOrWorkerGlobalScopeMixin::queue_the_performance_observer_task()
 
     // 3. Queue a task that consists of running the following substeps. The task source for the queued task is the performance
     //    timeline task source.
-    queue_global_task(Task::Source::PerformanceTimeline, this_impl(), [this]() {
+    queue_global_task(Task::Source::PerformanceTimeline, this_impl(), JS::create_heap_function(this_impl().heap(), [this]() {
         auto& realm = this_impl().realm();
 
         // 1. Unset performance observer task queued flag of relevantGlobal.
@@ -642,7 +642,7 @@ void WindowOrWorkerGlobalScopeMixin::queue_the_performance_observer_task()
             if (completion.is_abrupt())
                 HTML::report_exception(completion, realm);
         }
-    });
+    }));
 }
 
 // https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#run-steps-after-a-timeout

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Undefine <undefine@undefine.pl>
+ * Copyright (c) 2022-2024, Undefine <undefine@undefine.pl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -16,29 +16,24 @@
 
 namespace Kernel {
 
+struct FATEntryLocation {
+    BlockBasedFileSystem::BlockIndex block;
+    u32 entry;
+};
+
 class FATInode final : public Inode {
     friend FATFS;
 
 public:
     virtual ~FATInode() override = default;
 
-    static ErrorOr<NonnullRefPtr<FATInode>> create(FATFS&, FATEntry, Vector<FATLongFileNameEntry> const& = {});
+    static ErrorOr<NonnullRefPtr<FATInode>> create(FATFS&, FATEntry, FATEntryLocation inode_metadata_location, Vector<FATLongFileNameEntry> const& = {});
 
     FATFS& fs() { return static_cast<FATFS&>(Inode::fs()); }
     FATFS const& fs() const { return static_cast<FATFS const&>(Inode::fs()); }
 
 private:
-    FATInode(FATFS&, FATEntry, NonnullOwnPtr<KString> filename);
-
-    size_t fat_offset_for_cluster(u32 cluster) const;
-
-    // Returns cluster number value that indicates the end of the chain
-    // has been reached. Any cluster value >= this value indicates this
-    // is the last cluster.
-    u32 end_of_chain_marker() const;
-
-    // Reads the cluster number located at the offset within the table.
-    u32 cluster_number(KBuffer const& fat_sector, u32 entry_cluster_number, u32 entry_offset) const;
+    FATInode(FATFS&, FATEntry, FATEntryLocation inode_metadata_location, NonnullOwnPtr<KString> filename);
 
     static constexpr u8 end_entry_byte = 0x00;
     static constexpr u8 unused_entry_byte = 0xE5;
@@ -49,10 +44,23 @@ private:
     static constexpr u8 normal_filename_length = 8;
     static constexpr u8 normal_extension_length = 3;
 
+    static constexpr size_t lfn_entry_characters_part_1_length = 5;
+    static constexpr size_t lfn_entry_characters_part_2_length = 6;
+    static constexpr size_t lfn_entry_characters_part_3_length = 2;
+
+    static constexpr size_t characters_per_lfn_entry = lfn_entry_characters_part_1_length + lfn_entry_characters_part_2_length + lfn_entry_characters_part_3_length;
+    static constexpr u8 last_lfn_entry_mask = 0x40;
+
+    static constexpr size_t max_filename_length = 255;
+
     static ErrorOr<NonnullOwnPtr<KString>> compute_filename(FATEntry&, Vector<FATLongFileNameEntry> const& = {});
     static StringView byte_terminated_string(StringView, u8);
+    static u8 lfn_entry_checksum(FATEntry const& entry);
+    static void create_83_filename_for(FATEntry& entry, StringView name);
+    static ErrorOr<Vector<FATLongFileNameEntry>> create_lfn_entries(StringView name, u8 checksum);
 
-    ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> compute_block_list();
+    ErrorOr<Vector<u32>> compute_cluster_list(FATFS&, u32 first_cluster);
+    ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> get_block_list();
     ErrorOr<NonnullOwnPtr<KBuffer>> read_block_list();
     ErrorOr<RefPtr<FATInode>> traverse(Function<ErrorOr<bool>(RefPtr<FATInode>)> callback);
     u32 first_cluster() const;
@@ -60,6 +68,11 @@ private:
     // already being created to determine the FAT version. It is used
     // during FATInode creation (create()).
     u32 first_cluster(FATVersion const version) const;
+    ErrorOr<void> allocate_and_add_cluster_to_chain();
+    ErrorOr<void> remove_last_cluster_from_chain();
+    ErrorOr<Vector<FATEntryLocation>> allocate_entries(u32 count);
+
+    ErrorOr<void> resize(u64 size);
 
     // ^Inode
     virtual ErrorOr<size_t> write_bytes_locked(off_t, size_t, UserOrKernelBuffer const& data, OpenFileDescription*) override;
@@ -74,12 +87,14 @@ private:
     virtual ErrorOr<void> replace_child(StringView name, Inode& child) override;
     virtual ErrorOr<void> chmod(mode_t) override;
     virtual ErrorOr<void> chown(UserID, GroupID) override;
+    virtual ErrorOr<void> truncate_locked(u64) override;
     virtual ErrorOr<void> flush_metadata() override;
+    virtual ErrorOr<void> update_timestamps(Optional<UnixDateTime> atime, Optional<UnixDateTime> ctime, Optional<UnixDateTime> mtime) override;
 
-    Vector<BlockBasedFileSystem::BlockIndex> m_block_list;
+    Vector<u32> m_cluster_list;
     FATEntry m_entry;
+    FATEntryLocation m_inode_metadata_location;
     NonnullOwnPtr<KString> m_filename;
-    InodeMetadata m_metadata;
 };
 
 }

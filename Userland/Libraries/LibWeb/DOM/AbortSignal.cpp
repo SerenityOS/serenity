@@ -135,10 +135,10 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<AbortSignal>> AbortSignal::timeout(JS::VM& 
     // 3. Run steps after a timeout given global, "AbortSignal-timeout", milliseconds, and the following step:
     window_or_worker->run_steps_after_a_timeout(milliseconds, [&realm, &global, signal]() {
         // 1. Queue a global task on the timer task source given global to signal abort given signal and a new "TimeoutError" DOMException.
-        HTML::queue_global_task(HTML::Task::Source::TimerTask, global, [&realm, signal]() mutable {
+        HTML::queue_global_task(HTML::Task::Source::TimerTask, global, JS::create_heap_function(realm.heap(), [&realm, signal]() mutable {
             auto reason = WebIDL::TimeoutError::create(realm, "Signal timed out"_fly_string);
             signal->signal_abort(reason);
-        });
+        }));
     });
 
     // 4. Return signal.
