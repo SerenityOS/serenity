@@ -691,9 +691,9 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
             // 2. Let updateDocument be an algorithm step which performs update document for history step application given
             //    targetEntry's document, targetEntry, changingNavigableContinuation's update-only, scriptHistoryLength,
             //    scriptHistoryIndex, navigationType, entriesForNavigationAPI, and displayedEntry.
-            auto update_document = JS::SafeFunction<void()>([script_history_length, script_history_index, entries_for_navigation_api = move(entries_for_navigation_api), target_entry, update_only] {
+            auto update_document = [script_history_length, script_history_index, entries_for_navigation_api = move(entries_for_navigation_api), target_entry, update_only] {
                 target_entry->document()->update_for_history_step_application(*target_entry, update_only, script_history_length, script_history_index, entries_for_navigation_api);
-            });
+            };
 
             // 3. If targetEntry's document is equal to displayedDocument, then perform updateDocument.
             if (target_entry->document().ptr() == displayed_document.ptr()) {
@@ -701,9 +701,7 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
             }
             // 5. Otherwise, queue a global task on the navigation and traversal task source given targetEntry's document's relevant global object to perform updateDocument
             else {
-                queue_global_task(Task::Source::NavigationAndTraversal, relevant_global_object(*target_entry->document()), JS::create_heap_function(heap, [update_document = move(update_document)]() {
-                    update_document();
-                }));
+                queue_global_task(Task::Source::NavigationAndTraversal, relevant_global_object(*target_entry->document()), JS::create_heap_function(heap, move(update_document)));
             }
 
             // 6. Increment completedChangeJobs.
