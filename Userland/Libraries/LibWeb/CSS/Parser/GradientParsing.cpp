@@ -30,15 +30,14 @@ Optional<Vector<TElement>> Parser::parse_color_stop_list(TokenStream<ComponentVa
         tokens.skip_whitespace();
         if (!tokens.has_next_token())
             return ElementType::Garbage;
-        auto const& token = tokens.next_token();
 
         RefPtr<StyleValue> color;
         Optional<typename TElement::PositionType> position;
         Optional<typename TElement::PositionType> second_position;
-        auto dimension = parse_dimension(token);
-        if (dimension.has_value() && is_position(*dimension)) {
+        if (auto dimension = parse_dimension(tokens.peek_token()); dimension.has_value() && is_position(*dimension)) {
             // [<T-percentage> <color>] or [<T-percentage>]
             position = get_position(*dimension);
+            (void)tokens.next_token(); // dimension
             tokens.skip_whitespace();
             // <T-percentage>
             if (!tokens.has_next_token() || tokens.peek_token().is(Token::Type::Comma)) {
@@ -46,13 +45,13 @@ Optional<Vector<TElement>> Parser::parse_color_stop_list(TokenStream<ComponentVa
                 return ElementType::ColorHint;
             }
             // <T-percentage> <color>
-            auto maybe_color = parse_color_value(tokens.next_token());
+            auto maybe_color = parse_color_value(tokens);
             if (!maybe_color)
                 return ElementType::Garbage;
             color = maybe_color.release_nonnull();
         } else {
             // [<color> <T-percentage>?]
-            auto maybe_color = parse_color_value(token);
+            auto maybe_color = parse_color_value(tokens);
             if (!maybe_color)
                 return ElementType::Garbage;
             color = maybe_color.release_nonnull();
@@ -61,8 +60,7 @@ Optional<Vector<TElement>> Parser::parse_color_stop_list(TokenStream<ComponentVa
             // Note: Double-position color stops only appear to be valid in this order.
             for (auto stop_position : Array { &position, &second_position }) {
                 if (tokens.has_next_token() && !tokens.peek_token().is(Token::Type::Comma)) {
-                    auto token = tokens.next_token();
-                    auto dimension = parse_dimension(token);
+                    auto dimension = parse_dimension(tokens.next_token());
                     if (!dimension.has_value() || !is_position(*dimension))
                         return ElementType::Garbage;
                     *stop_position = get_position(*dimension);
