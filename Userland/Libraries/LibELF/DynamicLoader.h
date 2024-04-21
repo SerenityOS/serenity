@@ -88,7 +88,7 @@ public:
     static Optional<DynamicObject::SymbolLookupResult> lookup_symbol(const ELF::DynamicObject::Symbol&);
     void copy_initial_tls_data_into(Bytes buffer) const;
 
-    DynamicObject const& dynamic_object() const;
+    DynamicObject const& dynamic_object() const { return *m_dynamic_object; }
 
     bool is_fully_relocated() const { return m_fully_relocated; }
     bool is_fully_initialized() const { return m_fully_initialized; }
@@ -177,8 +177,6 @@ private:
     Vector<DynamicObject::Relocation> m_unresolved_relocations;
     Vector<DynamicObject::Relocation> m_direct_ifunc_relocations;
     Vector<DynamicObject::Relocation> m_plt_ifunc_relocations;
-
-    mutable RefPtr<DynamicObject> m_cached_dynamic_object;
 
     bool m_fully_relocated { false };
     bool m_fully_initialized { false };
