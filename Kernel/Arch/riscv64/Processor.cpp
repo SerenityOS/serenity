@@ -137,10 +137,19 @@ template<typename T>
 }
 
 template<typename T>
-void ProcessorBase<T>::flush_tlb_local(VirtualAddress, size_t)
+void ProcessorBase<T>::flush_tlb_local(VirtualAddress vaddr, size_t page_count)
 {
-    // FIXME: Don't flush all pages
-    flush_entire_tlb_local();
+    auto addr = vaddr.get();
+    while (page_count > 0) {
+        // clang-format off
+        asm volatile("sfence.vma %0"
+             :
+             : "r"(addr)
+             : "memory");
+        // clang-format on
+        addr += PAGE_SIZE;
+        page_count--;
+    }
 }
 
 template<typename T>
@@ -152,6 +161,7 @@ void ProcessorBase<T>::flush_entire_tlb_local()
 template<typename T>
 void ProcessorBase<T>::flush_tlb(Memory::PageDirectory const*, VirtualAddress vaddr, size_t page_count)
 {
+    // FIXME: Use the SBI RFENCE extension to flush the TLB of other harts when we support SMP on riscv64.
     flush_tlb_local(vaddr, page_count);
 }
 
