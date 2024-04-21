@@ -12,10 +12,10 @@
 #    error "This file is only available on Mach platforms"
 #endif
 
-#include <LibWebView/Platform/ProcessStatistics.h>
+#include <LibCore/Platform/ProcessStatistics.h>
 #include <mach/mach.h>
 
-namespace WebView {
+namespace Core::Platform {
 
 struct ChildPortMessage {
     mach_msg_header_t header;

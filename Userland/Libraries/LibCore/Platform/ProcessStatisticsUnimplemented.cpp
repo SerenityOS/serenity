@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWebView/Platform/ProcessStatistics.h>
+#include <LibCore/Platform/ProcessStatistics.h>
 
-namespace WebView {
+namespace Core::Platform {
 
 ErrorOr<void> update_process_statistics(ProcessStatistics&)
 {

@@ -72,6 +72,8 @@ source_set("sources") {
     "NetworkResponse.h",
     "Notifier.cpp",
     "Notifier.h",
+    "Platform/ProcessInfo.h",
+    "Platform/ProcessStatistics.h",
     "Process.cpp",
     "Process.h",
     "ProcessStatisticsReader.cpp",
@@ -118,6 +120,19 @@ source_set("sources") {
   }
   if (current_os == "mac") {
     sources += [ "MachPort.cpp" ]
+  }
+
+  if (current_os == "serenity") {
+    sources += [ "Platform/ProcessStatisticsSerenity.cpp" ]
+  } else if (current_os == "linux") {
+    sources += [ "Platform/ProcessStatisticsLinux.cpp" ]
+  } else if (current_os == "mac") {
+    sources += [
+      "Platform/ProcessStatisticsMach.cpp",
+      "Platform/ProcessStatisticsMach.h",
+    ]
+  } else {
+    sources += [ "Platform/ProcessStatisticsUnimplemented.cpp" ]
   }
 }
 

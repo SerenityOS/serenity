@@ -13,9 +13,9 @@
 #include <AK/ByteString.h>
 #include <AK/Time.h>
 #include <LibCore/MachPort.h>
-#include <LibWebView/Platform/ProcessStatisticsMach.h>
+#include <LibCore/Platform/ProcessStatisticsMach.h>
 
-namespace WebView {
+namespace Core::Platform {
 
 static auto user_hz = sysconf(_SC_CLK_TCK);
 
@@ -43,19 +43,19 @@ ErrorOr<void> update_process_statistics(ProcessStatistics& statistics)
     for (auto& process : statistics.processes) {
         mach_task_basic_info_data_t basic_info {};
         count = MACH_TASK_BASIC_INFO_COUNT;
-        res = task_info(process.child_task_port.port(), MACH_TASK_BASIC_INFO, reinterpret_cast<task_info_t>(&basic_info), &count);
+        res = task_info(process->child_task_port.port(), MACH_TASK_BASIC_INFO, reinterpret_cast<task_info_t>(&basic_info), &count);
         if (res != KERN_SUCCESS) {
-            dbgln("Failed to get task info for pid {}: {}", process.pid, mach_error_string(res));
+            dbgln("Failed to get task info for pid {}: {}", process->pid, mach_error_string(res));
             return Core::mach_error_to_error(res);
         }
 
-        process.memory_usage_bytes = basic_info.resident_size;
+        process->memory_usage_bytes = basic_info.resident_size;
 
         task_thread_times_info_data_t time_info {};
         count = TASK_THREAD_TIMES_INFO_COUNT;
-        res = task_info(process.child_task_port.port(), TASK_THREAD_TIMES_INFO, reinterpret_cast<task_info_t>(&time_info), &count);
+        res = task_info(process->child_task_port.port(), TASK_THREAD_TIMES_INFO, reinterpret_cast<task_info_t>(&time_info), &count);
         if (res != KERN_SUCCESS) {
-            dbgln("Failed to get thread times info for pid {}: {}", process.pid, mach_error_string(res));
+            dbgln("Failed to get thread times info for pid {}: {}", process->pid, mach_error_string(res));
             return Core::mach_error_to_error(res);
         }
 
@@ -64,12 +64,12 @@ ErrorOr<void> update_process_statistics(ProcessStatistics& statistics)
         scratch_timeval = { static_cast<time_t>(time_info.system_time.seconds), static_cast<suseconds_t>(time_info.system_time.microseconds) };
         time_in_process += Duration::from_timeval(scratch_timeval);
 
-        auto time_diff_process = time_in_process - Duration::from_microseconds(process.time_spent_in_process);
-        process.time_spent_in_process = time_in_process.to_microseconds();
+        auto time_diff_process = time_in_process - Duration::from_microseconds(process->time_spent_in_process);
+        process->time_spent_in_process = time_in_process.to_microseconds();
 
-        process.cpu_percent = 0.0f;
+        process->cpu_percent = 0.0f;
         if (time_diff_process > Duration::zero())
-            process.cpu_percent = 100.0f * static_cast<float>(time_diff_process.to_microseconds()) / total_cpu_micro_diff;
+            process->cpu_percent = 100.0f * static_cast<float>(time_diff_process.to_microseconds()) / total_cpu_micro_diff;
     }
 
     return {};

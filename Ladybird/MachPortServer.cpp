@@ -6,7 +6,7 @@
 
 #include "MachPortServer.h"
 #include <AK/Debug.h>
-#include <LibWebView/Platform/ProcessStatisticsMach.h>
+#include <LibCore/Platform/ProcessStatisticsMach.h>
 
 namespace Ladybird {
 
@@ -56,7 +56,7 @@ void MachPortServer::thread_loop()
 {
     while (!m_should_stop.load(MemoryOrder::memory_order_acquire)) {
 
-        WebView::ParentPortMessage message {};
+        Core::Platform::ParentPortMessage message {};
 
         // Get the pid of the child from the audit trailer so we can associate the port w/it
         mach_msg_options_t const options = MACH_RCV_MSG | MACH_RCV_TRAILER_TYPE(MACH_RCV_TRAILER_AUDIT) | MACH_RCV_TRAILER_ELEMENTS(MACH_RCV_TRAILER_AUDIT);
@@ -68,7 +68,7 @@ void MachPortServer::thread_loop()
             break;
         }
 
-        if (message.header.msgh_id != WebView::SELF_TASK_PORT_MESSAGE_ID) {
+        if (message.header.msgh_id != Core::Platform::SELF_TASK_PORT_MESSAGE_ID) {
             dbgln("Received message with id {}, ignoring", message.header.msgh_id);
             continue;
         }

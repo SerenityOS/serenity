@@ -46,7 +46,7 @@
 #endif
 
 #if defined(AK_OS_MACOS)
-#    include <LibWebView/Platform/ProcessStatisticsMach.h>
+#    include <LibCore/Platform/ProcessStatisticsMach.h>
 #endif
 
 static ErrorOr<void> load_content_filters();
@@ -132,7 +132,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
 #if defined(AK_OS_MACOS)
     if (!mach_server_name.is_empty()) {
-        WebView::register_with_mach_server(mach_server_name);
+        Core::Platform::register_with_mach_server(mach_server_name);
     }
 #endif
 

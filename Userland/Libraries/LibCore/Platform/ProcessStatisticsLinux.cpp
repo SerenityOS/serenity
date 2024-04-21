@@ -6,10 +6,10 @@
 
 #include <AK/String.h>
 #include <LibCore/File.h>
-#include <LibWebView/Platform/ProcessStatistics.h>
+#include <LibCore/Platform/ProcessStatistics.h>
 #include <unistd.h>
 
-namespace WebView {
+namespace Core::Platform {
 
 static auto user_hz = sysconf(_SC_CLK_TCK);
 static auto page_size = sysconf(_SC_PAGESIZE);
@@ -43,7 +43,7 @@ ErrorOr<void> update_process_statistics(ProcessStatistics& statistics)
     statistics.total_time_scheduled = total_time_scheduled;
 
     for (auto& process : statistics.processes) {
-        auto proc_pid_stat_or_error = Core::File::open(MUST(String::formatted("/proc/{}/stat", process.pid)), Core::File::OpenMode::Read);
+        auto proc_pid_stat_or_error = Core::File::open(MUST(String::formatted("/proc/{}/stat", process->pid)), Core::File::OpenMode::Read);
         if (proc_pid_stat_or_error.is_error()) {
             // FIXME: Remove stale process from process list?
             continue;
@@ -60,15 +60,15 @@ ErrorOr<void> update_process_statistics(ProcessStatistics& statistics)
         if (res != 3)
             return Error::from_string_literal("Failed to parse /proc/pid/stat");
 
-        process.memory_usage_bytes = rss * page_size;
+        process->memory_usage_bytes = rss * page_size;
 
         u64 const time_process = utime + stime;
-        float const time_scheduled_diff = time_process - process.time_spent_in_process;
-        process.time_spent_in_process = time_process;
+        float const time_scheduled_diff = time_process - process->time_spent_in_process;
+        process->time_spent_in_process = time_process;
 
-        process.cpu_percent = 0.0;
+        process->cpu_percent = 0.0;
         if (total_time_scheduled_diff > 0) {
-            process.cpu_percent = time_scheduled_diff / (total_time_scheduled_diff / ncpu_online) * 100.0f;
+            process->cpu_percent = time_scheduled_diff / (total_time_scheduled_diff / ncpu_online) * 100.0f;
         }
     }
 

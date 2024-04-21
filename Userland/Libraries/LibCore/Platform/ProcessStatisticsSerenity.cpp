@@ -11,11 +11,10 @@
 #endif
 
 #include <LibCore/File.h>
+#include <LibCore/Platform/ProcessStatistics.h>
 #include <LibCore/ProcessStatisticsReader.h>
-#include <LibWebView/Platform/ProcessInfo.h>
-#include <LibWebView/Platform/ProcessStatistics.h>
 
-namespace WebView {
+namespace Core::Platform {
 
 ErrorOr<void> update_process_statistics(ProcessStatistics& statistics)
 {
@@ -28,25 +27,25 @@ ErrorOr<void> update_process_statistics(ProcessStatistics& statistics)
     statistics.total_time_scheduled = total_time_scheduled;
 
     for (auto& process : statistics.processes) {
-        auto it = all_processes.processes.find_if([&](auto& entry) { return entry.pid == process.pid; });
+        auto it = all_processes.processes.find_if([&](auto& entry) { return entry.pid == process->pid; });
         if (!it.is_end()) {
-            process.memory_usage_bytes = it->amount_resident;
+            process->memory_usage_bytes = it->amount_resident;
 
             u64 time_process = 0;
             for (auto& thread : it->threads) {
                 time_process += thread.time_user + thread.time_kernel;
             }
-            u64 time_scheduled_diff = time_process - process.time_spent_in_process;
+            u64 time_scheduled_diff = time_process - process->time_spent_in_process;
 
-            process.time_spent_in_process = time_process;
-            process.cpu_percent = 0.0;
+            process->time_spent_in_process = time_process;
+            process->cpu_percent = 0.0;
             if (total_time_scheduled_diff > 0) {
-                process.cpu_percent = static_cast<float>((time_scheduled_diff * 1000) / total_time_scheduled_diff) / 10.0f;
+                process->cpu_percent = static_cast<float>((time_scheduled_diff * 1000) / total_time_scheduled_diff) / 10.0f;
             }
         } else {
-            process.memory_usage_bytes = 0;
-            process.cpu_percent = 0.0;
-            process.time_spent_in_process = 0;
+            process->memory_usage_bytes = 0;
+            process->cpu_percent = 0.0;
+            process->time_spent_in_process = 0;
         }
     }
 

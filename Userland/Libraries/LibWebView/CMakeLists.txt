@@ -21,22 +21,7 @@ set(SOURCES
 set(GENERATED_SOURCES ${CURRENT_LIB_GENERATED})
 
 if (SERENITYOS)
-    list(APPEND SOURCES
-        OutOfProcessWebView.cpp
-        Platform/ProcessStatisticsSerenity.cpp
-    )
-elseif(LINUX AND NOT ANDROID)
-    list(APPEND SOURCES
-        Platform/ProcessStatisticsLinux.cpp
-    )
-elseif(APPLE)
-    list(APPEND SOURCES
-        Platform/ProcessStatisticsMach.cpp
-    )
-else()
-    list(APPEND SOURCES
-        Platform/ProcessStatisticsNoop.cpp
-    )
+    list(APPEND SOURCES OutOfProcessWebView.cpp)
 endif()
 
 embed_as_string_view(
