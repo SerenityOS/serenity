@@ -2622,19 +2622,21 @@ enum class @enum.type.name@ {
 )~~~");
 
         enum_generator.append(R"~~~(
-inline String idl_enum_to_string(@enum.type.name@ value) {
-    switch(value) {
+inline String idl_enum_to_string(@enum.type.name@ value)
+{
+    switch (value) {
 )~~~");
         for (auto& entry : it.value.translated_cpp_names) {
             enum_generator.set("enum.entry", entry.value);
             enum_generator.set("enum.string", entry.key);
             enum_generator.append(R"~~~(
-    case @enum.type.name@::@enum.entry@: return "@enum.string@"_string;
+    case @enum.type.name@::@enum.entry@:
+        return "@enum.string@"_string;
 )~~~");
         }
         enum_generator.append(R"~~~(
-    default: return "<unknown>"_string;
-    };
+    }
+    VERIFY_NOT_REACHED();
 }
 )~~~");
     }
