@@ -826,7 +826,7 @@ JS::NonnullGCPtr<Node> Node::clone_node(Document* document, bool clone_children)
         element.for_each_attribute([&](auto& name, auto& value) {
             // 1. Let copyAttribute be a clone of attribute.
             // 2. Append copyAttribute to copy.
-            MUST(element_copy->set_attribute(name, value));
+            element_copy->append_attribute(name, value);
         });
         copy = move(element_copy);
 

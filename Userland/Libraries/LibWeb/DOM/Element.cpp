@@ -247,6 +247,12 @@ WebIDL::ExceptionOr<void> Element::set_attribute_ns(Optional<FlyString> const& n
 }
 
 // https://dom.spec.whatwg.org/#concept-element-attributes-append
+void Element::append_attribute(FlyString const& name, String const& value)
+{
+    m_attributes->append_attribute(Attr::create(document(), name, value));
+}
+
+// https://dom.spec.whatwg.org/#concept-element-attributes-append
 void Element::append_attribute(Attr& attribute)
 {
     m_attributes->append_attribute(attribute);
