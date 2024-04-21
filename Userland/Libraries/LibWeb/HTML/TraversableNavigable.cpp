@@ -378,6 +378,30 @@ static void deactivate_a_document_for_cross_document_navigation(JS::NonnullGCPtr
     }
 }
 
+struct ChangingNavigableContinuationState : public JS::Cell {
+    JS_CELL(ChangingNavigableContinuationState, JS::Cell);
+    JS_DECLARE_ALLOCATOR(ChangingNavigableContinuationState);
+
+    JS::GCPtr<DOM::Document> displayed_document;
+    JS::GCPtr<SessionHistoryEntry> target_entry;
+    JS::GCPtr<Navigable> navigable;
+    bool update_only = false;
+
+    JS::GCPtr<SessionHistoryEntry> populated_target_entry;
+    bool populated_cloned_target_session_history_entry = false;
+
+    virtual void visit_edges(Cell::Visitor& visitor) override
+    {
+        Base::visit_edges(visitor);
+        visitor.visit(displayed_document);
+        visitor.visit(target_entry);
+        visitor.visit(navigable);
+        visitor.visit(populated_target_entry);
+    }
+};
+
+JS_DEFINE_ALLOCATOR(ChangingNavigableContinuationState);
+
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#apply-the-history-step
 TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_step(
     int step,
@@ -441,19 +465,9 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
     // 10. Let completedChangeJobs be 0.
     IGNORE_USE_IN_ESCAPING_LAMBDA size_t completed_change_jobs = 0;
 
-    struct ChangingNavigableContinuationState {
-        JS::Handle<DOM::Document> displayed_document;
-        JS::Handle<SessionHistoryEntry> target_entry;
-        JS::Handle<Navigable> navigable;
-        bool update_only = false;
-
-        JS::Handle<SessionHistoryEntry> populated_target_entry;
-        bool populated_cloned_target_session_history_entry = false;
-    };
-
     // 11. Let changingNavigableContinuations be an empty queue of changing navigable continuation states.
     // NOTE: This queue is used to split the operations on changingNavigables into two parts. Specifically, changingNavigableContinuations holds data for the second part.
-    IGNORE_USE_IN_ESCAPING_LAMBDA Queue<ChangingNavigableContinuationState> changing_navigable_continuations;
+    IGNORE_USE_IN_ESCAPING_LAMBDA Queue<JS::Handle<ChangingNavigableContinuationState>> changing_navigable_continuations;
 
     // 12. For each navigable of changingNavigables, queue a global task on the navigation and traversal task source of navigable's active window to run the steps:
     for (auto& navigable : changing_navigables) {
@@ -471,19 +485,18 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
             auto target_entry = navigable->current_session_history_entry();
 
             // 3. Let changingNavigableContinuation be a changing navigable continuation state with:
-            auto changing_navigable_continuation = ChangingNavigableContinuationState {
-                .displayed_document = displayed_entry->document(),
-                .target_entry = target_entry,
-                .navigable = navigable,
-                .update_only = false,
-                .populated_target_entry = {},
-                .populated_cloned_target_session_history_entry = false,
-            };
+            auto changing_navigable_continuation = vm.heap().allocate_without_realm<ChangingNavigableContinuationState>();
+            changing_navigable_continuation->displayed_document = displayed_entry->document();
+            changing_navigable_continuation->target_entry = target_entry;
+            changing_navigable_continuation->navigable = navigable;
+            changing_navigable_continuation->update_only = false;
+            changing_navigable_continuation->populated_target_entry = nullptr;
+            changing_navigable_continuation->populated_cloned_target_session_history_entry = false;
 
             // 4. If displayedEntry is targetEntry and targetEntry's document state's reload pending is false, then:
             if (synchronous_navigation == SynchronousNavigation::Yes && !target_entry->document_state()->reload_pending()) {
                 // 1. Set changingNavigableContinuation's update-only to true.
-                changing_navigable_continuation.update_only = true;
+                changing_navigable_continuation->update_only = true;
 
                 // 2. Enqueue changingNavigableContinuation on changingNavigableContinuations.
                 changing_navigable_continuations.enqueue(move(changing_navigable_continuation));
@@ -524,12 +537,12 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
             //    then fire a traverse navigate event given targetEntry and userInvolvementForNavigateEvents.
 
             auto after_document_populated = [old_origin, changing_navigable_continuation, &changing_navigable_continuations, &vm, &navigable](bool populated_cloned_target_she, JS::NonnullGCPtr<SessionHistoryEntry> target_entry) mutable {
-                changing_navigable_continuation.populated_target_entry = target_entry;
-                changing_navigable_continuation.populated_cloned_target_session_history_entry = populated_cloned_target_she;
+                changing_navigable_continuation->populated_target_entry = target_entry;
+                changing_navigable_continuation->populated_cloned_target_session_history_entry = populated_cloned_target_she;
 
                 // 1. If targetEntry's document is null, then set changingNavigableContinuation's update-only to true.
                 if (!target_entry->document()) {
-                    changing_navigable_continuation.update_only = true;
+                    changing_navigable_continuation->update_only = true;
                 }
 
                 else {
@@ -650,13 +663,13 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
         // 3. If changingNavigableContinuation is nothing, then continue.
 
         // 4. Let displayedDocument be changingNavigableContinuation's displayed document.
-        auto displayed_document = changing_navigable_continuation.displayed_document;
+        auto displayed_document = changing_navigable_continuation->displayed_document;
 
         // 5. Let targetEntry be changingNavigableContinuation's target entry.
-        JS::GCPtr<SessionHistoryEntry> const populated_target_entry = changing_navigable_continuation.populated_target_entry.ptr();
+        JS::GCPtr<SessionHistoryEntry> const populated_target_entry = changing_navigable_continuation->populated_target_entry;
 
         // 6. Let navigable be changingNavigableContinuation's navigable.
-        auto navigable = changing_navigable_continuation.navigable;
+        auto navigable = changing_navigable_continuation->navigable;
 
         // NOTE: This check is not in the spec but we should not continue navigation if navigable has been destroyed.
         if (navigable->has_been_destroyed())
@@ -674,9 +687,9 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
         auto entries_for_navigation_api = get_session_history_entries_for_the_navigation_api(*navigable, target_step);
 
         // 12. In both cases, let afterPotentialUnloads be the following steps:
-        bool const update_only = changing_navigable_continuation.update_only;
-        JS::GCPtr<SessionHistoryEntry> const target_entry = changing_navigable_continuation.target_entry.ptr();
-        bool const populated_cloned_target_session_history_entry = changing_navigable_continuation.populated_cloned_target_session_history_entry;
+        bool const update_only = changing_navigable_continuation->update_only;
+        JS::GCPtr<SessionHistoryEntry> const target_entry = changing_navigable_continuation->target_entry;
+        bool const populated_cloned_target_session_history_entry = changing_navigable_continuation->populated_cloned_target_session_history_entry;
         auto after_potential_unload = JS::create_heap_function(this->heap(), [navigable, update_only, target_entry, populated_target_entry, populated_cloned_target_session_history_entry, displayed_document, &completed_change_jobs, script_history_length, script_history_index, entries_for_navigation_api = move(entries_for_navigation_api), &heap = this->heap()] {
             if (populated_cloned_target_session_history_entry) {
                 target_entry->set_document_state(populated_target_entry->document_state());
@@ -709,7 +722,7 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
         });
 
         // 10. If changingNavigableContinuation's update-only is true, or targetEntry's document is displayedDocument, then:
-        if (changing_navigable_continuation.update_only || populated_target_entry->document().ptr() == displayed_document.ptr()) {
+        if (changing_navigable_continuation->update_only || populated_target_entry->document().ptr() == displayed_document.ptr()) {
             // 1. Set the ongoing navigation for navigable to null.
             navigable->set_ongoing_navigation({});
 
