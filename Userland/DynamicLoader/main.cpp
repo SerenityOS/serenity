@@ -91,6 +91,8 @@ ALWAYS_INLINE static void optimizer_fence()
     asm("" ::: "memory");
 }
 
+[[noreturn]] void _invoke_entry(int argc, char** argv, char** envp, ELF::EntryPointFunction entry);
+
 [[gnu::no_stack_protector]] void _entry(int argc, char** argv, char** envp)
 {
     char** env;
@@ -185,7 +187,8 @@ ALWAYS_INLINE static void optimizer_fence()
     VERIFY(main_program_fd >= 0);
     VERIFY(!main_program_path.is_empty());
 
-    ELF::DynamicLinker::linker_main(move(main_program_path), main_program_fd, is_secure, argc, argv, envp);
+    auto entry_point = ELF::DynamicLinker::linker_main(move(main_program_path), main_program_fd, is_secure, envp);
+    _invoke_entry(argc, argv, envp, entry_point);
     VERIFY_NOT_REACHED();
 }
 }
