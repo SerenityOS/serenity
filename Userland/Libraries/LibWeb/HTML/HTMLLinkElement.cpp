@@ -46,6 +46,15 @@ void HTMLLinkElement::initialize(JS::Realm& realm)
     WEB_SET_PROTOTYPE_FOR_INTERFACE(HTMLLinkElement);
 }
 
+void HTMLLinkElement::removed_from(Node* old_parent)
+{
+    Base::removed_from(old_parent);
+    if (m_loaded_style_sheet) {
+        document_or_shadow_root_style_sheets().remove_a_css_style_sheet(*m_loaded_style_sheet);
+        m_loaded_style_sheet = nullptr;
+    }
+}
+
 void HTMLLinkElement::inserted()
 {
     HTMLElement::inserted();
