@@ -5100,8 +5100,12 @@ RefPtr<StyleValue> Parser::parse_easing_value(TokenStream<ComponentValue>& token
     return EasingStyleValue::create(function, move(values));
 }
 
+// https://www.w3.org/TR/css-transforms-1/#transform-property
 RefPtr<StyleValue> Parser::parse_transform_value(TokenStream<ComponentValue>& tokens)
 {
+    // <transform> = none | <transform-list>
+    // <transform-list> = <transform-function>+
+
     if (contains_single_none_ident(tokens)) {
         tokens.next_token(); // none
         return IdentifierStyleValue::create(ValueID::None);
@@ -5109,7 +5113,6 @@ RefPtr<StyleValue> Parser::parse_transform_value(TokenStream<ComponentValue>& to
 
     StyleValueVector transformations;
     auto transaction = tokens.begin_transaction();
-
     while (tokens.has_next_token()) {
         auto const& part = tokens.next_token();
         if (!part.is_function())
@@ -5120,15 +5123,23 @@ RefPtr<StyleValue> Parser::parse_transform_value(TokenStream<ComponentValue>& to
         auto function = maybe_function.release_value();
         auto function_metadata = transform_function_metadata(function);
 
+        auto function_tokens = TokenStream { part.function().values() };
+        auto arguments = parse_a_comma_separated_list_of_component_values(function_tokens);
+
+        if (arguments.size() > function_metadata.parameters.size()) {
+            dbgln_if(CSS_PARSER_DEBUG, "Too many arguments to {}. max: {}", part.function().name(), function_metadata.parameters.size());
+            return nullptr;
+        }
+
+        if (arguments.size() < function_metadata.parameters.size() && function_metadata.parameters[arguments.size()].required) {
+            dbgln_if(CSS_PARSER_DEBUG, "Required parameter at position {} is missing", arguments.size());
+            return nullptr;
+        }
+
         StyleValueVector values;
-        auto argument_tokens = TokenStream { part.function().values() };
-        argument_tokens.skip_whitespace();
-        size_t argument_index = 0;
-        while (argument_tokens.has_next_token()) {
-            if (argument_index == function_metadata.parameters.size()) {
-                dbgln_if(CSS_PARSER_DEBUG, "Too many arguments to {}. max: {}", part.function().name(), function_metadata.parameters.size());
-                return nullptr;
-            }
+        for (auto argument_index = 0u; argument_index < arguments.size(); ++argument_index) {
+            TokenStream argument_tokens { arguments[argument_index] };
+            argument_tokens.skip_whitespace();
 
             auto const& value = argument_tokens.next_token();
             RefPtr<CalculatedStyleValue> maybe_calc_value = parse_calculated_value(value);
@@ -5157,8 +5168,7 @@ RefPtr<StyleValue> Parser::parse_transform_value(TokenStream<ComponentValue>& to
                         auto identifier_value = parse_identifier_value(value);
                         if (identifier_value && identifier_value->to_identifier() == ValueID::None) {
                             values.append(identifier_value.release_nonnull());
-                            argument_index++;
-                            continue;
+                            break;
                         }
                     }
 
@@ -5217,23 +5227,8 @@ RefPtr<StyleValue> Parser::parse_transform_value(TokenStream<ComponentValue>& to
             }
 
             argument_tokens.skip_whitespace();
-            if (argument_tokens.has_next_token()) {
-                // Arguments must be separated by commas.
-                if (!argument_tokens.next_token().is(Token::Type::Comma))
-                    return nullptr;
-                argument_tokens.skip_whitespace();
-
-                // If there are no more parameters after the comma, this is invalid.
-                if (!argument_tokens.has_next_token())
-                    return nullptr;
-            }
-
-            argument_index++;
-        }
-
-        if (argument_index < function_metadata.parameters.size() && function_metadata.parameters[argument_index].required) {
-            dbgln_if(CSS_PARSER_DEBUG, "Required parameter at position {} is missing", argument_index);
-            return nullptr;
+            if (argument_tokens.has_next_token())
+                return nullptr;
         }
 
         transformations.append(TransformationStyleValue::create(function, move(values)));
