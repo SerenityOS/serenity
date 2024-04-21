@@ -568,8 +568,11 @@ void WebContentView::initialize_client(WebView::ViewImplementation::CreateNewCli
     if (!screens.empty()) {
         Vector<Web::DevicePixelRect> screen_rects;
         for (auto const& screen : screens) {
+            // NOTE: QScreen::geometry() returns the 'device-independent pixels', we multiply
+            //       by the device pixel ratio to get the 'physical pixels' of the display.
             auto geometry = screen->geometry();
-            screen_rects.append(Web::DevicePixelRect(geometry.x(), geometry.y(), geometry.width(), geometry.height()));
+            auto device_pixel_ratio = screen->devicePixelRatio();
+            screen_rects.append(Web::DevicePixelRect(geometry.x(), geometry.y(), geometry.width() * device_pixel_ratio, geometry.height() * device_pixel_ratio));
         }
 
         // FIXME: Update the screens again when QGuiApplication::screenAdded/Removed signals are emitted
