@@ -2195,12 +2195,15 @@ RefPtr<StyleValue> Parser::parse_number_or_percentage_value(TokenStream<Componen
     return nullptr;
 }
 
-RefPtr<StyleValue> Parser::parse_identifier_value(ComponentValue const& component_value)
+RefPtr<StyleValue> Parser::parse_identifier_value(TokenStream<ComponentValue>& tokens)
 {
-    if (component_value.is(Token::Type::Ident)) {
-        auto value_id = value_id_from_string(component_value.token().ident());
-        if (value_id.has_value())
+    auto peek_token = tokens.peek_token();
+    if (peek_token.is(Token::Type::Ident)) {
+        auto value_id = value_id_from_string(peek_token.token().ident());
+        if (value_id.has_value()) {
+            (void)tokens.next_token(); // ident
             return IdentifierStyleValue::create(value_id.value());
+        }
     }
 
     return nullptr;
@@ -3610,7 +3613,7 @@ RefPtr<StyleValue> Parser::parse_shadow_value(TokenStream<ComponentValue>& token
 {
     // "none"
     if (contains_single_none_ident(tokens))
-        return parse_identifier_value(tokens.next_token());
+        return parse_identifier_value(tokens);
 
     return parse_comma_separated_value_list(tokens, [this, allow_inset_keyword](auto& tokens) {
         return parse_single_shadow_value(tokens, allow_inset_keyword);
@@ -3724,8 +3727,6 @@ RefPtr<StyleValue> Parser::parse_content_value(TokenStream<ComponentValue>& toke
 {
     // FIXME: `content` accepts several kinds of function() type, which we don't handle in property_accepts_value() yet.
 
-    auto transaction = tokens.begin_transaction();
-
     auto is_single_value_identifier = [](ValueID identifier) -> bool {
         switch (identifier) {
         case ValueID::None:
@@ -3737,14 +3738,16 @@ RefPtr<StyleValue> Parser::parse_content_value(TokenStream<ComponentValue>& toke
     };
 
     if (tokens.remaining_token_count() == 1) {
-        if (auto identifier = parse_identifier_value(tokens.peek_token())) {
+        auto transaction = tokens.begin_transaction();
+        if (auto identifier = parse_identifier_value(tokens)) {
             if (is_single_value_identifier(identifier->to_identifier())) {
-                (void)tokens.next_token();
                 transaction.commit();
                 return identifier;
             }
         }
     }
+
+    auto transaction = tokens.begin_transaction();
 
     StyleValueVector content_values;
     StyleValueVector alt_text_values;
@@ -3793,7 +3796,7 @@ RefPtr<StyleValue> Parser::parse_display_value(TokenStream<ComponentValue>& toke
 {
     auto parse_single_component_display = [this](TokenStream<ComponentValue>& tokens) -> Optional<Display> {
         auto transaction = tokens.begin_transaction();
-        if (auto identifier_value = parse_identifier_value(tokens.next_token())) {
+        if (auto identifier_value = parse_identifier_value(tokens)) {
             auto identifier = identifier_value->to_identifier();
             if (identifier == ValueID::ListItem) {
                 transaction.commit();
@@ -3871,8 +3874,7 @@ RefPtr<StyleValue> Parser::parse_display_value(TokenStream<ComponentValue>& toke
 
         auto transaction = tokens.begin_transaction();
         while (tokens.has_next_token()) {
-            auto& token = tokens.next_token();
-            if (auto value = parse_identifier_value(token)) {
+            if (auto value = parse_identifier_value(tokens)) {
                 auto identifier = value->to_identifier();
                 if (identifier == ValueID::ListItem) {
                     if (list_item == Display::ListItem::Yes)
@@ -3895,7 +3897,7 @@ RefPtr<StyleValue> Parser::parse_display_value(TokenStream<ComponentValue>& toke
             }
 
             // Not a display value, abort.
-            dbgln_if(CSS_PARSER_DEBUG, "Unrecognized display value: `{}`", token.to_string());
+            dbgln_if(CSS_PARSER_DEBUG, "Unrecognized display value: `{}`", tokens.peek_token().to_string());
             return {};
         }
 
@@ -3926,7 +3928,7 @@ RefPtr<StyleValue> Parser::parse_filter_value_list_value(TokenStream<ComponentVa
 
     if (contains_single_none_ident(tokens)) {
         transaction.commit();
-        return parse_identifier_value(tokens.next_token());
+        return parse_identifier_value(tokens);
     }
 
     // FIXME: <url>s are ignored for now
@@ -4878,7 +4880,7 @@ RefPtr<StyleValue> Parser::parse_quotes_value(TokenStream<ComponentValue>& token
     auto transaction = tokens.begin_transaction();
 
     if (tokens.remaining_token_count() == 1) {
-        auto identifier = parse_identifier_value(tokens.next_token());
+        auto identifier = parse_identifier_value(tokens);
         if (identifier && property_accepts_identifier(PropertyID::Quotes, identifier->to_identifier())) {
             transaction.commit();
             return identifier;
@@ -5045,6 +5047,7 @@ RefPtr<StyleValue> Parser::parse_easing_value(TokenStream<ComponentValue>& token
             }
 
             auto& value = argument_values[0];
+            auto value_as_stream = TokenStream { argument_values };
             switch (function_metadata.parameters[argument_index].type) {
             case EasingFunctionParameterType::Number: {
                 if (value.is(Token::Type::Number))
@@ -5070,7 +5073,7 @@ RefPtr<StyleValue> Parser::parse_easing_value(TokenStream<ComponentValue>& token
             case EasingFunctionParameterType::StepPosition: {
                 if (!value.is(Token::Type::Ident))
                     return nullptr;
-                auto ident = parse_identifier_value(value);
+                auto ident = parse_identifier_value(value_as_stream);
                 if (!ident)
                     return nullptr;
                 switch (ident->to_identifier()) {
@@ -5162,24 +5165,26 @@ RefPtr<StyleValue> Parser::parse_transform_value(TokenStream<ComponentValue>& to
             case TransformFunctionParameterType::Length:
             case TransformFunctionParameterType::LengthNone: {
                 if (maybe_calc_value && maybe_calc_value->resolves_to_length()) {
+                    (void)argument_tokens.next_token(); // calc()
                     values.append(maybe_calc_value.release_nonnull());
                 } else {
                     if (function_metadata.parameters[argument_index].type == TransformFunctionParameterType::LengthNone) {
-                        auto identifier_value = parse_identifier_value(value);
+                        auto ident_transaction = argument_tokens.begin_transaction();
+                        // FIXME: Remove this reconsume once all parsing functions are TokenStream-based.
+                        argument_tokens.reconsume_current_input_token();
+                        auto identifier_value = parse_identifier_value(argument_tokens);
                         if (identifier_value && identifier_value->to_identifier() == ValueID::None) {
                             values.append(identifier_value.release_nonnull());
+                            ident_transaction.commit();
                             break;
                         }
                     }
 
                     auto dimension_value = parse_dimension_value(value);
-                    if (!dimension_value)
+                    if (!dimension_value || !dimension_value->is_length())
                         return nullptr;
 
-                    if (dimension_value->is_length())
-                        values.append(dimension_value.release_nonnull());
-                    else
-                        return nullptr;
+                    values.append(dimension_value.release_nonnull());
                 }
                 break;
             }
