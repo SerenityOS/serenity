@@ -61,6 +61,8 @@ public:
 
     bool fire_a_synthetic_pointer_event(FlyString const& type, DOM::Element& target, bool not_trusted);
 
+    String access_key_label() const;
+
     // https://html.spec.whatwg.org/multipage/forms.html#category-label
     virtual bool is_labelable() const { return false; }
 
@@ -99,6 +101,7 @@ private:
 
     // https://html.spec.whatwg.org/multipage/interaction.html#click-in-progress-flag
     bool m_click_in_progress { false };
+
 };
 
 }

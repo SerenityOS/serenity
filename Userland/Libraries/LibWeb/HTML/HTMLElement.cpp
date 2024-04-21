@@ -566,4 +566,20 @@ void HTMLElement::did_receive_focus()
     browsing_context->set_cursor_position(DOM::Position::create(realm(), *this, 0));
 }
 
+String HTMLElement::access_key_label() const
+{
+    auto access_key = get_attribute(HTML::AttributeNames::accesskey);
+    if (!access_key.has_value() || access_key->is_empty())
+        return {};
+
+    StringBuilder access_key_label;
+    dbgln("FIXME: Implement HTMLElement::access_key_label() valid system key check");
+    // Loop through words in access_key to find first valid system key
+    dbgln("FIXME: Implement HTMLElement::access_key_label() get system modifier key");
+    // get system modifier key and append that instead of this line
+    access_key_label.append("Alt"sv);
+    access_key_label.append("+"sv);
+    access_key_label.append(*access_key);
+    return MUST(access_key_label.to_string());
+}
 }

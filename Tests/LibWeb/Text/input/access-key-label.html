@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Access Key Label Test</title>
+    <script src="include.js"></script>
+</head>
+<body>
+    <div id="testElement" accesskey="A"></div>
+    <script>
+        test(() => {
+            const testElement = document.getElementById('testElement');
+            testElement.accessKey = 'A';
+            
+            println(testElement.accessKeyLabel);
+        });
+    </script>
+</body>
+</html>
