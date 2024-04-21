@@ -2545,6 +2545,50 @@ JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> @constructor_class@::constru
     }
 }
 
+static void generate_enumerations(HashMap<ByteString, Enumeration> const& enumerations, StringBuilder& builder)
+{
+    SourceGenerator generator { builder };
+
+    for (auto const& it : enumerations) {
+        if (!it.value.is_original_definition)
+            continue;
+        auto enum_generator = generator.fork();
+        enum_generator.set("enum.type.name", it.key);
+        enum_generator.append(R"~~~(
+enum class @enum.type.name@ {
+)~~~");
+        for (auto const& entry : it.value.translated_cpp_names) {
+            enum_generator.set("enum.entry", entry.value);
+            enum_generator.append(R"~~~(
+    @enum.entry@,
+)~~~");
+        }
+
+        enum_generator.append(R"~~~(
+};
+)~~~");
+
+        enum_generator.append(R"~~~(
+inline String idl_enum_to_string(@enum.type.name@ value)
+{
+    switch (value) {
+)~~~");
+        for (auto const& entry : it.value.translated_cpp_names) {
+            enum_generator.set("enum.entry", entry.value);
+            enum_generator.set("enum.string", entry.key);
+            enum_generator.append(R"~~~(
+    case @enum.type.name@::@enum.entry@:
+        return "@enum.string@"_string;
+)~~~");
+        }
+        enum_generator.append(R"~~~(
+    }
+    VERIFY_NOT_REACHED();
+}
+)~~~");
+    }
+}
+
 static void generate_prototype_or_global_mixin_declarations(IDL::Interface const& interface, StringBuilder& builder)
 {
     SourceGenerator generator { builder };
@@ -2602,44 +2646,7 @@ static void generate_prototype_or_global_mixin_declarations(IDL::Interface const
 
 )~~~");
 
-    for (auto& it : interface.enumerations) {
-        if (!it.value.is_original_definition)
-            continue;
-        auto enum_generator = generator.fork();
-        enum_generator.set("enum.type.name", it.key);
-        enum_generator.append(R"~~~(
-enum class @enum.type.name@ {
-)~~~");
-        for (auto& entry : it.value.translated_cpp_names) {
-            enum_generator.set("enum.entry", entry.value);
-            enum_generator.append(R"~~~(
-    @enum.entry@,
-)~~~");
-        }
-
-        enum_generator.append(R"~~~(
-};
-)~~~");
-
-        enum_generator.append(R"~~~(
-inline String idl_enum_to_string(@enum.type.name@ value)
-{
-    switch (value) {
-)~~~");
-        for (auto& entry : it.value.translated_cpp_names) {
-            enum_generator.set("enum.entry", entry.value);
-            enum_generator.set("enum.string", entry.key);
-            enum_generator.append(R"~~~(
-    case @enum.type.name@::@enum.entry@:
-        return "@enum.string@"_string;
-)~~~");
-        }
-        enum_generator.append(R"~~~(
-    }
-    VERIFY_NOT_REACHED();
-}
-)~~~");
-    }
+    generate_enumerations(interface.enumerations, builder);
 }
 
 // https://webidl.spec.whatwg.org/#create-an-inheritance-stack
