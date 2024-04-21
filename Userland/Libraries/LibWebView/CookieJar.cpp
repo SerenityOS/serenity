@@ -447,6 +447,10 @@ Vector<Web::Cookie::Cookie> CookieJar::get_matching_cookies(const URL::URL& url,
         });
     });
 
+    // NOTE: The WebDriver spec expects only step 1 above to be executed to match cookies.
+    if (mode == MatchingCookiesSpecMode::WebDriver)
+        return cookie_list;
+
     // 3. Update the last-access-time of each cookie in the cookie-list to the current date and time.
     auto now = UnixDateTime::now();
 
