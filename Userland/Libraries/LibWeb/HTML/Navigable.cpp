@@ -586,7 +586,7 @@ static JS::GCPtr<DOM::Document> attempt_to_create_a_non_fetch_scheme_document(No
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#create-navigation-params-from-a-srcdoc-resource
-static WebIDL::ExceptionOr<NavigationParams> create_navigation_params_from_a_srcdoc_resource(JS::GCPtr<SessionHistoryEntry> entry, JS::GCPtr<Navigable> navigable, TargetSnapshotParams const& target_snapshot_params, Optional<String> navigation_id)
+static WebIDL::ExceptionOr<JS::NonnullGCPtr<NavigationParams>> create_navigation_params_from_a_srcdoc_resource(JS::GCPtr<SessionHistoryEntry> entry, JS::GCPtr<Navigable> navigable, TargetSnapshotParams const& target_snapshot_params, Optional<String> navigation_id)
 {
     auto& vm = navigable->vm();
     auto& realm = navigable->active_window()->realm();
@@ -649,25 +649,22 @@ static WebIDL::ExceptionOr<NavigationParams> create_navigation_params_from_a_src
     //    cross-origin opener policy: coop
     //    FIXME: navigation timing type: navTimingType
     //    about base URL: entry's document state's about base URL
-    return NavigationParams {
-        .id = move(navigation_id),
-        .navigable = navigable,
-        .request = nullptr,
-        .response = *response,
-        .fetch_controller = nullptr,
-        .commit_early_hints = nullptr,
-        .coop_enforcement_result = move(coop_enforcement_result),
-        .reserved_environment = {},
-        .origin = move(response_origin),
-        .policy_container = policy_container,
-        .final_sandboxing_flag_set = target_snapshot_params.sandboxing_flags,
-        .cross_origin_opener_policy = move(coop),
-        .about_base_url = entry->document_state()->about_base_url(),
-    };
+    auto navigation_params = vm.heap().allocate_without_realm<NavigationParams>();
+    navigation_params->id = move(navigation_id);
+    navigation_params->navigable = navigable;
+    navigation_params->response = response;
+    navigation_params->coop_enforcement_result = move(coop_enforcement_result);
+    navigation_params->origin = move(response_origin);
+    navigation_params->policy_container = policy_container;
+    navigation_params->final_sandboxing_flag_set = target_snapshot_params.sandboxing_flags;
+    navigation_params->cross_origin_opener_policy = move(coop);
+    navigation_params->about_base_url = entry->document_state()->about_base_url();
+
+    return navigation_params;
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#create-navigation-params-by-fetching
-static WebIDL::ExceptionOr<Variant<Empty, NavigationParams, NonFetchSchemeNavigationParams>> create_navigation_params_by_fetching(JS::GCPtr<SessionHistoryEntry> entry, JS::GCPtr<Navigable> navigable, SourceSnapshotParams const& source_snapshot_params, TargetSnapshotParams const& target_snapshot_params, CSPNavigationType csp_navigation_type, Optional<String> navigation_id)
+static WebIDL::ExceptionOr<Variant<Empty, JS::NonnullGCPtr<NavigationParams>, JS::NonnullGCPtr<NonFetchSchemeNavigationParams>>> create_navigation_params_by_fetching(JS::GCPtr<SessionHistoryEntry> entry, JS::GCPtr<Navigable> navigable, SourceSnapshotParams const& source_snapshot_params, TargetSnapshotParams const& target_snapshot_params, CSPNavigationType csp_navigation_type, Optional<String> navigation_id)
 {
     auto& vm = navigable->vm();
     auto& realm = navigable->active_window()->realm();
@@ -953,14 +950,14 @@ static WebIDL::ExceptionOr<Variant<Empty, NavigationParams, NonFetchSchemeNaviga
         // - source snapshot has transient activation: sourceSnapshotParams's has transient activation
         // - initiator origin: responseOrigin
         // FIXME: - navigation timing type: navTimingType
-        return NonFetchSchemeNavigationParams {
-            .id = navigation_id,
-            .navigable = navigable,
-            .url = location_url.release_value().value(),
-            .target_snapshot_sandboxing_flags = target_snapshot_params.sandboxing_flags,
-            .source_snapshot_has_transient_activation = source_snapshot_params.has_transient_activation,
-            .initiator_origin = move(*response_origin),
-        };
+        auto navigation_params = vm.heap().allocate_without_realm<NonFetchSchemeNavigationParams>();
+        navigation_params->id = navigation_id;
+        navigation_params->navigable = navigable;
+        navigation_params->url = location_url.release_value().value();
+        navigation_params->target_snapshot_sandboxing_flags = target_snapshot_params.sandboxing_flags;
+        navigation_params->source_snapshot_has_transient_activation = source_snapshot_params.has_transient_activation;
+        navigation_params->initiator_origin = move(*response_origin);
+        return navigation_params;
     }
 
     // 21. If any of the following are true:
@@ -1002,22 +999,20 @@ static WebIDL::ExceptionOr<Variant<Empty, NavigationParams, NonFetchSchemeNaviga
     //     COOP enforcement result: coopEnforcementResult
     //     FIXME: navigation timing type: navTimingType
     //     about base URL: entry's document state's about base URL
-    HTML::NavigationParams navigation_params {
-        .id = navigation_id,
-        .navigable = navigable,
-        .request = request,
-        .response = *response_holder->response(),
-        .fetch_controller = fetch_controller,
-        .commit_early_hints = move(commit_early_hints),
-        .coop_enforcement_result = coop_enforcement_result,
-        .reserved_environment = request->reserved_client(),
-        .origin = *response_origin,
-        .policy_container = result_policy_container,
-        .final_sandboxing_flag_set = final_sandbox_flags,
-        .cross_origin_opener_policy = response_coop,
-        .about_base_url = entry->document_state()->about_base_url(),
-    };
-
+    auto navigation_params = vm.heap().allocate_without_realm<NavigationParams>();
+    navigation_params->id = navigation_id;
+    navigation_params->navigable = navigable;
+    navigation_params->request = request;
+    navigation_params->response = *response_holder->response();
+    navigation_params->fetch_controller = fetch_controller;
+    navigation_params->commit_early_hints = move(commit_early_hints);
+    navigation_params->coop_enforcement_result = coop_enforcement_result;
+    navigation_params->reserved_environment = request->reserved_client();
+    navigation_params->origin = *response_origin;
+    navigation_params->policy_container = result_policy_container;
+    navigation_params->final_sandboxing_flag_set = final_sandbox_flags;
+    navigation_params->cross_origin_opener_policy = response_coop;
+    navigation_params->about_base_url = entry->document_state()->about_base_url();
     return navigation_params;
 }
 
@@ -1027,7 +1022,7 @@ WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(
     SourceSnapshotParams const& source_snapshot_params,
     TargetSnapshotParams const& target_snapshot_params,
     Optional<String> navigation_id,
-    Variant<Empty, NavigationParams, NonFetchSchemeNavigationParams> navigation_params,
+    Variant<Empty, JS::NonnullGCPtr<NavigationParams>, JS::NonnullGCPtr<NonFetchSchemeNavigationParams>> navigation_params,
     CSPNavigationType csp_navigation_type,
     bool allow_POST,
     Function<void()> completion_steps)
@@ -1037,7 +1032,7 @@ WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(
     // 2. Assert: if navigationParams is non-null, then navigationParams's response is non-null.
     // NavigationParams' response field is NonnullGCPtr
     if (!navigation_params.has<Empty>())
-        VERIFY(navigation_params.has<NavigationParams>());
+        VERIFY(navigation_params.has<JS::NonnullGCPtr<NavigationParams>>());
 
     // 3. Let currentBrowsingContext be navigable's active browsing context.
     [[maybe_unused]] auto current_browsing_context = active_browsing_context();
@@ -1068,14 +1063,14 @@ WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(
             // - source snapshot has transient activation: sourceSnapshotParams's has transient activation
             // - initiator origin: entry's document state's initiator origin
             // FIXME: - navigation timing type: navTimingType
-            navigation_params = NonFetchSchemeNavigationParams {
-                .id = navigation_id,
-                .navigable = this,
-                .url = entry->url(),
-                .target_snapshot_sandboxing_flags = target_snapshot_params.sandboxing_flags,
-                .source_snapshot_has_transient_activation = source_snapshot_params.has_transient_activation,
-                .initiator_origin = *entry->document_state()->initiator_origin(),
-            };
+            auto non_fetching_scheme_navigation_params = vm().heap().allocate_without_realm<NonFetchSchemeNavigationParams>();
+            non_fetching_scheme_navigation_params->id = navigation_id;
+            non_fetching_scheme_navigation_params->navigable = this;
+            non_fetching_scheme_navigation_params->url = entry->url();
+            non_fetching_scheme_navigation_params->target_snapshot_sandboxing_flags = target_snapshot_params.sandboxing_flags;
+            non_fetching_scheme_navigation_params->source_snapshot_has_transient_activation = source_snapshot_params.has_transient_activation;
+            non_fetching_scheme_navigation_params->initiator_origin = *entry->document_state()->initiator_origin();
+            navigation_params = non_fetching_scheme_navigation_params;
         }
     }
 
@@ -1100,10 +1095,10 @@ WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(
 
         // 3. If navigationParams is a non-fetch scheme navigation params, then set entry's document state's document to the result of
         //    running attempt to create a non-fetch scheme document navigationParams
-        if (navigation_params.has<NonFetchSchemeNavigationParams>()) {
+        if (navigation_params.has<JS::NonnullGCPtr<NonFetchSchemeNavigationParams>>()) {
             // FIXME: https://github.com/whatwg/html/issues/9767
             // We probably are expected to skip to steps 13 and 14 and return after doing this
-            entry->document_state()->set_document(attempt_to_create_a_non_fetch_scheme_document(navigation_params.get<NonFetchSchemeNavigationParams>()));
+            entry->document_state()->set_document(attempt_to_create_a_non_fetch_scheme_document(navigation_params.get<JS::NonnullGCPtr<NonFetchSchemeNavigationParams>>()));
             if (entry->document()) {
                 entry->document_state()->set_ever_populated(true);
             }
@@ -1148,7 +1143,7 @@ WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(
             }
         }
         // FIXME: 9. Otherwise, if navigationParams's response's status is 204 or 205, then:
-        else if (navigation_params.get<NavigationParams>().response->status() == 204 || navigation_params.get<NavigationParams>().response->status() == 205) {
+        else if (navigation_params.get<JS::NonnullGCPtr<NavigationParams>>()->response->status() == 204 || navigation_params.get<JS::NonnullGCPtr<NavigationParams>>()->response->status() == 205) {
             // 1. Run completionSteps.
             completion_steps();
 
@@ -1161,7 +1156,7 @@ WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(
         else {
             // 1. Let document be the result of loading a document given navigationParams, sourceSnapshotParams,
             //    and entry's document state's initiator origin.
-            auto document = load_document(navigation_params.get<NavigationParams>());
+            auto document = load_document(navigation_params.get<JS::NonnullGCPtr<NavigationParams>>());
 
             // 2. If document is null, then run completionSteps and return.
             if (!document) {
@@ -1415,7 +1410,7 @@ WebIDL::ExceptionOr<void> Navigable::navigate(NavigateParams params)
         history_entry->set_document_state(document_state);
 
         // 7. Let navigationParams be null.
-        Variant<Empty, NavigationParams, NonFetchSchemeNavigationParams> navigation_params = Empty {};
+        Variant<Empty, JS::NonnullGCPtr<NavigationParams>, JS::NonnullGCPtr<NonFetchSchemeNavigationParams>> navigation_params = Empty {};
 
         // FIXME: 8. If response is non-null:
         if (response) {
@@ -1425,7 +1420,7 @@ WebIDL::ExceptionOr<void> Navigable::navigate(NavigateParams params)
         //     for historyEntry, given navigable, "navigate", sourceSnapshotParams,
         //     targetSnapshotParams, navigationId, navigationParams, cspNavigationType, with allowPOST
         //     set to true and completionSteps set to the following step:
-        populate_session_history_entry_document(history_entry, source_snapshot_params, target_snapshot_params, navigation_id, move(navigation_params), csp_navigation_type, true, [this, history_entry, history_handling, navigation_id] {
+        populate_session_history_entry_document(history_entry, source_snapshot_params, target_snapshot_params, navigation_id, navigation_params, csp_navigation_type, true, [this, history_entry, history_handling, navigation_id] {
             // 1.     Append session history traversal steps to navigable's traversable to finalize a cross-document navigation given navigable, historyHandling, and historyEntry.
             traversable_navigable()->append_session_history_traversal_steps([this, history_entry, history_handling, navigation_id] {
                 if (this->has_been_destroyed()) {
@@ -1615,21 +1610,20 @@ WebIDL::ExceptionOr<JS::GCPtr<DOM::Document>> Navigable::evaluate_javascript_url
     //     cross-origin opener policy: coop
     // FIXME: navigation timing type: "navigate"
     //     about base URL: targetNavigable's active document's about base URL
-    NavigationParams navigation_params {
-        .id = navigation_id,
-        .navigable = this,
-        .request = {},
-        .response = response,
-        .fetch_controller = nullptr,
-        .commit_early_hints = nullptr,
-        .coop_enforcement_result = move(coop_enforcement_result),
-        .reserved_environment = {},
-        .origin = new_document_origin,
-        .policy_container = policy_container,
-        .final_sandboxing_flag_set = final_sandbox_flags,
-        .cross_origin_opener_policy = coop,
-        .about_base_url = active_document()->about_base_url(),
-    };
+    auto navigation_params = vm.heap().allocate_without_realm<NavigationParams>();
+    navigation_params->id = navigation_id;
+    navigation_params->navigable = this;
+    navigation_params->request = {};
+    navigation_params->response = response;
+    navigation_params->fetch_controller = nullptr;
+    navigation_params->commit_early_hints = nullptr;
+    navigation_params->coop_enforcement_result = move(coop_enforcement_result);
+    navigation_params->reserved_environment = {};
+    navigation_params->origin = new_document_origin;
+    navigation_params->policy_container = policy_container;
+    navigation_params->final_sandboxing_flag_set = final_sandbox_flags;
+    navigation_params->cross_origin_opener_policy = coop;
+    navigation_params->about_base_url = active_document()->about_base_url();
 
     // 17. Return the result of loading an HTML document given navigationParams.
     return load_document(navigation_params);

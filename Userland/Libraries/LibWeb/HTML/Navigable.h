@@ -120,7 +120,7 @@ public:
         SourceSnapshotParams const& source_snapshot_params,
         TargetSnapshotParams const& target_snapshot_params,
         Optional<String> navigation_id = {},
-        Variant<Empty, NavigationParams, NonFetchSchemeNavigationParams> navigation_params = Empty {},
+        Variant<Empty, JS::NonnullGCPtr<NavigationParams>, JS::NonnullGCPtr<NonFetchSchemeNavigationParams>> navigation_params = Empty {},
         CSPNavigationType csp_navigation_type = CSPNavigationType::Other,
         bool allow_POST = false,
         Function<void()> completion_steps = [] {});

@@ -6,11 +6,14 @@
 
 #pragma once
 
+#include <AK/Optional.h>
+#include <LibJS/Heap/CellAllocator.h>
+#include <LibJS/Heap/GCPtr.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Requests.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Responses.h>
+#include <LibWeb/Forward.h>
 #include <LibWeb/HTML/CrossOrigin/CrossOriginOpenerPolicy.h>
 #include <LibWeb/HTML/CrossOrigin/CrossOriginOpenerPolicyEnforcementResult.h>
-#include <LibWeb/HTML/Navigable.h>
 #include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/PolicyContainers.h>
 #include <LibWeb/HTML/SandboxingFlagSet.h>
@@ -18,12 +21,15 @@
 namespace Web::HTML {
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigation-params
-struct NavigationParams {
+struct NavigationParams : JS::Cell {
+    JS_CELL(NavigationParams, JS::Cell);
+    JS_DECLARE_ALLOCATOR(NavigationParams);
+
     // null or a navigation ID
     Optional<String> id;
 
     // the navigable to be navigated
-    JS::Handle<Navigable> navigable;
+    JS::GCPtr<Navigable> navigable;
 
     // null or a request that started the navigation
     JS::GCPtr<Fetch::Infrastructure::Request> request;
@@ -59,15 +65,20 @@ struct NavigationParams {
 
     // a URL or null used to populate the new Document's about base URL
     Optional<URL::URL> about_base_url;
+
+    void visit_edges(Visitor& visitor) override;
 };
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#non-fetch-scheme-navigation-params
-struct NonFetchSchemeNavigationParams {
+struct NonFetchSchemeNavigationParams : JS::Cell {
+    JS_CELL(NonFetchSchemeNavigationParams, JS::Cell);
+    JS_DECLARE_ALLOCATOR(NonFetchSchemeNavigationParams);
+
     // null or a navigation ID
     Optional<String> id;
 
     // the navigable to be navigated
-    JS::Handle<Navigable> navigable;
+    JS::GCPtr<Navigable> navigable;
 
     // a URL
     URL::URL url;
@@ -82,6 +93,8 @@ struct NonFetchSchemeNavigationParams {
     Origin initiator_origin;
 
     // FIXME: a NavigationTimingType used for creating the navigation timing entry for the new Document
+
+    void visit_edges(Visitor& visitor) override;
 };
 
 }

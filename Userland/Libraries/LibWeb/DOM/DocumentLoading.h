@@ -8,6 +8,7 @@
 #pragma once
 
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/Fetch/Infrastructure/HTTP/Responses.h>
 
 namespace Web {
 
@@ -54,21 +55,20 @@ JS::NonnullGCPtr<DOM::Document> create_document_for_inline_content(JS::GCPtr<HTM
     //    about base URL: null
     auto response = Fetch::Infrastructure::Response::create(vm);
     response->url_list().append(URL::URL("about:error")); // AD-HOC: https://github.com/whatwg/html/issues/9122
-    HTML::NavigationParams navigation_params {
-        .id = navigation_id,
-        .navigable = navigable,
-        .request = {},
-        .response = *response,
-        .fetch_controller = nullptr,
-        .commit_early_hints = nullptr,
-        .coop_enforcement_result = move(coop_enforcement_result),
-        .reserved_environment = {},
-        .origin = move(origin),
-        .policy_container = HTML::PolicyContainer {},
-        .final_sandboxing_flag_set = HTML::SandboxingFlagSet {},
-        .cross_origin_opener_policy = move(coop),
-        .about_base_url = {},
-    };
+    auto navigation_params = vm.heap().allocate_without_realm<HTML::NavigationParams>();
+    navigation_params->id = navigation_id;
+    navigation_params->navigable = navigable;
+    navigation_params->request = nullptr;
+    navigation_params->response = response;
+    navigation_params->fetch_controller = nullptr;
+    navigation_params->commit_early_hints = nullptr;
+    navigation_params->coop_enforcement_result = move(coop_enforcement_result);
+    navigation_params->reserved_environment = {};
+    navigation_params->origin = move(origin);
+    navigation_params->policy_container = HTML::PolicyContainer {};
+    navigation_params->final_sandboxing_flag_set = HTML::SandboxingFlagSet {};
+    navigation_params->cross_origin_opener_policy = move(coop);
+    navigation_params->about_base_url = {};
 
     // 5. Let document be the result of creating and initializing a Document object given "html", "text/html", and navigationParams.
     auto document = DOM::Document::create_and_initialize(DOM::Document::Type::HTML, "text/html"_string, navigation_params).release_value_but_fixme_should_propagate_errors();
