@@ -156,14 +156,12 @@ jobs:
 
       - name: Show ccache stats before build and configure
         run: |
-          # We only have 5 GiB of cache available *in total*. Beyond that, GitHub deletes caches.
-          # Currently, we use about 130 MB for the toolchains (x86_64), and 2 ccache caches:
-          # One with ALL_DEBUG (x86_64), and one with NORMAL_DEBUG (x86_64).
-          # Therefore, using 1.6 GB or more per cache causes disaster.
-          # Building from scratch fills the ccache cache from 0 to about 0.7 GB, and after compression it comes out to
-          # about 0.25 GB, so 3 GB (1GB after compression) should be plenty, all while comfortably fitting in the cache.
-          ccache -M 3000M
+          # Reset all ccache modification dates to a known epoch. This provides a baseline that we can prune against.
+          find ${{ github.workspace }}/.ccache | tac | xargs touch -a -m -d "2018-10-10T09:53:07Z"
+          ccache -M 0
           ccache -s
+          ccache -z
+
       - name: Create build directory
         run: |
           mkdir -p ${{ github.workspace }}/Build/${{ matrix.arch }}
@@ -221,6 +219,10 @@ jobs:
       - name: Build Serenity and Tests
         working-directory: ${{ github.workspace }}/Build/superbuild
         run: cmake --build .
+
+      - name: Prune obsolete ccache files
+        run: ccache --evict-older-than 1d
+
       - name: Show ccache stats after build
         run: ccache -s
 

@@ -56,7 +56,6 @@ jobs:
         with_remote_data_caches: true
         ${{ if eq(parameters.os, 'macOS') }}:
           ccache_version: 2
-        serenity_ccache_size: '2G'
 
     - ${{ if eq(parameters.os, 'Android') }}:
       - script: |
@@ -211,6 +210,10 @@ jobs:
           # FIXME: enable detect_stack_use_after_return=1 #7420
           ASAN_OPTIONS: 'strict_string_checks=1:check_initialization_order=1:strict_init_order=1:detect_stack_use_after_return=0:allocator_may_return_null=1'
           UBSAN_OPTIONS: 'print_stacktrace=1:print_summary=1:halt_on_error=1'
+
+    - script: |
+        CCACHE_DIR='$(SERENITY_CCACHE_DIR)' ccache --evict-older-than 1d
+      displayName: 'Prune obsolete ccache files'
 
     - script: |
         CCACHE_DIR='$(SERENITY_CCACHE_DIR)' ccache -s
