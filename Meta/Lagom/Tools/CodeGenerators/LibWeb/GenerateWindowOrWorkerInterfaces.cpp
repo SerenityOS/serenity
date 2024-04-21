@@ -434,8 +434,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     // TODO: service_worker_exposed
 
     for (size_t i = 0; i < paths.size(); ++i) {
-        IDL::Parser parser(paths[i], file_contents[i], lexical_base.string());
-        TRY(add_to_interface_sets(parser.parse(), intrinsics, window_exposed, dedicated_worker_exposed, shared_worker_exposed));
+        auto const& path = paths[i];
+        IDL::Parser parser(path, file_contents[i], lexical_base.string());
+        auto& interface = parser.parse();
+        if (interface.name.is_empty()) {
+            s_error_string = ByteString::formatted("Interface for file {} missing", path);
+            return Error::from_string_view(s_error_string.view());
+        }
+
+        TRY(add_to_interface_sets(interface, intrinsics, window_exposed, dedicated_worker_exposed, shared_worker_exposed));
         parsers.append(move(parser));
     }
 
