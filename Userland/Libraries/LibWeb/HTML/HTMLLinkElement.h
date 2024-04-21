@@ -28,6 +28,7 @@ public:
     virtual ~HTMLLinkElement() override;
 
     virtual void inserted() override;
+    virtual void removed_from(Node* old_parent) override;
 
     String rel() const { return get_attribute_value(HTML::AttributeNames::rel); }
     String type() const { return get_attribute_value(HTML::AttributeNames::type); }
