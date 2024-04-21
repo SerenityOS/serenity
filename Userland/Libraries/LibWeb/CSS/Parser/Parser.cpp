@@ -2524,10 +2524,13 @@ RefPtr<StyleValue> Parser::parse_ratio_value(TokenStream<ComponentValue>& tokens
     return nullptr;
 }
 
-RefPtr<StyleValue> Parser::parse_string_value(ComponentValue const& component_value)
+RefPtr<StyleValue> Parser::parse_string_value(TokenStream<ComponentValue>& tokens)
 {
-    if (component_value.is(Token::Type::String))
-        return StringStyleValue::create(component_value.token().string().to_string());
+    auto peek = tokens.peek_token();
+    if (peek.is(Token::Type::String)) {
+        (void)tokens.next_token();
+        return StringStyleValue::create(peek.token().string().to_string());
+    }
 
     return nullptr;
 }
@@ -4885,7 +4888,7 @@ RefPtr<StyleValue> Parser::parse_quotes_value(TokenStream<ComponentValue>& token
 
     StyleValueVector string_values;
     while (tokens.has_next_token()) {
-        auto maybe_string = parse_string_value(tokens.next_token());
+        auto maybe_string = parse_string_value(tokens);
         if (!maybe_string)
             return nullptr;
 
