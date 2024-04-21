@@ -9,8 +9,6 @@ jobs:
     variables:
     - name: LLVM_CCACHE_DIR
       value: $(Build.SourcesDirectory)/Toolchain/.ccache
-    - name: LLVM_CCACHE_MAXSIZE
-      value: 20GB
     - name: SERENITY_CCACHE_DIR
       value: $(Build.SourcesDirectory)/.ccache
 
@@ -29,7 +27,6 @@ jobs:
         toolchain: 'clang'
         download_cache_path: 'Build/caches'
         toolchain_ccache_path: '$(LLVM_CCACHE_DIR)'
-        toolchain_ccache_size: '$(LLVM_CCACHE_MAXSIZE)'
         serenity_ccache_path: '$(SERENITY_CCACHE_DIR)'
 
     - script: ./Toolchain/BuildClang.sh --ci
@@ -126,6 +123,13 @@ jobs:
           artifactType: 'pipeline'
           artifactName: 'Coverage'
 
+    - script: |
+        echo "##[section]Toolchain Cache"
+        CCACHE_DIR='$(LLVM_CCACHE_DIR)' ccache --evict-older-than 1d
+
+        echo "##[section]Serenity Cache"
+        CCACHE_DIR='$(SERENITY_CCACHE_DIR)' ccache --evict-older-than 1d
+      displayName: 'Prune obsolete ccache files'
 
     - script: |
         echo "##[section]Toolchain Cache"

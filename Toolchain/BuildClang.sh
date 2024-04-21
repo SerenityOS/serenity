@@ -293,8 +293,7 @@ pushd "$DIR/Build/clang"
             ${link_lld:+"-DLLVM_ENABLE_LLD=ON"} \
             ${dev:+"-DLLVM_CCACHE_BUILD=ON"} \
             ${ci:+"-DLLVM_CCACHE_BUILD=ON"} \
-            ${ci:+"-DLLVM_CCACHE_DIR=$LLVM_CCACHE_DIR"} \
-            ${ci:+"-DLLVM_CCACHE_MAXSIZE=$LLVM_CCACHE_MAXSIZE"}
+            ${ci:+"-DLLVM_CCACHE_DIR=$LLVM_CCACHE_DIR"}
 
         buildstep_ninja "llvm/build" ninja -j "$MAKEJOBS"
         buildstep_ninja "llvm/install" ninja install/strip
