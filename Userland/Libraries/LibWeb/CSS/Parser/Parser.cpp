@@ -2137,11 +2137,12 @@ Optional<Gfx::UnicodeRange> Parser::parse_unicode_range(StringView text)
     return make_valid_unicode_range(start_value, end_value);
 }
 
-RefPtr<StyleValue> Parser::parse_dimension_value(ComponentValue const& component_value)
+RefPtr<StyleValue> Parser::parse_dimension_value(TokenStream<ComponentValue>& tokens)
 {
-    auto dimension = parse_dimension(component_value);
+    auto dimension = parse_dimension(tokens.peek_token());
     if (!dimension.has_value())
         return nullptr;
+    (void)tokens.next_token(); // dimension
 
     if (dimension->is_angle())
         return AngleStyleValue::create(dimension->angle());
@@ -5155,7 +5156,9 @@ RefPtr<StyleValue> Parser::parse_transform_value(TokenStream<ComponentValue>& to
                 } else if (value.is(Token::Type::Number) && value.token().number_value() == 0) {
                     values.append(AngleStyleValue::create(Angle::make_degrees(0)));
                 } else {
-                    auto dimension_value = parse_dimension_value(value);
+                    // FIXME: Remove this reconsume once all parsing functions are TokenStream-based.
+                    argument_tokens.reconsume_current_input_token();
+                    auto dimension_value = parse_dimension_value(argument_tokens);
                     if (!dimension_value || !dimension_value->is_angle())
                         return nullptr;
                     values.append(dimension_value.release_nonnull());
@@ -5168,10 +5171,11 @@ RefPtr<StyleValue> Parser::parse_transform_value(TokenStream<ComponentValue>& to
                     (void)argument_tokens.next_token(); // calc()
                     values.append(maybe_calc_value.release_nonnull());
                 } else {
+                    // FIXME: Remove this reconsume once all parsing functions are TokenStream-based.
+                    argument_tokens.reconsume_current_input_token();
+
                     if (function_metadata.parameters[argument_index].type == TransformFunctionParameterType::LengthNone) {
                         auto ident_transaction = argument_tokens.begin_transaction();
-                        // FIXME: Remove this reconsume once all parsing functions are TokenStream-based.
-                        argument_tokens.reconsume_current_input_token();
                         auto identifier_value = parse_identifier_value(argument_tokens);
                         if (identifier_value && identifier_value->to_identifier() == ValueID::None) {
                             values.append(identifier_value.release_nonnull());
@@ -5180,7 +5184,7 @@ RefPtr<StyleValue> Parser::parse_transform_value(TokenStream<ComponentValue>& to
                         }
                     }
 
-                    auto dimension_value = parse_dimension_value(value);
+                    auto dimension_value = parse_dimension_value(argument_tokens);
                     if (!dimension_value || !dimension_value->is_length())
                         return nullptr;
 
@@ -5192,7 +5196,9 @@ RefPtr<StyleValue> Parser::parse_transform_value(TokenStream<ComponentValue>& to
                 if (maybe_calc_value && maybe_calc_value->resolves_to_length_percentage()) {
                     values.append(maybe_calc_value.release_nonnull());
                 } else {
-                    auto dimension_value = parse_dimension_value(value);
+                    // FIXME: Remove this reconsume once all parsing functions are TokenStream-based.
+                    argument_tokens.reconsume_current_input_token();
+                    auto dimension_value = parse_dimension_value(argument_tokens);
                     if (!dimension_value)
                         return nullptr;
 
