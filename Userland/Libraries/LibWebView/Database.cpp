@@ -25,7 +25,7 @@ ErrorOr<NonnullRefPtr<Database>> Database::create()
 
 ErrorOr<NonnullRefPtr<Database>> Database::create(ReadonlySpan<ByteString> candidate_sql_server_paths)
 {
-    auto sql_client = TRY(Core::launch_singleton_process<SQL::SQLClient>("SQLServer"sv, candidate_sql_server_paths));
+    auto [sql_client, _] = TRY(Core::launch_singleton_process<SQL::SQLClient>("SQLServer"sv, candidate_sql_server_paths));
     return create(move(sql_client));
 }
 

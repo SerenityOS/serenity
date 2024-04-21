@@ -21,14 +21,29 @@
 namespace Core {
 
 namespace Detail {
-ErrorOr<NonnullOwnPtr<Core::LocalSocket>> launch_and_connect_to_process(StringView process_name, ReadonlySpan<ByteString> candidate_process_paths, ReadonlySpan<ByteString> command_line_arguments);
+
+struct ProcessSocket {
+    NonnullOwnPtr<Core::LocalSocket> socket;
+    pid_t pid { 0 };
+};
+
+ErrorOr<ProcessSocket> launch_and_connect_to_process(StringView process_name, ReadonlySpan<ByteString> candidate_process_paths, ReadonlySpan<ByteString> command_line_arguments);
+
 }
 
 template<typename ClientType>
-ErrorOr<NonnullRefPtr<ClientType>> launch_singleton_process(StringView process_name, ReadonlySpan<ByteString> candidate_process_paths, ReadonlySpan<ByteString> command_line_arguments = {})
+struct SingletonProcess {
+    NonnullRefPtr<ClientType> client;
+    pid_t pid { 0 };
+};
+
+template<typename ClientType>
+ErrorOr<SingletonProcess<ClientType>> launch_singleton_process(StringView process_name, ReadonlySpan<ByteString> candidate_process_paths, ReadonlySpan<ByteString> command_line_arguments = {})
 {
-    auto socket = TRY(Detail::launch_and_connect_to_process(process_name, candidate_process_paths, command_line_arguments));
-    return adopt_nonnull_ref_or_enomem(new (nothrow) ClientType { move(socket) });
+    auto process_socket = TRY(Detail::launch_and_connect_to_process(process_name, candidate_process_paths, command_line_arguments));
+    auto client = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) ClientType { move(process_socket.socket) }));
+
+    return SingletonProcess<ClientType> { move(client), process_socket.pid };
 }
 
 }

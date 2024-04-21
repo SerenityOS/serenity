@@ -14,10 +14,10 @@
 
 namespace Core::Detail {
 
-static ErrorOr<bool> should_launch_process(StringView process_name, ByteString const& pid_path)
+static ErrorOr<Optional<pid_t>> get_process_pid(StringView process_name, ByteString const& pid_path)
 {
     if (Core::System::stat(pid_path).is_error())
-        return true;
+        return OptionalNone {};
 
     Optional<pid_t> pid;
     {
@@ -39,15 +39,15 @@ static ErrorOr<bool> should_launch_process(StringView process_name, ByteString c
     if (!pid.has_value()) {
         warnln("{} PID file '{}' exists, but with an invalid PID", process_name, pid_path);
         TRY(Core::System::unlink(pid_path));
-        return true;
+        return OptionalNone {};
     }
     if (kill(*pid, 0) < 0) {
         warnln("{} PID file '{}' exists with PID {}, but process cannot be found", process_name, pid_path, *pid);
         TRY(Core::System::unlink(pid_path));
-        return true;
+        return OptionalNone {};
     }
 
-    return false;
+    return pid;
 }
 
 // This is heavily based on how SystemServer's Service creates its socket.
@@ -79,7 +79,7 @@ static ErrorOr<int> create_ipc_socket(ByteString const& socket_path)
     return socket_fd;
 }
 
-static ErrorOr<void> launch_process(StringView process_name, ByteString const& socket_path, ByteString const& pid_path, ReadonlySpan<ByteString> candidate_process_paths, ReadonlySpan<ByteString> command_line_arguments)
+static ErrorOr<pid_t> launch_process(StringView process_name, ByteString const& socket_path, ByteString const& pid_path, ReadonlySpan<ByteString> candidate_process_paths, ReadonlySpan<ByteString> command_line_arguments)
 {
     auto ipc_fd_or_error = create_ipc_socket(socket_path);
     if (ipc_fd_or_error.is_error()) {
@@ -147,7 +147,10 @@ static ErrorOr<void> launch_process(StringView process_name, ByteString const& s
     (void)pthread_sigmask(SIG_SETMASK, &original_set, nullptr);
     TRY(wait_err);
 
-    return {};
+    auto process_pid = TRY(get_process_pid(process_name, pid_path));
+    VERIFY(process_pid.has_value());
+
+    return *process_pid;
 }
 
 struct ProcessPaths {
@@ -163,17 +166,20 @@ static ErrorOr<ProcessPaths> paths_for_process(StringView process_name)
     return ProcessPaths { move(socket_path), move(pid_path) };
 }
 
-ErrorOr<NonnullOwnPtr<Core::LocalSocket>> launch_and_connect_to_process(StringView process_name, ReadonlySpan<ByteString> candidate_process_paths, ReadonlySpan<ByteString> command_line_arguments)
+ErrorOr<ProcessSocket> launch_and_connect_to_process(StringView process_name, ReadonlySpan<ByteString> candidate_process_paths, ReadonlySpan<ByteString> command_line_arguments)
 {
     auto [socket_path, pid_path] = TRY(paths_for_process(process_name));
+    pid_t pid = 0;
 
-    if (TRY(Detail::should_launch_process(process_name, pid_path)))
-        TRY(Detail::launch_process(process_name, socket_path, pid_path, candidate_process_paths, command_line_arguments));
+    if (auto existing_pid = TRY(Detail::get_process_pid(process_name, pid_path)); existing_pid.has_value())
+        pid = *existing_pid;
+    else
+        pid = TRY(Detail::launch_process(process_name, socket_path, pid_path, candidate_process_paths, command_line_arguments));
 
     auto socket = TRY(Core::LocalSocket::connect(socket_path));
     TRY(socket->set_blocking(true));
 
-    return socket;
+    return ProcessSocket { move(socket), pid };
 }
 
 }
