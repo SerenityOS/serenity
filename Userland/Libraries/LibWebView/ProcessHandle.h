@@ -13,7 +13,7 @@ namespace WebView {
 
 struct ProcessHandle {
     // FIXME: Use mach_port_t on macOS/Hurd and HANDLE on Windows.
-    pid_t pid;
+    pid_t pid { -1 };
 };
 
 }
