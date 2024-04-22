@@ -9,9 +9,9 @@
 
 TEST_CASE(test_dlopen)
 {
-    auto liba = dlopen("/usr/Tests/LibELF/libDynlibA.so", 0);
+    auto liba = dlopen("libDynlibA.so", RTLD_LAZY | RTLD_GLOBAL);
     EXPECT_NE(liba, nullptr);
-    auto libb = dlopen("/usr/Tests/LibELF/libDynlibB.so", 0);
+    auto libb = dlopen("libDynlibB.so", RTLD_LAZY | RTLD_GLOBAL);
     EXPECT_NE(libb, nullptr);
 
     typedef int (*dynlib_func_t)();
@@ -26,7 +26,7 @@ TEST_CASE(test_dlopen)
 
 TEST_CASE(test_dlsym_rtld_default)
 {
-    auto libd = dlopen("/usr/Tests/LibELF/libDynlibD.so", 0);
+    auto libd = dlopen("libDynlibD.so", RTLD_LAZY | RTLD_GLOBAL);
     EXPECT_NE(libd, nullptr);
     if (libd == nullptr) {
         warnln("can't open libDynlibD.so, {}", dlerror());
