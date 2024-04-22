@@ -175,6 +175,8 @@ public:
     HTML::MuteState page_mute_state() const { return m_mute_state; }
     void toggle_page_mute_state();
 
+    void download_context_menu_element();
+
     Optional<String> const& user_style() const { return m_user_style_sheet_source; }
     void set_user_style(String source);
 

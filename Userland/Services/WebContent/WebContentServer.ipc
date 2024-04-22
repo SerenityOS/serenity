@@ -102,6 +102,8 @@ endpoint WebContentServer
 
     toggle_page_mute_state(u64 page_id) =|
 
+    download_context_menu_element(u64 page_id) =|
+
     set_user_style(u64 page_id, String source) =|
 
     enable_inspector_prototype(u64 page_id) =|

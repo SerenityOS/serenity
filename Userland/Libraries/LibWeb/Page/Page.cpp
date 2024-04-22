@@ -517,6 +517,24 @@ JS::GCPtr<HTML::HTMLMediaElement> Page::media_context_menu_element()
     return static_cast<HTML::HTMLMediaElement*>(dom_node);
 }
 
+void Page::download_context_menu_element()
+{
+    if (!m_context_menu_element_id.has_value())
+        return;
+
+    auto* dom_node = DOM::Node::from_unique_id(*m_context_menu_element_id);
+    if (dom_node == nullptr)
+        return;
+
+    if (dom_node->is_html_anchor_element()) {
+        // download anchor
+    } else if (dom_node->is_html_image_element()) {
+        // download image
+    } else if (is<HTML::HTMLMediaElement>(dom_node)) {
+        // download media
+    }
+}
+
 void Page::set_user_style(String source)
 {
     m_user_style_sheet_source = source;

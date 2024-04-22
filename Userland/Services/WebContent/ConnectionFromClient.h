@@ -115,6 +115,8 @@ private:
 
     virtual void toggle_page_mute_state(u64 page_id) override;
 
+    virtual void download_context_menu_element(u64 page_id) override;
+
     virtual void set_user_style(u64 page_id, String const&) override;
 
     virtual void enable_inspector_prototype(u64 page_id) override;

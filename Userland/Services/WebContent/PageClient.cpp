@@ -466,6 +466,11 @@ Web::WebIDL::ExceptionOr<void> PageClient::toggle_media_controls_state()
     return page().toggle_media_controls_state();
 }
 
+void PageClient::download_context_menu_element()
+{
+    page().download_context_menu_element();
+}
+
 void PageClient::set_user_style(String source)
 {
     page().set_user_style(source);

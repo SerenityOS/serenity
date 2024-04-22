@@ -355,6 +355,11 @@ void ViewImplementation::did_change_audio_play_state(Badge<WebContentClient>, We
         on_audio_play_state_changed(m_audio_play_state);
 }
 
+void ViewImplementation::download_context_menu_element()
+{
+    client().async_download_context_menu_element(page_id());
+}
+
 void ViewImplementation::did_update_navigation_buttons_state(Badge<WebContentClient>, bool back_enabled, bool forward_enabled) const
 {
     if (on_navigation_buttons_state_changed)

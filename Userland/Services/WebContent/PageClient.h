@@ -59,6 +59,8 @@ public:
     Web::WebIDL::ExceptionOr<void> toggle_media_loop_state();
     Web::WebIDL::ExceptionOr<void> toggle_media_controls_state();
 
+    void download_context_menu_element();
+
     void alert_closed();
     void confirm_closed(bool accepted);
     void prompt_closed(Optional<String> response);
