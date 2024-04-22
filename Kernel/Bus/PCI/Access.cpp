@@ -160,7 +160,7 @@ UNMAP_AFTER_INIT void Access::rescan_hardware()
     SpinlockLocker scan_locker(m_scan_lock);
     VERIFY(m_device_identifiers.is_empty());
     for (auto& [_, host_controller] : m_host_controllers) {
-        host_controller->enumerate_attached_devices([this](EnumerableDeviceIdentifier device_identifier) {
+        host_controller->enumerate_attached_devices([this](EnumerableDeviceIdentifier const& device_identifier) {
             auto device_identifier_or_error = DeviceIdentifier::from_enumerable_identifier(device_identifier);
             if (device_identifier_or_error.is_error()) {
                 dmesgln("Failed during PCI Access::rescan_hardware due to {}", device_identifier_or_error.error());
