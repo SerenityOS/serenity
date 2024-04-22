@@ -145,13 +145,11 @@ ErrorOr<void> NVMeController::start_controller()
     return {};
 }
 
-UNMAP_AFTER_INIT u32 NVMeController::get_admin_q_dept()
+UNMAP_AFTER_INIT void NVMeController::set_admin_q_depth()
 {
-    u32 aqa = m_controller_regs->aqa;
     // Queue depth is 0 based
-    u32 q_depth = min(ACQ_SIZE(aqa), ASQ_SIZE(aqa)) + 1;
-    dbgln_if(NVME_DEBUG, "NVMe: Admin queue depth is {}", q_depth);
-    return q_depth;
+    u16 queue_depth = ADMIN_QUEUE_SIZE - 1;
+    m_controller_regs->aqa = queue_depth | (queue_depth << AQA_ACQ_SHIFT);
 }
 
 UNMAP_AFTER_INIT ErrorOr<void> NVMeController::identify_and_init_namespaces()
@@ -317,13 +315,13 @@ void NVMeController::complete_current_request([[maybe_unused]] AsyncDeviceReques
 
 UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_admin_queue(QueueType queue_type)
 {
-    auto qdepth = get_admin_q_dept();
     OwnPtr<Memory::Region> cq_dma_region;
     Vector<NonnullRefPtr<Memory::PhysicalPage>> cq_dma_pages;
     OwnPtr<Memory::Region> sq_dma_region;
     Vector<NonnullRefPtr<Memory::PhysicalPage>> sq_dma_pages;
-    auto cq_size = round_up_to_power_of_two(CQ_SIZE(qdepth), 4096);
-    auto sq_size = round_up_to_power_of_two(SQ_SIZE(qdepth), 4096);
+    set_admin_q_depth();
+    auto cq_size = round_up_to_power_of_two(CQ_SIZE(ADMIN_QUEUE_SIZE), 4096);
+    auto sq_size = round_up_to_power_of_two(SQ_SIZE(ADMIN_QUEUE_SIZE), 4096);
     auto maybe_error = reset_controller();
     if (maybe_error.is_error()) {
         dmesgln_pci(*this, "Failed to reset the NVMe controller");
@@ -362,7 +360,7 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_admin_queue(QueueType queu
         return maybe_error;
     }
     set_admin_queue_ready_flag();
-    m_admin_queue = TRY(NVMeQueue::try_create(*this, 0, irq, qdepth, move(cq_dma_region), move(sq_dma_region), move(doorbell), queue_type));
+    m_admin_queue = TRY(NVMeQueue::try_create(*this, 0, irq, ADMIN_QUEUE_SIZE, move(cq_dma_region), move(sq_dma_region), move(doorbell), queue_type));
 
     dbgln_if(NVME_DEBUG, "NVMe: Admin queue created");
     return {};

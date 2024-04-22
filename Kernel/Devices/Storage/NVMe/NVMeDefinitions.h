@@ -77,15 +77,7 @@ static constexpr u32 CSTS_SHST(u32 x)
     return (x & CSTS_SHST_MASK) >> CSTS_SHST_SHIFT;
 }
 
-static constexpr u16 CC_AQA_MASK = (0xfff);
-static constexpr u16 ACQ_SIZE(u32 x)
-{
-    return (x >> 16) & CC_AQA_MASK;
-}
-static constexpr u16 ASQ_SIZE(u32 x)
-{
-    return x & CC_AQA_MASK;
-}
+static constexpr u16 AQA_ACQ_SHIFT = 16;
 static constexpr u8 CQ_WIDTH = 4; // CQ is 16 bytes(2^4) in size.
 static constexpr u8 SQ_WIDTH = 6; // SQ size is 64 bytes(2^6) in size.
 static constexpr u16 CQ_SIZE(u16 q_depth)
@@ -106,6 +98,7 @@ static constexpr u16 CQ_STATUS_FIELD(u16 x)
     return (x & CQ_STATUS_FIELD_MASK) >> 1;
 }
 
+static constexpr u16 ADMIN_QUEUE_SIZE = 2;
 static constexpr u16 IO_QUEUE_SIZE = 64; // TODO:Need to be configurable
 
 // IDENTIFY
