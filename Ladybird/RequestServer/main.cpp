@@ -20,6 +20,10 @@
 #include <RequestServer/HttpProtocol.h>
 #include <RequestServer/HttpsProtocol.h>
 
+#if defined(AK_OS_MACOS)
+#    include <LibCore/Platform/ProcessStatisticsMach.h>
+#endif
+
 ErrorOr<ByteString> find_certificates(StringView serenity_resource_root)
 {
     auto cert_path = ByteString::formatted("{}/ladybird/cacert.pem", serenity_resource_root);
@@ -34,10 +38,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     StringView serenity_resource_root;
     Vector<ByteString> certificates;
+    StringView mach_server_name;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(certificates, "Path to a certificate file", "certificate", 'C', "certificate");
     args_parser.add_option(serenity_resource_root, "Absolute path to directory for serenity resources", "serenity-resource-root", 'r', "serenity-resource-root");
+    args_parser.add_option(mach_server_name, "Mach server name", "mach-server-name", 0, "mach_server_name");
     args_parser.parse(arguments);
 
     // Ensure the certificates are read out here.
@@ -47,6 +53,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     [[maybe_unused]] auto& certs = DefaultRootCACertificates::the();
 
     Core::EventLoop event_loop;
+
+#if defined(AK_OS_MACOS)
+    if (!mach_server_name.is_empty())
+        Core::Platform::register_with_mach_server(mach_server_name);
+#endif
 
     RequestServer::GeminiProtocol::install();
     RequestServer::HttpProtocol::install();

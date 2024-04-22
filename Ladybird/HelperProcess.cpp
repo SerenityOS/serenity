@@ -176,10 +176,16 @@ ErrorOr<NonnullRefPtr<Protocol::RequestClient>> launch_request_server_process(Re
         arguments.append("--serenity-resource-root"sv);
         arguments.append(serenity_resource_root);
     }
+
     Vector<ByteString> certificate_args;
     for (auto const& certificate : certificates) {
         certificate_args.append(ByteString::formatted("--certificate={}", certificate));
         arguments.append(certificate_args.last().view());
+    }
+
+    if (auto server = mach_server_name(); server.has_value()) {
+        arguments.append("--mach-server-name"sv);
+        arguments.append(server.value());
     }
 
     return launch_generic_server_process<Protocol::RequestClient>(candidate_request_server_paths, "RequestServer"sv, move(arguments));
