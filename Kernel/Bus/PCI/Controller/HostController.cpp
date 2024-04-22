@@ -108,6 +108,7 @@ UNMAP_AFTER_INIT void HostController::enumerate_attached_devices(Function<void(E
 {
     VERIFY(Access::the().access_lock().is_locked());
     VERIFY(Access::the().scan_lock().is_locked());
+    m_enumerated_buses.fill(false);
     // First scan bus 0. Find any device on that bus, and if it's a PCI-to-PCI
     // bridge, recursively scan it too.
     m_enumerated_buses.set(m_domain.start_bus(), true);
