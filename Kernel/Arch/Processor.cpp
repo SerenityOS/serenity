@@ -23,7 +23,7 @@ void ProcessorBase<T>::check_invoke_scheduler()
     VERIFY(!m_in_irq);
     VERIFY(!m_in_critical);
     VERIFY(&Processor::current() == this);
-    if (m_invoke_scheduler_async && m_scheduler_initialized) {
+    if (m_invoke_scheduler_async && m_scheduler_initialized.was_set()) {
         m_invoke_scheduler_async = false;
         Scheduler::invoke_async();
     }

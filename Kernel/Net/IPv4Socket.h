@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/HashMap.h>
+#include <AK/SetOnce.h>
 #include <AK/SinglyLinkedList.h>
 #include <Kernel/Library/DoubleBuffer.h>
 #include <Kernel/Library/KBuffer.h>
@@ -73,7 +74,7 @@ protected:
     IPv4Socket(int type, int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer, OwnPtr<KBuffer> optional_scratch_buffer);
     virtual StringView class_name() const override { return "IPv4Socket"sv; }
 
-    void set_bound(bool bound) { m_bound = bound; }
+    void set_bound() { m_bound.set(); }
     ErrorOr<void> ensure_bound();
 
     virtual ErrorOr<void> protocol_bind() { return {}; }
@@ -107,7 +108,7 @@ private:
 
     Vector<IPv4Address> m_multicast_memberships;
     bool m_multicast_loop { true };
-    bool m_bound { false };
+    SetOnce m_bound;
 
     struct ReceivedPacket {
         IPv4Address peer_address;

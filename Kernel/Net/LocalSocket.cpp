@@ -156,13 +156,13 @@ ErrorOr<void> LocalSocket::bind(Credentials const& credentials, Userspace<sockad
     m_inode = inode;
 
     m_path = move(path);
-    m_bound = true;
+    m_bound.set();
     return {};
 }
 
 ErrorOr<void> LocalSocket::connect(Credentials const& credentials, OpenFileDescription& description, Userspace<sockaddr const*> user_address, socklen_t address_size)
 {
-    if (m_bound)
+    if (m_bound.was_set())
         return set_so_error(EISCONN);
 
     if (address_size > sizeof(sockaddr_un))
@@ -260,7 +260,7 @@ void LocalSocket::detach(OpenFileDescription& description)
         VERIFY(m_accept_side_fd_open);
         m_accept_side_fd_open = false;
 
-        if (m_bound) {
+        if (m_bound.was_set()) {
             if (m_inode)
                 m_inode->unbind_socket();
         }

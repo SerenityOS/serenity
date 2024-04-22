@@ -452,7 +452,7 @@ static void* kmalloc_impl(size_t size, size_t alignment, CallerWillInitializeMem
     SpinlockLocker lock(s_lock);
     ++g_kmalloc_call_count;
 
-    if (g_dump_kmalloc_stacks && Kernel::g_kernel_symbols_available) {
+    if (g_dump_kmalloc_stacks && Kernel::g_kernel_symbols_available.was_set()) {
         dbgln("kmalloc({})", size);
         Kernel::dump_backtrace();
     }

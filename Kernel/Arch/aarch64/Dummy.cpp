@@ -7,6 +7,7 @@
 #include <AK/Singleton.h>
 #include <AK/Types.h>
 
+#include <AK/SetOnce.h>
 #include <Kernel/Arch/Delay.h>
 #include <Kernel/Bus/PCI/Initializer.h>
 #include <Kernel/Sections.h>
@@ -26,13 +27,13 @@ void microseconds_delay(u32)
 // Initializer.cpp
 namespace Kernel::PCI {
 
-bool g_pci_access_io_probe_failed { false };
-bool g_pci_access_is_disabled_from_commandline { true };
+SetOnce g_pci_access_io_probe_failed;
+SetOnce g_pci_access_is_disabled_from_commandline;
 
 void initialize()
 {
     dbgln("PCI: FIXME: Enable PCI for aarch64 platforms");
-    g_pci_access_io_probe_failed = true;
+    g_pci_access_io_probe_failed.set();
 }
 
 }

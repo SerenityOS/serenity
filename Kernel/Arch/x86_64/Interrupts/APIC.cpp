@@ -147,14 +147,14 @@ void APIC::set_base(PhysicalAddress const& base)
 {
     MSR msr(APIC_BASE_MSR);
     u64 flags = 1 << 11;
-    if (m_is_x2)
+    if (m_is_x2.was_set())
         flags |= 1 << 10;
     msr.set(base.get() | flags);
 }
 
 void APIC::write_register(u32 offset, u32 value)
 {
-    if (m_is_x2) {
+    if (m_is_x2.was_set()) {
         MSR msr(APIC_REGS_MSR_BASE + (offset >> 4));
         msr.set(value);
     } else {
@@ -164,7 +164,7 @@ void APIC::write_register(u32 offset, u32 value)
 
 u32 APIC::read_register(u32 offset)
 {
-    if (m_is_x2) {
+    if (m_is_x2.was_set()) {
         MSR msr(APIC_REGS_MSR_BASE + (offset >> 4));
         return (u32)msr.get();
     }
@@ -190,7 +190,7 @@ void APIC::wait_for_pending_icr()
 
 void APIC::write_icr(ICRReg const& icr)
 {
-    if (m_is_x2) {
+    if (m_is_x2.was_set()) {
         MSR msr(APIC_REGS_MSR_BASE + (APIC_REG_ICR_LOW >> 4));
         msr.set(icr.x2_value());
     } else {
@@ -247,13 +247,13 @@ UNMAP_AFTER_INIT bool APIC::init_bsp()
     if ((id.edx() & (1 << 9)) == 0)
         return false;
     if (id.ecx() & (1 << 21))
-        m_is_x2 = true;
+        m_is_x2.set();
 
     PhysicalAddress apic_base = get_base();
-    dbgln_if(APIC_DEBUG, "Initializing {}APIC, base: {}", m_is_x2 ? "x2" : "x", apic_base);
+    dbgln_if(APIC_DEBUG, "Initializing {}APIC, base: {}", m_is_x2.was_set() ? "x2" : "x", apic_base);
     set_base(apic_base);
 
-    if (!m_is_x2) {
+    if (!m_is_x2.was_set()) {
         auto region_or_error = MM.allocate_kernel_region(apic_base.page_base(), PAGE_SIZE, {}, Memory::Region::Access::ReadWrite);
         if (region_or_error.is_error()) {
             dbgln("APIC: Failed to allocate memory for APIC base");
@@ -463,10 +463,10 @@ UNMAP_AFTER_INIT void APIC::boot_aps()
 
 UNMAP_AFTER_INIT void APIC::enable(u32 cpu)
 {
-    VERIFY(m_is_x2 || cpu < 8);
+    VERIFY(m_is_x2.was_set() || cpu < 8);
 
     u32 apic_id;
-    if (m_is_x2) {
+    if (m_is_x2.was_set()) {
         dbgln_if(APIC_DEBUG, "Enable x2APIC on CPU #{}", cpu);
 
         // We need to enable x2 mode on each core independently
@@ -498,7 +498,7 @@ UNMAP_AFTER_INIT void APIC::enable(u32 cpu)
         APICIPIInterruptHandler::initialize(IRQ_APIC_IPI);
     }
 
-    if (!m_is_x2) {
+    if (!m_is_x2.was_set()) {
         // local destination mode (flat mode), not supported in x2 mode
         write_register(APIC_REG_DF, 0xf0000000);
     }
@@ -566,12 +566,12 @@ void APIC::send_ipi(u32 cpu)
     VERIFY(cpu != Processor::current_id());
     VERIFY(cpu < Processor::count());
     wait_for_pending_icr();
-    write_icr({ IRQ_APIC_IPI + IRQ_VECTOR_BASE, m_is_x2 ? Processor::by_id(cpu).info().apic_id() : cpu, ICRReg::Fixed, m_is_x2 ? ICRReg::Physical : ICRReg::Logical, ICRReg::Assert, ICRReg::TriggerMode::Edge, ICRReg::NoShorthand });
+    write_icr({ IRQ_APIC_IPI + IRQ_VECTOR_BASE, m_is_x2.was_set() ? Processor::by_id(cpu).info().apic_id() : cpu, ICRReg::Fixed, m_is_x2.was_set() ? ICRReg::Physical : ICRReg::Logical, ICRReg::Assert, ICRReg::TriggerMode::Edge, ICRReg::NoShorthand });
 }
 
 UNMAP_AFTER_INIT APICTimer* APIC::initialize_timers(HardwareTimerBase& calibration_timer)
 {
-    if (!m_apic_base && !m_is_x2)
+    if (!m_apic_base && !m_is_x2.was_set())
         return nullptr;
 
     // We should only initialize and calibrate the APIC timer once on the BSP!

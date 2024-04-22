@@ -10,6 +10,7 @@
 #include <AK/EnumBits.h>
 #include <AK/IntrusiveList.h>
 #include <AK/IntrusiveRedBlackTree.h>
+#include <AK/SetOnce.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Library/KString.h>
 #include <Kernel/Library/LockWeakable.h>
@@ -89,8 +90,8 @@ public:
     [[nodiscard]] bool is_stack() const { return m_stack; }
     void set_stack(bool stack) { m_stack = stack; }
 
-    [[nodiscard]] bool is_immutable() const { return m_immutable; }
-    void set_immutable() { m_immutable = true; }
+    [[nodiscard]] bool is_immutable() const { return m_immutable.was_set(); }
+    void set_immutable() { m_immutable.set(); }
 
     [[nodiscard]] bool is_mmap() const { return m_mmap; }
 
@@ -243,11 +244,12 @@ private:
     bool m_cacheable : 1 { false };
     bool m_stack : 1 { false };
     bool m_mmap : 1 { false };
-    bool m_immutable : 1 { false };
     bool m_syscall_region : 1 { false };
     bool m_write_combine : 1 { false };
     bool m_mmapped_from_readable : 1 { false };
     bool m_mmapped_from_writable : 1 { false };
+
+    SetOnce m_immutable;
 
     IntrusiveRedBlackTreeNode<FlatPtr, Region, RawPtr<Region>> m_tree_node;
     IntrusiveListNode<Region> m_vmobject_list_node;

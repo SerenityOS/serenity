@@ -455,8 +455,6 @@ UNMAP_AFTER_INIT void Processor::cpu_detect()
         }
     }
 
-    m_has_qemu_hvf_quirk = false;
-
     if (max_extended_leaf >= 0x80000008) {
         // CPUID.80000008H:EAX[7:0] reports the physical-address width supported by the processor.
         CPUID cpuid(0x80000008);
@@ -478,7 +476,7 @@ UNMAP_AFTER_INIT void Processor::cpu_detect()
         if (has_feature(CPUFeature::HYPERVISOR)) {
             CPUID hypervisor_leaf_range(0x40000000);
             if (!hypervisor_leaf_range.ebx() && m_physical_address_bit_width == 36) {
-                m_has_qemu_hvf_quirk = true;
+                m_has_qemu_hvf_quirk.set();
                 m_virtual_address_bit_width = 48;
             }
         }
@@ -602,7 +600,6 @@ UNMAP_AFTER_INIT void ProcessorBase<T>::early_initialize(u32 cpu)
     m_in_critical = 0;
 
     m_invoke_scheduler_async = false;
-    m_scheduler_initialized = false;
     m_in_scheduler = true;
 
     self->m_message_queue = nullptr;
@@ -642,7 +639,7 @@ UNMAP_AFTER_INIT void ProcessorBase<T>::initialize(u32 cpu)
         dmesgln("CPU[{}]: No RDRAND support detected, randomness will be poor", current_id());
     dmesgln("CPU[{}]: Physical address bit width: {}", current_id(), m_physical_address_bit_width);
     dmesgln("CPU[{}]: Virtual address bit width: {}", current_id(), m_virtual_address_bit_width);
-    if (self->m_has_qemu_hvf_quirk)
+    if (self->m_has_qemu_hvf_quirk.was_set())
         dmesgln("CPU[{}]: Applied correction for QEMU Hypervisor.framework quirk", current_id());
 
     if (cpu == 0)
@@ -1688,7 +1685,7 @@ UNMAP_AFTER_INIT void ProcessorBase<T>::initialize_context_switching(Thread& ini
     self->m_tss.rsp0l = regs.rsp0 & 0xffffffff;
     self->m_tss.rsp0h = regs.rsp0 >> 32;
 
-    m_scheduler_initialized = true;
+    m_scheduler_initialized.set();
 
     // clang-format off
     asm volatile(

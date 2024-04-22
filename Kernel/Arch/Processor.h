@@ -8,6 +8,7 @@
 #pragma once
 
 #include <AK/Function.h>
+#include <AK/SetOnce.h>
 #include <Kernel/Arch/CPUID.h>
 #include <Kernel/Arch/DeferredCallEntry.h>
 #include <Kernel/Arch/DeferredCallPool.h>
@@ -195,7 +196,8 @@ private:
     //       they need to be FlatPtrs or everything becomes highly unsound and breaks. They are actually just booleans.
     FlatPtr m_in_scheduler;
     FlatPtr m_invoke_scheduler_async;
-    FlatPtr m_scheduler_initialized;
+
+    SetOnce m_scheduler_initialized;
 
     DeferredCallPool m_deferred_call_pool {};
 };

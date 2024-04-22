@@ -157,7 +157,7 @@ void ProcessorBase<T>::initialize_context_switching(Thread& initial_thread)
 {
     VERIFY(initial_thread.process().is_kernel_process());
 
-    m_scheduler_initialized = true;
+    m_scheduler_initialized.set();
 
     // FIXME: Figure out if we need to call {pre_,post_,}init_finished once aarch64 supports SMP
     Processor::set_current_in_scheduler(true);

@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/RefPtr.h>
+#include <AK/SetOnce.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Firmware/Directory.h>
@@ -34,7 +35,7 @@ private:
 
     PhysicalAddress m_dmi_entry_point;
     PhysicalAddress m_smbios_structure_table;
-    bool m_using_64bit_dmi_entry_point { false };
+    SetOnce m_using_64bit_dmi_entry_point;
     size_t m_smbios_structure_table_length { 0 };
     size_t m_dmi_entry_point_length { 0 };
 };

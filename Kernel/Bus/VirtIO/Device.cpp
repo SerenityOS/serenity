@@ -40,8 +40,8 @@ void Device::set_status_bit(u8 status_bit)
 
 ErrorOr<void> Device::accept_device_features(u64 device_features, u64 accepted_features)
 {
-    VERIFY(!m_did_accept_features);
-    m_did_accept_features = true;
+    VERIFY(!m_did_accept_features.was_set());
+    m_did_accept_features.set();
 
     if (is_feature_set(device_features, VIRTIO_F_VERSION_1)) {
         accepted_features |= VIRTIO_F_VERSION_1; // let the device know were not a legacy driver
@@ -89,8 +89,8 @@ ErrorOr<void> Device::setup_queue(u16 queue_index)
 
 ErrorOr<void> Device::setup_queues(u16 requested_queue_count)
 {
-    VERIFY(!m_did_setup_queues);
-    m_did_setup_queues = true;
+    VERIFY(!m_did_setup_queues.was_set());
+    m_did_setup_queues.set();
 
     auto* common_cfg = TRY(m_transport_entity->get_config(ConfigurationType::Common));
     if (common_cfg) {
@@ -120,8 +120,8 @@ ErrorOr<void> Device::setup_queues(u16 requested_queue_count)
 
 void Device::finish_init()
 {
-    VERIFY(m_did_accept_features);                 // ensure features were negotiated
-    VERIFY(m_did_setup_queues);                    // ensure queues were set-up
+    VERIFY(m_did_accept_features.was_set());       // ensure features were negotiated
+    VERIFY(m_did_setup_queues.was_set());          // ensure queues were set-up
     VERIFY(!(m_status & DEVICE_STATUS_DRIVER_OK)); // ensure we didn't already finish the initialization
 
     set_status_bit(DEVICE_STATUS_DRIVER_OK);

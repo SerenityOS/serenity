@@ -28,7 +28,7 @@ void VGAIOArbiter::disable_vga_emulation_access_permanently(Badge<GraphicsManage
     u8 sr1 = IO::in8(0x3c5);
     IO::out8(0x3c5, sr1 | 1 << 5);
     microseconds_delay(1000);
-    m_vga_access_is_disabled = true;
+    m_vga_access_is_disabled.set();
 }
 
 void VGAIOArbiter::enable_vga_text_mode_console_cursor(Badge<GraphicsManagement>)
@@ -39,7 +39,7 @@ void VGAIOArbiter::enable_vga_text_mode_console_cursor(Badge<GraphicsManagement>
 void VGAIOArbiter::enable_vga_text_mode_console_cursor()
 {
     SpinlockLocker locker(m_main_vga_lock);
-    if (m_vga_access_is_disabled)
+    if (m_vga_access_is_disabled.was_set())
         return;
     IO::out8(0x3D4, 0xA);
     IO::out8(0x3D5, 0);
@@ -53,7 +53,7 @@ void VGAIOArbiter::disable_vga_text_mode_console_cursor(Badge<GraphicsManagement
 void VGAIOArbiter::disable_vga_text_mode_console_cursor()
 {
     SpinlockLocker locker(m_main_vga_lock);
-    if (m_vga_access_is_disabled)
+    if (m_vga_access_is_disabled.was_set())
         return;
     IO::out8(0x3D4, 0xA);
     IO::out8(0x3D5, 0x20);
@@ -62,7 +62,7 @@ void VGAIOArbiter::disable_vga_text_mode_console_cursor()
 void VGAIOArbiter::unblank_screen(Badge<GraphicsManagement>)
 {
     SpinlockLocker locker(m_main_vga_lock);
-    if (m_vga_access_is_disabled)
+    if (m_vga_access_is_disabled.was_set())
         return;
     IO::out8(0x3c0, 0x20);
 }
@@ -70,7 +70,7 @@ void VGAIOArbiter::unblank_screen(Badge<GraphicsManagement>)
 void VGAIOArbiter::set_vga_text_mode_cursor(Badge<GraphicsManagement>, size_t console_width, size_t x, size_t y)
 {
     SpinlockLocker locker(m_main_vga_lock);
-    if (m_vga_access_is_disabled)
+    if (m_vga_access_is_disabled.was_set())
         return;
     enable_vga_text_mode_console_cursor();
     u16 value = y * console_width + x;

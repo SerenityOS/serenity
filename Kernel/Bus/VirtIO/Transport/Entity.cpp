@@ -10,7 +10,7 @@ namespace Kernel::VirtIO {
 
 auto TransportEntity::mapping_for_resource_index(u8 resource_index) -> IOWindow&
 {
-    VERIFY(m_use_mmio);
+    VERIFY(m_use_mmio.was_set());
     VERIFY(m_register_bases[resource_index]);
     return *m_register_bases[resource_index];
 }

@@ -195,7 +195,7 @@ UNMAP_AFTER_INIT ErrorOr<void> E1000NetworkAdapter::initialize(Badge<NetworkingM
     dmesgln_pci(*this, "IO base: {}", m_registers_io_window);
     dmesgln_pci(*this, "Interrupt line: {}", interrupt_number());
     detect_eeprom();
-    dmesgln_pci(*this, "Has EEPROM? {}", m_has_eeprom);
+    dmesgln_pci(*this, "Has EEPROM? {}", m_has_eeprom.was_set());
     read_mac_address();
     auto const& mac = mac_address();
     dmesgln_pci(*this, "MAC address: {}", mac.to_string());
@@ -280,18 +280,17 @@ UNMAP_AFTER_INIT void E1000NetworkAdapter::detect_eeprom()
     for (int i = 0; i < 999; ++i) {
         u32 data = in32(REG_EEPROM);
         if (data & 0x10) {
-            m_has_eeprom = true;
+            m_has_eeprom.set();
             return;
         }
     }
-    m_has_eeprom = false;
 }
 
 UNMAP_AFTER_INIT u32 E1000NetworkAdapter::read_eeprom(u8 address)
 {
     u16 data = 0;
     u32 tmp = 0;
-    if (m_has_eeprom) {
+    if (m_has_eeprom.was_set()) {
         out32(REG_EEPROM, ((u32)address << 8) | 1);
         while (!((tmp = in32(REG_EEPROM)) & (1 << 4)))
             Processor::wait_check();
@@ -306,7 +305,7 @@ UNMAP_AFTER_INIT u32 E1000NetworkAdapter::read_eeprom(u8 address)
 
 UNMAP_AFTER_INIT void E1000NetworkAdapter::read_mac_address()
 {
-    if (m_has_eeprom) {
+    if (m_has_eeprom.was_set()) {
         MACAddress mac {};
         u32 tmp = read_eeprom(0);
         mac[0] = tmp & 0xff;

@@ -5,10 +5,11 @@
  */
 
 #include <AK/Format.h>
+#include <AK/SetOnce.h>
 #include <AK/StringBuilder.h>
 #include <Kernel/Library/KString.h>
 
-extern bool g_in_early_boot;
+extern SetOnce g_not_in_early_boot;
 
 namespace Kernel {
 
@@ -33,7 +34,7 @@ ErrorOr<NonnullOwnPtr<KString>> KString::vformatted(StringView fmtstr, AK::TypeE
 NonnullOwnPtr<KString> KString::must_create(StringView string)
 {
     // We can only enforce success during early boot.
-    VERIFY(g_in_early_boot);
+    VERIFY(!g_not_in_early_boot.was_set());
     return KString::try_create(string).release_value();
 }
 
@@ -51,7 +52,7 @@ ErrorOr<NonnullOwnPtr<KString>> KString::try_create_uninitialized(size_t length,
 NonnullOwnPtr<KString> KString::must_create_uninitialized(size_t length, char*& characters)
 {
     // We can only enforce success during early boot.
-    VERIFY(g_in_early_boot);
+    VERIFY(!g_not_in_early_boot.was_set());
     return KString::try_create_uninitialized(length, characters).release_value();
 }
 

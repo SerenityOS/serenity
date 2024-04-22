@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/SetOnce.h>
 #include <Kernel/Debug.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Locking/LockLocation.h>
@@ -12,7 +13,7 @@
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Tasks/Thread.h>
 
-extern bool g_in_early_boot;
+extern SetOnce g_not_in_early_boot;
 
 namespace Kernel {
 
@@ -23,7 +24,7 @@ void Mutex::lock(Mode mode, [[maybe_unused]] LockLocation const& location)
     VERIFY(!Processor::current_in_irq());
     if constexpr (LOCK_IN_CRITICAL_DEBUG) {
         // There are no interrupts enabled in early boot.
-        if (!g_in_early_boot)
+        if (g_not_in_early_boot.was_set())
             VERIFY_INTERRUPTS_ENABLED();
     }
     VERIFY(mode != Mode::Unlocked);
@@ -151,7 +152,7 @@ void Mutex::unlock()
     VERIFY(!Processor::current_in_irq());
     if constexpr (LOCK_IN_CRITICAL_DEBUG) {
         // There are no interrupts enabled in early boot.
-        if (!g_in_early_boot)
+        if (g_not_in_early_boot.was_set())
             VERIFY_INTERRUPTS_ENABLED();
     }
     auto* current_thread = Thread::current();
@@ -211,7 +212,7 @@ void Mutex::block(Thread& current_thread, Mode mode, SpinlockLocker<Spinlock<Loc
 {
     if constexpr (LOCK_IN_CRITICAL_DEBUG) {
         // There are no interrupts enabled in early boot.
-        if (!g_in_early_boot)
+        if (g_not_in_early_boot.was_set())
             VERIFY_INTERRUPTS_ENABLED();
     }
     m_blocked_thread_lists.with([&](auto& lists) {

@@ -157,7 +157,7 @@ ErrorOr<NonnullRefPtr<TCPSocket>> TCPSocket::try_create_client(IPv4Address const
         client->set_local_port(new_local_port);
         client->set_peer_address(new_peer_address);
         client->set_peer_port(new_peer_port);
-        client->set_bound(true);
+        client->set_bound();
         client->set_direction(Direction::Incoming);
         client->set_originator(*this);
 
