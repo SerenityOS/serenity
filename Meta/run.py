@@ -722,7 +722,7 @@ def set_up_machine_devices(config: Configuration):
         config.cpu_count = None
         config.audio_devices = []
         config.extra_arguments.extend(["-serial", "stdio"])
-        config.kernel_cmdline.append("serial_debug")
+        config.kernel_cmdline.extend(["serial_debug", "nvme_poll"])
         config.qemu_cpu = None
         return
 
