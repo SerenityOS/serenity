@@ -187,7 +187,16 @@ ErrorOr<NonnullRefPtr<Protocol::RequestClient>> launch_request_server_process(Re
 
 ErrorOr<NonnullRefPtr<SQL::SQLClient>> launch_sql_server_process(ReadonlySpan<ByteString> candidate_sql_server_paths)
 {
-    auto [client, _] = TRY(Core::launch_singleton_process<SQL::SQLClient>("SQLServer"sv, candidate_sql_server_paths));
+    Vector<ByteString> arguments;
+
+    if (auto server = mach_server_name(); server.has_value()) {
+        arguments.append("--mach-server-name"sv);
+        arguments.append(server.value());
+    }
+
+    auto [client, pid] = TRY(Core::launch_singleton_process<SQL::SQLClient>("SQLServer"sv, candidate_sql_server_paths, arguments));
+    WebView::ProcessManager::the().add_process(WebView::ProcessType::SQLServer, pid);
+
     return client;
 }
 
