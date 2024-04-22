@@ -720,9 +720,6 @@ def set_up_machine_devices(config: Configuration):
     elif config.architecture == Arch.RISCV64:
         config.qemu_machine = "virt"
         config.cpu_count = None
-        config.vga_type = None
-        config.display_device = None
-        config.display_backend = None
         config.audio_devices = []
         config.extra_arguments.extend(["-serial", "stdio"])
         config.kernel_cmdline.append("serial_debug")
