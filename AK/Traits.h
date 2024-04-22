@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include "Concepts.h"
-#include "Find.h"
 #include <AK/BitCast.h>
 #include <AK/Concepts.h>
 #include <AK/Forward.h>
@@ -19,7 +17,7 @@ namespace AK {
 template<typename T>
 concept HasEqualityOperator = requires(T a, T b) {
     {
-        a == b
+        *a == *b
     } -> SameAs<bool>;
 };
 
@@ -56,19 +54,9 @@ struct Traits<T> : public DefaultTraits<T> {
     }
 };
 
-template<typename T>
-requires(HasEqualityOperator<T> && !Detail::IsPointerOfType<char, T>)
-struct Traits<T*> : public DefaultTraits<T*> {
-    static constexpr bool is_trivial() { return true; }
-    static unsigned hash(T* p) { return ptr_hash(bit_cast<FlatPtr>(p)); }
-    static constexpr bool equals(T* const& lhs, T* const& rhs)
-    {
-        return *lhs == *rhs;
-    }
-};
 
 template<typename T>
-requires(HasEqualityOperator<T> && !Detail::IsPointerOfType<char, T>)
+requires(HasEqualityOperator<T const*> && !Detail::IsPointerOfType<char, T>)
 struct Traits<T const*> : public DefaultTraits<T const*> {
     static constexpr bool is_trivial() { return true; }
     static unsigned hash(T const* p) { return ptr_hash(bit_cast<FlatPtr>(p)); }
