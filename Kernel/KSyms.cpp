@@ -17,7 +17,7 @@ namespace Kernel {
 
 FlatPtr g_lowest_kernel_symbol_address = 0xffffffff;
 FlatPtr g_highest_kernel_symbol_address = 0;
-bool g_kernel_symbols_available = false;
+SetOnce g_kernel_symbols_available;
 
 extern "C" {
 __attribute__((section(".kernel_symbols"))) char kernel_symbols[5 * MiB] {};
@@ -107,7 +107,7 @@ UNMAP_AFTER_INIT static void load_kernel_symbols_from_data(Bytes buffer)
         ++bufptr;
         ++current_symbol_index;
     }
-    g_kernel_symbols_available = true;
+    g_kernel_symbols_available.set();
 }
 
 NEVER_INLINE static void dump_backtrace_impl(FlatPtr frame_pointer, bool use_ksyms, PrintToScreen print_to_screen)
@@ -121,7 +121,7 @@ NEVER_INLINE static void dump_backtrace_impl(FlatPtr frame_pointer, bool use_ksy
     } while (0)
 
     SmapDisabler disabler;
-    if (use_ksyms && !g_kernel_symbols_available)
+    if (use_ksyms && !g_kernel_symbols_available.was_set())
         Processor::halt();
 
     struct RecognizedSymbol {
@@ -235,7 +235,7 @@ void dump_backtrace(PrintToScreen print_to_screen)
     TemporaryChange disable_kmalloc_stacks(g_dump_kmalloc_stacks, false);
 
     FlatPtr base_pointer = (FlatPtr)__builtin_frame_address(0);
-    dump_backtrace_impl(base_pointer, g_kernel_symbols_available, print_to_screen);
+    dump_backtrace_impl(base_pointer, g_kernel_symbols_available.was_set(), print_to_screen);
 }
 
 UNMAP_AFTER_INIT void load_kernel_symbol_table()

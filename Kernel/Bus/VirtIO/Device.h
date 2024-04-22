@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/SetOnce.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Bus/VirtIO/Definitions.h>
@@ -66,7 +67,7 @@ protected:
     }
     bool is_feature_accepted(u64 feature) const
     {
-        VERIFY(m_did_accept_features);
+        VERIFY(m_did_accept_features.was_set());
         return is_feature_set(m_accepted_features, feature);
     }
 
@@ -91,8 +92,8 @@ private:
     u16 m_queue_count { 0 };
     u8 m_status { 0 };
     u64 m_accepted_features { 0 };
-    bool m_did_accept_features { false };
-    bool m_did_setup_queues { false };
+    SetOnce m_did_accept_features;
+    SetOnce m_did_setup_queues;
 
     NonnullOwnPtr<TransportEntity> const m_transport_entity;
 };

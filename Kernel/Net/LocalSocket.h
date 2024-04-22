@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/IntrusiveList.h>
+#include <AK/SetOnce.h>
 #include <Kernel/Library/DoubleBuffer.h>
 #include <Kernel/Net/Socket.h>
 
@@ -94,7 +95,7 @@ private:
         return m_role;
     }
 
-    bool m_bound { false };
+    SetOnce m_bound;
     bool m_accept_side_fd_open { false };
     OwnPtr<KString> m_path;
 

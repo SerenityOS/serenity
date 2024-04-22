@@ -9,6 +9,7 @@
 #include <AK/Error.h>
 #include <AK/OwnPtr.h>
 #include <AK/Platform.h>
+#include <AK/SetOnce.h>
 #include <AK/Time.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
@@ -72,7 +73,7 @@ public:
     // FIXME: Most likely broken, because it does not check m_update[12] for in-progress updates.
     void set_remaining_epoch_time_adjustment(Duration adjustment) { m_remaining_epoch_time_adjustment = adjustment; }
 
-    bool can_query_precise_time() const { return m_can_query_precise_time; }
+    bool can_query_precise_time() const { return m_can_query_precise_time.was_set(); }
 
     Memory::VMObject& time_page_vmobject();
 
@@ -108,7 +109,7 @@ private:
     Atomic<u32> m_update2 { 0 };
 
     u32 m_time_ticks_per_second { 0 }; // may be different from interrupts/second (e.g. hpet)
-    bool m_can_query_precise_time { false };
+    SetOnce m_can_query_precise_time;
     bool m_updating_time { false }; // may only be accessed from the BSP!
 
     LockRefPtr<HardwareTimerBase> m_system_timer;

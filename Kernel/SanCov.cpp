@@ -5,12 +5,13 @@
  */
 
 #include <AK/Platform.h>
+#include <AK/SetOnce.h>
 #include <AK/TemporaryChange.h>
 #include <Kernel/Arch/Processor.h>
 #include <Kernel/Devices/KCOVDevice.h>
 #include <Kernel/Library/Panic.h>
 
-extern bool g_in_early_boot;
+extern SetOnce g_not_in_early_boot;
 
 #ifdef ENABLE_KERNEL_COVERAGE_COLLECTION_DEBUG
 // Set kcov_emergency_off=true before making calls from __sanitizer_cov_trace_pc to coverage
@@ -36,7 +37,7 @@ static void crash_and_burn(Thread* thread)
 extern "C" void __sanitizer_cov_trace_pc(void);
 extern "C" void __sanitizer_cov_trace_pc(void)
 {
-    if (g_in_early_boot) [[unlikely]]
+    if (!g_not_in_early_boot.was_set()) [[unlikely]]
         return;
 
     auto* thread = Processor::current_thread();

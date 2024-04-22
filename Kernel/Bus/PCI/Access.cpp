@@ -41,12 +41,12 @@ bool Access::is_initialized()
 
 bool Access::is_hardware_disabled()
 {
-    return g_pci_access_io_probe_failed;
+    return g_pci_access_io_probe_failed.was_set();
 }
 
 bool Access::is_disabled()
 {
-    return g_pci_access_is_disabled_from_commandline || g_pci_access_io_probe_failed;
+    return g_pci_access_is_disabled_from_commandline.was_set() || g_pci_access_io_probe_failed.was_set();
 }
 
 UNMAP_AFTER_INIT bool Access::find_and_register_pci_host_bridges_from_acpi_mcfg_table(PhysicalAddress mcfg_table)

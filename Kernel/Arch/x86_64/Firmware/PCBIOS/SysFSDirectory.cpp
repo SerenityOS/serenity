@@ -68,7 +68,7 @@ void SysFSBIOSDirectory::create_components()
 UNMAP_AFTER_INIT void SysFSBIOSDirectory::initialize_dmi_exposer()
 {
     VERIFY(!(m_dmi_entry_point.is_null()));
-    if (m_using_64bit_dmi_entry_point) {
+    if (m_using_64bit_dmi_entry_point.was_set()) {
         set_dmi_64_bit_entry_initialization_values();
     } else {
         set_dmi_32_bit_entry_initialization_values();
@@ -87,7 +87,7 @@ UNMAP_AFTER_INIT SysFSBIOSDirectory::SysFSBIOSDirectory(SysFSFirmwareDirectory& 
     auto entry_64bit = find_dmi_entry64bit_point();
     if (entry_64bit.has_value()) {
         m_dmi_entry_point = entry_64bit.value();
-        m_using_64bit_dmi_entry_point = true;
+        m_using_64bit_dmi_entry_point.set();
     }
     if (m_dmi_entry_point.is_null())
         return;

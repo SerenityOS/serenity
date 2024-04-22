@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/SetOnce.h>
 #include <AK/Types.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Time/HardwareTimer.h>
@@ -99,7 +100,7 @@ private:
     u32 m_processor_cnt { 0 };
     u32 m_processor_enabled_cnt { 0 };
     APICTimer* m_apic_timer { nullptr };
-    bool m_is_x2 { false };
+    SetOnce m_is_x2;
 
     static PhysicalAddress get_base();
     void set_base(PhysicalAddress const& base);

@@ -123,7 +123,7 @@ ErrorOr<void> PCIeTransportLink::locate_configurations_and_resources(Badge<VirtI
             }
             dbgln_if(VIRTIO_DEBUG, "{}: Found configuration {}, resource: {}, offset: {}, length: {}", device_name(), (u32)config.cfg_type, config.resource_index, config.offset, config.length);
             if (config.cfg_type == ConfigurationType::Common)
-                m_use_mmio = true;
+                m_use_mmio.set();
             else if (config.cfg_type == ConfigurationType::Notify)
                 m_notify_multiplier = capability.read32(0x10);
 
@@ -131,7 +131,7 @@ ErrorOr<void> PCIeTransportLink::locate_configurations_and_resources(Badge<VirtI
         }
     }
 
-    if (m_use_mmio) {
+    if (m_use_mmio.was_set()) {
         for (auto& cfg : m_configs) {
             auto mapping_io_window = TRY(IOWindow::create_for_pci_device_bar(device_identifier(), static_cast<PCI::HeaderType0BaseRegister>(cfg.resource_index)));
             m_register_bases[cfg.resource_index] = move(mapping_io_window);

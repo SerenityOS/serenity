@@ -8,6 +8,7 @@
 
 #include <AK/NonnullOwnPtr.h>
 #include <AK/Platform.h>
+#include <AK/SetOnce.h>
 #include <AK/Types.h>
 #include <Kernel/Locking/Spinlock.h>
 
@@ -34,7 +35,7 @@ private:
     void enable_vga_text_mode_console_cursor();
 
     RecursiveSpinlock<LockRank::None> m_main_vga_lock {};
-    bool m_vga_access_is_disabled { false };
+    SetOnce m_vga_access_is_disabled;
 };
 
 }

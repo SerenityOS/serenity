@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/SetOnce.h>
 #include <Kernel/Arch/CPU.h>
 #include <Kernel/Boot/CommandLine.h>
 #include <Kernel/Bus/PCI/API.h>
@@ -15,14 +16,15 @@
 
 namespace Kernel::PCI {
 
-bool g_pci_access_io_probe_failed { false };
-bool g_pci_access_is_disabled_from_commandline;
+SetOnce g_pci_access_io_probe_failed;
+SetOnce g_pci_access_is_disabled_from_commandline;
 
 void initialize()
 {
-    g_pci_access_is_disabled_from_commandline = kernel_command_line().is_pci_disabled();
-    if (g_pci_access_is_disabled_from_commandline)
+    if (kernel_command_line().is_pci_disabled()) {
+        g_pci_access_is_disabled_from_commandline.set();
         return;
+    }
 
     new Access();
 

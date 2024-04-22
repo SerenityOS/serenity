@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/SetOnce.h>
 #include <AK/Types.h>
 #include <Kernel/Bus/VirtIO/Definitions.h>
 #include <Kernel/Bus/VirtIO/Queue.h>
@@ -90,7 +91,7 @@ protected:
 
     IOWindow& base_io_window();
     Array<OwnPtr<IOWindow>, 6> m_register_bases;
-    bool m_use_mmio { false };
+    SetOnce m_use_mmio;
 
     u32 m_notify_multiplier { 0 };
 };

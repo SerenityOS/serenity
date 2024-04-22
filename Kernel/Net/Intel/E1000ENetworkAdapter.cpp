@@ -221,7 +221,7 @@ UNMAP_AFTER_INIT ErrorOr<void> E1000ENetworkAdapter::initialize(Badge<Networking
     dmesgln("E1000e: IO base: {}", m_registers_io_window);
     dmesgln("E1000e: Interrupt line: {}", interrupt_number());
     detect_eeprom();
-    dmesgln("E1000e: Has EEPROM? {}", m_has_eeprom);
+    dmesgln("E1000e: Has EEPROM? {}", m_has_eeprom.was_set());
     read_mac_address();
     auto const& mac = mac_address();
     dmesgln("E1000e: MAC address: {}", mac.to_string());
@@ -252,12 +252,13 @@ UNMAP_AFTER_INIT E1000ENetworkAdapter::~E1000ENetworkAdapter() = default;
 UNMAP_AFTER_INIT void E1000ENetworkAdapter::detect_eeprom()
 {
     // Section 13.4.3 of https://www.intel.com/content/dam/doc/manual/pci-pci-x-family-gbe-controllers-software-dev-manual.pdf
-    m_has_eeprom = in32(REG_EECD) & EECD_PRES;
+    if (in32(REG_EECD) & EECD_PRES)
+        m_has_eeprom.set();
 }
 
 UNMAP_AFTER_INIT u32 E1000ENetworkAdapter::read_eeprom(u8 address)
 {
-    VERIFY(m_has_eeprom);
+    VERIFY(m_has_eeprom.was_set());
     u16 data = 0;
     u32 tmp = 0;
     out32(REG_EEPROM, ((u32)address << 2) | 1);

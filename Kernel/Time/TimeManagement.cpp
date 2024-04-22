@@ -118,7 +118,7 @@ MonotonicTime TimeManagement::monotonic_time(TimePrecision precision) const
     u64 seconds;
     u32 ticks;
 
-    bool do_query = precision == TimePrecision::Precise && m_can_query_precise_time;
+    bool do_query = precision == TimePrecision::Precise && m_can_query_precise_time.was_set();
 
     u32 update_iteration;
     do {
@@ -380,7 +380,7 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_x86_non_legacy_hardware_time
     // Use the HPET main counter frequency for time purposes. This is likely
     // a much higher frequency than the interrupt itself and allows us to
     // keep a more accurate time
-    m_can_query_precise_time = true;
+    m_can_query_precise_time.set();
     m_time_ticks_per_second = HPET::the().frequency();
 
     m_system_timer->try_to_set_frequency(m_system_timer->calculate_nearest_possible_frequency(OPTIMAL_TICKS_PER_SECOND_RATE));

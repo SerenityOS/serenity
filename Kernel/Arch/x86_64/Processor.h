@@ -9,6 +9,7 @@
 #include <AK/Array.h>
 #include <AK/Concepts.h>
 #include <AK/Function.h>
+#include <AK/SetOnce.h>
 #include <AK/Types.h>
 
 #include <Kernel/Arch/DeferredCallEntry.h>
@@ -72,7 +73,7 @@ private:
     static Atomic<u32> s_idle_cpu_mask;
 
     TSS m_tss;
-    bool m_has_qemu_hvf_quirk;
+    SetOnce m_has_qemu_hvf_quirk;
 
     ProcessorInfo* m_info;
 

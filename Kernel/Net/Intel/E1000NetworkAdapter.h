@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/OwnPtr.h>
+#include <AK/SetOnce.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Interrupts/IRQHandler.h>
@@ -96,7 +97,7 @@ protected:
     NonnullOwnPtr<Memory::Region> m_tx_buffer_region;
     Array<void*, number_of_rx_descriptors> m_rx_buffers;
     Array<void*, number_of_tx_descriptors> m_tx_buffers;
-    bool m_has_eeprom { false };
+    SetOnce m_has_eeprom;
     bool m_link_up { false };
     EntropySource m_entropy_source;
 

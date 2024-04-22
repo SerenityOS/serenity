@@ -5,6 +5,7 @@
  */
 
 #include <AK/Platform.h>
+#include <AK/SetOnce.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/CPU.h>
 #include <Kernel/Arch/InterruptManagement.h>
@@ -100,7 +101,7 @@ extern "C" u8 end_of_kernel_image[];
 multiboot_module_entry_t multiboot_copy_boot_modules_array[16];
 size_t multiboot_copy_boot_modules_count;
 
-READONLY_AFTER_INIT bool g_in_early_boot;
+READONLY_AFTER_INIT SetOnce g_not_in_early_boot;
 
 namespace Kernel {
 
@@ -168,8 +169,6 @@ READONLY_AFTER_INIT static u8 s_command_line_buffer[512];
 
 extern "C" [[noreturn]] UNMAP_AFTER_INIT NO_SANITIZE_COVERAGE void init([[maybe_unused]] BootInfo const& boot_info)
 {
-    g_in_early_boot = true;
-
 #if ARCH(X86_64)
     start_of_prekernel_image = PhysicalAddress { boot_info.start_of_prekernel_image };
     end_of_prekernel_image = PhysicalAddress { boot_info.end_of_prekernel_image };
@@ -460,7 +459,7 @@ void init_stage2(void*)
     }
 
     // Switch out of early boot mode.
-    g_in_early_boot = false;
+    g_not_in_early_boot.set();
 
     // NOTE: Everything marked READONLY_AFTER_INIT becomes non-writable after this point.
     MM.protect_readonly_after_init_memory();
