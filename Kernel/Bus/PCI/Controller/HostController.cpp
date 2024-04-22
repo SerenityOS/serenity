@@ -121,7 +121,7 @@ UNMAP_AFTER_INIT void HostController::enumerate_attached_devices(Function<Iterat
         for (int bus_as_function_number = 1; bus_as_function_number < 8; ++bus_as_function_number) {
             if (read16_field(0, 0, bus_as_function_number, PCI::RegisterOffset::VENDOR_ID) == PCI::none_value)
                 continue;
-            if (read8_field(0, 0, bus_as_function_number, PCI::RegisterOffset::CLASS) != 0x6)
+            if (read8_field(0, 0, bus_as_function_number, PCI::RegisterOffset::CLASS) != to_underlying(PCI::ClassID::Bridge))
                 continue;
             if (Checked<u8>::addition_would_overflow(m_domain.start_bus(), bus_as_function_number))
                 break;
