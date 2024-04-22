@@ -153,6 +153,8 @@ public:
         Select,
     };
 
+    void did_request_link_context_menu(i32 link_id, CSSPixelPoint, URL::URL const&, ByteString const& target, unsigned modifiers);
+
     void register_media_element(Badge<HTML::HTMLMediaElement>, int media_id);
     void unregister_media_element(Badge<HTML::HTMLMediaElement>, int media_id);
 
@@ -213,8 +215,9 @@ private:
     PendingNonBlockingDialog m_pending_non_blocking_dialog { PendingNonBlockingDialog::None };
     WeakPtr<HTML::HTMLElement> m_pending_non_blocking_dialog_target;
 
+    Optional<i32> m_context_menu_element_id;
+
     Vector<int> m_media_elements;
-    Optional<int> m_media_context_menu_element_id;
 
     Web::HTML::MuteState m_mute_state { Web::HTML::MuteState::Unmuted };
 

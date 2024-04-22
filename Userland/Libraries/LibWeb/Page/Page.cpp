@@ -404,6 +404,12 @@ void Page::select_dropdown_closed(Optional<u32> const& selected_item_id)
     }
 }
 
+void Page::did_request_link_context_menu(i32 link_id, CSSPixelPoint position, URL::URL const& url, ByteString const& target, unsigned modifiers)
+{
+    m_context_menu_element_id = link_id;
+    client().page_did_request_link_context_menu(position, move(url), target, modifiers);
+}
+
 void Page::register_media_element(Badge<HTML::HTMLMediaElement>, int media_id)
 {
     m_media_elements.append(media_id);
@@ -418,7 +424,7 @@ void Page::unregister_media_element(Badge<HTML::HTMLMediaElement>, int media_id)
 
 void Page::did_request_media_context_menu(i32 media_id, CSSPixelPoint position, ByteString const& target, unsigned modifiers, MediaContextMenu menu)
 {
-    m_media_context_menu_element_id = media_id;
+    m_context_menu_element_id = media_id;
     client().page_did_request_media_context_menu(position, target, modifiers, move(menu));
 }
 
@@ -498,10 +504,10 @@ void Page::toggle_page_mute_state()
 
 JS::GCPtr<HTML::HTMLMediaElement> Page::media_context_menu_element()
 {
-    if (!m_media_context_menu_element_id.has_value())
+    if (!m_context_menu_element_id.has_value())
         return nullptr;
 
-    auto* dom_node = DOM::Node::from_unique_id(*m_media_context_menu_element_id);
+    auto* dom_node = DOM::Node::from_unique_id(*m_context_menu_element_id);
     if (dom_node == nullptr)
         return nullptr;
 

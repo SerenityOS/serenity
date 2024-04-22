@@ -302,7 +302,7 @@ bool EventHandler::handle_mouseup(CSSPixelPoint position, CSSPixelPoint screen_p
                     if (button == GUI::MouseButton::Middle) {
                         m_navigable->page().client().page_did_middle_click_link(url, link->target().to_byte_string(), modifiers);
                     } else if (button == GUI::MouseButton::Secondary) {
-                        m_navigable->page().client().page_did_request_link_context_menu(top_level_position, url, link->target().to_byte_string(), modifiers);
+                        m_navigable->page().did_request_link_context_menu(link->unique_id(), top_level_position, url, link->target().to_byte_string(), modifiers);
                     }
                 } else if (button == GUI::MouseButton::Secondary) {
                     if (is<HTML::HTMLImageElement>(*node)) {
