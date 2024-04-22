@@ -334,6 +334,36 @@ static ErrorOr<CodingStyleDefault> read_coding_style_default(ReadonlyBytes data)
     return cod;
 }
 
+// A.6.2 Coding style component (COC)
+struct CodingStyleComponent {
+    u16 component_index { 0 }; // "Ccoc" in spec.
+
+    // Table A.23 – Coding style parameter values for the Scoc parameter
+    bool has_explicit_precinct_size { false }; // "Scoc" in spec.
+
+    CodingStyleParameters parameters;
+};
+
+static ErrorOr<CodingStyleComponent> read_coding_style_component(ReadonlyBytes data, size_t number_of_components)
+{
+    FixedMemoryStream stream { data };
+
+    // Table A.22 – Coding style component parameter values
+    CodingStyleComponent coc;
+    if (number_of_components < 257)
+        coc.component_index = TRY(stream.read_value<u8>());
+    else
+        coc.component_index = TRY(stream.read_value<BigEndian<u16>>());
+
+    u8 Scoc = TRY(stream.read_value<u8>());
+    coc.has_explicit_precinct_size = Scoc & 1;
+
+    dbgln_if(JPEG2000_DEBUG, "JPEG2000ImageDecoderPlugin: COC marker segment: component_index={}", coc.component_index);
+    coc.parameters = TRY(read_coding_style_parameters(data.slice(TRY(stream.tell())), "COC"sv, coc.has_explicit_precinct_size));
+
+    return coc;
+}
+
 // A.6.4 Quantization default (QCD)
 struct QuantizationDefault {
     enum QuantizationStyle {
@@ -479,6 +509,7 @@ struct TilePartData {
 
 struct TileData {
     Optional<CodingStyleDefault> cod;
+    Vector<CodingStyleComponent> cocs;
     Optional<QuantizationDefault> qcd;
     Vector<QuantizationComponent> qccs;
     Vector<TilePartData> tile_parts;
@@ -502,6 +533,7 @@ struct JPEG2000LoadingContext {
     // Data from marker segments:
     ImageAndTileSize siz;
     CodingStyleDefault cod;
+    Vector<CodingStyleComponent> cocs;
     QuantizationDefault qcd;
     Vector<QuantizationComponent> qccs;
     Vector<Comment> coms;
@@ -587,6 +619,8 @@ static ErrorOr<void> parse_codestream_main_header(JPEG2000LoadingContext& contex
                     return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Multiple COD markers in main header");
                 context.cod = TRY(read_coding_style_default(marker.data.value()));
                 saw_COD_marker = true;
+            } else if (marker.marker == J2K_COC) {
+                context.cocs.append(TRY(read_coding_style_component(marker.data.value(), context.siz.components.size())));
             } else if (marker.marker == J2K_QCD) {
                 if (saw_QCD_marker)
                     return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Multiple QCD markers in main header");
@@ -617,7 +651,8 @@ static ErrorOr<void> parse_codestream_main_header(JPEG2000LoadingContext& contex
                 [](Empty) -> size_t { VERIFY_NOT_REACHED(); },
                 [](Vector<QuantizationDefault::ReversibleStepSize> const& step_sizes) { return step_sizes.size(); },
                 [](Vector<QuantizationDefault::IrreversibleStepSize> const& step_sizes) { return step_sizes.size(); });
-            if (context.qcd.quantization_style != QuantizationDefault::ScalarDerived && step_sizes_count < context.cod.number_of_decomposition_levels * 3u + 1u)
+            // FIXME: What if number_of_decomposition_levels is in context.cocs and varies by component?
+            if (context.qcd.quantization_style != QuantizationDefault::ScalarDerived && step_sizes_count < context.cod.parameters.number_of_decomposition_levels * 3u + 1u)
                 return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Not enough step sizes for number of decomposition levels");
 
             return {};
@@ -676,6 +711,8 @@ static ErrorOr<void> parse_codestream_tile_header(JPEG2000LoadingContext& contex
                 if (tile.cod.has_value())
                     return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Multiple COD markers in tile header");
                 tile.cod = TRY(read_coding_style_default(marker.data.value()));
+            } else if (marker.marker == J2K_COC) {
+                tile.cocs.append(TRY(read_coding_style_component(marker.data.value(), context.siz.components.size())));
             } else if (marker.marker == J2K_QCD) {
                 if (tile.qcd.has_value())
                     return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Multiple QCD markers in tile header");
