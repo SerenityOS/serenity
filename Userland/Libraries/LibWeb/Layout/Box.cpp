@@ -56,7 +56,10 @@ bool Box::is_scroll_container() const
 
 bool Box::is_user_scrollable() const
 {
-    // FIXME: Support horizontal scroll as well (overflow-x)
+    // FIXME: Support horizontal scroll as well (overflow-x).
+	if (computed_values().overflow_y() == CSS::Overflow::Hidden || computed_values().overflow_x() == CSS::Overflow::Hidden) 
+		return false;
+
     return computed_values().overflow_y() == CSS::Overflow::Scroll || computed_values().overflow_y() == CSS::Overflow::Auto;
 }
 
