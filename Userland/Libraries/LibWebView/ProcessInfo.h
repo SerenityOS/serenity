@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <AK/Optional.h>
+#include <AK/String.h>
 #include <AK/Types.h>
 #include <LibCore/Platform/ProcessInfo.h>
 
@@ -34,6 +36,7 @@ struct ProcessInfo : public Core::Platform::ProcessInfo {
     }
 
     ProcessType type { ProcessType::WebContent };
+    Optional<String> title;
 };
 
 }

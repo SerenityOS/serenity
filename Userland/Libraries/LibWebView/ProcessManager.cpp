@@ -197,7 +197,7 @@ String ProcessManager::generate_html()
         <table>
                 <thead>
                 <tr>
-                        <th>Type</th>
+                        <th>Name</th>
                         <th>PID</th>
                         <th>Memory Usage</th>
                         <th>CPU %</th>
@@ -210,6 +210,8 @@ String ProcessManager::generate_html()
         builder.append("<tr>"sv);
         builder.append("<td>"sv);
         builder.append(WebView::process_name_from_type(process.type));
+        if (process.title.has_value())
+            builder.appendff(" - {}", *process.title);
         builder.append("</td>"sv);
         builder.append("<td>"sv);
         builder.append(MUST(String::number(process.pid)));
