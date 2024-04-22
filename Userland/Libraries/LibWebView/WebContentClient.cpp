@@ -38,6 +38,7 @@ void WebContentClient::notify_process_information(WebView::ProcessHandle const& 
 {
     dbgln_if(SPAM_DEBUG, "handle: WebContentClient::NotifyProcessInformation! pid={}", handle.pid);
     ProcessManager::the().add_process(ProcessType::WebContent, handle.pid);
+    m_process_handle = handle;
 }
 
 void WebContentClient::did_paint(u64 page_id, Gfx::IntRect const& rect, i32 bitmap_id)
@@ -48,6 +49,9 @@ void WebContentClient::did_paint(u64 page_id, Gfx::IntRect const& rect, i32 bitm
 
 void WebContentClient::did_start_loading(u64 page_id, URL::URL const& url, bool is_redirect)
 {
+    if (auto* process = WebView::ProcessManager::the().find_process(m_process_handle.pid))
+        process->title.clear();
+
     if (auto view = view_for_page_id(page_id); view.has_value()) {
         view->set_url({}, url);
 
@@ -121,6 +125,9 @@ void WebContentClient::did_layout(u64 page_id, Gfx::IntSize content_size)
 
 void WebContentClient::did_change_title(u64 page_id, ByteString const& title)
 {
+    if (auto* process = WebView::ProcessManager::the().find_process(m_process_handle.pid))
+        process->title = MUST(String::from_byte_string(title));
+
     if (auto view = view_for_page_id(page_id); view.has_value()) {
         if (!view->on_title_change)
             return;
