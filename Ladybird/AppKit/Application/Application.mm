@@ -40,6 +40,11 @@
     return m_application_bridge->launch_request_server(certificates);
 }
 
+- (ErrorOr<NonnullRefPtr<SQL::SQLClient>>)launchSQLServer
+{
+    return m_application_bridge->launch_sql_server();
+}
+
 - (ErrorOr<NonnullRefPtr<WebView::WebContentClient>>)launchWebContent:(Ladybird::WebViewBridge&)web_view_bridge
 {
     return m_application_bridge->launch_web_content(web_view_bridge);

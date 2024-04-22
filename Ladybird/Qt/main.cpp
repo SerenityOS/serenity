@@ -117,7 +117,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (!disable_sql_database) {
         auto sql_server_paths = TRY(get_paths_for_helper_process("SQLServer"sv));
-        database = TRY(WebView::Database::create(move(sql_server_paths)));
+        auto sql_client = TRY(launch_sql_server_process(sql_server_paths));
+
+        database = TRY(WebView::Database::create(sql_client));
     }
 
     auto cookie_jar = database ? TRY(WebView::CookieJar::create(*database)) : WebView::CookieJar::create();

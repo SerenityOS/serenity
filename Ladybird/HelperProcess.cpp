@@ -7,6 +7,7 @@
 #include "HelperProcess.h"
 #include "Utilities.h"
 #include <LibCore/Environment.h>
+#include <LibCore/SingletonProcess.h>
 #include <LibWebView/ProcessManager.h>
 
 ErrorOr<NonnullRefPtr<WebView::WebContentClient>> launch_web_content_process(
@@ -182,6 +183,12 @@ ErrorOr<NonnullRefPtr<Protocol::RequestClient>> launch_request_server_process(Re
     }
 
     return launch_generic_server_process<Protocol::RequestClient>(candidate_request_server_paths, "RequestServer"sv, move(arguments));
+}
+
+ErrorOr<NonnullRefPtr<SQL::SQLClient>> launch_sql_server_process(ReadonlySpan<ByteString> candidate_sql_server_paths)
+{
+    auto [client, _] = TRY(Core::launch_singleton_process<SQL::SQLClient>("SQLServer"sv, candidate_sql_server_paths));
+    return client;
 }
 
 ErrorOr<IPC::File> connect_new_request_server_client(Protocol::RequestClient& client)
