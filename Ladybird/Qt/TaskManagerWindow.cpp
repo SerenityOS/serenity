@@ -18,7 +18,7 @@ TaskManagerWindow::TaskManagerWindow(QWidget* parent)
     layout()->addWidget(m_web_view);
 
     setWindowTitle("Task Manager");
-    resize(400, 300);
+    resize(600, 400);
 
     m_update_timer.setInterval(1000);
 
