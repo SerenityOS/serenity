@@ -38,7 +38,6 @@ protected:
 public:
     ErrorOr<void> reset_controller();
     ErrorOr<void> start_controller();
-    u32 get_admin_q_dept();
 
     u16 submit_admin_command(NVMeSubmission& sub, bool sync = false)
     {
@@ -61,6 +60,7 @@ private:
 
     NVMeController(PCI::DeviceIdentifier const&, u32 hardware_relative_controller_id);
 
+    void set_admin_q_depth();
     ErrorOr<void> identify_and_init_namespaces();
     ErrorOr<void> identify_and_init_controller();
     NSFeatures get_ns_features(IdentifyNamespace& identify_data_struct);
