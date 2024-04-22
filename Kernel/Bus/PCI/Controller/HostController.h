@@ -31,12 +31,17 @@ public:
 
     u32 domain_number() const { return m_domain.domain_number(); }
 
-    void enumerate_attached_devices(Function<void(EnumerableDeviceIdentifier const&)> callback);
+    void enumerate_attached_devices(Function<void(EnumerableDeviceIdentifier const&)> callback, Function<void(EnumerableDeviceIdentifier const&)> post_bridge_callback = nullptr);
+    void configure_attached_devices(FlatPtr& mmio_32bit_base, FlatPtr mmio_32bit_end, FlatPtr& mmio_64bit_base, FlatPtr mmio_64bit_end);
 
 private:
-    void enumerate_bus(Function<void(EnumerableDeviceIdentifier const&)> const& callback, BusNumber, bool recursive_search_into_bridges);
-    void enumerate_functions(Function<void(EnumerableDeviceIdentifier const&)> const& callback, BusNumber, DeviceNumber, FunctionNumber, bool recursive_search_into_bridges);
-    void enumerate_device(Function<void(EnumerableDeviceIdentifier const&)> const& callback, BusNumber bus, DeviceNumber device, bool recursive_search_into_bridges);
+    void enumerate_bus(Function<void(EnumerableDeviceIdentifier const&)> const& callback, Function<void(EnumerableDeviceIdentifier const&)>& post_bridge_callback, BusNumber, bool recursive_search_into_bridges);
+    void enumerate_functions(Function<void(EnumerableDeviceIdentifier const&)> const& callback, Function<void(EnumerableDeviceIdentifier const&)>& post_bridge_callback, BusNumber, DeviceNumber, FunctionNumber, bool recursive_search_into_bridges);
+    void enumerate_device(Function<void(EnumerableDeviceIdentifier const&)> const& callback, Function<void(EnumerableDeviceIdentifier const&)>& post_bridge_callback, BusNumber bus, DeviceNumber device, bool recursive_search_into_bridges);
+
+    void write8_field(BusNumber, DeviceNumber, FunctionNumber, RegisterOffset field, u8 value);
+    void write16_field(BusNumber, DeviceNumber, FunctionNumber, RegisterOffset field, u16 value);
+    void write32_field(BusNumber, DeviceNumber, FunctionNumber, RegisterOffset field, u32 value);
 
     u8 read8_field(BusNumber, DeviceNumber, FunctionNumber, RegisterOffset field);
     u16 read16_field(BusNumber, DeviceNumber, FunctionNumber, RegisterOffset field);

@@ -52,6 +52,10 @@ void initialize()
     [[maybe_unused]] auto soc_size_cells = soc.get_property("#size-cells"sv).value().as<u32>();
 
     Optional<u32> domain_counter;
+    Optional<FlatPtr> pci_32bit_mmio_base;
+    u32 pci_32bit_mmio_size = 0;
+    Optional<FlatPtr> pci_64bit_mmio_base;
+    u64 pci_64bit_mmio_size = 0;
     for (auto const& entry : soc.children()) {
         if (!entry.key.starts_with("pci"sv))
             continue;
@@ -147,8 +151,53 @@ void initialize()
         case ControllerCompatible::Unknown:
             VERIFY_NOT_REACHED(); // This should have been rejected earlier
         }
+
+        auto maybe_ranges = node.get_property("ranges"sv);
+        if (maybe_ranges.has_value()) {
+            auto address_cells = node.get_property("#address-cells"sv).value().as<u32>();
+            VERIFY(address_cells == 3); // Additional cell for OpenFirmware PCI address metadata
+            auto size_cells = node.get_property("#size-cells"sv).value().as<u32>();
+            auto stream = maybe_ranges.value().as_stream();
+            while (!stream.is_eof()) {
+                u32 pci_address_metadata = MUST(stream.read_value<BigEndian<u32>>());
+                FlatPtr pci_address = MUST(stream.read_value<BigEndian<u64>>());
+                FlatPtr mmio_address;
+                if (soc_address_cells == 1)
+                    mmio_address = MUST(stream.read_value<BigEndian<u32>>());
+                else
+                    mmio_address = MUST(stream.read_value<BigEndian<u64>>());
+                u64 mmio_size;
+                if (size_cells == 1)
+                    mmio_size = MUST(stream.read_value<BigEndian<u32>>());
+                else
+                    mmio_size = MUST(stream.read_value<BigEndian<u64>>());
+                auto space_type = (pci_address_metadata >> OpenFirmwareAddress::space_type_offset) & OpenFirmwareAddress::space_type_mask;
+                if (space_type != OpenFirmwareAddress::SpaceType::Memory32BitSpace && space_type != OpenFirmwareAddress::SpaceType::Memory64BitSpace)
+                    continue; // We currently only support memory-mapped PCI on RISC-V
+                // TODO: Support mapped PCI addresses
+                VERIFY(pci_address == mmio_address);
+                if (space_type == OpenFirmwareAddress::SpaceType::Memory32BitSpace) {
+                    auto prefetchable = (pci_address_metadata >> OpenFirmwareAddress::prefetchable_offset) & OpenFirmwareAddress::prefetchable_mask;
+                    if (prefetchable)
+                        continue; // We currently only use non-prefetchable 32-bit regions, since 64-bit regions are always prefetchable - TODO: Use 32-bit prefetchable regions if only they are available
+                    if (pci_32bit_mmio_base.has_value() && pci_32bit_mmio_size >= mmio_size)
+                        continue; // We currently only use the single largest region - TODO: Use all available regions if needed
+                    pci_32bit_mmio_base = mmio_address;
+                    pci_32bit_mmio_size = mmio_size;
+                } else {
+                    if (pci_64bit_mmio_base.has_value() && pci_64bit_mmio_size >= mmio_size)
+                        continue; // We currently only use the single largest region - TODO: Use all available regions if needed
+                    pci_64bit_mmio_base = mmio_address;
+                    pci_64bit_mmio_size = mmio_size;
+                }
+            }
+        }
     }
 
+    if (pci_32bit_mmio_base.has_value() || pci_64bit_mmio_base.has_value())
+        Access::the().configure_pci_space(pci_32bit_mmio_base.value_or(0), pci_32bit_mmio_size, pci_64bit_mmio_base.value_or(0), pci_64bit_mmio_size);
+    else
+        dmesgln("PCI: No MMIO ranges found - assuming pre-configured by bootloader");
     Access::the().rescan_hardware();
 
     PCIBusSysFSDirectory::initialize();
