@@ -9,6 +9,7 @@
 #include <AK/Error.h>
 #include <AK/Vector.h>
 #include <LibIPC/Forward.h>
+#include <LibSQL/SQLClient.h>
 #include <LibWebView/Forward.h>
 
 #import <System/Cocoa.h>
@@ -22,6 +23,7 @@ class WebViewBridge;
 - (instancetype)init;
 
 - (ErrorOr<void>)launchRequestServer:(Vector<ByteString> const&)certificates;
+- (ErrorOr<NonnullRefPtr<SQL::SQLClient>>)launchSQLServer;
 - (ErrorOr<NonnullRefPtr<WebView::WebContentClient>>)launchWebContent:(Ladybird::WebViewBridge&)web_view_bridge;
 - (ErrorOr<IPC::File>)launchWebWorker;
 

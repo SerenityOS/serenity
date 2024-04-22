@@ -29,9 +29,7 @@ class Database : public RefCounted<Database> {
 
 public:
     static ErrorOr<NonnullRefPtr<Database>> create();
-#if !defined(AK_OS_SERENITY)
-    static ErrorOr<NonnullRefPtr<Database>> create(ReadonlySpan<ByteString> candidate_sql_server_paths);
-#endif
+    static ErrorOr<NonnullRefPtr<Database>> create(NonnullRefPtr<SQL::SQLClient>);
 
     ErrorOr<SQL::StatementID> prepare_statement(StringView statement);
 
@@ -59,8 +57,6 @@ public:
     }
 
 private:
-    static ErrorOr<NonnullRefPtr<Database>> create(NonnullRefPtr<SQL::SQLClient>);
-
     struct ExecutionKey {
         constexpr bool operator==(ExecutionKey const&) const = default;
 

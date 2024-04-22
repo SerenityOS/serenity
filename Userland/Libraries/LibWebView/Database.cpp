@@ -7,10 +7,6 @@
 #include <AK/StringView.h>
 #include <LibWebView/Database.h>
 
-#if !defined(AK_OS_SERENITY)
-#    include <LibCore/SingletonProcess.h>
-#endif
-
 namespace WebView {
 
 static constexpr auto database_name = "Browser"sv;
@@ -20,16 +16,6 @@ ErrorOr<NonnullRefPtr<Database>> Database::create()
     auto sql_client = TRY(SQL::SQLClient::try_create());
     return create(move(sql_client));
 }
-
-#if !defined(AK_OS_SERENITY)
-
-ErrorOr<NonnullRefPtr<Database>> Database::create(ReadonlySpan<ByteString> candidate_sql_server_paths)
-{
-    auto [sql_client, _] = TRY(Core::launch_singleton_process<SQL::SQLClient>("SQLServer"sv, candidate_sql_server_paths));
-    return create(move(sql_client));
-}
-
-#endif
 
 ErrorOr<NonnullRefPtr<Database>> Database::create(NonnullRefPtr<SQL::SQLClient> sql_client)
 {

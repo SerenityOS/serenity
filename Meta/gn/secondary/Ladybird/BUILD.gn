@@ -187,6 +187,7 @@ executable("headless-browser") {
     "//Userland/Libraries/LibJS",
     "//Userland/Libraries/LibMain",
     "//Userland/Libraries/LibProtocol",
+    "//Userland/Libraries/LibSQL",
     "//Userland/Libraries/LibTLS",
     "//Userland/Libraries/LibURL",
     "//Userland/Libraries/LibWeb",
