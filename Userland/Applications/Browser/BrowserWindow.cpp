@@ -780,7 +780,7 @@ void BrowserWindow::show_task_manager_window()
     if (!m_task_manager_window) {
         m_task_manager_window = GUI::Window::construct();
         m_task_manager_window->set_window_mode(GUI::WindowMode::Modeless);
-        m_task_manager_window->resize(400, 300);
+        m_task_manager_window->resize(600, 400);
         m_task_manager_window->set_title("Task Manager");
 
         (void)m_task_manager_window->set_main_widget<TaskManagerWidget>();

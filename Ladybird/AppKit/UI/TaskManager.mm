@@ -15,8 +15,8 @@
 #    error "This project requires ARC"
 #endif
 
-static constexpr CGFloat const WINDOW_WIDTH = 400;
-static constexpr CGFloat const WINDOW_HEIGHT = 300;
+static constexpr CGFloat const WINDOW_WIDTH = 600;
+static constexpr CGFloat const WINDOW_HEIGHT = 400;
 
 @interface TaskManager ()
 {
