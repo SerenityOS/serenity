@@ -133,6 +133,7 @@ source_set("HTML") {
     "NavigationCurrentEntryChangeEvent.cpp",
     "NavigationDestination.cpp",
     "NavigationHistoryEntry.cpp",
+    "NavigationParams.cpp",
     "NavigationTransition.cpp",
     "Navigator.cpp",
     "NavigatorBeacon.cpp",
