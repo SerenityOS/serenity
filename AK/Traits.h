@@ -54,7 +54,6 @@ struct Traits<T> : public DefaultTraits<T> {
     }
 };
 
-
 template<typename T>
 requires(HasEqualityOperator<T const*> && !Detail::IsPointerOfType<char, T>)
 struct Traits<T const*> : public DefaultTraits<T const*> {
