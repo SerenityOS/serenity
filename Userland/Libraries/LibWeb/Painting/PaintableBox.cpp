@@ -91,6 +91,26 @@ void PaintableBox::set_scroll_offset(CSSPixelPoint offset)
         return;
     }
 
+    // https://drafts.csswg.org/cssom-view-1/#scrolling-events
+    // Whenever an element gets scrolled (whether in response to user interaction or by an API),
+    // the user agent must run these steps:
+
+    // 1. Let doc be the element’s node document.
+    auto& document = layout_box().document();
+
+    // FIXME: 2. If the element is a snap container, run the steps to update snapchanging targets for the element with
+    //           the element’s eventual snap target in the block axis as newBlockTarget and the element’s eventual snap
+    //           target in the inline axis as newInlineTarget.
+
+    JS::NonnullGCPtr<DOM::EventTarget> const event_target = *dom_node();
+
+    // 3. If the element is already in doc’s pending scroll event targets, abort these steps.
+    if (document.pending_scroll_event_targets().contains_slow(event_target))
+        return;
+
+    // 4. Append the element to doc’s pending scroll event targets.
+    document.pending_scroll_event_targets().append(*layout_box().dom_node());
+
     set_needs_display();
 }
 
