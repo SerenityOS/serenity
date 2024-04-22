@@ -520,7 +520,7 @@ void DynamicLoader::load_program_headers()
 
 DynamicLoader::RelocationResult DynamicLoader::do_direct_relocation(DynamicObject::Relocation const& relocation,
     Optional<DynamicLoader::CachedLookupResult>& cached_result,
-    [[maybe_unused]] ShouldInitializeWeak should_initialize_weak,
+    ShouldInitializeWeak should_initialize_weak,
     ShouldCallIfuncResolver should_call_ifunc_resolver)
 {
     FlatPtr* patch_ptr = nullptr;
@@ -569,21 +569,26 @@ DynamicLoader::RelocationResult DynamicLoader::do_direct_relocation(DynamicObjec
     case ABSOLUTE: {
         auto symbol = relocation.symbol();
         auto res = lookup_symbol(symbol);
+        VirtualAddress symbol_address;
         if (!res.has_value()) {
-            if (symbol.bind() == STB_WEAK)
-                return RelocationResult::ResolveLater;
-            dbgln("ERROR: symbol not found: {}.", symbol.name());
-            return RelocationResult::Failed;
+            if (symbol.bind() == STB_WEAK) {
+                if (should_initialize_weak == ShouldInitializeWeak::No)
+                    return RelocationResult::ResolveLater;
+            } else {
+                dbgln("ERROR: symbol not found: {}.", symbol.name());
+                return RelocationResult::Failed;
+            }
+            symbol_address = VirtualAddress { (FlatPtr)0 };
+        } else {
+            if (res.value().type == STT_GNU_IFUNC && should_call_ifunc_resolver == ShouldCallIfuncResolver::No)
+                return RelocationResult::CallIfuncResolver;
+            symbol_address = res.value().address;
         }
-        if (res.value().type == STT_GNU_IFUNC && should_call_ifunc_resolver == ShouldCallIfuncResolver::No)
-            return RelocationResult::CallIfuncResolver;
-
-        auto symbol_address = res.value().address;
         if (relocation.addend_used())
             *patch_ptr = symbol_address.get() + relocation.addend();
         else
             *patch_ptr += symbol_address.get();
-        if (res.value().type == STT_GNU_IFUNC)
+        if (res.has_value() && res.value().type == STT_GNU_IFUNC)
             *patch_ptr = call_ifunc_resolver(VirtualAddress { *patch_ptr }).get();
         break;
     }
