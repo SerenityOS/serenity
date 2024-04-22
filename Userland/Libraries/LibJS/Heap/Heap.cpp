@@ -21,7 +21,6 @@
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/WeakContainer.h>
 #include <LibJS/SafeFunction.h>
-#include <cstdio>
 #include <setjmp.h>
 
 #ifdef AK_OS_SERENITY
