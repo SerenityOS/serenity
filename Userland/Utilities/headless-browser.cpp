@@ -675,6 +675,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     ByteString test_glob;
     Vector<ByteString> certificates;
 
+#if !defined(AK_OS_SERENITY)
+    platform_init();
+    resources_folder = s_serenity_resource_root;
+#endif
+
     Core::ArgsParser args_parser;
     args_parser.set_general_help("This utility runs the Browser in headless mode.");
     args_parser.add_option(screenshot_timeout, "Take a screenshot after [n] seconds (default: 1)", "screenshot", 's', "n");
