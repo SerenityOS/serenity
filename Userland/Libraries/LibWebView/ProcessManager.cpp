@@ -159,6 +159,7 @@ String ProcessManager::generate_html()
     builder.append(R"(
         <html>
         <head>
+        <title>Task Manager</title>
         <style>
                 @media (prefers-color-scheme: dark) {
                     /* FIXME: We should be able to remove the HTML style when "color-scheme" is supported */

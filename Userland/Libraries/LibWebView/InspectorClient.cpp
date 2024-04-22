@@ -351,6 +351,7 @@ void InspectorClient::load_inspector()
 <html>
 <head>
     <meta name="color-scheme" content="dark light">
+    <title>Inspector</title>
     <style type="text/css">
 )~~~"sv);
 
