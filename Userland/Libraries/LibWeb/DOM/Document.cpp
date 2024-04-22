@@ -1058,13 +1058,14 @@ void Document::update_layout()
     if (!navigable)
         return;
 
+    auto* document_element = this->document_element();
     auto viewport_rect = this->viewport_rect();
 
     if (!m_layout_root) {
         Layout::TreeBuilder tree_builder;
         m_layout_root = verify_cast<Layout::Viewport>(*tree_builder.build(*this));
 
-        if (auto* document_element = this->document_element()) {
+        if (document_element && document_element->layout_node()) {
             propagate_overflow_to_viewport(*document_element, *m_layout_root);
         }
     }
@@ -1079,8 +1080,7 @@ void Document::update_layout()
         viewport_state.set_content_width(viewport_rect.width());
         viewport_state.set_content_height(viewport_rect.height());
 
-        if (auto* document_element = this->document_element()) {
-            VERIFY(document_element->layout_node());
+        if (document_element && document_element->layout_node()) {
             auto& icb_state = layout_state.get_mutable(verify_cast<Layout::NodeWithStyleAndBoxModelMetrics>(*document_element->layout_node()));
             icb_state.set_content_width(viewport_rect.width());
         }
