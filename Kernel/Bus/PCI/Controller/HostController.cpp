@@ -54,7 +54,7 @@ u16 HostController::read16_field(BusNumber bus, DeviceNumber device, FunctionNum
     return read16_field(bus, device, function, to_underlying(field));
 }
 
-UNMAP_AFTER_INIT void HostController::enumerate_functions(Function<IterationDecision(EnumerableDeviceIdentifier)> const& callback, BusNumber bus, DeviceNumber device, FunctionNumber function, bool recursive_search_into_bridges)
+UNMAP_AFTER_INIT void HostController::enumerate_functions(Function<void(EnumerableDeviceIdentifier)> const& callback, BusNumber bus, DeviceNumber device, FunctionNumber function, bool recursive_search_into_bridges)
 {
     dbgln_if(PCI_DEBUG, "PCI: Enumerating function, bus={}, device={}, function={}", bus, device, function);
     Address address(domain_number(), bus.value(), device.value(), function.value());
@@ -83,7 +83,7 @@ UNMAP_AFTER_INIT void HostController::enumerate_functions(Function<IterationDeci
     }
 }
 
-UNMAP_AFTER_INIT void HostController::enumerate_device(Function<IterationDecision(EnumerableDeviceIdentifier)> const& callback, BusNumber bus, DeviceNumber device, bool recursive_search_into_bridges)
+UNMAP_AFTER_INIT void HostController::enumerate_device(Function<void(EnumerableDeviceIdentifier)> const& callback, BusNumber bus, DeviceNumber device, bool recursive_search_into_bridges)
 {
     dbgln_if(PCI_DEBUG, "PCI: Enumerating device in bus={}, device={}", bus, device);
     if (read16_field(bus, device, 0, PCI::RegisterOffset::VENDOR_ID) == PCI::none_value)
@@ -97,14 +97,14 @@ UNMAP_AFTER_INIT void HostController::enumerate_device(Function<IterationDecisio
     }
 }
 
-UNMAP_AFTER_INIT void HostController::enumerate_bus(Function<IterationDecision(EnumerableDeviceIdentifier)> const& callback, BusNumber bus, bool recursive_search_into_bridges)
+UNMAP_AFTER_INIT void HostController::enumerate_bus(Function<void(EnumerableDeviceIdentifier)> const& callback, BusNumber bus, bool recursive_search_into_bridges)
 {
     dbgln_if(PCI_DEBUG, "PCI: Enumerating bus {}", bus);
     for (u8 device = 0; device < 32; ++device)
         enumerate_device(callback, bus, device, recursive_search_into_bridges);
 }
 
-UNMAP_AFTER_INIT void HostController::enumerate_attached_devices(Function<IterationDecision(EnumerableDeviceIdentifier)> callback)
+UNMAP_AFTER_INIT void HostController::enumerate_attached_devices(Function<void(EnumerableDeviceIdentifier)> callback)
 {
     VERIFY(Access::the().access_lock().is_locked());
     VERIFY(Access::the().scan_lock().is_locked());

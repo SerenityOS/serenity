@@ -132,15 +132,13 @@ ErrorOr<void> Access::add_host_controller_and_scan_for_devices(NonnullOwnPtr<Hos
     // Note: We need to register the new controller as soon as possible, and
     // definitely before enumerating devices behind that.
     m_host_controllers.set(domain_number, move(controller));
-    ErrorOr<void> error_or_void {};
-    m_host_controllers.get(domain_number).value()->enumerate_attached_devices([&](EnumerableDeviceIdentifier const& device_identifier) -> IterationDecision {
+    m_host_controllers.get(domain_number).value()->enumerate_attached_devices([&](EnumerableDeviceIdentifier const& device_identifier) {
         auto device_identifier_or_error = DeviceIdentifier::from_enumerable_identifier(device_identifier);
         if (device_identifier_or_error.is_error()) {
-            error_or_void = device_identifier_or_error.release_error();
-            return IterationDecision::Break;
+            dmesgln("Failed during PCI Access::rescan_hardware due to {}", device_identifier_or_error.error());
+            VERIFY_NOT_REACHED();
         }
         m_device_identifiers.append(device_identifier_or_error.release_value());
-        return IterationDecision::Continue;
     });
     return {};
 }
@@ -161,21 +159,15 @@ UNMAP_AFTER_INIT void Access::rescan_hardware()
     SpinlockLocker locker(m_access_lock);
     SpinlockLocker scan_locker(m_scan_lock);
     VERIFY(m_device_identifiers.is_empty());
-    ErrorOr<void> error_or_void {};
     for (auto& [_, host_controller] : m_host_controllers) {
-        host_controller->enumerate_attached_devices([this, &error_or_void](EnumerableDeviceIdentifier device_identifier) -> IterationDecision {
+        host_controller->enumerate_attached_devices([this](EnumerableDeviceIdentifier device_identifier) {
             auto device_identifier_or_error = DeviceIdentifier::from_enumerable_identifier(device_identifier);
             if (device_identifier_or_error.is_error()) {
-                error_or_void = device_identifier_or_error.release_error();
-                return IterationDecision::Break;
+                dmesgln("Failed during PCI Access::rescan_hardware due to {}", device_identifier_or_error.error());
+                VERIFY_NOT_REACHED();
             }
             m_device_identifiers.append(device_identifier_or_error.release_value());
-            return IterationDecision::Continue;
         });
-    }
-    if (error_or_void.is_error()) {
-        dmesgln("Failed during PCI Access::rescan_hardware due to {}", error_or_void.error());
-        VERIFY_NOT_REACHED();
     }
 }
 
