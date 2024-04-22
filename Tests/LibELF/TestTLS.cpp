@@ -17,7 +17,7 @@ TEST_CASE(basic)
 
 TEST_CASE(local_exec)
 {
-    [[gnu::tls_model("local-exec")]] static volatile __thread char test1[PAGE_SIZE * 4 + 10];
+    [[gnu::tls_model("local-exec")]] static volatile __thread char test1[4096 * 4 + 10];
 
     for (size_t i = 0; i < sizeof(test1); i++) {
         test1[i] = static_cast<char>(i);
