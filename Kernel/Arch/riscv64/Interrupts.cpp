@@ -23,7 +23,7 @@ namespace Kernel {
 extern "C" void syscall_handler(TrapFrame const*);
 
 // FIXME: Share this array with x86_64/aarch64 somehow and consider if this really needs to use raw pointers and not OwnPtrs
-static Array<GenericInterruptHandler*, 64> s_interrupt_handlers;
+static Array<GenericInterruptHandler*, 256> s_interrupt_handlers;
 
 void dump_registers(RegisterState const& regs)
 {
@@ -55,6 +55,17 @@ extern "C" void trap_handler(TrapFrame& trap_frame)
 
         if (scause == RISCV64::CSR::SCAUSE::SupervisorTimerInterrupt) {
             RISCV64::Timer::the().handle_interrupt(*trap_frame.regs);
+        } else if (scause == RISCV64::CSR::SCAUSE::SupervisorExternalInterrupt) {
+            for (auto& interrupt_controller : InterruptManagement::the().controllers()) {
+                u8 pending_interrupt = 0;
+                while ((pending_interrupt = interrupt_controller->pending_interrupt())) {
+                    auto* handler = s_interrupt_handlers[pending_interrupt];
+                    VERIFY(handler);
+                    handler->increment_call_count();
+                    handler->handle_interrupt(*trap_frame.regs);
+                    handler->eoi();
+                }
+            }
         } else {
             TODO_RISCV64();
         }

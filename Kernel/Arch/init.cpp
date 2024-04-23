@@ -296,9 +296,6 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT NO_SANITIZE_COVERAGE void init([[maybe_
     for (ctor_func_t* ctor = start_ctors; ctor < end_ctors; ctor++)
         (*ctor)();
 
-    InterruptManagement::initialize();
-    ACPI::initialize();
-
 #if ARCH(RISCV64)
     MUST(unflatten_fdt());
 
@@ -307,6 +304,9 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT NO_SANITIZE_COVERAGE void init([[maybe_
 
     init_delay_loop();
 #endif
+
+    InterruptManagement::initialize();
+    ACPI::initialize();
 
     // Initialize TimeManagement before using randomness!
     TimeManagement::initialize(0);
