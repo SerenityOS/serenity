@@ -24,7 +24,6 @@ public:
 
     virtual HardwareTimerType timer_type() const override { return HardwareTimerType::RPiTimer; }
     virtual StringView model() const override { return "RPi Timer"sv; }
-    virtual size_t ticks_per_second() const override { return m_frequency; }
 
     virtual bool is_periodic() const override { TODO_AARCH64(); }
     virtual bool is_periodic_capable() const override { TODO_AARCH64(); }

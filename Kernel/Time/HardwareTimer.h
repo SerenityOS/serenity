@@ -50,7 +50,6 @@ public:
     virtual void set_periodic() = 0;
     virtual void set_non_periodic() = 0;
     virtual void disable() = 0;
-    virtual u32 frequency() const = 0;
     virtual bool can_query_raw() const { return false; }
     virtual u64 current_raw() const { return 0; }
     virtual u64 raw_to_ns(u64) const { return 0; }
@@ -89,7 +88,7 @@ public:
         return previous_callback;
     }
 
-    virtual u32 frequency() const override { return (u32)m_frequency; }
+    virtual size_t ticks_per_second() const override { return m_frequency; }
 
 protected:
     HardwareTimer(u8 irq_number, Function<void(RegisterState const&)> callback = nullptr)
@@ -141,8 +140,7 @@ public:
     virtual HandlerType type() const override { return HandlerType::IRQHandler; }
     virtual StringView controller() const override { return {}; }
     virtual bool eoi() override;
-
-    virtual u32 frequency() const override { return (u32)m_frequency; }
+    virtual size_t ticks_per_second() const override { return m_frequency; }
 
 protected:
     HardwareTimer(u8 irq_number, Function<void(RegisterState const&)> callback = nullptr)

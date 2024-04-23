@@ -39,11 +39,6 @@ PIT::PIT(Function<void(RegisterState const&)> callback)
     enable_irq();
 }
 
-size_t PIT::ticks_per_second() const
-{
-    return m_frequency;
-}
-
 void PIT::set_periodic()
 {
     IO::out8(PIT_CTL, TIMER0_CTL | WRITE_WORD | MODE_SQUARE_WAVE);

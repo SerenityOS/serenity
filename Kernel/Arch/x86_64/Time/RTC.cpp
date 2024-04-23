@@ -35,11 +35,6 @@ bool RealTimeClock::handle_irq(RegisterState const& regs)
     return result;
 }
 
-size_t RealTimeClock::ticks_per_second() const
-{
-    return m_frequency;
-}
-
 void RealTimeClock::reset_to_default_ticks_per_second()
 {
     InterruptDisabler disabler;

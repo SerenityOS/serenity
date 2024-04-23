@@ -19,7 +19,6 @@ public:
 
     virtual HardwareTimerType timer_type() const override { return HardwareTimerType::RISCVTimer; }
     virtual StringView model() const override { return "RISC-V Timer"sv; }
-    virtual size_t ticks_per_second() const override { return m_frequency; }
 
     virtual bool is_periodic() const override { TODO_RISCV64(); }
     virtual bool is_periodic_capable() const override { TODO_RISCV64(); }

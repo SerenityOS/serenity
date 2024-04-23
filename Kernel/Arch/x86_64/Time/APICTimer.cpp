@@ -141,11 +141,6 @@ void APICTimer::disable_local_timer()
     APIC::the().setup_local_timer(0, APIC::TimerMode::OneShot, false);
 }
 
-size_t APICTimer::ticks_per_second() const
-{
-    return m_frequency;
-}
-
 void APICTimer::set_periodic()
 {
     // FIXME: Implement it...
