@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Matthew L. Curry <matthew.curry@gmail.com>
+ * Copyright (c) 2024, Daniel Gaston <tfd@tuta.io>.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -86,14 +87,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     ByteBuffer previous_buf = TRY(ByteBuffer::create_uninitialized(1024));
     ByteBuffer current_buf = TRY(ByteBuffer::create_uninitialized(1024));
 
-    StringView previous = TRY(infile->read_line(previous_buf));
+    StringView previous = TRY(infile->read_line_with_resize(previous_buf));
     StringView previous_to_compare = skip(previous, skip_chars, skip_fields);
 
     while (TRY(infile->can_read_line())) {
-        // FIXME: The buffer does not automatically resize,
-        // and this will return EMSGSIZE if the read line
-        // is more than 1024 bytes.
-        StringView current = TRY(infile->read_line(current_buf));
+
+        StringView current = TRY(infile->read_line_with_resize(current_buf));
 
         StringView current_to_compare = skip(current, skip_chars, skip_fields);
         bool lines_equal = ignore_case ? current_to_compare.equals_ignoring_ascii_case(previous_to_compare) : current_to_compare == previous_to_compare;
@@ -103,9 +102,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         } else {
             count++;
         }
-        swap(current_to_compare, previous_to_compare);
+
         swap(current_buf, previous_buf);
-        swap(current, previous);
+        // The StringViews cannot be swapped since read_line_with_resize
+        // potentially changes the location of the buffers due to reallocation.
+        // Instead create a new StringView of what was most recently read in.
+        previous = StringView { previous_buf.span().trim(current.length()) };
+        previous_to_compare = skip(previous, skip_chars, skip_fields);
     }
 
     TRY(write_line_content(previous, count, duplicates_only, print_count, *outfile));
