@@ -317,7 +317,7 @@ public:
     InputBufferedSeekable(InputBufferedSeekable&& other) = default;
     InputBufferedSeekable& operator=(InputBufferedSeekable&& other) = default;
 
-    virtual ErrorOr<Bytes> read_some(Bytes buffer) override { return m_helper.read(move(buffer)); }
+    virtual ErrorOr<Bytes> read_some(Bytes buffer) override { return m_helper.read(buffer); }
     virtual ErrorOr<size_t> write_some(ReadonlyBytes buffer) override { return m_helper.stream().write_some(buffer); }
     virtual bool is_eof() const override { return m_helper.is_eof(); }
     virtual bool is_open() const override { return m_helper.stream().is_open(); }
@@ -344,21 +344,21 @@ public:
         return m_helper.stream().truncate(length);
     }
 
-    ErrorOr<StringView> read_line(Bytes buffer) { return m_helper.read_line(move(buffer)); }
+    ErrorOr<StringView> read_line(Bytes buffer) { return m_helper.read_line(buffer); }
     ErrorOr<bool> can_read_line()
     {
         return TRY(m_helper.can_read_up_to_delimiter("\n"sv.bytes())) || m_helper.is_eof_with_data_left_over();
     }
-    ErrorOr<Bytes> read_until(Bytes buffer, StringView candidate) { return m_helper.read_until(move(buffer), move(candidate)); }
+    ErrorOr<Bytes> read_until(Bytes buffer, StringView candidate) { return m_helper.read_until(buffer, candidate); }
     template<size_t N>
-    ErrorOr<Bytes> read_until_any_of(Bytes buffer, Array<StringView, N> candidates) { return m_helper.read_until_any_of(move(buffer), move(candidates)); }
+    ErrorOr<Bytes> read_until_any_of(Bytes buffer, Array<StringView, N> candidates) { return m_helper.read_until_any_of(buffer, move(candidates)); }
     ErrorOr<bool> can_read_up_to_delimiter(ReadonlyBytes delimiter) { return m_helper.can_read_up_to_delimiter(delimiter); }
 
     // Methods for reading stream into an auto-adjusting buffer
     ErrorOr<StringView> read_line_with_resize(ByteBuffer& buffer) { return m_helper.read_line_with_resize(buffer); }
-    ErrorOr<Bytes> read_until_with_resize(ByteBuffer& buffer, StringView candidate) { return m_helper.read_until_with_resize(move(buffer), move(candidate)); }
+    ErrorOr<Bytes> read_until_with_resize(ByteBuffer& buffer, StringView candidate) { return m_helper.read_until_with_resize(buffer, candidate); }
     template<size_t N>
-    ErrorOr<Bytes> read_until_any_of_with_resize(ByteBuffer& buffer, Array<StringView, N> candidates) { return m_helper.read_until_any_of_with_resize(move(buffer), move(candidates)); }
+    ErrorOr<Bytes> read_until_any_of_with_resize(ByteBuffer& buffer, Array<StringView, N> candidates) { return m_helper.read_until_any_of_with_resize(buffer, move(candidates)); }
 
     size_t buffer_size() const { return m_helper.buffer_size(); }
 
