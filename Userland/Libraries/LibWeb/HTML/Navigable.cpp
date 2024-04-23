@@ -1025,7 +1025,7 @@ WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(
     Variant<Empty, JS::NonnullGCPtr<NavigationParams>, JS::NonnullGCPtr<NonFetchSchemeNavigationParams>> navigation_params,
     CSPNavigationType csp_navigation_type,
     bool allow_POST,
-    Function<void()> completion_steps)
+    JS::SafeFunction<void()> completion_steps)
 {
     // FIXME: 1. Assert: this is running in parallel.
 
