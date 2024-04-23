@@ -109,7 +109,7 @@ int fesetexceptflag(fexcept_t const* except, int exceptions)
 int fegetround()
 {
     // There's no way to signal whether the SSE rounding mode and x87 ones are different, so we assume they're the same
-    return (read_status_register() >> 10) & 3;
+    return (read_control_word() >> 10) & 3;
 }
 
 int fesetround(int rounding_mode)
