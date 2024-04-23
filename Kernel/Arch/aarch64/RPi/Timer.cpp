@@ -82,9 +82,9 @@ u64 Timer::update_time(u64& seconds_since_boot, u32& ticks_this_second, bool que
     }
 
     u64 ticks_since_last_second = (u64)ticks_this_second + delta_ticks;
-    auto ticks_per_second = frequency();
-    seconds_since_boot += ticks_since_last_second / ticks_per_second;
-    ticks_this_second = ticks_since_last_second % ticks_per_second;
+    auto frequency = ticks_per_second();
+    seconds_since_boot += ticks_since_last_second / frequency;
+    ticks_this_second = ticks_since_last_second % frequency;
 
     if (!query_only) {
         m_main_counter_drift = 0;
@@ -92,7 +92,7 @@ u64 Timer::update_time(u64& seconds_since_boot, u32& ticks_this_second, bool que
     }
 
     // Return the time passed (in ns) since last time update_time was called
-    return (delta_ticks * 1000000000ull) / ticks_per_second;
+    return (delta_ticks * 1000000000ull) / frequency;
 }
 
 void Timer::enable_interrupt_mode()

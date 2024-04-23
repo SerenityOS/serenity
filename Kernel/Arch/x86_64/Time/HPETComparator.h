@@ -25,8 +25,6 @@ public:
     bool is_enabled() const { return m_enabled; }
     bool is_64bit_capable() const { return m_is_64bit_capable; }
 
-    virtual size_t ticks_per_second() const override;
-
     virtual bool is_periodic() const override { return m_periodic; }
     virtual bool is_periodic_capable() const override { return m_periodic_capable; }
     virtual void set_periodic() override;
