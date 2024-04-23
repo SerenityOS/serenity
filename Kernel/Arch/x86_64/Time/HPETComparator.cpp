@@ -68,11 +68,6 @@ void HPETComparator::set_new_countdown()
     HPET::the().update_non_periodic_comparator_value(*this);
 }
 
-size_t HPETComparator::ticks_per_second() const
-{
-    return m_frequency;
-}
-
 void HPETComparator::reset_to_default_ticks_per_second()
 {
     dbgln("reset_to_default_ticks_per_second");

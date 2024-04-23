@@ -16,7 +16,6 @@ public:
     static NonnullLockRefPtr<RealTimeClock> create(Function<void(RegisterState const&)> callback);
     virtual HardwareTimerType timer_type() const override { return HardwareTimerType::RTC; }
     virtual StringView model() const override { return "Real Time Clock"sv; }
-    virtual size_t ticks_per_second() const override;
 
     virtual bool is_periodic() const override { return true; }
     virtual bool is_periodic_capable() const override { return true; }
