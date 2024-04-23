@@ -279,7 +279,13 @@ public:
 
     ALWAYS_INLINE T fetch_sub(T val, MemoryOrder order = DefaultMemoryOrder) volatile noexcept
     {
-        return __atomic_fetch_sub(&m_value, val, order);
+        T volatile* ptr = &m_value;
+        // FIXME: GCC > 12 will wrongly warn on -Wstringop-overflow here with ASAN+UBSAN
+#if defined(AK_COMPILER_GCC) && defined(HAS_ADDRESS_SANITIZER)
+        if (!ptr)
+            __builtin_unreachable();
+#endif
+        return __atomic_fetch_sub(ptr, val, order);
     }
 
     ALWAYS_INLINE T operator&=(T val) volatile noexcept
