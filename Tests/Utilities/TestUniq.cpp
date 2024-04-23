@@ -50,3 +50,13 @@ TEST_CASE(long_line)
 
     run_uniq({}, StringView { input }, StringView { expected_output });
 }
+
+TEST_CASE(duplicate_flag)
+{
+    run_uniq({ "-d" }, "AAA\nAAA\nBBB\n"sv, "AAA\n"sv);
+}
+
+TEST_CASE(count_flag)
+{
+    run_uniq({ "-c" }, "AAA\nAAA\n"sv, "2 AAA\n"sv);
+}

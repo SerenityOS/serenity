@@ -83,7 +83,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto infile = TRY(Core::InputBufferedFile::create(TRY(Core::File::open_file_or_standard_stream(inpath, Core::File::OpenMode::Read))));
     auto outfile = TRY(Core::File::open_file_or_standard_stream(outpath, Core::File::OpenMode::Write));
 
-    size_t count = 0;
+    // The count starts at 1 since each line will appear at least once.
+    // Otherwise the -d and -c flags do not work as expected.
+    size_t count = 1;
     ByteBuffer previous_buf = TRY(ByteBuffer::create_uninitialized(1024));
     ByteBuffer current_buf = TRY(ByteBuffer::create_uninitialized(1024));
 
