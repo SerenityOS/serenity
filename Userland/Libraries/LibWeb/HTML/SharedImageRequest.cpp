@@ -85,17 +85,17 @@ void SharedImageRequest::fetch_image(JS::Realm& realm, JS::NonnullGCPtr<Fetch::I
         //        https://github.com/whatwg/html/issues/9355
         response = response->unsafe_response();
 
-        auto process_body = [this, request, response](ByteBuffer data) {
+        auto process_body = JS::create_heap_function(heap(), [this, request, response](ByteBuffer data) {
             auto extracted_mime_type = response->header_list()->extract_mime_type().release_value_but_fixme_should_propagate_errors();
             auto mime_type = extracted_mime_type.has_value() ? extracted_mime_type.value().essence().bytes_as_string_view() : StringView {};
             handle_successful_fetch(request->url(), mime_type, move(data));
-        };
-        auto process_body_error = [this](auto) {
+        });
+        auto process_body_error = JS::create_heap_function(heap(), [this](JS::GCPtr<WebIDL::DOMException>) {
             handle_failed_fetch();
-        };
+        });
 
         if (response->body())
-            response->body()->fully_read(realm, move(process_body), move(process_body_error), JS::NonnullGCPtr { realm.global_object() }).release_value_but_fixme_should_propagate_errors();
+            response->body()->fully_read(realm, process_body, process_body_error, JS::NonnullGCPtr { realm.global_object() }).release_value_but_fixme_should_propagate_errors();
         else
             handle_failed_fetch();
     };

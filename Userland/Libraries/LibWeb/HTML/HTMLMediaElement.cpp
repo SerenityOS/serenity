@@ -986,7 +986,7 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::fetch_resource(URL::URL const& url_r
             // 2. Let updateMedia be to queue a media element task given the media element to run the first appropriate steps from the media data processing
             //    steps list below. (A new task is used for this so that the work described below occurs relative to the appropriate media element event task
             //    source rather than using the networking task source.)
-            auto update_media = [this, failure_callback = move(failure_callback)](auto media_data) mutable {
+            auto update_media = JS::create_heap_function(heap(), [this, failure_callback = move(failure_callback)](ByteBuffer media_data) mutable {
                 // 6. Update the media data with the contents of response's unsafe response obtained in this fashion. response can be CORS-same-origin or
                 //    CORS-cross-origin; this affects whether subtitles referenced in the media data are exposed in the API and, for video elements, whether
                 //    a canvas gets tainted when the video is drawn on it.
@@ -1005,7 +1005,7 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::fetch_resource(URL::URL const& url_r
                     if (m_ready_state == ReadyState::HaveMetadata)
                         set_ready_state(ReadyState::HaveEnoughData);
                 });
-            };
+            });
 
             // FIXME: 3. Let processEndOfMedia be the following step: If the fetching process has completes without errors, including decoding the media data,
             //           and if all of the data is available to the user agent without network access, then, the user agent must move on to the final step below.
@@ -1015,12 +1015,12 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::fetch_resource(URL::URL const& url_r
             // 5. Otherwise, incrementally read response's body given updateMedia, processEndOfMedia, an empty algorithm, and global.
 
             VERIFY(response->body());
-            auto empty_algorithm = [](auto) {};
+            auto empty_algorithm = JS::create_heap_function(heap(), [](JS::GCPtr<WebIDL::DOMException>) {});
 
             // FIXME: We are "fully" reading the response here, rather than "incrementally". Memory concerns aside, this should be okay for now as we are
             //        always setting byteRange to "entire resource". However, we should switch to incremental reads when that is implemented, and then
             //        implement the processEndOfMedia step.
-            response->body()->fully_read(realm, move(update_media), move(empty_algorithm), JS::NonnullGCPtr { global }).release_value_but_fixme_should_propagate_errors();
+            response->body()->fully_read(realm, update_media, empty_algorithm, JS::NonnullGCPtr { global }).release_value_but_fixme_should_propagate_errors();
         };
 
         m_fetch_controller = TRY(Fetch::Fetching::fetch(realm, request, Fetch::Infrastructure::FetchAlgorithms::create(vm, move(fetch_algorithms_input))));
