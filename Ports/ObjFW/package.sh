@@ -13,3 +13,9 @@ config_sub_paths=(
 depends=(
     'openssl'
 )
+
+# Disable pledge support.
+# If ObjFW detects pledge(), it expects it to be exactly OpenBSD-compatible,
+# which ours is not. This then causes ObjFW to hard-abort upon trying to use
+# pledge() to enter a sandbox.
+configopts=('ac_cv_func_pledge=no')
