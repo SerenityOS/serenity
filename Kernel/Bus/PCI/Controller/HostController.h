@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Bitmap.h>
+#include <AK/HashMap.h>
 #include <AK/Vector.h>
 #include <Kernel/Bus/PCI/Definitions.h>
 #include <Kernel/Locking/Spinlock.h>
@@ -16,6 +17,17 @@ namespace Kernel::PCI {
 AK_TYPEDEF_DISTINCT_ORDERED_ID(u8, BusNumber);
 AK_TYPEDEF_DISTINCT_ORDERED_ID(u8, DeviceNumber);
 AK_TYPEDEF_DISTINCT_ORDERED_ID(u8, FunctionNumber);
+
+struct PCIConfiguration {
+    FlatPtr mmio_32bit_base { 0 };
+    FlatPtr mmio_32bit_end { 0 };
+    FlatPtr mmio_64bit_base { 0 };
+    FlatPtr mmio_64bit_end { 0 };
+    // The keys contains the bus, device & function at the same offsets as OpenFirmware PCI addresses,
+    // with the least significant 8 bits being the interrupt pin.
+    HashMap<u32, u64> masked_interrupt_mapping;
+    u32 interrupt_mask { 0 };
+};
 
 class HostController {
 public:
@@ -32,7 +44,7 @@ public:
     u32 domain_number() const { return m_domain.domain_number(); }
 
     void enumerate_attached_devices(Function<void(EnumerableDeviceIdentifier const&)> callback, Function<void(EnumerableDeviceIdentifier const&)> post_bridge_callback = nullptr);
-    void configure_attached_devices(FlatPtr& mmio_32bit_base, FlatPtr mmio_32bit_end, FlatPtr& mmio_64bit_base, FlatPtr mmio_64bit_end);
+    void configure_attached_devices(PCIConfiguration&);
 
 private:
     void enumerate_bus(Function<void(EnumerableDeviceIdentifier const&)> const& callback, Function<void(EnumerableDeviceIdentifier const&)>& post_bridge_callback, BusNumber, bool recursive_search_into_bridges);

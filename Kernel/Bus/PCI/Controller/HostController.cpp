@@ -154,7 +154,7 @@ UNMAP_AFTER_INIT void HostController::enumerate_attached_devices(Function<void(E
     }
 }
 
-void HostController::configure_attached_devices(FlatPtr& mmio_32bit_base, FlatPtr mmio_32bit_end, FlatPtr& mmio_64bit_base, FlatPtr mmio_64bit_end)
+void HostController::configure_attached_devices(PCIConfiguration& config)
 {
     // First, Assign PCI-to-PCI bridge bus numbering
     u8 bus_id = 0;
@@ -171,9 +171,9 @@ void HostController::configure_attached_devices(FlatPtr& mmio_32bit_base, FlatPt
             write8_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), PCI::RegisterOffset::SUBORDINATE_BUS, bus_id);
         });
 
-    // Second, Assign BAR addresses
+    // Second, Assign BAR addresses & Interrupt numbers
     // TODO: We currently naively assign addresses bump-allocator style - Switch to a proper allocator if this is not good enough
-    enumerate_attached_devices([this, &mmio_32bit_base, mmio_32bit_end, &mmio_64bit_base, mmio_64bit_end](EnumerableDeviceIdentifier const& device_identifier) {
+    enumerate_attached_devices([this, &config](EnumerableDeviceIdentifier const& device_identifier) {
         // device-generic handling
         auto header_type = read8_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), PCI::RegisterOffset::HEADER_TYPE);
         auto const max_bar = (header_type == 0) ? RegisterOffset::BAR5 : RegisterOffset::BAR1;
@@ -191,16 +191,16 @@ void HostController::configure_attached_devices(FlatPtr& mmio_32bit_base, FlatPt
                 bar_size = (~bar_size) + 1;
                 if (bar_size == 0)
                     continue;
-                auto mmio_32bit_address = align_up_to(mmio_32bit_base, bar_size);
-                if (mmio_32bit_address + bar_size <= mmio_32bit_end) {
+                auto mmio_32bit_address = align_up_to(config.mmio_32bit_base, bar_size);
+                if (mmio_32bit_address + bar_size <= config.mmio_32bit_end) {
                     write32_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), bar_offset, mmio_32bit_address);
-                    mmio_32bit_base = mmio_32bit_address + bar_size;
+                    config.mmio_32bit_base = mmio_32bit_address + bar_size;
                     continue;
                 }
-                auto mmio_64bit_address = align_up_to(mmio_64bit_base, bar_size);
-                if (bar_prefetchable && mmio_64bit_address + bar_size <= mmio_64bit_end && mmio_64bit_address + bar_size <= NumericLimits<u32>::max()) {
+                auto mmio_64bit_address = align_up_to(config.mmio_64bit_base, bar_size);
+                if (bar_prefetchable && mmio_64bit_address + bar_size <= config.mmio_64bit_end && mmio_64bit_address + bar_size <= NumericLimits<u32>::max()) {
                     write32_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), bar_offset, mmio_64bit_address);
-                    mmio_64bit_base = mmio_64bit_address + bar_size;
+                    config.mmio_64bit_base = mmio_64bit_address + bar_size;
                     continue;
                 }
                 dmesgln("PCI: Ran out of 32-bit MMIO address space");
@@ -220,19 +220,19 @@ void HostController::configure_attached_devices(FlatPtr& mmio_32bit_base, FlatPt
                 bar_offset += 4;
                 continue;
             }
-            auto mmio_64bit_address = align_up_to(mmio_64bit_base, bar_size);
-            if (bar_prefetchable && mmio_64bit_address + bar_size <= mmio_64bit_end) {
+            auto mmio_64bit_address = align_up_to(config.mmio_64bit_base, bar_size);
+            if (bar_prefetchable && mmio_64bit_address + bar_size <= config.mmio_64bit_end) {
                 write32_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), bar_offset, mmio_64bit_address & 0xFFFFFFFF);
                 write32_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), bar_offset + 4, mmio_64bit_address >> 32);
-                mmio_64bit_base = mmio_64bit_address + bar_size;
+                config.mmio_64bit_base = mmio_64bit_address + bar_size;
                 bar_offset += 4;
                 continue;
             }
-            auto mmio_32bit_address = align_up_to(mmio_32bit_base, bar_size);
-            if (mmio_32bit_address + bar_size <= mmio_32bit_end) {
+            auto mmio_32bit_address = align_up_to(config.mmio_32bit_base, bar_size);
+            if (mmio_32bit_address + bar_size <= config.mmio_32bit_end) {
                 write32_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), bar_offset, mmio_32bit_address & 0xFFFFFFFF);
                 write32_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), bar_offset + 4, mmio_32bit_address >> 32);
-                mmio_32bit_base = mmio_32bit_address + bar_size;
+                config.mmio_32bit_base = mmio_32bit_address + bar_size;
                 bar_offset += 4;
                 continue;
             }
@@ -243,24 +243,30 @@ void HostController::configure_attached_devices(FlatPtr& mmio_32bit_base, FlatPt
         auto command_value = read16_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), PCI::RegisterOffset::COMMAND);
         command_value |= 1 << 1; // memory space enable
         write16_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), PCI::RegisterOffset::COMMAND, command_value);
+        // assign interrupt number
+        auto interrupt_pin = read8_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), PCI::RegisterOffset::INTERRUPT_PIN);
+        auto masked_identifier = (((u32)device_identifier.address().bus() << 16) | ((u32)device_identifier.address().device() << 11) | ((u32)device_identifier.address().function() << 8) | interrupt_pin) & config.interrupt_mask;
+        auto interrupt_number = config.masked_interrupt_mapping.get(masked_identifier);
+        if (interrupt_number.has_value())
+            write8_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), PCI::RegisterOffset::INTERRUPT_LINE, interrupt_number.value());
 
         if (read8_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), PCI::RegisterOffset::CLASS) != PCI::ClassID::Bridge)
             return;
         if (read8_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), PCI::RegisterOffset::SUBCLASS) != PCI::Bridge::SubclassID::PCI_TO_PCI)
             return;
         // bridge-specific handling
-        mmio_32bit_base = align_up_to(mmio_32bit_base, MiB);
-        mmio_64bit_base = align_up_to(mmio_64bit_base, MiB);
-        write32_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), PCI::RegisterOffset::MEMORY_BASE, mmio_32bit_base >> 16);
-        write32_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), PCI::RegisterOffset::PREFETCHABLE_MEMORY_BASE, mmio_64bit_base >> 16);
-        write32_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), PCI::RegisterOffset::PREFETCHABLE_MEMORY_BASE_UPPER_32_BITS, mmio_64bit_base >> 32); },
-        [this, &mmio_32bit_base, &mmio_64bit_base](EnumerableDeviceIdentifier const& device_identifier) {
+        config.mmio_32bit_base = align_up_to(config.mmio_32bit_base, MiB);
+        config.mmio_64bit_base = align_up_to(config.mmio_64bit_base, MiB);
+        write32_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), PCI::RegisterOffset::MEMORY_BASE, config.mmio_32bit_base >> 16);
+        write32_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), PCI::RegisterOffset::PREFETCHABLE_MEMORY_BASE, config.mmio_64bit_base >> 16);
+        write32_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), PCI::RegisterOffset::PREFETCHABLE_MEMORY_BASE_UPPER_32_BITS, config.mmio_64bit_base >> 32); },
+        [this, &config](EnumerableDeviceIdentifier const& device_identifier) {
             // called after a bridge was recursively enumerated
-            mmio_32bit_base = align_up_to(mmio_32bit_base, MiB);
-            mmio_64bit_base = align_up_to(mmio_64bit_base, MiB);
-            write32_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), PCI::RegisterOffset::MEMORY_LIMIT, mmio_32bit_base >> 16);
-            write32_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), PCI::RegisterOffset::PREFETCHABLE_MEMORY_LIMIT, mmio_64bit_base >> 16);
-            write32_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), PCI::RegisterOffset::PREFETCHABLE_MEMORY_LIMIT_UPPER_32_BITS, mmio_64bit_base >> 32);
+            config.mmio_32bit_base = align_up_to(config.mmio_32bit_base, MiB);
+            config.mmio_64bit_base = align_up_to(config.mmio_64bit_base, MiB);
+            write32_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), PCI::RegisterOffset::MEMORY_LIMIT, config.mmio_32bit_base >> 16);
+            write32_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), PCI::RegisterOffset::PREFETCHABLE_MEMORY_LIMIT, config.mmio_64bit_base >> 16);
+            write32_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), PCI::RegisterOffset::PREFETCHABLE_MEMORY_LIMIT_UPPER_32_BITS, config.mmio_64bit_base >> 32);
             // enable bridging
             auto command_value = read16_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), PCI::RegisterOffset::COMMAND);
             command_value |= 1 << 2; // enable forwarding of requests by the bridge

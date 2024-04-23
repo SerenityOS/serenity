@@ -54,10 +54,12 @@ void initialize()
     [[maybe_unused]] auto soc_size_cells = soc.get_property("#size-cells"sv).value().as<u32>();
 
     Optional<u32> domain_counter;
-    Optional<FlatPtr> pci_32bit_mmio_base;
+    FlatPtr pci_32bit_mmio_base = 0;
     u32 pci_32bit_mmio_size = 0;
-    Optional<FlatPtr> pci_64bit_mmio_base;
+    FlatPtr pci_64bit_mmio_base = 0;
     u64 pci_64bit_mmio_size = 0;
+    HashMap<u32, u64> masked_interrupt_mapping;
+    u32 interrupt_mask = 0;
     for (auto const& entry : soc.children()) {
         if (!entry.key.starts_with("pci"sv))
             continue;
@@ -182,24 +184,62 @@ void initialize()
                     auto prefetchable = (pci_address_metadata >> OpenFirmwareAddress::prefetchable_offset) & OpenFirmwareAddress::prefetchable_mask;
                     if (prefetchable)
                         continue; // We currently only use non-prefetchable 32-bit regions, since 64-bit regions are always prefetchable - TODO: Use 32-bit prefetchable regions if only they are available
-                    if (pci_32bit_mmio_base.has_value() && pci_32bit_mmio_size >= mmio_size)
+                    if (pci_32bit_mmio_size >= mmio_size)
                         continue; // We currently only use the single largest region - TODO: Use all available regions if needed
                     pci_32bit_mmio_base = mmio_address;
                     pci_32bit_mmio_size = mmio_size;
                 } else {
-                    if (pci_64bit_mmio_base.has_value() && pci_64bit_mmio_size >= mmio_size)
+                    if (pci_64bit_mmio_size >= mmio_size)
                         continue; // We currently only use the single largest region - TODO: Use all available regions if needed
                     pci_64bit_mmio_base = mmio_address;
                     pci_64bit_mmio_size = mmio_size;
                 }
             }
         }
+
+        auto maybe_interrupt_map = node.get_property("interrupt-map"sv);
+        auto maybe_interrupt_map_mask = node.get_property("interrupt-map-mask"sv);
+        if (maybe_interrupt_map.has_value() && maybe_interrupt_map_mask.has_value()) {
+            auto mask_stream = maybe_interrupt_map_mask.value().as_stream();
+            u32 metadata_mask = MUST(mask_stream.read_value<BigEndian<u32>>());
+            MUST(mask_stream.discard(sizeof(u32) * 2));
+            VERIFY(node.get_property("#interrupt-cells"sv)->as<u32>() == 1); // PCI interrupt pin should always fit in one word
+            u32 pin_mask = MUST(mask_stream.read_value<BigEndian<u32>>());
+            interrupt_mask = ((metadata_mask >> 8) << 8) | pin_mask;
+            auto map_stream = maybe_interrupt_map.value().as_stream();
+            while (!map_stream.is_eof()) {
+                u32 pci_address_metadata = MUST(map_stream.read_value<BigEndian<u32>>());
+                MUST(map_stream.discard(sizeof(u32) * 2));
+                u32 pin = MUST(map_stream.read_value<BigEndian<u32>>());
+                u32 interrupt_controller_phandle = MUST(map_stream.read_value<BigEndian<u32>>());
+                auto* interrupt_controller = device_tree.phandle(interrupt_controller_phandle);
+                VERIFY(interrupt_controller);
+                auto interrupt_cells = interrupt_controller->get_property("#interrupt-cells"sv)->as<u32>();
+                VERIFY(interrupt_cells == 1 || interrupt_cells == 2);
+                u64 interrupt;
+                if (interrupt_cells == 1)
+                    interrupt = MUST(map_stream.read_value<BigEndian<u32>>());
+                else
+                    interrupt = MUST(map_stream.read_value<BigEndian<u64>>());
+                auto masked_specifier = (((pci_address_metadata >> 8) << 8) | pin) & interrupt_mask;
+                masked_interrupt_mapping.set(masked_specifier, interrupt);
+            }
+        }
     }
 
-    if (pci_32bit_mmio_base.has_value() || pci_64bit_mmio_base.has_value())
-        Access::the().configure_pci_space(pci_32bit_mmio_base.value_or(0), pci_32bit_mmio_size, pci_64bit_mmio_base.value_or(0), pci_64bit_mmio_size);
-    else
+    if (pci_32bit_mmio_size != 0 || pci_64bit_mmio_size != 0) {
+        PCIConfiguration config {
+            pci_32bit_mmio_base,
+            pci_32bit_mmio_base + pci_32bit_mmio_size,
+            pci_64bit_mmio_base,
+            pci_64bit_mmio_base + pci_64bit_mmio_size,
+            move(masked_interrupt_mapping),
+            interrupt_mask,
+        };
+        Access::the().configure_pci_space(config);
+    } else {
         dmesgln("PCI: No MMIO ranges found - assuming pre-configured by bootloader");
+    }
     Access::the().rescan_hardware();
 
     PCIBusSysFSDirectory::initialize();
