@@ -7,14 +7,11 @@
  */
 
 #include <LibGfx/AntiAliasingPainter.h>
+#include <LibGfx/Font/ScaledFont.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Painting/BackgroundPainting.h>
-#include <LibWeb/Painting/BorderRadiusCornerClipper.h>
-#include <LibWeb/Painting/GradientPainting.h>
-#include <LibWeb/Painting/PaintContext.h>
-#include <LibWeb/Painting/PaintableBox.h>
-#include <LibWeb/Painting/RecordingPainter.h>
+#include <LibWeb/Painting/InlinePaintable.h>
 
 namespace Web::Painting {
 
@@ -60,9 +57,74 @@ static CSSPixelSize run_default_sizing_algorithm(
     return default_size;
 }
 
-// https://www.w3.org/TR/css-backgrounds-3/#backgrounds
-void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMetrics const& layout_node, CSSPixelRect const& border_rect, Color background_color, CSS::ImageRendering image_rendering, Vector<CSS::BackgroundLayerData> const* background_layers, BorderRadiiData const& border_radii, Vector<Gfx::Path> const& clip_paths)
+static Vector<Gfx::Path> compute_text_clip_paths(PaintContext& context, Paintable const& paintable)
 {
+    Vector<Gfx::Path> text_clip_paths;
+    auto add_text_clip_path = [&](PaintableFragment const& fragment) {
+        // Scale to the device pixels.
+        Gfx::Path glyph_run_path;
+        for (auto glyph : fragment.glyph_run().glyphs()) {
+            glyph.visit([&](auto& glyph) {
+                glyph.font = *glyph.font->with_size(glyph.font->point_size() * static_cast<float>(context.device_pixels_per_css_pixel()));
+                glyph.position = glyph.position.scaled(context.device_pixels_per_css_pixel());
+            });
+
+            if (glyph.has<Gfx::DrawGlyph>()) {
+                auto const& draw_glyph = glyph.get<Gfx::DrawGlyph>();
+
+                // Get the path for the glyph.
+                Gfx::Path glyph_path;
+                auto const& scaled_font = static_cast<Gfx::ScaledFont const&>(*draw_glyph.font);
+                auto glyph_id = scaled_font.glyph_id_for_code_point(draw_glyph.code_point);
+                scaled_font.append_glyph_path_to(glyph_path, glyph_id);
+
+                // Transform the path to the fragment's position.
+                // FIXME: Record glyphs and use Painter::draw_glyphs() instead to avoid this duplicated code.
+                auto top_left = draw_glyph.position + Gfx::FloatPoint(scaled_font.glyph_left_bearing(draw_glyph.code_point), 0);
+                auto glyph_position = Gfx::GlyphRasterPosition::get_nearest_fit_for(top_left);
+                auto transform = Gfx::AffineTransform {}.translate(glyph_position.blit_position.to_type<float>());
+                glyph_run_path.append_path(glyph_path.copy_transformed(transform));
+            }
+        }
+
+        // Calculate the baseline start position.
+        auto fragment_absolute_rect = fragment.absolute_rect();
+        auto fragment_absolute_device_rect = context.enclosing_device_rect(fragment_absolute_rect);
+        DevicePixelPoint baseline_start { fragment_absolute_device_rect.x(), fragment_absolute_device_rect.y() + context.rounded_device_pixels(fragment.baseline()) };
+
+        // Add the path to text_clip_paths.
+        auto transform = Gfx::AffineTransform {}.translate(baseline_start.to_type<int>().to_type<float>());
+        text_clip_paths.append(glyph_run_path.copy_transformed(transform));
+    };
+
+    paintable.for_each_in_inclusive_subtree([&](auto& paintable) {
+        if (is<PaintableWithLines>(paintable)) {
+            auto const& paintable_lines = static_cast<PaintableWithLines const&>(paintable);
+            for (auto const& fragment : paintable_lines.fragments()) {
+                if (is<Layout::TextNode>(fragment.layout_node()))
+                    add_text_clip_path(fragment);
+            }
+        } else if (is<InlinePaintable>(paintable)) {
+            auto const& inline_paintable = static_cast<InlinePaintable const&>(paintable);
+            for (auto const& fragment : inline_paintable.fragments()) {
+                if (is<Layout::TextNode>(fragment.layout_node()))
+                    add_text_clip_path(fragment);
+            }
+        }
+        return TraversalDecision::Continue;
+    });
+
+    return text_clip_paths;
+}
+
+// https://www.w3.org/TR/css-backgrounds-3/#backgrounds
+void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMetrics const& layout_node, CSSPixelRect const& border_rect, Color background_color, CSS::ImageRendering image_rendering, Vector<CSS::BackgroundLayerData> const* background_layers, BorderRadiiData const& border_radii)
+{
+    Vector<Gfx::Path> clip_paths {};
+    if (background_layers && !background_layers->is_empty() && background_layers->last().clip == CSS::BackgroundBox::Text) {
+        clip_paths = compute_text_clip_paths(context, *layout_node.paintable());
+    }
+
     auto& painter = context.recording_painter();
 
     struct BackgroundBox {
