@@ -90,6 +90,10 @@ ErrorOr<Process> Process::spawn(ProcessSpawnOptions const& options)
                     File::open_mode_to_options(action.mode | Core::File::OpenMode::KeepOnExec),
                     action.permissions));
                 return {};
+            },
+            [&](FileAction::CloseFile const& action) -> ErrorOr<void> {
+                CHECK(posix_spawn_file_actions_addclose(&spawn_actions, action.fd));
+                return {};
             }));
     }
 
