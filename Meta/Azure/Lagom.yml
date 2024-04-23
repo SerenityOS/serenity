@@ -2,6 +2,8 @@ parameters:
   os: 'Linux'
   fuzzer: 'NoFuzz'
   lagom_lints: false
+  host_cc: 'cc'
+  host_cxx: 'cxx'
 
 jobs:
   - job: 'Lagom_${{ parameters.os }}_${{ parameters.fuzzer }}'
@@ -19,21 +21,15 @@ jobs:
 
     - name: toolchain
       ${{ if eq(parameters.fuzzer, 'Fuzz') }}:
-        value: clang
+        value: '${{ parameters.host_cc }}_Fuzz'
       ${{ if eq(parameters.fuzzer, 'NoFuzz') }}:
-        value: gcc
+        value: '${{ parameters.host_cc }}'
 
     - name: host-cc
-      ${{ if eq(parameters.os, 'macOS') }}:
-        value: $(brew --prefix llvm@18)/bin/clang
-      ${{ if not(eq(parameters.os, 'macOS')) }}:
-        value: gcc-13
+      value: '${{ parameters.host_cc }}'
 
     - name: host-cxx
-      ${{ if eq(parameters.os, 'macOS') }}:
-        value: $(brew --prefix llvm@18)/bin/clang++
-      ${{ if not(eq(parameters.os, 'macOS')) }}:
-        value: g++-13
+      value: '${{ parameters.host_cxx }}'
 
     - name: ndk_version # only relevant for Android
       value: '25.2.9519653'
@@ -102,6 +98,8 @@ jobs:
               -DBUILD_LAGOM=OFF \
               -DENABLE_LAGOM_CCACHE=ON \
               -DCMAKE_INSTALL_PREFIX=tool-install \
+              -DCMAKE_C_COMPILER=$(host-cc) \
+              -DCMAKE_CXX_COMPILER=$(host-cxx) \
               -Dpackage=LagomTools
           ninja -C tools-build install
           cmake -GNinja -B Build \

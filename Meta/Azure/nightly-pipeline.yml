@@ -26,3 +26,13 @@ stages:
       - template: Lagom.yml
         parameters:
           os: 'Android'
+
+  - stage: Lagom_GCC
+    dependsOn: []
+    jobs:
+      - template: Lagom.yml
+        parameters:
+          os: 'Linux'
+          fuzzer: 'NoFuzz'
+          host_cc: 'gcc-13'
+          host_cxx: 'g++-13'
