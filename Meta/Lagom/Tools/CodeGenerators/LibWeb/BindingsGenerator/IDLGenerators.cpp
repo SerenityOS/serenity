@@ -3762,9 +3762,6 @@ void generate_namespace_implementation(IDL::Interface const& interface, StringBu
 
 )~~~");
 
-    for (auto& path : interface.required_imported_paths)
-        generate_include_for(generator, path);
-
     emit_includes_for_all_imports(interface, generator, interface.pair_iterator_types.has_value());
 
     generator.append(R"~~~(
@@ -4027,9 +4024,6 @@ void generate_constructor_implementation(IDL::Interface const& interface, String
 )~~~");
         }
     }
-
-    for (auto& path : interface.required_imported_paths)
-        generate_include_for(generator, path);
 
     emit_includes_for_all_imports(interface, generator, interface.pair_iterator_types.has_value());
 
@@ -4300,9 +4294,6 @@ void generate_prototype_implementation(IDL::Interface const& interface, StringBu
 #include <LibWeb/Bindings/MainThreadVM.h>
 )~~~");
     }
-
-    for (auto& path : interface.required_imported_paths)
-        generate_include_for(generator, path);
 
     emit_includes_for_all_imports(interface, generator, interface.pair_iterator_types.has_value());
 
@@ -4593,9 +4584,6 @@ void generate_global_mixin_implementation(IDL::Interface const& interface, Strin
 #include <LibWeb/WebIDL/Types.h>
 
 )~~~");
-
-    for (auto& path : interface.required_imported_paths)
-        generate_include_for(generator, path);
 
     emit_includes_for_all_imports(interface, generator, interface.pair_iterator_types.has_value());
 
