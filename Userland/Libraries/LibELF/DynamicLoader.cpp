@@ -196,13 +196,10 @@ void DynamicLoader::do_main_relocations()
 
     Optional<DynamicLoader::CachedLookupResult> cached_result;
     m_dynamic_object->relocation_section().for_each_relocation([&](DynamicObject::Relocation const& relocation) {
-        switch (do_direct_relocation(relocation, cached_result, ShouldInitializeWeak::No, ShouldCallIfuncResolver::No)) {
+        switch (do_direct_relocation(relocation, cached_result, ShouldCallIfuncResolver::No)) {
         case RelocationResult::Failed:
             dbgln("Loader.so: {} unresolved symbol '{}'", m_filepath, relocation.symbol().name());
             VERIFY_NOT_REACHED();
-        case RelocationResult::ResolveLater:
-            m_unresolved_relocations.append(relocation);
-            break;
         case RelocationResult::CallIfuncResolver:
             m_direct_ifunc_relocations.append(relocation);
             break;
@@ -226,8 +223,8 @@ void DynamicLoader::do_main_relocations()
         if (static_cast<GenericDynamicRelocationType>(relocation.type()) == GenericDynamicRelocationType::TLSDESC) {
             // GNU ld for some reason puts TLSDESC relocations into .rela.plt
             // https://sourceware.org/bugzilla/show_bug.cgi?id=28387
-
-            VERIFY(do_direct_relocation(relocation, cached_result, ShouldInitializeWeak::No, ShouldCallIfuncResolver::No) == RelocationResult::Success);
+            auto result = do_direct_relocation(relocation, cached_result, ShouldCallIfuncResolver::No);
+            VERIFY(result == RelocationResult::Success);
             return;
         }
 
@@ -236,8 +233,6 @@ void DynamicLoader::do_main_relocations()
             switch (do_plt_relocation(relocation, ShouldCallIfuncResolver::No)) {
             case RelocationResult::Failed:
                 dbgln("Loader.so: {} unresolved symbol '{}'", m_filepath, relocation.symbol().name());
-                VERIFY_NOT_REACHED();
-            case RelocationResult::ResolveLater:
                 VERIFY_NOT_REACHED();
             case RelocationResult::CallIfuncResolver:
                 m_plt_ifunc_relocations.append(relocation);
@@ -255,7 +250,6 @@ void DynamicLoader::do_main_relocations()
 
 Result<NonnullRefPtr<DynamicObject>, DlErrorMessage> DynamicLoader::load_stage_3(unsigned flags)
 {
-    do_lazy_relocations();
     if (flags & RTLD_LAZY) {
         if (m_dynamic_object->has_plt())
             setup_plt_trampoline();
@@ -270,7 +264,7 @@ Result<NonnullRefPtr<DynamicObject>, DlErrorMessage> DynamicLoader::load_stage_3
 
     Optional<DynamicLoader::CachedLookupResult> cached_result;
     for (auto const& relocation : m_direct_ifunc_relocations) {
-        auto result = do_direct_relocation(relocation, cached_result, ShouldInitializeWeak::No, ShouldCallIfuncResolver::Yes);
+        auto result = do_direct_relocation(relocation, cached_result, ShouldCallIfuncResolver::Yes);
         VERIFY(result == RelocationResult::Success);
     }
 
@@ -305,17 +299,6 @@ void DynamicLoader::load_stage_4()
     call_object_init_functions();
 
     m_fully_initialized = true;
-}
-
-void DynamicLoader::do_lazy_relocations()
-{
-    Optional<DynamicLoader::CachedLookupResult> cached_result;
-    for (auto const& relocation : m_unresolved_relocations) {
-        if (auto res = do_direct_relocation(relocation, cached_result, ShouldInitializeWeak::Yes, ShouldCallIfuncResolver::Yes); res != RelocationResult::Success) {
-            dbgln("Loader.so: {} unresolved symbol '{}'", m_filepath, relocation.symbol().name());
-            VERIFY_NOT_REACHED();
-        }
-    }
 }
 
 void DynamicLoader::load_program_headers()
@@ -520,7 +503,6 @@ void DynamicLoader::load_program_headers()
 
 DynamicLoader::RelocationResult DynamicLoader::do_direct_relocation(DynamicObject::Relocation const& relocation,
     Optional<DynamicLoader::CachedLookupResult>& cached_result,
-    ShouldInitializeWeak should_initialize_weak,
     ShouldCallIfuncResolver should_call_ifunc_resolver)
 {
     FlatPtr* patch_ptr = nullptr;
@@ -571,10 +553,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_direct_relocation(DynamicObjec
         auto res = lookup_symbol(symbol);
         VirtualAddress symbol_address;
         if (!res.has_value()) {
-            if (symbol.bind() == STB_WEAK) {
-                if (should_initialize_weak == ShouldInitializeWeak::No)
-                    return RelocationResult::ResolveLater;
-            } else {
+            if (symbol.bind() != STB_WEAK) {
                 dbgln("ERROR: symbol not found: {}.", symbol.name());
                 return RelocationResult::Failed;
             }
@@ -598,10 +577,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_direct_relocation(DynamicObjec
         auto res = lookup_symbol(symbol);
         VirtualAddress symbol_location;
         if (!res.has_value()) {
-            if (symbol.bind() == STB_WEAK) {
-                if (should_initialize_weak == ShouldInitializeWeak::No)
-                    return RelocationResult::ResolveLater;
-            } else {
+            if (symbol.bind() != STB_WEAK) {
                 // Symbol not found
                 return RelocationResult::Failed;
             }

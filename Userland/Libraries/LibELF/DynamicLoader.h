@@ -35,11 +35,6 @@ private:
     size_t m_size;
 };
 
-enum class ShouldInitializeWeak {
-    Yes,
-    No
-};
-
 enum class ShouldCallIfuncResolver {
     Yes,
     No
@@ -127,7 +122,6 @@ private:
     void do_main_relocations();
 
     // Stage 3
-    void do_lazy_relocations();
     void setup_plt_trampoline();
 
     // Stage 4
@@ -138,16 +132,15 @@ private:
     friend FlatPtr _fixup_plt_entry(DynamicObject*, u32);
 
     enum class RelocationResult : uint8_t {
-        Failed = 0,
-        Success = 1,
-        ResolveLater = 2,
-        CallIfuncResolver = 3,
+        Failed,
+        Success,
+        CallIfuncResolver,
     };
     struct CachedLookupResult {
         DynamicObject::Symbol symbol;
         Optional<DynamicObject::SymbolLookupResult> result;
     };
-    RelocationResult do_direct_relocation(DynamicObject::Relocation const&, Optional<CachedLookupResult>&, ShouldInitializeWeak, ShouldCallIfuncResolver);
+    RelocationResult do_direct_relocation(DynamicObject::Relocation const&, Optional<CachedLookupResult>&, ShouldCallIfuncResolver);
     // Will be called from _fixup_plt_entry, as part of the PLT trampoline
     static RelocationResult do_plt_relocation(DynamicObject::Relocation const&, ShouldCallIfuncResolver);
     void do_relr_relocations();
@@ -174,7 +167,6 @@ private:
     size_t m_tls_size_of_current_object { 0 };
     size_t m_tls_alignment_of_current_object { 0 };
 
-    Vector<DynamicObject::Relocation> m_unresolved_relocations;
     Vector<DynamicObject::Relocation> m_direct_ifunc_relocations;
     Vector<DynamicObject::Relocation> m_plt_ifunc_relocations;
 
