@@ -306,7 +306,6 @@ public:
     HashMap<ByteString, HashTable<ByteString>> included_mixins;
 
     ByteString module_own_path;
-    HashTable<ByteString> required_imported_paths;
     Vector<Interface&> imported_modules;
 
     HashMap<ByteString, Vector<Function&>> overload_sets;
