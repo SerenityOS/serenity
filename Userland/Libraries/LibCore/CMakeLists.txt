@@ -81,10 +81,6 @@ else()
     )
 endif()
 
-if (NOT SERENITYOS)
-    list(APPEND SOURCES SingletonProcess.cpp)
-endif()
-
 if (APPLE OR CMAKE_SYSTEM_NAME STREQUAL "GNU")
     list(APPEND SOURCES MachPort.cpp)
 endif()

@@ -121,12 +121,6 @@ source_set("sources") {
   if (current_os == "mac") {
     sources += [ "MachPort.cpp" ]
   }
-  if (current_os != "serenity") {
-    sources += [
-      "SingletonProcess.cpp",
-      "SingletonProcess.h",
-    ]
-  }
 
   if (current_os == "serenity") {
     sources += [ "Platform/ProcessStatisticsSerenity.cpp" ]
