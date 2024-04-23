@@ -24,7 +24,7 @@
     @GUI::ScrollableContainerWidget {
         name: "scrollable_container"
 
-        @GUI::Widget {
+        content_widget: @GUI::Widget {
             name: "emojis"
             layout: @GUI::VerticalBoxLayout {}
         }

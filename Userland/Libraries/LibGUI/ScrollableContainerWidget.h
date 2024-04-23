@@ -21,6 +21,9 @@ public:
     GUI::Widget* widget() { return m_widget; }
     GUI::Widget const* widget() const { return m_widget; }
 
+    // GMLCompiler support for the `content_widget` object property.
+    void set_content_widget(GUI::Widget& widget) { set_widget(&widget); }
+
 protected:
     virtual void did_scroll() override;
     virtual void resize_event(GUI::ResizeEvent&) override;

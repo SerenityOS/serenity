@@ -188,6 +188,18 @@ public:
         }
     }
 
+    template<typename Callback>
+    void for_each_object_property(Callback callback) const
+    {
+        for (auto const& child : m_properties) {
+            if (is<KeyValuePair>(child)) {
+                auto const& property = static_cast<KeyValuePair const&>(*child);
+                if (is<Object>(property.value().ptr()))
+                    callback(property.key(), static_ptr_cast<Object>(property.value()));
+            }
+        }
+    }
+
     template<FallibleFunction<StringView, NonnullRefPtr<JsonValueNode>> Callback>
     ErrorOr<void> try_for_each_property(Callback callback) const
     {
@@ -196,6 +208,19 @@ public:
                 auto const& property = static_cast<KeyValuePair const&>(*child);
                 if (property.key() != "layout" && is<JsonValueNode>(property.value().ptr()))
                     TRY(callback(property.key(), static_ptr_cast<JsonValueNode>(property.value())));
+            }
+        }
+        return {};
+    }
+
+    template<FallibleFunction<StringView, NonnullRefPtr<Object>> Callback>
+    ErrorOr<void> try_for_each_object_property(Callback callback) const
+    {
+        for (auto const& child : m_properties) {
+            if (is<KeyValuePair>(child)) {
+                auto const& property = static_cast<KeyValuePair const&>(*child);
+                if (is<Object>(property.value().ptr()))
+                    TRY(callback(property.key(), static_ptr_cast<Object>(property.value())));
             }
         }
         return {};

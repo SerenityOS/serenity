@@ -313,6 +313,29 @@ static ErrorOr<void> generate_loader_for_object(GUI::GML::Object const& gml_obje
     }));
     generator.appendln("");
 
+    // Object properties
+    size_t current_object_property_index = 0;
+    auto next_object_property_name = [&]() {
+        return String::formatted("{}_property_{}", object_name, current_object_property_index++);
+    };
+    TRY(gml_object.try_for_each_object_property([&](StringView key, NonnullRefPtr<GUI::GML::Object> value) -> ErrorOr<void> {
+        if (key == "layout"sv)
+            return {}; // Layout is handled separately.
+
+        auto property_generator = generator.fork();
+        auto property_variable_name = TRY(next_object_property_name());
+        property_generator.set("property_variable_name", property_variable_name.bytes_as_string_view());
+        property_generator.set("property_class_name", value->name());
+        property_generator.set("key", key);
+        TRY(append(property_generator, "RefPtr<::@property_class_name@> @property_variable_name@;"));
+        TRY(generate_loader_for_object(*value, property_generator.fork(), property_variable_name, indentation + 1, UseObjectConstructor::Yes));
+
+        // Set the property on the object.
+        TRY(append(property_generator, "@object_name@->set_@key@(*@property_variable_name@);"));
+        property_generator.appendln("");
+        return {};
+    }));
+
     // Layout
     if (gml_object.layout_object() != nullptr) {
         TRY(append(generator, "RefPtr<GUI::Layout> layout;"));
@@ -340,10 +363,9 @@ static ErrorOr<void> generate_loader_for_object(GUI::GML::Object const& gml_obje
         TRY(append(child_generator, "RefPtr<::@child_class_name@> @child_variable_name@;"));
         TRY(generate_loader_for_object(child, child_generator.fork(), child_variable_name, indentation + 1, UseObjectConstructor::Yes));
 
-        // Handle the current two special cases of child adding.
-        if (gml_object.name() == "GUI::ScrollableContainerWidget"sv)
-            TRY(append(child_generator, "static_ptr_cast<GUI::ScrollableContainerWidget>(@object_name@)->set_widget(@child_variable_name@);"));
-        else if (gml_object.name() == "GUI::TabWidget"sv)
+        // Handle the current special case of child adding.
+        // FIXME: This should be using the proper API for handling object properties.
+        if (gml_object.name() == "GUI::TabWidget"sv)
             TRY(append(child_generator, "static_ptr_cast<GUI::TabWidget>(@object_name@)->add_widget(*@child_variable_name@);"));
         else
             TRY(append(child_generator, "TRY(@object_name@->try_add_child(*@child_variable_name@));"));
