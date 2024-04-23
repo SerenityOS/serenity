@@ -90,8 +90,8 @@ PromiseJob create_promise_reaction_job(VM& vm, PromiseReaction& reaction, Value 
 {
     // 1. Let job be a new Job Abstract Closure with no parameters that captures reaction and argument and performs the following steps when called:
     //    See run_reaction_job for "the following steps".
-    auto job = create_heap_function(vm.heap(), [&vm, reaction = make_handle(&reaction), argument = make_handle(argument)] {
-        return run_reaction_job(vm, *reaction.cell(), argument.value());
+    auto job = create_heap_function(vm.heap(), [&vm, &reaction, argument] {
+        return run_reaction_job(vm, reaction, argument);
     });
 
     // 2. Let handlerRealm be null.
@@ -164,8 +164,8 @@ PromiseJob create_promise_resolve_thenable_job(VM& vm, Promise& promise_to_resol
 
     // 1. Let job be a new Job Abstract Closure with no parameters that captures promiseToResolve, thenable, and then and performs the following steps when called:
     //    See run_resolve_thenable_job() for "the following steps".
-    auto job = create_heap_function(vm.heap(), [&vm, promise_to_resolve = make_handle(promise_to_resolve), thenable = make_handle(thenable), then]() mutable {
-        return run_resolve_thenable_job(vm, *promise_to_resolve.cell(), thenable.value(), then);
+    auto job = create_heap_function(vm.heap(), [&vm, &promise_to_resolve, thenable, then]() mutable {
+        return run_resolve_thenable_job(vm, promise_to_resolve, thenable, then);
     });
 
     // 6. Return the Record { [[Job]]: job, [[Realm]]: thenRealm }.
