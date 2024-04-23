@@ -59,7 +59,12 @@ public:
     {
     }
 
-    Process& operator=(Process&& other) = delete;
+    Process& operator=(Process&& other)
+    {
+        m_pid = exchange(other.m_pid, 0);
+        m_should_disown = exchange(other.m_should_disown, false);
+        return *this;
+    }
 
     ~Process()
     {
