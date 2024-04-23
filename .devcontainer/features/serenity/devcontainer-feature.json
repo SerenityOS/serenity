@@ -1,7 +1,7 @@
 {
     "name": "Serenity Development",
     "id": "serenity",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Enable development of Serenity and Lagom libraries and applications",
     "options": {
         "llvm_version": {
@@ -9,6 +9,8 @@
             "proposals": [
                 15,
                 16,
+                17,
+                18,
                 "trunk"
             ],
             "default": 16,
