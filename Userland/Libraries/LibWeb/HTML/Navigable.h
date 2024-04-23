@@ -123,7 +123,7 @@ public:
         Variant<Empty, JS::NonnullGCPtr<NavigationParams>, JS::NonnullGCPtr<NonFetchSchemeNavigationParams>> navigation_params = Empty {},
         CSPNavigationType csp_navigation_type = CSPNavigationType::Other,
         bool allow_POST = false,
-        Function<void()> completion_steps = [] {});
+        JS::SafeFunction<void()> completion_steps = [] {});
 
     struct NavigateParams {
         URL::URL const& url;
