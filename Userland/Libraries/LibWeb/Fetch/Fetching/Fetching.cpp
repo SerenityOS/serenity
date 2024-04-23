@@ -494,21 +494,21 @@ WebIDL::ExceptionOr<JS::GCPtr<PendingResponse>> main_fetch(JS::Realm& realm, Inf
             if (!request->integrity_metadata().is_empty()) {
                 // 1. Let processBodyError be this step: run fetch response handover given fetchParams and a network
                 //    error.
-                Infrastructure::Body::ProcessBodyErrorCallback process_body_error = [&realm, &vm, &fetch_params](auto) {
+                auto process_body_error = JS::create_heap_function(vm.heap(), [&realm, &vm, &fetch_params](JS::GCPtr<WebIDL::DOMException>) {
                     TRY_OR_IGNORE(fetch_response_handover(realm, fetch_params, Infrastructure::Response::network_error(vm, "Response body could not be processed"sv)));
-                };
+                });
 
                 // 2. If response’s body is null, then run processBodyError and abort these steps.
                 if (!response->body()) {
-                    process_body_error({});
+                    process_body_error->function()({});
                     return;
                 }
 
                 // 3. Let processBody given bytes be these steps:
-                Infrastructure::Body::ProcessBodyCallback process_body = [&realm, request, response, &fetch_params, process_body_error = move(process_body_error)](ByteBuffer bytes) {
+                auto process_body = JS::create_heap_function(vm.heap(), [&realm, request, response, &fetch_params, process_body_error = move(process_body_error)](ByteBuffer bytes) {
                     // 1. If bytes do not match request’s integrity metadata, then run processBodyError and abort these steps.
                     if (!TRY_OR_IGNORE(SRI::do_bytes_match_metadata_list(bytes, request->integrity_metadata()))) {
-                        process_body_error({});
+                        process_body_error->function()({});
                         return;
                     }
 
@@ -517,7 +517,7 @@ WebIDL::ExceptionOr<JS::GCPtr<PendingResponse>> main_fetch(JS::Realm& realm, Inf
 
                     // 3. Run fetch response handover given fetchParams and response.
                     TRY_OR_IGNORE(fetch_response_handover(realm, fetch_params, *response));
-                };
+                });
 
                 // 4. Fully read response’s body given processBody and processBodyError.
                 TRY_OR_IGNORE(response->body()->fully_read(realm, move(process_body), move(process_body_error), fetch_params.task_destination()));
@@ -661,27 +661,27 @@ WebIDL::ExceptionOr<void> fetch_response_handover(JS::Realm& realm, Infrastructu
     if (fetch_params.algorithms()->process_response_consume_body()) {
         // 1. Let processBody given nullOrBytes be this step: run fetchParams’s process response consume body given
         //    response and nullOrBytes.
-        auto process_body = [&fetch_params, &response](Variant<ByteBuffer, Empty> const& null_or_bytes) {
+        auto process_body = JS::create_heap_function(vm.heap(), [&fetch_params, &response](ByteBuffer null_or_bytes) {
             (fetch_params.algorithms()->process_response_consume_body())(response, null_or_bytes);
-        };
+        });
 
         // 2. Let processBodyError be this step: run fetchParams’s process response consume body given response and
         //    failure.
-        auto process_body_error = [&fetch_params, &response](auto) {
+        auto process_body_error = JS::create_heap_function(vm.heap(), [&fetch_params, &response](JS::GCPtr<WebIDL::DOMException>) {
             (fetch_params.algorithms()->process_response_consume_body())(response, Infrastructure::FetchAlgorithms::ConsumeBodyFailureTag {});
-        };
+        });
 
         // 3. If internalResponse's body is null, then queue a fetch task to run processBody given null, with
         //    fetchParams’s task destination.
         if (!internal_response->body()) {
             Infrastructure::queue_fetch_task(fetch_params.controller(), task_destination, JS::create_heap_function(vm.heap(), [process_body = move(process_body)]() {
-                process_body({});
+                process_body->function()({});
             }));
         }
         // 4. Otherwise, fully read internalResponse body given processBody, processBodyError, and fetchParams’s task
         //    destination.
         else {
-            TRY(internal_response->body()->fully_read(realm, move(process_body), move(process_body_error), fetch_params.task_destination()));
+            TRY(internal_response->body()->fully_read(realm, process_body, process_body_error, fetch_params.task_destination()));
         }
     }
 

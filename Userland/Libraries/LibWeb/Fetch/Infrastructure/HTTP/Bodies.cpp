@@ -72,19 +72,19 @@ WebIDL::ExceptionOr<void> Body::fully_read(JS::Realm& realm, Web::Fetch::Infrast
     auto task_destination_object = task_destination.get<JS::NonnullGCPtr<JS::Object>>();
 
     // 2. Let successSteps given a byte sequence bytes be to queue a fetch task to run processBody given bytes, with taskDestination.
-    auto success_steps = [&realm, process_body = move(process_body), task_destination_object = JS::make_handle(task_destination_object)](ByteBuffer const& bytes) mutable -> ErrorOr<void> {
+    auto success_steps = [&realm, process_body, task_destination_object = task_destination_object](ByteBuffer const& bytes) mutable -> ErrorOr<void> {
         // Make a copy of the bytes, as the source of the bytes may disappear between the time the task is queued and executed.
         auto bytes_copy = TRY(ByteBuffer::copy(bytes));
-        queue_fetch_task(*task_destination_object, JS::create_heap_function(realm.heap(), [process_body = move(process_body), bytes_copy = move(bytes_copy)]() {
-            process_body(move(bytes_copy));
+        queue_fetch_task(*task_destination_object, JS::create_heap_function(realm.heap(), [process_body, bytes_copy = move(bytes_copy)]() {
+            process_body->function()(move(bytes_copy));
         }));
         return {};
     };
 
     // 3. Let errorSteps optionally given an exception exception be to queue a fetch task to run processBodyError given exception, with taskDestination.
-    auto error_steps = [&realm, process_body_error = move(process_body_error), task_destination_object = JS::make_handle(task_destination_object)](JS::GCPtr<WebIDL::DOMException> exception) mutable {
-        queue_fetch_task(*task_destination_object, JS::create_heap_function(realm.heap(), [process_body_error = move(process_body_error), exception = JS::make_handle(exception)]() {
-            process_body_error(*exception);
+    auto error_steps = [&realm, process_body_error, task_destination_object](JS::GCPtr<WebIDL::DOMException> exception) mutable {
+        queue_fetch_task(*task_destination_object, JS::create_heap_function(realm.heap(), [process_body_error = move(process_body_error), exception]() {
+            process_body_error->function()(*exception);
         }));
     };
 
