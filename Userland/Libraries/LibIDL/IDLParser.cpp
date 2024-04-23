@@ -1011,7 +1011,6 @@ Interface& Parser::parse()
 
     Vector<Interface&> imports;
     {
-        HashTable<ByteString> required_imported_paths;
         while (lexer.consume_specific("#import"sv)) {
             consume_whitespace();
             assert_specific('<');
@@ -1019,13 +1018,10 @@ Interface& Parser::parse()
             lexer.ignore();
             auto maybe_interface = resolve_import(path);
             if (maybe_interface.has_value()) {
-                for (auto& entry : maybe_interface.value().required_imported_paths)
-                    required_imported_paths.set(entry);
                 imports.append(maybe_interface.release_value());
             }
             consume_whitespace();
         }
-        interface.required_imported_paths = move(required_imported_paths);
     }
 
     parse_non_interface_entities(true, interface);
@@ -1185,8 +1181,6 @@ Interface& Parser::parse()
         }
     }
 
-    if (interface.will_generate_code())
-        interface.required_imported_paths.set(this_module);
     interface.imported_modules = move(imports);
 
     if (top_level_parser() == this)
