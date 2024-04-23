@@ -560,20 +560,18 @@ ErrorOr<size_t> Ext2FSInode::read_bytes_locked(off_t offset, size_t count, UserO
     int const block_size = fs().logical_block_size();
 
     BlockBasedFileSystem::BlockIndex first_block_logical_index = offset / block_size;
-    BlockBasedFileSystem::BlockIndex last_block_logical_index = (offset + count) / block_size;
-    if (last_block_logical_index >= m_block_list.size())
-        last_block_logical_index = m_block_list.size() - 1;
 
     int offset_into_first_block = offset % block_size;
 
     size_t nread = 0;
     auto remaining_count = min((off_t)count, (off_t)size() - offset);
+    auto current_block_logical_index = first_block_logical_index;
 
     dbgln_if(EXT2_VERY_DEBUG, "Ext2FSInode[{}]::read_bytes(): Reading up to {} bytes, {} bytes into inode to {}", identifier(), count, offset, buffer.user_or_kernel_ptr());
 
-    for (auto bi = first_block_logical_index; remaining_count && bi <= last_block_logical_index; bi = bi.value() + 1) {
-        auto block_index = m_block_list[bi.value()];
-        size_t offset_into_block = (bi == first_block_logical_index) ? offset_into_first_block : 0;
+    while (remaining_count) {
+        auto block_index = m_block_list[current_block_logical_index.value()];
+        size_t offset_into_block = (current_block_logical_index == first_block_logical_index) ? offset_into_first_block : 0;
         size_t num_bytes_to_copy = min((size_t)block_size - offset_into_block, (size_t)remaining_count);
         auto buffer_offset = buffer.offset(nread);
         if (block_index.value() == 0) {
@@ -581,10 +579,11 @@ ErrorOr<size_t> Ext2FSInode::read_bytes_locked(off_t offset, size_t count, UserO
             TRY(buffer_offset.memset(0, num_bytes_to_copy));
         } else {
             if (auto result = fs().read_block(block_index, &buffer_offset, num_bytes_to_copy, offset_into_block, allow_cache); result.is_error()) {
-                dmesgln("Ext2FSInode[{}]::read_bytes(): Failed to read block {} (index {})", identifier(), block_index.value(), bi);
+                dmesgln("Ext2FSInode[{}]::read_bytes(): Failed to read block {} (index {})", identifier(), block_index.value(), current_block_logical_index);
                 return result.release_error();
             }
         }
+        current_block_logical_index = current_block_logical_index.value() + 1;
         remaining_count -= num_bytes_to_copy;
         nread += num_bytes_to_copy;
     }
@@ -702,25 +701,25 @@ ErrorOr<size_t> Ext2FSInode::write_bytes_locked(off_t offset, size_t count, User
     }
 
     BlockBasedFileSystem::BlockIndex first_block_logical_index = offset / block_size;
-    BlockBasedFileSystem::BlockIndex last_block_logical_index = (offset + count) / block_size;
-    if (last_block_logical_index >= m_block_list.size())
-        last_block_logical_index = m_block_list.size() - 1;
 
     size_t offset_into_first_block = offset % block_size;
 
     size_t nwritten = 0;
     auto remaining_count = min((off_t)count, (off_t)new_size - offset);
+    auto current_block_logical_index = first_block_logical_index;
 
     dbgln_if(EXT2_VERY_DEBUG, "Ext2FSInode[{}]::write_bytes_locked(): Writing {} bytes, {} bytes into inode from {}", identifier(), count, offset, data.user_or_kernel_ptr());
 
-    for (auto bi = first_block_logical_index; remaining_count && bi <= last_block_logical_index; bi = bi.value() + 1) {
-        size_t offset_into_block = (bi == first_block_logical_index) ? offset_into_first_block : 0;
+    while (remaining_count) {
+        auto block_index = m_block_list[current_block_logical_index.value()];
+        size_t offset_into_block = (current_block_logical_index == first_block_logical_index) ? offset_into_first_block : 0;
         size_t num_bytes_to_copy = min((size_t)block_size - offset_into_block, (size_t)remaining_count);
-        dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]::write_bytes_locked(): Writing block {} (offset_into_block: {})", identifier(), m_block_list[bi.value()], offset_into_block);
-        if (auto result = fs().write_block(m_block_list[bi.value()], data.offset(nwritten), num_bytes_to_copy, offset_into_block, allow_cache); result.is_error()) {
-            dbgln("Ext2FSInode[{}]::write_bytes_locked(): Failed to write block {} (index {})", identifier(), m_block_list[bi.value()], bi);
+        dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]::write_bytes_locked(): Writing block {} (offset_into_block: {})", identifier(), block_index, offset_into_block);
+        if (auto result = fs().write_block(block_index, data.offset(nwritten), num_bytes_to_copy, offset_into_block, allow_cache); result.is_error()) {
+            dbgln("Ext2FSInode[{}]::write_bytes_locked(): Failed to write block {} (index {})", identifier(), block_index, current_block_logical_index);
             return result.release_error();
         }
+        current_block_logical_index = current_block_logical_index.value() + 1;
         remaining_count -= num_bytes_to_copy;
         nwritten += num_bytes_to_copy;
     }
