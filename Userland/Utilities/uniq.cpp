@@ -37,7 +37,7 @@ static StringView skip(StringView line, unsigned char_skip_count, unsigned field
             if (is_ascii_space(c)) {
                 in_field = false;
                 field_index = i;
-                if (++current_field > field_skip_count)
+                if (++current_field >= field_skip_count)
                     break;
             } else if (!in_field) {
                 in_field = true;
@@ -83,8 +83,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto infile = TRY(Core::InputBufferedFile::create(TRY(Core::File::open_file_or_standard_stream(inpath, Core::File::OpenMode::Read))));
     auto outfile = TRY(Core::File::open_file_or_standard_stream(outpath, Core::File::OpenMode::Write));
 
-    // The count starts at 1 since each line will appear at least once.
-    // Otherwise the -d and -c flags do not work as expected.
+    // The count starts at 1 since each line appears at least once.
+    // Otherwise the -d and -c flags are off by one.
     size_t count = 1;
     ByteBuffer previous_buf = TRY(ByteBuffer::create_uninitialized(1024));
     ByteBuffer current_buf = TRY(ByteBuffer::create_uninitialized(1024));
@@ -92,28 +92,32 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView previous = TRY(infile->read_line_with_resize(previous_buf));
     StringView previous_to_compare = skip(previous, skip_chars, skip_fields);
 
-    while (TRY(infile->can_read_line())) {
-
+    while (!infile->is_eof()) {
         StringView current = TRY(infile->read_line_with_resize(current_buf));
 
         StringView current_to_compare = skip(current, skip_chars, skip_fields);
         bool lines_equal = ignore_case ? current_to_compare.equals_ignoring_ascii_case(previous_to_compare) : current_to_compare == previous_to_compare;
-        if (!lines_equal) {
-            TRY(write_line_content(previous, count, duplicates_only, print_count, *outfile));
-            count = 1;
-        } else {
+
+        while (lines_equal && current.length() > 0) {
+            // The docs say "The second and succeeding copies of repeated adjacent input
+            // lines shall not be written", therefore  keep reading lines while they match previous.
+            // See https://pubs.opengroup.org/onlinepubs/9699919799/utilities/uniq.html
+            current = TRY(infile->read_line_with_resize(current_buf));
+            current_to_compare = skip(current, skip_chars, skip_fields);
+            lines_equal = ignore_case ? current_to_compare.equals_ignoring_ascii_case(previous_to_compare) : current_to_compare == previous_to_compare;
             count++;
         }
 
+        TRY(write_line_content(previous, count, duplicates_only, print_count, *outfile));
+        count = 1;
+
         swap(current_buf, previous_buf);
-        // The StringViews cannot be swapped since read_line_with_resize
+        // The StringViews can't be swapped since read_line_with_resize
         // potentially changes the location of the buffers due to reallocation.
         // Instead create a new StringView of what was most recently read in.
         previous = StringView { previous_buf.span().trim(current.length()) };
         previous_to_compare = skip(previous, skip_chars, skip_fields);
     }
-
-    TRY(write_line_content(previous, count, duplicates_only, print_count, *outfile));
 
     return 0;
 }

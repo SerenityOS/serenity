@@ -51,12 +51,50 @@ TEST_CASE(long_line)
     run_uniq({}, StringView { input }, StringView { expected_output });
 }
 
+TEST_CASE(line_longer_than_internal_stream_buffer)
+{
+    auto input = Array<u8, 131072> {};
+    auto expected_output = Array<u8, 65536> {};
+    // Create two lines of 65535 A's and a newline.
+    input.fill('A');
+    input[65535] = '\n';
+    input[131071] = '\n';
+
+    expected_output.fill('A');
+    expected_output[65535] = '\n';
+
+    run_uniq({}, StringView { input }, StringView { expected_output });
+}
+
+TEST_CASE(ignore_case_flag)
+{
+    run_uniq({ "-i" }, "AAA\nAaA\n"sv, "AAA\n"sv);
+    run_uniq({ "-i" }, "AAA\naaa\nAaA\n"sv, "AAA\n"sv);
+}
+
 TEST_CASE(duplicate_flag)
 {
     run_uniq({ "-d" }, "AAA\nAAA\nBBB\n"sv, "AAA\n"sv);
+    run_uniq({ "-d" }, "AAA\nAAA\nBBB\nBBB\nCCC\n"sv, "AAA\nBBB\n"sv);
+}
+
+TEST_CASE(skip_chars_flag)
+{
+    run_uniq({ "-s1" }, "AAA\nAaA\n"sv, "AAA\nAaA\n"sv);
+    run_uniq({ "-s2" }, "AAA\nAaA\n"sv, "AAA\n"sv);
+    run_uniq({ "-s200" }, "AAA\nAaA\n"sv, "AAA\n"sv);
+}
+
+TEST_CASE(skip_fields_flag)
+{
+    run_uniq({ "-f1" }, "1 AA\n2 AA\n"sv, "1 AA\n"sv);
+    run_uniq({ "-f1" }, "1 a AA\n2 b AA\n"sv, "1 a AA\n2 b AA\n"sv);
+    run_uniq({ "-f2" }, "1 a AA\n2 b AA\n"sv, "1 a AA\n"sv);
+    run_uniq({ "-f200" }, "1 AA\n2 AA\n"sv, "1 AA\n"sv);
 }
 
 TEST_CASE(count_flag)
 {
     run_uniq({ "-c" }, "AAA\nAAA\n"sv, "2 AAA\n"sv);
+    run_uniq({ "-c" }, "AAA\nAAA\nBBB\n"sv, "2 AAA\n1 BBB\n"sv);
 }
