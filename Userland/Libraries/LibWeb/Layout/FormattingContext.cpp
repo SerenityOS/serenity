@@ -283,7 +283,7 @@ CSSPixelSize FormattingContext::solve_replaced_size_constraint(CSSPixels input_w
     if (input_width > max_width && input_height < min_height)
         return { max_width, min_height };
 
-    if (input_width > 0) {
+    if (input_width > 0 && input_height > 0) {
         if (input_width > max_width && input_height > max_height && max_width / input_width <= max_height / input_height)
             return { max_width, max(min_height, max_width / aspect_ratio) };
         if (input_width > max_width && input_height > max_height && max_width / input_width > max_height / input_height)
