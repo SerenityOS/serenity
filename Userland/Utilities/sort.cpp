@@ -66,10 +66,13 @@ static ErrorOr<void> load_file(Options const& options, StringView filename, Stri
     auto file = TRY(Core::InputBufferedFile::create(
         TRY(Core::File::open_file_or_standard_stream(filename, Core::File::OpenMode::Read))));
 
-    // FIXME: Unlimited line length
     auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
-    while (TRY(file->can_read_line())) {
-        ByteString line { TRY(file->read_until(buffer, line_delimiter)) };
+    while (!file->is_eof()) {
+        ByteString line { TRY(file->read_until_with_resize(buffer, line_delimiter)) };
+        // Ensure any trailing delimiter is ignored.
+        if (line.is_empty() && file->is_eof())
+            break;
+
         StringView key = line;
         if (options.key_field != 0) {
             auto split = (!options.separator.is_empty())
