@@ -228,6 +228,7 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT NO_SANITIZE_COVERAGE void init([[maybe_
         kernel_cmdline = "serial_debug"sv;
     else
         kernel_cmdline = maybe_command_line.value();
+    VERIFY(boot_info.mhartid == 0); // We implicitly assume the boot hart is hart 0 below
 #endif
 
     setup_serial_debug();
