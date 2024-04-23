@@ -5,29 +5,36 @@
  */
 
 #include <AK/Format.h>
-#include <AK/NeverDestroyed.h>
 #include <Kernel/Arch/riscv64/CPU.h>
 #include <Kernel/Arch/riscv64/SBI.h>
 #include <Kernel/Arch/riscv64/Timer.h>
 
 namespace Kernel::RISCV64 {
 
+static Timer* s_the;
+
 Timer::Timer()
-    : HardwareTimer(to_underlying(CSR::SCAUSE::SupervisorTimerInterrupt) & ~CSR::SCAUSE_INTERRUPT_MASK)
 {
     m_frequency = DeviceTree::get().resolve_property("/cpus/timebase-frequency"sv).value().as<u32>();
 
     m_interrupt_interval = m_frequency / OPTIMAL_TICKS_PER_SECOND_RATE;
 
     set_compare(current_ticks() + m_interrupt_interval);
-    RISCV64::CSR::set_bits(RISCV64::CSR::Address::SIE, 1 << interrupt_number());
+    RISCV64::CSR::set_bits(RISCV64::CSR::Address::SIE, 1 << (to_underlying(CSR::SCAUSE::SupervisorTimerInterrupt) & ~CSR::SCAUSE_INTERRUPT_MASK));
 }
 
 NonnullLockRefPtr<Timer> Timer::initialize()
 {
+    VERIFY(!s_the);
     auto timer = adopt_lock_ref(*new Timer);
-    timer->register_interrupt_handler();
+    s_the = timer.ptr();
     return timer;
+}
+
+Timer& Timer::the()
+{
+    VERIFY(s_the);
+    return *s_the;
 }
 
 u64 Timer::current_ticks()
@@ -35,13 +42,11 @@ u64 Timer::current_ticks()
     return RISCV64::CSR::read(RISCV64::CSR::Address::TIME);
 }
 
-bool Timer::handle_interrupt(RegisterState const& regs)
+void Timer::handle_interrupt(RegisterState const& regs)
 {
-    auto result = HardwareTimer::handle_interrupt(regs);
-
+    if (m_callback)
+        m_callback(regs);
     set_compare(current_ticks() + m_interrupt_interval);
-
-    return result;
 }
 
 u64 Timer::update_time(u64& seconds_since_boot, u32& ticks_this_second, bool query_only)
@@ -74,15 +79,6 @@ void Timer::set_compare(u64 compare)
 {
     if (SBI::Timer::set_timer(compare).is_error())
         MUST(SBI::Legacy::set_timer(compare));
-}
-
-}
-
-namespace Kernel {
-
-bool HardwareTimer<GenericInterruptHandler>::eoi()
-{
-    return true;
 }
 
 }

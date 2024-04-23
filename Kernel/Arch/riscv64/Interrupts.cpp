@@ -13,6 +13,7 @@
 #include <Kernel/Arch/PageFault.h>
 #include <Kernel/Arch/TrapFrame.h>
 #include <Kernel/Arch/riscv64/InterruptManagement.h>
+#include <Kernel/Arch/riscv64/Timer.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
 #include <Kernel/Interrupts/SharedIRQHandler.h>
 #include <Kernel/Interrupts/UnhandledInterruptHandler.h>
@@ -52,13 +53,11 @@ extern "C" void trap_handler(TrapFrame& trap_frame)
 
         Processor::current().enter_trap(trap_frame, true);
 
-        auto interrupt_number = to_underlying(scause) & ~RISCV64::CSR::SCAUSE_INTERRUPT_MASK;
-
-        auto* handler = s_interrupt_handlers[interrupt_number];
-        VERIFY(handler);
-        handler->increment_call_count();
-        handler->handle_interrupt(*trap_frame.regs);
-        handler->eoi();
+        if (scause == RISCV64::CSR::SCAUSE::SupervisorTimerInterrupt) {
+            RISCV64::Timer::the().handle_interrupt(*trap_frame.regs);
+        } else {
+            TODO_RISCV64();
+        }
 
         Processor::current().exit_trap(trap_frame);
     } else {
