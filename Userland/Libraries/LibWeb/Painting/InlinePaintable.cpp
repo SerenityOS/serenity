@@ -92,6 +92,9 @@ void InlinePaintable::paint(PaintContext& context, PaintPhase phase) const
                 absolute_fragment_rect.set_width(absolute_fragment_rect.width() + extra_end_width);
             }
 
+            absolute_fragment_rect.translate_by(0, -box_model().padding.top);
+            absolute_fragment_rect.set_height(absolute_fragment_rect.height() + box_model().padding.top + box_model().padding.bottom);
+
             auto const& border_radii_data = fragment.border_radii_data();
             paint_background(context, layout_node(), absolute_fragment_rect, computed_values().background_color(), computed_values().image_rendering(), &computed_values().background_layers(), border_radii_data);
 
@@ -136,6 +139,9 @@ void InlinePaintable::paint(PaintContext& context, PaintPhase phase) const
                 auto extra_end_width = box_model().padding.right;
                 absolute_fragment_rect.set_width(absolute_fragment_rect.width() + extra_end_width);
             }
+
+            absolute_fragment_rect.translate_by(0, -box_model().padding.top);
+            absolute_fragment_rect.set_height(absolute_fragment_rect.height() + box_model().padding.top + box_model().padding.bottom);
 
             auto borders_rect = absolute_fragment_rect.inflated(borders_data.top.width, borders_data.right.width, borders_data.bottom.width, borders_data.left.width);
             auto border_radii_data = fragment.border_radii_data();

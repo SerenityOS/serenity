@@ -38,6 +38,9 @@ void InlineLevelIterator::enter_node_with_box_model_metrics(Layout::NodeWithStyl
     used_values.border_left = computed_values.border_left().width;
     used_values.padding_left = computed_values.padding().left().to_px(node, m_containing_block_used_values.content_width());
 
+    used_values.padding_bottom = computed_values.padding().bottom().to_px(node, m_containing_block_used_values.content_width());
+    used_values.padding_top = computed_values.padding().top().to_px(node, m_containing_block_used_values.content_width());
+
     m_extra_leading_metrics->margin += used_values.margin_left;
     m_extra_leading_metrics->border += used_values.border_left;
     m_extra_leading_metrics->padding += used_values.padding_left;
