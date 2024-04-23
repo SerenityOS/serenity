@@ -24,6 +24,10 @@ struct OpenFile {
     mode_t permissions = 0600;
 };
 
+struct CloseFile {
+    int fd { -1 };
+};
+
 // FIXME: Implement other file actions
 
 }
@@ -31,9 +35,9 @@ struct OpenFile {
 struct ProcessSpawnOptions {
     ByteString executable;
     bool search_for_executable_in_path { false };
-    Vector<ByteString> const& arguments = {};
-    Optional<ByteString> working_directory = {};
-    Vector<Variant<FileAction::OpenFile>> const& file_actions = {};
+    Vector<ByteString> const& arguments {};
+    Optional<ByteString> working_directory {};
+    Vector<Variant<FileAction::OpenFile, FileAction::CloseFile>> const& file_actions {};
 };
 
 class Process {
