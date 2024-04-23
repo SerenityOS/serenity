@@ -2,6 +2,7 @@
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, MacDue <macdue@dueutil.tech>
  * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2024, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -33,11 +34,14 @@ struct CloseFile {
 }
 
 struct ProcessSpawnOptions {
-    ByteString executable;
+    StringView name {};
+    ByteString executable {};
     bool search_for_executable_in_path { false };
     Vector<ByteString> const& arguments {};
     Optional<ByteString> working_directory {};
-    Vector<Variant<FileAction::OpenFile, FileAction::CloseFile>> const& file_actions {};
+
+    using FileActionType = Variant<FileAction::OpenFile, FileAction::CloseFile>;
+    Vector<FileActionType> const& file_actions {};
 };
 
 class Process {
@@ -97,6 +101,35 @@ private:
 
     pid_t m_pid;
     bool m_should_disown;
+};
+
+class IPCProcess {
+public:
+    template<typename ClientType>
+    struct ProcessAndIPCClient {
+        Process process;
+        NonnullRefPtr<ClientType> client;
+    };
+
+    template<typename ClientType, typename... ClientArguments>
+    static ErrorOr<ProcessAndIPCClient<ClientType>> spawn(ProcessSpawnOptions const& options, ClientArguments&&... client_arguments)
+    {
+        auto [process, socket] = TRY(spawn_and_connect_to_process(options));
+        auto client = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) ClientType { move(socket), forward<ClientArguments>(client_arguments)... }));
+
+        return ProcessAndIPCClient<ClientType> { move(process), move(client) };
+    }
+
+    pid_t pid() const { return m_process.pid(); }
+
+private:
+    struct ProcessAndIPCSocket {
+        Process process;
+        NonnullOwnPtr<Core::LocalSocket> m_ipc_socket;
+    };
+    static ErrorOr<ProcessAndIPCSocket> spawn_and_connect_to_process(ProcessSpawnOptions const& options);
+
+    Process m_process;
 };
 
 }

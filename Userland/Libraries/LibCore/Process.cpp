@@ -2,6 +2,7 @@
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022-2023, MacDue <macdue@dueutil.tech>
  * Copyright (c) 2023-2024, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2024, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -13,6 +14,7 @@
 #include <LibCore/Environment.h>
 #include <LibCore/File.h>
 #include <LibCore/Process.h>
+#include <LibCore/Socket.h>
 #include <LibCore/System.h>
 #include <errno.h>
 #include <spawn.h>
@@ -349,6 +351,29 @@ ErrorOr<bool> Process::wait_for_termination()
 
     m_should_disown = false;
     return exited_with_code_0;
+}
+
+ErrorOr<IPCProcess::ProcessAndIPCSocket> IPCProcess::spawn_and_connect_to_process(ProcessSpawnOptions const& options)
+{
+    int socket_fds[2] {};
+    TRY(System::socketpair(AF_LOCAL, SOCK_STREAM, 0, socket_fds));
+
+    ArmedScopeGuard guard_fd_0 { [&] { MUST(System::close(socket_fds[0])); } };
+    ArmedScopeGuard guard_fd_1 { [&] { MUST(System::close(socket_fds[1])); } };
+
+    auto& file_actions = const_cast<Vector<ProcessSpawnOptions::FileActionType>&>(options.file_actions);
+    file_actions.append(FileAction::CloseFile { socket_fds[0] });
+
+    auto takeover_string = MUST(String::formatted("{}:{}", options.name, socket_fds[1]));
+    TRY(Environment::set("SOCKET_TAKEOVER"sv, takeover_string, Environment::Overwrite::Yes));
+
+    auto process = TRY(Process::spawn(options));
+
+    auto ipc_socket = TRY(LocalSocket::adopt_fd(socket_fds[0]));
+    guard_fd_0.disarm();
+    TRY(ipc_socket->set_blocking(true));
+
+    return ProcessAndIPCSocket { move(process), move(ipc_socket) };
 }
 
 }
