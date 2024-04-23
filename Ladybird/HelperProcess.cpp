@@ -8,7 +8,6 @@
 #include "Utilities.h"
 #include <AK/Enumerate.h>
 #include <LibCore/Process.h>
-#include <LibCore/SingletonProcess.h>
 #include <LibWebView/ProcessManager.h>
 
 enum class RegisterWithProcessManager {
@@ -59,6 +58,19 @@ static ErrorOr<NonnullRefPtr<ClientType>> launch_generic_server_process(
 {
     return launch_server_process_impl<ClientType>(server_name, candidate_server_paths, arguments, register_with_process_manager, [&](auto options) {
         return Core::IPCProcess::spawn<ClientType>(move(options), forward<ClientArguments>(client_arguments)...);
+    });
+}
+
+template<typename ClientType, typename... ClientArguments>
+static ErrorOr<NonnullRefPtr<ClientType>> launch_singleton_server_process(
+    StringView server_name,
+    ReadonlySpan<ByteString> candidate_server_paths,
+    Vector<ByteString> const& arguments,
+    RegisterWithProcessManager register_with_process_manager,
+    ClientArguments&&... client_arguments)
+{
+    return launch_server_process_impl<ClientType>(server_name, candidate_server_paths, arguments, register_with_process_manager, [&](auto options) {
+        return Core::IPCProcess::spawn_singleton<ClientType>(move(options), forward<ClientArguments>(client_arguments)...);
     });
 }
 
@@ -161,10 +173,7 @@ ErrorOr<NonnullRefPtr<SQL::SQLClient>> launch_sql_server_process(ReadonlySpan<By
         arguments.append(server.value());
     }
 
-    auto [client, pid] = TRY(Core::launch_singleton_process<SQL::SQLClient>("SQLServer"sv, candidate_sql_server_paths, arguments));
-    WebView::ProcessManager::the().add_process(WebView::ProcessType::SQLServer, pid);
-
-    return client;
+    return launch_singleton_server_process<SQL::SQLClient>("SQLServer"sv, candidate_sql_server_paths, arguments, RegisterWithProcessManager::Yes);
 }
 
 ErrorOr<IPC::File> connect_new_request_server_client(Protocol::RequestClient& client)
