@@ -112,11 +112,10 @@ void Heap::find_min_and_max_block_addresses(FlatPtr& min_address, FlatPtr& max_a
 {
     min_address = explode_byte(0xff);
     max_address = 0;
-    for_each_block([&](auto& block) {
-        min_address = min(min_address, reinterpret_cast<FlatPtr>(&block));
-        max_address = max(max_address, reinterpret_cast<FlatPtr>(&block) + HeapBlockBase::block_size);
-        return IterationDecision::Continue;
-    });
+    for (auto& allocator : m_all_cell_allocators) {
+        min_address = min(min_address, allocator.min_block_address());
+        max_address = max(max_address, allocator.max_block_address() + HeapBlockBase::block_size);
+    }
 }
 
 template<typename Callback>
