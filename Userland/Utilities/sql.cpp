@@ -20,7 +20,7 @@
 #include <unistd.h>
 
 #if !defined(AK_OS_SERENITY)
-#    include <LibCore/SingletonProcess.h>
+#    include <LibCore/Process.h>
 #endif
 
 class SQLRepl {
@@ -364,7 +364,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto sql_client = TRY(SQL::SQLClient::try_create());
 #else
     VERIFY(!sql_server_path.is_empty());
-    auto [sql_client, _] = TRY(Core::launch_singleton_process<SQL::SQLClient>("SQLServer"sv, { { sql_server_path } }));
+
+    auto [_, sql_client] = TRY(Core::IPCProcess::spawn_singleton<SQL::SQLClient>({
+        .name = "SQLServer"sv,
+        .executable = sql_server_path,
+    }));
 #endif
 
     SQLRepl repl(loop, database_name, move(sql_client));
