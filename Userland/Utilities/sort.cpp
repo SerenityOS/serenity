@@ -42,7 +42,7 @@ private:
 
 template<>
 struct AK::Traits<Line> : public DefaultTraits<Line> {
-    static unsigned hash(Line l)
+    static unsigned hash(Line const& l)
     {
         if (l.numeric)
             return l.numeric_key;
