@@ -27,7 +27,7 @@ public:
 #endif
 
     ErrorOr<void> fast_enumerate(Function<void(DeviceIdentifier const&)>&) const;
-    void configure_pci_space(FlatPtr mmio_32bit_base, u32 mmio_32bit_size, FlatPtr mmio_64bit_base, u64 mmio_64bit_size);
+    void configure_pci_space(PCIConfiguration&);
     void rescan_hardware();
 
     static Access& the();

@@ -154,14 +154,12 @@ UNMAP_AFTER_INIT Access::Access()
     s_access = this;
 }
 
-UNMAP_AFTER_INIT void Access::configure_pci_space(FlatPtr mmio_32bit_base, u32 mmio_32bit_size, FlatPtr mmio_64bit_base, u64 mmio_64bit_size)
+UNMAP_AFTER_INIT void Access::configure_pci_space(PCIConfiguration& config)
 {
     SpinlockLocker locker(m_access_lock);
     SpinlockLocker scan_locker(m_scan_lock);
-    FlatPtr mmio_32bit_end = mmio_32bit_base + mmio_32bit_size;
-    FlatPtr mmio_64bit_end = mmio_64bit_base + mmio_64bit_size;
     for (auto& [_, host_controller] : m_host_controllers)
-        host_controller->configure_attached_devices(mmio_32bit_base, mmio_32bit_end, mmio_64bit_base, mmio_64bit_end);
+        host_controller->configure_attached_devices(config);
 }
 
 UNMAP_AFTER_INIT void Access::rescan_hardware()
