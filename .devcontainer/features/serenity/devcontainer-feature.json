@@ -13,7 +13,7 @@
                 18,
                 "trunk"
             ],
-            "default": 16,
+            "default": 18,
             "description": "Select LLVM compiler version to use"
         },
         "enable_ladybird": {
