@@ -20,7 +20,6 @@
 // Public domain boot code adapted from:
 // https://github.com/dosfstools/dosfstools/blob/289a48b9cb5b3c589391d28aa2515c325c932c7a/src/mkfs.fat.c#L205
 
-// clang-format off
 static u8 s_bootcode[74] = {
     0x0E,             // push cs
     0x1F,             // pop ds
@@ -36,10 +35,10 @@ static u8 s_bootcode[74] = {
     0x5E,             // pop si
     0xEB, 0xF0,       // jmp write_msg
     // key_press:
-    0x32, 0xE4,       // xor ah, ah
-    0xCD, 0x16,       // int 16h
-    0xCD, 0x19,       // int 19h
-    0xEB, 0xFE,       // foo: jmp foo
+    0x32, 0xE4, // xor ah, ah
+    0xCD, 0x16, // int 16h
+    0xCD, 0x19, // int 19h
+    0xEB, 0xFE, // foo: jmp foo
     // message_txt:
     '\r', '\n',
     'N', 'o', 'n', '-', 's', 'y', 's', 't',
@@ -51,7 +50,6 @@ static u8 s_bootcode[74] = {
     '\r', '\n',
     0
 };
-// clang-format on
 
 // FIXME: Modify the boot code to use relative offsets.
 static constexpr size_t s_message_offset_offset = 3;

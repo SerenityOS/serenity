@@ -951,12 +951,10 @@ void ProcessorBase<T>::flush_tlb_local(VirtualAddress vaddr, size_t page_count)
 {
     auto ptr = vaddr.as_ptr();
     while (page_count > 0) {
-        // clang-format off
         asm volatile("invlpg %0"
-             :
-             : "m"(*ptr)
-             : "memory");
-        // clang-format on
+                     :
+                     : "m"(*ptr)
+                     : "memory");
         ptr += PAGE_SIZE;
         page_count--;
     }

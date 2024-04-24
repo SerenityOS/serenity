@@ -14,14 +14,10 @@
 #    define TEST_INPUT(x) ("test-inputs/" x)
 #endif
 
-// FIXME: Enable formatting when the patch will be mainstream
-//        https://github.com/llvm/llvm-project/commit/fd86789962964a98157e8159c3d95cdc241942e3
-// clang-format off
 auto small_image = Core::File::open(TEST_INPUT("jpg/rgb24.jpg"sv), Core::File::OpenMode::Read).release_value()->read_until_eof().release_value();
 auto big_image = Core::File::open(TEST_INPUT("jpg/big_image.jpg"sv), Core::File::OpenMode::Read).release_value()->read_until_eof().release_value();
 auto rgb_image = Core::File::open(TEST_INPUT("jpg/rgb_components.jpg"sv), Core::File::OpenMode::Read).release_value()->read_until_eof().release_value();
 auto several_scans = Core::File::open(TEST_INPUT("jpg/several_scans.jpg"sv), Core::File::OpenMode::Read).release_value()->read_until_eof().release_value();
-// clang-format on
 
 BENCHMARK_CASE(small_image)
 {

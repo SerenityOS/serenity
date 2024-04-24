@@ -30,11 +30,9 @@ static ErrorOr<void> test_once()
         })));
         threads.last()->start();
     }
-    // clang-format off
-    // It wants to put [[maybe_unused]] on its own line, for some reason.
+
     for (auto& thread : threads)
-        [[maybe_unused]] auto res = thread->join();
-    // clang-format on
+        (void)thread->join();
 
     VERIFY(v.size() == 1);
 
@@ -63,11 +61,9 @@ static ErrorOr<void> test_mutex()
         })));
         threads.last()->start();
     }
-    // clang-format off
-    // It wants to put [[maybe_unused]] on its own line, for some reason.
+
     for (auto& thread : threads)
-        [[maybe_unused]] auto res = thread->join();
-    // clang-format on
+        (void)thread->join();
 
     VERIFY(v.size() == threads_count * num_times);
     VERIFY(pthread_mutex_trylock(&mutex) == 0);
@@ -99,11 +95,9 @@ static ErrorOr<void> test_semaphore_as_lock()
         })));
         threads.last()->start();
     }
-    // clang-format off
-    // It wants to put [[maybe_unused]] on its own line, for some reason.
+
     for (auto& thread : threads)
-        [[maybe_unused]] auto res = thread->join();
-    // clang-format on
+        (void)thread->join();
 
     VERIFY(v.size() == threads_count * num_times);
     VERIFY(sem_trywait(&semaphore) == 0);
@@ -172,11 +166,9 @@ static ErrorOr<void> test_semaphore_nonbinary()
         })));
         threads.last()->start();
     }
-    // clang-format off
-    // It wants to put [[maybe_unused]] on its own line, for some reason.
+
     for (auto& thread : threads)
-        [[maybe_unused]] auto res = thread->join();
-    // clang-format on
+        (void)thread->join();
 
     VERIFY(value.load() == 0);
     VERIFY(seen_more_than_two.load());
