@@ -156,7 +156,7 @@ SampledFunction::create(Document* document, Vector<Bound> domain, Optional<Vecto
         size_product *= size;
     size_t bits_per_plane = size_product * bits_per_sample;
     size_t total_bits = bits_per_plane * decode.size();
-    if (stream->bytes().size() < ceil_div(total_bits, 8ull))
+    if (stream->bytes().size() < ceil_div(total_bits, static_cast<size_t>(8)))
         return Error { Error::Type::MalformedPDF, "Function type 0 stream too small" };
 
     auto function = adopt_ref(*new SampledFunction(stream));

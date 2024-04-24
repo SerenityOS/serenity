@@ -14,10 +14,10 @@
 
 namespace PDF {
 
-constexpr long invalid_byte_offset = NumericLimits<long>::max();
+constexpr u64 invalid_byte_offset = NumericLimits<u64>::max();
 
 struct XRefEntry {
-    long byte_offset { invalid_byte_offset };
+    u64 byte_offset { invalid_byte_offset };
     u16 generation_number { 0 };
     bool in_use { false };
     bool compressed { false };
@@ -73,16 +73,16 @@ public:
 
     [[nodiscard]] ALWAYS_INLINE bool has_object(size_t index) const
     {
-        return index < m_entries.size() && m_entries[index].byte_offset != -1;
+        return index < m_entries.size() && m_entries[index].byte_offset != invalid_byte_offset;
     }
 
-    [[nodiscard]] ALWAYS_INLINE long byte_offset_for_object(size_t index) const
+    [[nodiscard]] ALWAYS_INLINE u64 byte_offset_for_object(size_t index) const
     {
         VERIFY(has_object(index));
         return m_entries[index].byte_offset;
     }
 
-    [[nodiscard]] ALWAYS_INLINE long object_stream_for_object(size_t index) const
+    [[nodiscard]] ALWAYS_INLINE u64 object_stream_for_object(size_t index) const
     {
         return byte_offset_for_object(index);
     }

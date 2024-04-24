@@ -477,7 +477,7 @@ PDFErrorOr<NonnullRefPtr<XRefTable>> DocumentParser::parse_xref_stream()
         Vector<XRefEntry> entries;
 
         for (int i = 0; i < count; i++) {
-            Array<long, 3> fields;
+            Array<u64, 3> fields;
             for (size_t field_index = 0; field_index < 3; ++field_index) {
                 if (!field_sizes->at(field_index).has_u32())
                     return error("Malformed xref stream");
@@ -562,7 +562,7 @@ PDFErrorOr<NonnullRefPtr<XRefTable>> DocumentParser::parse_xref_table()
                 m_reader.move_by(2);
             }
 
-            auto offset = strtol(offset_string.characters(), nullptr, 10);
+            u64 offset = strtoll(offset_string.characters(), nullptr, 10);
             auto generation = strtol(generation_string.characters(), nullptr, 10);
 
             entries.append({ offset, static_cast<u16>(generation), letter == 'n' });
