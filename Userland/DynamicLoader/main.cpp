@@ -103,6 +103,11 @@ static ErrorOr<int> open_executable(char const* path)
     return checked_fd;
 }
 
+ALWAYS_INLINE static void optimizer_fence()
+{
+    asm("" ::: "memory");
+}
+
 void _entry(int argc, char** argv, char** envp)
 {
     char** env;
@@ -121,7 +126,14 @@ void _entry(int argc, char** argv, char** envp)
     }
     VERIFY(at_random_found);
 
+    // Make sure compiler won't move any functions calls above __stack_chk_guard initialization even
+    // if their definitions somehow become available.
+    optimizer_fence();
+
     perform_self_relocations(auxvp);
+
+    // Similarly, make sure no non-offset-agnostic language features are used above this point.
+    optimizer_fence();
 
     // Initialize the copy of libc included statically in Loader.so,
     // initialization of the dynamic libc.so is done by the DynamicLinker
