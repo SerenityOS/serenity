@@ -239,7 +239,7 @@ private:
 
 ErrorOr<NonnullOwnPtr<BitBuffer>> BitBuffer::create(size_t width, size_t height)
 {
-    size_t pitch = ceil_div(width, 8ull);
+    size_t pitch = ceil_div(width, static_cast<size_t>(8));
     auto bits = TRY(ByteBuffer::create_uninitialized(pitch * height));
     return adopt_nonnull_own_or_enomem(new (nothrow) BitBuffer(move(bits), width, height, pitch));
 }
