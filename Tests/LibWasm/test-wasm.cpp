@@ -176,8 +176,8 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::get_export)
                     [&](u128 value) -> JS::Value { return JS::BigInt::create(vm, Crypto::SignedBigInteger::import_data(bit_cast<u8 const*>(&value), sizeof(value))); },
                     [&](Wasm::Reference const& reference) -> JS::Value {
                         return reference.ref().visit(
-                            [&](const Wasm::Reference::Null&) -> JS::Value { return JS::js_null(); },
-                            [&](const auto& ref) -> JS::Value { return JS::Value(static_cast<double>(ref.address.value())); });
+                            [&](Wasm::Reference::Null const&) -> JS::Value { return JS::js_null(); },
+                            [&](auto const& ref) -> JS::Value { return JS::Value(static_cast<double>(ref.address.value())); });
                     });
             }
             return vm.throw_completion<JS::TypeError>(TRY_OR_THROW_OOM(vm, String::formatted("'{}' does not refer to a function or a global", name)));
@@ -277,8 +277,8 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::wasm_invoke)
             },
             [](Wasm::Reference const& reference) {
                 return reference.ref().visit(
-                    [](const Wasm::Reference::Null&) { return JS::js_null(); },
-                    [](const auto& ref) { return JS::Value(static_cast<double>(ref.address.value())); });
+                    [](Wasm::Reference::Null const&) { return JS::js_null(); },
+                    [](auto const& ref) { return JS::Value(static_cast<double>(ref.address.value())); });
             });
     };
 

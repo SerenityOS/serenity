@@ -22,7 +22,7 @@ extern "C" {
 #define _FUTEX_OP_MASK_CMP_ARG 0xfff
 
 #define FUTEX_OP(op, op_arg, cmp, cmp_arg) \
-    ((((op)&_FUTEX_OP_MASK_OP) << _FUTEX_OP_SHIFT_OP) | (((cmp)&_FUTEX_OP_MASK_CMP) << _FUTEX_OP_SHIFT_CMP) | (((op_arg)&_FUTEX_OP_MASK_OP_ARG) << _FUTEX_OP_SHIFT_OP_ARG) | (((cmp_arg)&_FUTEX_OP_MASK_CMP_ARG) << _FUTEX_OP_SHIFT_CMP_ARG))
+    ((((op) & _FUTEX_OP_MASK_OP) << _FUTEX_OP_SHIFT_OP) | (((cmp) & _FUTEX_OP_MASK_CMP) << _FUTEX_OP_SHIFT_CMP) | (((op_arg) & _FUTEX_OP_MASK_OP_ARG) << _FUTEX_OP_SHIFT_OP_ARG) | (((cmp_arg) & _FUTEX_OP_MASK_CMP_ARG) << _FUTEX_OP_SHIFT_CMP_ARG))
 
 #define _FUTEX_OP(val3) (((val3) >> _FUTEX_OP_SHIFT_OP) & _FUTEX_OP_MASK_OP)
 #define _FUTEX_CMP(val3) (((val3) >> _FUTEX_OP_SHIFT_CMP) & _FUTEX_OP_MASK_CMP)

@@ -30,7 +30,7 @@ struct syslog_data {
 
 /* Macros for masking out the priority of a combined priority */
 #define LOG_PRIMASK (7)
-#define LOG_PRI(priority) ((priority)&LOG_PRIMASK)
+#define LOG_PRI(priority) ((priority) & LOG_PRIMASK)
 
 /*
  * Many of these facilities don't really make sense anymore, but we keep them
@@ -62,7 +62,7 @@ struct syslog_data {
 
 /* Macros to get the facility from a combined priority. */
 #define LOG_FACMASK (~7)
-#define LOG_FAC(priority) (((priority)&LOG_FACMASK) >> 3)
+#define LOG_FAC(priority) (((priority) & LOG_FACMASK) >> 3)
 
 /* For masking logs, we use these macros with just the priority. */
 #define LOG_MASK(priority) (1 << (priority))

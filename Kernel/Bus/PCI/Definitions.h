@@ -481,16 +481,16 @@ public:
 private:
     DeviceIdentifier(EnumerableDeviceIdentifier const& other_identifier)
         : EnumerableDeviceIdentifier(other_identifier.address(),
-            other_identifier.hardware_id(),
-            other_identifier.revision_id(),
-            other_identifier.class_code(),
-            other_identifier.subclass_code(),
-            other_identifier.prog_if(),
-            other_identifier.subsystem_id(),
-            other_identifier.subsystem_vendor_id(),
-            other_identifier.interrupt_line(),
-            other_identifier.interrupt_pin(),
-            other_identifier.capabilities())
+              other_identifier.hardware_id(),
+              other_identifier.revision_id(),
+              other_identifier.class_code(),
+              other_identifier.subclass_code(),
+              other_identifier.prog_if(),
+              other_identifier.subsystem_id(),
+              other_identifier.subsystem_vendor_id(),
+              other_identifier.interrupt_line(),
+              other_identifier.interrupt_pin(),
+              other_identifier.capabilities())
     {
     }
 

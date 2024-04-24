@@ -134,7 +134,7 @@ TEST_CASE(starts_with)
     ReadonlyBytes nah_bytes { str_nah, strlen(str_nah) };
     EXPECT(!bytes.starts_with(nah_bytes));
 
-    const u8 hey_array[3] = { 'H', 'e', 'y' };
+    u8 const hey_array[3] = { 'H', 'e', 'y' };
     ReadonlyBytes hey_bytes_u8 { hey_array, 3 };
     EXPECT(bytes.starts_with(hey_bytes_u8));
 }

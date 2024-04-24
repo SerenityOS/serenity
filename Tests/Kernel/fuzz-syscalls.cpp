@@ -118,7 +118,7 @@ static void do_random_tests()
     }
 
     // Note that we will also make lots of syscalls for randomness and debugging.
-    const size_t fuzz_syscall_count = 10000;
+    size_t const fuzz_syscall_count = 10000;
 
     size_t direct_sc_args[3] = { 0 };
     // Isolate to a separate region to make corruption less likely, because we will write to it:

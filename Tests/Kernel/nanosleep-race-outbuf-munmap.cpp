@@ -116,7 +116,7 @@ int main()
     signal(SIGUSR1, signal_printer);
 
     // T1: Go to sleep.
-    const timespec requested_sleep = { 3, 0 };
+    timespec const requested_sleep = { 3, 0 };
     rc = clock_nanosleep(CLOCK_MONOTONIC, 0, &requested_sleep, shared.remaining_sleep);
     // Now we are beyond T4.
 

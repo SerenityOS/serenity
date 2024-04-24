@@ -19,7 +19,7 @@ TEST_CASE(zlib_decompress_simple)
         0x99, 0x5E, 0x09, 0xE8
     };
 
-    const u8 uncompressed[] = "This is a simple text file :)";
+    u8 const uncompressed[] = "This is a simple text file :)";
 
     auto stream = make<FixedMemoryStream>(compressed);
     auto decompressor = TRY_OR_FAIL(Compress::ZlibDecompressor::create(move(stream)));
@@ -40,7 +40,7 @@ TEST_CASE(zlib_compress_simple)
         0xE8
     };
 
-    const u8 uncompressed[] = "This is a simple text file :)";
+    u8 const uncompressed[] = "This is a simple text file :)";
 
     auto const freshly_pressed = Compress::ZlibCompressor::compress_all({ uncompressed, sizeof(uncompressed) - 1 });
     EXPECT(freshly_pressed.value().bytes() == compressed.span());

@@ -128,7 +128,9 @@ Widget::Widget()
         });
 
 #define __ENUMERATE_COLOR_ROLE(role) \
-    { Gfx::ColorRole::role, #role },
+    {                                \
+        Gfx::ColorRole::role, #role  \
+    },
     REGISTER_ENUM_PROPERTY("foreground_role", foreground_role, set_foreground_role, Gfx::ColorRole,
         { Gfx::ColorRole::NoRole, "NoRole" },
         ENUMERATE_COLOR_ROLES(__ENUMERATE_COLOR_ROLE));

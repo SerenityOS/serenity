@@ -44,7 +44,7 @@ RecursionDecision IfBranchMergingPass::on_entry(Tree tree)
 
 Tree IfBranchMergingPass::merge_branches(Vector<Tree> const& unmerged_branches)
 {
-    static const Tree error = make_ref_counted<ErrorNode>("Cannot make sense of if-elseif-else chain"sv);
+    static Tree const error = make_ref_counted<ErrorNode>("Cannot make sense of if-elseif-else chain"sv);
 
     VERIFY(unmerged_branches.size() >= 1);
 

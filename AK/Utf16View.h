@@ -74,8 +74,8 @@ public:
     template<size_t Size>
     Utf16View(char16_t const (&code_units)[Size])
         : m_code_units(
-            reinterpret_cast<u16 const*>(&code_units[0]),
-            code_units[Size - 1] == u'\0' ? Size - 1 : Size)
+              reinterpret_cast<u16 const*>(&code_units[0]),
+              code_units[Size - 1] == u'\0' ? Size - 1 : Size)
     {
     }
 

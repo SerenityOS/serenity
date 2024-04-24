@@ -18,7 +18,7 @@ TEST_CASE(gzip_decompress_simple)
         0x00, 0xc2, 0x1d, 0x22, 0x15, 0x0f, 0x00, 0x00, 0x00
     };
 
-    const u8 uncompressed[] = "word1 abc word2";
+    u8 const uncompressed[] = "word1 abc word2";
 
     auto const decompressed = Compress::GzipDecompressor::decompress_all(compressed);
     EXPECT(decompressed.value().bytes() == (ReadonlyBytes { uncompressed, sizeof(uncompressed) - 1 }));
@@ -34,7 +34,7 @@ TEST_CASE(gzip_decompress_multiple_members)
         0x06, 0x00, 0x00, 0x00
     };
 
-    const u8 uncompressed[] = "abcabcabcabc";
+    u8 const uncompressed[] = "abcabcabcabc";
 
     auto const decompressed = Compress::GzipDecompressor::decompress_all(compressed);
     EXPECT(decompressed.value().bytes() == (ReadonlyBytes { uncompressed, sizeof(uncompressed) - 1 }));

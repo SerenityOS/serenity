@@ -50,7 +50,7 @@ static inline uint32_t ntohl(uint32_t value)
 #define IN_CLASSA(addr) ((((uint32_t)(addr)) & (128 << 24)) == 0)
 #define IN_CLASSB(addr) ((((uint32_t)(addr)) & (192 << 24)) == (128 << 24))
 
-#define IN_MULTICAST(x) (((x)&0xf0000000) == 0xe0000000)
+#define IN_MULTICAST(x) (((x) & 0xf0000000) == 0xe0000000)
 
 // NOTE: The IPv6 Addressing Scheme that we detect are documented in RFC# 2373.
 //       See: https://datatracker.ietf.org/doc/html/rfc2373

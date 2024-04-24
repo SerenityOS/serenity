@@ -101,7 +101,7 @@ int main(int argc, char** argv)
 
     if (do_segmentation_violation || do_all_crash_types) {
         any_failures |= !Crash("Segmentation violation", []() {
-            volatile int* crashme = nullptr;
+            int volatile* crashme = nullptr;
             *crashme = 0xbeef;
             return Crash::Failure::DidNotCrash;
         }).run(run_type);
@@ -109,9 +109,9 @@ int main(int argc, char** argv)
 
     if (do_division_by_zero || do_all_crash_types) {
         any_failures |= !Crash("Division by zero", []() {
-            volatile int lala = 10;
-            volatile int zero = 0;
-            [[maybe_unused]] volatile int test = lala / zero;
+            int volatile lala = 10;
+            int volatile zero = 0;
+            [[maybe_unused]] int volatile test = lala / zero;
             return Crash::Failure::DidNotCrash;
         }).run(run_type);
     }
@@ -132,25 +132,25 @@ int main(int argc, char** argv)
 
     if (do_read_from_uninitialized_malloc_memory || do_all_crash_types) {
         any_failures |= !Crash("Read from uninitialized malloc memory", []() {
-            auto* uninitialized_memory = (volatile u32**)malloc(1024);
+            auto* uninitialized_memory = (u32 volatile**)malloc(1024);
             if (!uninitialized_memory)
                 return Crash::Failure::UnexpectedError;
 
-            [[maybe_unused]] volatile auto x = uninitialized_memory[0][0];
+            [[maybe_unused]] auto volatile x = uninitialized_memory[0][0];
             return Crash::Failure::DidNotCrash;
         }).run(run_type);
     }
 
     if (do_read_from_freed_memory || do_all_crash_types) {
         any_failures |= !Crash("Read from freed memory", []() {
-            auto* uninitialized_memory = (volatile u32**)malloc(1024);
+            auto* uninitialized_memory = (u32 volatile**)malloc(1024);
             if (!uninitialized_memory)
                 return Crash::Failure::UnexpectedError;
 
             free(uninitialized_memory);
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wuse-after-free"
-            [[maybe_unused]] volatile auto x = uninitialized_memory[4][0];
+            [[maybe_unused]] auto volatile x = uninitialized_memory[4][0];
 #pragma GCC diagnostic pop
             return Crash::Failure::DidNotCrash;
         }).run(run_type);
@@ -158,7 +158,7 @@ int main(int argc, char** argv)
 
     if (do_write_to_uninitialized_malloc_memory || do_all_crash_types) {
         any_failures |= !Crash("Write to uninitialized malloc memory", []() {
-            auto* uninitialized_memory = (volatile u32**)malloc(1024);
+            auto* uninitialized_memory = (u32 volatile**)malloc(1024);
             if (!uninitialized_memory)
                 return Crash::Failure::UnexpectedError;
 
@@ -169,7 +169,7 @@ int main(int argc, char** argv)
 
     if (do_write_to_freed_memory || do_all_crash_types) {
         any_failures |= !Crash("Write to freed memory", []() {
-            auto* uninitialized_memory = (volatile u32**)malloc(1024);
+            auto* uninitialized_memory = (u32 volatile**)malloc(1024);
             if (!uninitialized_memory)
                 return Crash::Failure::UnexpectedError;
 

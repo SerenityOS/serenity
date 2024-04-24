@@ -20,7 +20,7 @@ UNMAP_AFTER_INIT NonnullLockRefPtr<VGATextModeConsole> VGATextModeConsole::initi
 UNMAP_AFTER_INIT VGATextModeConsole::VGATextModeConsole(NonnullOwnPtr<Memory::Region> vga_window_region)
     : Console(80, 25)
     , m_vga_window_region(move(vga_window_region))
-    , m_current_vga_window(m_vga_window_region->vaddr().offset(0x18000).as_ptr())
+    , m_current_vga_window(m_vga_window_region -> vaddr().offset(0x18000).as_ptr())
 {
     for (size_t index = 0; index < height(); index++) {
         clear_vga_row(index);

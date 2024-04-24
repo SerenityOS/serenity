@@ -323,8 +323,8 @@ TEST_CASE(wcsrtombs)
 {
     mbstate_t state = {};
     char buf[MB_LEN_MAX * 4];
-    const wchar_t good_chars[] = { L'\U0001F41E', L'\U0001F41E', L'\0' };
-    const wchar_t bad_chars[] = { L'\U0001F41E', static_cast<wchar_t>(0x1111F41E), L'\0' };
+    wchar_t const good_chars[] = { L'\U0001F41E', L'\U0001F41E', L'\0' };
+    wchar_t const bad_chars[] = { L'\U0001F41E', static_cast<wchar_t>(0x1111F41E), L'\0' };
     wchar_t const* src;
     size_t ret = 0;
 
@@ -369,7 +369,7 @@ TEST_CASE(wcsrtombs)
 TEST_CASE(wcsnrtombs)
 {
     mbstate_t state = {};
-    const wchar_t good_chars[] = { L'\U0001F41E', L'\U0001F41E', L'\0' };
+    wchar_t const good_chars[] = { L'\U0001F41E', L'\U0001F41E', L'\0' };
     wchar_t const* src;
     size_t ret = 0;
 

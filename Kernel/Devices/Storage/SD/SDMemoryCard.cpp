@@ -11,8 +11,7 @@
 namespace Kernel {
 
 SDMemoryCard::SDMemoryCard(SDHostController& sdhc, StorageDevice::LUNAddress lun_address, u32 hardware_relative_controller_id, u32 block_len, u64 capacity_in_blocks, u32 relative_card_address, SD::OperatingConditionRegister ocr, SD::CardIdentificationRegister cid, SD::SDConfigurationRegister scr)
-    : StorageDevice(lun_address, hardware_relative_controller_id, block_len,
-        capacity_in_blocks)
+    : StorageDevice(lun_address, hardware_relative_controller_id, block_len, capacity_in_blocks)
     , m_sdhc(sdhc)
     , m_relative_card_address(relative_card_address)
     , m_ocr(ocr)

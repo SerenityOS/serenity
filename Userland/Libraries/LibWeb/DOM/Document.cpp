@@ -3947,7 +3947,7 @@ void Document::shared_declarative_refresh_steps(StringView input, JS::GCPtr<HTML
         // 7. Skip ASCII whitespace within input given position.
         lexer.ignore_while(Infra::is_ascii_whitespace);
 
-    skip_quotes : {
+    skip_quotes: {
         // 8. Skip quotes: If the code point in input pointed to by position is U+0027 (') or U+0022 ("), then let
         //    quote be that code point, and advance position to the next code point. Otherwise, let quote be the empty
         //    string.

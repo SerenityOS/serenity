@@ -240,10 +240,10 @@ UNMAP_AFTER_INIT E1000ENetworkAdapter::E1000ENetworkAdapter(StringView interface
     NonnullOwnPtr<Memory::Region> tx_buffer_region, NonnullOwnPtr<Memory::Region> rx_descriptors_region,
     NonnullOwnPtr<Memory::Region> tx_descriptors_region)
     : E1000NetworkAdapter(interface_name, device_identifier, irq, move(registers_io_window),
-        move(rx_buffer_region),
-        move(tx_buffer_region),
-        move(rx_descriptors_region),
-        move(tx_descriptors_region))
+          move(rx_buffer_region),
+          move(tx_buffer_region),
+          move(rx_descriptors_region),
+          move(tx_descriptors_region))
 {
 }
 

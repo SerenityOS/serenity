@@ -159,7 +159,7 @@ TEST_CASE(should_constexpr_convert_construct)
 TEST_CASE(should_constexpr_copy_construct)
 {
     constexpr auto checked_value = [] {
-        const Checked<int> old_value { 42 };
+        Checked<int> const old_value { 42 };
         Checked<int> value(old_value);
         return value;
     }();
@@ -180,7 +180,7 @@ TEST_CASE(should_constexpr_move_construct)
 TEST_CASE(should_constexpr_copy_assign)
 {
     constexpr auto checked_value = [] {
-        const Checked<int> old_value { 42 };
+        Checked<int> const old_value { 42 };
         Checked<int> value {};
         value = old_value;
         return value;

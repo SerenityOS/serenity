@@ -21,7 +21,7 @@ TEST_CASE(should_default_contructor_with_0s)
 TEST_CASE(should_construct_from_c_array)
 {
     constexpr auto addr = [] {
-        const u8 a[4] = { 1, 2, 3, 4 };
+        u8 const a[4] = { 1, 2, 3, 4 };
         return IPv4Address(a);
     }();
 
@@ -33,7 +33,7 @@ TEST_CASE(should_construct_from_c_array)
 TEST_CASE(should_construct_from_u32)
 {
     constexpr auto addr = [] {
-        const NetworkOrdered<u32> a = 0x11'22'33'44;
+        NetworkOrdered<u32> const a = 0x11'22'33'44;
         return IPv4Address(a);
     }();
 
