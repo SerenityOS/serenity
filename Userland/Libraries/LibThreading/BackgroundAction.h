@@ -118,4 +118,6 @@ private:
     bool m_canceled { false };
 };
 
+void quit_background_thread();
+
 }
