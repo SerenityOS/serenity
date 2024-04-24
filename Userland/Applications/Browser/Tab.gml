@@ -13,7 +13,7 @@
 
     @GUI::Frame {
         name: "webdriver_banner"
-        style: "SunkenPanel"
+        frame_style: "SunkenPanel"
         preferred_height: "shrink"
         foreground_role: "TooltipText"
         background_role: "Tooltip"

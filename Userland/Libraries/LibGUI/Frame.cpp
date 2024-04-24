@@ -19,7 +19,7 @@ Frame::Frame()
 {
     set_frame_style(Gfx::FrameStyle::SunkenContainer);
 
-    REGISTER_ENUM_PROPERTY("style", frame_style, set_frame_style, Gfx::FrameStyle,
+    REGISTER_ENUM_PROPERTY("frame_style", frame_style, set_frame_style, Gfx::FrameStyle,
         { Gfx::FrameStyle::NoFrame, "NoFrame" },
         { Gfx::FrameStyle::Window, "Window" },
         { Gfx::FrameStyle::Plain, "Plain" },

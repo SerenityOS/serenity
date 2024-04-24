@@ -18,7 +18,7 @@
     @GUI::Label {
         name: "description_label"
         text_alignment: "CenterLeft"
-        style: "SunkenContainer"
+        frame_style: "SunkenContainer"
         max_height: 24
     }
 
@@ -73,7 +73,7 @@
             name: "full_path_label"
             text_alignment: "CenterLeft"
             text: ""
-            style: "SunkenContainer"
+            frame_style: "SunkenContainer"
             max_height: 22
         }
     }

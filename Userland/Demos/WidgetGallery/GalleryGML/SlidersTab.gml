@@ -35,7 +35,7 @@
         @GUI::HorizontalSeparator {}
 
         @GUI::Frame {
-            style: "SunkenPanel"
+            frame_style: "SunkenPanel"
             preferred_height: "fit"
             layout: @GUI::VerticalBoxLayout {
                 margins: [1]
