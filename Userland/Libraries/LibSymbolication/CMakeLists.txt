@@ -3,4 +3,4 @@ set(SOURCES
 )
 
 serenity_lib(LibSymbolication symbolication)
-target_link_libraries(LibSymbolication PRIVATE LibCore LibDebug LibFileSystem)
+target_link_libraries(LibSymbolication PRIVATE LibCore LibDebug LibELF LibFileSystem)
