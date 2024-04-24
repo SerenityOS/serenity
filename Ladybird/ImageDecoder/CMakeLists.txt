@@ -24,4 +24,4 @@ target_link_libraries(ImageDecoder PRIVATE imagedecoder LibMain)
 
 target_include_directories(imagedecoder PRIVATE ${SERENITY_SOURCE_DIR}/Userland/Services/)
 target_include_directories(imagedecoder PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/..)
-target_link_libraries(imagedecoder PRIVATE LibCore LibGfx LibIPC LibImageDecoderClient LibMain)
+target_link_libraries(imagedecoder PRIVATE LibCore LibGfx LibIPC LibImageDecoderClient LibMain LibThreading)
