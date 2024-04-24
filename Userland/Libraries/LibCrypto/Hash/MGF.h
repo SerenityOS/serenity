@@ -24,8 +24,10 @@ public:
         size_t h_len = hash.digest_size();
 
         // 1. If length > 2^32(hLen), output "mask too long" and stop.
-        if (length > (h_len << 32))
-            return Error::from_string_view("mask too long"sv);
+        if constexpr (sizeof(size_t) > 32) {
+            if (length > (h_len << 32))
+                return Error::from_string_view("mask too long"sv);
+        }
 
         // 2. Let T be the empty octet string.
         auto t = TRY(ByteBuffer::create_uninitialized(0));
