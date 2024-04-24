@@ -63,7 +63,7 @@
             }
 
             @GUI::Label {
-                style: "SunkenContainer"
+                frame_style: "SunkenContainer"
                 name: "clock_preview"
                 text: "12:34:56"
             }

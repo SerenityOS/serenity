@@ -17,7 +17,7 @@
 
             @GUI::Frame {
                 name: "label_frame"
-                style: "SunkenPanel"
+                frame_style: "SunkenPanel"
                 layout: @GUI::VerticalBoxLayout {
                     margins: [3, 4]
                 }
