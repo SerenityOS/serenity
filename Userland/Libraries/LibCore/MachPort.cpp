@@ -8,6 +8,13 @@
 #include <AK/Format.h>
 #include <LibCore/MachPort.h>
 
+#if defined(AK_OS_GNU_HURD)
+extern "C" {
+#    include <mach_error.h>
+}
+// This is in <mach/mach_error.h> on Darwin, and doesn't seem to be required.
+#endif
+
 #if defined(AK_OS_MACOS)
 #    include <bootstrap.h>
 #endif
@@ -18,18 +25,24 @@ static constexpr MachPort::PortRight associated_port_right(MachPort::MessageRigh
 {
     switch (right) {
     case MachPort::MessageRight::MoveReceive:
-    case MachPort::MessageRight::CopyReceive:
-    case MachPort::MessageRight::DisposeReceive:
         return MachPort::PortRight::Receive;
     case MachPort::MessageRight::MoveSend:
     case MachPort::MessageRight::CopySend:
     case MachPort::MessageRight::MakeSend:
-    case MachPort::MessageRight::DisposeSend:
         return MachPort::PortRight::Send;
     case MachPort::MessageRight::MoveSendOnce:
     case MachPort::MessageRight::MakeSendOnce:
+        return MachPort::PortRight::SendOnce;
+
+#if defined(AK_OS_MACOS)
+    case MachPort::MessageRight::CopyReceive:
+    case MachPort::MessageRight::DisposeReceive:
+        return MachPort::PortRight::Receive;
+    case MachPort::MessageRight::DisposeSend:
+        return MachPort::PortRight::Send;
     case MachPort::MessageRight::DisposeSendOnce:
         return MachPort::PortRight::SendOnce;
+#endif
     }
     VERIFY_NOT_REACHED();
 }
@@ -41,12 +54,14 @@ Error mach_error_to_error(kern_return_t error)
     return Error::from_string_view(err_view);
 }
 
+#if defined(AK_OS_MACOS)
 static Error bootstrap_error_to_error(kern_return_t error)
 {
     char const* err_string = bootstrap_strerror(error);
     StringView const err_view(err_string, strlen(err_string));
     return Error::from_string_view(err_view);
 }
+#endif
 
 MachPort::MachPort(PortRight right, mach_port_t port)
     : m_right(right)

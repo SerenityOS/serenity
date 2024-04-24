@@ -14,7 +14,10 @@
 
 #include <AK/Error.h>
 #include <AK/Noncopyable.h>
+
+extern "C" {
 #include <mach/mach.h>
+}
 
 namespace Core {
 
