@@ -17,6 +17,10 @@
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
 #include <Kernel/Interrupts/SharedIRQHandler.h>
 #include <Kernel/Interrupts/UnhandledInterruptHandler.h>
+#include <Kernel/Library/StdLib.h>
+#include <Kernel/Tasks/Process.h>
+#include <Kernel/Tasks/Thread.h>
+#include <Kernel/Tasks/ThreadTracer.h>
 
 namespace Kernel {
 
@@ -43,10 +47,20 @@ extern "C" void trap_handler(TrapFrame& trap_frame)
 {
     auto scause = trap_frame.regs->scause;
 
-    // sepc has to point to the instruction following the ecall when returning from a syscall, unless it is changed by the syscall handler.
-    // We have to increment sepc before interrupts are re-enabled, as code triggered by interrupts also can cause sepc to be updated.
-    if (scause == RISCV64::CSR::SCAUSE::EnvironmentCallFromUMode)
+    // We have to increment sepc for these exceptions, as we otherwise would return to the instruction causing the trap.
+    // sepc has to be incremented before interrupts are re-enabled, as code triggered by interrupts also can cause sepc to be updated.
+    if (scause == RISCV64::CSR::SCAUSE::EnvironmentCallFromUMode) {
         trap_frame.regs->sepc += 4;
+    } else if (scause == RISCV64::CSR::SCAUSE::Breakpoint) {
+        u32 break_instruction;
+        if (!copy_from_user(&break_instruction, bit_cast<u32*>(trap_frame.regs->sepc), sizeof(break_instruction)).is_error()) {
+            // Increment sepc based on the instruction length of the breakpoint instruction.
+            if ((break_instruction & 0b11) == 0b11)
+                trap_frame.regs->sepc += 4;
+            else
+                trap_frame.regs->sepc += 2;
+        }
+    }
 
     if ((to_underlying(scause) & RISCV64::CSR::SCAUSE_INTERRUPT_MASK) != 0) {
         // Interrupt
@@ -124,7 +138,17 @@ extern "C" void trap_handler(TrapFrame& trap_frame)
             break;
 
         case Breakpoint:
-            TODO_RISCV64();
+            if (trap_frame.regs->previous_mode() == ExecutionMode::User) {
+                auto* current_thread = Thread::current();
+                auto& current_process = current_thread->process();
+
+                if (auto* tracer = current_process.tracer())
+                    tracer->set_regs(*trap_frame.regs);
+
+                current_thread->send_urgent_signal_to_self(SIGTRAP);
+            } else {
+                handle_crash(*trap_frame.regs, "Unexpected breakpoint trap", SIGTRAP, false);
+            }
             break;
 
         default:
