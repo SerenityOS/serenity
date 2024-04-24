@@ -177,8 +177,9 @@ static UNMAP_AFTER_INIT void setup_kernel_page_directory(u64* root_table)
 // This function has to fit into one page as it will be identity mapped.
 [[gnu::aligned(PAGE_SIZE)]] [[noreturn]] UNMAP_AFTER_INIT static void enable_paging(BootInfo const& info, FlatPtr satp, u64* enable_paging_pte)
 {
-    // Switch current root page table to argument 0. This will immediately take effect, but we won't not crash as this function is identity mapped.
+    // Switch current root page table to argument 1. This will immediately take effect, but we won't not crash as this function is identity mapped.
     // Also, set up a temporary trap handler to catch any traps while switching page tables.
+    auto offset = calculate_physical_to_link_time_address_offset();
     register FlatPtr a0 asm("a0") = bit_cast<FlatPtr>(&info);
     asm volatile(
         "   lla t0, 1f \n"
@@ -213,7 +214,7 @@ static UNMAP_AFTER_INIT void setup_kernel_page_directory(u64* root_table)
         "   wfi \n"
         "   j 1b \n"
         :
-        : "r"(a0), [satp] "r"(satp), [offset] "r"(calculate_physical_to_link_time_address_offset()), [enable_paging_pte] "r"(enable_paging_pte)
+        : "r"(a0), [satp] "r"(satp), [offset] "r"(offset), [enable_paging_pte] "r"(enable_paging_pte)
         : "t0");
 
     VERIFY_NOT_REACHED();
