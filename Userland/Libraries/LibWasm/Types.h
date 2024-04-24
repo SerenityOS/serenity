@@ -466,7 +466,6 @@ public:
 
 private:
     OpCode m_opcode { 0 };
-    // clang-format off
     Variant<
         BlockType,
         DataIndex,
@@ -495,9 +494,8 @@ private:
         i32,
         i64,
         u128,
-        u8 // Empty state
-    > m_arguments;
-    // clang-format on
+        u8> // Empty state
+        m_arguments;
 };
 
 class CustomSection {

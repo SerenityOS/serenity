@@ -63,15 +63,9 @@ struct Connection {
         template<typename T>
         static JobData create(NonnullRefPtr<T> job)
         {
-            // Clang-format _really_ messes up formatting this, so just format it manually.
-            // clang-format off
             return JobData {
-                .start = [job](auto& socket) {
-                    job->start(socket);
-                },
-                .fail = [job](auto error) {
-                    job->fail(error);
-                },
+                .start = [job](auto& socket) { job->start(socket); },
+                .fail = [job](auto error) { job->fail(error); },
                 .provide_client_certificates = [job] {
                     if constexpr (requires { job->on_certificate_requested; }) {
                         if (job->on_certificate_requested)
@@ -80,10 +74,8 @@ struct Connection {
                         // "use" `job`, otherwise clang gets sad.
                         (void)job;
                     }
-                    return Vector<TLS::Certificate> {};
-                },
+                    return Vector<TLS::Certificate> {}; },
             };
-            // clang-format on
         }
     };
     using QueueType = Vector<JobData>;

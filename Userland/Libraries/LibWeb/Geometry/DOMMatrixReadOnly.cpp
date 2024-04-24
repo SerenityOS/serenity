@@ -449,12 +449,12 @@ JS::NonnullGCPtr<DOMMatrix> DOMMatrixReadOnly::flip_x()
     auto result = DOMMatrix::create_from_dom_matrix_read_only(realm(), *this);
 
     // 2. Post-multiply result with new DOMMatrix([-1, 0, 0, 1, 0, 0]).
-    // clang-format off
-    Gfx::DoubleMatrix4x4 flip_matrix = { -1, 0, 0, 0,
+    Gfx::DoubleMatrix4x4 flip_matrix = {
+        -1, 0, 0, 0,
         0, 1, 0, 0,
         0, 0, 1, 0,
-        0, 0, 0, 1 };
-    // clang-format on
+        0, 0, 0, 1
+    };
     result->m_matrix = result->m_matrix * flip_matrix;
 
     // 3. Return result.
@@ -468,12 +468,12 @@ JS::NonnullGCPtr<DOMMatrix> DOMMatrixReadOnly::flip_y()
     auto result = DOMMatrix::create_from_dom_matrix_read_only(realm(), *this);
 
     // 2. Post-multiply result with new DOMMatrix([1, 0, 0, -1, 0, 0]).
-    // clang-format off
-    Gfx::DoubleMatrix4x4 flip_matrix = { 1, 0, 0, 0,
+    Gfx::DoubleMatrix4x4 flip_matrix = {
+        1, 0, 0, 0,
         0, -1, 0, 0,
         0, 0, 1, 0,
-        0, 0, 0, 1 };
-    // clang-format on
+        0, 0, 0, 1
+    };
     result->m_matrix = result->m_matrix * flip_matrix;
 
     // 3. Return result.

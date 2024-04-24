@@ -191,7 +191,6 @@ void ProcessorBase<T>::switch_context(Thread*& from_thread, Thread*& to_thread)
     // m_in_critical is restored in enter_thread_context
     from_thread->save_critical(m_in_critical);
 
-    // clang-format off
     asm volatile(
         "sub sp, sp, #256 \n"
         "stp x0, x1,     [sp, #(0 * 0)] \n"
@@ -268,7 +267,6 @@ void ProcessorBase<T>::switch_context(Thread*& from_thread, Thread*& to_thread)
         [from_thread] "m"(from_thread),
         [to_thread] "m"(to_thread)
         : "memory", "x0", "x1", "x2");
-    // clang-format on
 
     dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context <-- from {} {} to {} {}", VirtualAddress(from_thread), *from_thread, VirtualAddress(to_thread), *to_thread);
 }

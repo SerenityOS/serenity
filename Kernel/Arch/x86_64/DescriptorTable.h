@@ -98,10 +98,7 @@ enum class IDTEntryType {
     TrapGate32 = 0b1111,
 };
 
-// Clang doesn't format this right due to the compiler magic
-// clang-format off
-struct [[gnu::packed]] IDTEntry
-{
+struct [[gnu::packed]] IDTEntry {
     u16 offset_1; // offset bits 0..15
     u16 selector; // a code segment selector in GDT or LDT
 
@@ -147,7 +144,6 @@ struct [[gnu::packed]] IDTEntry
         return IDTEntryType(type_attr.gate_type);
     }
 };
-// clang-format on
 
 static_assert(AssertSize<IDTEntry, 2 * sizeof(void*)>());
 

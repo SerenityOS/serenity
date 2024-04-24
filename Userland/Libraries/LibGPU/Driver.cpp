@@ -13,9 +13,7 @@
 namespace GPU {
 
 // FIXME: Think of a better way to configure these paths. Maybe use ConfigServer?
-// clang-format off
-static HashMap<StringView, char const*> const s_driver_path_map
-{
+static HashMap<StringView, char const*> const s_driver_path_map {
 #if defined(AK_OS_SERENITY)
     { "softgpu"sv, "libsoftgpu.so.serenity" },
     { "virtgpu"sv, "libvirtgpu.so.serenity" },
@@ -25,7 +23,6 @@ static HashMap<StringView, char const*> const s_driver_path_map
     { "softgpu"sv, "liblagom-softgpu.so.0" },
 #endif
 };
-// clang-format on
 
 static HashMap<ByteString, WeakPtr<Driver>> s_loaded_drivers;
 

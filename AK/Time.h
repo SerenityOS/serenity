@@ -484,10 +484,7 @@ public:
     [[nodiscard]] static MonotonicTime now_coarse();
 #endif
 
-    // clang-format off
-    // Clang-format likes to expand this function for some reason.
     [[nodiscard]] i64 seconds() const { return m_offset.to_seconds(); }
-    // clang-format on
     [[nodiscard]] i64 milliseconds() const { return m_offset.to_milliseconds(); }
     [[nodiscard]] i64 nanoseconds() const { return m_offset.to_nanoseconds(); }
     // Never returns a point in the future, since fractional seconds are cut off.

@@ -141,12 +141,10 @@ void ProcessorBase<T>::flush_tlb_local(VirtualAddress vaddr, size_t page_count)
 {
     auto addr = vaddr.get();
     while (page_count > 0) {
-        // clang-format off
         asm volatile("sfence.vma %0"
-             :
-             : "r"(addr)
-             : "memory");
-        // clang-format on
+                     :
+                     : "r"(addr)
+                     : "memory");
         addr += PAGE_SIZE;
         page_count--;
     }
@@ -221,7 +219,6 @@ void ProcessorBase<T>::switch_context(Thread*& from_thread, Thread*& to_thread)
     // m_in_critical is restored in enter_thread_context
     from_thread->save_critical(m_in_critical);
 
-    // clang-format off
     asm volatile(
         // Store a RegisterState of from_thread on from_thread's stack
         "addi sp, sp, -(34 * 8) \n"
@@ -338,7 +335,6 @@ void ProcessorBase<T>::switch_context(Thread*& from_thread, Thread*& to_thread)
         [from_thread] "m"(from_thread),
         [to_thread] "m"(to_thread)
         : "memory", "t0", "s1", "a0", "a1");
-    // clang-format on
 
     dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context <-- from {} {} to {} {}", VirtualAddress(from_thread), *from_thread, VirtualAddress(to_thread), *to_thread);
 }
