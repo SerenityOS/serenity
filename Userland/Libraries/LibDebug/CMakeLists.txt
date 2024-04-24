@@ -13,4 +13,4 @@ set(SOURCES
 )
 
 serenity_lib(LibDebug debug)
-target_link_libraries(LibDebug PRIVATE LibCore LibFileSystem LibRegex)
+target_link_libraries(LibDebug PRIVATE LibCore LibELF LibFileSystem LibRegex)
