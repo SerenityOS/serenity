@@ -466,8 +466,8 @@ void WebContentView::set_device_pixel_ratio(double device_pixel_ratio)
 
 void WebContentView::update_viewport_rect()
 {
-    auto scaled_width = int(viewport()->width() * m_device_pixel_ratio);
-    auto scaled_height = int(viewport()->height() * m_device_pixel_ratio);
+    auto scaled_width = int((viewport()->width() + (verticalScrollBar()->isVisible() ? verticalScrollBar()->width() : 0)) * m_device_pixel_ratio);
+    auto scaled_height = int((viewport()->height() + (horizontalScrollBar()->isVisible() ? horizontalScrollBar()->width() : 0)) * m_device_pixel_ratio);
     Gfx::IntRect rect(max(0, horizontalScrollBar()->value()), max(0, verticalScrollBar()->value()), scaled_width, scaled_height);
 
     set_viewport_rect(rect);
