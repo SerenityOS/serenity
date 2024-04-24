@@ -553,13 +553,10 @@ static CrossOriginOpenerPolicy obtain_a_cross_origin_opener_policy(JS::NonnullGC
     CrossOriginOpenerPolicy policy = {};
 
     // AD-HOC: We don't yet setup environments in all cases
-    if (reserved_client.has<Empty>())
+    if (!reserved_client)
         return policy;
 
-    auto& reserved_environment = reserved_client.visit(
-        [](Empty const&) -> Environment& { VERIFY_NOT_REACHED(); },
-        [](Environment* env) -> Environment& { return *env; },
-        [](JS::GCPtr<EnvironmentSettingsObject> eso) -> Environment& { return *eso; });
+    auto& reserved_environment = *reserved_client;
 
     // 2. If reservedEnvironment is a non-secure context, then return policy.
     if (is_non_secure_context(reserved_environment))

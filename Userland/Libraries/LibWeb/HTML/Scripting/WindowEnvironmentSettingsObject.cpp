@@ -29,7 +29,7 @@ void WindowEnvironmentSettingsObject::visit_edges(JS::Cell::Visitor& visitor)
 }
 
 // https://html.spec.whatwg.org/multipage/window-object.html#set-up-a-window-environment-settings-object
-void WindowEnvironmentSettingsObject::setup(Page& page, URL::URL const& creation_url, NonnullOwnPtr<JS::ExecutionContext> execution_context, Optional<Environment> reserved_environment, URL::URL top_level_creation_url, Origin top_level_origin)
+void WindowEnvironmentSettingsObject::setup(Page& page, URL::URL const& creation_url, NonnullOwnPtr<JS::ExecutionContext> execution_context, JS::GCPtr<Environment> reserved_environment, URL::URL top_level_creation_url, Origin top_level_origin)
 {
     // 1. Let realm be the value of execution context's Realm component.
     auto realm = execution_context->realm;
@@ -43,7 +43,7 @@ void WindowEnvironmentSettingsObject::setup(Page& page, URL::URL const& creation
     auto settings_object = realm->heap().allocate<WindowEnvironmentSettingsObject>(*realm, window, move(execution_context));
 
     // 4. If reservedEnvironment is non-null, then:
-    if (reserved_environment.has_value()) {
+    if (reserved_environment) {
         // FIXME:    1. Set settings object's id to reservedEnvironment's id,
         //              target browsing context to reservedEnvironment's target browsing context,
         //              and active service worker to reservedEnvironment's active service worker.

@@ -7,6 +7,7 @@
 #include <LibWeb/Fetch/Infrastructure/FetchController.h>
 #include <LibWeb/HTML/Navigable.h>
 #include <LibWeb/HTML/NavigationParams.h>
+#include <LibWeb/HTML/Scripting/Environments.h>
 
 namespace Web::HTML {
 
@@ -20,6 +21,7 @@ void NavigationParams::visit_edges(Visitor& visitor)
     visitor.visit(request);
     visitor.visit(response);
     visitor.visit(fetch_controller);
+    visitor.visit(reserved_environment);
 }
 
 void NonFetchSchemeNavigationParams::visit_edges(Visitor& visitor)

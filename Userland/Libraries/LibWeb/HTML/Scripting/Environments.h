@@ -17,8 +17,11 @@
 namespace Web::HTML {
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#environment
-struct Environment {
-    virtual ~Environment() = default;
+struct Environment : public JS::Cell {
+    JS_CELL(Environment, JS::Cell);
+
+public:
+    virtual ~Environment() override;
 
     // An id https://html.spec.whatwg.org/multipage/webappapis.html#concept-environment-id
     String id;
@@ -39,6 +42,9 @@ struct Environment {
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#concept-environment-execution-ready-flag
     bool execution_ready { false };
+
+protected:
+    virtual void visit_edges(Cell::Visitor&) override;
 };
 
 enum class RunScriptDecision {
@@ -47,11 +53,10 @@ enum class RunScriptDecision {
 };
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#environment-settings-object
-struct EnvironmentSettingsObject
-    : public JS::Cell
-    , public Environment {
-    JS_CELL(EnvironmentSettingsObject, JS::Cell);
+struct EnvironmentSettingsObject : public Environment {
+    JS_CELL(EnvironmentSettingsObject, Environment);
 
+public:
     virtual ~EnvironmentSettingsObject() override;
     virtual void initialize(JS::Realm&) override;
 

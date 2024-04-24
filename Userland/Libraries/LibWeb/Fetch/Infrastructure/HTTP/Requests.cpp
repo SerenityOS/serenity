@@ -28,9 +28,7 @@ void Request::visit_edges(JS::Cell::Visitor& visitor)
     m_body.visit(
         [&](JS::NonnullGCPtr<Body>& body) { visitor.visit(body); },
         [](auto&) {});
-    m_reserved_client.visit(
-        [&](JS::GCPtr<HTML::EnvironmentSettingsObject> const& value) { visitor.visit(value); },
-        [](auto const&) {});
+    visitor.visit(m_reserved_client);
     m_window.visit(
         [&](JS::GCPtr<HTML::EnvironmentSettingsObject> const& value) { visitor.visit(value); },
         [](auto const&) {});

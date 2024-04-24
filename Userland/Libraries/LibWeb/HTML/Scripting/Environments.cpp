@@ -19,6 +19,14 @@
 
 namespace Web::HTML {
 
+Environment::~Environment() = default;
+
+void Environment::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(target_browsing_context);
+}
+
 EnvironmentSettingsObject::EnvironmentSettingsObject(NonnullOwnPtr<JS::ExecutionContext> realm_execution_context)
     : m_realm_execution_context(move(realm_execution_context))
 {
@@ -43,7 +51,6 @@ void EnvironmentSettingsObject::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_responsible_event_loop);
-    visitor.visit(target_browsing_context);
     visitor.visit(m_module_map);
     visitor.ignore(m_outstanding_rejected_promises_weak_set);
     m_realm_execution_context->visit_edges(visitor);
