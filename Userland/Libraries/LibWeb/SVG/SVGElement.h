@@ -23,8 +23,7 @@ public:
     virtual void inserted() override;
     virtual void removed_from(Node*) override;
 
-    HTML::DOMStringMap* dataset() { return m_dataset.ptr(); }
-    HTML::DOMStringMap const* dataset() const { return m_dataset.ptr(); }
+    [[nodiscard]] JS::NonnullGCPtr<HTML::DOMStringMap> dataset();
 
     void focus();
     void blur();

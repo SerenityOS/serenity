@@ -25,14 +25,19 @@ void SVGElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
     WEB_SET_PROTOTYPE_FOR_INTERFACE(SVGElement);
-
-    m_dataset = HTML::DOMStringMap::create(*this);
 }
 
 void SVGElement::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_dataset);
+}
+
+JS::NonnullGCPtr<HTML::DOMStringMap> SVGElement::dataset()
+{
+    if (!m_dataset)
+        m_dataset = HTML::DOMStringMap::create(*this);
+    return *m_dataset;
 }
 
 void SVGElement::attribute_changed(FlyString const& name, Optional<String> const& value)
