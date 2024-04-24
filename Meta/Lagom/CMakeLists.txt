@@ -497,14 +497,7 @@ if (BUILD_LAGOM)
     endif()
 
     if (NOT EMSCRIPTEN)
-        # FIXME: Create a LIBELF_SOURCES macro similar to AK
-        file(GLOB LIBELF_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibELF/*.cpp")
-        # There's no way we can reliably make the dynamic loading classes cross platform
-        list(FILTER LIBELF_SOURCES EXCLUDE REGEX ".*Dynamic.*.cpp$")
-        lagom_lib(LibELF elf
-            SOURCES ${LIBELF_SOURCES}
-        )
-        list(APPEND lagom_standard_libraries X86)
+        list(APPEND lagom_standard_libraries ELF X86)
     endif()
 
     foreach(lib IN LISTS lagom_standard_libraries)
@@ -546,14 +539,8 @@ if (BUILD_LAGOM)
 
         lagom_utility(base64 SOURCES ../../Userland/Utilities/base64.cpp LIBS LibMain)
 
-        # FIXME: Excluding arm64 is a temporary hack to circumvent a build problem
-        #        for Lagom on Apple M1
-        if (NOT CMAKE_SYSTEM_PROCESSOR MATCHES "arm64" AND NOT EMSCRIPTEN)
-            lagom_utility(disasm SOURCES ../../Userland/Utilities/disasm.cpp LIBS LibELF LibX86 LibMain)
-        endif()
-
         if (NOT EMSCRIPTEN)
-            # LibELF is part of LibC in SerenityOS builds, but not in Lagom.
+            lagom_utility(disasm SOURCES ../../Userland/Utilities/disasm.cpp LIBS LibELF LibX86 LibMain)
             lagom_utility(file SOURCES ../../Userland/Utilities/file.cpp LIBS LibAudio LibArchive LibCompress LibELF LibGfx LibIPC LibMain)
         endif()
 

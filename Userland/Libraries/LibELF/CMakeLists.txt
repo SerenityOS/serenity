@@ -1,12 +1,3 @@
-# This is here just to not make any changes to Lagom CMakeLists in this commit.
-if (NOT SERENITYOS)
-    add_library(LibELF INTERFACE)
-    serenity_install_headers("LibELF")
-    serenity_install_sources("Userland/Libraries/LibELF")
-
-    return()
-endif()
-
 set(SOURCES
     Image.cpp
     Validation.cpp
