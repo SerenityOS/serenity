@@ -59,6 +59,10 @@ void HTMLLinkElement::inserted()
 {
     HTMLElement::inserted();
 
+    if (!document().browsing_context()) {
+        return;
+    }
+
     if (m_relationship & Relationship::Stylesheet) {
         // https://html.spec.whatwg.org/multipage/links.html#link-type-stylesheet:fetch-and-process-the-linked-resource
         // The appropriate times to fetch and process this type of link are:
