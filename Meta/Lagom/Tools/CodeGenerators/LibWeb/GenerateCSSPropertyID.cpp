@@ -69,8 +69,8 @@ void replace_logical_aliases(JsonObject& properties)
     AK::HashMap<ByteString, ByteString> logical_aliases;
     properties.for_each_member([&](auto& name, auto& value) {
         VERIFY(value.is_object());
-        const auto& value_as_object = value.as_object();
-        const auto logical_alias_for = value_as_object.get_array("logical-alias-for"sv);
+        auto const& value_as_object = value.as_object();
+        auto const logical_alias_for = value_as_object.get_array("logical-alias-for"sv);
         if (logical_alias_for.has_value()) {
             auto const& aliased_properties = logical_alias_for.value();
             for (auto const& aliased_property : aliased_properties.values()) {

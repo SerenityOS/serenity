@@ -51,7 +51,7 @@ TEST_CASE(load_form)
     widgets->for_each([&](JsonValue const& widget_value) {
         auto& widget_object = widget_value.as_object();
         auto widget_class = widget_object.get_byte_string("class"sv).value();
-        widget_object.for_each_member([&]([[maybe_unused]] auto& property_name, [[maybe_unused]] const JsonValue& property_value) {
+        widget_object.for_each_member([&]([[maybe_unused]] auto& property_name, [[maybe_unused]] JsonValue const& property_value) {
         });
     });
 }

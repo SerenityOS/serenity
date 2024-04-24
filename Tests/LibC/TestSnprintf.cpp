@@ -22,7 +22,7 @@ struct Testcase {
     char const* dest;
     size_t dest_n;
     char const* fmt;
-    const TArg arg;
+    TArg const arg;
     int expected_return;
     char const* dest_expected;
     size_t dest_expected_n; // == dest_n

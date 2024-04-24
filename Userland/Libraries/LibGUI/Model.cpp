@@ -437,13 +437,13 @@ void Model::handle_move(Operation const& operation)
     auto replace_handle = [&](ModelIndex const& current_index, int new_dimension, bool relative) {
         int new_row = is_row
             ? (relative
-                    ? current_index.row() + new_dimension
-                    : new_dimension)
+                      ? current_index.row() + new_dimension
+                      : new_dimension)
             : current_index.row();
         int new_column = !is_row
             ? (relative
-                    ? current_index.column() + new_dimension
-                    : new_dimension)
+                      ? current_index.column() + new_dimension
+                      : new_dimension)
             : current_index.column();
         auto new_index = index(new_row, new_column, operation.target_parent);
 

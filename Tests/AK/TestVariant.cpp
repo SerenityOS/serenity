@@ -188,7 +188,7 @@ TEST_CASE(return_values)
         EXPECT_EQ(value, 42);
     }
     {
-        const MyVariant the_value { "str" };
+        MyVariant const the_value { "str" };
 
         ByteString value = the_value.visit(
             [&](int const&) { return ByteString { "wrong" }; },

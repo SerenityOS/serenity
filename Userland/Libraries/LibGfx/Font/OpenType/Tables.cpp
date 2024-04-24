@@ -426,7 +426,8 @@ bool OS2::use_typographic_metrics() const
 Optional<i16> OS2::x_height() const
 {
     return m_data.visit(
-        []<typename T> requires(requires { T::sx_height; })(T * data)->Optional<i16> {
+        []<typename T>
+        requires(requires { T::sx_height; })(T * data) -> Optional<i16> {
             return data->sx_height;
         },
         [](auto*) { return Optional<i16>(); });

@@ -11,9 +11,9 @@
 #include <unistd.h>
 
 // Supposed to use volatile everywhere here but good lord does C++ make that a pain
-volatile sig_atomic_t saved_signal;
-volatile siginfo_t saved_siginfo;
-volatile ucontext_t saved_ucontext;
+sig_atomic_t volatile saved_signal;
+siginfo_t volatile saved_siginfo;
+ucontext_t volatile saved_ucontext;
 siginfo_t* sig_info_addr;
 ucontext_t* ucontext_addr;
 void* stack_ptr;

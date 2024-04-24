@@ -147,7 +147,7 @@ struct TestSuite {
     Array<unsigned char, 32> expected_values[8]; // 32 bytes for each argument's value.
 };
 
-const TestSuite test_suites[] {
+TestSuite const test_suites[] {
     { "%d", "", 0, 0, {}, {} },
     { "%x", "0x519", 1, 1, { unsignedarg0 }, { to_value_t(0x519) } },
     { "%x", "0x51g", 1, 1, { unsignedarg0 }, { to_value_t(0x51u) } },

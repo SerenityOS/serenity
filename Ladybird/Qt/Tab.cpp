@@ -212,7 +212,7 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
 
         dialog.setWindowTitle("Ladybird");
         dialog.setOption(QColorDialog::ShowAlphaChannel, false);
-        QObject::connect(&dialog, &QColorDialog::currentColorChanged, this, [this](const QColor& color) {
+        QObject::connect(&dialog, &QColorDialog::currentColorChanged, this, [this](QColor const& color) {
             view().color_picker_update(Color(color.red(), color.green(), color.blue()), Web::HTML::ColorPickerUpdateState::Update);
         });
 

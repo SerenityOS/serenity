@@ -77,7 +77,7 @@ TEST_CASE(deflate_decompress_compressed_block)
         0xCB, 0x4A, 0x13, 0x00
     };
 
-    const u8 uncompressed[] = "This is a simple text file :)";
+    u8 const uncompressed[] = "This is a simple text file :)";
 
     auto const decompressed = Compress::DeflateDecompressor::decompress_all(compressed);
     EXPECT(decompressed.value().bytes() == ReadonlyBytes({ uncompressed, sizeof(uncompressed) - 1 }));
@@ -90,7 +90,7 @@ TEST_CASE(deflate_decompress_uncompressed_block)
         0x57, 0x6f, 0x72, 0x6c, 0x64, 0x21
     };
 
-    const u8 uncompressed[] = "Hello, World!";
+    u8 const uncompressed[] = "Hello, World!";
 
     auto const decompressed = Compress::DeflateDecompressor::decompress_all(compressed);
     EXPECT(decompressed.value().bytes() == (ReadonlyBytes { uncompressed, sizeof(uncompressed) - 1 }));
@@ -107,7 +107,7 @@ TEST_CASE(deflate_decompress_multiple_blocks)
         0x92, 0xf3, 0x73, 0x0b, 0x8a, 0x52, 0x8b, 0x8b, 0x53, 0x53, 0xf4, 0x00
     };
 
-    const u8 uncompressed[] = "The first block is uncompressed and the second block is compressed.";
+    u8 const uncompressed[] = "The first block is uncompressed and the second block is compressed.";
 
     auto const decompressed = Compress::DeflateDecompressor::decompress_all(compressed);
     EXPECT(decompressed.value().bytes() == (ReadonlyBytes { uncompressed, sizeof(uncompressed) - 1 }));

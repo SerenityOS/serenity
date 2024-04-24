@@ -44,8 +44,8 @@ public:
 
     MathematicalValue(Value value)
         : m_value(value.is_number()
-                ? value_from_number(value.as_double())
-                : ValueType(value.as_bigint().big_integer()))
+                  ? value_from_number(value.as_double())
+                  : ValueType(value.as_bigint().big_integer()))
     {
     }
 

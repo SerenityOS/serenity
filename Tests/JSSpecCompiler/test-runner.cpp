@@ -42,7 +42,7 @@ constexpr TestDescription::Flag dump_after_frontend = {
     .dump_cfg = false
 };
 
-const Array regression_tests = {
+Array const regression_tests = {
     TestDescription {
         .sources = { "simple.cpp"sv },
         .flags = { always_dump_all },
@@ -59,11 +59,11 @@ const Array regression_tests = {
     }
 };
 
-static const LexicalPath path_to_compiler_binary = [] {
+static LexicalPath const path_to_compiler_binary = [] {
     auto path_to_self = LexicalPath(MUST(Core::System::current_executable_path())).parent();
     return LexicalPath::join(path_to_self.string(), compiler_binary_name);
 }();
-static const LexicalPath path_to_tests_directory { relative_path_to_test };
+static LexicalPath const path_to_tests_directory { relative_path_to_test };
 
 Vector<ByteString> build_command_line_arguments(LexicalPath const& test_source, TestDescription const& description)
 {

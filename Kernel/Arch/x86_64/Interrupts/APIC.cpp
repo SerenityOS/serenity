@@ -205,7 +205,7 @@ void APIC::write_icr(ICRReg const& icr)
 
 #define APIC_LVT_MASKED (1 << 16)
 #define APIC_LVT_TRIGGER_LEVEL (1 << 14)
-#define APIC_LVT(iv, dm) (((iv)&0xff) | (((dm)&0x7) << 8))
+#define APIC_LVT(iv, dm) (((iv) & 0xff) | (((dm) & 0x7) << 8))
 
 extern "C" void apic_ap_start(void);
 extern "C" u16 apic_ap_start_size;

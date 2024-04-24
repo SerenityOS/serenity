@@ -531,7 +531,7 @@ void WebSocket::send_frame(WebSocket::OpCode op_code, ReadonlyBytes payload, boo
 {
     VERIFY(m_impl);
     VERIFY(m_state == WebSocket::InternalState::Open);
-    u8 frame_head[1] = { (u8)((is_final ? 0x80 : 0x00) | ((u8)(op_code)&0xf)) };
+    u8 frame_head[1] = { (u8)((is_final ? 0x80 : 0x00) | ((u8)(op_code) & 0xf)) };
     m_impl->send(ReadonlyBytes(frame_head, 1));
     // Section 5.1 : a client MUST mask all frames that it sends to the server
     bool has_mask = true;

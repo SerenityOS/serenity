@@ -11,9 +11,9 @@
 
 #define PAGE_MASK (~(FlatPtr)0xfffu)
 
-#define LSW(x) ((u32)(x)&0xFFFF)
+#define LSW(x) ((u32)(x) & 0xFFFF)
 #define MSW(x) (((u32)(x) >> 16) & 0xFFFF)
-#define LSB(x) ((x)&0xFF)
+#define LSB(x) ((x) & 0xFF)
 #define MSB(x) (((x) >> 8) & 0xFF)
 
 #if ARCH(X86_64)

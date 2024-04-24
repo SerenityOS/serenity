@@ -42,7 +42,7 @@ TEST_CASE(wctrans)
 
 TEST_CASE(iswctype)
 {
-    const wint_t test_chars[] = { L'A', L'a', L'F', L'f', L'Z', L'z', L'0', L'\n', L'.', L'\x00' };
+    wint_t const test_chars[] = { L'A', L'a', L'F', L'f', L'Z', L'z', L'0', L'\n', L'.', L'\x00' };
 
     // Test that valid properties are wired to the correct implementation.
     for (unsigned int i = 0; i < sizeof(test_chars) / sizeof(test_chars[0]); i++) {
@@ -69,7 +69,7 @@ TEST_CASE(iswctype)
 
 TEST_CASE(towctrans)
 {
-    const wint_t test_chars[] = { L'A', L'a', L'F', L'f', L'Z', L'z', L'0', L'\n', L'.', L'\x00' };
+    wint_t const test_chars[] = { L'A', L'a', L'F', L'f', L'Z', L'z', L'0', L'\n', L'.', L'\x00' };
 
     // Test that valid mappings are wired to the correct implementation.
     for (unsigned int i = 0; i < sizeof(test_chars) / sizeof(test_chars[0]); i++) {

@@ -17,17 +17,17 @@ struct TestCase {
     ssize_t matching_offset { -1 };
 };
 
-const static TestCase g_test_cases[] = {
+static TestCase const g_test_cases[] = {
     { (u8 const*) {}, 0u, (u8 const*) {}, 0u, 0 },
-    { (const u8[]) { 1, 2, 3 }, 3u, (const u8[]) { 1, 2, 3 }, 3u, 0 },
-    { (const u8[]) { 1, 2, 4 }, 3u, (const u8[]) { 1, 2, 3 }, 3u, -1 },
-    { (u8 const*)"abcdef", 6u, (const u8[]) {}, 0u, 0 },
+    { (u8 const[]) { 1, 2, 3 }, 3u, (u8 const[]) { 1, 2, 3 }, 3u, 0 },
+    { (u8 const[]) { 1, 2, 4 }, 3u, (u8 const[]) { 1, 2, 3 }, 3u, -1 },
+    { (u8 const*)"abcdef", 6u, (u8 const[]) {}, 0u, 0 },
     { (u8 const*)"abcdef", 6u, (u8 const*)"de", 2u, 3 },
-    { (const u8[]) { 0, 1, 2, 5, 2, 5 }, 6u, (const u8[]) { 1 }, 1u, 1 },
-    { (const u8[]) { 0, 1, 2, 5, 2, 5 }, 6u, (const u8[]) { 1, 2 }, 2u, 1 },
-    { (const u8[]) { 0, 1, 1, 2 }, 4u, (const u8[]) { 1, 5 }, 2u, -1 },
-    { (const u8[64]) { 0 }, 64u, (const u8[33]) { 0 }, 33u, 0 },
-    { (const u8[64]) { 0, 1, 1, 2 }, 64u, (const u8[33]) { 1, 1 }, 2u, 1 },
+    { (u8 const[]) { 0, 1, 2, 5, 2, 5 }, 6u, (u8 const[]) { 1 }, 1u, 1 },
+    { (u8 const[]) { 0, 1, 2, 5, 2, 5 }, 6u, (u8 const[]) { 1, 2 }, 2u, 1 },
+    { (u8 const[]) { 0, 1, 1, 2 }, 4u, (u8 const[]) { 1, 5 }, 2u, -1 },
+    { (u8 const[64]) { 0 }, 64u, (u8 const[33]) { 0 }, 33u, 0 },
+    { (u8 const[64]) { 0, 1, 1, 2 }, 64u, (u8 const[33]) { 1, 1 }, 2u, 1 },
 };
 
 TEST_CASE(memmem_search)
