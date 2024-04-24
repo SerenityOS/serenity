@@ -20,6 +20,12 @@ ConnectionFromClient::ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket> sock
 
 void ConnectionFromClient::die()
 {
+    for (auto& [_, job] : m_pending_jobs) {
+        job->cancel();
+    }
+    m_pending_jobs.clear();
+
+    Threading::quit_background_thread();
     Core::EventLoop::current().quit(0);
 }
 
@@ -38,24 +44,19 @@ static void decode_image_to_bitmaps_and_durations_with_decoder(Gfx::ImageDecoder
     }
 }
 
-static void decode_image_to_details(Core::AnonymousBuffer const& encoded_buffer, Optional<Gfx::IntSize> ideal_size, Optional<ByteString> const& known_mime_type, bool& is_animated, u32& loop_count, Vector<Gfx::ShareableBitmap>& bitmaps, Vector<u32>& durations, Gfx::FloatPoint& scale)
+static ErrorOr<ConnectionFromClient::DecodeResult> decode_image_to_details(Core::AnonymousBuffer const& encoded_buffer, Optional<Gfx::IntSize> ideal_size, Optional<ByteString> const& known_mime_type)
 {
-    VERIFY(bitmaps.size() == 0);
-    VERIFY(durations.size() == 0);
+    auto decoder = TRY(Gfx::ImageDecoder::try_create_for_raw_bytes(ReadonlyBytes { encoded_buffer.data<u8>(), encoded_buffer.size() }, known_mime_type));
 
-    auto decoder_or_err = Gfx::ImageDecoder::try_create_for_raw_bytes(ReadonlyBytes { encoded_buffer.data<u8>(), encoded_buffer.size() }, known_mime_type);
-    if (decoder_or_err.is_error() || !decoder_or_err.value()) {
-        dbgln_if(IMAGE_DECODER_DEBUG, "Could not find suitable image decoder plugin for data");
-        return;
-    }
-    auto decoder = decoder_or_err.release_value();
+    if (!decoder)
+        return Error::from_string_literal("Could not find suitable image decoder plugin for data");
 
-    if (!decoder->frame_count()) {
-        dbgln_if(IMAGE_DECODER_DEBUG, "Could not decode image from encoded data");
-        return;
-    }
-    is_animated = decoder->is_animated();
-    loop_count = decoder->loop_count();
+    if (!decoder->frame_count())
+        return Error::from_string_literal("Could not decode image from encoded data");
+
+    ConnectionFromClient::DecodeResult result;
+    result.is_animated = decoder->is_animated();
+    result.loop_count = decoder->loop_count();
 
     if (auto maybe_metadata = decoder->metadata(); maybe_metadata.has_value() && is<Gfx::ExifMetadata>(*maybe_metadata)) {
         auto const& exif = static_cast<Gfx::ExifMetadata const&>(maybe_metadata.value());
@@ -63,31 +64,36 @@ static void decode_image_to_details(Core::AnonymousBuffer const& encoded_buffer,
             auto const x_resolution = exif.x_resolution()->as_double();
             auto const y_resolution = exif.y_resolution()->as_double();
             if (x_resolution < y_resolution)
-                scale.set_y(x_resolution / y_resolution);
+                result.scale.set_y(x_resolution / y_resolution);
             else
-                scale.set_x(y_resolution / x_resolution);
+                result.scale.set_x(y_resolution / x_resolution);
         }
     }
 
-    decode_image_to_bitmaps_and_durations_with_decoder(*decoder, ideal_size, bitmaps, durations);
+    decode_image_to_bitmaps_and_durations_with_decoder(*decoder, move(ideal_size), result.bitmaps, result.durations);
+
+    if (result.bitmaps.is_empty())
+        return Error::from_string_literal("Could not decode image");
+
+    return result;
 }
 
-ConnectionFromClient::Job ConnectionFromClient::make_decode_image_job(i64 image_id, Core::AnonymousBuffer encoded_buffer, Optional<Gfx::IntSize> ideal_size, Optional<ByteString> mime_type)
+NonnullRefPtr<ConnectionFromClient::Job> ConnectionFromClient::make_decode_image_job(i64 image_id, Core::AnonymousBuffer encoded_buffer, Optional<Gfx::IntSize> ideal_size, Optional<ByteString> mime_type)
 {
-    return [strong_this = NonnullRefPtr(*this), image_id, encoded_buffer = move(encoded_buffer), ideal_size = move(ideal_size), mime_type = move(mime_type)]() {
-        bool is_animated = false;
-        u32 loop_count = 0;
-        Gfx::FloatPoint scale { 1, 1 };
-        Vector<Gfx::ShareableBitmap> bitmaps;
-        Vector<u32> durations;
-
-        decode_image_to_details(encoded_buffer, ideal_size, mime_type, is_animated, loop_count, bitmaps, durations, scale);
-        if (bitmaps.is_empty()) {
-            strong_this->async_did_fail_to_decode_image(image_id, "Could not decode image"_string);
-        } else {
-            strong_this->async_did_decode_image(image_id, is_animated, loop_count, bitmaps, durations, scale);
-        }
-    };
+    return Job::construct(
+        [encoded_buffer = move(encoded_buffer), ideal_size = move(ideal_size), mime_type = move(mime_type)](auto&) -> ErrorOr<DecodeResult> {
+            return TRY(decode_image_to_details(encoded_buffer, ideal_size, mime_type));
+        },
+        [strong_this = NonnullRefPtr(*this), image_id](DecodeResult result) -> ErrorOr<void> {
+            strong_this->async_did_decode_image(image_id, result.is_animated, result.loop_count, result.bitmaps, result.durations, result.scale);
+            strong_this->m_pending_jobs.remove(image_id);
+            return {};
+        },
+        [strong_this = NonnullRefPtr(*this), image_id](Error error) -> void {
+            if (strong_this->is_open())
+                strong_this->async_did_fail_to_decode_image(image_id, MUST(String::formatted("Decoding failed: {}", error)));
+            strong_this->m_pending_jobs.remove(image_id);
+        });
 }
 
 Messages::ImageDecoderServer::DecodeImageResponse ConnectionFromClient::decode_image(Core::AnonymousBuffer const& encoded_buffer, Optional<Gfx::IntSize> const& ideal_size, Optional<ByteString> const& mime_type)
@@ -102,19 +108,13 @@ Messages::ImageDecoderServer::DecodeImageResponse ConnectionFromClient::decode_i
 
     m_pending_jobs.set(image_id, make_decode_image_job(image_id, encoded_buffer, ideal_size, mime_type));
 
-    Core::deferred_invoke([strong_this = NonnullRefPtr(*this), image_id]() {
-        if (auto job = strong_this->m_pending_jobs.take(image_id); job.has_value()) {
-            job.value()();
-        }
-    });
-
     return image_id;
 }
 
 void ConnectionFromClient::cancel_decoding(i64 image_id)
 {
     if (auto job = m_pending_jobs.take(image_id); job.has_value()) {
-        async_did_fail_to_decode_image(image_id, "Decoding was canceled"_string);
+        job.value()->cancel();
     }
 }
 

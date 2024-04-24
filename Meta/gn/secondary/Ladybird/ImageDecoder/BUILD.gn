@@ -11,6 +11,7 @@ executable("ImageDecoder") {
     "//Userland/Libraries/LibIPC",
     "//Userland/Libraries/LibImageDecoderClient",
     "//Userland/Libraries/LibMain",
+    "//Userland/Libraries/LibThreading",
   ]
   sources = [
     "//Userland/Services/ImageDecoder/ConnectionFromClient.cpp",

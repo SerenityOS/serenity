@@ -11,6 +11,7 @@
 #include <ImageDecoder/ImageDecoderClientEndpoint.h>
 #include <ImageDecoder/ImageDecoderServerEndpoint.h>
 #include <LibIPC/ConnectionFromClient.h>
+#include <LibThreading/BackgroundAction.h>
 
 namespace ImageDecoder {
 
@@ -23,18 +24,26 @@ public:
 
     virtual void die() override;
 
+    struct DecodeResult {
+        bool is_animated = false;
+        u32 loop_count = 0;
+        Gfx::FloatPoint scale { 1, 1 };
+        Vector<Gfx::ShareableBitmap> bitmaps;
+        Vector<u32> durations;
+    };
+
 private:
-    using Job = Function<void()>;
+    using Job = Threading::BackgroundAction<DecodeResult>;
 
     explicit ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket>);
 
     virtual Messages::ImageDecoderServer::DecodeImageResponse decode_image(Core::AnonymousBuffer const&, Optional<Gfx::IntSize> const& ideal_size, Optional<ByteString> const& mime_type) override;
     virtual void cancel_decoding(i64 image_id) override;
 
-    Job make_decode_image_job(i64 image_id, Core::AnonymousBuffer, Optional<Gfx::IntSize> ideal_size, Optional<ByteString> mime_type);
+    NonnullRefPtr<Job> make_decode_image_job(i64 image_id, Core::AnonymousBuffer, Optional<Gfx::IntSize> ideal_size, Optional<ByteString> mime_type);
 
     i64 m_next_image_id { 0 };
-    HashMap<i64, Job> m_pending_jobs;
+    HashMap<i64, NonnullRefPtr<Job>> m_pending_jobs;
 };
 
 }
