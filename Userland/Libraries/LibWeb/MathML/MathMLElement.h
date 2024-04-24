@@ -20,8 +20,7 @@ class MathMLElement : public DOM::Element
 public:
     virtual ~MathMLElement() override;
 
-    HTML::DOMStringMap* dataset() { return m_dataset.ptr(); }
-    HTML::DOMStringMap const* dataset() const { return m_dataset.ptr(); }
+    [[nodiscard]] JS::NonnullGCPtr<HTML::DOMStringMap> dataset();
 
     virtual Optional<ARIA::Role> default_role() const override;
 

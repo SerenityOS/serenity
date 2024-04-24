@@ -53,8 +53,7 @@ public:
 
     bool cannot_navigate() const;
 
-    DOMStringMap* dataset() { return m_dataset.ptr(); }
-    DOMStringMap const* dataset() const { return m_dataset.ptr(); }
+    [[nodiscard]] JS::NonnullGCPtr<DOMStringMap> dataset();
 
     void focus();
 

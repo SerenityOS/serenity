@@ -23,8 +23,13 @@ void MathMLElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
     WEB_SET_PROTOTYPE_FOR_INTERFACE(MathMLElement);
+}
 
-    m_dataset = HTML::DOMStringMap::create(*this);
+JS::NonnullGCPtr<HTML::DOMStringMap> MathMLElement::dataset()
+{
+    if (!m_dataset)
+        m_dataset = HTML::DOMStringMap::create(*this);
+    return *m_dataset;
 }
 
 Optional<ARIA::Role> MathMLElement::default_role() const
