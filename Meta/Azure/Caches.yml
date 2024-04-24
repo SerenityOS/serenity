@@ -38,9 +38,11 @@ steps:
         displayName: 'Toolchain Compiler Cache'
 
       - script: |
+          CCACHE_DIR=${{ parameters.toolchain_ccache_path }} ccache -M 0
+
           # Reset all ccache modification dates to a known epoch. This provides a baseline that we can prune against.
           find ${{ parameters.toolchain_ccache_path }} | tac | xargs touch -a -m -d "2018-10-10T09:53:07Z"
-          CCACHE_DIR=${{ parameters.toolchain_ccache_path }} ccache -M 0
+
           CCACHE_DIR=${{ parameters.toolchain_ccache_path }} ccache -s
           CCACHE_DIR=${{ parameters.toolchain_ccache_path }} ccache -z
         displayName: 'Configure Toolchain ccache'
@@ -55,9 +57,11 @@ steps:
       displayName: 'Serenity Compiler Cache'
 
     - script: |
+        CCACHE_DIR=${{ parameters.serenity_ccache_path }} ccache -M 0
+
         # Reset all ccache modification dates to a known epoch. This provides a baseline that we can prune against.
         find ${{ parameters.serenity_ccache_path }} | tac | xargs touch -a -m -d "2018-10-10T09:53:07Z"
-        CCACHE_DIR=${{ parameters.serenity_ccache_path }} ccache -M 0
+
         CCACHE_DIR=${{ parameters.serenity_ccache_path }} ccache -s
         CCACHE_DIR=${{ parameters.serenity_ccache_path }} ccache -z
       displayName: 'Configure Serenity ccache'

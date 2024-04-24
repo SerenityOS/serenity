@@ -156,9 +156,11 @@ jobs:
 
       - name: Show ccache stats before build and configure
         run: |
+          ccache -M 0
+
           # Reset all ccache modification dates to a known epoch. This provides a baseline that we can prune against.
           find ${{ github.workspace }}/.ccache | tac | xargs touch -a -m -d "2018-10-10T09:53:07Z"
-          ccache -M 0
+
           ccache -s
           ccache -z
 
