@@ -23,6 +23,9 @@ if (SERENITYOS)
             Arch/aarch64/tls.S
         )
     endif()
+
+    add_library(DynamicLoader_LibELF STATIC ${SOURCES})
+    target_link_libraries(DynamicLoader_LibELF PUBLIC DynamicLoader_CompileOptions)
 endif()
 
 serenity_lib(LibELF elf ${SOURCES})

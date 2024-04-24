@@ -3,19 +3,21 @@ set(LOADER_SOURCES
     misc.cpp
 )
 
-file(GLOB ELF_SOURCES "../Libraries/LibELF/*.cpp")
+add_library(DynamicLoader_CompileOptions INTERFACE)
+target_compile_options(DynamicLoader_CompileOptions INTERFACE -fno-rtti -fpie)
+target_link_options(DynamicLoader_CompileOptions INTERFACE -nostdlib -fpie)
+target_compile_definitions(DynamicLoader_CompileOptions INTERFACE NO_TLS)
+add_dependencies(DynamicLoader_CompileOptions install_libc_headers)
+
 file(GLOB LIBC_SOURCES1 "../Libraries/LibC/*.cpp")
 file(GLOB LIBC_SOURCES2 "../Libraries/LibC/*/*.cpp")
 
 set(ARCH_FOLDER "${SERENITY_ARCH}")
 
 file(GLOB LIBC_SOURCES3 "../Libraries/LibC/arch/${ARCH_FOLDER}/*.S")
-set(ELF_SOURCES ${ELF_SOURCES} "../Libraries/LibELF/Arch/${ARCH_FOLDER}/entry.S" "../Libraries/LibELF/Arch/${ARCH_FOLDER}/plt_trampoline.S" "../Libraries/LibELF/Arch/${ARCH_FOLDER}/tls.cpp")
 set(LIBC_SOURCES3 ${LIBC_SOURCES3} "../Libraries/LibC/arch/${ARCH_FOLDER}/fenv.cpp")
 if ("${SERENITY_ARCH}" STREQUAL "x86_64")
     set(LIBC_SOURCES3 ${LIBC_SOURCES3} "../Libraries/LibC/arch/x86_64/memset.cpp")
-elseif ("${SERENITY_ARCH}" STREQUAL "aarch64")
-    set(ELF_SOURCES ${ELF_SOURCES} "../Libraries/LibELF/Arch/aarch64/tls.S")
 endif()
 
 file(GLOB LIBSYSTEM_SOURCES "../Libraries/LibSystem/*.cpp")
@@ -29,13 +31,11 @@ list(FILTER LIBC_SOURCES1 EXCLUDE REGEX ".*/LibC/(pthread|semaphore)\\.cpp")
 
 add_definitions(-D_DYNAMIC_LOADER)
 
-set(SOURCES ${LOADER_SOURCES} ${AK_SOURCES} ${ELF_SOURCES} ${LIBC_SOURCES1} ${LIBC_SOURCES2} ${LIBC_SOURCES3} ${LIBSYSTEM_SOURCES})
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti -nostdlib -pie -fpie -DNO_TLS")
+set(SOURCES ${LOADER_SOURCES} ${AK_SOURCES} ${LIBC_SOURCES1} ${LIBC_SOURCES2} ${LIBC_SOURCES3} ${LIBSYSTEM_SOURCES})
 
 if (("${SERENITY_ARCH}" STREQUAL "aarch64") OR ("${SERENITY_ARCH}" STREQUAL "riscv64"))
     # On aarch64 and riscv64 the stack protector would be accessed before the Loader can relocate itself.
-    set_source_files_properties(main.cpp ../Libraries/LibELF/Relocation.cpp PROPERTIES COMPILE_FLAGS "-fno-stack-protector")
+    set_source_files_properties(main.cpp PROPERTIES COMPILE_FLAGS "-fno-stack-protector")
 endif()
 
 set_source_files_properties(../Libraries/LibC/ssp.cpp PROPERTIES COMPILE_FLAGS "-fno-stack-protector")
@@ -58,7 +58,9 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
     target_link_libraries(Loader.so PRIVATE clang_rt.builtins)
 endif ()
 
-# Note: Don't confuse the coverage results by instrumenting Loader
-target_link_libraries(Loader.so PRIVATE LibTimeZone NoCoverage)
+target_link_libraries(Loader.so PRIVATE DynamicLoader_CompileOptions DynamicLoader_LibELF LibTimeZone)
 target_link_options(Loader.so PRIVATE LINKER:--no-dynamic-linker)
+# Don't confuse the coverage results by instrumenting Loader
+target_link_libraries(Loader.so PRIVATE NoCoverage)
+
 install(TARGETS Loader.so RUNTIME DESTINATION usr/lib/)
