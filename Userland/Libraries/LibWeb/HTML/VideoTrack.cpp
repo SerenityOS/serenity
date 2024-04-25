@@ -98,6 +98,11 @@ void VideoTrack::pause_video(Badge<HTMLVideoElement>)
     m_playback_manager->pause_playback();
 }
 
+void VideoTrack::stop_video(Badge<HTMLVideoElement>)
+{
+    m_playback_manager->terminate_playback();
+}
+
 Duration VideoTrack::position() const
 {
     return m_playback_manager->current_playback_time();
@@ -141,7 +146,7 @@ void VideoTrack::set_selected(bool selected)
     // no longer in a VideoTrackList object, then the track being selected or unselected has no effect beyond changing the value of
     // the attribute on the VideoTrack object.)
     if (m_video_track_list) {
-        for (auto video_track : m_video_track_list->video_tracks({})) {
+        for (auto video_track : m_video_track_list->video_tracks()) {
             if (video_track.ptr() != this)
                 video_track->m_selected = false;
         }
