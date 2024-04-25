@@ -122,6 +122,7 @@ public:
     void resume_playback();
     void pause_playback();
     void restart_playback();
+    void terminate_playback();
     void seek_to_timestamp(Duration, SeekMode = DEFAULT_SEEK_MODE);
     bool is_playing() const
     {
