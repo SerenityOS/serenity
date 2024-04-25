@@ -12,10 +12,9 @@ if (ANDROID OR IOS)
     set(BUILD_SHARED_LIBS OFF)
 endif()
 
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-
+# FIXME: The rpath steps from lagom_install_rules.cmake do not produce a working binary
+#        in the build directory on macOS.
+#        We need to copy the libs into the build directory bundle as the install rules do.
 set(CMAKE_SKIP_BUILD_RPATH FALSE)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 # See slide 100 of the following ppt :^)
