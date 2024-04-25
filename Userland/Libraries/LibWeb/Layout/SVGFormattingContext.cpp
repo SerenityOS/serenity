@@ -262,6 +262,9 @@ void SVGFormattingContext::layout_svg_element(Box const& child)
         bfc.run(child, LayoutMode::Normal, *m_available_space);
         auto& child_state = m_state.get_mutable(child);
         child_state.set_content_offset(child_state.offset.translated(m_svg_offset));
+        child.for_each_child_of_type<SVGMaskBox>([&](SVGMaskBox const& child) {
+            layout_svg_element(child);
+        });
     } else if (is<SVGGraphicsBox>(child)) {
         layout_graphics_element(static_cast<SVGGraphicsBox const&>(child));
     }
