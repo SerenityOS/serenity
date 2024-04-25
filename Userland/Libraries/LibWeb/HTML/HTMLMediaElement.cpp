@@ -70,6 +70,7 @@ void HTMLMediaElement::initialize(JS::Realm& realm)
 
 void HTMLMediaElement::finalize()
 {
+    Base::finalize();
     document().page().unregister_media_element({}, unique_id());
 }
 
