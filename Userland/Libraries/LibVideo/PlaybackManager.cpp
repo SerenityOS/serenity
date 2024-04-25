@@ -96,11 +96,7 @@ PlaybackManager::PlaybackManager(NonnullOwnPtr<Demuxer>& demuxer, Track video_tr
 
 PlaybackManager::~PlaybackManager()
 {
-    m_stop_decoding.exchange(true);
-    m_decode_wait_condition.broadcast();
-    dbgln_if(PLAYBACK_MANAGER_DEBUG, "Waiting for decode thread to end...");
-    (void)m_decode_thread->join();
-    dbgln_if(PLAYBACK_MANAGER_DEBUG, "Successfully destroyed PlaybackManager.");
+    terminate_playback();
 }
 
 void PlaybackManager::resume_playback()
@@ -115,6 +111,18 @@ void PlaybackManager::pause_playback()
     if (!m_playback_handler->is_playing())
         warnln("Cannot pause.");
     TRY_OR_FATAL_ERROR(m_playback_handler->pause());
+}
+
+void PlaybackManager::terminate_playback()
+{
+    m_stop_decoding.exchange(true);
+    m_decode_wait_condition.broadcast();
+
+    if (m_decode_thread->needs_to_be_joined()) {
+        dbgln_if(PLAYBACK_MANAGER_DEBUG, "Waiting for decode thread to end...");
+        (void)m_decode_thread->join();
+        dbgln_if(PLAYBACK_MANAGER_DEBUG, "Successfully destroyed PlaybackManager.");
+    }
 }
 
 Duration PlaybackManager::current_playback_time()
