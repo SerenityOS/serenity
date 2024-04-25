@@ -653,6 +653,7 @@ set(SOURCES
     WebAssembly/Module.cpp
     WebAssembly/Table.cpp
     WebAssembly/WebAssembly.cpp
+    WebAudio/AudioBuffer.cpp
     WebAudio/AudioContext.cpp
     WebAudio/BaseAudioContext.cpp
     WebDriver/Capabilities.cpp
