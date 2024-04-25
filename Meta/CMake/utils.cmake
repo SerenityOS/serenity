@@ -29,10 +29,7 @@ function(serenity_install_headers target_name)
 endfunction()
 
 function(serenity_install_sources)
-    # TODO: Use cmake_path() when we upgrade the minimum CMake version to 3.20
-    #       https://cmake.org/cmake/help/v3.23/command/cmake_path.html#relative-path
-    string(LENGTH ${SerenityOS_SOURCE_DIR} root_source_dir_length)
-    string(SUBSTRING ${CMAKE_CURRENT_SOURCE_DIR} ${root_source_dir_length} -1 current_source_dir_relative)
+    cmake_path(RELATIVE_PATH CMAKE_CURRENT_SOURCE_DIR BASE_DIRECTORY ${SerenityOS_SOURCE_DIR} OUTPUT_VARIABLE current_source_dir_relative)
     file(GLOB_RECURSE sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*.h" "*.cpp" "*.gml")
     foreach(source ${sources})
         get_filename_component(subdirectory ${source} DIRECTORY)
