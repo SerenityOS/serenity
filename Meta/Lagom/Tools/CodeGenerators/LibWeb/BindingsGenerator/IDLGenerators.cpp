@@ -3830,7 +3830,7 @@ void @namespace_class@::initialize(JS::Realm& realm)
 void @namespace_class@::visit_edges(JS::Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    @name@::visit_edges(visitor);
+    @name@::visit_edges(*this, visitor);
 }
 )~~~");
     }

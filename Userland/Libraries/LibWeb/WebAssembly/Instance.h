@@ -11,8 +11,10 @@
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/GCPtr.h>
 #include <LibJS/Heap/Handle.h>
+#include <LibWasm/AbstractMachine/AbstractMachine.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/PlatformObject.h>
+#include <LibWeb/WebAssembly/WebAssembly.h>
 
 namespace Web::WebAssembly {
 
@@ -26,13 +28,16 @@ public:
     Object const* exports() const { return m_exports.ptr(); }
 
 private:
-    Instance(JS::Realm&, size_t index);
+    Instance(JS::Realm&, NonnullOwnPtr<Wasm::ModuleInstance>);
 
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Visitor&) override;
 
     JS::NonnullGCPtr<Object> m_exports;
-    size_t m_index { 0 };
+    NonnullOwnPtr<Wasm::ModuleInstance> m_module_instance;
+    HashMap<Wasm::FunctionAddress, JS::GCPtr<JS::FunctionObject>> m_function_instances;
+    HashMap<Wasm::MemoryAddress, JS::GCPtr<WebAssembly::Memory>> m_memory_instances;
+    HashMap<Wasm::TableAddress, JS::GCPtr<WebAssembly::Table>> m_table_instances;
 };
 
 }

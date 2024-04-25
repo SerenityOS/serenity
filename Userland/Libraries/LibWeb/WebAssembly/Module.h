@@ -13,6 +13,7 @@
 #include <LibWasm/Types.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/PlatformObject.h>
+#include <LibWeb/WebAssembly/WebAssembly.h>
 
 namespace Web::WebAssembly {
 
@@ -23,15 +24,14 @@ class Module : public Bindings::PlatformObject {
 public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<Module>> construct_impl(JS::Realm&, JS::Handle<WebIDL::BufferSource>& bytes);
 
-    size_t index() const { return m_index; }
-    Wasm::Module const& module() const;
+    NonnullRefPtr<Detail::CompiledWebAssemblyModule> compiled_module() const { return m_compiled_module; }
 
 private:
-    Module(JS::Realm&, size_t index);
+    Module(JS::Realm&, NonnullRefPtr<Detail::CompiledWebAssemblyModule>);
 
     virtual void initialize(JS::Realm&) override;
 
-    size_t m_index { 0 };
+    NonnullRefPtr<Detail::CompiledWebAssemblyModule> m_compiled_module;
 };
 
 }
