@@ -56,7 +56,7 @@ struct WebContentOptions {
     EnableCallgrindProfiling enable_callgrind_profiling { EnableCallgrindProfiling::No };
     EnableGPUPainting enable_gpu_painting { EnableGPUPainting::No };
     IsLayoutTestMode is_layout_test_mode { IsLayoutTestMode::No };
-    UseLagomNetworking use_lagom_networking { UseLagomNetworking::No };
+    UseLagomNetworking use_lagom_networking { UseLagomNetworking::Yes };
     WaitForDebugger wait_for_debugger { WaitForDebugger::No };
     LogAllJSExceptions log_all_js_exceptions { LogAllJSExceptions::No };
     EnableIDLTracing enable_idl_tracing { EnableIDLTracing::No };
