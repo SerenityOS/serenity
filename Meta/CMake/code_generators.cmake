@@ -62,10 +62,7 @@ function(compile_ipc source output)
     add_custom_target(generate_${output_name} DEPENDS ${output})
     add_dependencies(all_generated generate_${output_name})
 
-    # TODO: Use cmake_path() when we upgrade the minimum CMake version to 3.20
-    #       https://cmake.org/cmake/help/v3.23/command/cmake_path.html#relative-path
-    string(LENGTH ${SerenityOS_SOURCE_DIR} root_source_dir_length)
-    string(SUBSTRING ${CMAKE_CURRENT_SOURCE_DIR} ${root_source_dir_length} -1 current_source_dir_relative)
+    cmake_path(RELATIVE_PATH CMAKE_CURRENT_SOURCE_DIR BASE_DIRECTORY ${SerenityOS_SOURCE_DIR} OUTPUT_VARIABLE current_source_dir_relative)
     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${output} DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${current_source_dir_relative}" OPTIONAL)
 endfunction()
 
