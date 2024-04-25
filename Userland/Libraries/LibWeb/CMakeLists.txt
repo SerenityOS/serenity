@@ -483,6 +483,7 @@ set(SOURCES
     Layout/ReplacedBox.cpp
     Layout/SVGBox.cpp
     Layout/SVGFormattingContext.cpp
+    Layout/SVGForeignObjectBox.cpp
     Layout/SVGGeometryBox.cpp
     Layout/SVGGraphicsBox.cpp
     Layout/SVGSVGBox.cpp
@@ -540,6 +541,7 @@ set(SOURCES
     Painting/PaintableFragment.cpp
     Painting/RadioButtonPaintable.cpp
     Painting/RecordingPainter.cpp
+    Painting/SVGForeignObjectPaintable.cpp
     Painting/SVGPathPaintable.cpp
     Painting/SVGGraphicsPaintable.cpp
     Painting/SVGMaskPaintable.cpp
