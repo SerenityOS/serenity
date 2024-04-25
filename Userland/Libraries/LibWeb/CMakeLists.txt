@@ -543,6 +543,7 @@ set(SOURCES
     Painting/SVGPathPaintable.cpp
     Painting/SVGGraphicsPaintable.cpp
     Painting/SVGMaskPaintable.cpp
+    Painting/SVGMaskable.cpp
     Painting/SVGClipPaintable.cpp
     Painting/SVGPaintable.cpp
     Painting/SVGSVGPaintable.cpp
