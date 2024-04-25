@@ -9,7 +9,6 @@
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/Realm.h>
 #include <LibJS/Runtime/VM.h>
-#include <LibWasm/AbstractMachine/AbstractMachine.h>
 #include <LibWeb/Bindings/InstancePrototype.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/WebAssembly/Instance.h>
@@ -29,14 +28,14 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Instance>> Instance::construct_impl(JS::Rea
 
     auto& vm = realm.vm();
 
-    auto index = TRY(Detail::instantiate_module(vm, module.module()));
-    return vm.heap().allocate<Instance>(realm, realm, index);
+    auto module_instance = TRY(Detail::instantiate_module(vm, module.compiled_module()->module));
+    return vm.heap().allocate<Instance>(realm, realm, move(module_instance));
 }
 
-Instance::Instance(JS::Realm& realm, size_t index)
+Instance::Instance(JS::Realm& realm, NonnullOwnPtr<Wasm::ModuleInstance> module_instance)
     : Bindings::PlatformObject(realm)
     , m_exports(Object::create(realm, nullptr))
-    , m_index(index)
+    , m_module_instance(move(module_instance))
 {
 }
 
@@ -47,34 +46,31 @@ void Instance::initialize(JS::Realm& realm)
     Base::initialize(realm);
     WEB_SET_PROTOTYPE_FOR_INTERFACE_WITH_CUSTOM_NAME(Instance, WebAssembly.Instance);
 
-    auto& instance = *Detail::s_instantiated_modules[m_index];
-    auto& cache = Detail::s_module_caches.at(m_index);
-
-    for (auto& export_ : instance.exports()) {
+    for (auto& export_ : m_module_instance->exports()) {
         export_.value().visit(
             [&](Wasm::FunctionAddress const& address) {
-                Optional<JS::GCPtr<JS::FunctionObject>> object = cache.function_instances.get(address);
+                Optional<JS::GCPtr<JS::FunctionObject>> object = m_function_instances.get(address);
                 if (!object.has_value()) {
                     object = Detail::create_native_function(vm, address, export_.name());
-                    cache.function_instances.set(address, *object);
+                    m_function_instances.set(address, *object);
                 }
 
                 m_exports->define_direct_property(export_.name(), *object, JS::default_attributes);
             },
             [&](Wasm::MemoryAddress const& address) {
-                Optional<JS::GCPtr<Memory>> object = cache.memory_instances.get(address);
+                Optional<JS::GCPtr<Memory>> object = m_memory_instances.get(address);
                 if (!object.has_value()) {
                     object = heap().allocate<Memory>(realm, realm, address);
-                    cache.memory_instances.set(address, *object);
+                    m_memory_instances.set(address, *object);
                 }
 
                 m_exports->define_direct_property(export_.name(), *object, JS::default_attributes);
             },
             [&](Wasm::TableAddress const& address) {
-                Optional<JS::GCPtr<Table>> object = cache.table_instances.get(address);
+                Optional<JS::GCPtr<Table>> object = m_table_instances.get(address);
                 if (!object.has_value()) {
                     object = heap().allocate<Table>(realm, realm, address);
-                    cache.table_instances.set(address, *object);
+                    m_table_instances.set(address, *object);
                 }
 
                 m_exports->define_direct_property(export_.name(), *object, JS::default_attributes);
@@ -91,6 +87,9 @@ void Instance::visit_edges(Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_exports);
+    visitor.visit(m_function_instances);
+    visitor.visit(m_memory_instances);
+    visitor.visit(m_table_instances);
 }
 
 }

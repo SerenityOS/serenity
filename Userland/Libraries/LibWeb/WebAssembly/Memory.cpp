@@ -23,12 +23,13 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Memory>> Memory::construct_impl(JS::Realm& 
     Wasm::Limits limits { descriptor.initial, move(descriptor.maximum) };
     Wasm::MemoryType memory_type { move(limits) };
 
-    auto address = Detail::s_abstract_machine.store().allocate(memory_type);
+    auto& cache = Detail::get_cache(realm);
+    auto address = cache.abstract_machine().store().allocate(memory_type);
     if (!address.has_value())
         return vm.throw_completion<JS::TypeError>("Wasm Memory allocation failed"sv);
 
     auto memory_object = vm.heap().allocate<Memory>(realm, realm, *address);
-    Detail::s_abstract_machine.store().get(*address)->successful_grow_hook = [memory_object] {
+    cache.abstract_machine().store().get(*address)->successful_grow_hook = [memory_object] {
         MUST(memory_object->reset_the_memory_buffer());
     };
 
@@ -58,7 +59,8 @@ WebIDL::ExceptionOr<u32> Memory::grow(u32 delta)
 {
     auto& vm = this->vm();
 
-    auto* memory = Detail::s_abstract_machine.store().get(address());
+    auto& context = Detail::get_cache(realm());
+    auto* memory = context.abstract_machine().store().get(address());
     if (!memory)
         return vm.throw_completion<JS::RangeError>("Could not find the memory instance to grow"sv);
 
@@ -103,7 +105,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::ArrayBuffer>> Memory::buffer() const
 // https://webassembly.github.io/spec/js-api/#create-a-memory-buffer
 WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::ArrayBuffer>> Memory::create_a_memory_buffer(JS::VM& vm, JS::Realm& realm, Wasm::MemoryAddress address)
 {
-    auto* memory = Detail::s_abstract_machine.store().get(address);
+    auto& context = Detail::get_cache(realm);
+    auto* memory = context.abstract_machine().store().get(address);
     if (!memory)
         return vm.throw_completion<JS::RangeError>("Could not find the memory instance"sv);
 

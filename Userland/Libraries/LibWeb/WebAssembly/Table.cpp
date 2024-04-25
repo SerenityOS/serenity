@@ -45,12 +45,13 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Table>> Table::construct_impl(JS::Realm& re
     Wasm::Limits limits { descriptor.initial, move(descriptor.maximum) };
     Wasm::TableType table_type { reference_type, move(limits) };
 
-    auto address = Detail::s_abstract_machine.store().allocate(table_type);
+    auto& cache = Detail::get_cache(realm);
+    auto address = cache.abstract_machine().store().allocate(table_type);
     if (!address.has_value())
         return vm.throw_completion<JS::TypeError>("Wasm Table allocation failed"sv);
 
     auto const& reference = reference_value.value().get<Wasm::Reference>();
-    auto& table = *Detail::s_abstract_machine.store().get(*address);
+    auto& table = *cache.abstract_machine().store().get(*address);
     for (auto& element : table.elements())
         element = reference;
 
@@ -74,7 +75,8 @@ WebIDL::ExceptionOr<u32> Table::grow(u32 delta, JS::Value value)
 {
     auto& vm = this->vm();
 
-    auto* table = Detail::s_abstract_machine.store().get(address());
+    auto& cache = Detail::get_cache(realm());
+    auto* table = cache.abstract_machine().store().get(address());
     if (!table)
         return vm.throw_completion<JS::RangeError>("Could not find the memory table to grow"sv);
 
@@ -94,7 +96,8 @@ WebIDL::ExceptionOr<JS::Value> Table::get(u32 index) const
 {
     auto& vm = this->vm();
 
-    auto* table = Detail::s_abstract_machine.store().get(address());
+    auto& cache = Detail::get_cache(realm());
+    auto* table = cache.abstract_machine().store().get(address());
     if (!table)
         return vm.throw_completion<JS::RangeError>("Could not find the memory table"sv);
 
@@ -114,7 +117,8 @@ WebIDL::ExceptionOr<void> Table::set(u32 index, JS::Value value)
 {
     auto& vm = this->vm();
 
-    auto* table = Detail::s_abstract_machine.store().get(address());
+    auto& cache = Detail::get_cache(realm());
+    auto* table = cache.abstract_machine().store().get(address());
     if (!table)
         return vm.throw_completion<JS::RangeError>("Could not find the memory table"sv);
 
@@ -134,7 +138,8 @@ WebIDL::ExceptionOr<u32> Table::length() const
 {
     auto& vm = this->vm();
 
-    auto* table = Detail::s_abstract_machine.store().get(address());
+    auto& cache = Detail::get_cache(realm());
+    auto* table = cache.abstract_machine().store().get(address());
     if (!table)
         return vm.throw_completion<JS::RangeError>("Could not find the memory table"sv);
 
