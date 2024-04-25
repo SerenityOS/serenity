@@ -3703,6 +3703,12 @@ private:
 )~~~");
     }
 
+    if (interface.extended_attributes.contains("WithFinalizer"sv)) {
+        generator.append(R"~~~(
+    virtual void finalize() override;
+)~~~");
+    }
+
     for (auto const& overload_set : interface.overload_sets) {
         auto function_generator = generator.fork();
         function_generator.set("function.name:snakecase", make_input_acceptable_cpp(overload_set.key.to_snakecase()));
@@ -3831,6 +3837,15 @@ void @namespace_class@::visit_edges(JS::Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     @name@::visit_edges(*this, visitor);
+}
+)~~~");
+    }
+
+    if (interface.extended_attributes.contains("WithFinalizer"sv)) {
+        generator.append(R"~~~(
+void @namespace_class@::finalize()
+{
+    @name@::finalize(*this);
 }
 )~~~");
     }
