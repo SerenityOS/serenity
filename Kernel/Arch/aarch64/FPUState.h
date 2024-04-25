@@ -16,4 +16,7 @@ struct [[gnu::aligned(16)]] FPUState {
     u8 buffer[512];
 };
 
+extern "C" void store_fpu_state(FPUState* fpu_state);
+extern "C" void load_fpu_state(FPUState* fpu_state);
+
 }

@@ -27,52 +27,6 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread) __a
 
 Processor* g_current_processor;
 
-static void store_fpu_state(FPUState* fpu_state)
-{
-    asm volatile(
-        "mov x0, %[fpu_state]\n"
-        "stp q0, q1, [x0, #(0 * 16)]\n"
-        "stp q2, q3, [x0, #(2 * 16)]\n"
-        "stp q4, q5, [x0, #(4 * 16)]\n"
-        "stp q6, q7, [x0, #(6 * 16)]\n"
-        "stp q8, q9, [x0, #(8 * 16)]\n"
-        "stp q10, q11, [x0, #(10 * 16)]\n"
-        "stp q12, q13, [x0, #(12 * 16)]\n"
-        "stp q14, q15, [x0, #(14 * 16)]\n"
-        "stp q16, q17, [x0, #(16 * 16)]\n"
-        "stp q18, q19, [x0, #(18 * 16)]\n"
-        "stp q20, q21, [x0, #(20 * 16)]\n"
-        "stp q22, q23, [x0, #(22 * 16)]\n"
-        "stp q24, q25, [x0, #(24 * 16)]\n"
-        "stp q26, q27, [x0, #(26 * 16)]\n"
-        "stp q28, q29, [x0, #(28 * 16)]\n"
-        "stp q30, q31, [x0, #(30 * 16)]\n"
-        "\n" ::[fpu_state] "r"(fpu_state));
-}
-
-static void load_fpu_state(FPUState* fpu_state)
-{
-    asm volatile(
-        "mov x0, %[fpu_state]\n"
-        "ldp q0, q1, [x0, #(0 * 16)]\n"
-        "ldp q2, q3, [x0, #(2 * 16)]\n"
-        "ldp q4, q5, [x0, #(4 * 16)]\n"
-        "ldp q6, q7, [x0, #(6 * 16)]\n"
-        "ldp q8, q9, [x0, #(8 * 16)]\n"
-        "ldp q10, q11, [x0, #(10 * 16)]\n"
-        "ldp q12, q13, [x0, #(12 * 16)]\n"
-        "ldp q14, q15, [x0, #(14 * 16)]\n"
-        "ldp q16, q17, [x0, #(16 * 16)]\n"
-        "ldp q18, q19, [x0, #(18 * 16)]\n"
-        "ldp q20, q21, [x0, #(20 * 16)]\n"
-        "ldp q22, q23, [x0, #(22 * 16)]\n"
-        "ldp q24, q25, [x0, #(24 * 16)]\n"
-        "ldp q26, q27, [x0, #(26 * 16)]\n"
-        "ldp q28, q29, [x0, #(28 * 16)]\n"
-        "ldp q30, q31, [x0, #(30 * 16)]\n"
-        "\n" ::[fpu_state] "r"(fpu_state));
-}
-
 template<typename T>
 void ProcessorBase<T>::early_initialize(u32 cpu)
 {
