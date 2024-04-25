@@ -7,11 +7,13 @@
 #pragma once
 
 #include <LibWeb/Layout/SVGGraphicsBox.h>
+#include <LibWeb/Painting/SVGMaskable.h>
 #include <LibWeb/Painting/SVGPaintable.h>
 
 namespace Web::Painting {
 
-class SVGGraphicsPaintable : public SVGPaintable {
+class SVGGraphicsPaintable : public SVGPaintable
+    , public SVGMaskable {
     JS_CELL(SVGGraphicsPaintable, SVGPaintable);
 
 public:
@@ -49,9 +51,10 @@ public:
 
     Layout::SVGGraphicsBox const& layout_box() const;
 
-    virtual Optional<CSSPixelRect> get_masking_area() const override;
-    virtual Optional<Gfx::Bitmap::MaskKind> get_mask_type() const override;
-    virtual RefPtr<Gfx::Bitmap> calculate_mask(PaintContext&, CSSPixelRect const& masking_area) const override;
+    virtual JS::GCPtr<DOM::Node const> dom_node_of_svg() const override { return dom_node(); }
+    virtual Optional<CSSPixelRect> get_masking_area() const override { return get_masking_area_of_svg(); }
+    virtual Optional<Gfx::Bitmap::MaskKind> get_mask_type() const override { return get_mask_type_of_svg(); }
+    virtual RefPtr<Gfx::Bitmap> calculate_mask(PaintContext& paint_context, CSSPixelRect const& masking_area) const override { return calculate_mask_of_svg(paint_context, masking_area); }
 
     void set_computed_transforms(ComputedTransforms computed_transforms)
     {
