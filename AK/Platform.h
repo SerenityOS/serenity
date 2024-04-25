@@ -7,6 +7,10 @@
 
 #pragma once
 
+#if __has_include(<features.h>)
+#    include <features.h>
+#endif
+
 #ifndef USING_AK_GLOBALLY
 #    define USING_AK_GLOBALLY 1
 #endif
