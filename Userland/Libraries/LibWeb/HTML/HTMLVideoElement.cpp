@@ -15,6 +15,7 @@
 #include <LibWeb/Fetch/Infrastructure/HTTP/Responses.h>
 #include <LibWeb/HTML/HTMLVideoElement.h>
 #include <LibWeb/HTML/VideoTrack.h>
+#include <LibWeb/HTML/VideoTrackList.h>
 #include <LibWeb/Layout/VideoBox.h>
 #include <LibWeb/Painting/Paintable.h>
 #include <LibWeb/Platform/ImageCodecPlugin.h>
@@ -34,6 +35,14 @@ void HTMLVideoElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
     WEB_SET_PROTOTYPE_FOR_INTERFACE(HTMLVideoElement);
+}
+
+void HTMLVideoElement::finalize()
+{
+    Base::finalize();
+
+    for (auto video_track : video_tracks()->video_tracks())
+        video_track->stop_video({});
 }
 
 void HTMLVideoElement::visit_edges(Cell::Visitor& visitor)

@@ -25,6 +25,7 @@ public:
 
     void play_video(Badge<HTMLVideoElement>);
     void pause_video(Badge<HTMLVideoElement>);
+    void stop_video(Badge<HTMLVideoElement>);
 
     Duration position() const;
     Duration duration() const;
