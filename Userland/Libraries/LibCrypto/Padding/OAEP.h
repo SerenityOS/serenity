@@ -78,6 +78,8 @@ public:
     template<typename HashFunction, typename MaskGenerationFunction>
     static ErrorOr<ByteBuffer> eme_encode(ReadonlyBytes message, ReadonlyBytes label, u32 rsa_modulus_n, Function<void(Bytes)> seed_function = fill_with_random)
     {
+        dbgln("encode");
+
         // FIXME: 1. If the length of L is greater than the input limitation for the
         //           hash function (2^61 - 1 octets for SHA-1), output "label too
         //           long" and stop.
@@ -130,6 +132,13 @@ public:
         TRY(em.try_append(0x00));
         TRY(em.try_append(masked_seed));
         TRY(em.try_append(masked_db));
+
+        dbgln("seed: {}", seed.span());
+        dbgln("db: {}", db.span());
+        dbgln("masked_db: {}", masked_db.span());
+        dbgln("seed_mask: {}", seed_mask.span());
+        dbgln("masked_seed: {}", masked_seed.span());
+        dbgln("EM: {}", em.span());
 
         // 12. Output EM.
         return em;
@@ -194,6 +203,103 @@ public:
             return Error::from_string_view("decoding error"sv);
 
         // 11. Output M.
+        return message;
+    }
+
+    // https://www.rfc-editor.org/rfc/rfc3447#section-7.1.2
+    template<typename HashFunction, typename MaskGenerationFunction>
+    static ErrorOr<ByteBuffer> eme_decode(ReadonlyBytes encoded_message, ReadonlyBytes label, u32 rsa_modulus_n)
+    {
+        dbgln("decode");
+
+        auto h_len = HashFunction::digest_size();
+        auto k = rsa_modulus_n;
+
+        // 1. If the label L is not provided, let L be the empty string.
+        // Let lHash = Hash(L), an octet string of length hLen (see the note in Section 7.1.1).
+        HashFunction hash;
+        hash.update(label);
+        auto digest = hash.digest();
+        auto l_hash = digest.bytes();
+
+        // 2. Separate the encoded message EM into
+        //    a single octet Y,
+        //    an octet string maskedSeed of length hLen,
+        //    and an octet string maskedDB of length k - hLen - 1
+        //    as EM = Y || maskedSeed || maskedDB.
+        auto y = encoded_message[0];
+        auto masked_seed = encoded_message.slice(1, h_len);
+        auto masked_db = encoded_message.slice(h_len + 1, k - h_len - 1);
+
+        dbgln("EM: {}", encoded_message);
+
+        // 3. Let seedMask = MGF(maskedDB, hLen).
+        auto seed_mask = TRY(MaskGenerationFunction::template mgf1<HashFunction>(masked_db, h_len));
+
+        dbgln("seed_mask: {}", seed_mask.span());
+
+        // 4. Let seed = maskedSeed \xor seedMask.
+        auto seed = TRY(ByteBuffer::xor_buffers(masked_seed, seed_mask));
+
+        dbgln("seed: {}", seed.span());
+
+        // 5. Let dbMask = MGF(seed, k - hLen - 1).
+        auto db_mask = TRY(MaskGenerationFunction::template mgf1<HashFunction>(seed, k - h_len - 1));
+
+        dbgln("db_mask: {}", db_mask.span());
+
+        // 6. Let DB = maskedDB \xor dbMask.
+        auto db = TRY(ByteBuffer::xor_buffers(masked_db, db_mask));
+
+        dbgln("db: {}", db.span());
+
+        // 7. Separate DB into
+        // an octet string lHash' of length hLen,
+        // a (possibly empty) padding string PS consisting of octets withhexadecimal value 0x00,
+        // and a message M
+        // as DB = lHash' || PS || 0x01 || M.
+        auto l_hash_prime = TRY(db.slice(0, h_len));
+
+        dbgln("hash_prime: {}", l_hash_prime.span());
+
+        size_t i = h_len;
+        for (; i < db.size(); ++i) {
+            if (db[i] == 0x01)
+                break;
+        }
+
+        auto message = TRY(db.slice(i + 1, db.size() - i - 1));
+
+        dbgln("DB: {}", db.span());
+        dbgln("lHash: {}", l_hash);
+        dbgln("lHash': {}", l_hash_prime.span());
+        dbgln("M: {}", message.span());
+
+        // NOTE: We have to make sure to do all these steps before returning an error due to timing attacks
+        bool is_valid = true;
+
+        // If there is no octet with hexadecimal value 0x01 to separate PS from M,
+        if (i == db.size())
+            is_valid = false;
+
+        dbgln("missing 0x01 separator? {}", is_valid);
+
+        // if lHash does not equal lHash',
+        if (l_hash_prime.span() != l_hash)
+            is_valid = false;
+
+        dbgln("wrong hash? {}", is_valid);
+
+        // if Y is nonzero, output "decryption error" and stop.
+        if (y != 0x00)
+            is_valid = false;
+
+        dbgln("non-zero Y? {}", is_valid);
+
+        if (!is_valid)
+            return Error::from_string_view("decryption error"sv);
+
+        // 8. Output the message M.
         return message;
     }
 };
