@@ -48,6 +48,12 @@ void visit_edges(JS::Object& object, JS::Cell::Visitor& visitor)
     }
 }
 
+void finalize(JS::Object& object)
+{
+    auto& global_object = HTML::relevant_global_object(object);
+    Detail::s_caches.remove(global_object);
+}
+
 // https://webassembly.github.io/spec/js-api/#dom-webassembly-validate
 bool validate(JS::VM& vm, JS::Handle<WebIDL::BufferSource>& bytes)
 {

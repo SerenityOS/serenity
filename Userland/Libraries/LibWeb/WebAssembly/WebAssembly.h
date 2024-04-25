@@ -19,6 +19,7 @@
 namespace Web::WebAssembly {
 
 void visit_edges(JS::Object&, JS::Cell::Visitor&);
+void finalize(JS::Object&);
 
 bool validate(JS::VM&, JS::Handle<WebIDL::BufferSource>& bytes);
 WebIDL::ExceptionOr<JS::Value> compile(JS::VM&, JS::Handle<WebIDL::BufferSource>& bytes);
