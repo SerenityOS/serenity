@@ -7,6 +7,7 @@
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/HTML/HTMLMediaElement.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/WebAudio/AudioContext.h>
 #include <LibWeb/WebIDL/Promise.h>
 
@@ -107,7 +108,10 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> AudioContext::resume()
     auto& realm = this->realm();
     auto& vm = realm.vm();
 
-    // FIXME: 1. If this's relevant global object's associated Document is not fully active then return a promise rejected with "InvalidStateError" DOMException.
+    // 1. If this's relevant global object's associated Document is not fully active then return a promise rejected with "InvalidStateError" DOMException.
+    auto const& associated_document = verify_cast<HTML::Window>(HTML::relevant_global_object(*this)).associated_document();
+    if (!associated_document.is_fully_active())
+        return WebIDL::InvalidStateError::create(realm, "Document is not fully active"_fly_string);
 
     // 2. Let promise be a new Promise.
     auto promise = WebIDL::create_promise(realm);
@@ -189,7 +193,10 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> AudioContext::suspend()
     auto& realm = this->realm();
     auto& vm = realm.vm();
 
-    // FIXME: 1. If this's relevant global object's associated Document is not fully active then return a promise rejected with "InvalidStateError" DOMException.
+    // 1. If this's relevant global object's associated Document is not fully active then return a promise rejected with "InvalidStateError" DOMException.
+    auto const& associated_document = verify_cast<HTML::Window>(HTML::relevant_global_object(*this)).associated_document();
+    if (!associated_document.is_fully_active())
+        return WebIDL::InvalidStateError::create(realm, "Document is not fully active"_fly_string);
 
     // 2. Let promise be a new Promise.
     auto promise = WebIDL::create_promise(realm);
@@ -243,7 +250,10 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> AudioContext::close()
 {
     auto& realm = this->realm();
 
-    // FIXME: 1. If this's relevant global object's associated Document is not fully active then return a promise rejected with "InvalidStateError" DOMException.
+    // 1. If this's relevant global object's associated Document is not fully active then return a promise rejected with "InvalidStateError" DOMException.
+    auto const& associated_document = verify_cast<HTML::Window>(HTML::relevant_global_object(*this)).associated_document();
+    if (!associated_document.is_fully_active())
+        return WebIDL::InvalidStateError::create(realm, "Document is not fully active"_fly_string);
 
     // 2. Let promise be a new Promise.
     auto promise = WebIDL::create_promise(realm);
