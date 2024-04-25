@@ -111,6 +111,11 @@ void InlineLevelIterator::compute_next()
         return;
     do {
         m_next_node = next_inline_node_in_pre_order(*m_next_node, m_containing_block);
+        if (m_next_node && m_next_node->is_svg_mask_box()) {
+            // NOTE: It is possible to encounter SVGMaskBox nodes while doing layout of formatting context established by <foreignObject> with a mask.
+            //       We should skip and let SVGFormattingContext take care of them.
+            m_next_node = m_next_node->next_sibling();
+        }
     } while (m_next_node && (!m_next_node->is_inline() && !m_next_node->is_out_of_flow(m_inline_formatting_context)));
 }
 
