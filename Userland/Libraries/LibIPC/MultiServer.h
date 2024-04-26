@@ -23,6 +23,11 @@ public:
         return adopt_nonnull_own_or_enomem(new (nothrow) MultiServer(move(server)));
     }
 
+    static ErrorOr<NonnullOwnPtr<MultiServer>> try_create(NonnullRefPtr<Core::LocalServer> server)
+    {
+        return adopt_nonnull_own_or_enomem(new (nothrow) MultiServer(move(server)));
+    }
+
     Function<void(ConnectionFromClientType&)> on_new_client;
 
 private:
