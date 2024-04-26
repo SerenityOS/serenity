@@ -47,6 +47,17 @@ ErrorOr<void> LocalServer::take_over_from_system_server(ByteString const& socket
     return {};
 }
 
+ErrorOr<void> LocalServer::take_over_fd(int socket_fd)
+{
+    if (m_listening)
+        return Error::from_string_literal("Core::LocalServer: Can't perform socket takeover when already listening");
+
+    m_fd = socket_fd;
+    m_listening = true;
+    setup_notifier();
+    return {};
+}
+
 void LocalServer::setup_notifier()
 {
     m_notifier = Notifier::construct(m_fd, Notifier::Type::Read, this);
