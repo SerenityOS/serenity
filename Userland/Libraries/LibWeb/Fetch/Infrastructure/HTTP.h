@@ -37,6 +37,6 @@ enum class HttpQuotedStringExtractValue {
     Yes,
 };
 
-ErrorOr<String> collect_an_http_quoted_string(GenericLexer& lexer, HttpQuotedStringExtractValue extract_value = HttpQuotedStringExtractValue::No);
+[[nodiscard]] String collect_an_http_quoted_string(GenericLexer& lexer, HttpQuotedStringExtractValue extract_value = HttpQuotedStringExtractValue::No);
 
 }

@@ -150,7 +150,7 @@ Optional<Vector<String>> get_decode_and_split_header_value(ReadonlyBytes value)
             // 1. If the code point at position within input is U+0022 ("), then:
             if (lexer.peek() == '"') {
                 // 1. Append the result of collecting an HTTP quoted string from input, given position, to temporaryValue.
-                temporary_value_builder.append(MUST(collect_an_http_quoted_string(lexer)));
+                temporary_value_builder.append(collect_an_http_quoted_string(lexer));
 
                 // 2. If position is not past the end of input, then continue.
                 if (!lexer.is_eof())
