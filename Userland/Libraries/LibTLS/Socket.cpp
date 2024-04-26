@@ -66,6 +66,7 @@ ErrorOr<NonnullOwnPtr<TLSv12>> TLSv12::connect(ByteString const& host, u16 port,
     };
 
     TRY(promise->await());
+    tls_socket->m_context.should_expect_successful_read = true;
     return tls_socket;
 }
 
@@ -83,6 +84,7 @@ ErrorOr<NonnullOwnPtr<TLSv12>> TLSv12::connect(ByteString const& host, Core::Soc
         promise->reject(AK::Error::from_string_view(enum_to_string(alert)));
     };
     TRY(promise->await());
+    tls_socket->m_context.should_expect_successful_read = true;
     return tls_socket;
 }
 
@@ -174,7 +176,7 @@ ErrorOr<void> TLSv12::read_from_socket()
         consume(read_bytes);
     } while (!read_bytes.is_empty() && !m_context.critical_error);
 
-    if (read_bytes.is_empty()) {
+    if (m_context.should_expect_successful_read && read_bytes.is_empty()) {
         // read_some() returned an empty span, this is either an EOF (from improper closure)
         // or some sort of weird even that is showing itself as an EOF.
         // To guard against servers closing the connection weirdly or just improperly, make sure

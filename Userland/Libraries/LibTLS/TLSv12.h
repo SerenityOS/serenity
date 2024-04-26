@@ -271,6 +271,7 @@ struct Context {
     u64 local_sequence_number { 0 };
 
     ConnectionStatus connection_status { ConnectionStatus::Disconnected };
+    bool should_expect_successful_read { false };
     u8 critical_error { 0 };
     Error error_code { Error::NoError };
 
