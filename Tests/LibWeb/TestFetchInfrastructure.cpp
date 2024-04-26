@@ -16,14 +16,14 @@ TEST_CASE(collect_an_http_quoted_string)
         auto test = "\"\""_string;
         GenericLexer lexer { test };
 
-        auto result = MUST(Web::Fetch::Infrastructure::collect_an_http_quoted_string(lexer));
+        auto result = Web::Fetch::Infrastructure::collect_an_http_quoted_string(lexer);
         EXPECT_EQ(result, "\"\""_string);
     }
     {
         auto test = "\"abc\""_string;
         GenericLexer lexer { test };
 
-        auto result = MUST(Web::Fetch::Infrastructure::collect_an_http_quoted_string(lexer));
+        auto result = Web::Fetch::Infrastructure::collect_an_http_quoted_string(lexer);
         EXPECT_EQ(result, "\"abc\""_string);
     }
     {
@@ -32,7 +32,7 @@ TEST_CASE(collect_an_http_quoted_string)
         GenericLexer lexer { test };
         lexer.ignore(4);
 
-        auto result = MUST(Web::Fetch::Infrastructure::collect_an_http_quoted_string(lexer));
+        auto result = Web::Fetch::Infrastructure::collect_an_http_quoted_string(lexer);
         EXPECT_EQ(result, "\"abc\""_string);
     }
     {
@@ -41,7 +41,7 @@ TEST_CASE(collect_an_http_quoted_string)
         GenericLexer lexer { test };
         lexer.ignore(4);
 
-        auto result = MUST(Web::Fetch::Infrastructure::collect_an_http_quoted_string(lexer));
+        auto result = Web::Fetch::Infrastructure::collect_an_http_quoted_string(lexer);
         EXPECT_EQ(result, "\"abc\""_string);
     }
     {
@@ -50,14 +50,14 @@ TEST_CASE(collect_an_http_quoted_string)
         GenericLexer lexer { test };
         lexer.ignore(4);
 
-        auto result = MUST(Web::Fetch::Infrastructure::collect_an_http_quoted_string(lexer));
+        auto result = Web::Fetch::Infrastructure::collect_an_http_quoted_string(lexer);
         EXPECT_EQ(result, "\"abc\""_string);
     }
     {
         auto test = "\"abc\" bar"_string;
         GenericLexer lexer { test };
 
-        auto result = MUST(Web::Fetch::Infrastructure::collect_an_http_quoted_string(lexer));
+        auto result = Web::Fetch::Infrastructure::collect_an_http_quoted_string(lexer);
         EXPECT_EQ(result, "\"abc\""_string);
     }
 }

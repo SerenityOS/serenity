@@ -12,7 +12,7 @@
 namespace Web::Fetch::Infrastructure {
 
 // https://fetch.spec.whatwg.org/#collect-an-http-quoted-string
-ErrorOr<String> collect_an_http_quoted_string(GenericLexer& lexer, HttpQuotedStringExtractValue extract_value)
+String collect_an_http_quoted_string(GenericLexer& lexer, HttpQuotedStringExtractValue extract_value)
 {
     // To collect an HTTP quoted string from a string input, given a position variable position and optionally an extract-value flag, run these steps:
     // 1. Let positionStart be position.
@@ -69,10 +69,10 @@ ErrorOr<String> collect_an_http_quoted_string(GenericLexer& lexer, HttpQuotedStr
 
     // 6. If the extract-value flag is set, then return value.
     if (extract_value == HttpQuotedStringExtractValue::Yes)
-        return value.to_string();
+        return MUST(value.to_string());
 
     // 7. Return the code points from positionStart to position, inclusive, within input.
-    return String::from_utf8(lexer.input().substring_view(position_start, lexer.tell() - position_start));
+    return MUST(String::from_utf8(lexer.input().substring_view(position_start, lexer.tell() - position_start)));
 }
 
 }
