@@ -659,6 +659,7 @@ set(SOURCES
     WebAudio/AudioBuffer.cpp
     WebAudio/AudioContext.cpp
     WebAudio/BaseAudioContext.cpp
+    WebAudio/OfflineAudioContext.cpp
     WebDriver/Capabilities.cpp
     WebDriver/Client.cpp
     WebDriver/Contexts.cpp
