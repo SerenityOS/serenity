@@ -325,7 +325,8 @@ void PageClient::page_did_request_scroll_to(Web::CSSPixelPoint scroll_position)
 
 void PageClient::page_did_enter_tooltip_area(Web::CSSPixelPoint content_position, ByteString const& title)
 {
-    client().async_did_enter_tooltip_area(m_id, { content_position.x().to_int(), content_position.y().to_int() }, title);
+    auto device_position = page().css_to_device_point(content_position);
+    client().async_did_enter_tooltip_area(m_id, { device_position.x(), device_position.y() }, title);
 }
 
 void PageClient::page_did_leave_tooltip_area()
