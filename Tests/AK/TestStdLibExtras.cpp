@@ -20,11 +20,47 @@ TEST_CASE(ceil_div)
     EXPECT_EQ(ceil_div(3, 1), 3);
     EXPECT_EQ(ceil_div(4, 1), 4);
 
+    EXPECT_EQ(ceil_div(-0, 1), 0);
+    EXPECT_EQ(ceil_div(-1, 1), -1);
+    EXPECT_EQ(ceil_div(-2, 1), -2);
+    EXPECT_EQ(ceil_div(-3, 1), -3);
+    EXPECT_EQ(ceil_div(-4, 1), -4);
+
+    EXPECT_EQ(ceil_div(0, -1), 0);
+    EXPECT_EQ(ceil_div(1, -1), -1);
+    EXPECT_EQ(ceil_div(2, -1), -2);
+    EXPECT_EQ(ceil_div(3, -1), -3);
+    EXPECT_EQ(ceil_div(4, -1), -4);
+
+    EXPECT_EQ(ceil_div(-0, -1), 0);
+    EXPECT_EQ(ceil_div(-1, -1), 1);
+    EXPECT_EQ(ceil_div(-2, -1), 2);
+    EXPECT_EQ(ceil_div(-3, -1), 3);
+    EXPECT_EQ(ceil_div(-4, -1), 4);
+
     EXPECT_EQ(ceil_div(0, 2), 0);
     EXPECT_EQ(ceil_div(1, 2), 1);
     EXPECT_EQ(ceil_div(2, 2), 1);
     EXPECT_EQ(ceil_div(3, 2), 2);
     EXPECT_EQ(ceil_div(4, 2), 2);
+
+    EXPECT_EQ(ceil_div(-0, 2), 0);
+    EXPECT_EQ(ceil_div(-1, 2), 0);
+    EXPECT_EQ(ceil_div(-2, 2), -1);
+    EXPECT_EQ(ceil_div(-3, 2), -1);
+    EXPECT_EQ(ceil_div(-4, 2), -2);
+
+    EXPECT_EQ(ceil_div(0, -2), 0);
+    EXPECT_EQ(ceil_div(1, -2), 0);
+    EXPECT_EQ(ceil_div(2, -2), -1);
+    EXPECT_EQ(ceil_div(3, -2), -1);
+    EXPECT_EQ(ceil_div(4, -2), -2);
+
+    EXPECT_EQ(ceil_div(-0, -2), 0);
+    EXPECT_EQ(ceil_div(-1, -2), 1);
+    EXPECT_EQ(ceil_div(-2, -2), 1);
+    EXPECT_EQ(ceil_div(-3, -2), 2);
+    EXPECT_EQ(ceil_div(-4, -2), 2);
 }
 
 TEST_CASE(mix)
