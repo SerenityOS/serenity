@@ -109,7 +109,7 @@ public:
     [[nodiscard]] Optional<URL::URL const&> url() const;
     [[nodiscard]] ErrorOr<Optional<URL::URL>> location_url(Optional<String> const& request_fragment) const;
 
-    [[nodiscard]] WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> clone(JS::Realm&) const;
+    [[nodiscard]] JS::NonnullGCPtr<Response> clone(JS::Realm&) const;
 
     [[nodiscard]] JS::NonnullGCPtr<Response> unsafe_response();
 
@@ -227,7 +227,7 @@ class BasicFilteredResponse final : public FilteredResponse {
     JS_DECLARE_ALLOCATOR(BasicFilteredResponse);
 
 public:
-    [[nodiscard]] static ErrorOr<JS::NonnullGCPtr<BasicFilteredResponse>> create(JS::VM&, JS::NonnullGCPtr<Response>);
+    [[nodiscard]] static JS::NonnullGCPtr<BasicFilteredResponse> create(JS::VM&, JS::NonnullGCPtr<Response>);
 
     [[nodiscard]] virtual Type type() const override { return Type::Basic; }
     [[nodiscard]] virtual JS::NonnullGCPtr<HeaderList> header_list() const override { return m_header_list; }
@@ -246,7 +246,7 @@ class CORSFilteredResponse final : public FilteredResponse {
     JS_DECLARE_ALLOCATOR(CORSFilteredResponse);
 
 public:
-    [[nodiscard]] static ErrorOr<JS::NonnullGCPtr<CORSFilteredResponse>> create(JS::VM&, JS::NonnullGCPtr<Response>);
+    [[nodiscard]] static JS::NonnullGCPtr<CORSFilteredResponse> create(JS::VM&, JS::NonnullGCPtr<Response>);
 
     [[nodiscard]] virtual Type type() const override { return Type::CORS; }
     [[nodiscard]] virtual JS::NonnullGCPtr<HeaderList> header_list() const override { return m_header_list; }
