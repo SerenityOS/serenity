@@ -173,4 +173,75 @@ private:
     Vector<u8> m_output {};
 };
 
+class LzwCompressor : private Details::LzwState {
+public:
+    static ErrorOr<ByteBuffer> compress_all(ReadonlyBytes bytes, u8 initial_code_size)
+    {
+        LzwCompressor compressor { initial_code_size };
+        AllocatingMemoryStream buffer;
+        LittleEndianOutputBitStream output_stream { MaybeOwned<Stream>(buffer) };
+
+        u16 const clear_code = compressor.add_control_code();
+        u16 const end_of_data_code = compressor.add_control_code();
+
+        TRY(output_stream.write_bits(clear_code, compressor.m_code_size));
+
+        u32 last_offset = 0;
+
+        while (last_offset < bytes.size()) {
+            ReadonlyBytes current_symbol {};
+            u16 current_code {};
+
+            if (compressor.m_code_table.size() == max_table_size - 2) {
+                TRY(output_stream.write_bits(clear_code, compressor.m_code_size));
+                compressor.reset();
+            }
+
+            bool found_symbol = false;
+
+            for (u32 symbol_size = 1; last_offset + symbol_size <= bytes.size(); ++symbol_size) {
+                current_symbol = bytes.slice(last_offset, symbol_size);
+                auto const new_code = compressor.code_for_symbol(current_symbol);
+
+                if (new_code.has_value()) {
+                    current_code = *new_code;
+                } else {
+                    found_symbol = true;
+                    break;
+                }
+            }
+
+            TRY(output_stream.write_bits(current_code, compressor.m_code_size));
+
+            if (found_symbol) {
+                compressor.extend_code_table(Vector(current_symbol));
+                current_symbol = current_symbol.trim(current_symbol.size() - 1);
+            }
+            last_offset += current_symbol.size();
+        }
+
+        TRY(output_stream.write_bits(end_of_data_code, compressor.m_code_size));
+        TRY(output_stream.align_to_byte_boundary());
+        TRY(output_stream.flush_buffer_to_stream());
+
+        return TRY(buffer.read_until_eof());
+    }
+
+private:
+    LzwCompressor(u8 initial_code_size)
+        : Details::LzwState(initial_code_size, 1)
+    {
+    }
+
+    Optional<u16> code_for_symbol(ReadonlyBytes bytes)
+    {
+        for (u16 i = 0; i < m_code_table.size(); ++i) {
+            if (m_code_table[i].span() == bytes)
+                return i;
+        }
+
+        return OptionalNone {};
+    }
+};
+
 }
