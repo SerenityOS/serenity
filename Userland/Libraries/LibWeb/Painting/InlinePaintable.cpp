@@ -46,8 +46,16 @@ Optional<CSSPixelPoint> InlinePaintable::enclosing_scroll_frame_offset() const
 
 Optional<CSSPixelRect> InlinePaintable::clip_rect() const
 {
-    if (m_enclosing_clip_frame)
-        return m_enclosing_clip_frame->rect();
+    if (m_enclosing_clip_frame) {
+        auto rect = m_enclosing_clip_frame->rect();
+
+        // NOTE: Since the painting command executor applies a CSS transform and the clip rect is calculated
+        //       with this transform taken into account, we need to remove the transform from the clip rect.
+        //       Otherwise, the transform will be applied twice to the clip rect.
+        auto combined_transform = compute_combined_css_transform();
+        rect.translate_by(-combined_transform.translation().to_type<CSSPixels>());
+        return rect;
+    }
     return {};
 }
 
