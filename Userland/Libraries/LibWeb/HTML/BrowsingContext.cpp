@@ -101,7 +101,8 @@ WebIDL::ExceptionOr<BrowsingContext::BrowsingContextAndDocument> BrowsingContext
     // 4. Set browsingContext and document be the result of creating a new browsing context and document with opener's active document, null, and group.
     auto [browsing_context, document] = TRY(create_a_new_browsing_context_and_document(page, opener->active_document(), nullptr, *group));
 
-    // FIXME: 5. Set browsingContext's is auxiliary to true.
+    // 5. Set browsingContext's is auxiliary to true.
+    browsing_context->m_is_auxiliary = true;
 
     // 6. Append browsingContext to group.
     group->append(browsing_context);
@@ -109,9 +110,11 @@ WebIDL::ExceptionOr<BrowsingContext::BrowsingContextAndDocument> BrowsingContext
     // 7. Set browsingContext's opener browsing context to opener.
     browsing_context->set_opener_browsing_context(opener);
 
-    // FIXME: 8. Set browsingContext's virtual browsing context group ID to openerTopLevelBrowsingContext's virtual browsing context group ID.
+    // 8. Set browsingContext's virtual browsing context group ID to openerTopLevelBrowsingContext's virtual browsing context group ID.
+    browsing_context->m_virtual_browsing_context_group_id = opener_top_level_browsing_context->m_virtual_browsing_context_group_id;
 
-    // FIXME: 9. Set browsingContext's opener origin at creation to opener's active document's origin.
+    // 9. Set browsingContext's opener origin at creation to opener's active document's origin.
+    browsing_context->m_opener_origin_at_creation = opener->active_document()->origin();
 
     // 10. Return browsingContext and document.
     return BrowsingContext::BrowsingContextAndDocument { browsing_context, document };
