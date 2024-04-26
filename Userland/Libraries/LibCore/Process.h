@@ -138,6 +138,14 @@ public:
         return ProcessAndIPCClient<ClientType> { move(process), move(client) };
     }
 
+    struct ProcessPaths {
+        ByteString socket_path;
+        ByteString pid_path;
+    };
+    static ErrorOr<ProcessPaths> paths_for_process(StringView process_name);
+    static ErrorOr<Optional<pid_t>> get_process_pid(StringView process_name, StringView pid_path);
+    static ErrorOr<int> create_ipc_socket(ByteString const& socket_path);
+
     pid_t pid() const { return m_process.pid(); }
 
 private:

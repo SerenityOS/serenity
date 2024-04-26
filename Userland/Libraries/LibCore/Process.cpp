@@ -379,7 +379,7 @@ ErrorOr<IPCProcess::ProcessAndIPCSocket> IPCProcess::spawn_and_connect_to_proces
     return ProcessAndIPCSocket { move(process), move(ipc_socket) };
 }
 
-static ErrorOr<Optional<pid_t>> get_process_pid(StringView process_name, StringView pid_path)
+ErrorOr<Optional<pid_t>> IPCProcess::get_process_pid(StringView process_name, StringView pid_path)
 {
     if (System::stat(pid_path).is_error())
         return OptionalNone {};
@@ -416,7 +416,7 @@ static ErrorOr<Optional<pid_t>> get_process_pid(StringView process_name, StringV
 }
 
 // This is heavily based on how SystemServer's Service creates its socket.
-static ErrorOr<int> create_ipc_socket(ByteString const& socket_path)
+ErrorOr<int> IPCProcess::create_ipc_socket(ByteString const& socket_path)
 {
     if (!System::stat(socket_path).is_error())
         TRY(System::unlink(socket_path));
@@ -444,11 +444,7 @@ static ErrorOr<int> create_ipc_socket(ByteString const& socket_path)
     return socket_fd;
 }
 
-struct ProcessPaths {
-    ByteString socket_path;
-    ByteString pid_path;
-};
-static ErrorOr<ProcessPaths> paths_for_process(StringView process_name)
+ErrorOr<IPCProcess::ProcessPaths> IPCProcess::paths_for_process(StringView process_name)
 {
     auto runtime_directory = TRY(StandardPaths::runtime_directory());
     auto socket_path = ByteString::formatted("{}/{}.socket", runtime_directory, process_name);
