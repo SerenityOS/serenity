@@ -36,10 +36,10 @@ bool is_forbidden_method(ReadonlyBytes method)
 }
 
 // https://fetch.spec.whatwg.org/#concept-method-normalize
-ErrorOr<ByteBuffer> normalize_method(ReadonlyBytes method)
+ByteBuffer normalize_method(ReadonlyBytes method)
 {
     // To normalize a method, if it is a byte-case-insensitive match for `DELETE`, `GET`, `HEAD`, `OPTIONS`, `POST`, or `PUT`, byte-uppercase it.
-    auto bytes = TRY(ByteBuffer::copy(method));
+    auto bytes = MUST(ByteBuffer::copy(method));
     if (StringView { method }.is_one_of_ignoring_ascii_case("DELETE"sv, "GET"sv, "HEAD"sv, "OPTIONS"sv, "POST"sv, "PUT"sv))
         Infra::byte_uppercase(bytes);
     return bytes;

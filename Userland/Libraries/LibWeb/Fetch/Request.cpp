@@ -373,7 +373,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
             return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Method must not be one of CONNECT, TRACE, or TRACK"sv };
 
         // 3. Normalize method.
-        method = TRY_OR_THROW_OOM(vm, String::from_utf8(TRY_OR_THROW_OOM(vm, Infrastructure::normalize_method(method.bytes()))));
+        method = TRY_OR_THROW_OOM(vm, String::from_utf8(Infrastructure::normalize_method(method.bytes())));
 
         // 4. Set request’s method to method.
         request->set_method(MUST(ByteBuffer::copy(method.bytes())));
