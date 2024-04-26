@@ -164,16 +164,6 @@ CSSPixelRect PaintableBox::compute_absolute_padding_rect_with_css_transform_appl
     return padding_rect;
 }
 
-Gfx::AffineTransform PaintableBox::compute_combined_css_transform() const
-{
-    Gfx::AffineTransform combined_transform;
-    for (auto const* ancestor = this; ancestor; ancestor = ancestor->containing_block()) {
-        auto affine_transform = Gfx::extract_2d_affine_transform(ancestor->transform());
-        combined_transform = combined_transform.multiply(affine_transform);
-    }
-    return combined_transform;
-}
-
 CSSPixelRect PaintableBox::absolute_rect() const
 {
     if (!m_absolute_rect.has_value())
