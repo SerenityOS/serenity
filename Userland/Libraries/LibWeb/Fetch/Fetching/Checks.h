@@ -11,7 +11,7 @@
 
 namespace Web::Fetch::Fetching {
 
-ErrorOr<bool> cors_check(Infrastructure::Request const&, Infrastructure::Response const&);
-ErrorOr<bool> tao_check(Infrastructure::Request const&, Infrastructure::Response const&);
+[[nodiscard]] bool cors_check(Infrastructure::Request const&, Infrastructure::Response const&);
+[[nodiscard]] bool tao_check(Infrastructure::Request const&, Infrastructure::Response const&);
 
 }

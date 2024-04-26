@@ -12,7 +12,7 @@
 namespace Web::Fetch::Fetching {
 
 // https://fetch.spec.whatwg.org/#concept-cors-check
-ErrorOr<bool> cors_check(Infrastructure::Request const& request, Infrastructure::Response const& response)
+bool cors_check(Infrastructure::Request const& request, Infrastructure::Response const& response)
 {
     // 1. Let origin be the result of getting `Access-Control-Allow-Origin` from response’s header list.
     auto origin = response.header_list()->get("Access-Control-Allow-Origin"sv.bytes());
@@ -27,7 +27,7 @@ ErrorOr<bool> cors_check(Infrastructure::Request const& request, Infrastructure:
         return true;
 
     // 4. If the result of byte-serializing a request origin with request is not origin, then return failure.
-    if (TRY(request.byte_serialize_origin()) != *origin)
+    if (request.byte_serialize_origin() != *origin)
         return false;
 
     // 5. If request’s credentials mode is not "include", then return success.
@@ -46,7 +46,7 @@ ErrorOr<bool> cors_check(Infrastructure::Request const& request, Infrastructure:
 }
 
 // https://fetch.spec.whatwg.org/#concept-tao-check
-ErrorOr<bool> tao_check(Infrastructure::Request const& request, Infrastructure::Response const& response)
+bool tao_check(Infrastructure::Request const& request, Infrastructure::Response const& response)
 {
     // 1. If request’s timing allow failed flag is set, then return failure.
     if (request.timing_allow_failed())
@@ -60,7 +60,7 @@ ErrorOr<bool> tao_check(Infrastructure::Request const& request, Infrastructure::
         return true;
 
     // 4. If values contains the result of serializing a request origin with request, then return success.
-    if (values.has_value() && values->contains_slow(TRY(request.serialize_origin())))
+    if (values.has_value() && values->contains_slow(request.serialize_origin()))
         return true;
 
     // 5. If request’s mode is "navigate" and request’s current URL’s origin is not same origin with request’s origin, then return failure.
