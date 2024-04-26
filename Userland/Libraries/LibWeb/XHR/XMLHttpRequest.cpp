@@ -475,7 +475,7 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::open(String const& method_string, Stri
         return WebIDL::SecurityError::create(realm(), "Forbidden method, must not be 'CONNECT', 'TRACE', or 'TRACK'"_fly_string);
 
     // 4. Normalize method.
-    auto normalized_method = TRY_OR_THROW_OOM(vm(), Fetch::Infrastructure::normalize_method(method));
+    auto normalized_method = Fetch::Infrastructure::normalize_method(method);
 
     // 5. Let parsedURL be the result of parsing url with this’s relevant settings object’s API base URL and this’s relevant settings object’s API URL character encoding.
     // FIXME: Pass in this’s relevant settings object’s API URL character encoding.
