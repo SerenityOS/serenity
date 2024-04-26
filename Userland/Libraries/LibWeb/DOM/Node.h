@@ -185,6 +185,8 @@ public:
 
     bool is_connected() const;
 
+    [[nodiscard]] bool is_browsing_context_connected() const;
+
     Node* parent_node() { return parent(); }
     Node const* parent_node() const { return parent(); }
 

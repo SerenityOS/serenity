@@ -134,17 +134,19 @@ void HTMLLinkElement::attribute_changed(FlyString const& name, Optional<String> 
         // https://html.spec.whatwg.org/multipage/links.html#link-type-stylesheet:fetch-and-process-the-linked-resource
         // The appropriate times to fetch and process this type of link are:
         if (
-            // AD-HOC: When the rel attribute changes
-            name == AttributeNames::rel ||
-            // - When the href attribute of the link element of an external resource link that is already browsing-context connected is changed.
-            name == AttributeNames::href ||
-            // - When the disabled attribute of the link element of an external resource link that is already browsing-context connected is set, changed, or removed.
-            name == AttributeNames::disabled ||
-            // - When the crossorigin attribute of the link element of an external resource link that is already browsing-context connected is set, changed, or removed.
-            name == AttributeNames::crossorigin
-            // FIXME: - When the type attribute of the link element of an external resource link that is already browsing-context connected is set or changed to a value that does not or no longer matches the Content-Type metadata of the previous obtained external resource, if any.
-            // FIXME: - When the type attribute of the link element of an external resource link that is already browsing-context connected, but was previously not obtained due to the type attribute specifying an unsupported type, is removed or changed.
-        ) {
+            is_browsing_context_connected()
+            && (
+                // AD-HOC: When the rel attribute changes
+                name == AttributeNames::rel ||
+                // - When the href attribute of the link element of an external resource link that is already browsing-context connected is changed.
+                name == AttributeNames::href ||
+                // - When the disabled attribute of the link element of an external resource link that is already browsing-context connected is set, changed, or removed.
+                name == AttributeNames::disabled ||
+                // - When the crossorigin attribute of the link element of an external resource link that is already browsing-context connected is set, changed, or removed.
+                name == AttributeNames::crossorigin
+                // FIXME: - When the type attribute of the link element of an external resource link that is already browsing-context connected is set or changed to a value that does not or no longer matches the Content-Type metadata of the previous obtained external resource, if any.
+                // FIXME: - When the type attribute of the link element of an external resource link that is already browsing-context connected, but was previously not obtained due to the type attribute specifying an unsupported type, is removed or changed.
+                )) {
             fetch_and_process_linked_resource();
         }
     }
