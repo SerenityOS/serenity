@@ -2,6 +2,7 @@ include(${SerenityOS_SOURCE_DIR}/Meta/CMake/public_suffix.cmake)
 
 set(SOURCES
     Attribute.cpp
+    ChromeProcess.cpp
     CookieJar.cpp
     Database.cpp
     InspectorClient.cpp
@@ -32,6 +33,9 @@ embed_as_string_view(
     NAMESPACE "WebView"
 )
 
+compile_ipc(UIProcessServer.ipc UIProcessServerEndpoint.h)
+compile_ipc(UIProcessClient.ipc UIProcessClientEndpoint.h)
+
 set(GENERATED_SOURCES
     ${GENERATED_SOURCES}
     ../../Services/RequestServer/RequestClientEndpoint.h
@@ -41,6 +45,8 @@ set(GENERATED_SOURCES
     ../../Services/WebContent/WebDriverClientEndpoint.h
     ../../Services/WebContent/WebDriverServerEndpoint.h
     NativeStyleSheetSource.cpp
+    UIProcessClientEndpoint.h
+    UIProcessServerEndpoint.h
 )
 
 serenity_lib(LibWebView webview)
