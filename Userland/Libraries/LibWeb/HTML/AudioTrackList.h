@@ -19,7 +19,7 @@ class AudioTrackList final : public DOM::EventTarget {
     JS_DECLARE_ALLOCATOR(AudioTrackList);
 
 public:
-    ErrorOr<void> add_track(Badge<HTMLMediaElement>, JS::NonnullGCPtr<AudioTrack>);
+    void add_track(Badge<HTMLMediaElement>, JS::NonnullGCPtr<AudioTrack>);
     void remove_all_tracks(Badge<HTMLMediaElement>);
 
     // https://html.spec.whatwg.org/multipage/media.html#dom-audiotracklist-length

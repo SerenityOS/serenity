@@ -172,10 +172,8 @@ JS::NonnullGCPtr<TimeRanges> HTMLMediaElement::buffered() const
 }
 
 // https://html.spec.whatwg.org/multipage/media.html#dom-navigator-canplaytype
-WebIDL::ExceptionOr<Bindings::CanPlayTypeResult> HTMLMediaElement::can_play_type(StringView type) const
+Bindings::CanPlayTypeResult HTMLMediaElement::can_play_type(StringView type) const
 {
-    auto& vm = this->vm();
-
     // The canPlayType(type) method must:
     // - return the empty string if type is a type that the user agent knows it cannot render or is the type "application/octet-stream"
     // - return "probably" if the user agent is confident that the type represents a media resource that it can render if used in with this audio or video element
@@ -184,7 +182,7 @@ WebIDL::ExceptionOr<Bindings::CanPlayTypeResult> HTMLMediaElement::can_play_type
     if (type == "application/octet-stream"sv)
         return Bindings::CanPlayTypeResult::Empty;
 
-    auto mime_type = TRY_OR_THROW_OOM(vm, MimeSniff::MimeType::parse(type));
+    auto mime_type = MUST(MimeSniff::MimeType::parse(type));
 
     if (mime_type.has_value() && mime_type->type() == "video"sv) {
         if (mime_type->subtype() == "webm"sv)
@@ -341,7 +339,6 @@ void HTMLMediaElement::set_duration(double duration)
 WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> HTMLMediaElement::play()
 {
     auto& realm = this->realm();
-    auto& vm = realm.vm();
 
     // FIXME: 1. If the media element is not allowed to play, then return a promise rejected with a "NotAllowedError" DOMException.
 
@@ -354,7 +351,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> HTMLMediaElement::play()
 
     // 3. Let promise be a new promise and append promise to the list of pending play promises.
     auto promise = WebIDL::create_promise(realm);
-    TRY_OR_THROW_OOM(vm, m_pending_play_promises.try_append(promise));
+    m_pending_play_promises.append(promise);
 
     // 4. Run the internal play steps for the media element.
     TRY(play_element());
@@ -1080,7 +1077,7 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::process_media_data(Function<void(Str
         m_fetch_controller->stop_fetch();
 
         // 2. Abort this subalgorithm, returning to the resource selection algorithm.
-        failure_callback(TRY_OR_THROW_OOM(vm, String::from_utf8(playback_manager.error().description())));
+        failure_callback(MUST(String::from_utf8(playback_manager.error().description())));
 
         return {};
     }
@@ -1094,7 +1091,7 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::process_media_data(Function<void(Str
         audio_track = vm.heap().allocate<AudioTrack>(realm, realm, *this, audio_loader.release_value());
 
         // 2. Update the media element's audioTracks attribute's AudioTrackList object with the new AudioTrack object.
-        TRY_OR_THROW_OOM(vm, m_audio_tracks->add_track({}, *audio_track));
+        m_audio_tracks->add_track({}, *audio_track);
 
         // 3. Let enable be unknown.
         auto enable = TriState::Unknown;
@@ -1126,7 +1123,7 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::process_media_data(Function<void(Str
         video_track = vm.heap().allocate<VideoTrack>(realm, realm, *this, playback_manager.release_value());
 
         // 2. Update the media element's videoTracks attribute's VideoTrackList object with the new VideoTrack object.
-        TRY_OR_THROW_OOM(vm, m_video_tracks->add_track({}, *video_track));
+        m_video_tracks->add_track({}, *video_track);
 
         // 3. Let enable be unknown.
         auto enable = TriState::Unknown;

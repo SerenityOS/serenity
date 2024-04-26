@@ -44,12 +44,10 @@ JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> VideoTrackList::internal
     return Base::internal_get_own_property(property_name);
 }
 
-ErrorOr<void> VideoTrackList::add_track(Badge<HTMLMediaElement>, JS::NonnullGCPtr<VideoTrack> video_track)
+void VideoTrackList::add_track(Badge<HTMLMediaElement>, JS::NonnullGCPtr<VideoTrack> video_track)
 {
-    TRY(m_video_tracks.try_append(video_track));
+    m_video_tracks.append(video_track);
     video_track->set_video_track_list({}, this);
-
-    return {};
 }
 
 void VideoTrackList::remove_all_tracks(Badge<HTMLMediaElement>)

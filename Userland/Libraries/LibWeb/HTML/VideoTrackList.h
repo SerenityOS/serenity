@@ -19,7 +19,7 @@ class VideoTrackList final : public DOM::EventTarget {
     JS_DECLARE_ALLOCATOR(VideoTrackList);
 
 public:
-    ErrorOr<void> add_track(Badge<HTMLMediaElement>, JS::NonnullGCPtr<VideoTrack>);
+    void add_track(Badge<HTMLMediaElement>, JS::NonnullGCPtr<VideoTrack>);
     void remove_all_tracks(Badge<HTMLMediaElement>);
 
     Span<JS::NonnullGCPtr<VideoTrack>> video_tracks() { return m_video_tracks; }

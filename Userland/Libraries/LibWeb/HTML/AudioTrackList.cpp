@@ -44,12 +44,10 @@ JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> AudioTrackList::internal
     return Base::internal_get_own_property(property_name);
 }
 
-ErrorOr<void> AudioTrackList::add_track(Badge<HTMLMediaElement>, JS::NonnullGCPtr<AudioTrack> audio_track)
+void AudioTrackList::add_track(Badge<HTMLMediaElement>, JS::NonnullGCPtr<AudioTrack> audio_track)
 {
-    TRY(m_audio_tracks.try_append(audio_track));
+    m_audio_tracks.append(audio_track);
     audio_track->set_audio_track_list({}, this);
-
-    return {};
 }
 
 void AudioTrackList::remove_all_tracks(Badge<HTMLMediaElement>)
