@@ -75,7 +75,7 @@ WebIDL::ExceptionOr<void> Body::fully_read(JS::Realm& realm, Web::Fetch::Infrast
     auto success_steps = [&realm, process_body, task_destination_object = task_destination_object](ByteBuffer const& bytes) mutable -> ErrorOr<void> {
         // Make a copy of the bytes, as the source of the bytes may disappear between the time the task is queued and executed.
         auto bytes_copy = TRY(ByteBuffer::copy(bytes));
-        queue_fetch_task(*task_destination_object, JS::create_heap_function(realm.heap(), [process_body, bytes_copy = move(bytes_copy)]() {
+        queue_fetch_task(*task_destination_object, JS::create_heap_function(realm.heap(), [process_body, bytes_copy = move(bytes_copy)]() mutable {
             process_body->function()(move(bytes_copy));
         }));
         return {};
