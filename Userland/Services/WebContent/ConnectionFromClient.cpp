@@ -552,7 +552,7 @@ void ConnectionFromClient::inspect_dom_node(u64 page_id, i32 node_id, Optional<W
             // FIXME: Pseudo-elements only exist as Layout::Nodes, which don't have style information
             //        in a format we can use. So, we run the StyleComputer again to get the specified
             //        values, and have to ignore the computed values and custom properties.
-            auto pseudo_element_style = page->page().focused_context().active_document()->style_computer().compute_style(element, pseudo_element);
+            auto pseudo_element_style = page->page().focused_navigable().active_document()->style_computer().compute_style(element, pseudo_element);
             ByteString computed_values = serialize_json(pseudo_element_style);
             ByteString resolved_values = "{}";
             ByteString custom_properties_json = serialize_custom_properties_json(element, pseudo_element);
@@ -817,20 +817,20 @@ Messages::WebContentServer::DumpGcGraphResponse ConnectionFromClient::dump_gc_gr
 Messages::WebContentServer::GetSelectedTextResponse ConnectionFromClient::get_selected_text(u64 page_id)
 {
     if (auto page = this->page(page_id); page.has_value())
-        return page->page().focused_context().selected_text().to_byte_string();
+        return page->page().focused_navigable().selected_text().to_byte_string();
     return ByteString {};
 }
 
 void ConnectionFromClient::select_all(u64 page_id)
 {
     if (auto page = this->page(page_id); page.has_value())
-        page->page().focused_context().select_all();
+        page->page().focused_navigable().select_all();
 }
 
 void ConnectionFromClient::paste(u64 page_id, String const& text)
 {
     if (auto page = this->page(page_id); page.has_value())
-        page->page().focused_context().paste(text);
+        page->page().focused_navigable().paste(text);
 }
 
 Messages::WebContentServer::DumpLayoutTreeResponse ConnectionFromClient::dump_layout_tree(u64 page_id)

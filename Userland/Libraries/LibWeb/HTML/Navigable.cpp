@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022-2024, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2023, Aliaksandr Kalenik <kalenik.aliaksandr@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -9,6 +9,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/DocumentLoading.h>
 #include <LibWeb/DOM/Event.h>
+#include <LibWeb/DOM/Range.h>
 #include <LibWeb/Fetch/Fetching/Fetching.h>
 #include <LibWeb/Fetch/Infrastructure/FetchAlgorithms.h>
 #include <LibWeb/Fetch/Infrastructure/FetchController.h>
@@ -36,6 +37,7 @@
 #include <LibWeb/Painting/Paintable.h>
 #include <LibWeb/Painting/ViewportPaintable.h>
 #include <LibWeb/Platform/EventLoopPlugin.h>
+#include <LibWeb/Selection/Selection.h>
 #include <LibWeb/XHR/FormData.h>
 
 namespace Web::HTML {
@@ -103,8 +105,24 @@ bool Navigable::is_ancestor_of(JS::NonnullGCPtr<Navigable> other) const
 
 Navigable::Navigable(JS::NonnullGCPtr<Page> page)
     : m_page(page)
+    , m_event_handler({}, *this)
 {
     all_navigables().set(this);
+
+    m_cursor_blink_timer = Core::Timer::create_repeating(500, [this] {
+        if (!is_focused())
+            return;
+        if (!m_cursor_position)
+            return;
+        auto node = m_cursor_position->node();
+        if (!node)
+            return;
+        node->document().update_layout();
+        if (node->paintable()) {
+            m_cursor_blink_state = !m_cursor_blink_state;
+            node->paintable()->set_needs_display();
+        }
+    });
 }
 
 Navigable::~Navigable()
@@ -120,6 +138,8 @@ void Navigable::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_current_session_history_entry);
     visitor.visit(m_active_session_history_entry);
     visitor.visit(m_container);
+    visitor.visit(m_cursor_position);
+    m_event_handler.visit_edges(visitor);
 }
 
 void Navigable::set_delaying_load_events(bool value)
@@ -2157,6 +2177,122 @@ UserNavigationInvolvement user_navigation_involvement(DOM::Event const& event)
     // 3. If event's isTrusted is initialized to true, then return "activation".
     // 4. Return "none".
     return event.is_trusted() ? UserNavigationInvolvement::Activation : UserNavigationInvolvement::None;
+}
+
+void Navigable::did_edit(Badge<EditEventHandler>)
+{
+    reset_cursor_blink_cycle();
+
+    if (m_cursor_position && is<DOM::Text>(*m_cursor_position->node())) {
+        auto& text_node = static_cast<DOM::Text&>(*m_cursor_position->node());
+        if (auto text_node_owner = text_node.editable_text_node_owner())
+            text_node_owner->did_edit_text_node({});
+    }
+}
+
+void Navigable::reset_cursor_blink_cycle()
+{
+    m_cursor_blink_state = true;
+    m_cursor_blink_timer->restart();
+    if (m_cursor_position && m_cursor_position->node()->paintable())
+        m_cursor_position->node()->paintable()->set_needs_display();
+}
+
+bool Navigable::is_focused() const
+{
+    return &m_page->focused_navigable() == this;
+}
+
+void Navigable::set_cursor_position(JS::NonnullGCPtr<DOM::Position> position)
+{
+    if (m_cursor_position && m_cursor_position->equals(position))
+        return;
+
+    if (m_cursor_position && m_cursor_position->node()->paintable())
+        m_cursor_position->node()->paintable()->set_needs_display();
+
+    m_cursor_position = position;
+
+    if (m_cursor_position && m_cursor_position->node()->paintable())
+        m_cursor_position->node()->paintable()->set_needs_display();
+
+    reset_cursor_blink_cycle();
+}
+
+static String visible_text_in_range(DOM::Range const& range)
+{
+    // NOTE: This is an adaption of Range stringification, but we skip over DOM nodes that don't have a corresponding layout node.
+    StringBuilder builder;
+
+    if (range.start_container() == range.end_container() && is<DOM::Text>(*range.start_container())) {
+        if (!range.start_container()->layout_node())
+            return String {};
+        return MUST(static_cast<DOM::Text const&>(*range.start_container()).data().substring_from_byte_offset(range.start_offset(), range.end_offset() - range.start_offset()));
+    }
+
+    if (is<DOM::Text>(*range.start_container()) && range.start_container()->layout_node())
+        builder.append(static_cast<DOM::Text const&>(*range.start_container()).data().bytes_as_string_view().substring_view(range.start_offset()));
+
+    for (DOM::Node const* node = range.start_container(); node != range.end_container()->next_sibling(); node = node->next_in_pre_order()) {
+        if (is<DOM::Text>(*node) && range.contains_node(*node) && node->layout_node())
+            builder.append(static_cast<DOM::Text const&>(*node).data());
+    }
+
+    if (is<DOM::Text>(*range.end_container()) && range.end_container()->layout_node())
+        builder.append(static_cast<DOM::Text const&>(*range.end_container()).data().bytes_as_string_view().substring_view(0, range.end_offset()));
+
+    return MUST(builder.to_string());
+}
+
+String Navigable::selected_text() const
+{
+    auto document = const_cast<Navigable*>(this)->active_document();
+    if (!document)
+        return String {};
+    auto selection = const_cast<DOM::Document&>(*document).get_selection();
+    auto range = selection->range();
+    if (!range)
+        return String {};
+    return visible_text_in_range(*range);
+}
+
+void Navigable::select_all()
+{
+    auto document = active_document();
+    if (!document)
+        return;
+    auto* body = document->body();
+    if (!body)
+        return;
+    auto selection = document->get_selection();
+    if (!selection)
+        return;
+    (void)selection->select_all_children(*document->body());
+}
+
+void Navigable::paste(String const& text)
+{
+    auto document = active_document();
+    if (!document)
+        return;
+
+    m_event_handler.handle_paste(text);
+}
+
+bool Navigable::increment_cursor_position_offset()
+{
+    if (!m_cursor_position->increment_offset())
+        return false;
+    reset_cursor_blink_cycle();
+    return true;
+}
+
+bool Navigable::decrement_cursor_position_offset()
+{
+    if (!m_cursor_position->decrement_offset())
+        return false;
+    reset_cursor_blink_cycle();
+    return true;
 }
 
 }

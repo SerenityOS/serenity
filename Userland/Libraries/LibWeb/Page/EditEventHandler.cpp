@@ -33,7 +33,7 @@ void EditEventHandler::handle_delete_character_after(JS::NonnullGCPtr<DOM::Posit
     builder.append(text.bytes_as_string_view().substring_view(*next_grapheme_offset));
     node.set_data(MUST(builder.to_string()));
 
-    m_browsing_context->did_edit({});
+    m_navigable->did_edit({});
 }
 
 // This method is quite convoluted but this is necessary to make editing feel intuitive.
@@ -89,7 +89,7 @@ void EditEventHandler::handle_delete(DOM::Range& range)
         end->remove();
     }
 
-    m_browsing_context->did_edit({});
+    m_navigable->did_edit({});
 }
 
 void EditEventHandler::handle_insert(JS::NonnullGCPtr<DOM::Position> position, u32 code_point)
@@ -126,6 +126,6 @@ void EditEventHandler::handle_insert(JS::NonnullGCPtr<DOM::Position> position, S
         position->set_offset(1);
     }
 
-    m_browsing_context->did_edit({});
+    m_navigable->did_edit({});
 }
 }

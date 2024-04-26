@@ -65,10 +65,10 @@ public:
 
     JS::NonnullGCPtr<HTML::TraversableNavigable> top_level_traversable() const;
 
-    HTML::BrowsingContext& focused_context();
-    HTML::BrowsingContext const& focused_context() const { return const_cast<Page*>(this)->focused_context(); }
+    HTML::Navigable& focused_navigable();
+    HTML::Navigable const& focused_navigable() const { return const_cast<Page*>(this)->focused_navigable(); }
 
-    void set_focused_browsing_context(Badge<EventHandler>, HTML::BrowsingContext&);
+    void set_focused_navigable(Badge<EventHandler>, HTML::Navigable&);
 
     void load(URL::URL const&);
 
@@ -186,7 +186,7 @@ private:
 
     JS::NonnullGCPtr<PageClient> m_client;
 
-    WeakPtr<HTML::BrowsingContext> m_focused_context;
+    WeakPtr<HTML::Navigable> m_focused_navigable;
 
     JS::GCPtr<HTML::TraversableNavigable> m_top_level_traversable;
 

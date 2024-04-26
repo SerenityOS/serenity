@@ -46,16 +46,16 @@ void Page::visit_edges(JS::Cell::Visitor& visitor)
     visitor.visit(m_client);
 }
 
-HTML::BrowsingContext& Page::focused_context()
+HTML::Navigable& Page::focused_navigable()
 {
-    if (m_focused_context)
-        return *m_focused_context;
-    return top_level_browsing_context();
+    if (m_focused_navigable)
+        return *m_focused_navigable;
+    return top_level_traversable();
 }
 
-void Page::set_focused_browsing_context(Badge<EventHandler>, HTML::BrowsingContext& browsing_context)
+void Page::set_focused_navigable(Badge<EventHandler>, HTML::Navigable& navigable)
 {
-    m_focused_context = browsing_context.make_weak_ptr();
+    m_focused_navigable = navigable.make_weak_ptr();
 }
 
 void Page::load(URL::URL const& url)
@@ -165,37 +165,37 @@ DevicePixelRect Page::rounded_device_rect(CSSPixelRect rect) const
 
 bool Page::handle_mouseup(DevicePixelPoint position, DevicePixelPoint screen_position, unsigned button, unsigned buttons, unsigned modifiers)
 {
-    return top_level_browsing_context().event_handler().handle_mouseup(device_to_css_point(position), device_to_css_point(screen_position), button, buttons, modifiers);
+    return top_level_traversable()->event_handler().handle_mouseup(device_to_css_point(position), device_to_css_point(screen_position), button, buttons, modifiers);
 }
 
 bool Page::handle_mousedown(DevicePixelPoint position, DevicePixelPoint screen_position, unsigned button, unsigned buttons, unsigned modifiers)
 {
-    return top_level_browsing_context().event_handler().handle_mousedown(device_to_css_point(position), device_to_css_point(screen_position), button, buttons, modifiers);
+    return top_level_traversable()->event_handler().handle_mousedown(device_to_css_point(position), device_to_css_point(screen_position), button, buttons, modifiers);
 }
 
 bool Page::handle_mousemove(DevicePixelPoint position, DevicePixelPoint screen_position, unsigned buttons, unsigned modifiers)
 {
-    return top_level_browsing_context().event_handler().handle_mousemove(device_to_css_point(position), device_to_css_point(screen_position), buttons, modifiers);
+    return top_level_traversable()->event_handler().handle_mousemove(device_to_css_point(position), device_to_css_point(screen_position), buttons, modifiers);
 }
 
 bool Page::handle_mousewheel(DevicePixelPoint position, DevicePixelPoint screen_position, unsigned button, unsigned buttons, unsigned modifiers, DevicePixels wheel_delta_x, DevicePixels wheel_delta_y)
 {
-    return top_level_browsing_context().event_handler().handle_mousewheel(device_to_css_point(position), device_to_css_point(screen_position), button, buttons, modifiers, wheel_delta_x.value(), wheel_delta_y.value());
+    return top_level_traversable()->event_handler().handle_mousewheel(device_to_css_point(position), device_to_css_point(screen_position), button, buttons, modifiers, wheel_delta_x.value(), wheel_delta_y.value());
 }
 
 bool Page::handle_doubleclick(DevicePixelPoint position, DevicePixelPoint screen_position, unsigned button, unsigned buttons, unsigned modifiers)
 {
-    return top_level_browsing_context().event_handler().handle_doubleclick(device_to_css_point(position), device_to_css_point(screen_position), button, buttons, modifiers);
+    return top_level_traversable()->event_handler().handle_doubleclick(device_to_css_point(position), device_to_css_point(screen_position), button, buttons, modifiers);
 }
 
 bool Page::handle_keydown(KeyCode key, unsigned modifiers, u32 code_point)
 {
-    return focused_context().event_handler().handle_keydown(key, modifiers, code_point);
+    return focused_navigable().event_handler().handle_keydown(key, modifiers, code_point);
 }
 
 bool Page::handle_keyup(KeyCode key, unsigned modifiers, u32 code_point)
 {
-    return focused_context().event_handler().handle_keyup(key, modifiers, code_point);
+    return focused_navigable().event_handler().handle_keyup(key, modifiers, code_point);
 }
 
 void Page::set_top_level_traversable(JS::NonnullGCPtr<HTML::TraversableNavigable> navigable)

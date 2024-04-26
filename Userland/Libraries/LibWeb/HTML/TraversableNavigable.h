@@ -82,6 +82,8 @@ public:
     String window_handle() const { return m_window_handle; }
     void set_window_handle(String window_handle) { m_window_handle = move(window_handle); }
 
+    [[nodiscard]] JS::GCPtr<DOM::Node> currently_focused_area();
+
 private:
     TraversableNavigable(JS::NonnullGCPtr<Page>);
 

@@ -276,22 +276,7 @@ WebIDL::ExceptionOr<BrowsingContext::BrowsingContextAndDocument> BrowsingContext
 
 BrowsingContext::BrowsingContext(JS::NonnullGCPtr<Page> page)
     : m_page(page)
-    , m_event_handler({}, *this)
 {
-    m_cursor_blink_timer = Core::Timer::create_repeating(500, [this] {
-        if (!is_focused_context())
-            return;
-        if (!m_cursor_position)
-            return;
-        auto node = m_cursor_position->node();
-        if (!node)
-            return;
-        node->document().update_layout();
-        if (node->paintable()) {
-            m_cursor_blink_state = !m_cursor_blink_state;
-            node->paintable()->set_needs_display();
-        }
-    });
 }
 
 BrowsingContext::~BrowsingContext() = default;
@@ -301,7 +286,6 @@ void BrowsingContext::visit_edges(Cell::Visitor& visitor)
     Base::visit_edges(visitor);
 
     visitor.visit(m_page);
-    visitor.visit(m_cursor_position);
     visitor.visit(m_window_proxy);
     visitor.visit(m_group);
     visitor.visit(m_parent);
@@ -310,8 +294,6 @@ void BrowsingContext::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_next_sibling);
     visitor.visit(m_previous_sibling);
     visitor.visit(m_opener_browsing_context);
-
-    m_event_handler.visit_edges(visitor);
 }
 
 // https://html.spec.whatwg.org/multipage/document-sequences.html#bc-traversable
@@ -324,35 +306,11 @@ JS::NonnullGCPtr<HTML::TraversableNavigable> BrowsingContext::top_level_traversa
     return *traversable;
 }
 
-void BrowsingContext::did_edit(Badge<EditEventHandler>)
-{
-    reset_cursor_blink_cycle();
-
-    if (m_cursor_position && is<DOM::Text>(*m_cursor_position->node())) {
-        auto& text_node = static_cast<DOM::Text&>(*m_cursor_position->node());
-        if (auto text_node_owner = text_node.editable_text_node_owner())
-            text_node_owner->did_edit_text_node({});
-    }
-}
-
-void BrowsingContext::reset_cursor_blink_cycle()
-{
-    m_cursor_blink_state = true;
-    m_cursor_blink_timer->restart();
-    if (m_cursor_position && m_cursor_position->node()->paintable())
-        m_cursor_position->node()->paintable()->set_needs_display();
-}
-
 // https://html.spec.whatwg.org/multipage/browsers.html#top-level-browsing-context
 bool BrowsingContext::is_top_level() const
 {
     // A browsing context that has no parent browsing context is the top-level browsing context for itself and all of the browsing contexts for which it is an ancestor browsing context.
     return !parent();
-}
-
-bool BrowsingContext::is_focused_context() const
-{
-    return &m_page->focused_context() == this;
 }
 
 JS::GCPtr<BrowsingContext> BrowsingContext::top_level_browsing_context() const
@@ -374,127 +332,6 @@ JS::GCPtr<BrowsingContext> BrowsingContext::top_level_browsing_context() const
 
     // 4. Return navigable's active browsing context.
     return navigable->active_browsing_context();
-}
-
-void BrowsingContext::set_cursor_position(JS::NonnullGCPtr<DOM::Position> position)
-{
-    if (m_cursor_position && m_cursor_position->equals(position))
-        return;
-
-    if (m_cursor_position && m_cursor_position->node()->paintable())
-        m_cursor_position->node()->paintable()->set_needs_display();
-
-    m_cursor_position = position;
-
-    if (m_cursor_position && m_cursor_position->node()->paintable())
-        m_cursor_position->node()->paintable()->set_needs_display();
-
-    reset_cursor_blink_cycle();
-}
-
-static String visible_text_in_range(DOM::Range const& range)
-{
-    // NOTE: This is an adaption of Range stringification, but we skip over DOM nodes that don't have a corresponding layout node.
-    StringBuilder builder;
-
-    if (range.start_container() == range.end_container() && is<DOM::Text>(*range.start_container())) {
-        if (!range.start_container()->layout_node())
-            return String {};
-        return MUST(static_cast<DOM::Text const&>(*range.start_container()).data().substring_from_byte_offset(range.start_offset(), range.end_offset() - range.start_offset()));
-    }
-
-    if (is<DOM::Text>(*range.start_container()) && range.start_container()->layout_node())
-        builder.append(static_cast<DOM::Text const&>(*range.start_container()).data().bytes_as_string_view().substring_view(range.start_offset()));
-
-    for (DOM::Node const* node = range.start_container(); node != range.end_container()->next_sibling(); node = node->next_in_pre_order()) {
-        if (is<DOM::Text>(*node) && range.contains_node(*node) && node->layout_node())
-            builder.append(static_cast<DOM::Text const&>(*node).data());
-    }
-
-    if (is<DOM::Text>(*range.end_container()) && range.end_container()->layout_node())
-        builder.append(static_cast<DOM::Text const&>(*range.end_container()).data().bytes_as_string_view().substring_view(0, range.end_offset()));
-
-    return MUST(builder.to_string());
-}
-
-String BrowsingContext::selected_text() const
-{
-    auto const* document = active_document();
-    if (!document)
-        return String {};
-    auto selection = const_cast<DOM::Document&>(*document).get_selection();
-    auto range = selection->range();
-    if (!range)
-        return String {};
-    return visible_text_in_range(*range);
-}
-
-void BrowsingContext::select_all()
-{
-    auto* document = active_document();
-    if (!document)
-        return;
-    auto* body = document->body();
-    if (!body)
-        return;
-    auto selection = document->get_selection();
-    if (!selection)
-        return;
-    (void)selection->select_all_children(*document->body());
-}
-
-void BrowsingContext::paste(String const& text)
-{
-    auto* document = active_document();
-    if (!document)
-        return;
-
-    m_event_handler.handle_paste(text);
-}
-
-bool BrowsingContext::increment_cursor_position_offset()
-{
-    if (!m_cursor_position->increment_offset())
-        return false;
-    reset_cursor_blink_cycle();
-    return true;
-}
-
-bool BrowsingContext::decrement_cursor_position_offset()
-{
-    if (!m_cursor_position->decrement_offset())
-        return false;
-    reset_cursor_blink_cycle();
-    return true;
-}
-
-// https://html.spec.whatwg.org/multipage/interaction.html#currently-focused-area-of-a-top-level-browsing-context
-JS::GCPtr<DOM::Node> BrowsingContext::currently_focused_area()
-{
-    // 1. If topLevelBC does not have system focus, then return null.
-    if (!is_focused_context())
-        return nullptr;
-
-    // 2. Let candidate be topLevelBC's active document.
-    auto* candidate = active_document();
-
-    // 3. While candidate's focused area is a browsing context container with a non-null nested browsing context:
-    //    set candidate to the active document of that browsing context container's nested browsing context.
-    while (candidate->focused_element()
-        && is<HTML::NavigableContainer>(candidate->focused_element())
-        && static_cast<HTML::NavigableContainer&>(*candidate->focused_element()).nested_browsing_context()) {
-        candidate = static_cast<HTML::NavigableContainer&>(*candidate->focused_element()).nested_browsing_context()->active_document();
-    }
-
-    // 4. If candidate's focused area is non-null, set candidate to candidate's focused area.
-    if (candidate->focused_element()) {
-        // NOTE: We return right away here instead of assigning to candidate,
-        //       since that would require compromising type safety.
-        return candidate->focused_element();
-    }
-
-    // 5. Return candidate.
-    return candidate;
 }
 
 DOM::Document const* BrowsingContext::active_document() const
