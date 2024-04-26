@@ -188,7 +188,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
     //     A copy of request’s header list.
     auto header_list_copy = Infrastructure::HeaderList::create(vm);
     for (auto& header : *input_request->header_list())
-        TRY_OR_THROW_OOM(vm, header_list_copy->append(header));
+        header_list_copy->append(header);
     request->set_header_list(header_list_copy);
 
     // unsafe-request flag
@@ -427,7 +427,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
         // 4. If headers is a Headers object, then for each header of its header list, append header to this’s headers.
         if (auto* header_list = headers.get_pointer<JS::NonnullGCPtr<Infrastructure::HeaderList>>()) {
             for (auto& header : *header_list->ptr())
-                TRY(request_object->headers()->append(TRY_OR_THROW_OOM(vm, Infrastructure::Header::from_string_pair(header.name, header.value))));
+                TRY(request_object->headers()->append(Infrastructure::Header::from_string_pair(header.name, header.value)));
         }
         // 5. Otherwise, fill this’s headers with headers.
         else {
@@ -460,7 +460,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
 
         // 4. If type is non-null and this’s headers’s header list does not contain `Content-Type`, then append (`Content-Type`, type) to this’s headers.
         if (type.has_value() && !request_object->headers()->header_list()->contains("Content-Type"sv.bytes()))
-            TRY(request_object->headers()->append(TRY_OR_THROW_OOM(vm, Infrastructure::Header::from_string_pair("Content-Type"sv, type->span()))));
+            TRY(request_object->headers()->append(Infrastructure::Header::from_string_pair("Content-Type"sv, type->span())));
     }
 
     // 38. Let inputOrInitBody be initBody if it is non-null; otherwise inputBody.

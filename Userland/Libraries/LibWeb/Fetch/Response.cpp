@@ -119,7 +119,7 @@ WebIDL::ExceptionOr<void> Response::initialize_response(ResponseInit const& init
                 .name = MUST(ByteBuffer::copy("Content-Type"sv.bytes())),
                 .value = TRY_OR_THROW_OOM(vm, ByteBuffer::copy(body->type->span())),
             };
-            TRY_OR_THROW_OOM(vm, m_response->header_list()->append(move(header)));
+            m_response->header_list()->append(move(header));
         }
     }
 
@@ -191,8 +191,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> Response::redirect(JS::VM& vm, S
     auto value = parsed_url.serialize();
 
     // 7. Append (`Location`, value) to responseObject’s response’s header list.
-    auto header = TRY_OR_THROW_OOM(vm, Infrastructure::Header::from_string_pair("Location"sv, value));
-    TRY_OR_THROW_OOM(vm, response_object->response()->header_list()->append(move(header)));
+    auto header = Infrastructure::Header::from_string_pair("Location"sv, value);
+    response_object->response()->header_list()->append(move(header));
 
     // 8. Return responseObject.
     return response_object;

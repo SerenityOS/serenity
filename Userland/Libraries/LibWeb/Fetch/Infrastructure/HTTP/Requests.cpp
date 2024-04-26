@@ -214,7 +214,7 @@ JS::NonnullGCPtr<Request> Request::clone(JS::Realm& realm) const
     new_request->set_method(m_method);
     new_request->set_local_urls_only(m_local_urls_only);
     for (auto const& header : *m_header_list)
-        MUST(new_request->header_list()->append(header));
+        new_request->header_list()->append(header);
     new_request->set_unsafe_request(m_unsafe_request);
     new_request->set_client(m_client);
     new_request->set_reserved_client(m_reserved_client);
@@ -284,7 +284,7 @@ ErrorOr<void> Request::add_range_header(u64 first, Optional<u64> const& last)
         .name = MUST(ByteBuffer::copy("Range"sv.bytes())),
         .value = move(range_value),
     };
-    TRY(m_header_list->append(move(header)));
+    m_header_list->append(move(header));
 
     return {};
 }
@@ -301,7 +301,7 @@ ErrorOr<void> Request::add_origin_header()
             .name = MUST(ByteBuffer::copy("Origin"sv.bytes())),
             .value = move(serialized_origin),
         };
-        TRY(m_header_list->append(move(header)));
+        m_header_list->append(move(header));
     }
     // 3. Otherwise, if request’s method is neither `GET` nor `HEAD`, then:
     else if (!StringView { m_method }.is_one_of("GET"sv, "HEAD"sv)) {
@@ -343,7 +343,7 @@ ErrorOr<void> Request::add_origin_header()
             .name = MUST(ByteBuffer::copy("Origin"sv.bytes())),
             .value = move(serialized_origin),
         };
-        TRY(m_header_list->append(move(header)));
+        m_header_list->append(move(header));
     }
 
     return {};

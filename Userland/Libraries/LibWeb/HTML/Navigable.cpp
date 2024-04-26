@@ -620,8 +620,10 @@ static WebIDL::ExceptionOr<JS::NonnullGCPtr<NavigationParams>> create_navigation
     //    body: the UTF-8 encoding of documentResource, as a body
     auto response = Fetch::Infrastructure::Response::create(vm);
     response->url_list().append(URL::URL("about:srcdoc"));
-    auto header = TRY_OR_THROW_OOM(vm, Fetch::Infrastructure::Header::from_string_pair("Content-Type"sv, "text/html"sv));
-    TRY_OR_THROW_OOM(vm, response->header_list()->append(move(header)));
+
+    auto header = Fetch::Infrastructure::Header::from_string_pair("Content-Type"sv, "text/html"sv);
+    response->header_list()->append(move(header));
+
     response->set_body(TRY(Fetch::Infrastructure::byte_sequence_as_body(realm, document_resource.get<String>().bytes())));
 
     // 3. Let responseOrigin be the result of determining the origin given response's URL, targetSnapshotParams's sandboxing flags, and entry's document state's origin.
@@ -740,8 +742,8 @@ static WebIDL::ExceptionOr<Variant<Empty, JS::NonnullGCPtr<NavigationParams>, JS
                 VERIFY_NOT_REACHED();
             }
         }();
-        auto header = TRY_OR_THROW_OOM(vm, Fetch::Infrastructure::Header::from_string_pair("Content-Type"sv, request_content_type_string));
-        TRY_OR_THROW_OOM(vm, request->header_list()->append(move(header)));
+        auto header = Fetch::Infrastructure::Header::from_string_pair("Content-Type"sv, request_content_type_string);
+        request->header_list()->append(move(header));
     }
 
     // 5. If entry's document state's reload pending is true, then set request's reload-navigation flag.
@@ -1591,8 +1593,10 @@ WebIDL::ExceptionOr<JS::GCPtr<DOM::Document>> Navigable::evaluate_javascript_url
     //     body: the UTF-8 encoding of result, as a body
     auto response = Fetch::Infrastructure::Response::create(vm);
     response->url_list().append(active_document()->url());
-    auto header = TRY_OR_THROW_OOM(vm, Fetch::Infrastructure::Header::from_string_pair("Content-Type"sv, "text/html"sv));
-    TRY_OR_THROW_OOM(vm, response->header_list()->append(move(header)));
+
+    auto header = Fetch::Infrastructure::Header::from_string_pair("Content-Type"sv, "text/html"sv);
+    response->header_list()->append(move(header));
+
     response->set_body(TRY(Fetch::Infrastructure::byte_sequence_as_body(realm, result.bytes())));
 
     // 12. Let policyContainer be targetNavigable's active document's policy container.

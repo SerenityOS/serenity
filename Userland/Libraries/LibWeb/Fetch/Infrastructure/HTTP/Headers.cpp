@@ -42,11 +42,11 @@ requires(IsSameIgnoringCV<T, u8>) struct CaseInsensitiveBytesTraits : public Tra
     }
 };
 
-ErrorOr<Header> Header::from_string_pair(StringView name, StringView value)
+Header Header::from_string_pair(StringView name, StringView value)
 {
     return Header {
-        .name = TRY(ByteBuffer::copy(name.bytes())),
-        .value = TRY(ByteBuffer::copy(value.bytes())),
+        .name = MUST(ByteBuffer::copy(name.bytes())),
+        .value = MUST(ByteBuffer::copy(value.bytes())),
     };
 }
 
@@ -56,7 +56,7 @@ JS::NonnullGCPtr<HeaderList> HeaderList::create(JS::VM& vm)
 }
 
 // Non-standard
-ErrorOr<Vector<ByteBuffer>> HeaderList::unique_names() const
+Vector<ByteBuffer> HeaderList::unique_names() const
 {
     Vector<ByteBuffer> header_names_set;
     HashTable<ReadonlyBytes, CaseInsensitiveBytesTraits<u8 const>> header_names_seen;
@@ -64,9 +64,8 @@ ErrorOr<Vector<ByteBuffer>> HeaderList::unique_names() const
     for (auto const& header : *this) {
         if (header_names_seen.contains(header.name))
             continue;
-        auto bytes = TRY(ByteBuffer::copy(header.name));
-        TRY(header_names_seen.try_set(header.name));
-        TRY(header_names_set.try_append(move(bytes)));
+        header_names_seen.set(header.name);
+        header_names_set.append(MUST(ByteBuffer::copy(header.name)));
     }
 
     return header_names_set;
@@ -82,13 +81,13 @@ bool HeaderList::contains(ReadonlyBytes name) const
 }
 
 // https://fetch.spec.whatwg.org/#concept-header-list-get
-ErrorOr<Optional<ByteBuffer>> HeaderList::get(ReadonlyBytes name) const
+Optional<ByteBuffer> HeaderList::get(ReadonlyBytes name) const
 {
     // To get a header name name from a header list list, run these steps:
 
     // 1. If list does not contain name, then return null.
     if (!contains(name))
-        return Optional<ByteBuffer> {};
+        return {};
 
     // 2. Return the values of all headers in list whose name is a byte-case-insensitive match for name, separated from each other by 0x2C 0x20, in order.
     ByteBuffer buffer;
@@ -99,32 +98,32 @@ ErrorOr<Optional<ByteBuffer>> HeaderList::get(ReadonlyBytes name) const
         if (first) {
             first = false;
         } else {
-            TRY(buffer.try_append(0x2c));
-            TRY(buffer.try_append(0x20));
+            buffer.append(0x2c);
+            buffer.append(0x20);
         }
-        TRY(buffer.try_append(header.value));
+        buffer.append(header.value);
     }
     return buffer;
 }
 
 // https://fetch.spec.whatwg.org/#concept-header-list-get-decode-split
-ErrorOr<Optional<Vector<String>>> HeaderList::get_decode_and_split(ReadonlyBytes name) const
+Optional<Vector<String>> HeaderList::get_decode_and_split(ReadonlyBytes name) const
 {
     // To get, decode, and split a header name name from header list list, run these steps:
 
     // 1. Let value be the result of getting name from list.
-    auto value = TRY(get(name));
+    auto value = get(name);
 
     // 2. If value is null, then return null.
     if (!value.has_value())
-        return Optional<Vector<String>> {};
+        return {};
 
     // 3. Return the result of getting, decoding, and splitting value.
     return get_decode_and_split_header_value(*value);
 }
 
 // https://fetch.spec.whatwg.org/#header-value-get-decode-and-split
-ErrorOr<Optional<Vector<String>>> get_decode_and_split_header_value(ReadonlyBytes value)
+Optional<Vector<String>> get_decode_and_split_header_value(ReadonlyBytes value)
 {
     // To get, decode, and split a header value value, run these steps:
 
@@ -144,14 +143,14 @@ ErrorOr<Optional<Vector<String>>> get_decode_and_split_header_value(ReadonlyByte
     while (!lexer.is_eof()) {
         // 1. Append the result of collecting a sequence of code points that are not U+0022 (") or U+002C (,) from input, given position, to temporaryValue.
         // NOTE: The result might be the empty string.
-        TRY(temporary_value_builder.try_append(lexer.consume_until(is_any_of("\","sv))));
+        temporary_value_builder.append(lexer.consume_until(is_any_of("\","sv)));
 
         // 2. If position is not past the end of input, then:
         if (!lexer.is_eof()) {
             // 1. If the code point at position within input is U+0022 ("), then:
             if (lexer.peek() == '"') {
                 // 1. Append the result of collecting an HTTP quoted string from input, given position, to temporaryValue.
-                TRY(temporary_value_builder.try_append(TRY(collect_an_http_quoted_string(lexer))));
+                temporary_value_builder.append(MUST(collect_an_http_quoted_string(lexer)));
 
                 // 2. If position is not past the end of input, then continue.
                 if (!lexer.is_eof())
@@ -168,10 +167,10 @@ ErrorOr<Optional<Vector<String>>> get_decode_and_split_header_value(ReadonlyByte
         }
 
         // 3. Remove all HTTP tab or space from the start and end of temporaryValue.
-        auto temporary_value = TRY(String::from_utf8(temporary_value_builder.string_view().trim(HTTP_TAB_OR_SPACE, TrimMode::Both)));
+        auto temporary_value = MUST(String::from_utf8(temporary_value_builder.string_view().trim(HTTP_TAB_OR_SPACE, TrimMode::Both)));
 
         // 4. Append temporaryValue to values.
-        TRY(values.try_append(move(temporary_value)));
+        values.append(move(temporary_value));
 
         // 5. Set temporaryValue to the empty string.
         temporary_value_builder.clear();
@@ -182,7 +181,7 @@ ErrorOr<Optional<Vector<String>>> get_decode_and_split_header_value(ReadonlyByte
 }
 
 // https://fetch.spec.whatwg.org/#concept-header-list-append
-ErrorOr<void> HeaderList::append(Header header)
+void HeaderList::append(Header header)
 {
     // To append a header (name, value) to a header list list, run these steps:
     // NOTE: Can't use structured bindings captured in the lambda due to https://github.com/llvm/llvm-project/issues/48582
@@ -198,9 +197,7 @@ ErrorOr<void> HeaderList::append(Header header)
     }
 
     // 2. Append (name, value) to list.
-    TRY(Vector<Header>::try_append(move(header)));
-
-    return {};
+    Vector<Header>::append(move(header));
 }
 
 // https://fetch.spec.whatwg.org/#concept-header-list-delete
@@ -213,7 +210,7 @@ void HeaderList::delete_(ReadonlyBytes name)
 }
 
 // https://fetch.spec.whatwg.org/#concept-header-list-set
-ErrorOr<void> HeaderList::set(Header header)
+void HeaderList::set(Header header)
 {
     // To set a header (name, value) in a header list list, run these steps:
     // NOTE: Can't use structured bindings captured in the lambda due to https://github.com/llvm/llvm-project/issues/48582
@@ -226,7 +223,7 @@ ErrorOr<void> HeaderList::set(Header header)
             return StringView { existing_header.name }.equals_ignoring_ascii_case(name);
         }).index();
         auto& matching_header = at(matching_index);
-        matching_header.value = TRY(ByteBuffer::copy(value));
+        matching_header.value = MUST(ByteBuffer::copy(value));
         size_t i = 0;
         remove_all_matching([&](auto const& existing_header) {
             ScopeGuard increment_i = [&]() { i++; };
@@ -237,14 +234,12 @@ ErrorOr<void> HeaderList::set(Header header)
     }
     // 2. Otherwise, append header (name, value) to list.
     else {
-        TRY(try_append(move(header)));
+        append(move(header));
     }
-
-    return {};
 }
 
 // https://fetch.spec.whatwg.org/#concept-header-list-combine
-ErrorOr<void> HeaderList::combine(Header header)
+void HeaderList::combine(Header header)
 {
     // To combine a header (name, value) in a header list list, run these steps:
     // NOTE: Can't use structured bindings captured in the lambda due to https://github.com/llvm/llvm-project/issues/48582
@@ -256,20 +251,18 @@ ErrorOr<void> HeaderList::combine(Header header)
         auto matching_header = first_matching([&](auto const& existing_header) {
             return StringView { existing_header.name }.equals_ignoring_ascii_case(name);
         });
-        TRY(matching_header->value.try_append(0x2c));
-        TRY(matching_header->value.try_append(0x20));
-        TRY(matching_header->value.try_append(value));
+        matching_header->value.append(0x2c);
+        matching_header->value.append(0x20);
+        matching_header->value.append(value);
     }
     // 2. Otherwise, append (name, value) to list.
     else {
-        TRY(try_append(move(header)));
+        append(move(header));
     }
-
-    return {};
 }
 
 // https://fetch.spec.whatwg.org/#concept-header-list-sort-and-combine
-ErrorOr<Vector<Header>> HeaderList::sort_and_combine() const
+Vector<Header> HeaderList::sort_and_combine() const
 {
     // To sort and combine a header list list, run these steps:
 
@@ -278,10 +271,10 @@ ErrorOr<Vector<Header>> HeaderList::sort_and_combine() const
 
     // 2. Let names be the result of convert header names to a sorted-lowercase set with all the names of the headers in list.
     Vector<ReadonlyBytes> names_list;
-    TRY(names_list.try_ensure_capacity(size()));
+    names_list.ensure_capacity(size());
     for (auto const& header : *this)
         names_list.unchecked_append(header.name);
-    auto names = TRY(convert_header_names_to_a_sorted_lowercase_set(names_list));
+    auto names = convert_header_names_to_a_sorted_lowercase_set(names_list);
 
     // 3. For each name of names:
     for (auto& name : names) {
@@ -292,15 +285,15 @@ ErrorOr<Vector<Header>> HeaderList::sort_and_combine() const
             for (auto const& [header_name, value] : *this) {
                 if (StringView { header_name }.equals_ignoring_ascii_case(name)) {
                     // 1. Append (name, value) to headers.
-                    auto header = TRY(Header::from_string_pair(name, value));
-                    TRY(headers.try_append(move(header)));
+                    auto header = Header::from_string_pair(name, value);
+                    headers.append(move(header));
                 }
             }
         }
         // 2. Otherwise:
         else {
             // 1. Let value be the result of getting name from list.
-            auto value = TRY(get(name));
+            auto value = get(name);
 
             // 2. Assert: value is not null.
             VERIFY(value.has_value());
@@ -310,7 +303,7 @@ ErrorOr<Vector<Header>> HeaderList::sort_and_combine() const
                 .name = move(name),
                 .value = value.release_value(),
             };
-            TRY(headers.try_append(move(header)));
+            headers.append(move(header));
         }
     }
 
@@ -319,10 +312,10 @@ ErrorOr<Vector<Header>> HeaderList::sort_and_combine() const
 }
 
 // https://fetch.spec.whatwg.org/#header-list-extract-a-length
-ErrorOr<HeaderList::ExtractLengthResult> HeaderList::extract_length() const
+HeaderList::ExtractLengthResult HeaderList::extract_length() const
 {
     // 1. Let values be the result of getting, decoding, and splitting `Content-Length` from headers.
-    auto values = TRY(get_decode_and_split("Content-Length"sv.bytes()));
+    auto values = get_decode_and_split("Content-Length"sv.bytes());
 
     // 2. If values is null, then return null.
     if (!values.has_value())
@@ -355,7 +348,7 @@ ErrorOr<HeaderList::ExtractLengthResult> HeaderList::extract_length() const
 }
 
 // https://fetch.spec.whatwg.org/#concept-header-extract-mime-type
-ErrorOr<Optional<MimeSniff::MimeType>> HeaderList::extract_mime_type() const
+Optional<MimeSniff::MimeType> HeaderList::extract_mime_type() const
 {
     // 1. Let charset be null.
     Optional<String> charset;
@@ -367,19 +360,16 @@ ErrorOr<Optional<MimeSniff::MimeType>> HeaderList::extract_mime_type() const
     Optional<MimeSniff::MimeType> mime_type;
 
     // 4. Let values be the result of getting, decoding, and splitting `Content-Type` from headers.
-    auto values_or_error = get_decode_and_split("Content-Type"sv.bytes());
-    if (values_or_error.is_error())
-        return OptionalNone {};
-    auto values = values_or_error.release_value();
+    auto values = get_decode_and_split("Content-Type"sv.bytes());
 
     // 5. If values is null, then return failure.
     if (!values.has_value())
-        return OptionalNone {};
+        return {};
 
     // 6. For each value of values:
     for (auto const& value : *values) {
         // 1. Let temporaryMimeType be the result of parsing value.
-        auto temporary_mime_type = TRY(MimeSniff::MimeType::parse(value));
+        auto temporary_mime_type = MUST(MimeSniff::MimeType::parse(value));
 
         // 2. If temporaryMimeType is failure or its essence is "*/*", then continue.
         if (!temporary_mime_type.has_value() || temporary_mime_type->essence() == "*/*"sv)
@@ -403,7 +393,7 @@ ErrorOr<Optional<MimeSniff::MimeType>> HeaderList::extract_mime_type() const
         }
         // 5. Otherwise, if mimeType’s parameters["charset"] does not exist, and charset is non-null, set mimeType’s parameters["charset"] to charset.
         else if (!mime_type->parameters().contains("charset"sv) && charset.has_value()) {
-            TRY(mime_type->set_parameter("charset"_string, charset.release_value()));
+            MUST(mime_type->set_parameter("charset"_string, charset.release_value()));
         }
     }
 
@@ -436,7 +426,7 @@ StringView legacy_extract_an_encoding(Optional<MimeSniff::MimeType> const& mime_
 }
 
 // https://fetch.spec.whatwg.org/#convert-header-names-to-a-sorted-lowercase-set
-ErrorOr<OrderedHashTable<ByteBuffer>> convert_header_names_to_a_sorted_lowercase_set(Span<ReadonlyBytes> header_names)
+OrderedHashTable<ByteBuffer> convert_header_names_to_a_sorted_lowercase_set(Span<ReadonlyBytes> header_names)
 {
     // To convert header names to a sorted-lowercase set, given a list of names headerNames, run these steps:
 
@@ -448,7 +438,7 @@ ErrorOr<OrderedHashTable<ByteBuffer>> convert_header_names_to_a_sorted_lowercase
     for (auto name : header_names) {
         if (header_names_seen.contains(name))
             continue;
-        auto bytes = TRY(ByteBuffer::copy(name));
+        auto bytes = MUST(ByteBuffer::copy(name));
         Infra::byte_lowercase(bytes);
         header_names_seen.set(name);
         header_names_set.append(move(bytes));
@@ -492,13 +482,13 @@ bool is_header_value(ReadonlyBytes header_value)
 }
 
 // https://fetch.spec.whatwg.org/#concept-header-value-normalize
-ErrorOr<ByteBuffer> normalize_header_value(ReadonlyBytes potential_value)
+ByteBuffer normalize_header_value(ReadonlyBytes potential_value)
 {
     // To normalize a byte sequence potentialValue, remove any leading and trailing HTTP whitespace bytes from potentialValue.
     if (potential_value.is_empty())
-        return ByteBuffer {};
+        return {};
     auto trimmed = StringView { potential_value }.trim(HTTP_WHITESPACE, TrimMode::Both);
-    return ByteBuffer::copy(trimmed.bytes());
+    return MUST(ByteBuffer::copy(trimmed.bytes()));
 }
 
 // https://fetch.spec.whatwg.org/#cors-safelisted-request-header
@@ -582,7 +572,7 @@ bool is_cors_unsafe_request_header_byte(u8 byte)
 }
 
 // https://fetch.spec.whatwg.org/#cors-unsafe-request-header-names
-ErrorOr<OrderedHashTable<ByteBuffer>> get_cors_unsafe_header_names(HeaderList const& headers)
+OrderedHashTable<ByteBuffer> get_cors_unsafe_header_names(HeaderList const& headers)
 {
     // The CORS-unsafe request-header names, given a header list headers, are determined as follows:
 
@@ -688,7 +678,7 @@ bool is_no_cors_safelisted_request_header(Header const& header)
 }
 
 // https://fetch.spec.whatwg.org/#forbidden-header-name
-ErrorOr<bool> is_forbidden_request_header(Header const& header)
+bool is_forbidden_request_header(Header const& header)
 {
     // A header (name, value) is forbidden request-header if these steps return true:
     auto name = StringView { header.name };
@@ -736,7 +726,7 @@ ErrorOr<bool> is_forbidden_request_header(Header const& header)
             "X-HTTP-Method-Override"sv,
             "X-Method"sv)) {
         // 1. Let parsedValues be the result of getting, decoding, and splitting value.
-        auto parsed_values = TRY(get_decode_and_split_header_value(header.value));
+        auto parsed_values = get_decode_and_split_header_value(header.value);
 
         // 2. For each method of parsedValues: if the isomorphic encoding of method is a forbidden method, then return true.
         if (parsed_values.has_value() && any_of(*parsed_values, [](auto method) { return is_forbidden_method(method.bytes()); }))
@@ -774,7 +764,7 @@ bool is_request_body_header_name(ReadonlyBytes header_name)
 }
 
 // https://fetch.spec.whatwg.org/#extract-header-values
-ErrorOr<Optional<Vector<ByteBuffer>>> extract_header_values(Header const& header)
+Optional<Vector<ByteBuffer>> extract_header_values(Header const& header)
 {
     // FIXME: 1. If parsing header’s value, per the ABNF for header’s name, fails, then return failure.
     // FIXME: 2. Return one or more values resulting from parsing header’s value, per the ABNF for header’s name.
@@ -791,19 +781,19 @@ ErrorOr<Optional<Vector<ByteBuffer>>> extract_header_values(Header const& header
 
         for (auto const& value : split_values) {
             auto trimmed_value = value.trim(" \t"sv);
-            auto trimmed_value_as_byte_buffer = TRY(ByteBuffer::copy(trimmed_value.bytes()));
-            TRY(trimmed_values.try_append(move(trimmed_value_as_byte_buffer)));
+            auto trimmed_value_as_byte_buffer = MUST(ByteBuffer::copy(trimmed_value.bytes()));
+            trimmed_values.append(move(trimmed_value_as_byte_buffer));
         }
 
         return trimmed_values;
     }
 
     // This always ignores the ABNF rules for now and returns the header value as a single list item.
-    return Vector { TRY(ByteBuffer::copy(header.value)) };
+    return Vector { MUST(ByteBuffer::copy(header.value)) };
 }
 
 // https://fetch.spec.whatwg.org/#extract-header-list-values
-ErrorOr<Variant<Vector<ByteBuffer>, ExtractHeaderParseFailure, Empty>> extract_header_list_values(ReadonlyBytes name, HeaderList const& list)
+Variant<Vector<ByteBuffer>, ExtractHeaderParseFailure, Empty> extract_header_list_values(ReadonlyBytes name, HeaderList const& list)
 {
     // 1. If list does not contain name, then return null.
     if (!list.contains(name))
@@ -821,7 +811,7 @@ ErrorOr<Variant<Vector<ByteBuffer>, ExtractHeaderParseFailure, Empty>> extract_h
             continue;
 
         // 1. Let extract be the result of extracting header values from header.
-        auto extract = TRY(extract_header_values(header));
+        auto extract = extract_header_values(header);
 
         // 2. If extract is failure, then return failure.
         if (!extract.has_value())

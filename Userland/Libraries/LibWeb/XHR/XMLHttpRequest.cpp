@@ -364,7 +364,7 @@ ErrorOr<MimeSniff::MimeType> XMLHttpRequest::get_final_mime_type() const
 ErrorOr<MimeSniff::MimeType> XMLHttpRequest::get_response_mime_type() const
 {
     // 1. Let mimeType be the result of extracting a MIME type from xhr’s response’s header list.
-    auto mime_type = TRY(m_response->header_list()->extract_mime_type());
+    auto mime_type = m_response->header_list()->extract_mime_type();
 
     // 2. If mimeType is failure, then set mimeType to text/xml.
     if (!mime_type.has_value())
@@ -425,7 +425,7 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::set_request_header(String const& name_
         return WebIDL::InvalidStateError::create(realm, "XHR send() flag is already set"_fly_string);
 
     // 3. Normalize value.
-    auto normalized_value = TRY_OR_THROW_OOM(vm, Fetch::Infrastructure::normalize_header_value(value));
+    auto normalized_value = Fetch::Infrastructure::normalize_header_value(value);
 
     // 4. If name is not a header name or value is not a header value, then throw a "SyntaxError" DOMException.
     if (!Fetch::Infrastructure::is_header_name(name))
@@ -439,11 +439,11 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::set_request_header(String const& name_
     };
 
     // 5. If (name, value) is a forbidden request-header, then return.
-    if (TRY_OR_THROW_OOM(vm, Fetch::Infrastructure::is_forbidden_request_header(header)))
+    if (Fetch::Infrastructure::is_forbidden_request_header(header))
         return {};
 
     // 6. Combine (name, value) in this’s author request headers.
-    TRY_OR_THROW_OOM(vm, m_author_request_headers->combine(move(header)));
+    m_author_request_headers->combine(move(header));
 
     return {};
 }
@@ -584,7 +584,7 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::send(Optional<DocumentOrXMLHttpRequest
         }
 
         // 4. Let originalAuthorContentType be the result of getting `Content-Type` from this’s author request headers.
-        auto original_author_content_type = TRY_OR_THROW_OOM(vm, m_author_request_headers->get("Content-Type"sv.bytes()));
+        auto original_author_content_type = m_author_request_headers->get("Content-Type"sv.bytes());
 
         // 5. If originalAuthorContentType is non-null, then:
         if (original_author_content_type.has_value()) {
@@ -604,8 +604,8 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::send(Optional<DocumentOrXMLHttpRequest
                         auto new_content_type_serialized = TRY_OR_THROW_OOM(vm, content_type_record->serialized());
 
                         // 3. Set (`Content-Type`, newContentTypeSerialized) in this’s author request headers.
-                        auto header = TRY_OR_THROW_OOM(vm, Fetch::Infrastructure::Header::from_string_pair("Content-Type"sv, new_content_type_serialized));
-                        TRY_OR_THROW_OOM(vm, m_author_request_headers->set(move(header)));
+                        auto header = Fetch::Infrastructure::Header::from_string_pair("Content-Type"sv, new_content_type_serialized);
+                        m_author_request_headers->set(move(header));
                     }
                 }
             }
@@ -618,21 +618,21 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::send(Optional<DocumentOrXMLHttpRequest
                 // NOTE: A document can only be an HTML document or XML document.
                 // 1. If body is an HTML document, then set (`Content-Type`, `text/html;charset=UTF-8`) in this’s author request headers.
                 if (document->is_html_document()) {
-                    auto header = TRY_OR_THROW_OOM(vm, Fetch::Infrastructure::Header::from_string_pair("Content-Type"sv, "text/html;charset=UTF-8"sv));
-                    TRY_OR_THROW_OOM(vm, m_author_request_headers->set(move(header)));
+                    auto header = Fetch::Infrastructure::Header::from_string_pair("Content-Type"sv, "text/html;charset=UTF-8"sv);
+                    m_author_request_headers->set(move(header));
                 }
                 // 2. Otherwise, if body is an XML document, set (`Content-Type`, `application/xml;charset=UTF-8`) in this’s author request headers.
                 else if (document->is_xml_document()) {
-                    auto header = TRY_OR_THROW_OOM(vm, Fetch::Infrastructure::Header::from_string_pair("Content-Type"sv, "application/xml;charset=UTF-8"sv));
-                    TRY_OR_THROW_OOM(vm, m_author_request_headers->set(move(header)));
+                    auto header = Fetch::Infrastructure::Header::from_string_pair("Content-Type"sv, "application/xml;charset=UTF-8"sv);
+                    m_author_request_headers->set(move(header));
                 } else {
                     VERIFY_NOT_REACHED();
                 }
             }
             // 3. Otherwise, if extractedContentType is not null, set (`Content-Type`, extractedContentType) in this’s author request headers.
             else if (extracted_content_type.has_value()) {
-                auto header = TRY_OR_THROW_OOM(vm, Fetch::Infrastructure::Header::from_string_pair("Content-Type"sv, extracted_content_type.value()));
-                TRY_OR_THROW_OOM(vm, m_author_request_headers->set(move(header)));
+                auto header = Fetch::Infrastructure::Header::from_string_pair("Content-Type"sv, extracted_content_type.value());
+                m_author_request_headers->set(move(header));
             }
         }
     }
@@ -802,7 +802,7 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::send(Optional<DocumentOrXMLHttpRequest
 
             // 8. Let length be the result of extracting a length from this’s response’s header list.
             // FIXME: We're in an async context, so we can't propagate the error anywhere.
-            auto length = m_response->header_list()->extract_length().release_value_but_fixme_should_propagate_errors();
+            auto length = m_response->header_list()->extract_length();
 
             // 9. If length is not an integer, then set it to 0.
             if (!length.has<u64>())
@@ -959,7 +959,7 @@ WebIDL::ExceptionOr<Optional<String>> XMLHttpRequest::get_response_header(String
     auto& vm = this->vm();
 
     // The getResponseHeader(name) method steps are to return the result of getting name from this’s response’s header list.
-    auto header_bytes = TRY_OR_THROW_OOM(vm, m_response->header_list()->get(name.bytes()));
+    auto header_bytes = m_response->header_list()->get(name.bytes());
     return header_bytes.has_value() ? TRY_OR_THROW_OOM(vm, String::from_utf8(*header_bytes)) : Optional<String> {};
 }
 
@@ -987,7 +987,7 @@ WebIDL::ExceptionOr<String> XMLHttpRequest::get_all_response_headers() const
     ByteBuffer output;
 
     // 2. Let initialHeaders be the result of running sort and combine with this’s response’s header list.
-    auto initial_headers = TRY_OR_THROW_OOM(vm, m_response->header_list()->sort_and_combine());
+    auto initial_headers = m_response->header_list()->sort_and_combine();
 
     // 3. Let headers be the result of sorting initialHeaders in ascending order, with a being less than b if a’s name is legacy-uppercased-byte less than b’s name.
     // Spec Note: Unfortunately, this is needed for compatibility with deployed content.
@@ -1154,7 +1154,6 @@ WebIDL::ExceptionOr<String> XMLHttpRequest::status_text() const
 // https://xhr.spec.whatwg.org/#handle-response-end-of-body
 WebIDL::ExceptionOr<void> XMLHttpRequest::handle_response_end_of_body()
 {
-    auto& vm = this->vm();
     auto& realm = this->realm();
 
     // 1. Handle errors for xhr.
@@ -1168,7 +1167,7 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::handle_response_end_of_body()
     auto transmitted = m_received_bytes.size();
 
     // 4. Let length be the result of extracting a length from this’s response’s header list.
-    auto maybe_length = TRY_OR_THROW_OOM(vm, m_response->header_list()->extract_length());
+    auto maybe_length = m_response->header_list()->extract_length();
 
     // 5. If length is not an integer, then set it to 0.
     if (!maybe_length.has<u64>())

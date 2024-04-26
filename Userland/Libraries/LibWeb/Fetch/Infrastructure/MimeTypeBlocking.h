@@ -11,6 +11,6 @@
 
 namespace Web::Fetch::Infrastructure {
 
-ErrorOr<RequestOrResponseBlocking> should_response_to_request_be_blocked_due_to_its_mime_type(Response const&, Request const&);
+[[nodiscard]] RequestOrResponseBlocking should_response_to_request_be_blocked_due_to_its_mime_type(Response const&, Request const&);
 
 }

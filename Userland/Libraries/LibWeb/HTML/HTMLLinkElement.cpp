@@ -320,7 +320,7 @@ void HTMLLinkElement::default_fetch_and_process_linked_resource()
 void HTMLLinkElement::process_stylesheet_resource(bool success, Fetch::Infrastructure::Response const& response, Variant<Empty, Fetch::Infrastructure::FetchAlgorithms::ConsumeBodyFailureTag, ByteBuffer> body_bytes)
 {
     // 1. If the resource's Content-Type metadata is not text/css, then set success to false.
-    auto extracted_mime_type = response.header_list()->extract_mime_type().release_value_but_fixme_should_propagate_errors();
+    auto extracted_mime_type = response.header_list()->extract_mime_type();
     if (!extracted_mime_type.has_value() || extracted_mime_type->essence() != "text/css") {
         success = false;
     }
