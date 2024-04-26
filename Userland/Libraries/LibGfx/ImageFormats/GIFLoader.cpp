@@ -14,7 +14,7 @@
 #include <AK/Memory.h>
 #include <AK/MemoryStream.h>
 #include <AK/Try.h>
-#include <LibCompress/LZWDecoder.h>
+#include <LibCompress/Lzw.h>
 #include <LibGfx/ImageFormats/GIFLoader.h>
 #include <string.h>
 

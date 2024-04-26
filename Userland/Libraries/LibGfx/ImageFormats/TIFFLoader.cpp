@@ -9,7 +9,7 @@
 #include <AK/Debug.h>
 #include <AK/Endian.h>
 #include <AK/String.h>
-#include <LibCompress/LZWDecoder.h>
+#include <LibCompress/Lzw.h>
 #include <LibCompress/PackBitsDecoder.h>
 #include <LibCompress/Zlib.h>
 #include <LibGfx/CMYKBitmap.h>
