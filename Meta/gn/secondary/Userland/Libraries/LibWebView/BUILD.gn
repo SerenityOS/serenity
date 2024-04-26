@@ -84,6 +84,28 @@ compiled_action("WebDriverServerEndpoint") {
   ]
 }
 
+compiled_action("UIProcessClientEndpoint") {
+  tool = "//Meta/Lagom/Tools/CodeGenerators/IPCCompiler"
+  inputs = [ "//Userland/Libraries/LibWebView/UIProcessClient.ipc" ]
+  outputs = [ "$root_gen_dir/LibWebView/UIProcessClientEndpoint.h" ]
+  args = [
+    rebase_path(inputs[0], root_build_dir),
+    "-o",
+    rebase_path(outputs[0], root_build_dir),
+  ]
+}
+
+compiled_action("UIProcessServerEndpoint") {
+  tool = "//Meta/Lagom/Tools/CodeGenerators/IPCCompiler"
+  inputs = [ "//Userland/Libraries/LibWebView/UIProcessServer.ipc" ]
+  outputs = [ "$root_gen_dir/LibWebView/UIProcessServerEndpoint.h" ]
+  args = [
+    rebase_path(inputs[0], root_build_dir),
+    "-o",
+    rebase_path(outputs[0], root_build_dir),
+  ]
+}
+
 embed_as_string_view("generate_native_stylesheet_source") {
   input = "Native.css"
   output = "$target_gen_dir/NativeStyleSheetSource.cpp"
@@ -100,6 +122,8 @@ shared_library("LibWebView") {
     "$target_gen_dir/..",
   ]
   deps = [
+    ":UIProcessClientEndpoint",
+    ":UIProcessServerEndpoint",
     ":WebContentClientEndpoint",
     ":WebContentServerEndpoint",
     ":WebDriverClientEndpoint",
@@ -118,6 +142,7 @@ shared_library("LibWebView") {
   ]
   sources = [
     "Attribute.cpp",
+    "ChromeProcess.cpp",
     "CookieJar.cpp",
     "Database.cpp",
     "InspectorClient.cpp",
@@ -136,6 +161,8 @@ shared_library("LibWebView") {
              get_target_outputs(":WebContentServerEndpoint") +
              get_target_outputs(":WebDriverClientEndpoint") +
              get_target_outputs(":WebDriverServerEndpoint") +
+             get_target_outputs(":UIProcessClientEndpoint") +
+             get_target_outputs(":UIProcessServerEndpoint") +
              get_target_outputs(":generate_native_stylesheet_source")
   if (enable_public_suffix_list_download) {
     deps += [ ":generate_public_suffix_list_sources" ]
