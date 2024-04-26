@@ -95,7 +95,7 @@ WebIDL::ExceptionOr<void> NavigableContainer::create_new_child_navigable(JS::Saf
     document_state->set_about_base_url(document->about_base_url());
 
     // 7. Let navigable be a new navigable.
-    JS::NonnullGCPtr<Navigable> navigable = *heap().allocate_without_realm<Navigable>();
+    JS::NonnullGCPtr<Navigable> navigable = *heap().allocate_without_realm<Navigable>(page);
 
     // 8. Initialize the navigable navigable given documentState and parentNavigable.
     TRY_OR_THROW_OOM(vm(), navigable->initialize_navigable(document_state, parent_navigable));

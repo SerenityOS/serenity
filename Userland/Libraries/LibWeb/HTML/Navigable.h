@@ -21,6 +21,7 @@
 #include <LibWeb/HTML/SourceSnapshotParams.h>
 #include <LibWeb/HTML/StructuredSerialize.h>
 #include <LibWeb/HTML/TokenizedFeatures.h>
+#include <LibWeb/Page/EventHandler.h>
 #include <LibWeb/PixelUnits.h>
 #include <LibWeb/XHR/FormDataEntry.h>
 
@@ -44,7 +45,9 @@ struct TargetSnapshotParams {
 };
 
 // https://html.spec.whatwg.org/multipage/document-sequences.html#navigable
-class Navigable : public JS::Cell {
+class Navigable
+    : public JS::Cell
+    , public Weakable<Navigable> {
     JS_CELL(Navigable, JS::Cell);
     JS_DECLARE_ALLOCATOR(Navigable);
 
@@ -92,6 +95,8 @@ public:
     JS::GCPtr<TraversableNavigable> top_level_traversable();
 
     virtual bool is_top_level_traversable() const { return false; }
+
+    [[nodiscard]] bool is_focused() const;
 
     enum class WindowType {
         ExistingOrNone,
@@ -186,6 +191,22 @@ public:
     Page& page() { return m_page; }
     Page const& page() const { return m_page; }
 
+    String selected_text() const;
+    void select_all();
+    void paste(String const&);
+
+    Web::EventHandler& event_handler() { return m_event_handler; }
+    Web::EventHandler const& event_handler() const { return m_event_handler; }
+
+    void did_edit(Badge<EditEventHandler>);
+
+    JS::GCPtr<DOM::Position> cursor_position() const { return m_cursor_position; }
+    void set_cursor_position(JS::NonnullGCPtr<DOM::Position>);
+    bool increment_cursor_position_offset();
+    bool decrement_cursor_position_offset();
+
+    bool cursor_blink_state() const { return m_cursor_blink_state; }
+
 protected:
     explicit Navigable(JS::NonnullGCPtr<Page>);
 
@@ -198,6 +219,8 @@ protected:
     TokenizedFeature::Popup m_is_popup { TokenizedFeature::Popup::No };
 
 private:
+    void reset_cursor_blink_cycle();
+
     void scroll_offset_did_change();
 
     void inform_the_navigation_api_about_aborting_navigation();
@@ -231,6 +254,12 @@ private:
     CSSPixelPoint m_viewport_scroll_offset;
 
     bool m_needs_repaint { false };
+
+    Web::EventHandler m_event_handler;
+
+    JS::GCPtr<DOM::Position> m_cursor_position;
+    RefPtr<Core::Timer> m_cursor_blink_timer;
+    bool m_cursor_blink_state { false };
 };
 
 HashTable<Navigable*>& all_navigables();

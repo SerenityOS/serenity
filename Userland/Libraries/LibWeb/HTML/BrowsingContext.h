@@ -23,7 +23,6 @@
 #include <LibWeb/HTML/SessionHistoryEntry.h>
 #include <LibWeb/HTML/TokenizedFeatures.h>
 #include <LibWeb/HTML/VisibilityState.h>
-#include <LibWeb/Page/EventHandler.h>
 #include <LibWeb/Platform/Timer.h>
 #include <LibWeb/TreeNode.h>
 
@@ -99,7 +98,6 @@ public:
     }
 
     bool is_top_level() const;
-    bool is_focused_context() const;
 
     DOM::Document const* active_document() const;
     DOM::Document* active_document();
@@ -115,25 +113,7 @@ public:
     Page& page() { return m_page; }
     Page const& page() const { return m_page; }
 
-    Web::EventHandler& event_handler() { return m_event_handler; }
-    Web::EventHandler const& event_handler() const { return m_event_handler; }
-
     JS::GCPtr<BrowsingContext> top_level_browsing_context() const;
-
-    JS::GCPtr<DOM::Position> cursor_position() const { return m_cursor_position; }
-    void set_cursor_position(JS::NonnullGCPtr<DOM::Position>);
-    bool increment_cursor_position_offset();
-    bool decrement_cursor_position_offset();
-
-    bool cursor_blink_state() const { return m_cursor_blink_state; }
-
-    String selected_text() const;
-    void select_all();
-    void paste(String const&);
-
-    void did_edit(Badge<EditEventHandler>);
-
-    JS::GCPtr<DOM::Node> currently_focused_area();
 
     BrowsingContextGroup* group();
     void set_group(BrowsingContextGroup*);
@@ -156,12 +136,7 @@ private:
 
     virtual void visit_edges(Cell::Visitor&) override;
 
-    void reset_cursor_blink_cycle();
-
     JS::NonnullGCPtr<Page> m_page;
-
-    // FIXME: Move EventHandler to Navigable
-    Web::EventHandler m_event_handler;
 
     // https://html.spec.whatwg.org/multipage/document-sequences.html#browsing-context
     JS::GCPtr<HTML::WindowProxy> m_window_proxy;
@@ -183,11 +158,6 @@ private:
 
     // https://html.spec.whatwg.org/multipage/document-sequences.html#virtual-browsing-context-group-id
     u64 m_virtual_browsing_context_group_id = { 0 };
-
-    // FIXME: Move cursor tracking to Navigable
-    JS::GCPtr<DOM::Position> m_cursor_position;
-    RefPtr<Core::Timer> m_cursor_blink_timer;
-    bool m_cursor_blink_state { false };
 
     // https://html.spec.whatwg.org/multipage/browsers.html#tlbc-group
     JS::GCPtr<BrowsingContextGroup> m_group;

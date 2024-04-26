@@ -65,7 +65,7 @@ void NestedBrowsingContextPaintable::paint(PaintContext& context, PaintPhase pha
         context.recording_painter().restore();
 
         if constexpr (HIGHLIGHT_FOCUSED_FRAME_DEBUG) {
-            if (layout_box().dom_node().nested_browsing_context()->is_focused_context()) {
+            if (layout_box().dom_node().content_navigable()->is_focused()) {
                 context.recording_painter().draw_rect(clip_rect.to_type<int>(), Color::Cyan);
             }
         }

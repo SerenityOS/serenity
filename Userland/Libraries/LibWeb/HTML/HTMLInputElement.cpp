@@ -379,7 +379,7 @@ WebIDL::ExceptionOr<void> HTMLInputElement::run_input_activation_behavior(DOM::E
     return {};
 }
 
-void HTMLInputElement::did_edit_text_node(Badge<BrowsingContext>)
+void HTMLInputElement::did_edit_text_node(Badge<Navigable>)
 {
     // An input element's dirty value flag must be set to true whenever the user interacts with the control in a way that changes the value.
     m_value = value_sanitization_algorithm(m_text_node->data());
@@ -543,8 +543,8 @@ WebIDL::ExceptionOr<void> HTMLInputElement::set_value(String const& value)
                 m_text_node->set_data(m_value);
                 update_placeholder_visibility();
 
-                if (auto* browsing_context = document().browsing_context())
-                    browsing_context->set_cursor_position(DOM::Position::create(realm, *m_text_node, m_text_node->data().bytes().size()));
+                if (auto navigable = document().navigable())
+                    navigable->set_cursor_position(DOM::Position::create(realm, *m_text_node, m_text_node->data().bytes().size()));
             }
 
             update_shadow_tree();
@@ -1053,12 +1053,12 @@ void HTMLInputElement::update_slider_thumb_element()
 
 void HTMLInputElement::did_receive_focus()
 {
-    auto* browsing_context = document().browsing_context();
-    if (!browsing_context)
+    auto navigable = document().navigable();
+    if (!navigable)
         return;
     if (!m_text_node)
         return;
-    browsing_context->set_cursor_position(DOM::Position::create(realm(), *m_text_node, 0));
+    navigable->set_cursor_position(DOM::Position::create(realm(), *m_text_node, 0));
 }
 
 void HTMLInputElement::did_lose_focus()

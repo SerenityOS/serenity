@@ -22,7 +22,7 @@ namespace Web {
 
 class EventHandler {
 public:
-    explicit EventHandler(Badge<HTML::BrowsingContext>, HTML::BrowsingContext&);
+    explicit EventHandler(Badge<HTML::Navigable>, HTML::Navigable&);
     ~EventHandler();
 
     bool handle_mouseup(CSSPixelPoint, CSSPixelPoint screen_position, unsigned button, unsigned buttons, unsigned modifiers);
@@ -46,7 +46,7 @@ private:
     bool focus_next_element();
     bool focus_previous_element();
 
-    bool fire_keyboard_event(FlyString const& event_name, HTML::BrowsingContext& browsing_context, KeyCode key, unsigned modifiers, u32 code_point);
+    bool fire_keyboard_event(FlyString const& event_name, HTML::Navigable&, KeyCode, unsigned modifiers, u32 code_point);
     CSSPixelPoint compute_mouse_event_client_offset(CSSPixelPoint event_page_position) const;
     CSSPixelPoint compute_mouse_event_page_offset(CSSPixelPoint event_client_offset) const;
     CSSPixelPoint compute_mouse_event_movement(CSSPixelPoint event_client_offset) const;
@@ -60,7 +60,7 @@ private:
     Painting::PaintableBox* paint_root();
     Painting::PaintableBox const* paint_root() const;
 
-    JS::NonnullGCPtr<HTML::BrowsingContext> m_browsing_context;
+    JS::NonnullGCPtr<HTML::Navigable> m_navigable;
 
     bool m_in_mouse_selection { false };
 
