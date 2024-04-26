@@ -2915,6 +2915,11 @@ HTML::PolicyContainer Document::policy_container() const
     return m_policy_container;
 }
 
+void Document::set_policy_container(HTML::PolicyContainer policy_container)
+{
+    m_policy_container = move(policy_container);
+}
+
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#snapshotting-source-snapshot-params
 HTML::SourceSnapshotParams Document::snapshot_source_snapshot_params() const
 {
