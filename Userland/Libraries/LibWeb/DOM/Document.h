@@ -501,6 +501,7 @@ public:
 
     // https://html.spec.whatwg.org/multipage/dom.html#concept-document-policy-container
     HTML::PolicyContainer policy_container() const;
+    void set_policy_container(HTML::PolicyContainer);
 
     Vector<JS::Handle<HTML::Navigable>> descendant_navigables();
     Vector<JS::Handle<HTML::Navigable>> const descendant_navigables() const;
