@@ -417,16 +417,16 @@ WebIDL::ExceptionOr<JS::GCPtr<PendingResponse>> main_fetch(JS::Realm& realm, Inf
 
                 // 2. Set response to the following filtered response with response as its internal response, depending
                 //    on request’s response tainting:
-                response = TRY_OR_IGNORE([&]() -> WebIDL::ExceptionOr<JS::NonnullGCPtr<Infrastructure::Response>> {
+                response = [&]() -> JS::NonnullGCPtr<Infrastructure::Response> {
                     switch (request->response_tainting()) {
                     // -> "basic"
                     case Infrastructure::Request::ResponseTainting::Basic:
                         // basic filtered response
-                        return TRY_OR_THROW_OOM(vm, Infrastructure::BasicFilteredResponse::create(vm, *response));
+                        return Infrastructure::BasicFilteredResponse::create(vm, *response);
                     // -> "cors"
                     case Infrastructure::Request::ResponseTainting::CORS:
                         // CORS filtered response
-                        return TRY_OR_THROW_OOM(vm, Infrastructure::CORSFilteredResponse::create(vm, *response));
+                        return Infrastructure::CORSFilteredResponse::create(vm, *response);
                     // -> "opaque"
                     case Infrastructure::Request::ResponseTainting::Opaque:
                         // opaque filtered response
@@ -434,7 +434,7 @@ WebIDL::ExceptionOr<JS::GCPtr<PendingResponse>> main_fetch(JS::Realm& realm, Inf
                     default:
                         VERIFY_NOT_REACHED();
                     }
-                }());
+                }();
             }
 
             // 15. Let internalResponse be response, if response is a network error, and response’s internal response

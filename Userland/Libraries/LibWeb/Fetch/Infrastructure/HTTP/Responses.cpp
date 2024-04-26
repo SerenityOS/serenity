@@ -146,18 +146,18 @@ ErrorOr<Optional<URL::URL>> Response::location_url(Optional<String> const& reque
 }
 
 // https://fetch.spec.whatwg.org/#concept-response-clone
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> Response::clone(JS::Realm& realm) const
+JS::NonnullGCPtr<Response> Response::clone(JS::Realm& realm) const
 {
     // To clone a response response, run these steps:
     auto& vm = realm.vm();
 
     // 1. If response is a filtered response, then return a new identical filtered response whose internal response is a clone of response’s internal response.
     if (is<FilteredResponse>(*this)) {
-        auto internal_response = TRY(static_cast<FilteredResponse const&>(*this).internal_response()->clone(realm));
+        auto internal_response = static_cast<FilteredResponse const&>(*this).internal_response()->clone(realm);
         if (is<BasicFilteredResponse>(*this))
-            return TRY_OR_THROW_OOM(vm, BasicFilteredResponse::create(vm, internal_response));
+            return BasicFilteredResponse::create(vm, internal_response);
         if (is<CORSFilteredResponse>(*this))
-            return TRY_OR_THROW_OOM(vm, CORSFilteredResponse::create(vm, internal_response));
+            return CORSFilteredResponse::create(vm, internal_response);
         if (is<OpaqueFilteredResponse>(*this))
             return OpaqueFilteredResponse::create(vm, internal_response);
         if (is<OpaqueRedirectFilteredResponse>(*this))
@@ -231,7 +231,7 @@ void FilteredResponse::visit_edges(JS::Cell::Visitor& visitor)
     visitor.visit(m_internal_response);
 }
 
-ErrorOr<JS::NonnullGCPtr<BasicFilteredResponse>> BasicFilteredResponse::create(JS::VM& vm, JS::NonnullGCPtr<Response> internal_response)
+JS::NonnullGCPtr<BasicFilteredResponse> BasicFilteredResponse::create(JS::VM& vm, JS::NonnullGCPtr<Response> internal_response)
 {
     // A basic filtered response is a filtered response whose type is "basic" and header list excludes
     // any headers in internal response’s header list whose name is a forbidden response-header name.
@@ -256,7 +256,7 @@ void BasicFilteredResponse::visit_edges(JS::Cell::Visitor& visitor)
     visitor.visit(m_header_list);
 }
 
-ErrorOr<JS::NonnullGCPtr<CORSFilteredResponse>> CORSFilteredResponse::create(JS::VM& vm, JS::NonnullGCPtr<Response> internal_response)
+JS::NonnullGCPtr<CORSFilteredResponse> CORSFilteredResponse::create(JS::VM& vm, JS::NonnullGCPtr<Response> internal_response)
 {
     // A CORS filtered response is a filtered response whose type is "cors" and header list excludes
     // any headers in internal response’s header list whose name is not a CORS-safelisted response-header

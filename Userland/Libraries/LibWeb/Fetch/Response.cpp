@@ -289,7 +289,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> Response::clone() const
         return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Response is unusable"sv };
 
     // 2. Let clonedResponse be the result of cloning this’s response.
-    auto cloned_response = TRY(m_response->clone(realm));
+    auto cloned_response = m_response->clone(realm);
 
     // 3. Return the result of creating a Response object, given clonedResponse, this’s headers’s guard, and this’s relevant Realm.
     return Response::create(HTML::relevant_realm(*this), cloned_response, m_headers->guard());
