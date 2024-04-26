@@ -7,7 +7,7 @@
 #include <AK/BitStream.h>
 #include <AK/Hex.h>
 #include <LibCompress/Deflate.h>
-#include <LibCompress/LZWDecoder.h>
+#include <LibCompress/Lzw.h>
 #include <LibCompress/PackBitsDecoder.h>
 #include <LibGfx/ImageFormats/CCITTDecoder.h>
 #include <LibGfx/ImageFormats/JBIG2Loader.h>
