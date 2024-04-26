@@ -101,7 +101,8 @@ bool Navigable::is_ancestor_of(JS::NonnullGCPtr<Navigable> other) const
     return false;
 }
 
-Navigable::Navigable()
+Navigable::Navigable(JS::NonnullGCPtr<Page> page)
+    : m_page(page)
 {
     all_navigables().set(this);
 }
@@ -114,6 +115,7 @@ Navigable::~Navigable()
 void Navigable::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
+    visitor.visit(m_page);
     visitor.visit(m_parent);
     visitor.visit(m_current_session_history_entry);
     visitor.visit(m_active_session_history_entry);

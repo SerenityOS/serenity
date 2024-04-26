@@ -23,8 +23,8 @@ namespace Web::HTML {
 JS_DEFINE_ALLOCATOR(TraversableNavigable);
 
 TraversableNavigable::TraversableNavigable(JS::NonnullGCPtr<Page> page)
-    : m_session_history_traversal_queue(vm().heap().allocate_without_realm<SessionHistoryTraversalQueue>())
-    , m_page(page)
+    : Navigable(page)
+    , m_session_history_traversal_queue(vm().heap().allocate_without_realm<SessionHistoryTraversalQueue>())
 {
 }
 
@@ -33,7 +33,6 @@ TraversableNavigable::~TraversableNavigable() = default;
 void TraversableNavigable::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_page);
     visitor.visit(m_session_history_entries);
     visitor.visit(m_session_history_traversal_queue);
 }

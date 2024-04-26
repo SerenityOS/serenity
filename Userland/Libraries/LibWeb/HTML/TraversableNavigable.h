@@ -79,9 +79,6 @@ public:
         m_session_history_traversal_queue->append_sync(move(steps), target_navigable);
     }
 
-    Page& page() { return m_page; }
-    Page const& page() const { return m_page; }
-
     String window_handle() const { return m_window_handle; }
     void set_window_handle(String window_handle) { m_window_handle = move(window_handle); }
 
@@ -119,8 +116,6 @@ private:
     VisibilityState m_system_visibility_state { VisibilityState::Visible };
 
     JS::NonnullGCPtr<SessionHistoryTraversalQueue> m_session_history_traversal_queue;
-
-    JS::NonnullGCPtr<Page> m_page;
 
     String m_window_handle;
 };
