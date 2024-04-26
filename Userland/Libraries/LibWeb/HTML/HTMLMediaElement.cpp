@@ -127,7 +127,7 @@ void HTMLMediaElement::removed_from(DOM::Node* node)
 }
 
 // https://html.spec.whatwg.org/multipage/media.html#fatal-decode-error
-WebIDL::ExceptionOr<void> HTMLMediaElement::set_decoder_error(String error_message)
+void HTMLMediaElement::set_decoder_error(String error_message)
 {
     auto& realm = this->realm();
     auto& vm = realm.vm();
@@ -137,7 +137,7 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::set_decoder_error(String error_messa
     // resource is usable (i.e. once the media element's readyState attribute is no longer HAVE_NOTHING) must cause the
     // user agent to execute the following steps:
     if (m_ready_state == ReadyState::HaveNothing)
-        return {};
+        return;
 
     // 1. The user agent should cancel the fetching process.
     if (m_fetch_controller)
@@ -156,8 +156,6 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::set_decoder_error(String error_messa
     dispatch_event(DOM::Event::create(realm, HTML::EventNames::error));
 
     // FIXME: 6. Abort the overall resource selection algorithm.
-
-    return {};
 }
 
 // https://html.spec.whatwg.org/multipage/media.html#dom-media-buffered

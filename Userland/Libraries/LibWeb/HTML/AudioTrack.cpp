@@ -39,7 +39,7 @@ AudioTrack::AudioTrack(JS::Realm& realm, JS::NonnullGCPtr<HTMLMediaElement> medi
     };
 
     m_audio_plugin->on_decoder_error = [this](String error_message) {
-        m_media_element->set_decoder_error(error_message).release_value_but_fixme_should_propagate_errors();
+        m_media_element->set_decoder_error(move(error_message));
     };
 }
 
