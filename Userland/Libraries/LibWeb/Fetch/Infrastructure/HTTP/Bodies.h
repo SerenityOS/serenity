@@ -41,7 +41,7 @@ public:
 
     [[nodiscard]] JS::NonnullGCPtr<Body> clone(JS::Realm&);
 
-    WebIDL::ExceptionOr<void> fully_read(JS::Realm&, ProcessBodyCallback process_body, ProcessBodyErrorCallback process_body_error, TaskDestination task_destination) const;
+    void fully_read(JS::Realm&, ProcessBodyCallback process_body, ProcessBodyErrorCallback process_body_error, TaskDestination task_destination) const;
 
     virtual void visit_edges(JS::Cell::Visitor&) override;
 

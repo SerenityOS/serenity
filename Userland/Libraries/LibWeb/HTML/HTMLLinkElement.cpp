@@ -539,7 +539,7 @@ WebIDL::ExceptionOr<void> HTMLLinkElement::load_fallback_favicon_if_needed(JS::N
 
         // 3. Use response's unsafe response as an icon as if it had been declared using the icon keyword.
         if (auto body = response->unsafe_response()->body())
-            body->fully_read(realm, process_body, process_body_error, global).release_value_but_fixme_should_propagate_errors();
+            body->fully_read(realm, process_body, process_body_error, global);
     };
 
     TRY(Fetch::Fetching::fetch(realm, request, Fetch::Infrastructure::FetchAlgorithms::create(vm, move(fetch_algorithms_input))));

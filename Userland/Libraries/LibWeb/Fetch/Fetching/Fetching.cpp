@@ -495,7 +495,7 @@ WebIDL::ExceptionOr<JS::GCPtr<PendingResponse>> main_fetch(JS::Realm& realm, Inf
                 // 1. Let processBodyError be this step: run fetch response handover given fetchParams and a network
                 //    error.
                 auto process_body_error = JS::create_heap_function(vm.heap(), [&realm, &vm, &fetch_params](JS::GCPtr<WebIDL::DOMException>) {
-                    TRY_OR_IGNORE(fetch_response_handover(realm, fetch_params, Infrastructure::Response::network_error(vm, "Response body could not be processed"sv)));
+                    fetch_response_handover(realm, fetch_params, Infrastructure::Response::network_error(vm, "Response body could not be processed"sv));
                 });
 
                 // 2. If response’s body is null, then run processBodyError and abort these steps.
@@ -516,15 +516,15 @@ WebIDL::ExceptionOr<JS::GCPtr<PendingResponse>> main_fetch(JS::Realm& realm, Inf
                     response->set_body(TRY_OR_IGNORE(Infrastructure::byte_sequence_as_body(realm, bytes)));
 
                     // 3. Run fetch response handover given fetchParams and response.
-                    TRY_OR_IGNORE(fetch_response_handover(realm, fetch_params, *response));
+                    fetch_response_handover(realm, fetch_params, *response);
                 });
 
                 // 4. Fully read response’s body given processBody and processBodyError.
-                TRY_OR_IGNORE(response->body()->fully_read(realm, move(process_body), move(process_body_error), fetch_params.task_destination()));
+                response->body()->fully_read(realm, process_body, process_body_error, fetch_params.task_destination());
             }
             // 23. Otherwise, run fetch response handover given fetchParams and response.
             else {
-                TRY_OR_IGNORE(fetch_response_handover(realm, fetch_params, *response));
+                fetch_response_handover(realm, fetch_params, *response);
             }
         });
     });
@@ -533,7 +533,7 @@ WebIDL::ExceptionOr<JS::GCPtr<PendingResponse>> main_fetch(JS::Realm& realm, Inf
 }
 
 // https://fetch.spec.whatwg.org/#fetch-finale
-WebIDL::ExceptionOr<void> fetch_response_handover(JS::Realm& realm, Infrastructure::FetchParams const& fetch_params, Infrastructure::Response& response)
+void fetch_response_handover(JS::Realm& realm, Infrastructure::FetchParams const& fetch_params, Infrastructure::Response& response)
 {
     dbgln_if(WEB_FETCH_DEBUG, "Fetch: Running 'fetch response handover' with: fetch_params @ {}, response @ {}", &fetch_params, &response);
 
@@ -681,11 +681,9 @@ WebIDL::ExceptionOr<void> fetch_response_handover(JS::Realm& realm, Infrastructu
         // 4. Otherwise, fully read internalResponse body given processBody, processBodyError, and fetchParams’s task
         //    destination.
         else {
-            TRY(internal_response->body()->fully_read(realm, process_body, process_body_error, fetch_params.task_destination()));
+            internal_response->body()->fully_read(realm, process_body, process_body_error, fetch_params.task_destination());
         }
     }
-
-    return {};
 }
 
 // https://fetch.spec.whatwg.org/#concept-scheme-fetch

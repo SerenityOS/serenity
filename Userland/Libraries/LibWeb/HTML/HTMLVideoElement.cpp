@@ -204,7 +204,7 @@ WebIDL::ExceptionOr<void> HTMLVideoElement::determine_element_poster_frame(Optio
         VERIFY(response->body());
         auto empty_algorithm = JS::create_heap_function(heap(), [](JS::GCPtr<WebIDL::DOMException>) {});
 
-        response->body()->fully_read(realm, on_image_data_read, empty_algorithm, JS::NonnullGCPtr { global }).release_value_but_fixme_should_propagate_errors();
+        response->body()->fully_read(realm, on_image_data_read, empty_algorithm, JS::NonnullGCPtr { global });
     };
 
     m_fetch_controller = TRY(Fetch::Fetching::fetch(realm, request, Fetch::Infrastructure::FetchAlgorithms::create(vm, move(fetch_algorithms_input))));
