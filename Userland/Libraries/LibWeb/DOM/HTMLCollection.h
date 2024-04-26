@@ -36,7 +36,7 @@ public:
 
     size_t length() const;
     Element* item(size_t index) const;
-    Element* named_item(FlyString const& name) const;
+    Element* named_item(FlyString const& key) const;
 
     JS::MarkedVector<JS::NonnullGCPtr<Element>> collect_matching_elements() const;
 
