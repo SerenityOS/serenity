@@ -201,7 +201,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> consume_body(JS::Realm& realm
     }
     // 6. Otherwise, fully read object’s body given successSteps, errorSteps, and object’s relevant global object.
     else {
-        TRY(body->fully_read(realm, success_steps, error_steps, JS::NonnullGCPtr { HTML::relevant_global_object(object.as_platform_object()) }));
+        body->fully_read(realm, success_steps, error_steps, JS::NonnullGCPtr { HTML::relevant_global_object(object.as_platform_object()) });
     }
 
     // 7. Return promise.

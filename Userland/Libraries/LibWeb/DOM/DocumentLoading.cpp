@@ -98,11 +98,10 @@ static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOM::Document>> load_markdown_docume
         });
 
         navigation_params.response->body()->fully_read(
-                                              realm,
-                                              process_body,
-                                              process_body_error,
-                                              JS::NonnullGCPtr { realm.global_object() })
-            .release_value_but_fixme_should_propagate_errors();
+            realm,
+            process_body,
+            process_body_error,
+            JS::NonnullGCPtr { realm.global_object() });
     });
 }
 
@@ -174,7 +173,7 @@ static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOM::Document>> load_html_document(H
         });
 
         auto& realm = document->realm();
-        TRY(navigation_params.response->body()->fully_read(realm, process_body, process_body_error, JS::NonnullGCPtr { realm.global_object() }));
+        navigation_params.response->body()->fully_read(realm, process_body, process_body_error, JS::NonnullGCPtr { realm.global_object() });
     }
 
     // 4. Return document.
@@ -265,7 +264,7 @@ static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOM::Document>> load_xml_document(HT
     });
 
     auto& realm = document->realm();
-    TRY(navigation_params.response->body()->fully_read(realm, process_body, process_body_error, JS::NonnullGCPtr { realm.global_object() }));
+    navigation_params.response->body()->fully_read(realm, process_body, process_body_error, JS::NonnullGCPtr { realm.global_object() });
 
     return document;
 }
@@ -328,7 +327,7 @@ static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOM::Document>> load_text_document(H
     });
 
     auto& realm = document->realm();
-    TRY(navigation_params.response->body()->fully_read(realm, process_body, process_body_error, JS::NonnullGCPtr { realm.global_object() }));
+    navigation_params.response->body()->fully_read(realm, process_body, process_body_error, JS::NonnullGCPtr { realm.global_object() });
 
     // 6. Return document.
     return document;
@@ -416,11 +415,11 @@ static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOM::Document>> load_media_document(
     //        However, if we don't, then we get stuck in HTMLParser::the_end() waiting for the media file to load, which
     //        never happens.
     auto& realm = document->realm();
-    TRY(navigation_params.response->body()->fully_read(
+    navigation_params.response->body()->fully_read(
         realm,
         JS::create_heap_function(document->heap(), [document](ByteBuffer) { HTML::HTMLParser::the_end(document); }),
         JS::create_heap_function(document->heap(), [](JS::GCPtr<WebIDL::DOMException>) {}),
-        JS::NonnullGCPtr { realm.global_object() }));
+        JS::NonnullGCPtr { realm.global_object() });
 
     // 9. Return document.
     return document;

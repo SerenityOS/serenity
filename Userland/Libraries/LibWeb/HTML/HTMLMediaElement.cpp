@@ -1016,7 +1016,7 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::fetch_resource(URL::URL const& url_r
             // FIXME: We are "fully" reading the response here, rather than "incrementally". Memory concerns aside, this should be okay for now as we are
             //        always setting byteRange to "entire resource". However, we should switch to incremental reads when that is implemented, and then
             //        implement the processEndOfMedia step.
-            response->body()->fully_read(realm, update_media, empty_algorithm, JS::NonnullGCPtr { global }).release_value_but_fixme_should_propagate_errors();
+            response->body()->fully_read(realm, update_media, empty_algorithm, JS::NonnullGCPtr { global });
         };
 
         m_fetch_controller = TRY(Fetch::Fetching::fetch(realm, request, Fetch::Infrastructure::FetchAlgorithms::create(vm, move(fetch_algorithms_input))));
