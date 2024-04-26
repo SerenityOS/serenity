@@ -335,6 +335,13 @@ bool Node::is_connected() const
     return shadow_including_root().is_document();
 }
 
+// https://html.spec.whatwg.org/multipage/infrastructure.html#browsing-context-connected
+bool Node::is_browsing_context_connected() const
+{
+    // A node is browsing-context connected when it is connected and its shadow-including root's browsing context is non-null.
+    return is_connected() && shadow_including_root().document().browsing_context();
+}
+
 // https://dom.spec.whatwg.org/#concept-node-ensure-pre-insertion-validity
 WebIDL::ExceptionOr<void> Node::ensure_pre_insertion_validity(JS::NonnullGCPtr<Node> node, JS::GCPtr<Node> child) const
 {
