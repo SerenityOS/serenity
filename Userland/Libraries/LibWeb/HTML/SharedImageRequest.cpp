@@ -86,7 +86,7 @@ void SharedImageRequest::fetch_image(JS::Realm& realm, JS::NonnullGCPtr<Fetch::I
         response = response->unsafe_response();
 
         auto process_body = JS::create_heap_function(heap(), [this, request, response](ByteBuffer data) {
-            auto extracted_mime_type = response->header_list()->extract_mime_type().release_value_but_fixme_should_propagate_errors();
+            auto extracted_mime_type = response->header_list()->extract_mime_type();
             auto mime_type = extracted_mime_type.has_value() ? extracted_mime_type.value().essence().bytes_as_string_view() : StringView {};
             handle_successful_fetch(request->url(), mime_type, move(data));
         });

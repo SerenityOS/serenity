@@ -58,12 +58,12 @@ WebIDL::ExceptionOr<bool> NavigatorBeaconMixin::send_beacon(String const& url, O
             cors_mode = Fetch::Infrastructure::Request::Mode::CORS;
 
             // If contentType value is a CORS-safelisted request-header value for the Content-Type header, set corsMode to "no-cors".
-            auto content_type_header = MUST(Fetch::Infrastructure::Header::from_string_pair("Content-Type"sv, content_type.value()));
+            auto content_type_header = Fetch::Infrastructure::Header::from_string_pair("Content-Type"sv, content_type.value());
             if (Fetch::Infrastructure::is_cors_safelisted_request_header(content_type_header))
                 cors_mode = Fetch::Infrastructure::Request::Mode::NoCORS;
 
             // Append a Content-Type header with value contentType to headerList.
-            MUST(header_list->append(content_type_header));
+            header_list->append(content_type_header);
         }
     }
 

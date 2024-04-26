@@ -13,10 +13,10 @@
 namespace Web::Fetch::Infrastructure {
 
 // https://fetch.spec.whatwg.org/#determine-nosniff
-ErrorOr<bool> determine_nosniff(HeaderList const& list)
+bool determine_nosniff(HeaderList const& list)
 {
     // 1. Let values be the result of getting, decoding, and splitting `X-Content-Type-Options` from list.
-    auto values = TRY(list.get_decode_and_split("X-Content-Type-Options"sv.bytes()));
+    auto values = list.get_decode_and_split("X-Content-Type-Options"sv.bytes());
 
     // 2. If values is null, then return false.
     if (!values.has_value())
@@ -31,14 +31,14 @@ ErrorOr<bool> determine_nosniff(HeaderList const& list)
 }
 
 // https://fetch.spec.whatwg.org/#should-response-to-request-be-blocked-due-to-nosniff?
-ErrorOr<RequestOrResponseBlocking> should_response_to_request_be_blocked_due_to_nosniff(Response const& response, Request const& request)
+RequestOrResponseBlocking should_response_to_request_be_blocked_due_to_nosniff(Response const& response, Request const& request)
 {
     // 1. If determine nosniff with response’s header list is false, then return allowed.
-    if (!TRY(determine_nosniff(response.header_list())))
+    if (!determine_nosniff(response.header_list()))
         return RequestOrResponseBlocking::Allowed;
 
     // 2. Let mimeType be the result of extracting a MIME type from response’s header list.
-    auto mime_type = TRY(response.header_list()->extract_mime_type());
+    auto mime_type = response.header_list()->extract_mime_type();
 
     // 3. Let destination be request’s destination.
     auto const& destination = request.destination();

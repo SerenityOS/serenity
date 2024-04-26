@@ -124,7 +124,7 @@ ErrorOr<Optional<URL::URL>> Response::location_url(Optional<String> const& reque
         return Optional<URL::URL> {};
 
     // 2. Let location be the result of extracting header list values given `Location` and response’s header list.
-    auto location_values_or_failure = TRY(extract_header_list_values("Location"sv.bytes(), m_header_list));
+    auto location_values_or_failure = extract_header_list_values("Location"sv.bytes(), m_header_list);
     if (location_values_or_failure.has<Infrastructure::ExtractHeaderParseFailure>() || location_values_or_failure.has<Empty>())
         return Optional<URL::URL> {};
 
@@ -173,7 +173,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> Response::clone(JS::Realm& realm
     new_response->set_status(m_status);
     new_response->set_status_message(m_status_message);
     for (auto const& header : *m_header_list)
-        MUST(new_response->header_list()->append(header));
+        new_response->header_list()->append(header);
     new_response->set_cache_state(m_cache_state);
     new_response->set_cors_exposed_header_name_list(m_cors_exposed_header_name_list);
     new_response->set_range_requested(m_range_requested);
@@ -238,7 +238,7 @@ ErrorOr<JS::NonnullGCPtr<BasicFilteredResponse>> BasicFilteredResponse::create(J
     auto header_list = HeaderList::create(vm);
     for (auto const& header : *internal_response->header_list()) {
         if (!is_forbidden_response_header_name(header.name))
-            TRY(header_list->append(header));
+            header_list->append(header);
     }
 
     return vm.heap().allocate_without_realm<BasicFilteredResponse>(internal_response, header_list);
@@ -268,7 +268,7 @@ ErrorOr<JS::NonnullGCPtr<CORSFilteredResponse>> CORSFilteredResponse::create(JS:
     auto header_list = HeaderList::create(vm);
     for (auto const& header : *internal_response->header_list()) {
         if (is_cors_safelisted_response_header_name(header.name, cors_exposed_header_name_list))
-            TRY(header_list->append(header));
+            header_list->append(header);
     }
 
     return vm.heap().allocate_without_realm<CORSFilteredResponse>(internal_response, header_list);

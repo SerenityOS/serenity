@@ -52,20 +52,17 @@ void HeadersIterator::visit_edges(JS::Cell::Visitor& visitor)
 }
 
 // https://webidl.spec.whatwg.org/#es-iterable, Step 2
-JS::ThrowCompletionOr<JS::Object*> HeadersIterator::next()
+JS::NonnullGCPtr<JS::Object> HeadersIterator::next()
 {
     // The value pairs to iterate over are the return value of running sort and combine with this’s header list.
-    auto value_pairs_to_iterate_over = [&]() -> JS::ThrowCompletionOr<Vector<Fetch::Infrastructure::Header>> {
-        auto headers_or_error = m_headers->m_header_list->sort_and_combine();
-        if (headers_or_error.is_error())
-            return vm().throw_completion<JS::InternalError>(JS::ErrorType::NotEnoughMemoryToAllocate);
-        return headers_or_error.release_value();
+    auto value_pairs_to_iterate_over = [&]() {
+        return m_headers->m_header_list->sort_and_combine();
     };
 
-    auto pairs = TRY(value_pairs_to_iterate_over());
+    auto pairs = value_pairs_to_iterate_over();
 
     if (m_index >= pairs.size())
-        return create_iterator_result_object(vm(), JS::js_undefined(), true).ptr();
+        return create_iterator_result_object(vm(), JS::js_undefined(), true);
 
     auto const& pair = pairs[m_index++];
     StringView pair_name { pair.name };
@@ -73,12 +70,12 @@ JS::ThrowCompletionOr<JS::Object*> HeadersIterator::next()
 
     switch (m_iteration_kind) {
     case JS::Object::PropertyKind::Key:
-        return create_iterator_result_object(vm(), JS::PrimitiveString::create(vm(), pair_name), false).ptr();
+        return create_iterator_result_object(vm(), JS::PrimitiveString::create(vm(), pair_name), false);
     case JS::Object::PropertyKind::Value:
-        return create_iterator_result_object(vm(), JS::PrimitiveString::create(vm(), pair_value), false).ptr();
+        return create_iterator_result_object(vm(), JS::PrimitiveString::create(vm(), pair_value), false);
     case JS::Object::PropertyKind::KeyAndValue: {
         auto array = JS::Array::create_from(realm(), { JS::PrimitiveString::create(vm(), pair_name), JS::PrimitiveString::create(vm(), pair_value) });
-        return create_iterator_result_object(vm(), array, false).ptr();
+        return create_iterator_result_object(vm(), array, false);
     }
     default:
         VERIFY_NOT_REACHED();

@@ -174,15 +174,15 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Infrastructure::FetchController>> fetch(JS:
         }
 
         // 3. Append (`Accept`, value) to request’s header list.
-        auto header = TRY_OR_THROW_OOM(vm, Infrastructure::Header::from_string_pair("Accept"sv, value.bytes()));
-        TRY_OR_THROW_OOM(vm, request.header_list()->append(move(header)));
+        auto header = Infrastructure::Header::from_string_pair("Accept"sv, value.bytes());
+        request.header_list()->append(move(header));
     }
 
     // 14. If request’s header list does not contain `Accept-Language`, then user agents should append
     //     (`Accept-Language, an appropriate header value) to request’s header list.
     if (!request.header_list()->contains("Accept-Language"sv.bytes())) {
-        auto header = MUST(Infrastructure::Header::from_string_pair("Accept-Language"sv, "*"sv));
-        TRY_OR_THROW_OOM(vm, request.header_list()->append(move(header)));
+        auto header = Infrastructure::Header::from_string_pair("Accept-Language"sv, "*"sv);
+        request.header_list()->append(move(header));
     }
 
     // 15. If request’s priority is null, then use request’s initiator, destination, and render-blocking appropriately
@@ -335,7 +335,7 @@ WebIDL::ExceptionOr<JS::GCPtr<PendingResponse>> main_fetch(JS::Realm& realm, Inf
             request->use_cors_preflight()
             || (request->unsafe_request()
                 && (!Infrastructure::is_cors_safelisted_method(request->method())
-                    || !TRY_OR_THROW_OOM(vm, Infrastructure::get_cors_unsafe_header_names(request->header_list())).is_empty()))) {
+                    || !Infrastructure::get_cors_unsafe_header_names(request->header_list()).is_empty()))) {
             // 1. Set request’s response tainting to "cors".
             request->set_response_tainting(Infrastructure::Request::ResponseTainting::CORS);
 
@@ -398,14 +398,14 @@ WebIDL::ExceptionOr<JS::GCPtr<PendingResponse>> main_fetch(JS::Realm& realm, Inf
                 if (request->response_tainting() == Infrastructure::Request::ResponseTainting::CORS) {
                     // 1. Let headerNames be the result of extracting header list values given
                     //    `Access-Control-Expose-Headers` and response’s header list.
-                    auto header_names_or_failure = TRY_OR_IGNORE(Infrastructure::extract_header_list_values("Access-Control-Expose-Headers"sv.bytes(), response->header_list()));
+                    auto header_names_or_failure = Infrastructure::extract_header_list_values("Access-Control-Expose-Headers"sv.bytes(), response->header_list());
                     auto header_names = header_names_or_failure.has<Vector<ByteBuffer>>() ? header_names_or_failure.get<Vector<ByteBuffer>>() : Vector<ByteBuffer> {};
 
                     // 2. If request’s credentials mode is not "include" and headerNames contains `*`, then set
                     //    response’s CORS-exposed header-name list to all unique header names in response’s header
                     //    list.
                     if (request->credentials_mode() != Infrastructure::Request::CredentialsMode::Include && header_names.contains_slow("*"sv.bytes())) {
-                        auto unique_header_names = TRY_OR_IGNORE(response->header_list()->unique_names());
+                        auto unique_header_names = response->header_list()->unique_names();
                         response->set_cors_exposed_header_name_list(move(unique_header_names));
                     }
                     // 3. Otherwise, if headerNames is not null or failure, then set response’s CORS-exposed
@@ -463,9 +463,9 @@ WebIDL::ExceptionOr<JS::GCPtr<PendingResponse>> main_fetch(JS::Realm& realm, Inf
                     // FIXME: - should internalResponse to request be blocked by Content Security Policy
                     || false
                     // - should internalResponse to request be blocked due to its MIME type
-                    || TRY_OR_IGNORE(Infrastructure::should_response_to_request_be_blocked_due_to_its_mime_type(internal_response, request)) == Infrastructure::RequestOrResponseBlocking::Blocked
+                    || Infrastructure::should_response_to_request_be_blocked_due_to_its_mime_type(internal_response, request) == Infrastructure::RequestOrResponseBlocking::Blocked
                     // - should internalResponse to request be blocked due to nosniff
-                    || TRY_OR_IGNORE(Infrastructure::should_response_to_request_be_blocked_due_to_nosniff(internal_response, request)) == Infrastructure::RequestOrResponseBlocking::Blocked)) {
+                    || Infrastructure::should_response_to_request_be_blocked_due_to_nosniff(internal_response, request) == Infrastructure::RequestOrResponseBlocking::Blocked)) {
                 // then set response and internalResponse to a network error.
                 response = internal_response = Infrastructure::Response::network_error(vm, "Response was blocked"_string);
             }
@@ -548,7 +548,7 @@ WebIDL::ExceptionOr<void> fetch_response_handover(JS::Realm& realm, Infrastructu
     //    The user agent may decide to expose `Server-Timing` headers to non-secure contexts requests as well.
     auto client = fetch_params.request()->client();
     if (!response.is_network_error() && client != nullptr && HTML::is_secure_context(*client)) {
-        auto server_timing_headers = TRY_OR_THROW_OOM(vm, response.header_list()->get_decode_and_split("Server-Timing"sv.bytes()));
+        auto server_timing_headers = response.header_list()->get_decode_and_split("Server-Timing"sv.bytes());
         if (server_timing_headers.has_value())
             timing_info->set_server_timing_headers(server_timing_headers.release_value());
     }
@@ -713,8 +713,10 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> scheme_fetch(JS::Realm& r
         if (request->current_url().serialize_path() == "blank"sv) {
             auto response = Infrastructure::Response::create(vm);
             response->set_status_message(MUST(ByteBuffer::copy("OK"sv.bytes())));
-            auto header = MUST(Infrastructure::Header::from_string_pair("Content-Type"sv, "text/html;charset=utf-8"sv));
-            TRY_OR_THROW_OOM(vm, response->header_list()->append(move(header)));
+
+            auto header = Infrastructure::Header::from_string_pair("Content-Type"sv, "text/html;charset=utf-8"sv);
+            response->header_list()->append(move(header));
+
             response->set_body(MUST(Infrastructure::byte_sequence_as_body(realm, ""sv.bytes())));
             return PendingResponse::create(vm, request, response);
         }
@@ -764,11 +766,11 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> scheme_fetch(JS::Realm& r
             response->set_body(move(body_with_type.body));
 
             // 4. Set response’s header list to « (`Content-Length`, serializedFullLength), (`Content-Type`, type) ».
-            auto content_length_header = TRY_OR_THROW_OOM(vm, Infrastructure::Header::from_string_pair("Content-Length"sv, serialized_full_length));
-            TRY_OR_THROW_OOM(vm, response->header_list()->append(move(content_length_header)));
+            auto content_length_header = Infrastructure::Header::from_string_pair("Content-Length"sv, serialized_full_length);
+            response->header_list()->append(move(content_length_header));
 
-            auto content_type_header = TRY_OR_THROW_OOM(vm, Infrastructure::Header::from_string_pair("Content-Type"sv, type));
-            TRY_OR_THROW_OOM(vm, response->header_list()->append(move(content_type_header)));
+            auto content_type_header = Infrastructure::Header::from_string_pair("Content-Type"sv, type);
+            response->header_list()->append(move(content_type_header));
         }
         // FIXME: 9. Otherwise:
         else {
@@ -819,8 +821,10 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> scheme_fetch(JS::Realm& r
         //    body is dataURLStruct’s body as a body.
         auto response = Infrastructure::Response::create(vm);
         response->set_status_message(MUST(ByteBuffer::copy("OK"sv.bytes())));
-        auto header = TRY_OR_THROW_OOM(vm, Infrastructure::Header::from_string_pair("Content-Type"sv, mime_type));
-        TRY_OR_THROW_OOM(vm, response->header_list()->append(move(header)));
+
+        auto header = Infrastructure::Header::from_string_pair("Content-Type"sv, mime_type);
+        response->header_list()->append(move(header));
+
         response->set_body(TRY(Infrastructure::byte_sequence_as_body(realm, data_url_struct.value().body)));
         return PendingResponse::create(vm, request, response);
     }
@@ -939,7 +943,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_fetch(JS::Realm& rea
                 // - There is at least one item in the CORS-unsafe request-header names with request’s header list for
                 //   which there is no header-name cache entry match using request.
                 //   FIXME: We currently have no cache, so there will always be no header-name cache entry.
-                || !TRY_OR_THROW_OOM(vm, Infrastructure::get_cors_unsafe_header_names(request->header_list())).is_empty())) {
+                || !Infrastructure::get_cors_unsafe_header_names(request->header_list()).is_empty())) {
             // 1. Let preflightResponse be the result of running CORS-preflight fetch given request.
             pending_preflight_response = TRY(cors_preflight_fetch(realm, request));
 
@@ -1324,7 +1328,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
                 .name = MUST(ByteBuffer::copy("Content-Length"sv.bytes())),
                 .value = content_length_header_value.release_value(),
             };
-            TRY_OR_THROW_OOM(vm, http_request->header_list()->append(move(header)));
+            http_request->header_list()->append(move(header));
         }
 
         // FIXME: 10. If contentLength is non-null and httpRequest’s keepalive is true, then:
@@ -1345,7 +1349,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
                 .name = MUST(ByteBuffer::copy("Referer"sv.bytes())),
                 .value = move(referrer_value),
             };
-            TRY_OR_THROW_OOM(vm, http_request->header_list()->append(move(header)));
+            http_request->header_list()->append(move(header));
         }
 
         // 12. Append a request `Origin` header for httpRequest.
@@ -1360,7 +1364,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
                 .name = MUST(ByteBuffer::copy("User-Agent"sv.bytes())),
                 .value = Infrastructure::default_user_agent_value(),
             };
-            TRY_OR_THROW_OOM(vm, http_request->header_list()->append(move(header)));
+            http_request->header_list()->append(move(header));
         }
 
         // 15. If httpRequest’s cache mode is "default" and httpRequest’s header list contains `If-Modified-Since`,
@@ -1381,8 +1385,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
         if (http_request->cache_mode() == Infrastructure::Request::CacheMode::NoCache
             && !http_request->prevent_no_cache_cache_control_header_modification()
             && !http_request->header_list()->contains("Cache-Control"sv.bytes())) {
-            auto header = MUST(Infrastructure::Header::from_string_pair("Cache-Control"sv, "max-age=0"sv));
-            TRY_OR_THROW_OOM(vm, http_request->header_list()->append(move(header)));
+            auto header = Infrastructure::Header::from_string_pair("Cache-Control"sv, "max-age=0"sv);
+            http_request->header_list()->append(move(header));
         }
 
         // 17. If httpRequest’s cache mode is "no-store" or "reload", then:
@@ -1391,15 +1395,15 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
             // 1. If httpRequest’s header list does not contain `Pragma`, then append (`Pragma`, `no-cache`) to
             //    httpRequest’s header list.
             if (!http_request->header_list()->contains("Pragma"sv.bytes())) {
-                auto header = MUST(Infrastructure::Header::from_string_pair("Pragma"sv, "no-cache"sv));
-                TRY_OR_THROW_OOM(vm, http_request->header_list()->append(move(header)));
+                auto header = Infrastructure::Header::from_string_pair("Pragma"sv, "no-cache"sv);
+                http_request->header_list()->append(move(header));
             }
 
             // 2. If httpRequest’s header list does not contain `Cache-Control`, then append
             //    (`Cache-Control`, `no-cache`) to httpRequest’s header list.
             if (!http_request->header_list()->contains("Cache-Control"sv.bytes())) {
-                auto header = MUST(Infrastructure::Header::from_string_pair("Cache-Control"sv, "no-cache"sv));
-                TRY_OR_THROW_OOM(vm, http_request->header_list()->append(move(header)));
+                auto header = Infrastructure::Header::from_string_pair("Cache-Control"sv, "no-cache"sv);
+                http_request->header_list()->append(move(header));
             }
         }
 
@@ -1408,8 +1412,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
         // NOTE: This avoids a failure when handling content codings with a part of an encoded response.
         //       Additionally, many servers mistakenly ignore `Range` headers if a non-identity encoding is accepted.
         if (http_request->header_list()->contains("Range"sv.bytes())) {
-            auto header = MUST(Infrastructure::Header::from_string_pair("Accept-Encoding"sv, "identity"sv));
-            TRY_OR_THROW_OOM(vm, http_request->header_list()->append(move(header)));
+            auto header = Infrastructure::Header::from_string_pair("Accept-Encoding"sv, "identity"sv);
+            http_request->header_list()->append(move(header));
         }
 
         // 19. Modify httpRequest’s header list per HTTP. Do not append a given header if httpRequest’s header list
@@ -1438,8 +1442,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
 
                 // 2. If cookies is not the empty string, then append (`Cookie`, cookies) to httpRequest’s header list.
                 if (!cookies.is_empty()) {
-                    auto header = TRY_OR_THROW_OOM(vm, Infrastructure::Header::from_string_pair("Cookie"sv, cookies));
-                    TRY_OR_THROW_OOM(vm, http_request->header_list()->append(move(header)));
+                    auto header = Infrastructure::Header::from_string_pair("Cookie"sv, cookies);
+                    http_request->header_list()->append(move(header));
                 }
             }
 
@@ -1466,8 +1470,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
                 // 4. If authorizationValue is non-null, then append (`Authorization`, authorizationValue) to
                 //    httpRequest’s header list.
                 if (authorization_value.has_value()) {
-                    auto header = TRY_OR_THROW_OOM(vm, Infrastructure::Header::from_string_pair("Authorization"sv, *authorization_value));
-                    TRY_OR_THROW_OOM(vm, http_request->header_list()->append(move(header)));
+                    auto header = Infrastructure::Header::from_string_pair("Authorization"sv, *authorization_value);
+                    http_request->header_list()->append(move(header));
                 }
             }
         }
@@ -1772,8 +1776,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> nonstandard_resource_load
             response->set_status(status_code.value_or(200));
             response->set_body(move(body));
             for (auto const& [name, value] : response_headers) {
-                auto header = TRY_OR_IGNORE(Infrastructure::Header::from_string_pair(name, value));
-                TRY_OR_IGNORE(response->header_list()->append(header));
+                auto header = Infrastructure::Header::from_string_pair(name, value);
+                response->header_list()->append(move(header));
             }
             // FIXME: Set response status message
             pending_response->resolve(response);
@@ -1792,8 +1796,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> nonstandard_resource_load
                 auto [body, _] = TRY_OR_IGNORE(extract_body(realm, data));
                 response->set_body(move(body));
                 for (auto const& [name, value] : response_headers) {
-                    auto header = TRY_OR_IGNORE(Infrastructure::Header::from_string_pair(name, value));
-                    TRY_OR_IGNORE(response->header_list()->append(header));
+                    auto header = Infrastructure::Header::from_string_pair(name, value);
+                    response->header_list()->append(move(header));
                 }
                 // FIXME: Set response status message
             }
@@ -1825,15 +1829,15 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> cors_preflight_fetch(JS::
     preflight->set_response_tainting(Infrastructure::Request::ResponseTainting::CORS);
 
     // 2. Append (`Accept`, `*/*`) to preflight’s header list.
-    auto temp_header = TRY_OR_THROW_OOM(vm, Infrastructure::Header::from_string_pair("Accept"sv, "*/*"sv));
-    TRY_OR_THROW_OOM(vm, preflight->header_list()->append(move(temp_header)));
+    auto temp_header = Infrastructure::Header::from_string_pair("Accept"sv, "*/*"sv);
+    preflight->header_list()->append(move(temp_header));
 
     // 3. Append (`Access-Control-Request-Method`, request’s method) to preflight’s header list.
-    temp_header = TRY_OR_THROW_OOM(vm, Infrastructure::Header::from_string_pair("Access-Control-Request-Method"sv, request.method()));
-    TRY_OR_THROW_OOM(vm, preflight->header_list()->append(move(temp_header)));
+    temp_header = Infrastructure::Header::from_string_pair("Access-Control-Request-Method"sv, request.method());
+    preflight->header_list()->append(move(temp_header));
 
     // 4. Let headers be the CORS-unsafe request-header names with request’s header list.
-    auto headers = TRY_OR_THROW_OOM(vm, Infrastructure::get_cors_unsafe_header_names(request.header_list()));
+    auto headers = Infrastructure::get_cors_unsafe_header_names(request.header_list());
 
     // 5. If headers is not empty, then:
     if (!headers.is_empty()) {
@@ -1855,7 +1859,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> cors_preflight_fetch(JS::
             .name = TRY_OR_THROW_OOM(vm, ByteBuffer::copy("Access-Control-Request-Headers"sv.bytes())),
             .value = move(value),
         };
-        TRY_OR_THROW_OOM(vm, preflight->header_list()->append(move(temp_header)));
+        preflight->header_list()->append(move(temp_header));
     }
 
     // 6. Let response be the result of running HTTP-network-or-cache fetch given a new fetch params whose request is preflight.
@@ -1874,11 +1878,11 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> cors_preflight_fetch(JS::
         // NOTE: The CORS check is done on request rather than preflight to ensure the correct credentials mode is used.
         if (TRY_OR_IGNORE(cors_check(request, response)) && Infrastructure::is_ok_status(response->status())) {
             // 1. Let methods be the result of extracting header list values given `Access-Control-Allow-Methods` and response’s header list.
-            auto methods_or_failure = TRY_OR_IGNORE(Infrastructure::extract_header_list_values("Access-Control-Allow-Methods"sv.bytes(), response->header_list()));
+            auto methods_or_failure = Infrastructure::extract_header_list_values("Access-Control-Allow-Methods"sv.bytes(), response->header_list());
 
             // 2. Let headerNames be the result of extracting header list values given `Access-Control-Allow-Headers` and
             //    response’s header list.
-            auto header_names_or_failure = TRY_OR_IGNORE(Infrastructure::extract_header_list_values("Access-Control-Allow-Headers"sv.bytes(), response->header_list()));
+            auto header_names_or_failure = Infrastructure::extract_header_list_values("Access-Control-Allow-Headers"sv.bytes(), response->header_list());
 
             // 3. If either methods or headerNames is failure, return a network error.
             if (methods_or_failure.has<Infrastructure::ExtractHeaderParseFailure>()) {
@@ -1939,7 +1943,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> cors_preflight_fetch(JS::
             // 7. For each unsafeName of the CORS-unsafe request-header names with request’s header list, if unsafeName is not a
             //    byte-case-insensitive match for an item in headerNames and request’s credentials mode is "include" or headerNames
             //    does not contain `*`, return a network error.
-            auto unsafe_names = TRY_OR_IGNORE(Infrastructure::get_cors_unsafe_header_names(request.header_list()));
+            auto unsafe_names = Infrastructure::get_cors_unsafe_header_names(request.header_list());
             for (auto const& unsafe_name : unsafe_names) {
                 bool is_in_header_names = false;
 

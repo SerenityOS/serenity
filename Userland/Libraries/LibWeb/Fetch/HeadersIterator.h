@@ -21,7 +21,7 @@ public:
 
     virtual ~HeadersIterator() override;
 
-    JS::ThrowCompletionOr<JS::Object*> next();
+    JS::NonnullGCPtr<JS::Object> next();
 
 private:
     virtual void initialize(JS::Realm&) override;

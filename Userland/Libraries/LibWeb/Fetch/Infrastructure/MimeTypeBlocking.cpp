@@ -11,10 +11,10 @@
 namespace Web::Fetch::Infrastructure {
 
 // https://fetch.spec.whatwg.org/#ref-for-should-response-to-request-be-blocked-due-to-mime-type?
-ErrorOr<RequestOrResponseBlocking> should_response_to_request_be_blocked_due_to_its_mime_type(Response const& response, Request const& request)
+RequestOrResponseBlocking should_response_to_request_be_blocked_due_to_its_mime_type(Response const& response, Request const& request)
 {
     // 1. Let mimeType be the result of extracting a MIME type from response’s header list.
-    auto mime_type = TRY(response.header_list()->extract_mime_type());
+    auto mime_type = response.header_list()->extract_mime_type();
 
     // 2. If mimeType is failure, then return allowed.
     if (!mime_type.has_value())

@@ -469,7 +469,7 @@ JS::GCPtr<DOM::Document> load_document(HTML::NavigationParams const& navigation_
     // and origin initiatorOrigin, perform the following steps. They return a Document or null.
 
     // 1. Let type be the computed type of navigationParams's response.
-    auto extracted_mime_type = navigation_params.response->header_list()->extract_mime_type().release_value_but_fixme_should_propagate_errors();
+    auto extracted_mime_type = navigation_params.response->header_list()->extract_mime_type();
     if (!extracted_mime_type.has_value())
         return nullptr;
     auto type = extracted_mime_type.release_value();
