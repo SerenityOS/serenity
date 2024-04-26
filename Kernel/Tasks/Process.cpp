@@ -1172,7 +1172,7 @@ ErrorOr<void> Process::require_promise(Pledge promise)
     if (has_promised(promise))
         return {};
 
-    dbgln("Has not pledged {}", to_string(promise));
+    dbgln("\033[31;1mProcess has not pledged '{}'\033[0m", to_string(promise));
     Thread::current()->set_promise_violation_pending(true);
     (void)try_set_coredump_property("pledge_violation"sv, to_string(promise));
     return EPROMISEVIOLATION;
