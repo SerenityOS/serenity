@@ -302,13 +302,13 @@ public:
 
     [[nodiscard]] bool has_redirect_tainted_origin() const;
 
-    [[nodiscard]] ErrorOr<String> serialize_origin() const;
-    [[nodiscard]] ErrorOr<ByteBuffer> byte_serialize_origin() const;
+    [[nodiscard]] String serialize_origin() const;
+    [[nodiscard]] ByteBuffer byte_serialize_origin() const;
 
     [[nodiscard]] JS::NonnullGCPtr<Request> clone(JS::Realm&) const;
 
-    [[nodiscard]] ErrorOr<void> add_range_header(u64 first, Optional<u64> const& last);
-    [[nodiscard]] ErrorOr<void> add_origin_header();
+    void add_range_header(u64 first, Optional<u64> const& last);
+    void add_origin_header();
 
     [[nodiscard]] bool cross_origin_embedder_policy_allows_credentials() const;
 

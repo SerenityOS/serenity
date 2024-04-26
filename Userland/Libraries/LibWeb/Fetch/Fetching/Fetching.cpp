@@ -994,13 +994,13 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_fetch(JS::Realm& rea
             // NOTE: As the CORS check is not to be applied to responses whose status is 304 or 407, or responses from
             //       a service worker for that matter, it is applied here.
             if (request->response_tainting() == Infrastructure::Request::ResponseTainting::CORS
-                && !TRY_OR_IGNORE(cors_check(request, *response))) {
+                && !cors_check(request, *response)) {
                 returned_pending_response->resolve(Infrastructure::Response::network_error(vm, "Request with 'cors' response tainting failed CORS check"_string));
                 return;
             }
 
             // 5. If the TAO check for request and response returns failure, then set request’s timing allow failed flag.
-            if (!TRY_OR_IGNORE(tao_check(request, *response)))
+            if (!tao_check(request, *response))
                 request->set_timing_allow_failed(true);
         }
 
@@ -1353,7 +1353,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
         }
 
         // 12. Append a request `Origin` header for httpRequest.
-        TRY_OR_THROW_OOM(vm, http_request->add_origin_header());
+        http_request->add_origin_header();
 
         // FIXME: 13. Append the Fetch metadata headers for httpRequest.
 
@@ -1876,7 +1876,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> cors_preflight_fetch(JS::
 
         // 7. If a CORS check for request and response returns success and response’s status is an ok status, then:
         // NOTE: The CORS check is done on request rather than preflight to ensure the correct credentials mode is used.
-        if (TRY_OR_IGNORE(cors_check(request, response)) && Infrastructure::is_ok_status(response->status())) {
+        if (cors_check(request, response) && Infrastructure::is_ok_status(response->status())) {
             // 1. Let methods be the result of extracting header list values given `Access-Control-Allow-Methods` and response’s header list.
             auto methods_or_failure = Infrastructure::extract_header_list_values("Access-Control-Allow-Methods"sv.bytes(), response->header_list());
 
