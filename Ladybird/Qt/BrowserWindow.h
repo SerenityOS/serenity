@@ -35,6 +35,7 @@ public:
     WebContentView& view() const { return m_current_tab->view(); }
 
     int tab_index(Tab*);
+    Tab& create_new_tab(Web::HTML::ActivateTab activate_tab);
 
     QAction& go_back_action()
     {
@@ -117,7 +118,6 @@ private:
     virtual void wheelEvent(QWheelEvent*) override;
     virtual void closeEvent(QCloseEvent*) override;
 
-    Tab& create_new_tab(Web::HTML::ActivateTab activate_tab);
     Tab& create_new_tab(Web::HTML::ActivateTab, Tab& parent, Web::HTML::WebViewHints, Optional<u64> page_index);
     void initialize_tab(Tab*);
 
