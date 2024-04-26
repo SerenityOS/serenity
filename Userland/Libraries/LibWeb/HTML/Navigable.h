@@ -183,8 +183,11 @@ public:
     };
     void paint(Painting::RecordingPainter&, PaintConfig);
 
+    Page& page() { return m_page; }
+    Page const& page() const { return m_page; }
+
 protected:
-    Navigable();
+    explicit Navigable(JS::NonnullGCPtr<Page>);
 
     virtual void visit_edges(Cell::Visitor&) override;
 
@@ -219,6 +222,8 @@ private:
 
     // Implied link between navigable and its container.
     JS::GCPtr<NavigableContainer> m_container;
+
+    JS::NonnullGCPtr<Page> m_page;
 
     bool m_has_been_destroyed { false };
 
