@@ -36,6 +36,7 @@ public:
     [[nodiscard]] static JS::NonnullGCPtr<Body> create(JS::VM&, JS::NonnullGCPtr<Streams::ReadableStream>, SourceType, Optional<u64>);
 
     [[nodiscard]] JS::NonnullGCPtr<Streams::ReadableStream> stream() const { return *m_stream; }
+    void set_stream(JS::NonnullGCPtr<Streams::ReadableStream> value) { m_stream = value; }
     [[nodiscard]] SourceType const& source() const { return m_source; }
     [[nodiscard]] Optional<u64> const& length() const { return m_length; }
 

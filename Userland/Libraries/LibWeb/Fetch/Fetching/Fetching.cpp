@@ -38,6 +38,7 @@
 #include <LibWeb/FileAPI/BlobURLStore.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
+#include <LibWeb/HTML/Scripting/TemporaryExecutionContext.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/HTML/WorkerGlobalScope.h>
 #include <LibWeb/HighResolutionTime/TimeOrigin.h>
@@ -47,6 +48,9 @@
 #include <LibWeb/ReferrerPolicy/AbstractOperations.h>
 #include <LibWeb/SRI/SRI.h>
 #include <LibWeb/SecureContexts/AbstractOperations.h>
+#include <LibWeb/Streams/TransformStream.h>
+#include <LibWeb/Streams/TransformStreamDefaultController.h>
+#include <LibWeb/Streams/Transformer.h>
 #include <LibWeb/WebIDL/DOMException.h>
 
 namespace Web::Fetch::Fetching {
@@ -88,7 +92,6 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Infrastructure::FetchController>> fetch(JS:
 
     // FIXME: 5. If useParallelQueue is true, then set taskDestination to the result of starting a new parallel queue.
     (void)use_parallel_queue;
-    (void)task_destination;
 
     // 6. Let timingInfo be a new fetch timing info whose start time and post-redirect start time are the coarsened
     //    shared current time given crossOriginIsolatedCapability, and render-blocking is set to request’s
@@ -669,11 +672,29 @@ void fetch_response_handover(JS::Realm& realm, Infrastructure::FetchParams const
     }
     // 7. Otherwise:
     else {
-        // FIXME: 1. Let transformStream be a new TransformStream.
-        // FIXME: 2. Let identityTransformAlgorithm be an algorithm which, given chunk, enqueues chunk in transformStream.
-        // FIXME: 3. Set up transformStream with transformAlgorithm set to identityTransformAlgorithm and flushAlgorithm set
-        //           to processResponseEndOfBody.
-        // FIXME: 4. Set internalResponse’s body’s stream to the result of internalResponse’s body’s stream piped through transformStream.
+        HTML::TemporaryExecutionContext const execution_context { Bindings::host_defined_environment_settings_object(realm), HTML::TemporaryExecutionContext::CallbacksEnabled::Yes };
+
+        // 1. Let transformStream be a new TransformStream.
+        auto transform_stream = realm.heap().allocate<Streams::TransformStream>(realm, realm);
+
+        // 2. Let identityTransformAlgorithm be an algorithm which, given chunk, enqueues chunk in transformStream.
+        auto identity_transform_algorithm = JS::create_heap_function(realm.heap(), [&realm, transform_stream](JS::Value chunk) -> JS::NonnullGCPtr<WebIDL::Promise> {
+            MUST(Streams::transform_stream_default_controller_enqueue(*transform_stream->controller(), chunk));
+            return WebIDL::create_resolved_promise(realm, JS::js_undefined());
+        });
+
+        // 3. Set up transformStream with transformAlgorithm set to identityTransformAlgorithm and flushAlgorithm set
+        //    to processResponseEndOfBody.
+        auto flush_algorithm = JS::create_heap_function(realm.heap(), [&realm, process_response_end_of_body]() -> JS::NonnullGCPtr<WebIDL::Promise> {
+            process_response_end_of_body();
+            return WebIDL::create_resolved_promise(realm, JS::js_undefined());
+        });
+        Streams::transform_stream_set_up(transform_stream, identity_transform_algorithm, flush_algorithm);
+
+        // 4. Set internalResponse’s body’s stream to the result of internalResponse’s body’s stream piped through transformStream.
+        auto promise = Streams::readable_stream_pipe_to(internal_response->body()->stream(), transform_stream->writable(), false, false, false, {});
+        WebIDL::mark_promise_as_handled(*promise);
+        internal_response->body()->set_stream(transform_stream->readable());
     }
 
     // 8. If fetchParams’s process response consume body is non-null, then:
