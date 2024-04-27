@@ -161,6 +161,7 @@ void pthread_exit(void* value_ptr)
     pthread_exit_without_cleanup_handlers(value_ptr);
 }
 
+#ifndef _DYNAMIC_LOADER
 void __pthread_maybe_cancel()
 {
     // Check if we have cancellations enabled.
@@ -175,6 +176,7 @@ void __pthread_maybe_cancel()
     // return value and calling the cleanup handlers for us.
     pthread_exit(PTHREAD_CANCELED);
 }
+#endif
 
 // https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_cleanup_push.html
 void pthread_cleanup_push(void (*routine)(void*), void* arg)
