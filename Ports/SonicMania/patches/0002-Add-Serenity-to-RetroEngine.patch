@@ -1,0 +1,74 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: LuisYeah1234-hub <azaznods111@gmail.com>
+Date: Sat, 27 Apr 2024 15:52:35 +0200
+Subject: [PATCH] Add Serenity to RetroEngine
+
+---
+ RSDKv5/RSDK/Core/RetroEngine.hpp | 19 +++++++++++++++++++
+ RSDKv5/main.cpp                  |  4 ++--
+ 2 files changed, 21 insertions(+), 2 deletions(-)
+
+diff --git a/RSDKv5/RSDK/Core/RetroEngine.hpp b/RSDKv5/RSDK/Core/RetroEngine.hpp
+index 2ef4e8563834c8c979110cadf3bf976481a5a3c4..ba91a3c6b666d2aaca756a3066016f9c7428e632 100644
+--- a/RSDKv5/RSDK/Core/RetroEngine.hpp
++++ b/RSDKv5/RSDK/Core/RetroEngine.hpp
+@@ -91,6 +91,7 @@ enum GameRegions {
+ #define RETRO_iOS     (6)
+ #define RETRO_ANDROID (7)
+ #define RETRO_UWP     (8)
++#define RETRO_SERENITY (9)
+ 
+ // ============================
+ // PLATFORMS (used mostly in legacy but could come in handy here)
+@@ -142,6 +143,9 @@ enum GameRegions {
+ #elif defined __linux__
+ #define RETRO_PLATFORM   (RETRO_LINUX)
+ #define RETRO_DEVICETYPE (RETRO_STANDARD)
++#elif defined __serenity__
++#define RETRO_PLATFORM   (RETRO_SERENITY)
++#define RETRO_DEVICETYPE (RETRO_STANDARD)
+ #else
+ #define RETRO_PLATFORM   (RETRO_WIN)
+ #define RETRO_DEVICETYPE (RETRO_STANDARD)
+@@ -406,6 +410,21 @@ enum GameRegions {
+ 
+ #endif
+ 
++#if RETRO_PLATFORM == RETRO_SERENITY
++#ifdef RSDK_USE_SDL2
++#undef RETRO_RENDERDEVICE_SDL2
++#define RETRO_RENDERDEVICE_SDL2 (1)
++#undef RETRO_INPUTDEVICE_SDL2
++#define RETRO_INPUTDEVICE_SDL2 (1)
++#undef RETRO_AUDIODEVICE_SDL2
++#define RETRO_AUDIODEVICE_SDL2 (1)
++#undef RETRO_AUDIODEVICE_SDL2
++#define RETRO_AUDIODEVICE_SDL2 (1)
++#else
++#error RSDK_USE_SDL2 must be defined.
++#endif //! RSDK_USE_SDL2
++#endif
++
+ #if RETRO_PLATFORM == RETRO_WIN || RETRO_PLATFORM == RETRO_UWP
+ 
+ // All windows systems need windows API for LoadLibrary()
+diff --git a/RSDKv5/main.cpp b/RSDKv5/main.cpp
+index 0ea7f0f7b1040a75db8052a66ad803504d6e3109..f725572bb48e8bbf9955499a04ee5c8c4659c391 100644
+--- a/RSDKv5/main.cpp
++++ b/RSDKv5/main.cpp
+@@ -5,7 +5,7 @@
+ #define LinkGameLogic RSDK::LinkGameLogic
+ #else
+ #define EngineInfo RSDK::EngineInfo
+-#include <GameMain.h>
++#include <..\Game\GameMain.h>
+ #define LinkGameLogic LinkGameLogicDLL
+ #endif
+ 
+@@ -88,4 +88,4 @@ int32 RSDK_main(int32 argc, char **argv, void *linkLogicPtr)
+     RSDK::ReleaseCoreAPI();
+ 
+     return exitCode;
+-}
+\ No newline at end of file
++}

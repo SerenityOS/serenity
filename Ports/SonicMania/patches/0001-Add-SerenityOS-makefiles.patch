@@ -1,0 +1,54 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: LuisYeah1234-hub <azaznods111@gmail.com>
+Date: Sat, 27 Apr 2024 15:50:59 +0200
+Subject: [PATCH] Add SerenityOS makefiles
+
+---
+ Makefile               |  4 ++++
+ makefiles/Serenity.cfg | 21 +++++++++++++++++++++
+ 2 files changed, 25 insertions(+)
+ create mode 100644 makefiles/Serenity.cfg
+
+diff --git a/Makefile b/Makefile
+index 1e3180c7ceccb6a128b7e47404d4059b695b146a..fae92b268f6ebf5a1978ca34d32878b940e4f415 100644
+--- a/Makefile
++++ b/Makefile
+@@ -69,7 +69,11 @@ else
+ 
+ endif
+ 
++ifeq ($(PLATFORM), Serenity)
++	PLATFORM ?= Serenity
++else
+ PLATFORM ?= Unknown
++endif
+ 
+ # =============================================================================
+ 
+diff --git a/makefiles/Serenity.cfg b/makefiles/Serenity.cfg
+new file mode 100644
+index 0000000000000000000000000000000000000000..7b98a89e47a77f1fe57e61cfb6676cf68e95a917
+--- /dev/null
++++ b/makefiles/Serenity.cfg
+@@ -0,0 +1,21 @@
++STATIC = 0
++CC=x86_64-pc-serenity-gcc
++CXX=x86_64-pc-serenity-g++
++RSDK_CFLAGS += -w -Os
++RSDK_CXXFLAGS += $(CFLAGS) -std=c++2a
++RSDK_LDFLAGS+=-Wl,--gc-sections -Wl,-Map,$(notdir $*.map)
++RSDK_CFLAGS+=-ggdb -fno-rtti -DNORMALUNIX -DLINUX -DSNDSERV # -DUSEASM
++SUBSYSTEM ?= SDL2
++
++ifeq ($(SUBSYSTEM),SDL2)
++	# EVERYTHING: SDL2
++	RSDK_CFLAGS += `$(PKGCONFIG) --cflags --static sdl2 ogg theora`
++	RSDK_LIBS += -lSDL2 -lgui -lipc -lgfx -lcore -lpthread -lregex -ltheora -ltheoradec -logg
++endif
++
++ifneq ($(SUBSYSTEM),SDL2)
++$(error SUBSYSTEM must be set to SDL2 for SerenityOS builds)
++endif
++
++RSDK_CFLAGS += `$(PKGCONFIG) --cflags --static theora theoradec`
++RSDK_LIBS += `$(PKGCONFIG) --libs --static theora theoradec`

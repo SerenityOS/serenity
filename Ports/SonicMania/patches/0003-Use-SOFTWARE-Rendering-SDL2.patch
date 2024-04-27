@@ -1,0 +1,22 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: LuisYeah1234-hub <azaznods111@gmail.com>
+Date: Sat, 27 Apr 2024 15:54:20 +0200
+Subject: [PATCH] Use SOFTWARE Rendering SDL2
+
+---
+ RSDKv5/RSDK/Graphics/SDL2/SDL2RenderDevice.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/RSDKv5/RSDK/Graphics/SDL2/SDL2RenderDevice.cpp b/RSDKv5/RSDK/Graphics/SDL2/SDL2RenderDevice.cpp
+index e125d51d3000af5cae20431bac5e7b31228091ee..4a318cdbf32c2706df9a07c8e2add873ea6f875e 100644
+--- a/RSDKv5/RSDK/Graphics/SDL2/SDL2RenderDevice.cpp
++++ b/RSDKv5/RSDK/Graphics/SDL2/SDL2RenderDevice.cpp
+@@ -593,7 +593,7 @@ bool RenderDevice::InitShaders()
+ 
+ bool RenderDevice::SetupRendering()
+ {
+-    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
++    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE);
+ 
+     if (!renderer) {
+         PrintLog(PRINT_NORMAL, "ERROR: failed to create renderer!");
