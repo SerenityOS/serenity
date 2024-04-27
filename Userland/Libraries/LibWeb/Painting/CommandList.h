@@ -96,15 +96,17 @@ public:
     void append(Command&& command, Optional<i32> scroll_frame_id);
 
     void apply_scroll_offsets(Vector<Gfx::IntPoint> const& offsets_by_frame_id);
+    void mark_unnecessary_commands();
     void execute(CommandExecutor&);
 
 private:
-    struct CommandWithScrollFrame {
+    struct CommandListItem {
         Optional<i32> scroll_frame_id;
         Command command;
+        bool skip { false };
     };
 
-    AK::SegmentedVector<CommandWithScrollFrame, 512> m_commands;
+    AK::SegmentedVector<CommandListItem, 512> m_commands;
 };
 
 }
