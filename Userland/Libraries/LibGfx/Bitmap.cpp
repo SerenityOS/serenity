@@ -565,14 +565,6 @@ void Bitmap::strip_alpha_channel()
     m_format = BitmapFormat::BGRx8888;
 }
 
-void Bitmap::set_mmap_name([[maybe_unused]] ByteString const& name)
-{
-    VERIFY(m_needs_munmap);
-#ifdef AK_OS_SERENITY
-    ::set_mmap_name(m_data, size_in_bytes(), name.characters());
-#endif
-}
-
 void Bitmap::fill(Color color)
 {
     for (int y = 0; y < physical_height(); ++y) {

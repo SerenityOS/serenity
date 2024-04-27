@@ -204,8 +204,6 @@ public:
     // Call only for BGRx8888 and BGRA8888 bitmaps.
     void strip_alpha_channel();
 
-    void set_mmap_name(ByteString const&);
-
     [[nodiscard]] static constexpr size_t size_in_bytes(size_t pitch, int physical_height) { return pitch * physical_height; }
     [[nodiscard]] size_t size_in_bytes() const { return size_in_bytes(m_pitch, physical_height()); }
 
