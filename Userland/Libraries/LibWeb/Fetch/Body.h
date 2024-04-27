@@ -26,7 +26,7 @@ class BodyMixin {
 public:
     virtual ~BodyMixin();
 
-    virtual ErrorOr<Optional<MimeSniff::MimeType>> mime_type_impl() const = 0;
+    virtual Optional<MimeSniff::MimeType> mime_type_impl() const = 0;
     virtual JS::GCPtr<Infrastructure::Body> body_impl() = 0;
     virtual JS::GCPtr<Infrastructure::Body const> body_impl() const = 0;
     virtual Bindings::PlatformObject& as_platform_object() = 0;

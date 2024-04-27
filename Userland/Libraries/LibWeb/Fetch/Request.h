@@ -73,7 +73,7 @@ public:
     virtual ~Request() override;
 
     // ^BodyMixin
-    virtual ErrorOr<Optional<MimeSniff::MimeType>> mime_type_impl() const override;
+    virtual Optional<MimeSniff::MimeType> mime_type_impl() const override;
     virtual JS::GCPtr<Infrastructure::Body> body_impl() override;
     virtual JS::GCPtr<Infrastructure::Body const> body_impl() const override;
     virtual Bindings::PlatformObject& as_platform_object() override { return *this; }
