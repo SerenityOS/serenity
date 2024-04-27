@@ -91,7 +91,7 @@ ALWAYS_INLINE static void optimizer_fence()
     asm("" ::: "memory");
 }
 
-void _entry(int argc, char** argv, char** envp)
+[[gnu::no_stack_protector]] void _entry(int argc, char** argv, char** envp)
 {
     char** env;
     for (env = envp; *env; ++env) {
