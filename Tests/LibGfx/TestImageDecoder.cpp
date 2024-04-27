@@ -682,6 +682,33 @@ TEST_CASE(test_jpeg2000_tag_tree)
         EXPECT_EQ(1u, MUST(tree.read_value(2, 1, read_bit, next_layer)));
         EXPECT_EQ(index, 7u); // Didn't change!
     }
+
+    {
+        // This isn't in the spec. If one dimension is 2^n + 1 and the other side is just 1, then the topmost node will have
+        // 2^n x 1 and 1 x 1 children. The first child will have n levels of children. The 1 x 1 child could end immediately,
+        // or it could require that it also has n levels of (all 1 x 1) children. The spec isn't clear on which of
+        // the two alternatives should happen. We currently have n levels of 1 x 1 blocks.
+        constexpr auto n = 5;
+        auto tree = TRY_OR_FAIL(Gfx::JPEG2000::TagTree::create((1 << n) + 1, 1));
+        Vector<u8> bits;
+        bits.append(1); // Finalize topmost node.
+        bits.append(0); // Increment value in 1 x 1 child.
+        bits.append(1); // Finalize 1 x 1 child.
+
+        // Finalize further 1 x 1 children, if present.
+        for (size_t i = 0; i < n; ++i)
+            bits.append(1);
+
+        size_t index = 0;
+        Function<ErrorOr<bool>()> read_bit = [&]() -> bool {
+            return bits[index++];
+        };
+
+        EXPECT_EQ(1u, MUST(tree.read_value(1 << n, 0, read_bit)));
+
+        // This will read either 3 or 3 + n bits, depending on the interpretation.
+        EXPECT_EQ(index, 3u + n);
+    }
 }
 
 TEST_CASE(test_pam_rgb)
