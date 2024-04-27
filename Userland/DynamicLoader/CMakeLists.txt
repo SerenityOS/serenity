@@ -20,8 +20,6 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
     set(LIBC_SOURCES3 ${LIBC_SOURCES3} "../Libraries/LibC/arch/x86_64/memset.cpp")
 endif()
 
-file(GLOB LIBSYSTEM_SOURCES "../Libraries/LibSystem/*.cpp")
-
 if (ENABLE_UNDEFINED_SANITIZER)
     set(LOADER_SOURCES ${LOADER_SOURCES} ../Libraries/LibSanitizer/UBSanitizer.cpp)
 endif()
@@ -31,7 +29,7 @@ list(FILTER LIBC_SOURCES1 EXCLUDE REGEX ".*/LibC/(pthread|semaphore)\\.cpp")
 
 add_definitions(-D_DYNAMIC_LOADER)
 
-set(SOURCES ${LOADER_SOURCES} ${AK_SOURCES} ${LIBC_SOURCES1} ${LIBC_SOURCES2} ${LIBC_SOURCES3} ${LIBSYSTEM_SOURCES})
+set(SOURCES ${LOADER_SOURCES} ${AK_SOURCES} ${LIBC_SOURCES1} ${LIBC_SOURCES2} ${LIBC_SOURCES3})
 
 if (("${SERENITY_ARCH}" STREQUAL "aarch64") OR ("${SERENITY_ARCH}" STREQUAL "riscv64"))
     # On aarch64 and riscv64 the stack protector would be accessed before the Loader can relocate itself.
@@ -58,7 +56,10 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
     target_link_libraries(Loader.so PRIVATE clang_rt.builtins)
 endif ()
 
-target_link_libraries(Loader.so PRIVATE DynamicLoader_CompileOptions DynamicLoader_LibELF LibTimeZone)
+target_link_libraries(Loader.so PRIVATE DynamicLoader_CompileOptions
+    DynamicLoader_LibSystemStatic
+    DynamicLoader_LibELF
+    LibTimeZone)
 target_link_options(Loader.so PRIVATE LINKER:--no-dynamic-linker)
 # Don't confuse the coverage results by instrumenting Loader
 target_link_libraries(Loader.so PRIVATE NoCoverage)

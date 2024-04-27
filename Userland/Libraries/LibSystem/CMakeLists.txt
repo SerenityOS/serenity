@@ -11,3 +11,6 @@ add_library(LibSystemStatic STATIC ${SOURCES})
 add_dependencies(LibSystemStatic install_libc_headers)
 target_include_directories(LibSystemStatic PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(LibSystemStatic PRIVATE NoCoverage)
+
+add_library(DynamicLoader_LibSystemStatic ${SOURCES})
+target_link_libraries(DynamicLoader_LibSystemStatic PUBLIC DynamicLoader_CompileOptions)
