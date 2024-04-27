@@ -52,6 +52,7 @@ public:
     void show_inspector_window(InspectorTarget = InspectorTarget::Document);
 
     QIcon const& favicon() const { return m_favicon; }
+    QString const& title() const { return m_title; }
 
     void update_navigation_buttons_state();
 

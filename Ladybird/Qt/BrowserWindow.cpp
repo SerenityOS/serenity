@@ -402,8 +402,11 @@ BrowserWindow::BrowserWindow(Vector<URL::URL> const& initial_urls, WebView::Cook
     });
     QObject::connect(quit_action, &QAction::triggered, this, &QMainWindow::close);
     QObject::connect(m_tabs_container, &QTabWidget::currentChanged, [this](int index) {
-        setWindowTitle(QString("%1 - Ladybird").arg(m_tabs_container->tabText(index)));
-        set_current_tab(verify_cast<Tab>(m_tabs_container->widget(index)));
+        auto* tab = verify_cast<Tab>(m_tabs_container->widget(index));
+        if (tab)
+            setWindowTitle(QString("%1 - Ladybird").arg(tab->title()));
+
+        set_current_tab(tab);
     });
     QObject::connect(m_tabs_container, &QTabWidget::tabCloseRequested, this, &BrowserWindow::close_tab);
     QObject::connect(close_current_tab_action, &QAction::triggered, this, &BrowserWindow::close_current_tab);
