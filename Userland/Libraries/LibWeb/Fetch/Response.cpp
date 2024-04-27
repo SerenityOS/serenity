@@ -113,7 +113,7 @@ WebIDL::ExceptionOr<void> Response::initialize_response(ResponseInit const& init
         m_response->set_body(body->body);
 
         // 3. If body’s type is non-null and response’s header list does not contain `Content-Type`, then append (`Content-Type`, body’s type) to response’s header list.
-        if (body->type.has_value() && m_response->header_list()->contains("Content-Type"sv.bytes())) {
+        if (body->type.has_value() && !m_response->header_list()->contains("Content-Type"sv.bytes())) {
             auto header = Infrastructure::Header {
                 .name = MUST(ByteBuffer::copy("Content-Type"sv.bytes())),
                 .value = MUST(ByteBuffer::copy(body->type->span())),
