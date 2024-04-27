@@ -31,8 +31,7 @@ Optional<CSSPixelRect> ClippableAndScrollable::clip_rect() const
         //       Otherwise, the transform will be applied twice to the clip rect.
         //       Similarly, for hit-testing, the transform must be removed from the clip rectangle since the position
         //       includes the transform.
-        auto combined_transform = compute_combined_css_transform_for_clippable_and_scrollable();
-        rect.translate_by(-combined_transform.translation().to_type<CSSPixels>());
+        rect.translate_by(-m_combined_css_transform.translation().to_type<CSSPixels>());
         return rect;
     }
     return {};

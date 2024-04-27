@@ -203,11 +203,6 @@ public:
 
     Optional<CSSPixelRect> get_clip_rect() const;
 
-    virtual Gfx::AffineTransform compute_combined_css_transform_for_clippable_and_scrollable() const override
-    {
-        return compute_combined_css_transform();
-    }
-
 protected:
     explicit PaintableBox(Layout::Box const&);
 
