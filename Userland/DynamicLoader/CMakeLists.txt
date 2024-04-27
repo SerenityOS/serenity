@@ -9,27 +9,72 @@ target_link_options(DynamicLoader_CompileOptions INTERFACE -nostdlib -fpie)
 target_compile_definitions(DynamicLoader_CompileOptions INTERFACE NO_TLS)
 add_dependencies(DynamicLoader_CompileOptions install_libc_headers)
 
-file(GLOB LIBC_SOURCES1 "../Libraries/LibC/*.cpp")
-file(GLOB LIBC_SOURCES2 "../Libraries/LibC/*/*.cpp")
+set(LIBC_SOURCES
+    ../Libraries/LibC/sys/archctl.cpp
+    ../Libraries/LibC/sys/auxv.cpp
+    ../Libraries/LibC/sys/file.cpp
+    ../Libraries/LibC/sys/mman.cpp
+    ../Libraries/LibC/sys/prctl.cpp
+    ../Libraries/LibC/sys/select.cpp
+    ../Libraries/LibC/sys/wait.cpp
+    ../Libraries/LibC/assert.cpp
+    ../Libraries/LibC/ctype.cpp
+    ../Libraries/LibC/cxxabi.cpp
+    ../Libraries/LibC/dirent.cpp
+    ../Libraries/LibC/dlfcn.cpp
+    ../Libraries/LibC/fcntl.cpp
+    ../Libraries/LibC/fenv.cpp
+    ../Libraries/LibC/inttypes.cpp
+    ../Libraries/LibC/ioctl.cpp
+    ../Libraries/LibC/libcinit.cpp
+    ../Libraries/LibC/libgen.cpp
+    ../Libraries/LibC/link.cpp
+    ../Libraries/LibC/malloc.cpp
+    ../Libraries/LibC/math.cpp
+    ../Libraries/LibC/poll.cpp
+    ../Libraries/LibC/pthread_cond.cpp
+    ../Libraries/LibC/pthread_integration.cpp
+    ../Libraries/LibC/pthread_once.cpp
+    ../Libraries/LibC/pwd.cpp
+    ../Libraries/LibC/qsort.cpp
+    ../Libraries/LibC/sched.cpp
+    ../Libraries/LibC/scanf.cpp
+    ../Libraries/LibC/search.cpp
+    ../Libraries/LibC/serenity.cpp
+    ../Libraries/LibC/signal.cpp
+    ../Libraries/LibC/spawn.cpp
+    ../Libraries/LibC/ssp.cpp
+    ../Libraries/LibC/stat.cpp
+    ../Libraries/LibC/stdio.cpp
+    ../Libraries/LibC/stdlib.cpp
+    ../Libraries/LibC/string.cpp
+    ../Libraries/LibC/strings.cpp
+    ../Libraries/LibC/termios.cpp
+    ../Libraries/LibC/time.cpp
+    ../Libraries/LibC/times.cpp
+    ../Libraries/LibC/ulimit.cpp
+    ../Libraries/LibC/unistd.cpp
+    ../Libraries/LibC/utime.cpp
+    ../Libraries/LibC/utsname.cpp
+    ../Libraries/LibC/wchar.cpp
+    ../Libraries/LibC/wctype.cpp
+    ../Libraries/LibC/wstdio.cpp)
 
 set(ARCH_FOLDER "${SERENITY_ARCH}")
 
-file(GLOB LIBC_SOURCES3 "../Libraries/LibC/arch/${ARCH_FOLDER}/*.S")
-set(LIBC_SOURCES3 ${LIBC_SOURCES3} "../Libraries/LibC/arch/${ARCH_FOLDER}/fenv.cpp")
+file(GLOB LIBC_ARCH_SPECIFIC_SOURCES "../Libraries/LibC/arch/${ARCH_FOLDER}/*.S")
+set(LIBC_ARCH_SPECIFIC_SOURCES ${LIBC_ARCH_SPECIFIC_SOURCES} "../Libraries/LibC/arch/${ARCH_FOLDER}/fenv.cpp")
 if ("${SERENITY_ARCH}" STREQUAL "x86_64")
-    set(LIBC_SOURCES3 ${LIBC_SOURCES3} "../Libraries/LibC/arch/x86_64/memset.cpp")
+    set(LIBC_ARCH_SPECIFIC_SOURCES ${LIBC_ARCH_SPECIFIC_SOURCES} "../Libraries/LibC/arch/x86_64/memset.cpp")
 endif()
 
 if (ENABLE_UNDEFINED_SANITIZER)
     set(LOADER_SOURCES ${LOADER_SOURCES} ../Libraries/LibSanitizer/UBSanitizer.cpp)
 endif()
 
-# pthread requires thread local storage, which DynamicLoader does not have.
-list(FILTER LIBC_SOURCES1 EXCLUDE REGEX ".*/LibC/(pthread|semaphore)\\.cpp")
-
 add_definitions(-D_DYNAMIC_LOADER)
 
-set(SOURCES ${LOADER_SOURCES} ${AK_SOURCES} ${LIBC_SOURCES1} ${LIBC_SOURCES2} ${LIBC_SOURCES3})
+set(SOURCES ${LOADER_SOURCES} ${AK_SOURCES} ${LIBC_SOURCES} ${LIBC_ARCH_SPECIFIC_SOURCES})
 
 if (("${SERENITY_ARCH}" STREQUAL "aarch64") OR ("${SERENITY_ARCH}" STREQUAL "riscv64"))
     # On aarch64 and riscv64 the stack protector would be accessed before the Loader can relocate itself.
