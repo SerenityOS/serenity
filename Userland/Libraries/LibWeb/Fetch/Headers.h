@@ -51,7 +51,7 @@ public:
     WebIDL::ExceptionOr<void> append(String const& name, String const& value);
     WebIDL::ExceptionOr<void> delete_(String const& name);
     WebIDL::ExceptionOr<Optional<String>> get(String const& name);
-    WebIDL::ExceptionOr<Vector<String>> get_set_cookie();
+    [[nodiscard]] Vector<String> get_set_cookie();
     WebIDL::ExceptionOr<bool> has(String const& name);
     WebIDL::ExceptionOr<void> set(String const& name, String const& value);
 
