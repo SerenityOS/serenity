@@ -87,8 +87,6 @@ JS::NonnullGCPtr<Response> Response::create(JS::Realm& realm, JS::NonnullGCPtr<I
 // https://fetch.spec.whatwg.org/#initialize-a-response
 WebIDL::ExceptionOr<void> Response::initialize_response(ResponseInit const& init, Optional<Infrastructure::BodyWithType> const& body)
 {
-    auto& vm = this->vm();
-
     // 1. If init["status"] is not in the range 200 to 599, inclusive, then throw a RangeError.
     if (init.status < 200 || init.status > 599)
         return WebIDL::SimpleException { WebIDL::SimpleExceptionType::RangeError, "Status must be in range 200-599"sv };
@@ -99,7 +97,7 @@ WebIDL::ExceptionOr<void> Response::initialize_response(ResponseInit const& init
     m_response->set_status(init.status);
 
     // 4. Set response’s response’s status message to init["statusText"].
-    m_response->set_status_message(TRY_OR_THROW_OOM(vm, ByteBuffer::copy(init.status_text.bytes())));
+    m_response->set_status_message(MUST(ByteBuffer::copy(init.status_text.bytes())));
 
     // 5. If init["headers"] exists, then fill response’s headers with init["headers"].
     if (init.headers.has_value())
@@ -118,7 +116,7 @@ WebIDL::ExceptionOr<void> Response::initialize_response(ResponseInit const& init
         if (body->type.has_value() && m_response->header_list()->contains("Content-Type"sv.bytes())) {
             auto header = Infrastructure::Header {
                 .name = MUST(ByteBuffer::copy("Content-Type"sv.bytes())),
-                .value = TRY_OR_THROW_OOM(vm, ByteBuffer::copy(body->type->span())),
+                .value = MUST(ByteBuffer::copy(body->type->span())),
             };
             m_response->header_list()->append(move(header));
         }
@@ -216,8 +214,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> Response::json(JS::VM& vm, JS::V
 
     // 4. Perform initialize a response given responseObject, init, and (body, "application/json").
     auto body_with_type = Infrastructure::BodyWithType {
-        .body = move(body),
-        .type = TRY_OR_THROW_OOM(vm, ByteBuffer::copy("application/json"sv.bytes()))
+        .body = body,
+        .type = MUST(ByteBuffer::copy("application/json"sv.bytes()))
     };
     TRY(response_object->initialize_response(init, move(body_with_type)));
 
@@ -233,14 +231,12 @@ Bindings::ResponseType Response::type() const
 }
 
 // https://fetch.spec.whatwg.org/#dom-response-url
-WebIDL::ExceptionOr<String> Response::url() const
+String Response::url() const
 {
-    auto& vm = this->vm();
-
     // The url getter steps are to return the empty string if this’s response’s URL is null; otherwise this’s response’s URL, serialized with exclude fragment set to true.
     return !m_response->url().has_value()
         ? String {}
-        : TRY_OR_THROW_OOM(vm, String::from_byte_string(m_response->url()->serialize(URL::ExcludeFragment::Yes)));
+        : MUST(String::from_byte_string(m_response->url()->serialize(URL::ExcludeFragment::Yes)));
 }
 
 // https://fetch.spec.whatwg.org/#dom-response-redirected
@@ -265,12 +261,10 @@ bool Response::ok() const
 }
 
 // https://fetch.spec.whatwg.org/#dom-response-statustext
-WebIDL::ExceptionOr<String> Response::status_text() const
+String Response::status_text() const
 {
-    auto& vm = this->vm();
-
     // The statusText getter steps are to return this’s response’s status message.
-    return TRY_OR_THROW_OOM(vm, String::from_utf8(m_response->status_message()));
+    return MUST(String::from_utf8(m_response->status_message()));
 }
 
 // https://fetch.spec.whatwg.org/#dom-response-headers
