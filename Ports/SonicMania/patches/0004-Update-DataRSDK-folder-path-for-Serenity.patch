@@ -1,0 +1,25 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: LuisYeah1234-hub <azaznods111@gmail.com>
+Date: Sat, 27 Apr 2024 15:55:00 +0200
+Subject: [PATCH] Update DataRSDK folder path for Serenity
+
+---
+ RSDKv5/RSDK/User/Core/UserStorage.cpp | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/RSDKv5/RSDK/User/Core/UserStorage.cpp b/RSDKv5/RSDK/User/Core/UserStorage.cpp
+index 0cf8d74ef1350ee7023b6f00c944ad4a9cd6f037..4e73750e18bda926ceba5967b4e76988cd368c7f 100644
+--- a/RSDKv5/RSDK/User/Core/UserStorage.cpp
++++ b/RSDKv5/RSDK/User/Core/UserStorage.cpp
+@@ -1166,6 +1166,9 @@ void RSDK::SKU::InitUserDirectory()
+ #else
+ 
+     SKU::SetUserFileCallbacks("", NULL, NULL);
++#endif
+ 
++#if RETRO_PLATFORM == RETRO_SERENITY
++    SKU::SetUserFileCallbacks("./RSDKv5/", NULL, NULL);
+ #endif
+-}
+\ No newline at end of file
++}
