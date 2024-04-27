@@ -148,12 +148,6 @@ add_custom_command(
     COMMAND "${CMAKE_COMMAND}" -E copy $<TARGET_OBJECTS:crtn> ${CMAKE_INSTALL_PREFIX}/usr/lib/crtn.o
 )
 
-set_source_files_properties (ssp_nonshared.cpp PROPERTIES COMPILE_FLAGS "-fno-stack-protector")
-add_library(ssp_nonshared STATIC ssp_nonshared.cpp)
-add_dependencies(ssp_nonshared install_libc_headers)
-target_link_libraries(ssp_nonshared PRIVATE NoCoverage)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libssp_nonshared.a DESTINATION ${CMAKE_INSTALL_PREFIX}/usr/lib/)
-
 set(SOURCES ${LIBC_SOURCES} ${AK_SOURCES} ${ASM_SOURCES})
 
 # Prevent GCC from removing null checks by marking the `FILE*` argument non-null
@@ -176,3 +170,24 @@ file(WRITE "${CMAKE_STAGING_PREFIX}/${CMAKE_INSTALL_LIBDIR}/libpthread.so" "INPU
 file(WRITE "${CMAKE_STAGING_PREFIX}/${CMAKE_INSTALL_LIBDIR}/libdl.so" "INPUT(libc.so)")
 file(WRITE "${CMAKE_STAGING_PREFIX}/${CMAKE_INSTALL_LIBDIR}/libm.so" "INPUT(libc.so)")
 file(WRITE "${CMAKE_STAGING_PREFIX}/${CMAKE_INSTALL_LIBDIR}/libssp.so" "INPUT(libc.so)")
+
+# ===== Compatibility with the GCC toolchain without TARGET_LIBC_PROVIDES_SSP =====
+# FIXME: Remove this on the next GCC toolchain version bump
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    add_custom_target(create_compat_ssp_libraries)
+    add_dependencies(Loader.so create_compat_ssp_libraries)
+
+    add_custom_command(TARGET create_compat_ssp_libraries
+        PRE_BUILD
+        COMMAND "${CMAKE_COMMAND}" -E remove libssp.so
+        COMMAND "${CMAKE_AR}" cr libssp.a
+        WORKING_DIRECTORY "${CMAKE_STAGING_PREFIX}/${CMAKE_INSTALL_LIBDIR}"
+    )
+
+    add_custom_command(TARGET create_compat_ssp_libraries
+        PRE_BUILD
+        COMMAND "${CMAKE_COMMAND}" -E remove libssp_nonshared.a
+        COMMAND "${CMAKE_AR}" cr libssp_nonshared.a
+        WORKING_DIRECTORY "${CMAKE_STAGING_PREFIX}/${CMAKE_INSTALL_LIBDIR}"
+    )
+endif()
