@@ -87,7 +87,7 @@ new file mode 100644
 index 0000000000000000000000000000000000000000..10c6f16fbe13eab36bab8f6896f8e2a6ae48df02
 --- /dev/null
 +++ b/gcc/config/serenity.h
-@@ -0,0 +1,48 @@
+@@ -0,0 +1,50 @@
 +/* Useful if you wish to make target-specific GCC changes. */
 +#undef TARGET_SERENITY
 +#define TARGET_SERENITY 1
@@ -109,6 +109,8 @@ index 0000000000000000000000000000000000000000..10c6f16fbe13eab36bab8f6896f8e2a6
 +/* Files that are linked after user code. */
 +#undef ENDFILE_SPEC
 +#define ENDFILE_SPEC "%{shared|static-pie|!no-pie:crtendS.o%s; :crtend.o%s} crtn.o%s"
++
++#define TARGET_LIBC_PROVIDES_SSP
 +
 +#undef LINK_SPEC
 +#define LINK_SPEC "%{shared:-shared} %{static:-static} %{!static: %{rdynamic:-export-dynamic} -dynamic-linker /usr/lib/Loader.so}"
