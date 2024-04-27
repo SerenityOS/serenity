@@ -573,43 +573,6 @@ void Bitmap::fill(Color color)
     }
 }
 
-void Bitmap::set_volatile()
-{
-    if (m_volatile)
-        return;
-#ifdef AK_OS_SERENITY
-    int rc = madvise(m_data, size_in_bytes(), MADV_SET_VOLATILE);
-    if (rc < 0) {
-        perror("madvise(MADV_SET_VOLATILE)");
-        VERIFY_NOT_REACHED();
-    }
-#endif
-    m_volatile = true;
-}
-
-[[nodiscard]] bool Bitmap::set_nonvolatile(bool& was_purged)
-{
-    if (!m_volatile) {
-        was_purged = false;
-        return true;
-    }
-
-#ifdef AK_OS_SERENITY
-    int rc = madvise(m_data, size_in_bytes(), MADV_SET_NONVOLATILE);
-    if (rc < 0) {
-        if (errno == ENOMEM) {
-            was_purged = true;
-            return false;
-        }
-        perror("madvise(MADV_SET_NONVOLATILE)");
-        VERIFY_NOT_REACHED();
-    }
-    was_purged = rc != 0;
-#endif
-    m_volatile = false;
-    return true;
-}
-
 Gfx::ShareableBitmap Bitmap::to_shareable_bitmap() const
 {
     auto bitmap_or_error = to_bitmap_backed_by_anonymous_buffer();
