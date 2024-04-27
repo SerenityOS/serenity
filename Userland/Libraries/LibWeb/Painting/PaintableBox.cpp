@@ -209,43 +209,6 @@ Optional<CSSPixelRect> PaintableBox::get_clip_rect() const
     return {};
 }
 
-Optional<int> PaintableBox::scroll_frame_id() const
-{
-    if (m_enclosing_scroll_frame)
-        return m_enclosing_scroll_frame->id;
-    return {};
-}
-
-Optional<CSSPixelPoint> PaintableBox::enclosing_scroll_frame_offset() const
-{
-    if (m_enclosing_scroll_frame)
-        return m_enclosing_scroll_frame->offset;
-    return {};
-}
-
-Optional<CSSPixelRect> PaintableBox::clip_rect() const
-{
-    if (m_enclosing_clip_frame) {
-        auto rect = m_enclosing_clip_frame->rect();
-        // NOTE: Since the painting command executor applies a CSS transform and the clip rect is calculated
-        //       with this transform in account, we need to remove the transform from the clip rect.
-        //       Otherwise, the transform will be applied twice to the clip rect.
-        //       Similarly, for hit-testing, the transform must be removed from the clip rectangle since the position
-        //       includes the transform.
-        auto combined_transform = compute_combined_css_transform();
-        rect.translate_by(-combined_transform.translation().to_type<CSSPixels>());
-        return rect;
-    }
-    return {};
-}
-
-Span<BorderRadiiClip const> PaintableBox::border_radii_clips() const
-{
-    if (m_enclosing_clip_frame)
-        return m_enclosing_clip_frame->border_radii_clips();
-    return {};
-}
-
 void PaintableBox::before_paint(PaintContext& context, [[maybe_unused]] PaintPhase phase) const
 {
     if (!is_visible())

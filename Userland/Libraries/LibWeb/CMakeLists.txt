@@ -527,6 +527,7 @@ set(SOURCES
     Painting/CommandExecutorCPU.cpp
     Painting/CommandList.cpp
     Painting/CheckBoxPaintable.cpp
+    Painting/ClippableAndScrollable.cpp
     Painting/GradientPainting.cpp
     Painting/FilterPainting.cpp
     Painting/ImagePaintable.cpp

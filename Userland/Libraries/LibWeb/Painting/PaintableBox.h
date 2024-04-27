@@ -9,18 +9,15 @@
 #include <LibWeb/Painting/BorderPainting.h>
 #include <LibWeb/Painting/BorderRadiusCornerClipper.h>
 #include <LibWeb/Painting/ClipFrame.h>
+#include <LibWeb/Painting/ClippableAndScrollable.h>
 #include <LibWeb/Painting/Paintable.h>
 #include <LibWeb/Painting/PaintableFragment.h>
 #include <LibWeb/Painting/ShadowPainting.h>
 
 namespace Web::Painting {
 
-struct ScrollFrame : public RefCounted<ScrollFrame> {
-    i32 id { -1 };
-    CSSPixelPoint offset;
-};
-
-class PaintableBox : public Paintable {
+class PaintableBox : public Paintable
+    , public ClippableAndScrollable {
     JS_CELL(PaintableBox, Paintable);
 
 public:
@@ -206,13 +203,10 @@ public:
 
     Optional<CSSPixelRect> get_clip_rect() const;
 
-    void set_enclosing_scroll_frame(RefPtr<ScrollFrame> scroll_frame) { m_enclosing_scroll_frame = scroll_frame; }
-    void set_enclosing_clip_frame(RefPtr<ClipFrame> clip_frame) { m_enclosing_clip_frame = clip_frame; }
-
-    Optional<int> scroll_frame_id() const;
-    Optional<CSSPixelPoint> enclosing_scroll_frame_offset() const;
-    Optional<CSSPixelRect> clip_rect() const;
-    Span<BorderRadiiClip const> border_radii_clips() const;
+    virtual Gfx::AffineTransform compute_combined_css_transform_for_clippable_and_scrollable() const override
+    {
+        return compute_combined_css_transform();
+    }
 
 protected:
     explicit PaintableBox(Layout::Box const&);

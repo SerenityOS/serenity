@@ -7,12 +7,14 @@
 #pragma once
 
 #include <LibWeb/Layout/InlineNode.h>
-#include <LibWeb/Painting/PaintableBox.h>
+#include <LibWeb/Painting/ClippableAndScrollable.h>
+#include <LibWeb/Painting/Paintable.h>
 #include <LibWeb/Painting/PaintableFragment.h>
 
 namespace Web::Painting {
 
-class InlinePaintable final : public Paintable {
+class InlinePaintable final : public Paintable
+    , public ClippableAndScrollable {
     JS_CELL(InlinePaintable, Paintable);
     JS_DECLARE_ALLOCATOR(InlinePaintable);
 
@@ -44,22 +46,16 @@ public:
     void set_outline_offset(CSSPixels outline_offset) { m_outline_offset = outline_offset; }
     CSSPixels outline_offset() const { return m_outline_offset; }
 
-    void set_enclosing_scroll_frame(RefPtr<ScrollFrame> scroll_frame) { m_enclosing_scroll_frame = scroll_frame; }
-    void set_enclosing_clip_frame(RefPtr<ClipFrame> clip_frame) { m_enclosing_clip_frame = clip_frame; }
-
-    Optional<int> scroll_frame_id() const;
-    Optional<CSSPixelPoint> enclosing_scroll_frame_offset() const;
-    Optional<CSSPixelRect> clip_rect() const;
+    virtual Gfx::AffineTransform compute_combined_css_transform_for_clippable_and_scrollable() const override
+    {
+        return compute_combined_css_transform();
+    }
 
 private:
     InlinePaintable(Layout::InlineNode const&);
 
     template<typename Callback>
     void for_each_fragment(Callback) const;
-
-    Optional<CSSPixelRect> m_clip_rect;
-    RefPtr<ScrollFrame const> m_enclosing_scroll_frame;
-    RefPtr<ClipFrame const> m_enclosing_clip_frame;
 
     Vector<ShadowData> m_box_shadow_data;
     Optional<BordersData> m_outline_data;
