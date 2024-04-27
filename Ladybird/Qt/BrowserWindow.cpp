@@ -8,6 +8,7 @@
  */
 
 #include "BrowserWindow.h"
+#include "Application.h"
 #include "Icon.h"
 #include "Settings.h"
 #include "SettingsDialog.h"
@@ -81,6 +82,10 @@ BrowserWindow::BrowserWindow(Vector<URL::URL> const& initial_urls, WebView::Cook
     m_new_tab_action = new QAction("New &Tab", this);
     m_new_tab_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::AddTab));
     menu->addAction(m_new_tab_action);
+
+    m_new_window_action = new QAction("New &Window", this);
+    m_new_window_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::New));
+    menu->addAction(m_new_window_action);
 
     auto* close_current_tab_action = new QAction("&Close Current Tab", this);
     close_current_tab_action->setIcon(load_icon_from_uri("resource://icons/16x16/close-tab.png"sv));
@@ -213,8 +218,8 @@ BrowserWindow::BrowserWindow(Vector<URL::URL> const& initial_urls, WebView::Cook
     task_manager_action->setIcon(load_icon_from_uri("resource://icons/16x16/app-system-monitor.png"sv));
     task_manager_action->setShortcuts({ QKeySequence("Ctrl+Shift+M") });
     inspect_menu->addAction(task_manager_action);
-    QObject::connect(task_manager_action, &QAction::triggered, this, [this] {
-        show_task_manager_window();
+    QObject::connect(task_manager_action, &QAction::triggered, this, [] {
+        static_cast<Ladybird::Application*>(QApplication::instance())->show_task_manager_window();
     });
 
     auto* debug_menu = menuBar()->addMenu("&Debug");
@@ -390,6 +395,10 @@ BrowserWindow::BrowserWindow(Vector<URL::URL> const& initial_urls, WebView::Cook
     });
     QObject::connect(m_new_tab_action, &QAction::triggered, this, [this] {
         new_tab_from_url(ak_url_from_qstring(Settings::the()->new_tab_page()), Web::HTML::ActivateTab::Yes);
+    });
+    QObject::connect(m_new_window_action, &QAction::triggered, this, [this] {
+        auto initial_urls = Vector<URL::URL> { ak_url_from_qstring(Settings::the()->new_tab_page()) };
+        (void)static_cast<Ladybird::Application*>(QApplication::instance())->new_window(initial_urls, m_cookie_jar, m_web_content_options, m_webdriver_content_ipc_path);
     });
     QObject::connect(open_file_action, &QAction::triggered, this, &BrowserWindow::open_file);
     QObject::connect(settings_action, &QAction::triggered, this, [this] {
@@ -864,6 +873,9 @@ bool BrowserWindow::event(QEvent* event)
     }
 #endif
 
+    if (event->type() == QEvent::WindowActivate)
+        static_cast<Ladybird::Application*>(QApplication::instance())->set_active_window(*this);
+
     return QMainWindow::event(event);
 }
 
@@ -917,23 +929,9 @@ void BrowserWindow::closeEvent(QCloseEvent* event)
     Settings::the()->set_last_size(size());
     Settings::the()->set_is_maximized(isMaximized());
 
+    QObject::deleteLater();
+
     QMainWindow::closeEvent(event);
-}
-
-void BrowserWindow::show_task_manager_window()
-{
-    if (!m_task_manager_window) {
-        m_task_manager_window = new TaskManagerWindow(this);
-    }
-    m_task_manager_window->show();
-    m_task_manager_window->activateWindow();
-    m_task_manager_window->raise();
-}
-
-void BrowserWindow::close_task_manager_window()
-{
-    if (m_task_manager_window)
-        m_task_manager_window->close();
 }
 
 }

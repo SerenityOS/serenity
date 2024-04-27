@@ -6,6 +6,7 @@
 
 #include "Application.h"
 #include "StringUtils.h"
+#include "TaskManagerWindow.h"
 #include <LibWebView/URL.h>
 #include <QFileOpenEvent>
 
@@ -14,6 +15,11 @@ namespace Ladybird {
 Application::Application(int& argc, char** argv)
     : QApplication(argc, argv)
 {
+}
+
+Application::~Application()
+{
+    close_task_manager_window();
 }
 
 bool Application::event(QEvent* event)
@@ -35,6 +41,35 @@ bool Application::event(QEvent* event)
     }
 
     return QApplication::event(event);
+}
+
+void Application::show_task_manager_window()
+{
+    if (!m_task_manager_window) {
+        m_task_manager_window = new TaskManagerWindow(nullptr);
+    }
+    m_task_manager_window->show();
+    m_task_manager_window->activateWindow();
+    m_task_manager_window->raise();
+}
+
+void Application::close_task_manager_window()
+{
+    if (m_task_manager_window) {
+        m_task_manager_window->close();
+        delete m_task_manager_window;
+        m_task_manager_window = nullptr;
+    }
+}
+
+BrowserWindow& Application::new_window(Vector<URL::URL> const& initial_urls, WebView::CookieJar& cookie_jar, WebContentOptions const& web_content_options, StringView webdriver_content_ipc_path)
+{
+    auto* window = new BrowserWindow(initial_urls, cookie_jar, web_content_options, webdriver_content_ipc_path);
+    set_active_window(*window);
+    window->show();
+    window->activateWindow();
+    window->raise();
+    return *window;
 }
 
 }

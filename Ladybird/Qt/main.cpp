@@ -103,6 +103,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool debug_web_content = false;
     bool log_all_js_exceptions = false;
     bool enable_idl_tracing = false;
+    bool new_window = false;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("The Ladybird web browser :^)");
@@ -117,17 +118,29 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(log_all_js_exceptions, "Log all JavaScript exceptions", "log-all-js-exceptions");
     args_parser.add_option(enable_idl_tracing, "Enable IDL tracing", "enable-idl-tracing");
     args_parser.add_option(expose_internals_object, "Expose internals object", "expose-internals-object");
+    args_parser.add_option(new_window, "Force opening in a new window", "new-window", 'n');
     args_parser.parse(arguments);
 
     WebView::ChromeProcess chrome_process;
-    auto new_window = false;
     if (TRY(chrome_process.connect(raw_urls, new_window)) == WebView::ChromeProcess::ProcessDisposition::ExitProcess) {
         outln("Opening in existing process");
         return 0;
     }
 
-    chrome_process.on_new_window = [](auto const& urls) {
-        dbgln("asked to open new window with urls: {}", urls);
+    chrome_process.on_new_tab = [&](auto const& raw_urls) {
+        auto& window = app.active_window();
+        auto urls = sanitize_urls(raw_urls);
+        for (size_t i = 0; i < urls.size(); ++i) {
+            window.new_tab_from_url(urls[i], (i == 0) ? Web::HTML::ActivateTab::Yes : Web::HTML::ActivateTab::No);
+        }
+        window.show();
+        window.activateWindow();
+        window.raise();
+    };
+
+    app.on_open_file = [&](auto file_url) {
+        auto& window = app.active_window();
+        window.view().load(file_url);
     };
 
     WebView::ProcessManager::initialize();
@@ -171,22 +184,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         .expose_internals_object = expose_internals_object ? Ladybird::ExposeInternalsObject::Yes : Ladybird::ExposeInternalsObject::No,
     };
 
-    Ladybird::BrowserWindow window(sanitize_urls(raw_urls), cookie_jar, web_content_options, webdriver_content_ipc_path);
+    chrome_process.on_new_window = [&](auto const& urls) {
+        app.new_window(sanitize_urls(urls), cookie_jar, web_content_options, webdriver_content_ipc_path);
+    };
+
+    auto& window = app.new_window(sanitize_urls(raw_urls), cookie_jar, web_content_options, webdriver_content_ipc_path);
     window.setWindowTitle("Ladybird");
-
-    chrome_process.on_new_tab = [&](auto const& raw_urls) {
-        auto urls = sanitize_urls(raw_urls);
-        for (size_t i = 0; i < urls.size(); ++i) {
-            window.new_tab_from_url(urls[i], (i == 0) ? Web::HTML::ActivateTab::Yes : Web::HTML::ActivateTab::No);
-        }
-        window.show();
-        window.activateWindow();
-        window.raise();
-    };
-
-    app.on_open_file = [&](auto file_url) {
-        window.view().load(file_url);
-    };
 
     if (Ladybird::Settings::the()->is_maximized()) {
         window.showMaximized();
