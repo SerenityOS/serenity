@@ -6,22 +6,9 @@
 
 #pragma once
 
+#include <arch/fenv.h>
 #include <stdint.h>
 #include <sys/cdefs.h>
-
-#if defined(__x86_64__)
-#    include <arch/x86_64/fenv.h>
-#elif defined(__aarch64__)
-
-// TODO: Implement this.
-typedef struct fenv_t {
-} fenv_t;
-
-#elif defined(__riscv) && __riscv_xlen == 64
-#    include <arch/riscv64/fenv.h>
-#else
-#    error "Unknown architecture"
-#endif
 
 __BEGIN_DECLS
 
