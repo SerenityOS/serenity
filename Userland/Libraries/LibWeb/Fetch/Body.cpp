@@ -112,7 +112,7 @@ WebIDL::ExceptionOr<JS::Value> package_data(JS::Realm& realm, ByteBuffer bytes, 
     case PackageDataType::Blob: {
         // Return a Blob whose contents are bytes and type attribute is mimeType.
         // NOTE: If extracting the mime type returns failure, other browsers set it to an empty string - not sure if that's spec'd.
-        auto mime_type_string = mime_type.has_value() ? TRY_OR_THROW_OOM(vm, mime_type->serialized()) : String {};
+        auto mime_type_string = mime_type.has_value() ? MUST(mime_type->serialized()) : String {};
         return FileAPI::Blob::create(realm, move(bytes), move(mime_type_string));
     }
     case PackageDataType::FormData:
@@ -142,7 +142,7 @@ WebIDL::ExceptionOr<JS::Value> package_data(JS::Realm& realm, ByteBuffer bytes, 
         auto decoder = TextCodec::decoder_for("UTF-8"sv);
         VERIFY(decoder.has_value());
 
-        auto utf8_text = TRY_OR_THROW_OOM(vm, TextCodec::convert_input_to_utf8_using_given_decoder_unless_there_is_a_byte_order_mark(*decoder, bytes));
+        auto utf8_text = MUST(TextCodec::convert_input_to_utf8_using_given_decoder_unless_there_is_a_byte_order_mark(*decoder, bytes));
         return JS::PrimitiveString::create(vm, move(utf8_text));
     }
     default:
@@ -181,7 +181,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> consume_body(JS::Realm& realm
         HTML::TemporaryExecutionContext execution_context { Bindings::host_defined_environment_settings_object(realm) };
 
         auto value_or_error = Bindings::throw_dom_exception_if_needed(vm, [&]() -> WebIDL::ExceptionOr<JS::Value> {
-            return package_data(realm, data, type, TRY_OR_THROW_OOM(vm, object.mime_type_impl()));
+            return package_data(realm, data, type, object.mime_type_impl());
         });
 
         if (value_or_error.is_error()) {
