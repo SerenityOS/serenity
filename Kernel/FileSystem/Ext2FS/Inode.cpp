@@ -485,77 +485,41 @@ ErrorOr<size_t> Ext2FSInode::read_bytes_locked(off_t offset, size_t count, UserO
 ErrorOr<void> Ext2FSInode::resize(u64 new_size)
 {
     VERIFY(m_inode_lock.is_locked());
-    auto old_size = size();
-    if (old_size == new_size)
+    if (size() == new_size)
         return {};
 
     if (!((u32)fs().get_features_readonly() & (u32)Ext2FS::FeaturesReadOnly::FileSize64bits) && (new_size >= static_cast<u32>(-1)))
         return ENOSPC;
 
-    u64 block_size = fs().logical_block_size();
-    auto blocks_needed_before = ceil_div(old_size, block_size);
-    auto blocks_needed_after = ceil_div(new_size, block_size);
+    if (new_size < size()) {
+        auto block_size = fs().logical_block_size();
+        BlockBasedFileSystem::BlockIndex first_block_logical_index = ceil_div(new_size, block_size);
+        BlockBasedFileSystem::BlockIndex last_block_logical_index = size() / block_size;
 
-    if constexpr (EXT2_DEBUG) {
-        dbgln("Ext2FSInode[{}]::resize(): Blocks needed before (size was {}): {}", identifier(), old_size, blocks_needed_before);
-        dbgln("Ext2FSInode[{}]::resize(): Blocks needed after  (size is  {}): {}", identifier(), new_size, blocks_needed_after);
-    }
+        if (m_block_list.is_empty())
+            m_block_list = TRY(compute_block_list());
+        auto old_block_list = TRY(m_block_list.clone());
 
-    if (blocks_needed_after > blocks_needed_before) {
-        auto additional_blocks_needed = blocks_needed_after - blocks_needed_before;
-        if (additional_blocks_needed > fs().super_block().s_free_blocks_count)
-            return ENOSPC;
-    }
-
-    if (m_block_list.is_empty())
-        m_block_list = TRY(compute_block_list());
-
-    auto old_block_list = TRY(m_block_list.clone());
-
-    if (blocks_needed_after > blocks_needed_before) {
-        auto blocks = TRY(fs().allocate_blocks(fs().group_index_from_inode(index()), blocks_needed_after - blocks_needed_before));
-        for (auto const& block : blocks)
-            TRY(m_block_list.try_set(m_block_list.size(), block));
-    } else if (blocks_needed_after < blocks_needed_before) {
-        if constexpr (EXT2_VERY_DEBUG) {
-            dbgln("Ext2FSInode[{}]::resize(): Shrinking inode, old block list is {} entries:", identifier(), m_block_list.size());
-            for (auto block_index : m_block_list) {
-                dbgln("    # {}", block_index);
+        for (auto bi = first_block_logical_index; bi <= last_block_logical_index; bi = bi.value() + 1) {
+            auto block = get_block(bi);
+            if (block == 0) {
+                // This is a hole, skip it.
+                continue;
             }
-        }
-        auto blocks = TRY(get_blocks(0, m_block_list.size()));
-        while (m_block_list.size() != blocks_needed_after) {
-            m_block_list.remove(blocks.size() - 1);
-            auto block = blocks.take_last();
             if (auto result = fs().set_block_allocation_state(block, false); result.is_error()) {
                 dbgln("Ext2FSInode[{}]::resize(): Failed to free block {}: {}", identifier(), block, result.error());
                 return result;
             }
+            m_block_list.remove(bi);
         }
+        TRY(flush_block_list(old_block_list));
     }
-
-    TRY(flush_block_list(old_block_list));
 
     m_raw_inode.i_size = new_size;
     if (Kernel::is_regular_file(m_raw_inode.i_mode))
         m_raw_inode.i_dir_acl = new_size >> 32;
 
     set_metadata_dirty(true);
-
-    if (new_size > old_size) {
-        // If we're growing the inode, make sure we zero out all the new space.
-        // FIXME: There are definitely more efficient ways to achieve this.
-        auto bytes_to_clear = new_size - old_size;
-        auto clear_from = old_size;
-        u8 zero_buffer[PAGE_SIZE] {};
-        while (bytes_to_clear) {
-            auto nwritten = TRY(prepare_and_write_bytes_locked(clear_from, min(static_cast<u64>(sizeof(zero_buffer)), bytes_to_clear), UserOrKernelBuffer::for_kernel_buffer(zero_buffer), nullptr));
-            VERIFY(nwritten != 0);
-            bytes_to_clear -= nwritten;
-            clear_from += nwritten;
-        }
-    }
-
     return {};
 }
 
@@ -598,11 +562,13 @@ ErrorOr<size_t> Ext2FSInode::write_bytes_locked(off_t offset, size_t count, User
     auto current_block_logical_index = first_block_logical_index;
 
     dbgln_if(EXT2_VERY_DEBUG, "Ext2FSInode[{}]::write_bytes_locked(): Writing {} bytes, {} bytes into inode from {}", identifier(), count, offset, data.user_or_kernel_ptr());
+    auto old_block_list = TRY(m_block_list.clone());
 
     while (remaining_count) {
-        auto block_index = get_block(current_block_logical_index);
         size_t offset_into_block = (current_block_logical_index == first_block_logical_index) ? offset_into_first_block : 0;
         size_t num_bytes_to_copy = min((size_t)block_size - offset_into_block, (size_t)remaining_count);
+        auto block_index = TRY(get_or_allocate_block(current_block_logical_index, num_bytes_to_copy != block_size, allow_cache));
+
         dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]::write_bytes_locked(): Writing block {} (offset_into_block: {})", identifier(), block_index, offset_into_block);
         if (auto result = fs().write_block(block_index, data.offset(nwritten), num_bytes_to_copy, offset_into_block, allow_cache); result.is_error()) {
             dbgln("Ext2FSInode[{}]::write_bytes_locked(): Failed to write block {} (index {})", identifier(), block_index, current_block_logical_index);
@@ -613,6 +579,7 @@ ErrorOr<size_t> Ext2FSInode::write_bytes_locked(off_t offset, size_t count, User
         nwritten += num_bytes_to_copy;
     }
 
+    TRY(flush_block_list(old_block_list));
     did_modify_contents();
 
     dbgln_if(EXT2_VERY_DEBUG, "Ext2FSInode[{}]::write_bytes_locked(): After write, i_size={}, i_blocks={} ({} blocks in list)", identifier(), size(), m_raw_inode.i_blocks, m_block_list.size());
@@ -712,6 +679,33 @@ ErrorOr<void> Ext2FSInode::write_directory(Vector<Ext2FSDirectoryEntry>& entries
     return {};
 }
 
+ErrorOr<BlockBasedFileSystem::BlockIndex> Ext2FSInode::get_or_allocate_block(BlockBasedFileSystem::BlockIndex block_index, bool zero_newly_allocated_block, bool allow_cache)
+{
+    auto it = m_block_list.find(block_index);
+    if (it != m_block_list.end()) {
+        auto block = (*it).value;
+        VERIFY(block != 0);
+        return block;
+    }
+
+    // FIXME: Preallocate some extra blocks here.
+    auto blocks = TRY(fs().allocate_blocks(fs().group_index_from_inode(index()), 1));
+
+    VERIFY(blocks.size() == 1);
+    auto block = blocks.first();
+    TRY(m_block_list.try_set(block_index, block));
+
+    if (zero_newly_allocated_block) {
+        u8 zero_buffer[PAGE_SIZE] {};
+        if (auto result = fs().write_block(block, UserOrKernelBuffer::for_kernel_buffer(zero_buffer), fs().logical_block_size(), 0, allow_cache); result.is_error()) {
+            dbgln("Ext2FSInode[{}]::get_or_allocate_block(): Failed to zero block {} (index {})", identifier(), block, block_index);
+            return result.release_error();
+        }
+    }
+
+    return block;
+}
+
 BlockBasedFileSystem::BlockIndex Ext2FSInode::get_block(BlockBasedFileSystem::BlockIndex block_index) const
 {
     auto it = m_block_list.find(block_index);
@@ -719,16 +713,6 @@ BlockBasedFileSystem::BlockIndex Ext2FSInode::get_block(BlockBasedFileSystem::Bl
         return 0;
 
     return (*it).value;
-}
-
-ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> Ext2FSInode::get_blocks(BlockBasedFileSystem::BlockIndex first_block_index, u64 count) const
-{
-    Vector<BlockBasedFileSystem::BlockIndex> blocks;
-    TRY(blocks.try_ensure_capacity(count));
-    for (auto block = first_block_index; block < first_block_index.value() + count; block = block.value() + 1)
-        blocks.unchecked_append(get_block(block));
-
-    return blocks;
 }
 
 ErrorOr<NonnullRefPtr<Inode>> Ext2FSInode::create_child(StringView name, mode_t mode, dev_t dev, UserID uid, GroupID gid)

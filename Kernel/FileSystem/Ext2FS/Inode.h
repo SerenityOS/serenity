@@ -45,8 +45,8 @@ private:
     virtual ErrorOr<void> truncate_locked(u64) override;
     virtual ErrorOr<int> get_block_address(int) override;
 
+    ErrorOr<BlockBasedFileSystem::BlockIndex> get_or_allocate_block(BlockBasedFileSystem::BlockIndex, bool zero_newly_allocated_block, bool allow_cache);
     BlockBasedFileSystem::BlockIndex get_block(BlockBasedFileSystem::BlockIndex) const;
-    ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> get_blocks(BlockBasedFileSystem::BlockIndex first_block_index, u64 count) const;
     ErrorOr<u32> allocate_and_zero_block();
 
     ErrorOr<void> write_directory(Vector<Ext2FSDirectoryEntry>&);
