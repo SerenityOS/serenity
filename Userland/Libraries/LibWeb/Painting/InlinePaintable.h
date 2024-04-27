@@ -46,11 +46,6 @@ public:
     void set_outline_offset(CSSPixels outline_offset) { m_outline_offset = outline_offset; }
     CSSPixels outline_offset() const { return m_outline_offset; }
 
-    virtual Gfx::AffineTransform compute_combined_css_transform_for_clippable_and_scrollable() const override
-    {
-        return compute_combined_css_transform();
-    }
-
 private:
     InlinePaintable(Layout::InlineNode const&);
 

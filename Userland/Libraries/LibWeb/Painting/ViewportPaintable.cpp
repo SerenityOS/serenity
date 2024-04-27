@@ -440,6 +440,16 @@ void ViewportPaintable::resolve_paint_only_properties()
             inline_paintable.set_outline_offset(outline_offset);
         }
 
+        if (is_paintable_box) {
+            auto& paintable_box = static_cast<Painting::PaintableBox&>(paintable);
+            auto combined_transform = paintable.compute_combined_css_transform();
+            paintable_box.set_combined_css_transform(combined_transform);
+        } else if (is_inline_paintable) {
+            auto& inline_paintable = static_cast<Painting::InlinePaintable&>(paintable);
+            auto combined_transform = paintable.compute_combined_css_transform();
+            inline_paintable.set_combined_css_transform(combined_transform);
+        }
+
         return TraversalDecision::Continue;
     });
 }

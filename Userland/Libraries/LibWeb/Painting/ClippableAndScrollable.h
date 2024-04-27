@@ -27,11 +27,14 @@ public:
     [[nodiscard]] Optional<CSSPixelRect> clip_rect() const;
     [[nodiscard]] Span<BorderRadiiClip const> border_radii_clips() const;
 
-    virtual Gfx::AffineTransform compute_combined_css_transform_for_clippable_and_scrollable() const = 0;
+    Gfx::AffineTransform const& combined_css_transform() const { return m_combined_css_transform; }
+    void set_combined_css_transform(Gfx::AffineTransform const& transform) { m_combined_css_transform = transform; }
 
 private:
     RefPtr<ScrollFrame const> m_enclosing_scroll_frame;
     RefPtr<ClipFrame const> m_enclosing_clip_frame;
+
+    Gfx::AffineTransform m_combined_css_transform;
 };
 
 }

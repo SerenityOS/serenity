@@ -483,7 +483,7 @@ void PaintableBox::apply_clip_overflow_rect(PaintContext& context, PaintPhase ph
         context.recording_painter().add_clip_rect(context.enclosing_device_rect(overflow_clip_rect).to_type<int>());
         auto const& border_radii_clips = this->border_radii_clips();
         m_corner_clipper_ids.resize(border_radii_clips.size());
-        auto combined_transform = compute_combined_css_transform();
+        auto const& combined_transform = combined_css_transform();
         for (size_t corner_clip_index = 0; corner_clip_index < border_radii_clips.size(); ++corner_clip_index) {
             auto const& corner_clip = border_radii_clips[corner_clip_index];
             auto corners = corner_clip.radii.as_corners(context);
@@ -504,7 +504,7 @@ void PaintableBox::clear_clip_overflow_rect(PaintContext& context, PaintPhase ph
 
     if (m_clipping_overflow) {
         m_clipping_overflow = false;
-        auto combined_transform = compute_combined_css_transform();
+        auto const& combined_transform = combined_css_transform();
         auto const& border_radii_clips = this->border_radii_clips();
         for (size_t corner_clip_index = 0; corner_clip_index < border_radii_clips.size(); ++corner_clip_index) {
             auto const& corner_clip = border_radii_clips[corner_clip_index];
