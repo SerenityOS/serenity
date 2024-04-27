@@ -53,11 +53,11 @@ public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> redirect(JS::VM&, String const& url, u16 status);
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> json(JS::VM&, JS::Value data, ResponseInit const& init = {});
     [[nodiscard]] Bindings::ResponseType type() const;
-    [[nodiscard]] WebIDL::ExceptionOr<String> url() const;
+    [[nodiscard]] String url() const;
     [[nodiscard]] bool redirected() const;
     [[nodiscard]] u16 status() const;
     [[nodiscard]] bool ok() const;
-    [[nodiscard]] WebIDL::ExceptionOr<String> status_text() const;
+    [[nodiscard]] String status_text() const;
     [[nodiscard]] JS::NonnullGCPtr<Headers> headers() const;
     [[nodiscard]] WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> clone() const;
 
