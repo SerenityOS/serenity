@@ -13,6 +13,7 @@
 #include <AK/IterationDecision.h>
 #include <AK/MemoryStream.h>
 #include <AK/Optional.h>
+#include <AK/RecursionDecision.h>
 #include <AK/Span.h>
 
 namespace DeviceTree {
@@ -168,6 +169,28 @@ public:
     //        bonus points if it could automatically recurse in the tree under some conditions,
     //        like "simple-bus" or "pci-bridge" nodes
 
+    auto for_each_node(CallableAs<ErrorOr<RecursionDecision>, StringView, DeviceTreeNodeView const&> auto callback) const
+    {
+        auto iterate = [&](auto self, StringView name, DeviceTreeNodeView const& node) -> ErrorOr<RecursionDecision> {
+            auto result = TRY(callback(name, node));
+
+            if (result == RecursionDecision::Recurse) {
+                for (auto const& [name, child] : node.children()) {
+                    auto child_result = TRY(self(self, name, child));
+
+                    if (child_result == RecursionDecision::Break)
+                        return RecursionDecision::Break;
+                }
+
+                return RecursionDecision::Continue;
+            }
+
+            return result;
+        };
+
+        return iterate(iterate, "/"sv, *this);
+    }
+
     DeviceTreeNodeView const* phandle(u32 phandle) const
     {
         if (phandle >= m_phandles.size())
@@ -182,6 +205,28 @@ private:
         : DeviceTreeNodeView(nullptr)
         , m_flattened_device_tree(flattened_device_tree)
     {
+    }
+
+    auto for_each_node(CallableAs<ErrorOr<RecursionDecision>, StringView, DeviceTreeNodeView&> auto callback)
+    {
+        auto iterate = [&](auto self, StringView name, DeviceTreeNodeView& node) -> ErrorOr<RecursionDecision> {
+            auto result = TRY(callback(name, node));
+
+            if (result == RecursionDecision::Recurse) {
+                for (auto& [name, child] : node.children()) {
+                    auto child_result = TRY(self(self, name, child));
+
+                    if (child_result == RecursionDecision::Break)
+                        return RecursionDecision::Break;
+                }
+
+                return RecursionDecision::Continue;
+            }
+
+            return result;
+        };
+
+        return iterate(iterate, "/"sv, *this);
     }
 
     ErrorOr<void> set_phandle(u32 phandle, DeviceTreeNodeView* node)

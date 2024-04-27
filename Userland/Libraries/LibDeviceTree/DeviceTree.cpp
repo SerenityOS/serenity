@@ -39,14 +39,7 @@ ErrorOr<NonnullOwnPtr<DeviceTree>> DeviceTree::parse(ReadonlyBytes flattened_dev
                 current_node = current_node->parent();
                 return IterationDecision::Continue;
             },
-            .on_property = [&device_tree, &current_node](StringView name, ReadonlyBytes value) -> ErrorOr<IterationDecision> {
-                DeviceTreeProperty property { value };
-
-                if (name == "phandle"sv) {
-                    auto phandle = property.as<u32>();
-                    TRY(device_tree->set_phandle(phandle, current_node));
-                }
-
+            .on_property = [&current_node](StringView name, ReadonlyBytes value) -> ErrorOr<IterationDecision> {
                 TRY(current_node->properties().try_set(name, DeviceTreeProperty { value }));
                 return IterationDecision::Continue;
             },
@@ -57,6 +50,25 @@ ErrorOr<NonnullOwnPtr<DeviceTree>> DeviceTree::parse(ReadonlyBytes flattened_dev
                 return {};
             },
         }));
+
+    // FIXME: While growing the a nodes children map, we might have reallocated it's storage
+    //        breaking the parent pointers of the children, so we need to fix them here
+    auto fix_parent = [](auto self, DeviceTreeNodeView& node) -> void {
+        for (auto& [name, child] : node.children()) {
+            child.m_parent = &node;
+            self(self, child);
+        }
+    };
+
+    fix_parent(fix_parent, *device_tree);
+    // Note: For the same reason as above, we need to postpone setting the phandles until the tree is fully built
+    TRY(device_tree->for_each_node([&device_tree]([[maybe_unused]] StringView name, DeviceTreeNodeView& node) -> ErrorOr<RecursionDecision> {
+        if (auto phandle = node.get_property("phandle"sv); phandle.has_value()) {
+            auto phandle_value = phandle.value().as<u32>();
+            TRY(device_tree->set_phandle(phandle_value, &node));
+        }
+        return RecursionDecision::Recurse;
+    }));
 
     return device_tree;
 }
