@@ -118,7 +118,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-warning-option")
 
 # Note: We link all these against NoCoverage so that we don't break ports by requiring coverage symbols
 # in runtime/startup objects.
-# Since all native serenity applications use dynamic libraries, prevent coverage on libc.a as well
 
 add_library(crt0 STATIC crt0.cpp)
 add_dependencies(crt0 install_libc_headers)
@@ -167,34 +166,10 @@ endif()
 
 set_source_files_properties(ssp.cpp PROPERTIES COMPILE_FLAGS "-fno-stack-protector")
 
-add_library(LibCStaticWithoutDeps STATIC ${SOURCES})
-target_link_libraries(LibCStaticWithoutDeps PUBLIC ssp LibTimeZone PRIVATE NoCoverage)
-add_dependencies(LibCStaticWithoutDeps LibSystem LibUBSanitizer)
-
-add_custom_target(LibCStatic
-        COMMAND ${CMAKE_AR} -x $<TARGET_FILE:LibCStaticWithoutDeps>
-        COMMAND ${CMAKE_AR} -x $<TARGET_FILE:LibSystemStatic>
-        COMMAND ${CMAKE_AR} -x $<TARGET_FILE:LibUBSanitizerStatic>
-        COMMAND ${CMAKE_AR} -rcs ${CMAKE_CURRENT_BINARY_DIR}/libc.a *.o
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        DEPENDS LibCStaticWithoutDeps LibSystemStatic LibUBSanitizerStatic
-        )
-
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libc.a DESTINATION ${CMAKE_INSTALL_PREFIX}/usr/lib/)
-file(GLOB TEMP_OBJ_FILES ${CMAKE_CURRENT_BINARY_DIR}/*.o)
-set_property(
-        TARGET LibCStatic
-        APPEND
-        PROPERTY ADDITIONAL_CLEAN_FILES ${TEMP_OBJ_FILES}
-)
-
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -nolibc")
 serenity_libc(LibC c)
 add_dependencies(LibC crti crt0 crt0_shared crtn install_libc_headers)
 target_link_libraries(LibC PRIVATE LibSystem LibTimeZone)
-
-# We mark LibCStatic as a dependency of LibC because this triggers the build of the LibCStatic target
-add_dependencies(LibC LibCStatic)
 
 # Provide a linker script instead of various other libraries that tells everything to link against LibC.
 file(WRITE "${CMAKE_STAGING_PREFIX}/${CMAKE_INSTALL_LIBDIR}/libpthread.so" "INPUT(libc.so)")
