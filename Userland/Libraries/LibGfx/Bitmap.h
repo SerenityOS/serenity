@@ -223,13 +223,6 @@ public:
         set_pixel(physical_position.x(), physical_position.y(), color);
     }
 
-    [[nodiscard]] bool is_volatile() const { return m_volatile; }
-    void set_volatile();
-
-    // Returns true if making the bitmap non-volatile succeeded. `was_purged` indicates status of contents.
-    // Returns false if there was not enough memory.
-    [[nodiscard]] bool set_nonvolatile(bool& was_purged);
-
     [[nodiscard]] Core::AnonymousBuffer& anonymous_buffer() { return m_buffer; }
     [[nodiscard]] Core::AnonymousBuffer const& anonymous_buffer() const { return m_buffer; }
 
@@ -252,7 +245,6 @@ private:
     size_t m_pitch { 0 };
     BitmapFormat m_format { BitmapFormat::Invalid };
     bool m_needs_munmap { false };
-    bool m_volatile { false };
     Core::AnonymousBuffer m_buffer;
 };
 
