@@ -5,6 +5,7 @@
  */
 
 #include <AK/QuickSort.h>
+#include <LibWeb/Bindings/IntersectionObserverPrototype.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>

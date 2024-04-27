@@ -5,6 +5,7 @@
  */
 
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/Bindings/ProcessingInstructionPrototype.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/ProcessingInstruction.h>
 #include <LibWeb/Layout/TextNode.h>

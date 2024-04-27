@@ -5,6 +5,7 @@
  */
 
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/Bindings/SVGTransformPrototype.h>
 #include <LibWeb/SVG/SVGTransform.h>
 
 namespace Web::SVG {

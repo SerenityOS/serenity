@@ -6,6 +6,7 @@
  */
 
 #include <AK/QuickSort.h>
+#include <LibWeb/Bindings/CanvasGradientPrototype.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/HTML/CanvasGradient.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>

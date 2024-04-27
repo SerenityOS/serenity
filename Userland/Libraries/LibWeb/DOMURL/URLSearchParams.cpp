@@ -12,6 +12,7 @@
 #include <LibURL/Parser.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/Bindings/URLSearchParamsPrototype.h>
 #include <LibWeb/DOMURL/DOMURL.h>
 #include <LibWeb/DOMURL/URLSearchParams.h>
 

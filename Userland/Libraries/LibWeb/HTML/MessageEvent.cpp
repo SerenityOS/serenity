@@ -6,6 +6,7 @@
 
 #include <LibJS/Runtime/Array.h>
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/Bindings/MessageEventPrototype.h>
 #include <LibWeb/HTML/MessageEvent.h>
 
 namespace Web::HTML {

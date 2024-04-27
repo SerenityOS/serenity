@@ -6,6 +6,7 @@
  */
 
 #include <LibWeb/ARIA/Roles.h>
+#include <LibWeb/Bindings/HTMLAnchorElementPrototype.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/HTML/AttributeNames.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>

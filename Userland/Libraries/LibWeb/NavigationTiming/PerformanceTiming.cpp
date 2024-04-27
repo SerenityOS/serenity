@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/PerformanceTimingPrototype.h>
 #include <LibWeb/NavigationTiming/PerformanceTiming.h>
 
 namespace Web::NavigationTiming {

@@ -5,6 +5,7 @@
  */
 
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/Bindings/PageTransitionEventPrototype.h>
 #include <LibWeb/HTML/PageTransitionEvent.h>
 
 namespace Web::HTML {

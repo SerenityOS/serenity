@@ -5,6 +5,7 @@
  */
 
 #include <LibWeb/Animations/KeyframeEffect.h>
+#include <LibWeb/Bindings/CSSAnimationPrototype.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/CSS/CSSAnimation.h>
 #include <LibWeb/DOM/Element.h>

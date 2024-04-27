@@ -6,6 +6,7 @@
 
 #include <LibJS/Heap/Heap.h>
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/Bindings/WorkerNavigatorPrototype.h>
 #include <LibWeb/HTML/WorkerGlobalScope.h>
 #include <LibWeb/HTML/WorkerNavigator.h>
 

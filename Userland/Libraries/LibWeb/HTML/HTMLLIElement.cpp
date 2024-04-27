@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/HTMLLIElementPrototype.h>
 #include <LibWeb/HTML/HTMLLIElement.h>
 #include <LibWeb/HTML/Window.h>
 

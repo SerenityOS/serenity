@@ -5,6 +5,7 @@
  */
 
 #include <LibWeb/ARIA/Roles.h>
+#include <LibWeb/Bindings/HTMLAreaElementPrototype.h>
 #include <LibWeb/HTML/HTMLAreaElement.h>
 #include <LibWeb/HTML/Window.h>
 

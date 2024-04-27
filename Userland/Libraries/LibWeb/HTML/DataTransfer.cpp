@@ -5,6 +5,7 @@
  */
 
 #include <LibJS/Runtime/Realm.h>
+#include <LibWeb/Bindings/DataTransferPrototype.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/HTML/DataTransfer.h>
 

@@ -6,6 +6,7 @@
 
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/VM.h>
+#include <LibWeb/Bindings/HeadersPrototype.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Fetch/Headers.h>
 

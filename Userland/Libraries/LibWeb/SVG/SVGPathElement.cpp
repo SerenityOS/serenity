@@ -7,6 +7,7 @@
 #include <AK/Debug.h>
 #include <AK/Optional.h>
 #include <LibGfx/Path.h>
+#include <LibWeb/Bindings/SVGPathElementPrototype.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/Layout/SVGGeometryBox.h>

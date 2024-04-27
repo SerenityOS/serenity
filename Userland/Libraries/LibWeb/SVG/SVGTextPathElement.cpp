@@ -5,6 +5,7 @@
  */
 
 #include <LibURL/URL.h>
+#include <LibWeb/Bindings/SVGTextPathElementPrototype.h>
 #include <LibWeb/Layout/SVGTextPathBox.h>
 #include <LibWeb/SVG/AttributeNames.h>
 #include <LibWeb/SVG/SVGTextPathElement.h>
