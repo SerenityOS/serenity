@@ -30,35 +30,6 @@ Layout::InlineNode const& InlinePaintable::layout_node() const
     return static_cast<Layout::InlineNode const&>(Paintable::layout_node());
 }
 
-Optional<int> InlinePaintable::scroll_frame_id() const
-{
-    if (m_enclosing_scroll_frame)
-        return m_enclosing_scroll_frame->id;
-    return {};
-}
-
-Optional<CSSPixelPoint> InlinePaintable::enclosing_scroll_frame_offset() const
-{
-    if (m_enclosing_scroll_frame)
-        return m_enclosing_scroll_frame->offset;
-    return {};
-}
-
-Optional<CSSPixelRect> InlinePaintable::clip_rect() const
-{
-    if (m_enclosing_clip_frame) {
-        auto rect = m_enclosing_clip_frame->rect();
-
-        // NOTE: Since the painting command executor applies a CSS transform and the clip rect is calculated
-        //       with this transform taken into account, we need to remove the transform from the clip rect.
-        //       Otherwise, the transform will be applied twice to the clip rect.
-        auto combined_transform = compute_combined_css_transform();
-        rect.translate_by(-combined_transform.translation().to_type<CSSPixels>());
-        return rect;
-    }
-    return {};
-}
-
 void InlinePaintable::before_paint(PaintContext& context, PaintPhase) const
 {
     if (scroll_frame_id().has_value()) {
@@ -218,7 +189,7 @@ void InlinePaintable::for_each_fragment(Callback callback) const
 
 TraversalDecision InlinePaintable::hit_test(CSSPixelPoint position, HitTestType type, Function<TraversalDecision(HitTestResult)> const& callback) const
 {
-    if (m_clip_rect.has_value() && !m_clip_rect.value().contains(position))
+    if (clip_rect().has_value() && !clip_rect().value().contains(position))
         return TraversalDecision::Continue;
 
     auto position_adjusted_by_scroll_offset = position;

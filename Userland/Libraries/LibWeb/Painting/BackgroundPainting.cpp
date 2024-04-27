@@ -12,6 +12,7 @@
 #include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Painting/BackgroundPainting.h>
 #include <LibWeb/Painting/InlinePaintable.h>
+#include <LibWeb/Painting/PaintableBox.h>
 
 namespace Web::Painting {
 
