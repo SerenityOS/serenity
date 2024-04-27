@@ -105,16 +105,6 @@ private:
 
     using BlockList = HashMap<BlockBasedFileSystem::BlockIndex, BlockBasedFileSystem::BlockIndex>;
 
-    struct BlockListShape {
-        unsigned direct_blocks { 0 };
-        unsigned indirect_blocks { 0 };
-        unsigned doubly_indirect_blocks { 0 };
-        unsigned triply_indirect_blocks { 0 };
-        unsigned meta_blocks { 0 };
-    };
-
-    BlockListShape compute_block_list_shape(unsigned blocks) const;
-
     u64 m_block_group_count { 0 };
 
     mutable ext2_super_block m_super_block {};

@@ -159,39 +159,6 @@ bool Ext2FS::find_block_containing_inode(InodeIndex inode, BlockIndex& block_ind
     return true;
 }
 
-Ext2FS::BlockListShape Ext2FS::compute_block_list_shape(unsigned blocks) const
-{
-    BlockListShape shape;
-    unsigned const entries_per_block = EXT2_ADDR_PER_BLOCK(&super_block());
-    unsigned blocks_remaining = blocks;
-
-    shape.direct_blocks = min((unsigned)EXT2_NDIR_BLOCKS, blocks_remaining);
-    blocks_remaining -= shape.direct_blocks;
-    if (!blocks_remaining)
-        return shape;
-
-    shape.indirect_blocks = min(blocks_remaining, entries_per_block);
-    shape.meta_blocks += 1;
-    blocks_remaining -= shape.indirect_blocks;
-    if (!blocks_remaining)
-        return shape;
-
-    shape.doubly_indirect_blocks = min(blocks_remaining, entries_per_block * entries_per_block);
-    shape.meta_blocks += 1;
-    shape.meta_blocks += ceil_div(shape.doubly_indirect_blocks, entries_per_block);
-    blocks_remaining -= shape.doubly_indirect_blocks;
-    if (!blocks_remaining)
-        return shape;
-
-    shape.triply_indirect_blocks = min(blocks_remaining, entries_per_block * entries_per_block * entries_per_block);
-    shape.meta_blocks += 1;
-    shape.meta_blocks += ceil_div(shape.triply_indirect_blocks, entries_per_block * entries_per_block);
-    shape.meta_blocks += ceil_div(shape.triply_indirect_blocks, entries_per_block);
-    blocks_remaining -= shape.triply_indirect_blocks;
-    VERIFY(blocks_remaining == 0);
-    return shape;
-}
-
 u8 Ext2FS::internal_file_type_to_directory_entry_type(DirectoryEntryView const& entry) const
 {
     switch (entry.file_type) {
@@ -618,10 +585,16 @@ ErrorOr<void> Ext2FS::free_inode(Ext2FSInode& inode)
 
     // Mark all blocks used by this inode as free.
     {
-        auto blocks = TRY(inode.compute_block_list_with_meta_blocks());
+        auto blocks = TRY(inode.compute_block_list());
         for (auto const& [_, block_index] : blocks) {
             VERIFY(block_index <= super_block().s_blocks_count && block_index != 0);
             TRY(set_block_allocation_state(block_index, false));
+        }
+
+        auto meta_blocks = TRY(inode.compute_meta_blocks());
+        for (auto const& block : meta_blocks) {
+            VERIFY(block <= super_block().s_blocks_count && block != 0);
+            TRY(set_block_allocation_state(block, false));
         }
     }
 
