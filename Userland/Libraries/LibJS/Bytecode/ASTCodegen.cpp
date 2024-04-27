@@ -1627,7 +1627,10 @@ Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> CallExpression::gen
     } else {
         Vector<Bytecode::Operand> argument_operands;
         for (auto const& argument : arguments()) {
-            argument_operands.append(TRY(argument.value->generate_bytecode(generator)).value());
+            auto argument_value = TRY(argument.value->generate_bytecode(generator)).value();
+            auto temporary = Bytecode::Operand(generator.allocate_register());
+            generator.emit<Bytecode::Op::Mov>(temporary, argument_value);
+            argument_operands.append(temporary);
         }
         generator.emit_with_extra_operand_slots<Bytecode::Op::Call>(
             argument_operands.size(),
