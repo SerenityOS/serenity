@@ -41,7 +41,7 @@ struct ProcessSpawnOptions {
     Optional<ByteString> working_directory {};
 
     using FileActionType = Variant<FileAction::OpenFile, FileAction::CloseFile>;
-    Vector<FileActionType> const& file_actions {};
+    Vector<FileActionType> file_actions {};
 };
 
 class IPCProcess;

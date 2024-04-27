@@ -364,7 +364,7 @@ ErrorOr<IPCProcess::ProcessAndIPCSocket> IPCProcess::spawn_and_connect_to_proces
     ArmedScopeGuard guard_fd_0 { [&] { MUST(System::close(socket_fds[0])); } };
     ArmedScopeGuard guard_fd_1 { [&] { MUST(System::close(socket_fds[1])); } };
 
-    auto& file_actions = const_cast<Vector<ProcessSpawnOptions::FileActionType>&>(options.file_actions);
+    auto& file_actions = const_cast<ProcessSpawnOptions&>(options).file_actions;
     file_actions.append(FileAction::CloseFile { socket_fds[0] });
 
     auto takeover_string = MUST(String::formatted("{}:{}", options.name, socket_fds[1]));
