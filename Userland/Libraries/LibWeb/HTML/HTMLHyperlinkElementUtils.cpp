@@ -8,6 +8,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLHyperlinkElementUtils.h>
 #include <LibWeb/HTML/Navigable.h>
+#include <LibWeb/HTML/SandboxingFlagSet.h>
 
 namespace Web::HTML {
 
@@ -521,6 +522,42 @@ void HTMLHyperlinkElementUtils::follow_the_hyperlink(Optional<String> hyperlink_
 
     // 13. Navigate targetNavigable to urlString using subject's node document, with referrerPolicy set to referrerPolicy and userInvolvement set to userInvolvement.
     MUST(target_navigable->navigate({ .url = url_string, .source_document = hyperlink_element_utils_document(), .referrer_policy = referrer_policy, .user_involvement = user_involvement }));
+}
+
+// https://html.spec.whatwg.org/multipage/links.html#downloading-hyperlinks
+void HTMLHyperlinkElementUtils::download_the_hyperlink(Optional<String> hyperlink_suffix, UserNavigationInvolvement user_involvement)
+{
+    // 1. If subject cannot navigate, then return.
+    if (cannot_navigate())
+        return;
+
+    // 2. If subject's node document's active sandboxing flag set has the sandboxed downloads browsing context flag set, then return.
+    if (has_flag(hyperlink_element_utils_document().active_sandboxing_flag_set(), SandboxingFlagSet::SandboxedDownloads))
+        return;
+
+    // 3. Let urlString be the result of encoding-parsing-and-serializing a URL given subject's href attribute value,
+    //    relative to subject's node document.
+    auto url = hyperlink_element_utils_document().parse_url(href());
+
+    // 4. If urlString is failure, then return.
+    if (!url.is_valid())
+        return;
+
+    // 5. If hyperlinkSuffix is non-null, then append it to urlString.
+    if (hyperlink_suffix.has_value()) {
+        StringBuilder url_builder;
+        url_builder.append(url_string);
+        url_builder.append(*hyperlink_suffix);
+
+        url_string = MUST(url_builder.to_string());
+    }
+
+    // FIXME: 6. If userInvolvement is not "browser UI", then:
+
+    // 7. Run these steps in parallel:
+    //    1. Optionally, the user agent may abort these steps, if it believes doing so would safeguard the user from a potentially hostile download.
+    //    2. Let request be a new request whose URL is urlString, client is entry settings object, initiator is "download", destination is the empty string, and whose synchronous flag and use-URL-credentials flag are set.
+    //    3. Handle the result of fetching request as a download.
 }
 
 }

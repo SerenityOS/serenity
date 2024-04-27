@@ -30,6 +30,8 @@ public:
     StringView referrer_policy() const;
     WebIDL::ExceptionOr<void> set_referrer_policy(String const&);
 
+    void do_manual_download();
+
     // ^EventTarget
     // https://html.spec.whatwg.org/multipage/interaction.html#the-tabindex-attribute:the-a-element
     virtual bool is_focusable() const override { return has_attribute(HTML::AttributeNames::href); }

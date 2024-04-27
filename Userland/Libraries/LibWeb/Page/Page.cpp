@@ -13,6 +13,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
+#include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
 #include <LibWeb/HTML/HTMLMediaElement.h>
 #include <LibWeb/HTML/HTMLSelectElement.h>
@@ -526,13 +527,12 @@ void Page::download_context_menu_element()
     if (dom_node == nullptr)
         return;
 
-    if (dom_node->is_html_anchor_element()) {
-        // download anchor
-    } else if (dom_node->is_html_image_element()) {
-        // download image
-    } else if (is<HTML::HTMLMediaElement>(dom_node)) {
-        // download media
-    }
+    if (dom_node->is_html_anchor_element())
+        static_cast<HTML::HTMLAnchorElement*>(dom_node)->do_manual_download();
+    else if (dom_node->is_html_image_element())
+        return;
+    else if (is<HTML::HTMLMediaElement>(dom_node))
+        return;
 }
 
 void Page::set_user_style(String source)

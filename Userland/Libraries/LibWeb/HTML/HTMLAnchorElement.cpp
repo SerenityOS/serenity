@@ -96,15 +96,18 @@ void HTMLAnchorElement::activation_behavior(Web::DOM::Event const& event)
     // 4. Let userInvolvement be event's user navigation involvement.
     auto user_involvement = user_navigation_involvement(event);
 
-    // FIXME: 5. If the user has expressed a preference to download the hyperlink, then set userInvolvement to "browser UI".
-    // NOTE: That is, if the user has expressed a specific preference for downloading, this no longer counts as merely "activation".
+    // 5. If the user has expressed a preference to download the hyperlink, then set userInvolvement to "browser UI".
+    //    NOTE: That is, if the user has expressed a specific preference for downloading, this no longer counts as merely "activation".
+    // Not applicable, see do_manual_download
 
-    // FIXME: 6. If element has a download attribute, or if the user has expressed a preference to download the
-    //     hyperlink, then download the hyperlink created by element with hyperlinkSuffix set to hyperlinkSuffix and
-    //     userInvolvement set to userInvolvement.
-
-    // 7. Otherwise, follow the hyperlink created by element with hyperlinkSuffix set to hyperlinkSuffix and userInvolvement set to userInvolvement.
-    follow_the_hyperlink(hyperlink_suffix, user_involvement);
+    // 6. If element has a download attribute, or if the user has expressed a preference to download the
+    //    hyperlink, then download the hyperlink created by element with hyperlinkSuffix set to hyperlinkSuffix and
+    //    userInvolvement set to userInvolvement.
+    if (has_attribute(HTML::AttributeNames::download)) {
+        // FIXME: Download the hyperlink
+    } else
+        // 7. Otherwise, follow the hyperlink created by element with hyperlinkSuffix set to hyperlinkSuffix and userInvolvement set to userInvolvement.
+        follow_the_hyperlink(hyperlink_suffix, user_involvement);
 }
 
 // https://html.spec.whatwg.org/multipage/interaction.html#dom-tabindex
@@ -158,6 +161,39 @@ WebIDL::ExceptionOr<void> HTMLAnchorElement::set_referrer_policy(String const& r
 {
     // The IDL attribute referrerPolicy must reflect the referrerpolicy content attribute, limited to only known values.
     return set_attribute(HTML::AttributeNames::referrerpolicy, referrer_policy);
+}
+
+// https://html.spec.whatwg.org/multipage/links.html#links-created-by-a-and-area-elements
+void HTMLAnchorElement::do_manual_download()
+{
+    // NOTE: Performing a manual download of an anchor uses the same activation behavior algorithm, but does not create an event relevant for it
+
+    // The activation behavior of an a or area element element given an event event is:
+
+    // 1. If element has no href attribute, then return.
+    if (href().is_empty())
+        return;
+
+    // 2. Let hyperlinkSuffix be null.
+    Optional<String> hyperlink_suffix {};
+
+    // 3. If element is an a element, and event's target is an img with an ismap attribute specified, then:
+    // Not applicable: Attempting to perform a manual download on an img triggers seperate logic
+
+    // 4. Let userInvolvement be event's user navigation involvement.
+    // Not applicable
+
+    // 5. If the user has expressed a preference to download the hyperlink, then set userInvolvement to "browser UI".
+    //    NOTE: That is, if the user has expressed a specific preference for downloading, this no longer counts as merely "activation".
+    [[maybe_unused]] auto user_involvement = UserNavigationInvolvement::BrowserUI;
+
+    // 6. If element has a download attribute, or if the user has expressed a preference to download the
+    //    hyperlink, then download the hyperlink created by element with hyperlinkSuffix set to hyperlinkSuffix and
+    //    userInvolvement set to userInvolvement.
+    // FIXME: Download the hyperlink
+
+    // 7. Otherwise, follow the hyperlink created by element with hyperlinkSuffix set to hyperlinkSuffix and userInvolvement set to userInvolvement.
+    // Not applicable
 }
 
 }
