@@ -5,6 +5,7 @@
  */
 
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/Bindings/SVGDefsElementPrototype.h>
 #include <LibWeb/Layout/SVGBox.h>
 #include <LibWeb/SVG/SVGDefsElement.h>
 

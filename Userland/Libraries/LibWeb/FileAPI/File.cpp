@@ -6,6 +6,7 @@
 
 #include <AK/Time.h>
 #include <LibJS/Runtime/Completion.h>
+#include <LibWeb/Bindings/FilePrototype.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/FileAPI/File.h>
 #include <LibWeb/Infra/Strings.h>

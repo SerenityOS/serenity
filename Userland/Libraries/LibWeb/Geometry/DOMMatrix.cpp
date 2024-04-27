@@ -6,6 +6,7 @@
  */
 
 #include <LibJS/Runtime/TypedArray.h>
+#include <LibWeb/Bindings/DOMMatrixPrototype.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Geometry/DOMMatrix.h>
 #include <LibWeb/HTML/Window.h>

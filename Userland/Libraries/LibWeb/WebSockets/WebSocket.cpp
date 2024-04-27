@@ -8,6 +8,7 @@
 #include <AK/QuickSort.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibJS/Runtime/FunctionObject.h>
+#include <LibWeb/Bindings/WebSocketPrototype.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/EventDispatcher.h>

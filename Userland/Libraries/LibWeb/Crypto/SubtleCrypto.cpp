@@ -11,6 +11,7 @@
 #include <LibJS/Runtime/Promise.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/Bindings/SubtleCryptoPrototype.h>
 #include <LibWeb/Crypto/KeyAlgorithms.h>
 #include <LibWeb/Crypto/SubtleCrypto.h>
 #include <LibWeb/HTML/Scripting/TemporaryExecutionContext.h>

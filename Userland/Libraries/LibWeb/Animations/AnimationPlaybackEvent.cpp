@@ -5,6 +5,7 @@
  */
 
 #include <LibWeb/Animations/AnimationPlaybackEvent.h>
+#include <LibWeb/Bindings/AnimationPlaybackEventPrototype.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 
 namespace Web::Animations {

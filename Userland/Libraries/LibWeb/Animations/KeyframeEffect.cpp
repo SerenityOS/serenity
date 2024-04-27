@@ -8,6 +8,7 @@
 #include <LibJS/Runtime/Iterator.h>
 #include <LibWeb/Animations/Animation.h>
 #include <LibWeb/Animations/KeyframeEffect.h>
+#include <LibWeb/Bindings/KeyframeEffectPrototype.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/Layout/Node.h>

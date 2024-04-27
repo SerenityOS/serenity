@@ -5,6 +5,7 @@
  */
 
 #include <LibGfx/Bitmap.h>
+#include <LibWeb/Bindings/HTMLObjectElementPrototype.h>
 #include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/DocumentLoading.h>

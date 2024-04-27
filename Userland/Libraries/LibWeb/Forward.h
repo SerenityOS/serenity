@@ -8,7 +8,6 @@
 #pragma once
 
 #include <LibJS/Forward.h>
-#include <LibWeb/Bindings/Forward.h>
 
 namespace Web {
 class EditEventHandler;

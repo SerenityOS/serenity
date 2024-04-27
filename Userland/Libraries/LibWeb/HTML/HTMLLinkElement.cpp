@@ -11,6 +11,7 @@
 #include <AK/Debug.h>
 #include <LibTextCodec/Decoder.h>
 #include <LibURL/URL.h>
+#include <LibWeb/Bindings/HTMLLinkElementPrototype.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>

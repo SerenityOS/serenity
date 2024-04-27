@@ -4565,6 +4565,7 @@ void generate_global_mixin_implementation(IDL::Interface const& interface, Strin
     SourceGenerator generator { builder };
 
     generator.set("class_name", interface.global_mixin_class);
+    generator.set("prototype_name", interface.prototype_class);
 
     generator.append(R"~~~(
 #include <AK/Function.h>
@@ -4579,6 +4580,7 @@ void generate_global_mixin_implementation(IDL::Interface const& interface, Strin
 #include <LibJS/Runtime/Value.h>
 #include <LibJS/Runtime/ValueInlines.h>
 #include <LibWeb/Bindings/@class_name@.h>
+#include <LibWeb/Bindings/@prototype_name@.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/DOM/Element.h>

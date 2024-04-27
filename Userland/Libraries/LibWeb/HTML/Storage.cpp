@@ -7,6 +7,7 @@
 
 #include <AK/String.h>
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/Bindings/StoragePrototype.h>
 #include <LibWeb/HTML/Storage.h>
 
 namespace Web::HTML {

@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/FocusEventPrototype.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/UIEvents/FocusEvent.h>
 

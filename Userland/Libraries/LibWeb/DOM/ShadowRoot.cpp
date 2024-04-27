@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/ShadowRootPrototype.h>
 #include <LibWeb/DOM/AdoptedStyleSheets.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>

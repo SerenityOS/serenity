@@ -9,6 +9,7 @@
 #include <LibWeb/Animations/AnimationEffect.h>
 #include <LibWeb/Animations/AnimationPlaybackEvent.h>
 #include <LibWeb/Animations/DocumentTimeline.h>
+#include <LibWeb/Bindings/AnimationPrototype.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/CSS/CSSAnimation.h>
 #include <LibWeb/DOM/Document.h>

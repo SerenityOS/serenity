@@ -5,6 +5,7 @@
  */
 
 #include <LibGfx/Bitmap.h>
+#include <LibWeb/Bindings/ImageBitmapPrototype.h>
 #include <LibWeb/HTML/ImageBitmap.h>
 
 namespace Web::HTML {

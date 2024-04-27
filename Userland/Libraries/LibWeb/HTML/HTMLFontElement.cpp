@@ -5,6 +5,7 @@
  */
 
 #include <AK/GenericLexer.h>
+#include <LibWeb/Bindings/HTMLFontElementPrototype.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/Parser/ParsingContext.h>

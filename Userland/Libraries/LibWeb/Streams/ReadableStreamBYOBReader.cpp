@@ -8,6 +8,7 @@
 #include <LibJS/Runtime/PromiseCapability.h>
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/Bindings/ReadableStreamBYOBReaderPrototype.h>
 #include <LibWeb/Streams/AbstractOperations.h>
 #include <LibWeb/Streams/ReadableStream.h>
 #include <LibWeb/Streams/ReadableStreamBYOBReader.h>

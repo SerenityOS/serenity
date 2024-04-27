@@ -8,6 +8,7 @@
 #include <Kernel/API/KeyCode.h>
 #include <LibGUI/Event.h>
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/Bindings/MouseEventPrototype.h>
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/UIEvents/EventNames.h>
 #include <LibWeb/UIEvents/MouseEvent.h>

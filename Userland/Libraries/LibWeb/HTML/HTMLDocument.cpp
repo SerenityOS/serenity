@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/HTMLDocumentPrototype.h>
 #include <LibWeb/HTML/HTMLDocument.h>
 
 namespace Web::HTML {

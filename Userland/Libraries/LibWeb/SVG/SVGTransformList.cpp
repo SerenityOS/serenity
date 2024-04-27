@@ -5,6 +5,7 @@
  */
 
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/Bindings/SVGTransformListPrototype.h>
 #include <LibWeb/SVG/SVGTransformList.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 

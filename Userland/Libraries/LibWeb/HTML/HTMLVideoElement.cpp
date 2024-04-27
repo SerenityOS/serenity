@@ -6,6 +6,7 @@
  */
 
 #include <LibGfx/Bitmap.h>
+#include <LibWeb/Bindings/HTMLVideoElementPrototype.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Fetch/Fetching/Fetching.h>

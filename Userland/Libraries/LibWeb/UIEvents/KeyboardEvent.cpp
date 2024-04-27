@@ -7,6 +7,7 @@
 #include <AK/CharacterTypes.h>
 #include <LibUnicode/CharacterTypes.h>
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/Bindings/KeyboardEventPrototype.h>
 #include <LibWeb/UIEvents/KeyboardEvent.h>
 
 namespace Web::UIEvents {

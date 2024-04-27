@@ -10,6 +10,7 @@
 
 #include <LibJS/Runtime/Date.h>
 #include <LibJS/Runtime/NativeFunction.h>
+#include <LibWeb/Bindings/HTMLInputElementPrototype.h>
 #include <LibWeb/CSS/StyleValues/DisplayStyleValue.h>
 #include <LibWeb/CSS/StyleValues/IdentifierStyleValue.h>
 #include <LibWeb/CSS/StyleValues/LengthStyleValue.h>

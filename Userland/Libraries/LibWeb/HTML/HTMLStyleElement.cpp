@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/HTMLStyleElementPrototype.h>
 #include <LibWeb/HTML/HTMLStyleElement.h>
 
 namespace Web::HTML {

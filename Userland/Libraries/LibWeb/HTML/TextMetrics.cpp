@@ -5,6 +5,7 @@
  */
 
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/Bindings/TextMetricsPrototype.h>
 #include <LibWeb/HTML/TextMetrics.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 

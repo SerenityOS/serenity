@@ -5,6 +5,7 @@
  */
 
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
+#include <LibWeb/Bindings/MathMLElementPrototype.h>
 #include <LibWeb/MathML/MathMLElement.h>
 #include <LibWeb/MathML/TagNames.h>
 

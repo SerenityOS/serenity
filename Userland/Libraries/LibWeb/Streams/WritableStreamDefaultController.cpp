@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/WritableStreamDefaultControllerPrototype.h>
 #include <LibWeb/DOM/AbortSignal.h>
 #include <LibWeb/Streams/WritableStream.h>
 #include <LibWeb/Streams/WritableStreamDefaultController.h>

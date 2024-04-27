@@ -11,6 +11,7 @@
 #include <LibGfx/ImageFormats/JPEGWriter.h>
 #include <LibGfx/ImageFormats/PNGWriter.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
+#include <LibWeb/Bindings/HTMLCanvasElementPrototype.h>
 #include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/CSS/StyleValues/IdentifierStyleValue.h>
 #include <LibWeb/CSS/StyleValues/RatioStyleValue.h>

@@ -8,6 +8,7 @@
 #include <AK/Utf16View.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Utf16String.h>
+#include <LibWeb/Bindings/SVGTextPositioningElementPrototype.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/SVG/AttributeNames.h>

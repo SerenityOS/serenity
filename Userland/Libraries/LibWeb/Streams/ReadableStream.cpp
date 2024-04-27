@@ -8,6 +8,7 @@
 
 #include <LibJS/Runtime/PromiseCapability.h>
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/Bindings/ReadableStreamPrototype.h>
 #include <LibWeb/DOM/AbortSignal.h>
 #include <LibWeb/Streams/AbstractOperations.h>
 #include <LibWeb/Streams/ReadableByteStreamController.h>

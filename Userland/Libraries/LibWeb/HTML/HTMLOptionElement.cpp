@@ -7,6 +7,7 @@
 
 #include <AK/StringBuilder.h>
 #include <LibWeb/ARIA/Roles.h>
+#include <LibWeb/Bindings/HTMLOptionElementPrototype.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/DOM/Text.h>

@@ -7,6 +7,7 @@
 
 #include <LibGfx/Bitmap.h>
 #include <LibJS/Runtime/TypedArray.h>
+#include <LibWeb/Bindings/ImageDataPrototype.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/HTML/ImageData.h>
 #include <LibWeb/WebIDL/Buffers.h>

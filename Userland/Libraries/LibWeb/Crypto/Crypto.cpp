@@ -8,6 +8,7 @@
 #include <AK/Random.h>
 #include <AK/StringBuilder.h>
 #include <LibJS/Runtime/TypedArray.h>
+#include <LibWeb/Bindings/CryptoPrototype.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Crypto/Crypto.h>

@@ -6,6 +6,7 @@
 
 #include <Kernel/API/KeyCode.h>
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/Bindings/WheelEventPrototype.h>
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/UIEvents/EventNames.h>
 #include <LibWeb/UIEvents/WheelEvent.h>
