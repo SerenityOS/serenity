@@ -192,7 +192,7 @@ function (generate_js_bindings target)
 
     function(generate_exposed_interface_files)
         set(exposed_interface_sources
-            Forward.h IntrinsicDefinitions.cpp
+            IntrinsicDefinitions.cpp
             DedicatedWorkerExposedInterfaces.cpp DedicatedWorkerExposedInterfaces.h
             SharedWorkerExposedInterfaces.cpp SharedWorkerExposedInterfaces.h
             WindowExposedInterfaces.cpp WindowExposedInterfaces.h)
@@ -201,7 +201,6 @@ function (generate_js_bindings target)
             OUTPUT  ${exposed_interface_sources}
             COMMAND "${CMAKE_COMMAND}" -E make_directory "tmp"
             COMMAND $<TARGET_FILE:Lagom::GenerateWindowOrWorkerInterfaces> -o "${CMAKE_CURRENT_BINARY_DIR}/tmp" -b "${LIBWEB_INPUT_FOLDER}" ${LIBWEB_ALL_IDL_FILES}
-            COMMAND "${CMAKE_COMMAND}" -E copy_if_different tmp/Forward.h "Bindings/Forward.h"
             COMMAND "${CMAKE_COMMAND}" -E copy_if_different tmp/IntrinsicDefinitions.cpp "Bindings/IntrinsicDefinitions.cpp"
             COMMAND "${CMAKE_COMMAND}" -E copy_if_different tmp/DedicatedWorkerExposedInterfaces.h "Bindings/DedicatedWorkerExposedInterfaces.h"
             COMMAND "${CMAKE_COMMAND}" -E copy_if_different tmp/DedicatedWorkerExposedInterfaces.cpp "Bindings/DedicatedWorkerExposedInterfaces.cpp"
