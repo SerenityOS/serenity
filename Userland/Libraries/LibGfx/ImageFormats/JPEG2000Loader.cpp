@@ -942,7 +942,6 @@ struct TagTreeNode {
             return node;
         }
 
-        VERIFY(x_count > 1 || y_count > 1);
         u32 top_left_x_child_count = min(x_count, 1u << (max(level, 1) - 1));
         u32 top_left_y_child_count = min(y_count, 1u << (max(level, 1) - 1));
         for (u32 y = 0; y < 2; ++y) {
