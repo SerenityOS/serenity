@@ -39,6 +39,43 @@ void CommandList::apply_scroll_offsets(Vector<Gfx::IntPoint> const& offsets_by_f
     }
 }
 
+void CommandList::mark_unnecessary_commands()
+{
+    // The pair sample_under_corners and blit_corner_clipping commands is not needed if there are no painting commands
+    // in between them that produce visible output.
+    struct SampleCornersBlitCornersRange {
+        u32 sample_command_index;
+        bool has_painting_commands_in_between { false };
+    };
+    // Stack of sample_under_corners commands that have not been matched with a blit_corner_clipping command yet.
+    Vector<SampleCornersBlitCornersRange> sample_blit_ranges;
+    for (u32 command_index = 0; command_index < m_commands.size(); ++command_index) {
+        auto const& command = m_commands[command_index].command;
+        if (command.has<SampleUnderCorners>()) {
+            sample_blit_ranges.append({
+                .sample_command_index = command_index,
+                .has_painting_commands_in_between = false,
+            });
+        } else if (command.has<BlitCornerClipping>()) {
+            auto range = sample_blit_ranges.take_last();
+            if (!range.has_painting_commands_in_between) {
+                m_commands[range.sample_command_index].skip = true;
+                m_commands[command_index].skip = true;
+            }
+        } else {
+            // SetClipRect and ClearClipRect commands do not produce visible output
+            auto update_clip_command = command.has<SetClipRect>() || command.has<ClearClipRect>();
+            if (sample_blit_ranges.size() > 0 && !update_clip_command) {
+                // If painting command is found for sample_under_corners command on top of the stack, then all
+                // sample_under_corners commands below should also not be skipped.
+                for (auto& sample_blit_range : sample_blit_ranges)
+                    sample_blit_range.has_painting_commands_in_between = true;
+            }
+        }
+    }
+    VERIFY(sample_blit_ranges.is_empty());
+}
+
 void CommandList::execute(CommandExecutor& executor)
 {
     executor.prepare_to_execute();
@@ -76,8 +113,12 @@ void CommandList::execute(CommandExecutor& executor)
     HashTable<u32> skipped_sample_corner_commands;
     size_t next_command_index = 0;
     while (next_command_index < m_commands.size()) {
-        auto& command_with_scroll_id = m_commands[next_command_index++];
-        auto& command = command_with_scroll_id.command;
+        if (m_commands[next_command_index].skip) {
+            next_command_index++;
+            continue;
+        }
+
+        auto& command = m_commands[next_command_index++].command;
         auto bounding_rect = command_bounding_rectangle(command);
         if (bounding_rect.has_value() && (bounding_rect->is_empty() || executor.would_be_fully_clipped_by_painter(*bounding_rect))) {
             if (command.has<SampleUnderCorners>()) {
