@@ -55,12 +55,10 @@ void Headers::visit_edges(JS::Cell::Visitor& visitor)
 // https://fetch.spec.whatwg.org/#dom-headers-append
 WebIDL::ExceptionOr<void> Headers::append(String const& name_string, String const& value_string)
 {
-    auto& vm = this->vm();
-
     // The append(name, value) method steps are to append (name, value) to this.
     auto header = Infrastructure::Header {
-        .name = TRY_OR_THROW_OOM(vm, ByteBuffer::copy(name_string.bytes())),
-        .value = TRY_OR_THROW_OOM(vm, ByteBuffer::copy(value_string.bytes())),
+        .name = MUST(ByteBuffer::copy(name_string.bytes())),
+        .value = MUST(ByteBuffer::copy(value_string.bytes())),
     };
     TRY(append(move(header)));
     return {};
@@ -100,7 +98,6 @@ WebIDL::ExceptionOr<void> Headers::delete_(String const& name_string)
 WebIDL::ExceptionOr<Optional<String>> Headers::get(String const& name_string)
 {
     // The get(name) method steps are:
-    auto& vm = this->vm();
     auto name = name_string.bytes();
 
     // 1. If name is not a header name, then throw a TypeError.
@@ -109,14 +106,13 @@ WebIDL::ExceptionOr<Optional<String>> Headers::get(String const& name_string)
 
     // 2. Return the result of getting name from this’s header list.
     auto byte_buffer = m_header_list->get(name);
-    return byte_buffer.has_value() ? TRY_OR_THROW_OOM(vm, String::from_utf8(*byte_buffer)) : Optional<String> {};
+    return byte_buffer.has_value() ? MUST(String::from_utf8(*byte_buffer)) : Optional<String> {};
 }
 
 // https://fetch.spec.whatwg.org/#dom-headers-getsetcookie
-WebIDL::ExceptionOr<Vector<String>> Headers::get_set_cookie()
+Vector<String> Headers::get_set_cookie()
 {
     // The getSetCookie() method steps are:
-    auto& vm = this->vm();
     auto values = Vector<String> {};
 
     // 1. If this’s header list does not contain `Set-Cookie`, then return « ».
@@ -127,7 +123,7 @@ WebIDL::ExceptionOr<Vector<String>> Headers::get_set_cookie()
     //    `Set-Cookie`, in order.
     for (auto const& header : *m_header_list) {
         if (StringView { header.name }.equals_ignoring_ascii_case("Set-Cookie"sv))
-            TRY_OR_THROW_OOM(vm, values.try_append(TRY_OR_THROW_OOM(vm, String::from_utf8(header.value))));
+            values.append(MUST(String::from_utf8(header.value)));
     }
     return values;
 }
@@ -149,9 +145,6 @@ WebIDL::ExceptionOr<bool> Headers::has(String const& name_string)
 // https://fetch.spec.whatwg.org/#dom-headers-set
 WebIDL::ExceptionOr<void> Headers::set(String const& name_string, String const& value_string)
 {
-    auto& realm = this->realm();
-    auto& vm = realm.vm();
-
     // The set(name, value) method steps are:
     auto name = name_string.bytes();
     auto value = value_string.bytes();
@@ -160,7 +153,7 @@ WebIDL::ExceptionOr<void> Headers::set(String const& name_string, String const& 
     auto normalized_value = Infrastructure::normalize_header_value(value);
 
     auto header = Infrastructure::Header {
-        .name = TRY_OR_THROW_OOM(vm, ByteBuffer::copy(name)),
+        .name = MUST(ByteBuffer::copy(name)),
         .value = move(normalized_value),
     };
 
@@ -185,8 +178,6 @@ WebIDL::ExceptionOr<void> Headers::set(String const& name_string, String const& 
 // https://webidl.spec.whatwg.org/#es-iterable, Step 4
 JS::ThrowCompletionOr<void> Headers::for_each(ForEachCallback callback)
 {
-    auto& vm = this->vm();
-
     // The value pairs to iterate over are the return value of running sort and combine with this’s header list.
     auto value_pairs_to_iterate_over = [&]() {
         return m_header_list->sort_and_combine();
@@ -206,7 +197,7 @@ JS::ThrowCompletionOr<void> Headers::for_each(ForEachCallback callback)
         auto const& pair = pairs[i];
 
         // 2. Invoke idlCallback with « pair’s value, pair’s key, idlObject » and with thisArg as the callback this value.
-        TRY(callback(TRY_OR_THROW_OOM(vm, String::from_utf8(pair.name)), TRY_OR_THROW_OOM(vm, String::from_utf8(pair.value))));
+        TRY(callback(MUST(String::from_utf8(pair.name)), MUST(String::from_utf8(pair.value))));
 
         // 3. Set pairs to idlObject’s current list of value pairs to iterate over. (It might have changed.)
         pairs = value_pairs_to_iterate_over();
@@ -249,9 +240,6 @@ WebIDL::ExceptionOr<bool> Headers::validate(Infrastructure::Header const& header
 // https://fetch.spec.whatwg.org/#concept-headers-append
 WebIDL::ExceptionOr<void> Headers::append(Infrastructure::Header header)
 {
-    auto& realm = this->realm();
-    auto& vm = realm.vm();
-
     // To append a header (name, value) to a Headers object headers, run these steps:
     auto& [name, value] = header;
 
@@ -269,17 +257,17 @@ WebIDL::ExceptionOr<void> Headers::append(Infrastructure::Header header)
 
         // 2. If temporaryValue is null, then set temporaryValue to value.
         if (!temporary_value.has_value()) {
-            temporary_value = TRY_OR_THROW_OOM(vm, ByteBuffer::copy(value));
+            temporary_value = MUST(ByteBuffer::copy(value));
         }
         // 3. Otherwise, set temporaryValue to temporaryValue, followed by 0x2C 0x20, followed by value.
         else {
-            TRY_OR_THROW_OOM(vm, temporary_value->try_append(0x2c));
-            TRY_OR_THROW_OOM(vm, temporary_value->try_append(0x20));
-            TRY_OR_THROW_OOM(vm, temporary_value->try_append(value));
+            temporary_value->append(0x2c);
+            temporary_value->append(0x20);
+            temporary_value->append(value);
         }
 
         auto temporary_header = Infrastructure::Header {
-            .name = TRY_OR_THROW_OOM(vm, ByteBuffer::copy(name)),
+            .name = MUST(ByteBuffer::copy(name)),
             .value = temporary_value.release_value(),
         };
 
