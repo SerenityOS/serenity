@@ -182,7 +182,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
 
     // method
     //     request’s method.
-    request->set_method(TRY_OR_THROW_OOM(vm, ByteBuffer::copy(input_request->method())));
+    request->set_method(MUST(ByteBuffer::copy(input_request->method())));
 
     // header list
     //     A copy of request’s header list.
@@ -373,7 +373,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
             return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Method must not be one of CONNECT, TRACE, or TRACK"sv };
 
         // 3. Normalize method.
-        method = TRY_OR_THROW_OOM(vm, String::from_utf8(Infrastructure::normalize_method(method.bytes())));
+        method = MUST(String::from_utf8(Infrastructure::normalize_method(method.bytes())));
 
         // 4. Set request’s method to method.
         request->set_method(MUST(ByteBuffer::copy(method.bytes())));
@@ -503,21 +503,17 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
 }
 
 // https://fetch.spec.whatwg.org/#dom-request-method
-WebIDL::ExceptionOr<String> Request::method() const
+String Request::method() const
 {
-    auto& vm = this->vm();
-
     // The method getter steps are to return this’s request’s method.
-    return TRY_OR_THROW_OOM(vm, String::from_utf8(m_request->method()));
+    return MUST(String::from_utf8(m_request->method()));
 }
 
 // https://fetch.spec.whatwg.org/#dom-request-url
-WebIDL::ExceptionOr<String> Request::url() const
+String Request::url() const
 {
-    auto& vm = this->vm();
-
     // The url getter steps are to return this’s request’s URL, serialized.
-    return TRY_OR_THROW_OOM(vm, String::from_byte_string(m_request->url().serialize()));
+    return MUST(String::from_byte_string(m_request->url().serialize()));
 }
 
 // https://fetch.spec.whatwg.org/#dom-request-headers
@@ -535,11 +531,10 @@ Bindings::RequestDestination Request::destination() const
 }
 
 // https://fetch.spec.whatwg.org/#dom-request-referrer
-WebIDL::ExceptionOr<String> Request::referrer() const
+String Request::referrer() const
 {
-    auto& vm = this->vm();
     return m_request->referrer().visit(
-        [&](Infrastructure::Request::Referrer const& referrer) -> WebIDL::ExceptionOr<String> {
+        [&](Infrastructure::Request::Referrer const& referrer) {
             switch (referrer) {
             // 1. If this’s request’s referrer is "no-referrer", then return the empty string.
             case Infrastructure::Request::Referrer::NoReferrer:
@@ -551,9 +546,9 @@ WebIDL::ExceptionOr<String> Request::referrer() const
                 VERIFY_NOT_REACHED();
             }
         },
-        [&](URL::URL const& url) -> WebIDL::ExceptionOr<String> {
+        [&](URL::URL const& url) {
             // 3. Return this’s request’s referrer, serialized.
-            return TRY_OR_THROW_OOM(vm, String::from_byte_string(url.serialize()));
+            return MUST(String::from_byte_string(url.serialize()));
         });
 }
 
