@@ -10,9 +10,8 @@
 
 namespace ELF {
 
-bool perform_relative_relocations(FlatPtr base_address)
+[[gnu::no_stack_protector]] bool perform_relative_relocations(FlatPtr base_address)
 {
-
     Elf_Ehdr* header = (Elf_Ehdr*)(base_address);
     Elf_Phdr* pheader = (Elf_Phdr*)(base_address + header->e_phoff);
     FlatPtr dynamic_section_addr = 0;
