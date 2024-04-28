@@ -36,11 +36,9 @@ void StyleSheetList::add_a_css_style_sheet(CSS::CSSStyleSheet& sheet)
     if (sheet.disabled())
         return;
 
-    VERIFY(sheet.title().has_value());
-
     // 3. If the title is not the empty string, the alternate flag is unset, and preferred CSS style sheet set name is the empty string change the preferred CSS style sheet set name to the title.
-    if (!sheet.title()->is_empty() && !sheet.is_alternate() && m_preferred_css_style_sheet_set_name.is_empty()) {
-        m_preferred_css_style_sheet_set_name = sheet.title().value();
+    if (!sheet.title().is_empty() && !sheet.is_alternate() && m_preferred_css_style_sheet_set_name.is_empty()) {
+        m_preferred_css_style_sheet_set_name = sheet.title();
     }
 
     // 4. If any of the following is true, then unset the disabled flag and return:
@@ -50,9 +48,9 @@ void StyleSheetList::add_a_css_style_sheet(CSS::CSSStyleSheet& sheet)
     // NOTE: We don't enable alternate sheets with an empty title.  This isn't directly mentioned in the algorithm steps, but the
     // HTML specification says that the title element must be specified with a non-empty value for alternative style sheets.
     // See: https://html.spec.whatwg.org/multipage/links.html#the-link-is-an-alternative-stylesheet
-    if ((sheet.title()->is_empty() && !sheet.is_alternate())
-        || (!m_last_css_style_sheet_set_name.has_value() && sheet.title().value().equals_ignoring_case(m_preferred_css_style_sheet_set_name))
-        || (m_last_css_style_sheet_set_name.has_value() && sheet.title().value().equals_ignoring_case(m_last_css_style_sheet_set_name.value()))) {
+    if ((sheet.title().is_empty() && !sheet.is_alternate())
+        || (!m_last_css_style_sheet_set_name.has_value() && sheet.title().equals_ignoring_case(m_preferred_css_style_sheet_set_name))
+        || (m_last_css_style_sheet_set_name.has_value() && sheet.title().equals_ignoring_case(m_last_css_style_sheet_set_name.value()))) {
         sheet.set_disabled(false);
         return;
     }
