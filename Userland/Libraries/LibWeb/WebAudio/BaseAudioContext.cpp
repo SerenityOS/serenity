@@ -9,6 +9,7 @@
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/WebAudio/BaseAudioContext.h>
+#include <LibWeb/WebAudio/OscillatorNode.h>
 
 namespace Web::WebAudio {
 
@@ -33,6 +34,13 @@ void BaseAudioContext::set_onstatechange(WebIDL::CallbackType* event_handler)
 WebIDL::CallbackType* BaseAudioContext::onstatechange()
 {
     return event_handler_attribute(HTML::EventNames::statechange);
+}
+
+// https://webaudio.github.io/web-audio-api/#dom-baseaudiocontext-createoscillator
+WebIDL::ExceptionOr<JS::NonnullGCPtr<OscillatorNode>> BaseAudioContext::create_oscillator()
+{
+    // Factory method for an OscillatorNode.
+    return OscillatorNode::create(realm(), *this);
 }
 
 // https://webaudio.github.io/web-audio-api/#dom-baseaudiocontext-createbuffer
