@@ -177,11 +177,7 @@ size_t CFEventLoopImplementation::pump(PumpMode mode)
                                        dequeue:YES];
 
     while (event) {
-        if (event.type == NSEventTypeApplicationDefined) {
-            m_thread_event_queue.process();
-        } else {
-            [NSApp sendEvent:event];
-        }
+        [NSApp sendEvent:event];
 
         event = [NSApp nextEventMatchingMask:NSEventMaskAny
                                    untilDate:nil
