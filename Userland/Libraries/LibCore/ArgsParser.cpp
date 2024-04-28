@@ -439,6 +439,24 @@ void ArgsParser::add_option(bool& value, char const* help_string, char const* lo
     add_option(move(option));
 }
 
+void ArgsParser::add_option(SetOnce& value, char const* help_string, char const* long_name, char short_name, OptionHideMode hide_mode)
+{
+    Option option {
+        OptionArgumentMode::None,
+        help_string,
+        long_name,
+        short_name,
+        nullptr,
+        [&value](StringView s) -> ErrorOr<bool> {
+            VERIFY(s.is_empty());
+            value.set();
+            return true;
+        },
+        hide_mode,
+    };
+    add_option(move(option));
+}
+
 void ArgsParser::add_option(ByteString& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
 {
     Option option {
