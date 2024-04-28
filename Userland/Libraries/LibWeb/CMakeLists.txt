@@ -659,6 +659,7 @@ set(SOURCES
     WebAssembly/WebAssembly.cpp
     WebAudio/AudioBuffer.cpp
     WebAudio/AudioContext.cpp
+    WebAudio/AudioNode.cpp
     WebAudio/AudioParam.cpp
     WebAudio/BaseAudioContext.cpp
     WebAudio/OfflineAudioContext.cpp
