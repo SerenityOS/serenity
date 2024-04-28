@@ -29,8 +29,9 @@ public:
     Optional<String> location() const { return m_location; }
     void set_location(Optional<String> location) { m_location = move(location); }
 
-    Optional<String> title() const { return m_title; }
-    void set_title(Optional<String> title) { m_title = move(title); }
+    String title() const { return m_title; }
+    Optional<String> title_for_bindings() const;
+    void set_title(String title) { m_title = move(title); }
 
     void set_type(String type) { m_type_string = move(type); }
 
@@ -66,7 +67,7 @@ private:
     JS::GCPtr<CSSStyleSheet> m_parent_style_sheet;
 
     Optional<String> m_location;
-    Optional<String> m_title;
+    String m_title;
     String m_type_string;
 
     bool m_disabled { false };

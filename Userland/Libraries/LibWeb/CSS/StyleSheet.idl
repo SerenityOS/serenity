@@ -13,7 +13,7 @@ interface StyleSheet {
     readonly attribute Element? ownerNode;
 
     readonly attribute CSSStyleSheet? parentStyleSheet;
-    readonly attribute DOMString? title;
+    [ImplementedAs=title_for_bindings] readonly attribute DOMString? title;
     [SameObject, PutForwards=mediaText] readonly attribute MediaList media;
     attribute boolean disabled;
 

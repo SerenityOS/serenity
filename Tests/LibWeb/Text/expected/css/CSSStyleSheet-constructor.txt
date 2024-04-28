@@ -1,6 +1,6 @@
 Empty sheet ownerNode: null
 Empty sheet ownerRule: null
-Empty sheet title is empty string: true
+Empty sheet title: null
 Empty sheet cssRules is empty: true
 Empty sheet is disabled by default: false
 cssRules length after insertRule(): 1
