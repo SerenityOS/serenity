@@ -9,7 +9,6 @@
 #include <AK/Debug.h>
 #include <AK/ScopedValueRollback.h>
 #include <AK/Vector.h>
-#include <assert.h>
 #include <errno.h>
 #include <mallocdefs.h>
 #include <pthread.h>
@@ -256,7 +255,7 @@ static ErrorOr<void*> os_alloc(size_t size, char const* name)
 static void os_free(void* ptr, size_t size)
 {
     int rc = munmap(ptr, size);
-    assert(rc == 0);
+    VERIFY(rc == 0);
 }
 
 static void* try_allocate_chunk_aligned(size_t align, ChunkedBlock& block)
@@ -486,7 +485,7 @@ static void free_impl(void* ptr)
         return;
     }
 
-    assert(magic == MAGIC_PAGE_HEADER);
+    VERIFY(magic == MAGIC_PAGE_HEADER);
     auto* block = (ChunkedBlock*)block_base;
 
     dbgln_if(MALLOC_DEBUG, "LibC: freeing {:p} in allocator {:p} (size={}, used={})", ptr, block, block->bytes_per_chunk(), block->used_chunks());
