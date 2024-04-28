@@ -54,6 +54,8 @@ public:
     QIcon const& favicon() const { return m_favicon; }
     QString const& title() const { return m_title; }
 
+    QMenu* context_menu() const { return m_context_menu; }
+
     void update_navigation_buttons_state();
 
 public slots:
@@ -90,6 +92,8 @@ private:
     QString m_title;
     QLabel* m_hover_label { nullptr };
     QIcon m_favicon;
+
+    QMenu* m_context_menu { nullptr };
 
     QMenu* m_page_context_menu { nullptr };
     Optional<String> m_page_context_menu_search_text;

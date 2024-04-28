@@ -34,6 +34,7 @@ public:
 
     WebContentView& view() const { return m_current_tab->view(); }
 
+    int tab_count() { return m_tabs_container->count(); }
     int tab_index(Tab*);
     Tab& create_new_tab(Web::HTML::ActivateTab activate_tab);
 
@@ -98,6 +99,7 @@ public slots:
     Tab& new_child_tab(Web::HTML::ActivateTab, Tab& parent, Web::HTML::WebViewHints, Optional<u64> page_index);
     void activate_tab(int index);
     void close_tab(int index);
+    void move_tab(int old_index, int new_index);
     void close_current_tab();
     void open_next_tab();
     void open_previous_tab();

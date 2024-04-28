@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2024, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2024, Jamie Mansfield <jmansfield@cadixdev.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,6 +11,7 @@
 #include <QTabBar>
 #include <QTabWidget>
 
+class QContextMenuEvent;
 class QEvent;
 class QIcon;
 class QWidget;
@@ -20,7 +22,10 @@ class TabBar : public QTabBar {
     Q_OBJECT
 
 public:
+    explicit TabBar(QWidget* parent = nullptr);
+
     virtual QSize tabSizeHint(int index) const override;
+    virtual void contextMenuEvent(QContextMenuEvent* event) override;
 };
 
 class TabWidget : public QTabWidget {
