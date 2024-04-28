@@ -23,6 +23,17 @@ struct ThreadData {
         return s_thread_data;
     }
 
+    Core::Notifier& notifier_by_fd(int fd)
+    {
+        for (auto notifier : notifiers) {
+            if (notifier.key->fd() == fd)
+                return *notifier.key;
+        }
+
+        // If we didn't have a notifier for the provided FD, it should have been unregistered.
+        VERIFY_NOT_REACHED();
+    }
+
     IDAllocator timer_id_allocator;
     HashMap<int, CFRunLoopTimerRef> timers;
     HashMap<Core::Notifier*, CFRunLoopSourceRef> notifiers;
@@ -93,9 +104,9 @@ void CFEventLoopManager::unregister_timer(intptr_t timer_id)
     CFRelease(*timer);
 }
 
-static void socket_notifier(CFSocketRef socket, CFSocketCallBackType notification_type, CFDataRef, void const*, void* info)
+static void socket_notifier(CFSocketRef socket, CFSocketCallBackType notification_type, CFDataRef, void const*, void*)
 {
-    auto& notifier = *reinterpret_cast<Core::Notifier*>(info);
+    auto& notifier = ThreadData::the().notifier_by_fd(CFSocketGetNative(socket));
 
     // This socket callback is not quite re-entrant. If Core::Notifier::dispatch_event blocks, e.g.
     // to wait upon a Core::Promise, this socket will not receive any more notifications until that
@@ -127,7 +138,7 @@ void CFEventLoopManager::register_notifier(Core::Notifier& notifier)
         break;
     }
 
-    CFSocketContext context { .version = 0, .info = &notifier, .retain = nullptr, .release = nullptr, .copyDescription = nullptr };
+    CFSocketContext context { .version = 0, .info = nullptr, .retain = nullptr, .release = nullptr, .copyDescription = nullptr };
     auto* socket = CFSocketCreateWithNative(kCFAllocatorDefault, notifier.fd(), notification_type, &socket_notifier, &context);
 
     CFOptionFlags sockopt = CFSocketGetSocketFlags(socket);
