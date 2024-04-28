@@ -25,6 +25,23 @@ public:
 
     bool was_set() const { return m_value; }
 
+    // NOTE: Userland has way more use-cases than the Kernel, and
+    // converting to use was_set() is not a sane thing to do for all of
+    // these cases (at least not in a short period of time).
+    // On the Kernel side, it is more manageable, so let's not allow to
+    // go down that slope of not caring about the was_set() method there
+    // anymore.
+#ifndef KERNEL
+    operator bool() const
+    {
+        return was_set();
+    }
+    bool operator!() const { return !was_set(); }
+#else
+    operator bool() const = delete;
+    bool operator!() const = delete;
+#endif
+
 private:
     bool m_value { false };
 };
