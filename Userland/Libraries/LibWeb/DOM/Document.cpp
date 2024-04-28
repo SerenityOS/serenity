@@ -2562,10 +2562,10 @@ void Document::evaluate_media_rules()
         return;
 
     bool any_media_queries_changed_match_state = false;
-    for (auto& style_sheet : style_sheets().sheets()) {
-        if (style_sheet->evaluate_media_queries(*window))
+    for_each_css_style_sheet([&](CSS::CSSStyleSheet& style_sheet) {
+        if (style_sheet.evaluate_media_queries(*window))
             any_media_queries_changed_match_state = true;
-    }
+    });
 
     if (any_media_queries_changed_match_state) {
         style_computer().invalidate_rule_cache();
@@ -4897,9 +4897,11 @@ WebIDL::ExceptionOr<void> Document::set_adopted_style_sheets(JS::Value new_value
 
 void Document::for_each_css_style_sheet(Function<void(CSS::CSSStyleSheet&)>&& callback) const
 {
-    for (auto& style_sheet : m_style_sheets->sheets()) {
-        if (!(style_sheet->is_alternate() && style_sheet->disabled()))
-            callback(*style_sheet);
+    if (m_style_sheets) {
+        for (auto& style_sheet : m_style_sheets->sheets()) {
+            if (!(style_sheet->is_alternate() && style_sheet->disabled()))
+                callback(*style_sheet);
+        }
     }
 
     if (m_adopted_style_sheets) {
