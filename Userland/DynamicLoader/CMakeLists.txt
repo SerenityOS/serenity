@@ -1,4 +1,4 @@
-set(LOADER_SOURCES
+set(SOURCES
     main.cpp
     misc.cpp
 )
@@ -10,15 +10,12 @@ target_link_options(DynamicLoader_CompileOptions INTERFACE -nolibc -nostdlib++ -
 target_link_options(DynamicLoader_CompileOptions INTERFACE -fno-sanitize=undefined) # Sanitizer runtime is linked in manually
 add_dependencies(DynamicLoader_CompileOptions install_libc_headers)
 
-if (ENABLE_UNDEFINED_SANITIZER)
-    set(LOADER_SOURCES ${LOADER_SOURCES} ../Libraries/LibSanitizer/UBSanitizer.cpp)
-endif()
-
-set(SOURCES ${LOADER_SOURCES})
-
 add_executable(Loader.so ${SOURCES})
 
 target_link_libraries(Loader.so PRIVATE DynamicLoader_CompileOptions DynamicLoader_LibELF)
+if (ENABLE_UNDEFINED_SANITIZER)
+    target_link_libraries(Loader.so PRIVATE DynamicLoader_LibUBSanitizer)
+endif()
 target_link_options(Loader.so PRIVATE LINKER:--no-dynamic-linker)
 # Don't confuse the coverage results by instrumenting Loader
 target_link_libraries(Loader.so PRIVATE NoCoverage)
