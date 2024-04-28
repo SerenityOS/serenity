@@ -145,16 +145,11 @@ CSSPixelRect PaintableBox::compute_absolute_rect() const
 
 CSSPixelRect PaintableBox::compute_absolute_padding_rect_with_css_transform_applied() const
 {
-    CSSPixelRect rect { offset(), content_size() };
-    for (auto const* block = containing_block(); block; block = block->containing_block()) {
-        auto offset = block->offset();
-        auto affine_transform = Gfx::extract_2d_affine_transform(block->transform());
-        offset.translate_by(affine_transform.translation().to_type<CSSPixels>());
-        offset.translate_by(-block->scroll_offset());
-        rect.translate_by(offset);
-    }
-    auto affine_transform = Gfx::extract_2d_affine_transform(transform());
-    rect.translate_by(affine_transform.translation().to_type<CSSPixels>());
+    auto rect = absolute_rect();
+    auto scroll_offset = this->enclosing_scroll_frame_offset();
+    if (scroll_offset.has_value())
+        rect.translate_by(scroll_offset.value());
+    rect.translate_by(combined_css_transform().translation().to_type<CSSPixels>());
 
     CSSPixelRect padding_rect;
     padding_rect.set_x(rect.x() - box_model().padding.left);
