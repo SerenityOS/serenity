@@ -664,6 +664,7 @@ set(SOURCES
     WebAudio/AudioScheduledSourceNode.cpp
     WebAudio/BaseAudioContext.cpp
     WebAudio/OfflineAudioContext.cpp
+    WebAudio/OscillatorNode.cpp
     WebAudio/PeriodicWave.cpp
     WebDriver/Capabilities.cpp
     WebDriver/Client.cpp
