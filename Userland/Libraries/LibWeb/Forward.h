@@ -683,6 +683,7 @@ namespace Web::WebAudio {
 class AudioContext;
 class AudioNode;
 class AudioParam;
+class AudioScheduledSourceNode;
 class BaseAudioContext;
 class OfflineAudioContext;
 class PeriodicWave;
