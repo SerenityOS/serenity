@@ -15,7 +15,7 @@ QSize TabBar::tabSizeHint(int index) const
 {
     auto width = this->width() / count();
     width = min(225, width);
-    width = max(64, width);
+    width = max(128, width);
 
     auto hint = QTabBar::tabSizeHint(index);
     hint.setWidth(width);
