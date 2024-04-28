@@ -4904,7 +4904,7 @@ void Document::for_each_css_style_sheet(Function<void(CSS::CSSStyleSheet&)>&& ca
 
     if (m_adopted_style_sheets) {
         m_adopted_style_sheets->for_each<CSS::CSSStyleSheet>([&](auto& style_sheet) {
-            if (!(style_sheet.is_alternate() && style_sheet.disabled()))
+            if (!style_sheet.disabled())
                 callback(style_sheet);
         });
     }
