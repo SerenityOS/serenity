@@ -19,12 +19,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     ByteString host;
-    int port;
+    int port = 0;
     bool tls { false };
 
     ByteString username;
     Core::SecretString password;
-    bool interactive_password;
+    bool interactive_password = false;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(interactive_password, "Prompt for password with getpass", "interactive", 'i');

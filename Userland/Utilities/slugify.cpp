@@ -18,7 +18,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Vector<String> inputs;
     String output_type;
     char glue = '-';
-    bool spa;
+    bool spa = false;
 
     Core::ArgsParser parser;
     parser.set_general_help("Slugify is a simple text to slug transform utility\n$ slugify 'Serenity is a cool ### PROject123.'");

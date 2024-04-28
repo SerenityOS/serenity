@@ -96,7 +96,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio rpath"));
 
     StringView path;
-    bool quiet;
+    bool quiet = false;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(path, "Path to file", "path", Core::ArgsParser::Required::No);
