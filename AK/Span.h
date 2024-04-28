@@ -220,6 +220,16 @@ public:
         return false;
     }
 
+    template<typename V>
+    [[nodiscard]] constexpr bool filled_with(V const& value) const
+    {
+        for (size_t i = 0; i < size(); ++i) {
+            if (!Traits<RemoveReference<T>>::equals(at(i), value))
+                return false;
+        }
+        return true;
+    }
+
     [[nodiscard]] constexpr bool starts_with(ReadonlySpan<T> other) const
     {
         if (size() < other.size())
