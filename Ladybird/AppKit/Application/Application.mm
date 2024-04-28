@@ -7,6 +7,7 @@
 #include <AK/ByteString.h>
 #include <Application/ApplicationBridge.h>
 #include <LibCore/EventLoop.h>
+#include <LibCore/ThreadEventQueue.h>
 #include <LibWebView/WebContentClient.h>
 
 #import <Application/Application.h>
@@ -60,6 +61,15 @@
 - (void)terminate:(id)sender
 {
     Core::EventLoop::current().quit(0);
+}
+
+- (void)sendEvent:(NSEvent*)event
+{
+    if ([event type] == NSEventTypeApplicationDefined) {
+        Core::ThreadEventQueue::current().process();
+    } else {
+        [super sendEvent:event];
+    }
 }
 
 @end
