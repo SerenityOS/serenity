@@ -35,6 +35,7 @@ static bool is_platform_object(Type const& type)
         "Attr"sv,
         "AudioNode"sv,
         "AudioParam"sv,
+        "AudioScheduledSourceNode"sv,
         "AudioTrack"sv,
         "BaseAudioContext"sv,
         "Blob"sv,
