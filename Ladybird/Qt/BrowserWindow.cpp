@@ -625,6 +625,11 @@ void BrowserWindow::close_tab(int index)
         close();
 }
 
+void BrowserWindow::move_tab(int old_index, int new_index)
+{
+    m_tabs_container->tabBar()->moveTab(old_index, new_index);
+}
+
 void BrowserWindow::open_file()
 {
     m_current_tab->open_file();

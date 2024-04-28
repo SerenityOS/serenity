@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, Matthew Costa <ucosty@gmail.com>
+ * Copyright (c) 2024, Jamie Mansfield <jmansfield@cadixdev.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -404,6 +405,69 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
         m_can_navigate_forward = forward_enabled;
         emit navigation_buttons_state_changed(tab_index());
     };
+
+    auto* reload_tab_action = new QAction("&Reload Tab", this);
+    QObject::connect(reload_tab_action, &QAction::triggered, this, [this]() {
+        reload();
+    });
+
+    auto* duplicate_tab_action = new QAction("&Duplicate Tab", this);
+    QObject::connect(duplicate_tab_action, &QAction::triggered, this, [this]() {
+        m_window->new_tab_from_url(view().url(), Web::HTML::ActivateTab::Yes);
+    });
+
+    auto* move_to_start_action = new QAction("Move to &Start", this);
+    QObject::connect(move_to_start_action, &QAction::triggered, this, [this]() {
+        m_window->move_tab(tab_index(), 0);
+    });
+
+    auto* move_to_end_action = new QAction("Move to &End", this);
+    QObject::connect(move_to_end_action, &QAction::triggered, this, [this]() {
+        m_window->move_tab(tab_index(), m_window->tab_count() - 1);
+    });
+
+    auto* close_tab_action = new QAction("&Close Tab", this);
+    QObject::connect(close_tab_action, &QAction::triggered, this, [this]() {
+        view().on_close();
+    });
+
+    auto* close_tabs_to_left_action = new QAction("C&lose Tabs to Left", this);
+    QObject::connect(close_tabs_to_left_action, &QAction::triggered, this, [this]() {
+        for (auto i = tab_index() - 1; i >= 0; i--) {
+            m_window->close_tab(i);
+        }
+    });
+
+    auto* close_tabs_to_right_action = new QAction("Close Tabs to R&ight", this);
+    QObject::connect(close_tabs_to_right_action, &QAction::triggered, this, [this]() {
+        for (auto i = m_window->tab_count() - 1; i > tab_index(); i--) {
+            m_window->close_tab(i);
+        }
+    });
+
+    auto* close_other_tabs_action = new QAction("Cl&ose Other Tabs", this);
+    QObject::connect(close_other_tabs_action, &QAction::triggered, this, [this]() {
+        for (auto i = m_window->tab_count() - 1; i >= 0; i--) {
+            if (i == tab_index())
+                continue;
+
+            m_window->close_tab(i);
+        }
+    });
+
+    m_context_menu = new QMenu("Context menu", this);
+    m_context_menu->addAction(reload_tab_action);
+    m_context_menu->addAction(duplicate_tab_action);
+    m_context_menu->addSeparator();
+    auto* move_tab_menu = m_context_menu->addMenu("Mo&ve Tab");
+    move_tab_menu->addAction(move_to_start_action);
+    move_tab_menu->addAction(move_to_end_action);
+    m_context_menu->addSeparator();
+    m_context_menu->addAction(close_tab_action);
+    auto* close_multiple_tabs_menu = m_context_menu->addMenu("Close &Multiple Tabs");
+    close_multiple_tabs_menu->addAction(close_tabs_to_left_action);
+    close_multiple_tabs_menu->addAction(close_tabs_to_right_action);
+    close_multiple_tabs_menu->addAction(close_other_tabs_action);
 
     auto* search_selected_text_action = new QAction("&Search for <query>", this);
     search_selected_text_action->setIcon(load_icon_from_uri("resource://icons/16x16/find.png"sv));
