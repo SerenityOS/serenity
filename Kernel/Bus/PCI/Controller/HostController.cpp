@@ -245,7 +245,13 @@ void HostController::configure_attached_devices(PCIConfiguration& config)
         write16_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), PCI::RegisterOffset::COMMAND, command_value);
         // assign interrupt number
         auto interrupt_pin = read8_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), PCI::RegisterOffset::INTERRUPT_PIN);
-        auto masked_identifier = (((u32)device_identifier.address().bus() << 16) | ((u32)device_identifier.address().device() << 11) | ((u32)device_identifier.address().function() << 8) | interrupt_pin) & config.interrupt_mask;
+        auto masked_identifier = PCIInterruptSpecifier{
+            .interrupt_pin = interrupt_pin,
+            .function = device_identifier.address().function(),
+            .device = device_identifier.address().device(),
+            .bus = device_identifier.address().bus()
+        };
+        masked_identifier &= config.interrupt_mask;
         auto interrupt_number = config.masked_interrupt_mapping.get(masked_identifier);
         if (interrupt_number.has_value())
             write8_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), PCI::RegisterOffset::INTERRUPT_LINE, interrupt_number.value());

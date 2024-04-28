@@ -23,6 +23,11 @@ struct DeviceTreeProperty {
     public:
         using AK::FixedMemoryStream::FixedMemoryStream;
 
+        ErrorOr<u32> read_cell()
+        {
+            return read_value<BigEndian<u32>>();
+        }
+
         ErrorOr<FlatPtr> read_cells(u32 cell_size)
         {
             // FIXME: There are rare cases of 3 cell size big values, even in addresses, especially in addresses
@@ -91,6 +96,9 @@ struct DeviceTreeProperty {
 };
 
 class DeviceTreeNodeView {
+    AK_MAKE_NONCOPYABLE(DeviceTreeNodeView);
+    AK_MAKE_DEFAULT_MOVABLE(DeviceTreeNodeView);
+
 public:
     bool has_property(StringView prop) const { return m_properties.contains(prop); }
     bool has_child(StringView child) const { return m_children.contains(child); }

@@ -28,9 +28,9 @@ void initialize()
 
     new Access();
 
-    // https://github.com/devicetree-org/devicetree-specification/releases/download/v0.4/devicetree-specification-v0.4.pdf
-    // https://github.com/devicetree-org/dt-schema/blob/main/dtschema/schemas/pci/pci-bus-common.yaml
-    // https://github.com/devicetree-org/dt-schema/blob/main/dtschema/schemas/pci/pci-host-bridge.yaml
+    // [1]: https://github.com/devicetree-org/devicetree-specification/releases/download/v0.4/devicetree-specification-v0.4.pdf
+    // [2]: https://github.com/devicetree-org/dt-schema/blob/main/dtschema/schemas/pci/pci-bus-common.yaml
+    // [3]: https://github.com/devicetree-org/dt-schema/blob/main/dtschema/schemas/pci/pci-host-bridge.yaml
 
     // The pci controllers are usually in /soc/pcie?@XXXXXXXX
     // FIXME: They can also appear in the root node, or any simple-bus other than soc
@@ -58,23 +58,22 @@ void initialize()
     u32 pci_32bit_mmio_size = 0;
     FlatPtr pci_64bit_mmio_base = 0;
     u64 pci_64bit_mmio_size = 0;
-    HashMap<u32, u64> masked_interrupt_mapping;
-    u32 interrupt_mask = 0;
-    for (auto const& entry : soc.children()) {
-        if (!entry.key.starts_with("pci"sv))
+    HashMap<PCIInterruptSpecifier, u64> masked_interrupt_mapping;
+    PCIInterruptSpecifier interrupt_mask;
+    for (auto const& [name, node] : soc.children()) {
+        if (!name.starts_with("pci"sv))
             continue;
-        auto const& node = entry.value;
 
         if (auto device_type = node.get_property("device_type"sv); !device_type.has_value() || device_type.value().as_string() != "pci"sv) {
             // Technically, the device_type property is deprecated, but if it is present,
             // no harm's done in checking it anyway
-            dmesgln("PCI: PCI named devicetree entry {} not a PCI type device, got device type '{}' instead", entry.key, device_type.has_value() ? device_type.value().as_string() : "<None>"sv);
+            dmesgln("PCI: PCI named devicetree entry {} not a PCI type device, got device type '{}' instead", name, device_type.has_value() ? device_type.value().as_string() : "<None>"sv);
             continue;
         }
 
         auto maybe_compatible = node.get_property("compatible"sv);
         if (!maybe_compatible.has_value()) {
-            dmesgln("PCI: Devicetree node for {} does not have a 'compatible' string, rejecting", entry.key);
+            dmesgln("PCI: Devicetree node for {} does not have a 'compatible' string, rejecting", name);
             continue;
         }
         auto compatible = maybe_compatible.value();
@@ -92,14 +91,14 @@ void initialize()
             return IterationDecision::Continue;
         });
         if (controller_compatibility == ControllerCompatible::Unknown) {
-            dmesgln("PCI: Devicetree node for {} does not have a known 'compatible' string, rejecting", entry.key);
+            dmesgln("PCI: Devicetree node for {} does not have a known 'compatible' string, rejecting", name);
             dmesgln("PCI: Compatible strings provided: {}", compatible.as_strings());
             continue;
         }
 
         auto maybe_reg = node.get_property("reg"sv);
         if (!maybe_reg.has_value()) {
-            dmesgln("PCI: Devicetree node for {} does not have a physical address assigned to it, rejecting", entry.key);
+            dmesgln("PCI: Devicetree node for {} does not have a physical address assigned to it, rejecting", name);
             continue;
         }
         auto reg = maybe_reg.value();
@@ -123,7 +122,7 @@ void initialize()
             domain_counter = domain_counter.value() + 1;
         } else {
             if (domain_counter.has_value()) {
-                dmesgln("PCI: Devicetree node for {} has a PCI-domain assigned, but a previous controller did not have one assigned", entry.key);
+                dmesgln("PCI: Devicetree node for {} has a PCI-domain assigned, but a previous controller did not have one assigned", name);
                 dmesgln("PCI: This could lead to domain collisions if handled improperly");
                 dmesgln("PCI: We will for now reject this device for now, further investigation is advised");
                 continue;
@@ -136,11 +135,7 @@ void initialize()
             // FIXME: Make this use a nice helper function
             // FIXME: Use the provided size field
             auto stream = reg.as_stream();
-            FlatPtr paddr;
-            if (soc_address_cells == 1)
-                paddr = MUST(stream.read_value<BigEndian<u32>>());
-            else
-                paddr = MUST(stream.read_value<BigEndian<u64>>());
+            FlatPtr paddr = MUST(stream.read_cells(soc_address_cells));
 
             Access::the().add_host_controller(
                 MemoryBackedHostBridge::must_create(
@@ -161,68 +156,107 @@ void initialize()
             auto address_cells = node.get_property("#address-cells"sv).value().as<u32>();
             VERIFY(address_cells == 3); // Additional cell for OpenFirmware PCI address metadata
             auto size_cells = node.get_property("#size-cells"sv).value().as<u32>();
+
             auto stream = maybe_ranges.value().as_stream();
             while (!stream.is_eof()) {
-                u32 pci_address_metadata = MUST(stream.read_value<BigEndian<u32>>());
-                FlatPtr pci_address = MUST(stream.read_value<BigEndian<u64>>());
-                FlatPtr mmio_address;
-                if (soc_address_cells == 1)
-                    mmio_address = MUST(stream.read_value<BigEndian<u32>>());
-                else
-                    mmio_address = MUST(stream.read_value<BigEndian<u64>>());
-                u64 mmio_size;
-                if (size_cells == 1)
-                    mmio_size = MUST(stream.read_value<BigEndian<u32>>());
-                else
-                    mmio_size = MUST(stream.read_value<BigEndian<u64>>());
-                auto space_type = (pci_address_metadata >> OpenFirmwareAddress::space_type_offset) & OpenFirmwareAddress::space_type_mask;
-                if (space_type != OpenFirmwareAddress::SpaceType::Memory32BitSpace && space_type != OpenFirmwareAddress::SpaceType::Memory64BitSpace)
+                auto pci_address_metadata = bit_cast<OpenFirmwareAddress>(MUST(stream.read_cell()));
+                FlatPtr pci_address = MUST(stream.read_cells(2));
+
+                FlatPtr mmio_address = MUST(stream.read_cells(soc_address_cells));
+                u64 mmio_size = MUST(stream.read_cells(size_cells));
+
+                if (pci_address_metadata.space_type != OpenFirmwareAddress::SpaceType::Memory32BitSpace
+                    && pci_address_metadata.space_type != OpenFirmwareAddress::SpaceType::Memory64BitSpace)
                     continue; // We currently only support memory-mapped PCI on RISC-V
+
                 // TODO: Support mapped PCI addresses
                 VERIFY(pci_address == mmio_address);
-                if (space_type == OpenFirmwareAddress::SpaceType::Memory32BitSpace) {
-                    auto prefetchable = (pci_address_metadata >> OpenFirmwareAddress::prefetchable_offset) & OpenFirmwareAddress::prefetchable_mask;
-                    if (prefetchable)
+                if (pci_address_metadata.space_type == OpenFirmwareAddress::SpaceType::Memory32BitSpace) {
+                    if (pci_address_metadata.prefetchable)
                         continue; // We currently only use non-prefetchable 32-bit regions, since 64-bit regions are always prefetchable - TODO: Use 32-bit prefetchable regions if only they are available
                     if (pci_32bit_mmio_size >= mmio_size)
                         continue; // We currently only use the single largest region - TODO: Use all available regions if needed
+
                     pci_32bit_mmio_base = mmio_address;
                     pci_32bit_mmio_size = mmio_size;
                 } else {
                     if (pci_64bit_mmio_size >= mmio_size)
                         continue; // We currently only use the single largest region - TODO: Use all available regions if needed
+
                     pci_64bit_mmio_base = mmio_address;
                     pci_64bit_mmio_size = mmio_size;
                 }
             }
         }
 
+        // 2.4.3 Interrupt Nexus Properties
+        // #interrupt-cells: [2] `1` for pci busses
+        // interrupt-map:
+        //  [{
+        //     child-unit-address(bus-node/#address-cells|3),
+        //     child-interrupt-specifier(#interrupt-cells|1),
+        //     interrupt-parent(phandle),
+        //     parent-unit-address(interrupt-parent/#address-cells),
+        //     parent-interrupt-specifier(interrupt-parent/#interrupt-cells)
+        //  }]
+        //   Note: The bus-node may be any other bus the child is connected to
+        //   FIXME?: Let's just hope this is always this/a PCI bus
+        // interrupt-map-mask:
+        // > This property specifies a  mask that is ANDed with the incoming
+        // > unit interrupt specifier being looked up in the table specified in the
+        // > interrupt-map property.
+        // Hence this should be of size:
+        // pci/#address-cells(3) + #interrupt-cells(1) = 4
         auto maybe_interrupt_map = node.get_property("interrupt-map"sv);
         auto maybe_interrupt_map_mask = node.get_property("interrupt-map-mask"sv);
         if (maybe_interrupt_map.has_value() && maybe_interrupt_map_mask.has_value()) {
+            VERIFY(node.get_property("#interrupt-cells"sv)->as<u32>() == 1);
+            VERIFY(maybe_interrupt_map_mask.value().size() == 4 * sizeof(u32));
+
             auto mask_stream = maybe_interrupt_map_mask.value().as_stream();
-            u32 metadata_mask = MUST(mask_stream.read_value<BigEndian<u32>>());
-            MUST(mask_stream.discard(sizeof(u32) * 2));
-            VERIFY(node.get_property("#interrupt-cells"sv)->as<u32>() == 1); // PCI interrupt pin should always fit in one word
-            u32 pin_mask = MUST(mask_stream.read_value<BigEndian<u32>>());
-            interrupt_mask = ((metadata_mask >> 8) << 8) | pin_mask;
+            auto metadata_mask = bit_cast<OpenFirmwareAddress>(MUST(mask_stream.read_cell()));
+            u64 phyical_address_mask = MUST(mask_stream.read_cells(2));
+            // [2]: phys.mid and phys.lo mask should be 0 -> physical-address-mask = 0
+            //      0 < metadata_mask < 0xff00
+            VERIFY(phyical_address_mask == 0);
+            VERIFY(metadata_mask.raw <= 0xff00);
+            // Additionally it would be ludicrous/impossible to differentiate interrupts on registers
+            VERIFY(metadata_mask.register_ == 0);
+
+            u32 pin_mask = MUST(mask_stream.read_cell());
+            // [2]: The interrupt specifier mask should be between 0 and 7
+            VERIFY(pin_mask <= 7);
+
+            interrupt_mask = PCIInterruptSpecifier {
+                .interrupt_pin = static_cast<u8>(pin_mask),
+                .function = metadata_mask.function,
+                .device = metadata_mask.device,
+                .bus = metadata_mask.bus,
+            };
             auto map_stream = maybe_interrupt_map.value().as_stream();
             while (!map_stream.is_eof()) {
-                u32 pci_address_metadata = MUST(map_stream.read_value<BigEndian<u32>>());
-                MUST(map_stream.discard(sizeof(u32) * 2));
-                u32 pin = MUST(map_stream.read_value<BigEndian<u32>>());
-                u32 interrupt_controller_phandle = MUST(map_stream.read_value<BigEndian<u32>>());
-                auto* interrupt_controller = device_tree.phandle(interrupt_controller_phandle);
+                auto pci_address_metadata = bit_cast<OpenFirmwareAddress>(MUST(map_stream.read_cell()));
+                MUST(map_stream.discard(sizeof(u32) * 2)); // Physical Address, the mask for those is guaranteed to be 0
+                u32 pin = MUST(map_stream.read_cell());
+
+                u32 interrupt_controller_phandle = MUST(map_stream.read_cell());
+                auto const* interrupt_controller = device_tree.phandle(interrupt_controller_phandle);
                 VERIFY(interrupt_controller);
+
                 auto interrupt_cells = interrupt_controller->get_property("#interrupt-cells"sv)->as<u32>();
                 VERIFY(interrupt_cells == 1 || interrupt_cells == 2);
-                u64 interrupt;
-                if (interrupt_cells == 1)
-                    interrupt = MUST(map_stream.read_value<BigEndian<u32>>());
-                else
-                    interrupt = MUST(map_stream.read_value<BigEndian<u64>>());
-                auto masked_specifier = (((pci_address_metadata >> 8) << 8) | pin) & interrupt_mask;
-                masked_interrupt_mapping.set(masked_specifier, interrupt);
+                u64 interrupt = MUST(map_stream.read_cells(interrupt_cells));
+
+                pin &= pin_mask;
+                pci_address_metadata.raw &= metadata_mask.raw;
+                masked_interrupt_mapping.set(
+                    PCIInterruptSpecifier {
+                        .interrupt_pin = static_cast<u8>(pin),
+                        .function = pci_address_metadata.function,
+                        .device = pci_address_metadata.device,
+                        .bus = pci_address_metadata.bus,
+                    },
+                    interrupt);
             }
         }
     }

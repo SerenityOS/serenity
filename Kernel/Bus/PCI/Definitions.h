@@ -10,6 +10,7 @@
 #include <AK/DistinctNumeric.h>
 #include <AK/Function.h>
 #include <AK/RefCounted.h>
+#include <AK/Traits.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <Kernel/Debug.h>
@@ -99,21 +100,30 @@ static constexpr u8 msix_table_bir_mask = 0x7;
 static constexpr u16 msix_table_offset_mask = 0xfff8;
 static constexpr u16 msix_control_enable = 0x8000;
 
-namespace OpenFirmwareAddress {
-
-static constexpr u8 space_type_offset = 24;
-static constexpr u8 space_type_mask = 0x3;
-static constexpr u8 prefetchable_offset = 30;
-static constexpr u8 prefetchable_mask = 0x1;
-
-enum SpaceType {
-    ConfigurationSpace = 0,
-    IOSpace = 1,
-    Memory32BitSpace = 2,
-    Memory64BitSpace = 3,
+union OpenFirmwareAddress {
+    enum class SpaceType : u32 {
+        ConfigurationSpace = 0,
+        IOSpace = 1,
+        Memory32BitSpace = 2,
+        Memory64BitSpace = 3,
+    };
+    struct {
+        // https://www.devicetree.org/open-firmware/bindings/pci/pci2_1.pdf
+        // Chapter: 2.2.1.1
+        // phys.hi cell
+        u32 register_ : 8;        // r
+        u32 function : 3;         // f
+        u32 device : 5;           // d
+        u32 bus : 8;              // b
+        SpaceType space_type : 2; // s
+        u32 : 3;                  // 0
+        u32 aliased : 1;          // t
+        u32 prefetchable : 1;     // p
+        u32 relocatable : 1;      // n
+    };
+    u32 raw;
 };
-
-}
+static_assert(AssertSize<OpenFirmwareAddress, 4>());
 
 // Taken from https://pcisig.com/sites/default/files/files/PCI_Code-ID_r_1_11__v24_Jan_2019.pdf
 enum class ClassID {
@@ -524,7 +534,6 @@ private:
 
 class Domain;
 class Device;
-
 }
 
 template<>
