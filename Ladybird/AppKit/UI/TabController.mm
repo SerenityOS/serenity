@@ -520,9 +520,18 @@ static NSString* const TOOLBAR_TAB_OVERVIEW_IDENTIFIER = @"ToolbarTabOverviewIde
     [self.window makeKeyAndOrderFront:sender];
 
     [self focusLocationToolbarItem];
+
+    auto* delegate = (ApplicationDelegate*)[NSApp delegate];
+    [delegate setActiveTab:[self tab]];
 }
 
 #pragma mark - NSWindowDelegate
+
+- (void)windowDidBecomeMain:(NSNotification*)notification
+{
+    auto* delegate = (ApplicationDelegate*)[NSApp delegate];
+    [delegate setActiveTab:[self tab]];
+}
 
 - (void)windowWillClose:(NSNotification*)notification
 {
