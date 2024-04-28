@@ -38,7 +38,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool xz = false;
     bool no_auto_compress = false;
     StringView archive_file;
-    bool dereference;
+    bool dereference = false;
     StringView directory;
     Vector<ByteString> paths;
 

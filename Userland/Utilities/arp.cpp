@@ -28,9 +28,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath tty inet unix"));
 
-    static bool flag_set;
-    static bool flag_delete;
-    static bool flag_numeric;
+    bool flag_set = false;
+    bool flag_delete = false;
+    bool flag_numeric = false;
     StringView value_ipv4_address;
     StringView value_hw_address;
 
