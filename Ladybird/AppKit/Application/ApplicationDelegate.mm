@@ -184,6 +184,10 @@
         }
     }
 
+    if (activate_tab == Web::HTML::ActivateTab::Yes) {
+        [[controller window] orderFrontRegardless];
+    }
+
     [self.managed_tabs addObject:controller];
     return controller;
 }
