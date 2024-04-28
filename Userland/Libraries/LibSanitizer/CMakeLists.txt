@@ -3,8 +3,9 @@ set(SOURCES
     ../LibC/ssp.cpp
 )
 
-set_source_files_properties(../LibC/ssp.cpp PROPERTIES COMPILE_FLAGS "-fno-stack-protector")
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -nostdlib")
 serenity_libc(LibUBSanitizer ubsan)
 add_dependencies(LibUBSanitizer install_libc_headers)
+target_link_options(LibUBSanitizer PRIVATE -nostdlib)
+
+add_library(DynamicLoader_LibUBSanitizer STATIC UBSanitizer.cpp)
+target_link_libraries(DynamicLoader_LibUBSanitizer PUBLIC DynamicLoader_CompileOptions)
