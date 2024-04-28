@@ -35,6 +35,7 @@
 }
 
 @property (nonatomic, strong) NSMutableArray<TabController*>* managed_tabs;
+@property (nonatomic, strong) Tab* active_tab;
 
 @property (nonatomic, strong) TaskManagerController* task_manager_controller;
 
@@ -117,6 +118,16 @@
     [controller loadHTML:html url:url];
 
     return controller;
+}
+
+- (void)setActiveTab:(Tab*)tab
+{
+    self.active_tab = tab;
+}
+
+- (Tab*)activeTab
+{
+    return self.active_tab;
 }
 
 - (void)removeTab:(TabController*)controller

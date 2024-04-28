@@ -37,6 +37,9 @@
                                fromTab:(nullable Tab*)tab
                            activateTab:(Web::HTML::ActivateTab)activate_tab;
 
+- (void)setActiveTab:(nonnull Tab*)tab;
+- (nullable Tab*)activeTab;
+
 - (void)removeTab:(nonnull TabController*)controller;
 
 - (WebView::CookieJar&)cookieJar;
