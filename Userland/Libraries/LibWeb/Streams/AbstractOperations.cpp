@@ -4924,6 +4924,71 @@ void transform_stream_set_backpressure(TransformStream& stream, bool backpressur
     stream.set_backpressure(backpressure);
 }
 
+// https://streams.spec.whatwg.org/#transformstream-set-up
+void transform_stream_set_up(TransformStream& stream, JS::NonnullGCPtr<TransformAlgorithm> transform_algorithm, JS::GCPtr<FlushAlgorithm> flush_algorithm, JS::GCPtr<CancelAlgorithm>)
+{
+    auto& realm = stream.realm();
+
+    // 1. Let writableHighWaterMark be 1.
+    auto writable_high_water_mark = 1.0;
+
+    // 2. Let writableSizeAlgorithm be an algorithm that returns 1.
+    auto writable_size_algorithm = JS::create_heap_function(realm.heap(), [](JS::Value) {
+        return JS::normal_completion(JS::Value { 1 });
+    });
+
+    // 3. Let readableHighWaterMark be 0.
+    auto readable_high_water_mark = 0.0;
+
+    // 4. Let readableSizeAlgorithm be an algorithm that returns 1.
+    auto readable_size_algorithm = JS::create_heap_function(realm.heap(), [](JS::Value) {
+        return JS::normal_completion(JS::Value { 1 });
+    });
+
+    // 5. Let transformAlgorithmWrapper be an algorithm that runs these steps given a value chunk:
+    auto transform_algorithm_wrapper = JS::create_heap_function(realm.heap(), [&realm, transform_algorithm](JS::Value chunk) -> JS::NonnullGCPtr<WebIDL::Promise> {
+        // 1. Let result be the result of running transformAlgorithm given chunk. If this throws an exception e, return a promise rejected with e.
+        JS::GCPtr<JS::PromiseCapability> result = nullptr;
+        result = transform_algorithm->function()(chunk);
+
+        // 2. If result is a Promise, then return result.
+        if (result)
+            return JS::NonnullGCPtr { *result };
+
+        // 3. Return a promise resolved with undefined.
+        return WebIDL::create_resolved_promise(realm, JS::js_undefined());
+    });
+
+    // 6. Let flushAlgorithmWrapper be an algorithm that runs these steps:
+    auto flush_algorithm_wrapper = JS::create_heap_function(realm.heap(), [&realm, flush_algorithm]() -> JS::NonnullGCPtr<WebIDL::Promise> {
+        // 1. Let result be the result of running flushAlgorithm, if flushAlgorithm was given, or null otherwise. If this throws an exception e, return a promise rejected with e.
+        JS::GCPtr<JS::PromiseCapability> result = nullptr;
+        if (flush_algorithm)
+            result = flush_algorithm->function()();
+
+        // 2. If result is a Promise, then return result.
+        if (result)
+            return JS::NonnullGCPtr { *result };
+
+        // 3. Return a promise resolved with undefined.
+        return WebIDL::create_resolved_promise(realm, JS::js_undefined());
+    });
+
+    // FIXME 7. Let cancelAlgorithmWrapper be an algorithm that runs these steps given a value reason:
+
+    // 8. Let startPromise be a promise resolved with undefined.
+    auto start_promise = WebIDL::create_resolved_promise(realm, JS::js_undefined());
+
+    // 9. Perform ! InitializeTransformStream(stream, startPromise, writableHighWaterMark, writableSizeAlgorithm, readableHighWaterMark, readableSizeAlgorithm).
+    initialize_transform_stream(stream, start_promise, writable_high_water_mark, writable_size_algorithm, readable_high_water_mark, readable_size_algorithm);
+
+    // 10. Let controller be a new TransformStreamDefaultController.
+    auto controller = realm.heap().allocate<TransformStreamDefaultController>(realm, realm);
+
+    // 11. Perform ! SetUpTransformStreamDefaultController(stream, controller, transformAlgorithmWrapper, flushAlgorithmWrapper, cancelAlgorithmWrapper).
+    set_up_transform_stream_default_controller(stream, controller, transform_algorithm_wrapper, flush_algorithm_wrapper);
+}
+
 // https://streams.spec.whatwg.org/#is-non-negative-number
 bool is_non_negative_number(JS::Value value)
 {
