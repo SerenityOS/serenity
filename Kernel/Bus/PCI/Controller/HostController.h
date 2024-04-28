@@ -18,6 +18,46 @@ AK_TYPEDEF_DISTINCT_ORDERED_ID(u8, BusNumber);
 AK_TYPEDEF_DISTINCT_ORDERED_ID(u8, DeviceNumber);
 AK_TYPEDEF_DISTINCT_ORDERED_ID(u8, FunctionNumber);
 
+struct PCIInterruptSpecifier {
+    u8 interrupt_pin { 0 };
+    FunctionNumber function { 0 };
+    DeviceNumber device { 0 };
+    BusNumber bus { 0 };
+
+    bool operator==(PCIInterruptSpecifier const& other) const
+    {
+        return bus == other.bus && device == other.device && function == other.function && interrupt_pin == other.interrupt_pin;
+    }
+    PCIInterruptSpecifier operator&(PCIInterruptSpecifier other) const
+    {
+        return PCIInterruptSpecifier {
+            .interrupt_pin = static_cast<u8>(interrupt_pin & other.interrupt_pin),
+            .function = function.value() & other.function.value(),
+            .device = device.value() & other.device.value(),
+            .bus = bus.value() & other.bus.value(),
+        };
+    }
+
+    PCIInterruptSpecifier& operator&=(PCIInterruptSpecifier const& other)
+    {
+        *this = *this & other;
+        return *this;
+    }
+};
+
+}
+namespace AK {
+template<>
+struct Traits<Kernel::PCI::PCIInterruptSpecifier> : public DefaultTraits<Kernel::PCI::PCIInterruptSpecifier> {
+    static unsigned hash(Kernel::PCI::PCIInterruptSpecifier value)
+    {
+        return int_hash(value.bus.value() << 24 | value.device.value() << 16 | value.function.value() << 8 | value.interrupt_pin);
+    }
+};
+
+}
+namespace Kernel::PCI {
+
 struct PCIConfiguration {
     FlatPtr mmio_32bit_base { 0 };
     FlatPtr mmio_32bit_end { 0 };
@@ -25,8 +65,8 @@ struct PCIConfiguration {
     FlatPtr mmio_64bit_end { 0 };
     // The keys contains the bus, device & function at the same offsets as OpenFirmware PCI addresses,
     // with the least significant 8 bits being the interrupt pin.
-    HashMap<u32, u64> masked_interrupt_mapping;
-    u32 interrupt_mask { 0 };
+    HashMap<PCIInterruptSpecifier, u64> masked_interrupt_mapping;
+    PCIInterruptSpecifier interrupt_mask;
 };
 
 class HostController {
