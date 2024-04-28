@@ -5,6 +5,7 @@
  */
 
 #include <AK/LexicalPath.h>
+#include <AK/SetOnce.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
 #include <LibLine/Editor.h>
@@ -525,14 +526,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     // FIXME: Make these into StringViews once we stop using fopen below.
     ByteString filename = "-";
     ByteString prompt = "?f%f :.(line %l)?e (END):.";
-    bool dont_switch_buffer = false;
-    bool quit_at_eof = false;
+    SetOnce dont_switch_buffer;
+    SetOnce quit_at_eof;
     bool quit_if_one_screen = false;
-    bool emulate_more = false;
+    SetOnce emulate_more;
     bool show_line_numbers = false;
 
     if (LexicalPath::basename(arguments.strings[0]) == "more"sv)
-        emulate_more = true;
+        emulate_more.set();
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(filename, "The paged file", "file", Core::ArgsParser::Required::No);
@@ -564,8 +565,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (emulate_more) {
         // Configure options that match more's behavior
-        dont_switch_buffer = true;
-        quit_at_eof = true;
+        dont_switch_buffer.set();
+        quit_at_eof.set();
         prompt = "--More--";
     }
 

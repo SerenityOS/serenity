@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/SetOnce.h>
 #include <LibCompress/Gzip.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
@@ -15,7 +16,7 @@
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     Vector<StringView> filenames;
-    bool keep_input_files { false };
+    SetOnce keep_input_files;
     bool write_to_stdout { false };
     bool decompress { false };
 
@@ -27,7 +28,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     if (write_to_stdout)
-        keep_input_files = true;
+        keep_input_files.set();
 
     for (auto const& input_filename : filenames) {
         ByteString output_filename;

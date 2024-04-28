@@ -7,6 +7,7 @@
  */
 
 #include <AK/QuickSort.h>
+#include <AK/SetOnce.h>
 #include <AK/String.h>
 #include <LibCore/Account.h>
 #include <LibCore/ArgsParser.h>
@@ -222,11 +223,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/dev/", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    bool every_process_flag = false;
-    bool every_terminal_process_flag = false;
-    bool full_format_flag = false;
-    bool provided_filtering_option = false;
-    bool provided_quick_pid_list = false;
+    SetOnce every_process_flag;
+    SetOnce every_terminal_process_flag;
+    SetOnce full_format_flag;
+    SetOnce provided_filtering_option;
+    SetOnce provided_quick_pid_list;
     Vector<Column> columns;
     Vector<pid_t> pid_list;
     Vector<pid_t> parent_pid_list;
@@ -247,28 +248,28 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return column_or_error.release_value();
     }));
     args_parser.add_option(make_list_option(pid_list, "Show processes with a matching PID. (Comma- or space-separated list)", nullptr, 'p', "pid-list", [&](StringView pid_string) {
-        provided_filtering_option = true;
+        provided_filtering_option.set();
         auto pid = pid_string.to_number<int>();
         if (!pid.has_value())
             warnln("Could not parse '{}' as a PID.", pid_string);
         return pid;
     }));
     args_parser.add_option(make_list_option(parent_pid_list, "Show processes with a matching PPID. (Comma- or space-separated list.)", "ppid", {}, "pid-list", [&](StringView pid_string) {
-        provided_filtering_option = true;
+        provided_filtering_option.set();
         auto pid = pid_string.to_number<int>();
         if (!pid.has_value())
             warnln("Could not parse '{}' as a PID.", pid_string);
         return pid;
     }));
     args_parser.add_option(make_list_option(pid_list, "Show processes with a matching PID. (Comma- or space-separated list.) Processes will be listed in the order given.", nullptr, 'q', "pid-list", [&](StringView pid_string) {
-        provided_quick_pid_list = true;
+        provided_quick_pid_list.set();
         auto pid = pid_string.to_number<int>();
         if (!pid.has_value())
             warnln("Could not parse '{}' as a PID.", pid_string);
         return pid;
     }));
     args_parser.add_option(make_list_option(tty_list, "Show processes associated with the given terminal. (Comma- or space-separated list.) The short TTY name or the full device path may be used.", "tty", 't', "tty-list", [&](StringView tty_string) -> Optional<ByteString> {
-        provided_filtering_option = true;
+        provided_filtering_option.set();
         auto tty_pseudo_name_or_error = parse_tty_pseudo_name(tty_string);
         if (tty_pseudo_name_or_error.is_error()) {
             warnln("Could not parse '{}' as a TTY", tty_string);
@@ -277,7 +278,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return tty_pseudo_name_or_error.release_value().to_byte_string();
     }));
     args_parser.add_option(make_list_option(uid_list, "Show processes with a matching user ID or login name. (Comma- or space-separated list.)", nullptr, 'u', "user-list", [&](StringView user_string) -> Optional<uid_t> {
-        provided_filtering_option = true;
+        provided_filtering_option.set();
         if (auto uid = user_string.to_number<uid_t>(); uid.has_value()) {
             return uid.value();
         }

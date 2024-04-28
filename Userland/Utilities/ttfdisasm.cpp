@@ -5,6 +5,7 @@
  */
 
 #include <AK/Format.h>
+#include <AK/SetOnce.h>
 #include <AK/Utf8View.h>
 #include <LibCore/ArgsParser.h>
 #include <LibGfx/Font/OpenType/Font.h>
@@ -134,11 +135,11 @@ private:
     u32 m_indent_level { 1 };
 };
 
-static bool s_disassembly_attempted = false;
+static SetOnce s_disassembly_attempted;
 
 static void print_disassembly(StringView name, Optional<ReadonlyBytes> program, bool enable_highlighting, u32 code_point = 0)
 {
-    s_disassembly_attempted = true;
+    s_disassembly_attempted.set();
     if (!program.has_value()) {
         out(name, code_point);
         outln(": not found");
@@ -190,7 +191,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     }
 
-    if (!s_disassembly_attempted) {
+    if (!s_disassembly_attempted.was_set()) {
         args_parser.print_usage(stderr, arguments.strings[0]);
         return 1;
     }

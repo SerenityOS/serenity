@@ -7,6 +7,7 @@
 #include <AK/ByteString.h>
 #include <AK/CharacterTypes.h>
 #include <AK/LexicalPath.h>
+#include <AK/SetOnce.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 #include <LibCore/ArgsParser.h>
@@ -211,18 +212,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio rpath map_fixed"));
 
     ByteString path {};
-    static bool display_all = false;
-    static bool display_elf_header = false;
-    static bool display_program_headers = false;
-    static bool display_section_headers = false;
-    static bool display_headers = false;
-    static bool display_symbol_table = false;
-    static bool display_dynamic_symbol_table = false;
-    static bool display_core_notes = false;
-    static bool display_relocations = false;
-    static bool display_unwind_info = false;
-    static bool display_dynamic_section = false;
-    static bool display_hardening = false;
+    SetOnce display_all;
+    SetOnce display_elf_header;
+    SetOnce display_program_headers;
+    SetOnce display_section_headers;
+    SetOnce display_headers;
+    SetOnce display_symbol_table;
+    SetOnce display_dynamic_symbol_table;
+    SetOnce display_core_notes;
+    SetOnce display_relocations;
+    SetOnce display_unwind_info;
+    SetOnce display_dynamic_section;
+    SetOnce display_hardening;
     StringView string_dump_section {};
 
     Core::ArgsParser args_parser;
@@ -248,22 +249,22 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     if (display_headers) {
-        display_elf_header = true;
-        display_program_headers = true;
-        display_section_headers = true;
+        display_elf_header.set();
+        display_program_headers.set();
+        display_section_headers.set();
     }
 
     if (display_all) {
-        display_elf_header = true;
-        display_program_headers = true;
-        display_section_headers = true;
-        display_dynamic_symbol_table = true;
-        display_dynamic_section = true;
-        display_core_notes = true;
-        display_relocations = true;
-        display_unwind_info = true;
-        display_symbol_table = true;
-        display_hardening = true;
+        display_elf_header.set();
+        display_program_headers.set();
+        display_section_headers.set();
+        display_dynamic_symbol_table.set();
+        display_dynamic_section.set();
+        display_core_notes.set();
+        display_relocations.set();
+        display_unwind_info.set();
+        display_symbol_table.set();
+        display_hardening.set();
     }
 
     path = LexicalPath::absolute_path(TRY(Core::System::getcwd()), path);

@@ -9,6 +9,7 @@
 #include <AK/Hex.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
+#include <AK/SetOnce.h>
 #include <AK/StringUtils.h>
 #include <AK/StringView.h>
 #include <LibCore/ArgsParser.h>
@@ -18,7 +19,7 @@
 #include <LibMain/Main.h>
 #include <LibPCIDB/Database.h>
 
-static bool flag_show_numerical = false;
+static SetOnce flag_show_numerical;
 static bool flag_verbose = false;
 
 static constexpr StringView format_numerical = "{:04x}:{:02x}:{:02x}.{} {}: {}:{} (rev {:02x})"sv;
@@ -64,7 +65,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         db = PCIDB::Database::open();
         if (!db) {
             warnln("Couldn't open PCI ID database");
-            flag_show_numerical = true;
+            flag_show_numerical.set();
         }
     }
 

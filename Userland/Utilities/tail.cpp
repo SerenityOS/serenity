@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/SetOnce.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
@@ -84,9 +85,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     bool follow = false;
     size_t wanted_byte_count = 0;
-    bool byte_mode = false;
+    SetOnce byte_mode;
     size_t wanted_line_count = DEFAULT_LINE_COUNT;
-    bool start_from_end = true;
+    SetOnce not_start_from_end;
     StringView file;
     size_t file_size;
 
@@ -104,7 +105,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             Optional<size_t> value;
             if (lines.starts_with('+')) {
                 value = lines.substring_view(1, lines.length() - 1).to_number<size_t>();
-                start_from_end = false;
+                not_start_from_end.set();
             } else {
                 value = lines.to_number<size_t>();
             }
@@ -127,7 +128,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             Optional<size_t> value;
             if (bytes.starts_with('+')) {
                 value = bytes.substring_view(1, bytes.length() - 1).to_number<size_t>();
-                start_from_end = false;
+                not_start_from_end.set();
             } else {
                 value = bytes.to_number<size_t>();
             }
@@ -136,7 +137,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 return false;
             }
             wanted_byte_count = value.value();
-            byte_mode = true;
+            byte_mode.set();
             return true;
         },
     });
@@ -162,7 +163,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             StringBuilder line;
 
             if (byte_mode) {
-                if (start_from_end) {
+                if (!not_start_from_end) {
                     if (wanted_byte_count > bytes.size()) {
                         out("{}", StringView { bytes });
                         continue;
@@ -186,7 +187,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 continue;
             }
 
-            if (!start_from_end) {
+            if (!not_start_from_end) {
                 if (wanted_line_count > line_count) {
                     continue;
                 }
@@ -231,7 +232,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto file_size = TRY(f->size());
         if (wanted_byte_count > file_size)
             wanted_byte_count = file_size;
-        if (start_from_end) {
+        if (!not_start_from_end) {
             TRY(f->seek(wanted_byte_count * -1, SeekMode::FromEndPosition));
         } else {
             if (wanted_byte_count > 0 && wanted_byte_count < file_size)
@@ -241,7 +242,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
         pos = TRY(f->tell());
     } else {
-        pos = TRY(find_seek_pos(*f, wanted_line_count, start_from_end));
+        pos = TRY(find_seek_pos(*f, wanted_line_count, !not_start_from_end));
     }
     TRY(tail_from_pos(*f, pos));
 

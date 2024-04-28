@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/SetOnce.h>
 #include <LibCompress/Gzip.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
@@ -15,14 +16,14 @@
 ErrorOr<int> serenity_main(Main::Arguments args)
 {
     Vector<StringView> filenames;
-    bool keep_input_files { false };
-    bool write_to_stdout { false };
+    SetOnce keep_input_files;
+    SetOnce write_to_stdout;
 
     Core::ArgsParser args_parser;
     // NOTE: If the user run this program via the /bin/zcat symlink,
     // then emulate gzip decompression to stdout.
     if (args.argc > 0 && args.strings[0] == "zcat"sv) {
-        write_to_stdout = true;
+        write_to_stdout.set();
     } else {
         args_parser.add_option(keep_input_files, "Keep (don't delete) input files", "keep", 'k');
         args_parser.add_option(write_to_stdout, "Write to stdout, keep original files unchanged", "stdout", 'c');
@@ -31,7 +32,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     args_parser.parse(args);
 
     if (write_to_stdout)
-        keep_input_files = true;
+        keep_input_files.set();
 
     for (auto filename : filenames) {
 

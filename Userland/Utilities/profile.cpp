@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/SetOnce.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
@@ -27,7 +28,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     u64 event_mask = PERF_EVENT_MMAP | PERF_EVENT_MUNMAP | PERF_EVENT_PROCESS_CREATE
         | PERF_EVENT_PROCESS_EXEC | PERF_EVENT_PROCESS_EXIT | PERF_EVENT_THREAD_CREATE | PERF_EVENT_THREAD_EXIT
         | PERF_EVENT_SIGNPOST;
-    bool seen_event_type_arg = false;
+    SetOnce seen_event_type_arg;
 
     args_parser.add_option(pid_argument, "Target PID", nullptr, 'p', "PID");
     args_parser.add_option(all_processes, "Profile all processes (super-user only), result at /sys/kernel/profile", nullptr, 'a');
@@ -39,7 +40,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         Core::ArgsParser::OptionArgumentMode::Required,
         "Enable tracking specific event type", nullptr, 't', "event_type",
         [&](ByteString event_type) {
-            seen_event_type_arg = true;
+            seen_event_type_arg.set();
             if (event_type == "sample")
                 event_mask |= PERF_EVENT_SAMPLE;
             else if (event_type == "context_switch")

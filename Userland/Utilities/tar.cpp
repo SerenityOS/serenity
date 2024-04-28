@@ -8,6 +8,7 @@
 #include <AK/ByteString.h>
 #include <AK/HashMap.h>
 #include <AK/LexicalPath.h>
+#include <AK/SetOnce.h>
 #include <AK/Span.h>
 #include <AK/Vector.h>
 #include <LibArchive/TarStream.h>
@@ -33,12 +34,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool extract = false;
     bool list = false;
     bool verbose = false;
-    bool gzip = false;
-    bool lzma = false;
-    bool xz = false;
+    SetOnce gzip;
+    SetOnce lzma;
+    SetOnce xz;
     bool no_auto_compress = false;
     StringView archive_file;
-    bool dereference;
+    bool dereference = false;
     StringView directory;
     Vector<ByteString> paths;
 
@@ -64,11 +65,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (!no_auto_compress && !archive_file.is_empty()) {
         if (archive_file.ends_with(".gz"sv) || archive_file.ends_with(".tgz"sv))
-            gzip = true;
+            gzip.set();
         if (archive_file.ends_with(".lzma"sv))
-            lzma = true;
+            lzma.set();
         if (archive_file.ends_with(".xz"sv))
-            xz = true;
+            xz.set();
     }
 
     if (list || extract) {

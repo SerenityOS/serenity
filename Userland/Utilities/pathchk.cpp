@@ -5,6 +5,7 @@
  */
 
 #include <AK/ByteString.h>
+#include <AK/SetOnce.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
@@ -15,9 +16,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath"));
     bool fail = false;
-    static bool flag_most_posix = false;
-    static bool flag_portability = false;
-    static bool flag_empty_name_and_leading_dash = false;
+    static SetOnce flag_most_posix;
+    static SetOnce flag_portability;
+    static SetOnce flag_empty_name_and_leading_dash;
     Vector<ByteString> paths;
 
     Core::ArgsParser args_parser;
@@ -28,8 +29,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     if (flag_portability) {
-        flag_most_posix = true;
-        flag_empty_name_and_leading_dash = true;
+        flag_most_posix.set();
+        flag_empty_name_and_leading_dash.set();
     }
 
     for (auto& path : paths) {

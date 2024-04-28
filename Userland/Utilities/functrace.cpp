@@ -7,6 +7,7 @@
 #include <AK/Assertions.h>
 #include <AK/HashMap.h>
 #include <AK/NonnullOwnPtr.h>
+#include <AK/SetOnce.h>
 #include <AK/StringBuilder.h>
 #include <Kernel/API/SyscallString.h>
 #include <LibCore/ArgsParser.h>
@@ -24,7 +25,7 @@
 #include <unistd.h>
 
 static OwnPtr<Debug::DebugSession> g_debug_session;
-static bool g_should_output_color = false;
+static SetOnce g_should_output_color;
 
 static void handle_sigint(int)
 {
@@ -105,7 +106,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio proc exec rpath sigaction ptrace"));
 
     if (isatty(STDOUT_FILENO))
-        g_should_output_color = true;
+        g_should_output_color.set();
 
     StringView command;
     Core::ArgsParser args_parser;

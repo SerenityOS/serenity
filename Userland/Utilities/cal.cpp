@@ -7,6 +7,7 @@
 
 #include <AK/DateConstants.h>
 #include <AK/Find.h>
+#include <AK/SetOnce.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringUtils.h>
@@ -169,7 +170,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     int year = 0;
     StringView week_start_day_name {};
     bool three_month_mode = false;
-    bool year_mode = false;
+    SetOnce year_mode;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Display a nice overview of a month or year, defaulting to the current month.");
@@ -199,7 +200,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     if (!month && year)
-        year_mode = true;
+        year_mode.set();
 
     int week_start_day;
     if (week_start_day_name.is_empty())

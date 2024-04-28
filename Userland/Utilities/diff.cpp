@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/SetOnce.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCore/System.h>
@@ -19,8 +20,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::ArgsParser parser;
 
-    bool unified = false;
-    bool context = false;
+    SetOnce unified;
+    SetOnce context;
 
     Optional<size_t> unified_format_context;
     Optional<size_t> context_format_context;
@@ -46,10 +47,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (unified_format_context.has_value()) {
         number_context_lines = *unified_format_context;
-        unified = true;
+        unified.set();
     } else if (context_format_context.has_value()) {
         number_context_lines = *context_format_context;
-        context = true;
+        context.set();
     } else if (context || unified) {
         // Default for these formats is 3, but 0 in normal format.
         number_context_lines = 3;

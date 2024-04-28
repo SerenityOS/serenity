@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/SetOnce.h>
 #include <LibCore/Account.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/Environment.h>
@@ -20,7 +21,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView first_positional;
     StringView second_positional;
     StringView command;
-    bool simulate_login = false;
+    SetOnce simulate_login;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(first_positional, "See --login", "-", Core::ArgsParser::Required::No);
@@ -32,7 +33,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView user = first_positional;
 
     if (first_positional == '-') {
-        simulate_login = true;
+        simulate_login.set();
         user = second_positional;
     }
 

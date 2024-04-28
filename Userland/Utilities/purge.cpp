@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/SetOnce.h>
 #include <LibCore/ArgsParser.h>
 #include <LibMain/Main.h>
 #include <serenity.h>
@@ -13,16 +14,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     int mode = 0;
 
-    bool purge_all_volatile = false;
-    bool purge_all_clean_inode = false;
+    SetOnce purge_all_volatile;
+    SetOnce purge_all_clean_inode;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(purge_all_volatile, "Mode PURGE_ALL_VOLATILE", nullptr, 'v');
     args_parser.add_option(purge_all_clean_inode, "Mode PURGE_ALL_CLEAN_INODE", nullptr, 'c');
     args_parser.parse(arguments);
 
-    if (!purge_all_volatile && !purge_all_clean_inode)
-        purge_all_volatile = purge_all_clean_inode = true;
+    if (!purge_all_volatile && !purge_all_clean_inode) {
+        purge_all_volatile.set();
+        purge_all_clean_inode.set();
+    }
 
     if (purge_all_volatile)
         mode |= PURGE_ALL_VOLATILE;

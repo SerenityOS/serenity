@@ -10,6 +10,7 @@
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
+#include <AK/SetOnce.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
@@ -114,7 +115,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/etc/passwd", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    bool arg_all_processes { false };
+    SetOnce arg_all_processes;
     int arg_fd { -1 };
     StringView arg_uid;
     int arg_uid_int = -1;
@@ -123,7 +124,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView arg_filename;
 
     if (arguments.strings.size() == 1)
-        arg_all_processes = true;
+        arg_all_processes.set();
     else {
         Core::ArgsParser parser;
         parser.set_general_help("List open files of a processes. This can mean actual files in the file system, sockets, pipes, etc.");

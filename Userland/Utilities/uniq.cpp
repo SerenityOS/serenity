@@ -7,6 +7,7 @@
 
 #include <AK/CharacterTypes.h>
 #include <AK/RefPtr.h>
+#include <AK/SetOnce.h>
 #include <AK/StringView.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
@@ -56,7 +57,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView inpath;
     StringView outpath;
     bool duplicates_only = false;
-    bool unique_only = false;
+    SetOnce unique_only;
     bool ignore_case = false;
     bool print_count = false;
     unsigned skip_chars = 0;
@@ -74,7 +75,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     if (!unique_only && !duplicates_only) {
-        unique_only = true;
+        unique_only.set();
     } else if (unique_only && duplicates_only) {
         // Printing duplicated and unique lines shouldn't print anything
         return 0;

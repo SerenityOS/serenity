@@ -5,6 +5,7 @@
  */
 
 #include <AK/ByteString.h>
+#include <AK/SetOnce.h>
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
@@ -17,12 +18,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio"));
 
-    bool flag_system = false;
-    bool flag_node = false;
-    bool flag_release = false;
-    bool flag_version = false;
-    bool flag_machine = false;
-    bool flag_all = false;
+    SetOnce flag_system;
+    SetOnce flag_node;
+    SetOnce flag_release;
+    SetOnce flag_version;
+    SetOnce flag_machine;
+    SetOnce flag_all;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(flag_system, "Print the system name (default)", nullptr, 's');
@@ -33,11 +34,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(flag_all, "Print all information (same as -snrm)", nullptr, 'a');
     args_parser.parse(arguments);
 
-    if (flag_all)
-        flag_system = flag_node = flag_release = flag_machine = flag_version = true;
+    if (flag_all) {
+        flag_system.set();
+        flag_node.set();
+        flag_release.set();
+        flag_machine.set();
+        flag_version.set();
+    }
 
     if (!flag_system && !flag_node && !flag_release && !flag_machine && !flag_version)
-        flag_system = true;
+        flag_system.set();
 
     utsname uts = TRY(Core::System::uname());
 

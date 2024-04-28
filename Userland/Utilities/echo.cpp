@@ -6,6 +6,7 @@
 
 #include <AK/CharacterTypes.h>
 #include <AK/GenericLexer.h>
+#include <AK/SetOnce.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
@@ -39,7 +40,7 @@ static Optional<u8> parse_hex_number(GenericLexer& lexer)
     return value;
 }
 
-static ByteString interpret_backslash_escapes(StringView string, bool& no_trailing_newline)
+static ByteString interpret_backslash_escapes(StringView string, SetOnce& no_trailing_newline)
 {
     static constexpr auto escape_map = "a\ab\be\ef\fn\nr\rt\tv\v"sv;
     static constexpr auto unescaped_chars = "\a\b\e\f\n\r\t\v\\"sv;
@@ -57,7 +58,7 @@ static ByteString interpret_backslash_escapes(StringView string, bool& no_traili
             }
             auto next_char = lexer.peek();
             if (next_char == 'c') {
-                no_trailing_newline = true;
+                no_trailing_newline.set();
                 break;
             }
             if (next_char == '0') {
@@ -102,7 +103,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio"));
 
     Vector<ByteString> text;
-    bool no_trailing_newline = false;
+    SetOnce no_trailing_newline;
     bool should_interpret_backslash_escapes = false;
 
     Core::ArgsParser args_parser;
