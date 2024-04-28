@@ -17,13 +17,8 @@
 [[gnu::weak]] Result<void, DlErrorMessage> __dladdr(void const*, Dl_info*) asm("__dladdr");
 
 // FIXME: use thread_local and a String once TLS works
-#ifdef NO_TLS
-char* s_dlerror_text = NULL;
-bool s_dlerror_retrieved = false;
-#else
 __thread char* s_dlerror_text = NULL;
 __thread bool s_dlerror_retrieved = false;
-#endif
 
 static void store_error(ByteString const& error)
 {
