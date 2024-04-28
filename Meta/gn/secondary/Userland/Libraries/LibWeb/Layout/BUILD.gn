@@ -37,6 +37,7 @@ source_set("Layout") {
     "ReplacedBox.cpp",
     "SVGBox.cpp",
     "SVGClipBox.cpp",
+    "SVGForeignObjectBox.cpp",
     "SVGFormattingContext.cpp",
     "SVGGeometryBox.cpp",
     "SVGGraphicsBox.cpp",
