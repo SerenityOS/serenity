@@ -682,6 +682,8 @@ class Table;
 namespace Web::WebAudio {
 class AudioContext;
 class BaseAudioContext;
+class OfflineAudioContext;
+class PeriodicWave;
 
 enum class AudioContextState;
 

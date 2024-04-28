@@ -661,6 +661,7 @@ set(SOURCES
     WebAudio/AudioContext.cpp
     WebAudio/BaseAudioContext.cpp
     WebAudio/OfflineAudioContext.cpp
+    WebAudio/PeriodicWave.cpp
     WebDriver/Capabilities.cpp
     WebDriver/Client.cpp
     WebDriver/Contexts.cpp
