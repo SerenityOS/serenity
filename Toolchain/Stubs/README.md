@@ -2,7 +2,7 @@
 
 This directory contains stubs for SerenityOS's LibC that are referenced from the LLVM runtime
 libraries. These are needed by the linker in order to add the required `DT_NEEDED` entries and to
-not emit errors regarding undefiend libc symbols. Additionally, it provides fake empty libunwind.so
+not emit errors regarding undefined libc symbols. Additionally, it provides fake empty libunwind.so
 and libc++.so for CMake configuration checks to succeed when bootstrapping the OS.
 
 ## Do these need to be updated?
