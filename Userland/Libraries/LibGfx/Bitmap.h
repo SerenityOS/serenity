@@ -244,7 +244,7 @@ private:
     void* m_data { nullptr };
     size_t m_pitch { 0 };
     BitmapFormat m_format { BitmapFormat::Invalid };
-    bool m_needs_munmap { false };
+    bool m_data_is_malloced { false };
     Core::AnonymousBuffer m_buffer;
 };
 
