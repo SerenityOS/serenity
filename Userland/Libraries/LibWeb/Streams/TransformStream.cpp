@@ -54,9 +54,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<TransformStream>> TransformStream::construc
     // 9. Let startPromise be a new promise.
     auto start_promise = WebIDL::create_promise(realm);
 
-    // 10. Perform ! InitializeTransformStream(this, startPromise, writableHighWaterMark, writableSizeAlgorithm,
-    // readableHighWaterMark, readableSizeAlgorithm).
-    TRY(initialize_transform_stream(*stream, start_promise, writable_high_water_mark, move(writable_size_algorithm), readable_high_water_mark, move(readable_size_algorithm)));
+    // 10. Perform ! InitializeTransformStream(this, startPromise, writableHighWaterMark, writableSizeAlgorithm, readableHighWaterMark, readableSizeAlgorithm).
+    initialize_transform_stream(*stream, start_promise, writable_high_water_mark, move(writable_size_algorithm), readable_high_water_mark, move(readable_size_algorithm));
 
     // 11. Perform ? SetUpTransformStreamDefaultControllerFromTransformer(this, transformer, transformerDict).
     TRY(set_up_transform_stream_default_controller_from_transformer(*stream, transformer, transformer_dict));

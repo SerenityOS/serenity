@@ -81,7 +81,7 @@ Optional<double> readable_stream_default_controller_get_desired_size(ReadableStr
 bool readable_stream_default_controller_can_close_or_enqueue(ReadableStreamDefaultController&);
 WebIDL::ExceptionOr<void> set_up_readable_stream_default_controller(ReadableStream&, ReadableStreamDefaultController&, JS::NonnullGCPtr<StartAlgorithm>, JS::NonnullGCPtr<PullAlgorithm>, JS::NonnullGCPtr<CancelAlgorithm>, double high_water_mark, JS::NonnullGCPtr<SizeAlgorithm>);
 WebIDL::ExceptionOr<void> set_up_readable_stream_default_controller_from_underlying_source(ReadableStream&, JS::Value underlying_source_value, UnderlyingSource, double high_water_mark, JS::NonnullGCPtr<SizeAlgorithm>);
-WebIDL::ExceptionOr<void> set_up_readable_stream_controller_with_byte_reading_support(ReadableStream&, JS::GCPtr<PullAlgorithm> = {}, JS::GCPtr<CancelAlgorithm> = {}, double high_water_mark = 0);
+void set_up_readable_stream_controller_with_byte_reading_support(ReadableStream&, JS::GCPtr<PullAlgorithm> = {}, JS::GCPtr<CancelAlgorithm> = {}, double high_water_mark = 0);
 WebIDL::ExceptionOr<void> set_up_readable_byte_stream_controller(ReadableStream&, ReadableByteStreamController&, JS::NonnullGCPtr<StartAlgorithm>, JS::NonnullGCPtr<PullAlgorithm>, JS::NonnullGCPtr<CancelAlgorithm>, double high_water_mark, JS::Value auto_allocate_chunk_size);
 WebIDL::ExceptionOr<void> set_up_readable_byte_stream_controller_from_underlying_source(ReadableStream&, JS::Value underlying_source, UnderlyingSource const& underlying_source_dict, double high_water_mark);
 JS::GCPtr<ReadableStreamBYOBRequest> readable_byte_stream_controller_get_byob_request(JS::NonnullGCPtr<ReadableByteStreamController>);
@@ -125,7 +125,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WritableStreamDefaultWriter>> acquire_writa
 bool is_writable_stream_locked(WritableStream const&);
 WebIDL::ExceptionOr<void> set_up_writable_stream_default_writer(WritableStreamDefaultWriter&, WritableStream&);
 JS::NonnullGCPtr<WebIDL::Promise> writable_stream_abort(WritableStream&, JS::Value reason);
-WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> writable_stream_close(WritableStream&);
+JS::NonnullGCPtr<WebIDL::Promise> writable_stream_close(WritableStream&);
 
 JS::NonnullGCPtr<WebIDL::Promise> writable_stream_add_write_request(WritableStream&);
 bool writable_stream_close_queued_or_in_flight(WritableStream const&);
@@ -143,7 +143,7 @@ void writable_stream_start_erroring(WritableStream&, JS::Value reason);
 void writable_stream_update_backpressure(WritableStream&, bool backpressure);
 
 JS::NonnullGCPtr<WebIDL::Promise> writable_stream_default_writer_abort(WritableStreamDefaultWriter&, JS::Value reason);
-WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> writable_stream_default_writer_close(WritableStreamDefaultWriter&);
+JS::NonnullGCPtr<WebIDL::Promise> writable_stream_default_writer_close(WritableStreamDefaultWriter&);
 void writable_stream_default_writer_ensure_closed_promise_rejected(WritableStreamDefaultWriter&, JS::Value error);
 void writable_stream_default_writer_ensure_ready_promise_rejected(WritableStreamDefaultWriter&, JS::Value error);
 Optional<double> writable_stream_default_writer_get_desired_size(WritableStreamDefaultWriter const&);
@@ -154,7 +154,7 @@ WebIDL::ExceptionOr<void> set_up_writable_stream_default_controller(WritableStre
 WebIDL::ExceptionOr<void> set_up_writable_stream_default_controller_from_underlying_sink(WritableStream&, JS::Value underlying_sink_value, UnderlyingSink&, double high_water_mark, JS::NonnullGCPtr<SizeAlgorithm> size_algorithm);
 void writable_stream_default_controller_advance_queue_if_needed(WritableStreamDefaultController&);
 void writable_stream_default_controller_clear_algorithms(WritableStreamDefaultController&);
-WebIDL::ExceptionOr<void> writable_stream_default_controller_close(WritableStreamDefaultController&);
+void writable_stream_default_controller_close(WritableStreamDefaultController&);
 void writable_stream_default_controller_error(WritableStreamDefaultController&, JS::Value error);
 void writable_stream_default_controller_error_if_needed(WritableStreamDefaultController&, JS::Value error);
 bool writable_stream_default_controller_get_backpressure(WritableStreamDefaultController const&);
@@ -164,21 +164,21 @@ void writable_stream_default_controller_process_close(WritableStreamDefaultContr
 void writable_stream_default_controller_process_write(WritableStreamDefaultController&, JS::Value chunk);
 void writable_stream_default_controller_write(WritableStreamDefaultController&, JS::Value chunk, JS::Value chunk_size);
 
-WebIDL::ExceptionOr<void> initialize_transform_stream(TransformStream&, JS::NonnullGCPtr<JS::PromiseCapability> start_promise, double writable_high_water_mark, JS::NonnullGCPtr<SizeAlgorithm> writable_size_algorithm, double readable_high_water_mark, JS::NonnullGCPtr<SizeAlgorithm> readable_size_algorithm);
+void initialize_transform_stream(TransformStream&, JS::NonnullGCPtr<JS::PromiseCapability> start_promise, double writable_high_water_mark, JS::NonnullGCPtr<SizeAlgorithm> writable_size_algorithm, double readable_high_water_mark, JS::NonnullGCPtr<SizeAlgorithm> readable_size_algorithm);
 void set_up_transform_stream_default_controller(TransformStream&, TransformStreamDefaultController&, JS::NonnullGCPtr<TransformAlgorithm>, JS::NonnullGCPtr<FlushAlgorithm>);
 WebIDL::ExceptionOr<void> set_up_transform_stream_default_controller_from_transformer(TransformStream&, JS::Value transformer, Transformer&);
 void transform_stream_default_controller_clear_algorithms(TransformStreamDefaultController&);
 WebIDL::ExceptionOr<void> transform_stream_default_controller_enqueue(TransformStreamDefaultController&, JS::Value chunk);
-WebIDL::ExceptionOr<void> transform_stream_default_controller_error(TransformStreamDefaultController&, JS::Value error);
-WebIDL::ExceptionOr<void> transform_stream_default_controller_terminate(TransformStreamDefaultController&);
+void transform_stream_default_controller_error(TransformStreamDefaultController&, JS::Value error);
+void transform_stream_default_controller_terminate(TransformStreamDefaultController&);
 JS::NonnullGCPtr<WebIDL::Promise> transform_stream_default_controller_perform_transform(TransformStreamDefaultController&, JS::Value chunk);
-WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> transform_stream_default_sink_abort_algorithm(TransformStream&, JS::Value reason);
+JS::NonnullGCPtr<WebIDL::Promise> transform_stream_default_sink_abort_algorithm(TransformStream&, JS::Value reason);
 JS::NonnullGCPtr<WebIDL::Promise> transform_stream_default_sink_close_algorithm(TransformStream&);
 JS::NonnullGCPtr<WebIDL::Promise> transform_stream_default_sink_write_algorithm(TransformStream&, JS::Value chunk);
-WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> transform_stream_default_source_pull_algorithm(TransformStream&);
-WebIDL::ExceptionOr<void> transform_stream_error(TransformStream&, JS::Value error);
-WebIDL::ExceptionOr<void> transform_stream_error_writable_and_unblock_write(TransformStream&, JS::Value error);
-WebIDL::ExceptionOr<void> transform_stream_set_backpressure(TransformStream&, bool backpressure);
+JS::NonnullGCPtr<WebIDL::Promise> transform_stream_default_source_pull_algorithm(TransformStream&);
+void transform_stream_error(TransformStream&, JS::Value error);
+void transform_stream_error_writable_and_unblock_write(TransformStream&, JS::Value error);
+void transform_stream_set_backpressure(TransformStream&, bool backpressure);
 
 bool is_non_negative_number(JS::Value);
 bool can_transfer_array_buffer(JS::ArrayBuffer const& array_buffer);

@@ -56,21 +56,17 @@ WebIDL::ExceptionOr<void> TransformStreamDefaultController::enqueue(Optional<JS:
 }
 
 // https://streams.spec.whatwg.org/#ts-default-controller-error
-WebIDL::ExceptionOr<void> TransformStreamDefaultController::error(Optional<JS::Value> reason)
+void TransformStreamDefaultController::error(Optional<JS::Value> reason)
 {
     // 1. Perform ? TransformStreamDefaultControllerError(this, e).
-    TRY(transform_stream_default_controller_error(*this, reason.has_value() ? reason.value() : JS::js_undefined()));
-
-    return {};
+    transform_stream_default_controller_error(*this, reason.has_value() ? reason.value() : JS::js_undefined());
 }
 
 // https://streams.spec.whatwg.org/#ts-default-controller-terminate
-WebIDL::ExceptionOr<void> TransformStreamDefaultController::terminate()
+void TransformStreamDefaultController::terminate()
 {
     // 1. Perform ? TransformStreamDefaultControllerTerminate(this).
-    TRY(transform_stream_default_controller_terminate(*this));
-
-    return {};
+    transform_stream_default_controller_terminate(*this);
 }
 
 }

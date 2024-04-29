@@ -49,12 +49,12 @@ WebIDL::ExceptionOr<Infrastructure::BodyWithType> extract_body(JS::Realm& realm,
     }
     // 3. Otherwise, if object is a Blob object, set stream to the result of running object’s get stream.
     else if (auto const* blob_handle = object.get_pointer<JS::Handle<FileAPI::Blob>>()) {
-        stream = TRY(blob_handle->cell()->get_stream());
+        stream = blob_handle->cell()->get_stream();
     }
     // 4. Otherwise, set stream to a new ReadableStream object, and set up stream with byte reading support.
     else {
         stream = realm.heap().allocate<Streams::ReadableStream>(realm, realm);
-        TRY(Streams::set_up_readable_stream_controller_with_byte_reading_support(*stream));
+        Streams::set_up_readable_stream_controller_with_byte_reading_support(*stream);
     }
 
     // 5. Assert: stream is a ReadableStream object.

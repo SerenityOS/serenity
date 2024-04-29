@@ -288,14 +288,14 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Blob>> Blob::slice(Optional<i64> start, Opt
 }
 
 // https://w3c.github.io/FileAPI/#dom-blob-stream
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Streams::ReadableStream>> Blob::stream()
+JS::NonnullGCPtr<Streams::ReadableStream> Blob::stream()
 {
     // The stream() method, when invoked, must return the result of calling get stream on this.
-    return this->get_stream();
+    return get_stream();
 }
 
 // https://w3c.github.io/FileAPI/#blob-get-stream
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Streams::ReadableStream>> Blob::get_stream()
+JS::NonnullGCPtr<Streams::ReadableStream> Blob::get_stream()
 {
     auto& realm = this->realm();
 
@@ -303,7 +303,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Streams::ReadableStream>> Blob::get_stream(
     auto stream = realm.heap().allocate<Streams::ReadableStream>(realm, realm);
 
     // 2. Set up stream with byte reading support.
-    TRY(set_up_readable_stream_controller_with_byte_reading_support(stream));
+    set_up_readable_stream_controller_with_byte_reading_support(stream);
 
     // FIXME: 3. Run the following steps in parallel:
     {
@@ -357,13 +357,13 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Streams::ReadableStream>> Blob::get_stream(
 }
 
 // https://w3c.github.io/FileAPI/#dom-blob-text
-WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> Blob::text()
+JS::NonnullGCPtr<JS::Promise> Blob::text()
 {
     auto& realm = this->realm();
     auto& vm = realm.vm();
 
     // 1. Let stream be the result of calling get stream on this.
-    auto stream = TRY(this->get_stream());
+    auto stream = get_stream();
 
     // 2. Let reader be the result of getting a reader from stream. If that threw an exception, return a new promise rejected with that exception.
     auto reader_or_exception = acquire_readable_stream_default_reader(*stream);
@@ -387,12 +387,12 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> Blob::text()
 }
 
 // https://w3c.github.io/FileAPI/#dom-blob-arraybuffer
-WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> Blob::array_buffer()
+JS::NonnullGCPtr<JS::Promise> Blob::array_buffer()
 {
     auto& realm = this->realm();
 
     // 1. Let stream be the result of calling get stream on this.
-    auto stream = TRY(this->get_stream());
+    auto stream = get_stream();
 
     // 2. Let reader be the result of getting a reader from stream. If that threw an exception, return a new promise rejected with that exception.
     auto reader_or_exception = acquire_readable_stream_default_reader(*stream);
