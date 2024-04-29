@@ -2490,7 +2490,7 @@ WebIDL::ExceptionOr<void> set_up_readable_stream_default_controller_from_underly
     // 6. If underlyingSourceDict["pull"] exists, then set pullAlgorithm to an algorithm which returns the result of invoking underlyingSourceDict["pull"] with argument list « controller » and callback this value underlyingSource.
     if (underlying_source.pull) {
         pull_algorithm = JS::create_heap_function(realm.heap(), [&realm, controller, underlying_source_value, callback = underlying_source.pull]() -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
-            // Note: callback return a promise, so invoke_callback will never return an abrupt completion
+            // Note: callback returns a promise, so invoke_callback will never return an abrupt completion
             auto result = MUST_OR_THROW_OOM(WebIDL::invoke_callback(*callback, underlying_source_value, controller)).release_value();
             return WebIDL::create_resolved_promise(realm, result);
         });
@@ -2499,7 +2499,7 @@ WebIDL::ExceptionOr<void> set_up_readable_stream_default_controller_from_underly
     // 7. If underlyingSourceDict["cancel"] exists, then set cancelAlgorithm to an algorithm which takes an argument reason and returns the result of invoking underlyingSourceDict["cancel"] with argument list « reason » and callback this value underlyingSource.
     if (underlying_source.cancel) {
         cancel_algorithm = JS::create_heap_function(realm.heap(), [&realm, underlying_source_value, callback = underlying_source.cancel](JS::Value reason) -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
-            // Note: callback return a promise, so invoke_callback will never return an abrupt completion
+            // Note: callback returns a promise, so invoke_callback will never return an abrupt completion
             auto result = MUST_OR_THROW_OOM(WebIDL::invoke_callback(*callback, underlying_source_value, reason)).release_value();
             return WebIDL::create_resolved_promise(realm, result);
         });
@@ -4238,7 +4238,7 @@ WebIDL::ExceptionOr<void> set_up_writable_stream_default_controller_from_underly
     // 7. If underlyingSinkDict["write"] exists, then set writeAlgorithm to an algorithm which takes an argument chunk and returns the result of invoking underlyingSinkDict["write"] with argument list « chunk, controller » and callback this value underlyingSink.
     if (underlying_sink.write) {
         write_algorithm = JS::create_heap_function(realm.heap(), [&realm, controller, underlying_sink_value, callback = underlying_sink.write](JS::Value chunk) -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
-            // Note: callback return a promise, so invoke_callback will never return an abrupt completion
+            // Note: callback returns a promise, so invoke_callback will never return an abrupt completion
             auto result = MUST_OR_THROW_OOM(WebIDL::invoke_callback(*callback, underlying_sink_value, chunk, controller)).release_value();
             return WebIDL::create_resolved_promise(realm, result);
         });
@@ -4247,7 +4247,7 @@ WebIDL::ExceptionOr<void> set_up_writable_stream_default_controller_from_underly
     // 8. If underlyingSinkDict["close"] exists, then set closeAlgorithm to an algorithm which returns the result of invoking underlyingSinkDict["close"] with argument list «» and callback this value underlyingSink.
     if (underlying_sink.close) {
         close_algorithm = JS::create_heap_function(realm.heap(), [&realm, underlying_sink_value, callback = underlying_sink.close]() -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
-            // Note: callback return a promise, so invoke_callback will never return an abrupt completion
+            // Note: callback returns a promise, so invoke_callback will never return an abrupt completion
             auto result = MUST_OR_THROW_OOM(WebIDL::invoke_callback(*callback, underlying_sink_value)).release_value();
             return WebIDL::create_resolved_promise(realm, result);
         });
@@ -4256,7 +4256,7 @@ WebIDL::ExceptionOr<void> set_up_writable_stream_default_controller_from_underly
     // 9. If underlyingSinkDict["abort"] exists, then set abortAlgorithm to an algorithm which takes an argument reason and returns the result of invoking underlyingSinkDict["abort"] with argument list « reason » and callback this value underlyingSink.
     if (underlying_sink.abort) {
         abort_algorithm = JS::create_heap_function(realm.heap(), [&realm, underlying_sink_value, callback = underlying_sink.abort](JS::Value reason) -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
-            // Note: callback return a promise, so invoke_callback will never return an abrupt completion
+            // Note: callback returns a promise, so invoke_callback will never return an abrupt completion
             auto result = MUST_OR_THROW_OOM(WebIDL::invoke_callback(*callback, underlying_sink_value, reason)).release_value();
             return WebIDL::create_resolved_promise(realm, result);
         });
@@ -5099,7 +5099,7 @@ WebIDL::ExceptionOr<void> set_up_readable_byte_stream_controller_from_underlying
     // 6. If underlyingSourceDict["pull"] exists, then set pullAlgorithm to an algorithm which returns the result of invoking underlyingSourceDict["pull"] with argument list « controller » and callback this value underlyingSource.
     if (underlying_source_dict.pull) {
         pull_algorithm = JS::create_heap_function(realm.heap(), [&realm, controller, underlying_source, callback = underlying_source_dict.pull]() -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
-            // Note: callback return a promise, so invoke_callback will never return an abrupt completion
+            // Note: callback returns a promise, so invoke_callback will never return an abrupt completion
             auto result = MUST_OR_THROW_OOM(WebIDL::invoke_callback(*callback, underlying_source, controller)).release_value();
             return WebIDL::create_resolved_promise(realm, result);
         });
@@ -5108,7 +5108,7 @@ WebIDL::ExceptionOr<void> set_up_readable_byte_stream_controller_from_underlying
     // 7. If underlyingSourceDict["cancel"] exists, then set cancelAlgorithm to an algorithm which takes an argument reason and returns the result of invoking underlyingSourceDict["cancel"] with argument list « reason » and callback this value underlyingSource.
     if (underlying_source_dict.cancel) {
         cancel_algorithm = JS::create_heap_function(realm.heap(), [&realm, underlying_source, callback = underlying_source_dict.cancel](JS::Value reason) -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
-            // Note: callback return a promise, so invoke_callback will never return an abrupt completion
+            // Note: callback returns a promise, so invoke_callback will never return an abrupt completion
             auto result = MUST_OR_THROW_OOM(WebIDL::invoke_callback(*callback, underlying_source, reason)).release_value();
             return WebIDL::create_resolved_promise(realm, result);
         });
