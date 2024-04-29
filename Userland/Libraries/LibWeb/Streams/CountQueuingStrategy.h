@@ -20,7 +20,7 @@ class CountQueuingStrategy final : public Bindings::PlatformObject {
     JS_DECLARE_ALLOCATOR(CountQueuingStrategy);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<CountQueuingStrategy>> construct_impl(JS::Realm&, QueuingStrategyInit const&);
+    static JS::NonnullGCPtr<CountQueuingStrategy> construct_impl(JS::Realm&, QueuingStrategyInit const&);
 
     virtual ~CountQueuingStrategy() override;
 
@@ -32,7 +32,7 @@ public:
         return m_high_water_mark;
     }
 
-    WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::CallbackType>> size();
+    JS::NonnullGCPtr<WebIDL::CallbackType> size();
 
 private:
     explicit CountQueuingStrategy(JS::Realm&, double high_water_mark);

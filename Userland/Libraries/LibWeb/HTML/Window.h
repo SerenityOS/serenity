@@ -127,8 +127,8 @@ public:
     CrossOriginPropertyDescriptorMap const& cross_origin_property_descriptor_map() const { return m_cross_origin_property_descriptor_map; }
     CrossOriginPropertyDescriptorMap& cross_origin_property_descriptor_map() { return m_cross_origin_property_descriptor_map; }
 
-    WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::CallbackType>> count_queuing_strategy_size_function();
-    WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::CallbackType>> byte_length_queuing_strategy_size_function();
+    JS::NonnullGCPtr<WebIDL::CallbackType> count_queuing_strategy_size_function();
+    JS::NonnullGCPtr<WebIDL::CallbackType> byte_length_queuing_strategy_size_function();
 
     // JS API functions
     JS::NonnullGCPtr<WindowProxy> window() const;

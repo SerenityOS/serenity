@@ -152,7 +152,7 @@ private:
 JS_DEFINE_ALLOCATOR(DefaultReaderReadRequest);
 
 // https://streams.spec.whatwg.org/#default-reader-read
-WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> ReadableStreamDefaultReader::read()
+JS::NonnullGCPtr<JS::Promise> ReadableStreamDefaultReader::read()
 {
     auto& realm = this->realm();
 

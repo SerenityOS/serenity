@@ -73,7 +73,7 @@ public:
 
     virtual ~ReadableStreamDefaultReader() override = default;
 
-    WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> read();
+    JS::NonnullGCPtr<JS::Promise> read();
 
     void read_all_bytes(ReadLoopReadRequest::SuccessSteps, ReadLoopReadRequest::FailureSteps);
     JS::NonnullGCPtr<WebIDL::Promise> read_all_bytes_deprecated();
