@@ -1622,7 +1622,7 @@ ErrorOr<void> mknod(StringView pathname, mode_t mode, dev_t dev)
         return Error::from_syscall("mknod"sv, -EFAULT);
 
 #ifdef AK_OS_SERENITY
-    Syscall::SC_mknod_params params { { pathname.characters_without_null_termination(), pathname.length() }, mode, dev };
+    Syscall::SC_mknod_params params { { pathname.characters_without_null_termination(), pathname.length() }, mode, dev, AT_FDCWD };
     int rc = syscall(SC_mknod, &params);
     HANDLE_SYSCALL_RETURN_VALUE("mknod", rc, {});
 #else

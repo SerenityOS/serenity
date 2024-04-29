@@ -417,6 +417,7 @@ struct SC_mknod_params {
     StringArgument path;
     u16 mode;
     dev_t dev;
+    int dirfd;
 };
 
 struct SC_symlink_params {
