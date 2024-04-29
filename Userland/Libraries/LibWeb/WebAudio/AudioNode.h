@@ -42,8 +42,13 @@ public:
     void disconnect(JS::NonnullGCPtr<AudioParam> destination_param, WebIDL::UnsignedLong output);
 
 protected:
+    AudioNode(JS::Realm&, JS::NonnullGCPtr<BaseAudioContext>);
+
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
+
+private:
+    JS::NonnullGCPtr<BaseAudioContext> m_context;
 };
 
 }

@@ -25,6 +25,8 @@ public:
     WebIDL::ExceptionOr<void> stop(double when = 0);
 
 protected:
+    AudioScheduledSourceNode(JS::Realm&, JS::NonnullGCPtr<BaseAudioContext>);
+
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 };

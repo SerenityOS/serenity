@@ -13,6 +13,11 @@ namespace Web::WebAudio {
 
 JS_DEFINE_ALLOCATOR(AudioScheduledSourceNode);
 
+AudioScheduledSourceNode::AudioScheduledSourceNode(JS::Realm& realm, JS::NonnullGCPtr<BaseAudioContext> context)
+    : AudioNode(realm, context)
+{
+}
+
 AudioScheduledSourceNode::~AudioScheduledSourceNode() = default;
 
 // https://webaudio.github.io/web-audio-api/#dom-audioscheduledsourcenode-onended
