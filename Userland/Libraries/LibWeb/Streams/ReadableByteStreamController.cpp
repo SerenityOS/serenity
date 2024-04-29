@@ -91,7 +91,7 @@ WebIDL::ExceptionOr<void> ReadableByteStreamController::enqueue(JS::Handle<WebID
 }
 
 // https://streams.spec.whatwg.org/#rbs-controller-private-cancel
-WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> ReadableByteStreamController::cancel_steps(JS::Value reason)
+JS::NonnullGCPtr<WebIDL::Promise> ReadableByteStreamController::cancel_steps(JS::Value reason)
 {
     // 1. Perform ! ReadableByteStreamControllerClearPendingPullIntos(this).
     readable_byte_stream_controller_clear_pending_pull_intos(*this);
@@ -110,7 +110,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> ReadableByteStreamControl
 }
 
 // https://streams.spec.whatwg.org/#rbs-controller-private-pull
-WebIDL::ExceptionOr<void> ReadableByteStreamController::pull_steps(JS::NonnullGCPtr<ReadRequest> read_request)
+void ReadableByteStreamController::pull_steps(JS::NonnullGCPtr<ReadRequest> read_request)
 {
     auto& realm = this->realm();
 
@@ -128,7 +128,7 @@ WebIDL::ExceptionOr<void> ReadableByteStreamController::pull_steps(JS::NonnullGC
         readable_byte_stream_controller_fill_read_request_from_queue(*this, read_request);
 
         // 3. Return.
-        return {};
+        return;
     }
 
     // 4. Let autoAllocateChunkSize be this.[[autoAllocateChunkSize]].
@@ -144,7 +144,7 @@ WebIDL::ExceptionOr<void> ReadableByteStreamController::pull_steps(JS::NonnullGC
             read_request->on_error(*buffer.throw_completion().value());
 
             // 2. Return.
-            return {};
+            return;
         }
 
         // 3. Let pullIntoDescriptor be a new pull-into descriptor with buffer buffer.[[Value]], buffer byte length autoAllocateChunkSize, byte offset 0,
@@ -169,12 +169,10 @@ WebIDL::ExceptionOr<void> ReadableByteStreamController::pull_steps(JS::NonnullGC
 
     // 7. Perform ! ReadableByteStreamControllerCallPullIfNeeded(this).
     readable_byte_stream_controller_call_pull_if_needed(*this);
-
-    return {};
 }
 
 // https://streams.spec.whatwg.org/#rbs-controller-private-pull
-WebIDL::ExceptionOr<void> ReadableByteStreamController::release_steps()
+void ReadableByteStreamController::release_steps()
 {
     // 1. If this.[[pendingPullIntos]] is not empty,
     if (!m_pending_pull_intos.is_empty()) {
@@ -188,8 +186,6 @@ WebIDL::ExceptionOr<void> ReadableByteStreamController::release_steps()
         m_pending_pull_intos.clear();
         m_pending_pull_intos.append(first_pending_pull_into);
     }
-
-    return {};
 }
 
 void ReadableByteStreamController::visit_edges(Cell::Visitor& visitor)

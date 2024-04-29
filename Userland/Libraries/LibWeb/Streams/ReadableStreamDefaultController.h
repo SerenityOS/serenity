@@ -64,9 +64,9 @@ public:
     JS::GCPtr<ReadableStream> stream() { return m_stream; }
     void set_stream(JS::GCPtr<ReadableStream> value) { m_stream = value; }
 
-    WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> cancel_steps(JS::Value reason);
-    WebIDL::ExceptionOr<void> pull_steps(ReadRequest&);
-    WebIDL::ExceptionOr<void> release_steps();
+    JS::NonnullGCPtr<WebIDL::Promise> cancel_steps(JS::Value reason);
+    void pull_steps(ReadRequest&);
+    void release_steps();
 
 private:
     virtual void initialize(JS::Realm&) override;

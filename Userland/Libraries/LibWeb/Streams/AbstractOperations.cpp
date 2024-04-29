@@ -86,7 +86,7 @@ bool is_readable_stream_locked(ReadableStream const& stream)
 }
 
 // https://streams.spec.whatwg.org/#readable-stream-cancel
-WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> readable_stream_cancel(ReadableStream& stream, JS::Value reason)
+JS::NonnullGCPtr<WebIDL::Promise> readable_stream_cancel(ReadableStream& stream, JS::Value reason)
 {
     auto& realm = stream.realm();
 
@@ -121,9 +121,9 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> readable_stream_cancel(Re
     }
 
     // 7. Let sourceCancelPromise be ! stream.[[controller]].[[CancelSteps]](reason).
-    auto source_cancel_promise = TRY(stream.controller()->visit([&](auto const& controller) {
+    auto source_cancel_promise = stream.controller()->visit([&](auto const& controller) {
         return controller->cancel_steps(reason);
-    }));
+    });
 
     // 8. Return the result of reacting to sourceCancelPromise with a fulfillment step that returns undefined.
     auto react_result = WebIDL::react_to_promise(*source_cancel_promise,
@@ -242,7 +242,7 @@ bool readable_stream_has_default_reader(ReadableStream const& stream)
 }
 
 // https://streams.spec.whatwg.org/#readable-stream-pipe-to
-WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> readable_stream_pipe_to(ReadableStream& source, WritableStream& dest, bool, bool, bool, Optional<JS::Value> signal)
+JS::NonnullGCPtr<WebIDL::Promise> readable_stream_pipe_to(ReadableStream& source, WritableStream& dest, bool, bool, bool, Optional<JS::Value> signal)
 {
     auto& realm = source.realm();
 
@@ -319,7 +319,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> readable_stream_pipe_to(R
         WebIDL::reject_promise(realm, promise, error);
     };
 
-    TRY(reader->read_all_bytes(move(success_steps), move(failure_steps)));
+    reader->read_all_bytes(move(success_steps), move(failure_steps));
 
     // 16. Return promise.
     return promise;
@@ -420,7 +420,7 @@ public:
                     readable_stream_default_controller_error(controller2, completion.value().value());
 
                     // 3. Resolve cancelPromise with ! ReadableStreamCancel(stream, cloneResult.[[Value]]).
-                    auto cancel_result = MUST(readable_stream_cancel(m_stream, completion.value().value()));
+                    auto cancel_result = readable_stream_cancel(m_stream, completion.value().value());
                     JS::NonnullGCPtr cancel_value = verify_cast<JS::Promise>(*cancel_result->promise().ptr());
 
                     WebIDL::resolve_promise(m_realm, m_cancel_promise, cancel_value);
@@ -548,7 +548,7 @@ WebIDL::ExceptionOr<ReadableStreamPair> readable_stream_default_tee(JS::Realm& r
         auto read_request = realm.heap().allocate_without_realm<DefaultStreamTeeReadRequest>(realm, stream, params, cancel_promise, clone_for_branch2);
 
         // 4. Perform ! ReadableStreamDefaultReaderRead(reader, readRequest).
-        MUST(readable_stream_default_reader_read(reader, read_request));
+        readable_stream_default_reader_read(reader, read_request);
 
         // 5. Return a promise resolved with undefined.
         return WebIDL::create_resolved_promise(realm, JS::js_undefined());
@@ -571,7 +571,7 @@ WebIDL::ExceptionOr<ReadableStreamPair> readable_stream_default_tee(JS::Realm& r
             auto composite_reason = JS::Array::create_from(realm, AK::Array { params->reason1, params->reason2 });
 
             // 2. Let cancelResult be ! ReadableStreamCancel(stream, compositeReason).
-            auto cancel_result = MUST(readable_stream_cancel(stream, composite_reason));
+            auto cancel_result = readable_stream_cancel(stream, composite_reason);
 
             // 3. Resolve cancelPromise with cancelResult.
             JS::NonnullGCPtr cancel_value = verify_cast<JS::Promise>(*cancel_result->promise().ptr());
@@ -596,7 +596,7 @@ WebIDL::ExceptionOr<ReadableStreamPair> readable_stream_default_tee(JS::Realm& r
             auto composite_reason = JS::Array::create_from(realm, AK::Array { params->reason1, params->reason2 });
 
             // 2. Let cancelResult be ! ReadableStreamCancel(stream, compositeReason).
-            auto cancel_result = MUST(readable_stream_cancel(stream, composite_reason));
+            auto cancel_result = readable_stream_cancel(stream, composite_reason);
 
             // 3. Resolve cancelPromise with cancelResult.
             JS::NonnullGCPtr cancel_value = verify_cast<JS::Promise>(*cancel_result->promise().ptr());
@@ -733,7 +733,7 @@ public:
                     readable_byte_stream_controller_error(controller2, completion.value().value());
 
                     // 3. Resolve cancelPromise with ! ReadableStreamCancel(stream, cloneResult.[[Value]]).
-                    auto cancel_result = MUST(readable_stream_cancel(m_stream, completion.value().value()));
+                    auto cancel_result = readable_stream_cancel(m_stream, completion.value().value());
                     JS::NonnullGCPtr cancel_value = verify_cast<JS::Promise>(*cancel_result->promise().ptr());
 
                     WebIDL::resolve_promise(m_realm, m_cancel_promise, cancel_value);
@@ -898,7 +898,7 @@ public:
                     readable_byte_stream_controller_error(other_controller, completion.value().value());
 
                     // 3. Resolve cancelPromise with ! ReadableStreamCancel(stream, cloneResult.[[Value]]).
-                    auto cancel_result = MUST(readable_stream_cancel(m_stream, completion.value().value()));
+                    auto cancel_result = readable_stream_cancel(m_stream, completion.value().value());
                     JS::NonnullGCPtr cancel_value = verify_cast<JS::Promise>(*cancel_result->promise().ptr());
 
                     WebIDL::resolve_promise(m_realm, m_cancel_promise, cancel_value);
@@ -1093,7 +1093,7 @@ WebIDL::ExceptionOr<ReadableStreamPair> readable_byte_stream_tee(JS::Realm& real
         auto read_request = realm.heap().allocate_without_realm<ByteStreamTeeDefaultReadRequest>(realm, stream, params, cancel_promise);
 
         // 3. Perform ! ReadableStreamDefaultReaderRead(reader, readRequest).
-        MUST(readable_stream_default_reader_read(params->reader.get<JS::NonnullGCPtr<ReadableStreamDefaultReader>>(), read_request));
+        readable_stream_default_reader_read(params->reader.get<JS::NonnullGCPtr<ReadableStreamDefaultReader>>(), read_request);
     });
 
     // 16. Let pullWithBYOBReader be the following steps, given view and forBranch2:
@@ -1104,7 +1104,7 @@ WebIDL::ExceptionOr<ReadableStreamPair> readable_byte_stream_tee(JS::Realm& real
             VERIFY((*default_reader)->read_requests().is_empty());
 
             // 3. Perform ! ReadableStreamDefaultReaderRelease(reader).
-            MUST(readable_stream_default_reader_release(*default_reader));
+            readable_stream_default_reader_release(*default_reader);
 
             // 4. Set reader to ! AcquireReadableStreamBYOBReader(stream).
             params->reader = MUST(acquire_readable_stream_byob_reader(stream));
@@ -1208,7 +1208,7 @@ WebIDL::ExceptionOr<ReadableStreamPair> readable_byte_stream_tee(JS::Realm& real
             auto composite_reason = JS::Array::create_from(realm, AK::Array { params->reason1, params->reason2 });
 
             // 2. Let cancelResult be ! ReadableStreamCancel(stream, compositeReason).
-            auto cancel_result = MUST(readable_stream_cancel(stream, composite_reason));
+            auto cancel_result = readable_stream_cancel(stream, composite_reason);
 
             // 3. Resolve cancelPromise with cancelResult.
             JS::NonnullGCPtr cancel_value = verify_cast<JS::Promise>(*cancel_result->promise().ptr());
@@ -1233,7 +1233,7 @@ WebIDL::ExceptionOr<ReadableStreamPair> readable_byte_stream_tee(JS::Realm& real
             auto composite_reason = JS::Array::create_from(realm, AK::Array { params->reason1, params->reason2 });
 
             // 2. Let cancelResult be ! ReadableStreamCancel(stream, compositeReason).
-            auto cancel_result = MUST(readable_stream_cancel(stream, composite_reason));
+            auto cancel_result = readable_stream_cancel(stream, composite_reason);
 
             // 3. Resolve cancelPromise with cancelResult.
             JS::NonnullGCPtr cancel_value = verify_cast<JS::Promise>(*cancel_result->promise().ptr());
@@ -1401,7 +1401,7 @@ void readable_stream_add_read_into_request(ReadableStream& stream, JS::NonnullGC
 }
 
 // https://streams.spec.whatwg.org/#readable-stream-reader-generic-cancel
-WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> readable_stream_reader_generic_cancel(ReadableStreamGenericReaderMixin& reader, JS::Value reason)
+JS::NonnullGCPtr<WebIDL::Promise> readable_stream_reader_generic_cancel(ReadableStreamGenericReaderMixin& reader, JS::Value reason)
 {
     // 1. Let stream be reader.[[stream]]
     auto stream = reader.stream();
@@ -1410,7 +1410,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> readable_stream_reader_ge
     VERIFY(stream);
 
     // 3. Return ! ReadableStreamCancel(stream, reason)
-    return TRY(readable_stream_cancel(*stream, reason));
+    return readable_stream_cancel(*stream, reason);
 }
 
 // https://streams.spec.whatwg.org/#readable-stream-reader-generic-initialize
@@ -1451,7 +1451,7 @@ void readable_stream_reader_generic_initialize(ReadableStreamReader reader, Read
 }
 
 // https://streams.spec.whatwg.org/#readable-stream-reader-generic-release
-WebIDL::ExceptionOr<void> readable_stream_reader_generic_release(ReadableStreamGenericReaderMixin& reader)
+void readable_stream_reader_generic_release(ReadableStreamGenericReaderMixin& reader)
 {
     // 1. Let stream be reader.[[stream]].
     auto stream = reader.stream();
@@ -1478,15 +1478,13 @@ WebIDL::ExceptionOr<void> readable_stream_reader_generic_release(ReadableStreamG
     WebIDL::mark_promise_as_handled(*reader.closed_promise_capability());
 
     // 7. Perform ! stream.[[controller]].[[ReleaseSteps]]().
-    TRY(stream->controller()->visit([](auto const& controller) { return controller->release_steps(); }));
+    stream->controller()->visit([](auto const& controller) { return controller->release_steps(); });
 
     // 8. Set stream.[[reader]] to undefined.
     stream->set_reader({});
 
     // 9. Set reader.[[stream]] to undefined.
     reader.set_stream({});
-
-    return {};
 }
 
 // https://streams.spec.whatwg.org/#abstract-opdef-readablestreamdefaultreadererrorreadrequests
@@ -1626,7 +1624,7 @@ bool readable_byte_stream_controller_fill_pull_into_descriptor_from_queue(Readab
 }
 
 // https://streams.spec.whatwg.org/#readable-stream-default-reader-read
-WebIDL::ExceptionOr<void> readable_stream_default_reader_read(ReadableStreamDefaultReader& reader, ReadRequest& read_request)
+void readable_stream_default_reader_read(ReadableStreamDefaultReader& reader, ReadRequest& read_request)
 {
     // 1. Let stream be reader.[[stream]].
     auto stream = reader.stream();
@@ -1651,12 +1649,10 @@ WebIDL::ExceptionOr<void> readable_stream_default_reader_read(ReadableStreamDefa
         VERIFY(stream->is_readable());
 
         // 2. Perform ! stream.[[controller]].[[PullSteps]](readRequest).
-        TRY(stream->controller()->visit([&](auto const& controller) {
+        stream->controller()->visit([&](auto const& controller) {
             return controller->pull_steps(read_request);
-        }));
+        });
     }
-
-    return {};
 }
 
 // https://streams.spec.whatwg.org/#readable-byte-stream-controller-convert-pull-into-descriptor
@@ -1841,20 +1837,18 @@ void readable_stream_byob_reader_read(ReadableStreamBYOBReader& reader, WebIDL::
 }
 
 // https://streams.spec.whatwg.org/#abstract-opdef-readablestreamdefaultreaderrelease
-WebIDL::ExceptionOr<void> readable_stream_default_reader_release(ReadableStreamDefaultReader& reader)
+void readable_stream_default_reader_release(ReadableStreamDefaultReader& reader)
 {
     auto& realm = reader.realm();
 
     // 1. Perform ! ReadableStreamReaderGenericRelease(reader).
-    TRY(readable_stream_reader_generic_release(reader));
+    readable_stream_reader_generic_release(reader);
 
     // 2. Let e be a new TypeError exception.
     auto exception = JS::TypeError::create(realm, "Reader has been released"sv);
 
     // 3. Perform ! ReadableStreamDefaultReaderErrorReadRequests(reader, e).
     readable_stream_default_reader_error_read_requests(reader, exception);
-
-    return {};
 }
 
 // https://streams.spec.whatwg.org/#abstract-opdef-readablestreambyobreaderrelease
@@ -1863,7 +1857,7 @@ void readable_stream_byob_reader_release(ReadableStreamBYOBReader& reader)
     auto& realm = reader.realm();
 
     // 1. Perform ! ReadableStreamReaderGenericRelease(reader).
-    MUST(readable_stream_reader_generic_release(reader));
+    readable_stream_reader_generic_release(reader);
 
     // 2. Let e be a new TypeError exception.
     auto exception = JS::TypeError::create(realm, "Reader has been released"sv);
