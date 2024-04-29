@@ -130,7 +130,7 @@ WebIDL::ExceptionOr<void> FileReader::read_operation(Blob& blob, Type type, Opti
     m_error = {};
 
     // 5. Let stream be the result of calling get stream on blob.
-    auto stream = TRY(blob.get_stream());
+    auto stream = blob.get_stream();
 
     // 6. Let reader be the result of getting a reader from stream.
     auto reader = TRY(acquire_readable_stream_default_reader(*stream));

@@ -52,7 +52,7 @@ JS::GCPtr<JS::Object> WritableStreamDefaultWriter::ready()
 }
 
 // https://streams.spec.whatwg.org/#default-writer-abort
-WebIDL::ExceptionOr<JS::GCPtr<JS::Object>> WritableStreamDefaultWriter::abort(JS::Value reason)
+JS::GCPtr<JS::Object> WritableStreamDefaultWriter::abort(JS::Value reason)
 {
     auto& realm = this->realm();
 
@@ -67,7 +67,7 @@ WebIDL::ExceptionOr<JS::GCPtr<JS::Object>> WritableStreamDefaultWriter::abort(JS
 }
 
 // https://streams.spec.whatwg.org/#default-writer-close
-WebIDL::ExceptionOr<JS::GCPtr<JS::Object>> WritableStreamDefaultWriter::close()
+JS::GCPtr<JS::Object> WritableStreamDefaultWriter::close()
 {
     auto& realm = this->realm();
 
@@ -86,7 +86,7 @@ WebIDL::ExceptionOr<JS::GCPtr<JS::Object>> WritableStreamDefaultWriter::close()
     }
 
     // 4. Return ! WritableStreamDefaultWriterClose(this).
-    return TRY(writable_stream_default_writer_close(*this))->promise();
+    return writable_stream_default_writer_close(*this)->promise();
 }
 
 // https://streams.spec.whatwg.org/#default-writer-release-lock
@@ -106,7 +106,7 @@ WebIDL::ExceptionOr<void> WritableStreamDefaultWriter::release_lock()
 }
 
 // https://streams.spec.whatwg.org/#default-writer-write
-WebIDL::ExceptionOr<JS::GCPtr<JS::Object>> WritableStreamDefaultWriter::write(JS::Value chunk)
+JS::GCPtr<JS::Object> WritableStreamDefaultWriter::write(JS::Value chunk)
 {
     auto& realm = this->realm();
 

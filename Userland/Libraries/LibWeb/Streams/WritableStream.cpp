@@ -58,7 +58,7 @@ bool WritableStream::locked() const
 }
 
 // https://streams.spec.whatwg.org/#ws-close
-WebIDL::ExceptionOr<JS::GCPtr<JS::Object>> WritableStream::close()
+JS::GCPtr<JS::Object> WritableStream::close()
 {
     auto& realm = this->realm();
 
@@ -75,7 +75,7 @@ WebIDL::ExceptionOr<JS::GCPtr<JS::Object>> WritableStream::close()
     }
 
     // 3. Return ! WritableStreamClose(this).
-    return TRY(writable_stream_close(*this))->promise();
+    return writable_stream_close(*this)->promise();
 }
 
 // https://streams.spec.whatwg.org/#ws-abort
