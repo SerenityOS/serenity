@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <Kernel/Devices/Storage/ATA/ATADevice.h>
+#include <Kernel/Devices/Storage/AHCI/ATADevice.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Locking/Mutex.h>
 
@@ -18,14 +18,14 @@ class ATADiskDevice final : public ATADevice {
     friend class DeviceManagement;
 
 public:
-    static NonnullLockRefPtr<ATADiskDevice> create(ATAController const&, ATADevice::Address, u16 capabilities, u16 logical_sector_size, u64 max_addressable_block);
+    static NonnullLockRefPtr<ATADiskDevice> create(AHCIController const&, ATA::Address, u16 capabilities, u16 logical_sector_size, u64 max_addressable_block);
     virtual ~ATADiskDevice() override;
 
     // ^StorageDevice
     virtual CommandSet command_set() const override { return CommandSet::ATA; }
 
 private:
-    ATADiskDevice(ATAController const&, Address, u16, u16, u64);
+    ATADiskDevice(AHCIController const&, ATA::Address, u16, u16, u64);
 
     // ^DiskDevice
     virtual StringView class_name() const override;

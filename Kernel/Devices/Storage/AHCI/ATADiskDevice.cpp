@@ -6,13 +6,13 @@
 
 #include <AK/StringView.h>
 #include <Kernel/Devices/DeviceManagement.h>
-#include <Kernel/Devices/Storage/ATA/ATADiskDevice.h>
+#include <Kernel/Devices/Storage/AHCI/ATADiskDevice.h>
 #include <Kernel/Devices/Storage/StorageManagement.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {
 
-NonnullLockRefPtr<ATADiskDevice> ATADiskDevice::create(ATAController const& controller, ATADevice::Address ata_address, u16 capabilities, u16 logical_sector_size, u64 max_addressable_block)
+NonnullLockRefPtr<ATADiskDevice> ATADiskDevice::create(AHCIController const& controller, ATA::Address ata_address, u16 capabilities, u16 logical_sector_size, u64 max_addressable_block)
 {
     auto disk_device_or_error = DeviceManagement::try_create_device<ATADiskDevice>(controller, ata_address, capabilities, logical_sector_size, max_addressable_block);
     // FIXME: Find a way to propagate errors
@@ -20,7 +20,7 @@ NonnullLockRefPtr<ATADiskDevice> ATADiskDevice::create(ATAController const& cont
     return disk_device_or_error.release_value();
 }
 
-ATADiskDevice::ATADiskDevice(ATAController const& controller, ATADevice::Address ata_address, u16 capabilities, u16 logical_sector_size, u64 max_addressable_block)
+ATADiskDevice::ATADiskDevice(AHCIController const& controller, ATA::Address ata_address, u16 capabilities, u16 logical_sector_size, u64 max_addressable_block)
     : ATADevice(controller, ata_address, capabilities, logical_sector_size, max_addressable_block)
 {
 }

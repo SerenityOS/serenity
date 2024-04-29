@@ -9,9 +9,8 @@
 
 #include <AK/Atomic.h>
 #include <Kernel/Arch/Delay.h>
-#include <Kernel/Devices/Storage/ATA/AHCI/Port.h>
-#include <Kernel/Devices/Storage/ATA/ATADiskDevice.h>
-#include <Kernel/Devices/Storage/ATA/Definitions.h>
+#include <Kernel/Devices/Storage/AHCI/ATADiskDevice.h>
+#include <Kernel/Devices/Storage/AHCI/Port.h>
 #include <Kernel/Devices/Storage/StorageManagement.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/MemoryManager.h>
@@ -181,14 +180,9 @@ void AHCIPort::recover_from_fatal_error()
 {
     MutexLocker locker(m_lock);
     SpinlockLocker lock(m_hard_lock);
-    LockRefPtr<AHCIController> controller = m_parent_controller.strong_ref();
-    if (!controller) {
-        dmesgln("AHCI Port {}: fatal error, controller not available", representative_port_index());
-        return;
-    }
 
-    dmesgln("{}: AHCI Port {} fatal error, shutting down!", controller->device_identifier().address(), representative_port_index());
-    dmesgln("{}: AHCI Port {} fatal error, SError {}", controller->device_identifier().address(), representative_port_index(), (u32)m_port_registers.serr);
+    dmesgln("{}: AHCI Port {} fatal error, shutting down!", m_parent_controller->device_identifier().address(), representative_port_index());
+    dmesgln("{}: AHCI Port {} fatal error, SError {}", m_parent_controller->device_identifier().address(), representative_port_index(), (u32)m_port_registers.serr);
     stop_command_list_processing();
     stop_fis_receiving();
     m_interrupt_enable.clear();
@@ -283,12 +277,7 @@ bool AHCIPort::initialize()
 
         // FIXME: We don't support ATAPI devices yet, so for now we don't "create" them
         if (!is_atapi_attached()) {
-            LockRefPtr<AHCIController> controller = m_parent_controller.strong_ref();
-            if (!controller) {
-                dmesgln("AHCI Port {}: Device found, but parent controller is not available, abort.", representative_port_index());
-                return false;
-            }
-            m_connected_device = ATADiskDevice::create(*controller, { m_port_index, 0 }, 0, logical_sector_size, max_addressable_sector);
+            m_connected_device = ATADiskDevice::create(*m_parent_controller, { m_port_index, 0 }, 0, logical_sector_size, max_addressable_sector);
         } else {
             dbgln("AHCI Port {}: Ignoring ATAPI devices as we don't support them.", representative_port_index());
         }
@@ -588,10 +577,6 @@ bool AHCIPort::identify_device()
     VERIFY(m_lock.is_locked());
     VERIFY(is_operable());
     if (!spin_until_ready())
-        return false;
-
-    LockRefPtr<AHCIController> controller = m_parent_controller.strong_ref();
-    if (!controller)
         return false;
 
     auto unused_command_header = try_to_find_unused_command_header();
