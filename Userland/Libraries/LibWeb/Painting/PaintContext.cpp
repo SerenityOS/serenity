@@ -9,10 +9,13 @@
 
 namespace Web {
 
+static u64 s_next_paint_generation_id = 0;
+
 PaintContext::PaintContext(Painting::RecordingPainter& recording_painter, Palette const& palette, double device_pixels_per_css_pixel)
     : m_recording_painter(recording_painter)
     , m_palette(palette)
     , m_device_pixels_per_css_pixel(device_pixels_per_css_pixel)
+    , m_paint_generation_id(s_next_paint_generation_id++)
 {
 }
 
