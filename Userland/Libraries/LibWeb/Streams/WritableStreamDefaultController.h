@@ -20,7 +20,7 @@ class WritableStreamDefaultController final : public Bindings::PlatformObject {
 public:
     virtual ~WritableStreamDefaultController() override = default;
 
-    WebIDL::ExceptionOr<void> error(JS::Value error);
+    void error(JS::Value error);
     JS::NonnullGCPtr<DOM::AbortSignal> signal() { return *m_signal; }
     void set_signal(JS::NonnullGCPtr<DOM::AbortSignal> value) { m_signal = value; }
 
@@ -50,7 +50,7 @@ public:
     JS::GCPtr<WriteAlgorithm> write_algorithm() { return m_write_algorithm; }
     void set_write_algorithm(JS::GCPtr<WriteAlgorithm> value) { m_write_algorithm = value; }
 
-    WebIDL::ExceptionOr<JS::GCPtr<WebIDL::Promise>> abort_steps(JS::Value reason);
+    JS::NonnullGCPtr<WebIDL::Promise> abort_steps(JS::Value reason);
     void error_steps();
 
 private:

@@ -63,7 +63,7 @@ WebIDL::ExceptionOr<JS::GCPtr<JS::Object>> WritableStreamDefaultWriter::abort(JS
     }
 
     // 2. Return ! WritableStreamDefaultWriterAbort(this, reason).
-    return TRY(writable_stream_default_writer_abort(*this, reason))->promise();
+    return writable_stream_default_writer_abort(*this, reason)->promise();
 }
 
 // https://streams.spec.whatwg.org/#default-writer-close
@@ -117,7 +117,7 @@ WebIDL::ExceptionOr<JS::GCPtr<JS::Object>> WritableStreamDefaultWriter::write(JS
     }
 
     // 2. Return ! WritableStreamDefaultWriterWrite(this, chunk).
-    return TRY(writable_stream_default_writer_write(*this, chunk))->promise();
+    return writable_stream_default_writer_write(*this, chunk)->promise();
 }
 
 WritableStreamDefaultWriter::WritableStreamDefaultWriter(JS::Realm& realm)

@@ -79,7 +79,7 @@ WebIDL::ExceptionOr<JS::GCPtr<JS::Object>> WritableStream::close()
 }
 
 // https://streams.spec.whatwg.org/#ws-abort
-WebIDL::ExceptionOr<JS::GCPtr<JS::Object>> WritableStream::abort(JS::Value reason)
+JS::GCPtr<JS::Object> WritableStream::abort(JS::Value reason)
 {
     auto& realm = this->realm();
 
@@ -90,7 +90,7 @@ WebIDL::ExceptionOr<JS::GCPtr<JS::Object>> WritableStream::abort(JS::Value reaso
     }
 
     // 2. Return ! WritableStreamAbort(this, reason).
-    return TRY(writable_stream_abort(*this, reason))->promise();
+    return writable_stream_abort(*this, reason)->promise();
 }
 
 // https://streams.spec.whatwg.org/#ws-get-writer
