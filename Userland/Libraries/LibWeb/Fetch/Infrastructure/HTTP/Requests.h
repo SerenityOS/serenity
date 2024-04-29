@@ -56,6 +56,7 @@ public:
         Frame,
         IFrame,
         Image,
+        JSON,
         Manifest,
         Object,
         PaintWorklet,
@@ -388,7 +389,7 @@ private:
 
     // https://fetch.spec.whatwg.org/#concept-request-destination
     // A request has an associated destination, which is the empty string, "audio", "audioworklet", "document",
-    // "embed", "font", "frame", "iframe", "image", "manifest", "object", "paintworklet", "report", "script",
+    // "embed", "font", "frame", "iframe", "image", "json", "manifest", "object", "paintworklet", "report", "script",
     // "serviceworker", "sharedworker", "style", "track", "video", "webidentity", "worker", or "xslt". Unless stated
     // otherwise it is the empty string.
     // NOTE: These are reflected on RequestDestination except for "serviceworker" and "webidentity" as fetches with
