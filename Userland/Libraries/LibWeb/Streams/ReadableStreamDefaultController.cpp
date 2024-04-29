@@ -101,7 +101,7 @@ WebIDL::ExceptionOr<void> ReadableStreamDefaultController::pull_steps(Web::Strea
         }
         // 3. Otherwise, perform ! ReadableStreamDefaultControllerCallPullIfNeeded(this).
         else {
-            TRY(readable_stream_default_controller_can_pull_if_needed(*this));
+            readable_stream_default_controller_can_pull_if_needed(*this);
         }
 
         // 4. Perform readRequest’s chunk steps, given chunk.
@@ -113,7 +113,7 @@ WebIDL::ExceptionOr<void> ReadableStreamDefaultController::pull_steps(Web::Strea
         readable_stream_add_read_request(stream, read_request);
 
         // 2. Perform ! ReadableStreamDefaultControllerCallPullIfNeeded(this).
-        TRY(readable_stream_default_controller_can_pull_if_needed(*this));
+        readable_stream_default_controller_can_pull_if_needed(*this);
     }
 
     return {};
