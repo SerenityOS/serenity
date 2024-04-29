@@ -147,7 +147,7 @@ JS::NonnullGCPtr<WebIDL::Promise> writable_stream_default_writer_close(WritableS
 void writable_stream_default_writer_ensure_closed_promise_rejected(WritableStreamDefaultWriter&, JS::Value error);
 void writable_stream_default_writer_ensure_ready_promise_rejected(WritableStreamDefaultWriter&, JS::Value error);
 Optional<double> writable_stream_default_writer_get_desired_size(WritableStreamDefaultWriter const&);
-WebIDL::ExceptionOr<void> writable_stream_default_writer_release(WritableStreamDefaultWriter&);
+void writable_stream_default_writer_release(WritableStreamDefaultWriter&);
 JS::NonnullGCPtr<WebIDL::Promise> writable_stream_default_writer_write(WritableStreamDefaultWriter&, JS::Value chunk);
 
 WebIDL::ExceptionOr<void> set_up_writable_stream_default_controller(WritableStream&, WritableStreamDefaultController&, JS::NonnullGCPtr<StartAlgorithm>, JS::NonnullGCPtr<WriteAlgorithm>, JS::NonnullGCPtr<CloseAlgorithm>, JS::NonnullGCPtr<AbortAlgorithm>, double high_water_mark, JS::NonnullGCPtr<SizeAlgorithm>);
@@ -166,7 +166,7 @@ void writable_stream_default_controller_write(WritableStreamDefaultController&, 
 
 void initialize_transform_stream(TransformStream&, JS::NonnullGCPtr<JS::PromiseCapability> start_promise, double writable_high_water_mark, JS::NonnullGCPtr<SizeAlgorithm> writable_size_algorithm, double readable_high_water_mark, JS::NonnullGCPtr<SizeAlgorithm> readable_size_algorithm);
 void set_up_transform_stream_default_controller(TransformStream&, TransformStreamDefaultController&, JS::NonnullGCPtr<TransformAlgorithm>, JS::NonnullGCPtr<FlushAlgorithm>);
-WebIDL::ExceptionOr<void> set_up_transform_stream_default_controller_from_transformer(TransformStream&, JS::Value transformer, Transformer&);
+void set_up_transform_stream_default_controller_from_transformer(TransformStream&, JS::Value transformer, Transformer&);
 void transform_stream_default_controller_clear_algorithms(TransformStreamDefaultController&);
 WebIDL::ExceptionOr<void> transform_stream_default_controller_enqueue(TransformStreamDefaultController&, JS::Value chunk);
 void transform_stream_default_controller_error(TransformStreamDefaultController&, JS::Value error);

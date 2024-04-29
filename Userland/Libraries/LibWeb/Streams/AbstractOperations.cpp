@@ -4012,7 +4012,7 @@ Optional<double> writable_stream_default_writer_get_desired_size(WritableStreamD
 }
 
 // https://streams.spec.whatwg.org/#writable-stream-default-writer-release
-WebIDL::ExceptionOr<void> writable_stream_default_writer_release(WritableStreamDefaultWriter& writer)
+void writable_stream_default_writer_release(WritableStreamDefaultWriter& writer)
 {
     auto& realm = writer.realm();
 
@@ -4039,8 +4039,6 @@ WebIDL::ExceptionOr<void> writable_stream_default_writer_release(WritableStreamD
 
     // 8. Set writer.[[stream]] to undefined.
     writer.set_stream({});
-
-    return {};
 }
 
 // https://streams.spec.whatwg.org/#writable-stream-default-writer-write
@@ -4592,7 +4590,7 @@ void set_up_transform_stream_default_controller(TransformStream& stream, Transfo
 }
 
 // https://streams.spec.whatwg.org/#set-up-transform-stream-default-controller-from-transformer
-WebIDL::ExceptionOr<void> set_up_transform_stream_default_controller_from_transformer(TransformStream& stream, JS::Value transformer, Transformer& transformer_dict)
+void set_up_transform_stream_default_controller_from_transformer(TransformStream& stream, JS::Value transformer, Transformer& transformer_dict)
 {
     auto& realm = stream.realm();
     auto& vm = realm.vm();
@@ -4643,8 +4641,6 @@ WebIDL::ExceptionOr<void> set_up_transform_stream_default_controller_from_transf
 
     // 6. Perform ! SetUpTransformStreamDefaultController(stream, controller, transformAlgorithm, flushAlgorithm).
     set_up_transform_stream_default_controller(stream, *controller, transform_algorithm, flush_algorithm);
-
-    return {};
 }
 
 // https://streams.spec.whatwg.org/#transform-stream-default-controller-clear-algorithms
