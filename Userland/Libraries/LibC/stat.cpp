@@ -81,6 +81,12 @@ int mkfifo(char const* pathname, mode_t mode)
     return mknod(pathname, mode | S_IFIFO, 0);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/mkfifoat.html
+int mkfifoat(int dirfd, char const* pathname, mode_t mode)
+{
+    return mknodat(dirfd, pathname, mode | S_IFIFO, 0);
+}
+
 static int do_stat(int dirfd, char const* path, struct stat* statbuf, bool follow_symlinks)
 {
     if (!path) {
