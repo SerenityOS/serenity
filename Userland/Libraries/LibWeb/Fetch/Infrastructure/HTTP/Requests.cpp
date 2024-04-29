@@ -418,4 +418,21 @@ StringView request_destination_to_string(Request::Destination destination)
     VERIFY_NOT_REACHED();
 }
 
+StringView request_mode_to_string(Request::Mode mode)
+{
+    switch (mode) {
+    case Request::Mode::SameOrigin:
+        return "same-origin"sv;
+    case Request::Mode::CORS:
+        return "cors"sv;
+    case Request::Mode::NoCORS:
+        return "no-cors"sv;
+    case Request::Mode::Navigate:
+        return "navigate"sv;
+    case Request::Mode::WebSocket:
+        return "websocket"sv;
+    }
+    VERIFY_NOT_REACHED();
+}
+
 }

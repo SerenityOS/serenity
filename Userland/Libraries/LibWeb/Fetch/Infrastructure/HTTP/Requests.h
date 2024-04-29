@@ -518,5 +518,6 @@ private:
 };
 
 StringView request_destination_to_string(Request::Destination);
+StringView request_mode_to_string(Request::Mode);
 
 }
