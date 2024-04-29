@@ -738,7 +738,7 @@ Vector<JS::NonnullGCPtr<MimeType>> Window::pdf_viewer_mime_type_objects()
 }
 
 // https://streams.spec.whatwg.org/#count-queuing-strategy-size-function
-WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::CallbackType>> Window::count_queuing_strategy_size_function()
+JS::NonnullGCPtr<WebIDL::CallbackType> Window::count_queuing_strategy_size_function()
 {
     auto& realm = this->realm();
 
@@ -760,7 +760,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::CallbackType>> Window::count_queuin
 }
 
 // https://streams.spec.whatwg.org/#byte-length-queuing-strategy-size-function
-WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::CallbackType>> Window::byte_length_queuing_strategy_size_function()
+JS::NonnullGCPtr<WebIDL::CallbackType> Window::byte_length_queuing_strategy_size_function()
 {
     auto& realm = this->realm();
 

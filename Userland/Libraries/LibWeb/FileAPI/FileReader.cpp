@@ -139,7 +139,7 @@ WebIDL::ExceptionOr<void> FileReader::read_operation(Blob& blob, Type type, Opti
     ByteBuffer bytes;
 
     // 8. Let chunkPromise be the result of reading a chunk from stream with reader.
-    auto chunk_promise = TRY(reader->read());
+    auto chunk_promise = reader->read();
 
     // 9. Let isFirstChunk be true.
     bool is_first_chunk = true;
@@ -183,7 +183,7 @@ WebIDL::ExceptionOr<void> FileReader::read_operation(Blob& blob, Type type, Opti
                 // FIXME: 3. If roughly 50ms have passed since these steps were last invoked, queue a task to fire a progress event called progress at fr.
 
                 // 4. Set chunkPromise to the result of reading a chunk from stream with reader.
-                chunk_promise = MUST(reader->read());
+                chunk_promise = reader->read();
             }
             // 5. Otherwise, if chunkPromise is fulfilled with an object whose done property is true, queue a task to run the following steps and abort this algorithm:
             else if (chunk_promise->state() == JS::Promise::State::Fulfilled && done.as_bool()) {

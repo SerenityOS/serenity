@@ -107,7 +107,7 @@ private:
 JS_DEFINE_ALLOCATOR(BYOBReaderReadIntoRequest);
 
 // https://streams.spec.whatwg.org/#byob-reader-read
-WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> ReadableStreamBYOBReader::read(JS::Handle<WebIDL::ArrayBufferView>& view)
+JS::NonnullGCPtr<JS::Promise> ReadableStreamBYOBReader::read(JS::Handle<WebIDL::ArrayBufferView>& view)
 {
     auto& realm = this->realm();
 

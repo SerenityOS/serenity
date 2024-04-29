@@ -9,20 +9,19 @@
 #include <LibWeb/Streams/AbstractOperations.h>
 #include <LibWeb/Streams/ReadableStream.h>
 #include <LibWeb/Streams/ReadableStreamGenericReader.h>
-#include <LibWeb/WebIDL/ExceptionOr.h>
 #include <LibWeb/WebIDL/Promise.h>
 
 namespace Web::Streams {
 
 // https://streams.spec.whatwg.org/#generic-reader-closed
-WebIDL::ExceptionOr<JS::GCPtr<JS::Promise>> ReadableStreamGenericReaderMixin::closed()
+JS::GCPtr<JS::Promise> ReadableStreamGenericReaderMixin::closed()
 {
     // 1. Return this.[[closedPromise]].
     return JS::GCPtr { verify_cast<JS::Promise>(*m_closed_promise->promise()) };
 }
 
 // https://streams.spec.whatwg.org/#generic-reader-cancel
-WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> ReadableStreamGenericReaderMixin::cancel(JS::Value reason)
+JS::NonnullGCPtr<JS::Promise> ReadableStreamGenericReaderMixin::cancel(JS::Value reason)
 {
     // 1. If this.[[stream]] is undefined, return a promise rejected with a TypeError exception.
     if (!m_stream) {

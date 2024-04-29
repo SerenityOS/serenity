@@ -20,7 +20,7 @@ class ByteLengthQueuingStrategy final : public Bindings::PlatformObject {
     JS_DECLARE_ALLOCATOR(ByteLengthQueuingStrategy);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<ByteLengthQueuingStrategy>> construct_impl(JS::Realm&, QueuingStrategyInit const&);
+    static JS::NonnullGCPtr<ByteLengthQueuingStrategy> construct_impl(JS::Realm&, QueuingStrategyInit const&);
 
     virtual ~ByteLengthQueuingStrategy() override;
 
@@ -32,7 +32,7 @@ public:
         return m_high_water_mark;
     }
 
-    WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::CallbackType>> size();
+    JS::NonnullGCPtr<WebIDL::CallbackType> size();
 
 private:
     explicit ByteLengthQueuingStrategy(JS::Realm&, double high_water_mark);

@@ -83,7 +83,7 @@ bool ReadableStream::locked() const
 }
 
 // https://streams.spec.whatwg.org/#rs-cancel
-WebIDL::ExceptionOr<JS::GCPtr<JS::Object>> ReadableStream::cancel(JS::Value reason)
+JS::NonnullGCPtr<JS::Object> ReadableStream::cancel(JS::Value reason)
 {
     auto& realm = this->realm();
 
@@ -134,7 +134,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<ReadableStream>> ReadableStream::pipe_throu
     return JS::NonnullGCPtr { *transform.readable };
 }
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Object>> ReadableStream::pipe_to(WritableStream& destination, StreamPipeOptions const& options)
+JS::NonnullGCPtr<JS::Object> ReadableStream::pipe_to(WritableStream& destination, StreamPipeOptions const& options)
 {
     auto& realm = this->realm();
 
