@@ -2039,4 +2039,43 @@ void set_sec_fetch_mode_header(Infrastructure::Request& request)
     request.header_list()->append(move(header));
 }
 
+// https://w3c.github.io/webappsec-fetch-metadata/#abstract-opdef-set-site
+void set_sec_fetch_site_header(Infrastructure::Request& request)
+{
+    // 1. Assert: r’s url is a potentially trustworthy URL.
+    VERIFY(SecureContexts::is_url_potentially_trustworthy(request.url()) == SecureContexts::Trustworthiness::PotentiallyTrustworthy);
+
+    // 2. Let header be a Structured Header whose value is a token.
+    // FIXME: This is handled below, as Serenity doesn't have APIs for RFC 8941.
+
+    // 3. Set header’s value to same-origin.
+    auto header_value = "same-origin"sv;
+
+    // FIXME: 4. If r is a navigation request that was explicitly caused by a user’s interaction with the user agent (by typing an address
+    //           into the user agent directly, for example, or by clicking a bookmark, etc.), then set header’s value to none.
+
+    // 5. If header’s value is not none, then for each url in r’s url list:
+    if (!header_value.equals_ignoring_ascii_case("none"sv)) {
+        for (auto& url : request.url_list()) {
+            // 1. If url is same origin with r’s origin, continue.
+            if (DOMURL::url_origin(url).is_same_origin(DOMURL::url_origin(request.current_url())))
+                continue;
+
+            // 2. Set header’s value to cross-site.
+            header_value = "cross-site"sv;
+
+            // FIXME: 3. If r’s origin is not same site with url’s origin, then break.
+
+            // FIXME: 4. Set header’s value to same-site.
+        }
+    }
+
+    // 6. Set a structured field value `Sec-Fetch-Site`/header in r’s header list.
+    auto header = Infrastructure::Header {
+        .name = MUST(ByteBuffer::copy("Sec-Fetch-Site"sv.bytes())),
+        .value = MUST(ByteBuffer::copy(header_value.bytes())),
+    };
+    request.header_list()->append(move(header));
+}
+
 }

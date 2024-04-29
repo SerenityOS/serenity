@@ -41,4 +41,5 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> nonstandard_resource_load
 WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> cors_preflight_fetch(JS::Realm&, Infrastructure::Request&);
 void set_sec_fetch_dest_header(Infrastructure::Request&);
 void set_sec_fetch_mode_header(Infrastructure::Request&);
+void set_sec_fetch_site_header(Infrastructure::Request&);
 }
