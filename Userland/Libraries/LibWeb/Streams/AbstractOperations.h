@@ -39,7 +39,7 @@ void readable_stream_close(ReadableStream&);
 void readable_stream_error(ReadableStream&, JS::Value error);
 void readable_stream_add_read_request(ReadableStream&, JS::NonnullGCPtr<ReadRequest>);
 void readable_stream_add_read_into_request(ReadableStream&, JS::NonnullGCPtr<ReadIntoRequest>);
-WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> readable_stream_cancel(ReadableStream&, JS::Value reason);
+JS::NonnullGCPtr<WebIDL::Promise> readable_stream_cancel(ReadableStream&, JS::Value reason);
 void readable_stream_fulfill_read_into_request(ReadableStream&, JS::Value chunk, bool done);
 void readable_stream_fulfill_read_request(ReadableStream&, JS::Value chunk, bool done);
 size_t readable_stream_get_num_read_into_requests(ReadableStream const&);
@@ -47,15 +47,15 @@ size_t readable_stream_get_num_read_requests(ReadableStream const&);
 bool readable_stream_has_byob_reader(ReadableStream const&);
 bool readable_stream_has_default_reader(ReadableStream const&);
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> readable_stream_pipe_to(ReadableStream& source, WritableStream& dest, bool prevent_close, bool prevent_abort, bool prevent_cancel, Optional<JS::Value> signal);
+JS::NonnullGCPtr<WebIDL::Promise> readable_stream_pipe_to(ReadableStream& source, WritableStream& dest, bool prevent_close, bool prevent_abort, bool prevent_cancel, Optional<JS::Value> signal);
 
 WebIDL::ExceptionOr<ReadableStreamPair> readable_stream_tee(JS::Realm&, ReadableStream&, bool clone_for_branch2);
 WebIDL::ExceptionOr<ReadableStreamPair> readable_stream_default_tee(JS::Realm& realm, ReadableStream& stream, bool clone_for_branch2);
 WebIDL::ExceptionOr<ReadableStreamPair> readable_byte_stream_tee(JS::Realm& realm, ReadableStream& stream);
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> readable_stream_reader_generic_cancel(ReadableStreamGenericReaderMixin&, JS::Value reason);
+JS::NonnullGCPtr<WebIDL::Promise> readable_stream_reader_generic_cancel(ReadableStreamGenericReaderMixin&, JS::Value reason);
 void readable_stream_reader_generic_initialize(ReadableStreamReader, ReadableStream&);
-WebIDL::ExceptionOr<void> readable_stream_reader_generic_release(ReadableStreamGenericReaderMixin&);
+void readable_stream_reader_generic_release(ReadableStreamGenericReaderMixin&);
 
 void readable_stream_default_reader_error_read_requests(ReadableStreamDefaultReader&, JS::Value error);
 void readable_stream_byob_reader_error_read_into_requests(ReadableStreamBYOBReader&, JS::Value error);
@@ -64,8 +64,8 @@ void readable_byte_stream_controller_pull_into(ReadableByteStreamController&, We
 void readable_stream_byob_reader_read(ReadableStreamBYOBReader&, WebIDL::ArrayBufferView&, ReadIntoRequest&);
 void readable_byte_stream_controller_fill_head_pull_into_descriptor(ReadableByteStreamController const&, u64 size, PullIntoDescriptor&);
 
-WebIDL::ExceptionOr<void> readable_stream_default_reader_read(ReadableStreamDefaultReader&, ReadRequest&);
-WebIDL::ExceptionOr<void> readable_stream_default_reader_release(ReadableStreamDefaultReader&);
+void readable_stream_default_reader_read(ReadableStreamDefaultReader&, ReadRequest&);
+void readable_stream_default_reader_release(ReadableStreamDefaultReader&);
 void readable_stream_byob_reader_release(ReadableStreamBYOBReader&);
 WebIDL::ExceptionOr<void> set_up_readable_stream_default_reader(ReadableStreamDefaultReader&, ReadableStream&);
 WebIDL::ExceptionOr<void> set_up_readable_stream_byob_reader(ReadableStreamBYOBReader&, ReadableStream&);

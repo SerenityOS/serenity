@@ -75,10 +75,10 @@ public:
 
     WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> read();
 
-    WebIDL::ExceptionOr<void> read_all_bytes(ReadLoopReadRequest::SuccessSteps, ReadLoopReadRequest::FailureSteps);
-    WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> read_all_bytes_deprecated();
+    void read_all_bytes(ReadLoopReadRequest::SuccessSteps, ReadLoopReadRequest::FailureSteps);
+    JS::NonnullGCPtr<WebIDL::Promise> read_all_bytes_deprecated();
 
-    WebIDL::ExceptionOr<void> release_lock();
+    void release_lock();
 
     SinglyLinkedList<JS::NonnullGCPtr<ReadRequest>>& read_requests() { return m_read_requests; }
 

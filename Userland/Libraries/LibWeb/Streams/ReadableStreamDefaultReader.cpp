@@ -94,11 +94,7 @@ void ReadLoopReadRequest::on_chunk(JS::Value chunk)
     //        up more than one chunk at a time, we may run into stack overflow problems.
     //
     // 3. Read-loop given reader, bytes, successSteps, and failureSteps.
-    auto maybe_error = readable_stream_default_reader_read(m_reader, *this);
-    if (maybe_error.is_exception()) {
-        auto throw_completion = Bindings::dom_exception_to_throw_completion(m_vm, maybe_error.exception());
-        m_failure_steps(*throw_completion.release_error().value());
-    }
+    readable_stream_default_reader_read(m_reader, *this);
 }
 
 // close steps
@@ -179,14 +175,14 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> ReadableStreamDefaultReader::
     auto read_request = heap().allocate_without_realm<DefaultReaderReadRequest>(realm, promise_capability);
 
     // 4. Perform ! ReadableStreamDefaultReaderRead(this, readRequest).
-    TRY(readable_stream_default_reader_read(*this, read_request));
+    readable_stream_default_reader_read(*this, read_request);
 
     // 5. Return promise.
     return JS::NonnullGCPtr { verify_cast<JS::Promise>(*promise_capability->promise()) };
 }
 
 // https://streams.spec.whatwg.org/#readablestreamdefaultreader-read-all-bytes
-WebIDL::ExceptionOr<void> ReadableStreamDefaultReader::read_all_bytes(ReadLoopReadRequest::SuccessSteps success_steps, ReadLoopReadRequest::FailureSteps failure_steps)
+void ReadableStreamDefaultReader::read_all_bytes(ReadLoopReadRequest::SuccessSteps success_steps, ReadLoopReadRequest::FailureSteps failure_steps)
 {
     auto& realm = this->realm();
     auto& vm = realm.vm();
@@ -196,15 +192,13 @@ WebIDL::ExceptionOr<void> ReadableStreamDefaultReader::read_all_bytes(ReadLoopRe
     auto read_request = heap().allocate_without_realm<ReadLoopReadRequest>(vm, realm, *this, move(success_steps), move(failure_steps));
 
     // 2. Perform ! ReadableStreamDefaultReaderRead(this, readRequest).
-    TRY(readable_stream_default_reader_read(*this, read_request));
-
-    return {};
+    readable_stream_default_reader_read(*this, read_request);
 }
 
 // FIXME: This function is a promise-based wrapper around "read all bytes". The spec changed this function to not use promises
 //        in https://github.com/whatwg/streams/commit/f894acdd417926a2121710803cef593e15127964 - however, it seems that the
 //        FileAPI blob specification has not been updated to match, see: https://github.com/w3c/FileAPI/issues/187.
-WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> ReadableStreamDefaultReader::read_all_bytes_deprecated()
+JS::NonnullGCPtr<WebIDL::Promise> ReadableStreamDefaultReader::read_all_bytes_deprecated()
 {
     auto& realm = this->realm();
 
@@ -223,20 +217,20 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> ReadableStreamDefaultRead
         WebIDL::reject_promise(realm, promise, error);
     };
 
-    TRY(read_all_bytes(move(success_steps), move(failure_steps)));
+    read_all_bytes(move(success_steps), move(failure_steps));
 
     return promise;
 }
 
 // https://streams.spec.whatwg.org/#default-reader-release-lock
-WebIDL::ExceptionOr<void> ReadableStreamDefaultReader::release_lock()
+void ReadableStreamDefaultReader::release_lock()
 {
     // 1. If this.[[stream]] is undefined, return.
     if (!m_stream)
-        return {};
+        return;
 
     // 2. Perform ! ReadableStreamDefaultReaderRelease(this).
-    return readable_stream_default_reader_release(*this);
+    readable_stream_default_reader_release(*this);
 }
 
 }

@@ -372,7 +372,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> Blob::text()
     auto reader = reader_or_exception.release_value();
 
     // 3. Let promise be the result of reading all bytes from stream with reader
-    auto promise = TRY(reader->read_all_bytes_deprecated());
+    auto promise = reader->read_all_bytes_deprecated();
 
     // 4. Return the result of transforming promise by a fulfillment handler that returns the result of running UTF-8 decode on its first argument.
     return WebIDL::upon_fulfillment(*promise, JS::create_heap_function(heap(), [&vm](JS::Value first_argument) -> WebIDL::ExceptionOr<JS::Value> {
@@ -401,7 +401,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> Blob::array_buffer()
     auto reader = reader_or_exception.release_value();
 
     // 3. Let promise be the result of reading all bytes from stream with reader.
-    auto promise = TRY(reader->read_all_bytes_deprecated());
+    auto promise = reader->read_all_bytes_deprecated();
 
     // 4. Return the result of transforming promise by a fulfillment handler that returns a new ArrayBuffer whose contents are its first argument.
     return WebIDL::upon_fulfillment(*promise, JS::create_heap_function(heap(), [&realm](JS::Value first_argument) -> WebIDL::ExceptionOr<JS::Value> {

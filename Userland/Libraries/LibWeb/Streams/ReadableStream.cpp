@@ -94,7 +94,7 @@ WebIDL::ExceptionOr<JS::GCPtr<JS::Object>> ReadableStream::cancel(JS::Value reas
     }
 
     // 2. Return ! ReadableStreamCancel(this, reason).
-    return TRY(readable_stream_cancel(*this, reason))->promise();
+    return readable_stream_cancel(*this, reason)->promise();
 }
 
 // https://streams.spec.whatwg.org/#rs-get-reader
@@ -125,7 +125,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<ReadableStream>> ReadableStream::pipe_throu
     auto signal = options.signal ? JS::Value(options.signal) : JS::js_undefined();
 
     // 4. Let promise be ! ReadableStreamPipeTo(this, transform["writable"], options["preventClose"], options["preventAbort"], options["preventCancel"], signal).
-    auto promise = MUST(readable_stream_pipe_to(*this, *transform.writable, options.prevent_close, options.prevent_abort, options.prevent_cancel, signal));
+    auto promise = readable_stream_pipe_to(*this, *transform.writable, options.prevent_close, options.prevent_abort, options.prevent_cancel, signal);
 
     // 5. Set promise.[[PromiseIsHandled]] to true.
     WebIDL::mark_promise_as_handled(*promise);
@@ -156,7 +156,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Object>> ReadableStream::pipe_to(Writab
     auto signal = options.signal ? JS::Value(options.signal) : JS::js_undefined();
 
     // 4. Return ! ReadableStreamPipeTo(this, destination, options["preventClose"], options["preventAbort"], options["preventCancel"], signal).
-    return MUST(readable_stream_pipe_to(*this, destination, options.prevent_close, options.prevent_abort, options.prevent_cancel, signal))->promise();
+    return readable_stream_pipe_to(*this, destination, options.prevent_close, options.prevent_abort, options.prevent_cancel, signal)->promise();
 }
 
 // https://streams.spec.whatwg.org/#readablestream-tee

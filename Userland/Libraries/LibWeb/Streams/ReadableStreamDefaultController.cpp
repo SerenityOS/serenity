@@ -65,7 +65,7 @@ void ReadableStreamDefaultController::error(JS::Value error)
 }
 
 // https://streams.spec.whatwg.org/#rs-default-controller-private-cancel
-WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> ReadableStreamDefaultController::cancel_steps(JS::Value reason)
+JS::NonnullGCPtr<WebIDL::Promise> ReadableStreamDefaultController::cancel_steps(JS::Value reason)
 {
     // 1. Perform ! ResetQueue(this).
     reset_queue(*this);
@@ -81,7 +81,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> ReadableStreamDefaultCont
 }
 
 // https://streams.spec.whatwg.org/#rs-default-controller-private-pull
-WebIDL::ExceptionOr<void> ReadableStreamDefaultController::pull_steps(Web::Streams::ReadRequest& read_request)
+void ReadableStreamDefaultController::pull_steps(Web::Streams::ReadRequest& read_request)
 {
     // 1. Let stream be this.[[stream]].
     auto& stream = *m_stream;
@@ -115,15 +115,12 @@ WebIDL::ExceptionOr<void> ReadableStreamDefaultController::pull_steps(Web::Strea
         // 2. Perform ! ReadableStreamDefaultControllerCallPullIfNeeded(this).
         readable_stream_default_controller_can_pull_if_needed(*this);
     }
-
-    return {};
 }
 
 // https://streams.spec.whatwg.org/#abstract-opdef-readablestreamdefaultcontroller-releasesteps
-WebIDL::ExceptionOr<void> ReadableStreamDefaultController::release_steps()
+void ReadableStreamDefaultController::release_steps()
 {
     // 1. Return.
-    return {};
 }
 
 void ReadableStreamDefaultController::initialize(JS::Realm& realm)
