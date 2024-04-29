@@ -448,7 +448,7 @@ public:
 
             // 7. If readAgain is true, perform pullAlgorithm.
             if (m_params->read_again) {
-                MUST(m_params->pull_algorithm->function()());
+                m_params->pull_algorithm->function()();
             }
         }));
 
@@ -531,7 +531,7 @@ WebIDL::ExceptionOr<ReadableStreamPair> readable_stream_default_tee(JS::Realm& r
     auto cancel_promise = WebIDL::create_promise(realm);
 
     // 13. Let pullAlgorithm be the following steps:
-    auto pull_algorithm = JS::create_heap_function(realm.heap(), [&realm, &stream, reader, params, cancel_promise, clone_for_branch2]() -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
+    auto pull_algorithm = JS::create_heap_function(realm.heap(), [&realm, &stream, reader, params, cancel_promise, clone_for_branch2]() {
         // 1. If reading is true,
         if (params->reading) {
             // 1. Set readAgain to true.
@@ -558,7 +558,7 @@ WebIDL::ExceptionOr<ReadableStreamPair> readable_stream_default_tee(JS::Realm& r
     params->pull_algorithm = pull_algorithm;
 
     // 14. Let cancel1Algorithm be the following steps, taking a reason argument:
-    auto cancel1_algorithm = JS::create_heap_function(realm.heap(), [&realm, &stream, params, cancel_promise](JS::Value reason) -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
+    auto cancel1_algorithm = JS::create_heap_function(realm.heap(), [&realm, &stream, params, cancel_promise](JS::Value reason) {
         // 1. Set canceled1 to true.
         params->canceled1 = true;
 
@@ -583,7 +583,7 @@ WebIDL::ExceptionOr<ReadableStreamPair> readable_stream_default_tee(JS::Realm& r
     });
 
     // 15. Let cancel2Algorithm be the following steps, taking a reason argument:
-    auto cancel2_algorithm = JS::create_heap_function(realm.heap(), [&realm, &stream, params, cancel_promise](JS::Value reason) -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
+    auto cancel2_algorithm = JS::create_heap_function(realm.heap(), [&realm, &stream, params, cancel_promise](JS::Value reason) {
         // 1. Set canceled2 to true.
         params->canceled2 = true;
 
@@ -761,11 +761,11 @@ public:
 
             // 8. If readAgainForBranch1 is true, perform pull1Algorithm.
             if (m_params->read_again_for_branch1) {
-                MUST(m_params->pull1_algorithm->function()());
+                m_params->pull1_algorithm->function()();
             }
             // 9. Otherwise, if readAgainForBranch2 is true, perform pull2Algorithm.
             else if (m_params->read_again_for_branch2) {
-                MUST(m_params->pull2_algorithm->function()());
+                m_params->pull2_algorithm->function()();
             }
         }));
 
@@ -928,11 +928,11 @@ public:
 
             // 8. If readAgainForBranch1 is true, perform pull1Algorithm.
             if (m_params->read_again_for_branch1) {
-                MUST(m_params->pull1_algorithm->function()());
+                m_params->pull1_algorithm->function()();
             }
             // 9. Otherwise, if readAgainForBranch2 is true, perform pull2Algorithm.
             else if (m_params->read_again_for_branch2) {
-                MUST(m_params->pull2_algorithm->function()());
+                m_params->pull2_algorithm->function()();
             }
         }));
 
@@ -1127,7 +1127,7 @@ WebIDL::ExceptionOr<ReadableStreamPair> readable_byte_stream_tee(JS::Realm& real
     });
 
     // 17. Let pull1Algorithm be the following steps:
-    auto pull1_algorithm = JS::create_heap_function(realm.heap(), [&realm, params, pull_with_default_reader, pull_with_byob_reader]() -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
+    auto pull1_algorithm = JS::create_heap_function(realm.heap(), [&realm, params, pull_with_default_reader, pull_with_byob_reader]() {
         auto controller1 = params->branch1->controller()->get<JS::NonnullGCPtr<ReadableByteStreamController>>();
 
         // 1. If reading is true,
@@ -1159,7 +1159,7 @@ WebIDL::ExceptionOr<ReadableStreamPair> readable_byte_stream_tee(JS::Realm& real
     });
 
     // 18. Let pull2Algorithm be the following steps:
-    auto pull2_algorithm = JS::create_heap_function(realm.heap(), [&realm, params, pull_with_default_reader, pull_with_byob_reader]() -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
+    auto pull2_algorithm = JS::create_heap_function(realm.heap(), [&realm, params, pull_with_default_reader, pull_with_byob_reader]() {
         auto controller2 = params->branch2->controller()->get<JS::NonnullGCPtr<ReadableByteStreamController>>();
 
         // 1. If reading is true,
@@ -1195,7 +1195,7 @@ WebIDL::ExceptionOr<ReadableStreamPair> readable_byte_stream_tee(JS::Realm& real
     params->pull2_algorithm = pull2_algorithm;
 
     // 19. Let cancel1Algorithm be the following steps, taking a reason argument:
-    auto cancel1_algorithm = JS::create_heap_function(realm.heap(), [&realm, &stream, params, cancel_promise](JS::Value reason) -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
+    auto cancel1_algorithm = JS::create_heap_function(realm.heap(), [&realm, &stream, params, cancel_promise](JS::Value reason) {
         // 1. Set canceled1 to true.
         params->canceled1 = true;
 
@@ -1220,7 +1220,7 @@ WebIDL::ExceptionOr<ReadableStreamPair> readable_byte_stream_tee(JS::Realm& real
     });
 
     // 20. Let cancel2Algorithm be the following steps, taking a reason argument:
-    auto cancel2_algorithm = JS::create_heap_function(realm.heap(), [&realm, &stream, params, cancel_promise](JS::Value reason) -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
+    auto cancel2_algorithm = JS::create_heap_function(realm.heap(), [&realm, &stream, params, cancel_promise](JS::Value reason) {
         // 1. Set canceled2 to true.
         params->canceled2 = true;
 
@@ -1783,7 +1783,7 @@ void readable_byte_stream_controller_pull_into(ReadableByteStreamController& con
             auto filled_view = readable_byte_stream_controller_convert_pull_into_descriptor(realm, pull_into_descriptor);
 
             // 2. Perform ! ReadableByteStreamControllerHandleQueueDrain(controller).
-            MUST(readable_byte_stream_controller_handle_queue_drain(controller));
+            readable_byte_stream_controller_handle_queue_drain(controller);
 
             // 3. Perform readIntoRequest’s chunk steps, given filledView.
             read_into_request.on_chunk(filled_view);
@@ -1815,7 +1815,7 @@ void readable_byte_stream_controller_pull_into(ReadableByteStreamController& con
     readable_stream_add_read_into_request(*stream, read_into_request);
 
     // 16. Perform ! ReadableByteStreamControllerCallPullIfNeeded(controller).
-    MUST(readable_byte_stream_controller_call_pull_if_needed(controller));
+    readable_byte_stream_controller_call_pull_if_needed(controller);
 }
 
 // https://streams.spec.whatwg.org/#readable-stream-byob-reader-read
@@ -1990,18 +1990,19 @@ WebIDL::ExceptionOr<void> readable_stream_default_controller_enqueue(ReadableStr
     }
 
     // 5. Perform ! ReadableStreamDefaultControllerCallPullIfNeeded(controller).
-    return readable_stream_default_controller_can_pull_if_needed(controller);
+    readable_stream_default_controller_can_pull_if_needed(controller);
+    return {};
 }
 
 // https://streams.spec.whatwg.org/#readable-stream-default-controller-call-pull-if-needed
-WebIDL::ExceptionOr<void> readable_stream_default_controller_can_pull_if_needed(ReadableStreamDefaultController& controller)
+void readable_stream_default_controller_can_pull_if_needed(ReadableStreamDefaultController& controller)
 {
     // 1. Let shouldPull be ! ReadableStreamDefaultControllerShouldCallPull(controller).
     auto should_pull = readable_stream_default_controller_should_call_pull(controller);
 
     // 2. If shouldPull is false, return.
     if (!should_pull)
-        return {};
+        return;
 
     // 3. If controller.[[pulling]] is true,
     if (controller.pulling()) {
@@ -2009,7 +2010,7 @@ WebIDL::ExceptionOr<void> readable_stream_default_controller_can_pull_if_needed(
         controller.set_pull_again(true);
 
         // 2. Return.
-        return {};
+        return;
     }
 
     // 4. Assert: controller.[[pullAgain]] is false.
@@ -2019,7 +2020,7 @@ WebIDL::ExceptionOr<void> readable_stream_default_controller_can_pull_if_needed(
     controller.set_pulling(true);
 
     // 6. Let pullPromise be the result of performing controller.[[pullAlgorithm]].
-    auto pull_promise = TRY(controller.pull_algorithm()->function()());
+    auto pull_promise = controller.pull_algorithm()->function()();
 
     // 7. Upon fulfillment of pullPromise,
     WebIDL::upon_fulfillment(*pull_promise, JS::create_heap_function(controller.heap(), [&controller](JS::Value) -> WebIDL::ExceptionOr<JS::Value> {
@@ -2032,7 +2033,7 @@ WebIDL::ExceptionOr<void> readable_stream_default_controller_can_pull_if_needed(
             controller.set_pull_again(false);
 
             // 2. Perform ! ReadableStreamDefaultControllerCallPullIfNeeded(controller).
-            TRY(readable_stream_default_controller_can_pull_if_needed(controller));
+            readable_stream_default_controller_can_pull_if_needed(controller);
         }
 
         return JS::js_undefined();
@@ -2045,8 +2046,6 @@ WebIDL::ExceptionOr<void> readable_stream_default_controller_can_pull_if_needed(
 
         return JS::js_undefined();
     }));
-
-    return {};
 }
 
 // https://streams.spec.whatwg.org/#readable-stream-default-controller-should-call-pull
@@ -2241,7 +2240,7 @@ WebIDL::ExceptionOr<void> readable_byte_stream_controller_respond_internal(Reada
     }
 
     // 7. Perform ! ReadableByteStreamControllerCallPullIfNeeded(controller).
-    MUST(readable_byte_stream_controller_call_pull_if_needed(controller));
+    readable_byte_stream_controller_call_pull_if_needed(controller);
     return {};
 }
 
@@ -2440,7 +2439,7 @@ WebIDL::ExceptionOr<void> set_up_readable_stream_default_controller(ReadableStre
         VERIFY(!controller.pull_again());
 
         // 4. Perform ! ReadableStreamDefaultControllerCallPullIfNeeded(controller).
-        TRY(readable_stream_default_controller_can_pull_if_needed(controller));
+        readable_stream_default_controller_can_pull_if_needed(controller);
 
         return JS::js_undefined();
     }));
@@ -2470,12 +2469,12 @@ WebIDL::ExceptionOr<void> set_up_readable_stream_default_controller_from_underly
     });
 
     // 3. Let pullAlgorithm be an algorithm that returns a promise resolved with undefined.
-    auto pull_algorithm = JS::create_heap_function(realm.heap(), [&realm]() -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
+    auto pull_algorithm = JS::create_heap_function(realm.heap(), [&realm]() {
         return WebIDL::create_resolved_promise(realm, JS::js_undefined());
     });
 
     // 4. Let cancelAlgorithm be an algorithm that returns a promise resolved with undefined.
-    auto cancel_algorithm = JS::create_heap_function(realm.heap(), [&realm](JS::Value) -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
+    auto cancel_algorithm = JS::create_heap_function(realm.heap(), [&realm](JS::Value) {
         return WebIDL::create_resolved_promise(realm, JS::js_undefined());
     });
 
@@ -2489,18 +2488,18 @@ WebIDL::ExceptionOr<void> set_up_readable_stream_default_controller_from_underly
 
     // 6. If underlyingSourceDict["pull"] exists, then set pullAlgorithm to an algorithm which returns the result of invoking underlyingSourceDict["pull"] with argument list « controller » and callback this value underlyingSource.
     if (underlying_source.pull) {
-        pull_algorithm = JS::create_heap_function(realm.heap(), [&realm, controller, underlying_source_value, callback = underlying_source.pull]() -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
+        pull_algorithm = JS::create_heap_function(realm.heap(), [&realm, controller, underlying_source_value, callback = underlying_source.pull]() {
             // Note: callback returns a promise, so invoke_callback will never return an abrupt completion
-            auto result = MUST_OR_THROW_OOM(WebIDL::invoke_callback(*callback, underlying_source_value, controller)).release_value();
+            auto result = MUST(WebIDL::invoke_callback(*callback, underlying_source_value, controller)).release_value();
             return WebIDL::create_resolved_promise(realm, result);
         });
     }
 
     // 7. If underlyingSourceDict["cancel"] exists, then set cancelAlgorithm to an algorithm which takes an argument reason and returns the result of invoking underlyingSourceDict["cancel"] with argument list « reason » and callback this value underlyingSource.
     if (underlying_source.cancel) {
-        cancel_algorithm = JS::create_heap_function(realm.heap(), [&realm, underlying_source_value, callback = underlying_source.cancel](JS::Value reason) -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
+        cancel_algorithm = JS::create_heap_function(realm.heap(), [&realm, underlying_source_value, callback = underlying_source.cancel](JS::Value reason) {
             // Note: callback returns a promise, so invoke_callback will never return an abrupt completion
-            auto result = MUST_OR_THROW_OOM(WebIDL::invoke_callback(*callback, underlying_source_value, reason)).release_value();
+            auto result = MUST(WebIDL::invoke_callback(*callback, underlying_source_value, reason)).release_value();
             return WebIDL::create_resolved_promise(realm, result);
         });
     }
@@ -2510,14 +2509,14 @@ WebIDL::ExceptionOr<void> set_up_readable_stream_default_controller_from_underly
 }
 
 // https://streams.spec.whatwg.org/#readable-byte-stream-controller-call-pull-if-needed
-WebIDL::ExceptionOr<void> readable_byte_stream_controller_call_pull_if_needed(ReadableByteStreamController& controller)
+void readable_byte_stream_controller_call_pull_if_needed(ReadableByteStreamController& controller)
 {
     // 1. Let shouldPull be ! ReadableByteStreamControllerShouldCallPull(controller).
     auto should_pull = readable_byte_stream_controller_should_call_pull(controller);
 
     // 2. If shouldPull is false, return.
     if (!should_pull)
-        return {};
+        return;
 
     // 3. If controller.[[pulling]] is true,
     if (controller.pulling()) {
@@ -2525,7 +2524,7 @@ WebIDL::ExceptionOr<void> readable_byte_stream_controller_call_pull_if_needed(Re
         controller.set_pull_again(true);
 
         // 2. Return.
-        return {};
+        return;
     }
 
     // 4. Assert: controller.[[pullAgain]] is false.
@@ -2535,7 +2534,7 @@ WebIDL::ExceptionOr<void> readable_byte_stream_controller_call_pull_if_needed(Re
     controller.set_pulling(true);
 
     // 6. Let pullPromise be the result of performing controller.[[pullAlgorithm]].
-    auto pull_promise = TRY(controller.pull_algorithm()->function()());
+    auto pull_promise = controller.pull_algorithm()->function()();
 
     // 7. Upon fulfillment of pullPromise,
     WebIDL::upon_fulfillment(*pull_promise, JS::create_heap_function(controller.heap(), [&controller](JS::Value) -> WebIDL::ExceptionOr<JS::Value> {
@@ -2548,7 +2547,7 @@ WebIDL::ExceptionOr<void> readable_byte_stream_controller_call_pull_if_needed(Re
             controller.set_pull_again(false);
 
             // 2. Perform ! ReadableByteStreamControllerCallPullIfNeeded(controller).
-            TRY(readable_byte_stream_controller_call_pull_if_needed(controller));
+            readable_byte_stream_controller_call_pull_if_needed(controller);
         }
 
         return JS::js_undefined();
@@ -2561,8 +2560,6 @@ WebIDL::ExceptionOr<void> readable_byte_stream_controller_call_pull_if_needed(Re
 
         return JS::js_undefined();
     }));
-
-    return {};
 }
 
 // https://streams.spec.whatwg.org/#readable-byte-stream-controller-clear-algorithms
@@ -2673,7 +2670,7 @@ WebIDL::ExceptionOr<void> readable_byte_stream_controller_fill_read_request_from
     controller.set_queue_total_size(controller.queue_total_size() - entry.byte_length);
 
     // 5. Perform ! ReadableByteStreamControllerHandleQueueDrain(controller).
-    TRY(readable_byte_stream_controller_handle_queue_drain(controller));
+    readable_byte_stream_controller_handle_queue_drain(controller);
 
     // 6. Let view be ! Construct(%Uint8Array%, « entry’s buffer, entry’s byte offset, entry’s byte length »).
     auto view = MUST_OR_THROW_OOM(JS::construct(vm, *realm.intrinsics().uint8_array_constructor(), entry.buffer, JS::Value(entry.byte_offset), JS::Value(entry.byte_length)));
@@ -2703,7 +2700,7 @@ Optional<double> readable_byte_stream_controller_get_desired_size(ReadableByteSt
 }
 
 // https://streams.spec.whatwg.org/#readable-byte-stream-controller-handle-queue-drain
-WebIDL::ExceptionOr<void> readable_byte_stream_controller_handle_queue_drain(ReadableByteStreamController& controller)
+void readable_byte_stream_controller_handle_queue_drain(ReadableByteStreamController& controller)
 {
     // 1. Assert: controller.[[stream]].[[state]] is "readable".
     VERIFY(controller.stream()->state() == ReadableStream::State::Readable);
@@ -2719,10 +2716,8 @@ WebIDL::ExceptionOr<void> readable_byte_stream_controller_handle_queue_drain(Rea
     // 3. Otherwise,
     else {
         // 1. Perform ! ReadableByteStreamControllerCallPullIfNeeded(controller).
-        TRY(readable_byte_stream_controller_call_pull_if_needed(controller));
+        readable_byte_stream_controller_call_pull_if_needed(controller);
     }
-
-    return {};
 }
 
 // https://streams.spec.whatwg.org/#readable-byte-stream-controller-invalidate-byob-request
@@ -3062,7 +3057,7 @@ WebIDL::ExceptionOr<void> set_up_readable_byte_stream_controller(ReadableStream&
         VERIFY(!controller.pull_again());
 
         // 4. Perform ! ReadableByteStreamControllerCallPullIfNeeded(controller).
-        TRY(readable_byte_stream_controller_call_pull_if_needed(controller));
+        readable_byte_stream_controller_call_pull_if_needed(controller);
 
         return JS::js_undefined();
     }));
@@ -3220,7 +3215,7 @@ WebIDL::ExceptionOr<void> readable_byte_stream_controller_enqueue(ReadableByteSt
     }
 
     // 12. Perform ! ReadableByteStreamControllerCallPullIfNeeded(controller).
-    TRY(readable_byte_stream_controller_call_pull_if_needed(controller));
+    readable_byte_stream_controller_call_pull_if_needed(controller);
 
     return {};
 }
@@ -3417,11 +3412,11 @@ WebIDL::ExceptionOr<void> set_up_readable_stream_controller_with_byte_reading_su
     auto start_algorithm = JS::create_heap_function(realm.heap(), []() -> WebIDL::ExceptionOr<JS::Value> { return JS::js_undefined(); });
 
     // 2. Let pullAlgorithmWrapper be an algorithm that runs these steps:
-    auto pull_algorithm_wrapper = JS::create_heap_function(realm.heap(), [&realm, pull_algorithm]() -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
+    auto pull_algorithm_wrapper = JS::create_heap_function(realm.heap(), [&realm, pull_algorithm]() {
         // 1. Let result be the result of running pullAlgorithm, if pullAlgorithm was given, or null otherwise. If this throws an exception e, return a promise rejected with e.
         JS::GCPtr<JS::PromiseCapability> result = nullptr;
         if (pull_algorithm)
-            result = TRY(pull_algorithm->function()());
+            result = pull_algorithm->function()();
 
         // 2. If result is a Promise, then return result.
         if (result != nullptr)
@@ -3432,11 +3427,11 @@ WebIDL::ExceptionOr<void> set_up_readable_stream_controller_with_byte_reading_su
     });
 
     // 3. Let cancelAlgorithmWrapper be an algorithm that runs these steps:
-    auto cancel_algorithm_wrapper = JS::create_heap_function(realm.heap(), [&realm, cancel_algorithm](JS::Value c) -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
+    auto cancel_algorithm_wrapper = JS::create_heap_function(realm.heap(), [&realm, cancel_algorithm](JS::Value c) {
         // 1. Let result be the result of running cancelAlgorithm, if cancelAlgorithm was given, or null otherwise. If this throws an exception e, return a promise rejected with e.
         JS::GCPtr<JS::PromiseCapability> result = nullptr;
         if (cancel_algorithm)
-            result = TRY(cancel_algorithm->function()(c));
+            result = cancel_algorithm->function()(c);
 
         // 2. If result is a Promise, then return result.
         if (result != nullptr)
@@ -4213,17 +4208,17 @@ WebIDL::ExceptionOr<void> set_up_writable_stream_default_controller_from_underly
     auto start_algorithm = JS::create_heap_function(realm.heap(), []() -> WebIDL::ExceptionOr<JS::Value> { return JS::js_undefined(); });
 
     // 3. Let writeAlgorithm be an algorithm that returns a promise resolved with undefined.
-    auto write_algorithm = JS::create_heap_function(realm.heap(), [&realm](JS::Value) -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
+    auto write_algorithm = JS::create_heap_function(realm.heap(), [&realm](JS::Value) {
         return WebIDL::create_resolved_promise(realm, JS::js_undefined());
     });
 
     // 4. Let closeAlgorithm be an algorithm that returns a promise resolved with undefined.
-    auto close_algorithm = JS::create_heap_function(realm.heap(), [&realm]() -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
+    auto close_algorithm = JS::create_heap_function(realm.heap(), [&realm]() {
         return WebIDL::create_resolved_promise(realm, JS::js_undefined());
     });
 
     // 5. Let abortAlgorithm be an algorithm that returns a promise resolved with undefined.
-    auto abort_algorithm = JS::create_heap_function(realm.heap(), [&realm](JS::Value) -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
+    auto abort_algorithm = JS::create_heap_function(realm.heap(), [&realm](JS::Value) {
         return WebIDL::create_resolved_promise(realm, JS::js_undefined());
     });
 
@@ -4237,27 +4232,27 @@ WebIDL::ExceptionOr<void> set_up_writable_stream_default_controller_from_underly
 
     // 7. If underlyingSinkDict["write"] exists, then set writeAlgorithm to an algorithm which takes an argument chunk and returns the result of invoking underlyingSinkDict["write"] with argument list « chunk, controller » and callback this value underlyingSink.
     if (underlying_sink.write) {
-        write_algorithm = JS::create_heap_function(realm.heap(), [&realm, controller, underlying_sink_value, callback = underlying_sink.write](JS::Value chunk) -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
+        write_algorithm = JS::create_heap_function(realm.heap(), [&realm, controller, underlying_sink_value, callback = underlying_sink.write](JS::Value chunk) {
             // Note: callback returns a promise, so invoke_callback will never return an abrupt completion
-            auto result = MUST_OR_THROW_OOM(WebIDL::invoke_callback(*callback, underlying_sink_value, chunk, controller)).release_value();
+            auto result = MUST(WebIDL::invoke_callback(*callback, underlying_sink_value, chunk, controller)).release_value();
             return WebIDL::create_resolved_promise(realm, result);
         });
     }
 
     // 8. If underlyingSinkDict["close"] exists, then set closeAlgorithm to an algorithm which returns the result of invoking underlyingSinkDict["close"] with argument list «» and callback this value underlyingSink.
     if (underlying_sink.close) {
-        close_algorithm = JS::create_heap_function(realm.heap(), [&realm, underlying_sink_value, callback = underlying_sink.close]() -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
+        close_algorithm = JS::create_heap_function(realm.heap(), [&realm, underlying_sink_value, callback = underlying_sink.close]() {
             // Note: callback returns a promise, so invoke_callback will never return an abrupt completion
-            auto result = MUST_OR_THROW_OOM(WebIDL::invoke_callback(*callback, underlying_sink_value)).release_value();
+            auto result = MUST(WebIDL::invoke_callback(*callback, underlying_sink_value)).release_value();
             return WebIDL::create_resolved_promise(realm, result);
         });
     }
 
     // 9. If underlyingSinkDict["abort"] exists, then set abortAlgorithm to an algorithm which takes an argument reason and returns the result of invoking underlyingSinkDict["abort"] with argument list « reason » and callback this value underlyingSink.
     if (underlying_sink.abort) {
-        abort_algorithm = JS::create_heap_function(realm.heap(), [&realm, underlying_sink_value, callback = underlying_sink.abort](JS::Value reason) -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
+        abort_algorithm = JS::create_heap_function(realm.heap(), [&realm, underlying_sink_value, callback = underlying_sink.abort](JS::Value reason) {
             // Note: callback returns a promise, so invoke_callback will never return an abrupt completion
-            auto result = MUST_OR_THROW_OOM(WebIDL::invoke_callback(*callback, underlying_sink_value, reason)).release_value();
+            auto result = MUST(WebIDL::invoke_callback(*callback, underlying_sink_value, reason)).release_value();
             return WebIDL::create_resolved_promise(realm, result);
         });
     }
@@ -4304,11 +4299,11 @@ WebIDL::ExceptionOr<void> writable_stream_default_controller_advance_queue_if_ne
 
     // 9. If value is the close sentinel, perform ! WritableStreamDefaultControllerProcessClose(controller).
     if (is_close_sentinel(value)) {
-        TRY(writable_stream_default_controller_process_close(controller));
+        writable_stream_default_controller_process_close(controller);
     }
     // 10. Otherwise, perform ! WritableStreamDefaultControllerProcessWrite(controller, value).
     else {
-        TRY(writable_stream_default_controller_process_write(controller, value));
+        writable_stream_default_controller_process_write(controller, value);
     }
 
     return {};
@@ -4405,7 +4400,7 @@ double writable_stream_default_controller_get_desired_size(WritableStreamDefault
 }
 
 // https://streams.spec.whatwg.org/#writable-stream-default-controller-process-close
-WebIDL::ExceptionOr<void> writable_stream_default_controller_process_close(WritableStreamDefaultController& controller)
+void writable_stream_default_controller_process_close(WritableStreamDefaultController& controller)
 {
     // 1. Let stream be controller.[[stream]].
     auto stream = controller.stream();
@@ -4420,7 +4415,7 @@ WebIDL::ExceptionOr<void> writable_stream_default_controller_process_close(Writa
     VERIFY(controller.queue().is_empty());
 
     // 5. Let sinkClosePromise be the result of performing controller.[[closeAlgorithm]].
-    auto sink_close_promise = TRY(controller.close_algorithm()->function()());
+    auto sink_close_promise = controller.close_algorithm()->function()();
 
     // 6. Perform ! WritableStreamDefaultControllerClearAlgorithms(controller).
     writable_stream_default_controller_clear_algorithms(controller);
@@ -4440,12 +4435,10 @@ WebIDL::ExceptionOr<void> writable_stream_default_controller_process_close(Writa
 
         return JS::js_undefined();
     }));
-
-    return {};
 }
 
 // https://streams.spec.whatwg.org/#writable-stream-default-controller-process-write
-WebIDL::ExceptionOr<void> writable_stream_default_controller_process_write(WritableStreamDefaultController& controller, JS::Value chunk)
+void writable_stream_default_controller_process_write(WritableStreamDefaultController& controller, JS::Value chunk)
 {
     // 1. Let stream be controller.[[stream]].
     auto stream = controller.stream();
@@ -4454,7 +4447,7 @@ WebIDL::ExceptionOr<void> writable_stream_default_controller_process_write(Writa
     writable_stream_mark_first_write_request_in_flight(*stream);
 
     // 3. Let sinkWritePromise be the result of performing controller.[[writeAlgorithm]], passing in chunk.
-    auto sink_write_promise = TRY(controller.write_algorithm()->function()(chunk));
+    auto sink_write_promise = controller.write_algorithm()->function()(chunk);
 
     // 4. Upon fulfillment of sinkWritePromise,
     WebIDL::upon_fulfillment(*sink_write_promise, JS::create_heap_function(controller.heap(), [&controller, stream](JS::Value) -> WebIDL::ExceptionOr<JS::Value> {
@@ -4496,8 +4489,6 @@ WebIDL::ExceptionOr<void> writable_stream_default_controller_process_write(Writa
 
         return JS::js_undefined();
     }));
-
-    return {};
 }
 
 // https://streams.spec.whatwg.org/#writable-stream-default-controller-write
@@ -4552,19 +4543,19 @@ WebIDL::ExceptionOr<void> initialize_transform_stream(TransformStream& stream, J
     });
 
     // 2. Let writeAlgorithm be the following steps, taking a chunk argument:
-    auto write_algorithm = JS::create_heap_function(realm.heap(), [&stream](JS::Value chunk) -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
+    auto write_algorithm = JS::create_heap_function(realm.heap(), [&stream](JS::Value chunk) {
         // 1. Return ! TransformStreamDefaultSinkWriteAlgorithm(stream, chunk).
         return transform_stream_default_sink_write_algorithm(stream, chunk);
     });
 
     // 3. Let abortAlgorithm be the following steps, taking a reason argument:
-    auto abort_algorithm = JS::create_heap_function(realm.heap(), [&stream](JS::Value reason) -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
+    auto abort_algorithm = JS::create_heap_function(realm.heap(), [&stream](JS::Value reason) {
         // 1. Return ! TransformStreamDefaultSinkAbortAlgorithm(stream, reason).
-        return transform_stream_default_sink_abort_algorithm(stream, reason);
+        return MUST(transform_stream_default_sink_abort_algorithm(stream, reason));
     });
 
     // 4. Let closeAlgorithm be the following steps:
-    auto close_algorithm = JS::create_heap_function(realm.heap(), [&stream]() -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
+    auto close_algorithm = JS::create_heap_function(realm.heap(), [&stream]() {
         // 1. Return ! TransformStreamDefaultSinkCloseAlgorithm(stream).
         return transform_stream_default_sink_close_algorithm(stream);
     });
@@ -4573,15 +4564,15 @@ WebIDL::ExceptionOr<void> initialize_transform_stream(TransformStream& stream, J
     stream.set_writable(TRY(create_writable_stream(realm, writable_start_algorithm, write_algorithm, close_algorithm, abort_algorithm, writable_high_water_mark, writable_size_algorithm)));
 
     // 6. Let pullAlgorithm be the following steps:
-    auto pull_algorithm = JS::create_heap_function(realm.heap(), [&stream]() -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
+    auto pull_algorithm = JS::create_heap_function(realm.heap(), [&stream]() {
         // 1. Return ! TransformStreamDefaultSourcePullAlgorithm(stream).
-        return transform_stream_default_source_pull_algorithm(stream);
+        return MUST(transform_stream_default_source_pull_algorithm(stream));
     });
 
     // 7. Let cancelAlgorithm be the following steps, taking a reason argument:
-    auto cancel_algorithm = JS::create_heap_function(realm.heap(), [&stream, &realm](JS::Value reason) -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
+    auto cancel_algorithm = JS::create_heap_function(realm.heap(), [&stream, &realm](JS::Value reason) {
         // 1. Perform ! TransformStreamErrorWritableAndUnblockWrite(stream, reason).
-        TRY(transform_stream_error_writable_and_unblock_write(stream, reason));
+        MUST(transform_stream_error_writable_and_unblock_write(stream, reason));
 
         // 2. Return a promise resolved with undefined.
         return WebIDL::create_resolved_promise(realm, JS::js_undefined());
@@ -4633,7 +4624,7 @@ WebIDL::ExceptionOr<void> set_up_transform_stream_default_controller_from_transf
     auto controller = realm.heap().allocate<TransformStreamDefaultController>(realm, realm);
 
     // 2. Let transformAlgorithm be the following steps, taking a chunk argument:
-    auto transform_algorithm = JS::create_heap_function(realm.heap(), [controller, &realm, &vm](JS::Value chunk) -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
+    auto transform_algorithm = JS::create_heap_function(realm.heap(), [controller, &realm, &vm](JS::Value chunk) {
         // 1. Let result be TransformStreamDefaultControllerEnqueue(controller, chunk).
         auto result = transform_stream_default_controller_enqueue(*controller, chunk);
 
@@ -4648,7 +4639,7 @@ WebIDL::ExceptionOr<void> set_up_transform_stream_default_controller_from_transf
     });
 
     // 3. Let flushAlgorithm be an algorithm which returns a promise resolved with undefined.
-    auto flush_algorithm = JS::create_heap_function(realm.heap(), [&realm]() -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
+    auto flush_algorithm = JS::create_heap_function(realm.heap(), [&realm]() {
         return WebIDL::create_resolved_promise(realm, JS::js_undefined());
     });
 
@@ -4656,16 +4647,17 @@ WebIDL::ExceptionOr<void> set_up_transform_stream_default_controller_from_transf
     //    and returns the result of invoking transformerDict["transform"] with argument list « chunk, controller » and
     //    callback this value transformer.
     if (transformer_dict.transform) {
-        transform_algorithm = JS::create_heap_function(realm.heap(), [controller, &realm, transformer, callback = transformer_dict.transform](JS::Value chunk) -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
+        transform_algorithm = JS::create_heap_function(realm.heap(), [controller, &realm, transformer, callback = transformer_dict.transform](JS::Value chunk) {
             // Note: callback returns a promise, so invoke_callback will never return an abrupt completion
             auto result = MUST(WebIDL::invoke_callback(*callback, transformer, chunk, controller)).release_value();
             return WebIDL::create_resolved_promise(realm, result);
         });
     }
+
     // 5. If transformerDict["flush"] exists, set flushAlgorithm to an algorithm which returns the result of invoking
     //    transformerDict["flush"] with argument list « controller » and callback this value transformer.
     if (transformer_dict.flush) {
-        flush_algorithm = JS::create_heap_function(realm.heap(), [&realm, transformer, callback = transformer_dict.flush, controller]() -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
+        flush_algorithm = JS::create_heap_function(realm.heap(), [&realm, transformer, callback = transformer_dict.flush, controller]() {
             // Note: callback returns a promise, so invoke_callback will never return an abrupt completion
             auto result = MUST(WebIDL::invoke_callback(*callback, transformer, controller)).release_value();
             return WebIDL::create_resolved_promise(realm, result);
@@ -4768,12 +4760,12 @@ WebIDL::ExceptionOr<void> transform_stream_default_controller_terminate(Transfor
 }
 
 // https://streams.spec.whatwg.org/#transform-stream-default-controller-perform-transform
-WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> transform_stream_default_controller_perform_transform(TransformStreamDefaultController& controller, JS::Value chunk)
+JS::NonnullGCPtr<WebIDL::Promise> transform_stream_default_controller_perform_transform(TransformStreamDefaultController& controller, JS::Value chunk)
 {
     auto& realm = controller.realm();
 
     // 1. Let transformPromise be the result of performing controller.[[transformAlgorithm]], passing chunk.
-    auto transform_promise = TRY(controller.transform_algorithm()->function()(chunk));
+    auto transform_promise = controller.transform_algorithm()->function()(chunk);
 
     // 2. Return the result of reacting to transformPromise with the following rejection steps given the argument r:
     auto react_result = WebIDL::react_to_promise(*transform_promise,
@@ -4802,7 +4794,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> transform_stream_default_
 }
 
 // https://streams.spec.whatwg.org/#transform-stream-default-sink-close-algorithm
-WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> transform_stream_default_sink_close_algorithm(TransformStream& stream)
+JS::NonnullGCPtr<WebIDL::Promise> transform_stream_default_sink_close_algorithm(TransformStream& stream)
 {
     auto& realm = stream.realm();
 
@@ -4813,7 +4805,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> transform_stream_default_
     auto controller = stream.controller();
 
     // 3. Let flushPromise be the result of performing controller.[[flushAlgorithm]].
-    auto flush_promise = TRY(controller->flush_algorithm()->function()());
+    auto flush_promise = controller->flush_algorithm()->function()();
 
     // 4. Perform ! TransformStreamDefaultControllerClearAlgorithms(controller).
     transform_stream_default_controller_clear_algorithms(*controller);
@@ -4846,7 +4838,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> transform_stream_default_
 }
 
 // https://streams.spec.whatwg.org/#transform-stream-default-sink-write-algorithm
-WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> transform_stream_default_sink_write_algorithm(TransformStream& stream, JS::Value chunk)
+JS::NonnullGCPtr<WebIDL::Promise> transform_stream_default_sink_write_algorithm(TransformStream& stream, JS::Value chunk)
 {
     auto& realm = stream.realm();
 
@@ -4881,7 +4873,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> transform_stream_default_
                 VERIFY(state == WritableStream::State::Writable);
 
                 // 5. Return ! TransformStreamDefaultControllerPerformTransform(controller, chunk).
-                return TRY(transform_stream_default_controller_perform_transform(*controller, chunk))->promise();
+                return transform_stream_default_controller_perform_transform(*controller, chunk)->promise();
             }),
             {});
 
@@ -5073,12 +5065,12 @@ WebIDL::ExceptionOr<void> set_up_readable_byte_stream_controller_from_underlying
     auto start_algorithm = JS::create_heap_function(realm.heap(), []() -> WebIDL::ExceptionOr<JS::Value> { return JS::js_undefined(); });
 
     // 3. Let pullAlgorithm be an algorithm that returns a promise resolved with undefined.
-    auto pull_algorithm = JS::create_heap_function(realm.heap(), [&realm]() -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
+    auto pull_algorithm = JS::create_heap_function(realm.heap(), [&realm]() {
         return WebIDL::create_resolved_promise(realm, JS::js_undefined());
     });
 
     // 4. Let cancelAlgorithm be an algorithm that returns a promise resolved with undefined.
-    auto cancel_algorithm = JS::create_heap_function(realm.heap(), [&realm](JS::Value) -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
+    auto cancel_algorithm = JS::create_heap_function(realm.heap(), [&realm](JS::Value) {
         return WebIDL::create_resolved_promise(realm, JS::js_undefined());
     });
 
@@ -5092,18 +5084,18 @@ WebIDL::ExceptionOr<void> set_up_readable_byte_stream_controller_from_underlying
 
     // 6. If underlyingSourceDict["pull"] exists, then set pullAlgorithm to an algorithm which returns the result of invoking underlyingSourceDict["pull"] with argument list « controller » and callback this value underlyingSource.
     if (underlying_source_dict.pull) {
-        pull_algorithm = JS::create_heap_function(realm.heap(), [&realm, controller, underlying_source, callback = underlying_source_dict.pull]() -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
+        pull_algorithm = JS::create_heap_function(realm.heap(), [&realm, controller, underlying_source, callback = underlying_source_dict.pull]() {
             // Note: callback returns a promise, so invoke_callback will never return an abrupt completion
-            auto result = MUST_OR_THROW_OOM(WebIDL::invoke_callback(*callback, underlying_source, controller)).release_value();
+            auto result = MUST(WebIDL::invoke_callback(*callback, underlying_source, controller)).release_value();
             return WebIDL::create_resolved_promise(realm, result);
         });
     }
 
     // 7. If underlyingSourceDict["cancel"] exists, then set cancelAlgorithm to an algorithm which takes an argument reason and returns the result of invoking underlyingSourceDict["cancel"] with argument list « reason » and callback this value underlyingSource.
     if (underlying_source_dict.cancel) {
-        cancel_algorithm = JS::create_heap_function(realm.heap(), [&realm, underlying_source, callback = underlying_source_dict.cancel](JS::Value reason) -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
+        cancel_algorithm = JS::create_heap_function(realm.heap(), [&realm, underlying_source, callback = underlying_source_dict.cancel](JS::Value reason) {
             // Note: callback returns a promise, so invoke_callback will never return an abrupt completion
-            auto result = MUST_OR_THROW_OOM(WebIDL::invoke_callback(*callback, underlying_source, reason)).release_value();
+            auto result = MUST(WebIDL::invoke_callback(*callback, underlying_source, reason)).release_value();
             return WebIDL::create_resolved_promise(realm, result);
         });
     }

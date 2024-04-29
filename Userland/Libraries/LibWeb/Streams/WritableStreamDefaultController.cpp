@@ -44,7 +44,7 @@ WebIDL::ExceptionOr<void> WritableStreamDefaultController::error(JS::Value error
 WebIDL::ExceptionOr<JS::GCPtr<WebIDL::Promise>> WritableStreamDefaultController::abort_steps(JS::Value reason)
 {
     // 1. Let result be the result of performing this.[[abortAlgorithm]], passing reason.
-    auto result = TRY(m_abort_algorithm->function()(reason));
+    auto result = m_abort_algorithm->function()(reason);
 
     // 2. Perform ! WritableStreamDefaultControllerClearAlgorithms(this).
     writable_stream_default_controller_clear_algorithms(*this);

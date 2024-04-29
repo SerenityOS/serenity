@@ -168,7 +168,9 @@ WebIDL::ExceptionOr<void> ReadableByteStreamController::pull_steps(JS::NonnullGC
     readable_stream_add_read_request(*m_stream, read_request);
 
     // 7. Perform ! ReadableByteStreamControllerCallPullIfNeeded(this).
-    return readable_byte_stream_controller_call_pull_if_needed(*this);
+    readable_byte_stream_controller_call_pull_if_needed(*this);
+
+    return {};
 }
 
 // https://streams.spec.whatwg.org/#rbs-controller-private-pull
