@@ -454,7 +454,7 @@ void init_stage2(void*)
     for (auto* init_function = driver_init_table_start; init_function != driver_init_table_end; init_function++)
         (*init_function)();
 
-    StorageManagement::the().initialize(kernel_command_line().is_force_pio(), kernel_command_line().is_nvme_polling_enabled());
+    StorageManagement::the().initialize(kernel_command_line().is_nvme_polling_enabled());
     for (int i = 0; i < 5; ++i) {
         if (StorageManagement::the().determine_boot_device(kernel_command_line().root_device()))
             break;

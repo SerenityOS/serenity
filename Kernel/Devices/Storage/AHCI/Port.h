@@ -9,10 +9,9 @@
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
 #include <Kernel/Devices/Device.h>
-#include <Kernel/Devices/Storage/ATA/AHCI/Definitions.h>
-#include <Kernel/Devices/Storage/ATA/AHCI/InterruptHandler.h>
-#include <Kernel/Devices/Storage/ATA/ATADevice.h>
-#include <Kernel/Devices/Storage/ATA/Definitions.h>
+#include <Kernel/Devices/Storage/AHCI/ATADevice.h>
+#include <Kernel/Devices/Storage/AHCI/Definitions.h>
+#include <Kernel/Devices/Storage/AHCI/InterruptHandler.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Library/LockWeakPtr.h>
 #include <Kernel/Library/LockWeakable.h>
@@ -126,7 +125,7 @@ private:
     NonnullRefPtr<Memory::PhysicalPage> const m_identify_buffer_page;
 
     volatile AHCI::PortRegisters& m_port_registers;
-    LockWeakPtr<AHCIController> m_parent_controller;
+    NonnullRefPtr<AHCIController> const m_parent_controller;
     AHCI::PortInterruptStatusBitField m_interrupt_status;
     AHCI::PortInterruptEnableBitField m_interrupt_enable;
 

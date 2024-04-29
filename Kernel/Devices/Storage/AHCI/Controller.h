@@ -8,8 +8,8 @@
 
 #include <AK/OwnPtr.h>
 #include <AK/Types.h>
-#include <Kernel/Devices/Storage/ATA/AHCI/Definitions.h>
-#include <Kernel/Devices/Storage/ATA/ATAController.h>
+#include <Kernel/Devices/Storage/AHCI/Definitions.h>
+#include <Kernel/Devices/Storage/StorageController.h>
 #include <Kernel/Devices/Storage/StorageDevice.h>
 #include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Memory/TypedMapping.h>
@@ -20,7 +20,7 @@ namespace Kernel {
 class AsyncBlockDeviceRequest;
 class AHCIInterruptHandler;
 class AHCIPort;
-class AHCIController final : public ATAController
+class AHCIController final : public StorageController
     , public PCI::Device {
     friend class AHCIInterruptHandler;
 
@@ -34,8 +34,9 @@ public:
     virtual ErrorOr<void> reset() override;
     virtual ErrorOr<void> shutdown() override;
     virtual size_t devices_count() const override;
-    virtual void start_request(ATADevice const&, AsyncBlockDeviceRequest&) override;
     virtual void complete_current_request(AsyncDeviceRequest::RequestResult) override;
+
+    void start_request(ATA::Address, AsyncBlockDeviceRequest&);
 
     void handle_interrupt_for_port(Badge<AHCIInterruptHandler>, u32 port_index) const;
 

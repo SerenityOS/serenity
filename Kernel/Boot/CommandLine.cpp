@@ -92,11 +92,6 @@ UNMAP_AFTER_INIT bool CommandLine::is_boot_profiling_enabled() const
     return contains("boot_prof"sv);
 }
 
-UNMAP_AFTER_INIT bool CommandLine::is_ide_enabled() const
-{
-    return !contains("disable_ide"sv);
-}
-
 UNMAP_AFTER_INIT bool CommandLine::is_smp_enabled() const
 {
     // Note: We can't enable SMP mode without enabling the IOAPIC.
@@ -193,11 +188,6 @@ bool CommandLine::is_pc_speaker_enabled() const
     if (value == "off"sv)
         return false;
     PANIC("Unknown pcspeaker setting: {}", value);
-}
-
-UNMAP_AFTER_INIT bool CommandLine::is_force_pio() const
-{
-    return contains("force_pio"sv);
 }
 
 UNMAP_AFTER_INIT StringView CommandLine::root_device() const

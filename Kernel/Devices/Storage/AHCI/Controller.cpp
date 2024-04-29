@@ -12,8 +12,9 @@
 #include <Kernel/Boot/CommandLine.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/BarMapping.h>
-#include <Kernel/Devices/Storage/ATA/AHCI/Controller.h>
-#include <Kernel/Devices/Storage/ATA/AHCI/InterruptHandler.h>
+#include <Kernel/Devices/Storage/AHCI/Controller.h>
+#include <Kernel/Devices/Storage/AHCI/InterruptHandler.h>
+#include <Kernel/Devices/Storage/StorageManagement.h>
 #include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Memory/MemoryManager.h>
 
@@ -87,9 +88,9 @@ size_t AHCIController::devices_count() const
     return count;
 }
 
-void AHCIController::start_request(ATADevice const& device, AsyncBlockDeviceRequest& request)
+void AHCIController::start_request(ATA::Address address, AsyncBlockDeviceRequest& request)
 {
-    auto port = m_ports[device.ata_address().port];
+    auto port = m_ports[address.port];
     VERIFY(port);
     port->start_request(request);
 }
@@ -111,7 +112,7 @@ volatile AHCI::HBA& AHCIController::hba() const
 }
 
 UNMAP_AFTER_INIT AHCIController::AHCIController(PCI::DeviceIdentifier const& pci_device_identifier)
-    : ATAController()
+    : StorageController(StorageManagement::generate_relative_ahci_controller_id({}))
     , PCI::Device(const_cast<PCI::DeviceIdentifier&>(pci_device_identifier))
 {
 }

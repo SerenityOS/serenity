@@ -113,15 +113,11 @@ set(KERNEL_SOURCES
     Devices/GPU/VirtIO/GPU3DDevice.cpp
     Devices/GPU/VirtIO/GraphicsAdapter.cpp
     Devices/Loop/LoopDevice.cpp
-    Devices/Storage/ATA/AHCI/Controller.cpp
-    Devices/Storage/ATA/AHCI/Port.cpp
-    Devices/Storage/ATA/AHCI/InterruptHandler.cpp
-    Devices/Storage/ATA/GenericIDE/Controller.cpp
-    Devices/Storage/ATA/GenericIDE/Channel.cpp
-    Devices/Storage/ATA/ATAController.cpp
-    Devices/Storage/ATA/ATADevice.cpp
-    Devices/Storage/ATA/ATADiskDevice.cpp
-    Devices/Storage/ATA/ATAPort.cpp
+    Devices/Storage/AHCI/ATADevice.cpp
+    Devices/Storage/AHCI/ATADiskDevice.cpp
+    Devices/Storage/AHCI/Controller.cpp
+    Devices/Storage/AHCI/InterruptHandler.cpp
+    Devices/Storage/AHCI/Port.cpp
     Devices/Storage/NVMe/NVMeController.cpp
     Devices/Storage/NVMe/NVMeNameSpace.cpp
     Devices/Storage/NVMe/NVMeInterruptQueue.cpp
@@ -419,10 +415,8 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
 
         Arch/x86_64/ISABus/HID/VMWareMouseDevice.cpp
         Arch/x86_64/ISABus/I8042Controller.cpp
-        Arch/x86_64/ISABus/IDEController.cpp
         Arch/x86_64/ISABus/SerialDevice.cpp
         Arch/x86_64/PCI/Controller/HostBridge.cpp
-        Arch/x86_64/PCI/IDELegacyModeController.cpp
         Arch/x86_64/PCI/Initializer.cpp
         Arch/x86_64/PCI/MSI.cpp
 

@@ -72,7 +72,6 @@ public:
     [[nodiscard]] bool contains(StringView key) const;
 
     [[nodiscard]] bool is_boot_profiling_enabled() const;
-    [[nodiscard]] bool is_ide_enabled() const;
     [[nodiscard]] bool is_ioapic_enabled() const;
     [[nodiscard]] bool is_smp_enabled_without_ioapic_enabled() const;
     [[nodiscard]] bool is_smp_enabled() const;
@@ -85,7 +84,6 @@ public:
     [[nodiscard]] bool i8042_enable_first_port_translation() const;
     [[nodiscard]] GraphicsSubsystemMode graphics_subsystem_mode() const;
     [[nodiscard]] I8042PresenceMode i8042_presence_mode() const;
-    [[nodiscard]] bool is_force_pio() const;
     [[nodiscard]] AcpiFeatureLevel acpi_feature_level() const;
     [[nodiscard]] StringView system_mode() const;
     [[nodiscard]] PanicMode panic_mode(Validate should_validate = Validate::No) const;

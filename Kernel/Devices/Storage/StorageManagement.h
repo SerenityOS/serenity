@@ -18,13 +18,13 @@
 
 namespace Kernel {
 
-class ATAController;
+class AHCIController;
 class NVMeController;
 class StorageManagement {
 
 public:
     StorageManagement();
-    void initialize(bool force_pio, bool nvme_poll);
+    void initialize(bool nvme_poll);
     static StorageManagement& the();
 
     bool determine_boot_device(StringView boot_argument);
@@ -38,14 +38,14 @@ public:
     static u32 generate_controller_id();
 
     static u32 generate_relative_nvme_controller_id(Badge<NVMeController>);
-    static u32 generate_relative_ata_controller_id(Badge<ATAController>);
+    static u32 generate_relative_ahci_controller_id(Badge<AHCIController>);
     static u32 generate_relative_sd_controller_id(Badge<SDHostController>);
 
     void add_device(StorageDevice&);
     void remove_device(StorageDevice&);
 
 private:
-    void enumerate_pci_controllers(bool force_pio, bool nvme_poll);
+    void enumerate_pci_controllers(bool nvme_poll);
     void enumerate_storage_devices();
     ErrorOr<void> enumerate_device_partitions(StorageDevice&);
     void enumerate_disk_partitions();

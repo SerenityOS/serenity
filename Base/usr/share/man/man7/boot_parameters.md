@@ -24,9 +24,6 @@ List of options:
 * **`boot_prof`** - If present on the command line, global system profiling will be enabled
    as soon as possible during the boot sequence. Allowing you to profile startup of all applications.
 
-* **`disable_ide`** - If present on the command line, the IDE controller will not be initialized
-   during the boot sequence. Leaving only the AHCI and Ram Disk controllers.
-
 * **`disable_physical_storage`** - If present on the command line, neither AHCI, or IDE controllers will be initialized on boot.
 
 * **`disable_ps2_mouse`** - If present on the command line, no PS2 mouse will be attached.
@@ -49,8 +46,6 @@ List of options:
 
 * **`graphics_subsystem_mode`** - This parameter expects one of the following values. **`on`**- Boot into the graphical environment if possible (default). **`off`** - Boot into text mode, don't initialize any driver. **`limited`** - Boot into the pre-defined framebuffer that the bootloader
 has set up before booting the Kernel, don't initialize any driver.
-
-* **`force_pio`** - If present on the command line, the IDE controllers will be force into PIO mode when initialized IDE Channels on boot.
 
 * **`hpet`** - This parameter expects one of the following values. **`periodic`** - The High Precision Event Timer should
   be configured in a periodic mode. **`nonperiodic`** - The High Precision Event Timer should eb configure din non-periodic mode.
