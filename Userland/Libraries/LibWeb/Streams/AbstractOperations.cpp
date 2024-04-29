@@ -2654,7 +2654,7 @@ void readable_byte_stream_controller_error(ReadableByteStreamController& control
 }
 
 // https://streams.spec.whatwg.org/#abstract-opdef-readablebytestreamcontrollerfillreadrequestfromqueue
-WebIDL::ExceptionOr<void> readable_byte_stream_controller_fill_read_request_from_queue(ReadableByteStreamController& controller, JS::NonnullGCPtr<ReadRequest> read_request)
+void readable_byte_stream_controller_fill_read_request_from_queue(ReadableByteStreamController& controller, JS::NonnullGCPtr<ReadRequest> read_request)
 {
     auto& vm = controller.vm();
     auto& realm = controller.realm();
@@ -2673,12 +2673,10 @@ WebIDL::ExceptionOr<void> readable_byte_stream_controller_fill_read_request_from
     readable_byte_stream_controller_handle_queue_drain(controller);
 
     // 6. Let view be ! Construct(%Uint8Array%, « entry’s buffer, entry’s byte offset, entry’s byte length »).
-    auto view = MUST_OR_THROW_OOM(JS::construct(vm, *realm.intrinsics().uint8_array_constructor(), entry.buffer, JS::Value(entry.byte_offset), JS::Value(entry.byte_length)));
+    auto view = MUST(JS::construct(vm, *realm.intrinsics().uint8_array_constructor(), entry.buffer, JS::Value(entry.byte_offset), JS::Value(entry.byte_length)));
 
     // 7. Perform readRequest’s chunk steps, given view.
     read_request->on_chunk(view);
-
-    return {};
 }
 
 // https://streams.spec.whatwg.org/#readable-byte-stream-controller-get-desired-size
@@ -3166,7 +3164,7 @@ WebIDL::ExceptionOr<void> readable_byte_stream_controller_enqueue(ReadableByteSt
     // 9. If ! ReadableStreamHasDefaultReader(stream) is true,
     if (readable_stream_has_default_reader(*stream)) {
         // 1. Perform ! ReadableByteStreamControllerProcessReadRequestsUsingQueue(controller).
-        TRY(readable_byte_stream_controller_process_read_requests_using_queue(controller));
+        readable_byte_stream_controller_process_read_requests_using_queue(controller);
 
         // 2. If ! ReadableStreamGetNumReadRequests(stream) is 0,
         if (readable_stream_get_num_read_requests(*stream) == 0) {
@@ -3191,7 +3189,7 @@ WebIDL::ExceptionOr<void> readable_byte_stream_controller_enqueue(ReadableByteSt
             }
 
             // 3. Let transferredView be ! Construct(%Uint8Array%, « transferredBuffer, byteOffset, byteLength »).
-            auto transferred_view = MUST_OR_THROW_OOM(JS::construct(vm, *realm.intrinsics().uint8_array_constructor(), transferred_buffer, JS::Value(byte_offset), JS::Value(byte_length)));
+            auto transferred_view = MUST(JS::construct(vm, *realm.intrinsics().uint8_array_constructor(), transferred_buffer, JS::Value(byte_offset), JS::Value(byte_length)));
 
             // 4. Perform ! ReadableStreamFulfillReadRequest(stream, transferredView, false).
             readable_stream_fulfill_read_request(*stream, transferred_view, false);
@@ -3323,7 +3321,7 @@ void readable_byte_stream_controller_process_pull_into_descriptors_using_queue(R
 }
 
 // https://streams.spec.whatwg.org/#abstract-opdef-readablebytestreamcontrollerprocessreadrequestsusingqueue
-WebIDL::ExceptionOr<void> readable_byte_stream_controller_process_read_requests_using_queue(ReadableByteStreamController& controller)
+void readable_byte_stream_controller_process_read_requests_using_queue(ReadableByteStreamController& controller)
 {
     // 1. Let reader be controller.[[stream]].[[reader]].
     auto reader = controller.stream()->reader();
@@ -3336,17 +3334,15 @@ WebIDL::ExceptionOr<void> readable_byte_stream_controller_process_read_requests_
     while (!readable_stream_default_reader->read_requests().is_empty()) {
         // 1. If controller.[[queueTotalSize]] is 0, return.
         if (controller.queue_total_size() == 0.0)
-            return {};
+            return;
 
         // 2. Let readRequest be reader.[[readRequests]][0].
         // 3. Remove readRequest from reader.[[readRequests]].
         auto read_request = readable_stream_default_reader->read_requests().take_first();
 
         // 4. Perform ! ReadableByteStreamControllerFillReadRequestFromQueue(controller, readRequest).
-        TRY(readable_byte_stream_controller_fill_read_request_from_queue(controller, read_request));
+        readable_byte_stream_controller_fill_read_request_from_queue(controller, read_request);
     }
-
-    return {};
 }
 
 // https://streams.spec.whatwg.org/#readable-byte-stream-controller-enqueue-chunk-to-queue
@@ -3546,10 +3542,9 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> writable_stream_close(Wri
 }
 
 // https://streams.spec.whatwg.org/#writable-stream-add-write-request
-WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> writable_stream_add_write_request(WritableStream& stream)
+JS::NonnullGCPtr<WebIDL::Promise> writable_stream_add_write_request(WritableStream& stream)
 {
     auto& realm = stream.realm();
-    auto& vm = stream.vm();
 
     // 1. Assert: ! IsWritableStreamLocked(stream) is true.
     VERIFY(is_writable_stream_locked(stream));
@@ -3561,7 +3556,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> writable_stream_add_write
     auto promise = WebIDL::create_promise(realm);
 
     // 4. Append promise to stream.[[writeRequests]].
-    TRY_OR_THROW_OOM(vm, stream.write_requests().try_append(promise));
+    stream.write_requests().append(promise);
 
     // 5. Return promise.
     return promise;
