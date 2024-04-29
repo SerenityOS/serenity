@@ -221,25 +221,23 @@ JS::Value dequeue_value(T& container)
 
 // https://streams.spec.whatwg.org/#enqueue-value-with-size
 template<typename T>
-WebIDL::ExceptionOr<void> enqueue_value_with_size(T& container, JS::Value value, JS::Value size_value)
+WebIDL::ExceptionOr<void> enqueue_value_with_size(T& container, JS::Value value, JS::Value size)
 {
     // 1. Assert: container has [[queue]] and [[queueTotalSize]] internal slots.
 
     // 2. If ! IsNonNegativeNumber(size) is false, throw a RangeError exception.
-    if (!is_non_negative_number(size_value))
+    if (!is_non_negative_number(size))
         return WebIDL::SimpleException { WebIDL::SimpleExceptionType::RangeError, "Chunk has non-positive size"sv };
 
-    auto size = size_value.as_double();
-
     // 3. If size is +∞, throw a RangeError exception.
-    if (size == HUGE_VAL)
+    if (size.is_positive_infinity())
         return WebIDL::SimpleException { WebIDL::SimpleExceptionType::RangeError, "Chunk has infinite size"sv };
 
     // 4. Append a new value-with-size with value value and size size to container.[[queue]].
-    container.queue().append({ value, size });
+    container.queue().append({ value, size.as_double() });
 
     // 5. Set container.[[queueTotalSize]] to container.[[queueTotalSize]] + size.
-    container.set_queue_total_size(container.queue_total_size() + size);
+    container.set_queue_total_size(container.queue_total_size() + size.as_double());
 
     return {};
 }
