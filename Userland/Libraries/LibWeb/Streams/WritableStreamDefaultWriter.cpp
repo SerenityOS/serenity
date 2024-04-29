@@ -90,19 +90,19 @@ JS::GCPtr<JS::Object> WritableStreamDefaultWriter::close()
 }
 
 // https://streams.spec.whatwg.org/#default-writer-release-lock
-WebIDL::ExceptionOr<void> WritableStreamDefaultWriter::release_lock()
+void WritableStreamDefaultWriter::release_lock()
 {
     // 1. Let stream be this.[[stream]].
 
     // 2. If stream is undefined, return.
     if (!m_stream)
-        return {};
+        return;
 
     // 3. Assert: stream.[[writer]] is not undefined.
     VERIFY(m_stream->writer());
 
     // 4. Perform ! WritableStreamDefaultWriterRelease(this).
-    return writable_stream_default_writer_release(*this);
+    writable_stream_default_writer_release(*this);
 }
 
 // https://streams.spec.whatwg.org/#default-writer-write

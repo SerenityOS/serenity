@@ -30,7 +30,7 @@ public:
     JS::GCPtr<JS::Object> ready();
     JS::GCPtr<JS::Object> abort(JS::Value reason);
     JS::GCPtr<JS::Object> close();
-    WebIDL::ExceptionOr<void> release_lock();
+    void release_lock();
     JS::GCPtr<JS::Object> write(JS::Value chunk);
 
     JS::GCPtr<WebIDL::Promise> closed_promise() { return m_closed_promise; }
