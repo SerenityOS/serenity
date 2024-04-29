@@ -20,9 +20,15 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<OscillatorNode>> OscillatorNode::create(JS:
 }
 
 // https://webaudio.github.io/web-audio-api/#dom-oscillatornode-oscillatornode
-WebIDL::ExceptionOr<JS::NonnullGCPtr<OscillatorNode>> OscillatorNode::construct_impl(JS::Realm& realm, JS::NonnullGCPtr<BaseAudioContext>, OscillatorOptions const&)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<OscillatorNode>> OscillatorNode::construct_impl(JS::Realm& realm, JS::NonnullGCPtr<BaseAudioContext> context, OscillatorOptions const& options)
 {
-    return WebIDL::NotSupportedError::create(realm, "FIXME: Implement OscillatorNode::construct_impl"_fly_string);
+    // FIXME: Invoke "Initialize the AudioNode" steps.
+    return realm.vm().heap().allocate<OscillatorNode>(realm, realm, context, options);
+}
+
+OscillatorNode::OscillatorNode(JS::Realm& realm, JS::NonnullGCPtr<BaseAudioContext> context, OscillatorOptions const&)
+    : AudioScheduledSourceNode(realm, context)
+{
 }
 
 void OscillatorNode::initialize(JS::Realm& realm)

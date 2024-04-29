@@ -1,0 +1,15 @@
+<script src="../include.js"></script>
+<script>
+    test(() => {
+        const audioContext = new OfflineAudioContext(1, 5000, 44100);
+
+        const oscillator = audioContext.createOscillator();
+
+        let prototype = Object.getPrototypeOf(oscillator);
+
+        while (prototype) {
+            println(prototype.constructor.name);
+            prototype = Object.getPrototypeOf(prototype);
+        }
+    });
+</script>

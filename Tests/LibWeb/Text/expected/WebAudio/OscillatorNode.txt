@@ -1,0 +1,5 @@
+OscillatorNode
+AudioScheduledSourceNode
+AudioNode
+EventTarget
+Object

@@ -6,10 +6,18 @@
 
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/WebAudio/AudioNode.h>
+#include <LibWeb/WebAudio/BaseAudioContext.h>
 
 namespace Web::WebAudio {
 
 JS_DEFINE_ALLOCATOR(AudioNode);
+
+AudioNode::AudioNode(JS::Realm& realm, JS::NonnullGCPtr<BaseAudioContext> context)
+    : DOM::EventTarget(realm)
+    , m_context(context)
+
+{
+}
 
 AudioNode::~AudioNode() = default;
 
@@ -91,6 +99,7 @@ void AudioNode::initialize(JS::Realm& realm)
 void AudioNode::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
+    visitor.visit(m_context);
 }
 
 }
