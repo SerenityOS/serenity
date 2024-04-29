@@ -262,11 +262,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         } else {
             if (fs_type.is_empty())
                 fs_type = "ext2"sv;
-            auto stat = TRY(Core::System::fstat(fd));
-            if (!S_ISBLK(stat.st_mode))
-                TRY(mount_using_loop_device(fd, mountpoint, fs_type, flags));
-            else
-                TRY(Core::System::mount(fd, mountpoint, fs_type, flags));
+            if (fd >= 0) {
+                auto stat = TRY(Core::System::fstat(fd));
+                if (!S_ISBLK(stat.st_mode)) {
+                    TRY(mount_using_loop_device(fd, mountpoint, fs_type, flags));
+                    return 0;
+                }
+            }
+            TRY(Core::System::mount(fd, mountpoint, fs_type, flags));
         }
         return 0;
     }
