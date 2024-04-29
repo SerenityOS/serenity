@@ -4657,24 +4657,18 @@ WebIDL::ExceptionOr<void> set_up_transform_stream_default_controller_from_transf
     //    callback this value transformer.
     if (transformer_dict.transform) {
         transform_algorithm = JS::create_heap_function(realm.heap(), [controller, &realm, transformer, callback = transformer_dict.transform](JS::Value chunk) -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
-            // Note: callback does not return a promise, so invoke_callback may return an abrupt completion
-            auto result = WebIDL::invoke_callback(*callback, transformer, chunk, controller);
-            if (result.is_error())
-                return WebIDL::create_rejected_promise(realm, *result.release_value());
-
-            return WebIDL::create_resolved_promise(realm, *result.release_value());
+            // Note: callback returns a promise, so invoke_callback will never return an abrupt completion
+            auto result = MUST(WebIDL::invoke_callback(*callback, transformer, chunk, controller)).release_value();
+            return WebIDL::create_resolved_promise(realm, result);
         });
     }
     // 5. If transformerDict["flush"] exists, set flushAlgorithm to an algorithm which returns the result of invoking
     //    transformerDict["flush"] with argument list « controller » and callback this value transformer.
     if (transformer_dict.flush) {
         flush_algorithm = JS::create_heap_function(realm.heap(), [&realm, transformer, callback = transformer_dict.flush, controller]() -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
-            // Note: callback does not return a promise, so invoke_callback may return an abrupt completion
-            auto result = WebIDL::invoke_callback(*callback, transformer, controller);
-            if (result.is_error()) {
-                return WebIDL::create_rejected_promise(realm, *result.release_value());
-            }
-            return WebIDL::create_resolved_promise(realm, *result.release_value());
+            // Note: callback returns a promise, so invoke_callback will never return an abrupt completion
+            auto result = MUST(WebIDL::invoke_callback(*callback, transformer, controller)).release_value();
+            return WebIDL::create_resolved_promise(realm, result);
         });
     }
 
