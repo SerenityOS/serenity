@@ -97,7 +97,7 @@ WebIDL::ExceptionOr<void> readable_byte_stream_controller_enqueue(ReadableByteSt
 WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::ArrayBuffer>> transfer_array_buffer(JS::Realm& realm, JS::ArrayBuffer& buffer);
 WebIDL::ExceptionOr<void> readable_byte_stream_controller_enqueue_detached_pull_into_queue(ReadableByteStreamController& controller, PullIntoDescriptor& pull_into_descriptor);
 void readable_byte_stream_controller_commit_pull_into_descriptor(ReadableStream&, PullIntoDescriptor const&);
-WebIDL::ExceptionOr<void> readable_byte_stream_controller_process_read_requests_using_queue(ReadableByteStreamController& controller);
+void readable_byte_stream_controller_process_read_requests_using_queue(ReadableByteStreamController& controller);
 void readable_byte_stream_controller_process_pull_into_descriptors_using_queue(ReadableByteStreamController&);
 void readable_byte_stream_controller_enqueue_chunk_to_queue(ReadableByteStreamController& controller, JS::NonnullGCPtr<JS::ArrayBuffer> buffer, u32 byte_offset, u32 byte_length);
 WebIDL::ExceptionOr<void> readable_byte_stream_controller_enqueue_cloned_chunk_to_queue(ReadableByteStreamController& controller, JS::ArrayBuffer& buffer, u64 byte_offset, u64 byte_length);
@@ -108,7 +108,7 @@ void readable_byte_stream_controller_clear_algorithms(ReadableByteStreamControll
 void readable_byte_stream_controller_clear_pending_pull_intos(ReadableByteStreamController&);
 WebIDL::ExceptionOr<void> readable_byte_stream_controller_close(ReadableByteStreamController&);
 void readable_byte_stream_controller_error(ReadableByteStreamController&, JS::Value error);
-WebIDL::ExceptionOr<void> readable_byte_stream_controller_fill_read_request_from_queue(ReadableByteStreamController&, JS::NonnullGCPtr<ReadRequest>);
+void readable_byte_stream_controller_fill_read_request_from_queue(ReadableByteStreamController&, JS::NonnullGCPtr<ReadRequest>);
 bool readable_byte_stream_controller_fill_pull_into_descriptor_from_queue(ReadableByteStreamController&, PullIntoDescriptor&);
 Optional<double> readable_byte_stream_controller_get_desired_size(ReadableByteStreamController const&);
 void readable_byte_stream_controller_handle_queue_drain(ReadableByteStreamController&);
@@ -127,7 +127,7 @@ WebIDL::ExceptionOr<void> set_up_writable_stream_default_writer(WritableStreamDe
 WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> writable_stream_abort(WritableStream&, JS::Value reason);
 WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> writable_stream_close(WritableStream&);
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> writable_stream_add_write_request(WritableStream&);
+JS::NonnullGCPtr<WebIDL::Promise> writable_stream_add_write_request(WritableStream&);
 bool writable_stream_close_queued_or_in_flight(WritableStream const&);
 WebIDL::ExceptionOr<void> writable_stream_deal_with_rejection(WritableStream&, JS::Value error);
 WebIDL::ExceptionOr<void> writable_stream_finish_erroring(WritableStream&);

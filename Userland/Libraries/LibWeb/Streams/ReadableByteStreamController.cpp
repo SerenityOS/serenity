@@ -112,7 +112,6 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> ReadableByteStreamControl
 // https://streams.spec.whatwg.org/#rbs-controller-private-pull
 WebIDL::ExceptionOr<void> ReadableByteStreamController::pull_steps(JS::NonnullGCPtr<ReadRequest> read_request)
 {
-    auto& vm = this->vm();
     auto& realm = this->realm();
 
     // 1. Let stream be this.[[stream]].
@@ -126,7 +125,8 @@ WebIDL::ExceptionOr<void> ReadableByteStreamController::pull_steps(JS::NonnullGC
         VERIFY(readable_stream_get_num_read_requests(*m_stream) == 0);
 
         // 2. Perform ! ReadableByteStreamControllerFillReadRequestFromQueue(this, readRequest).
-        TRY(readable_byte_stream_controller_fill_read_request_from_queue(*this, read_request));
+        readable_byte_stream_controller_fill_read_request_from_queue(*this, read_request);
+
         // 3. Return.
         return {};
     }
@@ -161,7 +161,7 @@ WebIDL::ExceptionOr<void> ReadableByteStreamController::pull_steps(JS::NonnullGC
         };
 
         // 4. Append pullIntoDescriptor to this.[[pendingPullIntos]].
-        TRY_OR_THROW_OOM(vm, m_pending_pull_intos.try_append(move(pull_into_descriptor)));
+        m_pending_pull_intos.append(move(pull_into_descriptor));
     }
 
     // 6. Perform ! ReadableStreamAddReadRequest(stream, readRequest).
@@ -176,8 +176,6 @@ WebIDL::ExceptionOr<void> ReadableByteStreamController::pull_steps(JS::NonnullGC
 // https://streams.spec.whatwg.org/#rbs-controller-private-pull
 WebIDL::ExceptionOr<void> ReadableByteStreamController::release_steps()
 {
-    auto& vm = this->vm();
-
     // 1. If this.[[pendingPullIntos]] is not empty,
     if (!m_pending_pull_intos.is_empty()) {
         // 1. Let firstPendingPullInto be this.[[pendingPullIntos]][0].
@@ -188,7 +186,7 @@ WebIDL::ExceptionOr<void> ReadableByteStreamController::release_steps()
 
         // 3. Set this.[[pendingPullIntos]] to the list « firstPendingPullInto ».
         m_pending_pull_intos.clear();
-        TRY_OR_THROW_OOM(vm, m_pending_pull_intos.try_append(first_pending_pull_into));
+        m_pending_pull_intos.append(first_pending_pull_into);
     }
 
     return {};
