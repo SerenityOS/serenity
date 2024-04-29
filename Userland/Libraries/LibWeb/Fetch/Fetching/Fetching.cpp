@@ -1355,7 +1355,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
         // 12. Append a request `Origin` header for httpRequest.
         http_request->add_origin_header();
 
-        // FIXME: 13. Append the Fetch metadata headers for httpRequest.
+        // 13. Append the Fetch metadata headers for httpRequest.
+        append_fetch_metadata_headers_for_request(*http_request);
 
         // 14. If httpRequest’s header list does not contain `User-Agent`, then user agents should append
         //     (`User-Agent`, default `User-Agent` value) to httpRequest’s header list.
@@ -2101,6 +2102,26 @@ void set_sec_fetch_user_header(Infrastructure::Request& request)
         .value = move(header_value),
     };
     request.header_list()->append(move(header));
+}
+
+// https://w3c.github.io/webappsec-fetch-metadata/#abstract-opdef-append-the-fetch-metadata-headers-for-a-request
+void append_fetch_metadata_headers_for_request(Infrastructure::Request& request)
+{
+    // 1. If r’s url is not an potentially trustworthy URL, return.
+    if (SecureContexts::is_url_potentially_trustworthy(request.url()) != SecureContexts::Trustworthiness::PotentiallyTrustworthy)
+        return;
+
+    // 2. Set the Sec-Fetch-Dest header for r.
+    set_sec_fetch_dest_header(request);
+
+    // 3. Set the Sec-Fetch-Mode header for r.
+    set_sec_fetch_mode_header(request);
+
+    // 4. Set the Sec-Fetch-Site header for r.
+    set_sec_fetch_site_header(request);
+
+    // 5. Set the Sec-Fetch-User header for r.
+    set_sec_fetch_user_header(request);
 }
 
 }
