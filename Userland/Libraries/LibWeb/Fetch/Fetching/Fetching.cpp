@@ -2019,4 +2019,24 @@ void set_sec_fetch_dest_header(Infrastructure::Request& request)
     request.header_list()->append(move(header));
 }
 
+// https://w3c.github.io/webappsec-fetch-metadata/#abstract-opdef-set-dest
+void set_sec_fetch_mode_header(Infrastructure::Request& request)
+{
+    // 1. Assert: r’s url is a potentially trustworthy URL.
+    VERIFY(SecureContexts::is_url_potentially_trustworthy(request.url()) == SecureContexts::Trustworthiness::PotentiallyTrustworthy);
+
+    // 2. Let header be a Structured Header whose value is a token.
+    // FIXME: This is handled below, as Serenity doesn't have APIs for RFC 8941.
+
+    // 3. Set header’s value to r’s mode.
+    auto header_value = MUST(ByteBuffer::copy(Infrastructure::request_mode_to_string(request.mode()).bytes()));
+
+    // 4. Set a structured field value `Sec-Fetch-Mode`/header in r’s header list.
+    auto header = Infrastructure::Header {
+        .name = MUST(ByteBuffer::copy("Sec-Fetch-Mode"sv.bytes())),
+        .value = move(header_value),
+    };
+    request.header_list()->append(move(header));
+}
+
 }

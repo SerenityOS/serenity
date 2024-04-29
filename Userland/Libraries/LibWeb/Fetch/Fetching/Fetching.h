@@ -40,4 +40,5 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
 WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> nonstandard_resource_loader_file_or_http_network_fetch(JS::Realm&, Infrastructure::FetchParams const&, IncludeCredentials include_credentials = IncludeCredentials::No, IsNewConnectionFetch is_new_connection_fetch = IsNewConnectionFetch::No);
 WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> cors_preflight_fetch(JS::Realm&, Infrastructure::Request&);
 void set_sec_fetch_dest_header(Infrastructure::Request&);
+void set_sec_fetch_mode_header(Infrastructure::Request&);
 }
