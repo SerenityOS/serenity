@@ -109,7 +109,7 @@ void StackingContext::paint_descendants(PaintContext& context, Paintable const& 
 
         if (stacking_context && z_index.value_or(0) != 0)
             return;
-        if (child.is_positioned() && !z_index.has_value())
+        if (child.is_positioned() && z_index.value_or(0) == 0)
             return;
 
         if (stacking_context) {
