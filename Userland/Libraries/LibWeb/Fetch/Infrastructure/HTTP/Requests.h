@@ -517,4 +517,6 @@ private:
     Vector<JS::NonnullGCPtr<Fetching::PendingResponse>> m_pending_responses;
 };
 
+StringView request_destination_to_string(Request::Destination);
+
 }
