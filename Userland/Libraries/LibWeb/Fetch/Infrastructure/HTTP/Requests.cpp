@@ -367,4 +367,55 @@ bool Request::cross_origin_embedder_policy_allows_credentials() const
     return request_origin->is_same_origin(DOMURL::url_origin(current_url())) && !has_redirect_tainted_origin();
 }
 
+StringView request_destination_to_string(Request::Destination destination)
+{
+    switch (destination) {
+    case Request::Destination::Audio:
+        return "audio"sv;
+    case Request::Destination::AudioWorklet:
+        return "audioworklet"sv;
+    case Request::Destination::Document:
+        return "document"sv;
+    case Request::Destination::Embed:
+        return "embed"sv;
+    case Request::Destination::Font:
+        return "font"sv;
+    case Request::Destination::Frame:
+        return "frame"sv;
+    case Request::Destination::IFrame:
+        return "iframe"sv;
+    case Request::Destination::Image:
+        return "image"sv;
+    case Request::Destination::JSON:
+        return "json"sv;
+    case Request::Destination::Manifest:
+        return "manifest"sv;
+    case Request::Destination::Object:
+        return "object"sv;
+    case Request::Destination::PaintWorklet:
+        return "paintworklet"sv;
+    case Request::Destination::Report:
+        return "report"sv;
+    case Request::Destination::Script:
+        return "script"sv;
+    case Request::Destination::ServiceWorker:
+        return "serviceworker"sv;
+    case Request::Destination::SharedWorker:
+        return "sharedworker"sv;
+    case Request::Destination::Style:
+        return "style"sv;
+    case Request::Destination::Track:
+        return "track"sv;
+    case Request::Destination::Video:
+        return "video"sv;
+    case Request::Destination::WebIdentity:
+        return "webidentity"sv;
+    case Request::Destination::Worker:
+        return "worker"sv;
+    case Request::Destination::XSLT:
+        return "xslt"sv;
+    }
+    VERIFY_NOT_REACHED();
+}
+
 }
