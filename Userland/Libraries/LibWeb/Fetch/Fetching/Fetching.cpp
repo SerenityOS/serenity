@@ -2078,4 +2078,29 @@ void set_sec_fetch_site_header(Infrastructure::Request& request)
     request.header_list()->append(move(header));
 }
 
+// https://w3c.github.io/webappsec-fetch-metadata/#abstract-opdef-set-user
+void set_sec_fetch_user_header(Infrastructure::Request& request)
+{
+    // 1. Assert: r’s url is a potentially trustworthy URL.
+    VERIFY(SecureContexts::is_url_potentially_trustworthy(request.url()) == SecureContexts::Trustworthiness::PotentiallyTrustworthy);
+
+    // 2. If r is not a navigation request, or if r’s user-activation is false, return.
+    if (!request.is_navigation_request() || !request.user_activation())
+        return;
+
+    // 3. Let header be a Structured Header whose value is a token.
+    // FIXME: This is handled below, as Serenity doesn't have APIs for RFC 8941.
+
+    // 4. Set header’s value to true.
+    // NOTE: See https://datatracker.ietf.org/doc/html/rfc8941#name-booleans for boolean format in RFC 8941.
+    auto header_value = MUST(ByteBuffer::copy("?1"sv.bytes()));
+
+    // 5. Set a structured field value `Sec-Fetch-User`/header in r’s header list.
+    auto header = Infrastructure::Header {
+        .name = MUST(ByteBuffer::copy("Sec-Fetch-User"sv.bytes())),
+        .value = move(header_value),
+    };
+    request.header_list()->append(move(header));
+}
+
 }
