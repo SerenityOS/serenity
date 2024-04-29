@@ -75,4 +75,16 @@ constexpr bool is_power_of(U x)
     return true;
 }
 
+template<Unsigned T>
+constexpr T reinterpret_as_octal(T decimal)
+{
+    T result = 0;
+    T n = 0;
+    while (decimal > 0) {
+        result += pow<T>(8, n++) * (decimal % 10);
+        decimal /= 10;
+    }
+    return result;
+}
+
 }
