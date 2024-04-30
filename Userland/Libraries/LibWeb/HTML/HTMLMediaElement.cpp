@@ -1011,7 +1011,7 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::fetch_resource(URL::URL const& url_r
             // 5. Otherwise, incrementally read response's body given updateMedia, processEndOfMedia, an empty algorithm, and global.
 
             VERIFY(response->body());
-            auto empty_algorithm = JS::create_heap_function(heap(), [](JS::GCPtr<WebIDL::DOMException>) {});
+            auto empty_algorithm = JS::create_heap_function(heap(), [](JS::Value) {});
 
             // FIXME: We are "fully" reading the response here, rather than "incrementally". Memory concerns aside, this should be okay for now as we are
             //        always setting byteRange to "entire resource". However, we should switch to incremental reads when that is implemented, and then

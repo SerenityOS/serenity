@@ -90,7 +90,7 @@ void SharedImageRequest::fetch_image(JS::Realm& realm, JS::NonnullGCPtr<Fetch::I
             auto mime_type = extracted_mime_type.has_value() ? extracted_mime_type.value().essence().bytes_as_string_view() : StringView {};
             handle_successful_fetch(request->url(), mime_type, move(data));
         });
-        auto process_body_error = JS::create_heap_function(heap(), [this](JS::GCPtr<WebIDL::DOMException>) {
+        auto process_body_error = JS::create_heap_function(heap(), [this](JS::Value) {
             handle_failed_fetch();
         });
 

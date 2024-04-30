@@ -30,7 +30,7 @@ public:
     // processBody must be an algorithm accepting a byte sequence.
     using ProcessBodyCallback = JS::NonnullGCPtr<JS::HeapFunction<void(ByteBuffer)>>;
     // processBodyError must be an algorithm optionally accepting an exception.
-    using ProcessBodyErrorCallback = JS::NonnullGCPtr<JS::HeapFunction<void(JS::GCPtr<WebIDL::DOMException>)>>;
+    using ProcessBodyErrorCallback = JS::NonnullGCPtr<JS::HeapFunction<void(JS::Value)>>;
 
     [[nodiscard]] static JS::NonnullGCPtr<Body> create(JS::VM&, JS::NonnullGCPtr<Streams::ReadableStream>);
     [[nodiscard]] static JS::NonnullGCPtr<Body> create(JS::VM&, JS::NonnullGCPtr<Streams::ReadableStream>, SourceType, Optional<u64>);

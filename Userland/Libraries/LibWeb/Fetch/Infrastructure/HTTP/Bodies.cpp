@@ -82,7 +82,7 @@ void Body::fully_read(JS::Realm& realm, Web::Fetch::Infrastructure::Body::Proces
     // 3. Let errorSteps optionally given an exception exception be to queue a fetch task to run processBodyError given exception, with taskDestination.
     auto error_steps = [&realm, process_body_error, task_destination_object](JS::GCPtr<WebIDL::DOMException> exception) {
         queue_fetch_task(*task_destination_object, JS::create_heap_function(realm.heap(), [process_body_error, exception]() {
-            process_body_error->function()(*exception);
+            process_body_error->function()(exception);
         }));
     };
 

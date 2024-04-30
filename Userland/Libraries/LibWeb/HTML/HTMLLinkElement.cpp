@@ -548,7 +548,7 @@ WebIDL::ExceptionOr<void> HTMLLinkElement::load_fallback_favicon_if_needed(JS::N
         auto process_body = JS::create_heap_function(realm.heap(), [document, request](ByteBuffer body) {
             (void)decode_favicon(body, request->url(), document->navigable());
         });
-        auto process_body_error = JS::create_heap_function(realm.heap(), [](JS::GCPtr<WebIDL::DOMException>) {
+        auto process_body_error = JS::create_heap_function(realm.heap(), [](JS::Value) {
         });
 
         // 3. Use response's unsafe response as an icon as if it had been declared using the icon keyword.

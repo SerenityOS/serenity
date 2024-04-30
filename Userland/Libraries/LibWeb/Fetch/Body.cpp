@@ -182,7 +182,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> consume_body(JS::Realm& realm
 
     // 3. Let errorSteps given error be to reject promise with error.
     // NOTE: `promise` and `realm` is protected by JS::SafeFunction.
-    auto error_steps = JS::create_heap_function(realm.heap(), [promise, &realm](JS::GCPtr<WebIDL::DOMException> error) {
+    auto error_steps = JS::create_heap_function(realm.heap(), [promise, &realm](JS::Value error) {
         // AD-HOC: An execution context is required for Promise's reject function.
         HTML::TemporaryExecutionContext execution_context { Bindings::host_defined_environment_settings_object(realm) };
         WebIDL::reject_promise(realm, promise, error);
