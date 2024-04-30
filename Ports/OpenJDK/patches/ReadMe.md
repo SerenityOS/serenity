@@ -5,9 +5,9 @@
 make: Add Serenity support, masquerading as BSD when necessary
 
 
-## `0002-make-Build-with-c-20-when-targeting-serenity.patch`
+## `0002-make-Build-with-c-23-when-targeting-serenity.patch`
 
-make: Build with c++20 when targeting serenity
+make: Build with c++23 when targeting serenity
 
 
 ## `0003-make-Remove-CUPS-dependency.patch`

@@ -13,7 +13,7 @@ Optional: `fuse2fs` for [building images without root](https://github.com/Sereni
 
 #### GCC 12 or Clang 15
 
-A host compiler that supports C++20 features is required for building host tools, the newer the better. Tested versions include gcc-12 and clang-15.
+A host compiler that supports C++23 features is required for building host tools, the newer the better. Tested versions include gcc-12 and clang-15.
 
 On Ubuntu gcc-12 is available in the repositories of 22.04 (Jammy) and later.
 If you are running an older version, you will either need to upgrade, or find an alternative installation source.

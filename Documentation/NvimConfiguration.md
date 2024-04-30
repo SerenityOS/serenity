@@ -45,7 +45,7 @@ system and customize the `inlayHints.sep` based on your preference.
 
 ```json
 {
-    "clangd.fallbackFlags": ["-std=c++20"],
+    "clangd.fallbackFlags": ["-std=c++23"],
     "clangd.arguments": ["--query-driver=${workspaceFolder}/Toolchain/Local/**/*"],
     "semanticTokens.enable": true,
     "inlayHint.subSeparator": "︴",

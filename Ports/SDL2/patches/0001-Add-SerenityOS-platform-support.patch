@@ -137,7 +137,7 @@ index c4aec174e35ee653c4c4e0449939054e0f68ad9d..2f88b7f8790df95838e7de7a45789804
 +    set(HAVE_SDL_VIDEO TRUE)
 +    set(HAVE_SDL_AUDIO TRUE)
 +
-+    set(CMAKE_CXX_FLAGS "-std=c++2a ${CMAKE_CXX_FLAGS}")
++    set(CMAKE_CXX_FLAGS "-std=c++23 ${CMAKE_CXX_FLAGS}")
 +    file(GLOB SERENITY_SOURCES ${SDL2_SOURCE_DIR}/src/video/serenity/*.cpp ${SDL2_SOURCE_DIR}/src/audio/serenity/*.cpp)
 +    set(SOURCE_FILES ${SOURCE_FILES} ${SERENITY_SOURCES})
 +    set(SDL_VIDEO_DRIVER_SERENITY 1)

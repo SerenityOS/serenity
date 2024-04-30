@@ -90,7 +90,7 @@ config("compiler_defaults") {
     ldflags += [ "-Wl,--color-diagnostics" ]
   }
   cflags_cc += [
-    "-std=c++20",
+    "-std=c++23",
     "-fvisibility-inlines-hidden",
   ]
 

@@ -9,7 +9,7 @@ files=(
 )
 
 configure() {
-    run cmake "${configopts[@]}" -DCMAKE_CXX_FLAGS="-std=c++2a -O2"
+    run cmake "${configopts[@]}" -DCMAKE_CXX_FLAGS="-std=c++23 -O2"
 }
 
 install() {
