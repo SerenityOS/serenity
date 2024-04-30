@@ -2,6 +2,8 @@
 
 set -e
 
+trap 'git diff --exit-code' EXIT
+
 script_path=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 cd "${script_path}/.." || exit 1
 
