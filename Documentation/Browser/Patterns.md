@@ -140,3 +140,28 @@ namespace, e.g. `Fetch::Request` vs `Fetch::Infrastructure::Request`.
 The `.cpp`, `.h`, and `.idl` files for a given interface should all be in the same directory, unless
 the implementation is hand-written when it cannot be generated from IDL. In those cases, no IDL file
 is present and code should be placed in `Bindings/`.
+
+## Testing
+
+Every feature or bug fix added to LibWeb should have a corresponding test in `Tests/LibWeb`.
+The test should be either a Text, Layout or Ref test depending on the feature.
+
+LibWeb tests can be run in one of two ways. The easiest is to use the `serenity.sh` script. The LibWeb tests are
+registered with CMake as a test in `Ladybird/CMakeLists.txt`. Using the builtin test filtering, you can run all tests
+with `Meta/serenity.sh test lagom` or run just the LibWeb tests with `Meta/serenity.sh test lagom LibWeb`. The second
+way is to invoke the headless browser test runner directly. See the invocation in `Ladybird/CMakeLists.txt` for the
+expected command line arguments.
+
+The script `add_libweb_test.py` can be used to create a new test file. It will create a new test file with the correct
+boilerplate code for a Text test. Future versions of the script will support Layout and Ref tests.
+
+### Text tests
+
+Text tests are intended to test Web APIs that don't have a visual representation. They are written in JavaScript and
+run in a headless browser. Each test has a test function in a script tag that exercises the API and prints expected
+results using the `println` function. `println` calls are accumulated into an output test file, which is then
+compared to the expected output file by the test runner.
+
+Text tests can be either sync or async. Async tests should use the `done` callback to signal completion.
+Async tests are not necessarily run in an async context, they simply require the test function to signal completion
+when it is done. If an async context is needed to test the API, the lambda passed to `test` can be async.
