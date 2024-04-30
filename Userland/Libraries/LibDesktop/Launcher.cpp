@@ -20,6 +20,11 @@ auto Launcher::Details::from_details_str(ByteString const& details_str) -> Nonnu
     auto const& obj = json.as_object();
     details->executable = obj.get_byte_string("executable"sv).value_or({});
     details->name = obj.get_byte_string("name"sv).value_or({});
+
+    obj.get_array("arguments"sv).value().for_each([&](JsonValue const& argument) {
+        details->arguments.append(argument.as_string());
+    });
+
     if (auto type_value = obj.get_byte_string("type"sv); type_value.has_value()) {
         auto const& type_str = type_value.value();
         if (type_str == "app")

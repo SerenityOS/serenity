@@ -24,6 +24,7 @@ struct Handler {
     Type handler_type;
     ByteString name;
     ByteString executable;
+    Vector<ByteString> arguments;
     HashTable<ByteString> mime_types {};
     HashTable<ByteString> file_types {};
     HashTable<ByteString> protocols {};
