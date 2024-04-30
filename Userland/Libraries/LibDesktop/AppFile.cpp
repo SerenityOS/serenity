@@ -91,6 +91,12 @@ ByteString AppFile::executable() const
     return executable;
 }
 
+Vector<ByteString> AppFile::arguments() const
+{
+    auto arguments = m_config->read_entry("App", "Arguments").trim_whitespace();
+    return arguments.split(' ');
+}
+
 ByteString AppFile::description() const
 {
     return m_config->read_entry("App", "Description").trim_whitespace();
@@ -169,12 +175,20 @@ Vector<ByteString> AppFile::launcher_protocols() const
     return protocols;
 }
 
-ErrorOr<void> AppFile::spawn(ReadonlySpan<StringView> arguments) const
+ErrorOr<void> AppFile::spawn(ReadonlySpan<StringView> user_arguments) const
 {
     if (!is_valid())
         return Error::from_string_literal("AppFile is invalid");
 
-    TRY(Core::Process::spawn(executable(), arguments, working_directory()));
+    Vector<StringView> args;
+
+    auto arguments = AppFile::arguments();
+    for (auto const& argument : arguments)
+        args.append(argument);
+
+    args.extend(Vector(user_arguments));
+
+    TRY(Core::Process::spawn(executable(), args, working_directory()));
     return {};
 }
 
@@ -187,6 +201,10 @@ ErrorOr<void> AppFile::spawn_with_escalation(ReadonlySpan<StringView> user_argum
     Vector<StringView, 2> args;
 
     auto executable = AppFile::executable();
+    auto arguments = AppFile::arguments();
+
+    for (auto const& argument : arguments)
+        args.append(argument);
 
     // FIXME: These single quotes won't be enough for executables with single quotes in their name.
     auto pls_with_executable = ByteString::formatted("/bin/pls '{}'", executable);

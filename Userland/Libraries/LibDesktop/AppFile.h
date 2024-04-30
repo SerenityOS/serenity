@@ -33,6 +33,7 @@ public:
     ByteString name() const;
     ByteString menu_name() const;
     ByteString executable() const;
+    Vector<ByteString> arguments() const;
     ByteString category() const;
     ByteString description() const;
     ByteString working_directory() const;
