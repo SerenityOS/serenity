@@ -126,7 +126,7 @@ bool DynamicLoader::validate()
     return true;
 }
 
-RefPtr<DynamicObject> DynamicLoader::map(size_t dependency_index)
+OwnPtr<DynamicObject> DynamicLoader::map(size_t dependency_index)
 {
     if (m_dynamic_object) {
         // Already mapped.
@@ -142,11 +142,12 @@ RefPtr<DynamicObject> DynamicLoader::map(size_t dependency_index)
 
     VERIFY(!m_base_address.is_null());
 
-    m_dynamic_object = DynamicObject::create(m_filepath, m_base_address, m_dynamic_section_address, dependency_index);
+    auto object = DynamicObject::create(m_filepath, m_base_address, m_dynamic_section_address, dependency_index);
+    m_dynamic_object = object.ptr();
     m_dynamic_object->set_tls_offset(m_tls_offset);
     m_dynamic_object->set_tls_size(m_tls_size_of_current_object);
 
-    return m_dynamic_object;
+    return object;
 }
 
 bool DynamicLoader::link(unsigned flags)
@@ -248,7 +249,7 @@ void DynamicLoader::do_main_relocations()
     });
 }
 
-Result<NonnullRefPtr<DynamicObject>, DlErrorMessage> DynamicLoader::load_stage_3(unsigned flags)
+ErrorOr<void, DlErrorMessage> DynamicLoader::load_stage_3(unsigned flags)
 {
     if (flags & RTLD_LAZY) {
         if (m_dynamic_object->has_plt())
@@ -291,7 +292,7 @@ Result<NonnullRefPtr<DynamicObject>, DlErrorMessage> DynamicLoader::load_stage_3
 
     m_fully_relocated = true;
 
-    return NonnullRefPtr<DynamicObject> { *m_dynamic_object };
+    return {};
 }
 
 void DynamicLoader::load_stage_4()
@@ -768,11 +769,11 @@ void DynamicLoader::setup_plt_trampoline()
     auto* got_ptr = (FlatPtr*)got_address.as_ptr();
 
 #if ARCH(AARCH64) || ARCH(X86_64)
-    got_ptr[1] = (FlatPtr)m_dynamic_object.ptr();
+    got_ptr[1] = (FlatPtr)m_dynamic_object;
     got_ptr[2] = (FlatPtr)&_plt_trampoline;
 #elif ARCH(RISCV64)
     got_ptr[0] = (FlatPtr)&_plt_trampoline;
-    got_ptr[1] = (FlatPtr)m_dynamic_object.ptr();
+    got_ptr[1] = (FlatPtr)m_dynamic_object;
 #else
 #    error Unknown architecture
 #endif

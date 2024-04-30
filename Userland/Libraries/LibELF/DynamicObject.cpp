@@ -543,9 +543,9 @@ auto DynamicObject::lookup_symbol(HashSymbol const& symbol) const -> Optional<Sy
     return SymbolLookupResult { symbol_result.value(), symbol_result.size(), symbol_result.address(), symbol_result.bind(), symbol_result.type(), this };
 }
 
-NonnullRefPtr<DynamicObject> DynamicObject::create(ByteString const& filepath, VirtualAddress base_address, VirtualAddress dynamic_section_address, size_t dependency_index)
+NonnullOwnPtr<DynamicObject> DynamicObject::create(ByteString const& filepath, VirtualAddress base_address, VirtualAddress dynamic_section_address, size_t dependency_index)
 {
-    return adopt_ref(*new DynamicObject(filepath, base_address, dynamic_section_address, dependency_index));
+    return adopt_own(*new DynamicObject(filepath, base_address, dynamic_section_address, dependency_index));
 }
 
 u32 DynamicObject::HashSymbol::gnu_hash() const

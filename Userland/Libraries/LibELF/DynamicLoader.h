@@ -54,7 +54,7 @@ public:
     // Load a full ELF image from file into the current process and create an DynamicObject
     // from the SHT_DYNAMIC in the file.
     // Note that the DynamicObject will not be linked yet. Callers are responsible for calling link() to finish it.
-    RefPtr<DynamicObject> map(size_t dependency_index = NumericLimits<size_t>::max());
+    OwnPtr<DynamicObject> map(size_t dependency_index = NumericLimits<size_t>::max());
 
     bool link(unsigned flags);
 
@@ -62,7 +62,7 @@ public:
     bool load_stage_2(unsigned flags);
 
     // Stage 3 of loading: lazy relocations
-    Result<NonnullRefPtr<DynamicObject>, DlErrorMessage> load_stage_3(unsigned flags);
+    ErrorOr<void, DlErrorMessage> load_stage_3(unsigned flags);
 
     // Stage 4 of loading: initializers
     void load_stage_4();
@@ -162,7 +162,7 @@ private:
     OwnPtr<ELF::Image> m_elf_image;
     bool m_valid { true };
 
-    RefPtr<DynamicObject> m_dynamic_object;
+    DynamicObject* m_dynamic_object { nullptr };
 
     VirtualAddress m_base_address;
     Vector<LoadedSegment> m_text_segments;

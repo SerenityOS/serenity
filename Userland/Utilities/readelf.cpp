@@ -293,7 +293,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto& header = *reinterpret_cast<Elf_Ehdr const*>(elf_image_data.data());
 
-    RefPtr<ELF::DynamicObject> object = nullptr;
+    OwnPtr<ELF::DynamicObject> object;
 
     if (elf_image.is_dynamic()) {
         if (interpreter_path.is_empty()) {

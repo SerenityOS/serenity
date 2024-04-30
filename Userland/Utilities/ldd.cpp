@@ -65,7 +65,7 @@ static ErrorOr<void> recusively_resolve_all_necessary_libraries(StringView inter
             continue;
         }
 
-        RefPtr<ELF::DynamicObject> library_object = loader->map();
+        OwnPtr<ELF::DynamicObject> library_object = loader->map();
         if (!library_object) {
             outln("Failed to map dynamic ELF object {}", library_path);
             continue;
@@ -117,7 +117,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
     auto interpreter_path = interpreter_path_builder.string_view();
 
-    RefPtr<ELF::DynamicObject> object = nullptr;
+    OwnPtr<ELF::DynamicObject> object;
     if (elf_image.is_dynamic()) {
         if (interpreter_path != "/usr/lib/Loader.so"sv && !force_without_valid_interpreter) {
             warnln("ELF interpreter image is invalid");

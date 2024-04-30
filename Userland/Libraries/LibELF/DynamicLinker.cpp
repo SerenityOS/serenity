@@ -45,7 +45,7 @@ namespace {
 ByteString s_main_program_path;
 
 // The order of objects here corresponds to the "load order" from POSIX specification.
-OrderedHashMap<ByteString, NonnullRefPtr<ELF::DynamicObject>> s_global_objects;
+OrderedHashMap<ByteString, NonnullOwnPtr<ELF::DynamicObject>> s_global_objects;
 
 class ConsecutiveIDAllocator {
 public:
@@ -146,12 +146,14 @@ static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(ByteStri
     size_t dependency_index = s_dependency_index_allocator.allocate();
 
     // This actually maps the library at the intended and final place.
-    auto& main_library_object = *loader->map(dependency_index);
-    s_global_objects.set(filepath, main_library_object);
+    auto main_library_object = loader->map(dependency_index);
+    if (!main_library_object)
+        return DlErrorMessage { "Failed to map ELF object" };
+    s_global_objects.set(filepath, main_library_object.release_nonnull());
 
     if (s_dependency_index_to_object.size() <= dependency_index)
         s_dependency_index_to_object.resize(dependency_index + 1);
-    s_dependency_index_to_object[dependency_index] = main_library_object;
+    s_dependency_index_to_object[dependency_index] = loader->dynamic_object();
 
     return loader;
 }
@@ -259,7 +261,7 @@ static ErrorOr<DependencyOrdering, DlErrorMessage> map_dependencies(NonnullRefPt
 
                 parent_object.add_dependency_for_unloading(dependency_loader->dynamic_object());
             } else {
-                parent_object.add_dependency_for_unloading(it->value);
+                parent_object.add_dependency_for_unloading(*it->value);
             }
 
             if (auto it = current_loaders.find(dependency_path); it != current_loaders.end()) {
@@ -424,13 +426,10 @@ static ErrorOr<void, DlErrorMessage> link_main_library(int flags, DependencyOrde
     }
 
     for (auto& loader : objects.load_order) {
-        auto result = loader->load_stage_3(flags);
-        VERIFY(!result.is_error());
-        auto& object = result.value();
+        MUST(loader->load_stage_3(flags));
 
-        if (loader->filepath().ends_with("/libc.so"sv)) {
-            initialize_libc(*object);
-        }
+        if (loader->filepath().ends_with("/libc.so"sv))
+            initialize_libc(loader->dynamic_object());
 
         if (loader->filepath().ends_with("/libsystem.so"sv)) {
             VERIFY(!loader->text_segments().is_empty());
@@ -465,11 +464,7 @@ static Result<void, DlErrorMessage> __dlclose(void* handle)
     pthread_mutex_lock(&s_loader_lock);
     ScopeGuard unlock_guard = [] { pthread_mutex_unlock(&s_loader_lock); };
 
-    // FIXME: this will not currently destroy the dynamic object
-    // because we're intentionally holding a strong reference to it
-    // via s_global_objects until there's proper unload support.
-    auto object = static_cast<ELF::DynamicObject*>(handle);
-    object->unref();
+    // FIXME: Count references to a dynamic object.
     return {};
 }
 
@@ -520,7 +515,7 @@ static Result<void*, DlErrorMessage> __dlopen(char const* filename, int flags)
     auto const& [name, parent_object] = *s_global_objects.begin();
     VERIFY(name == s_main_program_path);
 
-    auto library_path = (filename ? DynamicLinker::resolve_library(filename, parent_object) : s_main_program_path);
+    auto library_path = (filename ? DynamicLinker::resolve_library(filename, *parent_object) : s_main_program_path);
 
     if (!library_path.has_value())
         return DlErrorMessage { ByteString::formatted("Could not find required shared library: {}", filename) };
@@ -528,7 +523,7 @@ static Result<void*, DlErrorMessage> __dlopen(char const* filename, int flags)
     auto existing_elf_object = s_global_objects.get(library_path.value());
     if (existing_elf_object.has_value()) {
         // It's up to the caller to release the ref with dlclose().
-        existing_elf_object.value()->ref();
+        // FIXME: Actually count references.
         return *existing_elf_object;
     }
 
@@ -549,7 +544,7 @@ static Result<void*, DlErrorMessage> __dlopen(char const* filename, int flags)
         return DlErrorMessage { "Could not load ELF object." };
 
     // It's up to the caller to release the ref with dlclose().
-    object.value()->ref();
+    // FIXME: Actually count references.
     return *object;
 }
 
@@ -586,7 +581,7 @@ static Result<void, DlErrorMessage> __dladdr(void const* addr, Dl_info* info)
     pthread_mutex_lock(&s_loader_lock);
     ScopeGuard unlock_guard = [] { pthread_mutex_unlock(&s_loader_lock); };
 
-    RefPtr<DynamicObject> best_matching_library;
+    DynamicObject const* best_matching_library = nullptr;
     VirtualAddress best_library_offset;
     for (auto& lib : s_global_objects) {
         if (user_addr < lib.value->base_address())
@@ -628,7 +623,7 @@ static void __call_fini_functions()
 
     // FIXME: This is not and never has been the correct order to call finalizers in.
     for (auto& it : s_global_objects) {
-        auto object = it.value;
+        auto const& object = it.value;
 
         if (object->has_fini_array_section()) {
             auto fini_array_section = object->fini_array_section();
