@@ -130,6 +130,16 @@ constexpr T ceil_div(T a, U b)
 }
 
 template<typename T, typename U>
+constexpr T floor_div(T a, U b)
+{
+    static_assert(sizeof(T) == sizeof(U));
+    T result = a / b;
+    if ((a % b) != 0 && (a > 0) != (b > 0))
+        --result;
+    return result;
+}
+
+template<typename T, typename U>
 inline void swap(T& a, U& b)
 {
     if (&a == &b)
@@ -216,6 +226,7 @@ using AK::array_size;
 using AK::ceil_div;
 using AK::clamp;
 using AK::exchange;
+using AK::floor_div;
 using AK::forward;
 using AK::is_constant_evaluated;
 using AK::is_power_of_two;
