@@ -93,7 +93,7 @@ static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOM::Document>> load_markdown_docume
             parser->run(url);
         });
 
-        auto process_body_error = JS::create_heap_function(realm.heap(), [](JS::GCPtr<WebIDL::DOMException>) {
+        auto process_body_error = JS::create_heap_function(realm.heap(), [](JS::Value) {
             dbgln("FIXME: Load html page with an error if read of body failed.");
         });
 
@@ -168,7 +168,7 @@ static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOM::Document>> load_html_document(H
             });
         });
 
-        auto process_body_error = JS::create_heap_function(document->heap(), [](JS::GCPtr<WebIDL::DOMException>) {
+        auto process_body_error = JS::create_heap_function(document->heap(), [](JS::Value) {
             dbgln("FIXME: Load html page with an error if read of body failed.");
         });
 
@@ -259,7 +259,7 @@ static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOM::Document>> load_xml_document(HT
         }
     });
 
-    auto process_body_error = JS::create_heap_function(document->heap(), [](JS::GCPtr<WebIDL::DOMException>) {
+    auto process_body_error = JS::create_heap_function(document->heap(), [](JS::Value) {
         dbgln("FIXME: Load html page with an error if read of body failed.");
     });
 
@@ -322,7 +322,7 @@ static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOM::Document>> load_text_document(H
         MUST(title_element->append_child(*title_text));
     });
 
-    auto process_body_error = JS::create_heap_function(document->heap(), [](JS::GCPtr<WebIDL::DOMException>) {
+    auto process_body_error = JS::create_heap_function(document->heap(), [](JS::Value) {
         dbgln("FIXME: Load html page with an error if read of body failed.");
     });
 
@@ -418,7 +418,7 @@ static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOM::Document>> load_media_document(
     navigation_params.response->body()->fully_read(
         realm,
         JS::create_heap_function(document->heap(), [document](ByteBuffer) { HTML::HTMLParser::the_end(document); }),
-        JS::create_heap_function(document->heap(), [](JS::GCPtr<WebIDL::DOMException>) {}),
+        JS::create_heap_function(document->heap(), [](JS::Value) {}),
         JS::NonnullGCPtr { realm.global_object() });
 
     // 9. Return document.
