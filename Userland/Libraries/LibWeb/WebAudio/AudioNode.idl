@@ -37,7 +37,7 @@ interface AudioNode : EventTarget {
                          unsigned long input);
     undefined disconnect(AudioParam destinationParam);
     undefined disconnect(AudioParam destinationParam, unsigned long output);
-    // FIXME: readonly attribute BaseAudioContext context;
+    readonly attribute BaseAudioContext context;
     // FIXME: readonly attribute unsigned long numberOfInputs;
     // FIXME: readonly attribute unsigned long numberOfOutputs;
     // FIXME: attribute unsigned long channelCount;

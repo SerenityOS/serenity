@@ -3,3 +3,4 @@ AudioScheduledSourceNode
 AudioNode
 EventTarget
 Object
+context: '[object OfflineAudioContext], is same as original: true
