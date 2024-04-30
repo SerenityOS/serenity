@@ -42,7 +42,10 @@ public:
     // failureSteps, which is an algorithm accepting a JavaScript value
     using FailureSteps = JS::SafeFunction<void(JS::Value error)>;
 
-    ReadLoopReadRequest(JS::VM& vm, JS::Realm& realm, ReadableStreamDefaultReader& reader, SuccessSteps success_steps, FailureSteps failure_steps);
+    // AD-HOC: callback triggered on every chunk received from the stream.
+    using ChunkSteps = JS::SafeFunction<void(ByteBuffer)>;
+
+    ReadLoopReadRequest(JS::VM& vm, JS::Realm& realm, ReadableStreamDefaultReader& reader, SuccessSteps success_steps, FailureSteps failure_steps, ChunkSteps chunk_steps = {});
 
     virtual void on_chunk(JS::Value chunk) override;
 
@@ -59,6 +62,7 @@ private:
     Vector<ByteBuffer> m_byte_chunks;
     SuccessSteps m_success_steps;
     FailureSteps m_failure_steps;
+    ChunkSteps m_chunk_steps;
 };
 
 // https://streams.spec.whatwg.org/#readablestreamdefaultreader
@@ -76,6 +80,7 @@ public:
     JS::NonnullGCPtr<JS::Promise> read();
 
     void read_all_bytes(ReadLoopReadRequest::SuccessSteps, ReadLoopReadRequest::FailureSteps);
+    void read_all_chunks(ReadLoopReadRequest::ChunkSteps, ReadLoopReadRequest::SuccessSteps, ReadLoopReadRequest::FailureSteps);
     JS::NonnullGCPtr<WebIDL::Promise> read_all_bytes_deprecated();
 
     void release_lock();
