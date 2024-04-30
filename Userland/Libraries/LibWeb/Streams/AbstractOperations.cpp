@@ -312,7 +312,7 @@ JS::NonnullGCPtr<WebIDL::Promise> readable_stream_pipe_to(ReadableStream& source
         WebIDL::resolve_promise(realm, promise, JS::js_undefined());
     };
 
-    auto success_steps = [promise, &realm](Vector<ByteBuffer> const&) {
+    auto success_steps = [promise, &realm](ByteBuffer) {
         WebIDL::resolve_promise(realm, promise, JS::js_undefined());
     };
 

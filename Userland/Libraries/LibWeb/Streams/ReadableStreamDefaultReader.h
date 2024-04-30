@@ -37,7 +37,7 @@ class ReadLoopReadRequest final : public ReadRequest {
 
 public:
     // successSteps, which is an algorithm accepting a byte sequence
-    using SuccessSteps = JS::SafeFunction<void(Vector<ByteBuffer> const&)>;
+    using SuccessSteps = JS::SafeFunction<void(ByteBuffer)>;
 
     // failureSteps, which is an algorithm accepting a JavaScript value
     using FailureSteps = JS::SafeFunction<void(JS::Value error)>;
@@ -59,7 +59,7 @@ private:
     JS::VM& m_vm;
     JS::NonnullGCPtr<JS::Realm> m_realm;
     JS::NonnullGCPtr<ReadableStreamDefaultReader> m_reader;
-    Vector<ByteBuffer> m_byte_chunks;
+    ByteBuffer m_bytes;
     SuccessSteps m_success_steps;
     FailureSteps m_failure_steps;
     ChunkSteps m_chunk_steps;

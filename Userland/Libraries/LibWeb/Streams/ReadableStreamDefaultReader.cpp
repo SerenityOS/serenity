@@ -88,7 +88,7 @@ void ReadLoopReadRequest::on_chunk(JS::Value chunk)
     auto const& buffer = array.viewed_array_buffer()->buffer();
 
     // 2. Append the bytes represented by chunk to bytes.
-    m_byte_chunks.append(buffer);
+    m_bytes.append(buffer);
 
     if (m_chunk_steps) {
         // FIXME: Can we move the buffer out of the `chunk`? Unclear if that is safe.
@@ -107,7 +107,7 @@ void ReadLoopReadRequest::on_chunk(JS::Value chunk)
 void ReadLoopReadRequest::on_close()
 {
     // 1. Call successSteps with bytes.
-    m_success_steps(m_byte_chunks);
+    m_success_steps(m_bytes);
 }
 
 // error steps, given e
@@ -226,12 +226,8 @@ JS::NonnullGCPtr<WebIDL::Promise> ReadableStreamDefaultReader::read_all_bytes_de
 
     auto promise = WebIDL::create_promise(realm);
 
-    auto success_steps = [promise, &realm](Vector<ByteBuffer> const& byte_chunks) {
-        ByteBuffer concatenated_byte_chunks;
-        for (auto const& chunk : byte_chunks)
-            concatenated_byte_chunks.append(chunk);
-
-        auto buffer = JS::ArrayBuffer::create(realm, move(concatenated_byte_chunks));
+    auto success_steps = [promise, &realm](ByteBuffer bytes) {
+        auto buffer = JS::ArrayBuffer::create(realm, move(bytes));
         WebIDL::resolve_promise(realm, promise, buffer);
     };
 
