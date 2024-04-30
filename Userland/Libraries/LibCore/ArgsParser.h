@@ -9,6 +9,7 @@
 #include <AK/ByteString.h>
 #include <AK/Concepts.h>
 #include <AK/Function.h>
+#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibMain/Main.h>
 #include <stdio.h>
@@ -176,6 +177,7 @@ public:
     // Note: This option is being used when we expect the user to use the same option
     // multiple times (e.g. "program --option=example --option=anotherexample ...").
     void add_option(Vector<ByteString>& values, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
+    void add_option(Vector<String>& values, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
 
     void add_positional_argument(Arg&&);
     void add_positional_argument(ByteString& value, char const* help_string, char const* name, Required required = Required::Yes);

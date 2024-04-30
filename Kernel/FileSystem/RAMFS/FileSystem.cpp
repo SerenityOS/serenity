@@ -11,12 +11,38 @@
 
 namespace Kernel {
 
-ErrorOr<NonnullRefPtr<FileSystem>> RAMFS::try_create(ReadonlyBytes)
+struct [[gnu::packed]] RAMFSSpecificFlagsBytes {
+    u64 max_size;
+};
+
+ErrorOr<NonnullRefPtr<FileSystem>> RAMFS::try_create(ReadonlyBytes mount_flags)
 {
-    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) RAMFS));
+    auto* ramfs_mount_flags = reinterpret_cast<RAMFSSpecificFlagsBytes const*>(mount_flags.data());
+    u64 raw_max_size = ramfs_mount_flags->max_size;
+    Optional<u64> max_size = ramfs_mount_flags->max_size != 0 ? raw_max_size : Optional<u64> {};
+    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) RAMFS(max_size)));
 }
 
-RAMFS::RAMFS() = default;
+ErrorOr<void> RAMFS::handle_mount_unsigned_integer_flag(Bytes mount_file_specific_flags_buffer, StringView key, u64 value)
+{
+    auto* ramfs_mount_flags = reinterpret_cast<RAMFSSpecificFlagsBytes*>(mount_file_specific_flags_buffer.data());
+    if (key == "fs_max_size") {
+        if ((value % RAMFSInode::DataBlock::block_size) != 0)
+            return EDOM;
+        ramfs_mount_flags->max_size = value;
+        return {};
+    }
+    return EINVAL;
+}
+
+RAMFS::RAMFS(Optional<u64> max_size)
+    : m_max_size(max_size)
+{
+    m_current_storage_usage_size.with_exclusive([](auto& current_size) {
+        current_size = 0;
+    });
+}
+
 RAMFS::~RAMFS() = default;
 
 ErrorOr<void> RAMFS::initialize()

@@ -47,6 +47,9 @@ Additionally, the name `defaults` is accepted and ignored.
 
 # mount a regular file using a temporary loop device
 $ mount /home/anon/myfilesystem.bin /mnt
+
+# mount a RAMFS filesystem with size limit of 8192 bytes
+$ mount -t ram -Ofs_max_size=8192 none /mnt
 ```
 
 ## See also
