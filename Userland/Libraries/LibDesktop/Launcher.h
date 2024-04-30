@@ -26,6 +26,7 @@ public:
     struct Details : public RefCounted<Details> {
         ByteString name;
         ByteString executable;
+        Vector<ByteString> arguments;
         LauncherType launcher_type { LauncherType::Default };
 
         static NonnullRefPtr<Details> from_details_str(ByteString const&);
