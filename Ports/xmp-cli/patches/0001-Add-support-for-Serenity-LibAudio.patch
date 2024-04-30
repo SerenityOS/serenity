@@ -21,7 +21,7 @@ index b65eb85244acec722b2f240976f184f06db11a27..840845dc1f5d7459bfbb339071b817ad
  
  AM_CPPFLAGS = -DSYSCONFDIR=\"${sysconfdir}/${PACKAGE_NAME}\" ${LIBXMP_CFLAGS} \
 -              ${alsa_CFLAGS} ${pulseaudio_CFLAGS}
-+              ${alsa_CFLAGS} ${pulseaudio_CFLAGS} -std=c++2a 
++              ${alsa_CFLAGS} ${pulseaudio_CFLAGS} -std=c++23
  AM_CFLAGS   = -Wall
  
  bin_PROGRAMS = xmp

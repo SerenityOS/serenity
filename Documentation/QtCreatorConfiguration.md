@@ -25,7 +25,7 @@ First, make sure you have a working toolchain and can build and run SerenityOS. 
     #define __SSE__
     ```
     If you're working on the Kernel, just uncomment `#define KERNEL`.
-* Edit the `serenity.cxxflags` file to say `-std=c++20 -fsigned-char -fconcepts -fno-exceptions -fno-semantic-interposition -fPIC`
+* Edit the `serenity.cxxflags` file to say `-std=c++23 -fsigned-char -fconcepts -fno-exceptions -fno-semantic-interposition -fPIC`
 * Edit the `serenity.includes` file to list the following lines:
     ```
     ./

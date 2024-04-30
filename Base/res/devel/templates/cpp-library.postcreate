@@ -12,7 +12,7 @@ sed -i "s/\\\$LibName/$3/g" $2/Class1.cpp
 echo > $2/Makefile <<-EOF
 LIBRARY = $1.so
 OBJS = Class1.o
-CXXFLAGS = -g -std=c++2a
+CXXFLAGS = -g -std=c++23
 
 all: \$(LIBRARY)
 

@@ -83,7 +83,7 @@ following ``c_cpp_properties.json`` to circumvent some errors. Even with the con
             ],
             "compilerPath": "${workspaceFolder}/Toolchain/Local/x86_64/bin/x86_64-pc-serenity-g++",
             "cStandard": "c17",
-            "cppStandard": "c++20",
+            "cppStandard": "c++23",
             "intelliSenseMode": "linux-gcc-x86",
             "compileCommands": "Build/x86_64/compile_commands.json",
             "compilerArgs": [

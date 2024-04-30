@@ -3,7 +3,7 @@
 echo > $2/Makefile <<-EOF
 PROGRAM = $1
 OBJS = main.o
-CXXFLAGS = -g -std=c++2a
+CXXFLAGS = -g -std=c++23
 
 all: \$(PROGRAM)
 

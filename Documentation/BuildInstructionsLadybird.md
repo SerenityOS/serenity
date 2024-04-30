@@ -2,7 +2,7 @@
 
 ## Build Prerequisites
 
-Qt6 development packages and a C++20 capable compiler are required. g++-12 or clang-15 are required at a minimum for c++20 support.
+Qt6 development packages and a C++23 capable compiler are required. g++-12 or clang-15 are required at a minimum for c++23 support.
 
 NOTE: In all of the below lists of packages, the Qt6 multimedia package is not needed if your Linux system supports PulseAudio.
 
@@ -52,7 +52,7 @@ nix-shell --command bash Ladybird
 
 On macOS:
 
-Note that Xcode 13.x does not have sufficient C++20 support to build ladybird. Xcode 14 versions before 14.3 might crash while building ladybird. Xcode 14.3 or clang from homebrew may be required to successfully build ladybird.
+Xcode 14 versions before 14.3 might crash while building ladybird. Xcode 14.3 or clang from homebrew may be required to successfully build ladybird.
 
 ```
 xcode-select --install
