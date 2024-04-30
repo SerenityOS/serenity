@@ -169,22 +169,19 @@ Vector<ByteString> AppFile::launcher_protocols() const
     return protocols;
 }
 
-bool AppFile::spawn(ReadonlySpan<StringView> arguments) const
+ErrorOr<void> AppFile::spawn(ReadonlySpan<StringView> arguments) const
 {
     if (!is_valid())
-        return false;
+        return Error::from_string_literal("AppFile is invalid");
 
-    auto pid = Core::Process::spawn(executable(), arguments, working_directory());
-    if (pid.is_error())
-        return false;
-
-    return true;
+    TRY(Core::Process::spawn(executable(), arguments, working_directory()));
+    return {};
 }
 
-bool AppFile::spawn_with_escalation(ReadonlySpan<StringView> user_arguments) const
+ErrorOr<void> AppFile::spawn_with_escalation(ReadonlySpan<StringView> user_arguments) const
 {
     if (!is_valid())
-        return false;
+        return Error::from_string_literal("AppFile is invalid");
 
     StringView exe;
     Vector<StringView, 2> args;
@@ -207,18 +204,15 @@ bool AppFile::spawn_with_escalation(ReadonlySpan<StringView> user_arguments) con
     }
     args.extend(Vector(user_arguments));
 
-    auto pid = Core::Process::spawn(exe, args.span(),
-        working_directory().is_empty() ? Core::StandardPaths::home_directory() : working_directory());
-    if (pid.is_error())
-        return false;
-
-    return true;
+    TRY(Core::Process::spawn(exe, args.span(),
+        working_directory().is_empty() ? Core::StandardPaths::home_directory() : working_directory()));
+    return {};
 }
 
 void AppFile::spawn_with_escalation_or_show_error(GUI::Window& window, ReadonlySpan<StringView> arguments) const
 {
-    if (!spawn_with_escalation(arguments))
-        GUI::MessageBox::show_error(&window, ByteString::formatted("Failed to spawn {} with escalation", executable()));
+    if (auto result = spawn_with_escalation(arguments); result.is_error())
+        GUI::MessageBox::show_error(&window, ByteString::formatted("Failed to spawn {} with escalation: {}", executable(), result.error()));
 }
 
 }

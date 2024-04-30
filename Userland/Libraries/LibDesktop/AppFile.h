@@ -44,8 +44,8 @@ public:
     Vector<ByteString> launcher_mime_types() const;
     Vector<ByteString> launcher_file_types() const;
     Vector<ByteString> launcher_protocols() const;
-    bool spawn(ReadonlySpan<StringView> arguments = {}) const;
-    bool spawn_with_escalation(ReadonlySpan<StringView> arguments = {}) const;
+    ErrorOr<void> spawn(ReadonlySpan<StringView> arguments = {}) const;
+    ErrorOr<void> spawn_with_escalation(ReadonlySpan<StringView> arguments = {}) const;
     void spawn_with_escalation_or_show_error(GUI::Window&, ReadonlySpan<StringView> arguments = {}) const;
 
 private:

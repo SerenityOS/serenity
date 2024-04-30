@@ -386,8 +386,8 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
         break;
     }
     case GUI::Event::WM_SuperSpaceKeyPressed: {
-        if (!m_assistant_app_file->spawn())
-            warnln("failed to spawn 'Assistant' when requested via Super+Space");
+        if (auto result = m_assistant_app_file->spawn(); result.is_error())
+            warnln("Failed to spawn 'Assistant' when requested via Super+Space: {}", result.error());
         break;
     }
     case GUI::Event::WM_SuperDKeyPressed: {
