@@ -9,6 +9,7 @@
 #pragma once
 
 #include <AK/Assertions.h>
+#include <AK/Bitmap.h>
 #include <AK/ByteString.h>
 #include <AK/Concepts.h>
 #include <AK/RefCounted.h>
@@ -332,6 +333,10 @@ public:
 
     void* symbol_for_name(StringView name);
 
+    // NOTE: This is marked const even though it isn't because too many places in the codebase
+    //       assume that symbol lookup doesn't change the DynamicObject.
+    void add_dependency_for_unloading(DynamicObject const& dependency) const;
+
 private:
     explicit DynamicObject(ByteString const& filepath, VirtualAddress base_address, VirtualAddress dynamic_section_address, size_t dependency_index);
 
@@ -348,6 +353,7 @@ private:
     unsigned m_symbol_count { 0 };
 
     size_t m_dependency_index { 0 };
+    mutable Bitmap m_dependencies;
 
     // Begin Section information collected from DT_* entries
     FlatPtr m_init_offset { 0 };

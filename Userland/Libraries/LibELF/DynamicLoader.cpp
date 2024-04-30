@@ -817,8 +817,16 @@ void DynamicLoader::call_object_init_functions()
 
 Optional<DynamicObject::SymbolLookupResult> DynamicLoader::lookup_symbol(const ELF::DynamicObject::Symbol& symbol)
 {
-    if (symbol.is_undefined() || symbol.bind() == STB_WEAK)
-        return DynamicLinker::lookup_global_symbol(symbol.name());
+    if (symbol.is_undefined() || symbol.bind() == STB_WEAK) {
+        auto lookup_result = DynamicLinker::lookup_global_symbol(symbol.name());
+        if (lookup_result.has_value()) {
+            auto object_with_symbol = lookup_result->dynamic_object;
+            if (object_with_symbol != nullptr && object_with_symbol != &symbol.object())
+                symbol.object().add_dependency_for_unloading(*object_with_symbol);
+        }
+
+        return lookup_result;
+    }
 
     return DynamicObject::SymbolLookupResult { symbol.value(), symbol.size(), symbol.address(), symbol.bind(), symbol.type(), &symbol.object() };
 }

@@ -89,7 +89,7 @@ public:
     bool is_fully_relocated() const { return m_fully_relocated; }
     bool is_fully_initialized() const { return m_fully_initialized; }
 
-    void add_dependency(NonnullRefPtr<DynamicLoader> dependency)
+    void add_dependency_for_topological_order(NonnullRefPtr<DynamicLoader> dependency)
     {
         // Dependencies that aren't actually true will be removed in compute_topological_order.
         m_true_dependencies.append(move(dependency));

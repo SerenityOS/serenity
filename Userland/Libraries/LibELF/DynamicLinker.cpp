@@ -252,14 +252,19 @@ static ErrorOr<DependencyOrdering, DlErrorMessage> map_dependencies(NonnullRefPt
                 return DlErrorMessage { ByteString::formatted("Could not find required shared library: {}", needed_name) };
             auto dependency_path = maybe_dependency_path.release_value();
 
-            if (!s_global_objects.contains(dependency_path)) {
+            if (auto it = s_global_objects.find(dependency_path); it == s_global_objects.end()) {
                 auto dependency_loader = TRY(map_library(dependency_path));
                 load_order.append(dependency_loader);
                 current_loaders.set(dependency_loader->filepath(), dependency_loader);
+
+                parent_object.add_dependency_for_unloading(dependency_loader->dynamic_object());
+            } else {
+                parent_object.add_dependency_for_unloading(it->value);
             }
+
             if (auto it = current_loaders.find(dependency_path); it != current_loaders.end()) {
                 // Even if the object is already mapped, the dependency might still affect topological order.
-                loader->add_dependency(it->value);
+                loader->add_dependency_for_topological_order(it->value);
             }
         }
 
