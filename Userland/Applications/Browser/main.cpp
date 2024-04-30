@@ -6,6 +6,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Enumerate.h>
 #include <Applications/Browser/Browser.h>
 #include <Applications/Browser/BrowserWindow.h>
 #include <Applications/Browser/Tab.h>
@@ -23,6 +24,7 @@
 #include <LibGUI/TabWidget.h>
 #include <LibMain/Main.h>
 #include <LibWeb/Loader/ResourceLoader.h>
+#include <LibWebView/ChromeProcess.h>
 #include <LibWebView/CookieJar.h>
 #include <LibWebView/Database.h>
 #include <LibWebView/OutOfProcessWebView.h>
@@ -88,6 +90,40 @@ static ErrorOr<void> load_autoplay_allowlist()
     return {};
 }
 
+enum class NewWindow {
+    No,
+    Yes,
+};
+
+static Vector<URL::URL> sanitize_urls(Vector<ByteString> const& raw_urls, NewWindow new_window = NewWindow::Yes)
+{
+    Vector<URL::URL> sanitized_urls;
+    for (auto const& raw_url : raw_urls) {
+        if (auto url = WebView::sanitize_url(raw_url); url.has_value())
+            sanitized_urls.append(url.release_value());
+    }
+
+    if (sanitized_urls.is_empty())
+        sanitized_urls.append(new_window == NewWindow::Yes ? Browser::g_home_url : Browser::g_new_tab_url);
+
+    return sanitized_urls;
+}
+
+static void open_urls_from_client(Browser::BrowserWindow& window, Vector<ByteString> const& raw_urls, NewWindow new_window)
+{
+    auto urls = sanitize_urls(raw_urls, new_window);
+
+    for (auto [i, url] : enumerate(urls)) {
+        if (new_window == NewWindow::Yes)
+            outln("New browser windows are not yet supported. Opening URLs in a new tab.");
+
+        auto activate_tab = i == 0 ? Web::HTML::ActivateTab::Yes : Web::HTML::ActivateTab::No;
+        window.create_new_tab(url, activate_tab);
+    }
+
+    window.show();
+}
+
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     if (getuid() == 0) {
@@ -95,17 +131,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    TRY(Core::System::pledge("sigaction stdio recvfd sendfd unix fattr cpath rpath wpath proc exec"));
+    TRY(Core::System::pledge("sigaction stdio recvfd sendfd accept unix fattr cpath rpath wpath proc exec"));
 
     WebView::ProcessManager::initialize();
 
-    TRY(Core::System::pledge("stdio recvfd sendfd unix fattr cpath rpath wpath proc exec"));
+    TRY(Core::System::pledge("stdio recvfd sendfd accept unix fattr cpath rpath wpath proc exec"));
 
-    Vector<StringView> specified_urls;
+    Vector<ByteString> specified_urls;
+    bool new_window = false;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(specified_urls, "URLs to open", "url", Core::ArgsParser::Required::No);
     args_parser.add_option(Browser::g_webdriver_content_ipc_path, "Path to WebDriver IPC for WebContent", "webdriver-content-path", 0, "path", Core::ArgsParser::OptionHideMode::CommandLineAndMarkdown);
+    args_parser.add_option(new_window, "Force opening in a new window", "new-window", 'n');
 
     args_parser.parse(arguments);
 
@@ -122,6 +160,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Desktop::Launcher::add_allowed_handler_with_only_specific_urls("/bin/Help", { URL::create_with_file_scheme(man_file) }));
     TRY(Desktop::Launcher::seal_allowlist());
 
+    TRY(Core::System::unveil("/tmp/session/%sid/Ladybird.pid", "rwc"));
+    TRY(Core::System::unveil("/tmp/session/%sid/Ladybird.socket", "rwc"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/filesystemaccess", "rw"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/filesystemaccess", "rw"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/image", "rw"));
@@ -139,6 +179,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/bin/BrowserSettings", "x"));
     TRY(Core::System::unveil("/bin/Browser", "x"));
     TRY(Core::System::unveil(nullptr, nullptr));
+
+    WebView::ChromeProcess chrome_process;
+    if (TRY(chrome_process.connect(specified_urls, new_window)) == WebView::ChromeProcess::ProcessDisposition::ExitProcess) {
+        outln("Opening in existing process");
+        return 0;
+    }
 
     Web::ResourceLoader::initialize(TRY(WebView::RequestServerAdapter::try_create()));
 
@@ -170,18 +216,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     }
 
-    Vector<URL::URL> initial_urls;
-
-    for (auto specified_url : specified_urls) {
-        if (auto url = WebView::sanitize_url(specified_url); url.has_value())
-            initial_urls.append(url.release_value());
-    }
-
-    if (initial_urls.is_empty())
-        initial_urls.append(Browser::g_home_url);
-
     auto cookie_jar = TRY(WebView::CookieJar::create(*database));
-    auto window = Browser::BrowserWindow::construct(cookie_jar, initial_urls, man_file);
+    auto window = Browser::BrowserWindow::construct(cookie_jar, sanitize_urls(specified_urls), man_file);
+
+    chrome_process.on_new_tab = [&](auto const& raw_urls) {
+        open_urls_from_client(*window, raw_urls, NewWindow::No);
+    };
+
+    chrome_process.on_new_window = [&](auto const& raw_urls) {
+        open_urls_from_client(*window, raw_urls, NewWindow::Yes);
+    };
 
     auto content_filters_watcher = TRY(Core::FileWatcher::create());
     content_filters_watcher->on_change = [&](Core::FileWatcherEvent const&) {
