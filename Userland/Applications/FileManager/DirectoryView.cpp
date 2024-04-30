@@ -493,6 +493,7 @@ void DirectoryView::set_should_show_dotfiles(bool show_dotfiles)
 
 void DirectoryView::launch(URL::URL const&, LauncherHandler const& launcher_handler) const
 {
+    // FIXME: Add posix_spawnattr_t support to Core::Process and use it here.
     pid_t child;
 
     posix_spawnattr_t spawn_attributes;
@@ -509,8 +510,15 @@ void DirectoryView::launch(URL::URL const&, LauncherHandler const& launcher_hand
         posix_spawn_file_actions_init(&spawn_actions);
         posix_spawn_file_actions_addchdir(&spawn_actions, path().characters());
 
-        char const* argv[] = { launcher_handler.details().name.characters(), nullptr };
-        errno = posix_spawn(&child, launcher_handler.details().executable.characters(), &spawn_actions, &spawn_attributes, const_cast<char**>(argv), environ);
+        Vector<char const*, 2> argv;
+        argv.append(launcher_handler.details().name.characters());
+
+        for (auto const& argument : launcher_handler.details().arguments)
+            argv.append(argument.characters());
+
+        argv.append(nullptr);
+
+        errno = posix_spawn(&child, launcher_handler.details().executable.characters(), &spawn_actions, &spawn_attributes, const_cast<char**>(argv.data()), environ);
         if (errno) {
             perror("posix_spawn");
         } else if (disown(child) < 0) {
