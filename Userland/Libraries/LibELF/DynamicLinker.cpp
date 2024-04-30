@@ -42,6 +42,11 @@ namespace ELF {
 
 namespace {
 
+ByteString s_main_program_path;
+
+// The order of objects here corresponds to the "load order" from POSIX specification.
+OrderedHashMap<ByteString, NonnullRefPtr<ELF::DynamicObject>> s_global_objects;
+
 class ConsecutiveIDAllocator {
 public:
     size_t allocate()
@@ -71,18 +76,6 @@ private:
 
 Vector<Optional<ELF::DynamicObject&>> s_dependency_index_to_object;
 
-}
-
-static ByteString s_main_program_path;
-
-// The order of objects here corresponds to the "load order" from POSIX specification.
-static OrderedHashMap<ByteString, NonnullRefPtr<ELF::DynamicObject>> s_global_objects;
-
-using LibCExitFunction = void (*)(int);
-using DlIteratePhdrCallbackFunction = int (*)(struct dl_phdr_info*, size_t, void*);
-using DlIteratePhdrFunction = int (*)(DlIteratePhdrCallbackFunction, void*);
-using CallFiniFunctionsFunction = void (*)();
-
 struct TLSData {
     size_t total_tls_size { 0 };
     void* tls_template { nullptr };
@@ -90,20 +83,26 @@ struct TLSData {
     size_t alignment { 0 };
     size_t static_tls_region_size { 0 };
     size_t static_tls_region_alignment { 0 };
-};
-static TLSData s_tls_data;
+} s_tls_data;
 
-static char** s_envp = nullptr;
-static __pthread_mutex_t s_loader_lock = __PTHREAD_MUTEX_INITIALIZER;
-static ByteString s_cwd;
+char** s_envp = nullptr;
+__pthread_mutex_t s_loader_lock = __PTHREAD_MUTEX_INITIALIZER;
+ByteString s_cwd;
 
-static bool s_allowed_to_check_environment_variables { false };
-static bool s_do_breakpoint_trap_before_entry { false };
-static StringView s_ld_library_path;
-static StringView s_main_program_pledge_promises;
-static ByteString s_loader_pledge_promises;
+bool s_allowed_to_check_environment_variables { false };
+bool s_do_breakpoint_trap_before_entry { false };
+StringView s_ld_library_path;
+StringView s_main_program_pledge_promises;
+ByteString s_loader_pledge_promises;
 
-static HashMap<StringView, DynamicObject::SymbolLookupResult> s_magic_functions;
+HashMap<StringView, DynamicObject::SymbolLookupResult> s_magic_functions;
+
+}
+
+using LibCExitFunction = void (*)(int);
+using DlIteratePhdrCallbackFunction = int (*)(struct dl_phdr_info*, size_t, void*);
+using DlIteratePhdrFunction = int (*)(DlIteratePhdrCallbackFunction, void*);
+using CallFiniFunctionsFunction = void (*)();
 
 Optional<DynamicObject::SymbolLookupResult> DynamicLinker::lookup_global_symbol(StringView name)
 {
