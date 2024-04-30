@@ -61,22 +61,7 @@ OwnPtr<QuickLaunchEntry> QuickLaunchEntry::create_from_path(StringView path)
 
 ErrorOr<void> QuickLaunchEntryAppFile::launch() const
 {
-    auto executable = m_app_file->executable();
-
-    pid_t pid = TRY(Core::System::fork());
-    if (pid == 0) {
-        if (chdir(Core::StandardPaths::home_directory().characters()) < 0) {
-            perror("chdir");
-            exit(1);
-        }
-        if (m_app_file->run_in_terminal())
-            execl("/bin/Terminal", "Terminal", "-e", executable.characters(), nullptr);
-        else
-            execl(executable.characters(), executable.characters(), nullptr);
-        perror("execl");
-        VERIFY_NOT_REACHED();
-    } else
-        TRY(Core::System::disown(pid));
+    TRY(m_app_file->spawn_with_escalation());
     return {};
 }
 
