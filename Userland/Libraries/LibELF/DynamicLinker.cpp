@@ -464,7 +464,9 @@ static Result<void, DlErrorMessage> __dlclose(void* handle)
     pthread_mutex_lock(&s_loader_lock);
     ScopeGuard unlock_guard = [] { pthread_mutex_unlock(&s_loader_lock); };
 
-    // FIXME: Count references to a dynamic object.
+    auto object = reinterpret_cast<DynamicObject*>(handle);
+    object->dlopen_unref();
+    // FIXME: Unload the object if needed.
     return {};
 }
 
@@ -523,7 +525,7 @@ static Result<void*, DlErrorMessage> __dlopen(char const* filename, int flags)
     auto existing_elf_object = s_global_objects.get(library_path.value());
     if (existing_elf_object.has_value()) {
         // It's up to the caller to release the ref with dlclose().
-        // FIXME: Actually count references.
+        (*existing_elf_object)->dlopen_ref();
         return *existing_elf_object;
     }
 
@@ -544,7 +546,7 @@ static Result<void*, DlErrorMessage> __dlopen(char const* filename, int flags)
         return DlErrorMessage { "Could not load ELF object." };
 
     // It's up to the caller to release the ref with dlclose().
-    // FIXME: Actually count references.
+    (*object)->dlopen_ref();
     return *object;
 }
 
@@ -773,6 +775,8 @@ Examples of static-pie ELF objects are ELF packers, and the system dynamic loade
     drop_loader_promise("rpath"sv);
 
     auto& main_executable_loader = objects.load_order.first();
+    main_executable_loader->dynamic_object().dlopen_ref();
+
     auto entry_point = main_executable_loader->image().entry();
     if (main_executable_loader->is_dynamic())
         entry_point = entry_point.offset(main_executable_loader->base_address().get());

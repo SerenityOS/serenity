@@ -337,6 +337,18 @@ public:
     //       assume that symbol lookup doesn't change the DynamicObject.
     void add_dependency_for_unloading(DynamicObject const& dependency) const;
 
+    void dlopen_ref()
+    {
+        VERIFY(m_dlopen_references < NumericLimits<unsigned>::max() - 1);
+        ++m_dlopen_references;
+    }
+
+    void dlopen_unref()
+    {
+        VERIFY(m_dlopen_references > 0);
+        --m_dlopen_references;
+    }
+
 private:
     explicit DynamicObject(ByteString const& filepath, VirtualAddress base_address, VirtualAddress dynamic_section_address, size_t dependency_index);
 
@@ -354,6 +366,9 @@ private:
 
     size_t m_dependency_index { 0 };
     mutable Bitmap m_dependencies;
+
+    unsigned m_dlopen_references { 0 };
+    unsigned m_unload_dependency_references { 0 };
 
     // Begin Section information collected from DT_* entries
     FlatPtr m_init_offset { 0 };

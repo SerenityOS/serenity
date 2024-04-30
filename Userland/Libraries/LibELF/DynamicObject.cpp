@@ -578,7 +578,10 @@ void DynamicObject::add_dependency_for_unloading(DynamicObject const& dependency
     size_t index = dependency.m_dependency_index;
     if (m_dependencies.size() <= index)
         m_dependencies.grow(align_up_to(index + 1, 64), false);
-    m_dependencies.set(index, true);
+    if (!m_dependencies.get(index)) {
+        m_dependencies.set(index, true);
+        ++const_cast<DynamicObject&>(dependency).m_unload_dependency_references;
+    }
 }
 
 } // end namespace ELF
