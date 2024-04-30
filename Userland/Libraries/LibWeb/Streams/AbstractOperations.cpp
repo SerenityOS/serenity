@@ -304,14 +304,15 @@ JS::NonnullGCPtr<WebIDL::Promise> readable_stream_pipe_to(ReadableStream& source
     //       JavaScript-modifiable reader, writer, and stream APIs (i.e. methods on the appropriate prototypes) must not
     //       be used. Instead, the streams must be manipulated directly.
 
-    // FIXME: Currently a naive implementation that uses ReadableStreamDefaultReader::read_all_bytes() to read all chunks
+    // FIXME: Currently a naive implementation that uses ReadableStreamDefaultReader::read_all_chunks() to read all chunks
     //        from the source and then through the callback success_steps writes those chunks to the destination.
-    auto success_steps = [promise, &realm, writer](Vector<ByteBuffer> const& bytes) {
-        for (auto byte_buffer : bytes) {
-            auto buffer = JS::ArrayBuffer::create(realm, move(byte_buffer));
-            auto inner_promise = writable_stream_default_writer_write(writer, JS::Value { buffer });
-            WebIDL::resolve_promise(realm, inner_promise, JS::js_undefined());
-        }
+    auto chunk_steps = [&realm, writer](ByteBuffer chunk) {
+        auto buffer = JS::ArrayBuffer::create(realm, move(chunk));
+        auto promise = writable_stream_default_writer_write(writer, JS::Value { buffer });
+        WebIDL::resolve_promise(realm, promise, JS::js_undefined());
+    };
+
+    auto success_steps = [promise, &realm](Vector<ByteBuffer> const&) {
         WebIDL::resolve_promise(realm, promise, JS::js_undefined());
     };
 
@@ -319,7 +320,7 @@ JS::NonnullGCPtr<WebIDL::Promise> readable_stream_pipe_to(ReadableStream& source
         WebIDL::reject_promise(realm, promise, error);
     };
 
-    reader->read_all_bytes(move(success_steps), move(failure_steps));
+    reader->read_all_chunks(move(chunk_steps), move(success_steps), move(failure_steps));
 
     // 16. Return promise.
     return promise;
