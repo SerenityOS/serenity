@@ -16,10 +16,11 @@
 
 namespace ELF {
 
-DynamicObject::DynamicObject(ByteString const& filepath, VirtualAddress base_address, VirtualAddress dynamic_section_address)
+DynamicObject::DynamicObject(ByteString const& filepath, VirtualAddress base_address, VirtualAddress dynamic_section_address, size_t dependency_index)
     : m_filepath(filepath)
     , m_base_address(base_address)
     , m_dynamic_address(dynamic_section_address)
+    , m_dependency_index(dependency_index)
 {
     auto* header = (Elf_Ehdr*)base_address.as_ptr();
     auto* const phdrs = program_headers();
@@ -542,9 +543,9 @@ auto DynamicObject::lookup_symbol(HashSymbol const& symbol) const -> Optional<Sy
     return SymbolLookupResult { symbol_result.value(), symbol_result.size(), symbol_result.address(), symbol_result.bind(), symbol_result.type(), this };
 }
 
-NonnullRefPtr<DynamicObject> DynamicObject::create(ByteString const& filepath, VirtualAddress base_address, VirtualAddress dynamic_section_address)
+NonnullRefPtr<DynamicObject> DynamicObject::create(ByteString const& filepath, VirtualAddress base_address, VirtualAddress dynamic_section_address, size_t dependency_index)
 {
-    return adopt_ref(*new DynamicObject(filepath, base_address, dynamic_section_address));
+    return adopt_ref(*new DynamicObject(filepath, base_address, dynamic_section_address, dependency_index));
 }
 
 u32 DynamicObject::HashSymbol::gnu_hash() const

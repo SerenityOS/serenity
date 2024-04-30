@@ -21,7 +21,7 @@ namespace ELF {
 
 class DynamicObject : public RefCounted<DynamicObject> {
 public:
-    static NonnullRefPtr<DynamicObject> create(ByteString const& filepath, VirtualAddress base_address, VirtualAddress dynamic_section_address);
+    static NonnullRefPtr<DynamicObject> create(ByteString const& filepath, VirtualAddress base_address, VirtualAddress dynamic_section_address, size_t dependency_index);
     static char const* name_for_dtag(Elf_Sword d_tag);
 
     ~DynamicObject();
@@ -333,7 +333,7 @@ public:
     void* symbol_for_name(StringView name);
 
 private:
-    explicit DynamicObject(ByteString const& filepath, VirtualAddress base_address, VirtualAddress dynamic_section_address);
+    explicit DynamicObject(ByteString const& filepath, VirtualAddress base_address, VirtualAddress dynamic_section_address, size_t dependency_index);
 
     StringView symbol_string_table_string(Elf_Word) const;
     char const* raw_symbol_string_table_string(Elf_Word) const;
@@ -346,6 +346,8 @@ private:
     VirtualAddress m_elf_base_address;
 
     unsigned m_symbol_count { 0 };
+
+    size_t m_dependency_index { 0 };
 
     // Begin Section information collected from DT_* entries
     FlatPtr m_init_offset { 0 };

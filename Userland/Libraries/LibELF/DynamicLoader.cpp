@@ -126,7 +126,7 @@ bool DynamicLoader::validate()
     return true;
 }
 
-RefPtr<DynamicObject> DynamicLoader::map()
+RefPtr<DynamicObject> DynamicLoader::map(size_t dependency_index)
 {
     if (m_dynamic_object) {
         // Already mapped.
@@ -142,7 +142,7 @@ RefPtr<DynamicObject> DynamicLoader::map()
 
     VERIFY(!m_base_address.is_null());
 
-    m_dynamic_object = DynamicObject::create(m_filepath, m_base_address, m_dynamic_section_address);
+    m_dynamic_object = DynamicObject::create(m_filepath, m_base_address, m_dynamic_section_address, dependency_index);
     m_dynamic_object->set_tls_offset(m_tls_offset);
     m_dynamic_object->set_tls_size(m_tls_size_of_current_object);
 

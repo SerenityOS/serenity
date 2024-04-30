@@ -7,6 +7,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Bitmap.h>
 #include <AK/ByteBuffer.h>
 #include <AK/Debug.h>
 #include <AK/HashMap.h>
@@ -38,6 +39,39 @@
 #include <unistd.h>
 
 namespace ELF {
+
+namespace {
+
+class ConsecutiveIDAllocator {
+public:
+    size_t allocate()
+    {
+        auto position = m_allocated_ids.find_first<false>();
+        if (position.has_value()) {
+            m_allocated_ids.set(position.value(), true);
+            return position.value();
+        } else {
+            size_t id = m_allocated_ids.size();
+            // We can do exponential growth here, but it's really not necessary.
+            m_allocated_ids.grow(align_up_to(id + 1, 64), false);
+            m_allocated_ids.set(id, true);
+            return id;
+        }
+    }
+
+    void deallocate(size_t index)
+    {
+        VERIFY(m_allocated_ids.get(index));
+        m_allocated_ids.set(index, false);
+    }
+
+private:
+    Bitmap m_allocated_ids;
+} s_dependency_index_allocator;
+
+Vector<Optional<ELF::DynamicObject&>> s_dependency_index_to_object;
+
+}
 
 static ByteString s_main_program_path;
 
@@ -110,9 +144,15 @@ static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(ByteStri
         loader->set_tls_offset(s_current_tls_offset);
     }
 
+    size_t dependency_index = s_dependency_index_allocator.allocate();
+
     // This actually maps the library at the intended and final place.
-    auto main_library_object = loader->map();
-    s_global_objects.set(filepath, *main_library_object);
+    auto& main_library_object = *loader->map(dependency_index);
+    s_global_objects.set(filepath, main_library_object);
+
+    if (s_dependency_index_to_object.size() <= dependency_index)
+        s_dependency_index_to_object.resize(dependency_index + 1);
+    s_dependency_index_to_object[dependency_index] = main_library_object;
 
     return loader;
 }

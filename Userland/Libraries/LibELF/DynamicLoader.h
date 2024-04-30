@@ -54,7 +54,7 @@ public:
     // Load a full ELF image from file into the current process and create an DynamicObject
     // from the SHT_DYNAMIC in the file.
     // Note that the DynamicObject will not be linked yet. Callers are responsible for calling link() to finish it.
-    RefPtr<DynamicObject> map();
+    RefPtr<DynamicObject> map(size_t dependency_index = NumericLimits<size_t>::max());
 
     bool link(unsigned flags);
 
