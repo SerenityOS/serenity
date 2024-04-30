@@ -107,7 +107,7 @@ void ReadLoopReadRequest::on_chunk(JS::Value chunk)
 void ReadLoopReadRequest::on_close()
 {
     // 1. Call successSteps with bytes.
-    m_success_steps(m_bytes);
+    m_success_steps(move(m_bytes));
 }
 
 // error steps, given e
