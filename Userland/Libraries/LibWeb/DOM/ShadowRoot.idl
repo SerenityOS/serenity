@@ -6,7 +6,7 @@
 [Exposed=Window]
 interface ShadowRoot : DocumentFragment {
     readonly attribute ShadowRootMode mode;
-    // FIXME: readonly attribute boolean delegatesFocus;
+    readonly attribute boolean delegatesFocus;
     readonly attribute SlotAssignmentMode slotAssignment;
     readonly attribute Element host;
     // FIXME: attribute EventHandler onslotchange;
