@@ -185,10 +185,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     chrome_process.on_new_window = [&](auto const& urls) {
-        app.new_window(sanitize_urls(urls), cookie_jar, web_content_options, webdriver_content_ipc_path);
+        app.new_window(sanitize_urls(urls), *cookie_jar, web_content_options, webdriver_content_ipc_path);
     };
 
-    auto& window = app.new_window(sanitize_urls(raw_urls), cookie_jar, web_content_options, webdriver_content_ipc_path);
+    auto& window = app.new_window(sanitize_urls(raw_urls), *cookie_jar, web_content_options, webdriver_content_ipc_path);
     window.setWindowTitle("Ladybird");
 
     if (Ladybird::Settings::the()->is_maximized()) {
