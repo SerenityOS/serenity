@@ -13,6 +13,7 @@
 #include <AK/StringView.h>
 #include <AK/Traits.h>
 #include <LibCore/DateTime.h>
+#include <LibCore/Timer.h>
 #include <LibSQL/Type.h>
 #include <LibURL/Forward.h>
 #include <LibWeb/Cookie/Cookie.h>
@@ -34,22 +35,53 @@ class CookieJar {
         SQL::StatementID create_table { 0 };
         SQL::StatementID insert_cookie { 0 };
         SQL::StatementID update_cookie { 0 };
-        SQL::StatementID update_cookie_last_access_time { 0 };
         SQL::StatementID expire_cookie { 0 };
-        SQL::StatementID select_cookie { 0 };
         SQL::StatementID select_all_cookies { 0 };
     };
 
-    struct PersistedStorage {
-        Database& database;
-        Statements statements;
+    class TransientStorage {
+    public:
+        using Cookies = HashMap<CookieStorageKey, Web::Cookie::Cookie>;
+
+        void set_cookies(Cookies);
+        void set_cookie(CookieStorageKey, Web::Cookie::Cookie);
+        Optional<Web::Cookie::Cookie> get_cookie(CookieStorageKey const&);
+
+        size_t size() const { return m_cookies.size(); }
+
+        UnixDateTime purge_expired_cookies();
+
+        auto take_inserted_cookies() { return move(m_inserted_cookies); }
+        auto take_updated_cookies() { return move(m_updated_cookies); }
+
+        template<typename Callback>
+        void for_each_cookie(Callback callback)
+        {
+            for (auto& it : m_cookies)
+                callback(it.value);
+        }
+
+    private:
+        Cookies m_cookies;
+        Cookies m_inserted_cookies;
+        Cookies m_updated_cookies;
     };
 
-    using TransientStorage = HashMap<CookieStorageKey, Web::Cookie::Cookie>;
+    struct PersistedStorage {
+        void insert_cookie(Web::Cookie::Cookie const& cookie);
+        void update_cookie(Web::Cookie::Cookie const& cookie);
+        TransientStorage::Cookies select_all_cookies();
+
+        Database& database;
+        Statements statements;
+        RefPtr<Core::Timer> synchronization_timer {};
+    };
 
 public:
-    static ErrorOr<CookieJar> create(Database&);
-    static CookieJar create();
+    static ErrorOr<NonnullOwnPtr<CookieJar>> create(Database&);
+    static NonnullOwnPtr<CookieJar> create();
+
+    ~CookieJar();
 
     String get_cookie(const URL::URL& url, Web::Cookie::Source source);
     void set_cookie(const URL::URL& url, Web::Cookie::ParsedCookie const& parsed_cookie, Web::Cookie::Source source);
@@ -60,8 +92,10 @@ public:
     Optional<Web::Cookie::Cookie> get_named_cookie(URL::URL const& url, StringView name);
 
 private:
-    explicit CookieJar(PersistedStorage);
-    explicit CookieJar(TransientStorage);
+    explicit CookieJar(Optional<PersistedStorage>);
+
+    AK_MAKE_NONCOPYABLE(CookieJar);
+    AK_MAKE_NONMOVABLE(CookieJar);
 
     static Optional<String> canonicalize_domain(const URL::URL& url);
     static bool domain_matches(StringView string, StringView domain_string);
@@ -76,20 +110,8 @@ private:
     void store_cookie(Web::Cookie::ParsedCookie const& parsed_cookie, const URL::URL& url, String canonicalized_domain, Web::Cookie::Source source);
     Vector<Web::Cookie::Cookie> get_matching_cookies(const URL::URL& url, StringView canonicalized_domain, Web::Cookie::Source source, MatchingCookiesSpecMode mode = MatchingCookiesSpecMode::RFC6265);
 
-    void insert_cookie_into_database(Web::Cookie::Cookie const& cookie);
-    void update_cookie_in_database(Web::Cookie::Cookie const& cookie);
-    void update_cookie_last_access_time_in_database(Web::Cookie::Cookie const& cookie);
-
-    using OnCookieFound = Function<void(Web::Cookie::Cookie&, Web::Cookie::Cookie)>;
-    using OnCookieNotFound = Function<void(Web::Cookie::Cookie)>;
-    void select_cookie_from_database(Web::Cookie::Cookie cookie, OnCookieFound on_result, OnCookieNotFound on_complete_without_results);
-
-    using OnSelectAllCookiesResult = Function<void(Web::Cookie::Cookie)>;
-    void select_all_cookies_from_database(OnSelectAllCookiesResult on_result);
-
-    void purge_expired_cookies();
-
-    Variant<PersistedStorage, TransientStorage> m_storage;
+    Optional<PersistedStorage> m_persisted_storage;
+    TransientStorage m_transient_storage;
 };
 
 }

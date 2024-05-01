@@ -164,7 +164,7 @@ public:
     }
 
 private:
-    HeadlessWebContentView(NonnullRefPtr<WebView::Database> database, WebView::CookieJar cookie_jar, RefPtr<Protocol::RequestClient> request_client = nullptr)
+    HeadlessWebContentView(NonnullRefPtr<WebView::Database> database, NonnullOwnPtr<WebView::CookieJar> cookie_jar, RefPtr<Protocol::RequestClient> request_client = nullptr)
         : m_database(move(database))
         , m_cookie_jar(move(cookie_jar))
         , m_request_client(move(request_client))
@@ -183,11 +183,11 @@ private:
         };
 
         on_get_cookie = [this](auto const& url, auto source) {
-            return m_cookie_jar.get_cookie(url, source);
+            return m_cookie_jar->get_cookie(url, source);
         };
 
         on_set_cookie = [this](auto const& url, auto const& cookie, auto source) {
-            m_cookie_jar.set_cookie(url, cookie, source);
+            m_cookie_jar->set_cookie(url, cookie, source);
         };
 
         on_request_worker_agent = [this]() {
@@ -213,7 +213,7 @@ private:
     RefPtr<Core::Promise<RefPtr<Gfx::Bitmap>>> m_pending_screenshot;
 
     NonnullRefPtr<WebView::Database> m_database;
-    WebView::CookieJar m_cookie_jar;
+    NonnullOwnPtr<WebView::CookieJar> m_cookie_jar;
     RefPtr<Protocol::RequestClient> m_request_client;
 };
 
