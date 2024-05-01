@@ -36,6 +36,18 @@ void ShadowRoot::initialize(JS::Realm& realm)
     WEB_SET_PROTOTYPE_FOR_INTERFACE(ShadowRoot);
 }
 
+// https://dom.spec.whatwg.org/#dom-shadowroot-onslotchange
+void ShadowRoot::set_onslotchange(WebIDL::CallbackType* event_handler)
+{
+    set_event_handler_attribute(HTML::EventNames::slotchange, event_handler);
+}
+
+// https://dom.spec.whatwg.org/#dom-shadowroot-onslotchange
+WebIDL::CallbackType* ShadowRoot::onslotchange()
+{
+    return event_handler_attribute(HTML::EventNames::slotchange);
+}
+
 // https://dom.spec.whatwg.org/#ref-for-get-the-parent%E2%91%A6
 EventTarget* ShadowRoot::get_parent(Event const& event)
 {
