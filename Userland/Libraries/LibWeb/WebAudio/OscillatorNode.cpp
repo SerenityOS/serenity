@@ -23,12 +23,41 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<OscillatorNode>> OscillatorNode::create(JS:
 WebIDL::ExceptionOr<JS::NonnullGCPtr<OscillatorNode>> OscillatorNode::construct_impl(JS::Realm& realm, JS::NonnullGCPtr<BaseAudioContext> context, OscillatorOptions const& options)
 {
     // FIXME: Invoke "Initialize the AudioNode" steps.
-    return realm.vm().heap().allocate<OscillatorNode>(realm, realm, context, options);
+    TRY(verify_valid_type(realm, options.type));
+    auto node = realm.vm().heap().allocate<OscillatorNode>(realm, realm, context, options);
+    return node;
 }
 
 OscillatorNode::OscillatorNode(JS::Realm& realm, JS::NonnullGCPtr<BaseAudioContext> context, OscillatorOptions const&)
     : AudioScheduledSourceNode(realm, context)
 {
+}
+
+// https://webaudio.github.io/web-audio-api/#dom-oscillatornode-type
+Bindings::OscillatorType OscillatorNode::type() const
+{
+    return m_type;
+}
+
+// https://webaudio.github.io/web-audio-api/#dom-oscillatornode-type
+WebIDL::ExceptionOr<void> OscillatorNode::verify_valid_type(JS::Realm& realm, Bindings::OscillatorType type)
+{
+    // The shape of the periodic waveform. It may directly be set to any of the type constant values except
+    // for "custom". ⌛ Doing so MUST throw an InvalidStateError exception. The setPeriodicWave() method can
+    // be used to set a custom waveform, which results in this attribute being set to "custom". The default
+    // value is "sine". When this attribute is set, the phase of the oscillator MUST be conserved.
+    if (type == Bindings::OscillatorType::Custom)
+        return WebIDL::InvalidStateError::create(realm, "Oscillator node type cannot be set to 'custom'"_fly_string);
+
+    return {};
+}
+
+// https://webaudio.github.io/web-audio-api/#dom-oscillatornode-type
+WebIDL::ExceptionOr<void> OscillatorNode::set_type(Bindings::OscillatorType type)
+{
+    TRY(verify_valid_type(realm(), type));
+    m_type = type;
+    return {};
 }
 
 void OscillatorNode::initialize(JS::Realm& realm)

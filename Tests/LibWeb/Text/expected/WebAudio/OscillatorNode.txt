@@ -4,3 +4,7 @@ AudioNode
 EventTarget
 Object
 context: '[object OfflineAudioContext], is same as original: true
+Error creating node: 'InvalidStateError: Oscillator node type cannot be set to 'custom''
+oscillator node type: 'sine'
+Error: 'InvalidStateError: Oscillator node type cannot be set to 'custom'', type is: sine
+oscillator node type: 'triangle'
