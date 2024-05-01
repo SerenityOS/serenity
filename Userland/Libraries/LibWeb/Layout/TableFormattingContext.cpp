@@ -482,7 +482,11 @@ void TableFormattingContext::compute_table_width()
     }
 
     CSSPixels used_width;
-    if (width_is_auto_relative_to_state(computed_values.width(), containing_block_state)) {
+    if (m_available_space->width.is_min_content()) {
+        used_width = grid_min;
+    } else if (m_available_space->width.is_max_content()) {
+        used_width = grid_max;
+    } else if (width_is_auto_relative_to_state(computed_values.width(), containing_block_state)) {
         // If the table-root has 'width: auto', the used width is the greater of
         // min(GRIDMAX, the table’s containing block width), the used min-width of the table.
         if (width_of_table_containing_block.is_definite())
