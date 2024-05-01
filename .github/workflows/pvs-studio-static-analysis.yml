@@ -19,16 +19,16 @@ jobs:
           wget -q -O - https://files.pvs-studio.com/beta/etc/pubkey.txt | sudo apt-key add -
           sudo wget -O /etc/apt/sources.list.d/viva64.list https://files.pvs-studio.com/beta/etc/viva64.list
 
-      - name: "Install Ubuntu dependencies"
-        # These packages are already part of the ubuntu-22.04 image:
-        # cmake libgmp-dev npm shellcheck
-        # Packages below aren't.
-        #
+      - name: "Set up environment"
+        uses: ./.github/actions/setup
+        with:
+          os: 'Serenity'
+          arch: ${{ env.PVS_STUDIO_ANALYSIS_ARCH }}
+
+      - name: "Install PVS Studio"
         run: |
-          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-          sudo add-apt-repository 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-18 main'
           sudo apt-get update
-          sudo apt-get install -y clang-format-18 gcc-13 g++-13 libstdc++-13-dev libmpfr-dev libmpc-dev ninja-build unzip pvs-studio
+          sudo apt-get install -y pvs-studio
 
       - name: Check versions
         run: set +e; g++ --version; g++-13 --version; ninja --version;
