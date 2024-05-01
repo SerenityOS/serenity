@@ -40,6 +40,9 @@ TestOrderLib2.cpp:init
 TestOrderExe.cpp:init
 TestOrderExe.cpp:main
 f() returns: TestOrderLib1.cpp
+TestOrderExe.cpp:fini
+TestOrderLib2.cpp:fini
+TestOrderLib1.cpp:fini
 )"sv;
         auto output = run("TestOrderExe1.elf");
         EXPECT_EQ(StringView(output.bytes()), expected);
@@ -51,6 +54,9 @@ TestOrderLib2.cpp:init
 TestOrderExe.cpp:init
 TestOrderExe.cpp:main
 f() returns: TestOrderLib2.cpp
+TestOrderExe.cpp:fini
+TestOrderLib2.cpp:fini
+TestOrderLib1.cpp:fini
 )"sv;
         auto output = run("TestOrderExe2.elf");
         EXPECT_EQ(StringView(output.bytes()), expected);

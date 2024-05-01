@@ -46,6 +46,7 @@ ByteString s_main_program_path;
 
 // The order of objects here corresponds to the "load order" from POSIX specification.
 OrderedHashMap<ByteString, NonnullOwnPtr<ELF::DynamicObject>> s_global_objects;
+OrderedHashTable<ELF::DynamicObject*> s_global_objects_in_topological_order;
 
 class ConsecutiveIDAllocator {
 public:
@@ -282,6 +283,9 @@ static ErrorOr<DependencyOrdering, DlErrorMessage> map_dependencies(NonnullRefPt
     VERIFY(topological_order.size() == load_order.size());
     VERIFY(topological_order.last()->filepath() == loader->filepath());
 
+    for (auto const& object : topological_order)
+        s_global_objects_in_topological_order.set(&object->dynamic_object());
+
     return DependencyOrdering {
         .load_order = move(load_order),
         .topological_order = move(topological_order),
@@ -506,8 +510,8 @@ static Result<void, DlErrorMessage> __dlclose(void* handle)
         // FIXME: Then, deallocate everything we've allocated for TLS.
 
         // And, finally, unmap the object.
-        auto it = s_global_objects.find(object_to_unload->filepath());
-        s_global_objects.remove(it);
+        s_global_objects_in_topological_order.remove(object_to_unload);
+        s_global_objects.remove(object_to_unload->filepath());
     }
 
     return {};
@@ -664,11 +668,9 @@ static Result<void, DlErrorMessage> __dladdr(void const* addr, Dl_info* info)
 
 static void __call_fini_functions()
 {
-    // FIXME: This is not and never has been the correct order to call finalizers in.
-    for (auto& it : s_global_objects) {
-        auto const& object = it.value;
+    // The order here is the reverse of one used for initializers.
+    for (auto object : s_global_objects_in_topological_order.in_reverse())
         call_destructors_of(*object);
-    }
 }
 
 static char** __environ_value()

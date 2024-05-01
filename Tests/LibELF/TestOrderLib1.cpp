@@ -11,6 +11,11 @@
     outln("TestOrderLib1.cpp:init");
 }
 
+[[gnu::destructor]] static void fini()
+{
+    outln("TestOrderLib1.cpp:fini");
+}
+
 StringView f();
 StringView f()
 {

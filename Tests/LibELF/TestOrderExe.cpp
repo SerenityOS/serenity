@@ -11,6 +11,11 @@
     outln("TestOrderExe.cpp:init");
 }
 
+[[gnu::destructor]] static void fini()
+{
+    outln("TestOrderExe.cpp:fini");
+}
+
 StringView f();
 
 int main()
