@@ -693,11 +693,11 @@ ThrowCompletionOr<Value> perform_eval(VM& vm, Value x, CallerMode strict_caller,
     executable->name = "eval"sv;
     if (Bytecode::g_dump_bytecode)
         executable->dump();
-    auto result_or_error = vm.bytecode_interpreter().run_and_return_frame(*executable, nullptr);
+    auto result_or_error = vm.bytecode_interpreter().run_executable(*executable, nullptr);
     if (result_or_error.value.is_error())
         return result_or_error.value.release_error();
 
-    auto& result = result_or_error.frame->registers()[0];
+    auto& result = result_or_error.return_register_value;
     if (!result.is_empty())
         eval_result = result;
 

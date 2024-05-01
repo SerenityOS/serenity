@@ -16,7 +16,7 @@ namespace JS {
 
 JS_DEFINE_ALLOCATOR(AsyncGenerator);
 
-ThrowCompletionOr<NonnullGCPtr<AsyncGenerator>> AsyncGenerator::create(Realm& realm, Value initial_value, ECMAScriptFunctionObject* generating_function, NonnullOwnPtr<ExecutionContext> execution_context, NonnullOwnPtr<Bytecode::CallFrame> frame)
+ThrowCompletionOr<NonnullGCPtr<AsyncGenerator>> AsyncGenerator::create(Realm& realm, Value initial_value, ECMAScriptFunctionObject* generating_function, NonnullOwnPtr<ExecutionContext> execution_context)
 {
     auto& vm = realm.vm();
     // This is "g1.prototype" in figure-2 (https://tc39.es/ecma262/img/figure-2.png)
@@ -24,7 +24,6 @@ ThrowCompletionOr<NonnullGCPtr<AsyncGenerator>> AsyncGenerator::create(Realm& re
     auto generating_function_prototype_object = TRY(generating_function_prototype.to_object(vm));
     auto object = realm.heap().allocate<AsyncGenerator>(realm, realm, generating_function_prototype_object, move(execution_context));
     object->m_generating_function = generating_function;
-    object->m_frame = move(frame);
     object->m_previous_value = initial_value;
     return object;
 }
@@ -45,8 +44,6 @@ void AsyncGenerator::visit_edges(Cell::Visitor& visitor)
     }
     visitor.visit(m_generating_function);
     visitor.visit(m_previous_value);
-    if (m_frame)
-        m_frame->visit_edges(visitor);
     visitor.visit(m_current_promise);
     m_async_generator_context->visit_edges(visitor);
 }
@@ -192,19 +189,9 @@ void AsyncGenerator::execute(VM& vm, Completion completion)
 
         VERIFY(!m_generating_function->bytecode_executable()->basic_blocks.find_if([next_block](auto& block) { return block == next_block; }).is_end());
 
-        Bytecode::CallFrame* frame = nullptr;
-        if (m_frame)
-            frame = m_frame.ptr();
+        bytecode_interpreter.accumulator() = completion_object;
 
-        if (frame)
-            frame->registers()[0] = completion_object;
-        else
-            bytecode_interpreter.accumulator() = completion_object;
-
-        auto next_result = bytecode_interpreter.run_and_return_frame(*m_generating_function->bytecode_executable(), next_block, frame);
-
-        if (!m_frame)
-            m_frame = move(next_result.frame);
+        auto next_result = bytecode_interpreter.run_executable(*m_generating_function->bytecode_executable(), next_block);
 
         auto result_value = move(next_result.value);
         if (!result_value.is_throw_completion()) {
