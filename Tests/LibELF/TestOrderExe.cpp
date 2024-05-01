@@ -16,7 +16,7 @@
     outln("TestOrderExe.cpp:fini");
 }
 
-StringView f();
+char const* f();
 
 int main()
 {

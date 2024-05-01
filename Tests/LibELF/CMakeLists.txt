@@ -96,9 +96,18 @@ add_test_exe(TestOrderExe2.elf TestOrderExe.cpp)
 target_link_manual(TestOrderExe2.elf TestOrderLib2)
 target_link_manual(TestOrderExe2.elf TestOrderLib1)
 
+add_test_exe(TestOrderDlClose1.elf TestOrderDlClose1.cpp)
+target_link_libraries(TestOrderDlClose1.elf PRIVATE LibCore)
+add_test_exe(TestOrderDlClose2.elf TestOrderDlClose2.cpp)
+add_test_exe(TestOrderDlClose3.elf TestOrderDlClose3.cpp)
+target_link_options(TestOrderDlClose3.elf PRIVATE -Wl,-z,lazy)
+
 add_dependencies(TestOrder
     TestOrderLib1
     TestOrderLib2
     TestOrderExe1.elf
     TestOrderExe2.elf
+    TestOrderDlClose1.elf
+    TestOrderDlClose2.elf
+    TestOrderDlClose3.elf
 )
