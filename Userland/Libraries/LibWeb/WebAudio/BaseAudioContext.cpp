@@ -13,8 +13,9 @@
 
 namespace Web::WebAudio {
 
-BaseAudioContext::BaseAudioContext(JS::Realm& realm)
+BaseAudioContext::BaseAudioContext(JS::Realm& realm, float sample_rate)
     : DOM::EventTarget(realm)
+    , m_sample_rate(sample_rate)
 {
 }
 

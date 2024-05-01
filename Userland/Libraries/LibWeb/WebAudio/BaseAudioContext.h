@@ -50,7 +50,7 @@ public:
     WebIDL::ExceptionOr<JS::NonnullGCPtr<OscillatorNode>> create_oscillator();
 
 protected:
-    explicit BaseAudioContext(JS::Realm&);
+    explicit BaseAudioContext(JS::Realm&, float m_sample_rate = 0);
 
     virtual void initialize(JS::Realm&) override;
 

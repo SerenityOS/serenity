@@ -73,11 +73,10 @@ OfflineAudioContext::OfflineAudioContext(JS::Realm& realm, OfflineAudioContextOp
 }
 
 OfflineAudioContext::OfflineAudioContext(JS::Realm& realm, WebIDL::UnsignedLong number_of_channels, WebIDL::UnsignedLong length, float sample_rate)
-    : BaseAudioContext(realm)
+    : BaseAudioContext(realm, sample_rate)
     , m_length(length)
 {
     (void)number_of_channels;
-    (void)sample_rate;
 }
 
 void OfflineAudioContext::initialize(JS::Realm& realm)
