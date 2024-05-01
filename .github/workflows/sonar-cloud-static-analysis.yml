@@ -50,20 +50,12 @@ jobs:
           echo "sonar.python.version=3.7, 3.8, 3.9" >> ${{ github.workspace }}/sonar-project.properties
 
       # === OS SETUP ===
-      # TODO: Is there someway to share these steps with the cmake.yml?
 
-      - name: "Install Ubuntu dependencies"
-        # These packages are already part of the ubuntu-22.04 image:
-        # cmake libgmp-dev npm shellcheck
-        # Packages below aren't.
-        run: |
-          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-          sudo add-apt-repository 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-18 main'
-          sudo apt-get update
-          sudo apt-get install -y clang-format-18 gcc-13 g++-13 libstdc++-13-dev libmpfr-dev libmpc-dev ninja-build unzip
-
-      - name: Check versions
-        run: set +e; g++ --version; g++-13 --version; ninja --version;
+      - name: "Set up environment"
+        uses: ./.github/actions/setup
+        with:
+          os: 'Serenity'
+          arch: ${{ env.SONAR_ANALYSIS_ARCH }}
 
       - name: Prepare useful stamps
         id: stamps

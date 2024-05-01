@@ -14,9 +14,11 @@ jobs:
       matrix:
         os: [ubuntu-22.04]
         package_type: [Linux-x86_64]
+        os_name: [Linux]
         include:
           - os: macos-14
             package_type: macOS-universal2
+            os_name: macOS
 
     concurrency:
       group: ${{ github.workflow }}-${{ matrix.os }}
@@ -26,26 +28,11 @@ jobs:
       - name: Checkout SerenityOS/serenity
         uses: actions/checkout@v4
 
-      - name: Install dependencies Ubuntu
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ninja-build unzip gcc-13 g++-13
-        if: ${{ matrix.os == 'ubuntu-22.04' }}
-
-      - name: Install dependencies macOS
-        run: |
-          brew install bash ninja unzip
-        if: ${{ matrix.os == 'macos-14' }}
-
-      - name: Check versions Ubuntu
-        run: |
-          ninja --version; gcc-13 --version; g++-13 --version
-        if: ${{ matrix.os == 'ubuntu-22.04' }}
-
-      - name: Check versions macOS
-        run: |
-          ninja --version; clang++ --version
-        if: ${{ matrix.os == 'macos-14' }}
+      - name: "Set up environment"
+        uses: ./.github/actions/setup
+        with:
+          os: ${{ matrix.os_name }}
+          arch: 'Lagom'
 
       - name: Create build directory
         run: |
