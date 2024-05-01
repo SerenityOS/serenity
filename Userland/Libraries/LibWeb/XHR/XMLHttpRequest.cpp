@@ -1265,4 +1265,16 @@ JS::ThrowCompletionOr<void> XMLHttpRequest::request_error_steps(FlyString const&
     return {};
 }
 
+// https://xhr.spec.whatwg.org/#the-responseurl-attribute
+String XMLHttpRequest::response_url()
+{
+    // The responseURL getter steps are to return the empty string if this’s response’s URL is null;
+    // otherwise its serialization with the exclude fragment flag set.
+    if (!m_response->url().has_value())
+        return String {};
+
+    auto serialized = m_response->url().value().serialize(URL::ExcludeFragment::Yes);
+    return String::from_utf8_without_validation(serialized.bytes());
+}
+
 }

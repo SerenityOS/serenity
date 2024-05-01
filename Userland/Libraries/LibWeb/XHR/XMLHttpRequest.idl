@@ -41,7 +41,7 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
     undefined abort();
 
     // response
-    // FIXME: readonly attribute USVString responseURL;
+    readonly attribute USVString responseURL;
     readonly attribute unsigned short status;
     readonly attribute ByteString statusText;
     ByteString? getResponseHeader(ByteString name);
