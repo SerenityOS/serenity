@@ -647,7 +647,7 @@ inline ThrowCompletionOr<ECMAScriptFunctionObject*> new_class(VM& vm, Value supe
 
     // NOTE: NewClass expects classEnv to be active lexical environment
     auto* class_environment = vm.lexical_environment();
-    vm.running_execution_context().lexical_environment = interpreter.saved_lexical_environment_stack().take_last();
+    vm.running_execution_context().lexical_environment = vm.running_execution_context().saved_lexical_environments.take_last();
 
     Optional<DeprecatedFlyString> binding_name;
     DeprecatedFlyString class_name;

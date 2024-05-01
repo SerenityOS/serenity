@@ -717,12 +717,12 @@ ThrowCompletionOr<void> SourceTextModule::execute_module(VM& vm, GCPtr<PromiseCa
         else {
             auto executable = maybe_executable.release_value();
 
-            auto value_and_frame = vm.bytecode_interpreter().run_and_return_frame(*executable, nullptr);
-            if (value_and_frame.value.is_error()) {
-                result = value_and_frame.value.release_error();
+            auto result_and_return_register = vm.bytecode_interpreter().run_executable(*executable, nullptr);
+            if (result_and_return_register.value.is_error()) {
+                result = result_and_return_register.value.release_error();
             } else {
                 // Resulting value is in the accumulator.
-                result = value_and_frame.frame->registers()[0].value_or(js_undefined());
+                result = result_and_return_register.return_register_value.value_or(js_undefined());
             }
         }
 

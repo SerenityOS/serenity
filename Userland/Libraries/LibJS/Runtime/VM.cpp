@@ -289,11 +289,24 @@ ThrowCompletionOr<void> VM::binding_initialization(NonnullRefPtr<BindingPattern 
 
 ThrowCompletionOr<Value> VM::execute_ast_node(ASTNode const& node)
 {
+    // FIXME: This function should be gone once we will emit bytecode for everything before executing instructions.
+
     auto executable = TRY(Bytecode::compile(*this, node, {}, FunctionKind::Normal, ""sv));
-    auto result_or_error = bytecode_interpreter().run_and_return_frame(*executable, nullptr);
+    auto& running_execution_context = this->running_execution_context();
+
+    // Registers have to be saved and restored because executable for compiled ASTNode does not have its own execution context
+    auto saved_registers = running_execution_context.registers;
+    for (size_t i = 0; i < saved_registers.size(); ++i)
+        running_execution_context.registers[i] = {};
+
+    auto result_or_error = bytecode_interpreter().run_executable(*executable, nullptr);
+
+    for (size_t i = 0; i < saved_registers.size(); ++i)
+        running_execution_context.registers[i] = saved_registers[i];
+
     if (result_or_error.value.is_error())
         return result_or_error.value.release_error();
-    return result_or_error.frame->registers()[0];
+    return result_or_error.return_register_value;
 }
 
 // 13.15.5.3 Runtime Semantics: PropertyDestructuringAssignmentEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-propertydestructuringassignmentevaluation

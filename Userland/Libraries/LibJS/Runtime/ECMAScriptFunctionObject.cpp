@@ -713,11 +713,23 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
                 } else if (i < execution_context_arguments.size() && !execution_context_arguments[i].is_undefined()) {
                     argument_value = execution_context_arguments[i];
                 } else if (parameter.default_value) {
-                    auto value_and_frame = vm.bytecode_interpreter().run_and_return_frame(*m_default_parameter_bytecode_executables[default_parameter_index - 1], nullptr);
-                    if (value_and_frame.value.is_error())
-                        return value_and_frame.value.release_error();
-                    // Resulting value is in the accumulator.
-                    argument_value = value_and_frame.frame->registers()[0];
+                    auto& running_execution_context = vm.running_execution_context();
+
+                    // NOTE: Registers have to be saved and restored because executable created for default parameter uses
+                    //       running execution context.
+                    // FIXME: This is a hack and instead instructions for default parameters should be a part of the function's bytecode.
+                    auto saved_registers = running_execution_context.registers;
+                    for (size_t register_index = 0; register_index < saved_registers.size(); ++register_index)
+                        saved_registers[register_index] = {};
+
+                    auto result_and_return_register = vm.bytecode_interpreter().run_executable(*m_default_parameter_bytecode_executables[default_parameter_index - 1], nullptr);
+
+                    for (size_t register_index = 0; register_index < saved_registers.size(); ++register_index)
+                        running_execution_context.registers[register_index] = saved_registers[register_index];
+
+                    if (result_and_return_register.value.is_error())
+                        return result_and_return_register.value.release_error();
+                    argument_value = result_and_return_register.return_register_value;
                 } else {
                     argument_value = js_undefined();
                 }
@@ -1103,7 +1115,7 @@ void async_block_start(VM& vm, T const& async_body, PromiseCapability const& pro
             if (maybe_executable.is_error())
                 result = maybe_executable.release_error();
             else
-                result = vm.bytecode_interpreter().run_and_return_frame(*maybe_executable.value(), nullptr).value;
+                result = vm.bytecode_interpreter().run_executable(*maybe_executable.value(), nullptr).value;
         }
         // b. Else,
         else {
@@ -1230,9 +1242,8 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
         }
     }
 
-    auto result_and_frame = vm.bytecode_interpreter().run_and_return_frame(*m_bytecode_executable, nullptr);
+    auto result_and_frame = vm.bytecode_interpreter().run_executable(*m_bytecode_executable, nullptr);
 
-    VERIFY(result_and_frame.frame != nullptr);
     if (result_and_frame.value.is_error())
         return result_and_frame.value.release_error();
 
@@ -1244,11 +1255,11 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
         return { Completion::Type::Return, result.value_or(js_undefined()), {} };
 
     if (m_kind == FunctionKind::AsyncGenerator) {
-        auto async_generator_object = TRY(AsyncGenerator::create(realm, result, this, vm.running_execution_context().copy(), result_and_frame.frame.release_nonnull()));
+        auto async_generator_object = TRY(AsyncGenerator::create(realm, result, this, vm.running_execution_context().copy()));
         return { Completion::Type::Return, async_generator_object, {} };
     }
 
-    auto generator_object = TRY(GeneratorObject::create(realm, result, this, vm.running_execution_context().copy(), result_and_frame.frame.release_nonnull()));
+    auto generator_object = TRY(GeneratorObject::create(realm, result, this, vm.running_execution_context().copy()));
 
     // NOTE: Async functions are entirely transformed to generator functions, and wrapped in a custom driver that returns a promise
     //       See AwaitExpression::generate_bytecode() for the transformation.

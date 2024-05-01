@@ -259,7 +259,6 @@ AK::JsonObject Heap::dump_graph()
     HashMap<Cell*, HeapRoot> roots;
     gather_roots(roots);
     GraphConstructorVisitor visitor(*this, roots);
-    vm().bytecode_interpreter().visit_edges(visitor);
     visitor.visit_all_cells();
     return visitor.dump();
 }
@@ -456,8 +455,6 @@ void Heap::mark_live_cells(HashMap<Cell*, HeapRoot> const& roots)
     dbgln_if(HEAP_DEBUG, "mark_live_cells:");
 
     MarkingVisitor visitor(*this, roots);
-
-    vm().bytecode_interpreter().visit_edges(visitor);
 
     visitor.mark_all_live_cells();
 

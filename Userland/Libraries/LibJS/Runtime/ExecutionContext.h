@@ -10,6 +10,7 @@
 
 #include <AK/DeprecatedFlyString.h>
 #include <AK/WeakPtr.h>
+#include <LibJS/Bytecode/BasicBlock.h>
 #include <LibJS/Bytecode/Instruction.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Module.h>
@@ -75,6 +76,10 @@ public:
 
     Vector<Value> arguments;
     Vector<Value> locals;
+    Vector<Value> registers;
+    Vector<Bytecode::UnwindInfo> unwind_contexts;
+    Vector<Bytecode::BasicBlock const*> previously_scheduled_jumps;
+    Vector<GCPtr<Environment>> saved_lexical_environments;
 };
 
 struct StackTraceElement {

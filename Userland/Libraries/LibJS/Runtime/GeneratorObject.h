@@ -17,7 +17,7 @@ class GeneratorObject : public Object {
     JS_DECLARE_ALLOCATOR(GeneratorObject);
 
 public:
-    static ThrowCompletionOr<NonnullGCPtr<GeneratorObject>> create(Realm&, Value, ECMAScriptFunctionObject*, NonnullOwnPtr<ExecutionContext>, NonnullOwnPtr<Bytecode::CallFrame>);
+    static ThrowCompletionOr<NonnullGCPtr<GeneratorObject>> create(Realm&, Value, ECMAScriptFunctionObject*, NonnullOwnPtr<ExecutionContext>);
     virtual ~GeneratorObject() override = default;
     void visit_edges(Cell::Visitor&) override;
 
@@ -43,7 +43,6 @@ private:
     NonnullOwnPtr<ExecutionContext> m_execution_context;
     GCPtr<ECMAScriptFunctionObject> m_generating_function;
     Value m_previous_value;
-    OwnPtr<Bytecode::CallFrame> m_frame;
     GeneratorState m_generator_state { GeneratorState::SuspendedStart };
     Optional<StringView> m_generator_brand;
 };
