@@ -1,0 +1,158 @@
+import jakt::platform::utility { null }
+import openweathermap { OpenWeatherMap, Promise, StringHack, WeatherData, RequestData, Icon}
+import view { AK, Core, Gfx, GUI, Main, Weather }
+
+import extern "LibProtocol/RequestClient.h"
+import extern "LibProtocol/Request.h"
+import extern "LibURL/URL.h"
+import extern "LibGfx/Bitmap.h"
+
+type AK::String implements(ThrowingFromStringLiteral) {
+    [[name=from_utf8]]
+    extern fn from_string_literal(anon s: StringView) throws -> AK::String
+}
+
+type AK::ByteString implements(ThrowingFromStringLiteral) {
+    [[name=from_utf8]]
+    extern fn from_string_literal(anon s: StringView) throws -> AK::ByteString
+}
+
+type AK::StringView implements(FromStringLiteral) {}
+
+fn make_an_rc() throws -> Protocol::RequestClient {
+    mut rc: Protocol::RequestClient? = None
+    unsafe { cpp { "rc = TRY(Protocol::RequestClient::try_create());" }}
+    return rc!
+}
+
+fn start_request(anon client: &mut Protocol::RequestClient, anon method: AK::ByteString, anon url: URL::URL) throws -> Protocol::Request {
+    mut request: Protocol::Request? = None
+    unsafe { cpp { "if (auto r = client->start_request(method, url)) request = *r;" }}
+    return request!
+}
+
+class ProtocolRequestData : RequestData {
+    public request: Protocol::Request
+}
+
+fn do_incremental_search(
+    client: &mut Protocol::RequestClient
+    window: &GUI::Window
+    query: AK::ByteString
+) {}
+
+fn update_entry(
+    mut entry: IndividualEntryWidget
+    client: &mut Protocol::RequestClient
+    window: &GUI::Window
+    query: AK::ByteString
+    first_time: bool = false
+) {
+    try {
+        let owm_key = "0435ece06dcb77bf80abb9f8f05bcf83"
+        // FIXME: Default values for RequestClient::start_request() are not brought in by the compiler, so we have to drop down to C++ to call that function.
+        // FIXME: Jakt really confuses AK::String and (Jakt::)String (same for StringView).
+        let api = OpenWeatherMap(
+            api_key: owm_key
+            make_request: fn[&mut client](anon u: StringHack) throws -> RequestData {
+                mut request = start_request(&mut client, "GET", URL::URL(u.value))
+                mut promise: Promise<StringHack> = Promise()
+
+                unsafe {
+                    cpp {
+                        "request->set_buffered_request_finished_callback([promise](auto ok, auto size, auto headers, auto response_code, auto payload) {"
+                        "    if (!ok) return promise->reject(Error::from_errno(ENOENT));"
+                        "    auto result = AK::ByteString::from_utf8(payload);"
+                        "    if (result.is_error()) promise->reject(result.release_error());"
+                        "    promise->resolve(openweathermap::StringHack { result.release_value() });"
+                        "});"
+                    }
+                }
+
+                return ProtocolRequestData(promise, request)
+            }
+        )
+
+        entry.container!.set_section_label(ak_string(format("Searching for {}...", query)))
+
+        let data = api.search(query: format("{}", query))
+
+        entry.city_name!.set_text(ak_string(data.city_name))
+        entry.country_name!.set_text(ak_string(data.country_code))
+        entry.state!.set_text(ak_string(data.state))
+        entry.temp_current!.set_text(ak_string(format("{}", data.temperature.current)))
+        entry.temp_min!.set_text(ak_string(format("{}", data.temperature.min)))
+        entry.temp_max!.set_text(ak_string(format("{}", data.temperature.max)))
+        entry.temp_feels_like!.set_text(ak_string(format("{}", data.temperature.feels_like)))
+
+        // FIXME: Set the icon instead of this text.
+        entry.description!.set_text(icon_name(data.icon))
+
+        entry.container!.set_section_label(ak_string(format("Weather in {}", data.city_name)))
+        if first_time {
+            entry.container!.set_view_state(GUI::DynamicWidgetContainer::ViewState::Expanded)
+            entry.timer.on_timeout = fn[entry, &mut client, &window, query]() {
+                update_entry(entry, &mut client, &window, query)
+            }
+            entry.timer.start(interval_ms: 60000)
+        }
+    } catch {
+        entry.remove_from_parent()
+        GUI::MessageBox::show_error(&raw window, "Failed to fetch weather data")
+    }
+}
+
+fn main() {
+    let args: AK::Span<AK::StringView> = AK::Span()
+    mut app = GUI::Application::create(&Main::Arguments(0, null(), args))
+
+    mut window = GUI::Window(null())
+    mut view = window.set_main_widget<UnderlyingClassTypeOf<View>>().self()
+    window.resize(width: 600, height: 400)
+
+    view.initialize()
+    window.show()
+
+    // FIXME: We currently assume try_create() takes the exact same arguments as the constructor.
+    //        This is the case in most of the codebase, but there are some exceptions - as seen here.
+    mut client = make_an_rc()
+
+    mut content = view.search_view!.content!
+
+    mut box = view.searchbox!
+    box.on_return_pressed = fn[box, &mut view, &mut client, &window]() {
+        mut c = view.content!
+        mut entry = c.add<UnderlyingClassTypeOf<IndividualEntryWidget>>().self()
+        entry.container!.set_view_state(GUI::DynamicWidgetContainer::ViewState::Collapsed)
+
+        try update_entry(entry, &mut client, &window, query: box.text(), first_time: true)
+    }
+    box.on_change = fn[box, &mut content]() {
+        mut label = content.add<UnderlyingClassTypeOf<GUI::Label>>().self()
+        label.set_text_alignment(Gfx::TextAlignment::CenterLeft)
+        label.set_text(try ak_string(format("{}", box.text())) catch { return })
+    }
+    box.on_focusin = fn[&mut view]() {
+        view.search_window!.show()
+    }
+    box.on_focusout = fn[&mut view]() {
+        view.search_window!.hide()
+    }
+    return app.exec()
+}
+
+fn ak_string<T>(anon s: T) throws -> AK::String {
+    unsafe { cpp { "return AK::String::from_byte_string(s);" } }
+    abort()
+}
+
+fn icon_name(anon icon: Icon) throws -> AK::String => ak_string(match icon {
+    Clear => "Clear"
+    Cloudy => "Cloudy"
+    Rainy => "Rainy"
+    Snowy => "Snowy"
+    Thunderstorm => "Thunderstorm"
+    Windy => "Windy"
+    Foggy => "Foggy"
+    Unknown => "Unknown"
+})

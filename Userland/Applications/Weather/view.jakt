@@ -1,0 +1,210 @@
+import extern "LibGUI/Application.h"
+import extern "LibGUI/BoxLayout.h"
+import extern "LibGUI/DynamicWidgetContainer.h"
+import extern "LibGUI/Frame.h"
+import extern "LibGUI/Label.h"
+import extern "LibGUI/MessageBox.h"
+import extern "LibGUI/ScrollableContainerWidget.h"
+import extern "LibGUI/Statusbar.h"
+import extern "LibGUI/TextBox.h"
+import extern "LibGUI/Toolbar.h"
+import extern "LibGUI/Widget.h"
+import extern "LibGUI/Window.h"
+import extern "LibMain/Main.h"
+import jakt::platform::utility { null }
+import openweathermap { OpenWeatherMap, WeatherData }
+
+fn panic(anon message: String) -> never {
+    eprintln("panic: {}", message)
+    abort()
+}
+
+comptime degree_c() -> String => "℃"
+comptime degree_f() -> String => "℉"
+comptime degree_k() -> String => "K"
+
+namespace Weather {
+    class SearchView : GUI::Widget {
+        public content: GUI::Widget?
+
+        fn must_be<U, T>(anon name: StringView, anon x: raw UnderlyingClassTypeOf<T>) throws -> U {
+            if x as! raw void == null() {
+                throw Error::from_string_literal(name)
+            }
+            return (unsafe *x).self()
+        }
+
+        [[raw_constructor()]]
+        public fn constructor(mut this) {
+            .content = None
+        }
+
+        public extern fn try_create() throws -> SearchView
+        public fn construct() => must try_create()
+
+        public fn initialize(mut this) throws {
+            .content = must_be<GUI::Widget>("content", .find_descendant_of_type_named<UnderlyingClassTypeOf<GUI::Widget>>("content"))
+        }
+    }
+
+    class View : GUI::Widget {
+        public toolbar: GUI::Toolbar?
+        public statusbar: GUI::Statusbar?
+        public content: GUI::Widget?
+        public searchbox: GUI::TextBox?
+        public search_window: GUI::Window?
+        public search_view: SearchView?
+
+        fn must_be<U, T>(anon name: StringView, anon x: raw UnderlyingClassTypeOf<T>) throws -> U {
+            if x as! raw void == null() {
+                throw Error::from_string_literal(name)
+            }
+            return (unsafe *x).self()
+        }
+
+        fn must_be<U, T>(anon name: StringView, anon x: raw T) throws -> U {
+            if x as! raw void == null() {
+                throw Error::from_string_literal(name)
+            }
+            return unsafe *x
+        }
+
+        [[raw_constructor()]]
+        public fn constructor(mut this) {
+            .toolbar = None
+            .statusbar = None
+            .content = None
+            .searchbox = None
+            .search_window = None
+            .search_view = None
+        }
+
+        public extern fn try_create() throws -> View
+        public fn construct() =>  must try_create()
+        public fn initialize(mut this) throws {
+            .toolbar = must_be<GUI::Toolbar>("toolbar", .find_descendant_of_type_named<UnderlyingClassTypeOf<GUI::Toolbar>>("toolbar"))
+            .statusbar = must_be<GUI::Statusbar>("statusbar", .find_descendant_of_type_named<UnderlyingClassTypeOf<GUI::Statusbar>>("statusbar"))
+            .content = must_be<GUI::Widget>("content", .find_descendant_of_type_named<UnderlyingClassTypeOf<GUI::Widget>>("content"))
+            .searchbox = must_be<GUI::TextBox>("searchbox", .find_descendant_of_type_named<UnderlyingClassTypeOf<GUI::TextBox>>("searchbox"))
+
+            mut search_window = GUI::Window(null())
+            search_window.set_rect(&.searchbox!.rect().translated(0 as! c_int, .searchbox!.height() + 7))
+            search_window.set_window_type(WindowServer::WindowType::Tooltip)
+            search_window.set_resizable(false)
+            .search_window = search_window
+            .search_view = search_window.set_main_widget<UnderlyingClassTypeOf<SearchView>>().self()
+            .search_view!.initialize()
+        }
+    }
+
+    class IndividualEntryWidget : GUI::Widget {
+        public container: GUI::DynamicWidgetContainer? = None
+        // FIXME: public image: GUI::ImageWidget? = None
+        public description: GUI::Label? = None
+        public city_name: GUI::Label? = None
+        public country_name: GUI::Label? = None
+        public state: GUI::Label? = None
+        public temp_current: GUI::Label? = None
+        public temp_min: GUI::Label? = None
+        public temp_max: GUI::Label? = None
+        public temp_feels_like: GUI::Label? = None
+        public timer: Core::Timer
+
+        public fn construct() -> IndividualEntryWidget => must try_create()
+        public fn try_create() throws -> IndividualEntryWidget {
+            mut widget = IndividualEntryWidget(
+                timer: Core::Timer(null())
+            )
+            widget.set_layout<UnderlyingClassTypeOf<GUI::HorizontalBoxLayout>>()
+
+            widget.container = widget.add<UnderlyingClassTypeOf<GUI::DynamicWidgetContainer>>().self()
+            mut root_container = widget.container!.add<UnderlyingClassTypeOf<GUI::Widget>>().self()
+            root_container.set_layout<UnderlyingClassTypeOf<GUI::VerticalBoxLayout>>()
+
+            mut inner_container2 = root_container.add<UnderlyingClassTypeOf<GUI::Widget>>().self()
+            inner_container2.set_layout<UnderlyingClassTypeOf<GUI::HorizontalBoxLayout>>()
+
+            mut city_name = inner_container2.add<UnderlyingClassTypeOf<GUI::Label>>().self()
+            city_name.set_font_size(12)
+            city_name.set_font_weight(700)
+            city_name.set_shrink_to_fit(true)
+            city_name.set_text_alignment(Gfx::TextAlignment::TopLeft)
+            widget.city_name = city_name
+
+            mut country_name = inner_container2.add<UnderlyingClassTypeOf<GUI::Label>>().self()
+            country_name.set_text_alignment(Gfx::TextAlignment::CenterLeft)
+            widget.country_name = country_name
+
+            mut detail_container = root_container.add<UnderlyingClassTypeOf<GUI::Widget>>().self()
+            detail_container.set_layout<UnderlyingClassTypeOf<GUI::HorizontalBoxLayout>>()
+
+            // widget.image = detail_container.add<UnderlyingClassTypeOf<GUI::ImageWidget>>().self()
+            // widget.image!.set_fixed_size(GUI::UIDimension(120), GUI::UIDimension(80))
+            widget.description = detail_container.add<UnderlyingClassTypeOf<GUI::Label>>().self()
+            widget.description!.set_text_alignment(Gfx::TextAlignment::CenterLeft)
+            widget.description!.set_fixed_size(GUI::UIDimension(120), GUI::UIDimension(80))
+
+            mut container = detail_container.add<UnderlyingClassTypeOf<GUI::Widget>>().self()
+            container.set_layout<UnderlyingClassTypeOf<GUI::VerticalBoxLayout>>()
+
+            mut inner_container = container.add<UnderlyingClassTypeOf<GUI::Widget>>().self()
+            inner_container.set_layout<UnderlyingClassTypeOf<GUI::VerticalBoxLayout>>()
+
+            inner_container = container.add<UnderlyingClassTypeOf<GUI::Widget>>().self()
+            inner_container.set_layout<UnderlyingClassTypeOf<GUI::HorizontalBoxLayout>>()
+            mut desc_label = inner_container.add<UnderlyingClassTypeOf<GUI::Label>>().self()
+            desc_label.set_text(ak_string("State: "))
+            desc_label.set_shrink_to_fit(true)
+            widget.state = inner_container.add<UnderlyingClassTypeOf<GUI::Label>>().self()
+            widget.state!.set_text_alignment(Gfx::TextAlignment::CenterLeft)
+
+            inner_container = container.add<UnderlyingClassTypeOf<GUI::Widget>>().self()
+            inner_container.set_layout<UnderlyingClassTypeOf<GUI::HorizontalBoxLayout>>()
+            desc_label = inner_container.add<UnderlyingClassTypeOf<GUI::Label>>().self()
+            desc_label.set_text(ak_string("Temperature: "))
+            desc_label.set_shrink_to_fit(true)
+
+            widget.temp_current = inner_container.add<UnderlyingClassTypeOf<GUI::Label>>().self()
+            widget.temp_current!.set_shrink_to_fit(true)
+
+            desc_label = inner_container.add<UnderlyingClassTypeOf<GUI::Label>>().self()
+            desc_label.set_text(ak_string("Min: "))
+            desc_label.set_shrink_to_fit(true)
+
+            widget.temp_min = inner_container.add<UnderlyingClassTypeOf<GUI::Label>>().self()
+            widget.temp_min!.set_shrink_to_fit(true)
+
+            desc_label = inner_container.add<UnderlyingClassTypeOf<GUI::Label>>().self()
+            desc_label.set_text(ak_string("Max: "))
+            desc_label.set_shrink_to_fit(true)
+
+            widget.temp_max = inner_container.add<UnderlyingClassTypeOf<GUI::Label>>().self()
+            widget.temp_max!.set_shrink_to_fit(true)
+
+            desc_label = inner_container.add<UnderlyingClassTypeOf<GUI::Label>>().self()
+            desc_label.set_text(ak_string(degree_c()))
+            desc_label.set_shrink_to_fit(true)
+
+            inner_container = container.add<UnderlyingClassTypeOf<GUI::Widget>>().self()
+            inner_container.set_layout<UnderlyingClassTypeOf<GUI::HorizontalBoxLayout>>()
+            desc_label = inner_container.add<UnderlyingClassTypeOf<GUI::Label>>().self()
+            desc_label.set_text(ak_string("Feels like: "))
+            desc_label.set_shrink_to_fit(true)
+
+            widget.temp_feels_like = inner_container.add<UnderlyingClassTypeOf<GUI::Label>>().self()
+            widget.temp_feels_like!.set_shrink_to_fit(true)
+            desc_label = inner_container.add<UnderlyingClassTypeOf<GUI::Label>>().self()
+            desc_label.set_text(ak_string(degree_c()))
+            desc_label.set_shrink_to_fit(true)
+
+            return widget
+        }
+
+        fn ak_string<T>(anon s: T) throws -> AK::String {
+            unsafe { cpp { "return AK::String::from_byte_string(s);" } }
+            abort()
+        }
+    }
+}
+
+use Weather::View

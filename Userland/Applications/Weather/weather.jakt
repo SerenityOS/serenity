@@ -1,0 +1,27 @@
+struct Temperature {
+    current: f64
+    min: f64
+    max: f64
+    feels_like: f64
+}
+
+enum Icon {
+    day: bool
+
+    Clear
+    Cloudy
+    Rainy
+    Snowy
+    Thunderstorm
+    Windy
+    Foggy
+    Unknown
+}
+
+struct WeatherData {
+    city_name: String
+    country_code: String
+    state: String
+    temperature: Temperature
+    icon: Icon
+}
