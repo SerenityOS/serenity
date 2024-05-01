@@ -19,22 +19,6 @@
 
 namespace ELF {
 
-class LoadedSegment {
-public:
-    LoadedSegment(VirtualAddress address, size_t size)
-        : m_address(address)
-        , m_size(size)
-    {
-    }
-
-    VirtualAddress address() const { return m_address; }
-    size_t size() const { return m_size; }
-
-private:
-    VirtualAddress m_address;
-    size_t m_size;
-};
-
 enum class ShouldCallIfuncResolver {
     Yes,
     No
@@ -166,6 +150,7 @@ private:
 
     VirtualAddress m_base_address;
     Vector<LoadedSegment> m_text_segments;
+    Vector<LoadedSegment> m_mapped_segments;
 
     VirtualAddress m_relro_segment_address;
     size_t m_relro_segment_size { 0 };

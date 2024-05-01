@@ -457,6 +457,31 @@ static ErrorOr<void, DlErrorMessage> link_main_library(int flags, DependencyOrde
     return {};
 }
 
+static void call_destructors_of(DynamicObject const& object)
+{
+    using FiniFunc = void (*)();
+
+    if (object.has_fini_array_section()) {
+        auto fini_array_section = object.fini_array_section();
+
+        for (size_t i = fini_array_section.entry_count(); i--;) {
+            FiniFunc* finalizer = reinterpret_cast<FiniFunc*>(fini_array_section.address().as_ptr()) + i;
+
+            // Android sources claim that these can be -1, to be ignored.
+            // 0 definitely shows up. Apparently 0/-1 are valid? Confusing.
+            if (*finalizer == 0 || *finalizer == reinterpret_cast<FiniFunc>(explode_byte(0xff)))
+                continue;
+
+            (*finalizer)();
+        }
+    }
+
+    if (object.has_fini_section()) {
+        auto fini_function = object.fini_section_function();
+        (fini_function)();
+    }
+}
+
 static Result<void, DlErrorMessage> __dlclose(void* handle)
 {
     dbgln_if(DYNAMIC_LOAD_DEBUG, "__dlclose: {}", handle);
@@ -465,8 +490,26 @@ static Result<void, DlErrorMessage> __dlclose(void* handle)
     ScopeGuard unlock_guard = [] { pthread_mutex_unlock(&s_loader_lock); };
 
     auto object = reinterpret_cast<DynamicObject*>(handle);
-    object->dlopen_unref();
-    // FIXME: Unload the object if needed.
+    auto objects_to_unload = object->dlopen_unref(s_dependency_index_to_object);
+
+    // FIXME: Call TLS atexit functions.
+
+    for (auto object_to_unload : objects_to_unload)
+        call_destructors_of(*object_to_unload);
+
+    for (auto object_to_unload : objects_to_unload) {
+        // First, free the dependency index.
+        size_t index = object_to_unload->dependency_index();
+        s_dependency_index_to_object[index] = {};
+        s_dependency_index_allocator.deallocate(index);
+
+        // FIXME: Then, deallocate everything we've allocated for TLS.
+
+        // And, finally, unmap the object.
+        auto it = s_global_objects.find(object_to_unload->filepath());
+        s_global_objects.remove(it);
+    }
+
     return {};
 }
 
@@ -621,32 +664,10 @@ static Result<void, DlErrorMessage> __dladdr(void const* addr, Dl_info* info)
 
 static void __call_fini_functions()
 {
-    typedef void (*FiniFunc)();
-
     // FIXME: This is not and never has been the correct order to call finalizers in.
     for (auto& it : s_global_objects) {
         auto const& object = it.value;
-
-        if (object->has_fini_array_section()) {
-            auto fini_array_section = object->fini_array_section();
-
-            FiniFunc* fini_begin = (FiniFunc*)(fini_array_section.address().as_ptr());
-            FiniFunc* fini_end = fini_begin + fini_array_section.entry_count();
-            while (fini_begin != fini_end) {
-                --fini_end;
-
-                // Android sources claim that these can be -1, to be ignored.
-                // 0 deffiniely shows up. Apparently 0/-1 are valid? Confusing.
-                if (!*fini_end || ((FlatPtr)*fini_end == (FlatPtr)-1))
-                    continue;
-                (*fini_end)();
-            }
-        }
-
-        if (object->has_fini_section()) {
-            auto fini_function = object->fini_section_function();
-            (fini_function)();
-        }
+        call_destructors_of(*object);
     }
 }
 

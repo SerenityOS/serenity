@@ -142,7 +142,7 @@ OwnPtr<DynamicObject> DynamicLoader::map(size_t dependency_index)
 
     VERIFY(!m_base_address.is_null());
 
-    auto object = DynamicObject::create(m_filepath, m_base_address, m_dynamic_section_address, dependency_index);
+    auto object = DynamicObject::create(m_filepath, m_base_address, m_dynamic_section_address, dependency_index, move(m_mapped_segments));
     m_dynamic_object = object.ptr();
     m_dynamic_object->set_tls_offset(m_tls_offset);
     m_dynamic_object->set_tls_size(m_tls_size_of_current_object);
@@ -417,6 +417,7 @@ void DynamicLoader::load_program_headers()
     ByteString rodata_segment_name = ByteString::formatted("{}: .rodata", m_filepath);
     ByteString data_segment_name = ByteString::formatted("{}: .data", m_filepath);
 
+    m_mapped_segments.ensure_capacity(map_regions.size() + copy_regions.size());
     m_text_segments.ensure_capacity(map_regions.size());
 
     // Finally, we unmap the reservation.
@@ -437,14 +438,16 @@ void DynamicLoader::load_program_headers()
         char const* const segment_name = region.is_executable() ? text_segment_name.characters() : rodata_segment_name.characters();
 
         // Now we can map the text segment at the reserved address.
+        size_t mmap_size = ph_desired_base - ph_base + region.size_in_image();
         auto* segment_base = (u8*)mmap_with_name(
             (u8*)reservation + ph_base - ph_load_base,
-            ph_desired_base - ph_base + region.size_in_image(),
+            mmap_size,
             PROT_READ,
             MAP_SHARED | MAP_FIXED,
             m_image_fd,
             VirtualAddress { region.offset() }.page_base().get(),
             segment_name);
+        m_mapped_segments.unchecked_append({ VirtualAddress { segment_base }, mmap_size });
 
         if (segment_base == MAP_FAILED) {
             perror("mmap non-writable");
@@ -484,6 +487,7 @@ void DynamicLoader::load_program_headers()
             0,
             0,
             data_segment_name.characters());
+        m_mapped_segments.unchecked_append({ VirtualAddress { data_segment_address }, data_segment_size });
 
         if (MAP_FAILED == data_segment) {
             perror("mmap writable");

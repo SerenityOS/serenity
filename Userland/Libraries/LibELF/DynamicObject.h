@@ -13,6 +13,7 @@
 #include <AK/ByteString.h>
 #include <AK/Concepts.h>
 #include <AK/RefCounted.h>
+#include <AK/Vector.h>
 #include <Kernel/Memory/VirtualAddress.h>
 #include <LibELF/Arch/GenericDynamicRelocationType.h>
 #include <LibELF/ELFABI.h>
@@ -20,9 +21,25 @@
 
 namespace ELF {
 
+class LoadedSegment {
+public:
+    LoadedSegment(VirtualAddress address, size_t size)
+        : m_address(address)
+        , m_size(size)
+    {
+    }
+
+    VirtualAddress address() const { return m_address; }
+    size_t size() const { return m_size; }
+
+private:
+    VirtualAddress m_address;
+    size_t m_size;
+};
+
 class DynamicObject {
 public:
-    static NonnullOwnPtr<DynamicObject> create(ByteString const& filepath, VirtualAddress base_address, VirtualAddress dynamic_section_address, size_t dependency_index);
+    static NonnullOwnPtr<DynamicObject> create(ByteString const& filepath, VirtualAddress base_address, VirtualAddress dynamic_section_address, size_t dependency_index, Vector<LoadedSegment>&& mapped_segments);
     static char const* name_for_dtag(Elf_Sword d_tag);
 
     ~DynamicObject();
@@ -336,6 +353,7 @@ public:
     // NOTE: This is marked const even though it isn't because too many places in the codebase
     //       assume that symbol lookup doesn't change the DynamicObject.
     void add_dependency_for_unloading(DynamicObject const& dependency) const;
+    size_t dependency_index() const { return m_dependency_index; }
 
     void dlopen_ref()
     {
@@ -343,20 +361,19 @@ public:
         ++m_dlopen_references;
     }
 
-    void dlopen_unref()
-    {
-        VERIFY(m_dlopen_references > 0);
-        --m_dlopen_references;
-    }
+    Vector<DynamicObject*> dlopen_unref(Vector<Optional<ELF::DynamicObject&>>& dependency_index_to_object);
 
 private:
-    explicit DynamicObject(ByteString const& filepath, VirtualAddress base_address, VirtualAddress dynamic_section_address, size_t dependency_index);
+    explicit DynamicObject(ByteString const& filepath, VirtualAddress base_address, VirtualAddress dynamic_section_address, size_t dependency_index, Vector<LoadedSegment>&& mapped_segments);
 
     StringView symbol_string_table_string(Elf_Word) const;
     char const* raw_symbol_string_table_string(Elf_Word) const;
     void parse();
 
+    void cascade_dlopen_unload(Vector<Optional<ELF::DynamicObject&>>& dependency_index_to_object, Vector<DynamicObject*>& objects_to_unload);
+
     ByteString m_filepath;
+    Vector<LoadedSegment> m_mapped_segments;
 
     VirtualAddress m_base_address;
     VirtualAddress m_dynamic_address;

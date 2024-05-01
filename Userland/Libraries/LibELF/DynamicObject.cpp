@@ -16,8 +16,9 @@
 
 namespace ELF {
 
-DynamicObject::DynamicObject(ByteString const& filepath, VirtualAddress base_address, VirtualAddress dynamic_section_address, size_t dependency_index)
+DynamicObject::DynamicObject(ByteString const& filepath, VirtualAddress base_address, VirtualAddress dynamic_section_address, size_t dependency_index, Vector<LoadedSegment>&& mapped_segments)
     : m_filepath(filepath)
+    , m_mapped_segments(move(mapped_segments))
     , m_base_address(base_address)
     , m_dynamic_address(dynamic_section_address)
     , m_dependency_index(dependency_index)
@@ -38,17 +39,17 @@ DynamicObject::DynamicObject(ByteString const& filepath, VirtualAddress base_add
         }
     }
 
-    if (header->e_type == ET_DYN)
-        m_is_elf_dynamic = true;
-    else
-        m_is_elf_dynamic = false;
+    m_is_elf_dynamic = (header->e_type == ET_DYN);
 
     parse();
 }
 
 DynamicObject::~DynamicObject()
 {
-    // TODO: unmap the object
+    for (auto segment : m_mapped_segments) {
+        int rc = munmap(segment.address().as_ptr(), align_up_to(segment.size(), PAGE_SIZE));
+        VERIFY(rc == 0);
+    }
 }
 
 void DynamicObject::dump() const
@@ -543,9 +544,9 @@ auto DynamicObject::lookup_symbol(HashSymbol const& symbol) const -> Optional<Sy
     return SymbolLookupResult { symbol_result.value(), symbol_result.size(), symbol_result.address(), symbol_result.bind(), symbol_result.type(), this };
 }
 
-NonnullOwnPtr<DynamicObject> DynamicObject::create(ByteString const& filepath, VirtualAddress base_address, VirtualAddress dynamic_section_address, size_t dependency_index)
+NonnullOwnPtr<DynamicObject> DynamicObject::create(ByteString const& filepath, VirtualAddress base_address, VirtualAddress dynamic_section_address, size_t dependency_index, Vector<LoadedSegment>&& mapped_segments)
 {
-    return adopt_own(*new DynamicObject(filepath, base_address, dynamic_section_address, dependency_index));
+    return adopt_own(*new DynamicObject(filepath, base_address, dynamic_section_address, dependency_index, move(mapped_segments)));
 }
 
 u32 DynamicObject::HashSymbol::gnu_hash() const
@@ -581,6 +582,35 @@ void DynamicObject::add_dependency_for_unloading(DynamicObject const& dependency
     if (!m_dependencies.get(index)) {
         m_dependencies.set(index, true);
         ++const_cast<DynamicObject&>(dependency).m_unload_dependency_references;
+    }
+}
+
+Vector<DynamicObject*> DynamicObject::dlopen_unref(Vector<Optional<ELF::DynamicObject&>>& dependency_index_to_object)
+{
+    VERIFY(m_dlopen_references > 0);
+    --m_dlopen_references;
+
+    if (m_dlopen_references || m_unload_dependency_references)
+        return {};
+
+    Vector<DynamicObject*> objects_to_unload;
+    cascade_dlopen_unload(dependency_index_to_object, objects_to_unload);
+    return objects_to_unload;
+}
+
+void DynamicObject::cascade_dlopen_unload(Vector<Optional<ELF::DynamicObject&>>& dependency_index_to_object, Vector<DynamicObject*>& objects_to_unload)
+{
+    objects_to_unload.append(this);
+
+    for (size_t i = 0; i < m_dependencies.size(); ++i) {
+        if (m_dependencies.get(i)) {
+            VERIFY(i < dependency_index_to_object.size());
+            auto& dependency = dependency_index_to_object[i].value();
+            VERIFY(dependency.m_unload_dependency_references > 0);
+            --dependency.m_unload_dependency_references;
+            if (!dependency.m_dlopen_references && !dependency.m_unload_dependency_references)
+                dependency.cascade_dlopen_unload(dependency_index_to_object, objects_to_unload);
+        }
     }
 }
 
