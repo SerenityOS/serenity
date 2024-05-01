@@ -52,6 +52,7 @@ public:
     WebIDL::ExceptionOr<JS::GCPtr<DOM::Document>> response_xml();
     WebIDL::ExceptionOr<JS::Value> response();
     Bindings::XMLHttpRequestResponseType response_type() const { return m_response_type; }
+    String response_url();
 
     WebIDL::ExceptionOr<void> open(String const& method, String const& url);
     WebIDL::ExceptionOr<void> open(String const& method, String const& url, bool async, Optional<String> const& username = Optional<String> {}, Optional<String> const& password = Optional<String> {});
