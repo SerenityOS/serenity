@@ -375,12 +375,14 @@ ErrorOr<ssize_t> LocalSocket::send_message(ReadonlyBytes data, int flags, Vector
     auto const fd_payload_size = num_fds * sizeof(int);
 
     alignas(struct cmsghdr) char control_buf[CMSG_SPACE(sizeof(int) * MAX_LOCAL_SOCKET_TRANSFER_FDS)] {};
-    auto* header = new (control_buf) cmsghdr {
-        .cmsg_len = static_cast<socklen_t>(CMSG_LEN(fd_payload_size)),
-        .cmsg_level = SOL_SOCKET,
-        .cmsg_type = SCM_RIGHTS,
-    };
+
+    // Note: We don't use designated initializers here due to weirdness with glibc's flexible array members.
+    auto* header = new (control_buf) cmsghdr {};
+    header->cmsg_len = static_cast<socklen_t>(CMSG_LEN(fd_payload_size));
+    header->cmsg_level = SOL_SOCKET;
+    header->cmsg_type = SCM_RIGHTS;
     memcpy(CMSG_DATA(header), fds.data(), fd_payload_size);
+
     struct iovec iov {
         .iov_base = const_cast<u8*>(data.data()),
         .iov_len = data.size(),
