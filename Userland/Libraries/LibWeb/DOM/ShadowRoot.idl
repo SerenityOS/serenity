@@ -9,7 +9,7 @@ interface ShadowRoot : DocumentFragment {
     readonly attribute boolean delegatesFocus;
     readonly attribute SlotAssignmentMode slotAssignment;
     readonly attribute Element host;
-    // FIXME: attribute EventHandler onslotchange;
+    attribute EventHandler onslotchange;
 };
 
 ShadowRoot includes InnerHTML;

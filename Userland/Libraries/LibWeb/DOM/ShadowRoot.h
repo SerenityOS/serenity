@@ -25,6 +25,9 @@ public:
     bool delegates_focus() const { return m_delegates_focus; }
     void set_delegates_focus(bool delegates_focus) { m_delegates_focus = delegates_focus; }
 
+    void set_onslotchange(WebIDL::CallbackType*);
+    WebIDL::CallbackType* onslotchange();
+
     bool available_to_element_internals() const { return m_available_to_element_internals; }
     void set_available_to_element_internals(bool available_to_element_internals) { m_available_to_element_internals = available_to_element_internals; }
 
