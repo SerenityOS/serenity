@@ -15,5 +15,22 @@
 
         // Context getter
         println(`context: '${oscillator.context}, is same as original: ${audioContext === oscillator.context}`);
+
+        // Invalid type in constructor
+        try {
+            new OscillatorNode(audioContext, { type: 'custom' });
+        } catch (e) {
+            println(`Error creating node: '${e}'`);
+        }
+
+        // Type attribute
+        println(`oscillator node type: '${oscillator.type}'`);
+        try {
+            oscillator.type = 'custom';
+        } catch (e) {
+            println(`Error: '${e}', type is: ${oscillator.type}`);
+        }
+        oscillator.type = 'triangle';
+        println(`oscillator node type: '${oscillator.type}'`);
     });
 </script>
