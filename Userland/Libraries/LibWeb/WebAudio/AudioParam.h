@@ -18,6 +18,8 @@ class AudioParam final : public Bindings::PlatformObject {
     JS_DECLARE_ALLOCATOR(AudioParam);
 
 public:
+    static JS::NonnullGCPtr<AudioParam> create(JS::Realm&, float default_value, float min_value, float max_value, Bindings::AutomationRate);
+
     virtual ~AudioParam() override;
 
     float value() const;
@@ -39,6 +41,8 @@ public:
     WebIDL::ExceptionOr<JS::NonnullGCPtr<AudioParam>> cancel_and_hold_at_time(double cancel_time);
 
 private:
+    AudioParam(JS::Realm&, float default_value, float min_value, float max_value, Bindings::AutomationRate);
+
     // https://webaudio.github.io/web-audio-api/#dom-audioparam-current-value-slot
     float m_current_value {}; //  [[current value]]
 

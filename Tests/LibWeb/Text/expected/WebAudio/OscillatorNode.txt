@@ -8,3 +8,5 @@ Error creating node: 'InvalidStateError: Oscillator node type cannot be set to '
 oscillator node type: 'sine'
 Error: 'InvalidStateError: Oscillator node type cannot be set to 'custom'', type is: sine
 oscillator node type: 'triangle'
+[object AudioParam] current: 440, default: 440, min: -22050, max: 22050, rate: a-rate
+[object AudioParam] current: -52, default: 440, min: -22050, max: 22050, rate: a-rate

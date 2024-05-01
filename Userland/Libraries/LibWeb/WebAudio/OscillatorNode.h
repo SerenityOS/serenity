@@ -33,6 +33,8 @@ public:
     Bindings::OscillatorType type() const;
     WebIDL::ExceptionOr<void> set_type(Bindings::OscillatorType);
 
+    JS::NonnullGCPtr<AudioParam const> frequency() const { return m_frequency; }
+
 protected:
     OscillatorNode(JS::Realm&, JS::NonnullGCPtr<BaseAudioContext>, OscillatorOptions const& = {});
 
@@ -44,6 +46,9 @@ private:
 
     // https://webaudio.github.io/web-audio-api/#dom-oscillatornode-type
     Bindings::OscillatorType m_type { Bindings::OscillatorType::Sine };
+
+    // https://webaudio.github.io/web-audio-api/#dom-oscillatornode-frequency
+    JS::NonnullGCPtr<AudioParam> m_frequency;
 };
 
 }
