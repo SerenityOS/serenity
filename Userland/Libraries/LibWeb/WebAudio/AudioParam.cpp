@@ -31,9 +31,12 @@ JS::NonnullGCPtr<AudioParam> AudioParam::create(JS::Realm& realm, float default_
 AudioParam::~AudioParam() = default;
 
 // https://webaudio.github.io/web-audio-api/#dom-audioparam-value
+// https://webaudio.github.io/web-audio-api/#simple-nominal-range
 float AudioParam::value() const
 {
-    return m_current_value;
+    // Each AudioParam includes minValue and maxValue attributes that together form the simple nominal range
+    // for the parameter. In effect, value of the parameter is clamped to the range [minValue, maxValue].
+    return clamp(m_current_value, min_value(), max_value());
 }
 
 // https://webaudio.github.io/web-audio-api/#dom-audioparam-value
