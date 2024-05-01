@@ -6,6 +6,8 @@
 
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Bindings/OscillatorNodePrototype.h>
+#include <LibWeb/WebAudio/AudioParam.h>
+#include <LibWeb/WebAudio/BaseAudioContext.h>
 #include <LibWeb/WebAudio/OscillatorNode.h>
 
 namespace Web::WebAudio {
@@ -28,8 +30,9 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<OscillatorNode>> OscillatorNode::construct_
     return node;
 }
 
-OscillatorNode::OscillatorNode(JS::Realm& realm, JS::NonnullGCPtr<BaseAudioContext> context, OscillatorOptions const&)
+OscillatorNode::OscillatorNode(JS::Realm& realm, JS::NonnullGCPtr<BaseAudioContext> context, OscillatorOptions const& options)
     : AudioScheduledSourceNode(realm, context)
+    , m_frequency(AudioParam::create(realm, options.frequency, -context->nyquist_frequency(), context->nyquist_frequency(), Bindings::AutomationRate::ARate))
 {
 }
 
@@ -69,6 +72,7 @@ void OscillatorNode::initialize(JS::Realm& realm)
 void OscillatorNode::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
+    visitor.visit(m_frequency);
 }
 
 }

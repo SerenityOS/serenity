@@ -1,5 +1,9 @@
 <script src="../include.js"></script>
 <script>
+    function dumpAudioParam(param) {
+        println(`${param} current: ${param.value}, default: ${param.defaultValue}, min: ${param.minValue}, max: ${param.maxValue}, rate: ${param.automationRate}`);
+    }
+
     test(() => {
         const audioContext = new OfflineAudioContext(1, 5000, 44100);
 
@@ -32,5 +36,11 @@
         }
         oscillator.type = 'triangle';
         println(`oscillator node type: '${oscillator.type}'`);
+
+        // Frequency attribute
+        let frequency = oscillator.frequency;
+        dumpAudioParam(frequency);
+        frequency.value = -52;
+        dumpAudioParam(frequency);
     });
 </script>
