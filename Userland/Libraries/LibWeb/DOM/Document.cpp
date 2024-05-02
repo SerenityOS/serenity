@@ -917,7 +917,7 @@ Vector<CSS::BackgroundLayerData> const* Document::background_layers() const
     if (!body_element)
         return {};
 
-    auto* body_layout_node = body_element->layout_node();
+    auto body_layout_node = body_element->layout_node();
     if (!body_layout_node)
         return {};
 
@@ -1003,7 +1003,7 @@ static void propagate_overflow_to_viewport(Element& root_element, Layout::Viewpo
     // https://drafts.csswg.org/css-overflow-3/#overflow-propagation
     // UAs must apply the overflow-* values set on the root element to the viewport
     // when the root element’s display value is not none.
-    auto* overflow_origin_node = root_element.layout_node();
+    auto overflow_origin_node = root_element.layout_node();
     auto& viewport_computed_values = viewport.mutable_computed_values();
 
     // However, when the root element is an [HTML] html element (including XML syntax for HTML)
@@ -1011,7 +1011,7 @@ static void propagate_overflow_to_viewport(Element& root_element, Layout::Viewpo
     // a body element whose display value is also not none,
     // user agents must instead apply the overflow-* values of the first such child element to the viewport.
     if (root_element.is_html_html_element()) {
-        auto* root_element_layout_node = root_element.layout_node();
+        auto root_element_layout_node = root_element.layout_node();
         auto& root_element_computed_values = root_element_layout_node->mutable_computed_values();
         if (root_element_computed_values.overflow_x() == CSS::Overflow::Visible && root_element_computed_values.overflow_y() == CSS::Overflow::Visible) {
             auto* body_element = root_element.first_child_of_type<HTML::HTMLBodyElement>();
