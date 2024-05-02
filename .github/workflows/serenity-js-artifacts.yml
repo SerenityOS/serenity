@@ -34,29 +34,14 @@ jobs:
           os: ${{ matrix.os_name }}
           arch: 'Lagom'
 
-      - name: Create build directory
-        run: |
-          mkdir -p Build/TZDB
-          mkdir -p Build/UCD
-          mkdir -p Build/CLDR
-
-      - name: TimeZoneData cache
-        uses: actions/cache@v4
+      # NOTE: We don't restore ccache here, the Lagom ccache will have ASAN/UBSAN
+      - name: Data Caches
+        uses: ./.github/actions/cache-restore
         with:
-          path: ${{ github.workspace }}/libjs-test262/Build/TZDB
-          key: TimeZoneData-${{ hashFiles('Meta/CMake/time_zone_data.cmake') }}
-
-      - name: UnicodeData cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ github.workspace }}/libjs-test262/Build/UCD
-          key: UnicodeData-${{ hashFiles('Meta/CMake/unicode_data.cmake') }}
-
-      - name: UnicodeLocale cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ github.workspace }}/libjs-test262/Build/CLDR
-          key: UnicodeLocale-${{ hashFiles('Meta/CMake/locale_data.cmake') }}
+          os: 'Linux'
+          arch: 'x86_64'
+          with_remote_data_caches: true
+          download_cache_path: ${{ github.workspace }}/caches
 
       - name: Create build directory Ubuntu
         run: |
@@ -64,6 +49,7 @@ jobs:
             -DCMAKE_C_COMPILER=gcc-13 \
             -DCMAKE_CXX_COMPILER=g++-13 \
             -DBUILD_LAGOM=ON
+            -DSERENITY_CACHE_DIR=${{ github.workspace }}/caches
         if: ${{ matrix.os == 'ubuntu-22.04' }}
 
       - name: Create build directory macOS
@@ -74,6 +60,7 @@ jobs:
             -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" \
             -DCMAKE_OSX_DEPLOYMENT_TARGET="11.0" \
             -DBUILD_LAGOM=ON
+            -DSERENITY_CACHE_DIR=${{ github.workspace }}/caches
         if: ${{ matrix.os == 'macos-14' }}
 
       - name: Build and package js

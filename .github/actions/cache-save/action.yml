@@ -1,0 +1,76 @@
+name: 'Cache Save action'
+description: 'Saves caches of build artifacts.'
+author: 'Andrew Kaster <akaster@serenityos.org>'
+inputs:
+  arch:
+    description: 'Target Architecture to restore caches for'
+    required: false
+    default: 'x86_64'
+  toolchain:
+    description: 'Toolchain to restore caches for'
+    required: false
+    default: 'gcc'
+  serenity_ccache_path:
+    description: 'Path to the SerenityOS ccache directory'
+    required: false
+    default: ''
+  toolchain_ccache_path:
+    description: 'Path to the toolchain ccache directory'
+    required: false
+    default: ''
+
+runs:
+  using: "composite"
+  steps:
+    - name: 'Toolchain Prebuilt Cache'
+      uses: actions/cache/save@v4
+      # Do not waste time and storage space by updating the toolchain cache from a PR,
+      # as it would be discarded after being merged anyway.
+      if: ${{ github.event_name != 'pull_request' && !steps.toolchain-cache.outputs.cache-hit && inputs.arch != 'Lagom' && inputs.toolchain == 'clang' }}
+      with:
+        path: ${{ github.workspace }}/Toolchain/Local/clang
+        key: ${{ steps.toolchain-cache.outputs.cache-primary-key }}
+
+    - name: 'Toolchain Prebuilt Cache'
+      uses: actions/cache/save@v4
+      if: ${{ github.event_name != 'pull_request' && !steps.toolchain-cache.outputs.cache-hit && inputs.arch != 'Lagom' && inputs.toolchain == 'gcc' }}
+      with:
+        path: ${{ github.workspace }}/Toolchain/Local/${{ inputs.arch }}
+        key: ${{ steps.toolchain-cache.outputs.cache-primary-key }}
+
+    # FIXME: Remove manually built QEMU when we bump QEMU to >=8.1.x
+    - name: 'AArch64 QEMU Cache'
+      uses: actions/cache/save@v4
+      if: ${{ github.event_name != 'pull_request' && inputs.arch == 'aarch64' && !steps.qemu-cache.outputs.cache-hit }}
+      with:
+        path: ${{ github.workspace }}/Toolchain/Local/${{ inputs.arch }}/qemu
+        key: ${{ steps.qemu-cache.outputs.cache-primary-key }}
+
+    - name: 'Toolchain Compiler Cache'
+      uses: actions/cache/save@v4
+      if: ${{ github.event_name != 'pull_request' && inputs.toolchain_ccache_path != '' }}
+      with:
+        path: ${{ inputs.toolchain_ccache_path }}
+        key: ${{ steps.toolchain-ccache.outputs.cache-primary-key }}
+
+    - name: 'Prune obsolete ccache files'
+      shell: bash
+      if: ${{ inputs.serenity_ccache_path != '' }}
+      run: |
+        CCACHE_DIR=${{ inputs.serenity_ccache_path }} ccache --evict-older-than=1d
+
+    - name: 'Serenity Compiler Cache'
+      uses: actions/cache/save@v4
+      if: ${{ inputs.serenity_ccache_path != '' }}
+      with:
+        path: ${{ inputs.serenity_ccache_path }}
+        key: ${{ steps.serenity-ccache.outputs.timestamp }}
+        
+    - name: 'Cache Stats'
+      shell: bash
+      run: |
+        echo "Serenity Compiler Cache"
+        CCACHE_DIR=${{ inputs.serenity_ccache_path }} ccache -s
+        
+        echo "Toolchain Compiler Cache"
+        CCACHE_DIR=${{ inputs.toolchain_ccache_path }} ccache -s
