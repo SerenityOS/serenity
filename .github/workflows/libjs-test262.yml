@@ -74,7 +74,7 @@ jobs:
         uses: ./.github/actions/cache-restore
         with:
           os: 'Linux'
-          arch: 'x86_64'
+          arch: 'Lagom'
           with_remote_data_caches: true
           download_cache_path: ${{ github.workspace }}/libjs-test262/Build/caches
 
