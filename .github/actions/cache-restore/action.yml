@@ -54,19 +54,18 @@ runs:
       id: 'toolchain-stamp'
       if: ${{ inputs.arch != 'Lagom' }}
       run: |
-        if [[ ${{ inputs.toolchain }} == 'clang' ]]; then
-          hashed_files='${{ hashFiles('Toolchain/BuildClang.sh', 'Toolchain/Patches/llvm/*.patch', 'Toolchain/CMake/*.cmake', 'Userland/Libraries/LibC/**/*.h') }}
+        if [[ ${{ inputs.toolchain  == 'clang' }} ]]; then
+          hashed_files='${{ hashFiles('Toolchain/BuildClang.sh', 'Toolchain/Patches/llvm/*.patch', 'Toolchain/CMake/*.cmake', 'Userland/Libraries/LibC/**/*.h') }}'
           echo "toolchain_stamp=${hashed_files}" >> "$GITHUB_OUTPUT"
           source $GITHUB_WORKSPACE/Ports/llvm/package.sh
           echo "toolchain_version=$(echo ${version} | cut -d'.' -f1)" >> "$GITHUB_OUTPUT"
           echo "toolchain_path=${{ github.workspace }}/Toolchain/Local/clang" >> "$GITHUB_OUTPUT"
-        elif [[ ${{ inputs.toolchain }} == 'gcc' ]]; then
-          hashed_files='${{ hashFiles('Toolchain/BuildGNU.sh', 'Toolchain/Patches/binutils/*.patch', 'Toolchain/Patches/gcc/*.patch', 'Userland/Libraries/LibC/**/*.h') }}
+        elif [[ ${{ inputs.toolchain == 'gcc' }} ]]; then
+          hashed_files='${{ hashFiles('Toolchain/BuildGNU.sh', 'Toolchain/Patches/binutils/*.patch', 'Toolchain/Patches/gcc/*.patch', 'Userland/Libraries/LibC/**/*.h') }}'
           echo "toolchain_stamp=$hashed_files" >> $GITHUB_OUTPUT
           source $GITHUB_WORKSPACE/Ports/gcc/package.sh
           echo "toolchain_version=$(echo ${version} | cut -d'.' -f1)" >> $GITHUB_OUTPUT
           echo "toolchain_path=${{ github.workspace }}/Toolchain/Local/${{ inputs.arch }}" >> $GITHUB_OUTPUT
-          cat $GITHUB_OUTPUT
         fi
 
     - name: 'Test Outputs'
