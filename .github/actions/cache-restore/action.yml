@@ -88,13 +88,6 @@ runs:
           echo "toolchain_path=${{ github.workspace }}/Toolchain/Local/${{ inputs.arch }}" >> $GITHUB_OUTPUT
         fi
 
-    - name: 'Test Outputs'
-      shell: bash
-      run: |
-        echo "toolchain_stamp=${{ steps.toolchain-stamp.outputs.toolchain_stamp }}"
-        echo "toolchain_version=${{ steps.toolchain-stamp.outputs.toolchain_version }}"
-        echo "toolchain_path=${{ steps.toolchain-stamp.outputs.toolchain_path }}"
-
     - name: 'Toolchain Prebuilt Cache'
       uses: actions/cache/restore@v4
       id: 'toolchain-cache'
