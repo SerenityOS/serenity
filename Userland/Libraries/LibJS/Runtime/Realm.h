@@ -20,9 +20,7 @@
 namespace JS {
 
 // 9.3 Realms, https://tc39.es/ecma262/#realm-record
-class Realm final
-    : public Cell
-    , public Weakable<Realm> {
+class Realm final : public Cell {
     JS_CELL(Realm, Cell);
     JS_DECLARE_ALLOCATOR(Realm);
 

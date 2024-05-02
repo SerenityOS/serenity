@@ -37,8 +37,7 @@ enum class LayoutMode {
 
 class Node
     : public JS::Cell
-    , public TreeNode<Node>
-    , public Weakable<Node> {
+    , public TreeNode<Node> {
     JS_CELL(Node, JS::Cell);
 
 public:

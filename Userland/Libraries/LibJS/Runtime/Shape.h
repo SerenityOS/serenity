@@ -34,9 +34,7 @@ struct TransitionKey {
     }
 };
 
-class Shape final
-    : public Cell
-    , public Weakable<Shape> {
+class Shape final : public Cell {
     JS_CELL(Shape, Cell);
     JS_DECLARE_ALLOCATOR(Shape);
 
