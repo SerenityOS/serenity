@@ -56,6 +56,7 @@ jobs:
 
       - name: Restore Caches
         uses: ./.github/actions/cache-restore
+        id: 'cache-restore'
         with:
           os: 'Serenity'
           arch: ${{ matrix.arch }}
@@ -167,5 +168,12 @@ jobs:
         with:
           arch: ${{ matrix.arch }}
           toolchain: 'gcc'
-          serenity_ccache_path: ${{ github.workspace }}/.ccache
-          toolchain_ccache_path: ${{ github.workspace }}/Toolchain/.ccache
+          serenity_ccache_path: ${{ env.SERENITY_CCACHE_DIR }}
+          toolchain_ccache_path: ${{ env.TOOLCHAIN_CCACHE_DIR }}
+          toolchain_cache_primary_key: ${{ steps.cache-restore.outputs.toolchain_cache_primary_key }}
+          toolchain_cache_hit: ${{ steps.cache-restore.outputs.toolchain_cache_hit }}
+          toolchain_cache_path: ${{ steps.cache-restore.outputs.toolchain_cache_path }}
+          qemu_cache_primary_key: ${{ steps.cache-restore.outputs.qemu_cache_primary_key }}
+          qemu_cache_hit: ${{ steps.cache-restore.outputs.qemu_cache_hit }}
+          serenity_ccache_primary_key: ${{ steps.cache-restore.outputs.serenity_ccache_primary_key }}
+          toolchain_ccache_primary_key: ${{ steps.cache-restore.outputs.toolchain_ccache_primary_key }}

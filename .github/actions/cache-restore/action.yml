@@ -38,9 +38,29 @@ inputs:
     description: 'Path to the download cache directory'
     required: false
     default: 'caches'
-
+outputs:
+  toolchain_cache_primary_key:
+    description: 'Primary key for the toolchain cache'
+    value: ${{ steps.toolchain-cache.outputs.cache-primary-key }}
+  toolchain_cache_hit:
+    description: 'Whether the toolchain cache was hit'
+    value: ${{ steps.toolchain-cache.outputs.cache-hit }}
+  toolchain_cache_path:
+    description: 'Path to the cached toolchain'
+    value: ${{ steps.toolchain-stamp.outputs.toolchain_path }}
+  qemu_cache_primary_key:
+    description: 'Primary key for the AArch64 QEMU cache'
+    value: ${{ steps.qemu-cache.outputs.cache-primary-key }}
+  qemu_cache_hit:
+    description: 'Whether the AArch64 QEMU cache was hit'
+    value: ${{ steps.qemu-cache.outputs.cache-hit }}
+  serenity_ccache_primary_key:
+    description: 'Primary key for the Serenity ccache'
+    value: ${{ steps.serenity-ccache.outputs.cache-primary-key }}
+  toolchain_ccache_primary_key:
+    description: 'Primary key for the Toolchain ccache'
+    value: ${{ steps.toolchain-ccache.outputs.cache-hit }}
 runs:
-
   using: "composite"
   steps:
     - name: 'Date Stamp'
@@ -125,10 +145,10 @@ runs:
       shell: bash
       run: |
           CCACHE_DIR=${{ inputs.serenity_ccache_path }} ccache -M 0
-        
+
           # Reset all ccache modification dates to a known epoch. This provides a baseline that we can prune against.
           find ${{ inputs.serenity_ccache_path }} | tac | xargs touch -a -m -d "2018-10-10T09:53:07Z"
-        
+
           CCACHE_DIR=${{ inputs.serenity_ccache_path }} ccache -s
           CCACHE_DIR=${{ inputs.serenity_ccache_path }} ccache -z
 
@@ -136,7 +156,7 @@ runs:
       uses: actions/cache@v4
       if: ${{ inputs.with_remote_data_caches == 'true' }}
       with:
-        path: ${{ github.workspace }}/Build/${{ inputs.download_cache_path }}/TZDB
+        path: ${{ inputs.download_cache_path }}/TZDB
         key: TimeZoneData-${{ hashFiles('Meta/CMake/time_zone_data.cmake') }}-${{ steps.date-stamp.outputs.timestamp }}
         restore-keys: |
           TimeZoneData-${{ hashFiles('Meta/CMake/time_zone_data.cmake') }}
@@ -145,7 +165,7 @@ runs:
       uses: actions/cache@v4
       if: ${{ inputs.with_remote_data_caches == 'true' }}
       with:
-          path: ${{ github.workspace }}/Build/${{ inputs.download_cache_path }}/UCD
+          path: ${{ inputs.download_cache_path }}/UCD
           key: UnicodeData-${{ hashFiles('Meta/CMake/unicode_data.cmake') }}-${{ steps.date-stamp.outputs.timestamp }}
           restore-keys: |
             UnicodeData-${{ hashFiles('Meta/CMake/unicode_data.cmake') }}
@@ -154,7 +174,7 @@ runs:
       uses: actions/cache@v4
       if: ${{ inputs.with_remote_data_caches == 'true' }}
       with:
-          path: ${{ github.workspace }}/Build/${{ inputs.download_cache_path }}/CLDR
+          path: ${{ inputs.download_cache_path }}/CLDR
           key: UnicodeLocale-${{ hashFiles('Meta/CMake/locale_data.cmake') }}-${{ steps.date-stamp.outputs.timestamp }}
           restore-keys: |
               UnicodeLocale-${{ hashFiles('Meta/CMake/locale_data.cmake') }}
