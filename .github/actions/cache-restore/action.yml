@@ -62,11 +62,19 @@ runs:
           echo "toolchain_path=${{ github.workspace }}/Toolchain/Local/clang" >> "$GITHUB_OUTPUT"
         elif [[ ${{ inputs.toolchain }} == 'gcc' ]]; then
           hashed_files='${{ hashFiles('Toolchain/BuildGNU.sh', 'Toolchain/Patches/binutils/*.patch', 'Toolchain/Patches/gcc/*.patch', 'Userland/Libraries/LibC/**/*.h') }}
-          echo "toolchain_stamp=${hashed_files}" >> "$GITHUB_OUTPUT"
+          echo "toolchain_stamp=$hashed_files" >> $GITHUB_OUTPUT
           source $GITHUB_WORKSPACE/Ports/gcc/package.sh
-          echo "toolchain_version=$(echo ${version} | cut -d'.' -f1)" >> "$GITHUB_OUTPUT"
-          echo "toolchain_path=${{ github.workspace }}/Toolchain/Local/${{ inputs.arch }}" >> "$GITHUB_OUTPUT"
+          echo "toolchain_version=$(echo ${version} | cut -d'.' -f1)" >> $GITHUB_OUTPUT
+          echo "toolchain_path=${{ github.workspace }}/Toolchain/Local/${{ inputs.arch }}" >> $GITHUB_OUTPUT
+          cat $GITHUB_OUTPUT
         fi
+
+    - name: 'Test Outputs'
+      shell: bash
+      run: |
+        echo "toolchain_stamp=${{ steps.toolchain-stamp.outputs.toolchain_stamp }}"
+        echo "toolchain_version=${{ steps.toolchain-stamp.outputs.toolchain_version }}"
+        echo "toolchain_path=${{ steps.toolchain-stamp.outputs.toolchain_path }}"
 
     - name: 'Toolchain Prebuilt Cache'
       uses: actions/cache/restore@v4
