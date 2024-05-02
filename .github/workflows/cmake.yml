@@ -7,7 +7,8 @@ env:
   # runner.workspace = /home/runner/work/serenity
   # github.workspace = /home/runner/work/serenity/serenity
   SERENITY_SOURCE_DIR: ${{ github.workspace }}
-  CCACHE_DIR: ${{ github.workspace }}/.ccache
+  SERENITY_CCACHE_DIR: ${{ github.workspace }}/.ccache
+  TOOLCHAIN_CCACHE_DIR: ${{ github.workspace }}/Toolchain/.ccache
 
 concurrency:
   group: ${{ github.head_ref || format('{0}-{1}', github.ref, github.run_number) }}
@@ -52,107 +53,31 @@ jobs:
 
       - name: Lint (Phase 1/2)
         run: ${{ github.workspace }}/Meta/lint-ci.sh
-      - name: Prepare useful stamps
-        id: stamps
-        shell: cmake -P {0}
-        run: |
-          string(TIMESTAMP current_date "%Y_%m_%d_%H_%M_%S" UTC)
-          # Output everything twice to make it visible both in the logs
-          # *and* as actual output variable, in this order.
-          message("  set-output name=time::${current_date}")
-          message("::set-output name=time::${current_date}")
-          message("  set-output name=libc_headers::${{ hashFiles('Userland/Libraries/LibC/**/*.h', 'Userland/Libraries/LibPthread/**/*.h', 'Toolchain/Patches/*.patch', 'Toolchain/Patches/gcc/*.patch', 'Toolchain/BuildGNU.sh') }}")
-          message("::set-output name=libc_headers::${{ hashFiles('Userland/Libraries/LibC/**/*.h', 'Userland/Libraries/LibPthread/**/*.h', 'Toolchain/Patches/*.patch', 'Toolchain/Patches/gcc/*.patch', 'Toolchain/BuildGNU.sh') }}")
 
-      - name: Toolchain cache
-        uses: actions/cache/restore@v4
-        id: toolchain-cache
+      - name: Restore Caches
+        uses: ./.github/actions/cache-restore
+        id: 'cache-restore'
         with:
-          path: ${{ github.workspace }}/Toolchain/Local/${{ matrix.arch }}
-          # This assumes that *ALL* LibC and LibPthread headers have an impact on the Toolchain.
-          # This is wrong, and causes more Toolchain rebuilds than necessary.
-          # However, we want to avoid false cache hits at all costs.
-          key: ${{ runner.os }}-toolchain-${{ matrix.arch }}-${{ steps.stamps.outputs.libc_headers }}
+          os: 'Serenity'
+          arch: ${{ matrix.arch }}
+          toolchain: 'GNU'
+          cache_key_extra: ${{ matrix.debug-options }}
+          serenity_ccache_path: ${{ env.SERENITY_CCACHE_DIR }}
+          toolchain_ccache_path: ${{ env.TOOLCHAIN_CCACHE_DIR }}
+          download_cache_path: ${{ github.workspace }}/Build/caches
 
       - name: Build toolchain
-        if: ${{ !steps.toolchain-cache.outputs.cache-hit }}
+        if: ${{ !steps.cache-restore.outputs.toolchain_prebuilt_hit }}
         run: ARCH="${{ matrix.arch }}" ${{ github.workspace }}/Toolchain/BuildGNU.sh
-
-      - name: Update toolchain cache
-        uses: actions/cache/save@v4
-        # Do not waste time and storage space by updating the toolchain cache from a PR,
-        # as it would be discarded after being merged anyway.
-        if: ${{ github.event_name != 'pull_request' && !steps.toolchain-cache.outputs.cache-hit }}
-        with:
-          path: ${{ github.workspace }}/Toolchain/Local/${{ matrix.arch }}
-          key: ${{ steps.toolchain-cache.outputs.cache-primary-key }}
-
-      # FIXME: Qemu currently needs a local patch for AArch64 testing. It is included in Qemu 8.1; remove this when upgrading!
-      - name: AArch64 Qemu cache
-        id: qemu-cache
-        uses: actions/cache/restore@v4
-        if: ${{ matrix.arch == 'aarch64' }}
-        with:
-          path: ${{ github.workspace }}/Toolchain/Local/qemu
-          key: ${{ runner.os }}-qemu-${{ hashFiles('Ports/qemu/version.sh', 'Toolchain/BuildQemu.sh') }}
+        env:
+          CCACHE_DIR: ${{ env.TOOLCHAIN_CCACHE_DIR }}
 
       - name: Build AArch64 Qemu
-        if: ${{ matrix.arch == 'aarch64' && !steps.qemu-cache.outputs.cache-hit }}
+        if: ${{ matrix.arch == 'aarch64' && !steps.cache-restore.outputs.qemu_cache_hit }}
         run: ${{ github.workspace }}/Toolchain/BuildQemu.sh
+        env:
+          CCACHE_DIR: ${{ env.TOOLCHAIN_CCACHE_DIR }}
 
-      - name: Update AArch64 Qemu cache
-        uses: actions/cache/save@v4
-        if: ${{ github.event_name != 'pull_request' && matrix.arch == 'aarch64' && !steps.qemu-cache.outputs.cache-hit }}
-        with:
-          path: ${{ github.workspace }}/Toolchain/Local/qemu
-          key: ${{ steps.qemu-cache.outputs.cache-primary-key }}
-
-      - name: ccache(1) cache
-        # Pull the ccache *after* building the toolchain, in case building the Toolchain somehow interferes.
-        uses: actions/cache/restore@v4
-        id: ccache
-        with:
-          path: ${{ github.workspace }}/.ccache
-          # If you're here because ccache broke (it never should), increment matrix.ccache-mark.
-          # We want to always reuse the last cache, but upload a new one.
-          # This is achieved by using the "prefix-timestamp" format,
-          # and permitting the restore-key "prefix-" without specifying a timestamp.
-          # For this trick to work, the timestamp *must* come last, and it *must* be missing in 'restore-keys'.
-          key: ${{ runner.os }}-ccache-${{ matrix.arch }}-v${{ matrix.ccache-mark }}-D${{ matrix.debug-options }}-toolchain_${{steps.stamps.outputs.libc_headers}}-time${{ steps.stamps.outputs.time }}
-          restore-keys: |
-            ${{ runner.os }}-ccache-${{ matrix.arch }}-v${{ matrix.ccache-mark }}-D${{ matrix.debug-options }}-toolchain_${{steps.stamps.outputs.libc_headers}}-
-
-      - name: Show ccache stats before build and configure
-        run: |
-          ccache -M 0
-
-          # Reset all ccache modification dates to a known epoch. This provides a baseline that we can prune against.
-          find ${{ github.workspace }}/.ccache | tac | xargs touch -a -m -d "2018-10-10T09:53:07Z"
-
-          ccache -s
-          ccache -z
-
-      - name: Create build directory
-        run: |
-          mkdir -p ${{ github.workspace }}/Build/${{ matrix.arch }}
-          mkdir -p ${{ github.workspace }}/Build/caches/TZDB
-          mkdir -p ${{ github.workspace }}/Build/caches/UCD
-          mkdir -p ${{ github.workspace }}/Build/caches/CLDR
-      - name: TimeZoneData cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ github.workspace }}/Build/caches/TZDB
-          key: TimeZoneData-${{ hashFiles('Meta/CMake/time_zone_data.cmake') }}
-      - name: UnicodeData cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ github.workspace }}/Build/caches/UCD
-          key: UnicodeData-${{ hashFiles('Meta/CMake/unicode_data.cmake') }}
-      - name: UnicodeLocale Cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ github.workspace }}/Build/caches/CLDR
-          key: UnicodeLocale-${{ hashFiles('Meta/CMake/locale_data.cmake') }}
       - name: Create build environment with extra debug options
         # Build the entire project with all available debug options turned on, to prevent code rot.
         # However, it is unwieldy and slow to run tests with them enabled, so we will build twice.
@@ -167,6 +92,8 @@ jobs:
             -DENABLE_PCI_IDS_DOWNLOAD=OFF \
             -DENABLE_USB_IDS_DOWNLOAD=OFF
         if: ${{ matrix.debug-options == 'ALL_DEBUG' }}
+        env:
+          CCACHE_DIR: ${{ env.SERENITY_CCACHE_DIR }}
       - name: Create build environment
         working-directory: ${{ github.workspace }}
         # Note that we do not set BUILD_LAGOM for the normal debug build
@@ -183,25 +110,30 @@ jobs:
             -DENABLE_PCI_IDS_DOWNLOAD=OFF \
             -DENABLE_USB_IDS_DOWNLOAD=OFF
         if: ${{ matrix.debug-options == 'NORMAL_DEBUG' }}
+        env:
+          CCACHE_DIR: ${{ env.SERENITY_CCACHE_DIR }}
 
       # === ACTUALLY BUILD ===
 
       - name: Build Serenity and Tests
         working-directory: ${{ github.workspace }}/Build/superbuild
         run: cmake --build .
+        env:
+          CCACHE_DIR: ${{ env.SERENITY_CCACHE_DIR }}
 
-      - name: Prune obsolete ccache files
-        run: ccache --evict-older-than 1d
-
-      - name: Show ccache stats after build
-        run: ccache -s
-
-      - name: Update ccache(1) cache
-        uses: actions/cache/save@v4
-        if: ${{ github.event_name != 'pull_request' }}
+      - name: Save Caches
+        uses: ./.github/actions/cache-save
         with:
-          path: ${{ github.workspace }}/.ccache
-          key: ${{ steps.ccache.outputs.cache-primary-key }}
+          arch: ${{ matrix.arch }}
+          qemu_cache_primary_key: ${{ steps.cache-restore.outputs.qemu_cache_primary_key }}
+          qemu_cache_hit: ${{ steps.cache-restore.outputs.qemu_cache_hit }}
+          serenity_ccache_path: ${{ env.SERENITY_CCACHE_DIR }}
+          serenity_ccache_primary_key: ${{ steps.cache-restore.outputs.serenity_ccache_primary_key }}
+          toolchain_ccache_path: ${{ env.TOOLCHAIN_CCACHE_DIR }}
+          toolchain_ccache_primary_key: ${{ steps.cache-restore.outputs.toolchain_ccache_primary_key }}
+          toolchain_prebuilt_path: ${{ steps.cache-restore.outputs.toolchain_prebuilt_path }}
+          toolchain_prebuilt_primary_key: ${{ steps.cache-restore.outputs.toolchain_prebuilt_primary_key }}
+          toolchain_prebuilt_hit: ${{ steps.cache-restore.outputs.toolchain_prebuilt_hit }}
 
       - name: Lint (Phase 2/2)
         working-directory: ${{ github.workspace }}/Meta

@@ -4,6 +4,10 @@ on:
   schedule:
     - cron: '0 0 * * *'
 
+env:
+  SERENITY_CCACHE_DIR: ${{ github.workspace }}/.ccache
+  TOOLCHAIN_CCACHE_DIR: ${{ github.workspace }}/Toolchain/.ccache
+
 jobs:
   build:
     name: Static Analysis
@@ -33,55 +37,23 @@ jobs:
       - name: Check versions
         run: set +e; g++ --version; g++-13 --version; ninja --version;
 
-      - name: Prepare useful stamps
-        id: stamps
-        shell: cmake -P {0}
-        run: |
-          string(TIMESTAMP current_date "%Y_%m_%d_%H_%M_%S" UTC)
-          # Output everything twice to make it visible both in the logs
-          # *and* as actual output variable, in this order.
-          message("  set-output name=time::${current_date}")
-          message("::set-output name=time::${current_date}")
-          message("  set-output name=libc_headers::${{ hashFiles('Userland/Libraries/LibC/**/*.h', 'Userland/Libraries/LibPthread/**/*.h', 'Toolchain/Patches/*.patch', 'Toolchain/Patches/gcc/*.patch', 'Toolchain/BuildGNU.sh') }}")
-          message("::set-output name=libc_headers::${{ hashFiles('Userland/Libraries/LibC/**/*.h', 'Userland/Libraries/LibPthread/**/*.h', 'Toolchain/Patches/*.patch', 'Toolchain/Patches/gcc/*.patch', 'Toolchain/BuildGNU.sh') }}")
-
-      - name: Toolchain cache
-        # This job should always read the cache, never populate it.
-        uses: actions/cache/restore@v4
-        id: toolchain-cache
+      - name: Restore Caches
+        uses: ./.github/actions/cache-restore
+        id: 'cache-restore'
         with:
-          path: ${{ github.workspace }}/Toolchain/Local/${{ env.PVS_STUDIO_ANALYSIS_ARCH }}
-          # This assumes that *ALL* LibC and LibPthread headers have an impact on the Toolchain.
-          # This is wrong, and causes more Toolchain rebuilds than necessary.
-          # However, we want to avoid false cache hits at all costs.
-          key: ${{ runner.os }}-toolchain-${{ env.PVS_STUDIO_ANALYSIS_ARCH }}-${{ steps.stamps.outputs.libc_headers }}
+          os: 'Serenity'
+          arch: ${{ env.PVS_STUDIO_ANALYSIS_ARCH }}
+          toolchain: 'GNU'
+          cache_key_extra: 'Static Analysis'
+          serenity_ccache_path: ${{ env.SERENITY_CCACHE_DIR }}
+          toolchain_ccache_path: ${{ env.TOOLCHAIN_CCACHE_DIR }}
+          download_cache_path: ${{ github.workspace }}/Build/caches
 
       - name: Build toolchain
         if: ${{ !steps.toolchain-cache.outputs.cache-hit }}
         run: ARCH="${{ env.PVS_STUDIO_ANALYSIS_ARCH }}" ${{ github.workspace }}/Toolchain/BuildGNU.sh
-
-      - name: Create build directory
-        run: |
-          mkdir -p ${{ github.workspace }}/Build/${{ env.PVS_STUDIO_ANALYSIS_ARCH }}
-          mkdir -p ${{ github.workspace }}/Build/caches/TZDB
-          mkdir -p ${{ github.workspace }}/Build/caches/UCD
-          mkdir -p ${{ github.workspace }}/Build/caches/CLDR
-
-      - name: TimeZoneData cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ github.workspace }}/Build/caches/TZDB
-          key: TimeZoneData-${{ hashFiles('Meta/CMake/time_zone_data.cmake') }}
-      - name: UnicodeData cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ github.workspace }}/Build/caches/UCD
-          key: UnicodeData-${{ hashFiles('Meta/CMake/unicode_data.cmake') }}
-      - name: UnicodeLocale Cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ github.workspace }}/Build/caches/CLDR
-          key: UnicodeLocale-${{ hashFiles('Meta/CMake/locale_data.cmake') }}
+        env:
+          CCACHE_DIR: ${{ env.TOOLCHAIN_CCACHE_DIR }}
 
       - name: Create build environment
         working-directory: ${{ github.workspace }}
@@ -92,7 +64,10 @@ jobs:
             -DCMAKE_C_COMPILER=gcc-13 \
             -DCMAKE_CXX_COMPILER=g++-13 \
             -DENABLE_PCI_IDS_DOWNLOAD=OFF \
-            -DENABLE_USB_IDS_DOWNLOAD=OFF
+            -DENABLE_USB_IDS_DOWNLOAD=OFF \
+            -DSERENITY_CACHE_DIR=${{ github.workspace }}/Build/caches
+        env:
+          CCACHE_DIR: ${{ env.SERENITY_CCACHE_DIR }}
 
       - name: Build generated sources so they are available for analysis.
         working-directory: ${{ github.workspace }}
@@ -103,6 +78,20 @@ jobs:
           ninja -C Build/superbuild serenity-configure
           cmake -B Build/${{ env.PVS_STUDIO_ANALYSIS_ARCH }} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
           ninja -C Build/${{ env.PVS_STUDIO_ANALYSIS_ARCH }} all_generated
+        env:
+          CCACHE_DIR: ${{ env.SERENITY_CCACHE_DIR }}
+
+      - name: Save Caches
+        uses: ./.github/actions/cache-save
+        with:
+          arch: ${{ matrix.arch }}
+          serenity_ccache_path: ${{ env.SERENITY_CCACHE_DIR }}
+          serenity_ccache_primary_key: ${{ steps.cache-restore.outputs.serenity_ccache_primary_key }}
+          toolchain_ccache_path: ${{ env.TOOLCHAIN_CCACHE_DIR }}
+          toolchain_ccache_primary_key: ${{ steps.cache-restore.outputs.toolchain_ccache_primary_key }}
+          toolchain_prebuilt_path: ${{ steps.cache-restore.outputs.toolchain_prebuilt_path }}
+          toolchain_prebuilt_primary_key: ${{ steps.cache-restore.outputs.toolchain_prebuilt_primary_key }}
+          toolchain_prebuilt_hit: ${{ steps.cache-restore.outputs.toolchain_prebuilt_hit }}
 
       - name: Configure PVS-Studio License
         env:
