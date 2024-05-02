@@ -531,13 +531,13 @@ void Interpreter::catch_exception(Operand dst)
 
 void Interpreter::restore_scheduled_jump()
 {
-    m_scheduled_jump = call_frame().previously_scheduled_jumps.take_last();
+    m_scheduled_jump = vm().running_execution_context().previously_scheduled_jumps.take_last();
 }
 
 void Interpreter::leave_finally()
 {
     reg(Register::exception()) = {};
-    m_scheduled_jump = call_frame().previously_scheduled_jumps.take_last();
+    m_scheduled_jump = vm().running_execution_context().previously_scheduled_jumps.take_last();
 }
 
 void Interpreter::enter_object_environment(Object& object)
