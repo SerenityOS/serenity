@@ -22,9 +22,7 @@ namespace Web::Bindings {
     }
 
 // https://webidl.spec.whatwg.org/#dfn-platform-object
-class PlatformObject
-    : public JS::Object
-    , public Weakable<PlatformObject> {
+class PlatformObject : public JS::Object {
     JS_OBJECT(PlatformObject, JS::Object);
 
 public:

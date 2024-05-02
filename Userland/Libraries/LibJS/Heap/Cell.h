@@ -12,6 +12,7 @@
 #include <AK/HashMap.h>
 #include <AK/Noncopyable.h>
 #include <AK/StringView.h>
+#include <AK/Weakable.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/GCPtr.h>
 #include <LibJS/Heap/Internals.h>
@@ -27,7 +28,7 @@ public:                                            \
     }                                              \
     friend class JS::Heap;
 
-class Cell {
+class Cell : public Weakable<Cell> {
     AK_MAKE_NONCOPYABLE(Cell);
     AK_MAKE_NONMOVABLE(Cell);
 

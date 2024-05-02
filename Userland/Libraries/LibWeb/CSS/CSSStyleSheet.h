@@ -25,9 +25,7 @@ struct CSSStyleSheetInit {
     bool disabled { false };
 };
 
-class CSSStyleSheet final
-    : public StyleSheet
-    , public Weakable<CSSStyleSheet> {
+class CSSStyleSheet final : public StyleSheet {
     WEB_PLATFORM_OBJECT(CSSStyleSheet, StyleSheet);
     JS_DECLARE_ALLOCATOR(CSSStyleSheet);
 

@@ -55,7 +55,7 @@ HTML::Navigable& Page::focused_navigable()
 
 void Page::set_focused_navigable(Badge<EventHandler>, HTML::Navigable& navigable)
 {
-    m_focused_navigable = navigable.make_weak_ptr();
+    m_focused_navigable = navigable;
 }
 
 void Page::load(URL::URL const& url)
