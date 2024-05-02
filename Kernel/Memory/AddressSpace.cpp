@@ -59,7 +59,7 @@ ErrorOr<void> AddressSpace::unmap_mmap_range(VirtualAddress addr, size_t size)
         if (!whole_region->is_mmap())
             return EPERM;
         if (whole_region->is_immutable())
-            return EPERM;
+            TRY(m_page_directory->process()->require_promise(Pledge::dlclose));
 
         PerformanceManager::add_unmap_perf_event(Process::current(), whole_region->range());
 

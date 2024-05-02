@@ -75,7 +75,8 @@ UnixDateTime kgettimeofday();
     __ENUMERATE_PLEDGE_PROMISE(getkeymap) \
     __ENUMERATE_PLEDGE_PROMISE(jail)      \
     __ENUMERATE_PLEDGE_PROMISE(mount)     \
-    __ENUMERATE_PLEDGE_PROMISE(no_error)
+    __ENUMERATE_PLEDGE_PROMISE(no_error)  \
+    __ENUMERATE_PLEDGE_PROMISE(dlclose)
 
 #define __ENUMERATE_PLEDGE_PROMISE(x) sizeof(#x) + 1 +
 // NOTE: We truncate the last space from the string as it's not needed (with 0 - 1).
