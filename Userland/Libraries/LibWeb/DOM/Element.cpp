@@ -2070,12 +2070,12 @@ void Element::for_each_attribute(Function<void(FlyString const&, String const&)>
     });
 }
 
-Layout::NodeWithStyle* Element::layout_node()
+JS::GCPtr<Layout::NodeWithStyle> Element::layout_node()
 {
     return static_cast<Layout::NodeWithStyle*>(Node::layout_node());
 }
 
-Layout::NodeWithStyle const* Element::layout_node() const
+JS::GCPtr<Layout::NodeWithStyle const> Element::layout_node() const
 {
     return static_cast<Layout::NodeWithStyle const*>(Node::layout_node());
 }
