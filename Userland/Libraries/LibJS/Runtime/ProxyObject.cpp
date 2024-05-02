@@ -455,7 +455,7 @@ ThrowCompletionOr<bool> ProxyObject::internal_has_property(PropertyKey const& pr
 }
 
 // 10.5.8 [[Get]] ( P, Receiver ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-get-p-receiver
-ThrowCompletionOr<Value> ProxyObject::internal_get(PropertyKey const& property_key, Value receiver, CacheablePropertyMetadata*) const
+ThrowCompletionOr<Value> ProxyObject::internal_get(PropertyKey const& property_key, Value receiver, CacheablePropertyMetadata*, PropertyLookupPhase) const
 {
     // NOTE: We don't return any cacheable metadata for proxy lookups.
 

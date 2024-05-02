@@ -873,7 +873,7 @@ ThrowCompletionOr<bool> Object::internal_has_property(PropertyKey const& propert
 }
 
 // 10.1.8 [[Get]] ( P, Receiver ), https://tc39.es/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots-get-p-receiver
-ThrowCompletionOr<Value> Object::internal_get(PropertyKey const& property_key, Value receiver, CacheablePropertyMetadata* cacheable_metadata) const
+ThrowCompletionOr<Value> Object::internal_get(PropertyKey const& property_key, Value receiver, CacheablePropertyMetadata* cacheable_metadata, PropertyLookupPhase phase) const
 {
     VERIFY(!receiver.is_empty());
     VERIFY(property_key.is_valid());
@@ -893,17 +893,19 @@ ThrowCompletionOr<Value> Object::internal_get(PropertyKey const& property_key, V
             return js_undefined();
 
         // c. Return ? parent.[[Get]](P, Receiver).
-        return parent->internal_get(property_key, receiver);
+        return parent->internal_get(property_key, receiver, nullptr, PropertyLookupPhase::PrototypeChain);
     }
 
     // 3. If IsDataDescriptor(desc) is true, return desc.[[Value]].
     if (descriptor->is_data_descriptor()) {
         // Non-standard: If the caller has requested cacheable metadata and the property is an own property, fill it in.
         if (cacheable_metadata && descriptor->property_offset.has_value() && shape().is_cacheable()) {
-            *cacheable_metadata = CacheablePropertyMetadata {
-                .type = CacheablePropertyMetadata::Type::OwnProperty,
-                .property_offset = descriptor->property_offset.value(),
-            };
+            if (phase == PropertyLookupPhase::OwnProperty) {
+                *cacheable_metadata = CacheablePropertyMetadata {
+                    .type = CacheablePropertyMetadata::Type::OwnProperty,
+                    .property_offset = descriptor->property_offset.value(),
+                };
+            }
         }
         return *descriptor->value;
     }
