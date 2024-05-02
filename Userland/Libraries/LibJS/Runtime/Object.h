@@ -138,7 +138,11 @@ public:
     virtual ThrowCompletionOr<Optional<PropertyDescriptor>> internal_get_own_property(PropertyKey const&) const;
     virtual ThrowCompletionOr<bool> internal_define_own_property(PropertyKey const&, PropertyDescriptor const&);
     virtual ThrowCompletionOr<bool> internal_has_property(PropertyKey const&) const;
-    virtual ThrowCompletionOr<Value> internal_get(PropertyKey const&, Value receiver, CacheablePropertyMetadata* = nullptr) const;
+    enum class PropertyLookupPhase {
+        OwnProperty,
+        PrototypeChain,
+    };
+    virtual ThrowCompletionOr<Value> internal_get(PropertyKey const&, Value receiver, CacheablePropertyMetadata* = nullptr, PropertyLookupPhase = PropertyLookupPhase::OwnProperty) const;
     virtual ThrowCompletionOr<bool> internal_set(PropertyKey const&, Value value, Value receiver, CacheablePropertyMetadata* = nullptr);
     virtual ThrowCompletionOr<bool> internal_delete(PropertyKey const&);
     virtual ThrowCompletionOr<MarkedVector<Value>> internal_own_property_keys() const;

@@ -317,7 +317,7 @@ public:
     }
 
     // 10.4.5.4 [[Get]] ( P, Receiver ), 10.4.5.4 [[Get]] ( P, Receiver )
-    virtual ThrowCompletionOr<Value> internal_get(PropertyKey const& property_key, Value receiver, CacheablePropertyMetadata* cacheable_metadata) const override
+    virtual ThrowCompletionOr<Value> internal_get(PropertyKey const& property_key, Value receiver, CacheablePropertyMetadata* cacheable_metadata, PropertyLookupPhase phase) const override
     {
         VERIFY(!receiver.is_empty());
 
@@ -339,7 +339,7 @@ public:
         }
 
         // 2. Return ? OrdinaryGet(O, P, Receiver).
-        return Object::internal_get(property_key, receiver, cacheable_metadata);
+        return Object::internal_get(property_key, receiver, cacheable_metadata, phase);
     }
 
     // 10.4.5.5 [[Set]] ( P, V, Receiver ), https://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-set-p-v-receiver
