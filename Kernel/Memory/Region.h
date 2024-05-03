@@ -102,6 +102,9 @@ public:
         m_mmapped_from_writable = description_was_writable;
     }
 
+    [[nodiscard]] bool is_initially_loaded_executable_segment() const { return m_initially_loaded_executable_segment.was_set(); }
+    void set_initially_loaded_executable_segment() { m_initially_loaded_executable_segment.set(); }
+
     [[nodiscard]] bool is_write_combine() const { return m_write_combine; }
     ErrorOr<void> set_write_combine(bool);
 
@@ -250,6 +253,7 @@ private:
     bool m_mmapped_from_writable : 1 { false };
 
     SetOnce m_immutable;
+    SetOnce m_initially_loaded_executable_segment;
 
     IntrusiveRedBlackTreeNode<FlatPtr, Region, RawPtr<Region>> m_tree_node;
     IntrusiveListNode<Region> m_vmobject_list_node;
