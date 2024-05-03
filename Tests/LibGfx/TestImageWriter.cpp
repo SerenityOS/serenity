@@ -12,6 +12,8 @@
 #include <LibGfx/ImageFormats/AnimationWriter.h>
 #include <LibGfx/ImageFormats/BMPLoader.h>
 #include <LibGfx/ImageFormats/BMPWriter.h>
+#include <LibGfx/ImageFormats/GIFLoader.h>
+#include <LibGfx/ImageFormats/GIFWriter.h>
 #include <LibGfx/ImageFormats/JPEGLoader.h>
 #include <LibGfx/ImageFormats/JPEGWriter.h>
 #include <LibGfx/ImageFormats/PNGLoader.h>
@@ -22,21 +24,22 @@
 #include <LibGfx/ImageFormats/WebPWriter.h>
 #include <LibTest/TestCase.h>
 
-static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> expect_single_frame(Gfx::ImageDecoderPlugin& plugin_decoder)
+static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> expect_single_frame(Gfx::ImageDecoderPlugin& plugin_decoder, bool is_gif)
 {
     EXPECT_EQ(plugin_decoder.frame_count(), 1u);
     EXPECT(!plugin_decoder.is_animated());
-    EXPECT(!plugin_decoder.loop_count());
+    EXPECT_EQ(plugin_decoder.loop_count(), is_gif ? 1u : 0u);
 
     auto frame_descriptor = TRY(plugin_decoder.frame(0));
-    EXPECT_EQ(frame_descriptor.duration, 0);
+    if (!is_gif)
+        EXPECT_EQ(frame_descriptor.duration, 0);
     return *frame_descriptor.image;
 }
 
-static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> expect_single_frame_of_size(Gfx::ImageDecoderPlugin& plugin_decoder, Gfx::IntSize size)
+static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> expect_single_frame_of_size(Gfx::ImageDecoderPlugin& plugin_decoder, Gfx::IntSize size, bool is_gif = false)
 {
     EXPECT_EQ(plugin_decoder.size(), size);
-    auto frame = TRY(expect_single_frame(plugin_decoder));
+    auto frame = TRY(expect_single_frame(plugin_decoder, is_gif));
     EXPECT_EQ(frame->size(), size);
     return frame;
 }
@@ -54,10 +57,10 @@ static ErrorOr<ByteBuffer> encode_bitmap(Gfx::Bitmap const& bitmap, ExtraArgs...
 }
 
 template<class Writer, class Loader>
-static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> get_roundtrip_bitmap(Gfx::Bitmap const& bitmap)
+static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> get_roundtrip_bitmap(Gfx::Bitmap const& bitmap, bool is_gif = false)
 {
     auto encoded_data = TRY(encode_bitmap<Writer>(bitmap));
-    return expect_single_frame_of_size(*TRY(Loader::create(encoded_data)), bitmap.size());
+    return expect_single_frame_of_size(*TRY(Loader::create(encoded_data)), bitmap.size(), is_gif);
 }
 
 static void expect_bitmaps_equal(Gfx::Bitmap const& a, Gfx::Bitmap const& b)
@@ -69,9 +72,9 @@ static void expect_bitmaps_equal(Gfx::Bitmap const& a, Gfx::Bitmap const& b)
 }
 
 template<class Writer, class Loader>
-static ErrorOr<void> test_roundtrip(Gfx::Bitmap const& bitmap)
+static ErrorOr<void> test_roundtrip(Gfx::Bitmap const& bitmap, bool is_gif = false)
 {
-    auto decoded = TRY((get_roundtrip_bitmap<Writer, Loader>(bitmap)));
+    auto decoded = TRY((get_roundtrip_bitmap<Writer, Loader>(bitmap, is_gif)));
     expect_bitmaps_equal(*decoded, bitmap);
     return {};
 }
@@ -106,6 +109,18 @@ TEST_CASE(test_bmp)
 {
     TRY_OR_FAIL((test_roundtrip<Gfx::BMPWriter, Gfx::BMPImageDecoderPlugin>(TRY_OR_FAIL(create_test_rgb_bitmap()))));
     TRY_OR_FAIL((test_roundtrip<Gfx::BMPWriter, Gfx::BMPImageDecoderPlugin>(TRY_OR_FAIL(create_test_rgba_bitmap()))));
+}
+
+TEST_CASE(test_gif)
+{
+    // We only support grayscale and non-animated images yet
+    auto bitmap = TRY_OR_FAIL(create_test_rgb_bitmap());
+
+    // Convert bitmap to grayscale
+    for (auto& argb : *bitmap)
+        argb = Color::from_argb(argb).to_grayscale().value();
+
+    TRY_OR_FAIL((test_roundtrip<Gfx::GIFWriter, Gfx::GIFImageDecoderPlugin>(bitmap, true)));
 }
 
 TEST_CASE(test_jpeg)
