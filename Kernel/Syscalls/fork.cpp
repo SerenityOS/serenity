@@ -164,7 +164,8 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
 
     TRY(address_space().with([&](auto& parent_space) {
         return child->address_space().with([&](auto& child_space) -> ErrorOr<void> {
-            child_space->set_enforces_syscall_regions(parent_space->enforces_syscall_regions());
+            if (parent_space->enforces_syscall_regions())
+                child_space->set_enforces_syscall_regions();
             for (auto& region : parent_space->region_tree().regions()) {
                 dbgln_if(FORK_DEBUG, "fork: cloning Region '{}' @ {}", region.name(), region.vaddr());
                 auto region_clone = TRY(region.try_clone());

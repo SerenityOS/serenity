@@ -26,14 +26,10 @@ ErrorOr<FlatPtr> Process::sys$prctl(int option, FlatPtr arg1, FlatPtr arg2, Flat
                 return space->enforces_syscall_regions();
             });
         case PR_SET_NO_NEW_SYSCALL_REGION_ANNOTATIONS: {
-            if (arg1 != 0 && arg1 != 1)
+            if (arg1 != 0)
                 return EINVAL;
-            bool prohibit_new_annotated_syscall_regions = (arg1 == 1);
             return address_space().with([&](auto& space) -> ErrorOr<FlatPtr> {
-                if (space->enforces_syscall_regions() && !prohibit_new_annotated_syscall_regions)
-                    return EPERM;
-
-                space->set_enforces_syscall_regions(prohibit_new_annotated_syscall_regions);
+                space->set_enforces_syscall_regions();
                 return 0;
             });
             return 0;
