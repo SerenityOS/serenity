@@ -14,6 +14,7 @@
 #include <LibGfx/ImageFormats/PNGWriter.h>
 #include <LibGfx/ImageFormats/PortableFormatWriter.h>
 #include <LibGfx/ImageFormats/QOIWriter.h>
+#include <LibGfx/ImageFormats/WebPWriter.h>
 
 using AnyBitmap = Variant<RefPtr<Gfx::Bitmap>, RefPtr<Gfx::CMYKBitmap>>;
 struct LoadedImage {
@@ -176,6 +177,10 @@ static ErrorOr<void> save_image(LoadedImage& image, StringView out_path, bool pp
         TRY(Gfx::PortableFormatWriter::encode(*TRY(stream()), *frame, { .format = format }));
         return {};
     }
+    if (out_path.ends_with(".webp"sv, CaseSensitivity::CaseInsensitive)) {
+        TRY(Gfx::WebPWriter::encode(*TRY(stream()), *frame, { .icc_data = image.icc_data }));
+        return {};
+    }
 
     ByteBuffer bytes;
     if (out_path.ends_with(".bmp"sv, CaseSensitivity::CaseInsensitive)) {
@@ -185,7 +190,7 @@ static ErrorOr<void> save_image(LoadedImage& image, StringView out_path, bool pp
     } else if (out_path.ends_with(".qoi"sv, CaseSensitivity::CaseInsensitive)) {
         bytes = TRY(Gfx::QOIWriter::encode(*frame));
     } else {
-        return Error::from_string_view("can only write .bmp, .jpg, .png, .ppm, and .qoi"sv);
+        return Error::from_string_view("can only write .bmp, .jpg, .png, .ppm, .qoi, and .webp"sv);
     }
     TRY(TRY(stream())->write_until_depleted(bytes));
 
