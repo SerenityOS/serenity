@@ -42,7 +42,7 @@ ErrorOr<VP8LHeader> decode_webp_chunk_VP8L_header(ReadonlyBytes vp8l_data)
     dbgln_if(WEBP_DEBUG, "width {}, height {}, is_alpha_used {}, version_number {}",
         width, height, is_alpha_used, version_number);
 
-    // "The version_number is a 3 bit code that must be set to 0. Any other value should be treated as an error. [AMENDED]"
+    // "The version_number is a 3 bit code that must be set to 0. Any other value should be treated as an error."
     if (version_number != 0)
         return Error::from_string_literal("WebPImageDecoderPlugin: VP8L chunk invalid version_number");
 
