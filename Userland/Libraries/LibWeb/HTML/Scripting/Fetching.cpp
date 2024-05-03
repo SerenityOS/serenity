@@ -593,6 +593,21 @@ void fetch_descendants_of_a_module_script(JS::Realm& realm, JavaScriptModuleScri
     }
 }
 
+// https://html.spec.whatwg.org/multipage/webappapis.html#fetch-destination-from-module-type
+Fetch::Infrastructure::Request::Destination fetch_destination_from_module_type(Fetch::Infrastructure::Request::Destination default_destination, ByteString const& module_type)
+{
+    // 1. If moduleType is "json", then return "json".
+    if (module_type == "json"sv)
+        return Fetch::Infrastructure::Request::Destination::JSON;
+
+    // 2. If moduleType is "css", then return "style".
+    if (module_type == "css"sv)
+        return Fetch::Infrastructure::Request::Destination::Style;
+
+    // 3. Return defaultDestination.
+    return default_destination;
+}
+
 // https://html.spec.whatwg.org/multipage/webappapis.html#fetch-a-single-module-script
 void fetch_single_module_script(JS::Realm& realm,
     URL::URL const& url,
