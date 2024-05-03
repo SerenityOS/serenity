@@ -9,6 +9,7 @@
 
     @GUI::Button {
         name: "detach_button"
+        tooltip: "Detach"
         button_style: "Coolbar"
         preferred_width: "shrink"
         preferred_height: "shrink"
@@ -17,6 +18,7 @@
 
     @GUI::Button {
         name: "collapse_button"
+        tooltip: "Collapse"
         button_style: "Coolbar"
         preferred_width: "shrink"
         preferred_height: "shrink"
@@ -25,6 +27,7 @@
 
     @GUI::Button {
         name: "expand_button"
+        tooltip: "Expand"
         button_style: "Coolbar"
         preferred_width: "shrink"
         preferred_height: "shrink"
