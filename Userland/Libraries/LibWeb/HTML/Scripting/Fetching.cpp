@@ -661,25 +661,27 @@ void fetch_single_module_script(JS::Realm& realm,
     // 7. Set moduleMap[(url, moduleType)] to "fetching".
     module_map.set(url, module_type, { ModuleMap::EntryType::Fetching, nullptr });
 
-    // 8. Let request be a new request whose URL is url, destination is destination, mode is "cors", referrer is referrer, and client is fetchClient.
+    // 8. Let request be a new request whose URL is url, mode is "cors", referrer is referrer, and client is fetchClient.
     auto request = Fetch::Infrastructure::Request::create(realm.vm());
     request->set_url(url);
-    request->set_destination(destination);
     request->set_mode(Fetch::Infrastructure::Request::Mode::CORS);
     request->set_referrer(referrer);
     request->set_client(&fetch_client);
 
-    // 9. If destination is "worker", "sharedworker", or "serviceworker", and isTopLevel is true, then set request's mode to "same-origin".
+    // 9. Set request's destination to the result of running the fetch destination from module type steps given destination and moduleType.
+    request->set_destination(fetch_destination_from_module_type(destination, module_type));
+
+    // 10. If destination is "worker", "sharedworker", or "serviceworker", and isTopLevel is true, then set request's mode to "same-origin".
     if ((destination == Fetch::Infrastructure::Request::Destination::Worker || destination == Fetch::Infrastructure::Request::Destination::SharedWorker || destination == Fetch::Infrastructure::Request::Destination::ServiceWorker) && is_top_level == TopLevelModule::Yes)
         request->set_mode(Fetch::Infrastructure::Request::Mode::SameOrigin);
 
-    // 10. Set request's initiator type to "script".
+    // 11. Set request's initiator type to "script".
     request->set_initiator_type(Fetch::Infrastructure::Request::InitiatorType::Script);
 
-    // 11. Set up the module script request given request and options.
+    // 12. Set up the module script request given request and options.
     set_up_module_script_request(request, options);
 
-    // 12. If performFetch was given, run performFetch with request, isTopLevel, and with processResponseConsumeBody as defined below.
+    // 13. If performFetch was given, run performFetch with request, isTopLevel, and with processResponseConsumeBody as defined below.
     //     Otherwise, fetch request with processResponseConsumeBody set to processResponseConsumeBody as defined below.
     //     In both cases, let processResponseConsumeBody given response response and null, failure, or a byte sequence bodyBytes be the following algorithm:
     auto process_response_consume_body = [&module_map, url, module_type, &settings_object, on_complete](JS::NonnullGCPtr<Fetch::Infrastructure::Response> response, Fetch::Infrastructure::FetchAlgorithms::BodyBytes body_bytes) {

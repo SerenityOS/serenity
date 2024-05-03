@@ -165,6 +165,11 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Infrastructure::FetchController>> fetch(JS:
                 // `image/png,image/svg+xml,image/*;q=0.8,*/*;q=0.5`
                 value = "image/png,image/svg+xml,image/*;q=0.8,*/*;q=0.5"sv;
                 break;
+            // -> "json"
+            case Infrastructure::Request::Destination::JSON:
+                // `application/json,*/*;q=0.5`
+                value = "application/json,*/*;q=0.5"sv;
+                break;
             // -> "style"
             case Infrastructure::Request::Destination::Style:
                 // `text/css,*/*;q=0.1`

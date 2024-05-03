@@ -160,6 +160,8 @@ Bindings::RequestDestination to_bindings_enum(Optional<Infrastructure::Request::
         return Bindings::RequestDestination::Iframe;
     case Infrastructure::Request::Destination::Image:
         return Bindings::RequestDestination::Image;
+    case Infrastructure::Request::Destination::JSON:
+        return Bindings::RequestDestination::Json;
     case Infrastructure::Request::Destination::Manifest:
         return Bindings::RequestDestination::Manifest;
     case Infrastructure::Request::Destination::Object:
