@@ -744,6 +744,11 @@ Examples of static-pie ELF objects are ELF packers, and the system dynamic loade
         VERIFY_NOT_REACHED();
     }
 
+    rc = syscall(SC_prctl, PR_SET_NO_TRANSITION_TO_EXECUTABLE_FROM_WRITABLE_PROT, 0, 0, nullptr);
+    if (rc < 0) {
+        VERIFY_NOT_REACHED();
+    }
+
     dbgln_if(DYNAMIC_LOAD_DEBUG, "Jumping to entry point: {:p}", entry_point_function);
     if (s_do_breakpoint_trap_before_entry) {
 #if ARCH(AARCH64)

@@ -28,55 +28,8 @@
 
 namespace Kernel {
 
-static bool should_make_executable_exception_for_dynamic_loader(bool make_readable, bool make_writable, bool make_executable, Memory::Region const& region)
-{
-    // Normally we don't allow W -> X transitions, but we have to make an exception
-    // for the dynamic loader, which needs to do this after performing text relocations.
-
-    // FIXME: Investigate whether we could get rid of all text relocations entirely.
-
-    // The exception is only made if all the following criteria is fulfilled:
-
-    // The region must be RW
-    if (!(region.is_readable() && region.is_writable() && !region.is_executable()))
-        return false;
-
-    // The region wants to become RX
-    if (!(make_readable && !make_writable && make_executable))
-        return false;
-
-    // The region is backed by a file
-    if (!region.vmobject().is_inode())
-        return false;
-
-    // The file mapping is private, not shared (no relocations in a shared mapping!)
-    if (!region.vmobject().is_private_inode())
-        return false;
-
-    auto const& inode_vm = static_cast<Memory::InodeVMObject const&>(region.vmobject());
-    auto const& inode = inode_vm.inode();
-
-    Elf_Ehdr header;
-    auto buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)&header);
-    auto result = inode.read_bytes(0, sizeof(header), buffer, nullptr);
-    if (result.is_error() || result.value() != sizeof(header))
-        return false;
-
-    // The file is a valid ELF binary
-    if (!ELF::validate_elf_header(header, inode.size()))
-        return false;
-
-    // The file is an ELF shared object
-    if (header.e_type != ET_DYN)
-        return false;
-
-    // FIXME: Are there any additional checks/validations we could do here?
-    return true;
-}
-
 ErrorOr<void> Process::validate_mmap_prot(int prot, bool map_stack, bool map_anonymous, Memory::Region const* region) const
 {
-    bool make_readable = prot & PROT_READ;
     bool make_writable = prot & PROT_WRITE;
     bool make_executable = prot & PROT_EXEC;
 
@@ -96,13 +49,8 @@ ErrorOr<void> Process::validate_mmap_prot(int prot, bool map_stack, bool map_ano
         if (make_writable && region->has_been_executable())
             return EINVAL;
 
-        if (make_executable && region->has_been_writable()) {
-            if (should_make_executable_exception_for_dynamic_loader(make_readable, make_writable, make_executable, *region)) {
-                return {};
-            } else {
-                return EINVAL;
-            };
-        }
+        if (make_executable && region->has_been_writable() && should_reject_transition_to_executable_from_writable_prot())
+            return EINVAL;
     }
 
     return {};
