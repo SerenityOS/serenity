@@ -739,7 +739,7 @@ Examples of static-pie ELF objects are ELF packers, and the system dynamic loade
         entry_point = entry_point.offset(main_executable_loader->base_address().get());
     auto entry_point_function = reinterpret_cast<EntryPointFunction>(entry_point.as_ptr());
 
-    int rc = syscall(SC_prctl, PR_SET_NO_NEW_SYSCALL_REGION_ANNOTATIONS, 1, 0, nullptr);
+    int rc = syscall(SC_prctl, PR_SET_NO_NEW_SYSCALL_REGION_ANNOTATIONS, 0, 0, nullptr);
     if (rc < 0) {
         VERIFY_NOT_REACHED();
     }
