@@ -2,12 +2,14 @@
  * Copyright (c) 2020-2022, the SerenityOS developers.
  * Copyright (c) 2023, Tim Ledbetter <timledbetter@gmail.com>
  * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2024, Daniel Gaston <tfd@tuta.io>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "ChessWidget.h"
 #include "PromotionDialog.h"
+#include <AK/GenericLexer.h>
 #include <AK/Random.h>
 #include <AK/String.h>
 #include <LibCore/Account.h>
@@ -536,91 +538,200 @@ ErrorOr<String> ChessWidget::get_fen() const
     return TRY(m_playback ? m_board_playback.to_fen() : m_board.to_fen());
 }
 
-ErrorOr<void> ChessWidget::import_pgn(Core::File& file)
+ErrorOr<void, PGNParseError> ChessWidget::import_pgn(Core::File& file)
 {
-    m_board = Chess::Board();
+    reset();
+    enum class TokenType {
+        Move,
+        TagSymbol,
+        TagString,
+        Comment,
+        GameTerminator,
+        RAVStart,
+        RAVEnd,
+        Nag
+    };
 
-    ByteBuffer bytes = TRY(file.read_until_eof());
-    StringView content = bytes;
-    auto lines = content.lines();
-    StringView line;
-    size_t i = 0;
+    struct Token {
+        TokenType type;
+        StringView value;
+    };
+    auto maybe_file = file.read_until_eof();
+    if (maybe_file.is_error()) {
+        return PGNParseError::from_string_formatted(String::formatted("Could not read file"));
+    }
+    ByteString bytes = ByteString { maybe_file.release_value().bytes() };
+    Vector<Token> tokens;
+    Vector<StringView> rav_stack;
+    // FIXME: Engine cannot parse suffixes ? and !.
+    StringView suffix_characters = "+#"sv;
+    StringView closing_characters = "]})"sv;
+    StringView opening_characters = "({["sv;
+    LineTrackingLexer lexer { StringView { bytes } };
 
-    // Tag Pair Section
-    // FIXME: Parse these tags when they become relevant
-    do {
-        line = lines.at(i++);
-    } while (!line.is_empty() || i >= lines.size());
+    while (!lexer.is_eof()) {
 
-    // Movetext Section
-    bool skip = false;
-    bool recursive_annotation = false;
-    bool future_expansion = false;
+        if (lexer.next_is(is_any_of(closing_characters))) {
+            return PGNParseError::from_string_formatted(String::formatted("Unexpected character: {}.\n(line {} column {})", lexer.consume(1), lexer.current_position().line + 1, lexer.current_position().column));
+        }
+        if (lexer.next_is('[')) {
+            lexer.consume_specific('[');
+            auto value = lexer.consume_until(" ");
+            tokens.append(Token { TokenType::TagSymbol, value });
+            lexer.ignore_while(is_ascii_space);
+            if (!lexer.consume_specific('"')) {
+                return PGNParseError::from_string_formatted(String::formatted("Expected opening \".\n(line {} column {})", lexer.current_position().line + 1, lexer.current_position().column));
+            }
+            // Parsing will only succeed if a " is reached, if the lexer goes to a ] the next
+            // consume_specific will fail.
+            value = lexer.consume_until(is_any_of("\"]\n"sv));
+            tokens.append(Token { TokenType::TagString, value });
+            if (!lexer.consume_specific('"')) {
+                return PGNParseError::from_string_formatted(String::formatted("Expected closing \".\n(line {} column {})", lexer.current_position().line + 1, lexer.current_position().column));
+            }
+            // The end quote must be followed by a closing bracket.
+            if (!lexer.consume_specific(']')) {
+                return PGNParseError::from_string_formatted(String::formatted("Expected closing bracket.\n(line {} column {})", lexer.current_position().line + 1, lexer.current_position().column));
+            }
+            // Deal with trailing white space
+            lexer.ignore_while(is_ascii_space);
+            continue;
+        }
+
+        if (lexer.next_is('{')) {
+            lexer.consume_specific('{');
+            // Deal with leading white space
+            lexer.ignore_while(is_ascii_space);
+            auto value = lexer.consume_until('}');
+            tokens.append(Token { TokenType::Comment, value });
+            if (!lexer.consume_specific('}')) {
+                return PGNParseError::from_string_formatted(String::formatted("Expected closing brace.\n(line {} column {})", lexer.current_position().line + 1, lexer.current_position().column));
+            }
+            // Deal with trailing white space
+            lexer.ignore_while(is_ascii_space);
+            continue;
+        }
+
+        if (lexer.next_is('(')) {
+            // FIXME: Actually implement RAV instead of just ignoring them.
+            rav_stack.append(lexer.consume(1));
+            while (!rav_stack.is_empty() && !lexer.is_eof()) {
+                lexer.ignore_until(is_any_of("()"sv));
+                if (lexer.next_is('(')) {
+                    rav_stack.append(lexer.consume(1));
+                    tokens.append(Token { TokenType::RAVStart, rav_stack.last() });
+                } else {
+                    rav_stack.take_last();
+                    tokens.append(Token { TokenType::RAVStart, lexer.consume(1) });
+                }
+            }
+            if (!rav_stack.is_empty() || lexer.is_eof()) {
+                return PGNParseError::from_string_formatted(String::formatted("Unclosed recursive annotation.\n(line {} column {})", lexer.current_position().line + 1, lexer.current_position().column));
+            }
+            continue;
+        }
+
+        if (lexer.next_is("1-0"sv)) {
+            auto value = lexer.consume(3);
+            tokens.append(Token { TokenType::GameTerminator, value });
+            break;
+        }
+        if (lexer.next_is("0-1"sv)) {
+            auto value = lexer.consume(3);
+            tokens.append(Token { TokenType::GameTerminator, value });
+            break;
+        }
+
+        if (lexer.next_is("1/2-1/2"sv)) {
+            auto value = lexer.consume(3);
+            tokens.append(Token { TokenType::GameTerminator, value });
+            break;
+        }
+
+        if (lexer.next_is("*"sv)) {
+            auto value = lexer.consume(1);
+            tokens.append(Token { TokenType::GameTerminator, value });
+            break;
+        }
+
+        if (lexer.next_is(is_ascii_alpha)) {
+            // Parse move.
+            auto value = lexer.consume_while([&](char c) { return is_ascii_alphanumeric(c) || suffix_characters.contains(c) || c == '=' || c == '-'; });
+            tokens.append(Token { TokenType::Move, value });
+
+            if (!lexer.next_is(is_any_of(" ({$"sv)) && !lexer.next_is(is_ascii_space)) {
+                return PGNParseError::from_string_formatted(String::formatted("Unexpected character {}.\n(line {} column {})", lexer.consume(1), lexer.current_position().line + 1, lexer.current_position().column));
+            }
+
+            // Deal with any extra trailing white space
+            lexer.ignore_while(is_ascii_space);
+            continue;
+        }
+
+        if (lexer.next_is("$"sv)) {
+            lexer.consume_specific('$');
+            if (!lexer.next_is(is_ascii_digit)) {
+                return PGNParseError::from_string_formatted(String::formatted("Unexpected character {}.\n(line {} column {})", lexer.consume(1), lexer.current_position().line + 1, lexer.current_position().column));
+            }
+
+            auto value = lexer.consume_while(is_ascii_digit);
+            tokens.append(Token { TokenType::Nag, value });
+
+            // Ensure that a number has been parsed and it's in range 0-255.
+            auto optional_number = value.to_number<int>();
+            if (!optional_number.has_value()) {
+                return PGNParseError::from_string_formatted(String::formatted("Could not parse Nag.\n(line {} column {})", lexer.current_position().line + 1, lexer.current_position().column));
+            }
+
+            auto number = optional_number.value();
+            if (number < 0 || number > 255) {
+                return PGNParseError::from_string_formatted(String::formatted("Nag must be number between 0-255 but got {}.\n(line {} column {})", number, lexer.current_position().line + 1, lexer.current_position().column));
+            }
+
+            // Ensure that the Nag is followed by a whitespace.
+            if (!lexer.consume_specific(' ')) {
+                return PGNParseError::from_string_formatted(String::formatted("Unexpected character {}.\n(line {} column {})", lexer.consume(1), lexer.current_position().line + 1, lexer.current_position().column));
+            }
+
+            // Deal with trailing white space
+            lexer.ignore_while(is_ascii_space);
+            continue;
+        }
+
+        // Advance to the start of a token or to an invalid closing character to be dealt with.
+        lexer.ignore_until([&](char c) { return is_ascii_alpha(c) || opening_characters.contains(c) || closing_characters.contains(c) || c == '$'; });
+    }
+
+    // FIXME: Display more of this information in the UI.
     Chess::Color turn = Chess::Color::White;
-    String movetext;
-
-    for (size_t j = i; j < lines.size(); j++)
-        movetext = TRY(String::formatted("{}{}", movetext, lines.at(i)));
-
-    for (auto token : TRY(movetext.split(' '))) {
-        token = TRY(token.trim_ascii_whitespace());
-
-        // FIXME: Parse all of these tokens when we start caring about them
-        if (token.ends_with('}')) {
-            skip = false;
-            continue;
-        }
-        if (skip)
-            continue;
-        if (token.starts_with('{')) {
-            if (token.ends_with('}'))
-                continue;
-            skip = true;
-            continue;
-        }
-        if (token.ends_with(')')) {
-            recursive_annotation = false;
-            continue;
-        }
-        if (recursive_annotation)
-            continue;
-        if (token.starts_with('(')) {
-            if (token.ends_with(')'))
-                continue;
-            recursive_annotation = true;
-            continue;
-        }
-        if (token.ends_with('>')) {
-            future_expansion = false;
-            continue;
-        }
-        if (future_expansion)
-            continue;
-        if (token.starts_with('<')) {
-            if (token.ends_with('>'))
-                continue;
-            future_expansion = true;
-            continue;
-        }
-        if (token.starts_with('$'))
-            continue;
-        if (token.contains('*'))
-            break;
-        // FIXME: When we become able to set more of the game state, fix these end results
-        if (token.contains("1-0"sv)) {
-            m_board.set_resigned(Chess::Color::Black);
-            break;
-        }
-        if (token.contains("0-1"sv)) {
-            m_board.set_resigned(Chess::Color::White);
-            break;
-        }
-        if (token.contains("1/2-1/2"sv)) {
-            break;
-        }
-        if (!token.ends_with('.')) {
-            m_board.apply_move(Chess::Move::from_algebraic(token, turn, m_board));
+    for (auto& token : tokens) {
+        switch (token.type) {
+        case TokenType::Move:
+            // FIXME: Add some move validation so the engine doesn't crash.
+            // FIXME: Engine crashes with pawn promotion notation (e.g. fxg8=Q).
+            m_board.apply_move(Chess::Move::from_algebraic(token.value, turn, m_board));
             turn = Chess::opposing_color(turn);
+            break;
+        case TokenType::TagSymbol:
+            break;
+        case TokenType::TagString:
+            break;
+        case TokenType::GameTerminator:
+            if (token.value == "1-0"sv) {
+                m_board.set_resigned(Chess::Color::Black);
+            }
+            if (token.value == "0-1"sv) {
+                m_board.set_resigned(Chess::Color::White);
+            }
+            break;
+        case TokenType::Comment:
+            break;
+        case TokenType::RAVStart:
+            break;
+        case TokenType::RAVEnd:
+            break;
+        case TokenType::Nag:
+            break;
         }
     }
 
