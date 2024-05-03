@@ -143,6 +143,7 @@ class Process final
         Atomic<u32> thread_count { 0 };
         u8 termination_status { 0 };
         u8 termination_signal { 0 };
+        SetOnce reject_transition_to_executable_from_writable_prot;
     };
 
 public:
@@ -623,6 +624,13 @@ public:
 
     ErrorOr<void> require_promise(Pledge);
     ErrorOr<void> require_no_promises() const;
+
+    bool should_reject_transition_to_executable_from_writable_prot() const
+    {
+        return with_protected_data([](auto& protected_data) {
+            return protected_data.reject_transition_to_executable_from_writable_prot.was_set();
+        });
+    }
 
     ErrorOr<void> validate_mmap_prot(int prot, bool map_stack, bool map_anonymous, Memory::Region const* region = nullptr) const;
     ErrorOr<void> validate_inode_mmap_prot(int prot, bool description_readable, bool description_writable, bool map_shared) const;
