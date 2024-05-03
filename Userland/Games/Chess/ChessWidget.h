@@ -2,6 +2,7 @@
  * Copyright (c) 2020-2022, the SerenityOS developers.
  * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2023, Tim Ledbetter <timledbetter@gmail.com>
+ * Copyright (c) 2024, Daniel Gaston <tfd@tuta.io>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -16,6 +17,28 @@
 #include <LibConfig/Listener.h>
 #include <LibGUI/Frame.h>
 #include <LibGfx/Bitmap.h>
+
+class PGNParseError {
+public:
+    PGNParseError() = default;
+    PGNParseError(String&& message)
+        : m_message(move(message))
+    {
+    }
+
+    String const& message() const { return m_message; }
+
+    static PGNParseError from_string_formatted(ErrorOr<String> maybe_formatted_string)
+    {
+        if (maybe_formatted_string.is_error()) {
+            return PGNParseError {};
+        }
+        return PGNParseError { maybe_formatted_string.release_value() };
+    }
+
+private:
+    String m_message;
+};
 
 class ChessWidget final
     : public GUI::Frame
@@ -54,7 +77,7 @@ public:
     void set_show_available_moves(bool e) { m_show_available_moves = e; }
 
     ErrorOr<String> get_fen() const;
-    ErrorOr<void> import_pgn(Core::File&);
+    ErrorOr<void, PGNParseError> import_pgn(Core::File&);
     ErrorOr<void> export_pgn(Core::File&) const;
 
     int resign();

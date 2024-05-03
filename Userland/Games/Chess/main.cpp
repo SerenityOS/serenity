@@ -2,6 +2,7 @@
  * Copyright (c) 2020, the SerenityOS developers.
  * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2023, Tim Ledbetter <timledbetter@gmail.com>
+ * Copyright (c) 2024, Daniel Gaston <tfd@tuta.io>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -111,10 +112,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (result.is_error())
             return;
 
-        if (auto maybe_error = widget->import_pgn(*result.value().release_stream()); maybe_error.is_error())
-            dbgln("Failed to import PGN: {}", maybe_error.release_error());
-        else
+        if (auto maybe_error = widget->import_pgn(*result.value().release_stream()); maybe_error.is_error()) {
+            auto error_message = maybe_error.release_error().message();
+            dbgln("Failed to import PGN: {}", error_message);
+            GUI::MessageBox::show(window, error_message, "Import Error"sv, GUI::MessageBox::Type::Information);
+        } else {
             dbgln("Imported PGN file from {}", result.value().filename());
+        }
     }));
     game_menu->add_action(GUI::Action::create("&Export PGN...", { Mod_Ctrl, Key_S }, [&](auto&) {
         auto result = FileSystemAccessClient::Client::the().save_file(window, "Untitled", "pgn");
