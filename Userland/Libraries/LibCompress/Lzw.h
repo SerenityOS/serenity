@@ -44,6 +44,7 @@ public:
 
 protected:
     static constexpr int max_code_size = 12;
+    static constexpr int max_table_size = 1 << max_code_size;
 
     LzwState(u8 min_code_size, i32 offset_for_size_change)
         : m_code_size(min_code_size)
@@ -65,7 +66,7 @@ protected:
 
     void extend_code_table(Vector<u8> const& entry)
     {
-        if (entry.size() > 1 && m_code_table.size() < 4096) {
+        if (entry.size() > 1 && m_code_table.size() < max_table_size) {
             m_code_table.append(entry);
             if (m_code_table.size() >= (m_table_capacity + m_offset_for_size_change) && m_code_size < max_code_size) {
                 ++m_code_size;
