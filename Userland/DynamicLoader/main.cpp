@@ -6,6 +6,7 @@
 
 #include <AK/ScopeGuard.h>
 #include <Kernel/API/POSIX/sys/stat.h>
+#include <Kernel/API/VirtualMemoryAnnotations.h>
 #include <LibELF/AuxiliaryVector.h>
 #include <LibELF/DynamicLinker.h>
 #include <LibELF/Relocation.h>
@@ -17,24 +18,6 @@
 char* __static_environ[] = { nullptr }; // We don't get the environment without some libc workarounds..
 char** environ = __static_environ;
 uintptr_t __stack_chk_guard = 0;
-
-static void perform_self_relocations(auxv_t* auxvp)
-{
-    // We need to relocate ourselves.
-    // (these relocations seem to be generated because of our vtables)
-
-    FlatPtr base_address = 0;
-    bool found_base_address = false;
-    for (; auxvp->a_type != AT_NULL; ++auxvp) {
-        if (auxvp->a_type == ELF::AuxiliaryValue::BaseAddress) {
-            base_address = auxvp->a_un.a_val;
-            found_base_address = true;
-        }
-    }
-    VERIFY(found_base_address);
-    if (!ELF::perform_relative_relocations(base_address))
-        exit(1);
-}
 
 static void display_help()
 {
@@ -117,20 +100,30 @@ void _entry(int argc, char** argv, char** envp)
     auxv_t* auxvp = (auxv_t*)++env;
 
     bool at_random_found = false;
+    FlatPtr base_address = 0;
+    bool base_address_found = false;
+
     for (auxv_t* entry = auxvp; entry->a_type != AT_NULL; ++entry) {
-        if (entry->a_type == AT_RANDOM) {
+        if (entry->a_type == ELF::AuxiliaryValue::Random) {
             at_random_found = true;
             __stack_chk_guard = *reinterpret_cast<u64*>(entry->a_un.a_ptr);
-            break;
+        } else if (entry->a_type == ELF::AuxiliaryValue::BaseAddress) {
+            base_address_found = true;
+            base_address = entry->a_un.a_val;
         }
     }
-    VERIFY(at_random_found);
+    VERIFY(at_random_found && base_address_found);
 
     // Make sure compiler won't move any functions calls above __stack_chk_guard initialization even
     // if their definitions somehow become available.
     optimizer_fence();
 
-    perform_self_relocations(auxvp);
+    // We need to relocate ourselves.
+    // (these relocations seem to be generated because of our vtables)
+    if (!ELF::perform_relative_relocations(base_address)) {
+        syscall(SC_dbgputstr, "Unable to perform relative relocations!\n", 40);
+        VERIFY_NOT_REACHED();
+    }
 
     // Similarly, make sure no non-offset-agnostic language features are used above this point.
     optimizer_fence();
@@ -173,6 +166,20 @@ void _entry(int argc, char** argv, char** envp)
         main_program_path = argv[1];
         argv++;
         argc--;
+
+        // Allow syscalls from our code since the kernel won't do that automatically for us if we
+        // were invoked directly.
+        Elf_Ehdr* header = reinterpret_cast<Elf_Ehdr*>(base_address);
+        Elf_Phdr* pheader = reinterpret_cast<Elf_Phdr*>(base_address + header->e_phoff);
+
+        for (size_t i = 0; i < header->e_phnum; ++i) {
+            auto const& segment = pheader[i];
+            if (segment.p_type == PT_LOAD && (segment.p_flags & PF_X)) {
+                auto flags = VirtualMemoryRangeFlags::SyscallCode | VirtualMemoryRangeFlags::Immutable;
+                auto rc = syscall(Syscall::SC_annotate_mapping, segment.p_vaddr + base_address, flags);
+                VERIFY(rc == 0);
+            }
+        }
     }
 
     VERIFY(main_program_fd >= 0);
