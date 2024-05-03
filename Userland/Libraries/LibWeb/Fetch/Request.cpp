@@ -383,7 +383,9 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
     if (init.signal.has_value())
         input_signal = *init.signal;
 
-    // FIXME: 27. If init["priority"] exists, then:
+    // 27. If init["priority"] exists, then:
+    if (init.priority.has_value())
+        request->set_priority(from_bindings_enum(*init.priority));
 
     // 28. Set this’s request to request.
     // NOTE: This is done at the beginning as the 'this' value Request object

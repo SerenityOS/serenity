@@ -18,6 +18,7 @@ namespace Web::Fetch {
 [[nodiscard]] Infrastructure::Request::CredentialsMode from_bindings_enum(Bindings::RequestCredentials);
 [[nodiscard]] Infrastructure::Request::CacheMode from_bindings_enum(Bindings::RequestCache);
 [[nodiscard]] Infrastructure::Request::RedirectMode from_bindings_enum(Bindings::RequestRedirect);
+[[nodiscard]] Infrastructure::Request::Priority from_bindings_enum(Bindings::RequestPriority);
 
 [[nodiscard]] Bindings::ReferrerPolicy to_bindings_enum(ReferrerPolicy::ReferrerPolicy);
 [[nodiscard]] Bindings::RequestDestination to_bindings_enum(Optional<Infrastructure::Request::Destination> const&);

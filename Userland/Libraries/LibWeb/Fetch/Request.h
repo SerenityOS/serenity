@@ -37,6 +37,7 @@ struct RequestInit {
     Optional<bool> keepalive;
     Optional<JS::GCPtr<DOM::AbortSignal>> signal;
     Optional<Bindings::RequestDuplex> duplex;
+    Optional<Bindings::RequestPriority> priority;
     Optional<JS::Value> window;
 
     // https://infra.spec.whatwg.org/#map-is-empty
@@ -55,6 +56,7 @@ struct RequestInit {
             || keepalive.has_value()
             || signal.has_value()
             || duplex.has_value()
+            || priority.has_value()
             || window.has_value());
     }
 };
