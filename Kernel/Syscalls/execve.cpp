@@ -347,6 +347,8 @@ static ErrorOr<LoadResult> load_elf_object(Memory::AddressSpace& new_space, Open
         size_t rounded_range_end = TRY(Memory::page_round_up(program_header.vaddr().offset(load_offset).offset(program_header.size_in_memory()).get()));
         auto range_end = VirtualAddress { rounded_range_end };
         auto region = TRY(new_space.allocate_region_with_vmobject(Memory::RandomizeVirtualAddress::Yes, range_base, range_end.get() - range_base.get(), program_header.alignment(), *vmobject, program_header.offset(), elf_name->view(), prot, true));
+        if (program_header.is_executable())
+            region->set_initially_loaded_executable_segment();
 
         if (should_allow_syscalls == ShouldAllowSyscalls::Yes)
             region->set_syscall_region(true);

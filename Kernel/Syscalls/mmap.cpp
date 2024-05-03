@@ -542,7 +542,7 @@ ErrorOr<FlatPtr> Process::sys$annotate_mapping(Userspace<void*> address, int fla
         if (!region)
             return EINVAL;
 
-        if (!region->is_mmap())
+        if (!region->is_mmap() && !region->is_initially_loaded_executable_segment())
             return EINVAL;
         if (region->is_immutable())
             return EPERM;
