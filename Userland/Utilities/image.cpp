@@ -9,6 +9,7 @@
 #include <LibCore/MappedFile.h>
 #include <LibGfx/ICC/Profile.h>
 #include <LibGfx/ImageFormats/BMPWriter.h>
+#include <LibGfx/ImageFormats/GIFWriter.h>
 #include <LibGfx/ImageFormats/ImageDecoder.h>
 #include <LibGfx/ImageFormats/JPEGWriter.h>
 #include <LibGfx/ImageFormats/PNGWriter.h>
@@ -168,6 +169,10 @@ static ErrorOr<void> save_image(LoadedImage& image, StringView out_path, bool pp
 
     auto& frame = image.bitmap.get<RefPtr<Gfx::Bitmap>>();
 
+    if (out_path.ends_with(".gif"sv, CaseSensitivity::CaseInsensitive)) {
+        TRY(Gfx::GIFWriter::encode(*TRY(stream()), *frame));
+        return {};
+    }
     if (out_path.ends_with(".jpg"sv, CaseSensitivity::CaseInsensitive) || out_path.ends_with(".jpeg"sv, CaseSensitivity::CaseInsensitive)) {
         TRY(Gfx::JPEGWriter::encode(*TRY(stream()), *frame, { .icc_data = image.icc_data, .quality = jpeg_quality }));
         return {};
@@ -190,7 +195,7 @@ static ErrorOr<void> save_image(LoadedImage& image, StringView out_path, bool pp
     } else if (out_path.ends_with(".qoi"sv, CaseSensitivity::CaseInsensitive)) {
         bytes = TRY(Gfx::QOIWriter::encode(*frame));
     } else {
-        return Error::from_string_view("can only write .bmp, .jpg, .png, .ppm, .qoi, and .webp"sv);
+        return Error::from_string_view("can only write .bmp, .gif, .jpg, .png, .ppm, .qoi, and .webp"sv);
     }
     TRY(TRY(stream())->write_until_depleted(bytes));
 
