@@ -100,6 +100,7 @@ bool is_bad_port(u16 port)
         2049,  // nfs
         3659,  // apple-sasl
         4045,  // npp
+        4190,  // sieve
         5060,  // sip
         5061,  // sips
         6000,  // x11
@@ -109,6 +110,7 @@ bool is_bad_port(u16 port)
         6667,  // ircu
         6668,  // ircu
         6669,  // ircu
+        6679,  // osaut
         6697,  // ircs-u
         10080, // amanda
     };
