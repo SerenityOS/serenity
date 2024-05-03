@@ -46,6 +46,7 @@ dictionary RequestInit {
     boolean keepalive;
     AbortSignal? signal;
     RequestDuplex duplex;
+    RequestPriority priority;
     any window; // can only be set to null
 };
 
@@ -55,6 +56,7 @@ enum RequestCredentials { "omit", "same-origin", "include" };
 enum RequestCache { "default", "no-store", "reload", "no-cache", "force-cache", "only-if-cached" };
 enum RequestRedirect { "follow", "error", "manual" };
 enum RequestDuplex { "half" };
+enum RequestPriority { "high", "low", "auto" };
 
 // https://w3c.github.io/webappsec-referrer-policy/#enumdef-referrerpolicy
 enum ReferrerPolicy {

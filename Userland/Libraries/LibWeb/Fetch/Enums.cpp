@@ -113,6 +113,20 @@ Infrastructure::Request::RedirectMode from_bindings_enum(Bindings::RequestRedire
     }
 }
 
+Infrastructure::Request::Priority from_bindings_enum(Bindings::RequestPriority request_priority)
+{
+    switch (request_priority) {
+    case Bindings::RequestPriority::High:
+        return Infrastructure::Request::Priority::High;
+    case Bindings::RequestPriority::Low:
+        return Infrastructure::Request::Priority::Low;
+    case Bindings::RequestPriority::Auto:
+        return Infrastructure::Request::Priority::Auto;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
 Bindings::ReferrerPolicy to_bindings_enum(ReferrerPolicy::ReferrerPolicy referrer_policy)
 {
     switch (referrer_policy) {

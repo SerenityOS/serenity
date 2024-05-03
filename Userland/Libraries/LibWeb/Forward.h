@@ -60,6 +60,7 @@ enum class RequestCredentials;
 enum class RequestDestination;
 enum class RequestDuplex;
 enum class RequestMode;
+enum class RequestPriority;
 enum class RequestRedirect;
 enum class ResizeObserverBoxOptions;
 enum class ResponseType;
