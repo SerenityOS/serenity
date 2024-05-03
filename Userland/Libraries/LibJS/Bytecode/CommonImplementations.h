@@ -404,7 +404,7 @@ inline Value new_function(VM& vm, FunctionExpression const& function_node, Optio
             name = vm.bytecode_interpreter().current_executable().get_identifier(lhs_name.value());
         value = function_node.instantiate_ordinary_function_expression(vm, name);
     } else {
-        value = ECMAScriptFunctionObject::create(*vm.current_realm(), function_node.name(), function_node.source_text(), function_node.body(), function_node.parameters(), function_node.function_length(), function_node.local_variables_names(), vm.lexical_environment(), vm.running_execution_context().private_environment, function_node.kind(), function_node.is_strict_mode(), function_node.might_need_arguments_object(), function_node.contains_direct_call_to_eval(), function_node.is_arrow_function());
+        value = ECMAScriptFunctionObject::create(*vm.current_realm(), function_node.name(), function_node.source_text(), function_node.body(), function_node.parameters(), function_node.function_length(), function_node.local_variables_names(), vm.lexical_environment(), vm.running_execution_context().private_environment, function_node.kind(), function_node.is_strict_mode(), function_node.uses_this(), function_node.might_need_arguments_object(), function_node.contains_direct_call_to_eval(), function_node.is_arrow_function());
     }
 
     if (home_object.has_value()) {

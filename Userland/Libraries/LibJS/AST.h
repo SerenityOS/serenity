@@ -688,6 +688,11 @@ struct FunctionParameter {
     Handle<Bytecode::Executable> bytecode_executable {};
 };
 
+enum class UsesThis {
+    Yes,
+    No
+};
+
 class FunctionNode {
 public:
     StringView name() const { return m_name ? m_name->string().view() : ""sv; }
@@ -702,9 +707,10 @@ public:
     bool contains_direct_call_to_eval() const { return m_contains_direct_call_to_eval; }
     bool is_arrow_function() const { return m_is_arrow_function; }
     FunctionKind kind() const { return m_kind; }
+    UsesThis uses_this() const { return m_uses_this; }
 
 protected:
-    FunctionNode(RefPtr<Identifier const> name, ByteString source_text, NonnullRefPtr<Statement const> body, Vector<FunctionParameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function, Vector<DeprecatedFlyString> local_variables_names)
+    FunctionNode(RefPtr<Identifier const> name, ByteString source_text, NonnullRefPtr<Statement const> body, Vector<FunctionParameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function, Vector<DeprecatedFlyString> local_variables_names, UsesThis uses_this)
         : m_name(move(name))
         , m_source_text(move(source_text))
         , m_body(move(body))
@@ -715,6 +721,7 @@ protected:
         , m_might_need_arguments_object(might_need_arguments_object)
         , m_contains_direct_call_to_eval(contains_direct_call_to_eval)
         , m_is_arrow_function(is_arrow_function)
+        , m_uses_this(uses_this)
         , m_local_variables_names(move(local_variables_names))
     {
         if (m_is_arrow_function)
@@ -735,6 +742,7 @@ private:
     bool m_might_need_arguments_object : 1 { false };
     bool m_contains_direct_call_to_eval : 1 { false };
     bool m_is_arrow_function : 1 { false };
+    UsesThis m_uses_this : 1 { UsesThis::No };
 
     Vector<DeprecatedFlyString> m_local_variables_names;
 };
@@ -745,9 +753,9 @@ class FunctionDeclaration final
 public:
     static bool must_have_name() { return true; }
 
-    FunctionDeclaration(SourceRange source_range, RefPtr<Identifier const> name, ByteString source_text, NonnullRefPtr<Statement const> body, Vector<FunctionParameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool contains_direct_call_to_eval, Vector<DeprecatedFlyString> local_variables_names)
+    FunctionDeclaration(SourceRange source_range, RefPtr<Identifier const> name, ByteString source_text, NonnullRefPtr<Statement const> body, Vector<FunctionParameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool contains_direct_call_to_eval, Vector<DeprecatedFlyString> local_variables_names, UsesThis uses_this)
         : Declaration(move(source_range))
-        , FunctionNode(move(name), move(source_text), move(body), move(parameters), function_length, kind, is_strict_mode, might_need_arguments_object, contains_direct_call_to_eval, false, move(local_variables_names))
+        , FunctionNode(move(name), move(source_text), move(body), move(parameters), function_length, kind, is_strict_mode, might_need_arguments_object, contains_direct_call_to_eval, false, move(local_variables_names), uses_this)
     {
     }
 
@@ -770,9 +778,9 @@ class FunctionExpression final
 public:
     static bool must_have_name() { return false; }
 
-    FunctionExpression(SourceRange source_range, RefPtr<Identifier const> name, ByteString source_text, NonnullRefPtr<Statement const> body, Vector<FunctionParameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool contains_direct_call_to_eval, Vector<DeprecatedFlyString> local_variables_names, bool is_arrow_function = false)
+    FunctionExpression(SourceRange source_range, RefPtr<Identifier const> name, ByteString source_text, NonnullRefPtr<Statement const> body, Vector<FunctionParameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool contains_direct_call_to_eval, Vector<DeprecatedFlyString> local_variables_names, UsesThis uses_this = UsesThis::No, bool is_arrow_function = false)
         : Expression(move(source_range))
-        , FunctionNode(move(name), move(source_text), move(body), move(parameters), function_length, kind, is_strict_mode, might_need_arguments_object, contains_direct_call_to_eval, is_arrow_function, move(local_variables_names))
+        , FunctionNode(move(name), move(source_text), move(body), move(parameters), function_length, kind, is_strict_mode, might_need_arguments_object, contains_direct_call_to_eval, is_arrow_function, move(local_variables_names), uses_this)
     {
     }
 
