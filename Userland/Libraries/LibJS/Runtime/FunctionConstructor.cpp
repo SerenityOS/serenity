@@ -183,7 +183,8 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic
 
     // 18. Let body be ParseText(StringToCodePoints(bodyString), bodySym).
     bool contains_direct_call_to_eval = false;
-    auto body_parser = Parser::parse_function_body_from_string(body_string, parse_options, parameters, kind, contains_direct_call_to_eval);
+    bool uses_this = false;
+    auto body_parser = Parser::parse_function_body_from_string(body_string, parse_options, parameters, kind, contains_direct_call_to_eval, uses_this);
 
     // 19. If body is a List of errors, throw a SyntaxError exception.
     if (body_parser.has_errors()) {
@@ -218,7 +219,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic
     PrivateEnvironment* private_environment = nullptr;
 
     // 28. Let F be OrdinaryFunctionCreate(proto, sourceText, parameters, body, non-lexical-this, env, privateEnv).
-    auto function = ECMAScriptFunctionObject::create(realm, "anonymous", *prototype, move(source_text), expr->body(), expr->parameters(), expr->function_length(), expr->local_variables_names(), &environment, private_environment, expr->kind(), expr->is_strict_mode(), expr->might_need_arguments_object(), contains_direct_call_to_eval);
+    auto function = ECMAScriptFunctionObject::create(realm, "anonymous", *prototype, move(source_text), expr->body(), expr->parameters(), expr->function_length(), expr->local_variables_names(), &environment, private_environment, expr->kind(), expr->is_strict_mode(), uses_this ? UsesThis::Yes : UsesThis::No, expr->might_need_arguments_object(), contains_direct_call_to_eval);
 
     // FIXME: Remove the name argument from create() and do this instead.
     // 29. Perform SetFunctionName(F, "anonymous").
