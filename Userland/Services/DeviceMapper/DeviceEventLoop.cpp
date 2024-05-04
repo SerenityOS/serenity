@@ -6,6 +6,7 @@
 
 #include "DeviceEventLoop.h"
 #include <AK/Debug.h>
+#include <AK/LexicalPath.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/System.h>
 #include <LibIPC/MultiServer.h>
@@ -143,6 +144,13 @@ ErrorOr<void> DeviceEventLoop::register_new_device(DeviceNodeType device_node_ty
     umask(old_mask);
     TRY(prepare_permissions_after_populating_devtmpfs(path.bytes_as_string_view(), match));
 
+    auto symlink_path = LexicalPath("/tmp/system/devicemap/nodes/")
+                            .append(device_node_type == DeviceNodeType::Block ? "block"sv : "char"sv)
+                            .append(MUST(String::number(major_number.value())))
+                            .append(MUST(String::number(minor_number.value())));
+
+    TRY(Core::System::symlink(path.bytes_as_string_view(), symlink_path.string()));
+
     auto result = TRY(device_node_family->registered_nodes().try_set(RegisteredDeviceNode { move(path), minor_number }, AK::HashSetExistingEntryBehavior::Keep));
     VERIFY(result != HashSetResult::ReplacedExistingEntry);
     if (result == HashSetResult::KeptExistingEntry) {
@@ -172,6 +180,14 @@ ErrorOr<void> DeviceEventLoop::unregister_device(DeviceNodeType device_node_type
         if (node.minor_number() == minor_number)
             TRY(Core::System::unlink(node.device_path()));
     }
+
+    auto symlink_path = LexicalPath("/tmp/system/devicemap/nodes/")
+                            .append(device_node_type == DeviceNodeType::Block ? "block"sv : "char"sv)
+                            .append(MUST(String::number(major_number.value())))
+                            .append(MUST(String::number(minor_number.value())));
+
+    TRY(Core::System::unlink(symlink_path.string()));
+
     auto removed_anything = family.registered_nodes().remove_all_matching([minor_number](auto& device) { return device.minor_number() == minor_number; });
     if (!removed_anything) {
         // FIXME: Handle cases where we can't remove a device node.
