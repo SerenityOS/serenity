@@ -864,6 +864,7 @@ static void update_the_source_set(DOM::Element& element)
         elements.clear();
         element.parent()->for_each_child_of_type<DOM::Element>([&](auto& child) {
             elements.append(&child);
+            return IterationDecision::Continue;
         });
     }
 

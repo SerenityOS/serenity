@@ -127,6 +127,8 @@ static CSSPixelRect measure_scrollable_overflow(Box const& box)
                 for (auto const& fragment : static_cast<Painting::InlinePaintable const&>(*child.paintable()).fragments())
                     scrollable_overflow_rect = scrollable_overflow_rect.united(fragment.absolute_rect());
             }
+
+            return IterationDecision::Continue;
         });
     }
 

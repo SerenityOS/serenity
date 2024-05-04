@@ -112,13 +112,13 @@ void StackingContext::paint_descendants(PaintContext& context, Paintable const& 
             // FIXME: This may not be fully correct with respect to the paint phases.
             if (phase == StackingContextPaintPhase::Foreground)
                 paint_node_as_stacking_context(child, context);
-            return;
+            return IterationDecision::Continue;
         }
 
         if (stacking_context && z_index.value_or(0) != 0)
-            return;
+            return IterationDecision::Continue;
         if (child.is_positioned() && z_index.value_or(0) == 0)
-            return;
+            return IterationDecision::Continue;
 
         if (stacking_context) {
             // FIXME: This may not be fully correct with respect to the paint phases.
@@ -126,7 +126,7 @@ void StackingContext::paint_descendants(PaintContext& context, Paintable const& 
                 paint_child(context, *stacking_context);
             }
             // Note: Don't further recurse into descendants as paint_child() will do that.
-            return;
+            return IterationDecision::Continue;
         }
 
         bool child_is_inline_or_replaced = child.is_inline() || is<Layout::ReplacedBox>(child.layout_node());
@@ -171,6 +171,8 @@ void StackingContext::paint_descendants(PaintContext& context, Paintable const& 
             paint_descendants(context, child, phase);
             break;
         }
+
+        return IterationDecision::Continue;
     });
 
     paintable.after_children_paint(context, to_paint_phase(phase));

@@ -1940,6 +1940,7 @@ void GridFormattingContext::parent_context_did_dimension_child_root_box()
             auto available_height = AvailableSize::make_definite(cb_state.content_height() + cb_state.padding_top + cb_state.padding_bottom);
             layout_absolutely_positioned_element(box, AvailableSpace(available_width, available_height));
         }
+        return IterationDecision::Continue;
     });
 }
 

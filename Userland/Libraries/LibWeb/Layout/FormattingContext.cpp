@@ -243,6 +243,7 @@ CSSPixels FormattingContext::greatest_child_width(Box const& box) const
         box.for_each_child_of_type<Box>([&](Box const& child) {
             if (!child.is_absolutely_positioned())
                 max_width = max(max_width, m_state.get(child).margin_box_width());
+            return IterationDecision::Continue;
         });
     }
     return max_width;

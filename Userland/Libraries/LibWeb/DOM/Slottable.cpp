@@ -134,7 +134,7 @@ Vector<Slottable> find_slottables(JS::NonnullGCPtr<HTML::HTMLSlotElement> slot)
     else {
         host->for_each_child([&](auto& node) {
             if (!node.is_slottable())
-                return;
+                return IterationDecision::Continue;
 
             auto slottable = node.as_slottable();
 
@@ -144,6 +144,8 @@ Vector<Slottable> find_slottables(JS::NonnullGCPtr<HTML::HTMLSlotElement> slot)
             // 2. If foundSlot is slot, then append slottable to result.
             if (found_slot == slot)
                 result.append(move(slottable));
+
+            return IterationDecision::Continue;
         });
     }
 

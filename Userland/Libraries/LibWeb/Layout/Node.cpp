@@ -882,6 +882,7 @@ void NodeWithStyle::propagate_style_to_anonymous_wrappers()
             auto& child_computed_values = static_cast<CSS::MutableComputedValues&>(static_cast<CSS::ComputedValues&>(const_cast<CSS::ImmutableComputedValues&>(child.computed_values())));
             child_computed_values.inherit_from(computed_values());
         }
+        return IterationDecision::Continue;
     });
 }
 

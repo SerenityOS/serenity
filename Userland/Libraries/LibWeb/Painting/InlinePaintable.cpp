@@ -211,12 +211,13 @@ TraversalDecision InlinePaintable::hit_test(CSSPixelPoint position, HitTestType 
 
     bool should_exit = false;
     for_each_child([&](Paintable const& child) {
-        if (should_exit)
-            return;
         if (child.stacking_context())
-            return;
-        if (child.hit_test(position, type, callback) == TraversalDecision::Break)
+            return IterationDecision::Continue;
+        if (child.hit_test(position, type, callback) == TraversalDecision::Break) {
             should_exit = true;
+            return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
     });
 
     if (should_exit)
