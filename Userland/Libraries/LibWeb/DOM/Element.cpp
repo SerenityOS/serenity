@@ -2153,10 +2153,20 @@ void Element::scroll(HTML::ScrollToOptions const&)
     dbgln("FIXME: Implement Element::scroll(ScrollToOptions)");
 }
 
-// https://drafts.csswg.org/cssom-view/#dom-window-scrollby
+// https://drafts.csswg.org/cssom-view/#dom-element-scrollby
 void Element::scroll_by(double x, double y)
 {
-    dbgln("FIXME: Implement Element::scroll_by({}, {})", x, y);
+    // 1. Let options be null converted to a ScrollToOptions dictionary. [WEBIDL]
+    HTML::ScrollToOptions options;
+
+    // 2. Let x and y be the arguments, respectively.
+    // 3. Normalize non-finite values for x and y.
+    // 4. Let the left dictionary member of options have the value x.
+    // 5. Let the top dictionary member of options have the value y.
+    // NOTE: Element::scroll_by(HTML::ScrollToOptions) performs the normalization and following steps.
+    options.left = x;
+    options.top = y;
+    scroll_by(options);
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-element-scrollby
