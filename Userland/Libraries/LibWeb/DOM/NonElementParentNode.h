@@ -24,9 +24,9 @@ public:
         static_cast<NodeType const*>(this)->template for_each_in_inclusive_subtree_of_type<Element>([&](auto& element) {
             if (element.id() == id) {
                 found_element = &element;
-                return IterationDecision::Break;
+                return TraversalDecision::Break;
             }
-            return IterationDecision::Continue;
+            return TraversalDecision::Continue;
         });
         return found_element;
     }
@@ -37,9 +37,9 @@ public:
         static_cast<NodeType*>(this)->template for_each_in_inclusive_subtree_of_type<Element>([&](auto& element) {
             if (element.id() == id) {
                 found_element = &element;
-                return IterationDecision::Break;
+                return TraversalDecision::Continue;
             }
-            return IterationDecision::Continue;
+            return TraversalDecision::Continue;
         });
         return found_element;
     }

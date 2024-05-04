@@ -81,7 +81,7 @@ void SVGElement::update_use_elements_that_reference_this()
 
     document().for_each_in_subtree_of_type<SVGUseElement>([this](SVGUseElement& use_element) {
         use_element.svg_element_changed(*this);
-        return IterationDecision::Continue;
+        return TraversalDecision::Continue;
     });
 }
 
@@ -100,7 +100,7 @@ void SVGElement::remove_from_use_element_that_reference_this()
 
     document().for_each_in_subtree_of_type<SVGUseElement>([this](SVGUseElement& use_element) {
         use_element.svg_element_removed(*this);
-        return IterationDecision::Continue;
+        return TraversalDecision::Continue;
     });
 }
 

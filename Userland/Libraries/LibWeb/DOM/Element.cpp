@@ -2290,11 +2290,11 @@ Element::Directionality Element::directionality() const
             // Discard not-allowed ancestors
             for (auto* ancestor = text_node.parent(); ancestor && ancestor != this; ancestor = ancestor->parent()) {
                 if (is<HTML::HTMLScriptElement>(*ancestor) || is<HTML::HTMLStyleElement>(*ancestor) || is<HTML::HTMLTextAreaElement>(*ancestor))
-                    return IterationDecision::Continue;
+                    return TraversalDecision::Continue;
                 if (ancestor->is_element()) {
                     auto ancestor_element = static_cast<Element const*>(ancestor);
                     if (ancestor_element->dir().has_value())
-                        return IterationDecision::Continue;
+                        return TraversalDecision::Continue;
                 }
             }
 
@@ -2304,11 +2304,11 @@ Element::Directionality Element::directionality() const
                 if (first_is_one_of(bidi_class, bidirectional_class_L, bidirectional_class_AL, bidirectional_class_R)) {
                     found_character = code_point;
                     found_character_bidi_class = bidi_class;
-                    return IterationDecision::Break;
+                    return TraversalDecision::Break;
                 }
             }
 
-            return IterationDecision::Continue;
+            return TraversalDecision::Continue;
         });
 
         // If such a character is found and it is of bidirectional character type AL or R,

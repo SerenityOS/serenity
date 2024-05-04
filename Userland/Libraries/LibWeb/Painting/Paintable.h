@@ -13,12 +13,6 @@
 
 namespace Web::Painting {
 
-enum class TraversalDecision {
-    Continue,
-    SkipChildrenAndContinue,
-    Break,
-};
-
 enum class PaintPhase {
     Background,
     Border,

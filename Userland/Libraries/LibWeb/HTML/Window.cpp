@@ -1698,14 +1698,14 @@ Vector<FlyString> Window::supported_property_names() const
     //   that have a non-empty name content attribute and are in a document tree with window's associated Document as their root; and
     // - the value of the id content attribute for all HTML elements that have a non-empty id content attribute
     //   and are in a document tree with window's associated Document as their root.
-    associated_document().for_each_in_subtree_of_type<DOM::Element>([&property_names](auto& element) -> IterationDecision {
+    associated_document().for_each_in_subtree_of_type<DOM::Element>([&property_names](auto& element) -> TraversalDecision {
         if (is<HTMLEmbedElement>(element) || is<HTMLFormElement>(element) || is<HTMLImageElement>(element) || is<HTMLObjectElement>(element)) {
             if (element.name().has_value())
                 property_names.set(element.name().value(), AK::HashSetExistingEntryBehavior::Keep);
         }
         if (auto const& name = element.id(); name.has_value())
             property_names.set(name.value().to_string(), AK::HashSetExistingEntryBehavior::Keep);
-        return IterationDecision::Continue;
+        return TraversalDecision::Continue;
     });
 
     return property_names.values();
@@ -1729,12 +1729,12 @@ WebIDL::ExceptionOr<JS::Value> Window::named_item_value(FlyString const& name) c
         JS::GCPtr<NavigableContainer> container = nullptr;
         mutable_this.associated_document().for_each_in_subtree_of_type<HTML::NavigableContainer>([&](HTML::NavigableContainer& navigable_container) {
             if (!navigable_container.content_navigable())
-                return IterationDecision::Continue;
+                return TraversalDecision::Continue;
             if (objects.navigables.contains_slow(JS::NonnullGCPtr { *navigable_container.content_navigable() })) {
                 container = navigable_container;
-                return IterationDecision::Break;
+                return TraversalDecision::Break;
             }
-            return IterationDecision::Continue;
+            return TraversalDecision::Continue;
         });
         // 2. Return container's content navigable's active WindowProxy.
         VERIFY(container);
@@ -1775,13 +1775,13 @@ Window::NamedObjects Window::named_objects(StringView name)
     // embed, form, img, or object elements that have a name content attribute whose value is name
     // and are in a document tree with window's associated Document as their root; and
     // HTML elements that have an id content attribute whose value is name and are in a document tree with window's associated Document as their root.
-    associated_document().for_each_in_subtree_of_type<DOM::Element>([&objects, &name](auto& element) -> IterationDecision {
+    associated_document().for_each_in_subtree_of_type<DOM::Element>([&objects, &name](auto& element) -> TraversalDecision {
         if ((is<HTMLEmbedElement>(element) || is<HTMLFormElement>(element) || is<HTMLImageElement>(element) || is<HTMLObjectElement>(element))
             && (element.name() == name))
             objects.elements.append(element);
         else if (element.id() == name)
             objects.elements.append(element);
-        return IterationDecision::Continue;
+        return TraversalDecision::Continue;
     });
 
     return objects;

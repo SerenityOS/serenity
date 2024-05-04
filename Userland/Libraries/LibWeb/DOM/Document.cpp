@@ -751,7 +751,7 @@ JS::GCPtr<HTML::HTMLTitleElement> Document::title_element()
 
     for_each_in_subtree_of_type<HTML::HTMLTitleElement>([&](auto& title_element_in_tree) {
         title_element = title_element_in_tree;
-        return IterationDecision::Break;
+        return TraversalDecision::Break;
     });
 
     return title_element;
@@ -931,10 +931,10 @@ void Document::update_base_element(Badge<HTML::HTMLBaseElement>)
     for_each_in_subtree_of_type<HTML::HTMLBaseElement>([&base_element](HTML::HTMLBaseElement const& base_element_in_tree) {
         if (base_element_in_tree.has_attribute(HTML::AttributeNames::href)) {
             base_element = &base_element_in_tree;
-            return IterationDecision::Break;
+            return TraversalDecision::Break;
         }
 
-        return IterationDecision::Continue;
+        return TraversalDecision::Continue;
     });
 
     m_first_base_element_with_href_in_tree_order = base_element;
@@ -1757,7 +1757,7 @@ void Document::adopt_node(Node& node)
 
             // FIXME: 2. If inclusiveDescendant is an element, then set the node document of each attribute in inclusiveDescendant’s
             //           attribute list to document.
-            return IterationDecision::Continue;
+            return TraversalDecision::Continue;
         });
 
         // 2. For each inclusiveDescendant in node’s shadow-including inclusive descendants that is custom,
@@ -1765,7 +1765,7 @@ void Document::adopt_node(Node& node)
         //    and an argument list containing oldDocument and document.
         node.for_each_shadow_including_inclusive_descendant([&](DOM::Node& inclusive_descendant) {
             if (!is<DOM::Element>(inclusive_descendant))
-                return IterationDecision::Continue;
+                return TraversalDecision::Continue;
 
             auto& element = static_cast<DOM::Element&>(inclusive_descendant);
             if (element.is_custom()) {
@@ -1778,14 +1778,14 @@ void Document::adopt_node(Node& node)
                 element.enqueue_a_custom_element_callback_reaction(HTML::CustomElementReactionNames::adoptedCallback, move(arguments));
             }
 
-            return IterationDecision::Continue;
+            return TraversalDecision::Continue;
         });
 
         // 3. For each inclusiveDescendant in node’s shadow-including inclusive descendants, in shadow-including tree order,
         //    run the adopting steps with inclusiveDescendant and oldDocument.
         node.for_each_shadow_including_inclusive_descendant([&](auto& inclusive_descendant) {
             inclusive_descendant.adopted_from(old_document);
-            return IterationDecision::Continue;
+            return TraversalDecision::Continue;
         });
 
         // Transfer NodeIterators rooted at `node` from old_document to this document.
@@ -1951,9 +1951,9 @@ Element* Document::find_a_potential_indicated_element(FlyString const& fragment)
     root().for_each_in_subtree_of_type<Element>([&](Element const& element) {
         if (element.name() == fragment) {
             element_with_name = const_cast<Element*>(&element);
-            return IterationDecision::Break;
+            return TraversalDecision::Break;
         }
-        return IterationDecision::Continue;
+        return TraversalDecision::Continue;
     });
     if (element_with_name)
         return element_with_name;
@@ -2959,12 +2959,12 @@ Vector<JS::Handle<HTML::Navigable>> Document::descendant_navigables()
             auto& navigable_container = static_cast<HTML::NavigableContainer&>(node);
             // 1. If navigableContainer's content navigable is null, then continue.
             if (!navigable_container.content_navigable())
-                return IterationDecision::Continue;
+                return TraversalDecision::Continue;
 
             // 2. Extend navigables with navigableContainer's content navigable's active document's inclusive descendant navigables.
             navigables.extend(navigable_container.content_navigable()->active_document()->inclusive_descendant_navigables());
         }
-        return IterationDecision::Continue;
+        return TraversalDecision::Continue;
     });
 
     // 4. Return navigables.
@@ -3041,10 +3041,10 @@ Vector<JS::Handle<HTML::Navigable>> Document::document_tree_child_navigables()
     for_each_in_subtree_of_type<HTML::NavigableContainer>([&](HTML::NavigableContainer& navigable_container) {
         // 1. If navigableContainer's content navigable is null, then continue.
         if (!navigable_container.content_navigable())
-            return IterationDecision::Continue;
+            return TraversalDecision::Continue;
         // 2. Append navigableContainer's content navigable to navigables.
         navigables.append(*navigable_container.content_navigable());
-        return IterationDecision::Continue;
+        return TraversalDecision::Continue;
     });
 
     // 5. Return navigables.
@@ -4509,9 +4509,9 @@ Element const* Document::element_from_point(double x, double y)
             auto* dom_node = result.dom_node();
             if (dom_node && dom_node->is_element()) {
                 hit_test_result = result;
-                return Painting::TraversalDecision::Break;
+                return TraversalDecision::Break;
             }
-            return Painting::TraversalDecision::Continue;
+            return TraversalDecision::Continue;
         });
     }
     if (hit_test_result.has_value())
@@ -4551,7 +4551,7 @@ Vector<JS::NonnullGCPtr<Element>> Document::elements_from_point(double x, double
             auto* dom_node = result.dom_node();
             if (dom_node && dom_node->is_element())
                 sequence.append(*static_cast<Element*>(dom_node));
-            return Painting::TraversalDecision::Continue;
+            return TraversalDecision::Continue;
         });
     }
 

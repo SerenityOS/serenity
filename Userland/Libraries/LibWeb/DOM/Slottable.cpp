@@ -78,10 +78,10 @@ JS::GCPtr<HTML::HTMLSlotElement> find_a_slot(Slottable const& slottable, OpenFla
 
         shadow->for_each_in_subtree_of_type<HTML::HTMLSlotElement>([&](auto& child) {
             if (!child.manually_assigned_nodes().contains_slow(slottable))
-                return IterationDecision::Continue;
+                return TraversalDecision::Continue;
 
             slot = child;
-            return IterationDecision::Break;
+            return TraversalDecision::Break;
         });
 
         return slot;
@@ -93,10 +93,10 @@ JS::GCPtr<HTML::HTMLSlotElement> find_a_slot(Slottable const& slottable, OpenFla
 
     shadow->for_each_in_subtree_of_type<HTML::HTMLSlotElement>([&](auto& child) {
         if (child.slot_name() != slottable_name)
-            return IterationDecision::Continue;
+            return TraversalDecision::Continue;
 
         slot = child;
-        return IterationDecision::Break;
+        return TraversalDecision::Break;
     });
 
     return slot;
@@ -188,7 +188,7 @@ void assign_slottables_for_a_tree(JS::NonnullGCPtr<Node> root)
     // descendants, in tree order.
     root->for_each_in_inclusive_subtree_of_type<HTML::HTMLSlotElement>([](auto& slot) {
         assign_slottables(slot);
-        return IterationDecision::Continue;
+        return TraversalDecision::Continue;
     });
 }
 

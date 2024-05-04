@@ -104,9 +104,9 @@ Label const* Label::label_for_control_node(LabelableNode const& control)
         control.document().layout_node()->for_each_in_inclusive_subtree_of_type<Label>([&](auto& node) {
             if (node.dom_node().for_() == id) {
                 label = &node;
-                return IterationDecision::Break;
+                return TraversalDecision::Break;
             }
-            return IterationDecision::Continue;
+            return TraversalDecision::Continue;
         });
 
         if (label)

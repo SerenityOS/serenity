@@ -1225,7 +1225,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> Range::create_contextual
     fragment_node->for_each_in_subtree_of_type<HTML::HTMLScriptElement>([&](HTML::HTMLScriptElement& script_element) {
         script_element.unmark_as_already_started({});
         script_element.unmark_as_parser_inserted({});
-        return IterationDecision::Continue;
+        return TraversalDecision::Continue;
     });
 
     // 5. Return the value of fragment node.

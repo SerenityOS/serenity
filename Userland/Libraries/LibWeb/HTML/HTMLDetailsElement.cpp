@@ -157,15 +157,15 @@ void HTMLDetailsElement::update_shadow_tree_slots()
 
     for_each_in_subtree([&](auto& child) {
         if (&child == summary)
-            return IterationDecision::Continue;
+            return TraversalDecision::Continue;
         if (!child.is_slottable())
-            return IterationDecision::Continue;
+            return TraversalDecision::Continue;
 
         child.as_slottable().visit([&](auto& node) {
             descendants_assignment.append(JS::make_handle(node));
         });
 
-        return IterationDecision::Continue;
+        return TraversalDecision::Continue;
     });
 
     m_summary_slot->assign(move(summary_assignment));

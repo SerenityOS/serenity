@@ -149,7 +149,7 @@ String Node::descendant_text_content() const
     StringBuilder builder;
     for_each_in_subtree_of_type<Text>([&](auto& text_node) {
         builder.append(text_node.data());
-        return IterationDecision::Continue;
+        return TraversalDecision::Continue;
     });
     return builder.to_string_without_validation();
 }
@@ -281,7 +281,7 @@ void Node::invalidate_style()
             if (shadow_root->has_children())
                 shadow_root->m_child_needs_style_update = true;
         }
-        return IterationDecision::Continue;
+        return TraversalDecision::Continue;
     });
     for (auto* ancestor = parent_or_shadow_host(); ancestor; ancestor = ancestor->parent_or_shadow_host())
         ancestor->m_child_needs_style_update = true;
@@ -507,7 +507,7 @@ void Node::insert_before(JS::NonnullGCPtr<Node> node, JS::GCPtr<Node> child, boo
                 }
             }
 
-            return IterationDecision::Continue;
+            return TraversalDecision::Continue;
         });
     }
 
@@ -646,7 +646,7 @@ void Node::remove(bool suppress_observers)
 
     for_each_in_inclusive_subtree_of_type<HTML::HTMLSlotElement>([&](auto const&) {
         has_descendent_slot = true;
-        return IterationDecision::Break;
+        return TraversalDecision::Break;
     });
 
     if (has_descendent_slot) {
@@ -692,7 +692,7 @@ void Node::remove(bool suppress_observers)
             }
         }
 
-        return IterationDecision::Continue;
+        return TraversalDecision::Continue;
     });
 
     // 19. For each inclusive ancestor inclusiveAncestor of parent, and then for each registered of inclusiveAncestor’s registered observer list,

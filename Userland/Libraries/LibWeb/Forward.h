@@ -18,6 +18,7 @@ class PageClient;
 class PaintContext;
 class Resource;
 class ResourceLoader;
+enum class TraversalDecision;
 class XMLDocumentBuilder;
 }
 

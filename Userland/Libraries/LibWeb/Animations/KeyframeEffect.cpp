@@ -923,7 +923,7 @@ void KeyframeEffect::update_style_properties()
     target->for_each_in_subtree_of_type<DOM::Element>([&](auto& element) {
         auto* element_style = element.computed_css_values();
         if (!element_style || !element.layout_node())
-            return IterationDecision::Continue;
+            return TraversalDecision::Continue;
 
         for (auto i = to_underlying(CSS::first_property_id); i <= to_underlying(CSS::last_property_id); ++i) {
             if (element_style->is_property_inherited(static_cast<CSS::PropertyID>(i))) {
@@ -933,7 +933,7 @@ void KeyframeEffect::update_style_properties()
         }
 
         element.layout_node()->apply_style(*element_style);
-        return IterationDecision::Continue;
+        return TraversalDecision::Continue;
     });
 
     auto invalidation = compute_required_invalidation(animated_properties_before_update, style->animated_property_values());

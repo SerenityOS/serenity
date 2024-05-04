@@ -561,7 +561,7 @@ Vector<JS::NonnullGCPtr<DOM::Element>> HTMLFormElement::get_submittable_elements
                 submittable_elements.append(form_associated_element->form_associated_element_to_html_element());
         }
 
-        return IterationDecision::Continue;
+        return TraversalDecision::Continue;
     });
 
     return submittable_elements;
@@ -1086,14 +1086,14 @@ FormAssociatedElement* HTMLFormElement::default_button()
     root().for_each_in_subtree([&](auto& node) {
         auto* form_associated_element = dynamic_cast<FormAssociatedElement*>(&node);
         if (!form_associated_element)
-            return IterationDecision::Continue;
+            return TraversalDecision::Continue;
 
         if (form_associated_element->form() == this && form_associated_element->is_submit_button()) {
             default_button = form_associated_element;
-            return IterationDecision::Break;
+            return TraversalDecision::Break;
         }
 
-        return IterationDecision::Continue;
+        return TraversalDecision::Continue;
     });
 
     return default_button;

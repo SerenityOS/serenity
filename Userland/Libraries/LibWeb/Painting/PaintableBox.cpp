@@ -794,9 +794,9 @@ Optional<HitTestResult> PaintableBox::hit_test(CSSPixelPoint position, HitTestTy
     (void)PaintableBox::hit_test(position, type, [&](HitTestResult candidate) {
         VERIFY(!result.has_value());
         if (!candidate.paintable->visible_for_hit_testing())
-            return Painting::TraversalDecision::Continue;
+            return TraversalDecision::Continue;
         result = move(candidate);
-        return Painting::TraversalDecision::Break;
+        return TraversalDecision::Break;
     });
     return result;
 }
