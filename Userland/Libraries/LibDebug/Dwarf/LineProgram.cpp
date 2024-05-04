@@ -13,13 +13,13 @@
 
 namespace Debug::Dwarf {
 
-LineProgram::LineProgram(DwarfInfo& dwarf_info, size_t unit_offset)
+LineProgram::LineProgram(DwarfInfo const& dwarf_info, size_t unit_offset)
     : m_dwarf_info(dwarf_info)
     , m_unit_offset(unit_offset)
 {
 }
 
-ErrorOr<NonnullOwnPtr<LineProgram>> LineProgram::create(DwarfInfo& dwarf_info, SeekableStream& stream)
+ErrorOr<NonnullOwnPtr<LineProgram>> LineProgram::create(DwarfInfo const& dwarf_info, SeekableStream& stream)
 {
     auto offset = TRY(stream.tell());
     auto program = TRY(adopt_nonnull_own_or_enomem(new (nothrow) LineProgram(dwarf_info, offset)));
