@@ -5,8 +5,12 @@
  */
 
 #include <AK/Error.h>
+#include <AK/JsonArray.h>
+#include <AK/JsonObject.h>
+#include <AK/LexicalPath.h>
 #include <AK/ScopeGuard.h>
 #include <AK/Types.h>
+#include <Kernel/API/DeviceFileTypes.h>
 #include <LibCore/Process.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
@@ -24,9 +28,78 @@ static ErrorOr<void> prepare_bare_minimum_filesystem_mounts()
     return {};
 }
 
+static ErrorOr<void> populate_device_node_with_symlink(DeviceNodeType device_node_type, StringView path, mode_t mode, unsigned major, unsigned minor)
+{
+    VERIFY(device_node_type == DeviceNodeType::Block || device_node_type == DeviceNodeType::Character);
+    if (device_node_type == DeviceNodeType::Block)
+        TRY(Core::System::create_block_device(path, mode, major, minor));
+    else
+        TRY(Core::System::create_char_device(path, mode, major, minor));
+    auto symlink_path = LexicalPath("/tmp/system/devicemap/nodes/")
+                            .append(device_node_type == DeviceNodeType::Block ? "block"sv : "char"sv)
+                            .append(MUST(String::number(major)))
+                            .append(MUST(String::number(minor)));
+    TRY(Core::System::symlink(path, symlink_path.string()));
+    return {};
+}
+
 static ErrorOr<void> spawn_device_mapper_process()
 {
     TRY(Core::Process::spawn("/bin/DeviceMapper"sv, ReadonlySpan<StringView> {}, {}, Core::Process::KeepAsChild::No));
+    return {};
+}
+
+static ErrorOr<void> prepare_tmpfs_system_devicemap_directory()
+{
+    dbgln("Creating /tmp/system/devicemap directory");
+
+    TRY(Core::System::mkdir("/tmp/system/"sv, 0755));
+    TRY(Core::System::mkdir("/tmp/system/devicemap/"sv, 0755));
+    TRY(Core::System::mount(-1, "/tmp/system/devicemap/"sv, "ram"sv, MS_NOEXEC | MS_NOSUID | MS_NODEV));
+    TRY(Core::System::mkdir("/tmp/system/devicemap/nodes/"sv, 0755));
+    TRY(Core::System::mkdir("/tmp/system/devicemap/nodes/block/"sv, 0755));
+    TRY(Core::System::mkdir("/tmp/system/devicemap/nodes/char/"sv, 0755));
+
+    TRY(Core::System::mkdir("/tmp/system/devicemap/family/"sv, 0755));
+
+    auto build_tmp_system_devicemap_directory = [](StringView node_type_directory, JsonObject const& major_number_allocation_object) -> ErrorOr<void> {
+        auto allocated_number = major_number_allocation_object.get_u64("allocated_number"sv).value_or(0);
+        auto path = LexicalPath("/tmp/system/devicemap/nodes/").append(node_type_directory).append(MUST(String::number(allocated_number)));
+        TRY(Core::System::mkdir(path.string(), 0755));
+
+        auto possible_family_name = major_number_allocation_object.get_byte_string("family_name"sv);
+        if (!possible_family_name.has_value())
+            return Error::from_string_literal("Major allocation has no valid family name");
+
+        auto symlink_path = LexicalPath("/tmp/system/devicemap/family/").append(possible_family_name.value());
+        TRY(Core::System::symlink(path.string(), symlink_path.string()));
+        return {};
+    };
+
+    {
+        auto file = TRY(Core::File::open("/sys/kernel/chardev_major_allocs"sv, Core::File::OpenMode::Read));
+        auto file_contents = TRY(file->read_until_eof());
+        auto json_result = TRY(JsonValue::from_string(file_contents));
+        auto const& json = json_result.as_array();
+        TRY(json.try_for_each([&](auto& value) -> ErrorOr<void> {
+            auto& major_number_allocation_object = value.as_object();
+            TRY(build_tmp_system_devicemap_directory("char"sv, major_number_allocation_object));
+            return {};
+        }));
+    }
+
+    {
+        auto file = TRY(Core::File::open("/sys/kernel/blockdev_major_allocs"sv, Core::File::OpenMode::Read));
+        auto file_contents = TRY(file->read_until_eof());
+        auto json_result = TRY(JsonValue::from_string(file_contents));
+        auto const& json = json_result.as_array();
+        TRY(json.try_for_each([&](auto& value) -> ErrorOr<void> {
+            auto& major_number_allocation_object = value.as_object();
+            TRY(build_tmp_system_devicemap_directory("block"sv, major_number_allocation_object));
+            return {};
+        }));
+    }
+
     return {};
 }
 
@@ -46,19 +119,19 @@ static ErrorOr<void> prepare_bare_minimum_devtmpfs_directory_structure()
     TRY(Core::System::mount(-1, "/dev/loop"sv, "devloop"sv, 0));
 
     mode_t old_mask = umask(0);
-    TRY(Core::System::create_char_device("/dev/devctl"sv, 0660, 2, 10));
-    TRY(Core::System::create_char_device("/dev/zero"sv, 0666, 1, 5));
-    TRY(Core::System::create_char_device("/dev/mem"sv, 0600, 1, 1));
-    TRY(Core::System::create_char_device("/dev/null"sv, 0666, 1, 3));
-    TRY(Core::System::create_char_device("/dev/full"sv, 0666, 1, 7));
-    TRY(Core::System::create_char_device("/dev/random"sv, 0666, 1, 8));
-    TRY(Core::System::create_char_device("/dev/input/mice"sv, 0666, 12, 0));
-    TRY(Core::System::create_char_device("/dev/console"sv, 0666, 5, 1));
-    TRY(Core::System::create_char_device("/dev/ptmx"sv, 0666, 5, 2));
-    TRY(Core::System::create_char_device("/dev/tty"sv, 0666, 5, 0));
-    TRY(Core::System::create_char_device("/dev/fuse"sv, 0666, 10, 229));
+    TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/devctl"sv, 0660, 2, 10));
+    TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/zero"sv, 0666, 1, 5));
+    TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/mem"sv, 0600, 1, 1));
+    TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/null"sv, 0666, 1, 3));
+    TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/full"sv, 0666, 1, 7));
+    TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/random"sv, 0666, 1, 8));
+    TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/input/mice"sv, 0666, 12, 0));
+    TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/console"sv, 0666, 5, 1));
+    TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/ptmx"sv, 0666, 5, 2));
+    TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/tty"sv, 0666, 5, 0));
+    TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/fuse"sv, 0666, 10, 229));
 #ifdef ENABLE_KERNEL_COVERAGE_COLLECTION
-    TRY(Core::System::create_block_device("/dev/kcov"sv, 0666, 30, 0));
+    TRY(populate_device_node_with_symlink(DeviceNodeType::Block, "/dev/kcov"sv, 0666, 30, 0));
 #endif
     umask(old_mask);
     TRY(Core::System::symlink("/dev/random"sv, "/dev/urandom"sv));
@@ -69,6 +142,7 @@ static ErrorOr<void> prepare_bare_minimum_devtmpfs_directory_structure()
 static ErrorOr<void> prepare_synthetic_filesystems()
 {
     TRY(prepare_bare_minimum_filesystem_mounts());
+    TRY(prepare_tmpfs_system_devicemap_directory());
     TRY(prepare_bare_minimum_devtmpfs_directory_structure());
     TRY(spawn_device_mapper_process());
     return {};
