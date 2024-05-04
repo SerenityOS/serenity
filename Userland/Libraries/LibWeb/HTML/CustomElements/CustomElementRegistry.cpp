@@ -292,14 +292,14 @@ JS::ThrowCompletionOr<void> CustomElementRegistry::define(String const& name, We
 
     document.for_each_shadow_including_descendant([&](DOM::Node& inclusive_descendant) {
         if (!is<DOM::Element>(inclusive_descendant))
-            return IterationDecision::Continue;
+            return TraversalDecision::Continue;
 
         auto& inclusive_descendant_element = static_cast<DOM::Element&>(inclusive_descendant);
 
         if (inclusive_descendant_element.namespace_uri() == Namespace::HTML && inclusive_descendant_element.local_name() == local_name && (!extends.has_value() || inclusive_descendant_element.is_value() == name))
             upgrade_candidates.append(JS::make_handle(inclusive_descendant_element));
 
-        return IterationDecision::Continue;
+        return TraversalDecision::Continue;
     });
 
     // 19. For each element element in upgrade candidates, enqueue a custom element upgrade reaction given element and definition.
@@ -388,12 +388,12 @@ void CustomElementRegistry::upgrade(JS::NonnullGCPtr<DOM::Node> root) const
 
     root->for_each_shadow_including_inclusive_descendant([&](DOM::Node& inclusive_descendant) {
         if (!is<DOM::Element>(inclusive_descendant))
-            return IterationDecision::Continue;
+            return TraversalDecision::Continue;
 
         auto& inclusive_descendant_element = static_cast<DOM::Element&>(inclusive_descendant);
         candidates.append(JS::make_handle(inclusive_descendant_element));
 
-        return IterationDecision::Continue;
+        return TraversalDecision::Continue;
     });
 
     // 2. For each candidate of candidates, try to upgrade candidate.

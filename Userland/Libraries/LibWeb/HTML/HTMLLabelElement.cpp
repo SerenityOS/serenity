@@ -46,9 +46,9 @@ JS::GCPtr<HTMLElement> HTMLLabelElement::control() const
         for_each_in_inclusive_subtree_of_type<HTMLElement>([&](auto& element) {
             if (element.id() == *for_() && element.is_labelable()) {
                 control = &const_cast<HTMLElement&>(element);
-                return IterationDecision::Break;
+                return TraversalDecision::Break;
             }
-            return IterationDecision::Continue;
+            return TraversalDecision::Continue;
         });
         return control;
     }
@@ -58,9 +58,9 @@ JS::GCPtr<HTMLElement> HTMLLabelElement::control() const
     for_each_in_subtree_of_type<HTMLElement>([&](auto& element) {
         if (element.is_labelable()) {
             control = &const_cast<HTMLElement&>(element);
-            return IterationDecision::Break;
+            return TraversalDecision::Break;
         }
-        return IterationDecision::Continue;
+        return TraversalDecision::Continue;
     });
 
     return control;

@@ -45,10 +45,10 @@ WebIDL::ExceptionOr<JS::GCPtr<Element>> ParentNode::query_selector(StringView se
         for (auto& selector : selectors) {
             if (SelectorEngine::matches(selector, {}, element, {}, this)) {
                 result = &element;
-                return IterationDecision::Break;
+                return TraversalDecision::Break;
             }
         }
-        return IterationDecision::Continue;
+        return TraversalDecision::Continue;
     });
 
     return result;
@@ -79,7 +79,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<NodeList>> ParentNode::query_selector_all(S
                 elements.append(&element);
             }
         }
-        return IterationDecision::Continue;
+        return TraversalDecision::Continue;
     });
 
     return StaticNodeList::create(realm(), move(elements));

@@ -42,7 +42,7 @@ JS::MarkedVector<Node*> LiveNodeList::collection() const
         m_root->for_each_in_subtree([&](auto& node) {
             if (m_filter(node))
                 nodes.append(const_cast<Node*>(&node));
-            return IterationDecision::Continue;
+            return TraversalDecision::Continue;
         });
     } else {
         m_root->for_each_child([&](auto& node) {
@@ -61,9 +61,9 @@ Node* LiveNodeList::first_matching(Function<bool(Node const&)> const& filter) co
         m_root->for_each_in_subtree([&](auto& node) {
             if (m_filter(node) && filter(node)) {
                 matched_node = const_cast<Node*>(&node);
-                return IterationDecision::Break;
+                return TraversalDecision::Break;
             }
-            return IterationDecision::Continue;
+            return TraversalDecision::Continue;
         });
     } else {
         m_root->for_each_child([&](auto& node) {

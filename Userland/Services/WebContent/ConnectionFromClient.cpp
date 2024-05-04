@@ -443,7 +443,7 @@ void ConnectionFromClient::inspect_dom_node(u64 page_id, i32 node_id, Optional<W
         if (ctx.active_document() != nullptr) {
             ctx.active_document()->set_inspected_node(nullptr, {});
         }
-        return IterationDecision::Continue;
+        return Web::TraversalDecision::Continue;
     });
 
     Web::DOM::Node* node = Web::DOM::Node::from_unique_id(node_id);

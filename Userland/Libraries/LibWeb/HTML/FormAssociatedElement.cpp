@@ -137,10 +137,10 @@ void FormAssociatedElement::reset_form_owner()
         html_element.root().for_each_in_inclusive_subtree_of_type<HTMLFormElement>([this, &form_value](HTMLFormElement& form_element) {
             if (form_element.id() == form_value) {
                 set_form(&form_element);
-                return IterationDecision::Break;
+                return TraversalDecision::Break;
             }
 
-            return IterationDecision::Continue;
+            return TraversalDecision::Continue;
         });
     }
 

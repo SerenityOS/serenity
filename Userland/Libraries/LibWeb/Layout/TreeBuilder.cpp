@@ -254,9 +254,9 @@ static bool is_ignorable_whitespace(Layout::Node const& node)
         node.for_each_in_inclusive_subtree_of_type<TextNode>([&contains_only_white_space](auto& text_node) {
             if (!text_node.text_for_rendering().bytes_as_string_view().is_whitespace()) {
                 contains_only_white_space = false;
-                return IterationDecision::Break;
+                return TraversalDecision::Break;
             }
-            return IterationDecision::Continue;
+            return TraversalDecision::Continue;
         });
         if (contains_only_white_space)
             return true;
@@ -316,7 +316,7 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::Context& 
                 node.set_paintable(nullptr);
                 if (is<DOM::Element>(node))
                     static_cast<DOM::Element&>(node).clear_pseudo_element_nodes({});
-                return IterationDecision::Continue;
+                return TraversalDecision::Continue;
             });
         }
     };
@@ -520,7 +520,7 @@ void TreeBuilder::for_each_in_tree_with_internal_display(NodeWithStyle& root, Ca
         auto const display = box.display();
         if (display.is_internal() && display.internal() == internal)
             callback(box);
-        return IterationDecision::Continue;
+        return TraversalDecision::Continue;
     });
 }
 
@@ -531,7 +531,7 @@ void TreeBuilder::for_each_in_tree_with_inside_display(NodeWithStyle& root, Call
         auto const display = box.display();
         if (display.is_outside_and_inside() && display.inside() == inside)
             callback(box);
-        return IterationDecision::Continue;
+        return TraversalDecision::Continue;
     });
 }
 
@@ -742,7 +742,7 @@ Vector<JS::Handle<Box>> TreeBuilder::generate_missing_parents(NodeWithStyle& roo
             table_roots_to_wrap.append(parent);
         }
 
-        return IterationDecision::Continue;
+        return TraversalDecision::Continue;
     });
 
     for (auto& table_box : table_roots_to_wrap) {
