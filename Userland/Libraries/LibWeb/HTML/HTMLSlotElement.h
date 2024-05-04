@@ -29,8 +29,8 @@ class HTMLSlotElement final
 public:
     virtual ~HTMLSlotElement() override;
 
-    Vector<JS::Handle<DOM::Node>> assigned_nodes(AssignedNodesOptions options = {});
-    Vector<JS::Handle<DOM::Element>> assigned_elements(AssignedNodesOptions options = {});
+    Vector<JS::Handle<DOM::Node>> assigned_nodes(AssignedNodesOptions options = {}) const;
+    Vector<JS::Handle<DOM::Element>> assigned_elements(AssignedNodesOptions options = {}) const;
 
     using SlottableHandle = Variant<JS::Handle<DOM::Element>, JS::Handle<DOM::Text>>;
     void assign(Vector<SlottableHandle> nodes);
