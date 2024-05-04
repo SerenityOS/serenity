@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2024, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -46,9 +46,11 @@ struct CacheablePropertyMetadata {
     enum class Type {
         NotCacheable,
         OwnProperty,
+        InPrototypeChain,
     };
     Type type { Type::NotCacheable };
     Optional<u32> property_offset;
+    GCPtr<Object const> prototype;
 };
 
 class Object : public Cell {
@@ -56,6 +58,7 @@ class Object : public Cell {
     JS_DECLARE_ALLOCATOR(Object);
 
 public:
+    static NonnullGCPtr<Object> create_prototype(Realm&, Object* prototype);
     static NonnullGCPtr<Object> create(Realm&, Object* prototype);
     static NonnullGCPtr<Object> create_with_premade_shape(Shape&);
 
@@ -214,6 +217,8 @@ public:
 
     Shape& shape() { return *m_shape; }
     Shape const& shape() const { return *m_shape; }
+
+    void convert_to_prototype_if_needed();
 
     template<typename T>
     bool fast_is() const = delete;

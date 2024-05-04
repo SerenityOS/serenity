@@ -333,7 +333,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::create_class_const
         }
     }
 
-    auto prototype = Object::create(realm, proto_parent);
+    auto prototype = Object::create_prototype(realm, proto_parent);
     VERIFY(prototype);
 
     vm.running_execution_context().lexical_environment = class_environment;

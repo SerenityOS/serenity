@@ -21,7 +21,6 @@ public:
     NonnullGCPtr<Shape> empty_object_shape() { return *m_empty_object_shape; }
 
     NonnullGCPtr<Shape> new_object_shape() { return *m_new_object_shape; }
-    NonnullGCPtr<Shape> new_ordinary_function_prototype_object_shape() { return *m_new_ordinary_function_prototype_object_shape; }
 
     [[nodiscard]] NonnullGCPtr<Shape> iterator_result_object_shape() { return *m_iterator_result_object_shape; }
     [[nodiscard]] u32 iterator_result_object_value_offset() { return m_iterator_result_object_value_offset; }
@@ -125,7 +124,6 @@ private:
 
     GCPtr<Shape> m_empty_object_shape;
     GCPtr<Shape> m_new_object_shape;
-    GCPtr<Shape> m_new_ordinary_function_prototype_object_shape;
 
     GCPtr<Shape> m_iterator_result_object_shape;
     u32 m_iterator_result_object_value_offset { 0 };

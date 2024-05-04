@@ -118,9 +118,23 @@ inline ThrowCompletionOr<Value> get_by_id(VM& vm, Optional<DeprecatedFlyString c
         return Value { base_obj->indexed_properties().array_like_size() };
     }
 
-    // OPTIMIZATION: If the shape of the object hasn't changed, we can use the cached property offset.
     auto& shape = base_obj->shape();
-    if (&shape == cache.shape) {
+
+    if (cache.prototype) {
+        // OPTIMIZATION: If the prototype chain hasn't been mutated in a way that would invalidate the cache, we can use it.
+        bool can_use_cache = [&]() -> bool {
+            if (&shape != cache.shape)
+                return false;
+            if (!cache.prototype_chain_validity)
+                return false;
+            if (!cache.prototype_chain_validity->is_valid())
+                return false;
+            return true;
+        }();
+        if (can_use_cache)
+            return cache.prototype->get_direct(cache.property_offset.value());
+    } else if (&shape == cache.shape) {
+        // OPTIMIZATION: If the shape of the object hasn't changed, we can use the cached property offset.
         return base_obj->get_direct(cache.property_offset.value());
     }
 
@@ -128,8 +142,15 @@ inline ThrowCompletionOr<Value> get_by_id(VM& vm, Optional<DeprecatedFlyString c
     auto value = TRY(base_obj->internal_get(property, this_value, &cacheable_metadata));
 
     if (cacheable_metadata.type == CacheablePropertyMetadata::Type::OwnProperty) {
+        cache = {};
         cache.shape = shape;
         cache.property_offset = cacheable_metadata.property_offset.value();
+    } else if (cacheable_metadata.type == CacheablePropertyMetadata::Type::InPrototypeChain) {
+        cache = {};
+        cache.shape = &base_obj->shape();
+        cache.property_offset = cacheable_metadata.property_offset.value();
+        cache.prototype = *cacheable_metadata.prototype;
+        cache.prototype_chain_validity = *cacheable_metadata.prototype->shape().prototype_chain_validity();
     }
 
     return value;

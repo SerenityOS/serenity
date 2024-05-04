@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2024, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -35,6 +35,14 @@ NonnullGCPtr<Object> Object::create(Realm& realm, Object* prototype)
     if (prototype == realm.intrinsics().object_prototype())
         return realm.heap().allocate<Object>(realm, realm.intrinsics().new_object_shape());
     return realm.heap().allocate<Object>(realm, ConstructWithPrototypeTag::Tag, *prototype);
+}
+
+NonnullGCPtr<Object> Object::create_prototype(Realm& realm, Object* prototype)
+{
+    auto shape = realm.heap().allocate_without_realm<Shape>(realm);
+    if (prototype)
+        shape->set_prototype_without_transition(prototype);
+    return realm.heap().allocate<Object>(realm, shape);
 }
 
 NonnullGCPtr<Object> Object::create_with_premade_shape(Shape& shape)
@@ -893,7 +901,7 @@ ThrowCompletionOr<Value> Object::internal_get(PropertyKey const& property_key, V
             return js_undefined();
 
         // c. Return ? parent.[[Get]](P, Receiver).
-        return parent->internal_get(property_key, receiver, nullptr, PropertyLookupPhase::PrototypeChain);
+        return parent->internal_get(property_key, receiver, cacheable_metadata, PropertyLookupPhase::PrototypeChain);
     }
 
     // 3. If IsDataDescriptor(desc) is true, return desc.[[Value]].
@@ -904,6 +912,15 @@ ThrowCompletionOr<Value> Object::internal_get(PropertyKey const& property_key, V
                 *cacheable_metadata = CacheablePropertyMetadata {
                     .type = CacheablePropertyMetadata::Type::OwnProperty,
                     .property_offset = descriptor->property_offset.value(),
+                    .prototype = nullptr,
+                };
+            } else if (phase == PropertyLookupPhase::PrototypeChain) {
+                VERIFY(shape().is_prototype_shape());
+                VERIFY(shape().prototype_chain_validity()->is_valid());
+                *cacheable_metadata = CacheablePropertyMetadata {
+                    .type = CacheablePropertyMetadata::Type::InPrototypeChain,
+                    .property_offset = descriptor->property_offset.value(),
+                    .prototype = this,
                 };
             }
         }
@@ -999,6 +1016,7 @@ ThrowCompletionOr<bool> Object::ordinary_set_with_own_descriptor(PropertyKey con
                 *cacheable_metadata = CacheablePropertyMetadata {
                     .type = CacheablePropertyMetadata::Type::OwnProperty,
                     .property_offset = own_descriptor->property_offset.value(),
+                    .prototype = nullptr,
                 };
             }
 
@@ -1446,6 +1464,13 @@ ThrowCompletionOr<Value> Object::ordinary_to_primitive(Value::PreferredType pref
 
     // 4. Throw a TypeError exception.
     return vm.throw_completion<TypeError>(ErrorType::Convert, "object", preferred_type == Value::PreferredType::String ? "string" : "number");
+}
+
+void Object::convert_to_prototype_if_needed()
+{
+    if (shape().is_prototype_shape())
+        return;
+    set_shape(shape().clone_for_prototype());
 }
 
 }
