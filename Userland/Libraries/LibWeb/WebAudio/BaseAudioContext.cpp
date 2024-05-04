@@ -9,6 +9,7 @@
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/WebAudio/BaseAudioContext.h>
+#include <LibWeb/WebAudio/DynamicsCompressorNode.h>
 #include <LibWeb/WebAudio/OscillatorNode.h>
 
 namespace Web::WebAudio {
@@ -42,6 +43,13 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<OscillatorNode>> BaseAudioContext::create_o
 {
     // Factory method for an OscillatorNode.
     return OscillatorNode::create(realm(), *this);
+}
+
+// https://webaudio.github.io/web-audio-api/#dom-baseaudiocontext-createdynamicscompressor
+WebIDL::ExceptionOr<JS::NonnullGCPtr<DynamicsCompressorNode>> BaseAudioContext::create_dynamics_compressor()
+{
+    // Factory method for a DynamicsCompressorNode.
+    return DynamicsCompressorNode::create(realm(), *this);
 }
 
 // https://webaudio.github.io/web-audio-api/#dom-baseaudiocontext-createbuffer
