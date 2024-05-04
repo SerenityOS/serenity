@@ -7,7 +7,7 @@
 
 #include <LibGfx/AntiAliasingPainter.h>
 #include <LibWeb/Painting/SVGPathPaintable.h>
-#include <LibWeb/SVG/SVGSVGElement.h>
+#include <LibWeb/Painting/SVGSVGPaintable.h>
 
 namespace Web::Painting {
 
@@ -62,14 +62,14 @@ void SVGPathPaintable::paint(PaintContext& context, PaintPhase phase) const
 
     auto& geometry_element = layout_box().dom_node();
 
-    auto const* svg_element = geometry_element.shadow_including_first_ancestor_of_type<SVG::SVGSVGElement>();
-    auto svg_element_rect = svg_element->paintable_box()->absolute_rect();
+    auto const* svg_node = layout_box().first_ancestor_of_type<Layout::SVGSVGBox>();
+    auto svg_element_rect = svg_node->paintable_box()->absolute_rect();
 
     // FIXME: This should not be trucated to an int.
     RecordingPainterStateSaver save_painter { context.recording_painter() };
 
     auto offset = context.floored_device_point(svg_element_rect.location()).to_type<int>().to_type<float>();
-    auto maybe_view_box = svg_element->view_box();
+    auto maybe_view_box = svg_node->dom_node().view_box();
 
     auto paint_transform = computed_transforms().svg_to_device_pixels_transform(context);
     Gfx::Path path = computed_path()->copy_transformed(paint_transform);
