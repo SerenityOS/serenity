@@ -1,0 +1,4 @@
+DynamicsCompressorNode
+AudioNode
+EventTarget
+Object

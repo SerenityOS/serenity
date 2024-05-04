@@ -1,5 +1,6 @@
 #import <DOM/EventTarget.idl>
 #import <DOM/EventHandler.idl>
+#import <WebAudio/DynamicsCompressorNode.idl>
 #import <WebAudio/OscillatorNode.idl>
 
 // https://www.w3.org/TR/webaudio/#enumdef-audiocontextstate
@@ -30,7 +31,7 @@ interface BaseAudioContext : EventTarget {
     // FIXME: ConstantSourceNode createConstantSource ();
     // FIXME: ConvolverNode createConvolver ();
     // FIXME: DelayNode createDelay (optional double maxDelayTime = 1.0);
-    // FIXME: DynamicsCompressorNode createDynamicsCompressor ();
+    DynamicsCompressorNode createDynamicsCompressor();
     // FIXME: GainNode createGain ();
     // FIXME: IIRFilterNode createIIRFilter (sequence<double> feedforward, sequence<double> feedback);
     OscillatorNode createOscillator();

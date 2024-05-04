@@ -1,0 +1,16 @@
+<script src="../include.js"></script>
+<script>
+    test(() => {
+        const audioContext = new OfflineAudioContext(1, 5000, 44100);
+
+        const compressor = audioContext.createDynamicsCompressor();
+
+        // Check prototype
+        let prototype = Object.getPrototypeOf(compressor);
+
+        while (prototype) {
+            println(prototype.constructor.name);
+            prototype = Object.getPrototypeOf(prototype);
+        }
+    });
+</script>
