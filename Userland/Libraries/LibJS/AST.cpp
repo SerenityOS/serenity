@@ -1440,6 +1440,16 @@ void SequenceExpression::dump(int indent) const
         expression->dump(indent + 1);
 }
 
+bool ScopeNode::has_non_local_lexical_declarations() const
+{
+    bool result = false;
+    MUST(for_each_lexically_declared_identifier([&](Identifier const& identifier) {
+        if (!identifier.is_local())
+            result = true;
+    }));
+    return result;
+}
+
 ThrowCompletionOr<void> ScopeNode::for_each_lexically_scoped_declaration(ThrowCompletionOrVoidCallback<Declaration const&>&& callback) const
 {
     for (auto& declaration : m_lexical_declarations)
