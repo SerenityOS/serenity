@@ -41,11 +41,11 @@ class WebView(context: Context, attributeSet: AttributeSet) : View(context, attr
         viewImpl.setViewportGeometry(w, h)
     }
 
-    override fun onDraw(canvas: Canvas?) {
+    override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
         viewImpl.drawIntoBitmap(contentBitmap);
-        canvas?.drawBitmap(contentBitmap, 0f, 0f, null)
+        canvas.drawBitmap(contentBitmap, 0f, 0f, null)
     }
 
 }

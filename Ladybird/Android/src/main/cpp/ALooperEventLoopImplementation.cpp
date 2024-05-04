@@ -50,7 +50,7 @@ ALooperEventLoopManager::ALooperEventLoopManager(jobject timer_service)
     if (!m_register_timer)
         TODO();
 
-    m_unregister_timer = env.get()->GetMethodID(timer_service_class, "unregisterTimer", "(J)Z");
+    m_unregister_timer = env.get()->GetMethodID(timer_service_class, "unregisterTimer", "(J)V");
     if (!m_unregister_timer)
         TODO();
     env.get()->DeleteLocalRef(timer_service_class);
@@ -85,7 +85,7 @@ NonnullOwnPtr<Core::EventLoopImplementation> ALooperEventLoopManager::make_imple
     return ALooperEventLoopImplementation::create();
 }
 
-int ALooperEventLoopManager::register_timer(Core::EventReceiver& receiver, int milliseconds, bool should_reload, Core::TimerShouldFireWhenNotVisible visibility)
+intptr_t ALooperEventLoopManager::register_timer(Core::EventReceiver& receiver, int milliseconds, bool should_reload, Core::TimerShouldFireWhenNotVisible visibility)
 {
     JavaEnvironment env(global_vm);
     auto& thread_data = EventLoopThreadData::the();
@@ -101,13 +101,12 @@ int ALooperEventLoopManager::register_timer(Core::EventReceiver& receiver, int m
     return timer_id;
 }
 
-bool ALooperEventLoopManager::unregister_timer(int timer_id)
+void ALooperEventLoopManager::unregister_timer(intptr_t timer_id)
 {
     if (auto timer = EventLoopThreadData::the().timers.take(timer_id); timer.has_value()) {
         JavaEnvironment env(global_vm);
-        return env.get()->CallBooleanMethod(m_timer_service, m_unregister_timer, timer_id);
+        env.get()->CallVoidMethod(m_timer_service, m_unregister_timer, timer_id);
     }
-    return false;
 }
 
 void ALooperEventLoopManager::register_notifier(Core::Notifier& notifier)
@@ -203,13 +202,23 @@ void ALooperEventLoopImplementation::post_event(Core::EventReceiver& receiver, N
         wake();
 }
 
-static int notifier_callback(int fd, int, void* data)
+static int notifier_callback(int fd, int events, void* data)
 {
     auto& notifier = *static_cast<Core::Notifier*>(data);
 
     VERIFY(fd == notifier.fd());
 
-    Core::NotifierActivationEvent event(notifier.fd());
+    Core::NotificationType type = Core::NotificationType::None;
+    if (events & ALOOPER_EVENT_INPUT)
+        type |= Core::NotificationType::Read;
+    if (events & ALOOPER_EVENT_OUTPUT)
+        type |= Core::NotificationType::Write;
+    if (events & ALOOPER_EVENT_HANGUP)
+        type |= Core::NotificationType::HangUp;
+    if (events & ALOOPER_EVENT_ERROR)
+        type |= Core::NotificationType::Error;
+
+    Core::NotifierActivationEvent event(notifier.fd(), type);
     notifier.dispatch_event(event);
 
     // Wake up from ALooper_pollAll, and service this event on the event queue
@@ -228,7 +237,12 @@ void ALooperEventLoopImplementation::register_notifier(Core::Notifier& notifier)
     case Core::Notifier::Type::Write:
         event_flags = ALOOPER_EVENT_OUTPUT;
         break;
-    case Core::Notifier::Type::Exceptional:
+    case Core::Notifier::Type::Error:
+        event_flags = ALOOPER_EVENT_ERROR;
+        break;
+    case Core::Notifier::Type::HangUp:
+        event_flags = ALOOPER_EVENT_HANGUP;
+        break;
     case Core::Notifier::Type::None:
         TODO();
     }

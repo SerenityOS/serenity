@@ -177,7 +177,7 @@ ErrorOr<void> extract_tar_archive(String archive_file, ByteString output_directo
             path = path.prepend(header.prefix());
         ByteString filename = get_override("path"sv).value_or(path.string());
 
-        ByteString absolute_path = TRY(FileSystem::absolute_path(filename)).to_byte_string();
+        ByteString absolute_path = TRY(FileSystem::absolute_path(filename));
         auto parent_path = LexicalPath(absolute_path).parent();
         auto header_mode = TRY(header.mode());
 

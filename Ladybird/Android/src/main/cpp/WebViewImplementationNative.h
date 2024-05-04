@@ -15,14 +15,14 @@ class WebViewImplementationNative : public WebView::ViewImplementation {
 public:
     WebViewImplementationNative(jobject thiz);
 
-    virtual Gfx::IntRect viewport_rect() const override { return m_viewport_rect; }
+    virtual Web::DevicePixelRect viewport_rect() const override { return m_viewport_rect; }
     virtual Gfx::IntPoint to_content_position(Gfx::IntPoint p) const override { return p; }
     virtual Gfx::IntPoint to_widget_position(Gfx::IntPoint p) const override { return p; }
     virtual void update_zoom() override { }
 
     NonnullRefPtr<WebView::WebContentClient> bind_web_content_client();
 
-    virtual void create_client(WebView::EnableCallgrindProfiling) override;
+    virtual void initialize_client(CreateNewClient) override;
 
     void paint_into_bitmap(void* android_bitmap_raw, AndroidBitmapInfo const& info);
 
@@ -38,6 +38,6 @@ public:
 
 private:
     jobject m_java_instance = nullptr;
-    Gfx::IntRect m_viewport_rect;
+    Web::DevicePixelRect m_viewport_rect;
 };
 }

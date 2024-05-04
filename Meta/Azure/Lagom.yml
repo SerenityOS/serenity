@@ -32,7 +32,7 @@ jobs:
       value: '${{ parameters.host_cxx }}'
 
     - name: ndk_version # only relevant for Android
-      value: '25.2.9519653'
+      value: '26.1.10909125'
 
     pool:
       vmImage: $(job_pool)

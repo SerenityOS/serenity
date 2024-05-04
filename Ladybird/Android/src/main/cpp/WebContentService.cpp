@@ -19,6 +19,7 @@
 #include <LibIPC/ConnectionFromClient.h>
 #include <LibImageDecoderClient/Client.h>
 #include <LibJS/Bytecode/Interpreter.h>
+#include <LibProtocol/RequestClient.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/Loader/ContentFilter.h>
@@ -37,13 +38,13 @@ static ErrorOr<NonnullRefPtr<Protocol::RequestClient>> bind_request_server_servi
 }
 
 template ErrorOr<NonnullRefPtr<ImageDecoderClient::Client>, Error>
-bind_service<ImageDecoderClient::Client>(void (*)(int, int));
+bind_service<ImageDecoderClient::Client>(void (*)(int));
 
 static ErrorOr<void> load_content_filters();
 
 static ErrorOr<void> load_autoplay_allowlist();
 
-ErrorOr<int> service_main(int ipc_socket, int fd_passing_socket)
+ErrorOr<int> service_main(int ipc_socket)
 {
     Core::EventLoop event_loop;
 
@@ -75,13 +76,12 @@ ErrorOr<int> service_main(int ipc_socket, int fd_passing_socket)
 
     auto webcontent_socket = TRY(Core::LocalSocket::adopt_fd(ipc_socket));
     auto webcontent_client = TRY(WebContent::ConnectionFromClient::try_create(move(webcontent_socket)));
-    webcontent_client->set_fd_passing_socket(TRY(Core::LocalSocket::adopt_fd(fd_passing_socket)));
 
     return event_loop.exec();
 }
 
 template<typename Client>
-ErrorOr<NonnullRefPtr<Client>> bind_service(void (*bind_method)(int, int))
+ErrorOr<NonnullRefPtr<Client>> bind_service(void (*bind_method)(int))
 {
     int socket_fds[2] {};
     TRY(Core::System::socketpair(AF_LOCAL, SOCK_STREAM, 0, socket_fds));
@@ -89,20 +89,13 @@ ErrorOr<NonnullRefPtr<Client>> bind_service(void (*bind_method)(int, int))
     int ui_fd = socket_fds[0];
     int server_fd = socket_fds[1];
 
-    int fd_passing_socket_fds[2] {};
-    TRY(Core::System::socketpair(AF_LOCAL, SOCK_STREAM, 0, fd_passing_socket_fds));
-
-    int ui_fd_passing_fd = fd_passing_socket_fds[0];
-    int server_fd_passing_fd = fd_passing_socket_fds[1];
-
     // NOTE: The java object takes ownership of the socket fds
-    (*bind_method)(server_fd, server_fd_passing_fd);
+    (*bind_method)(server_fd);
 
     auto socket = TRY(Core::LocalSocket::adopt_fd(ui_fd));
     TRY(socket->set_blocking(true));
 
     auto new_client = TRY(try_make_ref_counted<Client>(move(socket)));
-    new_client->set_fd_passing_socket(TRY(Core::LocalSocket::adopt_fd(ui_fd_passing_fd)));
 
     return new_client;
 }

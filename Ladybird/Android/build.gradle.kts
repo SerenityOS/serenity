@@ -1,16 +1,17 @@
 import com.android.build.gradle.internal.tasks.factory.dependsOn
 
 plugins {
-    id("com.android.application") version "8.1.1"
+    id("com.android.application") version "8.4.0"
     id("org.jetbrains.kotlin.android") version "1.9.0"
 }
 
+var buildDir = layout.buildDirectory.get()
 var cacheDir = System.getenv("SERENITY_CACHE_DIR") ?: "$buildDir/caches"
 
 task<Exec>("buildLagomTools") {
     commandLine = listOf("./BuildLagomTools.sh")
     environment = mapOf(
-        "BUILD_DIR" to "$buildDir",
+        "BUILD_DIR" to buildDir,
         "CACHE_DIR" to cacheDir,
         "PATH" to System.getenv("PATH")!!
     )
@@ -20,12 +21,12 @@ tasks.named("prepareKotlinBuildScriptModel").dependsOn("buildLagomTools")
 
 android {
     namespace = "org.serenityos.ladybird"
-    compileSdk = 33
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "org.serenityos.ladybird"
         minSdk = 30
-        targetSdk = 33
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
@@ -75,9 +76,9 @@ android {
 }
 
 dependencies {
-    implementation("androidx.core:core-ktx:1.10.1")
+    implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.appcompat:appcompat:1.6.1")
-    implementation("com.google.android.material:material:1.9.0")
+    implementation("com.google.android.material:material:1.12.0")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
     testImplementation("junit:junit:4.13.2")
