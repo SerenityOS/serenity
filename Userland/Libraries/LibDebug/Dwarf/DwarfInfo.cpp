@@ -48,7 +48,6 @@ ErrorOr<void> DwarfInfo::populate_compilation_units()
         return {};
 
     FixedMemoryStream debug_info_stream { m_debug_info_data };
-    FixedMemoryStream line_info_stream { m_debug_line_data };
 
     while (!debug_info_stream.is_eof()) {
         auto unit_offset = TRY(debug_info_stream.tell());
@@ -59,23 +58,10 @@ ErrorOr<void> DwarfInfo::populate_compilation_units()
 
         u32 length_after_header = compilation_unit_header.length() - (compilation_unit_header.header_size() - offsetof(CompilationUnitHeader, common.version));
 
-        auto line_program = TRY(LineProgram::create(*this, line_info_stream));
-
-        // HACK: Clang generates line programs for embedded resource assembly files, but not compile units.
-        // Meaning that for graphical applications, some line info data would be unread, triggering the assertion below.
-        // As a fix, we don't create compilation units for line programs that come from resource files.
-#if defined(AK_COMPILER_CLANG)
-        if (line_program->looks_like_embedded_resource()) {
-            TRY(debug_info_stream.seek(unit_offset));
-        } else
-#endif
-        {
-            m_compilation_units.append(make<CompilationUnit>(*this, unit_offset, compilation_unit_header, move(line_program)));
-            TRY(debug_info_stream.discard(length_after_header));
-        }
+        m_compilation_units.append(TRY(CompilationUnit::create(*this, unit_offset, compilation_unit_header, m_debug_line_data)));
+        TRY(debug_info_stream.discard(length_after_header));
     }
 
-    VERIFY(line_info_stream.is_eof());
     return {};
 }
 
