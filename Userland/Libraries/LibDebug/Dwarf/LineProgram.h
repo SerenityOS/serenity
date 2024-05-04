@@ -134,21 +134,21 @@ public:
     bool looks_like_embedded_resource() const;
 
 private:
-    LineProgram(DwarfInfo& dwarf_info, SeekableStream& stream, size_t unit_offset);
+    LineProgram(DwarfInfo& dwarf_info, size_t unit_offset);
 
-    ErrorOr<void> parse_unit_header();
-    ErrorOr<void> parse_source_directories();
-    ErrorOr<void> parse_source_files();
-    ErrorOr<void> run_program();
+    ErrorOr<void> parse_unit_header(SeekableStream& stream);
+    ErrorOr<void> parse_source_directories(SeekableStream& stream);
+    ErrorOr<void> parse_source_files(SeekableStream& stream);
+    ErrorOr<void> run_program(SeekableStream& stream);
 
     void append_to_line_info();
     void reset_registers();
 
-    ErrorOr<void> handle_extended_opcode();
-    ErrorOr<void> handle_standard_opcode(u8 opcode);
+    ErrorOr<void> handle_extended_opcode(SeekableStream& stream);
+    ErrorOr<void> handle_standard_opcode(SeekableStream& stream, u8 opcode);
     void handle_special_opcode(u8 opcode);
 
-    ErrorOr<void> parse_path_entries(Function<void(PathEntry& entry)> callback, PathListType list_type);
+    ErrorOr<void> parse_path_entries(SeekableStream& stream, Function<void(PathEntry& entry)> callback, PathListType list_type);
 
     enum StandardOpcodes {
         Copy = 1,
@@ -176,7 +176,6 @@ private:
     static constexpr u16 MAX_DWARF_VERSION = 5;
 
     DwarfInfo& m_dwarf_info;
-    SeekableStream& m_stream;
 
     size_t m_unit_offset { 0 };
     LineProgramUnitHeader32 m_unit_header {};
