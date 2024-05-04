@@ -60,8 +60,9 @@ UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<MiniUART>> MiniUART::create()
     return DeviceManagement::try_create_device<MiniUART>();
 }
 
+// FIXME: Consider not hardcoding the minor number and allocate it dynamically.
 UNMAP_AFTER_INIT MiniUART::MiniUART()
-    : CharacterDevice(4, 64)
+    : CharacterDevice(4, 0)
     , m_registers(MMIO::the().peripheral<MiniUARTRegisters>(0x21'5040))
 {
     auto& gpio = GPIO::the();

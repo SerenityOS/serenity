@@ -18,11 +18,6 @@ namespace DeviceMapper {
 
 class DeviceEventLoop {
 public:
-    enum class MinorNumberAllocationType {
-        SequentialUnlimited,
-        SequentialLimited,
-    };
-
     enum class UnixDeviceType {
         BlockDevice,
         CharacterDevice,
@@ -34,9 +29,6 @@ public:
         StringView path_pattern;
         DeviceNodeFamily::Type unix_device_type;
         MajorNumber major_number;
-        MinorNumberAllocationType minor_number_allocation_type;
-        MinorNumber minor_number_start;
-        size_t minor_number_range_size;
         mode_t create_mode;
     };
 
@@ -46,8 +38,8 @@ public:
     ErrorOr<void> drain_events_from_devctl();
 
 private:
-    Optional<DeviceNodeFamily&> find_device_node_family(DeviceNodeFamily::Type unix_device_type, MajorNumber major_number, MinorNumber minor_number) const;
-    ErrorOr<NonnullRefPtr<DeviceNodeFamily>> find_or_register_new_device_node_family(DeviceNodeMatch const& match, DeviceNodeFamily::Type unix_device_type, MajorNumber major_number, MinorNumber minor_number);
+    Optional<DeviceNodeFamily&> find_device_node_family(DeviceNodeFamily::Type unix_device_type, MajorNumber major_number) const;
+    ErrorOr<NonnullRefPtr<DeviceNodeFamily>> find_or_register_new_device_node_family(DeviceNodeMatch const& match, DeviceNodeFamily::Type unix_device_type, MajorNumber major_number);
 
     ErrorOr<void> register_new_device(DeviceNodeFamily::Type unix_device_type, MajorNumber major_number, MinorNumber minor_number);
     ErrorOr<void> unregister_device(DeviceNodeFamily::Type unix_device_type, MajorNumber major_number, MinorNumber minor_number);
