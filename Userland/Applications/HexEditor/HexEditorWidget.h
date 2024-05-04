@@ -48,6 +48,7 @@ private:
     void set_search_results_visible(bool visible);
     void set_value_inspector_visible(bool visible);
     void update_inspector_values(size_t position);
+    void set_inspector_little_endian(bool little_endian, bool force = false);
 
     virtual void drag_enter_event(GUI::DragEvent&) override;
     virtual void drop_event(GUI::DropEvent&) override;
@@ -91,7 +92,6 @@ private:
     GUI::ActionGroup m_offset_format_actions;
 
     GUI::ActionGroup m_bytes_per_row_actions;
-    GUI::ActionGroup m_value_inspector_mode_actions;
 
     RefPtr<GUI::Statusbar> m_statusbar;
     RefPtr<GUI::Toolbar> m_toolbar;
@@ -99,8 +99,11 @@ private:
     RefPtr<GUI::TableView> m_search_results;
     RefPtr<GUI::Widget> m_search_results_container;
     RefPtr<GUI::DynamicWidgetContainer> m_side_panel_container;
+
     RefPtr<GUI::Widget> m_value_inspector_container;
     RefPtr<GUI::TableView> m_value_inspector;
+    RefPtr<GUI::ComboBox> m_value_inspector_endianness;
+    Vector<ByteString> m_endianness_options;
 
     RefPtr<GUI::Widget> m_annotations_container;
     RefPtr<GUI::TableView> m_annotations;
