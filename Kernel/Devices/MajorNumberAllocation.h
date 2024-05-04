@@ -9,6 +9,22 @@
 #include <AK/Array.h>
 #include <Kernel/API/DeviceFileTypes.h>
 
+// NOTE: PLEASE READ THIS NOTE CAREFULLY WHEN CHANGING THIS FILE!
+// When adding a major number allocation, you must:
+// 1. Add a new allocation based on its Type (either Block or Character)
+// 2. Make sure the family_name is not already taken! Duplicates are not allowed.
+//    Make sure the family_name string is informative and short.
+//    Prepare a CamelCase name for the chosen family_name, and insert it in the appropriate
+//    enum class - either CharacterDeviceFamily or BlockDeviceFamily.
+// 3. Make sure you put the allocation in the correct array - either s_char_device_numbers
+//    or s_block_device_numbers.
+// 4. Make sure you put the allocation and CamelCase for family name in ascending order.
+//    For example, if you allocate a number for new family of character devices, say 30, then you
+//    must put it after allocated number 29 (if so exists, if not look to the biggest existing number below 30)
+//    but not after the smallest existing number after 30 (which might be 31).
+//    Please note that you must insert in while keeping the ascending order, otherwise
+//    the code will not compile due to a failed static_assert().
+
 namespace Kernel::MajorAllocation {
 
 enum class CharacterDeviceFamily : unsigned {
