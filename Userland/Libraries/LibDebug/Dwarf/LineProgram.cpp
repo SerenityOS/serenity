@@ -13,9 +13,8 @@
 
 namespace Debug::Dwarf {
 
-LineProgram::LineProgram(DwarfInfo& dwarf_info, SeekableStream& stream, size_t unit_offset)
+LineProgram::LineProgram(DwarfInfo& dwarf_info, size_t unit_offset)
     : m_dwarf_info(dwarf_info)
-    , m_stream(stream)
     , m_unit_offset(unit_offset)
 {
 }
@@ -23,17 +22,17 @@ LineProgram::LineProgram(DwarfInfo& dwarf_info, SeekableStream& stream, size_t u
 ErrorOr<NonnullOwnPtr<LineProgram>> LineProgram::create(DwarfInfo& dwarf_info, SeekableStream& stream)
 {
     auto offset = TRY(stream.tell());
-    auto program = TRY(adopt_nonnull_own_or_enomem(new (nothrow) LineProgram(dwarf_info, stream, offset)));
-    TRY(program->parse_unit_header());
-    TRY(program->parse_source_directories());
-    TRY(program->parse_source_files());
-    TRY(program->run_program());
+    auto program = TRY(adopt_nonnull_own_or_enomem(new (nothrow) LineProgram(dwarf_info, offset)));
+    TRY(program->parse_unit_header(stream));
+    TRY(program->parse_source_directories(stream));
+    TRY(program->parse_source_files(stream));
+    TRY(program->run_program(stream));
     return program;
 }
 
-ErrorOr<void> LineProgram::parse_unit_header()
+ErrorOr<void> LineProgram::parse_unit_header(SeekableStream& stream)
 {
-    m_unit_header = TRY(m_stream.read_value<LineProgramUnitHeader32>());
+    m_unit_header = TRY(stream.read_value<LineProgramUnitHeader32>());
 
     VERIFY(m_unit_header.version() >= MIN_DWARF_VERSION && m_unit_header.version() <= MAX_DWARF_VERSION);
     VERIFY(m_unit_header.opcode_base() <= sizeof(m_unit_header.std_opcode_lengths) / sizeof(m_unit_header.std_opcode_lengths[0]) + 1);
@@ -42,27 +41,27 @@ ErrorOr<void> LineProgram::parse_unit_header()
     return {};
 }
 
-ErrorOr<void> LineProgram::parse_path_entries(Function<void(PathEntry& entry)> callback, PathListType list_type)
+ErrorOr<void> LineProgram::parse_path_entries(SeekableStream& stream, Function<void(PathEntry& entry)> callback, PathListType list_type)
 {
     if (m_unit_header.version() >= 5) {
-        auto path_entry_format_count = TRY(m_stream.read_value<u8>());
+        auto path_entry_format_count = TRY(stream.read_value<u8>());
 
         Vector<PathEntryFormat> format_descriptions;
 
         for (u8 i = 0; i < path_entry_format_count; i++) {
-            UnderlyingType<ContentType> content_type = TRY(m_stream.read_value<LEB128<UnderlyingType<ContentType>>>());
+            UnderlyingType<ContentType> content_type = TRY(stream.read_value<LEB128<UnderlyingType<ContentType>>>());
 
-            UnderlyingType<AttributeDataForm> data_form = TRY(m_stream.read_value<LEB128<UnderlyingType<AttributeDataForm>>>());
+            UnderlyingType<AttributeDataForm> data_form = TRY(stream.read_value<LEB128<UnderlyingType<AttributeDataForm>>>());
 
             format_descriptions.empend(static_cast<ContentType>(content_type), static_cast<AttributeDataForm>(data_form));
         }
 
-        size_t paths_count = TRY(m_stream.read_value<LEB128<size_t>>());
+        size_t paths_count = TRY(stream.read_value<LEB128<size_t>>());
 
         for (size_t i = 0; i < paths_count; i++) {
             PathEntry entry;
             for (auto& format_description : format_descriptions) {
-                auto value = TRY(m_dwarf_info.get_attribute_value(format_description.form, 0, m_stream));
+                auto value = TRY(m_dwarf_info.get_attribute_value(format_description.form, 0, stream));
                 switch (format_description.type) {
                 case ContentType::Path:
                     entry.path = TRY(value.as_string());
@@ -79,7 +78,7 @@ ErrorOr<void> LineProgram::parse_path_entries(Function<void(PathEntry& entry)> c
     } else {
         while (true) {
             StringBuilder builder;
-            while (auto c = TRY(m_stream.read_value<char>()))
+            while (auto c = TRY(stream.read_value<char>()))
                 TRY(builder.try_append(c));
             auto path = builder.to_byte_string();
             if (path.length() == 0)
@@ -88,9 +87,9 @@ ErrorOr<void> LineProgram::parse_path_entries(Function<void(PathEntry& entry)> c
             PathEntry entry;
             entry.path = path;
             if (list_type == PathListType::Filenames) {
-                size_t directory_index = TRY(m_stream.read_value<LEB128<size_t>>());
-                TRY(m_stream.read_value<LEB128<size_t>>()); // skip modification time
-                TRY(m_stream.read_value<LEB128<size_t>>()); // skip file size
+                size_t directory_index = TRY(stream.read_value<LEB128<size_t>>());
+                TRY(stream.read_value<LEB128<size_t>>()); // skip modification time
+                TRY(stream.read_value<LEB128<size_t>>()); // skip file size
                 entry.directory_index = directory_index;
                 dbgln_if(DWARF_DEBUG, "file: {}, directory index: {}", path, directory_index);
             }
@@ -101,30 +100,24 @@ ErrorOr<void> LineProgram::parse_path_entries(Function<void(PathEntry& entry)> c
     return {};
 }
 
-ErrorOr<void> LineProgram::parse_source_directories()
+ErrorOr<void> LineProgram::parse_source_directories(SeekableStream& stream)
 {
     if (m_unit_header.version() < 5) {
         m_source_directories.append(".");
     }
 
-    TRY(parse_path_entries([this](PathEntry& entry) {
-        m_source_directories.append(entry.path);
-    },
-        PathListType::Directories));
+    TRY(parse_path_entries(stream, [this](PathEntry& entry) { m_source_directories.append(entry.path); }, PathListType::Directories));
 
     return {};
 }
 
-ErrorOr<void> LineProgram::parse_source_files()
+ErrorOr<void> LineProgram::parse_source_files(SeekableStream& stream)
 {
     if (m_unit_header.version() < 5) {
         m_source_files.append({ ".", 0 });
     }
 
-    TRY(parse_path_entries([this](PathEntry& entry) {
-        m_source_files.append({ entry.path, entry.directory_index });
-    },
-        PathListType::Filenames));
+    TRY(parse_path_entries(stream, [this](PathEntry& entry) { m_source_files.append({ entry.path, entry.directory_index }); }, PathListType::Filenames));
 
     return {};
 }
@@ -156,11 +149,11 @@ void LineProgram::reset_registers()
     m_is_statement = m_unit_header.default_is_stmt() == 1;
 }
 
-ErrorOr<void> LineProgram::handle_extended_opcode()
+ErrorOr<void> LineProgram::handle_extended_opcode(SeekableStream& stream)
 {
-    size_t length = TRY(m_stream.read_value<LEB128<size_t>>());
+    size_t length = TRY(stream.read_value<LEB128<size_t>>());
 
-    auto sub_opcode = TRY(m_stream.read_value<u8>());
+    auto sub_opcode = TRY(stream.read_value<u8>());
 
     switch (sub_opcode) {
     case ExtendedOpcodes::EndSequence: {
@@ -170,23 +163,23 @@ ErrorOr<void> LineProgram::handle_extended_opcode()
     }
     case ExtendedOpcodes::SetAddress: {
         VERIFY(length == sizeof(size_t) + 1);
-        m_address = TRY(m_stream.read_value<FlatPtr>());
+        m_address = TRY(stream.read_value<FlatPtr>());
         dbgln_if(DWARF_DEBUG, "SetAddress: {:p}", m_address);
         break;
     }
     case ExtendedOpcodes::SetDiscriminator: {
         dbgln_if(DWARF_DEBUG, "SetDiscriminator");
-        [[maybe_unused]] size_t discriminator = TRY(m_stream.read_value<LEB128<size_t>>());
+        [[maybe_unused]] size_t discriminator = TRY(stream.read_value<LEB128<size_t>>());
         break;
     }
     default:
-        dbgln("Encountered unknown sub opcode {} at stream offset {:p}", sub_opcode, TRY(m_stream.tell()));
+        dbgln("Encountered unknown sub opcode {} at stream offset {:p}", sub_opcode, TRY(stream.tell()));
         VERIFY_NOT_REACHED();
     }
 
     return {};
 }
-ErrorOr<void> LineProgram::handle_standard_opcode(u8 opcode)
+ErrorOr<void> LineProgram::handle_standard_opcode(SeekableStream& stream, u8 opcode)
 {
     switch (opcode) {
     case StandardOpcodes::Copy: {
@@ -194,14 +187,14 @@ ErrorOr<void> LineProgram::handle_standard_opcode(u8 opcode)
         break;
     }
     case StandardOpcodes::AdvancePc: {
-        size_t operand = TRY(m_stream.read_value<LEB128<size_t>>());
+        size_t operand = TRY(stream.read_value<LEB128<size_t>>());
         size_t delta = operand * m_unit_header.min_instruction_length();
         dbgln_if(DWARF_DEBUG, "AdvancePC by: {} to: {:p}", delta, m_address + delta);
         m_address += delta;
         break;
     }
     case StandardOpcodes::SetFile: {
-        size_t new_file_index = TRY(m_stream.read_value<LEB128<size_t>>());
+        size_t new_file_index = TRY(stream.read_value<LEB128<size_t>>());
         dbgln_if(DWARF_DEBUG, "SetFile: new file index: {}", new_file_index);
         m_file_index = new_file_index;
         break;
@@ -209,12 +202,12 @@ ErrorOr<void> LineProgram::handle_standard_opcode(u8 opcode)
     case StandardOpcodes::SetColumn: {
         // not implemented
         dbgln_if(DWARF_DEBUG, "SetColumn");
-        [[maybe_unused]] size_t new_column = TRY(m_stream.read_value<LEB128<size_t>>());
+        [[maybe_unused]] size_t new_column = TRY(stream.read_value<LEB128<size_t>>());
 
         break;
     }
     case StandardOpcodes::AdvanceLine: {
-        ssize_t line_delta = TRY(m_stream.read_value<LEB128<ssize_t>>());
+        ssize_t line_delta = TRY(stream.read_value<LEB128<ssize_t>>());
         VERIFY(line_delta >= 0 || m_line >= (size_t)(-line_delta));
         m_line += line_delta;
         dbgln_if(DWARF_DEBUG, "AdvanceLine: {}", m_line);
@@ -234,12 +227,12 @@ ErrorOr<void> LineProgram::handle_standard_opcode(u8 opcode)
         break;
     }
     case StandardOpcodes::SetIsa: {
-        size_t isa = TRY(m_stream.read_value<LEB128<size_t>>());
+        size_t isa = TRY(stream.read_value<LEB128<size_t>>());
         dbgln_if(DWARF_DEBUG, "SetIsa: {}", isa);
         break;
     }
     case StandardOpcodes::FixAdvancePc: {
-        auto delta = TRY(m_stream.read_value<u16>());
+        auto delta = TRY(stream.read_value<u16>());
         dbgln_if(DWARF_DEBUG, "FixAdvancePC by: {} to: {:p}", delta, m_address + delta);
         m_address += delta;
         break;
@@ -283,19 +276,19 @@ void LineProgram::handle_special_opcode(u8 opcode)
     m_prologue_end = false;
 }
 
-ErrorOr<void> LineProgram::run_program()
+ErrorOr<void> LineProgram::run_program(SeekableStream& stream)
 {
     reset_registers();
 
-    while (TRY(m_stream.tell()) < m_unit_offset + sizeof(u32) + m_unit_header.length()) {
-        auto opcode = TRY(m_stream.read_value<u8>());
+    while (TRY(stream.tell()) < m_unit_offset + sizeof(u32) + m_unit_header.length()) {
+        auto opcode = TRY(stream.read_value<u8>());
 
-        dbgln_if(DWARF_DEBUG, "{:p}: opcode: {}", TRY(m_stream.tell()) - 1, opcode);
+        dbgln_if(DWARF_DEBUG, "{:p}: opcode: {}", TRY(stream.tell()) - 1, opcode);
 
         if (opcode == 0) {
-            TRY(handle_extended_opcode());
+            TRY(handle_extended_opcode(stream));
         } else if (opcode >= 1 && opcode <= 12) {
-            TRY(handle_standard_opcode(opcode));
+            TRY(handle_standard_opcode(stream, opcode));
         } else {
             handle_special_opcode(opcode);
         }
