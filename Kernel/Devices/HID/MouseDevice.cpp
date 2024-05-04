@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/API/MajorNumberAllocation.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/HID/Management.h>
 #include <Kernel/Devices/HID/MouseDevice.h>
@@ -16,7 +17,7 @@ ErrorOr<NonnullRefPtr<MouseDevice>> MouseDevice::try_to_initialize()
 }
 
 MouseDevice::MouseDevice()
-    : HIDDevice(10, HIDManagement::the().generate_minor_device_number_for_mouse())
+    : HIDDevice(MajorAllocation::CharacterDeviceFamily::Mouse, HIDManagement::the().generate_minor_device_number_for_mouse())
 {
 }
 

@@ -5,6 +5,7 @@
  */
 
 #include <Kernel/API/Ioctl.h>
+#include <Kernel/API/MajorNumberAllocation.h>
 #include <Kernel/Devices/GPU/DisplayConnector.h>
 #include <Kernel/Devices/GPU/Management.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/DeviceIdentifiers/CharacterDevicesDirectory.h>
@@ -15,7 +16,7 @@
 namespace Kernel {
 
 DisplayConnector::DisplayConnector(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, bool enable_write_combine_optimization)
-    : CharacterDevice(226, GraphicsManagement::the().allocate_minor_device_number())
+    : CharacterDevice(MajorAllocation::CharacterDeviceFamily::GPU, GraphicsManagement::the().allocate_minor_device_number())
     , m_enable_write_combine_optimization(enable_write_combine_optimization)
     , m_framebuffer_at_arbitrary_physical_range(false)
     , m_framebuffer_address(framebuffer_address)
@@ -24,7 +25,7 @@ DisplayConnector::DisplayConnector(PhysicalAddress framebuffer_address, size_t f
 }
 
 DisplayConnector::DisplayConnector(size_t framebuffer_resource_size, bool enable_write_combine_optimization)
-    : CharacterDevice(226, GraphicsManagement::the().allocate_minor_device_number())
+    : CharacterDevice(MajorAllocation::CharacterDeviceFamily::GPU, GraphicsManagement::the().allocate_minor_device_number())
     , m_enable_write_combine_optimization(enable_write_combine_optimization)
     , m_framebuffer_at_arbitrary_physical_range(true)
     , m_framebuffer_address({})

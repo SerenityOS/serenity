@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/API/MajorNumberAllocation.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/Generic/SelfTTYDevice.h>
 #include <Kernel/Devices/TTY/TTY.h>
@@ -56,7 +57,7 @@ ErrorOr<size_t> SelfTTYDevice::write(OpenFileDescription&, u64, UserOrKernelBuff
 }
 
 UNMAP_AFTER_INIT SelfTTYDevice::SelfTTYDevice()
-    : CharacterDevice(5, 0)
+    : CharacterDevice(MajorAllocation::CharacterDeviceFamily::Console, 0)
 {
 }
 

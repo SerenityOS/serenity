@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/API/MajorNumberAllocation.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/HID/AllMiceDevice.h>
 #include <Kernel/Devices/HID/Management.h>
@@ -16,7 +17,7 @@ NonnullRefPtr<AllMiceDevice> AllMiceDevice::must_create()
 }
 
 AllMiceDevice::AllMiceDevice()
-    : CharacterDevice(12, 0)
+    : CharacterDevice(MajorAllocation::CharacterDeviceFamily::AllMice, 0)
 {
 }
 

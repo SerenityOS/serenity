@@ -431,10 +431,6 @@ LockRefPtr<BlockDevice> StorageManagement::boot_block_device() const
     return m_boot_block_device.strong_ref();
 }
 
-MajorNumber StorageManagement::storage_type_major_number()
-{
-    return 3;
-}
 MinorNumber StorageManagement::generate_storage_minor_number()
 {
     return s_storage_device_minor_number.fetch_add(1);

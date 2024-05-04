@@ -5,6 +5,7 @@
  */
 
 #include <Kernel/API/Ioctl.h>
+#include <Kernel/API/MajorNumberAllocation.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/Generic/DeviceControlDevice.h>
 #include <Kernel/Devices/Loop/LoopDevice.h>
@@ -28,7 +29,7 @@ bool DeviceControlDevice::can_read(OpenFileDescription const&, u64) const
 }
 
 UNMAP_AFTER_INIT DeviceControlDevice::DeviceControlDevice()
-    : CharacterDevice(2, 10)
+    : CharacterDevice(MajorAllocation::CharacterDeviceFamily::DeviceControl, 10)
 {
 }
 

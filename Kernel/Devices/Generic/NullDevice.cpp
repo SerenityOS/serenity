@@ -5,6 +5,7 @@
  */
 
 #include <AK/Singleton.h>
+#include <Kernel/API/MajorNumberAllocation.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/Generic/NullDevice.h>
 #include <Kernel/Sections.h>
@@ -20,7 +21,7 @@ UNMAP_AFTER_INIT NonnullLockRefPtr<NullDevice> NullDevice::must_initialize()
 }
 
 UNMAP_AFTER_INIT NullDevice::NullDevice()
-    : CharacterDevice(1, 3)
+    : CharacterDevice(MajorAllocation::CharacterDeviceFamily::Generic, 3)
 {
 }
 

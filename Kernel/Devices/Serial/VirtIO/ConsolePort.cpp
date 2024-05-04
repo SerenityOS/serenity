@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/API/MajorNumberAllocation.h>
 #include <Kernel/Devices/Serial/VirtIO/Console.h>
 #include <Kernel/Devices/Serial/VirtIO/ConsolePort.h>
 
@@ -20,7 +21,7 @@ ErrorOr<NonnullLockRefPtr<ConsolePort>> ConsolePort::try_create(unsigned port, C
 }
 
 ConsolePort::ConsolePort(unsigned port, VirtIO::Console& console, NonnullOwnPtr<Memory::RingBuffer> receive_buffer, NonnullOwnPtr<Memory::RingBuffer> transmit_buffer)
-    : CharacterDevice(229, next_device_id++)
+    : CharacterDevice(MajorAllocation::CharacterDeviceFamily::VirtIOConsole, next_device_id++)
     , m_receive_buffer(move(receive_buffer))
     , m_transmit_buffer(move(transmit_buffer))
     , m_console(console)
