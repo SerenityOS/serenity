@@ -350,17 +350,17 @@ void ECMAScriptFunctionObject::initialize(Realm& realm)
         Object* prototype = nullptr;
         switch (m_kind) {
         case FunctionKind::Normal:
-            prototype = vm.heap().allocate<Object>(realm, realm.intrinsics().new_ordinary_function_prototype_object_shape());
+            prototype = Object::create_prototype(realm, realm.intrinsics().object_prototype());
             MUST(prototype->define_property_or_throw(vm.names.constructor, { .value = this, .writable = true, .enumerable = false, .configurable = true }));
             break;
         case FunctionKind::Generator:
             // prototype is "g1.prototype" in figure-2 (https://tc39.es/ecma262/img/figure-2.png)
-            prototype = Object::create(realm, realm.intrinsics().generator_function_prototype_prototype());
+            prototype = Object::create_prototype(realm, realm.intrinsics().generator_function_prototype_prototype());
             break;
         case FunctionKind::Async:
             break;
         case FunctionKind::AsyncGenerator:
-            prototype = Object::create(realm, realm.intrinsics().async_generator_function_prototype_prototype());
+            prototype = Object::create_prototype(realm, realm.intrinsics().async_generator_function_prototype_prototype());
             break;
         }
         // 27.7.4 AsyncFunction Instances, https://tc39.es/ecma262/#sec-async-function-instances

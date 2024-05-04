@@ -181,14 +181,12 @@ ThrowCompletionOr<void> Intrinsics::initialize_intrinsics(Realm& realm)
     // These are done first since other prototypes depend on their presence.
     m_empty_object_shape = heap().allocate_without_realm<Shape>(realm);
     m_object_prototype = heap().allocate_without_realm<ObjectPrototype>(realm);
+    m_object_prototype->convert_to_prototype_if_needed();
     m_function_prototype = heap().allocate_without_realm<FunctionPrototype>(realm);
+    m_function_prototype->convert_to_prototype_if_needed();
 
     m_new_object_shape = heap().allocate_without_realm<Shape>(realm);
     m_new_object_shape->set_prototype_without_transition(m_object_prototype);
-
-    m_new_ordinary_function_prototype_object_shape = heap().allocate_without_realm<Shape>(realm);
-    m_new_ordinary_function_prototype_object_shape->set_prototype_without_transition(m_object_prototype);
-    m_new_ordinary_function_prototype_object_shape->add_property_without_transition(vm.names.constructor, Attribute::Writable | Attribute::Configurable);
 
     // OPTIMIZATION: A lot of runtime algorithms create an "iterator result" object.
     //               We pre-bake a shape for these objects and remember the property offsets.
@@ -367,7 +365,6 @@ void Intrinsics::visit_edges(Visitor& visitor)
     visitor.visit(m_realm);
     visitor.visit(m_empty_object_shape);
     visitor.visit(m_new_object_shape);
-    visitor.visit(m_new_ordinary_function_prototype_object_shape);
     visitor.visit(m_iterator_result_object_shape);
     visitor.visit(m_proxy_constructor);
     visitor.visit(m_async_from_sync_iterator_prototype);

@@ -24,6 +24,8 @@ namespace JS::Bytecode {
 struct PropertyLookupCache {
     WeakPtr<Shape> shape;
     Optional<u32> property_offset;
+    WeakPtr<Object> prototype;
+    WeakPtr<PrototypeChainValidity> prototype_chain_validity;
 };
 
 struct GlobalVariableCache : public PropertyLookupCache {

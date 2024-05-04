@@ -217,6 +217,7 @@ class Symbol;
 class Token;
 class Utf16String;
 class VM;
+class PrototypeChainValidity;
 class Value;
 class WeakContainer;
 class WrappedFunction;
