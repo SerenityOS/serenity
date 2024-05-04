@@ -14,10 +14,9 @@
 JavaVM* global_vm;
 
 extern "C" JNIEXPORT void JNICALL
-Java_org_serenityos_ladybird_LadybirdServiceBase_nativeThreadLoop(JNIEnv*, jobject /* thiz */, jint ipc_socket, jint fd_passing_socket)
+Java_org_serenityos_ladybird_LadybirdServiceBase_nativeThreadLoop(JNIEnv*, jobject /* thiz */, jint ipc_socket)
 {
-    dbgln("New binding received, sockets {} and {}", ipc_socket, fd_passing_socket);
-    auto ret = service_main(ipc_socket, fd_passing_socket);
+    auto ret = service_main(ipc_socket);
     if (ret.is_error()) {
         warnln("Runtime Error: {}", ret.release_error());
     } else {

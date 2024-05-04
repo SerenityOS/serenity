@@ -6,6 +6,7 @@
 
 #include "WebViewImplementationNative.h"
 #include "JNIHelpers.h"
+#include <LibWebView/WebContentClient.h>
 #include <Userland/Libraries/LibGfx/Bitmap.h>
 #include <Userland/Libraries/LibGfx/Painter.h>
 #include <Userland/Libraries/LibWeb/Crypto/Crypto.h>
@@ -28,14 +29,14 @@ WebViewImplementationNative::WebViewImplementationNative(jobject thiz)
     : m_java_instance(thiz)
 {
     // NOTE: m_java_instance's global ref is controlled by the JNI bindings
-    create_client(WebView::EnableCallgrindProfiling::No);
+    initialize_client(CreateNewClient::Yes);
 
     on_ready_to_paint = [this]() {
         JavaEnvironment env(global_vm);
         env.get()->CallVoidMethod(m_java_instance, invalidate_layout_method);
     };
 
-    on_load_start = [this](URL const& url, bool is_redirect) {
+    on_load_start = [this](URL::URL const& url, bool is_redirect) {
         JavaEnvironment env(global_vm);
         auto url_string = env.jstring_from_ak_string(MUST(url.to_string()));
         env.get()->CallVoidMethod(m_java_instance, on_load_start_method, url_string, is_redirect);
@@ -43,7 +44,7 @@ WebViewImplementationNative::WebViewImplementationNative(jobject thiz)
     };
 }
 
-void WebViewImplementationNative::create_client(WebView::EnableCallgrindProfiling)
+void WebViewImplementationNative::initialize_client(WebView::ViewImplementation::CreateNewClient)
 {
     m_client_state = {};
 
@@ -56,9 +57,9 @@ void WebViewImplementationNative::create_client(WebView::EnableCallgrindProfilin
     };
 
     m_client_state.client_handle = MUST(Web::Crypto::generate_random_uuid());
-    client().async_set_window_handle(m_client_state.client_handle);
+    client().async_set_window_handle(0, m_client_state.client_handle);
 
-    client().async_set_device_pixels_per_css_pixel(m_device_pixel_ratio);
+    client().async_set_device_pixels_per_css_pixel(0, m_device_pixel_ratio);
 
     // FIXME: update_palette, update system fonts
 }
@@ -93,14 +94,14 @@ void WebViewImplementationNative::paint_into_bitmap(void* android_bitmap_raw, An
 void WebViewImplementationNative::set_viewport_geometry(int w, int h)
 {
     m_viewport_rect = { { 0, 0 }, { w, h } };
-    client().async_set_viewport_rect(m_viewport_rect);
+    client().async_set_viewport_rect(0, m_viewport_rect);
     handle_resize();
 }
 
 void WebViewImplementationNative::set_device_pixel_ratio(float f)
 {
     m_device_pixel_ratio = f;
-    client().async_set_device_pixels_per_css_pixel(m_device_pixel_ratio);
+    client().async_set_device_pixels_per_css_pixel(0, m_device_pixel_ratio);
 }
 
 NonnullRefPtr<WebView::WebContentClient> WebViewImplementationNative::bind_web_content_client()
@@ -113,20 +114,13 @@ NonnullRefPtr<WebView::WebContentClient> WebViewImplementationNative::bind_web_c
     int ui_fd = socket_fds[0];
     int wc_fd = socket_fds[1];
 
-    int fd_passing_socket_fds[2] {};
-    MUST(Core::System::socketpair(AF_LOCAL, SOCK_STREAM, 0, fd_passing_socket_fds));
-
-    int ui_fd_passing_fd = fd_passing_socket_fds[0];
-    int wc_fd_passing_fd = fd_passing_socket_fds[1];
-
     // NOTE: The java object takes ownership of the socket fds
-    env.get()->CallVoidMethod(m_java_instance, bind_webcontent_method, wc_fd, wc_fd_passing_fd);
+    env.get()->CallVoidMethod(m_java_instance, bind_webcontent_method, wc_fd);
 
     auto socket = MUST(Core::LocalSocket::adopt_fd(ui_fd));
     MUST(socket->set_blocking(true));
 
     auto new_client = make_ref_counted<WebView::WebContentClient>(move(socket), *this);
-    new_client->set_fd_passing_socket(MUST(Core::LocalSocket::adopt_fd(ui_fd_passing_fd)));
 
     return new_client;
 }

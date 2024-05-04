@@ -23,13 +23,13 @@
 // FIXME: Share b/w RequestServer and WebSocket
 ErrorOr<ByteString> find_certificates(StringView serenity_resource_root)
 {
-    auto cert_path = ByteString::formatted("{}/ladybird/cacert.pem", serenity_resource_root);
+    auto cert_path = ByteString::formatted("{}/res/ladybird/cacert.pem", serenity_resource_root);
     if (!FileSystem::exists(cert_path))
         return Error::from_string_view("Don't know how to load certs!"sv);
     return cert_path;
 }
 
-ErrorOr<int> service_main(int ipc_socket, int fd_passing_socket)
+ErrorOr<int> service_main(int ipc_socket)
 {
     // Ensure the certificates are read out here.
     DefaultRootCACertificates::set_default_certificate_paths(Vector { TRY(find_certificates(s_serenity_resource_root)) });
@@ -43,7 +43,6 @@ ErrorOr<int> service_main(int ipc_socket, int fd_passing_socket)
 
     auto socket = TRY(Core::LocalSocket::adopt_fd(ipc_socket));
     auto client = TRY(RequestServer::ConnectionFromClient::try_create(move(socket)));
-    client->set_fd_passing_socket(TRY(Core::LocalSocket::adopt_fd(fd_passing_socket)));
 
     return event_loop.exec();
 }

@@ -15,7 +15,6 @@ import android.os.ParcelFileDescriptor
 
 class LadybirdServiceConnection(
     private var ipcFd: Int,
-    private var fdPassingFd: Int,
     private var resourceDir: String
 ) :
     ServiceConnection {
@@ -36,9 +35,8 @@ class LadybirdServiceConnection(
         init.data.putString("PATH", resourceDir)
         service!!.send(init)
 
-        val msg = Message.obtain(null, MSG_TRANSFER_SOCKETS)
+        val msg = Message.obtain(null, MSG_TRANSFER_SOCKET)
         msg.data.putParcelable("IPC_SOCKET", ParcelFileDescriptor.adoptFd(ipcFd))
-        msg.data.putParcelable("FD_PASSING_SOCKET", ParcelFileDescriptor.adoptFd(fdPassingFd))
         service!!.send(msg)
     }
 

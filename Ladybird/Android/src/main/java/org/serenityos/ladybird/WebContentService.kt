@@ -20,9 +20,9 @@ class WebContentService : LadybirdServiceBase("WebContentService") {
         nativeInit();
     }
 
-    private fun bindRequestServer(ipcFd: Int, fdPassingFd: Int)
+    private fun bindRequestServer(ipcFd: Int)
     {
-        val connector = LadybirdServiceConnection(ipcFd, fdPassingFd, resourceDir)
+        val connector = LadybirdServiceConnection(ipcFd, resourceDir)
         connector.onDisconnect = {
             // FIXME: Notify impl that service is dead and might need restarted
             Log.e(TAG, "RequestServer Died! :(")
@@ -35,9 +35,9 @@ class WebContentService : LadybirdServiceBase("WebContentService") {
         )
     }
 
-    private fun bindImageDecoder(ipcFd: Int, fdPassingFd: Int)
+    private fun bindImageDecoder(ipcFd: Int)
     {
-        val connector = LadybirdServiceConnection(ipcFd, fdPassingFd, resourceDir)
+        val connector = LadybirdServiceConnection(ipcFd, resourceDir)
         connector.onDisconnect = {
             // FIXME: Notify impl that service is dead and might need restarted
             Log.e(TAG, "ImageDecoder Died! :(")

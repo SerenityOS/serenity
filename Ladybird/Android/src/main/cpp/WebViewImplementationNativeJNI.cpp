@@ -23,7 +23,7 @@ Java_org_serenityos_ladybird_WebViewImplementation_00024Companion_nativeClassIni
     WebViewImplementationNative::global_class_reference = reinterpret_cast<jclass>(env->NewGlobalRef(local_class));
     env->DeleteLocalRef(local_class);
 
-    auto method = env->GetMethodID(WebViewImplementationNative::global_class_reference, "bindWebContentService", "(II)V");
+    auto method = env->GetMethodID(WebViewImplementationNative::global_class_reference, "bindWebContentService", "(I)V");
     if (!method)
         TODO();
     WebViewImplementationNative::bind_webcontent_method = method;

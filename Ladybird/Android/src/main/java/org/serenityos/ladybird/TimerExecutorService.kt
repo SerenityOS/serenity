@@ -30,7 +30,7 @@ class TimerExecutorService {
             timer,
             milliseconds,
             TimeUnit.MILLISECONDS
-        ) else executor.scheduleAtFixedRate(
+        ) else executor.scheduleWithFixedDelay(
             timer,
             milliseconds,
             milliseconds,
@@ -40,9 +40,9 @@ class TimerExecutorService {
         return id
     }
 
-    fun unregisterTimer(id: Long): Boolean {
-        val timer = timers[id] ?: return false
-        return timer.cancel(false)
+    fun unregisterTimer(id: Long) {
+        val timer = timers[id] ?: return
+        timer.cancel(false)
     }
 
     private var nextId: Long = 0

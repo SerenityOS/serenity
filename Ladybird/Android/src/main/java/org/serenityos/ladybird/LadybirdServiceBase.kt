@@ -19,7 +19,7 @@ import java.lang.ref.WeakReference
 import java.util.concurrent.Executors
 
 const val MSG_SET_RESOURCE_ROOT = 1
-const val MSG_TRANSFER_SOCKETS = 2
+const val MSG_TRANSFER_SOCKET = 2
 
 abstract class LadybirdServiceBase(protected val TAG: String) : Service() {
     private val threadPool = Executors.newCachedThreadPool()
@@ -44,8 +44,7 @@ abstract class LadybirdServiceBase(protected val TAG: String) : Service() {
         val bundle = msg.data
         // FIXME: Handle garbage messages from wierd clients
         val ipcSocket = bundle.getParcelable<ParcelFileDescriptor>("IPC_SOCKET")!!
-        val fdSocket = bundle.getParcelable<ParcelFileDescriptor>("FD_PASSING_SOCKET")!!
-        createThread(ipcSocket, fdSocket)
+        createThread(ipcSocket)
     }
 
     private fun handleSetResourceRoot(msg: Message) {
@@ -61,13 +60,13 @@ abstract class LadybirdServiceBase(protected val TAG: String) : Service() {
     }
 
 
-    private fun createThread(ipcSocket: ParcelFileDescriptor, fdSocket: ParcelFileDescriptor) {
+    private fun createThread(ipcSocket: ParcelFileDescriptor) {
         threadPool.execute {
-            nativeThreadLoop(ipcSocket.detachFd(), fdSocket.detachFd())
+            nativeThreadLoop(ipcSocket.detachFd())
         }
     }
 
-    private external fun nativeThreadLoop(ipcSocket: Int, fdPassingSocket: Int)
+    private external fun nativeThreadLoop(ipcSocket: Int)
     private external fun initNativeCode(resourceDir: String, tagName: String);
 
     abstract fun handleServiceSpecificMessage(msg: Message): Boolean
@@ -78,7 +77,7 @@ abstract class LadybirdServiceBase(protected val TAG: String) : Service() {
             Handler(Looper.getMainLooper()) {
             override fun handleMessage(msg: Message) {
                 when (msg.what) {
-                    MSG_TRANSFER_SOCKETS -> service.get()?.handleTransferSockets(msg)
+                    MSG_TRANSFER_SOCKET -> service.get()?.handleTransferSockets(msg)
                         ?: super.handleMessage(msg)
 
                     MSG_SET_RESOURCE_ROOT -> service.get()?.handleSetResourceRoot(msg)

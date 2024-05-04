@@ -24,25 +24,25 @@ Java_org_serenityos_ladybird_WebContentService_nativeInit(JNIEnv* env, jobject t
     global_class_reference = reinterpret_cast<jclass>(env->NewGlobalRef(local_class));
     env->DeleteLocalRef(local_class);
 
-    auto method = env->GetMethodID(global_class_reference, "bindRequestServer", "(II)V");
+    auto method = env->GetMethodID(global_class_reference, "bindRequestServer", "(I)V");
     if (!method)
         TODO();
     bind_request_server_method = method;
 
-    method = env->GetMethodID(global_class_reference, "bindImageDecoder", "(II)V");
+    method = env->GetMethodID(global_class_reference, "bindImageDecoder", "(I)V");
     if (!method)
         TODO();
     bind_image_decoder_method = method;
 }
 
-void bind_request_server_java(int ipc_socket, int fd_passing_socket)
+void bind_request_server_java(int ipc_socket)
 {
     Ladybird::JavaEnvironment env(global_vm);
-    env.get()->CallVoidMethod(global_instance, bind_request_server_method, ipc_socket, fd_passing_socket);
+    env.get()->CallVoidMethod(global_instance, bind_request_server_method, ipc_socket);
 }
 
-void bind_image_decoder_java(int ipc_socket, int fd_passing_socket)
+void bind_image_decoder_java(int ipc_socket)
 {
     Ladybird::JavaEnvironment env(global_vm);
-    env.get()->CallVoidMethod(global_instance, bind_image_decoder_method, ipc_socket, fd_passing_socket);
+    env.get()->CallVoidMethod(global_instance, bind_image_decoder_method, ipc_socket);
 }
