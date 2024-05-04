@@ -306,6 +306,7 @@ public:
     void add_hoisted_function(NonnullRefPtr<FunctionDeclaration const> declaration);
 
     [[nodiscard]] bool has_lexical_declarations() const { return !m_lexical_declarations.is_empty(); }
+    [[nodiscard]] bool has_non_local_lexical_declarations() const;
     [[nodiscard]] bool has_var_declarations() const { return !m_var_declarations.is_empty(); }
 
     [[nodiscard]] size_t var_declaration_count() const { return m_var_declarations.size(); }

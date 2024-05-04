@@ -308,7 +308,7 @@ ECMAScriptFunctionObject::ECMAScriptFunctionObject(DeprecatedFlyString name, Byt
 
     // 30. If strict is false, then
     if (!m_strict) {
-        bool can_elide_declarative_environment = !m_contains_direct_call_to_eval && (!scope_body || !scope_body->has_lexical_declarations());
+        bool can_elide_declarative_environment = !m_contains_direct_call_to_eval && (!scope_body || !scope_body->has_non_local_lexical_declarations());
         if (can_elide_declarative_environment) {
             lex_environment_size = var_environment_size;
         } else {
@@ -870,7 +870,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
         // Optimization: We avoid creating empty top-level declarative environments in non-strict mode, if both of these conditions are true:
         //               1. there is no direct call to eval() within this function
         //               2. there are no lexical declarations that would go into the environment
-        bool can_elide_declarative_environment = !m_contains_direct_call_to_eval && (!scope_body || !scope_body->has_lexical_declarations());
+        bool can_elide_declarative_environment = !m_contains_direct_call_to_eval && (!scope_body || !scope_body->has_non_local_lexical_declarations());
         if (can_elide_declarative_environment) {
             lex_environment = var_environment;
         } else {
