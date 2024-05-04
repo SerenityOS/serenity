@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/API/MajorNumberAllocation.h>
 #include <Kernel/Arch/aarch64/RPi/GPIO.h>
 #include <Kernel/Arch/aarch64/RPi/MMIO.h>
 #include <Kernel/Arch/aarch64/RPi/MiniUART.h>
@@ -62,7 +63,7 @@ UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<MiniUART>> MiniUART::create()
 
 // FIXME: Consider not hardcoding the minor number and allocate it dynamically.
 UNMAP_AFTER_INIT MiniUART::MiniUART()
-    : CharacterDevice(4, 0)
+    : CharacterDevice(MajorAllocation::CharacterDeviceFamily::Serial, 0)
     , m_registers(MMIO::the().peripheral<MiniUARTRegisters>(0x21'5040))
 {
     auto& gpio = GPIO::the();

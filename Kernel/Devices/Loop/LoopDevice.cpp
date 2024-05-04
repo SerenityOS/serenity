@@ -5,6 +5,7 @@
  */
 
 #include <AK/Singleton.h>
+#include <Kernel/API/MajorNumberAllocation.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/Loop/LoopDevice.h>
 #include <Kernel/Sections.h>
@@ -117,7 +118,7 @@ ErrorOr<size_t> LoopDevice::write(OpenFileDescription& description, u64 offset, 
 
 // FIXME: Allow passing different block sizes to the constructor
 LoopDevice::LoopDevice(NonnullRefPtr<Custody> backing_custody, unsigned index)
-    : BlockDevice(20, index, 512)
+    : BlockDevice(MajorAllocation::BlockDeviceFamily::Loop, index, 512)
     , m_backing_custody(backing_custody)
     , m_index(index)
 {

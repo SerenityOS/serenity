@@ -12,6 +12,7 @@
 #if ARCH(X86_64)
 #    include <Kernel/Arch/x86_64/PCSpeaker.h>
 #endif
+#include <Kernel/API/MajorNumberAllocation.h>
 #include <Kernel/Boot/CommandLine.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/GPU/DisplayConnector.h>
@@ -276,7 +277,7 @@ void VirtualConsole::refresh_after_resolution_change()
 }
 
 UNMAP_AFTER_INIT VirtualConsole::VirtualConsole(unsigned const index)
-    : TTY(35, index)
+    : TTY(MajorAllocation::CharacterDeviceFamily::VirtualConsole, index)
     , m_index(index)
     , m_console_impl(*this)
 {

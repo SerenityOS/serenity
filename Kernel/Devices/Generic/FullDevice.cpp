@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/API/MajorNumberAllocation.h>
 #include <Kernel/API/POSIX/errno.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/Generic/FullDevice.h>
@@ -20,7 +21,7 @@ UNMAP_AFTER_INIT NonnullLockRefPtr<FullDevice> FullDevice::must_create()
 }
 
 UNMAP_AFTER_INIT FullDevice::FullDevice()
-    : CharacterDevice(1, 7)
+    : CharacterDevice(MajorAllocation::CharacterDeviceFamily::Generic, 7)
 {
 }
 

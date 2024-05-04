@@ -10,6 +10,7 @@
 #include <AK/Types.h>
 #include <Kernel/API/Ioctl.h>
 #include <Kernel/API/KeyCode.h>
+#include <Kernel/API/MajorNumberAllocation.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/HID/KeyboardDevice.h>
 #include <Kernel/Devices/TTY/VirtualConsole.h>
@@ -82,7 +83,7 @@ ErrorOr<NonnullRefPtr<KeyboardDevice>> KeyboardDevice::try_to_initialize()
 // FIXME: UNMAP_AFTER_INIT is fine for now, but for hot-pluggable devices
 // like USB keyboards, we need to remove this
 UNMAP_AFTER_INIT KeyboardDevice::KeyboardDevice()
-    : HIDDevice(85, HIDManagement::the().generate_minor_device_number_for_keyboard())
+    : HIDDevice(MajorAllocation::CharacterDeviceFamily::Keyboard, HIDManagement::the().generate_minor_device_number_for_keyboard())
 {
 }
 

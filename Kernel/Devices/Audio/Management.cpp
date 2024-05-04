@@ -16,10 +16,6 @@ namespace Kernel {
 static Singleton<AudioManagement> s_the;
 static Atomic<u32> s_device_minor_number;
 
-MajorNumber AudioManagement::audio_type_major_number()
-{
-    return 116;
-}
 MinorNumber AudioManagement::generate_storage_minor_number()
 {
     auto minor_number = s_device_minor_number.load();
