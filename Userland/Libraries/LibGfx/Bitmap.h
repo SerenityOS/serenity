@@ -147,7 +147,9 @@ public:
     [[nodiscard]] ARGB32 const* scanline(int physical_y) const;
 
     [[nodiscard]] ARGB32* begin();
+    [[nodiscard]] ARGB32 const* begin() const;
     [[nodiscard]] ARGB32* end();
+    [[nodiscard]] ARGB32 const* end() const;
     [[nodiscard]] size_t data_size() const;
 
     [[nodiscard]] IntRect rect() const { return { {}, m_size }; }
@@ -277,9 +279,19 @@ ALWAYS_INLINE ARGB32* Bitmap::begin()
     return scanline(0);
 }
 
+ALWAYS_INLINE ARGB32 const* Bitmap::begin() const
+{
+    return scanline(0);
+}
+
 ALWAYS_INLINE ARGB32* Bitmap::end()
 {
     return reinterpret_cast<ARGB32*>(reinterpret_cast<u8*>(m_data) + data_size());
+}
+
+ALWAYS_INLINE ARGB32 const* Bitmap::end() const
+{
+    return reinterpret_cast<ARGB32 const*>(reinterpret_cast<u8 const*>(m_data) + data_size());
 }
 
 ALWAYS_INLINE size_t Bitmap::data_size() const
