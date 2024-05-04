@@ -16,14 +16,9 @@ namespace DeviceMapper {
 
 class DeviceNodeFamily : public RefCounted<DeviceNodeFamily> {
 public:
-    enum class Type {
-        BlockDevice,
-        CharacterDevice,
-    };
-
-    DeviceNodeFamily(Bitmap devices_symbol_suffix_allocation_map, StringView literal_device_family, Type type, MajorNumber major)
+    DeviceNodeFamily(Bitmap devices_symbol_suffix_allocation_map, StringView literal_device_family, DeviceNodeType device_node_type, MajorNumber major)
         : m_literal_device_family(literal_device_family)
-        , m_type(type)
+        , m_device_node_type(device_node_type)
         , m_major(major)
         , m_devices_symbol_suffix_allocation_map(move(devices_symbol_suffix_allocation_map))
     {
@@ -31,7 +26,7 @@ public:
 
     StringView literal_device_family() const { return m_literal_device_family; }
     MajorNumber major_number() const { return m_major; }
-    Type type() const { return m_type; }
+    DeviceNodeType device_node_type() const { return m_device_node_type; }
 
     HashTable<RegisteredDeviceNode>& registered_nodes() { return m_registered_nodes; }
     Bitmap& devices_symbol_suffix_allocation_map() { return m_devices_symbol_suffix_allocation_map; }
@@ -39,7 +34,7 @@ public:
 
 private:
     StringView m_literal_device_family;
-    Type m_type { Type::CharacterDevice };
+    DeviceNodeType m_device_node_type { DeviceNodeType::Character };
     MajorNumber m_major { 0 };
 
     HashTable<RegisteredDeviceNode> m_registered_nodes;
