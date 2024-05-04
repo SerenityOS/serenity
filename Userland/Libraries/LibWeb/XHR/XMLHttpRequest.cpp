@@ -173,7 +173,7 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::set_response_type(Bindings::XMLHttpReq
     return {};
 }
 
-// https://xhr.spec.whatwg.org/#response
+// https://xhr.spec.whatwg.org/#dom-xmlhttprequest-response
 WebIDL::ExceptionOr<JS::Value> XMLHttpRequest::response()
 {
     auto& vm = this->vm();
@@ -222,9 +222,6 @@ WebIDL::ExceptionOr<JS::Value> XMLHttpRequest::response()
     // 7. Otherwise, if this’s response type is "document", set a document response for this.
     else if (m_response_type == Bindings::XMLHttpRequestResponseType::Document) {
         set_document_response();
-
-        if (m_response_object.has<Empty>())
-            return JS::js_null();
     }
     // 8. Otherwise:
     else {
@@ -241,11 +238,16 @@ WebIDL::ExceptionOr<JS::Value> XMLHttpRequest::response()
             return JS::js_null();
 
         // 4. Set this’s response object to jsonObject.
-        m_response_object = JS::NonnullGCPtr<JS::Object> { json_object_result.release_value().as_object() };
+        if (json_object_result.value().is_object())
+            m_response_object = JS::NonnullGCPtr<JS::Object> { json_object_result.release_value().as_object() };
+        else
+            m_response_object = Empty {};
     }
 
     // 9. Return this’s response object.
-    return m_response_object.get<JS::NonnullGCPtr<JS::Object>>();
+    return m_response_object.visit(
+        [](JS::NonnullGCPtr<JS::Object> object) -> JS::Value { return object; },
+        [](auto const&) -> JS::Value { return JS::js_null(); });
 }
 
 // https://xhr.spec.whatwg.org/#text-response
