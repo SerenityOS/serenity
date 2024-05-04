@@ -8,7 +8,7 @@
 
 #include "AbbreviationsMap.h"
 #include <AK/Noncopyable.h>
-#include <AK/NonnullOwnPtr.h>
+#include <AK/OwnPtr.h>
 #include <AK/Types.h>
 
 namespace Debug::Dwarf {
@@ -22,7 +22,7 @@ class CompilationUnit {
     AK_MAKE_NONMOVABLE(CompilationUnit);
 
 public:
-    CompilationUnit(DwarfInfo const& dwarf_info, u32 offset, CompilationUnitHeader const&, NonnullOwnPtr<LineProgram>&& line_program);
+    static ErrorOr<NonnullOwnPtr<CompilationUnit>> create(DwarfInfo const& dwarf_info, u32 offset, CompilationUnitHeader const&, ReadonlyBytes debug_line_data);
     ~CompilationUnit();
 
     u32 offset() const { return m_offset; }
@@ -49,11 +49,14 @@ public:
     ErrorOr<u64> range_lists_base() const;
 
 private:
+    CompilationUnit(DwarfInfo const& dwarf_info, u32 offset, CompilationUnitHeader const&);
+    ErrorOr<void> populate_line_program(ReadonlyBytes debug_line_data);
+
     DwarfInfo const& m_dwarf_info;
     u32 m_offset { 0 };
     CompilationUnitHeader m_header;
     AbbreviationsMap m_abbreviations;
-    NonnullOwnPtr<LineProgram> m_line_program;
+    OwnPtr<LineProgram> m_line_program;
     mutable bool m_has_cached_base_address : 1 { false };
     mutable bool m_has_cached_address_table_base : 1 { false };
     mutable bool m_has_cached_string_offsets_base : 1 { false };

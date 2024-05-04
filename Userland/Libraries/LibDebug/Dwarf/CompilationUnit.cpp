@@ -6,20 +6,44 @@
 
 #include "CompilationUnit.h"
 #include <AK/ByteReader.h>
+#include <AK/MemoryStream.h>
 #include <LibDebug/Dwarf/DIE.h>
 #include <LibDebug/Dwarf/DwarfInfo.h>
 #include <LibDebug/Dwarf/LineProgram.h>
 
 namespace Debug::Dwarf {
 
-CompilationUnit::CompilationUnit(DwarfInfo const& dwarf_info, u32 offset, CompilationUnitHeader const& header, NonnullOwnPtr<LineProgram>&& line_program)
+CompilationUnit::CompilationUnit(DwarfInfo const& dwarf_info, u32 offset, CompilationUnitHeader const& header)
     : m_dwarf_info(dwarf_info)
     , m_offset(offset)
     , m_header(header)
     , m_abbreviations(dwarf_info, header.abbrev_offset())
-    , m_line_program(move(line_program))
 {
     VERIFY(header.version() < 5 || header.unit_type() == CompilationUnitType::Full);
+}
+
+ErrorOr<NonnullOwnPtr<CompilationUnit>> CompilationUnit::create(DwarfInfo const& dwarf_info, u32 offset, CompilationUnitHeader const& header, ReadonlyBytes debug_line_data)
+{
+    auto compilation_unit = TRY(adopt_nonnull_own_or_enomem(new (nothrow) CompilationUnit(dwarf_info, offset, header)));
+    TRY(compilation_unit->populate_line_program(debug_line_data));
+    return compilation_unit;
+}
+
+ErrorOr<void> CompilationUnit::populate_line_program(ReadonlyBytes debug_line_data)
+{
+    auto die = root_die();
+
+    auto res = TRY(die.get_attribute(Attribute::StmtList));
+    if (!res.has_value())
+        return EINVAL;
+    VERIFY(res->form() == AttributeDataForm::SecOffset);
+
+    FixedMemoryStream debug_line_stream { debug_line_data };
+    TRY(debug_line_stream.seek(res->as_unsigned()));
+
+    m_line_program = TRY(LineProgram::create(m_dwarf_info, debug_line_stream));
+
+    return {};
 }
 
 CompilationUnit::~CompilationUnit() = default;
