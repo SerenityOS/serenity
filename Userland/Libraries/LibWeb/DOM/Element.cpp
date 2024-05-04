@@ -1418,13 +1418,13 @@ bool Element::is_actually_disabled() const
     return false;
 }
 
-// https://w3c.github.io/DOM-Parsing/#dom-element-outerhtml
+// https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-element-outerhtml
 WebIDL::ExceptionOr<String> Element::outer_html() const
 {
     return serialize_fragment(DOMParsing::RequireWellFormed::Yes, FragmentSerializationMode::Outer);
 }
 
-// https://w3c.github.io/DOM-Parsing/#dom-element-outerhtml
+// https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-element-outerhtml
 WebIDL::ExceptionOr<void> Element::set_outer_html(String const&)
 {
     dbgln("FIXME: Implement Element::set_outer_html()");
