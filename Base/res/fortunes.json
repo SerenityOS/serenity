@@ -324,6 +324,11 @@
     "url": "https://discord.com/channels/830522505605283862/860165510263996427/1154472970903887892",
     "utc_time": 1695318205,
     "context": "me: I'll just make NavigationParams match the spec\nevery call site that was constructing one with C++ designated initializers: error: ISO C++ requires field designators to be specified in declaration order; field 'reserved_environment' will be initialized after field 'navigable' [-Werror,-Wreorder-init-list]"
-    
+  },
+  {
+    "quote": "sprung on me, or sprung on you?",
+    "author": "Andrew Kaster",
+    "url": "https://discord.com/channels/830522505605283862/1151750658660253726/1236303479048372296",
+    "utc_time": 1714828080,
   }
 ]
