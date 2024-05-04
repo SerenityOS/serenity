@@ -1368,8 +1368,8 @@ void Window::scroll(ScrollToOptions const& options)
     auto y = options.top.value_or(viewport_rect.y());
 
     // 3. Normalize non-finite values for x and y.
-    x = JS::Value(x).is_finite_number() ? x : 0;
-    y = JS::Value(y).is_finite_number() ? y : 0;
+    x = HTML::normalize_non_finite_values(x);
+    y = HTML::normalize_non_finite_values(y);
 
     // 5. Let viewport width be the width of the viewport excluding the width of the scroll bar, if any.
     auto viewport_width = viewport_rect.width();
@@ -1438,16 +1438,14 @@ void Window::scroll(double x, double y)
 void Window::scroll_by(ScrollToOptions options)
 {
     // 2. Normalize non-finite values for the left and top dictionary members of options.
-    auto x = options.left.value_or(0);
-    auto y = options.top.value_or(0);
-    x = JS::Value(x).is_finite_number() ? x : 0;
-    y = JS::Value(y).is_finite_number() ? y : 0;
+    auto left = HTML::normalize_non_finite_values(options.left);
+    auto top = HTML::normalize_non_finite_values(options.top);
 
     // 3. Add the value of scrollX to the left dictionary member.
-    options.left = x + scroll_x();
+    options.left = left + scroll_x();
 
     // 4. Add the value of scrollY to the top dictionary member.
-    options.top = y + scroll_y();
+    options.top = top + scroll_y();
 
     // 5. Act as if the scroll() method was invoked with options as the only argument.
     scroll(options);
