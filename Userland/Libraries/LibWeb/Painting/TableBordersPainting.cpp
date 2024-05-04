@@ -38,7 +38,7 @@ static void collect_cell_boxes(Vector<PaintableBox const&>& cell_boxes, Paintabl
         } else {
             collect_cell_boxes(cell_boxes, child);
         }
-        return TraversalDecision::Continue;
+        return IterationDecision::Continue;
     });
 }
 

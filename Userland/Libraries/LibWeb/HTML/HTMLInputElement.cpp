@@ -135,6 +135,7 @@ void HTMLInputElement::set_checked(bool checked, ChangeSource change_source)
     if (parent()) {
         parent()->for_each_child([&](auto& child) {
             child.invalidate_style();
+            return IterationDecision::Continue;
         });
     }
 }

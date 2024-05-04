@@ -76,6 +76,7 @@ private:
         for_each_child_of_type<SVG::SVGStopElement>([&](auto& stop) {
             color_stops_found = true;
             callback(stop);
+            return IterationDecision::Continue;
         });
         if (!color_stops_found) {
             if (auto gradient = linked_gradient(seen_gradients))

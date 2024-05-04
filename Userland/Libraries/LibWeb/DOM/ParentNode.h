@@ -70,15 +70,19 @@ inline U* Node::shadow_including_first_ancestor_of_type()
 template<typename Callback>
 inline void ParentNode::for_each_child(Callback callback) const
 {
-    for (auto* node = first_child(); node; node = node->next_sibling())
-        callback(*node);
+    for (auto* node = first_child(); node; node = node->next_sibling()) {
+        if (callback(*node) == IterationDecision::Break)
+            return;
+    }
 }
 
 template<typename Callback>
 inline void ParentNode::for_each_child(Callback callback)
 {
-    for (auto* node = first_child(); node; node = node->next_sibling())
-        callback(*node);
+    for (auto* node = first_child(); node; node = node->next_sibling()) {
+        if (callback(*node) == IterationDecision::Break)
+            return;
+    }
 }
 
 }

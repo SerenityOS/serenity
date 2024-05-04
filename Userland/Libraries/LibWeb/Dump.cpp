@@ -118,6 +118,7 @@ void dump_tree(StringBuilder& builder, DOM::Node const& node)
         if (!is<HTML::HTMLTemplateElement>(node)) {
             static_cast<DOM::ParentNode const&>(node).for_each_child([&](auto& child) {
                 dump_tree(builder, child);
+                return IterationDecision::Continue;
             });
         } else {
             auto& template_element = verify_cast<HTML::HTMLTemplateElement>(node);
@@ -403,6 +404,7 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
     ++indent;
     layout_node.for_each_child([&](auto& child) {
         dump_tree(builder, child, show_box_model, show_specified_style, interactive);
+        return IterationDecision::Continue;
     });
     --indent;
 }

@@ -553,6 +553,7 @@ void TreeBuilder::remove_irrelevant_boxes(NodeWithStyle& root)
     for_each_in_tree_with_internal_display<CSS::DisplayInternal::TableColumn>(root, [&](Box& table_column) {
         table_column.for_each_child([&](auto& child) {
             to_remove.append(child);
+            return IterationDecision::Continue;
         });
     });
 
@@ -561,6 +562,7 @@ void TreeBuilder::remove_irrelevant_boxes(NodeWithStyle& root)
         table_column_group.for_each_child([&](auto& child) {
             if (!child.display().is_table_column())
                 to_remove.append(child);
+            return IterationDecision::Continue;
         });
     });
 
@@ -770,6 +772,7 @@ static void for_each_child_box_matching(Box& parent, Matcher matcher, Callback c
     parent.for_each_child_of_type<Box>([&](Box& child_box) {
         if (matcher(child_box))
             callback(child_box);
+        return IterationDecision::Continue;
     });
 }
 

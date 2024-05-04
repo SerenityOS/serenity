@@ -76,6 +76,7 @@ public:
         parent.for_each_child_of_type<Box>([&](Box const& child_box) {
             if (matcher(child_box))
                 callback(child_box);
+            return IterationDecision::Continue;
         });
     }
 

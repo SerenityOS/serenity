@@ -224,16 +224,20 @@ public:
     template<typename Callback>
     void for_each_child(Callback callback)
     {
-        for (auto* node = first_child(); node; node = node->next_sibling())
-            callback(*node);
+        for (auto* node = first_child(); node; node = node->next_sibling()) {
+            if (callback(*node) == IterationDecision::Break)
+                return;
+        }
     }
 
     template<typename U, typename Callback>
     void for_each_child_of_type(Callback callback)
     {
         for (auto* node = first_child(); node; node = node->next_sibling()) {
-            if (is<U>(node))
-                callback(verify_cast<U>(*node));
+            if (is<U>(node)) {
+                if (callback(verify_cast<U>(*node)) == IterationDecision::Break)
+                    return;
+            }
         }
     }
 

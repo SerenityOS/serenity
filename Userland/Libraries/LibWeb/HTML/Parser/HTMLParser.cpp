@@ -4418,7 +4418,8 @@ String HTMLParser::serialize_html_fragment(DOM::Node const& node, DOM::FragmentS
         if (is<DOM::Element>(current_node)) {
             // -> If current node is an Element
             auto& element = verify_cast<DOM::Element>(current_node);
-            return serialize_element(element);
+            serialize_element(element);
+            return IterationDecision::Continue;
         }
 
         if (is<DOM::Text>(current_node)) {
@@ -4440,7 +4441,6 @@ String HTMLParser::serialize_html_fragment(DOM::Node const& node, DOM::FragmentS
 
             // 2. Otherwise, append the value of current node's data IDL attribute, escaped as described below.
             builder.append(escape_string(text_node.data(), AttributeMode::No));
-            return IterationDecision::Continue;
         }
 
         if (is<DOM::Comment>(current_node)) {

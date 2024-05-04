@@ -85,6 +85,7 @@ static void concatenate_descendants_text_content(DOM::Node const* node, StringBu
         builder.append(verify_cast<DOM::Text>(node)->data());
     node->for_each_child([&](auto const& node) {
         concatenate_descendants_text_content(&node, builder);
+        return IterationDecision::Continue;
     });
 }
 
@@ -98,6 +99,7 @@ String HTMLOptionElement::text() const
     // script or SVG script elements.
     for_each_child([&](auto const& node) {
         concatenate_descendants_text_content(&node, builder);
+        return IterationDecision::Continue;
     });
 
     // Return the result of stripping and collapsing ASCII whitespace from the above concatenation.
