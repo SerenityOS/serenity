@@ -6,6 +6,7 @@
 
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/Generic/RandomDevice.h>
+#include <Kernel/Devices/MajorNumberAllocation.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Security/Random.h>
 
@@ -20,7 +21,7 @@ UNMAP_AFTER_INIT NonnullLockRefPtr<RandomDevice> RandomDevice::must_create()
 }
 
 UNMAP_AFTER_INIT RandomDevice::RandomDevice()
-    : CharacterDevice(1, 8)
+    : CharacterDevice(MajorAllocation::CharacterDeviceFamily::Generic, 8)
 {
 }
 

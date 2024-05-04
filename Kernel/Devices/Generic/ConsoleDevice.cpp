@@ -10,6 +10,7 @@
 #endif
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/Generic/ConsoleDevice.h>
+#include <Kernel/Devices/MajorNumberAllocation.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Sections.h>
 #include <Kernel/kstdio.h>
@@ -26,7 +27,7 @@ UNMAP_AFTER_INIT NonnullLockRefPtr<ConsoleDevice> ConsoleDevice::must_create()
 }
 
 UNMAP_AFTER_INIT ConsoleDevice::ConsoleDevice()
-    : CharacterDevice(5, 1)
+    : CharacterDevice(MajorAllocation::CharacterDeviceFamily::Console, 1)
 {
 }
 

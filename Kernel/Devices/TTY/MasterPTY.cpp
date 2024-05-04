@@ -8,6 +8,7 @@
 #include <Kernel/API/POSIX/errno.h>
 #include <Kernel/API/POSIX/signal_numbers.h>
 #include <Kernel/Debug.h>
+#include <Kernel/Devices/MajorNumberAllocation.h>
 #include <Kernel/Devices/TTY/MasterPTY.h>
 #include <Kernel/Devices/TTY/PTYMultiplexer.h>
 #include <Kernel/Devices/TTY/SlavePTY.h>
@@ -31,7 +32,7 @@ ErrorOr<NonnullRefPtr<MasterPTY>> MasterPTY::try_create(unsigned int index)
 }
 
 MasterPTY::MasterPTY(unsigned index, NonnullOwnPtr<DoubleBuffer> buffer)
-    : CharacterDevice(200, index)
+    : CharacterDevice(MajorAllocation::CharacterDeviceFamily::MasterPTY, index)
     , m_index(index)
     , m_buffer(move(buffer))
 {

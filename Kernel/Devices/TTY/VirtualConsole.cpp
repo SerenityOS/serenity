@@ -15,6 +15,7 @@
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/GPU/Management.h>
 #include <Kernel/Devices/HID/Management.h>
+#include <Kernel/Devices/MajorNumberAllocation.h>
 #include <Kernel/Devices/TTY/ConsoleManagement.h>
 #include <Kernel/Devices/TTY/VirtualConsole.h>
 #include <Kernel/Heap/kmalloc.h>
@@ -182,7 +183,7 @@ void VirtualConsole::refresh_after_resolution_change()
 }
 
 UNMAP_AFTER_INIT VirtualConsole::VirtualConsole(unsigned const index)
-    : TTY(35, index)
+    : TTY(MajorAllocation::CharacterDeviceFamily::VirtualConsole, index)
     , m_index(index)
     , m_console_impl(*this)
 {

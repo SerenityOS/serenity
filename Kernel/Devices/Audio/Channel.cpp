@@ -8,6 +8,7 @@
 #include <Kernel/Devices/Audio/Management.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/Generic/RandomDevice.h>
+#include <Kernel/Devices/MajorNumberAllocation.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Security/Random.h>
 
@@ -27,7 +28,7 @@ UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<AudioChannel>> AudioChannel::create(Audio
 }
 
 AudioChannel::AudioChannel(AudioController const& controller, size_t channel_index)
-    : CharacterDevice(AudioManagement::the().audio_type_major_number(), AudioManagement::the().generate_storage_minor_number())
+    : CharacterDevice(MajorAllocation::CharacterDeviceFamily::Audio, AudioManagement::the().generate_storage_minor_number())
     , m_controller(controller)
     , m_channel_index(channel_index)
 {

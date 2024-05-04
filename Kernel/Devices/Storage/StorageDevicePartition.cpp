@@ -6,6 +6,7 @@
 
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/MajorNumberAllocation.h>
 #include <Kernel/Devices/Storage/StorageDevice.h>
 #include <Kernel/Devices/Storage/StorageDevicePartition.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
@@ -21,7 +22,7 @@ NonnullLockRefPtr<StorageDevicePartition> StorageDevicePartition::create(Storage
 }
 
 StorageDevicePartition::StorageDevicePartition(StorageDevice& device, MinorNumber minor_number, Partition::DiskPartitionMetadata metadata)
-    : BlockDevice(100, minor_number, device.block_size())
+    : BlockDevice(MajorAllocation::BlockDeviceFamily::StoragePartition, minor_number, device.block_size())
     , m_device(device)
     , m_metadata(metadata)
 {

@@ -7,6 +7,7 @@
 #include <Kernel/API/POSIX/errno.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/Generic/FullDevice.h>
+#include <Kernel/Devices/MajorNumberAllocation.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {
@@ -20,7 +21,7 @@ UNMAP_AFTER_INIT NonnullLockRefPtr<FullDevice> FullDevice::must_create()
 }
 
 UNMAP_AFTER_INIT FullDevice::FullDevice()
-    : CharacterDevice(1, 7)
+    : CharacterDevice(MajorAllocation::CharacterDeviceFamily::Generic, 7)
 {
 }
 

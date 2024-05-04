@@ -11,6 +11,7 @@
 #include <Kernel/Devices/GPU/VirtIO/GPU3DDevice.h>
 #include <Kernel/Devices/GPU/VirtIO/GraphicsAdapter.h>
 #include <Kernel/Devices/GPU/VirtIO/Protocol.h>
+#include <Kernel/Devices/MajorNumberAllocation.h>
 #include <Kernel/Security/Random.h>
 
 namespace Kernel {
@@ -35,7 +36,7 @@ ErrorOr<NonnullLockRefPtr<VirtIOGPU3DDevice>> VirtIOGPU3DDevice::try_create(Virt
 }
 
 VirtIOGPU3DDevice::VirtIOGPU3DDevice(VirtIOGraphicsAdapter const& graphics_adapter, NonnullOwnPtr<Memory::Region> transfer_buffer_region, Graphics::VirtIOGPU::ContextID kernel_context_id)
-    : CharacterDevice(28, 0)
+    : CharacterDevice(MajorAllocation::CharacterDeviceFamily::GPURender, 0)
     , m_graphics_adapter(graphics_adapter)
     , m_kernel_context_id(kernel_context_id)
     , m_transfer_buffer_region(move(transfer_buffer_region))

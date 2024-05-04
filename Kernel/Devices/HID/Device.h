@@ -7,6 +7,7 @@
 #pragma once
 
 #include <Kernel/Devices/CharacterDevice.h>
+#include <Kernel/Devices/MajorNumberAllocation.h>
 #include <Kernel/Security/Random.h>
 
 namespace Kernel {
@@ -16,8 +17,8 @@ class HIDDevice : public CharacterDevice {
     friend class HIDManagement;
 
 protected:
-    HIDDevice(MajorNumber major, MinorNumber minor)
-        : CharacterDevice(major, minor)
+    HIDDevice(MajorAllocation::CharacterDeviceFamily character_device_family, MinorNumber minor)
+        : CharacterDevice(character_device_family, minor)
     {
     }
 
