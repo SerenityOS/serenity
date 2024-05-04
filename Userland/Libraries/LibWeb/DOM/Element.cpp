@@ -2142,9 +2142,62 @@ HashMap<FlyString, CSS::StyleProperty> const& Element::custom_properties(Optiona
 // https://drafts.csswg.org/cssom-view/#dom-element-scroll
 void Element::scroll(double x, double y)
 {
-    // AD-HOC:
-    if (auto* paintable_box = this->paintable_box())
-        paintable_box->scroll_by(x, y);
+    // 1. If invoked with one argument, follow these substeps:
+    //    NOTE: Not relevant here.
+    // 2. If invoked with two arguments, follow these substeps:
+    //     1. Let options be null converted to a ScrollToOptions dictionary. [WEBIDL]
+    //     2. Let x and y be the arguments, respectively.
+    //     3. Normalize non-finite values for x and y.
+    //     4. Let the left dictionary member of options have the value x.
+    //     5. Let the top dictionary member of options have the value y.
+    x = HTML::normalize_non_finite_values(x);
+    y = HTML::normalize_non_finite_values(y);
+
+    // 3. Let document be the element’s node document.
+    auto& document = this->document();
+
+    // 4. If document is not the active document, terminate these steps.
+    if (!document.is_active())
+        return;
+
+    // 5. Let window be the value of document’s defaultView attribute.
+    auto* window = document.default_view();
+
+    // 6. If window is null, terminate these steps.
+    if (!window)
+        return;
+
+    // 7. If the element is the root element and document is in quirks mode, terminate these steps.
+    if (document.document_element() == this && document.in_quirks_mode())
+        return;
+
+    // NOTE: Ensure that layout is up-to-date before looking at metrics.
+    document.update_layout();
+
+    // 8. If the element is the root element invoke scroll() on window with scrollX on window as first argument and y as second argument, and terminate these steps.
+    if (document.document_element() == this) {
+        window->scroll(window->scroll_x(), y);
+        return;
+    }
+
+    // 9. If the element is the body element, document is in quirks mode, and the element is not potentially scrollable, invoke scroll() on window
+    //    with options as the only argument, and terminate these steps.
+    if (document.body() == this && document.in_quirks_mode() && !is_potentially_scrollable()) {
+        window->scroll(x, y);
+        return;
+    }
+
+    // 10. If the element does not have any associated box, the element has no associated scrolling box, or the element has no overflow, terminate these steps.
+    // FIXME: or the element has no overflow
+    if (!paintable_box())
+        return;
+
+    // 11. Scroll the element to x,y, with the scroll behavior being the value of the behavior dictionary member of options.
+    // FIXME: Implement this in terms of calling "scroll the element".
+    auto scroll_offset = paintable_box()->scroll_offset();
+    scroll_offset.set_x(CSSPixels::nearest_value_for(x));
+    scroll_offset.set_y(CSSPixels::nearest_value_for(y));
+    paintable_box()->set_scroll_offset(scroll_offset);
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-element-scroll
