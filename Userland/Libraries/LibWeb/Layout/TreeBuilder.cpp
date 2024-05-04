@@ -340,7 +340,18 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::Context& 
         display = style->display();
         if (display.is_none())
             return;
-        layout_node = element.create_layout_node(*style);
+        if (context.layout_svg_mask_or_clip_path) {
+            if (is<SVG::SVGMaskElement>(dom_node))
+                layout_node = document.heap().allocate_without_realm<Layout::SVGMaskBox>(document, static_cast<SVG::SVGMaskElement&>(dom_node), *style);
+            else if (is<SVG::SVGClipPathElement>(dom_node))
+                layout_node = document.heap().allocate_without_realm<Layout::SVGClipBox>(document, static_cast<SVG::SVGClipPathElement&>(dom_node), *style);
+            else
+                VERIFY_NOT_REACHED();
+            // Only layout direct uses of SVG masks/clipPaths.
+            context.layout_svg_mask_or_clip_path = false;
+        } else {
+            layout_node = element.create_layout_node(*style);
+        }
     } else if (is<DOM::Document>(dom_node)) {
         style = style_computer.create_document_style();
         display = style->display();
@@ -348,17 +359,6 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::Context& 
     } else if (is<DOM::Text>(dom_node)) {
         layout_node = document.heap().allocate_without_realm<Layout::TextNode>(document, static_cast<DOM::Text&>(dom_node));
         display = CSS::Display(CSS::DisplayOutside::Inline, CSS::DisplayInside::Flow);
-    }
-
-    if (context.layout_svg_mask_or_clip_path) {
-        if (is<SVG::SVGMaskElement>(dom_node))
-            layout_node = document.heap().allocate_without_realm<Layout::SVGMaskBox>(document, static_cast<SVG::SVGMaskElement&>(dom_node), *style);
-        else if (is<SVG::SVGClipPathElement>(dom_node))
-            layout_node = document.heap().allocate_without_realm<Layout::SVGClipBox>(document, static_cast<SVG::SVGClipPathElement&>(dom_node), *style);
-        else
-            VERIFY_NOT_REACHED();
-        // Only layout direct uses of SVG masks/clipPaths.
-        context.layout_svg_mask_or_clip_path = false;
     }
 
     if (!layout_node)
