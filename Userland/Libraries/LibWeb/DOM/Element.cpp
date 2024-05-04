@@ -2159,10 +2159,22 @@ void Element::scroll_by(double x, double y)
     dbgln("FIXME: Implement Element::scroll_by({}, {})", x, y);
 }
 
-// https://drafts.csswg.org/cssom-view/#dom-window-scrollby
-void Element::scroll_by(HTML::ScrollToOptions const&)
+// https://drafts.csswg.org/cssom-view/#dom-element-scrollby
+void Element::scroll_by(HTML::ScrollToOptions options)
 {
-    dbgln("FIXME: Implement Element::scroll_by(ScrollToOptions)");
+    // 1. Let options be the argument.
+    // 2. Normalize non-finite values for left and top dictionary members of options, if present.
+    auto left = HTML::normalize_non_finite_values(options.left);
+    auto top = HTML::normalize_non_finite_values(options.top);
+
+    // 3. Add the value of scrollLeft to the left dictionary member.
+    options.left = scroll_left() + left;
+
+    // 4. Add the value of scrollTop to the top dictionary member.
+    options.top = scroll_top() + top;
+
+    // 5. Act as if the scroll() method was invoked with options as the only argument.
+    scroll(options);
 }
 
 bool Element::id_reference_exists(String const& id_reference) const
