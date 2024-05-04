@@ -164,6 +164,40 @@ To generalize the exception a bit more - debug messages (being used sparingly) w
 assumption of paths could be OK, as long as they never have any functional implication
 on the user.
 
+## Allocation of major numbers for new devices
+
+All major numbers in the operating systems are allocated per device type (family of devices).
+We allocate them in `Kernel/API/MajorNumberAllocation.h`, based on this set of rules:
+1. The allocation is either for a new type of block device or character device, not both.
+2. The family name string is not already taken for any block or character devices.
+3. The family name string is informative and short.
+4. The family name string is written in CamelCase name when inserted to the appropriate
+   enum (either CharacterDeviceFamily or BlockDeviceNumber).
+5. The family name string is written in snake_case name when inserted to the appropriate
+   to-StringView function (`character_device_family_to_string_view` or `block_device_family_to_string_view`) with the actual allocation, for example:
+   ```c++
+   ALWAYS_INLINE StringView character_device_family_to_string_view(CharacterDeviceFamily family)
+   {
+      switch (family) {
+      ...
+      case CharacterDeviceFamily::FUSE:
+        return "fuse"sv;
+     ...
+      }
+   }
+   ```
+   Also, you should add an entry in either `s_character_device_numbers` or `s_block_device_numbers` array.
+   For example:
+   ```c++
+   static constexpr CharacterDeviceFamily s_character_device_numbers[] = {
+      ...
+      CharacterDeviceFamily::FUSE,
+      ...
+   };
+   ```
+6. The allocation must be inserted by keeping the ascending order of the allocated major numbers
+   in the appropriate enum and associated to-StringView function.
+
 ## Documentation
 
 As with any documentation, it's always good to see more of it, either with a new manual page,

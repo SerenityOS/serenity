@@ -12,6 +12,9 @@
 #include <AK/Types.h>
 #include <Kernel/API/DeviceFileTypes.h>
 
+// NOTE: Please refer to Documentation/Kernel/DevelopmentGuidelines.md
+// to observe how to add new allocations.
+
 namespace Kernel::MajorAllocation {
 
 enum class CharacterDeviceFamily : unsigned {
