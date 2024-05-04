@@ -23,6 +23,7 @@
 #include <LibWeb/DOM/DOMTokenList.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
+#include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/HTMLCollection.h>
 #include <LibWeb/DOM/NamedNodeMap.h>
 #include <LibWeb/DOM/ShadowRoot.h>
@@ -1425,9 +1426,29 @@ WebIDL::ExceptionOr<String> Element::outer_html() const
 }
 
 // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-element-outerhtml
-WebIDL::ExceptionOr<void> Element::set_outer_html(String const&)
+WebIDL::ExceptionOr<void> Element::set_outer_html(String const& value)
 {
-    dbgln("FIXME: Implement Element::set_outer_html()");
+    // 1. Let parent be this's parent.
+    auto* parent = this->parent();
+
+    // 2. If parent is null, return. There would be no way to obtain a reference to the nodes created even if the remaining steps were run.
+    if (!parent)
+        return {};
+
+    // 3. If parent is a Document, throw a "NoModificationAllowedError" DOMException.
+    if (parent->is_document())
+        return WebIDL::NoModificationAllowedError::create(realm(), "Cannot set outer HTML on document"_fly_string);
+
+    // 4. If parent is a DocumentFragment, set parent to the result of creating an element given this's node document, body, and the HTML namespace.
+    if (parent->is_document_fragment())
+        parent = TRY(create_element(document(), HTML::TagNames::body, Namespace::HTML));
+
+    // 5. Let fragment be the result of invoking the fragment parsing algorithm steps given parent and the given value.
+    auto fragment = TRY(DOMParsing::parse_fragment(value, verify_cast<Element>(*parent)));
+
+    // 6. Replace this with fragment within this's parent.
+    TRY(parent->replace_child(fragment, *this));
+
     return {};
 }
 
