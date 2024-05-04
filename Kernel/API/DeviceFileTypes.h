@@ -10,3 +10,8 @@
 
 AK_TYPEDEF_DISTINCT_ORDERED_ID(unsigned, MajorNumber);
 AK_TYPEDEF_DISTINCT_ORDERED_ID(unsigned, MinorNumber);
+
+enum class DeviceNodeType {
+    Block = 1,
+    Character = 2,
+};

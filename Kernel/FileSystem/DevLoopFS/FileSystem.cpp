@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/API/DeviceFileTypes.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/Loop/LoopDevice.h>
 #include <Kernel/FileSystem/DevLoopFS/FileSystem.h>
@@ -57,7 +58,7 @@ ErrorOr<NonnullRefPtr<Inode>> DevLoopFS::get_inode(InodeIdentifier inode_id) con
         return *m_root_inode;
 
     unsigned loop_index = inode_index_to_loop_index(inode_id.index());
-    auto device = DeviceManagement::the().get_device(20, loop_index);
+    auto device = DeviceManagement::the().get_device(DeviceNodeType::Block, 20, loop_index);
     VERIFY(device);
 
     auto& loop_device = static_cast<LoopDevice&>(*device);

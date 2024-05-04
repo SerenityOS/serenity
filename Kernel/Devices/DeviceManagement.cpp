@@ -42,9 +42,20 @@ DeviceManagement& DeviceManagement::the()
     return *s_the;
 }
 
-RefPtr<Device> DeviceManagement::get_device(MajorNumber major, MinorNumber minor)
+RefPtr<Device> DeviceManagement::get_device(DeviceNodeType type, MajorNumber major, MinorNumber minor)
 {
-    return m_devices.with([&](auto& map) -> RefPtr<Device> {
+    VERIFY(type == DeviceNodeType::Block || type == DeviceNodeType::Character);
+
+    if (type == DeviceNodeType::Block) {
+        return m_block_devices.with([&](auto& map) -> RefPtr<Device> {
+            auto it = map.find(encoded_device(major.value(), minor.value()));
+            if (it == map.end())
+                return nullptr;
+            return *it->value;
+        });
+    }
+
+    return m_char_devices.with([&](auto& map) -> RefPtr<Device> {
         auto it = map.find(encoded_device(major.value(), minor.value()));
         if (it == map.end())
             return nullptr;
@@ -55,10 +66,19 @@ RefPtr<Device> DeviceManagement::get_device(MajorNumber major, MinorNumber minor
 void DeviceManagement::before_device_removal(Badge<Device>, Device& device)
 {
     u64 device_id = encoded_device(device.major(), device.minor());
-    m_devices.with([&](auto& map) -> void {
-        VERIFY(map.contains(device_id));
-        map.remove(encoded_device(device.major(), device.minor()));
-    });
+
+    if (device.is_block_device()) {
+        m_block_devices.with([&](auto& map) -> void {
+            VERIFY(map.contains(device_id));
+            map.remove(encoded_device(device.major(), device.minor()));
+        });
+    } else {
+        VERIFY(device.is_character_device());
+        m_char_devices.with([&](auto& map) -> void {
+            VERIFY(map.contains(device_id));
+            map.remove(encoded_device(device.major(), device.minor()));
+        });
+    }
 
     m_event_queue.with([&](auto& queue) {
         DeviceEvent event { DeviceEvent::State::Removed, device.is_block_device(), device.major().value(), device.minor().value() };
@@ -77,17 +97,32 @@ SpinlockProtected<CircularQueue<DeviceEvent, 100>, LockRank::None>& DeviceManage
 void DeviceManagement::after_inserting_device(Badge<Device>, Device& device)
 {
     u64 device_id = encoded_device(device.major(), device.minor());
-    m_devices.with([&](auto& map) -> void {
-        if (map.contains(device_id)) {
-            dbgln("Already registered {},{}: {}", device.major(), device.minor(), device.class_name());
-            VERIFY_NOT_REACHED();
-        }
-        auto result = map.set(device_id, &device);
-        if (result != AK::HashSetResult::InsertedNewEntry) {
-            dbgln("Failed to register {},{}: {}", device.major(), device.minor(), device.class_name());
-            VERIFY_NOT_REACHED();
-        }
-    });
+    if (device.is_block_device()) {
+        m_block_devices.with([&](auto& map) -> void {
+            if (map.contains(device_id)) {
+                dbgln("Already registered {},{}: {}", device.major(), device.minor(), device.class_name());
+                VERIFY_NOT_REACHED();
+            }
+            auto result = map.set(device_id, static_cast<BlockDevice*>(&device));
+            if (result != AK::HashSetResult::InsertedNewEntry) {
+                dbgln("Failed to register {},{}: {}", device.major(), device.minor(), device.class_name());
+                VERIFY_NOT_REACHED();
+            }
+        });
+    } else {
+        VERIFY(device.is_character_device());
+        m_char_devices.with([&](auto& map) -> void {
+            if (map.contains(device_id)) {
+                dbgln("Already registered {},{}: {}", device.major(), device.minor(), device.class_name());
+                VERIFY_NOT_REACHED();
+            }
+            auto result = map.set(device_id, static_cast<CharacterDevice*>(&device));
+            if (result != AK::HashSetResult::InsertedNewEntry) {
+                dbgln("Failed to register {},{}: {}", device.major(), device.minor(), device.class_name());
+                VERIFY_NOT_REACHED();
+            }
+        });
+    }
 
     m_event_queue.with([&](auto& queue) {
         DeviceEvent event { DeviceEvent::State::Inserted, device.is_block_device(), device.major().value(), device.minor().value() };
@@ -96,23 +131,6 @@ void DeviceManagement::after_inserting_device(Badge<Device>, Device& device)
 
     if (m_device_control_device)
         m_device_control_device->evaluate_block_conditions();
-}
-
-void DeviceManagement::for_each(Function<void(Device&)> callback)
-{
-    m_devices.with([&](auto& map) -> void {
-        for (auto& entry : map)
-            callback(*entry.value);
-    });
-}
-
-ErrorOr<void> DeviceManagement::try_for_each(Function<ErrorOr<void>(Device&)> callback)
-{
-    return m_devices.with([&](auto& map) -> ErrorOr<void> {
-        for (auto& entry : map)
-            TRY(callback(*entry.value));
-        return {};
-    });
 }
 
 NullDevice& DeviceManagement::null_device()
