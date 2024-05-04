@@ -276,7 +276,7 @@ void VirtualConsole::refresh_after_resolution_change()
 }
 
 UNMAP_AFTER_INIT VirtualConsole::VirtualConsole(unsigned const index)
-    : TTY(4, index)
+    : TTY(35, index)
     , m_index(index)
     , m_console_impl(*this)
 {
