@@ -24,39 +24,42 @@ static constexpr StringView digit_pattern = "%d"sv;
 static constexpr StringView letter_char_pattern = "%c"sv;
 
 static constexpr DeviceEventLoop::DeviceNodeMatch s_matchers[] = {
-    { "audio"sv, "audio"sv, "audio/%d"sv, DeviceNodeFamily::Type::CharacterDevice, 116, 0220 },
-    { {}, "render"sv, "gpu/render%d"sv, DeviceNodeFamily::Type::CharacterDevice, 28, 0666 },
-    { "window"sv, "gpu-connector"sv, "gpu/connector%d"sv, DeviceNodeFamily::Type::CharacterDevice, 226, 0660 },
-    { {}, "virtio-console"sv, "hvc0p%d"sv, DeviceNodeFamily::Type::CharacterDevice, 229, 0666 },
-    { "phys"sv, "hid-mouse"sv, "input/mouse/%d"sv, DeviceNodeFamily::Type::CharacterDevice, 10, 0666 },
-    { "phys"sv, "hid-keyboard"sv, "input/keyboard/%d"sv, DeviceNodeFamily::Type::CharacterDevice, 85, 0666 },
-    { {}, "storage"sv, "hd%c"sv, DeviceNodeFamily::Type::BlockDevice, 3, 0600 },
-    { "tty"sv, "console"sv, "tty%d"sv, DeviceNodeFamily::Type::CharacterDevice, 35, 0620 },
-    { "tty"sv, "console"sv, "ttyS%d"sv, DeviceNodeFamily::Type::CharacterDevice, 4, 0620 },
+    { "audio"sv, "audio"sv, "audio/%d"sv, DeviceNodeType::Character, 116, 0220 },
+    { {}, "render"sv, "gpu/render%d"sv, DeviceNodeType::Character, 28, 0666 },
+    { "window"sv, "gpu-connector"sv, "gpu/connector%d"sv, DeviceNodeType::Character, 226, 0660 },
+    { {}, "virtio-console"sv, "hvc0p%d"sv, DeviceNodeType::Character, 229, 0666 },
+    { "phys"sv, "hid-mouse"sv, "input/mouse/%d"sv, DeviceNodeType::Character, 10, 0666 },
+    { "phys"sv, "hid-keyboard"sv, "input/keyboard/%d"sv, DeviceNodeType::Character, 85, 0666 },
+    { {}, "storage"sv, "hd%c"sv, DeviceNodeType::Block, 3, 0600 },
+    { "tty"sv, "console"sv, "tty%d"sv, DeviceNodeType::Character, 35, 0620 },
+    { "tty"sv, "console"sv, "ttyS%d"sv, DeviceNodeType::Character, 4, 0620 },
 };
 
-static Optional<DeviceEventLoop::DeviceNodeMatch const&> device_node_family_to_match_type(DeviceNodeFamily::Type unix_device_type, MajorNumber major_number)
+static Optional<DeviceEventLoop::DeviceNodeMatch const&> device_node_family_to_match_type(DeviceNodeType device_node_type, MajorNumber major_number)
 {
     for (auto& matcher : s_matchers) {
         if (matcher.major_number == major_number
-            && unix_device_type == matcher.unix_device_type)
+            && device_node_type == matcher.device_node_type)
             return matcher;
     }
     return {};
 }
 
-Optional<DeviceNodeFamily&> DeviceEventLoop::find_device_node_family(DeviceNodeFamily::Type unix_device_type, MajorNumber major_number) const
+Optional<DeviceNodeFamily&> DeviceEventLoop::find_device_node_family(DeviceNodeType device_node_type, MajorNumber major_number) const
 {
     for (auto const& family : m_device_node_families) {
-        if (family->major_number() == major_number && family->type() == unix_device_type)
+        if (family->major_number() == major_number && family->device_node_type() == device_node_type)
             return *family.ptr();
     }
     return {};
 }
 
-ErrorOr<NonnullRefPtr<DeviceNodeFamily>> DeviceEventLoop::find_or_register_new_device_node_family(DeviceNodeMatch const& match, DeviceNodeFamily::Type unix_device_type, MajorNumber major_number)
+ErrorOr<NonnullRefPtr<DeviceNodeFamily>> DeviceEventLoop::find_or_register_new_device_node_family(DeviceNodeMatch const& match, DeviceNodeType device_node_type, MajorNumber major_number)
 {
-    if (auto possible_family = find_device_node_family(unix_device_type, major_number); possible_family.has_value())
+    VERIFY(device_node_type == DeviceNodeType::Block
+        || device_node_type == DeviceNodeType::Character);
+
+    if (auto possible_family = find_device_node_family(device_node_type, major_number); possible_family.has_value())
         return possible_family.release_value();
 
     // FIXME: Is 1024 enough nodes for allocated device nodes? or should
@@ -65,7 +68,7 @@ ErrorOr<NonnullRefPtr<DeviceNodeFamily>> DeviceEventLoop::find_or_register_new_d
     auto bitmap = TRY(Bitmap::create(allocation_map_size, false));
     auto node = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) DeviceNodeFamily(move(bitmap),
         match.family_type_literal,
-        unix_device_type,
+        device_node_type,
         major_number)));
     TRY(m_device_node_families.try_append(node));
 
@@ -101,13 +104,16 @@ static ErrorOr<void> prepare_permissions_after_populating_devtmpfs(StringView pa
     return {};
 }
 
-ErrorOr<void> DeviceEventLoop::register_new_device(DeviceNodeFamily::Type unix_device_type, MajorNumber major_number, MinorNumber minor_number)
+ErrorOr<void> DeviceEventLoop::register_new_device(DeviceNodeType device_node_type, MajorNumber major_number, MinorNumber minor_number)
 {
-    auto possible_match = device_node_family_to_match_type(unix_device_type, major_number);
+    VERIFY(device_node_type == DeviceNodeType::Block
+        || device_node_type == DeviceNodeType::Character);
+
+    auto possible_match = device_node_family_to_match_type(device_node_type, major_number);
     if (!possible_match.has_value())
         return {};
     auto const& match = possible_match.release_value();
-    auto device_node_family = TRY(find_or_register_new_device_node_family(match, unix_device_type, major_number));
+    auto device_node_family = TRY(find_or_register_new_device_node_family(match, device_node_type, major_number));
     static constexpr StringView devtmpfs_base_path = "/dev/"sv;
     auto path_pattern = TRY(String::from_utf8(match.path_pattern));
     auto& allocation_map = device_node_family->devices_symbol_suffix_allocation_map();
@@ -130,7 +136,7 @@ ErrorOr<void> DeviceEventLoop::register_new_device(DeviceNodeFamily::Type unix_d
     VERIFY(!path.is_empty());
     path = TRY(String::formatted("{}{}", devtmpfs_base_path, path));
     mode_t old_mask = umask(0);
-    if (unix_device_type == DeviceNodeFamily::Type::BlockDevice)
+    if (device_node_type == DeviceNodeType::Block)
         TRY(Core::System::create_block_device(path.bytes_as_string_view(), match.create_mode, major_number.value(), minor_number.value()));
     else
         TRY(Core::System::create_char_device(path.bytes_as_string_view(), match.create_mode, major_number.value(), minor_number.value()));
@@ -147,11 +153,14 @@ ErrorOr<void> DeviceEventLoop::register_new_device(DeviceNodeFamily::Type unix_d
     return {};
 }
 
-ErrorOr<void> DeviceEventLoop::unregister_device(DeviceNodeFamily::Type unix_device_type, MajorNumber major_number, MinorNumber minor_number)
+ErrorOr<void> DeviceEventLoop::unregister_device(DeviceNodeType device_node_type, MajorNumber major_number, MinorNumber minor_number)
 {
-    if (!device_node_family_to_match_type(unix_device_type, major_number).has_value())
+    VERIFY(device_node_type == DeviceNodeType::Block
+        || device_node_type == DeviceNodeType::Character);
+
+    if (!device_node_family_to_match_type(device_node_type, major_number).has_value())
         return {};
-    auto possible_family = find_device_node_family(unix_device_type, major_number);
+    auto possible_family = find_device_node_family(device_node_type, major_number);
     if (!possible_family.has_value()) {
         // FIXME: Handle cases where we can't remove a device node.
         // This could happen when the DeviceMapper program was restarted
@@ -234,9 +243,9 @@ ErrorOr<void> DeviceEventLoop::drain_events_from_devctl()
             }
 
             VERIFY(event.is_block_device == 1 || event.is_block_device == 0);
-            TRY(register_new_device(event.is_block_device ? DeviceNodeFamily::Type::BlockDevice : DeviceNodeFamily::Type::CharacterDevice, event.major_number, event.minor_number));
+            TRY(register_new_device(event.is_block_device ? DeviceNodeType::Block : DeviceNodeType::Character, event.major_number, event.minor_number));
         } else if (event.state == DeviceEvent::State::Removed) {
-            if (auto error_or_void = unregister_device(event.is_block_device ? DeviceNodeFamily::Type::BlockDevice : DeviceNodeFamily::Type::CharacterDevice, event.major_number, event.minor_number); error_or_void.is_error())
+            if (auto error_or_void = unregister_device(event.is_block_device ? DeviceNodeType::Block : DeviceNodeType::Character, event.major_number, event.minor_number); error_or_void.is_error())
                 dbgln("DeviceMapper: unregistering device failed: {}", error_or_void.error());
         } else {
             dbgln("DeviceMapper: Unhandled device event ({:x})!", event.state);
