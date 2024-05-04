@@ -109,7 +109,7 @@ class LineProgram {
     AK_MAKE_NONMOVABLE(LineProgram);
 
 public:
-    static ErrorOr<NonnullOwnPtr<LineProgram>> create(DwarfInfo& dwarf_info, SeekableStream& stream);
+    static ErrorOr<NonnullOwnPtr<LineProgram>> create(DwarfInfo const& dwarf_info, SeekableStream& stream);
 
     struct LineInfo {
         FlatPtr address { 0 };
@@ -134,7 +134,7 @@ public:
     bool looks_like_embedded_resource() const;
 
 private:
-    LineProgram(DwarfInfo& dwarf_info, size_t unit_offset);
+    LineProgram(DwarfInfo const& dwarf_info, size_t unit_offset);
 
     ErrorOr<void> parse_unit_header(SeekableStream& stream);
     ErrorOr<void> parse_source_directories(SeekableStream& stream);
@@ -175,7 +175,7 @@ private:
     static constexpr u16 MIN_DWARF_VERSION = 3;
     static constexpr u16 MAX_DWARF_VERSION = 5;
 
-    DwarfInfo& m_dwarf_info;
+    DwarfInfo const& m_dwarf_info;
 
     size_t m_unit_offset { 0 };
     LineProgramUnitHeader32 m_unit_header {};
