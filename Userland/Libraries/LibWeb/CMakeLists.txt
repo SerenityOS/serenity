@@ -665,6 +665,7 @@ set(SOURCES
     WebAudio/AudioParam.cpp
     WebAudio/AudioScheduledSourceNode.cpp
     WebAudio/BaseAudioContext.cpp
+    WebAudio/DynamicsCompressorNode.cpp
     WebAudio/OfflineAudioContext.cpp
     WebAudio/OscillatorNode.cpp
     WebAudio/PeriodicWave.cpp

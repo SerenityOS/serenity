@@ -689,6 +689,7 @@ class AudioNode;
 class AudioParam;
 class AudioScheduledSourceNode;
 class BaseAudioContext;
+class DynamicsCompressorNode;
 class OfflineAudioContext;
 class OscillatorNode;
 class PeriodicWave;
@@ -696,6 +697,8 @@ class PeriodicWave;
 enum class AudioContextState;
 
 struct AudioContextOptions;
+struct DynamicsCompressorOptions;
+struct OscillatorOptions;
 }
 
 namespace Web::WebGL {
