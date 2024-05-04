@@ -25,7 +25,6 @@ Make sure to read the basic [Build Instructions](BuildInstructions.md) first.
 * [Bare Metal Installation](BareMetalInstallation.md)
 * [Running On Raspberry Pi](RunningOnRaspberryPi.md)
 * [Known Hardware Compatibility](HardwareCompatibility.md)
-* [Network Booting](NetworkBoot.md)
 
 ## Configuring Editors
 * [CLion](CLionConfiguration.md)
