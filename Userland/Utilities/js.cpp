@@ -444,12 +444,6 @@ static ErrorOr<void> repl(JS::Realm& realm)
     return {};
 }
 
-static Function<void()> interrupt_interpreter;
-static void sigint_handler()
-{
-    interrupt_interpreter();
-}
-
 class ReplConsoleClient final : public JS::ConsoleClient {
 public:
     ReplConsoleClient(JS::Console& console)
@@ -603,7 +597,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         signal(SIGINT, [](int) {
             if (!s_editor->is_editing())
-                sigint_handler();
+                exit(0);
             s_editor->save_history(s_history_path.to_byte_string());
         });
 
@@ -812,10 +806,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         ReplConsoleClient console_client(console_object.console());
         console_object.console().set_client(console_client);
         g_vm->heap().set_should_collect_on_every_allocation(gc_on_every_allocation);
-
-        signal(SIGINT, [](int) {
-            sigint_handler();
-        });
 
         StringBuilder builder;
         StringView source_name;
