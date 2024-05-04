@@ -1207,8 +1207,7 @@ void Element::set_scroll_left(double x)
     // 1. Let x be the given value.
 
     // 2. Normalize non-finite values for x.
-    if (!isfinite(x))
-        x = 0.0;
+    x = HTML::normalize_non_finite_values(x);
 
     // 3. Let document be the element’s node document.
     auto& document = this->document();
@@ -1264,8 +1263,7 @@ void Element::set_scroll_top(double y)
     // 1. Let y be the given value.
 
     // 2. Normalize non-finite values for y.
-    if (!isfinite(y))
-        y = 0.0;
+    y = HTML::normalize_non_finite_values(y);
 
     // 3. Let document be the element’s node document.
     auto& document = this->document();
