@@ -47,6 +47,24 @@
                 preferred_height: "grow"
                 visible: false
 
+                @GUI::ToolbarContainer {
+                    name: "value_inspector_toolbar_container"
+
+                    @GUI::Toolbar {
+                        name: "value_inspector_toolbar"
+
+                        @GUI::Label {
+                            text: "Mode:"
+                            preferred_width: 40
+                        }
+
+                        @GUI::ComboBox {
+                            name: "value_inspector_endianness"
+                            preferred_width: 120
+                        }
+                    }
+                }
+
                 @GUI::TableView {
                     name: "value_inspector"
                     activates_on_selection: true
