@@ -337,7 +337,7 @@ public:
 
     void scroll(HTML::ScrollToOptions const&);
     void scroll(double x, double y);
-    void scroll_by(HTML::ScrollToOptions const&);
+    void scroll_by(HTML::ScrollToOptions);
     void scroll_by(double x, double y);
 
     void register_intersection_observer(Badge<IntersectionObserver::IntersectionObserver>, IntersectionObserver::IntersectionObserverRegistration);
