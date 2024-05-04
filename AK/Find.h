@@ -37,3 +37,9 @@ requires(requires(TIterator it) { it.index(); })
 }
 
 }
+
+#if USING_AK_GLOBALLY
+using AK::find;
+using AK::find_if;
+using AK::find_index;
+#endif
