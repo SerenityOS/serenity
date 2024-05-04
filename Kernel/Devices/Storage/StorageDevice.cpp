@@ -27,15 +27,6 @@ StorageDevice::StorageDevice(LUNAddress logical_unit_number_address, u32 hardwar
 {
 }
 
-StorageDevice::StorageDevice(Badge<RamdiskDevice>, LUNAddress logical_unit_number_address, u32 hardware_relative_controller_id, MajorNumber major, MinorNumber minor, size_t sector_size, u64 max_addressable_block)
-    : BlockDevice(major, minor, sector_size)
-    , m_logical_unit_number_address(logical_unit_number_address)
-    , m_hardware_relative_controller_id(hardware_relative_controller_id)
-    , m_max_addressable_block(max_addressable_block)
-    , m_blocks_per_page(PAGE_SIZE / block_size())
-{
-}
-
 ErrorOr<void> StorageDevice::after_inserting()
 {
     auto sysfs_storage_device_directory = StorageDeviceSysFSDirectory::create(SysFSStorageDirectory::the(), *this);

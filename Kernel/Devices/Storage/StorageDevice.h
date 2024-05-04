@@ -15,7 +15,6 @@
 
 namespace Kernel {
 
-class RamdiskDevice;
 class StorageDevice : public BlockDevice {
     friend class StorageManagement;
     friend class DeviceManagement;
@@ -85,10 +84,6 @@ public:
 
 protected:
     StorageDevice(LUNAddress, u32 hardware_relative_controller_id, size_t sector_size, u64);
-
-    // Note: We want to be able to put distinction between Storage devices and Ramdisk-based devices.
-    // We do this because it will make selecting ramdisk devices much more easier in boot time in the kernel commandline.
-    StorageDevice(Badge<RamdiskDevice>, LUNAddress, u32 hardware_relative_controller_id, MajorNumber, MinorNumber, size_t sector_size, u64);
 
     // ^DiskDevice
     virtual StringView class_name() const override;
