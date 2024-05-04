@@ -22,16 +22,19 @@ DeviceEventLoop::DeviceEventLoop(NonnullOwnPtr<Core::File> devctl_file)
 
 using MinorNumberAllocationType = DeviceEventLoop::MinorNumberAllocationType;
 
+static constexpr StringView digit_pattern = "%d"sv;
+static constexpr StringView letter_char_pattern = "%c"sv;
+
 static constexpr DeviceEventLoop::DeviceNodeMatch s_matchers[] = {
-    { "audio"sv, "audio"sv, "audio/%digit"sv, DeviceNodeFamily::Type::CharacterDevice, 116, MinorNumberAllocationType::SequentialUnlimited, 0, 0, 0220 },
-    { {}, "render"sv, "gpu/render%digit"sv, DeviceNodeFamily::Type::CharacterDevice, 28, MinorNumberAllocationType::SequentialUnlimited, 0, 0, 0666 },
-    { "window"sv, "gpu-connector"sv, "gpu/connector%digit"sv, DeviceNodeFamily::Type::CharacterDevice, 226, MinorNumberAllocationType::SequentialUnlimited, 0, 0, 0660 },
-    { {}, "virtio-console"sv, "hvc0p%digit"sv, DeviceNodeFamily::Type::CharacterDevice, 229, MinorNumberAllocationType::SequentialUnlimited, 0, 0, 0666 },
-    { "phys"sv, "hid-mouse"sv, "input/mouse/%digit"sv, DeviceNodeFamily::Type::CharacterDevice, 10, MinorNumberAllocationType::SequentialUnlimited, 0, 0, 0666 },
-    { "phys"sv, "hid-keyboard"sv, "input/keyboard/%digit"sv, DeviceNodeFamily::Type::CharacterDevice, 85, MinorNumberAllocationType::SequentialUnlimited, 0, 0, 0666 },
-    { {}, "storage"sv, "hd%letter"sv, DeviceNodeFamily::Type::BlockDevice, 3, MinorNumberAllocationType::SequentialUnlimited, 0, 0, 0600 },
-    { "tty"sv, "console"sv, "tty%digit"sv, DeviceNodeFamily::Type::CharacterDevice, 4, MinorNumberAllocationType::SequentialLimited, 0, 63, 0620 },
-    { "tty"sv, "console"sv, "ttyS%digit"sv, DeviceNodeFamily::Type::CharacterDevice, 4, MinorNumberAllocationType::SequentialLimited, 64, 127, 0620 },
+    { "audio"sv, "audio"sv, "audio/%d"sv, DeviceNodeFamily::Type::CharacterDevice, 116, MinorNumberAllocationType::SequentialUnlimited, 0, 0, 0220 },
+    { {}, "render"sv, "gpu/render%d"sv, DeviceNodeFamily::Type::CharacterDevice, 28, MinorNumberAllocationType::SequentialUnlimited, 0, 0, 0666 },
+    { "window"sv, "gpu-connector"sv, "gpu/connector%d"sv, DeviceNodeFamily::Type::CharacterDevice, 226, MinorNumberAllocationType::SequentialUnlimited, 0, 0, 0660 },
+    { {}, "virtio-console"sv, "hvc0p%d"sv, DeviceNodeFamily::Type::CharacterDevice, 229, MinorNumberAllocationType::SequentialUnlimited, 0, 0, 0666 },
+    { "phys"sv, "hid-mouse"sv, "input/mouse/%d"sv, DeviceNodeFamily::Type::CharacterDevice, 10, MinorNumberAllocationType::SequentialUnlimited, 0, 0, 0666 },
+    { "phys"sv, "hid-keyboard"sv, "input/keyboard/%d"sv, DeviceNodeFamily::Type::CharacterDevice, 85, MinorNumberAllocationType::SequentialUnlimited, 0, 0, 0666 },
+    { {}, "storage"sv, "hd%c"sv, DeviceNodeFamily::Type::BlockDevice, 3, MinorNumberAllocationType::SequentialUnlimited, 0, 0, 0600 },
+    { "tty"sv, "console"sv, "tty%d"sv, DeviceNodeFamily::Type::CharacterDevice, 4, MinorNumberAllocationType::SequentialLimited, 0, 63, 0620 },
+    { "tty"sv, "console"sv, "ttyS%d"sv, DeviceNodeFamily::Type::CharacterDevice, 4, MinorNumberAllocationType::SequentialLimited, 64, 127, 0620 },
 };
 
 static bool is_in_minor_number_range(DeviceEventLoop::DeviceNodeMatch const& matcher, MinorNumber minor_number)
@@ -132,13 +135,13 @@ ErrorOr<void> DeviceEventLoop::register_new_device(DeviceNodeFamily::Type unix_d
     auto allocated_suffix_index = possible_allocated_suffix_index.release_value();
 
     auto path = path_pattern;
-    if (match.path_pattern.contains("%digit"sv)) {
+    if (match.path_pattern.contains(digit_pattern)) {
         auto replacement = TRY(build_suffix_with_numbers(allocated_suffix_index));
-        path = TRY(path.replace("%digit"sv, replacement, ReplaceMode::All));
+        path = TRY(path.replace(digit_pattern, replacement, ReplaceMode::All));
     }
-    if (match.path_pattern.contains("%letter"sv)) {
+    if (match.path_pattern.contains(letter_char_pattern)) {
         auto replacement = TRY(build_suffix_with_letters(allocated_suffix_index));
-        path = TRY(path.replace("%letter"sv, replacement, ReplaceMode::All));
+        path = TRY(path.replace(letter_char_pattern, replacement, ReplaceMode::All));
     }
     VERIFY(!path.is_empty());
     path = TRY(String::formatted("{}{}", devtmpfs_base_path, path));
