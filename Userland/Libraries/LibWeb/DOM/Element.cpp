@@ -2201,9 +2201,17 @@ void Element::scroll(double x, double y)
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-element-scroll
-void Element::scroll(HTML::ScrollToOptions const&)
+void Element::scroll(HTML::ScrollToOptions options)
 {
-    dbgln("FIXME: Implement Element::scroll(ScrollToOptions)");
+    // 1. If invoked with one argument, follow these substeps:
+    //     1. Let options be the argument.
+    //     2. Normalize non-finite values for left and top dictionary members of options, if present.
+    //     3. Let x be the value of the left dictionary member of options, if present, or the element’s current scroll position on the x axis otherwise.
+    //     4. Let y be the value of the top dictionary member of options, if present, or the element’s current scroll position on the y axis otherwise.
+    // NOTE: remaining steps performed by Element::scroll(double x, double y)
+    auto x = options.left.has_value() ? HTML::normalize_non_finite_values(options.left.value()) : scroll_left();
+    auto y = options.top.has_value() ? HTML::normalize_non_finite_values(options.top.value()) : scroll_top();
+    scroll(x, y);
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-element-scrollby

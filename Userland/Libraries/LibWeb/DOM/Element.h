@@ -335,7 +335,7 @@ public:
     void set_custom_element_state(CustomElementState value) { m_custom_element_state = value; }
     void setup_custom_element_from_constructor(HTML::CustomElementDefinition& custom_element_definition, Optional<String> const& is_value);
 
-    void scroll(HTML::ScrollToOptions const&);
+    void scroll(HTML::ScrollToOptions);
     void scroll(double x, double y);
     void scroll_by(HTML::ScrollToOptions);
     void scroll_by(double x, double y);
