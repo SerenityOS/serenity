@@ -11,8 +11,10 @@
 #include <AK/OwnPtr.h>
 #include <AK/Types.h>
 #include <Kernel/API/DeviceEvent.h>
+#include <Kernel/API/DeviceFileTypes.h>
 #include <Kernel/API/TimePage.h>
 #include <Kernel/Arch/RegisterState.h>
+#include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/Generic/ConsoleDevice.h>
@@ -39,9 +41,7 @@ public:
     void after_inserting_device(Badge<Device>, Device&);
     void before_device_removal(Badge<Device>, Device&);
 
-    void for_each(Function<void(Device&)>);
-    ErrorOr<void> try_for_each(Function<ErrorOr<void>(Device&)>);
-    RefPtr<Device> get_device(MajorNumber major, MinorNumber minor);
+    RefPtr<Device> get_device(DeviceNodeType, MajorNumber major, MinorNumber minor);
 
     NullDevice const& null_device() const;
     NullDevice& null_device();
@@ -72,7 +72,8 @@ private:
     LockRefPtr<NullDevice> m_null_device;
     LockRefPtr<ConsoleDevice> m_console_device;
     LockRefPtr<DeviceControlDevice> m_device_control_device;
-    SpinlockProtected<HashMap<u64, Device*>, LockRank::None> m_devices {};
+    SpinlockProtected<HashMap<u64, BlockDevice*>, LockRank::None> m_block_devices {};
+    SpinlockProtected<HashMap<u64, CharacterDevice*>, LockRank::None> m_char_devices {};
     SpinlockProtected<CircularQueue<DeviceEvent, 100>, LockRank::None> m_event_queue {};
 };
 

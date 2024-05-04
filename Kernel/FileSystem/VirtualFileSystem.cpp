@@ -10,6 +10,7 @@
 #include <AK/RefPtr.h>
 #include <AK/Singleton.h>
 #include <AK/StringBuilder.h>
+#include <Kernel/API/DeviceFileTypes.h>
 #include <Kernel/API/POSIX/errno.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/BlockDevice.h>
@@ -531,7 +532,8 @@ ErrorOr<NonnullRefPtr<OpenFileDescription>> VirtualFileSystem::open(Process cons
     if (metadata.is_device()) {
         if (custody.mount_flags() & MS_NODEV)
             return EACCES;
-        auto device = DeviceManagement::the().get_device(metadata.major_device, metadata.minor_device);
+        auto device_type = metadata.is_block_device() ? DeviceNodeType::Block : DeviceNodeType::Character;
+        auto device = DeviceManagement::the().get_device(device_type, metadata.major_device, metadata.minor_device);
         if (device == nullptr) {
             return ENODEV;
         }
