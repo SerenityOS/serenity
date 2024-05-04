@@ -46,6 +46,7 @@
 #include <LibWeb/HTML/HTMLOptGroupElement.h>
 #include <LibWeb/HTML/HTMLOptionElement.h>
 #include <LibWeb/HTML/HTMLSelectElement.h>
+#include <LibWeb/HTML/HTMLSlotElement.h>
 #include <LibWeb/HTML/HTMLStyleElement.h>
 #include <LibWeb/HTML/HTMLTableElement.h>
 #include <LibWeb/HTML/HTMLTextAreaElement.h>
@@ -2200,9 +2201,65 @@ IntersectionObserver::IntersectionObserverRegistration& Element::get_intersectio
 // https://html.spec.whatwg.org/multipage/dom.html#the-directionality
 Element::Directionality Element::directionality() const
 {
-    // The directionality of an element (any element, not just an HTML element) is either 'ltr' or 'rtl',
-    // and is determined as per the first appropriate set of steps from the following list:
+    // The directionality of an element (any element, not just an HTML element) is either 'ltr' or 'rtl'.
+    // To compute the directionality given an element element, switch on element's dir attribute state:
+    auto maybe_dir = this->dir();
+    if (maybe_dir.has_value()) {
+        auto dir = maybe_dir.release_value();
+        switch (dir) {
+        // -> ltr
+        case Dir::Ltr:
+            // Return 'ltr'.
+            return Directionality::Ltr;
+        // -> rtl
+        case Dir::Rtl:
+            // Return 'rtl'.
+            return Directionality::Rtl;
+        // -> auto
+        case Dir::Auto:
+            // 1. Let result be the auto directionality of element.
+            auto result = auto_directionality();
 
+            // 2. If result is null, then return 'ltr'.
+            if (!result.has_value())
+                return Directionality::Ltr;
+
+            // 3. Return result.
+            return result.release_value();
+        }
+    }
+    // -> undefined
+    VERIFY(!maybe_dir.has_value());
+
+    // FIXME: If element is a bdi element:
+    // FIXME:     1. Let result be the auto directionality of element.
+    // FIXME:     2. If result is null, then return 'ltr'.
+    // FIXME:     3. Return result.
+
+    // If element is an input element whose type attribute is in the Telephone state:
+    if (is<HTML::HTMLInputElement>(this) && static_cast<HTML::HTMLInputElement const&>(*this).type_state() == HTML::HTMLInputElement::TypeAttributeState::Telephone) {
+        // Return 'ltr'.
+        return Directionality::Ltr;
+    }
+
+    // Otherwise:
+    // Return the parent directionality of element.
+    return parent_directionality();
+}
+
+// https://html.spec.whatwg.org/multipage/dom.html#auto-directionality-form-associated-elements
+bool Element::is_auto_directionality_form_associated_element() const
+{
+    // The auto-directionality form-associated elements are:
+    // input elements whose type attribute is in the Hidden, Text, Search, Telephone, URL, Email, Password, Submit Button, Reset Button, or Button state,
+    // and textarea elements.
+    return is<HTML::HTMLTextAreaElement>(this)
+        || (is<HTML::HTMLInputElement>(this) && first_is_one_of(static_cast<HTML::HTMLInputElement const&>(*this).type_state(), HTML::HTMLInputElement::TypeAttributeState::Hidden, HTML::HTMLInputElement::TypeAttributeState::Text, HTML::HTMLInputElement::TypeAttributeState::Search, HTML::HTMLInputElement::TypeAttributeState::Telephone, HTML::HTMLInputElement::TypeAttributeState::URL, HTML::HTMLInputElement::TypeAttributeState::Email, HTML::HTMLInputElement::TypeAttributeState::Password, HTML::HTMLInputElement::TypeAttributeState::SubmitButton, HTML::HTMLInputElement::TypeAttributeState::ResetButton, HTML::HTMLInputElement::TypeAttributeState::Button));
+}
+
+// https://html.spec.whatwg.org/multipage/dom.html#auto-directionality
+Optional<Element::Directionality> Element::auto_directionality() const
+{
     static auto bidirectional_class_L = Unicode::bidirectional_class_from_string("L"sv);
     static auto bidirectional_class_AL = Unicode::bidirectional_class_from_string("AL"sv);
     static auto bidirectional_class_R = Unicode::bidirectional_class_from_string("R"sv);
@@ -2211,46 +2268,37 @@ Element::Directionality Element::directionality() const
     if (!bidirectional_class_L.has_value())
         return Directionality::Ltr;
 
-    auto dir = this->dir();
+    // https://html.spec.whatwg.org/multipage/dom.html#text-node-directionality
+    auto text_node_directionality = [](Text const& text_node) -> Optional<Directionality> {
+        // 1. If text's data does not contain a code point whose bidirectional character type is L, AL, or R, then return null.
+        // 2. Let codePoint be the first code point in text's data whose bidirectional character type is L, AL, or R.
+        Optional<Unicode::BidirectionalClass> found_character_bidi_class;
+        for (auto code_point : Utf8View(text_node.data())) {
+            auto bidi_class = Unicode::bidirectional_class(code_point);
+            if (first_is_one_of(bidi_class, bidirectional_class_L, bidirectional_class_AL, bidirectional_class_R)) {
+                found_character_bidi_class = bidi_class;
+                break;
+            }
+        }
+        if (!found_character_bidi_class.has_value())
+            return {};
 
-    // -> If the element's dir attribute is in the ltr state
-    // -> If the element is a document element and the dir attribute is not in a defined state
-    //    (i.e. it is not present or has an invalid value)
-    // -> If the element is an input element whose type attribute is in the Telephone state, and the
-    //    dir attribute is not in a defined state (i.e. it is not present or has an invalid value)
-    if (dir == Dir::Ltr
-        || (is_document_element() && !dir.has_value())
-        || (is<HTML::HTMLInputElement>(this)
-            && static_cast<HTML::HTMLInputElement const&>(*this).type_state() == HTML::HTMLInputElement::TypeAttributeState::Telephone
-            && !dir.has_value())) {
-        // The directionality of the element is 'ltr'.
+        // 3. If codePoint is of bidirectional character type AL or R, then return 'rtl'.
+        if (first_is_one_of(*found_character_bidi_class, bidirectional_class_AL, bidirectional_class_R))
+            return Directionality::Rtl;
+
+        // 4. If codePoint is of bidirectional character type L, then return 'ltr'.
+        // NOTE: codePoint should always be of bidirectional character type L by this point, so we can just return 'ltr' here.
+        VERIFY(*found_character_bidi_class == bidirectional_class_L);
         return Directionality::Ltr;
-    }
+    };
 
-    // -> If the element's dir attribute is in the rtl state
-    if (dir == Dir::Rtl) {
-        // The directionality of the element is 'rtl'.
-        return Directionality::Rtl;
-    }
+    // 1. If element is an auto-directionality form-associated element:
+    if (is_auto_directionality_form_associated_element()) {
+        auto const& value = static_cast<HTML::HTMLInputElement const&>(*this).value();
 
-    // -> If the element is an input element whose type attribute is in the Text, Search, Telephone,
-    //    URL, or Email state, and the dir attribute is in the auto state
-    // -> If the element is a textarea element and the dir attribute is in the auto state
-    if ((is<HTML::HTMLInputElement>(this)
-            && first_is_one_of(static_cast<HTML::HTMLInputElement const&>(*this).type_state(),
-                HTML::HTMLInputElement::TypeAttributeState::Text, HTML::HTMLInputElement::TypeAttributeState::Search,
-                HTML::HTMLInputElement::TypeAttributeState::Telephone, HTML::HTMLInputElement::TypeAttributeState::URL,
-                HTML::HTMLInputElement::TypeAttributeState::Email)
-            && dir == Dir::Auto)
-        || (is<HTML::HTMLTextAreaElement>(this) && dir == Dir::Auto)) {
-
-        auto value = is<HTML::HTMLInputElement>(this)
-            ? static_cast<HTML::HTMLInputElement const&>(*this).value()
-            : static_cast<HTML::HTMLTextAreaElement const&>(*this).value();
-
-        // If the element's value contains a character of bidirectional character type AL or R, and
-        // there is no character of bidirectional character type L anywhere before it in the element's
-        // value, then the directionality of the element is 'rtl'. [BIDI]
+        // 1. If element's value contains a character of bidirectional character type AL or R,
+        //    and there is no character of bidirectional character type L anywhere before it in the element's value, then return 'rtl'.
         for (auto code_point : Utf8View(value)) {
             auto bidi_class = Unicode::bidirectional_class(code_point);
             if (bidi_class == bidirectional_class_L)
@@ -2259,87 +2307,114 @@ Element::Directionality Element::directionality() const
                 return Directionality::Rtl;
         }
 
-        // Otherwise, if the element's value is not the empty string, or if the element is a document element,
-        // the directionality of the element is 'ltr'.
-        if (!value.is_empty() || is_document_element()) {
+        // 2. If element's value is not the empty string, then return 'ltr'.
+        if (value.is_empty())
             return Directionality::Ltr;
-        }
-        // Otherwise, the directionality of the element is the same as the element's parent element's directionality.
-        else {
-            return parent_element()->directionality();
+
+        // 3. Return null.
+        return {};
+    }
+
+    // 2. If element is a slot element whose root is a shadow root and element's assigned nodes are not empty:
+    if (is<HTML::HTMLSlotElement>(this)) {
+        auto const& slot = static_cast<HTML::HTMLSlotElement const&>(*this);
+        if (slot.root().is_shadow_root() && !slot.assigned_nodes().is_empty()) {
+            // 1 . For each node child of element's assigned nodes:
+            for (auto const& child : slot.assigned_nodes()) {
+                // 1. Let childDirection be null.
+                Optional<Directionality> child_direction;
+
+                // 2. If child is a Text node, then set childDirection to the text node directionality of child.
+                if (child->is_text())
+                    child_direction = text_node_directionality(static_cast<Text const&>(*child));
+
+                // 3. Otherwise:
+                else {
+                    // 1. Assert: child is an Element node.
+                    VERIFY(child->is_element());
+
+                    // 2. Set childDirection to the auto directionality of child.
+                    child_direction = static_cast<HTML::HTMLElement const&>(*this).auto_directionality();
+                }
+
+                // 4. If childDirection is not null, then return childDirection.
+                if (child_direction.has_value())
+                    return child_direction;
+            }
+
+            // 2. Return null.
+            return {};
         }
     }
 
-    // -> If the element's dir attribute is in the auto state
-    // FIXME: -> If the element is a bdi element and the dir attribute is not in a defined state
-    //    (i.e. it is not present or has an invalid value)
-    if (dir == Dir::Auto) {
-        // Find the first character in tree order that matches the following criteria:
-        // - The character is from a Text node that is a descendant of the element whose directionality is being determined.
-        // - The character is of bidirectional character type L, AL, or R. [BIDI]
-        // - The character is not in a Text node that has an ancestor element that is a descendant of
-        //   the element whose directionality is being determined and that is either:
-        //   - FIXME: A bdi element.
-        //   - A script element.
-        //   - A style element.
-        //   - A textarea element.
-        //   - An element with a dir attribute in a defined state.
-        Optional<u32> found_character;
-        Optional<Unicode::BidirectionalClass> found_character_bidi_class;
-        for_each_in_subtree_of_type<Text>([&](Text const& text_node) {
-            // Discard not-allowed ancestors
-            for (auto* ancestor = text_node.parent(); ancestor && ancestor != this; ancestor = ancestor->parent()) {
-                if (is<HTML::HTMLScriptElement>(*ancestor) || is<HTML::HTMLStyleElement>(*ancestor) || is<HTML::HTMLTextAreaElement>(*ancestor))
-                    return TraversalDecision::Continue;
-                if (ancestor->is_element()) {
-                    auto ancestor_element = static_cast<Element const*>(ancestor);
-                    if (ancestor_element->dir().has_value())
-                        return TraversalDecision::Continue;
-                }
-            }
+    // 3. For each node descendant of element's descendants, in tree order:
+    Optional<Directionality> result;
+    for_each_in_subtree([&](auto& descendant) {
+        // 1. If descendant, or any of its ancestor elements that are descendants of element, is one of
+        // - FIXME: a bdi element
+        // - a script element
+        // - a style element
+        // - a textarea element
+        // - an element whose dir attribute is not in the undefined state
+        // then continue.
+        if (is<HTML::HTMLScriptElement>(descendant)
+            || is<HTML::HTMLStyleElement>(descendant)
+            || is<HTML::HTMLTextAreaElement>(descendant)
+            || (is<Element>(descendant) && static_cast<Element const&>(descendant).dir().has_value())) {
+            return TraversalDecision::SkipChildrenAndContinue;
+        }
 
-            // Look for matching characters
-            for (auto code_point : Utf8View(text_node.data())) {
-                auto bidi_class = Unicode::bidirectional_class(code_point);
-                if (first_is_one_of(bidi_class, bidirectional_class_L, bidirectional_class_AL, bidirectional_class_R)) {
-                    found_character = code_point;
-                    found_character_bidi_class = bidi_class;
-                    return TraversalDecision::Break;
-                }
+        // 2. If descendant is a slot element whose root is a shadow root, then return the directionality of that shadow root's host.
+        if (is<HTML::HTMLSlotElement>(descendant)) {
+            auto const& root = static_cast<HTML::HTMLSlotElement const&>(descendant).root();
+            if (root.is_shadow_root()) {
+                auto const& host = static_cast<ShadowRoot const&>(root).host();
+                VERIFY(host);
+                result = host->directionality();
+                return TraversalDecision::Break;
             }
+        }
 
+        // 3. If descendant is not a Text node, then continue.
+        if (!descendant.is_text())
             return TraversalDecision::Continue;
-        });
 
-        // If such a character is found and it is of bidirectional character type AL or R,
-        // the directionality of the element is 'rtl'.
-        if (found_character.has_value()
-            && first_is_one_of(found_character_bidi_class.value(), bidirectional_class_AL, bidirectional_class_R)) {
-            return Directionality::Rtl;
-        }
-        // If such a character is found and it is of bidirectional character type L,
-        // the directionality of the element is 'ltr'.
-        if (found_character.has_value() && found_character_bidi_class.value() == bidirectional_class_L) {
-            return Directionality::Ltr;
-        }
-        // Otherwise, if the element is a document element, the directionality of the element is 'ltr'.
-        else if (is_document_element()) {
-            return Directionality::Ltr;
-        }
-        // Otherwise, the directionality of the element is the same as the element's parent element's directionality.
-        else {
-            return parent_element()->directionality();
-        }
+        // 4. Let result be the text node directionality of descendant.
+        result = text_node_directionality(static_cast<Text const&>(descendant));
+
+        // 5. If result is not null, then return result.
+        if (result.has_value())
+            return TraversalDecision::Break;
+
+        return TraversalDecision::Continue;
+    });
+
+    if (result.has_value())
+        return result;
+
+    // 4. Return null.
+    return {};
+}
+
+// https://html.spec.whatwg.org/multipage/dom.html#parent-directionality
+Element::Directionality Element::parent_directionality() const
+{
+    // 1. Let parentNode be element's parent node.
+    auto const* parent_node = this->parent_node();
+
+    // 2. If parentNode is a shadow root, then return the directionality of parentNode's host.
+    if (is<ShadowRoot>(parent_node)) {
+        auto const& host = static_cast<ShadowRoot const&>(*parent_node).host();
+        VERIFY(host);
+        return host->directionality();
     }
 
-    // If the element has a parent element and the dir attribute is not in a defined state
-    // (i.e. it is not present or has an invalid value)
-    if (parent_element() && !dir.has_value()) {
-        // The directionality of the element is the same as the element's parent element's directionality.
-        return parent_element()->directionality();
-    }
+    // 3. If parentNode is an element, then return the directionality of parentNode.
+    if (is<Element>(parent_node))
+        return static_cast<Element const&>(*parent_node).directionality();
 
-    VERIFY_NOT_REACHED();
+    // 4. Return 'ltr'.
+    return Directionality::Ltr;
 }
 
 // https://dom.spec.whatwg.org/#ref-for-concept-element-attributes-change-ext①
