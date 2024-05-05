@@ -74,11 +74,6 @@ BrowserWindow::BrowserWindow(Vector<URL::URL> const& initial_urls, WebView::Cook
 
     auto* menu = menuBar()->addMenu("&File");
 
-    auto* about_action = new QAction("&About Ladybird", this);
-    menu->addAction(about_action);
-
-    menu->addSeparator();
-
     m_new_tab_action = new QAction("New &Tab", this);
     m_new_tab_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::AddTab));
     menu->addAction(m_new_tab_action);
@@ -390,9 +385,14 @@ BrowserWindow::BrowserWindow(Vector<URL::URL> const& initial_urls, WebView::Cook
         debug_request("same-origin-policy", state ? "on" : "off");
     });
 
+    auto* help_menu = menuBar()->addMenu("&Help");
+
+    auto* about_action = new QAction("&About Ladybird", this);
+    help_menu->addAction(about_action);
     QObject::connect(about_action, &QAction::triggered, this, [this] {
         new_tab_from_url("about:version"sv, Web::HTML::ActivateTab::Yes);
     });
+
     QObject::connect(m_new_tab_action, &QAction::triggered, this, [this] {
         new_tab_from_url(ak_url_from_qstring(Settings::the()->new_tab_page()), Web::HTML::ActivateTab::Yes);
     });
