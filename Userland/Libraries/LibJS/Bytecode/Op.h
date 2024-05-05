@@ -1057,64 +1057,59 @@ private:
     Operand m_property;
 };
 
-class Jump : public Instruction {
+class Jump final : public Instruction {
 public:
     constexpr static bool IsTerminator = true;
 
-    explicit Jump(Type type, Label taken_target, Optional<Label> nontaken_target = {})
-        : Instruction(type, sizeof(*this))
-        , m_true_target(move(taken_target))
-        , m_false_target(move(nontaken_target))
-    {
-    }
-
-    explicit Jump(Type type, Label taken_target, Label nontaken_target, size_t sizeof_self)
-        : Instruction(type, sizeof_self)
-        , m_true_target(move(taken_target))
-        , m_false_target(move(nontaken_target))
-    {
-    }
-
-    explicit Jump(Label taken_target, Optional<Label> nontaken_target = {})
+    explicit Jump(Label target)
         : Instruction(Type::Jump, sizeof(*this))
-        , m_true_target(move(taken_target))
-        , m_false_target(move(nontaken_target))
+        , m_target(target)
     {
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
+    auto& target() const { return m_target; }
+
+protected:
+    Label m_target;
+};
+
+class JumpIf final : public Instruction {
+public:
+    constexpr static bool IsTerminator = true;
+
+    explicit JumpIf(Operand condition, Label true_target, Label false_target)
+        : Instruction(Type::JumpIf, sizeof(*this))
+        , m_condition(condition)
+        , m_true_target(true_target)
+        , m_false_target(false_target)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
+
+    Operand condition() const { return m_condition; }
     auto& true_target() const { return m_true_target; }
     auto& false_target() const { return m_false_target; }
 
-protected:
-    Optional<Label> m_true_target;
-    Optional<Label> m_false_target;
-};
-
-class JumpIf final : public Jump {
-public:
-    explicit JumpIf(Operand condition, Label true_target, Label false_target)
-        : Jump(Type::JumpIf, move(true_target), move(false_target), sizeof(*this))
-        , m_condition(condition)
-    {
-    }
-
-    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-
-    Operand condition() const { return m_condition; }
-
 private:
     Operand m_condition;
+    Label m_true_target;
+    Label m_false_target;
 };
 
-class JumpNullish final : public Jump {
+class JumpNullish final : public Instruction {
 public:
+    constexpr static bool IsTerminator = true;
+
     explicit JumpNullish(Operand condition, Label true_target, Label false_target)
-        : Jump(Type::JumpNullish, move(true_target), move(false_target), sizeof(*this))
+        : Instruction(Type::JumpNullish, sizeof(*this))
         , m_condition(condition)
+        , m_true_target(true_target)
+        , m_false_target(false_target)
     {
     }
 
@@ -1122,16 +1117,24 @@ public:
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     Operand condition() const { return m_condition; }
+    auto& true_target() const { return m_true_target; }
+    auto& false_target() const { return m_false_target; }
 
 private:
     Operand m_condition;
+    Label m_true_target;
+    Label m_false_target;
 };
 
-class JumpUndefined final : public Jump {
+class JumpUndefined final : public Instruction {
 public:
+    constexpr static bool IsTerminator = true;
+
     explicit JumpUndefined(Operand condition, Label true_target, Label false_target)
-        : Jump(Type::JumpUndefined, move(true_target), move(false_target), sizeof(*this))
+        : Instruction(Type::JumpUndefined, sizeof(*this))
         , m_condition(condition)
+        , m_true_target(true_target)
+        , m_false_target(false_target)
     {
     }
 
@@ -1139,9 +1142,13 @@ public:
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     Operand condition() const { return m_condition; }
+    auto& true_target() const { return m_true_target; }
+    auto& false_target() const { return m_false_target; }
 
 private:
     Operand m_condition;
+    Label m_true_target;
+    Label m_false_target;
 };
 
 enum class CallType {
