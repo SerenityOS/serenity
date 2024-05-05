@@ -15,14 +15,30 @@
 
 namespace Web::Painting {
 
+template<typename T>
+static T const* first_child_layout_node_of_type(SVG::SVGGraphicsElement const& graphics_element)
+{
+    return graphics_element.layout_node()->first_child_of_type<T>();
+}
+
+static auto get_mask_box(SVG::SVGGraphicsElement const& graphics_element)
+{
+    return first_child_layout_node_of_type<Layout::SVGMaskBox>(graphics_element);
+}
+
+static auto get_clip_box(SVG::SVGGraphicsElement const& graphics_element)
+{
+    return first_child_layout_node_of_type<Layout::SVGClipBox>(graphics_element);
+}
+
 Optional<CSSPixelRect> SVGMaskable::get_masking_area_of_svg() const
 {
     auto const& graphics_element = verify_cast<SVG::SVGGraphicsElement const>(*dom_node_of_svg());
     Optional<CSSPixelRect> masking_area = {};
-    if (auto* mask_box = graphics_element.layout_node()->first_child_of_type<Layout::SVGMaskBox>()) {
+    if (auto* mask_box = get_mask_box(graphics_element)) {
         masking_area = mask_box->dom_node().resolve_masking_area(mask_box->paintable_box()->absolute_border_box_rect());
     }
-    if (auto* clip_box = graphics_element.layout_node()->first_child_of_type<Layout::SVGClipBox>()) {
+    if (auto* clip_box = get_clip_box(graphics_element)) {
         // This is a bit ad-hoc, but if we have both a mask and a clip-path, intersect the two areas to find the masking area.
         auto clip_area = clip_box->paintable_box()->absolute_border_box_rect();
         if (masking_area.has_value())
@@ -48,9 +64,9 @@ static Gfx::Bitmap::MaskKind mask_type_to_gfx_mask_kind(CSS::MaskType mask_type)
 Optional<Gfx::Bitmap::MaskKind> SVGMaskable::get_mask_type_of_svg() const
 {
     auto const& graphics_element = verify_cast<SVG::SVGGraphicsElement const>(*dom_node_of_svg());
-    if (auto mask = graphics_element.mask())
-        return mask_type_to_gfx_mask_kind(mask->layout_node()->computed_values().mask_type());
-    if (graphics_element.clip_path())
+    if (auto* mask_box = get_mask_box(graphics_element))
+        return mask_type_to_gfx_mask_kind(mask_box->computed_values().mask_type());
+    if (get_clip_box(graphics_element))
         return Gfx::Bitmap::MaskKind::Alpha;
     return {};
 }
@@ -77,11 +93,11 @@ RefPtr<Gfx::Bitmap> SVGMaskable::calculate_mask_of_svg(PaintContext& context, CS
         return mask_bitmap;
     };
     RefPtr<Gfx::Bitmap> mask_bitmap = {};
-    if (auto* mask_box = graphics_element.layout_node()->first_child_of_type<Layout::SVGMaskBox>()) {
+    if (auto* mask_box = get_mask_box(graphics_element)) {
         auto& mask_paintable = static_cast<PaintableBox const&>(*mask_box->paintable());
         mask_bitmap = paint_mask_or_clip(mask_paintable);
     }
-    if (auto* clip_box = graphics_element.layout_node()->first_child_of_type<Layout::SVGClipBox>()) {
+    if (auto* clip_box = get_clip_box(graphics_element)) {
         auto& clip_paintable = static_cast<PaintableBox const&>(*clip_box->paintable());
         auto clip_bitmap = paint_mask_or_clip(clip_paintable);
         // Combine the clip-path with the mask (if present).
