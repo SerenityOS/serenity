@@ -11,6 +11,7 @@
 
 TEST_CASE(pow)
 {
+    EXPECT_EQ(AK::pow<u64>(0, 0), 1ull);
     EXPECT_EQ(AK::pow<u64>(10, 0), 1ull);
     EXPECT_EQ(AK::pow<u64>(10, 1), 10ull);
     EXPECT_EQ(AK::pow<u64>(10, 2), 100ull);
@@ -22,12 +23,21 @@ TEST_CASE(pow)
 
 TEST_CASE(is_power_of)
 {
-    constexpr auto check_prime = []<u64 prime>(u64 limit) {
-        for (u64 power = 0; power < limit; ++power)
+    EXPECT(!AK::is_power_of<0>(10ull));
+    // We don't have enough context to know if the input was from 0^0
+    EXPECT(!AK::is_power_of<0>(1ull));
+
+    EXPECT(!AK::is_power_of<1>(10ull));
+    EXPECT(!AK::is_power_of<1>(0ull));
+
+    constexpr auto check_prime = []<u64 prime>(u64 limit, u64 init = 0) {
+        for (u64 power = init; power < limit; ++power)
             EXPECT(AK::is_power_of<prime>(AK::pow(prime, power)));
     };
 
     // Limits calculated as floor( log_{prime}(2^64) ) to prevent overflows.
+    check_prime.operator()<0>(42, 1);
+    check_prime.operator()<1>(36);
     check_prime.operator()<2>(64);
     check_prime.operator()<3>(40);
     check_prime.operator()<5>(27);
