@@ -33,7 +33,7 @@ static ErrorOr<void> write_chunk_header(Stream& stream, StringView chunk_fourcc,
 
 // https://developers.google.com/speed/webp/docs/riff_container#simple_file_format_lossless
 // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#7_overall_structure_of_the_format
-static ErrorOr<void> write_VP8L_header(Stream& stream, unsigned width, unsigned height, bool alpha_hint)
+static ErrorOr<void> write_VP8L_header(Stream& stream, unsigned width, unsigned height, bool alpha_is_used_hint)
 {
     // "The 14-bit precision for image width and height limits the maximum size of a WebP lossless image to 16384✕16384 pixels."
     if (width > 16384 || height > 16384)
@@ -53,7 +53,7 @@ static ErrorOr<void> write_VP8L_header(Stream& stream, unsigned width, unsigned 
 
     // "The alpha_is_used bit is a hint only, and should not impact decoding.
     //  It should be set to 0 when all alpha values are 255 in the picture, and 1 otherwise."
-    TRY(bit_stream.write_bits(alpha_hint, 1u));
+    TRY(bit_stream.write_bits(alpha_is_used_hint, 1u));
 
     // "The version_number is a 3 bit code that must be set to 0."
     TRY(bit_stream.write_bits(0u, 3u));
