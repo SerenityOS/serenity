@@ -71,6 +71,13 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
     m_layout->addWidget(m_toolbar);
     m_layout->addWidget(m_view);
 
+    m_hamburger_button = new QToolButton(m_toolbar);
+    m_hamburger_button->setText("Show &Menu");
+    m_hamburger_button->setToolTip("Show Menu");
+    m_hamburger_button->setIcon(create_tvg_icon_with_theme_colors("hamburger", palette()));
+    m_hamburger_button->setPopupMode(QToolButton::InstantPopup);
+    m_hamburger_button->setMenu(&m_window->hamburger_menu());
+
     recreate_toolbar_icons();
 
     m_favicon = default_favicon();
@@ -80,10 +87,17 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
     m_toolbar->addAction(&m_window->reload_action());
     m_toolbar->addWidget(m_location_edit);
     m_toolbar->addAction(&m_window->new_tab_action());
+    m_hamburger_button_action = m_toolbar->addWidget(m_hamburger_button);
     m_toolbar->setIconSize({ 16, 16 });
     // This is a little awkward, but without this Qt shrinks the button to the size of the icon.
     // Note: toolButtonStyle="0" -> ToolButtonIconOnly.
     m_toolbar->setStyleSheet("QToolButton[toolButtonStyle=\"0\"]{width:24px;height:24px}");
+
+    m_hamburger_button_action->setVisible(!Settings::the()->show_menubar());
+
+    QObject::connect(Settings::the(), &Settings::show_menubar_changed, this, [this](bool show_menubar) {
+        m_hamburger_button_action->setVisible(!show_menubar);
+    });
 
     m_reset_zoom_button = new QToolButton(m_toolbar);
     m_reset_zoom_button->setToolButtonStyle(Qt::ToolButtonTextOnly);
@@ -898,6 +912,7 @@ void Tab::recreate_toolbar_icons()
     m_window->go_forward_action().setIcon(create_tvg_icon_with_theme_colors("forward", palette()));
     m_window->reload_action().setIcon(create_tvg_icon_with_theme_colors("reload", palette()));
     m_window->new_tab_action().setIcon(create_tvg_icon_with_theme_colors("new_tab", palette()));
+    m_hamburger_button->setIcon(create_tvg_icon_with_theme_colors("hamburger", palette()));
 }
 
 void Tab::show_inspector_window(InspectorTarget inspector_target)

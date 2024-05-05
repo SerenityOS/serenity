@@ -38,6 +38,11 @@ public:
     int tab_index(Tab*);
     Tab& create_new_tab(Web::HTML::ActivateTab activate_tab);
 
+    QMenu& hamburger_menu()
+    {
+        return *m_hamburger_menu;
+    }
+
     QAction& go_back_action()
     {
         return *m_go_back_action;
@@ -154,6 +159,8 @@ private:
     QTabWidget* m_tabs_container { nullptr };
     Tab* m_current_tab { nullptr };
     QMenu* m_zoom_menu { nullptr };
+
+    QMenu* m_hamburger_menu { nullptr };
 
     QAction* m_go_back_action { nullptr };
     QAction* m_go_forward_action { nullptr };

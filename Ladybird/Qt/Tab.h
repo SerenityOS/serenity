@@ -84,6 +84,8 @@ private:
 
     QBoxLayout* m_layout { nullptr };
     QToolBar* m_toolbar { nullptr };
+    QToolButton* m_hamburger_button { nullptr };
+    QAction* m_hamburger_button_action { nullptr };
     QToolButton* m_reset_zoom_button { nullptr };
     QAction* m_reset_zoom_button_action { nullptr };
     LocationEdit* m_location_edit { nullptr };

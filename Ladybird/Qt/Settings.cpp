@@ -111,4 +111,15 @@ void Settings::set_enable_search(bool enable)
     m_qsettings->setValue("enable_search", enable);
 }
 
+bool Settings::show_menubar()
+{
+    return m_qsettings->value("show_menubar", false).toBool();
+}
+
+void Settings::set_show_menubar(bool show_menubar)
+{
+    m_qsettings->setValue("show_menubar", show_menubar);
+    emit show_menubar_changed(show_menubar);
+}
+
 }
