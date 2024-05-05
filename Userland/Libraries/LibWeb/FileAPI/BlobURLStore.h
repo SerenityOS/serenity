@@ -10,6 +10,7 @@
 #include <AK/String.h>
 #include <LibJS/Heap/GCPtr.h>
 #include <LibJS/Heap/Handle.h>
+#include <LibURL/Forward.h>
 #include <LibWeb/Forward.h>
 
 namespace Web::FileAPI {
@@ -27,6 +28,7 @@ BlobURLStore& blob_url_store();
 ErrorOr<String> generate_new_blob_url();
 ErrorOr<String> add_entry_to_blob_url_store(JS::NonnullGCPtr<Blob> object);
 ErrorOr<void> remove_entry_from_blob_url_store(StringView url);
+Optional<BlobURLEntry> resolve_a_blob_url(URL::URL const&);
 
 void run_unloading_cleanup_steps(JS::NonnullGCPtr<DOM::Document>);
 

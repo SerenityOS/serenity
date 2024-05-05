@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2023, Tim Flynn <trflynn89@serenityos.org>
  * Copyright (c) 2024, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2024, Shannon Booth <shannon@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -104,6 +105,22 @@ void run_unloading_cleanup_steps(JS::NonnullGCPtr<DOM::Document> document)
     store.remove_all_matching([&](auto&, auto& value) {
         return value.environment == &environment;
     });
+}
+
+// https://w3c.github.io/FileAPI/#blob-url-resolve
+Optional<BlobURLEntry> resolve_a_blob_url(URL::URL const& url)
+{
+    // 1. Assert: url’s scheme is "blob".
+    VERIFY(url.scheme() == "blob"sv);
+
+    // 2. Let store be the user agent’s blob URL store.
+    auto& store = blob_url_store();
+
+    // 3. Let url string be the result of serializing url with the exclude fragment flag set.
+    auto url_string = MUST(String::from_byte_string(url.serialize(URL::ExcludeFragment::Yes)));
+
+    // 4. If store[url string] exists, return store[url string]; otherwise return failure.
+    return store.get(url_string);
 }
 
 }
