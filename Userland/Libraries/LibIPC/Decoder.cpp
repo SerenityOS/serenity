@@ -34,8 +34,6 @@ template<>
 ErrorOr<ByteString> decode(Decoder& decoder)
 {
     auto length = TRY(decoder.decode_size());
-    if (length == NumericLimits<u32>::max())
-        return ByteString {};
     if (length == 0)
         return ByteString::empty();
 
