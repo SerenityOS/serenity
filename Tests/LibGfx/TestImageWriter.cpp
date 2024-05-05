@@ -6,6 +6,8 @@
 
 #include <AK/MemoryStream.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/ImageFormats/PNGLoader.h>
+#include <LibGfx/ImageFormats/PNGWriter.h>
 #include <LibGfx/ImageFormats/WebPLoader.h>
 #include <LibGfx/ImageFormats/WebPWriter.h>
 #include <LibTest/TestCase.h>
@@ -32,9 +34,14 @@ static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> expect_single_frame_of_size(Gfx::Imag
 template<class Writer, class Loader>
 static ErrorOr<void> test_roundtrip(Gfx::Bitmap const& bitmap)
 {
-    AllocatingMemoryStream stream;
-    TRY(Writer::encode(stream, bitmap));
-    auto encoded_data = TRY(stream.read_until_eof());
+    ByteBuffer encoded_data;
+    if constexpr (requires(AllocatingMemoryStream stream) { Writer::encode(stream, bitmap); }) {
+        AllocatingMemoryStream stream;
+        TRY(Writer::encode(stream, bitmap));
+        encoded_data = TRY(stream.read_until_eof());
+    } else {
+        encoded_data = TRY(Writer::encode(bitmap));
+    }
 
     auto plugin = TRY(Loader::create(encoded_data));
     auto decoded = TRY(expect_single_frame_of_size(*plugin, bitmap.size()));
@@ -70,6 +77,12 @@ static ErrorOr<AK::NonnullRefPtr<Gfx::Bitmap>> create_test_rgba_bitmap()
     }
 
     return bitmap;
+}
+
+TEST_CASE(test_png)
+{
+    TRY_OR_FAIL((test_roundtrip<Gfx::PNGWriter, Gfx::PNGImageDecoderPlugin>(TRY_OR_FAIL(create_test_rgb_bitmap()))));
+    TRY_OR_FAIL((test_roundtrip<Gfx::PNGWriter, Gfx::PNGImageDecoderPlugin>(TRY_OR_FAIL(create_test_rgba_bitmap()))));
 }
 
 TEST_CASE(test_webp)
