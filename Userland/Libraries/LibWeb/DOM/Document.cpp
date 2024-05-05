@@ -53,6 +53,7 @@
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/DOM/TreeWalker.h>
+#include <LibWeb/DOMURL/DOMURL.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Responses.h>
 #include <LibWeb/FileAPI/BlobURLStore.h>
@@ -982,8 +983,11 @@ URL::URL Document::base_url() const
 // https://html.spec.whatwg.org/multipage/urls-and-fetching.html#parse-a-url
 URL::URL Document::parse_url(StringView url) const
 {
-    // FIXME: Pass in document's character encoding.
-    return base_url().complete_url(url);
+    // 1. Let baseURL be environment's base URL, if environment is a Document object; otherwise environment's API base URL.
+    auto base_url = this->base_url();
+
+    // 2. Return the result of applying the URL parser to url, with baseURL.
+    return DOMURL::parse(url, base_url);
 }
 
 void Document::set_needs_layout()
