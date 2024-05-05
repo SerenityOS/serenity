@@ -332,26 +332,32 @@ void Interpreter::run_bytecode()
                 accumulator = get(static_cast<Op::End const&>(instruction).value());
                 return;
             case Instruction::Type::Jump:
-                m_current_block = &static_cast<Op::Jump const&>(instruction).true_target()->block();
+                m_current_block = &static_cast<Op::Jump const&>(instruction).target().block();
                 goto start;
-            case Instruction::Type::JumpIf:
-                if (get(static_cast<Op::JumpIf const&>(instruction).condition()).to_boolean())
-                    m_current_block = &static_cast<Op::JumpIf const&>(instruction).true_target()->block();
+            case Instruction::Type::JumpIf: {
+                auto& jump = static_cast<Op::JumpIf const&>(instruction);
+                if (get(jump.condition()).to_boolean())
+                    m_current_block = &jump.true_target().block();
                 else
-                    m_current_block = &static_cast<Op::JumpIf const&>(instruction).false_target()->block();
+                    m_current_block = &jump.false_target().block();
                 goto start;
-            case Instruction::Type::JumpNullish:
-                if (get(static_cast<Op::JumpNullish const&>(instruction).condition()).is_nullish())
-                    m_current_block = &static_cast<Op::Jump const&>(instruction).true_target()->block();
+            }
+            case Instruction::Type::JumpNullish: {
+                auto& jump = static_cast<Op::JumpNullish const&>(instruction);
+                if (get(jump.condition()).is_nullish())
+                    m_current_block = &jump.true_target().block();
                 else
-                    m_current_block = &static_cast<Op::Jump const&>(instruction).false_target()->block();
+                    m_current_block = &jump.false_target().block();
                 goto start;
-            case Instruction::Type::JumpUndefined:
-                if (get(static_cast<Op::JumpUndefined const&>(instruction).condition()).is_undefined())
-                    m_current_block = &static_cast<Op::Jump const&>(instruction).true_target()->block();
+            }
+            case Instruction::Type::JumpUndefined: {
+                auto& jump = static_cast<Op::JumpUndefined const&>(instruction);
+                if (get(jump.condition()).is_undefined())
+                    m_current_block = &jump.true_target().block();
                 else
-                    m_current_block = &static_cast<Op::Jump const&>(instruction).false_target()->block();
+                    m_current_block = &jump.false_target().block();
                 goto start;
+            }
             case Instruction::Type::EnterUnwindContext:
                 enter_unwind_context();
                 m_current_block = &static_cast<Op::EnterUnwindContext const&>(instruction).entry_point().block();
@@ -1869,36 +1875,31 @@ ByteString DeleteByIdWithThis::to_byte_string_impl(Bytecode::Executable const& e
 
 ByteString Jump::to_byte_string_impl(Bytecode::Executable const&) const
 {
-    if (m_true_target.has_value())
-        return ByteString::formatted("Jump {}", *m_true_target);
-    return ByteString::formatted("Jump <empty>");
+    return ByteString::formatted("Jump {}", m_target);
 }
 
 ByteString JumpIf::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
-    auto true_string = m_true_target.has_value() ? ByteString::formatted("{}", *m_true_target) : "<empty>";
-    auto false_string = m_false_target.has_value() ? ByteString::formatted("{}", *m_false_target) : "<empty>";
     return ByteString::formatted("JumpIf {}, \033[32mtrue\033[0m:{} \033[32mfalse\033[0m:{}",
         format_operand("condition"sv, m_condition, executable),
-        true_string, false_string);
+        m_true_target,
+        m_false_target);
 }
 
 ByteString JumpNullish::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
-    auto true_string = m_true_target.has_value() ? ByteString::formatted("{}", *m_true_target) : "<empty>";
-    auto false_string = m_false_target.has_value() ? ByteString::formatted("{}", *m_false_target) : "<empty>";
     return ByteString::formatted("JumpNullish {}, null:{} nonnull:{}",
         format_operand("condition"sv, m_condition, executable),
-        true_string, false_string);
+        m_true_target,
+        m_false_target);
 }
 
 ByteString JumpUndefined::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
-    auto true_string = m_true_target.has_value() ? ByteString::formatted("{}", *m_true_target) : "<empty>";
-    auto false_string = m_false_target.has_value() ? ByteString::formatted("{}", *m_false_target) : "<empty>";
     return ByteString::formatted("JumpUndefined {}, undefined:{} defined:{}",
         format_operand("condition"sv, m_condition, executable),
-        true_string, false_string);
+        m_true_target,
+        m_false_target);
 }
 
 static StringView call_type_to_string(CallType type)
