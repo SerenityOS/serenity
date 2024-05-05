@@ -64,6 +64,15 @@ static ErrorOr<void> write_VP8L_header(Stream& stream, unsigned width, unsigned 
     return {};
 }
 
+static bool are_all_pixels_opaque(Bitmap const& bitmap)
+{
+    for (ARGB32 pixel : bitmap) {
+        if ((pixel >> 24) != 0xff)
+            return false;
+    }
+    return true;
+}
+
 static ErrorOr<void> write_VP8L_image_data(Stream& stream, Bitmap const& bitmap)
 {
     LittleEndianOutputBitStream bit_stream { MaybeOwned<Stream>(stream) };
@@ -249,10 +258,12 @@ static ErrorOr<void> align_to_two(AllocatingMemoryStream& stream)
 
 ErrorOr<void> WebPWriter::encode(Stream& stream, Bitmap const& bitmap, Options const& options)
 {
+    bool alpha_is_used_hint = !are_all_pixels_opaque(bitmap);
+
     // The chunk headers need to know their size, so we either need a SeekableStream or need to buffer the data. We're doing the latter.
     // FIXME: The whole writing-and-reading-into-buffer over-and-over is awkward and inefficient.
     AllocatingMemoryStream vp8l_header_stream;
-    TRY(write_VP8L_header(vp8l_header_stream, bitmap.width(), bitmap.height(), true));
+    TRY(write_VP8L_header(vp8l_header_stream, bitmap.width(), bitmap.height(), alpha_is_used_hint));
     auto vp8l_header_bytes = TRY(vp8l_header_stream.read_until_eof());
 
     AllocatingMemoryStream vp8l_data_stream;
