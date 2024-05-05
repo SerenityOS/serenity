@@ -575,14 +575,20 @@ URL::URL parse(StringView input, Optional<URL::URL> const& base_url)
     if (!url.is_valid())
         return {};
 
-    // 3. If url’s scheme is not "blob",
+    // 3. If url’s scheme is not "blob", return url.
     if (url.scheme() != "blob")
         return url;
 
-    // FIXME: 4. Set url’s blob URL entry to the result of resolving the blob URL url,
-    // FIXME: 5. if that did not return failure, and null otherwise.
+    // 4. Set url’s blob URL entry to the result of resolving the blob URL url, if that did not return failure, and null otherwise.
+    auto blob_url_entry = FileAPI::resolve_a_blob_url(url);
+    if (blob_url_entry.has_value()) {
+        url.set_blob_url_entry(URL::BlobURLEntry {
+            .type = blob_url_entry->object->type(),
+            .byte_buffer = MUST(ByteBuffer::copy(blob_url_entry->object->bytes())),
+        });
+    }
 
-    // 6. Return url
+    // 5. Return url
     return url;
 }
 
