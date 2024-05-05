@@ -362,6 +362,10 @@ PDFErrorOr<ByteString> Parser::parse_hex_string()
 
             for (int i = 0; i < 2; i++) {
                 m_reader.consume_whitespace();
+
+                if (m_reader.done())
+                    return error("unterminated hex string");
+
                 auto ch = m_reader.consume();
                 if (ch == '>') {
                     // The hex string contains an odd number of characters, and the last character
