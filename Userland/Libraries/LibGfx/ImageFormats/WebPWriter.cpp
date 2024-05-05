@@ -116,7 +116,10 @@ static ErrorOr<void> write_VP8L_image_data(Stream& stream, Bitmap const& bitmap)
     if (alphabet_sizes[0] > 288)
         return Error::from_string_literal("Invalid alphabet size");
 
-    for (int i = 0; i < 4; ++i) {
+    bool all_pixels_are_opaque = are_all_pixels_opaque(bitmap);
+
+    int number_of_full_channels = all_pixels_are_opaque ? 3 : 4;
+    for (int i = 0; i < number_of_full_channels; ++i) {
         TRY(bit_stream.write_bits(0u, 1u)); // Normal code length code.
 
         // Write code length codes.
@@ -146,6 +149,14 @@ static ErrorOr<void> write_VP8L_image_data(Stream& stream, Bitmap const& bitmap)
         // (This is different from deflate, which needs 1 bit per element.)
     }
 
+    if (all_pixels_are_opaque) {
+        // Use a simple 1-element code.
+        TRY(bit_stream.write_bits(1u, 1u));   // Simple code length code.
+        TRY(bit_stream.write_bits(0u, 1u));   // num_symbols - 1
+        TRY(bit_stream.write_bits(1u, 1u));   // is_first_8bits
+        TRY(bit_stream.write_bits(255u, 8u)); // symbol0
+    }
+
     // For code #5, use a simple empty code, since we don't use this yet.
     TRY(bit_stream.write_bits(1u, 1u)); // Simple code length code.
     TRY(bit_stream.write_bits(0u, 1u)); // num_symbols - 1
@@ -164,7 +175,10 @@ static ErrorOr<void> write_VP8L_image_data(Stream& stream, Bitmap const& bitmap)
         TRY(bit_stream.write_bits(Compress::reverse8_lookup_table[g], 8u));
         TRY(bit_stream.write_bits(Compress::reverse8_lookup_table[r], 8u));
         TRY(bit_stream.write_bits(Compress::reverse8_lookup_table[b], 8u));
-        TRY(bit_stream.write_bits(Compress::reverse8_lookup_table[a], 8u));
+
+        // If all pixels are opaque, we wrote a one-element huffman table for alpha, which needs 0 bits per element.
+        if (!all_pixels_are_opaque)
+            TRY(bit_stream.write_bits(Compress::reverse8_lookup_table[a], 8u));
     }
 
     // FIXME: Make ~LittleEndianOutputBitStream do this, or make it VERIFY() that it has happened at least.
