@@ -6,6 +6,8 @@
 
 #include <AK/MemoryStream.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/ImageFormats/BMPLoader.h>
+#include <LibGfx/ImageFormats/BMPWriter.h>
 #include <LibGfx/ImageFormats/PNGLoader.h>
 #include <LibGfx/ImageFormats/PNGWriter.h>
 #include <LibGfx/ImageFormats/WebPLoader.h>
@@ -77,6 +79,12 @@ static ErrorOr<AK::NonnullRefPtr<Gfx::Bitmap>> create_test_rgba_bitmap()
     }
 
     return bitmap;
+}
+
+TEST_CASE(test_bmp)
+{
+    TRY_OR_FAIL((test_roundtrip<Gfx::BMPWriter, Gfx::BMPImageDecoderPlugin>(TRY_OR_FAIL(create_test_rgb_bitmap()))));
+    TRY_OR_FAIL((test_roundtrip<Gfx::BMPWriter, Gfx::BMPImageDecoderPlugin>(TRY_OR_FAIL(create_test_rgba_bitmap()))));
 }
 
 TEST_CASE(test_png)
