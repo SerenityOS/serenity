@@ -14,7 +14,9 @@
             text-align: center;
             display: block;
             width: 100%;
-            max-width: 400px;
+
+            /* Adjust this as more buttons are added */
+            max-width: 480px;
         }
 
         img {
@@ -49,6 +51,7 @@
                 <button type="button" onclick="search('github')">GitHub</button>
                 <button type="button" onclick="search('google')">Google</button>
                 <button type="button" onclick="search('wiby')">Wiby</button>
+                <button type="button" onclick="search('wikipedia')">Wikipedia</button>
                 <button type="button" onclick="search('yandex')">Yandex</button>
             </div>
         </form>
@@ -86,6 +89,9 @@
             } else if (searchEngine == "wiby") {
                 url = new URL("https://wiby.me");
                 url.searchParams.set("q", query);
+            } else if (searchEngine == "wikipedia") {
+                url = new URL("https://en.wikipedia.org/w/index.php?title=Special:Search");
+                url.searchParams.set("search", query);
             } else if (searchEngine == "yandex") {
                 url = new URL("https://yandex.com/search");
                 url.searchParams.set("text", query);
