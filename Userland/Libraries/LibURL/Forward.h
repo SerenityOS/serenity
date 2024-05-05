@@ -9,4 +9,6 @@
 namespace URL {
 class URL;
 class Parser;
+
+struct BlobURLEntry;
 }

@@ -58,6 +58,13 @@ enum class ApplyPercentDecoding {
     No
 };
 
+// https://w3c.github.io/FileAPI/#blob-url-entry
+// NOTE: This represents the raw bytes behind a 'Blob' (and does not yet support a MediaSourceQuery).
+struct BlobURLEntry {
+    String type;
+    ByteBuffer byte_buffer;
+};
+
 void append_percent_encoded_if_necessary(StringBuilder&, u32 code_point, PercentEncodeSet set = PercentEncodeSet::Userinfo);
 void append_percent_encoded(StringBuilder&, u32 code_point);
 bool code_point_is_in_percent_encode_set(u32 code_point, PercentEncodeSet);
@@ -143,6 +150,9 @@ public:
     String const& raw_username() const { return m_username; }
     String const& raw_password() const { return m_password; }
 
+    Optional<BlobURLEntry> const& blob_url_entry() const { return m_blob_url_entry; }
+    void set_blob_url_entry(Optional<BlobURLEntry> entry) { m_blob_url_entry = move(entry); }
+
 private:
     bool compute_validity() const;
 
@@ -174,6 +184,10 @@ private:
     Optional<String> m_fragment;
 
     bool m_cannot_be_a_base_url { false };
+
+    // https://url.spec.whatwg.org/#concept-url-blob-entry
+    // A URL also has an associated blob URL entry that is either null or a blob URL entry. It is initially null.
+    Optional<BlobURLEntry> m_blob_url_entry;
 };
 
 URL create_with_url_or_path(ByteString const&);
