@@ -8,6 +8,8 @@
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/ImageFormats/BMPLoader.h>
 #include <LibGfx/ImageFormats/BMPWriter.h>
+#include <LibGfx/ImageFormats/JPEGLoader.h>
+#include <LibGfx/ImageFormats/JPEGWriter.h>
 #include <LibGfx/ImageFormats/PNGLoader.h>
 #include <LibGfx/ImageFormats/PNGWriter.h>
 #include <LibGfx/ImageFormats/QOILoader.h>
@@ -36,7 +38,7 @@ static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> expect_single_frame_of_size(Gfx::Imag
 }
 
 template<class Writer, class Loader>
-static ErrorOr<void> test_roundtrip(Gfx::Bitmap const& bitmap)
+static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> get_roundtrip_bitmap(Gfx::Bitmap const& bitmap)
 {
     ByteBuffer encoded_data;
     if constexpr (requires(AllocatingMemoryStream stream) { Writer::encode(stream, bitmap); }) {
@@ -48,7 +50,13 @@ static ErrorOr<void> test_roundtrip(Gfx::Bitmap const& bitmap)
     }
 
     auto plugin = TRY(Loader::create(encoded_data));
-    auto decoded = TRY(expect_single_frame_of_size(*plugin, bitmap.size()));
+    return expect_single_frame_of_size(*plugin, bitmap.size());
+}
+
+template<class Writer, class Loader>
+static ErrorOr<void> test_roundtrip(Gfx::Bitmap const& bitmap)
+{
+    auto decoded = TRY((get_roundtrip_bitmap<Writer, Loader>(bitmap)));
 
     for (int y = 0; y < bitmap.height(); ++y)
         for (int x = 0; x < bitmap.width(); ++x)
@@ -87,6 +95,12 @@ TEST_CASE(test_bmp)
 {
     TRY_OR_FAIL((test_roundtrip<Gfx::BMPWriter, Gfx::BMPImageDecoderPlugin>(TRY_OR_FAIL(create_test_rgb_bitmap()))));
     TRY_OR_FAIL((test_roundtrip<Gfx::BMPWriter, Gfx::BMPImageDecoderPlugin>(TRY_OR_FAIL(create_test_rgba_bitmap()))));
+}
+
+TEST_CASE(test_jpeg)
+{
+    // JPEG is lossy, so the roundtripped bitmap won't match the original bitmap. But it should still have the same size.
+    (void)TRY_OR_FAIL((get_roundtrip_bitmap<Gfx::JPEGWriter, Gfx::JPEGImageDecoderPlugin>(TRY_OR_FAIL(create_test_rgb_bitmap()))));
 }
 
 TEST_CASE(test_png)
