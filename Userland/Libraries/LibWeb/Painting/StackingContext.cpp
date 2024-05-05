@@ -57,7 +57,9 @@ void StackingContext::sort()
 
 void StackingContext::set_last_paint_generation_id(u64 generation_id)
 {
-    VERIFY(!m_last_paint_generation_id.has_value() || m_last_paint_generation_id.value() < generation_id);
+    if (m_last_paint_generation_id.has_value() && m_last_paint_generation_id.value() >= generation_id) {
+        dbgln("FIXME: Painting commands are recorded twice for stacking context: {}", m_paintable->layout_node().debug_description());
+    }
     m_last_paint_generation_id = generation_id;
 }
 
