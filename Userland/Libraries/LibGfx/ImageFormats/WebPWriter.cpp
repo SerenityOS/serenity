@@ -165,6 +165,78 @@ static ErrorOr<void> write_VP8L_image_data(Stream& stream, Bitmap const& bitmap)
     return {};
 }
 
+struct VP8XHeader {
+    bool has_icc { false };
+    bool has_alpha { false };
+    bool has_exif { false };
+    bool has_xmp { false };
+    bool has_animation { false };
+    u32 width { 0 };
+    u32 height { 0 };
+};
+
+// https://developers.google.com/speed/webp/docs/riff_container#extended_file_format
+static ErrorOr<void> write_VP8X_header(Stream& stream, VP8XHeader const& header)
+{
+    if (header.width > (1 << 24) || header.height > (1 << 24))
+        return Error::from_string_literal("WebP dimensions too large for VP8X chunk");
+
+    if (header.width == 0 || header.height == 0)
+        return Error::from_string_literal("WebP lossless images must be at least one pixel wide and tall");
+
+    // "The product of Canvas Width and Canvas Height MUST be at most 2^32 - 1."
+    u64 product = static_cast<u64>(header.width) * static_cast<u64>(header.height);
+    if (product >= (1ull << 32))
+        return Error::from_string_literal("WebP dimensions too large for VP8X chunk");
+
+    LittleEndianOutputBitStream bit_stream { MaybeOwned<Stream>(stream) };
+
+    // "Reserved (Rsv): 2 bits
+    //  MUST be 0. Readers MUST ignore this field."
+    TRY(bit_stream.write_bits(0u, 2u));
+
+    // "ICC profile (I): 1 bit
+    //  Set if the file contains an 'ICCP' Chunk."
+    TRY(bit_stream.write_bits(header.has_icc, 1u));
+
+    // "Alpha (L): 1 bit
+    //  Set if any of the frames of the image contain transparency information ("alpha")."
+    TRY(bit_stream.write_bits(header.has_alpha, 1u));
+
+    // "Exif metadata (E): 1 bit
+    //  Set if the file contains Exif metadata."
+    TRY(bit_stream.write_bits(header.has_exif, 1u));
+
+    // "XMP metadata (X): 1 bit
+    //  Set if the file contains XMP metadata."
+    TRY(bit_stream.write_bits(header.has_xmp, 1u));
+
+    // "Animation (A): 1 bit
+    //  Set if this is an animated image. Data in 'ANIM' and 'ANMF' Chunks should be used to control the animation."
+    TRY(bit_stream.write_bits(header.has_animation, 1u));
+
+    // "Reserved (R): 1 bit
+    //  MUST be 0. Readers MUST ignore this field."
+    TRY(bit_stream.write_bits(0u, 1u));
+
+    // "Reserved: 24 bits
+    //  MUST be 0. Readers MUST ignore this field."
+    TRY(bit_stream.write_bits(0u, 24u));
+
+    // "Canvas Width Minus One: 24 bits
+    //  1-based width of the canvas in pixels. The actual canvas width is 1 + Canvas Width Minus One."
+    TRY(bit_stream.write_bits(header.width - 1, 24u));
+
+    // "Canvas Height Minus One: 24 bits
+    //  1-based height of the canvas in pixels. The actual canvas height is 1 + Canvas Height Minus One."
+    TRY(bit_stream.write_bits(header.height - 1, 24u));
+
+    // FIXME: Make ~LittleEndianOutputBitStream do this, or make it VERIFY() that it has happened at least.
+    TRY(bit_stream.flush_buffer_to_stream());
+
+    return {};
+}
+
 // FIXME: Consider using LibRIFF for RIFF writing details. (It currently has no writing support.)
 static ErrorOr<void> align_to_two(AllocatingMemoryStream& stream)
 {
@@ -194,12 +266,30 @@ ErrorOr<void> WebPWriter::encode(Stream& stream, Bitmap const& bitmap, Options c
     TRY(align_to_two(vp8l_chunk_stream));
     auto vp8l_chunk_bytes = TRY(vp8l_chunk_stream.read_until_eof());
 
+    ByteBuffer vp8x_chunk_bytes;
+    ByteBuffer iccp_chunk_bytes;
     if (options.icc_data.has_value()) {
-        // FIXME: Write VP8X, ICCP chunks.
-        dbgln("WebPWriter: Can't write ICC data to webp files yet, dropping it for now");
+        AllocatingMemoryStream iccp_chunk_stream;
+        TRY(write_chunk_header(iccp_chunk_stream, "ICCP"sv, options.icc_data.value().size()));
+        TRY(iccp_chunk_stream.write_until_depleted(options.icc_data.value()));
+        TRY(align_to_two(iccp_chunk_stream));
+        iccp_chunk_bytes = TRY(iccp_chunk_stream.read_until_eof());
+
+        AllocatingMemoryStream vp8x_header_stream;
+        TRY(write_VP8X_header(vp8x_header_stream, { .has_icc = true, .width = (u32)bitmap.width(), .height = (u32)bitmap.height() }));
+        auto vp8x_header_bytes = TRY(vp8x_header_stream.read_until_eof());
+
+        AllocatingMemoryStream vp8x_chunk_stream;
+        TRY(write_chunk_header(vp8x_chunk_stream, "VP8X"sv, vp8x_header_bytes.size()));
+        TRY(vp8x_chunk_stream.write_until_depleted(vp8x_header_bytes));
+        VERIFY(vp8x_chunk_stream.used_buffer_size() % 2 == 0);
+        vp8x_chunk_bytes = TRY(vp8x_chunk_stream.read_until_eof());
     }
 
-    TRY(write_webp_header(stream, vp8l_chunk_bytes.size()));
+    u32 total_size = vp8x_chunk_bytes.size() + iccp_chunk_bytes.size() + vp8l_chunk_bytes.size();
+    TRY(write_webp_header(stream, total_size));
+    TRY(stream.write_until_depleted(vp8x_chunk_bytes));
+    TRY(stream.write_until_depleted(iccp_chunk_bytes));
     TRY(stream.write_until_depleted(vp8l_chunk_bytes));
     return {};
 }
