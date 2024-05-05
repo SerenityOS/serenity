@@ -99,7 +99,19 @@ ErrorOr<void> encode(Encoder& encoder, UnixDateTime const& value)
 template<>
 ErrorOr<void> encode(Encoder& encoder, URL::URL const& value)
 {
-    return encoder.encode(value.to_byte_string());
+    TRY(encoder.encode(value.serialize()));
+
+    if (!value.blob_url_entry().has_value())
+        return encoder.encode(false);
+
+    TRY(encoder.encode(true));
+
+    auto const& blob = value.blob_url_entry().value();
+
+    TRY(encoder.encode(blob.type));
+    TRY(encoder.encode(blob.byte_buffer));
+
+    return {};
 }
 
 template<>

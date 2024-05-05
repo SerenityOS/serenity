@@ -83,8 +83,19 @@ ErrorOr<UnixDateTime> decode(Decoder& decoder)
 template<>
 ErrorOr<URL::URL> decode(Decoder& decoder)
 {
-    auto url = TRY(decoder.decode<ByteString>());
-    return URL::URL { url };
+    auto url_string = TRY(decoder.decode<ByteString>());
+    URL::URL url { url_string };
+
+    bool has_blob_url = TRY(decoder.decode<bool>());
+    if (!has_blob_url)
+        return url;
+
+    url.set_blob_url_entry(URL::BlobURLEntry {
+        .type = TRY(decoder.decode<String>()),
+        .byte_buffer = TRY(decoder.decode<ByteBuffer>()),
+    });
+
+    return url;
 }
 
 template<>
