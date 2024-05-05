@@ -731,10 +731,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> scheme_fetch(JS::Realm& r
     }
     // -> "blob"
     else if (request->current_url().scheme() == "blob"sv) {
-        auto const& store = FileAPI::blob_url_store();
-
         // 1. Let blobURLEntry be request’s current URL’s blob URL entry.
-        auto blob_url_entry = store.get(TRY_OR_THROW_OOM(vm, request->current_url().to_string()));
+        auto const& blob_url_entry = request->current_url().blob_url_entry();
 
         // 2. If request’s method is not `GET`, blobURLEntry is null, or blobURLEntry’s object is not a Blob object,
         //    then return a network error. [FILEAPI]
@@ -745,7 +743,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> scheme_fetch(JS::Realm& r
         }
 
         // 3. Let blob be blobURLEntry’s object.
-        auto const& blob = blob_url_entry->object;
+        auto const blob = FileAPI::Blob::create(realm, blob_url_entry.value().byte_buffer, blob_url_entry.value().type);
 
         // 4. Let response be a new response.
         auto response = Infrastructure::Response::create(vm);
@@ -762,7 +760,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> scheme_fetch(JS::Realm& r
         // 8. If request’s header list does not contain `Range`:
         if (!request->header_list()->contains("Range"sv.bytes())) {
             // 1. Let bodyWithType be the result of safely extracting blob.
-            auto body_with_type = TRY(safely_extract_body(realm, blob));
+            auto body_with_type = TRY(safely_extract_body(realm, blob->bytes()));
 
             // 2. Set response’s status message to `OK`.
             response->set_status_message(MUST(ByteBuffer::copy("OK"sv.bytes())));
