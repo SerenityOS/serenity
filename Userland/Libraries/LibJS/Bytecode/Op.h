@@ -32,6 +32,45 @@ class FunctionExpression;
 
 namespace JS::Bytecode::Op {
 
+class CreateRestParams final : public Instruction {
+public:
+    CreateRestParams(Operand dst, u32 rest_index)
+        : Instruction(Type::CreateRestParams)
+        , m_dst(dst)
+        , m_rest_index(rest_index)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
+
+private:
+    Operand m_dst;
+    u32 m_rest_index;
+};
+
+class CreateArguments final : public Instruction {
+public:
+    enum class Kind {
+        Mapped,
+        Unmapped,
+    };
+
+    CreateArguments(Kind kind, bool is_immutable)
+        : Instruction(Type::CreateArguments)
+        , m_kind(kind)
+        , m_is_immutable(is_immutable)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
+
+private:
+    Kind m_kind;
+    bool m_is_immutable { false };
+};
+
 class Mov final : public Instruction {
 public:
     Mov(Operand dst, Operand src)
@@ -413,6 +452,17 @@ public:
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 };
 
+class CreateVariableEnvironment final : public Instruction {
+public:
+    explicit CreateVariableEnvironment()
+        : Instruction(Type::CreateVariableEnvironment)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
+};
+
 class EnterObjectEnvironment final : public Instruction {
 public:
     explicit EnterObjectEnvironment(Operand object)
@@ -550,6 +600,46 @@ public:
 private:
     u32 m_index;
     Operand m_src;
+};
+
+class SetArgument final : public Instruction {
+public:
+    SetArgument(size_t index, Operand src)
+        : Instruction(Type::SetArgument)
+        , m_index(index)
+        , m_src(src)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
+
+    size_t index() const { return m_index; }
+    Operand src() const { return m_src; }
+
+private:
+    u32 m_index;
+    Operand m_src;
+};
+
+class GetArgument final : public Instruction {
+public:
+    GetArgument(Operand dst, size_t index)
+        : Instruction(Type::GetArgument)
+        , m_index(index)
+        , m_dst(dst)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
+
+    u32 index() const { return m_index; }
+    Operand dst() const { return m_dst; }
+
+private:
+    u32 m_index;
+    Operand m_dst;
 };
 
 class GetCalleeAndThisFromEnvironment final : public Instruction {

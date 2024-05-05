@@ -30,7 +30,10 @@
     O(ContinuePendingUnwind)           \
     O(CopyObjectExcludingProperties)   \
     O(CreateLexicalEnvironment)        \
+    O(CreateVariableEnvironment)       \
     O(CreateVariable)                  \
+    O(CreateRestParams)                \
+    O(CreateArguments)                 \
     O(Decrement)                       \
     O(DeleteById)                      \
     O(DeleteByIdWithThis)              \
@@ -43,6 +46,7 @@
     O(EnterObjectEnvironment)          \
     O(EnterUnwindContext)              \
     O(Exp)                             \
+    O(GetArgument)                     \
     O(GetById)                         \
     O(GetByIdWithThis)                 \
     O(GetByValue)                      \
@@ -114,6 +118,7 @@
     O(Return)                          \
     O(RightShift)                      \
     O(ScheduleJump)                    \
+    O(SetArgument)                     \
     O(SetVariable)                     \
     O(SetLocal)                        \
     O(StrictlyEquals)                  \

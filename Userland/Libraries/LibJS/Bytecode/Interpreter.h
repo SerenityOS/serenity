@@ -96,6 +96,7 @@ private:
     GCPtr<Object> m_global_object { nullptr };
     GCPtr<DeclarativeEnvironment> m_global_declarative_environment { nullptr };
     Optional<size_t&> m_program_counter;
+    Span<Value> m_arguments;
     Span<Value> m_registers;
     Span<Value> m_locals;
     Span<Value> m_constants;
@@ -103,6 +104,7 @@ private:
 
 extern bool g_dump_bytecode;
 
-ThrowCompletionOr<NonnullGCPtr<Bytecode::Executable>> compile(VM&, ASTNode const&, ReadonlySpan<FunctionParameter>, JS::FunctionKind kind, DeprecatedFlyString const& name);
+ThrowCompletionOr<NonnullGCPtr<Bytecode::Executable>> compile(VM&, ASTNode const&, JS::FunctionKind kind, DeprecatedFlyString const& name);
+ThrowCompletionOr<NonnullGCPtr<Bytecode::Executable>> compile(VM&, ECMAScriptFunctionObject const&);
 
 }

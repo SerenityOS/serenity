@@ -32,7 +32,11 @@ public:
         Function,
         Block,
     };
-    static CodeGenerationErrorOr<NonnullGCPtr<Executable>> generate(VM&, ASTNode const&, ReadonlySpan<FunctionParameter> parameters, FunctionKind = FunctionKind::Normal);
+
+    static CodeGenerationErrorOr<NonnullGCPtr<Executable>> generate_from_ast_node(VM&, ASTNode const&, FunctionKind = FunctionKind::Normal);
+    static CodeGenerationErrorOr<NonnullGCPtr<Executable>> generate_from_function(VM&, ECMAScriptFunctionObject const& function);
+
+    CodeGenerationErrorOr<void> emit_function_declaration_instantiation(ECMAScriptFunctionObject const& function);
 
     [[nodiscard]] ScopedOperand allocate_register();
     [[nodiscard]] ScopedOperand local(u32 local_index);
@@ -300,6 +304,8 @@ public:
 
 private:
     VM& m_vm;
+
+    static CodeGenerationErrorOr<NonnullGCPtr<Executable>> emit_function_body_bytecode(VM&, ASTNode const&, FunctionKind, GCPtr<ECMAScriptFunctionObject const>);
 
     enum class JumpType {
         Continue,
