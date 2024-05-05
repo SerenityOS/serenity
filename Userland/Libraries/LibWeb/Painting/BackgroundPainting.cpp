@@ -73,6 +73,12 @@ static Vector<Gfx::Path> compute_text_clip_paths(PaintContext& context, Paintabl
             if (glyph.has<Gfx::DrawGlyph>()) {
                 auto const& draw_glyph = glyph.get<Gfx::DrawGlyph>();
 
+                if (!is<Gfx::ScaledFont>(draw_glyph.font)) {
+                    // FIXME: This API only accepts Gfx::Font for ease of use.
+                    dbgln("Cannot path-ify bitmap fonts!");
+                    return;
+                }
+
                 // Get the path for the glyph.
                 Gfx::Path glyph_path;
                 auto const& scaled_font = static_cast<Gfx::ScaledFont const&>(*draw_glyph.font);
