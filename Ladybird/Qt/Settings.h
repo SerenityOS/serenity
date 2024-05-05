@@ -17,6 +17,8 @@
 namespace Ladybird {
 
 class Settings : public QObject {
+    Q_OBJECT
+
 public:
     Settings(Settings const&) = delete;
     Settings& operator=(Settings const&) = delete;
@@ -55,6 +57,12 @@ public:
 
     bool enable_search();
     void set_enable_search(bool enable);
+
+    bool show_menubar();
+    void set_show_menubar(bool show_menubar);
+
+signals:
+    void show_menubar_changed(bool show_menubar);
 
 protected:
     Settings();
