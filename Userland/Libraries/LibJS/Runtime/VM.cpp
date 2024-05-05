@@ -291,7 +291,7 @@ ThrowCompletionOr<Value> VM::execute_ast_node(ASTNode const& node)
 {
     // FIXME: This function should be gone once we will emit bytecode for everything before executing instructions.
 
-    auto executable = TRY(Bytecode::compile(*this, node, {}, FunctionKind::Normal, ""sv));
+    auto executable = TRY(Bytecode::compile(*this, node, FunctionKind::Normal, ""sv));
     auto& running_execution_context = this->running_execution_context();
 
     // Registers have to be saved and restored because executable for compiled ASTNode does not have its own execution context

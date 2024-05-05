@@ -73,6 +73,8 @@ public:
         return locals[index];
     }
 
+    u32 passed_argument_count { 0 };
+
     Vector<Value> arguments;
     Vector<Value> locals;
     Vector<Value> registers;

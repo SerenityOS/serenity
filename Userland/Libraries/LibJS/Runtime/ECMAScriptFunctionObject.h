@@ -9,6 +9,7 @@
 #pragma once
 
 #include <LibJS/Bytecode/Generator.h>
+#include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Runtime/ClassFieldDefinition.h>
 #include <LibJS/Runtime/ExecutionContext.h>
 #include <LibJS/Runtime/FunctionObject.h>
@@ -53,7 +54,7 @@ public:
     void set_is_module_wrapper(bool b) { m_is_module_wrapper = b; }
 
     Statement const& ecmascript_code() const { return m_ecmascript_code; }
-    Vector<FunctionParameter> const& formal_parameters() const { return m_formal_parameters; }
+    Vector<FunctionParameter> const& formal_parameters() const override { return m_formal_parameters; }
 
     virtual DeprecatedFlyString const& name() const override { return m_name; }
     void set_name(DeprecatedFlyString const& name);
@@ -98,6 +99,8 @@ public:
 
     Variant<PropertyKey, PrivateName, Empty> const& class_field_initializer_name() const { return m_class_field_initializer_name; }
 
+    friend class Bytecode::Generator;
+
 protected:
     virtual bool is_strict_mode() const final { return m_strict; }
 
@@ -112,13 +115,10 @@ private:
     ThrowCompletionOr<void> prepare_for_ordinary_call(ExecutionContext& callee_context, Object* new_target);
     void ordinary_call_bind_this(ExecutionContext&, Value this_argument);
 
-    ThrowCompletionOr<void> function_declaration_instantiation();
-
     DeprecatedFlyString m_name;
     GCPtr<PrimitiveString> m_name_string;
 
     GCPtr<Bytecode::Executable> m_bytecode_executable;
-    Vector<NonnullGCPtr<Bytecode::Executable>> m_default_parameter_bytecode_executables;
     i32 m_function_length { 0 };
     Vector<DeprecatedFlyString> m_local_variables_names;
 

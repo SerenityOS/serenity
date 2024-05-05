@@ -40,6 +40,8 @@ public:
 
     virtual Vector<DeprecatedFlyString> const& local_variables_names() const { VERIFY_NOT_REACHED(); }
 
+    virtual Vector<FunctionParameter> const& formal_parameters() const { VERIFY_NOT_REACHED(); }
+
 protected:
     explicit FunctionObject(Realm&, Object* prototype, MayInterfereWithIndexedPropertyAccess = MayInterfereWithIndexedPropertyAccess::No);
     explicit FunctionObject(Object& prototype, MayInterfereWithIndexedPropertyAccess = MayInterfereWithIndexedPropertyAccess::No);

@@ -12,6 +12,7 @@
 #include <LibJS/Bytecode/Instruction.h>
 #include <LibJS/Bytecode/Op.h>
 #include <LibJS/Bytecode/Register.h>
+#include <LibJS/Runtime/ECMAScriptFunctionObject.h>
 #include <LibJS/Runtime/VM.h>
 
 namespace JS::Bytecode {
@@ -26,21 +27,190 @@ Generator::Generator(VM& vm)
 {
 }
 
-CodeGenerationErrorOr<NonnullGCPtr<Executable>> Generator::generate(VM& vm, ASTNode const& node, ReadonlySpan<FunctionParameter> parameters, FunctionKind enclosing_function_kind)
+CodeGenerationErrorOr<void> Generator::emit_function_declaration_instantiation(ECMAScriptFunctionObject const& function)
 {
-    Generator generator(vm);
+    if (function.m_has_parameter_expressions) {
+        emit<Op::CreateLexicalEnvironment>();
+    }
 
-    for (auto const& parameter : parameters) {
-        if (auto const* identifier = parameter.binding.get_pointer<NonnullRefPtr<Identifier const>>();
-            identifier && (*identifier)->is_local()) {
-            generator.set_local_initialized((*identifier)->local_variable_index());
+    for (auto const& parameter_name : function.m_parameter_names) {
+        if (parameter_name.value == ECMAScriptFunctionObject::ParameterIsLocal::No) {
+            auto id = intern_identifier(parameter_name.key);
+            emit<Op::CreateVariable>(id, Op::EnvironmentMode::Lexical, false);
+            if (function.m_has_duplicates) {
+                emit<Op::SetVariable>(id, add_constant(js_undefined()), next_environment_variable_cache(), Op::SetVariable::InitializationMode::Initialize, Op::EnvironmentMode::Lexical);
+            }
         }
     }
+
+    if (function.m_arguments_object_needed) {
+        if (function.m_strict || !function.has_simple_parameter_list()) {
+            emit<Op::CreateArguments>(Op::CreateArguments::Kind::Unmapped, function.m_strict);
+        } else {
+            emit<Op::CreateArguments>(Op::CreateArguments::Kind::Mapped, function.m_strict);
+        }
+    }
+
+    auto const& formal_parameters = function.formal_parameters();
+    for (u32 param_index = 0; param_index < formal_parameters.size(); ++param_index) {
+        auto const& parameter = formal_parameters[param_index];
+
+        if (parameter.is_rest) {
+            auto argument_reg = allocate_register();
+            emit<Op::CreateRestParams>(argument_reg.operand(), param_index);
+            emit<Op::SetArgument>(param_index, argument_reg.operand());
+        } else if (parameter.default_value) {
+            auto& if_undefined_block = make_block();
+            auto& if_not_undefined_block = make_block();
+
+            auto argument_reg = allocate_register();
+            emit<Op::GetArgument>(argument_reg.operand(), param_index);
+
+            emit<Op::JumpUndefined>(
+                argument_reg.operand(),
+                Label { if_undefined_block },
+                Label { if_not_undefined_block });
+
+            switch_to_basic_block(if_undefined_block);
+            auto operand = TRY(parameter.default_value->generate_bytecode(*this));
+            emit<Op::SetArgument>(param_index, *operand);
+            emit<Op::Jump>(Label { if_not_undefined_block });
+
+            switch_to_basic_block(if_not_undefined_block);
+        }
+
+        if (auto const* identifier = parameter.binding.get_pointer<NonnullRefPtr<Identifier const>>(); identifier) {
+            if ((*identifier)->is_local()) {
+                auto local_variable_index = (*identifier)->local_variable_index();
+                emit<Op::GetArgument>(local(local_variable_index), param_index);
+                set_local_initialized((*identifier)->local_variable_index());
+            } else {
+                auto id = intern_identifier((*identifier)->string());
+                auto init_mode = function.m_has_duplicates ? Op::SetVariable::InitializationMode::Set : Op::SetVariable::InitializationMode::Initialize;
+                auto argument_reg = allocate_register();
+                emit<Op::GetArgument>(argument_reg.operand(), param_index);
+                emit<Op::SetVariable>(id, argument_reg.operand(),
+                    next_environment_variable_cache(),
+                    init_mode,
+                    Op::EnvironmentMode::Lexical);
+            }
+        } else if (auto const* binding_pattern = parameter.binding.get_pointer<NonnullRefPtr<BindingPattern const>>(); binding_pattern) {
+            auto input_operand = allocate_register();
+            emit<Op::GetArgument>(input_operand.operand(), param_index);
+            auto init_mode = function.m_has_duplicates ? Op::SetVariable::InitializationMode::Set : Bytecode::Op::SetVariable::InitializationMode::Initialize;
+            TRY((*binding_pattern)->generate_bytecode(*this, init_mode, input_operand, false));
+        }
+    }
+
+    ScopeNode const* scope_body = nullptr;
+    if (is<ScopeNode>(*function.m_ecmascript_code))
+        scope_body = static_cast<ScopeNode const*>(function.m_ecmascript_code.ptr());
+
+    if (!function.m_has_parameter_expressions) {
+        if (scope_body) {
+            for (auto const& variable_to_initialize : function.m_var_names_to_initialize_binding) {
+                auto const& id = variable_to_initialize.identifier;
+                if (id.is_local()) {
+                    emit<Op::Mov>(local(id.local_variable_index()), add_constant(js_undefined()));
+                } else {
+                    auto intern_id = intern_identifier(id.string());
+                    emit<Op::CreateVariable>(intern_id, Op::EnvironmentMode::Var, false);
+                    emit<Op::SetVariable>(intern_id, add_constant(js_undefined()), next_environment_variable_cache(), Bytecode::Op::SetVariable::InitializationMode::Initialize, Op::EnvironmentMode::Var);
+                }
+            }
+        }
+    } else {
+        emit<Op::CreateVariableEnvironment>();
+
+        if (scope_body) {
+            for (auto const& variable_to_initialize : function.m_var_names_to_initialize_binding) {
+                auto const& id = variable_to_initialize.identifier;
+                auto initial_value = allocate_register();
+                if (!variable_to_initialize.parameter_binding || variable_to_initialize.function_name) {
+                    emit<Op::Mov>(initial_value, add_constant(js_undefined()));
+                } else {
+                    if (id.is_local()) {
+                        emit<Op::Mov>(initial_value, local(id.local_variable_index()));
+                    } else {
+                        emit<Op::GetVariable>(initial_value, intern_identifier(id.string()), next_environment_variable_cache());
+                    }
+                }
+
+                if (id.is_local()) {
+                    emit<Op::Mov>(local(id.local_variable_index()), initial_value);
+                } else {
+                    auto intern_id = intern_identifier(id.string());
+                    emit<Op::CreateVariable>(intern_id, Op::EnvironmentMode::Var, false);
+                    emit<Op::SetVariable>(intern_id, initial_value, next_environment_variable_cache(), Op::SetVariable::InitializationMode::Initialize, Op::EnvironmentMode::Var);
+                }
+            }
+        }
+    }
+
+    if (!function.m_strict && scope_body) {
+        for (auto const& function_name : function.m_function_names_to_initialize_binding) {
+            auto intern_id = intern_identifier(function_name);
+            emit<Op::CreateVariable>(intern_id, Op::EnvironmentMode::Var, false);
+            emit<Op::SetVariable>(intern_id, add_constant(js_undefined()), next_environment_variable_cache(), Bytecode::Op::SetVariable::InitializationMode::Initialize, Op::EnvironmentMode::Var);
+        }
+    }
+
+    if (!function.m_strict) {
+        bool can_elide_declarative_environment = !function.m_contains_direct_call_to_eval && (!scope_body || !scope_body->has_non_local_lexical_declarations());
+        if (!can_elide_declarative_environment) {
+            emit<Op::CreateLexicalEnvironment>();
+        }
+    }
+
+    if (scope_body) {
+        MUST(scope_body->for_each_lexically_scoped_declaration([&](Declaration const& declaration) {
+            MUST(declaration.for_each_bound_identifier([&](auto const& id) {
+                if (id.is_local()) {
+                    return;
+                }
+
+                emit<Op::CreateVariable>(intern_identifier(id.string()),
+                    Op::EnvironmentMode::Lexical,
+                    declaration.is_constant_declaration(),
+                    false,
+                    declaration.is_constant_declaration());
+            }));
+        }));
+    }
+
+    for (auto const& declaration : function.m_functions_to_initialize) {
+        auto function = allocate_register();
+        emit<Op::NewFunction>(function, declaration, OptionalNone {});
+        if (declaration.name_identifier()->is_local()) {
+            emit<Op::Mov>(local(declaration.name_identifier()->local_variable_index()), function);
+        } else {
+            emit<Op::SetVariable>(intern_identifier(declaration.name()), function, next_environment_variable_cache(), Op::SetVariable::InitializationMode::Set, Op::EnvironmentMode::Var);
+        }
+    }
+
+    return {};
+}
+
+CodeGenerationErrorOr<NonnullGCPtr<Executable>> Generator::emit_function_body_bytecode(VM& vm, ASTNode const& node, FunctionKind enclosing_function_kind, GCPtr<ECMAScriptFunctionObject const> function)
+{
+    Generator generator(vm);
 
     generator.switch_to_basic_block(generator.make_block());
     SourceLocationScope scope(generator, node);
     generator.m_enclosing_function_kind = enclosing_function_kind;
-    if (generator.is_in_generator_or_async_function()) {
+    if (generator.is_in_async_function() && !generator.is_in_generator_function()) {
+        // Immediately yield with no value.
+        auto& start_block = generator.make_block();
+        generator.emit<Bytecode::Op::Yield>(Label { start_block }, generator.add_constant(js_undefined()));
+        generator.switch_to_basic_block(start_block);
+        // NOTE: This doesn't have to handle received throw/return completions, as GeneratorObject::resume_abrupt
+        //       will not enter the generator from the SuspendedStart state and immediately completes the generator.
+    }
+
+    if (function)
+        TRY(generator.emit_function_declaration_instantiation(*function));
+
+    if (generator.is_in_generator_function()) {
         // Immediately yield with no value.
         auto& start_block = generator.make_block();
         generator.emit<Bytecode::Op::Yield>(Label { start_block }, generator.add_constant(js_undefined()));
@@ -72,8 +242,6 @@ CodeGenerationErrorOr<NonnullGCPtr<Executable>> Generator::generate(VM& vm, ASTN
         is_strict_mode = static_cast<FunctionBody const&>(node).in_strict_mode();
     else if (is<FunctionDeclaration>(node))
         is_strict_mode = static_cast<FunctionDeclaration const&>(node).is_strict_mode();
-    else if (is<FunctionExpression>(node))
-        is_strict_mode = static_cast<FunctionExpression const&>(node).is_strict_mode();
 
     size_t size_needed = 0;
     for (auto& block : generator.m_root_basic_blocks) {
@@ -212,6 +380,16 @@ CodeGenerationErrorOr<NonnullGCPtr<Executable>> Generator::generate(VM& vm, ASTN
     generator.m_finished = true;
 
     return executable;
+}
+
+CodeGenerationErrorOr<NonnullGCPtr<Executable>> Generator::generate_from_ast_node(VM& vm, ASTNode const& node, FunctionKind enclosing_function_kind)
+{
+    return emit_function_body_bytecode(vm, node, enclosing_function_kind, {});
+}
+
+CodeGenerationErrorOr<NonnullGCPtr<Executable>> Generator::generate_from_function(VM& vm, ECMAScriptFunctionObject const& function)
+{
+    return emit_function_body_bytecode(vm, function.ecmascript_code(), function.kind(), &function);
 }
 
 void Generator::grow(size_t additional_size)

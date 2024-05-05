@@ -42,6 +42,7 @@ NonnullOwnPtr<ExecutionContext> ExecutionContext::copy() const
     copy->is_strict_mode = is_strict_mode;
     copy->executable = executable;
     copy->arguments = arguments;
+    copy->passed_argument_count = passed_argument_count;
     copy->locals = locals;
     copy->registers = registers;
     copy->unwind_contexts = unwind_contexts;
