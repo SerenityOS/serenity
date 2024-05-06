@@ -12,7 +12,7 @@ interface SVGTransform {
 
     readonly attribute unsigned short type;
     // FIXME: [SameObject] readonly attribute DOMMatrix matrix;
-    // FIXME: readonly attribute float angle;
+    readonly attribute float angle;
 
     // FIXME: undefined setMatrix(optional DOMMatrix2DInit matrix = {});
     // FIXME: undefined setTranslate(float tx, float ty);
