@@ -175,7 +175,7 @@ user-select: auto
 vertical-align: baseline
 visibility: visible
 white-space: normal
-width: auto
+width: 784px
 word-spacing: normal
 word-wrap: normal
 x: 0px

@@ -196,6 +196,18 @@ static RefPtr<StyleValue const> style_value_for_shadow(Vector<ShadowData> const&
 
 RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(Layout::NodeWithStyle const& layout_node, PropertyID property_id) const
 {
+    auto used_value_for_property = [&layout_node](Function<CSSPixels(Painting::PaintableBox const&)>&& used_value_getter) -> Optional<CSSPixels> {
+        auto const& display = layout_node.computed_values().display();
+        if (!display.is_none() && !display.is_contents() && layout_node.paintable()) {
+            if (layout_node.paintable()->is_paintable_box()) {
+                auto const& paintable_box = static_cast<Painting::PaintableBox const&>(*layout_node.paintable());
+                return used_value_getter(paintable_box);
+            }
+            dbgln("FIXME: Support getting used value for ({})", layout_node.debug_description());
+        }
+        return {};
+    };
+
     // A limited number of properties have special rules for producing their "resolved value".
     // We also have to manually construct shorthands from their longhands here.
     // Everything else uses the computed value.
@@ -269,20 +281,13 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
         // -> padding-right
         // -> padding-top
         // -> width
-        // -> A resolved value special case property like height defined in another specification
-    case PropertyID::Height: {
         // If the property applies to the element or pseudo-element and the resolved value of the
         // display property is not none or contents, then the resolved value is the used value.
         // Otherwise the resolved value is the computed value.
-        auto const& display = layout_node.computed_values().display();
-        if (!display.is_none() && !display.is_contents() && layout_node.paintable()) {
-            if (layout_node.paintable()->is_paintable_box()) {
-                auto const& paintable_box = static_cast<Painting::PaintableBox const&>(*layout_node.paintable());
-                auto const used_height = paintable_box.content_height();
-                return style_value_for_size(Size::make_px(used_height));
-            }
-            dbgln("FIXME: Support getting used height for ({})", layout_node.debug_description());
-        }
+    case PropertyID::Height: {
+        auto maybe_used_height = used_value_for_property([](auto const& paintable_box) { return paintable_box.content_height(); });
+        if (maybe_used_height.has_value())
+            return style_value_for_size(Size::make_px(maybe_used_height.release_value()));
         return style_value_for_size(layout_node.computed_values().height());
     }
     case PropertyID::MarginBlockEnd:
@@ -317,8 +322,12 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
         return style_value_for_length_percentage(layout_node.computed_values().padding().right());
     case PropertyID::PaddingTop:
         return style_value_for_length_percentage(layout_node.computed_values().padding().top());
-    case PropertyID::Width:
+    case PropertyID::Width: {
+        auto maybe_used_width = used_value_for_property([](auto const& paintable_box) { return paintable_box.content_width(); });
+        if (maybe_used_width.has_value())
+            return style_value_for_size(Size::make_px(maybe_used_width.release_value()));
         return style_value_for_size(layout_node.computed_values().width());
+    }
 
         // -> bottom
         // -> left
