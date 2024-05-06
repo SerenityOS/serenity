@@ -147,7 +147,7 @@ ThrowCompletionOr<Value> NativeFunction::internal_call(Value this_argument, Read
     // 8. Perform any necessary implementation-defined initialization of calleeContext.
     callee_context->this_value = this_argument;
     callee_context->arguments.append(arguments_list.data(), arguments_list.size());
-    callee_context->instruction_stream_iterator = vm.bytecode_interpreter().instruction_stream_iterator();
+    callee_context->program_counter = vm.bytecode_interpreter().program_counter();
 
     callee_context->lexical_environment = caller_context.lexical_environment;
     callee_context->variable_environment = caller_context.variable_environment;
@@ -210,7 +210,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> NativeFunction::internal_construct(Reado
 
     // 8. Perform any necessary implementation-defined initialization of calleeContext.
     callee_context->arguments.append(arguments_list.data(), arguments_list.size());
-    callee_context->instruction_stream_iterator = vm.bytecode_interpreter().instruction_stream_iterator();
+    callee_context->program_counter = vm.bytecode_interpreter().program_counter();
 
     callee_context->lexical_environment = caller_context.lexical_environment;
     callee_context->variable_environment = caller_context.variable_environment;

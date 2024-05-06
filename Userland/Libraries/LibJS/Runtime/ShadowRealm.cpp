@@ -180,7 +180,7 @@ ThrowCompletionOr<Value> perform_shadow_realm_eval(VM& vm, StringView source_tex
         else {
             auto executable = maybe_executable.release_value();
 
-            auto result_and_return_register = vm.bytecode_interpreter().run_executable(*executable, nullptr);
+            auto result_and_return_register = vm.bytecode_interpreter().run_executable(*executable, {});
             if (result_and_return_register.value.is_error()) {
                 result = result_and_return_register.value.release_error();
             } else {

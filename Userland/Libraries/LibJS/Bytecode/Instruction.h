@@ -137,6 +137,7 @@ public:
     size_t length() const { return m_length; }
     ByteString to_byte_string(Bytecode::Executable const&) const;
     ThrowCompletionOr<void> execute(Bytecode::Interpreter&) const;
+    void visit_labels(Function<void(Label&)> visitor);
     static void destroy(Instruction&);
 
     // FIXME: Find a better way to organize this information
@@ -149,6 +150,8 @@ protected:
         , m_length(length)
     {
     }
+
+    void visit_labels_impl(Function<void(Label&)>) { }
 
 private:
     SourceRecord m_source_record {};

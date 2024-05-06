@@ -27,7 +27,6 @@ public:
     static NonnullOwnPtr<BasicBlock> create(String name);
     ~BasicBlock();
 
-    void dump(Executable const&) const;
     ReadonlyBytes instruction_stream() const { return m_buffer.span(); }
     u8* data() { return m_buffer.data(); }
     u8 const* data() const { return m_buffer.data(); }

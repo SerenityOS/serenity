@@ -299,7 +299,7 @@ ThrowCompletionOr<Value> VM::execute_ast_node(ASTNode const& node)
     for (size_t i = 0; i < saved_registers.size(); ++i)
         running_execution_context.registers[i] = {};
 
-    auto result_or_error = bytecode_interpreter().run_executable(*executable, nullptr);
+    auto result_or_error = bytecode_interpreter().run_executable(*executable, {});
 
     for (size_t i = 0; i < saved_registers.size(); ++i)
         running_execution_context.registers[i] = saved_registers[i];
@@ -705,8 +705,8 @@ void VM::dump_backtrace() const
 {
     for (ssize_t i = m_execution_context_stack.size() - 1; i >= 0; --i) {
         auto& frame = m_execution_context_stack[i];
-        if (frame->instruction_stream_iterator.has_value() && frame->instruction_stream_iterator->source_code()) {
-            auto source_range = frame->instruction_stream_iterator->source_range().realize();
+        if (frame->program_counter.has_value()) {
+            auto source_range = frame->executable->source_range_at(frame->program_counter.value()).realize();
             dbgln("-> {} @ {}:{},{}", frame->function_name ? frame->function_name->utf8_string() : ""_string, source_range.filename(), source_range.start.line, source_range.start.column);
         } else {
             dbgln("-> {}", frame->function_name ? frame->function_name->utf8_string() : ""_string);
@@ -971,7 +971,7 @@ void VM::load_imported_module(ImportedModuleReferrer referrer, ModuleRequest con
 void VM::push_execution_context(ExecutionContext& context)
 {
     if (!m_execution_context_stack.is_empty())
-        m_execution_context_stack.last()->instruction_stream_iterator = bytecode_interpreter().instruction_stream_iterator();
+        m_execution_context_stack.last()->program_counter = bytecode_interpreter().program_counter();
     m_execution_context_stack.append(&context);
 }
 
@@ -995,10 +995,10 @@ static Optional<UnrealizedSourceRange> get_source_range(ExecutionContext const* 
     if (!context->executable)
         return {};
 
-    // Interpreter frame
-    if (context->instruction_stream_iterator.has_value())
-        return context->instruction_stream_iterator->source_range();
-    return {};
+    if (!context->program_counter.has_value())
+        return {};
+
+    return context->executable->source_range_at(context->program_counter.value());
 }
 
 Vector<StackTraceElement> VM::stack_trace() const

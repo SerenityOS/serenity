@@ -33,9 +33,9 @@ public:
     ThrowCompletionOr<Value> run(Script&, JS::GCPtr<Environment> lexical_environment_override = nullptr);
     ThrowCompletionOr<Value> run(SourceTextModule&);
 
-    ThrowCompletionOr<Value> run(Bytecode::Executable& executable, Bytecode::BasicBlock const* entry_point = nullptr)
+    ThrowCompletionOr<Value> run(Bytecode::Executable& executable, Optional<size_t> entry_point = {}, Value initial_accumulator_value = {})
     {
-        auto result_and_return_register = run_executable(executable, entry_point);
+        auto result_and_return_register = run_executable(executable, entry_point, initial_accumulator_value);
         return move(result_and_return_register.value);
     }
 
@@ -43,17 +43,17 @@ public:
         ThrowCompletionOr<Value> value;
         Value return_register_value;
     };
-    ResultAndReturnRegister run_executable(Bytecode::Executable&, Bytecode::BasicBlock const* entry_point);
+    ResultAndReturnRegister run_executable(Bytecode::Executable&, Optional<size_t> entry_point, Value initial_accumulator_value = {});
 
     ALWAYS_INLINE Value& accumulator() { return reg(Register::accumulator()); }
     ALWAYS_INLINE Value& saved_return_value() { return reg(Register::saved_return_value()); }
     Value& reg(Register const& r)
     {
-        return vm().running_execution_context().registers[r.index()];
+        return m_registers.data()[r.index()];
     }
     Value reg(Register const& r) const
     {
-        return vm().running_execution_context().registers[r.index()];
+        return m_registers.data()[r.index()];
     }
 
     [[nodiscard]] Value get(Operand) const;
@@ -75,23 +75,29 @@ public:
 
     Executable& current_executable() { return *m_current_executable; }
     Executable const& current_executable() const { return *m_current_executable; }
-    BasicBlock const& current_block() const { return *m_current_block; }
-    Optional<InstructionStreamIterator const&> instruction_stream_iterator() const { return m_pc; }
+    Optional<size_t> program_counter() const { return m_program_counter; }
 
     Vector<Value>& registers() { return vm().running_execution_context().registers; }
     Vector<Value> const& registers() const { return vm().running_execution_context().registers; }
 
 private:
-    void run_bytecode();
+    void run_bytecode(size_t entry_point);
+
+    enum class HandleExceptionResponse {
+        ExitFromExecutable,
+        ContinueInThisExecutable,
+    };
+    [[nodiscard]] HandleExceptionResponse handle_exception(size_t& program_counter, Value exception);
 
     VM& m_vm;
-    BasicBlock const* m_scheduled_jump { nullptr };
+    Optional<size_t> m_scheduled_jump;
     GCPtr<Executable> m_current_executable { nullptr };
-    BasicBlock const* m_current_block { nullptr };
     GCPtr<Realm> m_realm { nullptr };
     GCPtr<Object> m_global_object { nullptr };
     GCPtr<DeclarativeEnvironment> m_global_declarative_environment { nullptr };
-    Optional<InstructionStreamIterator&> m_pc {};
+    Optional<size_t&> m_program_counter;
+    Span<Value> m_registers;
+    Span<Value> m_locals;
 };
 
 extern bool g_dump_bytecode;

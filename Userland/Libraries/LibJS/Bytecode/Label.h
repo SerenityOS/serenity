@@ -18,18 +18,30 @@ public:
     {
     }
 
-    auto& block() const { return *m_block; }
+    // Used while compiling.
+    BasicBlock const& block() const { return *m_block; }
+
+    // Used after compiling.
+    size_t address() const { return m_address; }
+
+    void set_address(size_t address) { m_address = address; }
 
 private:
-    BasicBlock const* m_block { nullptr };
+    union {
+        // Relevant while compiling.
+        BasicBlock const* m_block { nullptr };
+
+        // Relevant after compiling.
+        size_t m_address;
+    };
 };
 
 }
 
 template<>
 struct AK::Formatter<JS::Bytecode::Label> : AK::Formatter<FormatString> {
-    ErrorOr<void> format(FormatBuilder& builder, JS::Bytecode::Label const& value)
+    ErrorOr<void> format(FormatBuilder& builder, JS::Bytecode::Label const& label)
     {
-        return AK::Formatter<FormatString>::format(builder, "@{}"sv, value.block().name());
+        return AK::Formatter<FormatString>::format(builder, "@{:x}"sv, label.address());
     }
 };
