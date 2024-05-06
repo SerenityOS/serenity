@@ -36,6 +36,11 @@ CCITT::Group3Options parse_t4_options(u32 bit_field)
     return options;
 }
 
+bool is_bilevel(TIFF::PhotometricInterpretation interpretation)
+{
+    return interpretation == TIFF::PhotometricInterpretation::WhiteIsZero || interpretation == TIFF::PhotometricInterpretation::BlackIsZero;
+}
+
 }
 
 namespace TIFF {
@@ -388,7 +393,7 @@ private:
         // BitsPerSample must be 1, since this type of compression is defined only for bilevel images.
         if (m_metadata.bits_per_sample()->size() > 1)
             return Error::from_string_literal("TIFFImageDecoderPlugin: CCITT image with BitsPerSample greater than one");
-        if (m_metadata.photometric_interpretation() != PhotometricInterpretation::WhiteIsZero && m_metadata.photometric_interpretation() != PhotometricInterpretation::BlackIsZero)
+        if (!is_bilevel(*m_metadata.photometric_interpretation()))
             return Error::from_string_literal("TIFFImageDecoderPlugin: CCITT compression is used on a non bilevel image");
 
         return {};
