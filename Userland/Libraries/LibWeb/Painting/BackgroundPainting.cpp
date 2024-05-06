@@ -277,8 +277,8 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
         CSSPixelRect image_rect;
         switch (layer.size_type) {
         case CSS::BackgroundSize::Contain: {
-            double max_width_ratio = (background_positioning_area.width() / concrete_image_size.width()).to_double();
-            double max_height_ratio = (background_positioning_area.height() / concrete_image_size.height()).to_double();
+            double max_width_ratio = background_positioning_area.width().to_double() / concrete_image_size.width().to_double();
+            double max_height_ratio = background_positioning_area.height().to_double() / concrete_image_size.height().to_double();
             double ratio = min(max_width_ratio, max_height_ratio);
             image_rect.set_size(concrete_image_size.width().scaled(ratio), concrete_image_size.height().scaled(ratio));
             break;
