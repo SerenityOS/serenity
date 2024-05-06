@@ -24,3 +24,17 @@ test("return from outer finally with nested unwind contexts", () => {
 
     expect(value).toBe(2);
 });
+
+test("restore exception after generator yield in finally", () => {
+    let generator = (function* () {
+        try {
+            throw new Error("foo");
+        } finally {
+            yield 42;
+        }
+    })();
+
+    expect(generator.next().value).toBe(42);
+    expect(() => generator.next()).toThrowWithMessage(Error, "foo");
+    expect(generator.next().done).toBe(true);
+});

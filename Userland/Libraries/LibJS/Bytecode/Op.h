@@ -1595,13 +1595,6 @@ class ScheduleJump final : public Instruction {
 public:
     // Note: We use this instruction to tell the next `finally` block to
     //       continue execution with a specific break/continue target;
-    // FIXME: We currently don't clear the interpreter internal flag, when we change
-    //        the control-flow (`break`, `continue`) in a finally-block,
-    // FIXME: .NET on x86_64 uses a call to the finally instead, which could make this
-    //        easier, at the cost of making control-flow changes (`break`, `continue`, `return`)
-    //        in the finally-block more difficult, but as stated above, those
-    //        aren't handled 100% correctly at the moment anyway
-    //        It might be worth investigating a similar mechanism
     constexpr static bool IsTerminator = true;
 
     ScheduleJump(Label target)
