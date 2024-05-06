@@ -209,6 +209,8 @@ JS_ENUMERATE_NEW_BUILTIN_ERROR_OPS(JS_DECLARE_NEW_BUILTIN_ERROR_OP)
 // NOTE: This instruction is variable-width depending on the number of excluded names
 class CopyObjectExcludingProperties final : public Instruction {
 public:
+    static constexpr bool IsVariableLength = true;
+
     CopyObjectExcludingProperties(Operand dst, Operand from_object, Vector<Operand> const& excluded_names)
         : Instruction(Type::CopyObjectExcludingProperties, length_impl(excluded_names.size()))
         , m_dst(dst)
@@ -242,6 +244,8 @@ private:
 // NOTE: This instruction is variable-width depending on the number of elements!
 class NewArray final : public Instruction {
 public:
+    static constexpr bool IsVariableLength = true;
+
     explicit NewArray(Operand dst)
         : Instruction(Type::NewArray, length_impl(0))
         , m_dst(dst)
@@ -290,6 +294,8 @@ private:
 
 class NewPrimitiveArray final : public Instruction {
 public:
+    static constexpr bool IsVariableLength = true;
+
     NewPrimitiveArray(Operand dst, ReadonlySpan<Value> elements)
         : Instruction(Type::NewPrimitiveArray, length_impl(elements.size()))
         , m_dst(dst)
@@ -1230,6 +1236,8 @@ enum class CallType {
 
 class Call final : public Instruction {
 public:
+    static constexpr bool IsVariableLength = true;
+
     Call(CallType type, Operand dst, Operand callee, Operand this_value, ReadonlySpan<Operand> arguments, Optional<StringTableIndex> expression_string = {}, Optional<Builtin> builtin = {})
         : Instruction(Type::Call, length_impl(arguments.size()))
         , m_dst(dst)

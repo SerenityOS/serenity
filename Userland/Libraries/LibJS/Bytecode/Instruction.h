@@ -128,6 +128,7 @@ namespace JS::Bytecode {
 class alignas(void*) Instruction {
 public:
     constexpr static bool IsTerminator = false;
+    static constexpr bool IsVariableLength = false;
 
     enum class Type {
 #define __BYTECODE_OP(op) \

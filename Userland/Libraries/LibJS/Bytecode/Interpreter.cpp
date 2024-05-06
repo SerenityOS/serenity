@@ -330,10 +330,6 @@ Interpreter::HandleExceptionResponse Interpreter::handle_exception(size_t& progr
     VERIFY_NOT_REACHED();
 }
 
-#define NEXT_INSTRUCTION()                   \
-    program_counter += instruction.length(); \
-    goto start;
-
 void Interpreter::run_bytecode(size_t entry_point)
 {
     auto& running_execution_context = vm().running_execution_context();
@@ -357,10 +353,12 @@ void Interpreter::run_bytecode(size_t entry_point)
             switch (instruction.type()) {
             case Instruction::Type::SetLocal:
                 locals[static_cast<Op::SetLocal const&>(instruction).index()] = get(static_cast<Op::SetLocal const&>(instruction).src());
-                NEXT_INSTRUCTION();
+                program_counter += sizeof(Op::SetLocal);
+                goto start;
             case Instruction::Type::Mov:
                 set(static_cast<Op::Mov const&>(instruction).dst(), get(static_cast<Op::Mov const&>(instruction).src()));
-                NEXT_INSTRUCTION();
+                program_counter += sizeof(Op::Mov);
+                goto start;
             case Instruction::Type::End:
                 accumulator = get(static_cast<Op::End const&>(instruction).value());
                 return;
@@ -381,7 +379,8 @@ void Interpreter::run_bytecode(size_t entry_point)
                     program_counter = jump.target().address();
                     goto start;
                 }
-                NEXT_INSTRUCTION();
+                program_counter += sizeof(Op::JumpTrue);
+                goto start;
             }
             case Instruction::Type::JumpFalse: {
                 auto& jump = static_cast<Op::JumpFalse const&>(instruction);
@@ -389,7 +388,8 @@ void Interpreter::run_bytecode(size_t entry_point)
                     program_counter = jump.target().address();
                     goto start;
                 }
-                NEXT_INSTRUCTION();
+                program_counter += sizeof(Op::JumpFalse);
+                goto start;
             }
             case Instruction::Type::JumpNullish: {
                 auto& jump = static_cast<Op::JumpNullish const&>(instruction);
@@ -440,7 +440,121 @@ void Interpreter::run_bytecode(size_t entry_point)
                 program_counter = finalizer.value();
                 goto start;
             }
-            default:
+
+#define HANDLE_INSTRUCTION(name)                                                                                                      \
+    case Instruction::Type::name: {                                                                                                   \
+        auto& typed_instruction = static_cast<Op::name const&>(instruction);                                                          \
+        auto result = typed_instruction.execute_impl(*this);                                                                          \
+        if (result.is_error()) {                                                                                                      \
+            if (handle_exception(program_counter, *result.throw_completion().value()) == HandleExceptionResponse::ExitFromExecutable) \
+                return;                                                                                                               \
+            goto start;                                                                                                               \
+        }                                                                                                                             \
+        if constexpr (Op::name::IsVariableLength)                                                                                     \
+            program_counter += instruction.length();                                                                                  \
+        else                                                                                                                          \
+            program_counter += sizeof(Op::name);                                                                                      \
+        goto start;                                                                                                                   \
+    }
+
+                HANDLE_INSTRUCTION(Add);
+                HANDLE_INSTRUCTION(ArrayAppend);
+                HANDLE_INSTRUCTION(AsyncIteratorClose);
+                HANDLE_INSTRUCTION(BitwiseAnd);
+                HANDLE_INSTRUCTION(BitwiseNot);
+                HANDLE_INSTRUCTION(BitwiseOr);
+                HANDLE_INSTRUCTION(BitwiseXor);
+                HANDLE_INSTRUCTION(BlockDeclarationInstantiation);
+                HANDLE_INSTRUCTION(Call);
+                HANDLE_INSTRUCTION(CallWithArgumentArray);
+                HANDLE_INSTRUCTION(Catch);
+                HANDLE_INSTRUCTION(ConcatString);
+                HANDLE_INSTRUCTION(CopyObjectExcludingProperties);
+                HANDLE_INSTRUCTION(CreateLexicalEnvironment);
+                HANDLE_INSTRUCTION(CreateVariable);
+                HANDLE_INSTRUCTION(Decrement);
+                HANDLE_INSTRUCTION(DeleteById);
+                HANDLE_INSTRUCTION(DeleteByIdWithThis);
+                HANDLE_INSTRUCTION(DeleteByValue);
+                HANDLE_INSTRUCTION(DeleteByValueWithThis);
+                HANDLE_INSTRUCTION(DeleteVariable);
+                HANDLE_INSTRUCTION(Div);
+                HANDLE_INSTRUCTION(Dump);
+                HANDLE_INSTRUCTION(EnterObjectEnvironment);
+                HANDLE_INSTRUCTION(Exp);
+                HANDLE_INSTRUCTION(GetById);
+                HANDLE_INSTRUCTION(GetByIdWithThis);
+                HANDLE_INSTRUCTION(GetByValue);
+                HANDLE_INSTRUCTION(GetByValueWithThis);
+                HANDLE_INSTRUCTION(GetCalleeAndThisFromEnvironment);
+                HANDLE_INSTRUCTION(GetGlobal);
+                HANDLE_INSTRUCTION(GetImportMeta);
+                HANDLE_INSTRUCTION(GetIterator);
+                HANDLE_INSTRUCTION(GetMethod);
+                HANDLE_INSTRUCTION(GetNewTarget);
+                HANDLE_INSTRUCTION(GetNextMethodFromIteratorRecord);
+                HANDLE_INSTRUCTION(GetObjectFromIteratorRecord);
+                HANDLE_INSTRUCTION(GetObjectPropertyIterator);
+                HANDLE_INSTRUCTION(GetPrivateById);
+                HANDLE_INSTRUCTION(GetVariable);
+                HANDLE_INSTRUCTION(GreaterThan);
+                HANDLE_INSTRUCTION(GreaterThanEquals);
+                HANDLE_INSTRUCTION(HasPrivateId);
+                HANDLE_INSTRUCTION(ImportCall);
+                HANDLE_INSTRUCTION(In);
+                HANDLE_INSTRUCTION(Increment);
+                HANDLE_INSTRUCTION(InstanceOf);
+                HANDLE_INSTRUCTION(IteratorClose);
+                HANDLE_INSTRUCTION(IteratorNext);
+                HANDLE_INSTRUCTION(IteratorToArray);
+                HANDLE_INSTRUCTION(LeaveFinally);
+                HANDLE_INSTRUCTION(LeaveLexicalEnvironment);
+                HANDLE_INSTRUCTION(LeaveUnwindContext);
+                HANDLE_INSTRUCTION(LeftShift);
+                HANDLE_INSTRUCTION(LessThan);
+                HANDLE_INSTRUCTION(LessThanEquals);
+                HANDLE_INSTRUCTION(LooselyEquals);
+                HANDLE_INSTRUCTION(LooselyInequals);
+                HANDLE_INSTRUCTION(Mod);
+                HANDLE_INSTRUCTION(Mul);
+                HANDLE_INSTRUCTION(NewArray);
+                HANDLE_INSTRUCTION(NewClass);
+                HANDLE_INSTRUCTION(NewFunction);
+                HANDLE_INSTRUCTION(NewObject);
+                HANDLE_INSTRUCTION(NewPrimitiveArray);
+                HANDLE_INSTRUCTION(NewRegExp);
+                HANDLE_INSTRUCTION(NewTypeError);
+                HANDLE_INSTRUCTION(Not);
+                HANDLE_INSTRUCTION(PostfixDecrement);
+                HANDLE_INSTRUCTION(PostfixIncrement);
+                HANDLE_INSTRUCTION(PutById);
+                HANDLE_INSTRUCTION(PutByIdWithThis);
+                HANDLE_INSTRUCTION(PutByValue);
+                HANDLE_INSTRUCTION(PutByValueWithThis);
+                HANDLE_INSTRUCTION(PutPrivateById);
+                HANDLE_INSTRUCTION(ResolveSuperBase);
+                HANDLE_INSTRUCTION(ResolveThisBinding);
+                HANDLE_INSTRUCTION(RestoreScheduledJump);
+                HANDLE_INSTRUCTION(RightShift);
+                HANDLE_INSTRUCTION(SetVariable);
+                HANDLE_INSTRUCTION(StrictlyEquals);
+                HANDLE_INSTRUCTION(StrictlyInequals);
+                HANDLE_INSTRUCTION(Sub);
+                HANDLE_INSTRUCTION(SuperCallWithArgumentArray);
+                HANDLE_INSTRUCTION(Throw);
+                HANDLE_INSTRUCTION(ThrowIfNotObject);
+                HANDLE_INSTRUCTION(ThrowIfNullish);
+                HANDLE_INSTRUCTION(ThrowIfTDZ);
+                HANDLE_INSTRUCTION(Typeof);
+                HANDLE_INSTRUCTION(TypeofVariable);
+                HANDLE_INSTRUCTION(UnaryMinus);
+                HANDLE_INSTRUCTION(UnaryPlus);
+                HANDLE_INSTRUCTION(UnsignedRightShift);
+
+            case Instruction::Type::Await:
+            case Instruction::Type::Return:
+            case Instruction::Type::Yield:
+                // Handled delicately below.
                 break;
             }
 
@@ -466,7 +580,8 @@ void Interpreter::run_bytecode(size_t entry_point)
                 break;
             }
 
-            NEXT_INSTRUCTION();
+            program_counter += instruction.length();
+            goto start;
         }
 
         if (!will_yield) {
