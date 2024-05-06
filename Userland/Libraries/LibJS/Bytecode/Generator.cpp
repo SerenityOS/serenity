@@ -118,6 +118,20 @@ CodeGenerationErrorOr<NonnullGCPtr<Executable>> Generator::generate(VM& vm, ASTN
         Bytecode::InstructionStreamIterator it(block->instruction_stream());
         while (!it.at_end()) {
             auto& instruction = const_cast<Instruction&>(*it);
+
+            // OPTIMIZATION: Don't emit jumps that just jump to the next block.
+            if (instruction.type() == Instruction::Type::Jump) {
+                auto& jump = static_cast<Bytecode::Op::Jump&>(instruction);
+                if (jump.target().basic_block_index() == block->index() + 1) {
+                    if (basic_block_start_offsets.last() == bytecode.size()) {
+                        // This block is empty, just skip it.
+                        basic_block_start_offsets.take_last();
+                    }
+                    ++it;
+                    continue;
+                }
+            }
+
             instruction.visit_labels([&](Label& label) {
                 size_t label_offset = bytecode.size() + (bit_cast<FlatPtr>(&label) - bit_cast<FlatPtr>(&instruction));
                 label_offsets.append(label_offset);
