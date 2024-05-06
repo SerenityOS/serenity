@@ -69,8 +69,10 @@
     O(IteratorNext)                    \
     O(IteratorToArray)                 \
     O(Jump)                            \
+    O(JumpFalse)                       \
     O(JumpIf)                          \
     O(JumpNullish)                     \
+    O(JumpTrue)                        \
     O(JumpUndefined)                   \
     O(LeaveFinally)                    \
     O(LeaveLexicalEnvironment)         \

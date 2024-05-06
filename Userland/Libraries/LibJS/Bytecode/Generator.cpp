@@ -132,6 +132,30 @@ CodeGenerationErrorOr<NonnullGCPtr<Executable>> Generator::generate(VM& vm, ASTN
                 }
             }
 
+            // OPTIMIZATION: For `JumpIf` where one of the targets is the very next block,
+            //               we can emit a `JumpTrue` or `JumpFalse` (to the other block) instead.
+            if (instruction.type() == Instruction::Type::JumpIf) {
+                auto& jump = static_cast<Bytecode::Op::JumpIf&>(instruction);
+                if (jump.true_target().basic_block_index() == block->index() + 1) {
+                    Op::JumpFalse jump_false(jump.condition(), Label { jump.false_target() });
+                    auto& label = jump_false.target();
+                    size_t label_offset = bytecode.size() + (bit_cast<FlatPtr>(&label) - bit_cast<FlatPtr>(&jump_false));
+                    label_offsets.append(label_offset);
+                    bytecode.append(reinterpret_cast<u8 const*>(&jump_false), jump_false.length());
+                    ++it;
+                    continue;
+                }
+                if (jump.false_target().basic_block_index() == block->index() + 1) {
+                    Op::JumpTrue jump_true(jump.condition(), Label { jump.true_target() });
+                    auto& label = jump_true.target();
+                    size_t label_offset = bytecode.size() + (bit_cast<FlatPtr>(&label) - bit_cast<FlatPtr>(&jump_true));
+                    label_offsets.append(label_offset);
+                    bytecode.append(reinterpret_cast<u8 const*>(&jump_true), jump_true.length());
+                    ++it;
+                    continue;
+                }
+            }
+
             instruction.visit_labels([&](Label& label) {
                 size_t label_offset = bytecode.size() + (bit_cast<FlatPtr>(&label) - bit_cast<FlatPtr>(&instruction));
                 label_offsets.append(label_offset);
