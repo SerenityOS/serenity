@@ -1,24 +1,23 @@
 // https://svgwg.org/svg2-draft/single-page.html#coords-InterfaceSVGTransform
 [Exposed=Window]
 interface SVGTransform {
+    // Transform Types
+    const unsigned short SVG_TRANSFORM_UNKNOWN = 0;
+    const unsigned short SVG_TRANSFORM_MATRIX = 1;
+    const unsigned short SVG_TRANSFORM_TRANSLATE = 2;
+    const unsigned short SVG_TRANSFORM_SCALE = 3;
+    const unsigned short SVG_TRANSFORM_ROTATE = 4;
+    const unsigned short SVG_TRANSFORM_SKEWX = 5;
+    const unsigned short SVG_TRANSFORM_SKEWY = 6;
 
-  // Transform Types
-  const unsigned short SVG_TRANSFORM_UNKNOWN = 0;
-  const unsigned short SVG_TRANSFORM_MATRIX = 1;
-  const unsigned short SVG_TRANSFORM_TRANSLATE = 2;
-  const unsigned short SVG_TRANSFORM_SCALE = 3;
-  const unsigned short SVG_TRANSFORM_ROTATE = 4;
-  const unsigned short SVG_TRANSFORM_SKEWX = 5;
-  const unsigned short SVG_TRANSFORM_SKEWY = 6;
+    // FIXME: readonly attribute unsigned short type;
+    // FIXME: [SameObject] readonly attribute DOMMatrix matrix;
+    // FIXME: readonly attribute float angle;
 
-  // FIXME: readonly attribute unsigned short type;
-  // FIXME: [SameObject] readonly attribute DOMMatrix matrix;
-  // FIXME: readonly attribute float angle;
-
-  // FIXME: undefined setMatrix(optional DOMMatrix2DInit matrix = {});
-  // FIXME: undefined setTranslate(float tx, float ty);
-  // FIXME: undefined setScale(float sx, float sy);
-  // FIXME: undefined setRotate(float angle, float cx, float cy);
-  // FIXME: undefined setSkewX(float angle);
-  // FIXME: undefined setSkewY(float angle);
+    // FIXME: undefined setMatrix(optional DOMMatrix2DInit matrix = {});
+    // FIXME: undefined setTranslate(float tx, float ty);
+    // FIXME: undefined setScale(float sx, float sy);
+    // FIXME: undefined setRotate(float angle, float cx, float cy);
+    // FIXME: undefined setSkewX(float angle);
+    // FIXME: undefined setSkewY(float angle);
 };
