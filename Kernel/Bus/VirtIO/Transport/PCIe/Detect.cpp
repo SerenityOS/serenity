@@ -11,6 +11,7 @@
 #include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/Bus/VirtIO/Device.h>
 #include <Kernel/Bus/VirtIO/Transport/PCIe/Detect.h>
+#include <Kernel/Devices/HID/VirtIO/Input.h>
 #include <Kernel/Devices/Serial/VirtIO/Console.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Security/Random/VirtIO/RNG.h>
@@ -44,6 +45,11 @@ UNMAP_AFTER_INIT void detect_pci_instances()
         }
         case PCI::DeviceID::VirtIOBlockDevice: {
             // This should have been initialized by the storage subsystem
+            break;
+        }
+        case PCI::DeviceID::VirtIOInput: {
+            auto& input = Input::must_create_for_pci_instance(device_identifier).leak_ref();
+            MUST(input.initialize_virtio_resources());
             break;
         }
         default:

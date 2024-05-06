@@ -26,6 +26,7 @@ enum DeviceID {
     VirtIOConsole = 0x1003,
     VirtIOEntropy = 0x1005,
     VirtIOGPU = 0x1050,
+    VirtIOInput = 0x1052,
 };
 
 }

@@ -73,6 +73,7 @@ set(KERNEL_SOURCES
     Devices/HID/PS2/KeyboardDevice.cpp
     Devices/HID/PS2/MouseDevice.cpp
     Devices/HID/USB/MouseDevice.cpp
+    Devices/HID/VirtIO/Input.cpp
     Devices/Generic/ConsoleDevice.cpp
     Devices/Generic/DeviceControlDevice.cpp
     Devices/Generic/FullDevice.cpp
