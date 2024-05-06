@@ -212,7 +212,7 @@ public:
     virtual String qualified_name() const = 0;
     virtual String human_readable_name() const = 0;
 
-    virtual RefPtr<Font> with_size(float point_size) const = 0;
+    virtual NonnullRefPtr<Font> with_size(float point_size) const = 0;
 
     Font const& bold_variant() const;
 

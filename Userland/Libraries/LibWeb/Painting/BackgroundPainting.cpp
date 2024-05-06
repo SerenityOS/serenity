@@ -66,7 +66,7 @@ static Vector<Gfx::Path> compute_text_clip_paths(PaintContext& context, Paintabl
         Gfx::Path glyph_run_path;
         for (auto glyph : fragment.glyph_run().glyphs()) {
             glyph.visit([&](auto& glyph) {
-                glyph.font = *glyph.font->with_size(glyph.font->point_size() * static_cast<float>(context.device_pixels_per_css_pixel()));
+                glyph.font = glyph.font->with_size(glyph.font->point_size() * static_cast<float>(context.device_pixels_per_css_pixel()));
                 glyph.position = glyph.position.scaled(context.device_pixels_per_css_pixel());
             });
 

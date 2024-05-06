@@ -39,7 +39,7 @@ CommandResult CommandExecutorGPU::draw_glyph_run(Vector<Gfx::DrawGlyphOrEmoji> c
         auto transformed_glyph = glyph;
         transformed_glyph.visit([&](auto& glyph) {
             glyph.position = glyph.position.scaled(scale).translated(translation);
-            glyph.font = *glyph.font->with_size(glyph.font->point_size() * static_cast<float>(scale));
+            glyph.font = glyph.font->with_size(glyph.font->point_size() * static_cast<float>(scale));
         });
         transformed_glyph_run.append(transformed_glyph);
     }

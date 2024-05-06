@@ -593,7 +593,7 @@ void paint_text_shadow(PaintContext& context, PaintableFragment const& fragment,
     scaled_glyph_run.ensure_capacity(fragment.glyph_run().glyphs().size());
     for (auto glyph : fragment.glyph_run().glyphs()) {
         glyph.visit([&](auto& glyph) {
-            glyph.font = *glyph.font->with_size(glyph.font->point_size() * static_cast<float>(context.device_pixels_per_css_pixel()));
+            glyph.font = glyph.font->with_size(glyph.font->point_size() * static_cast<float>(context.device_pixels_per_css_pixel()));
             glyph.position = glyph.position.scaled(context.device_pixels_per_css_pixel());
         });
         scaled_glyph_run.append(move(glyph));

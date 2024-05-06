@@ -272,7 +272,7 @@ inline Gfx::Font const& Node::scaled_font(PaintContext& context) const
 inline Gfx::Font const& Node::scaled_font(float scale_factor) const
 {
     auto const& font = first_available_font();
-    return *font.with_size(font.point_size() * scale_factor);
+    return font.with_size(font.point_size() * scale_factor);
 }
 
 inline const CSS::ImmutableComputedValues& Node::computed_values() const
