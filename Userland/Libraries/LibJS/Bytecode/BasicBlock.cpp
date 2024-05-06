@@ -10,13 +10,14 @@
 
 namespace JS::Bytecode {
 
-NonnullOwnPtr<BasicBlock> BasicBlock::create(String name)
+NonnullOwnPtr<BasicBlock> BasicBlock::create(u32 index, String name)
 {
-    return adopt_own(*new BasicBlock(move(name)));
+    return adopt_own(*new BasicBlock(index, move(name)));
 }
 
-BasicBlock::BasicBlock(String name)
-    : m_name(move(name))
+BasicBlock::BasicBlock(u32 index, String name)
+    : m_index(index)
+    , m_name(move(name))
 {
 }
 

@@ -14,27 +14,23 @@ class BasicBlock;
 
 class Label {
 public:
-    explicit Label(BasicBlock const& block)
-        : m_block(&block)
+    explicit Label(BasicBlock const&);
+
+    explicit Label(u32 basic_block_index)
+        : m_address_or_basic_block_index(basic_block_index)
     {
     }
 
     // Used while compiling.
-    BasicBlock const& block() const { return *m_block; }
+    size_t basic_block_index() const { return m_address_or_basic_block_index; }
 
     // Used after compiling.
-    size_t address() const { return m_address; }
+    size_t address() const { return m_address_or_basic_block_index; }
 
-    void set_address(size_t address) { m_address = address; }
+    void set_address(size_t address) { m_address_or_basic_block_index = address; }
 
 private:
-    union {
-        // Relevant while compiling.
-        BasicBlock const* m_block { nullptr };
-
-        // Relevant after compiling.
-        size_t m_address;
-    };
+    u32 m_address_or_basic_block_index { 0 };
 };
 
 }
