@@ -130,7 +130,7 @@ public:
     virtual String qualified_name() const override;
     virtual String human_readable_name() const override { return MUST(String::formatted("{} {} {}", family(), variant(), presentation_size())); }
 
-    virtual RefPtr<Font> with_size(float point_size) const override;
+    virtual NonnullRefPtr<Font> with_size(float point_size) const override;
 
 private:
     BitmapFont(String name, String family, Bytes rows, Span<u8> widths, bool is_fixed_width,

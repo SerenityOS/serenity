@@ -31,7 +31,7 @@ CommandResult CommandExecutorCPU::draw_glyph_run(Vector<Gfx::DrawGlyphOrEmoji> c
         auto transformed_glyph = glyph_or_emoji;
         transformed_glyph.visit([&](auto& glyph) {
             glyph.position = glyph.position.scaled(scale).translated(translation);
-            glyph.font = *glyph.font->with_size(glyph.font->point_size() * static_cast<float>(scale));
+            glyph.font = glyph.font->with_size(glyph.font->point_size() * static_cast<float>(scale));
         });
         if (glyph_or_emoji.has<Gfx::DrawGlyph>()) {
             auto& glyph = transformed_glyph.get<Gfx::DrawGlyph>();

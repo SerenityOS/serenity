@@ -89,8 +89,8 @@ void CommandList::execute(CommandExecutor& executor)
                 for (auto const& glyph_or_emoji : command.get<DrawGlyphRun>().glyph_run->glyphs()) {
                     if (glyph_or_emoji.has<Gfx::DrawGlyph>()) {
                         auto const& glyph = glyph_or_emoji.get<Gfx::DrawGlyph>();
-                        auto const& font = *glyph.font->with_size(glyph.font->point_size() * static_cast<float>(scale));
-                        unique_glyphs.ensure(&font, [] { return HashTable<u32> {}; }).set(glyph.code_point);
+                        auto font = glyph.font->with_size(glyph.font->point_size() * static_cast<float>(scale));
+                        unique_glyphs.ensure(font, [] { return HashTable<u32> {}; }).set(glyph.code_point);
                     }
                 }
             }

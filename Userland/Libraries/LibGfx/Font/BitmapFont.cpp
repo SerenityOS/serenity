@@ -410,9 +410,12 @@ String BitmapFont::variant() const
     return MUST(builder.to_string());
 }
 
-RefPtr<Font> BitmapFont::with_size(float point_size) const
+NonnullRefPtr<Font> BitmapFont::with_size(float point_size) const
 {
-    return Gfx::FontDatabase::the().get(family(), point_size, weight(), width(), slope());
+    auto scaled_font = Gfx::FontDatabase::the().get(family(), point_size, weight(), width(), slope(), AllowInexactSizeMatch::Yes);
+    VERIFY(scaled_font); // The inexact lookup should, at the very least, return `this` font.
+
+    return *scaled_font;
 }
 
 Font const& Font::bold_variant() const

@@ -159,7 +159,7 @@ NonnullRefPtr<ScaledFont> ScaledFont::scaled_with_size(float point_size) const
     return m_font->scaled_font(point_size);
 }
 
-RefPtr<Font> ScaledFont::with_size(float point_size) const
+NonnullRefPtr<Font> ScaledFont::with_size(float point_size) const
 {
     return scaled_with_size(point_size);
 }
