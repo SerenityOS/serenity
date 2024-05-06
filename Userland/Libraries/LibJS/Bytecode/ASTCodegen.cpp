@@ -851,8 +851,6 @@ Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> ForStatement::gener
     Bytecode::BasicBlock* body_block_ptr { nullptr };
     Bytecode::BasicBlock* update_block_ptr { nullptr };
 
-    auto& end_block = generator.make_block();
-
     bool has_lexical_environment = false;
 
     if (m_init) {
@@ -896,6 +894,8 @@ Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> ForStatement::gener
         test_block_ptr = &generator.make_block();
     else
         test_block_ptr = body_block_ptr;
+
+    auto& end_block = generator.make_block();
 
     generator.emit<Bytecode::Op::Jump>(Bytecode::Label { *test_block_ptr });
 
