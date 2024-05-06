@@ -1782,6 +1782,12 @@ static void generate_yield(Bytecode::Generator& generator,
 
 Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> YieldExpression::generate_bytecode(Bytecode::Generator& generator, [[maybe_unused]] Optional<Bytecode::Operand> preferred_dst) const
 {
+    // Note: We need to catch any scheduled exceptions and reschedule them on re-entry
+    //       as the act of yielding would otherwise clear them out
+    //       This only applies when we are in a finalizer
+    bool is_in_finalizer = generator.is_in_finalizer();
+    Optional<Bytecode::Register> saved_exception;
+
     Bytecode::Generator::SourceLocationScope scope(generator, *this);
     VERIFY(generator.is_in_generator_function());
 
@@ -1889,6 +1895,11 @@ Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> YieldExpression::ge
             //        This only matters for non-async generators.
             auto current_value = Bytecode::Operand(generator.allocate_register());
             generator.emit_iterator_value(current_value, inner_result);
+
+            if (is_in_finalizer) {
+                saved_exception = generator.allocate_register();
+                generator.emit<Bytecode::Op::Mov>(Bytecode::Operand(*saved_exception), Bytecode::Operand(Bytecode::Register::exception()));
+            }
 
             generate_yield(generator,
                 Bytecode::Label { continuation_block },
@@ -2077,6 +2088,10 @@ Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> YieldExpression::ge
         generate_yield(generator, Bytecode::Label { continuation_block }, received, received_completion, received_completion_type, received_completion_value, type_identifier, value_identifier, AwaitBeforeYield::No);
 
         generator.switch_to_basic_block(continuation_block);
+
+        if (is_in_finalizer)
+            generator.emit<Bytecode::Op::Mov>(Bytecode::Operand(Bytecode::Register::exception()), Bytecode::Operand(*saved_exception));
+
         generator.emit<Bytecode::Op::Mov>(received_completion, Bytecode::Operand(Bytecode::Register(0)));
         get_received_completion_type_and_value(generator, received_completion, received_completion_type, received_completion_value, type_identifier, value_identifier);
         generator.emit<Bytecode::Op::Jump>(Bytecode::Label { loop_block });
@@ -2092,8 +2107,18 @@ Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> YieldExpression::ge
         argument = generator.add_constant(js_undefined());
 
     auto& continuation_block = generator.make_block();
+
+    if (is_in_finalizer) {
+        saved_exception = generator.allocate_register();
+        generator.emit<Bytecode::Op::Mov>(Bytecode::Operand(*saved_exception), Bytecode::Operand(Bytecode::Register::exception()));
+    }
+
     generate_yield(generator, Bytecode::Label { continuation_block }, *argument, received_completion, received_completion_type, received_completion_value, type_identifier, value_identifier, AwaitBeforeYield::Yes);
     generator.switch_to_basic_block(continuation_block);
+
+    if (is_in_finalizer)
+        generator.emit<Bytecode::Op::Mov>(Bytecode::Operand(Bytecode::Register::exception()), Bytecode::Operand(*saved_exception));
+
     generator.emit<Bytecode::Op::Mov>(received_completion, Bytecode::Operand(Bytecode::Register(0)));
     get_received_completion_type_and_value(generator, received_completion, received_completion_type, received_completion_value, type_identifier, value_identifier);
 
@@ -2190,9 +2215,6 @@ Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> IfStatement::genera
 Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> ContinueStatement::generate_bytecode(Bytecode::Generator& generator, [[maybe_unused]] Optional<Bytecode::Operand> preferred_dst) const
 {
     Bytecode::Generator::SourceLocationScope scope(generator, *this);
-    // FIXME: Handle finally blocks in a graceful manner
-    //        We need to execute the finally block, but tell it to resume
-    //        execution at the designated block
     if (!m_target_label.has_value()) {
         generator.generate_continue();
         return Optional<Bytecode::Operand> {};

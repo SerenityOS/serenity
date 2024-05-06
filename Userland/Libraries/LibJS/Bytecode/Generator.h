@@ -238,6 +238,8 @@ public:
         }
     }
 
+    bool is_in_finalizer() const { return m_boundaries.contains_slow(BlockBoundaryType::LeaveFinally); }
+
     void generate_break();
     void generate_break(DeprecatedFlyString const& break_label);
 
