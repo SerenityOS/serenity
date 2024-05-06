@@ -850,7 +850,6 @@ Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> ForStatement::gener
     Bytecode::BasicBlock* test_block_ptr { nullptr };
     Bytecode::BasicBlock* body_block_ptr { nullptr };
     Bytecode::BasicBlock* update_block_ptr { nullptr };
-    Bytecode::BasicBlock* load_result_and_jump_to_end_block_ptr { nullptr };
 
     auto& end_block = generator.make_block();
 
@@ -901,14 +900,13 @@ Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> ForStatement::gener
     generator.emit<Bytecode::Op::Jump>(Bytecode::Label { *test_block_ptr });
 
     if (m_test) {
-        load_result_and_jump_to_end_block_ptr = &generator.make_block();
         generator.switch_to_basic_block(*test_block_ptr);
 
         auto test = TRY(m_test->generate_bytecode(generator)).value();
         generator.emit<Bytecode::Op::JumpIf>(
             test,
             Bytecode::Label { *body_block_ptr },
-            Bytecode::Label { *load_result_and_jump_to_end_block_ptr });
+            Bytecode::Label { end_block });
     }
 
     if (m_update) {
@@ -931,11 +929,6 @@ Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> ForStatement::gener
         } else {
             generator.emit<Bytecode::Op::Jump>(Bytecode::Label { *test_block_ptr });
         }
-    }
-
-    if (load_result_and_jump_to_end_block_ptr) {
-        generator.switch_to_basic_block(*load_result_and_jump_to_end_block_ptr);
-        generator.emit<Bytecode::Op::Jump>(Bytecode::Label { end_block });
     }
 
     generator.switch_to_basic_block(end_block);
