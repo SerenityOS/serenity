@@ -19,5 +19,5 @@ interface SVGTransform {
     undefined setScale(float sx, float sy);
     undefined setRotate(float angle, float cx, float cy);
     undefined setSkewX(float angle);
-    // FIXME: undefined setSkewY(float angle);
+    undefined setSkewY(float angle);
 };
