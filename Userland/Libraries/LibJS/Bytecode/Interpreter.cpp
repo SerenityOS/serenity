@@ -100,7 +100,7 @@ static ByteString format_value_list(StringView name, ReadonlySpan<Value> values)
 {
     StringBuilder builder;
     if (!name.is_empty())
-        builder.appendff(", \033[32m{}\033[0m:[", name);
+        builder.appendff("\033[32m{}\033[0m:[", name);
     builder.join(", "sv, values);
     builder.append("]"sv);
     return builder.to_byte_string();
