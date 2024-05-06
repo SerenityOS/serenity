@@ -125,7 +125,7 @@ Tag = namedtuple(
 known_tags: List[Tag] = [
     Tag('256', [TIFFType.UnsignedShort, TIFFType.UnsignedLong], [1], None, "ImageWidth", is_required=True),
     Tag('257', [TIFFType.UnsignedShort, TIFFType.UnsignedLong], [1], None, "ImageLength", is_required=True),
-    Tag('258', [TIFFType.UnsignedShort], [], None, "BitsPerSample", is_required=True),
+    Tag('258', [TIFFType.UnsignedShort], [], None, "BitsPerSample", is_required=False),
     Tag('259', [TIFFType.UnsignedShort], [1], None, "Compression", Compression, is_required=True),
     Tag('262', [TIFFType.UnsignedShort], [1], None, "PhotometricInterpretation",
         PhotometricInterpretation, is_required=True),
@@ -134,7 +134,7 @@ known_tags: List[Tag] = [
     Tag('272', [TIFFType.ASCII], [], None, "Model"),
     Tag('273', [TIFFType.UnsignedShort, TIFFType.UnsignedLong], [], None, "StripOffsets", is_required=False),
     Tag('274', [TIFFType.UnsignedShort], [1], Orientation.Default, "Orientation", Orientation),
-    Tag('277', [TIFFType.UnsignedShort], [1], None, "SamplesPerPixel", is_required=True),
+    Tag('277', [TIFFType.UnsignedShort], [1], None, "SamplesPerPixel", is_required=False),
     Tag('278', [TIFFType.UnsignedShort, TIFFType.UnsignedLong], [1], None, "RowsPerStrip", is_required=False),
     Tag('279', [TIFFType.UnsignedShort, TIFFType.UnsignedLong], [], None, "StripByteCounts", is_required=False),
     Tag('282', [TIFFType.UnsignedRational], [1], None, "XResolution"),

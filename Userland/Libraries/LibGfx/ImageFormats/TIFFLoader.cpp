@@ -103,6 +103,12 @@ public:
         if (!m_metadata.rows_per_strip().has_value() && segment_byte_counts()->size() != 1 && !is_tiled())
             return Error::from_string_literal("TIFFImageDecoderPlugin: RowsPerStrip is not provided and impossible to deduce");
 
+        if (!m_metadata.bits_per_sample().has_value())
+            return Error::from_string_literal("TIFFImageDecoderPlugin: Tag BitsPerSample is missing");
+
+        if (!m_metadata.samples_per_pixel().has_value())
+            return Error::from_string_literal("TIFFImageDecoderPlugin: Tag SamplesPerPixel is missing");
+
         if (any_of(*m_metadata.bits_per_sample(), [](auto bit_depth) { return bit_depth == 0 || bit_depth > 32; }))
             return Error::from_string_literal("TIFFImageDecoderPlugin: Invalid value in BitsPerSample");
 
