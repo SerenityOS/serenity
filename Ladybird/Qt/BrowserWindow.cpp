@@ -238,6 +238,7 @@ BrowserWindow::BrowserWindow(Vector<URL::URL> const& initial_urls, WebView::Cook
     });
 
     auto* debug_menu = m_hamburger_menu->addMenu("&Debug");
+    menuBar()->addMenu(debug_menu);
 
     auto* dump_session_history_tree_action = new QAction("Dump Session History Tree", this);
     dump_session_history_tree_action->setIcon(load_icon_from_uri("resource://icons/16x16/history.png"sv));
