@@ -43,4 +43,12 @@ float SVGTransform::angle()
     return 0;
 }
 
+// https://svgwg.org/svg2-draft/single-page.html#coords-__svg__SVGTransform__setTranslate
+void SVGTransform::set_translate(float tx, float ty)
+{
+    (void)tx;
+    (void)ty;
+    dbgln("FIXME: Implement SVGTransform::set_translate(float tx, float ty)");
+}
+
 }

@@ -34,6 +34,8 @@ public:
     Type type();
     float angle();
 
+    void set_translate(float tx, float ty);
+
 private:
     SVGTransform(JS::Realm& realm);
 
