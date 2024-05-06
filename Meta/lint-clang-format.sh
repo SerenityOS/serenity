@@ -12,6 +12,7 @@ if [ "$#" -eq "1" ]; then
             '*.h' \
             '*.mm' \
             ':!:Base' \
+            ':!:Kernel/Devices/HID/VirtIO/EvDevDefinitions.h' \
             ':!:Kernel/FileSystem/Ext2FS/Definitions.h' \
             ':!:Userland/Libraries/LibCodeComprehension/Cpp/Tests/*' \
             ':!:Userland/Libraries/LibCpp/Tests/parser/*' \

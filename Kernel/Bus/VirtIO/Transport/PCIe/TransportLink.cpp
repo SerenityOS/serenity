@@ -31,6 +31,8 @@ StringView PCIeTransportLink::determine_device_class_name() const
             return "VirtIOConsole"sv;
         case 4:
             return "VirtIORNG"sv;
+        case 18:
+            return "VirtIOInput"sv;
         default:
             dbgln("VirtIO: Unknown subsystem_device_id {}", subsystem_device_id);
             VERIFY_NOT_REACHED();
@@ -50,8 +52,10 @@ StringView PCIeTransportLink::determine_device_class_name() const
         return "VirtIORNG"sv;
     case PCI::DeviceID::VirtIOGPU:
         return "VirtIOGPU"sv;
+    case PCI::DeviceID::VirtIOInput:
+        return "VirtIOInput"sv;
     default:
-        dbgln("VirtIO: Unknown device_id {}", id.vendor_id);
+        dbgln("VirtIO: Unknown device_id {:#x}", id.device_id);
         VERIFY_NOT_REACHED();
     }
 }
