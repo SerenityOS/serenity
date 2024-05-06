@@ -32,6 +32,7 @@ public:
     };
 
     Type type();
+    float angle();
 
 private:
     SVGTransform(JS::Realm& realm);

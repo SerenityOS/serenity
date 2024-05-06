@@ -36,4 +36,11 @@ SVGTransform::Type SVGTransform::type()
     return SVGTransform::Type::Unknown;
 }
 
+// https://svgwg.org/svg2-draft/single-page.html#coords-__svg__SVGTransform__angle
+float SVGTransform::angle()
+{
+    dbgln("FIXME: Implement SVGTransform::angle()");
+    return 0;
+}
+
 }
