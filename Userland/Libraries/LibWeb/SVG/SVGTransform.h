@@ -37,6 +37,7 @@ public:
     void set_translate(float tx, float ty);
     void set_scale(float sx, float sy);
     void set_rotate(float angle, float cx, float cy);
+    void set_skew_x(float angle);
 
 private:
     SVGTransform(JS::Realm& realm);

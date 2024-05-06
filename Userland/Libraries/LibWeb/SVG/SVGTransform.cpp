@@ -68,4 +68,11 @@ void SVGTransform::set_rotate(float angle, float cx, float cy)
     dbgln("FIXME: Implement SVGTransform::set_rotate(float angle, float cx, float cy)");
 }
 
+// https://svgwg.org/svg2-draft/single-page.html#coords-__svg__SVGTransform__setSkewX
+void SVGTransform::set_skew_x(float angle)
+{
+    (void)angle;
+    dbgln("FIXME: Implement SVGTransform::set_skew_x(float angle)");
+}
+
 }
