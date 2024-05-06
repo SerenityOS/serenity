@@ -1069,6 +1069,10 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
+    void visit_labels_impl(Function<void(Label&)> visitor)
+    {
+        visitor(m_target);
+    }
 
     auto& target() const { return m_target; }
 
@@ -1090,6 +1094,11 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
+    void visit_labels_impl(Function<void(Label&)> visitor)
+    {
+        visitor(m_true_target);
+        visitor(m_false_target);
+    }
 
     Operand condition() const { return m_condition; }
     auto& true_target() const { return m_true_target; }
@@ -1115,6 +1124,11 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
+    void visit_labels_impl(Function<void(Label&)> visitor)
+    {
+        visitor(m_true_target);
+        visitor(m_false_target);
+    }
 
     Operand condition() const { return m_condition; }
     auto& true_target() const { return m_true_target; }
@@ -1140,6 +1154,11 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
+    void visit_labels_impl(Function<void(Label&)> visitor)
+    {
+        visitor(m_true_target);
+        visitor(m_false_target);
+    }
 
     Operand condition() const { return m_condition; }
     auto& true_target() const { return m_true_target; }
@@ -1501,6 +1520,10 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
+    void visit_labels_impl(Function<void(Label&)> visitor)
+    {
+        visitor(m_entry_point);
+    }
 
     auto& entry_point() const { return m_entry_point; }
 
@@ -1531,6 +1554,10 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
+    void visit_labels_impl(Function<void(Label&)> visitor)
+    {
+        visitor(m_target);
+    }
 
 private:
     Label m_target;
@@ -1570,6 +1597,10 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
+    void visit_labels_impl(Function<void(Label&)> visitor)
+    {
+        visitor(m_resume_target);
+    }
 
     auto& resume_target() const { return m_resume_target; }
 
@@ -1596,6 +1627,11 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
+    void visit_labels_impl(Function<void(Label&)> visitor)
+    {
+        if (m_continuation_label.has_value())
+            visitor(m_continuation_label.value());
+    }
 
     auto& continuation() const { return m_continuation_label; }
     Operand value() const { return m_value; }
@@ -1618,6 +1654,10 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
+    void visit_labels_impl(Function<void(Label&)> visitor)
+    {
+        visitor(m_continuation_label);
+    }
 
     auto& continuation() const { return m_continuation_label; }
     Operand argument() const { return m_argument; }

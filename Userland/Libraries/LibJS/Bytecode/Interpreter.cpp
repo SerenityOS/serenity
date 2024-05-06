@@ -157,7 +157,7 @@ ALWAYS_INLINE Value Interpreter::get(Operand op) const
     case Operand::Type::Register:
         return reg(Register { op.index() });
     case Operand::Type::Local:
-        return vm().running_execution_context().locals[op.index()];
+        return m_locals.data()[op.index()];
     case Operand::Type::Constant:
         return current_executable().constants[op.index()];
     }
@@ -171,7 +171,7 @@ ALWAYS_INLINE void Interpreter::set(Operand op, Value value)
         reg(Register { op.index() }) = value;
         return;
     case Operand::Type::Local:
-        vm().running_execution_context().locals[op.index()] = value;
+        m_locals.data()[op.index()] = value;
         return;
     case Operand::Type::Constant:
         VERIFY_NOT_REACHED();
@@ -244,7 +244,7 @@ ThrowCompletionOr<Value> Interpreter::run(Script& script_record, JS::GCPtr<Envir
                 executable->dump();
 
             // a. Set result to the result of evaluating script.
-            auto result_or_error = run_executable(*executable, nullptr);
+            auto result_or_error = run_executable(*executable, {}, {});
             if (result_or_error.value.is_error())
                 result = result_or_error.value.release_error();
             else
@@ -304,79 +304,113 @@ ThrowCompletionOr<Value> Interpreter::run(SourceTextModule& module)
     return js_undefined();
 }
 
-void Interpreter::run_bytecode()
+Interpreter::HandleExceptionResponse Interpreter::handle_exception(size_t& program_counter, Value exception)
 {
-    auto* locals = vm().running_execution_context().locals.data();
+    reg(Register::exception()) = exception;
+    m_scheduled_jump = {};
+    auto handlers = current_executable().exception_handlers_for_offset(program_counter);
+    if (!handlers.has_value()) {
+        return HandleExceptionResponse::ExitFromExecutable;
+    }
+    auto& handler = handlers->handler_offset;
+    auto& finalizer = handlers->finalizer_offset;
+
+    VERIFY(!vm().running_execution_context().unwind_contexts.is_empty());
+    auto& unwind_context = vm().running_execution_context().unwind_contexts.last();
+    VERIFY(unwind_context.executable == m_current_executable);
+
+    if (handler.has_value()) {
+        program_counter = handler.value();
+        return HandleExceptionResponse::ContinueInThisExecutable;
+    }
+    if (finalizer.has_value()) {
+        program_counter = finalizer.value();
+        return HandleExceptionResponse::ContinueInThisExecutable;
+    }
+    VERIFY_NOT_REACHED();
+}
+
+#define NEXT_INSTRUCTION()                   \
+    program_counter += instruction.length(); \
+    goto start;
+
+void Interpreter::run_bytecode(size_t entry_point)
+{
+    auto& running_execution_context = vm().running_execution_context();
+    auto* locals = running_execution_context.locals.data();
     auto& accumulator = this->accumulator();
+    auto& executable = current_executable();
+    auto const* bytecode = executable.bytecode.data();
+
+    size_t program_counter = entry_point;
+
+    TemporaryChange change(m_program_counter, Optional<size_t&>(program_counter));
+
     for (;;) {
     start:
-        auto pc = InstructionStreamIterator { m_current_block->instruction_stream(), m_current_executable };
-        TemporaryChange temp_change { m_pc, Optional<InstructionStreamIterator&>(pc) };
-
         bool will_return = false;
         bool will_yield = false;
 
-        ThrowCompletionOr<void> result;
-
-        while (!pc.at_end()) {
-            auto& instruction = *pc;
+        for (;;) {
+            auto& instruction = *reinterpret_cast<Instruction const*>(&bytecode[program_counter]);
 
             switch (instruction.type()) {
             case Instruction::Type::SetLocal:
                 locals[static_cast<Op::SetLocal const&>(instruction).index()] = get(static_cast<Op::SetLocal const&>(instruction).src());
-                break;
+                NEXT_INSTRUCTION();
             case Instruction::Type::Mov:
                 set(static_cast<Op::Mov const&>(instruction).dst(), get(static_cast<Op::Mov const&>(instruction).src()));
-                break;
+                NEXT_INSTRUCTION();
             case Instruction::Type::End:
                 accumulator = get(static_cast<Op::End const&>(instruction).value());
                 return;
             case Instruction::Type::Jump:
-                m_current_block = &static_cast<Op::Jump const&>(instruction).target().block();
+                program_counter = static_cast<Op::Jump const&>(instruction).target().address();
                 goto start;
             case Instruction::Type::JumpIf: {
                 auto& jump = static_cast<Op::JumpIf const&>(instruction);
                 if (get(jump.condition()).to_boolean())
-                    m_current_block = &jump.true_target().block();
+                    program_counter = jump.true_target().address();
                 else
-                    m_current_block = &jump.false_target().block();
+                    program_counter = jump.false_target().address();
                 goto start;
             }
             case Instruction::Type::JumpNullish: {
                 auto& jump = static_cast<Op::JumpNullish const&>(instruction);
                 if (get(jump.condition()).is_nullish())
-                    m_current_block = &jump.true_target().block();
+                    program_counter = jump.true_target().address();
                 else
-                    m_current_block = &jump.false_target().block();
+                    program_counter = jump.false_target().address();
                 goto start;
             }
             case Instruction::Type::JumpUndefined: {
                 auto& jump = static_cast<Op::JumpUndefined const&>(instruction);
                 if (get(jump.condition()).is_undefined())
-                    m_current_block = &jump.true_target().block();
+                    program_counter = jump.true_target().address();
                 else
-                    m_current_block = &jump.false_target().block();
+                    program_counter = jump.false_target().address();
                 goto start;
             }
             case Instruction::Type::EnterUnwindContext:
                 enter_unwind_context();
-                m_current_block = &static_cast<Op::EnterUnwindContext const&>(instruction).entry_point().block();
+                program_counter = static_cast<Op::EnterUnwindContext const&>(instruction).entry_point().address();
                 goto start;
             case Instruction::Type::ContinuePendingUnwind: {
                 if (auto exception = reg(Register::exception()); !exception.is_empty()) {
-                    result = throw_completion(exception);
-                    break;
+                    if (handle_exception(program_counter, exception) == HandleExceptionResponse::ExitFromExecutable)
+                        return;
+                    goto start;
                 }
                 if (!saved_return_value().is_empty()) {
                     do_return(saved_return_value());
-                    break;
+                    goto may_return;
                 }
-                auto& running_execution_context = vm().running_execution_context();
-                auto const* old_scheduled_jump = running_execution_context.previously_scheduled_jumps.take_last();
-                if (m_scheduled_jump) {
-                    m_current_block = exchange(m_scheduled_jump, nullptr);
+                auto const old_scheduled_jump = running_execution_context.previously_scheduled_jumps.take_last();
+                if (m_scheduled_jump.has_value()) {
+                    program_counter = m_scheduled_jump.value();
+                    m_scheduled_jump = {};
                 } else {
-                    m_current_block = &static_cast<Op::ContinuePendingUnwind const&>(instruction).resume_target().block();
+                    program_counter = static_cast<Op::ContinuePendingUnwind const&>(instruction).resume_target().address();
                     // set the scheduled jump to the old value if we continue
                     // where we left it
                     m_scheduled_jump = old_scheduled_jump;
@@ -384,42 +418,27 @@ void Interpreter::run_bytecode()
                 goto start;
             }
             case Instruction::Type::ScheduleJump: {
-                m_scheduled_jump = &static_cast<Op::ScheduleJump const&>(instruction).target().block();
-                auto const* finalizer = m_current_block->finalizer();
-                VERIFY(finalizer);
-                m_current_block = finalizer;
+                m_scheduled_jump = static_cast<Op::ScheduleJump const&>(instruction).target().address();
+                auto finalizer = executable.exception_handlers_for_offset(program_counter).value().finalizer_offset;
+                VERIFY(finalizer.has_value());
+                program_counter = finalizer.value();
                 goto start;
             }
             default:
-                result = instruction.execute(*this);
                 break;
             }
 
-            if (result.is_error()) [[unlikely]] {
-                reg(Register::exception()) = *result.throw_completion().value();
-                m_scheduled_jump = {};
-                auto const* handler = m_current_block->handler();
-                auto const* finalizer = m_current_block->finalizer();
-                if (!handler && !finalizer)
-                    return;
+            {
+                auto result = instruction.execute(*this);
 
-                auto& running_execution_context = vm().running_execution_context();
-                auto& unwind_context = running_execution_context.unwind_contexts.last();
-                VERIFY(unwind_context.executable == m_current_executable);
-
-                if (handler) {
-                    m_current_block = handler;
+                if (result.is_error()) {
+                    if (handle_exception(program_counter, *result.throw_completion().value()) == HandleExceptionResponse::ExitFromExecutable)
+                        return;
                     goto start;
                 }
-                if (finalizer) {
-                    m_current_block = finalizer;
-                    goto start;
-                }
-                // An unwind context with no handler or finalizer? We have nowhere to jump, and continuing on will make us crash on the next `Call` to a non-native function if there's an exception! So let's crash here instead.
-                // If you run into this, you probably forgot to remove the current unwind_context somewhere.
-                VERIFY_NOT_REACHED();
             }
 
+        may_return:
             if (!reg(Register::return_value()).is_empty()) {
                 will_return = true;
                 // Note: A `yield` statement will not go through a finally statement,
@@ -430,51 +449,55 @@ void Interpreter::run_bytecode()
                 will_yield = (instruction.type() == Instruction::Type::Yield && static_cast<Op::Yield const&>(instruction).continuation().has_value()) || instruction.type() == Instruction::Type::Await;
                 break;
             }
-            ++pc;
+
+            NEXT_INSTRUCTION();
         }
 
-        if (auto const* finalizer = m_current_block->finalizer(); finalizer && !will_yield) {
-            auto& running_execution_context = vm().running_execution_context();
-            auto& unwind_context = running_execution_context.unwind_contexts.last();
-            VERIFY(unwind_context.executable == m_current_executable);
-            reg(Register::saved_return_value()) = reg(Register::return_value());
-            reg(Register::return_value()) = {};
-            m_current_block = finalizer;
-            // the unwind_context will be pop'ed when entering the finally block
-            continue;
+        if (!will_yield) {
+            if (auto handlers = executable.exception_handlers_for_offset(program_counter); handlers.has_value()) {
+                if (auto finalizer = handlers.value().finalizer_offset; finalizer.has_value()) {
+                    VERIFY(!running_execution_context.unwind_contexts.is_empty());
+                    auto& unwind_context = running_execution_context.unwind_contexts.last();
+                    VERIFY(unwind_context.executable == m_current_executable);
+                    reg(Register::saved_return_value()) = reg(Register::return_value());
+                    reg(Register::return_value()) = {};
+                    program_counter = finalizer.value();
+                    // the unwind_context will be pop'ed when entering the finally block
+                    continue;
+                }
+            }
         }
-
-        if (pc.at_end())
-            break;
 
         if (will_return)
             break;
     }
 }
 
-Interpreter::ResultAndReturnRegister Interpreter::run_executable(Executable& executable, BasicBlock const* entry_point)
+Interpreter::ResultAndReturnRegister Interpreter::run_executable(Executable& executable, Optional<size_t> entry_point, Value initial_accumulator_value)
 {
     dbgln_if(JS_BYTECODE_DEBUG, "Bytecode::Interpreter will run unit {:p}", &executable);
 
     TemporaryChange restore_executable { m_current_executable, GCPtr { executable } };
-    TemporaryChange restore_saved_jump { m_scheduled_jump, static_cast<BasicBlock const*>(nullptr) };
+    TemporaryChange restore_saved_jump { m_scheduled_jump, Optional<size_t> {} };
     TemporaryChange restore_realm { m_realm, GCPtr { vm().current_realm() } };
     TemporaryChange restore_global_object { m_global_object, GCPtr { m_realm->global_object() } };
     TemporaryChange restore_global_declarative_environment { m_global_declarative_environment, GCPtr { m_realm->global_environment().declarative_record() } };
 
     VERIFY(!vm().execution_context_stack().is_empty());
 
-    TemporaryChange restore_current_block { m_current_block, entry_point ?: executable.basic_blocks.first() };
-
     auto& running_execution_context = vm().running_execution_context();
     if (running_execution_context.registers.size() < executable.number_of_registers)
         running_execution_context.registers.resize(executable.number_of_registers);
 
+    TemporaryChange restore_registers { m_registers, running_execution_context.registers.span() };
+    TemporaryChange restore_locals { m_locals, running_execution_context.locals.span() };
+
+    reg(Register::accumulator()) = initial_accumulator_value;
     reg(Register::return_value()) = {};
 
     running_execution_context.executable = &executable;
 
-    run_bytecode();
+    run_bytecode(entry_point.value_or(0));
 
     dbgln_if(JS_BYTECODE_DEBUG, "Bytecode::Interpreter did run unit {:p}", &executable);
 
@@ -514,7 +537,7 @@ void Interpreter::enter_unwind_context()
         m_current_executable,
         vm().running_execution_context().lexical_environment);
     running_execution_context.previously_scheduled_jumps.append(m_scheduled_jump);
-    m_scheduled_jump = nullptr;
+    m_scheduled_jump = {};
 }
 
 void Interpreter::leave_unwind_context()
@@ -1465,9 +1488,9 @@ ThrowCompletionOr<void> Yield::execute_impl(Bytecode::Interpreter& interpreter) 
     if (m_continuation_label.has_value())
         // FIXME: If we get a pointer, which is not accurately representable as a double
         //        will cause this to explode
-        object->define_direct_property("continuation", Value(static_cast<double>(reinterpret_cast<u64>(&m_continuation_label->block()))), JS::default_attributes);
+        object->define_direct_property("continuation", Value(m_continuation_label->address()), JS::default_attributes);
     else
-        object->define_direct_property("continuation", Value(0), JS::default_attributes);
+        object->define_direct_property("continuation", js_null(), JS::default_attributes);
 
     object->define_direct_property("isAwait", Value(false), JS::default_attributes);
     interpreter.do_return(object);
@@ -1482,7 +1505,7 @@ ThrowCompletionOr<void> Await::execute_impl(Bytecode::Interpreter& interpreter) 
     object->define_direct_property("result", yielded_value, JS::default_attributes);
     // FIXME: If we get a pointer, which is not accurately representable as a double
     //        will cause this to explode
-    object->define_direct_property("continuation", Value(static_cast<double>(reinterpret_cast<u64>(&m_continuation_label.block()))), JS::default_attributes);
+    object->define_direct_property("continuation", Value(m_continuation_label.address()), JS::default_attributes);
     object->define_direct_property("isAwait", Value(true), JS::default_attributes);
     interpreter.do_return(object);
     return {};
@@ -2074,8 +2097,8 @@ ByteString ContinuePendingUnwind::to_byte_string_impl(Bytecode::Executable const
 ByteString Yield::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
     if (m_continuation_label.has_value()) {
-        return ByteString::formatted("Yield continuation:@{}, {}",
-            m_continuation_label->block().name(),
+        return ByteString::formatted("Yield continuation:{}, {}",
+            m_continuation_label.value(),
             format_operand("value"sv, m_value, executable));
     }
     return ByteString::formatted("Yield return {}",
@@ -2084,9 +2107,9 @@ ByteString Yield::to_byte_string_impl(Bytecode::Executable const& executable) co
 
 ByteString Await::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
-    return ByteString::formatted("Await {}, continuation:@{}",
+    return ByteString::formatted("Await {}, continuation:{}",
         format_operand("argument"sv, m_argument, executable),
-        m_continuation_label.block().name());
+        m_continuation_label);
 }
 
 ByteString GetByValue::to_byte_string_impl(Bytecode::Executable const& executable) const

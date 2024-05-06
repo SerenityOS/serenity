@@ -11,7 +11,6 @@
 #include <AK/DeprecatedFlyString.h>
 #include <AK/WeakPtr.h>
 #include <LibJS/Bytecode/BasicBlock.h>
-#include <LibJS/Bytecode/Instruction.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Module.h>
 #include <LibJS/Runtime/PrivateEnvironment.h>
@@ -51,7 +50,7 @@ public:
     // Non-standard: This points at something that owns this ExecutionContext, in case it needs to be protected from GC.
     GCPtr<Cell> context_owner;
 
-    Optional<Bytecode::InstructionStreamIterator> instruction_stream_iterator;
+    Optional<size_t> program_counter;
     GCPtr<PrimitiveString> function_name;
     Value this_value;
     bool is_strict_mode { false };
@@ -78,7 +77,7 @@ public:
     Vector<Value> locals;
     Vector<Value> registers;
     Vector<Bytecode::UnwindInfo> unwind_contexts;
-    Vector<Bytecode::BasicBlock const*> previously_scheduled_jumps;
+    Vector<Optional<size_t>> previously_scheduled_jumps;
     Vector<GCPtr<Environment>> saved_lexical_environments;
 };
 

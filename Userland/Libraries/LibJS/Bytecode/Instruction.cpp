@@ -26,6 +26,22 @@ void Instruction::destroy(Instruction& instruction)
 #undef __BYTECODE_OP
 }
 
+void Instruction::visit_labels(Function<void(JS::Bytecode::Label&)> visitor)
+{
+#define __BYTECODE_OP(op)                                             \
+    case Type::op:                                                    \
+        static_cast<Op::op&>(*this).visit_labels_impl(move(visitor)); \
+        return;
+
+    switch (type()) {
+        ENUMERATE_BYTECODE_OPS(__BYTECODE_OP)
+    default:
+        VERIFY_NOT_REACHED();
+    }
+
+#undef __BYTECODE_OP
+}
+
 UnrealizedSourceRange InstructionStreamIterator::source_range() const
 {
     VERIFY(m_executable);

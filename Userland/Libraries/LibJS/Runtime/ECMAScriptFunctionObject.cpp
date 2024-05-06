@@ -384,7 +384,7 @@ ThrowCompletionOr<Value> ECMAScriptFunctionObject::internal_call(Value this_argu
 
     // Non-standard
     callee_context->arguments.append(arguments_list.data(), arguments_list.size());
-    callee_context->instruction_stream_iterator = vm.bytecode_interpreter().instruction_stream_iterator();
+    callee_context->program_counter = vm.bytecode_interpreter().program_counter();
 
     // 2. Let calleeContext be PrepareForOrdinaryCall(F, undefined).
     // NOTE: We throw if the end of the native stack is reached, so unlike in the spec this _does_ need an exception check.
@@ -455,7 +455,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> ECMAScriptFunctionObject::internal_const
 
     // Non-standard
     callee_context->arguments.append(arguments_list.data(), arguments_list.size());
-    callee_context->instruction_stream_iterator = vm.bytecode_interpreter().instruction_stream_iterator();
+    callee_context->program_counter = vm.bytecode_interpreter().program_counter();
 
     // 4. Let calleeContext be PrepareForOrdinaryCall(F, newTarget).
     // NOTE: We throw if the end of the native stack is reached, so unlike in the spec this _does_ need an exception check.
@@ -726,7 +726,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
                     for (size_t register_index = 0; register_index < saved_registers.size(); ++register_index)
                         saved_registers[register_index] = {};
 
-                    auto result_and_return_register = vm.bytecode_interpreter().run_executable(*m_default_parameter_bytecode_executables[default_parameter_index - 1], nullptr);
+                    auto result_and_return_register = vm.bytecode_interpreter().run_executable(*m_default_parameter_bytecode_executables[default_parameter_index - 1], {});
 
                     for (size_t register_index = 0; register_index < saved_registers.size(); ++register_index)
                         running_execution_context.registers[register_index] = saved_registers[register_index];
@@ -1124,7 +1124,7 @@ void async_block_start(VM& vm, T const& async_body, PromiseCapability const& pro
             if (maybe_executable.is_error())
                 result = maybe_executable.release_error();
             else
-                result = vm.bytecode_interpreter().run_executable(*maybe_executable.value(), nullptr).value;
+                result = vm.bytecode_interpreter().run_executable(*maybe_executable.value(), {}).value;
         }
         // b. Else,
         else {
@@ -1251,7 +1251,7 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
         }
     }
 
-    auto result_and_frame = vm.bytecode_interpreter().run_executable(*m_bytecode_executable, nullptr);
+    auto result_and_frame = vm.bytecode_interpreter().run_executable(*m_bytecode_executable, {});
 
     if (result_and_frame.value.is_error())
         return result_and_frame.value.release_error();

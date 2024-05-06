@@ -18,6 +18,7 @@
 #include <LibJS/Heap/Cell.h>
 #include <LibJS/Heap/CellAllocator.h>
 #include <LibJS/Runtime/EnvironmentCoordinate.h>
+#include <LibJS/SourceRange.h>
 
 namespace JS::Bytecode {
 
@@ -45,6 +46,7 @@ class Executable final : public Cell {
 
 public:
     Executable(
+        Vector<u8> bytecode,
         NonnullOwnPtr<IdentifierTable>,
         NonnullOwnPtr<StringTable>,
         NonnullOwnPtr<RegexTable>,
@@ -54,16 +56,15 @@ public:
         size_t number_of_global_variable_caches,
         size_t number_of_environment_variable_caches,
         size_t number_of_registers,
-        Vector<NonnullOwnPtr<BasicBlock>>,
         bool is_strict_mode);
 
     virtual ~Executable() override;
 
     DeprecatedFlyString name;
+    Vector<u8> bytecode;
     Vector<PropertyLookupCache> property_lookup_caches;
     Vector<GlobalVariableCache> global_variable_caches;
     Vector<EnvironmentVariableCache> environment_variable_caches;
-    Vector<NonnullOwnPtr<BasicBlock>> basic_blocks;
     NonnullOwnPtr<StringTable> string_table;
     NonnullOwnPtr<IdentifierTable> identifier_table;
     NonnullOwnPtr<RegexTable> regex_table;
@@ -72,6 +73,16 @@ public:
     NonnullRefPtr<SourceCode const> source_code;
     size_t number_of_registers { 0 };
     bool is_strict_mode { false };
+
+    struct ExceptionHandlers {
+        size_t start_offset;
+        size_t end_offset;
+        Optional<size_t> handler_offset;
+        Optional<size_t> finalizer_offset;
+    };
+
+    Vector<ExceptionHandlers> exception_handlers;
+    Vector<size_t> basic_block_start_offsets;
 
     ByteString const& get_string(StringTableIndex index) const { return string_table->get(index); }
     DeprecatedFlyString const& get_identifier(IdentifierTableIndex index) const { return identifier_table->get(index); }
@@ -82,6 +93,10 @@ public:
             return {};
         return get_identifier(*index);
     }
+
+    [[nodiscard]] Optional<ExceptionHandlers const&> exception_handlers_for_offset(size_t offset) const;
+
+    [[nodiscard]] UnrealizedSourceRange source_range_at(size_t offset) const;
 
     void dump() const;
 

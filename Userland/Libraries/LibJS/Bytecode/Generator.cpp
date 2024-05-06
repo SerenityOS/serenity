@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/QuickSort.h>
 #include <AK/TemporaryChange.h>
 #include <LibJS/AST.h>
 #include <LibJS/Bytecode/BasicBlock.h>
@@ -73,7 +74,66 @@ CodeGenerationErrorOr<NonnullGCPtr<Executable>> Generator::generate(VM& vm, ASTN
     else if (is<FunctionExpression>(node))
         is_strict_mode = static_cast<FunctionExpression const&>(node).is_strict_mode();
 
+    size_t size_needed = 0;
+    for (auto& block : generator.m_root_basic_blocks) {
+        size_needed += block->size();
+    }
+
+    Vector<u8> bytecode;
+    bytecode.ensure_capacity(size_needed);
+
+    Vector<size_t> basic_block_start_offsets;
+    basic_block_start_offsets.ensure_capacity(generator.m_root_basic_blocks.size());
+
+    HashMap<BasicBlock const*, size_t> block_offsets;
+    Vector<size_t> label_offsets;
+
+    struct UnlinkedExceptionHandlers {
+        size_t start_offset;
+        size_t end_offset;
+        BasicBlock const* handler;
+        BasicBlock const* finalizer;
+    };
+    Vector<UnlinkedExceptionHandlers> unlinked_exception_handlers;
+
+    for (auto& block : generator.m_root_basic_blocks) {
+        basic_block_start_offsets.append(bytecode.size());
+        if (block->handler() || block->finalizer()) {
+            unlinked_exception_handlers.append({
+                .start_offset = bytecode.size(),
+                .end_offset = 0,
+                .handler = block->handler(),
+                .finalizer = block->finalizer(),
+            });
+        }
+
+        block_offsets.set(block.ptr(), bytecode.size());
+        Bytecode::InstructionStreamIterator it(block->instruction_stream());
+        while (!it.at_end()) {
+            auto& instruction = const_cast<Instruction&>(*it);
+            instruction.visit_labels([&](Label& label) {
+                size_t label_offset = bytecode.size() + (bit_cast<FlatPtr>(&label) - bit_cast<FlatPtr>(&instruction));
+                label_offsets.append(label_offset);
+            });
+            bytecode.append(reinterpret_cast<u8 const*>(&instruction), instruction.length());
+            ++it;
+        }
+        if (!block->is_terminated()) {
+            Op::End end(generator.add_constant(js_undefined()));
+            bytecode.append(reinterpret_cast<u8 const*>(&end), end.length());
+        }
+        if (block->handler() || block->finalizer()) {
+            unlinked_exception_handlers.last().end_offset = bytecode.size();
+        }
+    }
+    for (auto label_offset : label_offsets) {
+        auto& label = *reinterpret_cast<Label*>(bytecode.data() + label_offset);
+        auto* block = &label.block();
+        label.set_address(block_offsets.get(block).value());
+    }
+
     auto executable = vm.heap().allocate_without_realm<Executable>(
+        move(bytecode),
         move(generator.m_identifier_table),
         move(generator.m_string_table),
         move(generator.m_regex_table),
@@ -83,8 +143,24 @@ CodeGenerationErrorOr<NonnullGCPtr<Executable>> Generator::generate(VM& vm, ASTN
         generator.m_next_global_variable_cache,
         generator.m_next_environment_variable_cache,
         generator.m_next_register,
-        move(generator.m_root_basic_blocks),
         is_strict_mode);
+
+    Vector<Executable::ExceptionHandlers> linked_exception_handlers;
+
+    for (auto& unlinked_handler : unlinked_exception_handlers) {
+        auto start_offset = unlinked_handler.start_offset;
+        auto end_offset = unlinked_handler.end_offset;
+        auto handler_offset = unlinked_handler.handler ? block_offsets.get(unlinked_handler.handler).value() : Optional<size_t> {};
+        auto finalizer_offset = unlinked_handler.finalizer ? block_offsets.get(unlinked_handler.finalizer).value() : Optional<size_t> {};
+        linked_exception_handlers.append({ start_offset, end_offset, handler_offset, finalizer_offset });
+    }
+
+    quick_sort(linked_exception_handlers, [](auto const& a, auto const& b) {
+        return a.start_offset < b.start_offset;
+    });
+
+    executable->exception_handlers = move(linked_exception_handlers);
+    executable->basic_block_start_offsets = move(basic_block_start_offsets);
 
     return executable;
 }

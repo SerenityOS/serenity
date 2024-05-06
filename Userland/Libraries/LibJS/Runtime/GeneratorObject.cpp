@@ -88,12 +88,14 @@ ThrowCompletionOr<Value> GeneratorObject::execute(VM& vm, Completion const& comp
         return value.is_empty() ? js_undefined() : value;
     };
 
-    auto generated_continuation = [&](Value value) -> Bytecode::BasicBlock const* {
+    auto generated_continuation = [&](Value value) -> Optional<size_t> {
         if (value.is_object()) {
             auto number_value = value.as_object().get_without_side_effects("continuation");
-            return reinterpret_cast<Bytecode::BasicBlock const*>(static_cast<u64>(number_value.as_double()));
+            if (number_value.is_null())
+                return {};
+            return static_cast<u64>(number_value.as_double());
         }
-        return nullptr;
+        return {};
     };
 
     auto& realm = *vm.current_realm();
@@ -103,16 +105,12 @@ ThrowCompletionOr<Value> GeneratorObject::execute(VM& vm, Completion const& comp
 
     auto& bytecode_interpreter = vm.bytecode_interpreter();
 
-    auto const* next_block = generated_continuation(m_previous_value);
+    auto const next_block = generated_continuation(m_previous_value);
 
     // We should never enter `execute` again after the generator is complete.
-    VERIFY(next_block);
+    VERIFY(next_block.has_value());
 
-    VERIFY(!m_generating_function->bytecode_executable()->basic_blocks.find_if([next_block](auto& block) { return block == next_block; }).is_end());
-
-    bytecode_interpreter.registers()[0] = completion_object;
-
-    auto next_result = bytecode_interpreter.run_executable(*m_generating_function->bytecode_executable(), next_block);
+    auto next_result = bytecode_interpreter.run_executable(*m_generating_function->bytecode_executable(), next_block, completion_object);
 
     vm.pop_execution_context();
 
@@ -123,7 +121,7 @@ ThrowCompletionOr<Value> GeneratorObject::execute(VM& vm, Completion const& comp
         return result_value;
     }
     m_previous_value = result_value.release_value();
-    bool done = generated_continuation(m_previous_value) == nullptr;
+    bool done = !generated_continuation(m_previous_value).has_value();
 
     m_generator_state = done ? GeneratorState::Completed : GeneratorState::SuspendedYield;
     return create_iterator_result_object(vm, generated_value(m_previous_value), done);

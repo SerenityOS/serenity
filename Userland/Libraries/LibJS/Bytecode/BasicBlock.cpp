@@ -30,27 +30,6 @@ BasicBlock::~BasicBlock()
     }
 }
 
-void BasicBlock::dump(Bytecode::Executable const& executable) const
-{
-    Bytecode::InstructionStreamIterator it(instruction_stream());
-
-    if (!m_name.is_empty())
-        warn("{}", m_name);
-    if (m_handler || m_finalizer) {
-        warn(" [");
-        if (m_handler)
-            warn(" Handler: {}", Label { *m_handler });
-        if (m_finalizer)
-            warn(" Finalizer: {}", Label { *m_finalizer });
-        warn(" ]");
-    }
-    warnln(":");
-    while (!it.at_end()) {
-        warnln("[{:4x}] {}", it.offset(), (*it).to_byte_string(executable));
-        ++it;
-    }
-}
-
 void BasicBlock::grow(size_t additional_size)
 {
     m_buffer.grow_capacity(m_buffer.size() + additional_size);
