@@ -25,8 +25,10 @@ class BasicBlock {
     AK_MAKE_NONCOPYABLE(BasicBlock);
 
 public:
-    static NonnullOwnPtr<BasicBlock> create(String name);
+    static NonnullOwnPtr<BasicBlock> create(u32 index, String name);
     ~BasicBlock();
+
+    u32 index() const { return m_index; }
 
     ReadonlyBytes instruction_stream() const { return m_buffer.span(); }
     u8* data() { return m_buffer.data(); }
@@ -50,8 +52,9 @@ public:
     void add_source_map_entry(size_t bytecode_offset, SourceRecord const& source_record) { m_source_map.set(bytecode_offset, source_record); }
 
 private:
-    explicit BasicBlock(String name);
+    explicit BasicBlock(u32 index, String name);
 
+    u32 m_index { 0 };
     Vector<u8> m_buffer;
     BasicBlock const* m_handler { nullptr };
     BasicBlock const* m_finalizer { nullptr };

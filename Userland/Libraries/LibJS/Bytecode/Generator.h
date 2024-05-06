@@ -150,12 +150,12 @@ public:
     {
         if (name.is_empty())
             name = MUST(String::number(m_next_block++));
-        auto block = BasicBlock::create(name);
+        auto block = BasicBlock::create(m_root_basic_blocks.size(), name);
         if (auto const* context = m_current_unwind_context) {
             if (context->handler().has_value())
-                block->set_handler(context->handler().value().block());
+                block->set_handler(*m_root_basic_blocks[context->handler().value().basic_block_index()]);
             if (m_current_unwind_context->finalizer().has_value())
-                block->set_finalizer(context->finalizer().value().block());
+                block->set_finalizer(*m_root_basic_blocks[context->finalizer().value().basic_block_index()]);
         }
         m_root_basic_blocks.append(move(block));
         return *m_root_basic_blocks.last();

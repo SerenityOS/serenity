@@ -135,7 +135,7 @@ CodeGenerationErrorOr<NonnullGCPtr<Executable>> Generator::generate(VM& vm, ASTN
     }
     for (auto label_offset : label_offsets) {
         auto& label = *reinterpret_cast<Label*>(bytecode.data() + label_offset);
-        auto* block = &label.block();
+        auto* block = generator.m_root_basic_blocks[label.basic_block_index()].ptr();
         label.set_address(block_offsets.get(block).value());
     }
 
