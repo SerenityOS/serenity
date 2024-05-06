@@ -1110,6 +1110,58 @@ private:
     Label m_false_target;
 };
 
+class JumpTrue final : public Instruction {
+public:
+    constexpr static bool IsTerminator = true;
+
+    explicit JumpTrue(Operand condition, Label target)
+        : Instruction(Type::JumpTrue, sizeof(*this))
+        , m_condition(condition)
+        , m_target(target)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
+    void visit_labels_impl(Function<void(Label&)> visitor)
+    {
+        visitor(m_target);
+    }
+
+    Operand condition() const { return m_condition; }
+    auto& target() const { return m_target; }
+
+private:
+    Operand m_condition;
+    Label m_target;
+};
+
+class JumpFalse final : public Instruction {
+public:
+    constexpr static bool IsTerminator = true;
+
+    explicit JumpFalse(Operand condition, Label target)
+        : Instruction(Type::JumpFalse, sizeof(*this))
+        , m_condition(condition)
+        , m_target(target)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
+    void visit_labels_impl(Function<void(Label&)> visitor)
+    {
+        visitor(m_target);
+    }
+
+    Operand condition() const { return m_condition; }
+    auto& target() const { return m_target; }
+
+private:
+    Operand m_condition;
+    Label m_target;
+};
+
 class JumpNullish final : public Instruction {
 public:
     constexpr static bool IsTerminator = true;

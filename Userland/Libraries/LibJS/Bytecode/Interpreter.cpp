@@ -375,6 +375,22 @@ void Interpreter::run_bytecode(size_t entry_point)
                     program_counter = jump.false_target().address();
                 goto start;
             }
+            case Instruction::Type::JumpTrue: {
+                auto& jump = static_cast<Op::JumpTrue const&>(instruction);
+                if (get(jump.condition()).to_boolean()) {
+                    program_counter = jump.target().address();
+                    goto start;
+                }
+                NEXT_INSTRUCTION();
+            }
+            case Instruction::Type::JumpFalse: {
+                auto& jump = static_cast<Op::JumpFalse const&>(instruction);
+                if (!get(jump.condition()).to_boolean()) {
+                    program_counter = jump.target().address();
+                    goto start;
+                }
+                NEXT_INSTRUCTION();
+            }
             case Instruction::Type::JumpNullish: {
                 auto& jump = static_cast<Op::JumpNullish const&>(instruction);
                 if (get(jump.condition()).is_nullish())
@@ -1241,6 +1257,18 @@ ThrowCompletionOr<void> JumpIf::execute_impl(Bytecode::Interpreter&) const
     __builtin_unreachable();
 }
 
+ThrowCompletionOr<void> JumpTrue::execute_impl(Bytecode::Interpreter&) const
+{
+    // Handled in the interpreter loop.
+    __builtin_unreachable();
+}
+
+ThrowCompletionOr<void> JumpFalse::execute_impl(Bytecode::Interpreter&) const
+{
+    // Handled in the interpreter loop.
+    __builtin_unreachable();
+}
+
 ThrowCompletionOr<void> JumpUndefined::execute_impl(Bytecode::Interpreter&) const
 {
     // Handled in the interpreter loop.
@@ -1907,6 +1935,20 @@ ByteString JumpIf::to_byte_string_impl(Bytecode::Executable const& executable) c
         format_operand("condition"sv, m_condition, executable),
         m_true_target,
         m_false_target);
+}
+
+ByteString JumpTrue::to_byte_string_impl(Bytecode::Executable const& executable) const
+{
+    return ByteString::formatted("JumpTrue {}, {}",
+        format_operand("condition"sv, m_condition, executable),
+        m_target);
+}
+
+ByteString JumpFalse::to_byte_string_impl(Bytecode::Executable const& executable) const
+{
+    return ByteString::formatted("JumpFalse {}, {}",
+        format_operand("condition"sv, m_condition, executable),
+        m_target);
 }
 
 ByteString JumpNullish::to_byte_string_impl(Bytecode::Executable const& executable) const
