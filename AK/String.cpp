@@ -310,7 +310,7 @@ bool String::equals_ignoring_ascii_case(StringView other) const
 
 ErrorOr<String> String::repeated(String const& input, size_t count)
 {
-    if (Checked<size_t>::multiplication_would_overflow(count, input.bytes().size()))
+    if (Checked<u32>::multiplication_would_overflow(count, input.bytes().size()))
         return Error::from_errno(EOVERFLOW);
 
     String result;
