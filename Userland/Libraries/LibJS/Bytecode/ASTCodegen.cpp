@@ -888,15 +888,15 @@ Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> ForStatement::gener
 
     body_block_ptr = &generator.make_block();
 
-    if (m_test)
-        test_block_ptr = &generator.make_block();
-    else
-        test_block_ptr = body_block_ptr;
-
     if (m_update)
         update_block_ptr = &generator.make_block();
     else
         update_block_ptr = body_block_ptr;
+
+    if (m_test)
+        test_block_ptr = &generator.make_block();
+    else
+        test_block_ptr = body_block_ptr;
 
     generator.emit<Bytecode::Op::Jump>(Bytecode::Label { *test_block_ptr });
 
