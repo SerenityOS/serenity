@@ -342,233 +342,289 @@ void Interpreter::run_bytecode(size_t entry_point)
 
     TemporaryChange change(m_program_counter, Optional<size_t&>(program_counter));
 
+    // Declare a lookup table for computed goto with each of the `handle_*` labels
+    // to avoid the overhead of a switch statement.
+    // This is a GCC extension, but it's also supported by Clang.
+
+    static void* const bytecode_dispatch_table[] = {
+#define SET_UP_LABEL(name) &&handle_##name,
+        ENUMERATE_BYTECODE_OPS(SET_UP_LABEL)
+    };
+
+#define DISPATCH_NEXT(name)                                                                         \
+    do {                                                                                            \
+        if constexpr (Op::name::IsVariableLength)                                                   \
+            program_counter += instruction.length();                                                \
+        else                                                                                        \
+            program_counter += sizeof(Op::name);                                                    \
+        auto& next_instruction = *reinterpret_cast<Instruction const*>(&bytecode[program_counter]); \
+        goto* bytecode_dispatch_table[static_cast<size_t>(next_instruction.type())];                \
+    } while (0)
+
     for (;;) {
     start:
         bool will_return = false;
         bool will_yield = false;
 
         for (;;) {
-            auto& instruction = *reinterpret_cast<Instruction const*>(&bytecode[program_counter]);
+            goto* bytecode_dispatch_table[static_cast<size_t>((*reinterpret_cast<Instruction const*>(&bytecode[program_counter])).type())];
 
-            switch (instruction.type()) {
-            case Instruction::Type::SetLocal:
-                locals[static_cast<Op::SetLocal const&>(instruction).index()] = get(static_cast<Op::SetLocal const&>(instruction).src());
-                program_counter += sizeof(Op::SetLocal);
-                goto start;
-            case Instruction::Type::Mov:
-                set(static_cast<Op::Mov const&>(instruction).dst(), get(static_cast<Op::Mov const&>(instruction).src()));
-                program_counter += sizeof(Op::Mov);
-                goto start;
-            case Instruction::Type::End:
-                accumulator = get(static_cast<Op::End const&>(instruction).value());
-                return;
-            case Instruction::Type::Jump:
-                program_counter = static_cast<Op::Jump const&>(instruction).target().address();
-                goto start;
-            case Instruction::Type::JumpIf: {
-                auto& jump = static_cast<Op::JumpIf const&>(instruction);
-                if (get(jump.condition()).to_boolean())
-                    program_counter = jump.true_target().address();
-                else
-                    program_counter = jump.false_target().address();
-                goto start;
-            }
-            case Instruction::Type::JumpTrue: {
-                auto& jump = static_cast<Op::JumpTrue const&>(instruction);
-                if (get(jump.condition()).to_boolean()) {
-                    program_counter = jump.target().address();
-                    goto start;
-                }
-                program_counter += sizeof(Op::JumpTrue);
-                goto start;
-            }
-            case Instruction::Type::JumpFalse: {
-                auto& jump = static_cast<Op::JumpFalse const&>(instruction);
-                if (!get(jump.condition()).to_boolean()) {
-                    program_counter = jump.target().address();
-                    goto start;
-                }
-                program_counter += sizeof(Op::JumpFalse);
-                goto start;
-            }
-            case Instruction::Type::JumpNullish: {
-                auto& jump = static_cast<Op::JumpNullish const&>(instruction);
-                if (get(jump.condition()).is_nullish())
-                    program_counter = jump.true_target().address();
-                else
-                    program_counter = jump.false_target().address();
-                goto start;
-            }
-            case Instruction::Type::JumpUndefined: {
-                auto& jump = static_cast<Op::JumpUndefined const&>(instruction);
-                if (get(jump.condition()).is_undefined())
-                    program_counter = jump.true_target().address();
-                else
-                    program_counter = jump.false_target().address();
-                goto start;
-            }
-            case Instruction::Type::EnterUnwindContext:
-                enter_unwind_context();
-                program_counter = static_cast<Op::EnterUnwindContext const&>(instruction).entry_point().address();
-                goto start;
-            case Instruction::Type::ContinuePendingUnwind: {
-                if (auto exception = reg(Register::exception()); !exception.is_empty()) {
-                    if (handle_exception(program_counter, exception) == HandleExceptionResponse::ExitFromExecutable)
-                        return;
-                    goto start;
-                }
-                if (!saved_return_value().is_empty()) {
-                    do_return(saved_return_value());
-                    goto may_return;
-                }
-                auto const old_scheduled_jump = running_execution_context.previously_scheduled_jumps.take_last();
-                if (m_scheduled_jump.has_value()) {
-                    program_counter = m_scheduled_jump.value();
-                    m_scheduled_jump = {};
-                } else {
-                    program_counter = static_cast<Op::ContinuePendingUnwind const&>(instruction).resume_target().address();
-                    // set the scheduled jump to the old value if we continue
-                    // where we left it
-                    m_scheduled_jump = old_scheduled_jump;
-                }
-                goto start;
-            }
-            case Instruction::Type::ScheduleJump: {
-                m_scheduled_jump = static_cast<Op::ScheduleJump const&>(instruction).target().address();
-                auto finalizer = executable.exception_handlers_for_offset(program_counter).value().finalizer_offset;
-                VERIFY(finalizer.has_value());
-                program_counter = finalizer.value();
-                goto start;
-            }
+        handle_SetLocal: {
+            auto& instruction = *reinterpret_cast<Op::SetLocal const*>(&bytecode[program_counter]);
+            locals[instruction.index()] = get(instruction.src());
+            DISPATCH_NEXT(SetLocal);
+        }
 
-#define HANDLE_INSTRUCTION(name)                                                                                                      \
-    case Instruction::Type::name: {                                                                                                   \
-        auto& typed_instruction = static_cast<Op::name const&>(instruction);                                                          \
-        auto result = typed_instruction.execute_impl(*this);                                                                          \
-        if (result.is_error()) {                                                                                                      \
-            if (handle_exception(program_counter, *result.throw_completion().value()) == HandleExceptionResponse::ExitFromExecutable) \
-                return;                                                                                                               \
-            goto start;                                                                                                               \
-        }                                                                                                                             \
-        if constexpr (Op::name::IsVariableLength)                                                                                     \
-            program_counter += instruction.length();                                                                                  \
-        else                                                                                                                          \
-            program_counter += sizeof(Op::name);                                                                                      \
-        goto start;                                                                                                                   \
+        handle_Mov: {
+            auto& instruction = *reinterpret_cast<Op::Mov const*>(&bytecode[program_counter]);
+            set(instruction.dst(), get(instruction.src()));
+            DISPATCH_NEXT(Mov);
+        }
+
+        handle_End: {
+            auto& instruction = *reinterpret_cast<Op::End const*>(&bytecode[program_counter]);
+            accumulator = get(instruction.value());
+            return;
+        }
+
+        handle_Jump: {
+            auto& instruction = *reinterpret_cast<Op::Jump const*>(&bytecode[program_counter]);
+            program_counter = instruction.target().address();
+            goto start;
+        }
+
+        handle_JumpIf: {
+            auto& instruction = *reinterpret_cast<Op::JumpIf const*>(&bytecode[program_counter]);
+            if (get(instruction.condition()).to_boolean())
+                program_counter = instruction.true_target().address();
+            else
+                program_counter = instruction.false_target().address();
+            goto start;
+        }
+
+        handle_JumpTrue: {
+            auto& instruction = *reinterpret_cast<Op::JumpTrue const*>(&bytecode[program_counter]);
+            if (get(instruction.condition()).to_boolean()) {
+                program_counter = instruction.target().address();
+                goto start;
+            }
+            DISPATCH_NEXT(JumpTrue);
+        }
+
+        handle_JumpFalse: {
+            auto& instruction = *reinterpret_cast<Op::JumpFalse const*>(&bytecode[program_counter]);
+            if (!get(instruction.condition()).to_boolean()) {
+                program_counter = instruction.target().address();
+                goto start;
+            }
+            DISPATCH_NEXT(JumpFalse);
+        }
+
+        handle_JumpNullish: {
+            auto& instruction = *reinterpret_cast<Op::JumpNullish const*>(&bytecode[program_counter]);
+            if (get(instruction.condition()).is_nullish())
+                program_counter = instruction.true_target().address();
+            else
+                program_counter = instruction.false_target().address();
+            goto start;
+        }
+
+        handle_JumpUndefined: {
+            auto& instruction = *reinterpret_cast<Op::JumpUndefined const*>(&bytecode[program_counter]);
+            if (get(instruction.condition()).is_undefined())
+                program_counter = instruction.true_target().address();
+            else
+                program_counter = instruction.false_target().address();
+            goto start;
+        }
+
+        handle_EnterUnwindContext: {
+            auto& instruction = *reinterpret_cast<Op::EnterUnwindContext const*>(&bytecode[program_counter]);
+            enter_unwind_context();
+            program_counter = instruction.entry_point().address();
+            goto start;
+        }
+
+        handle_ContinuePendingUnwind: {
+            auto& instruction = *reinterpret_cast<Op::ContinuePendingUnwind const*>(&bytecode[program_counter]);
+            if (auto exception = reg(Register::exception()); !exception.is_empty()) {
+                if (handle_exception(program_counter, exception) == HandleExceptionResponse::ExitFromExecutable)
+                    return;
+                goto start;
+            }
+            if (!saved_return_value().is_empty()) {
+                do_return(saved_return_value());
+                goto may_return;
+            }
+            auto const old_scheduled_jump = running_execution_context.previously_scheduled_jumps.take_last();
+            if (m_scheduled_jump.has_value()) {
+                program_counter = m_scheduled_jump.value();
+                m_scheduled_jump = {};
+            } else {
+                program_counter = instruction.resume_target().address();
+                // set the scheduled jump to the old value if we continue
+                // where we left it
+                m_scheduled_jump = old_scheduled_jump;
+            }
+            goto start;
+        }
+
+        handle_ScheduleJump: {
+            auto& instruction = *reinterpret_cast<Op::ScheduleJump const*>(&bytecode[program_counter]);
+            m_scheduled_jump = instruction.target().address();
+            auto finalizer = executable.exception_handlers_for_offset(program_counter).value().finalizer_offset;
+            VERIFY(finalizer.has_value());
+            program_counter = finalizer.value();
+            goto start;
+        }
+
+#define HANDLE_INSTRUCTION(name)                                                                                                          \
+    handle_##name:                                                                                                                        \
+    {                                                                                                                                     \
+        auto& instruction = *reinterpret_cast<Op::name const*>(&bytecode[program_counter]);                                               \
+        {                                                                                                                                 \
+            auto result = instruction.execute_impl(*this);                                                                                \
+            if (result.is_error()) {                                                                                                      \
+                if (handle_exception(program_counter, *result.throw_completion().value()) == HandleExceptionResponse::ExitFromExecutable) \
+                    return;                                                                                                               \
+                goto start;                                                                                                               \
+            }                                                                                                                             \
+        }                                                                                                                                 \
+        DISPATCH_NEXT(name);                                                                                                              \
     }
 
-                HANDLE_INSTRUCTION(Add);
-                HANDLE_INSTRUCTION(ArrayAppend);
-                HANDLE_INSTRUCTION(AsyncIteratorClose);
-                HANDLE_INSTRUCTION(BitwiseAnd);
-                HANDLE_INSTRUCTION(BitwiseNot);
-                HANDLE_INSTRUCTION(BitwiseOr);
-                HANDLE_INSTRUCTION(BitwiseXor);
-                HANDLE_INSTRUCTION(BlockDeclarationInstantiation);
-                HANDLE_INSTRUCTION(Call);
-                HANDLE_INSTRUCTION(CallWithArgumentArray);
-                HANDLE_INSTRUCTION(Catch);
-                HANDLE_INSTRUCTION(ConcatString);
-                HANDLE_INSTRUCTION(CopyObjectExcludingProperties);
-                HANDLE_INSTRUCTION(CreateLexicalEnvironment);
-                HANDLE_INSTRUCTION(CreateVariable);
-                HANDLE_INSTRUCTION(Decrement);
-                HANDLE_INSTRUCTION(DeleteById);
-                HANDLE_INSTRUCTION(DeleteByIdWithThis);
-                HANDLE_INSTRUCTION(DeleteByValue);
-                HANDLE_INSTRUCTION(DeleteByValueWithThis);
-                HANDLE_INSTRUCTION(DeleteVariable);
-                HANDLE_INSTRUCTION(Div);
-                HANDLE_INSTRUCTION(Dump);
-                HANDLE_INSTRUCTION(EnterObjectEnvironment);
-                HANDLE_INSTRUCTION(Exp);
-                HANDLE_INSTRUCTION(GetById);
-                HANDLE_INSTRUCTION(GetByIdWithThis);
-                HANDLE_INSTRUCTION(GetByValue);
-                HANDLE_INSTRUCTION(GetByValueWithThis);
-                HANDLE_INSTRUCTION(GetCalleeAndThisFromEnvironment);
-                HANDLE_INSTRUCTION(GetGlobal);
-                HANDLE_INSTRUCTION(GetImportMeta);
-                HANDLE_INSTRUCTION(GetIterator);
-                HANDLE_INSTRUCTION(GetMethod);
-                HANDLE_INSTRUCTION(GetNewTarget);
-                HANDLE_INSTRUCTION(GetNextMethodFromIteratorRecord);
-                HANDLE_INSTRUCTION(GetObjectFromIteratorRecord);
-                HANDLE_INSTRUCTION(GetObjectPropertyIterator);
-                HANDLE_INSTRUCTION(GetPrivateById);
-                HANDLE_INSTRUCTION(GetVariable);
-                HANDLE_INSTRUCTION(GreaterThan);
-                HANDLE_INSTRUCTION(GreaterThanEquals);
-                HANDLE_INSTRUCTION(HasPrivateId);
-                HANDLE_INSTRUCTION(ImportCall);
-                HANDLE_INSTRUCTION(In);
-                HANDLE_INSTRUCTION(Increment);
-                HANDLE_INSTRUCTION(InstanceOf);
-                HANDLE_INSTRUCTION(IteratorClose);
-                HANDLE_INSTRUCTION(IteratorNext);
-                HANDLE_INSTRUCTION(IteratorToArray);
-                HANDLE_INSTRUCTION(LeaveFinally);
-                HANDLE_INSTRUCTION(LeaveLexicalEnvironment);
-                HANDLE_INSTRUCTION(LeaveUnwindContext);
-                HANDLE_INSTRUCTION(LeftShift);
-                HANDLE_INSTRUCTION(LessThan);
-                HANDLE_INSTRUCTION(LessThanEquals);
-                HANDLE_INSTRUCTION(LooselyEquals);
-                HANDLE_INSTRUCTION(LooselyInequals);
-                HANDLE_INSTRUCTION(Mod);
-                HANDLE_INSTRUCTION(Mul);
-                HANDLE_INSTRUCTION(NewArray);
-                HANDLE_INSTRUCTION(NewClass);
-                HANDLE_INSTRUCTION(NewFunction);
-                HANDLE_INSTRUCTION(NewObject);
-                HANDLE_INSTRUCTION(NewPrimitiveArray);
-                HANDLE_INSTRUCTION(NewRegExp);
-                HANDLE_INSTRUCTION(NewTypeError);
-                HANDLE_INSTRUCTION(Not);
-                HANDLE_INSTRUCTION(PostfixDecrement);
-                HANDLE_INSTRUCTION(PostfixIncrement);
-                HANDLE_INSTRUCTION(PutById);
-                HANDLE_INSTRUCTION(PutByIdWithThis);
-                HANDLE_INSTRUCTION(PutByValue);
-                HANDLE_INSTRUCTION(PutByValueWithThis);
-                HANDLE_INSTRUCTION(PutPrivateById);
-                HANDLE_INSTRUCTION(ResolveSuperBase);
-                HANDLE_INSTRUCTION(ResolveThisBinding);
-                HANDLE_INSTRUCTION(RestoreScheduledJump);
-                HANDLE_INSTRUCTION(RightShift);
-                HANDLE_INSTRUCTION(SetVariable);
-                HANDLE_INSTRUCTION(StrictlyEquals);
-                HANDLE_INSTRUCTION(StrictlyInequals);
-                HANDLE_INSTRUCTION(Sub);
-                HANDLE_INSTRUCTION(SuperCallWithArgumentArray);
-                HANDLE_INSTRUCTION(Throw);
-                HANDLE_INSTRUCTION(ThrowIfNotObject);
-                HANDLE_INSTRUCTION(ThrowIfNullish);
-                HANDLE_INSTRUCTION(ThrowIfTDZ);
-                HANDLE_INSTRUCTION(Typeof);
-                HANDLE_INSTRUCTION(TypeofVariable);
-                HANDLE_INSTRUCTION(UnaryMinus);
-                HANDLE_INSTRUCTION(UnaryPlus);
-                HANDLE_INSTRUCTION(UnsignedRightShift);
+            HANDLE_INSTRUCTION(Add);
+            HANDLE_INSTRUCTION(ArrayAppend);
+            HANDLE_INSTRUCTION(AsyncIteratorClose);
+            HANDLE_INSTRUCTION(BitwiseAnd);
+            HANDLE_INSTRUCTION(BitwiseNot);
+            HANDLE_INSTRUCTION(BitwiseOr);
+            HANDLE_INSTRUCTION(BitwiseXor);
+            HANDLE_INSTRUCTION(BlockDeclarationInstantiation);
+            HANDLE_INSTRUCTION(Call);
+            HANDLE_INSTRUCTION(CallWithArgumentArray);
+            HANDLE_INSTRUCTION(Catch);
+            HANDLE_INSTRUCTION(ConcatString);
+            HANDLE_INSTRUCTION(CopyObjectExcludingProperties);
+            HANDLE_INSTRUCTION(CreateLexicalEnvironment);
+            HANDLE_INSTRUCTION(CreateVariable);
+            HANDLE_INSTRUCTION(Decrement);
+            HANDLE_INSTRUCTION(DeleteById);
+            HANDLE_INSTRUCTION(DeleteByIdWithThis);
+            HANDLE_INSTRUCTION(DeleteByValue);
+            HANDLE_INSTRUCTION(DeleteByValueWithThis);
+            HANDLE_INSTRUCTION(DeleteVariable);
+            HANDLE_INSTRUCTION(Div);
+            HANDLE_INSTRUCTION(Dump);
+            HANDLE_INSTRUCTION(EnterObjectEnvironment);
+            HANDLE_INSTRUCTION(Exp);
+            HANDLE_INSTRUCTION(GetById);
+            HANDLE_INSTRUCTION(GetByIdWithThis);
+            HANDLE_INSTRUCTION(GetByValue);
+            HANDLE_INSTRUCTION(GetByValueWithThis);
+            HANDLE_INSTRUCTION(GetCalleeAndThisFromEnvironment);
+            HANDLE_INSTRUCTION(GetGlobal);
+            HANDLE_INSTRUCTION(GetImportMeta);
+            HANDLE_INSTRUCTION(GetIterator);
+            HANDLE_INSTRUCTION(GetMethod);
+            HANDLE_INSTRUCTION(GetNewTarget);
+            HANDLE_INSTRUCTION(GetNextMethodFromIteratorRecord);
+            HANDLE_INSTRUCTION(GetObjectFromIteratorRecord);
+            HANDLE_INSTRUCTION(GetObjectPropertyIterator);
+            HANDLE_INSTRUCTION(GetPrivateById);
+            HANDLE_INSTRUCTION(GetVariable);
+            HANDLE_INSTRUCTION(GreaterThan);
+            HANDLE_INSTRUCTION(GreaterThanEquals);
+            HANDLE_INSTRUCTION(HasPrivateId);
+            HANDLE_INSTRUCTION(ImportCall);
+            HANDLE_INSTRUCTION(In);
+            HANDLE_INSTRUCTION(Increment);
+            HANDLE_INSTRUCTION(InstanceOf);
+            HANDLE_INSTRUCTION(IteratorClose);
+            HANDLE_INSTRUCTION(IteratorNext);
+            HANDLE_INSTRUCTION(IteratorToArray);
+            HANDLE_INSTRUCTION(LeaveFinally);
+            HANDLE_INSTRUCTION(LeaveLexicalEnvironment);
+            HANDLE_INSTRUCTION(LeaveUnwindContext);
+            HANDLE_INSTRUCTION(LeftShift);
+            HANDLE_INSTRUCTION(LessThan);
+            HANDLE_INSTRUCTION(LessThanEquals);
+            HANDLE_INSTRUCTION(LooselyEquals);
+            HANDLE_INSTRUCTION(LooselyInequals);
+            HANDLE_INSTRUCTION(Mod);
+            HANDLE_INSTRUCTION(Mul);
+            HANDLE_INSTRUCTION(NewArray);
+            HANDLE_INSTRUCTION(NewClass);
+            HANDLE_INSTRUCTION(NewFunction);
+            HANDLE_INSTRUCTION(NewObject);
+            HANDLE_INSTRUCTION(NewPrimitiveArray);
+            HANDLE_INSTRUCTION(NewRegExp);
+            HANDLE_INSTRUCTION(NewTypeError);
+            HANDLE_INSTRUCTION(Not);
+            HANDLE_INSTRUCTION(PostfixDecrement);
+            HANDLE_INSTRUCTION(PostfixIncrement);
+            HANDLE_INSTRUCTION(PutById);
+            HANDLE_INSTRUCTION(PutByIdWithThis);
+            HANDLE_INSTRUCTION(PutByValue);
+            HANDLE_INSTRUCTION(PutByValueWithThis);
+            HANDLE_INSTRUCTION(PutPrivateById);
+            HANDLE_INSTRUCTION(ResolveSuperBase);
+            HANDLE_INSTRUCTION(ResolveThisBinding);
+            HANDLE_INSTRUCTION(RestoreScheduledJump);
+            HANDLE_INSTRUCTION(RightShift);
+            HANDLE_INSTRUCTION(SetVariable);
+            HANDLE_INSTRUCTION(StrictlyEquals);
+            HANDLE_INSTRUCTION(StrictlyInequals);
+            HANDLE_INSTRUCTION(Sub);
+            HANDLE_INSTRUCTION(SuperCallWithArgumentArray);
+            HANDLE_INSTRUCTION(Throw);
+            HANDLE_INSTRUCTION(ThrowIfNotObject);
+            HANDLE_INSTRUCTION(ThrowIfNullish);
+            HANDLE_INSTRUCTION(ThrowIfTDZ);
+            HANDLE_INSTRUCTION(Typeof);
+            HANDLE_INSTRUCTION(TypeofVariable);
+            HANDLE_INSTRUCTION(UnaryMinus);
+            HANDLE_INSTRUCTION(UnaryPlus);
+            HANDLE_INSTRUCTION(UnsignedRightShift);
 
-            case Instruction::Type::Await:
-            case Instruction::Type::Return:
-            case Instruction::Type::Yield:
-                // Handled delicately below.
-                break;
+        handle_Await: {
+            auto& instruction = *reinterpret_cast<Op::Await const*>(&bytecode[program_counter]);
+            auto result = instruction.execute(*this);
+
+            if (result.is_error()) {
+                if (handle_exception(program_counter, *result.throw_completion().value()) == HandleExceptionResponse::ExitFromExecutable)
+                    return;
+                goto start;
             }
+            goto may_return;
+        }
 
-            {
-                auto result = instruction.execute(*this);
+        handle_Return: {
+            auto& instruction = *reinterpret_cast<Op::Return const*>(&bytecode[program_counter]);
+            auto result = instruction.execute(*this);
 
-                if (result.is_error()) {
-                    if (handle_exception(program_counter, *result.throw_completion().value()) == HandleExceptionResponse::ExitFromExecutable)
-                        return;
-                    goto start;
-                }
+            if (result.is_error()) {
+                if (handle_exception(program_counter, *result.throw_completion().value()) == HandleExceptionResponse::ExitFromExecutable)
+                    return;
+                goto start;
             }
+            goto may_return;
+        }
 
-        may_return:
+        handle_Yield: {
+            auto& instruction = *reinterpret_cast<Op::Yield const*>(&bytecode[program_counter]);
+            auto result = instruction.execute(*this);
+
+            if (result.is_error()) {
+                if (handle_exception(program_counter, *result.throw_completion().value()) == HandleExceptionResponse::ExitFromExecutable)
+                    return;
+                goto start;
+            }
+            goto may_return;
+        }
+
+        may_return: {
+            auto& instruction = *reinterpret_cast<Instruction const*>(&bytecode[program_counter]);
             if (!reg(Register::return_value()).is_empty()) {
                 will_return = true;
                 // Note: A `yield` statement will not go through a finally statement,
@@ -582,6 +638,7 @@ void Interpreter::run_bytecode(size_t entry_point)
 
             program_counter += instruction.length();
             goto start;
+        }
         }
 
         if (!will_yield) {
