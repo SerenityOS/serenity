@@ -108,20 +108,22 @@ public:
         if (!m_metadata.rows_per_strip().has_value() && segment_byte_counts()->size() != 1 && !is_tiled())
             return Error::from_string_literal("TIFFImageDecoderPlugin: RowsPerStrip is not provided and impossible to deduce");
 
-        if (!m_metadata.bits_per_sample().has_value())
-            return Error::from_string_literal("TIFFImageDecoderPlugin: Tag BitsPerSample is missing");
+        if (!is_bilevel(*m_metadata.photometric_interpretation())) {
+            if (!m_metadata.bits_per_sample().has_value())
+                return Error::from_string_literal("TIFFImageDecoderPlugin: Tag BitsPerSample is missing");
 
-        if (!m_metadata.samples_per_pixel().has_value())
-            return Error::from_string_literal("TIFFImageDecoderPlugin: Tag SamplesPerPixel is missing");
+            if (!m_metadata.samples_per_pixel().has_value())
+                return Error::from_string_literal("TIFFImageDecoderPlugin: Tag SamplesPerPixel is missing");
 
-        if (any_of(*m_metadata.bits_per_sample(), [](auto bit_depth) { return bit_depth == 0 || bit_depth > 32; }))
-            return Error::from_string_literal("TIFFImageDecoderPlugin: Invalid value in BitsPerSample");
+            if (any_of(*m_metadata.bits_per_sample(), [](auto bit_depth) { return bit_depth == 0 || bit_depth > 32; }))
+                return Error::from_string_literal("TIFFImageDecoderPlugin: Invalid value in BitsPerSample");
 
-        if (m_metadata.bits_per_sample()->size() != m_metadata.samples_per_pixel())
-            return Error::from_string_literal("TIFFImageDecoderPlugin: Invalid number of values in BitsPerSample");
+            if (m_metadata.bits_per_sample()->size() != m_metadata.samples_per_pixel())
+                return Error::from_string_literal("TIFFImageDecoderPlugin: Invalid number of values in BitsPerSample");
 
-        if (*m_metadata.samples_per_pixel() < samples_for_photometric_interpretation())
-            return Error::from_string_literal("TIFFImageDecoderPlugin: Not enough values in BitsPerSample for given PhotometricInterpretation");
+            if (*m_metadata.samples_per_pixel() < samples_for_photometric_interpretation())
+                return Error::from_string_literal("TIFFImageDecoderPlugin: Not enough values in BitsPerSample for given PhotometricInterpretation");
+        }
 
         return {};
     }
@@ -132,6 +134,8 @@ public:
             m_photometric_interpretation = m_metadata.photometric_interpretation().value();
         if (m_metadata.bits_per_sample().has_value())
             m_bits_per_sample = m_metadata.bits_per_sample().value();
+        else if (is_bilevel(m_photometric_interpretation))
+            m_bits_per_sample.append(1);
         if (m_metadata.image_width().has_value())
             m_image_width = m_metadata.image_width().value();
         if (m_metadata.predictor().has_value())
@@ -391,7 +395,7 @@ private:
     {
         // Section 8: Baseline Field Reference Guide
         // BitsPerSample must be 1, since this type of compression is defined only for bilevel images.
-        if (m_metadata.bits_per_sample()->size() > 1)
+        if (m_bits_per_sample.size() > 1)
             return Error::from_string_literal("TIFFImageDecoderPlugin: CCITT image with BitsPerSample greater than one");
         if (!is_bilevel(*m_metadata.photometric_interpretation()))
             return Error::from_string_literal("TIFFImageDecoderPlugin: CCITT compression is used on a non bilevel image");
