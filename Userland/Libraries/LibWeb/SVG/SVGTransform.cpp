@@ -59,4 +59,13 @@ void SVGTransform::set_scale(float sx, float sy)
     dbgln("FIXME: Implement SVGTransform::set_scale(float sx, float sy)");
 }
 
+// https://svgwg.org/svg2-draft/single-page.html#coords-__svg__SVGTransform__setRotate
+void SVGTransform::set_rotate(float angle, float cx, float cy)
+{
+    (void)angle;
+    (void)cx;
+    (void)cy;
+    dbgln("FIXME: Implement SVGTransform::set_rotate(float angle, float cx, float cy)");
+}
+
 }
