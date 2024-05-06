@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2024, MacDue <macdue@dueutil.tech>
+ * Copyright (c) 2024, Jamie Mansfield <jmansfield@cadixdev.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -19,6 +20,18 @@ class SVGTransform final : public Bindings::PlatformObject {
 public:
     [[nodiscard]] static JS::NonnullGCPtr<SVGTransform> create(JS::Realm& realm);
     virtual ~SVGTransform() override;
+
+    enum class Type : u16 {
+        Unknown = 0,
+        Matrix = 1,
+        Translate = 2,
+        Scale = 3,
+        Rotate = 4,
+        SkewX = 5,
+        SkewY = 6,
+    };
+
+    Type type();
 
 private:
     SVGTransform(JS::Realm& realm);

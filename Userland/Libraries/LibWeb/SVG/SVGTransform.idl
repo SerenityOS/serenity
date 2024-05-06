@@ -10,7 +10,7 @@ interface SVGTransform {
     const unsigned short SVG_TRANSFORM_SKEWX = 5;
     const unsigned short SVG_TRANSFORM_SKEWY = 6;
 
-    // FIXME: readonly attribute unsigned short type;
+    readonly attribute unsigned short type;
     // FIXME: [SameObject] readonly attribute DOMMatrix matrix;
     // FIXME: readonly attribute float angle;
 
