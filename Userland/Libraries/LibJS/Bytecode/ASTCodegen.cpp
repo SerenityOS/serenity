@@ -787,8 +787,8 @@ Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> DoWhileStatement::g
     // body
     // jump always (true) test
     // end
-    auto& test_block = generator.make_block();
     auto& body_block = generator.make_block();
+    auto& test_block = generator.make_block();
     auto& load_result_and_jump_to_end_block = generator.make_block();
     auto& end_block = generator.make_block();
 
