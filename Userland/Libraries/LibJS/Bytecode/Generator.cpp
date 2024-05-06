@@ -96,6 +96,8 @@ CodeGenerationErrorOr<NonnullGCPtr<Executable>> Generator::generate(VM& vm, ASTN
     };
     Vector<UnlinkedExceptionHandlers> unlinked_exception_handlers;
 
+    HashMap<size_t, SourceRecord> source_map;
+
     for (auto& block : generator.m_root_basic_blocks) {
         basic_block_start_offsets.append(bytecode.size());
         if (block->handler() || block->finalizer()) {
@@ -108,6 +110,11 @@ CodeGenerationErrorOr<NonnullGCPtr<Executable>> Generator::generate(VM& vm, ASTN
         }
 
         block_offsets.set(block.ptr(), bytecode.size());
+
+        for (auto& [offset, source_record] : block->source_map()) {
+            source_map.set(bytecode.size() + offset, source_record);
+        }
+
         Bytecode::InstructionStreamIterator it(block->instruction_stream());
         while (!it.at_end()) {
             auto& instruction = const_cast<Instruction&>(*it);
@@ -161,6 +168,7 @@ CodeGenerationErrorOr<NonnullGCPtr<Executable>> Generator::generate(VM& vm, ASTN
 
     executable->exception_handlers = move(linked_exception_handlers);
     executable->basic_block_start_offsets = move(basic_block_start_offsets);
+    executable->source_map = move(source_map);
 
     return executable;
 }

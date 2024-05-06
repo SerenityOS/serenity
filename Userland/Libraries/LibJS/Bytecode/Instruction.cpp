@@ -52,7 +52,7 @@ void Instruction::visit_labels(Function<void(JS::Bytecode::Label&)> visitor)
 UnrealizedSourceRange InstructionStreamIterator::source_range() const
 {
     VERIFY(m_executable);
-    auto record = dereference().source_record();
+    auto record = m_executable->source_map.get(offset()).value();
     return {
         .source_code = m_executable->source_code,
         .start_offset = record.source_start_offset,

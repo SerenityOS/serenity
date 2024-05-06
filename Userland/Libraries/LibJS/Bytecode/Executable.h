@@ -84,6 +84,8 @@ public:
     Vector<ExceptionHandlers> exception_handlers;
     Vector<size_t> basic_block_start_offsets;
 
+    HashMap<size_t, SourceRecord> source_map;
+
     ByteString const& get_string(StringTableIndex index) const { return string_table->get(index); }
     DeprecatedFlyString const& get_identifier(IdentifierTableIndex index) const { return identifier_table->get(index); }
 
