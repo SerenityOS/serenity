@@ -138,20 +138,22 @@ public:
     };
 
     Type type() const { return m_type; }
-    size_t length() const { return m_length; }
+    size_t length() const;
     ByteString to_byte_string(Bytecode::Executable const&) const;
     ThrowCompletionOr<void> execute(Bytecode::Interpreter&) const;
     void visit_labels(Function<void(Label&)> visitor);
     static void destroy(Instruction&);
 
 protected:
-    Instruction(Type, size_t length);
+    explicit Instruction(Type type)
+        : m_type(type)
+    {
+    }
 
     void visit_labels_impl(Function<void(Label&)>) { }
 
 private:
     Type m_type {};
-    u32 m_length {};
 };
 
 class InstructionStreamIterator {
