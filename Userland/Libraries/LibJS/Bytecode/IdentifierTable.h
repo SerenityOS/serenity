@@ -12,7 +12,10 @@
 
 namespace JS::Bytecode {
 
-AK_TYPEDEF_DISTINCT_NUMERIC_GENERAL(size_t, IdentifierTableIndex, Comparison);
+struct IdentifierTableIndex {
+    bool is_valid() const { return value != NumericLimits<u32>::max(); }
+    u32 value { 0 };
+};
 
 class IdentifierTable {
     AK_MAKE_NONMOVABLE(IdentifierTable);

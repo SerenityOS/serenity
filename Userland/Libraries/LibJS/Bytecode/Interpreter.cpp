@@ -1758,7 +1758,7 @@ ByteString GetGlobal::to_byte_string_impl(Bytecode::Executable const& executable
 
 ByteString DeleteVariable::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
-    return ByteString::formatted("DeleteVariable {} ({})", m_identifier, executable.identifier_table->get(m_identifier));
+    return ByteString::formatted("DeleteVariable {}", executable.identifier_table->get(m_identifier));
 }
 
 ByteString CreateLexicalEnvironment::to_byte_string_impl(Bytecode::Executable const&) const
@@ -1769,7 +1769,7 @@ ByteString CreateLexicalEnvironment::to_byte_string_impl(Bytecode::Executable co
 ByteString CreateVariable::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
     auto mode_string = m_mode == EnvironmentMode::Lexical ? "Lexical" : "Variable";
-    return ByteString::formatted("CreateVariable env:{} immutable:{} global:{} {} ({})", mode_string, m_is_immutable, m_is_global, m_identifier, executable.identifier_table->get(m_identifier));
+    return ByteString::formatted("CreateVariable env:{} immutable:{} global:{} {}", mode_string, m_is_immutable, m_is_global, executable.identifier_table->get(m_identifier));
 }
 
 ByteString EnterObjectEnvironment::to_byte_string_impl(Executable const& executable) const
@@ -2010,7 +2010,7 @@ ByteString NewClass::to_byte_string_impl(Bytecode::Executable const& executable)
     if (!name.is_empty())
         builder.appendff(", {}", name);
     if (m_lhs_name.has_value())
-        builder.appendff(", lhs_name:{}"sv, m_lhs_name.value());
+        builder.appendff(", lhs_name:{}"sv, executable.get_identifier(m_lhs_name.value()));
     return builder.to_byte_string();
 }
 
