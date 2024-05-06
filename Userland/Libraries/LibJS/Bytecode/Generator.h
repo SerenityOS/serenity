@@ -77,8 +77,7 @@ public:
         new (slot) OpType(forward<Args>(args)...);
         if constexpr (OpType::IsTerminator)
             m_current_basic_block->terminate({});
-        auto* op = static_cast<OpType*>(slot);
-        op->set_source_record({ m_current_ast_node->start_offset(), m_current_ast_node->end_offset() });
+        m_current_basic_block->add_source_map_entry(slot_offset, { m_current_ast_node->start_offset(), m_current_ast_node->end_offset() });
     }
 
     template<typename OpType, typename ExtraSlotType, typename... Args>
@@ -93,8 +92,7 @@ public:
         new (slot) OpType(forward<Args>(args)...);
         if constexpr (OpType::IsTerminator)
             m_current_basic_block->terminate({});
-        auto* op = static_cast<OpType*>(slot);
-        op->set_source_record({ m_current_ast_node->start_offset(), m_current_ast_node->end_offset() });
+        m_current_basic_block->add_source_map_entry(slot_offset, { m_current_ast_node->start_offset(), m_current_ast_node->end_offset() });
     }
 
     template<typename OpType, typename... Args>

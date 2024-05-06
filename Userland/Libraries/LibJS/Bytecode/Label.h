@@ -7,9 +7,10 @@
 #pragma once
 
 #include <AK/Format.h>
-#include <LibJS/Bytecode/BasicBlock.h>
 
 namespace JS::Bytecode {
+
+class BasicBlock;
 
 class Label {
 public:

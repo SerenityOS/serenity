@@ -8,6 +8,7 @@
 
 #include <AK/Badge.h>
 #include <AK/String.h>
+#include <LibJS/Bytecode/Executable.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Handle.h>
 
@@ -45,6 +46,9 @@ public:
     BasicBlock const* handler() const { return m_handler; }
     BasicBlock const* finalizer() const { return m_finalizer; }
 
+    auto const& source_map() const { return m_source_map; }
+    void add_source_map_entry(size_t bytecode_offset, SourceRecord const& source_record) { m_source_map.set(bytecode_offset, source_record); }
+
 private:
     explicit BasicBlock(String name);
 
@@ -53,6 +57,8 @@ private:
     BasicBlock const* m_finalizer { nullptr };
     String m_name;
     bool m_terminated { false };
+
+    HashMap<size_t, SourceRecord> m_source_map;
 };
 
 }

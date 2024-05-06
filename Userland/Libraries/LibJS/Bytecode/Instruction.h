@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Forward.h>
+#include <AK/Function.h>
 #include <AK/Span.h>
 #include <LibJS/Bytecode/Executable.h>
 #include <LibJS/Forward.h>
@@ -140,17 +141,12 @@ public:
     void visit_labels(Function<void(Label&)> visitor);
     static void destroy(Instruction&);
 
-    // FIXME: Find a better way to organize this information
-    void set_source_record(SourceRecord rec) { m_source_record = rec; }
-    SourceRecord source_record() const { return m_source_record; }
-
 protected:
     Instruction(Type, size_t length);
 
     void visit_labels_impl(Function<void(Label&)>) { }
 
 private:
-    SourceRecord m_source_record {};
     Type m_type {};
     u32 m_length {};
 };
