@@ -10,6 +10,13 @@
 
 namespace JS::Bytecode {
 
+Instruction::Instruction(Type type, size_t length)
+    : m_type(type)
+    , m_length(length)
+{
+    VERIFY(length <= NumericLimits<u32>::max());
+}
+
 void Instruction::destroy(Instruction& instruction)
 {
 #define __BYTECODE_OP(op)                        \

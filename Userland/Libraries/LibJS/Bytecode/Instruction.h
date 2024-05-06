@@ -145,18 +145,14 @@ public:
     SourceRecord source_record() const { return m_source_record; }
 
 protected:
-    Instruction(Type type, size_t length)
-        : m_type(type)
-        , m_length(length)
-    {
-    }
+    Instruction(Type, size_t length);
 
     void visit_labels_impl(Function<void(Label&)>) { }
 
 private:
     SourceRecord m_source_record {};
     Type m_type {};
-    size_t m_length {};
+    u32 m_length {};
 };
 
 class InstructionStreamIterator {
