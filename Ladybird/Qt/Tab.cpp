@@ -77,6 +77,7 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
     m_hamburger_button->setIcon(create_tvg_icon_with_theme_colors("hamburger", palette()));
     m_hamburger_button->setPopupMode(QToolButton::InstantPopup);
     m_hamburger_button->setMenu(&m_window->hamburger_menu());
+    m_hamburger_button->setStyleSheet(":menu-indicator {image: none}");
 
     recreate_toolbar_icons();
 
