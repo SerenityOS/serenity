@@ -537,6 +537,7 @@ if (BUILD_LAGOM)
             lagom_utility(adjtime SOURCES ../../Userland/Utilities/adjtime.cpp LIBS LibMain)
         endif()
 
+        lagom_utility(animation SOURCES ../../Userland/Utilities/animation.cpp LIBS LibGfx LibMain)
         lagom_utility(base64 SOURCES ../../Userland/Utilities/base64.cpp LIBS LibMain)
 
         if (NOT EMSCRIPTEN)

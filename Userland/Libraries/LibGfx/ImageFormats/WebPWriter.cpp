@@ -327,4 +327,192 @@ ErrorOr<void> WebPWriter::encode(Stream& stream, Bitmap const& bitmap, Options c
     return {};
 }
 
+class WebPAnimationWriter : public AnimationWriter {
+public:
+    WebPAnimationWriter(SeekableStream& stream, IntSize dimensions)
+        : m_stream(stream)
+        , m_dimensions(dimensions)
+    {
+    }
+
+    virtual ErrorOr<void> add_frame(Bitmap&, int, IntPoint) override;
+
+    ErrorOr<void> update_size_in_header();
+
+private:
+    SeekableStream& m_stream;
+    IntSize m_dimensions;
+};
+
+static ErrorOr<void> align_to_two(SeekableStream& stream)
+{
+    // https://developers.google.com/speed/webp/docs/riff_container
+    // "If Chunk Size is odd, a single padding byte -- which MUST be 0 to conform with RIFF -- is added."
+    if (TRY(stream.tell()) % 2 != 0)
+        TRY(stream.write_value<u8>(0));
+    return {};
+}
+
+struct ANMFChunk {
+    u32 frame_x { 0 };
+    u32 frame_y { 0 };
+    u32 frame_width { 0 };
+    u32 frame_height { 0 };
+    u32 frame_duration_in_milliseconds { 0 };
+
+    enum class BlendingMethod {
+        UseAlphaBlending = 0,
+        DoNotBlend = 1,
+    };
+    BlendingMethod blending_method { BlendingMethod::UseAlphaBlending };
+
+    enum class DisposalMethod {
+        DoNotDispose = 0,
+        DisposeToBackgroundColor = 1,
+    };
+    DisposalMethod disposal_method { DisposalMethod::DoNotDispose };
+
+    ReadonlyBytes frame_data;
+};
+
+static ErrorOr<void> write_ANMF_chunk(Stream& stream, ANMFChunk const& chunk)
+{
+    TRY(write_chunk_header(stream, "ANMF"sv, 16 + chunk.frame_data.size()));
+
+    LittleEndianOutputBitStream bit_stream { MaybeOwned<Stream>(stream) };
+
+    // "Frame X: 24 bits (uint24)
+    //  The X coordinate of the upper left corner of the frame is Frame X * 2."
+    TRY(bit_stream.write_bits(chunk.frame_x / 2, 24u));
+
+    // "Frame Y: 24 bits (uint24)
+    //  The Y coordinate of the upper left corner of the frame is Frame Y * 2."
+    TRY(bit_stream.write_bits(chunk.frame_y / 2, 24u));
+
+    // "Frame Width: 24 bits (uint24)
+    //  The 1-based width of the frame. The frame width is 1 + Frame Width Minus One."
+    TRY(bit_stream.write_bits(chunk.frame_width - 1, 24u));
+
+    // "Frame Height: 24 bits (uint24)
+    //  The 1-based height of the frame. The frame height is 1 + Frame Height Minus One."
+    TRY(bit_stream.write_bits(chunk.frame_height - 1, 24u));
+
+    // "Frame Duration: 24 bits (uint24)"
+    TRY(bit_stream.write_bits(chunk.frame_duration_in_milliseconds, 24u));
+
+    // Don't use bit_stream.write_bits() to write individual flags here:
+    // The spec describes bit flags in MSB to LSB order, but write_bits() writes LSB to MSB.
+    u8 flags = 0;
+    // "Reserved: 6 bits
+    //  MUST be 0. Readers MUST ignore this field."
+
+    // "Blending method (B): 1 bit"
+    if (chunk.blending_method == ANMFChunk::BlendingMethod::DoNotBlend)
+        flags |= 0x2;
+
+    // "Disposal method (D): 1 bit"
+    if (chunk.disposal_method == ANMFChunk::DisposalMethod::DisposeToBackgroundColor)
+        flags |= 0x1;
+
+    TRY(bit_stream.write_bits(flags, 8u));
+
+    // FIXME: Make ~LittleEndianOutputBitStream do this, or make it VERIFY() that it has happened at least.
+    TRY(bit_stream.flush_buffer_to_stream());
+
+    TRY(stream.write_until_depleted(chunk.frame_data));
+
+    if (chunk.frame_data.size() % 2 != 0)
+        TRY(stream.write_value<u8>(0));
+
+    return {};
+}
+
+ErrorOr<void> WebPAnimationWriter::add_frame(Bitmap& bitmap, int duration_ms, IntPoint at)
+{
+    if (at.x() < 0 || at.y() < 0 || at.x() + bitmap.width() > m_dimensions.width() || at.y() + bitmap.height() > m_dimensions.height())
+        return Error::from_string_literal("Frame does not fit in animation dimensions");
+
+    // FIXME: The whole writing-and-reading-into-buffer over-and-over is awkward and inefficient.
+    AllocatingMemoryStream vp8l_header_stream;
+    TRY(write_VP8L_header(vp8l_header_stream, bitmap.width(), bitmap.height(), true));
+    auto vp8l_header_bytes = TRY(vp8l_header_stream.read_until_eof());
+
+    AllocatingMemoryStream vp8l_data_stream;
+    TRY(write_VP8L_image_data(vp8l_data_stream, bitmap));
+    auto vp8l_data_bytes = TRY(vp8l_data_stream.read_until_eof());
+
+    AllocatingMemoryStream vp8l_chunk_stream;
+    TRY(write_chunk_header(vp8l_chunk_stream, "VP8L"sv, vp8l_header_bytes.size() + vp8l_data_bytes.size()));
+    TRY(vp8l_chunk_stream.write_until_depleted(vp8l_header_bytes));
+    TRY(vp8l_chunk_stream.write_until_depleted(vp8l_data_bytes));
+    TRY(align_to_two(vp8l_chunk_stream));
+    auto vp8l_chunk_bytes = TRY(vp8l_chunk_stream.read_until_eof());
+
+    ANMFChunk chunk;
+    chunk.frame_x = static_cast<u32>(at.x());
+    chunk.frame_y = static_cast<u32>(at.y());
+    chunk.frame_width = static_cast<u32>(bitmap.width());
+    chunk.frame_height = static_cast<u32>(bitmap.height());
+    chunk.frame_duration_in_milliseconds = static_cast<u32>(duration_ms);
+    chunk.blending_method = ANMFChunk::BlendingMethod::DoNotBlend;
+    chunk.disposal_method = ANMFChunk::DisposalMethod::DoNotDispose;
+    chunk.frame_data = vp8l_chunk_bytes;
+
+    TRY(write_ANMF_chunk(m_stream, chunk));
+
+    TRY(update_size_in_header());
+
+    return {};
+}
+
+ErrorOr<void> WebPAnimationWriter::update_size_in_header()
+{
+    auto current_offset = TRY(m_stream.tell());
+    TRY(m_stream.seek(4, SeekMode::SetPosition));
+    VERIFY(current_offset > 8);
+    TRY(m_stream.write_value<LittleEndian<u32>>(current_offset - 8));
+    TRY(m_stream.seek(current_offset, SeekMode::SetPosition));
+    return {};
+}
+
+struct ANIMChunk {
+    u32 background_color { 0 };
+    u16 loop_count { 0 };
+};
+
+static ErrorOr<void> write_ANIM_chunk(Stream& stream, ANIMChunk const& chunk)
+{
+    TRY(write_chunk_header(stream, "ANIM"sv, 6)); // Size of the ANIM chunk.
+    TRY(stream.write_value<LittleEndian<u32>>(chunk.background_color));
+    TRY(stream.write_value<LittleEndian<u16>>(chunk.loop_count));
+    return {};
+}
+
+ErrorOr<NonnullOwnPtr<AnimationWriter>> WebPWriter::start_encoding_animation(SeekableStream& stream, IntSize dimensions, int loop_count, Color background_color, Options const& options)
+{
+    // We'll update the stream with the actual size later.
+    TRY(write_webp_header(stream, 0));
+
+    VP8XHeader vp8x_header;
+    vp8x_header.has_icc = options.icc_data.has_value();
+    vp8x_header.width = dimensions.width();
+    vp8x_header.height = dimensions.height();
+    vp8x_header.has_animation = true;
+    TRY(write_VP8X_chunk(stream, vp8x_header));
+    VERIFY(TRY(stream.tell()) % 2 == 0);
+
+    ByteBuffer iccp_chunk_bytes;
+    if (options.icc_data.has_value()) {
+        TRY(write_chunk_header(stream, "ICCP"sv, options.icc_data.value().size()));
+        TRY(stream.write_until_depleted(options.icc_data.value()));
+        TRY(align_to_two(stream));
+    }
+
+    TRY(write_ANIM_chunk(stream, { .background_color = background_color.value(), .loop_count = static_cast<u16>(loop_count) }));
+
+    auto writer = make<WebPAnimationWriter>(stream, dimensions);
+    TRY(writer->update_size_in_header());
+    return writer;
+}
+
 }
