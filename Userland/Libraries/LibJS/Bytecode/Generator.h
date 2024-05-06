@@ -68,6 +68,7 @@ public:
     };
 
     template<typename OpType, typename... Args>
+    requires(requires { OpType(declval<Args>()...); })
     void emit(Args&&... args)
     {
         VERIFY(!is_current_block_terminated());
@@ -81,6 +82,7 @@ public:
     }
 
     template<typename OpType, typename ExtraSlotType, typename... Args>
+    requires(requires { OpType(declval<Args>()...); })
     void emit_with_extra_slots(size_t extra_slot_count, Args&&... args)
     {
         VERIFY(!is_current_block_terminated());
@@ -96,12 +98,14 @@ public:
     }
 
     template<typename OpType, typename... Args>
+    requires(requires { OpType(declval<Args>()...); })
     void emit_with_extra_operand_slots(size_t extra_operand_slots, Args&&... args)
     {
         emit_with_extra_slots<OpType, Operand>(extra_operand_slots, forward<Args>(args)...);
     }
 
     template<typename OpType, typename... Args>
+    requires(requires { OpType(declval<Args>()...); })
     void emit_with_extra_value_slots(size_t extra_operand_slots, Args&&... args)
     {
         emit_with_extra_slots<OpType, Value>(extra_operand_slots, forward<Args>(args)...);
