@@ -554,12 +554,12 @@ public:
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
-    size_t index() const { return m_index; }
+    u32 index() const { return m_index; }
     Operand dst() const { return Operand(Operand::Type::Local, m_index); }
     Operand src() const { return m_src; }
 
 private:
-    size_t m_index;
+    u32 m_index;
     Operand m_src;
 };
 
