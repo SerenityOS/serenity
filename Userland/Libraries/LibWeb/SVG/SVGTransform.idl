@@ -16,7 +16,7 @@ interface SVGTransform {
 
     // FIXME: undefined setMatrix(optional DOMMatrix2DInit matrix = {});
     undefined setTranslate(float tx, float ty);
-    // FIXME: undefined setScale(float sx, float sy);
+    undefined setScale(float sx, float sy);
     // FIXME: undefined setRotate(float angle, float cx, float cy);
     // FIXME: undefined setSkewX(float angle);
     // FIXME: undefined setSkewY(float angle);

@@ -51,4 +51,12 @@ void SVGTransform::set_translate(float tx, float ty)
     dbgln("FIXME: Implement SVGTransform::set_translate(float tx, float ty)");
 }
 
+// https://svgwg.org/svg2-draft/single-page.html#coords-__svg__SVGTransform__setScale
+void SVGTransform::set_scale(float sx, float sy)
+{
+    (void)sx;
+    (void)sy;
+    dbgln("FIXME: Implement SVGTransform::set_scale(float sx, float sy)");
+}
+
 }
