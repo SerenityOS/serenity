@@ -122,6 +122,7 @@ class FilterValueListStyleValue;
 class Flex;
 class FlexOrCalculated;
 class FlexStyleValue;
+class FontFace;
 class Frequency;
 class FrequencyOrCalculated;
 class FrequencyPercentage;
