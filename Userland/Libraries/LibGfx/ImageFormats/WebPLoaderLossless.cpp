@@ -940,7 +940,6 @@ ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L_contents(VP8LHeader const&
     auto stored_size = IntSize { vp8l_header.width, vp8l_header.height };
 
     // optional-transform   =  (%b1 transform optional-transform) / %b0
-    // "Each transform is allowed to be used only once."
     u8 seen_transforms = 0;
     Vector<NonnullOwnPtr<Transform>, 4> transforms;
     while (TRY(bit_stream.read_bits(1))) {
@@ -964,7 +963,7 @@ ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L_contents(VP8LHeader const&
         TransformType transform_type = static_cast<TransformType>(TRY(bit_stream.read_bits(2)));
         dbgln_if(WEBP_DEBUG, "transform type {}", (int)transform_type);
 
-        // Check that each transform is used only once.
+        // "Each transform is allowed to be used only once."
         u8 mask = 1 << (int)transform_type;
         if (seen_transforms & mask)
             return Error::from_string_literal("WebPImageDecoderPlugin: transform type used multiple times");
