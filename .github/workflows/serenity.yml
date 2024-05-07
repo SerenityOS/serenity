@@ -1,4 +1,4 @@
-name: Build, lint, and test
+name: SerenityOS
 
 on: [push, pull_request]
 
@@ -11,32 +11,30 @@ env:
   TOOLCHAIN_CCACHE_DIR: ${{ github.workspace }}/Toolchain/.ccache
 
 concurrency:
-  group: ${{ github.head_ref || format('{0}-{1}', github.ref, github.run_number) }}
+  group: ${{ github.workflow }}-${{ github.head_ref || format('{0}-{1}', github.ref, github.run_number) }}
   cancel-in-progress: true
 
 jobs:
-  build_and_test_serenity:
+  CI:
     runs-on: ${{ matrix.os }}
     if: github.repository == 'SerenityOS/serenity'
     strategy:
       fail-fast: false
       matrix:
-        debug-options: ['NORMAL_DEBUG']
+        toolchain: ['GNU', 'Clang']
         os: [ubuntu-22.04]
         arch: ['x86_64']
-        toolchain: ['GNU', 'Clang']
-        # If ccache is broken and you would like to bust the ccache cache on Github Actions, increment this:
-        ccache-mark: [0]
+        debug-options: ['NORMAL_DEBUG']
         include:
-          - debug-options: 'NORMAL_DEBUG'
+          - toolchain: 'GNU'
             os: ubuntu-22.04
             arch: 'aarch64'
-            toolchain: 'GNU'
+            debug-options: 'NORMAL_DEBUG'
 
-          - debug-options: 'ALL_DEBUG'
+          - toolchain: 'GNU'
             os: ubuntu-22.04
             arch: 'x86_64'
-            toolchain: 'GNU'
+            debug-options: 'ALL_DEBUG'
 
     steps:
       # Pull requests can trail behind `master` and can cause breakage if merging before running the CI checks on an updated branch.
