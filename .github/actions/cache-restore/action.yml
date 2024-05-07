@@ -48,7 +48,7 @@ outputs:
     value: ${{ steps.serenity-ccache.outputs.cache-primary-key }}
   toolchain_ccache_primary_key:
     description: 'Primary key for the Toolchain ccache'
-    value: ${{ steps.toolchain-ccache.outputs.cache-hit }}
+    value: ${{ steps.toolchain-ccache.outputs.cache-primary-key }}
   toolchain_prebuilt_primary_key:
     description: 'Primary key for the toolchain cache'
     value: ${{ steps.toolchain-prebuilt.outputs.cache-primary-key }}
