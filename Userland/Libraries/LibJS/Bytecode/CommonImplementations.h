@@ -168,7 +168,12 @@ inline ThrowCompletionOr<Value> get_by_value(VM& vm, Optional<DeprecatedFlyStrin
         // For "non-typed arrays":
         if (!object.may_interfere_with_indexed_property_access()
             && object_storage) {
-            auto maybe_value = object_storage->get(index);
+            auto maybe_value = [&] {
+                if (object_storage->is_simple_storage())
+                    return static_cast<SimpleIndexedPropertyStorage const*>(object_storage)->inline_get(index);
+                else
+                    return static_cast<GenericIndexedPropertyStorage const*>(object_storage)->get(index);
+            }();
             if (maybe_value.has_value()) {
                 auto value = maybe_value->value;
                 if (!value.is_accessor())

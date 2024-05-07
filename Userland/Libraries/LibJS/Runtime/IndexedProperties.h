@@ -74,6 +74,18 @@ public:
 
     Vector<Value> const& elements() const { return m_packed_elements; }
 
+    [[nodiscard]] bool inline_has_index(u32 index) const
+    {
+        return index < m_array_size && !m_packed_elements.data()[index].is_empty();
+    }
+
+    [[nodiscard]] Optional<ValueAndAttributes> inline_get(u32 index) const
+    {
+        if (!inline_has_index(index))
+            return {};
+        return ValueAndAttributes { m_packed_elements.data()[index], default_attributes };
+    }
+
 private:
     friend GenericIndexedPropertyStorage;
 
