@@ -445,6 +445,11 @@ static ErrorOr<void> decode_webp_extended(WebPLoadingContext& context, ReadonlyB
         return Error::from_string_literal("WebPImageDecoderPlugin: ICCP chunk is after image data");
     }
 
+    if (context.iccp_chunk.has_value() && !context.vp8x_header.has_icc)
+        return Error::from_string_literal("WebPImageDecoderPlugin: ICCP chunk present, but VP8X header claims no ICC profile");
+    if (!context.iccp_chunk.has_value() && context.vp8x_header.has_icc)
+        return Error::from_string_literal("WebPImageDecoderPlugin: VP8X header claims ICC profile, but no ICCP chunk present");
+
     context.state = WebPLoadingContext::State::ChunksDecoded;
     return {};
 }
