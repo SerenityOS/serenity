@@ -8,6 +8,7 @@
 // Lossless format: https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification
 
 #include <AK/BitStream.h>
+#include <AK/Debug.h>
 #include <LibCompress/DeflateTables.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/ImageFormats/WebPWriter.h>
@@ -273,6 +274,7 @@ static ErrorOr<void> align_to_two(AllocatingMemoryStream& stream)
 ErrorOr<void> WebPWriter::encode(Stream& stream, Bitmap const& bitmap, Options const& options)
 {
     bool alpha_is_used_hint = !are_all_pixels_opaque(bitmap);
+    dbgln_if(WEBP_DEBUG, "Writing WebP of size {} with alpha hint: {}", bitmap.size(), alpha_is_used_hint);
 
     // The chunk headers need to know their size, so we either need a SeekableStream or need to buffer the data. We're doing the latter.
     // FIXME: The whole writing-and-reading-into-buffer over-and-over is awkward and inefficient.
@@ -294,6 +296,7 @@ ErrorOr<void> WebPWriter::encode(Stream& stream, Bitmap const& bitmap, Options c
     ByteBuffer vp8x_chunk_bytes;
     ByteBuffer iccp_chunk_bytes;
     if (options.icc_data.has_value()) {
+        dbgln_if(WEBP_DEBUG, "Writing VP8X and ICCP chunks.");
         AllocatingMemoryStream iccp_chunk_stream;
         TRY(write_chunk_header(iccp_chunk_stream, "ICCP"sv, options.icc_data.value().size()));
         TRY(iccp_chunk_stream.write_until_depleted(options.icc_data.value()));
