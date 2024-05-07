@@ -875,13 +875,16 @@ ErrorOr<NonnullOwnPtr<ColorIndexingTransform>> ColorIndexingTransform::read(Litt
     auto palette_bitmap = TRY(decode_webp_chunk_VP8L_image(ImageKind::EntropyCoded, BitmapFormat::BGRA8888, palette_image_size, bit_stream));
 
     // "When the color table is small (equal to or less than 16 colors), several pixels are bundled into a single pixel..."
-    int pixels_per_pixel = 1;
+    int width_bits;
     if (color_table_size <= 2)
-        pixels_per_pixel = 8;
+        width_bits = 3;
     else if (color_table_size <= 4)
-        pixels_per_pixel = 4;
+        width_bits = 2;
     else if (color_table_size <= 16)
-        pixels_per_pixel = 2;
+        width_bits = 1;
+    else
+        width_bits = 0;
+    int pixels_per_pixel = 1 << width_bits;
 
     // "The color table is always subtraction-coded to reduce image entropy. [...]  In decoding, every final color in the color table
     //  can be obtained by adding the previous color component values by each ARGB component separately,
