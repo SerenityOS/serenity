@@ -4448,7 +4448,7 @@ CSSRule* Parser::parse_font_face_rule(TokenStream<ComponentValue>& tokens)
     auto declarations_and_at_rules = parse_a_list_of_declarations(tokens);
 
     Optional<FlyString> font_family;
-    Vector<FontFace::Source> src;
+    Vector<ParsedFontFace::Source> src;
     Vector<Gfx::UnicodeRange> unicode_range;
     Optional<int> weight;
     Optional<int> slope;
@@ -4520,7 +4520,7 @@ CSSRule* Parser::parse_font_face_rule(TokenStream<ComponentValue>& tokens)
         }
         if (declaration.name().equals_ignoring_ascii_case("src"sv)) {
             TokenStream token_stream { declaration.values() };
-            Vector<FontFace::Source> supported_sources = parse_font_face_src(token_stream);
+            Vector<ParsedFontFace::Source> supported_sources = parse_font_face_src(token_stream);
             if (!supported_sources.is_empty())
                 src = move(supported_sources);
             continue;
@@ -4560,10 +4560,10 @@ CSSRule* Parser::parse_font_face_rule(TokenStream<ComponentValue>& tokens)
         unicode_range.empend(0x0u, 0x10FFFFu);
     }
 
-    return CSSFontFaceRule::create(m_context.realm(), FontFace { font_family.release_value(), weight, slope, move(src), move(unicode_range) });
+    return CSSFontFaceRule::create(m_context.realm(), ParsedFontFace { font_family.release_value(), weight, slope, move(src), move(unicode_range) });
 }
 
-Vector<FontFace::Source> Parser::parse_font_face_src(TokenStream<ComponentValue>& component_values)
+Vector<ParsedFontFace::Source> Parser::parse_font_face_src(TokenStream<ComponentValue>& component_values)
 {
     // FIXME: Get this information from the system somehow?
     // Format-name table: https://www.w3.org/TR/css-fonts-4/#font-format-definitions
@@ -4574,7 +4574,7 @@ Vector<FontFace::Source> Parser::parse_font_face_src(TokenStream<ComponentValue>
         return false;
     };
 
-    Vector<FontFace::Source> supported_sources;
+    Vector<ParsedFontFace::Source> supported_sources;
 
     auto list_of_source_token_lists = parse_a_comma_separated_list_of_component_values(component_values);
     for (auto const& source_token_list : list_of_source_token_lists) {

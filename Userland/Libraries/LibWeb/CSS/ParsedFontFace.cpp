@@ -5,11 +5,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/CSS/FontFace.h>
+#include <LibWeb/CSS/ParsedFontFace.h>
 
 namespace Web::CSS {
 
-FontFace::FontFace(FlyString font_family, Optional<int> weight, Optional<int> slope, Vector<Source> sources, Vector<Gfx::UnicodeRange> unicode_ranges)
+ParsedFontFace::ParsedFontFace(FlyString font_family, Optional<int> weight, Optional<int> slope, Vector<Source> sources, Vector<Gfx::UnicodeRange> unicode_ranges)
     : m_font_family(move(font_family))
     , m_weight(weight)
     , m_slope(slope)

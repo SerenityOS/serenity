@@ -13,7 +13,7 @@
 
 namespace Web::CSS {
 
-class FontFace {
+class ParsedFontFace {
 public:
     struct Source {
         Variant<String, URL::URL> local_or_url;
@@ -21,8 +21,8 @@ public:
         Optional<FlyString> format;
     };
 
-    FontFace(FlyString font_family, Optional<int> weight, Optional<int> slope, Vector<Source> sources, Vector<Gfx::UnicodeRange> unicode_ranges);
-    ~FontFace() = default;
+    ParsedFontFace(FlyString font_family, Optional<int> weight, Optional<int> slope, Vector<Source> sources, Vector<Gfx::UnicodeRange> unicode_ranges);
+    ~ParsedFontFace() = default;
 
     FlyString font_family() const { return m_font_family; }
     Optional<int> weight() const { return m_weight; }

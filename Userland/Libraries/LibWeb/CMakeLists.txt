@@ -55,7 +55,6 @@ set(SOURCES
     CSS/Display.cpp
     CSS/EdgeRect.cpp
     CSS/Flex.cpp
-    CSS/FontFace.cpp
     CSS/Frequency.cpp
     CSS/GridTrackPlacement.cpp
     CSS/GridTrackSize.cpp
@@ -79,6 +78,7 @@ set(SOURCES
     CSS/Parser/SelectorParsing.cpp
     CSS/Parser/Token.cpp
     CSS/Parser/Tokenizer.cpp
+    CSS/ParsedFontFace.cpp
     CSS/PercentageOr.cpp
     CSS/PreferredColorScheme.cpp
     CSS/Ratio.cpp
