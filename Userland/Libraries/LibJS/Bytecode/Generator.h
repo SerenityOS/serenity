@@ -34,7 +34,13 @@ public:
     };
     static CodeGenerationErrorOr<NonnullGCPtr<Executable>> generate(VM&, ASTNode const&, ReadonlySpan<FunctionParameter> parameters, FunctionKind = FunctionKind::Normal);
 
-    Register allocate_register();
+    [[nodiscard]] ScopedOperand allocate_sequential_register();
+
+    [[nodiscard]] ScopedOperand allocate_register();
+    [[nodiscard]] ScopedOperand local(u32 local_index);
+    [[nodiscard]] ScopedOperand accumulator();
+
+    void free_register(Register);
 
     void set_local_initialized(u32 local_index);
     [[nodiscard]] bool is_local_initialized(u32 local_index) const;
@@ -112,28 +118,28 @@ public:
     }
 
     struct ReferenceOperands {
-        Optional<Operand> base {};                                       // [[Base]]
-        Optional<Operand> referenced_name {};                            // [[ReferencedName]] as an operand
+        Optional<ScopedOperand> base {};                                 // [[Base]]
+        Optional<ScopedOperand> referenced_name {};                      // [[ReferencedName]] as an operand
         Optional<IdentifierTableIndex> referenced_identifier {};         // [[ReferencedName]] as an identifier
         Optional<IdentifierTableIndex> referenced_private_identifier {}; // [[ReferencedName]] as a private identifier
-        Optional<Operand> this_value {};                                 // [[ThisValue]]
-        Optional<Operand> loaded_value {};                               // Loaded value, if we've performed a load.
+        Optional<ScopedOperand> this_value {};                           // [[ThisValue]]
+        Optional<ScopedOperand> loaded_value {};                         // Loaded value, if we've performed a load.
     };
 
-    CodeGenerationErrorOr<ReferenceOperands> emit_load_from_reference(JS::ASTNode const&, Optional<Operand> preferred_dst = {});
-    CodeGenerationErrorOr<void> emit_store_to_reference(JS::ASTNode const&, Operand value);
-    CodeGenerationErrorOr<void> emit_store_to_reference(ReferenceOperands const&, Operand value);
-    CodeGenerationErrorOr<Optional<Operand>> emit_delete_reference(JS::ASTNode const&);
+    CodeGenerationErrorOr<ReferenceOperands> emit_load_from_reference(JS::ASTNode const&, Optional<ScopedOperand> preferred_dst = {});
+    CodeGenerationErrorOr<void> emit_store_to_reference(JS::ASTNode const&, ScopedOperand value);
+    CodeGenerationErrorOr<void> emit_store_to_reference(ReferenceOperands const&, ScopedOperand value);
+    CodeGenerationErrorOr<Optional<ScopedOperand>> emit_delete_reference(JS::ASTNode const&);
 
     CodeGenerationErrorOr<ReferenceOperands> emit_super_reference(MemberExpression const&);
 
-    void emit_set_variable(JS::Identifier const& identifier, Operand value, Bytecode::Op::SetVariable::InitializationMode initialization_mode = Bytecode::Op::SetVariable::InitializationMode::Set, Bytecode::Op::EnvironmentMode mode = Bytecode::Op::EnvironmentMode::Lexical);
+    void emit_set_variable(JS::Identifier const& identifier, ScopedOperand value, Bytecode::Op::SetVariable::InitializationMode initialization_mode = Bytecode::Op::SetVariable::InitializationMode::Set, Bytecode::Op::EnvironmentMode mode = Bytecode::Op::EnvironmentMode::Lexical);
 
-    void push_home_object(Operand);
+    void push_home_object(ScopedOperand);
     void pop_home_object();
-    void emit_new_function(Operand dst, JS::FunctionExpression const&, Optional<IdentifierTableIndex> lhs_name);
+    void emit_new_function(ScopedOperand dst, JS::FunctionExpression const&, Optional<IdentifierTableIndex> lhs_name);
 
-    CodeGenerationErrorOr<Optional<Operand>> emit_named_evaluation_if_anonymous_function(Expression const&, Optional<IdentifierTableIndex> lhs_name, Optional<Operand> preferred_dst = {});
+    CodeGenerationErrorOr<Optional<ScopedOperand>> emit_named_evaluation_if_anonymous_function(Expression const&, Optional<IdentifierTableIndex> lhs_name, Optional<ScopedOperand> preferred_dst = {});
 
     void begin_continuable_scope(Label continue_target, Vector<DeprecatedFlyString> const& language_label_set);
     void end_continuable_scope();
@@ -257,14 +263,14 @@ public:
         m_boundaries.take_last();
     }
 
-    [[nodiscard]] Operand get_this(Optional<Operand> preferred_dst = {});
+    [[nodiscard]] ScopedOperand get_this(Optional<ScopedOperand> preferred_dst = {});
 
-    void emit_get_by_id(Operand dst, Operand base, IdentifierTableIndex property_identifier, Optional<IdentifierTableIndex> base_identifier = {});
+    void emit_get_by_id(ScopedOperand dst, ScopedOperand base, IdentifierTableIndex property_identifier, Optional<IdentifierTableIndex> base_identifier = {});
 
-    void emit_get_by_id_with_this(Operand dst, Operand base, IdentifierTableIndex, Operand this_value);
+    void emit_get_by_id_with_this(ScopedOperand dst, ScopedOperand base, IdentifierTableIndex, ScopedOperand this_value);
 
-    void emit_iterator_value(Operand dst, Operand result);
-    void emit_iterator_complete(Operand dst, Operand result);
+    void emit_iterator_value(ScopedOperand dst, ScopedOperand result);
+    void emit_iterator_complete(ScopedOperand dst, ScopedOperand result);
 
     [[nodiscard]] size_t next_global_variable_cache() { return m_next_global_variable_cache++; }
     [[nodiscard]] size_t next_environment_variable_cache() { return m_next_environment_variable_cache++; }
@@ -274,19 +280,21 @@ public:
         Yes,
         No,
     };
-    [[nodiscard]] Operand add_constant(Value value, DeduplicateConstant deduplicate_constant = DeduplicateConstant::Yes)
+    [[nodiscard]] ScopedOperand add_constant(Value value, DeduplicateConstant deduplicate_constant = DeduplicateConstant::Yes)
     {
         if (deduplicate_constant == DeduplicateConstant::Yes) {
             for (size_t i = 0; i < m_constants.size(); ++i) {
                 if (m_constants[i] == value)
-                    return Operand(Operand::Type::Constant, i);
+                    return ScopedOperand(*this, Operand(Operand::Type::Constant, i));
             }
         }
         m_constants.append(value);
-        return Operand(Operand::Type::Constant, m_constants.size() - 1);
+        return ScopedOperand(*this, Operand(Operand::Type::Constant, m_constants.size() - 1));
     }
 
     UnwindContext const* current_unwind_context() const { return m_current_unwind_context; }
+
+    [[nodiscard]] bool is_finished() const { return m_finished; }
 
 private:
     VM& m_vm;
@@ -318,6 +326,9 @@ private:
     NonnullOwnPtr<RegexTable> m_regex_table;
     MarkedVector<Value> m_constants;
 
+    ScopedOperand m_accumulator;
+    Vector<Register> m_free_registers;
+
     u32 m_next_register { Register::reserved_register_count };
     u32 m_next_block { 1 };
     u32 m_next_property_lookup_cache { 0 };
@@ -327,9 +338,11 @@ private:
     Vector<LabelableScope> m_continuable_scopes;
     Vector<LabelableScope> m_breakable_scopes;
     Vector<BlockBoundaryType> m_boundaries;
-    Vector<Operand> m_home_objects;
+    Vector<ScopedOperand> m_home_objects;
 
     HashTable<u32> m_initialized_locals;
+
+    bool m_finished { false };
 };
 
 }
