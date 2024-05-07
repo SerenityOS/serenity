@@ -303,7 +303,13 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_int)
     auto input_string = TRY(string.to_string(vm));
 
     // 2. Let S be ! TrimString(inputString, start).
-    auto trimmed_string = MUST(trim_string(vm, PrimitiveString::create(vm, move(input_string)), TrimMode::Left));
+    String trimmed_string;
+    // OPTIMIZATION: We can skip the trimming step when the value already starts with an alphanumeric ASCII character.
+    if (input_string.is_empty() || is_ascii_alphanumeric(input_string.bytes_as_string_view()[0])) {
+        trimmed_string = input_string;
+    } else {
+        trimmed_string = MUST(trim_string(vm, PrimitiveString::create(vm, move(input_string)), TrimMode::Left));
+    }
 
     // 3. Let sign be 1.
     auto sign = 1;
