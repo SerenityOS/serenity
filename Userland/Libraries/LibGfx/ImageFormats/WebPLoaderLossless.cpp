@@ -165,18 +165,22 @@ static ErrorOr<CanonicalCode> decode_webp_chunk_VP8L_prefix_code(LittleEndianInp
     for (int i = 0; i < num_code_lengths; ++i)
         code_length_code_lengths[kCodeLengthCodeOrder[i]] = TRY(bit_stream.read_bits(3));
 
-    // The spec is at best misleading here, suggesting that max_symbol should be set to "num_code_lengths" if it's not explicitly stored.
-    // But num_code_lengths doesn't mean the num_code_lengths mentioned a few lines further up in the spec (and in scope here),
-    // but alphabet_size!
-    //
-    // Since the spec doesn't mention it, see libwebp vp8l_dec.c, ReadHuffmanCode()
-    // which passes alphabet_size to ReadHuffmanCodeLengths() as num_symbols,
-    // and ReadHuffmanCodeLengths() then sets max_symbol to that.)
-    unsigned max_symbol = alphabet_size;
-    if (TRY(bit_stream.read_bits(1))) {
+    // "Next, if `ReadBits(1) == 0`, the maximum number of different read symbols
+    //  (`max_symbol`) for each symbol type (A, R, G, B, and distance) is set to its
+    //  alphabet size:"
+    unsigned max_symbol;
+    if (TRY(bit_stream.read_bits(1)) == 0) {
+        max_symbol = alphabet_size;
+    }
+    // "Otherwise, it is defined as:"
+    else {
+        // "int length_nbits = 2 + 2 * ReadBits(3);"
         int length_nbits = 2 + 2 * TRY(bit_stream.read_bits(3));
+        // "int max_symbol = 2 + ReadBits(length_nbits);"
         max_symbol = 2 + TRY(bit_stream.read_bits(length_nbits));
         dbgln_if(WEBP_DEBUG, "  extended, length_nbits {} max_symbol {}", length_nbits, max_symbol);
+
+        // "If `max_symbol` is larger than the size of the alphabet for the symbol type, the bitstream is invalid."
         if (max_symbol > alphabet_size)
             return Error::from_string_literal("WebPImageDecoderPlugin: invalid max_symbol");
     }
@@ -238,8 +242,9 @@ static ErrorOr<PrefixCodeGroup> decode_webp_chunk_VP8L_prefix_code_group(u16 col
     //                  ; understand what each of these five prefix
     //                  ; codes are for.
 
-    // "Once code lengths are read, a prefix code for each symbol type (A, R, G, B, distance) is formed using their respective alphabet sizes:
-    //  * G channel: 256 + 24 + color_cache_size
+    // "Once code lengths are read, a prefix code for each symbol type (A, R, G, B, distance) is formed using their respective alphabet sizes."
+    // ...
+    // "* G channel: 256 + 24 + color_cache_size
     //  * other literals (A,R,B): 256
     //  * distance code: 40"
     Array<size_t, 5> const alphabet_sizes { 256 + 24 + static_cast<size_t>(color_cache_size), 256, 256, 256, 40 };
