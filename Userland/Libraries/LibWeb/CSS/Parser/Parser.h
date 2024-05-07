@@ -12,9 +12,9 @@
 #include <AK/Vector.h>
 #include <LibGfx/Font/UnicodeRange.h>
 #include <LibWeb/CSS/CSSStyleDeclaration.h>
-#include <LibWeb/CSS/FontFace.h>
 #include <LibWeb/CSS/GeneralEnclosed.h>
 #include <LibWeb/CSS/MediaQuery.h>
+#include <LibWeb/CSS/ParsedFontFace.h>
 #include <LibWeb/CSS/Parser/Block.h>
 #include <LibWeb/CSS/Parser/ComponentValue.h>
 #include <LibWeb/CSS/Parser/Declaration.h>
@@ -162,7 +162,7 @@ private:
     Optional<GeneralEnclosed> parse_general_enclosed(TokenStream<ComponentValue>&);
 
     CSSRule* parse_font_face_rule(TokenStream<ComponentValue>&);
-    Vector<FontFace::Source> parse_font_face_src(TokenStream<ComponentValue>&);
+    Vector<ParsedFontFace::Source> parse_font_face_src(TokenStream<ComponentValue>&);
 
     CSSRule* convert_to_rule(NonnullRefPtr<Rule>);
     CSSMediaRule* convert_to_media_rule(NonnullRefPtr<Rule>);

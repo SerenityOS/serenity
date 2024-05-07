@@ -16,12 +16,12 @@ namespace Web::CSS {
 
 JS_DEFINE_ALLOCATOR(CSSFontFaceRule);
 
-JS::NonnullGCPtr<CSSFontFaceRule> CSSFontFaceRule::create(JS::Realm& realm, FontFace&& font_face)
+JS::NonnullGCPtr<CSSFontFaceRule> CSSFontFaceRule::create(JS::Realm& realm, ParsedFontFace&& font_face)
 {
     return realm.heap().allocate<CSSFontFaceRule>(realm, realm, move(font_face));
 }
 
-CSSFontFaceRule::CSSFontFaceRule(JS::Realm& realm, FontFace&& font_face)
+CSSFontFaceRule::CSSFontFaceRule(JS::Realm& realm, ParsedFontFace&& font_face)
     : CSSRule(realm)
     , m_font_face(move(font_face))
 {
@@ -35,7 +35,7 @@ void CSSFontFaceRule::initialize(JS::Realm& realm)
 
 CSSStyleDeclaration* CSSFontFaceRule::style()
 {
-    // FIXME: Return a CSSStyleDeclaration subclass that directs changes to the FontFace.
+    // FIXME: Return a CSSStyleDeclaration subclass that directs changes to the ParsedFontFace.
     return nullptr;
 }
 
@@ -63,7 +63,7 @@ String CSSFontFaceRule::serialized() const
         builder.append(" src: "sv);
 
         // 2. The result of invoking serialize a comma-separated list on performing serialize a URL or serialize a LOCAL for each source on the source list.
-        serialize_a_comma_separated_list(builder, m_font_face.sources(), [&](StringBuilder& builder, FontFace::Source source) -> void {
+        serialize_a_comma_separated_list(builder, m_font_face.sources(), [&](StringBuilder& builder, ParsedFontFace::Source source) -> void {
             if (source.local_or_url.has<URL::URL>()) {
                 serialize_a_url(builder, MUST(source.local_or_url.get<URL::URL>().to_string()));
             } else {
