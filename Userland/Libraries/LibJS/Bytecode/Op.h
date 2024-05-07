@@ -18,6 +18,7 @@
 #include <LibJS/Bytecode/Operand.h>
 #include <LibJS/Bytecode/RegexTable.h>
 #include <LibJS/Bytecode/Register.h>
+#include <LibJS/Bytecode/ScopedOperand.h>
 #include <LibJS/Bytecode/StringTable.h>
 #include <LibJS/Heap/Cell.h>
 #include <LibJS/Runtime/Environment.h>
@@ -211,7 +212,7 @@ class CopyObjectExcludingProperties final : public Instruction {
 public:
     static constexpr bool IsVariableLength = true;
 
-    CopyObjectExcludingProperties(Operand dst, Operand from_object, Vector<Operand> const& excluded_names)
+    CopyObjectExcludingProperties(Operand dst, Operand from_object, Vector<ScopedOperand> const& excluded_names)
         : Instruction(Type::CopyObjectExcludingProperties)
         , m_dst(dst)
         , m_from_object(from_object)
@@ -1238,7 +1239,7 @@ class Call final : public Instruction {
 public:
     static constexpr bool IsVariableLength = true;
 
-    Call(CallType type, Operand dst, Operand callee, Operand this_value, ReadonlySpan<Operand> arguments, Optional<StringTableIndex> expression_string = {}, Optional<Builtin> builtin = {})
+    Call(CallType type, Operand dst, Operand callee, Operand this_value, ReadonlySpan<ScopedOperand> arguments, Optional<StringTableIndex> expression_string = {}, Optional<Builtin> builtin = {})
         : Instruction(Type::Call)
         , m_dst(dst)
         , m_callee(callee)
