@@ -93,6 +93,8 @@ public:
         return *m_inspect_dom_node_action;
     }
 
+    Tab* current_tab() const { return m_current_tab; }
+
 public slots:
     void device_pixel_ratio_changed(qreal dpi);
     void tab_title_changed(int index, QString const&);

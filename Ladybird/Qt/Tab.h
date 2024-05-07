@@ -58,6 +58,8 @@ public:
 
     void update_navigation_buttons_state();
 
+    QToolButton* hamburger_button() const { return m_hamburger_button; }
+
 public slots:
     void focus_location_editor();
     void location_edit_return_pressed();
