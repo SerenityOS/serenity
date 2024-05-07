@@ -733,6 +733,12 @@ def set_up_machine_devices(config: Configuration):
         config.extra_arguments.extend(["-serial", "stdio"])
         config.kernel_cmdline.extend(["serial_debug", "nvme_poll"])
         config.qemu_cpu = None
+        config.add_devices(
+            [
+                "virtio-keyboard",
+                "virtio-tablet",
+            ]
+        )
         return
 
     # Machine specific base setups
