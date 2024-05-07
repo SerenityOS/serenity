@@ -125,7 +125,6 @@ static ErrorOr<void> prepare_bare_minimum_devtmpfs_directory_structure()
     TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/null"sv, 0666, 1, 3));
     TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/full"sv, 0666, 1, 7));
     TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/random"sv, 0666, 1, 8));
-    TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/input/mice"sv, 0666, 12, 0));
     TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/console"sv, 0666, 5, 1));
     TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/ptmx"sv, 0666, 5, 2));
     TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/tty"sv, 0666, 5, 0));
