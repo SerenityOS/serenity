@@ -969,6 +969,7 @@ ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L_contents(VP8LHeader const&
             return Error::from_string_literal("WebPImageDecoderPlugin: transform type used multiple times");
         seen_transforms |= mask;
 
+        // "Transform data contains the information required to apply the inverse transform and depends on the transform type."
         switch (transform_type) {
         case PREDICTOR_TRANSFORM:
             TRY(transforms.try_append(TRY(PredictorTransform::read(bit_stream, stored_size))));
