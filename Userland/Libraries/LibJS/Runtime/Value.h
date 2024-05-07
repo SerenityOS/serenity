@@ -735,6 +735,7 @@ struct Formatter<JS::Value> : Formatter<StringView> {
 template<>
 struct Traits<JS::Value> : DefaultTraits<JS::Value> {
     static unsigned hash(JS::Value value) { return Traits<u64>::hash(value.encoded()); }
+    static constexpr bool is_trivial() { return true; }
 };
 
 }
