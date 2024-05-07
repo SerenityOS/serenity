@@ -185,14 +185,10 @@ static ErrorOr<CanonicalCode> decode_webp_chunk_VP8L_prefix_code(LittleEndianInp
             return Error::from_string_literal("WebPImageDecoderPlugin: invalid max_symbol");
     }
 
-    auto const code_length_code = TRY(CanonicalCode::from_bytes({ code_length_code_lengths, sizeof(code_length_code_lengths) }));
-
-    // Next we extract the code lengths of the code that was used to encode the block.
-
-    u8 last_non_zero = 8; // "If code 16 is used before a non-zero value has been emitted, a value of 8 is repeated."
-
     // "A prefix table is then built from code_length_code_lengths and used to read up to max_symbol code lengths."
     dbgln_if(WEBP_DEBUG, "  reading {} symbols from at most {} codes", alphabet_size, max_symbol);
+    auto const code_length_code = TRY(CanonicalCode::from_bytes({ code_length_code_lengths, sizeof(code_length_code_lengths) }));
+    u8 last_non_zero = 8; // "If code 16 is used before a non-zero value has been emitted, a value of 8 is repeated."
     while (code_lengths.size() < alphabet_size) {
         if (max_symbol == 0)
             break;
