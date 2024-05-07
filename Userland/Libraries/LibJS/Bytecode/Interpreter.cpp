@@ -339,6 +339,11 @@ Interpreter::HandleExceptionResponse Interpreter::handle_exception(size_t& progr
 
 FLATTEN_ON_CLANG void Interpreter::run_bytecode(size_t entry_point)
 {
+    if (vm().did_reach_stack_space_limit()) {
+        reg(Register::exception()) = vm().throw_completion<InternalError>(ErrorType::CallStackSizeExceeded).release_value().value();
+        return;
+    }
+
     auto& running_execution_context = vm().running_execution_context();
     auto* locals = running_execution_context.locals.data();
     auto& accumulator = this->accumulator();
