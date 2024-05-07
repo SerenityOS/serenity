@@ -157,10 +157,7 @@ static ErrorOr<CanonicalCode> decode_webp_chunk_VP8L_prefix_code(LittleEndianInp
     // (...but webp uses 5 different prefix codes, while deflate doesn't.)
     int num_code_lengths = 4 + TRY(bit_stream.read_bits(4));
     dbgln_if(WEBP_DEBUG, "  num_code_lengths {}", num_code_lengths);
-
-    // "If num_code_lengths is > 19, the bit_stream is invalid. [AMENDED3]"
-    if (num_code_lengths > 19)
-        return Error::from_string_literal("WebPImageDecoderPlugin: invalid num_code_lengths");
+    VERIFY(num_code_lengths <= 19);
 
     constexpr int kCodeLengthCodes = 19;
     int kCodeLengthCodeOrder[kCodeLengthCodes] = { 17, 18, 0, 1, 2, 3, 4, 5, 16, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
