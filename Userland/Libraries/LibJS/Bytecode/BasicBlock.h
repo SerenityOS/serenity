@@ -9,6 +9,7 @@
 #include <AK/Badge.h>
 #include <AK/String.h>
 #include <LibJS/Bytecode/Executable.h>
+#include <LibJS/Bytecode/Operand.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Handle.h>
 
@@ -51,6 +52,9 @@ public:
     auto const& source_map() const { return m_source_map; }
     void add_source_map_entry(size_t bytecode_offset, SourceRecord const& source_record) { m_source_map.set(bytecode_offset, source_record); }
 
+    auto const& this_() const { return m_this; }
+    void set_this(Operand operand) { m_this = operand; }
+
 private:
     explicit BasicBlock(u32 index, String name);
 
@@ -62,6 +66,8 @@ private:
     bool m_terminated { false };
 
     HashMap<size_t, SourceRecord> m_source_map;
+
+    Optional<Operand> m_this;
 };
 
 }

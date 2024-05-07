@@ -798,4 +798,14 @@ void Generator::set_local_initialized(u32 local_index)
     m_initialized_locals.set(local_index);
 }
 
+Operand Generator::get_this(Optional<Operand> preferred_dst)
+{
+    if (m_current_basic_block->this_().has_value())
+        return m_current_basic_block->this_().value();
+    auto dst = preferred_dst.has_value() ? preferred_dst.value() : Operand(allocate_register());
+    emit<Bytecode::Op::ResolveThisBinding>(dst);
+    m_current_basic_block->set_this(dst);
+    return dst;
+}
+
 }
