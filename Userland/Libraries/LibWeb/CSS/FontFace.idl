@@ -1,0 +1,39 @@
+typedef (ArrayBuffer or ArrayBufferView) BinaryData;
+
+dictionary FontFaceDescriptors {
+    CSSOMString style = "normal";
+    CSSOMString weight = "normal";
+    CSSOMString stretch = "normal";
+    CSSOMString unicodeRange = "U+0-10FFFF";
+    CSSOMString featureSettings = "normal";
+    CSSOMString variationSettings = "normal";
+    CSSOMString display = "auto";
+    CSSOMString ascentOverride = "normal";
+    CSSOMString descentOverride = "normal";
+    CSSOMString lineGapOverride = "normal";
+};
+
+enum FontFaceLoadStatus { "unloaded", "loading", "loaded", "error" };
+
+// https://drafts.csswg.org/css-font-loading/#fontface-interface
+[Exposed=(Window,Worker)]
+interface FontFace {
+    // FIXME: constructor(CSSOMString family, (CSSOMString or BinaryData) source, optional FontFaceDescriptors descriptors = {});
+    constructor(CSSOMString family, CSSOMString source, optional FontFaceDescriptors descriptors = {});
+    // FIXME: attribute CSSOMString family;
+    // FIXME: attribute CSSOMString style;
+    // FIXME: attribute CSSOMString weight;
+    // FIXME: attribute CSSOMString stretch;
+    // FIXME: attribute CSSOMString unicodeRange;
+    // FIXME: attribute CSSOMString featureSettings;
+    // FIXME: attribute CSSOMString variationSettings;
+    // FIXME: attribute CSSOMString display;
+    // FIXME: attribute CSSOMString ascentOverride;
+    // FIXME: attribute CSSOMString descentOverride;
+    // FIXME: attribute CSSOMString lineGapOverride;
+
+    // FIXME: readonly attribute FontFaceLoadStatus status;
+
+    Promise<FontFace> load();
+    // FIXME: readonly attribute Promise<FontFace> loaded;
+};

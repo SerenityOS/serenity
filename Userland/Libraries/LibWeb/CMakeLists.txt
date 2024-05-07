@@ -54,6 +54,7 @@ set(SOURCES
     CSS/CSSTransition.cpp
     CSS/Display.cpp
     CSS/EdgeRect.cpp
+    CSS/FontFace.cpp
     CSS/Flex.cpp
     CSS/Frequency.cpp
     CSS/GridTrackPlacement.cpp

@@ -48,6 +48,7 @@ static bool is_platform_object(Type const& type)
         "DOMRectReadOnly"sv,
         "EventTarget"sv,
         "FileList"sv,
+        "FontFace"sv,
         "FormData"sv,
         "HTMLCollection"sv,
         "ImageBitmap"sv,
