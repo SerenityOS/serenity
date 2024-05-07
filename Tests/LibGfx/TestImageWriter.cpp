@@ -6,6 +6,9 @@
 
 #include <AK/MemoryStream.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/ICC/BinaryWriter.h>
+#include <LibGfx/ICC/Profile.h>
+#include <LibGfx/ICC/WellKnownProfiles.h>
 #include <LibGfx/ImageFormats/BMPLoader.h>
 #include <LibGfx/ImageFormats/BMPWriter.h>
 #include <LibGfx/ImageFormats/JPEGLoader.h>
@@ -37,31 +40,38 @@ static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> expect_single_frame_of_size(Gfx::Imag
     return frame;
 }
 
+template<class Writer, class... ExtraArgs>
+static ErrorOr<ByteBuffer> encode_bitmap(Gfx::Bitmap const& bitmap, ExtraArgs... extra_args)
+{
+    if constexpr (requires(AllocatingMemoryStream stream) { Writer::encode(stream, bitmap, extra_args...); }) {
+        AllocatingMemoryStream stream;
+        TRY(Writer::encode(stream, bitmap, extra_args...));
+        return stream.read_until_eof();
+    } else {
+        return Writer::encode(bitmap, extra_args...);
+    }
+}
+
 template<class Writer, class Loader>
 static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> get_roundtrip_bitmap(Gfx::Bitmap const& bitmap)
 {
-    ByteBuffer encoded_data;
-    if constexpr (requires(AllocatingMemoryStream stream) { Writer::encode(stream, bitmap); }) {
-        AllocatingMemoryStream stream;
-        TRY(Writer::encode(stream, bitmap));
-        encoded_data = TRY(stream.read_until_eof());
-    } else {
-        encoded_data = TRY(Writer::encode(bitmap));
-    }
+    auto encoded_data = TRY(encode_bitmap<Writer>(bitmap));
+    return expect_single_frame_of_size(*TRY(Loader::create(encoded_data)), bitmap.size());
+}
 
-    auto plugin = TRY(Loader::create(encoded_data));
-    return expect_single_frame_of_size(*plugin, bitmap.size());
+static void expect_bitmaps_equal(Gfx::Bitmap const& a, Gfx::Bitmap const& b)
+{
+    VERIFY(a.size() == b.size());
+    for (int y = 0; y < a.height(); ++y)
+        for (int x = 0; x < a.width(); ++x)
+            EXPECT_EQ(a.get_pixel(x, y), b.get_pixel(x, y));
 }
 
 template<class Writer, class Loader>
 static ErrorOr<void> test_roundtrip(Gfx::Bitmap const& bitmap)
 {
     auto decoded = TRY((get_roundtrip_bitmap<Writer, Loader>(bitmap)));
-
-    for (int y = 0; y < bitmap.height(); ++y)
-        for (int x = 0; x < bitmap.width(); ++x)
-            EXPECT_EQ(decoded->get_pixel(x, y), bitmap.get_pixel(x, y));
-
+    expect_bitmaps_equal(*decoded, bitmap);
     return {};
 }
 
@@ -119,4 +129,19 @@ TEST_CASE(test_webp)
 {
     TRY_OR_FAIL((test_roundtrip<Gfx::WebPWriter, Gfx::WebPImageDecoderPlugin>(TRY_OR_FAIL(create_test_rgb_bitmap()))));
     TRY_OR_FAIL((test_roundtrip<Gfx::WebPWriter, Gfx::WebPImageDecoderPlugin>(TRY_OR_FAIL(create_test_rgba_bitmap()))));
+}
+
+TEST_CASE(test_webp_icc)
+{
+    auto sRGB_icc_profile = MUST(Gfx::ICC::sRGB());
+    auto sRGB_icc_data = MUST(Gfx::ICC::encode(sRGB_icc_profile));
+
+    auto rgba_bitmap = TRY_OR_FAIL(create_test_rgba_bitmap());
+    auto encoded_rgba_bitmap = TRY_OR_FAIL((encode_bitmap<Gfx::WebPWriter>(rgba_bitmap, Gfx::WebPEncoderOptions { .icc_data = sRGB_icc_data })));
+
+    auto decoded_rgba_plugin = TRY_OR_FAIL(Gfx::WebPImageDecoderPlugin::create(encoded_rgba_bitmap));
+    expect_bitmaps_equal(*TRY_OR_FAIL(expect_single_frame_of_size(*decoded_rgba_plugin, rgba_bitmap->size())), rgba_bitmap);
+    auto decoded_rgba_profile = TRY_OR_FAIL(Gfx::ICC::Profile::try_load_from_externally_owned_memory(TRY_OR_FAIL(decoded_rgba_plugin->icc_data()).value()));
+    auto reencoded_icc_data = TRY_OR_FAIL(Gfx::ICC::encode(decoded_rgba_profile));
+    EXPECT_EQ(sRGB_icc_data, reencoded_icc_data);
 }

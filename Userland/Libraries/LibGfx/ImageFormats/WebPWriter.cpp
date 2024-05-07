@@ -215,33 +215,41 @@ static ErrorOr<void> write_VP8X_header(Stream& stream, VP8XHeader const& header)
 
     LittleEndianOutputBitStream bit_stream { MaybeOwned<Stream>(stream) };
 
+    // Don't use bit_stream.write_bits() to write individual flags here:
+    // The spec describes bit flags in MSB to LSB order, but write_bits() writes LSB to MSB.
+    u8 flags = 0;
     // "Reserved (Rsv): 2 bits
     //  MUST be 0. Readers MUST ignore this field."
-    TRY(bit_stream.write_bits(0u, 2u));
 
     // "ICC profile (I): 1 bit
     //  Set if the file contains an 'ICCP' Chunk."
-    TRY(bit_stream.write_bits(header.has_icc, 1u));
+    if (header.has_icc)
+        flags |= 0x20;
 
     // "Alpha (L): 1 bit
     //  Set if any of the frames of the image contain transparency information ("alpha")."
-    TRY(bit_stream.write_bits(header.has_alpha, 1u));
+    if (header.has_alpha)
+        flags |= 0x10;
 
     // "Exif metadata (E): 1 bit
     //  Set if the file contains Exif metadata."
-    TRY(bit_stream.write_bits(header.has_exif, 1u));
+    if (header.has_exif)
+        flags |= 0x8;
 
     // "XMP metadata (X): 1 bit
     //  Set if the file contains XMP metadata."
-    TRY(bit_stream.write_bits(header.has_xmp, 1u));
+    if (header.has_xmp)
+        flags |= 0x4;
 
     // "Animation (A): 1 bit
     //  Set if this is an animated image. Data in 'ANIM' and 'ANMF' Chunks should be used to control the animation."
-    TRY(bit_stream.write_bits(header.has_animation, 1u));
+    if (header.has_animation)
+        flags |= 0x2;
 
     // "Reserved (R): 1 bit
     //  MUST be 0. Readers MUST ignore this field."
-    TRY(bit_stream.write_bits(0u, 1u));
+
+    TRY(bit_stream.write_bits(flags, 8u));
 
     // "Reserved: 24 bits
     //  MUST be 0. Readers MUST ignore this field."
@@ -304,7 +312,7 @@ ErrorOr<void> WebPWriter::encode(Stream& stream, Bitmap const& bitmap, Options c
         iccp_chunk_bytes = TRY(iccp_chunk_stream.read_until_eof());
 
         AllocatingMemoryStream vp8x_header_stream;
-        TRY(write_VP8X_header(vp8x_header_stream, { .has_icc = true, .width = (u32)bitmap.width(), .height = (u32)bitmap.height() }));
+        TRY(write_VP8X_header(vp8x_header_stream, { .has_icc = true, .has_alpha = alpha_is_used_hint, .width = (u32)bitmap.width(), .height = (u32)bitmap.height() }));
         auto vp8x_header_bytes = TRY(vp8x_header_stream.read_until_eof());
 
         AllocatingMemoryStream vp8x_chunk_stream;
