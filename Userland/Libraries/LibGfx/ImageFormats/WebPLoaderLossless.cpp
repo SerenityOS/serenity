@@ -992,8 +992,7 @@ ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L_contents(VP8LHeader const&
     auto format = vp8l_header.is_alpha_used ? BitmapFormat::BGRA8888 : BitmapFormat::BGRx8888;
     auto bitmap = TRY(decode_webp_chunk_VP8L_image(ImageKind::SpatiallyCoded, format, stored_size, bit_stream));
 
-    // Transforms have to be applied in the reverse order they appear in in the file.
-    // (As far as I can tell, this isn't mentioned in the spec.)
+    // "The inverse transforms are applied in the reverse order that they are read from the bitstream, that is, last one first."
     for (auto const& transform : transforms.in_reverse())
         bitmap = TRY(transform->transform(bitmap));
 
