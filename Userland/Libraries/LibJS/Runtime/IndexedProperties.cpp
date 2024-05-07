@@ -22,14 +22,12 @@ SimpleIndexedPropertyStorage::SimpleIndexedPropertyStorage(Vector<Value>&& initi
 
 bool SimpleIndexedPropertyStorage::has_index(u32 index) const
 {
-    return index < m_array_size && !m_packed_elements[index].is_empty();
+    return inline_has_index(index);
 }
 
 Optional<ValueAndAttributes> SimpleIndexedPropertyStorage::get(u32 index) const
 {
-    if (!has_index(index))
-        return {};
-    return ValueAndAttributes { m_packed_elements[index], default_attributes };
+    return inline_get(index);
 }
 
 void SimpleIndexedPropertyStorage::grow_storage_if_needed()
