@@ -426,8 +426,7 @@ Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> AssignmentExpressio
                         // https://tc39.es/ecma262/#sec-super-keyword-runtime-semantics-evaluation
                         // 1. Let env be GetThisEnvironment().
                         // 2. Let actualThis be ? env.GetThisBinding().
-                        this_value = Bytecode::Operand(generator.allocate_register());
-                        generator.emit<Bytecode::Op::ResolveThisBinding>(*this_value);
+                        this_value = generator.get_this();
 
                         // SuperProperty : super [ Expression ]
                         // 3. Let propertyNameReference be ? Evaluation of Expression.
@@ -1486,8 +1485,7 @@ static Bytecode::CodeGenerationErrorOr<BaseAndValue> get_base_and_value_from_mem
     if (is<SuperExpression>(member_expression.object())) {
         // 1. Let env be GetThisEnvironment().
         // 2. Let actualThis be ? env.GetThisBinding().
-        auto this_value = Bytecode::Operand(generator.allocate_register());
-        generator.emit<Bytecode::Op::ResolveThisBinding>(this_value);
+        auto this_value = generator.get_this();
 
         Optional<Bytecode::Operand> computed_property;
 
@@ -2718,9 +2716,7 @@ Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> SpreadExpression::g
 Bytecode::CodeGenerationErrorOr<Optional<Bytecode::Operand>> ThisExpression::generate_bytecode(Bytecode::Generator& generator, Optional<Bytecode::Operand> preferred_dst) const
 {
     Bytecode::Generator::SourceLocationScope scope(generator, *this);
-    auto dst = choose_dst(generator, preferred_dst);
-    generator.emit<Bytecode::Op::ResolveThisBinding>(dst);
-    return dst;
+    return generator.get_this(preferred_dst);
 }
 
 static Bytecode::Operand generate_await(

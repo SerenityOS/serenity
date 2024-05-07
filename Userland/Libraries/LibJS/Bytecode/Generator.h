@@ -257,6 +257,8 @@ public:
         m_boundaries.take_last();
     }
 
+    [[nodiscard]] Operand get_this(Optional<Operand> preferred_dst = {});
+
     void emit_get_by_id(Operand dst, Operand base, IdentifierTableIndex property_identifier, Optional<IdentifierTableIndex> base_identifier = {});
 
     void emit_get_by_id_with_this(Operand dst, Operand base, IdentifierTableIndex, Operand this_value);
