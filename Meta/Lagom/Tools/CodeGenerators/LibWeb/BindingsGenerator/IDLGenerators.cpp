@@ -1569,7 +1569,7 @@ void IDL::ParameterizedType::generate_sequence_from_iterable(SourceGenerator& ge
 )~~~");
     } else {
         sequence_generator.append(R"~~~(
-    @sequence.storage_type@ @cpp_name@ { vm.heap() };
+    @sequence.storage_type@<@sequence.type@> @cpp_name@ { vm.heap() };
 )~~~");
     }
 

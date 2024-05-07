@@ -55,6 +55,7 @@ set(SOURCES
     CSS/Display.cpp
     CSS/EdgeRect.cpp
     CSS/FontFace.cpp
+    CSS/FontFaceSet.cpp
     CSS/Flex.cpp
     CSS/Frequency.cpp
     CSS/GridTrackPlacement.cpp

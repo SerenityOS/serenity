@@ -1,4 +1,5 @@
 #import <Animations/DocumentTimeline.idl>
+#import <CSS/FontFaceSet.idl>
 #import <CSS/StyleSheetList.idl>
 #import <DOM/CDATASection.idl>
 #import <DOM/Comment.idl>
@@ -152,3 +153,4 @@ dictionary ElementCreationOptions {
 Document includes ParentNode;
 Document includes GlobalEventHandlers;
 Document includes DocumentOrShadowRoot;
+Document includes FontFaceSource;

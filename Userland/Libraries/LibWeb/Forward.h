@@ -125,6 +125,7 @@ class Flex;
 class FlexOrCalculated;
 class FlexStyleValue;
 class FontFace;
+class FontFaceSet;
 class Frequency;
 class FrequencyOrCalculated;
 class FrequencyPercentage;

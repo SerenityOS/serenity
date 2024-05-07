@@ -8,6 +8,7 @@
 #include <LibWeb/Bindings/DedicatedWorkerExposedInterfaces.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Bindings/WorkerGlobalScopePrototype.h>
+#include <LibWeb/CSS/FontFaceSet.h>
 #include <LibWeb/HTML/EventHandler.h>
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/MessageEvent.h>
@@ -53,6 +54,7 @@ void WorkerGlobalScope::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_navigator);
     visitor.visit(m_internal_port);
     visitor.visit(m_page);
+    visitor.visit(m_fonts);
 }
 
 void WorkerGlobalScope::finalize()
@@ -126,5 +128,12 @@ WebIDL::ExceptionOr<void> WorkerGlobalScope::post_message(JS::Value message, Str
     }
 ENUMERATE_WORKER_GLOBAL_SCOPE_EVENT_HANDLERS(__ENUMERATE)
 #undef __ENUMERATE
+
+JS::NonnullGCPtr<CSS::FontFaceSet> WorkerGlobalScope::fonts()
+{
+    if (!m_fonts)
+        m_fonts = CSS::FontFaceSet::create(realm());
+    return *m_fonts;
+}
 
 }

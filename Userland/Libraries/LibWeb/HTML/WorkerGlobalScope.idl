@@ -1,3 +1,4 @@
+#import <CSS/FontFaceSet.idl>
 #import <DOM/EventTarget.idl>
 #import <DOM/EventHandler.idl>
 #import <HTML/WindowOrWorkerGlobalScope.idl>
@@ -28,3 +29,4 @@ interface WorkerGlobalScope : EventTarget {
 };
 
 WorkerGlobalScope includes WindowOrWorkerGlobalScope;
+WorkerGlobalScope includes FontFaceSource;

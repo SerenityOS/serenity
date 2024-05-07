@@ -77,6 +77,8 @@ public:
 
     WebIDL::ExceptionOr<void> post_message(JS::Value message, StructuredSerializeOptions const&);
 
+    JS::NonnullGCPtr<CSS::FontFaceSet> fonts();
+
     // Non-IDL public methods
 
     URL::URL const& url() const { return m_url.value(); }
@@ -136,6 +138,9 @@ private:
 
     // https://html.spec.whatwg.org/multipage/workers.html#concept-workerglobalscope-cross-origin-isolated-capability
     bool m_cross_origin_isolated_capability { false };
+
+    // https://drafts.csswg.org/css-font-loading/#font-source
+    JS::GCPtr<CSS::FontFaceSet> m_fonts;
 };
 
 }

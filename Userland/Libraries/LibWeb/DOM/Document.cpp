@@ -26,6 +26,7 @@
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/CSS/AnimationEvent.h>
 #include <LibWeb/CSS/CSSAnimation.h>
+#include <LibWeb/CSS/FontFaceSet.h>
 #include <LibWeb/CSS/MediaQueryList.h>
 #include <LibWeb/CSS/MediaQueryListEvent.h>
 #include <LibWeb/CSS/StyleComputer.h>
@@ -440,6 +441,7 @@ void Document::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_forms);
     visitor.visit(m_scripts);
     visitor.visit(m_all);
+    visitor.visit(m_fonts);
     visitor.visit(m_selection);
     visitor.visit(m_first_base_element_with_href_in_tree_order);
     visitor.visit(m_parser);
@@ -1450,6 +1452,14 @@ JS::NonnullGCPtr<HTML::HTMLAllCollection> Document::all()
         });
     }
     return *m_all;
+}
+
+// https://drafts.csswg.org/css-font-loading/#font-source
+JS::NonnullGCPtr<CSS::FontFaceSet> Document::fonts()
+{
+    if (!m_fonts)
+        m_fonts = CSS::FontFaceSet::create(realm());
+    return *m_fonts;
 }
 
 // https://html.spec.whatwg.org/multipage/obsolete.html#dom-document-clear
