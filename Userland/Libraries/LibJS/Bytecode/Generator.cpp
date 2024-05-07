@@ -802,6 +802,10 @@ Operand Generator::get_this(Optional<Operand> preferred_dst)
 {
     if (m_current_basic_block->this_().has_value())
         return m_current_basic_block->this_().value();
+    if (m_root_basic_blocks[0]->this_().has_value()) {
+        m_current_basic_block->set_this(m_root_basic_blocks[0]->this_().value());
+        return m_root_basic_blocks[0]->this_().value();
+    }
     auto dst = preferred_dst.has_value() ? preferred_dst.value() : Operand(allocate_register());
     emit<Bytecode::Op::ResolveThisBinding>(dst);
     m_current_basic_block->set_this(dst);
