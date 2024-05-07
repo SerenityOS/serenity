@@ -14,6 +14,8 @@ namespace Gfx {
 
 struct GIFLoadingContext;
 
+// Specified at: https://www.w3.org/Graphics/GIF/spec-gif89a.txt
+
 class GIFImageDecoderPlugin final : public ImageDecoderPlugin {
 public:
     static bool sniff(ReadonlyBytes);
