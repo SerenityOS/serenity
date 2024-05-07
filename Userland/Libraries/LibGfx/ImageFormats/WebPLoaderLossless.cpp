@@ -843,7 +843,7 @@ public:
     // If the palette has 5 to 16 colors, every index needs 4 bits and every pixel can encode 2 output pixels.
     // This returns how many output pixels one input pixel can encode after the color indexing transform.
     //
-    // The spec isn't very explicit about this, but this affects all images after the color indexing transform:
+    // This affects all images after the color indexing transform:
     // If a webp file contains a 29x32 image and it contains a color indexing transform with a 4-color palette, then the in-memory size of all images
     // after the color indexing transform assume a bitmap size of ceil_div(29, 4)x32 = 8x32.
     // That is, the sizes of transforms after the color indexing transform are computed relative to the size 8x32,
@@ -992,7 +992,10 @@ ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L_contents(VP8LHeader const&
             break;
         case COLOR_INDEXING_TRANSFORM: {
             auto color_indexing_transform = TRY(ColorIndexingTransform::read(bit_stream, stored_size.width()));
+
+            // "After reading this transform, image_width is subsampled by width_bits. This affects the size of subsequent transforms."
             stored_size.set_width(ceil_div(stored_size.width(), color_indexing_transform->pixels_per_pixel()));
+
             TRY(transforms.try_append(move(color_indexing_transform)));
             break;
         }
