@@ -321,7 +321,7 @@ static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L_image(ImageKind ima
 
     // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#52_encoding_of_image_data
     // "The encoded image data consists of several parts:
-    //    1. Decoding and building the prefix codes [AMENDED2]
+    //    1. Decoding and building the prefix codes
     //    2. Meta prefix codes
     //    3. Entropy-coded image data"
     // data                  =  prefix-codes lz77-coded-image
@@ -539,7 +539,7 @@ private:
         int pT = abs(pAlpha - (int)ALPHA(T)) + abs(pRed - (int)RED(T)) + abs(pGreen - (int)GREEN(T)) + abs(pBlue - (int)BLUE(T));
 
         // "Return either left or top, the one closer to the prediction."
-        if (pL < pT) { // "\[AMENDED\]"
+        if (pL < pT) {
             return L;
         } else {
             return T;
