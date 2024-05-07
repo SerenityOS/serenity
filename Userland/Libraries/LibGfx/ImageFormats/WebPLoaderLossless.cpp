@@ -645,6 +645,8 @@ ErrorOr<NonnullRefPtr<Bitmap>> PredictorTransform::transform(NonnullRefPtr<Bitma
             u8 predictor = Color::from_argb(predictor_scanline[predictor_x]).green();
 
             ARGB32 predicted = TRY(predict(predictor, TL, T, TR, L));
+
+            // "The final pixel value is obtained by adding each channel of the predicted value to the encoded residual value."
             bitmap_scanline[x] = add_argb32(bitmap_scanline[x], predicted);
 
             TL = T;
