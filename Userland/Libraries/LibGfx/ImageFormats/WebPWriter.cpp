@@ -199,27 +199,10 @@ struct VP8XHeader {
     u32 height { 0 };
 };
 
-// https://developers.google.com/speed/webp/docs/riff_container#extended_file_format
-static ErrorOr<void> write_VP8X_chunk(Stream& stream, VP8XHeader const& header)
+static u8 vp8x_flags_from_header(VP8XHeader const& header)
 {
-    if (header.width > (1 << 24) || header.height > (1 << 24))
-        return Error::from_string_literal("WebP dimensions too large for VP8X chunk");
-
-    if (header.width == 0 || header.height == 0)
-        return Error::from_string_literal("WebP lossless images must be at least one pixel wide and tall");
-
-    // "The product of Canvas Width and Canvas Height MUST be at most 2^32 - 1."
-    u64 product = static_cast<u64>(header.width) * static_cast<u64>(header.height);
-    if (product >= (1ull << 32))
-        return Error::from_string_literal("WebP dimensions too large for VP8X chunk");
-
-    TRY(write_chunk_header(stream, "VP8X"sv, 10));
-
-    LittleEndianOutputBitStream bit_stream { MaybeOwned<Stream>(stream) };
-
-    // Don't use bit_stream.write_bits() to write individual flags here:
-    // The spec describes bit flags in MSB to LSB order, but write_bits() writes LSB to MSB.
     u8 flags = 0;
+
     // "Reserved (Rsv): 2 bits
     //  MUST be 0. Readers MUST ignore this field."
 
@@ -251,7 +234,30 @@ static ErrorOr<void> write_VP8X_chunk(Stream& stream, VP8XHeader const& header)
     // "Reserved (R): 1 bit
     //  MUST be 0. Readers MUST ignore this field."
 
-    TRY(bit_stream.write_bits(flags, 8u));
+    return flags;
+}
+
+// https://developers.google.com/speed/webp/docs/riff_container#extended_file_format
+static ErrorOr<void> write_VP8X_chunk(Stream& stream, VP8XHeader const& header)
+{
+    if (header.width > (1 << 24) || header.height > (1 << 24))
+        return Error::from_string_literal("WebP dimensions too large for VP8X chunk");
+
+    if (header.width == 0 || header.height == 0)
+        return Error::from_string_literal("WebP lossless images must be at least one pixel wide and tall");
+
+    // "The product of Canvas Width and Canvas Height MUST be at most 2^32 - 1."
+    u64 product = static_cast<u64>(header.width) * static_cast<u64>(header.height);
+    if (product >= (1ull << 32))
+        return Error::from_string_literal("WebP dimensions too large for VP8X chunk");
+
+    TRY(write_chunk_header(stream, "VP8X"sv, 10));
+
+    LittleEndianOutputBitStream bit_stream { MaybeOwned<Stream>(stream) };
+
+    // Don't use bit_stream.write_bits() to write individual flags here:
+    // The spec describes bit flags in MSB to LSB order, but write_bits() writes LSB to MSB.
+    TRY(bit_stream.write_bits(vp8x_flags_from_header(header), 8u));
 
     // "Reserved: 24 bits
     //  MUST be 0. Readers MUST ignore this field."
@@ -329,19 +335,22 @@ ErrorOr<void> WebPWriter::encode(Stream& stream, Bitmap const& bitmap, Options c
 
 class WebPAnimationWriter : public AnimationWriter {
 public:
-    WebPAnimationWriter(SeekableStream& stream, IntSize dimensions)
+    WebPAnimationWriter(SeekableStream& stream, IntSize dimensions, u8 original_vp8x_flags)
         : m_stream(stream)
         , m_dimensions(dimensions)
+        , m_vp8x_flags(original_vp8x_flags)
     {
     }
 
     virtual ErrorOr<void> add_frame(Bitmap&, int, IntPoint) override;
 
     ErrorOr<void> update_size_in_header();
+    ErrorOr<void> set_alpha_bit_in_header();
 
 private:
     SeekableStream& m_stream;
     IntSize m_dimensions;
+    u8 m_vp8x_flags { 0 };
 };
 
 static ErrorOr<void> align_to_two(SeekableStream& stream)
@@ -462,6 +471,9 @@ ErrorOr<void> WebPAnimationWriter::add_frame(Bitmap& bitmap, int duration_ms, In
 
     TRY(update_size_in_header());
 
+    if (!(m_vp8x_flags & 0x10) && !are_all_pixels_opaque(bitmap))
+        TRY(set_alpha_bit_in_header());
+
     return {};
 }
 
@@ -471,6 +483,17 @@ ErrorOr<void> WebPAnimationWriter::update_size_in_header()
     TRY(m_stream.seek(4, SeekMode::SetPosition));
     VERIFY(current_offset > 8);
     TRY(m_stream.write_value<LittleEndian<u32>>(current_offset - 8));
+    TRY(m_stream.seek(current_offset, SeekMode::SetPosition));
+    return {};
+}
+
+ErrorOr<void> WebPAnimationWriter::set_alpha_bit_in_header()
+{
+    m_vp8x_flags |= 0x10;
+
+    auto current_offset = TRY(m_stream.tell());
+    TRY(m_stream.seek(20, SeekMode::SetPosition));
+    TRY(m_stream.write_value<u8>(m_vp8x_flags));
     TRY(m_stream.seek(current_offset, SeekMode::SetPosition));
     return {};
 }
@@ -510,7 +533,7 @@ ErrorOr<NonnullOwnPtr<AnimationWriter>> WebPWriter::start_encoding_animation(See
 
     TRY(write_ANIM_chunk(stream, { .background_color = background_color.value(), .loop_count = static_cast<u16>(loop_count) }));
 
-    auto writer = make<WebPAnimationWriter>(stream, dimensions);
+    auto writer = make<WebPAnimationWriter>(stream, dimensions, vp8x_flags_from_header(vp8x_header));
     TRY(writer->update_size_in_header());
     return writer;
 }
