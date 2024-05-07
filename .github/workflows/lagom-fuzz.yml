@@ -1,0 +1,91 @@
+name: Lagom Fuzz
+
+on: [push, pull_request]
+
+env:
+  # runner.workspace = /home/runner/work/serenity
+  # github.workspace = /home/runner/work/serenity/serenity
+  SERENITY_SOURCE_DIR: ${{ github.workspace }}
+  CCACHE_DIR: ${{ github.workspace }}/.ccache
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || format('{0}-{1}', github.ref, github.run_number) }}
+  cancel-in-progress: true
+
+jobs:
+  CI:
+    runs-on: ${{ matrix.os }}
+    if: github.repository == 'SerenityOS/serenity'
+    strategy:
+      fail-fast: false
+      matrix:
+        os_name: ['Linux']
+        os: [ubuntu-22.04]
+
+    steps:
+      # Pull requests can trail behind `master` and can cause breakage if merging before running the CI checks on an updated branch.
+      # Luckily, GitHub creates and maintains a merge branch that is updated whenever the target or source branch is modified. By
+      # checking this branch out, we gain a stabler `master` at the cost of reproducibility.
+      - uses: actions/checkout@v4
+        if: ${{ github.event_name != 'pull_request' }}
+
+      - uses: actions/checkout@v4
+        if: ${{ github.event_name == 'pull_request' }}
+        with:
+          ref: refs/pull/${{ github.event.pull_request.number }}/merge
+
+      - name: 'Set Up Environment'
+        uses: ./.github/actions/setup
+        with:
+          os: ${{ matrix.os_name }}
+          arch: 'Lagom'
+
+      # === PREPARE FOR BUILDING ===
+
+      - name: Restore Caches
+        uses: ./.github/actions/cache-restore
+        id: 'cache-restore'
+        with:
+          os: ${{ matrix.os_name }}
+          arch: 'Lagom'
+          cache_key_extra: 'Fuzz'
+          serenity_ccache_path: ${{ env.CCACHE_DIR }}
+          download_cache_path: ${{ github.workspace }}/Build/caches
+
+      - name: Create Build Environment
+        working-directory: ${{ github.workspace }}/Meta/Lagom
+        run: |
+          set -e
+
+          cmake -GNinja -B tools-build \
+            -DBUILD_LAGOM=OFF \
+            -DCMAKE_INSTALL_PREFIX=tool-install \
+            -DCMAKE_C_COMPILER=gcc-13 \
+            -DCMAKE_CXX_COMPILER=g++-13 \
+            -Dpackage=LagomTools
+
+          ninja -C tools-build install
+
+          cmake -GNinja -B Build \
+            -DBUILD_LAGOM=ON \
+            -DENABLE_FUZZERS_LIBFUZZER=ON \
+            -DENABLE_ADDRESS_SANITIZER=ON \
+            -DCMAKE_C_COMPILER=clang \
+            -DCMAKE_CXX_COMPILER=clang++ \
+            -DCMAKE_PREFIX_PATH=tool-install
+
+      # === BUILD ===
+
+      - name: Build
+        working-directory: ${{ github.workspace }}/Meta/Lagom/Build
+        run: |
+          set -e
+          cmake --build .
+          cmake --install . --strip --prefix ${{ github.workspace }}/Meta/Lagom/Install
+
+      - name: Save Caches
+        uses: ./.github/actions/cache-save
+        with:
+          arch: 'Lagom'
+          serenity_ccache_path: ${{ env.CCACHE_DIR }}
+          serenity_ccache_primary_key: ${{ steps.cache-restore.outputs.serenity_ccache_primary_key }}

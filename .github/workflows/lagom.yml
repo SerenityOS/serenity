@@ -1,0 +1,146 @@
+name: Lagom
+
+on: [push, pull_request]
+
+env:
+  # runner.workspace = /home/runner/work/serenity
+  # github.workspace = /home/runner/work/serenity/serenity
+  SERENITY_SOURCE_DIR: ${{ github.workspace }}
+  CCACHE_DIR: ${{ github.workspace }}/.ccache
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || format('{0}-{1}', github.ref, github.run_number) }}
+  cancel-in-progress: true
+
+jobs:
+  CI:
+    runs-on: ${{ matrix.os }}
+    if: github.repository == 'SerenityOS/serenity'
+    strategy:
+      fail-fast: false
+      matrix:
+        os_name: ['Linux']
+        os: [ubuntu-22.04]
+        include:
+          - os_name: 'macOS'
+            os: macos-14
+
+    steps:
+      # Pull requests can trail behind `master` and can cause breakage if merging before running the CI checks on an updated branch.
+      # Luckily, GitHub creates and maintains a merge branch that is updated whenever the target or source branch is modified. By
+      # checking this branch out, we gain a stabler `master` at the cost of reproducibility.
+      - uses: actions/checkout@v4
+        if: ${{ github.event_name != 'pull_request' }}
+
+      - uses: actions/checkout@v4
+        if: ${{ github.event_name == 'pull_request' }}
+        with:
+          ref: refs/pull/${{ github.event.pull_request.number }}/merge
+
+      - name: 'Set Up Environment'
+        uses: ./.github/actions/setup
+        with:
+          os: ${{ matrix.os_name }}
+          arch: 'Lagom'
+
+      # === PREPARE FOR BUILDING ===
+
+      - name: Restore Caches
+        uses: ./.github/actions/cache-restore
+        id: 'cache-restore'
+        with:
+          os: ${{ matrix.os_name }}
+          arch: 'Lagom'
+          serenity_ccache_path: ${{ env.CCACHE_DIR }}
+          download_cache_path: ${{ github.workspace }}/Build/caches
+
+      - name: Assign Build Parameters
+        id: 'build-parameters'
+        run: |
+          if ${{ matrix.os_name == 'Linux' }} ; then
+            echo "host_cc=clang-18" >> "$GITHUB_OUTPUT"
+            echo "host_cxx=clang++-18" >> "$GITHUB_OUTPUT"
+          elif ${{ matrix.os_name == 'macOS' }} ; then
+            echo "host_cc=$(brew --prefix llvm@18)/bin/clang" >> "$GITHUB_OUTPUT"
+            echo "host_cxx=$(brew --prefix llvm@18)/bin/clang++" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create Build Environment
+        working-directory: ${{ github.workspace }}/Meta/Lagom
+        run: |
+          cmake -GNinja -B Build \
+            -DBUILD_LAGOM=ON \
+            -DENABLE_LAGOM_LADYBIRD=ON \
+            -DINCLUDE_WASM_SPEC_TESTS=ON \
+            -DWASM_SPEC_TEST_SKIP_FORMATTING=ON \
+            -DENABLE_UNDEFINED_SANITIZER=ON \
+            -DENABLE_ADDRESS_SANITIZER=ON \
+            -DCMAKE_C_COMPILER=${{ steps.build-parameters.outputs.host_cc }} \
+            -DCMAKE_CXX_COMPILER=${{ steps.build-parameters.outputs.host_cxx }}
+
+      # === BUILD ===
+
+      - name: Build
+        working-directory: ${{ github.workspace }}/Meta/Lagom/Build
+        run: |
+          set -e
+          cmake --build .
+          cmake --install . --strip --prefix ${{ github.workspace }}/Meta/Lagom/Install
+
+      - name: Enable the Ladybird Qt chrome
+        working-directory: ${{ github.workspace }}/Meta/Lagom
+        run: cmake -B Build -DENABLE_QT=ON
+        if: ${{ matrix.os_name == 'macOS' }}
+
+      - name: Build the Ladybird Qt chrome
+        working-directory: ${{ github.workspace }}/Meta/Lagom/Build
+        run: cmake --build .
+        if: ${{ matrix.os_name == 'macOS' }}
+
+      - name: Save Caches
+        uses: ./.github/actions/cache-save
+        with:
+          arch: 'Lagom'
+          serenity_ccache_path: ${{ env.CCACHE_DIR }}
+          serenity_ccache_primary_key: ${{ steps.cache-restore.outputs.serenity_ccache_primary_key }}
+
+      # === TEST ===
+
+      - name: Test
+        working-directory: ${{ github.workspace }}/Meta/Lagom/Build
+        run: ninja test
+        env:
+          CTEST_OUTPUT_ON_FAILURE: 1
+          ASAN_OPTIONS: 'strict_string_checks=1:check_initialization_order=1:strict_init_order=1:detect_stack_use_after_return=1:allocator_may_return_null=1'
+          UBSAN_OPTIONS: 'print_stacktrace=1:print_summary=1:halt_on_error=1'
+          TESTS_ONLY: 1
+
+      - name: Upload LibWeb Test Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: libweb-test-artifacts-${{ matrix.os_name }}
+          path: ${{ github.workspace }}/Meta/Lagom/Build/Ladybird/test-dumps
+          retention-days: 7
+          if-no-files-found: ignore
+        if: always()
+
+      - name: WPT
+        working-directory: ${{ github.workspace }}/Tests/LibWeb/WPT
+        run: ./run.sh --remove-wpt-repository
+        if: ${{ matrix.os_name == 'Linux' }}
+        env:
+          QT_QPA_PLATFORM: 'offscreen'
+
+      - name: Lints
+        working-directory: ${{ github.workspace }}
+        run: |
+          set -e
+          ./Meta/check-markdown.sh
+          ./Meta/lint-gml-format.sh
+          git ls-files '*.ipc' | xargs ./Meta/Lagom/Build/bin/IPCMagicLinter
+        if: ${{ matrix.os_name == 'Linux' }}
+        env:
+          MARKDOWN_CHECK_BINARY: ./Meta/Lagom/Build/bin/markdown-check
+          GML_FORMAT: ./Meta/Lagom/Build/bin/gml-format
+          ASAN_OPTIONS: 'strict_string_checks=1:check_initialization_order=1:strict_init_order=1:detect_stack_use_after_return=1:allocator_may_return_null=1'
+          UBSAN_OPTIONS: 'print_stacktrace=1:print_summary=1:halt_on_error=1'
