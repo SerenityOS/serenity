@@ -13,35 +13,33 @@ jobs:
     strategy:
       fail-fast: false
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.x'
-      - name: "Install Ubuntu dependencies"
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ninja-build gcc-13 g++-13 libstdc++-13-dev
-      - name: "Install emscripten"
-        uses: mymindstorm/setup-emsdk@v14
-        with:
-          version: 3.1.25
-      - name: "Check versions"
-        run: |
-          set +e
-          emcc --version
-          ninja --version
-          gcc --version
+      - name: Checkout SerenityOS/serenity
+        uses: actions/checkout@v4
+
       - name: Checkout SerenityOS/libjs-data libjs-wasm
         uses: actions/checkout@v4
         with:
           repository: SerenityOS/libjs-data
           path: libjs-data
           ref: libjs-wasm
+
+      - name: "Set up environment"
+        uses: ./.github/actions/setup
+        with:
+          os: 'Linux'
+          arch: 'Lagom'
+
+      - name: "Install emscripten"
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: 3.1.25
+
       - name: "Create build directories"
         run: |
           mkdir -p ${{ github.workspace }}/Build/caches/TZDB
           mkdir -p ${{ github.workspace }}/Build/caches/UCD
           mkdir -p ${{ github.workspace }}/Build/caches/CLDR
+
       - name: "TimeZoneData cache"
         uses: actions/cache@v4
         with:
