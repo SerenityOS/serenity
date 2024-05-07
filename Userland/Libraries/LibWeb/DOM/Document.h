@@ -256,6 +256,9 @@ public:
     JS::NonnullGCPtr<HTMLCollection> scripts();
     JS::NonnullGCPtr<HTML::HTMLAllCollection> all();
 
+    // https://drafts.csswg.org/css-font-loading/#font-source
+    JS::NonnullGCPtr<CSS::FontFaceSet> fonts();
+
     void clear();
     void capture_events();
     void release_events();
@@ -809,6 +812,9 @@ private:
     JS::GCPtr<HTMLCollection> m_forms;
     JS::GCPtr<HTMLCollection> m_scripts;
     JS::GCPtr<HTML::HTMLAllCollection> m_all;
+
+    // https://drafts.csswg.org/css-font-loading/#font-source
+    JS::GCPtr<CSS::FontFaceSet> m_fonts;
 
     // https://html.spec.whatwg.org/#completely-loaded-time
     Optional<AK::UnixDateTime> m_completely_loaded_time;
