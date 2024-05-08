@@ -8,6 +8,7 @@
  */
 
 #include <AK/Find.h>
+#include <AK/Queue.h>
 #include <LibJS/AST.h>
 #include <LibJS/Bytecode/Generator.h>
 #include <LibJS/Bytecode/Instruction.h>
@@ -2586,6 +2587,12 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> SwitchStatement::genera
 
     generator.emit<Bytecode::Op::Jump>(Bytecode::Label { *next_test_block });
 
+    Queue<Bytecode::BasicBlock*> test_blocks;
+    for (auto& switch_case : m_cases) {
+        if (switch_case->test())
+            test_blocks.enqueue(&generator.make_block());
+    }
+
     for (auto& switch_case : m_cases) {
         auto& case_block = generator.make_block();
         if (switch_case->test()) {
@@ -2593,7 +2600,7 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> SwitchStatement::genera
             auto test_value = TRY(switch_case->test()->generate_bytecode(generator)).value();
             auto result = generator.allocate_register();
             generator.emit<Bytecode::Op::StrictlyEquals>(result, test_value, discriminant);
-            next_test_block = &generator.make_block();
+            next_test_block = test_blocks.dequeue();
             generator.emit<Bytecode::Op::JumpIf>(
                 result,
                 Bytecode::Label { case_block },
