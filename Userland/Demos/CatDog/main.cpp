@@ -24,6 +24,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app = TRY(GUI::Application::create(arguments));
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-catdog"sv));
 
+    auto catdog_icon_sleep = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/catdog-sleeping.png"sv));
+    auto catdog_icon_wake = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/catdog-wake-up.png"sv));
+
     TRY(Core::System::pledge("stdio recvfd sendfd rpath"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/sys/kernel/processes", "r"));
@@ -46,6 +49,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto context_menu = GUI::Menu::construct();
     context_menu->add_action(GUI::CommonActions::make_about_action("CatDog Demo"_string, app_icon, window));
+    context_menu->add_action(GUI::Action::create("Put CatDog to sleep...", catdog_icon_sleep, [&](GUI::Action& action) {
+        catdog_widget->set_sleeping(!catdog_widget->is_sleeping());
+
+        action.set_text(catdog_widget->is_sleeping() ? "Wake CatDog..." : "Put CatDog to sleep...");
+        action.set_icon(catdog_widget->is_sleeping() ? catdog_icon_wake : catdog_icon_sleep);
+    }));
     context_menu->add_separator();
     context_menu->add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
 
