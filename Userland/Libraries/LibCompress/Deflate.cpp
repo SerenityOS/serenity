@@ -9,7 +9,6 @@
 #include <AK/Assertions.h>
 #include <AK/BinaryHeap.h>
 #include <AK/BinarySearch.h>
-#include <AK/BitStream.h>
 #include <AK/MemoryStream.h>
 #include <string.h>
 
@@ -164,14 +163,6 @@ ErrorOr<u32> CanonicalCode::read_symbol(LittleEndianInputBitStream& stream) cons
     }
 
     return Error::from_string_literal("Symbol exceeds maximum symbol number");
-}
-
-ErrorOr<void> CanonicalCode::write_symbol(LittleEndianOutputBitStream& stream, u32 symbol) const
-{
-    auto code = symbol < m_bit_codes.size() ? m_bit_codes[symbol] : 0u;
-    auto length = symbol < m_bit_code_lengths.size() ? m_bit_code_lengths[symbol] : 0u;
-    TRY(stream.write_bits(code, length));
-    return {};
 }
 
 DeflateDecompressor::CompressedBlock::CompressedBlock(DeflateDecompressor& decompressor, CanonicalCode literal_codes, Optional<CanonicalCode> distance_codes)
