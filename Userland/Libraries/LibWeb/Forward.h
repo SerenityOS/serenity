@@ -635,6 +635,7 @@ struct UnderlyingSource;
 }
 
 namespace Web::SVG {
+class SVGAnimatedBoolean;
 class SVGAnimatedEnumeration;
 class SVGAnimatedLength;
 class SVGAnimatedRect;
