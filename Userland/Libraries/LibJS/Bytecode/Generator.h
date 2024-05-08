@@ -34,8 +34,6 @@ public:
     };
     static CodeGenerationErrorOr<NonnullGCPtr<Executable>> generate(VM&, ASTNode const&, ReadonlySpan<FunctionParameter> parameters, FunctionKind = FunctionKind::Normal);
 
-    [[nodiscard]] ScopedOperand allocate_sequential_register();
-
     [[nodiscard]] ScopedOperand allocate_register();
     [[nodiscard]] ScopedOperand local(u32 local_index);
     [[nodiscard]] ScopedOperand accumulator();

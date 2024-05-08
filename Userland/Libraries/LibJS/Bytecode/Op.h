@@ -254,13 +254,13 @@ public:
     {
     }
 
-    NewArray(Operand dst, AK::Array<Operand, 2> const& elements_range)
+    NewArray(Operand dst, ReadonlySpan<ScopedOperand> elements)
         : Instruction(Type::NewArray)
         , m_dst(dst)
-        , m_element_count(elements_range[1].index() - elements_range[0].index() + 1)
+        , m_element_count(elements.size())
     {
-        m_elements[0] = elements_range[0];
-        m_elements[1] = elements_range[1];
+        for (size_t i = 0; i < m_element_count; ++i)
+            m_elements[i] = elements[i];
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
@@ -270,19 +270,7 @@ public:
 
     size_t length_impl() const
     {
-        return round_up_to_power_of_two(alignof(void*), sizeof(*this) + sizeof(Operand) * (m_element_count == 0 ? 0 : 2));
-    }
-
-    Operand start() const
-    {
-        VERIFY(m_element_count);
-        return m_elements[0];
-    }
-
-    Operand end() const
-    {
-        VERIFY(m_element_count);
-        return m_elements[1];
+        return round_up_to_power_of_two(alignof(void*), sizeof(*this) + sizeof(Operand) * m_element_count);
     }
 
     size_t element_count() const { return m_element_count; }

@@ -220,18 +220,13 @@ void Generator::grow(size_t additional_size)
     m_current_basic_block->grow(additional_size);
 }
 
-ScopedOperand Generator::allocate_sequential_register()
-{
-    VERIFY(m_next_register != NumericLimits<u32>::max());
-    return ScopedOperand { *this, Operand { Register { m_next_register++ } } };
-}
-
 ScopedOperand Generator::allocate_register()
 {
     if (!m_free_registers.is_empty()) {
         return ScopedOperand { *this, Operand { m_free_registers.take_last() } };
     }
-    return allocate_sequential_register();
+    VERIFY(m_next_register != NumericLimits<u32>::max());
+    return ScopedOperand { *this, Operand { Register { m_next_register++ } } };
 }
 
 void Generator::free_register(Register reg)
