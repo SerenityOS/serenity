@@ -60,6 +60,7 @@ jobs:
           cmake -GNinja -B tools-build \
             -DBUILD_LAGOM=OFF \
             -DCMAKE_INSTALL_PREFIX=tool-install \
+            -DSERENITY_CACHE_DIR=${{ github.workspace }}/Build/caches \
             -DCMAKE_C_COMPILER=gcc-13 \
             -DCMAKE_CXX_COMPILER=g++-13 \
             -Dpackage=LagomTools
@@ -70,6 +71,7 @@ jobs:
             -DBUILD_LAGOM=ON \
             -DENABLE_FUZZERS_LIBFUZZER=ON \
             -DENABLE_ADDRESS_SANITIZER=ON \
+            -DSERENITY_CACHE_DIR=${{ github.workspace }}/Build/caches \
             -DCMAKE_C_COMPILER=clang \
             -DCMAKE_CXX_COMPILER=clang++ \
             -DCMAKE_PREFIX_PATH=tool-install
