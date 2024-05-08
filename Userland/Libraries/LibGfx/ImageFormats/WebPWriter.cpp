@@ -200,7 +200,7 @@ struct VP8XHeader {
 };
 
 // https://developers.google.com/speed/webp/docs/riff_container#extended_file_format
-static ErrorOr<void> write_VP8X_header(Stream& stream, VP8XHeader const& header)
+static ErrorOr<void> write_VP8X_chunk(Stream& stream, VP8XHeader const& header)
 {
     if (header.width > (1 << 24) || header.height > (1 << 24))
         return Error::from_string_literal("WebP dimensions too large for VP8X chunk");
@@ -212,6 +212,8 @@ static ErrorOr<void> write_VP8X_header(Stream& stream, VP8XHeader const& header)
     u64 product = static_cast<u64>(header.width) * static_cast<u64>(header.height);
     if (product >= (1ull << 32))
         return Error::from_string_literal("WebP dimensions too large for VP8X chunk");
+
+    TRY(write_chunk_header(stream, "VP8X"sv, 10));
 
     LittleEndianOutputBitStream bit_stream { MaybeOwned<Stream>(stream) };
 
@@ -311,13 +313,8 @@ ErrorOr<void> WebPWriter::encode(Stream& stream, Bitmap const& bitmap, Options c
         TRY(align_to_two(iccp_chunk_stream));
         iccp_chunk_bytes = TRY(iccp_chunk_stream.read_until_eof());
 
-        AllocatingMemoryStream vp8x_header_stream;
-        TRY(write_VP8X_header(vp8x_header_stream, { .has_icc = true, .has_alpha = alpha_is_used_hint, .width = (u32)bitmap.width(), .height = (u32)bitmap.height() }));
-        auto vp8x_header_bytes = TRY(vp8x_header_stream.read_until_eof());
-
         AllocatingMemoryStream vp8x_chunk_stream;
-        TRY(write_chunk_header(vp8x_chunk_stream, "VP8X"sv, vp8x_header_bytes.size()));
-        TRY(vp8x_chunk_stream.write_until_depleted(vp8x_header_bytes));
+        TRY(write_VP8X_chunk(vp8x_chunk_stream, { .has_icc = true, .has_alpha = alpha_is_used_hint, .width = (u32)bitmap.width(), .height = (u32)bitmap.height() }));
         VERIFY(vp8x_chunk_stream.used_buffer_size() % 2 == 0);
         vp8x_chunk_bytes = TRY(vp8x_chunk_stream.read_until_eof());
     }
