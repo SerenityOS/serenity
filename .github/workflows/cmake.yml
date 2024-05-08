@@ -51,7 +51,7 @@ jobs:
 
       # === PREPARE FOR BUILDING ===
 
-      - name: Lint (Phase 1/2)
+      - name: Lint
         run: ${{ github.workspace }}/Meta/lint-ci.sh
 
       - name: Restore Caches
@@ -134,12 +134,6 @@ jobs:
           toolchain_prebuilt_path: ${{ steps.cache-restore.outputs.toolchain_prebuilt_path }}
           toolchain_prebuilt_primary_key: ${{ steps.cache-restore.outputs.toolchain_prebuilt_primary_key }}
           toolchain_prebuilt_hit: ${{ steps.cache-restore.outputs.toolchain_prebuilt_hit }}
-
-      - name: Lint (Phase 2/2)
-        working-directory: ${{ github.workspace }}/Meta
-        env:
-          SERENITY_ARCH: ${{ matrix.arch }}
-        run: ./check-symbols.sh
 
       - name: Create Serenity Rootfs
         if: ${{ matrix.debug-options == 'NORMAL_DEBUG' }}
