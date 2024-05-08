@@ -54,7 +54,7 @@ runs:
       # The setup-python action set default python to python3.x. Note that we are not using system python here.
       run: |
         python -m pip install --upgrade pip
-        pip install flake8 requests
+        pip install flake8 requests six
 
     - name: 'Install Dependencies'
       if: ${{ inputs.os == 'Serenity' }}
