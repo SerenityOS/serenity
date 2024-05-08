@@ -81,7 +81,7 @@ jobs:
       - name: Save Caches
         uses: ./.github/actions/cache-save
         with:
-          arch: ${{ matrix.arch }}
+          arch: 'Lagom'
           serenity_ccache_path: ${{ env.SERENITY_CCACHE_DIR }}
           serenity_ccache_primary_key: ${{ steps.cache-restore.outputs.serenity_ccache_primary_key }}
 
