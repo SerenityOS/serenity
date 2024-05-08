@@ -69,6 +69,7 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
         net_adapters_fields.empend("packets_out", "Pkt Out"_string, Gfx::TextAlignment::CenterRight);
         net_adapters_fields.empend("bytes_in", "Bytes In"_string, Gfx::TextAlignment::CenterRight);
         net_adapters_fields.empend("bytes_out", "Bytes Out"_string, Gfx::TextAlignment::CenterRight);
+        net_adapters_fields.empend("packets_dropped", "Packets Dropped"_string, Gfx::TextAlignment::CenterRight);
         m_adapter_model = GUI::JsonArrayModel::create("/sys/kernel/net/adapters", move(net_adapters_fields));
         m_adapter_table_view->set_model(MUST(GUI::SortingProxyModel::create(*m_adapter_model)));
         m_adapter_context_menu = GUI::Menu::construct();
