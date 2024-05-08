@@ -11,6 +11,7 @@
 #include <AK/Debug.h>
 #include <LibCompress/DeflateTables.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/ImageFormats/WebPShared.h>
 #include <LibGfx/ImageFormats/WebPWriter.h>
 #include <LibRIFF/RIFF.h>
 
@@ -189,16 +190,6 @@ static ErrorOr<void> write_VP8L_image_data(Stream& stream, Bitmap const& bitmap)
     return {};
 }
 
-struct VP8XHeader {
-    bool has_icc { false };
-    bool has_alpha { false };
-    bool has_exif { false };
-    bool has_xmp { false };
-    bool has_animation { false };
-    u32 width { 0 };
-    u32 height { 0 };
-};
-
 static u8 vp8x_flags_from_header(VP8XHeader const& header)
 {
     u8 flags = 0;
@@ -362,28 +353,6 @@ static ErrorOr<void> align_to_two(SeekableStream& stream)
     return {};
 }
 
-struct ANMFChunk {
-    u32 frame_x { 0 };
-    u32 frame_y { 0 };
-    u32 frame_width { 0 };
-    u32 frame_height { 0 };
-    u32 frame_duration_in_milliseconds { 0 };
-
-    enum class BlendingMethod {
-        UseAlphaBlending = 0,
-        DoNotBlend = 1,
-    };
-    BlendingMethod blending_method { BlendingMethod::UseAlphaBlending };
-
-    enum class DisposalMethod {
-        DoNotDispose = 0,
-        DisposeToBackgroundColor = 1,
-    };
-    DisposalMethod disposal_method { DisposalMethod::DoNotDispose };
-
-    ReadonlyBytes frame_data;
-};
-
 static ErrorOr<void> write_ANMF_chunk(Stream& stream, ANMFChunk const& chunk)
 {
     if (chunk.frame_width > (1 << 24) || chunk.frame_height > (1 << 24))
@@ -509,11 +478,6 @@ ErrorOr<void> WebPAnimationWriter::set_alpha_bit_in_header()
     TRY(m_stream.seek(current_offset, SeekMode::SetPosition));
     return {};
 }
-
-struct ANIMChunk {
-    u32 background_color { 0 };
-    u16 loop_count { 0 };
-};
 
 static ErrorOr<void> write_ANIM_chunk(Stream& stream, ANIMChunk const& chunk)
 {

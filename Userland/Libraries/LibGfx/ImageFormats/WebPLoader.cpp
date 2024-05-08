@@ -13,6 +13,7 @@
 #include <LibGfx/ImageFormats/WebPLoader.h>
 #include <LibGfx/ImageFormats/WebPLoaderLossless.h>
 #include <LibGfx/ImageFormats/WebPLoaderLossy.h>
+#include <LibGfx/ImageFormats/WebPShared.h>
 #include <LibGfx/Painter.h>
 #include <LibRIFF/ChunkID.h>
 #include <LibRIFF/RIFF.h>
@@ -23,43 +24,6 @@
 namespace Gfx {
 
 namespace {
-
-struct VP8XHeader {
-    bool has_icc;
-    bool has_alpha;
-    bool has_exif;
-    bool has_xmp;
-    bool has_animation;
-    u32 width;
-    u32 height;
-};
-
-struct ANIMChunk {
-    u32 background_color;
-    u16 loop_count;
-};
-
-struct ANMFChunk {
-    u32 frame_x;
-    u32 frame_y;
-    u32 frame_width;
-    u32 frame_height;
-    u32 frame_duration_in_milliseconds;
-
-    enum class BlendingMethod {
-        UseAlphaBlending = 0,
-        DoNotBlend = 1,
-    };
-    BlendingMethod blending_method;
-
-    enum class DisposalMethod {
-        DoNotDispose = 0,
-        DisposeToBackgroundColor = 1,
-    };
-    DisposalMethod disposal_method;
-
-    ReadonlyBytes frame_data;
-};
 
 // "For a still image, the image data consists of a single frame, which is made up of:
 //     An optional alpha subchunk.
