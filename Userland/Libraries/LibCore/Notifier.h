@@ -32,11 +32,15 @@ public:
 
     void event(Core::Event&) override;
 
+    void set_owner_thread(pthread_t owner_thread) { m_owner_thread = owner_thread; }
+    pthread_t owner_thread() const { return m_owner_thread; }
+
 private:
     Notifier(int fd, Type type, EventReceiver* parent = nullptr);
 
     int m_fd { -1 };
     bool m_is_enabled { false };
+    pthread_t m_owner_thread { 0 };
     Type m_type { Type::None };
 };
 
