@@ -1,0 +1,5 @@
+[Exposed=Window]
+interface SVGAnimatedEnumeration {
+    attribute unsigned short baseVal;
+    readonly attribute unsigned short animVal;
+};
