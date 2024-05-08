@@ -11,9 +11,9 @@
 
 namespace RequestServer::ConnectionCache {
 
-HashMap<ConnectionKey, NonnullOwnPtr<Vector<NonnullOwnPtr<Connection<Core::TCPSocket, Core::Socket>>>>> g_tcp_connection_cache {};
-HashMap<ConnectionKey, NonnullOwnPtr<Vector<NonnullOwnPtr<Connection<TLS::TLSv12>>>>> g_tls_connection_cache {};
-HashMap<ByteString, InferredServerProperties> g_inferred_server_properties;
+Threading::MutexProtected<HashMap<ConnectionKey, NonnullOwnPtr<Vector<NonnullOwnPtr<Connection<Core::TCPSocket, Core::Socket>>>>>> g_tcp_connection_cache {};
+Threading::MutexProtected<HashMap<ConnectionKey, NonnullOwnPtr<Vector<NonnullOwnPtr<Connection<TLS::TLSv12>>>>>> g_tls_connection_cache {};
+Threading::MutexProtected<HashMap<ByteString, InferredServerProperties>> g_inferred_server_properties;
 
 void request_did_finish(URL::URL const& url, Core::Socket const* socket)
 {
@@ -26,8 +26,17 @@ void request_did_finish(URL::URL const& url, Core::Socket const* socket)
 
     ConnectionKey partial_key { url.serialized_host().release_value_but_fixme_should_propagate_errors().to_byte_string(), url.port_or_default() };
     auto fire_off_next_job = [&](auto& cache) {
-        auto it = find_if(cache.begin(), cache.end(), [&](auto& connection) { return connection.key.hostname == partial_key.hostname && connection.key.port == partial_key.port; });
-        if (it == cache.end()) {
+        auto [it, end] = cache.with_locked([&](auto& cache) {
+            struct Result {
+                decltype(cache.begin()) it;
+                decltype(cache.end()) end;
+            };
+            return Result {
+                find_if(cache.begin(), cache.end(), [&](auto& connection) { return connection.key.hostname == partial_key.hostname && connection.key.port == partial_key.port; }),
+                cache.end(),
+            };
+        });
+        if (it == end) {
             dbgln("Request for URL {} finished, but we don't own that!", url);
             return;
         }
@@ -38,7 +47,7 @@ void request_did_finish(URL::URL const& url, Core::Socket const* socket)
         }
 
         auto& connection = *connection_it;
-        auto& properties = g_inferred_server_properties.ensure(partial_key.hostname);
+        auto& properties = g_inferred_server_properties.with_locked([&](auto& map) -> InferredServerProperties& { return map.ensure(partial_key.hostname); });
         if (!connection->socket->is_open())
             properties.requests_served_per_connection = min(properties.requests_served_per_connection, connection->max_queue_length + 1);
 
@@ -60,29 +69,35 @@ void request_did_finish(URL::URL const& url, Core::Socket const* socket)
                             return;
 
                         dbgln_if(REQUESTSERVER_DEBUG, "Removing no-longer-used connection {} (socket {})", ptr, ptr->socket);
-                        auto did_remove = cache_entry.remove_first_matching([&](auto& entry) { return entry == ptr; });
-                        VERIFY(did_remove);
-                        if (cache_entry.is_empty())
-                            cache.remove(key);
+                        cache.with_locked([&](auto& cache) {
+                            auto did_remove = cache_entry.remove_first_matching([&](auto& entry) { return entry == ptr; });
+                            VERIFY(did_remove);
+                            if (cache_entry.is_empty())
+                                cache.remove(key);
+                        });
                     });
                 };
                 connection->removal_timer->start();
             });
         } else {
             if (auto result = recreate_socket_if_needed(*connection, url); result.is_error()) {
-                dbgln("ConnectionCache request finish handler, reconnection failed with {}", result.error());
-                connection->job_data.fail(Core::NetworkJob::Error::ConnectionFailed);
+                cache.with_locked([&](auto&) {
+                    dbgln("ConnectionCache request finish handler, reconnection failed with {}", result.error());
+                    connection->job_data.fail(Core::NetworkJob::Error::ConnectionFailed);
+                });
                 return;
             }
 
             connection->has_started = true;
-            Core::deferred_invoke([&connection = *connection, url] {
-                dbgln_if(REQUESTSERVER_DEBUG, "Running next job in queue for connection {}", &connection);
-                connection.timer.start();
-                connection.current_url = url;
-                connection.job_data = connection.request_queue.take_first();
-                connection.socket->set_notifications_enabled(true);
-                connection.job_data.start(*connection.socket);
+            Core::deferred_invoke([&connection = *connection, url, &cache] {
+                cache.with_locked([&](auto&) {
+                    dbgln_if(REQUESTSERVER_DEBUG, "Running next job in queue for connection {}", &connection);
+                    connection.timer.start();
+                    connection.current_url = url;
+                    connection.job_data = connection.request_queue.take_first();
+                    connection.socket->set_notifications_enabled(true);
+                    connection.job_data.start(*connection.socket);
+                });
             });
         }
     };
@@ -97,28 +112,33 @@ void request_did_finish(URL::URL const& url, Core::Socket const* socket)
 
 void dump_jobs()
 {
-    dbgln("=========== TLS Connection Cache ==========");
-    for (auto& connection : g_tls_connection_cache) {
-        dbgln(" - {}:{}", connection.key.hostname, connection.key.port);
-        for (auto& entry : *connection.value) {
-            dbgln("  - Connection {} (started={}) (socket={})", &entry, entry->has_started, entry->socket);
-            dbgln("    Currently loading {} ({} elapsed)", entry->current_url, entry->timer.is_valid() ? entry->timer.elapsed() : 0);
-            dbgln("    Request Queue:");
-            for (auto& job : entry->request_queue)
-                dbgln("    - {}", &job);
+    g_tls_connection_cache.with_locked([](auto& cache) {
+        dbgln("=========== TLS Connection Cache ==========");
+        for (auto& connection : cache) {
+            dbgln(" - {}:{}", connection.key.hostname, connection.key.port);
+            for (auto& entry : *connection.value) {
+                dbgln("  - Connection {} (started={}) (socket={})", &entry, entry->has_started, entry->socket);
+                dbgln("    Currently loading {} ({} elapsed)", entry->current_url, entry->timer.is_valid() ? entry->timer.elapsed() : 0);
+                dbgln("    Request Queue:");
+                for (auto& job : entry->request_queue)
+                    dbgln("    - {}", &job);
+            }
         }
-    }
-    dbgln("=========== TCP Connection Cache ==========");
-    for (auto& connection : g_tcp_connection_cache) {
-        dbgln(" - {}:{}", connection.key.hostname, connection.key.port);
-        for (auto& entry : *connection.value) {
-            dbgln("  - Connection {} (started={}) (socket={})", &entry, entry->has_started, entry->socket);
-            dbgln("    Currently loading {} ({} elapsed)", entry->current_url, entry->timer.is_valid() ? entry->timer.elapsed() : 0);
-            dbgln("    Request Queue:");
-            for (auto& job : entry->request_queue)
-                dbgln("    - {}", &job);
+    });
+
+    g_tcp_connection_cache.with_locked([](auto& cache) {
+        dbgln("=========== TCP Connection Cache ==========");
+        for (auto& connection : cache) {
+            dbgln(" - {}:{}", connection.key.hostname, connection.key.port);
+            for (auto& entry : *connection.value) {
+                dbgln("  - Connection {} (started={}) (socket={})", &entry, entry->has_started, entry->socket);
+                dbgln("    Currently loading {} ({} elapsed)", entry->current_url, entry->timer.is_valid() ? entry->timer.elapsed() : 0);
+                dbgln("    Request Queue:");
+                for (auto& job : entry->request_queue)
+                    dbgln("    - {}", &job);
+            }
         }
-    }
+    });
 }
 
 }

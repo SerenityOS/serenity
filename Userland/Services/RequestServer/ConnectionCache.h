@@ -16,6 +16,7 @@
 #include <LibCore/SOCKSProxyClient.h>
 #include <LibCore/Timer.h>
 #include <LibTLS/TLSv12.h>
+#include <LibThreading/MutexProtected.h>
 #include <LibURL/URL.h>
 
 namespace RequestServer {
@@ -117,9 +118,9 @@ struct InferredServerProperties {
     size_t requests_served_per_connection { NumericLimits<size_t>::max() };
 };
 
-extern HashMap<ConnectionKey, NonnullOwnPtr<Vector<NonnullOwnPtr<Connection<Core::TCPSocket, Core::Socket>>>>> g_tcp_connection_cache;
-extern HashMap<ConnectionKey, NonnullOwnPtr<Vector<NonnullOwnPtr<Connection<TLS::TLSv12>>>>> g_tls_connection_cache;
-extern HashMap<ByteString, InferredServerProperties> g_inferred_server_properties;
+extern Threading::MutexProtected<HashMap<ConnectionKey, NonnullOwnPtr<Vector<NonnullOwnPtr<Connection<Core::TCPSocket, Core::Socket>>>>>> g_tcp_connection_cache;
+extern Threading::MutexProtected<HashMap<ConnectionKey, NonnullOwnPtr<Vector<NonnullOwnPtr<Connection<TLS::TLSv12>>>>>> g_tls_connection_cache;
+extern Threading::MutexProtected<HashMap<ByteString, InferredServerProperties>> g_inferred_server_properties;
 
 void request_did_finish(URL::URL const&, Core::Socket const*);
 void dump_jobs();
@@ -168,18 +169,29 @@ ErrorOr<void> recreate_socket_if_needed(T& connection, URL::URL const& url)
     return {};
 }
 
+template<typename ReturnType, typename CacheEntryType>
+ReturnType start_or_queue_connection(const URL::URL& url, auto job, InferredServerProperties const& properties, auto& sockets_for_url, Proxy& proxy);
+
 decltype(auto) get_or_create_connection(auto& cache, URL::URL const& url, auto job, Core::ProxyData proxy_data = {})
 {
-    using CacheEntryType = RemoveCVReference<decltype(*cache.begin()->value)>;
+    using CacheEntryType = RemoveCVReference<decltype(*declval<typename RemoveCVReference<decltype(cache)>::ProtectedType>().begin()->value)>;
 
     auto hostname = url.serialized_host().release_value_but_fixme_should_propagate_errors().to_byte_string();
-    auto& properties = g_inferred_server_properties.ensure(hostname);
+    auto& properties = g_inferred_server_properties.with_locked([&](auto& map) -> InferredServerProperties& { return map.ensure(hostname); });
 
-    auto& sockets_for_url = *cache.ensure({ move(hostname), url.port_or_default(), proxy_data }, [] { return make<CacheEntryType>(); });
-
-    Proxy proxy { proxy_data };
+    auto& sockets_for_url = *cache.with_locked([&](auto& map) -> NonnullOwnPtr<CacheEntryType>& {
+        return map.ensure({ move(hostname), url.port_or_default(), proxy_data }, [] { return make<CacheEntryType>(); });
+    });
 
     using ReturnType = decltype(sockets_for_url[0].ptr());
+    return cache.with_locked([&](auto&) -> ReturnType {
+        return start_or_queue_connection<ReturnType, CacheEntryType>(url, job, properties, sockets_for_url, { proxy_data });
+    });
+}
+
+template<typename ReturnType, typename CacheEntryType>
+ReturnType start_or_queue_connection(URL::URL const& url, auto job, InferredServerProperties const& properties, auto& sockets_for_url, Proxy proxy)
+{
     // Find the connection with an empty queue; if none exist, we'll find the least backed-up connection later.
     // Note that servers that are known to serve a single request per connection (e.g. HTTP/1.0) usually have
     // issues with concurrent connections, so we'll only allow one connection per URL in that case to avoid issues.
@@ -188,8 +200,8 @@ decltype(auto) get_or_create_connection(auto& cache, URL::URL const& url, auto j
     auto it = sockets_for_url.find_if([&](auto& connection) { return properties.requests_served_per_connection < 2 || connection->request_queue.is_empty(); });
     auto did_add_new_connection = false;
     auto failed_to_find_a_socket = it.is_end();
-    if (failed_to_find_a_socket && sockets_for_url.size() < ConnectionCache::MaxConcurrentConnectionsPerURL) {
-        using ConnectionType = RemoveCVReference<decltype(*cache.begin()->value->at(0))>;
+    if (failed_to_find_a_socket && sockets_for_url.size() < MaxConcurrentConnectionsPerURL) {
+        using ConnectionType = RemoveCVReference<decltype(*AK::Detail::declval<CacheEntryType>().at(0))>;
         auto connection_result = proxy.tunnel<typename ConnectionType::SocketType, typename ConnectionType::StorageType>(url);
         if (connection_result.is_error()) {
             dbgln("ConnectionCache: Connection to {} failed: {}", url, connection_result.error());
@@ -206,7 +218,7 @@ decltype(auto) get_or_create_connection(auto& cache, URL::URL const& url, auto j
             });
             return ReturnType { nullptr };
         }
-        sockets_for_url.append(make<ConnectionType>(
+        sockets_for_url.append(AK::make<ConnectionType>(
             socket_result.release_value(),
             typename ConnectionType::QueueType {},
             Core::Timer::create_single_shot(ConnectionKeepAliveTimeMilliseconds, nullptr)));
