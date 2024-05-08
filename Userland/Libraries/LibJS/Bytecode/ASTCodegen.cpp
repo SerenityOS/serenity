@@ -350,24 +350,18 @@ static Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> arguments_to_arr
 
     auto first_spread = find_if(arguments.begin(), arguments.end(), [](auto el) { return el.is_spread; });
 
-    Vector<ScopedOperand> registers;
-    Bytecode::Register args_start_reg { 0 };
+    Vector<ScopedOperand> args;
+    args.ensure_capacity(first_spread.index());
     for (auto it = arguments.begin(); it != first_spread; ++it) {
-        auto reg = generator.allocate_sequential_register();
-        registers.append(reg);
-        if (args_start_reg.index() == 0)
-            args_start_reg = reg.operand().as_register();
-    }
-    u32 i = 0;
-    for (auto it = arguments.begin(); it != first_spread; ++it, ++i) {
-        VERIFY(it->is_spread == false);
-        Bytecode::Register reg { args_start_reg.index() + i };
+        VERIFY(!it->is_spread);
+        auto reg = generator.allocate_register();
         auto value = TRY(it->value->generate_bytecode(generator)).value();
-        generator.emit<Bytecode::Op::Mov>(Bytecode::Operand(reg), value);
+        generator.emit<Bytecode::Op::Mov>(reg, value);
+        args.append(move(reg));
     }
 
     if (first_spread.index() != 0)
-        generator.emit_with_extra_operand_slots<Bytecode::Op::NewArray>(2u, dst, AK::Array { Bytecode::Operand(args_start_reg), Bytecode::Operand { Bytecode::Register { args_start_reg.index() + static_cast<u32>(first_spread.index() - 1) } } });
+        generator.emit_with_extra_operand_slots<Bytecode::Op::NewArray>(args.size(), dst, args);
     else
         generator.emit<Bytecode::Op::NewArray>(dst);
 
@@ -1037,27 +1031,22 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> ArrayExpression::genera
 
     auto first_spread = find_if(m_elements.begin(), m_elements.end(), [](auto el) { return el && is<SpreadExpression>(*el); });
 
-    Vector<ScopedOperand> registers;
-    Optional<Bytecode::Register> args_start_reg;
+    Vector<ScopedOperand> args;
+    args.ensure_capacity(m_elements.size());
     for (auto it = m_elements.begin(); it != first_spread; ++it) {
-        auto reg = generator.allocate_sequential_register();
-        registers.append(reg);
-        if (!args_start_reg.has_value())
-            args_start_reg = reg.operand().as_register();
-    }
-    u32 i = 0;
-    for (auto it = m_elements.begin(); it != first_spread; ++it, ++i) {
-        Bytecode::Register reg { args_start_reg->index() + i };
         if (*it) {
+            auto reg = generator.allocate_register();
             auto value = TRY((*it)->generate_bytecode(generator)).value();
             generator.emit<Bytecode::Op::Mov>(Bytecode::Operand(reg), value);
+            args.append(move(reg));
+        } else {
+            args.append(generator.add_constant(Value()));
         }
     }
 
     auto dst = choose_dst(generator, preferred_dst);
     if (first_spread.index() != 0) {
-        auto reg = Bytecode::Register { args_start_reg->index() + static_cast<u32>(first_spread.index() - 1) };
-        generator.emit_with_extra_operand_slots<Bytecode::Op::NewArray>(2u, dst, AK::Array { Bytecode::Operand(*args_start_reg), Bytecode::Operand(reg) });
+        generator.emit_with_extra_operand_slots<Bytecode::Op::NewArray>(args.size(), dst, args);
     } else {
         generator.emit<Bytecode::Op::NewArray>(dst);
     }
@@ -1623,6 +1612,7 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> CallExpression::generat
         generator.emit<Bytecode::Op::CallWithArgumentArray>(call_type, dst, callee, this_value, arguments, expression_string_index);
     } else {
         Vector<ScopedOperand> argument_operands;
+        argument_operands.ensure_capacity(arguments().size());
         for (auto const& argument : arguments()) {
             auto argument_value = TRY(argument.value->generate_bytecode(generator)).value();
             auto temporary = generator.allocate_register();
@@ -1857,7 +1847,7 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> YieldExpression::genera
 
         // i. Let innerResult be ? Call(iteratorRecord.[[NextMethod]], iteratorRecord.[[Iterator]], « received.[[Value]] »).
         auto array = generator.allocate_register();
-        generator.emit_with_extra_operand_slots<Bytecode::Op::NewArray>(2u, array, AK::Array { received_completion_value.operand(), received_completion_value.operand() });
+        generator.emit_with_extra_operand_slots<Bytecode::Op::NewArray>(1, array, ReadonlySpan<ScopedOperand> { &received_completion_value, 1 });
         auto inner_result = generator.allocate_register();
         generator.emit<Bytecode::Op::CallWithArgumentArray>(Bytecode::Op::CallType::Call, inner_result, next_method, iterator, array);
 
@@ -1949,7 +1939,7 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> YieldExpression::genera
 
         // 1. Let innerResult be ? Call(throw, iterator, « received.[[Value]] »).
         auto received_value_array = generator.allocate_register();
-        generator.emit_with_extra_operand_slots<Bytecode::Op::NewArray>(2u, received_value_array, AK::Array { received_completion_value.operand(), received_completion_value.operand() });
+        generator.emit_with_extra_operand_slots<Bytecode::Op::NewArray>(1, received_value_array, ReadonlySpan<ScopedOperand> { &received_completion_value, 1 });
         generator.emit<Bytecode::Op::CallWithArgumentArray>(Bytecode::Op::CallType::Call, inner_result, throw_method, iterator, received_value_array);
 
         // 2. If generatorKind is async, set innerResult to ? Await(innerResult).
@@ -2046,7 +2036,7 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> YieldExpression::genera
 
         // iv. Let innerReturnResult be ? Call(return, iterator, « received.[[Value]] »).
         auto call_array = generator.allocate_register();
-        generator.emit_with_extra_operand_slots<Bytecode::Op::NewArray>(2, call_array, AK::Array { received_completion_value.operand(), received_completion_value.operand() });
+        generator.emit_with_extra_operand_slots<Bytecode::Op::NewArray>(1, call_array, ReadonlySpan<ScopedOperand> { &received_completion_value, 1 });
         auto inner_return_result = generator.allocate_register();
         generator.emit<Bytecode::Op::CallWithArgumentArray>(Bytecode::Op::CallType::Call, inner_return_result, return_method, iterator, call_array);
 
@@ -2306,8 +2296,6 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> TaggedTemplateLiteral::
     Bytecode::Generator::SourceLocationScope scope(generator, *this);
     auto tag = TRY(m_tag->generate_bytecode(generator)).value();
 
-    // FIXME: We only need to record the first and last register,
-    //        due to packing everything in an array, same goes for argument_regs
     // FIXME: Follow
     //        13.2.8.3 GetTemplateObject ( templateLiteral ), https://tc39.es/ecma262/#sec-gettemplateobject
     //        more closely, namely:
@@ -2316,70 +2304,61 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> TaggedTemplateLiteral::
     //        * freeze array and raw member
     Vector<ScopedOperand> string_regs;
     auto& expressions = m_template_literal->expressions();
-    for (size_t i = 0; i < expressions.size(); ++i) {
-        if (i % 2 != 0)
-            continue;
-        string_regs.append(generator.allocate_sequential_register());
-    }
 
-    size_t reg_index = 0;
     for (size_t i = 0; i < expressions.size(); ++i) {
         if (i % 2 != 0)
             continue;
         // NOTE: If the string contains invalid escapes we get a null expression here,
         //       which we then convert to the expected `undefined` TV. See
         //       12.9.6.1 Static Semantics: TV, https://tc39.es/ecma262/#sec-static-semantics-tv
-        auto string_reg = string_regs[reg_index++];
+        auto string_reg = generator.allocate_register();
         if (is<NullLiteral>(expressions[i])) {
             generator.emit<Bytecode::Op::Mov>(string_reg, generator.add_constant(js_undefined()));
         } else {
             auto value = TRY(expressions[i]->generate_bytecode(generator)).value();
             generator.emit<Bytecode::Op::Mov>(string_reg, value);
         }
+        string_regs.append(move(string_reg));
     }
 
-    auto strings_array = generator.allocate_sequential_register();
+    auto strings_array = generator.allocate_register();
     if (string_regs.is_empty()) {
         generator.emit<Bytecode::Op::NewArray>(strings_array);
     } else {
-        generator.emit_with_extra_operand_slots<Bytecode::Op::NewArray>(2u, strings_array, AK::Array { string_regs.first().operand(), string_regs.last().operand() });
+        generator.emit_with_extra_operand_slots<Bytecode::Op::NewArray>(string_regs.size(), strings_array, string_regs);
     }
 
     Vector<ScopedOperand> argument_regs;
     argument_regs.append(strings_array);
-    for (size_t i = 1; i < expressions.size(); i += 2)
-        argument_regs.append(generator.allocate_sequential_register());
 
     for (size_t i = 1; i < expressions.size(); i += 2) {
-        auto string_reg = argument_regs[1 + i / 2];
+        auto string_reg = generator.allocate_register();
         auto string = TRY(expressions[i]->generate_bytecode(generator)).value();
         generator.emit<Bytecode::Op::Mov>(string_reg, string);
+        argument_regs.append(move(string_reg));
     }
 
     Vector<ScopedOperand> raw_string_regs;
-    for ([[maybe_unused]] auto& raw_string : m_template_literal->raw_strings())
-        string_regs.append(generator.allocate_sequential_register());
-
-    reg_index = 0;
+    raw_string_regs.ensure_capacity(m_template_literal->raw_strings().size());
     for (auto& raw_string : m_template_literal->raw_strings()) {
         auto value = TRY(raw_string->generate_bytecode(generator)).value();
-        auto raw_string_reg = string_regs[reg_index++];
+        auto raw_string_reg = generator.allocate_register();
         generator.emit<Bytecode::Op::Mov>(raw_string_reg, value);
-        raw_string_regs.append(raw_string_reg);
+        raw_string_regs.append(move(raw_string_reg));
     }
 
     auto raw_strings_array = generator.allocate_register();
     if (raw_string_regs.is_empty()) {
         generator.emit<Bytecode::Op::NewArray>(raw_strings_array);
     } else {
-        generator.emit_with_extra_operand_slots<Bytecode::Op::NewArray>(2u, raw_strings_array, AK::Array { raw_string_regs.first().operand(), raw_string_regs.last().operand() });
+        generator.emit_with_extra_operand_slots<Bytecode::Op::NewArray>(raw_string_regs.size(), raw_strings_array, raw_string_regs);
     }
 
     generator.emit<Bytecode::Op::PutById>(strings_array, generator.intern_identifier("raw"), raw_strings_array, Bytecode::Op::PropertyKind::KeyValue, generator.next_property_lookup_cache());
 
     auto arguments = generator.allocate_register();
     if (!argument_regs.is_empty())
-        generator.emit_with_extra_operand_slots<Bytecode::Op::NewArray>(2, arguments, AK::Array { argument_regs.first().operand(), argument_regs.last().operand() });
+        generator.emit_with_extra_operand_slots<Bytecode::Op::NewArray>(argument_regs.size(), arguments, argument_regs);
     else
         generator.emit<Bytecode::Op::NewArray>(arguments);
 

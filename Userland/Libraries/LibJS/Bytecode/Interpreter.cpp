@@ -86,7 +86,7 @@ static ByteString format_operand_list(StringView name, ReadonlySpan<Operand> ope
 {
     StringBuilder builder;
     if (!name.is_empty())
-        builder.appendff(", \033[32m{}\033[0m:[", name);
+        builder.appendff("\033[32m{}\033[0m:[", name);
     for (size_t i = 0; i < operands.size(); ++i) {
         if (i != 0)
             builder.append(", "sv);
@@ -1095,8 +1095,7 @@ ThrowCompletionOr<void> NewArray::execute_impl(Bytecode::Interpreter& interprete
 {
     auto array = MUST(Array::create(interpreter.realm(), 0));
     for (size_t i = 0; i < m_element_count; i++) {
-        auto& value = interpreter.reg(Register(m_elements[0].index() + i));
-        array->indexed_properties().put(i, value, default_attributes);
+        array->indexed_properties().put(i, interpreter.get(m_elements[i]), default_attributes);
     }
     interpreter.set(dst(), array);
     return {};
@@ -1883,7 +1882,7 @@ ByteString NewArray::to_byte_string_impl(Bytecode::Executable const& executable)
     StringBuilder builder;
     builder.appendff("NewArray {}", format_operand("dst"sv, dst(), executable));
     if (m_element_count != 0) {
-        builder.appendff(", [{}-{}]", format_operand("from"sv, m_elements[0], executable), format_operand("to"sv, m_elements[1], executable));
+        builder.appendff(", {}", format_operand_list("args"sv, { m_elements, m_element_count }, executable));
     }
     return builder.to_byte_string();
 }
@@ -2169,7 +2168,7 @@ ByteString Call::to_byte_string_impl(Bytecode::Executable const& executable) con
     auto type = call_type_to_string(m_type);
 
     StringBuilder builder;
-    builder.appendff("Call{} {}, {}, {}"sv,
+    builder.appendff("Call{} {}, {}, {}, "sv,
         type,
         format_operand("dst"sv, m_dst, executable),
         format_operand("callee"sv, m_callee, executable),
