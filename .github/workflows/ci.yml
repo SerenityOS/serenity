@@ -51,6 +51,7 @@ jobs:
 
     uses: ./.github/workflows/lagom-template.yml
     with:
+      toolchain: 'Clang'
       os_name: ${{ matrix.os_name }}
       os: ${{ matrix.os }}
       fuzzer: ${{ matrix.fuzzer }}

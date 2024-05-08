@@ -3,6 +3,9 @@ name: Lagom Template
 on:
   workflow_call:
     inputs:
+        toolchain:
+          required: true
+          type: string
         os_name:
           required: true
           type: string
@@ -50,6 +53,7 @@ jobs:
         with:
           os: ${{ inputs.os_name }}
           arch: 'Lagom'
+          toolchain: ${{ inputs.toolchain }}
           cache_key_extra: ${{ inputs.fuzzer }}
           serenity_ccache_path: ${{ env.CCACHE_DIR }}
           download_cache_path: ${{ github.workspace }}/Build/caches
@@ -58,8 +62,13 @@ jobs:
         id: 'build-parameters'
         run: |
           if ${{ inputs.os_name == 'Linux' }} ; then
-            echo "host_cc=clang-18" >> "$GITHUB_OUTPUT"
-            echo "host_cxx=clang++-18" >> "$GITHUB_OUTPUT"
+            if ${{ inputs.toolchain == 'Clang' }} ; then
+              echo "host_cc=clang-18" >> "$GITHUB_OUTPUT"
+              echo "host_cxx=clang++-18" >> "$GITHUB_OUTPUT"
+            elif ${{ inputs.toolchain == 'GNU' }} ; then
+              echo "host_cc=gcc-13" >> "$GITHUB_OUTPUT"
+              echo "host_cxx=g++-13" >> "$GITHUB_OUTPUT"
+            fi
           elif ${{ inputs.os_name == 'macOS' }} ; then
             echo "host_cc=$(brew --prefix llvm@18)/bin/clang" >> "$GITHUB_OUTPUT"
             echo "host_cxx=$(brew --prefix llvm@18)/bin/clang++" >> "$GITHUB_OUTPUT"
