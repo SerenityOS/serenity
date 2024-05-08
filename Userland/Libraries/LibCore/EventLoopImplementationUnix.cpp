@@ -169,8 +169,6 @@ private:
 
 class EventLoopTimer final : public EventLoopTimeout {
 public:
-    static constexpr auto delay_tolerance = Duration::from_milliseconds(5);
-
     EventLoopTimer() = default;
 
     void reload(MonotonicTime const& now) { m_fire_time = now + interval; }
@@ -185,11 +183,6 @@ public:
         if (should_reload) {
             MonotonicTime next_fire_time = m_fire_time + interval;
             if (next_fire_time <= current_time) {
-                auto delay = current_time - next_fire_time;
-                if (delay >= delay_tolerance && !interval.is_zero()) {
-                    auto iterations = delay.to_milliseconds() / max<i64>(1, interval.to_milliseconds()) + 1;
-                    dbgln("Can't keep up! Skipping approximately {} iteration(s) of a reloading timer (delayed by {}ms).", iterations, delay.to_milliseconds());
-                }
                 next_fire_time = current_time + interval;
             }
             m_fire_time = next_fire_time;
