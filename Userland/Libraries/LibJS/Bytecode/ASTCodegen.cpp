@@ -2588,7 +2588,6 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> SwitchStatement::genera
 
     for (auto& switch_case : m_cases) {
         auto& case_block = generator.make_block();
-        auto& case_entry_block = generator.make_block();
         if (switch_case->test()) {
             generator.switch_to_basic_block(*next_test_block);
             auto test_value = TRY(switch_case->test()->generate_bytecode(generator)).value();
@@ -2597,16 +2596,11 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> SwitchStatement::genera
             next_test_block = &generator.make_block();
             generator.emit<Bytecode::Op::JumpIf>(
                 result,
-                Bytecode::Label { case_entry_block },
+                Bytecode::Label { case_block },
                 Bytecode::Label { *next_test_block });
         } else {
-            entry_block_for_default = &case_entry_block;
+            entry_block_for_default = &case_block;
         }
-
-        // Initialize the completion value of the switch statement to empty. We can't do this in the case's basic block directly,
-        // as we must not clobber the possible non-empty completion value of the previous case when falling through.
-        generator.switch_to_basic_block(case_entry_block);
-        generator.emit<Bytecode::Op::Jump>(Bytecode::Label { case_block });
 
         case_blocks.append(case_block);
     }
