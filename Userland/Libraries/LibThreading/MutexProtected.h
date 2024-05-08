@@ -16,9 +16,10 @@ template<typename T>
 class MutexProtected {
     AK_MAKE_NONCOPYABLE(MutexProtected);
     AK_MAKE_NONMOVABLE(MutexProtected);
-    using ProtectedType = T;
 
 public:
+    using ProtectedType = T;
+
     ALWAYS_INLINE MutexProtected() = default;
     ALWAYS_INLINE MutexProtected(T&& value)
         : m_value(move(value))
