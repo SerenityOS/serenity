@@ -25,6 +25,28 @@ static bool are_all_pixels_opaque(Bitmap const& bitmap)
     return true;
 }
 
+NEVER_INLINE static ErrorOr<void> write_image_data(LittleEndianOutputBitStream& bit_stream, Bitmap const& bitmap, bool all_pixels_are_opaque)
+{
+    // This is currently the hot loop. Keep performance in mind when you change it.
+    for (ARGB32 pixel : bitmap) {
+        u8 a = pixel >> 24;
+        u8 r = pixel >> 16;
+        u8 g = pixel >> 8;
+        u8 b = pixel;
+
+        // We wrote a huffman table that gives every symbol 8 bits. That means we can write the image data
+        // out uncompressed –- but we do need to reverse the bit order of the bytes.
+        TRY(bit_stream.write_bits(Compress::reverse8_lookup_table[g], 8u));
+        TRY(bit_stream.write_bits(Compress::reverse8_lookup_table[r], 8u));
+        TRY(bit_stream.write_bits(Compress::reverse8_lookup_table[b], 8u));
+
+        // If all pixels are opaque, we wrote a one-element huffman table for alpha, which needs 0 bits per element.
+        if (!all_pixels_are_opaque)
+            TRY(bit_stream.write_bits(Compress::reverse8_lookup_table[a], 8u));
+    }
+    return {};
+}
+
 static ErrorOr<void> write_VP8L_image_data(Stream& stream, Bitmap const& bitmap)
 {
     LittleEndianOutputBitStream bit_stream { MaybeOwned<Stream>(stream) };
@@ -116,22 +138,7 @@ static ErrorOr<void> write_VP8L_image_data(Stream& stream, Bitmap const& bitmap)
     TRY(bit_stream.write_bits(0u, 1u)); // symbol0
 
     // Image data.
-    for (ARGB32 pixel : bitmap) {
-        u8 a = pixel >> 24;
-        u8 r = pixel >> 16;
-        u8 g = pixel >> 8;
-        u8 b = pixel;
-
-        // We wrote a huffman table that gives every symbol 8 bits. That means we can write the image data
-        // out uncompressed –- but we do need to reverse the bit order of the bytes.
-        TRY(bit_stream.write_bits(Compress::reverse8_lookup_table[g], 8u));
-        TRY(bit_stream.write_bits(Compress::reverse8_lookup_table[r], 8u));
-        TRY(bit_stream.write_bits(Compress::reverse8_lookup_table[b], 8u));
-
-        // If all pixels are opaque, we wrote a one-element huffman table for alpha, which needs 0 bits per element.
-        if (!all_pixels_are_opaque)
-            TRY(bit_stream.write_bits(Compress::reverse8_lookup_table[a], 8u));
-    }
+    TRY(write_image_data(bit_stream, bitmap, all_pixels_are_opaque));
 
     // FIXME: Make ~LittleEndianOutputBitStream do this, or make it VERIFY() that it has happened at least.
     TRY(bit_stream.align_to_byte_boundary());
