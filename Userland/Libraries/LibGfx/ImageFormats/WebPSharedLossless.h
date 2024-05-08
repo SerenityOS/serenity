@@ -39,6 +39,14 @@ private:
     Variant<u32, Compress::CanonicalCode> m_code;
 };
 
+ALWAYS_INLINE ErrorOr<void> CanonicalCode::write_symbol(LittleEndianOutputBitStream& bit_stream, u32 symbol) const
+{
+    TRY(m_code.visit(
+        [&](u32 single_code) __attribute__((always_inline))->ErrorOr<void> { VERIFY(symbol == single_code); return {}; },
+        [&](Compress::CanonicalCode const& code) __attribute__((always_inline)) { return code.write_symbol(bit_stream, symbol); }));
+    return {};
+}
+
 // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#61_overview
 // "From here on, we refer to this set as a prefix code group."
 class PrefixCodeGroup {
