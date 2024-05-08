@@ -12,6 +12,7 @@
 #include <AK/Vector.h>
 #include <LibCompress/Deflate.h>
 #include <LibGfx/ImageFormats/WebPLoaderLossless.h>
+#include <LibGfx/ImageFormats/WebPSharedLossless.h>
 
 // Lossless format: https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification
 
@@ -47,77 +48,6 @@ ErrorOr<VP8LHeader> decode_webp_chunk_VP8L_header(ReadonlyBytes vp8l_data)
         return Error::from_string_literal("WebPImageDecoderPlugin: VP8L chunk invalid version_number");
 
     return VP8LHeader { width, height, is_alpha_used, vp8l_data.slice(5) };
-}
-
-namespace {
-
-// WebP-lossless's CanonicalCodes are almost identical to deflate's.
-// One difference is that codes with a single element in webp-lossless consume 0 bits to produce that single element,
-// while they consume 1 bit in Compress::CanonicalCode. This class wraps Compress::CanonicalCode to handle the case
-// where the codes contain just a single element, and dispatches to Compress::CanonicalCode else.
-class CanonicalCode {
-public:
-    CanonicalCode()
-        : m_code(0)
-    {
-    }
-
-    static ErrorOr<CanonicalCode> from_bytes(ReadonlyBytes);
-    ErrorOr<u32> read_symbol(LittleEndianInputBitStream&) const;
-
-private:
-    explicit CanonicalCode(u32 single_symbol)
-        : m_code(single_symbol)
-    {
-    }
-
-    explicit CanonicalCode(Compress::CanonicalCode code)
-        : m_code(move(code))
-    {
-    }
-
-    Variant<u32, Compress::CanonicalCode> m_code;
-};
-
-ErrorOr<CanonicalCode> CanonicalCode::from_bytes(ReadonlyBytes bytes)
-{
-    auto non_zero_symbol_count = 0;
-    auto last_non_zero_symbol = -1;
-    for (size_t i = 0; i < bytes.size(); i++) {
-        if (bytes[i] != 0) {
-            non_zero_symbol_count++;
-            last_non_zero_symbol = i;
-        }
-    }
-
-    if (non_zero_symbol_count == 1)
-        return CanonicalCode(last_non_zero_symbol);
-
-    return CanonicalCode(TRY(Compress::CanonicalCode::from_bytes(bytes)));
-}
-
-ErrorOr<u32> CanonicalCode::read_symbol(LittleEndianInputBitStream& bit_stream) const
-{
-    return TRY(m_code.visit(
-        [](u32 single_code) -> ErrorOr<u32> { return single_code; },
-        [&bit_stream](Compress::CanonicalCode const& code) { return code.read_symbol(bit_stream); }));
-}
-
-// https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#61_overview
-// "From here on, we refer to this set as a prefix code group."
-class PrefixCodeGroup {
-public:
-    PrefixCodeGroup() = default;
-    PrefixCodeGroup(PrefixCodeGroup&&) = default;
-    PrefixCodeGroup(PrefixCodeGroup const&) = delete;
-
-    CanonicalCode& operator[](int i) { return m_codes[i]; }
-    CanonicalCode const& operator[](int i) const { return m_codes[i]; }
-
-private:
-    Array<CanonicalCode, 5> m_codes;
-};
-
 }
 
 // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#621_decoding_and_building_the_prefix_codes

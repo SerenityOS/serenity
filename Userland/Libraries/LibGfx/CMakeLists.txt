@@ -71,6 +71,7 @@ set(SOURCES
     ImageFormats/WebPLoader.cpp
     ImageFormats/WebPLoaderLossless.cpp
     ImageFormats/WebPLoaderLossy.cpp
+    ImageFormats/WebPSharedLossless.cpp
     ImageFormats/WebPWriter.cpp
     ImageFormats/WebPWriterLossless.cpp
     ImmutableBitmap.cpp
