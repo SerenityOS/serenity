@@ -32,4 +32,12 @@ ErrorOr<u32> CanonicalCode::read_symbol(LittleEndianInputBitStream& bit_stream) 
         [&bit_stream](Compress::CanonicalCode const& code) { return code.read_symbol(bit_stream); }));
 }
 
+ErrorOr<void> CanonicalCode::write_symbol(LittleEndianOutputBitStream& bit_stream, u32 symbol) const
+{
+    TRY(m_code.visit(
+        [&](u32 single_code) -> ErrorOr<void> { VERIFY(symbol == single_code); return {};},
+        [&](Compress::CanonicalCode const& code) { return code.write_symbol(bit_stream, symbol); }));
+    return {};
+}
+
 }
