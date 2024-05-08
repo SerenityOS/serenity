@@ -96,9 +96,12 @@ public:
 
     bool did_reach_stack_space_limit() const
     {
-        // Address sanitizer (ASAN) used to check for more space but
-        // currently we can't detect the stack size with it enabled.
+#if defined(AK_OS_MACOS) && defined(HAS_ADDRESS_SANITIZER)
+        // We hit stack limits sooner on macOS 14 arm64 with ASAN enabled.
+        return m_stack_info.size_free() < 96 * KiB;
+#else
         return m_stack_info.size_free() < 32 * KiB;
+#endif
     }
 
     // TODO: Rename this function instead of providing a second argument, now that the global object is no longer passed in.
