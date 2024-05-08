@@ -41,6 +41,7 @@ runs:
         wget https://github.com/WebAssembly/wabt/releases/download/1.0.23/wabt-1.0.23-ubuntu.tar.gz
         tar -xzf ./wabt-1.0.23-ubuntu.tar.gz
         rm ./wabt-1.0.23-ubuntu.tar.gz
+        echo "${{ github.workspace }}/wabt-1.0.23/bin" >> $GITHUB_PATH
 
     - name: 'Install JS dependencies'
       if: ${{ inputs.os == 'Linux' || inputs.os == 'Serenity' }}
