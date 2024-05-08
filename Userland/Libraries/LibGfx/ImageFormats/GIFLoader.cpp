@@ -350,10 +350,10 @@ static ErrorOr<void> load_gif_frame_descriptors(GIFLoadingContext& context)
 
             image->lzw_min_code_size = TRY(context.stream.read_value<u8>());
 
-            u8 lzw_encoded_bytes_expected = 0;
-
             for (;;) {
-                lzw_encoded_bytes_expected = TRY(context.stream.read_value<u8>());
+                auto const lzw_encoded_bytes_expected = TRY(context.stream.read_value<u8>());
+
+                // Block terminator
                 if (lzw_encoded_bytes_expected == 0)
                     break;
 
