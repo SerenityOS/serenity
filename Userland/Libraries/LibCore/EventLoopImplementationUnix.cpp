@@ -16,6 +16,7 @@
 #include <LibCore/Socket.h>
 #include <LibCore/System.h>
 #include <LibCore/ThreadEventQueue.h>
+#include <pthread.h>
 #include <sys/select.h>
 #include <unistd.h>
 
@@ -25,7 +26,8 @@ namespace {
 struct ThreadData;
 class TimeoutSet;
 
-thread_local ThreadData* s_thread_data;
+HashMap<pthread_t, ThreadData*> s_thread_data;
+thread_local pthread_t s_thread_id;
 
 short notification_type_to_poll_events(NotificationType type)
 {
@@ -214,16 +216,29 @@ public:
     bool should_reload { false };
     TimerShouldFireWhenNotVisible fire_when_not_visible { TimerShouldFireWhenNotVisible::No };
     WeakPtr<EventReceiver> owner;
+    pthread_t owner_thread { 0 };
+    Atomic<bool> is_being_deleted { false };
 };
 
 struct ThreadData {
     static ThreadData& the()
     {
-        if (!s_thread_data) {
+        if (s_thread_id == 0)
+            s_thread_id = pthread_self();
+        ThreadData* data = nullptr;
+        if (!s_thread_data.contains(s_thread_id)) {
             // FIXME: Don't leak this.
-            s_thread_data = new ThreadData;
+            data = new ThreadData;
+            s_thread_data.set(s_thread_id, data);
+        } else {
+            data = s_thread_data.get(s_thread_id).value();
         }
-        return *s_thread_data;
+        return *data;
+    }
+
+    static ThreadData& for_thread(pthread_t thread_id)
+    {
+        return *s_thread_data.get(thread_id).value();
     }
 
     ThreadData()
@@ -610,6 +625,7 @@ intptr_t EventLoopManagerUnix::register_timer(EventReceiver& object, int millise
     VERIFY(milliseconds >= 0);
     auto& thread_data = ThreadData::the();
     auto timer = new EventLoopTimer;
+    timer->owner_thread = s_thread_id;
     timer->owner = object;
     timer->interval = Duration::from_milliseconds(milliseconds);
     timer->reload(MonotonicTime::now_coarse());
@@ -621,11 +637,14 @@ intptr_t EventLoopManagerUnix::register_timer(EventReceiver& object, int millise
 
 void EventLoopManagerUnix::unregister_timer(intptr_t timer_id)
 {
-    auto& thread_data = ThreadData::the();
     auto* timer = bit_cast<EventLoopTimer*>(timer_id);
-    if (timer->is_scheduled())
-        thread_data.timeouts.unschedule(timer);
-    delete timer;
+    auto& thread_data = ThreadData::for_thread(timer->owner_thread);
+    auto expected = false;
+    if (timer->is_being_deleted.compare_exchange_strong(expected, true, AK::MemoryOrder::memory_order_acq_rel)) {
+        if (timer->is_scheduled())
+            thread_data.timeouts.unschedule(timer);
+        delete timer;
+    }
 }
 
 void EventLoopManagerUnix::register_notifier(Notifier& notifier)
