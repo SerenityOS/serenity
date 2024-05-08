@@ -35,9 +35,11 @@ public:
     Function<void(GUI::ContextMenuEvent&)> on_context_menu_request;
 
     void set_roaming(bool roaming);
+    void set_sleeping(bool sleeping);
 
     [[nodiscard]] bool is_artist() const;
     [[nodiscard]] bool is_inspector() const;
+    [[nodiscard]] bool is_sleeping() const;
 
 private:
     enum class State : u16 {

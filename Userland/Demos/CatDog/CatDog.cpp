@@ -8,6 +8,7 @@
 #include "CatDog.h"
 #include <LibCore/File.h>
 #include <LibCore/ProcessStatisticsReader.h>
+#include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
 
@@ -67,6 +68,12 @@ void CatDog::set_roaming(bool roaming)
     update();
 }
 
+void CatDog::set_sleeping(bool sleeping)
+{
+    m_state = (sleeping ? State::Sleeping : State::Idle) | special_application_states();
+    update();
+}
+
 CatDog::State CatDog::special_application_states() const
 {
     auto maybe_proc_info = Core::ProcessStatisticsReader::get_all(*m_proc_all);
@@ -99,11 +106,19 @@ bool CatDog::is_inspector() const
     return has_flag(special_application_states(), State::Inspector);
 }
 
+bool CatDog::is_sleeping() const
+{
+    return has_flag(m_state, State::Sleeping);
+}
+
 void CatDog::timer_event(Core::TimerEvent&)
 {
     using namespace AK::TimeLiterals;
 
     if (has_flag(m_state, State::Alert))
+        return;
+
+    if (has_flag(m_state, State::Sleeping))
         return;
 
     m_state = special_application_states();
@@ -162,6 +177,9 @@ void CatDog::paint_event(GUI::PaintEvent& event)
 void CatDog::track_mouse_move(Gfx::IntPoint point)
 {
     if (has_flag(m_state, State::Alert))
+        return;
+
+    if (has_flag(m_state, State::Sleeping))
         return;
 
     Gfx::IntPoint relative_offset = point - window()->position();
