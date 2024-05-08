@@ -569,7 +569,7 @@ DefaultRootCACertificates::DefaultRootCACertificates()
 
 DefaultRootCACertificates& DefaultRootCACertificates::the()
 {
-    static DefaultRootCACertificates s_the;
+    static thread_local DefaultRootCACertificates s_the;
     return s_the;
 }
 

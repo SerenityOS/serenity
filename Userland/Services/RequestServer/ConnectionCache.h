@@ -16,6 +16,7 @@
 #include <LibCore/SOCKSProxyClient.h>
 #include <LibCore/Timer.h>
 #include <LibTLS/TLSv12.h>
+#include <LibThreading/RWLockProtected.h>
 #include <LibURL/URL.h>
 
 namespace RequestServer {
@@ -53,42 +54,95 @@ struct Proxy {
     }
 };
 
+struct JobData {
+    Function<void(Core::BufferedSocketBase&)> start {};
+    Function<void(Core::NetworkJob::Error)> fail {};
+    Function<Vector<TLS::Certificate>()> provide_client_certificates {};
+    struct TimingInfo {
+#if REQUESTSERVER_DEBUG
+        bool valid { true };
+        Core::ElapsedTimer timer {};
+        URL::URL url {};
+        Duration waiting_in_queue {};
+        Duration starting_connection {};
+        Duration performing_request {};
+#endif
+    } timing_info {};
+
+    JobData(Function<void(Core::BufferedSocketBase&)> start, Function<void(Core::NetworkJob::Error)> fail, Function<Vector<TLS::Certificate>()> provide_client_certificates, TimingInfo timing_info)
+        : start(move(start))
+        , fail(move(fail))
+        , provide_client_certificates(move(provide_client_certificates))
+        , timing_info(move(timing_info))
+    {
+    }
+
+    JobData(JobData&& other)
+        : start(move(other.start))
+        , fail(move(other.fail))
+        , provide_client_certificates(move(other.provide_client_certificates))
+        , timing_info(move(other.timing_info))
+    {
+#if REQUESTSERVER_DEBUG
+        other.timing_info.valid = false;
+#endif
+    }
+
+#if REQUESTSERVER_DEBUG
+    ~JobData()
+    {
+        if (timing_info.valid) {
+            dbgln("JobData for {} timings:", timing_info.url);
+            dbgln("  - Waiting in queue: {}ms", timing_info.waiting_in_queue.to_milliseconds());
+            dbgln("  - Starting connection: {}ms", timing_info.starting_connection.to_milliseconds());
+            dbgln("  - Performing request: {}ms", timing_info.performing_request.to_milliseconds());
+        }
+    }
+#endif
+
+    template<typename T>
+    static JobData create(NonnullRefPtr<T> job, [[maybe_unused]] URL::URL url)
+    {
+        return JobData {
+            [job](auto& socket) { job->start(socket); },
+            [job](auto error) { job->fail(error); },
+            [job] {
+                if constexpr (requires { job->on_certificate_requested; }) {
+                    if (job->on_certificate_requested)
+                        return job->on_certificate_requested();
+                } else {
+                    // "use" `job`, otherwise clang gets sad.
+                    (void)job;
+                }
+                return Vector<TLS::Certificate> {};
+            },
+            {
+#if REQUESTSERVER_DEBUG
+                .timer = Core::ElapsedTimer::start_new(Core::TimerType::Precise),
+                .url = move(url),
+                .waiting_in_queue = {},
+                .starting_connection = {},
+                .performing_request = {},
+#endif
+            },
+        };
+    }
+};
+
 template<typename Socket, typename SocketStorageType = Socket>
 struct Connection {
-    struct JobData {
-        Function<void(Core::BufferedSocketBase&)> start {};
-        Function<void(Core::NetworkJob::Error)> fail {};
-        Function<Vector<TLS::Certificate>()> provide_client_certificates {};
-
-        template<typename T>
-        static JobData create(NonnullRefPtr<T> job)
-        {
-            return JobData {
-                .start = [job](auto& socket) { job->start(socket); },
-                .fail = [job](auto error) { job->fail(error); },
-                .provide_client_certificates = [job] {
-                    if constexpr (requires { job->on_certificate_requested; }) {
-                        if (job->on_certificate_requested)
-                            return job->on_certificate_requested();
-                    } else {
-                        // "use" `job`, otherwise clang gets sad.
-                        (void)job;
-                    }
-                    return Vector<TLS::Certificate> {}; },
-            };
-        }
-    };
     using QueueType = Vector<JobData>;
     using SocketType = Socket;
     using StorageType = SocketStorageType;
 
-    NonnullOwnPtr<Core::BufferedSocket<SocketStorageType>> socket;
-    QueueType request_queue;
+    OwnPtr<Core::BufferedSocket<SocketStorageType>> socket;
+    Threading::RWLockProtected<QueueType> request_queue;
     NonnullRefPtr<Core::Timer> removal_timer;
+    Atomic<bool> is_being_started { false };
     bool has_started { false };
     URL::URL current_url {};
     Core::ElapsedTimer timer {};
-    JobData job_data {};
+    Optional<JobData> job_data {};
     Proxy proxy {};
     size_t max_queue_length { 0 };
 };
@@ -117,15 +171,16 @@ struct InferredServerProperties {
     size_t requests_served_per_connection { NumericLimits<size_t>::max() };
 };
 
-extern HashMap<ConnectionKey, NonnullOwnPtr<Vector<NonnullOwnPtr<Connection<Core::TCPSocket, Core::Socket>>>>> g_tcp_connection_cache;
-extern HashMap<ConnectionKey, NonnullOwnPtr<Vector<NonnullOwnPtr<Connection<TLS::TLSv12>>>>> g_tls_connection_cache;
-extern HashMap<ByteString, InferredServerProperties> g_inferred_server_properties;
+extern Threading::RWLockProtected<HashMap<ConnectionKey, NonnullOwnPtr<Vector<NonnullOwnPtr<Connection<Core::TCPSocket, Core::Socket>>>>>> g_tcp_connection_cache;
+extern Threading::RWLockProtected<HashMap<ConnectionKey, NonnullOwnPtr<Vector<NonnullOwnPtr<Connection<TLS::TLSv12>>>>>> g_tls_connection_cache;
+extern Threading::RWLockProtected<HashMap<ByteString, InferredServerProperties>> g_inferred_server_properties;
 
 void request_did_finish(URL::URL const&, Core::Socket const*);
 void dump_jobs();
 
 constexpr static size_t MaxConcurrentConnectionsPerURL = 4;
-constexpr static size_t ConnectionKeepAliveTimeMilliseconds = 10'000;
+constexpr static size_t ConnectionKeepAliveTimeMilliseconds = 20'000;
+constexpr static size_t ConnectionCacheQueueHighWatermark = 4;
 
 template<typename T>
 ErrorOr<void> recreate_socket_if_needed(T& connection, URL::URL const& url)
@@ -134,6 +189,7 @@ ErrorOr<void> recreate_socket_if_needed(T& connection, URL::URL const& url)
     using SocketStorageType = typename T::StorageType;
 
     if (!connection.socket->is_open() || connection.socket->is_eof()) {
+        connection.socket = nullptr;
         // Create another socket for the connection.
         auto set_socket = [&](NonnullOwnPtr<SocketStorageType>&& socket) -> ErrorOr<void> {
             connection.socket = TRY(Core::BufferedSocket<SocketStorageType>::create(move(socket)));
@@ -151,52 +207,82 @@ ErrorOr<void> recreate_socket_if_needed(T& connection, URL::URL const& url)
                 else
                     reason = Core::NetworkJob::Error::TransmissionFailed;
 
-                if (connection.job_data.fail)
-                    connection.job_data.fail(reason);
+                if (connection.job_data->fail)
+                    connection.job_data->fail(reason);
             });
             options.set_certificate_provider([&connection]() -> Vector<TLS::Certificate> {
-                if (connection.job_data.provide_client_certificates)
-                    return connection.job_data.provide_client_certificates();
+                if (connection.job_data->provide_client_certificates)
+                    return connection.job_data->provide_client_certificates();
                 return {};
             });
             TRY(set_socket(TRY((connection.proxy.template tunnel<SocketType, SocketStorageType>(url, move(options))))));
         } else {
             TRY(set_socket(TRY((connection.proxy.template tunnel<SocketType, SocketStorageType>(url)))));
         }
-        dbgln_if(REQUESTSERVER_DEBUG, "Creating a new socket for {} -> {}", url, connection.socket);
+        dbgln_if(REQUESTSERVER_DEBUG, "Creating a new socket for {} -> {}", url, connection.socket.ptr());
     }
     return {};
 }
 
-decltype(auto) get_or_create_connection(auto& cache, URL::URL const& url, auto job, Core::ProxyData proxy_data = {})
+extern size_t hits;
+extern size_t misses;
+
+template<typename Cache>
+void start_connection(const URL::URL& url, auto job, auto& sockets_for_url, size_t index, Duration, Cache&);
+
+void ensure_connection(auto& cache, const URL::URL& url, auto job, Core::ProxyData proxy_data = {})
 {
-    using CacheEntryType = RemoveCVReference<decltype(*cache.begin()->value)>;
+    using CacheEntryType = RemoveCVReference<decltype(*declval<typename RemoveCVReference<decltype(cache)>::ProtectedType>().begin()->value)>;
 
     auto hostname = url.serialized_host().release_value_but_fixme_should_propagate_errors().to_byte_string();
-    auto& properties = g_inferred_server_properties.ensure(hostname);
+    auto& properties = g_inferred_server_properties.with_write_locked([&](auto& map) -> InferredServerProperties& { return map.ensure(hostname); });
 
-    auto& sockets_for_url = *cache.ensure({ move(hostname), url.port_or_default(), proxy_data }, [] { return make<CacheEntryType>(); });
+    auto& sockets_for_url = *cache.with_write_locked([&](auto& map) -> NonnullOwnPtr<CacheEntryType>& {
+        return map.ensure({ move(hostname), url.port_or_default(), proxy_data }, [] { return make<CacheEntryType>(); });
+    });
 
-    Proxy proxy { proxy_data };
-
-    using ReturnType = decltype(sockets_for_url[0].ptr());
     // Find the connection with an empty queue; if none exist, we'll find the least backed-up connection later.
     // Note that servers that are known to serve a single request per connection (e.g. HTTP/1.0) usually have
     // issues with concurrent connections, so we'll only allow one connection per URL in that case to avoid issues.
     // This is a bit too aggressive, but there's no way to know if the server can handle concurrent connections
     // without trying it out first, and that's not worth the effort as HTTP/1.0 is a legacy protocol anyway.
-    auto it = sockets_for_url.find_if([&](auto& connection) { return properties.requests_served_per_connection < 2 || connection->request_queue.is_empty(); });
+    auto it = sockets_for_url.find_if([&](auto const& connection) {
+        return properties.requests_served_per_connection < 2
+            || connection->request_queue.with_read_locked([](auto const& queue) { return queue.size(); }) <= ConnectionCacheQueueHighWatermark;
+    });
     auto did_add_new_connection = false;
     auto failed_to_find_a_socket = it.is_end();
-    if (failed_to_find_a_socket && sockets_for_url.size() < ConnectionCache::MaxConcurrentConnectionsPerURL) {
-        using ConnectionType = RemoveCVReference<decltype(*cache.begin()->value->at(0))>;
+
+    Proxy proxy { proxy_data };
+    size_t index;
+
+    auto timer = Core::ElapsedTimer::start_new();
+    if (failed_to_find_a_socket && sockets_for_url.size() < MaxConcurrentConnectionsPerURL) {
+        using ConnectionType = RemoveCVReference<decltype(*AK::Detail::declval<CacheEntryType>().at(0))>;
+        auto& connection = cache.with_write_locked([&](auto&) -> ConnectionType& {
+            index = sockets_for_url.size();
+            sockets_for_url.append(AK::make<ConnectionType>(
+                nullptr,
+                typename ConnectionType::QueueType {},
+                Core::Timer::create_single_shot(ConnectionKeepAliveTimeMilliseconds, nullptr),
+                true));
+            auto& connection = sockets_for_url.last();
+            connection->proxy = move(proxy);
+            return *connection;
+        });
+        ScopeGuard start_guard = [&] {
+            connection.is_being_started = false;
+        };
+        dbgln_if(REQUESTSERVER_DEBUG, "I will start a connection ({}) for URL {}", &connection, url);
+
         auto connection_result = proxy.tunnel<typename ConnectionType::SocketType, typename ConnectionType::StorageType>(url);
+        misses++;
         if (connection_result.is_error()) {
             dbgln("ConnectionCache: Connection to {} failed: {}", url, connection_result.error());
             Core::deferred_invoke([job] {
                 job->fail(Core::NetworkJob::Error::ConnectionFailed);
             });
-            return ReturnType { nullptr };
+            return;
         }
         auto socket_result = Core::BufferedSocket<typename ConnectionType::StorageType>::create(connection_result.release_value());
         if (socket_result.is_error()) {
@@ -204,25 +290,21 @@ decltype(auto) get_or_create_connection(auto& cache, URL::URL const& url, auto j
             Core::deferred_invoke([job] {
                 job->fail(Core::NetworkJob::Error::ConnectionFailed);
             });
-            return ReturnType { nullptr };
+            return;
         }
-        sockets_for_url.append(make<ConnectionType>(
-            socket_result.release_value(),
-            typename ConnectionType::QueueType {},
-            Core::Timer::create_single_shot(ConnectionKeepAliveTimeMilliseconds, nullptr)));
-        sockets_for_url.last()->proxy = move(proxy);
         did_add_new_connection = true;
+        connection.socket = socket_result.release_value();
     }
-    size_t index;
+
+    auto elapsed = Duration::from_milliseconds(timer.elapsed_milliseconds());
+
     if (failed_to_find_a_socket) {
-        if (did_add_new_connection) {
-            index = sockets_for_url.size() - 1;
-        } else {
+        if (!did_add_new_connection) {
             // Find the least backed-up connection (based on how many entries are in their request queue).
             index = 0;
             auto min_queue_size = (size_t)-1;
             for (auto it = sockets_for_url.begin(); it != sockets_for_url.end(); ++it) {
-                if (auto queue_size = (*it)->request_queue.size(); min_queue_size > queue_size) {
+                if (auto queue_size = (*it)->request_queue.with_read_locked([](auto const& queue) { return queue.size(); }); min_queue_size > queue_size) {
                     index = it.index();
                     min_queue_size = queue_size;
                 }
@@ -230,39 +312,76 @@ decltype(auto) get_or_create_connection(auto& cache, URL::URL const& url, auto j
         }
     } else {
         index = it.index();
+        hits++;
     }
+
+    dbgln_if(REQUESTSERVER_DEBUG, "ConnectionCache: Hits: {}, Misses: {}", RequestServer::ConnectionCache::hits, RequestServer::ConnectionCache::misses);
+    start_connection(url, job, sockets_for_url, index, elapsed, cache);
+}
+
+template<typename Cache>
+void start_connection(URL::URL const& url, auto job, auto& sockets_for_url, size_t index, Duration setup_time, Cache& cache)
+{
     if (sockets_for_url.is_empty()) {
         Core::deferred_invoke([job] {
             job->fail(Core::NetworkJob::Error::ConnectionFailed);
         });
-        return ReturnType { nullptr };
+        return;
     }
 
     auto& connection = *sockets_for_url[index];
+    if (connection.is_being_started) {
+        // Someone else is creating the connection, queue the job and let them handle it.
+        dbgln_if(REQUESTSERVER_DEBUG, "Enqueue request for URL {} in {} - {}", url, &connection, connection.socket.ptr());
+        auto size = connection.request_queue.with_write_locked([&](auto& queue) {
+            queue.append(JobData::create(job, url));
+            return queue.size();
+        });
+        connection.max_queue_length = max(connection.max_queue_length, size);
+        return;
+    }
+
     if (!connection.has_started) {
         connection.has_started = true;
-        Core::deferred_invoke([&connection, url, job] {
+        Core::deferred_invoke([&connection, &cache, url, job, setup_time] {
+            (void)setup_time;
+            auto job_data = JobData::create(job, url);
+            if constexpr (REQUESTSERVER_DEBUG) {
+                job_data.timing_info.waiting_in_queue = Duration::from_milliseconds(job_data.timing_info.timer.elapsed_milliseconds());
+                job_data.timing_info.timer.start();
+            }
             if (auto result = recreate_socket_if_needed(connection, url); result.is_error()) {
-                dbgln("ConnectionCache: request failed to start, failed to make a socket: {}", result.error());
+                dbgln_if(REQUESTSERVER_DEBUG, "ConnectionCache: request failed to start, failed to make a socket: {}", result.error());
+                if constexpr (REQUESTSERVER_DEBUG) {
+                    job_data.timing_info.starting_connection += Duration::from_milliseconds(job_data.timing_info.timer.elapsed_milliseconds()) + setup_time;
+                    job_data.timing_info.timer.start();
+                }
                 Core::deferred_invoke([job] {
                     job->fail(Core::NetworkJob::Error::ConnectionFailed);
                 });
             } else {
-                dbgln_if(REQUESTSERVER_DEBUG, "Immediately start request for url {} in {} - {}", url, &connection, connection.socket);
-                connection.removal_timer->stop();
-                connection.timer.start();
-                connection.current_url = url;
-                connection.job_data = decltype(connection.job_data)::create(job);
-                connection.socket->set_notifications_enabled(true);
-                connection.job_data.start(*connection.socket);
+                cache.with_write_locked([&](auto&) {
+                    dbgln_if(REQUESTSERVER_DEBUG, "Immediately start request for url {} in {} - {}", url, &connection, connection.socket.ptr());
+                    connection.job_data = move(job_data);
+                    if constexpr (REQUESTSERVER_DEBUG) {
+                        connection.job_data->timing_info.starting_connection += Duration::from_milliseconds(connection.job_data->timing_info.timer.elapsed_milliseconds()) + setup_time;
+                        connection.job_data->timing_info.timer.start();
+                    }
+                    connection.removal_timer->stop();
+                    connection.timer.start();
+                    connection.current_url = url;
+                    connection.socket->set_notifications_enabled(true);
+                    connection.job_data->start(*connection.socket);
+                });
             }
         });
     } else {
-        dbgln_if(REQUESTSERVER_DEBUG, "Enqueue request for URL {} in {} - {}", url, &connection, connection.socket);
-        connection.request_queue.append(decltype(connection.job_data)::create(job));
-        connection.max_queue_length = max(connection.max_queue_length, connection.request_queue.size());
+        dbgln_if(REQUESTSERVER_DEBUG, "Enqueue request for URL {} in {} - {}", url, &connection, connection.socket.ptr());
+        auto size = connection.request_queue.with_write_locked([&](auto& queue) {
+            queue.append(JobData::create(job, url));
+            return queue.size();
+        });
+        connection.max_queue_length = max(connection.max_queue_length, size);
     }
-    return &connection;
 }
-
 }

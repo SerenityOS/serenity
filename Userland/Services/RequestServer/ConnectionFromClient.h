@@ -7,7 +7,10 @@
 #pragma once
 
 #include <AK/HashMap.h>
+#include <LibCore/SharedCircularQueue.h>
 #include <LibIPC/ConnectionFromClient.h>
+#include <LibThreading/MutexProtected.h>
+#include <LibThreading/ThreadPool.h>
 #include <LibWebSocket/WebSocket.h>
 #include <RequestServer/Forward.h>
 #include <RequestServer/RequestClientEndpoint.h>
@@ -46,8 +49,36 @@ private:
     virtual void websocket_close(i32, u16, ByteString const&) override;
     virtual Messages::RequestServer::WebsocketSetCertificateResponse websocket_set_certificate(i32, ByteString const&, ByteString const&) override;
 
-    HashMap<i32, OwnPtr<Request>> m_requests;
+    struct StartRequest {
+        i32 request_id;
+        ByteString method;
+        URL::URL url;
+        HashMap<ByteString, ByteString> request_headers;
+        ByteBuffer request_body;
+        Core::ProxyData proxy_data;
+    };
+
+    struct EnsureConnection {
+        URL::URL url;
+        CacheLevel cache_level;
+    };
+
+    using Work = Variant<StartRequest, EnsureConnection, Empty>;
+
+    void worker_do_work(Work);
+
+    Threading::MutexProtected<HashMap<i32, OwnPtr<Request>>> m_requests;
     HashMap<i32, RefPtr<WebSocket::WebSocket>> m_websockets;
+
+    void enqueue(Work);
+
+    template<typename Pool>
+    struct Looper : public Threading::ThreadPoolLooper<Pool> {
+        IterationDecision next(Pool& pool, bool wait);
+        Core::EventLoop event_loop;
+    };
+
+    Threading::ThreadPool<Work, Looper> m_thread_pool;
 };
 
 }

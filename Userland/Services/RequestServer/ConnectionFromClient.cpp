@@ -26,119 +26,9 @@ static IDAllocator s_client_ids;
 
 ConnectionFromClient::ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket> socket)
     : IPC::ConnectionFromClient<RequestClientEndpoint, RequestServerEndpoint>(*this, move(socket), s_client_ids.allocate())
+    , m_thread_pool([this](Work work) { worker_do_work(move(work)); })
 {
     s_connections.set(client_id(), *this);
-}
-
-void ConnectionFromClient::die()
-{
-    auto client_id = this->client_id();
-    s_connections.remove(client_id);
-    s_client_ids.deallocate(client_id);
-
-    if (s_connections.is_empty())
-        Core::EventLoop::current().quit(0);
-}
-
-Messages::RequestServer::ConnectNewClientResponse ConnectionFromClient::connect_new_client()
-{
-    int socket_fds[2] {};
-    if (auto err = Core::System::socketpair(AF_LOCAL, SOCK_STREAM, 0, socket_fds); err.is_error()) {
-        dbgln("Failed to create client socketpair: {}", err.error());
-        return IPC::File {};
-    }
-
-    auto client_socket_or_error = Core::LocalSocket::adopt_fd(socket_fds[0]);
-    if (client_socket_or_error.is_error()) {
-        close(socket_fds[0]);
-        close(socket_fds[1]);
-        dbgln("Failed to adopt client socket: {}", client_socket_or_error.error());
-        return IPC::File {};
-    }
-    auto client_socket = client_socket_or_error.release_value();
-    // Note: A ref is stored in the static s_connections map
-    auto client = adopt_ref(*new ConnectionFromClient(move(client_socket)));
-
-    return IPC::File::adopt_fd(socket_fds[1]);
-}
-
-Messages::RequestServer::IsSupportedProtocolResponse ConnectionFromClient::is_supported_protocol(ByteString const& protocol)
-{
-    bool supported = Protocol::find_by_name(protocol.to_lowercase());
-    return supported;
-}
-
-void ConnectionFromClient::start_request(i32 request_id, ByteString const& method, URL::URL const& url, HashMap<ByteString, ByteString> const& request_headers, ByteBuffer const& request_body, Core::ProxyData const& proxy_data)
-{
-    if (!url.is_valid()) {
-        dbgln("StartRequest: Invalid URL requested: '{}'", url);
-        (void)post_message(Messages::RequestClient::RequestFinished(request_id, false, 0));
-        return;
-    }
-
-    auto* protocol = Protocol::find_by_name(url.scheme().to_byte_string());
-    if (!protocol) {
-        dbgln("StartRequest: No protocol handler for URL: '{}'", url);
-        (void)post_message(Messages::RequestClient::RequestFinished(request_id, false, 0));
-        return;
-    }
-    auto request = protocol->start_request(request_id, *this, method, url, request_headers, request_body, proxy_data);
-    if (!request) {
-        dbgln("StartRequest: Protocol handler failed to start request: '{}'", url);
-        (void)post_message(Messages::RequestClient::RequestFinished(request_id, false, 0));
-        return;
-    }
-    auto id = request->id();
-    auto fd = request->request_fd();
-    m_requests.set(id, move(request));
-    (void)post_message(Messages::RequestClient::RequestStarted(request_id, IPC::File::adopt_fd(fd)));
-}
-
-Messages::RequestServer::StopRequestResponse ConnectionFromClient::stop_request(i32 request_id)
-{
-    auto* request = const_cast<Request*>(m_requests.get(request_id).value_or(nullptr));
-    bool success = false;
-    if (request) {
-        request->stop();
-        m_requests.remove(request_id);
-        success = true;
-    }
-    return success;
-}
-
-void ConnectionFromClient::did_receive_headers(Badge<Request>, Request& request)
-{
-    auto response_headers = request.response_headers().clone().release_value_but_fixme_should_propagate_errors();
-    async_headers_became_available(request.id(), move(response_headers), request.status_code());
-}
-
-void ConnectionFromClient::did_finish_request(Badge<Request>, Request& request, bool success)
-{
-    if (request.total_size().has_value())
-        async_request_finished(request.id(), success, request.total_size().value());
-
-    m_requests.remove(request.id());
-}
-
-void ConnectionFromClient::did_progress_request(Badge<Request>, Request& request)
-{
-    async_request_progress(request.id(), request.total_size(), request.downloaded_size());
-}
-
-void ConnectionFromClient::did_request_certificates(Badge<Request>, Request& request)
-{
-    async_certificate_requested(request.id());
-}
-
-Messages::RequestServer::SetCertificateResponse ConnectionFromClient::set_certificate(i32 request_id, ByteString const& certificate, ByteString const& key)
-{
-    auto* request = const_cast<Request*>(m_requests.get(request_id).value_or(nullptr));
-    bool success = false;
-    if (request) {
-        request->set_certificate(certificate, key);
-        success = true;
-    }
-    return success;
 }
 
 class Job : public RefCounted<Job>
@@ -183,6 +73,195 @@ private:
     inline static HashMap<URL::URL, WeakPtr<Job>> s_jobs {};
 };
 
+template<typename Pool>
+IterationDecision ConnectionFromClient::Looper<Pool>::next(Pool& pool, bool wait)
+{
+    bool should_exit = false;
+    auto timer = Core::Timer::create_repeating(100, [&] {
+        if (Threading::ThreadPoolLooper<Pool>::next(pool, false) == IterationDecision::Break) {
+            event_loop.quit(0);
+            should_exit = true;
+        }
+    });
+
+    timer->start();
+    if (!wait) {
+        event_loop.deferred_invoke([&] {
+            event_loop.quit(0);
+        });
+    }
+
+    event_loop.exec();
+
+    if (should_exit)
+        return IterationDecision::Break;
+    return IterationDecision::Continue;
+}
+
+void ConnectionFromClient::worker_do_work(Work work)
+{
+    work.visit(
+        [&](StartRequest& start_request) {
+            auto* protocol = Protocol::find_by_name(start_request.url.scheme().to_byte_string());
+            if (!protocol) {
+                dbgln("StartRequest: No protocol handler for URL: '{}'", start_request.url);
+                (void)post_message(Messages::RequestClient::RequestFinished(start_request.request_id, false, 0));
+                return;
+            }
+            auto request = protocol->start_request(start_request.request_id, *this, start_request.method, start_request.url, start_request.request_headers, start_request.request_body, start_request.proxy_data);
+            if (!request) {
+                dbgln("StartRequest: Protocol handler failed to start request: '{}'", start_request.url);
+                (void)post_message(Messages::RequestClient::RequestFinished(start_request.request_id, false, 0));
+                return;
+            }
+            auto id = request->id();
+            auto fd = request->request_fd();
+            m_requests.with_locked([&](auto& map) { map.set(id, move(request)); });
+            (void)post_message(Messages::RequestClient::RequestStarted(start_request.request_id, IPC::File::adopt_fd(fd)));
+        },
+        [&](EnsureConnection& ensure_connection) {
+            auto& url = ensure_connection.url;
+            auto& cache_level = ensure_connection.cache_level;
+
+            if (cache_level == CacheLevel::ResolveOnly) {
+                Core::deferred_invoke([host = url.serialized_host().release_value_but_fixme_should_propagate_errors().to_byte_string()] {
+                    dbgln("EnsureConnection: DNS-preload for {}", host);
+                    auto resolved_host = Core::Socket::resolve_host(host, Core::Socket::SocketType::Stream);
+                    if (resolved_host.is_error())
+                        dbgln("EnsureConnection: DNS-preload failed for {}", host);
+                });
+                dbgln("EnsureConnection: DNS-preload for {} done", url);
+                return;
+            }
+
+            auto job = Job::ensure(url);
+            dbgln("EnsureConnection: Pre-connect to {}", url);
+            auto do_preconnect = [&](auto& cache) {
+                ConnectionCache::ensure_connection(cache, url, job);
+            };
+
+            if (url.scheme() == "http"sv)
+                do_preconnect(ConnectionCache::g_tcp_connection_cache);
+            else if (url.scheme() == "https"sv)
+                do_preconnect(ConnectionCache::g_tls_connection_cache);
+            else
+                dbgln("EnsureConnection: Invalid URL scheme: '{}'", url.scheme());
+        },
+        [&](Empty) {});
+}
+
+void ConnectionFromClient::die()
+{
+    auto client_id = this->client_id();
+    s_connections.remove(client_id);
+    s_client_ids.deallocate(client_id);
+
+    if (s_connections.is_empty())
+        Core::EventLoop::current().quit(0);
+}
+
+Messages::RequestServer::ConnectNewClientResponse ConnectionFromClient::connect_new_client()
+{
+    int socket_fds[2] {};
+    if (auto err = Core::System::socketpair(AF_LOCAL, SOCK_STREAM, 0, socket_fds); err.is_error()) {
+        dbgln("Failed to create client socketpair: {}", err.error());
+        return IPC::File {};
+    }
+
+    auto client_socket_or_error = Core::LocalSocket::adopt_fd(socket_fds[0]);
+    if (client_socket_or_error.is_error()) {
+        close(socket_fds[0]);
+        close(socket_fds[1]);
+        dbgln("Failed to adopt client socket: {}", client_socket_or_error.error());
+        return IPC::File {};
+    }
+    auto client_socket = client_socket_or_error.release_value();
+    // Note: A ref is stored in the static s_connections map
+    auto client = adopt_ref(*new ConnectionFromClient(move(client_socket)));
+
+    return IPC::File::adopt_fd(socket_fds[1]);
+}
+
+void ConnectionFromClient::enqueue(Work work)
+{
+    m_thread_pool.submit(move(work));
+}
+
+Messages::RequestServer::IsSupportedProtocolResponse ConnectionFromClient::is_supported_protocol(ByteString const& protocol)
+{
+    bool supported = Protocol::find_by_name(protocol.to_lowercase());
+    return supported;
+}
+
+void ConnectionFromClient::start_request(i32 request_id, ByteString const& method, URL::URL const& url, HashMap<ByteString, ByteString> const& request_headers, ByteBuffer const& request_body, Core::ProxyData const& proxy_data)
+{
+    if (!url.is_valid()) {
+        dbgln("StartRequest: Invalid URL requested: '{}'", url);
+        (void)post_message(Messages::RequestClient::RequestFinished(request_id, false, 0));
+        return;
+    }
+
+    enqueue(StartRequest {
+        .request_id = request_id,
+        .method = method,
+        .url = url,
+        .request_headers = request_headers,
+        .request_body = request_body,
+        .proxy_data = proxy_data,
+    });
+}
+
+Messages::RequestServer::StopRequestResponse ConnectionFromClient::stop_request(i32 request_id)
+{
+    return m_requests.with_locked([&](auto& map) {
+        auto* request = const_cast<Request*>(map.get(request_id).value_or(nullptr));
+        bool success = false;
+        if (request) {
+            request->stop();
+            map.remove(request_id);
+            success = true;
+        }
+        return success;
+    });
+}
+
+void ConnectionFromClient::did_receive_headers(Badge<Request>, Request& request)
+{
+    auto response_headers = request.response_headers().clone().release_value_but_fixme_should_propagate_errors();
+    async_headers_became_available(request.id(), move(response_headers), request.status_code());
+}
+
+void ConnectionFromClient::did_finish_request(Badge<Request>, Request& request, bool success)
+{
+    if (request.total_size().has_value())
+        async_request_finished(request.id(), success, request.total_size().value());
+
+    m_requests.with_locked([&](auto& map) { map.remove(request.id()); });
+}
+
+void ConnectionFromClient::did_progress_request(Badge<Request>, Request& request)
+{
+    async_request_progress(request.id(), request.total_size(), request.downloaded_size());
+}
+
+void ConnectionFromClient::did_request_certificates(Badge<Request>, Request& request)
+{
+    async_certificate_requested(request.id());
+}
+
+Messages::RequestServer::SetCertificateResponse ConnectionFromClient::set_certificate(i32 request_id, ByteString const& certificate, ByteString const& key)
+{
+    return m_requests.with_locked([&](auto& map) {
+        auto* request = const_cast<Request*>(map.get(request_id).value_or(nullptr));
+        bool success = false;
+        if (request) {
+            request->set_certificate(certificate, key);
+            success = true;
+        }
+        return success;
+    });
+}
+
 void ConnectionFromClient::ensure_connection(URL::URL const& url, ::RequestServer::CacheLevel const& cache_level)
 {
     if (!url.is_valid()) {
@@ -190,30 +269,10 @@ void ConnectionFromClient::ensure_connection(URL::URL const& url, ::RequestServe
         return;
     }
 
-    if (cache_level == CacheLevel::ResolveOnly) {
-        return Core::deferred_invoke([host = url.serialized_host().release_value_but_fixme_should_propagate_errors().to_byte_string()] {
-            dbgln("EnsureConnection: DNS-preload for {}", host);
-            auto resolved_host = Core::Socket::resolve_host(host, Core::Socket::SocketType::Stream);
-            if (resolved_host.is_error())
-                dbgln("EnsureConnection: DNS-preload failed for {}", host);
-        });
-    }
-
-    auto job = Job::ensure(url);
-    dbgln("EnsureConnection: Pre-connect to {}", url);
-    auto do_preconnect = [&](auto& cache) {
-        auto serialized_host = url.serialized_host().release_value_but_fixme_should_propagate_errors().to_byte_string();
-        auto it = cache.find({ serialized_host, url.port_or_default() });
-        if (it == cache.end() || it->value->is_empty())
-            ConnectionCache::get_or_create_connection(cache, url, job);
-    };
-
-    if (url.scheme() == "http"sv)
-        do_preconnect(ConnectionCache::g_tcp_connection_cache);
-    else if (url.scheme() == "https"sv)
-        do_preconnect(ConnectionCache::g_tls_connection_cache);
-    else
-        dbgln("EnsureConnection: Invalid URL scheme: '{}'", url.scheme());
+    enqueue(EnsureConnection {
+        .url = url,
+        .cache_level = cache_level,
+    });
 }
 
 static i32 s_next_websocket_id = 1;

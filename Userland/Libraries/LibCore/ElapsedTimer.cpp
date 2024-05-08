@@ -10,9 +10,9 @@
 
 namespace Core {
 
-ElapsedTimer ElapsedTimer::start_new()
+ElapsedTimer ElapsedTimer::start_new(TimerType timer_type)
 {
-    ElapsedTimer timer;
+    ElapsedTimer timer(timer_type);
     timer.start();
     return timer;
 }
