@@ -84,6 +84,7 @@ void ThreadEventQueue::cancel_all_pending_jobs()
 size_t ThreadEventQueue::process()
 {
     decltype(m_private->queued_events) events;
+    decltype(m_private->queued_events) future_events;
     {
         Threading::MutexLocker locker(m_private->mutex);
         events = move(m_private->queued_events);
@@ -105,7 +106,10 @@ size_t ThreadEventQueue::process()
                 break;
             }
         } else if (event.type() == Event::Type::DeferredInvoke) {
-            static_cast<DeferredInvocationEvent&>(event).m_invokee();
+            if (static_cast<DeferredInvocationContext&>(*receiver).should_invoke())
+                static_cast<DeferredInvocationEvent&>(event).m_invokee();
+            else
+                future_events.append(move(queued_event));
         } else {
             NonnullRefPtr<EventReceiver> protector(*receiver);
             receiver->dispatch_event(event);
@@ -115,6 +119,8 @@ size_t ThreadEventQueue::process()
 
     {
         Threading::MutexLocker locker(m_private->mutex);
+        if (!future_events.is_empty())
+            m_private->queued_events.extend(move(future_events));
         if (m_private->pending_promises.size() > 30 && !m_private->warned_promise_count) {
             m_private->warned_promise_count = true;
             dbgln("ThreadEventQueue::process: Job queue wasn't designed for this load ({} promises)", m_private->pending_promises.size());
