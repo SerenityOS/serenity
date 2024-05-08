@@ -33,7 +33,7 @@ struct GIFImageDescriptor {
     bool interlaced { false };
     Color color_map[256];
     u8 lzw_min_code_size { 0 };
-    Vector<u8> lzw_encoded_bytes;
+    ByteBuffer lzw_encoded_bytes;
 
     // Fields from optional graphic control extension block
     enum DisposalMethod : u8 {
@@ -357,12 +357,8 @@ static ErrorOr<void> load_gif_frame_descriptors(GIFLoadingContext& context)
                 if (lzw_encoded_bytes_expected == 0)
                     break;
 
-                Array<u8, 256> buffer;
-                TRY(context.stream.read_until_filled(buffer.span().trim(lzw_encoded_bytes_expected)));
-
-                for (int i = 0; i < lzw_encoded_bytes_expected; ++i) {
-                    image->lzw_encoded_bytes.append(buffer[i]);
-                }
+                auto const lzw_subblock = TRY(image->lzw_encoded_bytes.get_bytes_for_writing(lzw_encoded_bytes_expected));
+                TRY(context.stream.read_until_filled(lzw_subblock));
             }
 
             current_image = make<GIFImageDescriptor>();
