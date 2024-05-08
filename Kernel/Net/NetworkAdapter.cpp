@@ -76,7 +76,7 @@ void NetworkAdapter::did_receive(ReadonlyBytes payload)
     m_bytes_in += payload.size();
 
     if (m_packet_queue_size == max_packet_buffers) {
-        // FIXME: Keep track of the number of dropped packets
+        m_packets_dropped++;
         return;
     }
 

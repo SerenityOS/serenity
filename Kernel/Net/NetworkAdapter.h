@@ -90,6 +90,7 @@ public:
     u32 bytes_in() const { return m_bytes_in; }
     u32 packets_out() const { return m_packets_out; }
     u32 bytes_out() const { return m_bytes_out; }
+    u32 packets_dropped() const { return m_packets_dropped; }
 
     RefPtr<PacketWithTimestamp> acquire_packet_buffer(size_t);
     void release_packet_buffer(PacketWithTimestamp&);
@@ -126,6 +127,7 @@ private:
     u32 m_packets_out { 0 };
     u32 m_bytes_out { 0 };
     u32 m_mtu { 1500 };
+    u32 m_packets_dropped { 0 };
 };
 
 }
