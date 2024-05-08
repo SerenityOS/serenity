@@ -13,11 +13,6 @@ inputs:
 runs:
   using: "composite"
   steps:
-    # Set default Python to python 3.x, and set Python path such that pip install works properly
-    - uses: actions/setup-python@v5
-      with:
-        python-version: '3.x'
-
     - name: 'Install Dependencies'
       if: ${{ inputs.os == 'Linux' }}
       shell: bash
@@ -51,10 +46,9 @@ runs:
     - name: 'Install Python dependencies'
       if: ${{ inputs.os == 'Linux' || inputs.os == 'Serenity' }}
       shell: bash
-      # The setup-python action set default python to python3.x. Note that we are not using system python here.
       run: |
-        python -m pip install --upgrade pip
-        pip install flake8 requests six
+        python3 -m pip install --upgrade pip
+        pip3 install flake8 requests six
 
     - name: 'Install Dependencies'
       if: ${{ inputs.os == 'Serenity' }}
