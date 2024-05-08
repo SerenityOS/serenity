@@ -75,6 +75,4 @@ if [ "$ports" = true ]; then
     fi
 fi
 
-echo "(Also look out for check-symbols.sh, which can only be executed after the build!)"
-
 exit "${FAILURES}"
