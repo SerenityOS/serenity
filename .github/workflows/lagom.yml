@@ -65,6 +65,11 @@ jobs:
             echo "host_cxx=$(brew --prefix llvm@18)/bin/clang++" >> "$GITHUB_OUTPUT"
           fi
 
+      # https://github.com/actions/runner-images/issues/9330
+      - name: Allow microphone access to all apps (macOS 14)
+        run: sqlite3 $HOME/Library/Application\ Support/com.apple.TCC/TCC.db "INSERT OR IGNORE INTO access VALUES ('kTCCServiceMicrophone','/usr/local/opt/runner/provisioner/provisioner',1,2,4,1,NULL,NULL,0,'UNUSED',NULL,0,1687786159,NULL,NULL,'UNUSED',1687786159);"
+        if: ${{ matrix.os == 'macos-14' }}
+
       - name: Create Build Environment
         working-directory: ${{ github.workspace }}/Meta/Lagom
         run: |
