@@ -637,6 +637,7 @@ struct UnderlyingSource;
 namespace Web::SVG {
 class SVGAnimatedBoolean;
 class SVGAnimatedEnumeration;
+class SVGAnimatedInteger;
 class SVGAnimatedLength;
 class SVGAnimatedRect;
 class SVGCircleElement;
