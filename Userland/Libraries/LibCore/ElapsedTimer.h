@@ -17,7 +17,7 @@ enum class TimerType {
 
 class ElapsedTimer {
 public:
-    static ElapsedTimer start_new();
+    static ElapsedTimer start_new(TimerType timer_type = TimerType::Coarse);
 
     ElapsedTimer(TimerType timer_type = TimerType::Coarse)
         : m_timer_type(timer_type)

@@ -32,7 +32,7 @@ OwnPtr<Request> GeminiProtocol::start_request(i32 request_id, ConnectionFromClie
     protocol_request->set_request_fd(pipe_result.value().read_fd);
 
     Core::EventLoop::current().deferred_invoke([=] {
-        ConnectionCache::get_or_create_connection(ConnectionCache::g_tls_connection_cache, url, job, proxy_data);
+        ConnectionCache::ensure_connection(ConnectionCache::g_tls_connection_cache, url, job, proxy_data);
     });
 
     return protocol_request;
