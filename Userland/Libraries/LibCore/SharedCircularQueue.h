@@ -90,13 +90,14 @@ public:
     ALWAYS_INLINE constexpr size_t weak_head() const { return m_queue->m_queue->m_head.load(AK::MemoryOrder::memory_order_relaxed); }
     ALWAYS_INLINE constexpr size_t weak_tail() const { return m_queue->m_queue->m_tail.load(AK::MemoryOrder::memory_order_relaxed); }
 
-    ErrorOr<void, QueueStatus> enqueue(ValueType to_insert)
+    template<typename U>
+    ErrorOr<void, QueueStatus> enqueue(U&& to_insert)
     {
         VERIFY(!m_queue.is_null());
         if (!can_enqueue())
             return QueueStatus::Full;
         auto our_tail = m_queue->m_queue->m_tail.load() % Size;
-        m_queue->m_queue->m_data[our_tail] = to_insert;
+        m_queue->m_queue->m_data[our_tail] = forward<U>(to_insert);
         m_queue->m_queue->m_tail.fetch_add(1);
 
         return {};
