@@ -708,7 +708,6 @@ ErrorOr<void, PGNParseError> ChessWidget::import_pgn(Core::File& file)
         switch (token.type) {
         case TokenType::Move:
             // FIXME: Add some move validation so the engine doesn't crash.
-            // FIXME: Engine crashes with pawn promotion notation (e.g. fxg8=Q).
             m_board.apply_move(Chess::Move::from_algebraic(token.value, turn, m_board));
             turn = Chess::opposing_color(turn);
             break;

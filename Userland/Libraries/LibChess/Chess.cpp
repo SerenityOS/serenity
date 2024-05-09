@@ -161,7 +161,7 @@ Move Move::from_algebraic(StringView algebraic, Color const turn, Board const& b
 
     Square::for_each([&](Square const& square) {
         if (!move_string.is_empty()) {
-            if (board.get_piece(square).type == move.piece.type && board.is_legal(Move(square, move.to), turn)) {
+            if (board.get_piece(square).type == move.piece.type && board.is_legal(Move(square, move.to, move.promote_to), turn)) {
                 if (move_string.length() >= 2) {
                     if (square == Square(move_string.substring_view(0, 2))) {
                         move.from = square;
