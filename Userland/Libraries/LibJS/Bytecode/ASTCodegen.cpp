@@ -1087,10 +1087,15 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> ArrayExpression::genera
     args.ensure_capacity(m_elements.size());
     for (auto it = m_elements.begin(); it != first_spread; ++it) {
         if (*it) {
-            auto reg = generator.allocate_register();
             auto value = TRY((*it)->generate_bytecode(generator)).value();
-            generator.emit<Bytecode::Op::Mov>(Bytecode::Operand(reg), value);
-            args.append(move(reg));
+            // NOTE: We don't need to protect temporary registers or constants from being clobbered.
+            if (value.operand().is_register() || value.operand().is_constant()) {
+                args.append(move(value));
+            } else {
+                auto reg = generator.allocate_register();
+                generator.emit<Bytecode::Op::Mov>(Bytecode::Operand(reg), value);
+                args.append(move(reg));
+            }
         } else {
             args.append(generator.add_constant(Value()));
         }
@@ -1667,9 +1672,14 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> CallExpression::generat
         argument_operands.ensure_capacity(arguments().size());
         for (auto const& argument : arguments()) {
             auto argument_value = TRY(argument.value->generate_bytecode(generator)).value();
-            auto temporary = generator.allocate_register();
-            generator.emit<Bytecode::Op::Mov>(temporary, argument_value);
-            argument_operands.append(temporary);
+            // NOTE: We don't need to protect temporary registers or constants from being clobbered.
+            if (argument_value.operand().is_register() || argument_value.operand().is_constant()) {
+                argument_operands.append(argument_value);
+            } else {
+                auto temporary = generator.allocate_register();
+                generator.emit<Bytecode::Op::Mov>(temporary, argument_value);
+                argument_operands.append(temporary);
+            }
         }
         generator.emit_with_extra_operand_slots<Bytecode::Op::Call>(
             argument_operands.size(),
