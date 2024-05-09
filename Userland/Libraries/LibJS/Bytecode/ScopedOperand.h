@@ -40,6 +40,8 @@ public:
 
     [[nodiscard]] bool operator==(ScopedOperand const& other) const { return operand() == other.operand(); }
 
+    [[nodiscard]] size_t ref_count() const { return m_impl->ref_count(); }
+
 private:
     NonnullRefPtr<ScopedOperandImpl> m_impl;
 };

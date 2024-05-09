@@ -77,6 +77,7 @@ public:
     {
         VERIFY(!is_current_block_terminated());
         size_t slot_offset = m_current_basic_block->size();
+        m_current_basic_block->set_last_instruction_start_offset(slot_offset);
         grow(sizeof(OpType));
         void* slot = m_current_basic_block->data() + slot_offset;
         new (slot) OpType(forward<Args>(args)...);
@@ -93,6 +94,7 @@ public:
 
         size_t size_to_allocate = round_up_to_power_of_two(sizeof(OpType) + extra_slot_count * sizeof(ExtraSlotType), alignof(void*));
         size_t slot_offset = m_current_basic_block->size();
+        m_current_basic_block->set_last_instruction_start_offset(slot_offset);
         grow(size_to_allocate);
         void* slot = m_current_basic_block->data() + slot_offset;
         new (slot) OpType(forward<Args>(args)...);
@@ -114,6 +116,8 @@ public:
     {
         emit_with_extra_slots<OpType, Value>(extra_operand_slots, forward<Args>(args)...);
     }
+
+    void emit_jump_if(ScopedOperand const& condition, Label true_target, Label false_target);
 
     struct ReferenceOperands {
         Optional<ScopedOperand> base {};                                 // [[Base]]
@@ -308,6 +312,9 @@ private:
     ~Generator() = default;
 
     void grow(size_t);
+
+    // Returns true if a fused instruction was emitted.
+    [[nodiscard]] bool fuse_compare_and_jump(ScopedOperand const& condition, Label true_target, Label false_target);
 
     struct LabelableScope {
         Label bytecode_target;

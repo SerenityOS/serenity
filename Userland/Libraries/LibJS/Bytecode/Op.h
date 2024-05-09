@@ -1157,6 +1157,52 @@ private:
     Label m_target;
 };
 
+#define JS_ENUMERATE_COMPARISON_OPS(X)        \
+    X(LessThan, less_than)                    \
+    X(LessThanEquals, less_than_equals)       \
+    X(GreaterThan, greater_than)              \
+    X(GreaterThanEquals, greater_than_equals) \
+    X(LooselyEquals, loosely_equals)          \
+    X(LooselyInequals, loosely_inequals)      \
+    X(StrictlyEquals, strict_equals)          \
+    X(StrictlyInequals, strict_inequals)
+
+#define DECLARE_COMPARISON_OP(op_TitleCase, op_snake_case)                                           \
+    class Jump##op_TitleCase final : public Instruction {                                            \
+    public:                                                                                          \
+        constexpr static bool IsTerminator = true;                                                   \
+                                                                                                     \
+        explicit Jump##op_TitleCase(Operand lhs, Operand rhs, Label true_target, Label false_target) \
+            : Instruction(Type::Jump##op_TitleCase)                                                  \
+            , m_lhs(lhs)                                                                             \
+            , m_rhs(rhs)                                                                             \
+            , m_true_target(true_target)                                                             \
+            , m_false_target(false_target)                                                           \
+        {                                                                                            \
+        }                                                                                            \
+                                                                                                     \
+        ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;                          \
+        ByteString to_byte_string_impl(Bytecode::Executable const&) const;                           \
+        void visit_labels_impl(Function<void(Label&)> visitor)                                       \
+        {                                                                                            \
+            visitor(m_true_target);                                                                  \
+            visitor(m_false_target);                                                                 \
+        }                                                                                            \
+                                                                                                     \
+        Operand lhs() const { return m_lhs; }                                                        \
+        Operand rhs() const { return m_rhs; }                                                        \
+        auto& true_target() const { return m_true_target; }                                          \
+        auto& false_target() const { return m_false_target; }                                        \
+                                                                                                     \
+    private:                                                                                         \
+        Operand m_lhs;                                                                               \
+        Operand m_rhs;                                                                               \
+        Label m_true_target;                                                                         \
+        Label m_false_target;                                                                        \
+    };
+
+JS_ENUMERATE_COMPARISON_OPS(DECLARE_COMPARISON_OP)
+
 class JumpNullish final : public Instruction {
 public:
     constexpr static bool IsTerminator = true;

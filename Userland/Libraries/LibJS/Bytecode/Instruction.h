@@ -70,8 +70,16 @@
     O(IteratorToArray)                 \
     O(Jump)                            \
     O(JumpFalse)                       \
+    O(JumpGreaterThan)                 \
+    O(JumpGreaterThanEquals)           \
     O(JumpIf)                          \
+    O(JumpLessThan)                    \
+    O(JumpLessThanEquals)              \
+    O(JumpLooselyEquals)               \
+    O(JumpLooselyInequals)             \
     O(JumpNullish)                     \
+    O(JumpStrictlyEquals)              \
+    O(JumpStrictlyInequals)            \
     O(JumpTrue)                        \
     O(JumpUndefined)                   \
     O(LeaveFinally)                    \

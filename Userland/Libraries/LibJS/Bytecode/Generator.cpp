@@ -833,4 +833,38 @@ ScopedOperand Generator::accumulator()
     return m_accumulator;
 }
 
+bool Generator::fuse_compare_and_jump(ScopedOperand const& condition, Label true_target, Label false_target)
+{
+    auto& last_instruction = *reinterpret_cast<Instruction const*>(m_current_basic_block->data() + m_current_basic_block->last_instruction_start_offset());
+
+#define HANDLE_COMPARISON_OP(op_TitleCase, op_snake_case)                          \
+    if (last_instruction.type() == Instruction::Type::op_TitleCase) {              \
+        auto& comparison = static_cast<Op::op_TitleCase const&>(last_instruction); \
+        VERIFY(comparison.dst() == condition);                                     \
+        auto lhs = comparison.lhs();                                               \
+        auto rhs = comparison.rhs();                                               \
+        m_current_basic_block->rewind();                                           \
+        emit<Op::Jump##op_TitleCase>(lhs, rhs, true_target, false_target);         \
+        return true;                                                               \
+    }
+
+    JS_ENUMERATE_COMPARISON_OPS(HANDLE_COMPARISON_OP);
+#undef HANDLE_COMPARISON_OP
+
+    return false;
+}
+
+void Generator::emit_jump_if(ScopedOperand const& condition, Label true_target, Label false_target)
+{
+    // NOTE: It's only safe to fuse compare-and-jump if the condition is a temporary with no other dependents.
+    if (condition.operand().is_register()
+        && condition.ref_count() == 1
+        && m_current_basic_block->size() > 0) {
+        if (fuse_compare_and_jump(condition, true_target, false_target))
+            return;
+    }
+
+    emit<Op::JumpIf>(condition, true_target, false_target);
+}
+
 }
