@@ -526,6 +526,14 @@ FLATTEN_ON_CLANG void Interpreter::run_bytecode(size_t entry_point)
         DISPATCH_NEXT(name);                                                                                                              \
     }
 
+#define HANDLE_INSTRUCTION_WITHOUT_EXCEPTION_CHECK(name)                                    \
+    handle_##name:                                                                          \
+    {                                                                                       \
+        auto& instruction = *reinterpret_cast<Op::name const*>(&bytecode[program_counter]); \
+        (void)instruction.execute_impl(*this);                                              \
+        DISPATCH_NEXT(name);                                                                \
+    }
+
             HANDLE_INSTRUCTION(Add);
             HANDLE_INSTRUCTION(ArrayAppend);
             HANDLE_INSTRUCTION(AsyncIteratorClose);
@@ -533,13 +541,13 @@ FLATTEN_ON_CLANG void Interpreter::run_bytecode(size_t entry_point)
             HANDLE_INSTRUCTION(BitwiseNot);
             HANDLE_INSTRUCTION(BitwiseOr);
             HANDLE_INSTRUCTION(BitwiseXor);
-            HANDLE_INSTRUCTION(BlockDeclarationInstantiation);
+            HANDLE_INSTRUCTION_WITHOUT_EXCEPTION_CHECK(BlockDeclarationInstantiation);
             HANDLE_INSTRUCTION(Call);
             HANDLE_INSTRUCTION(CallWithArgumentArray);
-            HANDLE_INSTRUCTION(Catch);
+            HANDLE_INSTRUCTION_WITHOUT_EXCEPTION_CHECK(Catch);
             HANDLE_INSTRUCTION(ConcatString);
             HANDLE_INSTRUCTION(CopyObjectExcludingProperties);
-            HANDLE_INSTRUCTION(CreateLexicalEnvironment);
+            HANDLE_INSTRUCTION_WITHOUT_EXCEPTION_CHECK(CreateLexicalEnvironment);
             HANDLE_INSTRUCTION(CreateVariable);
             HANDLE_INSTRUCTION(Decrement);
             HANDLE_INSTRUCTION(DeleteById);
@@ -548,7 +556,7 @@ FLATTEN_ON_CLANG void Interpreter::run_bytecode(size_t entry_point)
             HANDLE_INSTRUCTION(DeleteByValueWithThis);
             HANDLE_INSTRUCTION(DeleteVariable);
             HANDLE_INSTRUCTION(Div);
-            HANDLE_INSTRUCTION(Dump);
+            HANDLE_INSTRUCTION_WITHOUT_EXCEPTION_CHECK(Dump);
             HANDLE_INSTRUCTION(EnterObjectEnvironment);
             HANDLE_INSTRUCTION(Exp);
             HANDLE_INSTRUCTION(GetById);
@@ -557,10 +565,10 @@ FLATTEN_ON_CLANG void Interpreter::run_bytecode(size_t entry_point)
             HANDLE_INSTRUCTION(GetByValueWithThis);
             HANDLE_INSTRUCTION(GetCalleeAndThisFromEnvironment);
             HANDLE_INSTRUCTION(GetGlobal);
-            HANDLE_INSTRUCTION(GetImportMeta);
+            HANDLE_INSTRUCTION_WITHOUT_EXCEPTION_CHECK(GetImportMeta);
             HANDLE_INSTRUCTION(GetIterator);
             HANDLE_INSTRUCTION(GetMethod);
-            HANDLE_INSTRUCTION(GetNewTarget);
+            HANDLE_INSTRUCTION_WITHOUT_EXCEPTION_CHECK(GetNewTarget);
             HANDLE_INSTRUCTION(GetNextMethodFromIteratorRecord);
             HANDLE_INSTRUCTION(GetObjectFromIteratorRecord);
             HANDLE_INSTRUCTION(GetObjectPropertyIterator);
@@ -576,8 +584,8 @@ FLATTEN_ON_CLANG void Interpreter::run_bytecode(size_t entry_point)
             HANDLE_INSTRUCTION(IteratorClose);
             HANDLE_INSTRUCTION(IteratorNext);
             HANDLE_INSTRUCTION(IteratorToArray);
-            HANDLE_INSTRUCTION(LeaveFinally);
-            HANDLE_INSTRUCTION(LeaveLexicalEnvironment);
+            HANDLE_INSTRUCTION_WITHOUT_EXCEPTION_CHECK(LeaveFinally);
+            HANDLE_INSTRUCTION_WITHOUT_EXCEPTION_CHECK(LeaveLexicalEnvironment);
             HANDLE_INSTRUCTION(LeaveUnwindContext);
             HANDLE_INSTRUCTION(LeftShift);
             HANDLE_INSTRUCTION(LessThan);
@@ -586,13 +594,13 @@ FLATTEN_ON_CLANG void Interpreter::run_bytecode(size_t entry_point)
             HANDLE_INSTRUCTION(LooselyInequals);
             HANDLE_INSTRUCTION(Mod);
             HANDLE_INSTRUCTION(Mul);
-            HANDLE_INSTRUCTION(NewArray);
+            HANDLE_INSTRUCTION_WITHOUT_EXCEPTION_CHECK(NewArray);
             HANDLE_INSTRUCTION(NewClass);
-            HANDLE_INSTRUCTION(NewFunction);
-            HANDLE_INSTRUCTION(NewObject);
-            HANDLE_INSTRUCTION(NewPrimitiveArray);
-            HANDLE_INSTRUCTION(NewRegExp);
-            HANDLE_INSTRUCTION(NewTypeError);
+            HANDLE_INSTRUCTION_WITHOUT_EXCEPTION_CHECK(NewFunction);
+            HANDLE_INSTRUCTION_WITHOUT_EXCEPTION_CHECK(NewObject);
+            HANDLE_INSTRUCTION_WITHOUT_EXCEPTION_CHECK(NewPrimitiveArray);
+            HANDLE_INSTRUCTION_WITHOUT_EXCEPTION_CHECK(NewRegExp);
+            HANDLE_INSTRUCTION_WITHOUT_EXCEPTION_CHECK(NewTypeError);
             HANDLE_INSTRUCTION(Not);
             HANDLE_INSTRUCTION(PostfixDecrement);
             HANDLE_INSTRUCTION(PostfixIncrement);
