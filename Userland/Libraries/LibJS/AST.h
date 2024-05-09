@@ -714,6 +714,11 @@ public:
     FunctionKind kind() const { return m_kind; }
     UsesThis uses_this() const { return m_uses_this; }
 
+    virtual bool has_name() const = 0;
+    virtual Value instantiate_ordinary_function_expression(VM&, DeprecatedFlyString given_name) const = 0;
+
+    virtual ~FunctionNode() {};
+
 protected:
     FunctionNode(RefPtr<Identifier const> name, ByteString source_text, NonnullRefPtr<Statement const> body, Vector<FunctionParameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function, Vector<DeprecatedFlyString> local_variables_names, UsesThis uses_this)
         : m_name(move(name))
@@ -773,6 +778,11 @@ public:
 
     void set_should_do_additional_annexB_steps() { m_is_hoisted = true; }
 
+    bool has_name() const override { return true; }
+    Value instantiate_ordinary_function_expression(VM&, DeprecatedFlyString) const override { VERIFY_NOT_REACHED(); }
+
+    virtual ~FunctionDeclaration() {};
+
 private:
     bool m_is_hoisted { false };
 };
@@ -794,9 +804,11 @@ public:
     virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::ScopedOperand>> generate_bytecode(Bytecode::Generator&, Optional<Bytecode::ScopedOperand> preferred_dst = {}) const override;
     virtual Bytecode::CodeGenerationErrorOr<Optional<Bytecode::ScopedOperand>> generate_bytecode_with_lhs_name(Bytecode::Generator&, Optional<Bytecode::IdentifierTableIndex> lhs_name, Optional<Bytecode::ScopedOperand> preferred_dst = {}) const;
 
-    bool has_name() const { return !name().is_empty(); }
+    bool has_name() const override { return !name().is_empty(); }
 
-    Value instantiate_ordinary_function_expression(VM&, DeprecatedFlyString given_name) const;
+    Value instantiate_ordinary_function_expression(VM&, DeprecatedFlyString given_name) const override;
+
+    virtual ~FunctionExpression() {};
 
 private:
     virtual bool is_function_expression() const override { return true; }
