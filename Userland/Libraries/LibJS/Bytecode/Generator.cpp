@@ -856,6 +856,18 @@ bool Generator::fuse_compare_and_jump(ScopedOperand const& condition, Label true
 
 void Generator::emit_jump_if(ScopedOperand const& condition, Label true_target, Label false_target)
 {
+    if (condition.operand().is_constant()) {
+        auto value = m_constants[condition.operand().index()];
+        if (value.is_boolean()) {
+            if (value.as_bool()) {
+                emit<Op::Jump>(true_target);
+            } else {
+                emit<Op::Jump>(false_target);
+            }
+            return;
+        }
+    }
+
     // NOTE: It's only safe to fuse compare-and-jump if the condition is a temporary with no other dependents.
     if (condition.operand().is_register()
         && condition.ref_count() == 1
