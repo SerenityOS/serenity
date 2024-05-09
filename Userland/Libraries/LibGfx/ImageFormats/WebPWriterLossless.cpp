@@ -11,20 +11,12 @@
 #include <AK/Endian.h>
 #include <AK/MemoryStream.h>
 #include <LibCompress/DeflateTables.h>
+#include <LibCompress/Huffman.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/ImageFormats/WebPSharedLossless.h>
 #include <LibGfx/ImageFormats/WebPWriterLossless.h>
 
 namespace Gfx {
-
-static bool are_all_pixels_opaque(Bitmap const& bitmap)
-{
-    for (ARGB32 pixel : bitmap) {
-        if ((pixel >> 24) != 0xff)
-            return false;
-    }
-    return true;
-}
 
 NEVER_INLINE static ErrorOr<void> write_image_data(LittleEndianOutputBitStream& bit_stream, Bitmap const& bitmap, PrefixCodeGroup const& prefix_code_group)
 {
@@ -41,6 +33,184 @@ NEVER_INLINE static ErrorOr<void> write_image_data(LittleEndianOutputBitStream& 
         TRY(prefix_code_group[3].write_symbol(bit_stream, a));
     }
     return {};
+}
+
+struct CodeLengthSymbol {
+    u8 symbol { 0 };
+    u8 count { 0 }; // used for special symbols 16-18
+};
+
+// This is very similar to DeflateCompressor::encode_huffman_lengths().
+// But:
+// * size can be larger than 288 for green, is always 256 for r, b, a, and is always 40 for distance codes
+// * code 16 has different semantics, requires last_non_zero_symbol
+static size_t encode_huffman_lengths(ReadonlyBytes lengths, Array<CodeLengthSymbol, 256>& encoded_lengths)
+{
+    size_t encoded_count = 0;
+    size_t i = 0;
+    u8 last_non_zero_symbol = 8; // "If code 16 is used before a non-zero value has been emitted, a value of 8 is repeated."
+    while (i < lengths.size()) {
+        if (lengths[i] == 0) {
+            auto zero_count = 0;
+            for (size_t j = i; j < min(lengths.size(), i + 138) && lengths[j] == 0; j++)
+                zero_count++;
+
+            if (zero_count < 3) { // below minimum repeated zero count
+                encoded_lengths[encoded_count++].symbol = 0;
+                i++;
+                continue;
+            }
+
+            if (zero_count <= 10) {
+                // "Code 17 emits a streak of zeros [3..10], i.e., 3 + ReadBits(3) times."
+                encoded_lengths[encoded_count].symbol = 17;
+                encoded_lengths[encoded_count++].count = zero_count;
+            } else {
+                // "Code 18 emits a streak of zeros of length [11..138], i.e., 11 + ReadBits(7) times."
+                encoded_lengths[encoded_count].symbol = 18;
+                encoded_lengths[encoded_count++].count = zero_count;
+            }
+            i += zero_count;
+            continue;
+        }
+
+        VERIFY(lengths[i] != 0);
+        last_non_zero_symbol = lengths[i];
+        encoded_lengths[encoded_count++].symbol = lengths[i++];
+
+        // "Code 16 repeats the previous non-zero value [3..6] times, i.e., 3 + ReadBits(2) times."
+        // This is different from deflate.
+        auto copy_count = 0;
+        for (size_t j = i; j < min(lengths.size(), i + 6) && lengths[j] == last_non_zero_symbol; j++)
+            copy_count++;
+
+        if (copy_count >= 3) {
+            encoded_lengths[encoded_count].symbol = 16;
+            encoded_lengths[encoded_count++].count = copy_count;
+            i += copy_count;
+            continue;
+        }
+    }
+    return encoded_count;
+}
+
+static ErrorOr<CanonicalCode> write_simple_code_lengths(LittleEndianOutputBitStream& bit_stream, ReadonlyBytes symbols)
+{
+    VERIFY(symbols.size() <= 2);
+
+    static constexpr Array<u8, 1> empty { 0 };
+    if (symbols.size() == 0) {
+        // "Another special case is when all prefix code lengths are zeros (an empty prefix code). [...]
+        //  empty prefix codes can be coded as those containing a single symbol 0."
+        symbols = empty;
+    }
+
+    unsigned non_zero_symbol_count = symbols.size();
+
+    TRY(bit_stream.write_bits(1u, 1u));                        // Simple code length code.
+    TRY(bit_stream.write_bits(non_zero_symbol_count - 1, 1u)); // num_symbols - 1
+    if (symbols[0] <= 1) {
+        TRY(bit_stream.write_bits(0u, 1u));         // is_first_8bits: no
+        TRY(bit_stream.write_bits(symbols[0], 1u)); // symbol0
+    } else {
+        TRY(bit_stream.write_bits(1u, 1u));         // is_first_8bits: yes
+        TRY(bit_stream.write_bits(symbols[0], 8u)); // symbol0
+    }
+    if (non_zero_symbol_count > 1)
+        TRY(bit_stream.write_bits(symbols[1], 8u)); // symbol1
+
+    Array<u8, 256> bits_per_symbol {};
+    // "When coding a single leaf node [...], all but one code length are zeros, and the single leaf node value
+    //  is marked with the length of 1 -- even when no bits are consumed when that single leaf node tree is used."
+    // CanonicalCode follows that convention too, even when describing simple code lengths.
+    bits_per_symbol[symbols[0]] = 1;
+    if (non_zero_symbol_count > 1)
+        bits_per_symbol[symbols[1]] = 1;
+
+    return MUST(CanonicalCode::from_bytes(bits_per_symbol));
+}
+
+static ErrorOr<CanonicalCode> write_normal_code_lengths(LittleEndianOutputBitStream& bit_stream, Array<u8, 256> const& bit_lengths, size_t alphabet_size)
+{
+    // bit_lengths stores how many bits each symbol is encoded with.
+
+    // Drop trailing zero lengths.
+    // This will keep at least three symbols; else we would've called write_simple_code_lengths() instead.
+    // This is similar to the loops in Deflate::encode_block_lengths().
+    size_t code_count = bit_lengths.size();
+    while (bit_lengths[code_count - 1] == 0) {
+        code_count--;
+        VERIFY(code_count > 2);
+    }
+
+    Array<CodeLengthSymbol, 256> encoded_lengths {};
+    auto encoded_lengths_count = encode_huffman_lengths(bit_lengths.span().trim(code_count), encoded_lengths);
+
+    // The code to compute code length code lengths is very similar to some of the code in DeflateCompressor::flush().
+    // count code length frequencies
+    Array<u16, 19> code_lengths_frequencies { 0 };
+    for (size_t i = 0; i < encoded_lengths_count; i++) {
+        VERIFY(code_lengths_frequencies[encoded_lengths[i].symbol] < UINT16_MAX);
+        code_lengths_frequencies[encoded_lengths[i].symbol]++;
+    }
+
+    // generate optimal huffman code lengths code lengths
+    Array<u8, 19> code_lengths_bit_lengths {};
+    Compress::generate_huffman_lengths(code_lengths_bit_lengths, code_lengths_frequencies, 7); // deflate code length huffman can use up to 7 bits per symbol
+    // calculate actual code length code lengths count (without trailing zeros)
+    auto code_lengths_count = code_lengths_bit_lengths.size();
+    while (code_lengths_bit_lengths[kCodeLengthCodeOrder[code_lengths_count - 1]] == 0)
+        code_lengths_count--;
+
+    TRY(bit_stream.write_bits(0u, 1u)); // Normal code length code.
+
+    // This here isn't needed in Deflate because it always writes EndOfBlock. WebP does not have an EndOfBlock marker, so it needs this check.
+    if (code_lengths_count < 4)
+        code_lengths_count = 4;
+    dbgln_if(WEBP_DEBUG, "writing code_lengths_count: {}", code_lengths_count);
+
+    // WebP uses a different kCodeLengthCodeOrder than deflate. Other than that, the following is similar to a loop in Compress::write_dynamic_huffman().
+    // "int num_code_lengths = 4 + ReadBits(4);"
+    TRY(bit_stream.write_bits(code_lengths_count - 4u, 4u));
+
+    for (size_t i = 0; i < code_lengths_count; i++) {
+        TRY(bit_stream.write_bits(code_lengths_bit_lengths[kCodeLengthCodeOrder[i]], 3));
+    }
+
+    // Write code lengths. This is slightly different from deflate too -- deflate writes literal and distance lengths here,
+    // while WebP writes one of these codes each for g, r, b, a, and distance.
+    if (alphabet_size == encoded_lengths_count) {
+        TRY(bit_stream.write_bits(0u, 1u)); // max_symbol is alphabet_size
+    } else {
+        TRY(bit_stream.write_bits(1u, 1u)); // max_symbol is explicitly coded
+        // "int length_nbits = 2 + 2 * ReadBits(3);
+        //  int max_symbol = 2 + ReadBits(length_nbits);"
+        // => length_nbits is at most 2 + 2*7 == 16
+        unsigned needed_length_nbits = ceil(log2(encoded_lengths_count - 2));
+        VERIFY(needed_length_nbits <= 16);
+        needed_length_nbits = ceil_div(needed_length_nbits, 2) * 2;
+        TRY(bit_stream.write_bits((needed_length_nbits - 2) / 2, 3u));              // length_nbits = 2 + 2 * 3 == 8
+        TRY(bit_stream.write_bits(encoded_lengths_count - 2, needed_length_nbits)); // max_symbol = 2 + 254
+    }
+
+    // The rest is identical to write_dynamic_huffman() again. (Code 16 has different semantics, but that doesn't matter here.)
+    auto code_lengths_code = MUST(CanonicalCode::from_bytes(code_lengths_bit_lengths));
+    for (size_t i = 0; i < encoded_lengths_count; i++) {
+        auto encoded_length = encoded_lengths[i];
+        TRY(code_lengths_code.write_symbol(bit_stream, encoded_length.symbol));
+        if (encoded_length.symbol == 16) {
+            // "Code 16 repeats the previous non-zero value [3..6] times, i.e., 3 + ReadBits(2) times."
+            TRY(bit_stream.write_bits<u8>(encoded_length.count - 3, 2));
+        } else if (encoded_length.symbol == 17) {
+            // "Code 17 emits a streak of zeros [3..10], i.e., 3 + ReadBits(3) times."
+            TRY(bit_stream.write_bits<u8>(encoded_length.count - 3, 3));
+        } else if (encoded_length.symbol == 18) {
+            // "Code 18 emits a streak of zeros of length [11..138], i.e., 11 + ReadBits(7) times."
+            TRY(bit_stream.write_bits<u8>(encoded_length.count - 11, 7));
+        }
+    }
+
+    return CanonicalCode::from_bytes(bit_lengths.span().trim(code_count));
 }
 
 static ErrorOr<void> write_VP8L_image_data(Stream& stream, Bitmap const& bitmap)
@@ -75,78 +245,62 @@ static ErrorOr<void> write_VP8L_image_data(Stream& stream, Bitmap const& bitmap)
     //  Prefix code #5: Used for backward-reference distance."
 
     // We use neither back-references not color cache entries yet.
-    // We write prefix trees for 256 literals all of length 8, which means each byte is encoded as itself.
-    // That doesn't give any compression, but is a valid bit stream.
     // We can make this smarter later on.
 
     size_t const color_cache_size = 0;
-    constexpr Array alphabet_sizes = to_array<size_t>({ 256 + 24 + static_cast<size_t>(color_cache_size), 256, 256, 256, 40 }); // XXX Shared?
+    constexpr Array alphabet_sizes = to_array<size_t>({ 256 + 24 + static_cast<size_t>(color_cache_size), 256, 256, 256, 40 });
 
     // If you add support for color cache: At the moment, CanonicalCodes does not support writing more than 288 symbols.
     if (alphabet_sizes[0] > 288)
         return Error::from_string_literal("Invalid alphabet size");
 
-    bool all_pixels_are_opaque = are_all_pixels_opaque(bitmap);
+    // We do use huffman coding by writing a single prefix-code-group for the entire image.
+    // FIXME: Consider using a meta-prefix image and using one prefix-code-group per tile.
 
-    PrefixCodeGroup prefix_code_group;
-    int number_of_full_channels = all_pixels_are_opaque ? 3 : 4;
-    for (int i = 0; i < number_of_full_channels; ++i) {
-        TRY(bit_stream.write_bits(0u, 1u)); // Normal code length code.
-
-        // Write code length codes.
-        constexpr int kCodeLengthCodes = 19;
-        Array<int, kCodeLengthCodes> kCodeLengthCodeOrder = { 17, 18, 0, 1, 2, 3, 4, 5, 16, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
-        int num_code_lengths = max(4u, find_index(kCodeLengthCodeOrder.begin(), kCodeLengthCodeOrder.end(), 8) + 1);
-
-        // "int num_code_lengths = 4 + ReadBits(4);"
-        TRY(bit_stream.write_bits(num_code_lengths - 4u, 4u));
-
-        for (int i = 0; i < num_code_lengths - 1; ++i)
-            TRY(bit_stream.write_bits(0u, 3u));
-        TRY(bit_stream.write_bits(1u, 3u));
-
-        // Write code lengths.
-        if (alphabet_sizes[i] == 256) {
-            TRY(bit_stream.write_bits(0u, 1u)); // max_symbol is alphabet_size
-        } else {
-            TRY(bit_stream.write_bits(1u, 1u)); // max_symbol is explicitly coded
-            // "int length_nbits = 2 + 2 * ReadBits(3);
-            //  int max_symbol = 2 + ReadBits(length_nbits);"
-            TRY(bit_stream.write_bits(3u, 3u));   // length_nbits = 2 + 2 * 3
-            TRY(bit_stream.write_bits(254u, 8u)); // max_symbol = 2 + 254
-        }
-
-        auto bits_per_symbol = Array<u8, 256>::from_repeated_value(8);
-        prefix_code_group[i] = TRY(CanonicalCode::from_bytes(bits_per_symbol));
-
-        // The code length codes only contain a single entry for '8'. WebP streams with a single element store 0 bits per element.
-        // (This is different from deflate, which needs 1 bit per element.)
+    // FIXME: generate_huffman_lengths() currently halves a frequency cap if the maximum bit length is reached.
+    //        This has the effect of giving very frequent symbols a higher bit length than they would have otherwise.
+    //        Instead, try dividing frequencies by 2 if the maximum bit length is reached.
+    //        Then, low-frequency symbols will get a higher bit length than they would have otherwise, which might help
+    //        compressed size. (For deflate, it doesn't matter much since their blocks are 64kiB large, but for WebP
+    //        we currently use a single huffman tree per channel for the entire image.)
+    Array<Array<u16, 256>, 4> symbol_frequencies {};
+    for (ARGB32 pixel : bitmap) {
+        static constexpr auto saturating_increment = [](u16& value) {
+            if (value < UINT16_MAX)
+                value++;
+        };
+        saturating_increment(symbol_frequencies[0][(pixel >> 8) & 0xff]);  // green
+        saturating_increment(symbol_frequencies[1][(pixel >> 16) & 0xff]); // red
+        saturating_increment(symbol_frequencies[2][pixel & 0xff]);         // blue
+        saturating_increment(symbol_frequencies[3][pixel >> 24]);          // alpha
     }
 
-    if (all_pixels_are_opaque) {
-        // Use a simple 1-element code.
-        TRY(bit_stream.write_bits(1u, 1u));   // Simple code length code.
-        TRY(bit_stream.write_bits(0u, 1u));   // num_symbols - 1
-        TRY(bit_stream.write_bits(1u, 1u));   // is_first_8bits
-        TRY(bit_stream.write_bits(255u, 8u)); // symbol0
-        Array<u8, 256> bits_per_symbol {};
-        // "When coding a single leaf node [...], all but one code length are zeros, and the single leaf node value
-        //  is marked with the length of 1 -- even when no bits are consumed when that single leaf node tree is used."
-        // CanonicalCode follows that convention too, even when describing simple code lengths.
-        bits_per_symbol[255] = 1;
-        prefix_code_group[3] = TRY(CanonicalCode::from_bytes(bits_per_symbol));
+    Array<Array<u8, 256>, 4> code_lengths {};
+    for (int i = 0; i < 4; ++i) {
+        // "Code [0..15] indicates literal code lengths." => the maximum bit length is 15.
+        Compress::generate_huffman_lengths(code_lengths[i], symbol_frequencies[i], 15);
+    }
+
+    PrefixCodeGroup prefix_code_group;
+    for (int i = 0; i < 4; ++i) {
+        u8 symbols[2];
+        unsigned non_zero_symbol_count = 0;
+        for (int j = 0; j < 256; ++j) {
+            if (code_lengths[i][j] != 0) {
+                if (non_zero_symbol_count < 2)
+                    symbols[non_zero_symbol_count] = j;
+                non_zero_symbol_count++;
+            }
+        }
+
+        if (non_zero_symbol_count <= 2)
+            prefix_code_group[i] = TRY(write_simple_code_lengths(bit_stream, { symbols, non_zero_symbol_count }));
+        else
+            prefix_code_group[i] = TRY(write_normal_code_lengths(bit_stream, code_lengths[i], alphabet_sizes[i]));
     }
 
     // For code #5, use a simple empty code, since we don't use this yet.
-    // "Note: Another special case is when all prefix code lengths are zeros (an empty prefix code). [...]
-    //  empty prefix codes can be coded as those containing a single symbol 0."
-    TRY(bit_stream.write_bits(1u, 1u)); // Simple code length code.
-    TRY(bit_stream.write_bits(0u, 1u)); // num_symbols - 1
-    TRY(bit_stream.write_bits(0u, 1u)); // is_first_8bits
-    TRY(bit_stream.write_bits(0u, 1u)); // symbol0
-    Array<u8, 256> bits_per_symbol {};
-    bits_per_symbol[0] = 1; // See comment in `if (all_pixels_are_opaque)` block above.
-    prefix_code_group[4] = TRY(CanonicalCode::from_bytes(bits_per_symbol));
+    prefix_code_group[4] = TRY(write_simple_code_lengths(bit_stream, {}));
 
     // Image data.
     TRY(write_image_data(bit_stream, bitmap, prefix_code_group));
