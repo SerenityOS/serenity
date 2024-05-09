@@ -382,6 +382,10 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> Identifier::generate_by
         return local;
     }
 
+    if (is_global() && m_string == "undefined"sv) {
+        return generator.add_constant(js_undefined());
+    }
+
     auto dst = choose_dst(generator, preferred_dst);
     if (is_global()) {
         generator.emit<Bytecode::Op::GetGlobal>(dst, generator.intern_identifier(m_string), generator.next_global_variable_cache());
