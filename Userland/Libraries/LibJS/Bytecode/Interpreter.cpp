@@ -1256,7 +1256,9 @@ ThrowCompletionOr<void> DeleteVariable::execute_impl(Bytecode::Interpreter& inte
 void CreateLexicalEnvironment::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto make_and_swap_envs = [&](auto& old_environment) {
-        GCPtr<Environment> environment = new_declarative_environment(*old_environment).ptr();
+        auto declarative_environment = new_declarative_environment(*old_environment).ptr();
+        declarative_environment->ensure_capacity(m_capacity);
+        GCPtr<Environment> environment = declarative_environment;
         swap(old_environment, environment);
         return environment;
     };
@@ -1268,6 +1270,7 @@ ThrowCompletionOr<void> CreateVariableEnvironment::execute_impl(Bytecode::Interp
 {
     auto& running_execution_context = interpreter.vm().running_execution_context();
     auto var_environment = new_declarative_environment(*running_execution_context.lexical_environment);
+    var_environment->ensure_capacity(m_capacity);
     running_execution_context.variable_environment = var_environment;
     running_execution_context.lexical_environment = var_environment;
     return {};
