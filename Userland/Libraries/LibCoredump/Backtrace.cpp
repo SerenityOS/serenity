@@ -7,6 +7,7 @@
 
 #include <AK/LexicalPath.h>
 #include <AK/Platform.h>
+#include <AK/StackUnwinder.h>
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
 #include <LibCore/MappedFile.h>
@@ -44,57 +45,54 @@ ELFObjectInfo const* Backtrace::object_info_for_region(Reader const& coredump, M
 Backtrace::Backtrace(Reader const& coredump, const ELF::Core::ThreadInfo& thread_info, Function<void(size_t, size_t)> on_progress)
     : m_thread_info(move(thread_info))
 {
-#if ARCH(X86_64)
-    auto start_bp = m_thread_info.regs.rbp;
-    auto start_ip = m_thread_info.regs.rip;
-#elif ARCH(AARCH64)
-    auto start_bp = m_thread_info.regs.x[29];
-    auto start_ip = m_thread_info.regs.pc;
-#elif ARCH(RISCV64)
-    auto start_bp = m_thread_info.regs.x[7];
-    auto start_ip = m_thread_info.regs.pc;
-#else
-#    error Unknown architecture
-#endif
-
     // In order to provide progress updates, we first have to walk the
     // call stack to determine how many frames it has.
     size_t frame_count = 0;
-    {
-        auto bp = start_bp;
-        auto ip = start_ip;
-        while (bp && ip) {
-            ++frame_count;
-            auto next_ip = coredump.peek_memory(bp + sizeof(FlatPtr));
-            auto next_bp = coredump.peek_memory(bp);
-            if (!next_ip.has_value() || !next_bp.has_value())
-                break;
-            ip = next_ip.value();
-            bp = next_bp.value();
-        }
-    }
+    MUST(AK::unwind_stack_from_frame_pointer(
+        thread_info.regs.bp(),
+        [&coredump](FlatPtr address) -> ErrorOr<FlatPtr> {
+            auto maybe_value = coredump.peek_memory(address);
+            if (!maybe_value.has_value())
+                return EFAULT;
 
-    auto bp = start_bp;
-    auto ip = start_ip;
+            return maybe_value.value();
+        },
+        [&frame_count](AK::StackFrame) -> ErrorOr<IterationDecision> {
+            ++frame_count;
+            return IterationDecision::Continue;
+        }));
+
     size_t frame_index = 0;
-    while (bp && ip) {
-        // We use eip - 1 because the return address from a function frame
-        // is the instruction that comes after the 'call' instruction.
-        // However, because the first frame represents the faulting
-        // instruction rather than the return address we don't subtract
-        // 1 there.
-        VERIFY(ip > 0);
-        add_entry(coredump, ip - ((frame_index == 0) ? 0 : 1));
+
+    auto on_entry = [this, &coredump, &on_progress, &frame_index, frame_count](FlatPtr address) {
+        add_entry(coredump, address);
         if (on_progress)
             on_progress(frame_index, frame_count);
         ++frame_index;
-        auto next_ip = coredump.peek_memory(bp + sizeof(FlatPtr));
-        auto next_bp = coredump.peek_memory(bp);
-        if (!next_ip.has_value() || !next_bp.has_value())
-            break;
-        ip = next_ip.value();
-        bp = next_bp.value();
-    }
+    };
+
+    on_entry(thread_info.regs.ip());
+
+    MUST(AK::unwind_stack_from_frame_pointer(
+        thread_info.regs.bp(),
+        [&coredump](FlatPtr address) -> ErrorOr<FlatPtr> {
+            auto maybe_value = coredump.peek_memory(address);
+            if (!maybe_value.has_value())
+                return EFAULT;
+
+            return maybe_value.value();
+        },
+        [&on_entry](AK::StackFrame stack_frame) -> ErrorOr<IterationDecision> {
+            // We use return_address - 1 because the return address from a function frame
+            // is the instruction that comes after the calling instruction.
+            // However, because the first frame represents the faulting
+            // instruction rather than the return address we don't subtract
+            // 1 there.
+            VERIFY(stack_frame.return_address > 0);
+            on_entry(stack_frame.return_address - 1);
+
+            return IterationDecision::Continue;
+        }));
 }
 
 void Backtrace::add_entry(Reader const& coredump, FlatPtr ip)
