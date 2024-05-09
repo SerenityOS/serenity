@@ -269,6 +269,14 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> LogicalExpression::gene
 Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> UnaryExpression::generate_bytecode(Bytecode::Generator& generator, Optional<ScopedOperand> preferred_dst) const
 {
     Bytecode::Generator::SourceLocationScope scope(generator, *this);
+
+    // OPTIMIZATION: Turn expressions like `-1` into a constant.
+    if (m_op == UnaryOp::Minus && is<NumericLiteral>(*m_lhs)) {
+        auto& numeric_literal = static_cast<NumericLiteral const&>(*m_lhs);
+        auto value = numeric_literal.value();
+        return generator.add_constant(Value(-value.as_double()));
+    }
+
     if (m_op == UnaryOp::Delete)
         return generator.emit_delete_reference(m_lhs);
 
