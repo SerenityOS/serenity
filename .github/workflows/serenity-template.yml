@@ -16,6 +16,10 @@ on:
           required: false
           type: string
           default: 'NORMAL_DEBUG'
+        coverage:
+          required: false
+          type: string
+          default: 'OFF'
 
 env:
   # runner.workspace = /home/runner/work/serenity
@@ -58,7 +62,7 @@ jobs:
           os: 'Serenity'
           arch: ${{ inputs.arch }}
           toolchain: ${{ inputs.toolchain }}
-          cache_key_extra: ${{ inputs.debug_options }}
+          cache_key_extra: ${{ inputs.debug_options }}-COVERAGE_${{ inputs.coverage }}
           serenity_ccache_path: ${{ env.SERENITY_CCACHE_DIR }}
           toolchain_ccache_path: ${{ env.TOOLCHAIN_CCACHE_DIR }}
           download_cache_path: ${{ github.workspace }}/Build/caches
@@ -117,6 +121,7 @@ jobs:
             -DCMAKE_CXX_COMPILER=g++-13 \
             -DENABLE_UNDEFINED_SANITIZER=ON \
             -DUNDEFINED_BEHAVIOR_IS_FATAL=ON \
+            -DENABLE_USERSPACE_COVERAGE_COLLECTION=${{ inputs.coverage }} \
             -DDUMP_REGIONS_ON_CRASH=ON \
             -DENABLE_PCI_IDS_DOWNLOAD=OFF \
             -DENABLE_USB_IDS_DOWNLOAD=OFF
@@ -181,3 +186,25 @@ jobs:
         if: ${{ !cancelled() && inputs.debug_options == 'NORMAL_DEBUG'}}
         working-directory: ${{ steps.build-parameters.outputs.build_directory }}
         run: '[ ! -e debug.log ] || cat debug.log'
+
+      # === COVERAGE ===
+
+      - name: Aggregate Coverage Results
+        if: ${{ inputs.coverage == 'ON' }}
+        working-directory: ${{ github.workspace }}
+        run: ./Meta/analyze-qemu-coverage.sh
+        env:
+          SERENITY_TOOLCHAIN: ${{ matrix.toolchain }}
+          SERENITY_ARCH: ${{ matrix.arch }}
+
+      # FIXME: Deploy the static html pages somewhere
+      # FIXME: Alter script to also (instead?) produce a raw coverage.txt file for ingestion into sonar cloud
+      # Note: tmp_profile_data/Coverage.profdata has the entire combined profile data, but creating the raw txt requires
+      #       all of the instrumented binaries and the profdata file.
+      - name: Upload Coverage Results
+        if: ${{ inputs.coverage == 'ON' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: serenity-coverage
+          path: ${{ steps.build-parameters.outputs.build_directory }}/reports
+          retention-days: 90
