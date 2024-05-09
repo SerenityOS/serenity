@@ -420,7 +420,7 @@ inline ThrowCompletionOr<void> set_variable(
     return {};
 }
 
-inline Value new_function(VM& vm, FunctionExpression const& function_node, Optional<IdentifierTableIndex> const& lhs_name, Optional<Operand> const& home_object)
+inline Value new_function(VM& vm, FunctionNode const& function_node, Optional<IdentifierTableIndex> const& lhs_name, Optional<Operand> const& home_object)
 {
     Value value;
 

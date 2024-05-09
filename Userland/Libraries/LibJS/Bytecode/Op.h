@@ -1399,7 +1399,7 @@ private:
 
 class NewFunction final : public Instruction {
 public:
-    explicit NewFunction(Operand dst, FunctionExpression const& function_node, Optional<IdentifierTableIndex> lhs_name, Optional<Operand> home_object = {})
+    explicit NewFunction(Operand dst, FunctionNode const& function_node, Optional<IdentifierTableIndex> lhs_name, Optional<Operand> home_object = {})
         : Instruction(Type::NewFunction)
         , m_dst(dst)
         , m_function_node(function_node)
@@ -1412,13 +1412,13 @@ public:
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     Operand dst() const { return m_dst; }
-    FunctionExpression const& function_node() const { return m_function_node; }
+    FunctionNode const& function_node() const { return m_function_node; }
     Optional<IdentifierTableIndex> const& lhs_name() const { return m_lhs_name; }
     Optional<Operand> const& home_object() const { return m_home_object; }
 
 private:
     Operand m_dst;
-    FunctionExpression const& m_function_node;
+    FunctionNode const& m_function_node;
     Optional<IdentifierTableIndex> m_lhs_name;
     Optional<Operand> m_home_object;
 };
