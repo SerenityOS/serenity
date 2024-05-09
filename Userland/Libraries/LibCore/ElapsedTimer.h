@@ -19,7 +19,7 @@ class ElapsedTimer {
 public:
     static ElapsedTimer start_new();
 
-    ElapsedTimer(TimerType timer_type = TimerType::Coarse)
+    ElapsedTimer(TimerType timer_type = TimerType::Precise)
         : m_timer_type(timer_type)
     {
     }

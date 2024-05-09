@@ -73,7 +73,7 @@ private:
     void enqueue(Work);
 
     Vector<NonnullOwnPtr<Threading::WorkerThread<Error>>> m_connection_workers;
-    Core::SharedSingleProducerCircularQueue<Work, 256> m_work_queue;
+    Threading::MutexProtected<Queue<Work>> m_work_queue;
 };
 
 }

@@ -47,6 +47,9 @@ void request_did_finish(URL::URL const& url, Core::Socket const* socket)
         }
 
         auto& connection = *connection_it;
+        connection->job_data->timing_info.performing_request = Duration::from_milliseconds(connection->job_data->timing_info.timer.elapsed_milliseconds());
+        connection->job_data->timing_info.timer.start();
+
         auto& properties = g_inferred_server_properties.with_locked([&](auto& map) -> InferredServerProperties& { return map.ensure(partial_key.hostname); });
         if (!connection->socket->is_open())
             properties.requests_served_per_connection = min(properties.requests_served_per_connection, connection->max_queue_length + 1);
@@ -80,13 +83,16 @@ void request_did_finish(URL::URL const& url, Core::Socket const* socket)
                 connection->removal_timer->start();
             });
         } else {
+            auto timer = Core::ElapsedTimer::start_new();
             if (auto result = recreate_socket_if_needed(*connection, url); result.is_error()) {
+                connection->job_data->timing_info.starting_connection += Duration::from_milliseconds(timer.elapsed_milliseconds());
                 cache.with_locked([&](auto&) {
                     dbgln("ConnectionCache request finish handler, reconnection failed with {}", result.error());
-                    connection->job_data.fail(Core::NetworkJob::Error::ConnectionFailed);
+                    connection->job_data->fail(Core::NetworkJob::Error::ConnectionFailed);
                 });
                 return;
             }
+            connection->job_data->timing_info.starting_connection += Duration::from_milliseconds(timer.elapsed_milliseconds());
 
             connection->has_started = true;
             Core::deferred_invoke([&connection = *connection, url, &cache] {
@@ -95,8 +101,10 @@ void request_did_finish(URL::URL const& url, Core::Socket const* socket)
                     connection.timer.start();
                     connection.current_url = url;
                     connection.job_data = connection.request_queue.take_first();
+                    connection.job_data->timing_info.waiting_in_queue = Duration::from_milliseconds(connection.job_data->timing_info.timer.elapsed_milliseconds() - connection.job_data->timing_info.performing_request.to_milliseconds());
+                    connection.job_data->timing_info.timer.start();
                     connection.socket->set_notifications_enabled(true);
-                    connection.job_data.start(*connection.socket);
+                    connection.job_data->start(*connection.socket);
                 });
             });
         }
@@ -117,7 +125,7 @@ void dump_jobs()
         for (auto& connection : cache) {
             dbgln(" - {}:{}", connection.key.hostname, connection.key.port);
             for (auto& entry : *connection.value) {
-                dbgln("  - Connection {} (started={}) (socket={})", &entry, entry->has_started, entry->socket);
+                dbgln("  - Connection {} (started={}) (socket={})", &entry, entry->has_started, entry->socket.ptr());
                 dbgln("    Currently loading {} ({} elapsed)", entry->current_url, entry->timer.is_valid() ? entry->timer.elapsed() : 0);
                 dbgln("    Request Queue:");
                 for (auto& job : entry->request_queue)
@@ -131,7 +139,7 @@ void dump_jobs()
         for (auto& connection : cache) {
             dbgln(" - {}:{}", connection.key.hostname, connection.key.port);
             for (auto& entry : *connection.value) {
-                dbgln("  - Connection {} (started={}) (socket={})", &entry, entry->has_started, entry->socket);
+                dbgln("  - Connection {} (started={}) (socket={})", &entry, entry->has_started, entry->socket.ptr());
                 dbgln("    Currently loading {} ({} elapsed)", entry->current_url, entry->timer.is_valid() ? entry->timer.elapsed() : 0);
                 dbgln("    Request Queue:");
                 for (auto& job : entry->request_queue)
@@ -140,5 +148,8 @@ void dump_jobs()
         }
     });
 }
+
+size_t hits;
+size_t misses;
 
 }

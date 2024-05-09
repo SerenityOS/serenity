@@ -26,7 +26,6 @@ static IDAllocator s_client_ids;
 
 ConnectionFromClient::ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket> socket)
     : IPC::ConnectionFromClient<RequestClientEndpoint, RequestServerEndpoint>(*this, move(socket), s_client_ids.allocate())
-    , m_work_queue(MUST((Core::SharedSingleProducerCircularQueue<Work, 256>::create())))
 {
     s_connections.set(client_id(), *this);
     for (size_t i = 0; i < Core::System::hardware_concurrency(); ++i)
@@ -92,15 +91,13 @@ private:
 
 void ConnectionFromClient::worker_work()
 {
+    auto done = false;
     do {
-        if (!m_work_queue.is_valid())
-            return;
-
-        auto result = m_work_queue.dequeue();
-        if (result.is_error())
-            return;
-
-        auto work = result.release_value();
+        auto work = m_work_queue.with_locked([](auto& queue) {
+            if (queue.is_empty())
+                return Work(Empty {});
+            return queue.dequeue();
+        });
         work.visit(
             [&](StartRequest& start_request) {
                 auto* protocol = Protocol::find_by_name(start_request.url.scheme().to_byte_string());
@@ -152,8 +149,8 @@ void ConnectionFromClient::worker_work()
                 else
                     dbgln("EnsureConnection: Invalid URL scheme: '{}'", url.scheme());
             },
-            [](Empty) { VERIFY_NOT_REACHED(); });
-    } while (true);
+            [&](Empty) { done = true; });
+    } while (!done);
 }
 
 void ConnectionFromClient::die()
@@ -190,9 +187,7 @@ Messages::RequestServer::ConnectNewClientResponse ConnectionFromClient::connect_
 
 void ConnectionFromClient::enqueue(Work work)
 {
-    Core::deferred_invoke_if([this, work = move(work)] {
-        auto result = m_work_queue.enqueue(work);
-        VERIFY(!result.is_error()); }, [this] { return m_work_queue.can_enqueue(); });
+    m_work_queue.with_locked([&](auto& queue) { queue.enqueue(move(work)); });
 }
 
 Messages::RequestServer::IsSupportedProtocolResponse ConnectionFromClient::is_supported_protocol(ByteString const& protocol)
