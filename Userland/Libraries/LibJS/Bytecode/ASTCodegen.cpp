@@ -1652,9 +1652,16 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> CallExpression::generat
         original_callee = TRY(m_callee->generate_bytecode(generator)).value();
     }
 
-    // NOTE: We copy the callee to a new register to avoid overwriting it while evaluating arguments.
-    auto callee = generator.allocate_register();
-    generator.emit<Bytecode::Op::Mov>(callee, *original_callee);
+    // NOTE: If the callee isn't already a temporary, we copy it to a new register
+    //       to avoid overwriting it while evaluating arguments.
+    auto callee = [&]() -> ScopedOperand {
+        if (!original_callee->operand().is_register()) {
+            auto callee = generator.allocate_register();
+            generator.emit<Bytecode::Op::Mov>(callee, *original_callee);
+            return callee;
+        }
+        return *original_callee;
+    }();
 
     Bytecode::Op::CallType call_type;
     if (is<NewExpression>(*this)) {
