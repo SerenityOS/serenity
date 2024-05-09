@@ -227,6 +227,7 @@ void DebugSession::run(DesiredInitialDebugeeState initial_debugee_state, Callbac
 #    error Unknown architecture
 #endif
 
+                // FIXME: Use AK::unwind_stack_from_frame_pointer
                 do {
                     if (current_ebp == required_ebp) {
                         found_ebp = true;

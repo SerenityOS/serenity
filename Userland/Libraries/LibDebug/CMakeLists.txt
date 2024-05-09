@@ -9,7 +9,6 @@ set(SOURCES
     Dwarf/DwarfInfo.cpp
     Dwarf/LineProgram.cpp
     ProcessInspector.cpp
-    StackFrameUtils.cpp
 )
 
 serenity_lib(LibDebug debug)
