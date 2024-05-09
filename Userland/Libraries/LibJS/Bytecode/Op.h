@@ -443,24 +443,32 @@ enum class EnvironmentMode {
 
 class CreateLexicalEnvironment final : public Instruction {
 public:
-    explicit CreateLexicalEnvironment()
+    explicit CreateLexicalEnvironment(u32 capacity = 0)
         : Instruction(Type::CreateLexicalEnvironment)
+        , m_capacity(capacity)
     {
     }
 
     void execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
+
+private:
+    u32 m_capacity { 0 };
 };
 
 class CreateVariableEnvironment final : public Instruction {
 public:
-    explicit CreateVariableEnvironment()
+    explicit CreateVariableEnvironment(u32 capacity = 0)
         : Instruction(Type::CreateVariableEnvironment)
+        , m_capacity(capacity)
     {
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
+
+private:
+    u32 m_capacity { 0 };
 };
 
 class EnterObjectEnvironment final : public Instruction {

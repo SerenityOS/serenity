@@ -120,7 +120,7 @@ CodeGenerationErrorOr<void> Generator::emit_function_declaration_instantiation(E
             }
         }
     } else {
-        emit<Op::CreateVariableEnvironment>();
+        emit<Op::CreateVariableEnvironment>(function.m_var_environment_bindings_count);
 
         if (scope_body) {
             for (auto const& variable_to_initialize : function.m_var_names_to_initialize_binding) {
@@ -158,7 +158,7 @@ CodeGenerationErrorOr<void> Generator::emit_function_declaration_instantiation(E
     if (!function.m_strict) {
         bool can_elide_declarative_environment = !function.m_contains_direct_call_to_eval && (!scope_body || !scope_body->has_non_local_lexical_declarations());
         if (!can_elide_declarative_environment) {
-            emit<Op::CreateLexicalEnvironment>();
+            emit<Op::CreateLexicalEnvironment>(function.m_lex_environment_bindings_count);
         }
     }
 
