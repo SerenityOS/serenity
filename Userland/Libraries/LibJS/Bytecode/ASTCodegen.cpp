@@ -186,13 +186,13 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> LogicalExpression::gene
 
     switch (m_op) {
     case LogicalOp::And:
-        generator.emit<Bytecode::Op::JumpIf>(
+        generator.emit_jump_if(
             lhs,
             Bytecode::Label { rhs_block },
             Bytecode::Label { end_block });
         break;
     case LogicalOp::Or:
-        generator.emit<Bytecode::Op::JumpIf>(
+        generator.emit_jump_if(
             lhs,
             Bytecode::Label { end_block },
             Bytecode::Label { rhs_block });
@@ -549,7 +549,7 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> AssignmentExpression::g
         lhs_block_ptr = &generator.make_block();
         end_block_ptr = &generator.make_block();
 
-        generator.emit<Bytecode::Op::JumpIf>(
+        generator.emit_jump_if(
             lhs,
             Bytecode::Label { *rhs_block_ptr },
             Bytecode::Label { *lhs_block_ptr });
@@ -558,7 +558,7 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> AssignmentExpression::g
         lhs_block_ptr = &generator.make_block();
         end_block_ptr = &generator.make_block();
 
-        generator.emit<Bytecode::Op::JumpIf>(
+        generator.emit_jump_if(
             lhs,
             Bytecode::Label { *lhs_block_ptr },
             Bytecode::Label { *rhs_block_ptr });
@@ -748,7 +748,7 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> WhileStatement::generat
 
     generator.switch_to_basic_block(test_block);
     auto test = TRY(m_test->generate_bytecode(generator)).value();
-    generator.emit<Bytecode::Op::JumpIf>(
+    generator.emit_jump_if(
         test,
         Bytecode::Label { body_block },
         Bytecode::Label { end_block });
@@ -798,7 +798,7 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> DoWhileStatement::gener
 
     generator.switch_to_basic_block(test_block);
     auto test = TRY(m_test->generate_bytecode(generator)).value();
-    generator.emit<Bytecode::Op::JumpIf>(
+    generator.emit_jump_if(
         test,
         Bytecode::Label { body_block },
         Bytecode::Label { load_result_and_jump_to_end_block });
@@ -901,10 +901,7 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> ForStatement::generate_
         generator.switch_to_basic_block(*test_block_ptr);
 
         auto test = TRY(m_test->generate_bytecode(generator)).value();
-        generator.emit<Bytecode::Op::JumpIf>(
-            test,
-            Bytecode::Label { *body_block_ptr },
-            Bytecode::Label { end_block });
+        generator.emit_jump_if(test, Bytecode::Label { *body_block_ptr }, Bytecode::Label { end_block });
     }
 
     if (m_update) {
@@ -1298,7 +1295,7 @@ static Bytecode::CodeGenerationErrorOr<void> generate_array_binding_pattern_byte
                 auto& if_not_exhausted_block = generator.make_block();
                 auto& continuation_block = generator.make_block();
 
-                generator.emit<Bytecode::Op::JumpIf>(
+                generator.emit_jump_if(
                     is_iterator_exhausted,
                     Bytecode::Label { if_exhausted_block },
                     Bytecode::Label { if_not_exhausted_block });
@@ -1324,7 +1321,7 @@ static Bytecode::CodeGenerationErrorOr<void> generate_array_binding_pattern_byte
         if (!first) {
             auto& iterator_is_not_exhausted_block = generator.make_block();
 
-            generator.emit<Bytecode::Op::JumpIf>(
+            generator.emit_jump_if(
                 is_iterator_exhausted,
                 Bytecode::Label { iterator_is_exhausted_block },
                 Bytecode::Label { iterator_is_not_exhausted_block });
@@ -1338,7 +1335,7 @@ static Bytecode::CodeGenerationErrorOr<void> generate_array_binding_pattern_byte
         // We still have to check for exhaustion here. If the iterator is exhausted,
         // we need to bail before trying to get the value
         auto& no_bail_block = generator.make_block();
-        generator.emit<Bytecode::Op::JumpIf>(
+        generator.emit_jump_if(
             is_iterator_exhausted,
             Bytecode::Label { iterator_is_exhausted_block },
             Bytecode::Label { no_bail_block });
@@ -1392,7 +1389,7 @@ static Bytecode::CodeGenerationErrorOr<void> generate_array_binding_pattern_byte
     auto& done_block = generator.make_block();
     auto& not_done_block = generator.make_block();
 
-    generator.emit<Bytecode::Op::JumpIf>(
+    generator.emit_jump_if(
         is_iterator_exhausted,
         Bytecode::Label { done_block },
         Bytecode::Label { not_done_block });
@@ -1740,7 +1737,7 @@ static void generate_yield(Bytecode::Generator& generator,
         resumption_value_type_is_not_return_result,
         received_completion_type,
         generator.add_constant(Value(to_underlying(Completion::Type::Return))));
-    generator.emit<Bytecode::Op::JumpIf>(
+    generator.emit_jump_if(
         resumption_value_type_is_not_return_result,
         Bytecode::Label { continuation_label },
         Bytecode::Label { resumption_value_type_is_return_block });
@@ -1757,7 +1754,7 @@ static void generate_yield(Bytecode::Generator& generator,
         awaited_type_is_throw_result,
         received_completion_type,
         generator.add_constant(Value(to_underlying(Completion::Type::Throw))));
-    generator.emit<Bytecode::Op::JumpIf>(
+    generator.emit_jump_if(
         awaited_type_is_throw_result,
         Bytecode::Label { continuation_label },
         Bytecode::Label { awaited_type_is_normal_block });
@@ -1839,7 +1836,7 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> YieldExpression::genera
             received_completion_type_register_is_normal,
             received_completion_type,
             generator.add_constant(Value(to_underlying(Completion::Type::Normal))));
-        generator.emit<Bytecode::Op::JumpIf>(
+        generator.emit_jump_if(
             received_completion_type_register_is_normal,
             Bytecode::Label { type_is_normal_block },
             Bytecode::Label { is_type_throw_block });
@@ -1868,7 +1865,7 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> YieldExpression::genera
         // v. If done is true, then
         auto& type_is_normal_done_block = generator.make_block();
         auto& type_is_normal_not_done_block = generator.make_block();
-        generator.emit<Bytecode::Op::JumpIf>(
+        generator.emit_jump_if(
             done,
             Bytecode::Label { type_is_normal_done_block },
             Bytecode::Label { type_is_normal_not_done_block });
@@ -1917,7 +1914,7 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> YieldExpression::genera
             received_completion_type_register_is_throw,
             received_completion_type,
             generator.add_constant(Value(to_underlying(Completion::Type::Throw))));
-        generator.emit<Bytecode::Op::JumpIf>(
+        generator.emit_jump_if(
             received_completion_type_register_is_throw,
             Bytecode::Label { type_is_throw_block },
             Bytecode::Label { type_is_return_block });
@@ -1959,7 +1956,7 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> YieldExpression::genera
         // 6. If done is true, then
         auto& type_is_throw_done_block = generator.make_block();
         auto& type_is_throw_not_done_block = generator.make_block();
-        generator.emit<Bytecode::Op::JumpIf>(
+        generator.emit_jump_if(
             done,
             Bytecode::Label { type_is_throw_done_block },
             Bytecode::Label { type_is_throw_not_done_block });
@@ -2056,7 +2053,7 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> YieldExpression::genera
         // viii. If done is true, then
         auto& type_is_return_done_block = generator.make_block();
         auto& type_is_return_not_done_block = generator.make_block();
-        generator.emit<Bytecode::Op::JumpIf>(
+        generator.emit_jump_if(
             done,
             Bytecode::Label { type_is_return_done_block },
             Bytecode::Label { type_is_return_not_done_block });
@@ -2126,7 +2123,7 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> YieldExpression::genera
         received_completion_type_is_normal,
         received_completion_type,
         generator.add_constant(Value(to_underlying(Completion::Type::Normal))));
-    generator.emit<Bytecode::Op::JumpIf>(
+    generator.emit_jump_if(
         received_completion_type_is_normal,
         Bytecode::Label { normal_completion_continuation_block },
         Bytecode::Label { throw_completion_continuation_block });
@@ -2142,7 +2139,7 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> YieldExpression::genera
         generator.add_constant(Value(to_underlying(Completion::Type::Throw))));
 
     // If type is not equal to "throw" or "normal", assume it's "return".
-    generator.emit<Bytecode::Op::JumpIf>(
+    generator.emit_jump_if(
         received_completion_type_is_throw,
         Bytecode::Label { throw_value_block },
         Bytecode::Label { return_value_block });
@@ -2178,7 +2175,7 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> IfStatement::generate_b
     generator.emit<Bytecode::Op::Mov>(dst, generator.add_constant(js_undefined()));
 
     auto predicate = TRY(m_predicate->generate_bytecode(generator)).value();
-    generator.emit<Bytecode::Op::JumpIf>(
+    generator.emit_jump_if(
         predicate,
         Bytecode::Label { true_block },
         Bytecode::Label { false_block });
@@ -2241,7 +2238,7 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> ConditionalExpression::
     auto& end_block = generator.make_block();
 
     auto test = TRY(m_test->generate_bytecode(generator)).value();
-    generator.emit<Bytecode::Op::JumpIf>(
+    generator.emit_jump_if(
         test,
         Bytecode::Label { true_block },
         Bytecode::Label { false_block });
@@ -2601,7 +2598,7 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> SwitchStatement::genera
             auto result = generator.allocate_register();
             generator.emit<Bytecode::Op::StrictlyEquals>(result, test_value, discriminant);
             next_test_block = test_blocks.dequeue();
-            generator.emit<Bytecode::Op::JumpIf>(
+            generator.emit_jump_if(
                 result,
                 Bytecode::Label { case_block },
                 Bytecode::Label { *next_test_block });
@@ -2738,7 +2735,7 @@ static ScopedOperand generate_await(
         received_completion_type_is_normal,
         received_completion_type,
         generator.add_constant(Value(to_underlying(Completion::Type::Normal))));
-    generator.emit<Bytecode::Op::JumpIf>(
+    generator.emit_jump_if(
         received_completion_type_is_normal,
         Bytecode::Label { normal_completion_continuation_block },
         Bytecode::Label { throw_value_block });
@@ -2975,7 +2972,7 @@ static Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> for_in_of_body_e
 
     // e. If done is true, return V.
     auto& loop_continue = generator.make_block();
-    generator.emit<Bytecode::Op::JumpIf>(
+    generator.emit_jump_if(
         done,
         Bytecode::Label { loop_end },
         Bytecode::Label { loop_continue });

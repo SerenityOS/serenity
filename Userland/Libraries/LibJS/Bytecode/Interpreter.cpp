@@ -362,6 +362,7 @@ FLATTEN_ON_CLANG void Interpreter::run_bytecode(size_t entry_point)
 #define SET_UP_LABEL(name) &&handle_##name,
         ENUMERATE_BYTECODE_OPS(SET_UP_LABEL)
     };
+#undef SET_UP_LABEL
 
 #define DISPATCH_NEXT(name)                                                                         \
     do {                                                                                            \
@@ -440,6 +441,26 @@ FLATTEN_ON_CLANG void Interpreter::run_bytecode(size_t entry_point)
                 program_counter = instruction.false_target().address();
             goto start;
         }
+
+#define HANDLE_COMPARISON_OP(op_TitleCase, op_snake_case)                                                                             \
+    handle_Jump##op_TitleCase:                                                                                                        \
+    {                                                                                                                                 \
+        auto& instruction = *reinterpret_cast<Op::Jump##op_TitleCase const*>(&bytecode[program_counter]);                             \
+        auto result = op_snake_case(vm(), get(instruction.lhs()), get(instruction.rhs()));                                            \
+        if (result.is_error()) {                                                                                                      \
+            if (handle_exception(program_counter, *result.throw_completion().value()) == HandleExceptionResponse::ExitFromExecutable) \
+                return;                                                                                                               \
+            goto start;                                                                                                               \
+        }                                                                                                                             \
+        if (result.value().to_boolean())                                                                                              \
+            program_counter = instruction.true_target().address();                                                                    \
+        else                                                                                                                          \
+            program_counter = instruction.false_target().address();                                                                   \
+        goto start;                                                                                                                   \
+    }
+
+            JS_ENUMERATE_COMPARISON_OPS(HANDLE_COMPARISON_OP)
+#undef HANDLE_COMPARISON_OP
 
         handle_JumpUndefined: {
             auto& instruction = *reinterpret_cast<Op::JumpUndefined const*>(&bytecode[program_counter]);
@@ -2141,6 +2162,18 @@ ByteString JumpNullish::to_byte_string_impl(Bytecode::Executable const& executab
         m_true_target,
         m_false_target);
 }
+
+#define HANDLE_COMPARISON_OP(op_TitleCase, op_snake_case)                                            \
+    ByteString Jump##op_TitleCase::to_byte_string_impl(Bytecode::Executable const& executable) const \
+    {                                                                                                \
+        return ByteString::formatted("Jump" #op_TitleCase " {}, {}, true:{}, false:{}",              \
+            format_operand("lhs"sv, m_lhs, executable),                                              \
+            format_operand("rhs"sv, m_rhs, executable),                                              \
+            m_true_target,                                                                           \
+            m_false_target);                                                                         \
+    }
+
+JS_ENUMERATE_COMPARISON_OPS(HANDLE_COMPARISON_OP)
 
 ByteString JumpUndefined::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
