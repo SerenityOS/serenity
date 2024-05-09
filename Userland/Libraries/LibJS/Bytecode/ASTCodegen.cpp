@@ -90,9 +90,59 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> BinaryExpression::gener
         return dst;
     }
 
-    auto lhs = TRY(m_lhs->generate_bytecode(generator)).value();
-    auto rhs = TRY(m_rhs->generate_bytecode(generator)).value();
+    // OPTIMIZATION: If LHS and/or RHS are numeric literals, we make sure they are converted to i32/u32
+    //               as appropriate, to avoid having to perform these conversions at runtime.
 
+    auto get_left_side = [&](Expression const& side) -> CodeGenerationErrorOr<Optional<ScopedOperand>> {
+        switch (m_op) {
+        case BinaryOp::BitwiseAnd:
+        case BinaryOp::BitwiseOr:
+        case BinaryOp::BitwiseXor:
+        case BinaryOp::LeftShift:
+        case BinaryOp::RightShift:
+        case BinaryOp::UnsignedRightShift:
+            // LHS will always be converted to i32 for these ops.
+            if (side.is_numeric_literal()) {
+                auto value = MUST(static_cast<NumericLiteral const&>(side).value().to_i32(generator.vm()));
+                return generator.add_constant(Value(value));
+            }
+            break;
+        default:
+            break;
+        }
+
+        return side.generate_bytecode(generator);
+    };
+
+    auto get_right_side = [&](Expression const& side) -> CodeGenerationErrorOr<Optional<ScopedOperand>> {
+        switch (m_op) {
+        case BinaryOp::BitwiseAnd:
+        case BinaryOp::BitwiseOr:
+        case BinaryOp::BitwiseXor:
+            // RHS will always be converted to i32 for these ops.
+            if (side.is_numeric_literal()) {
+                auto value = MUST(static_cast<NumericLiteral const&>(side).value().to_i32(generator.vm()));
+                return generator.add_constant(Value(value));
+            }
+            break;
+        case BinaryOp::LeftShift:
+        case BinaryOp::RightShift:
+        case BinaryOp::UnsignedRightShift:
+            // RHS will always be converted to u32 for these ops.
+            if (side.is_numeric_literal()) {
+                auto value = MUST(static_cast<NumericLiteral const&>(side).value().to_u32(generator.vm()));
+                return generator.add_constant(Value(value));
+            }
+            break;
+        default:
+            break;
+        }
+
+        return side.generate_bytecode(generator);
+    };
+
+    auto lhs = TRY(get_left_side(*m_lhs)).value();
+    auto rhs = TRY(get_right_side(*m_rhs)).value();
     auto dst = choose_dst(generator, preferred_dst);
     switch (m_op) {
     case BinaryOp::Addition:
