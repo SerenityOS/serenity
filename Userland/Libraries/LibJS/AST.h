@@ -18,6 +18,7 @@
 #include <LibJS/Bytecode/CodeGenerationError.h>
 #include <LibJS/Bytecode/Executable.h>
 #include <LibJS/Bytecode/IdentifierTable.h>
+#include <LibJS/Bytecode/Op.h>
 #include <LibJS/Bytecode/Operand.h>
 #include <LibJS/Bytecode/ScopedOperand.h>
 #include <LibJS/Forward.h>
@@ -645,6 +646,8 @@ struct BindingPattern : RefCounted<BindingPattern> {
     ThrowCompletionOr<void> for_each_bound_identifier(ThrowCompletionOrVoidCallback<Identifier const&>&& callback) const;
 
     bool contains_expression() const;
+
+    Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&, Bytecode::Op::SetVariable::InitializationMode initialization_mode, Bytecode::ScopedOperand const& object, bool create_variables) const;
 
     Vector<BindingEntry> entries;
     Kind kind { Kind::Object };
