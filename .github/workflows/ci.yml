@@ -1,0 +1,36 @@
+name: CI
+
+on: [push, pull_request]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || format('{0}-{1}', github.ref, github.run_number) }}
+  cancel-in-progress: true
+
+jobs:
+  SerenityOS:
+    if: github.repository == 'SerenityOS/serenity'
+
+    strategy:
+      fail-fast: false
+      matrix:
+        toolchain: ['GNU', 'Clang']
+        os: [ubuntu-22.04]
+        arch: ['x86_64']
+        debug_options: ['NORMAL_DEBUG']
+        include:
+          - toolchain: 'GNU'
+            os: ubuntu-22.04
+            arch: 'aarch64'
+            debug_options: 'NORMAL_DEBUG'
+
+          - toolchain: 'GNU'
+            os: ubuntu-22.04
+            arch: 'x86_64'
+            debug_options: 'ALL_DEBUG'
+
+    uses: ./.github/workflows/serenity-template.yml
+    with:
+      toolchain: ${{ matrix.toolchain }}
+      os: ${{ matrix.os }}
+      arch: ${{ matrix.arch }}
+      debug_options: ${{ matrix.debug_options }}

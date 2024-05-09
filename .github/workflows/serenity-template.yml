@@ -1,40 +1,32 @@
-name: SerenityOS
+name: SerenityOS Template
 
-on: [push, pull_request]
+on:
+  workflow_call:
+    inputs:
+        toolchain:
+          required: true
+          type: string
+        os:
+          required: true
+          type: string
+        arch:
+          required: true
+          type: string
+        debug_options:
+          required: false
+          type: string
+          default: 'NORMAL_DEBUG'
 
 env:
-  # Don't mix these up!
   # runner.workspace = /home/runner/work/serenity
   # github.workspace = /home/runner/work/serenity/serenity
   SERENITY_SOURCE_DIR: ${{ github.workspace }}
   SERENITY_CCACHE_DIR: ${{ github.workspace }}/.ccache
   TOOLCHAIN_CCACHE_DIR: ${{ github.workspace }}/Toolchain/.ccache
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || format('{0}-{1}', github.ref, github.run_number) }}
-  cancel-in-progress: true
-
 jobs:
   CI:
-    runs-on: ${{ matrix.os }}
-    if: github.repository == 'SerenityOS/serenity'
-    strategy:
-      fail-fast: false
-      matrix:
-        toolchain: ['GNU', 'Clang']
-        os: [ubuntu-22.04]
-        arch: ['x86_64']
-        debug-options: ['NORMAL_DEBUG']
-        include:
-          - toolchain: 'GNU'
-            os: ubuntu-22.04
-            arch: 'aarch64'
-            debug-options: 'NORMAL_DEBUG'
-
-          - toolchain: 'GNU'
-            os: ubuntu-22.04
-            arch: 'x86_64'
-            debug-options: 'ALL_DEBUG'
+    runs-on: ${{ inputs.os }}
 
     steps:
       # Pull requests can trail behind `master` and can cause breakage if merging before running the CI checks on an updated branch.
@@ -48,11 +40,11 @@ jobs:
         with:
           ref: refs/pull/${{ github.event.pull_request.number }}/merge
 
-      - name: 'Set up environment'
+      - name: Set Up Environment
         uses: ./.github/actions/setup
         with:
           os: 'Serenity'
-          arch: ${{ matrix.arch }}
+          arch: ${{ inputs.arch }}
 
       # === PREPARE FOR BUILDING ===
 
@@ -64,9 +56,9 @@ jobs:
         id: 'cache-restore'
         with:
           os: 'Serenity'
-          arch: ${{ matrix.arch }}
-          toolchain: ${{ matrix.toolchain }}
-          cache_key_extra: ${{ matrix.debug-options }}
+          arch: ${{ inputs.arch }}
+          toolchain: ${{ inputs.toolchain }}
+          cache_key_extra: ${{ inputs.debug_options }}
           serenity_ccache_path: ${{ env.SERENITY_CCACHE_DIR }}
           toolchain_ccache_path: ${{ env.TOOLCHAIN_CCACHE_DIR }}
           download_cache_path: ${{ github.workspace }}/Build/caches
@@ -74,51 +66,53 @@ jobs:
       - name: Assign Build Parameters
         id: 'build-parameters'
         run: |
-          if ${{ matrix.toolchain == 'Clang' }} ; then
-            echo "build_directory=${{ github.workspace }}/Build/${{ matrix.arch }}clang" >> "$GITHUB_OUTPUT"
-          elif ${{ matrix.toolchain == 'GNU' }} ; then
-            echo "build_directory=${{ github.workspace }}/Build/${{ matrix.arch }}" >> "$GITHUB_OUTPUT"
+          if ${{ inputs.toolchain == 'Clang' }} ; then
+            echo "build_directory=${{ github.workspace }}/Build/${{ inputs.arch }}clang" >> "$GITHUB_OUTPUT"
+          elif ${{ inputs.toolchain == 'GNU' }} ; then
+            echo "build_directory=${{ github.workspace }}/Build/${{ inputs.arch }}" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Build toolchain
+      - name: Build Toolchain
         if: ${{ !steps.cache-restore.outputs.toolchain_prebuilt_hit }}
         run: |
-          ${{ github.workspace }}/Toolchain/Build${{ matrix.toolchain }}.sh --ci
+          ${{ github.workspace }}/Toolchain/Build${{ inputs.toolchain }}.sh --ci
         env:
-          ARCH: ${{ matrix.arch}}
+          ARCH: ${{ inputs.arch}}
           CCACHE_DIR: ${{ env.TOOLCHAIN_CCACHE_DIR }}
           TRY_USE_LOCAL_TOOLCHAIN: 'y'
 
       - name: Build AArch64 Qemu
-        if: ${{ matrix.arch == 'aarch64' && !steps.cache-restore.outputs.qemu_cache_hit }}
+        if: ${{ inputs.arch == 'aarch64' && !steps.cache-restore.outputs.qemu_cache_hit }}
         run: ${{ github.workspace }}/Toolchain/BuildQemu.sh
         env:
           CCACHE_DIR: ${{ env.TOOLCHAIN_CCACHE_DIR }}
 
-      - name: Create build environment with extra debug options
+      - name: Create Build Environment
+        if: ${{ inputs.debug_options == 'ALL_DEBUG' }}
         # Build the entire project with all available debug options turned on, to prevent code rot.
         # However, it is unwieldy and slow to run tests with them enabled, so we will build twice.
         run: |
           cmake -S Meta/CMake/Superbuild -B Build/superbuild -GNinja \
-            -DSERENITY_ARCH=${{ matrix.arch }} \
-            -DSERENITY_TOOLCHAIN=${{ matrix.toolchain }} \
+            -DSERENITY_ARCH=${{ inputs.arch }} \
+            -DSERENITY_TOOLCHAIN=${{ inputs.toolchain }} \
             -DBUILD_LAGOM=ON \
             -DCMAKE_C_COMPILER=gcc-13 \
             -DCMAKE_CXX_COMPILER=g++-13 \
             -DENABLE_ALL_DEBUG_FACILITIES=ON \
             -DENABLE_PCI_IDS_DOWNLOAD=OFF \
             -DENABLE_USB_IDS_DOWNLOAD=OFF
-        if: ${{ matrix.debug-options == 'ALL_DEBUG' }}
         env:
           CCACHE_DIR: ${{ env.SERENITY_CCACHE_DIR }}
-      - name: Create build environment
+
+      - name: Create Build Environment
+        if: ${{ inputs.debug_options == 'NORMAL_DEBUG' }}
         working-directory: ${{ github.workspace }}
         # Note that we do not set BUILD_LAGOM for the normal debug build
         # We build and run the Lagom tests in a separate job, and sanitizer builds take a good while longer than non-sanitized.
         run:  |
           cmake -S Meta/CMake/Superbuild -B Build/superbuild -GNinja \
-            -DSERENITY_ARCH=${{ matrix.arch }} \
-            -DSERENITY_TOOLCHAIN=${{ matrix.toolchain }} \
+            -DSERENITY_ARCH=${{ inputs.arch }} \
+            -DSERENITY_TOOLCHAIN=${{ inputs.toolchain }} \
             -DCMAKE_C_COMPILER=gcc-13 \
             -DCMAKE_CXX_COMPILER=g++-13 \
             -DENABLE_UNDEFINED_SANITIZER=ON \
@@ -126,11 +120,10 @@ jobs:
             -DDUMP_REGIONS_ON_CRASH=ON \
             -DENABLE_PCI_IDS_DOWNLOAD=OFF \
             -DENABLE_USB_IDS_DOWNLOAD=OFF
-        if: ${{ matrix.debug-options == 'NORMAL_DEBUG' }}
         env:
           CCACHE_DIR: ${{ env.SERENITY_CCACHE_DIR }}
 
-      # === ACTUALLY BUILD ===
+      # === BUILD ===
 
       - name: Build Serenity and Tests
         working-directory: ${{ github.workspace }}/Build/superbuild
@@ -141,7 +134,7 @@ jobs:
       - name: Save Caches
         uses: ./.github/actions/cache-save
         with:
-          arch: ${{ matrix.arch }}
+          arch: ${{ inputs.arch }}
           qemu_cache_primary_key: ${{ steps.cache-restore.outputs.qemu_cache_primary_key }}
           qemu_cache_hit: ${{ steps.cache-restore.outputs.qemu_cache_hit }}
           serenity_ccache_path: ${{ env.SERENITY_CCACHE_DIR }}
@@ -152,13 +145,15 @@ jobs:
           toolchain_prebuilt_primary_key: ${{ steps.cache-restore.outputs.toolchain_prebuilt_primary_key }}
           toolchain_prebuilt_hit: ${{ steps.cache-restore.outputs.toolchain_prebuilt_hit }}
 
+      # === TEST ===
+
       - name: Create Serenity Rootfs
-        if: ${{ matrix.debug-options == 'NORMAL_DEBUG' }}
+        if: ${{ inputs.debug_options == 'NORMAL_DEBUG' }}
         working-directory: ${{ steps.build-parameters.outputs.build_directory }}
         run: ninja install && ninja qemu-image
 
       - name: Run On-Target Tests
-        if: ${{ matrix.debug-options == 'NORMAL_DEBUG' && matrix.arch != 'aarch64' }}
+        if: ${{ inputs.debug_options == 'NORMAL_DEBUG' && inputs.arch != 'aarch64' }}
         working-directory: ${{ steps.build-parameters.outputs.build_directory }}
         env:
           SERENITY_QEMU_CPU: "max,vmx=off"
@@ -183,6 +178,6 @@ jobs:
 
       - name: Print Target Logs
         # Extremely useful if Serenity hangs trying to run one of the tests
-        if: ${{ !cancelled() && matrix.debug-options == 'NORMAL_DEBUG'}}
+        if: ${{ !cancelled() && inputs.debug_options == 'NORMAL_DEBUG'}}
         working-directory: ${{ steps.build-parameters.outputs.build_directory }}
         run: '[ ! -e debug.log ] || cat debug.log'
