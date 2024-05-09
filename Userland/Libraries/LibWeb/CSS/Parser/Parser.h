@@ -190,6 +190,7 @@ private:
     Optional<Ratio> parse_ratio(TokenStream<ComponentValue>&);
     Optional<Gfx::UnicodeRange> parse_unicode_range(TokenStream<ComponentValue>&);
     Optional<Gfx::UnicodeRange> parse_unicode_range(StringView);
+    Vector<Gfx::UnicodeRange> parse_unicode_ranges(TokenStream<ComponentValue>&);
     Optional<GridSize> parse_grid_size(ComponentValue const&);
     Optional<GridMinMax> parse_min_max(Vector<ComponentValue> const&);
     Optional<GridRepeat> parse_repeat(Vector<ComponentValue> const&);

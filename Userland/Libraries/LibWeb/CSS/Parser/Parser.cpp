@@ -2137,6 +2137,22 @@ Optional<Gfx::UnicodeRange> Parser::parse_unicode_range(StringView text)
     return make_valid_unicode_range(start_value, end_value);
 }
 
+Vector<Gfx::UnicodeRange> Parser::parse_unicode_ranges(TokenStream<ComponentValue>& tokens)
+{
+    Vector<Gfx::UnicodeRange> unicode_ranges;
+    auto range_token_lists = parse_a_comma_separated_list_of_component_values(tokens);
+    for (auto& range_tokens : range_token_lists) {
+        TokenStream range_token_stream { range_tokens };
+        auto maybe_unicode_range = parse_unicode_range(range_token_stream);
+        if (!maybe_unicode_range.has_value()) {
+            dbgln_if(CSS_PARSER_DEBUG, "CSSParser: unicode-range format invalid; discarding.");
+            return {};
+        }
+        unicode_ranges.append(maybe_unicode_range.release_value());
+    }
+    return unicode_ranges;
+}
+
 RefPtr<StyleValue> Parser::parse_dimension_value(TokenStream<ComponentValue>& tokens)
 {
     auto dimension = parse_dimension(tokens.peek_token());
@@ -4526,22 +4542,9 @@ CSSRule* Parser::parse_font_face_rule(TokenStream<ComponentValue>& tokens)
             continue;
         }
         if (declaration.name().equals_ignoring_ascii_case("unicode-range"sv)) {
-            Vector<Gfx::UnicodeRange> unicode_ranges;
-            bool unicode_range_invalid = false;
-            TokenStream all_tokens { declaration.values() };
-            auto range_token_lists = parse_a_comma_separated_list_of_component_values(all_tokens);
-            for (auto& range_tokens : range_token_lists) {
-                TokenStream range_token_stream { range_tokens };
-                auto maybe_unicode_range = parse_unicode_range(range_token_stream);
-                if (!maybe_unicode_range.has_value()) {
-                    dbgln_if(CSS_PARSER_DEBUG, "CSSParser: @font-face unicode-range format invalid; discarding.");
-                    unicode_range_invalid = true;
-                    break;
-                }
-                unicode_ranges.append(maybe_unicode_range.release_value());
-            }
-
-            if (unicode_range_invalid || unicode_ranges.is_empty())
+            TokenStream token_stream { declaration.values() };
+            auto unicode_ranges = parse_unicode_ranges(token_stream);
+            if (unicode_ranges.is_empty())
                 continue;
 
             unicode_range = move(unicode_ranges);
