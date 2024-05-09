@@ -226,9 +226,6 @@ public:
 
     CustomData* custom_data() { return m_custom_data; }
 
-    ThrowCompletionOr<void> binding_initialization(DeprecatedFlyString const& target, Value value, Environment* environment);
-    ThrowCompletionOr<void> binding_initialization(NonnullRefPtr<BindingPattern const> const& target, Value value, Environment* environment);
-
     ThrowCompletionOr<Value> named_evaluation_if_anonymous_function(ASTNode const& expression, DeprecatedFlyString const& name);
 
     void save_execution_context_stack();
@@ -280,9 +277,6 @@ private:
     };
 
     VM(OwnPtr<CustomData>, ErrorMessages);
-
-    ThrowCompletionOr<void> property_binding_initialization(BindingPattern const& binding, Value value, Environment* environment);
-    ThrowCompletionOr<void> iterator_binding_initialization(BindingPattern const& binding, IteratorRecord& iterator_record, Environment* environment);
 
     void load_imported_module(ImportedModuleReferrer, ModuleRequest const&, GCPtr<GraphLoadingState::HostDefined>, ImportedModulePayload);
     ThrowCompletionOr<void> link_and_eval_module(CyclicModule&);
