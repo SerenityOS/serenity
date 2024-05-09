@@ -11,6 +11,7 @@
 
 namespace Web::SVG {
 
+// https://svgwg.org/svg2-draft/types.html#InterfaceSVGAnimatedRect
 class SVGAnimatedRect final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(SVGAnimatedRect, Bindings::PlatformObject);
     JS_DECLARE_ALLOCATOR(SVGAnimatedRect);
