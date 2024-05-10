@@ -145,7 +145,7 @@ public:
     {
     }
 
-    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    void execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     Operand dst() const { return m_dst; }
@@ -165,7 +165,7 @@ public:
     {
     }
 
-    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    void execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     Operand dst() const { return m_dst; }
@@ -183,25 +183,25 @@ private:
 #define JS_ENUMERATE_NEW_BUILTIN_ERROR_OPS(O) \
     O(TypeError)
 
-#define JS_DECLARE_NEW_BUILTIN_ERROR_OP(ErrorName)                          \
-    class New##ErrorName final : public Instruction {                       \
-    public:                                                                 \
-        New##ErrorName(Operand dst, StringTableIndex error_string)          \
-            : Instruction(Type::New##ErrorName)                             \
-            , m_dst(dst)                                                    \
-            , m_error_string(error_string)                                  \
-        {                                                                   \
-        }                                                                   \
-                                                                            \
-        ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const; \
-        ByteString to_byte_string_impl(Bytecode::Executable const&) const;  \
-                                                                            \
-        Operand dst() const { return m_dst; }                               \
-        StringTableIndex error_string() const { return m_error_string; }    \
-                                                                            \
-    private:                                                                \
-        Operand m_dst;                                                      \
-        StringTableIndex m_error_string;                                    \
+#define JS_DECLARE_NEW_BUILTIN_ERROR_OP(ErrorName)                         \
+    class New##ErrorName final : public Instruction {                      \
+    public:                                                                \
+        New##ErrorName(Operand dst, StringTableIndex error_string)         \
+            : Instruction(Type::New##ErrorName)                            \
+            , m_dst(dst)                                                   \
+            , m_error_string(error_string)                                 \
+        {                                                                  \
+        }                                                                  \
+                                                                           \
+        void execute_impl(Bytecode::Interpreter&) const;                   \
+        ByteString to_byte_string_impl(Bytecode::Executable const&) const; \
+                                                                           \
+        Operand dst() const { return m_dst; }                              \
+        StringTableIndex error_string() const { return m_error_string; }   \
+                                                                           \
+    private:                                                               \
+        Operand m_dst;                                                     \
+        StringTableIndex m_error_string;                                   \
     };
 
 JS_ENUMERATE_NEW_BUILTIN_ERROR_OPS(JS_DECLARE_NEW_BUILTIN_ERROR_OP)
@@ -263,7 +263,7 @@ public:
             m_elements[i] = elements[i];
     }
 
-    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    void execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     Operand dst() const { return m_dst; }
@@ -299,7 +299,7 @@ public:
         return round_up_to_power_of_two(alignof(void*), sizeof(*this) + sizeof(Value) * m_element_count);
     }
 
-    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    void execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     Operand dst() const { return m_dst; }
@@ -409,7 +409,7 @@ public:
     {
     }
 
-    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    void execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 };
 
@@ -438,7 +438,7 @@ public:
     {
     }
 
-    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    void execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     Operand dst() const { return m_dst; }
@@ -454,7 +454,7 @@ public:
     {
     }
 
-    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    void execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 };
 
@@ -465,7 +465,7 @@ public:
     {
     }
 
-    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    void execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 };
 
@@ -1408,7 +1408,7 @@ public:
     {
     }
 
-    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    void execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     Operand dst() const { return m_dst; }
@@ -1431,7 +1431,7 @@ public:
     {
     }
 
-    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    void execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     ScopeNode const& scope_node() const { return m_scope_node; }
@@ -1450,7 +1450,7 @@ public:
     {
     }
 
-    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    void execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     Optional<Operand> const& value() const { return m_value; }
@@ -1658,7 +1658,7 @@ public:
     {
     }
 
-    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    void execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 };
 
@@ -1669,7 +1669,7 @@ public:
     {
     }
 
-    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    void execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 };
 
@@ -1969,7 +1969,7 @@ public:
     {
     }
 
-    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    void execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     Operand dst() const { return m_dst; }
@@ -1986,7 +1986,7 @@ public:
     {
     }
 
-    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    void execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     Operand dst() const { return m_dst; }
@@ -2043,7 +2043,7 @@ public:
     {
     }
 
-    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    void execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
 private:
