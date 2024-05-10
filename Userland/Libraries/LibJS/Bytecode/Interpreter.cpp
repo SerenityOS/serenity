@@ -155,11 +155,11 @@ ALWAYS_INLINE Value Interpreter::get(Operand op) const
 {
     switch (op.type()) {
     case Operand::Type::Register:
-        return reg(Register { op.index() });
+        return m_registers.data()[op.index()];
     case Operand::Type::Local:
         return m_locals.data()[op.index()];
     case Operand::Type::Constant:
-        return current_executable().constants[op.index()];
+        return m_constants.data()[op.index()];
     }
     __builtin_unreachable();
 }
@@ -168,13 +168,13 @@ ALWAYS_INLINE void Interpreter::set(Operand op, Value value)
 {
     switch (op.type()) {
     case Operand::Type::Register:
-        reg(Register { op.index() }) = value;
+        m_registers.data()[op.index()] = value;
         return;
     case Operand::Type::Local:
         m_locals.data()[op.index()] = value;
         return;
     case Operand::Type::Constant:
-        VERIFY_NOT_REACHED();
+        break;
     }
     __builtin_unreachable();
 }
@@ -720,6 +720,7 @@ Interpreter::ResultAndReturnRegister Interpreter::run_executable(Executable& exe
 
     TemporaryChange restore_registers { m_registers, running_execution_context.registers.span() };
     TemporaryChange restore_locals { m_locals, running_execution_context.locals.span() };
+    TemporaryChange restore_constants { m_constants, executable.constants.span() };
 
     reg(Register::accumulator()) = initial_accumulator_value;
     reg(Register::return_value()) = {};

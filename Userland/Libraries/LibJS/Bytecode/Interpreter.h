@@ -98,6 +98,7 @@ private:
     Optional<size_t&> m_program_counter;
     Span<Value> m_registers;
     Span<Value> m_locals;
+    Span<Value> m_constants;
 };
 
 extern bool g_dump_bytecode;
