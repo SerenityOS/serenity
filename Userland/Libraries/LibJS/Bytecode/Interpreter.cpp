@@ -585,7 +585,7 @@ FLATTEN_ON_CLANG void Interpreter::run_bytecode(size_t entry_point)
             HANDLE_INSTRUCTION(IteratorToArray);
             HANDLE_INSTRUCTION_WITHOUT_EXCEPTION_CHECK(LeaveFinally);
             HANDLE_INSTRUCTION_WITHOUT_EXCEPTION_CHECK(LeaveLexicalEnvironment);
-            HANDLE_INSTRUCTION(LeaveUnwindContext);
+            HANDLE_INSTRUCTION_WITHOUT_EXCEPTION_CHECK(LeaveUnwindContext);
             HANDLE_INSTRUCTION(LeftShift);
             HANDLE_INSTRUCTION(LessThan);
             HANDLE_INSTRUCTION(LessThanEquals);
@@ -610,7 +610,7 @@ FLATTEN_ON_CLANG void Interpreter::run_bytecode(size_t entry_point)
             HANDLE_INSTRUCTION(PutPrivateById);
             HANDLE_INSTRUCTION(ResolveSuperBase);
             HANDLE_INSTRUCTION(ResolveThisBinding);
-            HANDLE_INSTRUCTION(RestoreScheduledJump);
+            HANDLE_INSTRUCTION_WITHOUT_EXCEPTION_CHECK(RestoreScheduledJump);
             HANDLE_INSTRUCTION(RightShift);
             HANDLE_INSTRUCTION(SetVariable);
             HANDLE_INSTRUCTION(StrictlyEquals);
@@ -828,7 +828,7 @@ static void dump_object(Object& o, HashTable<Object const*>& seen, int indent = 
     }
 }
 
-ThrowCompletionOr<void> Dump::execute_impl(Bytecode::Interpreter& interpreter) const
+void Dump::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto value = interpreter.get(m_value);
     dbgln("(DUMP) {}: {}", m_text, value);
@@ -836,7 +836,6 @@ ThrowCompletionOr<void> Dump::execute_impl(Bytecode::Interpreter& interpreter) c
         HashTable<Object const*> seen;
         dump_object(value.as_object(), seen);
     }
-    return {};
 }
 
 ThrowCompletionOr<void> End::execute_impl(Bytecode::Interpreter&) const
@@ -1090,23 +1089,21 @@ static ThrowCompletionOr<Value> typeof_(VM& vm, Value value)
 
 JS_ENUMERATE_COMMON_UNARY_OPS(JS_DEFINE_COMMON_UNARY_OP)
 
-ThrowCompletionOr<void> NewArray::execute_impl(Bytecode::Interpreter& interpreter) const
+void NewArray::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto array = MUST(Array::create(interpreter.realm(), 0));
     for (size_t i = 0; i < m_element_count; i++) {
         array->indexed_properties().put(i, interpreter.get(m_elements[i]), default_attributes);
     }
     interpreter.set(dst(), array);
-    return {};
 }
 
-ThrowCompletionOr<void> NewPrimitiveArray::execute_impl(Bytecode::Interpreter& interpreter) const
+void NewPrimitiveArray::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto array = MUST(Array::create(interpreter.realm(), 0));
     for (size_t i = 0; i < m_element_count; i++)
         array->indexed_properties().put(i, m_elements[i], default_attributes);
     interpreter.set(dst(), array);
-    return {};
 }
 
 ThrowCompletionOr<void> ArrayAppend::execute_impl(Bytecode::Interpreter& interpreter) const
@@ -1129,15 +1126,14 @@ ThrowCompletionOr<void> IteratorToArray::execute_impl(Bytecode::Interpreter& int
     return {};
 }
 
-ThrowCompletionOr<void> NewObject::execute_impl(Bytecode::Interpreter& interpreter) const
+void NewObject::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
     auto& realm = *vm.current_realm();
     interpreter.set(dst(), Object::create(realm, realm.intrinsics().object_prototype()));
-    return {};
 }
 
-ThrowCompletionOr<void> NewRegExp::execute_impl(Bytecode::Interpreter& interpreter) const
+void NewRegExp::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     interpreter.set(dst(),
         new_regexp(
@@ -1145,16 +1141,14 @@ ThrowCompletionOr<void> NewRegExp::execute_impl(Bytecode::Interpreter& interpret
             interpreter.current_executable().regex_table->get(m_regex_index),
             interpreter.current_executable().get_string(m_source_index),
             interpreter.current_executable().get_string(m_flags_index)));
-    return {};
 }
 
 #define JS_DEFINE_NEW_BUILTIN_ERROR_OP(ErrorName)                                                                      \
-    ThrowCompletionOr<void> New##ErrorName::execute_impl(Bytecode::Interpreter& interpreter) const                     \
+    void New##ErrorName::execute_impl(Bytecode::Interpreter& interpreter) const                                        \
     {                                                                                                                  \
         auto& vm = interpreter.vm();                                                                                   \
         auto& realm = *vm.current_realm();                                                                             \
         interpreter.set(dst(), ErrorName::create(realm, interpreter.current_executable().get_string(m_error_string))); \
-        return {};                                                                                                     \
     }                                                                                                                  \
     ByteString New##ErrorName::to_byte_string_impl(Bytecode::Executable const& executable) const                       \
     {                                                                                                                  \
@@ -1225,7 +1219,7 @@ ThrowCompletionOr<void> DeleteVariable::execute_impl(Bytecode::Interpreter& inte
     return {};
 }
 
-ThrowCompletionOr<void> CreateLexicalEnvironment::execute_impl(Bytecode::Interpreter& interpreter) const
+void CreateLexicalEnvironment::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto make_and_swap_envs = [&](auto& old_environment) {
         GCPtr<Environment> environment = new_declarative_environment(*old_environment).ptr();
@@ -1234,7 +1228,6 @@ ThrowCompletionOr<void> CreateLexicalEnvironment::execute_impl(Bytecode::Interpr
     };
     auto& running_execution_context = interpreter.vm().running_execution_context();
     running_execution_context.saved_lexical_environments.append(make_and_swap_envs(running_execution_context.lexical_environment));
-    return {};
 }
 
 ThrowCompletionOr<void> EnterObjectEnvironment::execute_impl(Bytecode::Interpreter& interpreter) const
@@ -1244,22 +1237,19 @@ ThrowCompletionOr<void> EnterObjectEnvironment::execute_impl(Bytecode::Interpret
     return {};
 }
 
-ThrowCompletionOr<void> Catch::execute_impl(Bytecode::Interpreter& interpreter) const
+void Catch::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     interpreter.catch_exception(dst());
-    return {};
 }
 
-ThrowCompletionOr<void> LeaveFinally::execute_impl(Bytecode::Interpreter& interpreter) const
+void LeaveFinally::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     interpreter.leave_finally();
-    return {};
 }
 
-ThrowCompletionOr<void> RestoreScheduledJump::execute_impl(Bytecode::Interpreter& interpreter) const
+void RestoreScheduledJump::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     interpreter.restore_scheduled_jump();
-    return {};
 }
 
 ThrowCompletionOr<void> CreateVariable::execute_impl(Bytecode::Interpreter& interpreter) const
@@ -1421,16 +1411,14 @@ ThrowCompletionOr<void> ResolveSuperBase::execute_impl(Bytecode::Interpreter& in
     return {};
 }
 
-ThrowCompletionOr<void> GetNewTarget::execute_impl(Bytecode::Interpreter& interpreter) const
+void GetNewTarget::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     interpreter.set(dst(), interpreter.vm().get_new_target());
-    return {};
 }
 
-ThrowCompletionOr<void> GetImportMeta::execute_impl(Bytecode::Interpreter& interpreter) const
+void GetImportMeta::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     interpreter.set(dst(), interpreter.vm().get_import_meta());
-    return {};
 }
 
 ThrowCompletionOr<void> JumpIf::execute_impl(Bytecode::Interpreter&) const
@@ -1532,20 +1520,18 @@ ThrowCompletionOr<void> SuperCallWithArgumentArray::execute_impl(Bytecode::Inter
     return {};
 }
 
-ThrowCompletionOr<void> NewFunction::execute_impl(Bytecode::Interpreter& interpreter) const
+void NewFunction::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
     interpreter.set(dst(), new_function(vm, m_function_node, m_lhs_name, m_home_object));
-    return {};
 }
 
-ThrowCompletionOr<void> Return::execute_impl(Bytecode::Interpreter& interpreter) const
+void Return::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     if (m_value.has_value())
         interpreter.do_return(interpreter.get(*m_value));
     else
         interpreter.do_return(js_undefined());
-    return {};
 }
 
 ThrowCompletionOr<void> Increment::execute_impl(Bytecode::Interpreter& interpreter) const
@@ -1669,17 +1655,15 @@ ThrowCompletionOr<void> ScheduleJump::execute_impl(Bytecode::Interpreter&) const
     __builtin_unreachable();
 }
 
-ThrowCompletionOr<void> LeaveLexicalEnvironment::execute_impl(Bytecode::Interpreter& interpreter) const
+void LeaveLexicalEnvironment::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& running_execution_context = interpreter.vm().running_execution_context();
     running_execution_context.lexical_environment = running_execution_context.saved_lexical_environments.take_last();
-    return {};
 }
 
-ThrowCompletionOr<void> LeaveUnwindContext::execute_impl(Bytecode::Interpreter& interpreter) const
+void LeaveUnwindContext::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     interpreter.leave_unwind_context();
-    return {};
 }
 
 ThrowCompletionOr<void> ContinuePendingUnwind::execute_impl(Bytecode::Interpreter&) const
@@ -1858,7 +1842,7 @@ ThrowCompletionOr<void> TypeofVariable::execute_impl(Bytecode::Interpreter& inte
     return {};
 }
 
-ThrowCompletionOr<void> BlockDeclarationInstantiation::execute_impl(Bytecode::Interpreter& interpreter) const
+void BlockDeclarationInstantiation::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
     auto old_environment = vm.running_execution_context().lexical_environment;
@@ -1866,7 +1850,6 @@ ThrowCompletionOr<void> BlockDeclarationInstantiation::execute_impl(Bytecode::In
     running_execution_context.saved_lexical_environments.append(old_environment);
     running_execution_context.lexical_environment = new_declarative_environment(*old_environment);
     m_scope_node.block_declaration_instantiation(vm, running_execution_context.lexical_environment);
-    return {};
 }
 
 ByteString Mov::to_byte_string_impl(Bytecode::Executable const& executable) const
