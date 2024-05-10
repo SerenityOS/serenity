@@ -148,7 +148,6 @@ public:
     Type type() const { return m_type; }
     size_t length() const;
     ByteString to_byte_string(Bytecode::Executable const&) const;
-    ThrowCompletionOr<void> execute(Bytecode::Interpreter&) const;
     void visit_labels(Function<void(Label&)> visitor);
     static void destroy(Instruction&);
 
