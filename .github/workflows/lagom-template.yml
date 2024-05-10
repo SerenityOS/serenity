@@ -1,6 +1,18 @@
-name: Lagom
+name: Lagom Template
 
-on: [push, pull_request]
+on:
+  workflow_call:
+    inputs:
+        os_name:
+          required: true
+          type: string
+        os:
+          required: true
+          type: string
+        fuzzer:
+          required: false
+          type: string
+          default: 'NO_FUZZ'
 
 env:
   # runner.workspace = /home/runner/work/serenity
@@ -8,22 +20,9 @@ env:
   SERENITY_SOURCE_DIR: ${{ github.workspace }}
   CCACHE_DIR: ${{ github.workspace }}/.ccache
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || format('{0}-{1}', github.ref, github.run_number) }}
-  cancel-in-progress: true
-
 jobs:
   CI:
-    runs-on: ${{ matrix.os }}
-    if: github.repository == 'SerenityOS/serenity'
-    strategy:
-      fail-fast: false
-      matrix:
-        os_name: ['Linux']
-        os: [ubuntu-22.04]
-        include:
-          - os_name: 'macOS'
-            os: macos-14
+    runs-on: ${{ inputs.os }}
 
     steps:
       # Pull requests can trail behind `master` and can cause breakage if merging before running the CI checks on an updated branch.
@@ -37,10 +36,10 @@ jobs:
         with:
           ref: refs/pull/${{ github.event.pull_request.number }}/merge
 
-      - name: 'Set Up Environment'
+      - name: Set Up Environment
         uses: ./.github/actions/setup
         with:
-          os: ${{ matrix.os_name }}
+          os: ${{ inputs.os_name }}
           arch: 'Lagom'
 
       # === PREPARE FOR BUILDING ===
@@ -49,28 +48,30 @@ jobs:
         uses: ./.github/actions/cache-restore
         id: 'cache-restore'
         with:
-          os: ${{ matrix.os_name }}
+          os: ${{ inputs.os_name }}
           arch: 'Lagom'
+          cache_key_extra: ${{ inputs.fuzzer }}
           serenity_ccache_path: ${{ env.CCACHE_DIR }}
           download_cache_path: ${{ github.workspace }}/Build/caches
 
       - name: Assign Build Parameters
         id: 'build-parameters'
         run: |
-          if ${{ matrix.os_name == 'Linux' }} ; then
+          if ${{ inputs.os_name == 'Linux' }} ; then
             echo "host_cc=clang-18" >> "$GITHUB_OUTPUT"
             echo "host_cxx=clang++-18" >> "$GITHUB_OUTPUT"
-          elif ${{ matrix.os_name == 'macOS' }} ; then
+          elif ${{ inputs.os_name == 'macOS' }} ; then
             echo "host_cc=$(brew --prefix llvm@18)/bin/clang" >> "$GITHUB_OUTPUT"
             echo "host_cxx=$(brew --prefix llvm@18)/bin/clang++" >> "$GITHUB_OUTPUT"
           fi
 
       # https://github.com/actions/runner-images/issues/9330
-      - name: Allow microphone access to all apps (macOS 14)
+      - name: Enable Microphone Access (macOS 14)
+        if: ${{ inputs.os == 'macos-14' }}
         run: sqlite3 $HOME/Library/Application\ Support/com.apple.TCC/TCC.db "INSERT OR IGNORE INTO access VALUES ('kTCCServiceMicrophone','/usr/local/opt/runner/provisioner/provisioner',1,2,4,1,NULL,NULL,0,'UNUSED',NULL,0,1687786159,NULL,NULL,'UNUSED',1687786159);"
-        if: ${{ matrix.os == 'macos-14' }}
 
       - name: Create Build Environment
+        if: ${{ inputs.fuzzer == 'NO_FUZZ' }}
         working-directory: ${{ github.workspace }}/Meta/Lagom
         run: |
           cmake -GNinja -B Build \
@@ -84,6 +85,31 @@ jobs:
             -DCMAKE_C_COMPILER=${{ steps.build-parameters.outputs.host_cc }} \
             -DCMAKE_CXX_COMPILER=${{ steps.build-parameters.outputs.host_cxx }}
 
+      - name: Create Build Environment
+        if: ${{ inputs.fuzzer == 'FUZZ' }}
+        working-directory: ${{ github.workspace }}/Meta/Lagom
+        run: |
+          set -e
+
+          cmake -GNinja -B tools-build \
+            -DBUILD_LAGOM=OFF \
+            -DCMAKE_INSTALL_PREFIX=tool-install \
+            -DSERENITY_CACHE_DIR=${{ github.workspace }}/Build/caches \
+            -DCMAKE_C_COMPILER=gcc-13 \
+            -DCMAKE_CXX_COMPILER=g++-13 \
+            -Dpackage=LagomTools
+
+          ninja -C tools-build install
+
+          cmake -GNinja -B Build \
+            -DBUILD_LAGOM=ON \
+            -DENABLE_FUZZERS_LIBFUZZER=ON \
+            -DENABLE_ADDRESS_SANITIZER=ON \
+            -DSERENITY_CACHE_DIR=${{ github.workspace }}/Build/caches \
+            -DCMAKE_C_COMPILER=clang \
+            -DCMAKE_CXX_COMPILER=clang++ \
+            -DCMAKE_PREFIX_PATH=tool-install
+
       # === BUILD ===
 
       - name: Build
@@ -94,14 +120,14 @@ jobs:
           cmake --install . --strip --prefix ${{ github.workspace }}/Meta/Lagom/Install
 
       - name: Enable the Ladybird Qt chrome
+        if: ${{ inputs.os_name == 'macOS' && inputs.fuzzer == 'NO_FUZZ' }}
         working-directory: ${{ github.workspace }}/Meta/Lagom
         run: cmake -B Build -DENABLE_QT=ON
-        if: ${{ matrix.os_name == 'macOS' }}
 
       - name: Build the Ladybird Qt chrome
+        if: ${{ inputs.os_name == 'macOS' && inputs.fuzzer == 'NO_FUZZ' }}
         working-directory: ${{ github.workspace }}/Meta/Lagom/Build
         run: cmake --build .
-        if: ${{ matrix.os_name == 'macOS' }}
 
       - name: Save Caches
         uses: ./.github/actions/cache-save
@@ -113,6 +139,7 @@ jobs:
       # === TEST ===
 
       - name: Test
+        if: ${{ inputs.fuzzer == 'NO_FUZZ' }}
         working-directory: ${{ github.workspace }}/Meta/Lagom/Build
         run: ninja test
         env:
@@ -122,29 +149,29 @@ jobs:
           TESTS_ONLY: 1
 
       - name: Upload LibWeb Test Artifacts
+        if: ${{ always() && inputs.fuzzer == 'NO_FUZZ' }}
         uses: actions/upload-artifact@v4
         with:
-          name: libweb-test-artifacts-${{ matrix.os_name }}
+          name: libweb-test-artifacts-${{ inputs.os_name }}
           path: ${{ github.workspace }}/Meta/Lagom/Build/Ladybird/test-dumps
           retention-days: 7
           if-no-files-found: ignore
-        if: always()
 
       - name: WPT
+        if: ${{ inputs.os_name == 'Linux' && inputs.fuzzer == 'NO_FUZZ' }}
         working-directory: ${{ github.workspace }}/Tests/LibWeb/WPT
         run: ./run.sh --remove-wpt-repository
-        if: ${{ matrix.os_name == 'Linux' }}
         env:
           QT_QPA_PLATFORM: 'offscreen'
 
       - name: Lints
+        if: ${{ inputs.os_name == 'Linux' && inputs.fuzzer == 'NO_FUZZ' }}
         working-directory: ${{ github.workspace }}
         run: |
           set -e
           ./Meta/check-markdown.sh
           ./Meta/lint-gml-format.sh
           git ls-files '*.ipc' | xargs ./Meta/Lagom/Build/bin/IPCMagicLinter
-        if: ${{ matrix.os_name == 'Linux' }}
         env:
           MARKDOWN_CHECK_BINARY: ./Meta/Lagom/Build/bin/markdown-check
           GML_FORMAT: ./Meta/Lagom/Build/bin/gml-format

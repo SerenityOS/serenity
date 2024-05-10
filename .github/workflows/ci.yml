@@ -34,3 +34,23 @@ jobs:
       os: ${{ matrix.os }}
       arch: ${{ matrix.arch }}
       debug_options: ${{ matrix.debug_options }}
+
+  Lagom:
+    if: github.repository == 'SerenityOS/serenity'
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os_name: ['Linux']
+        os: [ubuntu-22.04]
+        fuzzer: ['NO_FUZZ', 'FUZZ']
+        include:
+          - os_name: 'macOS'
+            os: macos-14
+            fuzzer: 'NO_FUZZ'
+
+    uses: ./.github/workflows/lagom-template.yml
+    with:
+      os_name: ${{ matrix.os_name }}
+      os: ${{ matrix.os }}
+      fuzzer: ${{ matrix.fuzzer }}
