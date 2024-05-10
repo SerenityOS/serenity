@@ -1247,7 +1247,7 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
         if (declaration_result.is_throw_completion()) {
             auto promise_capability = MUST(new_promise_capability(vm, realm.intrinsics().promise_constructor()));
             MUST(call(vm, *promise_capability->reject(), js_undefined(), *declaration_result.throw_completion().value()));
-            return Completion { Completion::Type::Return, promise_capability->promise(), {} };
+            return Completion { Completion::Type::Return, promise_capability->promise() };
         }
     }
 
@@ -1261,11 +1261,11 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
     // NOTE: Running the bytecode should eventually return a completion.
     // Until it does, we assume "return" and include the undefined fallback from the call site.
     if (m_kind == FunctionKind::Normal)
-        return { Completion::Type::Return, result.value_or(js_undefined()), {} };
+        return { Completion::Type::Return, result.value_or(js_undefined()) };
 
     if (m_kind == FunctionKind::AsyncGenerator) {
         auto async_generator_object = TRY(AsyncGenerator::create(realm, result, this, vm.running_execution_context().copy()));
-        return { Completion::Type::Return, async_generator_object, {} };
+        return { Completion::Type::Return, async_generator_object };
     }
 
     auto generator_object = TRY(GeneratorObject::create(realm, result, this, vm.running_execution_context().copy()));
@@ -1273,10 +1273,10 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
     // NOTE: Async functions are entirely transformed to generator functions, and wrapped in a custom driver that returns a promise
     //       See AwaitExpression::generate_bytecode() for the transformation.
     if (m_kind == FunctionKind::Async)
-        return { Completion::Type::Return, AsyncFunctionDriverWrapper::create(realm, generator_object), {} };
+        return { Completion::Type::Return, AsyncFunctionDriverWrapper::create(realm, generator_object) };
 
     VERIFY(m_kind == FunctionKind::Generator);
-    return { Completion::Type::Return, generator_object, {} };
+    return { Completion::Type::Return, generator_object };
 }
 
 void ECMAScriptFunctionObject::set_name(DeprecatedFlyString const& name)

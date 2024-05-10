@@ -62,7 +62,7 @@ JS_DEFINE_NATIVE_FUNCTION(IteratorHelperPrototype::return_)
     }
 
     // 5. Let C be Completion { [[Type]]: return, [[Value]]: undefined, [[Target]]: empty }.
-    Completion completion { Completion::Type::Return, js_undefined(), {} };
+    Completion completion { Completion::Type::Return, js_undefined() };
 
     // 6. Return ? GeneratorResumeAbrupt(O, C, "Iterator Helper").
     return TRY(iterator->resume_abrupt(vm, move(completion), "Iterator Helper"sv));

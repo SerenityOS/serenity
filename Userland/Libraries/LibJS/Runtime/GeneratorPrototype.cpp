@@ -44,7 +44,7 @@ JS_DEFINE_NATIVE_FUNCTION(GeneratorPrototype::return_)
     auto generator_object = TRY(typed_this_object(vm));
 
     // 2. Let C be Completion Record { [[Type]]: return, [[Value]]: value, [[Target]]: empty }.
-    auto completion = Completion(Completion::Type::Return, vm.argument(0), {});
+    auto completion = Completion(Completion::Type::Return, vm.argument(0));
 
     // 3. Return ? GeneratorResumeAbrupt(g, C, empty).
     return generator_object->resume_abrupt(vm, completion, {});

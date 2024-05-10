@@ -403,7 +403,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from_async)
                     TRY(array->set(vm.names.length, Value(k), Object::ShouldThrowExceptions::Yes));
 
                     // b. Return Completion Record { [[Type]]: return, [[Value]]: A, [[Target]]: empty }.
-                    return Completion { Completion::Type::Return, array, {} };
+                    return Completion { Completion::Type::Return, array };
                 }
 
                 // 8. Let nextValue be ? IteratorValue(nextResult).
@@ -508,7 +508,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from_async)
             TRY(array->set(vm.names.length, Value(length), Object::ShouldThrowExceptions::Yes));
 
             // ix. Return Completion Record { [[Type]]: return, [[Value]]: A, [[Target]]: empty }.
-            return Completion { Completion::Type::Return, array, {} };
+            return Completion { Completion::Type::Return, array };
         }
     };
 

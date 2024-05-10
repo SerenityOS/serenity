@@ -144,7 +144,7 @@ Completion throw_completion(Value value)
         log_exception(value);
 
     // 1. Return Completion Record { [[Type]]: throw, [[Value]]: value, [[Target]]: empty }.
-    return { Completion::Type::Throw, value, {} };
+    return { Completion::Type::Throw, value };
 }
 
 }

@@ -119,7 +119,7 @@ JS_DEFINE_NATIVE_FUNCTION(AsyncGeneratorPrototype::return_)
     auto generator = TRY_OR_REJECT(vm, promise_capability, async_generator_validate(vm, generator_this_value, OptionalNone {}));
 
     // 5. Let completion be Completion Record { [[Type]]: return, [[Value]]: value, [[Target]]: empty }.
-    auto completion = Completion(Completion::Type::Return, vm.argument(0), {});
+    auto completion = Completion(Completion::Type::Return, vm.argument(0));
 
     // 6. Perform AsyncGeneratorEnqueue(generator, completion, promiseCapability).
     generator->async_generator_enqueue(completion, promise_capability);
