@@ -374,11 +374,10 @@ FLATTEN_ON_CLANG void Interpreter::run_bytecode(size_t entry_point)
         goto* bytecode_dispatch_table[static_cast<size_t>(next_instruction.type())];                \
     } while (0)
 
+    bool will_yield = false;
+
     for (;;) {
     start:
-        bool will_return = false;
-        bool will_yield = false;
-
         for (;;) {
             goto* bytecode_dispatch_table[static_cast<size_t>((*reinterpret_cast<Instruction const*>(&bytecode[program_counter])).type())];
 
@@ -487,7 +486,7 @@ FLATTEN_ON_CLANG void Interpreter::run_bytecode(size_t entry_point)
             }
             if (!saved_return_value().is_empty()) {
                 do_return(saved_return_value());
-                goto may_return;
+                goto run_finalizer_and_return;
             }
             auto const old_scheduled_jump = running_execution_context.previously_scheduled_jumps.take_last();
             if (m_scheduled_jump.has_value()) {
@@ -631,56 +630,44 @@ FLATTEN_ON_CLANG void Interpreter::run_bytecode(size_t entry_point)
         handle_Await: {
             auto& instruction = *reinterpret_cast<Op::Await const*>(&bytecode[program_counter]);
             (void)instruction.execute_impl(*this);
-            goto may_return;
+            will_yield = true;
+            goto run_finalizer_and_return;
         }
 
         handle_Return: {
             auto& instruction = *reinterpret_cast<Op::Return const*>(&bytecode[program_counter]);
             (void)instruction.execute_impl(*this);
-            goto may_return;
+            goto run_finalizer_and_return;
         }
 
         handle_Yield: {
             auto& instruction = *reinterpret_cast<Op::Yield const*>(&bytecode[program_counter]);
             (void)instruction.execute_impl(*this);
-            goto may_return;
-        }
-
-        may_return: {
-            auto& instruction = *reinterpret_cast<Instruction const*>(&bytecode[program_counter]);
-            if (!reg(Register::return_value()).is_empty()) {
-                will_return = true;
-                // Note: A `yield` statement will not go through a finally statement,
-                //       hence we need to set a flag to not do so,
-                //       but we generate a Yield Operation in the case of returns in
-                //       generators as well, so we need to check if it will actually
-                //       continue or is a `return` in disguise
-                will_yield = (instruction.type() == Instruction::Type::Yield && static_cast<Op::Yield const&>(instruction).continuation().has_value()) || instruction.type() == Instruction::Type::Await;
-                break;
-            }
-
-            program_counter += instruction.length();
-            goto start;
+            // Note: A `yield` statement will not go through a finally statement,
+            //       hence we need to set a flag to not do so,
+            //       but we generate a Yield Operation in the case of returns in
+            //       generators as well, so we need to check if it will actually
+            //       continue or is a `return` in disguise
+            will_yield = instruction.continuation().has_value();
+            goto run_finalizer_and_return;
         }
         }
+    }
 
-        if (!will_yield) {
-            if (auto handlers = executable.exception_handlers_for_offset(program_counter); handlers.has_value()) {
-                if (auto finalizer = handlers.value().finalizer_offset; finalizer.has_value()) {
-                    VERIFY(!running_execution_context.unwind_contexts.is_empty());
-                    auto& unwind_context = running_execution_context.unwind_contexts.last();
-                    VERIFY(unwind_context.executable == m_current_executable);
-                    reg(Register::saved_return_value()) = reg(Register::return_value());
-                    reg(Register::return_value()) = {};
-                    program_counter = finalizer.value();
-                    // the unwind_context will be pop'ed when entering the finally block
-                    continue;
-                }
+run_finalizer_and_return:
+    if (!will_yield) {
+        if (auto handlers = executable.exception_handlers_for_offset(program_counter); handlers.has_value()) {
+            if (auto finalizer = handlers.value().finalizer_offset; finalizer.has_value()) {
+                VERIFY(!running_execution_context.unwind_contexts.is_empty());
+                auto& unwind_context = running_execution_context.unwind_contexts.last();
+                VERIFY(unwind_context.executable == m_current_executable);
+                reg(Register::saved_return_value()) = reg(Register::return_value());
+                reg(Register::return_value()) = {};
+                program_counter = finalizer.value();
+                // the unwind_context will be pop'ed when entering the finally block
+                goto start;
             }
         }
-
-        if (will_return)
-            break;
     }
 }
 
