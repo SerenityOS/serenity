@@ -1819,7 +1819,7 @@ ThrowCompletionOr<void> IteratorClose::execute_impl(Bytecode::Interpreter& inter
     auto& iterator = verify_cast<IteratorRecord>(interpreter.get(m_iterator_record).as_object());
 
     // FIXME: Return the value of the resulting completion. (Note that m_completion_value can be empty!)
-    TRY(iterator_close(vm, iterator, Completion { m_completion_type, m_completion_value, {} }));
+    TRY(iterator_close(vm, iterator, Completion { m_completion_type, m_completion_value }));
     return {};
 }
 
@@ -1829,7 +1829,7 @@ ThrowCompletionOr<void> AsyncIteratorClose::execute_impl(Bytecode::Interpreter& 
     auto& iterator = verify_cast<IteratorRecord>(interpreter.get(m_iterator_record).as_object());
 
     // FIXME: Return the value of the resulting completion. (Note that m_completion_value can be empty!)
-    TRY(async_iterator_close(vm, iterator, Completion { m_completion_type, m_completion_value, {} }));
+    TRY(async_iterator_close(vm, iterator, Completion { m_completion_type, m_completion_value }));
     return {};
 }
 
