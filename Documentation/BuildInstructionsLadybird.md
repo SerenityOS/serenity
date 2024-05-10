@@ -2,7 +2,7 @@
 
 ## Build Prerequisites
 
-Qt6 development packages and a C++23 capable compiler are required. g++-12 or clang-15 are required at a minimum for c++23 support.
+Qt6 development packages and a C++23 capable compiler are required. g++-12 or clang-17 are required at a minimum for c++23 support.
 
 NOTE: In all of the below lists of packages, the Qt6 multimedia package is not needed if your Linux system supports PulseAudio.
 
@@ -69,7 +69,7 @@ On OpenIndiana:
 Note that OpenIndiana's latest GCC port (GCC 11) is too old to build Ladybird, so you need Clang, which is available in the repository.
 
 ```
-pfexec pkg install cmake ninja clang-15 libglvnd qt6
+pfexec pkg install cmake ninja clang-17 libglvnd qt6
 ```
 
 On Haiku:
