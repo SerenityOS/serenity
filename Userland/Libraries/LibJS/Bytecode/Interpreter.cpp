@@ -630,7 +630,7 @@ FLATTEN_ON_CLANG void Interpreter::run_bytecode(size_t entry_point)
 
         handle_Await: {
             auto& instruction = *reinterpret_cast<Op::Await const*>(&bytecode[program_counter]);
-            auto result = instruction.execute(*this);
+            auto result = instruction.execute_impl(*this);
 
             if (result.is_error()) {
                 if (handle_exception(program_counter, *result.throw_completion().value()) == HandleExceptionResponse::ExitFromExecutable)
@@ -642,7 +642,7 @@ FLATTEN_ON_CLANG void Interpreter::run_bytecode(size_t entry_point)
 
         handle_Return: {
             auto& instruction = *reinterpret_cast<Op::Return const*>(&bytecode[program_counter]);
-            auto result = instruction.execute(*this);
+            auto result = instruction.execute_impl(*this);
 
             if (result.is_error()) {
                 if (handle_exception(program_counter, *result.throw_completion().value()) == HandleExceptionResponse::ExitFromExecutable)
@@ -654,7 +654,7 @@ FLATTEN_ON_CLANG void Interpreter::run_bytecode(size_t entry_point)
 
         handle_Yield: {
             auto& instruction = *reinterpret_cast<Op::Yield const*>(&bytecode[program_counter]);
-            auto result = instruction.execute(*this);
+            auto result = instruction.execute_impl(*this);
 
             if (result.is_error()) {
                 if (handle_exception(program_counter, *result.throw_completion().value()) == HandleExceptionResponse::ExitFromExecutable)
