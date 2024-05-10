@@ -1263,7 +1263,7 @@ private:
     Label m_false_target;
 };
 
-enum class CallType {
+enum class CallType : u8 {
     Call,
     Construct,
     DirectEval,
@@ -1280,8 +1280,8 @@ public:
         , m_this_value(this_value)
         , m_argument_count(arguments.size())
         , m_type(type)
-        , m_expression_string(expression_string)
         , m_builtin(builtin)
+        , m_expression_string(expression_string)
     {
         for (size_t i = 0; i < arguments.size(); ++i)
             m_arguments[i] = arguments[i];
@@ -1311,8 +1311,8 @@ private:
     Operand m_this_value;
     u32 m_argument_count { 0 };
     CallType m_type;
-    Optional<StringTableIndex> m_expression_string;
     Optional<Builtin> m_builtin;
+    Optional<StringTableIndex> m_expression_string;
     Operand m_arguments[];
 };
 

@@ -22,7 +22,7 @@ namespace JS::Bytecode {
     O(MathRound, math_round, Math, round, 1) \
     O(MathSqrt, math_sqrt, Math, sqrt, 1)
 
-enum class Builtin {
+enum class Builtin : u8 {
 #define DEFINE_BUILTIN_ENUM(name, ...) name,
     JS_ENUMERATE_BUILTINS(DEFINE_BUILTIN_ENUM)
 #undef DEFINE_BUILTIN_ENUM
