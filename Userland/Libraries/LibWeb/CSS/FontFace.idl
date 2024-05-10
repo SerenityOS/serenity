@@ -20,17 +20,17 @@ enum FontFaceLoadStatus { "unloaded", "loading", "loaded", "error" };
 interface FontFace {
     // FIXME: constructor(CSSOMString family, (CSSOMString or BinaryData) source, optional FontFaceDescriptors descriptors = {});
     constructor(CSSOMString family, CSSOMString source, optional FontFaceDescriptors descriptors = {});
-    // FIXME: attribute CSSOMString family;
-    // FIXME: attribute CSSOMString style;
-    // FIXME: attribute CSSOMString weight;
-    // FIXME: attribute CSSOMString stretch;
-    // FIXME: attribute CSSOMString unicodeRange;
-    // FIXME: attribute CSSOMString featureSettings;
-    // FIXME: attribute CSSOMString variationSettings;
-    // FIXME: attribute CSSOMString display;
-    // FIXME: attribute CSSOMString ascentOverride;
-    // FIXME: attribute CSSOMString descentOverride;
-    // FIXME: attribute CSSOMString lineGapOverride;
+    attribute CSSOMString family;
+    attribute CSSOMString style;
+    attribute CSSOMString weight;
+    attribute CSSOMString stretch;
+    attribute CSSOMString unicodeRange;
+    attribute CSSOMString featureSettings;
+    attribute CSSOMString variationSettings;
+    attribute CSSOMString display;
+    attribute CSSOMString ascentOverride;
+    attribute CSSOMString descentOverride;
+    attribute CSSOMString lineGapOverride;
 
     // FIXME: readonly attribute FontFaceLoadStatus status;
 
