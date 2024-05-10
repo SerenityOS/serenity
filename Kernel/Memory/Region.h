@@ -208,6 +208,7 @@ public:
 
     void set_page_directory(PageDirectory&);
     ErrorOr<void> map(PageDirectory&, ShouldFlushTLB = ShouldFlushTLB::Yes);
+    ErrorOr<void> map(PageDirectory&, PhysicalAddress, ShouldFlushTLB = ShouldFlushTLB::Yes);
     void unmap(ShouldFlushTLB = ShouldFlushTLB::Yes);
     void unmap_with_locks_held(ShouldFlushTLB, SpinlockLocker<RecursiveSpinlock<LockRank::None>>& pd_locker);
 
@@ -247,6 +248,8 @@ private:
 
     [[nodiscard]] bool map_individual_page_impl(size_t page_index);
     [[nodiscard]] bool map_individual_page_impl(size_t page_index, RefPtr<PhysicalPage>);
+    [[nodiscard]] bool map_individual_page_impl(size_t page_index, PhysicalAddress);
+    [[nodiscard]] bool map_individual_page_impl(size_t page_index, PhysicalAddress, bool readable, bool writeable);
 
     LockRefPtr<PageDirectory> m_page_directory;
     VirtualRange m_range;

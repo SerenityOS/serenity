@@ -417,7 +417,7 @@ u64 HPET::ns_to_raw_counter_ticks(u64 ns) const
 UNMAP_AFTER_INIT HPET::HPET(PhysicalAddress acpi_hpet)
     : m_physical_acpi_hpet_table(acpi_hpet)
     , m_physical_acpi_hpet_registers(find_acpi_hpet_registers_block())
-    , m_hpet_mmio_region(MM.allocate_kernel_region(m_physical_acpi_hpet_registers.page_base(), PAGE_SIZE, "HPET MMIO"sv, Memory::Region::Access::ReadWrite).release_value())
+    , m_hpet_mmio_region(MM.allocate_mmio_kernel_region(m_physical_acpi_hpet_registers.page_base(), PAGE_SIZE, "HPET MMIO"sv, Memory::Region::Access::ReadWrite).release_value())
 {
     s_hpet = this; // Make available as soon as possible so that IRQs can use it
 

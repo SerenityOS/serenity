@@ -37,7 +37,7 @@ ErrorOr<Optional<PhysicalAddress>> find_rsdp_in_platform_specific_memory_locatio
         auto region_size_or_error = Memory::page_round_up(memory_range.length);
         if (region_size_or_error.is_error())
             return IterationDecision::Continue;
-        auto region_or_error = MM.allocate_kernel_region(memory_range.start, region_size_or_error.value(), {}, Memory::Region::Access::Read);
+        auto region_or_error = MM.allocate_mmio_kernel_region(memory_range.start, region_size_or_error.value(), {}, Memory::Region::Access::Read);
         if (region_or_error.is_error())
             return IterationDecision::Continue;
         mapping.region = region_or_error.release_value();

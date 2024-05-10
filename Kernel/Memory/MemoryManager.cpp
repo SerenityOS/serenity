@@ -21,6 +21,7 @@
 #include <Kernel/Library/Panic.h>
 #include <Kernel/Library/StdLib.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
+#include <Kernel/Memory/MMIOVMObject.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/PhysicalRegion.h>
 #include <Kernel/Memory/SharedInodeVMObject.h>
@@ -1066,9 +1067,10 @@ ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_contiguous_kernel_region(
 
 ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_page(StringView name, Memory::Region::Access access, RefPtr<Memory::PhysicalPage>& dma_buffer_page)
 {
-    dma_buffer_page = TRY(allocate_physical_page());
+    auto page = TRY(allocate_physical_page());
+    dma_buffer_page = page;
     // Do not enable Cache for this region as physical memory transfers are performed (Most architectures have this behavior by default)
-    return allocate_kernel_region(dma_buffer_page->paddr(), PAGE_SIZE, name, access, Region::Cacheable::No);
+    return allocate_kernel_region_with_physical_pages({ &page, 1 }, name, access, Region::Cacheable::No);
 }
 
 ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_page(StringView name, Memory::Region::Access access)
@@ -1083,7 +1085,7 @@ ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_pages(
     VERIFY(!(size % PAGE_SIZE));
     dma_buffer_pages = TRY(allocate_contiguous_physical_pages(size));
     // Do not enable Cache for this region as physical memory transfers are performed (Most architectures have this behavior by default)
-    return allocate_kernel_region(dma_buffer_pages.first()->paddr(), size, name, access, Region::Cacheable::No);
+    return allocate_kernel_region_with_physical_pages(dma_buffer_pages, name, access, Region::Cacheable::No);
 }
 
 ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_pages(size_t size, StringView name, Memory::Region::Access access)
@@ -1107,16 +1109,28 @@ ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region(size_t size
     return region;
 }
 
-ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region(PhysicalAddress paddr, size_t size, StringView name, Region::Access access, Region::Cacheable cacheable)
+ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region_with_physical_pages(Span<NonnullRefPtr<PhysicalPage>> pages, StringView name, Region::Access access, Region::Cacheable cacheable)
+{
+    auto vmobject = TRY(AnonymousVMObject::try_create_with_physical_pages(pages));
+    OwnPtr<KString> name_kstring;
+    if (!name.is_null())
+        name_kstring = TRY(KString::try_create(name));
+    auto region = TRY(Region::create_unplaced(move(vmobject), 0, move(name_kstring), access, cacheable));
+    TRY(m_global_data.with([&](auto& global_data) { return global_data.region_tree.place_anywhere(*region, RandomizeVirtualAddress::No, pages.size() * PAGE_SIZE, PAGE_SIZE); }));
+    TRY(region->map(kernel_page_directory()));
+    return region;
+}
+
+ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_mmio_kernel_region(PhysicalAddress paddr, size_t size, StringView name, Region::Access access, Region::Cacheable cacheable)
 {
     VERIFY(!(size % PAGE_SIZE));
-    auto vmobject = TRY(AnonymousVMObject::try_create_for_physical_range(paddr, size));
+    auto vmobject = TRY(MMIOVMObject::try_create_for_physical_range(paddr, size));
     OwnPtr<KString> name_kstring;
     if (!name.is_null())
         name_kstring = TRY(KString::try_create(name));
     auto region = TRY(Region::create_unplaced(move(vmobject), 0, move(name_kstring), access, cacheable));
     TRY(m_global_data.with([&](auto& global_data) { return global_data.region_tree.place_anywhere(*region, RandomizeVirtualAddress::No, size, PAGE_SIZE); }));
-    TRY(region->map(kernel_page_directory()));
+    TRY(region->map(kernel_page_directory(), paddr));
     return region;
 }
 
@@ -1326,7 +1340,7 @@ ErrorOr<Vector<NonnullRefPtr<PhysicalPage>>> MemoryManager::allocate_contiguous_
     }));
 
     {
-        auto cleanup_region = TRY(MM.allocate_kernel_region(physical_pages[0]->paddr(), PAGE_SIZE * page_count, {}, Region::Access::Read | Region::Access::Write));
+        auto cleanup_region = TRY(MM.allocate_kernel_region_with_physical_pages(physical_pages, {}, Region::Access::Read | Region::Access::Write));
         memset(cleanup_region->vaddr().as_ptr(), 0, PAGE_SIZE * page_count);
     }
     return physical_pages;

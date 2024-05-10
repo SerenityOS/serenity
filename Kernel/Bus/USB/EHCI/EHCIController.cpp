@@ -18,7 +18,7 @@ ErrorOr<NonnullLockRefPtr<EHCIController>> EHCIController::try_to_initialize(con
     auto pci_bar_space_size = PCI::get_BAR_space_size(pci_device_identifier, SpaceBaseAddressRegister);
 
     auto register_region_size = TRY(Memory::page_round_up(pci_bar_address.offset_in_page() + pci_bar_space_size));
-    auto register_region = TRY(MM.allocate_kernel_region(pci_bar_address.page_base(), register_region_size, {}, Memory::Region::Access::ReadWrite));
+    auto register_region = TRY(MM.allocate_mmio_kernel_region(pci_bar_address.page_base(), register_region_size, {}, Memory::Region::Access::ReadWrite));
 
     VirtualAddress register_base_address = register_region->vaddr().offset(pci_bar_address.offset_in_page());
 

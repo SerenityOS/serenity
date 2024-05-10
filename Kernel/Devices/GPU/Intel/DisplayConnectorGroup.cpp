@@ -20,7 +20,7 @@ namespace Kernel {
 
 ErrorOr<NonnullLockRefPtr<IntelDisplayConnectorGroup>> IntelDisplayConnectorGroup::try_create(Badge<IntelNativeGraphicsAdapter>, IntelGraphics::Generation generation, MMIORegion const& first_region, MMIORegion const& second_region)
 {
-    auto registers_region = TRY(MM.allocate_kernel_region(first_region.pci_bar_paddr, first_region.pci_bar_space_length, "Intel Native Graphics Registers"sv, Memory::Region::Access::ReadWrite));
+    auto registers_region = TRY(MM.allocate_mmio_kernel_region(first_region.pci_bar_paddr, first_region.pci_bar_space_length, "Intel Native Graphics Registers"sv, Memory::Region::Access::ReadWrite));
     // NOTE: 0x5100 is the offset of the start of the GMBus registers
     auto gmbus_connector = TRY(GMBusConnector::create_with_physical_address(first_region.pci_bar_paddr.offset(0x5100)));
     auto connector_group = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) IntelDisplayConnectorGroup(generation, move(gmbus_connector), move(registers_region), first_region, second_region)));
