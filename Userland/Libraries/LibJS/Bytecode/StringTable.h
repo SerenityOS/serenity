@@ -12,7 +12,7 @@
 
 namespace JS::Bytecode {
 
-AK_TYPEDEF_DISTINCT_NUMERIC_GENERAL(size_t, StringTableIndex, Comparison);
+AK_TYPEDEF_DISTINCT_NUMERIC_GENERAL(u32, StringTableIndex, Comparison);
 
 class StringTable {
     AK_MAKE_NONMOVABLE(StringTable);
