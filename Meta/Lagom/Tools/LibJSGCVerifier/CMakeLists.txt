@@ -5,7 +5,7 @@ project(LibJSGCVerifier C CXX)
 set(LAGOM_BUILD OFF CACHE BOOL "Build without the serenity toolchain Clang")
 
 if (LAGOM_BUILD)
-    find_package(Clang 16 CONFIG REQUIRED)
+    find_package(Clang 17 CONFIG REQUIRED)
 else()
     find_package(Clang CONFIG REQUIRED HINTS "../../../../Toolchain/Local/clang")
 endif()

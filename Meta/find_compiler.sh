@@ -56,7 +56,7 @@ pick_host_compiler() {
         return
     fi
 
-    find_newest_compiler clang clang-15 clang-16 clang-17 clang-18 /opt/homebrew/opt/llvm/bin/clang
+    find_newest_compiler clang clang-17 clang-18 /opt/homebrew/opt/llvm/bin/clang
     if is_supported_compiler "$HOST_COMPILER"; then
         export CC="${HOST_COMPILER}"
         export CXX="${HOST_COMPILER/clang/clang++}"
@@ -71,8 +71,8 @@ pick_host_compiler() {
     fi
 
     if [ "$(uname -s)" = "Darwin" ]; then
-        die "Please make sure that Xcode 14.3, Homebrew Clang 15, or higher is installed."
+        die "Please make sure that Xcode 14.3, Homebrew Clang 17, or higher is installed."
     else
-        die "Please make sure that GCC version 12, Clang version 15, or higher is installed."
+        die "Please make sure that GCC version 12, Clang version 17, or higher is installed."
     fi
 }
