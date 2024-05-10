@@ -254,7 +254,7 @@ UNMAP_AFTER_INIT bool APIC::init_bsp()
     set_base(apic_base);
 
     if (!m_is_x2.was_set()) {
-        auto region_or_error = MM.allocate_kernel_region(apic_base.page_base(), PAGE_SIZE, {}, Memory::Region::Access::ReadWrite);
+        auto region_or_error = MM.allocate_mmio_kernel_region(apic_base.page_base(), PAGE_SIZE, {}, Memory::Region::Access::ReadWrite);
         if (region_or_error.is_error()) {
             dbgln("APIC: Failed to allocate memory for APIC base");
             return false;

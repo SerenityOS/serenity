@@ -507,7 +507,7 @@ bool AHCIPort::access_device(AsyncBlockDeviceRequest::RequestType direction, u64
 
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: CLE: ctba={:#08x}, ctbau={:#08x}, prdbc={:#08x}, prdtl={:#04x}, attributes={:#04x}", representative_port_index(), (u32)command_list_entries[unused_command_header.value()].ctba, (u32)command_list_entries[unused_command_header.value()].ctbau, (u32)command_list_entries[unused_command_header.value()].prdbc, (u16)command_list_entries[unused_command_header.value()].prdtl, (u16)command_list_entries[unused_command_header.value()].attributes);
 
-    auto command_table_region = MM.allocate_kernel_region(m_command_table_pages[unused_command_header.value()]->paddr().page_base(), Memory::page_round_up(sizeof(AHCI::CommandTable)).value(), "AHCI Command Table"sv, Memory::Region::Access::ReadWrite, Memory::Region::Cacheable::No).release_value();
+    auto command_table_region = MM.allocate_kernel_region_with_physical_pages({ &m_command_table_pages[unused_command_header.value()], 1 }, "AHCI Command Table"sv, Memory::Region::Access::ReadWrite, Memory::Region::Cacheable::No).release_value();
     auto& command_table = *(volatile AHCI::CommandTable*)command_table_region->vaddr().as_ptr();
 
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: Allocated command table at {}", representative_port_index(), command_table_region->vaddr());
@@ -591,7 +591,7 @@ bool AHCIPort::identify_device()
     // QEMU doesn't care if we don't set the correct CFL field in this register, real hardware will set an handshake error bit in PxSERR register.
     command_list_entries[unused_command_header.value()].attributes = (size_t)FIS::DwordCount::RegisterHostToDevice | AHCI::CommandHeaderAttributes::P;
 
-    auto command_table_region = MM.allocate_kernel_region(m_command_table_pages[unused_command_header.value()]->paddr().page_base(), Memory::page_round_up(sizeof(AHCI::CommandTable)).value(), "AHCI Command Table"sv, Memory::Region::Access::ReadWrite).release_value();
+    auto command_table_region = MM.allocate_kernel_region_with_physical_pages({ &m_command_table_pages[unused_command_header.value()], 1 }, "AHCI Command Table"sv, Memory::Region::Access::ReadWrite).release_value();
     auto& command_table = *(volatile AHCI::CommandTable*)command_table_region->vaddr().as_ptr();
     memset(const_cast<u8*>(command_table.command_fis), 0, 64);
     command_table.descriptors[0].base_high = 0;

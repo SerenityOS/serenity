@@ -80,7 +80,7 @@ ErrorOr<void> DisplayConnector::allocate_framebuffer_resources(size_t rounded_si
     if (!m_framebuffer_at_arbitrary_physical_range) {
         VERIFY(m_framebuffer_address.value().page_base() == m_framebuffer_address.value());
         m_shared_framebuffer_vmobject = TRY(Memory::SharedFramebufferVMObject::try_create_for_physical_range(m_framebuffer_address.value(), rounded_size));
-        m_framebuffer_region = TRY(MM.allocate_kernel_region(m_framebuffer_address.value().page_base(), rounded_size, "Framebuffer"sv, Memory::Region::Access::ReadWrite));
+        m_framebuffer_region = TRY(MM.allocate_mmio_kernel_region(m_framebuffer_address.value().page_base(), rounded_size, "Framebuffer"sv, Memory::Region::Access::ReadWrite));
     } else {
         m_shared_framebuffer_vmobject = TRY(Memory::SharedFramebufferVMObject::try_create_at_arbitrary_physical_range(rounded_size));
         m_framebuffer_region = TRY(MM.allocate_kernel_region_with_vmobject(m_shared_framebuffer_vmobject->real_writes_framebuffer_vmobject(), rounded_size, "Framebuffer"sv, Memory::Region::Access::ReadWrite));
