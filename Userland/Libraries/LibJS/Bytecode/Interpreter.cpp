@@ -441,21 +441,21 @@ FLATTEN_ON_CLANG void Interpreter::run_bytecode(size_t entry_point)
             goto start;
         }
 
-#define HANDLE_COMPARISON_OP(op_TitleCase, op_snake_case)                                                                             \
-    handle_Jump##op_TitleCase:                                                                                                        \
-    {                                                                                                                                 \
-        auto& instruction = *reinterpret_cast<Op::Jump##op_TitleCase const*>(&bytecode[program_counter]);                             \
-        auto result = op_snake_case(vm(), get(instruction.lhs()), get(instruction.rhs()));                                            \
-        if (result.is_error()) {                                                                                                      \
-            if (handle_exception(program_counter, *result.throw_completion().value()) == HandleExceptionResponse::ExitFromExecutable) \
-                return;                                                                                                               \
-            goto start;                                                                                                               \
-        }                                                                                                                             \
-        if (result.value().to_boolean())                                                                                              \
-            program_counter = instruction.true_target().address();                                                                    \
-        else                                                                                                                          \
-            program_counter = instruction.false_target().address();                                                                   \
-        goto start;                                                                                                                   \
+#define HANDLE_COMPARISON_OP(op_TitleCase, op_snake_case)                                                               \
+    handle_Jump##op_TitleCase:                                                                                          \
+    {                                                                                                                   \
+        auto& instruction = *reinterpret_cast<Op::Jump##op_TitleCase const*>(&bytecode[program_counter]);               \
+        auto result = op_snake_case(vm(), get(instruction.lhs()), get(instruction.rhs()));                              \
+        if (result.is_error()) {                                                                                        \
+            if (handle_exception(program_counter, result.error_value()) == HandleExceptionResponse::ExitFromExecutable) \
+                return;                                                                                                 \
+            goto start;                                                                                                 \
+        }                                                                                                               \
+        if (result.value().to_boolean())                                                                                \
+            program_counter = instruction.true_target().address();                                                      \
+        else                                                                                                            \
+            program_counter = instruction.false_target().address();                                                     \
+        goto start;                                                                                                     \
     }
 
             JS_ENUMERATE_COMPARISON_OPS(HANDLE_COMPARISON_OP)
@@ -510,19 +510,19 @@ FLATTEN_ON_CLANG void Interpreter::run_bytecode(size_t entry_point)
             goto start;
         }
 
-#define HANDLE_INSTRUCTION(name)                                                                                                          \
-    handle_##name:                                                                                                                        \
-    {                                                                                                                                     \
-        auto& instruction = *reinterpret_cast<Op::name const*>(&bytecode[program_counter]);                                               \
-        {                                                                                                                                 \
-            auto result = instruction.execute_impl(*this);                                                                                \
-            if (result.is_error()) {                                                                                                      \
-                if (handle_exception(program_counter, *result.throw_completion().value()) == HandleExceptionResponse::ExitFromExecutable) \
-                    return;                                                                                                               \
-                goto start;                                                                                                               \
-            }                                                                                                                             \
-        }                                                                                                                                 \
-        DISPATCH_NEXT(name);                                                                                                              \
+#define HANDLE_INSTRUCTION(name)                                                                                            \
+    handle_##name:                                                                                                          \
+    {                                                                                                                       \
+        auto& instruction = *reinterpret_cast<Op::name const*>(&bytecode[program_counter]);                                 \
+        {                                                                                                                   \
+            auto result = instruction.execute_impl(*this);                                                                  \
+            if (result.is_error()) {                                                                                        \
+                if (handle_exception(program_counter, result.error_value()) == HandleExceptionResponse::ExitFromExecutable) \
+                    return;                                                                                                 \
+                goto start;                                                                                                 \
+            }                                                                                                               \
+        }                                                                                                                   \
+        DISPATCH_NEXT(name);                                                                                                \
     }
 
 #define HANDLE_INSTRUCTION_WITHOUT_EXCEPTION_CHECK(name)                                    \

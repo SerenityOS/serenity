@@ -315,6 +315,7 @@ public:
 
     [[nodiscard]] bool is_throw_completion() const { return m_value_or_error.template has<ErrorValue>(); }
     [[nodiscard]] Completion throw_completion() const { return error(); }
+    [[nodiscard]] Value error_value() const { return m_value_or_error.template get<ErrorValue>().error; }
 
     [[nodiscard]] bool has_value() const
     requires(!IsSame<ValueType, Empty>)
