@@ -182,22 +182,6 @@ ErrorOr<ByteBuffer> GzipDecompressor::decompress_all(ReadonlyBytes bytes)
     return output_buffer;
 }
 
-ErrorOr<void> GzipDecompressor::decompress_file(StringView input_filename, NonnullOwnPtr<Stream> output_stream)
-{
-    auto input_file = TRY(Core::File::open(input_filename, Core::File::OpenMode::Read));
-    auto input_stream = TRY(Core::InputBufferedFile::create(move(input_file), 256 * KiB));
-
-    auto gzip_stream = GzipDecompressor { move(input_stream) };
-    auto buffer = TRY(ByteBuffer::create_uninitialized(256 * KiB));
-
-    while (!gzip_stream.is_eof()) {
-        auto span = TRY(gzip_stream.read_some(buffer));
-        TRY(output_stream->write_until_depleted(span));
-    }
-
-    return {};
-}
-
 bool GzipDecompressor::is_eof() const { return m_input_stream->is_eof(); }
 
 ErrorOr<size_t> GzipDecompressor::write_some(ReadonlyBytes)
@@ -260,24 +244,6 @@ ErrorOr<ByteBuffer> GzipCompressor::compress_all(ReadonlyBytes bytes)
     auto buffer = TRY(ByteBuffer::create_uninitialized(output_stream->used_buffer_size()));
     TRY(output_stream->read_until_filled(buffer.bytes()));
     return buffer;
-}
-
-ErrorOr<void> GzipCompressor::compress_file(StringView input_filename, NonnullOwnPtr<Stream> output_stream)
-{
-    // We map the whole file instead of streaming to reduce size overhead (gzip header) and increase the deflate block size (better compression)
-    // TODO: automatically fallback to buffered streaming for very large files
-    OwnPtr<Core::MappedFile> file;
-    ReadonlyBytes input_bytes;
-
-    if (TRY(Core::System::stat(input_filename)).st_size > 0) {
-        file = TRY(Core::MappedFile::map(input_filename));
-        input_bytes = file->bytes();
-    }
-
-    auto output_bytes = TRY(Compress::GzipCompressor::compress_all(input_bytes));
-    TRY(output_stream->write_until_depleted(output_bytes));
-
-    return {};
 }
 
 }
