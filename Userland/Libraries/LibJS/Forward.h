@@ -315,7 +315,7 @@ class MarkedVector;
 
 namespace Bytecode {
 class BasicBlock;
-enum class Builtin;
+enum class Builtin : u8;
 class Executable;
 class Generator;
 class Instruction;
