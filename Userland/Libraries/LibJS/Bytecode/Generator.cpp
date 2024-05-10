@@ -528,7 +528,7 @@ CodeGenerationErrorOr<Optional<ScopedOperand>> Generator::emit_delete_reference(
         if (is<SuperExpression>(expression.object())) {
             auto super_reference = TRY(emit_super_reference(expression));
 
-            auto dst = Operand(allocate_register());
+            auto dst = allocate_register();
             if (super_reference.referenced_name.has_value()) {
                 emit<Bytecode::Op::DeleteByValueWithThis>(dst, *super_reference.base, *super_reference.this_value, *super_reference.referenced_name);
             } else {
