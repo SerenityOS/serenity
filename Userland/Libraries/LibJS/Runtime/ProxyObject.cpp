@@ -18,6 +18,24 @@ namespace JS {
 
 JS_DEFINE_ALLOCATOR(ProxyObject);
 
+// NOTE: We can't rely on native stack overflows to catch infinite recursion in Proxy traps,
+//       since the compiler may decide to optimize tail/sibling calls into loops.
+//       So instead we keep track of the recursion depth and throw a TypeError if it exceeds a certain limit.
+
+static int s_recursion_depth = 0;
+
+struct RecursionDepthUpdater {
+    RecursionDepthUpdater() { ++s_recursion_depth; }
+    ~RecursionDepthUpdater() { --s_recursion_depth; }
+};
+
+#define LIMIT_PROXY_RECURSION_DEPTH()                                                      \
+    RecursionDepthUpdater recursion_depth_updater;                                         \
+    do {                                                                                   \
+        if (s_recursion_depth >= 10000)                                                    \
+            return vm().throw_completion<InternalError>(ErrorType::CallStackSizeExceeded); \
+    } while (0)
+
 NonnullGCPtr<ProxyObject> ProxyObject::create(Realm& realm, Object& target, Object& handler)
 {
     return realm.heap().allocate<ProxyObject>(realm, target, handler, realm.intrinsics().object_prototype());
@@ -46,6 +64,8 @@ static Value property_key_to_value(VM& vm, PropertyKey const& property_key)
 // 10.5.1 [[GetPrototypeOf]] ( ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-getprototypeof
 ThrowCompletionOr<Object*> ProxyObject::internal_get_prototype_of() const
 {
+    LIMIT_PROXY_RECURSION_DEPTH();
+
     auto& vm = this->vm();
 
     // 1. Let handler be O.[[ProxyHandler]].
@@ -94,6 +114,8 @@ ThrowCompletionOr<Object*> ProxyObject::internal_get_prototype_of() const
 // 10.5.2 [[SetPrototypeOf]] ( V ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-setprototypeof-v
 ThrowCompletionOr<bool> ProxyObject::internal_set_prototype_of(Object* prototype)
 {
+    LIMIT_PROXY_RECURSION_DEPTH();
+
     auto& vm = this->vm();
 
     // 1. Let handler be O.[[ProxyHandler]].
@@ -142,6 +164,8 @@ ThrowCompletionOr<bool> ProxyObject::internal_set_prototype_of(Object* prototype
 // 10.5.3 [[IsExtensible]] ( ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-isextensible
 ThrowCompletionOr<bool> ProxyObject::internal_is_extensible() const
 {
+    LIMIT_PROXY_RECURSION_DEPTH();
+
     auto& vm = this->vm();
 
     // 1. Let handler be O.[[ProxyHandler]].
@@ -179,6 +203,8 @@ ThrowCompletionOr<bool> ProxyObject::internal_is_extensible() const
 // 10.5.4 [[PreventExtensions]] ( ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-preventextensions
 ThrowCompletionOr<bool> ProxyObject::internal_prevent_extensions()
 {
+    LIMIT_PROXY_RECURSION_DEPTH();
+
     auto& vm = this->vm();
 
     // 1. Let handler be O.[[ProxyHandler]].
@@ -219,6 +245,8 @@ ThrowCompletionOr<bool> ProxyObject::internal_prevent_extensions()
 // 10.5.5 [[GetOwnProperty]] ( P ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-getownproperty-p
 ThrowCompletionOr<Optional<PropertyDescriptor>> ProxyObject::internal_get_own_property(PropertyKey const& property_key) const
 {
+    LIMIT_PROXY_RECURSION_DEPTH();
+
     auto& vm = this->vm();
 
     VERIFY(property_key.is_valid());
@@ -310,6 +338,8 @@ ThrowCompletionOr<Optional<PropertyDescriptor>> ProxyObject::internal_get_own_pr
 // 10.5.6 [[DefineOwnProperty]] ( P, Desc ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-defineownproperty-p-desc
 ThrowCompletionOr<bool> ProxyObject::internal_define_own_property(PropertyKey const& property_key, PropertyDescriptor const& property_descriptor)
 {
+    LIMIT_PROXY_RECURSION_DEPTH();
+
     auto& vm = this->vm();
 
     VERIFY(property_key.is_valid());
@@ -392,6 +422,8 @@ ThrowCompletionOr<bool> ProxyObject::internal_define_own_property(PropertyKey co
 // 10.5.7 [[HasProperty]] ( P ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-hasproperty-p
 ThrowCompletionOr<bool> ProxyObject::internal_has_property(PropertyKey const& property_key) const
 {
+    LIMIT_PROXY_RECURSION_DEPTH();
+
     auto& vm = this->vm();
 
     VERIFY(property_key.is_valid());
@@ -457,6 +489,8 @@ ThrowCompletionOr<bool> ProxyObject::internal_has_property(PropertyKey const& pr
 // 10.5.8 [[Get]] ( P, Receiver ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-get-p-receiver
 ThrowCompletionOr<Value> ProxyObject::internal_get(PropertyKey const& property_key, Value receiver, CacheablePropertyMetadata*, PropertyLookupPhase) const
 {
+    LIMIT_PROXY_RECURSION_DEPTH();
+
     // NOTE: We don't return any cacheable metadata for proxy lookups.
 
     VERIFY(!receiver.is_empty());
@@ -529,6 +563,8 @@ ThrowCompletionOr<Value> ProxyObject::internal_get(PropertyKey const& property_k
 // 10.5.9 [[Set]] ( P, V, Receiver ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-set-p-v-receiver
 ThrowCompletionOr<bool> ProxyObject::internal_set(PropertyKey const& property_key, Value value, Value receiver, CacheablePropertyMetadata*)
 {
+    LIMIT_PROXY_RECURSION_DEPTH();
+
     auto& vm = this->vm();
 
     VERIFY(property_key.is_valid());
@@ -602,6 +638,8 @@ ThrowCompletionOr<bool> ProxyObject::internal_set(PropertyKey const& property_ke
 // 10.5.10 [[Delete]] ( P ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-delete-p
 ThrowCompletionOr<bool> ProxyObject::internal_delete(PropertyKey const& property_key)
 {
+    LIMIT_PROXY_RECURSION_DEPTH();
+
     auto& vm = this->vm();
 
     VERIFY(property_key.is_valid());
@@ -656,6 +694,8 @@ ThrowCompletionOr<bool> ProxyObject::internal_delete(PropertyKey const& property
 // 10.5.11 [[OwnPropertyKeys]] ( ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-ownpropertykeys
 ThrowCompletionOr<MarkedVector<Value>> ProxyObject::internal_own_property_keys() const
 {
+    LIMIT_PROXY_RECURSION_DEPTH();
+
     auto& vm = this->vm();
 
     // 1. Let handler be O.[[ProxyHandler]].
@@ -776,6 +816,8 @@ ThrowCompletionOr<MarkedVector<Value>> ProxyObject::internal_own_property_keys()
 // 10.5.12 [[Call]] ( thisArgument, argumentsList ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-call-thisargument-argumentslist
 ThrowCompletionOr<Value> ProxyObject::internal_call(Value this_argument, ReadonlySpan<Value> arguments_list)
 {
+    LIMIT_PROXY_RECURSION_DEPTH();
+
     auto& vm = this->vm();
     auto& realm = *vm.current_realm();
 
@@ -820,6 +862,8 @@ bool ProxyObject::has_constructor() const
 // 10.5.13 [[Construct]] ( argumentsList, newTarget ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-construct-argumentslist-newtarget
 ThrowCompletionOr<NonnullGCPtr<Object>> ProxyObject::internal_construct(ReadonlySpan<Value> arguments_list, FunctionObject& new_target)
 {
+    LIMIT_PROXY_RECURSION_DEPTH();
+
     auto& vm = this->vm();
     auto& realm = *vm.current_realm();
 
