@@ -350,6 +350,21 @@ private:
     Value m_elements[];
 };
 
+class AddPrivateName final : public Instruction {
+public:
+    explicit AddPrivateName(IdentifierTableIndex name)
+        : Instruction(Type::AddPrivateName)
+        , m_name(name)
+    {
+    }
+
+    void execute_impl(Bytecode::Interpreter&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
+
+private:
+    IdentifierTableIndex m_name;
+};
+
 class ArrayAppend final : public Instruction {
 public:
     ArrayAppend(Operand dst, Operand src, bool is_spread)
@@ -469,6 +484,17 @@ public:
 
 private:
     u32 m_capacity { 0 };
+};
+
+class CreatePrivateEnvironment final : public Instruction {
+public:
+    explicit CreatePrivateEnvironment()
+        : Instruction(Type::CreatePrivateEnvironment)
+    {
+    }
+
+    void execute_impl(Bytecode::Interpreter&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 };
 
 class EnterObjectEnvironment final : public Instruction {
@@ -1471,13 +1497,25 @@ private:
 
 class NewClass final : public Instruction {
 public:
-    explicit NewClass(Operand dst, Optional<Operand> super_class, ClassExpression const& class_expression, Optional<IdentifierTableIndex> lhs_name)
+    static constexpr bool IsVariableLength = true;
+
+    explicit NewClass(Operand dst, Optional<Operand> super_class, ClassExpression const& class_expression, Optional<IdentifierTableIndex> lhs_name, ReadonlySpan<Optional<ScopedOperand>> elements_keys)
         : Instruction(Type::NewClass)
         , m_dst(dst)
         , m_super_class(super_class)
         , m_class_expression(class_expression)
         , m_lhs_name(lhs_name)
+        , m_element_keys_count(elements_keys.size())
     {
+        for (size_t i = 0; i < m_element_keys_count; i++) {
+            if (elements_keys[i].has_value())
+                m_element_keys[i] = elements_keys[i]->operand();
+        }
+    }
+
+    size_t length_impl() const
+    {
+        return round_up_to_power_of_two(alignof(void*), sizeof(*this) + sizeof(Optional<Operand>) * m_element_keys_count);
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
@@ -1493,6 +1531,8 @@ private:
     Optional<Operand> m_super_class;
     ClassExpression const& m_class_expression;
     Optional<IdentifierTableIndex> m_lhs_name;
+    size_t m_element_keys_count { 0 };
+    Optional<Operand> m_element_keys[];
 };
 
 class NewFunction final : public Instruction {
@@ -1753,6 +1793,17 @@ class LeaveLexicalEnvironment final : public Instruction {
 public:
     LeaveLexicalEnvironment()
         : Instruction(Type::LeaveLexicalEnvironment)
+    {
+    }
+
+    void execute_impl(Bytecode::Interpreter&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
+};
+
+class LeavePrivateEnvironment final : public Instruction {
+public:
+    LeavePrivateEnvironment()
+        : Instruction(Type::LeavePrivateEnvironment)
     {
     }
 

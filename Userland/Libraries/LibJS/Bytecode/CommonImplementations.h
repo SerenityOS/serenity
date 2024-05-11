@@ -666,7 +666,7 @@ inline ThrowCompletionOr<void> create_variable(VM& vm, DeprecatedFlyString const
     return verify_cast<GlobalEnvironment>(vm.variable_environment())->create_global_var_binding(name, false);
 }
 
-inline ThrowCompletionOr<ECMAScriptFunctionObject*> new_class(VM& vm, Value super_class, ClassExpression const& class_expression, Optional<IdentifierTableIndex> const& lhs_name)
+inline ThrowCompletionOr<ECMAScriptFunctionObject*> new_class(VM& vm, Value super_class, ClassExpression const& class_expression, Optional<IdentifierTableIndex> const& lhs_name, ReadonlySpan<Value> element_keys)
 {
     auto& interpreter = vm.bytecode_interpreter();
     auto name = class_expression.name();
@@ -684,7 +684,7 @@ inline ThrowCompletionOr<ECMAScriptFunctionObject*> new_class(VM& vm, Value supe
         class_name = name.is_null() ? ""sv : name;
     }
 
-    return TRY(class_expression.create_class_constructor(vm, class_environment, vm.lexical_environment(), super_class, binding_name, class_name));
+    return TRY(class_expression.create_class_constructor(vm, class_environment, vm.lexical_environment(), super_class, element_keys, binding_name, class_name));
 }
 
 // 13.3.7.1 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-super-keyword-runtime-semantics-evaluation

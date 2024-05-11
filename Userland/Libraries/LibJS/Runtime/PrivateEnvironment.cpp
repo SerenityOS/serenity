@@ -34,7 +34,7 @@ PrivateName PrivateEnvironment::resolve_private_identifier(DeprecatedFlyString c
     return m_outer_environment->resolve_private_identifier(identifier);
 }
 
-void PrivateEnvironment::add_private_name(Badge<ClassExpression>, DeprecatedFlyString description)
+void PrivateEnvironment::add_private_name(DeprecatedFlyString description)
 {
     if (!find_private_name(description).is_end())
         return;
