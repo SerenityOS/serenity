@@ -9,6 +9,7 @@
 #include <Kernel/FileSystem/FUSE/Definitions.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Library/KBuffer.h>
+#include <Kernel/Tasks/Process.h>
 
 namespace Kernel {
 
@@ -41,10 +42,10 @@ public:
         header->unique = unique;
         header->nodeid = nodeid;
 
-        // FIXME: Fill in proper values for these.
-        header->uid = 0;
-        header->gid = 0;
-        header->pid = 1;
+        auto current_process_credentials = Process::current().credentials();
+        header->uid = current_process_credentials->euid().value();
+        header->gid = current_process_credentials->egid().value();
+        header->pid = Process::current().pid().value();
 
         u8* payload = bit_cast<u8*>(request->data() + sizeof(fuse_in_header));
         memcpy(payload, request_body.data(), request_body.size());
