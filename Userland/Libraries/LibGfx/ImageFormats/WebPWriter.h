@@ -13,19 +13,10 @@
 
 namespace Gfx {
 
+class AnimationWriter;
+
 struct WebPEncoderOptions {
     Optional<ReadonlyBytes> icc_data;
-};
-
-class AnimationWriter {
-public:
-    virtual ~AnimationWriter() = default;
-
-    // Flushes the frame to disk.
-    // IntRect { at, at + bitmap.size() } must fit in the dimensions
-    // passed to `start_writing_animation()`.
-    // FIXME: Consider passing in disposal method and blend mode.
-    virtual ErrorOr<void> add_frame(Bitmap&, int duration_ms, IntPoint at = {}) = 0;
 };
 
 class WebPWriter {
