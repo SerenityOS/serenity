@@ -15,6 +15,7 @@
 
 #define ENUMERATE_BYTECODE_OPS(O)      \
     O(Add)                             \
+    O(AddPrivateName)                  \
     O(ArrayAppend)                     \
     O(AsyncIteratorClose)              \
     O(Await)                           \
@@ -31,6 +32,7 @@
     O(CopyObjectExcludingProperties)   \
     O(CreateLexicalEnvironment)        \
     O(CreateVariableEnvironment)       \
+    O(CreatePrivateEnvironment)        \
     O(CreateVariable)                  \
     O(CreateRestParams)                \
     O(CreateArguments)                 \
@@ -88,6 +90,7 @@
     O(JumpUndefined)                   \
     O(LeaveFinally)                    \
     O(LeaveLexicalEnvironment)         \
+    O(LeavePrivateEnvironment)         \
     O(LeaveUnwindContext)              \
     O(LeftShift)                       \
     O(LessThan)                        \

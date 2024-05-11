@@ -547,6 +547,7 @@ FLATTEN_ON_CLANG void Interpreter::run_bytecode(size_t entry_point)
     }
 
             HANDLE_INSTRUCTION(Add);
+            HANDLE_INSTRUCTION_WITHOUT_EXCEPTION_CHECK(AddPrivateName);
             HANDLE_INSTRUCTION(ArrayAppend);
             HANDLE_INSTRUCTION(AsyncIteratorClose);
             HANDLE_INSTRUCTION(BitwiseAnd);
@@ -561,6 +562,7 @@ FLATTEN_ON_CLANG void Interpreter::run_bytecode(size_t entry_point)
             HANDLE_INSTRUCTION(CopyObjectExcludingProperties);
             HANDLE_INSTRUCTION_WITHOUT_EXCEPTION_CHECK(CreateLexicalEnvironment);
             HANDLE_INSTRUCTION_WITHOUT_EXCEPTION_CHECK(CreateVariableEnvironment);
+            HANDLE_INSTRUCTION_WITHOUT_EXCEPTION_CHECK(CreatePrivateEnvironment);
             HANDLE_INSTRUCTION(CreateVariable);
             HANDLE_INSTRUCTION(CreateRestParams);
             HANDLE_INSTRUCTION(CreateArguments);
@@ -601,6 +603,7 @@ FLATTEN_ON_CLANG void Interpreter::run_bytecode(size_t entry_point)
             HANDLE_INSTRUCTION(IteratorToArray);
             HANDLE_INSTRUCTION_WITHOUT_EXCEPTION_CHECK(LeaveFinally);
             HANDLE_INSTRUCTION_WITHOUT_EXCEPTION_CHECK(LeaveLexicalEnvironment);
+            HANDLE_INSTRUCTION_WITHOUT_EXCEPTION_CHECK(LeavePrivateEnvironment);
             HANDLE_INSTRUCTION_WITHOUT_EXCEPTION_CHECK(LeaveUnwindContext);
             HANDLE_INSTRUCTION(LeftShift);
             HANDLE_INSTRUCTION(LessThan);
@@ -1140,6 +1143,12 @@ void NewPrimitiveArray::execute_impl(Bytecode::Interpreter& interpreter) const
     interpreter.set(dst(), array);
 }
 
+void AddPrivateName::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto const& name = interpreter.current_executable().get_identifier(m_name);
+    interpreter.vm().running_execution_context().private_environment->add_private_name(name);
+}
+
 ThrowCompletionOr<void> ArrayAppend::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     return append(interpreter.vm(), interpreter.get(dst()), interpreter.get(src()), m_is_spread);
@@ -1264,6 +1273,13 @@ void CreateLexicalEnvironment::execute_impl(Bytecode::Interpreter& interpreter) 
     };
     auto& running_execution_context = interpreter.vm().running_execution_context();
     running_execution_context.saved_lexical_environments.append(make_and_swap_envs(running_execution_context.lexical_environment));
+}
+
+void CreatePrivateEnvironment::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& running_execution_context = interpreter.vm().running_execution_context();
+    auto outer_private_environment = running_execution_context.private_environment;
+    running_execution_context.private_environment = new_private_environment(interpreter.vm(), outer_private_environment);
 }
 
 ThrowCompletionOr<void> CreateVariableEnvironment::execute_impl(Bytecode::Interpreter& interpreter) const
@@ -1754,6 +1770,12 @@ void LeaveLexicalEnvironment::execute_impl(Bytecode::Interpreter& interpreter) c
     running_execution_context.lexical_environment = running_execution_context.saved_lexical_environments.take_last();
 }
 
+void LeavePrivateEnvironment::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& running_execution_context = interpreter.vm().running_execution_context();
+    running_execution_context.private_environment = running_execution_context.private_environment->outer_environment();
+}
+
 void LeaveUnwindContext::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     interpreter.leave_unwind_context();
@@ -1923,7 +1945,14 @@ ThrowCompletionOr<void> NewClass::execute_impl(Bytecode::Interpreter& interprete
     Value super_class;
     if (m_super_class.has_value())
         super_class = interpreter.get(m_super_class.value());
-    interpreter.set(dst(), TRY(new_class(interpreter.vm(), super_class, m_class_expression, m_lhs_name)));
+    Vector<Value> element_keys;
+    for (size_t i = 0; i < m_element_keys_count; ++i) {
+        Value element_key;
+        if (m_element_keys[i].has_value())
+            element_key = interpreter.get(m_element_keys[i].value());
+        element_keys.append(element_key);
+    }
+    interpreter.set(dst(), TRY(new_class(interpreter.vm(), super_class, m_class_expression, m_lhs_name, element_keys)));
     return {};
 }
 
@@ -1967,6 +1996,11 @@ ByteString NewPrimitiveArray::to_byte_string_impl(Bytecode::Executable const& ex
     return ByteString::formatted("NewPrimitiveArray {}, {}"sv,
         format_operand("dst"sv, dst(), executable),
         format_value_list("elements"sv, elements()));
+}
+
+ByteString AddPrivateName::to_byte_string_impl(Bytecode::Executable const& executable) const
+{
+    return ByteString::formatted("AddPrivateName {}"sv, executable.identifier_table->get(m_name));
 }
 
 ByteString ArrayAppend::to_byte_string_impl(Bytecode::Executable const& executable) const
@@ -2050,6 +2084,11 @@ ByteString DeleteVariable::to_byte_string_impl(Bytecode::Executable const& execu
 ByteString CreateLexicalEnvironment::to_byte_string_impl(Bytecode::Executable const&) const
 {
     return "CreateLexicalEnvironment"sv;
+}
+
+ByteString CreatePrivateEnvironment::to_byte_string_impl(Bytecode::Executable const&) const
+{
+    return "CreatePrivateEnvironment"sv;
 }
 
 ByteString CreateVariableEnvironment::to_byte_string_impl(Bytecode::Executable const&) const
@@ -2419,6 +2458,11 @@ ByteString ScheduleJump::to_byte_string_impl(Bytecode::Executable const&) const
 ByteString LeaveLexicalEnvironment::to_byte_string_impl(Bytecode::Executable const&) const
 {
     return "LeaveLexicalEnvironment"sv;
+}
+
+ByteString LeavePrivateEnvironment::to_byte_string_impl(Bytecode::Executable const&) const
+{
+    return "LeavePrivateEnvironment"sv;
 }
 
 ByteString LeaveUnwindContext::to_byte_string_impl(Bytecode::Executable const&) const

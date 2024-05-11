@@ -35,7 +35,10 @@ class PrivateEnvironment : public Cell {
 public:
     PrivateName resolve_private_identifier(DeprecatedFlyString const& identifier) const;
 
-    void add_private_name(Badge<ClassExpression>, DeprecatedFlyString description);
+    void add_private_name(DeprecatedFlyString description);
+
+    PrivateEnvironment* outer_environment() { return m_outer_environment; }
+    PrivateEnvironment const* outer_environment() const { return m_outer_environment; }
 
 private:
     explicit PrivateEnvironment(PrivateEnvironment* parent);
