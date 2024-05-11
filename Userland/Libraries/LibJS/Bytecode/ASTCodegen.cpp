@@ -397,7 +397,7 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> Identifier::generate_by
     if (is_global()) {
         generator.emit<Bytecode::Op::GetGlobal>(dst, generator.intern_identifier(m_string), generator.next_global_variable_cache());
     } else {
-        generator.emit<Bytecode::Op::GetVariable>(dst, generator.intern_identifier(m_string), generator.next_environment_variable_cache());
+        generator.emit<Bytecode::Op::GetVariable>(dst, generator.intern_identifier(m_string));
     }
     return dst;
 }
@@ -1140,8 +1140,8 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> FunctionDeclaration::ge
         Bytecode::Generator::SourceLocationScope scope(generator, *this);
         auto index = generator.intern_identifier(name());
         auto value = generator.allocate_register();
-        generator.emit<Bytecode::Op::GetVariable>(value, index, generator.next_environment_variable_cache());
-        generator.emit<Bytecode::Op::SetVariable>(index, value, generator.next_environment_variable_cache(), Bytecode::Op::SetVariable::InitializationMode::Set, Bytecode::Op::EnvironmentMode::Var);
+        generator.emit<Bytecode::Op::GetVariable>(value, index);
+        generator.emit<Bytecode::Op::SetVariable>(index, value, Bytecode::Op::SetVariable::InitializationMode::Set, Bytecode::Op::EnvironmentMode::Var);
     }
     return Optional<ScopedOperand> {};
 }
@@ -1163,7 +1163,7 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> FunctionExpression::gen
     generator.emit_new_function(new_function, *this, lhs_name);
 
     if (has_name) {
-        generator.emit<Bytecode::Op::SetVariable>(*name_identifier, new_function, generator.next_environment_variable_cache(), Bytecode::Op::SetVariable::InitializationMode::Initialize, Bytecode::Op::EnvironmentMode::Lexical);
+        generator.emit<Bytecode::Op::SetVariable>(*name_identifier, new_function, Bytecode::Op::SetVariable::InitializationMode::Initialize, Bytecode::Op::EnvironmentMode::Lexical);
         generator.end_variable_scope();
     }
 
@@ -1641,8 +1641,7 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> CallExpression::generat
             generator.emit<Bytecode::Op::GetCalleeAndThisFromEnvironment>(
                 *original_callee,
                 this_value,
-                generator.intern_identifier(identifier.string()),
-                generator.next_environment_variable_cache());
+                generator.intern_identifier(identifier.string()));
         }
     } else {
         // FIXME: this = global object in sloppy mode.
@@ -2553,7 +2552,7 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> TryStatement::generate_
                     did_create_variable_scope_for_catch_clause = true;
                     auto parameter_identifier = generator.intern_identifier(parameter);
                     generator.emit<Bytecode::Op::CreateVariable>(parameter_identifier, Bytecode::Op::EnvironmentMode::Lexical, false);
-                    generator.emit<Bytecode::Op::SetVariable>(parameter_identifier, caught_value, generator.next_environment_variable_cache(), Bytecode::Op::SetVariable::InitializationMode::Initialize);
+                    generator.emit<Bytecode::Op::SetVariable>(parameter_identifier, caught_value, Bytecode::Op::SetVariable::InitializationMode::Initialize);
                 }
                 return {};
             },
@@ -3437,7 +3436,6 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> ExportStatement::genera
             generator.emit<Bytecode::Op::SetVariable>(
                 generator.intern_identifier(ExportStatement::local_name_for_default),
                 value,
-                generator.next_environment_variable_cache(),
                 Bytecode::Op::SetVariable::InitializationMode::Initialize);
         }
 
@@ -3450,7 +3448,6 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> ExportStatement::genera
     generator.emit<Bytecode::Op::SetVariable>(
         generator.intern_identifier(ExportStatement::local_name_for_default),
         value,
-        generator.next_environment_variable_cache(),
         Bytecode::Op::SetVariable::InitializationMode::Initialize);
     return value;
 }

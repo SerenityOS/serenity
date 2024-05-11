@@ -38,7 +38,7 @@ CodeGenerationErrorOr<void> Generator::emit_function_declaration_instantiation(E
             auto id = intern_identifier(parameter_name.key);
             emit<Op::CreateVariable>(id, Op::EnvironmentMode::Lexical, false);
             if (function.m_has_duplicates) {
-                emit<Op::SetVariable>(id, add_constant(js_undefined()), next_environment_variable_cache(), Op::SetVariable::InitializationMode::Initialize, Op::EnvironmentMode::Lexical);
+                emit<Op::SetVariable>(id, add_constant(js_undefined()), Op::SetVariable::InitializationMode::Initialize, Op::EnvironmentMode::Lexical);
             }
         }
     }
@@ -90,7 +90,6 @@ CodeGenerationErrorOr<void> Generator::emit_function_declaration_instantiation(E
                 auto argument_reg = allocate_register();
                 emit<Op::GetArgument>(argument_reg.operand(), param_index);
                 emit<Op::SetVariable>(id, argument_reg.operand(),
-                    next_environment_variable_cache(),
                     init_mode,
                     Op::EnvironmentMode::Lexical);
             }
@@ -115,7 +114,7 @@ CodeGenerationErrorOr<void> Generator::emit_function_declaration_instantiation(E
                 } else {
                     auto intern_id = intern_identifier(id.string());
                     emit<Op::CreateVariable>(intern_id, Op::EnvironmentMode::Var, false);
-                    emit<Op::SetVariable>(intern_id, add_constant(js_undefined()), next_environment_variable_cache(), Bytecode::Op::SetVariable::InitializationMode::Initialize, Op::EnvironmentMode::Var);
+                    emit<Op::SetVariable>(intern_id, add_constant(js_undefined()), Bytecode::Op::SetVariable::InitializationMode::Initialize, Op::EnvironmentMode::Var);
                 }
             }
         }
@@ -132,7 +131,7 @@ CodeGenerationErrorOr<void> Generator::emit_function_declaration_instantiation(E
                     if (id.is_local()) {
                         emit<Op::Mov>(initial_value, local(id.local_variable_index()));
                     } else {
-                        emit<Op::GetVariable>(initial_value, intern_identifier(id.string()), next_environment_variable_cache());
+                        emit<Op::GetVariable>(initial_value, intern_identifier(id.string()));
                     }
                 }
 
@@ -141,7 +140,7 @@ CodeGenerationErrorOr<void> Generator::emit_function_declaration_instantiation(E
                 } else {
                     auto intern_id = intern_identifier(id.string());
                     emit<Op::CreateVariable>(intern_id, Op::EnvironmentMode::Var, false);
-                    emit<Op::SetVariable>(intern_id, initial_value, next_environment_variable_cache(), Op::SetVariable::InitializationMode::Initialize, Op::EnvironmentMode::Var);
+                    emit<Op::SetVariable>(intern_id, initial_value, Op::SetVariable::InitializationMode::Initialize, Op::EnvironmentMode::Var);
                 }
             }
         }
@@ -151,7 +150,7 @@ CodeGenerationErrorOr<void> Generator::emit_function_declaration_instantiation(E
         for (auto const& function_name : function.m_function_names_to_initialize_binding) {
             auto intern_id = intern_identifier(function_name);
             emit<Op::CreateVariable>(intern_id, Op::EnvironmentMode::Var, false);
-            emit<Op::SetVariable>(intern_id, add_constant(js_undefined()), next_environment_variable_cache(), Bytecode::Op::SetVariable::InitializationMode::Initialize, Op::EnvironmentMode::Var);
+            emit<Op::SetVariable>(intern_id, add_constant(js_undefined()), Bytecode::Op::SetVariable::InitializationMode::Initialize, Op::EnvironmentMode::Var);
         }
     }
 
@@ -184,7 +183,7 @@ CodeGenerationErrorOr<void> Generator::emit_function_declaration_instantiation(E
         if (declaration.name_identifier()->is_local()) {
             emit<Op::Mov>(local(declaration.name_identifier()->local_variable_index()), function);
         } else {
-            emit<Op::SetVariable>(intern_identifier(declaration.name()), function, next_environment_variable_cache(), Op::SetVariable::InitializationMode::Set, Op::EnvironmentMode::Var);
+            emit<Op::SetVariable>(intern_identifier(declaration.name()), function, Op::SetVariable::InitializationMode::Set, Op::EnvironmentMode::Var);
         }
     }
 
@@ -355,7 +354,6 @@ CodeGenerationErrorOr<NonnullGCPtr<Executable>> Generator::emit_function_body_by
         node.source_code(),
         generator.m_next_property_lookup_cache,
         generator.m_next_global_variable_cache,
-        generator.m_next_environment_variable_cache,
         generator.m_next_register,
         is_strict_mode);
 
@@ -776,7 +774,7 @@ void Generator::emit_set_variable(JS::Identifier const& identifier, ScopedOperan
         }
         emit<Bytecode::Op::SetLocal>(identifier.local_variable_index(), value);
     } else {
-        emit<Bytecode::Op::SetVariable>(intern_identifier(identifier.string()), value, next_environment_variable_cache(), initialization_mode, mode);
+        emit<Bytecode::Op::SetVariable>(intern_identifier(identifier.string()), value, initialization_mode, mode);
     }
 }
 

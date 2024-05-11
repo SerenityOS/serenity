@@ -405,12 +405,12 @@ inline ThrowCompletionOr<void> set_variable(
     Value value,
     Op::EnvironmentMode mode,
     Op::SetVariable::InitializationMode initialization_mode,
-    EnvironmentVariableCache& cache)
+    EnvironmentCoordinate& cache)
 {
     auto environment = mode == Op::EnvironmentMode::Lexical ? vm.running_execution_context().lexical_environment : vm.running_execution_context().variable_environment;
     auto reference = TRY(vm.resolve_binding(name, environment));
     if (reference.environment_coordinate().has_value())
-        cache = reference.environment_coordinate();
+        cache = reference.environment_coordinate().value();
     switch (initialization_mode) {
     case Op::SetVariable::InitializationMode::Initialize:
         TRY(reference.initialize_referenced_binding(vm, value));
@@ -530,19 +530,19 @@ struct CalleeAndThis {
     Value this_value;
 };
 
-inline ThrowCompletionOr<CalleeAndThis> get_callee_and_this_from_environment(Bytecode::Interpreter& interpreter, DeprecatedFlyString const& name, EnvironmentVariableCache& cache)
+inline ThrowCompletionOr<CalleeAndThis> get_callee_and_this_from_environment(Bytecode::Interpreter& interpreter, DeprecatedFlyString const& name, EnvironmentCoordinate& cache)
 {
     auto& vm = interpreter.vm();
 
     Value callee = js_undefined();
     Value this_value = js_undefined();
 
-    if (cache.has_value()) {
+    if (cache.is_valid()) {
         auto const* environment = interpreter.running_execution_context().lexical_environment.ptr();
-        for (size_t i = 0; i < cache->hops; ++i)
+        for (size_t i = 0; i < cache.hops; ++i)
             environment = environment->outer_environment();
         if (!environment->is_permanently_screwed_by_eval()) {
-            callee = TRY(static_cast<DeclarativeEnvironment const&>(*environment).get_binding_value_direct(vm, cache.value().index));
+            callee = TRY(static_cast<DeclarativeEnvironment const&>(*environment).get_binding_value_direct(vm, cache.index));
             this_value = js_undefined();
             if (auto base_object = environment->with_base_object())
                 this_value = base_object;
@@ -556,7 +556,7 @@ inline ThrowCompletionOr<CalleeAndThis> get_callee_and_this_from_environment(Byt
 
     auto reference = TRY(vm.resolve_binding(name));
     if (reference.environment_coordinate().has_value())
-        cache = reference.environment_coordinate();
+        cache = reference.environment_coordinate().value();
 
     callee = TRY(reference.get_value(vm));
 
