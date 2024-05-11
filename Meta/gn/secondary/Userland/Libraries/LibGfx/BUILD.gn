@@ -63,6 +63,7 @@ shared_library("LibGfx") {
     "ICC/TagTypes.cpp",
     "ICC/Tags.cpp",
     "ICC/WellKnownProfiles.cpp",
+    "ImageFormats/AnimationWriter.cpp",
     "ImageFormats/BMPLoader.cpp",
     "ImageFormats/BMPWriter.cpp",
     "ImageFormats/BooleanDecoder.cpp",

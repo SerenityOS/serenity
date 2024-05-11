@@ -9,6 +9,7 @@
 #include <LibGfx/ICC/BinaryWriter.h>
 #include <LibGfx/ICC/Profile.h>
 #include <LibGfx/ICC/WellKnownProfiles.h>
+#include <LibGfx/ImageFormats/AnimationWriter.h>
 #include <LibGfx/ImageFormats/BMPLoader.h>
 #include <LibGfx/ImageFormats/BMPWriter.h>
 #include <LibGfx/ImageFormats/JPEGLoader.h>

@@ -11,6 +11,7 @@
 #include <AK/Debug.h>
 #include <LibCompress/DeflateTables.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/ImageFormats/AnimationWriter.h>
 #include <LibGfx/ImageFormats/WebPShared.h>
 #include <LibGfx/ImageFormats/WebPWriter.h>
 #include <LibRIFF/RIFF.h>
