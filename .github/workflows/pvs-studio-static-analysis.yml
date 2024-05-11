@@ -50,9 +50,10 @@ jobs:
           download_cache_path: ${{ github.workspace }}/Build/caches
 
       - name: Build toolchain
-        if: ${{ !steps.toolchain-cache.outputs.cache-hit }}
-        run: ARCH="${{ env.PVS_STUDIO_ANALYSIS_ARCH }}" ${{ github.workspace }}/Toolchain/BuildGNU.sh
+        if: ${{ !steps.cache-restore.outputs.toolchain_prebuilt_hit }}
+        run: ${{ github.workspace }}/Toolchain/BuildGNU.sh
         env:
+          ARCH: ${{ env.PVS_STUDIO_ANALYSIS_ARCH }}
           CCACHE_DIR: ${{ env.TOOLCHAIN_CCACHE_DIR }}
 
       - name: Create build environment
