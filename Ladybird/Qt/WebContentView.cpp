@@ -528,6 +528,26 @@ void WebContentView::update_palette(PaletteMode mode)
     client().async_update_system_theme(m_client_state.page_index, make_system_theme_from_qt_palette(*this, mode));
 }
 
+void WebContentView::update_screen_rects()
+{
+    auto screens = QGuiApplication::screens();
+
+    if (!screens.empty()) {
+        Vector<Web::DevicePixelRect> screen_rects;
+        for (auto const& screen : screens) {
+            auto geometry = screen->geometry();
+            screen_rects.append(Web::DevicePixelRect(geometry.x(), geometry.y(), geometry.width(), geometry.height()));
+        }
+
+        // FIXME: Update the screens again when QGuiApplication::screenAdded/Removed signals are emitted
+
+        // NOTE: The first item in QGuiApplication::screens is always the primary screen.
+        //       This is not specified in the documentation but QGuiApplication::primaryScreen
+        //       always returns the first item in the list if it isn't empty.
+        client().async_update_screen_rects(m_client_state.page_index, screen_rects, 0);
+    }
+}
+
 void WebContentView::initialize_client(WebView::ViewImplementation::CreateNewClient create_new_client)
 {
     if (create_new_client == CreateNewClient::Yes) {
@@ -563,25 +583,7 @@ void WebContentView::initialize_client(WebView::ViewImplementation::CreateNewCli
     update_palette();
     client().async_update_system_fonts(m_client_state.page_index, Gfx::FontDatabase::default_font_query(), Gfx::FontDatabase::fixed_width_font_query(), Gfx::FontDatabase::window_title_font_query());
 
-    auto screens = QGuiApplication::screens();
-
-    if (!screens.empty()) {
-        Vector<Web::DevicePixelRect> screen_rects;
-        for (auto const& screen : screens) {
-            // NOTE: QScreen::geometry() returns the 'device-independent pixels', we multiply
-            //       by the device pixel ratio to get the 'physical pixels' of the display.
-            auto geometry = screen->geometry();
-            auto device_pixel_ratio = screen->devicePixelRatio();
-            screen_rects.append(Web::DevicePixelRect(geometry.x(), geometry.y(), geometry.width() * device_pixel_ratio, geometry.height() * device_pixel_ratio));
-        }
-
-        // FIXME: Update the screens again when QGuiApplication::screenAdded/Removed signals are emitted
-
-        // NOTE: The first item in QGuiApplication::screens is always the primary screen.
-        //       This is not specified in the documentation but QGuiApplication::primaryScreen
-        //       always returns the first item in the list if it isn't empty.
-        client().async_update_screen_rects(m_client_state.page_index, screen_rects, 0);
-    }
+    update_screen_rects();
 
     if (!m_webdriver_content_ipc_path.is_empty())
         client().async_connect_to_webdriver(m_client_state.page_index, m_webdriver_content_ipc_path);

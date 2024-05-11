@@ -100,6 +100,7 @@ private:
     void enqueue_native_event(Web::MouseEvent::Type, QSinglePointEvent const& event);
     void enqueue_native_event(Web::KeyEvent::Type, QKeyEvent const& event);
     void finish_handling_key_event(Web::KeyEvent const&);
+    void update_screen_rects();
 
     bool m_should_show_line_box_borders { false };
 
