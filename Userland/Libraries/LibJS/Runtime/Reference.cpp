@@ -142,7 +142,7 @@ ThrowCompletionOr<Value> Reference::get_value(VM& vm) const
 
     // c. Return ? base.GetBindingValue(V.[[ReferencedName]], V.[[Strict]]) (see 9.1).
     if (m_environment_coordinate.has_value())
-        return static_cast<DeclarativeEnvironment*>(m_base_environment)->get_binding_value_direct(vm, m_environment_coordinate->index, m_strict);
+        return static_cast<DeclarativeEnvironment*>(m_base_environment)->get_binding_value_direct(vm, m_environment_coordinate->index);
     return m_base_environment->get_binding_value(vm, m_name.as_string(), m_strict);
 }
 

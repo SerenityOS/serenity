@@ -1232,7 +1232,25 @@ ThrowCompletionOr<void> ConcatString::execute_impl(Bytecode::Interpreter& interp
 
 ThrowCompletionOr<void> GetVariable::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    interpreter.set(dst(), TRY(get_variable(interpreter, interpreter.current_executable().get_identifier(m_identifier), interpreter.current_executable().environment_variable_caches[m_cache_index])));
+    auto& vm = interpreter.vm();
+    auto& executable = interpreter.current_executable();
+    auto& cache = executable.environment_variable_caches[m_cache_index];
+
+    if (cache.has_value()) {
+        auto const* environment = vm.running_execution_context().lexical_environment.ptr();
+        for (size_t i = 0; i < cache->hops; ++i)
+            environment = environment->outer_environment();
+        if (!environment->is_permanently_screwed_by_eval()) {
+            interpreter.set(dst(), TRY(static_cast<DeclarativeEnvironment const&>(*environment).get_binding_value_direct(vm, cache.value().index)));
+            return {};
+        }
+        cache = {};
+    }
+
+    auto reference = TRY(vm.resolve_binding(executable.get_identifier(m_identifier)));
+    if (reference.environment_coordinate().has_value())
+        cache = reference.environment_coordinate();
+    interpreter.set(dst(), TRY(reference.get_value(vm)));
     return {};
 }
 
