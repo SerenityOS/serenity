@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Atomic.h>
 #include <Kernel/FileSystem/FUSE/Definitions.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Library/KBuffer.h>
@@ -62,10 +63,11 @@ public:
         if (!m_initialized)
             TRY(handle_init());
 
-        auto request = TRY(create_request(opcode, nodeid, m_unique, request_body));
+        u32 unique = m_unique++;
+        auto request = TRY(create_request(opcode, nodeid, unique, request_body));
         auto response = TRY(device->send_request_and_wait_for_a_reply(m_description, request->bytes()));
 
-        if (validate_response(*response, m_unique++).is_error())
+        if (validate_response(*response, unique).is_error())
             return Error::from_errno(EIO);
 
         return response;
@@ -134,7 +136,7 @@ private:
 
     NonnullRefPtr<OpenFileDescription> m_description;
     bool m_initialized { false };
-    u32 m_unique { 0 };
+    Atomic<u32> m_unique { 0 };
 
     u32 m_major { 0 };
     u32 m_minor { 0 };
