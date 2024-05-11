@@ -213,7 +213,8 @@ public:
         SurroundingScopeKind kind;
     };
 
-    void block_declaration_instantiation(ScopeNode const&);
+    // Returns true if a lexical environment was created.
+    bool emit_block_declaration_instantiation(ScopeNode const&);
 
     void begin_variable_scope();
     void end_variable_scope();

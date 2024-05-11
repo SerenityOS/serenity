@@ -44,8 +44,7 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> ScopeNode::generate_byt
 
     if (is<BlockStatement>(*this)) {
         if (has_lexical_declarations()) {
-            generator.block_declaration_instantiation(*this);
-            did_create_lexical_environment = true;
+            did_create_lexical_environment = generator.emit_block_declaration_instantiation(*this);
         }
     } else if (is<Program>(*this)) {
         // GlobalDeclarationInstantiation is handled by the C++ AO.
@@ -2655,9 +2654,9 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> SwitchStatement::genera
     Bytecode::BasicBlock* entry_block_for_default { nullptr };
     Bytecode::BasicBlock* next_test_block = &generator.make_block();
 
-    auto has_lexical_declarations = this->has_lexical_declarations();
-    if (has_lexical_declarations)
-        generator.block_declaration_instantiation(*this);
+    bool did_create_lexical_environment = false;
+    if (has_lexical_declarations())
+        did_create_lexical_environment = generator.emit_block_declaration_instantiation(*this);
 
     generator.emit<Bytecode::Op::Jump>(Bytecode::Label { *next_test_block });
 
@@ -2721,7 +2720,7 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> SwitchStatement::genera
 
     generator.switch_to_basic_block(end_block);
 
-    if (has_lexical_declarations)
+    if (did_create_lexical_environment)
         generator.end_variable_scope();
 
     return dst;

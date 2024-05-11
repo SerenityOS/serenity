@@ -448,10 +448,28 @@ Label Generator::nearest_continuable_scope() const
     return m_continuable_scopes.last().bytecode_target;
 }
 
-void Generator::block_declaration_instantiation(ScopeNode const& scope_node)
+bool Generator::emit_block_declaration_instantiation(ScopeNode const& scope_node)
 {
+    bool needs_block_declaration_instantiation = false;
+    MUST(scope_node.for_each_lexically_scoped_declaration([&](Declaration const& declaration) {
+        if (declaration.is_function_declaration()) {
+            needs_block_declaration_instantiation = true;
+            return;
+        }
+        MUST(declaration.for_each_bound_identifier([&](auto const& id) {
+            if (!id.is_local())
+                needs_block_declaration_instantiation = true;
+        }));
+    }));
+
+    if (!needs_block_declaration_instantiation)
+        return false;
+
+    // FIXME: Generate the actual bytecode for block declaration instantiation
+    //        and get rid of the BlockDeclarationInstantiation instruction.
     start_boundary(BlockBoundaryType::LeaveLexicalEnvironment);
     emit<Bytecode::Op::BlockDeclarationInstantiation>(scope_node);
+    return true;
 }
 
 void Generator::begin_variable_scope()
