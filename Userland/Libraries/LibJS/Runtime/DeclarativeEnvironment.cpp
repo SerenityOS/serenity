@@ -24,17 +24,17 @@ DeclarativeEnvironment* DeclarativeEnvironment::create_for_per_iteration_binding
 }
 
 DeclarativeEnvironment::DeclarativeEnvironment()
-    : Environment(nullptr)
+    : Environment(nullptr, IsDeclarative::Yes)
 {
 }
 
 DeclarativeEnvironment::DeclarativeEnvironment(Environment* parent_environment)
-    : Environment(parent_environment)
+    : Environment(parent_environment, IsDeclarative::Yes)
 {
 }
 
 DeclarativeEnvironment::DeclarativeEnvironment(Environment* parent_environment, ReadonlySpan<Binding> bindings)
-    : Environment(parent_environment)
+    : Environment(parent_environment, IsDeclarative::Yes)
     , m_bindings(bindings)
 {
 }
