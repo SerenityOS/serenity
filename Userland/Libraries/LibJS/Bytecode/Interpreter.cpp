@@ -315,8 +315,8 @@ Interpreter::HandleExceptionResponse Interpreter::handle_exception(size_t& progr
     auto& handler = handlers->handler_offset;
     auto& finalizer = handlers->finalizer_offset;
 
-    VERIFY(!vm().running_execution_context().unwind_contexts.is_empty());
-    auto& unwind_context = vm().running_execution_context().unwind_contexts.last();
+    VERIFY(!running_execution_context().unwind_contexts.is_empty());
+    auto& unwind_context = running_execution_context().unwind_contexts.last();
     VERIFY(unwind_context.executable == m_current_executable);
 
     if (handler.has_value()) {
@@ -344,7 +344,7 @@ FLATTEN_ON_CLANG void Interpreter::run_bytecode(size_t entry_point)
         return;
     }
 
-    auto& running_execution_context = vm().running_execution_context();
+    auto& running_execution_context = this->running_execution_context();
     auto* arguments = running_execution_context.arguments.data();
     auto* locals = running_execution_context.locals.data();
     auto& accumulator = this->accumulator();
@@ -706,6 +706,7 @@ Interpreter::ResultAndReturnRegister Interpreter::run_executable(Executable& exe
     if (running_execution_context.registers.size() < executable.number_of_registers)
         running_execution_context.registers.resize(executable.number_of_registers);
 
+    TemporaryChange restore_running_execution_context { m_running_execution_context, &running_execution_context };
     TemporaryChange restore_arguments { m_arguments, running_execution_context.arguments.span() };
     TemporaryChange restore_registers { m_registers, running_execution_context.registers.span() };
     TemporaryChange restore_locals { m_locals, running_execution_context.locals.span() };
@@ -745,55 +746,51 @@ Interpreter::ResultAndReturnRegister Interpreter::run_executable(Executable& exe
     vm().finish_execution_generation();
 
     if (!exception.is_empty())
-        return { throw_completion(exception), vm().running_execution_context().registers[0] };
-    return { return_value, vm().running_execution_context().registers[0] };
+        return { throw_completion(exception), running_execution_context.registers[0] };
+    return { return_value, running_execution_context.registers[0] };
 }
 
 void Interpreter::enter_unwind_context()
 {
-    auto& running_execution_context = vm().running_execution_context();
-    running_execution_context.unwind_contexts.empend(
+    running_execution_context().unwind_contexts.empend(
         m_current_executable,
-        vm().running_execution_context().lexical_environment);
-    running_execution_context.previously_scheduled_jumps.append(m_scheduled_jump);
+        running_execution_context().lexical_environment);
+    running_execution_context().previously_scheduled_jumps.append(m_scheduled_jump);
     m_scheduled_jump = {};
 }
 
 void Interpreter::leave_unwind_context()
 {
-    auto& running_execution_context = vm().running_execution_context();
-    running_execution_context.unwind_contexts.take_last();
+    running_execution_context().unwind_contexts.take_last();
 }
 
 void Interpreter::catch_exception(Operand dst)
 {
     set(dst, reg(Register::exception()));
     reg(Register::exception()) = {};
-    auto& running_execution_context = vm().running_execution_context();
-    auto& context = running_execution_context.unwind_contexts.last();
+    auto& context = running_execution_context().unwind_contexts.last();
     VERIFY(!context.handler_called);
     VERIFY(context.executable == &current_executable());
     context.handler_called = true;
-    vm().running_execution_context().lexical_environment = context.lexical_environment;
+    running_execution_context().lexical_environment = context.lexical_environment;
 }
 
 void Interpreter::restore_scheduled_jump()
 {
-    m_scheduled_jump = vm().running_execution_context().previously_scheduled_jumps.take_last();
+    m_scheduled_jump = running_execution_context().previously_scheduled_jumps.take_last();
 }
 
 void Interpreter::leave_finally()
 {
     reg(Register::exception()) = {};
-    m_scheduled_jump = vm().running_execution_context().previously_scheduled_jumps.take_last();
+    m_scheduled_jump = running_execution_context().previously_scheduled_jumps.take_last();
 }
 
 void Interpreter::enter_object_environment(Object& object)
 {
-    auto& running_execution_context = vm().running_execution_context();
-    auto& old_environment = running_execution_context.lexical_environment;
-    running_execution_context.saved_lexical_environments.append(old_environment);
-    running_execution_context.lexical_environment = new_object_environment(object, true, old_environment);
+    auto& old_environment = running_execution_context().lexical_environment;
+    running_execution_context().saved_lexical_environments.append(old_environment);
+    running_execution_context().lexical_environment = new_object_environment(object, true, old_environment);
 }
 
 ThrowCompletionOr<NonnullGCPtr<Bytecode::Executable>> compile(VM& vm, ASTNode const& node, FunctionKind kind, DeprecatedFlyString const& name)
@@ -1237,7 +1234,7 @@ ThrowCompletionOr<void> GetVariable::execute_impl(Bytecode::Interpreter& interpr
     auto& cache = executable.environment_variable_caches[m_cache_index];
 
     if (cache.has_value()) {
-        auto const* environment = vm.running_execution_context().lexical_environment.ptr();
+        auto const* environment = interpreter.running_execution_context().lexical_environment.ptr();
         for (size_t i = 0; i < cache->hops; ++i)
             environment = environment->outer_environment();
         if (!environment->is_permanently_screwed_by_eval()) {
@@ -1289,7 +1286,7 @@ void CreateLexicalEnvironment::execute_impl(Bytecode::Interpreter& interpreter) 
         swap(old_environment, environment);
         return environment;
     };
-    auto& running_execution_context = interpreter.vm().running_execution_context();
+    auto& running_execution_context = interpreter.running_execution_context();
     running_execution_context.saved_lexical_environments.append(make_and_swap_envs(running_execution_context.lexical_environment));
 }
 
@@ -1302,7 +1299,7 @@ void CreatePrivateEnvironment::execute_impl(Bytecode::Interpreter& interpreter) 
 
 ThrowCompletionOr<void> CreateVariableEnvironment::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto& running_execution_context = interpreter.vm().running_execution_context();
+    auto& running_execution_context = interpreter.running_execution_context();
     auto var_environment = new_declarative_environment(*running_execution_context.lexical_environment);
     var_environment->ensure_capacity(m_capacity);
     running_execution_context.variable_environment = var_environment;
@@ -1340,8 +1337,8 @@ ThrowCompletionOr<void> CreateVariable::execute_impl(Bytecode::Interpreter& inte
 
 ThrowCompletionOr<void> CreateRestParams::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto const& arguments = interpreter.vm().running_execution_context().arguments;
-    auto arguments_count = interpreter.vm().running_execution_context().passed_argument_count;
+    auto const& arguments = interpreter.running_execution_context().arguments;
+    auto arguments_count = interpreter.running_execution_context().passed_argument_count;
     auto array = MUST(Array::create(interpreter.realm(), 0));
     for (size_t rest_index = m_rest_index; rest_index < arguments_count; ++rest_index)
         array->indexed_properties().append(arguments[rest_index]);
@@ -1351,11 +1348,11 @@ ThrowCompletionOr<void> CreateRestParams::execute_impl(Bytecode::Interpreter& in
 
 ThrowCompletionOr<void> CreateArguments::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto const& function = interpreter.vm().running_execution_context().function;
-    auto const& arguments = interpreter.vm().running_execution_context().arguments;
-    auto const& environment = interpreter.vm().running_execution_context().lexical_environment;
+    auto const& function = interpreter.running_execution_context().function;
+    auto const& arguments = interpreter.running_execution_context().arguments;
+    auto const& environment = interpreter.running_execution_context().lexical_environment;
 
-    auto passed_arguments = ReadonlySpan<Value> { arguments.data(), interpreter.vm().running_execution_context().passed_argument_count };
+    auto passed_arguments = ReadonlySpan<Value> { arguments.data(), interpreter.running_execution_context().passed_argument_count };
     Object* arguments_object;
     if (m_kind == Kind::Mapped) {
         arguments_object = create_mapped_arguments_object(interpreter.vm(), *function, function->formal_parameters(), passed_arguments, *environment);
@@ -1443,7 +1440,7 @@ ThrowCompletionOr<void> HasPrivateId::execute_impl(Bytecode::Interpreter& interp
     if (!base.is_object())
         return vm.throw_completion<TypeError>(ErrorType::InOperatorWithObject);
 
-    auto private_environment = vm.running_execution_context().private_environment;
+    auto private_environment = interpreter.running_execution_context().private_environment;
     VERIFY(private_environment);
     auto private_name = private_environment->resolve_private_identifier(interpreter.current_executable().get_identifier(m_property));
     interpreter.set(dst(), Value(base.as_object().private_element_find(private_name) != nullptr));
@@ -1784,7 +1781,7 @@ ThrowCompletionOr<void> ScheduleJump::execute_impl(Bytecode::Interpreter&) const
 
 void LeaveLexicalEnvironment::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto& running_execution_context = interpreter.vm().running_execution_context();
+    auto& running_execution_context = interpreter.running_execution_context();
     running_execution_context.lexical_environment = running_execution_context.saved_lexical_environments.take_last();
 }
 
@@ -1985,8 +1982,8 @@ ThrowCompletionOr<void> TypeofVariable::execute_impl(Bytecode::Interpreter& inte
 void BlockDeclarationInstantiation::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    auto old_environment = vm.running_execution_context().lexical_environment;
-    auto& running_execution_context = vm.running_execution_context();
+    auto old_environment = interpreter.running_execution_context().lexical_environment;
+    auto& running_execution_context = interpreter.running_execution_context();
     running_execution_context.saved_lexical_environments.append(old_environment);
     running_execution_context.lexical_environment = new_declarative_environment(*old_environment);
     m_scope_node.block_declaration_instantiation(vm, running_execution_context.lexical_environment);

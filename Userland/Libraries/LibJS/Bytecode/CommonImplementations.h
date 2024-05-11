@@ -536,7 +536,7 @@ inline ThrowCompletionOr<CalleeAndThis> get_callee_and_this_from_environment(Byt
     Value this_value = js_undefined();
 
     if (cache.has_value()) {
-        auto const* environment = vm.running_execution_context().lexical_environment.ptr();
+        auto const* environment = interpreter.running_execution_context().lexical_environment.ptr();
         for (size_t i = 0; i < cache->hops; ++i)
             environment = environment->outer_environment();
         if (!environment->is_permanently_screwed_by_eval()) {
