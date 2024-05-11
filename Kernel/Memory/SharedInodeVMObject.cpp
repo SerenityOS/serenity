@@ -39,12 +39,12 @@ ErrorOr<NonnullLockRefPtr<VMObject>> SharedInodeVMObject::try_clone()
     return adopt_nonnull_lock_ref_or_enomem<VMObject>(new (nothrow) SharedInodeVMObject(*this, move(new_physical_pages), move(dirty_pages)));
 }
 
-SharedInodeVMObject::SharedInodeVMObject(Inode& inode, FixedArray<RefPtr<PhysicalPage>>&& new_physical_pages, Bitmap dirty_pages)
+SharedInodeVMObject::SharedInodeVMObject(Inode& inode, FixedArray<RefPtr<PhysicalRAMPage>>&& new_physical_pages, Bitmap dirty_pages)
     : InodeVMObject(inode, move(new_physical_pages), move(dirty_pages))
 {
 }
 
-SharedInodeVMObject::SharedInodeVMObject(SharedInodeVMObject const& other, FixedArray<RefPtr<PhysicalPage>>&& new_physical_pages, Bitmap dirty_pages)
+SharedInodeVMObject::SharedInodeVMObject(SharedInodeVMObject const& other, FixedArray<RefPtr<PhysicalRAMPage>>&& new_physical_pages, Bitmap dirty_pages)
     : InodeVMObject(other, move(new_physical_pages), move(dirty_pages))
 {
 }

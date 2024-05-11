@@ -130,13 +130,13 @@ UNMAP_AFTER_INIT void PageDirectory::allocate_kernel_directory()
 {
     // Adopt the page tables already set up by boot.S
     dmesgln("MM: boot_pml4t @ {}", boot_pml4t);
-    m_pml4t = PhysicalPage::create(boot_pml4t, MayReturnToFreeList::No);
+    m_pml4t = PhysicalRAMPage::create(boot_pml4t, MayReturnToFreeList::No);
     dmesgln("MM: boot_pdpt @ {}", boot_pdpt);
     dmesgln("MM: boot_pd0 @ {}", boot_pd0);
     dmesgln("MM: boot_pd_kernel @ {}", boot_pd_kernel);
-    m_directory_table = PhysicalPage::create(boot_pdpt, MayReturnToFreeList::No);
-    m_directory_pages[0] = PhysicalPage::create(boot_pd0, MayReturnToFreeList::No);
-    m_directory_pages[(kernel_mapping_base >> 30) & 0x1ff] = PhysicalPage::create(boot_pd_kernel, MayReturnToFreeList::No);
+    m_directory_table = PhysicalRAMPage::create(boot_pdpt, MayReturnToFreeList::No);
+    m_directory_pages[0] = PhysicalRAMPage::create(boot_pd0, MayReturnToFreeList::No);
+    m_directory_pages[(kernel_mapping_base >> 30) & 0x1ff] = PhysicalRAMPage::create(boot_pd_kernel, MayReturnToFreeList::No);
 }
 
 PageDirectory::~PageDirectory()

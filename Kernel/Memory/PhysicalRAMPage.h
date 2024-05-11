@@ -16,9 +16,9 @@ enum class MayReturnToFreeList : bool {
     Yes
 };
 
-class PhysicalPage {
-    AK_MAKE_NONCOPYABLE(PhysicalPage);
-    AK_MAKE_NONMOVABLE(PhysicalPage);
+class PhysicalRAMPage {
+    AK_MAKE_NONCOPYABLE(PhysicalRAMPage);
+    AK_MAKE_NONMOVABLE(PhysicalRAMPage);
 
     friend class MemoryManager;
 
@@ -36,7 +36,7 @@ public:
             free_this();
     }
 
-    static NonnullRefPtr<PhysicalPage> create(PhysicalAddress, MayReturnToFreeList may_return_to_freelist = MayReturnToFreeList::Yes);
+    static NonnullRefPtr<PhysicalRAMPage> create(PhysicalAddress, MayReturnToFreeList may_return_to_freelist = MayReturnToFreeList::Yes);
 
     u32 ref_count() const { return m_ref_count.load(AK::memory_order_consume); }
 
@@ -44,8 +44,8 @@ public:
     bool is_lazy_committed_page() const;
 
 private:
-    explicit PhysicalPage(MayReturnToFreeList may_return_to_freelist);
-    ~PhysicalPage() = default;
+    explicit PhysicalRAMPage(MayReturnToFreeList may_return_to_freelist);
+    ~PhysicalRAMPage() = default;
 
     void free_this() const;
 
@@ -57,7 +57,7 @@ struct PhysicalPageEntry {
     union {
         // If it's a live PhysicalPage object:
         struct {
-            PhysicalPage physical_page;
+            PhysicalRAMPage physical_page;
         } allocated;
 
         // If it's an entry in a PhysicalZone::Bucket's freelist.

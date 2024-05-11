@@ -14,7 +14,7 @@
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/AllocationStrategy.h>
 #include <Kernel/Memory/MemorySections.h>
-#include <Kernel/Memory/PhysicalPage.h>
+#include <Kernel/Memory/PhysicalRAMPage.h>
 #include <Kernel/Memory/PhysicalRegion.h>
 #include <Kernel/Memory/Region.h>
 #include <Kernel/Memory/RegionTree.h>
@@ -113,7 +113,7 @@ public:
     bool is_empty() const { return m_page_count == 0; }
     size_t page_count() const { return m_page_count; }
 
-    [[nodiscard]] NonnullRefPtr<PhysicalPage> take_one();
+    [[nodiscard]] NonnullRefPtr<PhysicalRAMPage> take_one();
     void uncommit_one();
 
     void operator=(CommittedPhysicalPageSet&&) = delete;
@@ -163,19 +163,19 @@ public:
     ErrorOr<CommittedPhysicalPageSet> commit_physical_pages(size_t page_count);
     void uncommit_physical_pages(Badge<CommittedPhysicalPageSet>, size_t page_count);
 
-    NonnullRefPtr<PhysicalPage> allocate_committed_physical_page(Badge<CommittedPhysicalPageSet>, ShouldZeroFill = ShouldZeroFill::Yes);
-    ErrorOr<NonnullRefPtr<PhysicalPage>> allocate_physical_page(ShouldZeroFill = ShouldZeroFill::Yes, bool* did_purge = nullptr);
-    ErrorOr<Vector<NonnullRefPtr<PhysicalPage>>> allocate_contiguous_physical_pages(size_t size);
+    NonnullRefPtr<PhysicalRAMPage> allocate_committed_physical_page(Badge<CommittedPhysicalPageSet>, ShouldZeroFill = ShouldZeroFill::Yes);
+    ErrorOr<NonnullRefPtr<PhysicalRAMPage>> allocate_physical_page(ShouldZeroFill = ShouldZeroFill::Yes, bool* did_purge = nullptr);
+    ErrorOr<Vector<NonnullRefPtr<PhysicalRAMPage>>> allocate_contiguous_physical_pages(size_t size);
     void deallocate_physical_page(PhysicalAddress);
 
     ErrorOr<NonnullOwnPtr<Region>> allocate_contiguous_kernel_region(size_t, StringView name, Region::Access access, Region::Cacheable = Region::Cacheable::Yes);
-    ErrorOr<NonnullOwnPtr<Memory::Region>> allocate_dma_buffer_page(StringView name, Memory::Region::Access access, RefPtr<Memory::PhysicalPage>& dma_buffer_page);
+    ErrorOr<NonnullOwnPtr<Memory::Region>> allocate_dma_buffer_page(StringView name, Memory::Region::Access access, RefPtr<Memory::PhysicalRAMPage>& dma_buffer_page);
     ErrorOr<NonnullOwnPtr<Memory::Region>> allocate_dma_buffer_page(StringView name, Memory::Region::Access access);
-    ErrorOr<NonnullOwnPtr<Memory::Region>> allocate_dma_buffer_pages(size_t size, StringView name, Memory::Region::Access access, Vector<NonnullRefPtr<Memory::PhysicalPage>>& dma_buffer_pages);
+    ErrorOr<NonnullOwnPtr<Memory::Region>> allocate_dma_buffer_pages(size_t size, StringView name, Memory::Region::Access access, Vector<NonnullRefPtr<Memory::PhysicalRAMPage>>& dma_buffer_pages);
     ErrorOr<NonnullOwnPtr<Memory::Region>> allocate_dma_buffer_pages(size_t size, StringView name, Memory::Region::Access access);
     ErrorOr<NonnullOwnPtr<Region>> allocate_kernel_region(size_t, StringView name, Region::Access access, AllocationStrategy strategy = AllocationStrategy::Reserve, Region::Cacheable = Region::Cacheable::Yes);
     ErrorOr<NonnullOwnPtr<Region>> allocate_mmio_kernel_region(PhysicalAddress, size_t, StringView name, Region::Access access, Region::Cacheable = Region::Cacheable::Yes);
-    ErrorOr<NonnullOwnPtr<Region>> allocate_kernel_region_with_physical_pages(Span<NonnullRefPtr<PhysicalPage>>, StringView name, Region::Access access, Region::Cacheable = Region::Cacheable::Yes);
+    ErrorOr<NonnullOwnPtr<Region>> allocate_kernel_region_with_physical_pages(Span<NonnullRefPtr<PhysicalRAMPage>>, StringView name, Region::Access access, Region::Cacheable = Region::Cacheable::Yes);
     ErrorOr<NonnullOwnPtr<Region>> allocate_kernel_region_with_vmobject(VMObject&, size_t, StringView name, Region::Access access, Region::Cacheable = Region::Cacheable::Yes);
     ErrorOr<NonnullOwnPtr<Region>> allocate_unbacked_region_anywhere(size_t size, size_t alignment);
     ErrorOr<NonnullOwnPtr<Region>> create_identity_mapped_region(PhysicalAddress, size_t);
@@ -215,8 +215,8 @@ public:
 
     void dump_kernel_regions();
 
-    PhysicalPage& shared_zero_page() { return *m_shared_zero_page; }
-    PhysicalPage& lazy_committed_page() { return *m_lazy_committed_page; }
+    PhysicalRAMPage& shared_zero_page() { return *m_shared_zero_page; }
+    PhysicalRAMPage& lazy_committed_page() { return *m_lazy_committed_page; }
 
     PageDirectory& kernel_page_directory() { return *m_kernel_page_directory; }
 
@@ -231,9 +231,9 @@ public:
     bool is_allowed_to_read_physical_memory_for_userspace(PhysicalAddress, size_t read_length) const;
 
     PhysicalPageEntry& get_physical_page_entry(PhysicalAddress);
-    PhysicalAddress get_physical_address(PhysicalPage const&);
+    PhysicalAddress get_physical_address(PhysicalRAMPage const&);
 
-    void copy_physical_page(PhysicalPage&, u8 page_buffer[PAGE_SIZE]);
+    void copy_physical_page(PhysicalRAMPage&, u8 page_buffer[PAGE_SIZE]);
 
     IterationDecision for_each_physical_memory_range(Function<IterationDecision(PhysicalMemoryRange const&)>);
 
@@ -272,9 +272,9 @@ private:
     static void flush_tlb_local(VirtualAddress, size_t page_count = 1);
     static void flush_tlb(PageDirectory const*, VirtualAddress, size_t page_count = 1);
 
-    RefPtr<PhysicalPage> find_free_physical_page(bool);
+    RefPtr<PhysicalRAMPage> find_free_physical_page(bool);
 
-    ALWAYS_INLINE u8* quickmap_page(PhysicalPage& page)
+    ALWAYS_INLINE u8* quickmap_page(PhysicalRAMPage& page)
     {
         return quickmap_page(page.paddr());
     }
@@ -296,8 +296,8 @@ private:
     //       and then never change. Atomic ref-counting covers that case without
     //       the need for additional synchronization.
     LockRefPtr<PageDirectory> m_kernel_page_directory;
-    RefPtr<PhysicalPage> m_shared_zero_page;
-    RefPtr<PhysicalPage> m_lazy_committed_page;
+    RefPtr<PhysicalRAMPage> m_shared_zero_page;
+    RefPtr<PhysicalRAMPage> m_lazy_committed_page;
 
     // NOTE: These are outside of GlobalData as they are initialized on startup,
     //       and then never change.
@@ -307,12 +307,12 @@ private:
     SpinlockProtected<GlobalData, LockRank::None> m_global_data;
 };
 
-inline bool PhysicalPage::is_shared_zero_page() const
+inline bool PhysicalRAMPage::is_shared_zero_page() const
 {
     return this == &MM.shared_zero_page();
 }
 
-inline bool PhysicalPage::is_lazy_committed_page() const
+inline bool PhysicalRAMPage::is_lazy_committed_page() const
 {
     return this == &MM.lazy_committed_page();
 }

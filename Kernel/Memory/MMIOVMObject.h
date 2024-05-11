@@ -18,7 +18,7 @@ public:
     virtual ErrorOr<NonnullLockRefPtr<VMObject>> try_clone() override { return ENOTSUP; }
 
 private:
-    MMIOVMObject(PhysicalAddress, FixedArray<RefPtr<PhysicalPage>>&&);
+    MMIOVMObject(PhysicalAddress, FixedArray<RefPtr<PhysicalRAMPage>>&&);
 
     virtual StringView class_name() const override { return "MMIOVMObject"sv; }
 };

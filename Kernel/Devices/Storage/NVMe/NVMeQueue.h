@@ -83,7 +83,7 @@ protected:
             m_db_regs.mmio_reg->sq_tail = m_sq_tail;
     }
 
-    NVMeQueue(NonnullOwnPtr<Memory::Region> rw_dma_region, Memory::PhysicalPage const& rw_dma_page, u16 qid, u32 q_depth, OwnPtr<Memory::Region> cq_dma_region, OwnPtr<Memory::Region> sq_dma_region, Doorbell db_regs);
+    NVMeQueue(NonnullOwnPtr<Memory::Region> rw_dma_region, Memory::PhysicalRAMPage const& rw_dma_page, u16 qid, u32 q_depth, OwnPtr<Memory::Region> cq_dma_region, OwnPtr<Memory::Region> sq_dma_region, Doorbell db_regs);
 
     [[nodiscard]] u32 get_request_cid()
     {
@@ -130,6 +130,6 @@ private:
     Span<NVMeCompletion> m_cqe_array;
     WaitQueue m_sync_wait_queue;
     Doorbell m_db_regs;
-    NonnullRefPtr<Memory::PhysicalPage const> const m_rw_dma_page;
+    NonnullRefPtr<Memory::PhysicalRAMPage const> const m_rw_dma_page;
 };
 }

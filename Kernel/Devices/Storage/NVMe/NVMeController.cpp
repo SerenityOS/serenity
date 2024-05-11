@@ -155,7 +155,7 @@ UNMAP_AFTER_INIT void NVMeController::set_admin_q_depth()
 UNMAP_AFTER_INIT ErrorOr<void> NVMeController::identify_and_init_namespaces()
 {
 
-    RefPtr<Memory::PhysicalPage> prp_dma_buffer;
+    RefPtr<Memory::PhysicalRAMPage> prp_dma_buffer;
     OwnPtr<Memory::Region> prp_dma_region;
     auto namespace_data_struct = TRY(ByteBuffer::create_zeroed(NVMe_IDENTIFY_SIZE));
     u32 active_namespace_list[NVMe_IDENTIFY_SIZE / sizeof(u32)];
@@ -219,7 +219,7 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::identify_and_init_namespaces()
 
 ErrorOr<void> NVMeController::identify_and_init_controller()
 {
-    RefPtr<Memory::PhysicalPage> prp_dma_buffer;
+    RefPtr<Memory::PhysicalRAMPage> prp_dma_buffer;
     OwnPtr<Memory::Region> prp_dma_region;
     IdentifyController ctrl {};
 
@@ -311,9 +311,9 @@ void NVMeController::complete_current_request([[maybe_unused]] AsyncDeviceReques
 UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_admin_queue(QueueType queue_type)
 {
     OwnPtr<Memory::Region> cq_dma_region;
-    Vector<NonnullRefPtr<Memory::PhysicalPage>> cq_dma_pages;
+    Vector<NonnullRefPtr<Memory::PhysicalRAMPage>> cq_dma_pages;
     OwnPtr<Memory::Region> sq_dma_region;
-    Vector<NonnullRefPtr<Memory::PhysicalPage>> sq_dma_pages;
+    Vector<NonnullRefPtr<Memory::PhysicalRAMPage>> sq_dma_pages;
     set_admin_q_depth();
     auto cq_size = round_up_to_power_of_two(CQ_SIZE(ADMIN_QUEUE_SIZE), 4096);
     auto sq_size = round_up_to_power_of_two(SQ_SIZE(ADMIN_QUEUE_SIZE), 4096);
@@ -364,9 +364,9 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_admin_queue(QueueType queu
 UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_io_queue(u8 qid, QueueType queue_type)
 {
     OwnPtr<Memory::Region> cq_dma_region;
-    Vector<NonnullRefPtr<Memory::PhysicalPage>> cq_dma_pages;
+    Vector<NonnullRefPtr<Memory::PhysicalRAMPage>> cq_dma_pages;
     OwnPtr<Memory::Region> sq_dma_region;
-    Vector<NonnullRefPtr<Memory::PhysicalPage>> sq_dma_pages;
+    Vector<NonnullRefPtr<Memory::PhysicalRAMPage>> sq_dma_pages;
     auto cq_size = round_up_to_power_of_two(CQ_SIZE(IO_QUEUE_SIZE), 4096);
     auto sq_size = round_up_to_power_of_two(SQ_SIZE(IO_QUEUE_SIZE), 4096);
 
