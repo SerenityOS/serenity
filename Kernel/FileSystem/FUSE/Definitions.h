@@ -21,6 +21,11 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
+ *
+ *  This file is based on include/uapi/linux/fuse.h from Linux. That header
+ *  is dual-licensed under the GPLv2 and the above 2-Clause BSD license.
+ *  Consequentially, we are sublicensing this file under the latter license,
+ *  which is why we have to include it above verbatim.
  */
 
 #pragma once
