@@ -182,29 +182,14 @@ ThrowCompletionOr<void> DeclarativeEnvironment::set_mutable_binding_direct(VM& v
 }
 
 // 9.1.1.1.6 GetBindingValue ( N, S ), https://tc39.es/ecma262/#sec-declarative-environment-records-getbindingvalue-n-s
-ThrowCompletionOr<Value> DeclarativeEnvironment::get_binding_value(VM& vm, DeprecatedFlyString const& name, bool strict)
+ThrowCompletionOr<Value> DeclarativeEnvironment::get_binding_value(VM& vm, DeprecatedFlyString const& name, [[maybe_unused]] bool strict)
 {
     // 1. Assert: envRec has a binding for N.
     auto binding_and_index = find_binding_and_index(name);
     VERIFY(binding_and_index.has_value());
 
     // 2-3. (extracted into a non-standard function below)
-    return get_binding_value_direct(vm, binding_and_index->binding(), strict);
-}
-
-ThrowCompletionOr<Value> DeclarativeEnvironment::get_binding_value_direct(VM& vm, size_t index, bool strict)
-{
-    return get_binding_value_direct(vm, m_bindings[index], strict);
-}
-
-ThrowCompletionOr<Value> DeclarativeEnvironment::get_binding_value_direct(VM&, Binding& binding, bool)
-{
-    // 2. If the binding for N in envRec is an uninitialized binding, throw a ReferenceError exception.
-    if (!binding.initialized)
-        return vm().throw_completion<ReferenceError>(ErrorType::BindingNotInitialized, binding.name);
-
-    // 3. Return the value currently bound to N in envRec.
-    return binding.value;
+    return get_binding_value_direct(vm, binding_and_index->binding());
 }
 
 // 9.1.1.1.7 DeleteBinding ( N ), https://tc39.es/ecma262/#sec-declarative-environment-records-deletebinding-n

@@ -119,7 +119,7 @@ ThrowCompletionOr<Value> GlobalEnvironment::get_binding_value(VM& vm, Deprecated
     if (MUST(m_declarative_record->has_binding(name, &index))) {
         // a. Return ? DclRec.GetBindingValue(N, S).
         if (index.has_value())
-            return m_declarative_record->get_binding_value_direct(vm, index.value(), strict);
+            return m_declarative_record->get_binding_value_direct(vm, index.value());
         return m_declarative_record->get_binding_value(vm, name, strict);
     }
 

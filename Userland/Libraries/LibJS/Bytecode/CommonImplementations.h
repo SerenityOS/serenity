@@ -523,28 +523,6 @@ inline ThrowCompletionOr<void> put_by_value(VM& vm, Value base, Optional<Depreca
     return {};
 }
 
-inline ThrowCompletionOr<Value> get_variable(Bytecode::Interpreter& interpreter, DeprecatedFlyString const& name, EnvironmentVariableCache& cache)
-{
-    auto& vm = interpreter.vm();
-
-    if (cache.has_value()) {
-        auto environment = vm.running_execution_context().lexical_environment;
-        for (size_t i = 0; i < cache->hops; ++i)
-            environment = environment->outer_environment();
-        VERIFY(environment);
-        VERIFY(environment->is_declarative_environment());
-        if (!environment->is_permanently_screwed_by_eval()) {
-            return TRY(verify_cast<DeclarativeEnvironment>(*environment).get_binding_value_direct(vm, cache.value().index, vm.in_strict_mode()));
-        }
-        cache = {};
-    }
-
-    auto reference = TRY(vm.resolve_binding(name));
-    if (reference.environment_coordinate().has_value())
-        cache = reference.environment_coordinate();
-    return TRY(reference.get_value(vm));
-}
-
 struct CalleeAndThis {
     Value callee;
     Value this_value;
@@ -558,13 +536,11 @@ inline ThrowCompletionOr<CalleeAndThis> get_callee_and_this_from_environment(Byt
     Value this_value = js_undefined();
 
     if (cache.has_value()) {
-        auto environment = vm.running_execution_context().lexical_environment;
+        auto const* environment = vm.running_execution_context().lexical_environment.ptr();
         for (size_t i = 0; i < cache->hops; ++i)
             environment = environment->outer_environment();
-        VERIFY(environment);
-        VERIFY(environment->is_declarative_environment());
         if (!environment->is_permanently_screwed_by_eval()) {
-            callee = TRY(verify_cast<DeclarativeEnvironment>(*environment).get_binding_value_direct(vm, cache.value().index, vm.in_strict_mode()));
+            callee = TRY(static_cast<DeclarativeEnvironment const&>(*environment).get_binding_value_direct(vm, cache.value().index));
             this_value = js_undefined();
             if (auto base_object = environment->with_base_object())
                 this_value = base_object;
