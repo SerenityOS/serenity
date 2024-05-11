@@ -1,4 +1,5 @@
 set(TEST_SOURCES
+    TestAsyncTestStreams.cpp
     TestNoCrash.cpp
     TestGenerator.cpp
 )
