@@ -16,10 +16,10 @@ dictionary DynamicsCompressorOptions : AudioNodeOptions {
 interface DynamicsCompressorNode : AudioNode {
     constructor(BaseAudioContext context,
                 optional DynamicsCompressorOptions options = {});
-    // FIXME: readonly attribute AudioParam threshold;
-    // FIXME: readonly attribute AudioParam knee;
-    // FIXME: readonly attribute AudioParam ratio;
+    readonly attribute AudioParam threshold;
+    readonly attribute AudioParam knee;
+    readonly attribute AudioParam ratio;
     // FIXME: readonly attribute float reduction;
-    // FIXME: readonly attribute AudioParam attack;
-    // FIXME: readonly attribute AudioParam release;
+    readonly attribute AudioParam attack;
+    readonly attribute AudioParam release;
 };
