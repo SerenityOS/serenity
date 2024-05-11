@@ -24,39 +24,38 @@ UNMAP_AFTER_INIT FUSEDevice::FUSEDevice()
 
 UNMAP_AFTER_INIT FUSEDevice::~FUSEDevice() = default;
 
-ErrorOr<void> FUSEDevice::initialize_instance(OpenFileDescription const& fd)
+ErrorOr<void> FUSEDevice::initialize_instance(OpenFileDescription const& description)
 {
     return m_instances.with([&](auto& instances) -> ErrorOr<void> {
-        for (auto const& instance : instances)
-            VERIFY(instance.fd != &fd);
-
-        TRY(instances.try_append({
-            &fd,
-            TRY(KBuffer::try_create_with_size("FUSE: Pending request buffer"sv, 0x21000)),
-            TRY(KBuffer::try_create_with_size("FUSE: Response buffer"sv, 0x21000)),
-        }));
-
+        VERIFY(!instances.contains(&description));
+        TRY(instances.try_set(&description, {}));
         return {};
     });
 }
 
-bool FUSEDevice::can_read(OpenFileDescription const& fd, u64) const
+bool FUSEDevice::can_read(OpenFileDescription const& description, u64) const
 {
+    bool drop = m_closing_instances.with([&](auto& closing_instances) {
+        auto iterator = closing_instances.find(&description);
+        return iterator != closing_instances.end();
+    });
+
+    if (drop)
+        return true;
+
     return m_instances.with([&](auto& instances) {
-        Optional<size_t> instance_index = {};
-        for (size_t i = 0; i < instances.size(); ++i) {
-            if (instances[i].fd == &fd) {
-                instance_index = i;
-                break;
-            }
-        }
-        if (!instance_index.has_value()) {
+        auto instance_iterator = instances.find(&description);
+        if (instance_iterator == instances.end()) {
             VERIFY(instances.is_empty());
             return false;
         }
 
-        auto& instance = instances[instance_index.value()];
-        return instance.buffer_ready || instance.drop_request;
+        auto const& requests_for_instance = (*instance_iterator).value;
+        for (auto const& request : requests_for_instance.in_reverse()) {
+            if (request.buffer_ready)
+                return true;
+        }
+        return false;
     });
 }
 
@@ -65,56 +64,49 @@ bool FUSEDevice::can_write(OpenFileDescription const&, u64) const
     return true;
 }
 
-ErrorOr<size_t> FUSEDevice::read(OpenFileDescription& fd, u64, UserOrKernelBuffer& buffer, size_t size)
+ErrorOr<size_t> FUSEDevice::read(OpenFileDescription& description, u64, UserOrKernelBuffer& buffer, size_t size)
 {
+    TRY(m_closing_instances.with([&](auto& closing_instances) -> ErrorOr<void> {
+        bool removed = closing_instances.remove_first_matching([&](auto const* closing_description) { return closing_description == &description; });
+        if (removed)
+            return Error::from_errno(ENODEV);
+
+        return {};
+    }));
+
+    if (size < 0x21000)
+        return Error::from_errno(EIO);
+
     return m_instances.with([&](auto& instances) -> ErrorOr<size_t> {
-        Optional<size_t> instance_index = {};
-        for (size_t i = 0; i < instances.size(); ++i) {
-            if (instances[i].fd == &fd) {
-                instance_index = i;
-                break;
-            }
-        }
-
-        if (!instance_index.has_value())
+        auto instance_iterator = instances.find(&description);
+        if (instance_iterator == instances.end())
             return Error::from_errno(ENODEV);
 
-        auto& instance = instances[instance_index.value()];
+        auto& requests_for_instance = (*instance_iterator).value;
 
-        if (instance.drop_request) {
-            instance.drop_request = false;
+        for (auto& request : requests_for_instance.in_reverse()) {
+            if (!request.buffer_ready)
+                continue;
 
-            instances.remove(instance_index.value());
-            return Error::from_errno(ENODEV);
+            TRY(buffer.write(request.pending_request->bytes()));
+            request.buffer_ready = false;
+            return request.pending_request->size();
         }
 
-        if (size < 0x21000)
-            return Error::from_errno(EIO);
-
-        if (!instance.buffer_ready)
-            return Error::from_errno(ENOENT);
-
-        TRY(buffer.write(instance.pending_request->bytes()));
-        instance.buffer_ready = false;
-        return instance.pending_request->size();
+        return Error::from_errno(ENOENT);
     });
 }
 
 ErrorOr<size_t> FUSEDevice::write(OpenFileDescription& description, u64, UserOrKernelBuffer const& buffer, size_t size)
 {
     return m_instances.with([&](auto& instances) -> ErrorOr<size_t> {
-        Optional<size_t> instance_index = {};
-        for (size_t i = 0; i < instances.size(); ++i) {
-            if (instances[i].fd == &description) {
-                instance_index = i;
-                break;
-            }
-        }
+        auto instance_iterator = instances.find(&description);
 
-        if (!instance_index.has_value())
+        if (instance_iterator == instances.end())
             return Error::from_errno(ENODEV);
 
-        auto& instance = instances[instance_index.value()];
+        auto& requests_for_instance = (*instance_iterator).value;
+        auto& instance = requests_for_instance.last();
 
         if (instance.expecting_header) {
             memset(instance.response->data(), 0, instance.response->size());
@@ -149,18 +141,18 @@ ErrorOr<size_t> FUSEDevice::write(OpenFileDescription& description, u64, UserOrK
 ErrorOr<NonnullOwnPtr<KBuffer>> FUSEDevice::send_request_and_wait_for_a_reply(OpenFileDescription const& description, Bytes bytes)
 {
     return m_instances.with([&](auto& instances) -> ErrorOr<NonnullOwnPtr<KBuffer>> {
-        Optional<size_t> instance_index = {};
-        for (size_t i = 0; i < instances.size(); ++i) {
-            if (instances[i].fd == &description) {
-                instance_index = i;
-                break;
-            }
-        }
+        auto instance_iterator = instances.find(&description);
+        VERIFY(instance_iterator != instances.end());
+        auto& requests_for_instance = (*instance_iterator).value;
 
-        VERIFY(instance_index.has_value());
-        auto& instance = instances[instance_index.value()];
+        TRY(requests_for_instance.try_append({
+            &description,
+            TRY(KBuffer::try_create_with_size("FUSE: Pending request buffer"sv, 0x21000)),
+            TRY(KBuffer::try_create_with_size("FUSE: Response buffer"sv, 0x21000)),
+        }));
 
-        VERIFY(!instance.drop_request);
+        size_t instance_index = requests_for_instance.size() - 1;
+        auto& instance = requests_for_instance.last();
         VERIFY(bytes.size() <= 0x21000);
 
         memset(instance.pending_request->data(), 0, instance.pending_request->size());
@@ -172,7 +164,7 @@ ErrorOr<NonnullOwnPtr<KBuffer>> FUSEDevice::send_request_and_wait_for_a_reply(Op
             (void)Thread::current()->sleep(Duration::from_microseconds(100));
 
         auto result = KBuffer::try_create_with_bytes("FUSEDevice: Response"sv, instance.response->bytes());
-        instance.response_ready = false;
+        requests_for_instance.remove(instance_index);
 
         return result;
     });
@@ -181,15 +173,11 @@ ErrorOr<NonnullOwnPtr<KBuffer>> FUSEDevice::send_request_and_wait_for_a_reply(Op
 void FUSEDevice::shutdown_for_description(OpenFileDescription const& description)
 {
     m_instances.with([&](auto& instances) {
-        Optional<size_t> instance_index = {};
-        for (size_t i = 0; i < instances.size(); ++i) {
-            if (instances[i].fd == &description) {
-                instance_index = i;
-                break;
-            }
-        }
-        VERIFY(instance_index.has_value());
-        instances[instance_index.value()].drop_request = true;
+        VERIFY(instances.remove(&description));
+    });
+
+    m_closing_instances.with([&](auto& closing_instances) {
+        closing_instances.append(&description);
     });
 
     evaluate_block_conditions();
