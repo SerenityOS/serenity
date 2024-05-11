@@ -125,8 +125,6 @@ protected:
     }
 
 private:
-    virtual bool is_declarative_environment() const override { return true; }
-
     Vector<Binding> m_bindings;
     Vector<DisposableResource> m_disposable_resource_stack;
 
