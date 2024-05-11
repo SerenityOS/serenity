@@ -588,13 +588,12 @@ public:
         Initialize,
         Set,
     };
-    explicit SetVariable(IdentifierTableIndex identifier, Operand src, u32 cache_index, InitializationMode initialization_mode = InitializationMode::Set, EnvironmentMode mode = EnvironmentMode::Lexical)
+    explicit SetVariable(IdentifierTableIndex identifier, Operand src, InitializationMode initialization_mode = InitializationMode::Set, EnvironmentMode mode = EnvironmentMode::Lexical)
         : Instruction(Type::SetVariable)
         , m_identifier(identifier)
         , m_src(src)
         , m_mode(mode)
         , m_initialization_mode(initialization_mode)
-        , m_cache_index(cache_index)
     {
     }
 
@@ -605,14 +604,13 @@ public:
     Operand src() const { return m_src; }
     EnvironmentMode mode() const { return m_mode; }
     InitializationMode initialization_mode() const { return m_initialization_mode; }
-    u32 cache_index() const { return m_cache_index; }
 
 private:
     IdentifierTableIndex m_identifier;
     Operand m_src;
     EnvironmentMode m_mode;
     InitializationMode m_initialization_mode { InitializationMode::Set };
-    u32 m_cache_index { 0 };
+    mutable EnvironmentCoordinate m_cache;
 };
 
 class SetLocal final : public Instruction {
@@ -678,12 +676,11 @@ private:
 
 class GetCalleeAndThisFromEnvironment final : public Instruction {
 public:
-    explicit GetCalleeAndThisFromEnvironment(Operand callee, Operand this_value, IdentifierTableIndex identifier, u32 cache_index)
+    explicit GetCalleeAndThisFromEnvironment(Operand callee, Operand this_value, IdentifierTableIndex identifier)
         : Instruction(Type::GetCalleeAndThisFromEnvironment)
         , m_identifier(identifier)
         , m_callee(callee)
         , m_this_value(this_value)
-        , m_cache_index(cache_index)
     {
     }
 
@@ -691,7 +688,6 @@ public:
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
 
     IdentifierTableIndex identifier() const { return m_identifier; }
-    u32 cache_index() const { return m_cache_index; }
     Operand callee() const { return m_callee; }
     Operand this_() const { return m_this_value; }
 
@@ -699,16 +695,15 @@ private:
     IdentifierTableIndex m_identifier;
     Operand m_callee;
     Operand m_this_value;
-    u32 m_cache_index { 0 };
+    mutable EnvironmentCoordinate m_cache;
 };
 
 class GetVariable final : public Instruction {
 public:
-    explicit GetVariable(Operand dst, IdentifierTableIndex identifier, u32 cache_index)
+    explicit GetVariable(Operand dst, IdentifierTableIndex identifier)
         : Instruction(Type::GetVariable)
         , m_dst(dst)
         , m_identifier(identifier)
-        , m_cache_index(cache_index)
     {
     }
 
@@ -717,12 +712,11 @@ public:
 
     Operand dst() const { return m_dst; }
     IdentifierTableIndex identifier() const { return m_identifier; }
-    u32 cache_index() const { return m_cache_index; }
 
 private:
     Operand m_dst;
     IdentifierTableIndex m_identifier;
-    u32 m_cache_index { 0 };
+    mutable EnvironmentCoordinate m_cache;
 };
 
 class GetGlobal final : public Instruction {

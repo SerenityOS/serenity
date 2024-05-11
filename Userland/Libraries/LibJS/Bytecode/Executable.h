@@ -33,8 +33,6 @@ struct GlobalVariableCache : public PropertyLookupCache {
     u64 environment_serial_number { 0 };
 };
 
-using EnvironmentVariableCache = Optional<EnvironmentCoordinate>;
-
 struct SourceRecord {
     u32 source_start_offset {};
     u32 source_end_offset {};
@@ -54,7 +52,6 @@ public:
         NonnullRefPtr<SourceCode const>,
         size_t number_of_property_lookup_caches,
         size_t number_of_global_variable_caches,
-        size_t number_of_environment_variable_caches,
         size_t number_of_registers,
         bool is_strict_mode);
 
@@ -64,7 +61,6 @@ public:
     Vector<u8> bytecode;
     Vector<PropertyLookupCache> property_lookup_caches;
     Vector<GlobalVariableCache> global_variable_caches;
-    Vector<EnvironmentVariableCache> environment_variable_caches;
     NonnullOwnPtr<StringTable> string_table;
     NonnullOwnPtr<IdentifierTable> identifier_table;
     NonnullOwnPtr<RegexTable> regex_table;

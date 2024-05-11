@@ -1231,22 +1231,21 @@ ThrowCompletionOr<void> GetVariable::execute_impl(Bytecode::Interpreter& interpr
 {
     auto& vm = interpreter.vm();
     auto& executable = interpreter.current_executable();
-    auto& cache = executable.environment_variable_caches[m_cache_index];
 
-    if (cache.has_value()) {
+    if (m_cache.is_valid()) {
         auto const* environment = interpreter.running_execution_context().lexical_environment.ptr();
-        for (size_t i = 0; i < cache->hops; ++i)
+        for (size_t i = 0; i < m_cache.hops; ++i)
             environment = environment->outer_environment();
         if (!environment->is_permanently_screwed_by_eval()) {
-            interpreter.set(dst(), TRY(static_cast<DeclarativeEnvironment const&>(*environment).get_binding_value_direct(vm, cache.value().index)));
+            interpreter.set(dst(), TRY(static_cast<DeclarativeEnvironment const&>(*environment).get_binding_value_direct(vm, m_cache.index)));
             return {};
         }
-        cache = {};
+        m_cache = {};
     }
 
     auto reference = TRY(vm.resolve_binding(executable.get_identifier(m_identifier)));
     if (reference.environment_coordinate().has_value())
-        cache = reference.environment_coordinate();
+        m_cache = reference.environment_coordinate().value();
     interpreter.set(dst(), TRY(reference.get_value(vm)));
     return {};
 }
@@ -1256,7 +1255,7 @@ ThrowCompletionOr<void> GetCalleeAndThisFromEnvironment::execute_impl(Bytecode::
     auto callee_and_this = TRY(get_callee_and_this_from_environment(
         interpreter,
         interpreter.current_executable().get_identifier(m_identifier),
-        interpreter.current_executable().environment_variable_caches[m_cache_index]));
+        m_cache));
     interpreter.set(m_callee, callee_and_this.callee);
     interpreter.set(m_this_value, callee_and_this.this_value);
     return {};
@@ -1379,7 +1378,7 @@ ThrowCompletionOr<void> SetVariable::execute_impl(Bytecode::Interpreter& interpr
         interpreter.get(src()),
         m_mode,
         m_initialization_mode,
-        interpreter.current_executable().environment_variable_caches[m_cache_index]));
+        m_cache));
     return {};
 }
 
