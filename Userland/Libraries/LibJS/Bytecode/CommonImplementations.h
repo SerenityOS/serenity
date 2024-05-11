@@ -231,7 +231,7 @@ inline ThrowCompletionOr<Value> get_by_value(VM& vm, Optional<DeprecatedFlyStrin
     return TRY(object->internal_get(property_key, base_value));
 }
 
-inline ThrowCompletionOr<Value> get_global(Bytecode::Interpreter& interpreter, DeprecatedFlyString const& identifier, GlobalVariableCache& cache)
+inline ThrowCompletionOr<Value> get_global(Interpreter& interpreter, IdentifierTableIndex identifier_index, GlobalVariableCache& cache)
 {
     auto& vm = interpreter.vm();
     auto& binding_object = interpreter.global_object();
@@ -245,6 +245,8 @@ inline ThrowCompletionOr<Value> get_global(Bytecode::Interpreter& interpreter, D
     }
 
     cache.environment_serial_number = declarative_record.environment_serial_number();
+
+    auto& identifier = interpreter.current_executable().get_identifier(identifier_index);
 
     if (vm.running_execution_context().script_or_module.has<NonnullGCPtr<Module>>()) {
         // NOTE: GetGlobal is used to access variables stored in the module environment and global environment.
