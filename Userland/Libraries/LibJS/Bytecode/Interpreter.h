@@ -80,6 +80,8 @@ public:
     Vector<Value>& registers() { return vm().running_execution_context().registers; }
     Vector<Value> const& registers() const { return vm().running_execution_context().registers; }
 
+    ExecutionContext& running_execution_context() { return *m_running_execution_context; }
+
 private:
     void run_bytecode(size_t entry_point);
 
@@ -100,6 +102,7 @@ private:
     Span<Value> m_registers;
     Span<Value> m_locals;
     Span<Value> m_constants;
+    ExecutionContext* m_running_execution_context { nullptr };
 };
 
 extern bool g_dump_bytecode;
