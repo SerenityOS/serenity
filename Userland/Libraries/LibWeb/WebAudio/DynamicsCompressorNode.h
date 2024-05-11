@@ -35,6 +35,7 @@ public:
     JS::NonnullGCPtr<AudioParam const> ratio() const { return m_ratio; }
     JS::NonnullGCPtr<AudioParam const> attack() const { return m_attack; }
     JS::NonnullGCPtr<AudioParam const> release() const { return m_release; }
+    float reduction() const { return m_reduction; }
 
 protected:
     DynamicsCompressorNode(JS::Realm&, JS::NonnullGCPtr<BaseAudioContext>, DynamicsCompressorOptions const& = {});
@@ -57,6 +58,9 @@ private:
 
     // https://webaudio.github.io/web-audio-api/#dom-dynamicscompressornode-release
     JS::NonnullGCPtr<AudioParam> m_release;
+
+    // https://webaudio.github.io/web-audio-api/#dom-dynamicscompressornode-internal-reduction-slot
+    float m_reduction { 0 }; // [[internal reduction]]
 };
 
 }
