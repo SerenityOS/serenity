@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/StackUnwinder.h>
 #include <AK/TemporaryChange.h>
 #include <Kernel/Arch/SafeMem.h>
 #include <Kernel/Arch/SmapDisabler.h>
@@ -129,80 +130,38 @@ NEVER_INLINE static void dump_backtrace_impl(FlatPtr frame_pointer, bool use_ksy
         KernelSymbol const* symbol { nullptr };
     };
 
-    struct FrameRecord {
-        FlatPtr previous_frame_pointer;
-        FlatPtr return_address;
-    };
-
-    auto safe_memcpy_frame_record_from_stack = [](FlatPtr current_frame_pointer) -> ErrorOr<FrameRecord> {
-#if ARCH(X86_64) || ARCH(AARCH64)
-        // x86_64/aarch64 frame record layout:
-        // rbp/fp+8: return address
-        // rbp/fp+0: previous base/frame pointer
-
-        FlatPtr previous_frame_pointer_and_return_address[2];
-        void* fault_at;
-        if (!safe_memcpy(previous_frame_pointer_and_return_address, bit_cast<FlatPtr*>(current_frame_pointer), sizeof(previous_frame_pointer_and_return_address), fault_at))
-            return EFAULT;
-
-        return FrameRecord {
-            .previous_frame_pointer = previous_frame_pointer_and_return_address[0],
-            .return_address = previous_frame_pointer_and_return_address[1],
-        };
-#elif ARCH(RISCV64)
-        // riscv64 frame record layout:
-        // fp-8: return address
-        // fp-16: previous frame pointer
-
-        FlatPtr previous_frame_pointer_and_return_address[2];
-        void* fault_at;
-        if (!safe_memcpy(previous_frame_pointer_and_return_address, bit_cast<FlatPtr*>(current_frame_pointer) - 2, sizeof(previous_frame_pointer_and_return_address), fault_at))
-            return EFAULT;
-
-        return FrameRecord {
-            .previous_frame_pointer = previous_frame_pointer_and_return_address[0],
-            .return_address = previous_frame_pointer_and_return_address[1],
-        };
-#else
-#    error Unknown architecture
-#endif
-    };
-
     constexpr size_t max_recognized_symbol_count = 256;
     RecognizedSymbol recognized_symbols[max_recognized_symbol_count];
     size_t recognized_symbol_count = 0;
-    if (use_ksyms) {
-        FlatPtr current_frame_pointer = frame_pointer;
 
-        while (current_frame_pointer != 0 && recognized_symbol_count < max_recognized_symbol_count) {
-            if (current_frame_pointer < kernel_mapping_base)
-                break;
+    MUST(AK::unwind_stack_from_frame_pointer(
+        frame_pointer,
+        [](FlatPtr address) -> ErrorOr<FlatPtr> {
+            if (address < kernel_mapping_base)
+                return EINVAL;
 
-            auto frame_record_or_error = safe_memcpy_frame_record_from_stack(current_frame_pointer);
-            if (frame_record_or_error.is_error())
-                break;
+            FlatPtr value;
+            void* fault_at;
+            if (!safe_memcpy(&value, bit_cast<FlatPtr*>(address), sizeof(FlatPtr), fault_at))
+                return EFAULT;
 
-            auto frame_record = frame_record_or_error.release_value();
+            return value;
+        },
+        [use_ksyms, print_to_screen, &recognized_symbol_count, &recognized_symbols](AK::StackFrame stack_frame) -> ErrorOr<IterationDecision> {
+            if (use_ksyms) {
+                if (recognized_symbol_count >= max_recognized_symbol_count)
+                    return IterationDecision::Break;
 
-            recognized_symbols[recognized_symbol_count++] = { frame_record.return_address, symbolicate_kernel_address(frame_record.return_address) };
-            current_frame_pointer = frame_record.previous_frame_pointer;
-        }
-    } else {
-        FlatPtr current_frame_pointer = frame_pointer;
+                recognized_symbols[recognized_symbol_count++] = { stack_frame.return_address, symbolicate_kernel_address(stack_frame.return_address) };
+            } else {
+                PRINT_LINE("{:p}", stack_frame.return_address);
+            }
+            return IterationDecision::Continue;
+        }));
 
-        while (current_frame_pointer != 0) {
-            auto frame_record_or_error = safe_memcpy_frame_record_from_stack(current_frame_pointer);
-            if (frame_record_or_error.is_error())
-                break;
-
-            auto frame_record = frame_record_or_error.release_value();
-
-            PRINT_LINE("{:p} (next: {:p})", frame_record.return_address, frame_record.previous_frame_pointer);
-            current_frame_pointer = frame_record.previous_frame_pointer;
-        }
-
+    if (!use_ksyms)
         return;
-    }
+
     VERIFY(recognized_symbol_count <= max_recognized_symbol_count);
     for (size_t i = 0; i < recognized_symbol_count; ++i) {
         auto& symbol = recognized_symbols[i];

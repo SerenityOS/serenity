@@ -8,6 +8,7 @@
 
 #include <AK/BuiltinWrappers.h>
 #include <AK/Format.h>
+#include <AK/StackUnwinder.h>
 #include <AK/StdLibExtras.h>
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
@@ -763,44 +764,47 @@ ErrorOr<Vector<FlatPtr, 32>> ProcessorBase<T>::capture_stack_trace(Thread& threa
     FlatPtr frame_ptr = 0, ip = 0;
     Vector<FlatPtr, 32> stack_trace;
 
-    auto walk_stack = [&](FlatPtr stack_ptr) -> ErrorOr<void> {
+    auto walk_stack = [&](FlatPtr frame_ptr) -> ErrorOr<void> {
         constexpr size_t max_stack_frames = 4096;
         bool is_walking_userspace_stack = false;
         TRY(stack_trace.try_append(ip));
-        size_t count = 1;
-        while (stack_ptr && stack_trace.size() < max_stack_frames) {
-            FlatPtr retaddr;
 
-            count++;
-            if (max_frames != 0 && count > max_frames)
-                break;
-
-            if (!Memory::is_user_address(VirtualAddress { stack_ptr })) {
-                if (is_walking_userspace_stack) {
-                    dbgln("SHENANIGANS! Userspace stack points back into kernel memory");
-                    break;
+        TRY(AK::unwind_stack_from_frame_pointer(
+            frame_ptr,
+            [&is_walking_userspace_stack](FlatPtr address) -> ErrorOr<FlatPtr> {
+                if (!Memory::is_user_address(VirtualAddress { address })) {
+                    if (is_walking_userspace_stack) {
+                        dbgln("SHENANIGANS! Userspace stack points back into kernel memory");
+                        return EFAULT;
+                    }
+                } else {
+                    is_walking_userspace_stack = true;
                 }
-            } else {
-                is_walking_userspace_stack = true;
-            }
 
-            if (Memory::is_user_range(VirtualAddress(stack_ptr), sizeof(FlatPtr) * 2)) {
-                if (copy_from_user(&retaddr, &((FlatPtr*)stack_ptr)[1]).is_error() || !retaddr)
-                    break;
-                TRY(stack_trace.try_append(retaddr));
-                if (copy_from_user(&stack_ptr, (FlatPtr*)stack_ptr).is_error())
-                    break;
-            } else {
-                void* fault_at;
-                if (!safe_memcpy(&retaddr, &((FlatPtr*)stack_ptr)[1], sizeof(FlatPtr), fault_at) || !retaddr)
-                    break;
-                TRY(stack_trace.try_append(retaddr));
-                if (!safe_memcpy(&stack_ptr, (FlatPtr*)stack_ptr, sizeof(FlatPtr), fault_at))
-                    break;
-            }
-        }
+                FlatPtr value;
+
+                if (Memory::is_user_range(VirtualAddress { address }, sizeof(FlatPtr))) {
+                    TRY(copy_from_user(&value, bit_cast<FlatPtr*>(address)));
+                } else {
+                    void* fault_at;
+                    if (!safe_memcpy(&value, bit_cast<FlatPtr*>(address), sizeof(FlatPtr), fault_at))
+                        return EFAULT;
+                }
+
+                return value;
+            },
+            [&stack_trace, max_frames](AK::StackFrame stack_frame) -> ErrorOr<IterationDecision> {
+                if (stack_trace.size() >= max_stack_frames || (max_frames != 0 && stack_trace.size() >= max_frames))
+                    return IterationDecision::Break;
+
+                TRY(stack_trace.try_append(stack_frame.return_address));
+
+                return IterationDecision::Continue;
+            }));
+
         return {};
     };
+
     auto capture_current_thread = [&]() {
         frame_ptr = (FlatPtr)__builtin_frame_address(0);
         ip = (FlatPtr)__builtin_return_address(0);
