@@ -94,7 +94,7 @@ private:
 
         fuse_out_header* header = bit_cast<fuse_out_header*>(response.data());
         if (header->unique != unique) {
-            dmesgln("FUSE: Received a mismatched request");
+            dmesgln("FUSE: Received a mismatched request (expected #{}, received #{})", unique, header->unique);
             return Error::from_errno(EINVAL);
         }
 
