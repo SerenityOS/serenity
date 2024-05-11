@@ -8,9 +8,9 @@
 #include <AK/JsonArraySerializer.h>
 #include <AK/JsonObjectSerializer.h>
 #include <AK/ScopeGuard.h>
+#include <AK/StackUnwinder.h>
 #include <Kernel/Arch/RegisterState.h>
 #include <Kernel/Arch/SafeMem.h>
-#include <Kernel/Arch/SmapDisabler.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/Library/KBufferBuilder.h>
 #include <Kernel/Tasks/PerformanceEventBuffer.h>
@@ -30,40 +30,48 @@ NEVER_INLINE ErrorOr<void> PerformanceEventBuffer::append(int type, FlatPtr arg1
     return append_with_ip_and_bp(current_thread->pid(), current_thread->tid(), 0, base_pointer, type, 0, arg1, arg2, arg3, filesystem_event);
 }
 
-static Vector<FlatPtr, PerformanceEvent::max_stack_frame_count> raw_backtrace(FlatPtr bp, FlatPtr ip)
+static Vector<FlatPtr, PerformanceEvent::max_stack_frame_count> raw_backtrace(FlatPtr frame_pointer, FlatPtr pc)
 {
     Vector<FlatPtr, PerformanceEvent::max_stack_frame_count> backtrace;
-    if (ip != 0)
-        backtrace.unchecked_append(ip);
-    FlatPtr stack_ptr_copy;
-    FlatPtr stack_ptr = bp;
-    // FIXME: Figure out how to remove this SmapDisabler without breaking profile stacks.
-    SmapDisabler disabler;
+    if (pc != 0)
+        backtrace.unchecked_append(pc);
+
     // NOTE: The stack should always have kernel frames first, followed by userspace frames.
     //       If a userspace frame points back into kernel memory, something is afoot.
     bool is_walking_userspace_stack = false;
-    while (stack_ptr) {
-        void* fault_at;
-        if (!safe_memcpy(&stack_ptr_copy, (void*)stack_ptr, sizeof(FlatPtr), fault_at))
-            break;
-        if (!Memory::is_user_address(VirtualAddress { stack_ptr })) {
-            if (is_walking_userspace_stack) {
-                dbgln("SHENANIGANS! Userspace stack points back into kernel memory");
-                break;
+
+    MUST(AK::unwind_stack_from_frame_pointer(
+        frame_pointer,
+        [&is_walking_userspace_stack](FlatPtr address) -> ErrorOr<FlatPtr> {
+            if (!Memory::is_user_address(VirtualAddress { address })) {
+                if (is_walking_userspace_stack) {
+                    dbgln("SHENANIGANS! Userspace stack points back into kernel memory");
+                    return EFAULT;
+                }
+            } else {
+                is_walking_userspace_stack = true;
             }
-        } else {
-            is_walking_userspace_stack = true;
-        }
-        FlatPtr retaddr;
-        if (!safe_memcpy(&retaddr, (void*)(stack_ptr + sizeof(FlatPtr)), sizeof(FlatPtr), fault_at))
-            break;
-        if (retaddr == 0)
-            break;
-        backtrace.unchecked_append(retaddr);
-        if (backtrace.size() == PerformanceEvent::max_stack_frame_count)
-            break;
-        stack_ptr = stack_ptr_copy;
-    }
+
+            FlatPtr value;
+
+            if (Memory::is_user_range(VirtualAddress { address }, sizeof(FlatPtr))) {
+                TRY(copy_from_user(&value, bit_cast<FlatPtr*>(address)));
+            } else {
+                void* fault_at;
+                if (!safe_memcpy(&value, bit_cast<FlatPtr*>(address), sizeof(FlatPtr), fault_at))
+                    return EFAULT;
+            }
+
+            return value;
+        },
+        [&backtrace](AK::StackFrame stack_frame) -> ErrorOr<IterationDecision> {
+            backtrace.unchecked_append(stack_frame.return_address);
+            if (backtrace.size() >= PerformanceEvent::max_stack_frame_count)
+                return IterationDecision::Break;
+
+            return IterationDecision::Continue;
+        }));
+
     return backtrace;
 }
 
