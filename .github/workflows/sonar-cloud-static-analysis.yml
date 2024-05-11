@@ -15,7 +15,7 @@ jobs:
     if: always() && github.repository == 'SerenityOS/serenity' && github.ref == 'refs/heads/master'
     env:
       # Latest scanner version is tracked on: https://docs.sonarcloud.io/advanced-setup/ci-based-analysis/sonarscanner-cli/
-      SONAR_SCANNER_VERSION: 4.7.0.2747
+      SONAR_SCANNER_VERSION: 5.0.1.3006
       SONAR_SERVER_URL: "https://sonarcloud.io"
       SONAR_ANALYSIS_ARCH: x86_64
     steps:
@@ -24,11 +24,11 @@ jobs:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
 
         # Install JDK for sonar-scanner
-      - name: Set up JDK 11
+      - name: Set Up Java
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: 11
+          java-version: 17
 
       - name: Download and set up sonar-scanner
         env:
