@@ -219,25 +219,6 @@ void VM::gather_roots(HashMap<Cell*, HeapRoot>& roots)
         roots.set(job, HeapRoot { .type = HeapRoot::Type::VM });
 }
 
-ThrowCompletionOr<Value> VM::named_evaluation_if_anonymous_function(ASTNode const& expression, DeprecatedFlyString const& name)
-{
-    // 8.3.3 Static Semantics: IsAnonymousFunctionDefinition ( expr ), https://tc39.es/ecma262/#sec-isanonymousfunctiondefinition
-    // And 8.3.5 Runtime Semantics: NamedEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-namedevaluation
-    if (is<FunctionExpression>(expression)) {
-        auto& function = static_cast<FunctionExpression const&>(expression);
-        if (!function.has_name()) {
-            return function.instantiate_ordinary_function_expression(*this, name);
-        }
-    } else if (is<ClassExpression>(expression)) {
-        auto& class_expression = static_cast<ClassExpression const&>(expression);
-        if (!class_expression.has_name()) {
-            return TRY(class_expression.class_definition_evaluation(*this, {}, name));
-        }
-    }
-
-    return execute_ast_node(expression);
-}
-
 ThrowCompletionOr<Value> VM::execute_ast_node(ASTNode const& node)
 {
     // FIXME: This function should be gone once we will emit bytecode for everything before executing instructions.

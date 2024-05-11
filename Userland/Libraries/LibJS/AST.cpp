@@ -452,26 +452,6 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::create_class_const
     return { class_constructor };
 }
 
-ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_evaluation(VM& vm, Optional<DeprecatedFlyString> const& binding_name, DeprecatedFlyString const& class_name) const
-{
-    auto* environment = vm.lexical_environment();
-    VERIFY(environment);
-    auto class_environment = new_declarative_environment(*environment);
-
-    Value super_class;
-
-    if (binding_name.has_value())
-        MUST(class_environment->create_immutable_binding(vm, binding_name.value(), true));
-
-    if (!m_super_class.is_null()) {
-        vm.running_execution_context().lexical_environment = class_environment;
-        super_class = TRY(vm.execute_ast_node(*m_super_class));
-        vm.running_execution_context().lexical_environment = environment;
-    }
-
-    return create_class_constructor(vm, class_environment, environment, super_class, binding_name, class_name);
-}
-
 void ASTNode::dump(int indent) const
 {
     print_indent(indent);
