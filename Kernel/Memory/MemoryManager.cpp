@@ -788,7 +788,7 @@ UNMAP_AFTER_INIT void MemoryManager::initialize_physical_pages()
             auto pt_paddr = page_tables_base.offset(pt_index * PAGE_SIZE);
             auto physical_page_index = PhysicalAddress::physical_page_index(pt_paddr.get());
             auto& physical_page_entry = m_physical_page_entries[physical_page_index];
-            auto physical_page = adopt_lock_ref(*new (&physical_page_entry.allocated.physical_page) PhysicalPage(MayReturnToFreeList::No));
+            auto physical_page = adopt_lock_ref(*new (&physical_page_entry.allocated.physical_page) PhysicalRAMPage(MayReturnToFreeList::No));
 
             // NOTE: This leaked ref is matched by the unref in MemoryManager::release_pte()
             (void)physical_page.leak_ref();
@@ -827,7 +827,7 @@ PhysicalPageEntry& MemoryManager::get_physical_page_entry(PhysicalAddress physic
     return m_physical_page_entries[physical_page_entry_index];
 }
 
-PhysicalAddress MemoryManager::get_physical_address(PhysicalPage const& physical_page)
+PhysicalAddress MemoryManager::get_physical_address(PhysicalRAMPage const& physical_page)
 {
     PhysicalPageEntry const& physical_page_entry = *reinterpret_cast<PhysicalPageEntry const*>((u8 const*)&physical_page - __builtin_offsetof(PhysicalPageEntry, allocated.physical_page));
     size_t physical_page_entry_index = &physical_page_entry - m_physical_page_entries;
@@ -1065,7 +1065,7 @@ ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_contiguous_kernel_region(
     return region;
 }
 
-ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_page(StringView name, Memory::Region::Access access, RefPtr<Memory::PhysicalPage>& dma_buffer_page)
+ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_page(StringView name, Memory::Region::Access access, RefPtr<Memory::PhysicalRAMPage>& dma_buffer_page)
 {
     auto page = TRY(allocate_physical_page());
     dma_buffer_page = page;
@@ -1075,12 +1075,12 @@ ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_page(S
 
 ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_page(StringView name, Memory::Region::Access access)
 {
-    RefPtr<Memory::PhysicalPage> dma_buffer_page;
+    RefPtr<Memory::PhysicalRAMPage> dma_buffer_page;
 
     return allocate_dma_buffer_page(name, access, dma_buffer_page);
 }
 
-ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_pages(size_t size, StringView name, Memory::Region::Access access, Vector<NonnullRefPtr<Memory::PhysicalPage>>& dma_buffer_pages)
+ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_pages(size_t size, StringView name, Memory::Region::Access access, Vector<NonnullRefPtr<Memory::PhysicalRAMPage>>& dma_buffer_pages)
 {
     VERIFY(!(size % PAGE_SIZE));
     dma_buffer_pages = TRY(allocate_contiguous_physical_pages(size));
@@ -1091,7 +1091,7 @@ ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_pages(
 ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_pages(size_t size, StringView name, Memory::Region::Access access)
 {
     VERIFY(!(size % PAGE_SIZE));
-    Vector<NonnullRefPtr<Memory::PhysicalPage>> dma_buffer_pages;
+    Vector<NonnullRefPtr<Memory::PhysicalRAMPage>> dma_buffer_pages;
 
     return allocate_dma_buffer_pages(size, name, access, dma_buffer_pages);
 }
@@ -1109,7 +1109,7 @@ ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region(size_t size
     return region;
 }
 
-ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region_with_physical_pages(Span<NonnullRefPtr<PhysicalPage>> pages, StringView name, Region::Access access, Region::Cacheable cacheable)
+ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region_with_physical_pages(Span<NonnullRefPtr<PhysicalRAMPage>> pages, StringView name, Region::Access access, Region::Cacheable cacheable)
 {
     auto vmobject = TRY(AnonymousVMObject::try_create_with_physical_pages(pages));
     OwnPtr<KString> name_kstring;
@@ -1218,9 +1218,9 @@ void MemoryManager::deallocate_physical_page(PhysicalAddress paddr)
     });
 }
 
-RefPtr<PhysicalPage> MemoryManager::find_free_physical_page(bool committed)
+RefPtr<PhysicalRAMPage> MemoryManager::find_free_physical_page(bool committed)
 {
-    RefPtr<PhysicalPage> page;
+    RefPtr<PhysicalRAMPage> page;
     m_global_data.with([&](auto& global_data) {
         if (committed) {
             // Draw from the committed pages pool. We should always have these pages available
@@ -1247,7 +1247,7 @@ RefPtr<PhysicalPage> MemoryManager::find_free_physical_page(bool committed)
     return page;
 }
 
-NonnullRefPtr<PhysicalPage> MemoryManager::allocate_committed_physical_page(Badge<CommittedPhysicalPageSet>, ShouldZeroFill should_zero_fill)
+NonnullRefPtr<PhysicalRAMPage> MemoryManager::allocate_committed_physical_page(Badge<CommittedPhysicalPageSet>, ShouldZeroFill should_zero_fill)
 {
     auto page = find_free_physical_page(true);
     VERIFY(page);
@@ -1260,9 +1260,9 @@ NonnullRefPtr<PhysicalPage> MemoryManager::allocate_committed_physical_page(Badg
     return page.release_nonnull();
 }
 
-ErrorOr<NonnullRefPtr<PhysicalPage>> MemoryManager::allocate_physical_page(ShouldZeroFill should_zero_fill, bool* did_purge)
+ErrorOr<NonnullRefPtr<PhysicalRAMPage>> MemoryManager::allocate_physical_page(ShouldZeroFill should_zero_fill, bool* did_purge)
 {
-    return m_global_data.with([&](auto&) -> ErrorOr<NonnullRefPtr<PhysicalPage>> {
+    return m_global_data.with([&](auto&) -> ErrorOr<NonnullRefPtr<PhysicalRAMPage>> {
         auto page = find_free_physical_page(false);
         bool purged_pages = false;
 
@@ -1317,12 +1317,12 @@ ErrorOr<NonnullRefPtr<PhysicalPage>> MemoryManager::allocate_physical_page(Shoul
     });
 }
 
-ErrorOr<Vector<NonnullRefPtr<PhysicalPage>>> MemoryManager::allocate_contiguous_physical_pages(size_t size)
+ErrorOr<Vector<NonnullRefPtr<PhysicalRAMPage>>> MemoryManager::allocate_contiguous_physical_pages(size_t size)
 {
     VERIFY(!(size % PAGE_SIZE));
     size_t page_count = ceil_div(size, static_cast<size_t>(PAGE_SIZE));
 
-    auto physical_pages = TRY(m_global_data.with([&](auto& global_data) -> ErrorOr<Vector<NonnullRefPtr<PhysicalPage>>> {
+    auto physical_pages = TRY(m_global_data.with([&](auto& global_data) -> ErrorOr<Vector<NonnullRefPtr<PhysicalRAMPage>>> {
         // We need to make sure we don't touch pages that we have committed to
         if (global_data.system_memory_info.physical_pages_uncommitted < page_count)
             return ENOMEM;
@@ -1495,7 +1495,7 @@ CommittedPhysicalPageSet::~CommittedPhysicalPageSet()
         MM.uncommit_physical_pages({}, m_page_count);
 }
 
-NonnullRefPtr<PhysicalPage> CommittedPhysicalPageSet::take_one()
+NonnullRefPtr<PhysicalRAMPage> CommittedPhysicalPageSet::take_one()
 {
     VERIFY(m_page_count > 0);
     --m_page_count;
@@ -1509,7 +1509,7 @@ void CommittedPhysicalPageSet::uncommit_one()
     MM.uncommit_physical_pages({}, 1);
 }
 
-void MemoryManager::copy_physical_page(PhysicalPage& physical_page, u8 page_buffer[PAGE_SIZE])
+void MemoryManager::copy_physical_page(PhysicalRAMPage& physical_page, u8 page_buffer[PAGE_SIZE])
 {
     auto* quickmapped_page = quickmap_page(physical_page);
     memcpy(page_buffer, quickmapped_page, PAGE_SIZE);

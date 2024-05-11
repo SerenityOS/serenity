@@ -22,7 +22,7 @@ ErrorOr<NonnullLockRefPtr<MMIOVMObject>> MMIOVMObject::try_create_for_physical_r
     return adopt_nonnull_lock_ref_or_enomem(new (nothrow) MMIOVMObject(paddr, move(new_physical_pages)));
 }
 
-MMIOVMObject::MMIOVMObject(PhysicalAddress paddr, FixedArray<RefPtr<PhysicalPage>>&& new_physical_pages)
+MMIOVMObject::MMIOVMObject(PhysicalAddress paddr, FixedArray<RefPtr<PhysicalRAMPage>>&& new_physical_pages)
     : VMObject(move(new_physical_pages))
 {
     VERIFY(paddr.page_base() == paddr);

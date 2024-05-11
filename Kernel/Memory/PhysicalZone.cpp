@@ -7,7 +7,7 @@
 #include <AK/BuiltinWrappers.h>
 #include <AK/Format.h>
 #include <Kernel/Memory/MemoryManager.h>
-#include <Kernel/Memory/PhysicalPage.h>
+#include <Kernel/Memory/PhysicalRAMPage.h>
 #include <Kernel/Memory/PhysicalZone.h>
 
 namespace Kernel::Memory {

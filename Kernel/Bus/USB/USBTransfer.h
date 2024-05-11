@@ -12,7 +12,7 @@
 #include <Kernel/Bus/USB/USBPipe.h>
 #include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
-#include <Kernel/Memory/PhysicalPage.h>
+#include <Kernel/Memory/PhysicalRAMPage.h>
 #include <Kernel/Memory/Region.h>
 
 // TODO: Callback stuff in this class please!

@@ -8,7 +8,7 @@
 
 #include <AK/OwnPtr.h>
 #include <AK/Vector.h>
-#include <Kernel/Memory/PhysicalPage.h>
+#include <Kernel/Memory/PhysicalRAMPage.h>
 #include <Kernel/Memory/PhysicalZone.h>
 
 namespace Kernel::Memory {
@@ -34,8 +34,8 @@ public:
 
     OwnPtr<PhysicalRegion> try_take_pages_from_beginning(size_t);
 
-    RefPtr<PhysicalPage> take_free_page();
-    Vector<NonnullRefPtr<PhysicalPage>> take_contiguous_free_pages(size_t count);
+    RefPtr<PhysicalRAMPage> take_free_page();
+    Vector<NonnullRefPtr<PhysicalRAMPage>> take_contiguous_free_pages(size_t count);
     void return_page(PhysicalAddress);
 
 private:

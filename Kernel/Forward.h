@@ -76,7 +76,7 @@ class InodeVMObject;
 class MappedROM;
 class MemoryManager;
 class PageDirectory;
-class PhysicalPage;
+class PhysicalRAMPage;
 class PhysicalRegion;
 class PrivateInodeVMObject;
 class Region;

@@ -76,8 +76,8 @@ private:
     Vector<NonnullLockRefPtr<NVMeQueue>> m_queues;
     Vector<NonnullLockRefPtr<NVMeNameSpace>> m_namespaces;
     Memory::TypedMapping<ControllerRegister volatile> m_controller_regs;
-    RefPtr<Memory::PhysicalPage> m_dbbuf_shadow_page;
-    RefPtr<Memory::PhysicalPage> m_dbbuf_eventidx_page;
+    RefPtr<Memory::PhysicalRAMPage> m_dbbuf_shadow_page;
+    RefPtr<Memory::PhysicalRAMPage> m_dbbuf_eventidx_page;
     bool m_admin_queue_ready { false };
     size_t m_device_count { 0 };
     AK::Duration m_ready_timeout;

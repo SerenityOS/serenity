@@ -238,7 +238,7 @@ set(KERNEL_SOURCES
     Memory/InodeVMObject.cpp
     Memory/MemoryManager.cpp
     Memory/MMIOVMObject.cpp
-    Memory/PhysicalPage.cpp
+    Memory/PhysicalRAMPage.cpp
     Memory/PhysicalRegion.cpp
     Memory/PhysicalZone.cpp
     Memory/PrivateInodeVMObject.cpp

@@ -17,7 +17,7 @@
 #include <Kernel/Forward.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/PhysicalAddress.h>
-#include <Kernel/Memory/PhysicalPage.h>
+#include <Kernel/Memory/PhysicalRAMPage.h>
 
 namespace Kernel::Memory {
 
@@ -211,9 +211,9 @@ private:
     static void deregister_page_directory(PageDirectory* directory);
 
     Process* m_process { nullptr };
-    RefPtr<PhysicalPage> m_root_table;
-    RefPtr<PhysicalPage> m_directory_table;
-    RefPtr<PhysicalPage> m_directory_pages[512];
+    RefPtr<PhysicalRAMPage> m_root_table;
+    RefPtr<PhysicalRAMPage> m_directory_table;
+    RefPtr<PhysicalRAMPage> m_directory_pages[512];
     RecursiveSpinlock<LockRank::None> m_lock {};
 };
 

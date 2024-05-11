@@ -17,17 +17,17 @@ SpinlockProtected<VMObject::AllInstancesList, LockRank::None>& VMObject::all_ins
     return s_all_instances;
 }
 
-ErrorOr<FixedArray<RefPtr<PhysicalPage>>> VMObject::try_clone_physical_pages() const
+ErrorOr<FixedArray<RefPtr<PhysicalRAMPage>>> VMObject::try_clone_physical_pages() const
 {
     return m_physical_pages.clone();
 }
 
-ErrorOr<FixedArray<RefPtr<PhysicalPage>>> VMObject::try_create_physical_pages(size_t size)
+ErrorOr<FixedArray<RefPtr<PhysicalRAMPage>>> VMObject::try_create_physical_pages(size_t size)
 {
-    return FixedArray<RefPtr<PhysicalPage>>::create(ceil_div(size, static_cast<size_t>(PAGE_SIZE)));
+    return FixedArray<RefPtr<PhysicalRAMPage>>::create(ceil_div(size, static_cast<size_t>(PAGE_SIZE)));
 }
 
-VMObject::VMObject(FixedArray<RefPtr<PhysicalPage>>&& new_physical_pages)
+VMObject::VMObject(FixedArray<RefPtr<PhysicalRAMPage>>&& new_physical_pages)
     : m_physical_pages(move(new_physical_pages))
 {
     all_instances().with([&](auto& list) { list.append(*this); });

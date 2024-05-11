@@ -74,7 +74,7 @@ OwnPtr<PhysicalRegion> PhysicalRegion::try_take_pages_from_beginning(size_t page
     return try_create(taken_lower, taken_upper);
 }
 
-Vector<NonnullRefPtr<PhysicalPage>> PhysicalRegion::take_contiguous_free_pages(size_t count)
+Vector<NonnullRefPtr<PhysicalRAMPage>> PhysicalRegion::take_contiguous_free_pages(size_t count)
 {
     auto rounded_page_count = next_power_of_two(count);
     auto order = count_trailing_zeroes(rounded_page_count);
@@ -94,15 +94,15 @@ Vector<NonnullRefPtr<PhysicalPage>> PhysicalRegion::take_contiguous_free_pages(s
     if (!page_base.has_value())
         return {};
 
-    Vector<NonnullRefPtr<PhysicalPage>> physical_pages;
+    Vector<NonnullRefPtr<PhysicalRAMPage>> physical_pages;
     physical_pages.ensure_capacity(count);
 
     for (size_t i = 0; i < count; ++i)
-        physical_pages.append(PhysicalPage::create(page_base.value().offset(i * PAGE_SIZE)));
+        physical_pages.append(PhysicalRAMPage::create(page_base.value().offset(i * PAGE_SIZE)));
     return physical_pages;
 }
 
-RefPtr<PhysicalPage> PhysicalRegion::take_free_page()
+RefPtr<PhysicalRAMPage> PhysicalRegion::take_free_page()
 {
     if (m_usable_zones.is_empty())
         return nullptr;
@@ -116,7 +116,7 @@ RefPtr<PhysicalPage> PhysicalRegion::take_free_page()
         m_full_zones.append(zone);
     }
 
-    return PhysicalPage::create(page.value());
+    return PhysicalRAMPage::create(page.value());
 }
 
 void PhysicalRegion::return_page(PhysicalAddress paddr)
