@@ -7,7 +7,6 @@ configopts=(
     '-Ddynamic_core=none'
     '-Dtry_static_libs=opusfile'
     '-Dunit_tests=disabled'
-    '-Duse_mt32emu=false'
     '-Duse_opengl=false'
 )
 files=(
@@ -15,6 +14,7 @@ files=(
 )
 depends=(
     'fluidsynth'
+    'libmt32emu'
     'libslirp'
     'libpng'
     'opusfile'
