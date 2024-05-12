@@ -232,7 +232,7 @@ CodeGenerationErrorOr<NonnullGCPtr<Executable>> Generator::emit_function_body_by
             if (block->is_terminated())
                 continue;
             generator.switch_to_basic_block(*block);
-            generator.emit<Bytecode::Op::Yield>(nullptr, generator.add_constant(js_undefined()));
+            generator.emit_return<Bytecode::Op::Yield>(generator.add_constant(js_undefined()));
         }
     }
 

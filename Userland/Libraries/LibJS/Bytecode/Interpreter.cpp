@@ -356,8 +356,6 @@ FLATTEN_ON_CLANG void Interpreter::run_bytecode(size_t entry_point)
         goto* bytecode_dispatch_table[static_cast<size_t>(next_instruction.type())];                \
     } while (0)
 
-    bool will_yield = false;
-
     for (;;) {
     start:
         for (;;) {
@@ -486,7 +484,19 @@ FLATTEN_ON_CLANG void Interpreter::run_bytecode(size_t entry_point)
             }
             if (!saved_return_value().is_empty()) {
                 do_return(saved_return_value());
-                goto run_finalizer_and_return;
+                if (auto handlers = executable.exception_handlers_for_offset(program_counter); handlers.has_value()) {
+                    if (auto finalizer = handlers.value().finalizer_offset; finalizer.has_value()) {
+                        VERIFY(!running_execution_context.unwind_contexts.is_empty());
+                        auto& unwind_context = running_execution_context.unwind_contexts.last();
+                        VERIFY(unwind_context.executable == m_current_executable);
+                        reg(Register::saved_return_value()) = reg(Register::return_value());
+                        reg(Register::return_value()) = {};
+                        program_counter = finalizer.value();
+                        // the unwind_context will be pop'ed when entering the finally block
+                        goto start;
+                    }
+                }
+                return;
             }
             auto const old_scheduled_jump = running_execution_context.previously_scheduled_jumps.take_last();
             if (m_scheduled_jump.has_value()) {
@@ -639,14 +649,13 @@ FLATTEN_ON_CLANG void Interpreter::run_bytecode(size_t entry_point)
         handle_Await: {
             auto& instruction = *reinterpret_cast<Op::Await const*>(&bytecode[program_counter]);
             instruction.execute_impl(*this);
-            will_yield = true;
-            goto run_finalizer_and_return;
+            return;
         }
 
         handle_Return: {
             auto& instruction = *reinterpret_cast<Op::Return const*>(&bytecode[program_counter]);
             instruction.execute_impl(*this);
-            goto run_finalizer_and_return;
+            return;
         }
 
         handle_Yield: {
@@ -657,25 +666,8 @@ FLATTEN_ON_CLANG void Interpreter::run_bytecode(size_t entry_point)
             //       but we generate a Yield Operation in the case of returns in
             //       generators as well, so we need to check if it will actually
             //       continue or is a `return` in disguise
-            will_yield = instruction.continuation().has_value();
-            goto run_finalizer_and_return;
+            return;
         }
-        }
-    }
-
-run_finalizer_and_return:
-    if (!will_yield) {
-        if (auto handlers = executable.exception_handlers_for_offset(program_counter); handlers.has_value()) {
-            if (auto finalizer = handlers.value().finalizer_offset; finalizer.has_value()) {
-                VERIFY(!running_execution_context.unwind_contexts.is_empty());
-                auto& unwind_context = running_execution_context.unwind_contexts.last();
-                VERIFY(unwind_context.executable == m_current_executable);
-                reg(Register::saved_return_value()) = reg(Register::return_value());
-                reg(Register::return_value()) = {};
-                program_counter = finalizer.value();
-                // the unwind_context will be pop'ed when entering the finally block
-                goto start;
-            }
         }
     }
 }

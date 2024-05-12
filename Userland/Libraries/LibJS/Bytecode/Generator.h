@@ -261,12 +261,42 @@ public:
     }
 
     bool is_in_finalizer() const { return m_boundaries.contains_slow(BlockBoundaryType::LeaveFinally); }
+    bool must_enter_finalizer() const { return m_boundaries.contains_slow(BlockBoundaryType::ReturnToFinally); }
 
     void generate_break();
     void generate_break(DeprecatedFlyString const& break_label);
 
     void generate_continue();
     void generate_continue(DeprecatedFlyString const& continue_label);
+
+    template<typename OpType>
+    void emit_return(ScopedOperand value)
+    requires(IsOneOf<OpType, Op::Return, Op::Yield>)
+    {
+        // FIXME: Tell the call sites about the `saved_return_value` destination
+        //        And take that into account in the movs below.
+        perform_needed_unwinds<OpType>();
+        if (must_enter_finalizer()) {
+            VERIFY(m_current_basic_block->finalizer() != nullptr);
+            // Compare to:
+            // *  Interpreter::do_return
+            // *  Interpreter::run_bytecode::handle_ContinuePendingUnwind
+            // *  Return::execute_impl
+            // *  Yield::execute_impl
+            emit<Bytecode::Op::Mov>(Operand(Register::saved_return_value()), value);
+            emit<Bytecode::Op::Mov>(Operand(Register::exception()), add_constant(Value {}));
+            // FIXME: Do we really need to clear the return value register here?
+            emit<Bytecode::Op::Mov>(Operand(Register::return_value()), add_constant(Value {}));
+
+            emit<Bytecode::Op::Jump>(Label { *m_current_basic_block->finalizer() });
+            return;
+        }
+
+        if constexpr (IsSame<OpType, Op::Return>)
+            emit<Op::Return>(value);
+        else
+            emit<Op::Yield>(nullptr, value);
+    }
 
     void start_boundary(BlockBoundaryType type) { m_boundaries.append(type); }
     void end_boundary(BlockBoundaryType type)
