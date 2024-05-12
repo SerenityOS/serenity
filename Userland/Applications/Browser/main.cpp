@@ -131,11 +131,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    TRY(Core::System::pledge("sigaction stdio recvfd sendfd accept unix fattr cpath rpath wpath proc exec"));
+    TRY(Core::System::pledge("sigaction stdio thread recvfd sendfd accept unix fattr cpath rpath wpath proc exec"));
 
     WebView::ProcessManager::initialize();
 
-    TRY(Core::System::pledge("stdio recvfd sendfd accept unix fattr cpath rpath wpath proc exec"));
+    TRY(Core::System::pledge("stdio thread recvfd sendfd accept unix fattr cpath rpath wpath proc exec"));
 
     Vector<ByteString> specified_urls;
     bool new_window = false;
