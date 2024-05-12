@@ -45,6 +45,8 @@ standard_idl_files = [
   "//Userland/Libraries/LibWeb/CSS/CSSStyleRule.idl",
   "//Userland/Libraries/LibWeb/CSS/CSSStyleSheet.idl",
   "//Userland/Libraries/LibWeb/CSS/CSSSupportsRule.idl",
+  "//Userland/Libraries/LibWeb/CSS/FontFace.idl",
+  "//Userland/Libraries/LibWeb/CSS/FontFaceSet.idl",
   "//Userland/Libraries/LibWeb/CSS/MediaList.idl",
   "//Userland/Libraries/LibWeb/CSS/MediaQueryList.idl",
   "//Userland/Libraries/LibWeb/CSS/MediaQueryListEvent.idl",
