@@ -60,7 +60,7 @@ void SVGPathPaintable::paint(PaintContext& context, PaintPhase phase) const
     if (phase != PaintPhase::Foreground)
         return;
 
-    auto& geometry_element = layout_box().dom_node();
+    auto& graphics_element = layout_box().dom_node();
 
     auto const* svg_node = layout_box().first_ancestor_of_type<Layout::SVGSVGBox>();
     auto svg_element_rect = svg_node->paintable_box()->absolute_rect();
@@ -114,9 +114,9 @@ void SVGPathPaintable::paint(PaintContext& context, PaintPhase phase) const
         .transform = paint_transform
     };
 
-    auto fill_opacity = geometry_element.fill_opacity().value_or(1);
-    auto winding_rule = to_gfx_winding_rule(geometry_element.fill_rule().value_or(SVG::FillRule::Nonzero));
-    if (auto paint_style = geometry_element.fill_paint_style(paint_context); paint_style.has_value()) {
+    auto fill_opacity = graphics_element.fill_opacity().value_or(1);
+    auto winding_rule = to_gfx_winding_rule(graphics_element.fill_rule().value_or(SVG::FillRule::Nonzero));
+    if (auto paint_style = graphics_element.fill_paint_style(paint_context); paint_style.has_value()) {
         context.recording_painter().fill_path({
             .path = closed_path(),
             .paint_style = *paint_style,
@@ -124,7 +124,7 @@ void SVGPathPaintable::paint(PaintContext& context, PaintPhase phase) const
             .opacity = fill_opacity,
             .translation = offset,
         });
-    } else if (auto fill_color = geometry_element.fill_color(); fill_color.has_value()) {
+    } else if (auto fill_color = graphics_element.fill_color(); fill_color.has_value()) {
         context.recording_painter().fill_path({
             .path = closed_path(),
             .color = fill_color->with_opacity(fill_opacity),
@@ -133,12 +133,12 @@ void SVGPathPaintable::paint(PaintContext& context, PaintPhase phase) const
         });
     }
 
-    auto stroke_opacity = geometry_element.stroke_opacity().value_or(1);
+    auto stroke_opacity = graphics_element.stroke_opacity().value_or(1);
 
     // Note: This is assuming .x_scale() == .y_scale() (which it does currently).
-    float stroke_thickness = geometry_element.stroke_width().value_or(1) * viewbox_scale;
+    float stroke_thickness = graphics_element.stroke_width().value_or(1) * viewbox_scale;
 
-    if (auto paint_style = geometry_element.stroke_paint_style(paint_context); paint_style.has_value()) {
+    if (auto paint_style = graphics_element.stroke_paint_style(paint_context); paint_style.has_value()) {
         context.recording_painter().stroke_path({
             .path = path,
             .paint_style = *paint_style,
@@ -146,7 +146,7 @@ void SVGPathPaintable::paint(PaintContext& context, PaintPhase phase) const
             .opacity = stroke_opacity,
             .translation = offset,
         });
-    } else if (auto stroke_color = geometry_element.stroke_color(); stroke_color.has_value()) {
+    } else if (auto stroke_color = graphics_element.stroke_color(); stroke_color.has_value()) {
         context.recording_painter().stroke_path({
             .path = path,
             .color = stroke_color->with_opacity(stroke_opacity),
