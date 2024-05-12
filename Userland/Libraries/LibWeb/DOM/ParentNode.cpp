@@ -156,12 +156,11 @@ JS::NonnullGCPtr<HTMLCollection> ParentNode::get_elements_by_tag_name(FlyString 
 
 // https://dom.spec.whatwg.org/#concept-getelementsbytagnamens
 // NOTE: This method is only exposed on Document and Element, but is in ParentNode to prevent code duplication.
-JS::NonnullGCPtr<HTMLCollection> ParentNode::get_elements_by_tag_name_ns(Optional<String> const& nullable_namespace, FlyString const& local_name)
+JS::NonnullGCPtr<HTMLCollection> ParentNode::get_elements_by_tag_name_ns(Optional<FlyString> namespace_, FlyString const& local_name)
 {
     // 1. If namespace is the empty string, set it to null.
-    Optional<FlyString> namespace_;
-    if (nullable_namespace.has_value() && !nullable_namespace->is_empty())
-        namespace_ = nullable_namespace.value();
+    if (namespace_ == FlyString {})
+        namespace_ = OptionalNone {};
 
     // 2. If both namespace and localName are "*" (U+002A), return a HTMLCollection rooted at root, whose filter matches descendant elements.
     if (namespace_ == "*" && local_name == "*") {

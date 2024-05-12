@@ -71,8 +71,8 @@ interface Document : Node {
 
     Element? getElementById(DOMString id);
     HTMLCollection getElementsByName([FlyString] DOMString name);
-    HTMLCollection getElementsByTagName(DOMString tagName);
-    HTMLCollection getElementsByTagNameNS(DOMString? namespace, DOMString localName);
+    HTMLCollection getElementsByTagName([FlyString] DOMString tagName);
+    HTMLCollection getElementsByTagNameNS([FlyString] DOMString? namespace, [FlyString] DOMString localName);
     HTMLCollection getElementsByClassName(DOMString className);
 
     [SameObject] readonly attribute HTMLCollection applets;

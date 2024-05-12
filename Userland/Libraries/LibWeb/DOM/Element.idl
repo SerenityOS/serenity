@@ -60,8 +60,8 @@ interface Element : Node {
     Element? closest(DOMString selectors);
     [ImplementedAs=matches] boolean webkitMatchesSelector(DOMString selectors); // legacy alias of .matches
 
-    HTMLCollection getElementsByTagName(DOMString tagName);
-    HTMLCollection getElementsByTagNameNS(DOMString? namespace, DOMString localName);
+    HTMLCollection getElementsByTagName([FlyString] DOMString tagName);
+    HTMLCollection getElementsByTagNameNS([FlyString] DOMString? namespace, [FlyString] DOMString localName);
     HTMLCollection getElementsByClassName(DOMString className);
 
     [CEReactions] Element? insertAdjacentElement(DOMString where, Element element); // legacy
