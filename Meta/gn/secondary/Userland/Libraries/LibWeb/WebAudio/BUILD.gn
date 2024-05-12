@@ -1,0 +1,26 @@
+source_set("WebAudio") {
+  configs += [ "//Userland/Libraries/LibWeb:configs" ]
+
+  deps = [ "//Userland/Libraries/LibWeb:all_generated" ]
+
+  sources = [
+    "AudioBuffer.cpp",
+    "AudioBuffer.h",
+    "AudioContext.cpp",
+    "AudioContext.h",
+    "AudioNode.cpp",
+    "AudioNode.h",
+    "AudioParam.cpp",
+    "AudioParam.h",
+    "AudioScheduledSourceNode.cpp",
+    "AudioScheduledSourceNode.h",
+    "BaseAudioContext.cpp",
+    "BaseAudioContext.h",
+    "OfflineAudioContext.cpp",
+    "OfflineAudioContext.h",
+    "OscillatorNode.cpp",
+    "OscillatorNode.h",
+    "PeriodicWave.cpp",
+    "PeriodicWave.h",
+  ]
+}

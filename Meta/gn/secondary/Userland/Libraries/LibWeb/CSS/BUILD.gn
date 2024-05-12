@@ -26,6 +26,7 @@ source_set("CSS") {
     "CSSStyleRule.cpp",
     "CSSStyleSheet.cpp",
     "CSSSupportsRule.cpp",
+    "CSSTransition.cpp",
     "CalculatedOr.cpp",
     "Clip.cpp",
     "Display.cpp",
