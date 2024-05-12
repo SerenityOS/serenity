@@ -70,14 +70,13 @@ public:
 
     Value& local(size_t index)
     {
-        return locals[index];
+        return registers_and_constants_and_locals[index];
     }
 
     u32 passed_argument_count { 0 };
 
     Vector<Value> arguments;
-    Vector<Value> locals;
-    Vector<Value> registers;
+    Vector<Value> registers_and_constants_and_locals;
     Vector<Bytecode::UnwindInfo> unwind_contexts;
     Vector<Optional<size_t>> previously_scheduled_jumps;
     Vector<GCPtr<Environment>> saved_lexical_environments;

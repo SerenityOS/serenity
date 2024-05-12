@@ -49,11 +49,11 @@ public:
     ALWAYS_INLINE Value& saved_return_value() { return reg(Register::saved_return_value()); }
     Value& reg(Register const& r)
     {
-        return m_registers.data()[r.index()];
+        return m_registers_and_constants_and_locals.data()[r.index()];
     }
     Value reg(Register const& r) const
     {
-        return m_registers.data()[r.index()];
+        return m_registers_and_constants_and_locals.data()[r.index()];
     }
 
     [[nodiscard]] Value get(Operand) const;
@@ -77,9 +77,6 @@ public:
     Executable const& current_executable() const { return *m_current_executable; }
     Optional<size_t> program_counter() const { return m_program_counter; }
 
-    Vector<Value>& registers() { return vm().running_execution_context().registers; }
-    Vector<Value> const& registers() const { return vm().running_execution_context().registers; }
-
     ExecutionContext& running_execution_context() { return *m_running_execution_context; }
 
 private:
@@ -99,9 +96,7 @@ private:
     GCPtr<DeclarativeEnvironment> m_global_declarative_environment { nullptr };
     Optional<size_t&> m_program_counter;
     Span<Value> m_arguments;
-    Span<Value> m_registers;
-    Span<Value> m_locals;
-    Span<Value> m_constants;
+    Span<Value> m_registers_and_constants_and_locals;
     ExecutionContext* m_running_execution_context { nullptr };
 };
 

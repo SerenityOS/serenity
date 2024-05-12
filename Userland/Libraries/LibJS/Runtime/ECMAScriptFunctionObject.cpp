@@ -380,8 +380,6 @@ ThrowCompletionOr<Value> ECMAScriptFunctionObject::internal_call(Value this_argu
 
     auto callee_context = ExecutionContext::create(heap());
 
-    callee_context->locals.resize(m_local_variables_names.size());
-
     // Non-standard
     callee_context->arguments.ensure_capacity(max(arguments_list.size(), m_formal_parameters.size()));
     callee_context->arguments.append(arguments_list.data(), arguments_list.size());
@@ -456,8 +454,6 @@ ThrowCompletionOr<NonnullGCPtr<Object>> ECMAScriptFunctionObject::internal_const
     }
 
     auto callee_context = ExecutionContext::create(heap());
-
-    callee_context->locals.resize(m_local_variables_names.size());
 
     // Non-standard
     callee_context->arguments.ensure_capacity(max(arguments_list.size(), m_formal_parameters.size()));
@@ -840,6 +836,8 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
         }
         m_bytecode_executable = m_ecmascript_code->bytecode_executable();
     }
+
+    vm.running_execution_context().registers_and_constants_and_locals.resize(m_local_variables_names.size() + m_bytecode_executable->number_of_registers + m_bytecode_executable->constants.size());
 
     auto result_and_frame = vm.bytecode_interpreter().run_executable(*m_bytecode_executable, {});
 

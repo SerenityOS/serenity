@@ -157,6 +157,7 @@ public:
     size_t length() const;
     ByteString to_byte_string(Bytecode::Executable const&) const;
     void visit_labels(Function<void(Label&)> visitor);
+    void visit_operands(Function<void(Operand&)> visitor);
     static void destroy(Instruction&);
 
 protected:
@@ -166,6 +167,7 @@ protected:
     }
 
     void visit_labels_impl(Function<void(Label&)>) { }
+    void visit_operands_impl(Function<void(Operand&)>) { }
 
 private:
     Type m_type {};
