@@ -337,6 +337,8 @@ static ErrorOr<void> load_gif_frame_descriptors(GIFLoadingContext& context)
             image->use_global_color_map = !(packed_fields & 0x80);
             image->interlaced = (packed_fields & 0x40) != 0;
 
+            dbgln_if(GIF_DEBUG, "Image descriptor: x={}, y={}, width={}, height={}, use_global_color_map={}, local_map_size_exponent={}, interlaced={}", image->x, image->y, image->width, image->height, image->use_global_color_map, (packed_fields & 7) + 1, image->interlaced);
+
             if (!image->use_global_color_map) {
                 size_t local_color_table_size = AK::exp2<size_t>((packed_fields & 7) + 1);
 
