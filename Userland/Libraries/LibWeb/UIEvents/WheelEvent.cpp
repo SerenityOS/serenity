@@ -33,6 +33,11 @@ void WheelEvent::initialize(JS::Realm& realm)
     WEB_SET_PROTOTYPE_FOR_INTERFACE(WheelEvent);
 }
 
+JS::NonnullGCPtr<WheelEvent> WheelEvent::construct_impl(JS::Realm& realm, FlyString const& event_name, WheelEventInit const& wheel_event_init)
+{
+    return create(realm, event_name, wheel_event_init);
+}
+
 JS::NonnullGCPtr<WheelEvent> WheelEvent::create(JS::Realm& realm, FlyString const& event_name, WheelEventInit const& event_init, double page_x, double page_y, double offset_x, double offset_y)
 {
     return realm.heap().allocate<WheelEvent>(realm, realm, event_name, event_init, page_x, page_y, offset_x, offset_y);
