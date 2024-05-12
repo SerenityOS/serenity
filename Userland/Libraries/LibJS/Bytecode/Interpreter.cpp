@@ -54,7 +54,7 @@ static ByteString format_operand(StringView name, Operand operand, Bytecode::Exe
         break;
     case Operand::Type::Constant: {
         builder.append("\033[36m"sv);
-        auto value = executable.constants[operand.index()];
+        auto value = executable.constants[operand.index() - executable.number_of_registers];
         if (value.is_empty())
             builder.append("<Empty>"sv);
         else if (value.is_boolean())
@@ -153,30 +153,12 @@ Interpreter::~Interpreter()
 
 ALWAYS_INLINE Value Interpreter::get(Operand op) const
 {
-    switch (op.type()) {
-    case Operand::Type::Register:
-        return m_registers.data()[op.index()];
-    case Operand::Type::Local:
-        return m_locals.data()[op.index()];
-    case Operand::Type::Constant:
-        return m_constants.data()[op.index()];
-    }
-    __builtin_unreachable();
+    return m_registers_and_constants_and_locals.data()[op.index()];
 }
 
 ALWAYS_INLINE void Interpreter::set(Operand op, Value value)
 {
-    switch (op.type()) {
-    case Operand::Type::Register:
-        m_registers.data()[op.index()] = value;
-        return;
-    case Operand::Type::Local:
-        m_locals.data()[op.index()] = value;
-        return;
-    case Operand::Type::Constant:
-        break;
-    }
-    __builtin_unreachable();
+    m_registers_and_constants_and_locals.data()[op.index()] = value;
 }
 
 // 16.1.6 ScriptEvaluation ( scriptRecord ), https://tc39.es/ecma262/#sec-runtime-semantics-scriptevaluation
@@ -346,7 +328,7 @@ FLATTEN_ON_CLANG void Interpreter::run_bytecode(size_t entry_point)
 
     auto& running_execution_context = this->running_execution_context();
     auto* arguments = running_execution_context.arguments.data();
-    auto* locals = running_execution_context.locals.data();
+    auto* registers_and_constants_and_locals = running_execution_context.registers_and_constants_and_locals.data();
     auto& accumulator = this->accumulator();
     auto& executable = current_executable();
     auto const* bytecode = executable.bytecode.data();
@@ -384,7 +366,7 @@ FLATTEN_ON_CLANG void Interpreter::run_bytecode(size_t entry_point)
 
         handle_SetLocal: {
             auto& instruction = *reinterpret_cast<Op::SetLocal const*>(&bytecode[program_counter]);
-            locals[instruction.index()] = get(instruction.src());
+            registers_and_constants_and_locals[instruction.index()] = get(instruction.src());
             DISPATCH_NEXT(SetLocal);
         }
 
@@ -715,31 +697,35 @@ Interpreter::ResultAndReturnRegister Interpreter::run_executable(Executable& exe
     VERIFY(!vm().execution_context_stack().is_empty());
 
     auto& running_execution_context = vm().running_execution_context();
-    if (running_execution_context.registers.size() < executable.number_of_registers)
-        running_execution_context.registers.resize(executable.number_of_registers);
+    u32 registers_and_contants_count = executable.number_of_registers + executable.constants.size();
+    if (running_execution_context.registers_and_constants_and_locals.size() < registers_and_contants_count)
+        running_execution_context.registers_and_constants_and_locals.resize(registers_and_contants_count);
 
     TemporaryChange restore_running_execution_context { m_running_execution_context, &running_execution_context };
     TemporaryChange restore_arguments { m_arguments, running_execution_context.arguments.span() };
-    TemporaryChange restore_registers { m_registers, running_execution_context.registers.span() };
-    TemporaryChange restore_locals { m_locals, running_execution_context.locals.span() };
-    TemporaryChange restore_constants { m_constants, executable.constants.span() };
+    TemporaryChange restore_registers_and_constants_and_locals { m_registers_and_constants_and_locals, running_execution_context.registers_and_constants_and_locals.span() };
 
     reg(Register::accumulator()) = initial_accumulator_value;
     reg(Register::return_value()) = {};
 
     running_execution_context.executable = &executable;
 
+    for (size_t i = 0; i < executable.constants.size(); ++i) {
+        running_execution_context.registers_and_constants_and_locals[executable.number_of_registers + i] = executable.constants[i];
+    }
+
     run_bytecode(entry_point.value_or(0));
 
     dbgln_if(JS_BYTECODE_DEBUG, "Bytecode::Interpreter did run unit {:p}", &executable);
 
     if constexpr (JS_BYTECODE_DEBUG) {
-        for (size_t i = 0; i < registers().size(); ++i) {
+        auto const& registers_and_constants_and_locals = running_execution_context.registers_and_constants_and_locals;
+        for (size_t i = 0; i < executable.number_of_registers; ++i) {
             String value_string;
-            if (registers()[i].is_empty())
+            if (registers_and_constants_and_locals[i].is_empty())
                 value_string = "(empty)"_string;
             else
-                value_string = registers()[i].to_string_without_side_effects();
+                value_string = registers_and_constants_and_locals[i].to_string_without_side_effects();
             dbgln("[{:3}] {}", i, value_string);
         }
     }
@@ -758,8 +744,8 @@ Interpreter::ResultAndReturnRegister Interpreter::run_executable(Executable& exe
     vm().finish_execution_generation();
 
     if (!exception.is_empty())
-        return { throw_completion(exception), running_execution_context.registers[0] };
-    return { return_value, running_execution_context.registers[0] };
+        return { throw_completion(exception), running_execution_context.registers_and_constants_and_locals[0] };
+    return { return_value, running_execution_context.registers_and_constants_and_locals[0] };
 }
 
 void Interpreter::enter_unwind_context()
