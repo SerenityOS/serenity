@@ -336,6 +336,12 @@ Optional<CSS::FillRule> StyleProperties::fill_rule() const
     return value_id_to_fill_rule(value->to_identifier());
 }
 
+Optional<CSS::ClipRule> StyleProperties::clip_rule() const
+{
+    auto value = property(CSS::PropertyID::ClipRule);
+    return value_id_to_fill_rule(value->to_identifier());
+}
+
 Optional<CSS::FlexDirection> StyleProperties::flex_direction() const
 {
     auto value = property(CSS::PropertyID::FlexDirection);

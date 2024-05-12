@@ -137,6 +137,8 @@ enum class FillRule {
     Evenodd
 };
 
+using ClipRule = FillRule;
+
 enum class TextAnchor {
     Start,
     Middle,

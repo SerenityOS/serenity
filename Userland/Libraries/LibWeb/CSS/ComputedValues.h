@@ -27,6 +27,8 @@
 
 namespace Web::CSS {
 
+using ClipRule = FillRule;
+
 struct FlexBasisContent { };
 using FlexBasis = Variant<FlexBasisContent, Size>;
 
@@ -134,6 +136,7 @@ public:
     static float opacity() { return 1.0f; }
     static float fill_opacity() { return 1.0f; }
     static CSS::FillRule fill_rule() { return CSS::FillRule::Nonzero; }
+    static CSS::ClipRule clip_rule() { return CSS::ClipRule::Nonzero; }
     static float stroke_opacity() { return 1.0f; }
     static float stop_opacity() { return 1.0f; }
     static CSS::TextAnchor text_anchor() { return CSS::TextAnchor::Start; }
@@ -430,6 +433,7 @@ public:
     Optional<MaskReference> const& mask() const { return m_noninherited.mask; }
     CSS::MaskType mask_type() const { return m_noninherited.mask_type; }
     Optional<ClipPathReference> const& clip_path() const { return m_noninherited.clip_path; }
+    CSS::ClipRule clip_rule() const { return m_inherited.clip_rule; }
 
     LengthPercentage const& cx() const { return m_noninherited.cx; }
     LengthPercentage const& cy() const { return m_noninherited.cy; }
@@ -505,6 +509,7 @@ protected:
         float stroke_opacity { InitialValues::stroke_opacity() };
         LengthPercentage stroke_width { Length::make_px(1) };
         CSS::TextAnchor text_anchor { InitialValues::text_anchor() };
+        CSS::ClipRule clip_rule { InitialValues::clip_rule() };
 
         Vector<ShadowData> text_shadow;
 
@@ -731,6 +736,7 @@ public:
     void set_mask(MaskReference value) { m_noninherited.mask = value; }
     void set_mask_type(CSS::MaskType value) { m_noninherited.mask_type = value; }
     void set_clip_path(ClipPathReference value) { m_noninherited.clip_path = value; }
+    void set_clip_rule(CSS::ClipRule value) { m_inherited.clip_rule = value; }
 
     void set_cx(LengthPercentage cx) { m_noninherited.cx = cx; }
     void set_cy(LengthPercentage cy) { m_noninherited.cy = cy; }

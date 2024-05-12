@@ -158,6 +158,7 @@ void SVGGraphicsElement::apply_presentational_hints(CSS::StyleProperties& style)
         NamedPropertyID(CSS::PropertyID::Mask),
         NamedPropertyID(CSS::PropertyID::MaskType),
         NamedPropertyID(CSS::PropertyID::ClipPath),
+        NamedPropertyID(CSS::PropertyID::ClipRule),
     };
 
     CSS::Parser::ParsingContext parsing_context { document(), CSS::Parser::ParsingContext::Mode::SVGPresentationAttribute };
@@ -172,11 +173,9 @@ void SVGGraphicsElement::apply_presentational_hints(CSS::StyleProperties& style)
     });
 }
 
-Optional<FillRule> SVGGraphicsElement::fill_rule() const
+static FillRule to_svg_fill_rule(CSS::FillRule fill_rule)
 {
-    if (!layout_node())
-        return {};
-    switch (layout_node()->computed_values().fill_rule()) {
+    switch (fill_rule) {
     case CSS::FillRule::Nonzero:
         return FillRule::Nonzero;
     case CSS::FillRule::Evenodd:
@@ -184,6 +183,20 @@ Optional<FillRule> SVGGraphicsElement::fill_rule() const
     default:
         VERIFY_NOT_REACHED();
     }
+}
+
+Optional<FillRule> SVGGraphicsElement::fill_rule() const
+{
+    if (!layout_node())
+        return {};
+    return to_svg_fill_rule(layout_node()->computed_values().fill_rule());
+}
+
+Optional<ClipRule> SVGGraphicsElement::clip_rule() const
+{
+    if (!layout_node())
+        return {};
+    return to_svg_fill_rule(layout_node()->computed_values().clip_rule());
 }
 
 Optional<Gfx::Color> SVGGraphicsElement::fill_color() const

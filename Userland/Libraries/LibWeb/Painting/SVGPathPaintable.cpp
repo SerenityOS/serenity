@@ -101,8 +101,7 @@ void SVGPathPaintable::paint(PaintContext& context, PaintPhase phase) const
         context.recording_painter().fill_path({
             .path = closed_path(),
             .color = Color::Black,
-            // FIXME: Support clip-rule.
-            .winding_rule = Gfx::Painter::WindingRule::Nonzero,
+            .winding_rule = to_gfx_winding_rule(graphics_element.clip_rule().value_or(SVG::ClipRule::Nonzero)),
             .translation = offset,
         });
         return;

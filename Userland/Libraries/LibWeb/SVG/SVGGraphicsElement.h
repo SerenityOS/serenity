@@ -35,11 +35,12 @@ public:
     virtual void attribute_changed(FlyString const& name, Optional<String> const& value) override;
 
     Optional<Gfx::Color> fill_color() const;
-    Optional<FillRule> fill_rule() const;
     Optional<Gfx::Color> stroke_color() const;
     Optional<float> stroke_width() const;
     Optional<float> fill_opacity() const;
     Optional<float> stroke_opacity() const;
+    Optional<FillRule> fill_rule() const;
+    Optional<ClipRule> clip_rule() const;
 
     float visible_stroke_width() const
     {
