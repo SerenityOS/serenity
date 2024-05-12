@@ -15,8 +15,6 @@
 
 namespace Web::HTML {
 
-// FIXME: Should be part of HTML namespace!
-
 class HTMLAllCollection : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(HTMLAllCollection, Bindings::PlatformObject);
     JS_DECLARE_ALLOCATOR(HTMLAllCollection);
