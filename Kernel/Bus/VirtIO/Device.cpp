@@ -27,7 +27,7 @@ UNMAP_AFTER_INIT ErrorOr<void> Device::initialize_virtio_resources()
 }
 
 UNMAP_AFTER_INIT VirtIO::Device::Device(NonnullOwnPtr<TransportEntity> transport_entity)
-    : m_class_name(transport_entity -> determine_device_class_name())
+    : m_class_name(transport_entity->determine_device_class_name())
     , m_transport_entity(move(transport_entity))
 {
 }
