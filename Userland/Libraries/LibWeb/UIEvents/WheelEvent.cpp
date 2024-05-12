@@ -20,6 +20,7 @@ WheelEvent::WheelEvent(JS::Realm& realm, FlyString const& event_name, WheelEvent
     : MouseEvent(realm, event_name, event_init, page_x, page_y, offset_x, offset_y)
     , m_delta_x(event_init.delta_x)
     , m_delta_y(event_init.delta_y)
+    , m_delta_z(event_init.delta_z)
     , m_delta_mode(event_init.delta_mode)
 {
     set_event_characteristics();
