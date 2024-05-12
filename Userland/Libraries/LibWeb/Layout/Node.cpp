@@ -804,6 +804,9 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     if (auto clip_path = computed_style.property(CSS::PropertyID::ClipPath); clip_path->is_url())
         computed_values.set_clip_path(clip_path->as_url().url());
 
+    if (auto clip_rule = computed_style.clip_rule(); clip_rule.has_value())
+        computed_values.set_clip_rule(*clip_rule);
+
     if (auto fill_rule = computed_style.fill_rule(); fill_rule.has_value())
         computed_values.set_fill_rule(*fill_rule);
 

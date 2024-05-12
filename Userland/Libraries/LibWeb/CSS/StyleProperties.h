@@ -148,6 +148,7 @@ public:
     float fill_opacity() const;
     float stroke_opacity() const;
     Optional<CSS::FillRule> fill_rule() const;
+    Optional<CSS::ClipRule> clip_rule() const;
 
     Gfx::Font const& first_available_computed_font() const { return m_font_list->first(); }
 
