@@ -1237,6 +1237,8 @@ U+1FA84.png
 U+1FA85.png
 U+1FA87.png
 U+1FA88.png
+U+1FA89.png
+U+1FA8F.png
 U+1FA90.png
 U+1FA91.png
 U+1FA92.png
@@ -1283,12 +1285,14 @@ U+1FABB.png
 U+1FABC.png
 U+1FABD.png
 U+1FABF.png
+U+1FABE.png
 U+1FAC0.png
 U+1FAC1.png
 U+1FAC2.png
 U+1FAC3.png
 U+1FAC4.png
 U+1FAC5.png
+U+1FAC6.png
 U+1FACE.png
 U+1FACF.png
 U+1FAD0.png
@@ -1303,6 +1307,8 @@ U+1FAD8.png
 U+1FAD9.png
 U+1FADA.png
 U+1FADB.png
+U+1FADC.png
+U+1FADF.png
 U+1FAE0.png
 U+1FAE1.png
 U+1FAE2.png
@@ -1312,6 +1318,7 @@ U+1FAE5.png
 U+1FAE6.png
 U+1FAE7.png
 U+1FAE8.png
+U+1FAE9.png
 U+1FAF0.png
 U+1FAF1.png
 U+1FAF2.png
@@ -1609,6 +1616,7 @@ U+1F1F8_U+1F1F1.png
 U+1F1F8_U+1F1F2.png
 U+1F1F8_U+1F1F3.png
 U+1F1F8_U+1F1F4.png
+U+1F1E8_U+1F1F6.png
 U+1F1F8_U+1F1F7.png
 U+1F1F8_U+1F1F8.png
 U+1F1F8_U+1F1F9.png
