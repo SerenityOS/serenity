@@ -219,28 +219,6 @@ void VM::gather_roots(HashMap<Cell*, HeapRoot>& roots)
         roots.set(job, HeapRoot { .type = HeapRoot::Type::VM });
 }
 
-ThrowCompletionOr<Value> VM::execute_ast_node(ASTNode const& node)
-{
-    // FIXME: This function should be gone once we will emit bytecode for everything before executing instructions.
-
-    auto executable = TRY(Bytecode::compile(*this, node, FunctionKind::Normal, ""sv));
-    auto& running_execution_context = this->running_execution_context();
-
-    // Registers have to be saved and restored because executable for compiled ASTNode does not have its own execution context
-    auto saved_registers = running_execution_context.registers;
-    for (size_t i = 0; i < saved_registers.size(); ++i)
-        running_execution_context.registers[i] = {};
-
-    auto result_or_error = bytecode_interpreter().run_executable(*executable, {});
-
-    for (size_t i = 0; i < saved_registers.size(); ++i)
-        running_execution_context.registers[i] = saved_registers[i];
-
-    if (result_or_error.value.is_error())
-        return result_or_error.value.release_error();
-    return result_or_error.return_register_value;
-}
-
 // 9.1.2.1 GetIdentifierReference ( env, name, strict ), https://tc39.es/ecma262/#sec-getidentifierreference
 ThrowCompletionOr<Reference> VM::get_identifier_reference(Environment* environment, DeprecatedFlyString name, bool strict, size_t hops)
 {

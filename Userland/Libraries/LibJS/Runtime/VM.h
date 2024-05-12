@@ -258,10 +258,6 @@ public:
     Function<ThrowCompletionOr<void>(Object&)> host_ensure_can_add_private_element;
     Function<ThrowCompletionOr<HandledByHost>(ArrayBuffer&, size_t)> host_resize_array_buffer;
 
-    // Execute a specific AST node either in AST or BC interpreter, depending on which one is enabled by default.
-    // NOTE: This is meant as a temporary stopgap until everything is bytecode.
-    ThrowCompletionOr<Value> execute_ast_node(ASTNode const&);
-
     Vector<StackTraceElement> stack_trace() const;
 
 private:
