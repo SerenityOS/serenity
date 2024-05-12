@@ -386,6 +386,9 @@ struct ANMFChunk {
 
 static ErrorOr<void> write_ANMF_chunk(Stream& stream, ANMFChunk const& chunk)
 {
+    dbgln_if(WEBP_DEBUG, "writing ANMF frame_x {} frame_y {} frame_width {} frame_height {} frame_duration {} blending_method {} disposal_method {}",
+        chunk.frame_x, chunk.frame_y, chunk.frame_width, chunk.frame_height, chunk.frame_duration_in_milliseconds, (int)chunk.blending_method, (int)chunk.disposal_method);
+
     TRY(write_chunk_header(stream, "ANMF"sv, 16 + chunk.frame_data.size()));
 
     LittleEndianOutputBitStream bit_stream { MaybeOwned<Stream>(stream) };
