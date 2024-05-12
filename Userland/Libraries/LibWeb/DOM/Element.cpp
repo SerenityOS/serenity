@@ -342,8 +342,7 @@ WebIDL::ExceptionOr<bool> Element::toggle_attribute(FlyString const& name, Optio
         return WebIDL::InvalidCharacterError::create(realm(), "Attribute name must not be empty"_fly_string);
 
     // 2. If this is in the HTML namespace and its node document is an HTML document, then set qualifiedName to qualifiedName in ASCII lowercase.
-    // FIXME: Handle the second condition, assume it is an HTML document for now.
-    bool insert_as_lowercase = namespace_uri() == Namespace::HTML;
+    bool insert_as_lowercase = namespace_uri() == Namespace::HTML && document().document_type() == Document::Type::HTML;
 
     // 3. Let attribute be the first attribute in this’s attribute list whose qualified name is qualifiedName, and null otherwise.
     auto* attribute = m_attributes->get_attribute(name);
