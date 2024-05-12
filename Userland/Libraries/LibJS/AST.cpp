@@ -151,11 +151,9 @@ ThrowCompletionOr<ClassElement::ClassValue> ClassMethod::class_element_evaluatio
 {
     auto property_key_or_private_name = TRY(class_key_to_property_name(vm, *m_key));
 
-    auto method_value = TRY(vm.execute_ast_node(*m_function));
+    auto& method_function = *ECMAScriptFunctionObject::create(*vm.current_realm(), m_function->name(), m_function->source_text(), m_function->body(), m_function->parameters(), m_function->function_length(), m_function->local_variables_names(), vm.lexical_environment(), vm.running_execution_context().private_environment, m_function->kind(), m_function->is_strict_mode(), m_function->uses_this(), m_function->might_need_arguments_object(), m_function->contains_direct_call_to_eval(), m_function->is_arrow_function());
 
-    auto function_handle = make_handle(&method_value.as_function());
-
-    auto& method_function = static_cast<ECMAScriptFunctionObject&>(method_value.as_function());
+    auto method_value = Value(&method_function);
     method_function.make_method(target);
 
     auto set_function_name = [&](ByteString prefix = "") {
