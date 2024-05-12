@@ -351,6 +351,7 @@ shared_library("LibWeb") {
            "UIEvents",
            "UserTiming",
            "WebAssembly",
+           "WebAudio",
            "WebDriver",
            "WebGL",
            "WebIDL",
