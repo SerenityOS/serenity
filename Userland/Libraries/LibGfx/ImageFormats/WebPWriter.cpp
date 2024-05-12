@@ -386,6 +386,15 @@ struct ANMFChunk {
 
 static ErrorOr<void> write_ANMF_chunk(Stream& stream, ANMFChunk const& chunk)
 {
+    if (chunk.frame_width > (1 << 24) || chunk.frame_height > (1 << 24))
+        return Error::from_string_literal("WebP dimensions too large for ANMF chunk");
+
+    if (chunk.frame_width == 0 || chunk.frame_height == 0)
+        return Error::from_string_literal("WebP lossless animation frames must be at least one pixel wide and tall");
+
+    if (chunk.frame_x % 2 != 0 || chunk.frame_y % 2 != 0)
+        return Error::from_string_literal("WebP lossless animation frames must be at at even coordinates");
+
     dbgln_if(WEBP_DEBUG, "writing ANMF frame_x {} frame_y {} frame_width {} frame_height {} frame_duration {} blending_method {} disposal_method {}",
         chunk.frame_x, chunk.frame_y, chunk.frame_width, chunk.frame_height, chunk.frame_duration_in_milliseconds, (int)chunk.blending_method, (int)chunk.disposal_method);
 
