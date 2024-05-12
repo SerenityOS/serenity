@@ -14,6 +14,7 @@
 struct Options {
     StringView in_path;
     StringView out_path;
+    bool write_full_frames { false };
 };
 
 static ErrorOr<Options> parse_options(Main::Arguments arguments)
@@ -22,6 +23,7 @@ static ErrorOr<Options> parse_options(Main::Arguments arguments)
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(options.in_path, "Path to input image file", "FILE");
     args_parser.add_option(options.out_path, "Path to output image file", "output", 'o', "FILE");
+    args_parser.add_option(options.write_full_frames, "Do not store incremental frames. Produces larger files.", "write-full-frames");
     args_parser.parse(arguments);
 
     if (options.out_path.is_empty())
@@ -46,9 +48,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto animation_writer = TRY(Gfx::WebPWriter::start_encoding_animation(*output_stream, decoder->size(), decoder->loop_count()));
 
+    RefPtr<Gfx::Bitmap> last_frame;
     for (size_t i = 0; i < decoder->frame_count(); ++i) {
         auto frame = TRY(decoder->frame(i));
-        TRY(animation_writer->add_frame(*frame.image, frame.duration));
+        if (options.write_full_frames) {
+            TRY(animation_writer->add_frame(*frame.image, frame.duration));
+        } else {
+            TRY(animation_writer->add_frame_relative_to_last_frame(*frame.image, frame.duration, last_frame));
+            last_frame = frame.image;
+        }
     }
 
     return 0;

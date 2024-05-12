@@ -21,6 +21,8 @@ public:
     // passed to `start_writing_animation()`.
     // FIXME: Consider passing in disposal method and blend mode.
     virtual ErrorOr<void> add_frame(Bitmap&, int duration_ms, IntPoint at = {}) = 0;
+
+    ErrorOr<void> add_frame_relative_to_last_frame(Bitmap&, int duration_ms, RefPtr<Bitmap> last_frame);
 };
 
 }
