@@ -12,7 +12,7 @@
 
 namespace Web::UIEvents {
 
-enum class WheelDeltaMode : WebIDL::UnsignedLong {
+enum WheelDeltaMode : WebIDL::UnsignedLong {
     DOM_DELTA_PIXEL = 0,
     DOM_DELTA_LINE = 1,
     DOM_DELTA_PAGE = 2,
@@ -23,7 +23,7 @@ struct WheelEventInit : public MouseEventInit {
     double delta_y = 0;
     double delta_z = 0;
 
-    WheelDeltaMode delta_mode = WheelDeltaMode::DOM_DELTA_PIXEL;
+    WebIDL::UnsignedLong delta_mode = WheelDeltaMode::DOM_DELTA_PIXEL;
 };
 
 class WheelEvent final : public MouseEvent {
@@ -39,7 +39,7 @@ public:
     double delta_x() const { return m_delta_x; }
     double delta_y() const { return m_delta_y; }
     double delta_z() const { return m_delta_z; }
-    WebIDL::UnsignedLong delta_mode() const { return to_underlying(m_delta_mode); }
+    WebIDL::UnsignedLong delta_mode() const { return m_delta_mode; }
 
 private:
     WheelEvent(JS::Realm&, FlyString const& event_name, WheelEventInit const& event_init, double page_x, double page_y, double offset_x, double offset_y);
@@ -51,7 +51,7 @@ private:
     double m_delta_x { 0 };
     double m_delta_y { 0 };
     double m_delta_z { 0 };
-    WheelDeltaMode m_delta_mode { WheelDeltaMode::DOM_DELTA_PIXEL };
+    WebIDL::UnsignedLong m_delta_mode { WheelDeltaMode::DOM_DELTA_PIXEL };
 };
 
 }
