@@ -211,7 +211,7 @@ String ProcessManager::generate_html()
         builder.append("<td>"sv);
         builder.append(WebView::process_name_from_type(process.type));
         if (process.title.has_value())
-            builder.appendff(" - {}", *process.title);
+            builder.appendff(" - {}", escape_html_entities(*process.title));
         builder.append("</td>"sv);
         builder.append("<td>"sv);
         builder.append(MUST(String::number(process.pid)));
