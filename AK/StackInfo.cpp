@@ -14,6 +14,7 @@
 #    include <serenity.h>
 #elif defined(AK_OS_LINUX) || defined(AK_LIBC_GLIBC) || defined(AK_OS_MACOS) || defined(AK_OS_IOS) || defined(AK_OS_NETBSD) || defined(AK_OS_SOLARIS) || defined(AK_OS_HAIKU)
 #    include <pthread.h>
+#    include <sys/resource.h>
 #elif defined(AK_OS_FREEBSD) || defined(AK_OS_OPENBSD)
 #    include <pthread.h>
 #    include <pthread_np.h>
@@ -95,6 +96,21 @@ StackInfo::StackInfo()
 #endif
 
     m_top = m_base + m_size;
+
+#if defined(AK_OS_LINUX) && !defined(AK_OS_ANDROID) && !defined(AK_LIBC_GLIBC)
+    // Note: musl libc always gives the initial size of the main thread's stack
+    if (getpid() == static_cast<pid_t>(gettid())) {
+        rlimit limit;
+        getrlimit(RLIMIT_STACK, &limit);
+        rlim_t size = limit.rlim_cur;
+        if (size == RLIM_INFINITY)
+            size = 8 * 0x10000;
+        // account for a guard page
+        size -= static_cast<rlim_t>(sysconf(_SC_PAGESIZE));
+        m_size = static_cast<size_t>(size);
+        m_base = m_top - m_size;
+    }
+#endif
 }
 
 }
