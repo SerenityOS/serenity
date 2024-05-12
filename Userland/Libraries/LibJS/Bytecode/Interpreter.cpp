@@ -529,7 +529,7 @@ FLATTEN_ON_CLANG void Interpreter::run_bytecode(size_t entry_point)
     handle_##name:                                                                          \
     {                                                                                       \
         auto& instruction = *reinterpret_cast<Op::name const*>(&bytecode[program_counter]); \
-        (void)instruction.execute_impl(*this);                                              \
+        instruction.execute_impl(*this);                                                    \
         DISPATCH_NEXT(name);                                                                \
     }
 
@@ -638,20 +638,20 @@ FLATTEN_ON_CLANG void Interpreter::run_bytecode(size_t entry_point)
 
         handle_Await: {
             auto& instruction = *reinterpret_cast<Op::Await const*>(&bytecode[program_counter]);
-            (void)instruction.execute_impl(*this);
+            instruction.execute_impl(*this);
             will_yield = true;
             goto run_finalizer_and_return;
         }
 
         handle_Return: {
             auto& instruction = *reinterpret_cast<Op::Return const*>(&bytecode[program_counter]);
-            (void)instruction.execute_impl(*this);
+            instruction.execute_impl(*this);
             goto run_finalizer_and_return;
         }
 
         handle_Yield: {
             auto& instruction = *reinterpret_cast<Op::Yield const*>(&bytecode[program_counter]);
-            (void)instruction.execute_impl(*this);
+            instruction.execute_impl(*this);
             // Note: A `yield` statement will not go through a finally statement,
             //       hence we need to set a flag to not do so,
             //       but we generate a Yield Operation in the case of returns in
@@ -1300,14 +1300,13 @@ void CreatePrivateEnvironment::execute_impl(Bytecode::Interpreter& interpreter) 
     running_execution_context.private_environment = new_private_environment(interpreter.vm(), outer_private_environment);
 }
 
-ThrowCompletionOr<void> CreateVariableEnvironment::execute_impl(Bytecode::Interpreter& interpreter) const
+void CreateVariableEnvironment::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& running_execution_context = interpreter.running_execution_context();
     auto var_environment = new_declarative_environment(*running_execution_context.lexical_environment);
     var_environment->ensure_capacity(m_capacity);
     running_execution_context.variable_environment = var_environment;
     running_execution_context.lexical_environment = var_environment;
-    return {};
 }
 
 ThrowCompletionOr<void> EnterObjectEnvironment::execute_impl(Bytecode::Interpreter& interpreter) const
@@ -1768,7 +1767,7 @@ void LeaveUnwindContext::execute_impl(Bytecode::Interpreter& interpreter) const
     interpreter.leave_unwind_context();
 }
 
-ThrowCompletionOr<void> Yield::execute_impl(Bytecode::Interpreter& interpreter) const
+void Yield::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto yielded_value = interpreter.get(m_value).value_or(js_undefined());
 
@@ -1784,11 +1783,9 @@ ThrowCompletionOr<void> Yield::execute_impl(Bytecode::Interpreter& interpreter) 
 
     object->define_direct_property("isAwait", Value(false), JS::default_attributes);
     interpreter.do_return(object);
-
-    return {};
 }
 
-ThrowCompletionOr<void> Await::execute_impl(Bytecode::Interpreter& interpreter) const
+void Await::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto yielded_value = interpreter.get(m_argument).value_or(js_undefined());
     auto object = Object::create(interpreter.realm(), nullptr);
@@ -1798,7 +1795,6 @@ ThrowCompletionOr<void> Await::execute_impl(Bytecode::Interpreter& interpreter) 
     object->define_direct_property("continuation", Value(m_continuation_label.address()), JS::default_attributes);
     object->define_direct_property("isAwait", Value(true), JS::default_attributes);
     interpreter.do_return(object);
-    return {};
 }
 
 ThrowCompletionOr<void> GetByValue::execute_impl(Bytecode::Interpreter& interpreter) const
