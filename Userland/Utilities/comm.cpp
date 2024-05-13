@@ -113,27 +113,27 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     int col3_count { 0 };
     ByteString file1_line;
     ByteString file2_line;
-    Array<u8, PAGE_SIZE> buffer;
+    auto buffer = TRY(ByteBuffer::create_uninitialized(PAGE_SIZE));
 
     auto should_continue_comparing_files = [&]() {
-        if (read_file1) {
-            auto can_read_file1_line = file1->can_read_line();
-            if (can_read_file1_line.is_error() || !can_read_file1_line.value())
-                return false;
-        }
-        if (read_file2) {
-            auto can_read_file2_line = file2->can_read_line();
-            if (can_read_file2_line.is_error() || !can_read_file2_line.value())
-                return false;
-        }
+        if (read_file1 && file1->is_eof())
+            return false;
+        if (read_file2 && file2->is_eof())
+            return false;
         return true;
     };
 
     while (should_continue_comparing_files()) {
-        if (read_file1)
-            file1_line = TRY(file1->read_line(buffer));
-        if (read_file2)
-            file2_line = TRY(file2->read_line(buffer));
+        if (read_file1) {
+            file1_line = TRY(file1->read_line_with_resize(buffer));
+            if (file1_line.is_empty() && file1->is_eof())
+                break;
+        }
+        if (read_file2) {
+            file2_line = TRY(file2->read_line_with_resize(buffer));
+            if (file2_line.is_empty() && file2->is_eof())
+                break;
+        }
 
         int cmp_result = cmp(file1_line, file2_line);
 
@@ -168,13 +168,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     auto process_remaining = [&](ByteString const& fmt, auto& file, int& count, bool print) {
-        while (true) {
-            auto can_read_result = file->can_read_line();
-            if (can_read_result.is_error() || !can_read_result.value())
-                break;
+        while (!file->is_eof()) {
             ++count;
-            auto line = file->read_line(buffer);
-            if (line.is_error())
+            auto line = file->read_line_with_resize(buffer);
+            if (line.is_error() || (line.value().is_empty() && file->is_eof()))
                 break;
             if (print)
                 outln(fmt, line.value());
