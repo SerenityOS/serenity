@@ -469,6 +469,34 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::every)
     return true;
 }
 
+// NOTE: This function assumes that the index is valid within the TypedArray,
+//       and that the TypedArray is not detached.
+template<typename T>
+inline void fast_typed_array_fill(TypedArrayBase& typed_array, u32 begin, u32 end, T value)
+{
+    Checked<size_t> computed_begin = begin;
+    computed_begin *= sizeof(T);
+    computed_begin += typed_array.byte_offset();
+
+    Checked<size_t> computed_end = end;
+    computed_end *= sizeof(T);
+    computed_end += typed_array.byte_offset();
+
+    if (computed_begin.has_overflow() || computed_end.has_overflow()) [[unlikely]] {
+        return;
+    }
+
+    if (computed_begin.value() >= typed_array.viewed_array_buffer()->byte_length()
+        || computed_end.value() > typed_array.viewed_array_buffer()->byte_length()) [[unlikely]] {
+        return;
+    }
+
+    auto& array_buffer = *typed_array.viewed_array_buffer();
+    auto* slot = reinterpret_cast<T*>(array_buffer.buffer().offset_pointer(computed_begin.value()));
+    for (auto i = begin; i < end; ++i)
+        *(slot++) = value;
+}
+
 // 23.2.3.9 %TypedArray%.prototype.fill ( value [ , start [ , end ] ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.fill
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::fill)
 {
@@ -537,13 +565,48 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::fill)
     // 17. Set final to min(final, len).
     final = min(final, length);
 
+    if (value.is_int32()) {
+        switch (typed_array->kind()) {
+        case TypedArrayBase::Kind::Uint8Array:
+            fast_typed_array_fill<u8>(*typed_array, k, final, static_cast<u8>(value.as_i32()));
+            return typed_array;
+        case TypedArrayBase::Kind::Uint16Array:
+            fast_typed_array_fill<u16>(*typed_array, k, final, static_cast<u16>(value.as_i32()));
+            return typed_array;
+        case TypedArrayBase::Kind::Uint32Array:
+            fast_typed_array_fill<u32>(*typed_array, k, final, static_cast<u32>(value.as_i32()));
+            return typed_array;
+        case TypedArrayBase::Kind::Int8Array:
+            fast_typed_array_fill<i8>(*typed_array, k, final, static_cast<i8>(value.as_i32()));
+            return typed_array;
+        case TypedArrayBase::Kind::Int16Array:
+            fast_typed_array_fill<i16>(*typed_array, k, final, static_cast<i16>(value.as_i32()));
+            return typed_array;
+        case TypedArrayBase::Kind::Int32Array:
+            fast_typed_array_fill<i32>(*typed_array, k, final, value.as_i32());
+            return typed_array;
+        case TypedArrayBase::Kind::Uint8ClampedArray:
+            fast_typed_array_fill<u8>(*typed_array, k, final, clamp(value.as_i32(), 0, 255));
+            return typed_array;
+        default:
+            // FIXME: Support more TypedArray kinds.
+            break;
+        }
+    }
+
     // 18. Repeat, while k < final,
     while (k < final) {
         // a. Let Pk be ! ToString(𝔽(k)).
-        PropertyKey property_key { k };
-
         // b. Perform ! Set(O, Pk, value, true).
-        MUST(typed_array->set(property_key, value, Object::ShouldThrowExceptions::Yes));
+        CanonicalIndex canonical_index { CanonicalIndex::Type::Index, k };
+        switch (typed_array->kind()) {
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
+    case TypedArrayBase::Kind::ClassName:                                           \
+        (void)typed_array_set_element<Type>(*typed_array, canonical_index, value);  \
+        break;
+            JS_ENUMERATE_TYPED_ARRAYS
+#undef __JS_ENUMERATE
+        }
 
         // c. Set k to k + 1.
         ++k;
