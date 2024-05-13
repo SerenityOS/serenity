@@ -760,6 +760,28 @@ JS::GCPtr<HTML::HTMLTitleElement> Document::title_element()
     return title_element;
 }
 
+// https://html.spec.whatwg.org/multipage/dom.html#dom-document-dir
+StringView Document::dir() const
+{
+    // The dir IDL attribute on Document objects must reflect the dir content attribute of the html
+    // element, if any, limited to only known values. If there is no such element, then the
+    // attribute must return the empty string and do nothing on setting.
+    if (auto html = html_element())
+        return html->dir();
+
+    return ""sv;
+}
+
+// https://html.spec.whatwg.org/multipage/dom.html#dom-document-dir
+void Document::set_dir(String const& dir)
+{
+    // The dir IDL attribute on Document objects must reflect the dir content attribute of the html
+    // element, if any, limited to only known values. If there is no such element, then the
+    // attribute must return the empty string and do nothing on setting.
+    if (auto html = html_element())
+        html->set_dir(dir);
+}
+
 HTML::HTMLElement* Document::body()
 {
     auto* html = html_element();

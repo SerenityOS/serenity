@@ -175,6 +175,10 @@ public:
     HTML::HTMLHtmlElement* html_element();
     HTML::HTMLHeadElement* head();
     JS::GCPtr<HTML::HTMLTitleElement> title_element();
+
+    StringView dir() const;
+    void set_dir(String const&);
+
     HTML::HTMLElement* body();
 
     HTML::HTMLHtmlElement const* html_element() const
