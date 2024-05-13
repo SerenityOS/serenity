@@ -14,10 +14,4 @@ USBController::USBController()
 {
 }
 
-u8 USBController::allocate_address()
-{
-    // FIXME: This can be smarter.
-    return m_next_device_index++;
-}
-
 }

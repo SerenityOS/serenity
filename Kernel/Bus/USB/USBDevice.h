@@ -37,13 +37,11 @@ public:
         LowSpeed
     };
 
-    static ErrorOr<NonnullLockRefPtr<Device>> try_create(USBController const&, u8, DeviceSpeed);
+    static ErrorOr<NonnullLockRefPtr<Device>> try_create(USBController&, u8, DeviceSpeed);
 
     Device(USBController const&, u8, DeviceSpeed, NonnullOwnPtr<ControlPipe> default_pipe);
     Device(Device const& device, NonnullOwnPtr<ControlPipe> default_pipe);
     virtual ~Device();
-
-    ErrorOr<void> enumerate_device();
 
     u8 port() const { return m_device_port; }
     DeviceSpeed speed() const { return m_device_speed; }
@@ -68,6 +66,26 @@ public:
     }
 
     SpinlockProtected<RefPtr<SysFSUSBDeviceInformation>, LockRank::None>& sysfs_device_info_node(Badge<USB::Hub>) { return m_sysfs_device_info_node; }
+
+    template<DerivedFrom<USBController> Controller>
+    void set_max_packet_size(Badge<Controller>, u8 max_packet_size)
+    {
+        m_default_pipe->set_max_packet_size(max_packet_size);
+    }
+    template<DerivedFrom<USBController> Controller>
+    void set_address(Badge<Controller>, u8 address)
+    {
+        VERIFY(m_address == 0); // Device can only transition once
+        m_address = address;
+        m_default_pipe->set_device_address(address);
+    }
+    template<DerivedFrom<USBController> Controller>
+    void set_descriptor(Badge<Controller>, USBDeviceDescriptor const& descriptor)
+    {
+        memcpy(&m_device_descriptor, &descriptor, sizeof(USBDeviceDescriptor));
+    }
+    template<DerivedFrom<USBController> Controller>
+    Vector<USBConfiguration>& configurations(Badge<Controller>) { return m_configurations; }
 
 protected:
     Device(NonnullLockRefPtr<USBController> controller, u8 address, u8 port, DeviceSpeed speed, NonnullOwnPtr<ControlPipe> default_pipe);
