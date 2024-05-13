@@ -18,12 +18,12 @@
 namespace Compress {
 
 template<InputBitStream InputStream>
-class LZWDecoder {
+class LzwDecompressor {
 private:
     static constexpr int max_code_size = 12;
 
 public:
-    explicit LZWDecoder(MaybeOwned<InputStream> lzw_stream, u8 min_code_size, i32 offset_for_size_change = 0)
+    explicit LzwDecompressor(MaybeOwned<InputStream> lzw_stream, u8 min_code_size, i32 offset_for_size_change = 0)
         : m_bit_stream(move(lzw_stream))
         , m_code_size(min_code_size)
         , m_original_code_size(min_code_size)
@@ -34,32 +34,32 @@ public:
         init_code_table();
     }
 
-    static ErrorOr<ByteBuffer> decode_all(ReadonlyBytes bytes, u8 initial_code_size, i32 offset_for_size_change = 0)
+    static ErrorOr<ByteBuffer> decompress_all(ReadonlyBytes bytes, u8 initial_code_size, i32 offset_for_size_change = 0)
     {
         auto memory_stream = make<FixedMemoryStream>(bytes);
         auto lzw_stream = make<InputStream>(MaybeOwned<Stream>(move(memory_stream)));
-        Compress::LZWDecoder lzw_decoder { MaybeOwned<InputStream> { move(lzw_stream) }, initial_code_size, offset_for_size_change };
+        LzwDecompressor lzw_decompressor { MaybeOwned<InputStream> { move(lzw_stream) }, initial_code_size, offset_for_size_change };
 
-        ByteBuffer decoded;
+        ByteBuffer decompressed;
 
-        u16 const clear_code = lzw_decoder.add_control_code();
-        u16 const end_of_data_code = lzw_decoder.add_control_code();
+        u16 const clear_code = lzw_decompressor.add_control_code();
+        u16 const end_of_data_code = lzw_decompressor.add_control_code();
 
         while (true) {
-            auto const code = TRY(lzw_decoder.next_code());
+            auto const code = TRY(lzw_decompressor.next_code());
 
             if (code == clear_code) {
-                lzw_decoder.reset();
+                lzw_decompressor.reset();
                 continue;
             }
 
             if (code == end_of_data_code)
                 break;
 
-            TRY(decoded.try_append(lzw_decoder.get_output()));
+            TRY(decompressed.try_append(lzw_decompressor.get_output()));
         }
 
-        return decoded;
+        return decompressed;
     }
 
     u16 add_control_code()

@@ -184,7 +184,7 @@ static ErrorOr<void> decode_frame(GIFLoadingContext& context, size_t frame_index
         if (image->lzw_min_code_size > 8)
             return Error::from_string_literal("LZW minimum code size is greater than 8");
 
-        auto decoded_stream = TRY(Compress::LZWDecoder<LittleEndianInputBitStream>::decode_all(image->lzw_encoded_bytes, image->lzw_min_code_size));
+        auto decoded_stream = TRY(Compress::LzwDecompressor<LittleEndianInputBitStream>::decompress_all(image->lzw_encoded_bytes, image->lzw_min_code_size));
 
         auto const& color_map = image->use_global_color_map ? context.logical_screen.color_map : image->color_map;
 
