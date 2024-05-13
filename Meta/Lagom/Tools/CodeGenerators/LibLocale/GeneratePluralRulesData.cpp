@@ -431,9 +431,9 @@ static ErrorOr<void> generate_unicode_locale_header(Core::InputBufferedFile& fil
     SourceGenerator generator { builder };
 
     generator.append(R"~~~(
-#include <AK/Types.h>
-
 #pragma once
+
+#include <AK/Types.h>
 
 namespace Locale {
 )~~~");
