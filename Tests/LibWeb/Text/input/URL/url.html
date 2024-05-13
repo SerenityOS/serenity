@@ -1,13 +1,7 @@
 <script src="../include.js"></script>
 <script>
     test(() => {
-        function printURL(input, base) {
-            if (base === undefined)
-                println(`new URL('${input}', ${base})`);
-            else
-                println(`new URL('${input}', '${base}')`);
-
-            const url = new URL(input, base);
+        function printURL(url) {
             println(`protocol => '${url.protocol}'`);
             println(`username => '${url.username}'`);
             println(`password => '${url.password}'`);
@@ -19,7 +13,7 @@
             println(`hash => '${url.hash}'`);
         }
 
-        for (url of [
+        const urls = [
             { input: 'ftp://serenityos.org:21' },
             { input: 'http://[0:1:0:1:0:1:0:1]' },
             { input: 'http://[1:0:1:0:1:0:1:0]' },
@@ -28,8 +22,26 @@
             { input: 'http://serenityos.org/cat?dog#meow"woof' },
             { input: '/hello', base: 'file://friends/' },
             { input: '//d:/..', base: 'file:///C:/a/b' },
-        ]) {
-            printURL(url.input, url.base);
+        ];
+
+        for (url of urls) {
+            if (url.base === undefined)
+                println(`new URL('${url.input}', ${url.base})`);
+            else
+                println(`new URL('${url.input}', '${url.base}')`);
+
+            printURL(new URL(url.input, url.base));
+        }
+
+        println('=========================================');
+
+        for (url of urls) {
+            if (url.base === undefined)
+                println(`URL.parse('${url.input}', ${url.base})`);
+            else
+                println(`URL.parse('${url.input}', '${url.base}')`);
+
+            printURL(URL.parse(url.input, url.base));
         }
     });
 </script>
