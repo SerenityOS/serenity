@@ -134,6 +134,7 @@ class Configuration:
     nvme_enable: bool = True
     sd_enable: bool = False
     usb_boot_enable: bool = False
+    virtio_block_enable: bool = False
     screen_count: int = 1
     host_ip: str = "127.0.0.1"
     ethernet_device_type: str = "e1000"
@@ -617,12 +618,15 @@ def set_up_boot_drive(config: Configuration):
     provided_nvme_enable = environ.get("SERENITY_NVME_ENABLE")
     if provided_nvme_enable is not None:
         config.nvme_enable = provided_nvme_enable == "1"
-    provided_usb_boot_enable = environ.get("SERENITY_USE_SDCARD")
-    if provided_usb_boot_enable is not None:
-        config.sd_enable = provided_usb_boot_enable == "1"
+    provided_sdcard_enable = environ.get("SERENITY_USE_SDCARD")
+    if provided_sdcard_enable is not None:
+        config.sd_enable = provided_sdcard_enable == "1"
     provided_usb_boot_enable = environ.get("SERENITY_USE_USBDRIVE")
     if provided_usb_boot_enable is not None:
         config.usb_boot_enable = provided_usb_boot_enable == "1"
+    provided_virtio_block_enable = environ.get("SERENITY_USE_VIRTIOBLOCK")
+    if provided_virtio_block_enable is not None:
+        config.virtio_block_enable = provided_virtio_block_enable == "1"
 
     if config.machine_type in [MachineType.MicroVM, MachineType.ISAPC]:
         if config.nvme_enable:
@@ -649,6 +653,10 @@ def set_up_boot_drive(config: Configuration):
         config.add_device("usb-storage,drive=usbstick")
         # FIXME: Find a better way to address the usb drive
         config.kernel_cmdline.append("root=block3:0")
+    elif config.virtio_block_enable:
+        config.boot_drive = f"if=none,id=virtio-root,format=raw,file={config.disk_image}"
+        config.add_device("virtio-blk-pci,drive=virtio-root")
+        config.kernel_cmdline.append("root=lun3:0:0")
     else:
         config.boot_drive = f"file={config.disk_image},format=raw,index=0,media=disk,id=disk"
 

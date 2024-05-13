@@ -126,6 +126,8 @@ set(KERNEL_SOURCES
     Devices/Storage/SD/SDHostController.cpp
     Devices/Storage/SD/SDMemoryCard.cpp
     Devices/Storage/USB/BulkSCSIInterface.cpp
+    Devices/Storage/VirtIO/VirtIOBlockController.cpp
+    Devices/Storage/VirtIO/VirtIOBlockDevice.cpp
     Devices/Storage/StorageController.cpp
     Devices/Storage/StorageDevice.cpp
     Devices/Storage/StorageManagement.cpp
