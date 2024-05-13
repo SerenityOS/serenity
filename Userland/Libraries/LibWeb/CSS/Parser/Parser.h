@@ -69,6 +69,8 @@ public:
 
     Optional<ComponentValue> parse_as_component_value();
 
+    Vector<ParsedFontFace::Source> parse_as_font_face_src();
+
     static NonnullRefPtr<StyleValue> resolve_unresolved_style_value(ParsingContext const&, DOM::Element&, Optional<CSS::Selector::PseudoElement::Type>, PropertyID, UnresolvedStyleValue const&);
 
     [[nodiscard]] LengthOrCalculated parse_as_sizes_attribute();
@@ -162,7 +164,9 @@ private:
     Optional<GeneralEnclosed> parse_general_enclosed(TokenStream<ComponentValue>&);
 
     CSSRule* parse_font_face_rule(TokenStream<ComponentValue>&);
-    Vector<ParsedFontFace::Source> parse_font_face_src(TokenStream<ComponentValue>&);
+
+    template<typename T>
+    Vector<ParsedFontFace::Source> parse_font_face_src(TokenStream<T>&);
 
     CSSRule* convert_to_rule(NonnullRefPtr<Rule>);
     CSSMediaRule* convert_to_media_rule(NonnullRefPtr<Rule>);
