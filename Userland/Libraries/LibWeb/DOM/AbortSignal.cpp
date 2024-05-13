@@ -147,25 +147,10 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<AbortSignal>> AbortSignal::timeout(JS::VM& 
 }
 
 // https://dom.spec.whatwg.org/#dom-abortsignal-any
-WebIDL::ExceptionOr<JS::NonnullGCPtr<AbortSignal>> AbortSignal::any(JS::VM& vm, JS::Value signals)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<AbortSignal>> AbortSignal::any(JS::VM& vm, Vector<JS::Handle<AbortSignal>> const& signals)
 {
-    Vector<JS::Handle<AbortSignal>> signals_list;
-    auto iterator_record = TRY(get_iterator(vm, signals, JS::IteratorHint::Sync));
-    while (true) {
-        auto next = TRY(iterator_step_value(vm, iterator_record));
-        if (!next.has_value())
-            break;
-
-        auto value = next.release_value();
-        if (!value.is_object() || !is<AbortSignal>(value.as_object()))
-            return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "AbortSignal");
-
-        auto& signal = static_cast<AbortSignal&>(value.as_object());
-        signals_list.append(JS::make_handle(signal));
-    }
-
     // The static any(signals) method steps are to return the result of creating a dependent abort signal from signals using AbortSignal and the current realm.
-    return create_dependent_abort_signal(*vm.current_realm(), signals_list);
+    return create_dependent_abort_signal(*vm.current_realm(), signals);
 }
 
 // https://dom.spec.whatwg.org/#create-a-dependent-abort-signal
