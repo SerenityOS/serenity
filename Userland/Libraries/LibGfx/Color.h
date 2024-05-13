@@ -316,7 +316,7 @@ public:
 
     constexpr u8 luminosity() const
     {
-        return (red() * 0.2126f + green() * 0.7152f + blue() * 0.0722f);
+        return round_to<u8>(red() * 0.2126f + green() * 0.7152f + blue() * 0.0722f);
     }
 
     constexpr float contrast_ratio(Color other)
