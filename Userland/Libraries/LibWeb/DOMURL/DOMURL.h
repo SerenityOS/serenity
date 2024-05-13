@@ -2,6 +2,7 @@
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
  * Copyright (c) 2021, the SerenityOS developers.
  * Copyright (c) 2023, networkException <networkexception@serenityos.org>
+ * Copyright (c) 2024, Shannon Booth <shannon@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -80,6 +81,8 @@ public:
 
 private:
     DOMURL(JS::Realm&, URL::URL, JS::NonnullGCPtr<URLSearchParams> query);
+
+    static JS::NonnullGCPtr<DOMURL> initialize_a_url(JS::Realm&, URL::URL const&);
 
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
