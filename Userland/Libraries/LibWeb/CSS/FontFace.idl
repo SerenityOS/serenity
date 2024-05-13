@@ -1,5 +1,3 @@
-typedef (ArrayBuffer or ArrayBufferView) BinaryData;
-
 dictionary FontFaceDescriptors {
     CSSOMString style = "normal";
     CSSOMString weight = "normal";
@@ -18,8 +16,8 @@ enum FontFaceLoadStatus { "unloaded", "loading", "loaded", "error" };
 // https://drafts.csswg.org/css-font-loading/#fontface-interface
 [Exposed=(Window,Worker)]
 interface FontFace {
-    // FIXME: constructor(CSSOMString family, (CSSOMString or BinaryData) source, optional FontFaceDescriptors descriptors = {});
-    constructor(CSSOMString family, CSSOMString source, optional FontFaceDescriptors descriptors = {});
+    // FIXME: BufferSource usage needs https://github.com/w3c/csswg-drafts/pull/10309
+    constructor(CSSOMString family, (CSSOMString or BufferSource) source, optional FontFaceDescriptors descriptors = {});
     attribute CSSOMString family;
     attribute CSSOMString style;
     attribute CSSOMString weight;
@@ -32,8 +30,8 @@ interface FontFace {
     attribute CSSOMString descentOverride;
     attribute CSSOMString lineGapOverride;
 
-    // FIXME: readonly attribute FontFaceLoadStatus status;
+    readonly attribute FontFaceLoadStatus status;
 
     Promise<FontFace> load();
-    // FIXME: readonly attribute Promise<FontFace> loaded;
+    readonly attribute Promise<FontFace> loaded;
 };

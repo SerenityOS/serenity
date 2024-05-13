@@ -4,15 +4,55 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibCore/Promise.h>
+#include <LibGfx/Font/OpenType/Font.h>
+#include <LibGfx/Font/VectorFont.h>
+#include <LibGfx/Font/WOFF/Font.h>
+#include <LibGfx/Font/WOFF2/Font.h>
 #include <LibJS/Heap/Heap.h>
+#include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibJS/Runtime/Realm.h>
 #include <LibWeb/Bindings/FontFacePrototype.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/CSS/FontFace.h>
 #include <LibWeb/CSS/Parser/Parser.h>
+#include <LibWeb/HTML/Scripting/TemporaryExecutionContext.h>
+#include <LibWeb/Platform/EventLoopPlugin.h>
+#include <LibWeb/WebIDL/AbstractOperations.h>
+#include <LibWeb/WebIDL/Buffers.h>
 #include <LibWeb/WebIDL/Promise.h>
 
 namespace Web::CSS {
+
+static NonnullRefPtr<Core::Promise<NonnullRefPtr<Gfx::VectorFont>>> load_vector_font(ByteBuffer const& data)
+{
+    auto promise = Core::Promise<NonnullRefPtr<Gfx::VectorFont>>::construct();
+
+    // FIXME: 'Asynchronously' shouldn't mean 'later on the main thread'.
+    //        Can we defer this to a background thread?
+    Platform::EventLoopPlugin::the().deferred_invoke([&data, promise] {
+        // FIXME: This should be de-duplicated with StyleComputer::FontLoader::try_load_font
+        // We don't have the luxury of knowing the MIME type, so we have to try all formats.
+        auto ttf = OpenType::Font::try_load_from_externally_owned_memory(data);
+        if (!ttf.is_error()) {
+            promise->resolve(ttf.release_value());
+            return;
+        }
+        auto woff = WOFF::Font::try_load_from_externally_owned_memory(data);
+        if (!woff.is_error()) {
+            promise->resolve(woff.release_value());
+            return;
+        }
+        auto woff2 = WOFF2::Font::try_load_from_externally_owned_memory(data);
+        if (!woff2.is_error()) {
+            promise->resolve(woff2.release_value());
+            return;
+        }
+        promise->reject(Error::from_string_literal("Automatic format detection failed"));
+    });
+
+    return promise;
+}
 
 JS_DEFINE_ALLOCATOR(FontFace);
 
@@ -26,15 +66,115 @@ RefPtr<CSS::StyleValue const> parse_property_string(JS::Realm& realm, StringView
     return maybe_parser.release_value().parse_as_css_value(PropertyID);
 }
 
+// https://drafts.csswg.org/css-font-loading/#font-face-constructor
 JS::NonnullGCPtr<FontFace> FontFace::construct_impl(JS::Realm& realm, String family, FontFaceSource source, FontFaceDescriptors const& descriptors)
 {
-    return realm.heap().allocate<FontFace>(realm, realm, move(family), move(source), descriptors);
+    auto& vm = realm.vm();
+
+    // 1. Let font face be a fresh FontFace object. Set font face’s status attribute to "unloaded",
+    //    Set its internal [[FontStatusPromise]] slot to a fresh pending Promise object.
+    auto promise = WebIDL::create_promise(realm);
+
+    // FIXME: Parse the family argument, and the members of the descriptors argument,
+    //    according to the grammars of the corresponding descriptors of the CSS @font-face rule.
+    //    If the source argument is a CSSOMString, parse it according to the grammar of the CSS src descriptor of the @font-face rule.
+    //    If any of them fail to parse correctly, reject font face’s [[FontStatusPromise]] with a DOMException named "SyntaxError",
+    //    set font face’s corresponding attributes to the empty string, and set font face’s status attribute to "error".
+    //    Otherwise, set font face’s corresponding attributes to the serialization of the parsed values.
+
+    // 2. (Out of order) If the source argument was a CSSOMString, set font face’s internal [[Urls]]
+    //    slot to the string.
+    //    If the source argument was a BinaryData, set font face’s internal [[Data]] slot
+    //    to the passed argument.
+    Vector<CSS::ParsedFontFace::Source> sources;
+    ByteBuffer buffer;
+    if (auto* string = source.get_pointer<String>()) {
+        auto maybe_parser = CSS::Parser::Parser::create(CSS::Parser::ParsingContext(realm), *string);
+        if (maybe_parser.is_error()) {
+            WebIDL::reject_promise(realm, promise, WebIDL::SyntaxError::create(realm, "FontFace constructor: Invalid source string"_fly_string));
+        } else {
+            auto parser = maybe_parser.release_value();
+            sources = parser.parse_as_font_face_src();
+            if (sources.is_empty())
+                WebIDL::reject_promise(realm, promise, WebIDL::SyntaxError::create(realm, "FontFace constructor: Invalid source string"_fly_string));
+        }
+    } else {
+        auto buffer_source = source.get<JS::Handle<WebIDL::BufferSource>>();
+        auto maybe_buffer = WebIDL::get_buffer_source_copy(buffer_source->raw_object());
+        if (maybe_buffer.is_error()) {
+            VERIFY(maybe_buffer.error().code() == ENOMEM);
+            auto throw_completion = vm.throw_completion<JS::InternalError>(vm.error_message(JS::VM::ErrorMessage::OutOfMemory));
+            WebIDL::reject_promise(realm, promise, *throw_completion.value());
+        } else {
+            buffer = maybe_buffer.release_value();
+        }
+    }
+
+    if (buffer.is_empty() && sources.is_empty())
+        WebIDL::reject_promise(realm, promise, WebIDL::SyntaxError::create(realm, "FontFace constructor: Invalid font source"_fly_string));
+
+    auto font = realm.heap().allocate<FontFace>(realm, realm, promise, move(sources), move(buffer), move(family), descriptors);
+
+    // 1. (continued) Return font face. If font face’s status is "error", terminate this algorithm;
+    //    otherwise, complete the rest of these steps asynchronously.
+    if (font->status() == Bindings::FontFaceLoadStatus::Error)
+        return font;
+
+    // 3. If font face’s [[Data]] slot is not null, queue a task to run the following steps synchronously:
+    if (font->m_binary_data.is_empty())
+        return font;
+
+    HTML::queue_global_task(HTML::Task::Source::FontLoading, HTML::relevant_global_object(*font), JS::create_heap_function(vm.heap(), [font] {
+        // 1.  Set font face’s status attribute to "loading".
+        font->m_status = Bindings::FontFaceLoadStatus::Loading;
+
+        // 2. FIXME: For each FontFaceSet font face is in:
+
+        // 3. Asynchronously, attempt to parse the data in it as a font.
+        //    When this is completed, successfully or not, queue a task to run the following steps synchronously:
+        font->m_font_load_promise = load_vector_font(font->m_binary_data);
+
+        font->m_font_load_promise->when_resolved([font = JS::make_handle(font)](auto const& vector_font) -> ErrorOr<void> {
+            HTML::queue_global_task(HTML::Task::Source::FontLoading, HTML::relevant_global_object(*font), JS::create_heap_function(font->heap(), [font = JS::NonnullGCPtr(*font), vector_font] {
+                HTML::TemporaryExecutionContext context(HTML::relevant_settings_object(*font), HTML::TemporaryExecutionContext::CallbacksEnabled::Yes);
+                // 1. If the load was successful, font face now represents the parsed font;
+                //    fulfill font face’s [[FontStatusPromise]] with font face, and set its status attribute to "loaded".
+
+                // FIXME: Are we supposed to set the properties of the FontFace based on the loaded vector font?
+                font->m_parsed_font = vector_font;
+                font->m_status = Bindings::FontFaceLoadStatus::Loaded;
+                WebIDL::resolve_promise(font->realm(), font->m_font_status_promise, font);
+
+                // FIXME: For each FontFaceSet font face is in:
+
+                font->m_font_load_promise = nullptr;
+            }));
+            return {};
+        });
+        font->m_font_load_promise->when_rejected([font = JS::make_handle(font)](auto const& error) {
+            HTML::queue_global_task(HTML::Task::Source::FontLoading, HTML::relevant_global_object(*font), JS::create_heap_function(font->heap(), [font = JS::NonnullGCPtr(*font), error = Error::copy(error)] {
+                HTML::TemporaryExecutionContext context(HTML::relevant_settings_object(*font), HTML::TemporaryExecutionContext::CallbacksEnabled::Yes);
+                // 2. Otherwise, reject font face’s [[FontStatusPromise]] with a DOMException named "SyntaxError"
+                //    and set font face’s status attribute to "error".
+                font->m_status = Bindings::FontFaceLoadStatus::Error;
+                WebIDL::reject_promise(font->realm(), font->m_font_status_promise, WebIDL::SyntaxError::create(font->realm(), MUST(String::formatted("Failed to load font: {}", error))));
+
+                // FIXME: For each FontFaceSet font face is in:
+
+                font->m_font_load_promise = nullptr;
+            }));
+        });
+    }));
+
+    return font;
 }
 
-FontFace::FontFace(JS::Realm& realm, String font_family, FontFaceSource, FontFaceDescriptors const& descriptors)
+FontFace::FontFace(JS::Realm& realm, JS::NonnullGCPtr<WebIDL::Promise> font_status_promise, Vector<ParsedFontFace::Source> urls, ByteBuffer data, String font_family, FontFaceDescriptors const& descriptors)
     : Bindings::PlatformObject(realm)
+    , m_font_status_promise(font_status_promise)
+    , m_urls(move(urls))
+    , m_binary_data(move(data))
 {
-    // FIXME: Validate these values the same way as the setters
     m_family = move(font_family);
     m_style = descriptors.style;
     m_weight = descriptors.weight;
@@ -46,6 +186,9 @@ FontFace::FontFace(JS::Realm& realm, String font_family, FontFaceSource, FontFac
     m_ascent_override = descriptors.ascent_override;
     m_descent_override = descriptors.descent_override;
     m_line_gap_override = descriptors.line_gap_override;
+
+    if (verify_cast<JS::Promise>(*m_font_status_promise->promise()).state() == JS::Promise::State::Rejected)
+        m_status = Bindings::FontFaceLoadStatus::Error;
 }
 
 void FontFace::initialize(JS::Realm& realm)
@@ -53,6 +196,18 @@ void FontFace::initialize(JS::Realm& realm)
     Base::initialize(realm);
 
     WEB_SET_PROTOTYPE_FOR_INTERFACE(FontFace);
+}
+
+void FontFace::visit_edges(JS::Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+
+    visitor.visit(m_font_status_promise);
+}
+
+JS::NonnullGCPtr<JS::Promise> FontFace::loaded() const
+{
+    return verify_cast<JS::Promise>(*m_font_status_promise->promise());
 }
 
 // https://drafts.csswg.org/css-font-loading/#dom-fontface-family

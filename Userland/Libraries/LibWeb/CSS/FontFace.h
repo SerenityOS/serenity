@@ -6,7 +6,11 @@
 
 #pragma once
 
+#include <LibGfx/Font/VectorFont.h>
+#include <LibURL/URL.h>
+#include <LibWeb/Bindings/FontFacePrototype.h>
 #include <LibWeb/Bindings/PlatformObject.h>
+#include <LibWeb/CSS/ParsedFontFace.h>
 
 namespace Web::CSS {
 
@@ -28,7 +32,7 @@ class FontFace final : public Bindings::PlatformObject {
     JS_DECLARE_ALLOCATOR(FontFace);
 
 public:
-    using FontFaceSource = Variant<String, JS::Handle<JS::ArrayBuffer>, JS::Handle<WebIDL::ArrayBufferView>>;
+    using FontFaceSource = Variant<String, JS::Handle<WebIDL::BufferSource>>;
 
     [[nodiscard]] static JS::NonnullGCPtr<FontFace> construct_impl(JS::Realm&, String family, FontFaceSource source, FontFaceDescriptors const& descriptors);
     virtual ~FontFace() override = default;
@@ -66,12 +70,16 @@ public:
     String line_gap_override() const { return m_line_gap_override; }
     WebIDL::ExceptionOr<void> set_line_gap_override(String const&);
 
+    Bindings::FontFaceLoadStatus status() const { return m_status; }
+
     JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Promise>> load();
+    JS::NonnullGCPtr<JS::Promise> loaded() const;
 
 private:
-    FontFace(JS::Realm&, String family, FontFaceSource source, FontFaceDescriptors const& descriptors);
+    FontFace(JS::Realm&, JS::NonnullGCPtr<WebIDL::Promise> font_status_promise, Vector<ParsedFontFace::Source> urls, ByteBuffer data, String family, FontFaceDescriptors const& descriptors);
 
     virtual void initialize(JS::Realm&) override;
+    virtual void visit_edges(Visitor&) override;
 
     // FIXME: Should we be storing StyleValues instead?
     String m_family;
@@ -85,6 +93,16 @@ private:
     String m_ascent_override;
     String m_descent_override;
     String m_line_gap_override;
+
+    // https://drafts.csswg.org/css-font-loading/#dom-fontface-status
+    Bindings::FontFaceLoadStatus m_status { Bindings::FontFaceLoadStatus::Unloaded };
+
+    JS::NonnullGCPtr<WebIDL::Promise> m_font_status_promise; // [[FontStatusPromise]]
+    Vector<ParsedFontFace::Source> m_urls;                   // [[Urls]]
+    ByteBuffer m_binary_data;                                // [[Data]]
+
+    RefPtr<Gfx::VectorFont> m_parsed_font;
+    RefPtr<Core::Promise<NonnullRefPtr<Gfx::VectorFont>>> m_font_load_promise;
 
     // https://drafts.csswg.org/css-font-loading/#css-connected
     bool m_is_css_connected { false };

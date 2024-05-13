@@ -4566,7 +4566,13 @@ CSSRule* Parser::parse_font_face_rule(TokenStream<ComponentValue>& tokens)
     return CSSFontFaceRule::create(m_context.realm(), ParsedFontFace { font_family.release_value(), weight, slope, move(src), move(unicode_range) });
 }
 
-Vector<ParsedFontFace::Source> Parser::parse_font_face_src(TokenStream<ComponentValue>& component_values)
+Vector<ParsedFontFace::Source> Parser::parse_as_font_face_src()
+{
+    return parse_font_face_src(m_token_stream);
+}
+
+template<typename T>
+Vector<ParsedFontFace::Source> Parser::parse_font_face_src(TokenStream<T>& component_values)
 {
     // FIXME: Get this information from the system somehow?
     // Format-name table: https://www.w3.org/TR/css-fonts-4/#font-format-definitions
