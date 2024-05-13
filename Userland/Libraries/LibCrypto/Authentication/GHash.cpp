@@ -86,13 +86,15 @@ GHash::TagType GHash::process(ReadonlyBytes aad, ReadonlyBytes cipher)
 
 /// Galois Field multiplication using <x^127 + x^7 + x^2 + x + 1>.
 /// Note that x, y, and z are strictly BE.
-void galois_multiply(u32 (&z)[4], u32 const (&_x)[4], u32 const (&_y)[4])
+void galois_multiply(u32 (&_z)[4], u32 const (&_x)[4], u32 const (&_y)[4])
 {
+    // Note: Copied upfront to stack to avoid memory access in the loop.
     u32 x[4] { _x[0], _x[1], _x[2], _x[3] };
-    u32 y[4] { _y[0], _y[1], _y[2], _y[3] };
-    __builtin_memset(z, 0, sizeof(z));
+    u32 const y[4] { _y[0], _y[1], _y[2], _y[3] };
+    u32 z[4] { 0, 0, 0, 0 };
 
-#pragma GCC unroll 16
+    // Unrolled by 32, the access in y[3-(i/32)] can be cached throughout the loop.
+#pragma GCC unroll 32
     for (ssize_t i = 127; i > -1; --i) {
         auto r = -((y[3 - (i / 32)] >> (i % 32)) & 1);
         z[0] ^= x[0] & r;
@@ -113,6 +115,8 @@ void galois_multiply(u32 (&z)[4], u32 const (&_x)[4], u32 const (&_y)[4])
 
         x[0] ^= 0xe1000000 & -a3;
     }
+
+    memcpy(_z, z, sizeof(z));
 }
 
 }
