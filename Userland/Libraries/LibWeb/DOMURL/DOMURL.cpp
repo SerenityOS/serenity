@@ -70,6 +70,24 @@ JS::NonnullGCPtr<DOMURL> DOMURL::initialize_a_url(JS::Realm& realm, URL::URL con
     return result_url;
 }
 
+// https://url.spec.whatwg.org/#dom-url-parse
+JS::GCPtr<DOMURL> DOMURL::parse_for_bindings(JS::VM& vm, String const& url, Optional<String> const& base)
+{
+    auto& realm = *vm.current_realm();
+
+    // 1. Let parsedURL be the result of running the API URL parser on url with base, if given.
+    auto parsed_url = parse_api_url(url, base);
+
+    // 2. If parsedURL is failure, then return null.
+    if (!parsed_url.has_value())
+        return nullptr;
+
+    // 3. Let url be a new URL object.
+    // 4. Initialize url with parsedURL.
+    // 5. Return url.
+    return initialize_a_url(realm, parsed_url.value());
+}
+
 // https://url.spec.whatwg.org/#dom-url-url
 WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMURL>> DOMURL::construct_impl(JS::Realm& realm, String const& url, Optional<String> const& base)
 {
