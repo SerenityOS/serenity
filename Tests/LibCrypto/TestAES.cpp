@@ -336,6 +336,17 @@ TEST_CASE(test_AES_CTR_128bit_decrypt_16bytes)
     // If encryption works, then decryption works, too.
 }
 
+BENCHMARK_CASE(GCM)
+{
+    Crypto::Authentication::GHash ghash("WellHelloFriends"_b);
+    auto v = ByteBuffer::create_uninitialized(16 * MiB).release_value();
+    fill_with_random(v);
+    for (size_t i = 0; i < 10; ++i) {
+        ghash.process(v, "test"_b);
+        AK::taint_for_optimizer(v);
+    }
+}
+
 TEST_CASE(test_AES_GCM_name)
 {
     Crypto::Cipher::AESCipher::GCMMode cipher("WellHelloFriends"_b, 128, Crypto::Cipher::Intent::Encryption);
