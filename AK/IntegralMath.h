@@ -27,12 +27,10 @@ constexpr T log2(T x)
 template<Integral T>
 constexpr T ceil_log2(T x)
 {
-    if (!x)
+    if (x <= 1)
         return 0;
 
-    T log = AK::log2(x);
-    log += (x & ((((T)1) << (log - 1)) - 1)) != 0;
-    return log;
+    return AK::log2(x - 1) + 1;
 }
 
 template<Integral I>
