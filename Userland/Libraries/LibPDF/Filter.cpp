@@ -262,7 +262,7 @@ PDFErrorOr<ByteBuffer> Filter::decode_lzw(ReadonlyBytes bytes, RefPtr<DictObject
     if (decode_parms && decode_parms->contains(CommonNames::EarlyChange))
         early_change = decode_parms->get_value(CommonNames::EarlyChange).get<int>();
 
-    auto decoded = TRY(Compress::LZWDecoder<BigEndianInputBitStream>::decode_all(bytes, 8, -early_change));
+    auto decoded = TRY(Compress::LzwDecompressor<BigEndianInputBitStream>::decompress_all(bytes, 8, -early_change));
     return handle_lzw_and_flate_parameters(move(decoded), decode_parms);
 }
 
