@@ -1275,17 +1275,17 @@ private:
     Label m_target;
 };
 
-#define JS_ENUMERATE_COMPARISON_OPS(X)        \
-    X(LessThan, less_than)                    \
-    X(LessThanEquals, less_than_equals)       \
-    X(GreaterThan, greater_than)              \
-    X(GreaterThanEquals, greater_than_equals) \
-    X(LooselyEquals, loosely_equals)          \
-    X(LooselyInequals, loosely_inequals)      \
-    X(StrictlyEquals, strict_equals)          \
-    X(StrictlyInequals, strict_inequals)
+#define JS_ENUMERATE_COMPARISON_OPS(X)            \
+    X(LessThan, less_than, <)                     \
+    X(LessThanEquals, less_than_equals, <=)       \
+    X(GreaterThan, greater_than, >)               \
+    X(GreaterThanEquals, greater_than_equals, >=) \
+    X(LooselyEquals, loosely_equals, ==)          \
+    X(LooselyInequals, loosely_inequals, !=)      \
+    X(StrictlyEquals, strict_equals, ==)          \
+    X(StrictlyInequals, strict_inequals, !=)
 
-#define DECLARE_COMPARISON_OP(op_TitleCase, op_snake_case)                                           \
+#define DECLARE_COMPARISON_OP(op_TitleCase, op_snake_case, numeric_operator)                         \
     class Jump##op_TitleCase final : public Instruction {                                            \
     public:                                                                                          \
         constexpr static bool IsTerminator = true;                                                   \

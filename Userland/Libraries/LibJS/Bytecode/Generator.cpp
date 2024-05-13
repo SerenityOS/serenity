@@ -1031,7 +1031,7 @@ bool Generator::fuse_compare_and_jump(ScopedOperand const& condition, Label true
 {
     auto& last_instruction = *reinterpret_cast<Instruction const*>(m_current_basic_block->data() + m_current_basic_block->last_instruction_start_offset());
 
-#define HANDLE_COMPARISON_OP(op_TitleCase, op_snake_case)                          \
+#define HANDLE_COMPARISON_OP(op_TitleCase, op_snake_case, numeric_operator)        \
     if (last_instruction.type() == Instruction::Type::op_TitleCase) {              \
         auto& comparison = static_cast<Op::op_TitleCase const&>(last_instruction); \
         VERIFY(comparison.dst() == condition);                                     \
