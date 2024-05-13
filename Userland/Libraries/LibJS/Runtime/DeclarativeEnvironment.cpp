@@ -110,9 +110,12 @@ ThrowCompletionOr<void> DeclarativeEnvironment::create_immutable_binding(VM&, De
 // 4.1.1.1.1 InitializeBinding ( N, V, hint ), https://tc39.es/proposal-explicit-resource-management/#sec-declarative-environment-records
 ThrowCompletionOr<void> DeclarativeEnvironment::initialize_binding(VM& vm, DeprecatedFlyString const& name, Value value, Environment::InitializeBindingHint hint)
 {
-    auto binding_and_index = find_binding_and_index(name);
-    VERIFY(binding_and_index.has_value());
-    auto& binding = binding_and_index->binding();
+    return initialize_binding_direct(vm, find_binding_and_index(name)->index().value(), value, hint);
+}
+
+ThrowCompletionOr<void> DeclarativeEnvironment::initialize_binding_direct(VM& vm, size_t index, Value value, Environment::InitializeBindingHint hint)
+{
+    auto& binding = m_bindings.at(index);
 
     // 1. Assert: envRec must have an uninitialized binding for N.
     VERIFY(binding.initialized == false);
