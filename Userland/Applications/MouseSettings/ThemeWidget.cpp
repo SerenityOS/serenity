@@ -135,6 +135,7 @@ ErrorOr<void> ThemeWidget::initialize()
     m_mouse_cursor_model->change_theme(theme_name);
 
     m_theme_name_box = find_descendant_of_type_named<GUI::ComboBox>("theme_name_box");
+    m_theme_name_box->set_only_allow_values_from_model(true);
     m_theme_name_box->on_change = [this](ByteString const& value, GUI::ModelIndex const&) {
         m_mouse_cursor_model->change_theme(value);
         set_modified(true);
