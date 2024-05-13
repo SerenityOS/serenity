@@ -99,7 +99,7 @@ ErrorOr<void> UHCIRootHub::setup(Badge<UHCIController>)
 
     // NOTE: The root hub will be on the default address at this point.
     // The root hub must be the first device to be created, otherwise the HCD will intercept all default address transfers as though they're targeted at the root hub.
-    TRY(m_hub->enumerate_device());
+    TRY(m_uhci_controller->initialize_device(*m_hub));
 
     // NOTE: The root hub is no longer on the default address.
     TRY(m_hub->enumerate_and_power_on_hub());
