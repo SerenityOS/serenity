@@ -1379,6 +1379,25 @@ ThrowCompletionOr<void> CreateArguments::execute_impl(Bytecode::Interpreter& int
 ThrowCompletionOr<void> SetVariable::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
+
+    if (m_cache.is_valid()) {
+        auto* environment = m_mode == EnvironmentMode::Lexical
+            ? interpreter.running_execution_context().lexical_environment.ptr()
+            : interpreter.running_execution_context().variable_environment.ptr();
+        for (size_t i = 0; i < m_cache.hops; ++i)
+            environment = environment->outer_environment();
+        if (!environment->is_permanently_screwed_by_eval()) {
+            auto value = interpreter.get(src());
+            if (m_initialization_mode == InitializationMode::Initialize) {
+                TRY(static_cast<DeclarativeEnvironment&>(*environment).initialize_binding_direct(vm, m_cache.index, value, Environment::InitializeBindingHint::Normal));
+                return {};
+            }
+            TRY(static_cast<DeclarativeEnvironment&>(*environment).set_mutable_binding_direct(vm, m_cache.index, value, vm.in_strict_mode()));
+            return {};
+        }
+        m_cache = {};
+    }
+
     auto const& name = interpreter.current_executable().get_identifier(m_identifier);
     TRY(set_variable(vm,
         name,
