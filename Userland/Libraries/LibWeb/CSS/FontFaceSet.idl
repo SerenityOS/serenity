@@ -38,10 +38,10 @@ interface FontFaceSet : EventTarget {
     // FIXME: boolean check(CSSOMString font, optional CSSOMString text = " ");
 
     // async notification that font loading and layout operations are done
-    // FIXME: readonly attribute Promise<FontFaceSet> ready;
+    readonly attribute Promise<FontFaceSet> ready;
 
     // loading state, "loading" while one or more fonts loading, "loaded" otherwise
-    // FIXME: readonly attribute FontFaceSetLoadStatus status;
+    readonly attribute FontFaceSetLoadStatus status;
 };
 
 interface mixin FontFaceSource {
