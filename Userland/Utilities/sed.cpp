@@ -659,15 +659,15 @@ public:
         };
     }
 
-    ErrorOr<bool> has_next() const
+    bool has_next() const
     {
-        return m_file->can_read_line();
+        return !m_file->is_eof();
     }
 
     ErrorOr<StringView> next()
     {
-        VERIFY(TRY(has_next()));
-        m_current_line = TRY(m_file->read_line(m_buffer));
+        VERIFY(has_next());
+        m_current_line = TRY(m_file->read_line_with_resize(m_buffer));
         ++m_line_number;
         return m_current_line;
     }
@@ -700,6 +700,7 @@ private:
         , m_file(move(file))
         , m_output(move(output))
         , m_output_temp_file(move(temp_file))
+        , m_buffer(MUST(ByteBuffer::create_uninitialized(PAGE_SIZE)))
     {
     }
 
@@ -711,8 +712,7 @@ private:
     OwnPtr<FileSystem::TempFile> m_output_temp_file;
     size_t m_line_number { 0 };
     ByteString m_current_line;
-    constexpr static size_t MAX_SUPPORTED_LINE_SIZE = 4096;
-    Array<u8, MAX_SUPPORTED_LINE_SIZE> m_buffer;
+    ByteBuffer m_buffer;
 };
 
 static ErrorOr<void> write_pattern_space(File& output, StringBuilder& pattern_space)
@@ -796,7 +796,7 @@ static ErrorOr<CycleDecision> apply(Command const& command, StringBuilder& patte
         if (!suppress_default_output)
             TRY(write_pattern_space(stdout, pattern_space));
         TRY(write_pattern_space(input, pattern_space));
-        if (TRY(input.has_next())) {
+        if (input.has_next()) {
             pattern_space.clear();
             pattern_space.append(TRY(input.next()));
         }
@@ -853,11 +853,13 @@ static ErrorOr<void> run(Vector<File>& inputs, Script& script, bool suppress_def
     auto stdout = TRY(File::create_from_stdout());
 
     // main loop
-    while (TRY(input.has_next())) {
+    while (input.has_next()) {
 
         // Avoid potential last, empty line
         auto line = TRY(input.next());
-        auto is_last_line = !TRY(input.has_next());
+        auto is_last_line = !input.has_next();
+        if (is_last_line && line.is_empty())
+            break;
 
         // TODO: "Reading from input shall be skipped if a <newline> was in the pattern space prior to a D command ending the previous cycle"
         pattern_space.append(line);
