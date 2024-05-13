@@ -65,6 +65,24 @@ TEST_CASE(exp2)
     EXPECT_EQ(AK::exp2<u64>(63), 9223372036854775808ull);
 }
 
+TEST_CASE(log2)
+{
+    EXPECT_EQ(AK::log2<u64>(0), 0ull);
+    EXPECT_EQ(AK::log2<u64>(1), 0ull);
+    EXPECT_EQ(AK::log2<i8>(64), 6);
+    EXPECT_EQ(AK::log2<u8>(128), 7);
+    EXPECT_EQ(AK::log2<u16>(512), 9);
+    EXPECT_EQ(AK::log2<i16>(16384), 14);
+    EXPECT_EQ(AK::log2<u16>(32768), 15);
+    EXPECT_EQ(AK::log2<i32>(131072), 17);
+    EXPECT_EQ(AK::log2<i32>(1073741824), 30);
+    EXPECT_EQ(AK::log2<u32>(2147483648), 31u);
+    EXPECT_EQ(AK::log2<i64>(4294967296), 32);
+    EXPECT_EQ(AK::log2<i64>(8589934592), 33);
+    EXPECT_EQ(AK::log2<i64>(4611686018427387904), 62);
+    EXPECT_EQ(AK::log2<u64>(9223372036854775808ull), 63ull);
+}
+
 TEST_CASE(ceil_log2)
 {
     EXPECT_EQ(AK::ceil_log2<u64>(0), 0ull);
