@@ -111,6 +111,7 @@ interface Document : Node {
     readonly attribute DocumentType? doctype;
 
     readonly attribute Element? documentElement;
+    [CEReactions] attribute DOMString dir;
     [CEReactions] attribute HTMLElement? body;
     readonly attribute HTMLHeadElement? head;
     readonly attribute HTMLScriptElement? currentScript;
