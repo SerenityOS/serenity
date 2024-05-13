@@ -212,9 +212,9 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     if (!pattern_file.is_empty()) {
         auto file = TRY(Core::File::open(pattern_file, Core::File::OpenMode::Read));
         auto buffered_file = TRY(Core::InputBufferedFile::create(move(file)));
-        Array<u8, PAGE_SIZE> buffer;
+        auto buffer = TRY(ByteBuffer::create_uninitialized(PAGE_SIZE));
         while (!buffered_file->is_eof()) {
-            auto next_pattern = TRY(buffered_file->read_line(buffer));
+            auto next_pattern = TRY(buffered_file->read_line_with_resize(buffer));
             // Empty lines represent a valid pattern, but the trailing newline
             // should be ignored.
             if (next_pattern.is_empty() && buffered_file->is_eof())
@@ -300,9 +300,11 @@ ErrorOr<int> serenity_main(Main::Arguments args)
             auto file = TRY(Core::File::open_file_or_standard_stream(filename, Core::File::OpenMode::Read));
             auto buffered_file = TRY(Core::InputBufferedFile::create(move(file)));
 
-            for (size_t line_number = 1; TRY(buffered_file->can_read_line()); ++line_number) {
-                Array<u8, PAGE_SIZE> buffer;
-                auto line = TRY(buffered_file->read_line(buffer));
+            auto buffer = TRY(ByteBuffer::create_uninitialized(PAGE_SIZE));
+            for (size_t line_number = 1; !buffered_file->is_eof(); ++line_number) {
+                auto line = TRY(buffered_file->read_line_with_resize(buffer));
+                if (line.is_empty() && buffered_file->is_eof())
+                    break;
 
                 auto is_binary = line.contains('\0');
 
