@@ -23,6 +23,7 @@
 #include <Kernel/Devices/Storage/SD/PCISDHostController.h>
 #include <Kernel/Devices/Storage/SD/SDHostController.h>
 #include <Kernel/Devices/Storage/StorageManagement.h>
+#include <Kernel/Devices/Storage/VirtIO/VirtIOBlockController.h>
 #include <Kernel/FileSystem/Ext2FS/FileSystem.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Library/Panic.h>
@@ -103,6 +104,8 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_pci_controllers(bool nvme_pol
             }
         }));
 
+        RefPtr<VirtIOBlockController> virtio_controller;
+
         auto const& handle_mass_storage_device = [&](PCI::DeviceIdentifier const& device_identifier) {
             using SubclassID = PCI::MassStorage::SubclassID;
 
@@ -120,6 +123,16 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_pci_controllers(bool nvme_pol
                     dmesgln("Unable to initialize NVMe controller: {}", controller.error());
                 } else {
                     m_controllers.append(controller.release_value());
+                }
+            }
+            if (VirtIOBlockController::is_handled(device_identifier)) {
+                if (virtio_controller.is_null()) {
+                    auto controller = make_ref_counted<VirtIOBlockController>();
+                    m_controllers.append(controller);
+                    virtio_controller = controller;
+                }
+                if (auto res = virtio_controller->add_device(device_identifier); res.is_error()) {
+                    dmesgln("Unable to initialize VirtIO block device: {}", res.error());
                 }
             }
         };

@@ -42,6 +42,10 @@ UNMAP_AFTER_INIT void detect_pci_instances()
             // This should have been initialized by the graphics subsystem
             break;
         }
+        case PCI::DeviceID::VirtIOBlockDevice: {
+            // This should have been initialized by the storage subsystem
+            break;
+        }
         default:
             dbgln_if(VIRTIO_DEBUG, "VirtIO: Unknown VirtIO device with ID: {}", device_identifier.hardware_id().device_id);
             break;
