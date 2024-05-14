@@ -370,7 +370,7 @@ static ErrorOr<void> align_to_two(SeekableStream& stream)
     return align_to_two(stream, TRY(stream.tell()));
 }
 
-static ErrorOr<void> write_ANMF_chunk(Stream& stream, ANMFChunkHeader const& chunk, ReadonlyBytes frame_data)
+static ErrorOr<void> write_ANMF_chunk_header(Stream& stream, ANMFChunkHeader const& chunk, size_t payload_size)
 {
     if (chunk.frame_width > (1 << 24) || chunk.frame_height > (1 << 24))
         return Error::from_string_literal("WebP dimensions too large for ANMF chunk");
@@ -384,7 +384,7 @@ static ErrorOr<void> write_ANMF_chunk(Stream& stream, ANMFChunkHeader const& chu
     dbgln_if(WEBP_DEBUG, "writing ANMF frame_x {} frame_y {} frame_width {} frame_height {} frame_duration {} blending_method {} disposal_method {}",
         chunk.frame_x, chunk.frame_y, chunk.frame_width, chunk.frame_height, chunk.frame_duration_in_milliseconds, (int)chunk.blending_method, (int)chunk.disposal_method);
 
-    TRY(write_chunk_header(stream, "ANMF"sv, 16 + frame_data.size()));
+    TRY(write_chunk_header(stream, "ANMF"sv, 16 + payload_size));
 
     LittleEndianOutputBitStream bit_stream { MaybeOwned<Stream>(stream) };
 
@@ -426,11 +426,6 @@ static ErrorOr<void> write_ANMF_chunk(Stream& stream, ANMFChunkHeader const& chu
     // FIXME: Make ~LittleEndianOutputBitStream do this, or make it VERIFY() that it has happened at least.
     TRY(bit_stream.flush_buffer_to_stream());
 
-    TRY(stream.write_until_depleted(frame_data));
-
-    if (frame_data.size() % 2 != 0)
-        TRY(stream.write_value<u8>(0));
-
     return {};
 }
 
@@ -456,7 +451,10 @@ ErrorOr<void> WebPAnimationWriter::add_frame(Bitmap& bitmap, int duration_ms, In
     chunk.blending_method = ANMFChunkHeader::BlendingMethod::DoNotBlend;
     chunk.disposal_method = ANMFChunkHeader::DisposalMethod::DoNotDispose;
 
-    TRY(write_ANMF_chunk(m_stream, chunk, vp8l_chunk_bytes));
+    TRY(write_ANMF_chunk_header(m_stream, chunk, vp8l_chunk_bytes.size()));
+
+    TRY(m_stream.write_until_depleted(vp8l_chunk_bytes));
+    VERIFY(vp8l_chunk_bytes.size() % 2 == 0);
 
     TRY(update_size_in_header());
 
