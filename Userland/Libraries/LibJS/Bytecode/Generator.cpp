@@ -17,13 +17,14 @@
 
 namespace JS::Bytecode {
 
-Generator::Generator(VM& vm)
+Generator::Generator(VM& vm, MustPropagateCompletion must_propagate_completion)
     : m_vm(vm)
     , m_string_table(make<StringTable>())
     , m_identifier_table(make<IdentifierTable>())
     , m_regex_table(make<RegexTable>())
     , m_constants(vm.heap())
     , m_accumulator(*this, Operand(Register::accumulator()))
+    , m_must_propagate_completion(must_propagate_completion == MustPropagateCompletion::Yes)
 {
 }
 
@@ -190,9 +191,9 @@ CodeGenerationErrorOr<void> Generator::emit_function_declaration_instantiation(E
     return {};
 }
 
-CodeGenerationErrorOr<NonnullGCPtr<Executable>> Generator::emit_function_body_bytecode(VM& vm, ASTNode const& node, FunctionKind enclosing_function_kind, GCPtr<ECMAScriptFunctionObject const> function)
+CodeGenerationErrorOr<NonnullGCPtr<Executable>> Generator::emit_function_body_bytecode(VM& vm, ASTNode const& node, FunctionKind enclosing_function_kind, GCPtr<ECMAScriptFunctionObject const> function, MustPropagateCompletion must_propagate_completion)
 {
-    Generator generator(vm);
+    Generator generator(vm, must_propagate_completion);
 
     generator.switch_to_basic_block(generator.make_block());
     SourceLocationScope scope(generator, node);
@@ -429,7 +430,7 @@ CodeGenerationErrorOr<NonnullGCPtr<Executable>> Generator::generate_from_ast_nod
 
 CodeGenerationErrorOr<NonnullGCPtr<Executable>> Generator::generate_from_function(VM& vm, ECMAScriptFunctionObject const& function)
 {
-    return emit_function_body_bytecode(vm, function.ecmascript_code(), function.kind(), &function);
+    return emit_function_body_bytecode(vm, function.ecmascript_code(), function.kind(), &function, MustPropagateCompletion::No);
 }
 
 void Generator::grow(size_t additional_size)
