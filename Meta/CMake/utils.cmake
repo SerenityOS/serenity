@@ -237,3 +237,22 @@ function(extract_path dest_dir zip_path source_path dest_path)
         file(ARCHIVE_EXTRACT INPUT "${zip_path}" DESTINATION "${dest_dir}" PATTERNS "${source_path}")
     endif()
 endfunction()
+
+function(add_lagom_library_install_rules target_name)
+    cmake_parse_arguments(PARSE_ARGV 1 LAGOM_INSTALL_RULES "" "ALIAS_NAME" "")
+    if (NOT LAGOM_INSTALL_RULES_ALIAS_NAME)
+        set(LAGOM_INSTALL_RULES_ALIAS_NAME ${target_name})
+    endif()
+     # Don't make alias when we're going to import a previous build for Tools
+    # FIXME: Is there a better way to write this?
+    if (NOT ENABLE_FUZZERS AND NOT CMAKE_CROSSCOMPILING)
+        # alias for parity with exports
+        add_library(Lagom::${LAGOM_INSTALL_RULES_ALIAS_NAME} ALIAS ${target_name})
+    endif()
+    install(TARGETS ${target_name} EXPORT LagomTargets
+        RUNTIME COMPONENT Lagom_Runtime
+        LIBRARY COMPONENT Lagom_Runtime NAMELINK_COMPONENT Lagom_Development
+        ARCHIVE COMPONENT Lagom_Development
+        INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    )
+endfunction()
