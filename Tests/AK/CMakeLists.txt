@@ -35,6 +35,7 @@ set(AK_TEST_SOURCES
     TestFlyString.cpp
     TestFormat.cpp
     TestFuzzyMatch.cpp
+    TestGeneratorAK.cpp
     TestGenericLexer.cpp
     TestHashFunctions.cpp
     TestHashMap.cpp

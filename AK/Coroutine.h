@@ -31,6 +31,12 @@ struct SuspendNever {
     void await_resume() const noexcept { }
 };
 
+struct SuspendAlways {
+    bool await_ready() const noexcept { return false; }
+    void await_suspend(std::coroutine_handle<>) const noexcept { }
+    void await_resume() const noexcept { }
+};
+
 struct SymmetricControlTransfer {
     SymmetricControlTransfer(std::coroutine_handle<> handle)
         : m_handle(handle ? handle : std::noop_coroutine())
