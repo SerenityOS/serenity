@@ -577,7 +577,7 @@ FLATTEN_ON_CLANG void Interpreter::run_bytecode(size_t entry_point)
             HANDLE_INSTRUCTION(GetObjectFromIteratorRecord);
             HANDLE_INSTRUCTION(GetObjectPropertyIterator);
             HANDLE_INSTRUCTION(GetPrivateById);
-            HANDLE_INSTRUCTION(GetVariable);
+            HANDLE_INSTRUCTION(GetBinding);
             HANDLE_INSTRUCTION(GreaterThan);
             HANDLE_INSTRUCTION(GreaterThanEquals);
             HANDLE_INSTRUCTION(HasPrivateId);
@@ -1237,7 +1237,7 @@ ThrowCompletionOr<void> ConcatString::execute_impl(Bytecode::Interpreter& interp
     return {};
 }
 
-ThrowCompletionOr<void> GetVariable::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> GetBinding::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
     auto& executable = interpreter.current_executable();
@@ -2122,9 +2122,9 @@ ByteString GetCalleeAndThisFromEnvironment::to_byte_string_impl(Bytecode::Execut
         executable.identifier_table->get(m_identifier));
 }
 
-ByteString GetVariable::to_byte_string_impl(Bytecode::Executable const& executable) const
+ByteString GetBinding::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
-    return ByteString::formatted("GetVariable {}, {}",
+    return ByteString::formatted("GetBinding {}, {}",
         format_operand("dst"sv, dst(), executable),
         executable.identifier_table->get(m_identifier));
 }

@@ -846,10 +846,10 @@ private:
     mutable EnvironmentCoordinate m_cache;
 };
 
-class GetVariable final : public Instruction {
+class GetBinding final : public Instruction {
 public:
-    explicit GetVariable(Operand dst, IdentifierTableIndex identifier)
-        : Instruction(Type::GetVariable)
+    explicit GetBinding(Operand dst, IdentifierTableIndex identifier)
+        : Instruction(Type::GetBinding)
         , m_dst(dst)
         , m_identifier(identifier)
     {

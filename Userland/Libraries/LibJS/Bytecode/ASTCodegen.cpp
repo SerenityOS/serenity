@@ -397,7 +397,7 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> Identifier::generate_by
     if (is_global()) {
         generator.emit<Bytecode::Op::GetGlobal>(dst, generator.intern_identifier(m_string), generator.next_global_variable_cache());
     } else {
-        generator.emit<Bytecode::Op::GetVariable>(dst, generator.intern_identifier(m_string));
+        generator.emit<Bytecode::Op::GetBinding>(dst, generator.intern_identifier(m_string));
     }
     return dst;
 }
@@ -520,7 +520,7 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> AssignmentExpression::g
                         generator.emit<Bytecode::Op::ResolveSuperBase>(*base);
                     }
                 } else if (is<Identifier>(*lhs)) {
-                    // NOTE: For Identifiers, we cannot perform GetVariable and then write into the reference it retrieves, only SetVariable can do this.
+                    // NOTE: For Identifiers, we cannot perform GetBinding and then write into the reference it retrieves, only SetVariable can do this.
                     // FIXME: However, this breaks spec as we are doing variable lookup after evaluating the RHS. This is observable in an object environment, where we visibly perform HasOwnProperty and Get(@@unscopables) on the binded object.
                 } else {
                     (void)TRY(lhs->generate_bytecode(generator));
@@ -1150,7 +1150,7 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> FunctionDeclaration::ge
         Bytecode::Generator::SourceLocationScope scope(generator, *this);
         auto index = generator.intern_identifier(name());
         auto value = generator.allocate_register();
-        generator.emit<Bytecode::Op::GetVariable>(value, index);
+        generator.emit<Bytecode::Op::GetBinding>(value, index);
         generator.emit<Bytecode::Op::SetVariableBinding>(index, value);
     }
     return Optional<ScopedOperand> {};
