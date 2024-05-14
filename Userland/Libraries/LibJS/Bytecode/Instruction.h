@@ -30,12 +30,12 @@
     O(ConcatString)                    \
     O(ContinuePendingUnwind)           \
     O(CopyObjectExcludingProperties)   \
-    O(CreateLexicalEnvironment)        \
-    O(CreateVariableEnvironment)       \
-    O(CreatePrivateEnvironment)        \
-    O(CreateVariable)                  \
-    O(CreateRestParams)                \
     O(CreateArguments)                 \
+    O(CreateLexicalEnvironment)        \
+    O(CreatePrivateEnvironment)        \
+    O(CreateRestParams)                \
+    O(CreateVariable)                  \
+    O(CreateVariableEnvironment)       \
     O(Decrement)                       \
     O(DeleteById)                      \
     O(DeleteByIdWithThis)              \
@@ -54,16 +54,16 @@
     O(GetByValue)                      \
     O(GetByValueWithThis)              \
     O(GetCalleeAndThisFromEnvironment) \
+    O(GetGlobal)                       \
+    O(GetImportMeta)                   \
     O(GetIterator)                     \
     O(GetMethod)                       \
     O(GetNewTarget)                    \
     O(GetNextMethodFromIteratorRecord) \
     O(GetObjectFromIteratorRecord)     \
-    O(GetImportMeta)                   \
     O(GetObjectPropertyIterator)       \
     O(GetPrivateById)                  \
     O(GetVariable)                     \
-    O(GetGlobal)                       \
     O(GreaterThan)                     \
     O(GreaterThanEquals)               \
     O(HasPrivateId)                    \
@@ -115,8 +115,8 @@
     O(PutByValue)                      \
     O(PutByValueWithThis)              \
     O(PutPrivateById)                  \
-    O(ResolveThisBinding)              \
     O(ResolveSuperBase)                \
+    O(ResolveThisBinding)              \
     O(RestoreScheduledJump)            \
     O(Return)                          \
     O(RightShift)                      \
