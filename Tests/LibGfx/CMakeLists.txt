@@ -8,6 +8,7 @@ set(TEST_SOURCES
     TestICCProfile.cpp
     TestImageDecoder.cpp
     TestImageWriter.cpp
+    TestMedianCut.cpp
     TestPainter.cpp
     TestParseISOBMFF.cpp
     TestRect.cpp

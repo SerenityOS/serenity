@@ -73,6 +73,7 @@ set(SOURCES
     ImageFormats/WebPLoaderLossy.cpp
     ImageFormats/WebPWriter.cpp
     ImmutableBitmap.cpp
+    MedianCut.cpp
     Painter.cpp
     Palette.cpp
     Path.cpp
