@@ -8,6 +8,7 @@
 #include <LibCompress/Lzw.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/ImageFormats/GIFWriter.h>
+#include <LibGfx/MedianCut.h>
 
 namespace Gfx {
 
@@ -49,29 +50,27 @@ ErrorOr<void> write_logical_descriptor(BigEndianOutputBitStream& stream, Bitmap 
     return {};
 }
 
-ErrorOr<void> write_global_color_table(Stream& stream)
+ErrorOr<void> write_global_color_table(Stream& stream, ColorPalette const& palette)
 {
     // 19. Global Color Table
 
-    // FIXME: The color table should include color specific to the image
     for (u16 i = 0; i < 256; ++i) {
-        TRY(stream.write_value<u8>(i));
-        TRY(stream.write_value<u8>(i));
-        TRY(stream.write_value<u8>(i));
+        auto const color = i < palette.palette().size() ? palette.palette()[i] : Color::NamedColor::White;
+        TRY(stream.write_value<u8>(color.red()));
+        TRY(stream.write_value<u8>(color.green()));
+        TRY(stream.write_value<u8>(color.blue()));
     }
     return {};
 }
 
-ErrorOr<void> write_image_data(Stream& stream, Bitmap const& bitmap)
+ErrorOr<void> write_image_data(Stream& stream, Bitmap const& bitmap, ColorPalette const& palette)
 {
     // 22. Table Based Image Data
     auto const pixel_number = static_cast<u32>(bitmap.width() * bitmap.height());
     auto indexes = TRY(ByteBuffer::create_uninitialized(pixel_number));
     for (u32 i = 0; i < pixel_number; ++i) {
         auto const color = Color::from_argb(*(bitmap.begin() + i));
-        if (color.red() != color.green() || color.green() != color.blue())
-            return Error::from_string_literal("Non grayscale images are unsupported.");
-        indexes[i] = Color::from_argb(*(bitmap.begin() + i)).red(); // Any channel is correct
+        indexes[i] = palette.index_of_closest_color(color);
     }
 
     constexpr u8 lzw_minimum_code_size = 8;
@@ -132,15 +131,16 @@ ErrorOr<void> write_trailer(Stream& stream)
 
 ErrorOr<void> GIFWriter::encode(Stream& stream, Bitmap const& bitmap)
 {
+    auto const palette = TRY(median_cut(bitmap, 256));
     TRY(write_header(stream));
 
     BigEndianOutputBitStream bit_stream { MaybeOwned<Stream> { stream } };
     TRY(write_logical_descriptor(bit_stream, bitmap));
-    TRY(write_global_color_table(bit_stream));
+    TRY(write_global_color_table(bit_stream, palette));
 
     // Write a Table-Based Image
     TRY(write_image_descriptor(bit_stream, bitmap));
-    TRY(write_image_data(stream, bitmap));
+    TRY(write_image_data(stream, bitmap, palette));
 
     TRY(write_trailer(bit_stream));
 
