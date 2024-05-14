@@ -22,15 +22,15 @@ namespace Gfx {
 static ErrorOr<void> write_webp_header(Stream& stream, unsigned data_size)
 {
     TRY(stream.write_until_depleted("RIFF"sv));
-    TRY(stream.write_value<LittleEndian<u32>>(4 + data_size)); // Including size of "WEBP" and the data size itself.
+    TRY(stream.write_value<LittleEndian<u32>>("WEBP"sv.length() + data_size));
     TRY(stream.write_until_depleted("WEBP"sv));
     return {};
 }
 
-static ErrorOr<void> write_chunk_header(Stream& stream, StringView chunk_fourcc, unsigned vp8l_data_size)
+static ErrorOr<void> write_chunk_header(Stream& stream, StringView chunk_fourcc, unsigned data_size)
 {
     TRY(stream.write_until_depleted(chunk_fourcc));
-    TRY(stream.write_value<LittleEndian<u32>>(vp8l_data_size));
+    TRY(stream.write_value<LittleEndian<u32>>(data_size));
     return {};
 }
 
