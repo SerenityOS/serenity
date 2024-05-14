@@ -866,12 +866,6 @@ void Dump::execute_impl(Bytecode::Interpreter& interpreter) const
     }
 }
 
-ThrowCompletionOr<void> End::execute_impl(Bytecode::Interpreter&) const
-{
-    // Handled in the interpreter loop.
-    __builtin_unreachable();
-}
-
 #define JS_DEFINE_EXECUTE_FOR_COMMON_BINARY_OP(OpTitleCase, op_snake_case)                      \
     ThrowCompletionOr<void> OpTitleCase::execute_impl(Bytecode::Interpreter& interpreter) const \
     {                                                                                           \
@@ -1433,18 +1427,6 @@ ThrowCompletionOr<void> SetVariableBinding::execute_impl(Bytecode::Interpreter& 
     return initialize_or_set_binding<EnvironmentMode::Var, BindingInitializationMode::Set>(interpreter, m_identifier, interpreter.get(m_src), m_cache);
 }
 
-ThrowCompletionOr<void> SetArgument::execute_impl(Bytecode::Interpreter&) const
-{
-    // Handled in the interpreter loop.
-    __builtin_unreachable();
-}
-
-ThrowCompletionOr<void> GetArgument::execute_impl(Bytecode::Interpreter&) const
-{
-    // Handled in the interpreter loop.
-    __builtin_unreachable();
-}
-
 ThrowCompletionOr<void> GetById::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto base_identifier = interpreter.current_executable().get_identifier(m_base_identifier);
@@ -1543,12 +1525,6 @@ ThrowCompletionOr<void> DeleteByIdWithThis::execute_impl(Bytecode::Interpreter& 
     return {};
 }
 
-ThrowCompletionOr<void> Jump::execute_impl(Bytecode::Interpreter&) const
-{
-    // Handled in the interpreter loop.
-    __builtin_unreachable();
-}
-
 ThrowCompletionOr<void> ResolveThisBinding::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& cached_this_value = interpreter.reg(Register::this_value());
@@ -1587,42 +1563,6 @@ void GetNewTarget::execute_impl(Bytecode::Interpreter& interpreter) const
 void GetImportMeta::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     interpreter.set(dst(), interpreter.vm().get_import_meta());
-}
-
-ThrowCompletionOr<void> JumpIf::execute_impl(Bytecode::Interpreter&) const
-{
-    // Handled in the interpreter loop.
-    __builtin_unreachable();
-}
-
-ThrowCompletionOr<void> JumpTrue::execute_impl(Bytecode::Interpreter&) const
-{
-    // Handled in the interpreter loop.
-    __builtin_unreachable();
-}
-
-ThrowCompletionOr<void> JumpFalse::execute_impl(Bytecode::Interpreter&) const
-{
-    // Handled in the interpreter loop.
-    __builtin_unreachable();
-}
-
-ThrowCompletionOr<void> JumpUndefined::execute_impl(Bytecode::Interpreter&) const
-{
-    // Handled in the interpreter loop.
-    __builtin_unreachable();
-}
-
-ThrowCompletionOr<void> JumpNullish::execute_impl(Bytecode::Interpreter&) const
-{
-    // Handled in the interpreter loop.
-    __builtin_unreachable();
-}
-
-ThrowCompletionOr<void> Mov::execute_impl(Bytecode::Interpreter&) const
-{
-    // Handled in the interpreter loop.
-    __builtin_unreachable();
 }
 
 static ThrowCompletionOr<Value> dispatch_builtin_call(Bytecode::Interpreter& interpreter, Bytecode::Builtin builtin, ReadonlySpan<Operand> arguments)
@@ -1811,18 +1751,6 @@ ThrowCompletionOr<void> ThrowIfTDZ::execute_impl(Bytecode::Interpreter& interpre
     return {};
 }
 
-ThrowCompletionOr<void> EnterUnwindContext::execute_impl(Bytecode::Interpreter&) const
-{
-    // Handled in the interpreter loop.
-    __builtin_unreachable();
-}
-
-ThrowCompletionOr<void> ScheduleJump::execute_impl(Bytecode::Interpreter&) const
-{
-    // Handled in the interpreter loop.
-    __builtin_unreachable();
-}
-
 void LeaveLexicalEnvironment::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& running_execution_context = interpreter.running_execution_context();
@@ -1838,12 +1766,6 @@ void LeavePrivateEnvironment::execute_impl(Bytecode::Interpreter& interpreter) c
 void LeaveUnwindContext::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     interpreter.leave_unwind_context();
-}
-
-ThrowCompletionOr<void> ContinuePendingUnwind::execute_impl(Bytecode::Interpreter&) const
-{
-    // Handled in the interpreter loop.
-    __builtin_unreachable();
 }
 
 ThrowCompletionOr<void> Yield::execute_impl(Bytecode::Interpreter& interpreter) const
