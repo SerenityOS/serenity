@@ -33,6 +33,11 @@ public:
         Block,
     };
 
+    enum class MustPropagateCompletion {
+        No,
+        Yes,
+    };
+
     static CodeGenerationErrorOr<NonnullGCPtr<Executable>> generate_from_ast_node(VM&, ASTNode const&, FunctionKind = FunctionKind::Normal);
     static CodeGenerationErrorOr<NonnullGCPtr<Executable>> generate_from_function(VM&, ECMAScriptFunctionObject const& function);
 
@@ -302,10 +307,12 @@ public:
 
     [[nodiscard]] bool is_finished() const { return m_finished; }
 
+    [[nodiscard]] bool must_propagate_completion() const { return m_must_propagate_completion; }
+
 private:
     VM& m_vm;
 
-    static CodeGenerationErrorOr<NonnullGCPtr<Executable>> emit_function_body_bytecode(VM&, ASTNode const&, FunctionKind, GCPtr<ECMAScriptFunctionObject const>);
+    static CodeGenerationErrorOr<NonnullGCPtr<Executable>> emit_function_body_bytecode(VM&, ASTNode const&, FunctionKind, GCPtr<ECMAScriptFunctionObject const>, MustPropagateCompletion = MustPropagateCompletion::Yes);
 
     enum class JumpType {
         Continue,
@@ -314,7 +321,7 @@ private:
     void generate_scoped_jump(JumpType);
     void generate_labelled_jump(JumpType, DeprecatedFlyString const& label);
 
-    explicit Generator(VM&);
+    Generator(VM&, MustPropagateCompletion);
     ~Generator() = default;
 
     void grow(size_t);
@@ -353,6 +360,7 @@ private:
     HashTable<u32> m_initialized_locals;
 
     bool m_finished { false };
+    bool m_must_propagate_completion { true };
 };
 
 }
