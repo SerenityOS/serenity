@@ -585,7 +585,7 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> AssignmentExpression::g
                 auto rval = TRY(m_rhs->generate_bytecode(generator)).value();
 
                 // 5. Perform ? DestructuringAssignmentEvaluation of assignmentPattern with argument rval.
-                TRY(pattern->generate_bytecode(generator, Bytecode::Op::SetVariable::InitializationMode::Set, rval, false));
+                TRY(pattern->generate_bytecode(generator, Bytecode::Op::BindingInitializationMode::Set, rval, false));
 
                 // 6. Return rval.
                 return rval;
@@ -1151,7 +1151,7 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> FunctionDeclaration::ge
         auto index = generator.intern_identifier(name());
         auto value = generator.allocate_register();
         generator.emit<Bytecode::Op::GetVariable>(value, index);
-        generator.emit<Bytecode::Op::SetVariable>(index, value, Bytecode::Op::SetVariable::InitializationMode::Set, Bytecode::Op::EnvironmentMode::Var);
+        generator.emit<Bytecode::Op::SetVariableBinding>(index, value);
     }
     return Optional<ScopedOperand> {};
 }
@@ -1173,7 +1173,7 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> FunctionExpression::gen
     generator.emit_new_function(new_function, *this, lhs_name);
 
     if (has_name) {
-        generator.emit<Bytecode::Op::SetVariable>(*name_identifier, new_function, Bytecode::Op::SetVariable::InitializationMode::Initialize, Bytecode::Op::EnvironmentMode::Lexical);
+        generator.emit<Bytecode::Op::InitializeLexicalBinding>(*name_identifier, new_function);
         generator.end_variable_scope();
     }
 
@@ -1186,7 +1186,7 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> FunctionExpression::gen
     return generate_bytecode_with_lhs_name(generator, {}, preferred_dst);
 }
 
-static Bytecode::CodeGenerationErrorOr<void> generate_object_binding_pattern_bytecode(Bytecode::Generator& generator, BindingPattern const& pattern, Bytecode::Op::SetVariable::InitializationMode initialization_mode, ScopedOperand const& object, bool create_variables)
+static Bytecode::CodeGenerationErrorOr<void> generate_object_binding_pattern_bytecode(Bytecode::Generator& generator, BindingPattern const& pattern, Bytecode::Op::BindingInitializationMode initialization_mode, ScopedOperand const& object, bool create_variables)
 {
     generator.emit<Bytecode::Op::ThrowIfNullish>(object);
 
@@ -1300,7 +1300,7 @@ static Bytecode::CodeGenerationErrorOr<void> generate_object_binding_pattern_byt
     return {};
 }
 
-static Bytecode::CodeGenerationErrorOr<void> generate_array_binding_pattern_bytecode(Bytecode::Generator& generator, BindingPattern const& pattern, Bytecode::Op::SetVariable::InitializationMode initialization_mode, ScopedOperand const& input_array, bool create_variables, [[maybe_unused]] Optional<ScopedOperand> preferred_dst = {})
+static Bytecode::CodeGenerationErrorOr<void> generate_array_binding_pattern_bytecode(Bytecode::Generator& generator, BindingPattern const& pattern, Bytecode::Op::BindingInitializationMode initialization_mode, ScopedOperand const& input_array, bool create_variables, [[maybe_unused]] Optional<ScopedOperand> preferred_dst = {})
 {
     /*
      * Consider the following destructuring assignment:
@@ -1476,7 +1476,7 @@ static Bytecode::CodeGenerationErrorOr<void> generate_array_binding_pattern_byte
     return {};
 }
 
-Bytecode::CodeGenerationErrorOr<void> BindingPattern::generate_bytecode(Bytecode::Generator& generator, Bytecode::Op::SetVariable::InitializationMode initialization_mode, ScopedOperand const& input_value, bool create_variables) const
+Bytecode::CodeGenerationErrorOr<void> BindingPattern::generate_bytecode(Bytecode::Generator& generator, Bytecode::Op::BindingInitializationMode initialization_mode, ScopedOperand const& input_value, bool create_variables) const
 {
     if (kind == Kind::Object)
         return generate_object_binding_pattern_bytecode(generator, *this, initialization_mode, input_value, create_variables);
@@ -1486,7 +1486,7 @@ Bytecode::CodeGenerationErrorOr<void> BindingPattern::generate_bytecode(Bytecode
 
 static Bytecode::CodeGenerationErrorOr<void> assign_value_to_variable_declarator(Bytecode::Generator& generator, VariableDeclarator const& declarator, VariableDeclaration const& declaration, ScopedOperand value)
 {
-    auto initialization_mode = declaration.is_lexical_declaration() ? Bytecode::Op::SetVariable::InitializationMode::Initialize : Bytecode::Op::SetVariable::InitializationMode::Set;
+    auto initialization_mode = declaration.is_lexical_declaration() ? Bytecode::Op::BindingInitializationMode::Initialize : Bytecode::Op::BindingInitializationMode::Set;
 
     return declarator.target().visit(
         [&](NonnullRefPtr<Identifier const> const& id) -> Bytecode::CodeGenerationErrorOr<void> {
@@ -2569,14 +2569,14 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> TryStatement::generate_
                     did_create_variable_scope_for_catch_clause = true;
                     auto parameter_identifier = generator.intern_identifier(parameter);
                     generator.emit<Bytecode::Op::CreateVariable>(parameter_identifier, Bytecode::Op::EnvironmentMode::Lexical, false);
-                    generator.emit<Bytecode::Op::SetVariable>(parameter_identifier, caught_value, Bytecode::Op::SetVariable::InitializationMode::Initialize);
+                    generator.emit<Bytecode::Op::InitializeLexicalBinding>(parameter_identifier, caught_value);
                 }
                 return {};
             },
             [&](NonnullRefPtr<BindingPattern const> const& binding_pattern) -> Bytecode::CodeGenerationErrorOr<void> {
                 generator.begin_variable_scope();
                 did_create_variable_scope_for_catch_clause = true;
-                TRY(binding_pattern->generate_bytecode(generator, Bytecode::Op::SetVariable::InitializationMode::Initialize, caught_value, true));
+                TRY(binding_pattern->generate_bytecode(generator, Bytecode::Op::BindingInitializationMode::Initialize, caught_value, true));
                 return {};
             }));
 
@@ -2763,7 +2763,7 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> ClassDeclaration::gener
 {
     Bytecode::Generator::SourceLocationScope scope(generator, *this);
     auto value = TRY(m_class_expression->generate_bytecode(generator)).value();
-    generator.emit_set_variable(*m_class_expression.ptr()->m_name, value, Bytecode::Op::SetVariable::InitializationMode::Initialize);
+    generator.emit_set_variable(*m_class_expression.ptr()->m_name, value, Bytecode::Op::BindingInitializationMode::Initialize);
     // NOTE: ClassDeclaration does not produce a value.
     return Optional<ScopedOperand> {};
 }
@@ -3130,7 +3130,7 @@ static Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> for_in_of_body_e
                     TRY(generator.emit_store_to_reference(**ptr, next_value));
                 } else {
                     auto& binding_pattern = lhs.get<NonnullRefPtr<BindingPattern const>>();
-                    TRY(binding_pattern->generate_bytecode(generator, Bytecode::Op::SetVariable::InitializationMode::Set, next_value, false));
+                    TRY(binding_pattern->generate_bytecode(generator, Bytecode::Op::BindingInitializationMode::Set, next_value, false));
                 }
             }
         }
@@ -3186,7 +3186,7 @@ static Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> for_in_of_body_e
             // 3. Let lhsRef be ! ResolveBinding(lhsName).
             // NOTE: We're skipping all the completion stuff that the spec does, as the unwinding mechanism will take case of doing that.
 
-            generator.emit_set_variable(*lhs_name, next_value, Bytecode::Op::SetVariable::InitializationMode::Initialize, Bytecode::Op::EnvironmentMode::Lexical);
+            generator.emit_set_variable(*lhs_name, next_value, Bytecode::Op::BindingInitializationMode::Initialize, Bytecode::Op::EnvironmentMode::Lexical);
         }
     }
     // i. If destructuring is false, then
@@ -3217,7 +3217,7 @@ static Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> for_in_of_body_e
             auto& binding_pattern = declaration.declarations().first()->target().get<NonnullRefPtr<BindingPattern const>>();
             (void)TRY(binding_pattern->generate_bytecode(
                 generator,
-                head_result.lhs_kind == LHSKind::VarBinding ? Bytecode::Op::SetVariable::InitializationMode::Set : Bytecode::Op::SetVariable::InitializationMode::Initialize,
+                head_result.lhs_kind == LHSKind::VarBinding ? Bytecode::Op::BindingInitializationMode::Set : Bytecode::Op::BindingInitializationMode::Initialize,
                 next_value,
                 false));
         } else {
@@ -3466,10 +3466,9 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> ExportStatement::genera
         auto value = TRY(generator.emit_named_evaluation_if_anonymous_function(static_cast<ClassExpression const&>(*m_statement), generator.intern_identifier("default"sv))).value();
 
         if (!static_cast<ClassExpression const&>(*m_statement).has_name()) {
-            generator.emit<Bytecode::Op::SetVariable>(
+            generator.emit<Bytecode::Op::InitializeLexicalBinding>(
                 generator.intern_identifier(ExportStatement::local_name_for_default),
-                value,
-                Bytecode::Op::SetVariable::InitializationMode::Initialize);
+                value);
         }
 
         return value;
@@ -3478,10 +3477,9 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> ExportStatement::genera
     // ExportDeclaration : export default AssignmentExpression ;
     VERIFY(is<Expression>(*m_statement));
     auto value = TRY(generator.emit_named_evaluation_if_anonymous_function(static_cast<Expression const&>(*m_statement), generator.intern_identifier("default"sv))).value();
-    generator.emit<Bytecode::Op::SetVariable>(
+    generator.emit<Bytecode::Op::InitializeLexicalBinding>(
         generator.intern_identifier(ExportStatement::local_name_for_default),
-        value,
-        Bytecode::Op::SetVariable::InitializationMode::Initialize);
+        value);
     return value;
 }
 

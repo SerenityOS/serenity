@@ -70,6 +70,8 @@
     O(ImportCall)                      \
     O(In)                              \
     O(Increment)                       \
+    O(InitializeLexicalBinding)        \
+    O(InitializeVariableBinding)       \
     O(InstanceOf)                      \
     O(IteratorClose)                   \
     O(IteratorNext)                    \
@@ -122,7 +124,8 @@
     O(RightShift)                      \
     O(ScheduleJump)                    \
     O(SetArgument)                     \
-    O(SetVariable)                     \
+    O(SetLexicalBinding)               \
+    O(SetVariableBinding)              \
     O(StrictlyEquals)                  \
     O(StrictlyInequals)                \
     O(Sub)                             \
