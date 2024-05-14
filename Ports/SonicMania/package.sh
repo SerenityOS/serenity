@@ -58,5 +58,5 @@ post_install() {
   echo "To verify try opening with a Sonic Mania Data.rsdk"
   echo "If that causes it to be stuck on Mods loading done."
   echo "Then this script installed Sonic Mania PLUS and need to get"
-  echo "The Sonic Mania PLUS Data.rsdk"
+  echo "The Sonic Mania PLUS Data.rsdk file."
 }
