@@ -383,7 +383,7 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> UnaryExpression::genera
 Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> NumericLiteral::generate_bytecode(Bytecode::Generator& generator, [[maybe_unused]] Optional<ScopedOperand> preferred_dst) const
 {
     Bytecode::Generator::SourceLocationScope scope(generator, *this);
-    return generator.add_constant(Value(m_value), Bytecode::Generator::DeduplicateConstant::No);
+    return generator.add_constant(Value(m_value));
 }
 
 Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> BooleanLiteral::generate_bytecode(Bytecode::Generator& generator, [[maybe_unused]] Optional<ScopedOperand> preferred_dst) const
@@ -412,13 +412,13 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> BigIntLiteral::generate
             return MUST(Crypto::SignedBigInteger::from_base(2, m_value.substring(2, m_value.length() - 3)));
         return MUST(Crypto::SignedBigInteger::from_base(10, m_value.substring(0, m_value.length() - 1)));
     }();
-    return generator.add_constant(BigInt::create(generator.vm(), move(integer)), Bytecode::Generator::DeduplicateConstant::No);
+    return generator.add_constant(BigInt::create(generator.vm(), move(integer)));
 }
 
 Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> StringLiteral::generate_bytecode(Bytecode::Generator& generator, [[maybe_unused]] Optional<ScopedOperand> preferred_dst) const
 {
     Bytecode::Generator::SourceLocationScope scope(generator, *this);
-    return generator.add_constant(PrimitiveString::create(generator.vm(), m_value), Bytecode::Generator::DeduplicateConstant::No);
+    return generator.add_constant(PrimitiveString::create(generator.vm(), m_value));
 }
 
 Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> RegExpLiteral::generate_bytecode(Bytecode::Generator& generator, Optional<ScopedOperand> preferred_dst) const
@@ -1283,7 +1283,7 @@ static Bytecode::CodeGenerationErrorOr<void> generate_object_binding_pattern_byt
         if (name.has<NonnullRefPtr<Identifier const>>()) {
             auto const& identifier = name.get<NonnullRefPtr<Identifier const>>()->string();
             if (has_rest) {
-                excluded_property_names.append(generator.add_constant(PrimitiveString::create(generator.vm(), identifier), Bytecode::Generator::DeduplicateConstant::No));
+                excluded_property_names.append(generator.add_constant(PrimitiveString::create(generator.vm(), identifier)));
             }
             generator.emit_get_by_id(value, object, generator.intern_identifier(identifier));
         } else {

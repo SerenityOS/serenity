@@ -326,17 +326,7 @@ public:
         Yes,
         No,
     };
-    [[nodiscard]] ScopedOperand add_constant(Value value, DeduplicateConstant deduplicate_constant = DeduplicateConstant::Yes)
-    {
-        if (deduplicate_constant == DeduplicateConstant::Yes) {
-            for (size_t i = 0; i < m_constants.size(); ++i) {
-                if (m_constants[i] == value)
-                    return ScopedOperand(*this, Operand(Operand::Type::Constant, i));
-            }
-        }
-        m_constants.append(value);
-        return ScopedOperand(*this, Operand(Operand::Type::Constant, m_constants.size() - 1));
-    }
+    [[nodiscard]] ScopedOperand add_constant(Value);
 
     [[nodiscard]] Value get_constant(ScopedOperand const& operand) const
     {
@@ -384,6 +374,13 @@ private:
     NonnullOwnPtr<IdentifierTable> m_identifier_table;
     NonnullOwnPtr<RegexTable> m_regex_table;
     MarkedVector<Value> m_constants;
+
+    mutable Optional<ScopedOperand> m_true_constant;
+    mutable Optional<ScopedOperand> m_false_constant;
+    mutable Optional<ScopedOperand> m_null_constant;
+    mutable Optional<ScopedOperand> m_undefined_constant;
+    mutable Optional<ScopedOperand> m_empty_constant;
+    mutable HashMap<i32, ScopedOperand> m_int32_constants;
 
     ScopedOperand m_accumulator;
     ScopedOperand m_this_value;

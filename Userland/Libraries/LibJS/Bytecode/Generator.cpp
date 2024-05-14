@@ -1191,4 +1191,46 @@ ScopedOperand Generator::copy_if_needed_to_preserve_evaluation_order(ScopedOpera
     return new_register;
 }
 
+ScopedOperand Generator::add_constant(Value value)
+{
+    auto append_new_constant = [&] {
+        m_constants.append(value);
+        return ScopedOperand { *this, Operand(Operand::Type::Constant, m_constants.size() - 1) };
+    };
+
+    if (value.is_boolean()) {
+        if (value.as_bool()) {
+            if (!m_true_constant.has_value())
+                m_true_constant = append_new_constant();
+            return m_true_constant.value();
+        } else {
+            if (!m_false_constant.has_value())
+                m_false_constant = append_new_constant();
+            return m_false_constant.value();
+        }
+    }
+    if (value.is_undefined()) {
+        if (!m_undefined_constant.has_value())
+            m_undefined_constant = append_new_constant();
+        return m_undefined_constant.value();
+    }
+    if (value.is_null()) {
+        if (!m_null_constant.has_value())
+            m_null_constant = append_new_constant();
+        return m_null_constant.value();
+    }
+    if (value.is_empty()) {
+        if (!m_empty_constant.has_value())
+            m_empty_constant = append_new_constant();
+        return m_empty_constant.value();
+    }
+    if (value.is_int32()) {
+        auto as_int32 = value.as_i32();
+        return m_int32_constants.ensure(as_int32, [&] {
+            return append_new_constant();
+        });
+    }
+    return append_new_constant();
+}
+
 }
