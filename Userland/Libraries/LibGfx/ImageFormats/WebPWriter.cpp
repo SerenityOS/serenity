@@ -208,6 +208,24 @@ static ErrorOr<void> align_to_two(Stream& stream, size_t number_of_bytes_written
     return {};
 }
 
+constexpr size_t vp8l_header_size = 5; // 1 byte signature + (2 * 14 bits width and height + 1 bit alpha hint + 3 bit version_number)
+
+static size_t compute_VP8L_chunk_size(ByteBuffer const& data)
+{
+    constexpr size_t chunk_header_size = 8; // "VP8L" + size
+    return chunk_header_size + align_up_to(vp8l_header_size + data.size(), 2);
+}
+
+static ErrorOr<void> write_VP8L_chunk(Stream& stream, unsigned width, unsigned height, bool alpha_is_used_hint, ByteBuffer const& data)
+{
+    size_t const number_of_bytes_written = vp8l_header_size + data.size();
+    TRY(write_chunk_header(stream, "VP8L"sv, number_of_bytes_written));
+    TRY(write_VP8L_header(stream, width, height, alpha_is_used_hint));
+    TRY(stream.write_until_depleted(data));
+    TRY(align_to_two(stream, number_of_bytes_written));
+    return {};
+}
+
 static u8 vp8x_flags_from_header(VP8XHeader const& header)
 {
     u8 flags = 0;
@@ -298,23 +316,14 @@ ErrorOr<void> WebPWriter::encode(Stream& stream, Bitmap const& bitmap, Options c
     dbgln_if(WEBP_DEBUG, "Writing WebP of size {} with alpha hint: {}", bitmap.size(), alpha_is_used_hint);
 
     // The chunk headers need to know their size, so we either need a SeekableStream or need to buffer the data. We're doing the latter.
-    // FIXME: The whole writing-and-reading-into-buffer over-and-over is awkward and inefficient.
-    AllocatingMemoryStream vp8l_header_stream;
-    TRY(write_VP8L_header(vp8l_header_stream, bitmap.width(), bitmap.height(), alpha_is_used_hint));
-    auto vp8l_header_bytes = TRY(vp8l_header_stream.read_until_eof());
-
     auto vp8l_data_bytes = TRY(compress_VP8L_image_data(bitmap));
-
-    AllocatingMemoryStream vp8l_chunk_stream;
-    TRY(write_chunk_header(vp8l_chunk_stream, "VP8L"sv, vp8l_header_bytes.size() + vp8l_data_bytes.size()));
-    TRY(vp8l_chunk_stream.write_until_depleted(vp8l_header_bytes));
-    TRY(vp8l_chunk_stream.write_until_depleted(vp8l_data_bytes));
-    TRY(align_to_two(vp8l_chunk_stream));
-    auto vp8l_chunk_bytes = TRY(vp8l_chunk_stream.read_until_eof());
 
     ByteBuffer vp8x_chunk_bytes;
     ByteBuffer iccp_chunk_bytes;
     if (options.icc_data.has_value()) {
+        // FIXME: The whole writing-and-reading-into-buffer over-and-over is awkward and inefficient.
+        //        Maybe add an abstraction that knows its size and can write its data later. This would
+        //        allow saving a few copies.
         dbgln_if(WEBP_DEBUG, "Writing VP8X and ICCP chunks.");
         AllocatingMemoryStream iccp_chunk_stream;
         TRY(write_chunk_header(iccp_chunk_stream, "ICCP"sv, options.icc_data.value().size()));
@@ -328,11 +337,11 @@ ErrorOr<void> WebPWriter::encode(Stream& stream, Bitmap const& bitmap, Options c
         vp8x_chunk_bytes = TRY(vp8x_chunk_stream.read_until_eof());
     }
 
-    u32 total_size = vp8x_chunk_bytes.size() + iccp_chunk_bytes.size() + vp8l_chunk_bytes.size();
+    u32 total_size = vp8x_chunk_bytes.size() + iccp_chunk_bytes.size() + compute_VP8L_chunk_size(vp8l_data_bytes);
     TRY(write_webp_header(stream, total_size));
     TRY(stream.write_until_depleted(vp8x_chunk_bytes));
     TRY(stream.write_until_depleted(iccp_chunk_bytes));
-    TRY(stream.write_until_depleted(vp8l_chunk_bytes));
+    TRY(write_VP8L_chunk(stream, bitmap.width(), bitmap.height(), alpha_is_used_hint, vp8l_data_bytes));
     return {};
 }
 
