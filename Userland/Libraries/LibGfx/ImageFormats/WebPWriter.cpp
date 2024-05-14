@@ -434,13 +434,10 @@ ErrorOr<void> WebPAnimationWriter::add_frame(Bitmap& bitmap, int duration_ms, In
     if (at.x() < 0 || at.y() < 0 || at.x() + bitmap.width() > m_dimensions.width() || at.y() + bitmap.height() > m_dimensions.height())
         return Error::from_string_literal("Frame does not fit in animation dimensions");
 
-    // FIXME: The whole writing-and-reading-into-buffer over-and-over is awkward and inefficient.
-
+    // Since we have a SeekableStream, we could write both the VP8L chunk header and the ANMF chunk header with a placeholder size,
+    // compress the frame data directly to the stream, and then go back and update the two sizes.
+    // That's pretty messy though, and the compressed image data is smaller than the uncompressed bitmap passed in. So we'll buffer it.
     auto vp8l_data_bytes = TRY(compress_VP8L_image_data(bitmap));
-
-    AllocatingMemoryStream vp8l_chunk_stream;
-    TRY(write_VP8L_chunk(vp8l_chunk_stream, bitmap.width(), bitmap.height(), true, vp8l_data_bytes));
-    auto vp8l_chunk_bytes = TRY(vp8l_chunk_stream.read_until_eof());
 
     ANMFChunkHeader chunk;
     chunk.frame_x = static_cast<u32>(at.x());
@@ -451,10 +448,8 @@ ErrorOr<void> WebPAnimationWriter::add_frame(Bitmap& bitmap, int duration_ms, In
     chunk.blending_method = ANMFChunkHeader::BlendingMethod::DoNotBlend;
     chunk.disposal_method = ANMFChunkHeader::DisposalMethod::DoNotDispose;
 
-    TRY(write_ANMF_chunk_header(m_stream, chunk, vp8l_chunk_bytes.size()));
-
-    TRY(m_stream.write_until_depleted(vp8l_chunk_bytes));
-    VERIFY(vp8l_chunk_bytes.size() % 2 == 0);
+    TRY(write_ANMF_chunk_header(m_stream, chunk, compute_VP8L_chunk_size(vp8l_data_bytes)));
+    TRY(write_VP8L_chunk(m_stream, bitmap.width(), bitmap.height(), true, vp8l_data_bytes));
 
     TRY(update_size_in_header());
 
