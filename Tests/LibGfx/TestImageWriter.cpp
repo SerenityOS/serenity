@@ -24,22 +24,21 @@
 #include <LibGfx/ImageFormats/WebPWriter.h>
 #include <LibTest/TestCase.h>
 
-static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> expect_single_frame(Gfx::ImageDecoderPlugin& plugin_decoder, bool is_gif)
+static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> expect_single_frame(Gfx::ImageDecoderPlugin& plugin_decoder)
 {
     EXPECT_EQ(plugin_decoder.frame_count(), 1u);
     EXPECT(!plugin_decoder.is_animated());
-    EXPECT_EQ(plugin_decoder.loop_count(), is_gif ? 1u : 0u);
+    EXPECT(!plugin_decoder.loop_count());
 
     auto frame_descriptor = TRY(plugin_decoder.frame(0));
-    if (!is_gif)
-        EXPECT_EQ(frame_descriptor.duration, 0);
+    EXPECT_EQ(frame_descriptor.duration, 0);
     return *frame_descriptor.image;
 }
 
-static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> expect_single_frame_of_size(Gfx::ImageDecoderPlugin& plugin_decoder, Gfx::IntSize size, bool is_gif = false)
+static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> expect_single_frame_of_size(Gfx::ImageDecoderPlugin& plugin_decoder, Gfx::IntSize size)
 {
     EXPECT_EQ(plugin_decoder.size(), size);
-    auto frame = TRY(expect_single_frame(plugin_decoder, is_gif));
+    auto frame = TRY(expect_single_frame(plugin_decoder));
     EXPECT_EQ(frame->size(), size);
     return frame;
 }
@@ -57,10 +56,10 @@ static ErrorOr<ByteBuffer> encode_bitmap(Gfx::Bitmap const& bitmap, ExtraArgs...
 }
 
 template<class Writer, class Loader>
-static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> get_roundtrip_bitmap(Gfx::Bitmap const& bitmap, bool is_gif = false)
+static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> get_roundtrip_bitmap(Gfx::Bitmap const& bitmap)
 {
     auto encoded_data = TRY(encode_bitmap<Writer>(bitmap));
-    return expect_single_frame_of_size(*TRY(Loader::create(encoded_data)), bitmap.size(), is_gif);
+    return expect_single_frame_of_size(*TRY(Loader::create(encoded_data)), bitmap.size());
 }
 
 static void expect_bitmaps_equal(Gfx::Bitmap const& a, Gfx::Bitmap const& b)
@@ -72,9 +71,9 @@ static void expect_bitmaps_equal(Gfx::Bitmap const& a, Gfx::Bitmap const& b)
 }
 
 template<class Writer, class Loader>
-static ErrorOr<void> test_roundtrip(Gfx::Bitmap const& bitmap, bool is_gif = false)
+static ErrorOr<void> test_roundtrip(Gfx::Bitmap const& bitmap)
 {
-    auto decoded = TRY((get_roundtrip_bitmap<Writer, Loader>(bitmap, is_gif)));
+    auto decoded = TRY((get_roundtrip_bitmap<Writer, Loader>(bitmap)));
     expect_bitmaps_equal(*decoded, bitmap);
     return {};
 }
