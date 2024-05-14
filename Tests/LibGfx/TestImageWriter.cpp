@@ -112,11 +112,8 @@ TEST_CASE(test_bmp)
 
 TEST_CASE(test_gif)
 {
-    auto bitmap = TRY_OR_FAIL(create_test_rgb_bitmap());
-
-    // We only support grayscale and non-animated images at the moment - convert bitmap to grayscale.
-    for (auto& argb : *bitmap)
-        argb = Color::from_argb(argb).to_grayscale().value();
+    // Let's limit the size of the image so every color can fit in a color table of 256 elements.
+    auto bitmap = TRY_OR_FAIL(TRY_OR_FAIL(create_test_rgb_bitmap())->cropped({ 0, 0, 16, 16 }));
 
     auto encoded_bitmap = TRY_OR_FAIL((encode_bitmap<Gfx::GIFWriter>(bitmap)));
     auto decoder = TRY_OR_FAIL(Gfx::GIFImageDecoderPlugin::create(encoded_bitmap));
