@@ -440,17 +440,11 @@ ErrorOr<void> WebPAnimationWriter::add_frame(Bitmap& bitmap, int duration_ms, In
         return Error::from_string_literal("Frame does not fit in animation dimensions");
 
     // FIXME: The whole writing-and-reading-into-buffer over-and-over is awkward and inefficient.
-    AllocatingMemoryStream vp8l_header_stream;
-    TRY(write_VP8L_header(vp8l_header_stream, bitmap.width(), bitmap.height(), true));
-    auto vp8l_header_bytes = TRY(vp8l_header_stream.read_until_eof());
 
     auto vp8l_data_bytes = TRY(compress_VP8L_image_data(bitmap));
 
     AllocatingMemoryStream vp8l_chunk_stream;
-    TRY(write_chunk_header(vp8l_chunk_stream, "VP8L"sv, vp8l_header_bytes.size() + vp8l_data_bytes.size()));
-    TRY(vp8l_chunk_stream.write_until_depleted(vp8l_header_bytes));
-    TRY(vp8l_chunk_stream.write_until_depleted(vp8l_data_bytes));
-    TRY(align_to_two(vp8l_chunk_stream));
+    TRY(write_VP8L_chunk(vp8l_chunk_stream, bitmap.width(), bitmap.height(), true, vp8l_data_bytes));
     auto vp8l_chunk_bytes = TRY(vp8l_chunk_stream.read_until_eof());
 
     ANMFChunk chunk;
