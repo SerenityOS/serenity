@@ -113,14 +113,20 @@ TEST_CASE(test_bmp)
 
 TEST_CASE(test_gif)
 {
-    // We only support grayscale and non-animated images yet
     auto bitmap = TRY_OR_FAIL(create_test_rgb_bitmap());
 
-    // Convert bitmap to grayscale
+    // We only support grayscale and non-animated images at the moment - convert bitmap to grayscale.
     for (auto& argb : *bitmap)
         argb = Color::from_argb(argb).to_grayscale().value();
 
-    TRY_OR_FAIL((test_roundtrip<Gfx::GIFWriter, Gfx::GIFImageDecoderPlugin>(bitmap, true)));
+    auto encoded_bitmap = TRY_OR_FAIL((encode_bitmap<Gfx::GIFWriter>(bitmap)));
+    auto decoder = TRY_OR_FAIL(Gfx::GIFImageDecoderPlugin::create(encoded_bitmap));
+
+    EXPECT_EQ(decoder->size(), bitmap->size());
+    EXPECT_EQ(decoder->frame_count(), 1u);
+    EXPECT(!decoder->is_animated());
+
+    expect_bitmaps_equal(*TRY_OR_FAIL(decoder->frame(0)).image, bitmap);
 }
 
 TEST_CASE(test_jpeg)
