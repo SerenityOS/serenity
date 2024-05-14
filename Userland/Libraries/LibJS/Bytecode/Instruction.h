@@ -123,7 +123,6 @@
     O(ScheduleJump)                    \
     O(SetArgument)                     \
     O(SetVariable)                     \
-    O(SetLocal)                        \
     O(StrictlyEquals)                  \
     O(StrictlyInequals)                \
     O(Sub)                             \

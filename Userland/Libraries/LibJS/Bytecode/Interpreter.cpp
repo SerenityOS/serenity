@@ -328,7 +328,6 @@ FLATTEN_ON_CLANG void Interpreter::run_bytecode(size_t entry_point)
 
     auto& running_execution_context = this->running_execution_context();
     auto* arguments = running_execution_context.arguments.data();
-    auto* registers_and_constants_and_locals = running_execution_context.registers_and_constants_and_locals.data();
     auto& accumulator = this->accumulator();
     auto& executable = current_executable();
     auto const* bytecode = executable.bytecode.data();
@@ -363,12 +362,6 @@ FLATTEN_ON_CLANG void Interpreter::run_bytecode(size_t entry_point)
     start:
         for (;;) {
             goto* bytecode_dispatch_table[static_cast<size_t>((*reinterpret_cast<Instruction const*>(&bytecode[program_counter])).type())];
-
-        handle_SetLocal: {
-            auto& instruction = *reinterpret_cast<Op::SetLocal const*>(&bytecode[program_counter]);
-            registers_and_constants_and_locals[instruction.index()] = get(instruction.src());
-            DISPATCH_NEXT(SetLocal);
-        }
 
         handle_GetArgument: {
             auto const& instruction = *reinterpret_cast<Op::GetArgument const*>(&bytecode[program_counter]);
@@ -1396,12 +1389,6 @@ ThrowCompletionOr<void> SetVariable::execute_impl(Bytecode::Interpreter& interpr
     return {};
 }
 
-ThrowCompletionOr<void> SetLocal::execute_impl(Bytecode::Interpreter&) const
-{
-    // Handled in the interpreter loop.
-    __builtin_unreachable();
-}
-
 ThrowCompletionOr<void> SetArgument::execute_impl(Bytecode::Interpreter&) const
 {
     // Handled in the interpreter loop.
@@ -2154,13 +2141,6 @@ ByteString SetVariable::to_byte_string_impl(Bytecode::Executable const& executab
         executable.identifier_table->get(m_identifier),
         format_operand("src"sv, src(), executable),
         mode_string, initialization_mode_name);
-}
-
-ByteString SetLocal::to_byte_string_impl(Bytecode::Executable const& executable) const
-{
-    return ByteString::formatted("SetLocal {}, {}",
-        format_operand("dst"sv, dst(), executable),
-        format_operand("src"sv, src(), executable));
 }
 
 ByteString GetArgument::to_byte_string_impl(Bytecode::Executable const& executable) const

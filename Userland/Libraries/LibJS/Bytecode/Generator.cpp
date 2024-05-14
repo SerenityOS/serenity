@@ -814,7 +814,7 @@ void Generator::emit_set_variable(JS::Identifier const& identifier, ScopedOperan
             // Moving a local to itself is a no-op.
             return;
         }
-        emit<Bytecode::Op::SetLocal>(identifier.local_variable_index(), value);
+        emit<Bytecode::Op::Mov>(local(identifier.local_variable_index()), value);
     } else {
         emit<Bytecode::Op::SetVariable>(intern_identifier(identifier.string()), value, initialization_mode, mode);
     }
