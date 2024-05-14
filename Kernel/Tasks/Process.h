@@ -221,6 +221,12 @@ public:
 
     virtual void remove_from_secondary_lists();
 
+    template<typename EntryFunction>
+    ErrorOr<NonnullRefPtr<Thread>> create_kernel_thread(StringView name, EntryFunction entry, u32 priority = THREAD_PRIORITY_NORMAL, u32 affinity = THREAD_AFFINITY_DEFAULT, bool joinable = true)
+    {
+        auto* entry_func = new EntryFunction(move(entry));
+        return create_kernel_thread(&Process::kernel_process_trampoline<EntryFunction>, entry_func, priority, name, affinity, joinable);
+    }
     ErrorOr<NonnullRefPtr<Thread>> create_kernel_thread(void (*entry)(void*), void* entry_data, u32 priority, StringView name, u32 affinity = THREAD_AFFINITY_DEFAULT, bool joinable = true);
 
     bool is_profiling() const { return m_profiling; }

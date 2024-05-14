@@ -1025,9 +1025,7 @@ ErrorOr<NonnullRefPtr<Thread>> Process::create_kernel_thread(void (*entry)(void*
     if (!joinable)
         thread->detach();
 
-    auto& regs = thread->regs();
-    regs.set_ip((FlatPtr)entry);
-    regs.set_sp((FlatPtr)entry_data); // entry function argument is expected to be in the SP register
+    thread->regs().set_entry_function((FlatPtr)entry, (FlatPtr)entry_data);
 
     SpinlockLocker lock(g_scheduler_lock);
     thread->set_state(Thread::State::Runnable);
