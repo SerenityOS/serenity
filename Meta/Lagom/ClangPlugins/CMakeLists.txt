@@ -1,9 +1,8 @@
-find_package(Clang 17 CONFIG REQUIRED)
+include(clang_development)
 
 function(clang_plugin target_name)
     cmake_parse_arguments(CLANG_PLUGIN "" "" "SOURCES" ${ARGN})
     add_library(${target_name} ${CLANG_PLUGIN_SOURCES})
-    install(TARGETS ${target_name} DESTINATION ${CMAKE_INSTALL_LIBDIR})
     target_include_directories(${target_name} SYSTEM PRIVATE ${CLANG_INCLUDE_DIRS} ${LLVM_INCLUDE_DIRS})
     target_compile_features(${target_name} PRIVATE cxx_std_20)
     target_compile_options(${target_name} PRIVATE -Wall -Wextra -Werror -Wno-unused -fno-rtti)
@@ -11,12 +10,16 @@ function(clang_plugin target_name)
     add_custom_target(${target_name}Target DEPENDS ${target_name})
 
     set_property(GLOBAL APPEND PROPERTY CLANG_PLUGINS_ALL_COMPILE_OPTIONS -fplugin=${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}/lib${target_name}.so)
+
+    add_lagom_library_install_rules(${target_name})
+endfunction()
+
+function(depend_on_clang_plugin target_name plugin_name)
+    if (TARGET ${plugin_name}Target)
+        add_dependencies(${target_name} ${plugin_name}Target)
+    endif()
+    target_compile_options(${target_name} INTERFACE -fplugin=$<TARGET_FILE:Lagom::${plugin_name}>)
 endfunction()
 
 clang_plugin(LambdaCaptureClangPlugin SOURCES LambdaCapturePluginAction.cpp)
 clang_plugin(LibJSGCClangPlugin SOURCES LibJSGCPluginAction.cpp)
-
-function(depend_on_clang_plugin target_name plugin_name)
-    add_dependencies(${target_name} ${plugin_name}Target)
-    target_compile_options(${target_name} INTERFACE -fplugin=$<TARGET_FILE:${plugin_name}>)
-endfunction()

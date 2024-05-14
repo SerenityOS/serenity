@@ -137,8 +137,6 @@ CHECK_INCLUDE_FILE(pulse/pulseaudio.h HAVE_PULSEAUDIO)
 
 add_library(JSClangPlugin INTERFACE)
 add_library(GenericClangPlugin INTERFACE)
-# These need to be installed to avoid CMake complaining about them not being in the export set
-install(TARGETS GenericClangPlugin JSClangPlugin EXPORT LagomTargets)
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
     add_compile_options(-Wno-overloaded-virtual)
@@ -152,7 +150,8 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
         set(LINKER_FLAGS "${LINKER_FLAGS} -fsanitize=fuzzer")
     endif()
 
-    if (ENABLE_CLANG_PLUGINS)
+    # Vanilla host builds only for building the clang plugins
+    if (ENABLE_CLANG_PLUGINS AND NOT CROSS_COMPILING AND NOT ENABLE_FUZZERS AND NOT ENABLE_COMPILER_EXPLORER_BUILD)
         add_subdirectory(ClangPlugins)
         depend_on_clang_plugin(JSClangPlugin LibJSGCClangPlugin)
         depend_on_clang_plugin(GenericClangPlugin LambdaCaptureClangPlugin)
@@ -219,13 +218,6 @@ function(lagom_lib target_name fs_name)
         set(LAGOM_LIBRARY_LIBRARY_TYPE "")
     endif()
     add_library(${target_name} ${LAGOM_LIBRARY_LIBRARY_TYPE} ${LAGOM_LIBRARY_SOURCES})
-    # Don't make alias when we're going to import a previous build for Tools
-    # FIXME: Is there a better way to write this?
-    if (NOT ENABLE_FUZZERS AND NOT CMAKE_CROSSCOMPILING)
-        # alias for parity with exports
-        add_library(Lagom::${library} ALIAS ${target_name})
-    endif()
-
     set_target_properties(
         ${target_name} PROPERTIES
         VERSION "${PROJECT_VERSION}"
@@ -246,19 +238,7 @@ function(lagom_lib target_name fs_name)
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/Userland/Libraries>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/Userland/Services>
     )
-    install(
-        TARGETS ${target_name}
-        EXPORT LagomTargets
-        RUNTIME #
-            COMPONENT Lagom_Runtime
-        LIBRARY #
-            COMPONENT Lagom_Runtime
-            NAMELINK_COMPONENT Lagom_Development
-        ARCHIVE #
-            COMPONENT Lagom_Development
-        INCLUDES #
-            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-    )
+    add_lagom_library_install_rules(${target_name} ALIAS_NAME ${library})
     # FIXME: Move this to serenity_install_headers
     install(
         DIRECTORY "${SERENITY_PROJECT_ROOT}/Userland/Libraries/Lib${library}"
@@ -339,6 +319,10 @@ if (NOT TARGET all_generated)
     # Meta target to run all code-gen steps in the build.
     add_custom_target(all_generated)
 endif()
+
+# Plugins need to be installed in order to be used by non-lagom builds
+add_lagom_library_install_rules(GenericClangPlugin)
+add_lagom_library_install_rules(JSClangPlugin)
 
 # Create mostly empty targets for system libraries we don't need to build for Lagom
 add_library(LibC INTERFACE)

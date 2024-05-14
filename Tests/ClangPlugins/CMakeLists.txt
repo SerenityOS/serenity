@@ -1,5 +1,4 @@
-find_package(Clang 17 CONFIG REQUIRED)
-find_package(LLVM 17 CONFIG REQUIRED)
+include(clang_development)
 include(AddLLVM)
 
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
