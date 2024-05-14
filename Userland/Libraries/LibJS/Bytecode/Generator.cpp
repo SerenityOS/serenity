@@ -133,7 +133,7 @@ CodeGenerationErrorOr<void> Generator::emit_function_declaration_instantiation(E
                     if (id.is_local()) {
                         emit<Op::Mov>(initial_value, local(id.local_variable_index()));
                     } else {
-                        emit<Op::GetVariable>(initial_value, intern_identifier(id.string()));
+                        emit<Op::GetBinding>(initial_value, intern_identifier(id.string()));
                     }
                 }
 

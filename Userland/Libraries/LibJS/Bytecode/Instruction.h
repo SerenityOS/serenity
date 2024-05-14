@@ -63,7 +63,7 @@
     O(GetObjectFromIteratorRecord)     \
     O(GetObjectPropertyIterator)       \
     O(GetPrivateById)                  \
-    O(GetVariable)                     \
+    O(GetBinding)                      \
     O(GreaterThan)                     \
     O(GreaterThanEquals)               \
     O(HasPrivateId)                    \
