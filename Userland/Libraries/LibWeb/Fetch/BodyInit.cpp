@@ -1,17 +1,19 @@
 /*
  * Copyright (c) 2022-2023, Linus Groh <linusg@serenityos.org>
- * Copyright (c) 2022-2023, Kenneth Myhra <kennethmyhra@serenityos.org>
+ * Copyright (c) 2022-2024, Kenneth Myhra <kennethmyhra@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibJS/Runtime/Completion.h>
+#include <LibJS/Runtime/TypedArray.h>
 #include <LibWeb/DOMURL/URLSearchParams.h>
 #include <LibWeb/Fetch/BodyInit.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Bodies.h>
 #include <LibWeb/FileAPI/Blob.h>
 #include <LibWeb/HTML/FormControlInfrastructure.h>
 #include <LibWeb/HTML/Scripting/TemporaryExecutionContext.h>
+#include <LibWeb/Platform/EventLoopPlugin.h>
 #include <LibWeb/Streams/AbstractOperations.h>
 #include <LibWeb/WebIDL/AbstractOperations.h>
 #include <LibWeb/WebIDL/Buffers.h>
@@ -60,7 +62,8 @@ WebIDL::ExceptionOr<Infrastructure::BodyWithType> extract_body(JS::Realm& realm,
     // 5. Assert: stream is a ReadableStream object.
     VERIFY(stream);
 
-    // FIXME: 6. Let action be null.
+    // 6. Let action be null.
+    Function<ByteBuffer()> action;
 
     // 7. Let source be null.
     Infrastructure::Body::SourceType source {};
@@ -131,12 +134,36 @@ WebIDL::ExceptionOr<Infrastructure::BodyWithType> extract_body(JS::Realm& realm,
             return {};
         }));
 
-    // FIXME: 11. If source is a byte sequence, then set action to a step that returns source and length to source’s length.
+    // 11. If source is a byte sequence, then set action to a step that returns source and length to source’s length.
     // For now, do it synchronously.
-    if (source.has<ByteBuffer>())
+    if (source.has<ByteBuffer>()) {
+        action = [source = MUST(ByteBuffer::copy(source.get<ByteBuffer>()))]() mutable {
+            return move(source);
+        };
         length = source.get<ByteBuffer>().size();
+    }
 
-    // FIXME: 12. If action is non-null, then run these steps in parallel:
+    // 12. If action is non-null, then run these steps in parallel:
+    if (action) {
+        Platform::EventLoopPlugin::the().deferred_invoke([&realm, stream, action = move(action)] {
+            HTML::TemporaryExecutionContext execution_context { Bindings::host_defined_environment_settings_object(realm), HTML::TemporaryExecutionContext::CallbacksEnabled::Yes };
+
+            // 1. Run action.
+            auto bytes = action();
+
+            // Whenever one or more bytes are available and stream is not errored, enqueue the result of creating a
+            // Uint8Array from the available bytes into stream.
+            if (!bytes.is_empty() && !stream->is_errored()) {
+                auto array_buffer = JS::ArrayBuffer::create(stream->realm(), move(bytes));
+                auto chunk = JS::Uint8Array::create(stream->realm(), array_buffer->byte_length(), *array_buffer);
+
+                Streams::readable_stream_enqueue(*stream->controller(), chunk).release_value_but_fixme_should_propagate_errors();
+            }
+
+            // When running action is done, close stream.
+            stream->close();
+        });
+    }
 
     // 13. Let body be a body whose stream is stream, source is source, and length is length.
     auto body = Infrastructure::Body::create(vm, *stream, move(source), move(length));
