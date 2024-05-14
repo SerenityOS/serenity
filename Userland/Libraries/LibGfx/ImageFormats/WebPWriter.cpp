@@ -198,6 +198,16 @@ static ErrorOr<ByteBuffer> compress_VP8L_image_data(Bitmap const& bitmap)
     return vp8l_data_stream.read_until_eof();
 }
 
+// FIXME: Consider using LibRIFF for RIFF writing details. (It currently has no writing support.)
+static ErrorOr<void> align_to_two(Stream& stream, size_t number_of_bytes_written)
+{
+    // https://developers.google.com/speed/webp/docs/riff_container
+    // "If Chunk Size is odd, a single padding byte -- which MUST be 0 to conform with RIFF -- is added."
+    if (number_of_bytes_written % 2 != 0)
+        TRY(stream.write_value<u8>(0));
+    return {};
+}
+
 static u8 vp8x_flags_from_header(VP8XHeader const& header)
 {
     u8 flags = 0;
@@ -279,11 +289,7 @@ static ErrorOr<void> write_VP8X_chunk(Stream& stream, VP8XHeader const& header)
 // FIXME: Consider using LibRIFF for RIFF writing details. (It currently has no writing support.)
 static ErrorOr<void> align_to_two(AllocatingMemoryStream& stream)
 {
-    // https://developers.google.com/speed/webp/docs/riff_container
-    // "If Chunk Size is odd, a single padding byte -- which MUST be 0 to conform with RIFF -- is added."
-    if (stream.used_buffer_size() % 2 != 0)
-        TRY(stream.write_value<u8>(0));
-    return {};
+    return align_to_two(stream, stream.used_buffer_size());
 }
 
 ErrorOr<void> WebPWriter::encode(Stream& stream, Bitmap const& bitmap, Options const& options)
@@ -352,11 +358,7 @@ private:
 
 static ErrorOr<void> align_to_two(SeekableStream& stream)
 {
-    // https://developers.google.com/speed/webp/docs/riff_container
-    // "If Chunk Size is odd, a single padding byte -- which MUST be 0 to conform with RIFF -- is added."
-    if (TRY(stream.tell()) % 2 != 0)
-        TRY(stream.write_value<u8>(0));
-    return {};
+    return align_to_two(stream, TRY(stream.tell()));
 }
 
 static ErrorOr<void> write_ANMF_chunk(Stream& stream, ANMFChunk const& chunk)
