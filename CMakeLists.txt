@@ -207,6 +207,13 @@ if (HACKSTUDIO_BUILD)
     return()
 endif()
 
+add_library(GenericClangPlugin INTERFACE)
+add_library(JSClangPlugin INTERFACE)
+if (ENABLE_CLANG_PLUGINS AND CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
+    target_link_libraries(GenericClangPlugin INTERFACE Lagom::GenericClangPlugin)
+    target_link_libraries(JSClangPlugin INTERFACE Lagom::JSClangPlugin)
+endif()
+
 add_subdirectory(AK)
 add_subdirectory(Kernel)
 
@@ -264,6 +271,3 @@ if (ENABLE_USB_IDS_DOWNLOAD AND NOT EXISTS "${USB_IDS_INSTALL_PATH}/${USB_IDS_FI
     download_file("${USB_IDS_URL}" "${USB_IDS_DOWNLOAD_PATH}")
     install(FILES "${USB_IDS_DOWNLOAD_PATH}" DESTINATION "${USB_IDS_INSTALL_PATH}")
 endif()
-
-add_library(GenericClangPlugin INTERFACE)
-add_library(JSClangPlugin INTERFACE)
