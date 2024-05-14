@@ -399,29 +399,6 @@ inline ThrowCompletionOr<Value> typeof_variable(VM& vm, DeprecatedFlyString cons
     return PrimitiveString::create(vm, value.typeof());
 }
 
-inline ThrowCompletionOr<void> set_variable(
-    VM& vm,
-    DeprecatedFlyString const& name,
-    Value value,
-    Op::EnvironmentMode mode,
-    Op::SetVariable::InitializationMode initialization_mode,
-    EnvironmentCoordinate& cache)
-{
-    auto environment = mode == Op::EnvironmentMode::Lexical ? vm.running_execution_context().lexical_environment : vm.running_execution_context().variable_environment;
-    auto reference = TRY(vm.resolve_binding(name, environment));
-    if (reference.environment_coordinate().has_value())
-        cache = reference.environment_coordinate().value();
-    switch (initialization_mode) {
-    case Op::SetVariable::InitializationMode::Initialize:
-        TRY(reference.initialize_referenced_binding(vm, value));
-        break;
-    case Op::SetVariable::InitializationMode::Set:
-        TRY(reference.put_value(vm, value));
-        break;
-    }
-    return {};
-}
-
 inline Value new_function(VM& vm, FunctionNode const& function_node, Optional<IdentifierTableIndex> const& lhs_name, Optional<Operand> const& home_object)
 {
     Value value;

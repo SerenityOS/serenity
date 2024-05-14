@@ -647,7 +647,7 @@ struct BindingPattern : RefCounted<BindingPattern> {
 
     bool contains_expression() const;
 
-    Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&, Bytecode::Op::SetVariable::InitializationMode initialization_mode, Bytecode::ScopedOperand const& object, bool create_variables) const;
+    Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&, Bytecode::Op::BindingInitializationMode initialization_mode, Bytecode::ScopedOperand const& object, bool create_variables) const;
 
     Vector<BindingEntry> entries;
     Kind kind { Kind::Object };

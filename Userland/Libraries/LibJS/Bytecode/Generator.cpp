@@ -39,7 +39,7 @@ CodeGenerationErrorOr<void> Generator::emit_function_declaration_instantiation(E
             auto id = intern_identifier(parameter_name.key);
             emit<Op::CreateVariable>(id, Op::EnvironmentMode::Lexical, false);
             if (function.m_has_duplicates) {
-                emit<Op::SetVariable>(id, add_constant(js_undefined()), Op::SetVariable::InitializationMode::Initialize, Op::EnvironmentMode::Lexical);
+                emit<Op::InitializeLexicalBinding>(id, add_constant(js_undefined()));
             }
         }
     }
@@ -87,17 +87,18 @@ CodeGenerationErrorOr<void> Generator::emit_function_declaration_instantiation(E
                 set_local_initialized((*identifier)->local_variable_index());
             } else {
                 auto id = intern_identifier((*identifier)->string());
-                auto init_mode = function.m_has_duplicates ? Op::SetVariable::InitializationMode::Set : Op::SetVariable::InitializationMode::Initialize;
                 auto argument_reg = allocate_register();
                 emit<Op::GetArgument>(argument_reg.operand(), param_index);
-                emit<Op::SetVariable>(id, argument_reg.operand(),
-                    init_mode,
-                    Op::EnvironmentMode::Lexical);
+                if (function.m_has_duplicates) {
+                    emit<Op::SetLexicalBinding>(id, argument_reg.operand());
+                } else {
+                    emit<Op::InitializeLexicalBinding>(id, argument_reg.operand());
+                }
             }
         } else if (auto const* binding_pattern = parameter.binding.get_pointer<NonnullRefPtr<BindingPattern const>>(); binding_pattern) {
             auto input_operand = allocate_register();
             emit<Op::GetArgument>(input_operand.operand(), param_index);
-            auto init_mode = function.m_has_duplicates ? Op::SetVariable::InitializationMode::Set : Bytecode::Op::SetVariable::InitializationMode::Initialize;
+            auto init_mode = function.m_has_duplicates ? Op::BindingInitializationMode::Set : Bytecode::Op::BindingInitializationMode::Initialize;
             TRY((*binding_pattern)->generate_bytecode(*this, init_mode, input_operand, false));
         }
     }
@@ -115,7 +116,7 @@ CodeGenerationErrorOr<void> Generator::emit_function_declaration_instantiation(E
                 } else {
                     auto intern_id = intern_identifier(id.string());
                     emit<Op::CreateVariable>(intern_id, Op::EnvironmentMode::Var, false);
-                    emit<Op::SetVariable>(intern_id, add_constant(js_undefined()), Bytecode::Op::SetVariable::InitializationMode::Initialize, Op::EnvironmentMode::Var);
+                    emit<Op::InitializeVariableBinding>(intern_id, add_constant(js_undefined()));
                 }
             }
         }
@@ -141,7 +142,7 @@ CodeGenerationErrorOr<void> Generator::emit_function_declaration_instantiation(E
                 } else {
                     auto intern_id = intern_identifier(id.string());
                     emit<Op::CreateVariable>(intern_id, Op::EnvironmentMode::Var, false);
-                    emit<Op::SetVariable>(intern_id, initial_value, Op::SetVariable::InitializationMode::Initialize, Op::EnvironmentMode::Var);
+                    emit<Op::InitializeVariableBinding>(intern_id, initial_value);
                 }
             }
         }
@@ -151,7 +152,7 @@ CodeGenerationErrorOr<void> Generator::emit_function_declaration_instantiation(E
         for (auto const& function_name : function.m_function_names_to_initialize_binding) {
             auto intern_id = intern_identifier(function_name);
             emit<Op::CreateVariable>(intern_id, Op::EnvironmentMode::Var, false);
-            emit<Op::SetVariable>(intern_id, add_constant(js_undefined()), Bytecode::Op::SetVariable::InitializationMode::Initialize, Op::EnvironmentMode::Var);
+            emit<Op::InitializeVariableBinding>(intern_id, add_constant(js_undefined()));
         }
     }
 
@@ -184,7 +185,7 @@ CodeGenerationErrorOr<void> Generator::emit_function_declaration_instantiation(E
         if (declaration.name_identifier()->is_local()) {
             emit<Op::Mov>(local(declaration.name_identifier()->local_variable_index()), function);
         } else {
-            emit<Op::SetVariable>(intern_identifier(declaration.name()), function, Op::SetVariable::InitializationMode::Set, Op::EnvironmentMode::Var);
+            emit<Op::SetVariableBinding>(intern_identifier(declaration.name()), function);
         }
     }
 
@@ -808,7 +809,7 @@ CodeGenerationErrorOr<Optional<ScopedOperand>> Generator::emit_delete_reference(
     return add_constant(Value(true));
 }
 
-void Generator::emit_set_variable(JS::Identifier const& identifier, ScopedOperand value, Bytecode::Op::SetVariable::InitializationMode initialization_mode, Bytecode::Op::EnvironmentMode mode)
+void Generator::emit_set_variable(JS::Identifier const& identifier, ScopedOperand value, Bytecode::Op::BindingInitializationMode initialization_mode, Bytecode::Op::EnvironmentMode environment_mode)
 {
     if (identifier.is_local()) {
         if (value.operand().is_local() && value.operand().index() == identifier.local_variable_index()) {
@@ -817,7 +818,22 @@ void Generator::emit_set_variable(JS::Identifier const& identifier, ScopedOperan
         }
         emit<Bytecode::Op::Mov>(local(identifier.local_variable_index()), value);
     } else {
-        emit<Bytecode::Op::SetVariable>(intern_identifier(identifier.string()), value, initialization_mode, mode);
+        auto identifier_index = intern_identifier(identifier.string());
+        if (environment_mode == Bytecode::Op::EnvironmentMode::Lexical) {
+            if (initialization_mode == Bytecode::Op::BindingInitializationMode::Initialize) {
+                emit<Bytecode::Op::InitializeLexicalBinding>(identifier_index, value);
+            } else if (initialization_mode == Bytecode::Op::BindingInitializationMode::Set) {
+                emit<Bytecode::Op::SetLexicalBinding>(identifier_index, value);
+            }
+        } else if (environment_mode == Bytecode::Op::EnvironmentMode::Var) {
+            if (initialization_mode == Bytecode::Op::BindingInitializationMode::Initialize) {
+                emit<Bytecode::Op::InitializeVariableBinding>(identifier_index, value);
+            } else if (initialization_mode == Bytecode::Op::BindingInitializationMode::Set) {
+                emit<Bytecode::Op::SetVariableBinding>(identifier_index, value);
+            }
+        } else {
+            VERIFY_NOT_REACHED();
+        }
     }
 }
 

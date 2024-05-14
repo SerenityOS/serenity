@@ -528,6 +528,11 @@ enum class EnvironmentMode {
     Var,
 };
 
+enum class BindingInitializationMode {
+    Initialize,
+    Set,
+};
+
 class CreateLexicalEnvironment final : public Instruction {
 public:
     explicit CreateLexicalEnvironment(u32 capacity = 0)
@@ -664,18 +669,12 @@ private:
     bool m_is_strict { false };
 };
 
-class SetVariable final : public Instruction {
+class InitializeLexicalBinding final : public Instruction {
 public:
-    enum class InitializationMode {
-        Initialize,
-        Set,
-    };
-    explicit SetVariable(IdentifierTableIndex identifier, Operand src, InitializationMode initialization_mode = InitializationMode::Set, EnvironmentMode mode = EnvironmentMode::Lexical)
-        : Instruction(Type::SetVariable)
+    explicit InitializeLexicalBinding(IdentifierTableIndex identifier, Operand src)
+        : Instruction(Type::InitializeLexicalBinding)
         , m_identifier(identifier)
         , m_src(src)
-        , m_mode(mode)
-        , m_initialization_mode(initialization_mode)
     {
     }
 
@@ -688,14 +687,85 @@ public:
 
     IdentifierTableIndex identifier() const { return m_identifier; }
     Operand src() const { return m_src; }
-    EnvironmentMode mode() const { return m_mode; }
-    InitializationMode initialization_mode() const { return m_initialization_mode; }
 
 private:
     IdentifierTableIndex m_identifier;
     Operand m_src;
-    EnvironmentMode m_mode;
-    InitializationMode m_initialization_mode { InitializationMode::Set };
+    mutable EnvironmentCoordinate m_cache;
+};
+
+class InitializeVariableBinding final : public Instruction {
+public:
+    explicit InitializeVariableBinding(IdentifierTableIndex identifier, Operand src)
+        : Instruction(Type::InitializeVariableBinding)
+        , m_identifier(identifier)
+        , m_src(src)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
+    void visit_operands_impl(Function<void(Operand&)> visitor)
+    {
+        visitor(m_src);
+    }
+
+    IdentifierTableIndex identifier() const { return m_identifier; }
+    Operand src() const { return m_src; }
+
+private:
+    IdentifierTableIndex m_identifier;
+    Operand m_src;
+    mutable EnvironmentCoordinate m_cache;
+};
+
+class SetLexicalBinding final : public Instruction {
+public:
+    explicit SetLexicalBinding(IdentifierTableIndex identifier, Operand src)
+        : Instruction(Type::SetLexicalBinding)
+        , m_identifier(identifier)
+        , m_src(src)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
+    void visit_operands_impl(Function<void(Operand&)> visitor)
+    {
+        visitor(m_src);
+    }
+
+    IdentifierTableIndex identifier() const { return m_identifier; }
+    Operand src() const { return m_src; }
+
+private:
+    IdentifierTableIndex m_identifier;
+    Operand m_src;
+    mutable EnvironmentCoordinate m_cache;
+};
+
+class SetVariableBinding final : public Instruction {
+public:
+    explicit SetVariableBinding(IdentifierTableIndex identifier, Operand src)
+        : Instruction(Type::SetVariableBinding)
+        , m_identifier(identifier)
+        , m_src(src)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
+    void visit_operands_impl(Function<void(Operand&)> visitor)
+    {
+        visitor(m_src);
+    }
+
+    IdentifierTableIndex identifier() const { return m_identifier; }
+    Operand src() const { return m_src; }
+
+private:
+    IdentifierTableIndex m_identifier;
+    Operand m_src;
     mutable EnvironmentCoordinate m_cache;
 };
 
