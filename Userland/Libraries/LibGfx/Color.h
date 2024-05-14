@@ -622,6 +622,15 @@ using Gfx::Color;
 namespace AK {
 
 template<>
+class Traits<Color> : public DefaultTraits<Color> {
+public:
+    static unsigned hash(Color const& color)
+    {
+        return int_hash(color.value());
+    }
+};
+
+template<>
 struct Formatter<Gfx::Color> : public Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder&, Gfx::Color);
 };
