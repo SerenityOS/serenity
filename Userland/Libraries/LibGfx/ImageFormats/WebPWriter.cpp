@@ -191,6 +191,13 @@ static ErrorOr<void> write_VP8L_image_data(Stream& stream, Bitmap const& bitmap)
     return {};
 }
 
+static ErrorOr<ByteBuffer> compress_VP8L_image_data(Bitmap const& bitmap)
+{
+    AllocatingMemoryStream vp8l_data_stream;
+    TRY(write_VP8L_image_data(vp8l_data_stream, bitmap));
+    return vp8l_data_stream.read_until_eof();
+}
+
 static u8 vp8x_flags_from_header(VP8XHeader const& header)
 {
     u8 flags = 0;
@@ -290,9 +297,7 @@ ErrorOr<void> WebPWriter::encode(Stream& stream, Bitmap const& bitmap, Options c
     TRY(write_VP8L_header(vp8l_header_stream, bitmap.width(), bitmap.height(), alpha_is_used_hint));
     auto vp8l_header_bytes = TRY(vp8l_header_stream.read_until_eof());
 
-    AllocatingMemoryStream vp8l_data_stream;
-    TRY(write_VP8L_image_data(vp8l_data_stream, bitmap));
-    auto vp8l_data_bytes = TRY(vp8l_data_stream.read_until_eof());
+    auto vp8l_data_bytes = TRY(compress_VP8L_image_data(bitmap));
 
     AllocatingMemoryStream vp8l_chunk_stream;
     TRY(write_chunk_header(vp8l_chunk_stream, "VP8L"sv, vp8l_header_bytes.size() + vp8l_data_bytes.size()));
@@ -428,9 +433,7 @@ ErrorOr<void> WebPAnimationWriter::add_frame(Bitmap& bitmap, int duration_ms, In
     TRY(write_VP8L_header(vp8l_header_stream, bitmap.width(), bitmap.height(), true));
     auto vp8l_header_bytes = TRY(vp8l_header_stream.read_until_eof());
 
-    AllocatingMemoryStream vp8l_data_stream;
-    TRY(write_VP8L_image_data(vp8l_data_stream, bitmap));
-    auto vp8l_data_bytes = TRY(vp8l_data_stream.read_until_eof());
+    auto vp8l_data_bytes = TRY(compress_VP8L_image_data(bitmap));
 
     AllocatingMemoryStream vp8l_chunk_stream;
     TRY(write_chunk_header(vp8l_chunk_stream, "VP8L"sv, vp8l_header_bytes.size() + vp8l_data_bytes.size()));
