@@ -311,10 +311,8 @@ static ErrorOr<ANMFChunk> decode_webp_chunk_ANMF(WebPLoadingContext& context, RI
     u32 frame_duration = (u32)anmf_chunk[12] | ((u32)anmf_chunk[13] << 8) | ((u32)anmf_chunk[14] << 16);
 
     u8 flags = anmf_chunk[15];
-    auto blending_method = static_cast<ANMFChunk::BlendingMethod>((flags >> 1) & 1);
-    auto disposal_method = static_cast<ANMFChunk::DisposalMethod>(flags & 1);
-
-    ReadonlyBytes frame_data = anmf_chunk.data().slice(16);
+    auto blending_method = static_cast<ANMFChunkHeader::BlendingMethod>((flags >> 1) & 1);
+    auto disposal_method = static_cast<ANMFChunkHeader::DisposalMethod>(flags & 1);
 
     dbgln_if(WEBP_DEBUG, "frame_x {} frame_y {} frame_width {} frame_height {} frame_duration {} blending_method {} disposal_method {}",
         frame_x, frame_y, frame_width, frame_height, frame_duration, (int)blending_method, (int)disposal_method);
@@ -326,7 +324,9 @@ static ErrorOr<ANMFChunk> decode_webp_chunk_ANMF(WebPLoadingContext& context, RI
     if (frame_x + frame_width > context.vp8x_header.width || frame_y + frame_height > context.vp8x_header.height)
         return Error::from_string_literal("WebPImageDecoderPlugin: ANMF dimensions out of bounds");
 
-    return ANMFChunk { frame_x, frame_y, frame_width, frame_height, frame_duration, blending_method, disposal_method, frame_data };
+    auto header = ANMFChunkHeader { frame_x, frame_y, frame_width, frame_height, frame_duration, blending_method, disposal_method };
+    ReadonlyBytes frame_data = anmf_chunk.data().slice(16);
+    return ANMFChunk { header, frame_data };
 }
 
 static ErrorOr<ImageData> decode_webp_set_image_data(Optional<RIFF::Chunk> alpha, Optional<RIFF::Chunk> image_data)
@@ -561,28 +561,29 @@ static ErrorOr<ImageFrameDescriptor> decode_webp_animation_frame(WebPLoadingCont
     for (size_t i = start_frame; i <= frame_index; ++i) {
         dbgln_if(WEBP_DEBUG, "drawing frame {} to produce frame {}", i, frame_index);
 
-        auto const& frame_description = context.animation_frame_chunks_data.value()[i];
+        auto const& frame = context.animation_frame_chunks_data.value()[i];
+        auto const& frame_description = frame.header;
 
         if (i > 0) {
-            auto const& previous_frame = context.animation_frame_chunks_data.value()[i - 1];
-            if (previous_frame.disposal_method == ANMFChunk::DisposalMethod::DisposeToBackgroundColor)
+            auto const& previous_frame = context.animation_frame_chunks_data.value()[i - 1].header;
+            if (previous_frame.disposal_method == ANMFChunkHeader::DisposalMethod::DisposeToBackgroundColor)
                 painter.clear_rect({ previous_frame.frame_x, previous_frame.frame_y, previous_frame.frame_width, previous_frame.frame_height }, clear_color);
         }
 
-        auto frame_image_data = TRY(decode_webp_animation_frame_image_data(frame_description));
+        auto frame_image_data = TRY(decode_webp_animation_frame_image_data(frame));
         auto frame_bitmap = TRY(decode_webp_image_data(context, frame_image_data));
         if (static_cast<u32>(frame_bitmap->width()) != frame_description.frame_width || static_cast<u32>(frame_bitmap->height()) != frame_description.frame_height)
             return Error::from_string_literal("WebPImageDecoderPlugin: decoded frame bitmap size doesn't match frame description size");
 
         // FIXME: "Alpha-blending SHOULD be done in linear color space..."
-        bool apply_alpha = frame_description.blending_method == ANMFChunk::BlendingMethod::UseAlphaBlending;
+        bool apply_alpha = frame_description.blending_method == ANMFChunkHeader::BlendingMethod::UseAlphaBlending;
         painter.blit({ frame_description.frame_x, frame_description.frame_y }, *frame_bitmap, { {}, frame_bitmap->size() }, /*opacity=*/1.0, apply_alpha);
 
         context.current_frame = i;
         context.state = WebPLoadingContext::State::BitmapDecoded;
     }
 
-    return ImageFrameDescriptor { context.bitmap, static_cast<int>(context.animation_frame_chunks_data.value()[frame_index].frame_duration_in_milliseconds) };
+    return ImageFrameDescriptor { context.bitmap, static_cast<int>(context.animation_frame_chunks_data.value()[frame_index].header.frame_duration_in_milliseconds) };
 }
 
 WebPImageDecoderPlugin::WebPImageDecoderPlugin(ReadonlyBytes data, OwnPtr<WebPLoadingContext> context)
