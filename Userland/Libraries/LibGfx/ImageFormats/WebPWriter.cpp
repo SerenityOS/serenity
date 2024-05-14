@@ -370,7 +370,7 @@ static ErrorOr<void> align_to_two(SeekableStream& stream)
     return align_to_two(stream, TRY(stream.tell()));
 }
 
-static ErrorOr<void> write_ANMF_chunk(Stream& stream, ANMFChunk const& chunk)
+static ErrorOr<void> write_ANMF_chunk(Stream& stream, ANMFChunkHeader const& chunk, ReadonlyBytes frame_data)
 {
     if (chunk.frame_width > (1 << 24) || chunk.frame_height > (1 << 24))
         return Error::from_string_literal("WebP dimensions too large for ANMF chunk");
@@ -384,7 +384,7 @@ static ErrorOr<void> write_ANMF_chunk(Stream& stream, ANMFChunk const& chunk)
     dbgln_if(WEBP_DEBUG, "writing ANMF frame_x {} frame_y {} frame_width {} frame_height {} frame_duration {} blending_method {} disposal_method {}",
         chunk.frame_x, chunk.frame_y, chunk.frame_width, chunk.frame_height, chunk.frame_duration_in_milliseconds, (int)chunk.blending_method, (int)chunk.disposal_method);
 
-    TRY(write_chunk_header(stream, "ANMF"sv, 16 + chunk.frame_data.size()));
+    TRY(write_chunk_header(stream, "ANMF"sv, 16 + frame_data.size()));
 
     LittleEndianOutputBitStream bit_stream { MaybeOwned<Stream>(stream) };
 
@@ -414,11 +414,11 @@ static ErrorOr<void> write_ANMF_chunk(Stream& stream, ANMFChunk const& chunk)
     //  MUST be 0. Readers MUST ignore this field."
 
     // "Blending method (B): 1 bit"
-    if (chunk.blending_method == ANMFChunk::BlendingMethod::DoNotBlend)
+    if (chunk.blending_method == ANMFChunkHeader::BlendingMethod::DoNotBlend)
         flags |= 0x2;
 
     // "Disposal method (D): 1 bit"
-    if (chunk.disposal_method == ANMFChunk::DisposalMethod::DisposeToBackgroundColor)
+    if (chunk.disposal_method == ANMFChunkHeader::DisposalMethod::DisposeToBackgroundColor)
         flags |= 0x1;
 
     TRY(bit_stream.write_bits(flags, 8u));
@@ -426,9 +426,9 @@ static ErrorOr<void> write_ANMF_chunk(Stream& stream, ANMFChunk const& chunk)
     // FIXME: Make ~LittleEndianOutputBitStream do this, or make it VERIFY() that it has happened at least.
     TRY(bit_stream.flush_buffer_to_stream());
 
-    TRY(stream.write_until_depleted(chunk.frame_data));
+    TRY(stream.write_until_depleted(frame_data));
 
-    if (chunk.frame_data.size() % 2 != 0)
+    if (frame_data.size() % 2 != 0)
         TRY(stream.write_value<u8>(0));
 
     return {};
@@ -447,17 +447,16 @@ ErrorOr<void> WebPAnimationWriter::add_frame(Bitmap& bitmap, int duration_ms, In
     TRY(write_VP8L_chunk(vp8l_chunk_stream, bitmap.width(), bitmap.height(), true, vp8l_data_bytes));
     auto vp8l_chunk_bytes = TRY(vp8l_chunk_stream.read_until_eof());
 
-    ANMFChunk chunk;
+    ANMFChunkHeader chunk;
     chunk.frame_x = static_cast<u32>(at.x());
     chunk.frame_y = static_cast<u32>(at.y());
     chunk.frame_width = static_cast<u32>(bitmap.width());
     chunk.frame_height = static_cast<u32>(bitmap.height());
     chunk.frame_duration_in_milliseconds = static_cast<u32>(duration_ms);
-    chunk.blending_method = ANMFChunk::BlendingMethod::DoNotBlend;
-    chunk.disposal_method = ANMFChunk::DisposalMethod::DoNotDispose;
-    chunk.frame_data = vp8l_chunk_bytes;
+    chunk.blending_method = ANMFChunkHeader::BlendingMethod::DoNotBlend;
+    chunk.disposal_method = ANMFChunkHeader::DisposalMethod::DoNotDispose;
 
-    TRY(write_ANMF_chunk(m_stream, chunk));
+    TRY(write_ANMF_chunk(m_stream, chunk, vp8l_chunk_bytes));
 
     TRY(update_size_in_header());
 

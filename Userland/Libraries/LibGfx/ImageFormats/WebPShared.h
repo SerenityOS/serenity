@@ -26,7 +26,7 @@ struct ANIMChunk {
     u16 loop_count { 0 };
 };
 
-struct ANMFChunk {
+struct ANMFChunkHeader {
     u32 frame_x { 0 };
     u32 frame_y { 0 };
     u32 frame_width { 0 };
@@ -44,7 +44,10 @@ struct ANMFChunk {
         DisposeToBackgroundColor = 1,
     };
     DisposalMethod disposal_method { DisposalMethod::DoNotDispose };
+};
 
+struct ANMFChunk {
+    ANMFChunkHeader header;
     ReadonlyBytes frame_data;
 };
 
