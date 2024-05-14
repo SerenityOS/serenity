@@ -699,32 +699,6 @@ private:
     mutable EnvironmentCoordinate m_cache;
 };
 
-class SetLocal final : public Instruction {
-public:
-    SetLocal(size_t index, Operand src)
-        : Instruction(Type::SetLocal)
-        , m_dst(Operand(Operand::Type::Local, index))
-        , m_src(src)
-    {
-    }
-
-    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void visit_operands_impl(Function<void(Operand&)> visitor)
-    {
-        visitor(m_dst);
-        visitor(m_src);
-    }
-
-    u32 index() const { return m_dst.index(); }
-    Operand dst() const { return m_dst; }
-    Operand src() const { return m_src; }
-
-private:
-    Operand m_dst;
-    Operand m_src;
-};
-
 class SetArgument final : public Instruction {
 public:
     SetArgument(size_t index, Operand src)
