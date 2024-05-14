@@ -642,7 +642,12 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> AssignmentExpression::g
         return TRY(m_rhs->generate_bytecode(generator)).value();
     }());
 
-    auto dst = choose_dst(generator, preferred_dst);
+    // OPTIMIZATION: If LHS is a local, we can write the result directly into it.
+    auto dst = [&] {
+        if (lhs.operand().is_local())
+            return lhs;
+        return choose_dst(generator, preferred_dst);
+    }();
 
     switch (m_op) {
     case AssignmentOp::AdditionAssignment:
