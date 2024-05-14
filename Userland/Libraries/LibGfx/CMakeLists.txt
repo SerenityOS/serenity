@@ -74,6 +74,7 @@ set(SOURCES
     ImageFormats/WebPWriter.cpp
     ImageFormats/WebPWriterLossless.cpp
     ImmutableBitmap.cpp
+    MedianCut.cpp
     Painter.cpp
     Palette.cpp
     Path.cpp
