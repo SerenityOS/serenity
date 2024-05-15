@@ -6,7 +6,7 @@ interface HTMLOptionElement : HTMLElement {
     [HTMLConstructor] constructor();
 
     [CEReactions, Reflect] attribute boolean disabled;
-    // FIXME: readonly attribute HTMLFormElement? form;
+    readonly attribute HTMLFormElement? form;
     [CEReactions, Reflect] attribute DOMString label;
     [CEReactions, Reflect=selected] attribute boolean defaultSelected;
     attribute boolean selected;
