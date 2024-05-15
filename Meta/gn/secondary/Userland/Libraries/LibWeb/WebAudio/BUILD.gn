@@ -16,6 +16,8 @@ source_set("WebAudio") {
     "AudioScheduledSourceNode.h",
     "BaseAudioContext.cpp",
     "BaseAudioContext.h",
+    "DynamicsCompressorNode.cpp",
+    "DynamicsCompressorNode.h",
     "OfflineAudioContext.cpp",
     "OfflineAudioContext.h",
     "OscillatorNode.cpp",
