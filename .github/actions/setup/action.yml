@@ -22,7 +22,6 @@ runs:
         # Packages below aren't.
 
         set -e
-        sudo apt-get purge -y clang-13 clang-14 clang-15 gcc-10 gcc-11 gcc-12
 
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
         sudo add-apt-repository 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-18 main'
