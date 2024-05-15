@@ -83,7 +83,6 @@ jobs:
         env:
           ARCH: ${{ inputs.arch}}
           CCACHE_DIR: ${{ env.TOOLCHAIN_CCACHE_DIR }}
-          TRY_USE_LOCAL_TOOLCHAIN: 'y'
 
       - name: Build AArch64 Qemu
         if: ${{ inputs.arch == 'aarch64' && !steps.cache-restore.outputs.qemu_cache_hit }}

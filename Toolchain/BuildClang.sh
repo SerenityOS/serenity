@@ -159,43 +159,6 @@ else
     buildstep setup echo "Using user-provided CFLAGS/CXXFLAGS."
 fi
 
-# === CHECK CACHE AND REUSE ===
-
-pushd "$DIR"
-    if [ "$TRY_USE_LOCAL_TOOLCHAIN" = "y" ]; then
-        mkdir -p Cache
-        echo "Cache (before):"
-        ls -l Cache
-        CACHED_TOOLCHAIN_ARCHIVE="Cache/ToolchainBinariesGithubActions.tar.gz"
-        if [ -r "${CACHED_TOOLCHAIN_ARCHIVE}" ] ; then
-            echo "Cache at ${CACHED_TOOLCHAIN_ARCHIVE} exists!"
-            echo "Extracting toolchain from cache:"
-            if tar xzf "${CACHED_TOOLCHAIN_ARCHIVE}" ; then
-                 echo "Done 'building' the toolchain."
-                 echo "Cache unchanged."
-                 exit 0
-            else
-                echo
-                echo
-                echo
-                echo "Could not extract cached toolchain archive."
-                echo "This means the cache is broken and *should be removed*!"
-                echo "As Github Actions cannot update a cache, this will unnecessarily"
-                echo "slow down all future builds for this hash, until someone"
-                echo "resets the cache."
-                echo
-                echo
-                echo
-                rm -f "${CACHED_TOOLCHAIN_ARCHIVE}"
-            fi
-        else
-            echo "Cache at ${CACHED_TOOLCHAIN_ARCHIVE} does not exist."
-            echo "Will rebuild toolchain from scratch, and save the result."
-        fi
-    fi
-    echo "::group::Actually building Toolchain"
-popd
-
 # === DOWNLOAD AND PATCH ===
 
 pushd "$DIR/Tarballs"
@@ -309,21 +272,4 @@ pushd "$DIR/Local/clang/bin/"
         ln -s llvm-nm "$arch"-pc-serenity-nm
         echo "--sysroot=$BUILD/${arch}clang/Root" > "$arch"-pc-serenity.cfg
     done
-popd
-
-# === SAVE TO CACHE ===
-
-pushd "$DIR"
-    if [ "$TRY_USE_LOCAL_TOOLCHAIN" = "y" ]; then
-        echo "::endgroup::"
-        echo "Building cache tar:"
-
-        echo "Building cache tar:"
-
-        rm -f "${CACHED_TOOLCHAIN_ARCHIVE}"  # Just in case
-
-        tar czf "${CACHED_TOOLCHAIN_ARCHIVE}" Local/
-        echo "Cache (after):"
-        ls -l Cache
-    fi
 popd
