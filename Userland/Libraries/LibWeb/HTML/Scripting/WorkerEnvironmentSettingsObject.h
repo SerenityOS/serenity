@@ -14,7 +14,7 @@ namespace Web::HTML {
 
 class WorkerEnvironmentSettingsObject final
     : public EnvironmentSettingsObject {
-    JS_CELL(WindowEnvironmentSettingsObject, EnvironmentSettingsObject);
+    JS_CELL(WorkerEnvironmentSettingsObject, EnvironmentSettingsObject);
     JS_DECLARE_ALLOCATOR(WorkerEnvironmentSettingsObject);
 
 public:
