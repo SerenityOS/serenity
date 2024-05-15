@@ -20,6 +20,7 @@ public:
     };
 
     explicit ParsingContext(JS::Realm&, Mode = Mode::Normal);
+    explicit ParsingContext(JS::Realm&, URL::URL, Mode = Mode::Normal);
     explicit ParsingContext(DOM::Document const&, Mode = Mode::Normal);
     explicit ParsingContext(DOM::Document const&, URL::URL, Mode = Mode::Normal);
     explicit ParsingContext(DOM::ParentNode&, Mode = Mode::Normal);

@@ -19,6 +19,13 @@ ParsingContext::ParsingContext(JS::Realm& realm, Mode mode)
 {
 }
 
+ParsingContext::ParsingContext(JS::Realm& realm, URL::URL url, Mode mode)
+    : m_realm(realm)
+    , m_url(move(url))
+    , m_mode(mode)
+{
+}
+
 ParsingContext::ParsingContext(DOM::Document const& document, URL::URL url, Mode mode)
     : m_realm(const_cast<JS::Realm&>(document.realm()))
     , m_document(&document)
