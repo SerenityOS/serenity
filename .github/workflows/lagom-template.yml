@@ -115,8 +115,8 @@ jobs:
             -DENABLE_FUZZERS_LIBFUZZER=ON \
             -DENABLE_ADDRESS_SANITIZER=ON \
             -DSERENITY_CACHE_DIR=${{ github.workspace }}/Build/caches \
-            -DCMAKE_C_COMPILER=clang \
-            -DCMAKE_CXX_COMPILER=clang++ \
+            -DCMAKE_C_COMPILER=${{ steps.build-parameters.outputs.host_cc }} \
+            -DCMAKE_CXX_COMPILER=${{ steps.build-parameters.outputs.host_cxx }} \
             -DCMAKE_PREFIX_PATH=tool-install
 
       # === BUILD ===
