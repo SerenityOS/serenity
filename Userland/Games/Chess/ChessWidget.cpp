@@ -24,6 +24,8 @@
 #include <LibGfx/Path.h>
 #include <unistd.h>
 
+namespace Chess {
+
 ErrorOr<NonnullRefPtr<ChessWidget>> ChessWidget::try_create()
 {
     auto widget = TRY(AK::adopt_nonnull_ref_or_enomem(new (nothrow) ChessWidget));
@@ -43,7 +45,7 @@ void ChessWidget::paint_event(GUI::PaintEvent& event)
     GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
-    painter.fill_rect(frame_inner_rect(), Color::Black);
+    painter.fill_rect(frame_inner_rect(), Gfx::Color::Black);
 
     painter.translate(frame_thickness() + widget_offset_x, frame_thickness() + widget_offset_y);
 
@@ -74,8 +76,8 @@ void ChessWidget::paint_event(GUI::PaintEvent& event)
             auto const piece = active_board.get_piece(sq);
             if (m_highlight_checks && last_move.is_check && piece.type == Chess::Type::King && piece.color == active_board.turn()) {
                 Array<Gfx::ColorStop, 2> colors = {
-                    Gfx::ColorStop { .color = Color::Red, .position = 0.16f },
-                    Gfx::ColorStop { .color = Color::Transparent, .position = .66f }
+                    Gfx::ColorStop { .color = Gfx::Color::Red, .position = 0.16f },
+                    Gfx::ColorStop { .color = Gfx::Color::Transparent, .position = .66f }
                 };
 
                 painter.fill_rect_with_radial_gradient(tile_rect, colors, tile_rect.center() - tile_rect.top_left(), tile_rect.size());
@@ -445,11 +447,11 @@ void ChessWidget::set_board_theme(StringView name)
     // FIXME: Add some kind of themes.json
     // The following Colors have been taken from lichess.org, but i'm pretty sure they took them from chess.com.
     if (name == "Beige") {
-        m_board_theme = { "Beige"sv, Color::from_rgb(0xb58863), Color::from_rgb(0xf0d9b5) };
+        m_board_theme = { "Beige"sv, Gfx::Color::from_rgb(0xb58863), Gfx::Color::from_rgb(0xf0d9b5) };
     } else if (name == "Green") {
-        m_board_theme = { "Green"sv, Color::from_rgb(0x86a666), Color::from_rgb(0xffffdd) };
+        m_board_theme = { "Green"sv, Gfx::Color::from_rgb(0x86a666), Gfx::Color::from_rgb(0xffffdd) };
     } else if (name == "Blue") {
-        m_board_theme = { "Blue"sv, Color::from_rgb(0x8ca2ad), Color::from_rgb(0xdee3e6) };
+        m_board_theme = { "Blue"sv, Gfx::Color::from_rgb(0x8ca2ad), Gfx::Color::from_rgb(0xdee3e6) };
     } else {
         set_board_theme("Beige"sv);
     }
@@ -892,4 +894,6 @@ void ChessWidget::config_bool_did_change(StringView domain, StringView group, St
         set_highlight_checks(value);
         update();
     }
+}
+
 }

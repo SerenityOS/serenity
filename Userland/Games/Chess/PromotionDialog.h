@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2024, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,6 +8,8 @@
 
 #include "ChessWidget.h"
 #include <LibGUI/Dialog.h>
+
+namespace Chess {
 
 class PromotionDialog final : public GUI::Dialog {
     C_OBJECT(PromotionDialog)
@@ -20,3 +22,5 @@ private:
 
     Chess::Type m_selected_piece;
 };
+
+}

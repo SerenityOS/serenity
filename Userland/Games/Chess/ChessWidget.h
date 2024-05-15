@@ -18,6 +18,8 @@
 #include <LibGUI/Frame.h>
 #include <LibGfx/Bitmap.h>
 
+namespace Chess {
+
 class PGNParseError {
 public:
     PGNParseError() = default;
@@ -86,8 +88,8 @@ public:
 
     struct BoardTheme {
         StringView name;
-        Color dark_square_color;
-        Color light_square_color;
+        Gfx::Color dark_square_color;
+        Gfx::Color light_square_color;
     };
 
     BoardTheme const& board_theme() const { return m_board_theme; }
@@ -155,11 +157,11 @@ private:
     size_t m_playback_move_number { 0 };
     BoardMarking m_current_marking;
     Vector<BoardMarking> m_board_markings;
-    BoardTheme m_board_theme { "Beige"sv, Color::from_rgb(0xb58863), Color::from_rgb(0xf0d9b5) };
-    Color m_move_highlight_color { Color::from_argb(0x66ccee00) };
-    Color m_marking_primary_color { Color::from_argb(0x66ff0000) };
-    Color m_marking_alternate_color { Color::from_argb(0x66ffaa00) };
-    Color m_marking_secondary_color { Color::from_argb(0x6655dd55) };
+    BoardTheme m_board_theme { "Beige"sv, Gfx::Color::from_rgb(0xb58863), Gfx::Color::from_rgb(0xf0d9b5) };
+    Gfx::Color m_move_highlight_color { Gfx::Color::from_argb(0x66ccee00) };
+    Gfx::Color m_marking_primary_color { Gfx::Color::from_argb(0x66ff0000) };
+    Gfx::Color m_marking_alternate_color { Gfx::Color::from_argb(0x66ffaa00) };
+    Gfx::Color m_marking_secondary_color { Gfx::Color::from_argb(0x6655dd55) };
     Chess::Color m_side { Chess::Color::White };
     HashMap<Chess::Piece, RefPtr<Gfx::Bitmap const>> m_pieces;
     bool m_any_piece_images_are_missing { false };
@@ -173,3 +175,5 @@ private:
     bool m_coordinates { true };
     bool m_highlight_checks { true };
 };
+
+}
