@@ -22,6 +22,5 @@ dictionary MessageEventInit : EventInit {
     USVString origin = "";
     DOMString lastEventId = "";
     MessageEventSource? source = null;
-    // FIXME: sequence<MessagePort> ports = [];
-    sequence<object> ports = [];
+    sequence<MessagePort> ports = [];
 };

@@ -1160,10 +1160,10 @@ WebIDL::ExceptionOr<void> Window::window_post_message_steps(JS::Value message, W
         // 6. Let newPorts be a new frozen array consisting of all MessagePort objects in deserializeRecord.[[TransferredValues]],
         //    if any, maintaining their relative order.
         // FIXME: Use a FrozenArray
-        Vector<JS::Handle<JS::Object>> new_ports;
+        Vector<JS::Handle<MessagePort>> new_ports;
         for (auto const& object : deserialize_record.transferred_values) {
             if (is<HTML::MessagePort>(*object)) {
-                new_ports.append(object);
+                new_ports.append(verify_cast<MessagePort>(*object));
             }
         }
 
