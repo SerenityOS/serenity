@@ -72,8 +72,10 @@ public:
 
     Bindings::FontFaceLoadStatus status() const { return m_status; }
 
-    JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Promise>> load();
+    JS::NonnullGCPtr<JS::Promise> load();
     JS::NonnullGCPtr<JS::Promise> loaded() const;
+
+    void load_font_source();
 
 private:
     FontFace(JS::Realm&, JS::NonnullGCPtr<WebIDL::Promise> font_status_promise, Vector<ParsedFontFace::Source> urls, ByteBuffer data, String family, FontFaceDescriptors const& descriptors);
@@ -87,6 +89,7 @@ private:
     String m_weight;
     String m_stretch;
     String m_unicode_range;
+    Vector<Gfx::UnicodeRange> m_unicode_ranges;
     String m_feature_settings;
     String m_variation_settings;
     String m_display;
