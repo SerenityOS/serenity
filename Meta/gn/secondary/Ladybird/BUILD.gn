@@ -19,6 +19,7 @@ moc_qt_objects("generate_moc") {
     "Qt/EventLoopImplementationQtEventTarget.h",
     "Qt/InspectorWidget.h",
     "Qt/LocationEdit.h",
+    "Qt/Settings.h",
     "Qt/SettingsDialog.h",
     "Qt/Tab.h",
     "Qt/TabBar.h",
