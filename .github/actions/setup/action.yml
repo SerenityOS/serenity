@@ -23,10 +23,14 @@ runs:
 
         set -e
         sudo apt-get purge -y clang-13 clang-14 clang-15 gcc-10 gcc-11 gcc-12
+
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
         sudo add-apt-repository 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-18 main'
+
+        sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+
         sudo apt-get update
-        sudo apt-get install ccache clang-18 clang++-18 lld-18 clang-format-18 ninja-build unzip qt6-base-dev qt6-tools-dev-tools libqt6svg6-dev qt6-multimedia-dev libgl1-mesa-dev libpulse-dev libssl-dev libegl1-mesa-dev
+        sudo apt-get install ccache clang-18 clang++-18 clang-format-18 lld-18 gcc-13 g++-13 libstdc++-13-dev ninja-build unzip qt6-base-dev qt6-tools-dev-tools libqt6svg6-dev qt6-multimedia-dev libgl1-mesa-dev libpulse-dev libssl-dev libegl1-mesa-dev
 
         sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-18 100
         sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-18 100
@@ -55,8 +59,12 @@ runs:
       shell: bash
       run: |
         set -e
+
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
         sudo add-apt-repository 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-18 main'
+
+        sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+
         sudo apt-get update
         sudo apt-get install clang-format-18 ccache e2fsprogs gcc-13 g++-13 libstdc++-13-dev libmpfr-dev libmpc-dev ninja-build optipng qemu-utils qemu-system-i386 unzip generate-ninja libegl1-mesa-dev
 
