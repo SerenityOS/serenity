@@ -17,6 +17,7 @@
 #include <LibWeb/CSS/Selector.h>
 #include <LibWeb/CSS/StyleProperties.h>
 #include <LibWeb/Forward.h>
+#include <LibWeb/Loader/ResourceLoader.h>
 
 namespace Web::CSS {
 
@@ -102,6 +103,8 @@ struct FontFaceKey {
     [[nodiscard]] bool operator==(FontFaceKey const&) const = default;
 };
 
+class FontLoader;
+
 class StyleComputer {
 public:
     enum class AllowUnresolved {
@@ -135,6 +138,8 @@ public:
 
     void did_load_font(FlyString const& family_name);
 
+    Optional<FontLoader&> load_font_face(ParsedFontFace const&, Function<void(FontLoader const&)> on_load = {}, Function<void()> on_fail = {});
+
     void load_fonts_from_sheet(CSSStyleSheet const&);
 
     RefPtr<Gfx::FontCascadeList const> compute_font_for_style_values(DOM::Element const* element, Optional<CSS::Selector::PseudoElement::Type> pseudo_element, StyleValue const& font_family, StyleValue const& font_size, StyleValue const& font_style, StyleValue const& font_weight, StyleValue const& font_stretch, int math_depth = 0) const;
@@ -153,7 +158,6 @@ private:
         CreatePseudoElementStyleIfNeeded,
     };
 
-    class FontLoader;
     struct MatchingFontCandidate;
 
     [[nodiscard]] bool should_reject_with_ancestor_filter(Selector const&) const;
@@ -224,6 +228,33 @@ private:
     CSSPixelRect m_viewport_rect;
 
     CountingBloomFilter<u8, 14> m_ancestor_filter;
+};
+
+class FontLoader : public ResourceClient {
+public:
+    FontLoader(StyleComputer& style_computer, FlyString family_name, Vector<Gfx::UnicodeRange> unicode_ranges, Vector<URL::URL> urls, Function<void(FontLoader const&)> on_load = {}, Function<void()> on_fail = {});
+
+    virtual ~FontLoader() override;
+
+    Vector<Gfx::UnicodeRange> const& unicode_ranges() const { return m_unicode_ranges; }
+    RefPtr<Gfx::VectorFont> vector_font() const { return m_vector_font; }
+
+    virtual void resource_did_load() override;
+    virtual void resource_did_fail() override;
+
+    RefPtr<Gfx::Font> font_with_point_size(float point_size);
+    void start_loading_next_url();
+
+private:
+    ErrorOr<NonnullRefPtr<Gfx::VectorFont>> try_load_font();
+
+    StyleComputer& m_style_computer;
+    FlyString m_family_name;
+    Vector<Gfx::UnicodeRange> m_unicode_ranges;
+    RefPtr<Gfx::VectorFont> m_vector_font;
+    Vector<URL::URL> m_urls;
+    Function<void(FontLoader const&)> m_on_load;
+    Function<void()> m_on_fail;
 };
 
 }
