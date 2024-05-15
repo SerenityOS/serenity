@@ -72,7 +72,6 @@
 #include <LibWeb/HTML/Scripting/TemporaryExecutionContext.h>
 #include <LibWeb/HighResolutionTime/TimeOrigin.h>
 #include <LibWeb/Layout/Node.h>
-#include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/Namespace.h>
 #include <LibWeb/Painting/PaintableBox.h>
 #include <LibWeb/Platform/FontPlugin.h>
@@ -103,103 +102,98 @@ StyleComputer::StyleComputer(DOM::Document& document)
 
 StyleComputer::~StyleComputer() = default;
 
-class StyleComputer::FontLoader : public ResourceClient {
-public:
-    explicit FontLoader(StyleComputer& style_computer, FlyString family_name, Vector<Gfx::UnicodeRange> unicode_ranges, Vector<URL::URL> urls)
-        : m_style_computer(style_computer)
-        , m_family_name(move(family_name))
-        , m_unicode_ranges(move(unicode_ranges))
-        , m_urls(move(urls))
-    {
+FontLoader::FontLoader(StyleComputer& style_computer, FlyString family_name, Vector<Gfx::UnicodeRange> unicode_ranges, Vector<URL::URL> urls, Function<void(FontLoader const&)> on_load, Function<void()> on_fail)
+    : m_style_computer(style_computer)
+    , m_family_name(move(family_name))
+    , m_unicode_ranges(move(unicode_ranges))
+    , m_urls(move(urls))
+    , m_on_load(move(on_load))
+    , m_on_fail(move(on_fail))
+{
+}
+
+FontLoader::~FontLoader() = default;
+
+void FontLoader::resource_did_load()
+{
+    auto result = try_load_font();
+    if (result.is_error()) {
+        dbgln("Failed to parse font: {}", result.error());
+        start_loading_next_url();
+        return;
     }
+    m_vector_font = result.release_value();
+    m_style_computer.did_load_font(m_family_name);
+    if (m_on_load)
+        m_on_load(*this);
+}
 
-    virtual ~FontLoader() override { }
+void FontLoader::resource_did_fail()
+{
+    if (m_on_fail) {
+        m_on_fail();
+    }
+}
 
-    Vector<Gfx::UnicodeRange> const& unicode_ranges() const { return m_unicode_ranges; }
+RefPtr<Gfx::Font> FontLoader::font_with_point_size(float point_size)
+{
+    if (!m_vector_font) {
+        start_loading_next_url();
+        return nullptr;
+    }
+    return m_vector_font->scaled_font(point_size);
+}
 
-    virtual void resource_did_load() override
-    {
-        auto result = try_load_font();
-        if (result.is_error()) {
-            dbgln("Failed to parse font: {}", result.error());
-            start_loading_next_url();
-            return;
+void FontLoader::start_loading_next_url()
+{
+    if (resource() && resource()->is_pending())
+        return;
+    if (m_urls.is_empty())
+        return;
+    LoadRequest request;
+    request.set_url(m_urls.take_first());
+
+    // HACK: We're crudely computing the referer value and shoving it into the
+    //       request until fetch infrastructure is used here.
+    auto referrer_url = ReferrerPolicy::strip_url_for_use_as_referrer(m_style_computer.document().url());
+    if (referrer_url.has_value() && !request.headers().contains("Referer"))
+        request.set_header("Referer", referrer_url->serialize());
+
+    set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
+}
+
+ErrorOr<NonnullRefPtr<Gfx::VectorFont>> FontLoader::try_load_font()
+{
+    // FIXME: This could maybe use the format() provided in @font-face as well, since often the mime type is just application/octet-stream and we have to try every format
+    auto const& mime_type = resource()->mime_type();
+    if (mime_type == "font/ttf"sv || mime_type == "application/x-font-ttf"sv) {
+        if (auto result = OpenType::Font::try_load_from_externally_owned_memory(resource()->encoded_data()); !result.is_error()) {
+            return result;
         }
-        m_vector_font = result.release_value();
-        m_style_computer.did_load_font(m_family_name);
     }
-
-    virtual void resource_did_fail() override
-    {
-    }
-
-    RefPtr<Gfx::Font> font_with_point_size(float point_size)
-    {
-        if (!m_vector_font) {
-            start_loading_next_url();
-            return nullptr;
+    if (mime_type == "font/woff"sv || mime_type == "application/font-woff"sv) {
+        if (auto result = WOFF::Font::try_load_from_externally_owned_memory(resource()->encoded_data()); !result.is_error()) {
+            return result;
         }
-        return m_vector_font->scaled_font(point_size);
+    }
+    if (mime_type == "font/woff2"sv || mime_type == "application/font-woff2"sv) {
+        if (auto result = WOFF2::Font::try_load_from_externally_owned_memory(resource()->encoded_data()); !result.is_error()) {
+            return result;
+        }
     }
 
-private:
-    void start_loading_next_url()
-    {
-        if (resource() && resource()->is_pending())
-            return;
-        if (m_urls.is_empty())
-            return;
-        LoadRequest request;
-        request.set_url(m_urls.take_first());
-
-        // HACK: We're crudely computing the referer value and shoving it into the
-        //       request until fetch infrastructure is used here.
-        auto referrer_url = ReferrerPolicy::strip_url_for_use_as_referrer(m_style_computer.document().url());
-        if (referrer_url.has_value() && !request.headers().contains("Referer"))
-            request.set_header("Referer", referrer_url->serialize());
-
-        set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
-    }
-
-    ErrorOr<NonnullRefPtr<Gfx::VectorFont>> try_load_font()
-    {
-        // FIXME: This could maybe use the format() provided in @font-face as well, since often the mime type is just application/octet-stream and we have to try every format
-        auto const& mime_type = resource()->mime_type();
-        if (mime_type == "font/ttf"sv || mime_type == "application/x-font-ttf"sv) {
-            if (auto result = OpenType::Font::try_load_from_externally_owned_memory(resource()->encoded_data()); !result.is_error()) {
-                return result;
-            }
-        }
-        if (mime_type == "font/woff"sv || mime_type == "application/font-woff"sv) {
-            if (auto result = WOFF::Font::try_load_from_externally_owned_memory(resource()->encoded_data()); !result.is_error()) {
-                return result;
-            }
-        }
-        if (mime_type == "font/woff2"sv || mime_type == "application/font-woff2"sv) {
-            if (auto result = WOFF2::Font::try_load_from_externally_owned_memory(resource()->encoded_data()); !result.is_error()) {
-                return result;
-            }
-        }
-
-        // We don't have the luxury of knowing the MIME type, so we have to try all formats.
-        auto ttf = OpenType::Font::try_load_from_externally_owned_memory(resource()->encoded_data());
-        if (!ttf.is_error())
-            return ttf.release_value();
-        auto woff = WOFF::Font::try_load_from_externally_owned_memory(resource()->encoded_data());
-        if (!woff.is_error())
-            return woff.release_value();
-        auto woff2 = WOFF2::Font::try_load_from_externally_owned_memory(resource()->encoded_data());
-        if (!woff2.is_error())
-            return woff2.release_value();
-        return Error::from_string_literal("Automatic format detection failed");
-    }
-
-    StyleComputer& m_style_computer;
-    FlyString m_family_name;
-    Vector<Gfx::UnicodeRange> m_unicode_ranges;
-    RefPtr<Gfx::VectorFont> m_vector_font;
-    Vector<URL::URL> m_urls;
-};
+    // We don't have the luxury of knowing the MIME type, so we have to try all formats.
+    auto ttf = OpenType::Font::try_load_from_externally_owned_memory(resource()->encoded_data());
+    if (!ttf.is_error())
+        return ttf.release_value();
+    auto woff = WOFF::Font::try_load_from_externally_owned_memory(resource()->encoded_data());
+    if (!woff.is_error())
+        return woff.release_value();
+    auto woff2 = WOFF2::Font::try_load_from_externally_owned_memory(resource()->encoded_data());
+    if (!woff2.is_error())
+        return woff2.release_value();
+    return Error::from_string_literal("Automatic format detection failed");
+}
 
 struct StyleComputer::MatchingFontCandidate {
     FontFaceKey key;
@@ -2566,40 +2560,54 @@ void StyleComputer::did_load_font(FlyString const&)
     document().invalidate_style();
 }
 
+Optional<FontLoader&> StyleComputer::load_font_face(ParsedFontFace const& font_face, Function<void(FontLoader const&)> on_load, Function<void()> on_fail)
+{
+    if (font_face.sources().is_empty()) {
+        if (on_fail)
+            on_fail();
+        return {};
+    }
+
+    FontFaceKey key {
+        .family_name = font_face.font_family(),
+        .weight = font_face.weight().value_or(0),
+        .slope = font_face.slope().value_or(0),
+    };
+
+    Vector<URL::URL> urls;
+    for (auto const& source : font_face.sources()) {
+        // FIXME: These should be loaded relative to the stylesheet URL instead of the document URL.
+        if (source.local_or_url.has<URL::URL>())
+            urls.append(m_document->parse_url(MUST(source.local_or_url.get<URL::URL>().to_string())));
+        // FIXME: Handle local()
+    }
+
+    if (urls.is_empty()) {
+        if (on_fail)
+            on_fail();
+        return {};
+    }
+
+    auto loader = make<FontLoader>(const_cast<StyleComputer&>(*this), font_face.font_family(), font_face.unicode_ranges(), move(urls), move(on_load), move(on_fail));
+    auto& loader_ref = *loader;
+    auto maybe_font_loaders_list = const_cast<StyleComputer&>(*this).m_loaded_fonts.get(key);
+    if (maybe_font_loaders_list.has_value()) {
+        maybe_font_loaders_list->append(move(loader));
+    } else {
+        FontLoaderList loaders;
+        loaders.append(move(loader));
+        const_cast<StyleComputer&>(*this).m_loaded_fonts.set(key, move(loaders));
+    }
+    // Actual object owned by font loader list inside m_loaded_fonts, this isn't use-after-move/free
+    return loader_ref;
+}
+
 void StyleComputer::load_fonts_from_sheet(CSSStyleSheet const& sheet)
 {
-    for (auto const& rule : static_cast<CSSStyleSheet const&>(sheet).rules()) {
+    for (auto const& rule : sheet.rules()) {
         if (!is<CSSFontFaceRule>(*rule))
             continue;
-        auto const& font_face = static_cast<CSSFontFaceRule const&>(*rule).font_face();
-        if (font_face.sources().is_empty())
-            continue;
-        FontFaceKey key {
-            .family_name = font_face.font_family(),
-            .weight = font_face.weight().value_or(0),
-            .slope = font_face.slope().value_or(0),
-        };
-
-        Vector<URL::URL> urls;
-        for (auto& source : font_face.sources()) {
-            // FIXME: These should be loaded relative to the stylesheet URL instead of the document URL.
-            if (source.local_or_url.has<URL::URL>())
-                urls.append(m_document->parse_url(MUST(source.local_or_url.get<URL::URL>().to_string())));
-            // FIXME: Handle local()
-        }
-
-        if (urls.is_empty())
-            continue;
-
-        auto loader = make<FontLoader>(const_cast<StyleComputer&>(*this), font_face.font_family(), font_face.unicode_ranges(), move(urls));
-        auto maybe_font_loaders_list = const_cast<StyleComputer&>(*this).m_loaded_fonts.get(key);
-        if (maybe_font_loaders_list.has_value()) {
-            maybe_font_loaders_list->append(move(loader));
-        } else {
-            FontLoaderList loaders;
-            loaders.append(move(loader));
-            const_cast<StyleComputer&>(*this).m_loaded_fonts.set(key, move(loaders));
-        }
+        (void)load_font_face(static_cast<CSSFontFaceRule const&>(*rule).font_face());
     }
 }
 
