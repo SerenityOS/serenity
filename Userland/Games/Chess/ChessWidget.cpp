@@ -289,7 +289,7 @@ void ChessWidget::mouseup_event(GUI::MouseEvent& event)
 
     Chess::Move move = { m_moving_square, target_square.release_value() };
     if (board().is_promotion_move(move)) {
-        auto promotion_dialog = PromotionDialog::construct(*this);
+        auto promotion_dialog = MUST(PromotionDialog::try_create(*this));
         if (promotion_dialog->exec() == PromotionDialog::ExecResult::OK)
             move.promote_to = promotion_dialog->selected_piece();
     }
