@@ -31,6 +31,8 @@ public:
 
     bool disabled() const;
 
+    JS::GCPtr<HTML::HTMLFormElement> form() const;
+
     virtual Optional<ARIA::Role> default_role() const override;
 
 private:
