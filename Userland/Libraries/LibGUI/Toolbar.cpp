@@ -165,7 +165,7 @@ ErrorOr<void> Toolbar::create_overflow_objects()
 
 ErrorOr<void> Toolbar::update_overflow_menu()
 {
-    if (!m_collapsible)
+    if (!m_collapsible || m_items.is_empty())
         return {};
 
     Optional<size_t> marginal_index {};
