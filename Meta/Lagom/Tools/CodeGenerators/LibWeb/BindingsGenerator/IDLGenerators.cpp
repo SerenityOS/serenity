@@ -888,7 +888,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 )~~~");
                 } else {
                     sequence_generator.append(R"~~~(
-    @sequence.storage_type@ @cpp_name@ { global_object.heap() };
+    @sequence.storage_type@<@sequence.type@> @cpp_name@ { vm.heap() };
 )~~~");
                 }
             }

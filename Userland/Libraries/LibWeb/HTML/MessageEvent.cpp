@@ -8,6 +8,7 @@
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Bindings/MessageEventPrototype.h>
 #include <LibWeb/HTML/MessageEvent.h>
+#include <LibWeb/HTML/MessagePort.h>
 
 namespace Web::HTML {
 
@@ -31,9 +32,9 @@ MessageEvent::MessageEvent(JS::Realm& realm, FlyString const& event_name, Messag
     , m_source(event_init.source)
 {
     m_ports.ensure_capacity(event_init.ports.size());
-    for (auto& port : event_init.ports) {
+    for (auto const& port : event_init.ports) {
         VERIFY(port);
-        m_ports.unchecked_append(*port);
+        m_ports.unchecked_append(static_cast<JS::Object&>(*port));
     }
 }
 

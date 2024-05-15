@@ -20,7 +20,7 @@ struct MessageEventInit : public DOM::EventInit {
     String origin {};
     String last_event_id {};
     Optional<MessageEventSource> source;
-    Vector<JS::Handle<JS::Object>> ports;
+    Vector<JS::Handle<MessagePort>> ports;
 };
 
 class MessageEvent : public DOM::Event {
