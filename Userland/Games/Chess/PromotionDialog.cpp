@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2024, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,6 +8,8 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Frame.h>
+
+namespace Chess {
 
 PromotionDialog::PromotionDialog(ChessWidget& chess_widget)
     : Dialog(chess_widget.window())
@@ -36,4 +38,6 @@ PromotionDialog::PromotionDialog(ChessWidget& chess_widget)
 void PromotionDialog::event(Core::Event& event)
 {
     Dialog::event(event);
+}
+
 }
