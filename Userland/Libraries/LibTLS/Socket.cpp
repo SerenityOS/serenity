@@ -66,6 +66,9 @@ ErrorOr<NonnullOwnPtr<TLSv12>> TLSv12::connect(ByteString const& host, u16 port,
     };
 
     TRY(promise->await());
+
+    tls_socket->on_tls_error = nullptr;
+    tls_socket->on_connected = nullptr;
     tls_socket->m_context.should_expect_successful_read = true;
     return tls_socket;
 }
@@ -84,6 +87,9 @@ ErrorOr<NonnullOwnPtr<TLSv12>> TLSv12::connect(ByteString const& host, Core::Soc
         promise->reject(AK::Error::from_string_view(enum_to_string(alert)));
     };
     TRY(promise->await());
+
+    tls_socket->on_tls_error = nullptr;
+    tls_socket->on_connected = nullptr;
     tls_socket->m_context.should_expect_successful_read = true;
     return tls_socket;
 }
