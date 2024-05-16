@@ -10,3 +10,9 @@ area.relList for after setting rel to "whatever": whatever
 area.relList for after setting rel to "prefetch": prefetch
 area.relList contains "prefetch": true
 area.relList contains "whatever": false
+form.relList initial length: 0
+form.relList always returns the same value: true
+form.relList for after setting rel to "whatever": whatever
+form.relList for after setting rel to "prefetch": prefetch
+form.relList contains "prefetch": true
+form.relList contains "whatever": false

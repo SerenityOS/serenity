@@ -17,7 +17,7 @@ interface HTMLFormElement : HTMLElement {
     [CEReactions, Reflect=novalidate] attribute boolean noValidate;
     [CEReactions, Reflect] attribute DOMString target;
     [CEReactions, Reflect] attribute DOMString rel;
-    // FIXME: [SameObject, PutForwards=value] readonly attribute DOMTokenList relList;
+    [SameObject, PutForwards=value] readonly attribute DOMTokenList relList;
 
     [SameObject] readonly attribute HTMLFormControlsCollection elements;
     readonly attribute unsigned long length;
