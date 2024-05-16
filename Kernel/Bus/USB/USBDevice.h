@@ -39,8 +39,8 @@ public:
 
     static ErrorOr<NonnullLockRefPtr<Device>> try_create(USBController&, u8, DeviceSpeed);
 
-    Device(USBController const&, u8, DeviceSpeed, NonnullOwnPtr<ControlPipe> default_pipe);
-    Device(Device const& device, NonnullOwnPtr<ControlPipe> default_pipe);
+    Device(USBController const&, u8, DeviceSpeed);
+    Device(Device const& device);
     virtual ~Device();
 
     u8 port() const { return m_device_port; }
@@ -77,7 +77,6 @@ public:
     {
         VERIFY(m_address == 0); // Device can only transition once
         m_address = address;
-        m_default_pipe->set_device_address(address);
     }
     template<DerivedFrom<USBController> Controller>
     void set_descriptor(Badge<Controller>, USBDeviceDescriptor const& descriptor)
@@ -88,7 +87,8 @@ public:
     Vector<USBConfiguration>& configurations(Badge<Controller>) { return m_configurations; }
 
 protected:
-    Device(NonnullLockRefPtr<USBController> controller, u8 address, u8 port, DeviceSpeed speed, NonnullOwnPtr<ControlPipe> default_pipe);
+    Device(NonnullLockRefPtr<USBController> controller, u8 address, u8 port, DeviceSpeed speed);
+    void set_default_pipe(NonnullOwnPtr<ControlPipe> pipe);
 
     u8 m_device_port { 0 };     // What port is this device attached to. NOTE: This is 1-based.
     DeviceSpeed m_device_speed; // What speed is this device running at
@@ -101,7 +101,7 @@ protected:
     Vector<USBConfiguration> m_configurations;  // Configurations for this device
 
     NonnullLockRefPtr<USBController> m_controller;
-    NonnullOwnPtr<ControlPipe> m_default_pipe; // Default communication pipe (endpoint0) used during enumeration
+    OwnPtr<ControlPipe> m_default_pipe; // Default communication pipe (endpoint0) used during enumeration
 
     LockRefPtr<Driver> m_driver;
 
