@@ -65,7 +65,7 @@ ErrorOr<void> MouseDriver::initialize_device(USB::Device& device, USBInterface c
         USB_REQUEST_SET_CONFIGURATION, configuration.configuration_id(), 0, 0, nullptr));
 
     auto const& endpoint_descriptor = interface.endpoints()[0];
-    auto interrupt_in_pipe = TRY(USB::InterruptInPipe::create(device.controller(), endpoint_descriptor.endpoint_address, endpoint_descriptor.max_packet_size, device.address(), 10));
+    auto interrupt_in_pipe = TRY(USB::InterruptInPipe::create(device.controller(), device, endpoint_descriptor.endpoint_address, endpoint_descriptor.max_packet_size, 10));
     auto mouse_device = TRY(USBMouseDevice::try_create_instance(device, endpoint_descriptor.max_packet_size, move(interrupt_in_pipe)));
     HIDManagement::the().attach_standalone_hid_device(*mouse_device);
     m_interfaces.append(mouse_device);
