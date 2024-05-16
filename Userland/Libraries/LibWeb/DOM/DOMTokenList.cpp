@@ -10,6 +10,7 @@
 #include <LibWeb/DOM/DOMTokenList.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
+#include <LibWeb/HTML/HTMLLinkElement.h>
 #include <LibWeb/Infra/CharacterTypes.h>
 #include <LibWeb/WebIDL/DOMException.h>
 
@@ -211,16 +212,31 @@ WebIDL::ExceptionOr<bool> DOMTokenList::replace(String const& token, String cons
 
 // https://dom.spec.whatwg.org/#dom-domtokenlist-supports
 // https://dom.spec.whatwg.org/#concept-domtokenlist-validation
-WebIDL::ExceptionOr<bool> DOMTokenList::supports([[maybe_unused]] StringView token)
+WebIDL::ExceptionOr<bool> DOMTokenList::supports(StringView token)
 {
-    // FIXME: Implement this fully when any use case defines supported tokens.
+    static HashMap<FlyString, Vector<StringView>> supported_tokens_map = {
+        // NOTE: The supported values for rel were taken from HTMLLinkElement::Relationship
+        { HTML::AttributeNames::rel, { "alternate"sv, "stylesheet"sv, "preload"sv, "dns-prefetch"sv, "preconnect"sv, "icon"sv } },
+    };
 
     // 1. If the associated attribute’s local name does not define supported tokens, throw a TypeError.
-    return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, String::formatted("Attribute {} does not define any supported tokens", m_associated_attribute).release_value_but_fixme_should_propagate_errors() };
+    auto supported_tokens = supported_tokens_map.get(m_associated_attribute);
+    if (!supported_tokens.has_value())
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, MUST(String::formatted("Attribute {} does not define any supported tokens", m_associated_attribute)) };
+
+    // AD-HOC: Other browsers return false for rel attributes on non-link elements for all attribute values we currently support.
+    if (m_associated_attribute == HTML::AttributeNames::rel && !is<HTML::HTMLLinkElement>(*m_associated_element))
+        return false;
 
     // 2. Let lowercase token be a copy of token, in ASCII lowercase.
+    auto lowercase_token = token.to_lowercase_string();
+
     // 3. If lowercase token is present in supported tokens, return true.
+    if (supported_tokens->contains_slow(lowercase_token))
+        return true;
+
     // 4. Return false.
+    return false;
 }
 
 // https://dom.spec.whatwg.org/#dom-domtokenlist-value
