@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<script src="../include.js"></script>
+<script>
+    function relListTest(tagName) {
+        const element = document.createElement(tagName);
+        const relList = element.relList;
+        println(`${tagName}.relList initial length: ${relList.length}`);
+        println(`${tagName}.relList always returns the same value: ${relList === element.relList}`);
+        element.rel = "whatever";
+        println(`${tagName}.relList for after setting rel to "whatever": ${relList}`);
+        element.relList = "prefetch";
+        println(`${tagName}.relList for after setting rel to "prefetch": ${relList}`);
+        println(`${tagName}.relList contains "prefetch": ${relList.contains("prefetch")}`);
+        println(`${tagName}.relList contains "whatever": ${relList.contains("whatever")}`);        
+    }
+
+    test(() => {
+        const tagNamesToTest = [
+            "a",
+        ];
+
+        for (const tagName of tagNamesToTest) {
+            relListTest(tagName);
+        }
+    });
+</script>

@@ -7,6 +7,7 @@
 
 #include <LibWeb/ARIA/Roles.h>
 #include <LibWeb/Bindings/HTMLAnchorElementPrototype.h>
+#include <LibWeb/DOM/DOMTokenList.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/HTML/AttributeNames.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
@@ -38,6 +39,9 @@ void HTMLAnchorElement::attribute_changed(FlyString const& name, Optional<String
     HTMLElement::attribute_changed(name, value);
     if (name == HTML::AttributeNames::href) {
         set_the_url();
+    } else if (name == HTML::AttributeNames::rel) {
+        if (m_rel_list)
+            m_rel_list->associated_attribute_changed(value.value_or(String {}));
     }
 }
 
@@ -121,6 +125,15 @@ Optional<ARIA::Role> HTMLAnchorElement::default_role() const
         return ARIA::Role::link;
     // https://www.w3.org/TR/html-aria/#el-a
     return ARIA::Role::generic;
+}
+
+// https://html.spec.whatwg.org/multipage/text-level-semantics.html#dom-a-rellist
+JS::GCPtr<DOM::DOMTokenList> HTMLAnchorElement::rel_list()
+{
+    // The IDL attribute relList must reflect the rel content attribute.
+    if (!m_rel_list)
+        m_rel_list = DOM::DOMTokenList::create(*this, HTML::AttributeNames::rel);
+    return m_rel_list;
 }
 
 // https://html.spec.whatwg.org/multipage/text-level-semantics.html#dom-a-text
