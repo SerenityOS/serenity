@@ -13,6 +13,7 @@
 #include <LibURL/URL.h>
 #include <LibWeb/Bindings/HTMLLinkElementPrototype.h>
 #include <LibWeb/CSS/Parser/Parser.h>
+#include <LibWeb/DOM/DOMTokenList.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/ShadowRoot.h>
@@ -89,6 +90,15 @@ void HTMLLinkElement::inserted()
     }
 }
 
+// https://html.spec.whatwg.org/multipage/semantics.html#dom-link-rellist
+JS::GCPtr<DOM::DOMTokenList> HTMLLinkElement::rel_list()
+{
+    // The relList IDL attribute must reflect the rel content attribute.
+    if (!m_rel_list)
+        m_rel_list = DOM::DOMTokenList::create(*this, HTML::AttributeNames::rel);
+    return m_rel_list;
+}
+
 bool HTMLLinkElement::has_loaded_icon() const
 {
     return m_relationship & Relationship::Icon && resource() && resource()->is_loaded() && resource()->has_encoded_data();
@@ -121,6 +131,9 @@ void HTMLLinkElement::attribute_changed(FlyString const& name, Optional<String> 
             else if (part == "icon"sv)
                 m_relationship |= Relationship::Icon;
         }
+
+        if (m_rel_list)
+            m_rel_list->associated_attribute_changed(value.value_or(String {}));
     }
 
     // https://html.spec.whatwg.org/multipage/semantics.html#the-link-element:explicitly-enabled
