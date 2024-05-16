@@ -11,6 +11,7 @@
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/HTMLFormElementPrototype.h>
+#include <LibWeb/DOM/DOMTokenList.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/HTMLFormControlsCollection.h>
@@ -584,6 +585,15 @@ StringView HTMLFormElement::method() const
     VERIFY_NOT_REACHED();
 }
 
+// https://html.spec.whatwg.org/multipage/forms.html#dom-form-rellist
+JS::GCPtr<DOM::DOMTokenList> HTMLFormElement::rel_list()
+{
+    // The relList IDL attribute must reflect the rel content attribute.
+    if (!m_rel_list)
+        m_rel_list = DOM::DOMTokenList::create(*this, HTML::AttributeNames::rel);
+    return m_rel_list;
+}
+
 // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#dom-fs-method
 WebIDL::ExceptionOr<void> HTMLFormElement::set_method(String const& method)
 {
@@ -609,6 +619,15 @@ String HTMLFormElement::action() const
 WebIDL::ExceptionOr<void> HTMLFormElement::set_action(String const& value)
 {
     return set_attribute(AttributeNames::action, value);
+}
+
+void HTMLFormElement::attribute_changed(FlyString const& name, Optional<String> const& value)
+{
+    HTMLElement::attribute_changed(name, value);
+    if (name == HTML::AttributeNames::rel) {
+        if (m_rel_list)
+            m_rel_list->associated_attribute_changed(value.value_or(String {}));
+    }
 }
 
 // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#picking-an-encoding-for-the-form
