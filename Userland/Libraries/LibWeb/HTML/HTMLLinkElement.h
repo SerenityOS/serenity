@@ -34,6 +34,8 @@ public:
     String type() const { return get_attribute_value(HTML::AttributeNames::type); }
     String href() const { return get_attribute_value(HTML::AttributeNames::href); }
 
+    JS::GCPtr<DOM::DOMTokenList> rel_list();
+
     bool has_loaded_icon() const;
     bool load_favicon_and_use_if_window_is_active();
 
@@ -43,7 +45,7 @@ private:
     HTMLLinkElement(DOM::Document&, DOM::QualifiedName);
 
     virtual void initialize(JS::Realm&) override;
-    void attribute_changed(FlyString const&, Optional<String> const&) override;
+    virtual void attribute_changed(FlyString const&, Optional<String> const&) override;
 
     // ^ResourceClient
     virtual void resource_did_fail() override;
@@ -133,6 +135,7 @@ private:
     JS::GCPtr<CSS::CSSStyleSheet> m_loaded_style_sheet;
 
     Optional<DOM::DocumentLoadEventDelayer> m_document_load_event_delayer;
+    JS::GCPtr<DOM::DOMTokenList> m_rel_list;
     unsigned m_relationship { 0 };
     // https://html.spec.whatwg.org/multipage/semantics.html#explicitly-enabled
     bool m_explicitly_enabled { false };

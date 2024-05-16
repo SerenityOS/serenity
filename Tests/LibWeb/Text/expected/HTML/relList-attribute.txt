@@ -16,3 +16,9 @@ form.relList for after setting rel to "whatever": whatever
 form.relList for after setting rel to "prefetch": prefetch
 form.relList contains "prefetch": true
 form.relList contains "whatever": false
+link.relList initial length: 0
+link.relList always returns the same value: true
+link.relList for after setting rel to "whatever": whatever
+link.relList for after setting rel to "prefetch": prefetch
+link.relList contains "prefetch": true
+link.relList contains "whatever": false
