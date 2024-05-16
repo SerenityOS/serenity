@@ -20,6 +20,7 @@ class HTMLAreaElement final
 
 public:
     virtual ~HTMLAreaElement() override;
+    JS::GCPtr<DOM::DOMTokenList> rel_list();
 
 private:
     HTMLAreaElement(DOM::Document&, DOM::QualifiedName);
@@ -50,6 +51,8 @@ private:
     }
 
     virtual Optional<ARIA::Role> default_role() const override;
+
+    JS::GCPtr<DOM::DOMTokenList> m_rel_list;
 };
 
 }

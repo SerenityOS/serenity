@@ -4,3 +4,9 @@ a.relList for after setting rel to "whatever": whatever
 a.relList for after setting rel to "prefetch": prefetch
 a.relList contains "prefetch": true
 a.relList contains "whatever": false
+area.relList initial length: 0
+area.relList always returns the same value: true
+area.relList for after setting rel to "whatever": whatever
+area.relList for after setting rel to "prefetch": prefetch
+area.relList contains "prefetch": true
+area.relList contains "whatever": false

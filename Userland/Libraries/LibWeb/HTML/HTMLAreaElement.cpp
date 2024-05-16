@@ -6,6 +6,7 @@
 
 #include <LibWeb/ARIA/Roles.h>
 #include <LibWeb/Bindings/HTMLAreaElementPrototype.h>
+#include <LibWeb/DOM/DOMTokenList.h>
 #include <LibWeb/HTML/HTMLAreaElement.h>
 #include <LibWeb/HTML/Window.h>
 
@@ -31,7 +32,19 @@ void HTMLAreaElement::attribute_changed(FlyString const& name, Optional<String> 
     HTMLElement::attribute_changed(name, value);
     if (name == HTML::AttributeNames::href) {
         set_the_url();
+    } else if (name == HTML::AttributeNames::rel) {
+        if (m_rel_list)
+            m_rel_list->associated_attribute_changed(value.value_or(String {}));
     }
+}
+
+// https://html.spec.whatwg.org/multipage/image-maps.html#dom-area-rellist
+JS::GCPtr<DOM::DOMTokenList> HTMLAreaElement::rel_list()
+{
+    // The IDL attribute relList must reflect the rel content attribute.
+    if (!m_rel_list)
+        m_rel_list = DOM::DOMTokenList::create(*this, HTML::AttributeNames::rel);
+    return m_rel_list;
 }
 
 Optional<String> HTMLAreaElement::hyperlink_element_utils_href() const
