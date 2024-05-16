@@ -1,0 +1,6 @@
+a.relList initial length: 0
+a.relList always returns the same value: true
+a.relList for after setting rel to "whatever": whatever
+a.relList for after setting rel to "prefetch": prefetch
+a.relList contains "prefetch": true
+a.relList contains "whatever": false

@@ -24,6 +24,8 @@ public:
     String target() const { return get_attribute_value(HTML::AttributeNames::target); }
     String download() const { return get_attribute_value(HTML::AttributeNames::download); }
 
+    JS::GCPtr<DOM::DOMTokenList> rel_list();
+
     String text() const;
     void set_text(String const&);
 
@@ -68,6 +70,8 @@ private:
     }
 
     virtual Optional<ARIA::Role> default_role() const override;
+
+    JS::GCPtr<DOM::DOMTokenList> m_rel_list;
 };
 
 }
