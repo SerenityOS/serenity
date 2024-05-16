@@ -94,9 +94,9 @@ public:
 
 private:
     // Root Hub constructor
-    Hub(NonnullLockRefPtr<USBController>, DeviceSpeed, NonnullOwnPtr<ControlPipe> default_pipe);
+    Hub(NonnullLockRefPtr<USBController>, DeviceSpeed);
 
-    Hub(Device const&, NonnullOwnPtr<ControlPipe> default_pipe);
+    Hub(Device const&);
 
     USBHubDescriptor m_hub_descriptor {};
 
