@@ -34,6 +34,9 @@ set(KERNEL_SOURCES
     Bus/USB/EHCI/EHCIController.cpp
     Bus/USB/UHCI/UHCIController.cpp
     Bus/USB/UHCI/UHCIRootHub.cpp
+    Bus/USB/xHCI/xHCIController.cpp
+    Bus/USB/xHCI/xHCIInterrupter.cpp
+    Bus/USB/xHCI/xHCIRootHub.cpp
     Bus/USB/Drivers/HID/MouseDriver.cpp
     Bus/USB/Drivers/MassStorage/MassStorageDriver.cpp
     Bus/USB/USBConfiguration.cpp
@@ -677,6 +680,9 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     # Prevent naively implemented string functions (like strlen) from being "optimized" into a call to themselves.
     set_source_files_properties(Library/MiniStdLib.cpp
         PROPERTIES COMPILE_FLAGS "-fno-tree-loop-distribution -fno-tree-loop-distribute-patterns")
+
+    # Prevent volatile bitfield accesses from being optimized into smaller load/stores
+    set_source_files_properties(Bus/USB/xHCI/xHCIController.cpp PROPERTIES COMPILE_FLAGS "-fstrict-volatile-bitfields")
 
     if ("${SERENITY_ARCH}" STREQUAL "x86_64")
         # The BFD linker only supports RELR relocations on x86 and POWER.
