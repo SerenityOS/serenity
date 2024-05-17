@@ -144,4 +144,9 @@ ErrorOr<void> SeekableStream::discard(size_t discarded_bytes)
     return {};
 }
 
+ErrorOr<bool> SeekableStream::accurate_is_eof() const
+{
+    return TRY(tell()) == TRY(size());
+}
+
 }

@@ -150,6 +150,9 @@ public:
     /// Seeks until after the given amount of bytes to be discarded instead of
     /// reading and discarding everything manually;
     virtual ErrorOr<void> discard(size_t discarded_bytes) override;
+
+    // Utilize `tell` and `size` to determine EOF on Streams that support it.
+    virtual ErrorOr<bool> accurate_is_eof() const override;
 };
 
 }
