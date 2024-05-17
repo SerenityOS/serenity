@@ -46,7 +46,7 @@ ErrorOr<void> USBConfiguration::enumerate_interfaces()
 
         // Get all the endpoint descriptors
         for (auto endpoint = 0u; endpoint < interface_descriptor->number_of_endpoints; endpoint++) {
-            u8* raw_endpoint_descriptor_offset = interface_descriptors_base + sizeof(USBInterfaceDescriptor) + (endpoint * sizeof(USBEndpointDescriptor));
+            u8* raw_endpoint_descriptor_offset = reinterpret_cast<u8*>(interface_descriptor) + sizeof(USBInterfaceDescriptor) + (endpoint * sizeof(USBEndpointDescriptor));
 
             // FIXME: It looks like HID descriptors come BEFORE the endpoint descriptors for a HID device, so we should load
             // these too eventually.
@@ -54,23 +54,22 @@ ErrorOr<void> USBConfiguration::enumerate_interfaces()
             if (interface_descriptor->interface_class_code == USB_CLASS_HID)
                 raw_endpoint_descriptor_offset += sizeof(USBHIDDescriptor); // Skip the HID descriptor (this was worked out via buffer inspection)
 
-            USBEndpointDescriptor endpoint_descriptor;
-            memcpy(&endpoint_descriptor, raw_endpoint_descriptor_offset, sizeof(USBEndpointDescriptor));
+            USBEndpointDescriptor* endpoint_descriptor = reinterpret_cast<USBEndpointDescriptor*>(raw_endpoint_descriptor_offset);
 
             if constexpr (USB_DEBUG) {
                 dbgln("Endpoint Descriptor {}", endpoint);
-                dbgln("Endpoint Address: {}", endpoint_descriptor.endpoint_address);
-                dbgln("Endpoint Attribute Bitmap: {:08b}", endpoint_descriptor.endpoint_attributes_bitmap);
-                dbgln("Endpoint Maximum Packet Size: {}", endpoint_descriptor.max_packet_size);
-                dbgln("Endpoint Poll Interval (in frames): {}", endpoint_descriptor.poll_interval_in_frames);
+                dbgln("Endpoint Address: {}", endpoint_descriptor->endpoint_address);
+                dbgln("Endpoint Attribute Bitmap: {:08b}", endpoint_descriptor->endpoint_attributes_bitmap);
+                dbgln("Endpoint Maximum Packet Size: {}", endpoint_descriptor->max_packet_size);
+                dbgln("Endpoint Poll Interval (in frames): {}", endpoint_descriptor->poll_interval_in_frames);
             }
 
-            endpoint_descriptors.unchecked_append(endpoint_descriptor);
+            endpoint_descriptors.unchecked_append(*endpoint_descriptor);
         }
 
         USBInterface device_interface(*this, *interface_descriptor, move(endpoint_descriptors));
         m_interfaces.unchecked_append(move(device_interface));
-        interface_descriptor += interface_descriptor->number_of_endpoints * sizeof(USBEndpointDescriptor);
+        interface_descriptor = reinterpret_cast<USBInterfaceDescriptor*>(reinterpret_cast<u8*>(interface_descriptor) + sizeof(USBInterfaceDescriptor) + interface_descriptor->number_of_endpoints * sizeof(USBEndpointDescriptor));
     }
 
     return {};
