@@ -42,6 +42,7 @@ private:
     HTMLAnchorElement(DOM::Document&, DOM::QualifiedName);
 
     virtual void initialize(JS::Realm&) override;
+    virtual void visit_edges(Cell::Visitor&) override;
 
     virtual bool has_activation_behavior() const override;
     virtual void activation_behavior(Web::DOM::Event const&) override;
