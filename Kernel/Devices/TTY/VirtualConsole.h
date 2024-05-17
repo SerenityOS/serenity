@@ -21,7 +21,6 @@
 
 namespace Kernel {
 
-class ConsoleManagement;
 class VirtualConsole;
 // FIXME: This implementation has no knowledge about keeping terminal history...
 class ConsoleImpl final : public VT::Terminal {
@@ -46,7 +45,6 @@ private:
 class VirtualConsole final : public TTY
     , public KeyboardClient
     , public VT::TerminalClient {
-    friend class ConsoleManagement;
     friend class DeviceManagement;
     friend class ConsoleImpl;
     friend class VT::Terminal;
@@ -68,15 +66,19 @@ public:
     };
 
 public:
-    static NonnullLockRefPtr<VirtualConsole> create(size_t index);
-    static NonnullLockRefPtr<VirtualConsole> create_with_preset_log(size_t index, CircularQueue<char, 16384> const&);
+    static constexpr size_t s_max_virtual_consoles = 6;
+
+    static void switch_to(unsigned index);
+    static void initialize_consoles();
+    static void switch_to_debug_console() { switch_to(1); }
+    static void resolution_was_changed();
+    static bool emit_char_on_debug_console(char ch);
+    static NonnullRefPtr<VirtualConsole> create(size_t index);
+    static NonnullRefPtr<VirtualConsole> create_with_preset_log(size_t index, CircularQueue<char, 16384> const&);
 
     virtual ~VirtualConsole() override;
 
     size_t index() const { return m_index; }
-
-    void refresh_after_resolution_change();
-
     bool is_graphical() const { return m_graphical; }
     void set_graphical(bool graphical);
 
@@ -86,6 +88,8 @@ private:
     explicit VirtualConsole(unsigned const index);
     // ^KeyboardClient
     virtual void on_key_pressed(KeyEvent) override;
+
+    void refresh_after_resolution_change();
 
     // ^TTY
     virtual ErrorOr<NonnullOwnPtr<KString>> pseudo_name() const override;

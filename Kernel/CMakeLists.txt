@@ -356,7 +356,6 @@ set(KERNEL_SOURCES
     Syscalls/waitid.cpp
     Syscalls/inode_watcher.cpp
     Syscalls/write.cpp
-    Devices/TTY/ConsoleManagement.cpp
     Devices/TTY/MasterPTY.cpp
     Devices/TTY/PTYMultiplexer.cpp
     Devices/TTY/SlavePTY.cpp
