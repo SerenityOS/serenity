@@ -43,7 +43,7 @@ JS::GCPtr<HTMLElement> HTMLLabelElement::control() const
     // and the first such element in tree order is a labelable element, then that element is the
     // label element's labeled control.
     if (for_().has_value()) {
-        for_each_in_inclusive_subtree_of_type<HTMLElement>([&](auto& element) {
+        root().for_each_in_inclusive_subtree_of_type<HTMLElement>([&](auto& element) {
             if (element.id() == *for_() && element.is_labelable()) {
                 control = &const_cast<HTMLElement&>(element);
                 return TraversalDecision::Break;
