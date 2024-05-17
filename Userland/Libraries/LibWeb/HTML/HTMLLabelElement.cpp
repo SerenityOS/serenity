@@ -6,6 +6,7 @@
 
 #include <LibWeb/Bindings/HTMLLabelElementPrototype.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/HTML/FormAssociatedElement.h>
 #include <LibWeb/HTML/HTMLLabelElement.h>
 #include <LibWeb/Layout/Label.h>
 
@@ -64,6 +65,23 @@ JS::GCPtr<HTMLElement> HTMLLabelElement::control() const
     });
 
     return control;
+}
+
+// https://html.spec.whatwg.org/multipage/forms.html#dom-label-form
+JS::GCPtr<HTMLFormElement> HTMLLabelElement::form() const
+{
+    auto labeled_control = control();
+
+    // 1. If the label element has no labeled control, then return null.
+    if (!labeled_control)
+        return {};
+
+    // 2. If the label element's labeled control is not a form-associated element, then return null.
+    if (!is<FormAssociatedElement>(*labeled_control))
+        return {};
+
+    // 3. Return the label element's labeled control's form owner (which can still be null).
+    return dynamic_cast<FormAssociatedElement*>(labeled_control.ptr())->form();
 }
 
 }
