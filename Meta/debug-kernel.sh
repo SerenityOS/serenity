@@ -41,14 +41,17 @@ fi
 if [ "$SERENITY_ARCH" = "x86_64" ]; then
     gdb_arch=i386:x86-64
     prekernel_image=Prekernel64
+    kernel_image=Kernel_shared_object
     kernel_base=0x2000200000
 elif [ "$SERENITY_ARCH" = "aarch64" ]; then
     gdb_arch=aarch64:armv8-r
     prekernel_image=Prekernel
+    kernel_image=Kernel
     kernel_base=0x0
 elif [ "$SERENITY_ARCH" = "riscv64" ]; then
     gdb_arch=riscv:rv64
     prekernel_image=Prekernel
+    kernel_image=Kernel
     kernel_base=0x0
 fi
 
@@ -64,7 +67,7 @@ exec $SERENITY_KERNEL_DEBUGGER \
     -ex "file $SCRIPT_DIR/../Build/${SERENITY_ARCH:-x86_64}$toolchain_suffix/Kernel/Prekernel/$prekernel_image" \
     -ex "set confirm off" \
     -ex "directory $SCRIPT_DIR/../Build/${SERENITY_ARCH:-x86_64}$toolchain_suffix/" \
-    -ex "add-symbol-file $SCRIPT_DIR/../Build/${SERENITY_ARCH:-x86_64}$toolchain_suffix/Kernel/Kernel_shared_object -o $kernel_base" \
+    -ex "add-symbol-file $SCRIPT_DIR/../Build/${SERENITY_ARCH:-x86_64}$toolchain_suffix/Kernel/$kernel_image -o $kernel_base" \
     -ex "set confirm on" \
     -ex "set arch $gdb_arch" \
     -ex "set print frame-arguments none" \
