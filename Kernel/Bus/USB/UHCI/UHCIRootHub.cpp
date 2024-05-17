@@ -78,7 +78,7 @@ static USBHubDescriptor uhci_root_hub_hub_descriptor = {
         DESCRIPTOR_TYPE_HUB,
     },
     UHCIController::NUMBER_OF_ROOT_PORTS, // 2 ports
-    0x0,                                  // Ganged power switching, not a compound device, global over-current protection.
+    { 0x0 },                              // Ganged power switching, not a compound device, global over-current protection.
     0x0,                                  // UHCI ports are always powered, so there's no time from power on to power good.
     0x0,                                  // Self-powered
 };

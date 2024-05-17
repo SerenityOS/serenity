@@ -17,9 +17,9 @@
 
 namespace Kernel::USB {
 
-ErrorOr<NonnullLockRefPtr<Device>> Device::try_create(USBController& controller, u8 port, DeviceSpeed speed)
+ErrorOr<NonnullLockRefPtr<Device>> Device::try_create(USBController& controller, Hub const& hub, u8 port, DeviceSpeed speed)
 {
-    auto device = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) Device(controller, port, speed)));
+    auto device = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) Device(controller, &hub, port, speed)));
     device->set_default_pipe(TRY(ControlPipe::create(controller, device, 0, 8)));
     auto sysfs_node = TRY(SysFSUSBDeviceInformation::create(*device));
     device->m_sysfs_device_info_node.with([&](auto& node) {
@@ -46,19 +46,22 @@ ErrorOr<NonnullLockRefPtr<Device>> Device::try_create(USBController& controller,
     return device;
 }
 
-Device::Device(USBController const& controller, u8 port, DeviceSpeed speed)
+Device::Device(USBController const& controller, Hub const* hub, u8 port, DeviceSpeed speed)
     : m_device_port(port)
     , m_device_speed(speed)
     , m_address(0)
     , m_controller(controller)
+    , m_hub(hub)
 {
 }
 
-Device::Device(NonnullLockRefPtr<USBController> controller, u8 address, u8 port, DeviceSpeed speed)
+Device::Device(USBController const& controller, Hub const* hub, u8 port, DeviceSpeed speed, u8 address, USBDeviceDescriptor const& descriptor)
     : m_device_port(port)
     , m_device_speed(speed)
     , m_address(address)
-    , m_controller(move(controller))
+    , m_device_descriptor(descriptor)
+    , m_controller(controller)
+    , m_hub(hub)
 {
 }
 
@@ -66,9 +69,11 @@ Device::Device(Device const& device)
     : m_device_port(device.port())
     , m_device_speed(device.speed())
     , m_address(device.address())
+    , m_controller_identifier(device.controller_identifier())
     , m_device_descriptor(device.device_descriptor())
     , m_configurations(device.configurations())
     , m_controller(device.controller())
+    , m_hub(device.hub())
 {
 }
 
