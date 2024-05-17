@@ -1,4 +1,5 @@
 set(SOURCES
+    AsyncDeflate.cpp
     Brotli.cpp
     BrotliDictionary.cpp
     Deflate.cpp

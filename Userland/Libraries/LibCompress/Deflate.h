@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/AsyncBitStream.h>
 #include <AK/BitStream.h>
 #include <AK/ByteBuffer.h>
 #include <AK/CircularBuffer.h>
@@ -22,7 +23,9 @@ namespace Compress {
 class CanonicalCode {
 public:
     CanonicalCode() = default;
+
     ErrorOr<u32> read_symbol(LittleEndianInputBitStream&) const;
+    ErrorOr<u32> read_symbol(BufferBitView& bit_view) const;
     ErrorOr<void> write_symbol(LittleEndianOutputBitStream&, u32) const;
 
     static CanonicalCode const& fixed_literal_codes();
