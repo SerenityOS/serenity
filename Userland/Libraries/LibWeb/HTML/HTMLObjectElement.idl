@@ -10,7 +10,7 @@ interface HTMLObjectElement : HTMLElement {
     [CEReactions] attribute DOMString data;
     [CEReactions, Reflect] attribute DOMString type;
     [CEReactions, Reflect] attribute DOMString name;
-    // FIXME: readonly attribute HTMLFormElement? form;
+    readonly attribute HTMLFormElement? form;
     [CEReactions, Reflect] attribute DOMString width;
     [CEReactions, Reflect] attribute DOMString height;
     readonly attribute Document? contentDocument;
