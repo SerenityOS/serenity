@@ -305,6 +305,7 @@ class FetchController;
 class FetchParams;
 class FetchTimingInfo;
 class HeaderList;
+class IncrementalReadLoopReadRequest;
 class Request;
 class Response;
 
