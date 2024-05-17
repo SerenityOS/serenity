@@ -13,9 +13,9 @@ Optional: `fuse2fs` for [building images without root](https://github.com/Sereni
 
 #### GCC 12 or Clang 17
 
-A host compiler that supports C++23 features is required for building host tools, the newer the better. Tested versions include gcc-12 and clang-17.
+A host compiler that supports C++23 features is required for building host tools, the newer the better. Tested versions include gcc-13 and clang-17.
 
-On Ubuntu gcc-12 is available in the repositories of 22.04 (Jammy) and later.
+On Ubuntu gcc-13 is available in the repositories of 22.04 (Jammy) and later.
 If you are running an older version, you will either need to upgrade, or find an alternative installation source.
 
 Next, update your local package information from this repository:
@@ -24,10 +24,10 @@ Next, update your local package information from this repository:
 sudo apt update
 ```
 
-Now on Ubuntu or Debian you can install gcc-12 with apt like this:
+Now on Ubuntu or Debian you can install gcc-13 with apt like this:
 
 ```console
-sudo apt install gcc-12 g++-12
+sudo apt install gcc-13 g++-13
 ```
 
 #### QEMU 6.2 or later
