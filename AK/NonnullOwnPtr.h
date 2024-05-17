@@ -150,12 +150,14 @@ requires(IsConstructible<T, Args...>) inline NonnullOwnPtr<T> make(Args&&... arg
     return NonnullOwnPtr<T>(NonnullOwnPtr<T>::Adopt, *new T(forward<Args>(args)...));
 }
 
-// FIXME: Remove once P0960R3 is available in Clang.
+#    ifdef AK_COMPILER_APPLE_CLANG
+// FIXME: Remove once P0960R3 is available in Apple Clang.
 template<class T, class... Args>
 inline NonnullOwnPtr<T> make(Args&&... args)
 {
     return NonnullOwnPtr<T>(NonnullOwnPtr<T>::Adopt, *new T { forward<Args>(args)... });
 }
+#    endif
 
 #endif
 
@@ -174,13 +176,15 @@ requires(IsConstructible<T, Args...>) inline ErrorOr<NonnullOwnPtr<T>> try_make(
     return adopt_nonnull_own_or_enomem(new (nothrow) T(forward<Args>(args)...));
 }
 
-// FIXME: Remove once P0960R3 is available in Clang.
+#ifdef AK_COMPILER_APPLE_CLANG
+// FIXME: Remove once P0960R3 is available in Apple Clang.
 template<typename T, class... Args>
 inline ErrorOr<NonnullOwnPtr<T>> try_make(Args&&... args)
 
 {
     return adopt_nonnull_own_or_enomem(new (nothrow) T { forward<Args>(args)... });
 }
+#endif
 
 template<typename T>
 struct Traits<NonnullOwnPtr<T>> : public DefaultTraits<NonnullOwnPtr<T>> {

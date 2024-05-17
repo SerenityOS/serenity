@@ -57,6 +57,10 @@
 #    define AK_COMPILER_GCC
 #endif
 
+#if defined(AK_COMPILER_CLANG) && defined(__apple_build_version__)
+#    define AK_COMPILER_APPLE_CLANG
+#endif
+
 #if defined(__GLIBC__)
 #    define AK_LIBC_GLIBC
 #    define AK_LIBC_GLIBC_PREREQ(maj, min) __GLIBC_PREREQ((maj), (min))
