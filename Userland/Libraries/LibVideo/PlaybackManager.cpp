@@ -43,48 +43,6 @@ DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> PlaybackManager::from_data(Readon
     return create(move(demuxer));
 }
 
-DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> PlaybackManager::create(NonnullOwnPtr<Demuxer> demuxer)
-{
-    auto video_tracks = TRY(demuxer->get_tracks_for_type(TrackType::Video));
-    if (video_tracks.is_empty())
-        return DecoderError::with_description(DecoderErrorCategory::Invalid, "No video track is present"sv);
-    auto track = video_tracks[0];
-
-    dbgln_if(PLAYBACK_MANAGER_DEBUG, "Selecting video track number {}", track.identifier());
-
-    auto codec_id = TRY(demuxer->get_codec_id_for_track(track));
-    OwnPtr<VideoDecoder> decoder;
-    switch (codec_id) {
-    case CodecID::VP9:
-        decoder = DECODER_TRY_ALLOC(try_make<VP9::Decoder>());
-        break;
-
-    default:
-        return DecoderError::format(DecoderErrorCategory::Invalid, "Unsupported codec: {}", codec_id);
-    }
-    auto decoder_non_null = decoder.release_nonnull();
-    auto frame_queue = DECODER_TRY_ALLOC(VideoFrameQueue::create());
-    auto playback_manager = DECODER_TRY_ALLOC(try_make<PlaybackManager>(demuxer, track, move(decoder_non_null), move(frame_queue)));
-
-    playback_manager->m_state_update_timer = Core::Timer::create_single_shot(0, [&self = *playback_manager] { self.timer_callback(); });
-
-    playback_manager->m_decode_thread = DECODER_TRY_ALLOC(Threading::Thread::try_create([&self = *playback_manager] {
-        while (!self.m_stop_decoding.load())
-            self.decode_and_queue_one_sample();
-
-        dbgln_if(PLAYBACK_MANAGER_DEBUG, "Media Decoder thread ended.");
-        return 0;
-    },
-        "Media Decoder"sv));
-
-    playback_manager->m_playback_handler = make<SeekingStateHandler>(*playback_manager, false, Duration::zero(), SeekMode::Fast);
-    DECODER_TRY_ALLOC(playback_manager->m_playback_handler->on_enter());
-
-    playback_manager->m_decode_thread->start();
-
-    return playback_manager;
-}
-
 PlaybackManager::PlaybackManager(NonnullOwnPtr<Demuxer>& demuxer, Track video_track, NonnullOwnPtr<VideoDecoder>&& decoder, VideoFrameQueue&& frame_queue)
     : m_demuxer(move(demuxer))
     , m_selected_video_track(video_track)
@@ -731,5 +689,47 @@ private:
     bool is_playing() const override { return false; }
     PlaybackState get_state() const override { return PlaybackState::Stopped; }
 };
+
+DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> PlaybackManager::create(NonnullOwnPtr<Demuxer> demuxer)
+{
+    auto video_tracks = TRY(demuxer->get_tracks_for_type(TrackType::Video));
+    if (video_tracks.is_empty())
+        return DecoderError::with_description(DecoderErrorCategory::Invalid, "No video track is present"sv);
+    auto track = video_tracks[0];
+
+    dbgln_if(PLAYBACK_MANAGER_DEBUG, "Selecting video track number {}", track.identifier());
+
+    auto codec_id = TRY(demuxer->get_codec_id_for_track(track));
+    OwnPtr<VideoDecoder> decoder;
+    switch (codec_id) {
+    case CodecID::VP9:
+        decoder = DECODER_TRY_ALLOC(try_make<VP9::Decoder>());
+        break;
+
+    default:
+        return DecoderError::format(DecoderErrorCategory::Invalid, "Unsupported codec: {}", codec_id);
+    }
+    auto decoder_non_null = decoder.release_nonnull();
+    auto frame_queue = DECODER_TRY_ALLOC(VideoFrameQueue::create());
+    auto playback_manager = DECODER_TRY_ALLOC(try_make<PlaybackManager>(demuxer, track, move(decoder_non_null), move(frame_queue)));
+
+    playback_manager->m_state_update_timer = Core::Timer::create_single_shot(0, [&self = *playback_manager] { self.timer_callback(); });
+
+    playback_manager->m_decode_thread = DECODER_TRY_ALLOC(Threading::Thread::try_create([&self = *playback_manager] {
+        while (!self.m_stop_decoding.load())
+            self.decode_and_queue_one_sample();
+
+        dbgln_if(PLAYBACK_MANAGER_DEBUG, "Media Decoder thread ended.");
+        return 0;
+    },
+        "Media Decoder"sv));
+
+    playback_manager->m_playback_handler = make<SeekingStateHandler>(*playback_manager, false, Duration::zero(), SeekMode::Fast);
+    DECODER_TRY_ALLOC(playback_manager->m_playback_handler->on_enter());
+
+    playback_manager->m_decode_thread->start();
+
+    return playback_manager;
+}
 
 }
