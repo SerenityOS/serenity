@@ -19,7 +19,7 @@ is_supported_compiler() {
         [ "$BUILD_VERSION" -ge 14030022 ] && return 0
     elif $COMPILER --version 2>&1 | grep "clang" >/dev/null; then
         # Clang version check
-        [ "$MAJOR_VERSION" -ge 15 ] && return 0
+        [ "$MAJOR_VERSION" -ge 17 ] && return 0
     else
         # GCC version check
         [ "$MAJOR_VERSION" -ge 12 ] && return 0
