@@ -564,6 +564,7 @@ void HTMLLinkElement::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_loaded_style_sheet);
+    visitor.visit(m_rel_list);
 }
 
 }

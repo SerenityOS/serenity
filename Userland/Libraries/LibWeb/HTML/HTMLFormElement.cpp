@@ -63,6 +63,7 @@ void HTMLFormElement::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_elements);
     visitor.visit(m_associated_elements);
     visitor.visit(m_planned_navigation);
+    visitor.visit(m_rel_list);
 }
 
 // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#implicit-submission
