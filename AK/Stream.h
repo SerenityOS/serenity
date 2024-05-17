@@ -93,12 +93,18 @@ public:
         return {};
     }
 
-    /// Returns whether the stream has reached the end of file. For sockets,
-    /// this most likely means that the protocol has disconnected (in the case
-    /// of TCP). For seekable streams, this means the end of the file. Note that
-    /// is_eof will only return true _after_ a read with 0 length, so this
-    /// method should be called after a read.
+    /// Estimates whether the stream has reached the end of file.
+    /// This is lightweight, but may be somewhat inaccurate, and only
+    /// eventually converges. Use `accurate_is_eof` if the highest
+    /// possibility for an immediate good readout is important.
     virtual bool is_eof() const = 0;
+
+    /// Queries whether the stream has reached the end of file.
+    /// This is as accurate as possible, but heavy and fallible.
+    virtual ErrorOr<bool> accurate_is_eof() const
+    {
+        return is_eof();
+    }
 
     virtual bool is_open() const = 0;
     virtual void close() = 0;
