@@ -37,13 +37,12 @@ public:
     {
         if (size == 0)
             return FixedArray<T>();
-        auto* new_storage = static_cast<Storage*>(kmalloc(storage_allocation_size(size)));
-        if (!new_storage)
+        auto* elements = reinterpret_cast<T*>(kmalloc(storage_allocation_size(size)));
+        if (!elements)
             return Error::from_errno(ENOMEM);
-        new_storage->size = size;
         for (size_t i = 0; i < size; ++i)
-            new (&new_storage->elements[i]) T();
-        return FixedArray<T>(new_storage);
+            new (&elements[i]) T();
+        return FixedArray<T>(size, elements);
     }
 
     static FixedArray<T> must_create_but_fixme_should_propagate_errors(size_t size)
@@ -62,13 +61,12 @@ public:
     {
         if (span.size() == 0)
             return FixedArray<T>();
-        auto* new_storage = static_cast<Storage*>(kmalloc(storage_allocation_size(span.size())));
-        if (!new_storage)
+        auto* elements = reinterpret_cast<T*>(kmalloc(storage_allocation_size(span.size())));
+        if (!elements)
             return Error::from_errno(ENOMEM);
-        new_storage->size = span.size();
         for (size_t i = 0; i < span.size(); ++i)
-            new (&new_storage->elements[i]) T(span[i]);
-        return FixedArray<T>(new_storage);
+            new (&elements[i]) T(span[i]);
+        return FixedArray<T>(span.size(), elements);
     }
 
     ErrorOr<FixedArray<T>> clone() const
@@ -76,57 +74,55 @@ public:
         return create(span());
     }
 
-    static size_t storage_allocation_size(size_t size)
-    {
-        return sizeof(Storage) + size * sizeof(T);
-    }
-
     // Nobody can ever use these functions, since it would be impossible to make them OOM-safe due to their signatures. We just explicitly delete them.
     FixedArray(FixedArray<T> const&) = delete;
     FixedArray<T>& operator=(FixedArray<T> const&) = delete;
 
     FixedArray(FixedArray<T>&& other)
-        : m_storage(exchange(other.m_storage, nullptr))
+        : m_size(exchange(other.m_size, 0))
+        , m_elements(exchange(other.m_elements, nullptr))
     {
     }
 
     FixedArray<T>& operator=(FixedArray<T>&& other)
     {
-        m_storage = other.m_storage;
-        other.m_storage = nullptr;
+        if (this != &other) {
+            this->~FixedArray();
+            new (this) FixedArray<T>(move(other));
+        }
         return *this;
     }
 
     ~FixedArray()
     {
-        if (!m_storage)
+        if (!m_elements)
             return;
-        for (size_t i = 0; i < m_storage->size; ++i)
-            m_storage->elements[i].~T();
-        kfree_sized(m_storage, storage_allocation_size(m_storage->size));
-        m_storage = nullptr;
+        for (size_t i = 0; i < m_size; ++i)
+            m_elements[i].~T();
+        kfree_sized(m_elements, storage_allocation_size(m_size));
+        m_elements = nullptr;
     }
 
-    size_t size() const { return m_storage ? m_storage->size : 0; }
+    size_t size() const { return m_size; }
     bool is_empty() const { return size() == 0; }
-    T* data() { return m_storage ? m_storage->elements : nullptr; }
-    T const* data() const { return m_storage ? m_storage->elements : nullptr; }
+    T* data() { return m_elements; }
+    T const* data() const { return m_elements; }
 
     T& at(size_t index)
     {
-        VERIFY(index < m_storage->size);
-        return m_storage->elements[index];
+        VERIFY(index < m_size);
+        return m_elements[index];
     }
 
     T& unchecked_at(size_t index)
     {
-        return m_storage->elements[index];
+        return m_elements[index];
     }
 
     T const& at(size_t index) const
     {
-        VERIFY(index < m_storage->size);
-        return m_storage->elements[index];
+        VERIFY(index < m_size);
+        return m_elements[index];
     }
 
     T& operator[](size_t index)
@@ -141,10 +137,10 @@ public:
 
     bool contains_slow(T const& value) const
     {
-        if (!m_storage)
+        if (!m_elements)
             return false;
-        for (size_t i = 0; i < m_storage->size; ++i) {
-            if (m_storage->elements[i] == value)
+        for (size_t i = 0; i < m_size; ++i) {
+            if (m_elements[i] == value)
                 return true;
         }
         return false;
@@ -152,15 +148,16 @@ public:
 
     void swap(FixedArray<T>& other)
     {
-        AK::swap(m_storage, other.m_storage);
+        AK::swap(m_size, other.m_size);
+        AK::swap(m_elements, other.m_elements);
     }
 
     void fill_with(T const& value)
     {
-        if (!m_storage)
+        if (!m_elements)
             return;
-        for (size_t i = 0; i < m_storage->size; ++i)
-            m_storage->elements[i] = value;
+        for (size_t i = 0; i < m_size; ++i)
+            m_elements[i] = value;
     }
 
     using Iterator = SimpleIterator<FixedArray, T>;
@@ -176,17 +173,19 @@ public:
     ReadonlySpan<T> span() const { return { data(), size() }; }
 
 private:
-    struct Storage {
-        size_t size { 0 };
-        T elements[0];
-    };
+    static size_t storage_allocation_size(size_t size)
+    {
+        return size * sizeof(T);
+    }
 
-    FixedArray(Storage* storage)
-        : m_storage(storage)
+    FixedArray(size_t size, T* elements)
+        : m_size(size)
+        , m_elements(elements)
     {
     }
 
-    Storage* m_storage { nullptr };
+    size_t m_size { 0 };
+    T* m_elements { nullptr };
 };
 
 }
