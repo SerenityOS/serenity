@@ -162,6 +162,23 @@ test("try/catch/finally with exception in try, catch and finally", () => {
     expect(finallyHasBeenExecuted).toBeTrue();
 });
 
+test("try/finally in async function returning an object", () => {
+    var tryHasBeenExecuted = false;
+    var finallyHasBeenExecuted = false;
+    async function foo() {
+        try {
+            tryHasBeenExecuted = true;
+            return { y: 5 };
+        } finally {
+            finallyHasBeenExecuted = true;
+        }
+    }
+
+    foo();
+    expect(tryHasBeenExecuted).toBeTrue();
+    expect(finallyHasBeenExecuted).toBeTrue();
+});
+
 test("try statement must have either 'catch' or 'finally' clause", () => {
     expect("try {} catch {}").toEval();
     expect("try {} catch (e) {}").toEval();
