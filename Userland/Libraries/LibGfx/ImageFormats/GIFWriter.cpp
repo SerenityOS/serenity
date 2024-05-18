@@ -17,7 +17,7 @@ namespace {
 ErrorOr<void> write_header(Stream& stream)
 {
     // 17. Header
-    TRY(stream.write_until_depleted("GIF87a"sv));
+    TRY(stream.write_until_depleted("GIF89a"sv));
     return {};
 }
 
@@ -121,6 +121,40 @@ ErrorOr<void> write_image_descriptor(BigEndianOutputBitStream& stream, Bitmap co
     return {};
 }
 
+ErrorOr<void> write_graphic_control_extension(BigEndianOutputBitStream& stream, int duration_ms)
+{
+    // 23. Graphic Control Extension
+
+    // Extension Introducer
+    TRY(stream.write_value<u8>(0x21));
+    // Graphic Control Label
+    TRY(stream.write_value<u8>(0xF9));
+
+    // Block Size
+    TRY(stream.write_value<u8>(4));
+
+    // Packed Field
+    // Reserved
+    TRY(stream.write_bits(0u, 3));
+    // Disposal Method
+    TRY(stream.write_bits(0u, 3));
+    // User Input Flag
+    TRY(stream.write_bits(false, 1));
+    // Transparency Flag
+    TRY(stream.write_bits(false, 1));
+
+    // Delay Time
+    TRY(stream.write_value<u16>(duration_ms / 10));
+
+    // Transparent Color Index
+    TRY(stream.write_value<u8>(0));
+
+    // Block Terminator
+    TRY(stream.write_value<u8>(0));
+
+    return {};
+}
+
 ErrorOr<void> write_trailer(Stream& stream)
 {
     TRY(stream.write_value<u8>(0x3B));
@@ -143,8 +177,7 @@ private:
 
 ErrorOr<void> GIFAnimationWriter::add_frame(Bitmap& bitmap, int duration_ms, IntPoint at = {})
 {
-    // FIXME: Consider frame's duration and position
-    (void)duration_ms;
+    // FIXME: Consider frame's position
     (void)at;
 
     // Let's get rid of the previously written trailer
@@ -155,6 +188,7 @@ ErrorOr<void> GIFAnimationWriter::add_frame(Bitmap& bitmap, int duration_ms, Int
 
     // Write a Table-Based Image
     BigEndianOutputBitStream bit_stream { MaybeOwned { m_stream } };
+    TRY(write_graphic_control_extension(bit_stream, duration_ms));
     TRY(write_image_descriptor(bit_stream, bitmap));
 
     auto const palette = TRY(median_cut(bitmap, 256));
