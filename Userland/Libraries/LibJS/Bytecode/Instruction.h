@@ -110,6 +110,7 @@
     O(NewRegExp)                       \
     O(NewTypeError)                    \
     O(Not)                             \
+    O(PrepareYield)                    \
     O(PostfixDecrement)                \
     O(PostfixIncrement)                \
     O(PutById)                         \
