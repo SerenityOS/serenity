@@ -360,6 +360,22 @@ public:
     }
 
     template<typename U, typename V>
+    [[nodiscard]] static constexpr bool subtraction_would_overflow(U u, V v)
+    {
+#if __has_builtin(__builtin_sub_overflow_p)
+        return __builtin_sub_overflow_p(u, v, (T)0);
+#elif __has_builtin(__builtin_sub_overflow)
+        T result;
+        return __builtin_sub_overflow(u, v, &result);
+#else
+        Checked checked;
+        checked = u;
+        checked -= v;
+        return checked.has_overflow();
+#endif
+    }
+
+    template<typename U, typename V>
     static constexpr T saturating_add(U a, V b)
     {
         Checked checked { a };
