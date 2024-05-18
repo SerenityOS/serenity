@@ -1672,7 +1672,7 @@ static ErrorOr<void> scroll_an_element_into_view(DOM::Element& target, Bindings:
             }
             // 3. Otherwise, if block is "center", then align the center of target bounding border box with the center of scrolling box in scrolling box’s block flow direction.
             else if (block == Bindings::ScrollLogicalPosition::Center) {
-                TODO();
+                y = element_edge_a + (element_height / 2) - (scrolling_box_height / 2);
             }
             // 4. Otherwise, block is "nearest":
             else {
