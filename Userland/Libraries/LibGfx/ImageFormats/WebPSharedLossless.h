@@ -16,10 +16,7 @@ namespace Gfx {
 // where the codes contain just a single element, and dispatches to Compress::CanonicalCode else.
 class CanonicalCode {
 public:
-    CanonicalCode()
-        : m_code(0)
-    {
-    }
+    CanonicalCode() = default;
 
     static ErrorOr<CanonicalCode> from_bytes(ReadonlyBytes);
     ErrorOr<u32> read_symbol(LittleEndianInputBitStream&) const;
@@ -36,7 +33,7 @@ private:
     {
     }
 
-    Variant<u32, Compress::CanonicalCode> m_code;
+    Variant<u32, Compress::CanonicalCode> m_code { 0 };
 };
 
 ALWAYS_INLINE ErrorOr<void> CanonicalCode::write_symbol(LittleEndianOutputBitStream& bit_stream, u32 symbol) const
