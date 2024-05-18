@@ -37,11 +37,11 @@ public:
     RefPtr<Gfx::Font> get(FlyString const& family, float point_size, unsigned weight, unsigned width, unsigned slope, Font::AllowInexactSizeMatch = Font::AllowInexactSizeMatch::No);
     RefPtr<Gfx::Font> get(FlyString const& family, FlyString const& variant, float point_size, Font::AllowInexactSizeMatch = Font::AllowInexactSizeMatch::No);
     RefPtr<Gfx::Font> get_by_name(StringView);
-    void for_each_font(NOESCAPE Function<void(Gfx::Font const&)>);
-    void for_each_fixed_width_font(NOESCAPE Function<void(Gfx::Font const&)>);
+    void for_each_font(Function<void(Gfx::Font const&)>);
+    void for_each_fixed_width_font(Function<void(Gfx::Font const&)>);
 
-    void for_each_typeface(NOESCAPE Function<void(Typeface const&)>);
-    void for_each_typeface_with_family_name(FlyString const& family_name, NOESCAPE Function<void(Typeface const&)>);
+    void for_each_typeface(Function<void(Typeface const&)>);
+    void for_each_typeface_with_family_name(FlyString const& family_name, Function<void(Typeface const&)>);
 
     void load_all_fonts_from_uri(StringView);
 

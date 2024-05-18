@@ -26,7 +26,7 @@ public:
     static RandomnessSource live() { return RandomnessSource(RandomRun(), true); }
     static RandomnessSource recorded(RandomRun const& run) { return RandomnessSource(run, false); }
     RandomRun& run() { return m_run; }
-    u64 draw_value(u64 max, NOESCAPE Function<u64()> random_generator)
+    u64 draw_value(u64 max, Function<u64()> random_generator)
     {
         // Live: use the random generator and remember the value.
         if (m_is_live) {

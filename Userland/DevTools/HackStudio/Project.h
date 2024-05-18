@@ -29,7 +29,7 @@ public:
 
     NonnullRefPtr<ProjectFile> create_file(ByteString const& path) const;
 
-    void for_each_text_file(NOESCAPE Function<void(ProjectFile const&)>) const;
+    void for_each_text_file(Function<void(ProjectFile const&)>) const;
     ByteString to_absolute_path(ByteString const&) const;
     bool project_is_serenity() const;
 

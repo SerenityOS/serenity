@@ -114,8 +114,8 @@ public:
 protected:
     Model();
 
-    void for_each_view(NOESCAPE Function<void(AbstractView&)>);
-    void for_each_client(NOESCAPE Function<void(ModelClient&)>);
+    void for_each_view(Function<void(AbstractView&)>);
+    void for_each_client(Function<void(ModelClient&)>);
     void did_update(unsigned flags = UpdateFlag::InvalidateAllIndices);
 
     static bool string_matches(StringView str, StringView needle, unsigned flags)
