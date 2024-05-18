@@ -3748,6 +3748,41 @@ private:
 )~~~");
 }
 
+static void generate_using_namespace_definitions(SourceGenerator& generator)
+{
+    generator.append(R"~~~(
+    // FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
+    using namespace Web::Animations;
+    using namespace Web::CSS;
+    using namespace Web::DOM;
+    using namespace Web::Crypto;
+    using namespace Web::DOMParsing;
+    using namespace Web::DOMURL;
+    using namespace Web::Encoding;
+    using namespace Web::Fetch;
+    using namespace Web::FileAPI;
+    using namespace Web::Geometry;
+    using namespace Web::HighResolutionTime;
+    using namespace Web::HTML;
+    using namespace Web::Internals;
+    using namespace Web::IntersectionObserver;
+    using namespace Web::RequestIdleCallback;
+    using namespace Web::ResizeObserver;
+    using namespace Web::Selection;
+    using namespace Web::NavigationTiming;
+    using namespace Web::PerformanceTimeline;
+    using namespace Web::UserTiming;
+    using namespace Web::Streams;
+    using namespace Web::SVG;
+    using namespace Web::UIEvents;
+    using namespace Web::XHR;
+    using namespace Web::WebAssembly;
+    using namespace Web::WebAudio;
+    using namespace Web::WebGL;
+    using namespace Web::WebIDL;
+)~~~"sv);
+}
+
 void generate_namespace_implementation(IDL::Interface const& interface, StringBuilder& builder)
 {
     SourceGenerator generator { builder };
@@ -3781,32 +3816,9 @@ void generate_namespace_implementation(IDL::Interface const& interface, StringBu
 
     emit_includes_for_all_imports(interface, generator, interface.pair_iterator_types.has_value());
 
-    generator.append(R"~~~(
-// FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
-using namespace Web::Animations;
-using namespace Web::CSS;
-using namespace Web::DOM;
-using namespace Web::DOMParsing;
-using namespace Web::DOMURL;
-using namespace Web::Encoding;
-using namespace Web::Fetch;
-using namespace Web::FileAPI;
-using namespace Web::Geometry;
-using namespace Web::HighResolutionTime;
-using namespace Web::HTML;
-using namespace Web::Internals;
-using namespace Web::IntersectionObserver;
-using namespace Web::RequestIdleCallback;
-using namespace Web::ResizeObserver;
-using namespace Web::Selection;
-using namespace Web::Streams;
-using namespace Web::UIEvents;
-using namespace Web::XHR;
-using namespace Web::WebAssembly;
-using namespace Web::WebAudio;
-using namespace Web::WebGL;
-using namespace Web::WebIDL;
+    generate_using_namespace_definitions(generator);
 
+    generator.append(R"~~~(
 namespace Web::Bindings {
 
 JS_DEFINE_ALLOCATOR(@namespace_class@);
@@ -4046,34 +4058,9 @@ void generate_constructor_implementation(IDL::Interface const& interface, String
 
     emit_includes_for_all_imports(interface, generator, interface.pair_iterator_types.has_value());
 
-    generator.append(R"~~~(
-// FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
-using namespace Web::Animations;
-using namespace Web::CSS;
-using namespace Web::DOM;
-using namespace Web::DOMParsing;
-using namespace Web::DOMURL;
-using namespace Web::Encoding;
-using namespace Web::Fetch;
-using namespace Web::FileAPI;
-using namespace Web::Geometry;
-using namespace Web::HighResolutionTime;
-using namespace Web::HTML;
-using namespace Web::Internals;
-using namespace Web::IntersectionObserver;
-using namespace Web::PerformanceTimeline;
-using namespace Web::RequestIdleCallback;
-using namespace Web::ResizeObserver;
-using namespace Web::Selection;
-using namespace Web::Streams;
-using namespace Web::UIEvents;
-using namespace Web::UserTiming;
-using namespace Web::XHR;
-using namespace Web::WebAssembly;
-using namespace Web::WebAudio;
-using namespace Web::WebGL;
-using namespace Web::WebIDL;
+    generate_using_namespace_definitions(generator);
 
+    generator.append(R"~~~(
 namespace Web::Bindings {
 
 JS_DEFINE_ALLOCATOR(@constructor_class@);
@@ -4316,39 +4303,9 @@ void generate_prototype_implementation(IDL::Interface const& interface, StringBu
 
     emit_includes_for_all_imports(interface, generator, interface.pair_iterator_types.has_value());
 
+    generate_using_namespace_definitions(generator);
+
     generator.append(R"~~~(
-
-// FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
-using namespace Web::Animations;
-using namespace Web::Crypto;
-using namespace Web::CSS;
-using namespace Web::DOM;
-using namespace Web::DOMParsing;
-using namespace Web::DOMURL;
-using namespace Web::Encoding;
-using namespace Web::Fetch;
-using namespace Web::FileAPI;
-using namespace Web::Geometry;
-using namespace Web::HighResolutionTime;
-using namespace Web::HTML;
-using namespace Web::Internals;
-using namespace Web::IntersectionObserver;
-using namespace Web::NavigationTiming;
-using namespace Web::PerformanceTimeline;
-using namespace Web::RequestIdleCallback;
-using namespace Web::ResizeObserver;
-using namespace Web::Selection;
-using namespace Web::Streams;
-using namespace Web::SVG;
-using namespace Web::UIEvents;
-using namespace Web::UserTiming;
-using namespace Web::WebSockets;
-using namespace Web::XHR;
-using namespace Web::WebAssembly;
-using namespace Web::WebAudio;
-using namespace Web::WebGL;
-using namespace Web::WebIDL;
-
 namespace Web::Bindings {
 
 JS_DEFINE_ALLOCATOR(@prototype_class@);
@@ -4471,33 +4428,9 @@ void generate_iterator_prototype_implementation(IDL::Interface const& interface,
 
     emit_includes_for_all_imports(interface, generator, true);
 
-    generator.append(R"~~~(
-// FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
-using namespace Web::Animations;
-using namespace Web::CSS;
-using namespace Web::DOM;
-using namespace Web::DOMParsing;
-using namespace Web::DOMURL;
-using namespace Web::Encoding;
-using namespace Web::Fetch;
-using namespace Web::FileAPI;
-using namespace Web::Geometry;
-using namespace Web::HighResolutionTime;
-using namespace Web::HTML;
-using namespace Web::Internals;
-using namespace Web::IntersectionObserver;
-using namespace Web::NavigationTiming;
-using namespace Web::PerformanceTimeline;
-using namespace Web::RequestIdleCallback;
-using namespace Web::ResizeObserver;
-using namespace Web::Selection;
-using namespace Web::XHR;
-using namespace Web::UIEvents;
-using namespace Web::UserTiming;
-using namespace Web::WebAudio;
-using namespace Web::WebGL;
-using namespace Web::WebIDL;
+    generate_using_namespace_definitions(generator);
 
+    generator.append(R"~~~(
 namespace Web::Bindings {
 
 JS_DEFINE_ALLOCATOR(@prototype_class@);
@@ -4608,38 +4541,9 @@ void generate_global_mixin_implementation(IDL::Interface const& interface, Strin
 
     emit_includes_for_all_imports(interface, generator, interface.pair_iterator_types.has_value());
 
+    generate_using_namespace_definitions(generator);
+
     generator.append(R"~~~(
-
-// FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
-using namespace Web::Animations;
-using namespace Web::Crypto;
-using namespace Web::CSS;
-using namespace Web::DOM;
-using namespace Web::DOMParsing;
-using namespace Web::DOMURL;
-using namespace Web::Encoding;
-using namespace Web::Fetch;
-using namespace Web::FileAPI;
-using namespace Web::Geometry;
-using namespace Web::HighResolutionTime;
-using namespace Web::HTML;
-using namespace Web::Internals;
-using namespace Web::IntersectionObserver;
-using namespace Web::NavigationTiming;
-using namespace Web::PerformanceTimeline;
-using namespace Web::RequestIdleCallback;
-using namespace Web::ResizeObserver;
-using namespace Web::Selection;
-using namespace Web::Streams;
-using namespace Web::SVG;
-using namespace Web::UIEvents;
-using namespace Web::UserTiming;
-using namespace Web::WebAudio;
-using namespace Web::WebSockets;
-using namespace Web::XHR;
-using namespace Web::WebGL;
-using namespace Web::WebIDL;
-
 namespace Web::Bindings {
 
 @class_name@::@class_name@() = default;
