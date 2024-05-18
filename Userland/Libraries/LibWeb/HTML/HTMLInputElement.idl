@@ -54,7 +54,7 @@ interface HTMLInputElement : HTMLElement {
     boolean reportValidity();
     undefined setCustomValidity(DOMString error);
 
-    // FIXME: readonly attribute NodeList? labels;
+    readonly attribute NodeList? labels;
 
     undefined select();
     // FIXME: attribute unsigned long? selectionStart;

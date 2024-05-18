@@ -31,6 +31,6 @@ interface HTMLButtonElement : HTMLElement {
     // FIXME: boolean reportValidity();
     // FIXME: undefined setCustomValidity(DOMString error);
 
-    // FIXME: readonly attribute NodeList labels;
+    readonly attribute NodeList labels;
 };
 // FIXME: HTMLButtonElement includes PopoverInvokerElement;

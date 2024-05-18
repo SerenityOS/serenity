@@ -32,7 +32,7 @@ interface HTMLTextAreaElement : HTMLElement {
     boolean reportValidity();
     undefined setCustomValidity(DOMString error);
 
-    // FIXME: readonly attribute NodeList labels;
+    readonly attribute NodeList labels;
 
     // FIXME: undefined select();
     attribute unsigned long selectionStart;

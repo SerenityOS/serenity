@@ -68,6 +68,8 @@ public:
     // https://html.spec.whatwg.org/multipage/forms.html#category-label
     virtual bool is_labelable() const { return false; }
 
+    JS::GCPtr<DOM::NodeList> labels();
+
     virtual Optional<ARIA::Role> default_role() const override;
 
     String get_an_elements_target() const;
@@ -92,6 +94,8 @@ private:
     [[nodiscard]] String get_the_text_steps();
 
     JS::GCPtr<DOMStringMap> m_dataset;
+
+    JS::GCPtr<DOM::NodeList> m_labels;
 
     enum class ContentEditableState {
         True,
