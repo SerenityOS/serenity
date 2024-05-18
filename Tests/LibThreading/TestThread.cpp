@@ -27,7 +27,7 @@ static void sleep_until_thread_exits(Threading::Thread const& thread)
 
 TEST_CASE(threads_can_detach)
 {
-    Atomic<int> should_be_42 = 0;
+    IGNORE_USE_IN_ESCAPING_LAMBDA Atomic<int> should_be_42 = 0;
 
     auto thread = Threading::Thread::construct([&should_be_42]() {
         usleep(10 * 1000);
@@ -43,7 +43,7 @@ TEST_CASE(threads_can_detach)
 
 TEST_CASE(detached_threads_do_not_need_to_be_joined)
 {
-    Atomic<bool> should_exit { false };
+    IGNORE_USE_IN_ESCAPING_LAMBDA Atomic<bool> should_exit { false };
     auto thread = Threading::Thread::construct([&]() {
         while (!should_exit.load())
             usleep(10 * 1000);

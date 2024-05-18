@@ -20,7 +20,7 @@ public:
     virtual ~EventLoopPlugin();
 
     virtual void spin_until(JS::SafeFunction<bool()> goal_condition) = 0;
-    virtual void deferred_invoke(JS::SafeFunction<void()>) = 0;
+    virtual void deferred_invoke(ESCAPING JS::SafeFunction<void()>) = 0;
     virtual NonnullRefPtr<Timer> create_timer() = 0;
     virtual void quit() = 0;
 };

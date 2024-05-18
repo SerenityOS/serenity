@@ -135,7 +135,7 @@ private:
             current_collapsible_margins.append(margin);
         }
 
-        void register_block_container_y_position_update_callback(Function<void(CSSPixels)> callback)
+        void register_block_container_y_position_update_callback(ESCAPING Function<void(CSSPixels)> callback)
         {
             block_container_y_position_update_callback = move(callback);
         }

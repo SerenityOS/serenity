@@ -21,8 +21,8 @@ class NativeFunction : public FunctionObject {
     JS_DECLARE_ALLOCATOR(NativeFunction);
 
 public:
-    static NonnullGCPtr<NativeFunction> create(Realm&, Function<ThrowCompletionOr<Value>(VM&)> behaviour, i32 length, PropertyKey const& name, Optional<Realm*> = {}, Optional<Object*> prototype = {}, Optional<StringView> const& prefix = {});
-    static NonnullGCPtr<NativeFunction> create(Realm&, DeprecatedFlyString const& name, Function<ThrowCompletionOr<Value>(VM&)>);
+    static NonnullGCPtr<NativeFunction> create(Realm&, ESCAPING Function<ThrowCompletionOr<Value>(VM&)> behaviour, i32 length, PropertyKey const& name, Optional<Realm*> = {}, Optional<Object*> prototype = {}, Optional<StringView> const& prefix = {});
+    static NonnullGCPtr<NativeFunction> create(Realm&, DeprecatedFlyString const& name, ESCAPING Function<ThrowCompletionOr<Value>(VM&)>);
 
     virtual ~NativeFunction() override = default;
 

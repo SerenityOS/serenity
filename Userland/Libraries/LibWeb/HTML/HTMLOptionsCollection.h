@@ -21,7 +21,7 @@ class HTMLOptionsCollection final : public DOM::HTMLCollection {
     JS_DECLARE_ALLOCATOR(HTMLOptionsCollection);
 
 public:
-    [[nodiscard]] static JS::NonnullGCPtr<HTMLOptionsCollection> create(DOM::ParentNode& root, Function<bool(DOM::Element const&)> filter);
+    [[nodiscard]] static JS::NonnullGCPtr<HTMLOptionsCollection> create(DOM::ParentNode& root, ESCAPING Function<bool(DOM::Element const&)> filter);
     virtual ~HTMLOptionsCollection() override;
 
     WebIDL::ExceptionOr<void> set_length(WebIDL::UnsignedLong);
@@ -34,7 +34,7 @@ public:
     void set_selected_index(WebIDL::Long);
 
 private:
-    HTMLOptionsCollection(DOM::ParentNode& root, Function<bool(DOM::Element const&)> filter);
+    HTMLOptionsCollection(DOM::ParentNode& root, ESCAPING Function<bool(DOM::Element const&)> filter);
 
     virtual void initialize(JS::Realm&) override;
 };

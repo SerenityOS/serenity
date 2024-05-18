@@ -14,7 +14,7 @@ namespace Web {
 
 class FileRequest {
 public:
-    FileRequest(ByteString path, Function<void(ErrorOr<i32>)> on_file_request_finish);
+    FileRequest(ByteString path, ESCAPING Function<void(ErrorOr<i32>)> on_file_request_finish);
 
     ByteString path() const;
 

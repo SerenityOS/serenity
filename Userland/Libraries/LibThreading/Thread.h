@@ -46,11 +46,11 @@ class Thread final
     : public AtomicRefCounted<Thread>
     , public Weakable<Thread> {
 public:
-    static NonnullRefPtr<Thread> construct(Function<intptr_t()> action, StringView thread_name = {})
+    static NonnullRefPtr<Thread> construct(ESCAPING Function<intptr_t()> action, StringView thread_name = {})
     {
         return adopt_ref(*new Thread(move(action), thread_name));
     }
-    static ErrorOr<NonnullRefPtr<Thread>> try_create(Function<intptr_t()> action, StringView thread_name = {})
+    static ErrorOr<NonnullRefPtr<Thread>> try_create(ESCAPING Function<intptr_t()> action, StringView thread_name = {})
     {
         return adopt_nonnull_ref_or_enomem(new (nothrow) Thread(move(action), thread_name));
     }
@@ -77,7 +77,7 @@ public:
     bool has_exited() const;
 
 private:
-    explicit Thread(Function<intptr_t()> action, StringView thread_name = {});
+    explicit Thread(ESCAPING Function<intptr_t()> action, StringView thread_name = {});
     Function<intptr_t()> m_action;
     pthread_t m_tid { 0 };
     ByteString m_thread_name;

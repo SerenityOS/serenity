@@ -30,7 +30,7 @@ public:
         Children,
         Descendants,
     };
-    [[nodiscard]] static JS::NonnullGCPtr<HTMLCollection> create(ParentNode& root, Scope, Function<bool(Element const&)> filter);
+    [[nodiscard]] static JS::NonnullGCPtr<HTMLCollection> create(ParentNode& root, Scope, ESCAPING Function<bool(Element const&)> filter);
 
     virtual ~HTMLCollection() override;
 
@@ -46,7 +46,7 @@ public:
     virtual bool is_supported_property_index(u32) const override;
 
 protected:
-    HTMLCollection(ParentNode& root, Scope, Function<bool(Element const&)> filter);
+    HTMLCollection(ParentNode& root, Scope, ESCAPING Function<bool(Element const&)> filter);
 
     virtual void initialize(JS::Realm&) override;
 

@@ -16,7 +16,7 @@ class HTMLFormControlsCollection : public HTMLCollection {
     JS_DECLARE_ALLOCATOR(HTMLFormControlsCollection);
 
 public:
-    [[nodiscard]] static JS::NonnullGCPtr<HTMLFormControlsCollection> create(ParentNode& root, Scope, Function<bool(Element const&)> filter);
+    [[nodiscard]] static JS::NonnullGCPtr<HTMLFormControlsCollection> create(ParentNode& root, Scope, ESCAPING Function<bool(Element const&)> filter);
 
     virtual ~HTMLFormControlsCollection() override;
 
@@ -28,7 +28,7 @@ protected:
     virtual WebIDL::ExceptionOr<JS::Value> named_item_value(FlyString const& name) const final;
 
 private:
-    HTMLFormControlsCollection(ParentNode& root, Scope, Function<bool(Element const&)> filter);
+    HTMLFormControlsCollection(ParentNode& root, Scope, ESCAPING Function<bool(Element const&)> filter);
 };
 
 }

@@ -43,7 +43,7 @@ TEST_CASE(simple_dequeue)
 // There is one parallel consumer, but nobody is producing at the same time.
 TEST_CASE(simple_multithread)
 {
-    auto queue = MUST(TestQueue::create());
+    IGNORE_USE_IN_ESCAPING_LAMBDA auto queue = MUST(TestQueue::create());
     auto const test_count = 10;
 
     for (int i = 0; i < test_count; ++i)
@@ -73,11 +73,11 @@ TEST_CASE(simple_multithread)
 // There is one parallel consumer and one parallel producer.
 TEST_CASE(producer_consumer_multithread)
 {
-    auto queue = MUST(TestQueue::create());
+    IGNORE_USE_IN_ESCAPING_LAMBDA auto queue = MUST(TestQueue::create());
     // Ensure that we have the possibility of filling the queue up.
     auto const test_count = queue.size() * 4;
 
-    Atomic<bool> other_thread_running { false };
+    IGNORE_USE_IN_ESCAPING_LAMBDA Atomic<bool> other_thread_running { false };
 
     auto second_thread = Threading::Thread::construct([&queue, &other_thread_running]() {
         auto copied_queue = queue;
