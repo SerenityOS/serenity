@@ -8,16 +8,20 @@
 
 #include <AK/Function.h>
 
-// expected-note@+1 {{Annotate the parameter with NOESCAPE if the lambda will not outlive the function call}}
 void take_fn(Function<void()>) { }
+void take_fn_escaping(ESCAPING Function<void()>) { }
 
 void test()
 {
     // expected-note@+1 {{Annotate the variable declaration with IGNORE_USE_IN_ESCAPING_LAMBDA if it outlives the lambda}}
     int a = 0;
 
-    // expected-warning@+1 {{Variable with local storage is captured by reference in a lambda that may be asynchronously executed}}
     take_fn([&a] {
+        (void)a;
+    });
+
+    // expected-warning@+1 {{Variable with local storage is captured by reference in a lambda marked ESCAPING}}
+    take_fn_escaping([&a] {
         (void)a;
     });
 }
