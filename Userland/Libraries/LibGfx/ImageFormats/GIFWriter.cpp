@@ -32,13 +32,13 @@ ErrorOr<void> write_logical_descriptor(BigEndianOutputBitStream& stream, Bitmap 
     TRY(stream.write_value<u16>(bitmap.height()));
 
     // Global Color Table Flag
-    TRY(stream.write_bits(true, 1));
+    TRY(stream.write_bits(false, 1));
     // Color Resolution
     TRY(stream.write_bits(6u, 3));
     // Sort Flag
     TRY(stream.write_bits(false, 1));
     // Size of Global Color Table
-    TRY(stream.write_bits(7u, 3));
+    TRY(stream.write_bits(0u, 3));
 
     // Background Color Index
     TRY(stream.write_value<u8>(0));
@@ -109,7 +109,7 @@ ErrorOr<void> write_image_descriptor(BigEndianOutputBitStream& stream, Bitmap co
     TRY(stream.write_value<u16>(bitmap.height()));
 
     // Local Color Table Flag
-    TRY(stream.write_bits(false, 1));
+    TRY(stream.write_bits(true, 1));
     // Interlace Flag
     TRY(stream.write_bits(false, 1));
     // Sort Flag
@@ -117,7 +117,7 @@ ErrorOr<void> write_image_descriptor(BigEndianOutputBitStream& stream, Bitmap co
     // Reserved
     TRY(stream.write_bits(0u, 2));
     // Size of Local Color Table
-    TRY(stream.write_bits(0u, 3));
+    TRY(stream.write_bits(7u, 3));
     return {};
 }
 
@@ -136,10 +136,10 @@ ErrorOr<void> GIFWriter::encode(Stream& stream, Bitmap const& bitmap)
 
     BigEndianOutputBitStream bit_stream { MaybeOwned<Stream> { stream } };
     TRY(write_logical_descriptor(bit_stream, bitmap));
-    TRY(write_color_table(bit_stream, palette));
 
     // Write a Table-Based Image
     TRY(write_image_descriptor(bit_stream, bitmap));
+    TRY(write_color_table(bit_stream, palette));
     TRY(write_image_data(stream, bitmap, palette));
 
     TRY(write_trailer(bit_stream));
