@@ -1766,10 +1766,13 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> ReturnStatement::genera
         return_value = generator.add_constant(js_undefined());
     }
 
-    if (generator.is_in_generator_or_async_function())
-        generator.emit_return<Bytecode::Op::Yield>(return_value.value());
-    else
-        generator.emit_return<Bytecode::Op::Return>(return_value.value());
+    if (generator.is_in_generator_or_async_function()) {
+        generator.perform_needed_unwinds<Bytecode::Op::Yield>();
+        generator.emit<Bytecode::Op::Yield>(nullptr, *return_value);
+    } else {
+        generator.perform_needed_unwinds<Bytecode::Op::Return>();
+        generator.emit<Bytecode::Op::Return>(return_value.has_value() ? return_value->operand() : Optional<Operand> {});
+    }
 
     return return_value;
 }
@@ -2114,7 +2117,8 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> YieldExpression::genera
 
         // 2. Return ? received.
         // NOTE: This will always be a return completion.
-        generator.emit_return<Bytecode::Op::Yield>(received_completion_value);
+        generator.perform_needed_unwinds<Bytecode::Op::Yield>();
+        generator.emit<Bytecode::Op::Yield>(nullptr, received_completion_value);
 
         generator.switch_to_basic_block(return_is_defined_block);
 
@@ -2151,7 +2155,8 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> YieldExpression::genera
         generator.emit_iterator_value(inner_return_result_value, inner_return_result);
 
         // 2. Return Completion Record { [[Type]]: return, [[Value]]: value, [[Target]]: empty }.
-        generator.emit_return<Bytecode::Op::Yield>(inner_return_result_value);
+        generator.perform_needed_unwinds<Bytecode::Op::Yield>();
+        generator.emit<Bytecode::Op::Yield>(nullptr, inner_return_result_value);
 
         generator.switch_to_basic_block(type_is_return_not_done_block);
 
@@ -2234,7 +2239,8 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> YieldExpression::genera
     generator.emit<Bytecode::Op::Throw>(received_completion_value);
 
     generator.switch_to_basic_block(return_value_block);
-    generator.emit_return<Bytecode::Op::Yield>(received_completion_value);
+    generator.perform_needed_unwinds<Bytecode::Op::Yield>();
+    generator.emit<Bytecode::Op::Yield>(nullptr, received_completion_value);
 
     generator.switch_to_basic_block(normal_completion_continuation_block);
     return received_completion_value;
