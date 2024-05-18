@@ -355,7 +355,17 @@ ErrorOr<Vector<FixedArray<Sample>>, LoaderError> FlacLoaderPlugin::load_chunks(s
     size_t sample_index = 0;
 
     while (!m_stream->is_eof() && sample_index < samples_to_read) {
-        TRY(frames.try_append(TRY(next_frame())));
+        auto frame = next_frame();
+        if (frame.is_error()) {
+            // For FLAC files with an unknown amount of samples, we keep attempting to read until EOF. Our Stream
+            // infrastructure does not set EOF until the number of bytes read from the stream is 0. So in the case of an
+            // unknown sample size, we should expect the final frame read to fail, because we only find out the EOF is set
+            // during next_frame()
+            if (m_total_samples == NumericLimits<decltype(m_total_samples)>::max() && m_stream->is_eof())
+                break;
+            return frame.release_error();
+        }
+        TRY(frames.try_append(frame.release_value()));
         sample_index += m_current_frame->sample_count;
     }
 
