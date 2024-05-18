@@ -59,7 +59,11 @@ MBRPartitionTable::MBRPartitionTable(PartitionableDevice device, u32 start_lba)
         if (entry.offset == 0x00) {
             continue;
         }
-        MUST(m_partitions.try_empend(entry.offset, (entry.offset + entry.length) - 1, entry.type));
+        // We have to place these in stack variables, since try_empend will try to take a reference to them, which is UB (since they're gnu::packed and unaligned)
+        u64 const block_offset = entry.offset;
+        u64 const block_limit = (entry.offset + entry.length) - 1;
+        u8 const partition_type = entry.type;
+        MUST(m_partitions.try_empend(block_offset, block_limit, partition_type));
     }
     m_valid = true;
 }
@@ -78,7 +82,11 @@ MBRPartitionTable::MBRPartitionTable(PartitionableDevice device)
         if (entry.offset == 0x00) {
             continue;
         }
-        MUST(m_partitions.try_empend(entry.offset, (entry.offset + entry.length) - 1, entry.type));
+        // We have to place these in stack variables, since try_empend will try to take a reference to them, which is UB (since they're gnu::packed and unaligned)
+        u64 const block_offset = entry.offset;
+        u64 const block_limit = (entry.offset + entry.length) - 1;
+        u8 const partition_type = entry.type;
+        MUST(m_partitions.try_empend(block_offset, block_limit, partition_type));
     }
     m_valid = true;
 }
