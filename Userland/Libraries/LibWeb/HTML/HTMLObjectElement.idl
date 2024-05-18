@@ -14,7 +14,7 @@ interface HTMLObjectElement : HTMLElement {
     [CEReactions, Reflect] attribute DOMString width;
     [CEReactions, Reflect] attribute DOMString height;
     readonly attribute Document? contentDocument;
-    // FIXME: readonly attribute WindowProxy? contentWindow;
+    readonly attribute WindowProxy? contentWindow;
     Document? getSVGDocument();
 
     // FIXME: readonly attribute boolean willValidate;
