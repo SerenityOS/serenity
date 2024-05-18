@@ -145,7 +145,8 @@ void Hub::remove_children_from_sysfs()
 
 void Hub::check_for_port_updates()
 {
-    for (u8 port_number = 1; port_number < m_hub_descriptor.number_of_downstream_ports + 1; ++port_number) {
+    for (u8 port_index = 0; port_index < m_hub_descriptor.number_of_downstream_ports; ++port_index) {
+        u8 port_number = port_index + 1;
         dbgln_if(USB_DEBUG, "USB Hub: Checking for port updates on port {}...", port_number);
 
         HubStatus port_status {};
