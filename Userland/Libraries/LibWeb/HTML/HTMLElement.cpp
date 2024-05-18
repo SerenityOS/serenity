@@ -59,6 +59,7 @@ void HTMLElement::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_dataset);
+    visitor.visit(m_labels);
 }
 
 JS::NonnullGCPtr<DOMStringMap> HTMLElement::dataset()
