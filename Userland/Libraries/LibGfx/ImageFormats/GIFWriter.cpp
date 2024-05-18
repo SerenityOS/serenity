@@ -50,9 +50,9 @@ ErrorOr<void> write_logical_descriptor(BigEndianOutputBitStream& stream, Bitmap 
     return {};
 }
 
-ErrorOr<void> write_global_color_table(Stream& stream, ColorPalette const& palette)
+ErrorOr<void> write_color_table(Stream& stream, ColorPalette const& palette)
 {
-    // 19. Global Color Table
+    // 19. Global Color Table or 21. Local Color Table.
 
     for (u16 i = 0; i < 256; ++i) {
         auto const color = i < palette.palette().size() ? palette.palette()[i] : Color::NamedColor::White;
@@ -136,7 +136,7 @@ ErrorOr<void> GIFWriter::encode(Stream& stream, Bitmap const& bitmap)
 
     BigEndianOutputBitStream bit_stream { MaybeOwned<Stream> { stream } };
     TRY(write_logical_descriptor(bit_stream, bitmap));
-    TRY(write_global_color_table(bit_stream, palette));
+    TRY(write_color_table(bit_stream, palette));
 
     // Write a Table-Based Image
     TRY(write_image_descriptor(bit_stream, bitmap));
