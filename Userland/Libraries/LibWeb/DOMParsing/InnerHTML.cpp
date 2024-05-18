@@ -13,16 +13,26 @@
 
 namespace Web::DOMParsing {
 
-// https://w3c.github.io/DOM-Parsing/#dfn-fragment-parsing-algorithm
+// https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#fragment-parsing-algorithm-steps
 WebIDL::ExceptionOr<JS::NonnullGCPtr<DOM::DocumentFragment>> parse_fragment(StringView markup, DOM::Element& context_element)
 {
-    // FIXME: Handle XML documents.
-
     auto& realm = context_element.realm();
 
-    auto new_children = HTML::HTMLParser::parse_html_fragment(context_element, markup);
+    // 1. Let algorithm be the HTML fragment parsing algorithm.
+    auto algorithm = HTML::HTMLParser::parse_html_fragment;
+
+    // FIXME: 2. If context's node document is an XML document, then set algorithm to the XML fragment parsing algorithm.
+    if (context_element.document().is_xml_document()) {
+        dbgln("FIXME: Handle fragment parsing of XML documents");
+    }
+
+    // 3. Let new children be the result of invoking algorithm given markup, with context set to context.
+    auto new_children = algorithm(context_element, markup);
+
+    // 4. Let fragment be a new DocumentFragment whose node document is context's node document.
     auto fragment = realm.heap().allocate<DOM::DocumentFragment>(realm, context_element.document());
 
+    // 5. Append each Node in new children to fragment (in tree order).
     for (auto& child : new_children) {
         // I don't know if this can throw here, but let's be safe.
         (void)TRY(fragment->append_child(*child));
