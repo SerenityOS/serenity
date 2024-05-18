@@ -92,7 +92,7 @@ public:
     StringView method() const;
     WebIDL::ExceptionOr<void> set_method(String const&);
 
-    JS::GCPtr<DOM::DOMTokenList> rel_list();
+    JS::NonnullGCPtr<DOM::DOMTokenList> rel_list();
 
     String action() const;
     WebIDL::ExceptionOr<void> set_action(String const&);

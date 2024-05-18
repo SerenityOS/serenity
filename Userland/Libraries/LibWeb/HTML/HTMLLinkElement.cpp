@@ -91,12 +91,12 @@ void HTMLLinkElement::inserted()
 }
 
 // https://html.spec.whatwg.org/multipage/semantics.html#dom-link-rellist
-JS::GCPtr<DOM::DOMTokenList> HTMLLinkElement::rel_list()
+JS::NonnullGCPtr<DOM::DOMTokenList> HTMLLinkElement::rel_list()
 {
     // The relList IDL attribute must reflect the rel content attribute.
     if (!m_rel_list)
         m_rel_list = DOM::DOMTokenList::create(*this, HTML::AttributeNames::rel);
-    return m_rel_list;
+    return *m_rel_list;
 }
 
 bool HTMLLinkElement::has_loaded_icon() const

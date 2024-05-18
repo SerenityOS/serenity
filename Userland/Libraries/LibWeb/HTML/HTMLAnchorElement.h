@@ -24,7 +24,7 @@ public:
     String target() const { return get_attribute_value(HTML::AttributeNames::target); }
     String download() const { return get_attribute_value(HTML::AttributeNames::download); }
 
-    JS::GCPtr<DOM::DOMTokenList> rel_list();
+    JS::NonnullGCPtr<DOM::DOMTokenList> rel_list();
 
     String text() const;
     void set_text(String const&);

@@ -128,12 +128,12 @@ Optional<ARIA::Role> HTMLAnchorElement::default_role() const
 }
 
 // https://html.spec.whatwg.org/multipage/text-level-semantics.html#dom-a-rellist
-JS::GCPtr<DOM::DOMTokenList> HTMLAnchorElement::rel_list()
+JS::NonnullGCPtr<DOM::DOMTokenList> HTMLAnchorElement::rel_list()
 {
     // The IDL attribute relList must reflect the rel content attribute.
     if (!m_rel_list)
         m_rel_list = DOM::DOMTokenList::create(*this, HTML::AttributeNames::rel);
-    return m_rel_list;
+    return *m_rel_list;
 }
 
 // https://html.spec.whatwg.org/multipage/text-level-semantics.html#dom-a-text
