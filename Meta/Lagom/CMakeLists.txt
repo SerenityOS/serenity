@@ -457,6 +457,7 @@ if (BUILD_LAGOM)
         IMAP
         ImageDecoderClient
         IPC
+        Java
         JIT
         JS
         Line
@@ -564,6 +565,7 @@ if (BUILD_LAGOM)
         lagom_utility(image SOURCES ../../Userland/Utilities/image.cpp LIBS LibGfx LibMain)
         lagom_utility(isobmff SOURCES ../../Userland/Utilities/isobmff.cpp LIBS LibGfx LibMain)
         lagom_utility(ttfdisasm SOURCES ../../Userland/Utilities/ttfdisasm.cpp LIBS LibGfx LibMain)
+        lagom_utility(javap SOURCES ../../Userland/Utilities/javap.cpp LIBS LibJava LibMain)
         lagom_utility(js SOURCES ../../Userland/Utilities/js.cpp LIBS LibCrypto LibJS LibLine LibLocale LibMain LibTextCodec Threads::Threads)
 
         if (EMSCRIPTEN)
