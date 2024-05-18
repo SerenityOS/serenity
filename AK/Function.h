@@ -40,9 +40,11 @@ namespace AK {
 
 // These annotations are used to avoid capturing a variable with local storage in a lambda that outlives it
 #if defined(AK_COMPILER_CLANG)
+#    define ESCAPING [[clang::annotate("serenity::escaping")]]
 // FIXME: When we get C++23, change this to be applied to the lambda directly instead of to the types of its captures
 #    define IGNORE_USE_IN_ESCAPING_LAMBDA [[clang::annotate("serenity::ignore_use_in_escaping_lambda")]]
 #else
+#    define ESCAPING
 #    define IGNORE_USE_IN_ESCAPING_LAMBDA
 #endif
 

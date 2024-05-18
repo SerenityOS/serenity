@@ -22,6 +22,7 @@ AST_MATCHER_P(clang::Decl, hasAnnotation, std::string, name)
     return false;
 }
 
+// FIXME: Detect simple lambda escape patterns so we can enforce ESCAPING annotations in the most common cases
 class Consumer
     : public clang::ASTConsumer
     , public clang::ast_matchers::internal::CollectMatchesCallback {
@@ -87,7 +88,7 @@ public:
                             allOf(
                                 // It's important that the parameter has a RecordType, as a templated type can never escape its function
                                 hasType(cxxRecordDecl()),
-                                unless(hasAnnotation("serenity::noescape"))))
+                                hasAnnotation("serenity::escaping")))
                             .bind("lambda-param-ref")))),
             this);
     }
@@ -105,7 +106,7 @@ public:
             if (capture->capturesThis() || capture->getCaptureKind() != clang::LCK_ByRef)
                 return;
 
-            auto diag_id = diag_engine.getCustomDiagID(clang::DiagnosticsEngine::Warning, "Variable with local storage is captured by reference in a lambda that may be asynchronously executed");
+            auto diag_id = diag_engine.getCustomDiagID(clang::DiagnosticsEngine::Warning, "Variable with local storage is captured by reference in a lambda marked ESCAPING");
             diag_engine.Report(capture->getLocation(), diag_id);
 
             clang::SourceLocation captured_var_location;
@@ -116,10 +117,6 @@ public:
             }
             diag_id = diag_engine.getCustomDiagID(clang::DiagnosticsEngine::Note, "Annotate the variable declaration with IGNORE_USE_IN_ESCAPING_LAMBDA if it outlives the lambda");
             diag_engine.Report(captured_var_location, diag_id);
-
-            auto const* param = result.Nodes.getNodeAs<clang::ParmVarDecl>("lambda-param-ref");
-            diag_id = diag_engine.getCustomDiagID(clang::DiagnosticsEngine::Note, "Annotate the parameter with NOESCAPE if the lambda will not outlive the function call");
-            diag_engine.Report(param->getTypeSourceInfo()->getTypeLoc().getBeginLoc(), diag_id);
         }
     }
 

@@ -9,11 +9,12 @@
 
 #include <AK/Function.h>
 
-void take_fn(Function<void()>) { }
+void take_fn(ESCAPING Function<void()>) { }
 
 void test()
 {
     IGNORE_USE_IN_ESCAPING_LAMBDA int a = 0;
+
     take_fn([&a] {
         (void)a;
     });
