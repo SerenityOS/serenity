@@ -11,7 +11,7 @@
 class TestClass : public JS::Object {
     JS_OBJECT(TestClass, JS::Object);
 
-    // expected-warning@+1 {{Missing call to Base::visit_edges}}
+    // expected-error@+1 {{Missing call to Base::visit_edges}}
     virtual void visit_edges(Visitor&) override
     {
     }

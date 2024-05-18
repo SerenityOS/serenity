@@ -12,10 +12,10 @@
 struct NotACell { };
 
 class TestClass {
-    // expected-warning@+1 {{Specialization type must inherit from JS::Cell}}
+    // expected-error@+1 {{Specialization type must inherit from JS::Cell}}
     JS::GCPtr<NotACell> m_member_1;
-    // expected-warning@+1 {{Specialization type must inherit from JS::Cell}}
+    // expected-error@+1 {{Specialization type must inherit from JS::Cell}}
     JS::NonnullGCPtr<NotACell> m_member_2;
-    // expected-warning@+1 {{Specialization type must inherit from JS::Cell}}
+    // expected-error@+1 {{Specialization type must inherit from JS::Cell}}
     JS::RawGCPtr<NotACell> m_member_3;
 };

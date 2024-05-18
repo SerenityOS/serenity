@@ -155,10 +155,10 @@ bool LibJSGCVisitor::VisitCXXRecordDecl(clang::CXXRecordDecl* record)
         auto validation_results = validate_field(field);
         if (!validation_results.is_valid) {
             if (validation_results.is_wrapped_in_gcptr) {
-                auto diag_id = diag_engine.getCustomDiagID(clang::DiagnosticsEngine::Warning, "Specialization type must inherit from JS::Cell");
+                auto diag_id = diag_engine.getCustomDiagID(clang::DiagnosticsEngine::Error, "Specialization type must inherit from JS::Cell");
                 diag_engine.Report(field->getLocation(), diag_id);
             } else {
-                auto diag_id = diag_engine.getCustomDiagID(clang::DiagnosticsEngine::Warning, "%0 to JS::Cell type should be wrapped in %1");
+                auto diag_id = diag_engine.getCustomDiagID(clang::DiagnosticsEngine::Error, "%0 to JS::Cell type should be wrapped in %1");
                 auto builder = diag_engine.Report(field->getLocation(), diag_id);
                 if (field->getType()->isReferenceType()) {
                     builder << "reference"
@@ -179,7 +179,7 @@ bool LibJSGCVisitor::VisitCXXRecordDecl(clang::CXXRecordDecl* record)
     clang::DeclarationName name = &m_context.Idents.get("visit_edges");
     auto const* visit_edges_method = record->lookup(name).find_first<clang::CXXMethodDecl>();
     if (!visit_edges_method && !fields_that_need_visiting.empty()) {
-        auto diag_id = diag_engine.getCustomDiagID(clang::DiagnosticsEngine::Warning, "JS::Cell-inheriting class %0 contains a GC-allocated member %1 but has no visit_edges method");
+        auto diag_id = diag_engine.getCustomDiagID(clang::DiagnosticsEngine::Error, "JS::Cell-inheriting class %0 contains a GC-allocated member %1 but has no visit_edges method");
         auto builder = diag_engine.Report(record->getLocation(), diag_id);
         builder << record->getName()
                 << fields_that_need_visiting[0];
@@ -214,7 +214,7 @@ bool LibJSGCVisitor::VisitCXXRecordDecl(clang::CXXRecordDecl* record)
     }
 
     if (!call_to_base_visit_edges_found) {
-        auto diag_id = diag_engine.getCustomDiagID(clang::DiagnosticsEngine::Warning, "Missing call to Base::visit_edges");
+        auto diag_id = diag_engine.getCustomDiagID(clang::DiagnosticsEngine::Error, "Missing call to Base::visit_edges");
         diag_engine.Report(visit_edges_method->getBeginLoc(), diag_id);
     }
 
@@ -240,7 +240,7 @@ bool LibJSGCVisitor::VisitCXXRecordDecl(clang::CXXRecordDecl* record)
     for (auto const* member_expr : field_access_callback.matches())
         fields_that_are_visited.insert(member_expr->getMemberNameInfo().getAsString());
 
-    auto diag_id = diag_engine.getCustomDiagID(clang::DiagnosticsEngine::Warning, "GC-allocated member is not visited in %0::visit_edges");
+    auto diag_id = diag_engine.getCustomDiagID(clang::DiagnosticsEngine::Error, "GC-allocated member is not visited in %0::visit_edges");
 
     for (auto const* field : fields_that_need_visiting) {
         if (!fields_that_are_visited.contains(field->getNameAsString())) {

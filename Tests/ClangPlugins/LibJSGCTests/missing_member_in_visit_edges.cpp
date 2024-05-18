@@ -16,6 +16,6 @@ class TestClass : public JS::Object {
         Base::visit_edges(visitor);
     }
 
-    // expected-warning@+1 {{GC-allocated member is not visited in TestClass::visit_edges}}
+    // expected-error@+1 {{GC-allocated member is not visited in TestClass::visit_edges}}
     JS::GCPtr<JS::Object> m_object;
 };
