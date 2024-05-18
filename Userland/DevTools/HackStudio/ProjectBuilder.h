@@ -42,8 +42,8 @@ private:
         Vector<ByteString> dependencies {};
     };
     static HashMap<ByteString, NonnullOwnPtr<LibraryInfo>> get_defined_libraries();
-    static void for_each_library_definition(NOESCAPE Function<void(ByteString, ByteString)>);
-    static void for_each_library_dependencies(NOESCAPE Function<void(ByteString, Vector<StringView>)>);
+    static void for_each_library_definition(Function<void(ByteString, ByteString)>);
+    static void for_each_library_dependencies(Function<void(ByteString, Vector<StringView>)>);
     static ErrorOr<ByteString> component_name(StringView cmake_file_path);
     static ErrorOr<void> verify_cmake_is_installed();
     static ErrorOr<void> verify_make_is_installed();

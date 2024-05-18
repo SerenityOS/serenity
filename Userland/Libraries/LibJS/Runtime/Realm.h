@@ -32,7 +32,7 @@ public:
     };
 
     static ThrowCompletionOr<NonnullGCPtr<Realm>> create(VM&);
-    static ThrowCompletionOr<NonnullOwnPtr<ExecutionContext>> initialize_host_defined_realm(VM&, NOESCAPE Function<Object*(Realm&)> create_global_object, NOESCAPE Function<Object*(Realm&)> create_global_this_value);
+    static ThrowCompletionOr<NonnullOwnPtr<ExecutionContext>> initialize_host_defined_realm(VM&, Function<Object*(Realm&)> create_global_object, Function<Object*(Realm&)> create_global_this_value);
 
     void set_global_object(Object* global_object, Object* this_value);
 

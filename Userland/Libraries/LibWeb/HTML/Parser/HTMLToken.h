@@ -221,7 +221,7 @@ public:
         m_data.get<OwnPtr<Vector<Attribute>>>().clear();
     }
 
-    void for_each_attribute(NOESCAPE Function<IterationDecision(Attribute const&)> callback) const
+    void for_each_attribute(Function<IterationDecision(Attribute const&)> callback) const
     {
         VERIFY(is_start_tag() || is_end_tag());
         auto* ptr = tag_attributes();
@@ -233,7 +233,7 @@ public:
         }
     }
 
-    void for_each_attribute(NOESCAPE Function<IterationDecision(Attribute&)> callback)
+    void for_each_attribute(Function<IterationDecision(Attribute&)> callback)
     {
         VERIFY(is_start_tag() || is_end_tag());
         auto* ptr = tag_attributes();

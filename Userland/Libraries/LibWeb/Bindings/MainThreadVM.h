@@ -84,7 +84,7 @@ ErrorOr<void> initialize_main_thread_vm();
 JS::VM& main_thread_vm();
 
 void queue_mutation_observer_microtask(DOM::Document const&);
-NonnullOwnPtr<JS::ExecutionContext> create_a_new_javascript_realm(JS::VM&, NOESCAPE Function<JS::Object*(JS::Realm&)> create_global_object, NOESCAPE Function<JS::Object*(JS::Realm&)> create_global_this_value);
+NonnullOwnPtr<JS::ExecutionContext> create_a_new_javascript_realm(JS::VM&, Function<JS::Object*(JS::Realm&)> create_global_object, Function<JS::Object*(JS::Realm&)> create_global_this_value);
 void invoke_custom_element_reactions(Vector<JS::Handle<DOM::Element>>& element_queue);
 
 }
