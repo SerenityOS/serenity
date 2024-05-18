@@ -283,11 +283,13 @@ public:
             // *  Interpreter::run_bytecode::handle_ContinuePendingUnwind
             // *  Return::execute_impl
             // *  Yield::execute_impl
-            emit<Bytecode::Op::Mov>(Operand(Register::saved_return_value()), value);
+            if constexpr (IsSame<OpType, Op::Yield>)
+                emit<Bytecode::Op::PrepareYield>(Operand(Register::saved_return_value()), value);
+            else
+                emit<Bytecode::Op::Mov>(Operand(Register::saved_return_value()), value);
             emit<Bytecode::Op::Mov>(Operand(Register::exception()), add_constant(Value {}));
             // FIXME: Do we really need to clear the return value register here?
             emit<Bytecode::Op::Mov>(Operand(Register::return_value()), add_constant(Value {}));
-
             emit<Bytecode::Op::Jump>(Label { *m_current_basic_block->finalizer() });
             return;
         }

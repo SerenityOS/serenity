@@ -161,6 +161,22 @@ ALWAYS_INLINE void Interpreter::set(Operand op, Value value)
     m_registers_and_constants_and_locals.data()[op.index()] = value;
 }
 
+ALWAYS_INLINE Value Interpreter::do_yield(Value value, Optional<Label> continuation)
+{
+    auto object = Object::create(realm(), nullptr);
+    object->define_direct_property("result", value, JS::default_attributes);
+
+    if (continuation.has_value())
+        // FIXME: If we get a pointer, which is not accurately representable as a double
+        //        will cause this to explode
+        object->define_direct_property("continuation", Value(continuation->address()), JS::default_attributes);
+    else
+        object->define_direct_property("continuation", js_null(), JS::default_attributes);
+
+    object->define_direct_property("isAwait", Value(false), JS::default_attributes);
+    return object;
+}
+
 // 16.1.6 ScriptEvaluation ( scriptRecord ), https://tc39.es/ecma262/#sec-runtime-semantics-scriptevaluation
 ThrowCompletionOr<Value> Interpreter::run(Script& script_record, JS::GCPtr<Environment> lexical_environment_override)
 {
@@ -619,6 +635,7 @@ FLATTEN_ON_CLANG void Interpreter::run_bytecode(size_t entry_point)
             HANDLE_INSTRUCTION_WITHOUT_EXCEPTION_CHECK(NewRegExp);
             HANDLE_INSTRUCTION_WITHOUT_EXCEPTION_CHECK(NewTypeError);
             HANDLE_INSTRUCTION(Not);
+            HANDLE_INSTRUCTION_WITHOUT_EXCEPTION_CHECK(PrepareYield);
             HANDLE_INSTRUCTION(PostfixDecrement);
             HANDLE_INSTRUCTION(PostfixIncrement);
             HANDLE_INSTRUCTION(PutById);
@@ -1762,19 +1779,14 @@ void LeaveUnwindContext::execute_impl(Bytecode::Interpreter& interpreter) const
 void Yield::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto yielded_value = interpreter.get(m_value).value_or(js_undefined());
+    interpreter.do_return(
+        interpreter.do_yield(yielded_value, m_continuation_label));
+}
 
-    auto object = Object::create(interpreter.realm(), nullptr);
-    object->define_direct_property("result", yielded_value, JS::default_attributes);
-
-    if (m_continuation_label.has_value())
-        // FIXME: If we get a pointer, which is not accurately representable as a double
-        //        will cause this to explode
-        object->define_direct_property("continuation", Value(m_continuation_label->address()), JS::default_attributes);
-    else
-        object->define_direct_property("continuation", js_null(), JS::default_attributes);
-
-    object->define_direct_property("isAwait", Value(false), JS::default_attributes);
-    interpreter.do_return(object);
+void PrepareYield::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto value = interpreter.get(m_value).value_or(js_undefined());
+    interpreter.set(m_dest, interpreter.do_yield(value, {}));
 }
 
 void Await::execute_impl(Bytecode::Interpreter& interpreter) const
@@ -2463,6 +2475,13 @@ ByteString Yield::to_byte_string_impl(Bytecode::Executable const& executable) co
             format_operand("value"sv, m_value, executable));
     }
     return ByteString::formatted("Yield return {}",
+        format_operand("value"sv, m_value, executable));
+}
+
+ByteString PrepareYield::to_byte_string_impl(Bytecode::Executable const& executable) const
+{
+    return ByteString::formatted("PrepareYield {}, {}",
+        format_operand("dst"sv, m_dest, executable),
         format_operand("value"sv, m_value, executable));
 }
 

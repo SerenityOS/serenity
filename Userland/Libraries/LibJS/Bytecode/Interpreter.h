@@ -59,6 +59,7 @@ public:
     [[nodiscard]] Value get(Operand) const;
     void set(Operand, Value);
 
+    Value do_yield(Value value, Optional<Label> continuation);
     void do_return(Value value)
     {
         reg(Register::return_value()) = value;

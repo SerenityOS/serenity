@@ -2214,6 +2214,31 @@ private:
     Operand m_value;
 };
 
+class PrepareYield final : public Instruction {
+public:
+    explicit PrepareYield(Operand dest, Operand value)
+        : Instruction(Type::PrepareYield)
+        , m_dest(dest)
+        , m_value(value)
+    {
+    }
+
+    void execute_impl(Bytecode::Interpreter&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
+    void visit_operands_impl(Function<void(Operand&)> visitor)
+    {
+        visitor(m_dest);
+        visitor(m_value);
+    }
+
+    Operand destination() const { return m_dest; }
+    Operand value() const { return m_value; }
+
+private:
+    Operand m_dest;
+    Operand m_value;
+};
+
 class Await final : public Instruction {
 public:
     constexpr static bool IsTerminator = true;
