@@ -17,7 +17,7 @@ namespace {
 ErrorOr<void> write_header(Stream& stream)
 {
     // 17. Header
-    TRY(stream.write_until_depleted("GIF87a"sv));
+    TRY(stream.write_until_depleted("GIF89a"sv));
     return {};
 }
 
@@ -121,6 +121,41 @@ ErrorOr<void> write_image_descriptor(BigEndianOutputBitStream& stream, Bitmap co
     return {};
 }
 
+ErrorOr<void> write_graphic_control_extension(BigEndianOutputBitStream& stream)
+{
+    // 23. Graphic Control Extension
+
+    // Extension Introducer
+    TRY(stream.write_value<u8>(0x21));
+    // Graphic Control Label
+    TRY(stream.write_value<u8>(0xF9));
+
+    // Block Size
+    TRY(stream.write_value<u8>(4));
+
+    // Packed Field
+    // Reserved
+    TRY(stream.write_bits(0u, 3));
+    // Disposal Method
+    TRY(stream.write_bits(0u, 3));
+    // User Input Flag
+    TRY(stream.write_bits(false, 1));
+    // Transparency Flag
+    TRY(stream.write_bits(false, 1));
+
+    // Delay Time
+    // Note: We default to 300ms for the moment.
+    TRY(stream.write_value<u16>(30));
+
+    // Transparent Color Index
+    TRY(stream.write_value<u8>(0));
+
+    // Block Terminator
+    TRY(stream.write_value<u8>(0));
+
+    return {};
+}
+
 ErrorOr<void> write_trailer(Stream& stream)
 {
     TRY(stream.write_value<u8>(0x3B));
@@ -138,6 +173,7 @@ ErrorOr<void> GIFWriter::encode(Stream& stream, Bitmap const& bitmap)
     TRY(write_logical_descriptor(bit_stream, bitmap));
     TRY(write_global_color_table(bit_stream, palette));
 
+    TRY(write_graphic_control_extension(bit_stream));
     // Write a Table-Based Image
     TRY(write_image_descriptor(bit_stream, bitmap));
     TRY(write_image_data(stream, bitmap, palette));

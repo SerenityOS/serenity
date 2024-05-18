@@ -122,7 +122,11 @@ TEST_CASE(test_gif)
     EXPECT_EQ(decoder->frame_count(), 1u);
     EXPECT(!decoder->is_animated());
 
-    expect_bitmaps_equal(*TRY_OR_FAIL(decoder->frame(0)).image, bitmap);
+    auto const frame = TRY_OR_FAIL(decoder->frame(0));
+    // This is the default value in the encoder, this was chosen arbitrarily and can be changed if needed.
+    EXPECT_EQ(frame.duration, 300);
+
+    expect_bitmaps_equal(*frame.image, bitmap);
 }
 
 TEST_CASE(test_jpeg)
