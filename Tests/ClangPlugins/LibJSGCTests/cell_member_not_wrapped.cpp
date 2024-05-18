@@ -30,15 +30,15 @@ private:
         visitor.visit(m_object_ptr);
     }
 
-    // expected-warning@+1 {{reference to JS::Cell type should be wrapped in JS::NonnullGCPtr}}
+    // expected-error@+1 {{reference to JS::Cell type should be wrapped in JS::NonnullGCPtr}}
     JS::Object& m_object_ref;
-    // expected-warning@+1 {{pointer to JS::Cell type should be wrapped in JS::GCPtr}}
+    // expected-error@+1 {{pointer to JS::Cell type should be wrapped in JS::GCPtr}}
     JS::Object* m_object_ptr;
-    // expected-warning@+1 {{pointer to JS::Cell type should be wrapped in JS::GCPtr}}
+    // expected-error@+1 {{pointer to JS::Cell type should be wrapped in JS::GCPtr}}
     Vector<JS::Object*> m_objects;
-    // expected-warning@+1 {{pointer to JS::Cell type should be wrapped in JS::GCPtr}}
+    // expected-error@+1 {{pointer to JS::Cell type should be wrapped in JS::GCPtr}}
     NewType1* m_newtype_1;
-    // expected-warning@+1 {{pointer to JS::Cell type should be wrapped in JS::GCPtr}}
+    // expected-error@+1 {{pointer to JS::Cell type should be wrapped in JS::GCPtr}}
     NewType2* m_newtype_2;
 };
 
@@ -50,14 +50,14 @@ public:
     }
 
 private:
-    // expected-warning@+1 {{reference to JS::Cell type should be wrapped in JS::NonnullGCPtr}}
+    // expected-error@+1 {{reference to JS::Cell type should be wrapped in JS::NonnullGCPtr}}
     JS::Object& m_object_ref;
-    // expected-warning@+1 {{pointer to JS::Cell type should be wrapped in JS::GCPtr}}
+    // expected-error@+1 {{pointer to JS::Cell type should be wrapped in JS::GCPtr}}
     JS::Object* m_object_ptr;
-    // expected-warning@+1 {{pointer to JS::Cell type should be wrapped in JS::GCPtr}}
+    // expected-error@+1 {{pointer to JS::Cell type should be wrapped in JS::GCPtr}}
     Vector<JS::Object*> m_objects;
-    // expected-warning@+1 {{pointer to JS::Cell type should be wrapped in JS::GCPtr}}
+    // expected-error@+1 {{pointer to JS::Cell type should be wrapped in JS::GCPtr}}
     NewType1* m_newtype_1;
-    // expected-warning@+1 {{pointer to JS::Cell type should be wrapped in JS::GCPtr}}
+    // expected-error@+1 {{pointer to JS::Cell type should be wrapped in JS::GCPtr}}
     NewType2* m_newtype_2;
 };
