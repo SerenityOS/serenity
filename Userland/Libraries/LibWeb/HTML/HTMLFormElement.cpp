@@ -586,12 +586,12 @@ StringView HTMLFormElement::method() const
 }
 
 // https://html.spec.whatwg.org/multipage/forms.html#dom-form-rellist
-JS::GCPtr<DOM::DOMTokenList> HTMLFormElement::rel_list()
+JS::NonnullGCPtr<DOM::DOMTokenList> HTMLFormElement::rel_list()
 {
     // The relList IDL attribute must reflect the rel content attribute.
     if (!m_rel_list)
         m_rel_list = DOM::DOMTokenList::create(*this, HTML::AttributeNames::rel);
-    return m_rel_list;
+    return *m_rel_list;
 }
 
 // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#dom-fs-method

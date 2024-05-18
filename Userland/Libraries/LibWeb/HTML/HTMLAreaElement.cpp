@@ -39,12 +39,12 @@ void HTMLAreaElement::attribute_changed(FlyString const& name, Optional<String> 
 }
 
 // https://html.spec.whatwg.org/multipage/image-maps.html#dom-area-rellist
-JS::GCPtr<DOM::DOMTokenList> HTMLAreaElement::rel_list()
+JS::NonnullGCPtr<DOM::DOMTokenList> HTMLAreaElement::rel_list()
 {
     // The IDL attribute relList must reflect the rel content attribute.
     if (!m_rel_list)
         m_rel_list = DOM::DOMTokenList::create(*this, HTML::AttributeNames::rel);
-    return m_rel_list;
+    return *m_rel_list;
 }
 
 Optional<String> HTMLAreaElement::hyperlink_element_utils_href() const

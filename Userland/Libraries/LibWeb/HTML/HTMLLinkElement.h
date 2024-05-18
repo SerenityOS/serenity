@@ -34,7 +34,7 @@ public:
     String type() const { return get_attribute_value(HTML::AttributeNames::type); }
     String href() const { return get_attribute_value(HTML::AttributeNames::href); }
 
-    JS::GCPtr<DOM::DOMTokenList> rel_list();
+    JS::NonnullGCPtr<DOM::DOMTokenList> rel_list();
 
     bool has_loaded_icon() const;
     bool load_favicon_and_use_if_window_is_active();

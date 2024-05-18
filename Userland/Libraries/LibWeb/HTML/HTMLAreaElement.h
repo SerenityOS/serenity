@@ -20,7 +20,7 @@ class HTMLAreaElement final
 
 public:
     virtual ~HTMLAreaElement() override;
-    JS::GCPtr<DOM::DOMTokenList> rel_list();
+    JS::NonnullGCPtr<DOM::DOMTokenList> rel_list();
 
 private:
     HTMLAreaElement(DOM::Document&, DOM::QualifiedName);
