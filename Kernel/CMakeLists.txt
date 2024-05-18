@@ -21,6 +21,7 @@ set(KERNEL_SOURCES
     Arch/init.cpp
     Arch/DeferredCallPool.cpp
     Arch/PageFault.cpp
+    Arch/PlatformDriver.cpp
     Arch/Processor.cpp
     Arch/TrapFrame.cpp
     Boot/CommandLine.cpp

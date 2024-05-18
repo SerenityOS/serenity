@@ -9,6 +9,7 @@
 #include <AK/Types.h>
 #include <Kernel/Arch/CPU.h>
 #include <Kernel/Arch/InterruptManagement.h>
+#include <Kernel/Arch/PlatformDriver.h>
 #include <Kernel/Arch/Processor.h>
 #include <Kernel/Boot/BootInfo.h>
 #include <Kernel/Boot/CommandLine.h>
@@ -93,8 +94,8 @@ extern "C" u8 start_of_safemem_atomic_text[];
 extern "C" u8 end_of_safemem_atomic_text[];
 #endif
 
-extern "C" USB::DriverInitFunction driver_init_table_start[];
-extern "C" USB::DriverInitFunction driver_init_table_end[];
+extern "C" DriverInitFunction driver_init_table_start[];
+extern "C" DriverInitFunction driver_init_table_end[];
 
 extern "C" u8 end_of_kernel_image[];
 
