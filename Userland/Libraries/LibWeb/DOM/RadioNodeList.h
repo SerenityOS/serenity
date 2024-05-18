@@ -16,7 +16,7 @@ class RadioNodeList : public LiveNodeList {
     JS_DECLARE_ALLOCATOR(RadioNodeList);
 
 public:
-    [[nodiscard]] static JS::NonnullGCPtr<RadioNodeList> create(JS::Realm& realm, Node const& root, Scope scope, Function<bool(Node const&)> filter);
+    [[nodiscard]] static JS::NonnullGCPtr<RadioNodeList> create(JS::Realm& realm, Node const& root, Scope scope, ESCAPING Function<bool(Node const&)> filter);
 
     virtual ~RadioNodeList() override;
 
@@ -27,7 +27,7 @@ protected:
     virtual void initialize(JS::Realm&) override;
 
 private:
-    explicit RadioNodeList(JS::Realm& realm, Node const& root, Scope scope, Function<bool(Node const&)> filter);
+    explicit RadioNodeList(JS::Realm& realm, Node const& root, Scope scope, ESCAPING Function<bool(Node const&)> filter);
 };
 
 }

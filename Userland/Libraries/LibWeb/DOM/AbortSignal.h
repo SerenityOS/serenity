@@ -26,7 +26,7 @@ public:
 
     virtual ~AbortSignal() override = default;
 
-    void add_abort_algorithm(Function<void()>);
+    void add_abort_algorithm(ESCAPING Function<void()>);
 
     // https://dom.spec.whatwg.org/#dom-abortsignal-aborted
     // An AbortSignal object is aborted when its abort reason is not undefined.

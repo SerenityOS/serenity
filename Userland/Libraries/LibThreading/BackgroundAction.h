@@ -30,12 +30,13 @@ class BackgroundActionBase {
 private:
     BackgroundActionBase() = default;
 
-    static void enqueue_work(Function<void()>);
+    static void enqueue_work(ESCAPING Function<void()>);
     static Thread& background_thread();
 };
 
 template<typename Result>
-class BackgroundAction final : public Core::EventReceiver
+class BackgroundAction final
+    : public Core::EventReceiver
     , private BackgroundActionBase {
     C_OBJECT(BackgroundAction);
 
@@ -54,7 +55,7 @@ public:
     bool is_canceled() const { return m_canceled; }
 
 private:
-    BackgroundAction(Function<ErrorOr<Result>(BackgroundAction&)> action, Function<ErrorOr<void>(Result)> on_complete, Optional<Function<void(Error)>> on_error = {})
+    BackgroundAction(ESCAPING Function<ErrorOr<Result>(BackgroundAction&)> action, ESCAPING Function<ErrorOr<void>(Result)> on_complete, ESCAPING Optional<Function<void(Error)>> on_error = {})
         : m_promise(Promise::try_create().release_value_but_fixme_should_propagate_errors())
         , m_action(move(action))
         , m_on_complete(move(on_complete))

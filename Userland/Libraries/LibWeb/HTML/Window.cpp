@@ -83,7 +83,7 @@ void run_animation_frame_callbacks(DOM::Document& document, double now)
 
 class IdleCallback : public RefCounted<IdleCallback> {
 public:
-    explicit IdleCallback(Function<JS::Completion(JS::NonnullGCPtr<RequestIdleCallback::IdleDeadline>)> handler, u32 handle)
+    explicit IdleCallback(ESCAPING Function<JS::Completion(JS::NonnullGCPtr<RequestIdleCallback::IdleDeadline>)> handler, u32 handle)
         : m_handler(move(handler))
         , m_handle(handle)
     {

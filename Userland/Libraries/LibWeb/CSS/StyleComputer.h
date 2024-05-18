@@ -138,7 +138,7 @@ public:
 
     void did_load_font(FlyString const& family_name);
 
-    Optional<FontLoader&> load_font_face(ParsedFontFace const&, Function<void(FontLoader const&)> on_load = {}, Function<void()> on_fail = {});
+    Optional<FontLoader&> load_font_face(ParsedFontFace const&, ESCAPING Function<void(FontLoader const&)> on_load = {}, ESCAPING Function<void()> on_fail = {});
 
     void load_fonts_from_sheet(CSSStyleSheet const&);
 
@@ -232,7 +232,7 @@ private:
 
 class FontLoader : public ResourceClient {
 public:
-    FontLoader(StyleComputer& style_computer, FlyString family_name, Vector<Gfx::UnicodeRange> unicode_ranges, Vector<URL::URL> urls, Function<void(FontLoader const&)> on_load = {}, Function<void()> on_fail = {});
+    FontLoader(StyleComputer& style_computer, FlyString family_name, Vector<Gfx::UnicodeRange> unicode_ranges, Vector<URL::URL> urls, ESCAPING Function<void(FontLoader const&)> on_load = {}, ESCAPING Function<void()> on_fail = {});
 
     virtual ~FontLoader() override;
 

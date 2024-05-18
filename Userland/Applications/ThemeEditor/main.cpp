@@ -37,7 +37,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     parser.add_positional_argument(file_to_edit, "Theme file to edit", "file", Core::ArgsParser::Required::No);
     parser.parse(arguments);
 
-    Optional<ByteString> path = {};
+    IGNORE_USE_IN_ESCAPING_LAMBDA Optional<ByteString> path = {};
 
     if (auto error_or_path = FileSystem::absolute_path(file_to_edit); !file_to_edit.is_empty() && !error_or_path.is_error())
         path = error_or_path.release_value();
@@ -48,9 +48,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil(nullptr, nullptr));
 
     auto app_icon = GUI::Icon::default_icon("app-theme-editor"sv);
-    auto window = GUI::Window::construct();
+    IGNORE_USE_IN_ESCAPING_LAMBDA auto window = GUI::Window::construct();
 
-    auto main_widget = TRY(ThemeEditor::MainWidget::try_create());
+    IGNORE_USE_IN_ESCAPING_LAMBDA auto main_widget = TRY(ThemeEditor::MainWidget::try_create());
     window->set_main_widget(main_widget);
 
     if (path.has_value()) {

@@ -67,7 +67,7 @@ public:
 
     void add_job(NonnullRefPtr<Promise<NonnullRefPtr<EventReceiver>>> job_promise);
 
-    void deferred_invoke(Function<void()>);
+    void deferred_invoke(ESCAPING Function<void()>);
 
     void wake();
 
@@ -82,7 +82,7 @@ public:
     static void register_notifier(Badge<Notifier>, Notifier&);
     static void unregister_notifier(Badge<Notifier>, Notifier&);
 
-    static int register_signal(int signo, Function<void(int)> handler);
+    static int register_signal(int signo, ESCAPING Function<void(int)> handler);
     static void unregister_signal(int handler_id);
 
     // Note: Boost uses Parent/Child/Prepare, but we don't really have anything
@@ -101,6 +101,6 @@ private:
     NonnullOwnPtr<EventLoopImplementation> m_impl;
 };
 
-void deferred_invoke(Function<void()>);
+void deferred_invoke(ESCAPING Function<void()>);
 
 }
