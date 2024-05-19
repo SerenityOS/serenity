@@ -1363,9 +1363,13 @@ ErrorOr<void> HackStudioWidget::create_action_tab(GUI::Widget& parent)
 
     m_disassembly_widget = m_action_tab_widget->add_tab<DisassemblyWidget>("Disassembly"_string);
     m_git_widget = m_action_tab_widget->add_tab<GitWidget>("Git"_string);
-    m_git_widget->set_view_diff_callback([this](auto const& original_content, auto const& diff) {
+    m_git_widget->set_view_diff_callback([this](auto const& original_content, auto const& diff, auto const& file_path) {
         m_diff_viewer->set_content(original_content, diff);
         set_edit_mode(EditMode::Diff);
+        StringBuilder diff_title;
+        diff_title.append("Diff:", 5);
+        diff_title.append(file_path.view());
+        m_diff_viewer->window()->set_title(diff_title.to_byte_string());
     });
     m_gml_preview_widget = m_action_tab_widget->add_tab<GMLPreviewWidget>("GML Preview"_string, "");
 
