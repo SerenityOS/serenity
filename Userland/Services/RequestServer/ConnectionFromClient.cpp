@@ -105,18 +105,21 @@ void ConnectionFromClient::worker_do_work(Work work)
             auto* protocol = Protocol::find_by_name(start_request.url.scheme().to_byte_string());
             if (!protocol) {
                 dbgln("StartRequest: No protocol handler for URL: '{}'", start_request.url);
+                auto lock = Threading::MutexLocker(m_ipc_mutex);
                 (void)post_message(Messages::RequestClient::RequestFinished(start_request.request_id, false, 0));
                 return;
             }
             auto request = protocol->start_request(start_request.request_id, *this, start_request.method, start_request.url, start_request.request_headers, start_request.request_body, start_request.proxy_data);
             if (!request) {
                 dbgln("StartRequest: Protocol handler failed to start request: '{}'", start_request.url);
+                auto lock = Threading::MutexLocker(m_ipc_mutex);
                 (void)post_message(Messages::RequestClient::RequestFinished(start_request.request_id, false, 0));
                 return;
             }
             auto id = request->id();
             auto fd = request->request_fd();
             m_requests.with_locked([&](auto& map) { map.set(id, move(request)); });
+            auto lock = Threading::MutexLocker(m_ipc_mutex);
             (void)post_message(Messages::RequestClient::RequestStarted(start_request.request_id, IPC::File::adopt_fd(fd)));
         },
         [&](EnsureConnection& ensure_connection) {
@@ -197,6 +200,7 @@ void ConnectionFromClient::start_request(i32 request_id, ByteString const& metho
 {
     if (!url.is_valid()) {
         dbgln("StartRequest: Invalid URL requested: '{}'", url);
+        auto lock = Threading::MutexLocker(m_ipc_mutex);
         (void)post_message(Messages::RequestClient::RequestFinished(request_id, false, 0));
         return;
     }
@@ -228,24 +232,29 @@ Messages::RequestServer::StopRequestResponse ConnectionFromClient::stop_request(
 void ConnectionFromClient::did_receive_headers(Badge<Request>, Request& request)
 {
     auto response_headers = request.response_headers().clone().release_value_but_fixme_should_propagate_errors();
+    auto lock = Threading::MutexLocker(m_ipc_mutex);
     async_headers_became_available(request.id(), move(response_headers), request.status_code());
 }
 
 void ConnectionFromClient::did_finish_request(Badge<Request>, Request& request, bool success)
 {
-    if (request.total_size().has_value())
+    if (request.total_size().has_value()) {
+        auto lock = Threading::MutexLocker(m_ipc_mutex);
         async_request_finished(request.id(), success, request.total_size().value());
+    }
 
     m_requests.with_locked([&](auto& map) { map.remove(request.id()); });
 }
 
 void ConnectionFromClient::did_progress_request(Badge<Request>, Request& request)
 {
+    auto lock = Threading::MutexLocker(m_ipc_mutex);
     async_request_progress(request.id(), request.total_size(), request.downloaded_size());
 }
 
 void ConnectionFromClient::did_request_certificates(Badge<Request>, Request& request)
 {
+    auto lock = Threading::MutexLocker(m_ipc_mutex);
     async_certificate_requested(request.id());
 }
 
@@ -297,15 +306,19 @@ Messages::RequestServer::WebsocketConnectResponse ConnectionFromClient::websocke
     auto id = ++s_next_websocket_id;
     auto connection = WebSocket::WebSocket::create(move(connection_info));
     connection->on_open = [this, id]() {
+        auto lock = Threading::MutexLocker(m_ipc_mutex);
         async_websocket_connected(id);
     };
     connection->on_message = [this, id](auto message) {
+        auto lock = Threading::MutexLocker(m_ipc_mutex);
         async_websocket_received(id, message.is_text(), message.data());
     };
     connection->on_error = [this, id](auto message) {
+        auto lock = Threading::MutexLocker(m_ipc_mutex);
         async_websocket_errored(id, (i32)message);
     };
     connection->on_close = [this, id](u16 code, ByteString reason, bool was_clean) {
+        auto lock = Threading::MutexLocker(m_ipc_mutex);
         async_websocket_closed(id, code, move(reason), was_clean);
     };
 

@@ -79,6 +79,7 @@ private:
     };
 
     Threading::ThreadPool<Work, Looper> m_thread_pool;
+    Threading::Mutex m_ipc_mutex;
 };
 
 }
