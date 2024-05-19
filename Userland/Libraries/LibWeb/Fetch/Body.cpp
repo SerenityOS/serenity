@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022-2023, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2024, Jamie Mansfield <jmansfield@cadixdev.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,6 +10,7 @@
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/PromiseCapability.h>
+#include <LibJS/Runtime/TypedArray.h>
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/HostDefined.h>
@@ -70,6 +72,16 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> BodyMixin::blob() const
     return consume_body(realm, *this, PackageDataType::Blob);
 }
 
+// https://fetch.spec.whatwg.org/#dom-body-bytes
+WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> BodyMixin::bytes() const
+{
+    auto& vm = Bindings::main_thread_vm();
+    auto& realm = *vm.current_realm();
+
+    // The bytes() method steps are to return the result of running consume body with this and Uint8Array.
+    return consume_body(realm, *this, PackageDataType::Uint8Array);
+}
+
 // https://fetch.spec.whatwg.org/#dom-body-formdata
 WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> BodyMixin::form_data() const
 {
@@ -114,6 +126,12 @@ WebIDL::ExceptionOr<JS::Value> package_data(JS::Realm& realm, ByteBuffer bytes, 
         // NOTE: If extracting the mime type returns failure, other browsers set it to an empty string - not sure if that's spec'd.
         auto mime_type_string = mime_type.has_value() ? MUST(mime_type->serialized()) : String {};
         return FileAPI::Blob::create(realm, move(bytes), move(mime_type_string));
+    }
+    case PackageDataType::Uint8Array: {
+        // Return the result of creating a Uint8Array from bytes in this’s relevant realm.
+        auto bytes_length = bytes.size();
+        auto array_buffer = JS::ArrayBuffer::create(realm, move(bytes));
+        return JS::Uint8Array::create(realm, bytes_length, *array_buffer);
     }
     case PackageDataType::FormData:
         // If mimeType’s essence is "multipart/form-data", then:
