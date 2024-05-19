@@ -450,3 +450,43 @@ test("Throw while breaking with nested try-catch-finally with throw in finalizer
 
     expect(executionOrder).toEqual([1, 2, 3, 4, 5]);
 });
+
+test("Labelled break with nested mixed try-catch/finally", () => {
+    const executionOrder = [];
+    scope: {
+        try {
+            try {
+                executionOrder.push(1);
+                break scope;
+            } catch {
+                expect.fail("Entered catch");
+            }
+            expect.fail("Continued after inner try");
+        } finally {
+            executionOrder.push(2);
+        }
+        expect.fail("Continued after outer try");
+    }
+
+    expect(executionOrder).toEqual([1, 2]);
+});
+
+test("Break with nested mixed try-catch/finally", () => {
+    const executionOrder = [];
+    do {
+        try {
+            try {
+                executionOrder.push(1);
+                break;
+            } catch {
+                expect.fail("Entered catch");
+            }
+            expect.fail("Continued after inner try");
+        } finally {
+            executionOrder.push(2);
+        }
+        expect.fail("Continued after outer try");
+    } while (expect.fail("Continued after do-while loop"));
+
+    expect(executionOrder).toEqual([1, 2]);
+});
