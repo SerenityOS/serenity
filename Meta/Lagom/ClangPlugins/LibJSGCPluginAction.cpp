@@ -10,6 +10,7 @@
 #include <clang/Basic/SourceManager.h>
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Frontend/FrontendPluginRegistry.h>
+#include <clang/Lex/MacroArgs.h>
 #include <unordered_set>
 
 template<typename T>
@@ -256,6 +257,67 @@ void LibJSGCASTConsumer::HandleTranslationUnit(clang::ASTContext& context)
 {
     LibJSGCVisitor visitor { context };
     visitor.TraverseDecl(context.getTranslationUnitDecl());
+}
+
+char const* LibJSCellMacro::type_name(Type type)
+{
+    switch (type) {
+    case Type::JSCell:
+        return "JS_CELL";
+    case Type::JSObject:
+        return "JS_OBJECT";
+    case Type::JSEnvironment:
+        return "JS_ENVIRONMENT";
+    case Type::JSPrototypeObject:
+        return "JS_PROTOTYPE_OBJECT";
+    case Type::WebPlatformObject:
+        return "WEB_PLATFORM_OBJECT";
+    default:
+        __builtin_unreachable();
+    }
+}
+
+void LibJSPPCallbacks::LexedFileChanged(clang::FileID curr_fid, LexedFileChangeReason reason, clang::SrcMgr::CharacteristicKind, clang::FileID, clang::SourceLocation)
+{
+    if (reason == LexedFileChangeReason::EnterFile) {
+        m_curr_fid_hash_stack.push_back(curr_fid.getHashValue());
+    } else {
+        assert(!m_curr_fid_hash_stack.empty());
+        m_curr_fid_hash_stack.pop_back();
+    }
+}
+
+void LibJSPPCallbacks::MacroExpands(clang::Token const& name_token, clang::MacroDefinition const&, clang::SourceRange range, clang::MacroArgs const* args)
+{
+    if (auto* ident_info = name_token.getIdentifierInfo()) {
+        static llvm::StringMap<LibJSCellMacro::Type> libjs_macro_types {
+            { "JS_CELL", LibJSCellMacro::Type::JSCell },
+            { "JS_OBJECT", LibJSCellMacro::Type::JSObject },
+            { "JS_ENVIRONMENT", LibJSCellMacro::Type::JSEnvironment },
+            { "JS_PROTOTYPE_OBJECT", LibJSCellMacro::Type::JSPrototypeObject },
+            { "WEB_PLATFORM_OBJECT", LibJSCellMacro::Type::WebPlatformObject },
+        };
+
+        auto name = ident_info->getName();
+        if (auto it = libjs_macro_types.find(name); it != libjs_macro_types.end()) {
+            LibJSCellMacro macro { range, it->second, {} };
+
+            for (size_t arg_index = 0; arg_index < args->getNumMacroArguments(); arg_index++) {
+                auto const* first_token = args->getUnexpArgument(arg_index);
+                auto stringified_token = clang::MacroArgs::StringifyArgument(first_token, m_preprocessor, false, range.getBegin(), range.getEnd());
+                // The token includes leading and trailing quotes
+                auto len = strlen(stringified_token.getLiteralData());
+                std::string arg_text { stringified_token.getLiteralData() + 1, len - 2 };
+                macro.args.push_back({ arg_text, first_token->getLocation() });
+            }
+
+            assert(!m_curr_fid_hash_stack.empty());
+            auto curr_fid_hash = m_curr_fid_hash_stack.back();
+            if (m_macro_map.find(curr_fid_hash) == m_macro_map.end())
+                m_macro_map[curr_fid_hash] = {};
+            m_macro_map[curr_fid_hash].push_back(macro);
+        }
+    }
 }
 
 static clang::FrontendPluginRegistry::Add<LibJSGCPluginAction> X("libjs_gc_scanner", "analyze LibJS GC usage");
