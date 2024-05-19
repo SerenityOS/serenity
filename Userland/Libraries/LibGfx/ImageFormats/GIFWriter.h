@@ -17,7 +17,7 @@ namespace Gfx {
 class GIFWriter {
 public:
     static ErrorOr<void> encode(Stream&, Bitmap const&);
-    static ErrorOr<NonnullOwnPtr<AnimationWriter>> start_encoding_animation(SeekableStream&, IntSize dimensions);
+    static ErrorOr<NonnullOwnPtr<AnimationWriter>> start_encoding_animation(SeekableStream&, IntSize dimensions, u16 loop_count);
 };
 
 }

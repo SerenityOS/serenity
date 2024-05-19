@@ -167,6 +167,36 @@ ErrorOr<void> GIFAnimationWriter::add_frame(Bitmap& bitmap, int duration_ms, Int
     return {};
 }
 
+ErrorOr<void> write_netscape_extension(BigEndianOutputBitStream& stream, u16 loop_count)
+{
+    // This is a vendor extension, its sole usage is to provide the loop count.
+    // I used this link as a source: https://web.archive.org/web/19990418091037/http://www6.uniovi.es/gifanim/gifabout.htm
+
+    // Extension Introducer
+    TRY(stream.write_value<u8>(0x21));
+    // Application Extension Label
+    TRY(stream.write_value<u8>(0xFF));
+
+    // Block Size
+    constexpr auto netscape_signature = "NETSCAPE2.0"sv;
+    TRY(stream.write_value<u8>(netscape_signature.length()));
+    TRY(stream.write_until_depleted(netscape_signature));
+
+    // Length of Data Sub-Block
+    TRY(stream.write_value<u8>(3));
+
+    // Undocumented
+    TRY(stream.write_value<u8>(1));
+
+    // Number of loops, 0 means infinite
+    TRY(stream.write_value<u16>(loop_count));
+
+    // Block Terminator
+    TRY(stream.write_value<u8>(0));
+
+    return {};
+}
+
 }
 
 ErrorOr<void> GIFWriter::encode(Stream& stream, Bitmap const& bitmap)
@@ -187,12 +217,16 @@ ErrorOr<void> GIFWriter::encode(Stream& stream, Bitmap const& bitmap)
     return {};
 }
 
-ErrorOr<NonnullOwnPtr<AnimationWriter>> GIFWriter::start_encoding_animation(SeekableStream& stream, IntSize dimensions)
+ErrorOr<NonnullOwnPtr<AnimationWriter>> GIFWriter::start_encoding_animation(SeekableStream& stream, IntSize dimensions, u16 loop_count)
 {
     TRY(write_header(stream));
 
     BigEndianOutputBitStream bit_stream { MaybeOwned<Stream> { stream } };
     TRY(write_logical_descriptor(bit_stream, dimensions));
+
+    // Vendor extension to support looping
+    TRY(write_netscape_extension(bit_stream, loop_count));
+
     return make<GIFAnimationWriter>(stream);
 }
 
