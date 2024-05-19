@@ -3,6 +3,7 @@
 #import <HighResolutionTime/Performance.idl>
 #import <HTML/ImageBitmap.idl>
 #import <HTML/MessagePort.idl>
+#import <IndexedDB/IDBFactory.idl>
 
 // FIXME: Support VoidFunction in the IDL parser
 callback VoidFunction = undefined ();
@@ -43,4 +44,7 @@ interface mixin WindowOrWorkerGlobalScope {
 
     // https://w3c.github.io/hr-time/#the-performance-attribute
     [Replaceable] readonly attribute Performance performance;
+
+    // https://w3c.github.io/IndexedDB/#factory-interface
+    [SameObject] readonly attribute IDBFactory indexedDB;
 };
