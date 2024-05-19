@@ -17,7 +17,7 @@ interface mixin WindowOrWorkerGlobalScope {
     readonly attribute boolean isSecureContext;
     readonly attribute boolean crossOriginIsolated;
 
-    // FIXME: undefined reportError(any e);
+    [FIXME] undefined reportError(any e);
 
     // base64 utility methods
     DOMString btoa(DOMString data);

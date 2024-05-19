@@ -31,7 +31,7 @@ interface Animation : EventTarget {
     undefined updatePlaybackRate(double playbackRate);
     undefined reverse();
     undefined persist();
-    // FIXME: [CEReactions] undefined commitStyles();
+    [FIXME, CEReactions] undefined commitStyles();
 };
 
 // https://www.w3.org/TR/web-animations-1/#the-animationplaystate-enumeration

@@ -14,9 +14,9 @@ interface SVGTextPathElement : SVGTextContentElement {
     const unsigned short TEXTPATH_SPACINGTYPE_AUTO = 1;
     const unsigned short TEXTPATH_SPACINGTYPE_EXACT = 2;
 
-    // FIXME: [SameObject] readonly attribute SVGAnimatedLength startOffset;
-    // FIXME: [SameObject] readonly attribute SVGAnimatedEnumeration method;
-    // FIXME: [SameObject] readonly attribute SVGAnimatedEnumeration spacing;
+    [FIXME, SameObject] readonly attribute SVGAnimatedLength startOffset;
+    [FIXME, SameObject] readonly attribute SVGAnimatedEnumeration method;
+    [FIXME, SameObject] readonly attribute SVGAnimatedEnumeration spacing;
 };
 
 SVGTextPathElement includes SVGURIReference;

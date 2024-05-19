@@ -24,12 +24,12 @@ interface HTMLButtonElement : HTMLElement {
     [CEReactions, Reflect, Enumerated=ButtonTypeState] attribute DOMString type;
     [CEReactions, Reflect] attribute DOMString value;
 
-    // FIXME: readonly attribute boolean willValidate;
-    // FIXME: readonly attribute ValidityState validity;
-    // FIXME: readonly attribute DOMString validationMessage;
-    // FIXME: boolean checkValidity();
-    // FIXME: boolean reportValidity();
-    // FIXME: undefined setCustomValidity(DOMString error);
+    [FIXME] readonly attribute boolean willValidate;
+    [FIXME] readonly attribute ValidityState validity;
+    [FIXME] readonly attribute DOMString validationMessage;
+    [FIXME] boolean checkValidity();
+    [FIXME] boolean reportValidity();
+    [FIXME] undefined setCustomValidity(DOMString error);
 
     readonly attribute NodeList labels;
 };

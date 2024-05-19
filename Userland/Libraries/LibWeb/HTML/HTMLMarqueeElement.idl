@@ -18,7 +18,6 @@ interface HTMLMarqueeElement : HTMLElement {
     // FIXME: [CEReactions] attribute unsigned long vspace;
     [CEReactions, Reflect] attribute DOMString width;
 
-    // FIXME: undefined start();
-    // FIXME: undefined stop();
-
+    [FIXME] undefined start();
+    [FIXME] undefined stop();
 };

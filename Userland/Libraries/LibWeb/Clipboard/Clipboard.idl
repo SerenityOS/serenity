@@ -5,8 +5,8 @@
 // https://w3c.github.io/clipboard-apis/#clipboard
 [SecureContext, Exposed=Window]
 interface Clipboard : EventTarget {
-    // FIXME: Promise<ClipboardItems> read();
-    // FIXME: Promise<DOMString> readText();
-    // FIXME: Promise<undefined> write(ClipboardItems data);
+    [FIXME] Promise<ClipboardItems> read();
+    [FIXME] Promise<DOMString> readText();
+    [FIXME] Promise<undefined> write(ClipboardItems data);
     Promise<undefined> writeText(DOMString data);
 };

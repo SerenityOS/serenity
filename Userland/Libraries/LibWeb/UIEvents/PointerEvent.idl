@@ -33,6 +33,6 @@ interface PointerEvent : MouseEvent {
     readonly attribute double azimuthAngle;
     readonly attribute DOMString pointerType;
     readonly attribute boolean isPrimary;
-    // FIXME: [SecureContext] sequence<PointerEvent> getCoalescedEvents();
-    // FIXME: sequence<PointerEvent> getPredictedEvents();
+    [FIXME, SecureContext] sequence<PointerEvent> getCoalescedEvents();
+    [FIXME] sequence<PointerEvent> getPredictedEvents();
 };

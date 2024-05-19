@@ -14,10 +14,10 @@ interface HTMLFieldSetElement : HTMLElement {
 
     [SameObject] readonly attribute HTMLCollection elements;
 
-    // FIXME: readonly attribute boolean willValidate;
-    // FIXME: [SameObject] readonly attribute ValidityState validity;
-    // FIXME: readonly attribute DOMString validationMessage;
-    // FIXME: boolean checkValidity();
-    // FIXME: boolean reportValidity();
-    // FIXME: undefined setCustomValidity(DOMString error);
+    [FIXME] readonly attribute boolean willValidate;
+    [FIXME, SameObject] readonly attribute ValidityState validity;
+    [FIXME] readonly attribute DOMString validationMessage;
+    [FIXME] boolean checkValidity();
+    [FIXME] boolean reportValidity();
+    [FIXME] undefined setCustomValidity(DOMString error);
 };

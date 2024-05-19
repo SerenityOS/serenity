@@ -4,7 +4,7 @@
 [Exposed=Window]
 interface SVGClipPathElement : SVGElement {
 
-    // FIXME: readonly attribute SVGAnimatedEnumeration clipPathUnits;
-    // FIXME: readonly attribute SVGAnimatedTransformList transform;
+    [FIXME] readonly attribute SVGAnimatedEnumeration clipPathUnits;
+    [FIXME] readonly attribute SVGAnimatedTransformList transform;
 
 };

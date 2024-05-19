@@ -23,7 +23,7 @@ interface HTMLInputElement : HTMLElement {
     [CEReactions, Reflect=formtarget] attribute DOMString formTarget;
     // FIXME: [CEReactions] attribute unsigned long height;
     attribute boolean indeterminate;
-    // FIXME: readonly attribute HTMLDataListElement? list;
+    [FIXME] readonly attribute HTMLDataListElement? list;
     [CEReactions, Reflect] attribute DOMString max;
     [CEReactions] attribute long maxLength;
     [CEReactions, Reflect] attribute DOMString min;
@@ -47,9 +47,9 @@ interface HTMLInputElement : HTMLElement {
     undefined stepUp(optional long n = 1);
     undefined stepDown(optional long n = 1);
 
-    // FIXME: readonly attribute boolean willValidate;
-    // FIXME: readonly attribute ValidityState validity;
-    // FIXME: readonly attribute DOMString validationMessage;
+    [FIXME] readonly attribute boolean willValidate;
+    [FIXME] readonly attribute ValidityState validity;
+    [FIXME] readonly attribute DOMString validationMessage;
     boolean checkValidity();
     boolean reportValidity();
     undefined setCustomValidity(DOMString error);
@@ -60,8 +60,8 @@ interface HTMLInputElement : HTMLElement {
     // FIXME: attribute unsigned long? selectionStart;
     // FIXME: attribute unsigned long? selectionEnd;
     // FIXME: attribute DOMString? selectionDirection;
-    // FIXME: undefined setRangeText(DOMString replacement);
-    // FIXME: undefined setRangeText(DOMString replacement, unsigned long start, unsigned long end, optional SelectionMode selectionMode = "preserve");
+    [FIXME] undefined setRangeText(DOMString replacement);
+    [FIXME] undefined setRangeText(DOMString replacement, unsigned long start, unsigned long end, optional SelectionMode selectionMode = "preserve");
     undefined setSelectionRange(unsigned long start, unsigned long end, optional DOMString direction);
 
     undefined showPicker();

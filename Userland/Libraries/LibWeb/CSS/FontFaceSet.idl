@@ -20,8 +20,8 @@ interface FontFaceSet : EventTarget {
 
     // FIXME: setlike<FontFace>;
     FontFaceSet add(FontFace font);
-    // FIXME: boolean delete(FontFace font);
-    // FIXME:  clear();
+    [FIXME] boolean delete(FontFace font);
+    [FIXME] undefined clear();
 
     // events for when loading state changes
     // FIXME: attribute EventHandler onloading;

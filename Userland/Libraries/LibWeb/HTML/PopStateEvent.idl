@@ -6,7 +6,7 @@ interface PopStateEvent : Event {
   constructor(DOMString type, optional PopStateEventInit eventInitDict = {});
 
   readonly attribute any state;
-  // FIXME: readonly attribute boolean hasUAVisualTransition;
+  [FIXME] readonly attribute boolean hasUAVisualTransition;
 };
 
 dictionary PopStateEventInit : EventInit {

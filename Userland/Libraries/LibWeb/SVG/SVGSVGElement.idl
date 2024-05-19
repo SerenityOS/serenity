@@ -22,12 +22,12 @@ interface SVGSVGElement : SVGGraphicsElement {
 
   // FIMXE: SVGNumber createSVGNumber();
   SVGLength createSVGLength();
-  // FIXME: SVGAngle createSVGAngle();
+  [FIXME] SVGAngle createSVGAngle();
   DOMPoint createSVGPoint();
   DOMMatrix createSVGMatrix();
   DOMRect createSVGRect();
   SVGTransform createSVGTransform();
-  // FIXME: SVGTransform createSVGTransformFromMatrix(optional DOMMatrix2DInit matrix = {});
+  [FIXME] SVGTransform createSVGTransformFromMatrix(optional DOMMatrix2DInit matrix = {});
 
   Element getElementById(DOMString elementId);
 
