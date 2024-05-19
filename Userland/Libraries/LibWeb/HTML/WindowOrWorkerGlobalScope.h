@@ -70,6 +70,8 @@ public:
 
     JS::NonnullGCPtr<JS::Object> supported_entry_types() const;
 
+    JS::NonnullGCPtr<IndexedDB::IDBFactory> indexed_db();
+
 protected:
     void initialize(JS::Realm&);
     void visit_edges(JS::Cell::Visitor&);
@@ -102,6 +104,8 @@ private:
     OrderedHashMap<FlyString, PerformanceTimeline::PerformanceEntryTuple> m_performance_entry_buffer_map;
 
     JS::GCPtr<HighResolutionTime::Performance> m_performance;
+
+    JS::GCPtr<IndexedDB::IDBFactory> m_indexed_db;
 
     mutable JS::GCPtr<JS::Object> m_supported_entry_types_array;
 };

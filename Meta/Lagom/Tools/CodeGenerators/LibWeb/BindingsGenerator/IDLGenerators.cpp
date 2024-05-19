@@ -3764,6 +3764,7 @@ static void generate_using_namespace_definitions(SourceGenerator& generator)
     using namespace Web::Geometry;
     using namespace Web::HighResolutionTime;
     using namespace Web::HTML;
+    using namespace Web::IndexedDB;
     using namespace Web::Internals;
     using namespace Web::IntersectionObserver;
     using namespace Web::RequestIdleCallback;

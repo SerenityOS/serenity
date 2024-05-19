@@ -498,6 +498,10 @@ namespace Web::HighResolutionTime {
 class Performance;
 }
 
+namespace Web::IndexedDB {
+class IDBFactory;
+}
+
 namespace Web::Internals {
 class Inspector;
 class Internals;
