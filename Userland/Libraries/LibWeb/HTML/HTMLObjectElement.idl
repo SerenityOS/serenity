@@ -17,12 +17,12 @@ interface HTMLObjectElement : HTMLElement {
     readonly attribute WindowProxy? contentWindow;
     Document? getSVGDocument();
 
-    // FIXME: readonly attribute boolean willValidate;
-    // FIXME: readonly attribute ValidityState validity;
-    // FIXME: readonly attribute DOMString validationMessage;
-    // FIXME: boolean checkValidity();
-    // FIXME: boolean reportValidity();
-    // FIXME: undefined setCustomValidity(DOMString error);
+    [FIXME] readonly attribute boolean willValidate;
+    [FIXME] readonly attribute ValidityState validity;
+    [FIXME] readonly attribute DOMString validationMessage;
+    [FIXME] boolean checkValidity();
+    [FIXME] boolean reportValidity();
+    [FIXME] undefined setCustomValidity(DOMString error);
 
     // Obsolete
     [CEReactions, Reflect] attribute DOMString align;

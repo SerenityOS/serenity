@@ -31,9 +31,9 @@ interface HTMLElement : Element {
     // FIXME: ElementInternals attachInternals();
 
     // The popover API
-    // FIXME: undefined showPopover();
-    // FIXME: undefined hidePopover();
-    // FIXME: boolean togglePopover(optional boolean force);
+    [FIXME] undefined showPopover();
+    [FIXME] undefined hidePopover();
+    [FIXME] boolean togglePopover(optional boolean force);
     // FIXME: [CEReactions] attribute DOMString? popover;
 
     // https://drafts.csswg.org/cssom-view/#extensions-to-the-htmlelement-interface

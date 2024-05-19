@@ -15,5 +15,5 @@ interface Location { // but see also additional creation steps and overridden in
     [LegacyUnforgeable] undefined replace(USVString url);
     [LegacyUnforgeable] undefined reload();
 
-    // TODO: [LegacyUnforgeable, SameObject] readonly attribute DOMStringList ancestorOrigins;
+    [FIXME, LegacyUnforgeable, SameObject] readonly attribute DOMStringList ancestorOrigins;
 };

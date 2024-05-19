@@ -11,7 +11,7 @@ callback IntersectionObserverCallback = undefined (sequence<IntersectionObserver
 interface IntersectionObserver {
     constructor(IntersectionObserverCallback callback, optional IntersectionObserverInit options = {});
     readonly attribute (Element or Document)? root;
-    // FIXME: readonly attribute DOMString rootMargin;
+    [FIXME] readonly attribute DOMString rootMargin;
     // FIXME: `sequence<double>` should be `FrozenArray<double>`
     readonly attribute sequence<double> thresholds;
     undefined observe(Element target);

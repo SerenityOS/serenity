@@ -18,13 +18,13 @@ interface HTMLImageElement : HTMLElement {
     readonly attribute unsigned long naturalWidth;
     readonly attribute unsigned long naturalHeight;
     readonly attribute boolean complete;
-    // FIXME: readonly attribute USVString currentSrc;
+    [FIXME] readonly attribute USVString currentSrc;
     // FIXME: [CEReactions] attribute DOMString referrerPolicy;
     // FIXME: [CEReactions] attribute DOMString decoding;
     // FIXME: [CEReactions] attribute DOMString loading;
     // FIXME: [CEReactions] attribute DOMString fetchPriority;
 
-    // FIXME: Promise<undefined> decode();
+    [FIXME] Promise<undefined> decode();
 
     // Obsolete
     [CEReactions, Reflect] attribute DOMString name;

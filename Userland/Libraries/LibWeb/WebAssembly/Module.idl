@@ -21,7 +21,7 @@ dictionary ModuleImportDescriptor {
 interface Module {
     constructor(BufferSource bytes);
 
-    // FIXME: static sequence<ModuleExportDescriptor> exports(Module moduleObject);
-    // FIXME: static sequence<ModuleImportDescriptor> imports(Module moduleObject);
-    // FIXME: static sequence<ArrayBuffer> customSections(Module moduleObject, DOMString sectionName);
+    [FIXME] static sequence<ModuleExportDescriptor> exports(Module moduleObject);
+    [FIXME] static sequence<ModuleImportDescriptor> imports(Module moduleObject);
+    [FIXME] static sequence<ArrayBuffer> customSections(Module moduleObject, DOMString sectionName);
 };

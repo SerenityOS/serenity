@@ -9,17 +9,17 @@ interface SVGTextContentElement : SVGGraphicsElement {
     const unsigned short LENGTHADJUST_SPACING = 1;
     const unsigned short LENGTHADJUST_SPACINGANDGLYPHS = 2;
 
-    // FIXME: [SameObject] readonly attribute SVGAnimatedLength textLength;
-    // FIXME:[SameObject] readonly attribute SVGAnimatedEnumeration lengthAdjust;
+    [FIXME, SameObject] readonly attribute SVGAnimatedLength textLength;
+    [FIXME, SameObject] readonly attribute SVGAnimatedEnumeration lengthAdjust;
 
     long getNumberOfChars();
-    // FIXME: float getComputedTextLength();
-    // FIXME: float getSubStringLength(unsigned long charnum, unsigned long nchars);
+    [FIXME] float getComputedTextLength();
+    [FIXME] float getSubStringLength(unsigned long charnum, unsigned long nchars);
     DOMPoint getStartPositionOfChar(unsigned long charnum);
-    // FIXME: DOMPoint getEndPositionOfChar(unsigned long charnum);
-    // FIXME: DOMRect getExtentOfChar(unsigned long charnum);
-    // FIXME: float getRotationOfChar(unsigned long charnum);
-    // FIXME: long getCharNumAtPosition(optional DOMPointInit point = {});
-    // FIXME: undefined selectSubString(unsigned long charnum, unsigned long nchars);
+    [FIXME] DOMPoint getEndPositionOfChar(unsigned long charnum);
+    [FIXME] DOMRect getExtentOfChar(unsigned long charnum);
+    [FIXME] float getRotationOfChar(unsigned long charnum);
+    [FIXME] long getCharNumAtPosition(optional DOMPointInit point = {});
+    [FIXME] undefined selectSubString(unsigned long charnum, unsigned long nchars);
 
 };

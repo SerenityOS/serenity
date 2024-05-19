@@ -25,9 +25,9 @@ interface HTMLTextAreaElement : HTMLElement {
     [LegacyNullToEmptyString] attribute DOMString value;
     readonly attribute unsigned long textLength;
 
-    // FIXME: readonly attribute boolean willValidate;
-    // FIXME: readonly attribute ValidityState validity;
-    // FIXME: readonly attribute DOMString validationMessage;
+    [FIXME] readonly attribute boolean willValidate;
+    [FIXME] readonly attribute ValidityState validity;
+    [FIXME] readonly attribute DOMString validationMessage;
     boolean checkValidity();
     boolean reportValidity();
     undefined setCustomValidity(DOMString error);
@@ -38,7 +38,7 @@ interface HTMLTextAreaElement : HTMLElement {
     attribute unsigned long selectionStart;
     attribute unsigned long selectionEnd;
     // FIXME: attribute DOMString selectionDirection;
-    // FIXME: undefined setRangeText(DOMString replacement);
-    // FIXME: undefined setRangeText(DOMString replacement, unsigned long start, unsigned long end, optional SelectionMode selectionMode = "preserve");
-    // FIXME: undefined setSelectionRange(unsigned long start, unsigned long end, optional DOMString direction);
+    [FIXME] undefined setRangeText(DOMString replacement);
+    [FIXME] undefined setRangeText(DOMString replacement, unsigned long start, unsigned long end, optional SelectionMode selectionMode = "preserve");
+    [FIXME] undefined setSelectionRange(unsigned long start, unsigned long end, optional DOMString direction);
 };

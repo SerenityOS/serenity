@@ -16,8 +16,8 @@ interface HTMLTrackElement : HTMLElement {
     // FIXME: [const unsigned short LOADING = 1;
     // FIXME: [const unsigned short LOADED = 2;
     // FIXME: [const unsigned short ERROR = 3;
-    // FIXME: [readonly attribute unsigned short readyState;
+    [FIXME] readonly attribute unsigned short readyState;
 
-    // FIXME: [readonly attribute TextTrack track;
+    [FIXME] readonly attribute TextTrack track;
 
 };

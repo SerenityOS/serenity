@@ -24,18 +24,18 @@ interface HTMLSelectElement : HTMLElement {
     [CEReactions] undefined add((HTMLOptionElement or HTMLOptGroupElement) element, optional (HTMLElement or long)? before = null);
     [CEReactions] undefined remove(); // ChildNode overload
     [CEReactions] undefined remove(long index);
-    // FIXME: [CEReactions] setter undefined (unsigned long index, HTMLOptionElement? option);
+    [FIXME, CEReactions] setter undefined (unsigned long index, HTMLOptionElement? option);
 
     [SameObject] readonly attribute HTMLCollection selectedOptions;
     attribute long selectedIndex;
     attribute DOMString value;
 
-    // FIXME: readonly attribute boolean willValidate;
-    // FIXME: readonly attribute ValidityState validity;
-    // FIXME: readonly attribute DOMString validationMessage;
-    // FIXME: boolean checkValidity();
-    // FIXME: boolean reportValidity();
-    // FIXME: undefined setCustomValidity(DOMString error);
+    [FIXME] readonly attribute boolean willValidate;
+    [FIXME] readonly attribute ValidityState validity;
+    [FIXME] readonly attribute DOMString validationMessage;
+    [FIXME] boolean checkValidity();
+    [FIXME] boolean reportValidity();
+    [FIXME] undefined setCustomValidity(DOMString error);
 
     readonly attribute NodeList labels;
 };

@@ -5,11 +5,11 @@
 interface IDBFactory {
     [NewObject] IDBOpenDBRequest open(DOMString name,
                                       optional [EnforceRange] unsigned long long version);
-    // FIXME: [NewObject] IDBOpenDBRequest deleteDatabase(DOMString name);
+    [FIXME, NewObject] IDBOpenDBRequest deleteDatabase(DOMString name);
 
-    // FIXME: Promise<sequence<IDBDatabaseInfo>> databases();
+    [FIXME] Promise<sequence<IDBDatabaseInfo>> databases();
 
-    // FIXME: short cmp(any first, any second);
+    [FIXME] short cmp(any first, any second);
 };
 
 dictionary IDBDatabaseInfo {

@@ -14,12 +14,12 @@ interface HTMLOutputElement : HTMLElement {
     [CEReactions] attribute DOMString defaultValue;
     [CEReactions] attribute DOMString value;
 
-    // FIXME: readonly attribute boolean willValidate;
-    // FIXME: readonly attribute ValidityState validity;
-    // FIXME: readonly attribute DOMString validationMessage;
-    // FIXME: boolean checkValidity();
-    // FIXME: boolean reportValidity();
-    // FIXME: undefined setCustomValidity(DOMString error);
+    [FIXME] readonly attribute boolean willValidate;
+    [FIXME] readonly attribute ValidityState validity;
+    [FIXME] readonly attribute DOMString validationMessage;
+    [FIXME] boolean checkValidity();
+    [FIXME] boolean reportValidity();
+    [FIXME] undefined setCustomValidity(DOMString error);
 
     readonly attribute NodeList labels;
 };
