@@ -8,6 +8,7 @@
 #include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
 #include <LibGfx/ImageFormats/AnimationWriter.h>
+#include <LibGfx/ImageFormats/GIFWriter.h>
 #include <LibGfx/ImageFormats/ImageDecoder.h>
 #include <LibGfx/ImageFormats/WebPWriter.h>
 
@@ -46,7 +47,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto output_file = TRY(Core::File::open(options.out_path, Core::File::OpenMode::Write));
     auto output_stream = TRY(Core::OutputBufferedFile::create(move(output_file)));
 
-    auto animation_writer = TRY(Gfx::WebPWriter::start_encoding_animation(*output_stream, decoder->size(), decoder->loop_count()));
+    auto animation_writer = TRY([&]() -> ErrorOr<NonnullOwnPtr<Gfx::AnimationWriter>> {
+        if (options.out_path.ends_with(".webp"sv))
+            return Gfx::WebPWriter::start_encoding_animation(*output_stream, decoder->size(), decoder->loop_count());
+        if (options.out_path.ends_with(".gif"sv))
+            return Gfx::GIFWriter::start_encoding_animation(*output_stream, decoder->size());
+        return Error::from_string_literal("Unable to find a encoder for the requested extension.");
+    }());
 
     RefPtr<Gfx::Bitmap> last_frame;
     for (size_t i = 0; i < decoder->frame_count(); ++i) {

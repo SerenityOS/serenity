@@ -127,6 +127,46 @@ ErrorOr<void> write_trailer(Stream& stream)
     return {};
 }
 
+class GIFAnimationWriter : public AnimationWriter {
+public:
+    GIFAnimationWriter(SeekableStream& stream)
+        : m_stream(stream)
+    {
+    }
+
+    virtual ErrorOr<void> add_frame(Bitmap&, int, IntPoint) override;
+
+private:
+    SeekableStream& m_stream;
+    bool m_is_first_frame { true };
+};
+
+ErrorOr<void> GIFAnimationWriter::add_frame(Bitmap& bitmap, int duration_ms, IntPoint at = {})
+{
+    // FIXME: Consider frame's duration and position
+    (void)duration_ms;
+    (void)at;
+
+    // Let's get rid of the previously written trailer
+    if (!m_is_first_frame)
+        TRY(m_stream.seek(-1, SeekMode::FromEndPosition));
+
+    m_is_first_frame = false;
+
+    // Write a Table-Based Image
+    BigEndianOutputBitStream bit_stream { MaybeOwned { m_stream } };
+    TRY(write_image_descriptor(bit_stream, bitmap));
+
+    auto const palette = TRY(median_cut(bitmap, 256));
+    TRY(write_color_table(m_stream, palette));
+    TRY(write_image_data(m_stream, bitmap, palette));
+
+    // We always write a trailer to ensure that the file is valid.
+    TRY(write_trailer(m_stream));
+
+    return {};
+}
+
 }
 
 ErrorOr<void> GIFWriter::encode(Stream& stream, Bitmap const& bitmap)
@@ -145,6 +185,15 @@ ErrorOr<void> GIFWriter::encode(Stream& stream, Bitmap const& bitmap)
     TRY(write_trailer(bit_stream));
 
     return {};
+}
+
+ErrorOr<NonnullOwnPtr<AnimationWriter>> GIFWriter::start_encoding_animation(SeekableStream& stream, IntSize dimensions)
+{
+    TRY(write_header(stream));
+
+    BigEndianOutputBitStream bit_stream { MaybeOwned<Stream> { stream } };
+    TRY(write_logical_descriptor(bit_stream, dimensions));
+    return make<GIFAnimationWriter>(stream);
 }
 
 }
