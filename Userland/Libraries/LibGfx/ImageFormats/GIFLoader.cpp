@@ -272,11 +272,9 @@ static ErrorOr<void> load_gif_frame_descriptors(GIFLoadingContext& context)
         if (sentinel == '!') {
             u8 extension_type = TRY(context.stream.read_value<u8>());
 
-            u8 sub_block_length = 0;
-
             Vector<u8> sub_block {};
             for (;;) {
-                sub_block_length = TRY(context.stream.read_value<u8>());
+                auto const sub_block_length = TRY(context.stream.read_value<u8>());
                 if (sub_block_length == 0)
                     break;
 
