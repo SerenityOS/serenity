@@ -53,9 +53,10 @@ private:
 
 class LibJSGCVisitor : public clang::RecursiveASTVisitor<LibJSGCVisitor> {
 public:
-    explicit LibJSGCVisitor(clang::ASTContext& context, LibJSCellMacroMap const& macro_map)
+    explicit LibJSGCVisitor(clang::ASTContext& context, LibJSCellMacroMap const& macro_map, bool detect_invalid_function_members)
         : m_context(context)
         , m_macro_map(macro_map)
+        , m_detect_invalid_function_members(detect_invalid_function_members)
     {
     }
 
@@ -72,33 +73,39 @@ private:
 
     clang::ASTContext& m_context;
     LibJSCellMacroMap const& m_macro_map;
+    bool m_detect_invalid_function_members;
 };
 
 class LibJSGCASTConsumer : public clang::ASTConsumer {
 public:
-    explicit LibJSGCASTConsumer(clang::CompilerInstance&);
+    LibJSGCASTConsumer(clang::CompilerInstance&, bool detect_invalid_function_members);
 
 private:
     virtual void HandleTranslationUnit(clang::ASTContext& context) override;
 
     clang::CompilerInstance& m_compiler;
     LibJSCellMacroMap m_macro_map;
+    bool m_detect_invalid_function_members;
 };
 
 class LibJSGCPluginAction : public clang::PluginASTAction {
 public:
-    virtual bool ParseArgs(clang::CompilerInstance const&, std::vector<std::string> const&) override
+    virtual bool ParseArgs(clang::CompilerInstance const&, std::vector<std::string> const& args) override
     {
+        m_detect_invalid_function_members = std::find(args.begin(), args.end(), "detect-invalid-function-members") != args.end();
         return true;
     }
 
     virtual std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(clang::CompilerInstance& compiler, llvm::StringRef) override
     {
-        return std::make_unique<LibJSGCASTConsumer>(compiler);
+        return std::make_unique<LibJSGCASTConsumer>(compiler, m_detect_invalid_function_members);
     }
 
     ActionType getActionType() override
     {
         return AddAfterMainAction;
     }
+
+private:
+    bool m_detect_invalid_function_members { false };
 };

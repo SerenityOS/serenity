@@ -33,3 +33,4 @@ serenity_option(SERENITY_CACHE_DIR "${PROJECT_BINARY_DIR}/../caches" CACHE PATH 
 serenity_option(ENABLE_NETWORK_DOWNLOADS ON CACHE BOOL "Allow downloads of required files. If OFF, required files must already be present in SERENITY_CACHE_DIR")
 
 serenity_option(ENABLE_CLANG_PLUGINS OFF CACHE BOOL "Enable building with the Clang plugins")
+serenity_option(ENABLE_CLANG_PLUGINS_INVALID_FUNCTION_MEMBERS OFF CACHE BOOL "Enable detecting invalid function types as members of GC-allocated objects")
