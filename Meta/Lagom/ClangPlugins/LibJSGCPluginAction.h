@@ -53,20 +53,36 @@ private:
 
 class LibJSGCVisitor : public clang::RecursiveASTVisitor<LibJSGCVisitor> {
 public:
-    explicit LibJSGCVisitor(clang::ASTContext& context)
+    explicit LibJSGCVisitor(clang::ASTContext& context, LibJSCellMacroMap const& macro_map)
         : m_context(context)
+        , m_macro_map(macro_map)
     {
     }
 
     bool VisitCXXRecordDecl(clang::CXXRecordDecl*);
 
 private:
+    struct CellMacroExpectation {
+        LibJSCellMacro::Type type;
+        std::string base_name;
+    };
+
+    void validate_record_macros(clang::CXXRecordDecl const&);
+    CellMacroExpectation get_record_cell_macro_expectation(clang::CXXRecordDecl const&);
+
     clang::ASTContext& m_context;
+    LibJSCellMacroMap const& m_macro_map;
 };
 
 class LibJSGCASTConsumer : public clang::ASTConsumer {
 public:
+    explicit LibJSGCASTConsumer(clang::CompilerInstance&);
+
+private:
     virtual void HandleTranslationUnit(clang::ASTContext& context) override;
+
+    clang::CompilerInstance& m_compiler;
+    LibJSCellMacroMap m_macro_map;
 };
 
 class LibJSGCPluginAction : public clang::PluginASTAction {
@@ -76,9 +92,9 @@ public:
         return true;
     }
 
-    virtual std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(clang::CompilerInstance&, llvm::StringRef) override
+    virtual std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(clang::CompilerInstance& compiler, llvm::StringRef) override
     {
-        return std::make_unique<LibJSGCASTConsumer>();
+        return std::make_unique<LibJSGCASTConsumer>(compiler);
     }
 
     ActionType getActionType() override
