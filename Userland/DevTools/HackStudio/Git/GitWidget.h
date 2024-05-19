@@ -14,7 +14,7 @@
 
 namespace HackStudio {
 
-using ViewDiffCallback = Function<void(ByteString const& original_content, ByteString const& diff)>;
+using ViewDiffCallback = Function<void(ByteString const& original_content, ByteString const& diff, ByteString const& file_path)>;
 
 class GitWidget final : public GUI::Widget {
     C_OBJECT(GitWidget)
