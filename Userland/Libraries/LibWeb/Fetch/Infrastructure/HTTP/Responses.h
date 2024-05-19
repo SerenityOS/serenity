@@ -49,6 +49,9 @@ public:
         // https://fetch.spec.whatwg.org/#fetch-timing-info-decoded-body-size
         u64 decoded_size { 0 };
 
+        // https://fetch.spec.whatwg.org/#response-body-info-content-type
+        String content_type {};
+
         bool operator==(BodyInfo const&) const = default;
     };
 

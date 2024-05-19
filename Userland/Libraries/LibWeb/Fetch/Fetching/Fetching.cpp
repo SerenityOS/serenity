@@ -24,6 +24,7 @@
 #include <LibWeb/Fetch/Infrastructure/FetchController.h>
 #include <LibWeb/Fetch/Infrastructure/FetchParams.h>
 #include <LibWeb/Fetch/Infrastructure/FetchTimingInfo.h>
+#include <LibWeb/Fetch/Infrastructure/HTTP/Headers.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Methods.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Requests.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Responses.h>
@@ -600,7 +601,17 @@ void fetch_response_handover(JS::Realm& realm, Infrastructure::FetchParams const
                 ? 0
                 : response.status();
 
-            // FIXME: 7. If fetchParams’s request’s initiator type is not null, then mark resource timing given timingInfo,
+            // 7. If fetchParams’s request’s mode is not "navigate" or response’s has-cross-origin-redirects is false:
+            if (fetch_params.request()->mode() != Infrastructure::Request::Mode::Navigate || !response.has_cross_origin_redirects()) {
+                // 1. Let mimeType be the result of extracting a MIME type from response’s header list.
+                auto mime_type = response.header_list()->extract_mime_type();
+
+                // 2. If mimeType is non-null, then set bodyInfo’s content type to the result of minimizing a supported MIME type given mimeType.
+                if (mime_type.has_value())
+                    body_info.content_type = MimeSniff::minimise_a_supported_mime_type(mime_type.value());
+            }
+
+            // FIXME: 8. If fetchParams’s request’s initiator type is not null, then mark resource timing given timingInfo,
             //           request’s URL, request’s initiator type, global, cacheState, bodyInfo, and responseStatus.
             (void)timing_info;
             (void)global;
