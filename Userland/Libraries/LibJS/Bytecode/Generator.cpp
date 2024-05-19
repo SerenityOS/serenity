@@ -902,7 +902,6 @@ void Generator::generate_scoped_jump(JumpType type)
             }
             break;
         case Unwind:
-            VERIFY(last_was_finally || !m_current_unwind_context->finalizer().has_value());
             if (!last_was_finally) {
                 VERIFY(m_current_unwind_context && m_current_unwind_context->handler().has_value());
                 emit<Bytecode::Op::LeaveUnwindContext>();
@@ -944,7 +943,6 @@ void Generator::generate_labelled_jump(JumpType type, DeprecatedFlyString const&
         for (; current_boundary > 0; --current_boundary) {
             auto boundary = m_boundaries[current_boundary - 1];
             if (boundary == BlockBoundaryType::Unwind) {
-                VERIFY(last_was_finally || !m_current_unwind_context->finalizer().has_value());
                 if (!last_was_finally) {
                     VERIFY(m_current_unwind_context && m_current_unwind_context->handler().has_value());
                     emit<Bytecode::Op::LeaveUnwindContext>();
