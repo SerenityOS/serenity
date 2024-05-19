@@ -364,28 +364,23 @@ static ErrorOr<void> load_gif_frame_descriptors(GIFLoadingContext& context)
 {
     NonnullOwnPtr<GIFImageDescriptor> current_image = make<GIFImageDescriptor>();
     for (;;) {
-        u8 sentinel = TRY(context.stream.read_value<u8>());
+        u8 const sentinel = TRY(context.stream.read_value<u8>());
 
-        if (sentinel == 0x21) {
+        switch (sentinel) {
+        case 0x21:
             TRY(load_extension(context, current_image));
-            continue;
-        }
-
-        if (sentinel == 0x2C) {
+            break;
+        case 0x2C:
             TRY(load_image_descriptor(context, move(current_image)));
             current_image = make<GIFImageDescriptor>();
-            continue;
-        }
-
-        if (sentinel == 0x3B) {
             break;
+        case 0x3B:
+            context.state = GIFLoadingContext::State::FrameDescriptorsLoaded;
+            return {};
+        default:
+            return Error::from_string_literal("Unexpected sentinel");
         }
-
-        return Error::from_string_literal("Unexpected sentinel");
     }
-
-    context.state = GIFLoadingContext::State::FrameDescriptorsLoaded;
-    return {};
 }
 
 GIFImageDecoderPlugin::GIFImageDecoderPlugin(FixedMemoryStream stream)
