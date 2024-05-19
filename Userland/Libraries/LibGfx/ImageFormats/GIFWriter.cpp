@@ -21,15 +21,15 @@ ErrorOr<void> write_header(Stream& stream)
     return {};
 }
 
-ErrorOr<void> write_logical_descriptor(BigEndianOutputBitStream& stream, Bitmap const& bitmap)
+ErrorOr<void> write_logical_descriptor(BigEndianOutputBitStream& stream, IntSize size)
 {
     // 18. Logical Screen Descriptor
 
-    if (bitmap.width() > NumericLimits<u16>::max() || bitmap.height() > NumericLimits<u16>::max())
+    if (size.width() > NumericLimits<u16>::max() || size.height() > NumericLimits<u16>::max())
         return Error::from_string_literal("Bitmap size is too big for a GIF");
 
-    TRY(stream.write_value<u16>(bitmap.width()));
-    TRY(stream.write_value<u16>(bitmap.height()));
+    TRY(stream.write_value<u16>(size.width()));
+    TRY(stream.write_value<u16>(size.height()));
 
     // Global Color Table Flag
     TRY(stream.write_bits(false, 1));
@@ -135,7 +135,7 @@ ErrorOr<void> GIFWriter::encode(Stream& stream, Bitmap const& bitmap)
     TRY(write_header(stream));
 
     BigEndianOutputBitStream bit_stream { MaybeOwned<Stream> { stream } };
-    TRY(write_logical_descriptor(bit_stream, bitmap));
+    TRY(write_logical_descriptor(bit_stream, bitmap.size()));
 
     // Write a Table-Based Image
     TRY(write_image_descriptor(bit_stream, bitmap));
