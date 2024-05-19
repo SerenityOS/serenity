@@ -11,7 +11,7 @@ interface HTMLSourceElement : HTMLElement {
     [CEReactions, Reflect] attribute DOMString srcset;
     [CEReactions, Reflect] attribute DOMString sizes;
     [CEReactions, Reflect] attribute DOMString media;
-    // FIXME: [CEReactions, Reflect] attribute unsigned long width;
-    // FIXME: [CEReactions, Reflect] attribute unsigned long height;
+    [FIXME, CEReactions, Reflect] attribute unsigned long width;
+    [FIXME, CEReactions, Reflect] attribute unsigned long height;
 
 };

@@ -37,7 +37,7 @@ interface HTMLTextAreaElement : HTMLElement {
     // FIXME: undefined select();
     attribute unsigned long selectionStart;
     attribute unsigned long selectionEnd;
-    // FIXME: attribute DOMString selectionDirection;
+    [FIXME] attribute DOMString selectionDirection;
     [FIXME] undefined setRangeText(DOMString replacement);
     [FIXME] undefined setRangeText(DOMString replacement, unsigned long start, unsigned long end, optional SelectionMode selectionMode = "preserve");
     [FIXME] undefined setSelectionRange(unsigned long start, unsigned long end, optional DOMString direction);

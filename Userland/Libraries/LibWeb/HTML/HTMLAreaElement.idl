@@ -15,7 +15,7 @@ interface HTMLAreaElement : HTMLElement {
     [CEReactions, Reflect] attribute USVString ping;
     [CEReactions, Reflect] attribute DOMString rel;
     [SameObject, PutForwards=value] readonly attribute DOMTokenList relList;
-    // FIXME: [CEReactions] attribute DOMString referrerPolicy;
+    [FIXME, CEReactions] attribute DOMString referrerPolicy;
 
     // Obsolete
     [Reflect=nohref] attribute boolean noHref;

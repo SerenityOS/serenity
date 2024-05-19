@@ -10,8 +10,8 @@ interface IDBRequest : EventTarget {
     [FIXME] readonly attribute IDBRequestReadyState readyState;
 
     // Event handlers:
-    // FIXME: attribute EventHandler onsuccess;
-    // FIXME: attribute EventHandler onerror;
+    [FIXME] attribute EventHandler onsuccess;
+    [FIXME] attribute EventHandler onerror;
 };
 
 enum IDBRequestReadyState {

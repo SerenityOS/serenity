@@ -10,7 +10,7 @@ interface HTMLImageElement : HTMLElement {
     [CEReactions, Reflect] attribute DOMString src;
     [CEReactions, Reflect] attribute DOMString srcset;
     [CEReactions, Reflect] attribute DOMString sizes;
-    // FIXME: [CEReactions] attribute DOMString? crossOrigin;
+    [FIXME, CEReactions] attribute DOMString? crossOrigin;
     [CEReactions, Reflect=usemap] attribute DOMString useMap;
     [CEReactions, Reflect=ismap] attribute boolean isMap;
     [CEReactions] attribute unsigned long width;
@@ -19,20 +19,20 @@ interface HTMLImageElement : HTMLElement {
     readonly attribute unsigned long naturalHeight;
     readonly attribute boolean complete;
     [FIXME] readonly attribute USVString currentSrc;
-    // FIXME: [CEReactions] attribute DOMString referrerPolicy;
-    // FIXME: [CEReactions] attribute DOMString decoding;
-    // FIXME: [CEReactions] attribute DOMString loading;
-    // FIXME: [CEReactions] attribute DOMString fetchPriority;
+    [FIXME, CEReactions] attribute DOMString referrerPolicy;
+    [FIXME, CEReactions] attribute DOMString decoding;
+    [FIXME, CEReactions] attribute DOMString loading;
+    [FIXME, CEReactions] attribute DOMString fetchPriority;
 
     [FIXME] Promise<undefined> decode();
 
     // Obsolete
     [CEReactions, Reflect] attribute DOMString name;
-    // FIXME: [CEReactions] attribute USVString lowsrc;
+    [FIXME, CEReactions] attribute USVString lowsrc;
     [CEReactions, Reflect] attribute DOMString align;
-    // FIXME: [CEReactions] attribute unsigned long hspace;
-    // FIXME: [CEReactions] attribute unsigned long vspace;
-    // FIXME: [CEReactions] attribute USVString longDesc;
+    [FIXME, CEReactions] attribute unsigned long hspace;
+    [FIXME, CEReactions] attribute unsigned long vspace;
+    [FIXME, CEReactions] attribute USVString longDesc;
 
     [CEReactions, LegacyNullToEmptyString, Reflect] attribute DOMString border;
 

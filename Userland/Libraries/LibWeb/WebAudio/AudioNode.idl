@@ -40,7 +40,7 @@ interface AudioNode : EventTarget {
     readonly attribute BaseAudioContext context;
     [FIXME] readonly attribute unsigned long numberOfInputs;
     [FIXME] readonly attribute unsigned long numberOfOutputs;
-    // FIXME: attribute unsigned long channelCount;
-    // FIXME: attribute ChannelCountMode channelCountMode;
-    // FIXME: attribute ChannelInterpretation channelInterpretation;
+    [FIXME] attribute unsigned long channelCount;
+    [FIXME] attribute ChannelCountMode channelCountMode;
+    [FIXME] attribute ChannelInterpretation channelInterpretation;
 };

@@ -3,8 +3,8 @@
 interface DataTransfer {
     constructor();
 
-    // FIXME: attribute DOMString dropEffect;
-    // FIXME: attribute DOMString effectAllowed;
+    [FIXME] attribute DOMString dropEffect;
+    [FIXME] attribute DOMString effectAllowed;
 
     [FIXME, SameObject] readonly attribute DataTransferItemList items;
 

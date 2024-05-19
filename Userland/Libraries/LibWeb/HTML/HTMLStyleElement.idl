@@ -7,9 +7,9 @@
 interface HTMLStyleElement : HTMLElement {
     [HTMLConstructor] constructor();
 
-    // FIXME: attribute boolean disabled;
+    [FIXME] attribute boolean disabled;
     [Reflect, CEReactions] attribute DOMString media;
-    // FIXME: [SameObject, PutForwards=value] readonly attribute DOMTokenList blocking;
+    [FIXME, SameObject, PutForwards=value] readonly attribute DOMTokenList blocking;
 
     // Obsolete
     [Reflect] attribute DOMString type;
