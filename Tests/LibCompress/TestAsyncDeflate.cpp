@@ -1,0 +1,154 @@
+/*
+ * Copyright (c) 2024, Dan Klishch <danilklishch@gmail.com>
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ */
+
+#include <LibCompress/AsyncDeflate.h>
+#include <LibTest/AsyncTestCase.h>
+#include <LibTest/AsyncTestStreams.h>
+
+struct InflateTestCase {
+    StringView name;
+    Vector<u8> input;
+    Variant<StringView, ByteString, int> output;
+};
+
+// clang-format off
+Vector<InflateTestCase> const test_cases = {
+    {
+        .name = "Single compressed block"sv,
+        .input = {
+            0x0B, 0xC9, 0xC8, 0x2C, 0x56, 0x00, 0xA2, 0x44, 0x85, 0xE2, 0xCC, 0xDC,
+            0x82, 0x9C, 0x54, 0x85, 0x92, 0xD4, 0x8A, 0x12, 0x85, 0xB4, 0x4C, 0x20,
+            0xCB, 0x4A, 0x13, 0x00
+        },
+        .output = "This is a simple text file :)"sv,
+    },
+    {
+        .name = "Uncompressed block"sv,
+        .input = {
+            0x01, 0x0d, 0x00, 0xf2, 0xff, 0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x2c, 0x20,
+            0x57, 0x6f, 0x72, 0x6c, 0x64, 0x21
+        },
+        .output = "Hello, World!"sv,
+    },
+    {
+        .name = "Multiple blocks"sv,
+        .input = {
+            0x00, 0x1f, 0x00, 0xe0, 0xff, 0x54, 0x68, 0x65, 0x20, 0x66, 0x69, 0x72,
+            0x73, 0x74, 0x20, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x20, 0x69, 0x73, 0x20,
+            0x75, 0x6e, 0x63, 0x6f, 0x6d, 0x70, 0x72, 0x65, 0x73, 0x73, 0x65, 0x64,
+            0x53, 0x48, 0xcc, 0x4b, 0x51, 0x28, 0xc9, 0x48, 0x55, 0x28, 0x4e, 0x4d,
+            0xce, 0x07, 0x32, 0x93, 0x72, 0xf2, 0x93, 0xb3, 0x15, 0x32, 0x8b, 0x15,
+            0x92, 0xf3, 0x73, 0x0b, 0x8a, 0x52, 0x8b, 0x8b, 0x53, 0x53, 0xf4, 0x00
+        },
+        .output = "The first block is uncompressed and the second block is compressed."sv,
+    },
+    {
+        .name = "4Kb of zeroes"sv,
+        .input = {
+            0xed, 0xc1, 0x01, 0x0d, 0x00, 0x00, 0x00, 0xc2, 0xa0, 0xf7, 0x4f, 0x6d,
+            0x0f, 0x07, 0x14, 0x00, 0x00, 0x00, 0xf0, 0x6e
+        },
+        .output = ByteString::repeated(0, 4096),
+    },
+    {
+        .name = "clusterfuzz-58046"sv,
+        .input = {
+            0x04, 0x20, 0x04, 0x49, 0xff, 0xbf, 0x9e, 0x10, 0x04, 0x20, 0x04, 0x49,
+            0xff, 0xbf, 0x49, 0x05, 0xc0, 0x9e, 0x10, 0x04, 0x20, 0x04, 0x49, 0xff,
+            0xbf, 0x9e, 0x10, 0x04, 0x20, 0xbf, 0x9e, 0xbc, 0x04, 0x9e, 0x10
+        },
+        .output = EIO,
+    },
+    {
+        .name = "Empty"sv,
+        .input = {
+            0x01, 0x00, 0x00, 0xff, 0xff
+        },
+        // FIXME: Why do we consider empty and null StringView different? Why do we even have a
+        //        null state of StringView in the first place?
+        .output = StringView {},
+    },
+    {
+        .name = "H and an empty block"sv,
+        .input = {
+            0x00, 0x01, 0x00, 0xfe, 0xff, 0x48, 0x01, 0x00, 0x00, 0xff, 0xff
+        },
+        .output = "H"sv,
+    },
+    {
+        .name = "Junk in the end"sv,
+        .input = {
+            0x01, 0x00, 0x00, 0xff, 0xff, 0xff
+        },
+        .output = EBUSY,
+    },
+    {
+        .name = "Junk"sv,
+        .input = {
+            0x03, 0x01
+        },
+        .output = 0,
+    },
+    {
+        .name = "Compressed EOF"sv,
+        .input = {
+            0x03, 0x00
+        },
+        .output = StringView {},
+    },
+    {
+        .name = "https://github.com/SerenityOS/serenity/issues/22130"sv,
+        .input = {
+            0x15, 0xcc, 0x4b, 0x0e, 0x45, 0x40, 0x10, 0x46, 0xe1, 0x79, 0xad, 0xa2,
+            0x30, 0xb9, 0x06, 0xf4, 0x5c, 0x62, 0x31, 0x75, 0xdb, 0x4f, 0x2a, 0x29,
+            0x8d, 0x7e, 0x08, 0xbb, 0xc7, 0xf0, 0x7c, 0x83, 0xd3, 0x54, 0xae, 0xa4,
+            0xe8, 0xfe, 0x1a, 0x1c, 0xc2, 0xc9, 0x56, 0x84, 0xc8, 0x36, 0x2f, 0xc6,
+            0x7e, 0x9d, 0x78, 0xe4, 0x88, 0xa3, 0x68, 0x04, 0xd7, 0x26, 0xbb, 0xa6,
+            0xfe, 0xc5, 0x5e, 0x7c, 0xd6, 0x2d, 0xa4, 0x9a, 0xbe, 0xc0, 0x05, 0x5f,
+            0x32, 0x7e, 0x12, 0x97, 0x96, 0xa8, 0xeb, 0xf8, 0xd4, 0x75, 0xe0, 0x84,
+            0xcc, 0xb3, 0x1a, 0xf2, 0xbd, 0x63, 0x7c, 0x9f, 0x03, 0x3d
+        },
+        .output = "#!/usr/bin/env lua\n\nlocal cmd = require \"lapis.cmd.actions\"\ncmd.execute(arg)\n\n-- vim: set filetype=lua:\n"sv,
+    },
+};
+// clang-format on
+
+ASYNC_TEST_CASE(decompression)
+{
+    for (auto const& test : test_cases) {
+        outln("Decompressing '{}'...", test.name);
+
+        auto close_expectation = test.output.has<int>() ? Test::StreamCloseExpectation::Reset : Test::StreamCloseExpectation::Close;
+        auto input_partitioning = Test::randomly_partition_input(1, AK::get_random_uniform(50) + 1, test.input.size());
+        outln("Input partitioning: {}", input_partitioning);
+        auto input_stream = make<Test::AsyncMemoryInputStream>(test.input.span(), close_expectation, move(input_partitioning));
+        auto decompressor = Compress::Async::DeflateDecompressor { move(input_stream) };
+        auto decompressed_data = co_await Test::read_until_eof(decompressor);
+
+        if (!decompressed_data.is_error()) {
+            auto close_error = co_await decompressor.close();
+            if (close_error.is_error())
+                decompressed_data = close_error.release_error();
+        }
+
+        test.output.visit(
+            [&](ByteString const& string) {
+                EXPECT(!decompressed_data.is_error());
+                if (!decompressed_data.is_error())
+                    EXPECT_EQ(string.bytes(), decompressed_data.value());
+            },
+            [&](StringView view) {
+                EXPECT(!decompressed_data.is_error());
+                if (!decompressed_data.is_error())
+                    EXPECT_EQ(view, StringView { decompressed_data.value() });
+            },
+            [&](int error) {
+                EXPECT(decompressed_data.is_error());
+                if (decompressed_data.is_error())
+                    EXPECT_EQ(error, decompressed_data.error().code());
+            });
+    }
+}
