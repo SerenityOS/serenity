@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2023-2024, Kemal Zebari <kemalzebra@gmail.com>.
+ * Copyright (c) 2024, Jamie Mansfield <jmansfield@cadixdev.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -329,4 +330,37 @@ TEST_CASE(determine_computed_mime_type_given_text_or_binary_context)
                                                                                          .supplied_type = supplied_type,
                                                                                      }));
     EXPECT_EQ("application/octet-stream"sv, MUST(computed_mime_type.serialized()));
+}
+
+TEST_CASE(determine_minimised_mime_type)
+{
+    HashMap<StringView, StringView> mime_type_to_minimised_mime_type_map;
+
+    // JavaScript MIME types should always be "text/javascript".
+    mime_type_to_minimised_mime_type_map.set("text/javascript"sv, "text/javascript"sv);
+    mime_type_to_minimised_mime_type_map.set("application/javascript"sv, "text/javascript"sv);
+    mime_type_to_minimised_mime_type_map.set("text/javascript; charset=utf-8"sv, "text/javascript"sv);
+
+    // JSON MIME types should always be "application/json".
+    mime_type_to_minimised_mime_type_map.set("application/json"sv, "application/json"sv);
+    mime_type_to_minimised_mime_type_map.set("text/json"sv, "application/json"sv);
+    mime_type_to_minimised_mime_type_map.set("application/json; charset=utf-8"sv, "application/json"sv);
+
+    // SVG MIME types should always be "image/svg+xml".
+    mime_type_to_minimised_mime_type_map.set("image/svg+xml"sv, "image/svg+xml"sv);
+    mime_type_to_minimised_mime_type_map.set("image/svg+xml; charset=utf-8"sv, "image/svg+xml"sv);
+
+    // XML MIME types should always be "application/xml".
+    mime_type_to_minimised_mime_type_map.set("application/xml"sv, "application/xml"sv);
+    mime_type_to_minimised_mime_type_map.set("text/xml"sv, "application/xml"sv);
+    mime_type_to_minimised_mime_type_map.set("application/xml; charset=utf-8"sv, "application/xml"sv);
+
+    // MIME types not supported by the user-agent should return an empty string.
+    mime_type_to_minimised_mime_type_map.set("application/java-archive"sv, ""sv);
+    mime_type_to_minimised_mime_type_map.set("application/zip"sv, ""sv);
+
+    for (auto const& mime_type_to_minimised_mime_type : mime_type_to_minimised_mime_type_map) {
+        auto mime_type = MUST(Web::MimeSniff::MimeType::parse(mime_type_to_minimised_mime_type.key)).release_value();
+        EXPECT_EQ(mime_type_to_minimised_mime_type.value, Web::MimeSniff::minimise_a_supported_mime_type(mime_type));
+    }
 }

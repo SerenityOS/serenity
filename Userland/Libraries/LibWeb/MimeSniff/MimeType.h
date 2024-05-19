@@ -67,4 +67,6 @@ private:
     String m_cached_essence;
 };
 
+String minimise_a_supported_mime_type(MimeType const&);
+
 }
