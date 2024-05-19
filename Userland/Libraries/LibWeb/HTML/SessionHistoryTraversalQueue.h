@@ -43,7 +43,7 @@ private:
 
 // https://html.spec.whatwg.org/multipage/document-sequences.html#tn-session-history-traversal-queue
 class SessionHistoryTraversalQueue : public JS::Cell {
-    JS_CELL(SessionHistoryTraversalQueue, Cell);
+    JS_CELL(SessionHistoryTraversalQueue, JS::Cell);
     JS_DECLARE_ALLOCATOR(SessionHistoryTraversalQueue);
 
 public:

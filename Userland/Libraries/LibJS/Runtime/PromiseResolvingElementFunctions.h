@@ -71,7 +71,7 @@ private:
 
 // 27.2.4.1.3 Promise.all Resolve Element Functions, https://tc39.es/ecma262/#sec-promise.all-resolve-element-functions
 class PromiseAllResolveElementFunction final : public PromiseResolvingElementFunction {
-    JS_OBJECT(PromiseAllResolveElementFunction, NativeFunction);
+    JS_OBJECT(PromiseAllResolveElementFunction, PromiseResolvingElementFunction);
     JS_DECLARE_ALLOCATOR(PromiseAllResolveElementFunction);
 
 public:
@@ -87,7 +87,7 @@ private:
 
 // 27.2.4.2.2 Promise.allSettled Resolve Element Functions, https://tc39.es/ecma262/#sec-promise.allsettled-resolve-element-functions
 class PromiseAllSettledResolveElementFunction final : public PromiseResolvingElementFunction {
-    JS_OBJECT(PromiseResolvingFunction, NativeFunction);
+    JS_OBJECT(PromiseAllSettledResolveElementFunction, PromiseResolvingElementFunction);
     JS_DECLARE_ALLOCATOR(PromiseAllSettledResolveElementFunction);
 
 public:

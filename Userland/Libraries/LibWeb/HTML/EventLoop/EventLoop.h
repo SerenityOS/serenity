@@ -16,7 +16,7 @@
 namespace Web::HTML {
 
 class EventLoop : public JS::Cell {
-    JS_CELL(EventLoop, Cell);
+    JS_CELL(EventLoop, JS::Cell);
     JS_DECLARE_ALLOCATOR(EventLoop);
 
 public:

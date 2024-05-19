@@ -125,6 +125,8 @@ protected:
     DOMMatrixReadOnly(JS::Realm&, DOMMatrixReadOnly const& other);
     explicit DOMMatrixReadOnly(JS::Realm&);
 
+    virtual void initialize(JS::Realm&) override;
+
     // NOTE: The matrix used in the spec is column-major (https://drafts.fxtf.org/geometry/#4x4-abstract-matrix) but Gfx::Matrix4x4 is row-major so we need to transpose the values.
     Gfx::DoubleMatrix4x4 m_matrix { Gfx::DoubleMatrix4x4::identity() };
 
@@ -133,8 +135,6 @@ protected:
 private:
     void initialize_from_create_2d_matrix(double m11, double m12, double m21, double m22, double m41, double m42);
     void initialize_from_create_3d_matrix(double m11, double m12, double m13, double m14, double m21, double m22, double m23, double m24, double m31, double m32, double m33, double m34, double m41, double m42, double m43, double m44);
-
-    virtual void initialize(JS::Realm&) override;
 };
 
 WebIDL::ExceptionOr<void> validate_and_fixup_dom_matrix_2d_init(DOMMatrix2DInit& init);

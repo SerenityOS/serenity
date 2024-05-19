@@ -13,7 +13,7 @@
 namespace Web::Layout {
 
 class SVGMaskBox : public SVGGraphicsBox {
-    JS_CELL(SVGMaskBox, SVGBox);
+    JS_CELL(SVGMaskBox, SVGGraphicsBox);
     JS_DECLARE_ALLOCATOR(SVGMaskBox);
 
 public:

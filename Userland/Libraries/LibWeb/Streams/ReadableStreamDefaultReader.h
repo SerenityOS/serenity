@@ -32,7 +32,7 @@ public:
 };
 
 class ReadLoopReadRequest final : public ReadRequest {
-    JS_CELL(ReadLoopReadRequest, JS::Cell);
+    JS_CELL(ReadLoopReadRequest, ReadRequest);
     JS_DECLARE_ALLOCATOR(ReadLoopReadRequest);
 
 public:

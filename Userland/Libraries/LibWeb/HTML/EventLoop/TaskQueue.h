@@ -13,7 +13,7 @@
 namespace Web::HTML {
 
 class TaskQueue : public JS::Cell {
-    JS_CELL(TaskQueue, Cell);
+    JS_CELL(TaskQueue, JS::Cell);
     JS_DECLARE_ALLOCATOR(TaskQueue);
 
 public:

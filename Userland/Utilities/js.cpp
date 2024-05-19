@@ -445,6 +445,8 @@ static ErrorOr<void> repl(JS::Realm& realm)
 }
 
 class ReplConsoleClient final : public JS::ConsoleClient {
+    JS_CELL(ReplConsoleClient, JS::ConsoleClient);
+
 public:
     ReplConsoleClient(JS::Console& console)
         : ConsoleClient(console)

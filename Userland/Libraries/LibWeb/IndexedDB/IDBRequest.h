@@ -11,7 +11,7 @@
 namespace Web::IndexedDB {
 
 class IDBRequest : public DOM::EventTarget {
-    WEB_PLATFORM_OBJECT(IDBRequest, EventTarget);
+    WEB_PLATFORM_OBJECT(IDBRequest, DOM::EventTarget);
     JS_DECLARE_ALLOCATOR(IDBRequest);
 
 public:

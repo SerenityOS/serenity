@@ -19,7 +19,7 @@ struct WorkerOptions {
 };
 
 class WorkerAgent : public JS::Cell {
-    JS_CELL(Agent, JS::Cell);
+    JS_CELL(WorkerAgent, JS::Cell);
     JS_DECLARE_ALLOCATOR(WorkerAgent);
 
     WorkerAgent(URL::URL url, WorkerOptions const& options, JS::GCPtr<MessagePort> outside_port, JS::NonnullGCPtr<EnvironmentSettingsObject> outside_settings);

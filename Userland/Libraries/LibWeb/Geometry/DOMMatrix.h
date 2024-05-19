@@ -15,7 +15,7 @@ namespace Web::Geometry {
 
 // https://drafts.fxtf.org/geometry/#dommatrix
 class DOMMatrix : public DOMMatrixReadOnly {
-    WEB_PLATFORM_OBJECT(DOMMatrix, Bindings::PlatformObject);
+    WEB_PLATFORM_OBJECT(DOMMatrix, DOMMatrixReadOnly);
     JS_DECLARE_ALLOCATOR(DOMMatrix);
 
 public:

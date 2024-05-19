@@ -12,7 +12,7 @@
 namespace Web::SVG {
 
 class SVGStyleElement final : public SVGElement {
-    WEB_PLATFORM_OBJECT(HTMLStyleElement, SVGElement);
+    WEB_PLATFORM_OBJECT(SVGStyleElement, SVGElement);
     JS_DECLARE_ALLOCATOR(SVGStyleElement);
 
 public:
