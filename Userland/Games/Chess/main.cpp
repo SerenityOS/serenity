@@ -66,7 +66,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto window = GUI::Window::construct();
     auto main_widget = TRY(Chess::MainWidget::try_create());
+
     auto& chess_widget = *main_widget->find_descendant_of_type_named<Chess::ChessWidget>("chess_widget");
+    auto& move_display_widget = *main_widget->find_descendant_of_type_named<GUI::TextEditor>("move_display_widget");
+    chess_widget.set_move_display_widget(move(move_display_widget));
 
     window->set_main_widget(main_widget);
     window->set_focused_widget(&chess_widget);
@@ -85,7 +88,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_title("Chess");
     window->set_base_size({ 4, 4 });
     window->set_size_increment({ 8, 8 });
-    window->resize(508, 508);
+    window->resize(668, 508);
 
     window->set_icon(app_icon.bitmap_for_size(16));
 

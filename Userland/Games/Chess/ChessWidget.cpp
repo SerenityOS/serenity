@@ -9,6 +9,7 @@
 
 #include "ChessWidget.h"
 #include "PromotionDialog.h"
+#include <AK/Enumerate.h>
 #include <AK/GenericLexer.h>
 #include <AK/Random.h>
 #include <AK/String.h>
@@ -37,7 +38,6 @@ ErrorOr<NonnullRefPtr<ChessWidget>> ChessWidget::try_create()
 void ChessWidget::paint_event(GUI::PaintEvent& event)
 {
     int const min_size = min(width(), height());
-    int const widget_offset_x = (window()->width() - min_size) / 2;
     int const widget_offset_y = (window()->height() - min_size) / 2;
 
     GUI::Frame::paint_event(event);
@@ -47,7 +47,7 @@ void ChessWidget::paint_event(GUI::PaintEvent& event)
 
     painter.fill_rect(frame_inner_rect(), Gfx::Color::Black);
 
-    painter.translate(frame_thickness() + widget_offset_x, frame_thickness() + widget_offset_y);
+    painter.translate(frame_thickness(), frame_thickness() + widget_offset_y);
 
     auto square_width = min_size / 8;
     auto square_height = min_size / 8;
@@ -211,7 +211,6 @@ void ChessWidget::paint_event(GUI::PaintEvent& event)
 void ChessWidget::mousedown_event(GUI::MouseEvent& event)
 {
     int const min_size = min(width(), height());
-    int const widget_offset_x = (window()->width() - min_size) / 2;
     int const widget_offset_y = (window()->height() - min_size) / 2;
 
     if (!frame_inner_rect().contains(event.position()))
@@ -237,7 +236,7 @@ void ChessWidget::mousedown_event(GUI::MouseEvent& event)
     if (drag_enabled() && piece.color == board().turn() && !m_playback) {
         m_dragging_piece = true;
         set_override_cursor(Gfx::StandardCursor::Drag);
-        m_drag_point = { event.position().x() - widget_offset_x, event.position().y() - widget_offset_y };
+        m_drag_point = { event.position().x(), event.position().y() - widget_offset_y };
         m_moving_square = square.value();
 
         m_board.generate_moves([&](Chess::Move move) {
@@ -295,6 +294,7 @@ void ChessWidget::mouseup_event(GUI::MouseEvent& event)
     }
 
     if (board().apply_move(move)) {
+        update_move_display_widget(m_board);
         m_playback_move_number = board().moves().size();
         m_playback = false;
         m_board_playback = m_board;
@@ -310,7 +310,6 @@ void ChessWidget::mouseup_event(GUI::MouseEvent& event)
 void ChessWidget::mousemove_event(GUI::MouseEvent& event)
 {
     int const min_size = min(width(), height());
-    int const widget_offset_x = (window()->width() - min_size) / 2;
     int const widget_offset_y = (window()->height() - min_size) / 2;
 
     if (!frame_inner_rect().contains(event.position()))
@@ -334,7 +333,7 @@ void ChessWidget::mousemove_event(GUI::MouseEvent& event)
         return;
     }
 
-    m_drag_point = { event.position().x() - widget_offset_x, event.position().y() - widget_offset_y };
+    m_drag_point = { event.position().x(), event.position().y() - widget_offset_y };
     update();
 }
 
@@ -399,10 +398,9 @@ void ChessWidget::set_piece_set(StringView set)
 Optional<Chess::Square> ChessWidget::mouse_to_square(GUI::MouseEvent& event) const
 {
     int const min_size = min(width(), height());
-    int const widget_offset_x = (window()->width() - min_size) / 2;
     int const widget_offset_y = (window()->height() - min_size) / 2;
 
-    auto x = event.x() - widget_offset_x;
+    auto x = event.x();
     auto y = event.y() - widget_offset_y;
     if (x < 0 || y < 0 || x > min_size || y > min_size)
         return {};
@@ -433,6 +431,7 @@ void ChessWidget::reset()
     m_playback_move_number = 0;
     m_board_playback = Chess::Board();
     m_board = Chess::Board();
+    update_move_display_widget(m_board);
     m_side = (get_random<u32>() % 2) ? Chess::Color::White : Chess::Color::Black;
     m_drag_enabled = true;
     if (m_engine)
@@ -483,10 +482,10 @@ void ChessWidget::input_engine_move()
         set_drag_enabled(drag_was_enabled);
         if (!move.is_error()) {
             VERIFY(board().apply_move(move.release_value()));
+            update_move_display_widget(board());
             if (check_game_over(ClaimDrawBehavior::Prompt))
                 return;
         }
-
         m_playback_move_number = m_board.moves().size();
         m_playback = false;
         m_board_markings.clear();
@@ -509,6 +508,7 @@ void ChessWidget::playback_move(PlaybackDirection direction)
         m_board_playback = Chess::Board();
         for (size_t i = 0; i < m_playback_move_number - 1; i++)
             m_board_playback.apply_move(m_board.moves().at(i));
+        update_move_display_widget(m_board_playback);
         m_playback_move_number--;
         break;
     case PlaybackDirection::Forward:
@@ -517,6 +517,7 @@ void ChessWidget::playback_move(PlaybackDirection direction)
             return;
         }
         m_board_playback.apply_move(m_board.moves().at(m_playback_move_number++));
+        update_move_display_widget(m_board_playback);
         if (m_playback_move_number == m_board.moves().size())
             m_playback = false;
         break;
@@ -533,6 +534,21 @@ void ChessWidget::playback_move(PlaybackDirection direction)
         VERIFY_NOT_REACHED();
     }
     update();
+}
+
+void ChessWidget::update_move_display_widget(Chess::Board& board)
+{
+    size_t turn = 1;
+    StringBuilder sb;
+    for (auto [i, move] : enumerate(board.moves())) {
+        if (i % 2 == 0) {
+            sb.append(MUST(String::formatted("{}. {}", turn, MUST(move.to_algebraic()))));
+        } else {
+            sb.append(MUST(String::formatted(" {}\n", MUST(move.to_algebraic()))));
+            turn++;
+        }
+    }
+    m_move_display_widget->set_text(sb.string_view());
 }
 
 ErrorOr<String> ChessWidget::get_fen() const
@@ -740,6 +756,7 @@ ErrorOr<void, PGNParseError> ChessWidget::import_pgn(Core::File& file)
     m_board_playback = m_board;
     m_playback_move_number = m_board_playback.moves().size();
     m_playback = true;
+    update_move_display_widget(m_board_playback);
     update();
 
     return {};

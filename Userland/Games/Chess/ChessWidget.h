@@ -16,6 +16,7 @@
 #include <LibChess/Chess.h>
 #include <LibConfig/Listener.h>
 #include <LibGUI/Frame.h>
+#include <LibGUI/TextEditor.h>
 #include <LibGfx/Bitmap.h>
 
 namespace Chess {
@@ -81,6 +82,7 @@ public:
     ErrorOr<String> get_fen() const;
     ErrorOr<void, PGNParseError> import_pgn(Core::File&);
     ErrorOr<void> export_pgn(Core::File&) const;
+    void update_move_display_widget(Chess::Board&);
 
     int resign();
     void flip_board();
@@ -106,6 +108,7 @@ public:
     void playback_move(PlaybackDirection);
 
     void set_engine(RefPtr<Engine> engine) { m_engine = engine; }
+    void set_move_display_widget(RefPtr<GUI::TextEditor> move_display_widget) { m_move_display_widget = move_display_widget; }
 
     void input_engine_move();
     bool want_engine_move();
@@ -174,6 +177,7 @@ private:
     RefPtr<Engine> m_engine;
     bool m_coordinates { true };
     bool m_highlight_checks { true };
+    RefPtr<GUI::TextEditor> m_move_display_widget;
 };
 
 }
