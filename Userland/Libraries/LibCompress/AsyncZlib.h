@@ -6,15 +6,15 @@
 
 #pragma once
 
-#include <AK/AsyncBitStream.h>
 #include <AK/AsyncStreamTransform.h>
-#include <AK/StreamBuffer.h>
+#include <AK/OwnPtr.h>
+#include <LibCompress/AsyncDeflate.h>
 
 namespace Compress::Async {
 
-class DeflateDecompressor final : public AsyncStreamTransform<AsyncInputLittleEndianBitStream> {
+class ZlibDecompressor final : public AsyncStreamTransform<AsyncInputStream> {
 public:
-    DeflateDecompressor(MaybeOwned<AsyncInputStream>&& input);
+    ZlibDecompressor(NonnullOwnPtr<AsyncInputStream>&& input);
 
     ReadonlyBytes buffered_data_unchecked(Badge<AsyncInputStream>) const override;
     void dequeue(Badge<AsyncInputStream>, size_t bytes) override;
@@ -22,7 +22,7 @@ public:
 private:
     Generator decompress();
 
-    StreamSeekbackBuffer m_buffer;
+    OwnPtr<DeflateDecompressor> m_decompressor;
 };
 
 }

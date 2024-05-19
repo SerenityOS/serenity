@@ -250,7 +250,7 @@ Coroutine<ErrorOr<void>> decode_codes(AsyncInputLittleEndianBitStream& stream, C
 }
 }
 
-DeflateDecompressor::DeflateDecompressor(NonnullOwnPtr<AsyncInputStream>&& input)
+DeflateDecompressor::DeflateDecompressor(MaybeOwned<AsyncInputStream>&& input)
     : AsyncStreamTransform(make<AsyncInputLittleEndianBitStream>(move(input)), decompress())
     , m_buffer(max_seekback_distance, max_back_reference_length)
 {
