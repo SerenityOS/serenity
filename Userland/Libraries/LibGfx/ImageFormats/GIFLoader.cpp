@@ -269,7 +269,7 @@ static ErrorOr<void> load_gif_frame_descriptors(GIFLoadingContext& context)
     for (;;) {
         u8 sentinel = TRY(context.stream.read_value<u8>());
 
-        if (sentinel == '!') {
+        if (sentinel == 0x21) {
             u8 extension_type = TRY(context.stream.read_value<u8>());
 
             Vector<u8> sub_block {};
@@ -321,7 +321,7 @@ static ErrorOr<void> load_gif_frame_descriptors(GIFLoadingContext& context)
             continue;
         }
 
-        if (sentinel == ',') {
+        if (sentinel == 0x2C) {
             context.images.append(move(current_image));
             auto& image = context.images.last();
 
@@ -365,7 +365,7 @@ static ErrorOr<void> load_gif_frame_descriptors(GIFLoadingContext& context)
             continue;
         }
 
-        if (sentinel == ';') {
+        if (sentinel == 0x3B) {
             break;
         }
 
