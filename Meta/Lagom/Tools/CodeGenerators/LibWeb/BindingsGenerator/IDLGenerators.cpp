@@ -1903,6 +1903,7 @@ static void generate_function(SourceGenerator& generator, IDL::Function const& f
     auto function_generator = generator.fork();
     function_generator.set("class_name", class_name);
     function_generator.set("interface_fully_qualified_name", interface_fully_qualified_name);
+    function_generator.set("function.name", function.name);
     function_generator.set("function.name:snakecase", make_input_acceptable_cpp(function.name.to_snakecase()));
     function_generator.set("overload_suffix", function.is_overloaded ? ByteString::number(function.overload_index) : ByteString::empty());
 
@@ -1919,6 +1920,15 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@@overload_suffi
     WebIDL::log_trace(vm, "@class_name@::@function.name:snakecase@@overload_suffix@");
     [[maybe_unused]] auto& realm = *vm.current_realm();
 )~~~");
+
+    if (function.extended_attributes.contains("FIXME")) {
+        function_generator.append(R"~~~(
+            dbgln("FIXME: Unimplemented IDL interface '@namespaced_name@.@function.name@'");
+            return JS::js_undefined();
+}
+)~~~");
+        return;
+    }
 
     if (is_static_function == StaticFunction::No) {
         function_generator.append(R"~~~(
@@ -3244,8 +3254,16 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.getter_callback@)
 {
     WebIDL::log_trace(vm, "@class_name@::@attribute.getter_callback@");
     [[maybe_unused]] auto& realm = *vm.current_realm();
-    auto* impl = TRY(impl_from(vm));
+    [[maybe_unused]] auto* impl = TRY(impl_from(vm));
 )~~~");
+        if (attribute.extended_attributes.contains("FIXME")) {
+            attribute_generator.append(R"~~~(
+    dbgln("FIXME: Unimplemented IDL interface '@namespaced_name@.@attribute.name@'");
+    return JS::js_undefined();
+}
+)~~~");
+            continue;
+        }
 
         if (attribute.extended_attributes.contains("CEReactions")) {
             // 1. Push a new element queue onto this object's relevant agent's custom element reactions stack.
@@ -4557,5 +4575,4 @@ namespace Web::Bindings {
 } // namespace Web::Bindings
     )~~~");
 }
-
 }
