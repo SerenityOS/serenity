@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022-2023, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2024, Jamie Mansfield <jmansfield@cadixdev.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -16,6 +17,7 @@ namespace Web::Fetch {
 enum class PackageDataType {
     ArrayBuffer,
     Blob,
+    Uint8Array,
     FormData,
     JSON,
     Text,
@@ -39,6 +41,7 @@ public:
     // JS API functions
     [[nodiscard]] WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> array_buffer() const;
     [[nodiscard]] WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> blob() const;
+    [[nodiscard]] WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> bytes() const;
     [[nodiscard]] WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> form_data() const;
     [[nodiscard]] WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> json() const;
     [[nodiscard]] WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> text() const;
