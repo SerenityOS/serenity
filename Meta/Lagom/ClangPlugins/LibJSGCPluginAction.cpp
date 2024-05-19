@@ -177,6 +177,8 @@ bool LibJSGCVisitor::VisitCXXRecordDecl(clang::CXXRecordDecl* record)
     if (!record_inherits_from_cell(*record))
         return true;
 
+    validate_record_macros(*record);
+
     clang::DeclarationName name = &m_context.Idents.get("visit_edges");
     auto const* visit_edges_method = record->lookup(name).find_first<clang::CXXMethodDecl>();
     if (!visit_edges_method && !fields_that_need_visiting.empty()) {
@@ -253,9 +255,167 @@ bool LibJSGCVisitor::VisitCXXRecordDecl(clang::CXXRecordDecl* record)
     return true;
 }
 
+struct CellTypeWithOrigin {
+    clang::CXXRecordDecl const& base_origin;
+    LibJSCellMacro::Type type;
+};
+
+std::optional<CellTypeWithOrigin> find_cell_type_with_origin(clang::CXXRecordDecl const& record)
+{
+    for (auto const& base : record.bases()) {
+        if (auto const* base_record = base.getType()->getAsCXXRecordDecl()) {
+            auto base_name = base_record->getQualifiedNameAsString();
+
+            if (base_name == "JS::Cell")
+                return CellTypeWithOrigin { *base_record, LibJSCellMacro::Type::JSCell };
+
+            if (base_name == "JS::Object")
+                return CellTypeWithOrigin { *base_record, LibJSCellMacro::Type::JSObject };
+
+            if (base_name == "JS::Environment")
+                return CellTypeWithOrigin { *base_record, LibJSCellMacro::Type::JSEnvironment };
+
+            if (base_name == "JS::PrototypeObject")
+                return CellTypeWithOrigin { *base_record, LibJSCellMacro::Type::JSPrototypeObject };
+
+            if (base_name == "Web::Bindings::PlatformObject")
+                return CellTypeWithOrigin { *base_record, LibJSCellMacro::Type::WebPlatformObject };
+
+            if (auto origin = find_cell_type_with_origin(*base_record))
+                return CellTypeWithOrigin { *base_record, origin->type };
+        }
+    }
+
+    return {};
+}
+
+LibJSGCVisitor::CellMacroExpectation LibJSGCVisitor::get_record_cell_macro_expectation(clang::CXXRecordDecl const& record)
+{
+    auto origin = find_cell_type_with_origin(record);
+    assert(origin.has_value());
+
+    // Need to iterate the bases again to turn the record into the exact text that the user used as
+    // the class base, since it doesn't have to be qualified (but might be).
+    for (auto const& base : record.bases()) {
+        if (auto const* base_record = base.getType()->getAsCXXRecordDecl()) {
+            if (base_record == &origin->base_origin) {
+                auto& source_manager = m_context.getSourceManager();
+                auto char_range = source_manager.getExpansionRange({ base.getBaseTypeLoc(), base.getEndLoc() });
+                auto exact_text = clang::Lexer::getSourceText(char_range, source_manager, m_context.getLangOpts());
+                return { origin->type, exact_text.str() };
+            }
+        }
+    }
+
+    assert(false);
+}
+
+void LibJSGCVisitor::validate_record_macros(clang::CXXRecordDecl const& record)
+{
+    auto& source_manager = m_context.getSourceManager();
+    auto record_range = record.getSourceRange();
+
+    // FIXME: The current macro detection doesn't recursively search through macro expansion,
+    //        so if the record itself is defined in a macro, the JS_CELL/etc won't be found
+    if (source_manager.isMacroBodyExpansion(record_range.getBegin()))
+        return;
+
+    auto [expected_cell_macro_type, expected_base_name] = get_record_cell_macro_expectation(record);
+    auto file_id = m_context.getSourceManager().getFileID(record.getLocation());
+    auto it = m_macro_map.find(file_id.getHashValue());
+    auto& diag_engine = m_context.getDiagnostics();
+
+    auto report_missing_macro = [&] {
+        auto diag_id = diag_engine.getCustomDiagID(clang::DiagnosticsEngine::Error, "Expected record to have a %0 macro invocation");
+        auto builder = diag_engine.Report(record.getLocation(), diag_id);
+        builder << LibJSCellMacro::type_name(expected_cell_macro_type);
+    };
+
+    if (it == m_macro_map.end()) {
+        report_missing_macro();
+        return;
+    }
+
+    std::vector<clang::SourceRange> sub_ranges;
+    for (auto const& sub_decl : record.decls()) {
+        if (auto const* sub_record = llvm::dyn_cast<clang::CXXRecordDecl>(sub_decl))
+            sub_ranges.push_back(sub_record->getSourceRange());
+    }
+
+    bool found_macro = false;
+
+    auto record_name = record.getDeclName().getAsString();
+    if (record.getQualifier()) {
+        // FIXME: There has to be a better way to get this info. getQualifiedNameAsString() gets too much info
+        //        (outer namespaces that aren't part of the class identifier), and getNameAsString() doesn't get
+        //        enough info (doesn't include parts before the namespace specifier).
+        auto loc = record.getQualifierLoc();
+        auto& sm = m_context.getSourceManager();
+        auto begin_offset = sm.getFileOffset(loc.getBeginLoc());
+        auto end_offset = sm.getFileOffset(loc.getEndLoc());
+        auto const* file_buf = sm.getCharacterData(loc.getBeginLoc());
+        auto prefix = std::string { file_buf, end_offset - begin_offset };
+        record_name = prefix + "::" + record_name;
+    }
+
+    for (auto const& macro : it->second) {
+        if (record_range.fullyContains(macro.range)) {
+            bool macro_is_in_sub_decl = false;
+            for (auto const& sub_range : sub_ranges) {
+                if (sub_range.fullyContains(macro.range)) {
+                    macro_is_in_sub_decl = true;
+                    break;
+                }
+            }
+            if (macro_is_in_sub_decl)
+                continue;
+
+            if (found_macro) {
+                auto diag_id = diag_engine.getCustomDiagID(clang::DiagnosticsEngine::Error, "Record has multiple JS_CELL-like macro invocations");
+                diag_engine.Report(record_range.getBegin(), diag_id);
+            }
+
+            found_macro = true;
+            if (macro.type != expected_cell_macro_type) {
+                auto diag_id = diag_engine.getCustomDiagID(clang::DiagnosticsEngine::Error, "Invalid JS-CELL-like macro invocation; expected %0");
+                auto builder = diag_engine.Report(macro.range.getBegin(), diag_id);
+                builder << LibJSCellMacro::type_name(expected_cell_macro_type);
+            }
+
+            // This is a compile error, no diagnostic needed
+            if (macro.args.size() < 2)
+                return;
+
+            if (macro.args[0].text != record_name) {
+                auto diag_id = diag_engine.getCustomDiagID(clang::DiagnosticsEngine::Error, "Expected first argument of %0 macro invocation to be %1");
+                auto builder = diag_engine.Report(macro.args[0].location, diag_id);
+                builder << LibJSCellMacro::type_name(expected_cell_macro_type) << record_name;
+            }
+
+            if (expected_cell_macro_type == LibJSCellMacro::Type::JSPrototypeObject) {
+                // FIXME: Validate the args for this macro
+            } else if (macro.args[1].text != expected_base_name) {
+                auto diag_id = diag_engine.getCustomDiagID(clang::DiagnosticsEngine::Error, "Expected second argument of %0 macro invocation to be %1");
+                auto builder = diag_engine.Report(macro.args[1].location, diag_id);
+                builder << LibJSCellMacro::type_name(expected_cell_macro_type) << expected_base_name;
+            }
+        }
+    }
+
+    if (!found_macro)
+        report_missing_macro();
+}
+
+LibJSGCASTConsumer::LibJSGCASTConsumer(clang::CompilerInstance& compiler)
+    : m_compiler(compiler)
+{
+    auto& preprocessor = compiler.getPreprocessor();
+    preprocessor.addPPCallbacks(std::make_unique<LibJSPPCallbacks>(preprocessor, m_macro_map));
+}
+
 void LibJSGCASTConsumer::HandleTranslationUnit(clang::ASTContext& context)
 {
-    LibJSGCVisitor visitor { context };
+    LibJSGCVisitor visitor { context, m_macro_map };
     visitor.TraverseDecl(context.getTranslationUnitDecl());
 }
 
