@@ -596,17 +596,18 @@ void fetch_response_handover(JS::Realm& realm, Infrastructure::FetchParams const
                 cache_state = {};
             }
 
-            // 6. Let responseStatus be 0 if fetchParams’s request’s mode is "navigate" and response’s has-cross-origin-redirects is true; otherwise response’s status.
-            auto response_status = fetch_params.request()->mode() == Infrastructure::Request::Mode::Navigate && response.has_cross_origin_redirects()
-                ? 0
-                : response.status();
+            // 6. Let responseStatus be 0.
+            auto response_status = 0;
 
             // 7. If fetchParams’s request’s mode is not "navigate" or response’s has-cross-origin-redirects is false:
             if (fetch_params.request()->mode() != Infrastructure::Request::Mode::Navigate || !response.has_cross_origin_redirects()) {
-                // 1. Let mimeType be the result of extracting a MIME type from response’s header list.
+                // 1. Set responseStatus to response’s status.
+                response_status = response.status();
+
+                // 2. Let mimeType be the result of extracting a MIME type from response’s header list.
                 auto mime_type = response.header_list()->extract_mime_type();
 
-                // 2. If mimeType is non-null, then set bodyInfo’s content type to the result of minimizing a supported MIME type given mimeType.
+                // 3. If mimeType is non-null, then set bodyInfo’s content type to the result of minimizing a supported MIME type given mimeType.
                 if (mime_type.has_value())
                     body_info.content_type = MimeSniff::minimise_a_supported_mime_type(mime_type.value());
             }
