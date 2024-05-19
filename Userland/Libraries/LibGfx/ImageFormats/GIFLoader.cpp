@@ -263,6 +263,103 @@ static ErrorOr<void> load_header_and_logical_screen(GIFLoadingContext& context)
     return {};
 }
 
+static ErrorOr<void> load_extension(GIFLoadingContext& context, NonnullOwnPtr<GIFImageDescriptor>& current_image)
+{
+    u8 extension_type = TRY(context.stream.read_value<u8>());
+
+    Vector<u8> sub_block {};
+    for (;;) {
+        auto const sub_block_length = TRY(context.stream.read_value<u8>());
+        if (sub_block_length == 0)
+            break;
+
+        TRY(sub_block.try_resize(sub_block.size() + sub_block_length));
+        TRY(context.stream.read_until_filled(sub_block.span().slice_from_end(sub_block_length)));
+    }
+
+    if (extension_type == 0xF9) {
+        if (sub_block.size() != 4) {
+            dbgln_if(GIF_DEBUG, "Unexpected graphic control size");
+            return {};
+        }
+
+        u8 disposal_method = (sub_block[0] & 0x1C) >> 2;
+        current_image->disposal_method = (GIFImageDescriptor::DisposalMethod)disposal_method;
+
+        u8 user_input = (sub_block[0] & 0x2) >> 1;
+        current_image->user_input = user_input == 1;
+
+        u8 transparent = sub_block[0] & 1;
+        current_image->transparent = transparent == 1;
+
+        u16 duration = sub_block[1] + ((u16)sub_block[2] << 8);
+        current_image->duration = duration;
+
+        current_image->transparency_index = sub_block[3];
+    }
+
+    if (extension_type == 0xFF) {
+        if (sub_block.size() != 14) {
+            dbgln_if(GIF_DEBUG, "Unexpected application extension size: {}", sub_block.size());
+            return {};
+        }
+
+        if (sub_block[11] != 1) {
+            dbgln_if(GIF_DEBUG, "Unexpected application extension format");
+            return {};
+        }
+
+        u16 loops = sub_block[12] + (sub_block[13] << 8);
+        context.loops = loops;
+    }
+
+    return {};
+}
+
+static ErrorOr<void> load_image_descriptor(GIFLoadingContext& context, NonnullOwnPtr<GIFImageDescriptor>&& current_image)
+{
+    context.images.append(move(current_image));
+    auto& image = context.images.last();
+
+    image->x = TRY(context.stream.read_value<LittleEndian<u16>>());
+    image->y = TRY(context.stream.read_value<LittleEndian<u16>>());
+    image->width = TRY(context.stream.read_value<LittleEndian<u16>>());
+    image->height = TRY(context.stream.read_value<LittleEndian<u16>>());
+
+    auto packed_fields = TRY(context.stream.read_value<u8>());
+
+    image->use_global_color_map = !(packed_fields & 0x80);
+    image->interlaced = (packed_fields & 0x40) != 0;
+
+    dbgln_if(GIF_DEBUG, "Image descriptor: x={}, y={}, width={}, height={}, use_global_color_map={}, local_map_size_exponent={}, interlaced={}", image->x, image->y, image->width, image->height, image->use_global_color_map, (packed_fields & 7) + 1, image->interlaced);
+
+    if (!image->use_global_color_map) {
+        size_t local_color_table_size = AK::exp2<size_t>((packed_fields & 7) + 1);
+
+        for (size_t i = 0; i < local_color_table_size; ++i) {
+            u8 r = TRY(context.stream.read_value<u8>());
+            u8 g = TRY(context.stream.read_value<u8>());
+            u8 b = TRY(context.stream.read_value<u8>());
+            image->color_map[i] = { r, g, b };
+        }
+    }
+
+    image->lzw_min_code_size = TRY(context.stream.read_value<u8>());
+
+    for (;;) {
+        auto const lzw_encoded_bytes_expected = TRY(context.stream.read_value<u8>());
+
+        // Block terminator
+        if (lzw_encoded_bytes_expected == 0)
+            break;
+
+        auto const lzw_subblock = TRY(image->lzw_encoded_bytes.get_bytes_for_writing(lzw_encoded_bytes_expected));
+        TRY(context.stream.read_until_filled(lzw_subblock));
+    }
+
+    return {};
+}
+
 static ErrorOr<void> load_gif_frame_descriptors(GIFLoadingContext& context)
 {
     NonnullOwnPtr<GIFImageDescriptor> current_image = make<GIFImageDescriptor>();
@@ -270,97 +367,12 @@ static ErrorOr<void> load_gif_frame_descriptors(GIFLoadingContext& context)
         u8 sentinel = TRY(context.stream.read_value<u8>());
 
         if (sentinel == 0x21) {
-            u8 extension_type = TRY(context.stream.read_value<u8>());
-
-            Vector<u8> sub_block {};
-            for (;;) {
-                auto const sub_block_length = TRY(context.stream.read_value<u8>());
-                if (sub_block_length == 0)
-                    break;
-
-                TRY(sub_block.try_resize(sub_block.size() + sub_block_length));
-                TRY(context.stream.read_until_filled(sub_block.span().slice_from_end(sub_block_length)));
-            }
-
-            if (extension_type == 0xF9) {
-                if (sub_block.size() != 4) {
-                    dbgln_if(GIF_DEBUG, "Unexpected graphic control size");
-                    continue;
-                }
-
-                u8 disposal_method = (sub_block[0] & 0x1C) >> 2;
-                current_image->disposal_method = (GIFImageDescriptor::DisposalMethod)disposal_method;
-
-                u8 user_input = (sub_block[0] & 0x2) >> 1;
-                current_image->user_input = user_input == 1;
-
-                u8 transparent = sub_block[0] & 1;
-                current_image->transparent = transparent == 1;
-
-                u16 duration = sub_block[1] + ((u16)sub_block[2] << 8);
-                current_image->duration = duration;
-
-                current_image->transparency_index = sub_block[3];
-            }
-
-            if (extension_type == 0xFF) {
-                if (sub_block.size() != 14) {
-                    dbgln_if(GIF_DEBUG, "Unexpected application extension size: {}", sub_block.size());
-                    continue;
-                }
-
-                if (sub_block[11] != 1) {
-                    dbgln_if(GIF_DEBUG, "Unexpected application extension format");
-                    continue;
-                }
-
-                u16 loops = sub_block[12] + (sub_block[13] << 8);
-                context.loops = loops;
-            }
-
+            TRY(load_extension(context, current_image));
             continue;
         }
 
         if (sentinel == 0x2C) {
-            context.images.append(move(current_image));
-            auto& image = context.images.last();
-
-            image->x = TRY(context.stream.read_value<LittleEndian<u16>>());
-            image->y = TRY(context.stream.read_value<LittleEndian<u16>>());
-            image->width = TRY(context.stream.read_value<LittleEndian<u16>>());
-            image->height = TRY(context.stream.read_value<LittleEndian<u16>>());
-
-            auto packed_fields = TRY(context.stream.read_value<u8>());
-
-            image->use_global_color_map = !(packed_fields & 0x80);
-            image->interlaced = (packed_fields & 0x40) != 0;
-
-            dbgln_if(GIF_DEBUG, "Image descriptor: x={}, y={}, width={}, height={}, use_global_color_map={}, local_map_size_exponent={}, interlaced={}", image->x, image->y, image->width, image->height, image->use_global_color_map, (packed_fields & 7) + 1, image->interlaced);
-
-            if (!image->use_global_color_map) {
-                size_t local_color_table_size = AK::exp2<size_t>((packed_fields & 7) + 1);
-
-                for (size_t i = 0; i < local_color_table_size; ++i) {
-                    u8 r = TRY(context.stream.read_value<u8>());
-                    u8 g = TRY(context.stream.read_value<u8>());
-                    u8 b = TRY(context.stream.read_value<u8>());
-                    image->color_map[i] = { r, g, b };
-                }
-            }
-
-            image->lzw_min_code_size = TRY(context.stream.read_value<u8>());
-
-            for (;;) {
-                auto const lzw_encoded_bytes_expected = TRY(context.stream.read_value<u8>());
-
-                // Block terminator
-                if (lzw_encoded_bytes_expected == 0)
-                    break;
-
-                auto const lzw_subblock = TRY(image->lzw_encoded_bytes.get_bytes_for_writing(lzw_encoded_bytes_expected));
-                TRY(context.stream.read_until_filled(lzw_subblock));
-            }
-
+            TRY(load_image_descriptor(context, move(current_image)));
             current_image = make<GIFImageDescriptor>();
             continue;
         }
