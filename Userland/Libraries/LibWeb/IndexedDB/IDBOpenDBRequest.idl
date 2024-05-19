@@ -1,0 +1,9 @@
+#import <IndexedDB/IDBRequest.idl>
+
+// https://w3c.github.io/IndexedDB/#idbopendbrequest
+[Exposed=(Window,Worker)]
+interface IDBOpenDBRequest : IDBRequest {
+    // Event handlers:
+    // FIXME: attribute EventHandler onblocked;
+    // FIXME: attribute EventHandler onupgradeneeded;
+};

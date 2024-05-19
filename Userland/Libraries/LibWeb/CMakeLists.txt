@@ -448,6 +448,7 @@ set(SOURCES
     Infra/JSON.cpp
     Infra/Strings.cpp
     IndexedDB/IDBFactory.cpp
+    IndexedDB/IDBOpenDBRequest.cpp
     IndexedDB/IDBRequest.cpp
     Internals/Inspector.cpp
     Internals/InternalAnimationTimeline.cpp
