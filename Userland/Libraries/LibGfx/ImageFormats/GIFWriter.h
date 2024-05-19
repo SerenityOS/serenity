@@ -8,6 +8,7 @@
 
 #include <AK/Error.h>
 #include <LibGfx/Forward.h>
+#include <LibGfx/ImageFormats/AnimationWriter.h>
 
 namespace Gfx {
 
@@ -16,6 +17,7 @@ namespace Gfx {
 class GIFWriter {
 public:
     static ErrorOr<void> encode(Stream&, Bitmap const&);
+    static ErrorOr<NonnullOwnPtr<AnimationWriter>> start_encoding_animation(SeekableStream&, IntSize dimensions);
 };
 
 }
