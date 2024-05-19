@@ -9,19 +9,19 @@ interface HTMLInputElement : HTMLElement {
 
     [CEReactions, Reflect] attribute DOMString accept;
     [CEReactions, Reflect] attribute DOMString alt;
-    // FIXME: [CEReactions] attribute DOMString autocomplete;
+    [FIXME, CEReactions] attribute DOMString autocomplete;
     [CEReactions, Reflect=checked] attribute boolean defaultChecked;
     [ImplementedAs=checked_binding] attribute boolean checked;
     [CEReactions, Reflect=dirname] attribute DOMString dirName;
     [CEReactions, Reflect] attribute boolean disabled;
     readonly attribute HTMLFormElement? form;
     attribute FileList? files;
-    // FIXME: [CEReactions] attribute USVString formAction;
-    // FIXME: [CEReactions] attribute DOMString formEnctype;
-    // FIXME: [CEReactions] attribute DOMString formMethod;
+    [FIXME, CEReactions] attribute USVString formAction;
+    [FIXME, CEReactions] attribute DOMString formEnctype;
+    [FIXME, CEReactions] attribute DOMString formMethod;
     [CEReactions, Reflect=formnovalidate] attribute boolean formNoValidate;
     [CEReactions, Reflect=formtarget] attribute DOMString formTarget;
-    // FIXME: [CEReactions] attribute unsigned long height;
+    [FIXME, CEReactions] attribute unsigned long height;
     attribute boolean indeterminate;
     [FIXME] readonly attribute HTMLDataListElement? list;
     [CEReactions, Reflect] attribute DOMString max;
@@ -30,7 +30,7 @@ interface HTMLInputElement : HTMLElement {
     [CEReactions] attribute long minLength;
     [CEReactions, Reflect] attribute boolean multiple;
     [CEReactions, Reflect] attribute DOMString name;
-    // FIXME: [CEReactions] attribute DOMString pattern;
+    [FIXME, CEReactions] attribute DOMString pattern;
     [CEReactions, Reflect] attribute DOMString placeholder;
     [CEReactions, Reflect=readonly] attribute boolean readOnly;
     [CEReactions, Reflect] attribute boolean required;
@@ -42,7 +42,7 @@ interface HTMLInputElement : HTMLElement {
     [CEReactions, LegacyNullToEmptyString] attribute DOMString value;
     attribute object? valueAsDate;
     attribute unrestricted double valueAsNumber;
-    // FIXME: [CEReactions] attribute unsigned long width;
+    [FIXME, CEReactions] attribute unsigned long width;
 
     undefined stepUp(optional long n = 1);
     undefined stepDown(optional long n = 1);
@@ -57,9 +57,9 @@ interface HTMLInputElement : HTMLElement {
     readonly attribute NodeList? labels;
 
     undefined select();
-    // FIXME: attribute unsigned long? selectionStart;
-    // FIXME: attribute unsigned long? selectionEnd;
-    // FIXME: attribute DOMString? selectionDirection;
+    [FIXME] attribute unsigned long? selectionStart;
+    [FIXME] attribute unsigned long? selectionEnd;
+    [FIXME] attribute DOMString? selectionDirection;
     [FIXME] undefined setRangeText(DOMString replacement);
     [FIXME] undefined setRangeText(DOMString replacement, unsigned long start, unsigned long end, optional SelectionMode selectionMode = "preserve");
     undefined setSelectionRange(unsigned long start, unsigned long end, optional DOMString direction);

@@ -14,6 +14,6 @@ interface CSSStyleDeclaration {
     [CEReactions] CSSOMString removeProperty(CSSOMString property);
 
     [FIXME] readonly attribute CSSRule? parentRule;
-    // FIXME: [CEReactions] attribute [LegacyNullToEmptyString] CSSOMString cssFloat;
+    [FIXME, CEReactions, LegacyNullToEmptyString] attribute CSSOMString cssFloat;
 
 };

@@ -6,7 +6,7 @@ interface HTMLTrackElement : HTMLElement {
 
     [HTMLConstructor] constructor();
 
-    // FIXME: [CEReactions] attribute DOMString kind;
+    [FIXME, CEReactions] attribute DOMString kind;
     [CEReactions, Reflect] attribute DOMString src;
     [CEReactions, Reflect] attribute DOMString srclang;
     [CEReactions, Reflect] attribute DOMString label;

@@ -11,7 +11,7 @@ interface HTMLTableCellElement : HTMLElement {
     [CEReactions, Reflect] attribute DOMString headers;
     [FIXME] readonly attribute long cellIndex;
 
-    // FIXME: [CEReactions] attribute DOMString scope; // only conforming for th elements
+    [FIXME, CEReactions] attribute DOMString scope; // only conforming for th elements
     [CEReactions, Reflect] attribute DOMString abbr;  // only conforming for th elements
 
     // Obsolete

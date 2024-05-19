@@ -12,7 +12,7 @@ interface HTMLElement : Element {
     // metadata attributes
     [Reflect, CEReactions] attribute DOMString title;
     [Reflect, CEReactions] attribute DOMString lang;
-    // FIXME: [CEReactions] attribute boolean translate;
+    [FIXME, CEReactions] attribute boolean translate;
     [CEReactions] attribute DOMString dir;
 
     // user interaction
@@ -21,9 +21,9 @@ interface HTMLElement : Element {
     undefined click();
     [Reflect=accesskey, CEReactions] attribute DOMString accessKey;
     readonly attribute DOMString accessKeyLabel;
-    // FIXME: [CEReactions] attribute boolean draggable;
-    // FIXME: [CEReactions] attribute boolean spellcheck;
-    // FIXME: [CEReactions] attribute DOMString autocapitalize;
+    [FIXME, CEReactions] attribute boolean draggable;
+    [FIXME, CEReactions] attribute boolean spellcheck;
+    [FIXME, CEReactions] attribute DOMString autocapitalize;
 
     [LegacyNullToEmptyString, CEReactions] attribute DOMString innerText;
     [LegacyNullToEmptyString, CEReactions] attribute DOMString outerText;
@@ -34,7 +34,7 @@ interface HTMLElement : Element {
     [FIXME] undefined showPopover();
     [FIXME] undefined hidePopover();
     [FIXME] boolean togglePopover(optional boolean force);
-    // FIXME: [CEReactions] attribute DOMString? popover;
+    [FIXME, CEReactions] attribute DOMString? popover;
 
     // https://drafts.csswg.org/cssom-view/#extensions-to-the-htmlelement-interface
     readonly attribute Element? offsetParent;
@@ -52,15 +52,15 @@ HTMLElement includes HTMLOrSVGElement;
 // https://html.spec.whatwg.org/#elementcontenteditable
 interface mixin ElementContentEditable {
     [CEReactions] attribute DOMString contentEditable;
-    // FIXME: [CEReactions] attribute DOMString enterKeyHint;
+    [FIXME, CEReactions] attribute DOMString enterKeyHint;
     readonly attribute boolean isContentEditable;
-    // FIXME: [CEReactions] attribute DOMString inputMode;
+    [FIXME, CEReactions] attribute DOMString inputMode;
 };
 
 // https://html.spec.whatwg.org/#htmlorsvgelement
 interface mixin HTMLOrSVGElement {
     [SameObject] readonly attribute DOMStringMap dataset;
-    // FIXME: attribute DOMString nonce; // intentionally no [CEReactions]
+    [FIXME] attribute DOMString nonce; // intentionally no [CEReactions]
 
     [CEReactions, Reflect] attribute boolean autofocus;
     [CEReactions] attribute long tabIndex;

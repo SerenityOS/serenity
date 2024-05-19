@@ -29,10 +29,10 @@ interface HTMLObjectElement : HTMLElement {
     [CEReactions, Reflect] attribute DOMString archive;
     [CEReactions, Reflect] attribute DOMString code;
     [CEReactions, Reflect] attribute boolean declare;
-    // FIXME: [CEReactions] attribute unsigned long hspace;
+    [FIXME, CEReactions] attribute unsigned long hspace;
     [CEReactions, Reflect] attribute DOMString standby;
-    // FIXME: [CEReactions] attribute unsigned long vspace;
-    // FIXME: [CEReactions] attribute DOMString codeBase;
+    [FIXME, CEReactions] attribute unsigned long vspace;
+    [FIXME, CEReactions] attribute DOMString codeBase;
     [CEReactions, Reflect=codetype] attribute DOMString codeType;
     [CEReactions, Reflect=usemap] attribute DOMString useMap;
 

@@ -13,7 +13,7 @@ enum AudioContextState { "suspended", "running", "closed" };
 // https://webaudio.github.io/web-audio-api/#BaseAudioContext
 [Exposed=Window]
 interface BaseAudioContext : EventTarget {
-    // FIXME: readonly attribute AudioDestinationNode destination;
+    [FIXME] readonly attribute AudioDestinationNode destination;
     readonly attribute float sampleRate;
     readonly attribute double currentTime;
     [FIXME] readonly attribute AudioListener listener;

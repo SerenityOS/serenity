@@ -5,11 +5,11 @@ enum CanvasLineJoin { "round", "bevel", "miter" };
 // https://html.spec.whatwg.org/multipage/canvas.html#canvaspathdrawingstyles
 interface mixin CanvasPathDrawingStyles {
     attribute unrestricted double lineWidth;
-    // FIXME: attribute CanvasLineCap lineCap;
-    // FIXME: attribute CanvasLineJoin lineJoin;
-    // FIXME: attribute unrestricted double miterLimit;
+    [FIXME] attribute CanvasLineCap lineCap;
+    [FIXME] attribute CanvasLineJoin lineJoin;
+    [FIXME] attribute unrestricted double miterLimit;
 
     [FIXME] undefined setLineDash(sequence<unrestricted double> segments);
     [FIXME] sequence<unrestricted double> getLineDash();
-    // FIXME: attribute unrestricted double lineDashOffset;
+    [FIXME] attribute unrestricted double lineDashOffset;
 };

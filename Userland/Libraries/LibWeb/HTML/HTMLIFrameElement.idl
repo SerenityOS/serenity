@@ -10,13 +10,13 @@ interface HTMLIFrameElement : HTMLElement {
     [CEReactions, Reflect] attribute DOMString src;
     [CEReactions, Reflect] attribute DOMString srcdoc;
     [CEReactions, Reflect] attribute DOMString name;
-    // FIXME: [SameObject, PutForwards=value] readonly attribute DOMTokenList sandbox;
+    [FIXME, SameObject, PutForwards=value] readonly attribute DOMTokenList sandbox;
     [CEReactions, Reflect] attribute DOMString allow;
     [CEReactions, Reflect=allowfullscreen] attribute boolean allowFullscreen;
     [CEReactions, Reflect] attribute DOMString width;
     [CEReactions, Reflect] attribute DOMString height;
-    // FIXME: [CEReactions] attribute DOMString referrerPolicy;
-    // FIXME: [CEReactions] attribute DOMString loading;
+    [FIXME, CEReactions] attribute DOMString referrerPolicy;
+    [FIXME, CEReactions] attribute DOMString loading;
     readonly attribute Document? contentDocument;
     readonly attribute WindowProxy? contentWindow;
     Document? getSVGDocument();
@@ -25,7 +25,7 @@ interface HTMLIFrameElement : HTMLElement {
     [CEReactions, Reflect] attribute DOMString align;
     [CEReactions, Reflect] attribute DOMString scrolling;
     [CEReactions, Reflect=frameborder] attribute DOMString frameBorder;
-    // FIXME: [CEReactions] attribute USVString longDesc;
+    [FIXME, CEReactions] attribute USVString longDesc;
 
     [CEReactions, LegacyNullToEmptyString, Reflect=marginheight] attribute DOMString marginHeight;
     [CEReactions, LegacyNullToEmptyString, Reflect=marginwidth] attribute DOMString marginWidth;
