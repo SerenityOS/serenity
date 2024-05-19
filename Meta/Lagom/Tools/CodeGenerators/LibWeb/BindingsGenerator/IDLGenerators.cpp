@@ -3262,6 +3262,17 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.getter_callback@)
     return JS::js_undefined();
 }
 )~~~");
+            if (!attribute.readonly || attribute.extended_attributes.contains("PutForwards"sv)) {
+                attribute_generator.append(R"~~~(
+JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.setter_callback@)
+{
+    WebIDL::log_trace(vm, "@class_name@::@attribute.setter_callback@");
+    dbgln("FIXME: Unimplemented IDL interface '@namespaced_name@.@attribute.name@'");
+    return JS::js_undefined();
+}
+)~~~");
+            }
+
             continue;
         }
 
