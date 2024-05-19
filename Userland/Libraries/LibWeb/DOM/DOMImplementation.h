@@ -21,7 +21,7 @@ public:
     [[nodiscard]] static JS::NonnullGCPtr<DOMImplementation> create(Document&);
     virtual ~DOMImplementation();
 
-    WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> create_document(Optional<FlyString> const&, String const&, JS::GCPtr<DocumentType>) const;
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<XMLDocument>> create_document(Optional<FlyString> const&, String const&, JS::GCPtr<DocumentType>) const;
     JS::NonnullGCPtr<Document> create_html_document(Optional<String> const& title) const;
     WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentType>> create_document_type(String const& qualified_name, String const& public_id, String const& system_id);
 
