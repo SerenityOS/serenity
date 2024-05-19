@@ -155,9 +155,16 @@ Optional<CSSPixelFraction> SVGDecodedImageData::intrinsic_aspect_ratio() const
     if (width.has_value() && height.has_value())
         return *width / *height;
 
-    if (auto const& viewbox = m_root_element->view_box(); viewbox.has_value())
-        return CSSPixels::nearest_value_for(viewbox->width) / CSSPixels::nearest_value_for(viewbox->height);
+    if (auto const& viewbox = m_root_element->view_box(); viewbox.has_value()) {
+        auto viewbox_width = CSSPixels::nearest_value_for(viewbox->width);
 
+        if (viewbox_width == 0)
+            return {};
+
+        auto viewbox_height = CSSPixels::nearest_value_for(viewbox->height);
+
+        return viewbox_width / viewbox_height;
+    }
     return {};
 }
 
