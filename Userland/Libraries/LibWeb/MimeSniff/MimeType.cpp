@@ -2,6 +2,7 @@
  * Copyright (c) 2022, Luke Wilde <lukew@serenityos.org>
  * Copyright (c) 2022-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2022, networkException <networkexception@serenityos.org>
+ * Copyright (c) 2024, Jamie Mansfield <jmansfield@cadixdev.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -367,6 +368,31 @@ bool MimeType::is_json() const
 {
     // A JSON MIME type is any MIME type whose subtype ends in "+json" or whose essence is "application/json" or "text/json".
     return subtype().ends_with_bytes("+json"sv) || essence().is_one_of("application/json"sv, "text/json"sv);
+}
+
+// https://mimesniff.spec.whatwg.org/#minimize-a-supported-mime-type
+String minimise_a_supported_mime_type(MimeType const& mime_type)
+{
+    // 1. If mimeType is a JavaScript MIME type, then return "text/javascript".
+    if (mime_type.is_javascript())
+        return "text/javascript"_string;
+
+    // 2. If mimeType is a JSON MIME type, then return "application/json".
+    if (mime_type.is_json())
+        return "application/json"_string;
+
+    // 3. If mimeType’s essence is "image/svg+xml", then return "image/svg+xml".
+    if (mime_type.essence() == "image/svg+xml")
+        return "image/svg+xml"_string;
+
+    // 4. If mimeType is an XML MIME type, then return "application/xml".
+    if (mime_type.is_xml())
+        return "application/xml"_string;
+
+    // FIXME: 5. If mimeType is supported by the user agent, then return mimeType’s essence.
+
+    // 6. Return the empty string.
+    return {};
 }
 
 }
