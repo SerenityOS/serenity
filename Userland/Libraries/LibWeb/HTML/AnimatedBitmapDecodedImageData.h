@@ -12,7 +12,7 @@
 namespace Web::HTML {
 
 class AnimatedBitmapDecodedImageData final : public DecodedImageData {
-    JS_CELL(AnimatedBitmapDecodedImageData, Cell);
+    JS_CELL(AnimatedBitmapDecodedImageData, DecodedImageData);
     JS_DECLARE_ALLOCATOR(AnimatedBitmapDecodedImageData);
 
 public:

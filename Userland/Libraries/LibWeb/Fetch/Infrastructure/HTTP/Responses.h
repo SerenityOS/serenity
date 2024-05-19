@@ -238,7 +238,7 @@ private:
 
 // https://fetch.spec.whatwg.org/#concept-filtered-response-basic
 class BasicFilteredResponse final : public FilteredResponse {
-    JS_CELL(OpaqueRedirectFilteredResponse, FilteredResponse);
+    JS_CELL(BasicFilteredResponse, FilteredResponse);
     JS_DECLARE_ALLOCATOR(BasicFilteredResponse);
 
 public:

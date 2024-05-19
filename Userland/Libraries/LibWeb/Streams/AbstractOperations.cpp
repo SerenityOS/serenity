@@ -350,7 +350,7 @@ WebIDL::ExceptionOr<ReadableStreamPair> readable_stream_tee(JS::Realm& realm, Re
 }
 
 struct DefaultStreamTeeParams final : JS::Cell {
-    JS_CELL(TeeParams, JS::Cell);
+    JS_CELL(DefaultStreamTeeParams, JS::Cell);
     JS_DECLARE_ALLOCATOR(DefaultStreamTeeParams);
 
     virtual void visit_edges(Visitor& visitor) override
@@ -378,7 +378,7 @@ JS_DEFINE_ALLOCATOR(DefaultStreamTeeParams);
 
 // https://streams.spec.whatwg.org/#ref-for-read-request③
 class DefaultStreamTeeReadRequest final : public ReadRequest {
-    JS_CELL(DefaultStreamTeeReadRequest, Cell);
+    JS_CELL(DefaultStreamTeeReadRequest, ReadRequest);
     JS_DECLARE_ALLOCATOR(DefaultStreamTeeReadRequest);
 
 public:
@@ -651,7 +651,7 @@ WebIDL::ExceptionOr<ReadableStreamPair> readable_stream_default_tee(JS::Realm& r
 }
 
 struct ByteStreamTeeParams final : JS::Cell {
-    JS_CELL(TeeParams, JS::Cell);
+    JS_CELL(ByteStreamTeeParams, JS::Cell);
     JS_DECLARE_ALLOCATOR(ByteStreamTeeParams);
 
     explicit ByteStreamTeeParams(ReadableStreamReader reader)
@@ -689,7 +689,7 @@ JS_DEFINE_ALLOCATOR(ByteStreamTeeParams);
 
 // https://streams.spec.whatwg.org/#ref-for-read-request④
 class ByteStreamTeeDefaultReadRequest final : public ReadRequest {
-    JS_CELL(ByteStreamTeeDefaultReadRequest, Cell);
+    JS_CELL(ByteStreamTeeDefaultReadRequest, ReadRequest);
     JS_DECLARE_ALLOCATOR(ByteStreamTeeDefaultReadRequest);
 
 public:
@@ -845,7 +845,7 @@ JS_DEFINE_ALLOCATOR(ByteStreamTeeDefaultReadRequest);
 
 // https://streams.spec.whatwg.org/#ref-for-read-into-request②
 class ByteStreamTeeBYOBReadRequest final : public ReadIntoRequest {
-    JS_CELL(ByteStreamTeeBYOBReadRequest, Cell);
+    JS_CELL(ByteStreamTeeBYOBReadRequest, ReadIntoRequest);
     JS_DECLARE_ALLOCATOR(ByteStreamTeeBYOBReadRequest);
 
 public:

@@ -13,7 +13,7 @@
 namespace JS {
 
 template<typename T>
-class HeapFunction final : public JS::Cell {
+class HeapFunction final : public Cell {
     JS_CELL(HeapFunction, Cell);
 
 public:

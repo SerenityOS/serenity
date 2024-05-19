@@ -16,7 +16,7 @@ namespace Web::HTML {
 struct UniqueTaskSource;
 
 class Task final : public JS::Cell {
-    JS_CELL(Task, Cell);
+    JS_CELL(Task, JS::Cell);
     JS_DECLARE_ALLOCATOR(Task);
 
 public:

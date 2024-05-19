@@ -14,7 +14,7 @@ namespace Web::MathML {
 
 class MathMLElement : public DOM::Element
     , public HTML::GlobalEventHandlers {
-    WEB_PLATFORM_OBJECT(MathMLElement, Element);
+    WEB_PLATFORM_OBJECT(MathMLElement, DOM::Element);
     JS_DECLARE_ALLOCATOR(MathMLElement);
 
 public:

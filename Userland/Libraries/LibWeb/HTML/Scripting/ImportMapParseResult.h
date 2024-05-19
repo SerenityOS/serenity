@@ -18,7 +18,7 @@ namespace Web::HTML {
 class ImportMapParseResult
     : public JS::Cell
     , public JS::Script::HostDefined {
-    JS_CELL(Script, JS::Cell);
+    JS_CELL(ImportMapParseResult, JS::Cell);
     JS_DECLARE_ALLOCATOR(ImportMapParseResult);
 
 public:

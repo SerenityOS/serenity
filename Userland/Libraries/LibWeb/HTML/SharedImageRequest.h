@@ -18,7 +18,7 @@
 namespace Web::HTML {
 
 class SharedImageRequest final : public JS::Cell {
-    JS_CELL(ImageRequest, JS::Cell);
+    JS_CELL(SharedImageRequest, JS::Cell);
     JS_DECLARE_ALLOCATOR(SharedImageRequest);
 
 public:

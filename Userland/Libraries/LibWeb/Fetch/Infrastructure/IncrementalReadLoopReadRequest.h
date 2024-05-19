@@ -13,7 +13,7 @@ namespace Web::Fetch::Infrastructure {
 
 // https://fetch.spec.whatwg.org/#incrementally-read-loop
 class IncrementalReadLoopReadRequest : public Streams::ReadRequest {
-    JS_CELL(IncrementalReadLoopReadRequest, JS::Cell);
+    JS_CELL(IncrementalReadLoopReadRequest, Streams::ReadRequest);
     JS_DECLARE_ALLOCATOR(IncrementalReadLoopReadRequest);
 
 public:

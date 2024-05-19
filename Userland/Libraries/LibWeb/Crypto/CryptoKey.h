@@ -69,7 +69,7 @@ private:
 
 // https://w3c.github.io/webcrypto/#ref-for-dfn-CryptoKeyPair-2
 class CryptoKeyPair : public JS::Object {
-    JS_OBJECT(CryptoKeyPair, Object);
+    JS_OBJECT(CryptoKeyPair, JS::Object);
     JS_DECLARE_ALLOCATOR(CryptoKeyPair);
 
 public:

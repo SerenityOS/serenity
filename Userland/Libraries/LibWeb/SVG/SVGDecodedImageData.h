@@ -12,7 +12,7 @@
 namespace Web::SVG {
 
 class SVGDecodedImageData final : public HTML::DecodedImageData {
-    JS_CELL(SVGDecodedImageData, Cell);
+    JS_CELL(SVGDecodedImageData, HTML::DecodedImageData);
     JS_DECLARE_ALLOCATOR(SVGDecodedImageData);
 
 public:

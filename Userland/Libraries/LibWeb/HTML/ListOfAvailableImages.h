@@ -17,7 +17,7 @@ namespace Web::HTML {
 
 // https://html.spec.whatwg.org/multipage/images.html#list-of-available-images
 class ListOfAvailableImages : public JS::Cell {
-    JS_CELL(ListOfAvailableImages, Cell);
+    JS_CELL(ListOfAvailableImages, JS::Cell);
     JS_DECLARE_ALLOCATOR(ListOfAvailableImages);
 
 public:

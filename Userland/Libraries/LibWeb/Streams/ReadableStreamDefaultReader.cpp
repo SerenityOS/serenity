@@ -119,7 +119,7 @@ void ReadLoopReadRequest::on_error(JS::Value error)
 }
 
 class DefaultReaderReadRequest final : public ReadRequest {
-    JS_CELL(DefaultReaderReadRequest, Cell);
+    JS_CELL(DefaultReaderReadRequest, ReadRequest);
     JS_DECLARE_ALLOCATOR(DefaultReaderReadRequest);
 
 public:

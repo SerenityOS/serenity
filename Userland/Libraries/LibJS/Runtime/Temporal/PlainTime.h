@@ -16,7 +16,7 @@
 namespace JS::Temporal {
 
 class PlainTime final : public Object {
-    JS_OBJECT(PlainDateTime, Object);
+    JS_OBJECT(PlainTime, Object);
     JS_DECLARE_ALLOCATOR(PlainTime);
 
 public:
