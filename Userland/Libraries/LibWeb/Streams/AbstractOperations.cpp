@@ -314,11 +314,17 @@ JS::NonnullGCPtr<WebIDL::Promise> readable_stream_pipe_to(ReadableStream& source
         WebIDL::resolve_promise(realm, promise, JS::js_undefined());
     };
 
-    auto success_steps = [promise, &realm](ByteBuffer) {
+    auto success_steps = [promise, &realm, writer](ByteBuffer) {
+        // Make sure we close the acquired writer.
+        WebIDL::resolve_promise(realm, writable_stream_default_writer_close(*writer), JS::js_undefined());
+
         WebIDL::resolve_promise(realm, promise, JS::js_undefined());
     };
 
-    auto failure_steps = [promise, &realm](JS::Value error) {
+    auto failure_steps = [promise, &realm, writer](JS::Value error) {
+        // Make sure we close the acquired writer.
+        WebIDL::resolve_promise(realm, writable_stream_default_writer_close(*writer), JS::js_undefined());
+
         WebIDL::reject_promise(realm, promise, error);
     };
 
