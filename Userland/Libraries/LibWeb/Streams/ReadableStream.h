@@ -79,6 +79,8 @@ public:
     JS::NonnullGCPtr<JS::Object> pipe_to(WritableStream& destination, StreamPipeOptions const& = {});
     WebIDL::ExceptionOr<ReadableStreamPair> tee();
 
+    void close();
+
     Optional<ReadableStreamController>& controller() { return m_controller; }
     void set_controller(Optional<ReadableStreamController> value) { m_controller = move(value); }
 
