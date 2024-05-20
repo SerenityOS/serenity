@@ -115,7 +115,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Infrastructure::FetchController>> fetch(JS:
 
     // 8. If request’s body is a byte sequence, then set request’s body to request’s body as a body.
     if (auto const* buffer = request.body().get_pointer<ByteBuffer>())
-        request.set_body(TRY(Infrastructure::byte_sequence_as_body(realm, buffer->bytes())));
+        request.set_body(Infrastructure::byte_sequence_as_body(realm, buffer->bytes()));
 
     // 9. If request’s window is "client", then set request’s window to request’s client, if request’s client’s global
     //    object is a Window object; otherwise "no-window".
@@ -524,7 +524,7 @@ WebIDL::ExceptionOr<JS::GCPtr<PendingResponse>> main_fetch(JS::Realm& realm, Inf
                     }
 
                     // 2. Set response’s body to bytes as a body.
-                    response->set_body(TRY_OR_IGNORE(Infrastructure::byte_sequence_as_body(realm, bytes)));
+                    response->set_body(Infrastructure::byte_sequence_as_body(realm, bytes));
 
                     // 3. Run fetch response handover given fetchParams and response.
                     fetch_response_handover(realm, fetch_params, *response);
@@ -755,7 +755,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> scheme_fetch(JS::Realm& r
             auto header = Infrastructure::Header::from_string_pair("Content-Type"sv, "text/html;charset=utf-8"sv);
             response->header_list()->append(move(header));
 
-            response->set_body(MUST(Infrastructure::byte_sequence_as_body(realm, ""sv.bytes())));
+            response->set_body(Infrastructure::byte_sequence_as_body(realm, ""sv.bytes()));
             return PendingResponse::create(vm, request, response);
         }
 
@@ -793,13 +793,13 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> scheme_fetch(JS::Realm& r
         // 8. If request’s header list does not contain `Range`:
         if (!request->header_list()->contains("Range"sv.bytes())) {
             // 1. Let bodyWithType be the result of safely extracting blob.
-            auto body_with_type = TRY(safely_extract_body(realm, blob->bytes()));
+            auto body_with_type = safely_extract_body(realm, blob->bytes());
 
             // 2. Set response’s status message to `OK`.
             response->set_status_message(MUST(ByteBuffer::copy("OK"sv.bytes())));
 
             // 3. Set response’s body to bodyWithType’s body.
-            response->set_body(move(body_with_type.body));
+            response->set_body(body_with_type.body);
 
             // 4. Set response’s header list to « (`Content-Length`, serializedFullLength), (`Content-Type`, type) ».
             auto content_length_header = Infrastructure::Header::from_string_pair("Content-Length"sv, serialized_full_length);
@@ -861,7 +861,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> scheme_fetch(JS::Realm& r
         auto header = Infrastructure::Header::from_string_pair("Content-Type"sv, mime_type);
         response->header_list()->append(move(header));
 
-        response->set_body(TRY(Infrastructure::byte_sequence_as_body(realm, data_url_struct.value().body)));
+        response->set_body(Infrastructure::byte_sequence_as_body(realm, data_url_struct.value().body));
         return PendingResponse::create(vm, request, response);
     }
     // -> "file"
@@ -1213,8 +1213,8 @@ WebIDL::ExceptionOr<JS::GCPtr<PendingResponse>> http_redirect_fetch(JS::Realm& r
         auto converted_source = source.has<ByteBuffer>()
             ? BodyInitOrReadableBytes { source.get<ByteBuffer>() }
             : BodyInitOrReadableBytes { source.get<JS::Handle<FileAPI::Blob>>() };
-        auto [body, _] = TRY(safely_extract_body(realm, converted_source));
-        request->set_body(move(body));
+        auto [body, _] = safely_extract_body(realm, converted_source);
+        request->set_body(body);
     }
 
     // 15. Let timingInfo be fetchParams’s timing info.
@@ -1638,8 +1638,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
                 auto converted_source = source.has<ByteBuffer>()
                     ? BodyInitOrReadableBytes { source.get<ByteBuffer>() }
                     : BodyInitOrReadableBytes { source.get<JS::Handle<FileAPI::Blob>>() };
-                auto [body, _] = TRY_OR_IGNORE(safely_extract_body(realm, converted_source));
-                request->set_body(move(body));
+                auto [body, _] = safely_extract_body(realm, converted_source);
+                request->set_body(body);
             }
 
             // 3. If request’s use-URL-credentials flag is unset or isAuthenticationFetch is true, then:
