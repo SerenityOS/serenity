@@ -108,7 +108,6 @@ void Thread::start()
         VERIFY(rc == 0);
     }
 #endif
-    dbgln("Started {}", *this);
 }
 
 void Thread::detach()
