@@ -103,19 +103,27 @@ ALWAYS_INLINE ThrowCompletionOr<NonnullGCPtr<Object>> base_object_for_get(VM& vm
     return throw_null_or_undefined_property_access(vm, base_value, base_identifier, property_identifier);
 }
 
+enum class GetByIdMode {
+    Normal,
+    Length,
+};
+
+template<GetByIdMode mode = GetByIdMode::Normal>
 inline ThrowCompletionOr<Value> get_by_id(VM& vm, Optional<DeprecatedFlyString const&> const& base_identifier, DeprecatedFlyString const& property, Value base_value, Value this_value, PropertyLookupCache& cache)
 {
-    if (base_value.is_string()) {
-        auto string_value = TRY(base_value.as_string().get(vm, property));
-        if (string_value.has_value())
-            return *string_value;
+    if constexpr (mode == GetByIdMode::Length) {
+        if (base_value.is_string()) {
+            return Value(base_value.as_string().utf16_string().length_in_code_units());
+        }
     }
 
     auto base_obj = TRY(base_object_for_get(vm, base_value, base_identifier, property));
 
-    // OPTIMIZATION: Fast path for the magical "length" property on Array objects.
-    if (base_obj->has_magical_length_property() && property == vm.names.length.as_string()) {
-        return Value { base_obj->indexed_properties().array_like_size() };
+    if constexpr (mode == GetByIdMode::Length) {
+        // OPTIMIZATION: Fast path for the magical "length" property on Array objects.
+        if (base_obj->has_magical_length_property()) {
+            return Value { base_obj->indexed_properties().array_like_size() };
+        }
     }
 
     auto& shape = base_obj->shape();
