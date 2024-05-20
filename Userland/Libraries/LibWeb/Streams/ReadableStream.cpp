@@ -166,6 +166,26 @@ WebIDL::ExceptionOr<ReadableStreamPair> ReadableStream::tee()
     return TRY(readable_stream_tee(realm(), *this, true));
 }
 
+// https://streams.spec.whatwg.org/#readablestream-close
+void ReadableStream::close()
+{
+    controller()->visit(
+        // 1. If stream.[[controller]] implements ReadableByteStreamController
+        [&](JS::NonnullGCPtr<ReadableByteStreamController> controller) {
+            // 1. Perform ! ReadableByteStreamControllerClose(stream.[[controller]]).
+            MUST(readable_byte_stream_controller_close(controller));
+
+            // 2. If stream.[[controller]].[[pendingPullIntos]] is not empty, perform ! ReadableByteStreamControllerRespond(stream.[[controller]], 0).
+            if (!controller->pending_pull_intos().is_empty())
+                MUST(readable_byte_stream_controller_respond(controller, 0));
+        },
+
+        // 2. Otherwise, perform ! ReadableStreamDefaultControllerClose(stream.[[controller]]).
+        [&](JS::NonnullGCPtr<ReadableStreamDefaultController> controller) {
+            readable_stream_default_controller_close(*controller);
+        });
+}
+
 void ReadableStream::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
