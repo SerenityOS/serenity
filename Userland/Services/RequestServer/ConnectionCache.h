@@ -188,7 +188,7 @@ ErrorOr<void> recreate_socket_if_needed(T& connection, URL::URL const& url)
     using SocketType = typename T::SocketType;
     using SocketStorageType = typename T::StorageType;
 
-    if (!connection.socket->is_open() || connection.socket->is_eof()) {
+    if (!connection.socket || !connection.socket->is_open() || connection.socket->is_eof()) {
         connection.socket = nullptr;
         // Create another socket for the connection.
         auto set_socket = [&](NonnullOwnPtr<SocketStorageType>&& socket) -> ErrorOr<void> {
