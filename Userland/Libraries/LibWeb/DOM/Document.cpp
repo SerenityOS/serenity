@@ -1337,7 +1337,9 @@ void Document::set_hovered_node(Node* node)
 
     // https://w3c.github.io/uievents/#mouseout
     if (old_hovered_node && old_hovered_node != m_hovered_node) {
-        auto event = UIEvents::MouseEvent::create(realm(), UIEvents::EventNames::mouseout);
+        UIEvents::MouseEventInit mouse_event_init {};
+        mouse_event_init.related_target = m_hovered_node;
+        auto event = UIEvents::MouseEvent::create(realm(), UIEvents::EventNames::mouseout, mouse_event_init);
         old_hovered_node->dispatch_event(event);
     }
 
@@ -1346,13 +1348,17 @@ void Document::set_hovered_node(Node* node)
         // FIXME: Check if we need to dispatch these events in a specific order.
         for (auto target = old_hovered_node; target && target.ptr() != common_ancestor; target = target->parent()) {
             // FIXME: Populate the event with mouse coordinates, etc.
-            target->dispatch_event(UIEvents::MouseEvent::create(realm(), UIEvents::EventNames::mouseleave));
+            UIEvents::MouseEventInit mouse_event_init {};
+            mouse_event_init.related_target = m_hovered_node;
+            target->dispatch_event(UIEvents::MouseEvent::create(realm(), UIEvents::EventNames::mouseleave, mouse_event_init));
         }
     }
 
     // https://w3c.github.io/uievents/#mouseover
     if (m_hovered_node && m_hovered_node != old_hovered_node) {
-        auto event = UIEvents::MouseEvent::create(realm(), UIEvents::EventNames::mouseover);
+        UIEvents::MouseEventInit mouse_event_init {};
+        mouse_event_init.related_target = old_hovered_node;
+        auto event = UIEvents::MouseEvent::create(realm(), UIEvents::EventNames::mouseover, mouse_event_init);
         m_hovered_node->dispatch_event(event);
     }
 
@@ -1361,7 +1367,9 @@ void Document::set_hovered_node(Node* node)
         // FIXME: Check if we need to dispatch these events in a specific order.
         for (auto target = m_hovered_node; target && target.ptr() != common_ancestor; target = target->parent()) {
             // FIXME: Populate the event with mouse coordinates, etc.
-            target->dispatch_event(UIEvents::MouseEvent::create(realm(), UIEvents::EventNames::mouseenter));
+            UIEvents::MouseEventInit mouse_event_init {};
+            mouse_event_init.related_target = old_hovered_node;
+            target->dispatch_event(UIEvents::MouseEvent::create(realm(), UIEvents::EventNames::mouseenter, mouse_event_init));
         }
     }
 }
