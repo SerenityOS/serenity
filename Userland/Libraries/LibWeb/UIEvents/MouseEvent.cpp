@@ -45,6 +45,7 @@ MouseEvent::MouseEvent(JS::Realm& realm, FlyString const& event_name, MouseEvent
     , m_movement_y(event_init.movement_y)
     , m_button(event_init.button)
     , m_buttons(event_init.buttons)
+    , m_related_target(event_init.related_target)
 {
     set_event_characteristics();
 }
@@ -55,6 +56,12 @@ void MouseEvent::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
     WEB_SET_PROTOTYPE_FOR_INTERFACE(MouseEvent);
+}
+
+void MouseEvent::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_related_target);
 }
 
 bool MouseEvent::get_modifier_state(String const& key_arg) const

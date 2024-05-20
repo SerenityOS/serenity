@@ -29,7 +29,7 @@ interface MouseEvent : UIEvent {
     readonly attribute short button;
     readonly attribute unsigned short buttons;
 
-    [FIXME] readonly attribute EventTarget? relatedTarget;
+    readonly attribute EventTarget? relatedTarget;
 
     boolean getModifierState(DOMString keyArg);
 };
@@ -48,5 +48,5 @@ dictionary MouseEventInit : EventModifierInit {
 
     short button = 0;
     unsigned short buttons = 0;
-    // FIXME: EventTarget? relatedTarget = null;
+    EventTarget? relatedTarget = null;
 };
