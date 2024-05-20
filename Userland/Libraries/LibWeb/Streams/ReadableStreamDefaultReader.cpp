@@ -15,6 +15,7 @@
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Bindings/ReadableStreamDefaultReaderPrototype.h>
+#include <LibWeb/Fetch/Infrastructure/IncrementalReadLoopReadRequest.h>
 #include <LibWeb/Streams/AbstractOperations.h>
 #include <LibWeb/Streams/ReadableStream.h>
 #include <LibWeb/Streams/ReadableStreamDefaultReader.h>
@@ -185,6 +186,13 @@ JS::NonnullGCPtr<JS::Promise> ReadableStreamDefaultReader::read()
 
     // 5. Return promise.
     return JS::NonnullGCPtr { verify_cast<JS::Promise>(*promise_capability->promise()) };
+}
+
+void ReadableStreamDefaultReader::read_a_chunk(Fetch::Infrastructure::IncrementalReadLoopReadRequest& read_request)
+{
+    // To read a chunk from a ReadableStreamDefaultReader reader, given a read request readRequest,
+    // perform ! ReadableStreamDefaultReaderRead(reader, readRequest).
+    readable_stream_default_reader_read(*this, read_request);
 }
 
 // https://streams.spec.whatwg.org/#readablestreamdefaultreader-read-all-bytes
