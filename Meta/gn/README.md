@@ -40,7 +40,7 @@ If you modify `args.gn` outside of `gn args`, be sure to run `gn gen` again to r
 
 On macOS, the default args should work out of the box. For compiling Ladybird there won't be any tailoring needed if you have Qt6 installed via homebrew and the Xcode tools installed.
 
-On Ubuntu, it's likely that the default ``cc`` and ``cxx`` will not be able to compile the project. For compiling Ladybird, a typical ``args.gn`` might look like the below:
+On Ubuntu, it's likely that the default ``cc`` and ``c++`` will not be able to compile the project. For compiling Ladybird, a typical ``args.gn`` might look like the below:
 
 args.gn
 ```gn

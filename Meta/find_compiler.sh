@@ -50,7 +50,7 @@ find_newest_compiler() {
 
 pick_host_compiler() {
     CC=${CC:-"cc"}
-    CXX=${CXX:-"cxx"}
+    CXX=${CXX:-"c++"}
 
     if is_supported_compiler "$CC" && is_supported_compiler "$CXX"; then
         return
