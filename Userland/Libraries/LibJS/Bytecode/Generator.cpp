@@ -1037,11 +1037,19 @@ CodeGenerationErrorOr<Optional<ScopedOperand>> Generator::emit_named_evaluation_
 
 void Generator::emit_get_by_id(ScopedOperand dst, ScopedOperand base, IdentifierTableIndex property_identifier, Optional<IdentifierTableIndex> base_identifier)
 {
+    if (m_identifier_table->get(property_identifier) == "length"sv) {
+        emit<Op::GetLength>(dst, base, move(base_identifier), m_next_property_lookup_cache++);
+        return;
+    }
     emit<Op::GetById>(dst, base, property_identifier, move(base_identifier), m_next_property_lookup_cache++);
 }
 
 void Generator::emit_get_by_id_with_this(ScopedOperand dst, ScopedOperand base, IdentifierTableIndex id, ScopedOperand this_value)
 {
+    if (m_identifier_table->get(id) == "length"sv) {
+        emit<Op::GetLengthWithThis>(dst, base, this_value, m_next_property_lookup_cache++);
+        return;
+    }
     emit<Op::GetByIdWithThis>(dst, base, id, this_value, m_next_property_lookup_cache++);
 }
 

@@ -990,6 +990,68 @@ private:
     u32 m_cache_index { 0 };
 };
 
+class GetLength final : public Instruction {
+public:
+    GetLength(Operand dst, Operand base, Optional<IdentifierTableIndex> base_identifier, u32 cache_index)
+        : Instruction(Type::GetLength)
+        , m_dst(dst)
+        , m_base(base)
+        , m_base_identifier(move(base_identifier))
+        , m_cache_index(cache_index)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
+    void visit_operands_impl(Function<void(Operand&)> visitor)
+    {
+        visitor(m_dst);
+        visitor(m_base);
+    }
+
+    Operand dst() const { return m_dst; }
+    Operand base() const { return m_base; }
+    u32 cache_index() const { return m_cache_index; }
+
+private:
+    Operand m_dst;
+    Operand m_base;
+    Optional<IdentifierTableIndex> m_base_identifier;
+    u32 m_cache_index { 0 };
+};
+
+class GetLengthWithThis final : public Instruction {
+public:
+    GetLengthWithThis(Operand dst, Operand base, Operand this_value, u32 cache_index)
+        : Instruction(Type::GetLengthWithThis)
+        , m_dst(dst)
+        , m_base(base)
+        , m_this_value(this_value)
+        , m_cache_index(cache_index)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    ByteString to_byte_string_impl(Bytecode::Executable const&) const;
+    void visit_operands_impl(Function<void(Operand&)> visitor)
+    {
+        visitor(m_dst);
+        visitor(m_base);
+        visitor(m_this_value);
+    }
+
+    Operand dst() const { return m_dst; }
+    Operand base() const { return m_base; }
+    Operand this_value() const { return m_this_value; }
+    u32 cache_index() const { return m_cache_index; }
+
+private:
+    Operand m_dst;
+    Operand m_base;
+    Operand m_this_value;
+    u32 m_cache_index { 0 };
+};
+
 class GetPrivateById final : public Instruction {
 public:
     explicit GetPrivateById(Operand dst, Operand base, IdentifierTableIndex property)

@@ -57,6 +57,8 @@
     O(GetGlobal)                       \
     O(GetImportMeta)                   \
     O(GetIterator)                     \
+    O(GetLength)                       \
+    O(GetLengthWithThis)               \
     O(GetMethod)                       \
     O(GetNewTarget)                    \
     O(GetNextMethodFromIteratorRecord) \

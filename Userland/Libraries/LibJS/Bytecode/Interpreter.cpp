@@ -597,6 +597,8 @@ FLATTEN_ON_CLANG void Interpreter::run_bytecode(size_t entry_point)
             HANDLE_INSTRUCTION(GetGlobal);
             HANDLE_INSTRUCTION_WITHOUT_EXCEPTION_CHECK(GetImportMeta);
             HANDLE_INSTRUCTION(GetIterator);
+            HANDLE_INSTRUCTION(GetLength);
+            HANDLE_INSTRUCTION(GetLengthWithThis);
             HANDLE_INSTRUCTION(GetMethod);
             HANDLE_INSTRUCTION_WITHOUT_EXCEPTION_CHECK(GetNewTarget);
             HANDLE_INSTRUCTION(GetNextMethodFromIteratorRecord);
@@ -1456,6 +1458,26 @@ ThrowCompletionOr<void> GetByIdWithThis::execute_impl(Bytecode::Interpreter& int
     return {};
 }
 
+ThrowCompletionOr<void> GetLength::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto base_identifier = interpreter.current_executable().get_identifier(m_base_identifier);
+
+    auto base_value = interpreter.get(base());
+    auto& cache = interpreter.current_executable().property_lookup_caches[m_cache_index];
+
+    interpreter.set(dst(), TRY(get_by_id<GetByIdMode::Length>(interpreter.vm(), base_identifier, interpreter.vm().names.length.as_string(), base_value, base_value, cache)));
+    return {};
+}
+
+ThrowCompletionOr<void> GetLengthWithThis::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto base_value = interpreter.get(m_base);
+    auto this_value = interpreter.get(m_this_value);
+    auto& cache = interpreter.current_executable().property_lookup_caches[m_cache_index];
+    interpreter.set(dst(), TRY(get_by_id<GetByIdMode::Length>(interpreter.vm(), {}, interpreter.vm().names.length.as_string(), base_value, this_value, cache)));
+    return {};
+}
+
 ThrowCompletionOr<void> GetPrivateById::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
@@ -2202,6 +2224,21 @@ ByteString GetByIdWithThis::to_byte_string_impl(Bytecode::Executable const& exec
         format_operand("dst"sv, m_dst, executable),
         format_operand("base"sv, m_base, executable),
         executable.identifier_table->get(m_property),
+        format_operand("this"sv, m_this_value, executable));
+}
+
+ByteString GetLength::to_byte_string_impl(Bytecode::Executable const& executable) const
+{
+    return ByteString::formatted("GetLength {}, {}",
+        format_operand("dst"sv, m_dst, executable),
+        format_operand("base"sv, m_base, executable));
+}
+
+ByteString GetLengthWithThis::to_byte_string_impl(Bytecode::Executable const& executable) const
+{
+    return ByteString::formatted("GetLengthWithThis {}, {}, {}",
+        format_operand("dst"sv, m_dst, executable),
+        format_operand("base"sv, m_base, executable),
         format_operand("this"sv, m_this_value, executable));
 }
 
