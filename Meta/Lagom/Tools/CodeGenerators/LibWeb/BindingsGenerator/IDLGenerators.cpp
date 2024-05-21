@@ -3194,7 +3194,7 @@ void @class_name@::initialize(JS::Realm& realm)
 
     if (!interface.attributes.is_empty() || !interface.functions.is_empty() || interface.has_stringifier) {
         generator.append(R"~~~(
-static JS::ThrowCompletionOr<@fully_qualified_name@*> impl_from(JS::VM& vm)
+[[maybe_unused]] static JS::ThrowCompletionOr<@fully_qualified_name@*> impl_from(JS::VM& vm)
 {
     auto this_value = vm.this_value();
     JS::Object* this_object = nullptr;
