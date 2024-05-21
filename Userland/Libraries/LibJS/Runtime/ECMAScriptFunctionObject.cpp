@@ -212,13 +212,16 @@ ECMAScriptFunctionObject::ECMAScriptFunctionObject(DeprecatedFlyString name, Byt
 
     HashMap<DeprecatedFlyString, ParameterIsLocal> parameter_bindings;
 
+    auto arguments_object_needs_binding = m_arguments_object_needed && !m_local_variables_names.contains_slow(vm().names.arguments.as_string());
+
     // 22. If argumentsObjectNeeded is true, then
     if (m_arguments_object_needed) {
         // f. Let parameterBindings be the list-concatenation of parameterNames and « "arguments" ».
         parameter_bindings = m_parameter_names;
         parameter_bindings.set(vm().names.arguments.as_string(), ParameterIsLocal::No);
 
-        (*environment_size)++;
+        if (arguments_object_needs_binding)
+            (*environment_size)++;
     } else {
         parameter_bindings = m_parameter_names;
         // a. Let parameterBindings be parameterNames.
@@ -328,7 +331,6 @@ ECMAScriptFunctionObject::ECMAScriptFunctionObject(DeprecatedFlyString name, Byt
         }));
     }
 
-    auto arguments_object_needs_binding = m_arguments_object_needed && !m_local_variables_names.contains_slow(vm().names.arguments.as_string());
     m_function_environment_needed = arguments_object_needs_binding || m_function_environment_bindings_count > 0 || m_var_environment_bindings_count > 0 || m_lex_environment_bindings_count > 0 || uses_this == UsesThis::Yes || m_contains_direct_call_to_eval;
 }
 
