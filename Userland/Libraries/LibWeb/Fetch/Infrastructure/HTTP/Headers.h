@@ -33,7 +33,7 @@ struct Header {
 // A header list is a list of zero or more headers. It is initially the empty list.
 class HeaderList final
     : public JS::Cell
-    , Vector<Header> {
+    , public Vector<Header> {
     JS_CELL(HeaderList, JS::Cell);
     JS_DECLARE_ALLOCATOR(HeaderList);
 

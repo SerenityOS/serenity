@@ -1252,6 +1252,126 @@ WebIDL::ExceptionOr<JS::GCPtr<PendingResponse>> http_redirect_fetch(JS::Realm& r
     return main_fetch(realm, fetch_params, recursive);
 }
 
+// https://fetch.spec.whatwg.org/#network-partition-key
+struct NetworkPartitionKey {
+    HTML::Origin top_level_origin;
+    // FIXME: See https://github.com/whatwg/fetch/issues/1035
+    //     This is the document origin in other browsers
+    void* second_key = nullptr;
+
+    bool operator==(NetworkPartitionKey const&) const = default;
+};
+
+}
+
+// FIXME: Take this with us to the eventual header these structs end up in to avoid closing and re-opening the namespace.
+template<>
+class AK::Traits<Web::Fetch::Fetching::NetworkPartitionKey> : public DefaultTraits<Web::Fetch::Fetching::NetworkPartitionKey> {
+public:
+    static unsigned hash(Web::Fetch::Fetching::NetworkPartitionKey const& partition_key)
+    {
+        return ::AK::Traits<Web::HTML::Origin>::hash(partition_key.top_level_origin);
+    }
+};
+
+namespace Web::Fetch::Fetching {
+
+struct CachedResponse {
+    Vector<Infrastructure::Header> headers;
+    ByteBuffer body;
+    ByteBuffer method;
+    URL::URL url;
+    UnixDateTime current_age;
+};
+
+class CachePartition {
+public:
+    // FIXME: Copy the headers... less
+    Optional<CachedResponse> select_response(URL::URL const& url, ReadonlyBytes method, Vector<Infrastructure::Header> const& headers) const
+    {
+        auto it = m_cache.find(url);
+        if (it == m_cache.end())
+            return {};
+
+        auto const& cached_response = it->value;
+
+        // FIXME: Validate headers and method
+        (void)method;
+        (void)headers;
+        return cached_response;
+    }
+
+private:
+    HashMap<URL::URL, CachedResponse> m_cache;
+};
+
+class HTTPCache {
+public:
+    CachePartition& get(NetworkPartitionKey const& key)
+    {
+        return *m_cache.ensure(key, [] {
+            return make<CachePartition>();
+        });
+    }
+
+    static HTTPCache& the()
+    {
+        static HTTPCache s_cache;
+        return s_cache;
+    }
+
+private:
+    HashMap<NetworkPartitionKey, NonnullOwnPtr<CachePartition>> m_cache;
+};
+
+// https://fetch.spec.whatwg.org/#determine-the-network-partition-key
+static NetworkPartitionKey determine_the_network_partition_key(HTML::Environment const& environment)
+{
+    // 1. Let topLevelOrigin be environment’s top-level origin.
+    auto top_level_origin = environment.top_level_origin;
+
+    // FIXME: 2. If topLevelOrigin is null, then set topLevelOrigin to environment’s top-level creation URL’s origin
+    // This field is supposed to be nullable
+
+    // 3. Assert: topLevelOrigin is an origin.
+
+    // FIXME: 4. Let topLevelSite be the result of obtaining a site, given topLevelOrigin.
+
+    // 5. Let secondKey be null or an implementation-defined value.
+    void* second_key = nullptr;
+
+    // 6. Return (topLevelSite, secondKey).
+    return { top_level_origin, second_key };
+}
+
+// https://fetch.spec.whatwg.org/#request-determine-the-network-partition-key
+static Optional<NetworkPartitionKey> determine_the_network_partition_key(Infrastructure::Request const& request)
+{
+    // 1. If request’s reserved client is non-null, then return the result of determining the network partition key given request’s reserved client.
+    if (auto reserved_client = request.reserved_client())
+        return determine_the_network_partition_key(*reserved_client);
+
+    // 2. If request’s client is non-null, then return the result of determining the network partition key given request’s client.
+    if (auto client = request.client())
+        return determine_the_network_partition_key(*client);
+
+    return {};
+}
+
+// https://fetch.spec.whatwg.org/#determine-the-http-cache-partition
+static Optional<CachePartition> determine_the_http_cache_partition(Infrastructure::Request const& request)
+{
+    // 1. Let key be the result of determining the network partition key given request.
+    auto key = determine_the_network_partition_key(request);
+
+    // 2. If key is null, then return null.
+    if (!key.has_value())
+        return OptionalNone {};
+
+    // 3. Return the unique HTTP cache associated with key. [HTTP-CACHING]
+    return HTTPCache::the().get(key.value());
+}
+
 // https://fetch.spec.whatwg.org/#concept-http-network-or-cache-fetch
 WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fetch(JS::Realm& realm, Infrastructure::FetchParams const& fetch_params, IsAuthenticationFetch is_authentication_fetch, IsNewConnectionFetch is_new_connection_fetch)
 {
@@ -1277,7 +1397,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
 
     // 6. Let httpCache be null.
     // (Typeless until we actually implement it, needed for checks below)
-    void* http_cache = nullptr;
+    Optional<CachePartition> http_cache;
 
     // 7. Let the revalidatingFlag be unset.
     auto revalidating_flag = RefCountedFlag::create(false);
@@ -1519,10 +1639,11 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
         // FIXME: 22. If there’s a proxy-authentication entry, use it as appropriate.
         // NOTE: This intentionally does not depend on httpRequest’s credentials mode.
 
-        // FIXME: 23. Set httpCache to the result of determining the HTTP cache partition, given httpRequest.
+        // 23. Set httpCache to the result of determining the HTTP cache partition, given httpRequest.
+        http_cache = determine_the_http_cache_partition(*http_request);
 
         // 24. If httpCache is null, then set httpRequest’s cache mode to "no-store".
-        if (!http_cache)
+        if (!http_cache.has_value())
             http_request->set_cache_mode(Infrastructure::Request::CacheMode::NoStore);
 
         // 25. If httpRequest’s cache mode is neither "no-store" nor "reload", then:
@@ -1532,10 +1653,15 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
             //    validation, as per the "Constructing Responses from Caches" chapter of HTTP Caching [HTTP-CACHING],
             //    if any.
             // NOTE: As mandated by HTTP, this still takes the `Vary` header into account.
-            stored_response = nullptr;
-
+            auto raw_response = http_cache->select_response(http_request->url(), http_request->method(), *http_request->header_list());
             // 2. If storedResponse is non-null, then:
-            if (stored_response) {
+            if (raw_response.has_value()) {
+
+                // FIXME: Set more properties from the cached response
+                auto [body, _] = TRY(extract_body(realm, ReadonlyBytes(raw_response->body)));
+                stored_response = Infrastructure::Response::create(vm);
+                stored_response->set_body(body);
+
                 // FIXME: Caching is not implemented yet.
                 VERIFY_NOT_REACHED();
             }
