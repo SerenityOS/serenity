@@ -328,7 +328,8 @@ ECMAScriptFunctionObject::ECMAScriptFunctionObject(DeprecatedFlyString name, Byt
         }));
     }
 
-    m_function_environment_needed = m_arguments_object_needed || m_function_environment_bindings_count > 0 || m_var_environment_bindings_count > 0 || m_lex_environment_bindings_count > 0 || uses_this == UsesThis::Yes || m_contains_direct_call_to_eval;
+    auto arguments_object_needs_binding = m_arguments_object_needed && !m_local_variables_names.contains_slow(vm().names.arguments.as_string());
+    m_function_environment_needed = arguments_object_needs_binding || m_function_environment_bindings_count > 0 || m_var_environment_bindings_count > 0 || m_lex_environment_bindings_count > 0 || uses_this == UsesThis::Yes || m_contains_direct_call_to_eval;
 }
 
 void ECMAScriptFunctionObject::initialize(Realm& realm)

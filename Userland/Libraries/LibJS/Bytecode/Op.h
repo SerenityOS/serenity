@@ -60,8 +60,9 @@ public:
         Unmapped,
     };
 
-    CreateArguments(Kind kind, bool is_immutable)
+    CreateArguments(Optional<Operand> dst, Kind kind, bool is_immutable)
         : Instruction(Type::CreateArguments)
+        , m_dst(dst)
         , m_kind(kind)
         , m_is_immutable(is_immutable)
     {
@@ -69,8 +70,14 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
+    void visit_operands_impl(Function<void(Operand&)> visitor)
+    {
+        if (m_dst.has_value())
+            visitor(m_dst.value());
+    }
 
 private:
+    Optional<Operand> m_dst;
     Kind m_kind;
     bool m_is_immutable { false };
 };

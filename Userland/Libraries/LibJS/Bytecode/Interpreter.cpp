@@ -1373,6 +1373,11 @@ ThrowCompletionOr<void> CreateArguments::execute_impl(Bytecode::Interpreter& int
         arguments_object = create_unmapped_arguments_object(interpreter.vm(), passed_arguments);
     }
 
+    if (m_dst.has_value()) {
+        interpreter.set(*m_dst, arguments_object);
+        return {};
+    }
+
     if (m_is_immutable) {
         MUST(environment->create_immutable_binding(interpreter.vm(), interpreter.vm().names.arguments.as_string(), false));
     } else {
@@ -2110,9 +2115,14 @@ ByteString CreateRestParams::to_byte_string_impl(Bytecode::Executable const& exe
     return ByteString::formatted("CreateRestParams {}, rest_index:{}", format_operand("dst"sv, m_dst, executable), m_rest_index);
 }
 
-ByteString CreateArguments::to_byte_string_impl(Bytecode::Executable const&) const
+ByteString CreateArguments::to_byte_string_impl(Bytecode::Executable const& executable) const
 {
-    return ByteString::formatted("CreateArguments {} immutable:{}", m_kind == Kind::Mapped ? "mapped"sv : "unmapped"sv, m_is_immutable);
+    StringBuilder builder;
+    builder.appendff("CreateArguments");
+    if (m_dst.has_value())
+        builder.appendff(" {}", format_operand("dst"sv, *m_dst, executable));
+    builder.appendff(" {} immutable:{}", m_kind == Kind::Mapped ? "mapped"sv : "unmapped"sv, m_is_immutable);
+    return builder.to_byte_string();
 }
 
 ByteString EnterObjectEnvironment::to_byte_string_impl(Executable const& executable) const

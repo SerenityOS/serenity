@@ -295,15 +295,13 @@ public:
                 continue;
             }
 
-            if (identifier_group_name == "arguments"sv) {
-                // NOTE: arguments is a special variable that should not be treated as a candidate to become local
-                continue;
-            }
-
             bool scope_has_declaration = false;
             if (is_top_level() && m_var_names.contains(identifier_group_name))
                 scope_has_declaration = true;
             else if (m_lexical_names.contains(identifier_group_name) || m_function_names.contains(identifier_group_name))
+                scope_has_declaration = true;
+
+            if (m_type == ScopeType::Function && !m_is_arrow_function && identifier_group_name == "arguments"sv)
                 scope_has_declaration = true;
 
             bool hoistable_function_declaration = false;
@@ -448,6 +446,11 @@ public:
         }
     }
 
+    void set_is_arrow_function()
+    {
+        m_is_arrow_function = true;
+    }
+
 private:
     void throw_identifier_declared(DeprecatedFlyString const& name, NonnullRefPtr<Declaration const> const& declaration)
     {
@@ -489,6 +492,7 @@ private:
     bool m_contains_await_expression { false };
     bool m_screwed_by_eval_in_scope_chain { false };
     bool m_uses_this { false };
+    bool m_is_arrow_function { false };
 };
 
 class OperatorPrecedenceTable {
@@ -995,6 +999,7 @@ RefPtr<FunctionExpression const> Parser::try_parse_arrow_function_expression(boo
     bool uses_this = false;
     auto function_body_result = [&]() -> RefPtr<FunctionBody const> {
         ScopePusher function_scope = ScopePusher::function_scope(*this);
+        function_scope.set_is_arrow_function();
 
         if (expect_parens) {
             // We have parens around the function parameters and can re-use the same parsing
