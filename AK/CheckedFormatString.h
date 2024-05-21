@@ -12,14 +12,6 @@
 #include <AK/StringView.h>
 
 #ifdef ENABLE_COMPILETIME_FORMAT_CHECK
-// FIXME: Seems like clang doesn't like calling 'consteval' functions inside 'consteval' functions quite the same way as GCC does,
-//        it seems to entirely forget that it accepted that parameters to a 'consteval' function to begin with.
-#    if defined(AK_COMPILER_CLANG)
-#        undef ENABLE_COMPILETIME_FORMAT_CHECK
-#    endif
-#endif
-
-#ifdef ENABLE_COMPILETIME_FORMAT_CHECK
 namespace AK::Format::Detail {
 
 // We have to define a local "purely constexpr" Array that doesn't lead back to us (via e.g. VERIFY)
