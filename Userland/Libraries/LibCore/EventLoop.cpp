@@ -156,20 +156,9 @@ void EventLoop::deferred_invoke(Function<void()> invokee)
     post_event(context, make<Core::DeferredInvocationEvent>(context, move(invokee)));
 }
 
-void EventLoop::deferred_invoke_if(Function<void()> invokee, Function<bool()> condition)
-{
-    auto context = DeferredInvocationContext::construct(move(condition));
-    post_event(context, make<Core::DeferredInvocationEvent>(context, move(invokee)));
-}
-
 void deferred_invoke(Function<void()> invokee)
 {
     EventLoop::current().deferred_invoke(move(invokee));
-}
-
-void deferred_invoke_if(Function<void()> invokee, Function<bool()> condition)
-{
-    EventLoop::current().deferred_invoke_if(move(invokee), move(condition));
 }
 
 bool EventLoop::was_exit_requested() const
