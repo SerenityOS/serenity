@@ -1394,7 +1394,10 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
         // 13. Append the Fetch metadata headers for httpRequest.
         append_fetch_metadata_headers_for_request(*http_request);
 
-        // 14. If httpRequest’s header list does not contain `User-Agent`, then user agents should append
+        // 14. FIXME If httpRequest’s initiator is "prefetch", then set a structured field value
+        //     given (`Sec-Purpose`, the token prefetch) in httpRequest’s header list.
+
+        // 15. If httpRequest’s header list does not contain `User-Agent`, then user agents should append
         //     (`User-Agent`, default `User-Agent` value) to httpRequest’s header list.
         if (!http_request->header_list()->contains("User-Agent"sv.bytes())) {
             auto header = Infrastructure::Header {
@@ -1404,7 +1407,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
             http_request->header_list()->append(move(header));
         }
 
-        // 15. If httpRequest’s cache mode is "default" and httpRequest’s header list contains `If-Modified-Since`,
+        // 16. If httpRequest’s cache mode is "default" and httpRequest’s header list contains `If-Modified-Since`,
         //     `If-None-Match`, `If-Unmodified-Since`, `If-Match`, or `If-Range`, then set httpRequest’s cache mode to
         //     "no-store".
         if (http_request->cache_mode() == Infrastructure::Request::CacheMode::Default
@@ -1416,7 +1419,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
             http_request->set_cache_mode(Infrastructure::Request::CacheMode::NoStore);
         }
 
-        // 16. If httpRequest’s cache mode is "no-cache", httpRequest’s prevent no-cache cache-control header
+        // 17. If httpRequest’s cache mode is "no-cache", httpRequest’s prevent no-cache cache-control header
         //     modification flag is unset, and httpRequest’s header list does not contain `Cache-Control`, then append
         //     (`Cache-Control`, `max-age=0`) to httpRequest’s header list.
         if (http_request->cache_mode() == Infrastructure::Request::CacheMode::NoCache
@@ -1426,7 +1429,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
             http_request->header_list()->append(move(header));
         }
 
-        // 17. If httpRequest’s cache mode is "no-store" or "reload", then:
+        // 18. If httpRequest’s cache mode is "no-store" or "reload", then:
         if (http_request->cache_mode() == Infrastructure::Request::CacheMode::NoStore
             || http_request->cache_mode() == Infrastructure::Request::CacheMode::Reload) {
             // 1. If httpRequest’s header list does not contain `Pragma`, then append (`Pragma`, `no-cache`) to
@@ -1444,7 +1447,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
             }
         }
 
-        // 18. If httpRequest’s header list contains `Range`, then append (`Accept-Encoding`, `identity`) to
+        // 19. If httpRequest’s header list contains `Range`, then append (`Accept-Encoding`, `identity`) to
         //     httpRequest’s header list.
         // NOTE: This avoids a failure when handling content codings with a part of an encoded response.
         //       Additionally, many servers mistakenly ignore `Range` headers if a non-identity encoding is accepted.
@@ -1453,7 +1456,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
             http_request->header_list()->append(move(header));
         }
 
-        // 19. Modify httpRequest’s header list per HTTP. Do not append a given header if httpRequest’s header list
+        // 20. Modify httpRequest’s header list per HTTP. Do not append a given header if httpRequest’s header list
         //     contains that header’s name.
         // NOTE: It would be great if we could make this more normative somehow. At this point headers such as
         //       `Accept-Encoding`, `Connection`, `DNT`, and `Host`, are to be appended if necessary.
@@ -1462,7 +1465,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
         //       the latter by default), and `Accept-Charset` is a waste of bytes. See HTTP header layer division for
         //       more details.
 
-        // 20. If includeCredentials is true, then:
+        // 21. If includeCredentials is true, then:
         if (include_credentials == IncludeCredentials::Yes) {
             // 1. If the user agent is not configured to block cookies for httpRequest (see section 7 of [COOKIES]),
             //    then:
@@ -1513,16 +1516,16 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
             }
         }
 
-        // FIXME: 21. If there’s a proxy-authentication entry, use it as appropriate.
+        // FIXME: 22. If there’s a proxy-authentication entry, use it as appropriate.
         // NOTE: This intentionally does not depend on httpRequest’s credentials mode.
 
-        // FIXME: 22. Set httpCache to the result of determining the HTTP cache partition, given httpRequest.
+        // FIXME: 23. Set httpCache to the result of determining the HTTP cache partition, given httpRequest.
 
-        // 23. If httpCache is null, then set httpRequest’s cache mode to "no-store".
+        // 24. If httpCache is null, then set httpRequest’s cache mode to "no-store".
         if (!http_cache)
             http_request->set_cache_mode(Infrastructure::Request::CacheMode::NoStore);
 
-        // 24. If httpRequest’s cache mode is neither "no-store" nor "reload", then:
+        // 25. If httpRequest’s cache mode is neither "no-store" nor "reload", then:
         if (http_request->cache_mode() != Infrastructure::Request::CacheMode::NoStore
             && http_request->cache_mode() != Infrastructure::Request::CacheMode::Reload) {
             // 1. Set storedResponse to the result of selecting a response from the httpCache, possibly needing
