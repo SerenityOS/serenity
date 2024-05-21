@@ -26,7 +26,8 @@
 class SQLRepl {
 public:
     explicit SQLRepl(Core::EventLoop& loop, ByteString const& database_name, NonnullRefPtr<SQL::SQLClient> sql_client)
-        : m_sql_client(move(sql_client))
+        : m_history_path(ByteString::formatted("{}/.sql-history", Core::StandardPaths::home_directory()))
+        , m_sql_client(move(sql_client))
         , m_loop(loop)
     {
         m_editor = Line::Editor::construct();
@@ -147,7 +148,7 @@ public:
     }
 
 private:
-    ByteString m_history_path { ByteString::formatted("{}/.sql-history", Core::StandardPaths::home_directory()) };
+    ByteString m_history_path;
     RefPtr<Line::Editor> m_editor { nullptr };
     int m_repl_line_level { 0 };
     bool m_keep_running { true };
