@@ -8,7 +8,7 @@
 #include <LibCore/EventLoop.h>
 #include <LibCore/StandardPaths.h>
 #include <LibCore/System.h>
-#include <LibIPC/MultiServer.h>
+#include <LibIPC/SingleServer.h>
 #include <LibMain/Main.h>
 #include <SQLServer/ConnectionFromClient.h>
 
@@ -24,6 +24,6 @@ ErrorOr<int> serenity_main(Main::Arguments)
 
     Core::EventLoop event_loop;
 
-    auto server = TRY(IPC::MultiServer<SQLServer::ConnectionFromClient>::try_create());
+    auto client = TRY(IPC::take_over_accepted_client_from_system_server<SQLServer::ConnectionFromClient>());
     return event_loop.exec();
 }

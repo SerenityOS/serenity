@@ -32,7 +32,7 @@ public:
     Function<void()> on_disconnect;
 
 private:
-    explicit ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket>, int client_id);
+    explicit ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket>);
 
     virtual Messages::SQLServer::ConnectResponse connect(ByteString const&) override;
     virtual Messages::SQLServer::PrepareStatementResponse prepare_statement(SQL::ConnectionID, ByteString const&) override;

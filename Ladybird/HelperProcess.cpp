@@ -84,19 +84,6 @@ static ErrorOr<NonnullRefPtr<ClientType>> launch_generic_server_process(
     });
 }
 
-template<typename ClientType, typename... ClientArguments>
-static ErrorOr<NonnullRefPtr<ClientType>> launch_singleton_server_process(
-    StringView server_name,
-    ReadonlySpan<ByteString> candidate_server_paths,
-    Vector<ByteString> arguments,
-    RegisterWithProcessManager register_with_process_manager,
-    ClientArguments&&... client_arguments)
-{
-    return launch_server_process_impl<ClientType>(server_name, candidate_server_paths, move(arguments), register_with_process_manager, Ladybird::EnableCallgrindProfiling::No, [&](auto options) {
-        return Core::IPCProcess::spawn_singleton<ClientType>(move(options), forward<ClientArguments>(client_arguments)...);
-    });
-}
-
 ErrorOr<NonnullRefPtr<WebView::WebContentClient>> launch_web_content_process(
     WebView::ViewImplementation& view,
     ReadonlySpan<ByteString> candidate_web_content_paths,
@@ -182,7 +169,7 @@ ErrorOr<NonnullRefPtr<SQL::SQLClient>> launch_sql_server_process(ReadonlySpan<By
         arguments.append(server.value());
     }
 
-    return launch_singleton_server_process<SQL::SQLClient>("SQLServer"sv, candidate_sql_server_paths, arguments, RegisterWithProcessManager::Yes);
+    return launch_generic_server_process<SQL::SQLClient>("SQLServer"sv, candidate_sql_server_paths, move(arguments), RegisterWithProcessManager::Yes, Ladybird::EnableCallgrindProfiling::No);
 }
 
 ErrorOr<IPC::File> connect_new_request_server_client(Protocol::RequestClient& client)

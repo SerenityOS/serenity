@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/IDAllocator.h>
 #include <AK/Vector.h>
 #include <LibCore/StandardPaths.h>
 #include <LibSQL/Result.h>
@@ -14,6 +15,7 @@
 namespace SQLServer {
 
 static HashMap<int, RefPtr<ConnectionFromClient>> s_connections;
+static IDAllocator s_client_ids;
 
 RefPtr<ConnectionFromClient> ConnectionFromClient::client_connection_for(int client_id)
 {
@@ -28,11 +30,11 @@ void ConnectionFromClient::set_database_path(ByteString database_path)
     m_database_path = move(database_path);
 }
 
-ConnectionFromClient::ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket> socket, int client_id)
-    : IPC::ConnectionFromClient<SQLClientEndpoint, SQLServerEndpoint>(*this, move(socket), client_id)
+ConnectionFromClient::ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket> socket)
+    : IPC::ConnectionFromClient<SQLClientEndpoint, SQLServerEndpoint>(*this, move(socket), s_client_ids.allocate())
     , m_database_path(ByteString::formatted("{}/sql", Core::StandardPaths::data_directory()))
 {
-    s_connections.set(client_id, *this);
+    s_connections.set(client_id(), *this);
 }
 
 void ConnectionFromClient::die()
