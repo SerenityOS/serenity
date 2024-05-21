@@ -33,7 +33,7 @@ namespace JS {
 
 JS_DEFINE_ALLOCATOR(ECMAScriptFunctionObject);
 
-NonnullGCPtr<ECMAScriptFunctionObject> ECMAScriptFunctionObject::create(Realm& realm, DeprecatedFlyString name, ByteString source_text, Statement const& ecmascript_code, Vector<FunctionParameter> parameters, i32 m_function_length, Vector<DeprecatedFlyString> local_variables_names, Environment* parent_environment, PrivateEnvironment* private_environment, FunctionKind kind, bool is_strict, UsesThis uses_this, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name)
+NonnullGCPtr<ECMAScriptFunctionObject> ECMAScriptFunctionObject::create(Realm& realm, DeprecatedFlyString name, ByteString source_text, Statement const& ecmascript_code, Vector<FunctionParameter> parameters, i32 m_function_length, Vector<DeprecatedFlyString> local_variables_names, Environment* parent_environment, PrivateEnvironment* private_environment, FunctionKind kind, bool is_strict, UsesThisFromEnvironment uses_this_from_environment, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name)
 {
     Object* prototype = nullptr;
     switch (kind) {
@@ -50,15 +50,15 @@ NonnullGCPtr<ECMAScriptFunctionObject> ECMAScriptFunctionObject::create(Realm& r
         prototype = realm.intrinsics().async_generator_function_prototype();
         break;
     }
-    return realm.heap().allocate<ECMAScriptFunctionObject>(realm, move(name), move(source_text), ecmascript_code, move(parameters), m_function_length, move(local_variables_names), parent_environment, private_environment, *prototype, kind, is_strict, uses_this, might_need_arguments_object, contains_direct_call_to_eval, is_arrow_function, move(class_field_initializer_name));
+    return realm.heap().allocate<ECMAScriptFunctionObject>(realm, move(name), move(source_text), ecmascript_code, move(parameters), m_function_length, move(local_variables_names), parent_environment, private_environment, *prototype, kind, is_strict, uses_this_from_environment, might_need_arguments_object, contains_direct_call_to_eval, is_arrow_function, move(class_field_initializer_name));
 }
 
-NonnullGCPtr<ECMAScriptFunctionObject> ECMAScriptFunctionObject::create(Realm& realm, DeprecatedFlyString name, Object& prototype, ByteString source_text, Statement const& ecmascript_code, Vector<FunctionParameter> parameters, i32 m_function_length, Vector<DeprecatedFlyString> local_variables_names, Environment* parent_environment, PrivateEnvironment* private_environment, FunctionKind kind, bool is_strict, UsesThis uses_this, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name)
+NonnullGCPtr<ECMAScriptFunctionObject> ECMAScriptFunctionObject::create(Realm& realm, DeprecatedFlyString name, Object& prototype, ByteString source_text, Statement const& ecmascript_code, Vector<FunctionParameter> parameters, i32 m_function_length, Vector<DeprecatedFlyString> local_variables_names, Environment* parent_environment, PrivateEnvironment* private_environment, FunctionKind kind, bool is_strict, UsesThisFromEnvironment uses_this_from_environment, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name)
 {
-    return realm.heap().allocate<ECMAScriptFunctionObject>(realm, move(name), move(source_text), ecmascript_code, move(parameters), m_function_length, move(local_variables_names), parent_environment, private_environment, prototype, kind, is_strict, uses_this, might_need_arguments_object, contains_direct_call_to_eval, is_arrow_function, move(class_field_initializer_name));
+    return realm.heap().allocate<ECMAScriptFunctionObject>(realm, move(name), move(source_text), ecmascript_code, move(parameters), m_function_length, move(local_variables_names), parent_environment, private_environment, prototype, kind, is_strict, uses_this_from_environment, might_need_arguments_object, contains_direct_call_to_eval, is_arrow_function, move(class_field_initializer_name));
 }
 
-ECMAScriptFunctionObject::ECMAScriptFunctionObject(DeprecatedFlyString name, ByteString source_text, Statement const& ecmascript_code, Vector<FunctionParameter> formal_parameters, i32 function_length, Vector<DeprecatedFlyString> local_variables_names, Environment* parent_environment, PrivateEnvironment* private_environment, Object& prototype, FunctionKind kind, bool strict, UsesThis uses_this, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name)
+ECMAScriptFunctionObject::ECMAScriptFunctionObject(DeprecatedFlyString name, ByteString source_text, Statement const& ecmascript_code, Vector<FunctionParameter> formal_parameters, i32 function_length, Vector<DeprecatedFlyString> local_variables_names, Environment* parent_environment, PrivateEnvironment* private_environment, Object& prototype, FunctionKind kind, bool strict, UsesThisFromEnvironment uses_this_from_environment, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name)
     : FunctionObject(prototype)
     , m_name(move(name))
     , m_function_length(function_length)
@@ -331,7 +331,7 @@ ECMAScriptFunctionObject::ECMAScriptFunctionObject(DeprecatedFlyString name, Byt
         }));
     }
 
-    m_function_environment_needed = arguments_object_needs_binding || m_function_environment_bindings_count > 0 || m_var_environment_bindings_count > 0 || m_lex_environment_bindings_count > 0 || uses_this == UsesThis::Yes || m_contains_direct_call_to_eval;
+    m_function_environment_needed = arguments_object_needs_binding || m_function_environment_bindings_count > 0 || m_var_environment_bindings_count > 0 || m_lex_environment_bindings_count > 0 || uses_this_from_environment == UsesThisFromEnvironment::Yes || m_contains_direct_call_to_eval;
 }
 
 void ECMAScriptFunctionObject::initialize(Realm& realm)
@@ -414,8 +414,7 @@ ThrowCompletionOr<Value> ECMAScriptFunctionObject::internal_call(Value this_argu
     }
 
     // 5. Perform OrdinaryCallBindThis(F, calleeContext, thisArgument).
-    if (m_function_environment_needed)
-        ordinary_call_bind_this(*callee_context, this_argument);
+    ordinary_call_bind_this(*callee_context, this_argument);
 
     // 6. Let result be Completion(OrdinaryCallEvaluateBody(F, argumentsList)).
     auto result = ordinary_call_evaluate_body();
@@ -478,8 +477,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> ECMAScriptFunctionObject::internal_const
     // 6. If kind is base, then
     if (kind == ConstructorKind::Base) {
         // a. Perform OrdinaryCallBindThis(F, calleeContext, thisArgument).
-        if (m_function_environment_needed)
-            ordinary_call_bind_this(*callee_context, this_argument);
+        ordinary_call_bind_this(*callee_context, this_argument);
 
         // b. Let initializeResult be Completion(InitializeInstanceElements(thisArgument, F)).
         auto initialize_result = this_argument->initialize_instance_elements(*this);
@@ -699,7 +697,9 @@ void ECMAScriptFunctionObject::ordinary_call_bind_this(ExecutionContext& callee_
     // 7. Assert: localEnv is a function Environment Record.
     // 8. Assert: The next step never returns an abrupt completion because localEnv.[[ThisBindingStatus]] is not initialized.
     // 9. Perform ! localEnv.BindThisValue(thisValue).
-    MUST(verify_cast<FunctionEnvironment>(*local_env).bind_this_value(vm, this_value));
+    callee_context.this_value = this_value;
+    if (m_function_environment_needed)
+        MUST(verify_cast<FunctionEnvironment>(*local_env).bind_this_value(vm, this_value));
 
     // 10. Return unused.
 }

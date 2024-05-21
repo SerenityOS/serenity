@@ -498,7 +498,8 @@ ThrowCompletionOr<void> SourceTextModule::initialize_environment(VM& vm)
                 DeprecatedFlyString function_name = function_declaration.name();
                 if (function_name == ExportStatement::local_name_for_default)
                     function_name = "default"sv;
-                auto function = ECMAScriptFunctionObject::create(realm(), function_name, function_declaration.source_text(), function_declaration.body(), function_declaration.parameters(), function_declaration.function_length(), function_declaration.local_variables_names(), environment, private_environment, function_declaration.kind(), function_declaration.is_strict_mode(), function_declaration.uses_this(), function_declaration.might_need_arguments_object(), function_declaration.contains_direct_call_to_eval());
+                auto function = ECMAScriptFunctionObject::create(realm(), function_name, function_declaration.source_text(), function_declaration.body(), function_declaration.parameters(), function_declaration.function_length(), function_declaration.local_variables_names(), environment, private_environment, function_declaration.kind(), function_declaration.is_strict_mode(),
+                    function_declaration.uses_this_from_environment(), function_declaration.might_need_arguments_object(), function_declaration.contains_direct_call_to_eval());
 
                 // 2. Perform ! env.InitializeBinding(dn, fo, normal).
                 MUST(environment->initialize_binding(vm, name, function, Environment::InitializeBindingHint::Normal));
@@ -759,7 +760,7 @@ ThrowCompletionOr<void> SourceTextModule::execute_module(VM& vm, GCPtr<PromiseCa
 
         auto module_wrapper_function = ECMAScriptFunctionObject::create(
             realm(), "module code with top-level await", StringView {}, this->m_ecmascript_code,
-            {}, 0, {}, environment(), nullptr, FunctionKind::Async, true, UsesThis::Yes, false, false);
+            {}, 0, {}, environment(), nullptr, FunctionKind::Async, true, UsesThisFromEnvironment::Yes, false, false);
         module_wrapper_function->set_is_module_wrapper(true);
 
         // AD-HOC: We push/pop the moduleContext around the call to ensure that the async execution context
