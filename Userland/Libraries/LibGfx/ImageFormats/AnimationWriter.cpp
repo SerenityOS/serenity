@@ -80,6 +80,13 @@ ErrorOr<void> AnimationWriter::add_frame_relative_to_last_frame(Bitmap& frame, i
 
     auto rect = rect_where_pixels_are_different(*last_frame, frame);
 
+    if (rect.is_empty()) {
+        // The frame is identical to the last frame. Don't store an empty bitmap.
+        // FIXME: We could delay writing the last frame until we know that the next frame is different,
+        //        and just keep increasing that frame's duration instead.
+        rect = { 0, 0, 1, 1 };
+    }
+
     // FIXME: It would be nice to have a way to crop a bitmap without copying the data.
     auto differences = TRY(frame.cropped(rect));
 
