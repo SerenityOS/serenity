@@ -6,8 +6,8 @@ interface HTMLVideoElement : HTMLMediaElement {
 
     [HTMLConstructor] constructor();
 
-    [FIXME, CEReactions] attribute unsigned long width;
-    [FIXME, CEReactions] attribute unsigned long height;
+    [CEReactions, Reflect] attribute unsigned long width;
+    [CEReactions, Reflect] attribute unsigned long height;
     readonly attribute unsigned long videoWidth;
     readonly attribute unsigned long videoHeight;
     [CEReactions, Reflect] attribute USVString poster;

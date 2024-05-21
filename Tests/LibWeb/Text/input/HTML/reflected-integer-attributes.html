@@ -19,5 +19,11 @@
                 testIntegerReflectedProperty(tagName, property);
             }
         }
+
+        for (const tagName of ["source", "video"]) {
+            for (const property of ["width", "height"]) {
+                testIntegerReflectedProperty(tagName, property);
+            }
+        }
     });
 </script>
