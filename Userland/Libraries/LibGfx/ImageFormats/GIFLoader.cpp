@@ -303,6 +303,8 @@ static ErrorOr<void> load_gif_frame_descriptors(GIFLoadingContext& context)
                 current_image->duration = duration;
 
                 current_image->transparency_index = sub_block[3];
+
+                dbgln_if(GIF_DEBUG, "Graphic control: disposal_method={}, user_input={}, transparent={}, duration={}", (int)current_image->disposal_method, current_image->user_input, current_image->transparent, current_image->duration);
             }
 
             if (extension_type == 0xFF) {
@@ -318,6 +320,8 @@ static ErrorOr<void> load_gif_frame_descriptors(GIFLoadingContext& context)
 
                 u16 loops = sub_block[12] + (sub_block[13] << 8);
                 context.loops = loops;
+
+                dbgln_if(GIF_DEBUG, "Application extension: loops={}", context.loops);
             }
 
             continue;
