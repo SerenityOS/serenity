@@ -229,3 +229,34 @@ TEST_CASE(test_webp_incremental_animation)
     EXPECT_EQ(frame1.duration, 200);
     expect_bitmaps_equal(*frame1.image, *rgb_bitmap_2);
 }
+
+TEST_CASE(test_webp_incremental_animation_two_identical_frames)
+{
+    auto rgb_bitmap = TRY_OR_FAIL(create_test_rgba_bitmap());
+    rgb_bitmap = TRY_OR_FAIL(rgb_bitmap->cropped({ 0, 0, 40, 20 })); // Even-sized.
+
+    // 20 kiB is enough for two 47x33 frames.
+    auto stream_buffer = TRY_OR_FAIL(ByteBuffer::create_uninitialized(20 * 1024));
+    FixedMemoryStream stream { Bytes { stream_buffer } };
+
+    auto animation_writer = TRY_OR_FAIL(Gfx::WebPWriter::start_encoding_animation(stream, rgb_bitmap->size()));
+
+    TRY_OR_FAIL(animation_writer->add_frame(*rgb_bitmap, 100));
+    TRY_OR_FAIL(animation_writer->add_frame_relative_to_last_frame(*rgb_bitmap, 200, *rgb_bitmap));
+
+    auto encoded_animation = ReadonlyBytes { stream_buffer.data(), stream.offset() };
+
+    auto decoded_animation_plugin = TRY_OR_FAIL(Gfx::WebPImageDecoderPlugin::create(encoded_animation));
+    EXPECT(decoded_animation_plugin->is_animated());
+    EXPECT_EQ(decoded_animation_plugin->frame_count(), 2u);
+    EXPECT_EQ(decoded_animation_plugin->loop_count(), 0u);
+    EXPECT_EQ(decoded_animation_plugin->size(), rgb_bitmap->size());
+
+    auto frame0 = TRY_OR_FAIL(decoded_animation_plugin->frame(0));
+    EXPECT_EQ(frame0.duration, 100);
+    expect_bitmaps_equal(*frame0.image, *rgb_bitmap);
+
+    auto frame1 = TRY_OR_FAIL(decoded_animation_plugin->frame(1));
+    EXPECT_EQ(frame1.duration, 200);
+    expect_bitmaps_equal(*frame1.image, *rgb_bitmap);
+}
