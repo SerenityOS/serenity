@@ -7,6 +7,6 @@ interface HTMLPreElement : HTMLElement {
     [HTMLConstructor] constructor();
 
     // Obsolete
-    [CEReactions] attribute long width;
+    [CEReactions, Reflect] attribute long width;
 
 };
