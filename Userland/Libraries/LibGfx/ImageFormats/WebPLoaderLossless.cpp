@@ -89,9 +89,7 @@ static ErrorOr<CanonicalCode> decode_webp_chunk_VP8L_prefix_code(LittleEndianInp
     dbgln_if(WEBP_DEBUG, "  num_code_lengths {}", num_code_lengths);
     VERIFY(num_code_lengths <= 19);
 
-    constexpr int kCodeLengthCodes = 19;
-    int kCodeLengthCodeOrder[kCodeLengthCodes] = { 17, 18, 0, 1, 2, 3, 4, 5, 16, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
-    u8 code_length_code_lengths[kCodeLengthCodes] = { 0 }; // "All zeros" [sic]
+    u8 code_length_code_lengths[kCodeLengthCodeOrder.size()] = { 0 }; // "All zeros" [sic]
     for (int i = 0; i < num_code_lengths; ++i)
         code_length_code_lengths[kCodeLengthCodeOrder[i]] = TRY(bit_stream.read_bits(3));
 
