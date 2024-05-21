@@ -30,8 +30,8 @@ interface HTMLImageElement : HTMLElement {
     [CEReactions, Reflect] attribute DOMString name;
     [FIXME, CEReactions] attribute USVString lowsrc;
     [CEReactions, Reflect] attribute DOMString align;
-    [FIXME, CEReactions] attribute unsigned long hspace;
-    [FIXME, CEReactions] attribute unsigned long vspace;
+    [CEReactions, Reflect] attribute unsigned long hspace;
+    [CEReactions, Reflect] attribute unsigned long vspace;
     [FIXME, CEReactions] attribute USVString longDesc;
 
     [CEReactions, LegacyNullToEmptyString, Reflect] attribute DOMString border;
