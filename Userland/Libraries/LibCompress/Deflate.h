@@ -193,8 +193,6 @@ private:
         u8 count; // used for special symbols 16-18
     };
     static u8 distance_to_base(u16 distance);
-    template<size_t Size>
-    static void generate_huffman_lengths(Array<u8, Size>& lengths, Array<u16, Size> const& frequencies, size_t max_bit_length, u16 frequency_cap = UINT16_MAX);
     size_t huffman_block_length(Array<u8, max_huffman_literals> const& literal_bit_lengths, Array<u8, max_huffman_distances> const& distance_bit_lengths);
     ErrorOr<void> write_huffman(CanonicalCode const& literal_code, Optional<CanonicalCode> const& distance_code);
     static size_t encode_huffman_lengths(Array<u8, max_huffman_literals + max_huffman_distances> const& lengths, size_t lengths_count, Array<code_length_symbol, max_huffman_literals + max_huffman_distances>& encoded_lengths);
