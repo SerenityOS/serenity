@@ -13,21 +13,8 @@ namespace Core {
 
 class DeferredInvocationContext final : public Core::EventReceiver {
     C_OBJECT(DeferredInvocationContext)
-public:
-    bool should_invoke() const { return m_condition(); }
-
 private:
-    DeferredInvocationContext()
-        : m_condition([] { return true; })
-    {
-    }
-
-    DeferredInvocationContext(Function<bool()> condition)
-        : m_condition(move(condition))
-    {
-    }
-
-    Function<bool()> m_condition;
+    DeferredInvocationContext() = default;
 };
 
 }

@@ -68,7 +68,6 @@ public:
     void add_job(NonnullRefPtr<Promise<NonnullRefPtr<EventReceiver>>> job_promise);
 
     void deferred_invoke(Function<void()>);
-    void deferred_invoke_if(Function<void()>, Function<bool()>);
 
     void wake();
 
@@ -103,5 +102,5 @@ private:
 };
 
 void deferred_invoke(Function<void()>);
-void deferred_invoke_if(Function<void()>, Function<bool()>);
+
 }
