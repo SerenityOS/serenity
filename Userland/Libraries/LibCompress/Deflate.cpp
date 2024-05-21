@@ -20,6 +20,8 @@ static constexpr u8 deflate_special_code_length_copy = 16;
 static constexpr u8 deflate_special_code_length_zeros = 17;
 static constexpr u8 deflate_special_code_length_long_zeros = 18;
 
+static constexpr int EndOfBlock = 256;
+
 CanonicalCode const& CanonicalCode::fixed_literal_codes()
 {
     static CanonicalCode code;
@@ -182,13 +184,13 @@ ErrorOr<bool> DeflateDecompressor::CompressedBlock::try_read_more()
     if (symbol >= 286)
         return Error::from_string_literal("Invalid deflate literal/length symbol");
 
-    if (symbol < 256) {
+    if (symbol < EndOfBlock) {
         u8 byte_symbol = symbol;
         m_decompressor.m_output_buffer.write({ &byte_symbol, sizeof(byte_symbol) });
         return true;
     }
 
-    if (symbol == 256) {
+    if (symbol == EndOfBlock) {
         m_eof = true;
         return false;
     }
@@ -806,7 +808,7 @@ size_t DeflateCompressor::encode_block_lengths(Array<u8, max_huffman_literals> c
     literal_code_count = max_huffman_literals;
     distance_code_count = max_huffman_distances;
 
-    VERIFY(literal_bit_lengths[256] != 0); // Make sure at least the EndOfBlock marker is present
+    VERIFY(literal_bit_lengths[EndOfBlock] != 0); // Make sure at least the EndOfBlock marker is present
     while (literal_bit_lengths[literal_code_count - 1] == 0)
         literal_code_count--;
 
@@ -885,8 +887,8 @@ ErrorOr<void> DeflateCompressor::flush()
 
     // insert EndOfBlock marker to the symbol buffer
     m_symbol_buffer[m_pending_symbol_size].distance = 0;
-    m_symbol_buffer[m_pending_symbol_size++].literal = 256;
-    m_symbol_frequencies[256]++;
+    m_symbol_buffer[m_pending_symbol_size++].literal = EndOfBlock;
+    m_symbol_frequencies[EndOfBlock]++;
 
     // generate optimal dynamic huffman code lengths
     Array<u8, max_huffman_literals> dynamic_literal_bit_lengths {};
