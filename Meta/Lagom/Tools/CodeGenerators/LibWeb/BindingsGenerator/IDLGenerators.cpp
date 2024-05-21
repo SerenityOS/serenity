@@ -3418,13 +3418,66 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.setter_callback@)
 )~~~");
                     // FIXME: 7. If contentAttributeValue corresponds to a state of attributeDefinition with no associated keyword value, then return null.
                 }
-            } else if (attribute.type->name() != "boolean") {
+            }
+            // If a reflected IDL attribute has the type boolean:
+            else if (attribute.type->name() == "boolean") {
+                // The getter steps are:
+                // 1. Let contentAttributeValue be the result of running this's get the content attribute.
+                // 2. If contentAttributeValue is null, then return false
                 attribute_generator.append(R"~~~(
-    auto retval = impl->get_attribute_value(HTML::AttributeNames::@attribute.reflect_name@);
+    auto retval = impl->has_attribute(HTML::AttributeNames::@attribute.reflect_name@);
+)~~~");
+            }
+            // If a reflected IDL attribute has the type long:
+            else if (attribute.type->name() == "long") {
+                // The getter steps are:
+                // 1. Let contentAttributeValue be the result of running this's get the content attribute.
+                // 2. If contentAttributeValue is not null:
+                //    1. Let parsedValue be the result of integer parsing contentAttributeValue if the reflected IDL attribute is not limited to only non-negative numbers;
+                //       otherwise the result of non-negative integer parsing contentAttributeValue.
+                //    2. If parsedValue is not an error and is within the long range, then return parsedValue.
+                attribute_generator.append(R"~~~(
+    i32 retval = 0;
+    auto content_attribute_value = impl->get_attribute(HTML::AttributeNames::@attribute.reflect_name@);
+    if (content_attribute_value.has_value()) {
+        auto maybe_parsed_value = content_attribute_value->to_number<i32>();
+        if (maybe_parsed_value.has_value())
+            retval = *maybe_parsed_value;
+    }
+)~~~");
+            }
+            // If a reflected IDL attribute has the type unsigned long,
+            // FIXME: optionally limited to only positive numbers, limited to only positive numbers with fallback, or clamped to the range [clampedMin, clampedMax], and optionally with a default value defaultValue:
+            else if (attribute.type->name() == "unsigned long") {
+                // The getter steps are:
+                // 1. Let contentAttributeValue be the result of running this's get the content attribute.
+                // 2. Let minimum be 0.
+                // FIXME: 3. If the reflected IDL attribute is limited to only positive numbers or limited to only positive numbers with fallback, then set minimum to 1.
+                // FIXME: 4. If the reflected IDL attribute is clamped to the range, then set minimum to clampedMin.
+                // 5. Let maximum be 2147483647 if the reflected IDL attribute is not clamped to the range; otherwise clampedMax.
+                // 6. If contentAttributeValue is not null:
+                //    1. Let parsedValue be the result of non-negative integer parsing contentAttributeValue.
+                //       2. If parsedValue is not an error and is in the range minimum to maximum, inclusive, then return parsedValue.
+                //       FIXME: 3. If parsedValue is not an error and the reflected IDL attribute is clamped to the range:
+                //              FIXME: 1. If parsedValue is less than minimum, then return minimum.
+                //              FIXME: 2. Return maximum.
+                attribute_generator.append(R"~~~(
+    u32 retval = 0;
+    auto content_attribute_value = impl->get_attribute(HTML::AttributeNames::@attribute.reflect_name@);
+    u32 minimum = 0;
+    u32 maximum = 2147483647;
+    if (content_attribute_value.has_value()) {
+        auto parsed_value = content_attribute_value->to_number<u32>();
+        if (parsed_value.has_value()) {
+            if (*parsed_value >= minimum && *parsed_value <= maximum) {
+                retval = *parsed_value;
+            }
+        }
+    }
 )~~~");
             } else {
                 attribute_generator.append(R"~~~(
-    auto retval = impl->has_attribute(HTML::AttributeNames::@attribute.reflect_name@);
+    auto retval = impl->get_attribute_value(HTML::AttributeNames::@attribute.reflect_name@);
 )~~~");
             }
 
@@ -3496,25 +3549,27 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.setter_callback@)
             generate_to_cpp(generator, attribute, "value", "", "cpp_value", interface, attribute.extended_attributes.contains("LegacyNullToEmptyString"));
 
             if (attribute.extended_attributes.contains("Reflect")) {
-                if (attribute.type->name() != "boolean") {
-                    if (attribute.type->is_nullable()) {
-                        attribute_generator.append(R"~~~(
-    if (!cpp_value.has_value())
-        impl->remove_attribute(HTML::AttributeNames::@attribute.reflect_name@);
-    else
-        MUST(impl->set_attribute(HTML::AttributeNames::@attribute.reflect_name@, cpp_value.value()));
-)~~~");
-                    } else {
-                        attribute_generator.append(R"~~~(
-    MUST(impl->set_attribute(HTML::AttributeNames::@attribute.reflect_name@, cpp_value));
-)~~~");
-                    }
-                } else {
+                if (attribute.type->name() == "boolean") {
                     attribute_generator.append(R"~~~(
     if (!cpp_value)
         impl->remove_attribute(HTML::AttributeNames::@attribute.reflect_name@);
     else
         MUST(impl->set_attribute(HTML::AttributeNames::@attribute.reflect_name@, String {}));
+)~~~");
+                } else if (attribute.type->is_integer() && !attribute.type->is_nullable()) {
+                    attribute_generator.append(R"~~~(
+    MUST(impl->set_attribute(HTML::AttributeNames::@attribute.reflect_name@, MUST(String::number(cpp_value))));
+)~~~");
+                } else if (attribute.type->is_nullable()) {
+                    attribute_generator.append(R"~~~(
+    if (!cpp_value.has_value())
+        impl->remove_attribute(HTML::AttributeNames::@attribute.reflect_name@);
+    else
+        MUST(impl->set_attribute(HTML::AttributeNames::@attribute.reflect_name@, cpp_value.value()));
+)~~~");
+                } else {
+                    attribute_generator.append(R"~~~(
+MUST(impl->set_attribute(HTML::AttributeNames::@attribute.reflect_name@, cpp_value));
 )~~~");
                 }
 
