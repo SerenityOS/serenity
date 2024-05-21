@@ -1566,8 +1566,13 @@ ThrowCompletionOr<void> ResolveThisBinding::execute_impl(Bytecode::Interpreter& 
     if (cached_this_value.is_empty()) {
         // OPTIMIZATION: Because the value of 'this' cannot be reassigned during a function execution, it's
         //               resolved once and then saved for subsequent use.
-        auto& vm = interpreter.vm();
-        cached_this_value = TRY(vm.resolve_this_binding());
+        auto& running_execution_context = interpreter.running_execution_context();
+        if (auto function = running_execution_context.function; function && is<ECMAScriptFunctionObject>(*function) && !static_cast<ECMAScriptFunctionObject&>(*function).allocates_function_environment()) {
+            cached_this_value = running_execution_context.this_value;
+        } else {
+            auto& vm = interpreter.vm();
+            cached_this_value = TRY(vm.resolve_this_binding());
+        }
     }
     interpreter.set(dst(), cached_this_value);
     return {};
