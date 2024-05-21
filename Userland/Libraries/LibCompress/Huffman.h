@@ -13,7 +13,7 @@
 namespace Compress {
 
 template<size_t Size>
-void generate_huffman_lengths(Array<u8, Size>& lengths, Array<u16, Size> const& frequencies, size_t max_bit_length, u16 frequency_cap = UINT16_MAX)
+void generate_huffman_lengths(Array<u8, Size>& lengths, Array<u16, Size> const& frequencies, size_t max_bit_length, u16 shift = 0)
 {
     VERIFY((1u << max_bit_length) >= Size);
     u16 heap_keys[Size]; // Used for O(n) heap construction
@@ -26,9 +26,7 @@ void generate_huffman_lengths(Array<u8, Size>& lengths, Array<u16, Size> const& 
         if (frequency == 0)
             continue;
 
-        if (frequency > frequency_cap) {
-            frequency = frequency_cap;
-        }
+        frequency = max(1, frequency >> shift);
 
         heap_keys[non_zero_freqs] = frequency;               // sort symbols by frequency
         heap_values[non_zero_freqs] = Size + non_zero_freqs; // huffman_links "links"
@@ -78,8 +76,8 @@ void generate_huffman_lengths(Array<u8, Size>& lengths, Array<u16, Size> const& 
         }
 
         if (bit_length > max_bit_length) {
-            VERIFY(frequency_cap != 1);
-            return generate_huffman_lengths(lengths, frequencies, max_bit_length, frequency_cap / 2);
+            VERIFY(shift < 15);
+            return generate_huffman_lengths(lengths, frequencies, max_bit_length, shift + 1);
         }
 
         lengths[i] = bit_length;
