@@ -22,9 +22,6 @@ public:
     // https://www.w3.org/TR/html-aria/#el-pre
     virtual Optional<ARIA::Role> default_role() const override { return ARIA::Role::generic; }
 
-    WebIDL::Long width() const;
-    WebIDL::ExceptionOr<void> set_width(WebIDL::Long);
-
 private:
     HTMLPreElement(DOM::Document&, DOM::QualifiedName);
 

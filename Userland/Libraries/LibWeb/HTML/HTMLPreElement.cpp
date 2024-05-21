@@ -38,20 +38,4 @@ void HTMLPreElement::apply_presentational_hints(CSS::StyleProperties& style) con
     });
 }
 
-// https://html.spec.whatwg.org/multipage/obsolete.html#dom-pre-width
-WebIDL::Long HTMLPreElement::width() const
-{
-    // The width IDL attribute of the pre element must reflect the content attribute of the same name.
-    if (auto width_string = get_attribute(HTML::AttributeNames::width); width_string.has_value()) {
-        if (auto width = parse_integer(*width_string); width.has_value())
-            return *width;
-    }
-    return 0;
-}
-
-WebIDL::ExceptionOr<void> HTMLPreElement::set_width(WebIDL::Long width)
-{
-    return set_attribute(HTML::AttributeNames::width, MUST(String::number(width)));
-}
-
 }
