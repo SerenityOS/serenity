@@ -815,15 +815,12 @@ size_t DeflateCompressor::encode_block_lengths(Array<u8, max_huffman_literals> c
         distance_code_count--;
 
     Array<u8, max_huffman_literals + max_huffman_distances> all_lengths {};
-    size_t lengths_count = 0;
-    for (size_t i = 0; i < literal_code_count; i++) {
-        all_lengths[lengths_count++] = literal_bit_lengths[i];
-    }
-    for (size_t i = 0; i < distance_code_count; i++) {
-        all_lengths[lengths_count++] = distance_bit_lengths[i];
-    }
+    for (size_t i = 0; i < literal_code_count; i++)
+        all_lengths[i] = literal_bit_lengths[i];
+    for (size_t i = 0; i < distance_code_count; i++)
+        all_lengths[literal_code_count + i] = distance_bit_lengths[i];
 
-    return encode_huffman_lengths(all_lengths, lengths_count, encoded_lengths);
+    return encode_huffman_lengths(all_lengths, literal_code_count + distance_code_count, encoded_lengths);
 }
 
 ErrorOr<void> DeflateCompressor::write_dynamic_huffman(CanonicalCode const& literal_code, size_t literal_code_count, Optional<CanonicalCode> const& distance_code, size_t distance_code_count, Array<u8, 19> const& code_lengths_bit_lengths, size_t code_length_count, Array<code_length_symbol, max_huffman_literals + max_huffman_distances> const& encoded_lengths, size_t encoded_lengths_count)
