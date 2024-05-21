@@ -45,10 +45,15 @@ CodeGenerationErrorOr<void> Generator::emit_function_declaration_instantiation(E
     }
 
     if (function.m_arguments_object_needed) {
+        Optional<Operand> dst;
+        auto local_var_index = function.m_local_variables_names.find_first_index("arguments"sv);
+        if (local_var_index.has_value())
+            dst = local(local_var_index.value());
+
         if (function.m_strict || !function.has_simple_parameter_list()) {
-            emit<Op::CreateArguments>(Op::CreateArguments::Kind::Unmapped, function.m_strict);
+            emit<Op::CreateArguments>(dst, Op::CreateArguments::Kind::Unmapped, function.m_strict);
         } else {
-            emit<Op::CreateArguments>(Op::CreateArguments::Kind::Mapped, function.m_strict);
+            emit<Op::CreateArguments>(dst, Op::CreateArguments::Kind::Mapped, function.m_strict);
         }
     }
 
