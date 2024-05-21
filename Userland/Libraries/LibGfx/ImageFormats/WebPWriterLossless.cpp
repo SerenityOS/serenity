@@ -257,12 +257,6 @@ static ErrorOr<void> write_VP8L_image_data(Stream& stream, Bitmap const& bitmap)
     // We do use huffman coding by writing a single prefix-code-group for the entire image.
     // FIXME: Consider using a meta-prefix image and using one prefix-code-group per tile.
 
-    // FIXME: generate_huffman_lengths() currently halves a frequency cap if the maximum bit length is reached.
-    //        This has the effect of giving very frequent symbols a higher bit length than they would have otherwise.
-    //        Instead, try dividing frequencies by 2 if the maximum bit length is reached.
-    //        Then, low-frequency symbols will get a higher bit length than they would have otherwise, which might help
-    //        compressed size. (For deflate, it doesn't matter much since their blocks are 64kiB large, but for WebP
-    //        we currently use a single huffman tree per channel for the entire image.)
     Array<Array<u16, 256>, 4> symbol_frequencies {};
     for (ARGB32 pixel : bitmap) {
         static constexpr auto saturating_increment = [](u16& value) {
