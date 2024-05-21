@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<script src="../include.js"></script>
+<script>
+    function setPropertyAndDumpValue(tagName, property, value) {
+        const element = document.createElement(tagName);
+        element[property] = value;
+        println(`${tagName}.${property} after setting to ${value}: ${element[property]}`);
+    }
+
+    function testIntegerReflectedProperty(tagName, property) {
+        setPropertyAndDumpValue(tagName, property, -1);
+        setPropertyAndDumpValue(tagName, property, 20);
+        setPropertyAndDumpValue(tagName, property, 2147483648);
+    }
+
+    test(() => {
+        for (const tagName of ["img", "marquee", "object"]) {
+            for (const property of ["hspace", "vspace"]) {
+                testIntegerReflectedProperty(tagName, property);
+            }
+        }
+    });
+</script>
