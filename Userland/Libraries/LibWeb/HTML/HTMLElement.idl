@@ -28,7 +28,7 @@ interface HTMLElement : Element {
     [LegacyNullToEmptyString, CEReactions] attribute DOMString innerText;
     [LegacyNullToEmptyString, CEReactions] attribute DOMString outerText;
 
-    // FIXME: ElementInternals attachInternals();
+    [FIXME] ElementInternals attachInternals();
 
     // The popover API
     [FIXME] undefined showPopover();
