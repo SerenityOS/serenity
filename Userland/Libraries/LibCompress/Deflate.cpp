@@ -758,14 +758,14 @@ ErrorOr<void> DeflateCompressor::write_huffman(CanonicalCode const& literal_code
     return {};
 }
 
-size_t DeflateCompressor::encode_huffman_lengths(Array<u8, max_huffman_literals + max_huffman_distances> const& lengths, size_t lengths_count, Array<code_length_symbol, max_huffman_literals + max_huffman_distances>& encoded_lengths)
+size_t DeflateCompressor::encode_huffman_lengths(ReadonlyBytes lengths, Array<code_length_symbol, max_huffman_literals + max_huffman_distances>& encoded_lengths)
 {
     size_t encoded_count = 0;
     size_t i = 0;
-    while (i < lengths_count) {
+    while (i < lengths.size()) {
         if (lengths[i] == 0) {
             auto zero_count = 0;
-            for (size_t j = i; j < min(lengths_count, i + 138) && lengths[j] == 0; j++)
+            for (size_t j = i; j < min(lengths.size(), i + 138) && lengths[j] == 0; j++)
                 zero_count++;
 
             if (zero_count < 3) { // below minimum repeated zero count
@@ -788,7 +788,7 @@ size_t DeflateCompressor::encode_huffman_lengths(Array<u8, max_huffman_literals 
         encoded_lengths[encoded_count++].symbol = lengths[i++];
 
         auto copy_count = 0;
-        for (size_t j = i; j < min(lengths_count, i + 6) && lengths[j] == lengths[i - 1]; j++)
+        for (size_t j = i; j < min(lengths.size(), i + 6) && lengths[j] == lengths[i - 1]; j++)
             copy_count++;
 
         if (copy_count >= 3) {
@@ -820,7 +820,7 @@ size_t DeflateCompressor::encode_block_lengths(Array<u8, max_huffman_literals> c
     for (size_t i = 0; i < distance_code_count; i++)
         all_lengths[literal_code_count + i] = distance_bit_lengths[i];
 
-    return encode_huffman_lengths(all_lengths, literal_code_count + distance_code_count, encoded_lengths);
+    return encode_huffman_lengths(all_lengths.span().trim(literal_code_count + distance_code_count), encoded_lengths);
 }
 
 ErrorOr<void> DeflateCompressor::write_dynamic_huffman(CanonicalCode const& literal_code, size_t literal_code_count, Optional<CanonicalCode> const& distance_code, size_t distance_code_count, Array<u8, 19> const& code_lengths_bit_lengths, size_t code_length_count, Array<code_length_symbol, max_huffman_literals + max_huffman_distances> const& encoded_lengths, size_t encoded_lengths_count)
