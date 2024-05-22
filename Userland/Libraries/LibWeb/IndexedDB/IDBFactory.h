@@ -7,7 +7,6 @@
 #pragma once
 
 #include <LibWeb/Bindings/PlatformObject.h>
-#include <LibWeb/WebIDL/Types.h>
 
 namespace Web::IndexedDB {
 
@@ -18,8 +17,6 @@ class IDBFactory : public Bindings::PlatformObject {
 
 public:
     virtual ~IDBFactory() override;
-
-    JS::NonnullGCPtr<IDBOpenDBRequest> open(String const& name, Optional<WebIDL::UnsignedLongLong> version = {});
 
 protected:
     explicit IDBFactory(JS::Realm&);

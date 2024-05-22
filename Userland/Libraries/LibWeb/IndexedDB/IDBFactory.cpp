@@ -7,7 +7,6 @@
 #include <LibWeb/Bindings/IDBFactoryPrototype.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/IndexedDB/IDBFactory.h>
-#include <LibWeb/IndexedDB/IDBOpenDBRequest.h>
 
 namespace Web::IndexedDB {
 
@@ -24,14 +23,6 @@ void IDBFactory::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
     WEB_SET_PROTOTYPE_FOR_INTERFACE(IDBFactory);
-}
-
-// https://w3c.github.io/IndexedDB/#dom-idbfactory-open
-JS::NonnullGCPtr<IDBOpenDBRequest> IDBFactory::open(String const&, Optional<WebIDL::UnsignedLongLong>)
-{
-    dbgln("FIXME: Implement IDBFactory::open");
-    auto& realm = this->realm();
-    return vm().heap().allocate<IDBOpenDBRequest>(realm, realm);
 }
 
 }
