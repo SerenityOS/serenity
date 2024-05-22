@@ -15,6 +15,7 @@ executable("RequestServer") {
     "//Userland/Libraries/LibMain",
     "//Userland/Libraries/LibProtocol",
     "//Userland/Libraries/LibTLS",
+    "//Userland/Libraries/LibThreading",
     "//Userland/Libraries/LibURL",
     "//Userland/Libraries/LibWebSocket",
   ]

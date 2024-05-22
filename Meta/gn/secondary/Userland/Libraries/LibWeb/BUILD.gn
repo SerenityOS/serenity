@@ -326,6 +326,7 @@ shared_library("LibWeb") {
            "Geometry",
            "HTML",
            "HighResolutionTime",
+           "IndexedDB",
            "Infra",
            "Internals",
            "IntersectionObserver",
