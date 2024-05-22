@@ -93,16 +93,16 @@ ErrorOr<void> write_image_data(Stream& stream, Bitmap const& bitmap, ColorPalett
     return {};
 }
 
-ErrorOr<void> write_image_descriptor(BigEndianOutputBitStream& stream, Bitmap const& bitmap)
+ErrorOr<void> write_image_descriptor(BigEndianOutputBitStream& stream, Bitmap const& bitmap, IntPoint at = {})
 {
     // 20. Image Descriptor
 
     // Image Separator
     TRY(stream.write_value<u8>(0x2c));
     // Image Left Position
-    TRY(stream.write_value<u16>(0));
+    TRY(stream.write_value<u16>(at.x()));
     // Image Top Position
-    TRY(stream.write_value<u16>(0));
+    TRY(stream.write_value<u16>(at.y()));
     // Image Width
     TRY(stream.write_value<u16>(bitmap.width()));
     // Image Height
@@ -177,9 +177,6 @@ private:
 
 ErrorOr<void> GIFAnimationWriter::add_frame(Bitmap& bitmap, int duration_ms, IntPoint at = {})
 {
-    // FIXME: Consider frame's position
-    (void)at;
-
     // Let's get rid of the previously written trailer
     if (!m_is_first_frame)
         TRY(m_stream.seek(-1, SeekMode::FromCurrentPosition));
@@ -189,7 +186,7 @@ ErrorOr<void> GIFAnimationWriter::add_frame(Bitmap& bitmap, int duration_ms, Int
     // Write a Table-Based Image
     BigEndianOutputBitStream bit_stream { MaybeOwned { m_stream } };
     TRY(write_graphic_control_extension(bit_stream, duration_ms));
-    TRY(write_image_descriptor(bit_stream, bitmap));
+    TRY(write_image_descriptor(bit_stream, bitmap, at));
 
     auto const palette = TRY(median_cut(bitmap, 256));
     TRY(write_color_table(m_stream, palette));

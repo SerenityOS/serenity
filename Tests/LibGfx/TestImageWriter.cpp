@@ -129,19 +129,23 @@ TEST_CASE(test_gif_animated)
 {
     auto bitmap_1 = TRY_OR_FAIL(TRY_OR_FAIL(create_test_rgb_bitmap())->cropped({ 0, 0, 16, 16 }));
     auto bitmap_2 = TRY_OR_FAIL(TRY_OR_FAIL(create_test_rgb_bitmap())->cropped({ 16, 16, 16, 16 }));
+    auto bitmap_3 = TRY_OR_FAIL(bitmap_2->clone());
+
+    bitmap_3->scanline(3)[3] = Color(Color::NamedColor::Red).value();
 
     auto stream_buffer = TRY_OR_FAIL(ByteBuffer::create_uninitialized(3072));
     FixedMemoryStream stream { Bytes { stream_buffer } };
     auto animation_writer = TRY_OR_FAIL(Gfx::GIFWriter::start_encoding_animation(stream, bitmap_1->size(), 0));
     TRY_OR_FAIL(animation_writer->add_frame(*bitmap_1, 100));
     TRY_OR_FAIL(animation_writer->add_frame(*bitmap_2, 200));
+    TRY_OR_FAIL(animation_writer->add_frame_relative_to_last_frame(*bitmap_3, 200, *bitmap_2));
 
     auto encoded_animation = ReadonlyBytes { stream_buffer.data(), stream.offset() };
 
     auto decoder = TRY_OR_FAIL(Gfx::GIFImageDecoderPlugin::create(encoded_animation));
 
     EXPECT_EQ(decoder->size(), bitmap_1->size());
-    EXPECT_EQ(decoder->frame_count(), 2u);
+    EXPECT_EQ(decoder->frame_count(), 3u);
     EXPECT_EQ(decoder->loop_count(), 0u);
     EXPECT(decoder->is_animated());
 
@@ -152,6 +156,10 @@ TEST_CASE(test_gif_animated)
     auto const frame_2 = TRY_OR_FAIL(decoder->frame(1));
     EXPECT_EQ(frame_2.duration, 200);
     expect_bitmaps_equal(*frame_2.image, bitmap_2);
+
+    auto const frame_3 = TRY_OR_FAIL(decoder->frame(2));
+    EXPECT_EQ(frame_3.duration, 200);
+    expect_bitmaps_equal(*frame_3.image, bitmap_3);
 }
 
 TEST_CASE(test_jpeg)
