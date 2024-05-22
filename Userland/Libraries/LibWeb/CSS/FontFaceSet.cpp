@@ -6,8 +6,10 @@
 
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/Realm.h>
+#include <LibJS/Runtime/Set.h>
 #include <LibWeb/Bindings/FontFaceSetPrototype.h>
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/CSS/FontFace.h>
 #include <LibWeb/CSS/FontFaceSet.h>
 #include <LibWeb/WebIDL/Promise.h>
 
@@ -15,10 +17,20 @@ namespace Web::CSS {
 
 JS_DEFINE_ALLOCATOR(FontFaceSet);
 
-JS::NonnullGCPtr<FontFaceSet> FontFaceSet::construct_impl(JS::Realm& realm, Vector<JS::Handle<FontFace>> initial_faces)
+// https://drafts.csswg.org/css-font-loading/#dom-fontfaceset-fontfaceset
+JS::NonnullGCPtr<FontFaceSet> FontFaceSet::construct_impl(JS::Realm& realm, Vector<JS::Handle<FontFace>> const& initial_faces)
 {
-    auto promise = WebIDL::create_promise(realm);
-    return realm.heap().allocate<FontFaceSet>(realm, realm, promise, move(initial_faces));
+    auto ready_promise = WebIDL::create_promise(realm);
+    auto set_entries = JS::Set::create(realm);
+
+    // The FontFaceSet constructor, when called, must iterate its initialFaces argument and add each value to its set entries.
+    for (auto const& face : initial_faces)
+        set_entries->set_add(face);
+
+    if (set_entries->set_size() == 0)
+        WebIDL::resolve_promise(realm, *ready_promise);
+
+    return realm.heap().allocate<FontFaceSet>(realm, realm, ready_promise, set_entries);
 }
 
 JS::NonnullGCPtr<FontFaceSet> FontFaceSet::create(JS::Realm& realm)
@@ -26,14 +38,13 @@ JS::NonnullGCPtr<FontFaceSet> FontFaceSet::create(JS::Realm& realm)
     return construct_impl(realm, {});
 }
 
-FontFaceSet::FontFaceSet(JS::Realm& realm, JS::NonnullGCPtr<WebIDL::Promise> ready_promise, Vector<JS::Handle<FontFace>>)
+FontFaceSet::FontFaceSet(JS::Realm& realm, JS::NonnullGCPtr<WebIDL::Promise> ready_promise, JS::NonnullGCPtr<JS::Set> set_entries)
     : Bindings::PlatformObject(realm)
+    , m_set_entries(set_entries)
     , m_ready_promise(ready_promise)
 {
-    // FIXME: Only set this after all the initial faces have been loaded
-    m_status = Bindings::FontFaceSetLoadStatus::Loaded;
-    // FIXME: Only resolve the promise after all the initial faces have been loaded
-    WebIDL::resolve_promise(realm, *m_ready_promise);
+    bool const is_ready = ready()->state() == JS::Promise::State::Fulfilled;
+    m_status = is_ready ? Bindings::FontFaceSetLoadStatus::Loaded : Bindings::FontFaceSetLoadStatus::Loading;
 }
 
 void FontFaceSet::initialize(JS::Realm& realm)
@@ -46,14 +57,30 @@ void FontFaceSet::initialize(JS::Realm& realm)
 void FontFaceSet::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
+    visitor.visit(m_set_entries);
     visitor.visit(m_ready_promise);
 }
 
 // https://drafts.csswg.org/css-font-loading/#dom-fontfaceset-add
-JS::NonnullGCPtr<FontFaceSet> FontFaceSet::add(JS::Handle<FontFace>)
+JS::NonnullGCPtr<FontFaceSet> FontFaceSet::add(JS::Handle<FontFace> face)
 {
-    // FIXME: Do the steps
+    // FIXME: Do the actual spec steps
+    m_set_entries->set_add(face);
     return *this;
+}
+
+// https://drafts.csswg.org/css-font-loading/#dom-fontfaceset-delete
+bool FontFaceSet::delete_(JS::Handle<FontFace> face)
+{
+    // FIXME: Do the actual spec steps
+    return m_set_entries->set_remove(face);
+}
+
+// https://drafts.csswg.org/css-font-loading/#dom-fontfaceset-clear
+void FontFaceSet::clear()
+{
+    // FIXME: Do the actual spec steps
+    m_set_entries->set_clear();
 }
 
 // https://drafts.csswg.org/css-font-loading/#dom-fontfaceset-load

@@ -18,10 +18,10 @@ enum FontFaceSetLoadStatus { "loading", "loaded" };
 interface FontFaceSet : EventTarget {
     constructor(sequence<FontFace> initialFaces);
 
-    // FIXME: setlike<FontFace>;
+    setlike<FontFace>;
     FontFaceSet add(FontFace font);
-    [FIXME] boolean delete(FontFace font);
-    [FIXME] undefined clear();
+    boolean delete(FontFace font);
+    undefined clear();
 
     // events for when loading state changes
     [FIXME] attribute EventHandler onloading;
