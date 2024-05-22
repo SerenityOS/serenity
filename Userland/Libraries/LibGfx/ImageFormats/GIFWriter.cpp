@@ -182,7 +182,7 @@ ErrorOr<void> GIFAnimationWriter::add_frame(Bitmap& bitmap, int duration_ms, Int
 
     // Let's get rid of the previously written trailer
     if (!m_is_first_frame)
-        TRY(m_stream.seek(-1, SeekMode::FromEndPosition));
+        TRY(m_stream.seek(-1, SeekMode::FromCurrentPosition));
 
     m_is_first_frame = false;
 
