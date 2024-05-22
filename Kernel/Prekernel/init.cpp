@@ -116,7 +116,7 @@ extern "C" [[noreturn]] void init()
         halt();
     __builtin_memcpy(kernel_program_headers, kernel_image + kernel_elf_header.e_phoff, sizeof(Elf_Phdr) * kernel_elf_header.e_phnum);
 
-    FlatPtr kernel_physical_base = (FlatPtr)kernel_image;
+    FlatPtr kernel_physical_base = (FlatPtr)0x200000;
     FlatPtr default_kernel_load_base = KERNEL_MAPPING_BASE + kernel_physical_base;
 
     FlatPtr kernel_load_base = default_kernel_load_base;
@@ -153,7 +153,7 @@ extern "C" [[noreturn]] void init()
     FlatPtr kernel_mapping_base = kernel_load_base & ~(FlatPtr)0x3fffffff;
 
     VERIFY(kernel_load_base % 0x1000 == 0);
-    VERIFY(kernel_load_base >= kernel_mapping_base + 0x200000);
+    VERIFY(kernel_load_base >= kernel_mapping_base + kernel_physical_base);
 
     int pdpt_flags = 0x3;
 
