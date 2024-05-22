@@ -125,6 +125,35 @@ TEST_CASE(test_gif)
     expect_bitmaps_equal(*TRY_OR_FAIL(decoder->frame(0)).image, bitmap);
 }
 
+TEST_CASE(test_gif_animated)
+{
+    auto bitmap_1 = TRY_OR_FAIL(TRY_OR_FAIL(create_test_rgb_bitmap())->cropped({ 0, 0, 16, 16 }));
+    auto bitmap_2 = TRY_OR_FAIL(TRY_OR_FAIL(create_test_rgb_bitmap())->cropped({ 16, 16, 16, 16 }));
+
+    auto stream_buffer = TRY_OR_FAIL(ByteBuffer::create_uninitialized(3072));
+    FixedMemoryStream stream { Bytes { stream_buffer } };
+    auto animation_writer = TRY_OR_FAIL(Gfx::GIFWriter::start_encoding_animation(stream, bitmap_1->size(), 0));
+    TRY_OR_FAIL(animation_writer->add_frame(*bitmap_1, 100));
+    TRY_OR_FAIL(animation_writer->add_frame(*bitmap_2, 200));
+
+    auto encoded_animation = ReadonlyBytes { stream_buffer.data(), stream.offset() };
+
+    auto decoder = TRY_OR_FAIL(Gfx::GIFImageDecoderPlugin::create(encoded_animation));
+
+    EXPECT_EQ(decoder->size(), bitmap_1->size());
+    EXPECT_EQ(decoder->frame_count(), 2u);
+    EXPECT_EQ(decoder->loop_count(), 0u);
+    EXPECT(decoder->is_animated());
+
+    auto const frame_1 = TRY_OR_FAIL(decoder->frame(0));
+    EXPECT_EQ(frame_1.duration, 100);
+    expect_bitmaps_equal(*frame_1.image, bitmap_1);
+
+    auto const frame_2 = TRY_OR_FAIL(decoder->frame(1));
+    EXPECT_EQ(frame_2.duration, 200);
+    expect_bitmaps_equal(*frame_2.image, bitmap_2);
+}
+
 TEST_CASE(test_jpeg)
 {
     // JPEG is lossy, so the roundtripped bitmap won't match the original bitmap. But it should still have the same size.
