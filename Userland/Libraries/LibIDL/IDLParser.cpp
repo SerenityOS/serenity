@@ -292,8 +292,11 @@ void Parser::parse_attribute(HashMap<ByteString, ByteString>& extended_attribute
     if (readonly)
         consume_whitespace();
 
+    // FIXME: Should we parse 'readonly setlike<T>' differently than this?
     if (lexer.consume_specific("attribute"sv))
         consume_whitespace();
+    else if (lexer.consume_specific("setlike"sv) && !inherit)
+        parse_setlike(interface, readonly);
     else
         report_parsing_error("expected 'attribute'"sv, filename, input, lexer.tell());
 
@@ -466,6 +469,28 @@ void Parser::parse_iterable(Interface& interface)
 
         interface.value_iterator_type = move(first_type);
     }
+
+    if (interface.set_entry_type.has_value())
+        report_parsing_error("Interfaces with an iterable declaration must not have a setlike declaration."sv, filename, input, lexer.tell());
+
+    assert_specific('>');
+    assert_specific(';');
+}
+
+void Parser::parse_setlike(Interface& interface, bool is_readonly)
+{
+    if (interface.supports_indexed_properties())
+        report_parsing_error("Interfaces with a setlike declaration must not supported indexed properties."sv, filename, input, lexer.tell());
+
+    if (interface.value_iterator_type.has_value() || interface.pair_iterator_types.has_value())
+        report_parsing_error("Interfaces with a setlike declaration must not must not be iterable."sv, filename, input, lexer.tell());
+
+    assert_string("setlike"sv);
+    assert_specific('<');
+
+    interface.set_entry_type = parse_type();
+    interface.is_set_readonly = is_readonly;
+
     assert_specific('>');
     assert_specific(';');
 }
@@ -622,6 +647,12 @@ void Parser::parse_interface(Interface& interface)
 
         if (lexer.next_is("iterable")) {
             parse_iterable(interface);
+            continue;
+        }
+
+        if (lexer.next_is("setlike")) {
+            bool is_readonly = false;
+            parse_setlike(interface, is_readonly);
             continue;
         }
 
