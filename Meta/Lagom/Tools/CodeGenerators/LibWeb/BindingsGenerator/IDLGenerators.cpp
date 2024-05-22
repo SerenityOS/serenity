@@ -3440,7 +3440,7 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.setter_callback@)
     i32 retval = 0;
     auto content_attribute_value = impl->get_attribute(HTML::AttributeNames::@attribute.reflect_name@);
     if (content_attribute_value.has_value()) {
-        auto maybe_parsed_value = content_attribute_value->to_number<i32>();
+        auto maybe_parsed_value = Web::HTML::parse_integer(*content_attribute_value);
         if (maybe_parsed_value.has_value())
             retval = *maybe_parsed_value;
     }
@@ -3467,7 +3467,7 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.setter_callback@)
     u32 minimum = 0;
     u32 maximum = 2147483647;
     if (content_attribute_value.has_value()) {
-        auto parsed_value = content_attribute_value->to_number<u32>();
+        auto parsed_value = Web::HTML::parse_non_negative_integer(*content_attribute_value);
         if (parsed_value.has_value()) {
             if (*parsed_value >= minimum && *parsed_value <= maximum) {
                 retval = *parsed_value;
@@ -4338,6 +4338,7 @@ void generate_prototype_implementation(IDL::Interface const& interface, StringBu
 #include <LibWeb/DOM/IDLEventListener.h>
 #include <LibWeb/DOM/NodeFilter.h>
 #include <LibWeb/DOM/Range.h>
+#include <LibWeb/HTML/Numbers.h>
 #include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Window.h>
