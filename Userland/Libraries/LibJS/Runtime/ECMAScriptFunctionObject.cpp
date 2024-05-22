@@ -332,6 +332,7 @@ ECMAScriptFunctionObject::ECMAScriptFunctionObject(DeprecatedFlyString name, Byt
     }
 
     m_function_environment_needed = arguments_object_needs_binding || m_function_environment_bindings_count > 0 || m_var_environment_bindings_count > 0 || m_lex_environment_bindings_count > 0 || parsing_insights.uses_this_from_environment || m_contains_direct_call_to_eval;
+    m_uses_this = parsing_insights.uses_this;
 }
 
 void ECMAScriptFunctionObject::initialize(Realm& realm)
@@ -414,7 +415,8 @@ ThrowCompletionOr<Value> ECMAScriptFunctionObject::internal_call(Value this_argu
     }
 
     // 5. Perform OrdinaryCallBindThis(F, calleeContext, thisArgument).
-    ordinary_call_bind_this(*callee_context, this_argument);
+    if (m_uses_this)
+        ordinary_call_bind_this(*callee_context, this_argument);
 
     // 6. Let result be Completion(OrdinaryCallEvaluateBody(F, argumentsList)).
     auto result = ordinary_call_evaluate_body();
@@ -477,7 +479,8 @@ ThrowCompletionOr<NonnullGCPtr<Object>> ECMAScriptFunctionObject::internal_const
     // 6. If kind is base, then
     if (kind == ConstructorKind::Base) {
         // a. Perform OrdinaryCallBindThis(F, calleeContext, thisArgument).
-        ordinary_call_bind_this(*callee_context, this_argument);
+        if (m_uses_this)
+            ordinary_call_bind_this(*callee_context, this_argument);
 
         // b. Let initializeResult be Completion(InitializeInstanceElements(thisArgument, F)).
         auto initialize_result = this_argument->initialize_instance_elements(*this);

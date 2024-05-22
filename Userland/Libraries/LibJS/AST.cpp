@@ -242,6 +242,7 @@ ThrowCompletionOr<ClassElement::ClassValue> ClassField::class_element_evaluation
         auto function_code = create_ast_node<ClassFieldInitializerStatement>(m_initializer->source_range(), copy_initializer.release_nonnull(), name);
         FunctionParsingInsights parsing_insights;
         parsing_insights.uses_this_from_environment = true;
+        parsing_insights.uses_this = true;
         initializer = make_handle(*ECMAScriptFunctionObject::create(realm, "field", ByteString::empty(), *function_code, {}, 0, {}, vm.lexical_environment(), vm.running_execution_context().private_environment, FunctionKind::Normal, true, parsing_insights, false, property_key_or_private_name));
         initializer->make_method(target);
     }
@@ -288,6 +289,7 @@ ThrowCompletionOr<ClassElement::ClassValue> StaticInitializer::class_element_eva
     // Note: The function bodyFunction is never directly accessible to ECMAScript code.
     FunctionParsingInsights parsing_insights;
     parsing_insights.uses_this_from_environment = true;
+    parsing_insights.uses_this = true;
     auto body_function = ECMAScriptFunctionObject::create(realm, ByteString::empty(), ByteString::empty(), *m_function_body, {}, 0, m_function_body->local_variables_names(), lexical_environment, private_environment, FunctionKind::Normal, true, parsing_insights, false);
 
     // 6. Perform MakeMethod(bodyFunction, homeObject).
@@ -337,6 +339,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::create_class_const
     auto const& constructor = *m_constructor;
     auto parsing_insights = constructor.parsing_insights();
     parsing_insights.uses_this_from_environment = true;
+    parsing_insights.uses_this = true;
     auto class_constructor = ECMAScriptFunctionObject::create(
         realm,
         constructor.name(),
