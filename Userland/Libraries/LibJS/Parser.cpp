@@ -1015,8 +1015,8 @@ RefPtr<FunctionExpression const> Parser::try_parse_arrow_function_expression(boo
 
     Vector<FunctionParameter> parameters;
     i32 function_length = -1;
-    bool contains_direct_call_to_eval = false;
-    bool uses_this_from_environment = false;
+    FunctionParsingInsights parsing_insights;
+    parsing_insights.might_need_arguments_object = false;
     auto function_body_result = [&]() -> RefPtr<FunctionBody const> {
         ScopePusher function_scope = ScopePusher::function_scope(*this);
         function_scope.set_is_arrow_function();
@@ -1071,7 +1071,7 @@ RefPtr<FunctionExpression const> Parser::try_parse_arrow_function_expression(boo
         if (match(TokenType::CurlyOpen)) {
             // Parse a function body with statements
             consume(TokenType::CurlyOpen);
-            auto body = parse_function_body(parameters, function_kind, contains_direct_call_to_eval, uses_this_from_environment);
+            auto body = parse_function_body(parameters, function_kind, parsing_insights);
             consume(TokenType::CurlyClose);
             return body;
         }
@@ -1090,8 +1090,8 @@ RefPtr<FunctionExpression const> Parser::try_parse_arrow_function_expression(boo
             return_block->append<ReturnStatement const>({ m_source_code, rule_start.position(), position() }, move(return_expression));
             if (m_state.strict_mode)
                 const_cast<FunctionBody&>(*return_block).set_strict_mode();
-            contains_direct_call_to_eval = m_state.current_scope_pusher->contains_direct_call_to_eval();
-            uses_this_from_environment = m_state.current_scope_pusher->uses_this_from_environment();
+            parsing_insights.contains_direct_call_to_eval = m_state.current_scope_pusher->contains_direct_call_to_eval();
+            parsing_insights.uses_this_from_environment = m_state.current_scope_pusher->uses_this_from_environment();
             return return_block;
         }
         // Invalid arrow function body
@@ -1123,7 +1123,7 @@ RefPtr<FunctionExpression const> Parser::try_parse_arrow_function_expression(boo
     return create_ast_node<FunctionExpression>(
         { m_source_code, rule_start.position(), position() }, nullptr, move(source_text),
         move(body), move(parameters), function_length, function_kind, body->in_strict_mode(),
-        /* might_need_arguments_object */ false, contains_direct_call_to_eval, move(local_variables_names), uses_this_from_environment ? UsesThisFromEnvironment::Yes : UsesThisFromEnvironment::No, /* is_arrow_function */ true);
+        parsing_insights, move(local_variables_names), /* is_arrow_function */ true);
 }
 
 RefPtr<LabelledStatement const> Parser::try_parse_labelled_statement(AllowLabelledFunction allow_function)
@@ -1616,15 +1616,17 @@ NonnullRefPtr<ClassExpression const> Parser::parse_class_expression(bool expect_
             // return statement here to create the correct completion.
             constructor_body->append(create_ast_node<ReturnStatement>({ m_source_code, rule_start.position(), position() }, move(super_call)));
 
+            FunctionParsingInsights parsing_insights;
             constructor = create_ast_node<FunctionExpression>(
                 { m_source_code, rule_start.position(), position() }, class_name, "",
                 move(constructor_body), Vector { FunctionParameter { move(argument_name), nullptr, true } }, 0, FunctionKind::Normal,
-                /* is_strict_mode */ true, /* might_need_arguments_object */ false, /* contains_direct_call_to_eval */ false, /* local_variables_names */ Vector<DeprecatedFlyString> {});
+                /* is_strict_mode */ true, parsing_insights, /* local_variables_names */ Vector<DeprecatedFlyString> {});
         } else {
+            FunctionParsingInsights parsing_insights;
             constructor = create_ast_node<FunctionExpression>(
                 { m_source_code, rule_start.position(), position() }, class_name, "",
                 move(constructor_body), Vector<FunctionParameter> {}, 0, FunctionKind::Normal,
-                /* is_strict_mode */ true, /* might_need_arguments_object */ false, /* contains_direct_call_to_eval */ false, /* local_variables_names */ Vector<DeprecatedFlyString> {});
+                /* is_strict_mode */ true, parsing_insights, /* local_variables_names */ Vector<DeprecatedFlyString> {});
         }
     }
 
@@ -2766,7 +2768,7 @@ void Parser::parse_statement_list(ScopeNode& output_node, AllowLabelledFunction 
 }
 
 // FunctionBody, https://tc39.es/ecma262/#prod-FunctionBody
-NonnullRefPtr<FunctionBody const> Parser::parse_function_body(Vector<FunctionParameter> const& parameters, FunctionKind function_kind, bool& contains_direct_call_to_eval, bool& uses_this)
+NonnullRefPtr<FunctionBody const> Parser::parse_function_body(Vector<FunctionParameter> const& parameters, FunctionKind function_kind, FunctionParsingInsights& parsing_insights)
 {
     auto rule_start = push_start();
     auto function_body = create_ast_node<FunctionBody>({ m_source_code, rule_start.position(), position() });
@@ -2841,8 +2843,8 @@ NonnullRefPtr<FunctionBody const> Parser::parse_function_body(Vector<FunctionPar
 
     m_state.strict_mode = previous_strict_mode;
     VERIFY(m_state.current_scope_pusher->type() == ScopePusher::ScopeType::Function);
-    contains_direct_call_to_eval = m_state.current_scope_pusher->contains_direct_call_to_eval();
-    uses_this = m_state.current_scope_pusher->uses_this_from_environment();
+    parsing_insights.contains_direct_call_to_eval = m_state.current_scope_pusher->contains_direct_call_to_eval();
+    parsing_insights.uses_this_from_environment = m_state.current_scope_pusher->uses_this_from_environment();
     return function_body;
 }
 
@@ -2927,8 +2929,7 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u16 parse_options, O
 
     i32 function_length = -1;
     Vector<FunctionParameter> parameters;
-    bool contains_direct_call_to_eval = false;
-    bool uses_this_from_environment = false;
+    FunctionParsingInsights parsing_insights;
     auto body = [&] {
         ScopePusher function_scope = ScopePusher::function_scope(*this, name);
 
@@ -2948,7 +2949,7 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u16 parse_options, O
 
         consume(TokenType::CurlyOpen);
 
-        auto body = parse_function_body(parameters, function_kind, contains_direct_call_to_eval, uses_this_from_environment);
+        auto body = parse_function_body(parameters, function_kind, parsing_insights);
         return body;
     }();
 
@@ -2963,13 +2964,12 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u16 parse_options, O
     auto function_start_offset = rule_start.position().offset;
     auto function_end_offset = position().offset - m_state.current_token.trivia().length();
     auto source_text = ByteString { m_state.lexer.source().substring_view(function_start_offset, function_end_offset - function_start_offset) };
+    parsing_insights.might_need_arguments_object = m_state.function_might_need_arguments_object;
     return create_ast_node<FunctionNodeType>(
         { m_source_code, rule_start.position(), position() },
         name, move(source_text), move(body), move(parameters), function_length,
-        function_kind, has_strict_directive, m_state.function_might_need_arguments_object,
-        contains_direct_call_to_eval,
-        move(local_variables_names),
-        uses_this_from_environment ? UsesThisFromEnvironment::Yes : UsesThisFromEnvironment::No);
+        function_kind, has_strict_directive, parsing_insights,
+        move(local_variables_names));
 }
 
 Vector<FunctionParameter> Parser::parse_formal_parameters(int& function_length, u16 parse_options)
@@ -5153,7 +5153,7 @@ NonnullRefPtr<Identifier const> Parser::create_identifier_and_register_in_curren
     return id;
 }
 
-Parser Parser::parse_function_body_from_string(ByteString const& body_string, u16 parse_options, Vector<FunctionParameter> const& parameters, FunctionKind kind, bool& contains_direct_call_to_eval, bool& uses_this_from_environment)
+Parser Parser::parse_function_body_from_string(ByteString const& body_string, u16 parse_options, Vector<FunctionParameter> const& parameters, FunctionKind kind, FunctionParsingInsights& parsing_insights)
 {
     RefPtr<FunctionBody const> function_body;
 
@@ -5166,7 +5166,7 @@ Parser Parser::parse_function_body_from_string(ByteString const& body_string, u1
             body_parser.m_state.await_expression_is_valid = true;
         if ((parse_options & FunctionNodeParseOptions::IsGeneratorFunction) != 0)
             body_parser.m_state.in_generator_function_context = true;
-        function_body = body_parser.parse_function_body(parameters, kind, contains_direct_call_to_eval, uses_this_from_environment);
+        function_body = body_parser.parse_function_body(parameters, kind, parsing_insights);
     }
 
     return body_parser;
