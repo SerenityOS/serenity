@@ -11,6 +11,7 @@ source_set("Infrastructure") {
     "FetchParams.cpp",
     "FetchTimingInfo.cpp",
     "HTTP.cpp",
+    "IncrementalReadLoopReadRequest.cpp",
     "MimeTypeBlocking.cpp",
     "NoSniffBlocking.cpp",
     "PortBlocking.cpp",
