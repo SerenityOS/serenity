@@ -164,6 +164,7 @@ private:
     bool m_arguments_object_needed { false };
     bool m_is_module_wrapper { false };
     bool m_function_environment_needed { false };
+    bool m_uses_this { false };
     Vector<VariableNameToInitialize> m_var_names_to_initialize_binding;
     Vector<DeprecatedFlyString> m_function_names_to_initialize_binding;
 

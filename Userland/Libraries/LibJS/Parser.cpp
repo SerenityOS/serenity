@@ -433,32 +433,29 @@ public:
         }
     }
 
-    bool uses_this_from_environment() const
-    {
-        return m_uses_this_from_environment;
-    }
+    bool uses_this() const { return m_uses_this; }
+    bool uses_this_from_environment() const { return m_uses_this_from_environment; }
 
     void set_uses_this()
     {
         auto const* closest_function_scope = last_function_scope();
-        if (!closest_function_scope || !closest_function_scope->m_is_arrow_function)
-            return;
-
+        auto uses_this_from_environment = closest_function_scope && closest_function_scope->m_is_arrow_function;
         for (auto* scope_ptr = this; scope_ptr; scope_ptr = scope_ptr->m_parent_scope) {
-            if (scope_ptr->m_uses_this_from_environment)
-                break;
-            if (scope_ptr->m_type == ScopeType::Function)
-                scope_ptr->m_uses_this_from_environment = true;
+            if (scope_ptr->m_type == ScopeType::Function) {
+                scope_ptr->m_uses_this = true;
+                if (uses_this_from_environment)
+                    scope_ptr->m_uses_this_from_environment = true;
+            }
         }
     }
 
     void set_uses_new_target()
     {
         for (auto* scope_ptr = this; scope_ptr; scope_ptr = scope_ptr->m_parent_scope) {
-            if (scope_ptr->m_uses_this_from_environment)
-                break;
-            if (scope_ptr->m_type == ScopeType::Function)
+            if (scope_ptr->m_type == ScopeType::Function) {
+                scope_ptr->m_uses_this = true;
                 scope_ptr->m_uses_this_from_environment = true;
+            }
         }
     }
 
@@ -512,6 +509,7 @@ private:
     // 1. It's an arrow function or establish parent scope for an arrow function
     // 2. Uses new.target
     bool m_uses_this_from_environment { false };
+    bool m_uses_this { false };
     bool m_is_arrow_function { false };
 };
 
@@ -2307,6 +2305,7 @@ NonnullRefPtr<Expression const> Parser::parse_expression(int min_precedence, Ass
         auto& callee = static_ptr_cast<CallExpression const>(expression)->callee();
         if (is<Identifier>(callee) && static_cast<Identifier const&>(callee).string() == "eval"sv) {
             m_state.current_scope_pusher->set_contains_direct_call_to_eval();
+            m_state.current_scope_pusher->set_uses_this();
         }
     }
 
@@ -2845,6 +2844,7 @@ NonnullRefPtr<FunctionBody const> Parser::parse_function_body(Vector<FunctionPar
     VERIFY(m_state.current_scope_pusher->type() == ScopePusher::ScopeType::Function);
     parsing_insights.contains_direct_call_to_eval = m_state.current_scope_pusher->contains_direct_call_to_eval();
     parsing_insights.uses_this_from_environment = m_state.current_scope_pusher->uses_this_from_environment();
+    parsing_insights.uses_this = m_state.current_scope_pusher->uses_this();
     return function_body;
 }
 
