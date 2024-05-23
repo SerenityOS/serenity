@@ -57,6 +57,9 @@ public:
     // https://html.spec.whatwg.org/multipage/embedded-content.html#dom-img-complete
     bool complete() const;
 
+    // https://html.spec.whatwg.org/multipage/embedded-content.html#dom-img-currentsrc
+    String current_src() const;
+
     virtual Optional<ARIA::Role> default_role() const override;
 
     // https://html.spec.whatwg.org/multipage/images.html#img-environment-changes

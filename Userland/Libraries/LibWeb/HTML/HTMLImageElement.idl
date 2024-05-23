@@ -19,7 +19,7 @@ interface HTMLImageElement : HTMLElement {
     readonly attribute unsigned long naturalWidth;
     readonly attribute unsigned long naturalHeight;
     readonly attribute boolean complete;
-    [FIXME] readonly attribute USVString currentSrc;
+    readonly attribute USVString currentSrc;
     [FIXME, CEReactions] attribute DOMString referrerPolicy;
     [FIXME, CEReactions] attribute DOMString decoding;
     [CEReactions, Enumerated=LazyLoadingAttribute, Reflect] attribute DOMString loading;

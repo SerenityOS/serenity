@@ -269,6 +269,13 @@ bool HTMLImageElement::complete() const
     return false;
 }
 
+// https://html.spec.whatwg.org/multipage/embedded-content.html#dom-img-currentsrc
+String HTMLImageElement::current_src() const
+{
+    // The currentSrc IDL attribute must return the img element's current request's current URL.
+    return MUST(m_current_request->current_url().to_string());
+}
+
 Optional<ARIA::Role> HTMLImageElement::default_role() const
 {
     // https://www.w3.org/TR/html-aria/#el-img
