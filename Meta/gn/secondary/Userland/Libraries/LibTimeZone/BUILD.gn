@@ -11,14 +11,16 @@ declare_args() {
 
 tzdb_cache = cache_path + "TZDB/"
 
+tzdb_version = "2024a"
+
 if (enable_timezone_database_download) {
   download_file("timezone_database_download") {
-    version = "2024a"
-    url =
-        "https://data.iana.org/time-zones/releases/tzdata" + version + ".tar.gz"
+    version = tzdb_version
+    url = "https://data.iana.org/time-zones/releases/tzdata$version.tar.gz"
     cache = tzdb_cache
     output = "tzdb.tar.gz"
     version_file = "version.txt"
+    sha256 = "0d0434459acbd2059a7a8da1f3304a84a86591f6ed69c6248fffa502b6edffe3"
   }
   extract_archive_contents("timezone_database_files") {
     deps = [ ":timezone_database_download" ]
