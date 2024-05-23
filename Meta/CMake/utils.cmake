@@ -210,20 +210,23 @@ function(download_file_multisource urls path)
         if (NOT ENABLE_NETWORK_DOWNLOADS)
             message(FATAL_ERROR "${path} does not exist, and unable to download it")
         endif()
+
         get_filename_component(file "${path}" NAME)
+        set(tmp_path "${path}.tmp")
 
         foreach(url ${urls})
             message(STATUS "Downloading file ${file} from ${url}")
 
-            file(DOWNLOAD "${url}" "${path}" INACTIVITY_TIMEOUT 10 STATUS download_result ${DOWNLOAD_SHA256})
+            file(DOWNLOAD "${url}" "${tmp_path}" INACTIVITY_TIMEOUT 10 STATUS download_result ${DOWNLOAD_SHA256})
             list(GET download_result 0 status_code)
             list(GET download_result 1 error_message)
 
             if (status_code EQUAL 0)
+                file(RENAME "${tmp_path}" "${path}")
                 break()
             endif()
 
-            file(REMOVE "${path}")
+            file(REMOVE "${tmp_path}")
             message(WARNING "Failed to download ${url}: ${error_message}")
         endforeach()
 
