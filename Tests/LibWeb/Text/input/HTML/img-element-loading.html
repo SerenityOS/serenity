@@ -1,0 +1,18 @@
+<img id="testImg">
+<script src="../include.js"></script>
+<script>
+    test(() => {
+        const img = document.getElementById('testImg');
+
+        println(`loading = ${img.loading}`);
+        println('');
+
+        img.loading = 'lazy';
+
+        println(`loading = ${img.loading}`);
+        println('');
+
+        img.loading = 'invalid-value';
+        println(`loading = ${img.loading}`);
+    });
+</script>
