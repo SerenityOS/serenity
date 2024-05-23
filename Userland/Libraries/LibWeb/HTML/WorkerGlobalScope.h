@@ -12,6 +12,7 @@
 #include <LibURL/URL.h>
 #include <LibWeb/DOM/EventTarget.h>
 #include <LibWeb/Forward.h>
+#include <LibWeb/HTML/Scripting/Fetching.h>
 #include <LibWeb/HTML/WindowOrWorkerGlobalScope.h>
 #include <LibWeb/HTML/WorkerLocation.h>
 #include <LibWeb/HTML/WorkerNavigator.h>
@@ -66,7 +67,7 @@ public:
 
     JS::NonnullGCPtr<WorkerLocation> location() const;
     JS::NonnullGCPtr<WorkerNavigator> navigator() const;
-    WebIDL::ExceptionOr<void> import_scripts(Vector<String> urls);
+    WebIDL::ExceptionOr<void> import_scripts(Vector<String> const& urls, PerformTheFetchHook = nullptr);
 
 #undef __ENUMERATE
 #define __ENUMERATE(attribute_name, event_name)       \
