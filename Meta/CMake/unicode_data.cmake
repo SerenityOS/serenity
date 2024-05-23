@@ -1,6 +1,10 @@
 include(${CMAKE_CURRENT_LIST_DIR}/utils.cmake)
 
-set(UCD_VERSION 15.1.0)
+set(UCD_VERSION "15.1.0")
+set(UCD_SHA256 "cb1c663d053926500cd501229736045752713a066bd75802098598b7a7056177")
+set(EMOJI_SHA256 "d876ee249aa28eaa76cfa6dfaa702847a8d13b062aa488d465d0395ee8137ed9")
+set(IDNA_SHA256 "402cbd285f1f952fcd0834b63541d54f69d3d8f1b8f8599bf71a1a14935f82c4")
+
 set(UCD_PATH "${SERENITY_CACHE_DIR}/UCD" CACHE PATH "Download location for UCD files")
 set(UCD_VERSION_FILE "${UCD_PATH}/version.txt")
 
@@ -76,7 +80,7 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
     remove_path_if_version_changed("${UCD_VERSION}" "${UCD_VERSION_FILE}" "${UCD_PATH}")
 
     if (ENABLE_NETWORK_DOWNLOADS)
-        download_file("${UCD_ZIP_URL}" "${UCD_ZIP_PATH}")
+        download_file("${UCD_ZIP_URL}" "${UCD_ZIP_PATH}" SHA256 "${UCD_SHA256}")
         extract_path("${UCD_PATH}" "${UCD_ZIP_PATH}" "${UNICODE_DATA_SOURCE}" "${UNICODE_DATA_PATH}")
         extract_path("${UCD_PATH}" "${UCD_ZIP_PATH}" "${SPECIAL_CASING_SOURCE}" "${SPECIAL_CASING_PATH}")
         extract_path("${UCD_PATH}" "${UCD_ZIP_PATH}" "${CASE_FOLDING_SOURCE}" "${CASE_FOLDING_PATH}")
@@ -96,9 +100,9 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
         extract_path("${UCD_PATH}" "${UCD_ZIP_PATH}" "${WORD_BREAK_PROP_SOURCE}" "${WORD_BREAK_PROP_PATH}")
         extract_path("${UCD_PATH}" "${UCD_ZIP_PATH}" "${SENTENCE_BREAK_PROP_SOURCE}" "${SENTENCE_BREAK_PROP_PATH}")
 
-        download_file("${EMOJI_TEST_URL}" "${EMOJI_TEST_PATH}")
+        download_file("${EMOJI_TEST_URL}" "${EMOJI_TEST_PATH}" SHA256 "${EMOJI_SHA256}")
 
-        download_file("${IDNA_MAPPING_TABLE_URL}" "${IDNA_MAPPING_TABLE_PATH}")
+        download_file("${IDNA_MAPPING_TABLE_URL}" "${IDNA_MAPPING_TABLE_PATH}" SHA256 "${IDNA_SHA256}")
     else()
         message(STATUS "Skipping download of ${UCD_ZIP_URL}, expecting the archive to have been extracted to ${UCD_ZIP_PATH}")
         message(STATUS "Skipping download of ${EMOJI_TEST_URL}, expecting the file to be at ${EMOJI_TEST_PATH}")
