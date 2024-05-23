@@ -31,11 +31,15 @@ struct ExecutionContext {
     void visit_edges(Cell::Visitor&);
 
 private:
+    friend class ExecutionContextAllocator;
+
     ExecutionContext(Heap&);
 
     IntrusiveListNode<ExecutionContext> m_list_node;
 
 public:
+    void operator delete(void* ptr);
+
     Heap& m_heap;
 
     using List = IntrusiveList<&ExecutionContext::m_list_node>;
