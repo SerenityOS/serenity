@@ -1,4 +1,5 @@
 #import <HTML/HTMLElement.idl>
+#import <HTML/Scripting/Fetching.idl>
 #import <DOM/Document.idl>
 
 // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#htmliframeelement
@@ -16,7 +17,7 @@ interface HTMLIFrameElement : HTMLElement {
     [CEReactions, Reflect] attribute DOMString width;
     [CEReactions, Reflect] attribute DOMString height;
     [FIXME, CEReactions] attribute DOMString referrerPolicy;
-    [FIXME, CEReactions] attribute DOMString loading;
+    [CEReactions, Enumerated=LazyLoadingAttribute, Reflect] attribute DOMString loading;
     readonly attribute Document? contentDocument;
     readonly attribute WindowProxy? contentWindow;
     Document? getSVGDocument();
