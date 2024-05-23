@@ -1,4 +1,5 @@
 #import <HTML/HTMLElement.idl>
+#import <HTML/Scripting/Fetching.idl>
 
 // https://html.spec.whatwg.org/multipage/embedded-content.html#htmlimageelement
 [Exposed=Window, LegacyFactoryFunction=Image(optional unsigned long width, optional unsigned long height)]
@@ -21,7 +22,7 @@ interface HTMLImageElement : HTMLElement {
     [FIXME] readonly attribute USVString currentSrc;
     [FIXME, CEReactions] attribute DOMString referrerPolicy;
     [FIXME, CEReactions] attribute DOMString decoding;
-    [FIXME, CEReactions] attribute DOMString loading;
+    [CEReactions, Enumerated=LazyLoadingAttribute, Reflect] attribute DOMString loading;
     [FIXME, CEReactions] attribute DOMString fetchPriority;
 
     [FIXME] Promise<undefined> decode();
