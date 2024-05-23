@@ -18,6 +18,7 @@ if (enable_unicode_database_download) {
     cache = unicode_cache
     output = "UCD.zip"
     version_file = "version.txt"
+    sha256 = "cb1c663d053926500cd501229736045752713a066bd75802098598b7a7056177"
   }
   download_file("emoji_test_download") {
     version = emoji_version
@@ -25,6 +26,7 @@ if (enable_unicode_database_download) {
     cache = emoji_cache
     output = "emoji-test.txt"
     version_file = "emoji-test-version.txt"
+    sha256 = "d876ee249aa28eaa76cfa6dfaa702847a8d13b062aa488d465d0395ee8137ed9"
   }
   download_file("idna_mapping_table_download") {
     version = unicode_version
@@ -32,6 +34,7 @@ if (enable_unicode_database_download) {
     cache = idna_cache
     output = "IdnaMappingTable.txt"
     version_file = "version.txt"
+    sha256 = "402cbd285f1f952fcd0834b63541d54f69d3d8f1b8f8599bf71a1a14935f82c4"
   }
 
   extract_archive_contents("unicode_database_files") {
