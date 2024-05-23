@@ -1,8 +1,9 @@
 include(${CMAKE_CURRENT_LIST_DIR}/utils.cmake)
 
-set(TZDB_PATH "${SERENITY_CACHE_DIR}/TZDB" CACHE PATH "Download location for TZDB files")
+set(TZDB_VERSION "2024a")
+set(TZDB_SHA256 "0d0434459acbd2059a7a8da1f3304a84a86591f6ed69c6248fffa502b6edffe3")
 
-set(TZDB_VERSION 2024a)
+set(TZDB_PATH "${SERENITY_CACHE_DIR}/TZDB" CACHE PATH "Download location for TZDB files")
 set(TZDB_VERSION_FILE "${TZDB_PATH}/version.txt")
 
 set(TZDB_ZIP_URL "https://data.iana.org/time-zones/releases/tzdata${TZDB_VERSION}.tar.gz")
@@ -46,7 +47,7 @@ if (ENABLE_TIME_ZONE_DATABASE_DOWNLOAD)
     remove_path_if_version_changed("${TZDB_VERSION}" "${TZDB_VERSION_FILE}" "${TZDB_PATH}")
 
     if (ENABLE_NETWORK_DOWNLOADS)
-        download_file("${TZDB_ZIP_URL}" "${TZDB_ZIP_PATH}")
+        download_file("${TZDB_ZIP_URL}" "${TZDB_ZIP_PATH}" SHA256 "${TZDB_SHA256}")
         extract_tzdb_file("${TZDB_AFRICA_SOURCE}" "${TZDB_AFRICA_PATH}")
         extract_tzdb_file("${TZDB_ANTARCTICA_SOURCE}" "${TZDB_ANTARCTICA_PATH}")
         extract_tzdb_file("${TZDB_ASIA_SOURCE}" "${TZDB_ASIA_PATH}")
