@@ -97,6 +97,7 @@ There is also a group of maintainers with the ability to approve and merge PRs:
 - [@GMTA](https://github.com/gmta)
 - [@kalenikaliaksandr](https://github.com/kalenikaliaksandr)
 - [@Lubrsi](https://github.com/Lubrsi)
+- [@tcl3](https://github.com/tcl3)
 - [@timschumi](https://github.com/timschumi)
 - [@trflynn89](https://github.com/trflynn89)
 
