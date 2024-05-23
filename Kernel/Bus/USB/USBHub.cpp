@@ -71,6 +71,16 @@ ErrorOr<void> Hub::enumerate_and_power_on_hub()
 
     dbgln_if(USB_DEBUG, "USB Hub: Enumerating and powering on for address {}", m_address);
 
+    // Before the hub can be used, it must first be configured via a SET_CONFIGURATION request.
+    // We don't need to set the configuration for the root hub (which has a null m_hub) as we would just ignore that request during root hub emulation anyway.
+    if (m_hub != nullptr) {
+        if (m_configurations.size() < 1)
+            return EINVAL;
+
+        // FIXME: Which configuration should we choose if there is more than one?
+        TRY(control_transfer(USB_REQUEST_TRANSFER_DIRECTION_HOST_TO_DEVICE | USB_REQUEST_TYPE_STANDARD | USB_REQUEST_RECIPIENT_DEVICE, USB_REQUEST_SET_CONFIGURATION, m_configurations[0].configuration_id(), 0, 0, nullptr));
+    }
+
     USBHubDescriptor descriptor {};
 
     // Get the first hub descriptor. All hubs are required to have a hub descriptor at index 0. USB 2.0 Specification Section 11.24.2.5.
