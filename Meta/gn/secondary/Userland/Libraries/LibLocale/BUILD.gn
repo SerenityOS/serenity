@@ -6,14 +6,16 @@ import("//Userland/Libraries/LibUnicode/enable_unicode_download.gni")
 
 locale_cache = cache_path + "CLDR/"
 
+locale_version = "45.0.0"
+
 if (enable_unicode_database_download) {
   download_file("locale_database_download") {
-    version = "45.0.0"
-    url = "https://github.com/unicode-org/cldr-json/releases/download/" +
-          version + "/cldr-" + version + "-json-modern.zip"
+    version = locale_version
+    url = "https://github.com/unicode-org/cldr-json/releases/download/$version/cldr-$version-json-modern.zip"
     cache = locale_cache
     output = "cldr.zip"
     version_file = "version.txt"
+    sha256 = "ba934cdd40ad4fb6439004c7e746bef97fe2b597db1040fcaa6c7d0647742c1b"
   }
 
   extract_archive_contents("locale_database_files") {
