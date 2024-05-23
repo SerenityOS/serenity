@@ -94,6 +94,8 @@ public:
 
     Web::Page* page() { return m_page.ptr(); }
 
+    PolicyContainer policy_container() const { return m_policy_container; }
+
 protected:
     explicit WorkerGlobalScope(JS::Realm&, JS::NonnullGCPtr<Web::Page>);
 
@@ -129,6 +131,7 @@ private:
 
     // https://html.spec.whatwg.org/multipage/workers.html#concept-workerglobalscope-policy-container
     // A WorkerGlobalScope object has an associated policy container (a policy container). It is initially a new policy container.
+    PolicyContainer m_policy_container;
 
     // https://html.spec.whatwg.org/multipage/workers.html#concept-workerglobalscope-embedder-policy
     // A WorkerGlobalScope object has an associated embedder policy (an embedder policy).
