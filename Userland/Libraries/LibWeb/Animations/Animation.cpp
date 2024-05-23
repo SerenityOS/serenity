@@ -456,7 +456,7 @@ void Animation::cancel(ShouldInvalidate should_invalidate)
             Optional<double> scheduled_event_time;
             if (m_timeline && !m_timeline->is_inactive() && m_timeline->can_convert_a_timeline_time_to_an_origin_relative_time())
                 scheduled_event_time = m_timeline->convert_a_timeline_time_to_an_origin_relative_time(m_timeline->current_time());
-            document->append_pending_animation_event({ cancel_event, *this, scheduled_event_time });
+            document->append_pending_animation_event({ cancel_event, *this, *this, scheduled_event_time });
         } else {
             HTML::queue_global_task(HTML::Task::Source::DOMManipulation, realm.global_object(), JS::create_heap_function(heap(), [this, cancel_event]() {
                 dispatch_event(cancel_event);
@@ -1127,9 +1127,12 @@ void Animation::update_finished_state(DidSeek did_seek, SynchronouslyNotify sync
             //    animation event queue along with its target, animation. For the scheduled event time, use the result
             //    of converting animation’s associated effect end to an origin-relative time.
             if (auto document_for_timing = this->document_for_timing()) {
-                document_for_timing->append_pending_animation_event({ .event = finish_event,
+                document_for_timing->append_pending_animation_event({
+                    .event = finish_event,
+                    .animation = *this,
                     .target = *this,
-                    .scheduled_event_time = convert_a_timeline_time_to_an_origin_relative_time(associated_effect_end()) });
+                    .scheduled_event_time = convert_a_timeline_time_to_an_origin_relative_time(associated_effect_end()),
+                });
             }
             //    Otherwise, queue a task to dispatch finishEvent at animation. The task source for this task is the DOM
             //    manipulation task source.
