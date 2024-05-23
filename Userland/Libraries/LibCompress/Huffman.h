@@ -53,7 +53,9 @@ void generate_huffman_lengths(Array<u8, Size>& lengths, Array<u16, Size> const& 
 
         u16 new_link = heap.size() + 1;
 
-        heap.insert(lowest_frequency + second_lowest_frequency, new_link);
+        u32 sum = lowest_frequency + second_lowest_frequency;
+        sum = min(sum, UINT16_MAX);
+        heap.insert(sum, new_link);
 
         huffman_links[lowest_link] = new_link;
         huffman_links[second_lowest_link] = new_link;
