@@ -401,7 +401,7 @@ public:
     {
         // 1. Queue a microtask to perform the following steps:
         HTML::queue_a_microtask(nullptr, JS::create_heap_function(m_realm->heap(), [this, chunk]() {
-            HTML::TemporaryExecutionContext execution_context { Bindings::host_defined_environment_settings_object(m_realm) };
+            HTML::TemporaryExecutionContext execution_context { Bindings::host_defined_environment_settings_object(m_realm), HTML::TemporaryExecutionContext::CallbacksEnabled::Yes };
 
             auto controller1 = m_params->branch1->controller()->get<JS::NonnullGCPtr<ReadableStreamDefaultController>>();
             auto controller2 = m_params->branch2->controller()->get<JS::NonnullGCPtr<ReadableStreamDefaultController>>();
