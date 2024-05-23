@@ -25,6 +25,7 @@
 #include <LibGfx/ImageFormats/QMArithmeticDecoder.h>
 #include <LibGfx/ImageFormats/TGALoader.h>
 #include <LibGfx/ImageFormats/TIFFLoader.h>
+#include <LibGfx/ImageFormats/TIFFMetadata.h>
 #include <LibGfx/ImageFormats/TinyVGLoader.h>
 #include <LibGfx/ImageFormats/WebPLoader.h>
 #include <LibTest/TestCase.h>
@@ -766,6 +767,18 @@ TEST_CASE(test_png)
     auto plugin_decoder = TRY_OR_FAIL(Gfx::PNGImageDecoderPlugin::create(file->bytes()));
 
     TRY_OR_FAIL(expect_single_frame(*plugin_decoder));
+}
+
+TEST_CASE(test_exif)
+{
+    auto file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("png/exif.png"sv)));
+    EXPECT(Gfx::PNGImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = TRY_OR_FAIL(Gfx::PNGImageDecoderPlugin::create(file->bytes()));
+
+    TRY_OR_FAIL(expect_single_frame_of_size(*plugin_decoder, { 100, 200 }));
+    EXPECT(plugin_decoder->metadata().has_value());
+    auto const& exif_metadata = static_cast<Gfx::ExifMetadata const&>(plugin_decoder->metadata().value());
+    EXPECT_EQ(*exif_metadata.orientation(), Gfx::TIFF::Orientation::Rotate90Clockwise);
 }
 
 TEST_CASE(test_png_malformed_frame)

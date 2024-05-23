@@ -27,6 +27,7 @@ public:
     virtual size_t frame_count() override;
     virtual size_t first_animated_frame_index() override;
     virtual ErrorOr<ImageFrameDescriptor> frame(size_t index, Optional<IntSize> ideal_size = {}) override;
+    virtual Optional<Metadata const&> metadata() override;
     virtual ErrorOr<Optional<ReadonlyBytes>> icc_data() override;
 
     static void unfilter_scanline(PNG::FilterType filter, Bytes scanline_data, ReadonlyBytes previous_scanlines_data, u8 bytes_per_complete_pixel);

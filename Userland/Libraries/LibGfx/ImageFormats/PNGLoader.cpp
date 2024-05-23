@@ -11,6 +11,8 @@
 #include <AK/Vector.h>
 #include <LibCompress/Zlib.h>
 #include <LibGfx/ImageFormats/PNGLoader.h>
+#include <LibGfx/ImageFormats/TIFFLoader.h>
+#include <LibGfx/ImageFormats/TIFFMetadata.h>
 #include <LibGfx/Painter.h>
 
 namespace Gfx {
@@ -197,6 +199,8 @@ struct PNGLoadingContext {
     Optional<EmbeddedICCProfile> embedded_icc_profile;
     Optional<ByteBuffer> decompressed_icc_profile;
     Optional<RenderingIntent> sRGB_rendering_intent;
+
+    OwnPtr<ExifMetadata> exif_metadata;
 
     Checked<int> compute_row_size_for_width(int width)
     {
@@ -1168,6 +1172,12 @@ static ErrorOr<void> process_fdAT(ReadonlyBytes data, PNGLoadingContext& context
     return {};
 }
 
+static ErrorOr<void> process_eXIf(ReadonlyBytes bytes, PNGLoadingContext& context)
+{
+    context.exif_metadata = TRY(TIFFImageDecoderPlugin::read_exif_metadata(bytes));
+    return {};
+}
+
 static void process_IEND(ReadonlyBytes, PNGLoadingContext& context)
 {
     // https://www.w3.org/TR/png/#11IEND
@@ -1235,6 +1245,8 @@ static ErrorOr<void> process_chunk(Streamer& streamer, PNGLoadingContext& contex
         return process_fcTL(chunk_data, context);
     if (chunk_type == "fdAT"sv)
         return process_fdAT(chunk_data, context);
+    if (chunk_type == "eXIf"sv)
+        return process_eXIf(chunk_data, context);
     if (chunk_type == "IEND"sv)
         process_IEND(chunk_data, context);
     return {};
@@ -1436,6 +1448,13 @@ ErrorOr<ImageFrameDescriptor> PNGImageDecoderPlugin::frame(size_t index, Optiona
     ImageFrameDescriptor descriptor { animation_frame.bitmap };
     set_descriptor_duration(descriptor, animation_frame);
     return descriptor;
+}
+
+Optional<Metadata const&> PNGImageDecoderPlugin::metadata()
+{
+    if (m_context->exif_metadata)
+        return *m_context->exif_metadata;
+    return OptionalNone {};
 }
 
 ErrorOr<Optional<ReadonlyBytes>> PNGImageDecoderPlugin::icc_data()
