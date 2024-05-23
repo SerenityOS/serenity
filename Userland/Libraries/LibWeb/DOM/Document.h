@@ -599,7 +599,8 @@ public:
 
     struct PendingAnimationEvent {
         JS::NonnullGCPtr<DOM::Event> event;
-        JS::NonnullGCPtr<Animations::Animation> target;
+        JS::NonnullGCPtr<Animations::Animation> animation;
+        JS::NonnullGCPtr<DOM::EventTarget> target;
         Optional<double> scheduled_event_time;
     };
     void append_pending_animation_event(PendingAnimationEvent const&);

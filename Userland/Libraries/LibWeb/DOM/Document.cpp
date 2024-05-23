@@ -2017,7 +2017,12 @@ void Document::dispatch_events_for_animation_if_necessary(JS::NonnullGCPtr<Anima
         return;
 
     auto& css_animation = verify_cast<CSS::CSSAnimation>(*animation);
-    if (auto target = effect->target(); target && target->paintable())
+
+    JS::GCPtr<Element> target = effect->target();
+    if (!target)
+        return;
+
+    if (target->paintable())
         target->paintable()->set_needs_display();
 
     auto previous_phase = effect->previous_phase();
@@ -2037,7 +2042,8 @@ void Document::dispatch_events_for_animation_if_necessary(JS::NonnullGCPtr<Anima
                         css_animation.id(),
                         elapsed_time,
                     }),
-                .target = animation,
+                .animation = css_animation,
+                .target = *target,
                 .scheduled_event_time = HighResolutionTime::unsafe_shared_current_time(),
             });
         };
@@ -2101,6 +2107,8 @@ void Document::dispatch_events_for_animation_if_necessary(JS::NonnullGCPtr<Anima
             dispatch_event(HTML::EventNames::animationcancel, effect->active_time_using_fill(Bindings::FillMode::Both).value());
         }
     }
+    effect->set_previous_phase(current_phase);
+    effect->set_previous_current_iteration(current_iteration);
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#scroll-to-the-fragment-identifier
@@ -4238,8 +4246,8 @@ void Document::update_animations_and_send_events(Optional<double> const& timesta
 
     // 6. Perform a stable sort of the animation events in events to dispatch as follows:
     auto sort_events_by_composite_order = [](auto const& a, auto const& b) {
-        auto& a_effect = verify_cast<Animations::KeyframeEffect>(*a.target->effect());
-        auto& b_effect = verify_cast<Animations::KeyframeEffect>(*b.target->effect());
+        auto& a_effect = verify_cast<Animations::KeyframeEffect>(*a.animation->effect());
+        auto& b_effect = verify_cast<Animations::KeyframeEffect>(*b.animation->effect());
         return Animations::KeyframeEffect::composite_order(a_effect, b_effect) < 0;
     };
 
@@ -4352,9 +4360,10 @@ void Document::remove_replaced_animations()
             //   timeline with which animation is associated.
             if (auto document = animation->document_for_timing()) {
                 PendingAnimationEvent pending_animation_event {
-                    remove_event,
-                    animation,
-                    animation->timeline()->convert_a_timeline_time_to_an_origin_relative_time(init.timeline_time),
+                    .event = remove_event,
+                    .animation = animation,
+                    .target = animation,
+                    .scheduled_event_time = animation->timeline()->convert_a_timeline_time_to_an_origin_relative_time(init.timeline_time),
                 };
                 document->append_pending_animation_event(pending_animation_event);
             }
