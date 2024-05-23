@@ -46,6 +46,30 @@ JS::NonnullGCPtr<WorkerEnvironmentSettingsObject> WorkerEnvironmentSettingsObjec
     return settings_object;
 }
 
+URL::URL WorkerEnvironmentSettingsObject::api_base_url()
+{
+    // Return worker global scope's url.
+    return m_global_scope->url();
+}
+
+Origin WorkerEnvironmentSettingsObject::origin()
+{
+    // FIXME: Return a unique opaque origin if worker global scope's url's scheme is "data", and inherited origin otherwise.
+    return m_origin;
+}
+
+PolicyContainer WorkerEnvironmentSettingsObject::policy_container()
+{
+    // Return worker global scope's policy container.
+    return m_global_scope->policy_container();
+}
+
+CanUseCrossOriginIsolatedAPIs WorkerEnvironmentSettingsObject::cross_origin_isolated_capability()
+{
+    // FIXME: Return worker global scope's cross-origin isolated capability.
+    return CanUseCrossOriginIsolatedAPIs::No;
+}
+
 void WorkerEnvironmentSettingsObject::visit_edges(JS::Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
