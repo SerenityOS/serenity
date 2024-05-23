@@ -13,9 +13,34 @@
 
 namespace JS {
 
+class ExecutionContextAllocator {
+public:
+    NonnullOwnPtr<ExecutionContext> allocate(Heap& heap)
+    {
+        if (m_execution_contexts.is_empty())
+            return adopt_own(*new ExecutionContext(heap));
+        void* slot = m_execution_contexts.take_last();
+        return adopt_own(*new (slot) ExecutionContext(heap));
+    }
+    void deallocate(void* ptr)
+    {
+        m_execution_contexts.append(ptr);
+    }
+
+private:
+    Vector<void*> m_execution_contexts;
+};
+
+static NeverDestroyed<ExecutionContextAllocator> s_execution_context_allocator;
+
 NonnullOwnPtr<ExecutionContext> ExecutionContext::create(Heap& heap)
 {
-    return adopt_own(*new ExecutionContext(heap));
+    return s_execution_context_allocator->allocate(heap);
+}
+
+void ExecutionContext::operator delete(void* ptr)
+{
+    s_execution_context_allocator->deallocate(ptr);
 }
 
 ExecutionContext::ExecutionContext(Heap& heap)
