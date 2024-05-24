@@ -4,6 +4,8 @@ set(SOURCES
     boot.S
     multiboot.S
     init.cpp
+    kmalloc.cpp
+    Runtime.cpp
     ../../Userland/Libraries/LibELF/Relocation.cpp
     )
 
