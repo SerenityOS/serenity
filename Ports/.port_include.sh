@@ -80,8 +80,6 @@ host_env() {
     enable_ccache
 }
 
-installedpackagesdb="${DESTDIR}/usr/Ports/installed.db"
-
 makeopts=("-j${MAKEJOBS}")
 installopts=()
 configscript=configure
@@ -514,6 +512,8 @@ clean_all() {
     clean_dist
 }
 addtodb() {
+    local installedpackagesdb="${DESTDIR}/usr/Ports/installed.db"
+
     buildstep_intro "Adding $port $version to database of installed ports..."
     if [ -n "$(package_install_state $port $version)" ]; then
         echo "Note: Skipped because $port $version is already installed."
@@ -530,12 +530,15 @@ addtodb() {
     echo "Successfully installed $port $version."
 }
 ensure_installedpackagesdb() {
+    local installedpackagesdb="${DESTDIR}/usr/Ports/installed.db"
+
     if [ ! -f "$installedpackagesdb" ]; then
         mkdir -p "$(dirname $installedpackagesdb)"
         touch "$installedpackagesdb"
     fi
 }
 package_install_state() {
+    local installedpackagesdb="${DESTDIR}/usr/Ports/installed.db"
     local port=$1
     local version=${2:-}
 
@@ -552,7 +555,11 @@ installdepends() {
         IFS=':' read -ra port_directories <<< "$SERENITY_PORT_DIRS"
         for port_dir in "${port_directories[@]}"; do
             if [ -d "${port_dir}/$depend" ]; then
-                (cd "${port_dir}/$depend" && ./package.sh --auto)
+                if [ -z ${2+x} ]; then
+                    (cd "${port_dir}/$depend" && ./package.sh "$1")
+                else
+                    (cd "${port_dir}/$depend" && ./package.sh "$1" "$2")
+                fi
                 continue 2
             fi
         done
@@ -562,6 +569,7 @@ installdepends() {
     done
 }
 uninstall() {
+    local installedpackagesdb="${DESTDIR}/usr/Ports/installed.db"
     if [ "$(package_install_state $port)" != "manual" ]; then
         >&2 echo "Error: $port is not installed. Cannot uninstall."
         return
@@ -584,8 +592,15 @@ uninstall() {
     mv installed.db.tmp "$installedpackagesdb"
 }
 do_installdepends() {
-    buildstep_intro "Installing dependencies of $port..."
-    installdepends
+    if [ "$1" = "package-dependency" ]; then
+        # prepare the build as a distributed dependency package
+        buildstep_intro "Installing dependencies of $port as dependency package..."
+        installdepends "--package-dependency" $2
+    elif [ "$1" = "auto" ]; then
+        # prepare the build as an auto installation
+        buildstep_intro "Installing dependencies of $port as direct installation..."
+        installdepends "--auto"
+    fi
 }
 do_fetch() {
     buildstep_intro "Fetching $port..."
@@ -620,12 +635,34 @@ do_build() {
 }
 do_install() {
     ensure_build
+
+    mkdir -p "${SERENITY_BUILD_DIR}/Packages/$port-$version/Root/"
+    DESTDIR="${SERENITY_BUILD_DIR}/Packages/$port-$version/Root/"
     buildstep pre_install
     buildstep_intro "Installing $port..."
     buildstep install
     buildstep install_main_launcher
     buildstep install_main_icon
     buildstep post_install
+
+    # copy all built files as part of installation
+    (
+        cd "${SERENITY_BUILD_DIR}/Packages/$port-$version/Root/"
+        cp -f -a -r . "${SERENITY_INSTALL_ROOT}"
+    )
+
+    # create list of tracked files by this package
+    (
+        mkdir -p "${SERENITY_INSTALL_ROOT}/usr/Ports/$port-$version"
+        cd "${SERENITY_BUILD_DIR}/Packages/$port-$version/Root/"
+        find . -printf '%y %p\n' | tail -n +2 > files
+        cd "${SERENITY_BUILD_DIR}/Packages/$port-$version/"
+        mv -f "${SERENITY_BUILD_DIR}/Packages/$port-$version/Root/files" "${SERENITY_INSTALL_ROOT}/usr/Ports/$port-$version/files"
+    )
+
+    # revert back to the installation directory so we insert the
+    DESTDIR="${SERENITY_INSTALL_ROOT}"
+
     addtodb "${1:-}"
 }
 do_clean() {
@@ -663,7 +700,7 @@ do_showproperty() {
     done
 }
 do_all() {
-    do_installdepends
+    do_installdepends "auto"
     do_fetch
     do_patch
     do_configure
@@ -672,7 +709,7 @@ do_all() {
 }
 
 do_shell() {
-    do_installdepends
+    do_installdepends "auto"
     do_fetch
     do_patch
     cd "$workdir"
@@ -784,6 +821,67 @@ prompt_yes_no_default_yes() {
     fi
 }
 
+do_create_package_base() {
+    # clean the package directory, just in case of operation being abrupted
+    rm -rf "${SERENITY_BUILD_DIR}/Packages/$port-$version"
+    mkdir -p "${SERENITY_BUILD_DIR}/Packages/$port-$version/Root/"
+
+    # start the details file with the name of the package
+    # all the needed packages will be written afterwards.
+    (
+        local installedpackagesdb="${SERENITY_BUILD_DIR}/Packages/$port-$version/details"
+        echo "package $port $version" >> "$installedpackagesdb"
+    )
+
+    DESTDIR="${SERENITY_BUILD_DIR}/Packages/$port-$version/Root/"
+    do_installdepends "package-dependency" "$port-$version"
+    DESTDIR="${SERENITY_INSTALL_ROOT}"
+    do_fetch
+    do_patch
+    do_configure
+    do_build
+    DESTDIR="${SERENITY_BUILD_DIR}/Packages/$port-$version/Root/"
+    buildstep pre_install
+    buildstep_intro "Installing $port..."
+    buildstep install
+    buildstep install_main_launcher
+    buildstep install_main_icon
+    buildstep post_install
+
+    # create list of tracked files by this package
+    (
+        cd "${SERENITY_BUILD_DIR}/Packages/$port-$version/Root/"
+        find . -printf '%y %p\n' | tail -n +2 > files
+        cd "${SERENITY_BUILD_DIR}/Packages/$port-$version/"
+        mv -f "${SERENITY_BUILD_DIR}/Packages/$port-$version/Root/files" "${SERENITY_BUILD_DIR}/Packages/$port-$version/files"
+    )
+
+    # finally, pack the port package as tar.xz and remove the package directory
+    (
+        cd "${SERENITY_BUILD_DIR}/Packages/"
+        tar -Jcf "$port-$version.tar.xz" "$port-$version/"
+    )
+}
+
+do_create_package_dependency() {
+    do_create_package_base
+
+    # finally, register a package dependency on the dependent package that called us
+    (
+        DESTDIR="${SERENITY_BUILD_DIR}/Packages/$1/Root/"
+        local installedpackagesdb="${SERENITY_BUILD_DIR}/Packages/$1/details"
+        echo "package-dependency $port $version" >> "$installedpackagesdb"
+    )
+
+    rm -rf "${SERENITY_BUILD_DIR}/Packages/$port-$version"
+}
+
+do_create_package() {
+    do_create_package_base
+
+    rm -rf "${SERENITY_BUILD_DIR}/Packages/$port-$version"
+}
+
 do_dev() {
     if [ -n "${IN_SERENITY_PORT_DEV:-}"  ]; then
         >&2 echo "Error: Already in dev environment for $IN_SERENITY_PORT_DEV"
@@ -791,7 +889,7 @@ do_dev() {
     fi
 
     if [ "${1:-}" != "--no-depends" ]; then
-        do_installdepends
+        do_installdepends "auto"
     fi
     if [ -d "$workdir" ] && [ ! -e "$workdir/.git" ]; then
         if prompt_yes_no "- Would you like to clean the working directory (i.e. ./package.sh clean)?"; then
@@ -869,10 +967,13 @@ parse_arguments() {
         return
     fi
     case "$1" in
-        build|clean|clean_all|clean_dist|configure|dev|fetch|generate_patch_readme|install|installdepends|patch|shell|showproperty|uninstall)
+        build|create_package|clean|clean_all|clean_dist|configure|dev|fetch|generate_patch_readme|install|patch|shell|showproperty|uninstall)
             method=$1
             shift
             do_${method} "$@"
+            ;;
+        --package-dependency)
+            do_create_package_dependency $2
             ;;
         --auto)
             do_all $1
@@ -887,7 +988,7 @@ parse_arguments() {
             bash --norc
             ;;
         *)
-            >&2 echo "I don't understand $1! Supported arguments: build, clean, clean_all, clean_dist, configure, dev, fetch, generate_patch_readme, install, installdepends, interactive, patch, shell, showproperty, uninstall."
+            >&2 echo "I don't understand $1! Supported arguments: build, clean, clean_all, clean_dist, configure, dev, fetch, generate_patch_readme, install, interactive, patch, shell, showproperty, uninstall."
             exit 1
             ;;
     esac
