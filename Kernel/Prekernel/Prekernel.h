@@ -20,6 +20,9 @@
 #define KERNEL_MAPPING_BASE 0x2000000000
 
 #ifdef __cplusplus
+
+extern "C" multiboot_info_t* multiboot_info_ptr;
+
 namespace Kernel {
 
 #    if ARCH(X86_64)
