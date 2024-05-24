@@ -12,6 +12,7 @@ set(SOURCES
     DebugOutput.cpp
     kmalloc.cpp
     Runtime.cpp
+    Random.cpp
     ../../Userland/Libraries/LibELF/Relocation.cpp
     )
 

@@ -12,14 +12,10 @@
 #include <Kernel/Memory/VirtualAddress.h>
 #include <Kernel/Prekernel/DebugOutput.h>
 #include <Kernel/Prekernel/Prekernel.h>
+#include <Kernel/Prekernel/Random.h>
 #include <Kernel/Prekernel/Runtime.h>
 #include <LibELF/ELFABI.h>
 #include <LibELF/Relocation.h>
-
-#if ARCH(X86_64)
-#    include <Kernel/Arch/x86_64/ASM_wrapper.h>
-#    include <Kernel/Arch/x86_64/CPUID.h>
-#endif
 
 // Defined in the linker script
 extern uintptr_t __stack_chk_guard;
@@ -65,8 +61,6 @@ extern "C" [[noreturn]] void init();
 //
 // This is where C++ execution begins, after boot.S transfers control here.
 //
-
-u64 generate_secure_seed();
 
 static void memmove_virt(void* dest_virt, FlatPtr dest_phys, void* src, size_t n)
 {
@@ -256,31 +250,6 @@ extern "C" [[noreturn]] void init()
     entry(*adjust_by_mapping_base(&info));
 
     __builtin_unreachable();
-}
-
-u64 generate_secure_seed()
-{
-    u32 seed = 0xFEEBDAED;
-
-#if ARCH(X86_64)
-    CPUID processor_info(0x1);
-    if (processor_info.edx() & (1 << 4)) // TSC
-        seed ^= read_tsc();
-
-    if (processor_info.ecx() & (1 << 30)) // RDRAND
-        seed ^= read_rdrand();
-
-    CPUID extended_features(0x7);
-    if (extended_features.ebx() & (1 << 18)) // RDSEED
-        seed ^= read_rdseed();
-#else
-#    warning No native randomness source available for this architecture
-#endif
-
-    seed ^= multiboot_info_ptr->mods_addr;
-    seed ^= multiboot_info_ptr->framebuffer_addr;
-
-    return seed;
 }
 
 // Define some Itanium C++ ABI methods to stop the linker from complaining.
