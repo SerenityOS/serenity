@@ -14,7 +14,9 @@
 #include <AK/StringView.h>
 #include <AK/Vector.h>
 
-#ifdef KERNEL
+#if defined(PREKERNEL)
+#    include <Kernel/Library/MiniStdLib.h>
+#elif defined(KERNEL)
 #    include <Kernel/Library/StdLib.h>
 #else
 #    include <AK/ByteString.h>

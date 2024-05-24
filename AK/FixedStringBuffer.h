@@ -12,7 +12,7 @@
 #include <AK/TypedTransfer.h>
 #include <AK/Userspace.h>
 
-#ifdef KERNEL
+#if defined(KERNEL) && !defined(PREKERNEL)
 #    include <Kernel/Arch/SafeMem.h>
 #    include <Kernel/Arch/SmapDisabler.h>
 #    include <Kernel/Memory/MemorySections.h>
@@ -64,7 +64,7 @@ public:
             m_storage[index] = '\0';
     }
 
-#ifdef KERNEL
+#if defined(KERNEL) && !defined(PREKERNEL)
     ErrorOr<void> copy_characters_from_user(Userspace<char const*> user_str, size_t user_str_size)
     {
         if (user_str_size > Size)
