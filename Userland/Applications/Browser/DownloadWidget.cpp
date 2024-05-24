@@ -43,8 +43,9 @@ DownloadWidget::DownloadWidget(const URL::URL& url)
     m_elapsed_timer.start();
     m_download = Web::ResourceLoader::the().connector().start_request("GET", url);
     VERIFY(m_download);
+
     m_download->on_progress = [this](Optional<u64> total_size, u64 downloaded_size) {
-        did_progress(total_size.value(), downloaded_size);
+        did_progress(move(total_size), downloaded_size);
     };
 
     {
