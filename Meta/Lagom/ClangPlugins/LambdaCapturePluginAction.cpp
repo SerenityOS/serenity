@@ -129,4 +129,4 @@ std::unique_ptr<clang::ASTConsumer> LambdaCapturePluginAction::CreateASTConsumer
     return std::make_unique<Consumer>();
 }
 
-static clang::FrontendPluginRegistry::Add<LambdaCapturePluginAction> X("lambda-capture", "analyze lambda captures");
+static clang::FrontendPluginRegistry::Add<LambdaCapturePluginAction> X("lambda_capture", "analyze lambda captures");

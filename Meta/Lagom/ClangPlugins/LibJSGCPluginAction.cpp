@@ -258,4 +258,4 @@ void LibJSGCASTConsumer::HandleTranslationUnit(clang::ASTContext& context)
     visitor.TraverseDecl(context.getTranslationUnitDecl());
 }
 
-static clang::FrontendPluginRegistry::Add<LibJSGCPluginAction> X("libjs-gc-scanner", "analyze LibJS GC usage");
+static clang::FrontendPluginRegistry::Add<LibJSGCPluginAction> X("libjs_gc_scanner", "analyze LibJS GC usage");
