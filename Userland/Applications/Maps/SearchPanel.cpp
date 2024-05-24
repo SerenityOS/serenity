@@ -59,7 +59,8 @@ void SearchPanel::search(StringView query)
     auto request = m_request_client->start_request("GET", url, headers, {});
     VERIFY(!request.is_null());
     m_request = request;
-    request->on_buffered_request_finish = [this, request, url](bool success, auto, auto&, auto, ReadonlyBytes payload) {
+
+    request->set_buffered_request_finished_callback([this, request, url](bool success, auto, auto&, auto, ReadonlyBytes payload) {
         m_request.clear();
         if (!success) {
             dbgln("Maps: Can't load: {}", url);
@@ -111,8 +112,8 @@ void SearchPanel::search(StringView query)
         m_empty_container->set_visible(false);
         m_places_list->set_model(*GUI::ItemListModel<String>::create(m_places_names));
         m_places_list->set_visible(true);
-    };
-    request->set_should_buffer_all_input(true);
+    });
+
     request->on_certificate_requested = []() -> Protocol::Request::CertificateAndKey { return {}; };
 }
 

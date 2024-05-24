@@ -414,7 +414,7 @@ void ResourceLoader::load(LoadRequest& request, SuccessCallback success_callback
 
         m_active_requests.set(*protocol_request);
 
-        protocol_request->on_buffered_request_finish = [this, success_callback = move(success_callback), error_callback = move(error_callback), log_success, log_failure, request, &protocol_request = *protocol_request](bool success, auto, auto& response_headers, auto status_code, ReadonlyBytes payload) mutable {
+        auto on_buffered_request_finished = [this, success_callback = move(success_callback), error_callback = move(error_callback), log_success, log_failure, request, &protocol_request = *protocol_request](bool success, auto, auto& response_headers, auto status_code, ReadonlyBytes payload) mutable {
             --m_pending_loads;
             if (on_load_counter_change)
                 on_load_counter_change();
@@ -446,13 +446,17 @@ void ResourceLoader::load(LoadRequest& request, SuccessCallback success_callback
                 m_active_requests.remove(protocol_request);
             });
         };
-        protocol_request->set_should_buffer_all_input(true);
+
+        protocol_request->set_buffered_request_finished_callback(move(on_buffered_request_finished));
+
         protocol_request->on_certificate_requested = []() -> ResourceLoaderConnectorRequest::CertificateAndKey {
             return {};
         };
+
         ++m_pending_loads;
         if (on_load_counter_change)
             on_load_counter_change();
+
         return;
     }
 

@@ -323,7 +323,8 @@ void MapWidget::process_tile_queue()
     VERIFY(!request.is_null());
 
     m_active_requests.append(request);
-    request->on_buffered_request_finish = [this, request, url, tile_key](bool success, auto, auto&, auto, ReadonlyBytes payload) {
+
+    request->set_buffered_request_finished_callback([this, request, url, tile_key](bool success, auto, auto&, auto, ReadonlyBytes payload) {
         auto was_active = m_active_requests.remove_first_matching([request](auto const& other_request) { return other_request->id() == request->id(); });
         if (!was_active)
             return;
@@ -351,8 +352,8 @@ void MapWidget::process_tile_queue()
 
         // FIXME: only update the part of the screen that this tile covers
         update();
-    };
-    request->set_should_buffer_all_input(true);
+    });
+
     request->on_certificate_requested = []() -> Protocol::Request::CertificateAndKey { return {}; };
 }
 

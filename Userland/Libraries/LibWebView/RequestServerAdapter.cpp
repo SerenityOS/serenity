@@ -19,18 +19,6 @@ ErrorOr<NonnullRefPtr<RequestServerRequestAdapter>> RequestServerRequestAdapter:
 RequestServerRequestAdapter::RequestServerRequestAdapter(NonnullRefPtr<Protocol::Request> request)
     : m_request(request)
 {
-    request->on_buffered_request_finish = [weak_this = make_weak_ptr()](auto success, auto total_size, auto const& response_headers, auto response_code, auto payload) {
-        if (auto strong_this = weak_this.strong_ref())
-            if (strong_this->on_buffered_request_finish)
-                strong_this->on_buffered_request_finish(success, total_size, response_headers, response_code, move(payload));
-    };
-
-    request->on_finish = [weak_this = make_weak_ptr()](bool success, u64 total_size) {
-        if (auto strong_this = weak_this.strong_ref())
-            if (strong_this->on_finish)
-                strong_this->on_finish(success, total_size);
-    };
-
     request->on_progress = [weak_this = make_weak_ptr()](Optional<u64> total_size, u64 downloaded_size) {
         if (auto strong_this = weak_this.strong_ref())
             if (strong_this->on_progress)
@@ -54,19 +42,19 @@ RequestServerRequestAdapter::RequestServerRequestAdapter(NonnullRefPtr<Protocol:
 
 RequestServerRequestAdapter::~RequestServerRequestAdapter() = default;
 
-void RequestServerRequestAdapter::set_should_buffer_all_input(bool should_buffer_all_input)
+void RequestServerRequestAdapter::set_buffered_request_finished_callback(Protocol::Request::BufferedRequestFinished on_buffered_request_finished)
 {
-    m_request->set_should_buffer_all_input(should_buffer_all_input);
+    m_request->set_buffered_request_finished_callback(move(on_buffered_request_finished));
+}
+
+void RequestServerRequestAdapter::set_unbuffered_request_callbacks(Protocol::Request::HeadersReceived on_headers_received, Protocol::Request::DataReceived on_data_received, Protocol::Request::RequestFinished on_finished)
+{
+    m_request->set_unbuffered_request_callbacks(move(on_headers_received), move(on_data_received), move(on_finished));
 }
 
 bool RequestServerRequestAdapter::stop()
 {
     return m_request->stop();
-}
-
-void RequestServerRequestAdapter::stream_into(Stream& stream)
-{
-    m_request->stream_into(stream);
 }
 
 ErrorOr<NonnullRefPtr<RequestServerAdapter>> RequestServerAdapter::try_create(NonnullRefPtr<Protocol::RequestClient> protocol_client)

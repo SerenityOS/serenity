@@ -105,15 +105,23 @@ ErrorOr<int> AvailablePort::update_available_ports_list_file()
     URL::URL url("https://raw.githubusercontent.com/SerenityOS/serenity/master/Ports/AvailablePorts.md");
     ByteString method = "GET";
     outln("pkg: Syncing packages database...");
+
     request = protocol_client->start_request(method, url, request_headers, ReadonlyBytes {}, proxy_data);
-    request->on_finish = [&](bool success, auto) {
+
+    auto on_data_received = [&](auto data) {
+        output_stream->write_until_depleted(data).release_value_but_fixme_should_propagate_errors();
+    };
+
+    auto on_finished = [&](bool success, auto) {
         if (!success)
             outln("pkg: Syncing packages database failed.");
         else
             outln("pkg: Syncing packages database done.");
         loop.quit(success ? 0 : 1);
     };
-    request->stream_into(*output_stream);
+
+    request->set_unbuffered_request_callbacks({}, move(on_data_received), move(on_finished));
+
     return loop.exec();
 }
 

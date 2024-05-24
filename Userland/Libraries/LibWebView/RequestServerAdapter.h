@@ -25,10 +25,9 @@ public:
     static ErrorOr<NonnullRefPtr<RequestServerRequestAdapter>> try_create(NonnullRefPtr<Protocol::Request>);
     virtual ~RequestServerRequestAdapter() override;
 
-    virtual void set_should_buffer_all_input(bool) override;
+    virtual void set_buffered_request_finished_callback(Protocol::Request::BufferedRequestFinished) override;
+    virtual void set_unbuffered_request_callbacks(Protocol::Request::HeadersReceived, Protocol::Request::DataReceived, Protocol::Request::RequestFinished) override;
     virtual bool stop() override;
-
-    virtual void stream_into(Stream&) override;
 
 private:
     RequestServerRequestAdapter(NonnullRefPtr<Protocol::Request>);

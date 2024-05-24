@@ -26,7 +26,8 @@ void UsersMapWidget::get_users()
     auto request = request_client()->start_request("GET", url, headers, {});
     VERIFY(!request.is_null());
     m_request = request;
-    request->on_buffered_request_finish = [this, request, url](bool success, auto, auto&, auto, ReadonlyBytes payload) {
+
+    request->set_buffered_request_finished_callback([this, request, url](bool success, auto, auto&, auto, ReadonlyBytes payload) {
         m_request.clear();
         if (!success) {
             dbgln("Maps: Can't load: {}", url);
@@ -57,8 +58,8 @@ void UsersMapWidget::get_users()
             m_users.value().append(user);
         }
         add_users_to_map();
-    };
-    request->set_should_buffer_all_input(true);
+    });
+
     request->on_certificate_requested = []() -> Protocol::Request::CertificateAndKey { return {}; };
 }
 
