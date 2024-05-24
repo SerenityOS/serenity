@@ -470,6 +470,10 @@ void Animation::cancel(ShouldInvalidate should_invalidate)
     // 3. Make animation’s start time unresolved.
     m_start_time = {};
 
+    // This time is needed for dispatching the animationcancel DOM event
+    if (auto effect = m_effect)
+        m_saved_cancel_time = effect->active_time_using_fill(Bindings::FillMode::Both);
+
     if (should_invalidate == ShouldInvalidate::Yes)
         invalidate_effect();
 }
