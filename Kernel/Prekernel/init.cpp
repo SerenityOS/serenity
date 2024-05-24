@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Gunnar Beutner <gbeutner@serenityos.org>
- * Copyright (c) 2021, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2021-2024, Liav A. <liavalb@hotmail.co.il>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,6 +10,7 @@
 #include <Kernel/Boot/Multiboot.h>
 #include <Kernel/Memory/PhysicalAddress.h>
 #include <Kernel/Memory/VirtualAddress.h>
+#include <Kernel/Prekernel/DebugOutput.h>
 #include <Kernel/Prekernel/Prekernel.h>
 #include <Kernel/Prekernel/Runtime.h>
 #include <LibELF/ELFABI.h>
@@ -54,11 +55,6 @@ void __stack_chk_fail()
     halt();
 }
 
-void __assertion_failed(char const*, char const*, unsigned int, char const*)
-{
-    halt();
-}
-
 namespace Kernel {
 
 // boot.S expects these functions to exactly have the following signatures.
@@ -96,8 +92,7 @@ extern "C" [[noreturn]] void init()
         // We only consider the first specified multiboot module, and ignore
         // the rest of the modules.
         multiboot_module_entry_t* initrd_module = (multiboot_module_entry_t*)(FlatPtr)multiboot_info_ptr->mods_addr;
-        if (initrd_module->start > initrd_module->end)
-            halt();
+        VERIFY(initrd_module->start < initrd_module->end);
 
         initrd_module_start = initrd_module->start;
         initrd_module_end = initrd_module->end;
@@ -107,8 +102,7 @@ extern "C" [[noreturn]] void init()
     // copy the ELF header and program headers because we might end up overwriting them
     Elf_Ehdr kernel_elf_header = *(Elf_Ehdr*)kernel_image;
     Elf_Phdr kernel_program_headers[16];
-    if (kernel_elf_header.e_phnum > array_size(kernel_program_headers))
-        halt();
+    VERIFY(kernel_elf_header.e_phnum < array_size(kernel_program_headers));
     __builtin_memcpy(kernel_program_headers, kernel_image + kernel_elf_header.e_phoff, sizeof(Elf_Phdr) * kernel_elf_header.e_phnum);
 
     FlatPtr kernel_physical_base = (FlatPtr)0x200000;
@@ -136,10 +130,8 @@ extern "C" [[noreturn]] void init()
             continue;
         auto start = kernel_load_base + kernel_program_header.p_vaddr;
         auto end = start + kernel_program_header.p_memsz;
-        if (start < (FlatPtr)end_of_prekernel_image)
-            halt();
-        if (kernel_physical_base + kernel_program_header.p_paddr < (FlatPtr)end_of_prekernel_image)
-            halt();
+        VERIFY(start > (FlatPtr)end_of_prekernel_image);
+        VERIFY(kernel_physical_base + kernel_program_header.p_paddr > (FlatPtr)end_of_prekernel_image);
         if (end > kernel_load_end)
             kernel_load_end = end;
     }

@@ -5,9 +5,12 @@
  */
 
 #include <Kernel/Arch/DebugOutput.h>
-#include <Kernel/Arch/Processor.h>
 #include <Kernel/Arch/x86_64/BochsDebugOutput.h>
 #include <Kernel/Arch/x86_64/IO.h>
+
+#if !defined(PREKERNEL)
+#    include <Kernel/Arch/Processor.h>
+#endif
 
 namespace Kernel {
 
@@ -35,8 +38,13 @@ void debug_output(char ch)
         serial_ready = true;
     }
 
-    while ((IO::in8(serial_com1_io_port + 5) & 0x20) == 0)
+    while ((IO::in8(serial_com1_io_port + 5) & 0x20) == 0) {
+#if !defined(PREKERNEL)
         Processor::wait_check();
+#else
+        ;
+#endif
+    }
 
     if (ch == '\n' && !was_cr)
         IO::out8(serial_com1_io_port, '\r');

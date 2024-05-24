@@ -16,7 +16,8 @@
 #    include <serenity.h>
 #endif
 
-#ifdef KERNEL
+#if defined(PREKERNEL)
+#elif defined(KERNEL)
 #    include <Kernel/Tasks/Process.h>
 #    include <Kernel/Tasks/Thread.h>
 #    include <Kernel/Time/TimeManagement.h>
@@ -1152,7 +1153,9 @@ void vdbg(StringView fmtstr, TypeErasedFormatParams& params, bool newline)
     StringBuilder builder;
 
     if (is_rich_debug_enabled) {
-#ifdef KERNEL
+#if defined(PREKERNEL)
+        ;
+#elif defined(KERNEL)
         if (Kernel::Processor::is_initialized() && TimeManagement::is_initialized()) {
             auto time = TimeManagement::the().monotonic_time(TimePrecision::Coarse);
             if (Kernel::Thread::current()) {
@@ -1195,7 +1198,7 @@ void vdbg(StringView fmtstr, TypeErasedFormatParams& params, bool newline)
     auto const string = builder.string_view();
 
 #ifdef AK_OS_SERENITY
-#    ifdef KERNEL
+#    if defined(KERNEL) && !defined(PREKERNEL)
     if (!Kernel::Processor::is_initialized()) {
         kernelearlyputstr(string.characters_without_null_termination(), string.length());
         return;
@@ -1205,7 +1208,7 @@ void vdbg(StringView fmtstr, TypeErasedFormatParams& params, bool newline)
     dbgputstr(string.characters_without_null_termination(), string.length());
 }
 
-#ifdef KERNEL
+#if defined(KERNEL) && !defined(PREKERNEL)
 void vdmesgln(StringView fmtstr, TypeErasedFormatParams& params)
 {
     StringBuilder builder;
