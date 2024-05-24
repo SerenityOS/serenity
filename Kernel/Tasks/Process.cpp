@@ -1195,6 +1195,11 @@ RefPtr<Custody const> Process::executable() const
     return m_executable.with([](auto& executable) { return executable; });
 }
 
+ErrorOr<NonnullRefPtr<Custody>> Process::custody_for_dirfd(Badge<CustodyBase>, int dirfd)
+{
+    return custody_for_dirfd(dirfd);
+}
+
 ErrorOr<NonnullRefPtr<Custody>> Process::custody_for_dirfd(int dirfd)
 {
     if (dirfd == AT_FDCWD)

@@ -27,8 +27,8 @@ ErrorOr<FlatPtr> Process::sys$chown(Userspace<Syscall::SC_chown_params const*> u
     TRY(require_promise(Pledge::chown));
     auto params = TRY(copy_typed_from_user(user_params));
     auto path = TRY(get_syscall_path_argument(params.path));
-    auto base = TRY(custody_for_dirfd(params.dirfd));
-    TRY(VirtualFileSystem::the().chown(credentials(), path->view(), params.uid, params.gid, *base, params.follow_symlinks ? 0 : O_NOFOLLOW_NOERROR));
+    CustodyBase base(params.dirfd, path->view());
+    TRY(VirtualFileSystem::the().chown(credentials(), path->view(), params.uid, params.gid, base, params.follow_symlinks ? 0 : O_NOFOLLOW_NOERROR));
     return 0;
 }
 

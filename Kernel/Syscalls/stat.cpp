@@ -28,8 +28,9 @@ ErrorOr<FlatPtr> Process::sys$stat(Userspace<Syscall::SC_stat_params const*> use
     auto params = TRY(copy_typed_from_user(user_params));
 
     auto path = TRY(get_syscall_path_argument(params.path));
-    auto base = TRY(custody_for_dirfd(params.dirfd));
-    auto metadata = TRY(VirtualFileSystem::the().lookup_metadata(credentials(), path->view(), *base, params.follow_symlinks ? 0 : O_NOFOLLOW_NOERROR));
+
+    CustodyBase base(params.dirfd, path->view());
+    auto metadata = TRY(VirtualFileSystem::the().lookup_metadata(credentials(), path->view(), base, params.follow_symlinks ? 0 : O_NOFOLLOW_NOERROR));
     auto statbuf = TRY(metadata.stat());
     TRY(copy_to_user(params.statbuf, &statbuf));
     return 0;

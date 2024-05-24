@@ -11,6 +11,7 @@
 #include <AK/Function.h>
 #include <AK/HashTable.h>
 #include <AK/IntrusiveList.h>
+#include <Kernel/FileSystem/CustodyBase.h>
 #include <Kernel/FileSystem/FIFO.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/InodeIdentifier.h>
@@ -72,7 +73,7 @@ public:
     virtual ErrorOr<void> chmod(mode_t) = 0;
     virtual ErrorOr<void> chown(UserID, GroupID) = 0;
 
-    ErrorOr<NonnullRefPtr<Custody>> resolve_as_link(Credentials const&, Custody& base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level) const;
+    ErrorOr<NonnullRefPtr<Custody>> resolve_as_link(Credentials const&, CustodyBase const& base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level) const;
 
     virtual ErrorOr<int> get_block_address(int) { return ENOTSUP; }
 

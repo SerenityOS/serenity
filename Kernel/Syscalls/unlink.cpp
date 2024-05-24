@@ -19,12 +19,12 @@ ErrorOr<FlatPtr> Process::sys$unlink(int dirfd, Userspace<char const*> user_path
     if (flags & ~AT_REMOVEDIR)
         return Error::from_errno(EINVAL);
 
-    auto base = TRY(custody_for_dirfd(dirfd));
+    CustodyBase base(dirfd, path->view());
 
     if (flags & AT_REMOVEDIR)
-        TRY(VirtualFileSystem::the().rmdir(credentials(), path->view(), *base));
+        TRY(VirtualFileSystem::the().rmdir(credentials(), path->view(), base));
     else
-        TRY(VirtualFileSystem::the().unlink(credentials(), path->view(), *base));
+        TRY(VirtualFileSystem::the().unlink(credentials(), path->view(), base));
     return 0;
 }
 

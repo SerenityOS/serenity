@@ -12,6 +12,7 @@
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
+#include <Kernel/FileSystem/CustodyBase.h>
 #include <Kernel/FileSystem/FileBackedFileSystem.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/Initializer.h>
@@ -64,27 +65,27 @@ public:
     ErrorOr<void> unmount(Custody& mount_point);
     ErrorOr<void> unmount(Inode& guest_inode, StringView custody_path);
 
-    ErrorOr<NonnullRefPtr<OpenFileDescription>> open(Credentials const&, StringView path, int options, mode_t mode, Custody& base, Optional<UidAndGid> = {});
-    ErrorOr<NonnullRefPtr<OpenFileDescription>> open(Process const&, Credentials const&, StringView path, int options, mode_t mode, Custody& base, Optional<UidAndGid> = {});
+    ErrorOr<NonnullRefPtr<OpenFileDescription>> open(Credentials const&, StringView path, int options, mode_t mode, CustodyBase const& base, Optional<UidAndGid> = {});
+    ErrorOr<NonnullRefPtr<OpenFileDescription>> open(Process const&, Credentials const&, StringView path, int options, mode_t mode, CustodyBase const& base, Optional<UidAndGid> = {});
     ErrorOr<NonnullRefPtr<OpenFileDescription>> create(Credentials const&, StringView path, int options, mode_t mode, Custody& parent_custody, Optional<UidAndGid> = {});
     ErrorOr<NonnullRefPtr<OpenFileDescription>> create(Process const&, Credentials const&, StringView path, int options, mode_t mode, Custody& parent_custody, Optional<UidAndGid> = {});
-    ErrorOr<void> mkdir(Credentials const&, StringView path, mode_t mode, Custody& base);
-    ErrorOr<void> link(Credentials const&, StringView old_path, StringView new_path, Custody& base);
-    ErrorOr<void> unlink(Credentials const&, StringView path, Custody& base);
-    ErrorOr<void> symlink(Credentials const&, StringView target, StringView linkpath, Custody& base);
-    ErrorOr<void> rmdir(Credentials const&, StringView path, Custody& base);
-    ErrorOr<void> chmod(Credentials const&, StringView path, mode_t, Custody& base, int options = 0);
+    ErrorOr<void> mkdir(Credentials const&, StringView path, mode_t mode, CustodyBase const& base);
+    ErrorOr<void> link(Credentials const&, StringView old_path, StringView new_path, CustodyBase const& base);
+    ErrorOr<void> unlink(Credentials const&, StringView path, CustodyBase const& base);
+    ErrorOr<void> symlink(Credentials const&, StringView target, StringView linkpath, CustodyBase const& base);
+    ErrorOr<void> rmdir(Credentials const&, StringView path, CustodyBase const& base);
+    ErrorOr<void> chmod(Credentials const&, StringView path, mode_t, CustodyBase const& base, int options = 0);
     ErrorOr<void> chmod(Credentials const&, Custody&, mode_t);
-    ErrorOr<void> chown(Credentials const&, StringView path, UserID, GroupID, Custody& base, int options);
+    ErrorOr<void> chown(Credentials const&, StringView path, UserID, GroupID, CustodyBase const& base, int options);
     ErrorOr<void> chown(Credentials const&, Custody&, UserID, GroupID);
-    ErrorOr<void> access(Credentials const&, StringView path, int mode, Custody& base, AccessFlags);
-    ErrorOr<InodeMetadata> lookup_metadata(Credentials const&, StringView path, Custody& base, int options = 0);
-    ErrorOr<void> utime(Credentials const&, StringView path, Custody& base, time_t atime, time_t mtime);
-    ErrorOr<void> utimensat(Credentials const&, StringView path, Custody& base, timespec const& atime, timespec const& mtime, int options = 0);
+    ErrorOr<void> access(Credentials const&, StringView path, int mode, CustodyBase const& base, AccessFlags);
+    ErrorOr<InodeMetadata> lookup_metadata(Credentials const&, StringView path, CustodyBase const& base, int options = 0);
+    ErrorOr<void> utime(Credentials const&, StringView path, CustodyBase const& base, time_t atime, time_t mtime);
+    ErrorOr<void> utimensat(Credentials const&, StringView path, CustodyBase const& base, timespec const& atime, timespec const& mtime, int options = 0);
     ErrorOr<void> do_utimens(Credentials const& credentials, Custody& custody, timespec const& atime, timespec const& mtime);
-    ErrorOr<void> rename(Credentials const&, Custody& old_base, StringView oldpath, Custody& new_base, StringView newpath);
-    ErrorOr<void> mknod(Credentials const&, StringView path, mode_t, dev_t, Custody& base);
-    ErrorOr<NonnullRefPtr<Custody>> open_directory(Credentials const&, StringView path, Custody& base);
+    ErrorOr<void> rename(Credentials const&, CustodyBase const& old_base, StringView oldpath, CustodyBase const& new_base, StringView newpath);
+    ErrorOr<void> mknod(Credentials const&, StringView path, mode_t, dev_t, CustodyBase const& base);
+    ErrorOr<NonnullRefPtr<Custody>> open_directory(Credentials const&, StringView path, CustodyBase const& base);
 
     ErrorOr<void> for_each_mount(Function<ErrorOr<void>(Mount const&)>) const;
 
@@ -94,8 +95,8 @@ public:
     static void sync();
 
     NonnullRefPtr<Custody> root_custody();
-    ErrorOr<NonnullRefPtr<Custody>> resolve_path(Credentials const&, StringView path, NonnullRefPtr<Custody> base, RefPtr<Custody>* out_parent = nullptr, int options = 0, int symlink_recursion_level = 0);
-    ErrorOr<NonnullRefPtr<Custody>> resolve_path(Process const&, Credentials const&, StringView path, NonnullRefPtr<Custody> base, RefPtr<Custody>* out_parent = nullptr, int options = 0, int symlink_recursion_level = 0);
+    ErrorOr<NonnullRefPtr<Custody>> resolve_path(Credentials const&, StringView path, CustodyBase const& base, RefPtr<Custody>* out_parent = nullptr, int options = 0, int symlink_recursion_level = 0);
+    ErrorOr<NonnullRefPtr<Custody>> resolve_path(Process const&, Credentials const&, StringView path, CustodyBase const& base, RefPtr<Custody>* out_parent = nullptr, int options = 0, int symlink_recursion_level = 0);
     ErrorOr<NonnullRefPtr<Custody>> resolve_path_without_veil(Credentials const&, StringView path, NonnullRefPtr<Custody> base, RefPtr<Custody>* out_parent = nullptr, int options = 0, int symlink_recursion_level = 0);
 
 private:

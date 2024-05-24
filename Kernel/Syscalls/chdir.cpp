@@ -16,10 +16,8 @@ ErrorOr<FlatPtr> Process::sys$chdir(Userspace<char const*> user_path, size_t pat
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::rpath));
     auto path = TRY(get_syscall_path_argument(user_path, path_length));
-    auto current_directory = m_current_directory.with([](auto& current_directory) -> NonnullRefPtr<Custody> {
-        return *current_directory;
-    });
-    RefPtr<Custody> new_directory = TRY(VirtualFileSystem::the().open_directory(credentials(), path->view(), *current_directory));
+
+    RefPtr<Custody> new_directory = TRY(VirtualFileSystem::the().open_directory(credentials(), path->view(), current_directory()));
     m_current_directory.with([&](auto& current_directory) {
         // NOTE: We use swap() here to avoid manipulating the ref counts while holding the lock.
         swap(current_directory, new_directory);

@@ -418,7 +418,7 @@ ErrorOr<void> VirtualFileSystem::traverse_directory_inode(Inode& dir_inode, Func
     });
 }
 
-ErrorOr<void> VirtualFileSystem::utime(Credentials const& credentials, StringView path, Custody& base, time_t atime, time_t mtime)
+ErrorOr<void> VirtualFileSystem::utime(Credentials const& credentials, StringView path, CustodyBase const& base, time_t atime, time_t mtime)
 {
     auto custody = TRY(resolve_path(credentials, path, base));
     auto& inode = custody->inode();
@@ -431,7 +431,7 @@ ErrorOr<void> VirtualFileSystem::utime(Credentials const& credentials, StringVie
     return {};
 }
 
-ErrorOr<void> VirtualFileSystem::utimensat(Credentials const& credentials, StringView path, Custody& base, timespec const& atime, timespec const& mtime, int options)
+ErrorOr<void> VirtualFileSystem::utimensat(Credentials const& credentials, StringView path, CustodyBase const& base, timespec const& atime, timespec const& mtime, int options)
 {
     auto custody = TRY(resolve_path(credentials, path, base, nullptr, options));
     return do_utimens(credentials, custody, atime, mtime);
@@ -454,18 +454,18 @@ ErrorOr<void> VirtualFileSystem::do_utimens(Credentials const& credentials, Cust
     return {};
 }
 
-ErrorOr<InodeMetadata> VirtualFileSystem::lookup_metadata(Credentials const& credentials, StringView path, Custody& base, int options)
+ErrorOr<InodeMetadata> VirtualFileSystem::lookup_metadata(Credentials const& credentials, StringView path, CustodyBase const& base, int options)
 {
     auto custody = TRY(resolve_path(credentials, path, base, nullptr, options));
     return custody->inode().metadata();
 }
 
-ErrorOr<NonnullRefPtr<OpenFileDescription>> VirtualFileSystem::open(Credentials const& credentials, StringView path, int options, mode_t mode, Custody& base, Optional<UidAndGid> owner)
+ErrorOr<NonnullRefPtr<OpenFileDescription>> VirtualFileSystem::open(Credentials const& credentials, StringView path, int options, mode_t mode, CustodyBase const& base, Optional<UidAndGid> owner)
 {
     return open(Process::current(), credentials, path, options, mode, base, owner);
 }
 
-ErrorOr<NonnullRefPtr<OpenFileDescription>> VirtualFileSystem::open(Process const& process, Credentials const& credentials, StringView path, int options, mode_t mode, Custody& base, Optional<UidAndGid> owner)
+ErrorOr<NonnullRefPtr<OpenFileDescription>> VirtualFileSystem::open(Process const& process, Credentials const& credentials, StringView path, int options, mode_t mode, CustodyBase const& base, Optional<UidAndGid> owner)
 {
     if ((options & O_CREAT) && (options & O_DIRECTORY))
         return EINVAL;
@@ -555,7 +555,7 @@ ErrorOr<NonnullRefPtr<OpenFileDescription>> VirtualFileSystem::open(Process cons
     return description;
 }
 
-ErrorOr<void> VirtualFileSystem::mknod(Credentials const& credentials, StringView path, mode_t mode, dev_t dev, Custody& base)
+ErrorOr<void> VirtualFileSystem::mknod(Credentials const& credentials, StringView path, mode_t mode, dev_t dev, CustodyBase const& base)
 {
     if (!is_regular_file(mode) && !is_block_device(mode) && !is_character_device(mode) && !is_fifo(mode) && !is_socket(mode))
         return EINVAL;
@@ -618,7 +618,7 @@ ErrorOr<NonnullRefPtr<OpenFileDescription>> VirtualFileSystem::create(Process co
     return description;
 }
 
-ErrorOr<void> VirtualFileSystem::mkdir(Credentials const& credentials, StringView path, mode_t mode, Custody& base)
+ErrorOr<void> VirtualFileSystem::mkdir(Credentials const& credentials, StringView path, mode_t mode, CustodyBase const& base)
 {
     // Unlike in basically every other case, where it's only the last
     // path component (the one being created) that is allowed not to
@@ -633,7 +633,8 @@ ErrorOr<void> VirtualFileSystem::mkdir(Credentials const& credentials, StringVie
     RefPtr<Custody> parent_custody;
     // FIXME: The errors returned by resolve_path_without_veil can leak information about paths that are not unveiled,
     //        e.g. when the error is EACCESS or similar.
-    auto result = resolve_path_without_veil(credentials, path, base, &parent_custody);
+    auto base_custody = TRY(base.resolve());
+    auto result = resolve_path_without_veil(credentials, path, base_custody, &parent_custody);
     if (!result.is_error())
         return EEXIST;
     else if (!parent_custody)
@@ -654,7 +655,7 @@ ErrorOr<void> VirtualFileSystem::mkdir(Credentials const& credentials, StringVie
     return {};
 }
 
-ErrorOr<void> VirtualFileSystem::access(Credentials const& credentials, StringView path, int mode, Custody& base, AccessFlags access_flags)
+ErrorOr<void> VirtualFileSystem::access(Credentials const& credentials, StringView path, int mode, CustodyBase const& base, AccessFlags access_flags)
 {
     auto should_follow_symlinks = !has_flag(access_flags, AccessFlags::DoNotFollowSymlinks);
     auto custody = TRY(resolve_path(credentials, path, base, nullptr, should_follow_symlinks ? 0 : O_NOFOLLOW_NOERROR));
@@ -679,7 +680,7 @@ ErrorOr<void> VirtualFileSystem::access(Credentials const& credentials, StringVi
     return {};
 }
 
-ErrorOr<NonnullRefPtr<Custody>> VirtualFileSystem::open_directory(Credentials const& credentials, StringView path, Custody& base)
+ErrorOr<NonnullRefPtr<Custody>> VirtualFileSystem::open_directory(Credentials const& credentials, StringView path, CustodyBase const& base)
 {
     auto custody = TRY(resolve_path(credentials, path, base));
     auto& inode = custody->inode();
@@ -704,13 +705,13 @@ ErrorOr<void> VirtualFileSystem::chmod(Credentials const& credentials, Custody& 
     return inode.chmod(mode);
 }
 
-ErrorOr<void> VirtualFileSystem::chmod(Credentials const& credentials, StringView path, mode_t mode, Custody& base, int options)
+ErrorOr<void> VirtualFileSystem::chmod(Credentials const& credentials, StringView path, mode_t mode, CustodyBase const& base, int options)
 {
     auto custody = TRY(resolve_path(credentials, path, base, nullptr, options));
     return chmod(credentials, custody, mode);
 }
 
-ErrorOr<void> VirtualFileSystem::rename(Credentials const& credentials, Custody& old_base, StringView old_path, Custody& new_base, StringView new_path)
+ErrorOr<void> VirtualFileSystem::rename(Credentials const& credentials, CustodyBase const& old_base, StringView old_path, CustodyBase const& new_base, StringView new_path)
 {
     RefPtr<Custody> old_parent_custody;
     auto old_custody = TRY(resolve_path(credentials, old_path, old_base, &old_parent_custody, O_NOFOLLOW_NOERROR));
@@ -844,7 +845,7 @@ ErrorOr<void> VirtualFileSystem::chown(Credentials const& credentials, Custody& 
     return inode.chown(new_uid, new_gid);
 }
 
-ErrorOr<void> VirtualFileSystem::chown(Credentials const& credentials, StringView path, UserID a_uid, GroupID a_gid, Custody& base, int options)
+ErrorOr<void> VirtualFileSystem::chown(Credentials const& credentials, StringView path, UserID a_uid, GroupID a_gid, CustodyBase const& base, int options)
 {
     auto custody = TRY(resolve_path(credentials, path, base, nullptr, options));
     return chown(credentials, custody, a_uid, a_gid);
@@ -867,7 +868,7 @@ static bool hard_link_allowed(Credentials const& credentials, Inode const& inode
     return false;
 }
 
-ErrorOr<void> VirtualFileSystem::link(Credentials const& credentials, StringView old_path, StringView new_path, Custody& base)
+ErrorOr<void> VirtualFileSystem::link(Credentials const& credentials, StringView old_path, StringView new_path, CustodyBase const& base)
 {
     // NOTE: To prevent unveil bypass by creating an hardlink after unveiling a path as read-only,
     // check that if write permission is allowed by the veil info on the old_path.
@@ -902,7 +903,7 @@ ErrorOr<void> VirtualFileSystem::link(Credentials const& credentials, StringView
     return parent_inode.add_child(old_inode, KLexicalPath::basename(new_path), old_inode.mode());
 }
 
-ErrorOr<void> VirtualFileSystem::unlink(Credentials const& credentials, StringView path, Custody& base)
+ErrorOr<void> VirtualFileSystem::unlink(Credentials const& credentials, StringView path, CustodyBase const& base)
 {
     RefPtr<Custody> parent_custody;
     auto custody = TRY(resolve_path(credentials, path, base, &parent_custody, O_WRONLY | O_NOFOLLOW_NOERROR | O_UNLINK_INTERNAL));
@@ -931,10 +932,11 @@ ErrorOr<void> VirtualFileSystem::unlink(Credentials const& credentials, StringVi
     return parent_inode.remove_child(KLexicalPath::basename(path));
 }
 
-ErrorOr<void> VirtualFileSystem::symlink(Credentials const& credentials, StringView target, StringView linkpath, Custody& base)
+ErrorOr<void> VirtualFileSystem::symlink(Credentials const& credentials, StringView target, StringView linkpath, CustodyBase const& base)
 {
+    auto base_custody = TRY(base.resolve());
     // NOTE: Check that the actual target (if it exists right now) is unveiled and prevent creating symlinks on veiled paths!
-    if (auto target_custody_or_error = resolve_path_without_veil(credentials, target, base, nullptr, O_RDWR, 0); !target_custody_or_error.is_error()) {
+    if (auto target_custody_or_error = resolve_path_without_veil(credentials, target, base_custody, nullptr, O_RDWR, 0); !target_custody_or_error.is_error()) {
         auto target_custody = target_custody_or_error.release_value();
         TRY(validate_path_against_process_veil(*target_custody, O_RDWR));
     }
@@ -971,7 +973,7 @@ ErrorOr<void> VirtualFileSystem::symlink(Credentials const& credentials, StringV
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/rmdir.html
-ErrorOr<void> VirtualFileSystem::rmdir(Credentials const& credentials, StringView path, Custody& base)
+ErrorOr<void> VirtualFileSystem::rmdir(Credentials const& credentials, StringView path, CustodyBase const& base)
 {
     RefPtr<Custody> parent_custody;
     auto custody = TRY(resolve_path(credentials, path, base, &parent_custody, O_CREAT));
@@ -1151,16 +1153,17 @@ ErrorOr<void> VirtualFileSystem::validate_path_against_process_veil(StringView p
     return validate_path_against_process_veil(Process::current(), path, options);
 }
 
-ErrorOr<NonnullRefPtr<Custody>> VirtualFileSystem::resolve_path(Credentials const& credentials, StringView path, NonnullRefPtr<Custody> base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level)
+ErrorOr<NonnullRefPtr<Custody>> VirtualFileSystem::resolve_path(Credentials const& credentials, StringView path, CustodyBase const& base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level)
 {
     return resolve_path(Process::current(), credentials, path, base, out_parent, options, symlink_recursion_level);
 }
 
-ErrorOr<NonnullRefPtr<Custody>> VirtualFileSystem::resolve_path(Process const& process, Credentials const& credentials, StringView path, NonnullRefPtr<Custody> base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level)
+ErrorOr<NonnullRefPtr<Custody>> VirtualFileSystem::resolve_path(Process const& process, Credentials const& credentials, StringView path, CustodyBase const& base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level)
 {
+    auto base_custody = TRY(base.resolve());
     // FIXME: The errors returned by resolve_path_without_veil can leak information about paths that are not unveiled,
     //        e.g. when the error is EACCESS or similar.
-    auto custody = TRY(resolve_path_without_veil(credentials, path, base, out_parent, options, symlink_recursion_level));
+    auto custody = TRY(resolve_path_without_veil(credentials, path, base_custody, out_parent, options, symlink_recursion_level));
     if (auto result = validate_path_against_process_veil(process, *custody, options); result.is_error()) {
         if (out_parent)
             out_parent->clear();

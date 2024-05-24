@@ -919,6 +919,8 @@ public:
         return m_fds.with_exclusive([](auto& fds) { return fds.allocate(); });
     }
 
+    ErrorOr<NonnullRefPtr<Custody>> custody_for_dirfd(Badge<CustodyBase>, int dirfd);
+
 private:
     ErrorOr<NonnullRefPtr<Custody>> custody_for_dirfd(int dirfd);
 

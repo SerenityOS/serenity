@@ -15,7 +15,9 @@ ErrorOr<FlatPtr> Process::sys$mkdir(int dirfd, Userspace<char const*> user_path,
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::cpath));
     auto path = TRY(get_syscall_path_argument(user_path, path_length));
-    TRY(VirtualFileSystem::the().mkdir(credentials(), path->view(), mode & ~umask(), TRY(custody_for_dirfd(dirfd))));
+
+    CustodyBase base(dirfd, path->view());
+    TRY(VirtualFileSystem::the().mkdir(credentials(), path->view(), mode & ~umask(), base));
     return 0;
 }
 }
