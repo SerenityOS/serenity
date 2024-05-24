@@ -81,8 +81,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return_value = TRY(AvailablePort::update_available_ports_list_file());
     }
 
-    if (Core::System::access(ports_database, R_OK).is_error()) {
-        warnln("pkg: {} isn't accessible, did you install a package in the past?", ports_database);
+    if (Core::System::access(default_ports_database_path, R_OK).is_error()) {
+        warnln("pkg: {} isn't accessible, did you install a package in the past?", default_ports_database_path);
         return 1;
     }
     HashMap<String, InstalledPort> installed_ports = TRY(InstalledPort::read_ports_database());

@@ -22,7 +22,7 @@ Optional<InstalledPort::Type> InstalledPort::type_from_string(StringView type)
 
 ErrorOr<HashMap<String, InstalledPort>> InstalledPort::read_ports_database()
 {
-    auto file = TRY(Core::File::open(ports_database, Core::File::OpenMode::Read));
+    auto file = TRY(Core::File::open(default_ports_database_path, Core::File::OpenMode::Read));
     auto buffered_file = TRY(Core::InputBufferedFile::create(move(file)));
     auto buffer = TRY(ByteBuffer::create_uninitialized(PAGE_SIZE));
 
