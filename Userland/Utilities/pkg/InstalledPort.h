@@ -14,7 +14,7 @@
 #include <AK/Variant.h>
 #include <LibSemVer/SemVer.h>
 
-constexpr StringView ports_database = "/usr/Ports/installed.db"sv;
+constexpr StringView default_ports_database_path = "/usr/Ports/installed.db"sv;
 
 class InstalledPort : public Port {
 public:
