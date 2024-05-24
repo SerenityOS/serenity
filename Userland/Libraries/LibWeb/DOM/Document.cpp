@@ -2103,8 +2103,9 @@ void Document::dispatch_events_for_animation_if_necessary(JS::NonnullGCPtr<Anima
         }
 
         if (current_phase == Animations::AnimationEffect::Phase::Idle && previous_phase != Animations::AnimationEffect::Phase::Idle && previous_phase != Animations::AnimationEffect::Phase::After) {
-            // FIXME: Use the active time "at the moment it was cancelled"
-            dispatch_event(HTML::EventNames::animationcancel, effect->active_time_using_fill(Bindings::FillMode::Both).value());
+            // FIXME: Calculate a non-zero time when the animation is cancelled by means other than calling cancel()
+            auto cancel_time = animation->release_saved_cancel_time().value_or(0.0);
+            dispatch_event(HTML::EventNames::animationcancel, cancel_time);
         }
     }
     effect->set_previous_phase(current_phase);

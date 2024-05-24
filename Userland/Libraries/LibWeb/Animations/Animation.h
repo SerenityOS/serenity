@@ -108,6 +108,8 @@ public:
 
     unsigned int global_animation_list_order() const { return m_global_animation_list_order; }
 
+    auto release_saved_cancel_time() { return move(m_saved_cancel_time); }
+
 protected:
     Animation(JS::Realm&);
 
@@ -194,6 +196,7 @@ private:
 
     Optional<double> m_saved_play_time;
     Optional<double> m_saved_pause_time;
+    Optional<double> m_saved_cancel_time;
 };
 
 }
