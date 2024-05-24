@@ -57,8 +57,15 @@ DownloadWidget::DownloadWidget(const URL::URL& url)
         m_output_file_stream = file_or_error.release_value();
     }
 
-    m_download->on_finish = [this](bool success, auto) { did_finish(success); };
-    m_download->stream_into(*m_output_file_stream);
+    auto on_data_received = [this](auto data) {
+        m_output_file_stream->write_until_depleted(data).release_value_but_fixme_should_propagate_errors();
+    };
+
+    auto on_finished = [this](bool success, auto) {
+        did_finish(success);
+    };
+
+    m_download->set_unbuffered_request_callbacks({}, move(on_data_received), move(on_finished));
 
     set_fill_with_background_color(true);
     set_layout<GUI::VerticalBoxLayout>(4);
