@@ -231,7 +231,8 @@ TEST_CASE(test_webp_incremental_animation)
     auto rgb_bitmap_2 = TRY_OR_FAIL(create_test_rgb_bitmap());
 
     // WebP frames can't be at odd coordinates. Make a pixel at an odd coordinate different to make sure we handle this.
-    rgb_bitmap_2->scanline(3)[3] = Color::Red;
+    // FIXME: Use Color::Red once WebPAnimationWriter::add_frame() no longer unconditionally passes true to is_alpha_used.
+    rgb_bitmap_2->scanline(3)[3] = Gfx::Color(Color::Transparent).value();
 
     // 20 kiB is enough for two 47x33 frames.
     auto stream_buffer = TRY_OR_FAIL(ByteBuffer::create_uninitialized(20 * 1024));
