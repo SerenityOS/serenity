@@ -11,6 +11,7 @@
 #include <Kernel/Memory/PhysicalAddress.h>
 #include <Kernel/Memory/VirtualAddress.h>
 #include <Kernel/Prekernel/Prekernel.h>
+#include <Kernel/Prekernel/Runtime.h>
 #include <LibELF/ELFABI.h>
 #include <LibELF/Relocation.h>
 
@@ -46,12 +47,6 @@ extern "C" void reload_cr3();
 
 extern "C" {
 multiboot_info_t* multiboot_info_ptr;
-}
-
-[[noreturn]] static void halt()
-{
-    asm volatile("hlt");
-    __builtin_unreachable();
 }
 
 void __stack_chk_fail()
