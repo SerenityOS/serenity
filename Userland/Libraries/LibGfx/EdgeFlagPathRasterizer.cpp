@@ -309,10 +309,12 @@ template<unsigned SamplesPerPixel>
 auto EdgeFlagPathRasterizer<SamplesPerPixel>::accumulate_even_odd_scanline(EdgeExtent edge_extent, auto init, auto sample_callback)
 {
     SampleType sample = init;
+    VERIFY(edge_extent.min_x >= 0);
+    VERIFY(edge_extent.max_x <= static_cast<int>(m_scanline.size()));
     for (int x = edge_extent.min_x; x <= edge_extent.max_x; x += 1) {
-        sample ^= m_scanline[x];
+        sample ^= m_scanline.data()[x];
         sample_callback(x, sample);
-        m_scanline[x] = 0;
+        m_scanline.data()[x] = 0;
     }
     return sample;
 }
