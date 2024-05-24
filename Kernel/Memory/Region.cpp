@@ -12,6 +12,7 @@
 #include <Kernel/Interrupts/InterruptDisabler.h>
 #include <Kernel/Library/Panic.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
+#include <Kernel/Memory/MMIOVMObject.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/Region.h>
 #include <Kernel/Memory/SharedInodeVMObject.h>
@@ -355,7 +356,11 @@ ErrorOr<void> Region::map(PageDirectory& page_directory, PhysicalAddress paddr, 
 void Region::remap()
 {
     VERIFY(m_page_directory);
-    auto result = map(*m_page_directory);
+    ErrorOr<void> result;
+    if (m_vmobject->is_mmio())
+        result = map(*m_page_directory, static_cast<MMIOVMObject const&>(*m_vmobject).base_address());
+    else
+        result = map(*m_page_directory);
     if (result.is_error())
         TODO();
 }

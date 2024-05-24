@@ -17,10 +17,15 @@ public:
 
     virtual ErrorOr<NonnullLockRefPtr<VMObject>> try_clone() override { return ENOTSUP; }
 
+    PhysicalAddress base_address() const { return m_base_address; }
+
 private:
     MMIOVMObject(PhysicalAddress, FixedArray<RefPtr<PhysicalRAMPage>>&&);
 
     virtual StringView class_name() const override { return "MMIOVMObject"sv; }
+    virtual bool is_mmio() const override { return true; }
+
+    PhysicalAddress m_base_address;
 };
 
 }
