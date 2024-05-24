@@ -423,9 +423,6 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
         Arch/x86_64/PCI/Initializer.cpp
         Arch/x86_64/PCI/MSI.cpp
 
-        Arch/x86_64/VGA/IOArbiter.cpp
-        Arch/x86_64/VGA/TextModeConsole.cpp
-
         Arch/x86_64/PowerState.cpp
         Arch/x86_64/RTC.cpp
         Arch/x86_64/Shutdown.cpp
