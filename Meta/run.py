@@ -64,7 +64,6 @@ class MachineType(Enum):
     Limine = "limine"
     Bochs = "b"
     MicroVM = "microvm"
-    ISAPC = "isapc"
 
     def uses_grub(self) -> bool:
         return self in [MachineType.QEMU35Grub, MachineType.QEMUGrub]
@@ -624,9 +623,9 @@ def set_up_boot_drive(config: Configuration):
     if provided_virtio_block_enable is not None:
         config.virtio_block_enable = provided_virtio_block_enable == "1"
 
-    if config.machine_type in [MachineType.MicroVM, MachineType.ISAPC]:
+    if config.machine_type in [MachineType.MicroVM]:
         if config.nvme_enable:
-            print("Warning: NVMe does not work under MicroVM/ISA PC, automatically disabling it.")
+            print("Warning: NVMe does not work under MicroVM, automatically disabling it.")
         config.nvme_enable = False
 
     if config.architecture == Arch.Aarch64:
@@ -772,20 +771,16 @@ def set_up_machine_devices(config: Configuration):
         )
         config.character_devices.append("stdio,id=stdout,mux=on")
         config.enable_usb = True
-    elif config.machine_type in [MachineType.MicroVM, MachineType.ISAPC]:
+    elif config.machine_type in [MachineType.MicroVM]:
         config.character_devices.append("stdio,id=stdout,mux=on")
         config.qemu_cpu = "qemu64"
+        config.qemu_machine = "microvm,pit=on,rtc=on,pic=on"
         config.cpu_count = None
         config.display_device = None
         config.network_default_device = None
         config.audio_devices = []
         config.add_devices(["isa-debugcon,chardev=stdout", "isa-vga", "ne2k_isa,netdev=breh"])
-
-        if config.machine_type == MachineType.MicroVM:
-            config.qemu_machine = "microvm,pit=on,rtc=on,pic=on"
-            config.add_devices(["isa-ide", "ide-hd,drive=disk", "i8042"])
-        else:  # ISAPC
-            config.qemu_machine = "isapc"
+        config.add_devices(["isa-ide", "ide-hd,drive=disk", "i8042"])
 
     elif config.machine_type == MachineType.CI:
         config.display_backend = "none"
