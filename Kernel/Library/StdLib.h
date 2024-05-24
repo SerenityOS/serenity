@@ -14,6 +14,7 @@
 #include <AK/Time.h>
 #include <AK/Userspace.h>
 #include <Kernel/Library/KString.h>
+#include <Kernel/Library/MiniStdLib.h>
 #include <Kernel/UnixTypes.h>
 #include <stddef.h>
 
@@ -55,23 +56,6 @@ ErrorOr<Duration> copy_time_from_user(Userspace<T*>);
 ErrorOr<void> copy_to_user(void*, void const*, size_t);
 ErrorOr<void> copy_from_user(void*, void const*, size_t);
 ErrorOr<void> memset_user(void*, int, size_t);
-
-extern "C" {
-
-void* memcpy(void*, void const*, size_t);
-[[nodiscard]] int strncmp(char const* s1, char const* s2, size_t n);
-[[nodiscard]] char* strstr(char const* haystack, char const* needle);
-[[nodiscard]] int strcmp(char const*, char const*);
-[[nodiscard]] size_t strlen(char const*);
-[[nodiscard]] size_t strnlen(char const*, size_t);
-void* memset(void*, int, size_t);
-[[nodiscard]] int memcmp(void const*, void const*, size_t);
-void* memmove(void* dest, void const* src, size_t n);
-void const* memmem(void const* haystack, size_t, void const* needle, size_t);
-
-[[nodiscard]] inline u16 ntohs(u16 w) { return (w & 0xff) << 8 | ((w >> 8) & 0xff); }
-[[nodiscard]] inline u16 htons(u16 w) { return (w & 0xff) << 8 | ((w >> 8) & 0xff); }
-}
 
 template<typename T>
 [[nodiscard]] inline ErrorOr<void> copy_from_user(T* dest, T const* src)
