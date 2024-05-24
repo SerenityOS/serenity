@@ -40,7 +40,7 @@ struct Oklab {
 
 class Color {
 public:
-    enum NamedColor {
+    enum class NamedColor {
         Transparent,
         Black,
         White,
@@ -65,6 +65,8 @@ public:
         MidMagenta,
         LightBlue,
     };
+
+    using enum NamedColor;
 
     constexpr Color() = default;
     constexpr Color(NamedColor);
