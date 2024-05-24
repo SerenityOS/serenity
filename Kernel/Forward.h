@@ -17,6 +17,7 @@ class BlockDevice;
 class CharacterDevice;
 class Coredump;
 class Credentials;
+class CustodyBase;
 class Custody;
 class Device;
 class DeviceControlDevice;

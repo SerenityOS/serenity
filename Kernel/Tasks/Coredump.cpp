@@ -109,7 +109,7 @@ ErrorOr<NonnullRefPtr<OpenFileDescription>> Coredump::try_create_target_file(Pro
         KLexicalPath::basename(output_path),
         O_CREAT | O_WRONLY | O_EXCL,
         S_IFREG, // We will enable reading from userspace when we finish generating the coredump file
-        *dump_directory,
+        dump_directory,
         UidAndGid { process_credentials->uid(), process_credentials->gid() }));
 }
 

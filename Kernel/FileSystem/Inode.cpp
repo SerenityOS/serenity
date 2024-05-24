@@ -52,7 +52,7 @@ void Inode::sync()
     }
 }
 
-ErrorOr<NonnullRefPtr<Custody>> Inode::resolve_as_link(Credentials const& credentials, Custody& base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level) const
+ErrorOr<NonnullRefPtr<Custody>> Inode::resolve_as_link(Credentials const& credentials, CustodyBase const& base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level) const
 {
     // The default implementation simply treats the stored
     // contents as a path and resolves that. That is, it
