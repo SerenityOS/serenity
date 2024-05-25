@@ -801,8 +801,11 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     if (auto mask = computed_style.property(CSS::PropertyID::Mask); mask->is_url())
         computed_values.set_mask(mask->as_url().url());
 
-    if (auto clip_path = computed_style.property(CSS::PropertyID::ClipPath); clip_path->is_url())
+    auto clip_path = computed_style.property(CSS::PropertyID::ClipPath);
+    if (clip_path->is_url())
         computed_values.set_clip_path(clip_path->as_url().url());
+    else if (clip_path->is_basic_shape())
+        computed_values.set_clip_path(clip_path->as_basic_shape());
 
     if (auto clip_rule = computed_style.clip_rule(); clip_rule.has_value())
         computed_values.set_clip_rule(*clip_rule);

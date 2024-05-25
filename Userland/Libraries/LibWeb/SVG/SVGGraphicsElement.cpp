@@ -83,7 +83,7 @@ JS::GCPtr<SVG::SVGMaskElement const> SVGGraphicsElement::mask() const
 JS::GCPtr<SVG::SVGClipPathElement const> SVGGraphicsElement::clip_path() const
 {
     auto const& clip_path_reference = layout_node()->computed_values().clip_path();
-    if (!clip_path_reference.has_value())
+    if (!clip_path_reference.has_value() || !clip_path_reference->is_url())
         return {};
     return try_resolve_url_to<SVG::SVGClipPathElement const>(clip_path_reference->url());
 }
