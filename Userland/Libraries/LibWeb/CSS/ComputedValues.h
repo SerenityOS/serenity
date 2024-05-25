@@ -21,6 +21,7 @@
 #include <LibWeb/CSS/Ratio.h>
 #include <LibWeb/CSS/Size.h>
 #include <LibWeb/CSS/StyleValues/AbstractImageStyleValue.h>
+#include <LibWeb/CSS/StyleValues/BasicShapeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PositionStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ShadowStyleValue.h>
 #include <LibWeb/CSS/Transformation.h>
@@ -234,18 +235,31 @@ private:
 };
 
 // https://drafts.fxtf.org/css-masking/#the-clip-path
+// TODO: Support clip sources.
 class ClipPathReference {
 public:
-    // TODO: Support clip sources.
     ClipPathReference(URL::URL const& url)
-        : m_url(url)
+        : m_clip_source(url)
     {
     }
 
-    URL::URL const& url() const { return m_url; }
+    ClipPathReference(BasicShapeStyleValue const& basic_shape)
+        : m_clip_source(basic_shape)
+    {
+    }
+
+    bool is_basic_shape() const { return m_clip_source.has<BasicShape>(); }
+
+    bool is_url() const { return m_clip_source.has<URL::URL>(); }
+
+    URL::URL const& url() const { return m_clip_source.get<URL::URL>(); }
+
+    BasicShapeStyleValue const& basic_shape() const { return *m_clip_source.get<BasicShape>(); }
 
 private:
-    URL::URL m_url;
+    using BasicShape = NonnullRefPtr<BasicShapeStyleValue const>;
+
+    Variant<URL::URL, BasicShape> m_clip_source;
 };
 
 struct BackgroundLayerData {
