@@ -6587,6 +6587,11 @@ Optional<Parser::PropertyAndValue> Parser::parse_css_value_for_properties(Readon
             return PropertyAndValue { *property, maybe_position };
     }
 
+    if (auto property = any_property_accepts_type(property_ids, ValueType::BasicShape); property.has_value()) {
+        if (auto maybe_basic_shape = parse_basic_shape_value(tokens))
+            return PropertyAndValue { *property, maybe_basic_shape };
+    }
+
     if (auto property = any_property_accepts_type(property_ids, ValueType::Ratio); property.has_value()) {
         if (auto maybe_ratio = parse_ratio_value(tokens))
             return PropertyAndValue { *property, maybe_ratio };
