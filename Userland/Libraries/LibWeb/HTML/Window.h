@@ -214,6 +214,9 @@ public:
     HighResolutionTime::DOMHighResTimeStamp get_last_activation_timestamp() const { return m_last_activation_timestamp; }
     void set_last_activation_timestamp(HighResolutionTime::DOMHighResTimeStamp timestamp) { m_last_activation_timestamp = timestamp; }
 
+    HighResolutionTime::DOMHighResTimeStamp get_last_history_action_activation_timestamp() const { return m_last_history_action_activation_timestamp; }
+    void set_last_history_action_activation_timestamp(HighResolutionTime::DOMHighResTimeStamp timestamp) { m_last_history_action_activation_timestamp = timestamp; }
+
     static void set_inspector_object_exposed(bool);
     static void set_internals_object_exposed(bool);
 
@@ -287,6 +290,9 @@ private:
 
     // https://html.spec.whatwg.org/multipage/interaction.html#user-activation-data-model
     HighResolutionTime::DOMHighResTimeStamp m_last_activation_timestamp { AK::Infinity<double> };
+
+    // https://html.spec.whatwg.org/multipage/interaction.html#last-history-action-activation-timestamp
+    HighResolutionTime::DOMHighResTimeStamp m_last_history_action_activation_timestamp { AK::Infinity<double> };
 
     // https://streams.spec.whatwg.org/#count-queuing-strategy-size-function
     JS::GCPtr<WebIDL::CallbackType> m_count_queuing_strategy_size_function;
