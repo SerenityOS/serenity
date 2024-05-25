@@ -14,6 +14,7 @@
 #include <LibWeb/HTML/NavigatorLanguage.h>
 #include <LibWeb/HTML/NavigatorOnLine.h>
 #include <LibWeb/HTML/PluginArray.h>
+#include <LibWeb/HTML/UserActivation.h>
 
 namespace Web::HTML {
 
@@ -47,6 +48,7 @@ public:
     [[nodiscard]] JS::NonnullGCPtr<MimeTypeArray> mime_types();
     [[nodiscard]] JS::NonnullGCPtr<PluginArray> plugins();
     [[nodiscard]] JS::NonnullGCPtr<Clipboard::Clipboard> clipboard();
+    [[nodiscard]] JS::NonnullGCPtr<UserActivation> user_activation();
 
     static WebIDL::Long max_touch_points();
 
@@ -65,6 +67,9 @@ private:
 
     // https://w3c.github.io/clipboard-apis/#dom-navigator-clipboard
     JS::GCPtr<Clipboard::Clipboard> m_clipboard;
+
+    // https://html.spec.whatwg.org/multipage/interaction.html#dom-navigator-useractivation
+    JS::GCPtr<UserActivation> m_user_activation;
 };
 
 }
