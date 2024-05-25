@@ -631,6 +631,13 @@ bool Window::has_transient_activation() const
     return false;
 }
 
+// https://html.spec.whatwg.org/multipage/interaction.html#history-action-activation
+bool Window::has_history_action_activation() const
+{
+    // When the last history-action activation timestamp of W is not equal to the last activation timestamp of W, then W is said to have history-action activation.
+    return m_last_history_action_activation_timestamp != m_last_activation_timestamp;
+}
+
 // https://w3c.github.io/requestidlecallback/#start-an-idle-period-algorithm
 void Window::start_an_idle_period()
 {

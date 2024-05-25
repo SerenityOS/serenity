@@ -122,6 +122,9 @@ public:
     // https://html.spec.whatwg.org/multipage/interaction.html#transient-activation
     bool has_transient_activation() const;
 
+    // https://html.spec.whatwg.org/multipage/interaction.html#history-action-activation
+    bool has_history_action_activation() const;
+
     WebIDL::ExceptionOr<void> initialize_web_interfaces(Badge<WindowEnvironmentSettingsObject>);
 
     Vector<JS::NonnullGCPtr<Plugin>> pdf_viewer_plugin_objects();
