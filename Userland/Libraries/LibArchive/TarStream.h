@@ -34,6 +34,7 @@ private:
 
 class TarInputStream {
 public:
+    static ErrorOr<void> handle_input(NonnullOwnPtr<Stream>, bool verbose, bool list, bool extract);
     static ErrorOr<NonnullOwnPtr<TarInputStream>> construct(NonnullOwnPtr<Stream>);
     ErrorOr<void> advance();
     bool finished() const { return m_found_end_of_archive || m_stream->is_eof(); }

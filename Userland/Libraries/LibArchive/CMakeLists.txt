@@ -5,4 +5,4 @@ set(SOURCES
         )
 
 serenity_lib(LibArchive archive)
-target_link_libraries(LibArchive PRIVATE LibCompress LibCore LibCrypto)
+target_link_libraries(LibArchive PRIVATE LibCompress LibFileSystem LibCore LibCrypto)
