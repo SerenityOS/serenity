@@ -62,6 +62,7 @@ void Navigator::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_mime_type_array);
     visitor.visit(m_plugin_array);
     visitor.visit(m_clipboard);
+    visitor.visit(m_user_activation);
 }
 
 JS::NonnullGCPtr<MimeTypeArray> Navigator::mime_types()
@@ -83,6 +84,13 @@ JS::NonnullGCPtr<Clipboard::Clipboard> Navigator::clipboard()
     if (!m_clipboard)
         m_clipboard = heap().allocate<Clipboard::Clipboard>(realm(), realm());
     return *m_clipboard;
+}
+
+JS::NonnullGCPtr<UserActivation> Navigator::user_activation()
+{
+    if (!m_user_activation)
+        m_user_activation = heap().allocate<UserActivation>(realm(), realm());
+    return *m_user_activation;
 }
 
 // https://w3c.github.io/pointerevents/#dom-navigator-maxtouchpoints

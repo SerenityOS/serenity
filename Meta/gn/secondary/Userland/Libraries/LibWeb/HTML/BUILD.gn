@@ -165,6 +165,7 @@ source_set("HTML") {
     "ToggleEvent.cpp",
     "TrackEvent.cpp",
     "TraversableNavigable.cpp",
+    "UserActivation.cpp",
     "VideoTrack.cpp",
     "VideoTrackList.cpp",
     "WebViewHints.cpp",

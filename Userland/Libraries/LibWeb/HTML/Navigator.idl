@@ -6,6 +6,7 @@
 #import <HTML/NavigatorOnLine.idl>
 #import <HTML/NavigatorConcurrentHardware.idl>
 #import <HTML/PluginArray.idl>
+#import <HTML/UserActivation.idl>
 
 // https://html.spec.whatwg.org/multipage/system-state.html#navigator
 [Exposed=Window]
@@ -17,6 +18,9 @@ interface Navigator {
 
     // https://w3c.github.io/pointerevents/#extensions-to-the-navigator-interface
     readonly attribute long maxTouchPoints;
+
+    // https://html.spec.whatwg.org/multipage/interaction.html#useractivation
+    [SameObject] readonly attribute UserActivation userActivation;
 };
 
 // NOTE: As NavigatorContentUtils, NavigatorCookies, NavigatorPlugins, and NavigatorAutomationInformation

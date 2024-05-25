@@ -466,6 +466,7 @@ class ToggleEvent;
 class TrackEvent;
 struct TransferDataHolder;
 class TraversableNavigable;
+class UserActivation;
 class VideoTrack;
 class VideoTrackList;
 class Window;
