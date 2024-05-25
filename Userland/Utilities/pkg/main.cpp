@@ -5,6 +5,7 @@
  */
 
 #include "AvailablePort.h"
+#include "AvailablePortDatabase.h"
 #include "InstalledPort.h"
 #include "InstalledPortDatabase.h"
 #include <LibCore/ArgsParser.h>
@@ -79,7 +80,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             outln("pkg: Requires root to update packages database.");
             return 1;
         }
-        return_value = TRY(AvailablePort::update_available_ports_list_file());
+        return_value = TRY(AvailablePortDatabase::download_available_ports_list_file(AvailablePortDatabase::default_path));
     }
 
     if (Core::System::access(InstalledPortDatabase::default_path, R_OK).is_error()) {
@@ -89,17 +90,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto installed_ports_database = TRY(InstalledPortDatabase::instantiate_ports_database(InstalledPortDatabase::default_path));
 
-    if (Core::System::access("/usr/Ports/AvailablePorts.md"sv, R_OK).is_error()) {
+    if (Core::System::access(AvailablePortDatabase::default_path, R_OK).is_error()) {
         outln("pkg: Please run this program with -u first!");
         return 0;
     }
-    HashMap<String, AvailablePort> available_ports = TRY(AvailablePort::read_available_ports_list());
+    auto available_ports_database = TRY(AvailablePortDatabase::instantiate_ports_database(AvailablePortDatabase::default_path));
 
     if (show_all_installed_ports) {
         outln("Manually-installed ports:");
-        TRY(installed_ports_database->for_each_by_type(InstalledPort::Type::Manual, [available_ports](InstalledPort const& port) -> ErrorOr<void> {
-            auto available_port = available_ports.find(port.name());
-            if (available_port != available_ports.end()) {
+        auto& database = *available_ports_database;
+        TRY(installed_ports_database->for_each_by_type(InstalledPort::Type::Manual, [database](InstalledPort const& port) -> ErrorOr<void> {
+            auto available_port = database.map().find(port.name());
+            if (available_port != database.map().end()) {
                 print_port_details(port, available_port->value);
             } else {
                 print_port_details(port, {});
@@ -113,7 +115,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             outln("pkg: Queried package name is empty.");
             return 0;
         }
-        AvailablePort::query_details_for_package(available_ports, installed_ports_database->map(), query_package, verbose);
+        available_ports_database->query_details_for_package(installed_ports_database->map(), query_package, verbose);
     }
 
     return return_value;

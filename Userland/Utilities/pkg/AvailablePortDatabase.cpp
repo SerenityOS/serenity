@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2023-2024, Liav A. <liavalb@hotmail.co.il>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -19,7 +19,7 @@
 #include <LibProtocol/Request.h>
 #include <LibProtocol/RequestClient.h>
 
-#include "AvailablePort.h"
+#include "AvailablePortDatabase.h"
 #include "MarkdownTableFinder.h"
 
 #include <Shell/AST.h>
@@ -28,10 +28,10 @@
 #include <Shell/PosixParser.h>
 #include <Shell/Shell.h>
 
-void AvailablePort::query_details_for_package(HashMap<String, AvailablePort>& available_ports, HashMap<String, InstalledPort> const& installed_ports, StringView package_name, bool verbose)
+void AvailablePortDatabase::query_details_for_package(HashMap<String, InstalledPort> const& installed_ports_map, StringView package_name, bool verbose)
 {
-    auto possible_available_port = available_ports.find(package_name);
-    if (possible_available_port == available_ports.end()) {
+    auto possible_available_port = m_available_ports.find(package_name);
+    if (possible_available_port == m_available_ports.end()) {
         outln("pkg: No match for queried name \"{}\"", package_name);
         return;
     }
@@ -41,8 +41,8 @@ void AvailablePort::query_details_for_package(HashMap<String, AvailablePort>& av
     outln("{}: {}, {}", available_port.name(), available_port.version_string(), available_port.website());
     if (verbose) {
         out("Installed: ");
-        auto installed_port = installed_ports.find(package_name);
-        if (installed_port != installed_ports.end()) {
+        auto installed_port = installed_ports_map.find(package_name);
+        if (installed_port != installed_ports_map.end()) {
             outln("Yes");
 
             out("Update Status: ");
@@ -84,14 +84,10 @@ static Optional<Markdown::Table::Column const&> get_column_in_table(Markdown::Ta
     return {};
 }
 
-ErrorOr<int> AvailablePort::update_available_ports_list_file()
+ErrorOr<int> AvailablePortDatabase::download_available_ports_list_file(StringView path)
 {
-    if (auto error_or_void = Core::System::mkdir("/usr/Ports/"sv, 0655); error_or_void.is_error()) {
-        if (error_or_void.error().code() != EEXIST)
-            return error_or_void.release_error();
-    }
-    if (!Core::System::access("/usr/Ports/AvailablePorts.md"sv, R_OK).is_error() && FileSystem::remove("/usr/Ports/AvailablePorts.md"sv, FileSystem::RecursionMode::Disallowed).is_error()) {
-        outln("pkg: /usr/Ports/AvailablePorts.md exists, but can't delete it before updating it!");
+    if (!Core::System::access(path, R_OK).is_error() && FileSystem::remove(path, FileSystem::RecursionMode::Disallowed).is_error()) {
+        outln("pkg: {} exists, but can't delete it before updating it!", path);
         return 0;
     }
     RefPtr<Protocol::Request> request;
@@ -99,7 +95,7 @@ ErrorOr<int> AvailablePort::update_available_ports_list_file()
     HTTP::HeaderMap request_headers;
     Core::ProxyData proxy_data {};
 
-    auto output_stream = TRY(Core::File::open("/usr/Ports/AvailablePorts.md"sv, Core::File::OpenMode::ReadWrite, 0644));
+    auto output_stream = TRY(Core::File::open(path, Core::File::OpenMode::ReadWrite, 0644));
     Core::EventLoop loop;
 
     URL::URL url("https://raw.githubusercontent.com/SerenityOS/serenity/master/Ports/AvailablePorts.md");
@@ -145,19 +141,19 @@ static ErrorOr<String> extract_port_name_from_column(Markdown::Table::Column con
     return string_builder.to_string();
 }
 
-ErrorOr<HashMap<String, AvailablePort>> AvailablePort::read_available_ports_list()
+ErrorOr<NonnullOwnPtr<AvailablePortDatabase>> AvailablePortDatabase::instantiate_ports_database(StringView path)
 {
-    if (Core::System::access("/usr/Ports/AvailablePorts.md"sv, R_OK).is_error()) {
-        warnln("pkg: /usr/Ports/AvailablePorts.md doesn't exist, did you run pkg -u first?");
+    if (Core::System::access(path, R_OK).is_error()) {
+        warnln("pkg: {} doesn't exist, did you run pkg -u first?", path);
         return Error::from_errno(ENOENT);
     }
-    auto available_ports_file = TRY(Core::File::open("/usr/Ports/AvailablePorts.md"sv, Core::File::OpenMode::Read, 0600));
+    auto available_ports_file = TRY(Core::File::open(path, Core::File::OpenMode::Read, 0600));
     auto content_buffer = TRY(available_ports_file->read_until_eof());
     auto content = StringView(content_buffer);
     auto document = Markdown::Document::parse(content);
     auto finder = MarkdownTableFinder::analyze(*document);
     if (finder.table_count() != 1)
-        return Error::from_string_literal("Invalid tables count in /usr/Ports/AvailablePorts.md");
+        return Error::from_string_literal("Invalid tables count in AvailablePorts.md");
 
     VERIFY(finder.tables()[0]);
     auto possible_port_name_column = get_column_in_table(*finder.tables()[0], "Port"sv);
@@ -165,11 +161,11 @@ ErrorOr<HashMap<String, AvailablePort>> AvailablePort::read_available_ports_list
     auto possible_port_website_column = get_column_in_table(*finder.tables()[0], "Website"sv);
 
     if (!possible_port_name_column.has_value())
-        return Error::from_string_literal("pkg: Port column not found /usr/Ports/AvailablePorts.md");
+        return Error::from_string_literal("pkg: Port column not found AvailablePorts.md");
     if (!possible_port_version_column.has_value())
-        return Error::from_string_literal("pkg: Version column not found /usr/Ports/AvailablePorts.md");
+        return Error::from_string_literal("pkg: Version column not found AvailablePorts.md");
     if (!possible_port_website_column.has_value())
-        return Error::from_string_literal("pkg: Website column not found /usr/Ports/AvailablePorts.md");
+        return Error::from_string_literal("pkg: Website column not found AvailablePorts.md");
 
     auto const& port_name_column = possible_port_name_column.release_value();
     auto const& port_version_column = possible_port_version_column.release_value();
@@ -191,5 +187,6 @@ ErrorOr<HashMap<String, AvailablePort>> AvailablePort::read_available_ports_list
 
         TRY(available_ports.try_set(name, AvailablePort { name, version, website }));
     }
-    return available_ports;
+
+    return adopt_nonnull_own_or_enomem(new (nothrow) AvailablePortDatabase(move(available_ports), TRY(String::from_utf8(path))));
 }
