@@ -176,6 +176,12 @@ ErrorOr<void> TarInputStream::handle_input(NonnullOwnPtr<Stream> input_stream, b
                 TRY(Core::System::symlink(header.link_name(), absolute_path));
                 break;
             }
+            case TarFileType::HardLink: {
+                MUST(Core::Directory::create(parent_path, Core::Directory::CreateDirectories::Yes));
+
+                TRY(Core::System::link(header.link_name(), absolute_path));
+                break;
+            }
             case TarFileType::Directory: {
                 MUST(Core::Directory::create(parent_path, Core::Directory::CreateDirectories::Yes));
 
