@@ -869,4 +869,41 @@ void PaintableBox::set_needs_display() const
         navigable->set_needs_display(absolute_rect());
 }
 
+Optional<CSSPixelRect> PaintableBox::get_masking_area() const
+{
+    // FIXME: Support clip-paths with transforms.
+    if (!combined_css_transform().is_identity_or_translation())
+        return {};
+    auto clip_path = computed_values().clip_path();
+    // FIXME: Support other clip sources.
+    if (!clip_path.has_value() || !clip_path->is_basic_shape())
+        return {};
+    // FIXME: Support other geometry boxes. See: https://drafts.fxtf.org/css-masking/#typedef-geometry-box
+    return absolute_border_box_rect();
+}
+
+Optional<Gfx::Bitmap::MaskKind> PaintableBox::get_mask_type() const
+{
+    // Always an alpha mask as only basic shapes are supported right now.
+    return Gfx::Bitmap::MaskKind::Alpha;
+}
+
+RefPtr<Gfx::Bitmap> PaintableBox::calculate_mask(PaintContext& context, CSSPixelRect const& masking_area) const
+{
+    VERIFY(computed_values().clip_path()->is_basic_shape());
+    auto const& basic_shape = computed_values().clip_path()->basic_shape();
+    auto path = basic_shape.to_path(masking_area, layout_node());
+    auto device_pixel_scale = context.device_pixels_per_css_pixel();
+    path = path.copy_transformed(Gfx::AffineTransform {}.set_scale(device_pixel_scale, device_pixel_scale));
+    auto mask_rect = context.enclosing_device_rect(masking_area);
+    auto maybe_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, mask_rect.size().to_type<int>());
+    if (maybe_bitmap.is_error())
+        return {};
+    auto bitmap = maybe_bitmap.release_value();
+    Gfx::Painter painter(*bitmap);
+    Gfx::AntiAliasingPainter aa_painter(painter);
+    aa_painter.fill_path(path, Color::Black);
+    return bitmap;
+}
+
 }
