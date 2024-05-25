@@ -8,6 +8,7 @@ serenity_component(
 set(SOURCES
     AvailablePort.cpp
     InstalledPort.cpp
+    InstalledPortDatabase.cpp
     main.cpp
 )
 

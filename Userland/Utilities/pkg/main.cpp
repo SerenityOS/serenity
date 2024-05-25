@@ -6,6 +6,7 @@
 
 #include "AvailablePort.h"
 #include "InstalledPort.h"
+#include "InstalledPortDatabase.h"
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
@@ -81,11 +82,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return_value = TRY(AvailablePort::update_available_ports_list_file());
     }
 
-    if (Core::System::access(default_ports_database_path, R_OK).is_error()) {
-        warnln("pkg: {} isn't accessible, did you install a package in the past?", default_ports_database_path);
+    if (Core::System::access(InstalledPortDatabase::default_path, R_OK).is_error()) {
+        warnln("pkg: {} isn't accessible, did you install a package in the past?", InstalledPortDatabase::default_path);
         return 1;
     }
-    HashMap<String, InstalledPort> installed_ports = TRY(InstalledPort::read_ports_database());
+
+    auto installed_ports_database = TRY(InstalledPortDatabase::instantiate_ports_database(InstalledPortDatabase::default_path));
 
     if (Core::System::access("/usr/Ports/AvailablePorts.md"sv, R_OK).is_error()) {
         outln("pkg: Please run this program with -u first!");
@@ -95,7 +97,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (show_all_installed_ports) {
         outln("Manually-installed ports:");
-        TRY(InstalledPort::for_each_by_type(installed_ports, InstalledPort::Type::Manual, [available_ports](InstalledPort const& port) -> ErrorOr<void> {
+        TRY(installed_ports_database->for_each_by_type(InstalledPort::Type::Manual, [available_ports](InstalledPort const& port) -> ErrorOr<void> {
             auto available_port = available_ports.find(port.name());
             if (available_port != available_ports.end()) {
                 print_port_details(port, available_port->value);
@@ -111,7 +113,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             outln("pkg: Queried package name is empty.");
             return 0;
         }
-        AvailablePort::query_details_for_package(available_ports, installed_ports, query_package, verbose);
+        AvailablePort::query_details_for_package(available_ports, installed_ports_database->map(), query_package, verbose);
     }
 
     return return_value;
