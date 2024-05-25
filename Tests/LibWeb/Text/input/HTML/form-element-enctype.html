@@ -5,14 +5,17 @@
         const form = document.getElementById('testForm');
 
         println(`enctype  | ${form.enctype}`);
+        println(`encoding | ${form.encoding}`);
         println('');
 
         form.enctype = 'text/plain';
 
         println(`enctype  | ${form.enctype}`);
+        println(`encoding | ${form.encoding}`);
         println('');
 
         form.enctype = 'invalid-value';
         println(`enctype  | ${form.enctype}`);
+        println(`encoding | ${form.encoding}`);
     });
 </script>

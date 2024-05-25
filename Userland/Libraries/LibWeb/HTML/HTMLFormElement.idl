@@ -19,7 +19,7 @@ interface HTMLFormElement : HTMLElement {
     [CEReactions] attribute USVString action;
     [FIXME, CEReactions] attribute DOMString autocomplete;
     [CEReactions, Enumerated=EnctypeAttribute, Reflect] attribute DOMString enctype;
-    [FIXME, CEReactions] attribute DOMString encoding;
+    [CEReactions, Enumerated=EnctypeAttribute, Reflect=enctype] attribute DOMString encoding;
     [CEReactions] attribute DOMString method;
     [CEReactions, Reflect] attribute DOMString name;
     [CEReactions, Reflect=novalidate] attribute boolean noValidate;
