@@ -1,0 +1,18 @@
+<form id="testForm"></form>
+<script src="../include.js"></script>
+<script>
+    test(() => {
+        const form = document.getElementById('testForm');
+
+        println(`enctype  | ${form.enctype}`);
+        println('');
+
+        form.enctype = 'text/plain';
+
+        println(`enctype  | ${form.enctype}`);
+        println('');
+
+        form.enctype = 'invalid-value';
+        println(`enctype  | ${form.enctype}`);
+    });
+</script>
