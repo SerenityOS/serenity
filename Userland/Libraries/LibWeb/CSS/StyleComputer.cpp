@@ -870,7 +870,7 @@ static RefPtr<StyleValue const> interpolate_transform(DOM::Element& element, Sty
                 values.append(AngleOrCalculated { value->as_angle().angle() });
                 break;
             case StyleValue::Type::Calculated:
-                values.append(AngleOrCalculated { value->as_calculated() });
+                values.append(LengthPercentage { value->as_calculated() });
                 break;
             case StyleValue::Type::Length:
                 values.append(LengthPercentage { value->as_length().length() });
