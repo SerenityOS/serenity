@@ -28,6 +28,7 @@ class AudioBuffer final : public Bindings::PlatformObject {
     JS_DECLARE_ALLOCATOR(AudioBuffer);
 
 public:
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<AudioBuffer>> create(JS::Realm&, WebIDL::UnsignedLong number_of_channels, WebIDL::UnsignedLong length, float sample_rate);
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<AudioBuffer>> construct_impl(JS::Realm&, AudioBufferOptions const&);
 
     virtual ~AudioBuffer() override;
