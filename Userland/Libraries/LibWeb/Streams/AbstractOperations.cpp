@@ -3221,6 +3221,49 @@ WebIDL::ExceptionOr<void> readable_byte_stream_controller_enqueue(ReadableByteSt
     return {};
 }
 
+// https://streams.spec.whatwg.org/#readablestream-pull-from-bytes
+WebIDL::ExceptionOr<void> readable_stream_pull_from_bytes(ReadableStream& stream, ByteBuffer bytes)
+{
+    // 1. Assert: stream.[[controller]] implements ReadableByteStreamController.
+    auto controller = stream.controller()->get<JS::NonnullGCPtr<ReadableByteStreamController>>();
+
+    // 2. Let available be bytes’s length.
+    auto available = bytes.size();
+
+    // 3. Let desiredSize be available.
+    auto desired_size = available;
+
+    // FIXME: 4. If stream’s current BYOB request view is non-null, then set desiredSize to stream’s current BYOB request
+    //           view's byte length.
+
+    // 5. Let pullSize be the smaller value of available and desiredSize.
+    auto pull_size = min(available, desired_size);
+
+    // 6. Let pulled be the first pullSize bytes of bytes.
+    auto pulled = pull_size == available ? move(bytes) : MUST(bytes.slice(0, pull_size));
+
+    // 7. Remove the first pullSize bytes from bytes.
+    if (pull_size != available)
+        bytes = MUST(bytes.slice(pull_size, available - pull_size));
+
+    // FIXME: 8. If stream’s current BYOB request view is non-null, then:
+    //           1. Write pulled into stream’s current BYOB request view.
+    //           2. Perform ? ReadableByteStreamControllerRespond(stream.[[controller]], pullSize).
+    // 9. Otherwise,
+    {
+        auto& realm = HTML::relevant_realm(stream);
+
+        // 1. Set view to the result of creating a Uint8Array from pulled in stream’s relevant Realm.
+        auto array_buffer = JS::ArrayBuffer::create(realm, move(pulled));
+        auto view = JS::Uint8Array::create(realm, array_buffer->byte_length(), *array_buffer);
+
+        // 2. Perform ? ReadableByteStreamControllerEnqueue(stream.[[controller]], view).
+        TRY(readable_byte_stream_controller_enqueue(controller, view));
+    }
+
+    return {};
+}
+
 // https://streams.spec.whatwg.org/#transfer-array-buffer
 WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::ArrayBuffer>> transfer_array_buffer(JS::Realm& realm, JS::ArrayBuffer& buffer)
 {
