@@ -286,7 +286,7 @@ private:
     CrossOriginPropertyDescriptorMap m_cross_origin_property_descriptor_map;
 
     // https://html.spec.whatwg.org/multipage/interaction.html#user-activation-data-model
-    HighResolutionTime::DOMHighResTimeStamp m_last_activation_timestamp { NumericLimits<double>::max() };
+    HighResolutionTime::DOMHighResTimeStamp m_last_activation_timestamp { AK::Infinity<double> };
 
     // https://streams.spec.whatwg.org/#count-queuing-strategy-size-function
     JS::GCPtr<WebIDL::CallbackType> m_count_queuing_strategy_size_function;
