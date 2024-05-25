@@ -594,6 +594,21 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Storage>> Window::session_storage()
     return JS::NonnullGCPtr { *storage };
 }
 
+// https://html.spec.whatwg.org/multipage/interaction.html#sticky-activation
+bool Window::has_sticky_activation() const
+{
+    // When the current high resolution time given W
+    auto current_time = HighResolutionTime::current_high_resolution_time(*this);
+
+    // is greater than or equal to the last activation timestamp in W
+    if (current_time >= m_last_activation_timestamp) {
+        // W is said to have sticky activation.
+        return true;
+    }
+
+    return false;
+}
+
 // https://html.spec.whatwg.org/multipage/interaction.html#transient-activation
 bool Window::has_transient_activation() const
 {

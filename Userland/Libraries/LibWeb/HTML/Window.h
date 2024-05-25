@@ -116,6 +116,9 @@ public:
 
     AnimationFrameCallbackDriver& animation_frame_callback_driver() { return m_animation_frame_callback_driver; }
 
+    // https://html.spec.whatwg.org/multipage/interaction.html#sticky-activation
+    bool has_sticky_activation() const;
+
     // https://html.spec.whatwg.org/multipage/interaction.html#transient-activation
     bool has_transient_activation() const;
 
