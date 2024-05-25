@@ -22,7 +22,7 @@ bool is_animatable_property(JsonObject& properties, StringView property_name);
 static bool type_name_is_enum(StringView type_name)
 {
     return !AK::first_is_one_of(type_name,
-        "angle"sv, "background-position"sv, "color"sv, "custom-ident"sv, "easing-function"sv, "flex"sv, "frequency"sv, "image"sv,
+        "angle"sv, "background-position"sv, "basic-shape"sv, "color"sv, "custom-ident"sv, "easing-function"sv, "flex"sv, "frequency"sv, "image"sv,
         "integer"sv, "length"sv, "number"sv, "paint"sv, "percentage"sv, "position"sv, "ratio"sv, "rect"sv,
         "resolution"sv, "string"sv, "time"sv, "url"sv);
 }
@@ -180,6 +180,7 @@ NonnullRefPtr<StyleValue> property_initial_value(JS::Realm&, PropertyID);
 enum class ValueType {
     Angle,
     BackgroundPosition,
+    BasicShape,
     Color,
     CustomIdent,
     EasingFunction,
@@ -699,6 +700,8 @@ bool property_accepts_type(PropertyID property_id, ValueType value_type)
                     property_generator.appendln("        case ValueType::Angle:");
                 } else if (type_name == "background-position") {
                     property_generator.appendln("        case ValueType::BackgroundPosition:");
+                } else if (type_name == "basic-shape") {
+                    property_generator.appendln("        case ValueType::BasicShape:");
                 } else if (type_name == "color") {
                     property_generator.appendln("        case ValueType::Color:");
                 } else if (type_name == "custom-ident") {
