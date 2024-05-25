@@ -1552,7 +1552,7 @@ ParseResult<CodeSection> CodeSection::parse(Stream& stream)
 ParseResult<DataSection::Data> DataSection::Data::parse(Stream& stream)
 {
     ScopeLogger<WASM_BINPARSER_DEBUG> logger("Data"sv);
-    auto tag_or_error = stream.read_value<u8>();
+    auto tag_or_error = stream.read_value<LEB128<size_t>>();
     if (tag_or_error.is_error())
         return with_eof_check(stream, ParseError::ExpectedKindTag);
 
