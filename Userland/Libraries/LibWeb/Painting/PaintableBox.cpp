@@ -679,8 +679,6 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
         context.recording_painter().save();
         // FIXME: Handle overflow-x and overflow-y being different values.
         context.recording_painter().add_clip_rect(context.rounded_device_rect(clip_box).to_type<int>());
-        auto scroll_offset = context.rounded_device_point(this->scroll_offset());
-        context.recording_painter().translate(-scroll_offset.to_type<int>());
 
         auto border_radii = normalized_border_radii_data(ShrinkRadiiForBorders::Yes);
         CornerRadii corner_radii {
@@ -693,6 +691,9 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
             corner_clip_id = context.allocate_corner_clipper_id();
             context.recording_painter().sample_under_corners(*corner_clip_id, corner_radii, context.rounded_device_rect(clip_box).to_type<int>(), CornerClip::Outside);
         }
+
+        auto scroll_offset = context.rounded_device_point(this->scroll_offset());
+        context.recording_painter().translate(-scroll_offset.to_type<int>());
     }
 
     // Text shadows
