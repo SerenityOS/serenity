@@ -186,6 +186,22 @@ void ReadableStream::close()
         });
 }
 
+// https://streams.spec.whatwg.org/#readablestream-error
+void ReadableStream::error(JS::Value error)
+{
+    controller()->visit(
+        // 1. If stream.[[controller]] implements ReadableByteStreamController, then perform
+        //    ! ReadableByteStreamControllerError(stream.[[controller]], e).
+        [&](JS::NonnullGCPtr<ReadableByteStreamController> controller) {
+            readable_byte_stream_controller_error(controller, error);
+        },
+
+        // 2. Otherwise, perform ! ReadableStreamDefaultControllerError(stream.[[controller]], e).
+        [&](JS::NonnullGCPtr<ReadableStreamDefaultController> controller) {
+            readable_stream_default_controller_error(controller, error);
+        });
+}
+
 void ReadableStream::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);

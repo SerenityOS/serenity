@@ -80,6 +80,7 @@ public:
     WebIDL::ExceptionOr<ReadableStreamPair> tee();
 
     void close();
+    void error(JS::Value);
 
     Optional<ReadableStreamController>& controller() { return m_controller; }
     void set_controller(Optional<ReadableStreamController> value) { m_controller = move(value); }
