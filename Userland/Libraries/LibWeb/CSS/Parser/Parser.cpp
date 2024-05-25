@@ -40,6 +40,7 @@
 #include <LibWeb/CSS/StyleValues/AngleStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BackgroundRepeatStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BackgroundSizeStyleValue.h>
+#include <LibWeb/CSS/StyleValues/BasicShapeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BorderRadiusStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ColorStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ContentStyleValue.h>
@@ -1202,6 +1203,55 @@ RefPtr<StyleValue> Parser::parse_url_value(TokenStream<ComponentValue>& tokens)
         return nullptr;
     (void)tokens.next_token();
     return URLStyleValue::create(*url);
+}
+
+RefPtr<StyleValue> Parser::parse_basic_shape_function(ComponentValue const& component_value)
+{
+    if (!component_value.is_function())
+        return nullptr;
+
+    auto function_name = component_value.function().name().bytes_as_string_view();
+
+    // FIXME: Implement other shapes. See: https://www.w3.org/TR/css-shapes-1/#basic-shape-functions
+    if (!function_name.equals_ignoring_ascii_case("polygon"sv))
+        return nullptr;
+
+    // polygon() = polygon( <'fill-rule'>? , [<length-percentage> <length-percentage>]# )
+    // FIXME: Parse the fill-rule.
+    auto arguments_tokens = TokenStream { component_value.function().values() };
+    auto arguments = parse_a_comma_separated_list_of_component_values(arguments_tokens);
+
+    Vector<Polygon::Point> points;
+    for (auto& argument : arguments) {
+        TokenStream argument_tokens { argument };
+
+        argument_tokens.skip_whitespace();
+        auto x_pos = parse_length_percentage(argument_tokens);
+        if (!x_pos.has_value())
+            return nullptr;
+
+        argument_tokens.skip_whitespace();
+        auto y_pos = parse_length_percentage(argument_tokens);
+        if (!y_pos.has_value())
+            return nullptr;
+
+        argument_tokens.skip_whitespace();
+        if (argument_tokens.has_next_token())
+            return nullptr;
+
+        points.append(Polygon::Point { *x_pos, *y_pos });
+    }
+
+    return BasicShapeStyleValue::create(Polygon { FillRule::Nonzero, move(points) });
+}
+
+RefPtr<StyleValue> Parser::parse_basic_shape_value(TokenStream<ComponentValue>& tokens)
+{
+    auto basic_shape = parse_basic_shape_function(tokens.peek_token());
+    if (!basic_shape)
+        return nullptr;
+    (void)tokens.next_token();
+    return basic_shape;
 }
 
 CSSRule* Parser::convert_to_rule(NonnullRefPtr<Rule> rule)
