@@ -18,6 +18,11 @@ namespace Web::WebAudio {
 
 JS_DEFINE_ALLOCATOR(AudioBuffer);
 
+WebIDL::ExceptionOr<JS::NonnullGCPtr<AudioBuffer>> AudioBuffer::create(JS::Realm& realm, WebIDL::UnsignedLong number_of_channels, WebIDL::UnsignedLong length, float sample_rate)
+{
+    return construct_impl(realm, { number_of_channels, length, sample_rate });
+}
+
 WebIDL::ExceptionOr<JS::NonnullGCPtr<AudioBuffer>> AudioBuffer::construct_impl(JS::Realm& realm, AudioBufferOptions const& options)
 {
     auto& vm = realm.vm();
