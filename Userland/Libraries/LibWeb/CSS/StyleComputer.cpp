@@ -43,6 +43,7 @@
 #include <LibWeb/CSS/StyleValues/DisplayStyleValue.h>
 #include <LibWeb/CSS/StyleValues/EasingStyleValue.h>
 #include <LibWeb/CSS/StyleValues/FilterValueListStyleValue.h>
+#include <LibWeb/CSS/StyleValues/FrequencyStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackPlacementStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackSizeListStyleValue.h>
 #include <LibWeb/CSS/StyleValues/IdentifierStyleValue.h>
@@ -1234,8 +1235,80 @@ static NonnullRefPtr<StyleValue const> interpolate_box_shadow(DOM::Element& elem
 
 static NonnullRefPtr<StyleValue const> interpolate_value(DOM::Element& element, StyleValue const& from, StyleValue const& to, float delta)
 {
-    if (from.type() != to.type())
+    if (from.type() != to.type()) {
+        // Handle mixed percentage and dimension types
+        // https://www.w3.org/TR/css-values-4/#mixed-percentages
+
+        struct NumericBaseTypeAndDefault {
+            CSSNumericType::BaseType base_type;
+            ValueComparingNonnullRefPtr<CSS::StyleValue> default_value;
+        };
+        static constexpr auto numeric_base_type_and_default = [](StyleValue const& value) -> Optional<NumericBaseTypeAndDefault> {
+            switch (value.type()) {
+            case StyleValue::Type::Angle: {
+                static auto default_angle_value = AngleStyleValue::create(Angle::make_degrees(0));
+                return NumericBaseTypeAndDefault { CSSNumericType::BaseType::Angle, default_angle_value };
+            }
+            case StyleValue::Type::Frequency: {
+                static auto default_frequency_value = FrequencyStyleValue::create(Frequency::make_hertz(0));
+                return NumericBaseTypeAndDefault { CSSNumericType::BaseType::Frequency, default_frequency_value };
+            }
+            case StyleValue::Type::Length: {
+                static auto default_length_value = LengthStyleValue::create(Length::make_px(0));
+                return NumericBaseTypeAndDefault { CSSNumericType::BaseType::Length, default_length_value };
+            }
+            case StyleValue::Type::Percentage: {
+                static auto default_percentage_value = PercentageStyleValue::create(Percentage { 0.0 });
+                return NumericBaseTypeAndDefault { CSSNumericType::BaseType::Percent, default_percentage_value };
+            }
+            case StyleValue::Type::Time: {
+                static auto default_time_value = TimeStyleValue::create(Time::make_seconds(0));
+                return NumericBaseTypeAndDefault { CSSNumericType::BaseType::Time, default_time_value };
+            }
+            default:
+                return {};
+            }
+        };
+
+        static constexpr auto to_calculation_node = [](StyleValue const& value) -> NonnullOwnPtr<CalculationNode> {
+            switch (value.type()) {
+            case StyleValue::Type::Angle:
+                return NumericCalculationNode::create(value.as_angle().angle());
+            case StyleValue::Type::Frequency:
+                return NumericCalculationNode::create(value.as_frequency().frequency());
+            case StyleValue::Type::Length:
+                return NumericCalculationNode::create(value.as_length().length());
+            case StyleValue::Type::Percentage:
+                return NumericCalculationNode::create(value.as_percentage().percentage());
+            case StyleValue::Type::Time:
+                return NumericCalculationNode::create(value.as_time().time());
+            default:
+                VERIFY_NOT_REACHED();
+            }
+        };
+
+        auto from_base_type_and_default = numeric_base_type_and_default(from);
+        auto to_base_type_and_default = numeric_base_type_and_default(to);
+
+        if (from_base_type_and_default.has_value() && to_base_type_and_default.has_value() && (from_base_type_and_default->base_type == CSSNumericType::BaseType::Percent || to_base_type_and_default->base_type == CSSNumericType::BaseType::Percent)) {
+            // This is an interpolation from a numeric unit to a percentage, or vice versa. The trick here is to
+            // interpolate two separate values. For example, consider an interpolation from 30px to 80%. It's quite
+            // hard to understand how this interpolation works, but if instead we rewrite the values as "30px + 0%" and
+            // "0px + 80%", then it is very simple to understand; we just interpolate each component separately.
+
+            auto interpolated_from = interpolate_value(element, from, from_base_type_and_default->default_value, delta);
+            auto interpolated_to = interpolate_value(element, to_base_type_and_default->default_value, to, delta);
+
+            Vector<NonnullOwnPtr<CalculationNode>> values;
+            values.ensure_capacity(2);
+            values.unchecked_append(to_calculation_node(interpolated_from));
+            values.unchecked_append(to_calculation_node(interpolated_to));
+            auto calc_node = SumCalculationNode::create(move(values));
+            return CalculatedStyleValue::create(move(calc_node), CSSNumericType { to_base_type_and_default->base_type, 1 });
+        }
+
         return delta >= 0.5f ? to : from;
+    }
 
     switch (from.type()) {
     case StyleValue::Type::Angle:
