@@ -14,18 +14,15 @@
 #include <AK/Variant.h>
 #include <LibSemVer/SemVer.h>
 
-constexpr StringView default_ports_database_path = "/usr/Ports/installed.db"sv;
-
 class InstalledPort : public Port {
+    friend class InstalledPortDatabase;
+
 public:
     enum class Type {
         Auto,
         Manual,
     };
     static Optional<Type> type_from_string(StringView);
-
-    static ErrorOr<HashMap<String, InstalledPort>> read_ports_database();
-    static ErrorOr<void> for_each_by_type(HashMap<String, InstalledPort>&, Type type, Function<ErrorOr<void>(InstalledPort const&)> callback);
 
     InstalledPort(String const& name, String const& version, Type type)
         : Port(name, version)
