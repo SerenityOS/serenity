@@ -1000,11 +1000,11 @@ bool Navigation::inner_navigate_event_firing_algorithm(
     // 10. Let traverseCanBeCanceled be true if all of the following are true:
     //      - navigable is a top-level traversable;
     //      - destination's is same document is true; and
-    //      - either userInvolvement is not "browser UI", or navigation's relevant global object has transient activation.
+    //      - either userInvolvement is not "browser UI", or navigation's relevant global object has history-action activation.
     //     Otherwise, let it be false.
     bool const traverse_can_be_canceled = navigable->is_top_level_traversable()
         && destination->same_document()
-        && (user_involvement != UserNavigationInvolvement::BrowserUI || relevant_global_object.has_transient_activation());
+        && (user_involvement != UserNavigationInvolvement::BrowserUI || relevant_global_object.has_history_action_activation());
 
     // FIXME: Fix spec grammaro, extra 'the -> set'
     // 11. If either:
