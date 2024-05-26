@@ -150,10 +150,20 @@ static double parse_simplified_iso8601(StringView iso_8601)
     return time_clip(time_ms);
 }
 
+// https://tc39.es/ecma262/#sec-time-values-and-time-range
+static bool is_within_valid_time_range(double value)
+{
+    // A Number can exactly represent all integers from -9,007,199,254,740,992 to 9,007,199,254,740,992 (21.1.2.8 and 21.1.2.6).
+    // A time value supports a slightly smaller range of -8,640,000,000,000,000 to 8,640,000,000,000,000 milliseconds. This
+    // yields a supported time value range of exactly -100,000,000 days to 100,000,000 days relative to midnight at the
+    // beginning of 1 January 1970 UTC.
+    return value >= -8'640'000'000'000'000 && value <= 8'640'000'000'000'000;
+}
+
 static double parse_date_string(StringView date_string)
 {
     auto value = parse_simplified_iso8601(date_string);
-    if (isfinite(value))
+    if (isfinite(value) && is_within_valid_time_range(value))
         return value;
 
     // Date.parse() is allowed to accept an arbitrary number of implementation-defined formats.
@@ -183,8 +193,12 @@ static double parse_date_string(StringView date_string)
 
     for (auto const& format : extra_formats) {
         auto maybe_datetime = Core::DateTime::parse(format, date_string);
-        if (maybe_datetime.has_value())
-            return 1000.0 * maybe_datetime->timestamp();
+        if (maybe_datetime.has_value()) {
+            auto result = (1000.0 * maybe_datetime->timestamp());
+            if (!is_within_valid_time_range(result))
+                return NAN;
+            return result;
+        }
     }
 
     return NAN;
