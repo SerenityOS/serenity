@@ -159,6 +159,13 @@ public:
         Auto
     };
 
+    // AD-HOC: Some web features need to receive data as it arrives, rather than when the response is fully complete
+    //         or when enough data has been buffered. Use this buffer policy to inform fetch of that requirement.
+    enum class BufferPolicy {
+        BufferResponse,
+        DoNotBufferResponse,
+    };
+
     // Members are implementation-defined
     struct InternalPriority { };
 
@@ -324,6 +331,9 @@ public:
     {
         m_pending_responses.remove_first_matching([&](auto gc_ptr) { return gc_ptr == pending_response; });
     }
+
+    [[nodiscard]] BufferPolicy buffer_policy() const { return m_buffer_policy; }
+    void set_buffer_policy(BufferPolicy buffer_policy) { m_buffer_policy = buffer_policy; }
 
 private:
     explicit Request(JS::NonnullGCPtr<HeaderList>);
@@ -515,6 +525,8 @@ private:
 
     // Non-standard
     Vector<JS::NonnullGCPtr<Fetching::PendingResponse>> m_pending_responses;
+
+    BufferPolicy m_buffer_policy { BufferPolicy::BufferResponse };
 };
 
 StringView request_destination_to_string(Request::Destination);
