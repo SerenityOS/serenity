@@ -204,6 +204,7 @@ set(SOURCES
     Fetch/BodyInit.cpp
     Fetch/Enums.cpp
     Fetch/Fetching/Checks.cpp
+    Fetch/Fetching/FetchedDataReceiver.cpp
     Fetch/Fetching/Fetching.cpp
     Fetch/Fetching/PendingResponse.cpp
     Fetch/Fetching/RefCountedFlag.cpp

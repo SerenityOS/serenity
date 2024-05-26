@@ -30,6 +30,7 @@ public:
 
     void when_loaded(Callback);
     void resolve(JS::NonnullGCPtr<Infrastructure::Response>);
+    bool is_resolved() const { return m_response != nullptr; }
 
 private:
     PendingResponse(JS::NonnullGCPtr<Infrastructure::Request>, JS::GCPtr<Infrastructure::Response> = {});
