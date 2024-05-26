@@ -3117,7 +3117,7 @@ void Document::run_unloading_cleanup_steps()
     // FIXME: 3. For each WebTransport object transport whose relevant global object is window, run the context cleanup steps given transport.
 
     // 4. If document's salvageable state is false, then:
-    if (m_salvageable) {
+    if (!m_salvageable) {
         // FIXME: 1. For each EventSource object eventSource whose relevant global object is equal to window, forcibly close eventSource.
 
         // 2. Clear window's map of active timers.
