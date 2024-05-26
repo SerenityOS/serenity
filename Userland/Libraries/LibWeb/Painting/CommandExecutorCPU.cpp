@@ -459,10 +459,6 @@ CommandResult CommandExecutorCPU::sample_under_corners(u32 id, CornerRadii const
         m_corner_clippers.resize(id + 1);
 
     auto clipper = BorderRadiusCornerClipper::create(corner_radii, border_rect.to_type<DevicePixels>(), corner_clip);
-    if (clipper.is_error()) {
-        m_corner_clippers[id] = nullptr;
-        return CommandResult::Continue;
-    }
     m_corner_clippers[id] = clipper.release_value();
     m_corner_clippers[id]->sample_under_corners(painter());
     return CommandResult::Continue;
@@ -470,9 +466,6 @@ CommandResult CommandExecutorCPU::sample_under_corners(u32 id, CornerRadii const
 
 CommandResult CommandExecutorCPU::blit_corner_clipping(u32 id)
 {
-    if (!m_corner_clippers[id])
-        return CommandResult::Continue;
-
     m_corner_clippers[id]->blit_corner_clipping(painter());
     m_corner_clippers[id] = nullptr;
     return CommandResult::Continue;
