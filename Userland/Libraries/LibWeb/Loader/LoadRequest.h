@@ -18,9 +18,7 @@ namespace Web {
 
 class LoadRequest {
 public:
-    LoadRequest()
-    {
-    }
+    LoadRequest();
 
     static LoadRequest create_for_url_on_page(const URL::URL& url, Page* page);
 
@@ -30,6 +28,8 @@ public:
     void set_main_resource(bool b) { m_main_resource = b; }
 
     bool is_valid() const { return m_url.is_valid(); }
+
+    int id() const { return m_id; }
 
     const URL::URL& url() const { return m_url; }
     void set_url(const URL::URL& url) { m_url = url; }
@@ -43,7 +43,7 @@ public:
     void start_timer() { m_load_timer.start(); }
     Duration load_time() const { return m_load_timer.elapsed_time(); }
 
-    JS::GCPtr<Page> page() { return m_page.ptr(); }
+    JS::GCPtr<Page> page() const { return m_page.ptr(); }
     void set_page(Page& page) { m_page = page; }
 
     unsigned hash() const
@@ -74,6 +74,7 @@ public:
     HashMap<ByteString, ByteString, CaseInsensitiveStringTraits> const& headers() const { return m_headers; }
 
 private:
+    int m_id { 0 };
     URL::URL m_url;
     ByteString m_method { "GET" };
     HashMap<ByteString, ByteString, CaseInsensitiveStringTraits> m_headers;

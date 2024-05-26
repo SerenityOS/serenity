@@ -78,6 +78,12 @@ public:
 
     void load(LoadRequest&, SuccessCallback success_callback, ErrorCallback error_callback = nullptr, Optional<u32> timeout = {}, TimeoutCallback timeout_callback = nullptr);
 
+    using OnHeadersReceived = JS::SafeFunction<void(HashMap<ByteString, ByteString, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> status_code)>;
+    using OnDataReceived = JS::SafeFunction<void(ReadonlyBytes data)>;
+    using OnComplete = JS::SafeFunction<void(bool success, Optional<StringView> error_message)>;
+
+    void load_unbuffered(LoadRequest&, OnHeadersReceived, OnDataReceived, OnComplete);
+
     ResourceLoaderConnector& connector() { return *m_connector; }
 
     void prefetch_dns(URL::URL const&);
@@ -100,7 +106,9 @@ private:
     ResourceLoader(NonnullRefPtr<ResourceLoaderConnector>);
     static ErrorOr<NonnullRefPtr<ResourceLoader>> try_create(NonnullRefPtr<ResourceLoaderConnector>);
 
-    static bool is_port_blocked(int port);
+    RefPtr<ResourceLoaderConnectorRequest> start_network_request(LoadRequest const&);
+    void handle_network_response_headers(LoadRequest const&, HashMap<ByteString, ByteString, CaseInsensitiveStringTraits> const&);
+    void finish_network_request(NonnullRefPtr<ResourceLoaderConnectorRequest> const&);
 
     int m_pending_loads { 0 };
 
