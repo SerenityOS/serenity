@@ -10,6 +10,13 @@
 
 namespace Web {
 
+static int s_resource_id = 0;
+
+LoadRequest::LoadRequest()
+    : m_id(s_resource_id++)
+{
+}
+
 LoadRequest LoadRequest::create_for_url_on_page(const URL::URL& url, Page* page)
 {
     LoadRequest request;
