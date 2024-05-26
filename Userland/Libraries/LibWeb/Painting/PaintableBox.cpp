@@ -692,6 +692,7 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
             context.recording_painter().sample_under_corners(*corner_clip_id, corner_radii, context.rounded_device_rect(clip_box).to_type<int>(), CornerClip::Outside);
         }
 
+        context.recording_painter().save();
         auto scroll_offset = context.rounded_device_point(this->scroll_offset());
         context.recording_painter().translate(-scroll_offset.to_type<int>());
     }
@@ -725,6 +726,7 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
             context.recording_painter().blit_corner_clipping(*corner_clip_id, clip_box.to_type<int>());
             corner_clip_id = {};
         }
+        context.recording_painter().restore();
     }
 }
 
