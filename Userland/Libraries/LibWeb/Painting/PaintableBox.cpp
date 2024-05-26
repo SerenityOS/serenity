@@ -673,12 +673,13 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
         clip_box.intersect(get_clip_rect().value());
         should_clip_overflow = true;
     }
-    if (enclosing_scroll_frame_offset().has_value())
-        clip_box.translate_by(enclosing_scroll_frame_offset().value());
     if (should_clip_overflow) {
         context.recording_painter().save();
         // FIXME: Handle overflow-x and overflow-y being different values.
-        context.recording_painter().add_clip_rect(context.rounded_device_rect(clip_box).to_type<int>());
+        auto clip_box_with_enclosing_scroll_frame_offset = clip_box;
+        if (enclosing_scroll_frame_offset().has_value())
+            clip_box_with_enclosing_scroll_frame_offset.translate_by(enclosing_scroll_frame_offset().value());
+        context.recording_painter().add_clip_rect(context.rounded_device_rect(clip_box_with_enclosing_scroll_frame_offset).to_type<int>());
 
         auto border_radii = normalized_border_radii_data(ShrinkRadiiForBorders::Yes);
         CornerRadii corner_radii {
