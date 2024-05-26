@@ -127,7 +127,7 @@ public:
     void pop_stacking_context();
 
     void sample_under_corners(u32 id, CornerRadii corner_radii, Gfx::IntRect border_rect, CornerClip corner_clip);
-    void blit_corner_clipping(u32 id, Gfx::IntRect border_rect);
+    void blit_corner_clipping(u32 id);
 
     void apply_backdrop_filter(Gfx::IntRect const& backdrop_region, BorderRadiiData const& border_radii_data, CSS::ResolvedBackdropFilter const& backdrop_filter);
 
@@ -144,6 +144,7 @@ public:
     void paint_borders(DevicePixelRect const& border_rect, CornerRadii const& corner_radii, BordersDataDevicePixels const& borders_data);
 
     RecordingPainter(CommandList& commands_list);
+    ~RecordingPainter();
 
     CommandList& commands_list() { return m_command_list; }
 
@@ -157,6 +158,12 @@ private:
     };
     State& state() { return m_state_stack.last(); }
     State const& state() const { return m_state_stack.last(); }
+
+    struct CornerClipState {
+        u32 id;
+        Gfx::IntRect rect;
+    };
+    Vector<CornerClipState> m_corner_clip_state_stack;
 
     Vector<State> m_state_stack;
     CommandList& m_command_list;

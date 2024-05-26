@@ -15,6 +15,11 @@ RecordingPainter::RecordingPainter(CommandList& command_list)
     m_state_stack.append(State());
 }
 
+RecordingPainter::~RecordingPainter()
+{
+    VERIFY(m_corner_clip_state_stack.is_empty());
+}
+
 void RecordingPainter::append(Command&& command)
 {
     m_command_list.append(move(command), state().scroll_frame_id);
@@ -22,6 +27,7 @@ void RecordingPainter::append(Command&& command)
 
 void RecordingPainter::sample_under_corners(u32 id, CornerRadii corner_radii, Gfx::IntRect border_rect, CornerClip corner_clip)
 {
+    m_corner_clip_state_stack.append({ id, border_rect });
     append(SampleUnderCorners {
         id,
         corner_radii,
@@ -29,9 +35,11 @@ void RecordingPainter::sample_under_corners(u32 id, CornerRadii corner_radii, Gf
         corner_clip });
 }
 
-void RecordingPainter::blit_corner_clipping(u32 id, Gfx::IntRect border_rect)
+void RecordingPainter::blit_corner_clipping(u32 id)
 {
-    append(BlitCornerClipping { id, border_rect = state().translation.map(border_rect) });
+    auto clip_state = m_corner_clip_state_stack.take_last();
+    VERIFY(clip_state.id == id);
+    append(BlitCornerClipping { id, state().translation.map(clip_state.rect) });
 }
 
 void RecordingPainter::fill_rect(Gfx::IntRect const& rect, Color color, Vector<Gfx::Path> const& clip_paths)

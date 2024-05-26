@@ -135,7 +135,7 @@ ScopedCornerRadiusClip::~ScopedCornerRadiusClip()
 {
     if (!m_has_radius)
         return;
-    m_context.recording_painter().blit_corner_clipping(m_id, m_border_rect);
+    m_context.recording_painter().blit_corner_clipping(m_id);
 }
 
 }
