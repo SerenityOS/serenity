@@ -35,7 +35,7 @@
 #include <LibWeb/Dump.h>
 #include <LibWeb/HTML/AudioPlayState.h>
 #include <LibWeb/Layout/Viewport.h>
-#include <LibWeb/Loader/ResourceLoader.h>
+#include <LibWeb/Loader/UserAgent.h>
 #include <LibWebView/CookieJar.h>
 #include <LibWebView/OutOfProcessWebView.h>
 #include <LibWebView/SearchEngine.h>
