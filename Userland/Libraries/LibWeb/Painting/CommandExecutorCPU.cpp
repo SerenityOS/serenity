@@ -453,21 +453,23 @@ CommandResult CommandExecutorCPU::draw_triangle_wave(Gfx::IntPoint const& p1, Gf
     return CommandResult::Continue;
 }
 
-CommandResult CommandExecutorCPU::sample_under_corners(u32 id, CornerRadii const& corner_radii, Gfx::IntRect const& border_rect, CornerClip corner_clip)
+void CommandExecutorCPU::prepare_to_execute(size_t corner_clip_max_depth)
 {
-    if (id >= m_corner_clippers.size())
-        m_corner_clippers.resize(id + 1);
+    m_corner_clippers_stack.ensure_capacity(corner_clip_max_depth);
+}
 
-    auto clipper = BorderRadiusCornerClipper::create(corner_radii, border_rect.to_type<DevicePixels>(), corner_clip);
-    m_corner_clippers[id] = clipper.release_value();
-    m_corner_clippers[id]->sample_under_corners(painter());
+CommandResult CommandExecutorCPU::sample_under_corners([[maybe_unused]] u32 id, CornerRadii const& corner_radii, Gfx::IntRect const& border_rect, CornerClip corner_clip)
+{
+    auto clipper = BorderRadiusCornerClipper::create(corner_radii, border_rect.to_type<DevicePixels>(), corner_clip).release_value();
+    clipper->sample_under_corners(painter());
+    m_corner_clippers_stack.append(clipper);
     return CommandResult::Continue;
 }
 
-CommandResult CommandExecutorCPU::blit_corner_clipping(u32 id)
+CommandResult CommandExecutorCPU::blit_corner_clipping([[maybe_unused]] u32 id)
 {
-    m_corner_clippers[id]->blit_corner_clipping(painter());
-    m_corner_clippers[id] = nullptr;
+    auto clipper = m_corner_clippers_stack.take_last();
+    clipper->blit_corner_clipping(painter());
     return CommandResult::Continue;
 }
 

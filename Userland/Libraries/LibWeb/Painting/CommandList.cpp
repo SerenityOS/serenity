@@ -78,7 +78,7 @@ void CommandList::mark_unnecessary_commands()
 
 void CommandList::execute(CommandExecutor& executor)
 {
-    executor.prepare_to_execute();
+    executor.prepare_to_execute(m_corner_clip_max_depth);
 
     if (executor.needs_prepare_glyphs_texture()) {
         HashMap<Gfx::Font const*, HashTable<u32>> unique_glyphs;

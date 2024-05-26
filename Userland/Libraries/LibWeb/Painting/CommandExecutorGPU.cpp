@@ -429,7 +429,7 @@ void CommandExecutorGPU::prepare_glyph_texture(HashMap<Gfx::Font const*, HashTab
     AccelGfx::GlyphAtlas::the().update(unique_glyphs);
 }
 
-void CommandExecutorGPU::prepare_to_execute()
+void CommandExecutorGPU::prepare_to_execute([[maybe_unused]] size_t corner_clip_max_depth)
 {
     m_context.activate();
 }

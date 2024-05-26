@@ -28,6 +28,8 @@ void RecordingPainter::append(Command&& command)
 void RecordingPainter::sample_under_corners(u32 id, CornerRadii corner_radii, Gfx::IntRect border_rect, CornerClip corner_clip)
 {
     m_corner_clip_state_stack.append({ id, border_rect });
+    if (m_corner_clip_state_stack.size() > commands_list().corner_clip_max_depth())
+        commands_list().set_corner_clip_max_depth(m_corner_clip_state_stack.size());
     append(SampleUnderCorners {
         id,
         corner_radii,
