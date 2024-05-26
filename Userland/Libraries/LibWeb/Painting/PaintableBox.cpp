@@ -723,7 +723,7 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
     if (should_clip_overflow) {
         context.recording_painter().restore();
         if (corner_clip_id.has_value()) {
-            context.recording_painter().blit_corner_clipping(*corner_clip_id, clip_box.to_type<int>());
+            context.recording_painter().blit_corner_clipping(*corner_clip_id, context.rounded_device_rect(clip_box).to_type<int>());
             corner_clip_id = {};
         }
         context.recording_painter().restore();
