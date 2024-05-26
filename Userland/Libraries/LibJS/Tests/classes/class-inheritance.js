@@ -506,3 +506,29 @@ test("When no constructor on deriving class @@iterator of %Array.prototype% is n
 
     expect(calls).toBe(1);
 });
+
+test("constructor return value overrides inheritance and property initialization", () => {
+    let calls = 0;
+    class Base {
+        constructor() {
+            this.prop = 1;
+            calls++;
+        }
+    }
+
+    class Derived extends Base {
+        constructor() {
+            super();
+
+            // Return an empty object instead of Derived/Base object
+            return {};
+        }
+    }
+
+    let object = new Derived();
+
+    expect(calls).toBe(1);
+    expect(typeof object.prop).toBe("undefined");
+    expect(object instanceof Derived).toBe(false);
+    expect(object instanceof Base).toBe(false);
+});
