@@ -130,113 +130,88 @@ void CommandList::execute(CommandExecutor& executor)
 
         auto result = command.visit(
             [&](DrawGlyphRun const& command) {
-                return executor.draw_glyph_run(command.glyph_run->glyphs(), command.color, command.translation, command.scale);
+                return executor.draw_glyph_run(command);
             },
             [&](DrawText const& command) {
-                return executor.draw_text(command.rect, command.raw_text, command.alignment, command.color,
-                    command.elision, command.wrapping, command.font);
+                return executor.draw_text(command);
             },
             [&](FillRect const& command) {
-                return executor.fill_rect(command.rect, command.color, command.clip_paths);
+                return executor.fill_rect(command);
             },
             [&](DrawScaledBitmap const& command) {
-                return executor.draw_scaled_bitmap(command.dst_rect, command.bitmap, command.src_rect,
-                    command.scaling_mode);
+                return executor.draw_scaled_bitmap(command);
             },
             [&](DrawScaledImmutableBitmap const& command) {
-                return executor.draw_scaled_immutable_bitmap(command.dst_rect, command.bitmap, command.src_rect,
-                    command.scaling_mode, command.clip_paths);
+                return executor.draw_scaled_immutable_bitmap(command);
             },
             [&](SetClipRect const& command) {
-                return executor.set_clip_rect(command.rect);
+                return executor.set_clip_rect(command);
             },
-            [&](ClearClipRect const&) {
-                return executor.clear_clip_rect();
+            [&](ClearClipRect const& command) {
+                return executor.clear_clip_rect(command);
             },
             [&](PushStackingContext const& command) {
-                return executor.push_stacking_context(command.opacity, command.is_fixed_position,
-                    command.source_paintable_rect,
-                    command.post_transform_translation,
-                    command.image_rendering, command.transform, command.mask);
+                return executor.push_stacking_context(command);
             },
-            [&](PopStackingContext const&) {
-                return executor.pop_stacking_context();
+            [&](PopStackingContext const& command) {
+                return executor.pop_stacking_context(command);
             },
             [&](PaintLinearGradient const& command) {
-                return executor.paint_linear_gradient(command.gradient_rect, command.linear_gradient_data, command.clip_paths);
+                return executor.paint_linear_gradient(command);
             },
             [&](PaintRadialGradient const& command) {
-                return executor.paint_radial_gradient(command.rect, command.radial_gradient_data,
-                    command.center, command.size, command.clip_paths);
+                return executor.paint_radial_gradient(command);
             },
             [&](PaintConicGradient const& command) {
-                return executor.paint_conic_gradient(command.rect, command.conic_gradient_data,
-                    command.position, command.clip_paths);
+                return executor.paint_conic_gradient(command);
             },
             [&](PaintOuterBoxShadow const& command) {
-                return executor.paint_outer_box_shadow(command.outer_box_shadow_params);
+                return executor.paint_outer_box_shadow(command);
             },
             [&](PaintInnerBoxShadow const& command) {
-                return executor.paint_inner_box_shadow(command.outer_box_shadow_params);
+                return executor.paint_inner_box_shadow(command);
             },
             [&](PaintTextShadow const& command) {
-                return executor.paint_text_shadow(command.blur_radius, command.shadow_bounding_rect,
-                    command.text_rect, command.glyph_run, command.color,
-                    command.fragment_baseline, command.draw_location);
+                return executor.paint_text_shadow(command);
             },
             [&](FillRectWithRoundedCorners const& command) {
-                return executor.fill_rect_with_rounded_corners(command.rect, command.color,
-                    command.top_left_radius,
-                    command.top_right_radius,
-                    command.bottom_left_radius,
-                    command.bottom_right_radius,
-                    command.clip_paths);
+                return executor.fill_rect_with_rounded_corners(command);
             },
             [&](FillPathUsingColor const& command) {
-                return executor.fill_path_using_color(command.path, command.color, command.winding_rule,
-                    command.aa_translation);
+                return executor.fill_path_using_color(command);
             },
             [&](FillPathUsingPaintStyle const& command) {
-                return executor.fill_path_using_paint_style(command.path, command.paint_style,
-                    command.winding_rule, command.opacity,
-                    command.aa_translation);
+                return executor.fill_path_using_paint_style(command);
             },
             [&](StrokePathUsingColor const& command) {
-                return executor.stroke_path_using_color(command.path, command.color, command.thickness,
-                    command.aa_translation);
+                return executor.stroke_path_using_color(command);
             },
             [&](StrokePathUsingPaintStyle const& command) {
-                return executor.stroke_path_using_paint_style(command.path, command.paint_style,
-                    command.thickness, command.opacity,
-                    command.aa_translation);
+                return executor.stroke_path_using_paint_style(command);
             },
             [&](DrawEllipse const& command) {
-                return executor.draw_ellipse(command.rect, command.color, command.thickness);
+                return executor.draw_ellipse(command);
             },
             [&](FillEllipse const& command) {
-                return executor.fill_ellipse(command.rect, command.color);
+                return executor.fill_ellipse(command);
             },
             [&](DrawLine const& command) {
-                return executor.draw_line(command.color, command.from, command.to, command.thickness,
-                    command.style, command.alternate_color);
+                return executor.draw_line(command);
             },
             [&](DrawSignedDistanceField const& command) {
-                return executor.draw_signed_distance_field(command.rect, command.color, command.sdf,
-                    command.smoothing);
+                return executor.draw_signed_distance_field(command);
             },
             [&](ApplyBackdropFilter const& command) {
-                return executor.apply_backdrop_filter(command.backdrop_region, command.backdrop_filter);
+                return executor.apply_backdrop_filter(command);
             },
             [&](DrawRect const& command) {
-                return executor.draw_rect(command.rect, command.color, command.rough);
+                return executor.draw_rect(command);
             },
             [&](DrawTriangleWave const& command) {
-                return executor.draw_triangle_wave(command.p1, command.p2, command.color, command.amplitude,
-                    command.thickness);
+                return executor.draw_triangle_wave(command);
             },
             [&](SampleUnderCorners const& command) {
-                return executor.sample_under_corners(command.id, command.corner_radii, command.border_rect,
-                    command.corner_clip);
+                return executor.sample_under_corners(command);
             },
             [&](BlitCornerClipping const& command) {
                 if (skipped_sample_corner_commands.contains(command.id)) {
@@ -247,10 +222,10 @@ void CommandList::execute(CommandExecutor& executor)
                     dbgln("Skipping blit_corner_clipping command because the sample_under_corners command was skipped.");
                     return CommandResult::Continue;
                 }
-                return executor.blit_corner_clipping(command.id);
+                return executor.blit_corner_clipping(command);
             },
             [&](PaintBorders const& command) {
-                return executor.paint_borders(command.border_rect, command.corner_radii, command.borders_data);
+                return executor.paint_borders(command);
             });
 
         if (result == CommandResult::SkipStackingContext) {
