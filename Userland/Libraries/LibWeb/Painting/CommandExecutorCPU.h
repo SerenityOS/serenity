@@ -49,6 +49,8 @@ public:
     bool needs_prepare_glyphs_texture() const override { return false; }
     void prepare_glyph_texture(HashMap<Gfx::Font const*, HashTable<u32>> const&) override {};
 
+    virtual void prepare_to_execute(size_t corner_clip_max_depth) override;
+
     bool needs_update_immutable_bitmap_texture_cache() const override { return false; }
     void update_immutable_bitmap_texture_cache(HashMap<u32, Gfx::ImmutableBitmap const*>&) override {};
 
@@ -56,7 +58,7 @@ public:
 
 private:
     Gfx::Bitmap& m_target_bitmap;
-    Vector<RefPtr<BorderRadiusCornerClipper>> m_corner_clippers;
+    Vector<RefPtr<BorderRadiusCornerClipper>> m_corner_clippers_stack;
 
     struct StackingContext {
         MaybeOwned<Gfx::Painter> painter;

@@ -86,7 +86,7 @@ public:
     virtual bool would_be_fully_clipped_by_painter(Gfx::IntRect) const = 0;
     virtual bool needs_prepare_glyphs_texture() const { return false; }
     virtual void prepare_glyph_texture(HashMap<Gfx::Font const*, HashTable<u32>> const& unique_glyphs) = 0;
-    virtual void prepare_to_execute() { }
+    virtual void prepare_to_execute([[maybe_unused]] size_t corner_clip_max_depth) { }
     virtual bool needs_update_immutable_bitmap_texture_cache() const = 0;
     virtual void update_immutable_bitmap_texture_cache(HashMap<u32, Gfx::ImmutableBitmap const*>&) = 0;
 };
@@ -99,6 +99,9 @@ public:
     void mark_unnecessary_commands();
     void execute(CommandExecutor&);
 
+    size_t corner_clip_max_depth() const { return m_corner_clip_max_depth; }
+    void set_corner_clip_max_depth(size_t depth) { m_corner_clip_max_depth = depth; }
+
 private:
     struct CommandListItem {
         Optional<i32> scroll_frame_id;
@@ -106,6 +109,7 @@ private:
         bool skip { false };
     };
 
+    size_t m_corner_clip_max_depth { 0 };
     AK::SegmentedVector<CommandListItem, 512> m_commands;
 };
 
