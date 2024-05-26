@@ -4,3 +4,10 @@ enum CORSSettingsAttribute {
     "anonymous",
     "use-credentials"
 };
+
+// https://html.spec.whatwg.org/multipage/urls-and-fetching.html#lazy-loading-attribute
+[MissingValueDefault=eager, InvalidValueDefault=eager]
+enum LazyLoadingAttribute {
+    "lazy",
+    "eager"
+};
