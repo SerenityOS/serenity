@@ -21,6 +21,7 @@
 #include <LibWeb/Loader/ProxyMappings.h>
 #include <LibWeb/Loader/Resource.h>
 #include <LibWeb/Loader/ResourceLoader.h>
+#include <LibWeb/Loader/UserAgent.h>
 #include <LibWeb/Platform/EventLoopPlugin.h>
 #include <LibWeb/Platform/Timer.h>
 

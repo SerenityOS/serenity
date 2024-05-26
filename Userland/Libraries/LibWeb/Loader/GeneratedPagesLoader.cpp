@@ -12,7 +12,7 @@
 #include <LibCore/Resource.h>
 #include <LibCore/System.h>
 #include <LibWeb/Loader/GeneratedPagesLoader.h>
-#include <LibWeb/Loader/ResourceLoader.h>
+#include <LibWeb/Loader/UserAgent.h>
 
 namespace Web {
 

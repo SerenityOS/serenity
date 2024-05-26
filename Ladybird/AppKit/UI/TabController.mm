@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Loader/UserAgent.h>
 #include <LibWebView/SearchEngine.h>
 #include <LibWebView/URL.h>
+#include <LibWebView/UserAgent.h>
 
 #import <Application/ApplicationDelegate.h>
-#import <LibWeb/Loader/ResourceLoader.h>
-#import <LibWebView/UserAgent.h>
 #import <UI/LadybirdWebView.h>
 #import <UI/Tab.h>
 #import <UI/TabController.h>

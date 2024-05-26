@@ -19,7 +19,7 @@
 #include <Ladybird/Qt/TabBar.h>
 #include <Ladybird/Utilities.h>
 #include <LibWeb/CSS/PreferredColorScheme.h>
-#include <LibWeb/Loader/ResourceLoader.h>
+#include <LibWeb/Loader/UserAgent.h>
 #include <LibWebView/CookieJar.h>
 #include <LibWebView/UserAgent.h>
 #include <QAction>
