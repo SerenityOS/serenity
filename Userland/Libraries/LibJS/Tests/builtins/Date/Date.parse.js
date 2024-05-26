@@ -203,3 +203,23 @@ test("Round trip Date.prototype.to*String", () => {
     expect(Date.parse(epoch.toISOString())).toBe(epoch.valueOf());
     expect(Date.parse(epoch.toUTCString())).toBe(epoch.valueOf());
 });
+
+test("Date parsing of minimum and maximum values", () => {
+    const minDateStr = "-271821-04-20T00:00:00.000Z";
+    const minDate = new Date(-8640000000000000);
+
+    expect(minDate.toISOString()).toBe(minDateStr);
+    expect(Date.parse(minDateStr)).toBe(minDate.valueOf());
+
+    const maxDateStr = "+275760-09-13T00:00:00.000Z";
+    const maxDate = new Date(8640000000000000);
+
+    expect(maxDate.toISOString()).toBe(maxDateStr);
+    expect(Date.parse(maxDateStr)).toBe(maxDate.valueOf());
+
+    const belowRange = "-271821-04-19T23:59:59.999Z";
+    const aboveRange = "+275760-09-13T00:00:00.001Z";
+
+    expect(Date.parse(belowRange)).toBe(NaN);
+    expect(Date.parse(aboveRange)).toBe(NaN);
+});
