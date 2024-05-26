@@ -26,7 +26,7 @@ namespace JS {
 JS_DEFINE_ALLOCATOR(DateConstructor);
 
 // 21.4.3.2 Date.parse ( string ), https://tc39.es/ecma262/#sec-date.parse
-static double parse_simplified_iso8601(ByteString const& iso_8601)
+static double parse_simplified_iso8601(StringView iso_8601)
 {
     // 21.4.1.15 Date Time String Format, https://tc39.es/ecma262/#sec-date-time-string-format
     GenericLexer lexer(iso_8601);
@@ -150,7 +150,7 @@ static double parse_simplified_iso8601(ByteString const& iso_8601)
     return time_clip(time_ms);
 }
 
-static double parse_date_string(ByteString const& date_string)
+static double parse_date_string(StringView date_string)
 {
     auto value = parse_simplified_iso8601(date_string);
     if (isfinite(value))
