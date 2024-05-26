@@ -105,11 +105,31 @@ WebIDL::ExceptionOr<void> AudioBuffer::copy_from_channel(JS::Handle<WebIDL::Buff
 }
 
 // https://webaudio.github.io/web-audio-api/#dom-audiobuffer-copytochannel
-WebIDL::ExceptionOr<void> AudioBuffer::copy_to_channel(JS::Handle<WebIDL::BufferSource>&, WebIDL::UnsignedLong channel_number, WebIDL::UnsignedLong buffer_offset) const
+WebIDL::ExceptionOr<void> AudioBuffer::copy_to_channel(JS::Handle<WebIDL::BufferSource> const& source, WebIDL::UnsignedLong channel_number, WebIDL::UnsignedLong buffer_offset)
 {
-    (void)channel_number;
-    (void)buffer_offset;
-    return WebIDL::NotSupportedError::create(realm(), "FIXME: Implement AudioBuffer:copy_to_channel:"_fly_string);
+    // The copyToChannel() method copies the samples to the specified channel of the AudioBuffer from the source array.
+    //
+    // A UnknownError may be thrown if source cannot be copied to the buffer.
+    //
+    // Let buffer be the AudioBuffer with Nb frames, let Nf be the number of elements in the source array, and k be the value
+    // of bufferOffset. Then the number of frames copied from source to the buffer is max(0,min(Nb−k,Nf)). If this is less than Nf,
+    // then the remaining elements of buffer are not modified.
+    auto& vm = this->vm();
+
+    if (!is<JS::Float32Array>(*source->raw_object()))
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "Float32Array");
+    auto const& float32_array = static_cast<JS::Float32Array const&>(*source->raw_object());
+
+    auto channel = TRY(get_channel_data(channel_number));
+
+    auto channel_length = channel->data().size();
+    if (buffer_offset >= channel_length)
+        return {};
+
+    u32 count = min(float32_array.data().size(), channel_length - buffer_offset);
+    float32_array.data().slice(0, count).copy_to(channel->data().slice(buffer_offset, count));
+
+    return {};
 }
 
 AudioBuffer::AudioBuffer(JS::Realm& realm, AudioBufferOptions const& options)
