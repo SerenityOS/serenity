@@ -25,12 +25,14 @@ public:
     unsigned hour() const { return m_hour; }
     unsigned minute() const { return m_minute; }
     unsigned second() const { return m_second; }
+    unsigned microsecond() const { return m_microsecond; }
+
     unsigned weekday() const;
     unsigned days_in_month() const;
     unsigned day_of_year() const;
     bool is_leap_year() const;
 
-    void set_time(int year, int month = 1, int day = 1, int hour = 0, int minute = 0, int second = 0);
+    void set_time(int year, int month = 1, int day = 1, int hour = 0, int minute = 0, int second = 0, unsigned microsecond = 0);
     void set_time_only(int hour, int minute, Optional<int> second = {});
     void set_date(Core::DateTime const& other);
 
@@ -42,7 +44,7 @@ public:
     ErrorOr<String> to_string(StringView format = "%Y-%m-%d %H:%M:%S"sv, LocalTime = LocalTime::Yes) const;
     ByteString to_byte_string(StringView format = "%Y-%m-%d %H:%M:%S"sv, LocalTime = LocalTime::Yes) const;
 
-    static DateTime create(int year, int month = 1, int day = 1, int hour = 0, int minute = 0, int second = 0);
+    static DateTime create(int year, int month = 1, int day = 1, int hour = 0, int minute = 0, int second = 0, unsigned microsecond = 0);
     static DateTime now();
     static DateTime from_timestamp(time_t);
     static Optional<DateTime> parse(StringView format, StringView string);
@@ -61,6 +63,8 @@ private:
     int m_hour { 0 };
     int m_minute { 0 };
     int m_second { 0 };
+    // NOTE: microseconds not part of the timestamp - only present if %f given
+    unsigned m_microsecond { 0 };
 };
 
 }
