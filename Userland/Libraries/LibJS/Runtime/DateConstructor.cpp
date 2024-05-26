@@ -187,16 +187,24 @@ static double parse_date_string(StringView date_string)
         "%Y-%m-%e%t%T"sv,                      // "2024-01-15 00:00:01"
         "%a%t%b%t%e%t%Y%t%T%t%Z"sv,            // "Tue Nov 07 2023 10:05:55  UTC"
         "%a%t%b%t%e%t%T%t%Y"sv,                // "Wed Apr 17 23:08:53 2019"
-        "%Y-%m-%eT%T%X%z"sv,                   // "2024-01-26T22:10:11.306+0000"
+        "%Y-%m-%eT%T%f%z"sv,                   // "2024-01-26T22:10:11.306+0000"
         "%m/%e/%Y,%t%T%t%p"sv,                 // "1/27/2024, 9:28:30 AM"
     };
 
     for (auto const& format : extra_formats) {
         auto maybe_datetime = Core::DateTime::parse(format, date_string);
         if (maybe_datetime.has_value()) {
-            auto result = (1000.0 * maybe_datetime->timestamp());
+            auto datetime = maybe_datetime.release_value();
+            auto result = (1000.0 * datetime.timestamp());
+
+            if (result >= 0)
+                result += datetime.microsecond() / 1000.0;
+            else
+                result -= datetime.microsecond() / 1000.0;
+
             if (!is_within_valid_time_range(result))
                 return NAN;
+
             return result;
         }
     }
