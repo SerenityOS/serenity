@@ -501,7 +501,7 @@ void PaintableBox::clear_clip_overflow_rect(PaintContext& context, PaintPhase ph
         m_clipping_overflow = false;
         auto const& combined_transform = combined_css_transform();
         auto const& border_radii_clips = this->border_radii_clips();
-        for (size_t corner_clip_index = 0; corner_clip_index < border_radii_clips.size(); ++corner_clip_index) {
+        for (int corner_clip_index = border_radii_clips.size() - 1; corner_clip_index >= 0; --corner_clip_index) {
             auto const& corner_clip = border_radii_clips[corner_clip_index];
             auto corners = corner_clip.radii.as_corners(context);
             if (!corners.has_any_radius())
