@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2024, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -179,7 +179,7 @@ public:
     WebIDL::ExceptionOr<String> inner_html() const;
     WebIDL::ExceptionOr<void> set_inner_html(StringView);
 
-    WebIDL::ExceptionOr<void> insert_adjacent_html(String const& position, String const& text);
+    WebIDL::ExceptionOr<void> insert_adjacent_html(String const& position, String const&);
 
     WebIDL::ExceptionOr<String> outer_html() const;
     WebIDL::ExceptionOr<void> set_outer_html(String const&);

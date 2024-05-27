@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2024, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022-2023, San Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -1450,19 +1450,21 @@ WebIDL::ExceptionOr<void> Element::set_outer_html(String const& value)
     return {};
 }
 
-// https://w3c.github.io/DOM-Parsing/#dom-element-insertadjacenthtml
-WebIDL::ExceptionOr<void> Element::insert_adjacent_html(String const& position, String const& text)
+// https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#the-insertadjacenthtml()-method
+WebIDL::ExceptionOr<void> Element::insert_adjacent_html(String const& position, String const& string)
 {
+    // 1. Let context be null.
     JS::GCPtr<Node> context;
-    // 1. Use the first matching item from this list:
+
+    // 2. Use the first matching item from this list:
     // - If position is an ASCII case-insensitive match for the string "beforebegin"
     // - If position is an ASCII case-insensitive match for the string "afterend"
     if (Infra::is_ascii_case_insensitive_match(position, "beforebegin"sv)
         || Infra::is_ascii_case_insensitive_match(position, "afterend"sv)) {
-        // Let context be the context object's parent.
+        // 1. Set context to this's parent.
         context = this->parent();
 
-        // If context is null or a Document, throw a "NoModificationAllowedError" DOMException.
+        // 2. If context is null or a Document, throw a "NoModificationAllowedError" DOMException.
         if (!context || context->is_document())
             return WebIDL::NoModificationAllowedError::create(realm(), "insertAdjacentHTML: context is null or a Document"_fly_string);
     }
@@ -1470,7 +1472,7 @@ WebIDL::ExceptionOr<void> Element::insert_adjacent_html(String const& position, 
     // - If position is an ASCII case-insensitive match for the string "beforeend"
     else if (Infra::is_ascii_case_insensitive_match(position, "afterbegin"sv)
         || Infra::is_ascii_case_insensitive_match(position, "beforeend"sv)) {
-        // Let context be the context object.
+        // Set context to this.
         context = this;
     }
     // Otherwise
@@ -1479,7 +1481,7 @@ WebIDL::ExceptionOr<void> Element::insert_adjacent_html(String const& position, 
         return WebIDL::SyntaxError::create(realm(), "insertAdjacentHTML: invalid position argument"_fly_string);
     }
 
-    // 2. If context is not an Element or the following are all true:
+    // 3. If context is not an Element or the following are all true:
     //    - context's node document is an HTML document,
     //    - context's local name is "html", and
     //    - context's namespace is the HTML namespace;
@@ -1487,39 +1489,36 @@ WebIDL::ExceptionOr<void> Element::insert_adjacent_html(String const& position, 
         || (context->document().document_type() == Document::Type::HTML
             && static_cast<Element const&>(*context).local_name() == "html"sv
             && static_cast<Element const&>(*context).namespace_uri() == Namespace::HTML)) {
-        // FIXME: let context be a new Element with
-        //        - body as its local name,
-        //        - The HTML namespace as its namespace, and
-        //        - The context object's node document as its node document.
+        // FIXME: set context to the result of creating an element given this's node document, body, and the HTML namespace.
         TODO();
     }
 
-    // 3. Let fragment be the result of invoking the fragment parsing algorithm with text as markup, and context as the context element.
-    auto fragment = TRY(DOMParsing::parse_fragment(text, verify_cast<Element>(*context)));
+    // 4. Let fragment be the result of invoking the fragment parsing algorithm steps with context and string.
+    auto fragment = TRY(DOMParsing::parse_fragment(string, verify_cast<Element>(*context)));
 
-    // 4. Use the first matching item from this list:
+    // 5. Use the first matching item from this list:
 
     // - If position is an ASCII case-insensitive match for the string "beforebegin"
     if (Infra::is_ascii_case_insensitive_match(position, "beforebegin"sv)) {
-        // Insert fragment into the context object's parent before the context object.
+        // Insert fragment into this's parent before this.
         parent()->insert_before(fragment, this);
     }
 
     // - If position is an ASCII case-insensitive match for the string "afterbegin"
     else if (Infra::is_ascii_case_insensitive_match(position, "afterbegin"sv)) {
-        // Insert fragment into the context object before its first child.
+        // Insert fragment into this before its first child.
         insert_before(fragment, first_child());
     }
 
     // - If position is an ASCII case-insensitive match for the string "beforeend"
     else if (Infra::is_ascii_case_insensitive_match(position, "beforeend"sv)) {
-        // Append fragment to the context object.
+        // Append fragment to this.
         TRY(append_child(fragment));
     }
 
     // - If position is an ASCII case-insensitive match for the string "afterend"
     else if (Infra::is_ascii_case_insensitive_match(position, "afterend"sv)) {
-        // Insert fragment into the context object's parent before the context object's next sibling.
+        // Insert fragment into this's parent before this's next sibling.
         parent()->insert_before(fragment, next_sibling());
     }
     return {};
