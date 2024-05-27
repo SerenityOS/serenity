@@ -676,6 +676,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<KeyframeEffect>> KeyframeEffect::construct_
     return effect;
 }
 
+// https://www.w3.org/TR/web-animations-1/#dom-keyframeeffect-keyframeeffect-source
 WebIDL::ExceptionOr<JS::NonnullGCPtr<KeyframeEffect>> KeyframeEffect::construct_impl(JS::Realm& realm, JS::NonnullGCPtr<KeyframeEffect> source)
 {
     auto& vm = realm.vm();
@@ -735,6 +736,7 @@ void KeyframeEffect::set_target(DOM::Element* target)
     m_target_element = target;
 }
 
+// https://www.w3.org/TR/web-animations-1/#dom-keyframeeffect-pseudoelement
 WebIDL::ExceptionOr<void> KeyframeEffect::set_pseudo_element(Optional<String> pseudo_element)
 {
     auto& realm = this->realm();
