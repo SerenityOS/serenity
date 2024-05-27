@@ -1,0 +1,7 @@
+<script src="../include.js"></script>
+<script>
+    test(() => {
+        document.documentElement.insertAdjacentHTML("afterbegin", "hello");
+        println("PASS (didn't crash)");
+    });
+</script>

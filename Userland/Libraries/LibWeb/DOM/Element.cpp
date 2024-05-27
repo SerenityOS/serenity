@@ -1489,8 +1489,7 @@ WebIDL::ExceptionOr<void> Element::insert_adjacent_html(String const& position, 
         || (context->document().document_type() == Document::Type::HTML
             && static_cast<Element const&>(*context).local_name() == "html"sv
             && static_cast<Element const&>(*context).namespace_uri() == Namespace::HTML)) {
-        // FIXME: set context to the result of creating an element given this's node document, body, and the HTML namespace.
-        TODO();
+        context = TRY(create_element(document(), HTML::TagNames::body, Namespace::HTML));
     }
 
     // 4. Let fragment be the result of invoking the fragment parsing algorithm steps with context and string.
