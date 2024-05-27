@@ -302,7 +302,7 @@ target_link_libraries(DynamicLoader_LibC
 # FIXME: Remove this on the next GCC toolchain version bump
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     add_custom_target(create_compat_ssp_libraries)
-    add_dependencies(Loader.so create_compat_ssp_libraries)
+    add_dependencies(LibC create_compat_ssp_libraries)
 
     add_custom_command(TARGET create_compat_ssp_libraries
         PRE_BUILD
