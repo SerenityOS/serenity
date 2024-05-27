@@ -78,11 +78,8 @@ static auto parse_vector(Stream& stream)
 static ParseResult<ByteString> parse_name(Stream& stream)
 {
     ScopeLogger<WASM_BINPARSER_DEBUG> logger;
-    auto data = parse_vector<u8>(stream);
-    if (data.is_error())
-        return data.error();
-
-    return ByteString::copy(data.value());
+    auto data = TRY(parse_vector<u8>(stream));
+    return ByteString::copy(data);
 }
 
 template<typename T>
@@ -113,11 +110,9 @@ requires(requires(Stream& stream, Args... args) { T::parse(stream, args...); })
         }
 
         new_stream.unread({ &byte, 1 });
-        auto parse_result = T::parse(new_stream, args...);
-        if (parse_result.is_error())
-            return parse_result.error();
+        auto parse_result = TRY(T::parse(new_stream, args...));
 
-        result.values.extend(parse_result.release_value());
+        result.values.extend(parse_result);
     }
 }
 
@@ -153,10 +148,8 @@ ParseResult<ValueType> ValueType::parse(Stream& stream)
 ParseResult<ResultType> ResultType::parse(Stream& stream)
 {
     ScopeLogger<WASM_BINPARSER_DEBUG> logger("ResultType"sv);
-    auto types = parse_vector<ValueType>(stream);
-    if (types.is_error())
-        return types.error();
-    return ResultType { types.release_value() };
+    auto types = TRY(parse_vector<ValueType>(stream));
+    return ResultType { types };
 }
 
 ParseResult<FunctionType> FunctionType::parse(Stream& stream)
@@ -173,14 +166,10 @@ ParseResult<FunctionType> FunctionType::parse(Stream& stream)
         return with_eof_check(stream, ParseError::InvalidTag);
     }
 
-    auto parameters_result = parse_vector<ValueType>(stream);
-    if (parameters_result.is_error())
-        return parameters_result.error();
-    auto results_result = parse_vector<ValueType>(stream);
-    if (results_result.is_error())
-        return results_result.error();
+    auto parameters_result = TRY(parse_vector<ValueType>(stream));
+    auto results_result = TRY(parse_vector<ValueType>(stream));
 
-    return FunctionType { parameters_result.release_value(), results_result.release_value() };
+    return FunctionType { parameters_result, results_result };
 }
 
 ParseResult<Limits> Limits::parse(Stream& stream)
@@ -214,32 +203,24 @@ ParseResult<Limits> Limits::parse(Stream& stream)
 ParseResult<MemoryType> MemoryType::parse(Stream& stream)
 {
     ScopeLogger<WASM_BINPARSER_DEBUG> logger("MemoryType"sv);
-    auto limits_result = Limits::parse(stream);
-    if (limits_result.is_error())
-        return limits_result.error();
-    return MemoryType { limits_result.release_value() };
+    auto limits_result = TRY(Limits::parse(stream));
+    return MemoryType { limits_result };
 }
 
 ParseResult<TableType> TableType::parse(Stream& stream)
 {
     ScopeLogger<WASM_BINPARSER_DEBUG> logger("TableType"sv);
-    auto type_result = ValueType::parse(stream);
-    if (type_result.is_error())
-        return type_result.error();
-    if (!type_result.value().is_reference())
+    auto type_result = TRY(ValueType::parse(stream));
+    if (!type_result.is_reference())
         return with_eof_check(stream, ParseError::InvalidType);
-    auto limits_result = Limits::parse(stream);
-    if (limits_result.is_error())
-        return limits_result.error();
-    return TableType { type_result.release_value(), limits_result.release_value() };
+    auto limits_result = TRY(Limits::parse(stream));
+    return TableType { type_result, limits_result };
 }
 
 ParseResult<GlobalType> GlobalType::parse(Stream& stream)
 {
     ScopeLogger<WASM_BINPARSER_DEBUG> logger("GlobalType"sv);
-    auto type_result = ValueType::parse(stream);
-    if (type_result.is_error())
-        return type_result.error();
+    auto type_result = TRY(ValueType::parse(stream));
 
     auto mutable_or_error = stream.read_value<u8>();
     if (mutable_or_error.is_error())
@@ -250,7 +231,7 @@ ParseResult<GlobalType> GlobalType::parse(Stream& stream)
     if (mutable_ > 1)
         return with_eof_check(stream, ParseError::InvalidTag);
 
-    return GlobalType { type_result.release_value(), mutable_ == 0x01 };
+    return GlobalType { type_result, mutable_ == 0x01 };
 }
 
 ParseResult<BlockType> BlockType::parse(Stream& stream)
@@ -342,57 +323,36 @@ ParseResult<Vector<Instruction>> Instruction::parse(Stream& stream, InstructionP
         case Instructions::block.value():
         case Instructions::loop.value():
         case Instructions::if_.value(): {
-            auto block_type = BlockType::parse(stream);
-            if (block_type.is_error())
-                return block_type.error();
-
-            nested_instructions.append({ move(resulting_instructions), opcode, block_type.release_value(), {}, {} });
+            auto block_type = TRY(BlockType::parse(stream));
+            nested_instructions.append({ move(resulting_instructions), opcode, block_type, {}, {} });
             resulting_instructions = {};
             break;
         }
         case Instructions::br.value():
         case Instructions::br_if.value(): {
             // branches with a single label immediate
-            auto index = GenericIndexParser<LabelIndex>::parse(stream);
-            if (index.is_error())
-                return index.error();
-
-            resulting_instructions.append(Instruction { opcode, index.release_value() });
+            auto index = TRY(GenericIndexParser<LabelIndex>::parse(stream));
+            resulting_instructions.append(Instruction { opcode, index });
             break;
         }
         case Instructions::br_table.value(): {
             // br_table label* label
-            auto labels = parse_vector<GenericIndexParser<LabelIndex>>(stream);
-            if (labels.is_error())
-                return labels.error();
-
-            auto default_label = GenericIndexParser<LabelIndex>::parse(stream);
-            if (default_label.is_error())
-                return default_label.error();
-
-            resulting_instructions.append(Instruction { opcode, TableBranchArgs { labels.release_value(), default_label.release_value() } });
+            auto labels = TRY(parse_vector<GenericIndexParser<LabelIndex>>(stream));
+            auto default_label = TRY(GenericIndexParser<LabelIndex>::parse(stream));
+            resulting_instructions.append(Instruction { opcode, TableBranchArgs { labels, default_label } });
             break;
         }
         case Instructions::call.value(): {
             // call function
-            auto function_index = GenericIndexParser<FunctionIndex>::parse(stream);
-            if (function_index.is_error())
-                return function_index.error();
-
-            resulting_instructions.append(Instruction { opcode, function_index.release_value() });
+            auto function_index = TRY(GenericIndexParser<FunctionIndex>::parse(stream));
+            resulting_instructions.append(Instruction { opcode, function_index });
             break;
         }
         case Instructions::call_indirect.value(): {
             // call_indirect type table
-            auto type_index = GenericIndexParser<TypeIndex>::parse(stream);
-            if (type_index.is_error())
-                return type_index.error();
-
-            auto table_index = GenericIndexParser<TableIndex>::parse(stream);
-            if (table_index.is_error())
-                return table_index.error();
-
-            resulting_instructions.append(Instruction { opcode, IndirectCallArgs { type_index.release_value(), table_index.release_value() } });
+            auto type_index = TRY(GenericIndexParser<TypeIndex>::parse(stream));
+            auto table_index = TRY(GenericIndexParser<TableIndex>::parse(stream));
+            resulting_instructions.append(Instruction { opcode, IndirectCallArgs { type_index, table_index } });
             break;
         }
         case Instructions::i32_load.value():
@@ -445,20 +405,14 @@ ParseResult<Vector<Instruction>> Instruction::parse(Stream& stream, InstructionP
         case Instructions::local_get.value():
         case Instructions::local_set.value():
         case Instructions::local_tee.value(): {
-            auto index = GenericIndexParser<LocalIndex>::parse(stream);
-            if (index.is_error())
-                return index.error();
-
-            resulting_instructions.append(Instruction { opcode, index.release_value() });
+            auto index = TRY(GenericIndexParser<LocalIndex>::parse(stream));
+            resulting_instructions.append(Instruction { opcode, index });
             break;
         }
         case Instructions::global_get.value():
         case Instructions::global_set.value(): {
-            auto index = GenericIndexParser<GlobalIndex>::parse(stream);
-            if (index.is_error())
-                return index.error();
-
-            resulting_instructions.append(Instruction { opcode, index.release_value() });
+            auto index = TRY(GenericIndexParser<GlobalIndex>::parse(stream));
+            resulting_instructions.append(Instruction { opcode, index });
             break;
         }
         case Instructions::memory_size.value():
@@ -517,37 +471,26 @@ ParseResult<Vector<Instruction>> Instruction::parse(Stream& stream, InstructionP
         }
         case Instructions::table_get.value():
         case Instructions::table_set.value(): {
-            auto index = GenericIndexParser<TableIndex>::parse(stream);
-            if (index.is_error())
-                return index.error();
-
-            resulting_instructions.append(Instruction { opcode, index.release_value() });
+            auto index = TRY(GenericIndexParser<TableIndex>::parse(stream));
+            resulting_instructions.append(Instruction { opcode, index });
             break;
         }
         case Instructions::select_typed.value(): {
-            auto types = parse_vector<ValueType>(stream);
-            if (types.is_error())
-                return types.error();
-
-            resulting_instructions.append(Instruction { opcode, types.release_value() });
+            auto types = TRY(parse_vector<ValueType>(stream));
+            resulting_instructions.append(Instruction { opcode, types });
             break;
         }
         case Instructions::ref_null.value(): {
-            auto type = ValueType::parse(stream);
-            if (type.is_error())
-                return type.error();
-            if (!type.value().is_reference())
+            auto type = TRY(ValueType::parse(stream));
+            if (!type.is_reference())
                 return ParseError::InvalidType;
 
-            resulting_instructions.append(Instruction { opcode, type.release_value() });
+            resulting_instructions.append(Instruction { opcode, type });
             break;
         }
         case Instructions::ref_func.value(): {
-            auto index = GenericIndexParser<FunctionIndex>::parse(stream);
-            if (index.is_error())
-                return index.error();
-
-            resulting_instructions.append(Instruction { opcode, index.release_value() });
+            auto index = TRY(GenericIndexParser<FunctionIndex>::parse(stream));
+            resulting_instructions.append(Instruction { opcode, index });
             break;
         }
         case Instructions::ref_is_null.value():
@@ -707,9 +650,7 @@ ParseResult<Vector<Instruction>> Instruction::parse(Stream& stream, InstructionP
                 resulting_instructions.append(Instruction { full_opcode });
                 break;
             case Instructions::memory_init.value(): {
-                auto index = GenericIndexParser<DataIndex>::parse(stream);
-                if (index.is_error())
-                    return index.error();
+                auto index = TRY(GenericIndexParser<DataIndex>::parse(stream));
 
                 // Proposal "multi-memory", literal 0x00 is replaced with a memory index.
                 auto memory_index_or_error = stream.read_value<u8>();
@@ -718,14 +659,12 @@ ParseResult<Vector<Instruction>> Instruction::parse(Stream& stream, InstructionP
 
                 auto memory_index = memory_index_or_error.release_value();
 
-                resulting_instructions.append(Instruction { full_opcode, MemoryInitArgs { index.release_value(), MemoryIndex(memory_index) } });
+                resulting_instructions.append(Instruction { full_opcode, MemoryInitArgs { index, MemoryIndex(memory_index) } });
                 break;
             }
             case Instructions::data_drop.value(): {
-                auto index = GenericIndexParser<DataIndex>::parse(stream);
-                if (index.is_error())
-                    return index.error();
-                resulting_instructions.append(Instruction { full_opcode, index.release_value() });
+                auto index = TRY(GenericIndexParser<DataIndex>::parse(stream));
+                resulting_instructions.append(Instruction { full_opcode, index });
                 break;
             }
             case Instructions::memory_copy.value(): {
@@ -753,39 +692,27 @@ ParseResult<Vector<Instruction>> Instruction::parse(Stream& stream, InstructionP
                 break;
             }
             case Instructions::table_init.value(): {
-                auto element_index = GenericIndexParser<ElementIndex>::parse(stream);
-                if (element_index.is_error())
-                    return element_index.error();
-                auto table_index = GenericIndexParser<TableIndex>::parse(stream);
-                if (table_index.is_error())
-                    return table_index.error();
-                resulting_instructions.append(Instruction { full_opcode, TableElementArgs { element_index.release_value(), table_index.release_value() } });
+                auto element_index = TRY(GenericIndexParser<ElementIndex>::parse(stream));
+                auto table_index = TRY(GenericIndexParser<TableIndex>::parse(stream));
+                resulting_instructions.append(Instruction { full_opcode, TableElementArgs { element_index, table_index } });
                 break;
             }
             case Instructions::elem_drop.value(): {
-                auto element_index = GenericIndexParser<ElementIndex>::parse(stream);
-                if (element_index.is_error())
-                    return element_index.error();
-                resulting_instructions.append(Instruction { full_opcode, element_index.release_value() });
+                auto element_index = TRY(GenericIndexParser<ElementIndex>::parse(stream));
+                resulting_instructions.append(Instruction { full_opcode, element_index });
                 break;
             }
             case Instructions::table_copy.value(): {
-                auto lhs = GenericIndexParser<TableIndex>::parse(stream);
-                if (lhs.is_error())
-                    return lhs.error();
-                auto rhs = GenericIndexParser<TableIndex>::parse(stream);
-                if (rhs.is_error())
-                    return rhs.error();
-                resulting_instructions.append(Instruction { full_opcode, TableTableArgs { lhs.release_value(), rhs.release_value() } });
+                auto lhs = TRY(GenericIndexParser<TableIndex>::parse(stream));
+                auto rhs = TRY(GenericIndexParser<TableIndex>::parse(stream));
+                resulting_instructions.append(Instruction { full_opcode, TableTableArgs { lhs, rhs } });
                 break;
             }
             case Instructions::table_grow.value():
             case Instructions::table_size.value():
             case Instructions::table_fill.value(): {
-                auto index = GenericIndexParser<TableIndex>::parse(stream);
-                if (index.is_error())
-                    return index.error();
-                resulting_instructions.append(Instruction { full_opcode, index.release_value() });
+                auto index = TRY(GenericIndexParser<TableIndex>::parse(stream));
+                resulting_instructions.append(Instruction { full_opcode, index });
                 break;
             }
             case Instructions::v128_load.value():
@@ -1119,9 +1046,7 @@ ParseResult<Vector<Instruction>> Instruction::parse(Stream& stream, InstructionP
 ParseResult<CustomSection> CustomSection::parse(Stream& stream)
 {
     ScopeLogger<WASM_BINPARSER_DEBUG> logger("CustomSection"sv);
-    auto name = parse_name(stream);
-    if (name.is_error())
-        return name.error();
+    auto name = TRY(parse_name(stream));
 
     ByteBuffer data_buffer;
     if (data_buffer.try_resize(64).is_error())
@@ -1139,27 +1064,21 @@ ParseResult<CustomSection> CustomSection::parse(Stream& stream)
             return with_eof_check(stream, ParseError::HugeAllocationRequested);
     }
 
-    return CustomSection(name.release_value(), move(data_buffer));
+    return CustomSection(name, move(data_buffer));
 }
 
 ParseResult<TypeSection> TypeSection::parse(Stream& stream)
 {
     ScopeLogger<WASM_BINPARSER_DEBUG> logger("TypeSection"sv);
-    auto types = parse_vector<FunctionType>(stream);
-    if (types.is_error())
-        return types.error();
-    return TypeSection { types.release_value() };
+    auto types = TRY(parse_vector<FunctionType>(stream));
+    return TypeSection { types };
 }
 
 ParseResult<ImportSection::Import> ImportSection::Import::parse(Stream& stream)
 {
     ScopeLogger<WASM_BINPARSER_DEBUG> logger("Import"sv);
-    auto module = parse_name(stream);
-    if (module.is_error())
-        return module.error();
-    auto name = parse_name(stream);
-    if (name.is_error())
-        return name.error();
+    auto module = TRY(parse_name(stream));
+    auto name = TRY(parse_name(stream));
     auto tag_or_error = stream.read_value<u8>();
     if (tag_or_error.is_error())
         return with_eof_check(stream, ParseError::ExpectedKindTag);
@@ -1168,10 +1087,8 @@ ParseResult<ImportSection::Import> ImportSection::Import::parse(Stream& stream)
 
     switch (tag) {
     case Constants::extern_function_tag: {
-        auto index = GenericIndexParser<TypeIndex>::parse(stream);
-        if (index.is_error())
-            return index.error();
-        return Import { module.release_value(), name.release_value(), index.release_value() };
+        auto index = TRY(GenericIndexParser<TypeIndex>::parse(stream));
+        return Import { module, name, index };
     }
     case Constants::extern_table_tag:
         return parse_with_type<TableType>(stream, module, name);
@@ -1187,22 +1104,18 @@ ParseResult<ImportSection::Import> ImportSection::Import::parse(Stream& stream)
 ParseResult<ImportSection> ImportSection::parse(Stream& stream)
 {
     ScopeLogger<WASM_BINPARSER_DEBUG> logger("ImportSection"sv);
-    auto imports = parse_vector<Import>(stream);
-    if (imports.is_error())
-        return imports.error();
-    return ImportSection { imports.release_value() };
+    auto imports = TRY(parse_vector<Import>(stream));
+    return ImportSection { imports };
 }
 
 ParseResult<FunctionSection> FunctionSection::parse(Stream& stream)
 {
     ScopeLogger<WASM_BINPARSER_DEBUG> logger("FunctionSection"sv);
-    auto indices = parse_vector<u32>(stream);
-    if (indices.is_error())
-        return indices.error();
+    auto indices = TRY(parse_vector<u32>(stream));
 
     Vector<TypeIndex> typed_indices;
-    typed_indices.ensure_capacity(indices.value().size());
-    for (auto entry : indices.value())
+    typed_indices.ensure_capacity(indices.size());
+    for (auto entry : indices)
         typed_indices.append(entry);
 
     return FunctionSection { move(typed_indices) };
@@ -1211,37 +1124,29 @@ ParseResult<FunctionSection> FunctionSection::parse(Stream& stream)
 ParseResult<TableSection::Table> TableSection::Table::parse(Stream& stream)
 {
     ScopeLogger<WASM_BINPARSER_DEBUG> logger("Table"sv);
-    auto type = TableType::parse(stream);
-    if (type.is_error())
-        return type.error();
-    return Table { type.release_value() };
+    auto type = TRY(TableType::parse(stream));
+    return Table { type };
 }
 
 ParseResult<TableSection> TableSection::parse(Stream& stream)
 {
     ScopeLogger<WASM_BINPARSER_DEBUG> logger("TableSection"sv);
-    auto tables = parse_vector<Table>(stream);
-    if (tables.is_error())
-        return tables.error();
-    return TableSection { tables.release_value() };
+    auto tables = TRY(parse_vector<Table>(stream));
+    return TableSection { tables };
 }
 
 ParseResult<MemorySection::Memory> MemorySection::Memory::parse(Stream& stream)
 {
     ScopeLogger<WASM_BINPARSER_DEBUG> logger("Memory"sv);
-    auto type = MemoryType::parse(stream);
-    if (type.is_error())
-        return type.error();
-    return Memory { type.release_value() };
+    auto type = TRY(MemoryType::parse(stream));
+    return Memory { type };
 }
 
 ParseResult<MemorySection> MemorySection::parse(Stream& stream)
 {
     ScopeLogger<WASM_BINPARSER_DEBUG> logger("MemorySection"sv);
-    auto memories = parse_vector<Memory>(stream);
-    if (memories.is_error())
-        return memories.error();
-    return MemorySection { memories.release_value() };
+    auto memories = TRY(parse_vector<Memory>(stream));
+    return MemorySection { memories };
 }
 
 ParseResult<Expression> Expression::parse(Stream& stream)
@@ -1258,30 +1163,22 @@ ParseResult<Expression> Expression::parse(Stream& stream)
 ParseResult<GlobalSection::Global> GlobalSection::Global::parse(Stream& stream)
 {
     ScopeLogger<WASM_BINPARSER_DEBUG> logger("Global"sv);
-    auto type = GlobalType::parse(stream);
-    if (type.is_error())
-        return type.error();
-    auto exprs = Expression::parse(stream);
-    if (exprs.is_error())
-        return exprs.error();
-    return Global { type.release_value(), exprs.release_value() };
+    auto type = TRY(GlobalType::parse(stream));
+    auto exprs = TRY(Expression::parse(stream));
+    return Global { type, exprs };
 }
 
 ParseResult<GlobalSection> GlobalSection::parse(Stream& stream)
 {
     ScopeLogger<WASM_BINPARSER_DEBUG> logger("GlobalSection"sv);
-    auto result = parse_vector<Global>(stream);
-    if (result.is_error())
-        return result.error();
-    return GlobalSection { result.release_value() };
+    auto result = TRY(parse_vector<Global>(stream));
+    return GlobalSection { result };
 }
 
 ParseResult<ExportSection::Export> ExportSection::Export::parse(Stream& stream)
 {
     ScopeLogger<WASM_BINPARSER_DEBUG> logger("Export"sv);
-    auto name = parse_name(stream);
-    if (name.is_error())
-        return name.error();
+    auto name = TRY(parse_name(stream));
     auto tag_or_error = stream.read_value<u8>();
     if (tag_or_error.is_error())
         return with_eof_check(stream, ParseError::ExpectedKindTag);
@@ -1295,13 +1192,13 @@ ParseResult<ExportSection::Export> ExportSection::Export::parse(Stream& stream)
 
     switch (tag) {
     case Constants::extern_function_tag:
-        return Export { name.release_value(), ExportDesc { FunctionIndex { index } } };
+        return Export { name, ExportDesc { FunctionIndex { index } } };
     case Constants::extern_table_tag:
-        return Export { name.release_value(), ExportDesc { TableIndex { index } } };
+        return Export { name, ExportDesc { TableIndex { index } } };
     case Constants::extern_memory_tag:
-        return Export { name.release_value(), ExportDesc { MemoryIndex { index } } };
+        return Export { name, ExportDesc { MemoryIndex { index } } };
     case Constants::extern_global_tag:
-        return Export { name.release_value(), ExportDesc { GlobalIndex { index } } };
+        return Export { name, ExportDesc { GlobalIndex { index } } };
     default:
         return with_eof_check(stream, ParseError::InvalidTag);
     }
@@ -1310,40 +1207,30 @@ ParseResult<ExportSection::Export> ExportSection::Export::parse(Stream& stream)
 ParseResult<ExportSection> ExportSection::parse(Stream& stream)
 {
     ScopeLogger<WASM_BINPARSER_DEBUG> logger("ExportSection"sv);
-    auto result = parse_vector<Export>(stream);
-    if (result.is_error())
-        return result.error();
-    return ExportSection { result.release_value() };
+    auto result = TRY(parse_vector<Export>(stream));
+    return ExportSection { result };
 }
 
 ParseResult<StartSection::StartFunction> StartSection::StartFunction::parse(Stream& stream)
 {
     ScopeLogger<WASM_BINPARSER_DEBUG> logger("StartFunction"sv);
-    auto index = GenericIndexParser<FunctionIndex>::parse(stream);
-    if (index.is_error())
-        return index.error();
-    return StartFunction { index.release_value() };
+    auto index = TRY(GenericIndexParser<FunctionIndex>::parse(stream));
+    return StartFunction { index };
 }
 
 ParseResult<StartSection> StartSection::parse(Stream& stream)
 {
     ScopeLogger<WASM_BINPARSER_DEBUG> logger("StartSection"sv);
-    auto result = StartFunction::parse(stream);
-    if (result.is_error())
-        return result.error();
-    return StartSection { result.release_value() };
+    auto result = TRY(StartFunction::parse(stream));
+    return StartSection { result };
 }
 
 ParseResult<ElementSection::SegmentType0> ElementSection::SegmentType0::parse(Stream& stream)
 {
-    auto expression = Expression::parse(stream);
-    if (expression.is_error())
-        return expression.error();
-    auto indices = parse_vector<GenericIndexParser<FunctionIndex>>(stream);
-    if (indices.is_error())
-        return indices.error();
+    auto expression = TRY(Expression::parse(stream));
+    auto indices = TRY(parse_vector<GenericIndexParser<FunctionIndex>>(stream));
 
-    return SegmentType0 { indices.release_value(), Active { 0, expression.release_value() } };
+    return SegmentType0 { indices, Active { 0, expression } };
 }
 
 ParseResult<ElementSection::SegmentType1> ElementSection::SegmentType1::parse(Stream& stream)
@@ -1355,11 +1242,9 @@ ParseResult<ElementSection::SegmentType1> ElementSection::SegmentType1::parse(St
     auto kind = kind_or_error.release_value();
     if (kind != 0)
         return ParseError::InvalidTag;
-    auto indices = parse_vector<GenericIndexParser<FunctionIndex>>(stream);
-    if (indices.is_error())
-        return indices.error();
+    auto indices = TRY(parse_vector<GenericIndexParser<FunctionIndex>>(stream));
 
-    return SegmentType1 { indices.release_value() };
+    return SegmentType1 { indices };
 }
 
 ParseResult<ElementSection::SegmentType2> ElementSection::SegmentType2::parse(Stream& stream)
@@ -1378,19 +1263,15 @@ ParseResult<ElementSection::SegmentType3> ElementSection::SegmentType3::parse(St
 
 ParseResult<ElementSection::SegmentType4> ElementSection::SegmentType4::parse(Stream& stream)
 {
-    auto expression = Expression::parse(stream);
-    if (expression.is_error())
-        return expression.error();
-    auto initializers = parse_vector<Expression>(stream);
-    if (initializers.is_error())
-        return initializers.error();
+    auto expression = TRY(Expression::parse(stream));
+    auto initializers = TRY(parse_vector<Expression>(stream));
 
     return SegmentType4 {
         .mode = Active {
             .index = 0,
-            .expression = expression.release_value(),
+            .expression = expression,
         },
-        .initializer = initializers.release_value(),
+        .initializer = initializers,
     };
 }
 
@@ -1487,10 +1368,8 @@ ParseResult<ElementSection::Element> ElementSection::Element::parse(Stream& stre
 ParseResult<ElementSection> ElementSection::parse(Stream& stream)
 {
     ScopeLogger<WASM_BINPARSER_DEBUG> logger("ElementSection"sv);
-    auto result = parse_vector<Element>(stream);
-    if (result.is_error())
-        return result.error();
-    return ElementSection { result.release_value() };
+    auto result = TRY(parse_vector<Element>(stream));
+    return ElementSection { result };
 }
 
 ParseResult<Locals> Locals::parse(Stream& stream)
@@ -1504,23 +1383,17 @@ ParseResult<Locals> Locals::parse(Stream& stream)
     if (count > Constants::max_allowed_function_locals_per_type)
         return with_eof_check(stream, ParseError::HugeAllocationRequested);
 
-    auto type = ValueType::parse(stream);
-    if (type.is_error())
-        return type.error();
+    auto type = TRY(ValueType::parse(stream));
 
-    return Locals { static_cast<u32>(count), type.release_value() };
+    return Locals { static_cast<u32>(count), type };
 }
 
 ParseResult<CodeSection::Func> CodeSection::Func::parse(Stream& stream)
 {
     ScopeLogger<WASM_BINPARSER_DEBUG> logger("Func"sv);
-    auto locals = parse_vector<Locals>(stream);
-    if (locals.is_error())
-        return locals.error();
-    auto body = Expression::parse(stream);
-    if (body.is_error())
-        return body.error();
-    return Func { locals.release_value(), body.release_value() };
+    auto locals = TRY(parse_vector<Locals>(stream));
+    auto body = TRY(Expression::parse(stream));
+    return Func { locals, body };
 }
 
 ParseResult<CodeSection::Code> CodeSection::Code::parse(Stream& stream)
@@ -1533,20 +1406,16 @@ ParseResult<CodeSection::Code> CodeSection::Code::parse(Stream& stream)
 
     auto constrained_stream = ConstrainedStream { MaybeOwned<Stream>(stream), size };
 
-    auto func = Func::parse(constrained_stream);
-    if (func.is_error())
-        return func.error();
+    auto func = TRY(Func::parse(constrained_stream));
 
-    return Code { static_cast<u32>(size), func.release_value() };
+    return Code { static_cast<u32>(size), func };
 }
 
 ParseResult<CodeSection> CodeSection::parse(Stream& stream)
 {
     ScopeLogger<WASM_BINPARSER_DEBUG> logger("CodeSection"sv);
-    auto result = parse_vector<Code>(stream);
-    if (result.is_error())
-        return result.error();
-    return CodeSection { result.release_value() };
+    auto result = TRY(parse_vector<Code>(stream));
+    return CodeSection { result };
 }
 
 ParseResult<DataSection::Data> DataSection::Data::parse(Stream& stream)
@@ -1562,31 +1431,19 @@ ParseResult<DataSection::Data> DataSection::Data::parse(Stream& stream)
         return with_eof_check(stream, ParseError::InvalidTag);
 
     if (tag == 0x00) {
-        auto expr = Expression::parse(stream);
-        if (expr.is_error())
-            return expr.error();
-        auto init = parse_vector<u8>(stream);
-        if (init.is_error())
-            return init.error();
-        return Data { Active { init.release_value(), { 0 }, expr.release_value() } };
+        auto expr = TRY(Expression::parse(stream));
+        auto init = TRY(parse_vector<u8>(stream));
+        return Data { Active { init, { 0 }, expr } };
     }
     if (tag == 0x01) {
-        auto init = parse_vector<u8>(stream);
-        if (init.is_error())
-            return init.error();
-        return Data { Passive { init.release_value() } };
+        auto init = TRY(parse_vector<u8>(stream));
+        return Data { Passive { init } };
     }
     if (tag == 0x02) {
-        auto index = GenericIndexParser<MemoryIndex>::parse(stream);
-        if (index.is_error())
-            return index.error();
-        auto expr = Expression::parse(stream);
-        if (expr.is_error())
-            return expr.error();
-        auto init = parse_vector<u8>(stream);
-        if (init.is_error())
-            return init.error();
-        return Data { Active { init.release_value(), index.release_value(), expr.release_value() } };
+        auto index = TRY(GenericIndexParser<MemoryIndex>::parse(stream));
+        auto expr = TRY(Expression::parse(stream));
+        auto init = TRY(parse_vector<u8>(stream));
+        return Data { Active { init, index, expr } };
     }
     VERIFY_NOT_REACHED();
 }
@@ -1594,11 +1451,8 @@ ParseResult<DataSection::Data> DataSection::Data::parse(Stream& stream)
 ParseResult<DataSection> DataSection::parse(Stream& stream)
 {
     ScopeLogger<WASM_BINPARSER_DEBUG> logger("DataSection"sv);
-    auto data = parse_vector<Data>(stream);
-    if (data.is_error())
-        return data.error();
-
-    return DataSection { data.release_value() };
+    auto data = TRY(parse_vector<Data>(stream));
+    return DataSection { data };
 }
 
 ParseResult<DataCountSection> DataCountSection::parse([[maybe_unused]] Stream& stream)

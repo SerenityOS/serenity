@@ -557,10 +557,8 @@ public:
         template<typename T>
         static ParseResult<Import> parse_with_type(auto&& stream, auto&& module, auto&& name)
         {
-            auto result = T::parse(stream);
-            if (result.is_error())
-                return result.error();
-            return Import { module.release_value(), name.release_value(), result.release_value() };
+            auto result = TRY(T::parse(stream));
+            return Import { module, name, result };
         }
 
         ByteString m_module;
