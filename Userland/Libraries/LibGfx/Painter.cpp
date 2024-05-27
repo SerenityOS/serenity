@@ -2447,10 +2447,8 @@ void Painter::draw_text_run(FloatPoint baseline_start, Utf8View const& string, F
 
 void Painter::draw_scaled_bitmap_with_transform(IntRect const& dst_rect, Bitmap const& bitmap, FloatRect const& src_rect, AffineTransform const& transform, float opacity, Painter::ScalingMode scaling_mode)
 {
-    if (transform.is_identity_or_translation()) {
-        translate(transform.e(), transform.f());
-        draw_scaled_bitmap(dst_rect, bitmap, src_rect, opacity, scaling_mode);
-        translate(-transform.e(), -transform.f());
+    if (transform.is_identity_or_translation_or_scale()) {
+        draw_scaled_bitmap(transform.map(dst_rect.to_type<float>()).to_rounded<int>(), bitmap, src_rect, opacity, scaling_mode);
     } else {
         // The painter has an affine transform, we have to draw through it!
 
