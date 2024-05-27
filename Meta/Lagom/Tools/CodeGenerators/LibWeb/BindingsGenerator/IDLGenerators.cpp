@@ -165,10 +165,10 @@ CppType idl_type_name_to_cpp_type(Type const& type, Interface const& interface)
     if (type.is_string())
         return { .name = "String", .sequence_storage_type = SequenceStorageType::Vector };
 
-    if (type.name() == "double" && !type.is_nullable())
+    if ((type.name() == "double" || type.name() == "unrestricted double") && !type.is_nullable())
         return { .name = "double", .sequence_storage_type = SequenceStorageType::Vector };
 
-    if (type.name() == "float" && !type.is_nullable())
+    if ((type.name() == "float" || type.name() == "unrestricted float") && !type.is_nullable())
         return { .name = "float", .sequence_storage_type = SequenceStorageType::Vector };
 
     if (type.name() == "boolean" && !type.is_nullable())
@@ -462,6 +462,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     scoped_generator.set("legacy_null_to_empty_string", legacy_null_to_empty_string ? "true" : "false");
     scoped_generator.set("string_type", string_to_fly_string ? "FlyString" : "String");
     scoped_generator.set("parameter.type.name", parameter.type->name());
+    scoped_generator.set("parameter.name", parameter.name);
 
     if (explicit_null) {
         if (!IDL::is_platform_object(*parameter.type)) {
@@ -559,7 +560,14 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 )~~~");
             }
         }
-    } else if (parameter.type->name() == "double" || parameter.type->name() == "float") {
+    } else if (parameter.type->is_floating_point()) {
+        if (parameter.type->name() == "unrestricted float") {
+            scoped_generator.set("parameter.type.name", "float");
+        } else if (parameter.type->name() == "unrestricted double") {
+            scoped_generator.set("parameter.type.name", "double");
+        }
+
+        bool is_wrapped_in_optional_type = false;
         if (!optional) {
             scoped_generator.append(R"~~~(
     @parameter.type.name@ @cpp_name@ = TRY(@js_name@@js_suffix@.to_double(vm));
@@ -570,6 +578,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     @parameter.type.name@ @cpp_name@;
 )~~~");
             } else {
+                is_wrapped_in_optional_type = true;
                 scoped_generator.append(R"~~~(
     Optional<@parameter.type.name@> @cpp_name@;
 )~~~");
@@ -586,6 +595,22 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
             } else {
                 scoped_generator.append(R"~~~(
 )~~~");
+            }
+        }
+
+        if (parameter.type->is_restricted_floating_point()) {
+            if (is_wrapped_in_optional_type) {
+                scoped_generator.append(R"~~~(
+    if (@cpp_name@.has_value() && (isinf(*@cpp_name@) || isnan(*@cpp_name@))) {
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::InvalidRestrictedFloatingPointParameter, "@parameter.name@");
+    }
+    )~~~");
+            } else {
+                scoped_generator.append(R"~~~(
+    if (isinf(@cpp_name@) || isnan(@cpp_name@)) {
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::InvalidRestrictedFloatingPointParameter, "@parameter.name@");
+    }
+    )~~~");
             }
         }
     } else if (parameter.type->name() == "Promise") {
@@ -1702,7 +1727,7 @@ static void generate_wrap_statement(SourceGenerator& generator, ByteString const
 
     @result_expression@ new_array@recursion_depth@;
 )~~~");
-    } else if (type.name() == "boolean" || type.name() == "double" || type.name() == "float") {
+    } else if (type.name() == "boolean" || type.is_floating_point()) {
         if (type.is_nullable()) {
             scoped_generator.append(R"~~~(
     @result_expression@ JS::Value(@value@.release_value());

@@ -38,6 +38,18 @@
             // 8. Creating a DOMRect with NaN height value
             testPart(() => new Rect(10, 20, 30, NaN));
 
+            // 5. Creating a DOMRect with Infinity x value
+            testPart(() => new Rect(Infinity, 20, 30, 40));
+
+            // 6. Creating a DOMRect with Infinity y value
+            testPart(() => new Rect(10, Infinity, 30, 40));
+
+            // 7. Creating a DOMRect with Infinity width value
+            testPart(() => new Rect(10, 20, Infinity, 40));
+
+            // 8. Creating a DOMRect with Infinity height value
+            testPart(() => new Rect(10, 20, 30, Infinity));
+
             testCounter = 1;
         }
     });

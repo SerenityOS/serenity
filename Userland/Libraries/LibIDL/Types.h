@@ -125,7 +125,7 @@ public:
     bool is_integer() const { return is_plain() && m_name.is_one_of("byte", "octet", "short", "unsigned short", "long", "unsigned long", "long long", "unsigned long long"); }
 
     // https://webidl.spec.whatwg.org/#dfn-numeric-type
-    bool is_numeric() const { return is_plain() && (is_integer() || m_name.is_one_of("float", "unrestricted float", "double", "unrestricted double")); }
+    bool is_numeric() const { return is_plain() && (is_integer() || is_floating_point()); }
 
     // https://webidl.spec.whatwg.org/#dfn-primitive-type
     bool is_primitive() const { return is_plain() && (is_numeric() || is_boolean() || m_name == "bigint"); }
@@ -137,6 +137,10 @@ public:
     bool is_distinguishable_from(Interface const&, Type const& other) const;
 
     bool is_json(Interface const&) const;
+
+    bool is_restricted_floating_point() const { return m_name.is_one_of("float", "double"); }
+    bool is_unrestricted_floating_point() const { return m_name.is_one_of("unrestricted float", "unrestricted double"); }
+    bool is_floating_point() const { return is_restricted_floating_point() || is_unrestricted_floating_point(); }
 
 private:
     Kind m_kind;
