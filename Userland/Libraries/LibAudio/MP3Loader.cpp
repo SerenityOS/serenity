@@ -166,19 +166,19 @@ ErrorOr<MP3::Header, LoaderError> MP3LoaderPlugin::read_header(SeekableStream& s
 {
     auto bitstream = BigEndianInputBitStream(MaybeOwned<Stream>(stream));
     if (TRY(bitstream.read_bits(4)) != 0xF)
-        return LoaderError { LoaderError::Category::Format, sample_index, "Frame header did not start with sync code." };
+        return LoaderError { LoaderError::Category::Format, sample_index, "Frame header did not start with sync code."_fly_string };
     MP3::Header header;
     header.id = TRY(bitstream.read_bit());
     header.layer = MP3::Tables::LayerNumberLookup[TRY(bitstream.read_bits(2))];
     if (header.layer <= 0)
-        return LoaderError { LoaderError::Category::Format, sample_index, "Frame header contains invalid layer number." };
+        return LoaderError { LoaderError::Category::Format, sample_index, "Frame header contains invalid layer number."_fly_string };
     header.protection_bit = TRY(bitstream.read_bit());
     header.bitrate = MP3::Tables::BitratesPerLayerLookup[header.layer - 1][TRY(bitstream.read_bits(4))];
     if (header.bitrate <= 0)
-        return LoaderError { LoaderError::Category::Format, sample_index, "Frame header contains invalid bitrate." };
+        return LoaderError { LoaderError::Category::Format, sample_index, "Frame header contains invalid bitrate."_fly_string };
     header.samplerate = MP3::Tables::SampleratesLookup[TRY(bitstream.read_bits(2))];
     if (header.samplerate <= 0)
-        return LoaderError { LoaderError::Category::Format, sample_index, "Frame header contains invalid samplerate." };
+        return LoaderError { LoaderError::Category::Format, sample_index, "Frame header contains invalid samplerate."_fly_string };
     header.padding_bit = TRY(bitstream.read_bit());
     header.private_bit = TRY(bitstream.read_bit());
     header.mode = static_cast<MP3::Mode>(TRY(bitstream.read_bits(2)));
@@ -221,7 +221,7 @@ ErrorOr<MP3::Header, LoaderError> MP3LoaderPlugin::synchronize_and_read_header(S
         }
         return header_result.value();
     }
-    return LoaderError { LoaderError::Category::Format, sample_index, "Failed to synchronize." };
+    return LoaderError { LoaderError::Category::Format, sample_index, "Failed to synchronize."_fly_string };
 }
 
 ErrorOr<MP3::Header, LoaderError> MP3LoaderPlugin::synchronize_and_read_header()
@@ -242,7 +242,7 @@ ErrorOr<MP3::MP3Frame, LoaderError> MP3LoaderPlugin::read_frame_data(MP3::Header
 
     auto maybe_buffer = ByteBuffer::create_uninitialized(header.slot_count);
     if (maybe_buffer.is_error())
-        return LoaderError { LoaderError::Category::IO, m_loaded_samples, "Out of memory" };
+        return LoaderError { LoaderError::Category::IO, m_loaded_samples, "Out of memory"_fly_string };
     auto& buffer = maybe_buffer.value();
 
     size_t old_reservoir_size = m_bit_reservoir.used_buffer_size();
@@ -539,7 +539,7 @@ MaybeLoaderError MP3LoaderPlugin::read_huffman_data(MP3::MP3Frame& frame, BigEnd
         }
 
         if (!tree || tree->nodes.is_empty()) {
-            return LoaderError { LoaderError::Category::Format, m_loaded_samples, "Frame references invalid huffman table." };
+            return LoaderError { LoaderError::Category::Format, m_loaded_samples, "Frame references invalid huffman table."_fly_string };
         }
 
         // Assumption: There's enough bits to read. 32 is just a placeholder for "unlimited".
@@ -547,7 +547,7 @@ MaybeLoaderError MP3LoaderPlugin::read_huffman_data(MP3::MP3Frame& frame, BigEnd
         auto const entry = MP3::Tables::Huffman::huffman_decode(reservoir, tree->nodes, 32);
         granule_bits_read += entry.bits_read;
         if (!entry.code.has_value())
-            return LoaderError { LoaderError::Category::Format, m_loaded_samples, "Frame contains invalid huffman data." };
+            return LoaderError { LoaderError::Category::Format, m_loaded_samples, "Frame contains invalid huffman data."_fly_string };
         int x = entry.code->symbol.x;
         int y = entry.code->symbol.y;
 
@@ -585,7 +585,7 @@ MaybeLoaderError MP3LoaderPlugin::read_huffman_data(MP3::MP3Frame& frame, BigEnd
         auto const entry = MP3::Tables::Huffman::huffman_decode(reservoir, count1table, granule.part_2_3_length - granule_bits_read);
         granule_bits_read += entry.bits_read;
         if (!entry.code.has_value())
-            return LoaderError { LoaderError::Category::Format, m_loaded_samples, "Frame contains invalid huffman data." };
+            return LoaderError { LoaderError::Category::Format, m_loaded_samples, "Frame contains invalid huffman data."_fly_string };
         int v = entry.code->symbol.v;
         if (v != 0) {
             if (granule_bits_read >= granule.part_2_3_length)
@@ -628,7 +628,7 @@ MaybeLoaderError MP3LoaderPlugin::read_huffman_data(MP3::MP3Frame& frame, BigEnd
     }
 
     if (granule_bits_read > granule.part_2_3_length) {
-        return LoaderError { LoaderError::Category::Format, m_loaded_samples, "Read too many bits from bit reservoir." };
+        return LoaderError { LoaderError::Category::Format, m_loaded_samples, "Read too many bits from bit reservoir."_fly_string };
     }
 
     // 2.4.3.4.6: "If there are more Huffman code bits than necessary to decode 576 values

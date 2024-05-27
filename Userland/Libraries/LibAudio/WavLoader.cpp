@@ -165,7 +165,7 @@ MaybeLoaderError WavLoaderPlugin::seek(int sample_index)
 {
     dbgln_if(AWAVLOADER_DEBUG, "seek sample_index {}", sample_index);
     if (sample_index < 0 || sample_index >= static_cast<int>(m_total_samples))
-        return LoaderError { LoaderError::Category::Internal, m_loaded_samples, "Seek outside the sample range" };
+        return LoaderError { LoaderError::Category::Internal, m_loaded_samples, "Seek outside the sample range"_fly_string };
 
     size_t sample_offset = m_byte_offset_of_data_samples + static_cast<size_t>(sample_index * m_num_channels * (pcm_bits_per_sample(m_sample_format) / 8));
 
@@ -178,11 +178,11 @@ MaybeLoaderError WavLoaderPlugin::seek(int sample_index)
 // Specification reference: http://www-mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/WAVE.html
 MaybeLoaderError WavLoaderPlugin::parse_header()
 {
-#define CHECK(check, category, msg)                                                                                                    \
-    do {                                                                                                                               \
-        if (!(check)) {                                                                                                                \
-            return LoaderError { category, static_cast<size_t>(TRY(m_stream->tell())), ByteString::formatted("WAV header: {}", msg) }; \
-        }                                                                                                                              \
+#define CHECK(check, category, msg)                                                                                                     \
+    do {                                                                                                                                \
+        if (!(check)) {                                                                                                                 \
+            return LoaderError { category, static_cast<size_t>(TRY(m_stream->tell())), TRY(String::formatted("WAV header: {}", msg)) }; \
+        }                                                                                                                               \
     } while (0)
 
     auto file_header = TRY(m_stream->read_value<RIFF::FileHeader>());

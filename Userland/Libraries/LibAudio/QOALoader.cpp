@@ -48,7 +48,7 @@ MaybeLoaderError QOALoaderPlugin::parse_header()
 {
     u32 header_magic = TRY(m_stream->read_value<BigEndian<u32>>());
     if (header_magic != QOA::magic)
-        return LoaderError { LoaderError::Category::Format, 0, "QOA header: Magic number must be 'qoaf'" };
+        return LoaderError { LoaderError::Category::Format, 0, "QOA header: Magic number must be 'qoaf'"_fly_string };
 
     m_total_samples = TRY(m_stream->read_value<BigEndian<u32>>());
 
@@ -62,9 +62,9 @@ MaybeLoaderError QOALoaderPlugin::load_one_frame(Span<Sample>& target, IsFirstFr
     if (header.num_channels > 8)
         dbgln("QOALoader: Warning: QOA frame at {} has more than 8 channels ({}), this is not supported by the reference implementation.", TRY(m_stream->tell()) - sizeof(QOA::FrameHeader), header.num_channels);
     if (header.num_channels == 0)
-        return LoaderError { LoaderError::Category::Format, TRY(m_stream->tell()), "QOA frame: Number of channels must be greater than 0" };
+        return LoaderError { LoaderError::Category::Format, TRY(m_stream->tell()), "QOA frame: Number of channels must be greater than 0"_fly_string };
     if (header.sample_count > QOA::max_frame_samples)
-        return LoaderError { LoaderError::Category::Format, TRY(m_stream->tell()), "QOA frame: Too many samples in frame" };
+        return LoaderError { LoaderError::Category::Format, TRY(m_stream->tell()), "QOA frame: Too many samples in frame"_fly_string };
 
     // We weren't given a large enough buffer; signal that we didn't write anything and return.
     if (header.sample_count > target.size()) {
@@ -105,7 +105,7 @@ MaybeLoaderError QOALoaderPlugin::load_one_frame(Span<Sample>& target, IsFirstFr
         m_sample_rate = header.sample_rate;
     } else {
         if (m_sample_rate != header.sample_rate)
-            return LoaderError { LoaderError::Category::Unimplemented, TRY(m_stream->tell()), "QOA: Differing sample rate in non-initial frame" };
+            return LoaderError { LoaderError::Category::Unimplemented, TRY(m_stream->tell()), "QOA: Differing sample rate in non-initial frame"_fly_string };
         if (m_num_channels != header.num_channels)
             m_has_uniform_channel_count = false;
     }
@@ -189,7 +189,7 @@ MaybeLoaderError QOALoaderPlugin::seek(int sample_index)
     // A QOA file consists of 8 bytes header followed by a number of usually fixed-size frames.
     // This fixed bitrate allows us to seek in constant time.
     if (!m_has_uniform_channel_count)
-        return LoaderError { LoaderError::Category::Unimplemented, TRY(m_stream->tell()), "QOA with non-uniform channel count is currently not seekable"sv };
+        return LoaderError { LoaderError::Category::Unimplemented, TRY(m_stream->tell()), "QOA with non-uniform channel count is currently not seekable"_fly_string };
     /// FIXME: Change the Loader API to use size_t.
     VERIFY(sample_index >= 0);
     // We seek to the frame "before"; i.e. the frame that contains that sample.
