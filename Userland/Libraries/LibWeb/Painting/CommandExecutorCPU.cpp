@@ -15,8 +15,9 @@
 
 namespace Web::Painting {
 
-CommandExecutorCPU::CommandExecutorCPU(Gfx::Bitmap& bitmap)
+CommandExecutorCPU::CommandExecutorCPU(Gfx::Bitmap& bitmap, bool enable_affine_command_executor)
     : m_target_bitmap(bitmap)
+    , m_enable_affine_command_executor(enable_affine_command_executor)
 {
     stacking_contexts.append({ .painter = AK::make<Gfx::Painter>(bitmap),
         .opacity = 1.0f,
@@ -127,6 +128,21 @@ CommandResult CommandExecutorCPU::clear_clip_rect(ClearClipRect const&)
 
 CommandResult CommandExecutorCPU::push_stacking_context(PushStackingContext const& command)
 {
+    // FIXME: This extracts the affine 2D part of the full transformation matrix.
+    // Use the whole matrix when we get better transformation support in LibGfx or use LibGL for drawing the bitmap
+    auto affine_transform = Gfx::extract_2d_affine_transform(command.transform.matrix);
+
+    if (m_enable_affine_command_executor && command.opacity == 1.0f && !affine_transform.is_identity_or_translation()) {
+        auto offset = command.is_fixed_position ? Gfx::IntPoint {} : painter().translation();
+        auto full_transform = Gfx::AffineTransform {}
+                                  .set_translation((command.post_transform_translation + offset).to_type<float>())
+                                  .translate(command.transform.origin)
+                                  .multiply(affine_transform)
+                                  .translate(-command.transform.origin);
+        m_affine_command_executor = AffineCommandExecutorCPU(m_target_bitmap, full_transform, painter().clip_rect());
+        return CommandResult::ContinueWithNestedExecutor;
+    }
+
     painter().save();
     if (command.is_fixed_position)
         painter().translate(-painter().translation());
@@ -147,10 +163,6 @@ CommandResult CommandExecutorCPU::push_stacking_context(PushStackingContext cons
         painter().translate(-command.source_paintable_rect.location());
         return CommandResult::Continue;
     }
-
-    // FIXME: This extracts the affine 2D part of the full transformation matrix.
-    // Use the whole matrix when we get better transformation support in LibGfx or use LibGL for drawing the bitmap
-    auto affine_transform = Gfx::extract_2d_affine_transform(command.transform.matrix);
 
     if (command.opacity == 1.0f && affine_transform.is_identity_or_translation()) {
         // OPTIMIZATION: This is a simple translation use previous stacking context's painter.

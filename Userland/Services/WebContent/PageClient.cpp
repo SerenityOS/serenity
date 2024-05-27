@@ -37,12 +37,18 @@
 namespace WebContent {
 
 static bool s_use_gpu_painter = false;
+static bool s_use_experimental_cpu_transform_support = false;
 
 JS_DEFINE_ALLOCATOR(PageClient);
 
 void PageClient::set_use_gpu_painter()
 {
     s_use_gpu_painter = true;
+}
+
+void PageClient::set_use_experimental_cpu_transform_support()
+{
+    s_use_experimental_cpu_transform_support = true;
 }
 
 JS::NonnullGCPtr<PageClient> PageClient::create(JS::VM& vm, PageHost& page_host, u64 id)
@@ -222,7 +228,7 @@ void PageClient::paint(Web::DevicePixelRect const& content_rect, Gfx::Bitmap& ta
         }
 #endif
     } else {
-        Web::Painting::CommandExecutorCPU painting_command_executor(target);
+        Web::Painting::CommandExecutorCPU painting_command_executor(target, s_use_experimental_cpu_transform_support);
         painting_commands.execute(painting_command_executor);
     }
 }
