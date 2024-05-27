@@ -88,7 +88,7 @@ public:
     void set_target(DOM::Element* target);
 
     // JS bindings
-    Optional<StringView> pseudo_element() const { return m_target_pseudo_selector->name(); }
+    Optional<String> pseudo_element() const;
     WebIDL::ExceptionOr<void> set_pseudo_element(Optional<String>);
 
     Optional<CSS::Selector::PseudoElement::Type> pseudo_element_type() const;
