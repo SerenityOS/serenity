@@ -70,6 +70,7 @@
     M(InvalidLength, "Invalid {} length")                                                                                               \
     M(InvalidOrAmbiguousExportEntry, "Invalid or ambiguous export entry '{}'")                                                          \
     M(InvalidPrecision, "Precision must be an integer no less than 1, and no greater than 100")                                         \
+    M(InvalidRestrictedFloatingPointParameter, "Expected {} to be a finite floating-point number")                                      \
     M(InvalidTimeValue, "Invalid time value")                                                                                           \
     M(InvalidRadix, "Radix must be an integer no less than 2, and no greater than 36")                                                  \
     M(IsNotA, "{} is not a {}")                                                                                                         \

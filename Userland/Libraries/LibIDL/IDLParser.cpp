@@ -225,9 +225,11 @@ NonnullRefPtr<Type const> Parser::parse_type()
     if (unsigned_)
         consume_whitespace();
 
-    // FIXME: Actually treat "unrestricted" and normal floats/doubles differently.
-    if (lexer.consume_specific("unrestricted"sv))
+    bool unrestricted = lexer.consume_specific("unrestricted"sv);
+    if (unrestricted)
         consume_whitespace();
+
+    VERIFY(!(unsigned_ && unrestricted));
 
     auto name = lexer.consume_until([](auto ch) { return !is_ascii_alphanumeric(ch) && ch != '_'; });
 
@@ -252,6 +254,9 @@ NonnullRefPtr<Type const> Parser::parse_type()
     StringBuilder builder;
     if (unsigned_)
         builder.append("unsigned "sv);
+    if (unrestricted)
+        builder.append("unrestricted "sv);
+
     builder.append(name);
 
     if (nullable) {
