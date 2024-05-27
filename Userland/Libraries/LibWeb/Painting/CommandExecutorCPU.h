@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/MaybeOwned.h>
+#include <LibWeb/Painting/AffineCommandExecutorCPU.h>
 #include <LibWeb/Painting/RecordingPainter.h>
 
 namespace Web::Painting {
@@ -53,10 +54,17 @@ public:
     bool needs_update_immutable_bitmap_texture_cache() const override { return false; }
     void update_immutable_bitmap_texture_cache(HashMap<u32, Gfx::ImmutableBitmap const*>&) override {};
 
-    CommandExecutorCPU(Gfx::Bitmap& bitmap);
+    CommandExecutorCPU(Gfx::Bitmap& bitmap, bool enable_affine_command_executor = false);
+
+    CommandExecutor& nested_executor() override
+    {
+        return *m_affine_command_executor;
+    }
 
 private:
     Gfx::Bitmap& m_target_bitmap;
+    bool m_enable_affine_command_executor { false };
+
     Vector<RefPtr<BorderRadiusCornerClipper>> m_corner_clippers_stack;
 
     struct StackingContext {
@@ -71,6 +79,7 @@ private:
     [[nodiscard]] Gfx::Painter& painter() { return *stacking_contexts.last().painter; }
 
     Vector<StackingContext> stacking_contexts;
+    Optional<AffineCommandExecutorCPU> m_affine_command_executor;
 };
 
 }

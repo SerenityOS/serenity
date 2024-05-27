@@ -100,6 +100,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool enable_qt_networking = false;
     bool expose_internals_object = false;
     bool use_gpu_painting = false;
+    bool use_experimental_cpu_transform_support = false;
     bool debug_web_content = false;
     bool log_all_js_exceptions = false;
     bool enable_idl_tracing = false;
@@ -113,6 +114,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(disable_sql_database, "Disable SQL database", "disable-sql-database");
     args_parser.add_option(enable_qt_networking, "Enable Qt as the backend networking service", "enable-qt-networking");
     args_parser.add_option(use_gpu_painting, "Enable GPU painting", "enable-gpu-painting");
+    args_parser.add_option(use_experimental_cpu_transform_support, "Enable experimental CPU transform support", "experimental-cpu-transforms");
     args_parser.add_option(debug_web_content, "Wait for debugger to attach to WebContent", "debug-web-content");
     args_parser.add_option(certificates, "Path to a certificate file", "certificate", 'C', "certificate");
     args_parser.add_option(log_all_js_exceptions, "Log all JavaScript exceptions", "log-all-js-exceptions");
@@ -177,6 +179,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         .executable_path = MUST(String::from_byte_string(MUST(Core::System::current_executable_path()))),
         .enable_callgrind_profiling = enable_callgrind_profiling ? Ladybird::EnableCallgrindProfiling::Yes : Ladybird::EnableCallgrindProfiling::No,
         .enable_gpu_painting = use_gpu_painting ? Ladybird::EnableGPUPainting::Yes : Ladybird::EnableGPUPainting::No,
+        .enable_experimental_cpu_transforms = use_experimental_cpu_transform_support ? Ladybird::EnableExperimentalCPUTransforms::Yes : Ladybird::EnableExperimentalCPUTransforms::No,
         .use_lagom_networking = enable_qt_networking ? Ladybird::UseLagomNetworking::No : Ladybird::UseLagomNetworking::Yes,
         .wait_for_debugger = debug_web_content ? Ladybird::WaitForDebugger::Yes : Ladybird::WaitForDebugger::No,
         .log_all_js_exceptions = log_all_js_exceptions ? Ladybird::LogAllJSExceptions::Yes : Ladybird::LogAllJSExceptions::No,

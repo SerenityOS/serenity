@@ -524,6 +524,7 @@ set(SOURCES
     Page/EventHandler.cpp
     Page/InputEvent.cpp
     Page/Page.cpp
+    Painting/AffineCommandExecutorCPU.cpp
     Painting/AudioPaintable.cpp
     Painting/BackgroundPainting.cpp
     Painting/BorderRadiiData.cpp

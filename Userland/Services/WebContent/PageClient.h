@@ -30,6 +30,7 @@ public:
     static JS::NonnullGCPtr<PageClient> create(JS::VM& vm, PageHost& page_host, u64 id);
 
     static void set_use_gpu_painter();
+    static void set_use_experimental_cpu_transform_support();
 
     virtual void schedule_repaint() override;
     virtual bool is_ready_to_paint() const override;
