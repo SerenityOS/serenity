@@ -14,7 +14,7 @@ namespace Web::Animations {
 // https://www.w3.org/TR/web-animations-1/#dictdef-keyframeanimationoptions
 struct KeyframeAnimationOptions : public KeyframeEffectOptions {
     FlyString id { ""_fly_string };
-    JS::GCPtr<AnimationTimeline> timeline;
+    Optional<JS::GCPtr<AnimationTimeline>> timeline;
 };
 
 // https://www.w3.org/TR/web-animations-1/#dictdef-getanimationsoptions
