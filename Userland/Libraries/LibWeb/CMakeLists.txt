@@ -430,6 +430,7 @@ set(SOURCES
     HTML/Timer.cpp
     HTML/TimeRanges.cpp
     HTML/ToggleEvent.cpp
+    HTML/TokenizedFeatures.cpp
     HTML/TrackEvent.cpp
     HTML/TraversableNavigable.cpp
     HTML/UserActivation.cpp
