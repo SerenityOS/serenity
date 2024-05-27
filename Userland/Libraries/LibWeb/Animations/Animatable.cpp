@@ -32,15 +32,15 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Animation>> Animatable::animate(Optional<JS
     // 3. If options is a KeyframeAnimationOptions object, let timeline be the timeline member of options or, if
     //    timeline member of options is missing, be the default document timeline of the node document of the element
     //    on which this method was called.
-    JS::GCPtr<AnimationTimeline> timeline;
+    Optional<JS::GCPtr<AnimationTimeline>> timeline;
     if (options.has<KeyframeAnimationOptions>())
         timeline = options.get<KeyframeAnimationOptions>().timeline;
-    if (!timeline)
+    if (!timeline.has_value())
         timeline = target->document().timeline();
 
     // 4. Construct a new Animation object, animation, in the relevant Realm of target by using the same procedure as
     //    the Animation() constructor, passing effect and timeline as arguments of the same name.
-    auto animation = TRY(Animation::construct_impl(realm, effect, timeline));
+    auto animation = TRY(Animation::construct_impl(realm, effect, move(timeline)));
 
     // 5. If options is a KeyframeAnimationOptions object, assign the value of the id member of options to animation’s
     //    id attribute.

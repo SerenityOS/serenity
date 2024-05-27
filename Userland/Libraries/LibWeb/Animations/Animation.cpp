@@ -668,7 +668,8 @@ WebIDL::ExceptionOr<void> Animation::play_an_animation(AutoRewind auto_rewind)
     //     If a user agent determines that animation is immediately ready, it may schedule the above task as a microtask
     //     such that it runs at the next microtask checkpoint, but it must not perform the task synchronously.
     m_pending_play_task = TaskState::Scheduled;
-    m_saved_play_time = m_timeline->current_time().value();
+    if (m_timeline)
+        m_saved_play_time = m_timeline->current_time().value();
 
     // 13. Run the procedure to update an animation’s finished state for animation with the did seek flag set to false,
     //     and the synchronously notify flag set to false.
