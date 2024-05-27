@@ -378,50 +378,6 @@ CommandResult CommandExecutorGPU::blit_corner_clipping(BlitCornerClipping const&
     return CommandResult::Continue;
 }
 
-CommandResult CommandExecutorGPU::paint_borders(PaintBorders const& command)
-{
-    // FIXME: Add support for corner radiuses
-
-    auto const& border_rect = command.border_rect;
-    auto const& borders_data = command.borders_data;
-
-    Gfx::IntRect top_border_rect = {
-        border_rect.x(),
-        border_rect.y(),
-        border_rect.width(),
-        borders_data.top.width
-    };
-    Gfx::IntRect right_border_rect = {
-        border_rect.x() + (border_rect.width() - borders_data.right.width),
-        border_rect.y(),
-        borders_data.right.width,
-        border_rect.height()
-    };
-    Gfx::IntRect bottom_border_rect = {
-        border_rect.x(),
-        border_rect.y() + (border_rect.height() - borders_data.bottom.width),
-        border_rect.width(),
-        borders_data.bottom.width
-    };
-    Gfx::IntRect left_border_rect = {
-        border_rect.x(),
-        border_rect.y(),
-        borders_data.left.width,
-        border_rect.height()
-    };
-
-    if (borders_data.top.width > 0)
-        painter().fill_rect(top_border_rect, borders_data.top.color);
-    if (borders_data.right.width > 0)
-        painter().fill_rect(right_border_rect, borders_data.right.color);
-    if (borders_data.bottom.width > 0)
-        painter().fill_rect(bottom_border_rect, borders_data.bottom.color);
-    if (borders_data.left.width > 0)
-        painter().fill_rect(left_border_rect, borders_data.left.color);
-
-    return CommandResult::Continue;
-}
-
 bool CommandExecutorGPU::would_be_fully_clipped_by_painter(Gfx::IntRect rect) const
 {
     auto translation = painter().transform().translation().to_type<int>();

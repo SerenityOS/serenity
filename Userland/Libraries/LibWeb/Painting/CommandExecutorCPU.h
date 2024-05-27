@@ -42,7 +42,6 @@ public:
     CommandResult draw_triangle_wave(DrawTriangleWave const&) override;
     CommandResult sample_under_corners(SampleUnderCorners const&) override;
     CommandResult blit_corner_clipping(BlitCornerClipping const&) override;
-    CommandResult paint_borders(PaintBorders const&) override;
 
     bool would_be_fully_clipped_by_painter(Gfx::IntRect) const override;
 
