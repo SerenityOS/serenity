@@ -797,44 +797,6 @@ public:
     struct Passive {
     };
 
-    struct SegmentType0 {
-        static ParseResult<SegmentType0> parse(Stream& stream);
-
-        Vector<FunctionIndex> function_indices;
-        Active mode;
-    };
-    struct SegmentType1 {
-        static ParseResult<SegmentType1> parse(Stream& stream);
-
-        Vector<FunctionIndex> function_indices;
-    };
-    struct SegmentType2 {
-        // FIXME: Implement me!
-        static ParseResult<SegmentType2> parse(Stream& stream);
-    };
-    struct SegmentType3 {
-        // FIXME: Implement me!
-        static ParseResult<SegmentType3> parse(Stream& stream);
-    };
-    struct SegmentType4 {
-        static ParseResult<SegmentType4> parse(Stream& stream);
-
-        Active mode;
-        Vector<Expression> initializer;
-    };
-    struct SegmentType5 {
-        // FIXME: Implement me!
-        static ParseResult<SegmentType5> parse(Stream& stream);
-    };
-    struct SegmentType6 {
-        // FIXME: Implement me!
-        static ParseResult<SegmentType6> parse(Stream& stream);
-    };
-    struct SegmentType7 {
-        // FIXME: Implement me!
-        static ParseResult<SegmentType7> parse(Stream& stream);
-    };
-
     struct Element {
         static ParseResult<Element> parse(Stream&);
 

@@ -1225,144 +1225,66 @@ ParseResult<StartSection> StartSection::parse(Stream& stream)
     return StartSection { result };
 }
 
-ParseResult<ElementSection::SegmentType0> ElementSection::SegmentType0::parse(Stream& stream)
-{
-    auto expression = TRY(Expression::parse(stream));
-    auto indices = TRY(parse_vector<GenericIndexParser<FunctionIndex>>(stream));
-
-    return SegmentType0 { indices, Active { 0, expression } };
-}
-
-ParseResult<ElementSection::SegmentType1> ElementSection::SegmentType1::parse(Stream& stream)
-{
-    auto kind_or_error = stream.read_value<u8>();
-    if (kind_or_error.is_error())
-        return with_eof_check(stream, ParseError::ExpectedKindTag);
-
-    auto kind = kind_or_error.release_value();
-    if (kind != 0)
-        return ParseError::InvalidTag;
-    auto indices = TRY(parse_vector<GenericIndexParser<FunctionIndex>>(stream));
-
-    return SegmentType1 { indices };
-}
-
-ParseResult<ElementSection::SegmentType2> ElementSection::SegmentType2::parse(Stream& stream)
-{
-    dbgln("Type 2");
-    (void)stream;
-    return ParseError::NotImplemented;
-}
-
-ParseResult<ElementSection::SegmentType3> ElementSection::SegmentType3::parse(Stream& stream)
-{
-    dbgln("Type 3");
-    (void)stream;
-    return ParseError::NotImplemented;
-}
-
-ParseResult<ElementSection::SegmentType4> ElementSection::SegmentType4::parse(Stream& stream)
-{
-    auto expression = TRY(Expression::parse(stream));
-    auto initializers = TRY(parse_vector<Expression>(stream));
-
-    return SegmentType4 {
-        .mode = Active {
-            .index = 0,
-            .expression = expression,
-        },
-        .initializer = initializers,
-    };
-}
-
-ParseResult<ElementSection::SegmentType5> ElementSection::SegmentType5::parse(Stream& stream)
-{
-    dbgln("Type 5");
-    (void)stream;
-    return ParseError::NotImplemented;
-}
-
-ParseResult<ElementSection::SegmentType6> ElementSection::SegmentType6::parse(Stream& stream)
-{
-    dbgln("Type 6");
-    (void)stream;
-    return ParseError::NotImplemented;
-}
-
-ParseResult<ElementSection::SegmentType7> ElementSection::SegmentType7::parse(Stream& stream)
-{
-    dbgln("Type 7");
-    (void)stream;
-    return ParseError::NotImplemented;
-}
-
 ParseResult<ElementSection::Element> ElementSection::Element::parse(Stream& stream)
 {
     ScopeLogger<WASM_BINPARSER_DEBUG> logger("Element"sv);
-    auto tag_or_error = stream.read_value<u8>();
+    auto tag_or_error = stream.read_value<LEB128<u32>>();
     if (tag_or_error.is_error())
         return with_eof_check(stream, ParseError::ExpectedKindTag);
 
     auto tag = tag_or_error.release_value();
 
-    switch (tag) {
-    case 0x00:
-        if (auto result = SegmentType0::parse(stream); result.is_error()) {
-            return result.error();
-        } else {
-            Vector<Instruction> instructions;
-            for (auto& index : result.value().function_indices)
-                instructions.empend(Instructions::ref_func, index);
-            return Element { ValueType(ValueType::FunctionReference), { Expression { move(instructions) } }, move(result.value().mode) };
-        }
-    case 0x01:
-        if (auto result = SegmentType1::parse(stream); result.is_error()) {
-            return result.error();
-        } else {
-            Vector<Instruction> instructions;
-            for (auto& index : result.value().function_indices)
-                instructions.empend(Instructions::ref_func, index);
-            return Element { ValueType(ValueType::FunctionReference), { Expression { move(instructions) } }, Passive {} };
-        }
-    case 0x02:
-        if (auto result = SegmentType2::parse(stream); result.is_error()) {
-            return result.error();
-        } else {
-            return ParseError::NotImplemented;
-        }
-    case 0x03:
-        if (auto result = SegmentType3::parse(stream); result.is_error()) {
-            return result.error();
-        } else {
-            return ParseError::NotImplemented;
-        }
-    case 0x04:
-        if (auto result = SegmentType4::parse(stream); result.is_error()) {
-            return result.error();
-        } else {
-            return Element { ValueType(ValueType::FunctionReference), move(result.value().initializer), move(result.value().mode) };
-        }
-    case 0x05:
-        if (auto result = SegmentType5::parse(stream); result.is_error()) {
-            return result.error();
-        } else {
-            return ParseError::NotImplemented;
-        }
-    case 0x06:
-        if (auto result = SegmentType6::parse(stream); result.is_error()) {
-            return result.error();
-        } else {
-            return ParseError::NotImplemented;
-        }
-    case 0x07:
-        if (auto result = SegmentType7::parse(stream); result.is_error()) {
-            return result.error();
-        } else {
-            return ParseError::NotImplemented;
-        }
-    default:
+    if (tag > 0x07)
         return ParseError::InvalidTag;
+
+    auto has_passive = (tag & 0x01) != 0;
+    auto has_explicit_index = (tag & 0x02) != 0;
+    auto has_exprs = (tag & 0x04) != 0;
+
+    Variant<Active, Passive, Declarative> mode = Passive {};
+    if (has_passive) {
+        if (has_explicit_index) {
+            mode = Declarative {};
+        } else {
+            mode = Passive {};
+        }
+    } else {
+        TableIndex table_index = 0;
+        if (has_explicit_index)
+            table_index = TRY(GenericIndexParser<TableIndex>::parse(stream));
+        auto expression = TRY(Expression::parse(stream));
+        mode = Active { table_index, expression };
     }
+
+    auto type = ValueType(ValueType::FunctionReference);
+    if (has_passive || has_explicit_index) {
+        if (has_exprs) {
+            type = TRY(ValueType::parse(stream));
+        } else {
+            auto extern_or_error = stream.read_value<u8>();
+            if (extern_or_error.is_error())
+                return with_eof_check(stream, ParseError::InvalidType);
+            // Make sure that this is a function, as it's technically only the
+            // allowed one.
+            if (extern_or_error.release_value() != 0x00) {
+                return ParseError::InvalidType;
+            }
+            type = ValueType(ValueType::FunctionReference);
+        }
+    }
+
+    Vector<Expression> items;
+    if (!has_exprs) {
+        auto indices = TRY(parse_vector<GenericIndexParser<FunctionIndex>>(stream));
+        Vector<Instruction> instructions;
+        for (auto& index : indices)
+            instructions.empend(Instructions::ref_func, index);
+        items = { Expression { move(instructions) } };
+    } else {
+        items = TRY(parse_vector<Expression>(stream));
+    }
+
+    return Element { type, move(items), move(mode) };
 }
 
 ParseResult<ElementSection> ElementSection::parse(Stream& stream)
