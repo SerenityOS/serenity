@@ -6,6 +6,9 @@
 
 #pragma once
 
+#include <AK/HashMap.h>
+#include <AK/String.h>
+
 namespace Web::HTML::TokenizedFeature {
 
 #define TOKENIZED_FEATURE(Feature) \
@@ -23,5 +26,17 @@ TOKENIZED_FEATURE(Resizable);
 TOKENIZED_FEATURE(Scrollbars);
 TOKENIZED_FEATURE(Status);
 TOKENIZED_FEATURE(Toolbar);
+
+using Map = OrderedHashMap<String, String>;
+
+}
+
+namespace Web::HTML {
+
+TokenizedFeature::Map tokenize_open_features(StringView features);
+TokenizedFeature::Popup check_if_a_popup_window_is_requested(TokenizedFeature::Map const&);
+
+template<Enum T>
+T parse_boolean_feature(StringView value);
 
 }
