@@ -61,7 +61,7 @@ Gfx::Color border_color(BorderEdge edge, BordersDataDevicePixels const& borders_
     return border_data.color;
 }
 
-void paint_border(Gfx::Painter& painter, BorderEdge edge, DevicePixelRect const& rect, Gfx::AntiAliasingPainter::CornerRadius const& radius, Gfx::AntiAliasingPainter::CornerRadius const& opposite_radius, BordersDataDevicePixels const& borders_data, Gfx::Path& path, bool last)
+void paint_border(RecordingPainter& painter, BorderEdge edge, DevicePixelRect const& rect, Gfx::AntiAliasingPainter::CornerRadius const& radius, Gfx::AntiAliasingPainter::CornerRadius const& opposite_radius, BordersDataDevicePixels const& borders_data, Gfx::Path& path, bool last)
 {
     auto const& border_data = [&] {
         switch (edge) {
@@ -189,8 +189,9 @@ void paint_border(Gfx::Painter& painter, BorderEdge edge, DevicePixelRect const&
         // If joined borders have the same color, combine them to draw together.
         if (ready_to_draw) {
             path.close_all_subpaths();
-            Gfx::AntiAliasingPainter aa_painter(painter);
-            aa_painter.fill_path(path, color, Gfx::Painter::WindingRule::EvenOdd);
+            painter.fill_path({ .path = path,
+                .color = color,
+                .winding_rule = Gfx::Painter::WindingRule::EvenOdd });
             path.clear();
         }
     };
@@ -490,7 +491,7 @@ void paint_border(Gfx::Painter& painter, BorderEdge edge, DevicePixelRect const&
     }
 }
 
-void paint_all_borders(Gfx::Painter& painter, DevicePixelRect const& border_rect, CornerRadii const& corner_radii, BordersDataDevicePixels const& borders_data)
+void paint_all_borders(RecordingPainter& painter, DevicePixelRect const& border_rect, CornerRadii const& corner_radii, BordersDataDevicePixels const& borders_data)
 {
     if (borders_data.top.width <= 0 && borders_data.right.width <= 0 && borders_data.left.width <= 0 && borders_data.bottom.width <= 0)
         return;

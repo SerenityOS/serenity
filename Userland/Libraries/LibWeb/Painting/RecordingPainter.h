@@ -141,8 +141,6 @@ public:
 
     void draw_triangle_wave(Gfx::IntPoint a_p1, Gfx::IntPoint a_p2, Color color, int amplitude, int thickness);
 
-    void paint_borders(DevicePixelRect const& border_rect, CornerRadii const& corner_radii, BordersDataDevicePixels const& borders_data);
-
     RecordingPainter(CommandList& commands_list);
     ~RecordingPainter();
 

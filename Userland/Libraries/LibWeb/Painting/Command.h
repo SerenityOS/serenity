@@ -379,19 +379,6 @@ struct BlitCornerClipping {
     void translate_by(Gfx::IntPoint const& offset) { border_rect.translate_by(offset); }
 };
 
-struct PaintBorders {
-    DevicePixelRect border_rect;
-    CornerRadii corner_radii;
-    BordersDataDevicePixels borders_data;
-
-    [[nodiscard]] Gfx::IntRect bounding_rect() const { return border_rect.to_type<int>(); }
-
-    void translate_by(Gfx::IntPoint const& offset)
-    {
-        border_rect.translate_by(offset.to_type<DevicePixels>());
-    }
-};
-
 using Command = Variant<
     DrawGlyphRun,
     DrawText,
@@ -421,7 +408,6 @@ using Command = Variant<
     DrawRect,
     DrawTriangleWave,
     SampleUnderCorners,
-    BlitCornerClipping,
-    PaintBorders>;
+    BlitCornerClipping>;
 
 }

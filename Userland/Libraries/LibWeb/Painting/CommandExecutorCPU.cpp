@@ -473,12 +473,6 @@ CommandResult CommandExecutorCPU::blit_corner_clipping(BlitCornerClipping const&
     return CommandResult::Continue;
 }
 
-CommandResult CommandExecutorCPU::paint_borders(PaintBorders const& command)
-{
-    paint_all_borders(painter(), command.border_rect, command.corner_radii, command.borders_data);
-    return CommandResult::Continue;
-}
-
 bool CommandExecutorCPU::would_be_fully_clipped_by_painter(Gfx::IntRect rect) const
 {
     return !painter().clip_rect().intersects(rect.translated(painter().translation()));

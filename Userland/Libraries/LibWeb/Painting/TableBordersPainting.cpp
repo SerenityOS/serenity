@@ -351,7 +351,7 @@ static void paint_separate_cell_borders(PaintableBox const& cell_box, HashMap<Ce
         .left = cell_box.box_model().border.left == 0 ? CSS::BorderData() : cell_box.computed_values().border_left(),
     };
     auto cell_rect = cell_coordinates_to_device_rect.get({ cell_box.table_cell_coordinates()->row_index, cell_box.table_cell_coordinates()->column_index }).value();
-    context.recording_painter().paint_borders(cell_rect, cell_box.normalized_border_radii_data().as_corners(context), borders_data.to_device_pixels(context));
+    paint_all_borders(context.recording_painter(), cell_rect, cell_box.normalized_border_radii_data().as_corners(context), borders_data.to_device_pixels(context));
 }
 
 void paint_table_borders(PaintContext& context, PaintableBox const& table_paintable)
@@ -436,7 +436,7 @@ void paint_table_borders(PaintContext& context, PaintableBox const& table_painta
                 .bottom = cell_box.box_model().border.bottom == 0 ? CSS::BorderData() : cell_box.computed_values().border_bottom(),
                 .left = cell_box.box_model().border.left == 0 ? CSS::BorderData() : cell_box.computed_values().border_left(),
             };
-            context.recording_painter().paint_borders(context.rounded_device_rect(cell_box.absolute_border_box_rect()), cell_box.normalized_border_radii_data().as_corners(context), borders_data.to_device_pixels(context));
+            paint_all_borders(context.recording_painter(), context.rounded_device_rect(cell_box.absolute_border_box_rect()), cell_box.normalized_border_radii_data().as_corners(context), borders_data.to_device_pixels(context));
         }
     }
 }
