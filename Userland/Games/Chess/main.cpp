@@ -9,6 +9,7 @@
 
 #include "ChessWidget.h"
 #include "MainWidget.h"
+#include "NewGameDialog.h"
 #include <LibConfig/Client.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
@@ -148,6 +149,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (chess_widget.resign() < 0)
                 return;
         }
+        auto new_game_dialog_or_error = Chess::NewGameDialog::try_create(window);
+        if (new_game_dialog_or_error.is_error()) {
+            GUI::MessageBox::show(window, "Failed to load the new game window"sv, "Unable to Open New Game Dialog"sv, GUI::MessageBox::Type::Error);
+            return;
+        }
+
+        auto new_game_dialog = new_game_dialog_or_error.release_value();
+        if (new_game_dialog->exec() != GUI::Dialog::ExecResult::OK)
+            return;
+
         chess_widget.reset();
     }));
     game_menu->add_separator();
