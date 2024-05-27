@@ -46,6 +46,19 @@ public:
     virtual ErrorOr<String> to_utf8(StringView) override;
 };
 
+class SingleByteDecoder final : public Decoder {
+public:
+    SingleByteDecoder(Array<u32, 128> translation_table)
+        : m_translation_table(translation_table)
+    {
+    }
+
+    virtual ErrorOr<void> process(StringView, Function<ErrorOr<void>(u32)> on_code_point) override;
+
+private:
+    Array<u32, 128> m_translation_table;
+};
+
 class Latin1Decoder final : public Decoder {
 public:
     virtual ErrorOr<void> process(StringView, Function<ErrorOr<void>(u32)> on_code_point) override;
@@ -77,11 +90,6 @@ public:
 };
 
 class Latin9Decoder final : public Decoder {
-public:
-    virtual ErrorOr<void> process(StringView, Function<ErrorOr<void>(u32)> on_code_point) override;
-};
-
-class MacRomanDecoder final : public Decoder {
 public:
     virtual ErrorOr<void> process(StringView, Function<ErrorOr<void>(u32)> on_code_point) override;
 };
