@@ -736,6 +736,13 @@ void KeyframeEffect::set_target(DOM::Element* target)
     m_target_element = target;
 }
 
+Optional<String> KeyframeEffect::pseudo_element() const
+{
+    if (!m_target_pseudo_selector.has_value())
+        return {};
+    return MUST(String::formatted("::{}", m_target_pseudo_selector->name()));
+}
+
 // https://www.w3.org/TR/web-animations-1/#dom-keyframeeffect-pseudoelement
 WebIDL::ExceptionOr<void> KeyframeEffect::set_pseudo_element(Optional<String> pseudo_element)
 {
