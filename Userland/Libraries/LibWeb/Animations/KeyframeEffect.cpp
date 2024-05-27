@@ -761,16 +761,17 @@ WebIDL::ExceptionOr<void> KeyframeEffect::set_pseudo_element(Optional<String> ps
     //   DOMException with error name SyntaxError and leave the target pseudo-selector of this animation effect
     //   unchanged.
     if (pseudo_element.has_value()) {
-        auto pseudo_element_without_colons = MUST(pseudo_element->replace("::"sv, ""sv, ReplaceMode::FirstOnly));
-        if (auto value = CSS::Selector::PseudoElement::from_string(pseudo_element_without_colons); value.has_value()) {
-            m_target_pseudo_selector = value;
-        } else {
-            return WebIDL::SyntaxError::create(realm, MUST(String::formatted("Invalid pseudo-element selector: \"{}\"", pseudo_element.value())));
+        if (pseudo_element->starts_with_bytes("::"sv)) {
+            if (auto value = CSS::Selector::PseudoElement::from_string(MUST(pseudo_element->substring_from_byte_offset(2))); value.has_value()) {
+                m_target_pseudo_selector = value;
+                return {};
+            }
         }
-    } else {
-        m_target_pseudo_selector = {};
+
+        return WebIDL::SyntaxError::create(realm, MUST(String::formatted("Invalid pseudo-element selector: \"{}\"", pseudo_element.value())));
     }
 
+    m_target_pseudo_selector = {};
     return {};
 }
 
