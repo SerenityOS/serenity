@@ -80,16 +80,12 @@ ErrorOr<NonnullRefPtr<KeyboardDevice>> KeyboardDevice::try_to_initialize()
     return *TRY(DeviceManagement::try_create_device<KeyboardDevice>());
 }
 
-// FIXME: UNMAP_AFTER_INIT is fine for now, but for hot-pluggable devices
-// like USB keyboards, we need to remove this
-UNMAP_AFTER_INIT KeyboardDevice::KeyboardDevice()
+KeyboardDevice::KeyboardDevice()
     : HIDDevice(85, HIDManagement::the().generate_minor_device_number_for_keyboard())
 {
 }
 
-// FIXME: UNMAP_AFTER_INIT is fine for now, but for hot-pluggable devices
-// like USB keyboards, we need to remove this
-UNMAP_AFTER_INIT KeyboardDevice::~KeyboardDevice() = default;
+KeyboardDevice::~KeyboardDevice() = default;
 
 bool KeyboardDevice::can_read(OpenFileDescription const&, u64) const
 {

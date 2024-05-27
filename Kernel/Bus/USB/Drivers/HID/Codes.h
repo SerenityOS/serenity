@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2023, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2024, Olekoop <mlglol360xd@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -27,6 +28,14 @@ struct [[gnu::packed]] MouseBootProtocolPacket {
 
 static_assert(AssertSize<MouseBootProtocolPacket, 6>());
 
+struct [[gnu::packed]] KeyboardBootProtocolPacket {
+    u8 modifiers;
+    u8 reverved;
+    u8 keypress[6];
+};
+
+static_assert(AssertSize<KeyboardBootProtocolPacket, 8>());
+
 constexpr StringView subclass_string(SubclassCode code)
 {
     switch (code) {
@@ -39,6 +48,7 @@ constexpr StringView subclass_string(SubclassCode code)
 
 enum class InterfaceProtocol : u8 {
     Mouse = 0x02,
+    Keyboard = 0x01,
 };
 
 }
