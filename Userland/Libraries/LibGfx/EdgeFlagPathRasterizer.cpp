@@ -323,13 +323,15 @@ template<unsigned SamplesPerPixel>
 auto EdgeFlagPathRasterizer<SamplesPerPixel>::accumulate_non_zero_scanline(EdgeExtent edge_extent, auto init, auto sample_callback)
 {
     NonZeroAcc acc = init;
+    VERIFY(edge_extent.min_x >= 0);
+    VERIFY(edge_extent.max_x < static_cast<int>(m_scanline.size()));
     for (int x = edge_extent.min_x; x <= edge_extent.max_x; x += 1) {
-        if (auto edges = m_scanline[x]) {
+        if (auto edges = m_scanline.data()[x]) {
             // We only need to process the windings when we hit some edges.
             for (auto y_sub = 0u; y_sub < SamplesPerPixel; y_sub++) {
                 auto subpixel_bit = 1 << y_sub;
                 if (edges & subpixel_bit) {
-                    auto winding = m_windings[x].counts[y_sub];
+                    auto winding = m_windings.data()[x].counts[y_sub];
                     auto previous_winding_count = acc.winding.counts[y_sub];
                     acc.winding.counts[y_sub] += winding;
                     // Toggle fill on change to/from zero.
@@ -339,8 +341,8 @@ auto EdgeFlagPathRasterizer<SamplesPerPixel>::accumulate_non_zero_scanline(EdgeE
             }
         }
         sample_callback(x, acc.sample);
-        m_scanline[x] = 0;
-        m_windings[x] = {};
+        m_scanline.data()[x] = 0;
+        m_windings.data()[x] = {};
     }
     return acc;
 }
