@@ -423,7 +423,7 @@ void VM::dump_backtrace() const
 {
     for (ssize_t i = m_execution_context_stack.size() - 1; i >= 0; --i) {
         auto& frame = m_execution_context_stack[i];
-        if (frame->program_counter.has_value()) {
+        if (frame->executable && frame->program_counter.has_value()) {
             auto source_range = frame->executable->source_range_at(frame->program_counter.value()).realize();
             dbgln("-> {} @ {}:{},{}", frame->function_name ? frame->function_name->utf8_string() : ""_string, source_range.filename(), source_range.start.line, source_range.start.column);
         } else {
