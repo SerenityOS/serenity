@@ -233,22 +233,22 @@ Optional<Decoder&> decoder_for(StringView a_encoding)
             return s_latin7_decoder;
         if (encoding.value().equals_ignoring_ascii_case("iso-8859-14"sv))
             return s_latin8_decoder;
-        if (encoding.value().equals_ignoring_ascii_case("windows-1250"sv))
-            return s_centraleurope_decoder;
-        if (encoding.value().equals_ignoring_ascii_case("windows-1255"sv))
-            return s_hebrew_decoder;
-        if (encoding.value().equals_ignoring_ascii_case("windows-1251"sv))
-            return s_cyrillic_decoder;
-        if (encoding.value().equals_ignoring_ascii_case("koi8-r"sv))
-            return s_koi8r_decoder;
         if (encoding.value().equals_ignoring_ascii_case("iso-8859-15"sv))
             return s_latin9_decoder;
+        if (encoding.value().equals_ignoring_ascii_case("koi8-r"sv))
+            return s_koi8r_decoder;
         if (encoding.value().equals_ignoring_ascii_case("macintosh"sv))
             return s_mac_roman_decoder;
         if (encoding.value().equals_ignoring_ascii_case("PDFDocEncoding"sv))
             return s_pdf_doc_encoding_decoder;
+        if (encoding.value().equals_ignoring_ascii_case("windows-1250"sv))
+            return s_centraleurope_decoder;
+        if (encoding.value().equals_ignoring_ascii_case("windows-1251"sv))
+            return s_cyrillic_decoder;
         if (encoding.value().equals_ignoring_ascii_case("windows-1254"sv))
             return s_turkish_decoder;
+        if (encoding.value().equals_ignoring_ascii_case("windows-1255"sv))
+            return s_hebrew_decoder;
         if (encoding.value().equals_ignoring_ascii_case("x-user-defined"sv))
             return s_x_user_defined_decoder;
     }
