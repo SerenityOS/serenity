@@ -128,105 +128,57 @@ void CommandList::execute(CommandExecutor& executor)
             continue;
         }
 
-        auto result = command.visit(
-            [&](DrawGlyphRun const& command) {
-                return executor.draw_glyph_run(command);
-            },
-            [&](DrawText const& command) {
-                return executor.draw_text(command);
-            },
-            [&](FillRect const& command) {
-                return executor.fill_rect(command);
-            },
-            [&](DrawScaledBitmap const& command) {
-                return executor.draw_scaled_bitmap(command);
-            },
-            [&](DrawScaledImmutableBitmap const& command) {
-                return executor.draw_scaled_immutable_bitmap(command);
-            },
-            [&](SetClipRect const& command) {
-                return executor.set_clip_rect(command);
-            },
-            [&](ClearClipRect const& command) {
-                return executor.clear_clip_rect(command);
-            },
-            [&](PushStackingContext const& command) {
-                return executor.push_stacking_context(command);
-            },
-            [&](PopStackingContext const& command) {
-                return executor.pop_stacking_context(command);
-            },
-            [&](PaintLinearGradient const& command) {
-                return executor.paint_linear_gradient(command);
-            },
-            [&](PaintRadialGradient const& command) {
-                return executor.paint_radial_gradient(command);
-            },
-            [&](PaintConicGradient const& command) {
-                return executor.paint_conic_gradient(command);
-            },
-            [&](PaintOuterBoxShadow const& command) {
-                return executor.paint_outer_box_shadow(command);
-            },
-            [&](PaintInnerBoxShadow const& command) {
-                return executor.paint_inner_box_shadow(command);
-            },
-            [&](PaintTextShadow const& command) {
-                return executor.paint_text_shadow(command);
-            },
-            [&](FillRectWithRoundedCorners const& command) {
-                return executor.fill_rect_with_rounded_corners(command);
-            },
-            [&](FillPathUsingColor const& command) {
-                return executor.fill_path_using_color(command);
-            },
-            [&](FillPathUsingPaintStyle const& command) {
-                return executor.fill_path_using_paint_style(command);
-            },
-            [&](StrokePathUsingColor const& command) {
-                return executor.stroke_path_using_color(command);
-            },
-            [&](StrokePathUsingPaintStyle const& command) {
-                return executor.stroke_path_using_paint_style(command);
-            },
-            [&](DrawEllipse const& command) {
-                return executor.draw_ellipse(command);
-            },
-            [&](FillEllipse const& command) {
-                return executor.fill_ellipse(command);
-            },
-            [&](DrawLine const& command) {
-                return executor.draw_line(command);
-            },
-            [&](DrawSignedDistanceField const& command) {
-                return executor.draw_signed_distance_field(command);
-            },
-            [&](ApplyBackdropFilter const& command) {
-                return executor.apply_backdrop_filter(command);
-            },
-            [&](DrawRect const& command) {
-                return executor.draw_rect(command);
-            },
-            [&](DrawTriangleWave const& command) {
-                return executor.draw_triangle_wave(command);
-            },
-            [&](SampleUnderCorners const& command) {
-                return executor.sample_under_corners(command);
-            },
-            [&](BlitCornerClipping const& command) {
-                if (skipped_sample_corner_commands.contains(command.id)) {
-                    // FIXME: If a sampling command falls outside the viewport and is not executed, the associated blit
-                    //        should also be skipped if it is within the viewport. In a properly generated list of
-                    //        painting commands, sample and blit commands should have matching rectangles, preventing
-                    //        this discrepancy.
-                    dbgln("Skipping blit_corner_clipping command because the sample_under_corners command was skipped.");
-                    return CommandResult::Continue;
-                }
-                return executor.blit_corner_clipping(command);
-            },
-            [&](PaintBorders const& command) {
-                return executor.paint_borders(command);
-            });
+        if (command.has<BlitCornerClipping>()) {
+            auto const& blit_corner_clipping = command.get<BlitCornerClipping>();
+            // FIXME: If a sampling command falls outside the viewport and is not executed, the associated blit
+            //        should also be skipped if it is within the viewport. In a properly generated list of
+            //        painting commands, sample and blit commands should have matching rectangles, preventing
+            //        this discrepancy.
+            if (skipped_sample_corner_commands.contains(blit_corner_clipping.id)) {
+                dbgln("Skipping blit_corner_clipping command because the sample_under_corners command was skipped.");
+                continue;
+            }
+        }
+
+#define HANDLE_COMMAND(command_type, executor_method)                   \
+    if (command.has<command_type>()) {                                  \
+        result = executor.executor_method(command.get<command_type>()); \
+    }
+
+        // clang-format off
+        CommandResult result;
+        HANDLE_COMMAND(DrawGlyphRun, draw_glyph_run)
+        else HANDLE_COMMAND(DrawText, draw_text)
+        else HANDLE_COMMAND(FillRect, fill_rect)
+        else HANDLE_COMMAND(DrawScaledBitmap, draw_scaled_bitmap)
+        else HANDLE_COMMAND(DrawScaledImmutableBitmap, draw_scaled_immutable_bitmap)
+        else HANDLE_COMMAND(SetClipRect, set_clip_rect)
+        else HANDLE_COMMAND(ClearClipRect, clear_clip_rect)
+        else HANDLE_COMMAND(PushStackingContext, push_stacking_context)
+        else HANDLE_COMMAND(PopStackingContext, pop_stacking_context)
+        else HANDLE_COMMAND(PaintLinearGradient, paint_linear_gradient)
+        else HANDLE_COMMAND(PaintRadialGradient, paint_radial_gradient)
+        else HANDLE_COMMAND(PaintConicGradient, paint_conic_gradient)
+        else HANDLE_COMMAND(PaintOuterBoxShadow, paint_outer_box_shadow)
+        else HANDLE_COMMAND(PaintInnerBoxShadow, paint_inner_box_shadow)
+        else HANDLE_COMMAND(PaintTextShadow, paint_text_shadow)
+        else HANDLE_COMMAND(FillRectWithRoundedCorners, fill_rect_with_rounded_corners)
+        else HANDLE_COMMAND(FillPathUsingColor, fill_path_using_color)
+        else HANDLE_COMMAND(FillPathUsingPaintStyle, fill_path_using_paint_style)
+        else HANDLE_COMMAND(StrokePathUsingColor, stroke_path_using_color)
+        else HANDLE_COMMAND(StrokePathUsingPaintStyle, stroke_path_using_paint_style)
+        else HANDLE_COMMAND(DrawEllipse, draw_ellipse)
+        else HANDLE_COMMAND(FillEllipse, fill_ellipse)
+        else HANDLE_COMMAND(DrawLine, draw_line)
+        else HANDLE_COMMAND(DrawSignedDistanceField, draw_signed_distance_field)
+        else HANDLE_COMMAND(ApplyBackdropFilter, apply_backdrop_filter)
+        else HANDLE_COMMAND(DrawRect, draw_rect)
+        else HANDLE_COMMAND(DrawTriangleWave, draw_triangle_wave)
+        else HANDLE_COMMAND(SampleUnderCorners, sample_under_corners)
+        else HANDLE_COMMAND(BlitCornerClipping, blit_corner_clipping)
+        else HANDLE_COMMAND(PaintBorders, paint_borders)
+        else VERIFY_NOT_REACHED();
+        // clang-format on
 
         if (result == CommandResult::SkipStackingContext) {
             auto stacking_context_nesting_level = 1;
