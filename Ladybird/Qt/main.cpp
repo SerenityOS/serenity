@@ -105,6 +105,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool log_all_js_exceptions = false;
     bool enable_idl_tracing = false;
     bool new_window = false;
+    bool force_new_process = false;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("The Ladybird web browser :^)");
@@ -121,10 +122,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(enable_idl_tracing, "Enable IDL tracing", "enable-idl-tracing");
     args_parser.add_option(expose_internals_object, "Expose internals object", "expose-internals-object");
     args_parser.add_option(new_window, "Force opening in a new window", "new-window", 'n');
+    args_parser.add_option(force_new_process, "Force creation of new browser/chrome process", "force-new-process");
     args_parser.parse(arguments);
 
     WebView::ChromeProcess chrome_process;
-    if (TRY(chrome_process.connect(raw_urls, new_window)) == WebView::ChromeProcess::ProcessDisposition::ExitProcess) {
+    if (!force_new_process && TRY(chrome_process.connect(raw_urls, new_window)) == WebView::ChromeProcess::ProcessDisposition::ExitProcess) {
         outln("Opening in existing process");
         return 0;
     }
