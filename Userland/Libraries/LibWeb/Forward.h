@@ -700,6 +700,7 @@ class AudioParam;
 class AudioScheduledSourceNode;
 class BaseAudioContext;
 class DynamicsCompressorNode;
+class GainNode;
 class OfflineAudioContext;
 class OscillatorNode;
 class PeriodicWave;
