@@ -2373,7 +2373,9 @@ Optional<Element::Directionality> Element::auto_directionality() const
 
     // 1. If element is an auto-directionality form-associated element:
     if (is_auto_directionality_form_associated_element()) {
-        auto const& value = static_cast<HTML::HTMLInputElement const&>(*this).value();
+        auto const* form_associated_element = dynamic_cast<HTML::FormAssociatedElement const*>(this);
+        VERIFY(form_associated_element);
+        auto const& value = form_associated_element->value();
 
         // 1. If element's value contains a character of bidirectional character type AL or R,
         //    and there is no character of bidirectional character type L anywhere before it in the element's value, then return 'rtl'.
