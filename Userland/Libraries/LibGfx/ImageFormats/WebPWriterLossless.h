@@ -11,6 +11,6 @@
 
 namespace Gfx {
 
-ErrorOr<ByteBuffer> compress_VP8L_image_data(Bitmap const&);
+ErrorOr<ByteBuffer> compress_VP8L_image_data(Bitmap const&, bool& is_fully_opaque);
 
 }
