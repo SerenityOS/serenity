@@ -95,6 +95,11 @@ public:
     virtual bool validate(StringView) override { return true; }
 };
 
+class GB18030Decoder final : public Decoder {
+public:
+    virtual ErrorOr<void> process(StringView, Function<ErrorOr<void>(u32)> on_code_point) override;
+};
+
 Optional<Decoder&> decoder_for(StringView encoding);
 Optional<StringView> get_standardized_encoding(StringView encoding);
 
