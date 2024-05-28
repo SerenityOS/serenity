@@ -62,9 +62,9 @@ void Application::close_task_manager_window()
     }
 }
 
-BrowserWindow& Application::new_window(Vector<URL::URL> const& initial_urls, WebView::CookieJar& cookie_jar, WebContentOptions const& web_content_options, StringView webdriver_content_ipc_path)
+BrowserWindow& Application::new_window(Vector<URL::URL> const& initial_urls, WebView::CookieJar& cookie_jar, WebContentOptions const& web_content_options, StringView webdriver_content_ipc_path, Tab* parent_tab, Optional<u64> page_index)
 {
-    auto* window = new BrowserWindow(initial_urls, cookie_jar, web_content_options, webdriver_content_ipc_path);
+    auto* window = new BrowserWindow(initial_urls, cookie_jar, web_content_options, webdriver_content_ipc_path, parent_tab, move(page_index));
     set_active_window(*window);
     window->show();
     window->activateWindow();
