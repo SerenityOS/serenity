@@ -68,7 +68,7 @@ public:
     }
 };
 
-BrowserWindow::BrowserWindow(Vector<URL::URL> const& initial_urls, WebView::CookieJar& cookie_jar, WebContentOptions const& web_content_options, StringView webdriver_content_ipc_path)
+BrowserWindow::BrowserWindow(Vector<URL::URL> const& initial_urls, WebView::CookieJar& cookie_jar, WebContentOptions const& web_content_options, StringView webdriver_content_ipc_path, Tab* parent_tab, Optional<u64> page_index)
     : m_tabs_container(new TabWidget(this))
     , m_cookie_jar(cookie_jar)
     , m_web_content_options(web_content_options)
@@ -525,8 +525,12 @@ BrowserWindow::BrowserWindow(Vector<URL::URL> const& initial_urls, WebView::Cook
         m_tabs_container->setCurrentIndex(m_tabs_container->count() - 1);
     });
 
-    for (size_t i = 0; i < initial_urls.size(); ++i) {
-        new_tab_from_url(initial_urls[i], (i == 0) ? Web::HTML::ActivateTab::Yes : Web::HTML::ActivateTab::No);
+    if (parent_tab) {
+        new_child_tab(Web::HTML::ActivateTab::Yes, *parent_tab, AK::move(page_index));
+    } else {
+        for (size_t i = 0; i < initial_urls.size(); ++i) {
+            new_tab_from_url(initial_urls[i], (i == 0) ? Web::HTML::ActivateTab::Yes : Web::HTML::ActivateTab::No);
+        }
     }
 
     setCentralWidget(m_tabs_container);
@@ -563,23 +567,22 @@ Tab& BrowserWindow::new_tab_from_content(StringView html, Web::HTML::ActivateTab
     return tab;
 }
 
-Tab& BrowserWindow::new_child_tab(Web::HTML::ActivateTab activate_tab, Tab& parent, Web::HTML::WebViewHints hints, Optional<u64> page_index)
+Tab& BrowserWindow::new_child_tab(Web::HTML::ActivateTab activate_tab, Tab& parent, Optional<u64> page_index)
 {
-    return create_new_tab(activate_tab, parent, hints, page_index);
+    return create_new_tab(activate_tab, parent, page_index);
 }
 
-Tab& BrowserWindow::create_new_tab(Web::HTML::ActivateTab activate_tab, Tab& parent, Web::HTML::WebViewHints, Optional<u64> page_index)
+Tab& BrowserWindow::create_new_tab(Web::HTML::ActivateTab activate_tab, Tab& parent, Optional<u64> page_index)
 {
     if (!page_index.has_value())
         return create_new_tab(activate_tab);
 
-    // FIXME: Respect hints for:
-    //   popup: Create new window
-    //   width, height: size of window
-    //   screen_x, screen_y: positioning of window on the screen
     auto* tab = new Tab(this, m_web_content_options, m_webdriver_content_ipc_path, parent.view().client(), page_index.value());
 
-    VERIFY(m_current_tab != nullptr);
+    // FIXME: Merge with other overload
+    if (m_current_tab == nullptr) {
+        set_current_tab(tab);
+    }
 
     m_tabs_container->addTab(tab, "New Tab");
     if (activate_tab == Web::HTML::ActivateTab::Yes)
@@ -620,7 +623,12 @@ void BrowserWindow::initialize_tab(Tab* tab)
     });
 
     tab->view().on_new_web_view = [this, tab](auto activate_tab, Web::HTML::WebViewHints hints, Optional<u64> page_index) {
-        auto& new_tab = new_child_tab(activate_tab, *tab, hints, page_index);
+        if (hints.popup) {
+            auto& window = static_cast<Ladybird::Application*>(QApplication::instance())->new_window({}, m_cookie_jar, m_web_content_options, m_webdriver_content_ipc_path, tab, AK::move(page_index));
+            window.set_window_rect(hints.screen_x, hints.screen_y, hints.width, hints.height);
+            return window.current_tab()->view().handle();
+        }
+        auto& new_tab = new_child_tab(activate_tab, *tab, page_index);
         return new_tab.view().handle();
     };
 
@@ -925,6 +933,18 @@ void BrowserWindow::update_displayed_zoom_level()
     VERIFY(m_current_tab);
     update_zoom_menu();
     m_current_tab->update_reset_zoom_button();
+}
+
+void BrowserWindow::set_window_rect(Optional<Web::DevicePixels> x, Optional<Web::DevicePixels> y, Optional<Web::DevicePixels> width, Optional<Web::DevicePixels> height)
+{
+    x = x.value_or(0);
+    y = y.value_or(0);
+    if (!width.has_value() || width.value() == 0)
+        width = 800;
+    if (!height.has_value() || height.value() == 0)
+        height = 600;
+
+    setGeometry(x.value().value(), y.value().value(), width.value().value(), height.value().value());
 }
 
 void BrowserWindow::copy_selected_text()
