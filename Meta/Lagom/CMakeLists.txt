@@ -343,9 +343,10 @@ install(TARGETS LibC LibCrypt LibSystem NoCoverage EXPORT LagomTargets)
 # AK
 add_serenity_subdirectory(AK)
 lagom_lib(AK ak SOURCES ${AK_SOURCES})
-if (${CMAKE_SYSTEM_NAME} MATCHES "BSD$" OR HAIKU)
-    # BSD Platforms and Haiku have backtrace(3) in a separate library
-    target_link_libraries(AK PRIVATE execinfo)
+find_package(Backtrace)
+if (Backtrace_FOUND AND NOT "${Backtrace_LIBRARIES}" STREQUAL "")
+    target_link_libraries(AK PRIVATE ${Backtrace_LIBRARIES})
+    target_include_directories(AK PRIVATE ${Backtrace_INCLUDE_DIRS})
 endif()
 
 add_serenity_subdirectory(Userland/Libraries/LibUnicode)
