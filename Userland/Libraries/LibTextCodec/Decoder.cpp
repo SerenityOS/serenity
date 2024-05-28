@@ -30,6 +30,7 @@ TurkishDecoder s_turkish_decoder;
 XUserDefinedDecoder s_x_user_defined_decoder;
 GB18030Decoder s_gb18030_decoder;
 Big5Decoder s_big5_decoder;
+EUCJPDecoder s_euc_jp_decoder;
 
 // clang-format off
 // https://encoding.spec.whatwg.org/index-ibm866.txt
@@ -303,6 +304,8 @@ Optional<Decoder&> decoder_for(StringView a_encoding)
             return s_utf16le_decoder;
         if (encoding.value().equals_ignoring_ascii_case("big5"sv))
             return s_big5_decoder;
+        if (encoding.value().equals_ignoring_ascii_case("euc-jp"sv))
+            return s_euc_jp_decoder;
         if (encoding.value().equals_ignoring_ascii_case("gbk"sv))
             return s_gb18030_decoder;
         if (encoding.value().equals_ignoring_ascii_case("gb18030"sv))
@@ -1274,6 +1277,92 @@ ErrorOr<void> Big5Decoder::process(StringView input, Function<ErrorOr<void>(u32)
         }
 
         // 6. Return error
+        TRY(on_code_point(replacement_code_point));
+    }
+}
+
+// https://encoding.spec.whatwg.org/#euc-jp-decoder
+ErrorOr<void> EUCJPDecoder::process(StringView input, Function<ErrorOr<void>(u32)> on_code_point)
+{
+    // EUC-JP’s decoder has an associated EUC-JP jis0212 (initially false) and EUC-JP lead (initially 0x00).
+    bool jis0212 = false;
+    u8 euc_jp_lead = 0x00;
+
+    // EUC-JP’s decoder’s handler, given ioQueue and byte, runs these steps:
+    size_t index = 0;
+    while (true) {
+        // 1. If byte is end-of-queue and EUC-JP lead is not 0x00, set EUC-JP lead to 0x00, and return error.
+        if (index >= input.length() && euc_jp_lead != 0x00) {
+            euc_jp_lead = 0x00;
+            TRY(on_code_point(replacement_code_point));
+            continue;
+        }
+
+        // 2. If byte is end-of-queue and EUC-JP lead is 0x00, return finished.
+        if (index >= input.length() && euc_jp_lead == 0x00)
+            return {};
+
+        u8 const byte = input[index++];
+
+        // 3. If EUC-JP lead is 0x8E and byte is in the range 0xA1 to 0xDF, inclusive, set EUC-JP lead to 0x00 and return a code point whose value is 0xFF61 − 0xA1 + byte.
+        if (euc_jp_lead == 0x8E && byte >= 0xA1 && byte <= 0xDF) {
+            euc_jp_lead = 0x00;
+            TRY(on_code_point(0xFF61 - 0xA1 + byte));
+            continue;
+        }
+
+        // 4. If EUC-JP lead is 0x8F and byte is in the range 0xA1 to 0xFE, inclusive, set EUC-JP jis0212 to true, set EUC-JP lead to byte, and return continue.
+        if (euc_jp_lead == 0x8F && byte >= 0xA1 && byte <= 0xFE) {
+            jis0212 = true;
+            euc_jp_lead = byte;
+            continue;
+        }
+
+        // 5. If EUC-JP lead is not 0x00, let lead be EUC-JP lead, set EUC-JP lead to 0x00, and then:
+        if (euc_jp_lead != 0x00) {
+            auto lead = euc_jp_lead;
+            euc_jp_lead = 0x00;
+
+            // 1. Let code point be null.
+            Optional<u32> code_point;
+
+            // 2. If lead and byte are both in the range 0xA1 to 0xFE, inclusive, then set code point to the index code point for (lead − 0xA1) × 94 + byte − 0xA1 in index jis0208 if EUC-JP jis0212 is false and in index jis0212 otherwise.
+            if (lead >= 0xA1 && lead <= 0xFE && byte >= 0xA1 && byte <= 0xFE) {
+                auto pointer = (lead - 0xA1) * 94 + byte - 0xA1;
+                code_point = jis0212 ? index_jis0212_code_point(pointer) : index_jis0208_code_point(pointer);
+            }
+
+            // 3. Set EUC-JP jis0212 to false.
+            jis0212 = false;
+
+            // 4. If code point is non-null, return a code point whose value is code point.
+            if (code_point.has_value()) {
+                TRY(on_code_point(code_point.value()));
+                continue;
+            }
+
+            // 5. If byte is an ASCII byte, restore byte to ioQueue.
+            if (byte <= 0x7F)
+                index--;
+
+            // 6. Return error.
+            TRY(on_code_point(replacement_code_point));
+            continue;
+        }
+
+        // 6. If byte is an ASCII byte, return a code point whose value is byte.
+        if (byte <= 0x7F) {
+            TRY(on_code_point(byte));
+            continue;
+        }
+
+        // 7. If byte is 0x8E, 0x8F, or in the range 0xA1 to 0xFE, inclusive, set EUC-JP lead to byte and return continue.
+        if (byte == 0x8E || byte == 0x8F || (byte >= 0xA1 && byte <= 0xFE)) {
+            euc_jp_lead = byte;
+            continue;
+        }
+
+        // 8. Return error.
         TRY(on_code_point(replacement_code_point));
     }
 }
