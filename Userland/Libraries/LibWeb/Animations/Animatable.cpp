@@ -55,7 +55,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Animation>> Animatable::animate(Optional<JS
 }
 
 // https://www.w3.org/TR/web-animations-1/#dom-animatable-getanimations
-Vector<JS::NonnullGCPtr<Animation>> Animatable::get_animations(Web::Animations::GetAnimationsOptions options)
+Vector<JS::NonnullGCPtr<Animation>> Animatable::get_animations(GetAnimationsOptions options)
 {
     // Returns the set of relevant animations for this object, or, if an options parameter is passed with subtree set to
     // true, returns the set of relevant animations for a subtree for this object.
@@ -71,13 +71,18 @@ Vector<JS::NonnullGCPtr<Animation>> Animatable::get_animations(Web::Animations::
         m_is_sorted_by_composite_order = true;
     }
 
-    // FIXME: Support subtree
-    (void)options;
-
     Vector<JS::NonnullGCPtr<Animation>> relevant_animations;
     for (auto const& animation : m_associated_animations) {
         if (animation->is_relevant())
             relevant_animations.append(*animation);
+    }
+
+    if (options.subtree) {
+        JS::NonnullGCPtr target { *static_cast<DOM::Element*>(this) };
+        target->for_each_child_of_type<DOM::Element>([&](auto& child) {
+            relevant_animations.extend(child.get_animations(options));
+            return IterationDecision::Continue;
+        });
     }
 
     return relevant_animations;
