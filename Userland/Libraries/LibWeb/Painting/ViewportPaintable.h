@@ -36,12 +36,18 @@ public:
 
     bool handle_mousewheel(Badge<EventHandler>, CSSPixelPoint, unsigned, unsigned, int wheel_delta_x, int wheel_delta_y) override;
 
+    void set_needs_to_refresh_clip_state(bool value) { m_needs_to_refresh_clip_state = value; }
+    void set_needs_to_refresh_scroll_state(bool value) { m_needs_to_refresh_scroll_state = value; }
+
 private:
     void build_stacking_context_tree();
 
     explicit ViewportPaintable(Layout::Viewport const&);
 
     virtual void visit_edges(Visitor&) override;
+
+    bool m_needs_to_refresh_clip_state { true };
+    bool m_needs_to_refresh_scroll_state { true };
 };
 
 }

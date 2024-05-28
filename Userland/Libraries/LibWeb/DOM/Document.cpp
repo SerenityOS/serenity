@@ -5056,4 +5056,16 @@ void Document::process_top_layer_removals()
     }
 }
 
+void Document::set_needs_to_refresh_clip_state(bool b)
+{
+    if (auto* paintable = this->paintable())
+        paintable->set_needs_to_refresh_clip_state(b);
+}
+
+void Document::set_needs_to_refresh_scroll_state(bool b)
+{
+    if (auto* paintable = this->paintable())
+        paintable->set_needs_to_refresh_scroll_state(b);
+}
+
 }

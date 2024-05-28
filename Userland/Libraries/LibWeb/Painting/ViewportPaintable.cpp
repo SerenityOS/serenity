@@ -128,6 +128,10 @@ void ViewportPaintable::assign_clip_frames()
 
 void ViewportPaintable::refresh_scroll_state()
 {
+    if (!m_needs_to_refresh_scroll_state)
+        return;
+    m_needs_to_refresh_scroll_state = false;
+
     for (auto& it : scroll_state) {
         auto const& paintable_box = *it.key;
         auto& scroll_frame = *it.value;
@@ -142,6 +146,10 @@ void ViewportPaintable::refresh_scroll_state()
 
 void ViewportPaintable::refresh_clip_state()
 {
+    if (!m_needs_to_refresh_clip_state)
+        return;
+    m_needs_to_refresh_clip_state = false;
+
     for (auto& it : clip_state) {
         auto const& paintable_box = *it.key;
         auto& clip_frame = *it.value;
