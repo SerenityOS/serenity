@@ -9,16 +9,20 @@
 #include <AK/Optional.h>
 #include <AK/Types.h>
 #include <LibIPC/Forward.h>
+#include <LibWeb/Forward.h>
+#include <LibWeb/HTML/TokenizedFeatures.h>
 #include <LibWeb/PixelUnits.h>
 
 namespace Web::HTML {
 
 struct WebViewHints {
     bool popup = false;
-    Optional<DevicePixels> width = {};
-    Optional<DevicePixels> height = {};
-    Optional<DevicePixels> screen_x = {};
-    Optional<DevicePixels> screen_y = {};
+    Optional<DevicePixels> width;
+    Optional<DevicePixels> height;
+    Optional<DevicePixels> screen_x;
+    Optional<DevicePixels> screen_y;
+
+    static WebViewHints from_tokenised_features(TokenizedFeature::Map const&, Page const&);
 };
 
 }

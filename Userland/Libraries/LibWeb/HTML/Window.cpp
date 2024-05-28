@@ -189,7 +189,7 @@ WebIDL::ExceptionOr<JS::GCPtr<WindowProxy>> Window::open_impl(StringView url, St
 
     // 10. Let targetNavigable and windowType be the result of applying the rules for choosing a navigable given target, sourceDocument's node navigable, and noopener.
     VERIFY(source_document.navigable());
-    auto [target_navigable, window_type] = source_document.navigable()->choose_a_navigable(target, no_opener);
+    auto [target_navigable, window_type] = source_document.navigable()->choose_a_navigable(target, no_opener, ActivateTab::Yes, tokenized_features);
 
     // 11. If targetNavigable is null, then return null.
     if (target_navigable == nullptr)
@@ -200,8 +200,8 @@ WebIDL::ExceptionOr<JS::GCPtr<WindowProxy>> Window::open_impl(StringView url, St
         // 1. Set the target browsing context's is popup to the result of checking if a popup window is requested, given tokenizedFeatures.
         target_navigable->set_is_popup(check_if_a_popup_window_is_requested(tokenized_features));
 
-        // FIXME: 2. Set up browsing context features for target browsing context given tokenizedFeatures. [CSSOMVIEW]
-        // NOTE: While this is not implemented yet, all of observable actions taken by this operation are optional (implementation-defined).
+        // 2. Set up browsing context features for target browsing context given tokenizedFeatures. [CSSOMVIEW]
+        // NOTE: This is implemented in choose_a_navigable when creating the top level traversable.
 
         // 3. Let urlRecord be the URL record about:blank.
         auto url_record = URL::URL("about:blank"sv);
