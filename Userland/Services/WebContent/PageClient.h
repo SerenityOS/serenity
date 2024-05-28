@@ -39,6 +39,7 @@ public:
 
     ErrorOr<void> connect_to_webdriver(ByteString const& webdriver_ipc_path);
 
+    virtual void paint_next_frame() override;
     virtual void paint(Web::DevicePixelRect const& content_rect, Gfx::Bitmap&, Web::PaintOptions = {}) override;
 
     void set_palette_impl(Gfx::PaletteImpl&);
@@ -177,7 +178,6 @@ private:
     };
 
     PaintState m_paint_state { PaintState::Ready };
-    RefPtr<Web::Platform::Timer> m_repaint_timer;
 
     Web::CSS::PreferredColorScheme m_preferred_color_scheme { Web::CSS::PreferredColorScheme::Auto };
 
