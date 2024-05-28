@@ -2133,8 +2133,9 @@ void Navigable::paint(Painting::RecordingPainter& recording_painter, PaintConfig
     auto background_color = document->background_color();
 
     recording_painter.fill_rect(bitmap_rect, background_color);
-    if (!document->paintable())
-        return;
+    if (!document->paintable()) {
+        VERIFY_NOT_REACHED();
+    }
 
     Web::PaintContext context(recording_painter, page.palette(), page.client().device_pixels_per_css_pixel());
     context.set_device_viewport_rect(viewport_rect);

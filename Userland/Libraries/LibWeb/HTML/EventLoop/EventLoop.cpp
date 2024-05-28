@@ -327,7 +327,10 @@ void EventLoop::process()
         if (navigable && navigable->needs_repaint()) {
             auto* browsing_context = document.browsing_context();
             auto& page = browsing_context->page();
-            page.client().schedule_repaint();
+            if (navigable->is_traversable()) {
+                VERIFY(page.client().is_ready_to_paint());
+                page.client().paint_next_frame();
+            }
         }
     });
 
