@@ -29,6 +29,7 @@ PDFDocEncodingDecoder s_pdf_doc_encoding_decoder;
 TurkishDecoder s_turkish_decoder;
 XUserDefinedDecoder s_x_user_defined_decoder;
 GB18030Decoder s_gb18030_decoder;
+Big5Decoder s_big5_decoder;
 
 // clang-format off
 // https://encoding.spec.whatwg.org/index-ibm866.txt
@@ -300,6 +301,8 @@ Optional<Decoder&> decoder_for(StringView a_encoding)
             return s_utf16be_decoder;
         if (encoding.value().equals_ignoring_ascii_case("utf-16le"sv))
             return s_utf16le_decoder;
+        if (encoding.value().equals_ignoring_ascii_case("big5"sv))
+            return s_big5_decoder;
         if (encoding.value().equals_ignoring_ascii_case("gbk"sv))
             return s_gb18030_decoder;
         if (encoding.value().equals_ignoring_ascii_case("gb18030"sv))
@@ -1179,6 +1182,98 @@ ErrorOr<void> GB18030Decoder::process(StringView input, Function<ErrorOr<void>(u
         }
 
         // 9. Return error.
+        TRY(on_code_point(replacement_code_point));
+    }
+}
+
+// https://encoding.spec.whatwg.org/#big5-decoder
+ErrorOr<void> Big5Decoder::process(StringView input, Function<ErrorOr<void>(u32)> on_code_point)
+{
+    // Big5’s decoder has an associated Big5 lead (initially 0x00).
+    u8 big5_lead = 0x00;
+
+    // Big5’s decoder’s handler, given ioQueue and byte, runs these steps:
+    size_t index = 0;
+    while (true) {
+        // 1. If byte is end-of-queue and Big5 lead is not 0x00, set Big5 lead to 0x00 and return error.
+        if (index >= input.length() && big5_lead != 0x00) {
+            big5_lead = 0x00;
+            TRY(on_code_point(replacement_code_point));
+            continue;
+        }
+
+        // 2. If byte is end-of-queue and Big5 lead is 0x00, return finished.
+        if (index >= input.length() && big5_lead == 0x00)
+            return {};
+
+        u8 const byte = input[index++];
+
+        // 3. If Big5 lead is not 0x00, let lead be Big5 lead, let pointer be null, set Big5 lead to 0x00, and then:
+        if (big5_lead != 0x00) {
+            auto lead = big5_lead;
+            Optional<u32> pointer;
+            big5_lead = 0x00;
+
+            // 1. Let offset be 0x40 if byte is less than 0x7F, otherwise 0x62.
+            u8 const offset = byte < 0x7F ? 0x40 : 0x62;
+
+            // 2. If byte is in the range 0x40 to 0x7E, inclusive, or 0xA1 to 0xFE, inclusive, set pointer to (lead − 0x81) × 157 + (byte − offset).
+            if ((byte >= 0x40 && byte <= 0x7E) || (byte >= 0xA1 && byte <= 0xFE))
+                pointer = (lead - 0x81) * 157 + (byte - offset);
+
+            // 3. If there is a row in the table below whose first column is pointer, return the two code points listed in its second column (the third column is irrelevant):
+            if (pointer.has_value() && pointer.value() == 1133) {
+                TRY(on_code_point(0x00CA));
+                TRY(on_code_point(0x0304));
+                continue;
+            }
+            if (pointer.has_value() && pointer.value() == 1135) {
+                TRY(on_code_point(0x00CA));
+                TRY(on_code_point(0x030C));
+                continue;
+            }
+            if (pointer.has_value() && pointer.value() == 1164) {
+                TRY(on_code_point(0x00EA));
+                TRY(on_code_point(0x0304));
+                continue;
+            }
+            if (pointer.has_value() && pointer.value() == 1166) {
+                TRY(on_code_point(0x00EA));
+                TRY(on_code_point(0x030C));
+                continue;
+            }
+
+            // 4. Let code point be null if pointer is null, otherwise the index code point for pointer in index Big5.
+            auto code_pointer = pointer.has_value() ? index_big5_code_point(pointer.value()) : Optional<u32> {};
+
+            // 5. If code point is non-null, return a code point whose value is code point.
+            if (code_pointer.has_value()) {
+                TRY(on_code_point(code_pointer.value()));
+                continue;
+            }
+
+            // 6. If byte is an ASCII byte, restore byte to ioQueue.
+            if (byte <= 0x7F)
+                index--;
+
+            // 7. Return error.
+            TRY(on_code_point(replacement_code_point));
+            continue;
+        }
+
+        // 4. If byte is an ASCII byte, return a code point whose value is byte.
+        if (byte <= 0x7F) {
+            TRY(on_code_point(byte));
+            continue;
+        }
+
+        // 5. If byte is in the range 0x81 to 0xFE, inclusive, set Big5 lead to byte and return continue.
+        if (byte >= 0x81 && byte <= 0xFE) {
+            big5_lead = byte;
+            continue;
+        }
+
+        // 6. Return error
         TRY(on_code_point(replacement_code_point));
     }
 }
