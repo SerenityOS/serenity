@@ -7,10 +7,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/BinarySearch.h>
 #include <AK/StringBuilder.h>
 #include <AK/Utf16View.h>
 #include <AK/Utf8View.h>
 #include <LibTextCodec/Decoder.h>
+#include <LibTextCodec/LookupTables.h>
 
 namespace TextCodec {
 
@@ -26,6 +28,7 @@ Latin9Decoder s_latin9_decoder;
 PDFDocEncodingDecoder s_pdf_doc_encoding_decoder;
 TurkishDecoder s_turkish_decoder;
 XUserDefinedDecoder s_x_user_defined_decoder;
+GB18030Decoder s_gb18030_decoder;
 
 // clang-format off
 // https://encoding.spec.whatwg.org/index-ibm866.txt
@@ -297,6 +300,10 @@ Optional<Decoder&> decoder_for(StringView a_encoding)
             return s_utf16be_decoder;
         if (encoding.value().equals_ignoring_ascii_case("utf-16le"sv))
             return s_utf16le_decoder;
+        if (encoding.value().equals_ignoring_ascii_case("gbk"sv))
+            return s_gb18030_decoder;
+        if (encoding.value().equals_ignoring_ascii_case("gb18030"sv))
+            return s_gb18030_decoder;
         if (encoding.value().equals_ignoring_ascii_case("ibm866"sv))
             return s_ibm866_decoder;
         if (encoding.value().equals_ignoring_ascii_case("iso-8859-2"sv))
@@ -970,6 +977,210 @@ ErrorOr<void> SingleByteDecoder::process(StringView input, Function<ErrorOr<void
     }
     // 1. If byte is end-of-queue, return finished.
     return {};
+}
+
+// https://encoding.spec.whatwg.org/#index-gb18030-ranges-code-point
+static Optional<u32> index_gb18030_ranges_code_point(u32 pointer)
+{
+    // 1. If pointer is greater than 39419 and less than 189000, or pointer is greater than 1237575, return null.
+    if ((pointer > 39419 && pointer < 189000) || pointer > 1237575)
+        return {};
+
+    // 2. If pointer is 7457, return code point U+E7C7.
+    if (pointer == 7457)
+        return 0xE7C7;
+
+    // FIXME: Encoding specification is not updated to GB-18030-2022 yet (https://github.com/whatwg/encoding/issues/312)
+    // NOTE: This matches https://commits.webkit.org/266173@main
+    switch (pointer) {
+    case 19057:
+        return 0xE81E; // 82 35 90 37
+    case 19058:
+        return 0xE826; // 82 35 90 38
+    case 19059:
+        return 0xE82B; // 82 35 90 39
+    case 19060:
+        return 0xE82C; // 82 35 91 30
+    case 19061:
+        return 0xE832; // 82 35 91 31
+    case 19062:
+        return 0xE843; // 82 35 91 32
+    case 19063:
+        return 0xE854; // 82 35 91 33
+    case 19064:
+        return 0xE864; // 82 35 91 34
+    case 39076:
+        return 0xE78D; // 84 31 82 36
+    case 39077:
+        return 0xE78F; // 84 31 82 37
+    case 39078:
+        return 0xE78E; // 84 31 82 38
+    case 39079:
+        return 0xE790; // 84 31 82 39
+    case 39080:
+        return 0xE791; // 84 31 83 30
+    case 39081:
+        return 0xE792; // 84 31 83 31
+    case 39082:
+        return 0xE793; // 84 31 83 32
+    case 39083:
+        return 0xE794; // 84 31 83 33
+    case 39084:
+        return 0xE795; // 84 31 83 34
+    case 39085:
+        return 0xE796; // 84 31 83 35
+    default:
+        break;
+    }
+
+    // 3. Let offset be the last pointer in index gb18030 ranges that is less than or equal to pointer and let code point offset be its corresponding code point.
+    size_t last_index;
+    binary_search(s_gb18030_ranges, pointer, &last_index, [](auto const pointer, auto const& entry) {
+        return pointer - entry.pointer;
+    });
+    auto offset = s_gb18030_ranges[last_index].pointer;
+    auto code_point_offset = s_gb18030_ranges[last_index].code_point;
+
+    // 4. Return a code point whose value is code point offset + pointer − offset.
+    return code_point_offset + pointer - offset;
+}
+
+// https://encoding.spec.whatwg.org/#gb18030-decoder
+ErrorOr<void> GB18030Decoder::process(StringView input, Function<ErrorOr<void>(u32)> on_code_point)
+{
+    // gb18030’s decoder has an associated gb18030 first, gb18030 second, and gb18030 third (all initially 0x00).
+    u8 first = 0x00;
+    u8 second = 0x00;
+    u8 third = 0x00;
+
+    // gb18030’s decoder’s handler, given ioQueue and byte, runs these steps:
+    size_t index = 0;
+    while (true) {
+        // 1. If byte is end-of-queue and gb18030 first, gb18030 second, and gb18030 third are 0x00, return finished.
+        if (index >= input.length() && first == 0x00 && second == 0x00 && third == 0x00)
+            return {};
+
+        // 2. If byte is end-of-queue, and gb18030 first, gb18030 second, or gb18030 third is not 0x00, set gb18030 first, gb18030 second, and gb18030 third to 0x00, and return error.
+        if (index >= input.length() && (first != 0x00 || second != 0x00 || third != 0x00)) {
+            first = 0x00;
+            second = 0x00;
+            third = 0x00;
+            TRY(on_code_point(replacement_code_point));
+            continue;
+        }
+
+        u8 const byte = input[index++];
+        // 3. If gb18030 third is not 0x00, then:
+        if (third != 0x00) {
+            // 1. If byte is not in the range 0x30 to 0x39, inclusive, then:
+            if (byte < 0x30 || byte > 0x39) {
+                // 1. Restore « gb18030 second, gb18030 third, byte » to ioQueue.
+                index -= 3;
+
+                // 2. Set gb18030 first, gb18030 second, and gb18030 third to 0x00.
+                first = 0x00;
+                second = 0x00;
+                third = 0x00;
+
+                // 3. Return error.
+                TRY(on_code_point(replacement_code_point));
+                continue;
+            }
+
+            // 2. Let code point be the index gb18030 ranges code point for ((gb18030 first − 0x81) × (10 × 126 × 10)) + ((gb18030 second − 0x30) × (10 × 126)) + ((gb18030 third − 0x81) × 10) + byte − 0x30.
+            auto code_point = index_gb18030_ranges_code_point(((first - 0x81) * (10 * 126 * 10)) + ((second - 0x30) * (10 * 126)) + ((third - 0x81) * 10) + byte - 0x30);
+
+            // 3. Set gb18030 first, gb18030 second, and gb18030 third to 0x00.
+            first = 0x00;
+            second = 0x00;
+            third = 0x00;
+
+            // 4. If code point is null, return error.
+            if (!code_point.has_value()) {
+                TRY(on_code_point(replacement_code_point));
+                continue;
+            }
+
+            // 5. Return a code point whose value is code point.
+            TRY(on_code_point(code_point.value()));
+            continue;
+        }
+
+        // 4. If gb18030 second is not 0x00, then:
+        if (second != 0x00) {
+            // 1. If byte is in the range 0x81 to 0xFE, inclusive, set gb18030 third to byte and return continue.
+            if (byte >= 0x81 && byte <= 0xFE) {
+                third = byte;
+                continue;
+            }
+
+            // 2. Restore « gb18030 second, byte » to ioQueue, set gb18030 first and gb18030 second to 0x00, and return error.
+            index -= 2;
+            first = 0x00;
+            second = 0x00;
+            TRY(on_code_point(replacement_code_point));
+            continue;
+        }
+
+        // 5. If gb18030 first is not 0x00, then:
+        if (first != 0x00) {
+            // 1. If byte is in the range 0x30 to 0x39, inclusive, set gb18030 second to byte and return continue.
+            if (byte >= 0x30 && byte <= 0x39) {
+                second = byte;
+                continue;
+            }
+
+            // 2. Let lead be gb18030 first, let pointer be null, and set gb18030 first to 0x00.
+            auto lead = first;
+            Optional<u32> pointer;
+            first = 0x00;
+
+            // 3. Let offset be 0x40 if byte is less than 0x7F, otherwise 0x41.
+            u8 const offset = byte < 0x7F ? 0x40 : 0x41;
+
+            // 4. If byte is in the range 0x40 to 0x7E, inclusive, or 0x80 to 0xFE, inclusive, set pointer to (lead − 0x81) × 190 + (byte − offset).
+            if ((byte >= 0x40 && byte <= 0x7E) || (byte >= 0x80 && byte <= 0xFE))
+                pointer = (lead - 0x81) * 190 + (byte - offset);
+
+            // 5. Let code point be null if pointer is null, otherwise the index code point for pointer in index gb18030.
+            auto code_point = pointer.has_value() ? index_gb18030_code_point(pointer.value()) : Optional<u32> {};
+
+            // 6. If code point is non-null, return a code point whose value is code point.
+            if (code_point.has_value()) {
+                TRY(on_code_point(code_point.value()));
+                continue;
+            }
+
+            // 7. If byte is an ASCII byte, restore byte to ioQueue.
+            if (byte <= 0x7F)
+                index--;
+
+            // 8. Return error.
+            TRY(on_code_point(replacement_code_point));
+            continue;
+        }
+
+        // 6. If byte is an ASCII byte, return a code point whose value is byte.
+        if (byte <= 0x7F) {
+            TRY(on_code_point(byte));
+            continue;
+        }
+
+        // 7. If byte is 0x80, return code point U+20AC.
+        if (byte == 0x80) {
+            TRY(on_code_point(0x20AC));
+            continue;
+        }
+
+        // 8. If byte is in the range 0x81 to 0xFE, inclusive, set gb18030 first to byte and return continue.
+        if (byte >= 0x81 && byte <= 0xFE) {
+            first = byte;
+            continue;
+        }
+
+        // 9. Return error.
+        TRY(on_code_point(replacement_code_point));
+    }
 }
 
 }
