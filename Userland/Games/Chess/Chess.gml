@@ -30,6 +30,20 @@
                 mode: "DisplayOnly"
                 focus_policy: "NoFocus"
             }
+
+            @GUI::Label {
+                text_alignment: "CenterLeft"
+                font_weight: "Bold"
+                autosize: true
+                name: "white_time_label"
+            }
+
+            @GUI::Label {
+                text_alignment: "CenterLeft"
+                font_weight: "Bold"
+                autosize: true
+                name: "black_time_label"
+            }
         }
     }
 }

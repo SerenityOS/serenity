@@ -16,6 +16,7 @@
 #include <LibChess/Chess.h>
 #include <LibConfig/Listener.h>
 #include <LibGUI/Frame.h>
+#include <LibGUI/Label.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGfx/Bitmap.h>
 
@@ -109,6 +110,8 @@ public:
 
     void set_engine(RefPtr<Engine> engine) { m_engine = engine; }
     void set_move_display_widget(RefPtr<GUI::TextEditor> move_display_widget) { m_move_display_widget = move_display_widget; }
+    void set_white_time_label(RefPtr<GUI::Label> time_label) { m_white_time_label = time_label; }
+    void set_black_time_label(RefPtr<GUI::Label> time_label) { m_black_time_label = time_label; }
 
     void input_engine_move();
     bool want_engine_move();
@@ -118,6 +121,18 @@ public:
 
     void set_highlight_checks(bool highlight_checks) { m_highlight_checks = highlight_checks; }
     bool highlight_checks() const { return m_highlight_checks; }
+
+    void set_unlimited_time_control(bool unlimited) { m_unlimited_time_control = unlimited; }
+    bool unlimited_time_control() const { return m_unlimited_time_control; }
+
+    void set_time_control_seconds(i32 seconds) { m_time_control_seconds = seconds; }
+    i32 time_control_seconds() const { return m_time_control_seconds; }
+
+    void set_time_control_increment(i32 seconds) { m_time_control_increment = seconds; }
+    i32 time_control_increment() const { return m_time_control_increment; }
+
+    void initialize_timer();
+    void update_time_labels(u32 white_time, u32 black_time);
 
     struct BoardMarking {
         Chess::Square from { 50, 50 };
@@ -153,6 +168,8 @@ private:
     virtual void config_bool_did_change(StringView domain, StringView group, StringView key, bool value) override;
 
     bool check_game_over(ClaimDrawBehavior);
+    void check_resign_on_time(StringView msg);
+    void apply_increment(Chess::Move move);
 
     Chess::Board m_board;
     Chess::Board m_board_playback;
@@ -178,6 +195,14 @@ private:
     bool m_coordinates { true };
     bool m_highlight_checks { true };
     RefPtr<GUI::TextEditor> m_move_display_widget;
+    RefPtr<GUI::Label> m_white_time_label;
+    RefPtr<GUI::Label> m_black_time_label;
+    bool m_unlimited_time_control { true };
+    i32 m_time_control_seconds { 0 };
+    i32 m_time_control_increment { 0 };
+    i32 m_white_time_elapsed { 0 };
+    i32 m_black_time_elapsed { 0 };
+    RefPtr<Core::Timer> m_timer;
 };
 
 }

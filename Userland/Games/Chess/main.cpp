@@ -71,6 +71,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto& chess_widget = *main_widget->find_descendant_of_type_named<Chess::ChessWidget>("chess_widget");
     auto& move_display_widget = *main_widget->find_descendant_of_type_named<GUI::TextEditor>("move_display_widget");
     chess_widget.set_move_display_widget(move(move_display_widget));
+    auto& white_time_label = *main_widget->find_descendant_of_type_named<GUI::Label>("white_time_label");
+    chess_widget.set_white_time_label(move(white_time_label));
+    auto& black_time_label = *main_widget->find_descendant_of_type_named<GUI::Label>("black_time_label");
+    chess_widget.set_black_time_label(move(black_time_label));
 
     window->set_main_widget(main_widget);
     window->set_focused_widget(&chess_widget);
@@ -98,6 +102,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     chess_widget.set_coordinates(Config::read_bool("Games"sv, "Chess"sv, "ShowCoordinates"sv, true));
     chess_widget.set_show_available_moves(Config::read_bool("Games"sv, "Chess"sv, "ShowAvailableMoves"sv, true));
     chess_widget.set_highlight_checks(Config::read_bool("Games"sv, "Chess"sv, "HighlightChecks"sv, true));
+    chess_widget.set_unlimited_time_control(Config::read_bool("Games"sv, "Chess"sv, "UnlimitedTimeControl"sv, true));
+    chess_widget.set_time_control_seconds(Config::read_i32("Games"sv, "Chess"sv, "TimeControlSeconds"sv, 300));
+    chess_widget.set_time_control_increment(Config::read_i32("Games"sv, "Chess"sv, "TimeControlIncrement"sv, 3));
+    chess_widget.initialize_timer();
 
     auto game_menu = window->add_menu("&Game"_string);
 
@@ -149,7 +157,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (chess_widget.resign() < 0)
                 return;
         }
-        auto new_game_dialog_or_error = Chess::NewGameDialog::try_create(window);
+
+        auto new_game_dialog_or_error = Chess::NewGameDialog::try_create(window, chess_widget.unlimited_time_control(), chess_widget.time_control_seconds(), chess_widget.time_control_increment());
         if (new_game_dialog_or_error.is_error()) {
             GUI::MessageBox::show(window, "Failed to load the new game window"sv, "Unable to Open New Game Dialog"sv, GUI::MessageBox::Type::Error);
             return;
@@ -159,6 +168,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (new_game_dialog->exec() != GUI::Dialog::ExecResult::OK)
             return;
 
+        chess_widget.set_unlimited_time_control(new_game_dialog->unlimited_time_control());
+        chess_widget.set_time_control_seconds(new_game_dialog->time_control_seconds());
+        chess_widget.set_time_control_increment(new_game_dialog->time_control_increment());
+
+        Config::write_bool("Games"sv, "Chess"sv, "UnlimitedTimeControl"sv, new_game_dialog->unlimited_time_control());
+        Config::write_i32("Games"sv, "Chess"sv, "TimeControlSeconds"sv, new_game_dialog->time_control_seconds());
+        Config::write_i32("Games"sv, "Chess"sv, "TimeControlIncrement"sv, new_game_dialog->time_control_increment());
         chess_widget.reset();
     }));
     game_menu->add_separator();
