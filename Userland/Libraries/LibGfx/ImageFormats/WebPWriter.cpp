@@ -319,7 +319,8 @@ ErrorOr<void> WebPAnimationWriter::add_frame(Bitmap& bitmap, int duration_ms, In
     chunk.disposal_method = ANMFChunkHeader::DisposalMethod::DoNotDispose;
 
     TRY(write_ANMF_chunk_header(m_stream, chunk, compute_VP8L_chunk_size(vp8l_data_bytes)));
-    TRY(write_VP8L_chunk(m_stream, bitmap.width(), bitmap.height(), true, vp8l_data_bytes));
+    bool alpha_is_used_hint = !is_fully_opaque;
+    TRY(write_VP8L_chunk(m_stream, bitmap.width(), bitmap.height(), alpha_is_used_hint, vp8l_data_bytes));
 
     TRY(update_size_in_header());
 
