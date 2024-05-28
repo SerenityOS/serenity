@@ -18,11 +18,13 @@
         checkException('KeyframeEffect with infinite endDelay value', () => new KeyframeEffect(null, null, { endDelay: Infinity }));
         checkException('KeyframeEffect with NaN endDelay value', () => new KeyframeEffect(null, null, { endDelay: NaN }));
         checkException('KeyframeEffect with NaN iterations', () => new KeyframeEffect(null, null, { iterations: NaN }));
+        checkException('KeyframeEffect with non-"auto" string duration', () => new KeyframeEffect(null, null, { duration: 'abc' }))
 
         // Test valid values
         checkException('KeyframeEffect with infinite options value', () => new KeyframeEffect(null, null, Infinity));
         checkException('KeyframeEffect with finite options value', () => new KeyframeEffect(null, null, 1234.5));
         checkException('KeyframeEffect with infinite iterations', () => new KeyframeEffect(null, null, { iterations: Infinity }));
         checkException('KeyframeEffect with infinite duration', () => new KeyframeEffect(null, null, { duration: Infinity }));
+        checkException('KeyframeEffect with "auto" string duration', () => new KeyframeEffect(null, null, { duration: 'auto' }))
     });
 </script>
