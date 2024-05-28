@@ -67,15 +67,6 @@ static ErrorOr<void> write_VP8L_header(Stream& stream, unsigned width, unsigned 
     return {};
 }
 
-static bool are_all_pixels_opaque(Bitmap const& bitmap)
-{
-    for (ARGB32 pixel : bitmap) {
-        if ((pixel >> 24) != 0xff)
-            return false;
-    }
-    return true;
-}
-
 // FIXME: Consider using LibRIFF for RIFF writing details. (It currently has no writing support.)
 static ErrorOr<void> align_to_two(Stream& stream, size_t number_of_bytes_written)
 {
@@ -190,11 +181,11 @@ static ErrorOr<void> align_to_two(AllocatingMemoryStream& stream)
 
 ErrorOr<void> WebPWriter::encode(Stream& stream, Bitmap const& bitmap, Options const& options)
 {
-    bool alpha_is_used_hint = !are_all_pixels_opaque(bitmap);
-    dbgln_if(WEBP_DEBUG, "Writing WebP of size {} with alpha hint: {}", bitmap.size(), alpha_is_used_hint);
-
     // The chunk headers need to know their size, so we either need a SeekableStream or need to buffer the data. We're doing the latter.
-    auto vp8l_data_bytes = TRY(compress_VP8L_image_data(bitmap));
+    bool is_fully_opaque;
+    auto vp8l_data_bytes = TRY(compress_VP8L_image_data(bitmap, is_fully_opaque));
+    bool alpha_is_used_hint = !is_fully_opaque;
+    dbgln_if(WEBP_DEBUG, "Writing WebP of size {} with alpha hint: {}", bitmap.size(), alpha_is_used_hint);
 
     ByteBuffer vp8x_chunk_bytes;
     ByteBuffer iccp_chunk_bytes;
@@ -315,7 +306,8 @@ ErrorOr<void> WebPAnimationWriter::add_frame(Bitmap& bitmap, int duration_ms, In
     // Since we have a SeekableStream, we could write both the VP8L chunk header and the ANMF chunk header with a placeholder size,
     // compress the frame data directly to the stream, and then go back and update the two sizes.
     // That's pretty messy though, and the compressed image data is smaller than the uncompressed bitmap passed in. So we'll buffer it.
-    auto vp8l_data_bytes = TRY(compress_VP8L_image_data(bitmap));
+    bool is_fully_opaque;
+    auto vp8l_data_bytes = TRY(compress_VP8L_image_data(bitmap, is_fully_opaque));
 
     ANMFChunkHeader chunk;
     chunk.frame_x = static_cast<u32>(at.x());
@@ -331,7 +323,7 @@ ErrorOr<void> WebPAnimationWriter::add_frame(Bitmap& bitmap, int duration_ms, In
 
     TRY(update_size_in_header());
 
-    if (!(m_vp8x_flags & 0x10) && !are_all_pixels_opaque(bitmap))
+    if (!(m_vp8x_flags & 0x10) && !is_fully_opaque)
         TRY(set_alpha_bit_in_header());
 
     return {};
