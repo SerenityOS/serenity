@@ -11,6 +11,7 @@
 #include <LibWeb/WebAudio/AudioBuffer.h>
 #include <LibWeb/WebAudio/BaseAudioContext.h>
 #include <LibWeb/WebAudio/DynamicsCompressorNode.h>
+#include <LibWeb/WebAudio/GainNode.h>
 #include <LibWeb/WebAudio/OscillatorNode.h>
 
 namespace Web::WebAudio {
@@ -59,6 +60,13 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DynamicsCompressorNode>> BaseAudioContext::
 {
     // Factory method for a DynamicsCompressorNode.
     return DynamicsCompressorNode::create(realm(), *this);
+}
+
+// https://webaudio.github.io/web-audio-api/#dom-baseaudiocontext-creategain
+JS::NonnullGCPtr<GainNode> BaseAudioContext::create_gain()
+{
+    // Factory method for GainNode.
+    return GainNode::create(realm(), *this);
 }
 
 // https://webaudio.github.io/web-audio-api/#dom-baseaudiocontext-createbuffer
