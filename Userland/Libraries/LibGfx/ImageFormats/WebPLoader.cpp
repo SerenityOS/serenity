@@ -518,7 +518,9 @@ static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_image_data(WebPLoadingContext&
         VERIFY(!image_data.alpha_chunk.has_value());
         auto vp8l_header = TRY(decode_webp_chunk_VP8L_header(image_data.image_data_chunk.data()));
 
-        if (context.first_chunk->id() == "VP8X" && context.vp8x_header.has_alpha != vp8l_header.is_alpha_used)
+        // Check that the VP8X header alpha flag matches the VP8L header alpha flag.
+        // FIXME: For animated images, if VP8X has alpha then at least one frame should have alpha. But we currently don't check this for animations.
+        if (context.first_chunk->id() == "VP8X" && !context.animation_frame_chunks_data.has_value() && context.vp8x_header.has_alpha != vp8l_header.is_alpha_used)
             return Error::from_string_literal("WebPImageDecoderPlugin: VP8X header alpha flag doesn't match VP8L header");
 
         return decode_webp_chunk_VP8L_contents(vp8l_header);
