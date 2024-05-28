@@ -352,6 +352,12 @@ ErrorOr<void> WebPAnimationWriter::set_alpha_bit_in_header()
     m_vp8x_flags |= 0x10;
 
     auto current_offset = TRY(m_stream.tell());
+    // 4 bytes for "RIFF",
+    // 4 bytes RIFF chunk size (i.e. file size - 8),
+    // 4 bytes for "WEBP",
+    // 4 bytes for "VP8X",
+    // 4 bytes for VP8X chunk size,
+    // followed by VP8X flags in the first byte of the VP8X chunk data.
     TRY(m_stream.seek(20, SeekMode::SetPosition));
     TRY(m_stream.write_value<u8>(m_vp8x_flags));
     TRY(m_stream.seek(current_offset, SeekMode::SetPosition));
