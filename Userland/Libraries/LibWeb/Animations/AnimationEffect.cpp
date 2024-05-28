@@ -140,7 +140,16 @@ WebIDL::ExceptionOr<void> AnimationEffect::update_timing(OptionalEffectTiming ti
     //    abort this procedure.
     // Note: "auto", the only valid string value, is treated as 0.
     auto& duration = timing.duration;
-    if (duration.has_value() && duration->has<double>() && (duration->get<double>() < 0.0 || isnan(duration->get<double>())))
+    auto has_valid_duration_value = [&] {
+        if (!duration.has_value())
+            return true;
+        if (duration->has<double>() && (duration->get<double>() < 0.0 || isnan(duration->get<double>())))
+            return false;
+        if (duration->has<String>() && (duration->get<String>() != "auto"))
+            return false;
+        return true;
+    }();
+    if (!has_valid_duration_value)
         return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Invalid duration value"sv };
 
     // 4. If the easing member of input exists but cannot be parsed using the <easing-function> production
