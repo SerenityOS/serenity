@@ -11,6 +11,7 @@
 #include "PromotionDialog.h"
 #include <AK/Enumerate.h>
 #include <AK/GenericLexer.h>
+#include <AK/NumberFormat.h>
 #include <AK/Random.h>
 #include <AK/String.h>
 #include <LibCore/Account.h>
@@ -293,8 +294,17 @@ void ChessWidget::mouseup_event(GUI::MouseEvent& event)
             move.promote_to = promotion_dialog->selected_piece();
     }
 
+    if (board().moves().size() == 0) {
+        if (!m_timer->is_active() && !m_unlimited_time_control) {
+            m_timer->start();
+        }
+    }
+
     if (board().apply_move(move)) {
         update_move_display_widget(m_board);
+        if (!m_unlimited_time_control) {
+            apply_increment(move);
+        }
         m_playback_move_number = board().moves().size();
         m_playback = false;
         m_board_playback = m_board;
@@ -434,9 +444,19 @@ void ChessWidget::reset()
     update_move_display_widget(m_board);
     m_side = (get_random<u32>() % 2) ? Chess::Color::White : Chess::Color::Black;
     m_drag_enabled = true;
+    m_white_time_elapsed = 0;
+    m_black_time_elapsed = 0;
+    m_timer->stop();
+
     if (m_engine)
         m_engine->start_new_game();
 
+    if (m_unlimited_time_control) {
+        m_white_time_label->set_text("White time: -"_string);
+        m_black_time_label->set_text("Black time: -"_string);
+    } else {
+        update_time_labels(m_time_control_seconds, m_time_control_seconds);
+    }
     input_engine_move();
     update();
 }
@@ -474,6 +494,12 @@ void ChessWidget::input_engine_move()
     if (drag_was_enabled)
         set_drag_enabled(false);
 
+    if (board().moves().size() == 0) {
+        if (!m_timer->is_active() && !m_unlimited_time_control) {
+            m_timer->start();
+        }
+    }
+
     set_override_cursor(Gfx::StandardCursor::Wait);
     m_engine->get_best_move(board(), 4000, [this, drag_was_enabled](ErrorOr<Chess::Move> move) {
         set_override_cursor(Gfx::StandardCursor::None);
@@ -483,6 +509,9 @@ void ChessWidget::input_engine_move()
         if (!move.is_error()) {
             VERIFY(board().apply_move(move.release_value()));
             update_move_display_widget(board());
+            if (!m_unlimited_time_control) {
+                apply_increment(move.release_value());
+            }
             if (check_game_over(ClaimDrawBehavior::Prompt))
                 return;
         }
@@ -783,7 +812,11 @@ ErrorOr<void> ChessWidget::export_pgn(Core::File& file) const
     TRY(file.write_until_depleted("[WhiteElo \"?\"]\n"sv.bytes()));
     TRY(file.write_until_depleted("[BlackElo \"?\"]\n"sv.bytes()));
     TRY(file.write_until_depleted("[Variant \"Standard\"]\n"sv.bytes()));
-    TRY(file.write_until_depleted("[TimeControl \"-\"]\n"sv.bytes()));
+    if (m_unlimited_time_control) {
+        TRY(file.write_until_depleted("[TimeControl \"-\"]\n"sv.bytes()));
+    } else {
+        TRY(file.write_until_depleted(TRY(String::formatted("[TimeControl \"{}+{}\"]\n", m_time_control_seconds, m_time_control_increment))));
+    }
     TRY(file.write_until_depleted("[Annotator \"SerenityOS Chess\"]\n"sv.bytes()));
     TRY(file.write_until_depleted("\n"sv.bytes()));
 
@@ -837,11 +870,65 @@ int ChessWidget::resign()
     board().set_resigned(m_board.turn());
 
     set_drag_enabled(false);
+    m_timer->stop();
     update();
     auto const msg = Chess::Board::result_to_string(m_board.game_result(), m_board.turn());
     GUI::MessageBox::show(window(), msg, "Game Over"sv, GUI::MessageBox::Type::Information);
 
     return 0;
+}
+
+void ChessWidget::initialize_timer()
+{
+    m_timer = Core::Timer::create_repeating(
+        1000, [this] {
+            // FIXME: Look into using AK/Timer methods to calculate elapsed time from
+            // start for greater accuracy.
+            auto white_time = m_time_control_seconds - m_white_time_elapsed;
+            auto black_time = m_time_control_seconds - m_black_time_elapsed;
+            if (m_board.turn() == Chess::Color::White) {
+                m_white_time_elapsed++;
+                update_time_labels(m_time_control_seconds - m_white_time_elapsed, black_time);
+                check_resign_on_time("White time out. Black wins."sv);
+            } else if (m_board.turn() == Chess::Color::Black) {
+                m_black_time_elapsed++;
+                update_time_labels(white_time, m_time_control_seconds - m_black_time_elapsed);
+                check_resign_on_time("Black time out. White wins."sv);
+            }
+        },
+        this);
+}
+
+void ChessWidget::apply_increment(Chess::Move move)
+{
+    if (move.piece.color == Chess::Color::White) {
+        m_white_time_elapsed -= m_time_control_increment;
+    } else {
+        m_black_time_elapsed -= m_time_control_increment;
+    }
+    update_time_labels(m_time_control_seconds - m_white_time_elapsed, m_time_control_seconds - m_black_time_elapsed);
+}
+
+void ChessWidget::update_time_labels(u32 white_time, u32 black_time)
+{
+    m_white_time_label->set_text(MUST(String::formatted("White time: {}", human_readable_digital_time(white_time))));
+    m_black_time_label->set_text(MUST(String::formatted("Black time: {}", human_readable_digital_time(black_time))));
+}
+
+void ChessWidget::check_resign_on_time(StringView msg)
+{
+    if (m_white_time_elapsed >= m_time_control_seconds) {
+        m_board.set_resigned(Chess::Color::White);
+    } else if (m_black_time_elapsed >= m_time_control_seconds) {
+        m_board.set_resigned(Chess::Color::Black);
+    } else {
+        return;
+    }
+    m_timer->stop();
+    set_override_cursor(Gfx::StandardCursor::None);
+    set_drag_enabled(false);
+    update();
+    GUI::MessageBox::show(window(), msg, "Game Over"sv, GUI::MessageBox::Type::Information);
 }
 
 bool ChessWidget::check_game_over(ClaimDrawBehavior claim_draw_behavior)
@@ -879,6 +966,7 @@ bool ChessWidget::check_game_over(ClaimDrawBehavior claim_draw_behavior)
 
     set_override_cursor(Gfx::StandardCursor::None);
     set_drag_enabled(false);
+    m_timer->stop();
     update();
     auto msg = Chess::Board::result_to_string(board().game_result(), board().turn());
     GUI::MessageBox::show(window(), msg, "Game Over"sv, GUI::MessageBox::Type::Information);
