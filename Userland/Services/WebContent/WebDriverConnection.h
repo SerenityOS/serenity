@@ -61,6 +61,7 @@ private:
     virtual Messages::WebDriverClient::MaximizeWindowResponse maximize_window() override;
     virtual Messages::WebDriverClient::MinimizeWindowResponse minimize_window() override;
     virtual Messages::WebDriverClient::FullscreenWindowResponse fullscreen_window() override;
+    virtual Messages::WebDriverClient::ConsumeUserActivationResponse consume_user_activation() override;
     virtual Messages::WebDriverClient::FindElementResponse find_element(JsonValue const& payload) override;
     virtual Messages::WebDriverClient::FindElementsResponse find_elements(JsonValue const& payload) override;
     virtual Messages::WebDriverClient::FindElementFromElementResponse find_element_from_element(JsonValue const& payload, String const& element_id) override;

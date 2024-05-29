@@ -59,6 +59,9 @@ public:
     virtual Response minimize_window(Parameters parameters, JsonValue payload) = 0;
     virtual Response fullscreen_window(Parameters parameters, JsonValue payload) = 0;
 
+    // Extension: https://html.spec.whatwg.org/multipage/interaction.html#user-activation-user-agent-automation
+    virtual Response consume_user_activation(Parameters parameters, JsonValue payload) = 0;
+
     // 12. Elements, https://w3c.github.io/webdriver/#elements
     virtual Response find_element(Parameters parameters, JsonValue payload) = 0;
     virtual Response find_elements(Parameters parameters, JsonValue payload) = 0;
