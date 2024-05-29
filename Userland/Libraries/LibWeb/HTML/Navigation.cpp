@@ -929,7 +929,7 @@ void Navigation::consume_history_action_user_activation(Window& w)
 
     // 5. For each window in windows, set window's last history-action activation timestamp to window's last activation timestamp.
     for (auto& window : windows)
-        window->set_last_history_action_activation_timestamp(window->get_last_activation_timestamp());
+        window->set_last_history_action_activation_timestamp(window->last_activation_timestamp());
 }
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#inner-navigate-event-firing-algorithm
