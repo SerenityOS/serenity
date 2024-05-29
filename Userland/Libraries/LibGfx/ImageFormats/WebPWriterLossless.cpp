@@ -189,8 +189,8 @@ static ErrorOr<CanonicalCode> write_normal_code_lengths(LittleEndianOutputBitStr
         unsigned needed_length_nbits = ceil(log2(encoded_lengths_count - 2));
         VERIFY(needed_length_nbits <= 16);
         needed_length_nbits = ceil_div(needed_length_nbits, 2) * 2;
-        TRY(bit_stream.write_bits((needed_length_nbits - 2) / 2, 3u));              // length_nbits = 2 + 2 * 3 == 8
-        TRY(bit_stream.write_bits(encoded_lengths_count - 2, needed_length_nbits)); // max_symbol = 2 + 254
+        TRY(bit_stream.write_bits((needed_length_nbits - 2) / 2, 3u));
+        TRY(bit_stream.write_bits(encoded_lengths_count - 2, needed_length_nbits));
     }
 
     // The rest is identical to write_dynamic_huffman() again. (Code 16 has different semantics, but that doesn't matter here.)
