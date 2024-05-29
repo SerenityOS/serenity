@@ -9,6 +9,7 @@
 #include <AK/Error.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/Forward.h>
+#include <LibGfx/ImageFormats/WebPWriterLossless.h>
 #include <LibGfx/Point.h>
 
 namespace Gfx {
@@ -16,6 +17,7 @@ namespace Gfx {
 class AnimationWriter;
 
 struct WebPEncoderOptions {
+    VP8LEncoderOptions vp8l_options;
     Optional<ReadonlyBytes> icc_data;
 };
 

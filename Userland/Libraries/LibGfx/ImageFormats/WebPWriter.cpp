@@ -14,7 +14,6 @@
 #include <LibGfx/ImageFormats/AnimationWriter.h>
 #include <LibGfx/ImageFormats/WebPShared.h>
 #include <LibGfx/ImageFormats/WebPWriter.h>
-#include <LibGfx/ImageFormats/WebPWriterLossless.h>
 
 namespace Gfx {
 
@@ -183,7 +182,7 @@ ErrorOr<void> WebPWriter::encode(Stream& stream, Bitmap const& bitmap, Options c
 {
     // The chunk headers need to know their size, so we either need a SeekableStream or need to buffer the data. We're doing the latter.
     bool is_fully_opaque;
-    auto vp8l_data_bytes = TRY(compress_VP8L_image_data(bitmap, is_fully_opaque));
+    auto vp8l_data_bytes = TRY(compress_VP8L_image_data(bitmap, options.vp8l_options, is_fully_opaque));
     bool alpha_is_used_hint = !is_fully_opaque;
     dbgln_if(WEBP_DEBUG, "Writing WebP of size {} with alpha hint: {}", bitmap.size(), alpha_is_used_hint);
 
@@ -216,10 +215,11 @@ ErrorOr<void> WebPWriter::encode(Stream& stream, Bitmap const& bitmap, Options c
 
 class WebPAnimationWriter : public AnimationWriter {
 public:
-    WebPAnimationWriter(SeekableStream& stream, IntSize dimensions, u8 original_vp8x_flags)
+    WebPAnimationWriter(SeekableStream& stream, IntSize dimensions, u8 original_vp8x_flags, VP8LEncoderOptions vp8l_options)
         : m_stream(stream)
         , m_dimensions(dimensions)
         , m_vp8x_flags(original_vp8x_flags)
+        , m_vp8l_options(vp8l_options)
     {
     }
 
@@ -232,6 +232,7 @@ private:
     SeekableStream& m_stream;
     IntSize m_dimensions;
     u8 m_vp8x_flags { 0 };
+    VP8LEncoderOptions m_vp8l_options;
 };
 
 static ErrorOr<void> align_to_two(SeekableStream& stream)
@@ -307,7 +308,7 @@ ErrorOr<void> WebPAnimationWriter::add_frame(Bitmap& bitmap, int duration_ms, In
     // compress the frame data directly to the stream, and then go back and update the two sizes.
     // That's pretty messy though, and the compressed image data is smaller than the uncompressed bitmap passed in. So we'll buffer it.
     bool is_fully_opaque;
-    auto vp8l_data_bytes = TRY(compress_VP8L_image_data(bitmap, is_fully_opaque));
+    auto vp8l_data_bytes = TRY(compress_VP8L_image_data(bitmap, m_vp8l_options, is_fully_opaque));
 
     ANMFChunkHeader chunk;
     chunk.frame_x = static_cast<u32>(at.x());
@@ -387,7 +388,7 @@ ErrorOr<NonnullOwnPtr<AnimationWriter>> WebPWriter::start_encoding_animation(See
 
     TRY(write_ANIM_chunk(stream, { .background_color = background_color.value(), .loop_count = static_cast<u16>(loop_count) }));
 
-    auto writer = make<WebPAnimationWriter>(stream, dimensions, vp8x_flags_from_header(vp8x_header));
+    auto writer = make<WebPAnimationWriter>(stream, dimensions, vp8x_flags_from_header(vp8x_header), options.vp8l_options);
     TRY(writer->update_size_in_header());
     return writer;
 }

@@ -213,7 +213,9 @@ TEST_CASE(test_webp_icc)
     auto sRGB_icc_data = MUST(Gfx::ICC::encode(sRGB_icc_profile));
 
     auto rgba_bitmap = TRY_OR_FAIL(create_test_rgba_bitmap());
-    auto encoded_rgba_bitmap = TRY_OR_FAIL((encode_bitmap<Gfx::WebPWriter>(rgba_bitmap, Gfx::WebPEncoderOptions { .icc_data = sRGB_icc_data })));
+    Gfx::WebPEncoderOptions options;
+    options.icc_data = sRGB_icc_data;
+    auto encoded_rgba_bitmap = TRY_OR_FAIL((encode_bitmap<Gfx::WebPWriter>(rgba_bitmap, options)));
 
     auto decoded_rgba_plugin = TRY_OR_FAIL(Gfx::WebPImageDecoderPlugin::create(encoded_rgba_bitmap));
     expect_bitmaps_equal(*TRY_OR_FAIL(expect_single_frame_of_size(*decoded_rgba_plugin, rgba_bitmap->size())), rgba_bitmap);
