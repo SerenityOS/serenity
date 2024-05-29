@@ -214,10 +214,10 @@ public:
 
     [[nodiscard]] JS::NonnullGCPtr<CustomElementRegistry> custom_elements();
 
-    HighResolutionTime::DOMHighResTimeStamp get_last_activation_timestamp() const { return m_last_activation_timestamp; }
+    HighResolutionTime::DOMHighResTimeStamp last_activation_timestamp() const { return m_last_activation_timestamp; }
     void set_last_activation_timestamp(HighResolutionTime::DOMHighResTimeStamp timestamp) { m_last_activation_timestamp = timestamp; }
 
-    HighResolutionTime::DOMHighResTimeStamp get_last_history_action_activation_timestamp() const { return m_last_history_action_activation_timestamp; }
+    HighResolutionTime::DOMHighResTimeStamp last_history_action_activation_timestamp() const { return m_last_history_action_activation_timestamp; }
     void set_last_history_action_activation_timestamp(HighResolutionTime::DOMHighResTimeStamp timestamp) { m_last_history_action_activation_timestamp = timestamp; }
 
     static void set_inspector_object_exposed(bool);
