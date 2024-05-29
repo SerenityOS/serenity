@@ -38,7 +38,6 @@ link_qt("ladybird_qt_components") {
     "Gui",
     "Widgets",
     "Network",
-    "Svg",
   ]
 }
 
