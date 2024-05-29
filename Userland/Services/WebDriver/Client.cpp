@@ -389,6 +389,15 @@ Web::WebDriver::Response Client::fullscreen_window(Web::WebDriver::Parameters pa
     return session->web_content_connection().fullscreen_window();
 }
 
+// Extension: Consume User Activation, https://html.spec.whatwg.org/multipage/interaction.html#user-activation-user-agent-automation
+// POST /session/{session id}/window/consume-user-activation
+Web::WebDriver::Response Client::consume_user_activation(Web::WebDriver::Parameters parameters, JsonValue)
+{
+    dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/window/consume-user-activation");
+    auto session = TRY(find_session_with_id(parameters[0]));
+    return session->web_content_connection().consume_user_activation();
+}
+
 // 12.3.2 Find Element, https://w3c.github.io/webdriver/#dfn-find-element
 // POST /session/{session id}/element
 Web::WebDriver::Response Client::find_element(Web::WebDriver::Parameters parameters, JsonValue payload)

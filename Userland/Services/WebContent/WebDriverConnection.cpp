@@ -754,6 +754,27 @@ Messages::WebDriverClient::FullscreenWindowResponse WebDriverConnection::fullscr
     return serialize_rect(rect);
 }
 
+// Extension Consume User Activation, https://html.spec.whatwg.org/multipage/interaction.html#user-activation-user-agent-automation
+Messages::WebDriverClient::ConsumeUserActivationResponse WebDriverConnection::consume_user_activation()
+{
+    // FIXME: This should probably be in the spec steps
+    // If the current top-level browsing context is no longer open, return error with error code no such window.
+    TRY(ensure_open_top_level_browsing_context());
+
+    // 1. Let window be current browsing context's active window.
+    auto* window = m_page_client->page().top_level_browsing_context().active_window();
+
+    // 2. Let consume be true if window has transient activation; otherwise false.
+    bool consume = window->has_transient_activation();
+
+    // 3. If consume is true, then consume user activation of window.
+    if (consume)
+        window->consume_user_activation();
+
+    // 4. Return success with data consume.
+    return consume;
+}
+
 // 12.3.2 Find Element, https://w3c.github.io/webdriver/#dfn-find-element
 Messages::WebDriverClient::FindElementResponse WebDriverConnection::find_element(JsonValue const& payload)
 {

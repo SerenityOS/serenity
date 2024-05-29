@@ -58,6 +58,7 @@ private:
     virtual Web::WebDriver::Response maximize_window(Web::WebDriver::Parameters parameters, JsonValue payload) override;
     virtual Web::WebDriver::Response minimize_window(Web::WebDriver::Parameters parameters, JsonValue payload) override;
     virtual Web::WebDriver::Response fullscreen_window(Web::WebDriver::Parameters parameters, JsonValue payload) override;
+    virtual Web::WebDriver::Response consume_user_activation(Web::WebDriver::Parameters parameters, JsonValue payload) override;
     virtual Web::WebDriver::Response find_element(Web::WebDriver::Parameters parameters, JsonValue payload) override;
     virtual Web::WebDriver::Response find_elements(Web::WebDriver::Parameters parameters, JsonValue payload) override;
     virtual Web::WebDriver::Response find_element_from_element(Web::WebDriver::Parameters parameters, JsonValue payload) override;
