@@ -663,6 +663,33 @@ void Window::consume_history_action_user_activation()
         window->set_last_history_action_activation_timestamp(window->last_activation_timestamp());
 }
 
+// https://html.spec.whatwg.org/multipage/interaction.html#consume-user-activation
+void Window::consume_user_activation()
+{
+    auto navigable = this->navigable();
+
+    // 1. If W's navigable is null, then return.
+    if (navigable == nullptr)
+        return;
+
+    // 2. Let top be W's navigable's top-level traversable.
+    auto top = navigable->top_level_traversable();
+
+    // 3. Let navigables be the inclusive descendant navigables of top's active document.
+    auto navigables = top->active_document()->inclusive_descendant_navigables();
+
+    // 4. Let windows be the list of Window objects constructed by taking the active window of each item in navigables.
+    JS::MarkedVector<JS::GCPtr<Window>> windows(heap());
+    for (auto& n : navigables)
+        windows.append(n->active_window());
+
+    // 5. For each window in windows, if window's last activation timestamp is not positive infinity, then set window's last activation timestamp to negative infinity.
+    for (auto& window : windows) {
+        if (window->last_activation_timestamp() != AK::Infinity<HighResolutionTime::DOMHighResTimeStamp>)
+            window->set_last_activation_timestamp(-AK::Infinity<HighResolutionTime::DOMHighResTimeStamp>);
+    }
+}
+
 // https://w3c.github.io/requestidlecallback/#start-an-idle-period-algorithm
 void Window::start_an_idle_period()
 {
