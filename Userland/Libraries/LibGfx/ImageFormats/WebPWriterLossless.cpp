@@ -213,17 +213,20 @@ static ErrorOr<CanonicalCode> write_normal_code_lengths(LittleEndianOutputBitStr
     return CanonicalCode::from_bytes(bit_lengths.span().trim(code_count));
 }
 
-static ErrorOr<void> write_VP8L_coded_image(LittleEndianOutputBitStream& bit_stream, Bitmap const& bitmap, bool& is_fully_opaque)
+static ErrorOr<void> write_VP8L_coded_image(ImageKind image_kind, LittleEndianOutputBitStream& bit_stream, Bitmap const& bitmap, bool& is_fully_opaque)
 {
     // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#5_image_data
     // spatially-coded-image =  color-cache-info meta-prefix data
+    // entropy-coded-image   =  color-cache-info data
 
     // color-cache-info      =  %b0
     // color-cache-info      =/ (%b1 4BIT) ; 1 followed by color cache size
     TRY(bit_stream.write_bits(0u, 1u)); // No color cache for now.
 
-    // meta-prefix           =  %b0 / (%b1 entropy-image)
-    TRY(bit_stream.write_bits(0u, 1u)); // No meta prefix for now.
+    if (image_kind == ImageKind::SpatiallyCoded) {
+        // meta-prefix           =  %b0 / (%b1 entropy-image)
+        TRY(bit_stream.write_bits(0u, 1u)); // No meta prefix for now.
+    }
 
     // data                  =  prefix-codes lz77-coded-image
     // prefix-codes          =  prefix-code-group *prefix-codes
@@ -308,7 +311,7 @@ static ErrorOr<void> write_VP8L_image_data(Stream& stream, Bitmap const& bitmap,
     // optional-transform   =  (%b1 transform optional-transform) / %b0
     TRY(bit_stream.write_bits(0u, 1u)); // No transform for now.
 
-    TRY(write_VP8L_coded_image(bit_stream, bitmap, is_fully_opaque));
+    TRY(write_VP8L_coded_image(ImageKind::SpatiallyCoded, bit_stream, bitmap, is_fully_opaque));
 
     // FIXME: Make ~LittleEndianOutputBitStream do this, or make it VERIFY() that it has happened at least.
     TRY(bit_stream.align_to_byte_boundary());
