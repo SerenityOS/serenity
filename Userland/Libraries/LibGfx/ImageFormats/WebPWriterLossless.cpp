@@ -213,14 +213,8 @@ static ErrorOr<CanonicalCode> write_normal_code_lengths(LittleEndianOutputBitStr
     return CanonicalCode::from_bytes(bit_lengths.span().trim(code_count));
 }
 
-static ErrorOr<void> write_VP8L_image_data(Stream& stream, Bitmap const& bitmap, bool& is_fully_opaque)
+static ErrorOr<void> write_VP8L_coded_image(LittleEndianOutputBitStream& bit_stream, Bitmap const& bitmap, bool& is_fully_opaque)
 {
-    LittleEndianOutputBitStream bit_stream { MaybeOwned<Stream>(stream) };
-
-    // image-stream  = optional-transform spatially-coded-image
-    // optional-transform   =  (%b1 transform optional-transform) / %b0
-    TRY(bit_stream.write_bits(0u, 1u)); // No transform for now.
-
     // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#5_image_data
     // spatially-coded-image =  color-cache-info meta-prefix data
 
@@ -302,6 +296,19 @@ static ErrorOr<void> write_VP8L_image_data(Stream& stream, Bitmap const& bitmap,
 
     // Image data.
     TRY(write_image_data(bit_stream, bitmap, prefix_code_group));
+
+    return {};
+}
+
+static ErrorOr<void> write_VP8L_image_data(Stream& stream, Bitmap const& bitmap, bool& is_fully_opaque)
+{
+    LittleEndianOutputBitStream bit_stream { MaybeOwned<Stream>(stream) };
+
+    // image-stream  = optional-transform spatially-coded-image
+    // optional-transform   =  (%b1 transform optional-transform) / %b0
+    TRY(bit_stream.write_bits(0u, 1u)); // No transform for now.
+
+    TRY(write_VP8L_coded_image(bit_stream, bitmap, is_fully_opaque));
 
     // FIXME: Make ~LittleEndianOutputBitStream do this, or make it VERIFY() that it has happened at least.
     TRY(bit_stream.align_to_byte_boundary());
