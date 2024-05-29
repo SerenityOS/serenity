@@ -56,6 +56,8 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
     m_layout->setContentsMargins(0, 0, 0, 0);
 
     m_view = new WebContentView(this, web_content_options, webdriver_content_ipc_path, parent_client, page_index);
+    m_find_in_page = new FindInPageWidget(this, m_view);
+    m_find_in_page->setVisible(false);
     m_toolbar = new QToolBar(this);
     m_location_edit = new LocationEdit(this);
 
@@ -70,6 +72,7 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
 
     m_layout->addWidget(m_toolbar);
     m_layout->addWidget(m_view);
+    m_layout->addWidget(m_find_in_page);
 
     m_hamburger_button = new QToolButton(m_toolbar);
     m_hamburger_button->setText("Show &Menu");
@@ -887,7 +890,11 @@ void Tab::resizeEvent(QResizeEvent* event)
 void Tab::update_hover_label()
 {
     m_hover_label->resize(QFontMetrics(m_hover_label->font()).boundingRect(m_hover_label->text()).adjusted(-4, -2, 4, 2).size());
-    m_hover_label->move(6, height() - m_hover_label->height() - 8);
+    auto hover_label_height = height() - m_hover_label->height() - 8;
+    if (m_find_in_page->isVisible())
+        hover_label_height -= m_find_in_page->height() - 4;
+
+    m_hover_label->move(6, hover_label_height);
     m_hover_label->raise();
 }
 
@@ -931,6 +938,12 @@ void Tab::show_inspector_window(InspectorTarget inspector_target)
         m_inspector_widget->select_hovered_node();
     else
         m_inspector_widget->select_default_node();
+}
+
+void Tab::show_find_in_page()
+{
+    m_find_in_page->setVisible(true);
+    m_find_in_page->setFocus();
 }
 
 void Tab::close_sub_widgets()

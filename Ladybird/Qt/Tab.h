@@ -9,6 +9,7 @@
 
 #include "LocationEdit.h"
 #include "WebContentView.h"
+#include <Ladybird/Qt/FindInPageWidget.h>
 #include <LibWeb/HTML/AudioPlayState.h>
 #include <QBoxLayout>
 #include <QLabel>
@@ -51,6 +52,8 @@ public:
     };
     void show_inspector_window(InspectorTarget = InspectorTarget::Document);
 
+    void show_find_in_page();
+
     QIcon const& favicon() const { return m_favicon; }
     QString const& title() const { return m_title; }
 
@@ -59,6 +62,8 @@ public:
     void update_navigation_buttons_state();
 
     QToolButton* hamburger_button() const { return m_hamburger_button; }
+
+    void update_hover_label();
 
 public slots:
     void focus_location_editor();
@@ -76,7 +81,6 @@ private:
     virtual bool event(QEvent*) override;
 
     void recreate_toolbar_icons();
-    void update_hover_label();
 
     void open_link(URL::URL const&);
     void open_link_in_new_tab(URL::URL const&);
@@ -92,6 +96,7 @@ private:
     QAction* m_reset_zoom_button_action { nullptr };
     LocationEdit* m_location_edit { nullptr };
     WebContentView* m_view { nullptr };
+    FindInPageWidget* m_find_in_page { nullptr };
     BrowserWindow* m_window { nullptr };
     QString m_title;
     QLabel* m_hover_label { nullptr };

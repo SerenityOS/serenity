@@ -115,6 +115,7 @@ if (ENABLE_QT)
         Qt/BrowserWindow.cpp
         Qt/EventLoopImplementationQt.cpp
         Qt/EventLoopImplementationQtEventTarget.cpp
+        Qt/FindInPageWidget.cpp
         Qt/Icon.cpp
         Qt/InspectorWidget.cpp
         Qt/LocationEdit.cpp

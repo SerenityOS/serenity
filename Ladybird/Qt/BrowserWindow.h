@@ -8,6 +8,7 @@
 #pragma once
 
 #include "Tab.h"
+#include <Ladybird/Qt/FindInPageWidget.h>
 #include <Ladybird/Types.h>
 #include <LibCore/Forward.h>
 #include <LibWeb/HTML/ActivateTab.h>
@@ -78,6 +79,11 @@ public:
         return *m_select_all_action;
     }
 
+    QAction& find_action()
+    {
+        return *m_find_in_page_action;
+    }
+
     QAction& paste_action()
     {
         return *m_paste_action;
@@ -119,6 +125,7 @@ public slots:
     void reset_zoom();
     void update_zoom_menu();
     void select_all();
+    void show_find_in_page();
     void paste();
     void copy_selected_text();
 
@@ -172,6 +179,7 @@ private:
     QAction* m_copy_selection_action { nullptr };
     QAction* m_paste_action { nullptr };
     QAction* m_select_all_action { nullptr };
+    QAction* m_find_in_page_action { nullptr };
     QAction* m_view_source_action { nullptr };
     QAction* m_inspect_dom_node_action { nullptr };
 

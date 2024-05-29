@@ -7,5 +7,7 @@
         <file>../Icons/hamburger.tvg</file>
         <file>../Icons/new_tab.tvg</file>
         <file>../Icons/reload.tvg</file>
+        <file>../Icons/up.tvg</file>
+        <file>../Icons/down.tvg</file>
     </qresource>
 </RCC>

@@ -152,6 +152,15 @@ BrowserWindow::BrowserWindow(Vector<URL::URL> const& initial_urls, WebView::Cook
 
     edit_menu->addSeparator();
 
+    m_find_in_page_action = new QAction("&Find in Page...", this);
+    m_find_in_page_action->setIcon(load_icon_from_uri("resource://icons/16x16/find.png"sv));
+    m_find_in_page_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Find));
+
+    edit_menu->addAction(m_find_in_page_action);
+    QObject::connect(m_find_in_page_action, &QAction::triggered, this, &BrowserWindow::show_find_in_page);
+
+    edit_menu->addSeparator();
+
     auto* settings_action = new QAction("&Settings", this);
     settings_action->setIcon(load_icon_from_uri("resource://icons/16x16/settings.png"sv));
     settings_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Preferences));
@@ -892,6 +901,14 @@ void BrowserWindow::select_all()
         return;
 
     m_current_tab->view().select_all();
+}
+
+void BrowserWindow::show_find_in_page()
+{
+    if (!m_current_tab)
+        return;
+
+    m_current_tab->show_find_in_page();
 }
 
 void BrowserWindow::paste()
