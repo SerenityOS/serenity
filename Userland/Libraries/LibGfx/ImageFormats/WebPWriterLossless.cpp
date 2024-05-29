@@ -9,7 +9,9 @@
 #include <AK/BitStream.h>
 #include <AK/Debug.h>
 #include <AK/Endian.h>
+#include <AK/HashTable.h>
 #include <AK/MemoryStream.h>
+#include <AK/QuickSort.h>
 #include <LibCompress/DeflateTables.h>
 #include <LibCompress/Huffman.h>
 #include <LibGfx/Bitmap.h>
@@ -320,15 +322,91 @@ static ErrorOr<void> write_VP8L_coded_image(ImageKind image_kind, LittleEndianOu
     return {};
 }
 
+static ARGB32 sub_argb32(ARGB32 a, ARGB32 b)
+{
+    auto a_color = Color::from_argb(a);
+    auto b_color = Color::from_argb(b);
+    return Color(a_color.red() - b_color.red(),
+        a_color.green() - b_color.green(),
+        a_color.blue() - b_color.blue(),
+        a_color.alpha() - b_color.alpha())
+        .value();
+}
+
+static ErrorOr<NonnullRefPtr<Bitmap>> maybe_write_color_indexing_transform(LittleEndianOutputBitStream& bit_stream, NonnullRefPtr<Bitmap> bitmap, IsOpaque& is_fully_opaque)
+{
+    // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#44_color_indexing_transform
+    unsigned color_table_size = 0;
+    HashTable<ARGB32> seen_colors;
+    for (ARGB32 pixel : *bitmap) {
+        auto result = seen_colors.set(pixel);
+        if (result == HashSetResult::InsertedNewEntry) {
+            ++color_table_size;
+            if (color_table_size > 256)
+                break;
+        }
+    }
+    dbgln_if(WEBP_DEBUG, "WebP: Image has {}{} colors", color_table_size > 256 ? ">= " : "", color_table_size);
+
+    // If the image has a single color, the huffman table can encode it in 0 bits and color indexing does not help.
+    // FIXME: If all colors use just a single channel, color indexing does not help either.
+    if (color_table_size <= 1 || color_table_size > 256)
+        return bitmap;
+
+    if (color_table_size <= 16) {
+        // FIXME: Implement pixel bundling.
+        dbgln_if(WEBP_DEBUG, "WebP: FIXME: Not writing color index because pixel bundling is not yet implemented");
+        return bitmap;
+    }
+
+    TRY(bit_stream.write_bits(1u, 1u)); // Transform present.
+    TRY(bit_stream.write_bits(static_cast<unsigned>(COLOR_INDEXING_TRANSFORM), 2u));
+
+    // "int color_table_size = ReadBits(8) + 1;"
+    TRY(bit_stream.write_bits(color_table_size - 1, 8u));
+
+    // Store color index to bit stream.
+    Vector<ARGB32, 256> colors;
+    for (ARGB32 color : seen_colors)
+        colors.append(color);
+    quick_sort(colors.begin(), colors.end());
+
+    // "The color table is stored using the image storage format itself." [...]
+    // "The color table is always subtraction-coded to reduce image entropy."
+    auto color_index_bitmap = TRY(Bitmap::create(BitmapFormat::BGRA8888, { static_cast<int>(color_table_size), 1 }));
+    color_index_bitmap->set_pixel(0, 0, Color::from_argb(colors[0]));
+    for (unsigned i = 1; i < color_table_size; ++i)
+        color_index_bitmap->set_pixel(i, 0, Color::from_argb(sub_argb32(colors[i], colors[i - 1])));
+    TRY(write_VP8L_coded_image(ImageKind::EntropyCoded, bit_stream, *color_index_bitmap, is_fully_opaque));
+
+    // Return a new bitmap with the color indexing transform applied.
+    HashMap<ARGB32, u8> color_index_map;
+    for (unsigned i = 0; i < color_table_size; ++i)
+        color_index_map.set(colors[i], i);
+    auto new_bitmap = TRY(Bitmap::create(BitmapFormat::BGRx8888, bitmap->size()));
+    for (int y = 0; y < bitmap->height(); ++y) {
+        for (int x = 0; x < bitmap->width(); ++x) {
+            auto pixel = bitmap->get_pixel(x, y);
+            auto result = color_index_map.get(pixel.value());
+            VERIFY(result.has_value());
+            // "The indexing is done based on the green component of the ARGB color."
+            new_bitmap->set_pixel(x, y, Color(0, result.value(), 0));
+        }
+    }
+
+    return new_bitmap;
+}
+
 static ErrorOr<void> write_VP8L_image_data(Stream& stream, NonnullRefPtr<Bitmap> bitmap, IsOpaque& is_fully_opaque)
 {
     LittleEndianOutputBitStream bit_stream { MaybeOwned<Stream>(stream) };
 
     // image-stream  = optional-transform spatially-coded-image
     // optional-transform   =  (%b1 transform optional-transform) / %b0
-    TRY(bit_stream.write_bits(0u, 1u)); // No transform for now.
+    bitmap = TRY(maybe_write_color_indexing_transform(bit_stream, bitmap, is_fully_opaque));
+    TRY(bit_stream.write_bits(0u, 1u)); // No further transforms for now.
 
-    TRY(write_VP8L_coded_image(ImageKind::SpatiallyCoded, bit_stream, bitmap, is_fully_opaque));
+    TRY(write_VP8L_coded_image(ImageKind::SpatiallyCoded, bit_stream, *bitmap, is_fully_opaque));
 
     // FIXME: Make ~LittleEndianOutputBitStream do this, or make it VERIFY() that it has happened at least.
     TRY(bit_stream.align_to_byte_boundary());
