@@ -15,6 +15,7 @@
 #include <LibGfx/ImageFormats/PNGWriter.h>
 #include <LibGfx/ImageFormats/PortableFormatWriter.h>
 #include <LibGfx/ImageFormats/QOIWriter.h>
+#include <LibGfx/ImageFormats/WebPSharedLossless.h>
 #include <LibGfx/ImageFormats/WebPWriter.h>
 
 using AnyBitmap = Variant<RefPtr<Gfx::Bitmap>, RefPtr<Gfx::CMYKBitmap>>;
@@ -149,7 +150,7 @@ static ErrorOr<OwnPtr<Core::MappedFile>> convert_image_profile(LoadedImage& imag
     return icc_file;
 }
 
-static ErrorOr<void> save_image(LoadedImage& image, StringView out_path, bool ppm_ascii, u8 jpeg_quality)
+static ErrorOr<void> save_image(LoadedImage& image, StringView out_path, bool ppm_ascii, u8 jpeg_quality, Optional<unsigned> webp_allowed_transforms)
 {
     auto stream = [out_path]() -> ErrorOr<NonnullOwnPtr<Core::OutputBufferedFile>> {
         auto output_stream = TRY(Core::File::open(out_path, Core::File::OpenMode::Write));
@@ -183,7 +184,11 @@ static ErrorOr<void> save_image(LoadedImage& image, StringView out_path, bool pp
         return {};
     }
     if (out_path.ends_with(".webp"sv, CaseSensitivity::CaseInsensitive)) {
-        TRY(Gfx::WebPWriter::encode(*TRY(stream()), *frame, { .icc_data = image.icc_data }));
+        Gfx::WebPWriter::Options options;
+        options.icc_data = image.icc_data;
+        if (webp_allowed_transforms.has_value())
+            options.vp8l_options.allowed_transforms = webp_allowed_transforms.value();
+        TRY(Gfx::WebPWriter::encode(*TRY(stream()), *frame, options));
         return {};
     }
 
@@ -216,6 +221,7 @@ struct Options {
     bool strip_color_profile = false;
     bool ppm_ascii = false;
     u8 quality = 75;
+    Optional<unsigned> webp_allowed_transforms;
 };
 
 template<class T>
@@ -240,6 +246,24 @@ static ErrorOr<Gfx::IntRect> parse_rect_string(StringView rect_string)
     return Gfx::IntRect { numbers[0], numbers[1], numbers[2], numbers[3] };
 }
 
+static ErrorOr<unsigned> parse_webp_allowed_transforms_string(StringView string)
+{
+    unsigned allowed_transforms = 0;
+    for (StringView part : string.split_view(',')) {
+        if (part == "predictor" || part == "p")
+            allowed_transforms |= 1 << Gfx::PREDICTOR_TRANSFORM;
+        else if (part == "color" || part == "c")
+            allowed_transforms |= 1 << Gfx::COLOR_TRANSFORM;
+        else if (part == "subtract-green" || part == "sg")
+            allowed_transforms |= 1 << Gfx::SUBTRACT_GREEN_TRANSFORM;
+        else if (part == "color-indexing" || part == "ci")
+            allowed_transforms |= 1 << Gfx::COLOR_INDEXING_TRANSFORM;
+        else
+            return Error::from_string_view("unknown WebP transform; valid values: predictor, p, color, c, subtract-green, sg, color-indexing, ci"sv);
+    }
+    return allowed_transforms;
+}
+
 static ErrorOr<Options> parse_options(Main::Arguments arguments)
 {
     Options options;
@@ -258,6 +282,8 @@ static ErrorOr<Options> parse_options(Main::Arguments arguments)
     args_parser.add_option(options.strip_color_profile, "Do not write color profile to output", "strip-color-profile", {});
     args_parser.add_option(options.ppm_ascii, "Convert to a PPM in ASCII", "ppm-ascii", {});
     args_parser.add_option(options.quality, "Quality used for the JPEG encoder, the default value is 75 on a scale from 0 to 100", "quality", {}, {});
+    StringView webp_allowed_transforms = "default"sv;
+    args_parser.add_option(webp_allowed_transforms, "Comma-separated list of allowed transforms (predictor,p,color,c,subtract-green,sg,color-indexing,ci) for WebP output (default: all allowed)", "webp-allowed-transforms", {}, {});
     args_parser.parse(arguments);
 
     if (options.out_path.is_empty() ^ options.no_output)
@@ -265,6 +291,8 @@ static ErrorOr<Options> parse_options(Main::Arguments arguments)
 
     if (!crop_rect_string.is_empty())
         options.crop_rect = TRY(parse_rect_string(crop_rect_string));
+    if (webp_allowed_transforms != "default"sv)
+        options.webp_allowed_transforms = TRY(parse_webp_allowed_transforms_string(webp_allowed_transforms));
 
     return options;
 }
@@ -307,7 +335,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (options.no_output)
         return 0;
 
-    TRY(save_image(image, options.out_path, options.ppm_ascii, options.quality));
+    TRY(save_image(image, options.out_path, options.ppm_ascii, options.quality, options.webp_allowed_transforms));
 
     return 0;
 }
