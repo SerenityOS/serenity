@@ -638,6 +638,31 @@ bool Window::has_history_action_activation() const
     return m_last_history_action_activation_timestamp != m_last_activation_timestamp;
 }
 
+// https://html.spec.whatwg.org/multipage/interaction.html#consume-history-action-user-activation
+void Window::consume_history_action_user_activation()
+{
+    auto navigable = this->navigable();
+
+    // 1. If W's navigable is null, then return.
+    if (navigable == nullptr)
+        return;
+
+    // 2. Let top be W's navigable's top-level traversable.
+    auto top = navigable->top_level_traversable();
+
+    // 3. Let navigables be the inclusive descendant navigables of top's active document.
+    auto navigables = top->active_document()->inclusive_descendant_navigables();
+
+    // 4. Let windows be the list of Window objects constructed by taking the active window of each item in navigables.
+    JS::MarkedVector<JS::GCPtr<Window>> windows(heap());
+    for (auto& n : navigables)
+        windows.append(n->active_window());
+
+    // 5. For each window in windows, set window's last history-action activation timestamp to window's last activation timestamp.
+    for (auto& window : windows)
+        window->set_last_history_action_activation_timestamp(window->last_activation_timestamp());
+}
+
 // https://w3c.github.io/requestidlecallback/#start-an-idle-period-algorithm
 void Window::start_an_idle_period()
 {

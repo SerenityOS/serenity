@@ -220,6 +220,8 @@ public:
     HighResolutionTime::DOMHighResTimeStamp last_history_action_activation_timestamp() const { return m_last_history_action_activation_timestamp; }
     void set_last_history_action_activation_timestamp(HighResolutionTime::DOMHighResTimeStamp timestamp) { m_last_history_action_activation_timestamp = timestamp; }
 
+    void consume_history_action_user_activation();
+
     static void set_inspector_object_exposed(bool);
     static void set_internals_object_exposed(bool);
 
