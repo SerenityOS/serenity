@@ -1986,6 +1986,9 @@ CSSPixelRect FormattingContext::margin_box_rect_in_ancestor_coordinate_space(Box
 
 bool box_is_sized_as_replaced_element(Box const& box)
 {
+    if (box.dom_node() && box.dom_node()->is_html_input_element())
+        return true;
+
     // When a box has a preferred aspect ratio, its automatic sizes are calculated the same as for a
     // replaced element with a natural aspect ratio and no natural size in that axis, see e.g. CSS2 §10
     // and CSS Flexible Box Model Level 1 §9.2.
