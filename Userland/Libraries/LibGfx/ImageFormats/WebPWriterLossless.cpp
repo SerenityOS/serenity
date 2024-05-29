@@ -353,12 +353,6 @@ static ErrorOr<NonnullRefPtr<Bitmap>> maybe_write_color_indexing_transform(Littl
     if (color_table_size <= 1 || color_table_size > 256)
         return bitmap;
 
-    if (color_table_size <= 16) {
-        // FIXME: Implement pixel bundling.
-        dbgln_if(WEBP_DEBUG, "WebP: FIXME: Not writing color index because pixel bundling is not yet implemented");
-        return bitmap;
-    }
-
     TRY(bit_stream.write_bits(1u, 1u)); // Transform present.
     TRY(bit_stream.write_bits(static_cast<unsigned>(COLOR_INDEXING_TRANSFORM), 2u));
 
@@ -383,14 +377,33 @@ static ErrorOr<NonnullRefPtr<Bitmap>> maybe_write_color_indexing_transform(Littl
     HashMap<ARGB32, u8> color_index_map;
     for (unsigned i = 0; i < color_table_size; ++i)
         color_index_map.set(colors[i], i);
-    auto new_bitmap = TRY(Bitmap::create(BitmapFormat::BGRx8888, bitmap->size()));
+
+    // "When the color table is small (equal to or less than 16 colors), several pixels are bundled into a single pixel.
+    //  The pixel bundling packs several (2, 4, or 8) pixels into a single pixel, reducing the image width respectively."
+    int width_bits;
+    if (color_table_size <= 2)
+        width_bits = 3;
+    else if (color_table_size <= 4)
+        width_bits = 2;
+    else if (color_table_size <= 16)
+        width_bits = 1;
+    else
+        width_bits = 0;
+    int pixels_per_pixel = 1 << width_bits;
+    int image_width = ceil_div(bitmap->width(), pixels_per_pixel);
+    auto new_bitmap = TRY(Bitmap::create(BitmapFormat::BGRx8888, { image_width, bitmap->height() }));
+
+    unsigned bits_per_pixel = 8 / pixels_per_pixel;
     for (int y = 0; y < bitmap->height(); ++y) {
-        for (int x = 0; x < bitmap->width(); ++x) {
-            auto pixel = bitmap->get_pixel(x, y);
-            auto result = color_index_map.get(pixel.value());
-            VERIFY(result.has_value());
-            // "The indexing is done based on the green component of the ARGB color."
-            new_bitmap->set_pixel(x, y, Color(0, result.value(), 0));
+        for (int x = 0, new_x = 0; x < bitmap->width(); x += pixels_per_pixel, ++new_x) {
+            u8 indexes = 0;
+            for (int i = 0; i < pixels_per_pixel && x + i < bitmap->width(); ++i) {
+                auto pixel = bitmap->get_pixel(x + i, y);
+                auto result = color_index_map.get(pixel.value());
+                VERIFY(result.has_value());
+                indexes |= result.value() << (i * bits_per_pixel);
+            }
+            new_bitmap->set_pixel(new_x, y, Color(0, indexes, 0, 0));
         }
     }
 
