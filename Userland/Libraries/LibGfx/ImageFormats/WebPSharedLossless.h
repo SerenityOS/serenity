@@ -61,4 +61,9 @@ private:
     Array<CanonicalCode, 5> m_codes;
 };
 
+enum class ImageKind {
+    SpatiallyCoded,
+    EntropyCoded,
+};
+
 }
