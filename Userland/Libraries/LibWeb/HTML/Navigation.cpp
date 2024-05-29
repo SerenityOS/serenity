@@ -909,29 +909,6 @@ void Navigation::notify_about_the_committed_to_entry(JS::NonnullGCPtr<Navigation
     WebIDL::resolve_promise(realm, api_method_tracker->committed_promise, nhe);
 }
 
-// https://html.spec.whatwg.org/multipage/interaction.html#consume-history-action-user-activation
-void Navigation::consume_history_action_user_activation(Window& w)
-{
-    // 1. If W's navigable is null, then return.
-    if (!w.navigable())
-        return;
-
-    // 2. Let top be W's navigable's top-level traversable.
-    auto top = w.navigable()->top_level_traversable();
-
-    // 3. Let navigables be the inclusive descendant navigables of top's active document.
-    auto navigables = top->active_document()->inclusive_descendant_navigables();
-
-    // 4. Let windows be the list of Window objects constructed by taking the active window of each item in navigables.
-    Vector<JS::GCPtr<Window>> windows;
-    for (auto& navigable : navigables)
-        windows.append(navigable->active_window());
-
-    // 5. For each window in windows, set window's last history-action activation timestamp to window's last activation timestamp.
-    for (auto& window : windows)
-        window->set_last_history_action_activation_timestamp(window->last_activation_timestamp());
-}
-
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#inner-navigate-event-firing-algorithm
 bool Navigation::inner_navigate_event_firing_algorithm(
     Bindings::NavigationType navigation_type,
@@ -1093,9 +1070,9 @@ bool Navigation::inner_navigate_event_firing_algorithm(
 
     // 29. If dispatchResult is false:
     if (!dispatch_result) {
-        // 1. If navigationType is "traverse", then consume history-action user activation.
+        // 1. If navigationType is "traverse", then consume history-action user activation given navigation's relevant global object.
         if (navigation_type == Bindings::NavigationType::Traverse)
-            consume_history_action_user_activation(relevant_global_object);
+            relevant_global_object.consume_history_action_user_activation();
 
         // 2. If event's abort controller's signal is not aborted, then abort the ongoing navigation given navigation.
         if (!event->abort_controller()->signal()->aborted())

@@ -150,7 +150,6 @@ private:
     void reject_the_finished_promise(JS::NonnullGCPtr<NavigationAPIMethodTracker>, JS::Value exception);
     void clean_up(JS::NonnullGCPtr<NavigationAPIMethodTracker>);
     void notify_about_the_committed_to_entry(JS::NonnullGCPtr<NavigationAPIMethodTracker>, JS::NonnullGCPtr<NavigationHistoryEntry>);
-    void consume_history_action_user_activation(Window& window);
 
     bool inner_navigate_event_firing_algorithm(
         Bindings::NavigationType,
