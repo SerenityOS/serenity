@@ -124,7 +124,7 @@ static ErrorOr<void> decode_webp_chunk_ALPH(RIFF::Chunk const& alph_chunk, Bitma
     u8 filtering_method = (flags >> 2) & 3;
     u8 compression_method = flags & 3;
 
-    dbgln_if(WEBP_DEBUG, "preprocessing {} filtering_method {} compression_method {}", preprocessing, filtering_method, compression_method);
+    dbgln_if(WEBP_DEBUG, "ALPH: preprocessing {} filtering_method {} compression_method {}", preprocessing, filtering_method, compression_method);
 
     ReadonlyBytes alpha_data = alph_chunk.data().slice(1);
 
@@ -258,7 +258,7 @@ static ErrorOr<VP8XHeader> decode_webp_chunk_VP8X(RIFF::Chunk const& vp8x_chunk)
     // 3 bytes height minus one
     u32 height = (vp8x_chunk[7] | (vp8x_chunk[8] << 8) | (vp8x_chunk[9] << 16)) + 1;
 
-    dbgln_if(WEBP_DEBUG, "flags {:#x} --{}{}{}{}{}{}, width {}, height {}",
+    dbgln_if(WEBP_DEBUG, "VP8X: flags {:#x} --{}{}{}{}{}{}, width {}, height {}",
         flags,
         has_icc ? " icc" : "",
         has_alpha ? " alpha" : "",
@@ -281,7 +281,7 @@ static ErrorOr<ANIMChunk> decode_webp_chunk_ANIM(RIFF::Chunk const& anim_chunk)
     u32 background_color = (u32)anim_chunk[0] | ((u32)anim_chunk[1] << 8) | ((u32)anim_chunk[2] << 16) | ((u32)anim_chunk[3] << 24);
     u16 loop_count = anim_chunk[4] | (anim_chunk[5] << 8);
 
-    dbgln_if(WEBP_DEBUG, "background_color {:x} loop_count {}", background_color, loop_count);
+    dbgln_if(WEBP_DEBUG, "ANIM: background_color {:x} loop_count {}", background_color, loop_count);
 
     return ANIMChunk { background_color, loop_count };
 }
@@ -314,7 +314,7 @@ static ErrorOr<ANMFChunk> decode_webp_chunk_ANMF(WebPLoadingContext& context, RI
     auto blending_method = static_cast<ANMFChunkHeader::BlendingMethod>((flags >> 1) & 1);
     auto disposal_method = static_cast<ANMFChunkHeader::DisposalMethod>(flags & 1);
 
-    dbgln_if(WEBP_DEBUG, "frame_x {} frame_y {} frame_width {} frame_height {} frame_duration {} blending_method {} disposal_method {}",
+    dbgln_if(WEBP_DEBUG, "ANMF: frame_x {} frame_y {} frame_width {} frame_height {} frame_duration {} blending_method {} disposal_method {}",
         frame_x, frame_y, frame_width, frame_height, frame_duration, (int)blending_method, (int)disposal_method);
 
     // https://developers.google.com/speed/webp/docs/riff_container#assembling_the_canvas_from_frames

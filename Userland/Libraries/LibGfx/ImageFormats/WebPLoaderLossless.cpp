@@ -40,7 +40,7 @@ ErrorOr<VP8LHeader> decode_webp_chunk_VP8L_header(ReadonlyBytes vp8l_data)
     u8 version_number = TRY(bit_stream.read_bits(3));
     VERIFY(bit_stream.is_eof());
 
-    dbgln_if(WEBP_DEBUG, "width {}, height {}, is_alpha_used {}, version_number {}",
+    dbgln_if(WEBP_DEBUG, "VP8L: width {}, height {}, is_alpha_used {}, version_number {}",
         width, height, is_alpha_used, version_number);
 
     // "The version_number is a 3 bit code that must be set to 0. Any other value should be treated as an error."
