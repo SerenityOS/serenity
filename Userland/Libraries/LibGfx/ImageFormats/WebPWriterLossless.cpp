@@ -18,6 +18,23 @@
 
 namespace Gfx {
 
+namespace {
+
+struct IsOpaque {
+    bool is_fully_opaque { false };
+    bool is_opacity_known { false };
+
+    void set_is_fully_opaque_if_not_yet_known(bool is_fully_opaque)
+    {
+        if (is_opacity_known)
+            return;
+        this->is_fully_opaque = is_fully_opaque;
+        is_opacity_known = true;
+    }
+};
+
+}
+
 NEVER_INLINE static ErrorOr<void> write_image_data(LittleEndianOutputBitStream& bit_stream, Bitmap const& bitmap, PrefixCodeGroup const& prefix_code_group)
 {
     // This is currently the hot loop. Keep performance in mind when you change it.
@@ -213,7 +230,7 @@ static ErrorOr<CanonicalCode> write_normal_code_lengths(LittleEndianOutputBitStr
     return CanonicalCode::from_bytes(bit_lengths.span().trim(code_count));
 }
 
-static ErrorOr<void> write_VP8L_coded_image(ImageKind image_kind, LittleEndianOutputBitStream& bit_stream, Bitmap const& bitmap, bool& is_fully_opaque)
+static ErrorOr<void> write_VP8L_coded_image(ImageKind image_kind, LittleEndianOutputBitStream& bit_stream, Bitmap const& bitmap, IsOpaque& is_fully_opaque)
 {
     // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#5_image_data
     // spatially-coded-image =  color-cache-info meta-prefix data
@@ -291,7 +308,7 @@ static ErrorOr<void> write_VP8L_coded_image(ImageKind image_kind, LittleEndianOu
             prefix_code_group[i] = TRY(write_normal_code_lengths(bit_stream, code_lengths[i], alphabet_sizes[i]));
 
         if (i == 3)
-            is_fully_opaque = non_zero_symbol_count == 1 && symbols[0] == 0xff;
+            is_fully_opaque.set_is_fully_opaque_if_not_yet_known(non_zero_symbol_count == 1 && symbols[0] == 0xff);
     }
 
     // For code #5, use a simple empty code, since we don't use this yet.
@@ -303,7 +320,7 @@ static ErrorOr<void> write_VP8L_coded_image(ImageKind image_kind, LittleEndianOu
     return {};
 }
 
-static ErrorOr<void> write_VP8L_image_data(Stream& stream, Bitmap const& bitmap, bool& is_fully_opaque)
+static ErrorOr<void> write_VP8L_image_data(Stream& stream, NonnullRefPtr<Bitmap> bitmap, IsOpaque& is_fully_opaque)
 {
     LittleEndianOutputBitStream bit_stream { MaybeOwned<Stream>(stream) };
 
@@ -323,7 +340,10 @@ static ErrorOr<void> write_VP8L_image_data(Stream& stream, Bitmap const& bitmap,
 ErrorOr<ByteBuffer> compress_VP8L_image_data(Bitmap const& bitmap, bool& is_fully_opaque)
 {
     AllocatingMemoryStream vp8l_data_stream;
-    TRY(write_VP8L_image_data(vp8l_data_stream, bitmap, is_fully_opaque));
+    IsOpaque is_opaque_struct;
+    TRY(write_VP8L_image_data(vp8l_data_stream, bitmap, is_opaque_struct));
+    VERIFY(is_opaque_struct.is_opacity_known);
+    is_fully_opaque = is_opaque_struct.is_fully_opaque;
     return vp8l_data_stream.read_until_eof();
 }
 
