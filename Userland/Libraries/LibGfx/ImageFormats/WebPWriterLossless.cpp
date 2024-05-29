@@ -217,6 +217,7 @@ static ErrorOr<void> write_VP8L_image_data(Stream& stream, Bitmap const& bitmap,
 {
     LittleEndianOutputBitStream bit_stream { MaybeOwned<Stream>(stream) };
 
+    // image-stream  = optional-transform spatially-coded-image
     // optional-transform   =  (%b1 transform optional-transform) / %b0
     TRY(bit_stream.write_bits(0u, 1u)); // No transform for now.
 
