@@ -180,6 +180,21 @@ void ViewImplementation::paste(String const& text)
     client().async_paste(page_id(), text);
 }
 
+void ViewImplementation::find_in_page(String const& query)
+{
+    client().async_find_in_page(page_id(), query);
+}
+
+void ViewImplementation::find_in_page_next_match()
+{
+    client().async_find_in_page_next_match(page_id());
+}
+
+void ViewImplementation::find_in_page_previous_match()
+{
+    client().async_find_in_page_previous_match(page_id());
+}
+
 void ViewImplementation::get_source()
 {
     client().async_get_source(page_id());

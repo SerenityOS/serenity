@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2024, Tim Ledbetter <timledbetter@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,6 +12,7 @@
 #include <LibIPC/Encoder.h>
 #include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/Range.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
@@ -20,8 +22,10 @@
 #include <LibWeb/HTML/Scripting/TemporaryExecutionContext.h>
 #include <LibWeb/HTML/SelectedFile.h>
 #include <LibWeb/HTML/TraversableNavigable.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/Platform/EventLoopPlugin.h>
+#include <LibWeb/Selection/Selection.h>
 
 namespace Web {
 
@@ -44,6 +48,7 @@ void Page::visit_edges(JS::Cell::Visitor& visitor)
     Base::visit_edges(visitor);
     visitor.visit(m_top_level_traversable);
     visitor.visit(m_client);
+    visitor.visit(m_find_in_page_matches);
 }
 
 HTML::Navigable& Page::focused_navigable()
@@ -516,6 +521,104 @@ void Page::set_user_style(String source)
     m_user_style_sheet_source = source;
     if (top_level_traversable_is_initialized() && top_level_traversable()->active_document()) {
         top_level_traversable()->active_document()->style_computer().invalidate_rule_cache();
+    }
+}
+
+void Page::clear_selection()
+{
+    auto documents = HTML::main_thread_event_loop().documents_in_this_event_loop();
+    for (auto const& document : documents) {
+        if (&document->page() != this)
+            continue;
+
+        auto selection = document->get_selection();
+        if (!selection)
+            continue;
+
+        selection->remove_all_ranges();
+    }
+}
+
+void Page::find_in_page(String const& query)
+{
+    m_find_in_page_match_index = 0;
+
+    if (query.is_empty()) {
+        m_find_in_page_matches = {};
+        update_find_in_page_selection();
+        return;
+    }
+
+    auto documents = HTML::main_thread_event_loop().documents_in_this_event_loop();
+    Vector<JS::Handle<DOM::Range>> all_matches;
+    for (auto const& document : documents) {
+        if (&document->page() != this)
+            continue;
+
+        auto matches = document->find_matching_text(query);
+        all_matches.extend(move(matches));
+    }
+
+    m_find_in_page_matches.clear_with_capacity();
+    for (auto& match : all_matches)
+        m_find_in_page_matches.append(*match);
+
+    update_find_in_page_selection();
+}
+
+void Page::find_in_page_next_match()
+{
+    if (m_find_in_page_matches.is_empty())
+        return;
+
+    if (m_find_in_page_match_index == m_find_in_page_matches.size() - 1) {
+        m_find_in_page_match_index = 0;
+    } else {
+        m_find_in_page_match_index++;
+    }
+
+    update_find_in_page_selection();
+}
+
+void Page::find_in_page_previous_match()
+{
+    if (m_find_in_page_matches.is_empty())
+        return;
+
+    if (m_find_in_page_match_index == 0) {
+        m_find_in_page_match_index = m_find_in_page_matches.size() - 1;
+    } else {
+        m_find_in_page_match_index--;
+    }
+
+    update_find_in_page_selection();
+}
+
+void Page::update_find_in_page_selection()
+{
+    clear_selection();
+
+    if (m_find_in_page_matches.is_empty())
+        return;
+
+    auto current_range = m_find_in_page_matches[m_find_in_page_match_index];
+    auto common_ancestor_container = current_range->common_ancestor_container();
+    auto& document = common_ancestor_container->document();
+    if (!document.window())
+        return;
+
+    auto selection = document.get_selection();
+    if (!selection)
+        return;
+
+    selection->add_range(*current_range);
+
+    if (auto* element = common_ancestor_container->parent_element()) {
+        DOM::ScrollIntoViewOptions scroll_options;
+        scroll_options.block = Bindings::ScrollLogicalPosition::Nearest;
+        scroll_options.inline_ = Bindings::ScrollLogicalPosition::Nearest;
+        scroll_options.behavior = Bindings::ScrollBehavior::Instant;
+        (void)element->scroll_into_view(scroll_options);
     }
 }
 

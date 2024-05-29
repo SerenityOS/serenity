@@ -5068,4 +5068,33 @@ void Document::set_needs_to_refresh_scroll_state(bool b)
         paintable->set_needs_to_refresh_scroll_state(b);
 }
 
+Vector<JS::Handle<DOM::Range>> Document::find_matching_text(String const& query)
+{
+    if (!document_element() || !document_element()->layout_node())
+        return {};
+
+    Vector<JS::Handle<DOM::Range>> matches;
+    document_element()->layout_node()->for_each_in_inclusive_subtree_of_type<Layout::TextNode>([&](auto const& text_node) {
+        auto const& text = text_node.text_for_rendering();
+        size_t offset = 0;
+        while (true) {
+            auto match_index = text.find_byte_offset(query, offset);
+            if (!match_index.has_value())
+                break;
+
+            auto range = create_range();
+            auto& dom_node = const_cast<DOM::Text&>(text_node.dom_node());
+            (void)range->set_start(dom_node, match_index.value());
+            (void)range->set_end(dom_node, match_index.value() + query.code_points().length());
+
+            matches.append(range);
+            offset = match_index.value() + 1;
+        }
+
+        return TraversalDecision::Continue;
+    });
+
+    return matches;
+}
+
 }

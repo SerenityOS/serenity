@@ -69,6 +69,10 @@ endpoint WebContentServer
     select_all(u64 page_id) =|
     paste(u64 page_id, String text) =|
 
+    find_in_page(u64 page_id, String query) =|
+    find_in_page_next_match(u64 page_id) =|
+    find_in_page_previous_match(u64 page_id) =|
+
     set_content_filters(u64 page_id, Vector<String> filters) =|
     set_autoplay_allowed_on_all_websites(u64 page_id) =|
     set_autoplay_allowlist(u64 page_id, Vector<String> allowlist) =|

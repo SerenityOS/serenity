@@ -827,6 +827,33 @@ void ConnectionFromClient::select_all(u64 page_id)
         page->page().focused_navigable().select_all();
 }
 
+void ConnectionFromClient::find_in_page(u64 page_id, String const& query)
+{
+    auto page = this->page(page_id);
+    if (!page.has_value())
+        return;
+
+    page->page().find_in_page(query);
+}
+
+void ConnectionFromClient::find_in_page_next_match(u64 page_id)
+{
+    auto page = this->page(page_id);
+    if (!page.has_value())
+        return;
+
+    page->page().find_in_page_next_match();
+}
+
+void ConnectionFromClient::find_in_page_previous_match(u64 page_id)
+{
+    auto page = this->page(page_id);
+    if (!page.has_value())
+        return;
+
+    page->page().find_in_page_previous_match();
+}
+
 void ConnectionFromClient::paste(u64 page_id, String const& text)
 {
     if (auto page = this->page(page_id); page.has_value())
