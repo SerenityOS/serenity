@@ -5,19 +5,27 @@ import("//Meta/gn/build/libs/pulse/enable.gni")
 
 moc_qt_objects("generate_moc") {
   sources = [
-    "//Ladybird/Qt/AudioCodecPluginQt.h",
-    "//Ladybird/Qt/AudioThread.h",
     "//Ladybird/Qt/EventLoopImplementationQtEventTarget.h",
     "//Ladybird/Qt/RequestManagerQt.h",
   ]
+
+  if (!enable_pulseaudio) {
+    sources += [
+      "//Ladybird/Qt/AudioCodecPluginQt.cpp",
+      "//Ladybird/Qt/AudioThread.cpp",
+    ]
+  }
 }
 
 link_qt("WebContent_qt") {
   qt_components = [
     "Core",
     "Network",
-    "Multimedia",
   ]
+
+  if (!enable_pulseaudio) {
+    qt_components += [ "Multimedia" ]
+  }
 }
 
 executable("WebContent") {
@@ -64,8 +72,6 @@ executable("WebContent") {
   if (enable_qt) {
     configs += [ ":WebContent_qt" ]
     sources += [
-      "//Ladybird/Qt/AudioCodecPluginQt.cpp",
-      "//Ladybird/Qt/AudioThread.cpp",
       "//Ladybird/Qt/EventLoopImplementationQt.cpp",
       "//Ladybird/Qt/EventLoopImplementationQtEventTarget.cpp",
       "//Ladybird/Qt/RequestManagerQt.cpp",
@@ -73,6 +79,13 @@ executable("WebContent") {
       "//Ladybird/Qt/WebSocketImplQt.cpp",
       "//Ladybird/Qt/WebSocketQt.cpp",
     ]
+
+    if (!enable_pulseaudio) {
+      sources += [
+        "//Ladybird/Qt/AudioCodecPluginQt.cpp",
+        "//Ladybird/Qt/AudioThread.cpp",
+      ]
+    }
 
     sources += get_target_outputs(":generate_moc")
     deps += [ ":generate_moc" ]
