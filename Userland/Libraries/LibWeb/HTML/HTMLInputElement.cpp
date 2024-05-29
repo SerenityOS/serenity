@@ -255,7 +255,9 @@ static void show_the_picker_if_applicable(HTMLInputElement& element)
     if (!element.is_mutable())
         return;
 
-    // 3. If element's type attribute is in the File Upload state, then run these steps in parallel:
+    // 3. Consume user activation given element's relevant global object.
+
+    // 4. If element's type attribute is in the File Upload state, then run these steps in parallel:
     if (element.type_state() == HTMLInputElement::TypeAttributeState::FileUpload) {
         // NOTE: These steps cannot be fully implemented here, and must be done in the PageClient when the response comes back from the PageHost
 
@@ -277,7 +279,7 @@ static void show_the_picker_if_applicable(HTMLInputElement& element)
         return;
     }
 
-    // 4. Otherwise, the user agent should show any relevant user interface for selecting a value for element,
+    // 5. Otherwise, the user agent should show any relevant user interface for selecting a value for element,
     //    in the way it normally would when the user interacts with the control. (If no such UI applies to element, then this step does nothing.)
     //    If such a user interface is shown, it must respect the requirements stated in the relevant parts of the specification for how element
     //    behaves given its type attribute state. (For example, various sections describe restrictions on the resulting value string.)
