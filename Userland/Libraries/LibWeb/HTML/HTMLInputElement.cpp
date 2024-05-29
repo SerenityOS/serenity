@@ -248,7 +248,10 @@ static void show_the_picker_if_applicable(HTMLInputElement& element)
 
     // 1. If element's relevant global object does not have transient activation, then return.
     auto& global_object = relevant_global_object(element);
-    if (!is<HTML::Window>(global_object) || !static_cast<HTML::Window&>(global_object).has_transient_activation())
+    if (!is<HTML::Window>(global_object))
+        return;
+    auto& relevant_global_object = static_cast<HTML::Window&>(global_object);
+    if (!relevant_global_object.has_transient_activation())
         return;
 
     // 2. If element is not mutable, then return.
@@ -256,6 +259,7 @@ static void show_the_picker_if_applicable(HTMLInputElement& element)
         return;
 
     // 3. Consume user activation given element's relevant global object.
+    relevant_global_object.consume_user_activation();
 
     // 4. If element's type attribute is in the File Upload state, then run these steps in parallel:
     if (element.type_state() == HTMLInputElement::TypeAttributeState::FileUpload) {
