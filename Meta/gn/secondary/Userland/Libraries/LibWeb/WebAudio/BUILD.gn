@@ -18,6 +18,8 @@ source_set("WebAudio") {
     "BaseAudioContext.h",
     "DynamicsCompressorNode.cpp",
     "DynamicsCompressorNode.h",
+    "GainNode.cpp",
+    "GainNode.h",
     "OfflineAudioContext.cpp",
     "OfflineAudioContext.h",
     "OscillatorNode.cpp",

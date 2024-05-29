@@ -320,6 +320,7 @@ standard_idl_files = [
   "//Userland/Libraries/LibWeb/WebAudio/AudioScheduledSourceNode.idl",
   "//Userland/Libraries/LibWeb/WebAudio/BaseAudioContext.idl",
   "//Userland/Libraries/LibWeb/WebAudio/DynamicsCompressorNode.idl",
+  "//Userland/Libraries/LibWeb/WebAudio/GainNode.idl",
   "//Userland/Libraries/LibWeb/WebAudio/OfflineAudioContext.idl",
   "//Userland/Libraries/LibWeb/WebAudio/OscillatorNode.idl",
   "//Userland/Libraries/LibWeb/WebAudio/PeriodicWave.idl",
