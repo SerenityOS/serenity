@@ -31,6 +31,7 @@ XUserDefinedDecoder s_x_user_defined_decoder;
 GB18030Decoder s_gb18030_decoder;
 Big5Decoder s_big5_decoder;
 EUCJPDecoder s_euc_jp_decoder;
+ISO2022JPDecoder s_iso_2022_jp_decoder;
 
 // clang-format off
 // https://encoding.spec.whatwg.org/index-ibm866.txt
@@ -312,6 +313,8 @@ Optional<Decoder&> decoder_for(StringView a_encoding)
             return s_gb18030_decoder;
         if (encoding.value().equals_ignoring_ascii_case("ibm866"sv))
             return s_ibm866_decoder;
+        if (encoding.value().equals_ignoring_ascii_case("iso-2022-jp"sv))
+            return s_iso_2022_jp_decoder;
         if (encoding.value().equals_ignoring_ascii_case("iso-8859-2"sv))
             return s_latin2_decoder;
         if (encoding.value().equals_ignoring_ascii_case("iso-8859-3"sv))
@@ -1364,6 +1367,255 @@ ErrorOr<void> EUCJPDecoder::process(StringView input, Function<ErrorOr<void>(u32
 
         // 8. Return error.
         TRY(on_code_point(replacement_code_point));
+    }
+}
+
+enum class ISO2022JPState {
+    ASCII,
+    Roman,
+    Katakana,
+    LeadByte,
+    TrailByte,
+    EscapeStart,
+    Escape,
+};
+
+// https://encoding.spec.whatwg.org/#iso-2022-jp-decoder
+ErrorOr<void> ISO2022JPDecoder::process(StringView input, Function<ErrorOr<void>(u32)> on_code_point)
+{
+    // ISO-2022-JP’s decoder has an associated ISO-2022-JP decoder state (initially ASCII), ISO-2022-JP decoder output state (initially ASCII), ISO-2022-JP lead (initially 0x00), and ISO-2022-JP output (initially false).
+    auto decoder_state = ISO2022JPState::ASCII;
+    auto output_state = ISO2022JPState::ASCII;
+    u8 iso2022_jp_lead = 0x00;
+    bool iso2022_jp_output = false;
+
+    size_t index = 0;
+    while (true) {
+        Optional<u8> byte;
+        if (index < input.length())
+            byte = input[index++];
+
+        // ISO-2022-JP’s decoder’s handler, given ioQueue and byte, runs these steps, switching on ISO-2022-JP decoder state:
+        switch (decoder_state) {
+        case ISO2022JPState::ASCII:
+            // Based on byte:
+            // 0x1B: Set ISO-2022-JP decoder state to escape start and return continue.
+            if (byte == 0x1B) {
+                decoder_state = ISO2022JPState::EscapeStart;
+                continue;
+            }
+
+            // 0x00 to 0x7F, excluding 0x0E, 0x0F, and 0x1B: Set ISO-2022-JP output to false and return a code point whose value is byte.
+            if (byte.has_value() && byte.value() <= 0x7F && byte != 0x0E && byte != 0x0F) {
+                iso2022_jp_output = false;
+                TRY(on_code_point(byte.value()));
+                continue;
+            }
+
+            // end-of-queue: Return finished.
+            if (!byte.has_value())
+                return {};
+
+            // Otherwise: Set ISO-2022-JP output to false and return error.
+            iso2022_jp_output = false;
+            TRY(on_code_point(replacement_code_point));
+            break;
+        case ISO2022JPState::Roman:
+            // Based on byte:
+            // 0x1B: Set ISO-2022-JP decoder state to escape start and return continue.
+            if (byte == 0x1B) {
+                decoder_state = ISO2022JPState::EscapeStart;
+                continue;
+            }
+
+            // 0x5C: Set ISO-2022-JP output to false and return code point U+00A5.
+            if (byte == 0x5C) {
+                iso2022_jp_output = false;
+                TRY(on_code_point(0x00A5));
+                continue;
+            }
+
+            // 0x7E: Set ISO-2022-JP output to false and return code point U+203E.
+            if (byte == 0x7E) {
+                iso2022_jp_output = false;
+                TRY(on_code_point(0x203E));
+                continue;
+            }
+
+            // 0x00 to 0x7F, excluding 0x0E, 0x0F, 0x1B, 0x5C, and 0x7E: Set ISO-2022-JP output to false and return a code point whose value is byte.
+            if (byte.has_value() && byte.value() <= 0x7F && byte != 0x0E && byte != 0x0F) {
+                iso2022_jp_output = false;
+                TRY(on_code_point(byte.value()));
+                continue;
+            }
+
+            // end-of-queue: Return finished.
+            if (!byte.has_value())
+                return {};
+
+            // Otherwise: Set ISO-2022-JP output to false and return error.
+            iso2022_jp_output = false;
+            TRY(on_code_point(replacement_code_point));
+            break;
+        case ISO2022JPState::Katakana:
+            // Based on byte:
+            // 0x1B: Set ISO-2022-JP decoder state to escape start and return continue.
+            if (byte == 0x1B) {
+                decoder_state = ISO2022JPState::EscapeStart;
+                continue;
+            }
+
+            // 0x21 to 0x5F: Set ISO-2022-JP output to false and return a code point whose value is 0xFF61 − 0x21 + byte.
+            if (byte.has_value() && byte.value() >= 0x21 && byte.value() <= 0x5F) {
+                iso2022_jp_output = false;
+                TRY(on_code_point(0xFF61 - 0x21 + byte.value()));
+                continue;
+            }
+
+            // end-of-queue: Return finished.
+            if (!byte.has_value())
+                return {};
+
+            // Otherwise: Set ISO-2022-JP output to false and return error.
+            iso2022_jp_output = false;
+            TRY(on_code_point(replacement_code_point));
+            break;
+        case ISO2022JPState::LeadByte:
+            // Based on byte:
+            // 0x1B: Set ISO-2022-JP decoder state to escape start and return continue.
+            if (byte == 0x1B) {
+                decoder_state = ISO2022JPState::EscapeStart;
+                continue;
+            }
+
+            // 0x21 to 0x7E: Set ISO-2022-JP output to false, ISO-2022-JP lead to byte, ISO-2022-JP decoder state to trail byte, and return continue.
+            if (byte.has_value() && byte.value() >= 0x21 && byte.value() <= 0x7E) {
+                iso2022_jp_output = false;
+                iso2022_jp_lead = byte.value();
+                decoder_state = ISO2022JPState::TrailByte;
+                continue;
+            }
+
+            // end-of-queue: Return finished.
+            if (!byte.has_value())
+                return {};
+
+            // Otherwise: Set ISO-2022-JP output to false and return error.
+            iso2022_jp_output = false;
+            TRY(on_code_point(replacement_code_point));
+            break;
+        case ISO2022JPState::TrailByte:
+            // Based on byte:
+
+            // 0x1B: Set ISO-2022-JP decoder state to escape start and return error.
+            if (byte == 0x1B) {
+                decoder_state = ISO2022JPState::EscapeStart;
+                TRY(on_code_point(replacement_code_point));
+                continue;
+            }
+
+            // 0x21 to 0x7E:
+            if (byte.has_value() && byte.value() >= 0x21 && byte.value() <= 0x7E) {
+                // 1. Set the ISO-2022-JP decoder state to lead byte.
+                decoder_state = ISO2022JPState::LeadByte;
+
+                // 2. Let pointer be (ISO-2022-JP lead − 0x21) × 94 + byte − 0x21.
+                u32 pointer = (iso2022_jp_lead - 0x21) * 94 + byte.value() - 0x21;
+
+                // 3. Let code point be the index code point for pointer in index jis0208.
+                auto code_point = index_jis0208_code_point(pointer);
+
+                // 4. If code point is null, return error.
+                if (!code_point.has_value()) {
+                    TRY(on_code_point(replacement_code_point));
+                    continue;
+                }
+
+                // 5. Return a code point whose value is code point.
+                TRY(on_code_point(code_point.value()));
+                continue;
+            }
+
+            // end-of-queue: Set the ISO-2022-JP decoder state to lead byte and return error.
+            if (!byte.has_value()) {
+                decoder_state = ISO2022JPState::LeadByte;
+                TRY(on_code_point(replacement_code_point));
+                continue;
+            }
+
+            // Otherwise: Set ISO-2022-JP decoder state to lead byte and return error.
+            decoder_state = ISO2022JPState::LeadByte;
+            TRY(on_code_point(replacement_code_point));
+            break;
+        case ISO2022JPState::EscapeStart:
+            // 1. If byte is either 0x24 or 0x28, set ISO-2022-JP lead to byte, ISO-2022-JP decoder state to escape, and return continue.
+            if (byte == 0x24 || byte == 0x28) {
+                iso2022_jp_lead = byte.value();
+                decoder_state = ISO2022JPState::Escape;
+                continue;
+            }
+
+            // 2. If byte is not end-of-queue, then restore byte to ioQueue.
+            if (byte.has_value())
+                index--;
+
+            // 3. Set ISO-2022-JP output to false, ISO-2022-JP decoder state to ISO-2022-JP decoder output state, and return error.
+            iso2022_jp_output = false;
+            decoder_state = output_state;
+            TRY(on_code_point(replacement_code_point));
+            break;
+        case ISO2022JPState::Escape: {
+            // 1. Let lead be ISO-2022-JP lead and set ISO-2022-JP lead to 0x00.
+            auto lead = iso2022_jp_lead;
+            iso2022_jp_lead = 0x00;
+
+            // 2. Let state be null.
+            Optional<ISO2022JPState> state;
+
+            // 3. If lead is 0x28 and byte is 0x42, set state to ASCII.
+            if (lead == 0x28 && byte == 0x42)
+                state = ISO2022JPState::ASCII;
+
+            // 4. If lead is 0x28 and byte is 0x4A, set state to Roman.
+            if (lead == 0x28 && byte == 0x4A)
+                state = ISO2022JPState::Roman;
+
+            // 5. If lead is 0x28 and byte is 0x49, set state to katakana.
+            if (lead == 0x28 && byte == 0x49)
+                state = ISO2022JPState::Katakana;
+
+            // 6. If lead is 0x24 and byte is either 0x40 or 0x42, set state to lead byte.
+            if (lead == 0x24 && (byte == 0x40 || byte == 0x42))
+                state = ISO2022JPState::LeadByte;
+
+            // 7. If state is non-null, then:
+            if (state.has_value()) {
+                // 1. Set ISO-2022-JP decoder state and ISO-2022-JP decoder output state to state.
+                decoder_state = state.value();
+                output_state = state.value();
+
+                // 2. Let output be the value of ISO-2022-JP output.
+                auto output = iso2022_jp_output;
+
+                // 3. Set ISO-2022-JP output to true.
+                iso2022_jp_output = true;
+
+                // 4. Return continue, if output is false, and error otherwise.
+                if (output)
+                    TRY(on_code_point(replacement_code_point));
+                continue;
+            }
+
+            // 8. If byte is end-of-queue, then restore lead to ioQueue; otherwise, restore « lead, byte » to ioQueue.
+            index -= byte.has_value() ? 2 : 1;
+
+            // 9. Set ISO-2022-JP output to false, ISO-2022-JP decoder state to ISO-2022-JP decoder output state and return error.
+            iso2022_jp_output = false;
+            decoder_state = output_state;
+            TRY(on_code_point(replacement_code_point));
+            break;
+        }
+        }
     }
 }
 
