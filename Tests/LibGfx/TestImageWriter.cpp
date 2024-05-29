@@ -186,6 +186,27 @@ TEST_CASE(test_webp)
     TRY_OR_FAIL((test_roundtrip<Gfx::WebPWriter, Gfx::WebPImageDecoderPlugin>(TRY_OR_FAIL(create_test_rgba_bitmap()))));
 }
 
+TEST_CASE(test_webp_color_indexing_transform)
+{
+    Array<Color, 256> colors;
+    for (size_t i = 0; i < colors.size(); ++i) {
+        colors[i].set_red(i);
+        colors[i].set_green(255 - i);
+        colors[i].set_blue(128);
+        colors[i].set_alpha(255 - i / 16);
+    }
+    for (int bits_per_pixel : { 1, 2, 4, 8 }) {
+        int number_of_colors = 1 << bits_per_pixel;
+
+        auto bitmap = TRY_OR_FAIL(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { 47, 33 }));
+        for (int y = 0; y < bitmap->height(); ++y)
+            for (int x = 0; x < bitmap->width(); ++x)
+                bitmap->set_pixel(x, y, colors[(x * bitmap->width() + y) % number_of_colors]);
+
+        TRY_OR_FAIL((test_roundtrip<Gfx::WebPWriter, Gfx::WebPImageDecoderPlugin>(bitmap)));
+    }
+}
+
 TEST_CASE(test_webp_icc)
 {
     auto sRGB_icc_profile = MUST(Gfx::ICC::sRGB());
