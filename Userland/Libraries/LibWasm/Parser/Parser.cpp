@@ -254,10 +254,12 @@ ParseResult<BlockType> BlockType::parse(Stream& stream)
     ReconsumableStream new_stream { stream };
     new_stream.unread({ &kind, 1 });
 
-    auto index_value_or_error = stream.read_value<LEB128<ssize_t>>();
+    // FIXME: should be an i33. Right now, we're missing a potential last bit at
+    // the end. See https://webassembly.github.io/spec/core/binary/instructions.html#binary-blocktype
+    auto index_value_or_error = new_stream.read_value<LEB128<i32>>();
     if (index_value_or_error.is_error())
         return with_eof_check(stream, ParseError::ExpectedIndex);
-    ssize_t index_value = index_value_or_error.release_value();
+    i32 index_value = index_value_or_error.release_value();
 
     if (index_value < 0) {
         dbgln("Invalid type index {}", index_value);
