@@ -875,20 +875,6 @@ ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L_contents(VP8LHeader const&
         // transform            =  predictor-tx / color-tx / subtract-green-tx
         // transform            =/ color-indexing-tx
 
-        enum TransformType {
-            // predictor-tx         =  %b00 predictor-image
-            PREDICTOR_TRANSFORM = 0,
-
-            // color-tx             =  %b01 color-image
-            COLOR_TRANSFORM = 1,
-
-            // subtract-green-tx    =  %b10
-            SUBTRACT_GREEN_TRANSFORM = 2,
-
-            // color-indexing-tx    =  %b11 color-indexing-image
-            COLOR_INDEXING_TRANSFORM = 3,
-        };
-
         TransformType transform_type = static_cast<TransformType>(TRY(bit_stream.read_bits(2)));
         dbgln_if(WEBP_DEBUG, "transform type {}", (int)transform_type);
 

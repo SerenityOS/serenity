@@ -66,4 +66,18 @@ enum class ImageKind {
     EntropyCoded,
 };
 
+enum TransformType {
+    // predictor-tx         =  %b00 predictor-image
+    PREDICTOR_TRANSFORM = 0,
+
+    // color-tx             =  %b01 color-image
+    COLOR_TRANSFORM = 1,
+
+    // subtract-green-tx    =  %b10
+    SUBTRACT_GREEN_TRANSFORM = 2,
+
+    // color-indexing-tx    =  %b11 color-indexing-image
+    COLOR_INDEXING_TRANSFORM = 3,
+};
+
 }
