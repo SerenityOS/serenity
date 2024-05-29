@@ -201,6 +201,7 @@ static ErrorOr<CanonicalCode> write_normal_code_lengths(LittleEndianOutputBitStr
     if (alphabet_size == encoded_lengths_count) {
         TRY(bit_stream.write_bits(0u, 1u)); // max_symbol is alphabet_size
     } else {
+        dbgln_if(WEBP_DEBUG, "writing max_symbol: {}", encoded_lengths_count);
         TRY(bit_stream.write_bits(1u, 1u)); // max_symbol is explicitly coded
         // "int length_nbits = 2 + 2 * ReadBits(3);
         //  int max_symbol = 2 + ReadBits(length_nbits);"
