@@ -411,13 +411,14 @@ static ErrorOr<NonnullRefPtr<Bitmap>> maybe_write_color_indexing_transform(Littl
     return new_bitmap;
 }
 
-static ErrorOr<void> write_VP8L_image_data(Stream& stream, NonnullRefPtr<Bitmap> bitmap, IsOpaque& is_fully_opaque)
+static ErrorOr<void> write_VP8L_image_data(Stream& stream, NonnullRefPtr<Bitmap> bitmap, VP8LEncoderOptions const& options, IsOpaque& is_fully_opaque)
 {
     LittleEndianOutputBitStream bit_stream { MaybeOwned<Stream>(stream) };
 
     // image-stream  = optional-transform spatially-coded-image
     // optional-transform   =  (%b1 transform optional-transform) / %b0
-    bitmap = TRY(maybe_write_color_indexing_transform(bit_stream, bitmap, is_fully_opaque));
+    if (options.allowed_transforms & (1u << COLOR_INDEXING_TRANSFORM))
+        bitmap = TRY(maybe_write_color_indexing_transform(bit_stream, bitmap, is_fully_opaque));
     TRY(bit_stream.write_bits(0u, 1u)); // No further transforms for now.
 
     TRY(write_VP8L_coded_image(ImageKind::SpatiallyCoded, bit_stream, *bitmap, is_fully_opaque));
@@ -429,11 +430,11 @@ static ErrorOr<void> write_VP8L_image_data(Stream& stream, NonnullRefPtr<Bitmap>
     return {};
 }
 
-ErrorOr<ByteBuffer> compress_VP8L_image_data(Bitmap const& bitmap, bool& is_fully_opaque)
+ErrorOr<ByteBuffer> compress_VP8L_image_data(Bitmap const& bitmap, VP8LEncoderOptions const& options, bool& is_fully_opaque)
 {
     AllocatingMemoryStream vp8l_data_stream;
     IsOpaque is_opaque_struct;
-    TRY(write_VP8L_image_data(vp8l_data_stream, bitmap, is_opaque_struct));
+    TRY(write_VP8L_image_data(vp8l_data_stream, bitmap, options, is_opaque_struct));
     VERIFY(is_opaque_struct.is_opacity_known);
     is_fully_opaque = is_opaque_struct.is_fully_opaque;
     return vp8l_data_stream.read_until_eof();

@@ -11,6 +11,11 @@
 
 namespace Gfx {
 
-ErrorOr<ByteBuffer> compress_VP8L_image_data(Bitmap const&, bool& is_fully_opaque);
+struct VP8LEncoderOptions {
+    // For each TransformType, set bit `1 << transform_type` if that transform type is allowed.
+    unsigned allowed_transforms { 0xf };
+};
+
+ErrorOr<ByteBuffer> compress_VP8L_image_data(Bitmap const&, VP8LEncoderOptions const&, bool& is_fully_opaque);
 
 }
