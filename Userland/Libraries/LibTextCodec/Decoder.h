@@ -115,6 +115,11 @@ public:
     virtual ErrorOr<void> process(StringView, Function<ErrorOr<void>(u32)> on_code_point) override;
 };
 
+class ShiftJISDecoder final : public Decoder {
+public:
+    virtual ErrorOr<void> process(StringView, Function<ErrorOr<void>(u32)> on_code_point) override;
+};
+
 Optional<Decoder&> decoder_for(StringView encoding);
 Optional<StringView> get_standardized_encoding(StringView encoding);
 
