@@ -170,6 +170,16 @@ static ErrorOr<JsonObject, Error> validate_capabilities(JsonValue const& capabil
         // FIXME: -> name is the name of an additional WebDriver capability
         // FIXME:     Let deserialized be the result of trying to run the additional capability deserialization algorithm for the extension capability corresponding to name, with argument value.
 
+        // https://w3c.github.io/webdriver-bidi/#type-session-CapabilityRequest
+        else if (name == "webSocketUrl"sv) {
+            // 1. If value is not a boolean, return error with code invalid argument.
+            if (!value.is_bool())
+                return Error::from_code(ErrorCode::InvalidArgument, "Capability webSocketUrl must be a boolean"sv);
+
+            // 2. Return success with data value.
+            deserialized = value;
+        }
+
         // -> name is the key of an extension capability
         //     If name is known to the implementation, let deserialized be the result of trying to deserialize value in an implementation-specific way. Otherwise, let deserialized be set to value.
         else if (name == "serenity:ladybird"sv) {
@@ -327,6 +337,17 @@ static JsonValue match_capabilities(JsonObject const& capabilities)
         else {
             // FIXME: If name is the name of an additional WebDriver capability which defines a matched capability serialization algorithm, let match value be the result of running the matched capability serialization algorithm for capability name with argument value.
             // FIXME: Otherwise, if name is the key of an extension capability, let match value be the result of trying implementation-specific steps to match on name with value. If the match is not successful, return success with data null.
+
+            // https://w3c.github.io/webdriver-bidi/#type-session-CapabilityRequest
+            if (name == "webSocketUrl"sv) {
+                // 1. If value is false, return success with data null.
+                if (!value.as_bool())
+                    return AK::Error::from_string_view("webSocketUrl"sv);
+
+                // 2. Return success with data value.
+                // FIXME: Remove this when we support BIDI communication.
+                return AK::Error::from_string_view("webSocketUrl"sv);
+            }
         }
 
         // c. Set a property on matched capabilities with name name and value match value.
