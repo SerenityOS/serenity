@@ -32,6 +32,7 @@ GB18030Decoder s_gb18030_decoder;
 Big5Decoder s_big5_decoder;
 EUCJPDecoder s_euc_jp_decoder;
 ISO2022JPDecoder s_iso_2022_jp_decoder;
+ShiftJISDecoder s_shift_jis_decoder;
 
 // clang-format off
 // https://encoding.spec.whatwg.org/index-ibm866.txt
@@ -349,6 +350,8 @@ Optional<Decoder&> decoder_for(StringView a_encoding)
             return s_mac_roman_decoder;
         if (encoding.value().equals_ignoring_ascii_case("PDFDocEncoding"sv))
             return s_pdf_doc_encoding_decoder;
+        if (encoding.value().equals_ignoring_ascii_case("shift_jis"sv))
+            return s_shift_jis_decoder;
         if (encoding.value().equals_ignoring_ascii_case("windows-874"sv))
             return s_windows874_decoder;
         if (encoding.value().equals_ignoring_ascii_case("windows-1250"sv))
@@ -1616,6 +1619,91 @@ ErrorOr<void> ISO2022JPDecoder::process(StringView input, Function<ErrorOr<void>
             break;
         }
         }
+    }
+}
+
+// https://encoding.spec.whatwg.org/#shift_jis-decoder
+ErrorOr<void> ShiftJISDecoder::process(StringView input, Function<ErrorOr<void>(u32)> on_code_point)
+{
+    // Shift_JIS’s decoder has an associated Shift_JIS lead (initially 0x00).
+    u8 shift_jis_lead = 0x00;
+
+    // Shift_JIS’s decoder’s handler, given ioQueue and byte, runs these steps:
+    size_t index = 0;
+    while (true) {
+        // 1. If byte is end-of-queue and Shift_JIS lead is not 0x00, set Shift_JIS lead to 0x00 and return error.
+        if (index >= input.length() && shift_jis_lead != 0x00) {
+            shift_jis_lead = 0x00;
+            TRY(on_code_point(replacement_code_point));
+            continue;
+        }
+
+        // 2. If byte is end-of-queue and Shift_JIS lead is 0x00, return finished.
+        if (index >= input.length() && shift_jis_lead == 0x00)
+            return {};
+
+        u8 const byte = input[index++];
+
+        // 3. If Shift_JIS lead is not 0x00, let lead be Shift_JIS lead, let pointer be null, set Shift_JIS lead to 0x00, and then:
+        if (shift_jis_lead != 0x00) {
+            auto lead = shift_jis_lead;
+            Optional<u32> pointer;
+            shift_jis_lead = 0x00;
+
+            // 1. Let offset be 0x40 if byte is less than 0x7F, otherwise 0x41.
+            u8 const offset = byte < 0x7F ? 0x40 : 0x41;
+
+            // 2. Let lead offset be 0x81 if lead is less than 0xA0, otherwise 0xC1.
+            u8 const lead_offset = lead < 0xA0 ? 0x81 : 0xC1;
+
+            // 3. If byte is in the range 0x40 to 0x7E, inclusive, or 0x80 to 0xFC, inclusive, set pointer to (lead − lead offset) × 188 + byte − offset.
+            if ((byte >= 0x40 && byte <= 0x7E) || (byte >= 0x80 && byte <= 0xFC))
+                pointer = (lead - lead_offset) * 188 + byte - offset;
+
+            // 4. If pointer is in the range 8836 to 10715, inclusive, return a code point whose value is 0xE000 − 8836 + pointer.
+            if (pointer.has_value() && pointer.value() >= 8836 && pointer.value() <= 10715) {
+                TRY(on_code_point(0xE000 - 8836 + pointer.value()));
+                continue;
+            }
+
+            // 5. Let code point be null if pointer is null, otherwise the index code point for pointer in index jis0208.
+            auto code_point = pointer.has_value() ? index_jis0208_code_point(pointer.value()) : Optional<u32> {};
+
+            // 6. If code point is non-null, return a code point whose value is code point.
+            if (code_point.has_value()) {
+                TRY(on_code_point(code_point.value()));
+                continue;
+            }
+
+            // 7. If byte is an ASCII byte, restore byte to ioQueue.
+            if (byte <= 0x7F)
+                index--;
+
+            // 8. Return error.
+            TRY(on_code_point(replacement_code_point));
+            continue;
+        }
+
+        // 4. If byte is an ASCII byte or 0x80, return a code point whose value is byte.
+        if (byte <= 0x80) {
+            TRY(on_code_point(byte));
+            continue;
+        }
+
+        // 5. If byte is in the range 0xA1 to 0xDF, inclusive, return a code point whose value is 0xFF61 − 0xA1 + byte.
+        if (byte >= 0xA1 && byte <= 0xDF) {
+            TRY(on_code_point(0xFF61 - 0xA1 + byte));
+            continue;
+        }
+
+        // 6. If byte is in the range 0x81 to 0x9F, inclusive, or 0xE0 to 0xFC, inclusive, set Shift_JIS lead to byte and return continue.
+        if ((byte >= 0x81 && byte <= 0x9F) || (byte >= 0xE0 && byte <= 0xFC)) {
+            shift_jis_lead = byte;
+            continue;
+        }
+
+        // 7. Return error.
+        TRY(on_code_point(replacement_code_point));
     }
 }
 
