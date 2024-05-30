@@ -210,6 +210,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             { "big5"sv, prepare_table(data.get("big5"sv)->as_array()) },
             { "jis0208"sv, prepare_table(data.get("jis0208"sv)->as_array()) },
             { "jis0212"sv, prepare_table(data.get("jis0212"sv)->as_array()) },
+            { "euc_kr"sv, prepare_table(data.get("euc-kr"sv)->as_array()) },
         },
     };
 

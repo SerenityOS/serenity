@@ -33,6 +33,7 @@ Big5Decoder s_big5_decoder;
 EUCJPDecoder s_euc_jp_decoder;
 ISO2022JPDecoder s_iso_2022_jp_decoder;
 ShiftJISDecoder s_shift_jis_decoder;
+EUCKRDecoder s_euc_kr_decoder;
 
 // clang-format off
 // https://encoding.spec.whatwg.org/index-ibm866.txt
@@ -308,6 +309,8 @@ Optional<Decoder&> decoder_for(StringView a_encoding)
             return s_big5_decoder;
         if (encoding.value().equals_ignoring_ascii_case("euc-jp"sv))
             return s_euc_jp_decoder;
+        if (encoding.value().equals_ignoring_ascii_case("euc-kr"sv))
+            return s_euc_kr_decoder;
         if (encoding.value().equals_ignoring_ascii_case("gbk"sv))
             return s_gb18030_decoder;
         if (encoding.value().equals_ignoring_ascii_case("gb18030"sv))
@@ -1703,6 +1706,73 @@ ErrorOr<void> ShiftJISDecoder::process(StringView input, Function<ErrorOr<void>(
         }
 
         // 7. Return error.
+        TRY(on_code_point(replacement_code_point));
+    }
+}
+
+// https://encoding.spec.whatwg.org/#euc-kr-decoder
+ErrorOr<void> EUCKRDecoder::process(StringView input, Function<ErrorOr<void>(u32)> on_code_point)
+{
+    // EUC-KR’s decoder has an associated EUC-KR lead (initially 0x00).
+    u8 euc_kr_lead = 0x00;
+
+    // EUC-KR’s decoder’s handler, given ioQueue and byte, runs these steps:
+    size_t index = 0;
+    while (true) {
+        // 1. If byte is end-of-queue and EUC-KR lead is not 0x00, set EUC-KR lead to 0x00 and return error.
+        if (index >= input.length() && euc_kr_lead != 0x00) {
+            euc_kr_lead = 0x00;
+            TRY(on_code_point(replacement_code_point));
+            continue;
+        }
+
+        // 2. If byte is end-of-queue and EUC-KR lead is 0x00, return finished.
+        if (index >= input.length() && euc_kr_lead == 0x00)
+            return {};
+
+        u8 const byte = input[index++];
+
+        // 3. If EUC-KR lead is not 0x00, let lead be EUC-KR lead, let pointer be null, set EUC-KR lead to 0x00, and then:
+        if (euc_kr_lead != 0x00) {
+            auto lead = euc_kr_lead;
+            Optional<u32> pointer;
+            euc_kr_lead = 0x00;
+
+            // 1. If byte is in the range 0x41 to 0xFE, inclusive, set pointer to (lead − 0x81) × 190 + (byte − 0x41).
+            if (byte >= 0x41 && byte <= 0xFE)
+                pointer = (lead - 0x81) * 190 + (byte - 0x41);
+
+            // 2. Let code point be null if pointer is null, otherwise the index code point for pointer in index EUC-KR.
+            auto code_point = pointer.has_value() ? index_euc_kr_code_point(pointer.value()) : Optional<u32> {};
+
+            // 3. If code point is non-null, return a code point whose value is code point.
+            if (code_point.has_value()) {
+                TRY(on_code_point(code_point.value()));
+                continue;
+            }
+
+            // 4. If byte is an ASCII byte, restore byte to ioQueue.
+            if (byte <= 0x7F)
+                index--;
+
+            // 5. Return error.
+            TRY(on_code_point(replacement_code_point));
+            continue;
+        }
+
+        // 4. If byte is an ASCII byte, return a code point whose value is byte.
+        if (byte <= 0x7F) {
+            TRY(on_code_point(byte));
+            continue;
+        }
+
+        // 5. If byte is in the range 0x81 to 0xFE, inclusive, set EUC-KR lead to byte and return continue.
+        if (byte >= 0x81 && byte <= 0xFE) {
+            euc_kr_lead = byte;
+            continue;
+        }
+
+        // 6. Return error.
         TRY(on_code_point(replacement_code_point));
     }
 }
