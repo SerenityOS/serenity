@@ -62,31 +62,37 @@ private:
 class Latin1Decoder final : public Decoder {
 public:
     virtual ErrorOr<void> process(StringView, Function<ErrorOr<void>(u32)> on_code_point) override;
+    virtual bool validate(StringView) override { return true; }
 };
 
 class Latin2Decoder final : public Decoder {
 public:
     virtual ErrorOr<void> process(StringView, Function<ErrorOr<void>(u32)> on_code_point) override;
+    virtual bool validate(StringView) override { return true; }
 };
 
 class Latin9Decoder final : public Decoder {
 public:
     virtual ErrorOr<void> process(StringView, Function<ErrorOr<void>(u32)> on_code_point) override;
+    virtual bool validate(StringView) override { return true; }
 };
 
 class PDFDocEncodingDecoder final : public Decoder {
 public:
     virtual ErrorOr<void> process(StringView, Function<ErrorOr<void>(u32)> on_code_point) override;
+    virtual bool validate(StringView) override { return true; }
 };
 
 class TurkishDecoder final : public Decoder {
 public:
     virtual ErrorOr<void> process(StringView, Function<ErrorOr<void>(u32)> on_code_point) override;
+    virtual bool validate(StringView) override { return true; }
 };
 
 class XUserDefinedDecoder final : public Decoder {
 public:
     virtual ErrorOr<void> process(StringView, Function<ErrorOr<void>(u32)> on_code_point) override;
+    virtual bool validate(StringView) override { return true; }
 };
 
 Optional<Decoder&> decoder_for(StringView encoding);
