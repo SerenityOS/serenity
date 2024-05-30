@@ -7,6 +7,7 @@
 #include <AK/LexicalPath.h>
 #include <LibGfx/ImageFormats/BMPLoader.h>
 #include <LibGfx/ImageFormats/DDSLoader.h>
+#include <LibGfx/ImageFormats/FLICLoader.h>
 #include <LibGfx/ImageFormats/GIFLoader.h>
 #include <LibGfx/ImageFormats/ICOLoader.h>
 #include <LibGfx/ImageFormats/ILBMLoader.h>
@@ -38,6 +39,7 @@ static ErrorOr<OwnPtr<ImageDecoderPlugin>> probe_and_sniff_for_appropriate_plugi
     static constexpr ImagePluginInitializer s_initializers[] = {
         { BMPImageDecoderPlugin::sniff, BMPImageDecoderPlugin::create },
         { DDSImageDecoderPlugin::sniff, DDSImageDecoderPlugin::create },
+        { FLICImageDecoderPlugin::sniff, FLICImageDecoderPlugin::create },
         { GIFImageDecoderPlugin::sniff, GIFImageDecoderPlugin::create },
         { ICOImageDecoderPlugin::sniff, ICOImageDecoderPlugin::create },
         { ILBMImageDecoderPlugin::sniff, ILBMImageDecoderPlugin::create },

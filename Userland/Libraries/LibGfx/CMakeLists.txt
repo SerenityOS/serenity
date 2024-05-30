@@ -42,6 +42,7 @@ set(SOURCES
     ImageFormats/BooleanDecoder.cpp
     ImageFormats/CCITTDecoder.cpp
     ImageFormats/DDSLoader.cpp
+    ImageFormats/FLICLoader.cpp
     ImageFormats/GIFLoader.cpp
     ImageFormats/GIFWriter.cpp
     ImageFormats/ICOLoader.cpp
