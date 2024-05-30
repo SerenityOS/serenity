@@ -34,6 +34,7 @@ EUCJPDecoder s_euc_jp_decoder;
 ISO2022JPDecoder s_iso_2022_jp_decoder;
 ShiftJISDecoder s_shift_jis_decoder;
 EUCKRDecoder s_euc_kr_decoder;
+ReplacementDecoder s_replacement_decoder;
 
 // clang-format off
 // https://encoding.spec.whatwg.org/index-ibm866.txt
@@ -353,6 +354,8 @@ Optional<Decoder&> decoder_for(StringView a_encoding)
             return s_mac_roman_decoder;
         if (encoding.value().equals_ignoring_ascii_case("PDFDocEncoding"sv))
             return s_pdf_doc_encoding_decoder;
+        if (encoding.value().equals_ignoring_ascii_case("replacement"sv))
+            return s_replacement_decoder;
         if (encoding.value().equals_ignoring_ascii_case("shift_jis"sv))
             return s_shift_jis_decoder;
         if (encoding.value().equals_ignoring_ascii_case("windows-874"sv))
@@ -1775,6 +1778,20 @@ ErrorOr<void> EUCKRDecoder::process(StringView input, Function<ErrorOr<void>(u32
         // 6. Return error.
         TRY(on_code_point(replacement_code_point));
     }
+}
+
+// https://encoding.spec.whatwg.org/#replacement-decoder
+ErrorOr<void> ReplacementDecoder::process(StringView input, Function<ErrorOr<void>(u32)> on_code_point)
+{
+    // replacement’s decoder has an associated replacement error returned (initially false).
+    // replacement’s decoder’s handler, given ioQueue and byte, runs these steps:
+    // 1. If byte is end-of-queue, return finished.
+    // 2. If replacement error returned is false, set replacement error returned to true and return error.
+    // 3. Return finished.
+
+    if (!input.is_empty())
+        return on_code_point(replacement_code_point);
+    return {};
 }
 
 }
