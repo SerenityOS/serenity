@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2023-2024, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -17,6 +17,7 @@
 #import <UI/Inspector.h>
 #import <UI/InspectorController.h>
 #import <UI/LadybirdWebView.h>
+#import <UI/SearchPanel.h>
 #import <UI/Tab.h>
 #import <UI/TabController.h>
 #import <Utilities/Conversions.h>
@@ -32,6 +33,8 @@ static constexpr CGFloat const WINDOW_HEIGHT = 800;
 
 @property (nonatomic, strong) NSString* title;
 @property (nonatomic, strong) NSImage* favicon;
+
+@property (nonatomic, strong) SearchPanel* search_panel;
 
 @property (nonatomic, strong) InspectorController* inspector_controller;
 
@@ -84,7 +87,10 @@ static constexpr CGFloat const WINDOW_HEIGHT = 800;
         [self setTitleVisibility:NSWindowTitleHidden];
         [self setIsVisible:YES];
 
-        auto* scroll_view = [[NSScrollView alloc] initWithFrame:[self frame]];
+        self.search_panel = [[SearchPanel alloc] init];
+        [self.search_panel setHidden:YES];
+
+        auto* scroll_view = [[NSScrollView alloc] init];
         [scroll_view setHasVerticalScroller:YES];
         [scroll_view setHasHorizontalScroller:YES];
         [scroll_view setLineScroll:24];
@@ -92,19 +98,49 @@ static constexpr CGFloat const WINDOW_HEIGHT = 800;
         [scroll_view setContentView:self.web_view];
         [scroll_view setDocumentView:[[NSView alloc] init]];
 
+        auto* stack_view = [NSStackView stackViewWithViews:@[
+            self.search_panel,
+            scroll_view,
+        ]];
+
+        [stack_view setOrientation:NSUserInterfaceLayoutOrientationVertical];
+        [stack_view setSpacing:0];
+
         [[NSNotificationCenter defaultCenter]
             addObserver:self
                selector:@selector(onContentScroll:)
                    name:NSViewBoundsDidChangeNotification
                  object:[scroll_view contentView]];
 
-        [self setContentView:scroll_view];
+        [self setContentView:stack_view];
+
+        [[self.search_panel leadingAnchor] constraintEqualToAnchor:[self.contentView leadingAnchor]].active = YES;
     }
 
     return self;
 }
 
 #pragma mark - Public methods
+
+- (void)find:(id)sender
+{
+    [self.search_panel find:sender];
+}
+
+- (void)findNextMatch:(id)sender
+{
+    [self.search_panel findNextMatch:sender];
+}
+
+- (void)findPreviousMatch:(id)sender
+{
+    [self.search_panel findPreviousMatch:sender];
+}
+
+- (void)useSelectionForFind:(id)sender
+{
+    [self.search_panel useSelectionForFind:sender];
+}
 
 - (void)tabWillClose
 {
