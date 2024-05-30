@@ -69,26 +69,6 @@ public:
     virtual ErrorOr<void> process(StringView, Function<ErrorOr<void>(u32)> on_code_point) override;
 };
 
-class CentralEuropeDecoder final : public Decoder {
-public:
-    virtual ErrorOr<void> process(StringView, Function<ErrorOr<void>(u32)> on_code_point) override;
-};
-
-class HebrewDecoder final : public Decoder {
-public:
-    virtual ErrorOr<void> process(StringView, Function<ErrorOr<void>(u32)> on_code_point) override;
-};
-
-class CyrillicDecoder final : public Decoder {
-public:
-    virtual ErrorOr<void> process(StringView, Function<ErrorOr<void>(u32)> on_code_point) override;
-};
-
-class Koi8RDecoder final : public Decoder {
-public:
-    virtual ErrorOr<void> process(StringView, Function<ErrorOr<void>(u32)> on_code_point) override;
-};
-
 class Latin9Decoder final : public Decoder {
 public:
     virtual ErrorOr<void> process(StringView, Function<ErrorOr<void>(u32)> on_code_point) override;
