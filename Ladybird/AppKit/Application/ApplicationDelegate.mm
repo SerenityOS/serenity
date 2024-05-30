@@ -354,6 +354,20 @@
     [submenu addItem:[[NSMenuItem alloc] initWithTitle:@"Select All"
                                                 action:@selector(selectAll:)
                                          keyEquivalent:@"a"]];
+    [submenu addItem:[NSMenuItem separatorItem]];
+
+    [submenu addItem:[[NSMenuItem alloc] initWithTitle:@"Find..."
+                                                action:@selector(find:)
+                                         keyEquivalent:@"f"]];
+    [submenu addItem:[[NSMenuItem alloc] initWithTitle:@"Find Next"
+                                                action:@selector(findNextMatch:)
+                                         keyEquivalent:@"g"]];
+    [submenu addItem:[[NSMenuItem alloc] initWithTitle:@"Find Previous"
+                                                action:@selector(findPreviousMatch:)
+                                         keyEquivalent:@"G"]];
+    [submenu addItem:[[NSMenuItem alloc] initWithTitle:@"Use Selection for Find"
+                                                action:@selector(useSelectionForFind:)
+                                         keyEquivalent:@"e"]];
 
     [menu setSubmenu:submenu];
     return menu;

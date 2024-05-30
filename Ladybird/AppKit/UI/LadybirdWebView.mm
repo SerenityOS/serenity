@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2023-2024, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -178,6 +178,21 @@ struct HideCursor {
 - (void)handleVisibility:(BOOL)is_visible
 {
     m_web_view_bridge->set_system_visibility_state(is_visible);
+}
+
+- (void)findInPage:(NSString*)query
+{
+    m_web_view_bridge->find_in_page(Ladybird::ns_string_to_string(query));
+}
+
+- (void)findInPageNextMatch
+{
+    m_web_view_bridge->find_in_page_next_match();
+}
+
+- (void)findInPagePreviousMatch
+{
+    m_web_view_bridge->find_in_page_previous_match();
 }
 
 - (void)zoomIn

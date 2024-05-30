@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2023-2024, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -59,6 +59,10 @@
 - (void)handleVisibility:(BOOL)is_visible;
 
 - (void)setPreferredColorScheme:(Web::CSS::PreferredColorScheme)color_scheme;
+
+- (void)findInPage:(NSString*)query;
+- (void)findInPageNextMatch;
+- (void)findInPagePreviousMatch;
 
 - (void)zoomIn;
 - (void)zoomOut;
