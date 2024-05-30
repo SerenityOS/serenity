@@ -51,7 +51,7 @@ if [ ! -d "${SCRIPT_DIR}/wpt" ]; then
     git -C wpt remote add origin https://github.com/web-platform-tests/wpt.git
 
     # Switch to the commit that was used to generate tests expectations. Requires periodic updates.
-    git -C wpt fetch --depth 1 origin eedf737ce39c512d0ca3471f988972e3ece11822
+    git -C wpt fetch --depth 1 origin 5930e386a5e1e59456dc810c9b21adf18bc1b6fe
     git -C wpt checkout FETCH_HEAD
 
     git apply 0001-tools-Pass-product-name-to-update-metadata-fallback-.patch
