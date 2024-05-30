@@ -531,10 +531,15 @@ StringView get_output_encoding(StringView encoding)
     return encoding;
 }
 
-bool Decoder::validate(StringView)
+bool Decoder::validate(StringView input)
 {
-    // By-default we assume that any input sequence is valid, character encodings that do not accept all inputs may override this
-    return true;
+    auto result = this->process(input, [](auto code_point) -> ErrorOr<void> {
+        if (code_point == replacement_code_point)
+            return Error::from_errno(EINVAL);
+        return {};
+    });
+
+    return !result.is_error();
 }
 
 ErrorOr<String> Decoder::to_utf8(StringView input)
