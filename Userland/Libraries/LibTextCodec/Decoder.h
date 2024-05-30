@@ -125,6 +125,12 @@ public:
     virtual ErrorOr<void> process(StringView, Function<ErrorOr<void>(u32)> on_code_point) override;
 };
 
+class ReplacementDecoder final : public Decoder {
+public:
+    virtual ErrorOr<void> process(StringView, Function<ErrorOr<void>(u32)> on_code_point) override;
+    virtual bool validate(StringView input) override { return input.is_empty(); }
+};
+
 Optional<Decoder&> decoder_for(StringView encoding);
 Optional<StringView> get_standardized_encoding(StringView encoding);
 
