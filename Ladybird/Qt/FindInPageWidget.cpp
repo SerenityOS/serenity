@@ -77,7 +77,10 @@ void FindInPageWidget::keyPressEvent(QKeyEvent* event)
         setVisible(false);
         break;
     case Qt::Key_Return:
-        m_next_button->click();
+        if (event->modifiers().testFlag(Qt::ShiftModifier))
+            m_previous_button->click();
+        else
+            m_next_button->click();
         break;
     default:
         event->ignore();
