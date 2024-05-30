@@ -3,13 +3,15 @@ import("//Ladybird/link_qt.gni")
 import("//Ladybird/moc_qt_objects.gni")
 import("//Meta/gn/build/libs/pulse/enable.gni")
 
+enable_qt_multimedia = !enable_pulseaudio && current_os != "mac"
+
 moc_qt_objects("generate_moc") {
   sources = [
     "//Ladybird/Qt/EventLoopImplementationQtEventTarget.h",
     "//Ladybird/Qt/RequestManagerQt.h",
   ]
 
-  if (!enable_pulseaudio) {
+  if (enable_qt_multimedia) {
     sources += [
       "//Ladybird/Qt/AudioCodecPluginQt.cpp",
       "//Ladybird/Qt/AudioThread.cpp",
@@ -23,7 +25,7 @@ link_qt("WebContent_qt") {
     "Network",
   ]
 
-  if (!enable_pulseaudio) {
+  if (enable_qt_multimedia) {
     qt_components += [ "Multimedia" ]
   }
 }
@@ -80,7 +82,7 @@ executable("WebContent") {
       "//Ladybird/Qt/WebSocketQt.cpp",
     ]
 
-    if (!enable_pulseaudio) {
+    if (enable_qt_multimedia) {
       sources += [
         "//Ladybird/Qt/AudioCodecPluginQt.cpp",
         "//Ladybird/Qt/AudioThread.cpp",
