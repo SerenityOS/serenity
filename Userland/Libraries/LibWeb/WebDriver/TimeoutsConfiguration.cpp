@@ -33,6 +33,7 @@ JsonObject timeouts_object(TimeoutsConfiguration const& timeouts)
     return timeouts_object;
 }
 
+// FIXME: Update this to match the newest spec: https://www.w3.org/TR/webdriver2/#dfn-deserialize-as-timeouts-configuration
 // https://w3c.github.io/webdriver/#ref-for-dfn-json-deserialize-3
 ErrorOr<TimeoutsConfiguration, Error> json_deserialize_as_a_timeouts_configuration(JsonValue const& value)
 {
@@ -74,7 +75,8 @@ ErrorOr<TimeoutsConfiguration, Error> json_deserialize_as_a_timeouts_configurati
     // 4. If value has a property with the key "pageLoad":
     if (value.as_object().has("pageLoad"sv)) {
         // 1. Let page load duration be the value of property "pageLoad".
-        auto page_load_duration = value.as_object().get_i64("pageLoad"sv);
+        // NOTE: We parse this as a double due to WPT sending values such as `{"pageLoad": 300.00000000000006}`
+        auto page_load_duration = value.as_object().get_double_with_precision_loss("pageLoad"sv);
 
         // 2. If page load duration is less than 0 or greater than maximum safe integer, return error with error code invalid argument.
         if (!page_load_duration.has_value() || *page_load_duration < 0 || *page_load_duration > max_safe_integer)
