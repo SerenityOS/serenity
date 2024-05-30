@@ -320,12 +320,15 @@ ErrorOr<void, Client::WrappedError> Client::send_error_response(Error const& err
     dbgln_if(WEBDRIVER_DEBUG, "Sending error response: {} {}: {}", error.http_status, error.error, error.message);
     auto reason = HTTP::HttpResponse::reason_phrase_for_code(error.http_status);
 
-    JsonObject result;
-    result.set("error", error.error);
-    result.set("message", error.message);
-    result.set("stacktrace", "");
+    JsonObject error_response;
+    error_response.set("error", error.error);
+    error_response.set("message", error.message);
+    error_response.set("stacktrace", "");
     if (error.data.has_value())
-        result.set("data", *error.data);
+        error_response.set("data", *error.data);
+
+    JsonObject result;
+    result.set("value", move(error_response));
 
     StringBuilder content_builder;
     result.serialize(content_builder);
