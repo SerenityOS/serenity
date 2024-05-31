@@ -137,7 +137,7 @@ public:
     virtual ErrorOr<size_t> tell() const;
     /// Returns the total size of the stream, or an errno in the case of an
     /// error. May not preserve the original position on the stream on failure.
-    virtual ErrorOr<size_t> size();
+    virtual ErrorOr<size_t> size() const;
     /// Shrinks or extends the stream to the given size. Returns an errno in
     /// the case of an error.
     virtual ErrorOr<void> truncate(size_t length) = 0;

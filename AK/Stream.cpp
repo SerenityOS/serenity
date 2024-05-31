@@ -115,14 +115,18 @@ ErrorOr<size_t> SeekableStream::tell() const
     return const_cast<SeekableStream*>(this)->seek(0, SeekMode::FromCurrentPosition);
 }
 
-ErrorOr<size_t> SeekableStream::size()
+ErrorOr<size_t> SeekableStream::size() const
 {
     auto original_position = TRY(tell());
 
-    auto seek_result = seek(0, SeekMode::FromEndPosition);
+    // Note: This is a bit iffy, but we will ultimately be const-correct because the original
+    // state is restored.
+    auto mutable_this = const_cast<SeekableStream*>(this);
+
+    auto seek_result = mutable_this->seek(0, SeekMode::FromEndPosition);
     if (seek_result.is_error()) {
         // Let's try to restore the original position, just in case.
-        auto restore_result = seek(original_position, SeekMode::SetPosition);
+        auto restore_result = mutable_this->seek(original_position, SeekMode::SetPosition);
         if (restore_result.is_error()) {
             dbgln("SeekableStream::size: Couldn't restore initial position, stream might have incorrect position now!");
         }
@@ -130,7 +134,7 @@ ErrorOr<size_t> SeekableStream::size()
         return seek_result.release_error();
     }
 
-    TRY(seek(original_position, SeekMode::SetPosition));
+    TRY(mutable_this->seek(original_position, SeekMode::SetPosition));
     return seek_result.value();
 }
 
