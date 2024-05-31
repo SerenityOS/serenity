@@ -2550,23 +2550,14 @@ private:
 
 class ResolveThisBinding final : public Instruction {
 public:
-    explicit ResolveThisBinding(Operand dst)
+    ResolveThisBinding()
         : Instruction(Type::ResolveThisBinding)
-        , m_dst(dst)
     {
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     ByteString to_byte_string_impl(Bytecode::Executable const&) const;
-    void visit_operands_impl(Function<void(Operand&)> visitor)
-    {
-        visitor(m_dst);
-    }
-
-    Operand dst() const { return m_dst; }
-
-private:
-    Operand m_dst;
+    void visit_operands_impl(Function<void(Operand&)>) { }
 };
 
 class ResolveSuperBase final : public Instruction {
