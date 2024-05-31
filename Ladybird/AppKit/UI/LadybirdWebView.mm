@@ -181,8 +181,9 @@ struct HideCursor {
 }
 
 - (void)findInPage:(NSString*)query
+    caseSensitivity:(CaseSensitivity)case_sensitivity
 {
-    m_web_view_bridge->find_in_page(Ladybird::ns_string_to_string(query));
+    m_web_view_bridge->find_in_page(Ladybird::ns_string_to_string(query), case_sensitivity);
 }
 
 - (void)findInPageNextMatch

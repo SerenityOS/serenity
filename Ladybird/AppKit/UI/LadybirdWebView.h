@@ -60,7 +60,8 @@
 
 - (void)setPreferredColorScheme:(Web::CSS::PreferredColorScheme)color_scheme;
 
-- (void)findInPage:(NSString*)query;
+- (void)findInPage:(NSString*)query
+    caseSensitivity:(CaseSensitivity)case_sensitivity;
 - (void)findInPageNextMatch;
 - (void)findInPagePreviousMatch;
 

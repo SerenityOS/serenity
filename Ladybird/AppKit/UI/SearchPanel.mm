@@ -19,8 +19,12 @@ static constexpr CGFloat const SEARCH_FIELD_HEIGHT = 30;
 static constexpr CGFloat const SEARCH_FIELD_WIDTH = 300;
 
 @interface SearchPanel () <NSSearchFieldDelegate>
+{
+    CaseSensitivity m_case_sensitivity;
+}
 
 @property (nonatomic, strong) NSSearchField* search_field;
+@property (nonatomic, strong) NSButton* search_match_case;
 
 @end
 
@@ -45,6 +49,12 @@ static constexpr CGFloat const SEARCH_FIELD_WIDTH = 300;
         [search_next setToolTip:@"Find Next Match"];
         [search_next setBordered:NO];
 
+        self.search_match_case = [NSButton checkboxWithTitle:@"Match Case"
+                                                      target:self
+                                                      action:@selector(find:)];
+        [self.search_match_case setState:NSControlStateValueOff];
+        m_case_sensitivity = CaseSensitivity::CaseInsensitive;
+
         auto* search_done = [NSButton buttonWithTitle:@"Done"
                                                target:self
                                                action:@selector(cancelSearch:)];
@@ -54,6 +64,7 @@ static constexpr CGFloat const SEARCH_FIELD_WIDTH = 300;
         [self addView:self.search_field inGravity:NSStackViewGravityLeading];
         [self addView:search_previous inGravity:NSStackViewGravityLeading];
         [self addView:search_next inGravity:NSStackViewGravityLeading];
+        [self addView:self.search_match_case inGravity:NSStackViewGravityLeading];
         [self addView:search_done inGravity:NSStackViewGravityTrailing];
 
         [self setOrientation:NSUserInterfaceLayoutOrientationHorizontal];
@@ -103,7 +114,7 @@ static constexpr CGFloat const SEARCH_FIELD_WIDTH = 300;
 
     if (![self isHidden]) {
         [self.search_field setStringValue:query];
-        [[[self tab] web_view] findInPage:query];
+        [[[self tab] web_view] findInPage:query caseSensitivity:m_case_sensitivity];
 
         [self.window makeFirstResponder:self.search_field];
     }
@@ -129,10 +140,15 @@ static constexpr CGFloat const SEARCH_FIELD_WIDTH = 300;
     auto* query = [paste_board stringForType:NSPasteboardTypeString];
 
     if (query) {
-        if (![[self.search_field stringValue] isEqual:query]) {
-            [self.search_field setStringValue:query];
-            [[[self tab] web_view] findInPage:query];
+        auto case_sensitivity = [self.search_match_case state] == NSControlStateValueOff
+            ? CaseSensitivity::CaseInsensitive
+            : CaseSensitivity::CaseSensitive;
 
+        if (case_sensitivity != m_case_sensitivity || ![[self.search_field stringValue] isEqual:query]) {
+            [self.search_field setStringValue:query];
+            m_case_sensitivity = case_sensitivity;
+
+            [[[self tab] web_view] findInPage:query caseSensitivity:m_case_sensitivity];
             return YES;
         }
     }
@@ -150,7 +166,7 @@ static constexpr CGFloat const SEARCH_FIELD_WIDTH = 300;
 - (void)controlTextDidChange:(NSNotification*)notification
 {
     auto* query = [self.search_field stringValue];
-    [[[self tab] web_view] findInPage:query];
+    [[[self tab] web_view] findInPage:query caseSensitivity:m_case_sensitivity];
 
     [self setPasteBoardContents:query];
 }
