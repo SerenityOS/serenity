@@ -2,7 +2,7 @@
 <script src="../include.js"></script>
 <script>
     test(() => {
-        for (const elementName of ["link", "a", "script"]) {
+        for (const elementName of ["link", "a", "img", "script"]) {
             const element = document.createElement(elementName);
             println(`${elementName} referrerPolicy initial value: '${element.referrerPolicy}'`);
             element.referrerPolicy = "invalid";
