@@ -1563,18 +1563,17 @@ ThrowCompletionOr<void> DeleteByIdWithThis::execute_impl(Bytecode::Interpreter& 
 ThrowCompletionOr<void> ResolveThisBinding::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& cached_this_value = interpreter.reg(Register::this_value());
-    if (cached_this_value.is_empty()) {
-        // OPTIMIZATION: Because the value of 'this' cannot be reassigned during a function execution, it's
-        //               resolved once and then saved for subsequent use.
-        auto& running_execution_context = interpreter.running_execution_context();
-        if (auto function = running_execution_context.function; function && is<ECMAScriptFunctionObject>(*function) && !static_cast<ECMAScriptFunctionObject&>(*function).allocates_function_environment()) {
-            cached_this_value = running_execution_context.this_value;
-        } else {
-            auto& vm = interpreter.vm();
-            cached_this_value = TRY(vm.resolve_this_binding());
-        }
+    if (!cached_this_value.is_empty())
+        return {};
+    // OPTIMIZATION: Because the value of 'this' cannot be reassigned during a function execution, it's
+    //               resolved once and then saved for subsequent use.
+    auto& running_execution_context = interpreter.running_execution_context();
+    if (auto function = running_execution_context.function; function && is<ECMAScriptFunctionObject>(*function) && !static_cast<ECMAScriptFunctionObject&>(*function).allocates_function_environment()) {
+        cached_this_value = running_execution_context.this_value;
+    } else {
+        auto& vm = interpreter.vm();
+        cached_this_value = TRY(vm.resolve_this_binding());
     }
-    interpreter.set(dst(), cached_this_value);
     return {};
 }
 
@@ -2655,9 +2654,9 @@ ByteString IteratorNext::to_byte_string_impl(Executable const& executable) const
         format_operand("iterator_record"sv, m_iterator_record, executable));
 }
 
-ByteString ResolveThisBinding::to_byte_string_impl(Bytecode::Executable const& executable) const
+ByteString ResolveThisBinding::to_byte_string_impl(Bytecode::Executable const&) const
 {
-    return ByteString::formatted("ResolveThisBinding {}", format_operand("dst"sv, m_dst, executable));
+    return "ResolveThisBinding"sv;
 }
 
 ByteString ResolveSuperBase::to_byte_string_impl(Bytecode::Executable const& executable) const

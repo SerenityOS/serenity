@@ -46,6 +46,7 @@ public:
     [[nodiscard]] ScopedOperand allocate_register();
     [[nodiscard]] ScopedOperand local(u32 local_index);
     [[nodiscard]] ScopedOperand accumulator();
+    [[nodiscard]] ScopedOperand this_value();
 
     void free_register(Register);
 
@@ -377,6 +378,7 @@ private:
     MarkedVector<Value> m_constants;
 
     ScopedOperand m_accumulator;
+    ScopedOperand m_this_value;
     Vector<Register> m_free_registers;
 
     u32 m_next_register { Register::reserved_register_count };

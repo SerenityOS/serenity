@@ -11,7 +11,7 @@ namespace JS::Bytecode {
 
 ScopedOperandImpl::~ScopedOperandImpl()
 {
-    if (!m_generator.is_finished() && m_operand.is_register() && m_operand.as_register().index() != 0)
+    if (!m_generator.is_finished() && m_operand.is_register() && m_operand.as_register().index() >= Register::reserved_register_count)
         m_generator.free_register(m_operand.as_register());
 }
 

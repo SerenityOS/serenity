@@ -24,6 +24,7 @@ Generator::Generator(VM& vm, GCPtr<ECMAScriptFunctionObject const> function, Mus
     , m_regex_table(make<RegexTable>())
     , m_constants(vm.heap())
     , m_accumulator(*this, Operand(Register::accumulator()))
+    , m_this_value(*this, Operand(Register::this_value()))
     , m_must_propagate_completion(must_propagate_completion == MustPropagateCompletion::Yes)
     , m_function(function)
 {
@@ -571,8 +572,7 @@ CodeGenerationErrorOr<Generator::ReferenceOperands> Generator::emit_super_refere
     // https://tc39.es/ecma262/#sec-super-keyword-runtime-semantics-evaluation
     // 1. Let env be GetThisEnvironment().
     // 2. Let actualThis be ? env.GetThisBinding().
-    auto actual_this = allocate_register();
-    emit<Bytecode::Op::ResolveThisBinding>(actual_this);
+    auto actual_this = get_this();
 
     Optional<ScopedOperand> computed_property_value;
 
@@ -1081,21 +1081,26 @@ void Generator::set_local_initialized(u32 local_index)
 
 ScopedOperand Generator::get_this(Optional<ScopedOperand> preferred_dst)
 {
-    if (m_current_basic_block->this_().has_value())
-        return m_current_basic_block->this_().value();
-    if (m_root_basic_blocks[0]->this_().has_value()) {
-        m_current_basic_block->set_this(m_root_basic_blocks[0]->this_().value());
-        return m_root_basic_blocks[0]->this_().value();
+    if (m_current_basic_block->has_resolved_this())
+        return this_value();
+    if (m_root_basic_blocks[0]->has_resolved_this()) {
+        m_current_basic_block->set_has_resolved_this();
+        return this_value();
     }
     auto dst = preferred_dst.has_value() ? preferred_dst.value() : allocate_register();
-    emit<Bytecode::Op::ResolveThisBinding>(dst);
-    m_current_basic_block->set_this(dst);
-    return dst;
+    emit<Bytecode::Op::ResolveThisBinding>();
+    m_current_basic_block->set_has_resolved_this();
+    return this_value();
 }
 
 ScopedOperand Generator::accumulator()
 {
     return m_accumulator;
+}
+
+ScopedOperand Generator::this_value()
+{
+    return m_this_value;
 }
 
 bool Generator::fuse_compare_and_jump(ScopedOperand const& condition, Label true_target, Label false_target)
