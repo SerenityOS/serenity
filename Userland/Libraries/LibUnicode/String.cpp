@@ -47,4 +47,14 @@ bool String::equals_ignoring_case(String const& other) const
     return Unicode::equals_ignoring_case(code_points(), other.code_points());
 }
 
+Optional<size_t> String::find_byte_offset_ignoring_case(StringView needle, size_t from_byte_offset) const
+{
+    auto haystack = code_points().substring_view(from_byte_offset);
+
+    if (auto index = Unicode::find_ignoring_case(haystack, Utf8View { needle }); index.has_value())
+        return *index + from_byte_offset;
+
+    return {};
+}
+
 }
