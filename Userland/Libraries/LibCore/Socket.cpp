@@ -113,6 +113,25 @@ ErrorOr<Bytes> PosixSocketHelper::read(Bytes buffer, int flags)
     return buffer.trim(nread);
 }
 
+ErrorOr<bool> PosixSocketHelper::accurate_is_eof() const
+{
+    struct pollfd pfd { };
+    pfd.fd = m_fd;
+    pfd.events = POLLIN | POLLHUP;
+
+    TRY(System::poll({ &pfd, 1 }, 0));
+
+    if (pfd.revents & POLLIN)
+        return false;
+
+    // Note: This would not hold true on its own. File descriptors can be HUP
+    //       but still have data ready to read.
+    if (pfd.revents & POLLHUP)
+        return true;
+
+    return is_eof();
+}
+
 void PosixSocketHelper::did_reach_eof_on_read()
 {
     m_last_read_was_eof = true;

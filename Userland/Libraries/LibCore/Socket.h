@@ -135,6 +135,7 @@ public:
 
     bool is_eof() const { return !is_open() || m_last_read_was_eof; }
     void did_reach_eof_on_read();
+    ErrorOr<bool> accurate_is_eof() const;
     bool is_open() const { return m_fd != -1; }
     void close();
 
@@ -181,6 +182,7 @@ public:
     virtual ErrorOr<Bytes> read_some(Bytes buffer) override { return m_helper.read(buffer, default_flags()); }
     virtual ErrorOr<size_t> write_some(ReadonlyBytes buffer) override { return m_helper.write(buffer, default_flags()); }
     virtual bool is_eof() const override { return m_helper.is_eof(); }
+    virtual ErrorOr<bool> accurate_is_eof() const override { return m_helper.accurate_is_eof(); }
     virtual bool is_open() const override { return m_helper.is_open(); }
     virtual void close() override { m_helper.close(); }
     virtual ErrorOr<size_t> pending_bytes() const override { return m_helper.pending_bytes(); }
@@ -255,6 +257,7 @@ public:
 
     virtual ErrorOr<size_t> write_some(ReadonlyBytes buffer) override { return m_helper.write(buffer, default_flags()); }
     virtual bool is_eof() const override { return m_helper.is_eof(); }
+    virtual ErrorOr<bool> accurate_is_eof() const override { return m_helper.accurate_is_eof(); }
     virtual bool is_open() const override { return m_helper.is_open(); }
     virtual void close() override { m_helper.close(); }
     virtual ErrorOr<size_t> pending_bytes() const override { return m_helper.pending_bytes(); }
@@ -315,6 +318,7 @@ public:
     virtual ErrorOr<Bytes> read_some(Bytes buffer) override { return m_helper.read(buffer, default_flags()); }
     virtual ErrorOr<size_t> write_some(ReadonlyBytes buffer) override { return m_helper.write(buffer, default_flags()); }
     virtual bool is_eof() const override { return m_helper.is_eof(); }
+    virtual ErrorOr<bool> accurate_is_eof() const override { return m_helper.accurate_is_eof(); }
     virtual bool is_open() const override { return m_helper.is_open(); }
     virtual void close() override { m_helper.close(); }
     virtual ErrorOr<size_t> pending_bytes() const override { return m_helper.pending_bytes(); }
@@ -408,6 +412,7 @@ public:
     virtual ErrorOr<Bytes> read_some(Bytes buffer) override { return m_helper.read(move(buffer)); }
     virtual ErrorOr<size_t> write_some(ReadonlyBytes buffer) override { return m_helper.stream().write_some(buffer); }
     virtual bool is_eof() const override { return m_helper.is_eof(); }
+    virtual ErrorOr<bool> accurate_is_eof() const override { return m_helper.accurate_is_eof(); }
     virtual bool is_open() const override { return m_helper.stream().is_open(); }
     virtual void close() override { m_helper.stream().close(); }
     virtual ErrorOr<size_t> pending_bytes() const override
@@ -497,6 +502,7 @@ public:
     virtual ErrorOr<Bytes> read_some(Bytes buffer) override { return m_socket.read(move(buffer)); }
     virtual ErrorOr<size_t> write_some(ReadonlyBytes buffer) override { return m_socket.write(buffer); }
     virtual bool is_eof() const override { return m_socket.is_eof(); }
+    virtual ErrorOr<bool> accurate_is_eof() const override { return m_socket.accurate_is_eof(); }
     virtual bool is_open() const override { return m_socket.is_open(); }
     virtual void close() override { m_socket.close(); }
     virtual ErrorOr<size_t> pending_bytes() const override { return m_socket.pending_bytes(); }
