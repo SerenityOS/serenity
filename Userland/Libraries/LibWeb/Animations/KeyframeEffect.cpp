@@ -138,12 +138,21 @@ static WebIDL::ExceptionOr<KeyframeType<AL>> process_a_keyframe_like_object(JS::
     auto input_properties = TRY(keyframe_input->internal_own_property_keys());
 
     Vector<String> animation_properties;
+    Optional<JS::Value> all_value;
+
     for (auto const& input_property : input_properties) {
         if (!input_property.is_string())
             continue;
 
         auto name = input_property.as_string().utf8_string();
-        if (auto property = CSS::property_id_from_camel_case_string(name); property.has_value()) {
+        if (name == "all"sv) {
+            all_value = TRY(keyframe_input->get(JS::PropertyKey { name }));
+            for (auto i = to_underlying(CSS::first_longhand_property_id); i <= to_underlying(CSS::last_longhand_property_id); ++i) {
+                auto property = static_cast<CSS::PropertyID>(i);
+                if (CSS::is_animatable_property(property))
+                    animation_properties.append(String { CSS::string_from_property_id(property) });
+            }
+        } else if (auto property = CSS::property_id_from_camel_case_string(name); property.has_value()) {
             if (CSS::is_animatable_property(property.value()))
                 animation_properties.append(name);
         }
@@ -157,7 +166,8 @@ static WebIDL::ExceptionOr<KeyframeType<AL>> process_a_keyframe_like_object(JS::
         // 1. Let raw value be the result of calling the [[Get]] internal method on keyframe input, with property name
         //    as the property key and keyframe input as the receiver.
         // 2. Check the completion record of raw value.
-        auto raw_value = TRY(keyframe_input->get(ByteString { property_name }));
+        JS::PropertyKey key { property_name };
+        auto raw_value = TRY(keyframe_input->has_property(key)) ? TRY(keyframe_input->get(key)) : *all_value;
 
         using PropertyValuesType = Conditional<AL == AllowLists::Yes, Vector<String>, String>;
         PropertyValuesType property_values;
