@@ -180,7 +180,7 @@ public:
 
     void clear_selection();
 
-    void find_in_page(String const& query);
+    void find_in_page(String const& query, CaseSensitivity);
     void find_in_page_next_match();
     void find_in_page_previous_match();
 
