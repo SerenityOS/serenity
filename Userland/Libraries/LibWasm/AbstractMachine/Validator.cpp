@@ -282,12 +282,12 @@ ErrorOr<void, ValidationError> Validator::validate(CodeSection const& section)
 
 ErrorOr<void, ValidationError> Validator::validate(TableType const& type)
 {
-    return validate(type.limits(), 32);
+    return validate(type.limits(), (1ull << 32) - 1);
 }
 
 ErrorOr<void, ValidationError> Validator::validate(MemoryType const& type)
 {
-    return validate(type.limits(), 16);
+    return validate(type.limits(), 1 << 16);
 }
 
 ErrorOr<FunctionType, ValidationError> Validator::validate(BlockType const& type)
@@ -309,9 +309,8 @@ ErrorOr<FunctionType, ValidationError> Validator::validate(BlockType const& type
     return Errors::invalid("BlockType"sv);
 }
 
-ErrorOr<void, ValidationError> Validator::validate(Limits const& limits, size_t k)
+ErrorOr<void, ValidationError> Validator::validate(Limits const& limits, u64 bound)
 {
-    auto bound = (1ull << k) - 1;
     auto check_bound = [bound](auto value) {
         return static_cast<u64>(value) <= bound;
     };
@@ -319,8 +318,9 @@ ErrorOr<void, ValidationError> Validator::validate(Limits const& limits, size_t 
     if (!check_bound(limits.min()))
         return Errors::out_of_bounds("limit minimum"sv, limits.min(), 0, bound);
 
-    if (limits.max().has_value() && (limits.max().value() < limits.min() || !check_bound(*limits.max())))
+    if (limits.max().has_value() && (limits.max().value() < limits.min() || !check_bound(*limits.max()))) {
         return Errors::out_of_bounds("limit maximum"sv, limits.max().value(), limits.min(), bound);
+    }
 
     return {};
 }
