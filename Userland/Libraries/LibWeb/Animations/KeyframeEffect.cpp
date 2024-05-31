@@ -43,7 +43,7 @@ WebIDL::ExceptionOr<Variant<T, Vector<T>>> convert_value_to_maybe_list(JS::Realm
     return TRY(value_converter(value));
 }
 
-enum AllowLists {
+enum class AllowLists {
     Yes,
     No,
 };
