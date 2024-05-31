@@ -51,6 +51,9 @@ u32 to_unicode_titlecase(u32 code_point);
 template<typename ViewType>
 bool equals_ignoring_case(ViewType, ViewType);
 
+template<typename ViewType>
+Optional<size_t> find_ignoring_case(ViewType, ViewType);
+
 Optional<GeneralCategory> general_category_from_string(StringView);
 bool code_point_has_general_category(u32 code_point, GeneralCategory general_category);
 

@@ -6,6 +6,7 @@
 
 #include <AK/CharacterTypes.h>
 #include <AK/Platform.h>
+#include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
 #include <AK/Utf16View.h>
@@ -55,6 +56,18 @@ public:
         return !m_casefolded_code_points.is_empty() || (m_it != m_string.end());
     }
 
+    size_t index() const
+    {
+        if constexpr (IsSame<ViewType, Utf8View>)
+            return m_string.byte_offset_of(m_it);
+        else if constexpr (IsSame<ViewType, Utf16View>)
+            return m_string.code_unit_offset_of(m_it);
+        else if constexpr (IsSame<ViewType, Utf32View>)
+            return m_string.iterator_offset(m_it);
+        else
+            static_assert(DependentFalse<ViewType>);
+    }
+
     u32 next_code_point()
     {
         VERIFY(has_more_data());
@@ -102,6 +115,38 @@ bool equals_ignoring_case(ViewType lhs, ViewType rhs)
 template bool equals_ignoring_case(Utf8View, Utf8View);
 template bool equals_ignoring_case(Utf16View, Utf16View);
 template bool equals_ignoring_case(Utf32View, Utf32View);
+
+template<typename ViewType>
+Optional<size_t> find_ignoring_case(ViewType lhs, ViewType rhs)
+{
+    CasefoldStringComparator lhs_comparator { lhs };
+
+    while (lhs_comparator.has_more_data()) {
+        CasefoldStringComparator rhs_comparator { rhs };
+
+        auto saved_state = lhs_comparator;
+        auto matches = true;
+
+        while (lhs_comparator.has_more_data() && rhs_comparator.has_more_data()) {
+            if (lhs_comparator.next_code_point() != rhs_comparator.next_code_point()) {
+                matches = false;
+                break;
+            }
+        }
+
+        if (matches && !rhs_comparator.has_more_data())
+            return saved_state.index();
+
+        lhs_comparator = move(saved_state);
+        lhs_comparator.next_code_point();
+    }
+
+    return {};
+}
+
+template Optional<size_t> find_ignoring_case(Utf8View, Utf8View);
+template Optional<size_t> find_ignoring_case(Utf16View, Utf16View);
+template Optional<size_t> find_ignoring_case(Utf32View, Utf32View);
 
 Optional<GeneralCategory> __attribute__((weak)) general_category_from_string(StringView) { return {}; }
 bool __attribute__((weak)) code_point_has_general_category(u32, GeneralCategory) { return {}; }

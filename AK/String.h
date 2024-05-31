@@ -132,6 +132,9 @@ public:
     Optional<size_t> find_byte_offset(u32 code_point, size_t from_byte_offset = 0) const;
     Optional<size_t> find_byte_offset(StringView substring, size_t from_byte_offset = 0) const;
 
+    // Using this method requires linking LibUnicode into your application.
+    Optional<size_t> find_byte_offset_ignoring_case(StringView, size_t from_byte_offset = 0) const;
+
     [[nodiscard]] bool operator==(String const&) const = default;
     [[nodiscard]] bool operator==(FlyString const&) const;
     [[nodiscard]] bool operator==(StringView) const;
