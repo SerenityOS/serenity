@@ -339,21 +339,38 @@ static ErrorOr<NonnullRefPtr<Bitmap>> maybe_write_color_indexing_transform(Littl
     // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#44_color_indexing_transform
     unsigned color_table_size = 0;
     HashTable<ARGB32> seen_colors;
+    ARGB32 channels = 0;
+    ARGB32 first_pixel = bitmap->get_pixel(0, 0).value();
     for (ARGB32 pixel : *bitmap) {
         auto result = seen_colors.set(pixel);
         if (result == HashSetResult::InsertedNewEntry) {
             ++color_table_size;
+            channels |= pixel ^ first_pixel;
             if (color_table_size > 256)
                 break;
         }
     }
-    dbgln_if(WEBP_DEBUG, "WebP: Image has {}{} colors", color_table_size > 256 ? ">= " : "", color_table_size);
+    dbgln_if(WEBP_DEBUG, "WebP: Image has {}{} colors; all pixels or'd is {:#08x}", color_table_size > 256 ? ">= " : "", color_table_size, channels);
 
     // If the image has a single color, the huffman table can encode it in 0 bits and color indexing does not help.
-    // FIXME: If all colors use just a single channel, color indexing does not help either.
     if (color_table_size <= 1 || color_table_size > 256)
         return bitmap;
 
+    // If all colors use just a single channel, color indexing does not help either,
+    // except if there are <= 16 colors and we can do pixel bundling.
+    // FIXME: Once we support color cache, maybe that helps for single-channel pixels with fewer than 16 colors
+    //        and we don't need to write a color index then?
+    if (color_table_size > 16) {
+        int number_of_non_constant_channels = 0;
+        for (int i = 0; i < 4; ++i) {
+            if (channels & (0xff << (i * 8)))
+                number_of_non_constant_channels++;
+        }
+        if (number_of_non_constant_channels <= 1)
+            return bitmap;
+    }
+
+    dbgln_if(WEBP_DEBUG, "WebP: Writing color index transform");
     TRY(bit_stream.write_bits(1u, 1u)); // Transform present.
     TRY(bit_stream.write_bits(static_cast<unsigned>(COLOR_INDEXING_TRANSFORM), 2u));
 
