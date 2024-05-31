@@ -78,6 +78,58 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> ExpressionStatement::ge
     return m_expression->generate_bytecode(generator);
 }
 
+static ThrowCompletionOr<ScopedOperand> constant_fold_binary_expression(Generator& generator, Value lhs, Value rhs, BinaryOp m_op)
+{
+    switch (m_op) {
+    case BinaryOp::Addition:
+        return generator.add_constant(TRY(add(generator.vm(), lhs, rhs)));
+    case BinaryOp::Subtraction:
+        return generator.add_constant(TRY(sub(generator.vm(), lhs, rhs)));
+    case BinaryOp::Multiplication:
+        return generator.add_constant(TRY(mul(generator.vm(), lhs, rhs)));
+    case BinaryOp::Division:
+        return generator.add_constant(TRY(div(generator.vm(), lhs, rhs)));
+    case BinaryOp::Modulo:
+        return generator.add_constant(TRY(mod(generator.vm(), lhs, rhs)));
+    case BinaryOp::Exponentiation:
+        return generator.add_constant(TRY(exp(generator.vm(), lhs, rhs)));
+    case BinaryOp::GreaterThan:
+        return generator.add_constant(TRY(greater_than(generator.vm(), lhs, rhs)));
+    case BinaryOp::GreaterThanEquals:
+        return generator.add_constant(TRY(greater_than_equals(generator.vm(), lhs, rhs)));
+    case BinaryOp::LessThan:
+        return generator.add_constant(TRY(less_than(generator.vm(), lhs, rhs)));
+    case BinaryOp::LessThanEquals:
+        return generator.add_constant(TRY(less_than_equals(generator.vm(), lhs, rhs)));
+    case BinaryOp::LooselyInequals:
+        return generator.add_constant(Value(!TRY(is_loosely_equal(generator.vm(), lhs, rhs))));
+    case BinaryOp::LooselyEquals:
+        return generator.add_constant(Value(TRY(is_loosely_equal(generator.vm(), lhs, rhs))));
+    case BinaryOp::StrictlyInequals:
+        return generator.add_constant(Value(!is_strictly_equal(lhs, rhs)));
+    case BinaryOp::StrictlyEquals:
+        return generator.add_constant(Value(is_strictly_equal(lhs, rhs)));
+    case BinaryOp::BitwiseAnd:
+        return generator.add_constant(TRY(bitwise_and(generator.vm(), lhs, rhs)));
+    case BinaryOp::BitwiseOr:
+        return generator.add_constant(TRY(bitwise_or(generator.vm(), lhs, rhs)));
+    case BinaryOp::BitwiseXor:
+        return generator.add_constant(TRY(bitwise_xor(generator.vm(), lhs, rhs)));
+    case BinaryOp::LeftShift:
+        return generator.add_constant(TRY(left_shift(generator.vm(), lhs, rhs)));
+    case BinaryOp::RightShift:
+        return generator.add_constant(TRY(right_shift(generator.vm(), lhs, rhs)));
+    case BinaryOp::UnsignedRightShift:
+        return generator.add_constant(TRY(unsigned_right_shift(generator.vm(), lhs, rhs)));
+    case BinaryOp::In:
+    case BinaryOp::InstanceOf:
+        // NOTE: We just have to throw *something* to indicate that this is not a constant foldable operation.
+        return throw_completion(js_null());
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
 Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> BinaryExpression::generate_bytecode(Bytecode::Generator& generator, Optional<ScopedOperand> preferred_dst) const
 {
     Bytecode::Generator::SourceLocationScope scope(generator, *this);
@@ -143,6 +195,13 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> BinaryExpression::gener
     auto lhs = TRY(get_left_side(*m_lhs)).value();
     auto rhs = TRY(get_right_side(*m_rhs)).value();
     auto dst = choose_dst(generator, preferred_dst);
+
+    // OPTIMIZATION: Do some basic constant folding for binary operations.
+    if (lhs.operand().is_constant() && rhs.operand().is_constant()) {
+        if (auto result = constant_fold_binary_expression(generator, generator.get_constant(lhs), generator.get_constant(rhs), m_op); !result.is_error())
+            return result.release_value();
+    }
+
     switch (m_op) {
     case BinaryOp::Addition:
         generator.emit<Bytecode::Op::Add>(dst, lhs, rhs);
