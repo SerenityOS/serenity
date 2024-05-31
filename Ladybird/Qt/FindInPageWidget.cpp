@@ -27,6 +27,7 @@ FindInPageWidget::FindInPageWidget(Tab* tab, WebContentView* content_view)
     m_find_text = new QLineEdit(this);
     m_find_text->setFocusPolicy(Qt::FocusPolicy::StrongFocus);
     m_find_text->setSizePolicy(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Fixed);
+    m_find_text->setPlaceholderText("Search");
     m_find_text->setMinimumWidth(50);
     m_find_text->setMaximumWidth(250);
     connect(m_find_text, &QLineEdit::textChanged, this, &FindInPageWidget::find_text_changed);
