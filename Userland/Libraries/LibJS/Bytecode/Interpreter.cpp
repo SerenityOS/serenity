@@ -46,7 +46,11 @@ static ByteString format_operand(StringView name, Operand operand, Bytecode::Exe
         builder.appendff("\033[32m{}\033[0m:", name);
     switch (operand.type()) {
     case Operand::Type::Register:
-        builder.appendff("\033[33mreg{}\033[0m", operand.index());
+        if (operand.index() == Register::this_value().index()) {
+            builder.appendff("\033[33mthis\033[0m");
+        } else {
+            builder.appendff("\033[33mreg{}\033[0m", operand.index());
+        }
         break;
     case Operand::Type::Local:
         // FIXME: Show local name.
