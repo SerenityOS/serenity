@@ -19,6 +19,10 @@
         checkException('KeyframeEffect with NaN endDelay value', () => new KeyframeEffect(null, null, { endDelay: NaN }));
         checkException('KeyframeEffect with NaN iterations', () => new KeyframeEffect(null, null, { iterations: NaN }));
         checkException('KeyframeEffect with non-"auto" string duration', () => new KeyframeEffect(null, null, { duration: 'abc' }))
+        checkException('KeyframeEffect with non-numeric offset', () => new KeyframeEffect(null, [{ offset: 'abc' }], {}));
+        checkException('KeyframeEffect with invalid numeric offset', () => new KeyframeEffect(null, [{ offset: -1 }], {}));
+
+        println('');
 
         // Test valid values
         checkException('KeyframeEffect with infinite options value', () => new KeyframeEffect(null, null, Infinity));

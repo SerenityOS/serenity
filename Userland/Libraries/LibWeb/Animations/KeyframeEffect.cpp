@@ -57,10 +57,13 @@ static WebIDL::ExceptionOr<KeyframeType<AL>> process_a_keyframe_like_object(JS::
 {
     auto& vm = realm.vm();
 
-    Function<WebIDL::ExceptionOr<Optional<double>>(JS::Value)> to_nullable_double = [&vm](JS::Value value) -> WebIDL::ExceptionOr<Optional<double>> {
+    Function<WebIDL::ExceptionOr<Optional<double>>(JS::Value)> to_offset = [&vm](JS::Value value) -> WebIDL::ExceptionOr<Optional<double>> {
         if (value.is_undefined())
             return Optional<double> {};
-        return TRY(value.to_double(vm));
+        auto double_value = TRY(value.to_double(vm));
+        if (isnan(double_value) || isinf(double_value))
+            return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, MUST(String::formatted("Invalid offset value: {}", TRY(value.to_string(vm)))) };
+        return double_value;
     };
 
     Function<WebIDL::ExceptionOr<String>(JS::Value)> to_string = [&vm](JS::Value value) -> WebIDL::ExceptionOr<String> {
@@ -102,7 +105,7 @@ static WebIDL::ExceptionOr<KeyframeType<AL>> process_a_keyframe_like_object(JS::
         composite = JS::PrimitiveString::create(vm, "auto"_string);
 
     if constexpr (AL == AllowLists::Yes) {
-        keyframe_output.offset = TRY(convert_value_to_maybe_list(realm, offset, to_nullable_double));
+        keyframe_output.offset = TRY(convert_value_to_maybe_list(realm, offset, to_offset));
         keyframe_output.composite = TRY(convert_value_to_maybe_list(realm, composite, to_composite_operation));
 
         auto easing_maybe_list = TRY(convert_value_to_maybe_list(realm, easing, to_string));
@@ -117,7 +120,7 @@ static WebIDL::ExceptionOr<KeyframeType<AL>> process_a_keyframe_like_object(JS::
                 keyframe_output.easing = move(easing_values);
             });
     } else {
-        keyframe_output.offset = TRY(to_nullable_double(offset));
+        keyframe_output.offset = TRY(to_offset(offset));
         keyframe_output.easing = TRY(to_string(easing));
         keyframe_output.composite = TRY(to_composite_operation(composite));
     }
