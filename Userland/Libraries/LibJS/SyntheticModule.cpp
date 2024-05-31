@@ -81,7 +81,7 @@ ThrowCompletionOr<Promise*> SyntheticModule::evaluate(VM& vm)
     // FIXME: We don't have suspend yet.
 
     // 2. Let moduleContext be a new ECMAScript code execution context.
-    auto module_context = ExecutionContext::create(vm.heap());
+    auto module_context = ExecutionContext::create();
 
     // 3. Set the Function of moduleContext to null.
     // Note: This is the default value.

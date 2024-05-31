@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2024, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2022, Luke Wilde <lukew@serenityos.org>
  *
@@ -23,7 +23,7 @@ using ScriptOrModule = Variant<Empty, NonnullGCPtr<Script>, NonnullGCPtr<Module>
 
 // 9.4 Execution Contexts, https://tc39.es/ecma262/#sec-execution-contexts
 struct ExecutionContext {
-    static NonnullOwnPtr<ExecutionContext> create(Heap&);
+    static NonnullOwnPtr<ExecutionContext> create();
     [[nodiscard]] NonnullOwnPtr<ExecutionContext> copy() const;
 
     ~ExecutionContext();
@@ -33,16 +33,10 @@ struct ExecutionContext {
 private:
     friend class ExecutionContextAllocator;
 
-    ExecutionContext(Heap&);
-
-    IntrusiveListNode<ExecutionContext> m_list_node;
+    ExecutionContext();
 
 public:
     void operator delete(void* ptr);
-
-    Heap& m_heap;
-
-    using List = IntrusiveList<&ExecutionContext::m_list_node>;
 
     GCPtr<FunctionObject> function;                // [[Function]]
     GCPtr<Realm> realm;                            // [[Realm]]

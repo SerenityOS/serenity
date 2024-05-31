@@ -382,7 +382,7 @@ ThrowCompletionOr<Value> ECMAScriptFunctionObject::internal_call(Value this_argu
     // 1. Let callerContext be the running execution context.
     // NOTE: No-op, kept by the VM in its execution context stack.
 
-    auto callee_context = ExecutionContext::create(heap());
+    auto callee_context = ExecutionContext::create();
 
     // Non-standard
     callee_context->arguments.ensure_capacity(max(arguments_list.size(), m_formal_parameters.size()));
@@ -457,7 +457,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> ECMAScriptFunctionObject::internal_const
         this_argument = TRY(ordinary_create_from_constructor<Object>(vm, new_target, &Intrinsics::object_prototype, ConstructWithPrototypeTag::Tag));
     }
 
-    auto callee_context = ExecutionContext::create(heap());
+    auto callee_context = ExecutionContext::create();
 
     // Non-standard
     callee_context->arguments.ensure_capacity(max(arguments_list.size(), m_formal_parameters.size()));

@@ -107,7 +107,7 @@ SourceTextModule::SourceTextModule(Realm& realm, StringView filename, Script::Ho
     RefPtr<ExportStatement const> default_export)
     : CyclicModule(realm, filename, has_top_level_await, move(requested_modules), host_defined)
     , m_ecmascript_code(move(body))
-    , m_execution_context(ExecutionContext::create(realm.heap()))
+    , m_execution_context(ExecutionContext::create())
     , m_import_entries(move(import_entries))
     , m_local_export_entries(move(local_export_entries))
     , m_indirect_export_entries(move(indirect_export_entries))
@@ -674,7 +674,7 @@ ThrowCompletionOr<void> SourceTextModule::execute_module(VM& vm, GCPtr<PromiseCa
     dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] SourceTextModule::execute_module({}, PromiseCapability @ {})", filename(), capability.ptr());
 
     // 1. Let moduleContext be a new ECMAScript code execution context.
-    auto module_context = ExecutionContext::create(vm.heap());
+    auto module_context = ExecutionContext::create();
 
     // Note: This is not in the spec but we require it.
     module_context->is_strict_mode = true;

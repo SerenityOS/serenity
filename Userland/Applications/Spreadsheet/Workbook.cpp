@@ -23,7 +23,7 @@ Workbook::Workbook(Vector<NonnullRefPtr<Sheet>>&& sheets, GUI::Window& parent_wi
     : m_sheets(move(sheets))
     , m_vm(JS::VM::create().release_value_but_fixme_should_propagate_errors())
     , m_root_execution_context(JS::create_simple_execution_context<JS::GlobalObject>(m_vm))
-    , m_main_execution_context(JS::ExecutionContext::create(m_vm->heap()))
+    , m_main_execution_context(JS::ExecutionContext::create())
     , m_parent_window(parent_window)
 {
     auto& realm = *m_root_execution_context->realm;
