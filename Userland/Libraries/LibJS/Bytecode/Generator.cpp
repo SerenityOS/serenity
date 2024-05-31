@@ -1087,6 +1087,13 @@ ScopedOperand Generator::get_this(Optional<ScopedOperand> preferred_dst)
         m_current_basic_block->set_has_resolved_this();
         return this_value();
     }
+
+    // OPTIMIZATION: If we're compiling a function that doesn't allocate a FunctionEnvironment,
+    //               it will always have the same `this` value as the outer function,
+    //               and so the `this` value is already in the `this` register!
+    if (m_function && !m_function->allocates_function_environment())
+        return this_value();
+
     auto dst = preferred_dst.has_value() ? preferred_dst.value() : allocate_register();
     emit<Bytecode::Op::ResolveThisBinding>();
     m_current_basic_block->set_has_resolved_this();
