@@ -1,0 +1,7 @@
+script referrerPolicy initial value: ''
+script referrerPolicy value after setting to "invalid": ''
+script referrerPolicy value after setting to "no-referrer": 'no-referrer'
+script referrerPolicy value after setting to null: ''
+script referrerPolicy value after setting to "NO-REFERRER": 'no-referrer'
+script referrerPolicy value after setting to "": ''
+script referrerPolicy value after calling removeAttribute: ''
