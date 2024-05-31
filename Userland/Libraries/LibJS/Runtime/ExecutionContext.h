@@ -51,7 +51,6 @@ public:
     Optional<size_t> program_counter;
     GCPtr<PrimitiveString> function_name;
     Value this_value;
-    bool is_strict_mode { false };
 
     GCPtr<Bytecode::Executable> executable;
 
@@ -72,6 +71,7 @@ public:
     }
 
     u32 passed_argument_count { 0 };
+    bool is_strict_mode { false };
 
     Vector<Value> arguments;
     Vector<Value> registers_and_constants_and_locals;
