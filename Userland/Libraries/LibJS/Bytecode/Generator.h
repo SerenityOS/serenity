@@ -353,7 +353,7 @@ private:
     void generate_scoped_jump(JumpType);
     void generate_labelled_jump(JumpType, DeprecatedFlyString const& label);
 
-    Generator(VM&, MustPropagateCompletion);
+    Generator(VM&, GCPtr<ECMAScriptFunctionObject const>, MustPropagateCompletion);
     ~Generator() = default;
 
     void grow(size_t);
@@ -393,6 +393,8 @@ private:
 
     bool m_finished { false };
     bool m_must_propagate_completion { true };
+
+    GCPtr<ECMAScriptFunctionObject const> m_function;
 };
 
 }

@@ -17,7 +17,7 @@
 
 namespace JS::Bytecode {
 
-Generator::Generator(VM& vm, MustPropagateCompletion must_propagate_completion)
+Generator::Generator(VM& vm, GCPtr<ECMAScriptFunctionObject const> function, MustPropagateCompletion must_propagate_completion)
     : m_vm(vm)
     , m_string_table(make<StringTable>())
     , m_identifier_table(make<IdentifierTable>())
@@ -25,6 +25,7 @@ Generator::Generator(VM& vm, MustPropagateCompletion must_propagate_completion)
     , m_constants(vm.heap())
     , m_accumulator(*this, Operand(Register::accumulator()))
     , m_must_propagate_completion(must_propagate_completion == MustPropagateCompletion::Yes)
+    , m_function(function)
 {
 }
 
@@ -199,7 +200,7 @@ CodeGenerationErrorOr<void> Generator::emit_function_declaration_instantiation(E
 
 CodeGenerationErrorOr<NonnullGCPtr<Executable>> Generator::compile(VM& vm, ASTNode const& node, FunctionKind enclosing_function_kind, GCPtr<ECMAScriptFunctionObject const> function, MustPropagateCompletion must_propagate_completion)
 {
-    Generator generator(vm, must_propagate_completion);
+    Generator generator(vm, function, must_propagate_completion);
 
     generator.switch_to_basic_block(generator.make_block());
     SourceLocationScope scope(generator, node);
