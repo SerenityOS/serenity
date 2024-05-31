@@ -539,7 +539,7 @@ void Page::clear_selection()
     }
 }
 
-void Page::find_in_page(String const& query)
+void Page::find_in_page(String const& query, CaseSensitivity case_sensitivity)
 {
     m_find_in_page_match_index = 0;
 
@@ -555,7 +555,7 @@ void Page::find_in_page(String const& query)
         if (&document->page() != this)
             continue;
 
-        auto matches = document->find_matching_text(query);
+        auto matches = document->find_matching_text(query, case_sensitivity);
         all_matches.extend(move(matches));
     }
 

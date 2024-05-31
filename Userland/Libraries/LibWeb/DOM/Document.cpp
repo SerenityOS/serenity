@@ -5068,7 +5068,7 @@ void Document::set_needs_to_refresh_scroll_state(bool b)
         paintable->set_needs_to_refresh_scroll_state(b);
 }
 
-Vector<JS::Handle<DOM::Range>> Document::find_matching_text(String const& query)
+Vector<JS::Handle<DOM::Range>> Document::find_matching_text(String const& query, CaseSensitivity case_sensitivity)
 {
     if (!document_element() || !document_element()->layout_node())
         return {};
@@ -5078,7 +5078,9 @@ Vector<JS::Handle<DOM::Range>> Document::find_matching_text(String const& query)
         auto const& text = text_node.text_for_rendering();
         size_t offset = 0;
         while (true) {
-            auto match_index = text.find_byte_offset(query, offset);
+            auto match_index = case_sensitivity == CaseSensitivity::CaseInsensitive
+                ? text.find_byte_offset_ignoring_case(query, offset)
+                : text.find_byte_offset(query, offset);
             if (!match_index.has_value())
                 break;
 

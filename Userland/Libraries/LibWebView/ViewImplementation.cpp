@@ -180,9 +180,9 @@ void ViewImplementation::paste(String const& text)
     client().async_paste(page_id(), text);
 }
 
-void ViewImplementation::find_in_page(String const& query)
+void ViewImplementation::find_in_page(String const& query, CaseSensitivity case_sensitivity)
 {
-    client().async_find_in_page(page_id(), query);
+    client().async_find_in_page(page_id(), query, case_sensitivity);
 }
 
 void ViewImplementation::find_in_page_next_match()

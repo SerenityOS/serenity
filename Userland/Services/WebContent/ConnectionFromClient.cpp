@@ -827,13 +827,13 @@ void ConnectionFromClient::select_all(u64 page_id)
         page->page().focused_navigable().select_all();
 }
 
-void ConnectionFromClient::find_in_page(u64 page_id, String const& query)
+void ConnectionFromClient::find_in_page(u64 page_id, String const& query, CaseSensitivity case_sensitivity)
 {
     auto page = this->page(page_id);
     if (!page.has_value())
         return;
 
-    page->page().find_in_page(query);
+    page->page().find_in_page(query, case_sensitivity);
 }
 
 void ConnectionFromClient::find_in_page_next_match(u64 page_id)

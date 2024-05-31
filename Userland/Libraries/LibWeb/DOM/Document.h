@@ -667,7 +667,7 @@ public:
     // Does document represent an embedded svg img
     [[nodiscard]] bool is_decoded_svg() const;
 
-    Vector<JS::Handle<DOM::Range>> find_matching_text(String const&);
+    Vector<JS::Handle<DOM::Range>> find_matching_text(String const&, CaseSensitivity);
 
 protected:
     virtual void initialize(JS::Realm&) override;
