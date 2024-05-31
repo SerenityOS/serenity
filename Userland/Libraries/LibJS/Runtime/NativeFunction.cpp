@@ -121,7 +121,7 @@ ThrowCompletionOr<Value> NativeFunction::internal_call(Value this_argument, Read
     // NOTE: We don't support this concept yet.
 
     // 3. Let calleeContext be a new execution context.
-    auto callee_context = ExecutionContext::create(heap());
+    auto callee_context = ExecutionContext::create();
 
     // 4. Set the Function of calleeContext to F.
     callee_context->function = this;
@@ -185,7 +185,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> NativeFunction::internal_construct(Reado
     // NOTE: We don't support this concept yet.
 
     // 3. Let calleeContext be a new execution context.
-    auto callee_context = ExecutionContext::create(heap());
+    auto callee_context = ExecutionContext::create();
 
     // 4. Set the Function of calleeContext to F.
     callee_context->function = this;

@@ -644,7 +644,7 @@ ThrowCompletionOr<Value> perform_eval(VM& vm, Value x, CallerMode strict_caller,
     // FIXME: We don't have this concept yet.
 
     // 20. Let evalContext be a new ECMAScript code execution context.
-    auto eval_context = ExecutionContext::create(vm.heap());
+    auto eval_context = ExecutionContext::create();
 
     // 21. Set evalContext's Function to null.
     // NOTE: This was done in the construction of eval_context.

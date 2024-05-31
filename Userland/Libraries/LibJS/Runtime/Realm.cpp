@@ -42,7 +42,7 @@ ThrowCompletionOr<NonnullOwnPtr<ExecutionContext>> Realm::initialize_host_define
     auto realm = MUST_OR_THROW_OOM(Realm::create(vm));
 
     // 2. Let newContext be a new execution context.
-    auto new_context = ExecutionContext::create(vm.heap());
+    auto new_context = ExecutionContext::create();
 
     // 3. Set the Function of newContext to null.
     new_context->function = nullptr;

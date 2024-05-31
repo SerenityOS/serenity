@@ -186,7 +186,7 @@ ThrowCompletionOr<Value> Interpreter::run(Script& script_record, JS::GCPtr<Envir
     auto& global_environment = script_record.realm().global_environment();
 
     // 2. Let scriptContext be a new ECMAScript code execution context.
-    auto script_context = ExecutionContext::create(vm.heap());
+    auto script_context = ExecutionContext::create();
 
     // 3. Set the Function of scriptContext to null.
     // NOTE: This was done during execution context construction.
