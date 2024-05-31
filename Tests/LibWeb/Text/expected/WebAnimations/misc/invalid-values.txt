@@ -5,6 +5,9 @@ KeyframeEffect with infinite endDelay value: threw an exception
 KeyframeEffect with NaN endDelay value: threw an exception
 KeyframeEffect with NaN iterations: threw an exception
 KeyframeEffect with non-"auto" string duration: threw an exception
+KeyframeEffect with non-numeric offset: threw an exception
+KeyframeEffect with invalid numeric offset: threw an exception
+
 KeyframeEffect with infinite options value: did not throw an exception
 KeyframeEffect with finite options value: did not throw an exception
 KeyframeEffect with infinite iterations: did not throw an exception
