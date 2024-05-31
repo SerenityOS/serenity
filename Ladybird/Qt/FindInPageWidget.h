@@ -8,6 +8,7 @@
 
 #include "WebContentView.h"
 #include <LibWebView/Forward.h>
+#include <QCheckBox>
 #include <QLineEdit>
 #include <QPushButton>
 #include <QWidget>
@@ -41,6 +42,7 @@ private:
     QPushButton* m_previous_button { nullptr };
     QPushButton* m_next_button { nullptr };
     QPushButton* m_exit_button { nullptr };
+    QCheckBox* m_match_case { nullptr };
     QAction* m_copy_attribute_value_action { nullptr };
 };
 
