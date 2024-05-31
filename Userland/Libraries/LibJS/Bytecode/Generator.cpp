@@ -197,7 +197,7 @@ CodeGenerationErrorOr<void> Generator::emit_function_declaration_instantiation(E
     return {};
 }
 
-CodeGenerationErrorOr<NonnullGCPtr<Executable>> Generator::emit_function_body_bytecode(VM& vm, ASTNode const& node, FunctionKind enclosing_function_kind, GCPtr<ECMAScriptFunctionObject const> function, MustPropagateCompletion must_propagate_completion)
+CodeGenerationErrorOr<NonnullGCPtr<Executable>> Generator::compile(VM& vm, ASTNode const& node, FunctionKind enclosing_function_kind, GCPtr<ECMAScriptFunctionObject const> function, MustPropagateCompletion must_propagate_completion)
 {
     Generator generator(vm, must_propagate_completion);
 
@@ -431,12 +431,12 @@ CodeGenerationErrorOr<NonnullGCPtr<Executable>> Generator::emit_function_body_by
 
 CodeGenerationErrorOr<NonnullGCPtr<Executable>> Generator::generate_from_ast_node(VM& vm, ASTNode const& node, FunctionKind enclosing_function_kind)
 {
-    return emit_function_body_bytecode(vm, node, enclosing_function_kind, {});
+    return compile(vm, node, enclosing_function_kind, {});
 }
 
 CodeGenerationErrorOr<NonnullGCPtr<Executable>> Generator::generate_from_function(VM& vm, ECMAScriptFunctionObject const& function)
 {
-    return emit_function_body_bytecode(vm, function.ecmascript_code(), function.kind(), &function, MustPropagateCompletion::No);
+    return compile(vm, function.ecmascript_code(), function.kind(), &function, MustPropagateCompletion::No);
 }
 
 void Generator::grow(size_t additional_size)
