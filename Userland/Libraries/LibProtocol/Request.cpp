@@ -140,7 +140,7 @@ void Request::set_up_internal_stream_data(DataReceived on_data_available)
 
         do {
             auto result = m_internal_stream_data->read_stream->read_some({ buffer, buffer_size });
-            if (result.is_error() && (!result.error().is_errno() || (result.error().is_errno() && (result.error().code() != EINTR && result.error().code() != EAGAIN))))
+            if (result.is_error() && (!result.error().is_errno() || (result.error().is_errno() && result.error().code() != EINTR)))
                 break;
             if (result.is_error())
                 continue;
