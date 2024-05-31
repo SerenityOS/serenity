@@ -254,7 +254,7 @@ public:
     ErrorOr<void, ValidationError> validate_instruction(Instruction const&, Stack& stack, bool& is_constant);
 
     // Types
-    ErrorOr<void, ValidationError> validate(Limits const&, size_t k); // n <= 2^k-1 && m? <= 2^k-1
+    ErrorOr<void, ValidationError> validate(Limits const&, u64 bound); // n <= bound && m? <= bound
     ErrorOr<FunctionType, ValidationError> validate(BlockType const&);
     ErrorOr<void, ValidationError> validate(FunctionType const&) { return {}; }
     ErrorOr<void, ValidationError> validate(TableType const&);
