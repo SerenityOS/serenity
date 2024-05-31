@@ -718,6 +718,7 @@ Interpreter::ResultAndReturnRegister Interpreter::run_executable(Executable& exe
 
     reg(Register::accumulator()) = initial_accumulator_value;
     reg(Register::return_value()) = {};
+    reg(Register::this_value()) = running_execution_context.this_value;
 
     running_execution_context.executable = &executable;
 
