@@ -338,6 +338,12 @@ public:
         return ScopedOperand(*this, Operand(Operand::Type::Constant, m_constants.size() - 1));
     }
 
+    [[nodiscard]] Value get_constant(ScopedOperand const& operand) const
+    {
+        VERIFY(operand.operand().is_constant());
+        return m_constants[operand.operand().index()];
+    }
+
     UnwindContext const* current_unwind_context() const { return m_current_unwind_context; }
 
     [[nodiscard]] bool is_finished() const { return m_finished; }
