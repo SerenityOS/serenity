@@ -62,6 +62,9 @@ def parse_typed_value(ast):
         'i64.const': 'i64',
         'f32.const': 'float',
         'f64.const': 'double',
+        'ref.null': 'null',
+        'ref.extern': 'i32',
+        'ref.func': 'i32',
         'v128.const': 'bigint',
     }
 
@@ -331,9 +334,9 @@ def generate(ast):
                 "function": {
                     "module": module,
                     "name": name,
-                    "args": list(parse_typed_value(x) for x in entry[1][arg + 2:])
+                    "args": [parse_typed_value(entry[2])] if len(entry) == 3 else []
                 },
-                "result": parse_typed_value(entry[2]) if len(entry) == 3 + arg else None
+                "result": None
             })
         elif len(entry) > 1 and entry[0][0] == 'register':
             if len(entry) == 3:
@@ -370,6 +373,8 @@ def genarg(spec):
         x = spec['value']
         if spec['type'] == 'bigint':
             return f"0x{x}n"
+        if spec['type'] == 'null':
+            return 'null'
 
         if spec['type'] in ('i32', 'i64'):
             if x.startswith('0x'):
