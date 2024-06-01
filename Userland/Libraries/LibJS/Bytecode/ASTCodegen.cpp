@@ -493,9 +493,7 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> AssignmentExpression::g
 
                     if (expression.is_computed()) {
                         auto property = TRY(expression.property().generate_bytecode(generator)).value();
-                        computed_property = generator.allocate_register();
-                        generator.emit<Bytecode::Op::Mov>(*computed_property, property);
-
+                        computed_property = generator.copy_if_needed_to_preserve_evaluation_order(property);
                         // To be continued later with PutByValue.
                     } else if (expression.property().is_identifier()) {
                         // Do nothing, this will be handled by PutById later.
@@ -1108,14 +1106,7 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> ArrayExpression::genera
     for (auto it = m_elements.begin(); it != first_spread; ++it) {
         if (*it) {
             auto value = TRY((*it)->generate_bytecode(generator)).value();
-            // NOTE: We don't need to protect temporary registers or constants from being clobbered.
-            if (value.operand().is_register() || value.operand().is_constant()) {
-                args.append(move(value));
-            } else {
-                auto reg = generator.allocate_register();
-                generator.emit<Bytecode::Op::Mov>(Bytecode::Operand(reg), value);
-                args.append(move(reg));
-            }
+            args.append(generator.copy_if_needed_to_preserve_evaluation_order(value));
         } else {
             args.append(generator.add_constant(Value()));
         }
@@ -1241,9 +1232,8 @@ static Bytecode::CodeGenerationErrorOr<void> generate_object_binding_pattern_byt
             auto property_name = TRY(expression->generate_bytecode(generator)).value();
 
             if (has_rest) {
-                auto excluded_name = generator.allocate_register();
+                auto excluded_name = generator.copy_if_needed_to_preserve_evaluation_order(property_name);
                 excluded_property_names.append(excluded_name);
-                generator.emit<Bytecode::Op::Mov>(excluded_name, property_name);
             }
 
             generator.emit<Bytecode::Op::GetByValue>(value, object, property_name);
@@ -1275,8 +1265,7 @@ static Bytecode::CodeGenerationErrorOr<void> generate_object_binding_pattern_byt
 
         if (alias.has<NonnullRefPtr<BindingPattern const>>()) {
             auto& binding_pattern = *alias.get<NonnullRefPtr<BindingPattern const>>();
-            auto nested_value = generator.allocate_register();
-            generator.emit<Bytecode::Op::Mov>(nested_value, value);
+            auto nested_value = generator.copy_if_needed_to_preserve_evaluation_order(value);
             TRY(binding_pattern.generate_bytecode(generator, initialization_mode, nested_value, create_variables));
         } else if (alias.has<Empty>()) {
             if (name.has<NonnullRefPtr<Expression const>>()) {
@@ -1665,14 +1654,7 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> CallExpression::generat
 
     // NOTE: If the callee isn't already a temporary, we copy it to a new register
     //       to avoid overwriting it while evaluating arguments.
-    auto callee = [&]() -> ScopedOperand {
-        if (!original_callee->operand().is_register()) {
-            auto callee = generator.allocate_register();
-            generator.emit<Bytecode::Op::Mov>(callee, *original_callee);
-            return callee;
-        }
-        return *original_callee;
-    }();
+    auto callee = generator.copy_if_needed_to_preserve_evaluation_order(original_callee.value());
 
     Bytecode::Op::CallType call_type;
     if (is<NewExpression>(*this)) {
@@ -1698,14 +1680,7 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> CallExpression::generat
         argument_operands.ensure_capacity(arguments().size());
         for (auto const& argument : arguments()) {
             auto argument_value = TRY(argument.value->generate_bytecode(generator)).value();
-            // NOTE: We don't need to protect temporary registers or constants from being clobbered.
-            if (argument_value.operand().is_register() || argument_value.operand().is_constant()) {
-                argument_operands.append(argument_value);
-            } else {
-                auto temporary = generator.allocate_register();
-                generator.emit<Bytecode::Op::Mov>(temporary, argument_value);
-                argument_operands.append(temporary);
-            }
+            argument_operands.append(generator.copy_if_needed_to_preserve_evaluation_order(argument_value));
         }
         generator.emit_with_extra_operand_slots<Bytecode::Op::Call>(
             argument_operands.size(),
@@ -2431,9 +2406,7 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> TaggedTemplateLiteral::
     raw_string_regs.ensure_capacity(m_template_literal->raw_strings().size());
     for (auto& raw_string : m_template_literal->raw_strings()) {
         auto value = TRY(raw_string->generate_bytecode(generator)).value();
-        auto raw_string_reg = generator.allocate_register();
-        generator.emit<Bytecode::Op::Mov>(raw_string_reg, value);
-        raw_string_regs.append(move(raw_string_reg));
+        raw_string_regs.append(generator.copy_if_needed_to_preserve_evaluation_order(value));
     }
 
     auto raw_strings_array = generator.allocate_register();
