@@ -60,10 +60,17 @@ public:
 private:
     // FIXME: Support masking.
     // FIXME: Support opacity < 1.0f.
+    struct Clip {
+        Gfx::FloatQuad quad;
+        Gfx::IntRect bounds;
+        bool is_rectangular = false;
+
+        bool operator==(Clip const&) const = default;
+    };
+
     struct StackingContext {
         Gfx::AffineTransform transform;
-        Gfx::FloatQuad clip;
-        Gfx::FloatRect clip_bounds;
+        Clip clip;
     };
 
     Gfx::AntiAliasingPainter aa_painter()
@@ -81,8 +88,17 @@ private:
         return m_stacking_contexts.last();
     }
 
+    void prepare_clipping(Gfx::IntRect bounding_rect);
+
+    void flush_clipping();
+
+    bool needs_expensive_clipping(Gfx::IntRect bounding_rect) const;
+
+    NonnullRefPtr<Gfx::Bitmap> m_target;
     Gfx::Painter m_painter;
     Vector<StackingContext> m_stacking_contexts;
+    RefPtr<Gfx::Bitmap> m_expensive_clipping_target;
+    RefPtr<Gfx::Bitmap> m_expensive_clipping_mask;
 };
 
 }
