@@ -94,15 +94,20 @@ ALWAYS_INLINE static void addition_with_carry(u32 a, u32 b, u32& z_carry, u32& z
  */
 UnsignedBigInteger::Word UnsignedBigIntegerAlgorithms::montgomery_fragment(UnsignedBigInteger& z, size_t offset_in_z, UnsignedBigInteger const& x, UnsignedBigInteger::Word y_digit, size_t num_words)
 {
+    VERIFY(x.m_words.size() >= num_words);
+    VERIFY(z.m_words.size() >= num_words + offset_in_z);
+    auto const* x_words = x.m_words.data();
+    auto* z_words = z.m_words.data();
+
     UnsignedBigInteger::Word carry { 0 };
     for (size_t i = 0; i < num_words; ++i) {
         UnsignedBigInteger::Word a_carry;
         UnsignedBigInteger::Word a;
-        linear_multiplication_with_carry(x.m_words[i], y_digit, z.m_words[offset_in_z + i], a_carry, a);
+        linear_multiplication_with_carry(x_words[i], y_digit, z_words[offset_in_z + i], a_carry, a);
         UnsignedBigInteger::Word b_carry;
         UnsignedBigInteger::Word b;
         addition_with_carry(a, carry, b_carry, b);
-        z.m_words[offset_in_z + i] = b;
+        z_words[offset_in_z + i] = b;
         carry = a_carry + b_carry;
     }
     return carry;
