@@ -119,6 +119,7 @@ if (ENABLE_QT)
         Qt/Icon.cpp
         Qt/InspectorWidget.cpp
         Qt/LocationEdit.cpp
+        Qt/MarkedScrollBar.cpp
         Qt/Settings.cpp
         Qt/SettingsDialog.cpp
         Qt/Tab.cpp

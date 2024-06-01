@@ -115,6 +115,7 @@ void FindInPageWidget::hideEvent(QHideEvent*)
 {
     if (m_tab && m_tab->isVisible())
         m_tab->update_hover_label();
+    m_content_view->clear_find_in_page_marks();
 }
 
 }

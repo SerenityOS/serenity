@@ -37,6 +37,7 @@ using WebView::WebContentClient;
 
 namespace Ladybird {
 
+class MarkedScrollBar;
 class Tab;
 
 class WebContentView final
@@ -83,6 +84,8 @@ public:
 
     QPoint map_point_to_global_position(Gfx::IntPoint) const;
 
+    void clear_find_in_page_marks();
+
 signals:
     void urls_dropped(QList<QUrl> const&);
 
@@ -108,6 +111,7 @@ private:
 
     WebContentOptions m_web_content_options;
     StringView m_webdriver_content_ipc_path;
+    MarkedScrollBar* m_vertical_scrollbar { nullptr };
 };
 
 }

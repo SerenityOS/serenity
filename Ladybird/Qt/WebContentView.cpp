@@ -7,6 +7,7 @@
 
 #include "WebContentView.h"
 #include "Application.h"
+#include "MarkedScrollBar.h"
 #include "StringUtils.h"
 #include <AK/Assertions.h>
 #include <AK/ByteBuffer.h>
@@ -53,6 +54,7 @@ WebContentView::WebContentView(QWidget* window, WebContentOptions const& web_con
     : QAbstractScrollArea(window)
     , m_web_content_options(web_content_options)
     , m_webdriver_content_ipc_path(webdriver_content_ipc_path)
+    , m_vertical_scrollbar(new MarkedScrollBar(Qt::Orientation::Vertical, this))
 {
     m_client_state.client = parent_client;
     m_client_state.page_index = page_index;
@@ -63,6 +65,15 @@ WebContentView::WebContentView(QWidget* window, WebContentOptions const& web_con
     setFocusPolicy(Qt::FocusPolicy::StrongFocus);
 
     m_device_pixel_ratio = devicePixelRatio();
+
+    setVerticalScrollBar(m_vertical_scrollbar);
+    on_find_in_page = [this](int document_height, Vector<int> const& vertical_match_positions) {
+        QList<int> match_positions;
+        match_positions.reserve(vertical_match_positions.size());
+        for (auto const& position : vertical_match_positions)
+            match_positions.append(position);
+        m_vertical_scrollbar->set_marks(document_height, match_positions);
+    };
 
     verticalScrollBar()->setSingleStep(24);
     horizontalScrollBar()->setSingleStep(24);
@@ -804,6 +815,11 @@ void WebContentView::finish_handling_key_event(Web::KeyEvent const& key_event)
 
     if (!event.isAccepted())
         QApplication::sendEvent(parent(), &event);
+}
+
+void WebContentView::clear_find_in_page_marks()
+{
+    m_vertical_scrollbar->clear_marks();
 }
 
 }
