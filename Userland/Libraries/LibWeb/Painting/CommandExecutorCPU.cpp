@@ -132,14 +132,12 @@ CommandResult CommandExecutorCPU::push_stacking_context(PushStackingContext cons
     // Use the whole matrix when we get better transformation support in LibGfx or use LibGL for drawing the bitmap
     auto affine_transform = Gfx::extract_2d_affine_transform(command.transform.matrix);
 
-    if (m_enable_affine_command_executor && command.opacity == 1.0f && !affine_transform.is_identity_or_translation()) {
+    if (m_enable_affine_command_executor && !affine_transform.is_identity_or_translation()) {
         auto offset = command.is_fixed_position ? Gfx::IntPoint {} : painter().translation();
-        auto full_transform = Gfx::AffineTransform {}
-                                  .set_translation((command.post_transform_translation + offset).to_type<float>())
-                                  .translate(command.transform.origin)
-                                  .multiply(affine_transform)
-                                  .translate(-command.transform.origin);
-        m_affine_command_executor = AffineCommandExecutorCPU(m_target_bitmap, full_transform, painter().clip_rect());
+        m_affine_command_executor = AffineCommandExecutorCPU(*painter().target(),
+            Gfx::AffineTransform {}.set_translation(offset.to_type<float>()), painter().clip_rect());
+        if (m_affine_command_executor->push_stacking_context(command) == CommandResult::SkipStackingContext)
+            return CommandResult::SkipStackingContext;
         return CommandResult::ContinueWithNestedExecutor;
     }
 
