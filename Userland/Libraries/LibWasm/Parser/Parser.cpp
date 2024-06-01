@@ -1429,46 +1429,48 @@ ParseResult<Module> Module::parse(Stream& stream)
         switch (section_id) {
         case CustomSection::section_id:
             sections.append(TRY(CustomSection::parse(section_stream)));
-            continue;
+            break;
         case TypeSection::section_id:
             sections.append(TRY(TypeSection::parse(section_stream)));
-            continue;
+            break;
         case ImportSection::section_id:
             sections.append(TRY(ImportSection::parse(section_stream)));
-            continue;
+            break;
         case FunctionSection::section_id:
             sections.append(TRY(FunctionSection::parse(section_stream)));
-            continue;
+            break;
         case TableSection::section_id:
             sections.append(TRY(TableSection::parse(section_stream)));
-            continue;
+            break;
         case MemorySection::section_id:
             sections.append(TRY(MemorySection::parse(section_stream)));
-            continue;
+            break;
         case GlobalSection::section_id:
             sections.append(TRY(GlobalSection::parse(section_stream)));
-            continue;
+            break;
         case ExportSection::section_id:
             sections.append(TRY(ExportSection::parse(section_stream)));
-            continue;
+            break;
         case StartSection::section_id:
             sections.append(TRY(StartSection::parse(section_stream)));
-            continue;
+            break;
         case ElementSection::section_id:
             sections.append(TRY(ElementSection::parse(section_stream)));
-            continue;
+            break;
         case CodeSection::section_id:
             sections.append(TRY(CodeSection::parse(section_stream)));
-            continue;
+            break;
         case DataSection::section_id:
             sections.append(TRY(DataSection::parse(section_stream)));
-            continue;
+            break;
         case DataCountSection::section_id:
             sections.append(TRY(DataCountSection::parse(section_stream)));
-            continue;
+            break;
         default:
             return with_eof_check(stream, ParseError::InvalidIndex);
         }
+        if (!section_stream.is_eof())
+            return ParseError::SectionSizeMismatch;
     }
 
     return Module { move(sections) };
@@ -1542,6 +1544,8 @@ ByteString parse_error_to_byte_string(ParseError error)
         return "Expected a signed integer immediate";
     case ParseError::InvalidImmediate:
         return "A parsed instruction immediate was invalid for the instruction it was used for";
+    case ParseError::SectionSizeMismatch:
+        return "A parsed section did not fulfill its expected size";
     case ParseError::UnknownInstruction:
         return "A parsed instruction was not known to this parser";
     }
