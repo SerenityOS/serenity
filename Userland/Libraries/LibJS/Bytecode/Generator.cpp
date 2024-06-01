@@ -275,18 +275,49 @@ CodeGenerationErrorOr<NonnullGCPtr<Executable>> Generator::compile(VM& vm, ASTNo
 
     HashMap<size_t, SourceRecord> source_map;
 
+    Optional<ScopedOperand> undefined_constant;
+
     for (auto& block : generator.m_root_basic_blocks) {
         if (!block->is_terminated()) {
             // NOTE: We must ensure that the "undefined" constant, which will be used by the not yet
             // emitted End instruction, is taken into account while shifting local operands by the
             // number of constants.
-            (void)generator.add_constant(js_undefined());
+            undefined_constant = generator.add_constant(js_undefined());
             break;
         }
     }
 
     auto number_of_registers = generator.m_next_register;
     auto number_of_constants = generator.m_constants.size();
+
+    // Pass: Rewrite the bytecode to use the correct register and constant indices.
+    for (auto& block : generator.m_root_basic_blocks) {
+        Bytecode::InstructionStreamIterator it(block->instruction_stream());
+        while (!it.at_end()) {
+            auto& instruction = const_cast<Instruction&>(*it);
+
+            instruction.visit_operands([number_of_registers, number_of_constants](Operand& operand) {
+                switch (operand.type()) {
+                case Operand::Type::Register:
+                    break;
+                case Operand::Type::Local:
+                    operand.offset_index_by(number_of_registers + number_of_constants);
+                    break;
+                case Operand::Type::Constant:
+                    operand.offset_index_by(number_of_registers);
+                    break;
+                default:
+                    VERIFY_NOT_REACHED();
+                }
+            });
+
+            ++it;
+        }
+    }
+
+    // Also rewrite the `undefined` constant if we have one for inserting End.
+    if (undefined_constant.has_value())
+        undefined_constant.value().operand().offset_index_by(number_of_registers);
 
     for (auto& block : generator.m_root_basic_blocks) {
         basic_block_start_offsets.append(bytecode.size());
@@ -308,21 +339,6 @@ CodeGenerationErrorOr<NonnullGCPtr<Executable>> Generator::compile(VM& vm, ASTNo
         Bytecode::InstructionStreamIterator it(block->instruction_stream());
         while (!it.at_end()) {
             auto& instruction = const_cast<Instruction&>(*it);
-
-            instruction.visit_operands([number_of_registers, number_of_constants](Operand& operand) {
-                switch (operand.type()) {
-                case Operand::Type::Register:
-                    break;
-                case Operand::Type::Local:
-                    operand.offset_index_by(number_of_registers + number_of_constants);
-                    break;
-                case Operand::Type::Constant:
-                    operand.offset_index_by(number_of_registers);
-                    break;
-                default:
-                    VERIFY_NOT_REACHED();
-                }
-            });
 
             // OPTIMIZATION: Don't emit jumps that just jump to the next block.
             if (instruction.type() == Instruction::Type::Jump) {
@@ -369,21 +385,7 @@ CodeGenerationErrorOr<NonnullGCPtr<Executable>> Generator::compile(VM& vm, ASTNo
             ++it;
         }
         if (!block->is_terminated()) {
-            Op::End end(generator.add_constant(js_undefined()));
-            end.visit_operands([number_of_registers, number_of_constants](Operand& operand) {
-                switch (operand.type()) {
-                case Operand::Type::Register:
-                    break;
-                case Operand::Type::Local:
-                    operand.offset_index_by(number_of_registers + number_of_constants);
-                    break;
-                case Operand::Type::Constant:
-                    operand.offset_index_by(number_of_registers);
-                    break;
-                default:
-                    VERIFY_NOT_REACHED();
-                }
-            });
+            Op::End end(*undefined_constant);
             bytecode.append(reinterpret_cast<u8 const*>(&end), end.length());
         }
         if (block->handler() || block->finalizer()) {
