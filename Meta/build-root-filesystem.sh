@@ -203,6 +203,7 @@ echo "done"
 
 printf "installing shortcuts... "
 ln -sf /bin/PackageManager mnt/bin/pkg
+ln -sf /bin/RunContainer mnt/bin/runc
 ln -sf Shell mnt/bin/sh
 ln -sf test mnt/bin/[
 ln -sf less mnt/bin/more

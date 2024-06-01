@@ -1162,7 +1162,7 @@ ErrorOr<CommittedPhysicalPageSet> MemoryManager::commit_physical_pages(size_t pa
         return CommittedPhysicalPageSet { {}, page_count };
     });
     if (result.is_error()) {
-        Process::for_each_ignoring_jails([&](Process const& process) {
+        Process::for_each_ignoring_process_lists([&](Process const& process) {
             size_t amount_resident = 0;
             size_t amount_shared = 0;
             size_t amount_virtual = 0;

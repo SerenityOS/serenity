@@ -25,6 +25,7 @@
 #include <Kernel/Tasks/PowerStateSwitchTask.h>
 #include <Kernel/Tasks/Process.h>
 #include <Kernel/Tasks/Scheduler.h>
+#include <Kernel/Tasks/ScopedProcessList.h>
 #include <Kernel/Tasks/Thread.h>
 #include <Kernel/Tasks/ThreadTracer.h>
 #include <Kernel/Time/TimerQueue.h>
@@ -574,7 +575,7 @@ void Thread::finalize_dying_threads()
     Vector<Thread*, 32> dying_threads;
     {
         SpinlockLocker lock(g_scheduler_lock);
-        for_each_in_state_ignoring_jails(Thread::State::Dying, [&](Thread& thread) {
+        for_each_in_state_ignoring_process_lists(Thread::State::Dying, [&](Thread& thread) {
             if (!thread.is_finalizable())
                 return;
             auto result = dying_threads.try_append(&thread);
@@ -925,7 +926,7 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
 
     auto& action = m_process->m_signal_action_data[signal];
     auto sender_pid = m_signal_senders[signal];
-    auto sender = Process::from_pid_ignoring_jails(sender_pid);
+    auto sender = Process::from_pid_ignoring_process_lists(sender_pid);
 
     if (!current_trap() && !action.handler_or_sigaction.is_null()) {
         // We're trying dispatch a handled signal to a user process that was scheduled
@@ -1244,7 +1245,7 @@ void Thread::set_state(State new_state, u8 stop_signal)
             });
             process.unblock_waiters(Thread::WaitBlocker::UnblockFlags::Continued);
             // Tell the parent process (if any) about this change.
-            if (auto parent = Process::from_pid_ignoring_jails(process.ppid())) {
+            if (auto parent = Process::from_pid_ignoring_process_lists(process.ppid())) {
                 [[maybe_unused]] auto result = parent->send_signal(SIGCHLD, &process);
             }
         }
@@ -1262,7 +1263,7 @@ void Thread::set_state(State new_state, u8 stop_signal)
             // enter/exit a syscall, or once their current time slice runs out.
             process.unblock_waiters(Thread::WaitBlocker::UnblockFlags::Stopped, stop_signal);
             // Tell the parent process (if any) about this change.
-            if (auto parent = Process::from_pid_ignoring_jails(process.ppid())) {
+            if (auto parent = Process::from_pid_ignoring_process_lists(process.ppid())) {
                 [[maybe_unused]] auto result = parent->send_signal(SIGCHLD, &process);
             }
         }
@@ -1349,25 +1350,32 @@ void Thread::print_backtrace()
     }
 }
 
-RefPtr<Thread> Thread::from_tid_in_same_jail(ThreadID tid)
+RefPtr<Thread> Thread::from_tid_in_same_process_list(ThreadID tid)
 {
     return Thread::all_instances().with([&](auto& list) -> RefPtr<Thread> {
-        for (Thread& thread : list) {
-            if (thread.tid() == tid) {
-                return Process::current().jail().with([&thread](auto const& my_jail) -> RefPtr<Thread> {
-                    return thread.process().jail().with([&thread, my_jail](auto const& other_thread_process_jail) -> RefPtr<Thread> {
-                        if (my_jail && my_jail.ptr() != other_thread_process_jail.ptr())
-                            return nullptr;
-                        return thread;
-                    });
-                });
+        return Process::current().m_scoped_process_list.with([&](auto const& list_ptr) -> RefPtr<Thread> {
+            if (list_ptr) {
+                for (Thread& thread : list) {
+                    if (thread.tid() == tid) {
+                        return thread.process().m_scoped_process_list.with([list_ptr, &thread](auto const& other_thread_process_list) -> RefPtr<Thread> {
+                            if (list_ptr.ptr() != other_thread_process_list.ptr())
+                                return nullptr;
+                            return thread;
+                        });
+                    }
+                }
             }
-        }
-        return nullptr;
+            for (Thread& thread : list) {
+                if (thread.tid() == tid) {
+                    return thread;
+                }
+            }
+            return {};
+        });
     });
 }
 
-RefPtr<Thread> Thread::from_tid_ignoring_jails(ThreadID tid)
+RefPtr<Thread> Thread::from_tid_ignoring_process_lists(ThreadID tid)
 {
     return Thread::all_instances().with([&](auto& list) -> RefPtr<Thread> {
         for (Thread& thread : list) {
