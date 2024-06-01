@@ -71,6 +71,7 @@ WebIDL::ExceptionOr<ImportMap> parse_import_map_string(JS::Realm& realm, ByteStr
     // 8. Return an import map whose imports are sortedAndNormalizedImports and whose scopes are sortedAndNormalizedScopes.
     ImportMap import_map;
     import_map.set_imports(sorted_and_normalised_imports);
+    import_map.set_scopes(sorted_and_normalised_scopes);
     return import_map;
 }
 
