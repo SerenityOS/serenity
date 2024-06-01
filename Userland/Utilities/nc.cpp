@@ -151,12 +151,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         dst_addr.sin_port = htons(port);
 
         if (!numeric_mode) {
-            auto* hostent = gethostbyname(target.characters());
-            if (!hostent) {
+            auto address_or_error = Core::Socket::resolve_host(target, Core::Socket::SocketType::Stream);
+            if (address_or_error.is_error()) {
                 warnln("nc: Unable to resolve '{}'", target);
                 return 1;
             }
-            dst_addr.sin_addr.s_addr = *(in_addr_t const*)hostent->h_addr_list[0];
+            dst_addr.sin_addr.s_addr = address_or_error.release_value().to_u32();
         } else {
             if (inet_pton(AF_INET, target.characters(), &dst_addr.sin_addr) <= 0) {
                 perror("inet_pton");
