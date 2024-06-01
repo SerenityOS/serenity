@@ -500,7 +500,6 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region, Physica
     RefPtr<PhysicalRAMPage> new_physical_page;
 
     if (page_in_slot_at_time_of_fault.is_lazy_committed_page()) {
-        VERIFY(m_vmobject->is_anonymous());
         new_physical_page = static_cast<AnonymousVMObject&>(*m_vmobject).allocate_committed_page({});
         dbgln_if(PAGE_FAULT_DEBUG, "      >> ALLOCATED COMMITTED {}", new_physical_page->paddr());
     } else {
