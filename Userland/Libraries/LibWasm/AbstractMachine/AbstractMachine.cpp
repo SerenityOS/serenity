@@ -282,15 +282,13 @@ InstantiationResult AbstractMachine::instantiate(Module const& module, Vector<Ex
                 return IterationDecision::Break;
             }
 
-            auto total_required_size = elem_instance->references().size() + d.value();
+            Checked<size_t> total_size = elem_instance->references().size();
+            total_size.saturating_add(d.value());
 
-            if (table_instance->type().limits().max().value_or(total_required_size) < total_required_size) {
-                instantiation_result = InstantiationError { "Table limit overflow in active element segment" };
+            if (total_size.value() > table_instance->elements().size()) {
+                instantiation_result = InstantiationError { "Table instantiation out of bounds" };
                 return IterationDecision::Break;
             }
-
-            if (table_instance->elements().size() < total_required_size)
-                table_instance->elements().resize(total_required_size);
 
             size_t i = 0;
             for (auto it = elem_instance->references().begin(); it < elem_instance->references().end(); ++i, ++it) {
