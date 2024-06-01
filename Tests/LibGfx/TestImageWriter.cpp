@@ -216,6 +216,39 @@ TEST_CASE(test_webp_color_indexing_transform)
     }
 }
 
+TEST_CASE(test_webp_color_indexing_transform_single_channel)
+{
+    Array<Color, 256> colors;
+    for (size_t i = 0; i < colors.size(); ++i) {
+        colors[i].set_red(0);
+        colors[i].set_green(255 - i);
+        colors[i].set_blue(128);
+        colors[i].set_alpha(255);
+    }
+    for (int bits_per_pixel : { 1, 2, 4, 8 }) {
+        int number_of_colors = 1 << bits_per_pixel;
+
+        auto bitmap = TRY_OR_FAIL(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { 47, 33 }));
+        for (int y = 0; y < bitmap->height(); ++y)
+            for (int x = 0; x < bitmap->width(); ++x)
+                bitmap->set_pixel(x, y, colors[(x * bitmap->width() + y) % number_of_colors]);
+
+        auto encoded_data = TRY_OR_FAIL(encode_bitmap<Gfx::WebPWriter>(bitmap));
+        auto decoded_bitmap = TRY_OR_FAIL(expect_single_frame_of_size(*TRY_OR_FAIL(Gfx::WebPImageDecoderPlugin::create(encoded_data)), bitmap->size()));
+        expect_bitmaps_equal(*decoded_bitmap, *bitmap);
+
+        Gfx::WebPEncoderOptions options;
+        options.vp8l_options.allowed_transforms = 0;
+        auto encoded_data_without_color_indexing = TRY_OR_FAIL(encode_bitmap<Gfx::WebPWriter>(bitmap, options));
+        if (bits_per_pixel == 8)
+            EXPECT(encoded_data.size() <= encoded_data_without_color_indexing.size());
+        else
+            EXPECT(encoded_data.size() < encoded_data_without_color_indexing.size());
+        auto decoded_bitmap_without_color_indexing = TRY_OR_FAIL(expect_single_frame_of_size(*TRY_OR_FAIL(Gfx::WebPImageDecoderPlugin::create(encoded_data)), bitmap->size()));
+        expect_bitmaps_equal(*decoded_bitmap_without_color_indexing, *decoded_bitmap);
+    }
+}
+
 TEST_CASE(test_webp_icc)
 {
     auto sRGB_icc_profile = MUST(Gfx::ICC::sRGB());
