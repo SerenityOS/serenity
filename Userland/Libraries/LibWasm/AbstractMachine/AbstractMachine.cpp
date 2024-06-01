@@ -346,20 +346,15 @@ InstantiationResult AbstractMachine::instantiate(Module const& module, Vector<Ex
                     if (data.init.is_empty())
                         return;
                     auto address = main_module_instance.memories()[data.index.value()];
-                    if (auto instance = m_store.get(address)) {
-                        if (auto max = instance->type().limits().max(); max.has_value()) {
-                            if (*max * Constants::page_size < data.init.size() + offset) {
-                                instantiation_result = InstantiationError {
-                                    ByteString::formatted("Data segment attempted to write to out-of-bounds memory ({}) of max {} bytes",
-                                        data.init.size() + offset, instance->type().limits().max().value())
-                                };
-                                return;
-                            }
-                        }
-                        if (instance->size() < data.init.size() + offset)
-                            instance->grow(data.init.size() + offset - instance->size());
-                        instance->data().overwrite(offset, data.init.data(), data.init.size());
+                    auto instance = m_store.get(address);
+                    if (data.init.size() + offset > instance->size()) {
+                        instantiation_result = InstantiationError {
+                            ByteString::formatted("Data segment attempted to write to out-of-bounds memory ({}) in memory of size {}",
+                                offset, instance->size())
+                        };
+                        return;
                     }
+                    instance->data().overwrite(offset, data.init.data(), data.init.size());
                 },
                 [&](DataSection::Data::Passive const& passive) {
                     auto maybe_data_address = m_store.allocate_data(passive.init);
