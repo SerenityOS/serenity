@@ -802,8 +802,12 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         auto source_offset = configuration.stack().pop().get<Value>().to<i32>().value();
         auto destination_offset = configuration.stack().pop().get<Value>().to<i32>().value();
 
-        TRAP_IF_NOT(static_cast<size_t>(source_offset + count) <= source_instance->data().size());
-        TRAP_IF_NOT(static_cast<size_t>(destination_offset + count) <= destination_instance->data().size());
+        Checked<size_t> source_position = source_offset;
+        source_position.saturating_add(count);
+        Checked<size_t> destination_position = destination_offset;
+        destination_position.saturating_add(count);
+        TRAP_IF_NOT(source_position <= source_instance->data().size());
+        TRAP_IF_NOT(destination_position <= destination_instance->data().size());
 
         if (count == 0)
             return;
