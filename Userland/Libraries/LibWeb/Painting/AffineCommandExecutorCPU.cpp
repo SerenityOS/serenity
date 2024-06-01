@@ -14,6 +14,63 @@ namespace Web::Painting {
 // transform can be assumed to be non-identity or translation, so there's no
 // need to add fast paths here (those will be handled in the normal executor).
 
+bool AffineCommandExecutorCPU::needs_expensive_clipping(Gfx::IntRect bounding_rect) const
+{
+    auto& current_stacking_context = stacking_context();
+    if (current_stacking_context.clip.is_rectangular)
+        return false;
+    auto dest = current_stacking_context.transform.map_to_quad(bounding_rect.to_type<float>());
+    for (auto point : { dest.p1(), dest.p2(), dest.p3(), dest.p4() }) {
+        if (!current_stacking_context.clip.quad.contains(point))
+            return true;
+    }
+    return false;
+}
+
+void AffineCommandExecutorCPU::prepare_clipping(Gfx::IntRect bounding_rect)
+{
+    if (m_expensive_clipping_target)
+        return;
+    if (!needs_expensive_clipping(bounding_rect))
+        return;
+    auto& current_stacking_context = stacking_context();
+    auto clip_bounds = current_stacking_context.clip.bounds;
+    if (clip_bounds.is_empty())
+        return;
+    m_expensive_clipping_target = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, clip_bounds.size()).release_value_but_fixme_should_propagate_errors();
+    m_expensive_clipping_mask = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, clip_bounds.size()).release_value_but_fixme_should_propagate_errors();
+
+    auto const& clip_quad = current_stacking_context.clip.quad;
+
+    // Prepare clip mask:
+    m_painter = Gfx::Painter(*m_expensive_clipping_mask);
+    m_painter.translate(-clip_bounds.top_left());
+    Gfx::Path clip_path;
+    clip_path.move_to(clip_quad.p1());
+    clip_path.line_to(clip_quad.p2());
+    clip_path.line_to(clip_quad.p3());
+    clip_path.line_to(clip_quad.p4());
+    clip_path.close();
+    aa_painter().fill_path(clip_path, Gfx::Color::Black, Gfx::Painter::WindingRule::EvenOdd);
+
+    // Prepare painter:
+    m_painter = Gfx::Painter(*m_expensive_clipping_target);
+    m_painter.translate(-clip_bounds.top_left());
+}
+
+void AffineCommandExecutorCPU::flush_clipping()
+{
+    if (!m_expensive_clipping_target)
+        return;
+    auto& current_stacking_context = stacking_context();
+    m_painter = Gfx::Painter(*m_target);
+    m_expensive_clipping_target->apply_mask(*m_expensive_clipping_mask, Gfx::Bitmap::MaskKind::Alpha);
+    m_painter.blit(current_stacking_context.clip.bounds.top_left(), *m_expensive_clipping_target, m_expensive_clipping_target->rect());
+    m_expensive_clipping_target = nullptr;
+    m_expensive_clipping_mask = nullptr;
+    m_painter.add_clip_rect(current_stacking_context.clip.bounds);
+}
+
 static Gfx::Path rect_path(Gfx::FloatRect const& rect)
 {
     Gfx::Path path;
@@ -26,10 +83,11 @@ static Gfx::Path rect_path(Gfx::FloatRect const& rect)
 }
 
 AffineCommandExecutorCPU::AffineCommandExecutorCPU(Gfx::Bitmap& bitmap, Gfx::AffineTransform transform, Gfx::IntRect clip)
-    : m_painter(bitmap)
+    : m_target(bitmap)
+    , m_painter(bitmap)
 {
-    auto clip_quad = Gfx::AffineTransform {}.map_to_quad(clip.to_type<float>());
-    m_stacking_contexts.append(StackingContext { transform, clip_quad, clip_quad.bounding_rect() });
+    m_painter.add_clip_rect(clip);
+    m_stacking_contexts.append(StackingContext { transform, Clip { .quad = Gfx::AffineTransform {}.map_to_quad(clip.to_type<float>()), .bounds = clip, .is_rectangular = true } });
 }
 
 CommandResult AffineCommandExecutorCPU::draw_glyph_run(DrawGlyphRun const&)
@@ -46,7 +104,8 @@ CommandResult AffineCommandExecutorCPU::draw_text(DrawText const&)
 
 CommandResult AffineCommandExecutorCPU::fill_rect(FillRect const& command)
 {
-    // FIXME: Somehow support clip_paths?
+    prepare_clipping(command.bounding_rect());
+    // FIXME: Support clip_paths.
     auto path = rect_path(command.rect.to_type<float>()).copy_transformed(stacking_context().transform);
     aa_painter().fill_path(path, command.color, Gfx::Painter::WindingRule::EvenOdd);
     return CommandResult::Continue;
@@ -54,26 +113,40 @@ CommandResult AffineCommandExecutorCPU::fill_rect(FillRect const& command)
 
 CommandResult AffineCommandExecutorCPU::draw_scaled_bitmap(DrawScaledBitmap const& command)
 {
+    prepare_clipping(command.bounding_rect());
     m_painter.draw_scaled_bitmap_with_transform(command.dst_rect, command.bitmap, command.src_rect.to_type<float>(), stacking_context().transform, 1.0f, command.scaling_mode);
     return CommandResult::Continue;
 }
 
 CommandResult AffineCommandExecutorCPU::draw_scaled_immutable_bitmap(DrawScaledImmutableBitmap const& command)
 {
+    prepare_clipping(command.bounding_rect());
     m_painter.draw_scaled_bitmap_with_transform(command.dst_rect, command.bitmap->bitmap(), command.src_rect.to_type<float>(), stacking_context().transform, 1.0f, command.scaling_mode);
     return CommandResult::Continue;
 }
 
-CommandResult AffineCommandExecutorCPU::set_clip_rect(SetClipRect const&)
+CommandResult AffineCommandExecutorCPU::set_clip_rect(SetClipRect const& clip)
 {
-    // FIXME: Implement. The plan here is to implement https://en.wikipedia.org/wiki/Sutherland%E2%80%93Hodgman_algorithm
-    // within the rasterizer (which should work as the clip quadrilateral will always be convex).
+    flush_clipping();
+    auto& current_stacking_context = stacking_context();
+    m_painter.clear_clip_rect();
+    auto clip_quad = current_stacking_context.transform.map_to_quad(clip.rect.to_type<float>());
+    current_stacking_context.clip.bounds = enclosing_int_rect(clip_quad.bounding_rect());
+    // FIXME: Flips and rotations by x*90° should also be marked as rectangular.
+    current_stacking_context.clip.is_rectangular = current_stacking_context.transform.is_identity_or_translation_or_scale();
+    current_stacking_context.clip.quad = clip_quad;
+    m_painter.add_clip_rect(current_stacking_context.clip.bounds);
     return CommandResult::Continue;
 }
 
 CommandResult AffineCommandExecutorCPU::clear_clip_rect(ClearClipRect const&)
 {
-    // FIXME: Implement.
+    flush_clipping();
+    auto& current_stacking_context = stacking_context();
+    m_painter.clear_clip_rect();
+    current_stacking_context.clip.bounds = m_painter.target()->rect();
+    current_stacking_context.clip.quad = Gfx::AffineTransform {}.map_to_quad(current_stacking_context.clip.bounds.to_type<float>());
+    current_stacking_context.clip.is_rectangular = true;
     return CommandResult::Continue;
 }
 
@@ -95,16 +168,24 @@ CommandResult AffineCommandExecutorCPU::push_stacking_context(PushStackingContex
     auto const& current_stacking_context = stacking_context();
     m_stacking_contexts.append(StackingContext {
         .transform = Gfx::AffineTransform(current_stacking_context.transform).multiply(new_transform),
-        .clip = current_stacking_context.clip,
-        .clip_bounds = current_stacking_context.clip_bounds });
+        .clip = current_stacking_context.clip });
     return CommandResult::Continue;
 }
 
 CommandResult AffineCommandExecutorCPU::pop_stacking_context(PopStackingContext const&)
 {
+    auto active_stacking_contexts = m_stacking_contexts.size();
+    bool last_stacking_context = active_stacking_contexts <= 1;
+    bool need_to_flush_clipping = last_stacking_context || stacking_context().clip != m_stacking_contexts[active_stacking_contexts - 2].clip;
+    if (need_to_flush_clipping)
+        flush_clipping();
     m_stacking_contexts.take_last();
-    if (m_stacking_contexts.size() == 0)
+    if (last_stacking_context)
         return CommandResult::ContinueWithParentExecutor;
+    if (need_to_flush_clipping) {
+        m_painter.clear_clip_rect();
+        m_painter.add_clip_rect(stacking_context().clip.bounds);
+    }
     return CommandResult::Continue;
 }
 
@@ -134,6 +215,7 @@ CommandResult AffineCommandExecutorCPU::paint_text_shadow(PaintTextShadow const&
 
 CommandResult AffineCommandExecutorCPU::fill_rect_with_rounded_corners(FillRectWithRoundedCorners const& command)
 {
+    prepare_clipping(command.bounding_rect());
     Gfx::Path path;
 
     auto x = command.rect.x();
@@ -181,6 +263,7 @@ CommandResult AffineCommandExecutorCPU::fill_rect_with_rounded_corners(FillRectW
 
 CommandResult AffineCommandExecutorCPU::fill_path_using_color(FillPathUsingColor const& command)
 {
+    prepare_clipping(command.bounding_rect());
     auto path_transform = Gfx::AffineTransform(stacking_context().transform).multiply(Gfx::AffineTransform {}.set_translation(command.aa_translation));
     aa_painter().fill_path(command.path.copy_transformed(path_transform), command.color, command.winding_rule);
     return CommandResult::Continue;
@@ -194,6 +277,7 @@ CommandResult AffineCommandExecutorCPU::fill_path_using_paint_style(FillPathUsin
 
 CommandResult AffineCommandExecutorCPU::stroke_path_using_color(StrokePathUsingColor const& command)
 {
+    prepare_clipping(command.bounding_rect());
     auto path_transform = Gfx::AffineTransform(stacking_context().transform).multiply(Gfx::AffineTransform {}.set_translation(command.aa_translation));
     aa_painter().stroke_path(command.path.copy_transformed(path_transform), command.color, command.thickness);
     return CommandResult::Continue;
@@ -219,6 +303,7 @@ CommandResult AffineCommandExecutorCPU::fill_ellipse(FillEllipse const&)
 
 CommandResult AffineCommandExecutorCPU::draw_line(DrawLine const& command)
 {
+    prepare_clipping(Gfx::IntRect::from_two_points(command.from, command.to).inflated(command.thickness, command.thickness));
     // FIXME: Implement other line styles.
     Gfx::Path path;
     path.move_to(command.from.to_type<float>());
@@ -241,6 +326,7 @@ CommandResult AffineCommandExecutorCPU::apply_backdrop_filter(ApplyBackdropFilte
 
 CommandResult AffineCommandExecutorCPU::draw_rect(DrawRect const& command)
 {
+    prepare_clipping(command.bounding_rect());
     auto path = rect_path(command.rect.to_type<float>()).copy_transformed(stacking_context().transform);
     aa_painter().stroke_path(path, command.color, 1);
     return CommandResult::Continue;
@@ -279,8 +365,8 @@ CommandResult AffineCommandExecutorCPU::blit_corner_clipping(BlitCornerClipping 
 bool AffineCommandExecutorCPU::would_be_fully_clipped_by_painter(Gfx::IntRect rect) const
 {
     auto const& current_stacking_context = stacking_context();
-    auto transformed_rect = current_stacking_context.transform.map(rect.to_type<float>());
-    return transformed_rect.intersected(current_stacking_context.clip_bounds).is_empty();
+    auto transformed_rect = current_stacking_context.transform.map(rect.to_type<float>()).to_type<int>();
+    return transformed_rect.intersected(current_stacking_context.clip.bounds).is_empty();
 }
 
 }

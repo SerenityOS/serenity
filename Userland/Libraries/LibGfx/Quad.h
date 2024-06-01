@@ -45,6 +45,8 @@ public:
             || Triangle(m_p2, m_p4, m_p3).contains(point);
     }
 
+    bool operator==(Quad<T> const&) const = default;
+
 private:
     Point<T> m_p1;
     Point<T> m_p2;
