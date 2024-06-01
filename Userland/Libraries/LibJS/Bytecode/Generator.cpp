@@ -1156,4 +1156,13 @@ void Generator::emit_jump_if(ScopedOperand const& condition, Label true_target, 
     emit<Op::JumpIf>(condition, true_target, false_target);
 }
 
+ScopedOperand Generator::copy_if_needed_to_preserve_evaluation_order(ScopedOperand const& operand)
+{
+    if (!operand.operand().is_local())
+        return operand;
+    auto new_register = allocate_register();
+    emit<Bytecode::Op::Mov>(new_register, operand);
+    return new_register;
+}
+
 }

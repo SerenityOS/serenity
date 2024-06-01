@@ -308,6 +308,8 @@ public:
         m_boundaries.take_last();
     }
 
+    [[nodiscard]] ScopedOperand copy_if_needed_to_preserve_evaluation_order(ScopedOperand const&);
+
     [[nodiscard]] ScopedOperand get_this(Optional<ScopedOperand> preferred_dst = {});
 
     void emit_get_by_id(ScopedOperand dst, ScopedOperand base, IdentifierTableIndex property_identifier, Optional<IdentifierTableIndex> base_identifier = {});
