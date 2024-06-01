@@ -21,6 +21,7 @@ Network cat: Connect to network sockets as if it were a file.
 * `-u`, `--udp`: UDP mode
 * `-p port`: Local port for remote connections
 * `-v`, `--verbose`: Log everything that's happening
+* `-z`, `--test-listening-service`: Test a TCP-listening service
 
 ## Arguments
 
