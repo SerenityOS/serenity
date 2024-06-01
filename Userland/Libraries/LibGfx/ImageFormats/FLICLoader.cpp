@@ -25,6 +25,7 @@ struct ChunkType {
         // sub_chunks
         COLOR_256 = 0x4,
         COLOR_64 = 0xB,
+        FLI_BRUN = 0xF,
         FLI_COPY = 0x10,
         DELTA_FLI = 0xC,
         // main chunks
@@ -126,15 +127,17 @@ static ErrorOr<void> decode_frame(FLICLoadingContext& context, size_t frame_inde
     dbgln_if(FLIC_DEBUG, "Decode_frame width={} frame_index={} chunks={}", context.width, frame_index, current_frame->chunks.size());
 
     // Not very optimal: copy color_table from previous frame
-    if (frame_index > 0) {
-        auto& previous_frame = context.frames.at(frame_index - 1);
+    if (frame_index > 0)
         for (size_t c = 0; c < 255; c++) {
+            auto& previous_frame = context.frames.at(frame_index - 1);
             current_frame->color_map[c] = previous_frame->color_map[c];
         }
+
+    if (context.state < FLICLoadingContext::State::FrameComplete) {
+        context.frame_buffer = TRY(Bitmap::create(BitmapFormat::BGRA8888, { context.width, context.height }));
     }
 
-    for (size_t i = 0; i < current_frame->chunks.size(); ++i) {
-        auto const& chunk = current_frame->chunks.at(i);
+    for (auto& chunk : current_frame->chunks) {
         auto stream = make<FixedMemoryStream>(ReadonlyBytes { chunk->data });
 
         switch (chunk->type) {
@@ -162,7 +165,6 @@ static ErrorOr<void> decode_frame(FLICLoadingContext& context, size_t frame_inde
 
         case ChunkType::FLI_COPY: {
             dbgln_if(FLIC_DEBUG, "Decoding copy_buffer {}x{} buffer_size={}", context.width, context.height, stream->size());
-            context.frame_buffer = TRY(Bitmap::create(BitmapFormat::BGRA8888, { context.width, context.height }));
             for (size_t y = 0; y < context.height; ++y) {
                 for (size_t x = 0; x < context.width; ++x) {
                     context.frame_buffer->set_pixel(x, y, current_frame->color_map[TRY(stream->read_value<u8>())]);
@@ -175,7 +177,6 @@ static ErrorOr<void> decode_frame(FLICLoadingContext& context, size_t frame_inde
             dbgln_if(FLIC_DEBUG, "Decoding delta_fli {}x{} buffer_size={}", context.width, context.height, stream->size());
             auto lines_to_skip = TRY(stream->read_value<LittleEndian<u16>>());
             auto number_of_lines = TRY(stream->read_value<LittleEndian<u16>>());
-            auto& previous_frame = context.frames.at(frame_index - 1);
 
             for (size_t line = lines_to_skip; line < lines_to_skip + number_of_lines; line++) {
                 size_t x = 0;
@@ -183,34 +184,57 @@ static ErrorOr<void> decode_frame(FLICLoadingContext& context, size_t frame_inde
 
                 for (u8 packet = 0; packet < packets; packet++) {
                     auto col_skip_count = TRY(stream->read_value<u8>());
-                    auto type = TRY(stream->read_value<i8>());
                     x += col_skip_count;
 
-                    // copy next pixels
+                    auto type = TRY(stream->read_value<i8>());
+
                     if (type > 0) {
-                        auto dest_x = x;
                         for (i8 n = 0; n < type; n++) {
                             auto color = TRY(stream->read_value<u8>());
-                            context.frame_buffer->set_pixel(dest_x++, line, previous_frame->color_map[color]);
+                            context.frame_buffer->set_pixel(x++, line, current_frame->color_map[color]);
                         }
                     } else if (type < 0) {
                         type = -type;
                         // repeat next pixels
                         auto color = TRY(stream->read_value<u8>());
-                        auto dest_x = x;
                         for (i8 n = 0; n < type; n++) {
-                            context.frame_buffer->set_pixel(dest_x++, line, previous_frame->color_map[color]);
+                            context.frame_buffer->set_pixel(x++, line, current_frame->color_map[color]);
                         }
                     }
+                }
+            }
+            break;
+        }
 
-                    x += type;
+        case ChunkType::FLI_BRUN: {
+            for (size_t y = 0; y < context.height; y++) {
+                auto x = 0;
+                // first byte was the packets count, but FLC variant can encode more than 256 bytes
+                // so ignore it and use the frame's width instead
+                TRY(stream->seek(1, SeekMode::FromCurrentPosition));
+
+                while (x < context.width) {
+                    auto type = TRY(stream->read_value<i8>());
+                    if (type > 0) {
+                        // repeat next pixels
+                        auto color = TRY(stream->read_value<u8>());
+                        for (i8 n = 0; n < type; n++) {
+                            context.frame_buffer->set_pixel(x++, y, current_frame->color_map[color]);
+                        }
+                    } else if (type < 0) {
+                        type = -type;
+                        for (i8 n = 0; n < type; n++) {
+                            auto color = TRY(stream->read_value<u8>());
+                            context.frame_buffer->set_pixel(x++, y, current_frame->color_map[color]);
+                        }
+                    }
                 }
             }
             break;
         }
 
         default: {
-            dbgln_if(FLIC_DEBUG, "Unknown main chunk {:#x}", chunk->type);
+            dbgln_if(FLIC_DEBUG, "Unknown subchunk {:#x}", chunk->type);
             break;
         }
         }
@@ -233,8 +257,7 @@ static ErrorOr<void> read_subchunk(FLICLoadingContext& context)
     // Some FLI encoders save the wrong size on the subchunk header.
     // For example in FLI_COPY subchunks: let's make sure the size is is enough to hold
     // an uncompressed frame.
-    size_t data_size = type == 0x10 ? AK::max(size - chunk_header_size, context.width * context.height) : (u16)size;
-    dbgln_if(FLIC_DEBUG, "Using subchunk size {}", data_size);
+    size_t data_size = type == ChunkType::FLI_COPY ? AK::max(size - chunk_header_size, context.width * context.height) : (u16)size;
     auto const chunk_data = TRY(chunk->data.get_bytes_for_writing(data_size));
     TRY(context.stream.read_until_filled(chunk_data));
     current_frame->chunks.append(move(chunk));
@@ -261,10 +284,9 @@ static ErrorOr<void> load_flic_frame_chunks(FLICLoadingContext& context)
             // The next 8 bytes are reserved bytes.
             TRY(context.stream.seek(8, SeekMode::FromCurrentPosition));
 
-            for (auto i = 0; i < num_chunks; ++i) {
+            for (auto i = 0; i < num_chunks; ++i)
                 TRY(read_subchunk(context));
-                dbgln_if(FLIC_DEBUG, "Added subchunk offset={}", context.stream.offset());
-            }
+
             break;
         }
 
