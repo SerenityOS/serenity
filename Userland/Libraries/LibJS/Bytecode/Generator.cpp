@@ -340,9 +340,10 @@ CodeGenerationErrorOr<NonnullGCPtr<Executable>> Generator::compile(VM& vm, ASTNo
         while (!it.at_end()) {
             auto& instruction = const_cast<Instruction&>(*it);
 
-            // OPTIMIZATION: Don't emit jumps that just jump to the next block.
             if (instruction.type() == Instruction::Type::Jump) {
                 auto& jump = static_cast<Bytecode::Op::Jump&>(instruction);
+
+                // OPTIMIZATION: Don't emit jumps that just jump to the next block.
                 if (jump.target().basic_block_index() == block->index() + 1) {
                     if (basic_block_start_offsets.last() == bytecode.size()) {
                         // This block is empty, just skip it.
@@ -350,6 +351,29 @@ CodeGenerationErrorOr<NonnullGCPtr<Executable>> Generator::compile(VM& vm, ASTNo
                     }
                     ++it;
                     continue;
+                }
+
+                // OPTIMIZATION: For jumps to a return-or-end-only block, we can emit a `Return` or `End` directly instead.
+                auto& target_block = *generator.m_root_basic_blocks[jump.target().basic_block_index()];
+                if (target_block.is_terminated()) {
+                    auto target_instruction_iterator = InstructionStreamIterator { target_block.instruction_stream() };
+                    auto& target_instruction = *target_instruction_iterator;
+
+                    if (target_instruction.type() == Instruction::Type::Return) {
+                        auto& return_instruction = static_cast<Bytecode::Op::Return const&>(target_instruction);
+                        Op::Return return_op(return_instruction.value());
+                        bytecode.append(reinterpret_cast<u8 const*>(&return_op), return_op.length());
+                        ++it;
+                        continue;
+                    }
+
+                    if (target_instruction.type() == Instruction::Type::End) {
+                        auto& return_instruction = static_cast<Bytecode::Op::End const&>(target_instruction);
+                        Op::End end_op(return_instruction.value());
+                        bytecode.append(reinterpret_cast<u8 const*>(&end_op), end_op.length());
+                        ++it;
+                        continue;
+                    }
                 }
             }
 
