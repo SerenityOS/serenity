@@ -12,6 +12,7 @@
 #include <AK/Noncopyable.h>
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
+#include <AK/Tuple.h>
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
 #include <Kernel/API/KeyCode.h>
@@ -180,7 +181,7 @@ public:
 
     void clear_selection();
 
-    void find_in_page(String const& query, CaseSensitivity);
+    Optional<Tuple<int, Vector<int>>> find_in_page(String const& query, CaseSensitivity);
     void find_in_page_next_match();
     void find_in_page_previous_match();
 

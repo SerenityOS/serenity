@@ -833,7 +833,12 @@ void ConnectionFromClient::find_in_page(u64 page_id, String const& query, CaseSe
     if (!page.has_value())
         return;
 
-    page->page().find_in_page(query, case_sensitivity);
+    auto const match_location_data = page->page().find_in_page(query, case_sensitivity);
+    if (match_location_data.has_value()) {
+        auto const& data = match_location_data.value();
+        async_did_find_in_page(page_id, data.get<int>(), data.get<Vector<int>>());
+    } else
+        async_did_find_in_page(page_id, 0, {});
 }
 
 void ConnectionFromClient::find_in_page_next_match(u64 page_id)

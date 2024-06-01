@@ -57,6 +57,7 @@
 #include <LibWeb/Dump.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Responses.h>
 #include <LibWeb/FileAPI/BlobURLStore.h>
+#include <LibWeb/Geometry/DOMRectList.h>
 #include <LibWeb/HTML/AttributeNames.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/CustomElements/CustomElementDefinition.h>
@@ -5068,8 +5069,10 @@ void Document::set_needs_to_refresh_scroll_state(bool b)
         paintable->set_needs_to_refresh_scroll_state(b);
 }
 
-Vector<JS::Handle<DOM::Range>> Document::find_matching_text(String const& query, CaseSensitivity case_sensitivity)
+Vector<JS::Handle<DOM::Range>> Document::find_matching_text(String const& query, CaseSensitivity case_sensitivity, Vector<int>& vertical_match_positions)
 {
+    vertical_match_positions.clear();
+
     if (!document_element() || !document_element()->layout_node())
         return {};
 
@@ -5090,6 +5093,22 @@ Vector<JS::Handle<DOM::Range>> Document::find_matching_text(String const& query,
             (void)range->set_end(dom_node, match_index.value() + query.code_points().length());
 
             matches.append(range);
+            // FIXME: Once Web::DOM::Range::get_client_rects() is implemented it can be used
+            //  instead of falling back to the text nodes parent element
+            if (navigable()) {
+                auto const* window = default_view();
+                auto const* parent_element = dom_node.parent_element();
+                if (window != nullptr && parent_element != nullptr) {
+                    auto const client_rects = parent_element->get_client_rects();
+                    for (u32 idx = 0; idx < client_rects->length(); ++idx) {
+                        if (auto const* rect = client_rects->item(idx)) {
+                            auto const vertical_position = static_cast<int>(rect->top() + window->scroll_y());
+                            vertical_match_positions.append(vertical_position);
+                        }
+                    }
+                }
+            }
+
             offset = match_index.value() + 1;
         }
 

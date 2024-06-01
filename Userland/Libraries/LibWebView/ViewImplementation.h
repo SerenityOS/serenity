@@ -191,6 +191,7 @@ public:
     Function<void(Gfx::IntPoint content_position, i32 minimum_width, Vector<Web::HTML::SelectItem> items)> on_request_select_dropdown;
     Function<void(Web::KeyEvent const&)> on_finish_handling_key_event;
     Function<void()> on_text_test_finish;
+    Function<void(int, Vector<int> const&)> on_find_in_page;
     Function<void(Gfx::Color)> on_theme_color_change;
     Function<void(String const&, String const&, String const&)> on_insert_clipboard_entry;
     Function<void(Web::HTML::AudioPlayState)> on_audio_play_state_changed;

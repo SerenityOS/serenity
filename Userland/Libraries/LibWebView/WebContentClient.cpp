@@ -78,6 +78,14 @@ void WebContentClient::did_finish_text_test(u64 page_id)
     }
 }
 
+void WebContentClient::did_find_in_page(u64 page_id, int document_height, Vector<int> const& vertical_match_positions)
+{
+    if (auto view = view_for_page_id(page_id); view.has_value()) {
+        if (view->on_find_in_page)
+            view->on_find_in_page(document_height, vertical_match_positions);
+    }
+}
+
 void WebContentClient::did_request_navigate_back(u64 page_id)
 {
     if (auto view = view_for_page_id(page_id); view.has_value()) {

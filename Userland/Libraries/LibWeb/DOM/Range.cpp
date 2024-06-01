@@ -1164,7 +1164,7 @@ WebIDL::ExceptionOr<void> Range::delete_contents()
     return {};
 }
 
-// https://drafts.csswg.org/cssom-view/#dom-element-getclientrects
+// https://drafts.csswg.org/cssom-view/#dom-range-getclientrects
 JS::NonnullGCPtr<Geometry::DOMRectList> Range::get_client_rects() const
 {
     dbgln("(STUBBED) Range::get_client_rects()");

@@ -539,24 +539,30 @@ void Page::clear_selection()
     }
 }
 
-void Page::find_in_page(String const& query, CaseSensitivity case_sensitivity)
+Optional<Tuple<int, Vector<int>>> Page::find_in_page(String const& query, CaseSensitivity case_sensitivity)
 {
     m_find_in_page_match_index = 0;
 
     if (query.is_empty()) {
         m_find_in_page_matches = {};
         update_find_in_page_selection();
-        return;
+        return {};
     }
 
+    int document_height = 0;
+    Vector<int> all_vertical_match_positions;
     auto documents = HTML::main_thread_event_loop().documents_in_this_event_loop();
     Vector<JS::Handle<DOM::Range>> all_matches;
     for (auto const& document : documents) {
         if (&document->page() != this)
             continue;
 
-        auto matches = document->find_matching_text(query, case_sensitivity);
+        if (auto const* element = document->document_element())
+            document_height = element->scroll_height();
+        Vector<int> vertical_match_positions;
+        auto matches = document->find_matching_text(query, case_sensitivity, vertical_match_positions);
         all_matches.extend(move(matches));
+        all_vertical_match_positions.extend(vertical_match_positions);
     }
 
     m_find_in_page_matches.clear_with_capacity();
@@ -564,6 +570,7 @@ void Page::find_in_page(String const& query, CaseSensitivity case_sensitivity)
         m_find_in_page_matches.append(*match);
 
     update_find_in_page_selection();
+    return Tuple { document_height, all_vertical_match_positions };
 }
 
 void Page::find_in_page_next_match()
