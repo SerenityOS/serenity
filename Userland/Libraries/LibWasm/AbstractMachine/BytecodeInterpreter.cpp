@@ -665,9 +665,8 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         TRAP_IF_NOT(index.value() >= 0);
         TRAP_IF_NOT(static_cast<size_t>(index.value()) < table_instance->elements().size());
         auto element = table_instance->elements()[index.value()];
-        TRAP_IF_NOT(element.has_value());
-        TRAP_IF_NOT(element->ref().has<Reference::Func>());
-        auto address = element->ref().get<Reference::Func>().address;
+        TRAP_IF_NOT(element.ref().has<Reference::Func>());
+        auto address = element.ref().get<Reference::Func>().address;
         dbgln_if(WASM_TRACE_DEBUG, "call_indirect({} -> {})", index.value(), address.value());
         call_address(configuration, address);
         return;
@@ -859,9 +858,55 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         *configuration.store().get(data_address) = DataInstance({});
         return;
     }
-    case Instructions::table_get.value():
-    case Instructions::table_set.value():
-        goto unimplemented;
+    case Instructions::elem_drop.value(): {
+        auto elem_index = instruction.arguments().get<ElementIndex>();
+        auto address = configuration.frame().module().elements()[elem_index.value()];
+        auto elem = configuration.store().get(address);
+        *configuration.store().get(address) = ElementInstance(elem->type(), {});
+        return;
+    }
+    case Instructions::table_set.value(): {
+        auto ref = *configuration.stack().pop().get<Value>().to<Reference>();
+        auto index = (size_t)(*configuration.stack().pop().get<Value>().to<i32>());
+        auto table_index = instruction.arguments().get<TableIndex>();
+        auto address = configuration.frame().module().tables()[table_index.value()];
+        auto table = configuration.store().get(address);
+        TRAP_IF_NOT(index < table->elements().size());
+        table->elements()[index] = ref;
+        return;
+    }
+    case Instructions::table_get.value(): {
+        auto index = (size_t)(*configuration.stack().pop().get<Value>().to<i32>());
+        auto table_index = instruction.arguments().get<TableIndex>();
+        auto address = configuration.frame().module().tables()[table_index.value()];
+        auto table = configuration.store().get(address);
+        TRAP_IF_NOT(index < table->elements().size());
+        auto ref = table->elements()[index];
+        configuration.stack().push(Value(ref));
+        return;
+    }
+    case Instructions::table_grow.value(): {
+        auto size = *configuration.stack().pop().get<Value>().to<u32>();
+        auto fill_value = *configuration.stack().pop().get<Value>().to<Reference>();
+        auto table_index = instruction.arguments().get<TableIndex>();
+        auto address = configuration.frame().module().tables()[table_index.value()];
+        auto table = configuration.store().get(address);
+        auto previous_size = table->elements().size();
+        auto did_grow = table->grow(size, fill_value);
+        if (!did_grow) {
+            configuration.stack().push(Value((i32)-1));
+        } else {
+            configuration.stack().push(Value((i32)previous_size));
+        }
+        return;
+    }
+    case Instructions::table_size.value(): {
+        auto table_index = instruction.arguments().get<TableIndex>();
+        auto address = configuration.frame().module().tables()[table_index.value()];
+        auto table = configuration.store().get(address);
+        configuration.stack().push(Value((i32)table->elements().size()));
+        return;
+    }
     case Instructions::ref_null.value(): {
         auto type = instruction.arguments().get<ValueType>();
         configuration.stack().push(Value(Reference(Reference::Null { type })));
@@ -1503,13 +1548,9 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     case Instructions::f64x2_convert_low_i32x4_s.value():
     case Instructions::f64x2_convert_low_i32x4_u.value():
     case Instructions::table_init.value():
-    case Instructions::elem_drop.value():
     case Instructions::table_copy.value():
-    case Instructions::table_grow.value():
-    case Instructions::table_size.value():
     case Instructions::table_fill.value():
     default:
-    unimplemented:;
         dbgln_if(WASM_TRACE_DEBUG, "Instruction '{}' not implemented", instruction_name(instruction.opcode()));
         m_trap = Trap { ByteString::formatted("Unimplemented instruction {}", instruction_name(instruction.opcode())) };
         return;

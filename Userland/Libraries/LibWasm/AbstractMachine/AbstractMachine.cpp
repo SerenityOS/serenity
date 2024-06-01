@@ -34,7 +34,7 @@ Optional<FunctionAddress> Store::allocate(HostFunction&& function)
 Optional<TableAddress> Store::allocate(TableType const& type)
 {
     TableAddress address { m_tables.size() };
-    Vector<Optional<Reference>> elements;
+    Vector<Reference> elements;
     elements.resize(type.limits().min());
     m_tables.empend(TableInstance { type, move(elements) });
     return address;
@@ -252,10 +252,6 @@ InstantiationResult AbstractMachine::instantiate(Module const& module, Vector<Ex
             auto active_ptr = segment.mode.get_pointer<ElementSection::Active>();
             if (!active_ptr)
                 continue;
-            if (active_ptr->index.value() != 0) {
-                instantiation_result = InstantiationError { "Non-zero table referenced by active element segment" };
-                return IterationDecision::Break;
-            }
             Configuration config { m_store };
             if (m_should_limit_instruction_count)
                 config.enable_instruction_count_limit();
@@ -275,11 +271,7 @@ InstantiationResult AbstractMachine::instantiate(Module const& module, Vector<Ex
                 instantiation_result = InstantiationError { "Element section initialisation returned invalid table initial offset" };
                 return IterationDecision::Break;
             }
-            if (main_module_instance.tables().size() < 1) {
-                instantiation_result = InstantiationError { "Element section initialisation references nonexistent table" };
-                return IterationDecision::Break;
-            }
-            auto table_instance = m_store.get(main_module_instance.tables()[0]);
+            auto table_instance = m_store.get(main_module_instance.tables()[active_ptr->index.value()]);
             if (current_index >= main_module_instance.elements().size()) {
                 instantiation_result = InstantiationError { "Invalid element referenced by active element segment" };
                 return IterationDecision::Break;
