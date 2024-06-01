@@ -63,7 +63,8 @@ void AffineCommandExecutorCPU::flush_clipping()
     if (!m_expensive_clipping_target)
         return;
     auto& current_stacking_context = stacking_context();
-    m_painter = Gfx::Painter(*m_target);
+    m_painter = Gfx::Painter(*current_stacking_context.target);
+    m_painter.translate(-current_stacking_context.origin);
     m_expensive_clipping_target->apply_mask(*m_expensive_clipping_mask, Gfx::Bitmap::MaskKind::Alpha);
     m_painter.blit(current_stacking_context.clip.bounds.top_left(), *m_expensive_clipping_target, m_expensive_clipping_target->rect());
     m_expensive_clipping_target = nullptr;
@@ -83,11 +84,16 @@ static Gfx::Path rect_path(Gfx::FloatRect const& rect)
 }
 
 AffineCommandExecutorCPU::AffineCommandExecutorCPU(Gfx::Bitmap& bitmap, Gfx::AffineTransform transform, Gfx::IntRect clip)
-    : m_target(bitmap)
-    , m_painter(bitmap)
+    : m_painter(bitmap)
 {
     m_painter.add_clip_rect(clip);
-    m_stacking_contexts.append(StackingContext { transform, Clip { .quad = Gfx::AffineTransform {}.map_to_quad(clip.to_type<float>()), .bounds = clip, .is_rectangular = true } });
+    m_stacking_contexts.append(StackingContext {
+        .transform = transform,
+        .clip = Clip {
+            .quad = Gfx::AffineTransform {}.map_to_quad(clip.to_type<float>()),
+            .bounds = clip,
+            .is_rectangular = true },
+        .target = bitmap });
 }
 
 CommandResult AffineCommandExecutorCPU::draw_glyph_run(DrawGlyphRun const&)
@@ -152,10 +158,11 @@ CommandResult AffineCommandExecutorCPU::clear_clip_rect(ClearClipRect const&)
 
 CommandResult AffineCommandExecutorCPU::push_stacking_context(PushStackingContext const& command)
 {
-    // FIXME: Support opacity.
-    // FIXME: Support masks.
+    // FIXME: Support masks (not possible to do while PushStackingContext takes a bitmap mask).
     // Note: Image rendering is not relevant as this does not transform via a bitmap.
     // Note: `position: fixed` does not apply when CSS transforms are involved.
+    if (command.opacity == 0.0f)
+        return CommandResult::SkipStackingContext;
 
     // FIXME: Attempt to support 3D transforms... Somehow?
     auto affine_transform = Gfx::extract_2d_affine_transform(command.transform.matrix);
@@ -166,27 +173,56 @@ CommandResult AffineCommandExecutorCPU::push_stacking_context(PushStackingContex
                              .translate(-command.transform.origin);
 
     auto const& current_stacking_context = stacking_context();
-    m_stacking_contexts.append(StackingContext {
+
+    StackingContext new_stacking_context {
         .transform = Gfx::AffineTransform(current_stacking_context.transform).multiply(new_transform),
-        .clip = current_stacking_context.clip });
+        .clip = current_stacking_context.clip,
+        .target = current_stacking_context.target,
+        .origin = current_stacking_context.origin,
+        .opacity = command.opacity
+    };
+
+    if (command.opacity < 1.0f) {
+        flush_clipping();
+        auto paint_rect = enclosing_int_rect(new_stacking_context.transform.map(command.source_paintable_rect.to_type<float>()))
+                              .intersected(current_stacking_context.target->rect().translated(current_stacking_context.origin));
+        if (paint_rect.is_empty())
+            return CommandResult::SkipStackingContext;
+        auto new_target = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, paint_rect.size()).release_value_but_fixme_should_propagate_errors();
+        new_stacking_context.target = new_target;
+        new_stacking_context.origin = paint_rect.top_left();
+        m_painter = Gfx::Painter(new_target);
+        m_painter.translate(-new_stacking_context.origin);
+    }
+
+    m_stacking_contexts.append(new_stacking_context);
     return CommandResult::Continue;
 }
 
 CommandResult AffineCommandExecutorCPU::pop_stacking_context(PopStackingContext const&)
 {
-    auto active_stacking_contexts = m_stacking_contexts.size();
+    auto active_stacking_contexts = m_stacking_contexts.size() - 1;
     bool last_stacking_context = active_stacking_contexts <= 1;
-    bool need_to_flush_clipping = last_stacking_context || stacking_context().clip != m_stacking_contexts[active_stacking_contexts - 2].clip;
+    auto prev_stacking_context = stacking_context();
+    bool need_to_flush_clipping = last_stacking_context
+        || stacking_context().clip != m_stacking_contexts[active_stacking_contexts - 1].clip
+        || prev_stacking_context.opacity < 1.0f;
     if (need_to_flush_clipping)
         flush_clipping();
     m_stacking_contexts.take_last();
-    if (last_stacking_context)
-        return CommandResult::ContinueWithParentExecutor;
     if (need_to_flush_clipping) {
         m_painter.clear_clip_rect();
         m_painter.add_clip_rect(stacking_context().clip.bounds);
     }
-    return CommandResult::Continue;
+    if (prev_stacking_context.opacity < 1.0f) {
+        auto& current_stacking_context = stacking_context();
+        m_painter = Gfx::Painter(current_stacking_context.target);
+        m_painter.translate(-current_stacking_context.origin);
+        auto stacking_context_rect = prev_stacking_context.target->rect().translated(prev_stacking_context.origin);
+        prepare_clipping(stacking_context_rect);
+        m_painter.blit(prev_stacking_context.origin, *prev_stacking_context.target, prev_stacking_context.target->rect(), prev_stacking_context.opacity);
+    }
+    return last_stacking_context ? CommandResult::ContinueWithParentExecutor : CommandResult::Continue;
 }
 
 CommandResult AffineCommandExecutorCPU::paint_linear_gradient(PaintLinearGradient const&)

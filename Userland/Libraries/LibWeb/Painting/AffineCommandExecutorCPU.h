@@ -58,8 +58,6 @@ public:
     virtual ~AffineCommandExecutorCPU() override = default;
 
 private:
-    // FIXME: Support masking.
-    // FIXME: Support opacity < 1.0f.
     struct Clip {
         Gfx::FloatQuad quad;
         Gfx::IntRect bounds;
@@ -68,9 +66,13 @@ private:
         bool operator==(Clip const&) const = default;
     };
 
+    // FIXME: Support masking.
     struct StackingContext {
         Gfx::AffineTransform transform;
         Clip clip;
+        NonnullRefPtr<Gfx::Bitmap> target;
+        Gfx::IntPoint origin = {};
+        float opacity = 1.0f;
     };
 
     Gfx::AntiAliasingPainter aa_painter()
@@ -94,7 +96,6 @@ private:
 
     bool needs_expensive_clipping(Gfx::IntRect bounding_rect) const;
 
-    NonnullRefPtr<Gfx::Bitmap> m_target;
     Gfx::Painter m_painter;
     Vector<StackingContext> m_stacking_contexts;
     RefPtr<Gfx::Bitmap> m_expensive_clipping_target;
