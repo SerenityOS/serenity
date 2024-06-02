@@ -706,8 +706,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<KeyframeEffect>> KeyframeEffect::construct_
     //   - effect target,
     effect->m_target_element = source->target();
 
-    // FIXME:
     //   - keyframes,
+    effect->m_keyframes = source->m_keyframes;
 
     //   - composite operation, and
     effect->set_composite(source->composite());
