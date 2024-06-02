@@ -13,6 +13,7 @@
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/EventDispatcher.h>
 #include <LibWeb/DOM/IDLEventListener.h>
+#include <LibWeb/DOMURL/DOMURL.h>
 #include <LibWeb/FileAPI/Blob.h>
 #include <LibWeb/HTML/CloseEvent.h>
 #include <LibWeb/HTML/EventHandler.h>
@@ -45,8 +46,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebSocket>> WebSocket::construct_impl(JS::R
     auto base_url = relevant_settings_object.api_base_url();
 
     // 2. Let urlRecord be the result of applying the URL parser to url with baseURL.
-    // FIXME: This should call an implementation of https://url.spec.whatwg.org/#concept-url-parser, currently it calls https://url.spec.whatwg.org/#concept-basic-url-parser
-    auto url_record = base_url.complete_url(url);
+    auto url_record = DOMURL::parse(url, base_url);
 
     // 3. If urlRecord is failure, then throw a "SyntaxError" DOMException.
     if (!url_record.is_valid())
