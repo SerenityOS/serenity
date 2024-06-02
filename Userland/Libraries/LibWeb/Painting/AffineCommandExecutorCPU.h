@@ -73,11 +73,21 @@ private:
         NonnullRefPtr<Gfx::Bitmap> target;
         Gfx::IntPoint origin = {};
         float opacity = 1.0f;
+
+        Gfx::IntRect rect() const
+        {
+            return target->rect().translated(origin);
+        }
     };
 
     Gfx::AntiAliasingPainter aa_painter()
     {
         return Gfx::AntiAliasingPainter(m_painter);
+    }
+
+    Gfx::Painter& painter()
+    {
+        return m_painter;
     }
 
     StackingContext& stacking_context()
@@ -95,6 +105,12 @@ private:
     void flush_clipping();
 
     bool needs_expensive_clipping(Gfx::IntRect bounding_rect) const;
+
+    void set_target(Gfx::IntPoint origin, Gfx::Bitmap& bitmap)
+    {
+        m_painter = Gfx::Painter(bitmap);
+        m_painter.translate(-origin);
+    }
 
     Gfx::Painter m_painter;
     Vector<StackingContext> m_stacking_contexts;
