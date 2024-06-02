@@ -72,6 +72,7 @@ executable("WebContent") {
   ]
 
   if (enable_qt) {
+    defines = [ "HAVE_QT" ]
     configs += [ ":WebContent_qt" ]
     sources += [
       "//Ladybird/Qt/EventLoopImplementationQt.cpp",
@@ -83,6 +84,7 @@ executable("WebContent") {
     ]
 
     if (enable_qt_multimedia) {
+      defines += [ "HAVE_QT_MULTIMEDIA" ]
       sources += [
         "//Ladybird/Qt/AudioCodecPluginQt.cpp",
         "//Ladybird/Qt/AudioThread.cpp",
