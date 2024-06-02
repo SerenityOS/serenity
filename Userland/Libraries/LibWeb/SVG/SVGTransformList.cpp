@@ -30,6 +30,13 @@ WebIDL::UnsignedLong SVGTransformList::length()
     return m_transforms.size();
 }
 
+// https://svgwg.org/svg2-draft/single-page.html#types-__svg__SVGNameList__numberOfItems
+WebIDL::UnsignedLong SVGTransformList::number_of_items()
+{
+    // The length and numberOfItems IDL attributes represents the length of the list, and on getting simply return the length of the list.
+    return m_transforms.size();
+}
+
 // https://svgwg.org/svg2-draft/single-page.html#types-__svg__SVGNameList__getItem
 WebIDL::ExceptionOr<JS::NonnullGCPtr<SVGTransform>> SVGTransformList::get_item(WebIDL::UnsignedLong index)
 {

@@ -23,6 +23,7 @@ public:
     virtual ~SVGTransformList() override;
 
     WebIDL::UnsignedLong length();
+    WebIDL::UnsignedLong number_of_items();
 
     WebIDL::ExceptionOr<JS::NonnullGCPtr<SVGTransform>> get_item(WebIDL::UnsignedLong index);
 
