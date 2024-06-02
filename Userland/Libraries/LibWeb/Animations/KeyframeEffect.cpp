@@ -159,9 +159,16 @@ static WebIDL::ExceptionOr<KeyframeType<AL>> process_a_keyframe_like_object(JS::
                 if (CSS::is_animatable_property(property))
                     animation_properties.append(String { CSS::string_from_property_id(property) });
             }
-        } else if (auto property = CSS::property_id_from_camel_case_string(name); property.has_value()) {
-            if (CSS::is_animatable_property(property.value()))
+        } else {
+            // Handle the two special cases
+            if (name == "cssFloat"sv || name == "cssOffset"sv) {
                 animation_properties.append(name);
+            } else if (name == "float"sv || name == "offset"sv) {
+                // Ignore these property names
+            } else if (auto property = CSS::property_id_from_camel_case_string(name); property.has_value()) {
+                if (CSS::is_animatable_property(property.value()))
+                    animation_properties.append(name);
+            }
         }
     }
 
@@ -516,17 +523,31 @@ static WebIDL::ExceptionOr<Vector<BaseKeyframe>> process_a_keyframes_argument(JS
         //    highlight
         BaseKeyframe::ParsedProperties parsed_properties;
         for (auto& [property_string, value_string] : keyframe.unparsed_properties()) {
-            if (auto property = CSS::property_id_from_camel_case_string(property_string); property.has_value()) {
-                auto maybe_parser = CSS::Parser::Parser::create(CSS::Parser::ParsingContext(realm), value_string);
-                if (maybe_parser.is_error())
-                    continue;
+            Optional<CSS::PropertyID> property_id;
 
-                if (auto style_value = maybe_parser.release_value().parse_as_css_value(*property)) {
-                    // Handle 'initial' here so we don't have to get the default value of the property every frame in StyleComputer
-                    if (style_value->is_initial())
-                        style_value = CSS::property_initial_value(realm, *property);
-                    parsed_properties.set(*property, *style_value);
-                }
+            // Handle some special cases
+            if (property_string == "cssFloat"sv) {
+                property_id = CSS::PropertyID::Float;
+            } else if (property_string == "cssOffset"sv) {
+                // FIXME: Support CSS offset property
+            } else if (property_string == "float"sv || property_string == "offset"sv) {
+                // Ignore these properties
+            } else if (auto property = CSS::property_id_from_camel_case_string(property_string); property.has_value()) {
+                property_id = *property;
+            }
+
+            if (!property_id.has_value())
+                continue;
+
+            auto maybe_parser = CSS::Parser::Parser::create(CSS::Parser::ParsingContext(realm), value_string);
+            if (maybe_parser.is_error())
+                continue;
+
+            if (auto style_value = maybe_parser.release_value().parse_as_css_value(*property_id)) {
+                // Handle 'initial' here so we don't have to get the default value of the property every frame in StyleComputer
+                if (style_value->is_initial())
+                    style_value = CSS::property_initial_value(realm, *property_id);
+                parsed_properties.set(*property_id, *style_value);
             }
         }
         keyframe.properties.set(move(parsed_properties));
