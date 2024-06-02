@@ -158,6 +158,56 @@ void Path::elliptical_arc_to(FloatPoint point, FloatSize radii, float x_axis_rot
         theta_delta);
 }
 
+void Path::quad(FloatQuad const& quad)
+{
+    move_to(quad.p1());
+    line_to(quad.p2());
+    line_to(quad.p3());
+    line_to(quad.p4());
+    close();
+}
+
+void Path::rounded_rect(FloatRect const& rect, CornerRadius top_left, CornerRadius top_right, CornerRadius bottom_right, CornerRadius bottom_left)
+{
+    auto x = rect.x();
+    auto y = rect.y();
+    auto width = rect.width();
+    auto height = rect.height();
+
+    if (top_left)
+        move_to({ x + top_left.horizontal_radius, y });
+    else
+        move_to({ x, y });
+
+    if (top_right) {
+        horizontal_line_to(x + width - top_right.horizontal_radius);
+        elliptical_arc_to({ x + width, y + top_right.horizontal_radius }, { top_right.horizontal_radius, top_right.vertical_radius }, 0, false, true);
+    } else {
+        horizontal_line_to(x + width);
+    }
+
+    if (bottom_right) {
+        vertical_line_to(y + height - bottom_right.vertical_radius);
+        elliptical_arc_to({ x + width - bottom_right.horizontal_radius, y + height }, { bottom_right.horizontal_radius, bottom_right.vertical_radius }, 0, false, true);
+    } else {
+        vertical_line_to(y + height);
+    }
+
+    if (bottom_left) {
+        horizontal_line_to(x + bottom_left.horizontal_radius);
+        elliptical_arc_to({ x, y + height - bottom_left.vertical_radius }, { bottom_left.horizontal_radius, bottom_left.vertical_radius }, 0, false, true);
+    } else {
+        horizontal_line_to(x);
+    }
+
+    if (top_left) {
+        vertical_line_to(y + top_left.vertical_radius);
+        elliptical_arc_to({ x + top_left.horizontal_radius, y }, { top_left.horizontal_radius, top_left.vertical_radius }, 0, false, true);
+    } else {
+        vertical_line_to(y);
+    }
+}
+
 void Path::text(Utf8View text, Font const& font)
 {
     if (!is<ScaledFont>(font)) {

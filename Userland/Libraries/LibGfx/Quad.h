@@ -7,6 +7,7 @@
 #pragma once
 
 #include <LibGfx/Point.h>
+#include <LibGfx/Rect.h>
 #include <LibGfx/Triangle.h>
 
 namespace Gfx {
@@ -19,6 +20,11 @@ public:
         , m_p2(p2)
         , m_p3(p3)
         , m_p4(p4)
+    {
+    }
+
+    Quad(Rect<T> const& rect)
+        : Quad(rect.top_left(), rect.top_right(), rect.bottom_right(), rect.bottom_left())
     {
     }
 

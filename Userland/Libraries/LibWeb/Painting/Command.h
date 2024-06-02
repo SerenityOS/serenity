@@ -169,10 +169,10 @@ struct PaintTextShadow {
 struct FillRectWithRoundedCorners {
     Gfx::IntRect rect;
     Color color;
-    Gfx::AntiAliasingPainter::CornerRadius top_left_radius;
-    Gfx::AntiAliasingPainter::CornerRadius top_right_radius;
-    Gfx::AntiAliasingPainter::CornerRadius bottom_left_radius;
-    Gfx::AntiAliasingPainter::CornerRadius bottom_right_radius;
+    Gfx::CornerRadius top_left_radius;
+    Gfx::CornerRadius top_right_radius;
+    Gfx::CornerRadius bottom_left_radius;
+    Gfx::CornerRadius bottom_right_radius;
     Vector<Gfx::Path> clip_paths;
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return rect; }

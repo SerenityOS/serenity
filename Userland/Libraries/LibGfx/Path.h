@@ -9,9 +9,11 @@
 #include <AK/ByteString.h>
 #include <AK/Optional.h>
 #include <AK/Vector.h>
+#include <LibGfx/CornerRadius.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Line.h>
 #include <LibGfx/Point.h>
+#include <LibGfx/Quad.h>
 #include <LibGfx/Rect.h>
 
 namespace Gfx {
@@ -182,6 +184,15 @@ public:
     {
         elliptical_arc_to(point, { radius, radius }, 0, large_arc, sweep);
     }
+
+    void rect(FloatRect const& rect)
+    {
+        return quad(rect);
+    }
+
+    void rounded_rect(FloatRect const& rect, CornerRadius top_left, CornerRadius top_right, CornerRadius bottom_right, CornerRadius bottom_left);
+
+    void quad(FloatQuad const& quad);
 
     void text(Utf8View, Font const&);
 

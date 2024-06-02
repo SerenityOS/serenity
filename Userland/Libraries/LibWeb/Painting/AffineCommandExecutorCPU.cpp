@@ -40,17 +40,11 @@ void AffineCommandExecutorCPU::prepare_clipping(Gfx::IntRect bounding_rect)
     m_expensive_clipping_target = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, clip_bounds.size()).release_value_but_fixme_should_propagate_errors();
     m_expensive_clipping_mask = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, clip_bounds.size()).release_value_but_fixme_should_propagate_errors();
 
-    auto const& clip_quad = current_stacking_context.clip.quad;
-
     // Prepare clip mask:
     m_painter = Gfx::Painter(*m_expensive_clipping_mask);
     m_painter.translate(-clip_bounds.top_left());
     Gfx::Path clip_path;
-    clip_path.move_to(clip_quad.p1());
-    clip_path.line_to(clip_quad.p2());
-    clip_path.line_to(clip_quad.p3());
-    clip_path.line_to(clip_quad.p4());
-    clip_path.close();
+    clip_path.quad(current_stacking_context.clip.quad);
     aa_painter().fill_path(clip_path, Gfx::Color::Black, Gfx::Painter::WindingRule::EvenOdd);
 
     // Prepare painter:
@@ -70,17 +64,6 @@ void AffineCommandExecutorCPU::flush_clipping()
     m_expensive_clipping_target = nullptr;
     m_expensive_clipping_mask = nullptr;
     m_painter.add_clip_rect(current_stacking_context.clip.bounds);
-}
-
-static Gfx::Path rect_path(Gfx::FloatRect const& rect)
-{
-    Gfx::Path path;
-    path.move_to({ rect.x(), rect.y() });
-    path.line_to({ rect.x() + rect.width(), rect.y() });
-    path.line_to({ rect.x() + rect.width(), rect.y() + rect.height() });
-    path.line_to({ rect.x(), rect.y() + rect.height() });
-    path.close();
-    return path;
 }
 
 AffineCommandExecutorCPU::AffineCommandExecutorCPU(Gfx::Bitmap& bitmap, Gfx::AffineTransform transform, Gfx::IntRect clip)
@@ -112,8 +95,9 @@ CommandResult AffineCommandExecutorCPU::fill_rect(FillRect const& command)
 {
     prepare_clipping(command.bounding_rect());
     // FIXME: Support clip_paths.
-    auto path = rect_path(command.rect.to_type<float>()).copy_transformed(stacking_context().transform);
-    aa_painter().fill_path(path, command.color, Gfx::Painter::WindingRule::EvenOdd);
+    Gfx::Path path;
+    path.rect(command.rect.to_type<float>());
+    aa_painter().fill_path(path.copy_transformed(stacking_context().transform), command.color, Gfx::Painter::WindingRule::EvenOdd);
     return CommandResult::Continue;
 }
 
@@ -253,45 +237,7 @@ CommandResult AffineCommandExecutorCPU::fill_rect_with_rounded_corners(FillRectW
 {
     prepare_clipping(command.bounding_rect());
     Gfx::Path path;
-
-    auto x = command.rect.x();
-    auto y = command.rect.y();
-    auto width = command.rect.width();
-    auto height = command.rect.height();
-
-    if (command.top_left_radius)
-        path.move_to({ x + command.top_left_radius.horizontal_radius, y });
-    else
-        path.move_to({ x, y });
-
-    if (command.top_right_radius) {
-        path.horizontal_line_to(x + width - command.top_right_radius.horizontal_radius);
-        path.elliptical_arc_to({ x + width, y + command.top_right_radius.horizontal_radius }, { command.top_right_radius.horizontal_radius, command.top_right_radius.vertical_radius }, 0, false, true);
-    } else {
-        path.horizontal_line_to(x + width);
-    }
-
-    if (command.bottom_right_radius) {
-        path.vertical_line_to(y + height - command.bottom_right_radius.vertical_radius);
-        path.elliptical_arc_to({ x + width - command.bottom_right_radius.horizontal_radius, y + height }, { command.bottom_right_radius.horizontal_radius, command.bottom_right_radius.vertical_radius }, 0, false, true);
-    } else {
-        path.vertical_line_to(y + height);
-    }
-
-    if (command.bottom_left_radius) {
-        path.horizontal_line_to(x + command.bottom_left_radius.horizontal_radius);
-        path.elliptical_arc_to({ x, y + height - command.bottom_left_radius.vertical_radius }, { command.bottom_left_radius.horizontal_radius, command.bottom_left_radius.vertical_radius }, 0, false, true);
-    } else {
-        path.horizontal_line_to(x);
-    }
-
-    if (command.top_left_radius) {
-        path.vertical_line_to(y + command.top_left_radius.vertical_radius);
-        path.elliptical_arc_to({ x + command.top_left_radius.horizontal_radius, y }, { command.top_left_radius.horizontal_radius, command.top_left_radius.vertical_radius }, 0, false, true);
-    } else {
-        path.vertical_line_to(y);
-    }
-
+    path.rounded_rect(command.rect.to_type<float>(), command.top_left_radius, command.top_right_radius, command.bottom_right_radius, command.bottom_left_radius);
     path = path.copy_transformed(stacking_context().transform);
     aa_painter().fill_path(path, command.color, Gfx::Painter::WindingRule::EvenOdd);
     return CommandResult::Continue;
@@ -363,8 +309,9 @@ CommandResult AffineCommandExecutorCPU::apply_backdrop_filter(ApplyBackdropFilte
 CommandResult AffineCommandExecutorCPU::draw_rect(DrawRect const& command)
 {
     prepare_clipping(command.bounding_rect());
-    auto path = rect_path(command.rect.to_type<float>()).copy_transformed(stacking_context().transform);
-    aa_painter().stroke_path(path, command.color, 1);
+    Gfx::Path path;
+    path.rect(command.rect.to_type<float>());
+    aa_painter().stroke_path(path.copy_transformed(stacking_context().transform), command.color, 1);
     return CommandResult::Continue;
 }
 
