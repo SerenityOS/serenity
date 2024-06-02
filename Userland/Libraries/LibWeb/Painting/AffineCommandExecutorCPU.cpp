@@ -50,15 +50,16 @@ void AffineCommandExecutorCPU::prepare_clipping(Gfx::IntRect bounding_rect)
     set_target(clip_bounds.top_left(), *m_expensive_clipping_target);
 }
 
-void AffineCommandExecutorCPU::flush_clipping()
+void AffineCommandExecutorCPU::flush_clipping(Optional<StackingContext const&> current_stacking_context)
 {
     if (!m_expensive_clipping_target)
         return;
-    auto& current_stacking_context = stacking_context();
-    set_target(current_stacking_context.origin, *current_stacking_context.target);
+    if (!current_stacking_context.has_value())
+        current_stacking_context = stacking_context();
+    set_target(current_stacking_context->origin, *current_stacking_context->target);
     m_expensive_clipping_target->apply_mask(*m_expensive_clipping_mask, Gfx::Bitmap::MaskKind::Alpha);
-    painter().blit(current_stacking_context.clip.bounds.top_left(), *m_expensive_clipping_target, m_expensive_clipping_target->rect());
-    painter().add_clip_rect(current_stacking_context.clip.bounds);
+    painter().blit(current_stacking_context->clip.bounds.top_left(), *m_expensive_clipping_target, m_expensive_clipping_target->rect());
+    painter().add_clip_rect(current_stacking_context->clip.bounds);
     m_expensive_clipping_target = nullptr;
     m_expensive_clipping_mask = nullptr;
 }
@@ -183,19 +184,17 @@ CommandResult AffineCommandExecutorCPU::pop_stacking_context(PopStackingContext 
 {
     auto active_stacking_contexts = m_stacking_contexts.size() - 1;
     bool is_final_stacking_context = active_stacking_contexts <= 1;
-    auto prev_stacking_context = stacking_context();
+    auto prev_stacking_context = m_stacking_contexts.take_last();
+    auto& current_stacking_context = stacking_context();
     bool need_to_flush_clipping = is_final_stacking_context
-        || stacking_context().clip != m_stacking_contexts[active_stacking_contexts - 1].clip
+        || prev_stacking_context.clip != current_stacking_context.clip
         || prev_stacking_context.opacity < 1.0f;
-    if (need_to_flush_clipping)
-        flush_clipping();
-    m_stacking_contexts.take_last();
     if (need_to_flush_clipping) {
+        flush_clipping(prev_stacking_context);
         painter().clear_clip_rect();
         painter().add_clip_rect(stacking_context().clip.bounds);
     }
     if (prev_stacking_context.opacity < 1.0f) {
-        auto& current_stacking_context = stacking_context();
         set_target(current_stacking_context.origin, *current_stacking_context.target);
         prepare_clipping(prev_stacking_context.rect());
         painter().blit(prev_stacking_context.origin, *prev_stacking_context.target, prev_stacking_context.target->rect(), prev_stacking_context.opacity);

@@ -102,7 +102,7 @@ private:
 
     void prepare_clipping(Gfx::IntRect bounding_rect);
 
-    void flush_clipping();
+    void flush_clipping(Optional<StackingContext const&> = {});
 
     bool needs_expensive_clipping(Gfx::IntRect bounding_rect) const;
 
