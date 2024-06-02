@@ -59,11 +59,8 @@ int InodeVMObject::release_all_clean_pages()
             ++count;
         }
     }
-    if (count) {
-        for_each_region([](auto& region) {
-            region.remap();
-        });
-    }
+    if (count)
+        remap_regions();
     return count;
 }
 
@@ -78,11 +75,8 @@ int InodeVMObject::try_release_clean_pages(int page_amount)
             ++count;
         }
     }
-    if (count) {
-        for_each_region([](auto& region) {
-            region.remap();
-        });
-    }
+    if (count)
+        remap_regions();
     return count;
 }
 

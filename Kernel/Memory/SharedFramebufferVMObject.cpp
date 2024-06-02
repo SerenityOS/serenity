@@ -79,17 +79,13 @@ void SharedFramebufferVMObject::switch_to_fake_sink_framebuffer_writes(Badge<Ker
 {
     SpinlockLocker locker(m_writes_state_lock);
     m_writes_are_faked = true;
-    for_each_region([](Region& region) {
-        region.remap();
-    });
+    remap_regions();
 }
 void SharedFramebufferVMObject::switch_to_real_framebuffer_writes(Badge<Kernel::DisplayConnector>)
 {
     SpinlockLocker locker(m_writes_state_lock);
     m_writes_are_faked = false;
-    for_each_region([](Region& region) {
-        region.remap();
-    });
+    remap_regions();
 }
 
 ReadonlySpan<RefPtr<PhysicalRAMPage>> SharedFramebufferVMObject::physical_pages() const
