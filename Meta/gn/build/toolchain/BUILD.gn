@@ -65,9 +65,6 @@ template("unix_toolchain") {
     }
 
     tool("alink") {
-      if (enable_ccache) {
-        command_launcher = "ccache"
-      }
       if (current_os == "ios" || current_os == "mac") {
         command = "libtool -D -static -no_warning_for_no_symbols {{arflags}} -o {{output}} {{inputs}}"
         not_needed([ "ar" ])
@@ -93,9 +90,6 @@ template("unix_toolchain") {
     lib_dir_switch = "-L"
 
     tool("solink") {
-      if (enable_ccache) {
-        command_launcher = "ccache"
-      }
       outfile = "{{output_dir}}/{{target_output_name}}{{output_extension}}"
       if (current_os == "ios" || current_os == "mac") {
         command = "$ld -shared {{ldflags}} -o $outfile {{inputs}} {{libs}} {{frameworks}} -Wl,-install_name,@rpath/{{target_output_name}}{{output_extension}}"
@@ -116,9 +110,6 @@ template("unix_toolchain") {
     }
 
     tool("solink_module") {
-      if (enable_ccache) {
-        command_launcher = "ccache"
-      }
       outfile = "{{output_dir}}/{{target_output_name}}{{output_extension}}"
       if (current_os == "ios" || current_os == "mac") {
         command = "$ld -shared {{ldflags}} -Wl,-flat_namespace -Wl,-undefined,suppress -o $outfile {{inputs}} {{libs}} {{frameworks}} -Wl,-install_name,@rpath/{{target_output_name}}{{output_extension}}"
