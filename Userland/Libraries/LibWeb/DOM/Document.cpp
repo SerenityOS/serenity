@@ -4406,6 +4406,16 @@ void Document::ensure_animation_timer()
     m_animation_driver_timer->start();
 }
 
+Vector<JS::NonnullGCPtr<Animations::Animation>> Document::get_animations()
+{
+    Vector<JS::NonnullGCPtr<Animations::Animation>> relevant_animations;
+    for_each_child_of_type<Element>([&](auto& child) {
+        relevant_animations.extend(child.get_animations({ .subtree = true }));
+        return IterationDecision::Continue;
+    });
+    return relevant_animations;
+}
+
 // https://html.spec.whatwg.org/multipage/dom.html#dom-document-nameditem-filter
 static bool is_potentially_named_element(DOM::Element const& element)
 {

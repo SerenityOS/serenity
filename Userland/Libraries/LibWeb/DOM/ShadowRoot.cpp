@@ -130,4 +130,14 @@ void ShadowRoot::for_each_css_style_sheet(Function<void(CSS::CSSStyleSheet&)>&& 
     }
 }
 
+Vector<JS::NonnullGCPtr<Animations::Animation>> ShadowRoot::get_animations()
+{
+    Vector<JS::NonnullGCPtr<Animations::Animation>> relevant_animations;
+    for_each_child_of_type<Element>([&](auto& child) {
+        relevant_animations.extend(child.get_animations({ .subtree = true }));
+        return IterationDecision::Continue;
+    });
+    return relevant_animations;
+}
+
 }

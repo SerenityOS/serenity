@@ -612,6 +612,8 @@ public:
     void remove_replaced_animations();
     void ensure_animation_timer();
 
+    Vector<JS::NonnullGCPtr<Animations::Animation>> get_animations();
+
     bool ready_to_run_scripts() const { return m_ready_to_run_scripts; }
     void set_ready_to_run_scripts() { m_ready_to_run_scripts = true; }
 
