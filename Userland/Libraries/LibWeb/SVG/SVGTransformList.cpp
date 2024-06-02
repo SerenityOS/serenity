@@ -23,6 +23,13 @@ SVGTransformList::~SVGTransformList() = default;
 SVGTransformList::SVGTransformList(JS::Realm& realm)
     : PlatformObject(realm) {};
 
+// https://svgwg.org/svg2-draft/single-page.html#types-__svg__SVGNameList__length
+WebIDL::UnsignedLong SVGTransformList::length()
+{
+    // The length and numberOfItems IDL attributes represents the length of the list, and on getting simply return the length of the list.
+    return m_transforms.size();
+}
+
 // https://svgwg.org/svg2-draft/single-page.html#types-__svg__SVGNameList__getItem
 WebIDL::ExceptionOr<JS::NonnullGCPtr<SVGTransform>> SVGTransformList::get_item(WebIDL::UnsignedLong index)
 {
