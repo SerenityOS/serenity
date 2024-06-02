@@ -13,6 +13,7 @@
 #include <AK/String.h>
 #include <AK/StringView.h>
 #include <LibURL/Forward.h>
+#include <LibWeb/MimeSniff/MimeType.h>
 
 namespace Web::Fetch::Infrastructure {
 
@@ -39,7 +40,7 @@ inline constexpr Array FETCH_SCHEMES = {
 
 // https://fetch.spec.whatwg.org/#data-url-struct
 struct DataURL {
-    String mime_type;
+    MimeSniff::MimeType mime_type;
     ByteBuffer body;
 };
 
