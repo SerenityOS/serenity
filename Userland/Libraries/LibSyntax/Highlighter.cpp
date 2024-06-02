@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibGUI/TextEditor.h>
 #include <LibGfx/Color.h>
 #include <LibSyntax/Highlighter.h>
 
@@ -75,7 +74,7 @@ void Highlighter::highlight_matching_token_pair()
     auto pairs = matching_token_pairs();
 
     for (size_t i = 0; i < document.spans().size(); ++i) {
-        auto& span = const_cast<GUI::TextDocumentSpan&>(document.spans().at(i));
+        auto& span = const_cast<TextDocumentSpan&>(document.spans().at(i));
         auto token_type = span.data;
 
         for (auto& pair : pairs) {
