@@ -5,6 +5,7 @@
  */
 
 #include <AK/String.h>
+#include <AK/TypeCasts.h>
 
 #include "AST/AST.h"
 
@@ -105,7 +106,7 @@ TreeList::TreeList(Vector<Tree>&& trees)
 {
     for (auto const& tree : trees) {
         if (tree->is_list()) {
-            for (auto const& nested_tree : as<TreeList>(tree)->m_trees)
+            for (auto const& nested_tree : as<TreeList>(*tree)->m_trees)
                 m_trees.append(nested_tree);
         } else {
             m_trees.append(tree);

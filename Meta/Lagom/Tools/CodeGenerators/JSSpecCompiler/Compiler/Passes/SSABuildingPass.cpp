@@ -6,6 +6,7 @@
 
 #include <AK/Enumerate.h>
 #include <AK/Queue.h>
+#include <AK/TypeCasts.h>
 
 #include "AST/AST.h"
 #include "Compiler/GenericASTPass.h"
@@ -245,11 +246,11 @@ protected:
 
     void on_leave(Tree tree) override
     {
-        if (auto binary_operation = as<BinaryOperation>(tree); binary_operation) {
+        if (auto* binary_operation = as<BinaryOperation>(*tree); binary_operation) {
             if (binary_operation->m_operation != BinaryOperator::Assignment)
                 return;
 
-            if (auto variable = as<Variable>(binary_operation->m_left); variable) {
+            if (auto* variable = as<Variable>(*binary_operation->m_left); variable) {
                 auto& vector = m_declarations.get(variable->m_name).value();
                 if (vector.is_empty() || vector.last() != m_current_block)
                     vector.append(m_current_block);
@@ -330,20 +331,20 @@ protected:
         if (tree->is_statement())
             TODO();
 
-        auto binary_operation = as<BinaryOperation>(tree);
+        auto* binary_operation = as<BinaryOperation>(*tree);
         if (binary_operation && binary_operation->m_operation == BinaryOperator::Assignment) {
             run_in_subtree(binary_operation->m_right);
-            if (auto variable = as<Variable>(binary_operation->m_left); variable) {
+            if (auto* variable = as<Variable>(*binary_operation->m_left); variable) {
                 m_create(variable->m_name);
-                m_rename(variable.release_nonnull());
+                m_rename(*variable);
             } else {
                 run_in_subtree(binary_operation->m_left);
             }
             return RecursionDecision::Continue;
         }
 
-        if (auto variable = as<Variable>(tree); variable) {
-            m_rename(variable.release_nonnull());
+        if (auto* variable = as<Variable>(*tree); variable) {
+            m_rename(*variable);
             return RecursionDecision::Continue;
         }
 
@@ -415,7 +416,7 @@ void SSABuildingPass::rename_variables(Vertex u, Vertex from)
         });
     renamer.run(u.block());
 
-    if (auto function_return = as<ControlFlowFunctionReturn>(u.block()->m_continuation); function_return) {
+    if (auto* function_return = as<ControlFlowFunctionReturn>(*u.block()->m_continuation); function_return) {
         // CFG should have exactly one ControlFlowFunctionReturn.
         VERIFY(m_function->m_return_value == nullptr);
         m_function->m_return_value = function_return->m_return_value->m_ssa;

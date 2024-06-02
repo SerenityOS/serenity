@@ -7,6 +7,7 @@
 #include "Compiler/Passes/CFGSimplificationPass.h"
 #include "AST/AST.h"
 #include "Function.h"
+#include <AK/TypeCasts.h>
 
 namespace JSSpecCompiler {
 
@@ -22,7 +23,7 @@ void CFGSimplificationPass::process_function()
     for (auto const& block : graph.blocks) {
         m_replacement[block->m_index] = block;
         if (block->m_expressions.size() == 0)
-            if (auto jump = as<ControlFlowJump>(block->m_continuation); jump)
+            if (auto* jump = as<ControlFlowJump>(*block->m_continuation); jump)
                 m_replacement[block->m_index] = jump->m_block;
     }
 

@@ -5,6 +5,7 @@
  */
 
 #include <AK/HashMap.h>
+#include <AK/TypeCasts.h>
 
 #include "AST/AST.h"
 #include "Compiler/Passes/ReferenceResolvingPass.h"
@@ -21,13 +22,13 @@ void ReferenceResolvingPass::process_function()
 
 RecursionDecision ReferenceResolvingPass::on_entry(Tree tree)
 {
-    if (auto binary_operation = as<BinaryOperation>(tree); binary_operation) {
+    if (auto* binary_operation = as<BinaryOperation>(*tree); binary_operation) {
         if (binary_operation->m_operation != BinaryOperator::Declaration)
             return RecursionDecision::Recurse;
 
         binary_operation->m_operation = BinaryOperator::Assignment;
 
-        if (auto variable_name = as<UnresolvedReference>(binary_operation->m_left); variable_name) {
+        if (auto* variable_name = as<UnresolvedReference>(*binary_operation->m_left); variable_name) {
             auto name = variable_name->m_name;
             if (!m_function->m_local_variables.contains(name))
                 m_function->m_local_variables.set(name, make_ref_counted<NamedVariableDeclaration>(name));
@@ -38,7 +39,7 @@ RecursionDecision ReferenceResolvingPass::on_entry(Tree tree)
 
 void ReferenceResolvingPass::on_leave(Tree tree)
 {
-    if (auto reference = as<UnresolvedReference>(tree); reference) {
+    if (auto* reference = as<UnresolvedReference>(*tree); reference) {
         auto name = reference->m_name;
 
         if (name.starts_with("[["sv) && name.ends_with("]]"sv)) {

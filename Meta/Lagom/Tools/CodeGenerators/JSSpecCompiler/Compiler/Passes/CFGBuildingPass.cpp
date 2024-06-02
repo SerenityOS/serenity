@@ -34,9 +34,8 @@ void CFGBuildingPass::process_function()
 
 RecursionDecision CFGBuildingPass::on_entry(Tree tree)
 {
-    m_is_expression_stack.append(!as<Expression>(tree).is_null());
-
-    if (auto if_else_if_chain = as<IfElseIfChain>(tree); if_else_if_chain) {
+    m_is_expression_stack.append(is<Expression>(tree.ptr()));
+    if (auto* if_else_if_chain = as<IfElseIfChain>(*tree); if_else_if_chain) {
         auto* end_block = create_empty_block();
 
         for (auto [i, current_condition] : enumerate(if_else_if_chain->m_conditions)) {
@@ -60,7 +59,7 @@ RecursionDecision CFGBuildingPass::on_entry(Tree tree)
         return RecursionDecision::Continue;
     }
 
-    if (auto return_node = as<ReturnNode>(tree); return_node) {
+    if (auto* return_node = as<ReturnNode>(*tree); return_node) {
         Tree return_assignment = make_ref_counted<BinaryOperation>(
             BinaryOperator::Assignment,
             make_ref_counted<Variable>(m_function->m_named_return_value),
@@ -79,7 +78,7 @@ void CFGBuildingPass::on_leave(Tree tree)
 {
     (void)m_is_expression_stack.take_last();
 
-    if (!m_is_expression_stack.last() && as<Expression>(tree))
+    if (!m_is_expression_stack.last() && as<Expression>(*tree))
         m_current_block->m_expressions.append(tree);
 }
 

@@ -16,12 +16,6 @@
 
 namespace JSSpecCompiler {
 
-template<typename T>
-RefPtr<T> as(NullableTree const& tree)
-{
-    return dynamic_cast<T*>(tree.ptr());
-}
-
 class NodeSubtreePointer {
 public:
     NodeSubtreePointer(Tree* tree_ptr)
