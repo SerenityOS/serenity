@@ -62,6 +62,8 @@ protected:
     template<typename Callback>
     void for_each_region(Callback);
 
+    void remap_regions();
+
     IntrusiveListNode<VMObject> m_list_node;
     FixedArray<RefPtr<PhysicalRAMPage>> m_physical_pages;
 

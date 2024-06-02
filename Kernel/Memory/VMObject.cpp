@@ -38,4 +38,11 @@ VMObject::~VMObject()
     VERIFY(m_regions.is_empty());
 }
 
+void VMObject::remap_regions()
+{
+    for_each_region([](Region& region) {
+        region.remap();
+    });
+}
+
 }
