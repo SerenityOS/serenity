@@ -8,6 +8,7 @@
 
 #include <LibURL/URL.h>
 #include <LibWeb/Fetch/Infrastructure/URL.h>
+#include <LibWeb/MimeSniff/MimeType.h>
 #include <Userland/Libraries/LibWeb/Infra/Base64.h>
 
 namespace Web::Fetch::Infrastructure {
@@ -95,16 +96,17 @@ ErrorOr<DataURL> process_data_url(URL::URL const& data_url)
         mime_type = builder.string_view();
     }
 
-    // FIXME: Parse the MIME type's components according to https://mimesniff.spec.whatwg.org/#parse-a-mime-type
-    // FIXME: 13. Let mimeTypeRecord be the result of parsing mimeType.
-    auto mime_type_record = mime_type.trim("\n\r\t "sv, TrimMode::Both);
+    // 13. Let mimeTypeRecord be the result of parsing mimeType.
+    auto mime_type_record = TRY(MimeSniff::MimeType::parse(mime_type));
 
     // 14. If mimeTypeRecord is failure, then set mimeTypeRecord to text/plain;charset=US-ASCII.
-    if (mime_type_record.is_empty())
-        mime_type_record = "text/plain;charset=US-ASCII"sv;
+    if (!mime_type_record.has_value()) {
+        mime_type_record = TRY(MimeSniff::MimeType::create("text"_string, "plain"_string));
+        TRY(mime_type_record->set_parameter("charset"_string, "US-ASCII"_string));
+    }
 
     // 15. Return a new data: URL struct whose MIME type is mimeTypeRecord and body is body.
-    return DataURL { TRY(String::from_utf8(mime_type_record)), body };
+    return DataURL { mime_type_record.release_value(), body };
 }
 
 }
