@@ -190,6 +190,7 @@ unix_toolchain("unix") {
     current_os = host_os
     cc = host_cc
     cxx = host_cxx
+    ld = host_cxx
   }
 }
 
