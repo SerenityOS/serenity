@@ -4,7 +4,7 @@
 [Exposed=Window]
 interface SVGTransformList {
   readonly attribute unsigned long length;
-  [FIXME] readonly attribute unsigned long numberOfItems;
+  readonly attribute unsigned long numberOfItems;
 
   [FIXME] undefined clear();
   // FIXME: SVGTransform initialize(SVGTransform newItem);
