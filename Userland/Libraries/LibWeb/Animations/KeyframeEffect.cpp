@@ -835,7 +835,7 @@ WebIDL::ExceptionOr<JS::MarkedVector<JS::Object*>> KeyframeEffect::get_keyframes
 
             for (auto const& [id, value] : keyframe.parsed_properties()) {
                 auto value_string = JS::PrimitiveString::create(vm, value->to_string());
-                TRY(object->set(JS::PropertyKey(DeprecatedFlyString(CSS::string_from_property_id(id))), value_string, ShouldThrowExceptions::Yes));
+                TRY(object->set(JS::PropertyKey(DeprecatedFlyString(CSS::camel_case_string_from_property_id(id))), value_string, ShouldThrowExceptions::Yes));
             }
 
             m_keyframe_objects.append(object);
