@@ -6,7 +6,6 @@
 
 #include "Language.h"
 #include <AK/LexicalPath.h>
-#include <LibGUI/TextEditor.h>
 #include <LibSyntax/Highlighter.h>
 
 namespace Syntax {
