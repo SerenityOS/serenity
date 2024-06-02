@@ -174,6 +174,7 @@ bool is_animatable_property(PropertyID);
 Optional<PropertyID> property_id_from_camel_case_string(StringView);
 Optional<PropertyID> property_id_from_string(StringView);
 [[nodiscard]] FlyString const& string_from_property_id(PropertyID);
+[[nodiscard]] FlyString const& camel_case_string_from_property_id(PropertyID);
 bool is_inherited_property(PropertyID);
 NonnullRefPtr<StyleValue> property_initial_value(JS::Realm&, PropertyID);
 
@@ -415,6 +416,33 @@ FlyString const& string_from_property_id(PropertyID property_id) {
         member_generator.append(R"~~~(
     case PropertyID::@name:titlecase@: {
         static FlyString name = "@name@"_fly_string;
+        return name;
+    }
+)~~~");
+    });
+
+    generator.append(R"~~~(
+    default: {
+        static FlyString invalid_property_id_string = "(invalid CSS::PropertyID)"_fly_string;
+        return invalid_property_id_string;
+    }
+    }
+}
+
+FlyString const& camel_case_string_from_property_id(PropertyID property_id) {
+    switch (property_id) {
+)~~~");
+
+    properties.for_each_member([&](auto& name, auto& value) {
+        VERIFY(value.is_object());
+
+        auto member_generator = generator.fork();
+        member_generator.set("name", name);
+        member_generator.set("name:titlecase", title_casify(name));
+        member_generator.set("name:camelcase", camel_casify(name));
+        member_generator.append(R"~~~(
+    case PropertyID::@name:titlecase@: {
+        static FlyString name = "@name:camelcase@"_fly_string;
         return name;
     }
 )~~~");
