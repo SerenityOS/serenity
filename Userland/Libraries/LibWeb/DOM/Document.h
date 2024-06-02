@@ -596,6 +596,7 @@ public:
     void restore_the_history_object_state(JS::NonnullGCPtr<HTML::SessionHistoryEntry> entry);
 
     JS::NonnullGCPtr<Animations::DocumentTimeline> timeline();
+    auto const& last_animation_frame_timestamp() const { return m_last_animation_frame_timestamp; }
 
     void associate_with_timeline(JS::NonnullGCPtr<Animations::AnimationTimeline>);
     void disassociate_with_timeline(JS::NonnullGCPtr<Animations::AnimationTimeline>);
@@ -889,6 +890,7 @@ private:
 
     // https://www.w3.org/TR/web-animations-1/#document-default-document-timeline
     JS::GCPtr<Animations::DocumentTimeline> m_default_timeline;
+    Optional<double> m_last_animation_frame_timestamp;
 
     // https://www.w3.org/TR/web-animations-1/#pending-animation-event-queue
     Vector<PendingAnimationEvent> m_pending_animation_event_queue;

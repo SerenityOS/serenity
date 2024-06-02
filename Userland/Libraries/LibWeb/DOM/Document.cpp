@@ -4233,6 +4233,7 @@ void Document::update_animations_and_send_events(Optional<double> const& timesta
     // - Running the update an animation’s finished state procedure for any animations whose current time has been
     //   updated.
     // - Queueing animation events for any such animations.
+    m_last_animation_frame_timestamp = timestamp;
     for (auto const& timeline : m_associated_animation_timelines)
         timeline->set_current_time(timestamp);
 
