@@ -53,7 +53,7 @@ using KeyframeType = Conditional<AL == AllowLists::Yes, BasePropertyIndexedKeyfr
 
 // https://www.w3.org/TR/web-animations-1/#process-a-keyframe-like-object
 template<AllowLists AL>
-static WebIDL::ExceptionOr<KeyframeType<AL>> process_a_keyframe_like_object(JS::Realm& realm, JS::GCPtr<JS::Object> keyframe_input)
+static WebIDL::ExceptionOr<KeyframeType<AL>> process_a_keyframe_like_object(JS::Realm& realm, JS::Value keyframe_input)
 {
     auto& vm = realm.vm();
 
@@ -96,11 +96,15 @@ static WebIDL::ExceptionOr<KeyframeType<AL>> process_a_keyframe_like_object(JS::
     //    Store the result of this procedure as keyframe output.
 
     KeyframeType<AL> keyframe_output;
-    auto offset = TRY(keyframe_input->get("offset"));
-    auto easing = TRY(keyframe_input->get("easing"));
+    if (keyframe_input.is_nullish())
+        return keyframe_output;
+
+    auto& keyframe_object = keyframe_input.as_object();
+    auto offset = TRY(keyframe_object.get("offset"));
+    auto easing = TRY(keyframe_object.get("easing"));
     if (easing.is_undefined())
         easing = JS::PrimitiveString::create(vm, "linear"_string);
-    auto composite = TRY(keyframe_input->get("composite"));
+    auto composite = TRY(keyframe_object.get("composite"));
     if (composite.is_undefined())
         composite = JS::PrimitiveString::create(vm, "auto"_string);
 
@@ -138,7 +142,7 @@ static WebIDL::ExceptionOr<KeyframeType<AL>> process_a_keyframe_like_object(JS::
     // 4. Make up a new list animation properties that consists of all of the properties that are in both input
     //    properties and animatable properties, or which are in input properties and conform to the
     //    <custom-property-name> production.
-    auto input_properties = TRY(keyframe_input->internal_own_property_keys());
+    auto input_properties = TRY(keyframe_object.internal_own_property_keys());
 
     Vector<String> animation_properties;
     Optional<JS::Value> all_value;
@@ -149,7 +153,7 @@ static WebIDL::ExceptionOr<KeyframeType<AL>> process_a_keyframe_like_object(JS::
 
         auto name = input_property.as_string().utf8_string();
         if (name == "all"sv) {
-            all_value = TRY(keyframe_input->get(JS::PropertyKey { name }));
+            all_value = TRY(keyframe_object.get(JS::PropertyKey { name }));
             for (auto i = to_underlying(CSS::first_longhand_property_id); i <= to_underlying(CSS::last_longhand_property_id); ++i) {
                 auto property = static_cast<CSS::PropertyID>(i);
                 if (CSS::is_animatable_property(property))
@@ -170,7 +174,7 @@ static WebIDL::ExceptionOr<KeyframeType<AL>> process_a_keyframe_like_object(JS::
         //    as the property key and keyframe input as the receiver.
         // 2. Check the completion record of raw value.
         JS::PropertyKey key { property_name };
-        auto raw_value = TRY(keyframe_input->has_property(key)) ? TRY(keyframe_input->get(key)) : *all_value;
+        auto raw_value = TRY(keyframe_object.has_property(key)) ? TRY(keyframe_object.get(key)) : *all_value;
 
         using PropertyValuesType = Conditional<AL == AllowLists::Yes, Vector<String>, String>;
         PropertyValuesType property_values;
@@ -343,7 +347,7 @@ static WebIDL::ExceptionOr<Vector<BaseKeyframe>> process_a_keyframes_argument(JS
 
             // 7. Append to processed keyframes the result of running the procedure to process a keyframe-like object
             //    passing nextItem as the keyframe input and with the allow lists flag set to false.
-            processed_keyframes.append(TRY(process_a_keyframe_like_object<AllowLists::No>(realm, next_item.as_object())));
+            processed_keyframes.append(TRY(process_a_keyframe_like_object<AllowLists::No>(realm, next_item)));
         }
     }
     // -> Otherwise,
