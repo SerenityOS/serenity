@@ -8,7 +8,7 @@
 #pragma once
 
 #include <AK/Queue.h>
-#include <LibGUI/AbstractScrollableWidget.h>
+#include <LibGUI/Frame.h>
 #include <LibGUI/Widget.h>
 #include <LibURL/URL.h>
 #include <LibWeb/CSS/Selector.h>
@@ -25,11 +25,11 @@ namespace WebView {
 class WebContentClient;
 
 class OutOfProcessWebView final
-    : public GUI::AbstractScrollableWidget
+    : public GUI::Frame
     , public ViewImplementation {
     C_OBJECT(OutOfProcessWebView);
 
-    using Super = GUI::AbstractScrollableWidget;
+    using Super = GUI::Frame;
 
 public:
     virtual ~OutOfProcessWebView() override;
@@ -74,14 +74,11 @@ private:
     virtual void show_event(GUI::ShowEvent&) override;
     virtual void hide_event(GUI::HideEvent&) override;
 
-    // ^AbstractScrollableWidget
-    virtual void did_scroll() override;
-
     // ^WebView::ViewImplementation
     virtual void initialize_client(CreateNewClient) override;
     virtual void update_zoom() override;
 
-    virtual Web::DevicePixelRect viewport_rect() const override;
+    virtual Web::DevicePixelSize viewport_size() const override;
     virtual Gfx::IntPoint to_content_position(Gfx::IntPoint widget_position) const override;
     virtual Gfx::IntPoint to_widget_position(Gfx::IntPoint content_position) const override;
 
