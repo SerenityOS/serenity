@@ -484,6 +484,8 @@ static ErrorOr<void> decode_webp_animation_frame_chunks(WebPLoadingContext& cont
     if (context.state >= WebPLoadingContext::State::AnimationFrameChunksDecoded)
         return {};
 
+    VERIFY(context.state == WebPLoadingContext::State::ChunksDecoded);
+
     context.animation_header_chunk_data = TRY(decode_webp_chunk_ANIM(context.animation_header_chunk.value()));
 
     Vector<ANMFChunk> decoded_chunks;
