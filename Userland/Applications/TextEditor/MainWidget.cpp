@@ -912,18 +912,16 @@ void MainWidget::update_markdown_preview()
 {
     auto document = Markdown::Document::parse(m_editor->text());
     if (document) {
+        // FIXME: Retain original scroll after loading new preview
         auto html = document->render_to_html();
-        auto current_scroll_pos = m_page_view->visible_content_rect();
         m_page_view->load_html(html);
-        m_page_view->scroll_into_view(current_scroll_pos, true, true);
     }
 }
 
 void MainWidget::update_html_preview()
 {
-    auto current_scroll_pos = m_page_view->visible_content_rect();
+    // FIXME: Retain original scroll after loading new preview
     m_page_view->load_html(m_editor->text());
-    m_page_view->scroll_into_view(current_scroll_pos, true, true);
 }
 
 void MainWidget::update_statusbar()
