@@ -1381,9 +1381,9 @@ TEST_CASE(test_webp_extended_lossless_animated)
     EXPECT(Gfx::WebPImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = TRY_OR_FAIL(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
 
+    EXPECT_EQ(plugin_decoder->loop_count(), 42u);
     EXPECT_EQ(plugin_decoder->frame_count(), 8u);
     EXPECT(plugin_decoder->is_animated());
-    EXPECT_EQ(plugin_decoder->loop_count(), 42u);
 
     EXPECT_EQ(plugin_decoder->size(), Gfx::IntSize(990, 1050));
 

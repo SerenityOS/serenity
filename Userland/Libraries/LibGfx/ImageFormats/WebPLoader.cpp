@@ -639,6 +639,11 @@ size_t WebPImageDecoderPlugin::loop_count()
     if (!is_animated())
         return 0;
 
+    if (m_context->state < WebPLoadingContext::State::ChunksDecoded) {
+        if (set_error(decode_webp_chunks(*m_context)))
+            return 0;
+    }
+
     if (m_context->state < WebPLoadingContext::State::AnimationFrameChunksDecoded) {
         if (set_error(decode_webp_animation_frame_chunks(*m_context)))
             return 0;
