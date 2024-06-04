@@ -9,6 +9,7 @@
 
 #include <LibJS/Forward.h>
 #include <LibJS/Module.h>
+#include <LibJS/Runtime/ModuleRequest.h>
 
 namespace JS {
 
