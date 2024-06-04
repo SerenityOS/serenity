@@ -33,7 +33,7 @@ jobs:
       - name: "Install emscripten"
         uses: mymindstorm/setup-emsdk@v14
         with:
-          version: 3.1.25
+          version: 3.1.61
 
       - name: Restore Caches
         uses: ./.github/actions/cache-restore
