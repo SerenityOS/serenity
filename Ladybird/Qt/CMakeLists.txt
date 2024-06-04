@@ -1,0 +1,26 @@
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network)
+qt_add_executable(ladybird ${LADYBIRD_SOURCES})
+target_sources(ladybird PRIVATE
+    Application.cpp
+    AutoComplete.cpp
+    BrowserWindow.cpp
+    EventLoopImplementationQt.cpp
+    EventLoopImplementationQtEventTarget.cpp
+    FindInPageWidget.cpp
+    Icon.cpp
+    InspectorWidget.cpp
+    LocationEdit.cpp
+    Settings.cpp
+    SettingsDialog.cpp
+    Tab.cpp
+    TabBar.cpp
+    TaskManagerWindow.cpp
+    TVGIconEngine.cpp
+    StringUtils.cpp
+    WebContentView.cpp
+    ladybird.qrc
+    main.cpp
+)
+target_link_libraries(ladybird PRIVATE Qt::Core Qt::Gui Qt::Network Qt::Widgets)
+set_target_properties(ladybird PROPERTIES AUTOMOC ON AUTORCC ON)
+create_ladybird_bundle(ladybird)
