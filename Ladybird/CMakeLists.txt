@@ -85,9 +85,9 @@ else()
     serenity_option(ENABLE_QT ON CACHE BOOL "Build ladybird application using Qt GUI")
 endif()
 
-set(SOURCES
-    HelperProcess.cpp
-    Utilities.cpp
+set(LADYBIRD_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/HelperProcess.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Utilities.cpp
 )
 set(LADYBIRD_HEADERS
     HelperProcess.h
@@ -95,63 +95,40 @@ set(LADYBIRD_HEADERS
     Utilities.h
 )
 
+function(create_ladybird_bundle target_name)
+    set_target_properties(${target_name} PROPERTIES
+        OUTPUT_NAME "Ladybird"
+        MACOSX_BUNDLE_GUI_IDENTIFIER org.SerenityOS.Ladybird
+        MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
+        MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
+        MACOSX_BUNDLE_INFO_PLIST "${SERENITY_SOURCE_DIR}/Ladybird/Info.plist"
+        MACOSX_BUNDLE TRUE
+        WIN32_EXECUTABLE TRUE
+        XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER org.SerenityOS.Ladybird
+    )
+
+    if (APPLE)
+        set(bundle_dir "$<TARGET_BUNDLE_DIR:${target_name}>")
+        add_custom_command(TARGET ${target_name} POST_BUILD
+            COMMAND "${CMAKE_COMMAND}" -E make_directory "${bundle_dir}/Contents/Resources"
+            COMMAND "iconutil" --convert icns "${SERENITY_SOURCE_DIR}/Ladybird/Icons/macos/app_icon.iconset" --output "${bundle_dir}/Contents/Resources/app_icon.icns"
+        )
+    endif()
+endfunction()
+
+# Select UI Framework
 if (ENABLE_QT)
-    find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network)
-    qt_add_executable(ladybird ${SOURCES})
-    target_sources(ladybird PRIVATE
-        Qt/Application.cpp
-        Qt/AutoComplete.cpp
-        Qt/BrowserWindow.cpp
-        Qt/EventLoopImplementationQt.cpp
-        Qt/EventLoopImplementationQtEventTarget.cpp
-        Qt/FindInPageWidget.cpp
-        Qt/Icon.cpp
-        Qt/InspectorWidget.cpp
-        Qt/LocationEdit.cpp
-        Qt/Settings.cpp
-        Qt/SettingsDialog.cpp
-        Qt/Tab.cpp
-        Qt/TabBar.cpp
-        Qt/TaskManagerWindow.cpp
-        Qt/TVGIconEngine.cpp
-        Qt/StringUtils.cpp
-        Qt/WebContentView.cpp
-        Qt/ladybird.qrc
-        Qt/main.cpp
-    )
-    target_link_libraries(ladybird PRIVATE Qt::Core Qt::Gui Qt::Network Qt::Widgets)
-    set_target_properties(ladybird PROPERTIES AUTOMOC ON AUTORCC ON)
+   add_subdirectory(Qt)
 elseif (APPLE)
-    add_executable(ladybird MACOSX_BUNDLE
-        ${SOURCES}
-        AppKit/main.mm
-        AppKit/Application/Application.mm
-        AppKit/Application/ApplicationBridge.cpp
-        AppKit/Application/ApplicationDelegate.mm
-        AppKit/Application/EventLoopImplementation.mm
-        AppKit/UI/Event.mm
-        AppKit/UI/Inspector.mm
-        AppKit/UI/InspectorController.mm
-        AppKit/UI/LadybirdWebView.mm
-        AppKit/UI/LadybirdWebViewBridge.cpp
-        AppKit/UI/Palette.mm
-        AppKit/UI/SearchPanel.mm
-        AppKit/UI/Tab.mm
-        AppKit/UI/TabController.mm
-        AppKit/UI/TaskManager.mm
-        AppKit/UI/TaskManagerController.mm
-        AppKit/Utilities/Conversions.mm
-    )
-    target_include_directories(ladybird PRIVATE AppKit)
-    target_link_libraries(ladybird PRIVATE "-framework Cocoa -framework UniformTypeIdentifiers" LibUnicode)
-    target_compile_options(ladybird PRIVATE
-        -fobjc-arc
-        -Wno-deprecated-anon-enum-enum-conversion # Required for CGImageCreate
-    )
+   add_subdirectory(AppKit)
 else()
     # TODO: Check for other GUI frameworks here when we move them in-tree
     #       For now, we can export a static library of common files for chromes to link to
-    add_library(ladybird STATIC ${SOURCES})
+    add_library(ladybird STATIC ${LADYBIRD_SOURCES})
+endif()
+
+if (NOT TARGET ladybird)
+    message(FATAL_ERROR "UI Framework selection must declare a ladybird target")
 endif()
 
 if (APPLE)
@@ -180,6 +157,7 @@ function(set_helper_process_properties)
 
         if (NOT CMAKE_INSTALL_LIBEXECDIR STREQUAL "libexec")
             set_source_files_properties(Utilities.cpp PROPERTIES COMPILE_DEFINITIONS LADYBIRD_LIBEXECDIR="${CMAKE_INSTALL_LIBEXECDIR}")
+            set_source_files_properties(Utilities.cpp TARGET_DIRECTORY ladybird PROPERTIES COMPILE_DEFINITIONS LADYBIRD_LIBEXECDIR="${CMAKE_INSTALL_LIBEXECDIR}")
             set_source_files_properties(Utilities.cpp TARGET_DIRECTORY ${targets} PROPERTIES COMPILE_DEFINITIONS LADYBIRD_LIBEXECDIR="${CMAKE_INSTALL_LIBEXECDIR}")
         endif()
     endif()
@@ -187,8 +165,7 @@ endfunction()
 
 add_executable(headless-browser
     ${SERENITY_SOURCE_DIR}/Userland/Utilities/headless-browser.cpp
-    HelperProcess.cpp
-    Utilities.cpp)
+    ${LADYBIRD_SOURCES})
 
 target_include_directories(headless-browser PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 target_include_directories(headless-browser PRIVATE ${SERENITY_SOURCE_DIR}/Userland/)
@@ -218,28 +195,6 @@ add_dependencies(ladybird ${ladybird_helper_processes})
 add_dependencies(headless-browser ${ladybird_helper_processes})
 add_dependencies(WebDriver ladybird headless-browser)
 
-function(create_ladybird_bundle target_name)
-    set_target_properties(${target_name} PROPERTIES
-        OUTPUT_NAME "Ladybird"
-        MACOSX_BUNDLE_GUI_IDENTIFIER org.SerenityOS.Ladybird
-        MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
-        MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
-        MACOSX_BUNDLE_INFO_PLIST "${SERENITY_SOURCE_DIR}/Ladybird/Info.plist"
-        MACOSX_BUNDLE TRUE
-        WIN32_EXECUTABLE TRUE
-        XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER org.SerenityOS.Ladybird
-    )
-
-    if (APPLE)
-        set(bundle_dir "$<TARGET_BUNDLE_DIR:${target_name}>")
-        add_custom_command(TARGET ${target_name} POST_BUILD
-            COMMAND "${CMAKE_COMMAND}" -E make_directory "${bundle_dir}/Contents/Resources"
-            COMMAND "iconutil" --convert icns "${SERENITY_SOURCE_DIR}/Ladybird/Icons/macos/app_icon.iconset" --output "${bundle_dir}/Contents/Resources/app_icon.icns"
-        )
-    endif()
-endfunction()
-
-create_ladybird_bundle(ladybird)
 set_helper_process_properties(${ladybird_helper_processes})
 if (APPLE)
     set_helper_process_properties(headless-browser WebDriver)
