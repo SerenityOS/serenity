@@ -25,9 +25,8 @@ void request_did_finish(URL::URL const& url, Core::Socket const* socket)
     dbgln_if(REQUESTSERVER_DEBUG, "Request for {} finished", url);
 
     ConnectionKey partial_key { url.serialized_host().release_value_but_fixme_should_propagate_errors().to_byte_string(), url.port_or_default() };
-    auto fire_off_next_job = [&](auto& cache) {
-        using CacheType = typename RemoveCVReference<decltype(cache)>::ProtectedType;
-        auto [it, end] = cache.with_read_locked([&](auto const& cache) {
+    auto fire_off_next_job = [socket, url, partial_key = move(partial_key)](auto& cache) -> Coroutine<void> {
+        auto [it, end] = cache.with_read_locked([&](auto& cache) {
             struct Result {
                 decltype(cache.begin()) it;
                 decltype(cache.end()) end;
@@ -41,12 +40,12 @@ void request_did_finish(URL::URL const& url, Core::Socket const* socket)
         });
         if (it == end) {
             dbgln("Request for URL {} finished, but we don't own that!", url);
-            return;
+            co_return;
         }
         auto connection_it = it->value->find_if([&](auto& connection) { return connection->socket == socket; });
         if (connection_it.is_end()) {
             dbgln("Request for URL {} finished, but we don't have a socket for that!", url);
-            return;
+            co_return;
         }
 
         auto& connection = *connection_it;
@@ -54,12 +53,11 @@ void request_did_finish(URL::URL const& url, Core::Socket const* socket)
             connection->job_data->timing_info.performing_request = Duration::from_milliseconds(connection->job_data->timing_info.timer.elapsed_milliseconds());
             connection->job_data->timing_info.timer.start();
         }
-
         auto& properties = g_inferred_server_properties.with_write_locked([&](auto& map) -> InferredServerProperties& { return map.ensure(partial_key.hostname); });
         if (!connection->socket->is_open())
             properties.requests_served_per_connection = min(properties.requests_served_per_connection, connection->max_queue_length + 1);
 
-        if (connection->request_queue.with_read_locked([](auto const& queue) { return queue.is_empty(); })) {
+        if (connection->request_queue.with_read_locked([&](auto& queue) { return queue.is_empty(); })) {
             // Immediately mark the connection as finished, as new jobs will never be run if they are queued
             // before the deferred_invoke() below runs otherwise.
             connection->has_started = false;
@@ -76,8 +74,8 @@ void request_did_finish(URL::URL const& url, Core::Socket const* socket)
                         if (ptr->has_started)
                             return;
 
-                        dbgln_if(REQUESTSERVER_DEBUG, "Removing no-longer-used connection {} (socket {})", ptr, ptr->socket.ptr());
-                        cache.with_write_locked([&](CacheType& cache) {
+                        dbgln_if(REQUESTSERVER_DEBUG, "Removing no-longer-used connection {} (socket {})", ptr, ptr->socket);
+                        cache.with_write_locked([&](auto& cache) {
                             auto did_remove = cache_entry.remove_first_matching([&](auto& entry) { return entry == ptr; });
                             VERIFY(did_remove);
                             if (cache_entry.is_empty())
@@ -89,7 +87,7 @@ void request_did_finish(URL::URL const& url, Core::Socket const* socket)
             });
         } else {
             auto timer = Core::ElapsedTimer::start_new();
-            if (auto result = recreate_socket_if_needed(*connection, url); result.is_error()) {
+            if (auto result = co_await recreate_socket_if_needed(*connection, url); result.is_error()) {
                 if constexpr (REQUESTSERVER_DEBUG) {
                     connection->job_data->timing_info.starting_connection += Duration::from_milliseconds(timer.elapsed_milliseconds());
                 }
@@ -97,19 +95,19 @@ void request_did_finish(URL::URL const& url, Core::Socket const* socket)
                     dbgln("ConnectionCache request finish handler, reconnection failed with {}", result.error());
                     connection->job_data->fail(Core::NetworkJob::Error::ConnectionFailed);
                 });
-                return;
+                co_return;
             }
             if constexpr (REQUESTSERVER_DEBUG) {
                 connection->job_data->timing_info.starting_connection += Duration::from_milliseconds(timer.elapsed_milliseconds());
             }
 
             connection->has_started = true;
-            Core::deferred_invoke([&connection = *connection, url, &cache] {
+            Core::deferred_invoke([&connection = *connection, &cache, url] {
                 cache.with_read_locked([&](auto&) {
                     dbgln_if(REQUESTSERVER_DEBUG, "Running next job in queue for connection {}", &connection);
                     connection.timer.start();
                     connection.current_url = url;
-                    connection.job_data = connection.request_queue.with_write_locked([](auto& queue) { return queue.take_first(); });
+                    connection.job_data = connection.request_queue.with_write_locked([&](auto& queue) { return queue.take_first(); });
                     if constexpr (REQUESTSERVER_DEBUG) {
                         connection.job_data->timing_info.waiting_in_queue = Duration::from_milliseconds(connection.job_data->timing_info.timer.elapsed_milliseconds() - connection.job_data->timing_info.performing_request.to_milliseconds());
                         connection.job_data->timing_info.timer.start();
@@ -122,46 +120,42 @@ void request_did_finish(URL::URL const& url, Core::Socket const* socket)
     };
 
     if (is<Core::BufferedSocket<TLS::TLSv12>>(socket))
-        fire_off_next_job(g_tls_connection_cache);
+        Core::deferred_invoke([fire_off_next_job = move(fire_off_next_job)] { Core::run_async_in_current_event_loop([&] { return fire_off_next_job(g_tls_connection_cache); }); });
     else if (is<Core::BufferedSocket<Core::Socket>>(socket))
-        fire_off_next_job(g_tcp_connection_cache);
+        Core::deferred_invoke([fire_off_next_job = move(fire_off_next_job)] { Core::run_async_in_current_event_loop([&] { return fire_off_next_job(g_tcp_connection_cache); }); });
     else
         dbgln("Unknown socket {} finished for URL {}", socket, url);
 }
 
 void dump_jobs()
 {
+    dbgln("=========== TLS Connection Cache ==========");
     g_tls_connection_cache.with_read_locked([](auto& cache) {
-        dbgln("=========== TLS Connection Cache ==========");
         for (auto& connection : cache) {
             dbgln(" - {}:{}", connection.key.hostname, connection.key.port);
             for (auto& entry : *connection.value) {
-                dbgln("  - Connection {} (started={}) (socket={})", &entry, entry->has_started, entry->socket.ptr());
+                dbgln("  - Connection {} (started={}) (socket={})", &entry, entry->has_started, entry->socket);
                 dbgln("    Currently loading {} ({} elapsed)", entry->current_url, entry->timer.is_valid() ? entry->timer.elapsed() : 0);
                 dbgln("    Request Queue:");
-                entry->request_queue.for_each_locked([](auto const& job) {
+                entry->request_queue.for_each_locked([](auto& job) {
                     dbgln("    - {}", &job);
                 });
             }
         }
     });
-
+    dbgln("=========== TCP Connection Cache ==========");
     g_tcp_connection_cache.with_read_locked([](auto& cache) {
-        dbgln("=========== TCP Connection Cache ==========");
         for (auto& connection : cache) {
             dbgln(" - {}:{}", connection.key.hostname, connection.key.port);
             for (auto& entry : *connection.value) {
-                dbgln("  - Connection {} (started={}) (socket={})", &entry, entry->has_started, entry->socket.ptr());
+                dbgln("  - Connection {} (started={}) (socket={})", &entry, entry->has_started, entry->socket);
                 dbgln("    Currently loading {} ({} elapsed)", entry->current_url, entry->timer.is_valid() ? entry->timer.elapsed() : 0);
                 dbgln("    Request Queue:");
-                entry->request_queue.for_each_locked([](auto const& job) {
+                entry->request_queue.for_each_locked([](auto& job) {
                     dbgln("    - {}", &job);
                 });
             }
         }
     });
 }
-
-size_t hits;
-size_t misses;
 }

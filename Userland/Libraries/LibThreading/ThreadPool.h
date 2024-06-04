@@ -55,30 +55,43 @@ public:
     using Work = TWork;
     friend struct ThreadPoolLooper<ThreadPool>;
 
-    ThreadPool(Optional<size_t> concurrency = {})
+    template<typename... Args>
+    ThreadPool(Optional<size_t> concurrency = {}, Args&&... looper_args)
     requires(IsFunction<Work>)
         : m_handler([](Work work) { return work(); })
         , m_work_available(m_mutex)
         , m_work_done(m_mutex)
     {
-        initialize_workers(concurrency.value_or(Core::System::hardware_concurrency()));
+        initialize_workers(concurrency.value_or(Core::System::hardware_concurrency()), forward<Args>(looper_args)...);
     }
 
-    explicit ThreadPool(Function<void(Work)> handler, Optional<size_t> concurrency = {})
+    template<typename... Args>
+    explicit ThreadPool(Function<void(Work)> handler, Optional<size_t> concurrency = {}, Args&&... looper_args)
         : m_handler(move(handler))
         , m_work_available(m_mutex)
         , m_work_done(m_mutex)
     {
-        initialize_workers(concurrency.value_or(Core::System::hardware_concurrency()));
+        initialize_workers(concurrency.value_or(Core::System::hardware_concurrency()), forward<Args>(looper_args)...);
     }
 
     ~ThreadPool()
     {
-        m_should_exit.store(true, AK::MemoryOrder::memory_order_release);
+        request_exit();
         for (auto& worker : m_workers) {
             m_work_available.broadcast();
             (void)worker->join();
         }
+    }
+
+    void request_exit()
+    {
+        m_should_exit.store(true, AK::MemoryOrder::memory_order_release);
+        m_work_available.broadcast();
+    }
+
+    bool was_exit_requested() const
+    {
+        return m_should_exit.load(AK::MemoryOrder::memory_order_acquire);
     }
 
     void submit(Work work)
@@ -107,11 +120,12 @@ public:
     }
 
 private:
-    void initialize_workers(size_t concurrency)
+    template<typename... Args>
+    void initialize_workers(size_t concurrency, Args&&... looper_args)
     {
         for (size_t i = 0; i < concurrency; ++i) {
-            m_workers.append(Thread::construct([this]() -> intptr_t {
-                Looper<ThreadPool> thread_looper;
+            m_workers.append(Thread::construct([this, looper_args...]() -> intptr_t {
+                Looper<ThreadPool> thread_looper { move(looper_args)... };
                 for (; !m_should_exit;) {
                     auto result = thread_looper.next(*this, true);
                     m_busy_count--;

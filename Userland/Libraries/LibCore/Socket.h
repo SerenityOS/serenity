@@ -160,6 +160,9 @@ public:
     static ErrorOr<NonnullOwnPtr<TCPSocket>> connect(SocketAddress const& address);
     static ErrorOr<NonnullOwnPtr<TCPSocket>> adopt_fd(int fd);
 
+    static Coroutine<ErrorOr<NonnullOwnPtr<TCPSocket>>> async_connect(ByteString const& host, u16 port);
+    static Coroutine<ErrorOr<NonnullOwnPtr<TCPSocket>>> async_connect(SocketAddress const& address);
+
     TCPSocket(TCPSocket&& other)
         : Socket(static_cast<Socket&&>(other))
         , m_helper(move(other.m_helper))
