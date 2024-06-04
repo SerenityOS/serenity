@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Coroutine.h>
 #include <LibCore/Socket.h>
 #include <LibCore/System.h>
 
@@ -214,6 +215,16 @@ ErrorOr<NonnullOwnPtr<TCPSocket>> TCPSocket::connect(SocketAddress const& addres
 
     socket->setup_notifier();
     return socket;
+}
+
+Coroutine<ErrorOr<NonnullOwnPtr<TCPSocket>>> TCPSocket::async_connect(Core::SocketAddress const& address)
+{
+    co_return CO_TRY(connect(address));
+}
+
+Coroutine<ErrorOr<NonnullOwnPtr<TCPSocket>>> TCPSocket::async_connect(const AK::ByteString& host, u16 port)
+{
+    co_return CO_TRY(connect(host, port));
 }
 
 ErrorOr<NonnullOwnPtr<TCPSocket>> TCPSocket::adopt_fd(int fd)

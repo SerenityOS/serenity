@@ -360,6 +360,9 @@ public:
     static ErrorOr<NonnullOwnPtr<TLSv12>> connect(ByteString const& host, u16 port, Options = {});
     static ErrorOr<NonnullOwnPtr<TLSv12>> connect(ByteString const& host, Core::Socket& underlying_stream, Options = {});
 
+    static Coroutine<ErrorOr<NonnullOwnPtr<TLSv12>>> async_connect(ByteString const& host, u16 port, Options = {});
+    static Coroutine<ErrorOr<NonnullOwnPtr<TLSv12>>> async_connect(ByteString const& host, Core::Socket& underlying_stream, Options = {});
+
     using StreamVariantType = Variant<OwnPtr<Core::Socket>, Core::Socket*>;
     explicit TLSv12(StreamVariantType, Options);
 

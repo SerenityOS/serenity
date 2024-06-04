@@ -26,9 +26,16 @@ static IDAllocator s_client_ids;
 
 ConnectionFromClient::ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket> socket)
     : IPC::ConnectionFromClient<RequestClientEndpoint, RequestServerEndpoint>(*this, move(socket), s_client_ids.allocate())
-    , m_thread_pool([this](Work work) { worker_do_work(move(work)); })
+    , m_thread_pipe_fds(MUST(Core::System::pipe2(O_CLOEXEC | O_NONBLOCK)))
+    , m_thread_pool([this](Work work) { worker_do_work(move(work)); }, {}, m_thread_pipe_fds[0])
 {
     s_connections.set(client_id(), *this);
+}
+
+ConnectionFromClient::~ConnectionFromClient()
+{
+    close(m_thread_pipe_fds[0]);
+    close(m_thread_pipe_fds[1]);
 }
 
 class Job : public RefCounted<Job>
@@ -63,6 +70,8 @@ public:
         s_jobs.remove(m_url);
     }
 
+    URL::URL const& url() const { return m_url; }
+
 private:
     explicit Job(URL::URL url)
         : m_url(move(url))
@@ -76,15 +85,37 @@ private:
 template<typename Pool>
 IterationDecision ConnectionFromClient::Looper<Pool>::next(Pool& pool, bool wait)
 {
-    bool should_exit = false;
-    auto timer = Core::Timer::create_repeating(100, [&] {
-        if (Threading::ThreadPoolLooper<Pool>::next(pool, false) == IterationDecision::Break) {
+    if (done)
+        return IterationDecision::Break;
+
+    auto should_quit = false;
+
+    auto exit_timer = Core::Timer::create_repeating(100, [&] {
+        if (pool.was_exit_requested()) {
+            done = true;
+            should_quit = true;
             event_loop.quit(0);
-            should_exit = true;
         }
     });
 
-    timer->start();
+    exit_timer->start();
+
+    notifier->on_activation = [&] {
+        char buffer[1];
+        auto nread = read(notifier->fd(), buffer, 1);
+        if (nread == 1) {
+            if (pool.was_exit_requested()) {
+                done = true;
+                should_quit = true;
+            } else {
+                should_quit = Threading::ThreadPoolLooper<Pool>::next(pool, true) == IterationDecision::Break;
+            }
+
+            if (should_quit)
+                event_loop.quit(0);
+        }
+    };
+
     if (!wait) {
         event_loop.deferred_invoke([&] {
             event_loop.quit(0);
@@ -93,7 +124,10 @@ IterationDecision ConnectionFromClient::Looper<Pool>::next(Pool& pool, bool wait
 
     event_loop.exec();
 
-    if (should_exit)
+    exit_timer->stop();
+    notifier->on_activation = nullptr;
+
+    if (should_quit)
         return IterationDecision::Break;
     return IterationDecision::Continue;
 }
@@ -188,6 +222,10 @@ Messages::RequestServer::ConnectNewClientResponse ConnectionFromClient::connect_
 void ConnectionFromClient::enqueue(Work work)
 {
     m_thread_pool.submit(move(work));
+    auto nwritten = write(m_thread_pipe_fds[1], "x", 1); // notify the worker threads
+    if (nwritten < 0) {
+        VERIFY_NOT_REACHED();
+    }
 }
 
 Messages::RequestServer::IsSupportedProtocolResponse ConnectionFromClient::is_supported_protocol(ByteString const& protocol)

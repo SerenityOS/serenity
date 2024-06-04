@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Coroutine.h>
 #include <AK/Debug.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/EventLoop.h>
@@ -50,48 +51,88 @@ ErrorOr<size_t> TLSv12::write_some(ReadonlyBytes bytes)
     return bytes.size();
 }
 
-ErrorOr<NonnullOwnPtr<TLSv12>> TLSv12::connect(ByteString const& host, u16 port, Options options)
+template<typename T>
+struct PromiseAwaiter {
+    bool await_ready() const { return promise->is_resolved(); }
+    void await_suspend(std::coroutine_handle<> awaiter)
+    {
+        promise->when_resolved([awaiter](auto&) {
+            Core::deferred_invoke([awaiter] { awaiter.resume(); });
+        });
+        promise->when_rejected([awaiter](auto&) {
+            Core::deferred_invoke([awaiter] { awaiter.resume(); });
+        });
+    }
+    ErrorOr<T> await_resume()
+    {
+        if constexpr (IsVoid<T>)
+            return {};
+        else
+            return promise->await(); // Already resolved, so this should never yield to the event loop.
+    }
+
+    NonnullRefPtr<Core::Promise<T>> promise;
+};
+
+Coroutine<ErrorOr<NonnullOwnPtr<TLSv12>>> TLSv12::async_connect(ByteString const& host, u16 port, Options options)
 {
     auto promise = Core::Promise<Empty>::construct();
-    OwnPtr<Core::Socket> tcp_socket = TRY(Core::TCPSocket::connect(host, port));
-    TRY(tcp_socket->set_blocking(false));
+    OwnPtr<Core::Socket> tcp_socket = CO_TRY(co_await Core::TCPSocket::async_connect(host, port));
+    CO_TRY(tcp_socket->set_blocking(false));
     auto tls_socket = make<TLSv12>(move(tcp_socket), move(options));
     tls_socket->set_sni(host);
-    tls_socket->on_connected = [&] {
+    tls_socket->on_connected = [=] {
         promise->resolve({});
     };
-    tls_socket->on_tls_error = [&](auto alert) {
-        tls_socket->try_disambiguate_error();
+    tls_socket->on_tls_error = [&tls_socket = *tls_socket, promise](auto alert) {
+        tls_socket.try_disambiguate_error();
         promise->reject(AK::Error::from_string_view(enum_to_string(alert)));
     };
 
-    TRY(promise->await());
+    ScopeGuard clear_callbacks = [&tls_socket = *tls_socket] {
+        tls_socket.on_tls_error = nullptr;
+        tls_socket.on_connected = nullptr;
+    };
 
-    tls_socket->on_tls_error = nullptr;
-    tls_socket->on_connected = nullptr;
+    CO_TRY(co_await PromiseAwaiter<Empty> { promise });
+
     tls_socket->m_context.should_expect_successful_read = true;
-    return tls_socket;
+    co_return tls_socket;
 }
 
-ErrorOr<NonnullOwnPtr<TLSv12>> TLSv12::connect(ByteString const& host, Core::Socket& underlying_stream, Options options)
+Coroutine<ErrorOr<NonnullOwnPtr<TLSv12>>> TLSv12::async_connect(ByteString const& host, Core::Socket& underlying_stream, Options options)
 {
     auto promise = Core::Promise<Empty>::construct();
-    TRY(underlying_stream.set_blocking(false));
+    CO_TRY(underlying_stream.set_blocking(false));
     auto tls_socket = make<TLSv12>(&underlying_stream, move(options));
     tls_socket->set_sni(host);
-    tls_socket->on_connected = [&] {
+    tls_socket->on_connected = [=] {
         promise->resolve({});
     };
-    tls_socket->on_tls_error = [&](auto alert) {
+    tls_socket->on_tls_error = [&, promise](auto alert) {
         tls_socket->try_disambiguate_error();
         promise->reject(AK::Error::from_string_view(enum_to_string(alert)));
     };
-    TRY(promise->await());
 
-    tls_socket->on_tls_error = nullptr;
-    tls_socket->on_connected = nullptr;
+    ScopeGuard clear_callbacks = [&tls_socket = *tls_socket] {
+        tls_socket.on_tls_error = nullptr;
+        tls_socket.on_connected = nullptr;
+    };
+
+    CO_TRY(co_await PromiseAwaiter<Empty> { promise });
+
     tls_socket->m_context.should_expect_successful_read = true;
-    return tls_socket;
+    co_return tls_socket;
+}
+
+ErrorOr<NonnullOwnPtr<TLSv12>> TLSv12::connect(const AK::ByteString& host, u16 port, TLS::Options options)
+{
+    return Core::run_async_in_current_event_loop([&] { return async_connect(host, port, move(options)); });
+}
+
+ErrorOr<NonnullOwnPtr<TLSv12>> TLSv12::connect(const AK::ByteString& host, Core::Socket& underlying_stream, TLS::Options options)
+{
+    return Core::run_async_in_current_event_loop([&] { return async_connect(host, underlying_stream, move(options)); });
 }
 
 void TLSv12::setup_connection()

@@ -23,7 +23,7 @@ class ConnectionFromClient final
     C_OBJECT(ConnectionFromClient);
 
 public:
-    ~ConnectionFromClient() override = default;
+    ~ConnectionFromClient() override;
 
     virtual void die() override;
 
@@ -74,10 +74,18 @@ private:
 
     template<typename Pool>
     struct Looper : public Threading::ThreadPoolLooper<Pool> {
+        Looper(int pipe_fd)
+            : notifier(Core::Notifier::construct(pipe_fd, Core::NotificationType::Read))
+        {
+        }
+
         IterationDecision next(Pool& pool, bool wait);
         Core::EventLoop event_loop;
+        NonnullRefPtr<Core::Notifier> notifier;
+        bool done { false };
     };
 
+    Array<int, 2> m_thread_pipe_fds { -1, -1 };
     Threading::ThreadPool<Work, Looper> m_thread_pool;
     Threading::Mutex m_ipc_mutex;
 };
