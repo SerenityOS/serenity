@@ -95,8 +95,8 @@ void galois_multiply(u32 (&_z)[4], u32 const (&_x)[4], u32 const (&_y)[4])
 
     // Unrolled by 32, the access in y[3-(i/32)] can be cached throughout the loop.
 #pragma GCC unroll 32
-    for (ssize_t i = 127; i > -1; --i) {
-        auto r = -((y[3 - (i / 32)] >> (i % 32)) & 1);
+    for (ssize_t i = 127, j = 0; i > -1; --i, j++) {
+        auto r = -((y[j / 32] >> (i % 32)) & 1);
         z[0] ^= x[0] & r;
         z[1] ^= x[1] & r;
         z[2] ^= x[2] & r;
