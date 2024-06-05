@@ -10,6 +10,7 @@
 #include <LibGfx/Painter.h>
 #include <LibGfx/Path.h>
 #include <LibGfx/Quad.h>
+#include <LibGfx/WindingRule.h>
 
 namespace Gfx {
 
@@ -34,8 +35,8 @@ public:
         draw_line(line.a(), line.b(), color, thickness, style, alternate_color, line_length_mode);
     }
 
-    void fill_path(Path const&, Color, Painter::WindingRule rule = Painter::WindingRule::Nonzero);
-    void fill_path(Path const&, PaintStyle const& paint_style, float opacity = 1.0f, Painter::WindingRule rule = Painter::WindingRule::Nonzero);
+    void fill_path(Path const&, Color, WindingRule rule = WindingRule::Nonzero);
+    void fill_path(Path const&, PaintStyle const& paint_style, float opacity = 1.0f, WindingRule rule = WindingRule::Nonzero);
 
     void stroke_path(Path const&, Color, float thickness, Path::CapStyle cap_style = Path::CapStyle::Round);
     void stroke_path(Path const&, PaintStyle const& paint_style, float thickness, float opacity = 1.0f, Path::CapStyle cap_style = Path::CapStyle::Round);
