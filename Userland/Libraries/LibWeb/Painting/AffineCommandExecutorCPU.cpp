@@ -117,7 +117,7 @@ CommandResult AffineCommandExecutorCPU::fill_rect(FillRect const& command)
     // FIXME: Support clip_paths.
     Gfx::Path path;
     path.rect(command.rect.to_type<float>());
-    aa_painter().fill_path(path.copy_transformed(stacking_context().transform), command.color, Gfx::Painter::WindingRule::EvenOdd);
+    aa_painter().fill_path(path.copy_transformed(stacking_context().transform), command.color, Gfx::WindingRule::EvenOdd);
     return CommandResult::Continue;
 }
 
@@ -254,7 +254,7 @@ CommandResult AffineCommandExecutorCPU::fill_rect_with_rounded_corners(FillRectW
     Gfx::Path path;
     path.rounded_rect(command.rect.to_type<float>(), command.top_left_radius, command.top_right_radius, command.bottom_right_radius, command.bottom_left_radius);
     path = path.copy_transformed(stacking_context().transform);
-    aa_painter().fill_path(path, command.color, Gfx::Painter::WindingRule::EvenOdd);
+    aa_painter().fill_path(path, command.color, Gfx::WindingRule::EvenOdd);
     return CommandResult::Continue;
 }
 

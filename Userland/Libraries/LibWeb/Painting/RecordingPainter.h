@@ -51,7 +51,7 @@ public:
     struct FillPathUsingColorParams {
         Gfx::Path path;
         Gfx::Color color;
-        Gfx::Painter::WindingRule winding_rule = Gfx::Painter::WindingRule::EvenOdd;
+        Gfx::WindingRule winding_rule = Gfx::WindingRule::EvenOdd;
         Optional<Gfx::FloatPoint> translation = {};
     };
     void fill_path(FillPathUsingColorParams params);
@@ -59,7 +59,7 @@ public:
     struct FillPathUsingPaintStyleParams {
         Gfx::Path path;
         PaintStyle paint_style;
-        Gfx::Painter::WindingRule winding_rule = Gfx::Painter::WindingRule::EvenOdd;
+        Gfx::WindingRule winding_rule = Gfx::WindingRule::EvenOdd;
         float opacity;
         Optional<Gfx::FloatPoint> translation = {};
     };
