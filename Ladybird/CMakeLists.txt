@@ -85,6 +85,8 @@ else()
     serenity_option(ENABLE_QT ON CACHE BOOL "Build ladybird application using Qt GUI")
 endif()
 
+include(cmake/ResourceFiles.cmake)
+
 set(LADYBIRD_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/HelperProcess.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Utilities.cpp
@@ -114,6 +116,14 @@ function(create_ladybird_bundle target_name)
             COMMAND "iconutil" --convert icns "${SERENITY_SOURCE_DIR}/Ladybird/Icons/macos/app_icon.iconset" --output "${bundle_dir}/Contents/Resources/app_icon.icns"
         )
     endif()
+
+    if (APPLE)
+        set(resource_base_dir "$<TARGET_BUNDLE_DIR:${target_name}>/Contents/Resources")
+    else()
+        set(resource_base_dir "${CMAKE_BINARY_DIR}/${IN_BUILD_PREFIX}${CMAKE_INSTALL_DATADIR}/Lagom")
+    endif()
+
+    copy_resources_to_build(${resource_base_dir} ${target_name})
 endfunction()
 
 # Select UI Framework
@@ -199,13 +209,6 @@ set_helper_process_properties(${ladybird_helper_processes})
 if (APPLE)
     set_helper_process_properties(headless-browser WebDriver)
 endif()
-
-include(cmake/ResourceFiles.cmake)
-set(resource_base_dir "${CMAKE_BINARY_DIR}/${IN_BUILD_PREFIX}${CMAKE_INSTALL_DATADIR}/Lagom")
-if (APPLE)
-    set(resource_base_dir "$<TARGET_BUNDLE_DIR:ladybird>/Contents/Resources")
-endif()
-copy_resources_to_build(${resource_base_dir} ladybird)
 
 if(NOT CMAKE_SKIP_INSTALL_RULES)
     include(cmake/InstallRules.cmake)
