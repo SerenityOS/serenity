@@ -16,6 +16,7 @@
 #include <LibGfx/Forward.h>
 #include <LibGfx/Gradients.h>
 #include <LibGfx/GrayscaleBitmap.h>
+#include <LibGfx/LineStyle.h>
 #include <LibGfx/PaintStyle.h>
 #include <LibGfx/Point.h>
 #include <LibGfx/Rect.h>
@@ -49,11 +50,8 @@ public:
     explicit Painter(Gfx::Bitmap&);
     ~Painter() = default;
 
-    enum class LineStyle {
-        Solid,
-        Dotted,
-        Dashed,
-    };
+    // FIXME: Remove this after replacing all uses with Gfx::LineStyle.
+    using LineStyle = ::Gfx::LineStyle;
 
     // FIXME: Remove this after replacing all uses with Gfx::ScalingMode.
     using ScalingMode = ::Gfx::ScalingMode;
