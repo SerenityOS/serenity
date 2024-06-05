@@ -19,6 +19,7 @@
 #include <LibGfx/PaintStyle.h>
 #include <LibGfx/Point.h>
 #include <LibGfx/Rect.h>
+#include <LibGfx/ScalingMode.h>
 #include <LibGfx/Size.h>
 #include <LibGfx/TextAlignment.h>
 #include <LibGfx/TextDirection.h>
@@ -53,13 +54,8 @@ public:
         Dashed,
     };
 
-    enum class ScalingMode {
-        NearestNeighbor,
-        SmoothPixels,
-        BilinearBlend,
-        BoxSampling,
-        None,
-    };
+    // FIXME: Remove this after replacing all uses with Gfx::ScalingMode.
+    using ScalingMode = ::Gfx::ScalingMode;
 
     void clear_rect(IntRect const&, Color);
     void fill_rect(IntRect const&, Color);
