@@ -132,15 +132,15 @@ void MagnifierWidget::second_paint_event(GUI::PaintEvent&)
 
     GUI::Painter painter(*this);
 
-    auto target = painter.target();
-    auto bitmap_clone_or_error = target->clone();
+    auto& target = painter.target();
+    auto bitmap_clone_or_error = target.clone();
     if (bitmap_clone_or_error.is_error())
         return;
 
     auto clone = bitmap_clone_or_error.release_value();
-    auto rect = target->rect();
+    auto rect = target.rect();
 
-    m_color_filter->apply(*target, rect, *clone, rect);
+    m_color_filter->apply(target, rect, *clone, rect);
 }
 
 void MagnifierWidget::mousemove_event(GUI::MouseEvent& event)

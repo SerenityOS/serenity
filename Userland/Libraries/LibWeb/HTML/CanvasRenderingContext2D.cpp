@@ -447,7 +447,7 @@ void CanvasRenderingContext2D::reset_to_default_state()
 
     // 1. Clear canvas's bitmap to transparent black.
     if (painter)
-        painter->clear_rect(painter->target()->rect(), Color::Transparent);
+        painter->clear_rect(painter->target().rect(), Color::Transparent);
 
     // 2. Empty the list of subpaths in context's current default path.
     path().clear();
@@ -459,7 +459,7 @@ void CanvasRenderingContext2D::reset_to_default_state()
     reset_drawing_state();
 
     if (painter)
-        did_draw(painter->target()->rect().to_type<float>());
+        did_draw(painter->target().rect().to_type<float>());
 }
 
 // https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-measuretext
