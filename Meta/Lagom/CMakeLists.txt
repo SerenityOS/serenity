@@ -80,6 +80,7 @@ if (ENABLE_FUZZERS OR CMAKE_CROSSCOMPILING)
 endif()
 
 include(flac_spec_tests)
+include(ca_certificates_data)
 include(lagom_compile_options)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -844,5 +845,3 @@ if (NOT "$ENV{LAGOM_TARGET}" STREQUAL "")
         VERBATIM
     )
 endif()
-
-include(ca_certificates_data)
