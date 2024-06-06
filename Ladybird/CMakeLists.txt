@@ -218,7 +218,7 @@ include(CTest)
 if (BUILD_TESTING)
     add_test(
         NAME LibWeb
-        COMMAND $<TARGET_FILE:headless-browser> --resources "${resource_base_dir}" --run-tests ${SERENITY_SOURCE_DIR}/Tests/LibWeb --dump-failed-ref-tests
+        COMMAND $<TARGET_FILE:headless-browser> --run-tests ${SERENITY_SOURCE_DIR}/Tests/LibWeb --dump-failed-ref-tests
     )
     add_test(
         NAME WPT
