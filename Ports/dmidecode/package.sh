@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='dmidecode'
-version='3.5'
+version='3.6'
 files=(
-    "https://download-mirror.savannah.gnu.org/releases/dmidecode/dmidecode-${version}.tar.xz#79d76735ee8e25196e2a722964cf9683f5a09581503537884b256b01389cc073"
+    "https://download-mirror.savannah.gnu.org/releases/dmidecode/dmidecode-${version}.tar.xz#e40c65f3ec3dafe31ad8349a4ef1a97122d38f65004ed66575e1a8d575dd8bae"
 )
