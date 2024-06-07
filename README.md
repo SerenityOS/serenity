@@ -1,8 +1,6 @@
-# SerenityOS and Ladybird
+# SerenityOS
 
-SerenityOS is a graphical Unix-like operating system for x86-64 computers.
-
-Ladybird is a cross-platform independent web browser built from SerenityOS components.
+Graphical Unix-like operating system for x86-64 computers.
 
 [![GitHub Actions Status](https://github.com/SerenityOS/serenity/workflows/Build,%20lint,%20and%20test/badge.svg)](https://github.com/SerenityOS/serenity/actions?query=workflow%3A"Build%2C%20lint%2C%20and%20test")
 [![Fuzzing Status](https://oss-fuzz-build-logs.storage.googleapis.com/badges/serenity.svg)](https://bugs.chromium.org/p/oss-fuzz/issues/list?sort=-opened&can=1&q=proj:serenity)
@@ -10,7 +8,7 @@ Ladybird is a cross-platform independent web browser built from SerenityOS compo
 
 [FAQ](Documentation/FAQ.md) | [Documentation](#how-do-i-read-the-documentation) | [Build Instructions](#how-do-i-build-and-run-this)
 
-## About SerenityOS
+## About
 
 SerenityOS is a love letter to '90s user interfaces with a custom Unix-like core. It flatters with sincerity by stealing beautiful ideas from various other systems.
 
@@ -22,19 +20,11 @@ You can watch videos of the system being developed on YouTube:
 * [Linus Groh's channel](https://youtube.com/linusgroh)
 * [kleines Filmröllchen's channel](https://www.youtube.com/c/kleinesfilmroellchen)
 
-## About Ladybird
-
-Ladybird is a cross-platform independent web browser built from SerenityOS components. It is a separate project from SerenityOS, but it uses the SerenityOS build system and shares much of the same code.
-All the browser UI code lives in the Serenity repository under the `Ladybird` directory. The SerenityOS LibGUI port of Ladybird lives in the `Userland/Applications/Browser` directory.
-All the implementation details are in the `Userland/Libraries` and `Userland/Services` directories.
-
-See the Ladybird [README.md](Ladybird/README.md) for more information.
-
-## SerenityOS Screenshot
+## Screenshot
 
 ![Screenshot as of c03b788.png](Meta/Screenshots/screenshot-c03b788.png)
 
-## SerenityOS Features
+## Features
 
 * Modern x86 64-bit kernel with pre-emptive multi-threading
 * [Browser](Userland/Applications/Browser/) with JavaScript, WebAssembly, and more (check the spec compliance for [JS](https://serenityos.github.io/libjs-website/test262/), [CSS](https://css.tobyase.de/), and [Wasm](https://serenityos.github.io/libjs-website/wasm/))
