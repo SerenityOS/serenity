@@ -1,5 +1,7 @@
 # Ladybird browser build instructions
 
+**NOTE:** The Ladybird cross-platform web browser project is now seperate from SerenityOS, and is now actively developed in the [LadybirdWebBrowser/ladybird](https://github.com/LadybirdWebBrowser/ladybird) repository.
+
 ## Build Prerequisites
 
 Qt6 development packages and a C++23 capable compiler are required. g++-13 or clang-17 are required at a minimum for c++23 support.
