@@ -724,7 +724,7 @@ Tab::Tab(BrowserWindow& window)
         view.take_screenshot(type)
             ->when_resolved([this](auto const& path) {
                 auto message = MUST(String::formatted("Screenshot saved to: {}", path));
-                auto response = GUI::MessageBox::show(&this->window(), message, "Ladybird"sv, GUI::MessageBox::Type::Information, GUI::MessageBox::InputType::OKReveal);
+                auto response = GUI::MessageBox::show(&this->window(), message, "Browser"sv, GUI::MessageBox::Type::Information, GUI::MessageBox::InputType::OKReveal);
 
                 if (response == GUI::MessageBox::ExecResult::Reveal)
                     Desktop::Launcher::open(URL::create_with_file_scheme(path.dirname()));

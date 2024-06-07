@@ -1,5 +1,5 @@
 [App]
-Name=&Ladybird
+Name=&Browser
 Executable=/bin/Browser
 Arguments=--new-window
 Category=&Internet
