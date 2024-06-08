@@ -63,7 +63,7 @@ public:
     {
         VERIFY(!ivec.is_empty());
 
-        static ByteBuffer dummy;
+        static ByteBuffer dummy = MUST(ByteBuffer::create_uninitialized(out.size()));
 
         encrypt(in, out, ivec, dummy, dummy);
     }
