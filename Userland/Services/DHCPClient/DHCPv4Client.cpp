@@ -16,7 +16,9 @@
 #include <AK/Try.h>
 #include <LibCore/File.h>
 #include <LibCore/Timer.h>
+#include <fcntl.h>
 #include <stdio.h>
+#include <unistd.h>
 
 static u8 mac_part(Vector<ByteString> const& parts, size_t index)
 {
@@ -75,11 +77,15 @@ static bool send(InterfaceDescriptor const& iface, DHCPv4Packet const& packet, C
 
 static void set_params(InterfaceDescriptor const& iface, IPv4Address const& ipv4_addr, IPv4Address const& netmask, Optional<IPv4Address> const& gateway)
 {
-    int fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
+    int fd = open("/dev/netdevctl", O_RDWR);
     if (fd < 0) {
-        dbgln("ERROR: socket :: {}", strerror(errno));
+        dbgln("ERROR: open :: {}", strerror(errno));
         return;
     }
+
+    ScopeGuard close_on_return([fd] {
+        close(fd);
+    });
 
     struct ifreq ifr;
     memset(&ifr, 0, sizeof(ifr));

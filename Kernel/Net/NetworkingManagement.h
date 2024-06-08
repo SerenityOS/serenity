@@ -11,6 +11,7 @@
 #include <AK/RefPtr.h>
 #include <AK/Types.h>
 #include <Kernel/Bus/PCI/Definitions.h>
+#include <Kernel/Devices/Generic/NetworkDeviceControlDevice.h>
 #include <Kernel/Locking/SpinlockProtected.h>
 #include <Kernel/Memory/Region.h>
 #include <Kernel/Net/NetworkAdapter.h>
@@ -43,6 +44,7 @@ private:
 
     SpinlockProtected<Vector<NonnullRefPtr<NetworkAdapter>>, LockRank::None> m_adapters {};
     RefPtr<NetworkAdapter> m_loopback_adapter;
+    NonnullRefPtr<NetworkDeviceControlDevice> const m_netdevctl_device;
 };
 
 }

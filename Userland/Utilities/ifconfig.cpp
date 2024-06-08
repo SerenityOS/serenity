@@ -76,7 +76,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 return 1;
             }
 
-            auto fd = TRY(Core::System::socket(AF_INET, SOCK_DGRAM, IPPROTO_IP));
+            int fd = TRY(Core::System::open("/dev/netdevctl"sv, O_RDWR));
 
             struct ifreq ifr;
             memset(&ifr, 0, sizeof(ifr));
@@ -100,7 +100,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 return 1;
             }
 
-            auto fd = TRY(Core::System::socket(AF_INET, SOCK_DGRAM, IPPROTO_IP));
+            int fd = TRY(Core::System::open("/dev/netdevctl"sv, O_RDWR));
 
             struct ifreq ifr;
             memset(&ifr, 0, sizeof(ifr));

@@ -47,6 +47,7 @@ static ErrorOr<void> prepare_bare_minimum_devtmpfs_directory_structure()
 
     mode_t old_mask = umask(0);
     TRY(Core::System::create_char_device("/dev/devctl"sv, 0660, 2, 10));
+    TRY(Core::System::create_char_device("/dev/netdevctl"sv, 0600, 2, 11));
     TRY(Core::System::create_char_device("/dev/zero"sv, 0666, 1, 5));
     TRY(Core::System::create_char_device("/dev/mem"sv, 0600, 1, 1));
     TRY(Core::System::create_char_device("/dev/null"sv, 0666, 1, 3));

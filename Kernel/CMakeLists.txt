@@ -78,6 +78,7 @@ set(KERNEL_SOURCES
     Devices/Generic/DeviceControlDevice.cpp
     Devices/Generic/FullDevice.cpp
     Devices/Generic/MemoryDevice.cpp
+    Devices/Generic/NetworkDeviceControlDevice.cpp
     Devices/Generic/NullDevice.cpp
     Devices/Generic/PCSpeakerDevice.cpp
     Devices/Generic/RandomDevice.cpp

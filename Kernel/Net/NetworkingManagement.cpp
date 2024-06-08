@@ -33,6 +33,7 @@ bool NetworkingManagement::is_initialized()
 }
 
 UNMAP_AFTER_INIT NetworkingManagement::NetworkingManagement()
+    : m_netdevctl_device(*NetworkDeviceControlDevice::must_create())
 {
 }
 
