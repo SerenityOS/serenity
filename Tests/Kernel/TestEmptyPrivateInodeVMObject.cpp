@@ -11,12 +11,13 @@
 #include <sys/mman.h>
 
 static u8* private_ptr = nullptr;
+size_t const mmap_len = 0x1000;
 
 static void private_zero_length_inode_vmobject_sync_signal_handler(int)
 {
-    auto rc = msync(private_ptr, 0x1000, MS_ASYNC);
+    auto rc = msync(private_ptr, mmap_len, MS_ASYNC);
     EXPECT(rc == 0);
-    rc = munmap(private_ptr, 0x1000);
+    rc = munmap(private_ptr, mmap_len);
     EXPECT(rc == 0);
     exit(0);
 }
@@ -32,7 +33,7 @@ TEST_CASE(private_zero_length_inode_vmobject_sync)
     }
     int fd = open("/tmp/private_msync_test", O_RDWR | O_CREAT, 0644);
     VERIFY(fd >= 0);
-    private_ptr = (u8*)mmap(nullptr, 0x1000, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
+    private_ptr = (u8*)mmap(nullptr, mmap_len, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
     EXPECT(private_ptr != MAP_FAILED);
     private_ptr[0] = 0x1;
     VERIFY_NOT_REACHED();
