@@ -24,8 +24,9 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath inet"));
+    TRY(Core::System::pledge("stdio rpath wpath inet"));
     TRY(Core::System::unveil("/sys/kernel/net", "r"));
+    TRY(Core::System::unveil("/dev/netdevctl", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     StringView modify_action;
@@ -192,7 +193,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return 1;
         }
 
-        int fd = TRY(Core::System::socket(AF_INET, SOCK_DGRAM, IPPROTO_IP));
+        int fd = TRY(Core::System::open("/dev/netdevctl"sv, O_RDWR));
 
         rtentry rt {};
         memset(&rt, 0, sizeof(rt));
