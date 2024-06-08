@@ -36,21 +36,23 @@ struct IsOpaque {
     }
 };
 
+struct Symbol {
+    u16 green_or_length_or_index { 0 };
+    u8 r;
+    u8 b;
+    u8 a;
+};
+
 }
 
-NEVER_INLINE static ErrorOr<void> write_image_data(LittleEndianOutputBitStream& bit_stream, Bitmap const& bitmap, PrefixCodeGroup const& prefix_code_group)
+NEVER_INLINE static ErrorOr<void> write_image_data(LittleEndianOutputBitStream& bit_stream, ReadonlySpan<Symbol> symbols, PrefixCodeGroup const& prefix_code_group)
 {
     // This is currently the hot loop. Keep performance in mind when you change it.
-    for (ARGB32 pixel : bitmap) {
-        u8 a = pixel >> 24;
-        u8 r = pixel >> 16;
-        u8 g = pixel >> 8;
-        u8 b = pixel;
-
-        TRY(prefix_code_group[0].write_symbol(bit_stream, g));
-        TRY(prefix_code_group[1].write_symbol(bit_stream, r));
-        TRY(prefix_code_group[2].write_symbol(bit_stream, b));
-        TRY(prefix_code_group[3].write_symbol(bit_stream, a));
+    for (Symbol const& symbol : symbols) {
+        TRY(prefix_code_group[0].write_symbol(bit_stream, symbol.green_or_length_or_index));
+        TRY(prefix_code_group[1].write_symbol(bit_stream, symbol.r));
+        TRY(prefix_code_group[2].write_symbol(bit_stream, symbol.b));
+        TRY(prefix_code_group[3].write_symbol(bit_stream, symbol.a));
     }
     return {};
 }
@@ -280,20 +282,36 @@ static ErrorOr<void> write_VP8L_coded_image(ImageKind image_kind, LittleEndianOu
     if (alphabet_sizes[0] > 288)
         return Error::from_string_literal("Invalid alphabet size");
 
+    Vector<Symbol> symbols;
+    TRY(symbols.try_ensure_capacity(bitmap.size().area()));
+    Array<Array<u16, 256>, 4> symbol_frequencies {};
+
+    static constexpr auto saturating_increment = [](u16& value) {
+        if (value < UINT16_MAX)
+            value++;
+    };
+
+    auto emit_literal = [&](ARGB32 pixel) {
+        Symbol symbol;
+        symbol.green_or_length_or_index = (pixel >> 8) & 0xff;
+        symbol.r = pixel >> 16;
+        symbol.b = pixel;
+        symbol.a = pixel >> 24;
+        symbols.append(symbol);
+
+        saturating_increment(symbol_frequencies[0][symbol.green_or_length_or_index]);
+        saturating_increment(symbol_frequencies[1][symbol.r]);
+        saturating_increment(symbol_frequencies[2][symbol.b]);
+        saturating_increment(symbol_frequencies[3][symbol.a]);
+    };
+
+    for (ARGB32 const* it = bitmap.begin(), * end = bitmap.end(); it != end; ++it) {
+        ARGB32 pixel = *it;
+        emit_literal(pixel);
+    }
+
     // We do use huffman coding by writing a single prefix-code-group for the entire image.
     // FIXME: Consider using a meta-prefix image and using one prefix-code-group per tile.
-
-    Array<Array<u16, 256>, 4> symbol_frequencies {};
-    for (ARGB32 pixel : bitmap) {
-        static constexpr auto saturating_increment = [](u16& value) {
-            if (value < UINT16_MAX)
-                value++;
-        };
-        saturating_increment(symbol_frequencies[0][(pixel >> 8) & 0xff]);  // green
-        saturating_increment(symbol_frequencies[1][(pixel >> 16) & 0xff]); // red
-        saturating_increment(symbol_frequencies[2][pixel & 0xff]);         // blue
-        saturating_increment(symbol_frequencies[3][pixel >> 24]);          // alpha
-    }
 
     Array<Array<u8, 256>, 4> code_lengths {};
     for (int i = 0; i < 4; ++i) {
@@ -326,7 +344,7 @@ static ErrorOr<void> write_VP8L_coded_image(ImageKind image_kind, LittleEndianOu
     prefix_code_group[4] = TRY(write_simple_code_lengths(bit_stream, {}));
 
     // Image data.
-    TRY(write_image_data(bit_stream, bitmap, prefix_code_group));
+    TRY(write_image_data(bit_stream, symbols.span(), prefix_code_group));
 
     return {};
 }
