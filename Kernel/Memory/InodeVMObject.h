@@ -22,6 +22,9 @@ public:
     size_t amount_dirty() const;
     size_t amount_clean() const;
 
+    bool is_page_dirty(size_t page_index) const;
+    void set_page_dirty(size_t page_index, bool is_dirty);
+
     int release_all_clean_pages();
     int try_release_clean_pages(int page_amount);
 
