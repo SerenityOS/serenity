@@ -50,18 +50,7 @@ size_t InodeVMObject::amount_dirty() const
 
 int InodeVMObject::release_all_clean_pages()
 {
-    SpinlockLocker locker(m_lock);
-
-    int count = 0;
-    for (size_t i = 0; i < page_count(); ++i) {
-        if (!m_dirty_pages.get(i) && m_physical_pages[i]) {
-            m_physical_pages[i] = nullptr;
-            ++count;
-        }
-    }
-    if (count)
-        remap_regions();
-    return count;
+    return try_release_clean_pages(page_count());
 }
 
 int InodeVMObject::try_release_clean_pages(int page_amount)
