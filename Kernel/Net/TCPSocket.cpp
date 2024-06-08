@@ -516,8 +516,9 @@ ErrorOr<void> TCPSocket::protocol_bind()
     // Check that we do have the address we're trying to bind to.
     TRY(m_adapter.with([this](auto& adapter) -> ErrorOr<void> {
         if (has_specific_local_address() && !adapter) {
-            adapter = NetworkingManagement::the().from_ipv4_address(local_address());
-            if (!adapter)
+
+            auto adapter_or_error = NetworkingManagement::the().from_ipv4_address(local_address());
+            if (adapter_or_error.is_error())
                 return set_so_error(EADDRNOTAVAIL);
         }
         return {};

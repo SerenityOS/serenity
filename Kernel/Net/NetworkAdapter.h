@@ -52,6 +52,8 @@ public:
         Ethernet
     };
 
+    AK_TYPEDEF_DISTINCT_ORDERED_ID(size_t, AdapterIndex);
+
     static constexpr i32 LINKSPEED_INVALID = -1;
 
     virtual ~NetworkAdapter();
@@ -102,6 +104,8 @@ public:
 
     void send_packet(ReadonlyBytes);
 
+    AdapterIndex index() const { return m_index; }
+
 protected:
     NetworkAdapter(StringView);
     void set_mac_address(MACAddress const& mac_address) { m_mac_address = mac_address; }
@@ -120,6 +124,7 @@ private:
 
     PacketList m_packet_queue;
     size_t m_packet_queue_size { 0 };
+    AdapterIndex const m_index { 0 };
     SpinlockProtected<PacketList, LockRank::None> m_unused_packets {};
     FixedStringBuffer<IFNAMSIZ> m_name;
     u32 m_packets_in { 0 };

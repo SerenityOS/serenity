@@ -26,6 +26,7 @@ ErrorOr<void> SysFSNetworkAdaptersStats::try_generate(KBufferBuilder& builder)
     auto array = TRY(JsonArraySerializer<>::try_create(builder));
     TRY(NetworkingManagement::the().try_for_each([&array](auto& adapter) -> ErrorOr<void> {
         auto obj = TRY(array.add_object());
+        TRY(obj.add("index"sv, adapter.index().value()));
         TRY(obj.add("name"sv, adapter.name()));
         TRY(obj.add("class_name"sv, adapter.class_name()));
         auto mac_address = TRY(adapter.mac_address().to_string());

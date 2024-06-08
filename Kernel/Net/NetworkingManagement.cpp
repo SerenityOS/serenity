@@ -58,29 +58,45 @@ ErrorOr<void> NetworkingManagement::try_for_each(Function<ErrorOr<void>(NetworkA
     });
 }
 
-RefPtr<NetworkAdapter> NetworkingManagement::from_ipv4_address(IPv4Address const& address) const
+ErrorOr<NonnullRefPtr<NetworkAdapter>> NetworkingManagement::lookup_by_index(NetworkAdapter::AdapterIndex index) const
+{
+    // NOTE: Network devices are 1-indexed since index 0 denotes an invalid device
+    if (index.value() == 0)
+        return Error::from_errno(ENODEV);
+    return m_adapters.with([&](auto& adapters) -> ErrorOr<NonnullRefPtr<NetworkAdapter>> {
+        for (auto& adapter : adapters) {
+            if (adapter->index() == index)
+                return adapter;
+        }
+        return Error::from_errno(ENODEV);
+    });
+}
+
+ErrorOr<NonnullRefPtr<NetworkAdapter>> NetworkingManagement::from_ipv4_address(IPv4Address const& address) const
 {
     if (address[0] == 0 && address[1] == 0 && address[2] == 0 && address[3] == 0)
-        return m_loopback_adapter;
+        return *m_loopback_adapter;
     if (address[0] == 127)
-        return m_loopback_adapter;
-    return m_adapters.with([&](auto& adapters) -> RefPtr<NetworkAdapter> {
+        return *m_loopback_adapter;
+    return m_adapters.with([&](auto& adapters) -> ErrorOr<NonnullRefPtr<NetworkAdapter>> {
         for (auto& adapter : adapters) {
             if (adapter->ipv4_address() == address || adapter->ipv4_broadcast() == address)
                 return adapter;
         }
-        return nullptr;
+        return Error::from_errno(ENODEV);
     });
 }
 
-RefPtr<NetworkAdapter> NetworkingManagement::lookup_by_name(StringView name) const
+ErrorOr<NonnullRefPtr<NetworkAdapter>> NetworkingManagement::lookup_by_name(StringView name) const
 {
-    return m_adapters.with([&](auto& adapters) -> RefPtr<NetworkAdapter> {
+    if (name.is_empty())
+        return Error::from_errno(ENODEV);
+    return m_adapters.with([&](auto& adapters) -> ErrorOr<NonnullRefPtr<NetworkAdapter>> {
         for (auto& adapter : adapters) {
             if (adapter->name() == name)
                 return adapter;
         }
-        return nullptr;
+        return Error::from_errno(ENODEV);
     });
 }
 
@@ -89,7 +105,8 @@ ErrorOr<FixedStringBuffer<IFNAMSIZ>> NetworkingManagement::generate_interface_na
     VERIFY(device_identifier.class_code().value() == 0x2);
     // Note: This stands for e - "Ethernet", p - "Port" as for PCI bus, "s" for slot as for PCI slot
     auto name = TRY(FixedStringBuffer<IFNAMSIZ>::formatted("ep{}s{}", device_identifier.address().bus(), device_identifier.address().device()));
-    VERIFY(!NetworkingManagement::the().lookup_by_name(name.representable_view()));
+    auto has_adapter_with_the_name = NetworkingManagement::the().lookup_by_name(name.representable_view());
+    VERIFY(has_adapter_with_the_name.is_error());
     return name;
 }
 
