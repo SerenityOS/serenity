@@ -15,6 +15,7 @@
 namespace Kernel {
 
 NetworkAdapter::NetworkAdapter(StringView interface_name)
+    : m_index(NetworkingManagement::the().allocate_adapter_index({}))
 {
     m_name.store_characters(interface_name);
 }

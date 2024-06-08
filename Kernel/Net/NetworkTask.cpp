@@ -160,8 +160,9 @@ void handle_arp(EthernetFrameHeader const& eth, size_t frame_size)
 
     if (packet.operation() == ARPOperation::Request) {
         // Who has this IP address?
-        if (auto adapter = NetworkingManagement::the().from_ipv4_address(packet.target_protocol_address())) {
+        if (auto adapter_or_error = NetworkingManagement::the().from_ipv4_address(packet.target_protocol_address()); !adapter_or_error.is_error()) {
             // We do!
+            auto adapter = adapter_or_error.release_value();
             dbgln("handle_arp: Responding to ARP request for my IPv4 address ({})", adapter->ipv4_address());
             ARPPacket response;
             response.set_operation(ARPOperation::Response);
@@ -238,9 +239,11 @@ void handle_icmp(EthernetFrameHeader const& eth, IPv4Packet const& ipv4_packet, 
             socket->did_receive(ipv4_packet.source(), 0, { &ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size() }, packet_timestamp);
     }
 
-    auto adapter = NetworkingManagement::the().from_ipv4_address(ipv4_packet.destination());
-    if (!adapter)
+    auto adapter_or_error = NetworkingManagement::the().from_ipv4_address(ipv4_packet.destination());
+    if (adapter_or_error.is_error())
         return;
+
+    auto adapter = adapter_or_error.release_value();
 
     if (icmp_header.type() == ICMPType::EchoRequest) {
         auto& request = reinterpret_cast<ICMPEchoPacket const&>(icmp_header);
@@ -296,7 +299,8 @@ void handle_udp(IPv4Packet const& ipv4_packet, UnixDateTime const& packet_timest
 
     auto& destination = ipv4_packet.destination();
 
-    if (destination == IPv4Address(255, 255, 255, 255) || NetworkingManagement::the().from_ipv4_address(destination) || socket->multicast_memberships().contains_slow(destination))
+    auto adapter_or_error = NetworkingManagement::the().from_ipv4_address(destination);
+    if (destination == IPv4Address(255, 255, 255, 255) || !adapter_or_error.is_error() || socket->multicast_memberships().contains_slow(destination))
         socket->did_receive(ipv4_packet.source(), udp_packet.source_port(), { &ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size() }, packet_timestamp);
 }
 
@@ -403,11 +407,13 @@ void handle_tcp(IPv4Packet const& ipv4_packet, UnixDateTime const& packet_timest
         tcp_packet.window_size(),
         payload_size);
 
-    auto adapter = NetworkingManagement::the().from_ipv4_address(ipv4_packet.destination());
-    if (!adapter) {
+    auto adapter_or_error = NetworkingManagement::the().from_ipv4_address(ipv4_packet.destination());
+    if (adapter_or_error.is_error()) {
         dbgln("handle_tcp: this packet is not for me, it's for {}", ipv4_packet.destination());
         return;
     }
+
+    auto adapter = adapter_or_error.release_value();
 
     IPv4SocketTuple tuple(ipv4_packet.destination(), tcp_packet.destination_port(), ipv4_packet.source(), tcp_packet.source_port());
 

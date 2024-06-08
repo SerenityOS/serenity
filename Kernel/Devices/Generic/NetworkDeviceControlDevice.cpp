@@ -49,9 +49,7 @@ ErrorOr<void> NetworkDeviceControlDevice::ioctl(OpenFileDescription&, unsigned r
 
         Userspace<char const*> user_rt_dev((FlatPtr)route.rt_dev);
         auto ifname = TRY(Process::get_syscall_name_string_fixed_buffer<IFNAMSIZ>(user_rt_dev));
-        auto adapter = NetworkingManagement::the().lookup_by_name(ifname.representable_view());
-        if (!adapter)
-            return ENODEV;
+        auto adapter = TRY(NetworkingManagement::the().lookup_by_name(ifname.representable_view()));
 
         switch (request) {
         case SIOCADDRT: {
@@ -120,29 +118,15 @@ ErrorOr<void> NetworkDeviceControlDevice::ioctl(OpenFileDescription&, unsigned r
         TRY(copy_from_user(&ifr, user_ifr));
 
         if (request == SIOCGIFNAME) {
-            // NOTE: Network devices are 1-indexed since index 0 denotes an invalid device
             if (ifr.ifr_index == 0)
                 return EINVAL;
 
-            size_t index = 1;
-            Optional<StringView> result {};
-
-            NetworkingManagement::the().for_each([&ifr, &index, &result](auto& adapter) {
-                if (index == ifr.ifr_index)
-                    result = adapter.name();
-                ++index;
-            });
-
-            if (result.has_value()) {
-                auto name = result.release_value();
-                auto succ = name.copy_characters_to_buffer(ifr.ifr_name, IFNAMSIZ);
-                if (!succ) {
-                    return EFAULT;
-                }
-                return copy_to_user(user_ifr, &ifr);
+            auto adapter = TRY(NetworkingManagement::the().lookup_by_index(ifr.ifr_index));
+            auto succ = adapter->name().copy_characters_to_buffer(ifr.ifr_name, IFNAMSIZ);
+            if (!succ) {
+                return EFAULT;
             }
-
-            return ENODEV;
+            return copy_to_user(user_ifr, &ifr);
         }
 
         char namebuf[IFNAMSIZ + 1];
@@ -150,27 +134,12 @@ ErrorOr<void> NetworkDeviceControlDevice::ioctl(OpenFileDescription&, unsigned r
         namebuf[sizeof(namebuf) - 1] = '\0';
 
         if (request == SIOCGIFINDEX) {
-            StringView name { namebuf, strlen(namebuf) };
-            size_t index = 1;
-            Optional<size_t> result {};
-
-            NetworkingManagement::the().for_each([&name, &index, &result](auto& adapter) {
-                if (adapter.name() == name)
-                    result = index;
-                ++index;
-            });
-
-            if (result.has_value()) {
-                ifr.ifr_index = result.release_value();
-                return copy_to_user(user_ifr, &ifr);
-            }
-
-            return ENODEV;
+            auto adapter = TRY(NetworkingManagement::the().lookup_by_name({ namebuf, strlen(namebuf) }));
+            ifr.ifr_index = adapter->index().value();
+            return copy_to_user(user_ifr, &ifr);
         }
 
-        auto adapter = NetworkingManagement::the().lookup_by_name({ namebuf, strlen(namebuf) });
-        if (!adapter)
-            return ENODEV;
+        auto adapter = TRY(NetworkingManagement::the().lookup_by_name({ namebuf, strlen(namebuf) }));
 
         auto current_process_credentials = Process::current().credentials();
 
