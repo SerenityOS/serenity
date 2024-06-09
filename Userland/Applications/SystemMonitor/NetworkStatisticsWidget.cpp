@@ -45,7 +45,7 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
         Vector<GUI::JsonArrayModel::FieldSpec> net_adapters_fields;
         net_adapters_fields.empend(String(), Gfx::TextAlignment::CenterLeft,
             [this](JsonObject const& object) -> GUI::Variant {
-                if (!object.get_bool("link_up"sv).value_or(false))
+                if (!object.has_string("link_status"sv) || object.get_byte_string("link_status"sv).value() != "media-connected")
                     return *m_network_link_down_bitmap;
                 else
                     return object.get_byte_string("ipv4_address"sv).value_or("").is_empty() ? *m_network_disconnected_bitmap : *m_network_connected_bitmap;
@@ -55,7 +55,13 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
         net_adapters_fields.empend("mac_address", "MAC"_string, Gfx::TextAlignment::CenterLeft);
         net_adapters_fields.empend("Link status"_string, Gfx::TextAlignment::CenterLeft,
             [](JsonObject const& object) -> ByteString {
-                if (!object.get_bool("link_up"sv).value_or(false))
+                if (!object.has_string("link_status"sv))
+                    return "Unknown";
+                auto link_status = object.get_byte_string("link_status"sv).value();
+                if (link_status == "user-shutdown")
+                    return "User-shutdown";
+
+                if (link_status == "media-disconnected")
                     return "Down";
 
                 return ByteString::formatted("{} Mb/s {}-duplex", object.get_i32("link_speed"sv).value_or(0),

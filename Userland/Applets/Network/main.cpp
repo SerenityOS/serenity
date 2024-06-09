@@ -115,7 +115,7 @@ private:
             auto& if_object = value.as_object();
             auto ip_address = if_object.get_byte_string("ipv4_address"sv).value_or("no IP");
             auto ifname = if_object.get_byte_string("name"sv).value();
-            auto link_up = if_object.get_bool("link_up"sv).value();
+            auto link_status = if_object.get_byte_string("link_status"sv).value();
             auto link_speed = if_object.get_i32("link_speed"sv).value();
 
             if (ifname == "loop")
@@ -128,7 +128,7 @@ private:
                 adapter_info.append('\n');
 
             adapter_info.appendff("{}: {} ", ifname, ip_address);
-            if (!link_up)
+            if (link_status != "media-connected")
                 adapter_info.appendff("(down)");
             else
                 adapter_info.appendff("({} Mb/s)", link_speed);

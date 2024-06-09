@@ -41,6 +41,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             auto& if_object = value.as_object();
 
             auto name = if_object.get_byte_string("name"sv).value_or({});
+            auto link_status = if_object.get_byte_string("link_status"sv).value_or({});
             auto class_name = if_object.get_byte_string("class_name"sv).value_or({});
             auto mac_address = if_object.get_byte_string("mac_address"sv).value_or({});
             auto ipv4_address = if_object.get_byte_string("ipv4_address"sv).value_or({});
@@ -52,6 +53,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             auto mtu = if_object.get_u32("mtu"sv).value_or(0);
 
             outln("{}:", name);
+            outln("\tstatus: {}", link_status);
             outln("\tmac: {}", mac_address);
             outln("\tipv4: {}", ipv4_address);
             outln("\tnetmask: {}", netmask);
