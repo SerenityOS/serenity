@@ -317,8 +317,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                     ? HTTP::HttpResponse::reason_phrase_for_code(value)
                     : "UNKNOWN"sv;
                 warnln("< Code={}, Reason={}", value, reason_phrase);
-                for (auto const& header : response_headers) {
-                    warnln("< {}: {}", header.key, header.value);
+                for (auto const& header : response_headers.headers()) {
+                    warnln("< {}: {}", header.name, header.value);
                 }
             }
 

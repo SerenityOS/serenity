@@ -1877,7 +1877,7 @@ static void log_load_request(auto const& load_request)
 static void log_response(auto const& status_code, auto const& headers, auto const& data)
 {
     dbgln("< HTTP/1.1 {}", status_code.value_or(0));
-    for (auto const& [name, value] : headers)
+    for (auto const& [name, value] : headers.headers())
         dbgln("< {}: {}", name, value);
     dbgln("<");
     for (auto line : StringView { data }.split_view('\n', SplitBehavior::KeepEmpty))
@@ -1985,7 +1985,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> nonstandard_resource_load
                 log_response(status_code, response_headers, ReadonlyBytes {});
             }
 
-            for (auto const& [name, value] : response_headers) {
+            for (auto const& [name, value] : response_headers.headers()) {
                 auto header = Infrastructure::Header::from_string_pair(name, value);
                 response->header_list()->append(move(header));
             }
@@ -2050,7 +2050,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> nonstandard_resource_load
             auto response = Infrastructure::Response::create(vm);
             response->set_status(status_code.value_or(200));
             response->set_body(move(body));
-            for (auto const& [name, value] : response_headers) {
+            for (auto const& [name, value] : response_headers.headers()) {
                 auto header = Infrastructure::Header::from_string_pair(name, value);
                 response->header_list()->append(move(header));
             }
@@ -2071,7 +2071,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> nonstandard_resource_load
                 response->set_status(status_code.value_or(400));
                 auto [body, _] = TRY_OR_IGNORE(extract_body(realm, data));
                 response->set_body(move(body));
-                for (auto const& [name, value] : response_headers) {
+                for (auto const& [name, value] : response_headers.headers()) {
                     auto header = Infrastructure::Header::from_string_pair(name, value);
                     response->header_list()->append(move(header));
                 }
