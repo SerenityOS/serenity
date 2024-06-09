@@ -4,8 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/TypeCasts.h>
+#include <LibGfx/Font/ScaledFont.h>
 #include <LibWeb/Painting/AffineCommandExecutorCPU.h>
-
 namespace Web::Painting {
 
 // This executor is hopes to handle (at least) 2D CSS transforms. All commands
@@ -77,9 +78,30 @@ AffineCommandExecutorCPU::AffineCommandExecutorCPU(Gfx::Bitmap& bitmap, Gfx::Aff
         .target = bitmap });
 }
 
-CommandResult AffineCommandExecutorCPU::draw_glyph_run(DrawGlyphRun const&)
+CommandResult AffineCommandExecutorCPU::draw_glyph_run(DrawGlyphRun const& command)
 {
-    // FIXME: Implement.
+    prepare_clipping(command.bounding_rect());
+    auto scale = Gfx::AffineTransform {}.scale(command.scale, command.scale);
+    auto const& glyphs = command.glyph_run->glyphs();
+    Gfx::Path path;
+    for (auto& glyph_or_emoji : glyphs) {
+        if (auto* glyph = glyph_or_emoji.get_pointer<Gfx::DrawGlyph>()) {
+            if (!is<Gfx::ScaledFont>(glyph->font))
+                return CommandResult::Continue;
+            auto& scaled_font = static_cast<Gfx::ScaledFont const&>(*glyph->font);
+            auto position = glyph->position.translated(scaled_font.glyph_left_bearing(glyph->code_point), 0);
+            auto glyph_id = scaled_font.glyph_id_for_code_point(glyph->code_point);
+            Gfx::Path glyph_path;
+            scaled_font.append_glyph_path_to(glyph_path, glyph_id);
+            glyph_path.transform(Gfx::AffineTransform(scale).translate(position));
+            path.append_path(glyph_path);
+        } else {
+            // TODO: Implement bitmap emojis via transformed bitmaps.
+        }
+    }
+    auto path_transform = Gfx::AffineTransform(stacking_context().transform).multiply(Gfx::AffineTransform {}.set_translation(command.translation));
+    path.transform(path_transform);
+    aa_painter().fill_path(path, command.color);
     return CommandResult::Continue;
 }
 
