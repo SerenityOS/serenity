@@ -103,7 +103,7 @@ ErrorOr<bool> Client::handle_request(HTTP::HttpRequest const& request)
 
     if constexpr (WEBSERVER_DEBUG) {
         dbgln("Got HTTP request: {} {}", request.method_name(), request.resource());
-        for (auto& header : request.headers()) {
+        for (auto& header : request.headers().headers()) {
             dbgln("    {} => {}", header.name, header.value);
         }
     }
@@ -115,7 +115,7 @@ ErrorOr<bool> Client::handle_request(HTTP::HttpRequest const& request)
 
     // Check for credentials if they are required
     if (Configuration::the().credentials().has_value()) {
-        bool has_authenticated = verify_credentials(request.headers());
+        bool has_authenticated = verify_credentials(request.headers().headers());
         if (!has_authenticated) {
             auto const basic_auth_header = "WWW-Authenticate: Basic realm=\"WebServer\", charset=\"UTF-8\""_string;
             Vector<String> headers {};
@@ -214,7 +214,7 @@ ErrorOr<void> Client::send_response(Stream& response, HTTP::HttpRequest const& r
     } while (true);
 
     auto keep_alive = false;
-    if (auto it = request.headers().find_if([](auto& header) { return header.name.equals_ignoring_ascii_case("Connection"sv); }); !it.is_end()) {
+    if (auto it = request.headers().headers().find_if([](auto& header) { return header.name.equals_ignoring_ascii_case("Connection"sv); }); !it.is_end()) {
         if (it->value.trim_whitespace().equals_ignoring_ascii_case("keep-alive"sv))
             keep_alive = true;
     }
@@ -376,7 +376,7 @@ void Client::log_response(unsigned code, HTTP::HttpRequest const& request)
     outln("{} :: {:03d} :: {} {}", Core::DateTime::now().to_byte_string(), code, request.method_name(), request.url().serialize().substring(1));
 }
 
-bool Client::verify_credentials(Vector<HTTP::HttpRequest::Header> const& headers)
+bool Client::verify_credentials(Vector<HTTP::Header> const& headers)
 {
     VERIFY(Configuration::the().credentials().has_value());
     auto& configured_credentials = Configuration::the().credentials().value();

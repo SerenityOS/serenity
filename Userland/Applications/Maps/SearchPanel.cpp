@@ -52,7 +52,7 @@ void SearchPanel::search(StringView query)
     m_start_container->set_visible(false);
 
     // Start HTTP GET request to load people.json
-    HashMap<ByteString, ByteString> headers;
+    HTTP::HeaderMap headers;
     headers.set("User-Agent", "SerenityOS Maps");
     headers.set("Accept", "application/json");
     URL::URL url(MUST(String::formatted("https://nominatim.openstreetmap.org/search?q={}&format=json", URL::percent_encode(query, URL::PercentEncodeSet::Query))));

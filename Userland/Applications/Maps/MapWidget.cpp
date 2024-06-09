@@ -315,7 +315,7 @@ void MapWidget::process_tile_queue()
     auto tile_key = m_tile_queue.dequeue();
 
     // Start HTTP GET request to load image
-    HashMap<ByteString, ByteString> headers;
+    HTTP::HeaderMap headers;
     headers.set("User-Agent", "SerenityOS Maps");
     headers.set("Accept", "image/png");
     URL::URL url(MUST(String::formatted(m_tile_provider.value_or(m_default_tile_provider), tile_key.zoom, tile_key.x, tile_key.y)));

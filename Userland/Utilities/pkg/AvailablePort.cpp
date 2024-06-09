@@ -96,7 +96,7 @@ ErrorOr<int> AvailablePort::update_available_ports_list_file()
     }
     RefPtr<Protocol::Request> request;
     auto protocol_client = TRY(Protocol::RequestClient::try_create());
-    HashMap<ByteString, ByteString, CaseInsensitiveStringTraits> request_headers;
+    HTTP::HeaderMap request_headers;
     Core::ProxyData proxy_data {};
 
     auto output_stream = TRY(Core::File::open("/usr/Ports/AvailablePorts.md"sv, Core::File::OpenMode::ReadWrite, 0644));
