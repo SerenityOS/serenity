@@ -22,6 +22,64 @@ NetworkAdapter::NetworkAdapter(StringView interface_name)
 
 NetworkAdapter::~NetworkAdapter() = default;
 
+i32 NetworkAdapter::link_speed()
+{
+    return m_link_status.with([this](auto& status) -> i32 {
+        if (status != LinkStatus::MediaConnected)
+            return LINKSPEED_INVALID;
+        return phy_link_speed();
+    });
+}
+
+bool NetworkAdapter::is_link_up() const
+{
+    return m_link_status.with([](auto& status) -> bool {
+        return status == NetworkAdapter::LinkStatus::MediaConnected;
+    });
+}
+
+bool NetworkAdapter::is_link_down_or_address_zeroed() const
+{
+    return m_link_status.with([this](auto& status) -> bool {
+        return ipv4_address().is_zero() || status != LinkStatus::MediaConnected;
+    });
+}
+
+void NetworkAdapter::update_link_status(LinkStatus status)
+{
+    VERIFY(status == LinkStatus::MediaConnected || status == LinkStatus::MediaDisconnected);
+    dmesgln("{}: Link status: {}", m_name.representable_view(), status == LinkStatus::MediaConnected ? "up"sv : "down"sv);
+    m_link_status.with([status](auto& link_status) {
+        // NOTE: If the user requested to shutdown the link, then don't try
+        // to update the state.
+        if (status == LinkStatus::UserShutdown)
+            return;
+        link_status = status;
+    });
+}
+
+void NetworkAdapter::release_link_user_forced_shutdown()
+{
+    m_link_status.with([this](auto& link_status) {
+        if (link_status != LinkStatus::UserShutdown)
+            return;
+        if (is_phy_link_up())
+            link_status = LinkStatus::MediaConnected;
+        else
+            link_status = LinkStatus::MediaDisconnected;
+        dmesgln("{}: Link status: {}", m_name.representable_view(), link_status == LinkStatus::MediaConnected ? "up"sv : "down"sv);
+    });
+}
+
+void NetworkAdapter::set_link_user_forced_shutdown()
+{
+    m_link_status.with([this](auto& link_status) {
+        if (link_status != LinkStatus::UserShutdown)
+            dmesgln("{}: Link status: user forced shutdown", m_name.representable_view());
+        link_status = LinkStatus::UserShutdown;
+    });
+}
+
 void NetworkAdapter::send_packet(ReadonlyBytes packet)
 {
     m_packets_out++;

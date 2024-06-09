@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Types.h>
+#include <Kernel/API/POSIX/net/if.h>
 #include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/Bus/VirtIO/Transport/PCIe/TransportLink.h>
 #include <Kernel/Net/NetworkingManagement.h>
@@ -177,6 +179,7 @@ ErrorOr<void> VirtIONetworkAdapter::handle_device_config_change()
         if (is_feature_accepted(VIRTIO_NET_F_STATUS)) {
             u16 status = transport_entity().config_read16(*m_device_config, offsetof(VirtIONetConfig, status));
             m_link_up = (status & VIRTIO_NET_S_LINK_UP) != 0;
+            update_link_status(m_link_up ? LinkStatus::MediaConnected : LinkStatus::MediaDisconnected);
         }
         if (is_feature_accepted(VIRTIO_NET_F_MTU)) {
             u16 mtu = transport_entity().config_read16(*m_device_config, offsetof(VirtIONetConfig, mtu));
@@ -275,4 +278,8 @@ void VirtIONetworkAdapter::send_raw(ReadonlyBytes payload)
     supply_chain_and_notify(TRANSMITQ, chain);
 }
 
+short VirtIONetworkAdapter::flags() const
+{
+    return IFF_BROADCAST | IFF_MULTICAST;
+}
 }

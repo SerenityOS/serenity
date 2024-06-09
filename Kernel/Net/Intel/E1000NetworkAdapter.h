@@ -28,9 +28,8 @@ public:
     virtual ~E1000NetworkAdapter() override;
 
     virtual void send_raw(ReadonlyBytes) override;
-    virtual bool link_up() override { return m_link_up; }
-    virtual i32 link_speed() override;
     virtual bool link_full_duplex() override;
+    virtual short flags() const override;
 
     virtual StringView purpose() const override { return class_name(); }
     virtual StringView device_name() const override { return "E1000"sv; }
@@ -42,6 +41,9 @@ protected:
 
     void setup_interrupts();
     void setup_link();
+
+    virtual i32 phy_link_speed() override;
+    virtual bool is_phy_link_up() override { return m_link_up; }
 
     E1000NetworkAdapter(StringView, PCI::DeviceIdentifier const&, u8 irq,
         NonnullOwnPtr<IOWindow> registers_io_window, NonnullOwnPtr<Memory::Region> rx_buffer_region,
