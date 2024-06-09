@@ -212,6 +212,8 @@ public:
 
     Path copy_transformed(AffineTransform const&) const;
 
+    void transform(AffineTransform const&);
+
     ReadonlySpan<FloatLine> split_lines() const
     {
         if (!m_split_lines.has_value()) {

@@ -417,6 +417,12 @@ Path Path::copy_transformed(Gfx::AffineTransform const& transform) const
     return result;
 }
 
+void Path::transform(AffineTransform const& transform)
+{
+    for (auto& point : m_points)
+        point = transform.map(point);
+}
+
 void Path::append_path(Path const& path, AppendRelativeToLastPoint relative_to_last_point)
 {
     auto previous_last_point = last_point();
