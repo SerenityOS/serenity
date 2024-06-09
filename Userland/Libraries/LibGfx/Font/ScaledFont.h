@@ -80,6 +80,8 @@ private:
     float m_y_scale { 0.0f };
     float m_point_width { 0.0f };
     float m_point_height { 0.0f };
+
+    mutable HashMap<u32, Gfx::Path> m_glyph_cache;
     mutable HashMap<GlyphIndexWithSubpixelOffset, RefPtr<Gfx::Bitmap>> m_cached_glyph_bitmaps;
     Gfx::FontPixelMetrics m_pixel_metrics;
 
