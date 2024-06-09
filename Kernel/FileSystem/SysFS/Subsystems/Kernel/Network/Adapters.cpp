@@ -41,7 +41,7 @@ ErrorOr<void> SysFSNetworkAdaptersStats::try_generate(KBufferBuilder& builder)
         TRY(obj.add("bytes_in"sv, adapter.bytes_in()));
         TRY(obj.add("packets_out"sv, adapter.packets_out()));
         TRY(obj.add("bytes_out"sv, adapter.bytes_out()));
-        TRY(obj.add("link_up"sv, adapter.is_link_up()));
+        TRY(obj.add("link_status"sv, NetworkAdapter::link_status_to_printable_state(adapter.current_link_status())));
         TRY(obj.add("link_speed"sv, adapter.link_speed()));
         TRY(obj.add("link_full_duplex"sv, adapter.link_full_duplex()));
         TRY(obj.add("mtu"sv, adapter.mtu()));

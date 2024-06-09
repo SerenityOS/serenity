@@ -22,6 +22,26 @@ NetworkAdapter::NetworkAdapter(StringView interface_name)
 
 NetworkAdapter::~NetworkAdapter() = default;
 
+StringView NetworkAdapter::link_status_to_printable_state(LinkStatus status)
+{
+    switch (status) {
+    case LinkStatus::MediaConnected:
+        return "media-connected"sv;
+    case LinkStatus::MediaDisconnected:
+        return "media-disconnected"sv;
+    case LinkStatus::UserShutdown:
+        return "user-shutdown"sv;
+    }
+    VERIFY_NOT_REACHED();
+}
+
+NetworkAdapter::LinkStatus NetworkAdapter::current_link_status() const
+{
+    return m_link_status.with([](auto& status) -> LinkStatus {
+        return status;
+    });
+}
+
 i32 NetworkAdapter::link_speed()
 {
     return m_link_status.with([this](auto& status) -> i32 {

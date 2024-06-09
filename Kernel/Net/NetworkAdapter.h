@@ -53,6 +53,8 @@ public:
         UserShutdown,
     };
 
+    static StringView link_status_to_printable_state(LinkStatus);
+
     enum class Type {
         Loopback,
         Ethernet
@@ -68,6 +70,7 @@ public:
     virtual Type adapter_type() const = 0;
     virtual ErrorOr<void> initialize(Badge<NetworkingManagement>) = 0;
 
+    LinkStatus current_link_status() const;
     bool is_link_up() const;
     bool is_link_down_or_address_zeroed() const;
 

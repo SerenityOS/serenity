@@ -202,7 +202,7 @@ private:
         auto const& array = json.value().as_array();
         for (auto const& adapter_value : array.values()) {
             auto const& adapter_obj = adapter_value.as_object();
-            if (!adapter_obj.has_string("ipv4_address"sv) || !adapter_obj.get_bool("link_up"sv).value())
+            if (!adapter_obj.has_string("ipv4_address"sv) || !adapter_obj.has_string("link_status"sv))
                 continue;
 
             tx += adapter_obj.get_u64("bytes_in"sv).value_or(0);

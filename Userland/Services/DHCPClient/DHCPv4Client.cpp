@@ -208,10 +208,10 @@ ErrorOr<DHCPv4Client::Interfaces> DHCPv4Client::get_discoverable_interfaces()
 
         auto name = if_object.get_byte_string("name"sv).value_or({});
         auto mac = if_object.get_byte_string("mac_address"sv).value_or({});
-        auto is_up = if_object.get_bool("link_up"sv).value_or(false);
+        auto link_status = if_object.get_byte_string("link_status"sv).value_or({});
         auto ipv4_addr_maybe = IPv4Address::from_string(if_object.get_byte_string("ipv4_address"sv).value_or({}));
         auto ipv4_addr = ipv4_addr_maybe.has_value() ? ipv4_addr_maybe.value() : IPv4Address { 0, 0, 0, 0 };
-        if (is_up) {
+        if (link_status == "media-connected") {
             dbgln_if(DHCPV4_DEBUG, "Found adapter '{}' with mac {}, and it was up!", name, mac);
             ifnames_to_immediately_discover.empend(name, mac_from_string(mac), ipv4_addr);
         } else {
