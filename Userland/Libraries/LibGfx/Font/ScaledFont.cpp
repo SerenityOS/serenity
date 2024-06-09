@@ -85,7 +85,18 @@ RefPtr<Gfx::Bitmap> ScaledFont::rasterize_glyph(u32 glyph_id, GlyphSubpixelOffse
 
 bool ScaledFont::append_glyph_path_to(Gfx::Path& path, u32 glyph_id) const
 {
-    return m_font->append_glyph_path_to(path, glyph_id, m_x_scale, m_y_scale);
+    auto glyph_iterator = m_glyph_cache.find(glyph_id);
+    if (glyph_iterator != m_glyph_cache.end()) {
+        path.append_path(glyph_iterator->value, Path::AppendRelativeToLastPoint::Yes);
+        return true;
+    }
+    Gfx::Path glyph_path;
+    bool success = m_font->append_glyph_path_to(glyph_path, glyph_id, m_x_scale, m_y_scale);
+    if (success) {
+        path.append_path(glyph_path, Path::AppendRelativeToLastPoint::Yes);
+        m_glyph_cache.set(glyph_id, move(glyph_path));
+    }
+    return success;
 }
 
 Gfx::Glyph ScaledFont::glyph(u32 code_point) const
