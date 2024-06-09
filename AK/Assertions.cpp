@@ -10,17 +10,11 @@
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 
-#if (defined(AK_OS_LINUX) && !defined(AK_OS_ANDROID)) || defined(AK_LIBC_GLIBC) || defined(AK_OS_BSD_GENERIC) || defined(AK_OS_SOLARIS) || defined(AK_OS_HAIKU)
+#if defined(AK_OS_LINUX) || defined(AK_LIBC_GLIBC) || defined(AK_OS_BSD_GENERIC) || defined(AK_OS_SOLARIS) || defined(AK_OS_HAIKU)
 #    define EXECINFO_BACKTRACE
 #endif
 
-#if defined(AK_OS_ANDROID) && (__ANDROID_API__ >= 33)
-#    include <android/log.h>
-#    define EXECINFO_BACKTRACE
-#    define PRINT_ERROR(s) __android_log_write(ANDROID_LOG_WARN, "AK", (s))
-#else
-#    define PRINT_ERROR(s) (void)fputs((s), stderr)
-#endif
+#define PRINT_ERROR(s) (void)fputs((s), stderr)
 
 #if defined(EXECINFO_BACKTRACE)
 #    include <cxxabi.h>
@@ -74,9 +68,7 @@ ALWAYS_INLINE void dump_backtrace()
         } else {
             error_builder.append(sym);
         }
-#        if !defined(AK_OS_ANDROID)
         error_builder.append('\n');
-#        endif
         error_builder.append('\0');
         PRINT_ERROR(error_builder.string_view().characters_without_null_termination());
     }
@@ -89,7 +81,7 @@ extern "C" {
 
 void ak_verification_failed(char const* message)
 {
-#    if defined(AK_OS_SERENITY) || defined(AK_OS_ANDROID)
+#    if defined(AK_OS_SERENITY)
     bool colorize_output = true;
 #    elif defined(AK_OS_WINDOWS)
     bool colorize_output = false;

@@ -374,7 +374,7 @@ ErrorOr<void> profiling_free_buffer(pid_t pid)
 }
 #endif
 
-#if !defined(AK_OS_BSD_GENERIC) && !defined(AK_OS_ANDROID)
+#if !defined(AK_OS_BSD_GENERIC)
 ErrorOr<Optional<struct spwd>> getspent()
 {
     errno = 0;
@@ -1264,7 +1264,7 @@ ErrorOr<struct utsname> uname()
     return uts;
 }
 
-#if !defined(AK_OS_ANDROID) && !defined(AK_OS_HAIKU)
+#if !defined(AK_OS_HAIKU)
 ErrorOr<void> adjtime(const struct timeval* delta, struct timeval* old_delta)
 {
 #    ifdef AK_OS_SERENITY
@@ -1784,7 +1784,7 @@ ErrorOr<String> resolve_executable_from_environment(StringView filename, int fla
 ErrorOr<ByteString> current_executable_path()
 {
     char path[4096] = {};
-#if defined(AK_OS_LINUX) || defined(AK_OS_ANDROID) || defined(AK_OS_SERENITY)
+#if defined(AK_OS_LINUX) || defined(AK_OS_SERENITY)
     auto ret = ::readlink("/proc/self/exe", path, sizeof(path) - 1);
     // Ignore error if it wasn't a symlink
     if (ret == -1 && errno != EINVAL)

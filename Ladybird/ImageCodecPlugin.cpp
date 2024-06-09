@@ -6,11 +6,7 @@
  */
 
 #include "ImageCodecPlugin.h"
-#ifdef AK_OS_ANDROID
-#    include <Ladybird/Android/src/main/cpp/WebContentService.h>
-#else
-#    include "HelperProcess.h"
-#endif
+#include "HelperProcess.h"
 #include "Utilities.h"
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/ImageFormats/ImageDecoder.h>
@@ -23,12 +19,8 @@ ImageCodecPlugin::~ImageCodecPlugin() = default;
 NonnullRefPtr<Core::Promise<Web::Platform::DecodedImage>> ImageCodecPlugin::decode_image(ReadonlyBytes bytes, Function<ErrorOr<void>(Web::Platform::DecodedImage&)> on_resolved, Function<void(Error&)> on_rejected)
 {
     if (!m_client) {
-#ifdef AK_OS_ANDROID
-        m_client = MUST(bind_service<ImageDecoderClient::Client>(&bind_image_decoder_java));
-#else
         auto candidate_image_decoder_paths = get_paths_for_helper_process("ImageDecoder"sv).release_value_but_fixme_should_propagate_errors();
         m_client = launch_image_decoder_process(candidate_image_decoder_paths).release_value_but_fixme_should_propagate_errors();
-#endif
         m_client->on_death = [&] {
             m_client = nullptr;
         };

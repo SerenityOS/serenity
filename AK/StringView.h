@@ -408,8 +408,7 @@ struct CaseInsensitiveASCIIStringViewTraits : public Traits<StringView> {
 //        See: https://github.com/llvm/llvm-project/issues/48230
 //        Additionally, oss-fuzz currently ships an llvm-project commit that is a pre-release of 15.0.0.
 //        See: https://github.com/google/oss-fuzz/issues/9989
-//        Android currently doesn't ship clang-15 in any NDK
-#if defined(AK_OS_BSD_GENERIC) || defined(OSS_FUZZ) || defined(AK_OS_ANDROID)
+#if defined(AK_OS_BSD_GENERIC) || defined(OSS_FUZZ)
 #    define AK_STRING_VIEW_LITERAL_CONSTEVAL constexpr
 #else
 #    define AK_STRING_VIEW_LITERAL_CONSTEVAL consteval
