@@ -19,7 +19,7 @@ UsersMapWidget::UsersMapWidget(Options const& options)
 void UsersMapWidget::get_users()
 {
     // Start HTTP GET request to load people.json
-    HashMap<ByteString, ByteString> headers;
+    HTTP::HeaderMap headers;
     headers.set("User-Agent", "SerenityOS Maps");
     headers.set("Accept", "application/json");
     URL::URL url("https://usermap.serenityos.org/people.json");

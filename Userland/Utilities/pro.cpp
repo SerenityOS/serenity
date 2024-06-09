@@ -156,7 +156,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView proxy_spec;
     ByteString method = "GET";
     StringView method_override;
-    HashMap<ByteString, ByteString, CaseInsensitiveStringTraits> request_headers;
+    HTTP::HeaderMap request_headers;
     String credentials;
 
     Core::ArgsParser args_parser;
@@ -298,8 +298,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (verbose_output && is_http_url) {
             warnln("* Setting up request");
             warnln("> Method={}, URL={}", method, url);
-            for (auto const& header : request_headers) {
-                warnln("> {}: {}", header.key, header.value);
+            for (auto const& header : request_headers.headers()) {
+                warnln("> {}: {}", header.name, header.value);
             }
         }
 

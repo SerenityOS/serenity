@@ -39,7 +39,7 @@ private:
     void die();
     void log_response(unsigned code, HTTP::HttpRequest const&);
     ErrorOr<void> handle_directory_listing(String const& requested_path, String const& real_path, HTTP::HttpRequest const&);
-    bool verify_credentials(Vector<HTTP::HttpRequest::Header> const&);
+    bool verify_credentials(Vector<HTTP::Header> const&);
 
     NonnullOwnPtr<Core::BufferedTCPSocket> m_socket;
     StringBuilder m_remaining_request;
