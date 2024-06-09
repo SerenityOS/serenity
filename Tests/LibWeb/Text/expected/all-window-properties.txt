@@ -324,6 +324,7 @@ TextDecoder
 TextEncoder
 TextMetrics
 TextTrack
+TextTrackList
 TimeRanges
 ToggleEvent
 TrackEvent
