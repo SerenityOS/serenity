@@ -8,7 +8,7 @@ project(ladybird
 
 include(GNUInstallDirs)
 
-if (ANDROID OR IOS)
+if (IOS)
     set(BUILD_SHARED_LIBS OFF)
 endif()
 
@@ -79,15 +79,10 @@ add_compile_options(-DAK_DONT_REPLACE_STD)
 add_compile_options(-Wno-expansion-to-defined)
 add_compile_options(-Wno-user-defined-literals)
 
-if (ANDROID OR APPLE)
+if (APPLE)
     serenity_option(ENABLE_QT OFF CACHE BOOL "Build ladybird application using Qt GUI")
 else()
     serenity_option(ENABLE_QT ON CACHE BOOL "Build ladybird application using Qt GUI")
-endif()
-
-if (ANDROID AND ENABLE_QT)
-    message(STATUS "Disabling Qt for Android")
-    set(ENABLE_QT OFF CACHE BOOL "" FORCE)
 endif()
 
 if (ENABLE_QT)
@@ -158,17 +153,6 @@ elseif (APPLE)
         -fobjc-arc
         -Wno-deprecated-anon-enum-enum-conversion # Required for CGImageCreate
     )
-elseif(ANDROID)
-    add_library(ladybird SHARED
-        ${SOURCES}
-        Android/src/main/cpp/LadybirdActivity.cpp
-        Android/src/main/cpp/WebViewImplementationNative.cpp
-        Android/src/main/cpp/WebViewImplementationNativeJNI.cpp
-        Android/src/main/cpp/ALooperEventLoopImplementation.cpp
-        Android/src/main/cpp/TimerExecutorService.cpp
-        Android/src/main/cpp/JNIHelpers.cpp
-    )
-    target_link_libraries(ladybird PRIVATE LibArchive jnigraphics android)
 else()
     # TODO: Check for other GUI frameworks here when we move them in-tree
     #       For now, we can export a static library of common files for chromes to link to
@@ -214,10 +198,6 @@ add_executable(headless-browser
 target_include_directories(headless-browser PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 target_include_directories(headless-browser PRIVATE ${SERENITY_SOURCE_DIR}/Userland/)
 target_link_libraries(headless-browser PRIVATE AK LibCore LibWeb LibWebView LibWebSocket LibCrypto LibFileSystem LibGemini LibHTTP LibImageDecoderClient LibJS LibGfx LibMain LibSQL LibTLS LibIPC LibDiff LibProtocol LibURL)
-
-if (ANDROID)
-    include(cmake/AndroidExtras.cmake)
-endif()
 
 add_custom_target(run${LADYBIRD_CUSTOM_TARGET_SUFFIX}
     COMMAND "${CMAKE_COMMAND}" -E env "SERENITY_SOURCE_DIR=${SERENITY_SOURCE_DIR}" "$<TARGET_FILE:ladybird>" $ENV{LAGOM_ARGS}

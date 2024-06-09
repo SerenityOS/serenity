@@ -41,7 +41,7 @@ if (ENABLE_QT)
     endif()
 else()
     set(LIB_TYPE STATIC)
-    if (ANDROID OR IOS)
+    if (IOS)
         set(LIB_TYPE SHARED)
     endif()
     add_library(webcontent ${LIB_TYPE} ${WEBCONTENT_SOURCES})
@@ -63,16 +63,6 @@ else()
               ${WEBCONTENT_SOURCE_DIR}/WebContentConsoleClient.h
               ${WEBCONTENT_SOURCE_DIR}/WebDriverConnection.h
     )
-
-    if (ANDROID)
-        target_sources(webcontent PRIVATE
-          ../Android/src/main/cpp/WebContentService.cpp
-          ../Android/src/main/cpp/WebContentServiceJNI.cpp
-          ../Android/src/main/cpp/LadybirdServiceBaseJNI.cpp
-          ../Android/src/main/cpp/JNIHelpers.cpp
-        )
-        target_link_libraries(webcontent PRIVATE android)
-    endif()
 
     add_executable(WebContent main.cpp)
     target_link_libraries(WebContent PRIVATE webcontent)

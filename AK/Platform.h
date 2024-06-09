@@ -127,18 +127,6 @@
 #    define AK_OS_WINDOWS
 #endif
 
-#if defined(__ANDROID__)
-#    define STR(x) __STR(x)
-#    define __STR(x) #x
-#    if __ANDROID_API__ < 30
-#        pragma message "Invalid android API " STR(__ANDROID_API__)
-#        error "Build configuration not tested on configured Android API version"
-#    endif
-#    undef STR
-#    undef __STR
-#    define AK_OS_ANDROID
-#endif
-
 #if defined(__EMSCRIPTEN__)
 #    define AK_OS_EMSCRIPTEN
 #endif

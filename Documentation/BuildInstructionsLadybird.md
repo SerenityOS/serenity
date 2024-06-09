@@ -84,11 +84,6 @@ On Windows:
 WSL2/WSLg are preferred, as they provide a linux environment that matches one of the above distributions.
 MinGW/MSYS2 are not supported, but may work with sufficient elbow grease. Native Windows builds are not supported with either clang-cl or MSVC.
 
-For Android:
-
-On a Unix-like platform, install the prerequisites for that platform and then see the [Android Studio guide](AndroidStudioConfiguration.md).
-Or, download a version of Gradle >= 8.0.0, and run the ``gradlew`` program in ``Ladybird/Android``
-
 ## Build steps
 
 ### Using serenity.sh
@@ -102,11 +97,10 @@ The simplest way to build and run ladybird is via the serenity.sh script:
 ```
 
 The above commands will build Ladybird with one of the following browser chromes, depending on the platform:
-* [Android UI](https://developer.android.com/develop/ui) - The native chrome on Android.
 * [AppKit](https://developer.apple.com/documentation/appkit?language=objc) - The native chrome on macOS.
 * [Qt](https://doc.qt.io/qt-6/) - The chrome used on all other platforms.
 
-The Qt chrome is available on platforms where it is not the default as well (except on Android). To build the
+The Qt chrome is available on platforms where it is not the default as well. To build the
 Qt chrome, install the Qt dependencies for your platform, and enable the Qt chrome via CMake:
 
 ```bash

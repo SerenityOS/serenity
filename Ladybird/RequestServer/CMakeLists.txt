@@ -17,16 +17,7 @@ set(REQUESTSERVER_SOURCES
     ${REQUESTSERVER_SOURCE_DIR}/Protocol.cpp
 )
 
-if (ANDROID)
-    add_library(requestserver SHARED
-        ${REQUESTSERVER_SOURCES}
-        ../Android/src/main/cpp/RequestServerService.cpp
-        ../Android/src/main/cpp/LadybirdServiceBaseJNI.cpp
-        ../Utilities.cpp
-    )
-else()
-    add_library(requestserver STATIC ${REQUESTSERVER_SOURCES})
-endif()
+add_library(requestserver STATIC ${REQUESTSERVER_SOURCES})
 
 add_executable(RequestServer main.cpp)
 target_link_libraries(RequestServer PRIVATE requestserver)

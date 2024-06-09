@@ -35,7 +35,7 @@
 #    include <Kernel/API/Jail.h>
 #endif
 
-#if !defined(AK_OS_BSD_GENERIC) && !defined(AK_OS_ANDROID)
+#if !defined(AK_OS_BSD_GENERIC)
 #    include <shadow.h>
 #endif
 
@@ -100,7 +100,7 @@ ALWAYS_INLINE ErrorOr<void> unveil(nullptr_t, nullptr_t)
     return unveil(StringView {}, StringView {});
 }
 
-#if !defined(AK_OS_BSD_GENERIC) && !defined(AK_OS_ANDROID)
+#if !defined(AK_OS_BSD_GENERIC)
 ErrorOr<Optional<struct spwd>> getspent();
 ErrorOr<Optional<struct spwd>> getspnam(StringView name);
 #endif
@@ -193,7 +193,7 @@ ErrorOr<void> utime(StringView path, Optional<struct utimbuf>);
 ErrorOr<void> utimensat(int fd, StringView path, struct timespec const times[2], int flag);
 ErrorOr<struct utsname> uname();
 ErrorOr<Array<int, 2>> pipe2(int flags);
-#if !defined(AK_OS_ANDROID) && !defined(AK_OS_HAIKU)
+#if !defined(AK_OS_HAIKU)
 ErrorOr<void> adjtime(const struct timeval* delta, struct timeval* old_delta);
 #endif
 enum class SearchInPath {

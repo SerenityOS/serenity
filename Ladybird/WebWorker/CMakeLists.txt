@@ -12,8 +12,6 @@ set(WEBWORKER_SOURCES
     ../Utilities.cpp
 )
 
-# FIXME: Add Android service
-
 add_library(webworker STATIC ${WEBWORKER_SOURCES})
 
 target_include_directories(webworker PRIVATE ${SERENITY_SOURCE_DIR}/Userland/Services/)
