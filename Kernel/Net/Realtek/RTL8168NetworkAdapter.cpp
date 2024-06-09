@@ -6,6 +6,8 @@
 
 #include <AK/Array.h>
 #include <AK/MACAddress.h>
+#include <AK/Types.h>
+#include <Kernel/API/POSIX/net/if.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/Debug.h>
@@ -364,6 +366,11 @@ UNMAP_AFTER_INIT ErrorOr<void> RTL8168NetworkAdapter::initialize(Badge<Networkin
     return {};
 }
 
+short RTL8168NetworkAdapter::flags() const
+{
+    return IFF_BROADCAST | IFF_MULTICAST;
+}
+
 void RTL8168NetworkAdapter::startup()
 {
     // initialize descriptors
@@ -435,8 +442,7 @@ void RTL8168NetworkAdapter::startup()
     out16(REG_IMR, enabled_interrupts);
     pci_commit();
 
-    // update link status
-    m_link_up = (in8(REG_PHYSTATUS) & PHY_LINK_STATUS) != 0;
+    update_link_status(((in8(REG_PHYSTATUS) & PHY_LINK_STATUS) != 0) ? LinkStatus::MediaConnected : LinkStatus::MediaDisconnected);
 }
 
 void RTL8168NetworkAdapter::configure_phy()
@@ -1320,8 +1326,7 @@ bool RTL8168NetworkAdapter::handle_irq(RegisterState const&)
             receive();
         }
         if (status & INT_LINK_CHANGE) {
-            m_link_up = (in8(REG_PHYSTATUS) & PHY_LINK_STATUS) != 0;
-            dmesgln_pci(*this, "Link status changed up={}", m_link_up);
+            update_link_status(((in8(REG_PHYSTATUS) & PHY_LINK_STATUS) != 0) ? LinkStatus::MediaConnected : LinkStatus::MediaDisconnected);
         }
         if (status & INT_RX_FIFO_OVERFLOW) {
             dmesgln_pci(*this, "RX FIFO overflow");
@@ -1857,11 +1862,8 @@ bool RTL8168NetworkAdapter::link_full_duplex()
     return !!(phystatus & (PHYSTATUS_FULLDUP | PHYSTATUS_1000MF));
 }
 
-i32 RTL8168NetworkAdapter::link_speed()
+i32 RTL8168NetworkAdapter::phy_link_speed()
 {
-    if (!link_up())
-        return NetworkAdapter::LINKSPEED_INVALID;
-
     u8 phystatus = in8(REG_PHYSTATUS);
     if (phystatus & PHYSTATUS_1000MF)
         return 1000;
@@ -1872,5 +1874,4 @@ i32 RTL8168NetworkAdapter::link_speed()
 
     return NetworkAdapter::LINKSPEED_INVALID;
 }
-
 }

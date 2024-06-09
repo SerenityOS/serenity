@@ -200,7 +200,7 @@ void handle_ipv4(EthernetFrameHeader const& eth, size_t frame_size, UnixDateTime
     dbgln_if(IPV4_DEBUG, "handle_ipv4: source={}, destination={}", packet.source(), packet.destination());
 
     NetworkingManagement::the().for_each([&](auto& adapter) {
-        if (adapter.ipv4_address().is_zero() || !adapter.link_up())
+        if (adapter.is_link_down_or_address_zeroed())
             return;
 
         auto my_net = adapter.ipv4_address().to_u32() & adapter.ipv4_netmask().to_u32();

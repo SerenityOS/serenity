@@ -29,9 +29,8 @@ public:
     virtual Type adapter_type() const override { return Type::Ethernet; }
     virtual ErrorOr<void> initialize(Badge<NetworkingManagement>) override;
 
-    virtual bool link_up() override { return m_link_up; }
     virtual bool link_full_duplex() override { return m_link_duplex; }
-    virtual i32 link_speed() override { return m_link_speed; }
+    virtual short flags() const override;
 
 private:
     explicit VirtIONetworkAdapter(StringView interface_name, NonnullOwnPtr<VirtIO::TransportEntity>);
@@ -42,6 +41,8 @@ private:
 
     // NetworkAdapter
     virtual void send_raw(ReadonlyBytes) override;
+    virtual bool is_phy_link_up() override { return m_link_up; }
+    virtual i32 phy_link_speed() override { return m_link_speed; }
 
 private:
     VirtIO::Configuration const* m_device_config { nullptr };

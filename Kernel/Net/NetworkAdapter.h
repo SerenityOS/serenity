@@ -47,6 +47,12 @@ class NetworkAdapter
     : public AtomicRefCounted<NetworkAdapter>
     , public LockWeakable<NetworkAdapter> {
 public:
+    enum class LinkStatus {
+        MediaConnected,
+        MediaDisconnected,
+        UserShutdown,
+    };
+
     enum class Type {
         Loopback,
         Ethernet
@@ -62,18 +68,20 @@ public:
     virtual Type adapter_type() const = 0;
     virtual ErrorOr<void> initialize(Badge<NetworkingManagement>) = 0;
 
+    bool is_link_up() const;
+    bool is_link_down_or_address_zeroed() const;
+
+    void set_link_user_forced_shutdown();
+    void release_link_user_forced_shutdown();
+    i32 link_speed();
+
     StringView name() const { return m_name.representable_view(); }
     MACAddress mac_address() { return m_mac_address; }
     IPv4Address ipv4_address() const { return m_ipv4_address; }
     IPv4Address ipv4_netmask() const { return m_ipv4_netmask; }
     IPv4Address ipv4_broadcast() const { return IPv4Address { (m_ipv4_address.to_u32() & m_ipv4_netmask.to_u32()) | ~m_ipv4_netmask.to_u32() }; }
-    virtual bool link_up() { return false; }
-    virtual i32 link_speed()
-    {
-        // In Mbit/sec.
-        return LINKSPEED_INVALID;
-    }
     virtual bool link_full_duplex() { return false; }
+    virtual short flags() const = 0;
 
     void set_ipv4_address(IPv4Address const&);
     void set_ipv4_netmask(IPv4Address const&);
@@ -112,6 +120,10 @@ protected:
     void did_receive(ReadonlyBytes);
     virtual void send_raw(ReadonlyBytes) = 0;
 
+    void update_link_status(LinkStatus);
+    virtual bool is_phy_link_up() = 0;
+    virtual i32 phy_link_speed() = 0;
+
 private:
     MACAddress m_mac_address;
     IPv4Address m_ipv4_address;
@@ -125,6 +137,8 @@ private:
     PacketList m_packet_queue;
     size_t m_packet_queue_size { 0 };
     AdapterIndex const m_index { 0 };
+    SpinlockProtected<LinkStatus, LockRank::None> m_link_status { LinkStatus::MediaDisconnected };
+    SpinlockProtected<bool, LockRank::None> m_link_force_down { false };
     SpinlockProtected<PacketList, LockRank::None> m_unused_packets {};
     FixedStringBuffer<IFNAMSIZ> m_name;
     u32 m_packets_in { 0 };

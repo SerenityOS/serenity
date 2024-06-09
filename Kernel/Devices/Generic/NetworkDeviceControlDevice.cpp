@@ -4,7 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Types.h>
 #include <Kernel/API/Ioctl.h>
+#include <Kernel/API/POSIX/net/if.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/Generic/NetworkDeviceControlDevice.h>
 #include <Kernel/Net/ARP.h>
@@ -214,8 +216,7 @@ ErrorOr<void> NetworkDeviceControlDevice::ioctl(OpenFileDescription&, unsigned r
         }
 
         case SIOCGIFFLAGS: {
-            // FIXME: stub!
-            constexpr short flags = 1;
+            short flags = adapter->flags() | (adapter->is_link_up() ? IFF_UP : 0);
             ifr.ifr_addr.sa_family = AF_INET;
             ifr.ifr_flags = flags;
             return copy_to_user(user_ifr, &ifr);

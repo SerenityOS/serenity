@@ -5,6 +5,8 @@
  */
 
 #include <AK/MACAddress.h>
+#include <AK/Types.h>
+#include <Kernel/API/POSIX/net/if.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/Debug.h>
@@ -207,6 +209,7 @@ UNMAP_AFTER_INIT ErrorOr<void> E1000NetworkAdapter::initialize(Badge<NetworkingM
     setup_interrupts();
 
     m_link_up = ((in32(REG_STATUS) & STATUS_LU) != 0);
+    update_link_status(m_link_up ? LinkStatus::MediaConnected : LinkStatus::MediaDisconnected);
 
     return {};
 }
@@ -255,8 +258,8 @@ bool E1000NetworkAdapter::handle_irq(RegisterState const&)
     if (status & INTERRUPT_LSC) {
         u32 flags = in32(REG_CTRL);
         out32(REG_CTRL, flags | ECTRL_SLU);
-
         m_link_up = ((in32(REG_STATUS) & STATUS_LU) != 0);
+        update_link_status(m_link_up ? LinkStatus::MediaConnected : LinkStatus::MediaDisconnected);
     }
     if (status & INTERRUPT_RXDMT0) {
         // Threshold OK?
@@ -447,11 +450,8 @@ void E1000NetworkAdapter::receive()
     }
 }
 
-i32 E1000NetworkAdapter::link_speed()
+i32 E1000NetworkAdapter::phy_link_speed()
 {
-    if (!link_up())
-        return NetworkAdapter::LINKSPEED_INVALID;
-
     u32 speed = in32(REG_STATUS) & STATUS_SPEED;
     switch (speed) {
     case STATUS_SPEED_10MB:
@@ -464,6 +464,11 @@ i32 E1000NetworkAdapter::link_speed()
     default:
         return NetworkAdapter::LINKSPEED_INVALID;
     }
+}
+
+short E1000NetworkAdapter::flags() const
+{
+    return IFF_BROADCAST | IFF_MULTICAST;
 }
 
 bool E1000NetworkAdapter::link_full_duplex()

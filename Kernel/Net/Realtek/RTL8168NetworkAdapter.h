@@ -29,9 +29,8 @@ public:
     virtual ~RTL8168NetworkAdapter() override;
 
     virtual void send_raw(ReadonlyBytes) override;
-    virtual bool link_up() override { return m_link_up; }
     virtual bool link_full_duplex() override;
-    virtual i32 link_speed() override;
+    virtual short flags() const override;
 
     virtual StringView purpose() const override { return class_name(); }
     virtual StringView device_name() const override { return class_name(); }
@@ -46,6 +45,9 @@ private:
 
     virtual bool handle_irq(RegisterState const&) override;
     virtual StringView class_name() const override { return "RTL8168NetworkAdapter"sv; }
+
+    virtual i32 phy_link_speed() override;
+    virtual bool is_phy_link_up() override { return m_link_up; }
 
     bool determine_supported_version() const;
 
