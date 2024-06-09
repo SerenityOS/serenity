@@ -222,6 +222,17 @@ ErrorOr<void> NetworkDeviceControlDevice::ioctl(OpenFileDescription&, unsigned r
             return copy_to_user(user_ifr, &ifr);
         }
 
+        case SIOCSIFFLAGS: {
+            if (!current_process_credentials->is_superuser())
+                return EPERM;
+
+            if (ifr.ifr_flags & IFF_UP)
+                adapter->release_link_user_forced_shutdown();
+            else
+                adapter->set_link_user_forced_shutdown();
+            return {};
+        }
+
         case SIOCGIFCONF: {
             // FIXME: stub!
             return EINVAL;
@@ -244,6 +255,7 @@ ErrorOr<void> NetworkDeviceControlDevice::ioctl(OpenFileDescription&, unsigned r
     case SIOCGIFCONF:
     case SIOCGIFNAME:
     case SIOCGIFINDEX:
+    case SIOCSIFFLAGS:
         return ioctl_interface();
 
     case SIOCADDRT:
