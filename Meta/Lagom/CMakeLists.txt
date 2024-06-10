@@ -650,6 +650,7 @@ if (BUILD_LAGOM)
             LibTTF
             LibTimeZone
             LibUnicode
+            LibURL
             LibVideo
             LibXML
         )
