@@ -417,6 +417,19 @@ Path Path::copy_transformed(Gfx::AffineTransform const& transform) const
     return result;
 }
 
+void Path::append_path(Path const& path, AppendRelativeToLastPoint relative_to_last_point)
+{
+    auto previous_last_point = last_point();
+    auto new_points_start = m_points.size();
+    m_commands.extend(path.m_commands);
+    m_points.extend(path.m_points);
+    if (relative_to_last_point == AppendRelativeToLastPoint::Yes) {
+        for (size_t i = new_points_start; i < m_points.size(); i++)
+            m_points[i] += previous_last_point;
+    }
+    invalidate_split_lines();
+}
+
 template<typename T>
 struct RoundTrip {
     RoundTrip(ReadonlySpan<T> span)

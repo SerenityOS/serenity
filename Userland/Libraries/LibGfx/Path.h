@@ -227,12 +227,12 @@ public:
         return m_split_lines->bounding_box;
     }
 
-    void append_path(Path const& path)
-    {
-        m_commands.extend(path.m_commands);
-        m_points.extend(path.m_points);
-        invalidate_split_lines();
-    }
+    enum class AppendRelativeToLastPoint {
+        Yes,
+        No
+    };
+
+    void append_path(Path const& path, AppendRelativeToLastPoint = AppendRelativeToLastPoint::No);
 
     ByteString to_byte_string() const;
 
