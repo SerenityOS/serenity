@@ -13,8 +13,8 @@
 #include <LibGUI/Forward.h>
 #include <LibGUI/Widget.h>
 #include <LibGfx/Forward.h>
-#include <LibVideo/DecoderError.h>
-#include <LibVideo/PlaybackManager.h>
+#include <LibMedia/DecoderError.h>
+#include <LibMedia/PlaybackManager.h>
 
 #include "VideoFrameWidget.h"
 
@@ -35,8 +35,8 @@ public:
 
     void update_title();
 
-    Video::PlaybackManager::SeekMode seek_mode();
-    void set_seek_mode(Video::PlaybackManager::SeekMode seek_mode);
+    Media::PlaybackManager::SeekMode seek_mode();
+    void set_seek_mode(Media::PlaybackManager::SeekMode seek_mode);
     void set_sizing_mode(VideoSizingMode sizing_mode);
 
     ErrorOr<void> initialize_menubar(GUI::Window&);
@@ -47,7 +47,7 @@ private:
     void update_seek_slider_max();
     void set_current_timestamp(Duration);
     void set_time_label(Duration);
-    void on_decoding_error(Video::DecoderError const&);
+    void on_decoding_error(Media::DecoderError const&);
 
     void cycle_sizing_modes();
     void set_current_sizing_mode_checked();
@@ -79,7 +79,7 @@ private:
     RefPtr<GUI::Action> m_size_stretch_action;
     RefPtr<GUI::Action> m_size_fullsize_action;
 
-    OwnPtr<Video::PlaybackManager> m_playback_manager;
+    OwnPtr<Media::PlaybackManager> m_playback_manager;
 
     bool m_was_playing_before_seek { false };
 };

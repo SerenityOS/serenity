@@ -50,7 +50,7 @@ ErrorOr<void> VideoPlayerWidget::initialize()
         auto progress = value / static_cast<double>(m_seek_slider->max());
         auto duration = m_playback_manager->duration().to_milliseconds();
         Duration timestamp = Duration::from_milliseconds(static_cast<i64>(round(progress * static_cast<double>(duration))));
-        auto seek_mode_to_use = m_seek_slider->knob_dragging() ? seek_mode() : Video::PlaybackManager::SeekMode::Accurate;
+        auto seek_mode_to_use = m_seek_slider->knob_dragging() ? seek_mode() : Media::PlaybackManager::SeekMode::Accurate;
         m_playback_manager->seek_to_timestamp(timestamp, seek_mode_to_use);
         set_current_timestamp(m_playback_manager->current_playback_time());
     };
@@ -119,7 +119,7 @@ void VideoPlayerWidget::open_file(FileSystemAccessClient::File file)
         return;
     }
 
-    auto load_file_result = Video::PlaybackManager::from_mapped_file(mapped_file_result.release_value());
+    auto load_file_result = Media::PlaybackManager::from_mapped_file(mapped_file_result.release_value());
     if (load_file_result.is_error()) {
         on_decoding_error(load_file_result.release_error());
         return;
@@ -142,7 +142,7 @@ void VideoPlayerWidget::open_file(FileSystemAccessClient::File file)
     m_playback_manager->on_playback_state_change = [this]() {
         update_play_pause_icon();
         // If we are seeking, do not set the timestamp, as that will override the seek position.
-        if (!m_was_playing_before_seek && m_playback_manager->get_state() != Video::PlaybackState::Seeking) {
+        if (!m_was_playing_before_seek && m_playback_manager->get_state() != Media::PlaybackState::Seeking) {
             set_current_timestamp(m_playback_manager->current_playback_time());
         }
     };
@@ -203,24 +203,24 @@ void VideoPlayerWidget::toggle_pause()
         resume_playback();
 }
 
-void VideoPlayerWidget::on_decoding_error(Video::DecoderError const& error)
+void VideoPlayerWidget::on_decoding_error(Media::DecoderError const& error)
 {
     StringView text_format;
 
     switch (error.category()) {
-    case Video::DecoderErrorCategory::IO:
+    case Media::DecoderErrorCategory::IO:
         text_format = "Error while reading video:\n{}"sv;
         break;
-    case Video::DecoderErrorCategory::Memory:
+    case Media::DecoderErrorCategory::Memory:
         text_format = "Ran out of memory:\n{}"sv;
         break;
-    case Video::DecoderErrorCategory::Corrupted:
+    case Media::DecoderErrorCategory::Corrupted:
         text_format = "Video was corrupted:\n{}"sv;
         break;
-    case Video::DecoderErrorCategory::Invalid:
+    case Media::DecoderErrorCategory::Invalid:
         text_format = "Invalid call:\n{}"sv;
         break;
-    case Video::DecoderErrorCategory::NotImplemented:
+    case Media::DecoderErrorCategory::NotImplemented:
         text_format = "Video feature is not yet implemented:\n{}"sv;
         break;
     default:
@@ -346,16 +346,16 @@ void VideoPlayerWidget::update_title()
     window()->set_title(string_builder.to_byte_string());
 }
 
-Video::PlaybackManager::SeekMode VideoPlayerWidget::seek_mode()
+Media::PlaybackManager::SeekMode VideoPlayerWidget::seek_mode()
 {
     if (m_use_fast_seeking->is_checked())
-        return Video::PlaybackManager::SeekMode::Fast;
-    return Video::PlaybackManager::SeekMode::Accurate;
+        return Media::PlaybackManager::SeekMode::Fast;
+    return Media::PlaybackManager::SeekMode::Accurate;
 }
 
-void VideoPlayerWidget::set_seek_mode(Video::PlaybackManager::SeekMode seek_mode)
+void VideoPlayerWidget::set_seek_mode(Media::PlaybackManager::SeekMode seek_mode)
 {
-    m_use_fast_seeking->set_checked(seek_mode == Video::PlaybackManager::SeekMode::Fast);
+    m_use_fast_seeking->set_checked(seek_mode == Media::PlaybackManager::SeekMode::Fast);
 }
 
 void VideoPlayerWidget::set_sizing_mode(VideoSizingMode sizing_mode)
@@ -395,7 +395,7 @@ ErrorOr<void> VideoPlayerWidget::initialize_menubar(GUI::Window& window)
     //        For now, leave it here for convenience.
     m_use_fast_seeking = GUI::Action::create_checkable("&Fast Seeking", [&](auto&) {});
     playback_menu->add_action(*m_use_fast_seeking);
-    set_seek_mode(Video::PlaybackManager::DEFAULT_SEEK_MODE);
+    set_seek_mode(Media::PlaybackManager::DEFAULT_SEEK_MODE);
 
     // View menu
     auto view_menu = window.add_menu("&View"_string);

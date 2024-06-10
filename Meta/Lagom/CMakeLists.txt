@@ -466,6 +466,7 @@ if (BUILD_LAGOM)
         Manual
         Markdown
         PDF
+        Media
         Protocol
         Regex
         RIFF
@@ -475,7 +476,6 @@ if (BUILD_LAGOM)
         TextCodec
         Threading
         TLS
-        Video
         Wasm
         WebSocket
         XML
@@ -645,14 +645,14 @@ if (BUILD_LAGOM)
             LibMarkdown
             LibPDF
             LibSQL
-            LibTest
+            LibMedia
+        LibTest
             LibTextCodec
             LibTTF
             LibTimeZone
             LibUnicode
             LibURL
-            LibVideo
-            LibXML
+                LibXML
         )
         if (ENABLE_LAGOM_LIBWEB)
             list(APPEND TEST_DIRECTORIES LibWeb)
