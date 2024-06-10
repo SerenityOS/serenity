@@ -67,6 +67,9 @@ public:
 
     void set_line_box_borders(bool);
 
+    bool url_is_hidden() const { return m_location_edit->url_is_hidden(); }
+    void set_url_is_hidden(bool url_is_hidden) { m_location_edit->set_url_is_hidden(url_is_hidden); }
+
 public slots:
     void focus_location_editor();
     void location_edit_return_pressed();
