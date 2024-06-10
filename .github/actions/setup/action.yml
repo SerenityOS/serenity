@@ -81,7 +81,7 @@ runs:
         sudo udevadm trigger --name-match=kvm
 
     - name: 'Install Dependencies'
-      if: ${{ inputs.os == 'macOS' || inputs.os == 'Android' }}
+      if: ${{ inputs.os == 'macOS' }}
       shell: bash
       run: |
         set -e
