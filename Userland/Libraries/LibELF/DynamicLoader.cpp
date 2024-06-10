@@ -704,7 +704,17 @@ DynamicLoader::RelocationResult DynamicLoader::do_plt_relocation(DynamicObject::
         if (result.value().type == STT_GNU_IFUNC) {
             if (should_call_ifunc_resolver == ShouldCallIfuncResolver::No)
                 return RelocationResult::CallIfuncResolver;
+// FIXME: IFUNC resolvers do not actually return an ElfAddr aka an int,
+//        But a pointer to a function. UBSan doesn't like us lying about that.
+//        This seems to only be detected on Clang
+//        To temporarily disable UBsan an IIFE is needed, as sanitizers aren't diagnostics...
+#ifdef AK_COMPILER_CLANG
+            [&] [[clang::no_sanitize("undefined")]] {
+                symbol_location = VirtualAddress { reinterpret_cast<DynamicObject::IfuncResolver>(address.get())() };
+            }();
+#else
             symbol_location = VirtualAddress { reinterpret_cast<DynamicObject::IfuncResolver>(address.get())() };
+#endif
         } else {
             symbol_location = address;
         }
