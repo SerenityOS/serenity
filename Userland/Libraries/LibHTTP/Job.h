@@ -19,7 +19,7 @@ class Job : public Core::NetworkJob {
     C_OBJECT(Job);
 
 public:
-    explicit Job(HttpRequest&&, Stream&);
+    explicit Job(HttpRequest&&, Core::File&);
     virtual ~Job() override = default;
 
     virtual void start(Core::BufferedSocketBase&) override;
@@ -31,25 +31,18 @@ public:
     HttpResponse* response() { return static_cast<HttpResponse*>(Core::NetworkJob::response()); }
     HttpResponse const* response() const { return static_cast<HttpResponse const*>(Core::NetworkJob::response()); }
 
-protected:
-    void finish_up();
-    void on_socket_connected();
-    void flush_received_buffers();
-    void register_on_ready_to_read(Function<void()>);
-    ErrorOr<ByteString> read_line(size_t);
-    ErrorOr<ByteBuffer> receive(size_t);
-    void timer_event(Core::TimerEvent&) override;
+private:
+    auto parse_status(auto& stream) -> Coroutine<ErrorOr<void>>;
+    auto parse_headers(auto& stream, bool in_trailers) -> Coroutine<ErrorOr<void>>;
+    auto parse_body(auto& stream) -> Coroutine<ErrorOr<bool>>;
+    auto read_response() -> Coroutine<ErrorOr<void>>;
 
-    enum class State {
-        InStatus,
-        InHeaders,
-        InBody,
-        Trailers,
-        Finished,
-    };
+protected:
+    Coroutine<void> finish_up();
+    void on_socket_connected();
+    Coroutine<void> flush_received_buffers();
 
     HttpRequest m_request;
-    State m_state { State::InStatus };
     Core::BufferedSocketBase* m_socket { nullptr };
     bool m_legacy_connection { false };
     int m_code { -1 };
@@ -79,6 +72,8 @@ protected:
     bool m_can_stream_response { true };
     bool m_should_read_chunk_ending_line { false };
     bool m_has_scheduled_finish { false };
+    bool m_has_scheduled_flush { false };
+    bool m_request_done { false };
 };
 
 }

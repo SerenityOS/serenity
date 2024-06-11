@@ -13,14 +13,17 @@
 namespace AK {
 
 struct AsyncStreamHelpers {
-    static Coroutine<ErrorOr<ReadonlyBytes>> consume_until(AsyncInputStream& stream, StringView delimiter)
+    static Coroutine<ErrorOr<ReadonlyBytes>> consume_until(AsyncInputStream& stream, StringView delimiter, Optional<size_t> max_size = {})
     {
         size_t start_position = 0;
         while (true) {
             auto buffer = CO_TRY(co_await stream.peek());
             auto position = StringUtils::find(StringView { buffer }, delimiter, start_position);
-            if (position.has_value())
-                co_return must_sync(stream.read(*position + delimiter.length()));
+            auto end_position = position.map([&](auto value) { return value + delimiter.length(); });
+            if (max_size.has_value() && !end_position.has_value() && buffer.size() >= max_size.value())
+                end_position = buffer.size();
+            if (end_position.has_value())
+                co_return must_sync(stream.read(*end_position));
             start_position = max(buffer.size(), delimiter.length() - 1) - delimiter.length() + 1;
         }
     }

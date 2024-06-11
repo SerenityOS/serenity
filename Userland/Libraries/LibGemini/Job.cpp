@@ -8,13 +8,14 @@
 #include <AK/Error.h>
 #include <AK/String.h>
 #include <AK/Utf8View.h>
+#include <LibCore/EventLoop.h>
 #include <LibGemini/GeminiResponse.h>
 #include <LibGemini/Job.h>
 #include <unistd.h>
 
 namespace Gemini {
 
-Job::Job(GeminiRequest const& request, Stream& output_stream)
+Job::Job(GeminiRequest const& request, Core::File& output_stream)
     : Core::NetworkJob(output_stream)
     , m_request(request)
 {
@@ -83,7 +84,7 @@ void Job::flush_received_buffers()
 {
     for (size_t i = 0; i < m_received_buffers.size(); ++i) {
         auto& payload = m_received_buffers[i];
-        auto result = do_write(payload);
+        auto result = Core::run_async_in_new_event_loop([&] { return do_write(payload); });
         if (result.is_error()) {
             if (!result.error().is_errno()) {
                 dbgln("Job: Failed to flush received buffers: {}", result.error());

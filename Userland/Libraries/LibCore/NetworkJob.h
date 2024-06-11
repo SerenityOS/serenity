@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/Coroutine.h>
 #include <AK/Function.h>
 #include <AK/Stream.h>
 #include <LibCore/EventReceiver.h>
@@ -53,16 +54,20 @@ public:
     }
 
 protected:
-    NetworkJob(Stream&);
+    NetworkJob(Core::File&);
     void did_finish(NonnullRefPtr<NetworkResponse>&&);
     void did_fail(Error);
     void did_progress(Optional<u64> total_size, u64 downloaded);
 
-    ErrorOr<size_t> do_write(ReadonlyBytes bytes) { return m_output_stream.write_some(bytes); }
+    Coroutine<ErrorOr<size_t>> do_write(ReadonlyBytes bytes)
+    {
+        CO_TRY(co_await m_output_stream.wait_for_state(Core::Notifier::Type::Write));
+        co_return m_output_stream.write_some(bytes);
+    }
 
 private:
     RefPtr<NetworkResponse> m_response;
-    Stream& m_output_stream;
+    Core::File& m_output_stream;
     Error m_error { Error::None };
 };
 
