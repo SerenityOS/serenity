@@ -30,7 +30,7 @@ public:
     Function<Vector<TLS::Certificate>()> on_certificate_requested;
 
 private:
-    explicit HttpsJob(HttpRequest&& request, Stream& output_stream)
+    explicit HttpsJob(HttpRequest&& request, Core::File& output_stream)
         : Job(move(request), output_stream)
     {
     }

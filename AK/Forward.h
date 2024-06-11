@@ -38,6 +38,7 @@ class DeprecatedStringCodePointIterator;
 class Duration;
 class Error;
 class FlyString;
+class GenericAwaiter;
 class GenericLexer;
 class IPv4Address;
 class JsonArray;

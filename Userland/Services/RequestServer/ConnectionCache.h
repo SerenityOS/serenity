@@ -20,6 +20,9 @@
 #include <LibThreading/RWLockProtected.h>
 #include <LibURL/URL.h>
 
+#undef REQUESTSERVER_DEBUG
+#define REQUESTSERVER_DEBUG 0
+
 namespace RequestServer {
 
 enum class CacheLevel {

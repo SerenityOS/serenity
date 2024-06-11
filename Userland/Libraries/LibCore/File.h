@@ -9,10 +9,13 @@
 
 #include <AK/Badge.h>
 #include <AK/BufferedStream.h>
+#include <AK/Coroutine.h>
+#include <AK/GenericAwaiter.h>
 #include <AK/Noncopyable.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/Stream.h>
 #include <LibCore/Forward.h>
+#include <LibCore/Notifier.h>
 #include <LibIPC/Forward.h>
 
 namespace Core {
@@ -76,6 +79,12 @@ public:
     // (due to the send buffer being full, for example).
     // See also Socket::set_blocking.
     ErrorOr<void> set_blocking(bool enabled);
+
+    Coroutine<ErrorOr<void>> wait_for_state(Core::Notifier::Type state)
+    {
+        auto notifier = CO_TRY(Core::Notifier::try_create(m_fd, state));
+        co_return co_await GenericAwaiter([&](auto ready) { notifier->on_activation = move(ready); });
+    }
 
     template<OneOf<::IPC::File, ::Core::MappedFile> VIP>
     int leak_fd(Badge<VIP>)
