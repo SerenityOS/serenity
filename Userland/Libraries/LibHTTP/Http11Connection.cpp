@@ -4,7 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/AsyncStreamBuffer.h>
 #include <AK/AsyncStreamHelpers.h>
+#include <AK/AsyncStreamTransform.h>
 #include <AK/GenericLexer.h>
 #include <LibHTTP/Http11Connection.h>
 
@@ -89,6 +91,67 @@ Coroutine<ErrorOr<StatusCodeAndHeaders>> receive_response_headers(AsyncStream& s
         .headers = headers,
     };
 }
+
+class ChunkedBodyStream final : public AsyncStreamTransform<AsyncInputStream> {
+public:
+    ChunkedBodyStream(AsyncInputStream& stream)
+        : AsyncStreamTransform(MaybeOwned { stream }, generate())
+    {
+    }
+
+    ReadonlyBytes buffered_data_unchecked(Badge<AsyncInputStream>) const override
+    {
+        return m_buffer.data();
+    }
+
+    void dequeue(Badge<AsyncInputStream>, size_t bytes) override
+    {
+        m_buffer.dequeue(bytes);
+    }
+
+private:
+    Generator generate()
+    {
+        while (true) {
+            auto line = CO_TRY(co_await AsyncStreamHelpers::consume_until(*m_stream, "\r\n"sv));
+
+            auto lexer = GenericLexer { line };
+            auto length_or_error = lexer.consume_decimal_integer<size_t>();
+            if (length_or_error.is_error()) {
+                m_stream->reset();
+                co_return Error::from_string_literal("Invalid chunk length");
+            }
+            if (!lexer.consume_specific("\r\n")) {
+                m_stream->reset();
+                co_return Error::from_string_literal("Expected \\r\\n after chunk length");
+            }
+            VERIFY(lexer.is_eof());
+            size_t chunk_length = length_or_error.release_value();
+            bool is_last_chunk = chunk_length == 0;
+
+            while (chunk_length > 0) {
+                auto data = CO_TRY(co_await m_stream->peek());
+                size_t to_copy = min(data.size(), chunk_length);
+                // FIXME: We can reuse the buffer of the underlying stream if our reading frame doesn't span
+                //        multiple chunks.
+                m_buffer.append(must_sync(m_stream->read(to_copy)));
+                chunk_length -= to_copy;
+                co_yield {};
+            }
+
+            if (CO_TRY(co_await m_stream->read(2)) != "\r\n"sv.bytes()) {
+                m_stream->reset();
+                co_return Error::from_string_literal("Expected \\r\\n after a chunk");
+            }
+
+            if (is_last_chunk)
+                co_return {};
+        }
+    }
+
+    AsyncStreamBuffer m_buffer;
+};
+
 }
 
 Coroutine<ErrorOr<NonnullOwnPtr<Http11Response>>> Http11Response::create(Badge<Http11Connection>, RequestData&& data, AsyncStream& stream)
@@ -107,20 +170,31 @@ Coroutine<ErrorOr<NonnullOwnPtr<Http11Response>>> Http11Response::create(Badge<H
     auto [status_code, headers] = CO_TRY(co_await receive_response_headers(stream));
 
     Optional<size_t> content_length;
+    Optional<StringView> transfer_encoding;
     for (auto const& header : headers) {
         if (header.header.equals_ignoring_ascii_case("Content-Length"sv)) {
             content_length = header.value.to_number<size_t>();
+        } else if (header.header.equals_ignoring_ascii_case("Transfer-Encoding"sv)) {
+            transfer_encoding = header.value;
         }
     }
 
-    if (!content_length.has_value()) {
-        stream.reset();
-        co_return Error::from_string_literal("'Content-Length' must be provided");
+    OwnPtr<AsyncInputStream> body;
+    if (transfer_encoding.has_value()) {
+        if (transfer_encoding.value() != "chunked"sv) {
+            stream.reset();
+            co_return Error::from_string_literal("Unsupported 'Transfer-Encoding'");
+        }
+        body = make<ChunkedBodyStream>(stream);
+    } else {
+        if (!content_length.has_value()) {
+            stream.reset();
+            co_return Error::from_string_literal("'Content-Length' must be provided");
+        }
+        body = make<AsyncInputStreamSlice>(stream, content_length.value());
     }
 
-    auto body = make<AsyncInputStreamSlice>(stream, content_length.value());
-
-    co_return adopt_own(*new (nothrow) Http11Response(move(body), status_code, move(headers)));
+    co_return adopt_own(*new (nothrow) Http11Response(body.release_nonnull(), status_code, move(headers)));
 }
 
 }
