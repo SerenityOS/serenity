@@ -1,4 +1,5 @@
 set(SOURCES
+    Http11Connection.cpp
     HttpRequest.cpp
     HttpResponse.cpp
     HttpsJob.cpp
