@@ -365,6 +365,7 @@ static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L_image(ImageKind ima
             // "Distance codes larger than 120 denote the pixel-distance in scan-line order, offset by 120."
             // "The smallest distance codes [1..120] are special, and are reserved for a close neighborhood of the current pixel."
             if (distance <= 120) {
+                // "The decoder can convert a distance code distance_code to a scan-line order distance dist as follows:"
                 auto offset = distance_map[distance - 1];
                 distance = offset.x + offset.y * bitmap->physical_width();
                 if (distance < 1)
