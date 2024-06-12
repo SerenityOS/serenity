@@ -37,6 +37,27 @@ Vector<HTTPUnitTest> const http_unit_tests = {
                                "\r\n"sv,
         .body_expectation = "0123456789abcdef"sv,
     },
+    {
+        .name = "Chunked"sv,
+        .method = HTTP::Method::GET,
+        .url = "/"sv,
+        .headers = {
+            { "Host", "localhost" },
+        },
+        .response = "HTTP/1.1 200 OK\r\n"
+                    "Transfer-Encoding: chunked\r\n"
+                    "\r\n"
+                    "18\r\n"
+                    "0123456789abcdef\r\n\r\n"
+                    "19\r\n"
+                    "Well hello friends!\r\n"
+                    "0\r\n"
+                    "\r\n"sv,
+        .request_expectation = "GET / HTTP/1.1\r\n"
+                               "Host: localhost\r\n"
+                               "\r\n"sv,
+        .body_expectation = "0123456789abcdef\r\nWell hello friends!"sv,
+    },
 };
 
 ASYNC_TEST_CASE(unit_tests_single)
