@@ -209,6 +209,9 @@ template ErrorOr<u32> GenericLexer::consume_decimal_integer<u32>();
 template ErrorOr<i32> GenericLexer::consume_decimal_integer<i32>();
 template ErrorOr<u64> GenericLexer::consume_decimal_integer<u64>();
 template ErrorOr<i64> GenericLexer::consume_decimal_integer<i64>();
+#ifdef AK_OS_MACOS
+template ErrorOr<size_t> GenericLexer::consume_decimal_integer<size_t>();
+#endif
 
 #ifndef KERNEL
 Optional<ByteString> GenericLexer::consume_and_unescape_string(char escape_char)
