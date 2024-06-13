@@ -13,6 +13,7 @@
 #include <LibURL/URL.h>
 #include <LibWeb/CSS/PreferredColorScheme.h>
 #include <LibWeb/CSS/PreferredContrast.h>
+#include <LibWeb/CSS/PreferredMotion.h>
 #include <LibWeb/HTML/ActivateTab.h>
 #include <LibWebView/CookieJar.h>
 
@@ -49,6 +50,7 @@
 - (Optional<StringView> const&)webdriverContentIPCPath;
 - (Web::CSS::PreferredColorScheme)preferredColorScheme;
 - (Web::CSS::PreferredContrast)preferredContrast;
+- (Web::CSS::PreferredMotion)preferredMotion;
 - (WebView::SearchEngine const&)searchEngine;
 
 @end
