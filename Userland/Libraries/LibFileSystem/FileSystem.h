@@ -43,6 +43,12 @@ bool is_char_device(int fd);
 bool is_link(StringView path);
 bool is_link(int fd);
 
+bool is_fifo(StringView path);
+bool is_fifo(int fd);
+
+bool is_socket(StringView path);
+bool is_socket(int fd);
+
 enum class RecursionMode {
     Allowed,
     Disallowed
