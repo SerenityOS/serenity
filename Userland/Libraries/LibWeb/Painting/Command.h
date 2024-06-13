@@ -34,6 +34,7 @@
 #include <LibWeb/Painting/BorderRadiusCornerClipper.h>
 #include <LibWeb/Painting/GradientData.h>
 #include <LibWeb/Painting/PaintBoxShadowParams.h>
+#include <LibWeb/Painting/PaintStyle.h>
 
 namespace Web::Painting {
 
@@ -199,7 +200,7 @@ struct FillPathUsingColor {
 struct FillPathUsingPaintStyle {
     Gfx::IntRect path_bounding_rect;
     Gfx::Path path;
-    NonnullRefPtr<Gfx::PaintStyle> paint_style;
+    PaintStyle paint_style;
     Gfx::Painter::WindingRule winding_rule;
     float opacity;
     Gfx::FloatPoint aa_translation;
@@ -232,7 +233,7 @@ struct StrokePathUsingColor {
 struct StrokePathUsingPaintStyle {
     Gfx::IntRect path_bounding_rect;
     Gfx::Path path;
-    NonnullRefPtr<Gfx::PaintStyle> paint_style;
+    PaintStyle paint_style;
     float thickness;
     float opacity = 1.0f;
     Gfx::FloatPoint aa_translation;

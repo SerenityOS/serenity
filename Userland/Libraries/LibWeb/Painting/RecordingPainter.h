@@ -36,6 +36,7 @@
 #include <LibWeb/Painting/CommandList.h>
 #include <LibWeb/Painting/GradientData.h>
 #include <LibWeb/Painting/PaintBoxShadowParams.h>
+#include <LibWeb/Painting/PaintStyle.h>
 
 namespace Web::Painting {
 
@@ -56,7 +57,7 @@ public:
 
     struct FillPathUsingPaintStyleParams {
         Gfx::Path path;
-        NonnullRefPtr<Gfx::PaintStyle> paint_style;
+        PaintStyle paint_style;
         Gfx::Painter::WindingRule winding_rule = Gfx::Painter::WindingRule::EvenOdd;
         float opacity;
         Optional<Gfx::FloatPoint> translation = {};
@@ -73,7 +74,7 @@ public:
 
     struct StrokePathUsingPaintStyleParams {
         Gfx::Path path;
-        NonnullRefPtr<Gfx::PaintStyle> paint_style;
+        PaintStyle paint_style;
         float thickness;
         float opacity;
         Optional<Gfx::FloatPoint> translation = {};
