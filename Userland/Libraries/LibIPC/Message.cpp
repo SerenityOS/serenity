@@ -5,6 +5,7 @@
  */
 
 #include <AK/Checked.h>
+#include <LibCore/EventLoop.h>
 #include <LibCore/Socket.h>
 #include <LibIPC/Message.h>
 #include <sched.h>
@@ -75,8 +76,8 @@ ErrorOr<void> MessageBuffer::transfer_message(Core::LocalSocket& socket)
             if (auto error = maybe_nwritten.release_error(); error.is_errno()) {
                 // FIXME: This is a hacky way to at least not crash on large messages
                 // The limit of 100 writes is arbitrary, and there to prevent indefinite spinning on the EventLoop
-                if (error.code() == EAGAIN && writes_done < 100) {
-                    sched_yield();
+                if ((error.code() == EAGAIN || error.code() == EMSGSIZE) && writes_done < 100) {
+                    Core::EventLoop::current().pump();
                     continue;
                 }
 
