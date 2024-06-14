@@ -377,6 +377,9 @@ add_serenity_subdirectory(Userland/Libraries/LibMain)
 # This is needed even if Lagom is not enabled because it is depended upon by code generators.
 add_serenity_subdirectory(Userland/Libraries/LibFileSystem)
 
+# LibSemVer
+add_serenity_subdirectory(Userland/Libraries/LibSemVer)
+
 # LibTimeZone
 # This is needed even if Lagom is not enabled because it is depended upon by code generators.
 add_serenity_subdirectory(Userland/Libraries/LibTimeZone)
@@ -545,6 +548,14 @@ if (BUILD_LAGOM)
 
         lagom_utility(gml-format SOURCES ../../Userland/Utilities/gml-format.cpp LIBS LibGUI LibMain)
         lagom_utility(gzip SOURCES ../../Userland/Utilities/gzip.cpp LIBS LibCompress LibMain)
+
+        lagom_utility(pkg SOURCES 
+            ../../Userland/Utilities/pkg/AvailablePort.cpp
+            ../../Userland/Utilities/pkg/InstalledPort.cpp
+            ../../Userland/Utilities/pkg/InstalledPortDatabase.cpp
+            ../../Userland/Utilities/pkg/PackedPort.cpp
+            ../../Userland/Utilities/pkg/main.cpp
+            LIBS LibCore LibSemVer LibMain LibFileSystem LibProtocol LibHTTP LibMarkdown LibShell LibURL LibCompress LibArchive)
 
         # Work around bug in JetBrains distributed CMake 3.27.2 where this causes infinite recursion in
         # export_components() when called from CLion Nova by checking if we already have Ladybird included
