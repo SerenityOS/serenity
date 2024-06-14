@@ -150,6 +150,35 @@ void EventLoop::wake()
     m_impl->wake();
 }
 
+void EventLoop::adopt_coroutine(Coroutine<void>&& coroutine)
+{
+    class OrphanedCoroutine {
+        struct PromiseType;
+
+    public:
+        using promise_type = PromiseType;
+
+    private:
+        struct Destroyer {
+            bool await_ready() const noexcept { return false; }
+            void await_suspend(std::coroutine_handle<> handle) const noexcept { handle.destroy(); }
+            void await_resume() const noexcept { }
+        };
+
+        struct PromiseType {
+            OrphanedCoroutine get_return_object() { return {}; }
+            AK::Detail::SuspendNever initial_suspend() { return {}; }
+            Destroyer final_suspend() noexcept { return {}; }
+            void return_void() { }
+        };
+    };
+
+    [](Coroutine<void>&& coroutine) mutable -> OrphanedCoroutine {
+        auto saved_coroutine = move(coroutine);
+        co_await saved_coroutine;
+    }(move(coroutine));
+}
+
 void EventLoop::deferred_invoke(Function<void()> invokee)
 {
     auto context = DeferredInvocationContext::construct();
