@@ -30,11 +30,12 @@ struct DuOption {
     bool all = false;
     bool apparent_size = false;
     bool one_file_system = false;
-    i64 threshold = 0;
     TimeType time_type = TimeType::NotUsed;
     Vector<ByteString> excluded_patterns;
     u64 block_size = 1024;
     size_t max_depth = SIZE_MAX;
+    u64 maximum_size_threshold = UINT64_MAX;
+    u64 minimum_size_threshold = 0;
 };
 
 struct VisitedFile {
@@ -113,6 +114,8 @@ ErrorOr<void> parse_args(Main::Arguments arguments, Vector<ByteString>& files, D
         }
     };
 
+    i64 threshold = 0;
+
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Display actual or apparent disk usage of files or directories.");
     args_parser.add_option(du_option.all, "Write counts for all files, not just directories", "all", 'a');
@@ -121,15 +124,25 @@ ErrorOr<void> parse_args(Main::Arguments arguments, Vector<ByteString>& files, D
     args_parser.add_option(du_option.human_readable_si, "Print human-readable sizes in SI units", "si");
     args_parser.add_option(du_option.max_depth, "Print the total for a directory or file only if it is N or fewer levels below the command line argument", "max-depth", 'd', "N");
     args_parser.add_option(summarize, "Display only a total for each argument", "summarize", 's');
-    args_parser.add_option(du_option.threshold, "Exclude entries smaller than size if positive, or entries greater than size if negative", "threshold", 't', "size");
+    args_parser.add_option(threshold, "Exclude entries smaller than size if positive, or entries greater than size if negative", "threshold", 't', "size");
     args_parser.add_option(move(time_option));
     args_parser.add_option(pattern, "Exclude files that match pattern", "exclude", 0, "pattern");
     args_parser.add_option(exclude_from, "Exclude files that match any pattern in file", "exclude-from", 'X', "file");
     args_parser.add_option(du_option.one_file_system, "Don't traverse directories on different file systems", "one-file-system", 'x');
     args_parser.add_option(du_option.block_size, "Outputs file sizes as the required blocks with the given size (defaults to 1024)", "block-size", 'B', "size");
     args_parser.add_option(move(block_size_1k_option));
+    args_parser.add_option(du_option.maximum_size_threshold, "Exclude files with size above a specified size (defaults to uint64_t max value)", "max-size", 0, "size");
+    args_parser.add_option(du_option.minimum_size_threshold, "Exclude files with size below a specified size (defaults to 0)", "min-size", 0, "size");
     args_parser.add_positional_argument(files_to_process, "File to process", "file", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
+
+    if (threshold > 0)
+        du_option.minimum_size_threshold = static_cast<u64>(threshold);
+    else if (threshold < 0)
+        du_option.maximum_size_threshold = static_cast<u64>(-threshold);
+
+    if (du_option.maximum_size_threshold < du_option.minimum_size_threshold)
+        return Error::from_string_literal("Invalid minimum size exclusion is above maximum size exclusion");
 
     if (summarize)
         du_option.max_depth = 0;
@@ -211,10 +224,10 @@ u64 print_space_usage(ByteString const& path, DuOption const& du_option, size_t 
 
     bool is_beyond_depth = current_depth > du_option.max_depth;
     bool is_inner_file = current_depth > 0 && !is_directory;
-    bool is_outside_threshold = (du_option.threshold > 0 && size < static_cast<u64>(du_option.threshold)) || (du_option.threshold < 0 && size > static_cast<u64>(-du_option.threshold));
+    bool is_outside_size_range = (du_option.minimum_size_threshold > size) || (du_option.maximum_size_threshold < size);
 
     // All of these still count towards the full size, they are just not reported on individually.
-    if (is_beyond_depth || (is_inner_file && !du_option.all) || is_outside_threshold)
+    if (is_beyond_depth || (is_inner_file && !du_option.all) || is_outside_size_range)
         return size;
 
     if (du_option.human_readable) {

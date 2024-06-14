@@ -25,6 +25,8 @@ $ du [files...]
 * `--exclude pattern`: Exclude files that match pattern
 * `-x`, `--one-file-system`: Don't traverse directories on different file systems
 * `-X file, --exclude-from`: Exclude files that match any pattern in file
+* `--max-size`: Exclude files with size above a specified size
+* `--min-size`: Exclude files with size below a specified size
 
 ## Arguments
 
