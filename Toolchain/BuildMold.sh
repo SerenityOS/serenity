@@ -24,7 +24,7 @@ if [ "$1" = "--git" ]; then
 
     git pull
 else
-    VERSION=1.5.1
+    VERSION=2.32.0
     [ ! -e mold-$VERSION.tar.gz ] && curl -L "https://github.com/rui314/mold/archive/refs/tags/v$VERSION.tar.gz" -o mold-$VERSION.tar.gz
     [ ! -e mold-$VERSION ] && tar -xzf mold-$VERSION.tar.gz
     cd mold-$VERSION
