@@ -114,11 +114,21 @@ static ErrorOr<void> mount_all_filesystems()
     if (pid == 0)
         TRY(Core::System::exec("/bin/mount"sv, Vector { "mount"sv, "-a"sv }, Core::System::SearchInPath::No));
 
-    wait(nullptr);
-    return {};
+    auto result = TRY(Core::System::waitpid(-1, 0));
+    if (result.status == 0)
+        return {};
+    return Error::from_errno(-result.status);
 }
 
-static ErrorOr<void> reopen_base_file_descriptors()
+static ErrorOr<int> acquire_new_stdin_fd(bool emergency)
+{
+    if (!emergency)
+        return TRY(Core::System::open("/dev/null"sv, O_NONBLOCK));
+    TRY(Core::System::create_char_device("/dev/tty_emergency"sv, 0660, 4, 0));
+    return TRY(Core::System::open("/dev/tty_emergency"sv, O_RDWR));
+}
+
+static ErrorOr<void> reopen_base_file_descriptors(bool emergency)
 {
     // NOTE: We open the /dev/null (or another) device and set file descriptors 0, 1, 2 to it
     // because otherwise these file descriptors won't have a custody, making
@@ -127,26 +137,65 @@ static ErrorOr<void> reopen_base_file_descriptors()
     // This affects also every other process that inherits the file descriptors
     // from SystemServer, so it is important for other things (also for ProcFS
     // tests that are running in CI mode).
-    int stdin_new_fd = TRY(Core::System::open("/dev/null"sv, O_NONBLOCK));
+    int stdin_new_fd = TRY(acquire_new_stdin_fd(emergency));
     TRY(Core::System::dup2(stdin_new_fd, 0));
     TRY(Core::System::dup2(stdin_new_fd, 1));
     TRY(Core::System::dup2(stdin_new_fd, 2));
     return {};
 }
 
-ErrorOr<int> serenity_main(Main::Arguments)
+static ErrorOr<void> execute_emergency_shell()
+{
+    outln("Emergency mode: Dropping to emergency shell mode");
+    outln("You may use this shell as rescue environment now.");
+    if (!Core::System::access("/bin/Shell"sv, X_OK, 0).is_error())
+        TRY(Core::System::exec("/bin/Shell"sv, Vector { "/bin/Shell"sv }, Core::System::SearchInPath::No));
+    if (!Core::System::access("/bin/BuggieBox"sv, X_OK, 0).is_error())
+        TRY(Core::System::exec("/bin/BuggieBox"sv, Vector { "/bin/BuggieBox"sv, "/bin/Shell"sv }, Core::System::SearchInPath::No));
+    outln("Failed to find a program to be used as rescue environment. Halting.");
+    VERIFY_NOT_REACHED();
+}
+
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     if (geteuid() != 0) {
         warnln("Not running as root :^(");
         return 1;
     }
-    TRY(mount_all_filesystems());
+
+    bool emergency = false;
+    // NOTE: What determins this flag normally is the user running the OS
+    // with a kernel commandline including "init_args=emergency".
+    if (arguments.strings.size() > 1 && arguments.strings[1] == "emergency"sv)
+        emergency = true;
+
+    // NOTE: The reason we check for emergency state is because we should avoid trying to mount
+    // anything if the user requested to use "emergency mode".
+    if (!emergency) {
+        // If we are not in emergency state, try to mount filesystems according
+        // to the /etc/fstab file. If it fails, declare emergency state and drop to shell.
+        if (auto result = mount_all_filesystems(); result.is_error())
+            emergency = true;
+    }
+
+    // If we are not in emergency state, and the /bin/SystemServer program is not accessible
+    // (or can't be run due to bad permissions) then declare emergency state and drop to shell.
+    // The reason we check for emergency state is because we should avoid useless syscalls at this stage.
+    if (!emergency && Core::System::access("/bin/SystemServer"sv, X_OK, 0).is_error())
+        emergency = true;
+
     TRY(prepare_synthetic_filesystems());
-    TRY(reopen_base_file_descriptors());
+
+    TRY(reopen_base_file_descriptors(emergency));
+
     TRY(create_tmp_coredump_directory());
     TRY(set_default_coredump_directory());
     TRY(create_tmp_semaphore_directory());
 
-    TRY(Core::System::exec("/bin/SystemServer"sv, Vector { "/bin/SystemServer"sv }, Core::System::SearchInPath::No));
+    if (!emergency)
+        TRY(Core::System::exec("/bin/SystemServer"sv, Vector { "/bin/SystemServer"sv }, Core::System::SearchInPath::No));
+    else {
+        TRY(execute_emergency_shell());
+    }
     VERIFY_NOT_REACHED();
 }
