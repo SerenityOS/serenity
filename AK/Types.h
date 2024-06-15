@@ -152,11 +152,18 @@ using mode_t = unsigned short;
 using FlatPtr = AK::Detail::Conditional<sizeof(void*) == 8, u64, u32>;
 
 constexpr u64 KiB = 1024;
-constexpr u64 MiB = KiB * KiB;
-constexpr u64 GiB = KiB * KiB * KiB;
-constexpr u64 TiB = KiB * KiB * KiB * KiB;
-constexpr u64 PiB = KiB * KiB * KiB * KiB * KiB;
-constexpr u64 EiB = KiB * KiB * KiB * KiB * KiB * KiB;
+constexpr u64 MiB = 1024 * KiB;
+constexpr u64 GiB = 1024 * MiB;
+constexpr u64 TiB = 1024 * GiB;
+constexpr u64 PiB = 1024 * TiB;
+constexpr u64 EiB = 1024 * PiB;
+
+constexpr u64 KB = 1000;
+constexpr u64 MB = 1000 * KB;
+constexpr u64 GB = 1000 * MB;
+constexpr u64 TB = 1000 * GB;
+constexpr u64 PB = 1000 * TB;
+constexpr u64 EB = 1000 * PB;
 
 namespace AK_REPLACED_STD_NAMESPACE { // NOLINT(cert-dcl58-cpp) nullptr_t must be in ::std:: for some analysis tools
 using nullptr_t = decltype(nullptr);
