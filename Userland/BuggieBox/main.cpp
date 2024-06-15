@@ -21,6 +21,7 @@
     E(file)                           \
     E(find)                           \
     E(id)                             \
+    E(init)                           \
     E(less)                           \
     E(ln)                             \
     E(ls)                             \

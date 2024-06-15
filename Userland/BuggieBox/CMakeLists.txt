@@ -21,6 +21,7 @@ set(utility_srcs
     ../Utilities/file.cpp
     ../Utilities/find.cpp
     ../Utilities/id.cpp
+    ../Utilities/init.cpp
     ../Utilities/less.cpp
     ../Utilities/ln.cpp
     ../Utilities/ls.cpp
