@@ -282,11 +282,12 @@ ErrorOr<void> BitmapFont::write_to_file(NonnullOwnPtr<Core::File> file)
     return {};
 }
 
-Glyph BitmapFont::glyph(u32 code_point) const
+Optional<Glyph> BitmapFont::glyph(u32 code_point) const
 {
-    // Note: Until all fonts support the 0xFFFD replacement
-    // character, fall back to painting '?' if necessary.
-    auto index = glyph_index(code_point).value_or('?');
+    auto maybe_index = glyph_index(code_point);
+    if (!maybe_index.has_value())
+        return {};
+    auto index = maybe_index.release_value();
     auto width = m_glyph_widths[index];
     auto glyph_byte_count = m_glyph_height * GlyphBitmap::bytes_per_row();
     return Glyph(

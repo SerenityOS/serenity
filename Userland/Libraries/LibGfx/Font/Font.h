@@ -173,8 +173,8 @@ public:
     virtual u16 width() const = 0;
 
     virtual u16 weight() const = 0;
-    virtual Glyph glyph(u32 code_point) const = 0;
-    virtual Glyph glyph(u32 code_point, GlyphSubpixelOffset) const = 0;
+    virtual Optional<Glyph> glyph(u32 code_point) const = 0;
+    virtual Optional<Glyph> glyph(u32 code_point, GlyphSubpixelOffset) const = 0;
     virtual Optional<Glyph> glyph_for_postscript_name(StringView, GlyphSubpixelOffset) const = 0;
     virtual bool contains_glyph(u32 code_point) const = 0;
     virtual bool contains_glyph_for_postscript_name(StringView name) const = 0;

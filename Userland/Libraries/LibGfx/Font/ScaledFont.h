@@ -42,10 +42,10 @@ public:
     virtual u8 slope() const override { return m_font->slope(); }
     virtual u16 width() const override { return m_font->width(); }
     virtual u16 weight() const override { return m_font->weight(); }
-    virtual Gfx::Glyph glyph(u32 code_point) const override;
+    virtual Optional<Gfx::Glyph> glyph(u32 code_point) const override;
     virtual float glyph_left_bearing(u32 code_point) const override;
     Optional<float> glyph_left_bearing_for_postscript_name(StringView) const override;
-    virtual Glyph glyph(u32 code_point, GlyphSubpixelOffset) const override;
+    virtual Optional<Glyph> glyph(u32 code_point, GlyphSubpixelOffset) const override;
     Optional<Glyph> glyph_for_postscript_name(StringView, GlyphSubpixelOffset) const override;
     virtual bool contains_glyph(u32 code_point) const override { return m_font->glyph_id_for_code_point(code_point) > 0; }
     virtual bool contains_glyph_for_postscript_name(StringView name) const override { return m_font->glyph_id_for_postscript_name(name).has_value(); }
@@ -80,7 +80,7 @@ public:
     virtual bool has_color_bitmaps() const override { return m_font->has_color_bitmaps(); }
 
 private:
-    Glyph glyph_for_id(u32 id, GlyphSubpixelOffset) const;
+    Optional<Glyph> glyph_for_id(u32 id, GlyphSubpixelOffset) const;
 
     NonnullRefPtr<VectorFont> m_font;
     float m_x_scale { 0.0f };
