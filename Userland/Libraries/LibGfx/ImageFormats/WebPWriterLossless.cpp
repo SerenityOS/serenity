@@ -208,7 +208,7 @@ static ErrorOr<CanonicalCode> write_normal_code_lengths(LittleEndianOutputBitStr
         // => length_nbits is at most 2 + 2*7 == 16
         unsigned needed_length_nbits = encoded_lengths_count > 2 ? count_required_bits(encoded_lengths_count - 2) : 2;
         VERIFY(needed_length_nbits <= 16);
-        needed_length_nbits = ceil_div(needed_length_nbits, 2) * 2;
+        needed_length_nbits = align_up_to(needed_length_nbits, 2);
         TRY(bit_stream.write_bits((needed_length_nbits - 2) / 2, 3u));
         TRY(bit_stream.write_bits(encoded_lengths_count - 2, needed_length_nbits));
     }
