@@ -79,7 +79,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     constants_menu->add_action(GUI::Action::create("&Phi", TRY(Gfx::Bitmap::load_from_file("/res/icons/calculator/phi.png"sv)), [&](auto&) {
         widget->set_typed_entry(Crypto::BigFraction { Crypto::SignedBigInteger(16180339887), power });
     }));
-
+    constants_menu->add_action(GUI::Action::create("&C", TRY(Gfx::Bitmap::load_from_file("/res/icons/calculator/c.png"sv)), [&](auto&) {
+        widget->set_typed_entry(Crypto::BigFraction { Crypto::SignedBigInteger(2997924580000000000), power });
+    }));
     auto round_menu = window->add_menu("&Round"_string);
     GUI::ActionGroup preview_actions;
 
