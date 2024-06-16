@@ -9,6 +9,7 @@
 #include <AK/BitStream.h>
 #include <AK/Debug.h>
 #include <AK/Endian.h>
+#include <AK/Enumerate.h>
 #include <AK/HashTable.h>
 #include <AK/MemoryStream.h>
 #include <AK/QuickSort.h>
@@ -117,6 +118,10 @@ static ErrorOr<CanonicalCode> write_simple_code_lengths(LittleEndianOutputBitStr
 {
     VERIFY(symbols.size() <= 2);
 
+    dbgln_if(WEBP_DEBUG, "WebP: Writing simple code lengths, {} entries", symbols.size());
+    for (auto [i, symbol] : enumerate(symbols))
+        dbgln_if(WEBP_DEBUG, "    symbol{}: {}", i, symbol);
+
     static constexpr Array<u8, 1> empty { 0 };
     if (symbols.size() == 0) {
         // "Another special case is when all prefix code lengths are zeros (an empty prefix code). [...]
@@ -186,7 +191,8 @@ static ErrorOr<CanonicalCode> write_normal_code_lengths(LittleEndianOutputBitStr
     // This here isn't needed in Deflate because it always writes EndOfBlock. WebP does not have an EndOfBlock marker, so it needs this check.
     if (code_lengths_count < 4)
         code_lengths_count = 4;
-    dbgln_if(WEBP_DEBUG, "writing code_lengths_count: {}", code_lengths_count);
+    dbgln_if(WEBP_DEBUG, "WebP: Writing normal code lengths");
+    dbgln_if(WEBP_DEBUG, "    num_code_lengths: {}", code_lengths_count);
 
     // WebP uses a different kCodeLengthCodeOrder than deflate. Other than that, the following is similar to a loop in Compress::write_dynamic_huffman().
     // "int num_code_lengths = 4 + ReadBits(4);"
@@ -201,7 +207,6 @@ static ErrorOr<CanonicalCode> write_normal_code_lengths(LittleEndianOutputBitStr
     if (alphabet_size == encoded_lengths_count) {
         TRY(bit_stream.write_bits(0u, 1u)); // max_symbol is alphabet_size
     } else {
-        dbgln_if(WEBP_DEBUG, "writing max_symbol: {}", encoded_lengths_count);
         TRY(bit_stream.write_bits(1u, 1u)); // max_symbol is explicitly coded
         // "int length_nbits = 2 + 2 * ReadBits(3);
         //  int max_symbol = 2 + ReadBits(length_nbits);"
@@ -209,6 +214,7 @@ static ErrorOr<CanonicalCode> write_normal_code_lengths(LittleEndianOutputBitStr
         unsigned needed_length_nbits = encoded_lengths_count > 2 ? count_required_bits(encoded_lengths_count - 2) : 2;
         VERIFY(needed_length_nbits <= 16);
         needed_length_nbits = align_up_to(needed_length_nbits, 2);
+        dbgln_if(WEBP_DEBUG, "    extended, length_nbits {}, max_symbol: {}", needed_length_nbits, encoded_lengths_count);
         TRY(bit_stream.write_bits((needed_length_nbits - 2) / 2, 3u));
         TRY(bit_stream.write_bits(encoded_lengths_count - 2, needed_length_nbits));
     }
@@ -241,10 +247,12 @@ static ErrorOr<void> write_VP8L_coded_image(ImageKind image_kind, LittleEndianOu
 
     // color-cache-info      =  %b0
     // color-cache-info      =/ (%b1 4BIT) ; 1 followed by color cache size
+    dbgln_if(WEBP_DEBUG, "writing has_color_cache_info false");
     TRY(bit_stream.write_bits(0u, 1u)); // No color cache for now.
 
     if (image_kind == ImageKind::SpatiallyCoded) {
         // meta-prefix           =  %b0 / (%b1 entropy-image)
+        dbgln_if(WEBP_DEBUG, "writing has_meta_prefix false");
         TRY(bit_stream.write_bits(0u, 1u)); // No meta prefix for now.
     }
 
@@ -370,7 +378,7 @@ static ErrorOr<NonnullRefPtr<Bitmap>> maybe_write_color_indexing_transform(Littl
             return bitmap;
     }
 
-    dbgln_if(WEBP_DEBUG, "WebP: Writing color index transform");
+    dbgln_if(WEBP_DEBUG, "WebP: Writing color index transform, color_table_size {}", color_table_size);
     TRY(bit_stream.write_bits(1u, 1u)); // Transform present.
     TRY(bit_stream.write_bits(static_cast<unsigned>(COLOR_INDEXING_TRANSFORM), 2u));
 
@@ -438,6 +446,7 @@ static ErrorOr<void> write_VP8L_image_data(Stream& stream, NonnullRefPtr<Bitmap>
         bitmap = TRY(maybe_write_color_indexing_transform(bit_stream, bitmap, is_fully_opaque));
     TRY(bit_stream.write_bits(0u, 1u)); // No further transforms for now.
 
+    dbgln_if(WEBP_DEBUG, "WebP: Writing main bitmap");
     TRY(write_VP8L_coded_image(ImageKind::SpatiallyCoded, bit_stream, *bitmap, is_fully_opaque));
 
     // FIXME: Make ~LittleEndianOutputBitStream do this, or make it VERIFY() that it has happened at least.
