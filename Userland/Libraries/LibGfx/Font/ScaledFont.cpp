@@ -99,19 +99,21 @@ bool ScaledFont::append_glyph_path_to(Gfx::Path& path, u32 glyph_id) const
     return success;
 }
 
-Gfx::Glyph ScaledFont::glyph(u32 code_point) const
+Optional<Gfx::Glyph> ScaledFont::glyph(u32 code_point) const
 {
     return glyph(code_point, GlyphSubpixelOffset { 0, 0 });
 }
 
-Glyph ScaledFont::glyph_for_id(u32 id, GlyphSubpixelOffset subpixel_offset) const
+Optional<Glyph> ScaledFont::glyph_for_id(u32 id, GlyphSubpixelOffset subpixel_offset) const
 {
     auto bitmap = rasterize_glyph(id, subpixel_offset);
+    if (!bitmap)
+        return {};
     auto metrics = glyph_metrics(id);
     return Gfx::Glyph(bitmap, metrics.left_side_bearing, metrics.advance_width, metrics.ascender, m_font->has_color_bitmaps());
 }
 
-Gfx::Glyph ScaledFont::glyph(u32 code_point, GlyphSubpixelOffset subpixel_offset) const
+Optional<Gfx::Glyph> ScaledFont::glyph(u32 code_point, GlyphSubpixelOffset subpixel_offset) const
 {
     auto id = glyph_id_for_code_point(code_point);
     return glyph_for_id(id, subpixel_offset);
