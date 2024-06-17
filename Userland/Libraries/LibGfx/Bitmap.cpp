@@ -91,14 +91,16 @@ Bitmap::Bitmap(BitmapFormat format, IntSize size, int scale_factor, BackingStore
     VERIFY(!size_would_overflow(format, size, scale_factor));
     VERIFY(m_data);
     VERIFY(backing_store.size_in_bytes == size_in_bytes());
-    m_data_is_malloced = true;
+    m_destruction_callback = [data = m_data, size_in_bytes = this->size_in_bytes()] {
+        kfree_sized(data, size_in_bytes);
+    };
 }
 
-ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::create_wrapper(BitmapFormat format, IntSize size, int scale_factor, size_t pitch, void* data)
+ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::create_wrapper(BitmapFormat format, IntSize size, int scale_factor, size_t pitch, void* data, Function<void()>&& destruction_callback)
 {
     if (size_would_overflow(format, size, scale_factor))
         return Error::from_string_literal("Gfx::Bitmap::create_wrapper size overflow");
-    return adopt_ref(*new Bitmap(format, size, scale_factor, pitch, data));
+    return adopt_ref(*new Bitmap(format, size, scale_factor, pitch, data, move(destruction_callback)));
 }
 
 ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::load_from_file(StringView path, int scale_factor, Optional<IntSize> ideal_size)
@@ -154,12 +156,13 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::load_from_bytes(ReadonlyBytes bytes, Opti
     return Error::from_string_literal("Gfx::Bitmap unable to load from file");
 }
 
-Bitmap::Bitmap(BitmapFormat format, IntSize size, int scale_factor, size_t pitch, void* data)
+Bitmap::Bitmap(BitmapFormat format, IntSize size, int scale_factor, size_t pitch, void* data, Function<void()>&& destruction_callback)
     : m_size(size)
     , m_scale(scale_factor)
     , m_data(data)
     , m_pitch(pitch)
     , m_format(format)
+    , m_destruction_callback(move(destruction_callback))
 {
     VERIFY(pitch >= minimum_pitch(size.width() * scale_factor, format));
     VERIFY(!size_would_overflow(format, size, scale_factor));
@@ -548,9 +551,8 @@ ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Bitmap::inverted() const
 
 Bitmap::~Bitmap()
 {
-    if (m_data_is_malloced) {
-        kfree_sized(m_data, size_in_bytes());
-    }
+    if (m_destruction_callback)
+        m_destruction_callback();
     m_data = nullptr;
 }
 
