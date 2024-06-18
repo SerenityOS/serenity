@@ -139,6 +139,7 @@ describe("correct behavior", () => {
         for (const segment of segments) {
             expect(segment.segment).toBe(expectedSegments[index].segment);
             expect(segment.index).toBe(expectedSegments[index].index);
+            // FIXME: expect(segment.isWordLike).toBe(expectedSegments[index].isWordLike);
             expect(segment.input).toBe(string);
             index++;
         }
