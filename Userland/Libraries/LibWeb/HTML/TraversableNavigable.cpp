@@ -1187,7 +1187,8 @@ void TraversableNavigable::paint(Web::DevicePixelRect const& content_rect, Gfx::
     paint_config.has_focus = paint_options.has_focus;
     record_painting_commands(recording_painter, paint_config);
 
-    if (paint_options.use_gpu_painter) {
+    auto painting_command_executor_type = page().client().painting_command_executor_type();
+    if (painting_command_executor_type == PaintingCommandExecutorType::GPU) {
 #ifdef HAS_ACCELERATED_GRAPHICS
         Web::Painting::CommandExecutorGPU painting_command_executor(*paint_options.accelerated_graphics_context, target);
         painting_commands.execute(painting_command_executor);
@@ -1200,7 +1201,7 @@ void TraversableNavigable::paint(Web::DevicePixelRect const& content_rect, Gfx::
         }
 #endif
     } else {
-        Web::Painting::CommandExecutorCPU painting_command_executor(target, paint_options.use_experimental_cpu_transform_support);
+        Web::Painting::CommandExecutorCPU painting_command_executor(target, painting_command_executor_type == PaintingCommandExecutorType::CPUWithExperimentalTransformSupport);
         painting_commands.execute(painting_command_executor);
     }
 }
