@@ -150,6 +150,25 @@ template Optional<size_t> find_ignoring_case(Utf32View, Utf32View);
 
 Optional<GeneralCategory> __attribute__((weak)) general_category_from_string(StringView) { return {}; }
 bool __attribute__((weak)) code_point_has_general_category(u32, GeneralCategory) { return {}; }
+
+bool code_point_has_control_general_category(u32 code_point)
+{
+#if ENABLE_UNICODE_DATA
+    return code_point_has_general_category(code_point, Unicode::GeneralCategory::Control);
+#else
+    return false;
+#endif
+}
+
+bool code_point_has_space_separator_general_category(u32 code_point)
+{
+#if ENABLE_UNICODE_DATA
+    return code_point_has_general_category(code_point, Unicode::GeneralCategory::Space_Separator);
+#else
+    return is_ascii_space(code_point);
+#endif
+}
+
 Optional<Property> __attribute__((weak)) property_from_string(StringView) { return {}; }
 bool __attribute__((weak)) code_point_has_property(u32, Property) { return {}; }
 
