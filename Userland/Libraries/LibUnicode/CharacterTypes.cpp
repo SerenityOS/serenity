@@ -153,6 +153,69 @@ bool __attribute__((weak)) code_point_has_general_category(u32, GeneralCategory)
 Optional<Property> __attribute__((weak)) property_from_string(StringView) { return {}; }
 bool __attribute__((weak)) code_point_has_property(u32, Property) { return {}; }
 
+bool code_point_has_emoji_property(u32 code_point)
+{
+#if ENABLE_UNICODE_DATA
+    return code_point_has_property(code_point, Unicode::Property::Emoji);
+#else
+    return false;
+#endif
+}
+
+bool code_point_has_emoji_modifier_base_property(u32 code_point)
+{
+#if ENABLE_UNICODE_DATA
+    return code_point_has_property(code_point, Unicode::Property::Emoji_Modifier_Base);
+#else
+    return false;
+#endif
+}
+
+bool code_point_has_emoji_presentation_property(u32 code_point)
+{
+#if ENABLE_UNICODE_DATA
+    return code_point_has_property(code_point, Unicode::Property::Emoji_Presentation);
+#else
+    return false;
+#endif
+}
+
+bool code_point_has_identifier_start_property(u32 code_point)
+{
+#if ENABLE_UNICODE_DATA
+    return code_point_has_property(code_point, Unicode::Property::ID_Start);
+#else
+    return false;
+#endif
+}
+
+bool code_point_has_identifier_continue_property(u32 code_point)
+{
+#if ENABLE_UNICODE_DATA
+    return code_point_has_property(code_point, Unicode::Property::ID_Continue);
+#else
+    return false;
+#endif
+}
+
+bool code_point_has_regional_indicator_property(u32 code_point)
+{
+#if ENABLE_UNICODE_DATA
+    return code_point_has_property(code_point, Unicode::Property::Regional_Indicator);
+#else
+    return false;
+#endif
+}
+
+bool code_point_has_variation_selector_property(u32 code_point)
+{
+#if ENABLE_UNICODE_DATA
+    return code_point_has_property(code_point, Unicode::Property::Variation_Selector);
+#else
+    return false;
+#endif
+}
+
 bool is_ecma262_property([[maybe_unused]] Property property)
 {
 #if ENABLE_UNICODE_DATA
