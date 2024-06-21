@@ -49,7 +49,6 @@ public:
     virtual ~CommandExecutor() = default;
 
     virtual CommandResult draw_glyph_run(DrawGlyphRun const&) = 0;
-    virtual CommandResult draw_text(DrawText const&) = 0;
     virtual CommandResult fill_rect(FillRect const&) = 0;
     virtual CommandResult draw_scaled_bitmap(DrawScaledBitmap const&) = 0;
     virtual CommandResult draw_scaled_immutable_bitmap(DrawScaledImmutableBitmap const&) = 0;
