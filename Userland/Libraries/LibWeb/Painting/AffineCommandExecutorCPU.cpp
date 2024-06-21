@@ -105,12 +105,6 @@ CommandResult AffineCommandExecutorCPU::draw_glyph_run(DrawGlyphRun const& comma
     return CommandResult::Continue;
 }
 
-CommandResult AffineCommandExecutorCPU::draw_text(DrawText const&)
-{
-    // FIXME: Implement.
-    return CommandResult::Continue;
-}
-
 CommandResult AffineCommandExecutorCPU::fill_rect(FillRect const& command)
 {
     prepare_clipping(command.bounding_rect());
