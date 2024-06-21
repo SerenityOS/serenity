@@ -92,6 +92,8 @@ public:
 
     virtual Web::DisplayListPlayerType display_list_player_type() const override;
 
+    void queue_screenshot_task(Optional<i32> node_id);
+
 private:
     PageClient(PageHost&, u64 id);
 
@@ -190,6 +192,11 @@ private:
     };
 
     PaintState m_paint_state { PaintState::Ready };
+
+    struct ScreenshotTask {
+        Optional<i32> node_id;
+    };
+    Queue<ScreenshotTask> m_screenshot_tasks;
 
     Web::CSS::PreferredColorScheme m_preferred_color_scheme { Web::CSS::PreferredColorScheme::Auto };
     Web::CSS::PreferredContrast m_preferred_contrast { Web::CSS::PreferredContrast::NoPreference };
