@@ -84,7 +84,7 @@ public:
     virtual CommandExecutor& nested_executor() { VERIFY_NOT_REACHED(); }
 };
 
-class CommandList {
+class DisplayList {
 public:
     void append(Command&& command, Optional<i32> scroll_frame_id);
 
