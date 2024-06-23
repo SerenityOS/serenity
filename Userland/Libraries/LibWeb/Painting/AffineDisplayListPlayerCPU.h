@@ -12,7 +12,7 @@
 
 namespace Web::Painting {
 
-class AffineCommandExecutorCPU : public CommandExecutor {
+class AffineDisplayListPlayerCPU : public DisplayListPlayer {
 public:
     CommandResult draw_glyph_run(DrawGlyphRun const&) override;
     CommandResult fill_rect(FillRect const&) override;
@@ -52,9 +52,8 @@ public:
     bool needs_update_immutable_bitmap_texture_cache() const override { return false; }
     void update_immutable_bitmap_texture_cache(HashMap<u32, Gfx::ImmutableBitmap const*>&) override {};
 
-    AffineCommandExecutorCPU(Gfx::Bitmap& bitmap, Gfx::AffineTransform transform, Gfx::IntRect clip);
-
-    virtual ~AffineCommandExecutorCPU() override = default;
+    AffineDisplayListPlayerCPU(Gfx::Bitmap& bitmap, Gfx::AffineTransform transform, Gfx::IntRect clip);
+    virtual ~AffineDisplayListPlayerCPU() override = default;
 
 private:
     struct Clip {

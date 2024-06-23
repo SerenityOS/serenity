@@ -12,7 +12,7 @@
 
 namespace Web::Painting {
 
-class CommandExecutorGPU : public CommandExecutor {
+class DisplayListPlayerGPU : public DisplayListPlayer {
 public:
     CommandResult draw_glyph_run(DrawGlyphRun const&) override;
     CommandResult fill_rect(FillRect const&) override;
@@ -52,8 +52,8 @@ public:
     bool needs_update_immutable_bitmap_texture_cache() const override { return true; }
     void update_immutable_bitmap_texture_cache(HashMap<u32, Gfx::ImmutableBitmap const*>&) override;
 
-    CommandExecutorGPU(AccelGfx::Context&, Gfx::Bitmap& bitmap);
-    ~CommandExecutorGPU() override;
+    DisplayListPlayerGPU(AccelGfx::Context&, Gfx::Bitmap& bitmap);
+    ~DisplayListPlayerGPU() override;
 
 private:
     Gfx::Bitmap& m_target_bitmap;

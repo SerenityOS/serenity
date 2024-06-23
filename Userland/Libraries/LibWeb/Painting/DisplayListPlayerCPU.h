@@ -8,12 +8,12 @@
 
 #include <AK/MaybeOwned.h>
 #include <LibGfx/ScalingMode.h>
-#include <LibWeb/Painting/AffineCommandExecutorCPU.h>
+#include <LibWeb/Painting/AffineDisplayListPlayerCPU.h>
 #include <LibWeb/Painting/DisplayListRecorder.h>
 
 namespace Web::Painting {
 
-class CommandExecutorCPU : public CommandExecutor {
+class DisplayListPlayerCPU : public DisplayListPlayer {
 public:
     CommandResult draw_glyph_run(DrawGlyphRun const&) override;
     CommandResult fill_rect(FillRect const&) override;
@@ -53,11 +53,12 @@ public:
     bool needs_update_immutable_bitmap_texture_cache() const override { return false; }
     void update_immutable_bitmap_texture_cache(HashMap<u32, Gfx::ImmutableBitmap const*>&) override {};
 
-    CommandExecutorCPU(Gfx::Bitmap& bitmap, bool enable_affine_command_executor = false);
+    DisplayListPlayerCPU(Gfx::Bitmap& bitmap, bool enable_affine_command_executor = false);
+    ~DisplayListPlayerCPU();
 
-    CommandExecutor& nested_executor() override
+    DisplayListPlayer& nested_player() override
     {
-        return *m_affine_command_executor;
+        return *m_affine_display_list_player;
     }
 
 private:
@@ -78,7 +79,7 @@ private:
     [[nodiscard]] Gfx::Painter& painter() { return *stacking_contexts.last().painter; }
 
     Vector<StackingContext> stacking_contexts;
-    Optional<AffineCommandExecutorCPU> m_affine_command_executor;
+    Optional<AffineDisplayListPlayerCPU> m_affine_display_list_player;
 };
 
 }
