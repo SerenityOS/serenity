@@ -76,7 +76,7 @@ void DisplayList::mark_unnecessary_commands()
     VERIFY(sample_blit_ranges.is_empty());
 }
 
-void DisplayList::execute(CommandExecutor& executor)
+void DisplayList::execute(DisplayListPlayer& executor)
 {
     executor.prepare_to_execute(m_corner_clip_max_depth);
 
@@ -112,8 +112,8 @@ void DisplayList::execute(CommandExecutor& executor)
 
     HashTable<u32> skipped_sample_corner_commands;
     size_t next_command_index = 0;
-    Vector<CommandExecutor&, 16> executor_stack;
-    CommandExecutor* current_executor = &executor;
+    Vector<DisplayListPlayer&, 16> executor_stack;
+    DisplayListPlayer* current_executor = &executor;
     while (next_command_index < m_commands.size()) {
         if (m_commands[next_command_index].skip) {
             next_command_index++;
@@ -181,7 +181,7 @@ void DisplayList::execute(CommandExecutor& executor)
 
         if (result == CommandResult::ContinueWithNestedExecutor) {
             executor_stack.append(*current_executor);
-            current_executor = &current_executor->nested_executor();
+            current_executor = &current_executor->nested_player();
         } else if (result == CommandResult::ContinueWithParentExecutor) {
             current_executor = &executor_stack.take_last();
         } else if (result == CommandResult::SkipStackingContext) {

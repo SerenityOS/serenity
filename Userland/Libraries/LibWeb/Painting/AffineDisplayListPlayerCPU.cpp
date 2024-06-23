@@ -6,7 +6,7 @@
 
 #include <AK/TypeCasts.h>
 #include <LibGfx/Font/ScaledFont.h>
-#include <LibWeb/Painting/AffineCommandExecutorCPU.h>
+#include <LibWeb/Painting/AffineDisplayListPlayerCPU.h>
 namespace Web::Painting {
 
 // This executor is hopes to handle (at least) 2D CSS transforms. All commands
@@ -15,7 +15,7 @@ namespace Web::Painting {
 // transform can be assumed to be non-identity or translation, so there's no
 // need to add fast paths here (those will be handled in the normal executor).
 
-bool AffineCommandExecutorCPU::needs_expensive_clipping(Gfx::IntRect bounding_rect) const
+bool AffineDisplayListPlayerCPU::needs_expensive_clipping(Gfx::IntRect bounding_rect) const
 {
     auto& current_stacking_context = stacking_context();
     if (current_stacking_context.clip.is_rectangular)
@@ -28,7 +28,7 @@ bool AffineCommandExecutorCPU::needs_expensive_clipping(Gfx::IntRect bounding_re
     return false;
 }
 
-void AffineCommandExecutorCPU::prepare_clipping(Gfx::IntRect bounding_rect)
+void AffineDisplayListPlayerCPU::prepare_clipping(Gfx::IntRect bounding_rect)
 {
     if (m_expensive_clipping_target)
         return;
@@ -51,7 +51,7 @@ void AffineCommandExecutorCPU::prepare_clipping(Gfx::IntRect bounding_rect)
     set_target(clip_bounds.top_left(), *m_expensive_clipping_target);
 }
 
-void AffineCommandExecutorCPU::flush_clipping(Optional<StackingContext const&> current_stacking_context)
+void AffineDisplayListPlayerCPU::flush_clipping(Optional<StackingContext const&> current_stacking_context)
 {
     if (!m_expensive_clipping_target)
         return;
@@ -65,7 +65,7 @@ void AffineCommandExecutorCPU::flush_clipping(Optional<StackingContext const&> c
     m_expensive_clipping_mask = nullptr;
 }
 
-AffineCommandExecutorCPU::AffineCommandExecutorCPU(Gfx::Bitmap& bitmap, Gfx::AffineTransform transform, Gfx::IntRect clip)
+AffineDisplayListPlayerCPU::AffineDisplayListPlayerCPU(Gfx::Bitmap& bitmap, Gfx::AffineTransform transform, Gfx::IntRect clip)
     : m_painter(bitmap)
 {
     painter().add_clip_rect(clip);
@@ -78,7 +78,7 @@ AffineCommandExecutorCPU::AffineCommandExecutorCPU(Gfx::Bitmap& bitmap, Gfx::Aff
         .target = bitmap });
 }
 
-CommandResult AffineCommandExecutorCPU::draw_glyph_run(DrawGlyphRun const& command)
+CommandResult AffineDisplayListPlayerCPU::draw_glyph_run(DrawGlyphRun const& command)
 {
     prepare_clipping(command.bounding_rect());
     auto scale = Gfx::AffineTransform {}.scale(command.scale, command.scale);
@@ -105,7 +105,7 @@ CommandResult AffineCommandExecutorCPU::draw_glyph_run(DrawGlyphRun const& comma
     return CommandResult::Continue;
 }
 
-CommandResult AffineCommandExecutorCPU::fill_rect(FillRect const& command)
+CommandResult AffineDisplayListPlayerCPU::fill_rect(FillRect const& command)
 {
     prepare_clipping(command.bounding_rect());
     // FIXME: Support clip_paths.
@@ -115,21 +115,21 @@ CommandResult AffineCommandExecutorCPU::fill_rect(FillRect const& command)
     return CommandResult::Continue;
 }
 
-CommandResult AffineCommandExecutorCPU::draw_scaled_bitmap(DrawScaledBitmap const& command)
+CommandResult AffineDisplayListPlayerCPU::draw_scaled_bitmap(DrawScaledBitmap const& command)
 {
     prepare_clipping(command.bounding_rect());
     painter().draw_scaled_bitmap_with_transform(command.dst_rect, command.bitmap, command.src_rect.to_type<float>(), stacking_context().transform, 1.0f, command.scaling_mode);
     return CommandResult::Continue;
 }
 
-CommandResult AffineCommandExecutorCPU::draw_scaled_immutable_bitmap(DrawScaledImmutableBitmap const& command)
+CommandResult AffineDisplayListPlayerCPU::draw_scaled_immutable_bitmap(DrawScaledImmutableBitmap const& command)
 {
     prepare_clipping(command.bounding_rect());
     painter().draw_scaled_bitmap_with_transform(command.dst_rect, command.bitmap->bitmap(), command.src_rect.to_type<float>(), stacking_context().transform, 1.0f, command.scaling_mode);
     return CommandResult::Continue;
 }
 
-CommandResult AffineCommandExecutorCPU::set_clip_rect(SetClipRect const& clip)
+CommandResult AffineDisplayListPlayerCPU::set_clip_rect(SetClipRect const& clip)
 {
     flush_clipping();
     auto& current_stacking_context = stacking_context();
@@ -143,7 +143,7 @@ CommandResult AffineCommandExecutorCPU::set_clip_rect(SetClipRect const& clip)
     return CommandResult::Continue;
 }
 
-CommandResult AffineCommandExecutorCPU::clear_clip_rect(ClearClipRect const&)
+CommandResult AffineDisplayListPlayerCPU::clear_clip_rect(ClearClipRect const&)
 {
     flush_clipping();
     auto& current_stacking_context = stacking_context();
@@ -154,7 +154,7 @@ CommandResult AffineCommandExecutorCPU::clear_clip_rect(ClearClipRect const&)
     return CommandResult::Continue;
 }
 
-CommandResult AffineCommandExecutorCPU::push_stacking_context(PushStackingContext const& command)
+CommandResult AffineDisplayListPlayerCPU::push_stacking_context(PushStackingContext const& command)
 {
     // FIXME: Support masks (not possible to do while PushStackingContext takes a bitmap mask).
     // Note: Image rendering is not relevant as this does not transform via a bitmap.
@@ -196,7 +196,7 @@ CommandResult AffineCommandExecutorCPU::push_stacking_context(PushStackingContex
     return CommandResult::Continue;
 }
 
-CommandResult AffineCommandExecutorCPU::pop_stacking_context(PopStackingContext const&)
+CommandResult AffineDisplayListPlayerCPU::pop_stacking_context(PopStackingContext const&)
 {
     auto active_stacking_contexts = m_stacking_contexts.size() - 1;
     bool is_final_stacking_context = active_stacking_contexts <= 1;
@@ -218,31 +218,31 @@ CommandResult AffineCommandExecutorCPU::pop_stacking_context(PopStackingContext 
     return is_final_stacking_context ? CommandResult::ContinueWithParentExecutor : CommandResult::Continue;
 }
 
-CommandResult AffineCommandExecutorCPU::paint_linear_gradient(PaintLinearGradient const&)
+CommandResult AffineDisplayListPlayerCPU::paint_linear_gradient(PaintLinearGradient const&)
 {
     // FIXME: Implement.
     return CommandResult::Continue;
 }
 
-CommandResult AffineCommandExecutorCPU::paint_outer_box_shadow(PaintOuterBoxShadow const&)
+CommandResult AffineDisplayListPlayerCPU::paint_outer_box_shadow(PaintOuterBoxShadow const&)
 {
     // FIXME: Implement.
     return CommandResult::Continue;
 }
 
-CommandResult AffineCommandExecutorCPU::paint_inner_box_shadow(PaintInnerBoxShadow const&)
+CommandResult AffineDisplayListPlayerCPU::paint_inner_box_shadow(PaintInnerBoxShadow const&)
 {
     // FIXME: Implement.
     return CommandResult::Continue;
 }
 
-CommandResult AffineCommandExecutorCPU::paint_text_shadow(PaintTextShadow const&)
+CommandResult AffineDisplayListPlayerCPU::paint_text_shadow(PaintTextShadow const&)
 {
     // FIXME: Implement.
     return CommandResult::Continue;
 }
 
-CommandResult AffineCommandExecutorCPU::fill_rect_with_rounded_corners(FillRectWithRoundedCorners const& command)
+CommandResult AffineDisplayListPlayerCPU::fill_rect_with_rounded_corners(FillRectWithRoundedCorners const& command)
 {
     prepare_clipping(command.bounding_rect());
     Gfx::Path path;
@@ -252,7 +252,7 @@ CommandResult AffineCommandExecutorCPU::fill_rect_with_rounded_corners(FillRectW
     return CommandResult::Continue;
 }
 
-CommandResult AffineCommandExecutorCPU::fill_path_using_color(FillPathUsingColor const& command)
+CommandResult AffineDisplayListPlayerCPU::fill_path_using_color(FillPathUsingColor const& command)
 {
     prepare_clipping(command.bounding_rect());
     auto path_transform = Gfx::AffineTransform(stacking_context().transform).multiply(Gfx::AffineTransform {}.set_translation(command.aa_translation));
@@ -260,13 +260,13 @@ CommandResult AffineCommandExecutorCPU::fill_path_using_color(FillPathUsingColor
     return CommandResult::Continue;
 }
 
-CommandResult AffineCommandExecutorCPU::fill_path_using_paint_style(FillPathUsingPaintStyle const&)
+CommandResult AffineDisplayListPlayerCPU::fill_path_using_paint_style(FillPathUsingPaintStyle const&)
 {
     // FIXME: Implement.
     return CommandResult::Continue;
 }
 
-CommandResult AffineCommandExecutorCPU::stroke_path_using_color(StrokePathUsingColor const& command)
+CommandResult AffineDisplayListPlayerCPU::stroke_path_using_color(StrokePathUsingColor const& command)
 {
     prepare_clipping(command.bounding_rect());
     auto path_transform = Gfx::AffineTransform(stacking_context().transform).multiply(Gfx::AffineTransform {}.set_translation(command.aa_translation));
@@ -274,25 +274,25 @@ CommandResult AffineCommandExecutorCPU::stroke_path_using_color(StrokePathUsingC
     return CommandResult::Continue;
 }
 
-CommandResult AffineCommandExecutorCPU::stroke_path_using_paint_style(StrokePathUsingPaintStyle const&)
+CommandResult AffineDisplayListPlayerCPU::stroke_path_using_paint_style(StrokePathUsingPaintStyle const&)
 {
     // FIXME: Implement.
     return CommandResult::Continue;
 }
 
-CommandResult AffineCommandExecutorCPU::draw_ellipse(DrawEllipse const&)
+CommandResult AffineDisplayListPlayerCPU::draw_ellipse(DrawEllipse const&)
 {
     // FIXME: Implement.
     return CommandResult::Continue;
 }
 
-CommandResult AffineCommandExecutorCPU::fill_ellipse(FillEllipse const&)
+CommandResult AffineDisplayListPlayerCPU::fill_ellipse(FillEllipse const&)
 {
     // FIXME: Implement.
     return CommandResult::Continue;
 }
 
-CommandResult AffineCommandExecutorCPU::draw_line(DrawLine const& command)
+CommandResult AffineDisplayListPlayerCPU::draw_line(DrawLine const& command)
 {
     prepare_clipping(Gfx::IntRect::from_two_points(command.from, command.to).inflated(command.thickness, command.thickness));
     // FIXME: Implement other line styles.
@@ -303,13 +303,13 @@ CommandResult AffineCommandExecutorCPU::draw_line(DrawLine const& command)
     return CommandResult::Continue;
 }
 
-CommandResult AffineCommandExecutorCPU::apply_backdrop_filter(ApplyBackdropFilter const&)
+CommandResult AffineDisplayListPlayerCPU::apply_backdrop_filter(ApplyBackdropFilter const&)
 {
     // FIXME: Implement.
     return CommandResult::Continue;
 }
 
-CommandResult AffineCommandExecutorCPU::draw_rect(DrawRect const& command)
+CommandResult AffineDisplayListPlayerCPU::draw_rect(DrawRect const& command)
 {
     prepare_clipping(command.bounding_rect());
     Gfx::Path path;
@@ -318,37 +318,37 @@ CommandResult AffineCommandExecutorCPU::draw_rect(DrawRect const& command)
     return CommandResult::Continue;
 }
 
-CommandResult AffineCommandExecutorCPU::paint_radial_gradient(PaintRadialGradient const&)
+CommandResult AffineDisplayListPlayerCPU::paint_radial_gradient(PaintRadialGradient const&)
 {
     // FIXME: Implement.
     return CommandResult::Continue;
 }
 
-CommandResult AffineCommandExecutorCPU::paint_conic_gradient(PaintConicGradient const&)
+CommandResult AffineDisplayListPlayerCPU::paint_conic_gradient(PaintConicGradient const&)
 {
     // FIXME: Implement.
     return CommandResult::Continue;
 }
 
-CommandResult AffineCommandExecutorCPU::draw_triangle_wave(DrawTriangleWave const&)
+CommandResult AffineDisplayListPlayerCPU::draw_triangle_wave(DrawTriangleWave const&)
 {
     // FIXME: Implement.
     return CommandResult::Continue;
 }
 
-CommandResult AffineCommandExecutorCPU::sample_under_corners(SampleUnderCorners const&)
+CommandResult AffineDisplayListPlayerCPU::sample_under_corners(SampleUnderCorners const&)
 {
     // FIXME: Implement? -- Likely not a good approach for transforms.
     return CommandResult::Continue;
 }
 
-CommandResult AffineCommandExecutorCPU::blit_corner_clipping(BlitCornerClipping const&)
+CommandResult AffineDisplayListPlayerCPU::blit_corner_clipping(BlitCornerClipping const&)
 {
     // FIXME: Implement? -- Likely not a good approach for transforms.
     return CommandResult::Continue;
 }
 
-bool AffineCommandExecutorCPU::would_be_fully_clipped_by_painter(Gfx::IntRect rect) const
+bool AffineDisplayListPlayerCPU::would_be_fully_clipped_by_painter(Gfx::IntRect rect) const
 {
     auto const& current_stacking_context = stacking_context();
     auto transformed_rect = current_stacking_context.transform.map(rect.to_type<float>()).to_type<int>();
