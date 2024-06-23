@@ -380,26 +380,12 @@ if (Backtrace_FOUND AND NOT "${Backtrace_LIBRARIES}" STREQUAL "")
     target_include_directories(AK PRIVATE ${Backtrace_INCLUDE_DIRS})
 endif()
 
-add_serenity_subdirectory(Userland/Libraries/LibUnicode)
-add_serenity_subdirectory(Userland/Libraries/LibURL)
-
-# LibCore
+# LibCoreMinimal
 add_serenity_subdirectory(Userland/Libraries/LibCore)
-target_link_libraries(LibCore PRIVATE Threads::Threads)
 if (${CMAKE_SYSTEM_NAME} MATCHES "NetBSD")
     # NetBSD has its shm_open and shm_unlink functions in librt so we need to link that
-    target_link_libraries(LibCore PRIVATE rt)
     target_link_libraries(LibCoreMinimal PRIVATE rt)
 endif()
-if (${CMAKE_SYSTEM_NAME} MATCHES "SunOS")
-    # Solaris has socket and networking related functions in two extra libraries
-    target_link_libraries(LibCore PRIVATE nsl socket)
-endif()
-if (HAIKU)
-    # Haiku has networking related functions in the network library
-    target_link_libraries(LibCore PRIVATE network)
-endif()
-target_link_libraries(LibCore PRIVATE LibURL)
 
 # LibMain
 add_serenity_subdirectory(Userland/Libraries/LibMain)
@@ -508,10 +494,26 @@ if (BUILD_LAGOM)
         TextCodec
         Threading
         TLS
+        Unicode
+        URL
         Wasm
         WebSocket
         XML
     )
+
+    target_link_libraries(LibCore PRIVATE LibURL Threads::Threads)
+    if (${CMAKE_SYSTEM_NAME} MATCHES "NetBSD")
+        # NetBSD has its shm_open and shm_unlink functions in librt so we need to link that
+        target_link_libraries(LibCore PRIVATE rt)
+    endif()
+    if (${CMAKE_SYSTEM_NAME} MATCHES "SunOS")
+        # Solaris has socket and networking related functions in two extra libraries
+        target_link_libraries(LibCore PRIVATE nsl socket)
+    endif()
+    if (HAIKU)
+        # Haiku has networking related functions in the network library
+        target_link_libraries(LibCore PRIVATE network)
+    endif()
 
     # These are needed for both LibWeb and LibProtocol.
     compile_ipc(${SERENITY_PROJECT_ROOT}/Userland/Services/RequestServer/RequestClient.ipc Userland/Services/RequestServer/RequestClientEndpoint.h)

@@ -17,6 +17,10 @@ set(SOURCES
 serenity_lib(LibCoreMinimal coreminimal)
 target_link_libraries(LibCoreMinimal PRIVATE LibSystem)
 
+if (NOT BUILD_LAGOM AND NOT SERENITYOS)
+    return()
+endif()
+
 if (SERENITYOS)
     add_library(DynamicLoader_LibCoreArgsParser 
         ArgsParser.cpp
