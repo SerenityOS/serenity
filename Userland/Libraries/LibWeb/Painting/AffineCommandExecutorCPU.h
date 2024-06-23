@@ -8,7 +8,7 @@
 
 #include <LibGfx/Painter.h>
 #include <LibGfx/Quad.h>
-#include <LibWeb/Painting/RecordingPainter.h>
+#include <LibWeb/Painting/DisplayListRecorder.h>
 
 namespace Web::Painting {
 

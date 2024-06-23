@@ -9,7 +9,7 @@
 #include <AK/MaybeOwned.h>
 #include <LibGfx/ScalingMode.h>
 #include <LibWeb/Painting/AffineCommandExecutorCPU.h>
-#include <LibWeb/Painting/RecordingPainter.h>
+#include <LibWeb/Painting/DisplayListRecorder.h>
 
 namespace Web::Painting {
 
