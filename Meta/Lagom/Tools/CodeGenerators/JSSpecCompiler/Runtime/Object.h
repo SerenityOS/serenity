@@ -49,12 +49,6 @@ struct DataProperty {
     }
 
     template<typename T>
-    T* as() const
-    {
-        return verify_cast<T>(value);
-    }
-
-    template<typename T>
     Optional<T*> get_or_diagnose(Realm* realm, QualifiedName name, Location location)
     {
         if (!is<T>()) {

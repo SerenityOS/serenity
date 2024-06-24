@@ -13,6 +13,25 @@
 namespace AK {
 
 template<typename OutputType, typename InputType>
+ALWAYS_INLINE CopyConst<InputType, OutputType>* as(InputType* input)
+{
+    if (!input)
+        return nullptr;
+
+    return as<OutputType>(*input);
+}
+
+template<typename OutputType, typename InputType>
+ALWAYS_INLINE CopyConst<InputType, OutputType>* as(InputType& input)
+{
+    if constexpr (requires { input.template fast_is<OutputType>(); }) {
+        if (input.template fast_is<OutputType>())
+            return static_cast<CopyConst<InputType, OutputType>*>(&input);
+    }
+    return dynamic_cast<CopyConst<InputType, OutputType>*>(&input);
+}
+
+template<typename OutputType, typename InputType>
 ALWAYS_INLINE bool is(InputType& input)
 {
     if constexpr (requires { input.template fast_is<OutputType>(); }) {
@@ -52,6 +71,7 @@ ALWAYS_INLINE CopyConst<InputType, OutputType>& verify_cast(InputType& input)
 }
 
 #if USING_AK_GLOBALLY
+using AK::as;
 using AK::is;
 using AK::verify_cast;
 #endif

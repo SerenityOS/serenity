@@ -13,7 +13,7 @@ namespace JSSpecCompiler {
 
 RecursionDecision IfBranchMergingPass::on_entry(Tree tree)
 {
-    if (auto list = as<TreeList>(tree); list) {
+    if (auto* list = as<TreeList>(*tree); list) {
         Vector<Tree> result;
         Vector<Tree> unmerged_branches;
 
@@ -52,7 +52,7 @@ Tree IfBranchMergingPass::merge_branches(Vector<Tree> const& unmerged_branches)
     Vector<Tree> branches;
     NullableTree else_branch;
 
-    if (auto if_branch = as<IfBranch>(unmerged_branches[0]); if_branch) {
+    if (auto* if_branch = as<IfBranch>(*unmerged_branches[0]); if_branch) {
         conditions.append(if_branch->m_condition);
         branches.append(if_branch->m_branch);
     } else {
@@ -60,7 +60,7 @@ Tree IfBranchMergingPass::merge_branches(Vector<Tree> const& unmerged_branches)
     }
 
     for (size_t i = 1; i < unmerged_branches.size(); ++i) {
-        auto branch = as<ElseIfBranch>(unmerged_branches[i]);
+        auto* branch = as<ElseIfBranch>(*unmerged_branches[i]);
 
         if (!branch)
             return error;
@@ -74,9 +74,9 @@ Tree IfBranchMergingPass::merge_branches(Vector<Tree> const& unmerged_branches)
             //         ...
             //   3. Else,
             //      ...
-            auto substep_list = as<TreeList>(branch->m_branch);
+            auto* substep_list = as<TreeList>(*branch->m_branch);
             if (substep_list && substep_list->m_trees.size() == 1) {
-                if (auto nested_if = as<IfBranch>(substep_list->m_trees[0]); nested_if)
+                if (auto* nested_if = as<IfBranch>(*substep_list->m_trees[0]); nested_if)
                     branch = make_ref_counted<ElseIfBranch>(nested_if->m_condition, nested_if->m_branch);
             }
         }

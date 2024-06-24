@@ -9,6 +9,7 @@
 #include "Compiler/ControlFlowGraph.h"
 #include "Compiler/StronglyConnectedComponents.h"
 #include "Function.h"
+#include <AK/TypeCasts.h>
 
 namespace JSSpecCompiler {
 
@@ -34,7 +35,7 @@ RecursionDecision DeadCodeEliminationPass::on_entry(Tree tree)
 
 void DeadCodeEliminationPass::on_leave(Tree tree)
 {
-    if (auto variable = as<Variable>(tree); variable)
+    if (auto* variable = as<Variable>(*tree); variable)
         as_vertex(variable)->is_referenced = true;
 }
 

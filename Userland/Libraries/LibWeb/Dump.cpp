@@ -84,45 +84,43 @@ void dump_tree(StringBuilder& builder, DOM::Node const& node)
     static int indent = 0;
     for (int i = 0; i < indent; ++i)
         builder.append("  "sv);
-    if (is<DOM::Element>(node)) {
-        builder.appendff("<{}", verify_cast<DOM::Element>(node).local_name());
-        verify_cast<DOM::Element>(node).for_each_attribute([&](auto& name, auto& value) {
+    if (auto const* element = as<DOM::Element>(node)) {
+        builder.appendff("<{}", element->local_name());
+        element->for_each_attribute([&](auto& name, auto& value) {
             builder.appendff(" {}={}", name, value);
         });
         builder.append(">\n"sv);
-    } else if (is<DOM::Text>(node)) {
-        builder.appendff("\"{}\"\n", verify_cast<DOM::Text>(node).data());
+    } else if (auto const* text_node = as<DOM::Text>(node)) {
+        builder.appendff("\"{}\"\n", text_node->data());
     } else {
         builder.appendff("{}\n", node.node_name());
     }
     ++indent;
-    if (is<DOM::Element>(node)) {
-        if (auto* shadow_root = static_cast<DOM::Element const&>(node).shadow_root_internal()) {
+    if (auto const* element = as<DOM::Element>(node)) {
+        if (auto const* shadow_root = element->shadow_root_internal()) {
             dump_tree(builder, *shadow_root);
         }
     }
-    if (is<HTML::HTMLImageElement>(node)) {
-        if (auto image_data = static_cast<HTML::HTMLImageElement const&>(node).current_request().image_data()) {
-            if (is<SVG::SVGDecodedImageData>(*image_data)) {
+    if (auto const* image_element = as<HTML::HTMLImageElement>(node)) {
+        if (auto image_data = image_element->current_request().image_data()) {
+            if (auto* svg_data = as<SVG::SVGDecodedImageData>(*image_data)) {
                 ++indent;
                 for (int i = 0; i < indent; ++i)
                     builder.append("  "sv);
                 builder.append("(SVG-as-image isolated context)\n"sv);
-                auto& svg_data = verify_cast<SVG::SVGDecodedImageData>(*image_data);
-                dump_tree(builder, svg_data.svg_document());
+                dump_tree(builder, svg_data->svg_document());
                 --indent;
             }
         }
     }
-    if (is<DOM::ParentNode>(node)) {
-        if (!is<HTML::HTMLTemplateElement>(node)) {
-            static_cast<DOM::ParentNode const&>(node).for_each_child([&](auto& child) {
+    if (auto const* parent_node = as<DOM::ParentNode>(node)) {
+        if (auto const* template_element = as<HTML::HTMLTemplateElement>(node)) {
+            dump_tree(builder, template_element->content());
+        } else {
+            parent_node->for_each_child([&](auto& child) {
                 dump_tree(builder, child);
                 return IterationDecision::Continue;
             });
-        } else {
-            auto& template_element = verify_cast<HTML::HTMLTemplateElement>(node);
-            dump_tree(builder, template_element.content());
         }
     }
     --indent;
@@ -144,20 +142,19 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
     FlyString tag_name;
     if (layout_node.is_anonymous())
         tag_name = "(anonymous)"_fly_string;
-    else if (is<DOM::Element>(layout_node.dom_node()))
-        tag_name = verify_cast<DOM::Element>(*layout_node.dom_node()).local_name();
+    else if (auto const* element = as<DOM::Element>(layout_node.dom_node()))
+        tag_name = element->local_name();
     else
         tag_name = layout_node.dom_node()->node_name();
 
     String identifier;
-    if (layout_node.dom_node() && is<DOM::Element>(*layout_node.dom_node())) {
-        auto& element = verify_cast<DOM::Element>(*layout_node.dom_node());
+    if (auto const* element = as<DOM::Element>(layout_node.dom_node())) {
         StringBuilder builder;
-        if (element.id().has_value() && !element.id()->is_empty()) {
+        if (element->id().has_value() && !element->id()->is_empty()) {
             builder.append('#');
-            builder.append(*element.id());
+            builder.append(*element->id());
         }
-        for (auto& class_name : element.class_names()) {
+        for (auto& class_name : element->class_names()) {
             builder.append('.');
             builder.append(class_name);
         }
@@ -314,9 +311,8 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
 
         builder.appendff(" children: {}", box.children_are_inline() ? "inline" : "not-inline");
 
-        if (is<Layout::FrameBox>(box)) {
-            auto const& frame_box = static_cast<Layout::FrameBox const&>(box);
-            if (auto* nested_browsing_context = frame_box.dom_node().nested_browsing_context()) {
+        if (auto const* frame_box = as<Layout::FrameBox>(box)) {
+            if (auto const* nested_browsing_context = frame_box->dom_node().nested_browsing_context()) {
                 if (auto* document = nested_browsing_context->active_document()) {
                     builder.appendff(" (url: {})", document->url());
                 }
@@ -326,17 +322,16 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
         builder.append("\n"sv);
     }
 
-    if (layout_node.dom_node() && is<HTML::HTMLImageElement>(*layout_node.dom_node())) {
-        if (auto image_data = static_cast<HTML::HTMLImageElement const&>(*layout_node.dom_node()).current_request().image_data()) {
-            if (is<SVG::SVGDecodedImageData>(*image_data)) {
-                auto& svg_data = verify_cast<SVG::SVGDecodedImageData>(*image_data);
-                if (svg_data.svg_document().layout_node()) {
+    if (auto const* image_data = as<HTML::HTMLImageElement>(layout_node.dom_node()); image_data && layout_node.dom_node()) {
+        if (image_data->current_request().image_data()) {
+            if (auto const* svg_data = as<SVG::SVGDecodedImageData>(image_data)) {
+                if (svg_data->svg_document().layout_node()) {
                     ++indent;
                     for (size_t i = 0; i < indent; ++i)
                         builder.append("  "sv);
                     builder.append("(SVG-as-image isolated context)\n"sv);
 
-                    dump_tree(builder, *svg_data.svg_document().layout_node(), show_box_model, show_specified_style, interactive);
+                    dump_tree(builder, *svg_data->svg_document().layout_node(), show_box_model, show_specified_style, interactive);
                     --indent;
                 }
             }
@@ -356,26 +351,23 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
             fragment.length(),
             fragment.absolute_rect(),
             fragment.baseline());
-        if (is<Layout::TextNode>(fragment.layout_node())) {
+        if (auto const* layout_text = as<Layout::TextNode>(fragment.layout_node())) {
             for (size_t i = 0; i < indent; ++i)
                 builder.append("  "sv);
-            auto const& layout_text = static_cast<Layout::TextNode const&>(fragment.layout_node());
-            auto fragment_text = MUST(layout_text.text_for_rendering().substring_from_byte_offset(fragment.start(), fragment.length()));
+            auto fragment_text = MUST(layout_text->text_for_rendering().substring_from_byte_offset(fragment.start(), fragment.length()));
             builder.appendff("      \"{}\"\n", fragment_text);
         }
     };
 
-    if (is<Layout::BlockContainer>(layout_node) && static_cast<Layout::BlockContainer const&>(layout_node).children_are_inline()) {
-        auto& block = static_cast<Layout::BlockContainer const&>(layout_node);
-        for (size_t fragment_index = 0; block.paintable_with_lines() && fragment_index < block.paintable_with_lines()->fragments().size(); ++fragment_index) {
-            auto const& fragment = block.paintable_with_lines()->fragments()[fragment_index];
+    if (auto const* block = as<Layout::BlockContainer>(layout_node); block && block->children_are_inline()) {
+        for (size_t fragment_index = 0; block->paintable_with_lines() && fragment_index < block->paintable_with_lines()->fragments().size(); ++fragment_index) {
+            auto const& fragment = block->paintable_with_lines()->fragments()[fragment_index];
             dump_fragment(fragment, fragment_index);
         }
     }
 
-    if (is<Layout::InlineNode>(layout_node) && layout_node.paintable()) {
-        auto const& inline_node = static_cast<Layout::InlineNode const&>(layout_node);
-        auto const& inline_paintable = static_cast<Painting::InlinePaintable const&>(*inline_node.paintable());
+    if (auto const* inline_node = as<Layout::InlineNode>(layout_node); inline_node && layout_node.paintable()) {
+        auto const& inline_paintable = static_cast<Painting::InlinePaintable const&>(*inline_node->paintable());
         auto const& fragments = inline_paintable.fragments();
         for (size_t fragment_index = 0; fragment_index < fragments.size(); ++fragment_index) {
             auto const& fragment = fragments[fragment_index];
