@@ -332,7 +332,7 @@ NO_SANITIZE_ADDRESS void Heap::gather_conservative_roots(HashMap<Cell*, HeapRoot
 
     dbgln_if(HEAP_DEBUG, "gather_conservative_roots:");
 
-    jmp_buf buf;
+    jmp_buf buf {};
     setjmp(buf);
 
     HashMap<FlatPtr, HeapRoot> possible_pointers;
