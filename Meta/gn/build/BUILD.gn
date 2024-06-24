@@ -129,6 +129,7 @@ config("compiler_defaults") {
       "-Wno-unused-private-field",
       "-Wno-implicit-const-int-float-conversion",
       "-Wno-vla-cxx-extension",
+      "-Wno-coroutine-missing-unhandled-exception",
     ]
   } else {
     cflags += [
