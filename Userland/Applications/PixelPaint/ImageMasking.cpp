@@ -226,7 +226,7 @@ void ImageMasking::generate_new_mask()
         Gfx::Color reference_mask_pixel;
         Gfx::HSV content_pixel_hsv;
 
-        for (int y = m_masked_area->top(); y <= m_masked_area->bottom(); y++) {
+        for (int y = m_masked_area->top(); y < m_masked_area->bottom(); y++) {
             auto reference_scanline = m_reference_mask->scanline(y);
             auto content_scanline = m_editor->active_layer()->content_bitmap().scanline(y);
             auto mask_scanline = m_editor->active_layer()->mask_bitmap()->scanline(y);
