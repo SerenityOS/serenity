@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/AsyncStreamBuffer.h>
 #include <AK/AsyncStreamHelpers.h>
 #include <AK/AsyncStreamTransform.h>
 #include <AK/GenericLexer.h>
+#include <AK/StreamBuffer.h>
 #include <LibHTTP/Http11Connection.h>
 
 namespace HTTP {
@@ -149,7 +149,7 @@ private:
         }
     }
 
-    AsyncStreamBuffer m_buffer;
+    StreamBuffer m_buffer;
 };
 
 }
