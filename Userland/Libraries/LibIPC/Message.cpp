@@ -38,7 +38,7 @@ ErrorOr<void> MessageBuffer::append_file_descriptor(int fd)
     return {};
 }
 
-ErrorOr<void> MessageBuffer::transfer_message(Core::LocalSocket& socket)
+ErrorOr<void> MessageBuffer::transfer_message(Core::LocalSocket& socket, bool block_event_loop)
 {
     Checked<MessageSizeType> checked_message_size { m_data.size() };
     checked_message_size -= sizeof(MessageSizeType);
@@ -77,7 +77,10 @@ ErrorOr<void> MessageBuffer::transfer_message(Core::LocalSocket& socket)
                 // FIXME: This is a hacky way to at least not crash on large messages
                 // The limit of 100 writes is arbitrary, and there to prevent indefinite spinning on the EventLoop
                 if ((error.code() == EAGAIN || error.code() == EMSGSIZE) && writes_done < 100) {
-                    Core::EventLoop::current().pump();
+                    if (block_event_loop)
+                        sched_yield();
+                    else
+                        Core::EventLoop::current().pump();
                     continue;
                 }
 
