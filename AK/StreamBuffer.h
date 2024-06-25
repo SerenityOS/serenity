@@ -11,17 +11,17 @@
 
 namespace AK {
 
-class AsyncStreamBuffer {
-    AK_MAKE_NONCOPYABLE(AsyncStreamBuffer);
+class StreamBuffer {
+    AK_MAKE_NONCOPYABLE(StreamBuffer);
 
 public:
-    AsyncStreamBuffer()
+    StreamBuffer()
     {
         m_capacity = min_capacity;
         m_data = reinterpret_cast<u8*>(kmalloc(m_capacity));
     }
 
-    AsyncStreamBuffer(AsyncStreamBuffer&& other)
+    StreamBuffer(StreamBuffer&& other)
         : m_read_head(exchange(other.m_read_head, 0))
         , m_peek_head(exchange(other.m_peek_head, 0))
         , m_capacity(exchange(other.m_capacity, 0))
@@ -29,16 +29,16 @@ public:
     {
     }
 
-    AsyncStreamBuffer& operator=(AsyncStreamBuffer&& buffer)
+    StreamBuffer& operator=(StreamBuffer&& buffer)
     {
         if (this != &buffer) {
-            this->~AsyncStreamBuffer();
-            new (this) AsyncStreamBuffer(move(buffer));
+            this->~StreamBuffer();
+            new (this) StreamBuffer(move(buffer));
         }
         return *this;
     }
 
-    ~AsyncStreamBuffer()
+    ~StreamBuffer()
     {
         if (m_data)
             kfree_sized(m_data, m_capacity);
@@ -127,5 +127,5 @@ private:
 }
 
 #ifdef USING_AK_GLOBALLY
-using AK::AsyncStreamBuffer;
+using AK::StreamBuffer;
 #endif
