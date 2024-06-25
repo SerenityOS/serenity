@@ -20,7 +20,7 @@
 
 namespace JS::Intl {
 
-// 6.2.2 IsStructurallyValidLanguageTag ( locale ), https://tc39.es/ecma402/#sec-isstructurallyvalidlanguagetag
+// 6.2.1 IsStructurallyValidLanguageTag ( locale ), https://tc39.es/ecma402/#sec-isstructurallyvalidlanguagetag
 Optional<::Locale::LocaleID> is_structurally_valid_language_tag(StringView locale)
 {
     auto contains_duplicate_variant = [&](auto& variants) {
@@ -81,7 +81,7 @@ Optional<::Locale::LocaleID> is_structurally_valid_language_tag(StringView local
     return locale_id;
 }
 
-// 6.2.3 CanonicalizeUnicodeLocaleId ( locale ), https://tc39.es/ecma402/#sec-canonicalizeunicodelocaleid
+// 6.2.2 CanonicalizeUnicodeLocaleId ( locale ), https://tc39.es/ecma402/#sec-canonicalizeunicodelocaleid
 String canonicalize_unicode_locale_id(::Locale::LocaleID& locale)
 {
     // Note: This implementation differs from the spec in how Step 3 is implemented. The spec assumes
@@ -139,10 +139,10 @@ bool is_well_formed_currency_code(StringView currency)
     return true;
 }
 
-// 6.5.1 IsWellFormedUnitIdentifier ( unitIdentifier ), https://tc39.es/ecma402/#sec-iswellformedunitidentifier
+// 6.6.1 IsWellFormedUnitIdentifier ( unitIdentifier ), https://tc39.es/ecma402/#sec-iswellformedunitidentifier
 bool is_well_formed_unit_identifier(StringView unit_identifier)
 {
-    // 6.5.2 IsSanctionedSingleUnitIdentifier ( unitIdentifier ), https://tc39.es/ecma402/#sec-issanctionedsingleunitidentifier
+    // 6.6.2 IsSanctionedSingleUnitIdentifier ( unitIdentifier ), https://tc39.es/ecma402/#sec-issanctionedsingleunitidentifier
     constexpr auto is_sanctioned_single_unit_identifier = [](StringView unit_identifier) {
         // 1. If unitIdentifier is listed in Table 2 below, return true.
         // 2. Else, return false.
