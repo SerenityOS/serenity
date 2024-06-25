@@ -36,19 +36,19 @@ void ConnectionBase::set_deferred_invoker(NonnullOwnPtr<DeferredInvoker> deferre
     m_deferred_invoker = move(deferred_invoker);
 }
 
-ErrorOr<void> ConnectionBase::post_message(Message const& message)
+ErrorOr<void> ConnectionBase::post_message(Message const& message, MessageKind kind)
 {
-    return post_message(TRY(message.encode()));
+    return post_message(TRY(message.encode()), kind);
 }
 
-ErrorOr<void> ConnectionBase::post_message(MessageBuffer buffer)
+ErrorOr<void> ConnectionBase::post_message(MessageBuffer buffer, MessageKind kind)
 {
     // NOTE: If this connection is being shut down, but has not yet been destroyed,
     //       the socket will be closed. Don't try to send more messages.
     if (!m_socket->is_open())
         return Error::from_string_literal("Trying to post_message during IPC shutdown");
 
-    if (auto result = buffer.transfer_message(*m_socket); result.is_error()) {
+    if (auto result = buffer.transfer_message(*m_socket, kind == MessageKind::Sync); result.is_error()) {
         shutdown_with_error(result.error());
         return result.release_error();
     }
@@ -81,7 +81,7 @@ void ConnectionBase::handle_messages()
             }
 
             if (auto response = handler_result.release_value()) {
-                if (auto post_result = post_message(*response); post_result.is_error()) {
+                if (auto post_result = post_message(*response, MessageKind::Async); post_result.is_error()) {
                     dbgln("IPC::ConnectionBase::handle_messages: {}", post_result.error());
                 }
             }

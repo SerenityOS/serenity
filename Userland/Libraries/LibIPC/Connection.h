@@ -44,7 +44,11 @@ public:
     DeferredInvoker& deferred_invoker() { return *m_deferred_invoker; }
 
     bool is_open() const { return m_socket->is_open(); }
-    ErrorOr<void> post_message(Message const&);
+    enum class MessageKind {
+        Async,
+        Sync,
+    };
+    ErrorOr<void> post_message(Message const&, MessageKind = MessageKind::Async);
 
     void shutdown();
     virtual void die() { }
@@ -64,7 +68,7 @@ protected:
     ErrorOr<Vector<u8>> read_as_much_as_possible_from_socket_without_blocking();
     ErrorOr<void> drain_messages_from_peer();
 
-    ErrorOr<void> post_message(MessageBuffer);
+    ErrorOr<void> post_message(MessageBuffer, MessageKind);
     void handle_messages();
 
     IPC::Stub& m_local_stub;
@@ -105,7 +109,7 @@ public:
     template<typename RequestType, typename... Args>
     NonnullOwnPtr<typename RequestType::ResponseType> send_sync(Args&&... args)
     {
-        MUST(post_message(RequestType(forward<Args>(args)...)));
+        MUST(post_message(RequestType(forward<Args>(args)...), MessageKind::Sync));
         auto response = wait_for_specific_endpoint_message<typename RequestType::ResponseType, PeerEndpoint>();
         VERIFY(response);
         return response.release_nonnull();
@@ -114,7 +118,7 @@ public:
     template<typename RequestType, typename... Args>
     OwnPtr<typename RequestType::ResponseType> send_sync_but_allow_failure(Args&&... args)
     {
-        if (post_message(RequestType(forward<Args>(args)...)).is_error())
+        if (post_message(RequestType(forward<Args>(args)...), MessageKind::Sync).is_error())
             return nullptr;
         return wait_for_specific_endpoint_message<typename RequestType::ResponseType, PeerEndpoint>();
     }
