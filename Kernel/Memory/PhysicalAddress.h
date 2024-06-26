@@ -24,8 +24,8 @@ public:
         return (size_t)(page_index);
     }
 
-    PhysicalAddress() = default;
-    explicit PhysicalAddress(PhysicalPtr address)
+    constexpr PhysicalAddress() = default;
+    constexpr explicit PhysicalAddress(PhysicalPtr address)
         : m_address(address)
     {
     }
