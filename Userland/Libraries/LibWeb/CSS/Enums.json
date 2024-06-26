@@ -364,6 +364,11 @@
     "middle",
     "end"
   ],
+  "scrollbar-gutter": [
+    "auto",
+    "stable",
+    "both-edges"
+  ],
   "scrollbar-width": [
     "auto",
     "thin",
