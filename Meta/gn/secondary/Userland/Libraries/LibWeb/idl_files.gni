@@ -227,6 +227,7 @@ standard_idl_files = [
   "//Userland/Libraries/LibWeb/HTML/ToggleEvent.idl",
   "//Userland/Libraries/LibWeb/HTML/TrackEvent.idl",
   "//Userland/Libraries/LibWeb/HTML/UserActivation.idl",
+  "//Userland/Libraries/LibWeb/HTML/ValidityState.idl",
   "//Userland/Libraries/LibWeb/HTML/VideoTrack.idl",
   "//Userland/Libraries/LibWeb/HTML/VideoTrackList.idl",
   "//Userland/Libraries/LibWeb/HTML/Worker.idl",
