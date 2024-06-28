@@ -36,6 +36,8 @@ class Region final
     friend class AddressSpace;
     friend class MemoryManager;
     friend class RegionTree;
+    friend class AnonymousVMObject;
+    friend class VMObject;
 
 public:
     enum Access : u8 {
