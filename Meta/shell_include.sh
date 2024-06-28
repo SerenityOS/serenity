@@ -99,3 +99,21 @@ disk_usage() {
 inode_usage() {
     find "$1" | wc -l
 }
+
+check_sha256() {
+    if [ $# -ne 2 ]; then
+        error "Usage: check_sha256 FILE EXPECTED_HASH"
+        return 1
+    fi
+
+    FILE="${1}"
+    EXPECTED_HASH="${2}"
+
+    SYSTEM_NAME="$(uname -s)"
+    if [ "$SYSTEM_NAME" = "Darwin" ]; then
+        SEEN_HASH="$(shasum -a 256 "${FILE}" | cut -d " " -f 1)"
+    else
+        SEEN_HASH="$(sha256sum "${FILE}" | cut -d " " -f 1)"
+    fi
+    test "${EXPECTED_HASH}" = "${SEEN_HASH}"
+}
