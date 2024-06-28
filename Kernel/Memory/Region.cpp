@@ -531,9 +531,13 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region, Physica
         }
     }
 
-    if (!remap_vmobject_page(page_index_in_vmobject, *new_physical_page)) {
-        dmesgln("MM: handle_zero_fault was unable to allocate a page table to map {}", new_physical_page);
-        return PageFaultResponse::OutOfMemory;
+    if (m_shared) {
+        anon_vmobject.remap_regions();
+    } else {
+        if (!remap_vmobject_page(page_index_in_vmobject, *new_physical_page)) {
+            dmesgln("MM: handle_zero_fault was unable to allocate a physical page");
+            return PageFaultResponse::OutOfMemory;
+        }
     }
     return PageFaultResponse::Continue;
 }
@@ -546,6 +550,8 @@ PageFaultResponse Region::handle_cow_fault(size_t page_index_in_region)
 
     if (!vmobject().is_anonymous())
         return PageFaultResponse::ShouldCrash;
+
+    VERIFY(!m_shared);
 
     auto page_index_in_vmobject = translate_to_vmobject_page(page_index_in_region);
     auto response = reinterpret_cast<AnonymousVMObject&>(vmobject()).handle_cow_fault(page_index_in_vmobject, vaddr().offset(page_index_in_region * PAGE_SIZE));
