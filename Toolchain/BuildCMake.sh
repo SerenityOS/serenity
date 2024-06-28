@@ -17,9 +17,9 @@ TARBALLS_DIR="$DIR/Tarballs"
 NPROC=$(get_number_of_processing_units)
 [ -z "$MAKEJOBS" ] && MAKEJOBS=${NPROC}
 
-check_sha() {
+check_sha256() {
     if [ $# -ne 2 ]; then
-        error "Usage: check_sha FILE EXPECTED_HASH"
+        error "Usage: check_sha256 FILE EXPECTED_HASH"
         return 1
     fi
 
@@ -50,7 +50,7 @@ pushd "$DIR"/Tarballs
         echo "${CMAKE_ARCHIVE} already exists, not downloading archive"
     fi
 
-    if ! check_sha "${CMAKE_ARCHIVE}" "${CMAKE_ARCHIVE_SHA256}"; then
+    if ! check_sha256 "${CMAKE_ARCHIVE}" "${CMAKE_ARCHIVE_SHA256}"; then
         echo "CMake archive SHA256 sum mismatch, please run script again"
         rm -f "${CMAKE_ARCHIVE}"
         exit 1
