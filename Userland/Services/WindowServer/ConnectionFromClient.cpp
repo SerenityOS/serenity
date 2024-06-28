@@ -6,6 +6,7 @@
 
 #include <AK/Badge.h>
 #include <LibCore/MimeData.h>
+#include <LibCore/Timer.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/StandardCursor.h>
 #include <LibGfx/SystemTheme.h>
