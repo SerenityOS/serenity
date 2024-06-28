@@ -6,6 +6,7 @@
 
 #include "ConnectionFromClient.h"
 #include <AK/Badge.h>
+#include <LibCore/Timer.h>
 #include <LibGfx/Font/Font.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/StylePainter.h>
