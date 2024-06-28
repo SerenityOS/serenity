@@ -34,7 +34,7 @@ ErrorOr<NonnullLockRefPtr<VMObject>> AnonymousVMObject::try_clone()
     // non-volatile memory available.
     size_t new_cow_pages_needed = 0;
     for (auto const& page : m_physical_pages) {
-        if (!page->is_shared_zero_page())
+        if (!page->is_shared_zero_page() && !page->is_lazy_committed_page())
             ++new_cow_pages_needed;
     }
 
