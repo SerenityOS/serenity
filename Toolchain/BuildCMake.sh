@@ -17,24 +17,6 @@ TARBALLS_DIR="$DIR/Tarballs"
 NPROC=$(get_number_of_processing_units)
 [ -z "$MAKEJOBS" ] && MAKEJOBS=${NPROC}
 
-check_sha256() {
-    if [ $# -ne 2 ]; then
-        error "Usage: check_sha256 FILE EXPECTED_HASH"
-        return 1
-    fi
-
-    FILE="${1}"
-    EXPECTED_HASH="${2}"
-
-    SYSTEM_NAME="$(uname -s)"
-    if [ "$SYSTEM_NAME" = "Darwin" ]; then
-        SEEN_HASH="$(shasum -a 256 "${FILE}" | cut -d " " -f 1)"
-    else
-        SEEN_HASH="$(sha256sum "${FILE}" | cut -d " " -f 1)"
-    fi
-    test "${EXPECTED_HASH}" = "${SEEN_HASH}"
-}
-
 # Note: Update this alongside the cmake port, and Meta/CMake/cmake-version.cmake if the build requires this version of cmake.
 CMAKE_VERSION=3.26.4
 CMAKE_ARCHIVE_SHA256=313b6880c291bd4fe31c0aa51d6e62659282a521e695f30d5cc0d25abbd5c208
