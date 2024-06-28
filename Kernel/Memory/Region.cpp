@@ -544,7 +544,10 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region, Physica
     }
 
     if (m_shared) {
-        anonymous_vmobject.remap_regions();
+        if (!anonymous_vmobject.remap_regions_one_page(page_index_in_vmobject, *new_physical_page)) {
+            dmesgln("MM: handle_zero_fault was unable to allocate a physical page");
+            return PageFaultResponse::OutOfMemory;
+        }
     } else {
         if (!remap_vmobject_page(page_index_in_vmobject, *new_physical_page)) {
             dmesgln("MM: handle_zero_fault was unable to allocate a physical page");

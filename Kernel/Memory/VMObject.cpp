@@ -45,4 +45,14 @@ void VMObject::remap_regions()
     });
 }
 
+bool VMObject::remap_regions_one_page(size_t page_index, NonnullRefPtr<PhysicalRAMPage> page)
+{
+    bool success = true;
+    for_each_region([&](Region& region) {
+        if (!region.remap_vmobject_page(page_index, *page))
+            success = false;
+    });
+    return success;
+}
+
 }
