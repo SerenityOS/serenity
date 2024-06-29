@@ -10,6 +10,7 @@
 #include "WMConnectionFromClient.h"
 #include <AK/ByteBuffer.h>
 #include <LibCore/EventLoop.h>
+#include <LibCore/FileWatcher.h>
 #include <LibCore/Notifier.h>
 #include <LibIPC/MultiServer.h>
 
@@ -25,16 +26,27 @@ public:
     int exec() { return m_event_loop.exec(); }
 
 private:
-    void drain_mouse();
-    void drain_keyboard();
+    void refresh_keyboard_devices();
+    void refresh_mouse_devices();
+
+    void drain_mouse(int fd);
+    void drain_keyboard(int fd);
 
     Core::EventLoop m_event_loop;
-    int m_keyboard_fd { -1 };
-    RefPtr<Core::Notifier> m_keyboard_notifier;
-    int m_mice_fd { -1 };
-    RefPtr<Core::Notifier> m_mouse_notifier;
+
+    struct InputDevice {
+        int fd { -1 };
+        NonnullRefPtr<Core::Notifier> notifier;
+    };
+
+    Vector<InputDevice> m_keyboard_devices;
+    Vector<InputDevice> m_mouse_devices;
+
     OwnPtr<IPC::MultiServer<ConnectionFromClient>> m_window_server;
     OwnPtr<IPC::MultiServer<WMConnectionFromClient>> m_wm_server;
+
+    RefPtr<Core::FileWatcher> m_mouse_devices_watcher;
+    RefPtr<Core::FileWatcher> m_keyboard_devices_watcher;
 };
 
 }

@@ -19,8 +19,8 @@
 
 namespace Kernel {
 
-TTY::TTY(MajorNumber major, MinorNumber minor)
-    : CharacterDevice(major, minor)
+TTY::TTY(MajorAllocation::CharacterDeviceFamily character_device_family, MinorNumber minor)
+    : CharacterDevice(character_device_family, minor)
 {
     set_default_termios();
 }

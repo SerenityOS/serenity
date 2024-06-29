@@ -6,6 +6,7 @@
 
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/Generic/ZeroDevice.h>
+#include <Kernel/Devices/MajorNumberAllocation.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {
@@ -19,7 +20,7 @@ UNMAP_AFTER_INIT NonnullLockRefPtr<ZeroDevice> ZeroDevice::must_create()
 }
 
 UNMAP_AFTER_INIT ZeroDevice::ZeroDevice()
-    : CharacterDevice(1, 5)
+    : CharacterDevice(MajorAllocation::CharacterDeviceFamily::Generic, 5)
 {
 }
 

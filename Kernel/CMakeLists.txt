@@ -66,7 +66,6 @@ set(KERNEL_SOURCES
     Devices/FUSEDevice.cpp
     Devices/PCISerialDevice.cpp
     Devices/SerialDevice.cpp
-    Devices/HID/AllMiceDevice.cpp
     Devices/HID/KeyboardDevice.cpp
     Devices/HID/Management.cpp
     Devices/HID/MouseDevice.cpp
@@ -198,6 +197,7 @@ set(KERNEL_SOURCES
     FileSystem/SysFS/Subsystems/Firmware/Directory.cpp
     FileSystem/SysFS/Subsystems/Kernel/Interrupts.cpp
     FileSystem/SysFS/Subsystems/Kernel/Processes.cpp
+    FileSystem/SysFS/Subsystems/Kernel/DeviceMajorNumberAllocations.cpp
     FileSystem/SysFS/Subsystems/Kernel/CPUInfo.cpp
     FileSystem/SysFS/Subsystems/Kernel/ConstantInformation.cpp
     FileSystem/SysFS/Subsystems/Kernel/Jails.cpp

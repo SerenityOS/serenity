@@ -9,6 +9,11 @@
 
 namespace Kernel {
 
+CharacterDevice::CharacterDevice(MajorAllocation::CharacterDeviceFamily character_device_family, MinorNumber minor)
+    : Device(MajorAllocation::s_char_device_numbers[to_underlying(character_device_family)].allocated_number, minor)
+{
+}
+
 CharacterDevice::~CharacterDevice() = default;
 
 void CharacterDevice::after_inserting_add_symlink_to_device_identifier_directory()

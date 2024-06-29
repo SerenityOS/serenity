@@ -6,6 +6,7 @@
 
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/Generic/MemoryDevice.h>
+#include <Kernel/Devices/MajorNumberAllocation.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/Sections.h>
@@ -21,7 +22,7 @@ UNMAP_AFTER_INIT NonnullLockRefPtr<MemoryDevice> MemoryDevice::must_create()
 }
 
 UNMAP_AFTER_INIT MemoryDevice::MemoryDevice()
-    : CharacterDevice(1, 1)
+    : CharacterDevice(MajorAllocation::CharacterDeviceFamily::Generic, 1)
 {
 }
 

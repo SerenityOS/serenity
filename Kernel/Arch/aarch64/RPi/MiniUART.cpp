@@ -8,6 +8,7 @@
 #include <Kernel/Arch/aarch64/RPi/MMIO.h>
 #include <Kernel/Arch/aarch64/RPi/MiniUART.h>
 #include <Kernel/Arch/aarch64/RPi/Timer.h>
+#include <Kernel/Devices/MajorNumberAllocation.h>
 
 namespace Kernel::RPi {
 
@@ -60,8 +61,9 @@ UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<MiniUART>> MiniUART::create()
     return DeviceManagement::try_create_device<MiniUART>();
 }
 
+// FIXME: Consider not hardcoding the minor number and allocate it dynamically.
 UNMAP_AFTER_INIT MiniUART::MiniUART()
-    : CharacterDevice(4, 64)
+    : CharacterDevice(MajorAllocation::CharacterDeviceFamily::Serial, 0)
     , m_registers(MMIO::the().peripheral<MiniUARTRegisters>(0x21'5040))
 {
     auto& gpio = GPIO::the();

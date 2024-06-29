@@ -31,6 +31,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
 {
     TRY(Core::System::unveil("/dev/"sv, "rwc"sv));
     TRY(Core::System::unveil("/etc/group"sv, "rw"sv));
+    TRY(Core::System::unveil("/tmp/system/devicemap/"sv, "rwc"sv));
     TRY(Core::System::unveil(nullptr, nullptr));
     TRY(Core::System::pledge("stdio rpath dpath wpath cpath chown fattr"));
 

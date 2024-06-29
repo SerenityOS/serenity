@@ -20,7 +20,6 @@ public:
     AudioManagement();
     static AudioManagement& the();
 
-    static MajorNumber audio_type_major_number();
     static MinorNumber generate_storage_minor_number();
 
     bool initialize();

@@ -10,6 +10,7 @@
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/KCOVDevice.h>
 #include <Kernel/Devices/KCOVInstance.h>
+#include <Kernel/Devices/MajorNumberAllocation.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
 
 #include <Kernel/Library/Panic.h>
@@ -25,7 +26,7 @@ UNMAP_AFTER_INIT NonnullLockRefPtr<KCOVDevice> KCOVDevice::must_create()
 }
 
 UNMAP_AFTER_INIT KCOVDevice::KCOVDevice()
-    : BlockDevice(30, 0)
+    : BlockDevice(MajorAllocation::BlockDeviceFamily::KCOV, 0)
 {
     dbgln("KCOVDevice created");
 }
