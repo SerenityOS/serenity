@@ -1410,10 +1410,10 @@ void Painter::draw_glyph_or_emoji(FloatPoint point, Utf8CodePointIterator& it, F
     auto draw_glyph_or_emoji = prepare_draw_glyph_or_emoji(point, it, font);
     if (draw_glyph_or_emoji.has<DrawGlyph>()) {
         auto& glyph = draw_glyph_or_emoji.get<DrawGlyph>();
-        draw_glyph(glyph.position, glyph.code_point, *glyph.font, color);
+        draw_glyph(glyph.position, glyph.code_point, font, color);
     } else {
         auto& emoji = draw_glyph_or_emoji.get<DrawEmoji>();
-        draw_emoji(emoji.position.to_type<int>(), *emoji.emoji, *emoji.font);
+        draw_emoji(emoji.position.to_type<int>(), *emoji.emoji, font);
     }
 }
 
@@ -2432,15 +2432,13 @@ void Painter::draw_text_run(IntPoint baseline_start, Utf8View const& string, Fon
 
 void Painter::draw_text_run(FloatPoint baseline_start, Utf8View const& string, Font const& font, Color color)
 {
-    auto font_list = Gfx::FontCascadeList::create();
-    font_list->add(font);
-    for_each_glyph_position(baseline_start, string, font_list, [&](DrawGlyphOrEmoji glyph_or_emoji) {
+    for_each_glyph_position(baseline_start, string, font, [&](DrawGlyphOrEmoji glyph_or_emoji) {
         if (glyph_or_emoji.has<DrawGlyph>()) {
             auto& glyph = glyph_or_emoji.get<DrawGlyph>();
-            draw_glyph(glyph.position, glyph.code_point, *glyph.font, color);
+            draw_glyph(glyph.position, glyph.code_point, font, color);
         } else {
             auto& emoji = glyph_or_emoji.get<DrawEmoji>();
-            draw_emoji(emoji.position.to_type<int>(), *emoji.emoji, *emoji.font);
+            draw_emoji(emoji.position.to_type<int>(), *emoji.emoji, font);
         }
     });
 }

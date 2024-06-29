@@ -84,11 +84,12 @@ CommandResult AffineDisplayListPlayerCPU::draw_glyph_run(DrawGlyphRun const& com
     auto scale = Gfx::AffineTransform {}.scale(command.scale, command.scale);
     auto const& glyphs = command.glyph_run->glyphs();
     Gfx::Path path;
-    for (auto& glyph_or_emoji : glyphs) {
+    auto const& font = command.glyph_run->font();
+    for (auto const& glyph_or_emoji : glyphs) {
         if (auto* glyph = glyph_or_emoji.get_pointer<Gfx::DrawGlyph>()) {
-            if (!is<Gfx::ScaledFont>(glyph->font))
+            if (!is<Gfx::ScaledFont>(font))
                 return CommandResult::Continue;
-            auto& scaled_font = static_cast<Gfx::ScaledFont const&>(*glyph->font);
+            auto& scaled_font = static_cast<Gfx::ScaledFont const&>(font);
             auto position = glyph->position.translated(scaled_font.glyph_left_bearing(glyph->code_point), 0);
             auto glyph_id = scaled_font.glyph_id_for_code_point(glyph->code_point);
             Gfx::Path glyph_path;
