@@ -26,7 +26,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath tty inet unix"));
+    TRY(Core::System::pledge("stdio rpath wpath tty inet unix"));
 
     bool flag_set = false;
     bool flag_delete = false;
@@ -147,7 +147,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return 1;
         }
 
-        int fd = TRY(Core::System::socket(AF_INET, SOCK_DGRAM, IPPROTO_IP));
+        int fd = TRY(Core::System::open("/dev/netdevctl"sv, O_RDWR));
 
         struct arpreq arp_req;
         memset(&arp_req, 0, sizeof(arp_req));

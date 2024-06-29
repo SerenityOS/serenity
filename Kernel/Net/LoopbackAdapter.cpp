@@ -5,6 +5,8 @@
  */
 
 #include <AK/Singleton.h>
+#include <AK/Types.h>
+#include <Kernel/API/POSIX/net/if.h>
 #include <Kernel/Net/LoopbackAdapter.h>
 
 namespace Kernel {
@@ -26,6 +28,8 @@ LoopbackAdapter::LoopbackAdapter(StringView interface_name)
     // by the data-link (Ethernet in this case) or physical layers, we need to subtract it from the MTU.
     set_mtu(65536 - sizeof(EthernetFrameHeader));
     set_mac_address({ 19, 85, 2, 9, 0x55, 0xaa });
+
+    update_link_status(LinkStatus::MediaConnected);
 }
 
 LoopbackAdapter::~LoopbackAdapter() = default;
@@ -36,4 +40,8 @@ void LoopbackAdapter::send_raw(ReadonlyBytes payload)
     did_receive(payload);
 }
 
+short LoopbackAdapter::flags() const
+{
+    return IFF_LOOPBACK;
+}
 }

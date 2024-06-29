@@ -16,7 +16,9 @@
 #include <AK/Try.h>
 #include <LibCore/File.h>
 #include <LibCore/Timer.h>
+#include <fcntl.h>
 #include <stdio.h>
+#include <unistd.h>
 
 static u8 mac_part(Vector<ByteString> const& parts, size_t index)
 {
@@ -75,11 +77,15 @@ static bool send(InterfaceDescriptor const& iface, DHCPv4Packet const& packet, C
 
 static void set_params(InterfaceDescriptor const& iface, IPv4Address const& ipv4_addr, IPv4Address const& netmask, Optional<IPv4Address> const& gateway)
 {
-    int fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
+    int fd = open("/dev/netdevctl", O_RDWR);
     if (fd < 0) {
-        dbgln("ERROR: socket :: {}", strerror(errno));
+        dbgln("ERROR: open :: {}", strerror(errno));
         return;
     }
+
+    ScopeGuard close_on_return([fd] {
+        close(fd);
+    });
 
     struct ifreq ifr;
     memset(&ifr, 0, sizeof(ifr));
@@ -202,10 +208,10 @@ ErrorOr<DHCPv4Client::Interfaces> DHCPv4Client::get_discoverable_interfaces()
 
         auto name = if_object.get_byte_string("name"sv).value_or({});
         auto mac = if_object.get_byte_string("mac_address"sv).value_or({});
-        auto is_up = if_object.get_bool("link_up"sv).value_or(false);
+        auto link_status = if_object.get_byte_string("link_status"sv).value_or({});
         auto ipv4_addr_maybe = IPv4Address::from_string(if_object.get_byte_string("ipv4_address"sv).value_or({}));
         auto ipv4_addr = ipv4_addr_maybe.has_value() ? ipv4_addr_maybe.value() : IPv4Address { 0, 0, 0, 0 };
-        if (is_up) {
+        if (link_status == "media-connected") {
             dbgln_if(DHCPV4_DEBUG, "Found adapter '{}' with mac {}, and it was up!", name, mac);
             ifnames_to_immediately_discover.empend(name, mac_from_string(mac), ipv4_addr);
         } else {

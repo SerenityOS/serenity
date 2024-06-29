@@ -212,7 +212,7 @@ RoutingDecision route_to(IPv4Address const& target, IPv4Address const& source, R
             return;
         }
 
-        if (!adapter.link_up() || (adapter_addr == 0 && !through))
+        if (!adapter.is_link_up() || (adapter_addr == 0 && !through))
             return;
 
         if (source_addr != 0 && source_addr != adapter_addr)

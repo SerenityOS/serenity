@@ -22,15 +22,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView value_ipv4 {};
     StringView value_adapter {};
     StringView value_mask {};
+    StringView value_state {};
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Display or modify the configuration of each network interface.");
     args_parser.add_option(value_ipv4, "Set the IP address of the selected network", "ipv4", 'i', "ip");
     args_parser.add_option(value_adapter, "Select a specific network adapter to configure", "adapter", 'a', "adapter");
     args_parser.add_option(value_mask, "Set the network mask of the selected network", "mask", 'm', "mask");
+    args_parser.add_option(value_state, "Set the network adapter state", "state", 's', "set-state");
     args_parser.parse(arguments);
 
-    if (value_ipv4.is_empty() && value_adapter.is_empty() && value_mask.is_empty()) {
+    if (value_ipv4.is_empty() && value_adapter.is_empty() && value_mask.is_empty() && value_state.is_empty()) {
         auto file = TRY(Core::File::open("/sys/kernel/net/adapters"sv, Core::File::OpenMode::Read));
         auto file_contents = TRY(file->read_until_eof());
         auto json = TRY(JsonValue::from_string(file_contents));
@@ -39,6 +41,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             auto& if_object = value.as_object();
 
             auto name = if_object.get_byte_string("name"sv).value_or({});
+            auto link_status = if_object.get_byte_string("link_status"sv).value_or({});
             auto class_name = if_object.get_byte_string("class_name"sv).value_or({});
             auto mac_address = if_object.get_byte_string("mac_address"sv).value_or({});
             auto ipv4_address = if_object.get_byte_string("ipv4_address"sv).value_or({});
@@ -50,6 +53,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             auto mtu = if_object.get_u32("mtu"sv).value_or(0);
 
             outln("{}:", name);
+            outln("\tstatus: {}", link_status);
             outln("\tmac: {}", mac_address);
             outln("\tipv4: {}", ipv4_address);
             outln("\tnetmask: {}", netmask);
@@ -68,6 +72,29 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         ByteString ifname = value_adapter;
 
+        if (!value_state.is_empty()) {
+            if (!(value_state == "down"sv || value_state == "up"sv)) {
+                warnln("Invalid state requested: '{}'", value_state);
+                return 1;
+            }
+
+            int fd = TRY(Core::System::open("/dev/netdevctl"sv, O_RDWR));
+
+            struct ifreq ifr;
+            memset(&ifr, 0, sizeof(ifr));
+
+            bool fits = ifname.copy_characters_to_buffer(ifr.ifr_name, IFNAMSIZ);
+            if (!fits) {
+                warnln("Interface name '{}' is too long", ifname);
+                return 1;
+            }
+
+            ifr.ifr_flags = 0;
+            ifr.ifr_flags |= (value_state == "up"sv ? IFF_UP : 0);
+
+            TRY(Core::System::ioctl(fd, SIOCSIFFLAGS, &ifr));
+        }
+
         if (!value_ipv4.is_empty()) {
             auto address = IPv4Address::from_string(value_ipv4);
 
@@ -76,7 +103,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 return 1;
             }
 
-            auto fd = TRY(Core::System::socket(AF_INET, SOCK_DGRAM, IPPROTO_IP));
+            int fd = TRY(Core::System::open("/dev/netdevctl"sv, O_RDWR));
 
             struct ifreq ifr;
             memset(&ifr, 0, sizeof(ifr));
@@ -100,7 +127,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 return 1;
             }
 
-            auto fd = TRY(Core::System::socket(AF_INET, SOCK_DGRAM, IPPROTO_IP));
+            int fd = TRY(Core::System::open("/dev/netdevctl"sv, O_RDWR));
 
             struct ifreq ifr;
             memset(&ifr, 0, sizeof(ifr));
