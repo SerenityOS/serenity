@@ -10,7 +10,21 @@
 #include <LibCore/EventLoop.h>
 #include <LibTest/TestCase.h>
 
-#ifdef AK_COMPILER_GCC
+#ifndef AK_COROUTINE_STATEMENT_EXPRS_BROKEN
+#    define CO_TRY_OR_FAIL(expression)                                                                   \
+        ({                                                                                               \
+            /* Ignore -Wshadow to allow nesting the macro. */                                            \
+            AK_IGNORE_DIAGNOSTIC("-Wshadow",                                                             \
+                auto _temporary_result = (expression));                                                  \
+            static_assert(!::AK::Detail::IsLvalueReference<decltype(_temporary_result.release_value())>, \
+                "Do not return a reference from a fallible expression");                                 \
+            if (_temporary_result.is_error()) [[unlikely]] {                                             \
+                FAIL(_temporary_result.release_error());                                                 \
+                co_return;                                                                               \
+            }                                                                                            \
+            _temporary_result.release_value();                                                           \
+        })
+#elifndef AK_COROUTINE_DESTRUCTION_BROKEN
 namespace AK::Detail::Test {
 
 // FIXME: Straight-forward way to implement CO_TRY_OR_FAIL we use for Clang causes GCC to ICE.
@@ -71,6 +85,10 @@ struct TryOrFailAwaiter {
 };
 
 }
+
+#    define CO_TRY_OR_FAIL(expression) (co_await ::AK::Detail::Test::TryOrFailAwaiter { (expression) })
+#else
+#    error Unable to work around compiler bugs in definiton of CO_TRY_OR_FAIL.
 #endif
 
 namespace Test {
@@ -94,23 +112,5 @@ namespace Test {
     };                                                                                               \
     static struct __TESTCASE_TYPE(x) __TESTCASE_TYPE(x);                                             \
     static Coroutine<void> __ASYNC_TESTCASE_FUNC(x)()
-
-#ifdef AK_COMPILER_GCC
-#    define CO_TRY_OR_FAIL(expression) (co_await ::AK::Detail::Test::TryOrFailAwaiter { (expression) })
-#else
-#    define CO_TRY_OR_FAIL(expression)                                                                   \
-        ({                                                                                               \
-            /* Ignore -Wshadow to allow nesting the macro. */                                            \
-            AK_IGNORE_DIAGNOSTIC("-Wshadow",                                                             \
-                auto _temporary_result = (expression));                                                  \
-            static_assert(!::AK::Detail::IsLvalueReference<decltype(_temporary_result.release_value())>, \
-                "Do not return a reference from a fallible expression");                                 \
-            if (_temporary_result.is_error()) [[unlikely]] {                                             \
-                FAIL(_temporary_result.release_error());                                                 \
-                co_return;                                                                               \
-            }                                                                                            \
-            _temporary_result.release_value();                                                           \
-        })
-#endif
 
 }
