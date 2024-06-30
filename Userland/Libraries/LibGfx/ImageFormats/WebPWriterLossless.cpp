@@ -284,12 +284,6 @@ static ErrorOr<void> write_VP8L_coded_image(ImageKind image_kind, LittleEndianOu
 
     Vector<Symbol> symbols;
     TRY(symbols.try_ensure_capacity(bitmap.size().area()));
-    Array<Array<u16, 256>, 4> symbol_frequencies {};
-
-    static constexpr auto saturating_increment = [](u16& value) {
-        if (value < UINT16_MAX)
-            value++;
-    };
 
     auto emit_literal = [&](ARGB32 pixel) {
         Symbol symbol;
@@ -298,11 +292,6 @@ static ErrorOr<void> write_VP8L_coded_image(ImageKind image_kind, LittleEndianOu
         symbol.b = pixel;
         symbol.a = pixel >> 24;
         symbols.append(symbol);
-
-        saturating_increment(symbol_frequencies[0][symbol.green_or_length_or_index]);
-        saturating_increment(symbol_frequencies[1][symbol.r]);
-        saturating_increment(symbol_frequencies[2][symbol.b]);
-        saturating_increment(symbol_frequencies[3][symbol.a]);
     };
 
     for (ARGB32 const* it = bitmap.begin(), * end = bitmap.end(); it != end; ++it) {
@@ -312,6 +301,20 @@ static ErrorOr<void> write_VP8L_coded_image(ImageKind image_kind, LittleEndianOu
 
     // We do use huffman coding by writing a single prefix-code-group for the entire image.
     // FIXME: Consider using a meta-prefix image and using one prefix-code-group per tile.
+
+    Array<Array<u16, 256>, 4> symbol_frequencies {};
+
+    static constexpr auto saturating_increment = [](u16& value) {
+        if (value < UINT16_MAX)
+            value++;
+    };
+
+    for (Symbol const& symbol : symbols) {
+        saturating_increment(symbol_frequencies[0][symbol.green_or_length_or_index]);
+        saturating_increment(symbol_frequencies[1][symbol.r]);
+        saturating_increment(symbol_frequencies[2][symbol.b]);
+        saturating_increment(symbol_frequencies[3][symbol.a]);
+     }
 
     Array<Array<u8, 256>, 4> code_lengths {};
     for (int i = 0; i < 4; ++i) {
