@@ -263,6 +263,20 @@ static ErrorOr<Vector<Symbol>> bitmap_to_symbols(Bitmap const& bitmap)
     return symbols;
 }
 
+static Optional<unsigned> can_write_as_simple_code_lengths(ReadonlyBytes code_lengths, Array<u8, 2>& symbols)
+{
+    unsigned non_zero_symbol_count = 0;
+    for (size_t j = 0; j < code_lengths.size(); ++j) {
+        if (code_lengths[j] != 0) {
+            if (non_zero_symbol_count >= 2)
+                return {};
+            symbols[non_zero_symbol_count] = j;
+            non_zero_symbol_count++;
+        }
+    }
+    return non_zero_symbol_count;
+}
+
 static ErrorOr<PrefixCodeGroup> compute_and_write_prefix_code_group(Vector<Symbol> const& symbols, LittleEndianOutputBitStream& bit_stream, IsOpaque& is_fully_opaque)
 {
     // prefix-code-group     =
@@ -309,23 +323,15 @@ static ErrorOr<PrefixCodeGroup> compute_and_write_prefix_code_group(Vector<Symbo
 
     PrefixCodeGroup prefix_code_group;
     for (int i = 0; i < 4; ++i) {
-        u8 symbols[2];
-        unsigned non_zero_symbol_count = 0;
-        for (int j = 0; j < 256; ++j) {
-            if (code_lengths[i][j] != 0) {
-                if (non_zero_symbol_count < 2)
-                    symbols[non_zero_symbol_count] = j;
-                non_zero_symbol_count++;
-            }
-        }
-
-        if (non_zero_symbol_count <= 2)
-            prefix_code_group[i] = TRY(write_simple_code_lengths(bit_stream, { symbols, non_zero_symbol_count }));
+        Array<u8, 2> symbols;
+        auto non_zero_symbol_count = can_write_as_simple_code_lengths(code_lengths[i], symbols);
+        if (non_zero_symbol_count.has_value())
+            prefix_code_group[i] = TRY(write_simple_code_lengths(bit_stream, symbols.span().trim(non_zero_symbol_count.value())));
         else
             prefix_code_group[i] = TRY(write_normal_code_lengths(bit_stream, code_lengths[i], alphabet_sizes[i]));
 
         if (i == 3)
-            is_fully_opaque.set_is_fully_opaque_if_not_yet_known(non_zero_symbol_count == 1 && symbols[0] == 0xff);
+            is_fully_opaque.set_is_fully_opaque_if_not_yet_known(non_zero_symbol_count.has_value() && non_zero_symbol_count.value() == 1 && symbols[0] == 0xff);
     }
 
     // For code #5, use a simple empty code, since we don't use this yet.
