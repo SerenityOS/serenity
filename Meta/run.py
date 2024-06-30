@@ -430,10 +430,6 @@ def set_up_basic_kernel_cmdline(config: Configuration):
         # Split environment variable at spaces, since we don't pass arguments like shell scripts do.
         config.kernel_cmdline.extend(provided_cmdline.split(sep=None))
 
-    # Handle system-specific arguments now, boot type specific arguments are handled later.
-    if config.qemu_kind == QEMUKind.NativeWindows:
-        config.kernel_cmdline.append("disable_virtio")
-
 
 def set_up_disk_image_path(config: Configuration):
     provided_disk_image = environ.get("SERENITY_DISK_IMAGE")
