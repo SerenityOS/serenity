@@ -238,18 +238,22 @@ namespace {
 Coroutine<ErrorOr<void>> co_try_success()
 {
     auto c = CO_TRY(co_await return_class_3());
+#ifndef AK_COROUTINE_DESTRUCTION_BROKEN
     // 1. Construct temporary as an argument for the constructor of a temporary ErrorOr<Class>.
     // 2. Move temporary ErrorOr<Class> into Coroutine.
     // -. Some magic is done in TryAwaiter.
     // 3. Move Class from ErrorOr<Class> inside Coroutine to c.
     EXPECT_EQ(c.cookie(), 3);
+#else
+    EXPECT_EQ(c.cookie(), 4);
+#endif
     co_return {};
 }
 
 Coroutine<ErrorOr<void>> co_try_fail()
 {
     ErrorOr<void> error = Error::from_string_literal("ERROR!");
-    CO_TRY(error);
+    CO_TRY(move(error));
     co_return {};
 }
 

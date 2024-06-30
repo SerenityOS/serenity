@@ -90,7 +90,7 @@ public:
         if (response->is_open()) {
             auto close_result = co_await response->close();
             if (!result.is_error()) // Preserve callback error in case it has failed.
-                CO_TRY(close_result);
+                CO_TRY(move(close_result));
         }
         co_return result;
     }

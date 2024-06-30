@@ -14,8 +14,12 @@ namespace AK {
 
 namespace Detail {
 
-// FIXME: GCC ICEs when a simpler implementation of CO_TRY_OR_FAIL is used. See also LibTest/AsyncTestCase.h.
-#ifdef AK_COMPILER_GCC
+// FIXME: GCC ICEs when an implementation of CO_TRY_OR_FAIL with statement expressions is used. See also LibTest/AsyncTestCase.h.
+#if defined(AK_COROUTINE_STATEMENT_EXPRS_BROKEN) && !defined(AK_COROUTINE_DESTRUCTION_BROKEN)
+#    define AK_USE_TRY_OR_FAIL_AWAITER
+#endif
+
+#ifdef AK_USE_TRY_OR_FAIL_AWAITER
 namespace Test {
 
 template<typename T>
@@ -123,7 +127,7 @@ private:
     template<typename U>
     friend struct Detail::TryAwaiter;
 
-#ifdef AK_COMPILER_GCC
+#ifdef AK_USE_TRY_OR_FAIL_AWAITER
     template<typename U>
     friend struct AK::Detail::Test::TryOrFailAwaiter;
 #endif
@@ -189,6 +193,7 @@ T must_sync(Coroutine<ErrorOr<T>>&& coroutine)
     return object.release_value();
 }
 
+#ifndef AK_COROUTINE_DESTRUCTION_BROKEN
 namespace Detail {
 template<typename T>
 struct TryAwaiter {
@@ -243,13 +248,9 @@ struct TryAwaiter {
 };
 }
 
-#ifdef AK_COMPILER_CLANG
-#    define CO_TRY(expression) (co_await ::AK::Detail::TryAwaiter { (expression) })
-#else
-// GCC cannot handle CO_TRY(...CO_TRY(...)...), this hack ensures that it always has the right type information available.
-// FIXME: Remove this once GCC can correctly infer the result type of `co_await TryAwaiter { ... }`.
-#    define CO_TRY(expression) static_cast<decltype(AK::Detail::declval_coro_result(expression).release_value())>(co_await ::AK::Detail::TryAwaiter { (expression) })
-
+#    ifndef AK_COROUTINE_TYPE_DEDUCTION_BROKEN
+#        define CO_TRY(expression) (co_await ::AK::Detail::TryAwaiter { (expression) })
+#    else
 namespace Detail {
 template<typename T>
 auto declval_coro_result(Coroutine<T>&&) -> T;
@@ -257,7 +258,23 @@ template<typename T>
 auto declval_coro_result(T&&) -> T;
 }
 
+// GCC cannot handle CO_TRY(...CO_TRY(...)...), this hack ensures that it always has the right type information available.
+// FIXME: Remove this once GCC can correctly infer the result type of `co_await TryAwaiter { ... }`.
+#        define CO_TRY(expression) static_cast<decltype(AK::Detail::declval_coro_result(expression).release_value())>(co_await ::AK::Detail::TryAwaiter { (expression) })
+#    endif
+#elifndef AK_COROUTINE_STATEMENT_EXPRS_BROKEN
+#    define CO_TRY(expression)                               \
+        ({                                                   \
+            AK_IGNORE_DIAGNOSTIC("-Wshadow",                 \
+                auto _temporary_result = (expression));      \
+            if (_temporary_result.is_error()) [[unlikely]]   \
+                co_return _temporary_result.release_error(); \
+            _temporary_result.release_value();               \
+        })
+#else
+#    error Unable to work around compiler bugs in definiton of CO_TRY.
 #endif
+
 }
 
 #ifdef USING_AK_GLOBALLY
