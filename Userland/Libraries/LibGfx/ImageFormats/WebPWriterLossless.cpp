@@ -263,25 +263,8 @@ static ErrorOr<Vector<Symbol>> bitmap_to_symbols(Bitmap const& bitmap)
     return symbols;
 }
 
-static ErrorOr<void> write_VP8L_coded_image(ImageKind image_kind, LittleEndianOutputBitStream& bit_stream, Bitmap const& bitmap, IsOpaque& is_fully_opaque)
+static ErrorOr<PrefixCodeGroup> compute_and_write_prefix_code_group(Vector<Symbol> const& symbols, LittleEndianOutputBitStream& bit_stream, IsOpaque& is_fully_opaque)
 {
-    // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#5_image_data
-    // spatially-coded-image =  color-cache-info meta-prefix data
-    // entropy-coded-image   =  color-cache-info data
-
-    // color-cache-info      =  %b0
-    // color-cache-info      =/ (%b1 4BIT) ; 1 followed by color cache size
-    dbgln_if(WEBP_DEBUG, "writing has_color_cache_info false");
-    TRY(bit_stream.write_bits(0u, 1u)); // No color cache for now.
-
-    if (image_kind == ImageKind::SpatiallyCoded) {
-        // meta-prefix           =  %b0 / (%b1 entropy-image)
-        dbgln_if(WEBP_DEBUG, "writing has_meta_prefix false");
-        TRY(bit_stream.write_bits(0u, 1u)); // No meta prefix for now.
-    }
-
-    // data                  =  prefix-codes lz77-coded-image
-    // prefix-codes          =  prefix-code-group *prefix-codes
     // prefix-code-group     =
     //     5prefix-code ; See "Interpretation of Meta Prefix Codes" to
     //                  ; understand what each of these five prefix
@@ -303,11 +286,6 @@ static ErrorOr<void> write_VP8L_coded_image(ImageKind image_kind, LittleEndianOu
     // If you add support for color cache: At the moment, CanonicalCodes does not support writing more than 288 symbols.
     if (alphabet_sizes[0] > 288)
         return Error::from_string_literal("Invalid alphabet size");
-
-    auto symbols = TRY(bitmap_to_symbols(bitmap));
-
-    // We do use huffman coding by writing a single prefix-code-group for the entire image.
-    // FIXME: Consider using a meta-prefix image and using one prefix-code-group per tile.
 
     Array<Array<u16, 256>, 4> symbol_frequencies {};
 
@@ -353,7 +331,33 @@ static ErrorOr<void> write_VP8L_coded_image(ImageKind image_kind, LittleEndianOu
     // For code #5, use a simple empty code, since we don't use this yet.
     prefix_code_group[4] = TRY(write_simple_code_lengths(bit_stream, {}));
 
-    // Image data.
+    return prefix_code_group;
+}
+
+static ErrorOr<void> write_VP8L_coded_image(ImageKind image_kind, LittleEndianOutputBitStream& bit_stream, Bitmap const& bitmap, IsOpaque& is_fully_opaque)
+{
+    // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#5_image_data
+    // spatially-coded-image =  color-cache-info meta-prefix data
+    // entropy-coded-image   =  color-cache-info data
+
+    // color-cache-info      =  %b0
+    // color-cache-info      =/ (%b1 4BIT) ; 1 followed by color cache size
+    dbgln_if(WEBP_DEBUG, "writing has_color_cache_info false");
+    TRY(bit_stream.write_bits(0u, 1u)); // No color cache for now.
+
+    if (image_kind == ImageKind::SpatiallyCoded) {
+        // meta-prefix           =  %b0 / (%b1 entropy-image)
+        dbgln_if(WEBP_DEBUG, "writing has_meta_prefix false");
+
+        // We do huffman coding by writing a single prefix-code-group for the entire image.
+        // FIXME: Consider using a meta-prefix image and using one prefix-code-group per tile.
+        TRY(bit_stream.write_bits(0u, 1u));
+    }
+
+    // data                  =  prefix-codes lz77-coded-image
+    // prefix-codes          =  prefix-code-group *prefix-codes
+    auto symbols = TRY(bitmap_to_symbols(bitmap));
+    auto prefix_code_group = TRY(compute_and_write_prefix_code_group(symbols, bit_stream, is_fully_opaque));
     TRY(write_image_data(bit_stream, symbols.span(), prefix_code_group));
 
     return {};
