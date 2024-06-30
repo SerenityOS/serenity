@@ -16,7 +16,7 @@ class HeaderView final : public Widget {
     C_OBJECT(HeaderView);
 
 public:
-    virtual ~HeaderView() override = default;
+    virtual ~HeaderView() override;
 
     Gfx::Orientation orientation() const { return m_orientation; }
 

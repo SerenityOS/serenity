@@ -31,6 +31,8 @@ HeaderView::HeaderView(AbstractTableView& table_view, Gfx::Orientation orientati
     }
 }
 
+HeaderView::~HeaderView() = default;
+
 void HeaderView::set_section_size(int section, int size)
 {
     auto& data = section_data(section);
