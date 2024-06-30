@@ -19,7 +19,12 @@ ErrorOr<int> serenity_main(Main::Arguments)
 
     auto config = TRY(Core::ConfigFile::open_for_app("Audio", Core::ConfigFile::AllowWriting::Yes));
     TRY(Core::System::unveil(config->filename(), "rwc"sv));
-    TRY(Core::System::unveil("/dev/audio", "wc"));
+
+    auto audio_unveil_result = Core::System::unveil("/dev/audio", "wc");
+    // System may not have audio devices, which we handle gracefully.
+    if (audio_unveil_result.is_error())
+        dbgln("Couldn't unveil audio devices: {}", audio_unveil_result.error());
+
     TRY(Core::System::unveil(nullptr, nullptr));
 
     Core::EventLoop event_loop;
