@@ -36,13 +36,49 @@ struct IsOpaque {
     }
 };
 
-struct Symbol {
-    u16 green_or_length_or_index { 0 };
-    u8 r;
-    u8 b;
-    u8 a;
+struct PrefixValue {
+    u8 prefix_code { 0 };
+    u8 extra_bits { 0 };
+    u32 offset { 0 };
 };
+PrefixValue prefix_decompose(u32 value)
+{
+    // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#522_lz77_backward_reference
+    // This is the inverse of the "pseudocode to obtain a (length or distance) value from the prefix code" there.
+    VERIFY(value >= 1);
+    value -= 1;
+    PrefixValue result;
+    if (value < 4) {
+        result.prefix_code = value;
+        return result;
+    }
+    result.prefix_code = 2 * (count_required_bits(value) - 1);
+    result.extra_bits = (result.prefix_code - 2) >> 1;
+    if (value >= (3u << result.extra_bits))
+        result.prefix_code++;
+    result.offset = (2 + (result.prefix_code & 1)) << result.extra_bits;
+    result.offset += 1;
+    return result;
+}
 
+struct Symbol {
+    u16 green_or_length_or_index { 0 }; // 12 bits.
+    union {
+        struct {
+            u8 r;
+            u8 b;
+            u8 a;
+        };
+        struct {
+            // 4 bits num_extra_bits, 10 bits payload. FIXME: Could store num_extra_bits in green_or_length_or_index?
+            u16 remaining_length;
+
+            // FIXME: Must become u32, or at least u21, when emitting full backreferences instead of just RLE.
+            // FIXME: Could use a single u32 for remaining_length and distance if num_extra_bits goes in green_or_length_or_index.
+            u16 distance;
+        };
+    };
+};
 }
 
 NEVER_INLINE static ErrorOr<void> write_image_data(LittleEndianOutputBitStream& bit_stream, ReadonlySpan<Symbol> symbols, PrefixCodeGroup const& prefix_code_group)
@@ -50,9 +86,19 @@ NEVER_INLINE static ErrorOr<void> write_image_data(LittleEndianOutputBitStream& 
     // This is currently the hot loop. Keep performance in mind when you change it.
     for (Symbol const& symbol : symbols) {
         TRY(prefix_code_group[0].write_symbol(bit_stream, symbol.green_or_length_or_index));
-        TRY(prefix_code_group[1].write_symbol(bit_stream, symbol.r));
-        TRY(prefix_code_group[2].write_symbol(bit_stream, symbol.b));
-        TRY(prefix_code_group[3].write_symbol(bit_stream, symbol.a));
+        if (symbol.green_or_length_or_index < 256) {
+            TRY(prefix_code_group[1].write_symbol(bit_stream, symbol.r));
+            TRY(prefix_code_group[2].write_symbol(bit_stream, symbol.b));
+            TRY(prefix_code_group[3].write_symbol(bit_stream, symbol.a));
+        } else if (symbol.green_or_length_or_index < 256 + 24) {
+            TRY(bit_stream.write_bits(static_cast<unsigned>(symbol.remaining_length & 0x3ff), symbol.remaining_length >> 10));
+
+            auto distance = prefix_decompose(symbol.distance);
+            TRY(prefix_code_group[4].write_symbol(bit_stream, distance.prefix_code));
+            TRY(bit_stream.write_bits(symbol.distance - distance.offset, distance.extra_bits));
+        } else {
+            // Nothing to do.
+        }
     }
     return {};
 }
@@ -66,8 +112,9 @@ struct CodeLengthSymbol {
 // But:
 // * size can be larger than 288 for green, is always 256 for r, b, a, and is always 40 for distance codes
 // * code 16 has different semantics, requires last_non_zero_symbol
-static size_t encode_huffman_lengths(ReadonlyBytes lengths, Array<CodeLengthSymbol, 256>& encoded_lengths)
+static size_t encode_huffman_lengths(ReadonlyBytes lengths, Span<CodeLengthSymbol> encoded_lengths)
 {
+    VERIFY(encoded_lengths.size() >= lengths.size());
     size_t encoded_count = 0;
     size_t i = 0;
     u8 last_non_zero_symbol = 8; // "If code 16 is used before a non-zero value has been emitted, a value of 8 is repeated."
@@ -156,7 +203,7 @@ static ErrorOr<CanonicalCode> write_simple_code_lengths(LittleEndianOutputBitStr
     return MUST(CanonicalCode::from_bytes(bits_per_symbol));
 }
 
-static ErrorOr<CanonicalCode> write_normal_code_lengths(LittleEndianOutputBitStream& bit_stream, Array<u8, 256> const& bit_lengths, size_t alphabet_size)
+static ErrorOr<CanonicalCode> write_normal_code_lengths(LittleEndianOutputBitStream& bit_stream, ReadonlyBytes bit_lengths, size_t alphabet_size)
 {
     // bit_lengths stores how many bits each symbol is encoded with.
 
@@ -169,8 +216,8 @@ static ErrorOr<CanonicalCode> write_normal_code_lengths(LittleEndianOutputBitStr
         VERIFY(code_count > 2);
     }
 
-    Array<CodeLengthSymbol, 256> encoded_lengths {};
-    auto encoded_lengths_count = encode_huffman_lengths(bit_lengths.span().trim(code_count), encoded_lengths);
+    Array<CodeLengthSymbol, 280> encoded_lengths;
+    auto encoded_lengths_count = encode_huffman_lengths(bit_lengths.trim(code_count), encoded_lengths.span());
 
     // The code to compute code length code lengths is very similar to some of the code in DeflateCompressor::flush().
     // count code length frequencies
@@ -238,11 +285,12 @@ static ErrorOr<CanonicalCode> write_normal_code_lengths(LittleEndianOutputBitStr
         }
     }
 
-    return CanonicalCode::from_bytes(bit_lengths.span().trim(code_count));
+    return CanonicalCode::from_bytes(bit_lengths.trim(code_count));
 }
 
 static ErrorOr<Vector<Symbol>> bitmap_to_symbols(Bitmap const& bitmap)
 {
+    // LZ77 compression.
     Vector<Symbol> symbols;
     TRY(symbols.try_ensure_capacity(bitmap.size().area()));
 
@@ -255,9 +303,58 @@ static ErrorOr<Vector<Symbol>> bitmap_to_symbols(Bitmap const& bitmap)
         symbols.append(symbol);
     };
 
-    for (ARGB32 const* it = bitmap.begin(), * end = bitmap.end(); it != end; ++it) {
-        ARGB32 pixel = *it;
-        emit_literal(pixel);
+    auto emit_backref = [&](u16 length, u16 distance) {
+        VERIFY(length <= 4096);
+        auto length_decomposed = prefix_decompose(length);
+
+        Symbol symbol;
+        symbol.green_or_length_or_index = 256 + length_decomposed.prefix_code;
+        VERIFY(symbol.green_or_length_or_index < 256 + 24); // Because `length` is capped to 4096.
+
+        // "The smallest distance codes [1..120] are special, and are reserved for a close neighborhood of the current pixel."
+        // "Distance codes larger than 120 denote the pixel-distance in scan-line order, offset by 120."
+        // Since we currently only do RLE, we only emit distances of 1. That's either entry 2 in the distance map, or 1 + 120.
+        // Higher numbers need more inline extra bits, pick 2 instead of the equivalent 121.
+        symbol.distance = distance;
+
+        symbol.remaining_length = length_decomposed.extra_bits << 10 | (length - length_decomposed.offset);
+        symbols.append(symbol);
+    };
+
+    emit_literal(*bitmap.begin());
+    ARGB32 last_pixel = *bitmap.begin();
+    for (ARGB32 const *it = bitmap.begin() + 1, *end = bitmap.end(); it != end; ++it) {
+        u16 length = 0;
+        for (ARGB32 const* it2 = it; it2 != end && *it2 == last_pixel; ++it2) {
+            length++;
+            if (length == 4096)
+                break;
+        }
+
+        // A single pixel needs g, r, b, a symbols.
+        // A back-reference needs a distance and a length symbol.
+        // Let's just say a backref is worth it if it stores at least two pixels.
+        // FIXME: Get some typical statistics and tweak this.
+        constexpr int min_backreference_length = 2;
+        if (length < min_backreference_length) {
+            ARGB32 pixel = *it;
+            emit_literal(pixel);
+            last_pixel = pixel;
+            continue;
+        }
+
+        // Emit a back-reference.
+        // Currently, we only emit back-references to the last pixel.
+        // FIXME: Do full LZ77 backref matching.
+        // FIXME: Add support for color cache entries as well.
+
+        // "The smallest distance codes [1..120] are special, and are reserved for a close neighborhood of the current pixel."
+        // "Distance codes larger than 120 denote the pixel-distance in scan-line order, offset by 120."
+        // Since we currently only do RLE, we only emit distances of 1. That's either entry 2 in the distance map, or 1 + 120.
+        // Higher numbers need more inline extra bits, pick 2 instead of the equivalent 121.
+        emit_backref(length, 2);
+
+        it += length - 1;
     }
 
     return symbols;
@@ -268,6 +365,8 @@ static Optional<unsigned> can_write_as_simple_code_lengths(ReadonlyBytes code_le
     unsigned non_zero_symbol_count = 0;
     for (size_t j = 0; j < code_lengths.size(); ++j) {
         if (code_lengths[j] != 0) {
+            if (j >= 256) // Simple code lengths cannot store symbols >= 256.
+                return {};
             if (non_zero_symbol_count >= 2)
                 return {};
             symbols[non_zero_symbol_count] = j;
@@ -291,9 +390,6 @@ static ErrorOr<PrefixCodeGroup> compute_and_write_prefix_code_group(Vector<Symbo
     //  Prefix code #2, #3, and #4: Used for red, blue, and alpha channels, respectively.
     //  Prefix code #5: Used for backward-reference distance."
 
-    // We use neither back-references not color cache entries yet.
-    // We can make this smarter later on.
-
     size_t const color_cache_size = 0;
     constexpr Array alphabet_sizes = to_array<size_t>({ 256 + 24 + static_cast<size_t>(color_cache_size), 256, 256, 256, 40 });
 
@@ -301,7 +397,17 @@ static ErrorOr<PrefixCodeGroup> compute_and_write_prefix_code_group(Vector<Symbo
     if (alphabet_sizes[0] > 288)
         return Error::from_string_literal("Invalid alphabet size");
 
-    Array<Array<u16, 256>, 4> symbol_frequencies {};
+    Array<u16, 280> symbol_frequencies_green_or_length {};
+    Array<Array<u16, 256>, 3> symbol_frequencies_rba {};
+    Array<u16, 40> symbol_frequencies_distance {};
+
+    Array<Span<u16>, 5> symbol_frequencies {
+        symbol_frequencies_green_or_length,
+        symbol_frequencies_rba[0],
+        symbol_frequencies_rba[1],
+        symbol_frequencies_rba[2],
+        symbol_frequencies_distance
+    };
 
     static constexpr auto saturating_increment = [](u16& value) {
         if (value < UINT16_MAX)
@@ -310,19 +416,35 @@ static ErrorOr<PrefixCodeGroup> compute_and_write_prefix_code_group(Vector<Symbo
 
     for (Symbol const& symbol : symbols) {
         saturating_increment(symbol_frequencies[0][symbol.green_or_length_or_index]);
-        saturating_increment(symbol_frequencies[1][symbol.r]);
-        saturating_increment(symbol_frequencies[2][symbol.b]);
-        saturating_increment(symbol_frequencies[3][symbol.a]);
-     }
+        if (symbol.green_or_length_or_index < 256) {
+            saturating_increment(symbol_frequencies[1][symbol.r]);
+            saturating_increment(symbol_frequencies[2][symbol.b]);
+            saturating_increment(symbol_frequencies[3][symbol.a]);
+        } else if (symbol.green_or_length_or_index < 256 + 24) {
+            saturating_increment(symbol_frequencies[4][prefix_decompose(symbol.distance).prefix_code]);
+        } else {
+            // Nothing to do.
+        }
+    }
 
-    Array<Array<u8, 256>, 4> code_lengths {};
-    for (int i = 0; i < 4; ++i) {
+    Array<u8, 280> code_lengths_green_or_length {};
+    Array<Array<u8, 256>, 3> code_lengths_rba {};
+    Array<u8, 40> code_lengths_distance {};
+
+    Array<Bytes, 5> code_lengths {
+        code_lengths_green_or_length,
+        code_lengths_rba[0],
+        code_lengths_rba[1],
+        code_lengths_rba[2],
+        code_lengths_distance
+    };
+    for (int i = 0; i < 5; ++i) {
         // "Code [0..15] indicates literal code lengths." => the maximum bit length is 15.
         Compress::generate_huffman_lengths(code_lengths[i], symbol_frequencies[i], 15);
     }
 
     PrefixCodeGroup prefix_code_group;
-    for (int i = 0; i < 4; ++i) {
+    for (int i = 0; i < 5; ++i) {
         Array<u8, 2> symbols;
         auto non_zero_symbol_count = can_write_as_simple_code_lengths(code_lengths[i], symbols);
         if (non_zero_symbol_count.has_value())
@@ -333,9 +455,6 @@ static ErrorOr<PrefixCodeGroup> compute_and_write_prefix_code_group(Vector<Symbo
         if (i == 3)
             is_fully_opaque.set_is_fully_opaque_if_not_yet_known(non_zero_symbol_count.has_value() && non_zero_symbol_count.value() == 1 && symbols[0] == 0xff);
     }
-
-    // For code #5, use a simple empty code, since we don't use this yet.
-    prefix_code_group[4] = TRY(write_simple_code_lengths(bit_stream, {}));
 
     return prefix_code_group;
 }
