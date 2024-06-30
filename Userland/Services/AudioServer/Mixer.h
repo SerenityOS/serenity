@@ -42,7 +42,12 @@ public:
     static ErrorOr<NonnullRefPtr<Mixer>> try_create(NonnullRefPtr<Core::ConfigFile> config)
     {
         // FIXME: Allow AudioServer to use other audio channels as well
-        auto device = TRY(Core::File::open("/dev/audio/0"sv, Core::File::OpenMode::Write));
+        auto maybe_device = Core::File::open("/dev/audio/0"sv, Core::File::OpenMode::Write);
+        OwnPtr<Core::File> device;
+        if (maybe_device.is_error())
+            dbgln("Couldn't open first audio channel: {}", maybe_device.error());
+        else
+            device = maybe_device.release_value();
         return adopt_nonnull_ref_or_enomem(new (nothrow) Mixer(move(config), move(device)));
     }
 
@@ -61,7 +66,7 @@ public:
     u32 audiodevice_get_sample_rate() const;
 
 private:
-    Mixer(NonnullRefPtr<Core::ConfigFile> config, NonnullOwnPtr<Core::File> device);
+    Mixer(NonnullRefPtr<Core::ConfigFile> config, OwnPtr<Core::File> device);
 
     void request_setting_sync();
 
@@ -69,7 +74,7 @@ private:
     Threading::Mutex m_pending_mutex;
     Threading::ConditionVariable m_mixing_necessary { m_pending_mutex };
 
-    NonnullOwnPtr<Core::File> m_device;
+    OwnPtr<Core::File> m_device;
     mutable Optional<u32> m_cached_sample_rate {};
 
     NonnullRefPtr<Threading::Thread> m_sound_thread;
