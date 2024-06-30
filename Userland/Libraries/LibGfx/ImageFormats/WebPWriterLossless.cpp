@@ -241,6 +241,28 @@ static ErrorOr<CanonicalCode> write_normal_code_lengths(LittleEndianOutputBitStr
     return CanonicalCode::from_bytes(bit_lengths.span().trim(code_count));
 }
 
+static ErrorOr<Vector<Symbol>> bitmap_to_symbols(Bitmap const& bitmap)
+{
+    Vector<Symbol> symbols;
+    TRY(symbols.try_ensure_capacity(bitmap.size().area()));
+
+    auto emit_literal = [&](ARGB32 pixel) {
+        Symbol symbol;
+        symbol.green_or_length_or_index = (pixel >> 8) & 0xff;
+        symbol.r = pixel >> 16;
+        symbol.b = pixel;
+        symbol.a = pixel >> 24;
+        symbols.append(symbol);
+    };
+
+    for (ARGB32 const* it = bitmap.begin(), * end = bitmap.end(); it != end; ++it) {
+        ARGB32 pixel = *it;
+        emit_literal(pixel);
+    }
+
+    return symbols;
+}
+
 static ErrorOr<void> write_VP8L_coded_image(ImageKind image_kind, LittleEndianOutputBitStream& bit_stream, Bitmap const& bitmap, IsOpaque& is_fully_opaque)
 {
     // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#5_image_data
@@ -282,22 +304,7 @@ static ErrorOr<void> write_VP8L_coded_image(ImageKind image_kind, LittleEndianOu
     if (alphabet_sizes[0] > 288)
         return Error::from_string_literal("Invalid alphabet size");
 
-    Vector<Symbol> symbols;
-    TRY(symbols.try_ensure_capacity(bitmap.size().area()));
-
-    auto emit_literal = [&](ARGB32 pixel) {
-        Symbol symbol;
-        symbol.green_or_length_or_index = (pixel >> 8) & 0xff;
-        symbol.r = pixel >> 16;
-        symbol.b = pixel;
-        symbol.a = pixel >> 24;
-        symbols.append(symbol);
-    };
-
-    for (ARGB32 const* it = bitmap.begin(), * end = bitmap.end(); it != end; ++it) {
-        ARGB32 pixel = *it;
-        emit_literal(pixel);
-    }
+    auto symbols = TRY(bitmap_to_symbols(bitmap));
 
     // We do use huffman coding by writing a single prefix-code-group for the entire image.
     // FIXME: Consider using a meta-prefix image and using one prefix-code-group per tile.
