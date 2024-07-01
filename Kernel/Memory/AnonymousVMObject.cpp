@@ -99,14 +99,7 @@ ErrorOr<NonnullLockRefPtr<AnonymousVMObject>> AnonymousVMObject::try_create_phys
 
 ErrorOr<NonnullLockRefPtr<AnonymousVMObject>> AnonymousVMObject::try_create_purgeable_with_size(size_t size, AllocationStrategy strategy)
 {
-    Optional<CommittedPhysicalPageSet> committed_pages;
-    if (strategy == AllocationStrategy::Reserve || strategy == AllocationStrategy::AllocateNow) {
-        committed_pages = TRY(MM.commit_physical_pages(ceil_div(size, static_cast<size_t>(PAGE_SIZE))));
-    }
-
-    auto new_physical_pages = TRY(VMObject::try_create_physical_pages(size));
-
-    auto vmobject = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) AnonymousVMObject(move(new_physical_pages), strategy, move(committed_pages))));
+    auto vmobject = TRY(try_create_with_size(size, strategy));
     vmobject->m_purgeable = true;
     return vmobject;
 }
