@@ -247,7 +247,7 @@ CommandResult AffineDisplayListPlayerCPU::fill_rect_with_rounded_corners(FillRec
 {
     prepare_clipping(command.bounding_rect());
     Gfx::Path path;
-    path.rounded_rect(command.rect.to_type<float>(), command.top_left_radius, command.top_right_radius, command.bottom_right_radius, command.bottom_left_radius);
+    path.rounded_rect(command.rect.to_type<float>(), command.corner_radii.top_left, command.corner_radii.top_right, command.corner_radii.bottom_right, command.corner_radii.bottom_left);
     path = path.copy_transformed(stacking_context().transform);
     aa_painter().fill_path(path, command.color, Gfx::WindingRule::EvenOdd);
     return CommandResult::Continue;

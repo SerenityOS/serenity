@@ -158,10 +158,7 @@ struct PaintTextShadow {
 struct FillRectWithRoundedCorners {
     Gfx::IntRect rect;
     Color color;
-    Gfx::CornerRadius top_left_radius;
-    Gfx::CornerRadius top_right_radius;
-    Gfx::CornerRadius bottom_left_radius;
-    Gfx::CornerRadius bottom_right_radius;
+    CornerRadii corner_radii;
     Vector<Gfx::Path> clip_paths;
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return rect; }
