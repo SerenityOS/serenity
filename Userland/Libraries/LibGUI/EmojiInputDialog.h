@@ -36,7 +36,7 @@ private:
     Vector<Emoji> supported_emoji();
     void update_displayed_emoji();
     void select_first_displayed_emoji();
-    Vector<EmojiScore> get_matching_emoji_scores(ByteString const& search_query);
+    Vector<Emoji> get_matching_emojis(ByteString const& search_query);
 
     OwnPtr<ActionGroup> m_category_action_group;
     Optional<Unicode::EmojiGroup> m_selected_category;
