@@ -267,10 +267,21 @@ NonnullRefPtr<PhysicalRAMPage> AnonymousVMObject::allocate_committed_page(Badge<
     return m_unused_committed_pages->take_one();
 }
 
+void AnonymousVMObject::reset_cow_map()
+{
+    for (size_t i = 0; i < page_count(); ++i) {
+        auto& page = physical_pages()[i];
+        bool should_cow = !page->is_shared_zero_page() && !page->is_lazy_committed_page();
+        m_cow_map.set(i, should_cow);
+    }
+}
+
 ErrorOr<void> AnonymousVMObject::ensure_cow_map()
 {
-    if (m_cow_map.is_null())
+    if (m_cow_map.is_null()) {
         m_cow_map = TRY(Bitmap::create(page_count(), true));
+        reset_cow_map();
+    }
     return {};
 }
 
@@ -279,7 +290,7 @@ ErrorOr<void> AnonymousVMObject::ensure_or_reset_cow_map()
     if (m_cow_map.is_null())
         TRY(ensure_cow_map());
     else
-        m_cow_map.fill(true);
+        reset_cow_map();
     return {};
 }
 
