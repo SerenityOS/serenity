@@ -156,6 +156,34 @@ auto EmojiInputDialog::supported_emoji() -> Vector<Emoji>
     return emojis;
 }
 
+Vector<EmojiInputDialog::EmojiScore> EmojiInputDialog::filter_and_rank_emojis(ByteString const& query)
+{
+    Vector<EmojiScore> emoji_scores;
+    for (auto& emoji : m_emojis) {
+        if (emoji.emoji.name.is_empty()) {
+            continue;
+        }
+
+        if (m_selected_category.has_value() && emoji.emoji.group != m_selected_category)
+            continue;
+
+        if (query.is_empty()) {
+            emoji_scores.append({ &emoji, 1 });
+            continue;
+        }
+
+        auto result = fuzzy_match(query, emoji.emoji.name);
+        if (result.score > 0)
+            emoji_scores.append({ &emoji, result.score });
+    }
+
+    quick_sort(emoji_scores, [](auto const& lhs, auto const& rhs) {
+        return lhs.score > rhs.score;
+    });
+
+    return emoji_scores;
+}
+
 void EmojiInputDialog::update_displayed_emoji()
 {
     ScopeGuard guard { [&] { m_emojis_widget->set_updates_enabled(true); } };
@@ -170,34 +198,17 @@ void EmojiInputDialog::update_displayed_emoji()
 
     auto query = m_search_box->text();
 
-    for (size_t row = 0; row < rows && index < m_emojis.size(); ++row) {
+    Vector<EmojiScore> matching_emojis = filter_and_rank_emojis(query);
+    for (size_t row = 0; row < rows && index < matching_emojis.size(); ++row) {
         auto& horizontal_container = m_emojis_widget->add<Widget>();
         horizontal_container.set_preferred_height(SpecialDimension::Fit);
         horizontal_container.set_layout<HorizontalBoxLayout>(GUI::Margins {}, 0);
 
-        for (size_t column = 0; column < columns; ++column) {
-            bool found_match = false;
-
-            while (!found_match && (index < m_emojis.size())) {
-                auto& emoji = m_emojis[index++];
-
-                if (m_selected_category.has_value() && emoji.emoji.group != m_selected_category)
-                    continue;
-
-                if (query.is_empty()) {
-                    found_match = true;
-                } else if (!emoji.emoji.name.is_empty()) {
-                    auto result = fuzzy_match(query, emoji.emoji.name);
-                    found_match = result.score > 0;
-                }
-
-                if (found_match) {
-                    horizontal_container.add_child(*emoji.button);
-
-                    if (m_first_displayed_emoji == nullptr)
-                        m_first_displayed_emoji = &emoji;
-                }
-            }
+        for (size_t column = 0; column < columns && index < matching_emojis.size(); ++index, ++column) {
+            auto& emoji = matching_emojis[index].emoji;
+            horizontal_container.add_child(*emoji->button);
+            if (m_first_displayed_emoji == nullptr)
+                m_first_displayed_emoji = emoji;
         }
     }
 }

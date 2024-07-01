@@ -28,9 +28,15 @@ public:
 private:
     explicit EmojiInputDialog(Window* parent_window);
 
+    struct EmojiScore {
+        Emoji* emoji;
+        int score;
+    };
+
     Vector<Emoji> supported_emoji();
     void update_displayed_emoji();
     void select_first_displayed_emoji();
+    Vector<EmojiScore> filter_and_rank_emojis(ByteString const& query);
 
     OwnPtr<ActionGroup> m_category_action_group;
     Optional<Unicode::EmojiGroup> m_selected_category;
