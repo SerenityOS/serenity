@@ -508,6 +508,7 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region, Physica
 {
     VERIFY(vmobject().is_anonymous());
 
+    auto& anonymous_vmobject = static_cast<AnonymousVMObject&>(vmobject());
     auto page_index_in_vmobject = translate_to_vmobject_page(page_index_in_region);
 
     auto current_thread = Thread::current();
@@ -517,7 +518,7 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region, Physica
     RefPtr<PhysicalRAMPage> new_physical_page;
 
     if (page_in_slot_at_time_of_fault.is_lazy_committed_page()) {
-        new_physical_page = static_cast<AnonymousVMObject&>(*m_vmobject).allocate_committed_page({});
+        new_physical_page = anonymous_vmobject.allocate_committed_page({});
         dbgln_if(PAGE_FAULT_DEBUG, "      >> ALLOCATED COMMITTED {}", new_physical_page->paddr());
     } else {
         auto page_or_error = MM.allocate_physical_page(MemoryManager::ShouldZeroFill::Yes);
@@ -529,12 +530,10 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region, Physica
         dbgln_if(PAGE_FAULT_DEBUG, "      >> ALLOCATED {}", new_physical_page->paddr());
     }
 
-    bool already_handled = false;
-
     {
-        SpinlockLocker locker(vmobject().m_lock);
+        SpinlockLocker locker(anonymous_vmobject.m_lock);
         auto& page_slot = physical_page_slot(page_index_in_region);
-        already_handled = !page_slot.is_null() && !page_slot->is_shared_zero_page() && !page_slot->is_lazy_committed_page();
+        bool already_handled = !page_slot.is_null() && !page_slot->is_shared_zero_page() && !page_slot->is_lazy_committed_page();
         if (already_handled) {
             // Someone else already faulted in a new page in this slot. That's fine, we'll just remap with their page.
             new_physical_page = page_slot;
