@@ -205,7 +205,7 @@ void EmojiInputDialog::update_displayed_emoji()
 
     auto query = m_search_box->text();
 
-    auto matching_emojis = get_matching_emojis(query);
+    Vector<Emoji> matching_emojis = query.is_empty() ? m_emojis : get_matching_emojis(query);
 
     for (size_t row = 0; row < rows && index < matching_emojis.size(); ++row) {
         auto& horizontal_container = m_emojis_widget->add<Widget>();
