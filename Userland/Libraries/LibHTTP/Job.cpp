@@ -5,7 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/AsyncStreamBuffer.h>
 #include <AK/AsyncStreamHelpers.h>
 #include <AK/AsyncStreamTransform.h>
 #include <AK/CharacterTypes.h>
@@ -13,6 +12,7 @@
 #include <AK/GenericAwaiter.h>
 #include <AK/MemMem.h>
 #include <AK/MemoryStream.h>
+#include <AK/StreamBuffer.h>
 #include <AK/Try.h>
 #include <LibCompress/Brotli.h>
 #include <LibCompress/Gzip.h>
@@ -79,7 +79,7 @@ struct SyncStreamAsyncWrapper final : public AsyncInputStream {
 private:
     MaybeOwned<Stream> m_stream;
     GenericAwaiter m_awaiter;
-    AsyncStreamBuffer m_buffer;
+    StreamBuffer m_buffer;
 };
 
 static ErrorOr<ByteBuffer> handle_content_encoding(ByteBuffer const& buf, ByteString const& content_encoding)
