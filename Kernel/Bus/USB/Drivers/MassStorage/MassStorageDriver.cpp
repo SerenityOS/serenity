@@ -128,8 +128,8 @@ ErrorOr<void> MassStorageDriver::initialise_bulk_only_device(USB::Device& device
         return ENOTSUP;
     }
 
-    auto in_pipe = TRY(BulkInPipe::create(device.controller(), in_pipe_address, in_max_packet_size, device.address()));
-    auto out_pipe = TRY(BulkOutPipe::create(device.controller(), out_pipe_address, out_max_packet_size, device.address()));
+    auto in_pipe = TRY(BulkInPipe::create(device.controller(), device, in_pipe_address, in_max_packet_size));
+    auto out_pipe = TRY(BulkOutPipe::create(device.controller(), device, out_pipe_address, out_max_packet_size));
 
     CommandBlockWrapper command_block {};
     command_block.set_command(SCSI::ReadCapacity10 {});

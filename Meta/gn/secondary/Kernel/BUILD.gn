@@ -106,6 +106,7 @@ write_cmake_config("kernel_debug_gen") {
     "VIRTUAL_CONSOLE_DEBUG=",
     "WAITBLOCK_DEBUG=",
     "WAITQUEUE_DEBUG=",
+    "XHCI_DEBUG=",
   ]
 }
 

@@ -44,6 +44,7 @@ enum HubFeatureSelector : u8 {
     C_PORT_RESET = 20,
     PORT_TEST = 21,
     PORT_INDICATOR = 22,
+    C_PORT_LINK_STATE = 25,
 };
 
 // USB 2.0 Specification Section 11.24.2.{6,7}
@@ -71,6 +72,8 @@ static constexpr u16 PORT_STATUS_HIGH_SPEED_DEVICE_ATTACHED = (1 << 10);
 static constexpr u16 PORT_STATUS_PORT_STATUS_MODE = (1 << 11);
 static constexpr u16 PORT_STATUS_PORT_INDICATOR_CONTROL = (1 << 12);
 
+static constexpr u16 SUPERSPEED_PORT_STATUS_POWER = (1 << 9);
+
 static constexpr u16 PORT_STATUS_CONNECT_STATUS_CHANGED = (1 << 0);
 static constexpr u16 PORT_STATUS_PORT_ENABLED_CHANGED = (1 << 1);
 static constexpr u16 PORT_STATUS_SUSPEND_CHANGED = (1 << 2);
@@ -80,6 +83,7 @@ static constexpr u16 PORT_STATUS_RESET_CHANGED = (1 << 4);
 class Hub : public Device {
 public:
     static ErrorOr<NonnullLockRefPtr<Hub>> try_create_root_hub(NonnullLockRefPtr<USBController>, DeviceSpeed);
+    static ErrorOr<NonnullLockRefPtr<Hub>> try_create_root_hub(NonnullLockRefPtr<USBController>, DeviceSpeed, u8 address, USBDeviceDescriptor const&);
     static ErrorOr<NonnullLockRefPtr<Hub>> try_create_from_device(Device const&);
 
     virtual ~Hub() override = default;
@@ -94,9 +98,10 @@ public:
 
 private:
     // Root Hub constructor
-    Hub(NonnullLockRefPtr<USBController>, DeviceSpeed, NonnullOwnPtr<ControlPipe> default_pipe);
+    Hub(NonnullLockRefPtr<USBController>, DeviceSpeed);
+    Hub(NonnullLockRefPtr<USBController>, DeviceSpeed, u8 address, USBDeviceDescriptor const&);
 
-    Hub(Device const&, NonnullOwnPtr<ControlPipe> default_pipe);
+    Hub(Device const&);
 
     USBHubDescriptor m_hub_descriptor {};
 

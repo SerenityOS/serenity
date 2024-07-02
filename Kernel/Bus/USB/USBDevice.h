@@ -33,17 +33,18 @@ class Hub;
 class Device : public AtomicRefCounted<Device> {
 public:
     enum class DeviceSpeed : u8 {
-        FullSpeed = 0,
-        LowSpeed
+        LowSpeed = 0,
+        FullSpeed,
+        HighSpeed,
+        SuperSpeed,
     };
 
-    static ErrorOr<NonnullLockRefPtr<Device>> try_create(USBController const&, u8, DeviceSpeed);
+    static ErrorOr<NonnullLockRefPtr<Device>> try_create(USBController&, Hub const&, u8, DeviceSpeed);
 
-    Device(USBController const&, u8, DeviceSpeed, NonnullOwnPtr<ControlPipe> default_pipe);
-    Device(Device const& device, NonnullOwnPtr<ControlPipe> default_pipe);
+    Device(USBController const&, Hub const*, u8 port, DeviceSpeed);
+    Device(USBController const&, Hub const*, u8 port, DeviceSpeed, u8 address, USBDeviceDescriptor const& descriptor);
+    Device(Device const& device);
     virtual ~Device();
-
-    ErrorOr<void> enumerate_device();
 
     u8 port() const { return m_device_port; }
     DeviceSpeed speed() const { return m_device_speed; }
@@ -54,6 +55,8 @@ public:
 
     USBController& controller() { return *m_controller; }
     USBController const& controller() const { return *m_controller; }
+
+    Hub const* hub() const { return m_hub; }
 
     ErrorOr<size_t> control_transfer(u8 request_type, u8 request, u16 value, u16 index, u16 length, void* data);
 
@@ -69,12 +72,38 @@ public:
 
     SpinlockProtected<RefPtr<SysFSUSBDeviceInformation>, LockRank::None>& sysfs_device_info_node(Badge<USB::Hub>) { return m_sysfs_device_info_node; }
 
+    template<DerivedFrom<USBController> Controller>
+    void set_max_packet_size(Badge<Controller>, u8 max_packet_size)
+    {
+        m_default_pipe->set_max_packet_size(max_packet_size);
+    }
+    template<DerivedFrom<USBController> Controller>
+    void set_address(Badge<Controller>, u8 address)
+    {
+        VERIFY(m_address == 0); // Device can only transition once
+        m_address = address;
+    }
+    template<DerivedFrom<USBController> Controller>
+    void set_descriptor(Badge<Controller>, USBDeviceDescriptor const& descriptor)
+    {
+        memcpy(&m_device_descriptor, &descriptor, sizeof(USBDeviceDescriptor));
+    }
+    template<DerivedFrom<USBController> Controller>
+    Vector<USBConfiguration>& configurations(Badge<Controller>) { return m_configurations; }
+    template<DerivedFrom<USBController> Controller>
+    void set_controller_identifier(Badge<Controller>, size_t identifier)
+    {
+        m_controller_identifier = identifier;
+    }
+    size_t controller_identifier() const { return m_controller_identifier; }
+
 protected:
-    Device(NonnullLockRefPtr<USBController> controller, u8 address, u8 port, DeviceSpeed speed, NonnullOwnPtr<ControlPipe> default_pipe);
+    void set_default_pipe(NonnullOwnPtr<ControlPipe> pipe);
 
     u8 m_device_port { 0 };     // What port is this device attached to. NOTE: This is 1-based.
     DeviceSpeed m_device_speed; // What speed is this device running at
     u8 m_address { 0 };         // USB address assigned to this device
+    size_t m_controller_identifier { 0 };
 
     // Device description
     u16 m_vendor_id { 0 };                      // This device's vendor ID assigned by the USB group
@@ -83,7 +112,8 @@ protected:
     Vector<USBConfiguration> m_configurations;  // Configurations for this device
 
     NonnullLockRefPtr<USBController> m_controller;
-    NonnullOwnPtr<ControlPipe> m_default_pipe; // Default communication pipe (endpoint0) used during enumeration
+    Hub const* m_hub { nullptr };
+    OwnPtr<ControlPipe> m_default_pipe; // Default communication pipe (endpoint0) used during enumeration
 
     LockRefPtr<Driver> m_driver;
 
