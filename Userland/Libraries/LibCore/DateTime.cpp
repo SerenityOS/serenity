@@ -47,10 +47,10 @@ DateTime DateTime::now()
     return from_timestamp(time(nullptr));
 }
 
-DateTime DateTime::create(int year, int month, int day, int hour, int minute, int second)
+DateTime DateTime::create(int year, int month, int day, int hour, int minute, int second, unsigned microsecond)
 {
     DateTime dt;
-    dt.set_time(year, month, day, hour, minute, second);
+    dt.set_time(year, month, day, hour, minute, second, microsecond);
     return dt;
 }
 
@@ -65,6 +65,7 @@ DateTime DateTime::from_timestamp(time_t timestamp)
     dt.m_hour = tm.tm_hour;
     dt.m_minute = tm.tm_min;
     dt.m_second = tm.tm_sec;
+    dt.m_microsecond = 0;
     dt.m_timestamp = timestamp;
     return dt;
 }
@@ -89,7 +90,7 @@ bool DateTime::is_leap_year() const
     return ::is_leap_year(m_year);
 }
 
-void DateTime::set_time(int year, int month, int day, int hour, int minute, int second)
+void DateTime::set_time(int year, int month, int day, int hour, int minute, int second, unsigned microsecond)
 {
     struct tm tm = {};
     tm.tm_sec = second;
@@ -110,6 +111,7 @@ void DateTime::set_time(int year, int month, int day, int hour, int minute, int 
     m_hour = tm.tm_hour;
     m_minute = tm.tm_min;
     m_second = tm.tm_sec;
+    m_microsecond = microsecond;
 }
 
 void DateTime::set_time_only(int hour, int minute, Optional<int> second)
@@ -361,6 +363,8 @@ Optional<DateTime> DateTime::parse(StringView format, StringView string)
         return false;
     };
 
+    unsigned microsecond = 0;
+
     while (format_pos < format.length() && !string_lexer.is_eof()) {
         if (format[format_pos] != '%') {
             consume(format[format_pos]);
@@ -589,6 +593,20 @@ Optional<DateTime> DateTime::parse(StringView format, StringView string)
 
             break;
         }
+        case 'f': {
+            if (!string_lexer.consume_specific('.'))
+                return {};
+
+            auto fractional_part = string_lexer.consume_while(is_ascii_digit);
+            if (fractional_part.is_empty() || fractional_part.length() > 6)
+                return {};
+
+            microsecond = fractional_part.to_number<unsigned>().value();
+            for (size_t i = fractional_part.length(); i < 6; ++i)
+                microsecond *= 10;
+
+            break;
+        }
         case '%':
             consume('%');
             break;
@@ -619,7 +637,9 @@ Optional<DateTime> DateTime::parse(StringView format, StringView string)
         localtime_r(&utc_time_t, &tm);
     }
 
-    return DateTime::from_timestamp(mktime(&tm));
+    auto date_time = DateTime::from_timestamp(mktime(&tm));
+    date_time.m_microsecond = microsecond;
+    return date_time;
 }
 
 }

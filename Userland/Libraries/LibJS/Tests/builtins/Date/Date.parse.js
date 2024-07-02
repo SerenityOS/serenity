@@ -28,7 +28,7 @@ test("basic functionality", () => {
     expect(Date.parse("2024-01-15 00:00:01")).toBe(1705298401000);
     expect(Date.parse("Tue Nov 07 2023 10:05:55  UTC")).toBe(1699351555000);
     expect(Date.parse("Wed Apr 17 23:08:53 2019")).toBe(1555560533000);
-    expect(Date.parse("2024-01-26T22:10:11.306+0000")).toBe(1706307011000); // FIXME: support sub-second precision
+    expect(Date.parse("2024-01-26T22:10:11.306+0000")).toBe(1706307011306);
     expect(Date.parse("1/27/2024, 9:28:30 AM")).toBe(1706369310000);
 
     // FIXME: Create a scoped time zone helper when bytecode supports the `using` declaration.
@@ -202,4 +202,24 @@ test("Round trip Date.prototype.to*String", () => {
     expect(Date.parse(epoch.toString())).toBe(epoch.valueOf());
     expect(Date.parse(epoch.toISOString())).toBe(epoch.valueOf());
     expect(Date.parse(epoch.toUTCString())).toBe(epoch.valueOf());
+});
+
+test("Date parsing of minimum and maximum values", () => {
+    const minDateStr = "-271821-04-20T00:00:00.000Z";
+    const minDate = new Date(-8640000000000000);
+
+    expect(minDate.toISOString()).toBe(minDateStr);
+    expect(Date.parse(minDateStr)).toBe(minDate.valueOf());
+
+    const maxDateStr = "+275760-09-13T00:00:00.000Z";
+    const maxDate = new Date(8640000000000000);
+
+    expect(maxDate.toISOString()).toBe(maxDateStr);
+    expect(Date.parse(maxDateStr)).toBe(maxDate.valueOf());
+
+    const belowRange = "-271821-04-19T23:59:59.999Z";
+    const aboveRange = "+275760-09-13T00:00:00.001Z";
+
+    expect(Date.parse(belowRange)).toBe(NaN);
+    expect(Date.parse(aboveRange)).toBe(NaN);
 });
