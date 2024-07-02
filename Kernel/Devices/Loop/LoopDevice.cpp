@@ -20,10 +20,18 @@ SpinlockProtected<LoopDevice::List, LockRank::None>& LoopDevice::all_instances()
     return s_all_instances;
 }
 
-void LoopDevice::remove(Badge<DeviceControlDevice>)
+ErrorOr<void> LoopDevice::remove(Badge<DeviceControlDevice>)
 {
-    LoopDevice::all_instances().with([&](auto&) {
+    // NOTE: It's safe to rely on the all_instances spinlock as the only
+    // way to find a device on DevLoopFS is by traversing this protected list
+    // as well.
+    return LoopDevice::all_instances().with([&](auto&) -> ErrorOr<void> {
+        // NOTE: If we have more than one refcount, which means that the device
+        // is in use by something else besides the list, refuse to remove it.
+        if (ref_count() > 1)
+            return Error::from_errno(EBUSY);
         m_list_node.remove();
+        return {};
     });
 }
 
@@ -44,6 +52,8 @@ bool LoopDevice::unref() const
 
 ErrorOr<NonnullRefPtr<LoopDevice>> LoopDevice::create_with_file_description(OpenFileDescription& description)
 {
+    if (!(description.is_readable() && description.is_writable()))
+        return Error::from_errno(EPERM);
     auto custody = description.custody();
     if (!custody)
         return Error::from_errno(EINVAL);

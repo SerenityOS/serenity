@@ -265,6 +265,17 @@ Inode& FATFS::root_inode()
     return *m_root_inode;
 }
 
+ErrorOr<void> FATFS::prepare_to_clear_last_mount(Inode&)
+{
+    MutexLocker locker(m_lock);
+    m_root_inode = nullptr;
+    BlockBasedFileSystem::remove_disk_cache_before_last_unmount();
+
+    // FIXME: This is probably not correct to just return here once we have write support
+    // as we probably need to do more clean up procedures.
+    return {};
+}
+
 FatBlockSpan FATFS::first_block_of_cluster(u32 cluster) const
 {
     // For FAT12/16, we use a value of cluster 0 to indicate this is a cluster for the root directory.
