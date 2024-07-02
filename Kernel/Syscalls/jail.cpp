@@ -46,7 +46,7 @@ ErrorOr<FlatPtr> Process::sys$jail_attach(Userspace<Syscall::SC_jail_attach_para
 
     // NOTE: Because the user might run a binary that is using this syscall and
     // that binary was marked as SUID, then the user might be unaware of the
-    // fact that while no new setuid binaries might be executed, he is already
+    // fact that while no new setuid binaries might be executed, they are already
     // running within such binary so for the sake of completeness and preventing
     // naive sense of being secure, we should block that.
     TRY(with_protected_data([&](auto& protected_data) -> ErrorOr<void> {
