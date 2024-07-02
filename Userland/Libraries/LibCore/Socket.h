@@ -248,7 +248,7 @@ public:
             // With UDP datagrams, reading a datagram into a buffer that's
             // smaller than the datagram's size will cause the rest of the
             // datagram to be discarded. That's not very nice, so let's bail
-            // early, telling the caller that he should allocate a bigger
+            // early, telling the caller that they should allocate a bigger
             // buffer.
             return Error::from_errno(EMSGSIZE);
         }
