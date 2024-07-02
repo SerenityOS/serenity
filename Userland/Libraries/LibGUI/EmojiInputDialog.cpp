@@ -156,6 +156,41 @@ auto EmojiInputDialog::supported_emoji() -> Vector<Emoji>
     return emojis;
 }
 
+Vector<EmojiInputDialog::Emoji> EmojiInputDialog::get_matching_emojis(ByteString const& query)
+{
+    Vector<EmojiScore> emoji_scores;
+
+    for (auto& emoji : m_emojis) {
+        if (m_selected_category.has_value() && emoji.emoji.group != m_selected_category)
+            continue;
+
+        if (query.is_empty()) {
+            emoji_scores.append({ &emoji, 0 });
+            continue;
+        }
+
+        if (emoji.emoji.name.is_empty()) {
+            continue;
+        }
+
+        auto result = fuzzy_match(query, emoji.emoji.name);
+        if (result.score > 0)
+            emoji_scores.append({ &emoji, result.score });
+    }
+
+    quick_sort(emoji_scores, [](auto const& lhs, auto const& rhs) {
+        return lhs.score > rhs.score;
+    });
+
+    // Get emojis from emoji_scores into a vector of Emojis
+    Vector<Emoji> emojis;
+    for (auto& [emoji, _] : emoji_scores) {
+        emojis.append(*emoji);
+    }
+
+    return emojis;
+}
+
 void EmojiInputDialog::update_displayed_emoji()
 {
     ScopeGuard guard { [&] { m_emojis_widget->set_updates_enabled(true); } };
@@ -170,7 +205,9 @@ void EmojiInputDialog::update_displayed_emoji()
 
     auto query = m_search_box->text();
 
-    for (size_t row = 0; row < rows && index < m_emojis.size(); ++row) {
+    Vector<Emoji> matching_emojis = query.is_empty() ? m_emojis : get_matching_emojis(query);
+
+    for (size_t row = 0; row < rows && index < matching_emojis.size(); ++row) {
         auto& horizontal_container = m_emojis_widget->add<Widget>();
         horizontal_container.set_preferred_height(SpecialDimension::Fit);
         horizontal_container.set_layout<HorizontalBoxLayout>(GUI::Margins {}, 0);
@@ -178,8 +215,8 @@ void EmojiInputDialog::update_displayed_emoji()
         for (size_t column = 0; column < columns; ++column) {
             bool found_match = false;
 
-            while (!found_match && (index < m_emojis.size())) {
-                auto& emoji = m_emojis[index++];
+            while (!found_match && (index < matching_emojis.size())) {
+                auto& emoji = matching_emojis[index++];
 
                 if (m_selected_category.has_value() && emoji.emoji.group != m_selected_category)
                     continue;
@@ -187,8 +224,7 @@ void EmojiInputDialog::update_displayed_emoji()
                 if (query.is_empty()) {
                     found_match = true;
                 } else if (!emoji.emoji.name.is_empty()) {
-                    auto result = fuzzy_match(query, emoji.emoji.name);
-                    found_match = result.score > 0;
+                    found_match = true;
                 }
 
                 if (found_match) {
