@@ -10,7 +10,6 @@
 #include <AK/Format.h>
 #include <AK/Forward.h>
 #include <AK/Math.h>
-#include <AK/SIMD.h>
 #include <AK/StdLibExtras.h>
 #include <LibIPC/Forward.h>
 #include <math.h>
