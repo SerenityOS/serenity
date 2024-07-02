@@ -46,6 +46,8 @@ OutOfProcessWebView::OutOfProcessWebView()
         set_override_cursor(cursor);
     };
 
+    // FIXME: Set on_request_tooltip_override, on_stop_tooltip_override.
+
     on_enter_tooltip_area = [](auto tooltip) {
         GUI::Application::the()->show_tooltip(MUST(String::from_byte_string(tooltip)), nullptr);
     };
