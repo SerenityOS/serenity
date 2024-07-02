@@ -63,7 +63,7 @@ private:
 
         BlockHeader m_header;
         NonnullOwnPtr<DeflateDecompressor> m_stream;
-        Crypto::Checksum::CRC32 m_checksum;
+        Crypto::Checksum::CRC32<> m_checksum;
         size_t m_nread { 0 };
 
     private:
