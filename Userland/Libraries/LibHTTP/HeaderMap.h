@@ -28,7 +28,7 @@ public:
 
     [[nodiscard]] Optional<ByteString> get(ByteString const& name) const
     {
-        return m_map.get(name);
+        return static_cast<Optional<ByteString>>(m_map.get(name));
     }
 
     [[nodiscard]] Vector<Header> const& headers() const

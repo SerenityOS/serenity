@@ -42,7 +42,7 @@ public:
     void add_compiled_module(NonnullRefPtr<CompiledWebAssemblyModule> module) { m_compiled_modules.append(module); }
     void add_function_instance(Wasm::FunctionAddress address, JS::GCPtr<JS::NativeFunction> function) { m_function_instances.set(address, function); }
 
-    Optional<JS::GCPtr<JS::NativeFunction>> get_function_instance(Wasm::FunctionAddress address) { return m_function_instances.get(address); }
+    Optional<JS::GCPtr<JS::NativeFunction>> get_function_instance(Wasm::FunctionAddress address) { return static_cast<Optional<JS::GCPtr<JS::NativeFunction>>>(m_function_instances.get(address)); }
 
     HashMap<Wasm::FunctionAddress, JS::GCPtr<JS::NativeFunction>> function_instances() const { return m_function_instances; }
     Wasm::AbstractMachine& abstract_machine() { return m_abstract_machine; }

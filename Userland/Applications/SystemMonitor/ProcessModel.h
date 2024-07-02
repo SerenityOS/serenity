@@ -244,7 +244,7 @@ private:
 
         Optional<NonnullRefPtr<Thread>> main_thread() const
         {
-            return threads.first_matching([this](auto const thread) { return thread->current_state.tid == pid; });
+            return static_cast<Optional<NonnullRefPtr<Thread>>>(threads.first_matching([this](auto const thread) { return thread->current_state.tid == pid; }));
         }
 
         // Return anything but the main thread; therefore, valid indices are anything up to threads.size()-1 exclusive.
