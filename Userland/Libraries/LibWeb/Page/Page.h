@@ -82,6 +82,7 @@ public:
     DevicePixelPoint css_to_device_point(CSSPixelPoint) const;
     DevicePixelRect css_to_device_rect(CSSPixelRect) const;
     CSSPixelRect device_to_css_rect(DevicePixelRect) const;
+    CSSPixelSize device_to_css_size(DevicePixelSize) const;
     DevicePixelRect enclosing_device_rect(CSSPixelRect) const;
     DevicePixelRect rounded_device_rect(CSSPixelRect) const;
 
@@ -287,8 +288,6 @@ public:
     virtual void page_did_unhover_link() { }
     virtual void page_did_change_favicon(Gfx::Bitmap const&) { }
     virtual void page_did_layout() { }
-    virtual void page_did_request_scroll(i32, i32) { }
-    virtual void page_did_request_scroll_to(CSSPixelPoint) { }
     virtual void page_did_request_alert(String const&) { }
     virtual void page_did_request_confirm(String const&) { }
     virtual void page_did_request_prompt(String const&, String const&) { }

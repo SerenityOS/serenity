@@ -1027,6 +1027,15 @@ void Document::invalidate_layout()
     schedule_layout_update();
 }
 
+static void propagate_scrollbar_width_to_viewport(Element& root_element, Layout::Viewport& viewport)
+{
+    // https://drafts.csswg.org/css-scrollbars/#scrollbar-width
+    // UAs must apply the scrollbar-color value set on the root element to the viewport.
+    auto& viewport_computed_values = viewport.mutable_computed_values();
+    auto& root_element_computed_values = root_element.layout_node()->computed_values();
+    viewport_computed_values.set_scrollbar_width(root_element_computed_values.scrollbar_width());
+}
+
 static void propagate_overflow_to_viewport(Element& root_element, Layout::Viewport& viewport)
 {
     // https://drafts.csswg.org/css-overflow-3/#overflow-propagation
@@ -1091,6 +1100,7 @@ void Document::update_layout()
 
         if (document_element && document_element->layout_node()) {
             propagate_overflow_to_viewport(*document_element, *m_layout_root);
+            propagate_scrollbar_width_to_viewport(*document_element, *m_layout_root);
         }
     }
 
@@ -1137,6 +1147,11 @@ void Document::update_layout()
     paintable()->recompute_selection_states();
 
     m_needs_layout = false;
+
+    // Scrolling by zero offset will clamp scroll offset back to valid range if it was out of bounds
+    // after the viewport size change.
+    if (auto window = this->window())
+        window->scroll_by(0, 0);
 }
 
 [[nodiscard]] static CSS::RequiredInvalidationAfterStyleChange update_style_recursively(Node& node, CSS::StyleComputer& style_computer)
@@ -1907,10 +1922,12 @@ void Document::set_focused_element(Element* element)
 
     // Scroll the viewport if necessary to make the newly focused element visible.
     if (m_focused_element) {
-        ScrollIntoViewOptions scroll_options;
-        scroll_options.block = Bindings::ScrollLogicalPosition::Nearest;
-        scroll_options.inline_ = Bindings::ScrollLogicalPosition::Nearest;
-        (void)m_focused_element->scroll_into_view(scroll_options);
+        m_focused_element->queue_an_element_task(HTML::Task::Source::UserInteraction, [&]() {
+            ScrollIntoViewOptions scroll_options;
+            scroll_options.block = Bindings::ScrollLogicalPosition::Nearest;
+            scroll_options.inline_ = Bindings::ScrollLogicalPosition::Nearest;
+            (void)m_focused_element->scroll_into_view(scroll_options);
+        });
     }
 }
 

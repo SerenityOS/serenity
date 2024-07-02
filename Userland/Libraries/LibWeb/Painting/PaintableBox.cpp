@@ -11,6 +11,7 @@
 #include <LibWeb/CSS/SystemColor.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLHtmlElement.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Painting/BackgroundPainting.h>
@@ -53,6 +54,12 @@ PaintableWithLines::~PaintableWithLines()
 
 CSSPixelPoint PaintableBox::scroll_offset() const
 {
+    if (is_viewport()) {
+        auto navigable = document().navigable();
+        VERIFY(navigable);
+        return navigable->viewport_scroll_offset();
+    }
+
     auto const& node = layout_node();
     if (node.is_generated_for_before_pseudo_element())
         return node.pseudo_element_generator()->scroll_offset(DOM::Element::ScrollOffsetFor::PseudoBefore);
@@ -207,6 +214,15 @@ Optional<CSSPixelRect> PaintableBox::get_clip_rect() const
     return {};
 }
 
+bool PaintableBox::wants_mouse_events() const
+{
+    if (scroll_thumb_rect(ScrollDirection::Vertical).has_value())
+        return true;
+    if (scroll_thumb_rect(ScrollDirection::Horizontal).has_value())
+        return true;
+    return false;
+}
+
 void PaintableBox::before_paint(PaintContext& context, [[maybe_unused]] PaintPhase phase) const
 {
     if (!is_visible())
@@ -230,7 +246,7 @@ bool PaintableBox::is_scrollable(ScrollDirection direction) const
     auto overflow = direction == ScrollDirection::Horizontal ? computed_values().overflow_x() : computed_values().overflow_y();
     auto scrollable_overflow_size = direction == ScrollDirection::Horizontal ? scrollable_overflow_rect()->width() : scrollable_overflow_rect()->height();
     auto scrollport_size = direction == ScrollDirection::Horizontal ? absolute_padding_box_rect().width() : absolute_padding_box_rect().height();
-    if (overflow == CSS::Overflow::Auto)
+    if (is_viewport() || overflow == CSS::Overflow::Auto)
         return scrollable_overflow_size > scrollport_size;
     return overflow == CSS::Overflow::Scroll;
 }
@@ -255,20 +271,27 @@ Optional<CSSPixelRect> PaintableBox::scroll_thumb_rect(ScrollDirection direction
     if (scroll_overflow_size > scrollport_size)
         thumb_position = scroll_offset * (scrollport_size - thumb_size) / (scroll_overflow_size - scrollport_size);
 
+    CSSPixelRect thumb_rect;
     if (direction == ScrollDirection::Horizontal) {
-        return CSSPixelRect {
+        thumb_rect = {
             padding_rect.left() + thumb_position,
             padding_rect.bottom() - scrollbar_thumb_thickness,
             thumb_size,
             scrollbar_thumb_thickness
         };
+    } else {
+        thumb_rect = {
+            padding_rect.right() - scrollbar_thumb_thickness,
+            padding_rect.top() + thumb_position,
+            scrollbar_thumb_thickness,
+            thumb_size
+        };
     }
-    return CSSPixelRect {
-        padding_rect.right() - scrollbar_thumb_thickness,
-        padding_rect.top() + thumb_position,
-        scrollbar_thumb_thickness,
-        thumb_size
-    };
+
+    if (is_viewport())
+        thumb_rect.translate_by(this->scroll_offset());
+
+    return thumb_rect;
 }
 
 void PaintableBox::paint(PaintContext& context, PaintPhase phase) const
@@ -314,7 +337,7 @@ void PaintableBox::paint(PaintContext& context, PaintPhase phase) const
     }
 
     auto scrollbar_width = computed_values().scrollbar_width();
-    if (!layout_box().is_viewport() && phase == PaintPhase::Overlay && scrollbar_width != CSS::ScrollbarWidth::None) {
+    if (phase == PaintPhase::Overlay && scrollbar_width != CSS::ScrollbarWidth::None) {
         auto color = Color(Color::NamedColor::DarkGray).with_alpha(128);
         int thumb_corner_radius = static_cast<int>(context.rounded_device_pixels(scrollbar_thumb_thickness / 2));
         if (auto thumb_rect = scroll_thumb_rect(ScrollDirection::Horizontal); thumb_rect.has_value()) {
@@ -732,6 +755,67 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
     }
 }
 
+Paintable::DispatchEventOfSameName PaintableBox::handle_mousedown(Badge<EventHandler>, CSSPixelPoint position, unsigned, unsigned)
+{
+    auto vertical_scroll_thumb_rect = scroll_thumb_rect(ScrollDirection::Vertical);
+    auto horizontal_scroll_thumb_rect = scroll_thumb_rect(ScrollDirection::Horizontal);
+    if (vertical_scroll_thumb_rect.has_value() && vertical_scroll_thumb_rect.value().contains(position)) {
+        if (is_viewport())
+            position.translate_by(-scroll_offset());
+        m_last_mouse_tracking_position = position;
+        m_scroll_thumb_dragging_direction = ScrollDirection::Vertical;
+        const_cast<HTML::Navigable&>(*navigable()).event_handler().set_mouse_event_tracking_paintable(this);
+    } else if (horizontal_scroll_thumb_rect.has_value() && horizontal_scroll_thumb_rect.value().contains(position)) {
+        if (is_viewport())
+            position.translate_by(-scroll_offset());
+        m_last_mouse_tracking_position = position;
+        m_scroll_thumb_dragging_direction = ScrollDirection::Horizontal;
+        const_cast<HTML::Navigable&>(*navigable()).event_handler().set_mouse_event_tracking_paintable(this);
+    }
+    return Paintable::DispatchEventOfSameName::Yes;
+}
+
+Paintable::DispatchEventOfSameName PaintableBox::handle_mouseup(Badge<EventHandler>, CSSPixelPoint, unsigned, unsigned)
+{
+    if (m_last_mouse_tracking_position.has_value()) {
+        m_last_mouse_tracking_position.clear();
+        m_scroll_thumb_dragging_direction.clear();
+        const_cast<HTML::Navigable&>(*navigable()).event_handler().set_mouse_event_tracking_paintable(nullptr);
+    }
+    return Paintable::DispatchEventOfSameName::Yes;
+}
+
+Paintable::DispatchEventOfSameName PaintableBox::handle_mousemove(Badge<EventHandler>, CSSPixelPoint position, unsigned, unsigned)
+{
+    if (m_last_mouse_tracking_position.has_value()) {
+        if (is_viewport())
+            position.translate_by(-scroll_offset());
+
+        Gfx::Point<double> scroll_delta;
+        if (m_scroll_thumb_dragging_direction == ScrollDirection::Horizontal)
+            scroll_delta.set_x((position.x() - m_last_mouse_tracking_position->x()).to_double());
+        else
+            scroll_delta.set_y((position.y() - m_last_mouse_tracking_position->y()).to_double());
+
+        auto padding_rect = absolute_padding_box_rect();
+        auto scrollable_overflow_rect = this->scrollable_overflow_rect().value();
+        auto scroll_overflow_size = m_scroll_thumb_dragging_direction == ScrollDirection::Horizontal ? scrollable_overflow_rect.width() : scrollable_overflow_rect.height();
+        auto scrollport_size = m_scroll_thumb_dragging_direction == ScrollDirection::Horizontal ? padding_rect.width() : padding_rect.height();
+        auto scroll_px_per_mouse_position_delta_px = scroll_overflow_size.to_double() / scrollport_size.to_double();
+        scroll_delta *= scroll_px_per_mouse_position_delta_px;
+
+        if (is_viewport()) {
+            document().window()->scroll_by(scroll_delta.x(), scroll_delta.y());
+        } else {
+            scroll_by(scroll_delta.x(), scroll_delta.y());
+        }
+
+        m_last_mouse_tracking_position = position;
+        return Paintable::DispatchEventOfSameName::No;
+    }
+    return Paintable::DispatchEventOfSameName::Yes;
+}
+
 bool PaintableBox::handle_mousewheel(Badge<EventHandler>, CSSPixelPoint, unsigned, unsigned, int wheel_delta_x, int wheel_delta_y)
 {
     if (!layout_box().is_user_scrollable())
@@ -755,6 +839,17 @@ Layout::BlockContainer& PaintableWithLines::layout_box()
     return static_cast<Layout::BlockContainer&>(PaintableBox::layout_box());
 }
 
+TraversalDecision PaintableBox::hit_test_scrollbars(CSSPixelPoint position, Function<TraversalDecision(HitTestResult)> const& callback) const
+{
+    auto vertical_scroll_thumb_rect = scroll_thumb_rect(ScrollDirection::Vertical);
+    if (vertical_scroll_thumb_rect.has_value() && vertical_scroll_thumb_rect.value().contains(position))
+        return callback(HitTestResult { const_cast<PaintableBox&>(*this) });
+    auto horizontal_scroll_thumb_rect = scroll_thumb_rect(ScrollDirection::Horizontal);
+    if (horizontal_scroll_thumb_rect.has_value() && horizontal_scroll_thumb_rect.value().contains(position))
+        return callback(HitTestResult { const_cast<PaintableBox&>(*this) });
+    return TraversalDecision::Continue;
+}
+
 TraversalDecision PaintableBox::hit_test(CSSPixelPoint position, HitTestType type, Function<TraversalDecision(HitTestResult)> const& callback) const
 {
     if (clip_rect().has_value() && !clip_rect()->contains(position))
@@ -766,6 +861,9 @@ TraversalDecision PaintableBox::hit_test(CSSPixelPoint position, HitTestType typ
 
     if (!is_visible())
         return TraversalDecision::Continue;
+
+    if (hit_test_scrollbars(position_adjusted_by_scroll_offset, callback) == TraversalDecision::Break)
+        return TraversalDecision::Break;
 
     if (layout_box().is_viewport()) {
         auto& viewport_paintable = const_cast<ViewportPaintable&>(static_cast<ViewportPaintable const&>(*this));
@@ -818,6 +916,9 @@ TraversalDecision PaintableWithLines::hit_test(CSSPixelPoint position, HitTestTy
     if (!layout_box().children_are_inline() || m_fragments.is_empty()) {
         return PaintableBox::hit_test(position, type, callback);
     }
+
+    if (hit_test_scrollbars(position_adjusted_by_scroll_offset, callback) == TraversalDecision::Break)
+        return TraversalDecision::Break;
 
     for (auto const* child = last_child(); child; child = child->previous_sibling()) {
         if (child->hit_test(position, type, callback) == TraversalDecision::Break)

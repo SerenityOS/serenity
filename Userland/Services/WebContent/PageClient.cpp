@@ -235,9 +235,9 @@ void PageClient::paint(Web::DevicePixelRect const& content_rect, Gfx::Bitmap& ta
     }
 }
 
-void PageClient::set_viewport_rect(Web::DevicePixelRect const& rect)
+void PageClient::set_viewport_size(Web::DevicePixelSize const& size)
 {
-    page().top_level_traversable()->set_viewport_rect(page().device_to_css_rect(rect));
+    page().top_level_traversable()->set_viewport_size(page().device_to_css_size(size));
 }
 
 void PageClient::page_did_request_cursor_change(Gfx::StandardCursor cursor)
@@ -309,24 +309,6 @@ Gfx::IntRect PageClient::page_did_request_minimize_window()
 Gfx::IntRect PageClient::page_did_request_fullscreen_window()
 {
     return client().did_request_fullscreen_window(m_id);
-}
-
-void PageClient::page_did_request_scroll(i32 x_delta, i32 y_delta)
-{
-    client().async_did_request_scroll(m_id, x_delta, y_delta);
-}
-
-void PageClient::page_did_request_scroll_to(Web::CSSPixelPoint scroll_position)
-{
-    // NOTE: The viewport scroll position is updated preemptively, so that subsequent
-    //       viewport offset calculation could use new offset even before actual
-    //       scroll on browser side happens.
-    auto viewport = page().top_level_traversable()->viewport_rect();
-    viewport.set_location(scroll_position);
-    page().top_level_traversable()->set_viewport_rect(viewport);
-
-    auto device_scroll_position = page().css_to_device_point(scroll_position);
-    client().async_did_request_scroll_to(m_id, device_scroll_position.to_type<int>());
 }
 
 void PageClient::page_did_enter_tooltip_area(Web::CSSPixelPoint content_position, ByteString const& title)
