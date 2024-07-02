@@ -224,14 +224,13 @@ public:
     }
 
 protected:
-    StringView m_input;
-    size_t m_index { 0 };
-
-private:
 #ifndef KERNEL
     Result<u32, UnicodeEscapeError> decode_code_point();
-    Result<u32, UnicodeEscapeError> decode_single_or_paired_surrogate(bool combine_surrogate_pairs);
+    Result<u32, UnicodeEscapeError> decode_single_or_paired_surrogate(bool combine_surrogate_pairs = true);
 #endif
+
+    StringView m_input;
+    size_t m_index { 0 };
 };
 
 class LineTrackingLexer : public GenericLexer {
