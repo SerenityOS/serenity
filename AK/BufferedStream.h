@@ -249,6 +249,14 @@ public:
         return stream().is_eof();
     }
 
+    ErrorOr<bool> accurate_is_eof() const
+    {
+        if (m_buffer.used_space() > 0)
+            return false;
+
+        return TRY(stream().accurate_is_eof());
+    }
+
     size_t buffer_size() const
     {
         return m_buffer.capacity();

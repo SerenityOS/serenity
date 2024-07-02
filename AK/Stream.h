@@ -93,12 +93,18 @@ public:
         return {};
     }
 
-    /// Returns whether the stream has reached the end of file. For sockets,
-    /// this most likely means that the protocol has disconnected (in the case
-    /// of TCP). For seekable streams, this means the end of the file. Note that
-    /// is_eof will only return true _after_ a read with 0 length, so this
-    /// method should be called after a read.
+    /// Estimates whether the stream has reached the end of file.
+    /// This is lightweight, but may be somewhat inaccurate, and only
+    /// eventually converges. Use `accurate_is_eof` if the highest
+    /// possibility for an immediate good readout is important.
     virtual bool is_eof() const = 0;
+
+    /// Queries whether the stream has reached the end of file.
+    /// This is as accurate as possible, but heavy and fallible.
+    virtual ErrorOr<bool> accurate_is_eof() const
+    {
+        return is_eof();
+    }
 
     virtual bool is_open() const = 0;
     virtual void close() = 0;
@@ -137,13 +143,16 @@ public:
     virtual ErrorOr<size_t> tell() const;
     /// Returns the total size of the stream, or an errno in the case of an
     /// error. May not preserve the original position on the stream on failure.
-    virtual ErrorOr<size_t> size();
+    virtual ErrorOr<size_t> size() const;
     /// Shrinks or extends the stream to the given size. Returns an errno in
     /// the case of an error.
     virtual ErrorOr<void> truncate(size_t length) = 0;
     /// Seeks until after the given amount of bytes to be discarded instead of
     /// reading and discarding everything manually;
     virtual ErrorOr<void> discard(size_t discarded_bytes) override;
+
+    // Utilize `tell` and `size` to determine EOF on Streams that support it.
+    virtual ErrorOr<bool> accurate_is_eof() const override;
 };
 
 }

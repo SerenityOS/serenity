@@ -343,7 +343,7 @@ ErrorOr<Vector<FixedArray<Sample>>, LoaderError> FlacLoaderPlugin::load_chunks(s
 {
     ssize_t remaining_samples = static_cast<ssize_t>(m_total_samples - m_loaded_samples);
     // The first condition is relevant for unknown-size streams (total samples = 0 in the header)
-    if (m_stream->is_eof() || (m_total_samples < NumericLimits<u64>::max() && remaining_samples <= 0))
+    if ((m_total_samples < NumericLimits<u64>::max() && remaining_samples <= 0) || TRY(m_stream->accurate_is_eof()))
         return Vector<FixedArray<Sample>> {};
 
     size_t samples_to_read = min(samples_to_read_from_input, remaining_samples);
@@ -354,7 +354,7 @@ ErrorOr<Vector<FixedArray<Sample>>, LoaderError> FlacLoaderPlugin::load_chunks(s
 
     size_t sample_index = 0;
 
-    while (!m_stream->is_eof() && sample_index < samples_to_read) {
+    while (!TRY(m_stream->accurate_is_eof()) && sample_index < samples_to_read) {
         TRY(frames.try_append(TRY(next_frame())));
         sample_index += m_current_frame->sample_count;
     }
