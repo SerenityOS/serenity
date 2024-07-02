@@ -22,6 +22,7 @@
 #include <Kernel/Devices/Audio/Management.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/FUSEDevice.h>
+#include <Kernel/Devices/GPU/Console/BootDummyConsole.h>
 #include <Kernel/Devices/GPU/Console/BootFramebufferConsole.h>
 #include <Kernel/Devices/GPU/Management.h>
 #include <Kernel/Devices/Generic/DeviceControlDevice.h>
@@ -68,7 +69,6 @@
 #    include <Kernel/Arch/x86_64/Hypervisor/VMWareBackdoor.h>
 #    include <Kernel/Arch/x86_64/Interrupts/APIC.h>
 #    include <Kernel/Arch/x86_64/Interrupts/PIC.h>
-#    include <Kernel/Arch/x86_64/VGA/TextModeConsole.h>
 #elif ARCH(AARCH64)
 #    include <Kernel/Arch/aarch64/RPi/Framebuffer.h>
 #    include <Kernel/Arch/aarch64/RPi/Mailbox.h>
@@ -266,11 +266,8 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT NO_SANITIZE_COVERAGE void init([[maybe_
         if ((multiboot_flags & MULTIBOOT_INFO_FRAMEBUFFER_INFO) && !multiboot_framebuffer_addr.is_null() && multiboot_framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB) {
             g_boot_console = &try_make_lock_ref_counted<Graphics::BootFramebufferConsole>(multiboot_framebuffer_addr, multiboot_framebuffer_width, multiboot_framebuffer_height, multiboot_framebuffer_pitch).value().leak_ref();
         } else {
-#if ARCH(X86_64)
-            g_boot_console = &Graphics::VGATextModeConsole::initialize().leak_ref();
-#else
-            dbgln("No early framebuffer console available");
-#endif
+            dbgln("No early framebuffer console available, initializing dummy console");
+            g_boot_console = &try_make_lock_ref_counted<Graphics::BootDummyConsole>().value().leak_ref();
         }
     }
     dmesgln("Starting SerenityOS...");

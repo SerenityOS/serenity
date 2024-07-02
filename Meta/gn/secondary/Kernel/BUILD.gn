@@ -345,7 +345,6 @@ source_set("arch_sources") {
       "Arch/x86_64/Time/PIT.cpp",
       "Arch/x86_64/Time/RTC.cpp",
       "Arch/x86_64/TrapFrame.cpp",
-      "Arch/x86_64/VGA/IOArbiter.cpp",
 
       # TODO: Share these with the aarch64 build
       "Interrupts/SpuriousInterruptHandler.cpp",
