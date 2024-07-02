@@ -177,6 +177,42 @@ bool is_link(int fd)
     return S_ISLNK(st.st_mode);
 }
 
+bool is_fifo(StringView path)
+{
+    auto st_or_error = Core::System::lstat(path);
+    if (st_or_error.is_error())
+        return false;
+    auto st = st_or_error.release_value();
+    return S_ISFIFO(st.st_mode);
+}
+
+bool is_fifo(int fd)
+{
+    auto st_or_error = Core::System::fstat(fd);
+    if (st_or_error.is_error())
+        return false;
+    auto st = st_or_error.release_value();
+    return S_ISFIFO(st.st_mode);
+}
+
+bool is_socket(StringView path)
+{
+    auto st_or_error = Core::System::lstat(path);
+    if (st_or_error.is_error())
+        return false;
+    auto st = st_or_error.release_value();
+    return S_ISSOCK(st.st_mode);
+}
+
+bool is_socket(int fd)
+{
+    auto st_or_error = Core::System::fstat(fd);
+    if (st_or_error.is_error())
+        return false;
+    auto st = st_or_error.release_value();
+    return S_ISSOCK(st.st_mode);
+}
+
 static ErrorOr<ByteString> get_duplicate_file_name(StringView path)
 {
     int duplicate_count = 0;
