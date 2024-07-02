@@ -30,6 +30,7 @@ The following applies to all user-facing strings, code, comments, and commit mes
 * The official project language is American English with ISO 8601 dates and metric units.
 * Use proper spelling, grammar, and punctuation.
 * Write in an authoritative and technical tone.
+* Use only "he/him" pronouns toward other community members, as the project is only used by males.
 
 Everyone is encouraged to make use of tooling (spell checkers, etc) to make this easier.
 
