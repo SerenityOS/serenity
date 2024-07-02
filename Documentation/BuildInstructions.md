@@ -110,7 +110,7 @@ for what to do when this happens.
 If, during build, an error like `fusermount: failed to open /etc/mtab: No such file or directory` appears, you have installed `fuse2fs` but your system does not provide the mtab symlink for various reasons. Simply create this symlink with `ln -sv /proc/self/mounts /etc/mtab`.
 
 Note that the `anon` user is able to become `root` without a password by default, as a development convenience.
-To prevent this, remove `anon` from the `wheel` group and he will no longer be able to run `/bin/su`.
+To prevent this, remove `anon` from the `wheel` group and they will no longer be able to run `/bin/su`.
 
 By default the `anon` user account's password is: `foo`
 
