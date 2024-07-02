@@ -9,6 +9,7 @@
 #include <LibCore/MappedFile.h>
 #include <LibGfx/ImageFormats/BMPLoader.h>
 #include <LibGfx/ImageFormats/DDSLoader.h>
+#include <LibGfx/ImageFormats/FLICLoader.h>
 #include <LibGfx/ImageFormats/GIFLoader.h>
 #include <LibGfx/ImageFormats/ICOLoader.h>
 #include <LibGfx/ImageFormats/ILBMLoader.h>
@@ -83,6 +84,30 @@ TEST_CASE(test_bmp_1bpp)
 
     auto frame = TRY_OR_FAIL(expect_single_frame_of_size(*plugin_decoder, { 399, 400 }));
     EXPECT_EQ(frame.image->begin()[0], 0xff'ff'ff'ff);
+}
+
+TEST_CASE(test_fli)
+{
+    auto file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("flic/serenity.fli"sv)));
+    EXPECT(Gfx::FLICImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = TRY_OR_FAIL(Gfx::FLICImageDecoderPlugin::create(file->bytes()));
+
+    EXPECT_EQ(plugin_decoder->frame_count(), 2u);
+    EXPECT(plugin_decoder->is_animated());
+    EXPECT_EQ(plugin_decoder->loop_count(), 1u);
+
+    EXPECT_EQ(plugin_decoder->size(), Gfx::IntSize(320, 200));
+
+    for (size_t frame_index = 0; frame_index < plugin_decoder->frame_count(); ++frame_index) {
+        auto frame = TRY_OR_FAIL(plugin_decoder->frame(frame_index));
+        EXPECT_EQ(frame.image->size(), Gfx::IntSize(320, 200));
+
+        // This pixel happens to be the same color in all frames.
+        EXPECT_EQ(frame.image->get_pixel(115, 67), Gfx::Color(144, 144, 252));
+
+        // This one isn't the same in all frames.
+        EXPECT_EQ(frame.image->get_pixel(124, 108), frame_index == 1 ? Gfx::Color(156, 28, 20) : Gfx::Color(0, 0, 0));
+    }
 }
 
 TEST_CASE(test_ico_malformed_frame)

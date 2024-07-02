@@ -264,6 +264,7 @@ write_cmake_config("ak_debug_gen") {
     "FILE_WATCHER_DEBUG=",
     "FILL_PATH_DEBUG=",
     "FLAC_ENCODER_DEBUG=",
+    "FLIC_DEBUG=",
     "GEMINI_DEBUG=",
     "GENERATE_DEBUG=",
     "GHASH_PROCESS_DEBUG=",

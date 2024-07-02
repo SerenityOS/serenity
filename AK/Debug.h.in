@@ -150,6 +150,10 @@
 #    cmakedefine01 FLAC_ENCODER_DEBUG
 #endif
 
+#ifndef FLIC_DEBUG
+#    cmakedefine01 FLIC_DEBUG
+#endif
+
 #ifndef GEMINI_DEBUG
 #    cmakedefine01 GEMINI_DEBUG
 #endif

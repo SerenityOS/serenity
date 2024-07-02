@@ -19,6 +19,8 @@
 #define ENUMERATE_IMAGE_FORMATS                \
     __ENUMERATE_IMAGE_FORMAT(bmp, ".bmp")      \
     __ENUMERATE_IMAGE_FORMAT(dds, ".dds")      \
+    __ENUMERATE_IMAGE_FORMAT(flc, ".flc")      \
+    __ENUMERATE_IMAGE_FORMAT(fli, ".fli")      \
     __ENUMERATE_IMAGE_FORMAT(gif, ".gif")      \
     __ENUMERATE_IMAGE_FORMAT(ico, ".ico")      \
     __ENUMERATE_IMAGE_FORMAT(iff, ".iff")      \

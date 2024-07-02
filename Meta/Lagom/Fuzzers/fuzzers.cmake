@@ -10,6 +10,7 @@ set(FUZZER_TARGETS
     DeflateDecompression
     ELF
     FlacLoader
+    FLICLoader
     Gemini
     GIFLoader
     GzipDecompression
@@ -85,6 +86,7 @@ set(FUZZER_DEPENDENCIES_DeflateCompression LibCompress)
 set(FUZZER_DEPENDENCIES_DeflateDecompression LibCompress)
 set(FUZZER_DEPENDENCIES_ELF LibELF)
 set(FUZZER_DEPENDENCIES_FlacLoader LibAudio)
+set(FUZZER_DEPENDENCIES_FLICLoader LibGfx)
 set(FUZZER_DEPENDENCIES_Gemini LibGemini)
 set(FUZZER_DEPENDENCIES_GIFLoader LibGfx)
 set(FUZZER_DEPENDENCIES_GzipDecompression LibCompress)

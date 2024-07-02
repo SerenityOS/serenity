@@ -24,6 +24,7 @@
     T(DeflateDecompression)  \
     T(ELF)                   \
     T(FlacLoader)            \
+    T(FLICLoader)            \
     T(Gemini)                \
     T(GIFLoader)             \
     T(GzipDecompression)     \

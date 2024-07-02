@@ -66,6 +66,7 @@ static Array constexpr s_plaintext_suffixes = {
 // See https://www.iana.org/assignments/media-types/<mime-type> for a list of registered MIME types.
 // For example, https://www.iana.org/assignments/media-types/application/gzip
 static Array const s_registered_mime_type = {
+    MimeType { .name = "application/autodesk-animator"sv, .common_extensions = { ".flc"sv, ".fli"sv }, .description = "FLIC compressed animation"sv },
     MimeType { .name = "application/gzip"sv, .common_extensions = { ".gz"sv, ".gzip"sv }, .description = "GZIP compressed data"sv, .magic_bytes = Vector<u8> { 0x1F, 0x8B } },
     MimeType { .name = "application/javascript"sv, .common_extensions = { ".js"sv, ".mjs"sv }, .description = "JavaScript source"sv },
     MimeType { .name = "application/json"sv, .common_extensions = { ".json"sv }, .description = "JSON data"sv },
