@@ -182,15 +182,19 @@ static LocaleAndKeys apply_unicode_extension_to_tag(StringView tag, LocaleAndKey
         // f. If optionsValue is not undefined, then
         if (options_value.has_value()) {
             // i. Assert: Type(optionsValue) is String.
-            // ii. Let value be optionsValue.
-            value = options_value.release_value();
 
-            // iii. If entry is not empty, then
+            // ii. Let optionsUValue be the ASCII-lowercase of optionsValue.
+            // NOTE: LibLocale performs this transformation itself.
+
+            // iii. Set value to the String value resulting from canonicalizing optionsUValue as a value of key key per Unicode Technical Standard #35 Part 1 Core, Annex C LocaleId Canonicalization Section 5 Canonicalizing Syntax, Processing LocaleIds.
+            value = ::Locale::canonicalize_unicode_extension_values(key, *options_value, ::Locale::RemoveTrue::Yes);
+
+            // iv. If entry is not empty, then
             if (entry != nullptr) {
                 // 1. Set entry.[[Value]] to value.
                 entry->value = *value;
             }
-            // iv. Else,
+            // v. Else,
             else {
                 // 1. Append the Record { [[Key]]: key, [[Value]]: value } to keywords.
                 keywords.append({ MUST(String::from_utf8(key)), *value });
