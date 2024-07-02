@@ -12,7 +12,6 @@
 #include <Kernel/API/KeyCode.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/HID/KeyboardDevice.h>
-#include <Kernel/Devices/TTY/ConsoleManagement.h>
 #include <Kernel/Devices/TTY/VirtualConsole.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Tasks/Scheduler.h>
@@ -29,16 +28,16 @@ void KeyboardDevice::handle_input_event(KeyEvent queued_event)
 
     if (queued_event.is_press() && (m_modifiers == (Mod_Alt | Mod_Shift) || m_modifiers == (Mod_Ctrl | Mod_Alt | Mod_Shift)) && queued_event.key == Key_F12) {
         // Alt+Shift+F12 pressed, dump some kernel state to the debug console.
-        ConsoleManagement::the().switch_to_debug();
+        VirtualConsole::switch_to_debug_console();
         Scheduler::dump_scheduler_state(m_modifiers == (Mod_Ctrl | Mod_Alt | Mod_Shift));
     }
 
     {
         auto key = queued_event.key;
-        if (queued_event.is_press() && (m_modifiers & Mod_Alt) != 0 && key >= Key_1 && key < Key_1 + ConsoleManagement::s_max_virtual_consoles) {
+        if (queued_event.is_press() && (m_modifiers & Mod_Alt) != 0 && key >= Key_1 && key < Key_1 + VirtualConsole::s_max_virtual_consoles) {
             // FIXME: Do something sanely here if we can't allocate a work queue?
             MUST(g_io_work->try_queue([key]() {
-                ConsoleManagement::the().switch_to(key - Key_1);
+                VirtualConsole::switch_to(key - Key_1);
             }));
         }
     }

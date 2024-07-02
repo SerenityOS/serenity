@@ -13,7 +13,7 @@
 #endif
 #include <AK/StringView.h>
 #include <Kernel/Arch/PowerState.h>
-#include <Kernel/Devices/TTY/ConsoleManagement.h>
+#include <Kernel/Devices/TTY/VirtualConsole.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
@@ -84,7 +84,7 @@ ErrorOr<void> PowerStateSwitchTask::perform_shutdown(PowerStateSwitchTask::DoReb
     if (alive_process_count != 0)
         dbgln("We're not the last process alive; proper shutdown may fail!");
 
-    ConsoleManagement::the().switch_to_debug();
+    VirtualConsole::switch_to_debug_console();
 
     dbgln("Locking all file systems...");
     FileSystem::lock_all();

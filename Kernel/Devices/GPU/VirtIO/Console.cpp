@@ -5,7 +5,7 @@
  */
 
 #include <Kernel/Devices/GPU/VirtIO/Console.h>
-#include <Kernel/Devices/TTY/ConsoleManagement.h>
+#include <Kernel/Devices/TTY/VirtualConsole.h>
 #include <Kernel/Tasks/WorkQueue.h>
 
 namespace Kernel::Graphics::VirtIOGPU {
@@ -36,7 +36,7 @@ void Console::set_resolution(size_t width, size_t height, size_t pitch)
     // Just to start cleanly, we clean the entire framebuffer
     memset(framebuffer_data(), 0, pitch * height);
 
-    ConsoleManagement::the().resolution_was_changed();
+    VirtualConsole::resolution_was_changed();
 }
 
 void Console::set_cursor(size_t x, size_t y)

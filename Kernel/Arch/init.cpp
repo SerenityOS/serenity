@@ -39,7 +39,6 @@
 #include <Kernel/Devices/PCISerialDevice.h>
 #include <Kernel/Devices/SerialDevice.h>
 #include <Kernel/Devices/Storage/StorageManagement.h>
-#include <Kernel/Devices/TTY/ConsoleManagement.h>
 #include <Kernel/Devices/TTY/PTYMultiplexer.h>
 #include <Kernel/Devices/TTY/VirtualConsole.h>
 #include <Kernel/FileSystem/SysFS/Registry.h>
@@ -410,7 +409,7 @@ void init_stage2(void*)
     MUST(HIDManagement::initialize());
 
     GraphicsManagement::the().initialize();
-    ConsoleManagement::the().initialize();
+    VirtualConsole::initialize_consoles();
 
     SyncTask::spawn();
     FinalizerTask::spawn();

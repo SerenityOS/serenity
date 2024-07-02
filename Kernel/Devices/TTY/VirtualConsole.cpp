@@ -1,11 +1,12 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020, Sergey Bugaev <bugaevc@serenityos.org>
- * Copyright (c) 2021, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2021-2024, Liav A. <liavalb@hotmail.co.il>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Singleton.h>
 #include <AK/StdLibExtras.h>
 #include <Kernel/Arch/Delay.h>
 #if ARCH(X86_64)
@@ -13,16 +14,109 @@
 #endif
 #include <Kernel/Boot/CommandLine.h>
 #include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/GPU/DisplayConnector.h>
 #include <Kernel/Devices/GPU/Management.h>
 #include <Kernel/Devices/HID/Management.h>
-#include <Kernel/Devices/TTY/ConsoleManagement.h>
 #include <Kernel/Devices/TTY/VirtualConsole.h>
 #include <Kernel/Heap/kmalloc.h>
+#include <Kernel/Library/Panic.h>
 #include <Kernel/Library/StdLib.h>
+#include <Kernel/Locking/SpinlockProtected.h>
 #include <Kernel/Sections.h>
 #include <LibVT/Color.h>
 
 namespace Kernel {
+
+static Singleton<SpinlockProtected<RefPtr<VirtualConsole>, LockRank::None>> s_active_console;
+static Singleton<SpinlockProtected<RefPtr<VirtualConsole>, LockRank::None>> s_debug_console;
+static Singleton<SpinlockProtected<Array<RefPtr<VirtualConsole>, VirtualConsole::s_max_virtual_consoles>, LockRank::None>> s_consoles;
+
+void VirtualConsole::resolution_was_changed()
+{
+    s_consoles->with([](auto& consoles) {
+        for (auto& console : consoles) {
+            // NOTE: The resolution can change before any VirtualConsole is initialized.
+            if (console)
+                console->refresh_after_resolution_change();
+        }
+    });
+}
+
+bool VirtualConsole::emit_char_on_debug_console(char ch)
+{
+    return s_debug_console->with([ch](auto& console) -> bool {
+        if (!console)
+            return false;
+        console->emit_char(ch);
+        return true;
+    });
+}
+
+UNMAP_AFTER_INIT void VirtualConsole::initialize_consoles()
+{
+    s_consoles->with([](auto& consoles) {
+        for (size_t index = 0; index < consoles.size(); index++) {
+            // FIXME: Better determine the debug TTY we chose...
+            if (index == 1) {
+                VERIFY(DeviceManagement::the().is_console_device_attached());
+                consoles[index] = VirtualConsole::create_with_preset_log(index, DeviceManagement::the().console_device().logbuffer());
+                continue;
+            }
+            consoles[index] = VirtualConsole::create(index);
+        }
+
+        // Note: By default the active console is the first one.
+        auto tty_number = kernel_command_line().switch_to_tty();
+        if (tty_number > consoles.size()) {
+            PANIC("Switch to tty value is invalid: {} ", tty_number);
+        }
+        s_active_console->with([&](auto& active_console) {
+            active_console = consoles[tty_number];
+            active_console->set_active(true);
+            if (!active_console->is_graphical())
+                active_console->clear();
+        });
+
+        s_debug_console->with([&](auto& console) {
+            console = consoles[1];
+        });
+    });
+}
+
+void VirtualConsole::switch_to(unsigned index)
+{
+    VERIFY(index < VirtualConsole::s_max_virtual_consoles);
+    dbgln_if(VIRTUAL_CONSOLE_DEBUG, "VirtualConsole: Switch to {}", index);
+    s_consoles->with([index](auto& consoles) {
+        s_active_console->with([&](auto& active_console) {
+            VERIFY(active_console);
+            if (active_console->index() == index)
+                return;
+
+            bool was_graphical = active_console->is_graphical();
+            active_console->set_active(false);
+            active_console = consoles[index];
+
+            // Before setting current console to be "active", switch between graphical mode to "textual" mode
+            // if needed. This will ensure we clear the screen and also that WindowServer won't print anything
+            // in between.
+            if (!active_console->is_graphical() && !was_graphical) {
+                active_console->set_active(true);
+                return;
+            }
+
+            if (active_console->is_graphical() && !was_graphical) {
+                active_console->set_active(true);
+                GraphicsManagement::the().activate_graphical_mode();
+                return;
+            }
+
+            VERIFY(!active_console->is_graphical() && was_graphical);
+            GraphicsManagement::the().deactivate_graphical_mode();
+            active_console->set_active(true);
+        });
+    });
+}
 
 ConsoleImpl::ConsoleImpl(VirtualConsole& client)
     : Terminal(client)
@@ -109,15 +203,15 @@ ErrorOr<NonnullOwnPtr<KString>> VirtualConsole::pseudo_name() const
     return KString::formatted("tty:{}", m_index);
 }
 
-UNMAP_AFTER_INIT NonnullLockRefPtr<VirtualConsole> VirtualConsole::create(size_t index)
+UNMAP_AFTER_INIT NonnullRefPtr<VirtualConsole> VirtualConsole::create(size_t index)
 {
     auto virtual_console_or_error = DeviceManagement::try_create_device<VirtualConsole>(index);
     // FIXME: Find a way to propagate errors
     VERIFY(!virtual_console_or_error.is_error());
-    return virtual_console_or_error.release_value();
+    return *virtual_console_or_error.release_value();
 }
 
-UNMAP_AFTER_INIT NonnullLockRefPtr<VirtualConsole> VirtualConsole::create_with_preset_log(size_t index, CircularQueue<char, 16384> const& log)
+UNMAP_AFTER_INIT NonnullRefPtr<VirtualConsole> VirtualConsole::create_with_preset_log(size_t index, CircularQueue<char, 16384> const& log)
 {
     auto virtual_console = VirtualConsole::create(index);
     // HACK: We have to go through the TTY layer for correct newline handling.
@@ -126,7 +220,7 @@ UNMAP_AFTER_INIT NonnullLockRefPtr<VirtualConsole> VirtualConsole::create_with_p
     for (auto ch : log) {
         virtual_console->emit_char(ch);
     }
-    return virtual_console;
+    return *virtual_console;
 }
 
 UNMAP_AFTER_INIT void VirtualConsole::initialize()
@@ -283,7 +377,6 @@ void VirtualConsole::on_key_pressed(KeyEvent event)
 
 ErrorOr<size_t> VirtualConsole::on_tty_write(UserOrKernelBuffer const& data, size_t size)
 {
-    SpinlockLocker global_lock(ConsoleManagement::the().tty_write_lock());
     auto result = data.read_buffered<512>(size, [&](ReadonlyBytes buffer) {
         for (auto const& byte : buffer)
             m_console_impl.on_input(byte);
@@ -296,7 +389,6 @@ ErrorOr<size_t> VirtualConsole::on_tty_write(UserOrKernelBuffer const& data, siz
 
 void VirtualConsole::set_active(bool active)
 {
-    VERIFY(ConsoleManagement::the().m_lock.is_locked());
     VERIFY(m_active != active);
     m_active = active;
 
@@ -508,5 +600,4 @@ void VirtualConsole::invalidate_cursor(size_t row)
 {
     m_lines[row].dirty = true;
 }
-
 }

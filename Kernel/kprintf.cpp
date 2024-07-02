@@ -16,7 +16,7 @@
 #include <Kernel/Devices/GPU/Management.h>
 #include <Kernel/Devices/Generic/ConsoleDevice.h>
 #include <Kernel/Devices/PCISerialDevice.h>
-#include <Kernel/Devices/TTY/ConsoleManagement.h>
+#include <Kernel/Devices/TTY/VirtualConsole.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/kstdio.h>
 
@@ -79,10 +79,9 @@ static void console_out(char ch)
         bochs_debug_output(ch);
 #endif
     }
-    if (ConsoleManagement::is_initialized()) {
-        ConsoleManagement::the().debug_tty()->emit_char(ch);
-    } else if (auto* boot_console = g_boot_console.load()) {
-        boot_console->write(ch, true);
+    if (!VirtualConsole::emit_char_on_debug_console(ch)) {
+        if (auto* boot_console = g_boot_console.load())
+            boot_console->write(ch, true);
     }
 }
 

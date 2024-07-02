@@ -5,7 +5,7 @@
  */
 
 #include <Kernel/Devices/GPU/Console/ContiguousFramebufferConsole.h>
-#include <Kernel/Devices/TTY/ConsoleManagement.h>
+#include <Kernel/Devices/TTY/VirtualConsole.h>
 
 namespace Kernel::Graphics {
 
@@ -36,7 +36,7 @@ void ContiguousFramebufferConsole::set_resolution(size_t width, size_t height, s
     // Just to start cleanly, we clean the entire framebuffer
     memset(m_framebuffer_region->vaddr().as_ptr(), 0, pitch * height);
 
-    ConsoleManagement::the().resolution_was_changed();
+    VirtualConsole::resolution_was_changed();
 }
 
 }
