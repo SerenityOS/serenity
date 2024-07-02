@@ -2,6 +2,7 @@
  * Copyright (c) 2021, Pierre Hoffmeister
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Aziz Berkay Yesilyurt <abyesilyurt@gmail.com>
+ * Copyright (c) 2024, Torben Jonas Virtmann
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,6 +11,7 @@
 #include <AK/FixedArray.h>
 #include <AK/SIMDExtras.h>
 #include <AK/String.h>
+#include <AK/Vector.h>
 #include <LibCompress/Zlib.h>
 #include <LibCrypto/Checksum/CRC32.h>
 #include <LibGfx/Bitmap.h>
@@ -127,6 +129,40 @@ ErrorOr<void> PNGWriter::add_IHDR_chunk(u32 width, u32 height, u8 bit_depth, PNG
     return {};
 }
 
+ErrorOr<void> PNGWriter::add_acTL_chunk(u32 num_frames, u32 num_plays = 0)
+{
+    PNGChunk png_chunk { "acTL"_string };
+    TRY(png_chunk.add_as_big_endian(num_frames));
+    TRY(png_chunk.add_as_big_endian(num_plays));
+    TRY(add_chunk(png_chunk));
+    return {};
+}
+
+ErrorOr<void> PNGWriter::add_fcTL_chunk(u32 sequence_number, u32 width, u32 height, u16 delay_num = 1, u16 delay_den = 30, u8 dispose_op = 0, u8 blend_op = 0, u32 x_offset = 0, u32 y_offset = 0)
+{
+    // TODO: Constraints on frame regions
+    PNGChunk png_chunk { "fcTL"_string };
+    TRY(png_chunk.add_as_big_endian(sequence_number));
+    TRY(png_chunk.add_as_big_endian(width));
+    TRY(png_chunk.add_as_big_endian(height));
+    TRY(png_chunk.add_as_big_endian(x_offset));
+    TRY(png_chunk.add_as_big_endian(y_offset));
+    TRY(png_chunk.add_as_big_endian(delay_num));
+    TRY(png_chunk.add_as_big_endian(delay_den));
+    TRY(png_chunk.add_u8(dispose_op));
+    // dispose_op values
+    // 0           APNG_DISPOSE_OP_NONE
+    // 1           APNG_DISPOSE_OP_BACKGROUND
+    // 2           APNG_DISPOSE_OP_PREVIOUS
+    TRY(png_chunk.add_u8(blend_op));
+    // blend_op values
+    // value
+    // 0       APNG_BLEND_OP_SOURCE
+    // 1       APNG_BLEND_OP_OVER
+    TRY(add_chunk(png_chunk));
+    return {};
+}
+
 ErrorOr<void> PNGWriter::add_iCCP_chunk(ReadonlyBytes icc_data)
 {
     // https://www.w3.org/TR/png/#11iCCP
@@ -167,9 +203,14 @@ union [[gnu::packed]] Pixel {
 };
 static_assert(AssertSize<Pixel, 4>());
 
-ErrorOr<void> PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap)
+ErrorOr<void> PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap, bool animated = false, u32 sequence_number = 0)
 {
     PNGChunk png_chunk { "IDAT"_string };
+    if (animated) {
+        PNGChunk png_chunk_fdat { "fdAT"_string };
+        png_chunk = png_chunk_fdat;
+        TRY(png_chunk.add_as_big_endian(sequence_number));
+    }
     TRY(png_chunk.reserve(bitmap.size_in_bytes()));
 
     ByteBuffer uncompressed_block_data;
@@ -279,6 +320,56 @@ ErrorOr<ByteBuffer> PNGWriter::encode(Gfx::Bitmap const& bitmap, Options options
     TRY(writer.add_IDAT_chunk(bitmap));
     TRY(writer.add_IEND_chunk());
     return ByteBuffer::copy(writer.m_data);
+}
+
+class PNGAnimationWriter : public AnimationWriter {
+public:
+    PNGAnimationWriter(SeekableStream& stream)
+        : m_stream(stream)
+    {
+    }
+
+    virtual ErrorOr<void> add_frame(Bitmap&, int, IntPoint) override;
+
+private:
+    PNGWriter& m_writer;
+
+    bool is_first_frame { true };
+    u32 sequence_number { 0 };
+};
+
+ErrorOr<void> PNGAnimationWriter::add_frame(Bitmap& bitmap, int duration_ms, IntPoint at = {})
+{
+    // FIXME: Consider frame's duration and position
+    (void)at;
+
+    // Let's get rid of the previously written trailer
+    if (!is_first_frame)
+        TRY(m_stream.seek(-4, SeekMode::FromEndPosition));
+
+    is_first_frame = false;
+
+    TRY(writer.add_fcTL_chunk(sequence_number, b.width(), b.height(), duration_ms, 1000, 0, 0));
+    sequence_number++;
+    TRY(writer.add_IDAT_chunk(b, true, sequence_number));
+    sequence_number++;
+    TRY(writer.add_IEND_chunk());
+
+    TRY(m_stream.write_some(ByteBuffer::copy(writer.m_data)))
+    TRY(m_data.clear());
+
+    return {};
+}
+
+ErrorOr<NonnullOwnPtr<AnimationWriter>> PNGWriter::start_encoding_animation(SeekableStream& stream, IntSize dimensions)
+{
+    TRY(writer.add_png_header());
+    TRY(writer.add_IHDR_chunk(bitmap.width(), bitmap.height(), 8, PNG::ColorType::TruecolorWithAlpha, 0, 0, 0));
+    if (options.icc_data.has_value())
+        TRY(writer.add_iCCP_chunk(options.icc_data.value()));
+    TRY(writer.add_acTL_chunk(bitmap.size()));
+    BigEndianOutputBitStream bit_stream { MaybeOwned<Stream> { stream } };
+    return make<PNGAnimationWriter>(stream);
 }
 
 }
