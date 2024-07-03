@@ -73,7 +73,23 @@ static Gfx::IntRect rect_where_pixels_are_different(Bitmap const& a, Bitmap cons
     return rect;
 }
 
-ErrorOr<void> AnimationWriter::add_frame_relative_to_last_frame(Bitmap& frame, int duration_ms, RefPtr<Bitmap> last_frame)
+bool AnimationWriter::can_zero_out_unchanging_pixels(Bitmap& new_frame, Gfx::IntRect new_frame_rect, Bitmap& last_frame, AllowInterFrameCompression allow_inter_frame_compression) const
+{
+    if (!can_blend_frames() || allow_inter_frame_compression == AllowInterFrameCompression::No)
+        return false;
+
+    VERIFY(new_frame.width() == new_frame_rect.width());
+    VERIFY(new_frame.height() == new_frame_rect.height());
+    for (int y = 0; y < new_frame.height(); ++y) {
+        for (int x = 0; x < new_frame.width(); ++x) {
+            if (new_frame.get_pixel(x, y).alpha() != 255 && new_frame.get_pixel(x, y) != last_frame.get_pixel(x + new_frame_rect.x(), y + new_frame_rect.y()))
+                return false;
+        }
+    }
+    return true;
+}
+
+ErrorOr<void> AnimationWriter::add_frame_relative_to_last_frame(Bitmap& frame, int duration_ms, RefPtr<Bitmap> last_frame, AllowInterFrameCompression allow_inter_frame_compression)
 {
     if (!last_frame)
         return add_frame(frame, duration_ms);
@@ -90,13 +106,22 @@ ErrorOr<void> AnimationWriter::add_frame_relative_to_last_frame(Bitmap& frame, i
     // FIXME: It would be nice to have a way to crop a bitmap without copying the data.
     auto differences = TRY(frame.cropped(rect));
 
-    // FIXME: Another idea: If all frames of the animation have no alpha,
-    //        this could set color values of pixels that are in the changed rect that are
-    //        equal to the last frame to transparent black and set the frame to be blended.
-    //        That might take less space after compression.
+    BlendMode blend_mode = BlendMode::Replace;
+
+    // If all frames of the animation have no alpha, set color values of pixels that are in the changed rect that are
+    // equal to the last frame to transparent black and set the frame to be blended. This is almost smaller after compression.
+    if (can_zero_out_unchanging_pixels(*differences, rect, *last_frame, allow_inter_frame_compression)) {
+        for (int y = 0; y < differences->height(); ++y) {
+            for (int x = 0; x < differences->width(); ++x) {
+                if (differences->get_pixel(x, y) == last_frame->get_pixel(x + rect.x(), y + rect.y()) || differences->get_pixel(x, y).alpha() == 0)
+                    differences->set_pixel(x, y, Color(0, 0, 0, 0));
+            }
+        }
+        blend_mode = BlendMode::Blend;
+    }
 
     // This assumes a replacement disposal method.
-    return add_frame(differences, duration_ms, rect.location());
+    return add_frame(differences, duration_ms, rect.location(), blend_mode);
 }
 
 }
