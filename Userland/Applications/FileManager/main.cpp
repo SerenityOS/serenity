@@ -993,6 +993,10 @@ ErrorOr<int> run_in_windowed_mode(ByteString const& initial_location, ByteString
     });
     focus_dependent_delete_action->set_enabled(false);
 
+    auto new_window_action = GUI::Action::create("&New Window", { Mod_Ctrl, Key_N }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/new-window.png"sv)), [&](GUI::Action const&) {
+        Desktop::Launcher::open(URL::create_with_file_scheme(directory_view->path()));
+    });
+
     auto mkdir_action = GUI::Action::create("&New Directory...", { Mod_Ctrl | Mod_Shift, Key_N }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"sv)), [&](GUI::Action const&) {
         directory_view->mkdir_action().activate();
         refresh_tree_view();
@@ -1004,6 +1008,7 @@ ErrorOr<int> run_in_windowed_mode(ByteString const& initial_location, ByteString
     });
 
     auto file_menu = window->add_menu("&File"_string);
+    file_menu->add_action(new_window_action);
     file_menu->add_action(mkdir_action);
     file_menu->add_action(touch_action);
     file_menu->add_action(focus_dependent_delete_action);
