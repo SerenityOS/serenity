@@ -168,15 +168,19 @@ public:
     {
     }
 
-    virtual ErrorOr<void> add_frame(Bitmap&, int, IntPoint) override;
+    virtual ErrorOr<void> add_frame(Bitmap&, int, IntPoint, BlendMode) override;
 
 private:
     SeekableStream& m_stream;
     bool m_is_first_frame { true };
 };
 
-ErrorOr<void> GIFAnimationWriter::add_frame(Bitmap& bitmap, int duration_ms, IntPoint at = {})
+ErrorOr<void> GIFAnimationWriter::add_frame(Bitmap& bitmap, int duration_ms, IntPoint at, BlendMode)
 {
+    // FIXME: After implementing support for writing GIFs with transparent pixels:
+    // * Set "Transparency Flag" in write_graphic_control_extension() to true for them if BlendMode is set
+    // * Override AnimationWriter::can_blend_frames() to return true
+
     // Let's get rid of the previously written trailer
     if (!m_is_first_frame)
         TRY(m_stream.seek(-1, SeekMode::FromCurrentPosition));

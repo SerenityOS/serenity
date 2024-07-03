@@ -223,7 +223,7 @@ public:
     {
     }
 
-    virtual ErrorOr<void> add_frame(Bitmap&, int, IntPoint) override;
+    virtual ErrorOr<void> add_frame(Bitmap&, int, IntPoint, BlendMode) override;
 
     ErrorOr<void> update_size_in_header();
     ErrorOr<void> set_alpha_bit_in_header();
@@ -299,8 +299,10 @@ static ErrorOr<void> write_ANMF_chunk_header(Stream& stream, ANMFChunkHeader con
     return {};
 }
 
-ErrorOr<void> WebPAnimationWriter::add_frame(Bitmap& bitmap, int duration_ms, IntPoint at)
+ErrorOr<void> WebPAnimationWriter::add_frame(Bitmap& bitmap, int duration_ms, IntPoint at, BlendMode)
 {
+    // FIXME: Honor BlendMode.
+
     if (at.x() < 0 || at.y() < 0 || at.x() + bitmap.width() > m_dimensions.width() || at.y() + bitmap.height() > m_dimensions.height())
         return Error::from_string_literal("Frame does not fit in animation dimensions");
 
