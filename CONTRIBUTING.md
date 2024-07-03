@@ -135,4 +135,10 @@ To make this easier, we do appreciate it if folks enable the "Allow edits from m
 
 ## On ideologically motivated changes
 
-This is a purely technical project. As such, it is not an appropriate arena to advertise your personal politics or religious beliefs. Any changes that appear ideologically motivated will be rejected.
+Serenity's goal is to enable collaboration between as many groups as *reasonably* possible, and we welcome contributions that make the project more accessisble to people.
+
+However, Serenity is intended to be a purely technical exercise, in the sense of it not being meant to invoke any sociopolitical change. We explicitly try to avoid drama or getting involved in "external" culture wars, and can reject changes that we feel to be sensitive.
+
+For instance, we can reject changes promoting dogwhistles, religious beliefs—which are unambiguously off-topic—or real-world political candidates.
+
+We may miss the mark sometimes, but we encourage good-faith dialogue over anger.
