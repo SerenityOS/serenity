@@ -16,6 +16,7 @@ struct Options {
     StringView in_path;
     StringView out_path;
     bool write_full_frames { false };
+    Gfx::AnimationWriter::AllowInterFrameCompression allow_inter_frame_compression { Gfx::AnimationWriter::AllowInterFrameCompression::Yes };
 };
 
 static ErrorOr<Options> parse_options(Main::Arguments arguments)
@@ -24,11 +25,27 @@ static ErrorOr<Options> parse_options(Main::Arguments arguments)
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(options.in_path, "Path to input image file", "FILE");
     args_parser.add_option(options.out_path, "Path to output image file", "output", 'o', "FILE");
-    args_parser.add_option(options.write_full_frames, "Do not store incremental frames. Produces larger files.", "write-full-frames");
+
+    bool inter_frame_compression_full = false;
+    args_parser.add_option(inter_frame_compression_full, "Store smallest frame covering all changing pixels between frames, and zero out non-changing pixels. Default.", "inter-frame-compression=full");
+
+    bool inter_frame_compression_clip = false;
+    args_parser.add_option(inter_frame_compression_clip, "Store smallest frame covering all changing pixels between frames.", "inter-frame-compression=clip");
+
+    bool inter_frame_compression_none = false;
+    args_parser.add_option(inter_frame_compression_none, "Do not store incremental frames. Produces larger files.", "inter-frame-compression=none");
+
     args_parser.parse(arguments);
 
     if (options.out_path.is_empty())
         return Error::from_string_view("-o is required "sv);
+
+    if (inter_frame_compression_full + inter_frame_compression_clip + inter_frame_compression_none > 1)
+        return Error::from_string_view("Only one of --inter-frame-compression=full, --inter-frame-compression=clip-rect, --inter-frame-compression=none can be specified"sv);
+    if (!inter_frame_compression_full && !inter_frame_compression_clip && !inter_frame_compression_none)
+        inter_frame_compression_full = true;
+    options.write_full_frames = inter_frame_compression_none;
+    options.allow_inter_frame_compression = inter_frame_compression_full ? Gfx::AnimationWriter::AllowInterFrameCompression::Yes : Gfx::AnimationWriter::AllowInterFrameCompression::No;
 
     return options;
 }
@@ -61,7 +78,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (options.write_full_frames) {
             TRY(animation_writer->add_frame(*frame.image, frame.duration));
         } else {
-            TRY(animation_writer->add_frame_relative_to_last_frame(*frame.image, frame.duration, last_frame));
+            TRY(animation_writer->add_frame_relative_to_last_frame(*frame.image, frame.duration, last_frame, options.allow_inter_frame_compression));
             last_frame = frame.image;
         }
     }
