@@ -224,6 +224,7 @@ public:
     }
 
     virtual ErrorOr<void> add_frame(Bitmap&, int, IntPoint, BlendMode) override;
+    virtual bool can_blend_frames() const override { return true; }
 
     ErrorOr<void> update_size_in_header();
     ErrorOr<void> set_alpha_bit_in_header();
@@ -299,10 +300,8 @@ static ErrorOr<void> write_ANMF_chunk_header(Stream& stream, ANMFChunkHeader con
     return {};
 }
 
-ErrorOr<void> WebPAnimationWriter::add_frame(Bitmap& bitmap, int duration_ms, IntPoint at, BlendMode)
+ErrorOr<void> WebPAnimationWriter::add_frame(Bitmap& bitmap, int duration_ms, IntPoint at, BlendMode blend_mode)
 {
-    // FIXME: Honor BlendMode.
-
     if (at.x() < 0 || at.y() < 0 || at.x() + bitmap.width() > m_dimensions.width() || at.y() + bitmap.height() > m_dimensions.height())
         return Error::from_string_literal("Frame does not fit in animation dimensions");
 
@@ -318,7 +317,10 @@ ErrorOr<void> WebPAnimationWriter::add_frame(Bitmap& bitmap, int duration_ms, In
     chunk.frame_width = static_cast<u32>(bitmap.width());
     chunk.frame_height = static_cast<u32>(bitmap.height());
     chunk.frame_duration_in_milliseconds = static_cast<u32>(duration_ms);
-    chunk.blending_method = ANMFChunkHeader::BlendingMethod::DoNotBlend;
+    if (blend_mode == BlendMode::Replace)
+        chunk.blending_method = ANMFChunkHeader::BlendingMethod::DoNotBlend;
+    else
+        chunk.blending_method = ANMFChunkHeader::BlendingMethod::UseAlphaBlending;
     chunk.disposal_method = ANMFChunkHeader::DisposalMethod::DoNotDispose;
 
     TRY(write_ANMF_chunk_header(m_stream, chunk, compute_VP8L_chunk_size(vp8l_data_bytes)));
