@@ -258,6 +258,7 @@ public:
     virtual double device_pixels_per_css_pixel() const = 0;
     virtual CSS::PreferredColorScheme preferred_color_scheme() const = 0;
     virtual void paint_next_frame() = 0;
+    virtual void process_screenshot_requests() = 0;
     virtual void paint(DevicePixelRect const&, Gfx::Bitmap&, PaintOptions = {}) = 0;
     virtual void page_did_change_title(ByteString const&) { }
     virtual void page_did_change_url(URL::URL const&) { }

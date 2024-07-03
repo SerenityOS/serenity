@@ -185,11 +185,16 @@ Web::Layout::Viewport* PageClient::layout_root()
     return document->layout_node();
 }
 
-void PageClient::paint_next_frame()
+void PageClient::process_screenshot_requests()
 {
     if (!m_backing_stores.back_bitmap) {
         return;
     }
+}
+
+void PageClient::paint_next_frame()
+{
+    process_screenshot_requests();
 
     auto& back_bitmap = *m_backing_stores.back_bitmap;
     auto viewport_rect = page().css_to_device_rect(page().top_level_traversable()->viewport_rect());
