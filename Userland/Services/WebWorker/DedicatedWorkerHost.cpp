@@ -15,6 +15,7 @@
 #include <LibWeb/HTML/Scripting/WorkerEnvironmentSettingsObject.h>
 #include <LibWeb/HTML/WorkerDebugConsoleClient.h>
 #include <LibWeb/HTML/WorkerGlobalScope.h>
+#include <LibWeb/HighResolutionTime/TimeOrigin.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <WebWorker/DedicatedWorkerHost.h>
 
@@ -35,6 +36,9 @@ void DedicatedWorkerHost::run(JS::NonnullGCPtr<Web::Page> page, Web::HTML::Trans
 {
     bool const is_shared = false;
 
+    // 3. Let unsafeWorkerCreationTime be the unsafe shared current time.
+    auto unsafe_worker_creation_time = Web::HighResolutionTime::unsafe_shared_current_time();
+
     // 7. Let realm execution context be the result of creating a new JavaScript realm given agent and the following customizations:
     auto realm_execution_context = Web::Bindings::create_a_new_javascript_realm(
         Web::Bindings::main_thread_vm(),
@@ -54,7 +58,7 @@ void DedicatedWorkerHost::run(JS::NonnullGCPtr<Web::Page> page, Web::HTML::Trans
 
     // 9. Set up a worker environment settings object with realm execution context,
     //    outside settings, and unsafeWorkerCreationTime, and let inside settings be the result.
-    auto inner_settings = Web::HTML::WorkerEnvironmentSettingsObject::setup(page, move(realm_execution_context));
+    auto inner_settings = Web::HTML::WorkerEnvironmentSettingsObject::setup(page, move(realm_execution_context), outside_settings_snapshot, unsafe_worker_creation_time);
 
     auto& console_object = *inner_settings->realm().intrinsics().console_object();
     m_console = console_object.heap().allocate_without_realm<Web::HTML::WorkerDebugConsoleClient>(console_object.console());
