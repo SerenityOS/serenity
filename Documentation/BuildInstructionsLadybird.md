@@ -1,6 +1,7 @@
 # Ladybird browser build instructions
 
-**NOTE:** The Ladybird cross-platform web browser project is now separate from SerenityOS, and is now actively developed in the [LadybirdBrowser/ladybird](https://github.com/LadybirdBrowser/ladybird) repository.
+> [!NOTE]
+> The Ladybird web browser project has moved to [LadybirdBrowser/ladybird](https://github.com/LadybirdBrowser/ladybird), this version is kept as a developer convenience for the testing of LibWeb and LibJS libraries included with SerenityOS.
 
 ## Build Prerequisites
 
