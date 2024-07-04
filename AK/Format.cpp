@@ -879,13 +879,17 @@ template<Integral T>
 ErrorOr<void> Formatter<T>::format(FormatBuilder& builder, T value)
 {
     if (m_mode == Mode::Character) {
-        // FIXME: We just support ASCII for now, in the future maybe unicode?
-        //        VERIFY(value >= 0 && value <= 127);
-
         m_mode = Mode::String;
 
         Formatter<StringView> formatter { *this };
-        return formatter.format(builder, StringView { reinterpret_cast<char const*>(&value), 1 });
+
+        // FIXME: We just support ASCII for now, in the future maybe unicode?
+        VERIFY(value >= 0 && value <= 127);
+
+        // Convert value to a single byte. This is important for big-endian systems, because the LSB is stored in the last byte.
+        char const c = (value & 0x7f);
+
+        return formatter.format(builder, StringView { &c, 1 });
     }
 
     if (m_precision.has_value())
