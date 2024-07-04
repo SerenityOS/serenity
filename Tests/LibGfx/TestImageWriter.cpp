@@ -249,6 +249,22 @@ TEST_CASE(test_webp_color_indexing_transform_single_channel)
     }
 }
 
+TEST_CASE(test_webp_color_cache)
+{
+    auto bitmap = TRY_OR_FAIL(create_test_rgba_bitmap());
+    for (int color_cache_bits = 0; color_cache_bits <= 11; ++color_cache_bits) {
+        Gfx::WebPEncoderOptions options;
+        if (color_cache_bits == 0)
+            options.vp8l_options.color_cache_bits = {};
+        else
+            options.vp8l_options.color_cache_bits = color_cache_bits;
+
+        auto encoded_data = TRY_OR_FAIL(encode_bitmap<Gfx::WebPWriter>(bitmap));
+        auto decoded_bitmap = TRY_OR_FAIL(expect_single_frame_of_size(*TRY_OR_FAIL(Gfx::WebPImageDecoderPlugin::create(encoded_data)), bitmap->size()));
+        expect_bitmaps_equal(*decoded_bitmap, *bitmap);
+    }
+}
+
 TEST_CASE(test_webp_icc)
 {
     auto sRGB_icc_profile = MUST(Gfx::ICC::sRGB());

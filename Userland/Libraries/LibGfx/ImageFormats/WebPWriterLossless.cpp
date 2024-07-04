@@ -216,7 +216,8 @@ static ErrorOr<CanonicalCode> write_normal_code_lengths(LittleEndianOutputBitStr
         VERIFY(code_count > 2);
     }
 
-    Array<CodeLengthSymbol, 280> encoded_lengths;
+    Vector<CodeLengthSymbol, 256 + 24 + 64> encoded_lengths;
+    TRY(encoded_lengths.try_resize(code_count));
     auto encoded_lengths_count = encode_huffman_lengths(bit_lengths.trim(code_count), encoded_lengths.span());
 
     // The code to compute code length code lengths is very similar to some of the code in DeflateCompressor::flush().
@@ -288,13 +289,29 @@ static ErrorOr<CanonicalCode> write_normal_code_lengths(LittleEndianOutputBitStr
     return CanonicalCode::from_bytes(bit_lengths.trim(code_count));
 }
 
-static ErrorOr<Vector<Symbol>> bitmap_to_symbols(Bitmap const& bitmap)
+static ErrorOr<Vector<Symbol>> bitmap_to_symbols(Bitmap const& bitmap, Optional<unsigned> color_cache_code_bits)
 {
+    Vector<ARGB32, 64> color_cache;
+    if (color_cache_code_bits.has_value())
+        TRY(color_cache.try_resize(1u << color_cache_code_bits.value()));
     // LZ77 compression.
     Vector<Symbol> symbols;
     TRY(symbols.try_ensure_capacity(bitmap.size().area()));
 
     auto emit_literal = [&](ARGB32 pixel) {
+        if (color_cache_code_bits.has_value()) {
+            // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#523_color_cache_coding
+            // "The state of the color cache is maintained by inserting every pixel, be it produced by backward referencing or as literals, into the cache in the order they appear in the stream."
+            u16 index = (0x1e35a7bd * pixel) >> (32 - color_cache_code_bits.value());
+            if (color_cache[index] == pixel) {
+                Symbol symbol;
+                symbol.green_or_length_or_index = 256 + 24 + index;
+                symbols.append(symbol);
+                return;
+            }
+            color_cache[index] = pixel;
+        }
+
         Symbol symbol;
         symbol.green_or_length_or_index = (pixel >> 8) & 0xff;
         symbol.r = pixel >> 16;
@@ -345,8 +362,7 @@ static ErrorOr<Vector<Symbol>> bitmap_to_symbols(Bitmap const& bitmap)
 
         // Emit a back-reference.
         // Currently, we only emit back-references to the last pixel.
-        // FIXME: Do full LZ77 backref matching.
-        // FIXME: Add support for color cache entries as well.
+        // FIXME: Do full LZ77 backref matching. Once we do this, we have to update color_cache for backrefs. (For RLE, it's already updated from the previous literal.)
 
         // "The smallest distance codes [1..120] are special, and are reserved for a close neighborhood of the current pixel."
         // "Distance codes larger than 120 denote the pixel-distance in scan-line order, offset by 120."
@@ -376,7 +392,7 @@ static Optional<unsigned> can_write_as_simple_code_lengths(ReadonlyBytes code_le
     return non_zero_symbol_count;
 }
 
-static ErrorOr<PrefixCodeGroup> compute_and_write_prefix_code_group(Vector<Symbol> const& symbols, LittleEndianOutputBitStream& bit_stream, IsOpaque& is_fully_opaque)
+static ErrorOr<PrefixCodeGroup> compute_and_write_prefix_code_group(Vector<Symbol> const& symbols, LittleEndianOutputBitStream& bit_stream, IsOpaque& is_fully_opaque, u16 color_cache_size)
 {
     // prefix-code-group     =
     //     5prefix-code ; See "Interpretation of Meta Prefix Codes" to
@@ -390,14 +406,11 @@ static ErrorOr<PrefixCodeGroup> compute_and_write_prefix_code_group(Vector<Symbo
     //  Prefix code #2, #3, and #4: Used for red, blue, and alpha channels, respectively.
     //  Prefix code #5: Used for backward-reference distance."
 
-    size_t const color_cache_size = 0;
-    constexpr Array alphabet_sizes = to_array<size_t>({ 256 + 24 + static_cast<size_t>(color_cache_size), 256, 256, 256, 40 });
+    Array const alphabet_sizes = to_array<size_t>({ 256 + 24 + static_cast<size_t>(color_cache_size), 256, 256, 256, 40 });
 
-    // If you add support for color cache: At the moment, CanonicalCodes does not support writing more than 288 symbols.
-    if (alphabet_sizes[0] > 288)
-        return Error::from_string_literal("Invalid alphabet size");
+    Vector<u16, 256 + 24 + 64> symbol_frequencies_green_or_length {};
+    TRY(symbol_frequencies_green_or_length.try_resize(alphabet_sizes[0]));
 
-    Array<u16, 280> symbol_frequencies_green_or_length {};
     Array<Array<u16, 256>, 3> symbol_frequencies_rba {};
     Array<u16, 40> symbol_frequencies_distance {};
 
@@ -427,7 +440,9 @@ static ErrorOr<PrefixCodeGroup> compute_and_write_prefix_code_group(Vector<Symbo
         }
     }
 
-    Array<u8, 280> code_lengths_green_or_length {};
+    Vector<u8, 256 + 24 + 64> code_lengths_green_or_length {};
+    TRY(code_lengths_green_or_length.try_resize(alphabet_sizes[0]));
+
     Array<Array<u8, 256>, 3> code_lengths_rba {};
     Array<u8, 40> code_lengths_distance {};
 
@@ -459,7 +474,7 @@ static ErrorOr<PrefixCodeGroup> compute_and_write_prefix_code_group(Vector<Symbo
     return prefix_code_group;
 }
 
-static ErrorOr<void> write_VP8L_coded_image(ImageKind image_kind, LittleEndianOutputBitStream& bit_stream, Bitmap const& bitmap, IsOpaque& is_fully_opaque)
+static ErrorOr<void> write_VP8L_coded_image(ImageKind image_kind, LittleEndianOutputBitStream& bit_stream, Bitmap const& bitmap, IsOpaque& is_fully_opaque, Optional<unsigned> color_cache_bits)
 {
     // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#5_image_data
     // spatially-coded-image =  color-cache-info meta-prefix data
@@ -467,8 +482,21 @@ static ErrorOr<void> write_VP8L_coded_image(ImageKind image_kind, LittleEndianOu
 
     // color-cache-info      =  %b0
     // color-cache-info      =/ (%b1 4BIT) ; 1 followed by color cache size
-    dbgln_if(WEBP_DEBUG, "writing has_color_cache_info false");
-    TRY(bit_stream.write_bits(0u, 1u)); // No color cache for now.
+    u16 color_cache_size = 0;
+    dbgln_if(WEBP_DEBUG, "has_color_cache_info {}", color_cache_bits.has_value());
+    if (color_cache_bits.has_value()) {
+        // "The range of allowed values for color_cache_code_bits is [1..11]. Compliant decoders must indicate a corrupted bitstream for other values."
+        if (color_cache_bits.has_value() && (color_cache_bits.value() < 1 || color_cache_bits.value() > 11))
+            return Error::from_string_literal("WebPWriter: invalid color_cache_bits, should be in [1..11]");
+
+        TRY(bit_stream.write_bits(1u, 1u));
+        TRY(bit_stream.write_bits(color_cache_bits.value(), 4u));
+
+        color_cache_size = 1 << color_cache_bits.value();
+        dbgln_if(WEBP_DEBUG, "color_cache_size {}", color_cache_size);
+    } else {
+        TRY(bit_stream.write_bits(0u, 1u));
+    }
 
     if (image_kind == ImageKind::SpatiallyCoded) {
         // meta-prefix           =  %b0 / (%b1 entropy-image)
@@ -481,8 +509,8 @@ static ErrorOr<void> write_VP8L_coded_image(ImageKind image_kind, LittleEndianOu
 
     // data                  =  prefix-codes lz77-coded-image
     // prefix-codes          =  prefix-code-group *prefix-codes
-    auto symbols = TRY(bitmap_to_symbols(bitmap));
-    auto prefix_code_group = TRY(compute_and_write_prefix_code_group(symbols, bit_stream, is_fully_opaque));
+    auto symbols = TRY(bitmap_to_symbols(bitmap, color_cache_bits));
+    auto prefix_code_group = TRY(compute_and_write_prefix_code_group(symbols, bit_stream, is_fully_opaque, color_cache_size));
     TRY(write_image_data(bit_stream, symbols.span(), prefix_code_group));
 
     return {};
@@ -499,7 +527,7 @@ static ARGB32 sub_argb32(ARGB32 a, ARGB32 b)
         .value();
 }
 
-static ErrorOr<NonnullRefPtr<Bitmap>> maybe_write_color_indexing_transform(LittleEndianOutputBitStream& bit_stream, NonnullRefPtr<Bitmap> bitmap, IsOpaque& is_fully_opaque)
+static ErrorOr<NonnullRefPtr<Bitmap>> maybe_write_color_indexing_transform(LittleEndianOutputBitStream& bit_stream, NonnullRefPtr<Bitmap> bitmap, IsOpaque& is_fully_opaque, bool& has_just_one_channel)
 {
     // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#44_color_indexing_transform
     unsigned color_table_size = 0;
@@ -517,23 +545,21 @@ static ErrorOr<NonnullRefPtr<Bitmap>> maybe_write_color_indexing_transform(Littl
     }
     dbgln_if(WEBP_DEBUG, "WebP: Image has {}{} colors; all pixels or'd is {:#08x}", color_table_size > 256 ? ">= " : "", color_table_size, channels);
 
+    int number_of_non_constant_channels = 0;
+    for (int i = 0; i < 4; ++i) {
+        if (channels & (0xff << (i * 8)))
+            number_of_non_constant_channels++;
+    }
+    has_just_one_channel = number_of_non_constant_channels <= 1;
+
     // If the image has a single color, the huffman table can encode it in 0 bits and color indexing does not help.
     if (color_table_size <= 1 || color_table_size > 256)
         return bitmap;
 
     // If all colors use just a single channel, color indexing does not help either,
     // except if there are <= 16 colors and we can do pixel bundling.
-    // FIXME: Once we support color cache, maybe that helps for single-channel pixels with fewer than 16 colors
-    //        and we don't need to write a color index then?
-    if (color_table_size > 16) {
-        int number_of_non_constant_channels = 0;
-        for (int i = 0; i < 4; ++i) {
-            if (channels & (0xff << (i * 8)))
-                number_of_non_constant_channels++;
-        }
-        if (number_of_non_constant_channels <= 1)
-            return bitmap;
-    }
+    if (color_table_size > 16 && has_just_one_channel)
+        return bitmap;
 
     dbgln_if(WEBP_DEBUG, "WebP: Writing color index transform, color_table_size {}", color_table_size);
     TRY(bit_stream.write_bits(1u, 1u)); // Transform present.
@@ -554,7 +580,7 @@ static ErrorOr<NonnullRefPtr<Bitmap>> maybe_write_color_indexing_transform(Littl
     color_index_bitmap->set_pixel(0, 0, Color::from_argb(colors[0]));
     for (unsigned i = 1; i < color_table_size; ++i)
         color_index_bitmap->set_pixel(i, 0, Color::from_argb(sub_argb32(colors[i], colors[i - 1])));
-    TRY(write_VP8L_coded_image(ImageKind::EntropyCoded, bit_stream, *color_index_bitmap, is_fully_opaque));
+    TRY(write_VP8L_coded_image(ImageKind::EntropyCoded, bit_stream, *color_index_bitmap, is_fully_opaque, {}));
 
     // Return a new bitmap with the color indexing transform applied.
     HashMap<ARGB32, u8> color_index_map;
@@ -593,18 +619,23 @@ static ErrorOr<NonnullRefPtr<Bitmap>> maybe_write_color_indexing_transform(Littl
     return new_bitmap;
 }
 
-static ErrorOr<void> write_VP8L_image_data(Stream& stream, NonnullRefPtr<Bitmap> bitmap, VP8LEncoderOptions const& options, IsOpaque& is_fully_opaque)
+static ErrorOr<void> write_VP8L_image_data(Stream& stream, NonnullRefPtr<Bitmap> bitmap, VP8LEncoderOptions& options, IsOpaque& is_fully_opaque)
 {
     LittleEndianOutputBitStream bit_stream { MaybeOwned<Stream>(stream) };
 
     // image-stream  = optional-transform spatially-coded-image
     // optional-transform   =  (%b1 transform optional-transform) / %b0
-    if (options.allowed_transforms & (1u << COLOR_INDEXING_TRANSFORM))
-        bitmap = TRY(maybe_write_color_indexing_transform(bit_stream, bitmap, is_fully_opaque));
+    if (options.allowed_transforms & (1u << COLOR_INDEXING_TRANSFORM)) {
+        bool has_just_one_channel = false;
+        auto new_bitmap = TRY(maybe_write_color_indexing_transform(bit_stream, bitmap, is_fully_opaque, has_just_one_channel));
+        if (new_bitmap != bitmap || has_just_one_channel)
+            options.color_cache_bits.clear();
+        bitmap = move(new_bitmap);
+    }
     TRY(bit_stream.write_bits(0u, 1u)); // No further transforms for now.
 
     dbgln_if(WEBP_DEBUG, "WebP: Writing main bitmap");
-    TRY(write_VP8L_coded_image(ImageKind::SpatiallyCoded, bit_stream, *bitmap, is_fully_opaque));
+    TRY(write_VP8L_coded_image(ImageKind::SpatiallyCoded, bit_stream, *bitmap, is_fully_opaque, options.color_cache_bits));
 
     // FIXME: Make ~LittleEndianOutputBitStream do this, or make it VERIFY() that it has happened at least.
     TRY(bit_stream.align_to_byte_boundary());
@@ -613,8 +644,9 @@ static ErrorOr<void> write_VP8L_image_data(Stream& stream, NonnullRefPtr<Bitmap>
     return {};
 }
 
-ErrorOr<ByteBuffer> compress_VP8L_image_data(Bitmap const& bitmap, VP8LEncoderOptions const& options, bool& is_fully_opaque)
+ErrorOr<ByteBuffer> compress_VP8L_image_data(Bitmap const& bitmap, VP8LEncoderOptions const& user_options, bool& is_fully_opaque)
 {
+    auto options = user_options;
     AllocatingMemoryStream vp8l_data_stream;
     IsOpaque is_opaque_struct;
     TRY(write_VP8L_image_data(vp8l_data_stream, bitmap, options, is_opaque_struct));
