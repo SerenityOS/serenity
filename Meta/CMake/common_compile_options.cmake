@@ -13,6 +13,19 @@ add_compile_options(-Wno-invalid-offsetof)
 add_compile_options(-Wno-unknown-warning-option)
 add_compile_options(-Wno-unused-command-line-argument)
 
+# This warning is triggered when one accepts or returns vectors from a function (that is not marked
+# with [[gnu::target(...)]]) which would have been otherwise passed in register if the current
+# translation unit had been compiled with more permissive flags wrt instruction selection (i. e. if
+# one adds -mavx2 to cmdline). This will never be a problem for us since we (a) never use
+# different instruction selection options across ABI boundaries; (b) most of the affected functions
+# are actually TU-local.
+#
+# Moreover, even if we somehow properly annotated all of the SIMD helpers, calling them across ABI
+# (or target) boundaries would still be very dangerous because of inconsistent and bogus handling of
+# [[gnu::target(...)]] across compilers. See https://github.com/llvm/llvm-project/issues/64706 and
+# https://www.reddit.com/r/cpp/comments/17qowl2/comment/k8j2odi .
+add_compile_options(-Wno-psabi)
+
 add_compile_options(-fno-exceptions)
 
 add_compile_options(-ffp-contract=off)

@@ -10,13 +10,6 @@
 #include <AK/Concepts.h>
 #include <AK/SIMD.h>
 
-// Functions returning vectors or accepting vector arguments have different calling conventions
-// depending on whether the target architecture supports SSE or not. GCC generates warning "psabi"
-// when compiling for non-SSE architectures. We disable this warning because these functions
-// are static and should never be visible from outside the translation unit that includes this header.
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpsabi"
-
 namespace AK::SIMD {
 
 // SIMD Vector Expansion
@@ -327,5 +320,3 @@ ALWAYS_INLINE static T elementwise_byte_reverse(T a)
 }
 
 }
-
-#pragma GCC diagnostic pop
