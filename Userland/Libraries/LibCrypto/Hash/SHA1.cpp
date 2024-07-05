@@ -83,6 +83,8 @@ static void transform_impl_base(u32 (&state)[5], u8 const (&data)[64])
 //      ~https://en.wikipedia.org/wiki/Intel_SHA_extensions
 [[gnu::target("sha,sse4.2")]] static void transform_impl_sha1(u32 (&state)[5], u8 const (&data)[64])
 {
+#    define SHA_TARGET gnu::target("sha"), gnu::always_inline
+
     using AK::SIMD::u32x4, AK::SIMD::i32x4;
     // Note: These need to be unsigned, as we add to them and expect them to wrap around,
     //       and signed overflow is UB;
@@ -96,12 +98,12 @@ static void transform_impl_base(u32 (&state)[5], u8 const (&data)[64])
     abcd[0] = AK::SIMD::item_reverse(abcd[0]);
     u32x4 e { 0, 0, 0, state[4] };
 
-    auto sha_msg1 = [] [[gnu::target("sha,sse4.2"), gnu::always_inline]] (u32x4 a, u32x4 b) { return bit_cast<u32x4>(__builtin_ia32_sha1msg1(bit_cast<i32x4>(a), bit_cast<i32x4>(b))); };
-    auto sha_msg2 = [] [[gnu::target("sha,sse4.2"), gnu::always_inline]] (u32x4 a, u32x4 b) { return bit_cast<u32x4>(__builtin_ia32_sha1msg2(bit_cast<i32x4>(a), bit_cast<i32x4>(b))); };
-    auto sha_next_e = [] [[gnu::target("sha,sse4.2"), gnu::always_inline]] (u32x4 a, u32x4 b) { return bit_cast<u32x4>(__builtin_ia32_sha1nexte(bit_cast<i32x4>(a), bit_cast<i32x4>(b))); };
-    auto sha_rnds4 = []<int i> [[gnu::target("sha,sse4.2"), gnu::always_inline]] (u32x4 a, u32x4 b) { return bit_cast<u32x4>(__builtin_ia32_sha1rnds4(bit_cast<i32x4>(a), bit_cast<i32x4>(b), i)); };
+    auto sha_msg1 = [] [[SHA_TARGET]] (u32x4 a, u32x4 b) { return bit_cast<u32x4>(__builtin_ia32_sha1msg1(bit_cast<i32x4>(a), bit_cast<i32x4>(b))); };
+    auto sha_msg2 = [] [[SHA_TARGET]] (u32x4 a, u32x4 b) { return bit_cast<u32x4>(__builtin_ia32_sha1msg2(bit_cast<i32x4>(a), bit_cast<i32x4>(b))); };
+    auto sha_next_e = [] [[SHA_TARGET]] (u32x4 a, u32x4 b) { return bit_cast<u32x4>(__builtin_ia32_sha1nexte(bit_cast<i32x4>(a), bit_cast<i32x4>(b))); };
+    auto sha_rnds4 = []<int i> [[SHA_TARGET]] (u32x4 a, u32x4 b) { return bit_cast<u32x4>(__builtin_ia32_sha1rnds4(bit_cast<i32x4>(a), bit_cast<i32x4>(b), i)); };
 
-    auto group = [&]<int i_group> [[gnu::target("sha,sse4.2")]] () {
+    auto group = [&]<int i_group> [[SHA_TARGET]] () {
         //" // FIXME: Trailing quote to fix syntax highlighting, somethings off with function like attributes and templated lambdas in VsCode
         // FIXME: Test if unrolling the loop is worth it
         //          GCC: #pragma GCC unroll(5)
@@ -138,6 +140,8 @@ static void transform_impl_base(u32 (&state)[5], u8 const (&data)[64])
     abcd[0] = AK::SIMD::item_reverse(abcd[0]);
     AK::SIMD::store_unaligned(&state[0], abcd[0]);
     state[4] = e[3];
+
+#    undef SHA_TARGET
 }
 
 // FIXME: We need a custom resolver as Clang and GCC either refuse or silently ignore the `sha` target
