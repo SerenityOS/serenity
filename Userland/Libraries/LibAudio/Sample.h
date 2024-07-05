@@ -53,8 +53,15 @@ struct Sample {
 
     void clip()
     {
-        left = clamp(left, -1, 1);
-        right = clamp(right, -1, 1);
+        if (left > 1)
+            left = 1;
+        else if (left < -1)
+            left = -1;
+
+        if (right > 1)
+            right = 1;
+        else if (right < -1)
+            right = -1;
     }
 
     // Logarithmic scaling, as audio should ALWAYS do.
