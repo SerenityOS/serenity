@@ -11,13 +11,6 @@
 #include <AK/SIMDExtras.h>
 #include <math.h>
 
-// Functions returning vectors or accepting vector arguments have different calling conventions
-// depending on whether the target architecture supports SSE or not. GCC generates warning "psabi"
-// when compiling for non-SSE architectures. We disable this warning because these functions
-// are static and should never be visible from outside the translation unit that includes this header.
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpsabi"
-
 namespace AK::SIMD {
 
 // Functions ending in "_int_range" only accept arguments within range [INT_MIN, INT_MAX].
@@ -90,5 +83,3 @@ ALWAYS_INLINE static f32x4 sqrt(f32x4 v)
 }
 
 }
-
-#pragma GCC diagnostic pop

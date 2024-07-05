@@ -15,8 +15,6 @@
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/ImageFormats/PNGWriter.h>
 
-#pragma GCC diagnostic ignored "-Wpsabi"
-
 namespace Gfx {
 
 class PNGChunk {

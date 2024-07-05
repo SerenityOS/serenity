@@ -13,7 +13,6 @@
 #    include <AK/SIMD.h>
 #    include <AK/SIMDExtras.h>
 #    include <cpuid.h>
-#    pragma GCC diagnostic ignored "-Wpsabi"
 #endif
 
 namespace Crypto::Hash {
