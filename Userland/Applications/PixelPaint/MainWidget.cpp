@@ -286,10 +286,12 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 
     file_menu->add_action(*m_close_image_action);
 
-    file_menu->add_action(GUI::CommonActions::make_quit_action([this](auto&) {
-        if (request_close())
-            GUI::Application::the()->quit();
-    }));
+    file_menu->add_action(GUI::CommonActions::make_quit_action(
+        [this](auto&) {
+            if (request_close())
+                GUI::Application::the()->quit();
+        },
+        GUI::CommonActions::QuitAltShortcut::None));
 
     m_edit_menu = window.add_menu("&Edit"_string);
 
