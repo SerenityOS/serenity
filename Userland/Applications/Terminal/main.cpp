@@ -384,11 +384,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return GUI::MessageBox::ExecResult::OK;
     };
 
-    file_menu->add_action(GUI::CommonActions::make_quit_action([&](auto&) {
-        dbgln("Terminal: Quit menu activated!");
-        if (check_terminal_quit() == GUI::MessageBox::ExecResult::OK)
-            GUI::Application::the()->quit();
-    }));
+    file_menu->add_action(GUI::CommonActions::make_quit_action(
+        [&](auto&) {
+            dbgln("Terminal: Quit menu activated!");
+            if (check_terminal_quit() == GUI::MessageBox::ExecResult::OK)
+                GUI::Application::the()->quit();
+        },
+        GUI::CommonActions::QuitAltShortcut::None));
 
     auto edit_menu = window->add_menu("&Edit"_string);
     edit_menu->add_action(terminal->copy_action());

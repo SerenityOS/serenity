@@ -117,9 +117,12 @@ NonnullRefPtr<Action> make_fullscreen_action(Function<void(Action&)> callback, C
     return action;
 }
 
-NonnullRefPtr<Action> make_quit_action(Function<void(Action&)> callback)
+NonnullRefPtr<Action> make_quit_action(Function<void(Action&)> callback, QuitAltShortcut quit_alt_shortcut)
 {
-    auto action = Action::create("&Quit", { Mod_Alt, Key_F4 }, move(callback));
+    Shortcut alternate_shortcut = { Mod_Ctrl, Key_W };
+    if (quit_alt_shortcut == QuitAltShortcut::None)
+        alternate_shortcut = {};
+    auto action = Action::create("&Quit", { Mod_Alt, Key_F4 }, alternate_shortcut, move(callback));
     action->set_status_tip("Quit the application"_string);
     return action;
 }

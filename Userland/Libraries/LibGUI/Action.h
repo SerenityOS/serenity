@@ -24,6 +24,11 @@
 namespace GUI {
 
 namespace CommonActions {
+enum class QuitAltShortcut {
+    None,
+    CtrlW
+};
+
 NonnullRefPtr<Action> make_about_action(String const& app_name, Icon const& app_icon, Window* parent = nullptr);
 NonnullRefPtr<Action> make_open_action(Function<void(Action&)>, Core::EventReceiver* parent = nullptr);
 NonnullRefPtr<Action> make_save_action(Function<void(Action&)>, Core::EventReceiver* parent = nullptr);
@@ -38,7 +43,7 @@ NonnullRefPtr<Action> make_move_to_front_action(Function<void(Action&)>, Core::E
 NonnullRefPtr<Action> make_move_to_back_action(Function<void(Action&)>, Core::EventReceiver* parent = nullptr);
 NonnullRefPtr<Action> make_insert_emoji_action(Function<void(Action&)>, Core::EventReceiver* parent = nullptr);
 NonnullRefPtr<Action> make_fullscreen_action(Function<void(Action&)>, Core::EventReceiver* parent = nullptr);
-NonnullRefPtr<Action> make_quit_action(Function<void(Action&)>);
+NonnullRefPtr<Action> make_quit_action(Function<void(Action&)>, QuitAltShortcut = QuitAltShortcut::CtrlW);
 NonnullRefPtr<Action> make_help_action(Function<void(Action&)>, Core::EventReceiver* parent = nullptr);
 NonnullRefPtr<Action> make_go_back_action(Function<void(Action&)>, Core::EventReceiver* parent = nullptr);
 NonnullRefPtr<Action> make_go_forward_action(Function<void(Action&)>, Core::EventReceiver* parent = nullptr);

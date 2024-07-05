@@ -56,7 +56,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         action.set_icon(catdog_widget->is_sleeping() ? catdog_icon_wake : catdog_icon_sleep);
     }));
     context_menu->add_separator();
-    context_menu->add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
+    context_menu->add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }, GUI::CommonActions::QuitAltShortcut::None));
 
     window->show();
     window->set_always_on_top();
