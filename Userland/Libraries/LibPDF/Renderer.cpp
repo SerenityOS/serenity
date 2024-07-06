@@ -305,12 +305,12 @@ RENDERER_HANDLER(path_append_rect)
 
 void Renderer::activate_clip()
 {
-    auto bounding_box = state().clipping_paths.current.bounding_box();
+    auto bounding_box = state().clipping_paths.current.bounding_box().to_type<int>();
     m_painter.clear_clip_rect();
     if (m_rendering_preferences.show_clipping_paths) {
-        m_painter.stroke_path(rect_path(bounding_box), Color::Black, 1);
+        m_painter.draw_rect(bounding_box, Color::Black);
     }
-    m_painter.add_clip_rect(bounding_box.to_type<int>());
+    m_painter.add_clip_rect(bounding_box);
 }
 
 void Renderer::deactivate_clip()
