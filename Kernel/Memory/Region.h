@@ -181,7 +181,6 @@ public:
     [[nodiscard]] size_t amount_dirty() const;
 
     [[nodiscard]] bool should_cow(size_t page_index) const;
-    ErrorOr<void> set_should_cow(size_t page_index, bool);
 
     [[nodiscard]] size_t cow_pages() const;
 
