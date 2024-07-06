@@ -42,6 +42,18 @@ static ErrorOr<Vector<DeviceEventLoop::DeviceNodeMatch>> fetch_device_node_match
         if (!major_number.has_value())
             return Error::from_string_literal("Invalid MajorNumber entry value");
 
+        Optional<unsigned> possible_minor_number {};
+        auto minor_number = config.read_entry_optional(name, "MinorNumber");
+        if (minor_number.has_value()) {
+            possible_minor_number = minor_number.value().to_number<unsigned>();
+            if (!possible_minor_number.has_value())
+                return Error::from_string_literal("Invalid MinorNumber entry value");
+        }
+
+        Optional<MinorNumber> specific_minor_number {};
+        if (possible_minor_number.has_value())
+            specific_minor_number = static_cast<MinorNumber>(possible_minor_number.value());
+
         auto group_permissions = config.read_entry(name, "GroupPermissions", "root");
 
         auto create_permissions = AK::StringUtils::convert_to_uint_from_octal<u16>(config.read_entry(name, "CreatePermissions"), TrimWhitespace::No);
@@ -55,6 +67,7 @@ static ErrorOr<Vector<DeviceEventLoop::DeviceNodeMatch>> fetch_device_node_match
             .path_pattern = TRY(String::from_byte_string(devtmpfs_path)),
             .device_node_type = node_type,
             .major_number = major_number.value(),
+            .specific_minor_number = specific_minor_number,
             .create_mode = create_permissions.value(),
         };
         TRY(matches.try_append(match));

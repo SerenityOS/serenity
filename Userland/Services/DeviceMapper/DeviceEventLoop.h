@@ -24,6 +24,7 @@ public:
         String path_pattern;
         DeviceNodeType device_node_type;
         MajorNumber major_number;
+        Optional<MinorNumber> specific_minor_number;
         mode_t create_mode;
     };
 
@@ -33,7 +34,7 @@ public:
     ErrorOr<void> drain_events_from_devctl();
 
 private:
-    Optional<DeviceEventLoop::DeviceNodeMatch const&> device_node_family_to_match_type(DeviceNodeType device_node_type, MajorNumber major_number);
+    Optional<DeviceEventLoop::DeviceNodeMatch const&> device_node_family_to_match_type(DeviceNodeType device_node_type, MajorNumber major_number, MinorNumber minor_number);
 
     Optional<DeviceNodeFamily&> find_device_node_family(DeviceNodeType, MajorNumber major_number) const;
     ErrorOr<NonnullRefPtr<DeviceNodeFamily>> find_or_register_new_device_node_family(DeviceNodeMatch const& match, DeviceNodeType, MajorNumber major_number);

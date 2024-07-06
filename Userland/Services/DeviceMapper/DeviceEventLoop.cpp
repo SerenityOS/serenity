@@ -25,14 +25,21 @@ DeviceEventLoop::DeviceEventLoop(Vector<DeviceNodeMatch> matches, NonnullOwnPtr<
 static constexpr StringView digit_pattern = "%d"sv;
 static constexpr StringView letter_char_pattern = "%c"sv;
 
-Optional<DeviceEventLoop::DeviceNodeMatch const&> DeviceEventLoop::device_node_family_to_match_type(DeviceNodeType device_node_type, MajorNumber major_number)
+Optional<DeviceEventLoop::DeviceNodeMatch const&> DeviceEventLoop::device_node_family_to_match_type(DeviceNodeType device_node_type, MajorNumber major_number, MinorNumber minor_number)
 {
+    Optional<DeviceEventLoop::DeviceNodeMatch const&> match {};
     for (auto& matcher : m_matches) {
-        if (matcher.major_number == major_number
-            && device_node_type == matcher.device_node_type)
-            return matcher;
+        auto basic_match = matcher.major_number == major_number && device_node_type == matcher.device_node_type;
+        if (basic_match) {
+            if (matcher.specific_minor_number.has_value()) {
+                if (minor_number == matcher.specific_minor_number.value())
+                    return matcher;
+                continue;
+            }
+            match = matcher;
+        }
     }
-    return {};
+    return match;
 }
 
 Optional<DeviceNodeFamily&> DeviceEventLoop::find_device_node_family(DeviceNodeType device_node_type, MajorNumber major_number) const
@@ -97,15 +104,37 @@ ErrorOr<void> DeviceEventLoop::register_new_device(DeviceNodeType device_node_ty
     VERIFY(device_node_type == DeviceNodeType::Block
         || device_node_type == DeviceNodeType::Character);
 
-    auto possible_match = device_node_family_to_match_type(device_node_type, major_number);
+    auto possible_match = device_node_family_to_match_type(device_node_type, major_number, minor_number);
     if (!possible_match.has_value())
         return {};
     auto const& match = possible_match.release_value();
-    auto device_node_family = TRY(find_or_register_new_device_node_family(match, device_node_type, major_number));
-    static constexpr StringView devtmpfs_base_path = "/dev/"sv;
+
     auto path_pattern = match.path_pattern;
     if (path_pattern.is_empty())
         return Error::from_string_literal("Device node family path pattern is empty");
+
+    static constexpr StringView devtmpfs_base_path = "/dev/"sv;
+
+    // NOTE: If the match has specific minor number, then it's for a specific
+    // device node (for example, /dev/beep). In such case, just create a device node
+    // and don't attempt to create (or find) a device node family, as there's no actual
+    // family (i.e. that matches its path pattern or permissions) for such device.
+    if (match.specific_minor_number.has_value()) {
+        auto path = match.path_pattern;
+        if (path.contains(digit_pattern) || path.contains(letter_char_pattern))
+            return Error::from_string_literal("Path pattern for specific device contains replacement specifiers");
+        path = TRY(String::formatted("{}{}", devtmpfs_base_path, path));
+        mode_t old_mask = umask(0);
+        if (device_node_type == DeviceNodeType::Block)
+            TRY(Core::System::create_block_device(path.bytes_as_string_view(), match.create_mode, major_number.value(), minor_number.value()));
+        else
+            TRY(Core::System::create_char_device(path.bytes_as_string_view(), match.create_mode, major_number.value(), minor_number.value()));
+        umask(old_mask);
+        TRY(prepare_permissions_after_populating_devtmpfs(path.bytes_as_string_view(), match));
+        return {};
+    }
+
+    auto device_node_family = TRY(find_or_register_new_device_node_family(match, device_node_type, major_number));
 
     auto& allocation_map = device_node_family->devices_symbol_suffix_allocation_map();
     auto possible_allocated_suffix_index = allocation_map.find_first_unset();
@@ -156,7 +185,7 @@ ErrorOr<void> DeviceEventLoop::unregister_device(DeviceNodeType device_node_type
     VERIFY(device_node_type == DeviceNodeType::Block
         || device_node_type == DeviceNodeType::Character);
 
-    if (!device_node_family_to_match_type(device_node_type, major_number).has_value())
+    if (!device_node_family_to_match_type(device_node_type, major_number, minor_number).has_value())
         return {};
     auto possible_family = find_device_node_family(device_node_type, major_number);
     if (!possible_family.has_value()) {
@@ -188,25 +217,6 @@ ErrorOr<void> DeviceEventLoop::unregister_device(DeviceNodeType device_node_type
     return {};
 }
 
-struct PluggableOnceCharacterDeviceNodeMatch {
-    StringView path;
-    mode_t mode;
-    MajorNumber major;
-    MinorNumber minor;
-};
-
-static constexpr PluggableOnceCharacterDeviceNodeMatch s_simple_matchers[] = {
-    { "/dev/beep"sv, 0666, 1, 10 },
-};
-
-static ErrorOr<void> create_pluggable_once_char_device_node(PluggableOnceCharacterDeviceNodeMatch const& match)
-{
-    mode_t old_mask = umask(0);
-    ScopeGuard umask_guard([old_mask] { umask(old_mask); });
-    TRY(Core::System::create_char_device(match.path, match.mode, match.major.value(), match.minor.value()));
-    return {};
-}
-
 ErrorOr<void> DeviceEventLoop::read_one_or_eof(DeviceEvent& event)
 {
     if (m_devctl_file->read_until_filled({ bit_cast<u8*>(&event), sizeof(DeviceEvent) }).is_error()) {
@@ -229,25 +239,6 @@ ErrorOr<void> DeviceEventLoop::drain_events_from_devctl()
             continue;
 
         if (event.state == DeviceEvent::State::Inserted) {
-            if (!event.is_block_device) {
-                // NOTE: We have a special handling for the pluggable-once devices, etc,
-                // as these device (if they appear) should only "hotplug" (being inserted)
-                // once during the OS runtime.
-                // We just blindly create such device node and assume we will never
-                // have to worry about it, so we don't need to register that!
-                auto possible_pluggable_once_char_device_match = ([](DeviceEvent& event) -> Optional<PluggableOnceCharacterDeviceNodeMatch const&> {
-                    for (auto const& match : s_simple_matchers) {
-                        if (event.major_number == match.major.value() && event.minor_number == match.minor.value())
-                            return match;
-                    }
-                    return Optional<PluggableOnceCharacterDeviceNodeMatch const&> {};
-                })(event);
-                if (possible_pluggable_once_char_device_match.has_value()) {
-                    TRY(create_pluggable_once_char_device_node(possible_pluggable_once_char_device_match.value()));
-                    continue;
-                }
-            }
-
             VERIFY(event.is_block_device == 1 || event.is_block_device == 0);
             TRY(register_new_device(event.is_block_device ? DeviceNodeType::Block : DeviceNodeType::Character, event.major_number, event.minor_number));
         } else if (event.state == DeviceEvent::State::Removed) {
