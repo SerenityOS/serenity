@@ -201,14 +201,6 @@ bool Region::should_cow(size_t page_index) const
     return static_cast<AnonymousVMObject const&>(vmobject()).should_cow(first_page_index() + page_index, m_shared);
 }
 
-ErrorOr<void> Region::set_should_cow(size_t page_index, bool cow)
-{
-    VERIFY(!m_shared);
-    if (vmobject().is_anonymous())
-        TRY(static_cast<AnonymousVMObject&>(vmobject()).set_should_cow(first_page_index() + page_index, cow));
-    return {};
-}
-
 bool Region::should_dirty_on_write(size_t page_index) const
 {
     if (!vmobject().is_inode())
