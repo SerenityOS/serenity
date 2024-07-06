@@ -16,29 +16,18 @@
 
 namespace DeviceMapper {
 
-DeviceEventLoop::DeviceEventLoop(NonnullOwnPtr<Core::File> devctl_file)
+DeviceEventLoop::DeviceEventLoop(Vector<DeviceNodeMatch> matches, NonnullOwnPtr<Core::File> devctl_file)
     : m_devctl_file(move(devctl_file))
+    , m_matches(move(matches))
 {
 }
 
 static constexpr StringView digit_pattern = "%d"sv;
 static constexpr StringView letter_char_pattern = "%c"sv;
 
-static constexpr DeviceEventLoop::DeviceNodeMatch s_matchers[] = {
-    { "audio"sv, "audio"sv, "audio/%d"sv, DeviceNodeType::Character, 116, 0220 },
-    { {}, "render"sv, "gpu/render%d"sv, DeviceNodeType::Character, 28, 0666 },
-    { "window"sv, "gpu-connector"sv, "gpu/connector%d"sv, DeviceNodeType::Character, 226, 0660 },
-    { {}, "virtio-console"sv, "hvc0p%d"sv, DeviceNodeType::Character, 229, 0666 },
-    { "phys"sv, "hid-mouse"sv, "input/mouse/%d"sv, DeviceNodeType::Character, 10, 0666 },
-    { "phys"sv, "hid-keyboard"sv, "input/keyboard/%d"sv, DeviceNodeType::Character, 85, 0666 },
-    { {}, "storage"sv, "hd%c"sv, DeviceNodeType::Block, 3, 0600 },
-    { "tty"sv, "console"sv, "tty%d"sv, DeviceNodeType::Character, 35, 0620 },
-    { "tty"sv, "console"sv, "ttyS%d"sv, DeviceNodeType::Character, 4, 0620 },
-};
-
-static Optional<DeviceEventLoop::DeviceNodeMatch const&> device_node_family_to_match_type(DeviceNodeType device_node_type, MajorNumber major_number)
+Optional<DeviceEventLoop::DeviceNodeMatch const&> DeviceEventLoop::device_node_family_to_match_type(DeviceNodeType device_node_type, MajorNumber major_number)
 {
-    for (auto& matcher : s_matchers) {
+    for (auto& matcher : m_matches) {
         if (matcher.major_number == major_number
             && device_node_type == matcher.device_node_type)
             return matcher;
@@ -96,8 +85,6 @@ static ErrorOr<String> build_suffix_with_numbers(size_t allocation_index)
 
 static ErrorOr<void> prepare_permissions_after_populating_devtmpfs(StringView path, DeviceEventLoop::DeviceNodeMatch const& match)
 {
-    if (match.permission_group.is_null())
-        return {};
     auto group = TRY(Core::System::getgrnam(match.permission_group));
     VERIFY(group.has_value());
     TRY(Core::System::endgrent());
@@ -116,7 +103,10 @@ ErrorOr<void> DeviceEventLoop::register_new_device(DeviceNodeType device_node_ty
     auto const& match = possible_match.release_value();
     auto device_node_family = TRY(find_or_register_new_device_node_family(match, device_node_type, major_number));
     static constexpr StringView devtmpfs_base_path = "/dev/"sv;
-    auto path_pattern = TRY(String::from_utf8(match.path_pattern));
+    auto path_pattern = match.path_pattern;
+    if (path_pattern.is_empty())
+        return Error::from_string_literal("Device node family path pattern is empty");
+
     auto& allocation_map = device_node_family->devices_symbol_suffix_allocation_map();
     auto possible_allocated_suffix_index = allocation_map.find_first_unset();
     if (!possible_allocated_suffix_index.has_value()) {
@@ -125,12 +115,12 @@ ErrorOr<void> DeviceEventLoop::register_new_device(DeviceNodeType device_node_ty
     }
     auto allocated_suffix_index = possible_allocated_suffix_index.release_value();
 
-    auto path = path_pattern;
-    if (match.path_pattern.contains(digit_pattern)) {
+    auto path = match.path_pattern;
+    if (path.contains(digit_pattern)) {
         auto replacement = TRY(build_suffix_with_numbers(allocated_suffix_index));
         path = TRY(path.replace(digit_pattern, replacement, ReplaceMode::All));
     }
-    if (match.path_pattern.contains(letter_char_pattern)) {
+    if (path.contains(letter_char_pattern)) {
         auto replacement = TRY(build_suffix_with_letters(allocated_suffix_index));
         path = TRY(path.replace(letter_char_pattern, replacement, ReplaceMode::All));
     }

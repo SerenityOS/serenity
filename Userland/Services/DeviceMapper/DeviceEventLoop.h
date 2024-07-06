@@ -19,20 +19,22 @@ namespace DeviceMapper {
 class DeviceEventLoop {
 public:
     struct DeviceNodeMatch {
-        StringView permission_group;
-        StringView family_type_literal;
-        StringView path_pattern;
+        String permission_group;
+        String family_type_literal;
+        String path_pattern;
         DeviceNodeType device_node_type;
         MajorNumber major_number;
         mode_t create_mode;
     };
 
-    DeviceEventLoop(NonnullOwnPtr<Core::File>);
+    DeviceEventLoop(Vector<DeviceNodeMatch>, NonnullOwnPtr<Core::File>);
     virtual ~DeviceEventLoop() = default;
 
     ErrorOr<void> drain_events_from_devctl();
 
 private:
+    Optional<DeviceEventLoop::DeviceNodeMatch const&> device_node_family_to_match_type(DeviceNodeType device_node_type, MajorNumber major_number);
+
     Optional<DeviceNodeFamily&> find_device_node_family(DeviceNodeType, MajorNumber major_number) const;
     ErrorOr<NonnullRefPtr<DeviceNodeFamily>> find_or_register_new_device_node_family(DeviceNodeMatch const& match, DeviceNodeType, MajorNumber major_number);
 
@@ -43,6 +45,7 @@ private:
 
     Vector<NonnullRefPtr<DeviceNodeFamily>> m_device_node_families;
     NonnullOwnPtr<Core::File> const m_devctl_file;
+    Vector<DeviceNodeMatch> m_matches;
 };
 
 }
