@@ -9,11 +9,20 @@ Make sure you have all the dependencies installed:
 ```console
 sudo apt install build-essential cmake curl libmpfr-dev libmpc-dev libgmp-dev e2fsprogs ninja-build qemu-system-gui qemu-system-x86 qemu-utils ccache rsync unzip texinfo libssl-dev
 ```
-Optional: `fuse2fs` for [building images without root](https://github.com/SerenityOS/serenity/pull/11224).
+### Fedora
 
-#### GCC 13 or Clang 17
+```console
+sudo dnf install gcc gcc-c++ cmake curl mpfr-devel libmpc-devel gmp-devel e2fsprogs ninja-build qemu-system-x86 qemu-img ccache rsync unzip texinfo openssl-devel
+```
+Optional: `fuse2fs` for [building images without root](https://github.com/SerenityOS/serenity/pull/11224). (Only tested in Debian/Ubuntu). 
 
-A host compiler that supports C++23 features is required for building host tools, the newer the better. Tested versions include gcc-13 and clang-17.
+#### GCC 13 or Clang 17 for Ubuntu; GCC 14 or Clang 18 or Higher for Fedora
+
+A host compiler that supports C++23 features is required for building host tools, the newer the better. 
+Tested versions include gcc-13 and clang-17 on Ubuntu. 
+
+@Oichkatzelfrettschen has successfully tested both gcc-14 and clang-18 on Fedora 40. 
+**YMMV:** Your mileage may vary. This is user-reported and highly anecdotal until a larger sample size is obtained. 
 
 On Ubuntu gcc-13 is available in the repositories of 24.04 (Noble) and later.
 If you are running an older version, you will either need to upgrade, or find an alternative installation source
@@ -21,11 +30,13 @@ If you are running an older version, you will either need to upgrade, or find an
 
 Next, update your local package information from this repository:
 
+# Debian / Ubuntu 
+
 ```console
 sudo apt update
 ```
 
-Now on Ubuntu or Debian you can install gcc-13 with apt like this:
+Install gcc-13 with apt like this:
 
 ```console
 sudo apt install gcc-13 g++-13
@@ -33,13 +44,19 @@ sudo apt install gcc-13 g++-13
 
 #### QEMU 6.2 or later
 
-Version 6.2 of QEMU is available in Ubuntu 22.04. On earlier versions of Ubuntu,
+Version 6.2 of QEMU is available in Ubuntu 22.04 and Fedora 38 or higher. On earlier versions of Ubuntu,
 you can build the recommended version of QEMU as provided by the toolchain by running
 `Toolchain/BuildQemu.sh`.
 Note that you might need additional dev packages in order to build QEMU on your machine:
 
 ```console
 sudo apt install libgtk-3-dev libpixman-1-dev libsdl2-dev libslirp-dev libspice-server-dev
+```
+
+## If you wish to pursue this route for Fedora instead of using repo-provided QEMU you may need: 
+
+```console
+sudo dnf install gtk3-devel pixman-devel SDL2-devel libslirp-devel spice-server-devel
 ```
 
 #### CMake version 3.25.0 or later
