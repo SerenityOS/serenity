@@ -21,9 +21,10 @@ static constexpr auto ROTATE_LEFT(u32 value, size_t bits)
     return (value << bits) | (value >> (32 - bits));
 }
 
-static void transform_impl_base(u32 (&state)[5], u8 const (&data)[64])
+template<>
+void SHA1::transform_impl<CPUFeatures::None>()
 {
-    constexpr static auto Rounds = 80;
+    auto& data = m_data_buffer;
 
     u32 blocks[80];
     for (size_t i = 0; i < 16; ++i)
@@ -33,7 +34,7 @@ static void transform_impl_base(u32 (&state)[5], u8 const (&data)[64])
     for (size_t i = 16; i < Rounds; ++i)
         blocks[i] = ROTATE_LEFT(blocks[i - 3] ^ blocks[i - 8] ^ blocks[i - 14] ^ blocks[i - 16], 1);
 
-    auto a = state[0], b = state[1], c = state[2], d = state[3], e = state[4];
+    auto a = m_state[0], b = m_state[1], c = m_state[2], d = m_state[3], e = m_state[4];
     u32 f, k;
 
     for (size_t i = 0; i < Rounds; ++i) {
@@ -58,11 +59,11 @@ static void transform_impl_base(u32 (&state)[5], u8 const (&data)[64])
         a = temp;
     }
 
-    state[0] += a;
-    state[1] += b;
-    state[2] += c;
-    state[3] += d;
-    state[4] += e;
+    m_state[0] += a;
+    m_state[1] += b;
+    m_state[2] += c;
+    m_state[3] += d;
+    m_state[4] += e;
 
     // "security" measures, as if SHA1 is secure
     a = 0;
@@ -78,9 +79,13 @@ static void transform_impl_base(u32 (&state)[5], u8 const (&data)[64])
 //       So it's safe to assume that if we have SHA we have at least SSE4.2
 //      ~https://en.wikipedia.org/wiki/Intel_SHA_extensions
 #if AK_CAN_CODEGEN_FOR_X86_SHA && AK_CAN_CODEGEN_FOR_X86_SSE42
-[[gnu::target("sha,sse4.2")]] static void transform_impl_sha1(u32 (&state)[5], u8 const (&data)[64])
+template<>
+[[gnu::target("sha,sse4.2")]] void SHA1::transform_impl<CPUFeatures::X86_SHA | CPUFeatures::X86_SSE42>()
 {
 #    define SHA_TARGET gnu::target("sha"), gnu::always_inline
+
+    auto& state = m_state;
+    auto& data = m_data_buffer;
 
     using AK::SIMD::u32x4, AK::SIMD::i32x4;
     // Note: These need to be unsigned, as we add to them and expect them to wrap around,
@@ -140,30 +145,20 @@ static void transform_impl_base(u32 (&state)[5], u8 const (&data)[64])
 
 #    undef SHA_TARGET
 }
+#endif
 
-// FIXME: We need a custom resolver as Clang and GCC either refuse or silently ignore the `sha` target
-//        for function multiversioning
-[[gnu::ifunc("resolve_transform_impl")]] static void transform_impl(u32 (&state)[5], u8 const (&data)[64]);
-namespace {
-extern "C" [[gnu::used]] decltype(&transform_impl) resolve_transform_impl()
-{
+decltype(SHA1::transform_dispatched) SHA1::transform_dispatched = [] {
     CPUFeatures features = detect_cpu_features();
-    if (has_flag(features, CPUFeatures::X86_SHA | CPUFeatures::X86_SSE42))
-        return transform_impl_sha1;
+
+    if constexpr (is_valid_feature(CPUFeatures::X86_SHA | CPUFeatures::X86_SSE42)) {
+        if (has_flag(features, CPUFeatures::X86_SHA | CPUFeatures::X86_SSE42))
+            return &SHA1::transform_impl<CPUFeatures::X86_SHA | CPUFeatures::X86_SSE42>;
+    }
 
     // FIXME: Investigate if more target clones (avx) make sense
 
-    return transform_impl_base;
-}
-}
-#else
-#    define transform_impl transform_impl_base
-#endif
-
-inline void SHA1::transform(u8 const (&data)[BlockSize])
-{
-    transform_impl(m_state, data);
-}
+    return &SHA1::transform_impl<CPUFeatures::None>;
+}();
 
 void SHA1::update(u8 const* message, size_t length)
 {
@@ -174,7 +169,7 @@ void SHA1::update(u8 const* message, size_t length)
         length -= copy_bytes;
         m_data_length += copy_bytes;
         if (m_data_length == BlockSize) {
-            transform(m_data_buffer);
+            transform();
             m_bit_length += BlockSize * 8;
             m_data_length = 0;
         }
@@ -209,7 +204,7 @@ SHA1::DigestType SHA1::peek()
         m_data_buffer[i++] = 0x80;
         while (i < BlockSize)
             m_data_buffer[i++] = 0x00;
-        transform(m_data_buffer);
+        transform();
 
         // Then start another block with BlockSize - 8 bytes of zeros
         __builtin_memset(m_data_buffer, 0, FinalBlockDataSize);
@@ -226,7 +221,7 @@ SHA1::DigestType SHA1::peek()
     m_data_buffer[BlockSize - 7] = m_bit_length >> 48;
     m_data_buffer[BlockSize - 8] = m_bit_length >> 56;
 
-    transform(m_data_buffer);
+    transform();
 
     for (i = 0; i < 4; ++i) {
         digest.data[i + 0] = (m_state[0] >> (24 - i * 8)) & 0x000000ff;

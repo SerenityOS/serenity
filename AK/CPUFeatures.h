@@ -47,6 +47,11 @@ inline CPUFeatures detect_cpu_features()
 }
 #endif
 
+constexpr bool is_valid_feature(CPUFeatures feature)
+{
+    return !has_flag(feature, CPUFeatures::Invalid);
+}
+
 }
 
 #ifdef USING_AK_GLOBALLY
