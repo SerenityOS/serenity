@@ -30,8 +30,26 @@ enum class CPUFeatures : u64 {
 
 AK_ENUM_BITWISE_OPERATORS(CPUFeatures);
 
+#ifndef KERNEL
+namespace Detail {
+CPUFeatures detect_cpu_features_uncached();
+}
+
+inline CPUFeatures detect_cpu_features()
+{
+    static CPUFeatures const s_cached_features = Detail::detect_cpu_features_uncached();
+    return s_cached_features;
+}
+#else
+inline CPUFeatures detect_cpu_features()
+{
+    return CPUFeatures::None;
+}
+#endif
+
 }
 
 #ifdef USING_AK_GLOBALLY
 using AK::CPUFeatures;
+using AK::detect_cpu_features;
 #endif
