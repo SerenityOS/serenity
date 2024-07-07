@@ -12,10 +12,6 @@
 #include <AK/Types.h>
 #include <LibCrypto/Hash/SHA2.h>
 
-#if (ARCH(I386) || ARCH(X86_64)) && !defined(KERNEL)
-#    include <cpuid.h>
-#endif
-
 namespace Crypto::Hash {
 constexpr static auto ROTRIGHT(u32 a, size_t b) { return (a >> b) | (a << (32 - b)); }
 constexpr static auto CH(u32 x, u32 y, u32 z) { return (x & y) ^ (z & ~x); }
@@ -131,11 +127,8 @@ static void SHA256_transform_impl_base(u32 (&state)[8], u8 const (&data)[64])
 namespace {
 extern "C" [[gnu::used]] decltype(&SHA256_transform_impl) resolve_SHA256_transform_impl()
 {
-    // FIXME: Use __builtin_cpu_supports("sha") when compilers support it
-    constexpr u32 cpuid_sha_ebx = 1 << 29;
-    u32 eax, ebx, ecx, edx;
-    __cpuid_count(7, 0, eax, ebx, ecx, edx);
-    if (ebx & cpuid_sha_ebx)
+    CPUFeatures features = detect_cpu_features();
+    if (has_flag(features, CPUFeatures::X86_SHA | CPUFeatures::X86_SSE42))
         return SHA256_transform_impl_sha;
 
     // FIXME: Investigate if more target clones (avx) make sense

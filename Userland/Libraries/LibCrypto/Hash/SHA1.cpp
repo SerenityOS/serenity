@@ -14,10 +14,6 @@
 #include <AK/Types.h>
 #include <LibCrypto/Hash/SHA1.h>
 
-#if (ARCH(I386) || ARCH(X86_64))
-#    include <cpuid.h>
-#endif
-
 namespace Crypto::Hash {
 
 static constexpr auto ROTATE_LEFT(u32 value, size_t bits)
@@ -151,11 +147,8 @@ static void transform_impl_base(u32 (&state)[5], u8 const (&data)[64])
 namespace {
 extern "C" [[gnu::used]] decltype(&transform_impl) resolve_transform_impl()
 {
-    // FIXME: Use __builtin_cpu_supports("sha") when compilers support it
-    constexpr u32 cpuid_sha_ebx = 1 << 29;
-    u32 eax, ebx, ecx, edx;
-    __cpuid_count(7, 0, eax, ebx, ecx, edx);
-    if (ebx & cpuid_sha_ebx)
+    CPUFeatures features = detect_cpu_features();
+    if (has_flag(features, CPUFeatures::X86_SHA | CPUFeatures::X86_SSE42))
         return transform_impl_sha1;
 
     // FIXME: Investigate if more target clones (avx) make sense
