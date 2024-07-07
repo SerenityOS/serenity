@@ -106,10 +106,6 @@ template<>
     auto sha_rnds4 = []<int i> [[SHA_TARGET]] (u32x4 a, u32x4 b) { return bit_cast<u32x4>(__builtin_ia32_sha1rnds4(bit_cast<i32x4>(a), bit_cast<i32x4>(b), i)); };
 
     auto group = [&]<int i_group> [[SHA_TARGET]] () {
-        //" // FIXME: Trailing quote to fix syntax highlighting, somethings off with function like attributes and templated lambdas in VsCode
-        // FIXME: Test if unrolling the loop is worth it
-        //          GCC: #pragma GCC unroll(5)
-        //        Clang: #pragma unroll
         for (size_t i_pack = 0; i_pack != 5; ++i_pack) {
             size_t i_msg = i_group * 5 + i_pack;
             if (i_msg < 4) {
@@ -154,8 +150,6 @@ decltype(SHA1::transform_dispatched) SHA1::transform_dispatched = [] {
         if (has_flag(features, CPUFeatures::X86_SHA | CPUFeatures::X86_SSE42))
             return &SHA1::transform_impl<CPUFeatures::X86_SHA | CPUFeatures::X86_SSE42>;
     }
-
-    // FIXME: Investigate if more target clones (avx) make sense
 
     return &SHA1::transform_impl<CPUFeatures::None>;
 }();

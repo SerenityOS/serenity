@@ -135,8 +135,6 @@ decltype(SHA256::transform_dispatched) SHA256::transform_dispatched = [] {
             return &SHA256::transform_impl<CPUFeatures::X86_SHA | CPUFeatures::X86_SSE42>;
     }
 
-    // FIXME: Investigate if more target clones (avx) make sense
-
     return &SHA256::transform_impl<CPUFeatures::None>;
 }();
 
