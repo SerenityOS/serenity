@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/CPUFeatures.h>
 #include <LibCrypto/Hash/HashFunction.h>
 
 #ifndef KERNEL
@@ -67,7 +68,11 @@ public:
     }
 
 private:
-    inline void transform(u8 const (&data)[BlockSize]);
+    template<CPUFeatures>
+    void transform_impl();
+
+    static void (SHA1::*const transform_dispatched)();
+    void transform() { return (this->*transform_dispatched)(); }
 
     u8 m_data_buffer[BlockSize] {};
     size_t m_data_length { 0 };
@@ -76,6 +81,7 @@ private:
     u32 m_state[5];
 
     constexpr static auto FinalBlockDataSize = BlockSize - 8;
+    constexpr static auto Rounds = 80;
 };
 
 }
