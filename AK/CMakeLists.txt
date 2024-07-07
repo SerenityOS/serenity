@@ -1,12 +1,13 @@
 set(AK_SOURCES
     Assertions.cpp
     Base64.cpp
+    ByteString.cpp
+    CPUFeatures.cpp
     CircularBuffer.cpp
     ConstrainedStream.cpp
     CountingStream.cpp
     DOSPackedTime.cpp
     DeprecatedFlyString.cpp
-    ByteString.cpp
     Error.cpp
     FloatingPointStringConversions.cpp
     FlyString.cpp
