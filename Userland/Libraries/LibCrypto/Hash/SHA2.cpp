@@ -29,10 +29,10 @@ constexpr static auto EP1(u64 x) { return ROTRIGHT(x, 14) ^ ROTRIGHT(x, 18) ^ RO
 constexpr static auto SIGN0(u64 x) { return ROTRIGHT(x, 1) ^ ROTRIGHT(x, 8) ^ (x >> 7); }
 constexpr static auto SIGN1(u64 x) { return ROTRIGHT(x, 19) ^ ROTRIGHT(x, 61) ^ (x >> 6); }
 
-static void SHA256_transform_impl_base(u32 (&state)[8], u8 const (&data)[64])
+template<>
+void SHA256::transform_impl<CPUFeatures::None>()
 {
-    constexpr static auto BlockSize = 64;
-    constexpr static auto Rounds = 64;
+    auto& data = m_data_buffer;
 
     u32 m[BlockSize];
 
@@ -45,10 +45,10 @@ static void SHA256_transform_impl_base(u32 (&state)[8], u8 const (&data)[64])
         m[i] = SIGN1(m[i - 2]) + m[i - 7] + SIGN0(m[i - 15]) + m[i - 16];
     }
 
-    auto a = state[0], b = state[1],
-         c = state[2], d = state[3],
-         e = state[4], f = state[5],
-         g = state[6], h = state[7];
+    auto a = m_state[0], b = m_state[1],
+         c = m_state[2], d = m_state[3],
+         e = m_state[4], f = m_state[5],
+         g = m_state[6], h = m_state[7];
 
     for (i = 0; i < Rounds; ++i) {
         auto temp0 = h + EP1(e) + CH(e, f, g) + SHA256Constants::RoundConstants[i] + m[i];
@@ -63,14 +63,14 @@ static void SHA256_transform_impl_base(u32 (&state)[8], u8 const (&data)[64])
         a = temp0 + temp1;
     }
 
-    state[0] += a;
-    state[1] += b;
-    state[2] += c;
-    state[3] += d;
-    state[4] += e;
-    state[5] += f;
-    state[6] += g;
-    state[7] += h;
+    m_state[0] += a;
+    m_state[1] += b;
+    m_state[2] += c;
+    m_state[3] += d;
+    m_state[4] += e;
+    m_state[5] += f;
+    m_state[6] += g;
+    m_state[7] += h;
 }
 
 // Note: The SHA extension was introduced with
@@ -78,9 +78,13 @@ static void SHA256_transform_impl_base(u32 (&state)[8], u8 const (&data)[64])
 //       So it's safe to assume that if we have SHA we have at least SSE4.2
 //      ~https://en.wikipedia.org/wiki/Intel_SHA_extensions
 #if AK_CAN_CODEGEN_FOR_X86_SHA && AK_CAN_CODEGEN_FOR_X86_SSE42
-[[gnu::target("sha,sse4.2")]] static void SHA256_transform_impl_sha(u32 (&state)[8], u8 const (&data)[64])
+template<>
+[[gnu::target("sha,sse4.2")]] void SHA256::transform_impl<CPUFeatures::X86_SHA | CPUFeatures::X86_SSE42>()
 {
     using AK::SIMD::i32x4, AK::SIMD::u32x4;
+
+    auto& state = m_state;
+    auto& data = m_data_buffer;
 
     u32x4 states[2] {};
     states[0] = AK::SIMD::load_unaligned<u32x4>(&state[0]);
@@ -121,29 +125,20 @@ static void SHA256_transform_impl_base(u32 (&state)[8], u8 const (&data)[64])
     AK::SIMD::store_unaligned(&state[0], states[0]);
     AK::SIMD::store_unaligned(&state[4], states[1]);
 }
-// FIXME: We need a custom resolver as Clang and GCC either refuse or silently ignore the `sha` target
-//        for function multiversioning
-[[gnu::ifunc("resolve_SHA256_transform_impl")]] static void SHA256_transform_impl(u32 (&state)[8], u8 const (&data)[64]);
-namespace {
-extern "C" [[gnu::used]] decltype(&SHA256_transform_impl) resolve_SHA256_transform_impl()
-{
+#endif
+
+decltype(SHA256::transform_dispatched) SHA256::transform_dispatched = [] {
     CPUFeatures features = detect_cpu_features();
-    if (has_flag(features, CPUFeatures::X86_SHA | CPUFeatures::X86_SSE42))
-        return SHA256_transform_impl_sha;
+
+    if constexpr (is_valid_feature(CPUFeatures::X86_SHA | CPUFeatures::X86_SSE42)) {
+        if (has_flag(features, CPUFeatures::X86_SHA | CPUFeatures::X86_SSE42))
+            return &SHA256::transform_impl<CPUFeatures::X86_SHA | CPUFeatures::X86_SSE42>;
+    }
 
     // FIXME: Investigate if more target clones (avx) make sense
 
-    return SHA256_transform_impl_base;
-}
-}
-#else
-#    define SHA256_transform_impl SHA256_transform_impl_base
-#endif
-
-inline void SHA256::transform(u8 const (&data)[BlockSize])
-{
-    SHA256_transform_impl(m_state, data);
-}
+    return &SHA256::transform_impl<CPUFeatures::None>;
+}();
 
 template<size_t BlockSize, typename Callback>
 void update_buffer(u8* buffer, u8 const* input, size_t length, size_t& data_length, Callback callback)
@@ -164,7 +159,7 @@ void update_buffer(u8* buffer, u8 const* input, size_t length, size_t& data_leng
 void SHA256::update(u8 const* message, size_t length)
 {
     update_buffer<BlockSize>(m_data_buffer, message, length, m_data_length, [&]() {
-        transform(m_data_buffer);
+        transform();
         m_bit_length += BlockSize * 8;
     });
 }
@@ -190,7 +185,7 @@ SHA256::DigestType SHA256::peek()
         m_data_buffer[i++] = 0x80;
         while (i < BlockSize)
             m_data_buffer[i++] = 0x00;
-        transform(m_data_buffer);
+        transform();
 
         // Then start another block with BlockSize - 8 bytes of zeros
         __builtin_memset(m_data_buffer, 0, FinalBlockDataSize);
@@ -207,7 +202,7 @@ SHA256::DigestType SHA256::peek()
     m_data_buffer[BlockSize - 7] = m_bit_length >> 48;
     m_data_buffer[BlockSize - 8] = m_bit_length >> 56;
 
-    transform(m_data_buffer);
+    transform();
 
     // SHA uses big-endian and we assume little-endian
     // FIXME: looks like a thing for AK::NetworkOrdered,
