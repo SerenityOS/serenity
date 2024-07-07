@@ -5,15 +5,16 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/CPUFeatures.h>
 #include <AK/Endian.h>
 #include <AK/Memory.h>
 #include <AK/Platform.h>
+#include <AK/SIMD.h>
+#include <AK/SIMDExtras.h>
 #include <AK/Types.h>
 #include <LibCrypto/Hash/SHA1.h>
 
 #if (ARCH(I386) || ARCH(X86_64))
-#    include <AK/SIMD.h>
-#    include <AK/SIMDExtras.h>
 #    include <cpuid.h>
 #endif
 
@@ -76,11 +77,11 @@ static void transform_impl_base(u32 (&state)[5], u8 const (&data)[64])
     secure_zero(blocks, 16 * sizeof(u32));
 }
 
-#if (ARCH(I386) || ARCH(X86_64))
 // Note: The SHA extension was introduced with
 //       Intel Goldmont (SSE4.2), Ice Lake (AVX512), Rocket Lake (AVX512), and AMD Zen (AVX2)
 //       So it's safe to assume that if we have SHA we have at least SSE4.2
 //      ~https://en.wikipedia.org/wiki/Intel_SHA_extensions
+#if AK_CAN_CODEGEN_FOR_X86_SHA && AK_CAN_CODEGEN_FOR_X86_SSE42
 [[gnu::target("sha,sse4.2")]] static void transform_impl_sha1(u32 (&state)[5], u8 const (&data)[64])
 {
 #    define SHA_TARGET gnu::target("sha"), gnu::always_inline
