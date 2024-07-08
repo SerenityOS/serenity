@@ -80,6 +80,7 @@ input[type=range]::-webkit-slider-runnable-track, input[type=range]::-webkit-sli
 input[type=range]::-webkit-slider-runnable-track {
     position: relative;
     height: 4px;
+    width: 100%;
     margin-top: 6px;
     background-color: Background;
     border: 1px solid rgba(0, 0, 0, 0.5);
