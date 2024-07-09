@@ -300,10 +300,12 @@ typedef struct {
 #define SHT_SUNW_verneed 0x6ffffffe /* symbol versioning req */
 #define SHT_SUNW_versym 0x6fffffff  /* symbol versioning table */
 #define SHT_HIOS 0x6fffffff         /*  section header types */
-#define SHT_LOPROC 0x70000000       /* reserved range for processor */
-#define SHT_HIPROC 0x7fffffff       /*  specific section header types */
 #define SHT_LOUSER 0x80000000       /* reserved range for application */
 #define SHT_HIUSER 0xffffffff       /*  specific indices */
+
+#define SHT_LOPROC 0x70000000           /* start of reserved range for processor specific section header types */
+#define SHT_RISCV_ATTRIBUTES 0x70000003 /* RISC-V ELF attribute section */
+#define SHT_HIPROC 0x7fffffff           /* end of reserved range for processor specific section header types */
 
 #define SHT_GNU_HASH 0x6ffffff6 /* GNU-style hash table section */
 

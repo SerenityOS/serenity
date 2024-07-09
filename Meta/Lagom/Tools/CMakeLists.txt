@@ -13,6 +13,7 @@ endfunction()
 
 add_subdirectory(CodeGenerators)
 add_subdirectory(ConfigureComponents)
+add_subdirectory(PrekernelPEImageGenerator)
 add_subdirectory(IPCMagicLinter)
 
 if (ENABLE_JAKT)
