@@ -90,6 +90,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool debug_web_content = false;
     bool log_all_js_exceptions = false;
     bool new_window = false;
+    bool allow_popups = false;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("The Ladybird web browser");
@@ -100,6 +101,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(certificates, "Path to a certificate file", "certificate", 'C', "certificate");
     args_parser.add_option(log_all_js_exceptions, "Log all JavaScript exceptions", "log-all-js-exceptions");
     args_parser.add_option(new_window, "Force opening in a new window", "new-window", 'n');
+    args_parser.add_option(allow_popups, "Disable popup blocking by default", "allow-popups");
     args_parser.parse(arguments);
 
     WebView::ChromeProcess chrome_process;
@@ -145,7 +147,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                                          newTabPageURL:URL::URL { Browser::default_new_tab_url }
                                          withCookieJar:move(cookie_jar)
                                      webContentOptions:web_content_options
-                               webdriverContentIPCPath:webdriver_content_ipc_path];
+                               webdriverContentIPCPath:webdriver_content_ipc_path
+                                           allowPopups:allow_popups];
 
     [NSApp setDelegate:delegate];
 
