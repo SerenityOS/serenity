@@ -127,7 +127,7 @@ void DynamicObject::parse()
             break;
         case DT_PLTREL:
             m_procedure_linkage_table_relocation_type = entry.val();
-            VERIFY(m_procedure_linkage_table_relocation_type & (DT_REL | DT_RELA));
+            VERIFY(m_procedure_linkage_table_relocation_type == DT_REL || m_procedure_linkage_table_relocation_type == DT_RELA);
             break;
         case DT_JMPREL:
             m_plt_relocation_offset_location = entry.ptr() - (FlatPtr)m_elf_base_address.as_ptr();
@@ -305,7 +305,7 @@ DynamicObject::RelocationSection DynamicObject::relocation_section() const
 
 DynamicObject::RelocationSection DynamicObject::plt_relocation_section() const
 {
-    return RelocationSection(Section(*this, m_plt_relocation_offset_location, m_size_of_plt_relocation_entry_list, m_size_of_relocation_entry, "DT_JMPREL"sv), m_procedure_linkage_table_relocation_type & DT_RELA);
+    return RelocationSection(Section(*this, m_plt_relocation_offset_location, m_size_of_plt_relocation_entry_list, m_size_of_relocation_entry, "DT_JMPREL"sv), m_procedure_linkage_table_relocation_type == DT_RELA);
 }
 
 DynamicObject::Section DynamicObject::relr_relocation_section() const
