@@ -50,6 +50,10 @@ def handler_class_for_type(type, re=re.compile('^([^<]+)(<.*>)?$')):
         return AKOptional
     elif klass == 'AK::Vector':
         return AKVector
+    elif klass == 'AK::Detail::IntrusiveList':
+        return AKIntrusiveList
+    elif klass == 'AK::Detail::IntrusiveListNode':
+        return AKIntrusiveListNode
     elif klass == 'VirtualAddress':
         return VirtualAddress
     else:
@@ -59,7 +63,7 @@ def handler_class_for_type(type, re=re.compile('^([^<]+)(<.*>)?$')):
 class UnhandledType:
     @classmethod
     def prettyprint_type(cls, type):
-        return type.name
+        return str(type)
 
 
 class AKAtomic:
@@ -186,10 +190,10 @@ class AKStringView:
         self.val = val
 
     def to_string(self):
-        if int(self.val["m_length"]) == 0:
-            return '""'
-        else:
-            return self.val["m_characters"].string(length=self.val["m_length"])
+        return self.val["m_characters"].string(length=self.val["m_length"])
+
+    def display_hint(self):
+        return 'string'
 
     @classmethod
     def prettyprint_type(cls, type):
@@ -378,7 +382,7 @@ class AKHashMapPrettyPrinter:
         for i in range(0, val["m_capacity"]):
             bucket = buckets[i]
             # if state == Used
-            if bucket["state"] & 0xf0 == 0x10:
+            if int(bucket["state"]) in range(1, 255):
                 cb(bucket["storage"].cast(entry_type_ptr))
 
     @staticmethod
@@ -427,6 +431,49 @@ class AKSinglyLinkedList:
     def prettyprint_type(cls, type):
         template_type = type.template_argument(0)
         return f'AK::SinglyLinkedList<{handler_class_for_type(template_type).prettyprint_type(template_type)}>'
+
+
+class AKIntrusiveList:
+    def __init__(self, val):
+        self.val = val
+        self.element_type = self.val.type.template_argument(0)
+        # get the IntrusiveListNode offset within the target object
+        self.ptr_offset = int(self.val.type.template_argument(2).cast(gdb.parse_and_eval('(void*)0').type))
+
+    def to_string(self):
+        return self.prettyprint_type(self.val.type)
+
+    def _list_node_to_item(self, node):
+        # basically a container_of
+        return gdb.parse_and_eval(str(int(node) - self.ptr_offset)).cast(self.element_type.pointer())[0]
+
+    def children(self):
+        m_first = self.val["m_storage"]["m_first"]
+        index = 0
+        while m_first:
+            yield (f"[{index}]", self._list_node_to_item(m_first))
+            m_first = m_first["m_next"]
+            index += 1
+
+    @classmethod
+    def prettyprint_type(cls, type):
+        element_type = type.template_argument(0)
+        pointer_type = type.template_argument(1)
+        intrusive_field = type.template_argument(2)
+        types_pp = [handler_class_for_type(i).prettyprint_type(i) for i in (element_type, pointer_type)]
+        return f'AK::IntrusiveList<{types_pp[0]}, {types_pp[1]}, {str(intrusive_field)}>'
+
+
+class AKIntrusiveListNode:
+    def __init__(self, val):
+        self.val = val
+
+    def to_string(self):
+        return self.prettyprint_type(self.val.type)
+
+    @classmethod
+    def prettyprint_type(cls, type):
+        return 'AK::IntrusiveListNode'
 
 
 class VirtualAddress:
