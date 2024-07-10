@@ -7,6 +7,7 @@
 
 #include "EventManager.h"
 #include <AK/JsonParser.h>
+#include <AK/QuickSort.h>
 #include <LibConfig/Client.h>
 #include <LibFileSystemAccessClient/Client.h>
 
@@ -26,6 +27,7 @@ OwnPtr<EventManager> EventManager::create()
 void EventManager::add_event(Event event)
 {
     m_events.append(move(event));
+    quick_sort(m_events, [&](auto& a, auto& b) { return a.start < b.start; });
     m_dirty = true;
     on_events_change();
 }
@@ -33,6 +35,7 @@ void EventManager::add_event(Event event)
 void EventManager::set_events(Vector<Event> events)
 {
     m_events = move(events);
+    quick_sort(m_events, [&](auto& a, auto& b) { return a.start < b.start; });
     m_dirty = true;
     on_events_change();
 }
