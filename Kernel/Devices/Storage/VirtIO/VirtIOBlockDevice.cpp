@@ -120,7 +120,10 @@ UNMAP_AFTER_INIT ErrorOr<void> VirtIOBlockDevice::initialize_virtio_resources()
     }));
     TRY(setup_queues(1)); // REQUESTQ
     finish_init();
-    return {};
+
+    // This device is not added to DeviceManagement, as we've bypassed try_create_device, so we need to add it ourselves
+    // We can't call the method directly, as it is redeclared as private in the StorageDevice class, thus the cast
+    return static_cast<Kernel::Device*>(this)->after_inserting();
 }
 
 ErrorOr<void> VirtIOBlockDevice::handle_device_config_change()
