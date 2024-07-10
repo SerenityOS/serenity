@@ -163,8 +163,9 @@
 #endif
 
 #ifdef AK_COMPILER_GCC
-// FIXME: Reduce and report these to GCC.
+// FIXME: Undefine once https://gcc.gnu.org/bugzilla/show_bug.cgi?id=115851 is fixed.
 #    define AK_COROUTINE_STATEMENT_EXPRS_BROKEN
+// FIXME: Undefine once https://gcc.gnu.org/bugzilla/show_bug.cgi?id=112341 is fixed.
 #    define AK_COROUTINE_TYPE_DEDUCTION_BROKEN
 #endif
 
