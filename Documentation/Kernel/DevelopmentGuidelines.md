@@ -198,6 +198,31 @@ We allocate them in `Kernel/API/MajorNumberAllocation.h`, based on this set of r
 6. The allocation must be inserted by keeping the ascending order of the allocated major numbers
    in the appropriate enum and associated to-StringView function.
 
+## Construction of `Device`-based objects
+
+Currently, we have many devices that are either inserted at boot time but also devices that could be inserted
+afterwards.
+
+To make it easier writing device drivers, when constructing an object from a `Device`-derived class, the usual pattern is to use `DeviceManagement` `try_create_device` method.
+For example, constructing a `VirtIOGPU3DDevice` is done this way:
+```c++
+ErrorOr<NonnullLockRefPtr<VirtIOGPU3DDevice>> VirtIOGPU3DDevice::try_create(VirtIOGraphicsAdapter& adapter)
+{
+    // Set up memory transfer region
+    auto region_result = TRY(MM.allocate_kernel_region(
+        NUM_TRANSFER_REGION_PAGES * PAGE_SIZE,
+        "VIRGL3D kernel upload buffer"sv,
+        Memory::Region::Access::ReadWrite,
+        AllocationStrategy::AllocateNow));
+    auto kernel_context_id = TRY(adapter.create_context());
+    return TRY(DeviceManagement::try_create_device<VirtIOGPU3DDevice>(adapter, move(region_result), kernel_context_id));
+}
+```
+
+The reason for using `DeviceManagement` `try_create_device` method is because that method
+calls the virtual `Device` `after_inserting()` method which does crucial initialization steps
+to register the device and expose it by the usual userspace interfaces.
+
 ## Documentation
 
 As with any documentation, it's always good to see more of it, either with a new manual page,
