@@ -23,7 +23,7 @@ struct FUSEInstance {
 };
 
 class FUSEDevice final : public CharacterDevice {
-    friend class DeviceManagement;
+    friend class Device;
 
 public:
     static NonnullLockRefPtr<FUSEDevice> must_create();

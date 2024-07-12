@@ -12,7 +12,7 @@
 namespace Kernel {
 
 class SerialDevice final : public CharacterDevice {
-    friend class DeviceManagement;
+    friend class Device;
 
 public:
     static NonnullLockRefPtr<SerialDevice> must_create(size_t com_number);

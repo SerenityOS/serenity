@@ -20,7 +20,7 @@ namespace Kernel {
 
 class NVMeController;
 class NVMeNameSpace : public StorageDevice {
-    friend class DeviceManagement;
+    friend class Device;
 
 public:
     static ErrorOr<NonnullLockRefPtr<NVMeNameSpace>> try_create(NVMeController const&, Vector<NonnullLockRefPtr<NVMeQueue>> queues, u16 nsid, size_t storage_size, size_t lba_size);

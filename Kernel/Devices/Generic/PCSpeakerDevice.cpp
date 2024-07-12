@@ -10,7 +10,7 @@
 #endif
 #include <Kernel/API/MajorNumberAllocation.h>
 #include <Kernel/Boot/CommandLine.h>
-#include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/Generic/PCSpeakerDevice.h>
 #include <Kernel/Sections.h>
 
@@ -18,7 +18,7 @@ namespace Kernel {
 
 UNMAP_AFTER_INIT NonnullRefPtr<PCSpeakerDevice> PCSpeakerDevice::must_create()
 {
-    auto device = MUST(DeviceManagement::try_create_device<PCSpeakerDevice>());
+    auto device = MUST(Device::try_create_device<PCSpeakerDevice>());
     return *device;
 }
 

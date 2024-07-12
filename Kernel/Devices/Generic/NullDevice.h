@@ -11,7 +11,7 @@
 namespace Kernel {
 
 class NullDevice final : public CharacterDevice {
-    friend class DeviceManagement;
+    friend class Device;
 
 public:
     virtual ~NullDevice() override;

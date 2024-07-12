@@ -11,7 +11,7 @@
 #include <Kernel/API/Ioctl.h>
 #include <Kernel/API/KeyCode.h>
 #include <Kernel/API/MajorNumberAllocation.h>
-#include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/HID/KeyboardDevice.h>
 #include <Kernel/Devices/TTY/VirtualConsole.h>
 #include <Kernel/Sections.h>
@@ -77,7 +77,7 @@ void KeyboardDevice::handle_input_event(KeyEvent queued_event)
 
 ErrorOr<NonnullRefPtr<KeyboardDevice>> KeyboardDevice::try_to_initialize()
 {
-    return *TRY(DeviceManagement::try_create_device<KeyboardDevice>());
+    return *TRY(Device::try_create_device<KeyboardDevice>());
 }
 
 // FIXME: UNMAP_AFTER_INIT is fine for now, but for hot-pluggable devices

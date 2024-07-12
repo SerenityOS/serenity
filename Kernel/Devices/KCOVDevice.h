@@ -11,7 +11,7 @@
 
 namespace Kernel {
 class KCOVDevice final : public BlockDevice {
-    friend class DeviceManagement;
+    friend class Device;
 
 public:
     static NonnullLockRefPtr<KCOVDevice> must_create();

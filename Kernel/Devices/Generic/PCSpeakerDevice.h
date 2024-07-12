@@ -11,7 +11,7 @@
 namespace Kernel {
 
 class PCSpeakerDevice final : public CharacterDevice {
-    friend class DeviceManagement;
+    friend class Device;
 
 public:
     virtual ~PCSpeakerDevice() override;

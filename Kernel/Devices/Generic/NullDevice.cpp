@@ -6,7 +6,7 @@
 
 #include <AK/Singleton.h>
 #include <Kernel/API/MajorNumberAllocation.h>
-#include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/Generic/NullDevice.h>
 #include <Kernel/Sections.h>
 
@@ -14,7 +14,7 @@ namespace Kernel {
 
 UNMAP_AFTER_INIT NonnullLockRefPtr<NullDevice> NullDevice::must_initialize()
 {
-    auto null_device_or_error = DeviceManagement::try_create_device<NullDevice>();
+    auto null_device_or_error = Device::try_create_device<NullDevice>();
     // FIXME: Find a way to propagate errors
     VERIFY(!null_device_or_error.is_error());
     return null_device_or_error.release_value();

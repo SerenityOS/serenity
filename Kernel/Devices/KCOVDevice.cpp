@@ -8,7 +8,7 @@
 #include <AK/NonnullOwnPtr.h>
 #include <Kernel/API/Ioctl.h>
 #include <Kernel/API/MajorNumberAllocation.h>
-#include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/KCOVDevice.h>
 #include <Kernel/Devices/KCOVInstance.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
@@ -19,7 +19,7 @@ namespace Kernel {
 
 UNMAP_AFTER_INIT NonnullLockRefPtr<KCOVDevice> KCOVDevice::must_create()
 {
-    auto kcov_device_or_error = DeviceManagement::try_create_device<KCOVDevice>();
+    auto kcov_device_or_error = Device::try_create_device<KCOVDevice>();
     // FIXME: Find a way to propagate errors
     VERIFY(!kcov_device_or_error.is_error());
     return kcov_device_or_error.release_value();

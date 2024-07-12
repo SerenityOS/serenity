@@ -11,7 +11,7 @@
 namespace Kernel {
 
 class ZeroDevice final : public CharacterDevice {
-    friend class DeviceManagement;
+    friend class Device;
 
 public:
     static NonnullLockRefPtr<ZeroDevice> must_create();

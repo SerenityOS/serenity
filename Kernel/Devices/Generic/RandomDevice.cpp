@@ -5,7 +5,7 @@
  */
 
 #include <Kernel/API/MajorNumberAllocation.h>
-#include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/Generic/RandomDevice.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Security/Random.h>
@@ -14,7 +14,7 @@ namespace Kernel {
 
 UNMAP_AFTER_INIT NonnullLockRefPtr<RandomDevice> RandomDevice::must_create()
 {
-    auto random_device_or_error = DeviceManagement::try_create_device<RandomDevice>();
+    auto random_device_or_error = Device::try_create_device<RandomDevice>();
     // FIXME: Find a way to propagate errors
     VERIFY(!random_device_or_error.is_error());
     return random_device_or_error.release_value();

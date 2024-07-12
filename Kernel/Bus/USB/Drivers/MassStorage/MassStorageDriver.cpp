@@ -9,7 +9,7 @@
 #include <Kernel/Bus/USB/USBClasses.h>
 #include <Kernel/Bus/USB/USBEndpoint.h>
 #include <Kernel/Bus/USB/USBRequest.h>
-#include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/Storage/StorageManagement.h>
 #include <Kernel/Devices/Storage/USB/BulkSCSIInterface.h>
 #include <Kernel/Devices/Storage/USB/Codes.h>
@@ -158,7 +158,7 @@ ErrorOr<void> MassStorageDriver::initialise_bulk_only_device(USB::Device& device
         0
     };
 
-    auto bulk_scsi_interface = TRY(DeviceManagement::try_create_device<BulkSCSIInterface>(
+    auto bulk_scsi_interface = TRY(Kernel::Device::try_create_device<BulkSCSIInterface>(
         lun,
         device.address(), // FIXME: Figure out a better ID to put here
         capacity.block_size,

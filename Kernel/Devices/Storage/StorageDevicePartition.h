@@ -15,7 +15,7 @@ namespace Kernel {
 
 class StorageDevice;
 class StorageDevicePartition final : public BlockDevice {
-    friend class DeviceManagement;
+    friend class Device;
 
 public:
     static NonnullLockRefPtr<StorageDevicePartition> create(StorageDevice&, MinorNumber, Partition::DiskPartitionMetadata);

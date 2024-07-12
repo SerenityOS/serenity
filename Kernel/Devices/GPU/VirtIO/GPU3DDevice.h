@@ -9,7 +9,7 @@
 #include <AK/DistinctNumeric.h>
 #include <AK/IntrusiveList.h>
 #include <Kernel/Devices/CharacterDevice.h>
-#include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/GPU/VirtIO/Protocol.h>
 #include <Kernel/Locking/SpinlockProtected.h>
 
@@ -94,7 +94,7 @@ namespace Kernel {
 
 class VirtIOGraphicsAdapter;
 class VirtIOGPU3DDevice : public CharacterDevice {
-    friend class DeviceManagement;
+    friend class Device;
 
 public:
     static ErrorOr<NonnullLockRefPtr<VirtIOGPU3DDevice>> try_create(VirtIOGraphicsAdapter&);

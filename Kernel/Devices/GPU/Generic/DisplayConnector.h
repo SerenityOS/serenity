@@ -17,7 +17,7 @@ namespace Kernel {
 
 class GenericDisplayConnector
     : public DisplayConnector {
-    friend class DeviceManagement;
+    friend class Device;
 
 public:
     static NonnullLockRefPtr<GenericDisplayConnector> must_create_with_preset_resolution(PhysicalAddress framebuffer_address, size_t width, size_t height, size_t pitch);

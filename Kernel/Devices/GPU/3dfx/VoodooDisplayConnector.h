@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/GPU/3dfx/Definitions.h>
 #include <Kernel/Devices/GPU/Console/GenericFramebufferConsole.h>
 #include <Kernel/Devices/GPU/DisplayConnector.h>
@@ -18,7 +18,7 @@ namespace Kernel::VoodooGraphics {
 class VoodooDisplayConnector final
     : public DisplayConnector {
     friend class VoodooGraphicsAdapter;
-    friend class Kernel::DeviceManagement;
+    friend class Kernel::Device;
 
 public:
     static NonnullLockRefPtr<VoodooDisplayConnector> must_create(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, Memory::TypedMapping<RegisterMap volatile>, NonnullOwnPtr<IOWindow> io_window);

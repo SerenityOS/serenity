@@ -6,7 +6,7 @@
 
 #include <Kernel/Arch/Delay.h>
 #include <Kernel/Debug.h>
-#include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/GPU/Console/ContiguousFramebufferConsole.h>
 #include <Kernel/Devices/GPU/Intel/DisplayConnectorGroup.h>
 #include <Kernel/Devices/GPU/Intel/Plane/G33DisplayPlane.h>

@@ -11,7 +11,7 @@
 namespace Kernel {
 
 class SelfTTYDevice final : public CharacterDevice {
-    friend class DeviceManagement;
+    friend class Device;
 
 public:
     static NonnullLockRefPtr<SelfTTYDevice> must_create();

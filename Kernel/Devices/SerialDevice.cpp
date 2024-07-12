@@ -6,7 +6,7 @@
  */
 
 #include <Kernel/API/MajorNumberAllocation.h>
-#include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/SerialDevice.h>
 #include <Kernel/Library/IOWindow.h>
 #include <Kernel/Sections.h>
