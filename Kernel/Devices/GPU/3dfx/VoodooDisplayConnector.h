@@ -21,7 +21,7 @@ class VoodooDisplayConnector final
     friend class Kernel::Device;
 
 public:
-    static NonnullLockRefPtr<VoodooDisplayConnector> must_create(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, Memory::TypedMapping<RegisterMap volatile>, NonnullOwnPtr<IOWindow> io_window);
+    static ErrorOr<NonnullRefPtr<VoodooDisplayConnector>> create(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, Memory::TypedMapping<RegisterMap volatile>, NonnullOwnPtr<IOWindow> io_window);
 
 private:
     ErrorOr<void> fetch_and_initialize_edid();

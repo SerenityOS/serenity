@@ -11,13 +11,11 @@
 
 namespace Kernel {
 
-NonnullLockRefPtr<GenericDisplayConnector> GenericDisplayConnector::must_create_with_preset_resolution(PhysicalAddress framebuffer_address, size_t width, size_t height, size_t pitch)
+ErrorOr<NonnullRefPtr<GenericDisplayConnector>> GenericDisplayConnector::create_with_preset_resolution(PhysicalAddress framebuffer_address, size_t width, size_t height, size_t pitch)
 {
-    auto device_or_error = Device::try_create_device<GenericDisplayConnector>(framebuffer_address, width, height, pitch);
-    VERIFY(!device_or_error.is_error());
-    auto connector = device_or_error.release_value();
-    MUST(connector->create_attached_framebuffer_console());
-    MUST(connector->initialize_edid_for_generic_monitor({}));
+    auto connector = TRY(Device::try_create_device<GenericDisplayConnector>(framebuffer_address, width, height, pitch));
+    TRY(connector->create_attached_framebuffer_console());
+    TRY(connector->initialize_edid_for_generic_monitor({}));
     return connector;
 }
 

@@ -12,12 +12,9 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT NonnullLockRefPtr<SelfTTYDevice> SelfTTYDevice::must_create()
+UNMAP_AFTER_INIT NonnullRefPtr<SelfTTYDevice> SelfTTYDevice::must_create()
 {
-    auto self_tty_device_or_error = Device::try_create_device<SelfTTYDevice>();
-    // FIXME: Find a way to propagate errors
-    VERIFY(!self_tty_device_or_error.is_error());
-    return self_tty_device_or_error.release_value();
+    return MUST(Device::try_create_device<SelfTTYDevice>());
 }
 
 ErrorOr<NonnullRefPtr<OpenFileDescription>> SelfTTYDevice::open(int options)

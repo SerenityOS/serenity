@@ -214,7 +214,7 @@ ErrorOr<void> StorageManagement::enumerate_device_partitions(StorageDevice& devi
 {
     auto partition_table = TRY(try_to_initialize_partition_table(device));
     for (auto partition_metadata : partition_table->partitions()) {
-        auto disk_partition = StorageDevicePartition::create(device, generate_partition_minor_number(), partition_metadata);
+        auto disk_partition = TRY(StorageDevicePartition::create(device, generate_partition_minor_number(), partition_metadata));
         device.add_partition(disk_partition);
     }
 
@@ -290,7 +290,7 @@ UNMAP_AFTER_INIT void StorageManagement::resolve_partition_from_boot_device_para
     auto partition_number = possible_partition_number.value();
     if (chosen_storage_device.partitions().size() <= partition_number)
         PANIC("StorageManagement: Invalid partition number parameter.");
-    m_boot_block_device = chosen_storage_device.partitions()[partition_number];
+    m_boot_block_device = *chosen_storage_device.partitions()[partition_number];
 }
 
 UNMAP_AFTER_INIT void StorageManagement::determine_hardware_relative_boot_device(StringView relative_hardware_prefix, Function<bool(StorageDevice const&)> filter_device_callback)
@@ -422,16 +422,19 @@ UNMAP_AFTER_INIT void StorageManagement::determine_boot_device_with_partition_uu
             if (partition->metadata().unique_guid().is_zero())
                 continue;
             if (partition->metadata().unique_guid() == partition_uuid) {
-                m_boot_block_device = partition;
+                m_boot_block_device = *partition;
                 break;
             }
         }
     }
 }
 
-LockRefPtr<BlockDevice> StorageManagement::boot_block_device() const
+RefPtr<BlockDevice> StorageManagement::boot_block_device() const
 {
-    return m_boot_block_device.strong_ref();
+    auto device = m_boot_block_device.strong_ref();
+    if (!device)
+        return nullptr;
+    return *device;
 }
 
 MinorNumber StorageManagement::generate_storage_minor_number()

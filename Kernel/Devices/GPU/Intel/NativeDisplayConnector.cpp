@@ -15,7 +15,7 @@
 
 namespace Kernel {
 
-ErrorOr<NonnullLockRefPtr<IntelNativeDisplayConnector>> IntelNativeDisplayConnector::try_create_with_display_connector_group(IntelDisplayConnectorGroup const& parent_connector_group, ConnectorIndex connector_index, Type type, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size)
+ErrorOr<NonnullRefPtr<IntelNativeDisplayConnector>> IntelNativeDisplayConnector::try_create_with_display_connector_group(IntelDisplayConnectorGroup const& parent_connector_group, ConnectorIndex connector_index, Type type, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size)
 {
     return TRY(Device::try_create_device<IntelNativeDisplayConnector>(parent_connector_group, connector_index, type, framebuffer_address, framebuffer_resource_size));
 }

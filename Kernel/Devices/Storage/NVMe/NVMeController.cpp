@@ -209,7 +209,7 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::identify_and_init_namespaces()
 
             dbgln_if(NVME_DEBUG, "NVMe: Block count is {} and Block size is {}", block_counts, block_size);
 
-            m_namespaces.append(TRY(NVMeNameSpace::try_create(*this, m_queues, nsid, block_counts, block_size)));
+            m_namespaces.append(TRY(NVMeNameSpace::create(*this, m_queues, nsid, block_counts, block_size)));
             m_device_count++;
             dbgln_if(NVME_DEBUG, "NVMe: Initialized namespace with NSID: {}", nsid);
         }
@@ -288,7 +288,9 @@ UNMAP_AFTER_INIT NVMeController::NSFeatures NVMeController::get_ns_features(Iden
 
 LockRefPtr<StorageDevice> NVMeController::device(u32 index) const
 {
-    return m_namespaces.at(index);
+    // FIXME: Remove this once we get rid of this hacky method in the future.
+    auto device = m_namespaces.at(index);
+    return *device;
 }
 
 size_t NVMeController::devices_count() const

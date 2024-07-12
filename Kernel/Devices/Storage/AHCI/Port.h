@@ -43,7 +43,7 @@ public:
     bool is_operable() const;
     bool is_atapi_attached() const { return m_port_registers.sig == (u32)ATA::DeviceSignature::ATAPI; }
 
-    LockRefPtr<StorageDevice> connected_device() const { return m_connected_device; }
+    RefPtr<StorageDevice> connected_device() const { return m_connected_device; }
 
     bool reset();
     bool initialize_without_reset();
@@ -113,7 +113,9 @@ private:
     RefPtr<Memory::PhysicalRAMPage> m_command_list_page;
     OwnPtr<Memory::Region> m_command_list_region;
     RefPtr<Memory::PhysicalRAMPage> m_fis_receive_page;
-    LockRefPtr<ATADevice> m_connected_device;
+    // FIXME: This should have some locking once we actually support hotplug
+    // properly.
+    RefPtr<ATADevice> m_connected_device;
 
     u32 m_port_index;
 

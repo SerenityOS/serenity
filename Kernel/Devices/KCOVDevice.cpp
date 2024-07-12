@@ -17,12 +17,9 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT NonnullLockRefPtr<KCOVDevice> KCOVDevice::must_create()
+UNMAP_AFTER_INIT NonnullRefPtr<KCOVDevice> KCOVDevice::must_create()
 {
-    auto kcov_device_or_error = Device::try_create_device<KCOVDevice>();
-    // FIXME: Find a way to propagate errors
-    VERIFY(!kcov_device_or_error.is_error());
-    return kcov_device_or_error.release_value();
+    return MUST(Device::try_create_device<KCOVDevice>());
 }
 
 UNMAP_AFTER_INIT KCOVDevice::KCOVDevice()

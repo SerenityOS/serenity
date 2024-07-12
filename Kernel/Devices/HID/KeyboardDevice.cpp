@@ -77,7 +77,7 @@ void KeyboardDevice::handle_input_event(KeyEvent queued_event)
 
 ErrorOr<NonnullRefPtr<KeyboardDevice>> KeyboardDevice::try_to_initialize()
 {
-    return *TRY(Device::try_create_device<KeyboardDevice>());
+    return TRY(Device::try_create_device<KeyboardDevice>());
 }
 
 // FIXME: UNMAP_AFTER_INIT is fine for now, but for hot-pluggable devices

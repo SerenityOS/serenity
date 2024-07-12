@@ -74,7 +74,7 @@ private:
 private:
     LockRefPtr<NVMeQueue> m_admin_queue;
     Vector<NonnullLockRefPtr<NVMeQueue>> m_queues;
-    Vector<NonnullLockRefPtr<NVMeNameSpace>> m_namespaces;
+    Vector<NonnullRefPtr<NVMeNameSpace>> m_namespaces;
     Memory::TypedMapping<ControllerRegister volatile> m_controller_regs;
     RefPtr<Memory::PhysicalRAMPage> m_dbbuf_shadow_page;
     RefPtr<Memory::PhysicalRAMPage> m_dbbuf_eventidx_page;

@@ -16,7 +16,7 @@ class MemoryDevice final : public CharacterDevice {
     friend class Device;
 
 public:
-    static NonnullLockRefPtr<MemoryDevice> must_create();
+    static NonnullRefPtr<MemoryDevice> must_create();
     ~MemoryDevice();
 
     virtual ErrorOr<NonnullLockRefPtr<Memory::VMObject>> vmobject_for_mmap(Process&, Memory::VirtualRange const&, u64& offset, bool shared) override;

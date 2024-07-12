@@ -20,7 +20,7 @@ class MiniUART final : public CharacterDevice {
     friend class Kernel::Device;
 
 public:
-    static ErrorOr<NonnullLockRefPtr<MiniUART>> create();
+    static ErrorOr<NonnullRefPtr<MiniUART>> create();
 
     virtual ~MiniUART() override;
 
