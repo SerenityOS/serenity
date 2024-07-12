@@ -69,7 +69,6 @@ class RAMFSInode;
 class UDPSocket;
 class UserOrKernelBuffer;
 class VFSRootContext;
-class VirtualFileSystem;
 class WaitQueue;
 class WorkQueue;
 

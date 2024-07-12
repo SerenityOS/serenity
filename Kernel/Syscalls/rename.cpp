@@ -19,7 +19,7 @@ ErrorOr<FlatPtr> Process::sys$rename(Userspace<Syscall::SC_rename_params const*>
     auto new_path = TRY(get_syscall_path_argument(params.new_path));
     CustodyBase old_base(params.olddirfd, old_path->view());
     CustodyBase new_base(params.newdirfd, new_path->view());
-    TRY(VirtualFileSystem::the().rename(vfs_root_context(), credentials(), old_base, old_path->view(), new_base, new_path->view()));
+    TRY(VirtualFileSystem::rename(vfs_root_context(), credentials(), old_base, old_path->view(), new_base, new_path->view()));
     return 0;
 }
 

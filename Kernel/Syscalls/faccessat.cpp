@@ -27,7 +27,7 @@ ErrorOr<FlatPtr> Process::sys$faccessat(Userspace<Syscall::SC_faccessat_params c
         flags |= AccessFlags::EffectiveAccess;
 
     CustodyBase base(params.dirfd, pathname->view());
-    TRY(VirtualFileSystem::the().access(vfs_root_context(), credentials(), pathname->view(), params.mode, base, flags));
+    TRY(VirtualFileSystem::access(vfs_root_context(), credentials(), pathname->view(), params.mode, base, flags));
     return 0;
 }
 

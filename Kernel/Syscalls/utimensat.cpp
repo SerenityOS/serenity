@@ -42,7 +42,7 @@ ErrorOr<FlatPtr> Process::sys$futimens(Userspace<Syscall::SC_futimens_params con
 
     auto& atime = times[0];
     auto& mtime = times[1];
-    TRY(VirtualFileSystem::the().do_utimens(credentials(), *description->custody(), atime, mtime));
+    TRY(VirtualFileSystem::do_utimens(credentials(), *description->custody(), atime, mtime));
     return 0;
 }
 
@@ -74,7 +74,7 @@ ErrorOr<FlatPtr> Process::sys$utimensat(Userspace<Syscall::SC_utimensat_params c
     auto& mtime = times[1];
 
     CustodyBase base(params.dirfd, path->view());
-    TRY(VirtualFileSystem::the().utimensat(vfs_root_context(), credentials(), path->view(), base, atime, mtime, follow_symlink));
+    TRY(VirtualFileSystem::utimensat(vfs_root_context(), credentials(), path->view(), base, atime, mtime, follow_symlink));
     return 0;
 }
 

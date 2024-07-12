@@ -47,12 +47,7 @@ FileSystem::DirectoryEntryView::DirectoryEntryView(StringView n, InodeIdentifier
 void FileSystem::sync()
 {
     Inode::sync_all();
-    VirtualFileSystem::the().sync_filesystems();
-}
-
-void FileSystem::lock_all()
-{
-    VirtualFileSystem::the().lock_all_filesystems();
+    VirtualFileSystem::sync_filesystems();
 }
 
 }

@@ -808,7 +808,7 @@ ErrorOr<void> Process::dump_perfcore()
     RefPtr<OpenFileDescription> description;
     auto credentials = this->credentials();
     for (size_t attempt = 1; attempt <= 10; ++attempt) {
-        auto description_or_error = VirtualFileSystem::the().open(*this, vfs_root_context(), credentials, perfcore_filename->view(), O_CREAT | O_EXCL, 0400, current_directory(), UidAndGid { 0, 0 });
+        auto description_or_error = VirtualFileSystem::open(*this, vfs_root_context(), credentials, perfcore_filename->view(), O_CREAT | O_EXCL, 0400, current_directory(), UidAndGid { 0, 0 });
         if (!description_or_error.is_error()) {
             description = description_or_error.release_value();
             break;
@@ -1225,7 +1225,7 @@ ErrorOr<NonnullRefPtr<VFSRootContext>> Process::vfs_root_context_for_id(int id)
     if (is_jailed() && id != -1)
         return EPERM;
 
-    return VirtualFileSystem::the().all_root_contexts_list(Badge<Process> {}).with([id](auto& list) -> ErrorOr<NonnullRefPtr<VFSRootContext>> {
+    return VFSRootContext::all_root_contexts_list(Badge<Process> {}).with([id](auto& list) -> ErrorOr<NonnullRefPtr<VFSRootContext>> {
         for (auto& context : list) {
             if (context.id() == static_cast<u64>(id))
                 return context;
@@ -1260,9 +1260,9 @@ ErrorOr<Process::MountTargetContext> Process::context_for_mount_operation(int vf
         auto vfs_root_context_custody = vfs_root_context->root_custody().with([](auto& custody) -> NonnullRefPtr<Custody> {
             return custody;
         });
-        target_custody = TRY(VirtualFileSystem::the().resolve_path(vfs_root_context, credentials(), path, vfs_root_context_custody));
+        target_custody = TRY(VirtualFileSystem::resolve_path(vfs_root_context, credentials(), path, vfs_root_context_custody));
     } else {
-        target_custody = TRY(VirtualFileSystem::the().resolve_path(vfs_root_context, credentials(), path, current_directory()));
+        target_custody = TRY(VirtualFileSystem::resolve_path(vfs_root_context, credentials(), path, current_directory()));
     }
     return MountTargetContext { *target_custody.release_nonnull(), *vfs_root_context };
 }

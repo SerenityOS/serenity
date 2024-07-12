@@ -464,22 +464,17 @@ ErrorOr<NonnullRefPtr<VFSRootContext>> StorageManagement::create_first_vfs_root_
     }
     auto description = TRY(OpenFileDescription::try_create(boot_device_description.release_nonnull()));
 
-    RefPtr<FileSystem> fs;
-    TRY(VirtualFileSystem::the().m_file_backed_file_systems_list.with_exclusive([&](auto& list) -> ErrorOr<void> {
-        fs = TRY(VirtualFileSystem::create_and_initialize_filesystem_from_mount_file_and_description(list, mount_file, description));
-        // NOTE: Fake a mounted count of 1 so the called VirtualFileSystem function in the
-        // next pivot_root logic block thinks everything is OK.
-        fs->mounted_count(Badge<StorageManagement> {}).with([](auto& mounted_count) {
-            mounted_count++;
-        });
-        list.append(static_cast<FileBackedFileSystem&>(*fs));
-        return {};
-    }));
-    VERIFY(fs);
+    auto fs = TRY(FileBackedFileSystem::create_and_append_filesystems_list_from_mount_file_and_description(mount_file, description));
 
-    TRY(VirtualFileSystem::the().pivot_root_by_copying_mounted_fs_instance(vfs_root_context, *fs, root_mount_flags));
+    // NOTE: Fake a mounted count of 1 so the called VirtualFileSystem function in the
+    // next pivot_root logic block thinks everything is OK.
+    fs->mounted_count().with([](auto& mounted_count) {
+        mounted_count++;
+    });
+
+    TRY(VirtualFileSystem::pivot_root_by_copying_mounted_fs_instance(*vfs_root_context, *fs, root_mount_flags));
     // NOTE: Return the mounted count to normal now we have it really mounted.
-    fs->mounted_count(Badge<StorageManagement> {}).with([](auto& mounted_count) {
+    fs->mounted_count().with([](auto& mounted_count) {
         mounted_count--;
     });
     return vfs_root_context;

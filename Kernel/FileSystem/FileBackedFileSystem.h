@@ -12,7 +12,6 @@
 namespace Kernel {
 
 class FileBackedFileSystem : public FileSystem {
-    friend class VirtualFileSystem;
 
 public:
     virtual ~FileBackedFileSystem() override;
@@ -39,5 +38,11 @@ private:
 
     IntrusiveListNode<FileBackedFileSystem> m_file_backed_file_system_node;
     NonnullRefPtr<OpenFileDescription> const m_file_description;
+
+public:
+    using List = IntrusiveList<&FileBackedFileSystem::m_file_backed_file_system_node>;
+
+    // NOTE: This method is implemented in Kernel/FileSystem/VirtualFileSystem.cpp
+    static ErrorOr<NonnullRefPtr<FileBackedFileSystem>> create_and_append_filesystems_list_from_mount_file_and_description(MountFile& mount_file, OpenFileDescription& source_description);
 };
 }

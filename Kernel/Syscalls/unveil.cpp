@@ -142,7 +142,7 @@ ErrorOr<FlatPtr> Process::sys$unveil(Userspace<Syscall::SC_unveil_params const*>
     auto vfs_root_context_root_custody = Process::current().vfs_root_context()->root_custody().with([](auto& custody) -> NonnullRefPtr<Custody> {
         return custody;
     });
-    auto custody_or_error = VirtualFileSystem::the().resolve_path_without_veil(vfs_root_context(), credentials(), path->view(), vfs_root_context_root_custody, &parent_custody);
+    auto custody_or_error = VirtualFileSystem::resolve_path_without_veil(vfs_root_context(), credentials(), path->view(), vfs_root_context_root_custody, &parent_custody);
     if (!custody_or_error.is_error()) {
         new_unveiled_path = TRY(custody_or_error.value()->try_serialize_absolute_path());
     } else if (custody_or_error.error().code() == ENOENT && parent_custody && (new_permissions & UnveilAccess::CreateOrRemove)) {

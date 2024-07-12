@@ -22,9 +22,9 @@ ErrorOr<FlatPtr> Process::sys$unlink(int dirfd, Userspace<char const*> user_path
     CustodyBase base(dirfd, path->view());
 
     if (flags & AT_REMOVEDIR)
-        TRY(VirtualFileSystem::the().rmdir(vfs_root_context(), credentials(), path->view(), base));
+        TRY(VirtualFileSystem::rmdir(vfs_root_context(), credentials(), path->view(), base));
     else
-        TRY(VirtualFileSystem::the().unlink(vfs_root_context(), credentials(), path->view(), base));
+        TRY(VirtualFileSystem::unlink(vfs_root_context(), credentials(), path->view(), base));
     return 0;
 }
 
