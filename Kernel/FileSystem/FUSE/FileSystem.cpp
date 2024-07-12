@@ -5,7 +5,7 @@
  */
 
 #include <AK/IntegralMath.h>
-#include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/Device.h>
 #include <Kernel/FileSystem/FUSE/FileSystem.h>
 #include <Kernel/FileSystem/FUSE/Inode.h>
 #include <Kernel/Tasks/Process.h>

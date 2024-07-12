@@ -17,7 +17,7 @@ namespace Kernel {
 class GraphicsManagement;
 class DisplayConnector : public CharacterDevice {
     friend class GraphicsManagement;
-    friend class DeviceManagement;
+    friend class Device;
 
 public:
     struct ModeSetting {

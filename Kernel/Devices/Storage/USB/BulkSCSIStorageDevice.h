@@ -14,6 +14,8 @@ namespace Kernel::USB {
 class BulkSCSIInterface;
 
 class BulkSCSIStorageDevice : public StorageDevice {
+    friend class Device;
+
 public:
     BulkSCSIStorageDevice(BulkSCSIInterface&, LUNAddress logical_unit_number_address, u32 hardware_relative_controller_id, size_t sector_size, u64 max_addressable_block);
 

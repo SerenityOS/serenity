@@ -9,7 +9,7 @@
 #include <Kernel/Arch/x86_64/IO.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Debug.h>
-#include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/GPU/Bochs/Definitions.h>
 #include <Kernel/Devices/GPU/Console/ContiguousFramebufferConsole.h>
 #include <Kernel/Devices/GPU/Management.h>
@@ -47,7 +47,7 @@ LockRefPtr<BochsDisplayConnector> BochsDisplayConnector::try_create_for_vga_isa_
     // Since this is probably hardcoded at other OSes in their guest drivers,
     // we can assume this is going to stay the same framebuffer physical address for
     // this device and will not be changed in the future.
-    auto device_or_error = DeviceManagement::try_create_device<BochsDisplayConnector>(PhysicalAddress(0xE0000000), video_ram_64k_chunks_count * (64 * KiB));
+    auto device_or_error = Device::try_create_device<BochsDisplayConnector>(PhysicalAddress(0xE0000000), video_ram_64k_chunks_count * (64 * KiB));
     VERIFY(!device_or_error.is_error());
     auto connector = device_or_error.release_value();
     MUST(connector->create_attached_framebuffer_console());
@@ -57,7 +57,7 @@ LockRefPtr<BochsDisplayConnector> BochsDisplayConnector::try_create_for_vga_isa_
 
 NonnullLockRefPtr<BochsDisplayConnector> BochsDisplayConnector::must_create(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, bool virtual_box_hardware)
 {
-    auto device_or_error = DeviceManagement::try_create_device<BochsDisplayConnector>(framebuffer_address, framebuffer_resource_size);
+    auto device_or_error = Device::try_create_device<BochsDisplayConnector>(framebuffer_address, framebuffer_resource_size);
     VERIFY(!device_or_error.is_error());
     auto connector = device_or_error.release_value();
     MUST(connector->create_attached_framebuffer_console());

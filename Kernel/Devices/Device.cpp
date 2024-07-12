@@ -5,8 +5,10 @@
  */
 
 #include <AK/Singleton.h>
+#include <Kernel/Devices/BaseDevices.h>
+#include <Kernel/Devices/BlockDevice.h>
+#include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/Devices/Device.h>
-#include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
 #include <Kernel/FileSystem/SysFS/Component.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/DeviceIdentifiers/BlockDevicesDirectory.h>
@@ -15,21 +17,70 @@
 
 namespace Kernel {
 
-Device::Device(MajorNumber major, MinorNumber minor)
-    : m_major(major)
-    , m_minor(minor)
+struct AllDevicesDetails {
+    SpinlockProtected<HashMap<u64, BlockDevice*>, LockRank::None> block_devices {};
+    SpinlockProtected<HashMap<u64, CharacterDevice*>, LockRank::None> char_devices {};
+    SpinlockProtected<CircularQueue<DeviceEvent, 100>, LockRank::None> event_queue {};
+    // NOTE: There's no locking on this pointer because we expect to initialize it once
+    // and never touch it again.
+    OwnPtr<BaseDevices> base_devices;
+};
+
+static Singleton<AllDevicesDetails> s_all_details;
+
+SpinlockProtected<CircularQueue<DeviceEvent, 100>, LockRank::None>& Device::event_queue()
 {
+    return s_all_details->event_queue;
+}
+
+BaseDevices* Device::base_devices()
+{
+    return s_all_details->base_devices.ptr();
+}
+
+UNMAP_AFTER_INIT void Device::initialize_base_devices()
+{
+    auto base_devices = MUST(adopt_nonnull_own_or_enomem(new (nothrow) BaseDevices(*NullDevice::must_initialize(), *ConsoleDevice::must_create(), *DeviceControlDevice::must_create())));
+    s_all_details->base_devices = move(base_devices);
+}
+
+RefPtr<Device> Device::acquire_by_type_and_major_minor_numbers(DeviceNodeType type, MajorNumber major, MinorNumber minor)
+{
+    VERIFY(type == DeviceNodeType::Block || type == DeviceNodeType::Character);
+
+    auto find_device_in_map = [major, minor](auto& map) -> RefPtr<Device> {
+        auto it = map.find(encoded_device(major.value(), minor.value()));
+        if (it == map.end())
+            return nullptr;
+        return *it->value;
+    };
+
+    if (type == DeviceNodeType::Block) {
+        return s_all_details->block_devices.with([&](auto& map) -> RefPtr<Device> {
+            return find_device_in_map(map);
+        });
+    }
+
+    return s_all_details->char_devices.with([&](auto& map) -> RefPtr<Device> {
+        return find_device_in_map(map);
+    });
 }
 
 void Device::before_will_be_destroyed_remove_from_device_management()
 {
-    DeviceManagement::the().before_device_removal({}, *this);
+    before_device_removal({}, *this);
     m_state = State::BeingRemoved;
 }
 
 void Device::after_inserting_add_to_device_management()
 {
-    DeviceManagement::the().after_inserting_device({}, *this);
+    after_inserting_device({}, *this);
+}
+
+Device::Device(MajorNumber major, MinorNumber minor)
+    : m_major(major)
+    , m_minor(minor)
+{
 }
 
 ErrorOr<void> Device::after_inserting()
@@ -78,6 +129,54 @@ void Device::process_next_queued_request(Badge<AsyncDeviceRequest>, AsyncDeviceR
     }
 
     evaluate_block_conditions();
+}
+
+void Device::after_inserting_device(Badge<Device>, Device& device)
+{
+    if (device.is_block_device()) {
+        s_all_details->block_devices.with([&](auto& map) -> void {
+            add_device_to_map<BlockDevice>(map, device);
+        });
+    } else {
+        VERIFY(device.is_character_device());
+        s_all_details->char_devices.with([&](auto& map) -> void {
+            add_device_to_map<CharacterDevice>(map, device);
+        });
+    }
+
+    s_all_details->event_queue.with([&](auto& queue) {
+        DeviceEvent event { DeviceEvent::State::Inserted, device.is_block_device(), device.major().value(), device.minor().value() };
+        queue.enqueue(event);
+    });
+
+    if (s_all_details->base_devices)
+        s_all_details->base_devices->device_control_device->evaluate_block_conditions();
+}
+
+void Device::before_device_removal(Badge<Device>, Device& device)
+{
+    u64 device_id = encoded_device(device.major(), device.minor());
+
+    if (device.is_block_device()) {
+        s_all_details->block_devices.with([&](auto& map) -> void {
+            VERIFY(map.contains(device_id));
+            map.remove(encoded_device(device.major(), device.minor()));
+        });
+    } else {
+        VERIFY(device.is_character_device());
+        s_all_details->char_devices.with([&](auto& map) -> void {
+            VERIFY(map.contains(device_id));
+            map.remove(encoded_device(device.major(), device.minor()));
+        });
+    }
+
+    s_all_details->event_queue.with([&](auto& queue) {
+        DeviceEvent event { DeviceEvent::State::Removed, device.is_block_device(), device.major().value(), device.minor().value() };
+        queue.enqueue(event);
+    });
+
+    if (s_all_details->base_devices)
+        s_all_details->base_devices->device_control_device->evaluate_block_conditions();
 }
 
 }

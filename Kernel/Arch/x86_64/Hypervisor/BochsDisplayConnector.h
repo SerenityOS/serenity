@@ -19,7 +19,7 @@ namespace Kernel {
 class BochsDisplayConnector
     : public DisplayConnector {
     friend class BochsGraphicsAdapter;
-    friend class DeviceManagement;
+    friend class Device;
     friend class GraphicsManagement;
 
 public:

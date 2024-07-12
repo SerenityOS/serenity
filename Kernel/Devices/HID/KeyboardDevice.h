@@ -19,7 +19,7 @@
 namespace Kernel {
 
 class KeyboardDevice : public HIDDevice {
-    friend class DeviceManagement;
+    friend class Device;
 
 public:
     using Event = KeyEvent;

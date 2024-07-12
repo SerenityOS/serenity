@@ -17,7 +17,7 @@
 namespace Kernel {
 
 class PS2KeyboardDevice final : public SerialIODevice {
-    friend class DeviceManagement;
+    friend class Device;
 
 public:
     static ErrorOr<NonnullOwnPtr<PS2KeyboardDevice>> try_to_initialize(SerialIOController const&, SerialIOController::PortIndex port_index, ScanCodeSet scan_code_set, KeyboardDevice const&);

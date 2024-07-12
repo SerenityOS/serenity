@@ -7,7 +7,7 @@
 #include <Kernel/API/Ioctl.h>
 #include <Kernel/API/MajorNumberAllocation.h>
 #include <Kernel/Devices/Audio/Management.h>
-#include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/Generic/RandomDevice.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Security/Random.h>
@@ -16,7 +16,7 @@ namespace Kernel {
 
 UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<AudioChannel>> AudioChannel::create(AudioController const& controller, size_t channel_index)
 {
-    auto channel = TRY(DeviceManagement::try_create_device<AudioChannel>(controller, channel_index));
+    auto channel = TRY(Device::try_create_device<AudioChannel>(controller, channel_index));
 
     // FIXME: Ideally, we would want the audio controller to run a channel at a device's initial sample
     //        rate instead of hardcoding 44.1 KHz here. However, most audio is provided at 44.1 KHz and as

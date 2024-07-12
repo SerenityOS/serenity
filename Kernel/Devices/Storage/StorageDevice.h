@@ -17,7 +17,7 @@ namespace Kernel {
 
 class StorageDevice : public BlockDevice {
     friend class StorageManagement;
-    friend class DeviceManagement;
+    friend class Device;
 
 public:
     // Note: this attribute describes the internal command set of a Storage device.

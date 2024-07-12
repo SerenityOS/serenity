@@ -20,7 +20,7 @@ class IntelDisplayConnectorGroup;
 class IntelNativeDisplayConnector final
     : public DisplayConnector {
     friend class IntelDisplayConnectorGroup;
-    friend class DeviceManagement;
+    friend class Device;
 
 public:
     enum class Type {

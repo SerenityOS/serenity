@@ -6,7 +6,7 @@
 
 #include <AK/Format.h>
 #include <AK/StdLibExtras.h>
-#include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/Storage/SD/Commands.h>
 #include <Kernel/Devices/Storage/SD/SDHostController.h>
 #include <Kernel/Devices/Storage/StorageManagement.h>
@@ -263,7 +263,7 @@ ErrorOr<NonnullLockRefPtr<SDMemoryCard>> SDHostController::try_initialize_insert
     m_registers->host_configuration_0 |= data_transfer_width_4bit;
     // 6. In case of SD memory only card, go to the 'End'. In case of other card, go to step (7).
 
-    return TRY(DeviceManagement::try_create_device<SDMemoryCard>(
+    return TRY(Device::try_create_device<SDMemoryCard>(
         *this,
         StorageDevice::LUNAddress { controller_id(), 0, 0 },
         hardware_relative_controller_id(), block_len,
