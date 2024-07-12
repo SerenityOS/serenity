@@ -14,7 +14,7 @@
 #include <Kernel/API/POSIX/errno.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/BlockDevice.h>
-#include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/Loop/LoopDevice.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FileBackedFileSystem.h>
@@ -549,7 +549,7 @@ ErrorOr<NonnullRefPtr<OpenFileDescription>> VirtualFileSystem::open(Process cons
         if (custody.mount_flags() & MS_NODEV)
             return EACCES;
         auto device_type = metadata.is_block_device() ? DeviceNodeType::Block : DeviceNodeType::Character;
-        auto device = DeviceManagement::the().get_device(device_type, metadata.major_device, metadata.minor_device);
+        auto device = Device::acquire_by_type_and_major_minor_numbers(device_type, metadata.major_device, metadata.minor_device);
         if (device == nullptr) {
             return ENODEV;
         }

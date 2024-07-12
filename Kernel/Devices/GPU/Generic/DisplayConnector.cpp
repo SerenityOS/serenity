@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/GPU/Console/ContiguousFramebufferConsole.h>
 #include <Kernel/Devices/GPU/Generic/DisplayConnector.h>
 #include <Kernel/Devices/GPU/Management.h>
@@ -13,7 +13,7 @@ namespace Kernel {
 
 NonnullLockRefPtr<GenericDisplayConnector> GenericDisplayConnector::must_create_with_preset_resolution(PhysicalAddress framebuffer_address, size_t width, size_t height, size_t pitch)
 {
-    auto device_or_error = DeviceManagement::try_create_device<GenericDisplayConnector>(framebuffer_address, width, height, pitch);
+    auto device_or_error = Device::try_create_device<GenericDisplayConnector>(framebuffer_address, width, height, pitch);
     VERIFY(!device_or_error.is_error());
     auto connector = device_or_error.release_value();
     MUST(connector->create_attached_framebuffer_console());

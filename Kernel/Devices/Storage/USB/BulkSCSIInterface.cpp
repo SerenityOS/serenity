@@ -6,7 +6,7 @@
 
 #include <Kernel/Bus/USB/USBController.h>
 #include <Kernel/Bus/USB/USBRequest.h>
-#include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/Storage/StorageManagement.h>
 #include <Kernel/Devices/Storage/USB/BulkSCSIInterface.h>
 #include <Kernel/Devices/Storage/USB/Codes.h>
@@ -124,7 +124,7 @@ ErrorOr<NonnullLockRefPtr<BulkSCSIInterface>> BulkSCSIInterface::initialize(USB:
         0
     };
 
-    auto storage_device = TRY(DeviceManagement::try_create_device<BulkSCSIStorageDevice>(
+    auto storage_device = TRY(Kernel::Device::try_create_device<BulkSCSIStorageDevice>(
         *bulk_scsi_interface,
         lun,
         device.address(), // FIXME: Figure out a better ID to put here

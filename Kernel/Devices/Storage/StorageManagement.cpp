@@ -18,7 +18,7 @@
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Controller/VolumeManagementDevice.h>
 #include <Kernel/Devices/BlockDevice.h>
-#include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/Storage/AHCI/Controller.h>
 #include <Kernel/Devices/Storage/NVMe/NVMeController.h>
 #include <Kernel/Devices/Storage/SD/PCISDHostController.h>
@@ -346,7 +346,7 @@ UNMAP_AFTER_INIT void StorageManagement::determine_block_boot_device()
     // Note: We simply fetch the corresponding BlockDevice with the major and minor parameters.
     // We don't try to accept and resolve a partition number as it will make this code much more
     // complicated. This rule is also explained in the boot_device_addressing(7) manual page.
-    auto device = DeviceManagement::the().get_device(DeviceNodeType::Block, parameters_view[0], parameters_view[1]);
+    auto device = Device::acquire_by_type_and_major_minor_numbers(DeviceNodeType::Block, parameters_view[0], parameters_view[1]);
     if (device && device->is_block_device())
         m_boot_block_device = *static_ptr_cast<BlockDevice>(device);
 }

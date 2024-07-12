@@ -13,7 +13,7 @@
 namespace Kernel {
 
 class MemoryDevice final : public CharacterDevice {
-    friend class DeviceManagement;
+    friend class Device;
 
 public:
     static NonnullLockRefPtr<MemoryDevice> must_create();

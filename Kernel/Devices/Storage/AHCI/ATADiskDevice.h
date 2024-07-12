@@ -15,7 +15,7 @@ namespace Kernel {
 class IDEController;
 class ATADiskDevice final : public ATADevice {
     friend class IDEController;
-    friend class DeviceManagement;
+    friend class Device;
 
 public:
     static NonnullLockRefPtr<ATADiskDevice> create(AHCIController const&, ATA::Address, u16 capabilities, u16 logical_sector_size, u64 max_addressable_block);

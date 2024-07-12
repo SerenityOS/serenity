@@ -20,7 +20,7 @@ struct BochsDisplayMMIORegisters;
 class QEMUDisplayConnector final
     : public DisplayConnector {
     friend class BochsGraphicsAdapter;
-    friend class DeviceManagement;
+    friend class Device;
 
 public:
     AK_TYPEDEF_DISTINCT_ORDERED_ID(u16, IndexID);

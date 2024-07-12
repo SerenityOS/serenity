@@ -5,7 +5,7 @@
  */
 
 #include <AK/StringView.h>
-#include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/Loop/LoopDevice.h>
 #include <Kernel/FileSystem/DevLoopFS/Inode.h>
 #include <Kernel/FileSystem/RAMBackedFileType.h>

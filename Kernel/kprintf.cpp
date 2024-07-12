@@ -11,7 +11,8 @@
 #if ARCH(X86_64)
 #    include <Kernel/Arch/x86_64/BochsDebugOutput.h>
 #endif
-#include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/BaseDevices.h>
+#include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/GPU/Console/BootFramebufferConsole.h>
 #include <Kernel/Devices/GPU/Management.h>
 #include <Kernel/Devices/Generic/ConsoleDevice.h>
@@ -69,8 +70,9 @@ static void critical_console_out(char ch)
 
 static void console_out(char ch)
 {
-    if (DeviceManagement::the().is_console_device_attached()) {
-        DeviceManagement::the().console_device().put_char(ch);
+    auto base_devices = Device::base_devices();
+    if (base_devices) {
+        base_devices->console_device->put_char(ch);
     } else {
         if (s_serial_debug_enabled)
             serial_putch(ch);

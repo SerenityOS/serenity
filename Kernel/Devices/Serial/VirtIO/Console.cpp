@@ -6,7 +6,7 @@
  */
 
 #include <Kernel/Bus/VirtIO/Transport/PCIe/TransportLink.h>
-#include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/Serial/VirtIO/Console.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Tasks/WorkQueue.h>
@@ -53,7 +53,7 @@ UNMAP_AFTER_INIT ErrorOr<void> Console::initialize_virtio_resources()
     if (is_feature_accepted(VIRTIO_CONSOLE_F_MULTIPORT)) {
         setup_multiport();
     } else {
-        auto port = TRY(DeviceManagement::the().try_create_device<VirtIO::ConsolePort>(0u, *this));
+        auto port = TRY(Kernel::Device::try_create_device<VirtIO::ConsolePort>(0u, *this));
         port->init_receive_buffer({});
         m_ports.append(port);
     }
@@ -161,7 +161,7 @@ void Console::process_control_message(ControlMessage message)
                 return;
             }
 
-            auto port = MUST(DeviceManagement::the().try_create_device<VirtIO::ConsolePort>(id, *this));
+            auto port = MUST(Kernel::Device::try_create_device<VirtIO::ConsolePort>(id, *this));
             port->init_receive_buffer({});
             m_ports.at(id) = port;
 

@@ -16,7 +16,7 @@
 namespace Kernel {
 
 class LoopDevice final : public BlockDevice {
-    friend class DeviceManagement;
+    friend class Device;
 
 public:
     virtual bool unref() const override;

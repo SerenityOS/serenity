@@ -8,7 +8,7 @@
 #include <Kernel/API/Ioctl.h>
 #include <Kernel/API/MajorNumberAllocation.h>
 #include <Kernel/Debug.h>
-#include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/Storage/StorageDevice.h>
 #include <Kernel/Devices/Storage/StorageManagement.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>

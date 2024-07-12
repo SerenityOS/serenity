@@ -20,7 +20,7 @@
 #include <Kernel/Bus/VirtIO/Device.h>
 #include <Kernel/Bus/VirtIO/Transport/PCIe/Detect.h>
 #include <Kernel/Devices/Audio/Management.h>
-#include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/FUSEDevice.h>
 #include <Kernel/Devices/GPU/Console/BootDummyConsole.h>
 #include <Kernel/Devices/GPU/Console/BootFramebufferConsole.h>
@@ -278,11 +278,9 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT NO_SANITIZE_COVERAGE void init([[maybe_
     // Initialize TimeManagement before using randomness!
     TimeManagement::initialize(0);
 
-    DeviceManagement::initialize();
     SysFSComponentRegistry::initialize();
-    DeviceManagement::the().attach_null_device(*NullDevice::must_initialize());
-    DeviceManagement::the().attach_console_device(*ConsoleDevice::must_create());
-    DeviceManagement::the().attach_device_control_device(*DeviceControlDevice::must_create());
+
+    Device::initialize_base_devices();
 
     __stack_chk_guard = get_fast_random<uintptr_t>();
 

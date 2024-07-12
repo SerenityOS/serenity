@@ -5,7 +5,7 @@
  */
 
 #include <Kernel/API/MajorNumberAllocation.h>
-#include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/Generic/ZeroDevice.h>
 #include <Kernel/Sections.h>
 
@@ -13,7 +13,7 @@ namespace Kernel {
 
 UNMAP_AFTER_INIT NonnullLockRefPtr<ZeroDevice> ZeroDevice::must_create()
 {
-    auto zero_device_or_error = DeviceManagement::try_create_device<ZeroDevice>();
+    auto zero_device_or_error = Device::try_create_device<ZeroDevice>();
     // FIXME: Find a way to propagate errors
     VERIFY(!zero_device_or_error.is_error());
     return zero_device_or_error.release_value();

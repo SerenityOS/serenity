@@ -14,7 +14,8 @@
 #include <Kernel/API/Syscall.h>
 #include <Kernel/Arch/PageDirectory.h>
 #include <Kernel/Debug.h>
-#include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/BaseDevices.h>
+#include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/Generic/NullDevice.h>
 #include <Kernel/Devices/TTY/TTY.h>
 #include <Kernel/FileSystem/Custody.h>
@@ -228,7 +229,9 @@ ErrorOr<Process::ProcessAndFirstThread> Process::create_user_process(StringView 
     TRY(process->m_fds.with_exclusive([&](auto& fds) -> ErrorOr<void> {
         TRY(fds.try_resize(Process::OpenFileDescriptions::max_open()));
 
-        auto& device_to_use_as_tty = tty ? (CharacterDevice&)*tty : DeviceManagement::the().null_device();
+        // NOTE: If Device::base_devices() is returning nullptr, it means the null device is not attached which is a bug.
+        VERIFY(Device::base_devices() != nullptr);
+        auto& device_to_use_as_tty = tty ? (CharacterDevice&)*tty : Device::base_devices()->null_device;
         auto description = TRY(device_to_use_as_tty.open(O_RDWR));
         auto setup_description = [&](int fd) {
             fds.m_fds_metadatas[fd].allocate();

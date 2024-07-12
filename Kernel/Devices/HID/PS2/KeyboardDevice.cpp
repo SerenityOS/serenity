@@ -8,7 +8,7 @@
 #include <AK/Types.h>
 #include <Kernel/Bus/SerialIO/PS2Definitions.h>
 #include <Kernel/Debug.h>
-#include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/HID/Management.h>
 #include <Kernel/Devices/HID/PS2/KeyboardDevice.h>
 #include <Kernel/Devices/HID/ScanCodeEvent.h>

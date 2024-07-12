@@ -14,7 +14,8 @@
 #endif
 #include <Kernel/API/MajorNumberAllocation.h>
 #include <Kernel/Boot/CommandLine.h>
-#include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/BaseDevices.h>
+#include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/GPU/DisplayConnector.h>
 #include <Kernel/Devices/GPU/Management.h>
 #include <Kernel/Devices/HID/Management.h>
@@ -59,8 +60,9 @@ UNMAP_AFTER_INIT void VirtualConsole::initialize_consoles()
         for (size_t index = 0; index < consoles.size(); index++) {
             // FIXME: Better determine the debug TTY we chose...
             if (index == 1) {
-                VERIFY(DeviceManagement::the().is_console_device_attached());
-                consoles[index] = VirtualConsole::create_with_preset_log(index, DeviceManagement::the().console_device().logbuffer());
+                // NOTE: If Device::base_devices() is returning nullptr, it means the console device is not attached which is a bug.
+                VERIFY(Device::base_devices() != nullptr);
+                consoles[index] = VirtualConsole::create_with_preset_log(index, Device::base_devices()->console_device->logbuffer());
                 continue;
             }
             consoles[index] = VirtualConsole::create(index);
@@ -206,7 +208,7 @@ ErrorOr<NonnullOwnPtr<KString>> VirtualConsole::pseudo_name() const
 
 UNMAP_AFTER_INIT NonnullRefPtr<VirtualConsole> VirtualConsole::create(size_t index)
 {
-    auto virtual_console_or_error = DeviceManagement::try_create_device<VirtualConsole>(index);
+    auto virtual_console_or_error = Device::try_create_device<VirtualConsole>(index);
     // FIXME: Find a way to propagate errors
     VERIFY(!virtual_console_or_error.is_error());
     return *virtual_console_or_error.release_value();

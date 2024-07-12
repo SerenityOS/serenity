@@ -9,7 +9,7 @@
 #    include <Kernel/Arch/x86_64/BochsDebugOutput.h>
 #endif
 #include <Kernel/API/MajorNumberAllocation.h>
-#include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/Generic/ConsoleDevice.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Sections.h>
@@ -21,7 +21,7 @@ Spinlock<LockRank::None> g_console_lock {};
 
 UNMAP_AFTER_INIT NonnullLockRefPtr<ConsoleDevice> ConsoleDevice::must_create()
 {
-    auto device_or_error = DeviceManagement::try_create_device<ConsoleDevice>();
+    auto device_or_error = Device::try_create_device<ConsoleDevice>();
     VERIFY(!device_or_error.is_error());
     return device_or_error.release_value();
 }
