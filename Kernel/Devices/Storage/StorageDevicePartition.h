@@ -18,7 +18,7 @@ class StorageDevicePartition final : public BlockDevice {
     friend class Device;
 
 public:
-    static NonnullLockRefPtr<StorageDevicePartition> create(StorageDevice&, MinorNumber, Partition::DiskPartitionMetadata);
+    static ErrorOr<NonnullRefPtr<StorageDevicePartition>> create(StorageDevice&, MinorNumber, Partition::DiskPartitionMetadata);
     virtual ~StorageDevicePartition();
 
     virtual void start_request(AsyncBlockDeviceRequest&) override;

@@ -14,7 +14,7 @@ class SelfTTYDevice final : public CharacterDevice {
     friend class Device;
 
 public:
-    static NonnullLockRefPtr<SelfTTYDevice> must_create();
+    static NonnullRefPtr<SelfTTYDevice> must_create();
     virtual ~SelfTTYDevice() override;
 
 private:

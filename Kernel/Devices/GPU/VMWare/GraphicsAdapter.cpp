@@ -186,7 +186,7 @@ UNMAP_AFTER_INIT ErrorOr<void> VMWareGraphicsAdapter::initialize_adapter()
 
     auto bar1_space_size = PCI::get_BAR_space_size(device_identifier(), PCI::HeaderType0BaseRegister::BAR1);
 
-    m_display_connector = VMWareDisplayConnector::must_create(*this, TRY(PCI::get_bar_address(device_identifier(), PCI::HeaderType0BaseRegister::BAR1)), bar1_space_size);
+    m_display_connector = TRY(VMWareDisplayConnector::create(*this, TRY(PCI::get_bar_address(device_identifier(), PCI::HeaderType0BaseRegister::BAR1)), bar1_space_size));
     TRY(m_display_connector->set_safe_mode_setting());
     return {};
 }

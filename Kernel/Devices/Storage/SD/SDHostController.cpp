@@ -78,6 +78,16 @@ void SDHostController::complete_current_request(AsyncDeviceRequest::RequestResul
     VERIFY_NOT_REACHED();
 }
 
+LockRefPtr<StorageDevice> SDHostController::device(u32 index) const
+{
+    // FIXME: Remove this once we get rid of this hacky method in the future.
+    if (index != 0)
+        return nullptr;
+    if (!m_card)
+        return nullptr;
+    return *m_card;
+}
+
 ErrorOr<void> SDHostController::initialize()
 {
     m_registers = get_register_map_base_address();
@@ -129,7 +139,7 @@ void SDHostController::try_enable_dma()
     }
 }
 
-ErrorOr<NonnullLockRefPtr<SDMemoryCard>> SDHostController::try_initialize_inserted_card()
+ErrorOr<NonnullRefPtr<SDMemoryCard>> SDHostController::try_initialize_inserted_card()
 {
     if (!is_card_inserted())
         return ENODEV;

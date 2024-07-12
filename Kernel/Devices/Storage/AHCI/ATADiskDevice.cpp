@@ -12,12 +12,9 @@
 
 namespace Kernel {
 
-NonnullLockRefPtr<ATADiskDevice> ATADiskDevice::create(AHCIController const& controller, ATA::Address ata_address, u16 capabilities, u16 logical_sector_size, u64 max_addressable_block)
+ErrorOr<NonnullRefPtr<ATADiskDevice>> ATADiskDevice::create(AHCIController const& controller, ATA::Address ata_address, u16 capabilities, u16 logical_sector_size, u64 max_addressable_block)
 {
-    auto disk_device_or_error = Device::try_create_device<ATADiskDevice>(controller, ata_address, capabilities, logical_sector_size, max_addressable_block);
-    // FIXME: Find a way to propagate errors
-    VERIFY(!disk_device_or_error.is_error());
-    return disk_device_or_error.release_value();
+    return TRY(Device::try_create_device<ATADiskDevice>(controller, ata_address, capabilities, logical_sector_size, max_addressable_block));
 }
 
 ATADiskDevice::ATADiskDevice(AHCIController const& controller, ATA::Address ata_address, u16 capabilities, u16 logical_sector_size, u64 max_addressable_block)

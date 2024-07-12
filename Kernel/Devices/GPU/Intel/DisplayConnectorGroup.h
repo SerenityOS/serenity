@@ -81,7 +81,7 @@ private:
 
     // Note: The linux driver specifies an enum of possible ports and there is only
     // 9 ports (PORT_{A-I}). PORT_TC{1-6} are mapped to PORT_{D-I}.
-    Array<LockRefPtr<IntelNativeDisplayConnector>, 9> m_connectors;
+    Array<RefPtr<IntelNativeDisplayConnector>, 9> m_connectors;
 
     Array<OwnPtr<IntelDisplayTranscoder>, 5> m_transcoders;
     Array<OwnPtr<IntelDisplayPlane>, 3> m_planes;

@@ -15,12 +15,9 @@
 
 namespace Kernel {
 
-NonnullLockRefPtr<VirtIODisplayConnector> VirtIODisplayConnector::must_create(VirtIOGraphicsAdapter& graphics_adapter, Graphics::VirtIOGPU::ScanoutID scanout_id)
+ErrorOr<NonnullRefPtr<VirtIODisplayConnector>> VirtIODisplayConnector::create(VirtIOGraphicsAdapter& graphics_adapter, Graphics::VirtIOGPU::ScanoutID scanout_id)
 {
-    auto device_or_error = Device::try_create_device<VirtIODisplayConnector>(graphics_adapter, scanout_id);
-    VERIFY(!device_or_error.is_error());
-    auto connector = device_or_error.release_value();
-    return connector;
+    return TRY(Device::try_create_device<VirtIODisplayConnector>(graphics_adapter, scanout_id));
 }
 
 static_assert((MAX_VIRTIOGPU_RESOLUTION_WIDTH * MAX_VIRTIOGPU_RESOLUTION_HEIGHT * sizeof(u32) * 2) % PAGE_SIZE == 0);

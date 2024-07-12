@@ -13,12 +13,9 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT NonnullLockRefPtr<DeviceControlDevice> DeviceControlDevice::must_create()
+UNMAP_AFTER_INIT NonnullRefPtr<DeviceControlDevice> DeviceControlDevice::must_create()
 {
-    auto device_control_device_or_error = Device::try_create_device<DeviceControlDevice>();
-    // FIXME: Find a way to propagate errors
-    VERIFY(!device_control_device_or_error.is_error());
-    return device_control_device_or_error.release_value();
+    return MUST(Device::try_create_device<DeviceControlDevice>());
 }
 
 bool DeviceControlDevice::can_read(OpenFileDescription const&, u64) const

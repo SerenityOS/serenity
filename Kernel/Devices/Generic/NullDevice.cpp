@@ -12,12 +12,9 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT NonnullLockRefPtr<NullDevice> NullDevice::must_initialize()
+UNMAP_AFTER_INIT NonnullRefPtr<NullDevice> NullDevice::must_initialize()
 {
-    auto null_device_or_error = Device::try_create_device<NullDevice>();
-    // FIXME: Find a way to propagate errors
-    VERIFY(!null_device_or_error.is_error());
-    return null_device_or_error.release_value();
+    return MUST(Device::try_create_device<NullDevice>());
 }
 
 UNMAP_AFTER_INIT NullDevice::NullDevice()

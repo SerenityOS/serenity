@@ -62,7 +62,7 @@ private:
     virtual ErrorOr<void> handle_device_config_change() override;
     virtual void handle_queue_update(u16 queue_index) override;
 
-    Vector<LockRefPtr<ConsolePort>> m_ports;
+    Vector<RefPtr<ConsolePort>> m_ports;
     void setup_multiport();
     void process_control_message(ControlMessage message);
     void write_control_message(ControlMessage message);

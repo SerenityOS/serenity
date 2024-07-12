@@ -19,11 +19,9 @@ namespace Kernel {
 
 Spinlock<LockRank::None> g_console_lock {};
 
-UNMAP_AFTER_INIT NonnullLockRefPtr<ConsoleDevice> ConsoleDevice::must_create()
+UNMAP_AFTER_INIT NonnullRefPtr<ConsoleDevice> ConsoleDevice::must_create()
 {
-    auto device_or_error = Device::try_create_device<ConsoleDevice>();
-    VERIFY(!device_or_error.is_error());
-    return device_or_error.release_value();
+    return MUST(Device::try_create_device<ConsoleDevice>());
 }
 
 UNMAP_AFTER_INIT ConsoleDevice::ConsoleDevice()

@@ -11,11 +11,11 @@
 
 namespace Kernel {
 
-NonnullLockRefPtr<VMWareDisplayConnector> VMWareDisplayConnector::must_create(VMWareGraphicsAdapter const& parent_adapter, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size)
+ErrorOr<NonnullRefPtr<VMWareDisplayConnector>> VMWareDisplayConnector::create(VMWareGraphicsAdapter const& parent_adapter, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size)
 {
-    auto connector = MUST(Device::try_create_device<VMWareDisplayConnector>(parent_adapter, framebuffer_address, framebuffer_resource_size));
-    MUST(connector->create_attached_framebuffer_console());
-    MUST(connector->initialize_edid_for_generic_monitor(Array<u8, 3> { 'V', 'M', 'W' }));
+    auto connector = TRY(Device::try_create_device<VMWareDisplayConnector>(parent_adapter, framebuffer_address, framebuffer_resource_size));
+    TRY(connector->create_attached_framebuffer_console());
+    TRY(connector->initialize_edid_for_generic_monitor(Array<u8, 3> { 'V', 'M', 'W' }));
     return connector;
 }
 

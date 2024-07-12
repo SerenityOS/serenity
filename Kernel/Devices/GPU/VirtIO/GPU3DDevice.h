@@ -97,7 +97,7 @@ class VirtIOGPU3DDevice : public CharacterDevice {
     friend class Device;
 
 public:
-    static ErrorOr<NonnullLockRefPtr<VirtIOGPU3DDevice>> try_create(VirtIOGraphicsAdapter&);
+    static ErrorOr<NonnullRefPtr<VirtIOGPU3DDevice>> create(VirtIOGraphicsAdapter&);
 
 private:
     VirtIOGPU3DDevice(VirtIOGraphicsAdapter const& graphics_adapter, NonnullOwnPtr<Memory::Region> transfer_buffer_region, Graphics::VirtIOGPU::ContextID kernel_context_id);

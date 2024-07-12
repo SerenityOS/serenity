@@ -202,7 +202,12 @@ LockRefPtr<StorageDevice> AHCIController::device_by_port(u32 port_index) const
     if (!port)
         return {};
     SpinlockLocker port_hard_locker(port->m_hard_lock);
-    return port->connected_device();
+
+    // FIXME: Remove this once we get rid of this hacky method in the future.
+    auto device = port->connected_device();
+    if (!device)
+        return nullptr;
+    return *device;
 }
 
 LockRefPtr<StorageDevice> AHCIController::device(u32 index) const

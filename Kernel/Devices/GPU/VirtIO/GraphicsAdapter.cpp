@@ -49,7 +49,7 @@ ErrorOr<void> VirtIOGraphicsAdapter::initialize_adapter()
     VERIFY(m_num_scanouts <= VIRTIO_GPU_MAX_SCANOUTS);
     TRY(initialize_3d_device());
     for (size_t index = 0; index < m_num_scanouts; index++) {
-        auto display_connector = VirtIODisplayConnector::must_create(*this, index);
+        auto display_connector = TRY(VirtIODisplayConnector::create(*this, index));
         m_scanouts[index].display_connector = display_connector;
         TRY(query_and_set_edid(index, *display_connector));
         display_connector->set_safe_mode_setting_after_initialization({});
@@ -465,7 +465,7 @@ ErrorOr<void> VirtIOGraphicsAdapter::initialize_3d_device()
 {
     if (m_has_virgl_support) {
         SpinlockLocker locker(m_operation_lock);
-        m_3d_device = TRY(VirtIOGPU3DDevice::try_create(*this));
+        m_3d_device = TRY(VirtIOGPU3DDevice::create(*this));
     }
     return {};
 }

@@ -76,7 +76,7 @@ private:
     ErrorOr<void> do_read(u32 block_index, u32 block_count, UserOrKernelBuffer& buffer, size_t buffer_size);
     ErrorOr<void> do_write(u32 block_index, u32 block_count, UserOrKernelBuffer& buffer, size_t buffer_size);
 
-    IntrusiveListNode<BulkSCSIInterface, NonnullLockRefPtr<BulkSCSIInterface>> m_list_node;
+    IntrusiveListNode<BulkSCSIInterface, NonnullRefPtr<BulkSCSIInterface>> m_list_node;
 
 public:
     using List = IntrusiveList<&BulkSCSIInterface::m_list_node>;

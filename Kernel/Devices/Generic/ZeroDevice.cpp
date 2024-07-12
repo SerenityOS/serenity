@@ -11,12 +11,9 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT NonnullLockRefPtr<ZeroDevice> ZeroDevice::must_create()
+UNMAP_AFTER_INIT NonnullRefPtr<ZeroDevice> ZeroDevice::must_create()
 {
-    auto zero_device_or_error = Device::try_create_device<ZeroDevice>();
-    // FIXME: Find a way to propagate errors
-    VERIFY(!zero_device_or_error.is_error());
-    return zero_device_or_error.release_value();
+    return MUST(Device::try_create_device<ZeroDevice>());
 }
 
 UNMAP_AFTER_INIT ZeroDevice::ZeroDevice()

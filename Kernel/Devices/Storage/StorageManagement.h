@@ -66,7 +66,7 @@ private:
 
     ErrorOr<NonnullOwnPtr<Partition::PartitionTable>> try_to_initialize_partition_table(StorageDevice&) const;
 
-    LockRefPtr<BlockDevice> boot_block_device() const;
+    RefPtr<BlockDevice> boot_block_device() const;
 
     StringView m_boot_argument;
     LockWeakPtr<BlockDevice> m_boot_block_device;

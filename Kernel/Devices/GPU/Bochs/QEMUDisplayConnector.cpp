@@ -13,13 +13,11 @@
 
 namespace Kernel {
 
-NonnullLockRefPtr<QEMUDisplayConnector> QEMUDisplayConnector::must_create(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, Memory::TypedMapping<BochsDisplayMMIORegisters volatile> registers_mapping)
+ErrorOr<NonnullRefPtr<QEMUDisplayConnector>> QEMUDisplayConnector::create(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, Memory::TypedMapping<BochsDisplayMMIORegisters volatile> registers_mapping)
 {
-    auto device_or_error = Device::try_create_device<QEMUDisplayConnector>(framebuffer_address, framebuffer_resource_size, move(registers_mapping));
-    VERIFY(!device_or_error.is_error());
-    auto connector = device_or_error.release_value();
-    MUST(connector->create_attached_framebuffer_console());
-    MUST(connector->fetch_and_initialize_edid());
+    auto connector = TRY(Device::try_create_device<QEMUDisplayConnector>(framebuffer_address, framebuffer_resource_size, move(registers_mapping)));
+    TRY(connector->create_attached_framebuffer_console());
+    TRY(connector->fetch_and_initialize_edid());
     return connector;
 }
 
