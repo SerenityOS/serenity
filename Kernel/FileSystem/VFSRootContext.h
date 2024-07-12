@@ -11,6 +11,7 @@
 #include <AK/RefPtr.h>
 #include <AK/SetOnce.h>
 #include <Kernel/FileSystem/Custody.h>
+#include <Kernel/FileSystem/FileBackedFileSystem.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/Mount.h>
 #include <Kernel/Locking/SpinlockProtected.h>
@@ -20,7 +21,6 @@ namespace Kernel {
 class VFSRootContext : public AtomicRefCounted<VFSRootContext> {
     AK_MAKE_NONCOPYABLE(VFSRootContext);
     AK_MAKE_NONMOVABLE(VFSRootContext);
-    friend class VirtualFileSystem;
 
 public:
     AK_TYPEDEF_DISTINCT_ORDERED_ID(u64, IndexID);
@@ -56,6 +56,8 @@ public:
 
     void set_attached(Badge<Process>);
 
+    ErrorOr<void> for_each_mount(Function<ErrorOr<void>(Mount const&)>) const;
+
 private:
     VFSRootContext(NonnullRefPtr<Custody> custody);
 
@@ -68,6 +70,16 @@ private:
     IntrusiveListNode<VFSRootContext, NonnullRefPtr<VFSRootContext>> m_list_node;
 
     IndexID m_id;
+
+    // NOTE: This method is implemented in Kernel/FileSystem/VirtualFileSystem.cpp
+    static SpinlockProtected<IntrusiveList<&VFSRootContext::m_list_node>, LockRank::FileSystem>& all_root_contexts_list();
+
+public:
+    using List = IntrusiveList<&VFSRootContext::m_list_node>;
+
+    // NOTE: These methods are implemented in Kernel/FileSystem/VirtualFileSystem.cpp
+    static SpinlockProtected<VFSRootContext::List, LockRank::FileSystem>& all_root_contexts_list(Badge<PowerStateSwitchTask>);
+    static SpinlockProtected<VFSRootContext::List, LockRank::FileSystem>& all_root_contexts_list(Badge<Process>);
 };
 
 }

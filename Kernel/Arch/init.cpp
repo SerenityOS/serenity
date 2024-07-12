@@ -393,8 +393,6 @@ void init_stage2(void*)
         PCISerialDevice::detect();
     }
 
-    VirtualFileSystem::initialize();
-
 #if ARCH(X86_64)
     if (!is_serial_debug_enabled())
         (void)SerialDevice::must_create(0).leak_ref();

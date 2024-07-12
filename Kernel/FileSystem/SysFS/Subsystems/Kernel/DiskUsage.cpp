@@ -28,7 +28,7 @@ UNMAP_AFTER_INIT SysFSDiskUsage::SysFSDiskUsage(SysFSDirectory const& parent_dir
 ErrorOr<void> SysFSDiskUsage::try_generate(KBufferBuilder& builder)
 {
     auto array = TRY(JsonArraySerializer<>::try_create(builder));
-    TRY(VirtualFileSystem::the().for_each_mount(Process::current().vfs_root_context(), [&array](auto& mount) -> ErrorOr<void> {
+    TRY(Process::current().vfs_root_context()->for_each_mount([&array](auto& mount) -> ErrorOr<void> {
         auto& fs = mount.guest_fs();
         auto fs_object = TRY(array.add_object());
         TRY(fs_object.add("class_name"sv, fs.class_name()));

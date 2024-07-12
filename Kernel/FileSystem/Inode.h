@@ -31,7 +31,6 @@ enum class ShouldBlock {
 
 class Inode : public ListedRefCounted<Inode, LockType::Spinlock>
     , public LockWeakable<Inode> {
-    friend class VirtualFileSystem;
     friend class FileSystem;
     friend class InodeFile;
 

@@ -20,14 +20,12 @@ namespace Kernel {
 
 class FileSystem : public AtomicRefCounted<FileSystem> {
     friend class Inode;
-    friend class VirtualFileSystem;
 
 public:
     virtual ~FileSystem();
 
     FileSystemID fsid() const { return m_fsid; }
     static void sync();
-    static void lock_all();
 
     virtual ErrorOr<void> initialize() = 0;
     virtual StringView class_name() const = 0;
@@ -66,9 +64,7 @@ public:
     // Converts file types that are used internally by the filesystem to DT_* types
     virtual u8 internal_file_type_to_directory_entry_type(DirectoryEntryView const& entry) const { return entry.file_type; }
 
-    SpinlockProtected<size_t, LockRank::FileSystem>& mounted_count(Badge<VirtualFileSystem>) { return m_attach_count; }
-    SpinlockProtected<size_t, LockRank::FileSystem>& mounted_count(Badge<StorageManagement>) { return m_attach_count; }
-    SpinlockProtected<size_t, LockRank::FileSystem>& mounted_count(Badge<VFSRootContext>) { return m_attach_count; }
+    SpinlockProtected<size_t, LockRank::FileSystem>& mounted_count() { return m_attach_count; }
 
 protected:
     FileSystem();
@@ -88,6 +84,12 @@ private:
 
     SpinlockProtected<size_t, LockRank::FileSystem> m_attach_count { 0 };
     IntrusiveListNode<FileSystem> m_file_system_node;
+
+public:
+    using List = IntrusiveList<&FileSystem::m_file_system_node>;
+
+    // NOTE: This method is implemented in Kernel/FileSystem/VirtualFileSystem.cpp
+    static SpinlockProtected<FileSystem::List, LockRank::FileSystem>& all_file_systems_list();
 };
 
 }

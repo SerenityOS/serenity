@@ -25,7 +25,7 @@ UNMAP_AFTER_INIT void VFSRootContext::initialize_empty_ramfs_root_context_for_ke
     // we leaked a ref, and this context is artificially created only for
     // kernel processes.
     dbgln("VFSRootContext({}): Context is artificially made, detach from global list", s_empty_context->id());
-    VirtualFileSystem::the().all_root_contexts_list(Badge<VFSRootContext> {}).with([&](auto& list) {
+    VFSRootContext::all_root_contexts_list().with([&](auto& list) {
         list.remove(*s_empty_context);
     });
 }
@@ -48,9 +48,18 @@ Custody const& VFSRootContext::empty_context_custody_for_kernel_processes()
     return *s_empty_context_custody;
 }
 
+ErrorOr<void> VFSRootContext::for_each_mount(Function<ErrorOr<void>(Mount const&)> callback) const
+{
+    return mounts().with([&](auto& mounts) -> ErrorOr<void> {
+        for (auto& mount : mounts)
+            TRY(callback(mount));
+        return {};
+    });
+}
+
 void VFSRootContext::add_to_mounts_list_and_increment_fs_mounted_count(DoBindMount do_bind_mount, IntrusiveList<&Mount::m_vfs_list_node>& mounts_list, NonnullOwnPtr<Mount> new_mount)
 {
-    new_mount->guest_fs().mounted_count(Badge<VFSRootContext> {}).with([&](auto& mounted_count) {
+    new_mount->guest_fs().mounted_count().with([&](auto& mounted_count) {
         // NOTE: We increment the mounted counter for the given filesystem regardless of the mount type,
         // as a bind mount also counts as a normal mount from the perspective of unmount(),
         // so we need to keep track of it in order for prepare_to_clear_last_mount() to work properly.
@@ -71,7 +80,7 @@ void VFSRootContext::add_to_mounts_list_and_increment_fs_mounted_count(DoBindMou
             // appear.
             VERIFY(do_bind_mount != DoBindMount::Yes);
 
-            VirtualFileSystem::the().all_file_systems_list({}).with([&](auto& fs_list) {
+            FileSystem::all_file_systems_list().with([&](auto& fs_list) {
                 fs_list.append(new_mount->guest_fs());
             });
         }
@@ -101,7 +110,7 @@ ErrorOr<NonnullRefPtr<VFSRootContext>> VFSRootContext::create_with_empty_ramfs()
     }));
 
     // Finally, add the context to the global list so it can be used.
-    VirtualFileSystem::the().all_root_contexts_list(Badge<VFSRootContext> {}).with([&](auto& list) {
+    VFSRootContext::all_root_contexts_list().with([&](auto& list) {
         list.append(*context);
     });
     return context;
@@ -133,7 +142,7 @@ ErrorOr<void> VFSRootContext::add_new_mount(DoBindMount do_bind_mount, Inode& so
         // this method shouldn't be called for new contexts when adding
         // their root mounts.
         VERIFY(!mounts.is_empty());
-        VirtualFileSystem::the().all_root_contexts_list(Badge<VFSRootContext> {}).with([&](auto& list) {
+        VFSRootContext::all_root_contexts_list().with([&](auto& list) {
             VERIFY(list.contains(*this));
         });
 

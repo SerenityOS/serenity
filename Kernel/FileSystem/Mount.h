@@ -15,11 +15,9 @@
 
 namespace Kernel {
 
-class VirtualFileSystem;
 class Mount {
     AK_MAKE_NONCOPYABLE(Mount);
     AK_MAKE_NONMOVABLE(Mount);
-    friend class VirtualFileSystem;
     friend class VFSRootContext;
 
 public:
@@ -44,6 +42,8 @@ public:
 
     int flags() const { return m_flags; }
     void set_flags(int flags) { m_flags = flags; }
+
+    static void delete_mount_from_list(Mount&);
 
 private:
     NonnullRefPtr<FileSystem> const m_guest_fs;

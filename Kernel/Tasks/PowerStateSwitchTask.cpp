@@ -86,7 +86,7 @@ static ErrorOr<void> unmount_mounts_on_vfs_root_context(VFSRootContext& vfs_root
 
             auto mount_path = TRY(mount.absolute_path());
             auto& mount_inode = mount.guest();
-            auto const result = VirtualFileSystem::the().unmount(vfs_root_context, mount_inode, mount_path->view());
+            auto const result = VirtualFileSystem::unmount(vfs_root_context, mount_inode, mount_path->view());
             if (result.is_error()) {
                 dbgln("Error during unmount of {}: {}", mount_path, result.error());
                 // FIXME: For unknown reasons the root FS stays busy even after everything else has shut down and was unmounted.
@@ -130,8 +130,7 @@ ErrorOr<void> PowerStateSwitchTask::perform_shutdown(PowerStateSwitchTask::DoReb
 
     VirtualConsole::switch_to_debug_console();
 
-    dbgln("Locking all file systems...");
-    FileSystem::lock_all();
+    dbgln("Syncing all file systems...");
     FileSystem::sync();
 
     dbgln("Unmounting all file systems...");
@@ -139,7 +138,7 @@ ErrorOr<void> PowerStateSwitchTask::perform_shutdown(PowerStateSwitchTask::DoReb
     size_t collected_contexts_count = 0;
     do {
         Array<RefPtr<VFSRootContext>, 16> contexts;
-        VirtualFileSystem::the().all_root_contexts_list(Badge<PowerStateSwitchTask> {}).with([&collected_contexts_count, &contexts](auto& list) {
+        VFSRootContext::all_root_contexts_list(Badge<PowerStateSwitchTask> {}).with([&collected_contexts_count, &contexts](auto& list) {
             size_t iteration_collect_count = min(contexts.size(), list.size_slow());
             for (collected_contexts_count = 0; collected_contexts_count < iteration_collect_count; collected_contexts_count++) {
                 contexts[collected_contexts_count] = list.take_first();
