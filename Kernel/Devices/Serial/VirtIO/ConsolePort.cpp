@@ -13,11 +13,11 @@ namespace Kernel::VirtIO {
 
 unsigned ConsolePort::next_device_id = 0;
 
-ErrorOr<NonnullLockRefPtr<ConsolePort>> ConsolePort::try_create(unsigned port, Console& console)
+ErrorOr<NonnullRefPtr<ConsolePort>> ConsolePort::create(unsigned port, Console& console)
 {
     auto receive_buffer = TRY(Memory::RingBuffer::try_create("VirtIO::ConsolePort Receive"sv, RINGBUFFER_SIZE));
     auto transmit_buffer = TRY(Memory::RingBuffer::try_create("VirtIO::ConsolePort Transmit"sv, RINGBUFFER_SIZE));
-    return adopt_nonnull_lock_ref_or_enomem(new (nothrow) ConsolePort(port, console, move(receive_buffer), move(transmit_buffer)));
+    return TRY(Device::try_create_device<ConsolePort>(port, console, move(receive_buffer), move(transmit_buffer)));
 }
 
 ConsolePort::ConsolePort(unsigned port, VirtIO::Console& console, NonnullOwnPtr<Memory::RingBuffer> receive_buffer, NonnullOwnPtr<Memory::RingBuffer> transmit_buffer)

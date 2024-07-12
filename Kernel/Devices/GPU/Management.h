@@ -50,9 +50,9 @@ private:
     LockRefPtr<Graphics::Console> m_console;
 
     // Note: This is only used when booting with kernel commandline that includes "graphics_subsystem_mode=limited"
-    LockRefPtr<GenericDisplayConnector> m_preset_resolution_generic_display_connector;
+    RefPtr<GenericDisplayConnector> m_preset_resolution_generic_display_connector;
 
-    LockRefPtr<DisplayConnector> m_platform_board_specific_display_connector;
+    RefPtr<DisplayConnector> m_platform_board_specific_display_connector;
 
     unsigned m_current_minor_number { 0 };
 

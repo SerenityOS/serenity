@@ -75,18 +75,9 @@ public:
     static void initialize_base_devices();
 
     template<typename DeviceType, typename... Args>
-    static inline ErrorOr<NonnullLockRefPtr<DeviceType>> try_create_device(Args&&... args)
-    requires(requires(Args... args) { DeviceType::try_create(args...); })
+    static inline ErrorOr<NonnullRefPtr<DeviceType>> try_create_device(Args&&... args)
     {
-        auto device = TRY(DeviceType::try_create(forward<Args>(args)...));
-        TRY(static_ptr_cast<Device>(device)->after_inserting());
-        return device;
-    }
-
-    template<typename DeviceType, typename... Args>
-    static inline ErrorOr<NonnullLockRefPtr<DeviceType>> try_create_device(Args&&... args)
-    {
-        auto device = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) DeviceType(forward<Args>(args)...)));
+        auto device = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) DeviceType(forward<Args>(args)...)));
         TRY(static_ptr_cast<Device>(device)->after_inserting());
         return device;
     }

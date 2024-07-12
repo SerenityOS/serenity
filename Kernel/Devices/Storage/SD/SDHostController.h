@@ -24,7 +24,7 @@ public:
 
     virtual ~SDHostController() = default;
 
-    virtual LockRefPtr<StorageDevice> device(u32 index) const override { return index == 0 ? m_card : nullptr; }
+    virtual LockRefPtr<StorageDevice> device(u32 index) const override;
     virtual size_t devices_count() const override { return m_card ? 1 : 0; }
     virtual void complete_current_request(AsyncDeviceRequest::RequestResult) override;
 
@@ -37,7 +37,7 @@ protected:
     virtual SD::HostControlRegisterMap volatile* get_register_map_base_address() = 0;
 
 private:
-    ErrorOr<NonnullLockRefPtr<SDMemoryCard>> try_initialize_inserted_card();
+    ErrorOr<NonnullRefPtr<SDMemoryCard>> try_initialize_inserted_card();
 
     bool is_card_inserted() const
     {
@@ -90,7 +90,7 @@ private:
     u32 make_adma_descriptor_table(u32 block_count);
 
     volatile SD::HostControlRegisterMap* m_registers;
-    LockRefPtr<SDMemoryCard> m_card { nullptr };
+    RefPtr<SDMemoryCard> m_card { nullptr };
 
     u32 m_hardware_relative_controller_id { 0 };
     OperatingMode m_mode { OperatingMode::PIO };

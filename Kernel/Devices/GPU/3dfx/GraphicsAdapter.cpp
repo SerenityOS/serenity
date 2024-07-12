@@ -60,7 +60,7 @@ UNMAP_AFTER_INIT ErrorOr<void> VoodooGraphicsAdapter::initialize_adapter(PCI::De
 
     auto io_window = TRY(IOWindow::create_for_pci_device_bar(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR2));
 
-    m_display_connector = VoodooGraphics::VoodooDisplayConnector::must_create(vmem_addr, vmem_size, move(mmio_mapping), move(io_window));
+    m_display_connector = TRY(VoodooGraphics::VoodooDisplayConnector::create(vmem_addr, vmem_size, move(mmio_mapping), move(io_window)));
     TRY(m_display_connector->set_safe_mode_setting());
 
     return {};

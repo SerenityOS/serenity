@@ -18,7 +18,7 @@ class ATADiskDevice final : public ATADevice {
     friend class Device;
 
 public:
-    static NonnullLockRefPtr<ATADiskDevice> create(AHCIController const&, ATA::Address, u16 capabilities, u16 logical_sector_size, u64 max_addressable_block);
+    static ErrorOr<NonnullRefPtr<ATADiskDevice>> create(AHCIController const&, ATA::Address, u16 capabilities, u16 logical_sector_size, u64 max_addressable_block);
     virtual ~ATADiskDevice() override;
 
     // ^StorageDevice

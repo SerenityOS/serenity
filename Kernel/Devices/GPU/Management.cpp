@@ -122,11 +122,11 @@ UNMAP_AFTER_INIT void GraphicsManagement::initialize_preset_resolution_generic_d
     VERIFY(!multiboot_framebuffer_addr.is_null());
     VERIFY(multiboot_framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB);
     dmesgln("Graphics: Using a preset resolution from the bootloader, without knowing the PCI device");
-    m_preset_resolution_generic_display_connector = GenericDisplayConnector::must_create_with_preset_resolution(
+    m_preset_resolution_generic_display_connector = MUST(GenericDisplayConnector::create_with_preset_resolution(
         multiboot_framebuffer_addr,
         multiboot_framebuffer_width,
         multiboot_framebuffer_height,
-        multiboot_framebuffer_pitch);
+        multiboot_framebuffer_pitch));
 }
 
 UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
@@ -169,11 +169,11 @@ UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
     // for the framebuffer.
     if (PCI::Access::is_hardware_disabled() && !(graphics_subsystem_mode == CommandLine::GraphicsSubsystemMode::Limited && !multiboot_framebuffer_addr.is_null() && multiboot_framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB)) {
 #if ARCH(X86_64)
-        auto vga_isa_bochs_display_connector = BochsDisplayConnector::try_create_for_vga_isa_connector();
-        if (vga_isa_bochs_display_connector) {
+        auto vga_isa_bochs_display_connector_or_error = BochsDisplayConnector::try_create_for_vga_isa_connector();
+        if (!vga_isa_bochs_display_connector_or_error.is_error()) {
+            m_platform_board_specific_display_connector = vga_isa_bochs_display_connector_or_error.release_value();
             dmesgln("Graphics: Using a Bochs ISA VGA compatible adapter");
-            MUST(vga_isa_bochs_display_connector->set_safe_mode_setting());
-            m_platform_board_specific_display_connector = vga_isa_bochs_display_connector;
+            MUST(m_platform_board_specific_display_connector->set_safe_mode_setting());
             dmesgln("Graphics: Invoking manual blanking with VGA ISA ports");
             IO::out8(0x3c0, 0x20);
             return true;

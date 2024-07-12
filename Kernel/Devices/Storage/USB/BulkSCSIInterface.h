@@ -213,7 +213,7 @@ public:
 private:
     BulkSCSIInterface(USB::Device&, USBInterface const&, NonnullOwnPtr<BulkInPipe>, NonnullOwnPtr<BulkOutPipe>);
 
-    void add_storage_device(NonnullLockRefPtr<BulkSCSIStorageDevice> storage_device) { m_storage_devices.append(storage_device); }
+    void add_storage_device(NonnullRefPtr<BulkSCSIStorageDevice> storage_device) { m_storage_devices.append(storage_device); }
 
     BulkSCSIStorageDevice::List m_storage_devices;
 
@@ -222,7 +222,7 @@ private:
     NonnullOwnPtr<BulkInPipe> m_in_pipe;
     NonnullOwnPtr<BulkOutPipe> m_out_pipe;
 
-    IntrusiveListNode<BulkSCSIInterface, NonnullLockRefPtr<BulkSCSIInterface>> m_list_node;
+    IntrusiveListNode<BulkSCSIInterface, NonnullRefPtr<BulkSCSIInterface>> m_list_node;
 
 public:
     using List = IntrusiveList<&BulkSCSIInterface::m_list_node>;

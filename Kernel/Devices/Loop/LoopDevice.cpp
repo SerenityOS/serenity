@@ -66,7 +66,7 @@ ErrorOr<NonnullRefPtr<LoopDevice>> LoopDevice::create_with_file_description(Open
         return Error::from_errno(ENOTSUP);
 
     return TRY(LoopDevice::all_instances().with([custody](auto& all_instances_list) -> ErrorOr<NonnullRefPtr<LoopDevice>> {
-        NonnullRefPtr<LoopDevice> device = *TRY(Device::try_create_device<LoopDevice>(*custody, s_loop_device_id.fetch_add(1)));
+        NonnullRefPtr<LoopDevice> device = TRY(Device::try_create_device<LoopDevice>(*custody, s_loop_device_id.fetch_add(1)));
         all_instances_list.append(*device);
         return device;
     }));

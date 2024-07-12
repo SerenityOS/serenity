@@ -16,7 +16,7 @@ class NullDevice final : public CharacterDevice {
 public:
     virtual ~NullDevice() override;
 
-    static NonnullLockRefPtr<NullDevice> must_initialize();
+    static NonnullRefPtr<NullDevice> must_initialize();
 
 private:
     NullDevice();

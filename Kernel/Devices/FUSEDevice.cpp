@@ -13,7 +13,7 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT NonnullLockRefPtr<FUSEDevice> FUSEDevice::must_create()
+UNMAP_AFTER_INIT NonnullRefPtr<FUSEDevice> FUSEDevice::must_create()
 {
     return MUST(Device::try_create_device<FUSEDevice>());
 }

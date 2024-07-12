@@ -13,7 +13,7 @@ namespace Kernel {
 
 ErrorOr<NonnullRefPtr<MouseDevice>> MouseDevice::try_to_initialize()
 {
-    return *TRY(Device::try_create_device<MouseDevice>());
+    return TRY(Device::try_create_device<MouseDevice>());
 }
 
 MouseDevice::MouseDevice()

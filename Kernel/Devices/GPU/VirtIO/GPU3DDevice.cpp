@@ -23,7 +23,7 @@ VirtIOGPU3DDevice::PerContextState::PerContextState(OpenFileDescription& descrip
 {
 }
 
-ErrorOr<NonnullLockRefPtr<VirtIOGPU3DDevice>> VirtIOGPU3DDevice::try_create(VirtIOGraphicsAdapter& adapter)
+ErrorOr<NonnullRefPtr<VirtIOGPU3DDevice>> VirtIOGPU3DDevice::create(VirtIOGraphicsAdapter& adapter)
 {
     // Setup memory transfer region
     auto region_result = TRY(MM.allocate_kernel_region(

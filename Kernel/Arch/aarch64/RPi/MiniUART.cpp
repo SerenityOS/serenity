@@ -56,7 +56,7 @@ enum LineStatus {
 
 constexpr FlatPtr AUX_ENABLES = 0x21'5000;
 
-UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<MiniUART>> MiniUART::create()
+UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<MiniUART>> MiniUART::create()
 {
     return Device::try_create_device<MiniUART>();
 }
