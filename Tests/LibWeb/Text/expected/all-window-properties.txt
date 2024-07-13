@@ -26,6 +26,7 @@ BigUint64Array
 BiquadFilterNode
 Blob
 Boolean
+BroadcastChannel
 ByteLengthQueuingStrategy
 CDATASection
 CSSAnimation
