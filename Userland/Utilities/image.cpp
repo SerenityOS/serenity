@@ -150,7 +150,7 @@ static ErrorOr<OwnPtr<Core::MappedFile>> convert_image_profile(LoadedImage& imag
     return icc_file;
 }
 
-static ErrorOr<void> save_image(LoadedImage& image, StringView out_path, bool ppm_ascii, u8 jpeg_quality, Optional<unsigned> webp_allowed_transforms)
+static ErrorOr<void> save_image(LoadedImage& image, StringView out_path, bool ppm_ascii, u8 jpeg_quality, Optional<unsigned> webp_allowed_transforms, unsigned webp_color_cache_bits)
 {
     auto stream = [out_path]() -> ErrorOr<NonnullOwnPtr<Core::OutputBufferedFile>> {
         auto output_stream = TRY(Core::File::open(out_path, Core::File::OpenMode::Write));
@@ -188,6 +188,10 @@ static ErrorOr<void> save_image(LoadedImage& image, StringView out_path, bool pp
         options.icc_data = image.icc_data;
         if (webp_allowed_transforms.has_value())
             options.vp8l_options.allowed_transforms = webp_allowed_transforms.value();
+        if (webp_color_cache_bits == 0)
+            options.vp8l_options.color_cache_bits = {};
+        else
+            options.vp8l_options.color_cache_bits = webp_color_cache_bits;
         TRY(Gfx::WebPWriter::encode(*TRY(stream()), *frame, options));
         return {};
     }
@@ -221,6 +225,7 @@ struct Options {
     bool strip_color_profile = false;
     bool ppm_ascii = false;
     u8 quality = 75;
+    unsigned webp_color_cache_bits = 6;
     Optional<unsigned> webp_allowed_transforms;
 };
 
@@ -282,6 +287,7 @@ static ErrorOr<Options> parse_options(Main::Arguments arguments)
     args_parser.add_option(options.strip_color_profile, "Do not write color profile to output", "strip-color-profile", {});
     args_parser.add_option(options.ppm_ascii, "Convert to a PPM in ASCII", "ppm-ascii", {});
     args_parser.add_option(options.quality, "Quality used for the JPEG encoder, the default value is 75 on a scale from 0 to 100", "quality", {}, {});
+    args_parser.add_option(options.webp_color_cache_bits, "Size of the webp color cache (in [0, 11], higher values tend to be slower and produce smaller output, default: 6)", "webp-color-cache-bits", {}, {});
     StringView webp_allowed_transforms = "default"sv;
     args_parser.add_option(webp_allowed_transforms, "Comma-separated list of allowed transforms (predictor,p,color,c,subtract-green,sg,color-indexing,ci) for WebP output (default: all allowed)", "webp-allowed-transforms", {}, {});
     args_parser.parse(arguments);
@@ -335,7 +341,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (options.no_output)
         return 0;
 
-    TRY(save_image(image, options.out_path, options.ppm_ascii, options.quality, options.webp_allowed_transforms));
+    TRY(save_image(image, options.out_path, options.ppm_ascii, options.quality, options.webp_allowed_transforms, options.webp_color_cache_bits));
 
     return 0;
 }
