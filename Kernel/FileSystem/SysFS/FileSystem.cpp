@@ -12,7 +12,7 @@
 
 namespace Kernel {
 
-ErrorOr<NonnullRefPtr<FileSystem>> SysFS::try_create(ReadonlyBytes)
+ErrorOr<NonnullRefPtr<FileSystem>> SysFS::try_create(FileSystemSpecificOptions const&)
 {
     return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) SysFS));
 }

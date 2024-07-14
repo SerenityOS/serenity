@@ -14,7 +14,7 @@
 
 namespace Kernel {
 
-ErrorOr<NonnullRefPtr<FileSystem>> DevLoopFS::try_create(ReadonlyBytes)
+ErrorOr<NonnullRefPtr<FileSystem>> DevLoopFS::try_create(FileSystemSpecificOptions const&)
 {
     return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) DevLoopFS));
 }

@@ -7,6 +7,7 @@
 #pragma once
 
 #include <Kernel/FileSystem/File.h>
+#include <Kernel/FileSystem/FileSystemSpecificOption.h>
 #include <Kernel/FileSystem/Initializer.h>
 #include <Kernel/Locking/MutexProtected.h>
 
@@ -27,17 +28,17 @@ public:
 
     int mount_flags() const { return m_flags; }
 
-    MutexProtected<OwnPtr<KBuffer>>& mount_file_system_specific_data() { return m_mount_specific_data; }
+    MutexProtected<FileSystemSpecificOptions>& filesystem_specific_options() { return m_filesystem_specific_options; }
     FileSystemInitializer const& file_system_initializer() const { return m_file_system_initializer; }
 
 private:
     virtual bool is_mount_file() const override { return true; }
 
-    MountFile(FileSystemInitializer const&, int flags, NonnullOwnPtr<KBuffer>);
+    MountFile(FileSystemInitializer const&, int flags);
 
     int const m_flags;
     FileSystemInitializer const& m_file_system_initializer;
-    MutexProtected<OwnPtr<KBuffer>> m_mount_specific_data;
+    MutexProtected<FileSystemSpecificOptions> m_filesystem_specific_options;
 };
 
 }
