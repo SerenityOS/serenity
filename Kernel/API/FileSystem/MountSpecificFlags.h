@@ -10,9 +10,6 @@
 
 #define MOUNT_SPECIFIC_FLAG_KEY_STRING_MAX_LENGTH 64
 
-#define MOUNT_SPECIFIC_FLAG_NON_ASCII_STRING_TYPE_MAX_LENGTH 64
-#define MOUNT_SPECIFIC_FLAG_ASCII_STRING_TYPE_MAX_LENGTH 1024
-
 struct MountSpecificFlag {
     u32 key_string_length;
     u32 value_length;
@@ -21,7 +18,6 @@ struct MountSpecificFlag {
         Boolean = 0,
         UnsignedInteger,
         SignedInteger,
-        ASCIIString,
     };
 
     ValueType value_type;

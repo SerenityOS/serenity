@@ -91,7 +91,7 @@ u8 DOSBIOSParameterBlock::signature() const
         return m_dos7_block->signature;
 }
 
-ErrorOr<NonnullRefPtr<FileSystem>> FATFS::try_create(OpenFileDescription& file_description, ReadonlyBytes)
+ErrorOr<NonnullRefPtr<FileSystem>> FATFS::try_create(OpenFileDescription& file_description, FileSystemSpecificOptions const&)
 {
     return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) FATFS(file_description)));
 }

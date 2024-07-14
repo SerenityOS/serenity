@@ -8,6 +8,7 @@
 #pragma once
 
 #include <Kernel/FileSystem/FileSystem.h>
+#include <Kernel/FileSystem/FileSystemSpecificOption.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/Forward.h>
 
@@ -18,7 +19,7 @@ class RAMFS final : public FileSystem {
 
 public:
     virtual ~RAMFS() override;
-    static ErrorOr<NonnullRefPtr<FileSystem>> try_create(ReadonlyBytes);
+    static ErrorOr<NonnullRefPtr<FileSystem>> try_create(FileSystemSpecificOptions const&);
     virtual ErrorOr<void> initialize() override;
 
     virtual StringView class_name() const override { return "RAMFS"sv; }
