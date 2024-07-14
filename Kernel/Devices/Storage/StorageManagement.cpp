@@ -456,9 +456,8 @@ NonnullRefPtr<FileSystem> StorageManagement::root_filesystem() const
     auto description_or_error = OpenFileDescription::try_create(boot_device_description.release_nonnull());
     VERIFY(!description_or_error.is_error());
 
-    Array<u8, PAGE_SIZE> mount_specific_data;
-    mount_specific_data.fill(0);
-    auto file_system = Ext2FS::try_create(description_or_error.release_value(), mount_specific_data.span()).release_value();
+    FileSystemSpecificOptions filesystem_specific_options {};
+    auto file_system = Ext2FS::try_create(description_or_error.release_value(), filesystem_specific_options).release_value();
 
     if (auto result = file_system->initialize(); result.is_error()) {
         dump_storage_devices_and_partitions();

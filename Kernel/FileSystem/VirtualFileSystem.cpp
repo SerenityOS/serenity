@@ -42,37 +42,37 @@ namespace Kernel {
 static Singleton<VirtualFileSystem> s_the;
 static constexpr int root_mount_flags = 0;
 
-static ErrorOr<void> handle_mount_boolean_flag_as_invalid(Span<u8>, StringView, bool)
+static ErrorOr<void> validate_mount_boolean_flag_as_invalid(StringView, bool)
 {
     return EINVAL;
 }
 
-static ErrorOr<void> handle_mount_unsigned_integer_flag_as_invalid(Span<u8>, StringView, u64)
+static ErrorOr<void> validate_mount_unsigned_integer_flag_as_invalid(StringView, u64)
 {
     return EINVAL;
 }
 
-static ErrorOr<void> handle_mount_signed_integer_flag_as_invalid(Span<u8>, StringView, i64)
+static ErrorOr<void> validate_mount_signed_integer_flag_as_invalid(StringView, i64)
 {
     return EINVAL;
 }
 
-static ErrorOr<void> handle_mount_ascii_string_flag_as_invalid(Span<u8>, StringView, StringView)
+static ErrorOr<void> validate_mount_ascii_string_flag_as_invalid(StringView, StringView)
 {
     return EINVAL;
 }
 
 static constexpr FileSystemInitializer s_initializers[] = {
-    { "proc"sv, "ProcFS"sv, false, false, false, {}, ProcFS::try_create, handle_mount_boolean_flag_as_invalid, handle_mount_unsigned_integer_flag_as_invalid, handle_mount_signed_integer_flag_as_invalid, handle_mount_ascii_string_flag_as_invalid },
-    { "devpts"sv, "DevPtsFS"sv, false, false, false, {}, DevPtsFS::try_create, handle_mount_boolean_flag_as_invalid, handle_mount_unsigned_integer_flag_as_invalid, handle_mount_signed_integer_flag_as_invalid, handle_mount_ascii_string_flag_as_invalid },
-    { "sys"sv, "SysFS"sv, false, false, false, {}, SysFS::try_create, handle_mount_boolean_flag_as_invalid, handle_mount_unsigned_integer_flag_as_invalid, handle_mount_signed_integer_flag_as_invalid, handle_mount_ascii_string_flag_as_invalid },
-    { "ram"sv, "RAMFS"sv, false, false, false, {}, RAMFS::try_create, handle_mount_boolean_flag_as_invalid, handle_mount_unsigned_integer_flag_as_invalid, handle_mount_signed_integer_flag_as_invalid, handle_mount_ascii_string_flag_as_invalid },
-    { "ext2"sv, "Ext2FS"sv, true, true, true, Ext2FS::try_create, {}, handle_mount_boolean_flag_as_invalid, handle_mount_unsigned_integer_flag_as_invalid, handle_mount_signed_integer_flag_as_invalid, handle_mount_ascii_string_flag_as_invalid },
-    { "9p"sv, "Plan9FS"sv, true, true, true, Plan9FS::try_create, {}, handle_mount_boolean_flag_as_invalid, handle_mount_unsigned_integer_flag_as_invalid, handle_mount_signed_integer_flag_as_invalid, handle_mount_ascii_string_flag_as_invalid },
-    { "iso9660"sv, "ISO9660FS"sv, true, true, true, ISO9660FS::try_create, {}, handle_mount_boolean_flag_as_invalid, handle_mount_unsigned_integer_flag_as_invalid, handle_mount_signed_integer_flag_as_invalid, handle_mount_ascii_string_flag_as_invalid },
-    { "fat"sv, "FATFS"sv, true, true, true, FATFS::try_create, {}, handle_mount_boolean_flag_as_invalid, handle_mount_unsigned_integer_flag_as_invalid, handle_mount_signed_integer_flag_as_invalid, handle_mount_ascii_string_flag_as_invalid },
-    { "devloop"sv, "DevLoopFS"sv, false, false, false, {}, DevLoopFS::try_create, handle_mount_boolean_flag_as_invalid, handle_mount_unsigned_integer_flag_as_invalid, handle_mount_signed_integer_flag_as_invalid, handle_mount_ascii_string_flag_as_invalid },
-    { "fuse"sv, "FUSE"sv, false, false, false, {}, FUSE::try_create, handle_mount_boolean_flag_as_invalid, FUSE::handle_mount_unsigned_integer_flag, handle_mount_signed_integer_flag_as_invalid, handle_mount_ascii_string_flag_as_invalid },
+    { "proc"sv, "ProcFS"sv, false, false, false, {}, ProcFS::try_create, validate_mount_boolean_flag_as_invalid, validate_mount_unsigned_integer_flag_as_invalid, validate_mount_signed_integer_flag_as_invalid, validate_mount_ascii_string_flag_as_invalid },
+    { "devpts"sv, "DevPtsFS"sv, false, false, false, {}, DevPtsFS::try_create, validate_mount_boolean_flag_as_invalid, validate_mount_unsigned_integer_flag_as_invalid, validate_mount_signed_integer_flag_as_invalid, validate_mount_ascii_string_flag_as_invalid },
+    { "sys"sv, "SysFS"sv, false, false, false, {}, SysFS::try_create, validate_mount_boolean_flag_as_invalid, validate_mount_unsigned_integer_flag_as_invalid, validate_mount_signed_integer_flag_as_invalid, validate_mount_ascii_string_flag_as_invalid },
+    { "ram"sv, "RAMFS"sv, false, false, false, {}, RAMFS::try_create, validate_mount_boolean_flag_as_invalid, validate_mount_unsigned_integer_flag_as_invalid, validate_mount_signed_integer_flag_as_invalid, validate_mount_ascii_string_flag_as_invalid },
+    { "ext2"sv, "Ext2FS"sv, true, true, true, Ext2FS::try_create, {}, validate_mount_boolean_flag_as_invalid, validate_mount_unsigned_integer_flag_as_invalid, validate_mount_signed_integer_flag_as_invalid, validate_mount_ascii_string_flag_as_invalid },
+    { "9p"sv, "Plan9FS"sv, true, true, true, Plan9FS::try_create, {}, validate_mount_boolean_flag_as_invalid, validate_mount_unsigned_integer_flag_as_invalid, validate_mount_signed_integer_flag_as_invalid, validate_mount_ascii_string_flag_as_invalid },
+    { "iso9660"sv, "ISO9660FS"sv, true, true, true, ISO9660FS::try_create, {}, validate_mount_boolean_flag_as_invalid, validate_mount_unsigned_integer_flag_as_invalid, validate_mount_signed_integer_flag_as_invalid, validate_mount_ascii_string_flag_as_invalid },
+    { "fat"sv, "FATFS"sv, true, true, true, FATFS::try_create, {}, validate_mount_boolean_flag_as_invalid, validate_mount_unsigned_integer_flag_as_invalid, validate_mount_signed_integer_flag_as_invalid, validate_mount_ascii_string_flag_as_invalid },
+    { "devloop"sv, "DevLoopFS"sv, false, false, false, {}, DevLoopFS::try_create, validate_mount_boolean_flag_as_invalid, validate_mount_unsigned_integer_flag_as_invalid, validate_mount_signed_integer_flag_as_invalid, validate_mount_ascii_string_flag_as_invalid },
+    { "fuse"sv, "FUSE"sv, false, false, false, {}, FUSE::try_create, validate_mount_boolean_flag_as_invalid, FUSE::validate_mount_unsigned_integer_flag, validate_mount_signed_integer_flag_as_invalid, validate_mount_ascii_string_flag_as_invalid },
 };
 
 ErrorOr<FileSystemInitializer const*> VirtualFileSystem::find_filesystem_type_initializer(StringView fs_type)
@@ -175,8 +175,8 @@ ErrorOr<void> VirtualFileSystem::mount(MountFile& mount_file, OpenFileDescriptio
         if (!file_system_initializer.create)
             return ENOTSUP;
         RefPtr<FileSystem> fs;
-        TRY(mount_file.mount_file_system_specific_data().with_exclusive([&](auto& mount_specific_data) -> ErrorOr<void> {
-            fs = TRY(file_system_initializer.create(mount_specific_data->bytes()));
+        TRY(mount_file.filesystem_specific_options().with_exclusive([&](auto const& filesystem_specific_options) -> ErrorOr<void> {
+            fs = TRY(file_system_initializer.create(filesystem_specific_options));
             return {};
         }));
         VERIFY(fs);
@@ -213,8 +213,8 @@ ErrorOr<void> VirtualFileSystem::mount(MountFile& mount_file, OpenFileDescriptio
             }
         }
         if (!fs) {
-            TRY(mount_file.mount_file_system_specific_data().with_exclusive([&](auto& mount_specific_data) -> ErrorOr<void> {
-                fs = TRY(file_system_initializer.create_with_fd(*source_description, mount_specific_data->bytes()));
+            TRY(mount_file.filesystem_specific_options().with_exclusive([&](auto const& filesystem_specific_options) -> ErrorOr<void> {
+                fs = TRY(file_system_initializer.create_with_fd(*source_description, filesystem_specific_options));
                 return {};
             }));
             TRY(fs->initialize());
