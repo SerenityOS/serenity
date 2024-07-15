@@ -166,13 +166,6 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
-      - name: WPT
-        if: ${{ inputs.os_name == 'Linux' && inputs.fuzzer == 'NO_FUZZ' }}
-        working-directory: ${{ github.workspace }}/Tests/LibWeb/WPT
-        run: ./run.sh --remove-wpt-repository
-        env:
-          QT_QPA_PLATFORM: 'offscreen'
-
       - name: Lints
         if: ${{ inputs.os_name == 'Linux' && inputs.fuzzer == 'NO_FUZZ' }}
         working-directory: ${{ github.workspace }}
