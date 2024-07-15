@@ -56,11 +56,10 @@ OpenFileDescription::~OpenFileDescription()
     m_file->detach(*this);
     // FIXME: Should this error path be observed somehow?
     (void)m_file->close();
-    if (m_inode)
+    if (m_inode) {
         m_inode->detach(*this);
-
-    if (m_inode)
         m_inode->remove_flocks_for_description(*this);
+    }
 }
 
 ErrorOr<void> OpenFileDescription::attach()
