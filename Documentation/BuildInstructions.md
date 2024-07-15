@@ -1,4 +1,4 @@
-# SerenityOS build instructions
+# SerenityOS Build Instructions
 
 ## Prerequisites
 
