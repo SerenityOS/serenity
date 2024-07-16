@@ -13,14 +13,14 @@ Subject: [PATCH] Add support for Serenity LibAudio
  create mode 100644 src/sound_serenity.cpp
 
 diff --git a/src/Makefile.am b/src/Makefile.am
-index b65eb85244acec722b2f240976f184f06db11a27..b3c35dc2e69ae611ffaa32e3afa8d7b6b890fdda 100644
+index b65eb85244acec722b2f240976f184f06db11a27..6745ed1d04cde08b9811781c2bfe552d488a6a82 100644
 --- a/src/Makefile.am
 +++ b/src/Makefile.am
 @@ -2,6 +2,7 @@
  
  AM_CPPFLAGS = -DSYSCONFDIR=\"${sysconfdir}/${PACKAGE_NAME}\" ${LIBXMP_CFLAGS} \
                ${alsa_CFLAGS} ${pulseaudio_CFLAGS}
-+AM_CXXFLAGS = -std=c++23
++AM_CXXFLAGS = -std=c++23 -fno-exceptions
  AM_CFLAGS   = -Wall
  
  bin_PROGRAMS = xmp
