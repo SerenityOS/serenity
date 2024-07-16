@@ -12,7 +12,7 @@ Subject: [PATCH] make: Build with c++23 when targeting serenity
  5 files changed, 10 insertions(+), 6 deletions(-)
 
 diff --git a/make/autoconf/flags-cflags.m4 b/make/autoconf/flags-cflags.m4
-index 88679489fc09019212286e0cb75885a05103dc85..63126c98054760f8a657d6ba7d51d5aeb3eebf18 100644
+index 88679489fc09019212286e0cb75885a05103dc85..f1cf955434f65b8cecb00af9f600e93089bd5dd0 100644
 --- a/make/autoconf/flags-cflags.m4
 +++ b/make/autoconf/flags-cflags.m4
 @@ -187,7 +187,8 @@ AC_DEFUN([FLAGS_SETUP_WARNINGS],
