@@ -4,28 +4,27 @@ Date: Fri, 23 Feb 2024 21:17:23 +0100
 Subject: [PATCH] Add support for Serenity LibAudio
 
 ---
- src/Makefile.am        |   5 +-
+ src/Makefile.am        |   4 ++
  src/sound.c            |   1 +
  src/sound.h            |   1 +
  src/sound_serenity.cpp | 157 +++++++++++++++++++++++++++++++++++++++++
  src/xmp.conf           |   2 +-
- 5 files changed, 164 insertions(+), 2 deletions(-)
+ 5 files changed, 164 insertions(+), 1 deletion(-)
  create mode 100644 src/sound_serenity.cpp
 
 diff --git a/src/Makefile.am b/src/Makefile.am
-index b65eb85244acec722b2f240976f184f06db11a27..840845dc1f5d7459bfbb339071b817adc2507c6a 100644
+index b65eb85244acec722b2f240976f184f06db11a27..b3c35dc2e69ae611ffaa32e3afa8d7b6b890fdda 100644
 --- a/src/Makefile.am
 +++ b/src/Makefile.am
-@@ -1,7 +1,7 @@
- # -*- Makefile -*-
+@@ -2,6 +2,7 @@
  
  AM_CPPFLAGS = -DSYSCONFDIR=\"${sysconfdir}/${PACKAGE_NAME}\" ${LIBXMP_CFLAGS} \
--              ${alsa_CFLAGS} ${pulseaudio_CFLAGS}
-+              ${alsa_CFLAGS} ${pulseaudio_CFLAGS} -std=c++23
+               ${alsa_CFLAGS} ${pulseaudio_CFLAGS}
++AM_CXXFLAGS = -std=c++23
  AM_CFLAGS   = -Wall
  
  bin_PROGRAMS = xmp
-@@ -93,6 +93,9 @@ xmp_SOURCES += sound_dart.c
+@@ -93,6 +94,9 @@ xmp_SOURCES += sound_dart.c
  xmp_LDADD   += -lmmpm2
  endif
  
