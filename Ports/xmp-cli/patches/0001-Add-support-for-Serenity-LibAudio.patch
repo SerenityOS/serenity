@@ -60,7 +60,7 @@ index 153a6c7cb6f6f1431e00b5a10a8a36d3fe7ab7db..beebb83fa3cccdb53bdd2f6893307e47
  	char s[80]; strncpy(s, *(p), 79); s[79] = 0; \
 diff --git a/src/sound_serenity.cpp b/src/sound_serenity.cpp
 new file mode 100644
-index 0000000000000000000000000000000000000000..172996990b7807e3eecf119557274febcc4f5d54
+index 0000000000000000000000000000000000000000..94e5f70953599a8292d1cd0980009bd83363ab06
 --- /dev/null
 +++ b/src/sound_serenity.cpp
 @@ -0,0 +1,157 @@
@@ -108,7 +108,7 @@ index 0000000000000000000000000000000000000000..172996990b7807e3eecf119557274feb
 +static double read_sample(void*& b)
 +{
 +    T sample = *(T*)b;
-+    b += sizeof(T);
++    b = bit_cast<void*>(bit_cast<FlatPtr>(b) + sizeof(T));
 +
 +    // Remap integer samples to normalized floating-point range of -1 to 1.
 +    if constexpr (IsIntegral<T>) {
