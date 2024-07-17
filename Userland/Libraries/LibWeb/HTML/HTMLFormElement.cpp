@@ -949,7 +949,7 @@ Vector<FlyString> HTMLFormElement::supported_property_names() const
             Name,
             Past,
         } source;
-        Duration age;
+        AK::Duration age;
     };
     Vector<SourcedName> sourced_names;
 
