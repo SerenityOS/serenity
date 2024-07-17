@@ -280,11 +280,11 @@ bool OpenFileDescription::is_tty() const
     return m_file->is_tty();
 }
 
-const TTY* OpenFileDescription::tty() const
+TTY const* OpenFileDescription::tty() const
 {
     if (!is_tty())
         return nullptr;
-    return static_cast<const TTY*>(m_file.ptr());
+    return static_cast<TTY const*>(m_file.ptr());
 }
 
 TTY* OpenFileDescription::tty()
