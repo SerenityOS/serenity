@@ -73,7 +73,7 @@ public:
     Device* device();
 
     bool is_tty() const;
-    const TTY* tty() const;
+    TTY const* tty() const;
     TTY* tty();
 
     bool is_inode_watcher() const;
