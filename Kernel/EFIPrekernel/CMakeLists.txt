@@ -11,6 +11,8 @@ set(SOURCES
 
     KernelImage.S
 
+    Arch/${SERENITY_ARCH}/MMU.cpp
+
     ../Library/MiniStdLib.cpp
     ../Prekernel/UBSanitizer.cpp
 
