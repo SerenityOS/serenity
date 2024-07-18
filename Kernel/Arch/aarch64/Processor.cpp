@@ -23,6 +23,8 @@
 
 namespace Kernel {
 
+extern "C" u8 vector_table_el1[];
+
 extern "C" void context_first_init(Thread* from_thread, Thread* to_thread) __attribute__((used));
 extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread) __attribute__((used));
 
@@ -55,6 +57,8 @@ void ProcessorBase<T>::initialize(u32)
         dmesgln("CPU[{}]: {} not detected, randomness will be poor", m_cpu, cpu_feature_to_description(CPUFeature::RNG));
 
     store_fpu_state(&s_clean_fpu_state);
+
+    Aarch64::Asm::load_el1_vector_table(+vector_table_el1);
 
     initialize_interrupts();
 }

@@ -10,8 +10,6 @@
 #include <Kernel/Arch/aarch64/Registers.h>
 #include <Kernel/Library/Panic.h>
 
-extern "C" uintptr_t vector_table_el1;
-
 namespace Kernel {
 
 static void drop_el3_to_el2()
@@ -79,8 +77,6 @@ static void setup_el1()
     cpacr_el1.SMEN = 0;    // Trap SME instructions at EL1 and EL0
     cpacr_el1.TTA = 0;     // Don't trap access to trace registers
     Aarch64::CPACR_EL1::write(cpacr_el1);
-
-    Aarch64::Asm::load_el1_vector_table(&vector_table_el1);
 }
 
 void initialize_exceptions()
