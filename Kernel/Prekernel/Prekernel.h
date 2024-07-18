@@ -9,6 +9,7 @@
 
 #ifdef __cplusplus
 #    include <Kernel/Boot/Multiboot.h>
+#    include <Kernel/EFIPrekernel/EFIPrekernel.h>
 #    include <Kernel/Memory/PhysicalAddress.h>
 #    include <Kernel/Memory/VirtualAddress.h>
 #    include <Kernel/Prekernel/Arch/ArchSpecificBootInfo.h>
@@ -47,9 +48,16 @@ struct Multiboot1BootInfo {
 struct PreInitBootInfo {
 };
 
+struct EFIBootInfo {
+    EFIMemoryMap memory_map;
+    VirtualAddress bootstrap_page_vaddr;
+    PhysicalAddress bootstrap_page_page_directory_paddr;
+};
+
 enum class BootMethod {
     Multiboot1,
     PreInit,
+    EFI,
 };
 
 enum class BootFramebufferType {
@@ -69,6 +77,7 @@ struct BootFramebufferInfo {
 union BootMethodSpecificBootInfo {
     PreInitBootInfo pre_init {};
     Multiboot1BootInfo multiboot1;
+    EFIBootInfo efi;
 };
 
 struct BootInfo {
