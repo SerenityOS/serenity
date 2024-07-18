@@ -91,6 +91,7 @@ SECTIONS
         end_of_kernel_ksyms = .;
     } :ksyms
 
+    /* The bss has to be in its own program header so the prekernel doesn't have to copy segments */
     .bss ALIGN(4K) (NOLOAD) :
     {
         start_of_bss = .;
