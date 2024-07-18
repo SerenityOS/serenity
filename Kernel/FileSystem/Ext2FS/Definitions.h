@@ -17,6 +17,7 @@
 #define _LINUX_EXT2_FS_H
 
 static constexpr size_t max_block_size = 4096;
+static constexpr size_t super_block_offset_on_device = 1024;
 
 #include "ext2_types.h" /* Changed from linux/types.h */
 
