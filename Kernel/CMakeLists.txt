@@ -803,11 +803,20 @@ if("${SERENITY_ARCH}" STREQUAL "aarch64")
     target_link_options(Kernel PRIVATE LINKER:-T ${CMAKE_CURRENT_SOURCE_DIR}/Arch/aarch64/linker.ld -nostdlib LINKER:--no-pie)
     set_target_properties(Kernel PROPERTIES LINK_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/Arch/aarch64/linker.ld)
 elseif("${SERENITY_ARCH}" STREQUAL "riscv64")
+    add_custom_command(
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/linker.ld
+        COMMAND "${CMAKE_CXX_COMPILER}" ${TARGET_STRING} -E -P -x c -I${CMAKE_CURRENT_SOURCE_DIR}/.. "${CMAKE_CURRENT_SOURCE_DIR}/Arch/riscv64/linker.ld" -o "${CMAKE_CURRENT_BINARY_DIR}/linker.ld"
+        MAIN_DEPENDENCY "Arch/riscv64/linker.ld"
+        COMMENT "Preprocessing linker.ld"
+        VERBATIM
+    )
+    add_custom_target(generate_kernel_linker_script DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/linker.ld)
+
     # The final kernel binary for some reason includes temporary local symbols on riscv64 clang, which causes kernel.map to be too big to fit in its section in the kernel.
     # Explicitly pass -X to the linker to remove them.
-    target_link_options(Kernel PRIVATE LINKER:-T ${CMAKE_CURRENT_SOURCE_DIR}/Arch/riscv64/linker.ld -nostdlib LINKER:--no-pie LINKER:-X)
+    target_link_options(Kernel PRIVATE LINKER:-T ${CMAKE_CURRENT_BINARY_DIR}/linker.ld -nostdlib LINKER:--no-pie LINKER:-X)
 
-    set_target_properties(Kernel PROPERTIES LINK_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/Arch/riscv64/linker.ld)
+    set_target_properties(Kernel PROPERTIES LINK_DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/linker.ld")
 elseif ("${SERENITY_ARCH}" STREQUAL "x86_64")
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/linker.ld
