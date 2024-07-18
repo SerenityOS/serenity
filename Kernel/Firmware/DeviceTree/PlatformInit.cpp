@@ -31,9 +31,8 @@ static constinit auto const s_platform_init_table = to_array<PlatformInitTableEn
 
 void run_platform_init()
 {
-    auto& header = *bit_cast<::DeviceTree::FlattenedDeviceTreeHeader*>(&s_fdt_storage[0]);
-    auto fdt = ReadonlyBytes { s_fdt_storage, header.totalsize };
-    auto compatible_or_error = ::DeviceTree::slow_get_property("/compatible"sv, header, fdt);
+    auto& header = *bit_cast<::DeviceTree::FlattenedDeviceTreeHeader*>(flattened_devicetree().data());
+    auto compatible_or_error = ::DeviceTree::slow_get_property("/compatible"sv, header, flattened_devicetree());
 
     if (compatible_or_error.is_error())
         return;
