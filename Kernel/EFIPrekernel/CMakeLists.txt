@@ -5,6 +5,7 @@ set(SOURCES
     init.cpp
 
     DebugOutput.cpp
+    DeviceTree.cpp
     Panic.cpp
     Relocation.cpp
     Runtime.cpp
