@@ -196,6 +196,7 @@ IdleDeadline
 Image
 ImageBitmap
 ImageData
+InputEvent
 Int16Array
 Int32Array
 Int8Array
