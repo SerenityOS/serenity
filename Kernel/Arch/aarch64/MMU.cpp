@@ -287,6 +287,7 @@ void init_page_tables(PhysicalPtr flattened_devicetree_paddr)
     *adjust_by_mapping_base(&g_boot_info.boot_method) = BootMethod::PreInit;
 
     *adjust_by_mapping_base(&g_boot_info.flattened_devicetree_paddr) = PhysicalAddress { flattened_devicetree_paddr };
+    *adjust_by_mapping_base(&g_boot_info.flattened_devicetree_size) = fdt_header->totalsize;
     *adjust_by_mapping_base(&g_boot_info.physical_to_virtual_offset) = calculate_physical_to_link_time_address_offset();
     *adjust_by_mapping_base(&g_boot_info.kernel_mapping_base) = KERNEL_MAPPING_BASE;
     *adjust_by_mapping_base(&g_boot_info.kernel_load_base) = KERNEL_MAPPING_BASE;

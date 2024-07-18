@@ -19,7 +19,7 @@ alignas(PAGE_SIZE) __attribute__((section(".bss.fdt"))) u8 s_fdt_storage[fdt_sto
 
 ErrorOr<void> unflatten_fdt()
 {
-    *s_device_tree = TRY(::DeviceTree::DeviceTree::parse({ s_fdt_storage, fdt_storage_size }));
+    *s_device_tree = TRY(::DeviceTree::DeviceTree::parse({ s_fdt_storage, g_boot_info.flattened_devicetree_size }));
     return {};
 }
 
@@ -33,7 +33,7 @@ bool verify_fdt()
 
     verified = true;
     auto& header = *bit_cast<::DeviceTree::FlattenedDeviceTreeHeader*>(&s_fdt_storage[0]);
-    auto fdt = ReadonlyBytes(s_fdt_storage, header.totalsize);
+    auto fdt = ReadonlyBytes(s_fdt_storage, g_boot_info.flattened_devicetree_size);
 
     verification_succeeded = ::DeviceTree::validate_flattened_device_tree(header, fdt, ::DeviceTree::Verbose::No);
 
@@ -43,14 +43,14 @@ bool verify_fdt()
 void dump_fdt()
 {
     auto& header = *bit_cast<::DeviceTree::FlattenedDeviceTreeHeader*>(&s_fdt_storage[0]);
-    auto fdt = ReadonlyBytes(s_fdt_storage, header.totalsize);
+    auto fdt = ReadonlyBytes(s_fdt_storage, g_boot_info.flattened_devicetree_size);
     MUST(::DeviceTree::dump(header, fdt));
 }
 
 ErrorOr<StringView> get_command_line_from_fdt()
 {
     auto& header = *bit_cast<::DeviceTree::FlattenedDeviceTreeHeader*>(&s_fdt_storage[0]);
-    auto fdt = ReadonlyBytes(s_fdt_storage, header.totalsize);
+    auto fdt = ReadonlyBytes(s_fdt_storage, g_boot_info.flattened_devicetree_size);
     return TRY(::DeviceTree::slow_get_property("/chosen/bootargs"sv, header, fdt)).as_string();
 }
 
