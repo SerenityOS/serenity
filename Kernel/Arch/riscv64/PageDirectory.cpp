@@ -99,8 +99,14 @@ UNMAP_AFTER_INIT void PageDirectory::allocate_kernel_directory()
 {
     dmesgln("MM: boot_pdpt @ {}", g_boot_info.boot_pdpt);
     dmesgln("MM: boot_pd_kernel @ {}", g_boot_info.boot_pd_kernel);
+
     m_directory_table = PhysicalRAMPage::create(g_boot_info.boot_pdpt, MayReturnToFreeList::No);
     m_directory_pages[(g_boot_info.kernel_mapping_base >> VPN_2_OFFSET) & PAGE_TABLE_INDEX_MASK] = PhysicalRAMPage::create(g_boot_info.boot_pd_kernel, MayReturnToFreeList::No);
+
+    if (g_boot_info.boot_method == BootMethod::EFI) {
+        dmesgln("MM: bootstrap_page_page_directory @ {}", g_boot_info.boot_method_specific.efi.bootstrap_page_page_directory_paddr);
+        m_directory_pages[(g_boot_info.boot_method_specific.efi.bootstrap_page_vaddr.get() >> VPN_2_OFFSET) & PAGE_TABLE_INDEX_MASK] = PhysicalRAMPage::create(g_boot_info.boot_method_specific.efi.bootstrap_page_page_directory_paddr, MayReturnToFreeList::No);
+    }
 }
 
 PageDirectory::~PageDirectory()
