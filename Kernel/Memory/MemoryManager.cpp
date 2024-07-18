@@ -74,15 +74,13 @@ bool MemoryManager::is_initialized()
 
 static UNMAP_AFTER_INIT VirtualRange kernel_virtual_range()
 {
-#if ARCH(X86_64)
+#if ARCH(AARCH64) || ARCH(RISCV64)
+    if (g_boot_info.boot_method != BootMethod::EFI)
+        return VirtualRange { VirtualAddress(g_boot_info.kernel_mapping_base), KERNEL_PD_END - g_boot_info.kernel_mapping_base };
+#endif
+
     size_t kernel_range_start = g_boot_info.kernel_mapping_base + 2 * MiB; // The first 2 MiB are used for mapping the pre-kernel
     return VirtualRange { VirtualAddress(kernel_range_start), KERNEL_PD_END - kernel_range_start };
-#elif ARCH(AARCH64) || ARCH(RISCV64)
-    // NOTE: This is not the same as x86_64, because the aarch64 and riscv64 kernels currently don't use the pre-kernel.
-    return VirtualRange { VirtualAddress(g_boot_info.kernel_mapping_base), KERNEL_PD_END - g_boot_info.kernel_mapping_base };
-#else
-#    error Unknown architecture
-#endif
 }
 
 MemoryManager::GlobalData::GlobalData()
