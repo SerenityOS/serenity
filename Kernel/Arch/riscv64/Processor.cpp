@@ -15,6 +15,8 @@
 
 namespace Kernel {
 
+extern "C" u8 asm_trap_handler[];
+
 Processor* g_current_processor;
 
 static void store_fpu_state(FPUState* fpu_state)
@@ -122,6 +124,8 @@ void ProcessorBase<T>::initialize(u32)
     RISCV64::CSR::SSTATUS::write(sstatus);
 
     store_fpu_state(&s_clean_fpu_state);
+
+    RISCV64::CSR::write(RISCV64::CSR::Address::STVEC, bit_cast<FlatPtr>(+asm_trap_handler));
 
     initialize_interrupts();
 }
