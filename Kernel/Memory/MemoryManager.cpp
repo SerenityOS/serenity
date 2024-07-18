@@ -137,14 +137,18 @@ UNMAP_AFTER_INIT void MemoryManager::unmap_prekernel()
 {
     SpinlockLocker page_lock(kernel_page_directory().get_lock());
 
-    VERIFY(g_boot_info.boot_method == BootMethod::Multiboot1);
+    if (g_boot_info.boot_method == BootMethod::Multiboot1) {
+#if ARCH(X86_64)
+        auto start = g_boot_info.boot_method_specific.multiboot1.start_of_prekernel_image.page_base().get();
+        auto end = g_boot_info.boot_method_specific.multiboot1.end_of_prekernel_image.page_base().get();
 
-    auto start = g_boot_info.boot_method_specific.multiboot1.start_of_prekernel_image.page_base().get();
-    auto end = g_boot_info.boot_method_specific.multiboot1.end_of_prekernel_image.page_base().get();
-
-    for (auto i = start; i <= end; i += PAGE_SIZE)
-        release_pte(kernel_page_directory(), VirtualAddress(i), i == end ? IsLastPTERelease::Yes : IsLastPTERelease::No);
-    flush_tlb(&kernel_page_directory(), VirtualAddress(start), (end - start) / PAGE_SIZE);
+        for (auto i = start; i <= end; i += PAGE_SIZE)
+            release_pte(kernel_page_directory(), VirtualAddress(i), i == end ? IsLastPTERelease::Yes : IsLastPTERelease::No);
+        flush_tlb(&kernel_page_directory(), VirtualAddress(start), (end - start) / PAGE_SIZE);
+#endif
+    } else if (g_boot_info.boot_method == BootMethod::EFI) {
+        // FIXME: Unmap g_boot_info.boot_method_specific.efi.bootstrap_page_vaddr
+    }
 }
 
 UNMAP_AFTER_INIT void MemoryManager::protect_readonly_after_init_memory()
