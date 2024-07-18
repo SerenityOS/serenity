@@ -185,6 +185,10 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT NO_SANITIZE_COVERAGE void init([[maybe_
     if (boot_info.boot_method == BootMethod::EFI) {
         g_boot_info = boot_info;
         s_kernel_cmdline = "serial_debug root=nvme:0:1:0 nvme_poll"sv;
+        asm volatile(R"(
+            la t0, asm_trap_handler
+            csrw stvec, t0
+        )");
     } else {
         auto maybe_command_line = get_command_line_from_fdt();
         if (maybe_command_line.is_error())
