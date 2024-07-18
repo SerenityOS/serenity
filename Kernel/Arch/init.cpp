@@ -213,9 +213,7 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT NO_SANITIZE_COVERAGE void init([[maybe_
 
     dmesgln("Boot method: {}", boot_info.boot_method);
 
-#if ARCH(X86_64)
     MM.unmap_prekernel();
-#endif
 
     // Ensure that the safemem sections are not empty. This could happen if the linker accidentally discards the sections.
     VERIFY(+start_of_safemem_text != +end_of_safemem_text);
