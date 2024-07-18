@@ -149,7 +149,7 @@ READONLY_AFTER_INIT static StringView s_kernel_cmdline;
 
 READONLY_AFTER_INIT constinit BootInfo g_boot_info;
 
-extern "C" [[noreturn]] UNMAP_AFTER_INIT NO_SANITIZE_COVERAGE void init([[maybe_unused]] BootInfo const& boot_info)
+extern "C" [[noreturn]] UNMAP_AFTER_INIT NO_SANITIZE_COVERAGE void init(BootInfo const& boot_info)
 {
 #if ARCH(X86_64)
     g_boot_info = boot_info;
@@ -157,15 +157,20 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT NO_SANITIZE_COVERAGE void init([[maybe_
     code64_sel = boot_info.arch_specific.code64_sel;
     s_kernel_cmdline = boot_info.cmdline;
 #elif ARCH(AARCH64) || ARCH(RISCV64)
-    if (!DeviceTree::verify_fdt())
-        // We are too early in the boot process to print anything, so just hang if the FDT is invalid.
-        Processor::halt();
+    if (boot_info.boot_method == BootMethod::EFI) {
+        g_boot_info = boot_info;
+        s_kernel_cmdline = boot_info.cmdline;
+    } else {
+        if (!DeviceTree::verify_fdt())
+            // We are too early in the boot process to print anything, so just hang if the FDT is invalid.
+            Processor::halt();
 
-    auto maybe_command_line = DeviceTree::get_command_line_from_fdt();
-    if (maybe_command_line.is_error())
-        s_kernel_cmdline = "serial_debug"sv;
-    else
-        s_kernel_cmdline = maybe_command_line.value();
+        auto maybe_command_line = DeviceTree::get_command_line_from_fdt();
+        if (maybe_command_line.is_error())
+            s_kernel_cmdline = "serial_debug"sv;
+        else
+            s_kernel_cmdline = maybe_command_line.value();
+    }
 #endif
 
     setup_serial_debug();
