@@ -200,6 +200,7 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT NO_SANITIZE_COVERAGE void init(BootInfo
     Memory::MemoryManager::initialize(0);
 
 #if ARCH(AARCH64) || ARCH(RISCV64)
+    DeviceTree::map_flattened_devicetree();
     DeviceTree::run_platform_init();
 #endif
 
