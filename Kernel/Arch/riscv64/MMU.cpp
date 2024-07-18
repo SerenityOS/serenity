@@ -243,6 +243,7 @@ static UNMAP_AFTER_INIT void setup_kernel_page_directory(u64* root_table)
 
     *adjust_by_mapping_base(&g_boot_info.arch_specific.boot_hart_id) = boot_hart_id;
     *adjust_by_mapping_base(&g_boot_info.flattened_devicetree_paddr) = PhysicalAddress { flattened_devicetree_paddr };
+    *adjust_by_mapping_base(&g_boot_info.flattened_devicetree_size) = fdt_header->totalsize;
 
     PageBumpAllocator allocator(adjust_by_mapping_base(reinterpret_cast<u64*>(page_tables_phys_start)), adjust_by_mapping_base(reinterpret_cast<u64*>(page_tables_phys_end)));
     auto* root_table = allocator.take_page();
