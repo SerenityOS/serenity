@@ -15,8 +15,6 @@ static Singleton<OwnPtr<DeviceTree::DeviceTree>> s_device_tree;
 
 namespace Kernel {
 
-BootInfo s_boot_info;
-
 alignas(PAGE_SIZE) __attribute__((section(".bss.fdt"))) u8 s_fdt_storage[fdt_storage_size];
 
 ErrorOr<void> unflatten_fdt()

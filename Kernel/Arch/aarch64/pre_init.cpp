@@ -45,7 +45,7 @@ extern "C" [[noreturn]] void pre_init()
     // in high virtual memory.
     asm volatile(
         "mov x0, %[base] \n"
-        "add sp, sp, x0 \n" ::[base] "r"(kernel_mapping_base)
+        "add sp, sp, x0 \n" ::[base] "r"(g_boot_info.kernel_mapping_base)
         : "x0");
 
     // We can now unmap the identity map as everything is running in high virtual memory at this point.

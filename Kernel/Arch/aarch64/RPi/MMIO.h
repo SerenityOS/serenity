@@ -26,7 +26,7 @@ public:
     // FIXME: The MMIO region is currently mapped at kernel_mapping_base + peripheral_base_address(),
     //        but the code should be changed to use the MemoryManager to map the physical memory instead
     //        of pre-mapping the whole MMIO region.
-    u32 volatile* peripheral_address(FlatPtr offset) { return (u32 volatile*)(kernel_mapping_base + m_base_address.get() + offset); }
+    u32 volatile* peripheral_address(FlatPtr offset) { return (u32 volatile*)(g_boot_info.kernel_mapping_base + m_base_address.get() + offset); }
     template<class T>
     T volatile* peripheral(FlatPtr offset) { return (T volatile*)peripheral_address(offset); }
 

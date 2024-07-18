@@ -36,7 +36,7 @@ constexpr FlatPtr page_round_down(FlatPtr x)
 
 inline FlatPtr virtual_to_low_physical(FlatPtr virtual_)
 {
-    return virtual_ - physical_to_virtual_offset;
+    return virtual_ - g_boot_info.physical_to_virtual_offset;
 }
 
 enum class UsedMemoryRangeType {

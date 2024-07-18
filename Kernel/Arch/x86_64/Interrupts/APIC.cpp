@@ -384,7 +384,7 @@ UNMAP_AFTER_INIT void APIC::setup_ap_boot_environment()
     auto const& idtr = get_idtr();
     *APIC_INIT_VAR_PTR(FlatPtr, apic_startup_region_ptr, ap_cpu_idtr) = FlatPtr(&idtr);
 
-    *APIC_INIT_VAR_PTR(FlatPtr, apic_startup_region_ptr, ap_cpu_kernel_map_base) = FlatPtr(kernel_mapping_base);
+    *APIC_INIT_VAR_PTR(FlatPtr, apic_startup_region_ptr, ap_cpu_kernel_map_base) = FlatPtr(g_boot_info.kernel_mapping_base);
     *APIC_INIT_VAR_PTR(FlatPtr, apic_startup_region_ptr, ap_cpu_kernel_entry_function) = FlatPtr(&init_ap);
 
     // Store the BSP's CR0 and CR4 values for the APs to use

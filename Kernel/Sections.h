@@ -17,9 +17,9 @@
 
 #define KERNEL_MAPPING_BASE 0x2000000000
 
-#define KERNEL_PD_END (kernel_mapping_base + KERNEL_PD_SIZE)
+#define KERNEL_PD_END (g_boot_info.kernel_mapping_base + KERNEL_PD_SIZE)
 #define KERNEL_PT1024_OFFSET 0x3FE00000
-#define KERNEL_PT1024_BASE (kernel_mapping_base + KERNEL_PT1024_OFFSET)
+#define KERNEL_PT1024_BASE (g_boot_info.kernel_mapping_base + KERNEL_PT1024_OFFSET)
 
 #define KERNEL_MAX_CPU_COUNT 64
 #define KERNEL_QUICKMAP_PT_PER_CPU_BASE (KERNEL_PT1024_BASE + (1 * KERNEL_MAX_CPU_COUNT * PAGE_SIZE))
@@ -27,4 +27,4 @@
 #define KERNEL_QUICKMAP_PER_CPU_BASE (KERNEL_PT1024_BASE + (3 * KERNEL_MAX_CPU_COUNT * PAGE_SIZE))
 
 #define USER_RANGE_BASE 0x10000
-#define USER_RANGE_CEILING (kernel_mapping_base - 0x2000000)
+#define USER_RANGE_CEILING (g_boot_info.kernel_mapping_base - 0x2000000)
