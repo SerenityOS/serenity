@@ -55,10 +55,11 @@ extern "C" [[noreturn]] void pre_init(PhysicalPtr flattened_devicetree_paddr)
 
     // Clear the frame pointer (x29) and link register (x30) to make sure the kernel cannot backtrace
     // into this code, and jump to actual init function in the kernel.
+    register FlatPtr const x0 asm("x0") = bit_cast<FlatPtr>(&g_boot_info);
     asm volatile(
         "mov x29, xzr \n"
         "mov x30, xzr \n"
-        "b init \n");
+        "b init \n" ::"r"(x0));
 
     VERIFY_NOT_REACHED();
 }
