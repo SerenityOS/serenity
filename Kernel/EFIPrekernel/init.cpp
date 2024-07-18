@@ -22,6 +22,7 @@
 #include <Kernel/EFIPrekernel/DeviceTree.h>
 #include <Kernel/EFIPrekernel/EFIPrekernel.h>
 #include <Kernel/EFIPrekernel/Error.h>
+#include <Kernel/EFIPrekernel/GOP.h>
 #include <Kernel/EFIPrekernel/Panic.h>
 #include <Kernel/EFIPrekernel/Relocation.h>
 #include <Kernel/EFIPrekernel/Runtime.h>
@@ -223,6 +224,8 @@ extern "C" EFIAPI EFI::Status init(EFI::Handle image_handle, EFI::SystemTable* s
     boot_info->boot_method = BootMethod::EFI;
     boot_info->boot_method_specific.pre_init.~PreInitBootInfo();
     new (&boot_info->boot_method_specific.efi) EFIBootInfo;
+
+    init_gop_and_fill_framebuffer_boot_info(boot_info);
 
     if (auto result = Memory::map_pages(root_page_table, BOOT_INFO_VADDR, boot_info_paddr, pages_needed(sizeof(BootInfo)), Memory::Access::Read); result.is_error())
         PANIC("Failed to map the BootInfo struct: {}", result.release_error());
