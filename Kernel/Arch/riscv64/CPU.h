@@ -16,6 +16,8 @@ VALIDATE_IS_RISCV64()
 namespace Kernel {
 
 constexpr size_t fdt_storage_size = 2 * MiB;
+
+// Unused when booting via UEFI
 extern u8 s_fdt_storage[fdt_storage_size];
 
 // FIXME: These should move to an architecture independent location,
