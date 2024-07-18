@@ -14,6 +14,7 @@
 #include <Kernel/EFIPrekernel/ConfigurationTable.h>
 #include <Kernel/EFIPrekernel/DebugOutput.h>
 #include <Kernel/EFIPrekernel/EFIPrekernel.h>
+#include <Kernel/EFIPrekernel/GOP.h>
 #include <Kernel/EFIPrekernel/Panic.h>
 #include <Kernel/EFIPrekernel/Relocation.h>
 #include <Kernel/EFIPrekernel/Runtime.h>
@@ -272,6 +273,9 @@ extern "C" EFIAPI EFI::Status init(EFI::Handle image_handle, EFI::SystemTable* s
     boot_info->kernel_mapping_base = KERNEL_MAPPING_BASE;
     boot_info->kernel_load_base = default_kernel_load_base;
     boot_info->physical_to_virtual_offset = boot_info->kernel_load_base - kernel_image_paddr;
+
+    // EFI_GRAPHICS_OUTPUT_PROTOCOL.SetMode() clears the screen, so do this as early as possible.
+    init_gop_and_populate_framebuffer_boot_info(*boot_info);
 
     dbgln("Mapping the kernel image...");
     map_kernel_image(root_page_table, kernel_elf_image, kernel_elf_image_data, boot_info->kernel_load_base);

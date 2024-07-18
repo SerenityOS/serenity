@@ -6,6 +6,7 @@ set(SOURCES
 
     ConfigurationTable.cpp
     DebugOutput.cpp
+    GOP.cpp
     Panic.cpp
     Relocation.cpp
     Runtime.cpp
