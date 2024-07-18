@@ -182,11 +182,15 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT NO_SANITIZE_COVERAGE void init([[maybe_
     // FIXME: Read the /chosen/bootargs property.
     s_kernel_cmdline = RPi::Mailbox::the().query_kernel_command_line(s_command_line_buffer);
 #elif ARCH(RISCV64)
-    auto maybe_command_line = get_command_line_from_fdt();
-    if (maybe_command_line.is_error())
-        s_kernel_cmdline = "serial_debug"sv;
-    else
-        s_kernel_cmdline = maybe_command_line.value();
+    if (boot_info.boot_method == BootMethod::EFI) {
+        g_boot_info = boot_info;
+    } else {
+        auto maybe_command_line = get_command_line_from_fdt();
+        if (maybe_command_line.is_error())
+            s_kernel_cmdline = "serial_debug"sv;
+        else
+            s_kernel_cmdline = maybe_command_line.value();
+    }
 #endif
 
     setup_serial_debug();
