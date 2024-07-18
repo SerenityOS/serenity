@@ -4,6 +4,7 @@ configure_file(KernelImage.S.in KernelImage.S @ONLY)
 set(SOURCES
     init.cpp
 
+    ConfigurationTable.cpp
     DebugOutput.cpp
     Panic.cpp
     Relocation.cpp
