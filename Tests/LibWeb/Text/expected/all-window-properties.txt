@@ -57,6 +57,7 @@ ClipboardEvent
 CloseEvent
 CloseWatcher
 Comment
+CompositionEvent
 CountQueuingStrategy
 Crypto
 CryptoKey
