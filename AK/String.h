@@ -64,6 +64,9 @@ public:
 
     [[nodiscard]] static String from_utf8_without_validation(ReadonlyBytes);
 
+    static ErrorOr<String> from_string_builder(Badge<StringBuilder>, StringBuilder&);
+    [[nodiscard]] static String from_string_builder_without_validation(Badge<StringBuilder>, StringBuilder&);
+
     // Creates a new String by reading byte_count bytes from a UTF-8 encoded Stream.
     static ErrorOr<String> from_stream(Stream&, size_t byte_count);
 
