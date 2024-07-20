@@ -9,8 +9,9 @@ set(SOURCES
     AvailablePortDatabase.cpp
     InstalledPort.cpp
     InstalledPortDatabase.cpp
+    PackedPort.cpp
     main.cpp
 )
 
 serenity_app(PackageManager ICON app-assistant)
-target_link_libraries(PackageManager PRIVATE LibCore LibSemVer LibMain LibFileSystem LibProtocol LibHTTP LibMarkdown LibShell LibURL)
+target_link_libraries(PackageManager PRIVATE LibCore LibSemVer LibMain LibFileSystem LibProtocol LibHTTP LibMarkdown LibShell LibURL LibCompress LibArchive)

@@ -23,6 +23,10 @@ static ErrorOr<void> prepare_bare_minimum_filesystem_mounts()
     TRY(Core::System::mount(-1, "/sys"sv, "sys"sv, 0));
     TRY(Core::System::mount(-1, "/dev"sv, "ram"sv, MS_NOSUID | MS_NOEXEC | MS_NOREGULAR));
     TRY(Core::System::mount(-1, "/tmp"sv, "ram"sv, MS_NOSUID | MS_NODEV));
+
+    TRY(Core::System::mkdir("/tmp/pkg"sv, 0755));
+    TRY(Core::System::mount(-1, "/tmp/pkg"sv, "ram"sv, MS_NOSUID | MS_NODEV | MS_NOEXEC));
+
     // NOTE: Set /tmp to have a sticky bit with 0777 permissions.
     TRY(Core::System::chmod("/tmp"sv, 01777));
     return {};
