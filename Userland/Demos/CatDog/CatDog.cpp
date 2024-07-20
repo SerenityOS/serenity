@@ -133,8 +133,11 @@ void CatDog::timer_event(Core::TimerEvent&)
         update();
     };
 
-    if (has_flag(m_state, State::Sleeping))
+    if (has_flag(m_state, State::Sleeping)) {
+        // Reset idle timer while sleeping to prevent instantly going to sleep again.
+        m_idle_sleep_timer.start();
         return;
+    }
 
     m_state = special_application_states();
 
