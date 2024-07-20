@@ -762,6 +762,9 @@ ErrorOr<RefPtr<OpenFileDescription>> Process::find_elf_interpreter_for_executabl
         auto interpreter_description = TRY(VirtualFileSystem::open(vfs_root_context(), credentials(), interpreter_path, O_EXEC, 0, current_directory()));
         auto interp_metadata = interpreter_description->metadata();
 
+        if (!interp_metadata.is_regular_file())
+            return ENOEXEC;
+
         VERIFY(interpreter_description->inode());
 
         // Validate the program interpreter as a valid elf binary.
