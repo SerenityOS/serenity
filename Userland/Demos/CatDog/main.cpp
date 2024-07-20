@@ -91,6 +91,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     catdog_widget->on_state_change = [&] {
         sleep_action->set_text(catdog_widget->is_sleeping() ? "Wake CatDog..." : "Put CatDog to sleep...");
         sleep_action->set_icon(catdog_widget->is_sleeping() ? catdog_icon_wake : catdog_icon_sleep);
+
+        // Reset advice timer to prevent waking too quickly.
+        if (catdog_widget->is_sleeping())
+            advice_timer->start();
     };
 
     // Let users toggle the advice functionality by clicking on catdog.
