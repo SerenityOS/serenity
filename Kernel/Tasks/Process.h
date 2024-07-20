@@ -707,7 +707,7 @@ private:
 
     ErrorOr<FlatPtr> do_statvfs(FileSystem const& path, Custody const*, statvfs* buf);
 
-    ErrorOr<RefPtr<OpenFileDescription>> find_elf_interpreter_for_executable(StringView path, Elf_Ehdr const& main_executable_header, size_t main_executable_header_size, size_t file_size, Optional<size_t>& minimum_stack_size);
+    ErrorOr<RefPtr<OpenFileDescription>> find_elf_interpreter_for_executable(OpenFileDescription&, StringView path, Elf_Ehdr const& main_executable_header, size_t main_executable_header_size, size_t file_size, Optional<size_t>& minimum_stack_size);
 
     ErrorOr<void> do_kill(Process&, int signal);
     ErrorOr<void> do_killpg(ProcessGroupID pgrp, int signal);

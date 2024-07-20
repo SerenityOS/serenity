@@ -120,10 +120,8 @@ bool DynamicLoader::validate()
     auto* elf_header = (Elf_Ehdr*)m_file_data;
     if (!validate_elf_header(*elf_header, m_file_size))
         return false;
-    auto result_or_error = validate_program_headers(*elf_header, m_file_size, { m_file_data, m_file_size });
-    if (result_or_error.is_error() || !result_or_error.value())
-        return false;
-    return true;
+    [[maybe_unused]] Optional<Elf_Phdr> interpreter_path_program_header {};
+    return validate_program_headers(*elf_header, m_file_size, { m_file_data, m_file_size }, interpreter_path_program_header);
 }
 
 RefPtr<DynamicObject> DynamicLoader::map()

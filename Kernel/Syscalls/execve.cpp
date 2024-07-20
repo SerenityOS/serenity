@@ -737,81 +737,92 @@ static ErrorOr<Vector<NonnullOwnPtr<KString>>> find_shebang_interpreter_for_exec
     return ENOEXEC;
 }
 
-ErrorOr<RefPtr<OpenFileDescription>> Process::find_elf_interpreter_for_executable(StringView path, Elf_Ehdr const& main_executable_header, size_t main_executable_header_size, size_t file_size, Optional<size_t>& minimum_stack_size)
+ErrorOr<RefPtr<OpenFileDescription>> Process::find_elf_interpreter_for_executable(OpenFileDescription& elf_file, StringView path, Elf_Ehdr const& main_executable_header, size_t main_executable_header_size, size_t file_size, Optional<size_t>& minimum_stack_size)
 {
-    // NOTE: We can't exec an ET_REL, as that's just an object file from the compiler,
+    // We can't exec an ET_REL, as that's just an object file from the compiler,
     // and we can't exec an ET_CORE as it's just a coredump.
     // The only allowed ELF files on execve are executables or shared object files
     // which are dynamically linked programs (or static-pie programs like the dynamic loader).
     if (main_executable_header.e_type != ET_EXEC && main_executable_header.e_type != ET_DYN)
         return ENOEXEC;
 
-    // Not using ErrorOr here because we'll want to do the same thing in userspace in the RTLD
-    StringBuilder interpreter_path_builder;
     Optional<size_t> main_executable_requested_stack_size {};
-    if (!TRY(ELF::validate_program_headers(main_executable_header, file_size, { &main_executable_header, main_executable_header_size }, &interpreter_path_builder, &main_executable_requested_stack_size))) {
+    Optional<Elf_Phdr> maybe_interpreter_path_program_header {};
+    if (!ELF::validate_program_headers(main_executable_header, file_size, { &main_executable_header, main_executable_header_size }, maybe_interpreter_path_program_header, &main_executable_requested_stack_size)) {
         dbgln("exec({}): File has invalid ELF Program headers", path);
         return ENOEXEC;
     }
-    auto interpreter_path = interpreter_path_builder.string_view();
+
     if (main_executable_requested_stack_size.has_value() && (!minimum_stack_size.has_value() || *minimum_stack_size < *main_executable_requested_stack_size))
         minimum_stack_size = main_executable_requested_stack_size;
 
-    if (!interpreter_path.is_empty()) {
-        dbgln_if(EXEC_DEBUG, "exec({}): Using program interpreter {}", path, interpreter_path);
-        auto interpreter_description = TRY(VirtualFileSystem::open(vfs_root_context(), credentials(), interpreter_path, O_EXEC, 0, current_directory()));
-        auto interp_metadata = interpreter_description->metadata();
+    // The ELF file might not have any INTERP header, which in such
+    // case we can't do anything and therefore we should just continue
+    // without loading any interpreter.
+    if (!maybe_interpreter_path_program_header.has_value())
+        return nullptr;
 
-        if (!interp_metadata.is_regular_file())
-            return ENOEXEC;
+    auto interpreter_path_program_header = maybe_interpreter_path_program_header.release_value();
 
-        VERIFY(interpreter_description->inode());
-
-        // Validate the program interpreter as a valid elf binary.
-        // If your program interpreter is a #! file or something, it's time to stop playing games :)
-        if (interp_metadata.size < (int)sizeof(Elf_Ehdr))
-            return ENOEXEC;
-
-        char first_page[PAGE_SIZE] = {};
-        auto first_page_buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)&first_page);
-        auto nread = TRY(interpreter_description->read(first_page_buffer, sizeof(first_page)));
-
-        if (nread < sizeof(Elf_Ehdr))
-            return ENOEXEC;
-
-        auto* elf_header = (Elf_Ehdr*)first_page;
-        if (!ELF::validate_elf_header(*elf_header, interp_metadata.size)) {
-            dbgln("exec({}): Interpreter ({}) has invalid ELF header", path, interpreter_path);
-            return ENOEXEC;
-        }
-
-        // Not using ErrorOr here because we'll want to do the same thing in userspace in the RTLD
-        StringBuilder interpreter_interpreter_path_builder;
-        Optional<size_t> interpreter_requested_stack_size {};
-        if (!TRY(ELF::validate_program_headers(*elf_header, interp_metadata.size, { first_page, nread }, &interpreter_interpreter_path_builder, &interpreter_requested_stack_size))) {
-            dbgln("exec({}): Interpreter ({}) has invalid ELF Program headers", path, interpreter_path);
-            return ENOEXEC;
-        }
-        auto interpreter_interpreter_path = interpreter_interpreter_path_builder.string_view();
-        if (interpreter_requested_stack_size.has_value() && (!minimum_stack_size.has_value() || *minimum_stack_size < *interpreter_requested_stack_size))
-            minimum_stack_size = interpreter_requested_stack_size;
-
-        if (!interpreter_interpreter_path.is_empty()) {
-            dbgln("exec({}): Interpreter ({}) has its own interpreter ({})! No thank you!", path, interpreter_path, interpreter_interpreter_path);
-            return ELOOP;
-        }
-
-        return interpreter_description;
+    auto buffer = TRY(KBuffer::try_create_with_size("ELF interpreter program path"sv, static_cast<size_t>(interpreter_path_program_header.p_filesz) - 1));
+    auto buffer_as_kernel_buffer = buffer->as_kernel_buffer();
+    {
+        auto nread = TRY(elf_file.read(buffer_as_kernel_buffer, static_cast<size_t>(interpreter_path_program_header.p_offset), buffer->size()));
+        if (nread < buffer->size())
+            return EIO;
     }
 
-    if (main_executable_header.e_type == ET_DYN) {
-        // If it's ET_DYN with no PT_INTERP, then it's a dynamic executable responsible
-        // for its own relocation (i.e. it's /usr/lib/Loader.so)
+    auto interpreter_path = StringView(buffer->bytes());
+    if (interpreter_path.is_empty()) {
+        dbgln("exec({}): WARNING: File has an INTERP program header, but the interpreter path is empty", path);
         return nullptr;
     }
 
-    // No interpreter, but, path refers to a valid elf image
-    return nullptr;
+    dbgln_if(EXEC_DEBUG, "exec({}): Using program interpreter {}", path, interpreter_path);
+    auto interpreter_description = TRY(VirtualFileSystem::open(vfs_root_context(), credentials(), interpreter_path, O_EXEC, 0, current_directory()));
+    auto interp_metadata = interpreter_description->metadata();
+
+    if (!interp_metadata.is_regular_file())
+        return ENOEXEC;
+
+    VERIFY(interpreter_description->inode());
+
+    // The program interpreter should be at least the size of an ELF header
+    // so it's easy to check this and fail accordingly.
+    if (interp_metadata.size < static_cast<int>(sizeof(Elf_Ehdr)))
+        return ENOEXEC;
+
+    static_assert(sizeof(Elf_Ehdr) < PAGE_SIZE);
+    auto first_page = Array<u8, PAGE_SIZE>::from_repeated_value(0);
+    auto first_page_buffer = UserOrKernelBuffer::for_kernel_buffer(first_page.data());
+    auto nread = TRY(interpreter_description->read(first_page_buffer, first_page.size()));
+    if (nread < sizeof(Elf_Ehdr))
+        return ENOEXEC;
+
+    auto const* elf_header = bit_cast<Elf_Ehdr const*>(first_page.data());
+    if (!ELF::validate_elf_header(*elf_header, interp_metadata.size)) {
+        dbgln("exec({}): Interpreter ({}) has invalid ELF header", path, interpreter_path);
+        return ENOEXEC;
+    }
+
+    Optional<size_t> interpreter_requested_stack_size {};
+    Optional<Elf_Phdr> maybe_interpreter_interpreter_path_program_header {};
+    if (!ELF::validate_program_headers(*elf_header, interp_metadata.size, first_page.span().trim(nread), maybe_interpreter_interpreter_path_program_header, &interpreter_requested_stack_size)) {
+        dbgln("exec({}): Interpreter ({}) has invalid ELF Program headers", path, interpreter_path);
+        return ENOEXEC;
+    }
+
+    // NOTE: This ELF file should not have any INTERP header, because it's already the
+    // interpreter of the previously loaded ELF file!
+    if (maybe_interpreter_interpreter_path_program_header.has_value()) {
+        dbgln("exec({}): Interpreter ({}) has its own interpreter! No thank you!", path, interpreter_path);
+        return ELOOP;
+    }
+
+    if (interpreter_requested_stack_size.has_value() && (!minimum_stack_size.has_value() || *minimum_stack_size < *interpreter_requested_stack_size))
+        minimum_stack_size = interpreter_requested_stack_size;
+
+    return interpreter_description;
 }
 
 ErrorOr<void> Process::exec(NonnullOwnPtr<KString> path, Vector<NonnullOwnPtr<KString>> arguments, Vector<NonnullOwnPtr<KString>> environment, Thread*& new_main_thread, InterruptsState& previous_interrupts_state, int recursion_depth)
@@ -867,7 +878,7 @@ ErrorOr<void> Process::exec(NonnullOwnPtr<KString> path, Vector<NonnullOwnPtr<KS
     }
 
     Optional<size_t> minimum_stack_size {};
-    auto interpreter_description = TRY(find_elf_interpreter_for_executable(path->view(), *main_program_header, nread, metadata.size, minimum_stack_size));
+    auto interpreter_description = TRY(find_elf_interpreter_for_executable(*description, path->view(), *main_program_header, nread, metadata.size, minimum_stack_size));
     return do_exec(move(description), move(arguments), move(environment), move(interpreter_description), new_main_thread, previous_interrupts_state, *main_program_header, minimum_stack_size);
 }
 
