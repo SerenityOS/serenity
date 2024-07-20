@@ -18,6 +18,7 @@
 #include <AK/Assertions.h>
 #include <AK/StringView.h>
 #include <Kernel/Library/StdLib.h> // For memcpy. FIXME: Make memcpy less expensive to access a declaration of in the Kernel.
+#include <Kernel/Library/UserOrKernelBuffer.h>
 #include <Kernel/Memory/MemoryManager.h>
 
 namespace Kernel {
@@ -37,6 +38,8 @@ public:
         memcpy(buffer->data(), bytes.data(), bytes.size());
         return buffer;
     }
+
+    UserOrKernelBuffer as_kernel_buffer() { return UserOrKernelBuffer::for_kernel_buffer(data()); }
 
     [[nodiscard]] u8* data() { return m_region->vaddr().as_ptr(); }
     [[nodiscard]] u8 const* data() const { return m_region->vaddr().as_ptr(); }
