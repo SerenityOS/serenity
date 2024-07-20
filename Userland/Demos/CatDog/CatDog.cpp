@@ -118,6 +118,11 @@ void CatDog::timer_event(Core::TimerEvent&)
     if (has_flag(m_state, State::Alert))
         return;
 
+    ScopeGuard update_animation_frame = [&] {
+        m_frame = m_frame == State::Frame1 ? State::Frame2 : State::Frame1;
+        update();
+    };
+
     if (has_flag(m_state, State::Sleeping))
         return;
 
@@ -153,16 +158,12 @@ void CatDog::timer_event(Core::TimerEvent&)
 
     window()->move_to(window()->position() + move);
     m_mouse_offset -= move;
-
-    m_frame = m_frame == State::Frame1 ? State::Frame2 : State::Frame1;
-    m_state |= m_frame;
-
-    update();
 }
 
 Gfx::Bitmap& CatDog::bitmap_for_state() const
 {
-    auto const iter = m_images.find_if([&](auto const& image) { return (m_state & image.state) == image.state; });
+    auto state_with_frame = m_state | m_frame;
+    auto const iter = m_images.find_if([&](auto const& image) { return (state_with_frame & image.state) == image.state; });
     return iter != m_images.end() ? *iter->bitmap : *m_images[m_images.size() - 1].bitmap;
 }
 
