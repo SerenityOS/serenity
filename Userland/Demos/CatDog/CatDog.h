@@ -33,6 +33,7 @@ public:
 
     Function<void()> on_click;
     Function<void(GUI::ContextMenuEvent&)> on_context_menu_request;
+    Function<void()> on_state_change;
 
     void set_roaming(bool roaming);
     void set_sleeping(bool sleeping);
@@ -40,6 +41,8 @@ public:
     [[nodiscard]] bool is_artist() const;
     [[nodiscard]] bool is_inspector() const;
     [[nodiscard]] bool is_sleeping() const;
+
+    void update();
 
 private:
     enum class State : u16 {
@@ -78,6 +81,7 @@ private:
     NonnullOwnPtr<Core::File> m_proc_all;
 
     State m_state { State::Roaming };
+    State m_last_state { m_state };
     State m_frame { State::Frame1 };
 
     CatDog();

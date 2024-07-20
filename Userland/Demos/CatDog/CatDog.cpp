@@ -62,6 +62,16 @@ CatDog::CatDog()
     m_idle_sleep_timer.start();
 }
 
+void CatDog::update()
+{
+    if (m_state != m_last_state) {
+        if (on_state_change)
+            on_state_change();
+        m_last_state = m_state;
+    }
+    Widget::update();
+}
+
 void CatDog::set_roaming(bool roaming)
 {
     m_state = (roaming ? State::Idle : State::Alert) | special_application_states();
