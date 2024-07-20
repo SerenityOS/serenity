@@ -14,7 +14,7 @@
 
 namespace Kernel {
 
-ErrorOr<NonnullRefPtr<FileSystem>> Ext2FS::try_create(OpenFileDescription& file_description, ReadonlyBytes)
+ErrorOr<NonnullRefPtr<FileSystem>> Ext2FS::try_create(OpenFileDescription& file_description, FileSystemSpecificOptions const&)
 {
     return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Ext2FS(file_description)));
 }

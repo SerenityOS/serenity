@@ -8,6 +8,7 @@
 
 #include <AK/Atomic.h>
 #include <Kernel/FileSystem/FileBackedFileSystem.h>
+#include <Kernel/FileSystem/FileSystemSpecificOption.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/FileSystem/Plan9FS/Definitions.h>
 #include <Kernel/FileSystem/Plan9FS/Message.h>
@@ -22,7 +23,7 @@ class Plan9FS final : public FileBackedFileSystem {
 
 public:
     virtual ~Plan9FS() override;
-    static ErrorOr<NonnullRefPtr<FileSystem>> try_create(OpenFileDescription&, ReadonlyBytes);
+    static ErrorOr<NonnullRefPtr<FileSystem>> try_create(OpenFileDescription&, FileSystemSpecificOptions const&);
 
     virtual bool supports_watchers() const override { return false; }
 

@@ -10,6 +10,7 @@
 #include <AK/HashMap.h>
 #include <Kernel/FileSystem/BlockBasedFileSystem.h>
 #include <Kernel/FileSystem/Ext2FS/Definitions.h>
+#include <Kernel/FileSystem/FileSystemSpecificOption.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/Library/KBuffer.h>
 #include <Kernel/UnixTypes.h>
@@ -37,7 +38,7 @@ public:
     };
     AK_ENUM_BITWISE_FRIEND_OPERATORS(FeaturesReadOnly);
 
-    static ErrorOr<NonnullRefPtr<FileSystem>> try_create(OpenFileDescription&, ReadonlyBytes);
+    static ErrorOr<NonnullRefPtr<FileSystem>> try_create(OpenFileDescription&, FileSystemSpecificOptions const&);
 
     virtual ~Ext2FS() override;
 

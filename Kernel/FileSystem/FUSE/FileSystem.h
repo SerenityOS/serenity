@@ -10,6 +10,7 @@
 #include <Kernel/Devices/FUSEDevice.h>
 #include <Kernel/FileSystem/FUSE/FUSEConnection.h>
 #include <Kernel/FileSystem/FileSystem.h>
+#include <Kernel/FileSystem/FileSystemSpecificOption.h>
 #include <Kernel/FileSystem/Inode.h>
 
 namespace Kernel {
@@ -21,9 +22,9 @@ class FUSE final : public FileSystem {
 
 public:
     virtual ~FUSE() override;
-    static ErrorOr<NonnullRefPtr<FileSystem>> try_create(ReadonlyBytes mount_flags);
+    static ErrorOr<NonnullRefPtr<FileSystem>> try_create(FileSystemSpecificOptions const&);
 
-    static ErrorOr<void> handle_mount_unsigned_integer_flag(Bytes mount_file_specific_flags_buffer, StringView key, u64);
+    static ErrorOr<void> validate_mount_unsigned_integer_flag(StringView key, u64);
 
     virtual ErrorOr<void> initialize() override;
     virtual StringView class_name() const override { return "FUSE"sv; }

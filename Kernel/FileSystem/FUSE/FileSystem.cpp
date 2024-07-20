@@ -13,46 +13,34 @@
 
 namespace Kernel {
 
-struct [[gnu::packed]] FUSESpecificFlagsBytes {
-    u64 pid;
-    u64 device_inode;
-    u64 rootmode;
-    u64 gid;
-    u64 uid;
-};
+static constexpr StringView rootmode_flag = "rootmode"sv;
+static constexpr StringView gid_flag = "gid"sv;
+static constexpr StringView uid_flag = "uid"sv;
+static constexpr StringView fd_flag = "fd"sv;
 
-ErrorOr<NonnullRefPtr<FileSystem>> FUSE::try_create(ReadonlyBytes mount_flags)
+ErrorOr<NonnullRefPtr<FileSystem>> FUSE::try_create(FileSystemSpecificOptions const& filesystem_specific_options)
 {
-    auto* fuse_mount_flags = reinterpret_cast<FUSESpecificFlagsBytes const*>(mount_flags.data());
-
-    auto description = TRY(Process::current().open_file_description(fuse_mount_flags->device_inode));
+    int device_inode = parse_unsigned_filesystem_specific_option(filesystem_specific_options, fd_flag).value_or(-1);
+    auto description = TRY(Process::current().open_file_description(device_inode));
     auto connection = TRY(FUSEConnection::try_create(description));
 
-    u64 rootmode = AK::reinterpret_as_octal(fuse_mount_flags->rootmode);
-    u64 gid = fuse_mount_flags->gid;
-    u64 uid = fuse_mount_flags->uid;
+    u64 rootmode = parse_unsigned_filesystem_specific_option(filesystem_specific_options, rootmode_flag).value_or(0);
+    u64 gid = parse_unsigned_filesystem_specific_option(filesystem_specific_options, gid_flag).value_or(0);
+    u64 uid = parse_unsigned_filesystem_specific_option(filesystem_specific_options, uid_flag).value_or(0);
     return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) FUSE(connection, rootmode, uid, gid)));
 }
 
-ErrorOr<void> FUSE::handle_mount_unsigned_integer_flag(Bytes mount_file_specific_flags_buffer, StringView key, u64 value)
+ErrorOr<void> FUSE::validate_mount_unsigned_integer_flag(StringView flag_name, u64)
 {
-    auto* fuse_mount_flags = reinterpret_cast<FUSESpecificFlagsBytes*>(mount_file_specific_flags_buffer.data());
-    if (key == "fd") {
-        fuse_mount_flags->device_inode = value;
+    if (flag_name == rootmode_flag)
         return {};
-    }
-    if (key == "rootmode") {
-        fuse_mount_flags->rootmode = value;
+    if (flag_name == gid_flag)
         return {};
-    }
-    if (key == "gid") {
-        fuse_mount_flags->gid = value;
+    if (flag_name == uid_flag)
         return {};
-    }
-    if (key == "uid") {
-        fuse_mount_flags->uid = value;
+    if (flag_name == fd_flag)
         return {};
-    }
+
     return EINVAL;
 }
 

@@ -560,6 +560,25 @@ void ArgsParser::add_option(Vector<ByteString>& values, char const* help_string,
     add_option(move(option));
 }
 
+void ArgsParser::add_option(Vector<String>& values, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
+{
+    Option option {
+        OptionArgumentMode::Optional,
+        help_string,
+        long_name,
+        short_name,
+        value_name,
+        [&values](StringView s) -> ErrorOr<bool> {
+            String value = TRY_OR_ERROR_IF_NOT_OOM(String::from_utf8(s), s);
+            TRY_OR_ERROR_IF_NOT_OOM(values.try_append(move(value)), s);
+            return true;
+        },
+        hide_mode
+    };
+
+    add_option(move(option));
+}
+
 void ArgsParser::add_positional_argument(Arg&& arg)
 {
     m_positional_args.append(move(arg));

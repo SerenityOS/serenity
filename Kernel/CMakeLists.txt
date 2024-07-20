@@ -147,6 +147,7 @@ set(KERNEL_SOURCES
     FileSystem/File.cpp
     FileSystem/FileBackedFileSystem.cpp
     FileSystem/FileSystem.cpp
+    FileSystem/FileSystemSpecificOption.cpp
     FileSystem/FUSE/FileSystem.cpp
     FileSystem/FUSE/Inode.cpp
     FileSystem/Inode.cpp

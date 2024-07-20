@@ -11,6 +11,7 @@
 #include <AK/Types.h>
 #include <Kernel/FileSystem/BlockBasedFileSystem.h>
 #include <Kernel/FileSystem/FATFS/Definitions.h>
+#include <Kernel/FileSystem/FileSystemSpecificOption.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Library/KBuffer.h>
@@ -59,7 +60,7 @@ class FATFS final : public BlockBasedFileSystem {
     friend FATInode;
 
 public:
-    static ErrorOr<NonnullRefPtr<FileSystem>> try_create(OpenFileDescription&, ReadonlyBytes);
+    static ErrorOr<NonnullRefPtr<FileSystem>> try_create(OpenFileDescription&, FileSystemSpecificOptions const&);
 
     virtual ~FATFS() override = default;
     virtual StringView class_name() const override { return "FATFS"sv; }
