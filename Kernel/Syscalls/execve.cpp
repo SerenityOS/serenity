@@ -739,6 +739,13 @@ static ErrorOr<Vector<NonnullOwnPtr<KString>>> find_shebang_interpreter_for_exec
 
 ErrorOr<RefPtr<OpenFileDescription>> Process::find_elf_interpreter_for_executable(StringView path, Elf_Ehdr const& main_executable_header, size_t main_executable_header_size, size_t file_size, Optional<size_t>& minimum_stack_size)
 {
+    // NOTE: We can't exec an ET_REL, as that's just an object file from the compiler,
+    // and we can't exec an ET_CORE as it's just a coredump.
+    // The only allowed ELF files on execve are executables or shared object files
+    // which are dynamically linked programs (or static-pie programs like the dynamic loader).
+    if (main_executable_header.e_type != ET_EXEC && main_executable_header.e_type != ET_DYN)
+        return ENOEXEC;
+
     // Not using ErrorOr here because we'll want to do the same thing in userspace in the RTLD
     StringBuilder interpreter_path_builder;
     Optional<size_t> main_executable_requested_stack_size {};
@@ -794,10 +801,6 @@ ErrorOr<RefPtr<OpenFileDescription>> Process::find_elf_interpreter_for_executabl
         return interpreter_description;
     }
 
-    if (main_executable_header.e_type == ET_REL) {
-        // We can't exec an ET_REL, that's just an object file from the compiler
-        return ENOEXEC;
-    }
     if (main_executable_header.e_type == ET_DYN) {
         // If it's ET_DYN with no PT_INTERP, then it's a dynamic executable responsible
         // for its own relocation (i.e. it's /usr/lib/Loader.so)
