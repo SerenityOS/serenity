@@ -14,6 +14,7 @@
 #include <LibELF/Relocation.h>
 #include <fcntl.h>
 #include <sys/internals.h>
+#include <sys/prctl.h>
 #include <syscall.h>
 #include <unistd.h>
 
@@ -55,7 +56,7 @@ static int print_loaded_libraries_callback(struct dl_phdr_info* info, size_t, vo
     return 0;
 }
 
-static int _main(int argc, char** argv, char** envp, bool is_secure)
+static int _main(ByteString const& interpreter_program_path, int argc, char** argv, char** envp, bool is_secure)
 {
     Vector<StringView> arguments;
     arguments.ensure_capacity(argc);
@@ -64,6 +65,7 @@ static int _main(int argc, char** argv, char** envp, bool is_secure)
 
     bool flag_dry_run { false };
     bool flag_list_loaded_dependencies { false };
+    bool jailed { false };
     Vector<StringView> command;
     StringView argv0;
     Core::ArgsParser args_parser;
@@ -78,6 +80,7 @@ static int _main(int argc, char** argv, char** envp, bool is_secure)
         args_parser.add_option(flag_dry_run, "Run in dry-run mode", "dry-run", 'd');
         args_parser.add_option(flag_list_loaded_dependencies, "List all loaded dependencies", "list", 'l');
         args_parser.add_option(argv0, "Run with custom argv0", "argv0", 'E', "custom argv0");
+        args_parser.add_option(jailed, "Run with jail mode enabled", "jailed", 'J');
     }
     args_parser.add_positional_argument(command, "Command to execute", "command");
     // NOTE: Don't use regular PrintUsageAndExit policy for ArgsParser, as it will simply
@@ -90,6 +93,9 @@ static int _main(int argc, char** argv, char** envp, bool is_secure)
         args_parser.print_usage(stderr, arguments[0]);
         return 1;
     }
+
+    if (LexicalPath::basename(interpreter_program_path) == "ldjail.so"sv)
+        jailed = true;
 
     auto error_or_fd = open_executable(command[0]);
     if (error_or_fd.is_error()) {
@@ -116,6 +122,10 @@ static int _main(int argc, char** argv, char** envp, bool is_secure)
         ELF::DynamicLinker::iterate_over_loaded_shared_objects(print_loaded_libraries_callback, nullptr);
     if (flag_dry_run)
         return 0;
+
+    if (jailed)
+        prctl(PR_SET_JAILED, 0, 0, 0);
+
     _invoke_entry(command.size(), argv, envp, entry_point);
     VERIFY_NOT_REACHED();
 }
@@ -195,6 +205,7 @@ ALWAYS_INLINE static void optimizer_fence()
 
     int main_program_fd = -1;
     ByteString main_program_path;
+    ByteString interpreter_program_path;
     bool is_secure = false;
     for (; auxvp->a_type != AT_NULL; ++auxvp) {
         if (auxvp->a_type == ELF::AuxiliaryValue::ExecFileDescriptor) {
@@ -206,9 +217,14 @@ ALWAYS_INLINE static void optimizer_fence()
         if (auxvp->a_type == ELF::AuxiliaryValue::Secure) {
             is_secure = auxvp->a_un.a_val == 1;
         }
+        if (auxvp->a_type == ELF::AuxiliaryValue::InterpreterFilename) {
+            interpreter_program_path = (char const*)auxvp->a_un.a_ptr;
+        }
     }
 
     if (main_program_fd == -1) {
+        interpreter_program_path = main_program_path;
+
         // Allow syscalls from our code since the kernel won't do that automatically for us if we
         // were invoked directly.
         Elf_Ehdr* header = reinterpret_cast<Elf_Ehdr*>(base_address);
@@ -225,7 +241,7 @@ ALWAYS_INLINE static void optimizer_fence()
 
         // We've been invoked directly as an executable rather than as the
         // ELF interpreter for some other binary.
-        int exit_status = _main(argc, argv, envp, is_secure);
+        int exit_status = _main(interpreter_program_path, argc, argv, envp, is_secure);
         _exit(exit_status);
     }
 
@@ -233,6 +249,9 @@ ALWAYS_INLINE static void optimizer_fence()
     VERIFY(!main_program_path.is_empty());
 
     auto entry_point = ELF::DynamicLinker::linker_main(move(main_program_path), main_program_fd, is_secure, envp);
+
+    if (LexicalPath::basename(interpreter_program_path) == "ldjail.so"sv)
+        prctl(PR_SET_JAILED, 0, 0, 0);
     _invoke_entry(argc, argv, envp, entry_point);
     VERIFY_NOT_REACHED();
 }

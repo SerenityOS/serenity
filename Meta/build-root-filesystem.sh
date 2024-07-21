@@ -207,6 +207,10 @@ ln -sf Shell mnt/bin/sh
 ln -sf test mnt/bin/[
 ln -sf less mnt/bin/more
 ln -sf /bin/env mnt/usr/bin/env
+echo "done"
+
+printf "installing symlinks to system programs... "
+ln -sf /usr/lib/Loader.so mnt/usr/lib/ldjail.so
 ln -sf /bin/init mnt/init
 echo "done"
 
