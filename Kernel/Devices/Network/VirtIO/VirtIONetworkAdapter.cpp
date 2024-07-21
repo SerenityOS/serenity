@@ -6,8 +6,8 @@
 
 #include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/Bus/VirtIO/Transport/PCIe/TransportLink.h>
+#include <Kernel/Devices/Network/VirtIO/VirtIONetworkAdapter.h>
 #include <Kernel/Net/NetworkingManagement.h>
-#include <Kernel/Net/VirtIO/VirtIONetworkAdapter.h>
 
 namespace Kernel {
 

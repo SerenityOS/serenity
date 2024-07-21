@@ -8,14 +8,14 @@
 #include <Kernel/Boot/CommandLine.h>
 #include <Kernel/Boot/Multiboot.h>
 #include <Kernel/Bus/PCI/API.h>
+#include <Kernel/Devices/Network/Intel/E1000ENetworkAdapter.h>
+#include <Kernel/Devices/Network/Intel/E1000NetworkAdapter.h>
+#include <Kernel/Devices/Network/Realtek/RTL8168NetworkAdapter.h>
+#include <Kernel/Devices/Network/VirtIO/VirtIONetworkAdapter.h>
 #include <Kernel/Library/KString.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
-#include <Kernel/Net/Intel/E1000ENetworkAdapter.h>
-#include <Kernel/Net/Intel/E1000NetworkAdapter.h>
 #include <Kernel/Net/LoopbackAdapter.h>
 #include <Kernel/Net/NetworkingManagement.h>
-#include <Kernel/Net/Realtek/RTL8168NetworkAdapter.h>
-#include <Kernel/Net/VirtIO/VirtIONetworkAdapter.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {

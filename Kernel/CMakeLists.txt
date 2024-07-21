@@ -109,6 +109,10 @@ set(KERNEL_SOURCES
     Devices/GPU/VirtIO/GPU3DDevice.cpp
     Devices/GPU/VirtIO/GraphicsAdapter.cpp
     Devices/Loop/LoopDevice.cpp
+    Devices/Network/Intel/E1000ENetworkAdapter.cpp
+    Devices/Network/Intel/E1000NetworkAdapter.cpp
+    Devices/Network/Realtek/RTL8168NetworkAdapter.cpp
+    Devices/Network/VirtIO/VirtIONetworkAdapter.cpp
     Devices/Serial/VirtIO/Console.cpp
     Devices/Serial/VirtIO/ConsolePort.cpp
     Devices/Storage/AHCI/ATADevice.cpp
@@ -266,10 +270,6 @@ set(KERNEL_SOURCES
     Library/KLexicalPath.cpp
     Library/KString.cpp
     Library/UserOrKernelBuffer.cpp
-    Net/Intel/E1000ENetworkAdapter.cpp
-    Net/Intel/E1000NetworkAdapter.cpp
-    Net/Realtek/RTL8168NetworkAdapter.cpp
-    Net/VirtIO/VirtIONetworkAdapter.cpp
     Net/IPv4Socket.cpp
     Net/LocalSocket.cpp
     Net/LoopbackAdapter.cpp
