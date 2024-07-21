@@ -889,7 +889,9 @@ endif()
 serenity_install_headers(Kernel)
 serenity_install_sources(Kernel)
 
-# Only x86 needs a Prekernel
+# Only x86 uses the multiboot Prekernel
 if ("${SERENITY_ARCH}" STREQUAL "x86_64")
     add_subdirectory(Prekernel)
 endif()
+
+add_subdirectory(EFIPrekernel)
