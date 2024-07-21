@@ -35,4 +35,5 @@ Serenity boots to a graphical desktop on all machines unless otherwise noted.
 | Gigabyte G31M-ES2L                       | ICH7 2009 machine with IDE controller only                      |
 | Asus PRIME B360-PLUS                     | Has only one PS2 port, AHCI works                               |
 | Asus H81M-K                              | w/ Intel Core i3-4170, AHCI works                               |
-| Acer OEM Motherboard, H57H-AM2           | w/ Intel Core i5-760, AHCI work (graphics not tested)           |
+| Acer OEM Motherboard, H57H-AM2           | w/ Intel Core i5-760, AHCI works (graphics not tested)          |
+| Gigabyte H510M S2H V2                    | w/ Intel Core i3-10105, AHCI works, USB keyboad and mouse work (bios has PS2 emulation) |
