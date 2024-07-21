@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='wget'
-version='1.21.4'
+version='1.24.5'
 useconfigure='true'
 use_fresh_config_sub='true'
 config_sub_paths=(
@@ -10,7 +10,7 @@ depends=(
     'openssl'
 )
 files=(
-    "https://ftpmirror.gnu.org/gnu/wget/wget-${version}.tar.gz#81542f5cefb8faacc39bbbc6c82ded80e3e4a88505ae72ea51df27525bcde04c"
+    "https://ftpmirror.gnu.org/gnu/wget/wget-${version}.tar.gz#fa2dc35bab5184ecbc46a9ef83def2aaaa3f4c9f3c97d4bd19dcb07d4da637de"
 )
 configopts=(
     '--with-ssl=openssl'
