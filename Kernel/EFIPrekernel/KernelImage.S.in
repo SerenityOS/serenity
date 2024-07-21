@@ -1,0 +1,11 @@
+// The kernel image has to be in a writable section, so we can apply relocations while EFI boot services are still available
+// (we are not allowed to change page tables until we call ExitBootServices()).
+.section .data
+
+.global start_of_kernel_image
+.global end_of_kernel_image
+
+.p2align 12
+start_of_kernel_image:
+.incbin "@PREKERNEL_KERNEL_IMAGE_PATH@"
+end_of_kernel_image:
