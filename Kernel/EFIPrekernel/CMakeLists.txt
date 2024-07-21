@@ -6,6 +6,7 @@ set(SOURCES
 
     DebugOutput.cpp
     Panic.cpp
+    Relocation.cpp
     Runtime.cpp
     kmalloc.cpp
 
@@ -17,6 +18,9 @@ set(SOURCES
     ../Firmware/EFI/EFI.cpp
     ../Library/MiniStdLib.cpp
     ../Prekernel/UBSanitizer.cpp
+
+    ../../Userland/Libraries/LibELF/Image.cpp
+    ../../Userland/Libraries/LibELF/Validation.cpp
 
     ../../AK/Format.cpp
     ../../AK/StringBuilder.cpp
