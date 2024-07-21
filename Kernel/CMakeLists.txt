@@ -861,7 +861,7 @@ add_custom_command(
     COMMAND ${CMAKE_OBJCOPY} --add-gnu-debuglink=Kernel.debug Kernel
     COMMAND ${CMAKE_OBJCOPY} --set-section-flags .heap=load Kernel Kernel_shared_object
     COMMAND ${CMAKE_OBJCOPY} -I binary -O ${KERNEL_ELF_OBJCOPY_TARGET} --rename-section .data=.Kernel_image --set-section-alignment .Kernel_image=4096 Kernel_shared_object Kernel.o
-    BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/Kernel.o ${CMAKE_CURRENT_BINARY_DIR}/kernel.map
+    BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/Kernel_shared_object ${CMAKE_CURRENT_BINARY_DIR}/Kernel.o ${CMAKE_CURRENT_BINARY_DIR}/kernel.map
 )
 
 # Architectures (x86_64, aarch64, riscv64) share the same location in their respective architecture build folder.
