@@ -210,8 +210,8 @@ ErrorOr<size_t> OpenFileDescription::get_dir_entries(UserOrKernelBuffer& output_
         return EIO;
 
     size_t remaining = size;
-    u8 stack_buffer[PAGE_SIZE];
-    Bytes temp_buffer(stack_buffer, sizeof(stack_buffer));
+    Array<u8, PAGE_SIZE> stack_buffer {};
+    Bytes temp_buffer(stack_buffer.span());
     FixedMemoryStream stream { temp_buffer };
 
     auto flush_stream_to_output_buffer = [&stream, &remaining, &temp_buffer, &output_buffer]() -> ErrorOr<void> {

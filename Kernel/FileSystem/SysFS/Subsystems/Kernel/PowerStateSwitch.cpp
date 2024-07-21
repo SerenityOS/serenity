@@ -48,8 +48,8 @@ ErrorOr<size_t> SysFSPowerStateSwitchNode::write_bytes(off_t offset, size_t coun
         return Error::from_errno(EINVAL);
     if (count > 1)
         return Error::from_errno(EINVAL);
-    char buf[1];
-    TRY(data.read(buf, 1));
+    Array<u8, 1> buf {};
+    TRY(data.read(buf.data(), 1));
     switch (buf[0]) {
     case '1':
         PowerStateSwitchTask::reboot();

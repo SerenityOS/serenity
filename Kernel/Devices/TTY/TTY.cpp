@@ -87,14 +87,14 @@ ErrorOr<size_t> TTY::write(OpenFileDescription&, u64, UserOrKernelBuffer const& 
 
     constexpr size_t num_chars = 256;
     return buffer.read_buffered<num_chars>(size, [&](ReadonlyBytes bytes) -> ErrorOr<size_t> {
-        u8 modified_data[num_chars * 2];
+        Array<u8, num_chars * 2> modified_data {};
         size_t modified_data_size = 0;
         for (auto const& byte : bytes) {
             process_output(byte, [&modified_data, &modified_data_size](u8 out_ch) {
                 modified_data[modified_data_size++] = out_ch;
             });
         }
-        auto bytes_written_or_error = on_tty_write(UserOrKernelBuffer::for_kernel_buffer(modified_data), modified_data_size);
+        auto bytes_written_or_error = on_tty_write(UserOrKernelBuffer::for_kernel_buffer(modified_data.data()), modified_data_size);
         if (bytes_written_or_error.is_error() || !(m_termios.c_oflag & OPOST) || !(m_termios.c_oflag & ONLCR))
             return bytes_written_or_error;
         auto bytes_written = bytes_written_or_error.value();

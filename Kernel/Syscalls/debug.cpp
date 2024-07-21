@@ -25,9 +25,9 @@ ErrorOr<FlatPtr> Process::sys$dbgputstr(Userspace<char const*> characters, size_
         return 0;
 
     if (size <= 1024) {
-        char buffer[1024];
-        TRY(copy_from_user(buffer, characters, size));
-        dbgputstr(buffer, size);
+        auto buffer = Array<u8, 1024> {};
+        TRY(copy_from_user(buffer.data(), characters, size));
+        dbgputstr(bit_cast<char const*>(buffer.data()), size);
         return size;
     }
 

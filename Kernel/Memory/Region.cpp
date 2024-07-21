@@ -604,10 +604,10 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region, bool m
     if (current_thread)
         current_thread->did_inode_fault();
 
-    u8 page_buffer[PAGE_SIZE];
+    auto page_buffer = Array<u8, PAGE_SIZE> {};
     auto& inode = inode_vmobject.inode();
 
-    auto buffer = UserOrKernelBuffer::for_kernel_buffer(page_buffer);
+    auto buffer = UserOrKernelBuffer::for_kernel_buffer(page_buffer.data());
     auto result = inode.read_bytes(page_index_in_vmobject * PAGE_SIZE, PAGE_SIZE, buffer, nullptr);
 
     if (result.is_error()) {
@@ -621,10 +621,6 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region, bool m
     if (nread == 0)
         return PageFaultResponse::BusError;
 
-    // If we read less than a page, zero out the rest to avoid leaking uninitialized data.
-    if (nread < PAGE_SIZE)
-        memset(page_buffer + nread, 0, PAGE_SIZE - nread);
-
     // Allocate a new physical page, and copy the read inode contents into it.
     auto new_physical_page_or_error = MM.allocate_physical_page(MemoryManager::ShouldZeroFill::No);
     if (new_physical_page_or_error.is_error()) {
@@ -635,7 +631,7 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region, bool m
     {
         InterruptDisabler disabler;
         u8* dest_ptr = MM.quickmap_page(*new_physical_page);
-        memcpy(dest_ptr, page_buffer, PAGE_SIZE);
+        memcpy(dest_ptr, page_buffer.data(), PAGE_SIZE);
         MM.unquickmap_page();
     }
 

@@ -158,7 +158,7 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::identify_and_init_namespaces()
     RefPtr<Memory::PhysicalRAMPage> prp_dma_buffer;
     OwnPtr<Memory::Region> prp_dma_region;
     auto namespace_data_struct = TRY(ByteBuffer::create_zeroed(NVMe_IDENTIFY_SIZE));
-    u32 active_namespace_list[NVMe_IDENTIFY_SIZE / sizeof(u32)];
+    Array<u32, NVMe_IDENTIFY_SIZE / sizeof(u32)> active_namespace_list {};
 
     {
         auto buffer = TRY(MM.allocate_dma_buffer_page("Identify PRP"sv, Memory::Region::Access::ReadWrite, prp_dma_buffer));
@@ -177,7 +177,7 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::identify_and_init_namespaces()
             dmesgln_pci(*this, "Failed to identify active namespace command");
             return EFAULT;
         }
-        if (void* fault_at; !safe_memcpy(active_namespace_list, prp_dma_region->vaddr().as_ptr(), NVMe_IDENTIFY_SIZE, fault_at)) {
+        if (void* fault_at; !safe_memcpy(active_namespace_list.data(), prp_dma_region->vaddr().as_ptr(), NVMe_IDENTIFY_SIZE, fault_at)) {
             return EFAULT;
         }
     }

@@ -88,10 +88,10 @@ ErrorOr<void> SharedInodeVMObject::sync_impl(off_t offset_in_pages, size_t pages
     for (auto it = pages_to_flush.begin(); it != pages_to_flush.end(); ++it) {
         size_t page_index = *it;
         auto& physical_page = m_physical_pages[page_index];
-        u8 page_buffer[PAGE_SIZE];
+        auto page_buffer = Array<u8, PAGE_SIZE> {};
 
-        MM.copy_physical_page(*physical_page, page_buffer);
-        TRY(m_inode->write_bytes(page_index * PAGE_SIZE, PAGE_SIZE, UserOrKernelBuffer::for_kernel_buffer(page_buffer), nullptr));
+        MM.copy_physical_page(*physical_page, page_buffer.data());
+        TRY(m_inode->write_bytes(page_index * PAGE_SIZE, PAGE_SIZE, UserOrKernelBuffer::for_kernel_buffer(page_buffer.data()), nullptr));
     }
 
     return {};
