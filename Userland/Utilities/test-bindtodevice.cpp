@@ -43,11 +43,11 @@ ErrorOr<int> serenity_main(Main::Arguments)
 void test_invalid(int fd)
 {
     // bind to an interface that does not exist
-    char buf[IFNAMSIZ];
+    Array<char, IFNAMSIZ> buffer {};
     socklen_t buflen = IFNAMSIZ;
-    memcpy(buf, "foodev", 7);
+    memcpy(buffer.data(), "foodev", 7);
 
-    auto setsockopt_maybe_error = Core::System::setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, buf, buflen);
+    auto setsockopt_maybe_error = Core::System::setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, buffer.data(), buflen);
     if (setsockopt_maybe_error.is_error()) {
         warnln("setsockopt(SO_BINDTODEVICE) :: invalid (Should fail with ENODEV).");
         puts("PASS invalid");
@@ -59,11 +59,11 @@ void test_invalid(int fd)
 void test_valid(int fd)
 {
     // bind to an interface that exists
-    char buf[IFNAMSIZ];
+    Array<char, IFNAMSIZ> buffer {};
     socklen_t buflen = IFNAMSIZ;
-    memcpy(buf, "loop", 5);
+    memcpy(buffer.data(), "loop", 5);
 
-    auto setsockopt_maybe_error = Core::System::setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, buf, buflen);
+    auto setsockopt_maybe_error = Core::System::setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, buffer.data(), buflen);
     if (setsockopt_maybe_error.is_error()) {
         warnln("setsockopt(SO_BINDTODEVICE) :: valid");
         puts("FAIL valid");
@@ -75,11 +75,11 @@ void test_valid(int fd)
 void test_no_route(int fd)
 {
     // bind to an interface that cannot deliver
-    char buf[IFNAMSIZ];
+    Array<char, IFNAMSIZ> buffer {};
     socklen_t buflen = IFNAMSIZ;
-    memcpy(buf, "loop", 5);
+    memcpy(buffer.data(), "loop", 5);
 
-    auto setsockopt_maybe_error = Core::System::setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, buf, buflen);
+    auto setsockopt_maybe_error = Core::System::setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, buffer.data(), buflen);
     if (setsockopt_maybe_error.is_error()) {
         warnln("setsockopt(SO_BINDTODEVICE) :: no_route");
         puts("FAIL no_route");
