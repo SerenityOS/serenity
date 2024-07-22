@@ -182,7 +182,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::enter_jail_mode());
 
-    WebView::ChromeProcess chrome_process;
+    auto chrome_process = TRY(WebView::ChromeProcess::create());
     if (TRY(chrome_process.connect(specified_urls, new_window)) == WebView::ChromeProcess::ProcessDisposition::ExitProcess) {
         outln("Opening in existing process");
         return 0;
