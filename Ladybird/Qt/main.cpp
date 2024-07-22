@@ -125,7 +125,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(force_new_process, "Force creation of new browser/chrome process", "force-new-process");
     args_parser.parse(arguments);
 
-    WebView::ChromeProcess chrome_process;
+    auto chrome_process = TRY(WebView::ChromeProcess::create());
     if (!force_new_process && TRY(chrome_process.connect(raw_urls, new_window)) == WebView::ChromeProcess::ProcessDisposition::ExitProcess) {
         outln("Opening in existing process");
         return 0;
