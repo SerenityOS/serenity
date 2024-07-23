@@ -1006,6 +1006,11 @@ void Tab::set_navigator_compatibility_mode(ByteString const& compatibility_mode)
     debug_request("navigator-compatibility-mode", compatibility_mode);
 }
 
+void Tab::set_preferred_languages(Vector<String> const& preferred_languages)
+{
+    m_view->set_preferred_languages(preferred_languages);
+}
+
 void Tab::set_enable_do_not_track(bool enable)
 {
     m_view->set_enable_do_not_track(enable);

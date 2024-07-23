@@ -45,6 +45,9 @@ public:
     WebView::SearchEngine search_engine() const { return m_search_engine; }
     void set_search_engine(WebView::SearchEngine engine);
 
+    QStringList preferred_languages();
+    void set_preferred_languages(QStringList const& languages);
+
     struct EngineProvider {
         QString name;
         QString url;
@@ -69,6 +72,7 @@ signals:
     void show_menubar_changed(bool show_menubar);
     void enable_search_changed(bool enable);
     void search_engine_changed(WebView::SearchEngine engine);
+    void preferred_languages_changed(QStringList const& languages);
     void enable_do_not_track_changed(bool enable);
 
 protected:
