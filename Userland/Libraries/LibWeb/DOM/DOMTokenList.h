@@ -50,6 +50,8 @@ private:
     virtual void visit_edges(Cell::Visitor&) override;
 
     WebIDL::ExceptionOr<void> validate_token(StringView token) const;
+    WebIDL::ExceptionOr<void> validate_token_not_empty(StringView token) const;
+    WebIDL::ExceptionOr<void> validate_token_not_whitespace(StringView token) const;
     void run_update_steps();
 
     String serialize_ordered_set() const;
