@@ -27,6 +27,7 @@ enum class TraversalDecision;
 }
 
 namespace Web::Painting {
+class DisplayList;
 class DisplayListRecorder;
 class SVGGradientPaintStyle;
 using PaintStyle = RefPtr<SVGGradientPaintStyle>;

@@ -49,37 +49,15 @@ CommandResult DisplayListPlayerCPU::draw_glyph_run(DrawGlyphRun const& command)
     return CommandResult::Continue;
 }
 
-template<typename Callback>
-void apply_clip_paths_to_painter(Gfx::IntRect const& rect, Callback callback, Vector<Gfx::Path> const& clip_paths, Gfx::Painter& target_painter)
-{
-    // Setup a painter for a background canvas that we will paint to first.
-    auto background_canvas = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, rect.size()).release_value_but_fixme_should_propagate_errors();
-    Gfx::Painter painter(*background_canvas);
-
-    // Offset the painter to paint in the correct location.
-    painter.translate(-rect.location());
-
-    // Paint the background canvas.
-    callback(painter);
-
-    // Apply the clip path to the target painter.
-    Gfx::AntiAliasingPainter aa_painter(target_painter);
-    for (auto const& clip_path : clip_paths) {
-        auto fill_offset = clip_path.bounding_box().location().to_type<int>() - rect.location();
-        auto paint_style = Gfx::BitmapPaintStyle::create(*background_canvas, fill_offset).release_value_but_fixme_should_propagate_errors();
-        aa_painter.fill_path(clip_path, paint_style);
-    }
-}
-
 CommandResult DisplayListPlayerCPU::fill_rect(FillRect const& command)
 {
     auto paint_op = [&](Gfx::Painter& painter) {
         painter.fill_rect(command.rect, command.color);
     };
-    if (command.clip_paths.is_empty()) {
+    if (!command.text_clip) {
         paint_op(painter());
     } else {
-        apply_clip_paths_to_painter(command.rect, paint_op, command.clip_paths, painter());
+        apply_mask_painted_from(command.rect, paint_op, *command.text_clip);
     }
     return CommandResult::Continue;
 }
@@ -96,10 +74,10 @@ CommandResult DisplayListPlayerCPU::draw_scaled_immutable_bitmap(DrawScaledImmut
     auto paint_op = [&](Gfx::Painter& painter) {
         painter.draw_scaled_bitmap(command.dst_rect, command.bitmap->bitmap(), command.src_rect, 1, command.scaling_mode);
     };
-    if (command.clip_paths.is_empty()) {
+    if (!command.text_clip) {
         paint_op(painter());
     } else {
-        apply_clip_paths_to_painter(command.dst_rect, paint_op, command.clip_paths, painter());
+        apply_mask_painted_from(command.dst_rect, paint_op, *command.text_clip);
     }
     return CommandResult::Continue;
 }
@@ -243,10 +221,10 @@ CommandResult DisplayListPlayerCPU::paint_linear_gradient(PaintLinearGradient co
             command.gradient_rect, linear_gradient_data.color_stops.list,
             linear_gradient_data.gradient_angle, linear_gradient_data.color_stops.repeat_length);
     };
-    if (command.clip_paths.is_empty()) {
+    if (!command.text_clip) {
         paint_op(painter());
     } else {
-        apply_clip_paths_to_painter(command.gradient_rect, paint_op, command.clip_paths, painter());
+        apply_mask_painted_from(command.gradient_rect, paint_op, *command.text_clip);
     }
     return CommandResult::Continue;
 }
@@ -316,10 +294,10 @@ CommandResult DisplayListPlayerCPU::fill_rect_with_rounded_corners(FillRectWithR
             command.corner_radii.bottom_right,
             command.corner_radii.bottom_left);
     };
-    if (command.clip_paths.is_empty()) {
+    if (!command.text_clip) {
         paint_op(painter());
     } else {
-        apply_clip_paths_to_painter(command.rect, paint_op, command.clip_paths, painter());
+        apply_mask_painted_from(command.rect, paint_op, *command.text_clip);
     }
     return CommandResult::Continue;
 }
@@ -431,10 +409,10 @@ CommandResult DisplayListPlayerCPU::paint_radial_gradient(PaintRadialGradient co
     auto paint_op = [&](Gfx::Painter& painter) {
         painter.fill_rect_with_radial_gradient(command.rect, command.radial_gradient_data.color_stops.list, command.center, command.size, command.radial_gradient_data.color_stops.repeat_length);
     };
-    if (command.clip_paths.is_empty()) {
+    if (!command.text_clip) {
         paint_op(painter());
     } else {
-        apply_clip_paths_to_painter(command.rect, paint_op, command.clip_paths, painter());
+        apply_mask_painted_from(command.rect, paint_op, *command.text_clip);
     }
     return CommandResult::Continue;
 }
@@ -444,10 +422,10 @@ CommandResult DisplayListPlayerCPU::paint_conic_gradient(PaintConicGradient cons
     auto paint_op = [&](Gfx::Painter& painter) {
         painter.fill_rect_with_conic_gradient(command.rect, command.conic_gradient_data.color_stops.list, command.position, command.conic_gradient_data.start_angle, command.conic_gradient_data.color_stops.repeat_length);
     };
-    if (command.clip_paths.is_empty()) {
+    if (!command.text_clip) {
         paint_op(painter());
     } else {
-        apply_clip_paths_to_painter(command.rect, paint_op, command.clip_paths, painter());
+        apply_mask_painted_from(command.rect, paint_op, *command.text_clip);
     }
     return CommandResult::Continue;
 }
