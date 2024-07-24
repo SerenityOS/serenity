@@ -89,8 +89,13 @@ private:
     virtual DisplayListPlayer& nested_player() { VERIFY_NOT_REACHED(); }
 };
 
-class DisplayList {
+class DisplayList : public RefCounted<DisplayList> {
 public:
+    static NonnullRefPtr<DisplayList> create()
+    {
+        return adopt_ref(*new DisplayList());
+    }
+
     void append(Command&& command, Optional<i32> scroll_frame_id);
 
     void apply_scroll_offsets(Vector<Gfx::IntPoint> const& offsets_by_frame_id);
@@ -108,6 +113,8 @@ public:
     AK::SegmentedVector<CommandListItem, 512> const& commands() const { return m_commands; }
 
 private:
+    DisplayList() = default;
+
     size_t m_corner_clip_max_depth { 0 };
     AK::SegmentedVector<CommandListItem, 512> m_commands;
 };
