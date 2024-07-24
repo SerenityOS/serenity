@@ -62,6 +62,16 @@ CatDog::CatDog()
     m_idle_sleep_timer.start();
 }
 
+void CatDog::update()
+{
+    if (m_state != m_last_state) {
+        if (on_state_change)
+            on_state_change();
+        m_last_state = m_state;
+    }
+    Widget::update();
+}
+
 void CatDog::set_roaming(bool roaming)
 {
     m_state = (roaming ? State::Idle : State::Alert) | special_application_states();
@@ -118,8 +128,16 @@ void CatDog::timer_event(Core::TimerEvent&)
     if (has_flag(m_state, State::Alert))
         return;
 
-    if (has_flag(m_state, State::Sleeping))
+    ScopeGuard update_animation_frame = [&] {
+        m_frame = m_frame == State::Frame1 ? State::Frame2 : State::Frame1;
+        update();
+    };
+
+    if (has_flag(m_state, State::Sleeping)) {
+        // Reset idle timer while sleeping to prevent instantly going to sleep again.
+        m_idle_sleep_timer.start();
         return;
+    }
 
     m_state = special_application_states();
 
@@ -153,16 +171,12 @@ void CatDog::timer_event(Core::TimerEvent&)
 
     window()->move_to(window()->position() + move);
     m_mouse_offset -= move;
-
-    m_frame = m_frame == State::Frame1 ? State::Frame2 : State::Frame1;
-    m_state |= m_frame;
-
-    update();
 }
 
 Gfx::Bitmap& CatDog::bitmap_for_state() const
 {
-    auto const iter = m_images.find_if([&](auto const& image) { return (m_state & image.state) == image.state; });
+    auto state_with_frame = m_state | m_frame;
+    auto const iter = m_images.find_if([&](auto const& image) { return (state_with_frame & image.state) == image.state; });
     return iter != m_images.end() ? *iter->bitmap : *m_images[m_images.size() - 1].bitmap;
 }
 

@@ -17,6 +17,7 @@
 #include <LibWeb/CSS/ResolvedCSSStyleDeclaration.h>
 #include <LibWeb/CSS/SelectorEngine.h>
 #include <LibWeb/CSS/StyleComputer.h>
+#include <LibWeb/CSS/StyleProperties.h>
 #include <LibWeb/CSS/StyleValues/IdentifierStyleValue.h>
 #include <LibWeb/CSS/StyleValues/NumberStyleValue.h>
 #include <LibWeb/DOM/Attr.h>
@@ -456,28 +457,32 @@ void Element::attribute_changed(FlyString const& name, Optional<String> const&, 
     auto value_or_empty = value.value_or(String {});
 
     if (name == HTML::AttributeNames::id) {
-        if (!value.has_value())
+        if (value_or_empty.is_empty())
             m_id = {};
         else
             m_id = value_or_empty;
 
         document().element_id_changed({}, *this);
     } else if (name == HTML::AttributeNames::name) {
-        if (!value.has_value())
+        if (value_or_empty.is_empty())
             m_name = {};
         else
             m_name = value_or_empty;
 
         document().element_name_changed({}, *this);
     } else if (name == HTML::AttributeNames::class_) {
-        auto new_classes = value_or_empty.bytes_as_string_view().split_view_if(Infra::is_ascii_whitespace);
-        m_classes.clear();
-        m_classes.ensure_capacity(new_classes.size());
-        for (auto& new_class : new_classes) {
-            m_classes.unchecked_append(FlyString::from_utf8(new_class).release_value_but_fixme_should_propagate_errors());
+        if (value_or_empty.is_empty()) {
+            m_classes.clear();
+        } else {
+            auto new_classes = value_or_empty.bytes_as_string_view().split_view_if(Infra::is_ascii_whitespace);
+            m_classes.clear();
+            m_classes.ensure_capacity(new_classes.size());
+            for (auto& new_class : new_classes) {
+                m_classes.unchecked_append(FlyString::from_utf8(new_class).release_value_but_fixme_should_propagate_errors());
+            }
+            if (m_class_list)
+                m_class_list->associated_attribute_changed(value_or_empty);
         }
-        if (m_class_list)
-            m_class_list->associated_attribute_changed(value_or_empty);
     } else if (name == HTML::AttributeNames::style) {
         if (!value.has_value()) {
             if (m_inline_style) {
@@ -811,21 +816,6 @@ bool Element::is_document_element() const
 {
     // The document element of a document is the element whose parent is that document, if it exists; otherwise null.
     return parent() == &document();
-}
-
-JS::NonnullGCPtr<HTMLCollection> Element::get_elements_by_class_name(StringView class_names)
-{
-    Vector<FlyString> list_of_class_names;
-    for (auto& name : class_names.split_view_if(Infra::is_ascii_whitespace)) {
-        list_of_class_names.append(FlyString::from_utf8(name).release_value_but_fixme_should_propagate_errors());
-    }
-    return HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [list_of_class_names = move(list_of_class_names), quirks_mode = document().in_quirks_mode()](Element const& element) {
-        for (auto& name : list_of_class_names) {
-            if (!element.has_class(name, quirks_mode ? CaseSensitivity::CaseInsensitive : CaseSensitivity::CaseSensitive))
-                return false;
-        }
-        return true;
-    });
 }
 
 // https://dom.spec.whatwg.org/#element-shadow-host
@@ -2341,6 +2331,54 @@ void Element::scroll_by(HTML::ScrollToOptions options)
 
     // 5. Act as if the scroll() method was invoked with options as the only argument.
     scroll(options);
+}
+
+// https://drafts.csswg.org/cssom-view-1/#dom-element-checkvisibility
+bool Element::check_visibility(Optional<CheckVisibilityOptions> options)
+{
+    // NOTE: Ensure that layout is up-to-date before looking at metrics.
+    document().update_layout();
+
+    // 1. If this does not have an associated box, return false.
+    if (!paintable_box())
+        return false;
+
+    // 2. If an ancestor of this in the flat tree has content-visibility: hidden, return false.
+    for (auto* element = parent_element(); element; element = element->parent_element()) {
+        if (element->computed_css_values()->content_visibility() == CSS::ContentVisibility::Hidden)
+            return false;
+    }
+
+    // AD-HOC: Since the rest of the steps use the options, we can return early if we haven't been given any options.
+    if (!options.has_value())
+        return true;
+
+    // 3. If either the opacityProperty or the checkOpacity dictionary members of options are true, and this, or an ancestor of this in the flat tree, has a computed opacity value of 0, return false.
+    if (options->opacity_property || options->check_opacity) {
+        for (auto* element = this; element; element = element->parent_element()) {
+            if (element->computed_css_values()->opacity() == 0.0f)
+                return false;
+        }
+    }
+
+    // 4. If either the visibilityProperty or the checkVisibilityCSS dictionary members of options are true, and this is invisible, return false.
+    if (options->visibility_property || options->check_visibility_css) {
+        if (computed_css_values()->visibility() == CSS::Visibility::Hidden)
+            return false;
+    }
+
+    // 5. If the contentVisibilityAuto dictionary member of options is true and an ancestor of this in the flat tree skips its contents due to content-visibility: auto, return false.
+    // FIXME: Currently we do not skip any content if content-visibility is auto: https://drafts.csswg.org/css-contain-2/#proximity-to-the-viewport
+    auto const skipped_contents_due_to_content_visibility_auto = false;
+    if (options->content_visibility_auto && skipped_contents_due_to_content_visibility_auto) {
+        for (auto* element = this; element; element = element->parent_element()) {
+            if (element->computed_css_values()->content_visibility() == CSS::ContentVisibility::Auto)
+                return false;
+        }
+    }
+
+    // 6. Return true.
+    return true;
 }
 
 bool Element::id_reference_exists(String const& id_reference) const

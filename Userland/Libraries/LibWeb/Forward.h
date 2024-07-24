@@ -706,11 +706,13 @@ class Table;
 
 namespace Web::WebAudio {
 class AudioBuffer;
+class AudioBufferSourceNode;
 class AudioContext;
 class AudioNode;
 class AudioParam;
 class AudioScheduledSourceNode;
 class BaseAudioContext;
+class BiquadFilterNode;
 class DynamicsCompressorNode;
 class GainNode;
 class OfflineAudioContext;

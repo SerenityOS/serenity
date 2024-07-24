@@ -48,6 +48,15 @@ struct ScrollIntoViewOptions : public HTML::ScrollOptions {
     Bindings::ScrollLogicalPosition inline_ { Bindings::ScrollLogicalPosition::Nearest };
 };
 
+// https://drafts.csswg.org/cssom-view-1/#dictdef-checkvisibilityoptions
+struct CheckVisibilityOptions {
+    bool check_opacity = false;
+    bool check_visibility_css = false;
+    bool content_visibility_auto = false;
+    bool opacity_property = false;
+    bool visibility_property = false;
+};
+
 // https://html.spec.whatwg.org/multipage/custom-elements.html#upgrade-reaction
 // An upgrade reaction, which will upgrade the custom element and contains a custom element definition; or
 struct CustomElementUpgradeReaction {
@@ -203,8 +212,6 @@ public:
     bool is_target() const;
     bool is_document_element() const;
 
-    JS::NonnullGCPtr<HTMLCollection> get_elements_by_class_name(StringView);
-
     bool is_shadow_host() const;
     JS::GCPtr<ShadowRoot> shadow_root() { return m_shadow_root; }
     JS::GCPtr<ShadowRoot const> shadow_root() const { return m_shadow_root; }
@@ -353,6 +360,8 @@ public:
     void scroll(double x, double y);
     void scroll_by(HTML::ScrollToOptions);
     void scroll_by(double x, double y);
+
+    bool check_visibility(Optional<CheckVisibilityOptions>);
 
     void register_intersection_observer(Badge<IntersectionObserver::IntersectionObserver>, IntersectionObserver::IntersectionObserverRegistration);
     void unregister_intersection_observer(Badge<IntersectionObserver::IntersectionObserver>, JS::NonnullGCPtr<IntersectionObserver::IntersectionObserver>);

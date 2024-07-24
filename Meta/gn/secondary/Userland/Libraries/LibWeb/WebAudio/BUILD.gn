@@ -6,6 +6,8 @@ source_set("WebAudio") {
   sources = [
     "AudioBuffer.cpp",
     "AudioBuffer.h",
+    "AudioBufferSourceNode.cpp",
+    "AudioBufferSourceNode.h",
     "AudioContext.cpp",
     "AudioContext.h",
     "AudioNode.cpp",
@@ -16,6 +18,8 @@ source_set("WebAudio") {
     "AudioScheduledSourceNode.h",
     "BaseAudioContext.cpp",
     "BaseAudioContext.h",
+    "BiquadFilterNode.cpp",
+    "BiquadFilterNode.h",
     "DynamicsCompressorNode.cpp",
     "DynamicsCompressorNode.h",
     "GainNode.cpp",

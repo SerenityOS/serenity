@@ -190,6 +190,7 @@ set(SOURCES
     DOM/StyleElementUtils.cpp
     DOM/Text.cpp
     DOM/TreeWalker.cpp
+    DOM/Utils.cpp
     DOM/XMLDocument.cpp
     DOMParsing/XMLSerializer.cpp
     DOMURL/DOMURL.cpp
@@ -269,6 +270,7 @@ set(SOURCES
     HTML/DataTransfer.cpp
     HTML/Dates.cpp
     HTML/DecodedImageData.cpp
+    HTML/DedicatedWorkerGlobalScope.cpp
     HTML/DocumentState.cpp
     HTML/DOMParser.cpp
     HTML/DOMStringMap.cpp
@@ -678,11 +680,13 @@ set(SOURCES
     WebAssembly/Table.cpp
     WebAssembly/WebAssembly.cpp
     WebAudio/AudioBuffer.cpp
+    WebAudio/AudioBufferSourceNode.cpp
     WebAudio/AudioContext.cpp
     WebAudio/AudioNode.cpp
     WebAudio/AudioParam.cpp
     WebAudio/AudioScheduledSourceNode.cpp
     WebAudio/BaseAudioContext.cpp
+    WebAudio/BiquadFilterNode.cpp
     WebAudio/DynamicsCompressorNode.cpp
     WebAudio/GainNode.cpp
     WebAudio/OfflineAudioContext.cpp

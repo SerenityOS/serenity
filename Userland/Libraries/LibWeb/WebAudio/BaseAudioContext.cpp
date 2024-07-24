@@ -9,7 +9,9 @@
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/WebAudio/AudioBuffer.h>
+#include <LibWeb/WebAudio/AudioBufferSourceNode.h>
 #include <LibWeb/WebAudio/BaseAudioContext.h>
+#include <LibWeb/WebAudio/BiquadFilterNode.h>
 #include <LibWeb/WebAudio/DynamicsCompressorNode.h>
 #include <LibWeb/WebAudio/GainNode.h>
 #include <LibWeb/WebAudio/OscillatorNode.h>
@@ -40,12 +42,26 @@ WebIDL::CallbackType* BaseAudioContext::onstatechange()
     return event_handler_attribute(HTML::EventNames::statechange);
 }
 
+// https://webaudio.github.io/web-audio-api/#dom-baseaudiocontext-createbiquadfilter
+WebIDL::ExceptionOr<JS::NonnullGCPtr<BiquadFilterNode>> BaseAudioContext::create_biquad_filter()
+{
+    // Factory method for a BiquadFilterNode representing a second order filter which can be configured as one of several common filter types.
+    return BiquadFilterNode::create(realm(), *this);
+}
+
 // https://webaudio.github.io/web-audio-api/#dom-baseaudiocontext-createbuffer
 WebIDL::ExceptionOr<JS::NonnullGCPtr<AudioBuffer>> BaseAudioContext::create_buffer(WebIDL::UnsignedLong number_of_channels, WebIDL::UnsignedLong length, float sample_rate)
 {
     // Creates an AudioBuffer of the given size. The audio data in the buffer will be zero-initialized (silent).
     // A NotSupportedError exception MUST be thrown if any of the arguments is negative, zero, or outside its nominal range.
     return AudioBuffer::create(realm(), number_of_channels, length, sample_rate);
+}
+
+// https://webaudio.github.io/web-audio-api/#dom-baseaudiocontext-createbuffersource
+WebIDL::ExceptionOr<JS::NonnullGCPtr<AudioBufferSourceNode>> BaseAudioContext::create_buffer_source()
+{
+    // Factory method for a AudioBufferSourceNode.
+    return AudioBufferSourceNode::create(realm(), *this);
 }
 
 // https://webaudio.github.io/web-audio-api/#dom-baseaudiocontext-createoscillator

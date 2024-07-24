@@ -584,6 +584,9 @@ UNMAP_AFTER_INIT APICTimer* APIC::initialize_timers(HardwareTimerBase& calibrati
 
 void APIC::setup_local_timer(u32 ticks, TimerMode timer_mode, bool enable)
 {
+    // Write 0 to the initial count so we don't accidentally start the timer when writing to the divide configuration register.
+    write_register(APIC_REG_TIMER_INITIAL_COUNT, 0);
+
     u32 flags = 0;
     switch (timer_mode) {
     case TimerMode::OneShot:
