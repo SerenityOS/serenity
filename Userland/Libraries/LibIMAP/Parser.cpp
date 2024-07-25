@@ -814,6 +814,19 @@ ErrorOr<Address> Parser::parse_address()
     auto host = TRY(parse_nstring());
     address.host = host;
     TRY(consume(")"sv));
+    // [RFC-2822] group syntax is indicated by a special form of
+    //          address structure in which the host name field is NIL.  If the
+    //          mailbox name field is also NIL, this is an end of group marker
+    //          (semi-colon in RFC 822 syntax).  If the mailbox name field is
+    //          non-NIL, this is a start of group marker, and the mailbox name
+    //          field holds the group name phrase.
+    if (!address.mailbox.is_empty() && address.host.is_empty()) {
+        // FIXME: Implement Group addresses per RFC-2822. For now, we just consume the group
+        // members, and return an Address object with the group name phrase in the mailbox field.
+        auto group_address = TRY(parse_address());
+        while (!group_address.mailbox.is_empty() && !group_address.host.is_empty())
+            group_address = TRY(parse_address());
+    }
     return address;
 }
 
