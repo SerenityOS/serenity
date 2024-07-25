@@ -281,11 +281,11 @@ void DOMTokenList::run_update_steps()
     MUST(associated_element->set_attribute(m_associated_attribute, value()));
 }
 
-JS::Value DOMTokenList::item_value(size_t index) const
+Optional<JS::Value> DOMTokenList::item_value(size_t index) const
 {
     auto string = item(index);
     if (!string.has_value())
-        return JS::js_undefined();
+        return {};
     return JS::PrimitiveString::create(vm(), string.release_value());
 }
 
