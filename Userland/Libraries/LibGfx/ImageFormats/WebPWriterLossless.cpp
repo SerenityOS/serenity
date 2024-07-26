@@ -527,6 +527,24 @@ static ARGB32 sub_argb32(ARGB32 a, ARGB32 b)
         .value();
 }
 
+static ErrorOr<NonnullRefPtr<Bitmap>> write_subtract_green_transform(LittleEndianOutputBitStream& bit_stream, NonnullRefPtr<Bitmap> bitmap)
+{
+    // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#43_subtract_green_transform
+    dbgln_if(WEBP_DEBUG, "WebP: Writing subtract green transform");
+    TRY(bit_stream.write_bits(1u, 1u)); // Transform present.
+    TRY(bit_stream.write_bits(static_cast<unsigned>(SUBTRACT_GREEN_TRANSFORM), 2u));
+
+    auto new_bitmap = TRY(bitmap->clone());
+    for (ARGB32& pixel : *new_bitmap) {
+        Color color = Color::from_argb(pixel);
+        u8 red = (color.red() - color.green()) & 0xff;
+        u8 blue = (color.blue() - color.green()) & 0xff;
+        pixel = Color(red, color.green(), blue, color.alpha()).value();
+    }
+
+    return new_bitmap;
+}
+
 static ErrorOr<NonnullRefPtr<Bitmap>> maybe_write_color_indexing_transform(LittleEndianOutputBitStream& bit_stream, NonnullRefPtr<Bitmap> bitmap, IsOpaque& is_fully_opaque, bool& has_just_one_channel)
 {
     // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#44_color_indexing_transform
@@ -560,6 +578,25 @@ static ErrorOr<NonnullRefPtr<Bitmap>> maybe_write_color_indexing_transform(Littl
     // except if there are <= 16 colors and we can do pixel bundling.
     if (color_table_size > 16 && has_just_one_channel)
         return bitmap;
+
+    // If the image is constant-alpha grayscale, subtract green has the same effect as writing a color index,
+    // but it doesn't require storage for the color index.
+    bool const has_constant_alpha = (channels & 0xff'00'00'00) == 0;
+    if (color_table_size > 16 && has_constant_alpha) {
+        auto pixel_is_gray = [](ARGB32 pixel) {
+            auto color = Color::from_argb(pixel);
+            return color.red() == color.green() && color.green() == color.blue();
+        };
+        bool is_grayscale = true;
+        for (ARGB32 pixel : seen_colors) {
+            if (!pixel_is_gray(pixel)) {
+                is_grayscale = false;
+                break;
+            }
+        }
+        if (is_grayscale)
+            return write_subtract_green_transform(bit_stream, bitmap);
+    }
 
     dbgln_if(WEBP_DEBUG, "WebP: Writing color index transform, color_table_size {}", color_table_size);
     TRY(bit_stream.write_bits(1u, 1u)); // Transform present.

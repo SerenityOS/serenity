@@ -21,6 +21,7 @@
 #include <LibGfx/ImageFormats/QOILoader.h>
 #include <LibGfx/ImageFormats/QOIWriter.h>
 #include <LibGfx/ImageFormats/WebPLoader.h>
+#include <LibGfx/ImageFormats/WebPSharedLossless.h>
 #include <LibGfx/ImageFormats/WebPWriter.h>
 #include <LibTest/TestCase.h>
 
@@ -238,7 +239,7 @@ TEST_CASE(test_webp_color_indexing_transform_single_channel)
         expect_bitmaps_equal(*decoded_bitmap, *bitmap);
 
         Gfx::WebPEncoderOptions options;
-        options.vp8l_options.allowed_transforms = 0;
+        options.vp8l_options.allowed_transforms = options.vp8l_options.allowed_transforms & ~(1u << Gfx::COLOR_INDEXING_TRANSFORM);
         auto encoded_data_without_color_indexing = TRY_OR_FAIL(encode_bitmap<Gfx::WebPWriter>(bitmap, options));
         if (bits_per_pixel == 8)
             EXPECT(encoded_data.size() <= encoded_data_without_color_indexing.size());
@@ -247,6 +248,53 @@ TEST_CASE(test_webp_color_indexing_transform_single_channel)
         auto decoded_bitmap_without_color_indexing = TRY_OR_FAIL(expect_single_frame_of_size(*TRY_OR_FAIL(Gfx::WebPImageDecoderPlugin::create(encoded_data)), bitmap->size()));
         expect_bitmaps_equal(*decoded_bitmap_without_color_indexing, *decoded_bitmap);
     }
+}
+
+TEST_CASE(test_webp_grayscale)
+{
+    Array<Color, 256> colors;
+    for (size_t i = 0; i < colors.size(); ++i) {
+        colors[i].set_red(i);
+        colors[i].set_green(255 - i);
+        colors[i].set_blue(128);
+        colors[i].set_alpha(255 - i / 16);
+    }
+    Array<Color, 256> grays;
+    for (size_t i = 0; i < grays.size(); ++i) {
+        // `255 - i` because:
+        // * webpwriter sorts palette colors by luminance
+        // * luminance is mostly green and `colors` uses `255 - i` for green
+        // * and palette order should match for compressed size comparisons to be meaningful
+        grays[i].set_red(255 - i);
+        grays[i].set_green(255 - i);
+        grays[i].set_blue(255 - i);
+        grays[i].set_alpha(255);
+    }
+    Array<Color, 256> grays_with_alpha = grays;
+    for (size_t i = 0; i < grays_with_alpha.size(); ++i)
+        grays_with_alpha[i].set_alpha(255 - i / 16);
+
+    auto make_bitmap = [](Array<Color, 256> const& palette) -> ErrorOr<NonnullRefPtr<Gfx::Bitmap>> {
+        auto bitmap = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { 47, 33 }));
+        for (int y = 0; y < bitmap->height(); ++y)
+            for (int x = 0; x < bitmap->width(); ++x)
+                bitmap->set_pixel(x, y, palette[(x * bitmap->width() + y) % palette.size()]);
+        return bitmap;
+    };
+    auto colors_bitmap = TRY_OR_FAIL(make_bitmap(colors));
+    auto grays_bitmap = TRY_OR_FAIL(make_bitmap(grays));
+    auto grays_with_alpha_bitmap = TRY_OR_FAIL(make_bitmap(grays_with_alpha));
+
+    auto encoded_grays = TRY_OR_FAIL(encode_bitmap<Gfx::WebPWriter>(grays_bitmap));
+    auto decoded_grays = TRY_OR_FAIL(expect_single_frame_of_size(*TRY_OR_FAIL(Gfx::WebPImageDecoderPlugin::create(encoded_grays)), grays_bitmap->size()));
+    expect_bitmaps_equal(*decoded_grays, *grays_bitmap);
+
+    auto encoded_colors = TRY_OR_FAIL(encode_bitmap<Gfx::WebPWriter>(colors_bitmap));
+    EXPECT(encoded_grays.size() < encoded_colors.size());
+
+    auto encoded_grays_with_alpha = TRY_OR_FAIL(encode_bitmap<Gfx::WebPWriter>(grays_with_alpha_bitmap));
+    EXPECT(encoded_grays_with_alpha.size() <= encoded_colors.size());
+    EXPECT(encoded_grays.size() < encoded_grays_with_alpha.size());
 }
 
 TEST_CASE(test_webp_color_cache)
