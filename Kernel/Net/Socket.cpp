@@ -8,7 +8,7 @@
 #include <Kernel/API/POSIX/errno.h>
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
-#include <Kernel/Net/IPv4Socket.h>
+#include <Kernel/Net/IPv4/Socket.h>
 #include <Kernel/Net/LocalSocket.h>
 #include <Kernel/Net/NetworkingManagement.h>
 #include <Kernel/Net/Socket.h>

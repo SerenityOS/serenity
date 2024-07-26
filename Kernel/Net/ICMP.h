@@ -7,9 +7,9 @@
 #pragma once
 
 #include <AK/MACAddress.h>
-#include <Kernel/Net/IPv4.h>
+#include <Kernel/Net/IPv4/IPv4.h>
 
-struct ICMPType {
+struct ICMPv4Type {
     enum {
         EchoReply = 0,
         EchoRequest = 8,

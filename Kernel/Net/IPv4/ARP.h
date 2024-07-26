@@ -9,7 +9,7 @@
 #include <AK/Endian.h>
 #include <AK/MACAddress.h>
 #include <Kernel/Net/EtherType.h>
-#include <Kernel/Net/IPv4.h>
+#include <Kernel/Net/IPv4/IPv4.h>
 
 namespace Kernel {
 

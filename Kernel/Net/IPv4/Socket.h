@@ -12,8 +12,8 @@
 #include <Kernel/Library/DoubleBuffer.h>
 #include <Kernel/Library/KBuffer.h>
 #include <Kernel/Locking/MutexProtected.h>
-#include <Kernel/Net/IPv4.h>
-#include <Kernel/Net/IPv4SocketTuple.h>
+#include <Kernel/Net/IPv4/IPv4.h>
+#include <Kernel/Net/IPv4/SocketTuple.h>
 #include <Kernel/Net/Socket.h>
 
 namespace Kernel {
