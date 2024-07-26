@@ -471,6 +471,7 @@ if (BUILD_LAGOM)
         Regex
         RIFF
         SoftGPU
+        Shell
         SQL
         Syntax
         TextCodec

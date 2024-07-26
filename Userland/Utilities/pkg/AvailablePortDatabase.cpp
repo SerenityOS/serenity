@@ -22,11 +22,11 @@
 #include "AvailablePortDatabase.h"
 #include "MarkdownTableFinder.h"
 
-#include <Shell/AST.h>
-#include <Shell/Formatter.h>
-#include <Shell/NodeVisitor.h>
-#include <Shell/PosixParser.h>
-#include <Shell/Shell.h>
+#include <LibShell/AST.h>
+#include <LibShell/Formatter.h>
+#include <LibShell/NodeVisitor.h>
+#include <LibShell/PosixParser.h>
+#include <LibShell/Shell.h>
 
 void AvailablePortDatabase::query_details_for_package(HashMap<String, InstalledPort> const& installed_ports_map, StringView package_name, bool verbose)
 {

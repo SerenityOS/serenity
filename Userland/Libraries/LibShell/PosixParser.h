@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <Shell/AST.h>
-#include <Shell/PosixLexer.h>
+#include <LibShell/AST.h>
+#include <LibShell/PosixLexer.h>
 
 namespace Shell::Posix {
 
