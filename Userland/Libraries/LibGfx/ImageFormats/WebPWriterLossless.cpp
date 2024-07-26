@@ -527,6 +527,59 @@ static ARGB32 sub_argb32(ARGB32 a, ARGB32 b)
         .value();
 }
 
+static ErrorOr<NonnullRefPtr<Bitmap>> maybe_write_predictor_transform(LittleEndianOutputBitStream& bit_stream, NonnullRefPtr<Bitmap> bitmap)
+{
+    // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#41_predictor_transform
+
+    // FIXME: Check if it's worth it to do this transform first, and use more than just the "L" predictor.
+
+    dbgln_if(WEBP_DEBUG, "WebP: Writing predictor transform");
+    TRY(bit_stream.write_bits(1u, 1u)); // Transform present.
+    TRY(bit_stream.write_bits(static_cast<unsigned>(PREDICTOR_TRANSFORM), 2u));
+
+    // "The first 3 bits of prediction data define the block width and height in number of bits.
+    //      int size_bits = ReadBits(3) + 2;
+    //      int block_width = (1 << size_bits);
+    //      int block_height = (1 << size_bits);
+    //      #define DIV_ROUND_UP(num, den) (((num) + (den) - 1) / (den))
+    //      int transform_width = DIV_ROUND_UP(image_width, 1 << size_bits);"
+    // We're always predicting to the left. Constant-value bitmaps encode in constant size with WebP's huffman tables,
+    // so it makes no difference which tile size we pick (...until we use more than one prediction mode).
+    unsigned size_bits = 0b111 + 2;
+    TRY(bit_stream.write_bits(size_bits - 2, 3u));
+
+    // "The transform data contains the prediction mode for each block of the image.
+    //  It is a subresolution image where the green component of a pixel defines which of the 14 predictors is used
+    //  for all the block_width * block_height pixels within a particular block of the ARGB image.
+    //  This subresolution image is encoded using the same techniques described in Chapter 5."
+    unsigned block_size = 1 << size_bits;
+    auto subresolution_bitmap = TRY(Bitmap::create(BitmapFormat::BGRA8888, { ceil_div(bitmap->width(), block_size), ceil_div(bitmap->height(), block_size) }));
+    subresolution_bitmap->fill(Color(0, 1 /* 1 is the "L" predictor */, 0, 0));
+    IsOpaque dont_care;
+    TRY(write_VP8L_coded_image(ImageKind::EntropyCoded, bit_stream, *subresolution_bitmap, dont_care, {}));
+
+    auto new_bitmap = TRY(Bitmap::create(BitmapFormat::BGRA8888, bitmap->size()));
+    for (int y = 0; y < new_bitmap->height(); ++y) {
+        auto* old_scanline = bitmap->scanline(y);
+        auto* new_scanline = new_bitmap->scanline(y);
+
+        // "There are special handling rules for some border pixels. If there is a prediction transform, regardless of the mode [0..13] for these pixels,
+        //  the predicted value for the left-topmost pixel of the image is 0xff000000, all pixels on the top row are L-pixel,
+        //  and all pixels on the leftmost column are T-pixel.
+        ARGB32 top = y == 0 ? 0xff000000 : bitmap->scanline(y - 1)[0];
+        ARGB32 current = old_scanline[0];
+        new_scanline[0] = sub_argb32(current, top);
+
+        for (int x = 1; x < new_bitmap->width(); ++x) {
+            ARGB32 left = old_scanline[x - 1];
+            ARGB32 current = old_scanline[x];
+            new_scanline[x] = sub_argb32(current, left);
+        }
+    }
+
+    return new_bitmap;
+}
+
 static ErrorOr<NonnullRefPtr<Bitmap>> write_subtract_green_transform(LittleEndianOutputBitStream& bit_stream, NonnullRefPtr<Bitmap> bitmap)
 {
     // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#43_subtract_green_transform
@@ -672,9 +725,14 @@ static ErrorOr<void> write_VP8L_image_data(Stream& stream, NonnullRefPtr<Bitmap>
         bitmap = move(new_bitmap);
     }
 
-    if (!did_use_color_indexing_transform && options.allowed_transforms & (1u << SUBTRACT_GREEN_TRANSFORM)) {
-        // FIXME: Check if subtract green transform is worth it instead of doing it unconditionally.
-        bitmap = TRY(write_subtract_green_transform(bit_stream, bitmap));
+    if (!did_use_color_indexing_transform) {
+        if (options.allowed_transforms & (1u << SUBTRACT_GREEN_TRANSFORM)) {
+            // FIXME: Check if subtract green transform is worth it instead of doing it unconditionally.
+            bitmap = TRY(write_subtract_green_transform(bit_stream, bitmap));
+        }
+
+        if (options.allowed_transforms & (1u << PREDICTOR_TRANSFORM))
+            bitmap = TRY(maybe_write_predictor_transform(bit_stream, bitmap));
     }
 
     TRY(bit_stream.write_bits(0u, 1u)); // No further transforms for now.

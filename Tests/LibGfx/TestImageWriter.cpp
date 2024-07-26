@@ -239,7 +239,7 @@ TEST_CASE(test_webp_color_indexing_transform_single_channel)
         expect_bitmaps_equal(*decoded_bitmap, *bitmap);
 
         Gfx::WebPEncoderOptions options;
-        options.vp8l_options.allowed_transforms = options.vp8l_options.allowed_transforms & ~(1u << Gfx::COLOR_INDEXING_TRANSFORM);
+        options.vp8l_options.allowed_transforms = options.vp8l_options.allowed_transforms & ~((1u << Gfx::COLOR_INDEXING_TRANSFORM) | (1u << Gfx::PREDICTOR_TRANSFORM));
         auto encoded_data_without_color_indexing = TRY_OR_FAIL(encode_bitmap<Gfx::WebPWriter>(bitmap, options));
         if (bits_per_pixel == 8)
             EXPECT(encoded_data.size() <= encoded_data_without_color_indexing.size());
